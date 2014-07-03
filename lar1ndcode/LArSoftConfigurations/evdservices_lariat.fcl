@@ -1,0 +1,58 @@
+#include "calorimetry.fcl"
+#include "services_lariat.fcl"
+#include "evdservices_base.fcl"
+
+BEGIN_PROLOG
+
+lariat_colordrawingopt:                       @local::standard_colordrawingopt
+lariat_rawdrawingopt:                         @local::standard_rawdrawingopt
+lariat_recodrawingopt:                        @local::standard_recodrawingopt
+lariat_analysisdrawingopt:
+{
+ DrawCalorimetry:                             1                                     
+ DrawParticleID:                              1                                     
+ CalorimetryModuleLabels:                     ["calo"]                              
+ ParticleIDModuleLabels:                      ["pid"]                               
+ CalorTemplateFileNames:                      ["dEdxKinErestemplate.root"]          
+}                                                                                      
+lariat_simdrawingopt:                         @local::standard_simdrawingopt        
+lariat_evdlayoutopt:   		              @local::standard_evdlayoutopt         
+lariat_evdlayoutopt.ShowSideBar:	      1                                     
+lariat_evdlayoutopt.AutoZoomInterest:	      0                                     
+lariat_evdlayoutopt.PrintTotalCharge:	      0                                     
+lariat_evdlayoutopt.ShowEndPointSection:      1	                             
+lariat_evdlayoutopt.ShowEndPointMarkers:      1                                     
+lariat_evdlayoutopt.MakeSeeds:	              0                                     
+lariat_evdlayoutopt.ChangeWire:	              0                                     
+lariat_evdlayoutopt.MakeSeeds:	              0                                     
+lariat_evdlayoutopt.ChangeWire:	              1                                     
+lariat_scanopt:                               @local::standard_scanopt              
+lariat_evd:                                   @local::standard_evd                  
+lariat_infotransfer:                          @local::standard_infotransfer         
+lariat_disp:                                                                       
+{                                                                                  
+ ExptGeoHelperInterface:                      @local::lariat_geometry_helper        
+ Geometry:                                    @local::lariat_geo                    
+ LArProperties:                               @local::lariat_properties             
+ DetectorProperties:                          @local::lariat_detproperties          
+ DatabaseUtil:		                      @local::lariat_database               
+ ColorDrawingOptions:                         @local::lariat_colordrawingopt        
+ SimulationDrawingOptions:                    @local::lariat_simdrawingopt          
+ RawDrawingOptions:                           @local::lariat_rawdrawingopt          
+ RecoDrawingOptions:                          @local::lariat_recodrawingopt         
+ AnalysisDrawingOptions:                      @local::lariat_analysisdrawingopt     
+ EvdLayoutOptions:	                      @local::lariat_evdlayoutopt           
+ EventDisplay:                                @local::lariat_evd                    
+ ScanOptions:                                 @local::lariat_scanopt                
+ LArG4Parameters:                             @local::lariat_largeantparameters     
+ LArVoxelCalculator:                          @local::lariat_larvoxelcalculator     
+ InfoTransfer:		                      @local::lariat_infotransfer    
+ TimeService:                  		       @local::lariat_timeservice
+}                                                                                  
+                                                                                   
+                                                                                   
+#######################################                                            
+                                                                                   
+lariat_graphcluster:                          @local::standard_graphcluster         
+
+END_PROLOG

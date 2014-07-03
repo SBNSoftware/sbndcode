@@ -1,0 +1,8 @@
+#include "larfft.fcl"
+
+BEGIN_PROLOG
+
+lariat_larfft:         @local::standard_larfft
+#lariat_larfft.FitBins: 5
+
+END_PROLOG

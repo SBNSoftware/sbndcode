@@ -1,0 +1,14 @@
+#include "calorimetry.fcl"
+
+BEGIN_PROLOG
+
+lariat_calorimetryalgdata:    @local::standard_calorimetryalgdata
+lariat_calorimetryalgmc:      @local::standard_calorimetryalgmc
+
+lariat_calodata:              @local::standard_calodata
+lariat_calodata.CaloAlg:      @local::lariat_calorimetryalgdata
+
+lariat_calomc:                @local::standard_calomc
+lariat_calomc.CaloAlg:        @local::lariat_calorimetryalgmc
+
+END_PROLOG

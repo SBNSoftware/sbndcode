@@ -1,0 +1,64 @@
+#include "clustermodules.fcl"
+
+BEGIN_PROLOG
+
+lariat_dbscanalg:                                 @local::standard_dbscanalg        
+                                                                                    
+lariat_clustercrawleralg:                         @local::standard_clustercrawleralg
+lariat_clustercrawleralg.AllowNoHitWire:          3                                 
+lariat_clustercrawleralg.MaxWirSkip:              [12, 8, 2]                        
+lariat_clustercrawleralg.MinWirAfterSkip:         [1, 1, 1]                         
+lariat_clustercrawleralg.ChiCut:                  [2., 2., 2.]                      
+lariat_clustercrawleralg.ChgCut:                  [2., 2., 2.]                      
+lariat_clustercrawleralg.HitErrFac:               0.6                               
+                                                                                    
+lariat_cchitfinderalg:                            @local::standard_cchitfinderalg   
+lariat_cchitfinderalg.MinSigInd:                  1.8                               
+lariat_cchitfinderalg.MinSigCol:                  2.5                               
+lariat_cchitfinderalg.MinRMSInd:                  5.                                
+lariat_cchitfinderalg.MinRMSCol:                  10.                               
+lariat_cchitfinderalg.ChiNorms:                   [0.5, 2.7]                        
+lariat_cchitfinderalg.ChgNorms:                   [1.0, 1.0]                        
+lariat_cchitrefineralg:                           @local::standard_cchitrefineralg  
+                                                                                    
+lariat_fuzzyclusteralg:                           @local::standard_fuzzyclusteralg  
+                                                                                    
+lariat_houghbasealg:                              @local::standard_houghbasealg     
+lariat_houghbasealg.MaxLines:                     15                                
+lariat_houghbasealg.MinHits:                      3                                 
+lariat_houghbasealg.NumAngleCells:                5000                              
+lariat_houghbasealg.MaxDistance:                  5.0                               
+                                                                                    
+lariat_endpointalg:                               @local::standard_endpointalg      
+                                                                                    
+lariat_clustercrawler:                            @local::standard_clustercrawler   
+lariat_clustercrawler.ClusterCrawlerAlg:          @local::lariat_clustercrawleralg  
+lariat_clustercrawler.CCHitFinderAlg:             @local::lariat_cchitfinderalg     
+lariat_clustercrawler.CCHitRefinerAlg:            @local::lariat_cchitrefineralg    
+
+lariat_clustercrawlermc:                          @local::lariat_clustercrawler      
+lariat_clustercrawlermc.CCHitFinderAlg.MinRMSInd: 6.7
+lariat_clustercrawlermc.CCHitFinderAlg.MinRMSCol: 7.6
+lariat_clustercrawlermc.CCHitFinderAlg.ChiNorms:  [ 1.6, 7.5 ]
+
+lariat_dbcluster:                                 @local::standard_dbcluster          
+lariat_dbcluster.DBScanAlg:                       @local::lariat_dbscanalg            
+                                                                                      
+lariat_dbclusterana:                              @local::standard_dbclusterana       
+                                                                                      
+lariat_fuzzycluster:                              @local::standard_fuzzycluster       
+lariat_fuzzycluster.fuzzyClusterAlg:              @local::lariat_fuzzyclusteralg      
+                                                                                      
+lariat_houghlinefinder:                           @local::standard_houghlinefinder    
+lariat_houghlinefinder.HoughBaseAlg:              @local::lariat_houghbasealg         
+                                                                                      
+lariat_houghlinefinderana:                        @local::standard_houghlinefinderana 
+                                                                                      
+lariat_linemerger:                                @local::standard_linemerger         
+                                                                                      
+lariat_endpointmod:                               @local::standard_endpointmod        
+lariat_endpointmod.EndPointAlg:                   @local::lariat_endpointalg          
+                                                                                      
+lariat_showeranglecluster:                        @local::standard_showeranglecluster 
+
+END_PROLOG

@@ -1,0 +1,54 @@
+#include "signalservices.fcl"
+
+BEGIN_PROLOG
+
+lariat_signalshapingservice:
+{
+  ADCTicksPerPCAtLowestASICGainSetting: 25172.1 #ADC/pC
+  #ASICGain: Options: (4.7, 7.8, 14, 25). Default: 7.8
+  ASICGainInMVPerFC:                    7.8     #mV/fC
+  
+  FieldBins:        75
+  Col3DCorrection:  2.5
+  Ind3DCorrection:  1.5
+  #ColFieldRespAmp:  0.0354
+  ColFieldRespAmp:  1.0
+  #IndUFieldRespAmp:  0.018
+  IndUFieldRespAmp:  1.0
+  #IndVFieldRespAmp:  0.018
+  IndVFieldRespAmp:  1.0
+  ShapeTimeConst:  [ 1.4, 0.5 ] #Gain and Peaking time (microseconds)
+
+  # For IndFilter and ColFilter, frequency (x) is measured in
+  # cycles/microsecond.  The conversion to frequency bin depends on FFT size
+  # samping rate.
+
+  IndUFilter:       "(x>0.0)*gaus*exp(-0.5*pow(x/[3],[4]))"
+  # IndUFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
+  IndUFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
+  IndVFilter:       "(x>0.0)*gaus*exp(-0.5*pow(x/[3],[4]))"
+  # IndVFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
+  IndVFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
+  ColFilter:       "(x>0)*[0]*exp(-0.5*(((x-[1])/[2])^2)^[3])"
+  # ColFilterParams: [ 79258.0, 0.0, 0.1875, 1.5 ]
+  ColFilterParams: [ 0.0792580, 0.0, 0.1875, 1.5 ]
+  
+  GetFilterFromHisto:   false  
+
+  FilterFunctionFname:  "lariat_filters_v0.1.root"
+  FilterHistoName:	"noisefilter_%d"       
+  
+
+  UseFunctionFieldShape: false
+  UseSimpleFieldShape: false
+  IndUFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
+  IndUFieldParams:  [.00843,.1534,1.77,0.,0.5]    #last parameter needs to be half of FFT vector, correct for in code
+  IndVFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
+  IndVFieldParams:  [.00843,.1534,1.77,0.,0.5]    #last parameter needs to be half of FFT vector, correct for in code
+  ColFieldShape: "x^[2]/(1.0+(x/[0])^[1])"
+  ColFieldParams: [ 8.0,16.0,.75 ]
+  
+
+
+}
+END_PROLOG

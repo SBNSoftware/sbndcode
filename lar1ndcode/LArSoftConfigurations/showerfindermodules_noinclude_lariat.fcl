@@ -1,0 +1,7 @@
+#include "showerfindermodules.fcl"
+
+BEGIN_PROLOG
+
+lariat_shower:     @local::standard_shower
+
+END_PROLOG

@@ -1,0 +1,34 @@
+#include "caldata.fcl"
+
+BEGIN_PROLOG
+
+lariat_calroi:
+{
+ module_type:        "CalWireROI"
+ DigitModuleLabel:   "daq"
+ Threshold: [ 3, 3, 3 ] # abs(threshold) for finding a Region Of Interest
+ MinWid:              4 # min width (time bins) for a ROI
+ MinSep:             10 # min separation (time bins) between ROIs
+ uPlaneROIPad: [ 150, 10 ] # number of bins to pad both ends of the ROIs
+ vPlaneROIPad: [  10, 10 ] # number of bins to pad both ends of the ROIs
+ zPlaneROIPad: [  10, 10 ] # number of bins to pad both ends of the ROIs
+ DoBaselineSub:    true # subtract baseline after deconvolution?
+ uPlaneRamp:       true # Set true if U plane response includes a pre-ROI ramp
+ FFTSize:     2048      # re-initialize FFT service to this size
+}
+
+lariat_calwire:
+{
+ module_type:        "CalWireT1034"
+ DigitModuleLabel:   "daq"
+ PostsampleBins:       0
+ BaseSampleBins:      40  # set > 0 for baseline subtraction. Value should be
+                          # modulo the data size (3200 for uB)
+ BaseVarCut:         25.  # Variance cut for selecting baseline points
+}
+
+
+
+lariat_calwireana: @local::standard_calwireana
+
+END_PROLOG

@@ -1,0 +1,10 @@
+#include "hitfindermodules.fcl"
+
+BEGIN_PROLOG
+
+lariat_hitfinder:              @local::standard_hitfinder
+lariat_gaushitfinder:          @local::gaus_hitfinder
+lariat_mc_hitfinder:           @local::standard_hitfinder
+lariat_mc_hitfinder.AreaNorms: [ 12.89, 14.51 ]
+
+END_PROLOG

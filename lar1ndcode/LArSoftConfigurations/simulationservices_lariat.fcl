@@ -1,0 +1,8 @@
+#include "simulationservices.fcl"
+
+BEGIN_PROLOG
+
+lariat_largeantparameters:   @local::standard_largeantparameters
+lariat_larvoxelcalculator:   @local::standard_larvoxelcalculator
+
+END_PROLOG

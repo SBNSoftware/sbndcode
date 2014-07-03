@@ -1,0 +1,35 @@
+#include "detsimmodules.fcl"
+
+BEGIN_PROLOG
+
+lariat_simwire:  
+{ 
+ module_type:        "SimWireT1034"
+ TrigModName:        "triggersim"
+ DriftEModuleLabel:  "largeant"
+ NoiseFact:          0.15       #Noise Scale to use with histogram
+ NoiseWidth:         62.4         #Exponential Noise width (kHz)
+ NoiseRand:          0.1          #frac of randomness of noise freq-spec
+ LowCutoff:          7.5          #Low frequency filter cutoff (kHz)
+ CompressionType:    "none"       #could also be none		
+ GenNoise:            false        #gen noise...if false function not called
+ GetNoiseFromHisto:   false
+ GenNoiseInTime:      false
+ CollectionPed:       400         #ADC baseline for coll plane
+ InductionPed:        2048        #ADC baseline for ind plane
+ BaselineRMS:         0.3         #ADC baseline fluctuation within channel        
+ NoiseFileFname:      "uboone_noise_v0.1.root"
+ NoiseHistoName:      "NoiseFreq"    
+
+}
+#lariat_simwireana: @local::standard_simwireana
+lariat_simwireana:
+{
+    module_type: "SimWiret1034Ana"
+    DigitModuleLabel: "daq"
+
+}
+
+lariat_wienerfilterana: @local::standard_wienerfilterana
+
+END_PROLOG
