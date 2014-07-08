@@ -2,6 +2,6 @@
 
 BEGIN_PROLOG
 
-lariat_singlep: @local::standard_singlep
+lar1nd_singlep: @local::standard_singlep
 
 END_PROLOG

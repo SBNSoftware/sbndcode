@@ -1,4 +1,4 @@
-#include "evdservices_lariat.fcl"
+#include "evdservices_lar1nd.fcl"
 
 
 process_name: EVD
@@ -10,7 +10,7 @@ services:
   Timing:       {}
   RandomNumberGenerator: {} #ART native random number generator
   message:      @local::evd_message
-  user:         @local::lariat_disp
+  user:         @local::lar1nd_disp
 }
 
 # Define the services

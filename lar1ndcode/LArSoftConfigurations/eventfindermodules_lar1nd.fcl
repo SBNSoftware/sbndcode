@@ -2,6 +2,6 @@
 
 BEGIN_PROLOG
 
-lariat_eventmaker:   @local::standard_eventmaker
+lar1nd_eventmaker:   @local::standard_eventmaker
 
 END_PROLOG

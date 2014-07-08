@@ -2,7 +2,7 @@
 
 BEGIN_PROLOG
 
-lariat_larfft:         @local::standard_larfft
-#lariat_larfft.FitBins: 5
+lar1nd_larfft:         @local::standard_larfft
+#lar1nd_larfft.FitBins: 5
 
 END_PROLOG

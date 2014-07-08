@@ -2,7 +2,7 @@
 
 BEGIN_PROLOG
 
-lariat_simwire:  
+lar1nd_simwire:  
 { 
  module_type:        "SimWireT1034"
  TrigModName:        "triggersim"
@@ -22,14 +22,14 @@ lariat_simwire:
  NoiseHistoName:      "NoiseFreq"    
 
 }
-#lariat_simwireana: @local::standard_simwireana
-lariat_simwireana:
+#lar1nd_simwireana: @local::standard_simwireana
+lar1nd_simwireana:
 {
     module_type: "SimWiret1034Ana"
     DigitModuleLabel: "daq"
 
 }
 
-lariat_wienerfilterana: @local::standard_wienerfilterana
+lar1nd_wienerfilterana: @local::standard_wienerfilterana
 
 END_PROLOG

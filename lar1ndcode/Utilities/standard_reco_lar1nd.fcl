@@ -1,8 +1,8 @@
-#include "services_lariat.fcl"
-#include "caldata_lariat.fcl"
-#include "hitfindermodules_lariat.fcl"
-#include "cluster_lariat.fcl"
-#include "trackfindermodules_lariat.fcl"
+#include "services_lar1nd.fcl"
+#include "caldata_lar1nd.fcl"
+#include "hitfindermodules_lar1nd.fcl"
+#include "cluster_lar1nd.fcl"
+#include "trackfindermodules_lar1nd.fcl"
 
 process_name: Reco
 
@@ -13,7 +13,7 @@ services:
   Timing:       {}
   RandomNumberGenerator: {} #ART native random number generator
   message:      @local::standard_warning
-  user:         @local::lariat_services 	     
+  user:         @local::lar1nd_services 	     
 }
 
 
@@ -32,14 +32,14 @@ physics:
 
  producers:
  {
-  caldata:    @local::lariat_calwire	    
-  ffthit:     @local::lariat_hitfinder	    
-  dbcluster:  @local::lariat_dbcluster	    
+  caldata:    @local::lar1nd_calwire	    
+  ffthit:     @local::lar1nd_hitfinder	    
+  dbcluster:  @local::lar1nd_dbcluster	    
  }
 
  analyzers:
  {
-  dbclusterana: @local::lariat_dbclusterana
+  dbclusterana: @local::lar1nd_dbclusterana
  }
 
  #define the producer and filter modules for this path, order matters, 

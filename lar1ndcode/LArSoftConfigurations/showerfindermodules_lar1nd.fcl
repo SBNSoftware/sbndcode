@@ -3,6 +3,6 @@
 
 BEGIN_PROLOG
 
-lariat_shower:     @local::standard_shower
+lar1nd_shower:     @local::standard_shower
 
 END_PROLOG

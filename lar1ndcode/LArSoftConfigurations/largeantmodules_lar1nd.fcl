@@ -2,7 +2,7 @@
 
 BEGIN_PROLOG
 
-lariat_largeant:    @local::standard_largeant
-lariat_largeantana: @local::standard_largeantana
+lar1nd_largeant:    @local::standard_largeant
+lar1nd_largeantana: @local::standard_largeantana
 
 END_PROLOG

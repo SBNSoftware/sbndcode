@@ -1,7 +1,7 @@
 
 BEGIN_PROLOG
 
-lariat_geo:
+lar1nd_geo:
 {
  SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
  Name:     "lariat"
@@ -11,7 +11,7 @@ lariat_geo:
 #ROOT:     "lariat_wdisk.gdml"
 }
 
-lariat_geometry_helper:
+lar1nd_geometry_helper:
 {
  service_provider : LArIATGeometryHelper
 }

@@ -2,6 +2,6 @@
 
 BEGIN_PROLOG
 
-lariat_photonlibraryanalyzer: @local::standard_photonlibraryanalyzer
+lar1nd_photonlibraryanalyzer: @local::standard_photonlibraryanalyzer
 
 END_PROLOG

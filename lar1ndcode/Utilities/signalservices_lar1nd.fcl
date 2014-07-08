@@ -2,7 +2,7 @@
 
 BEGIN_PROLOG
 
-lariat_signalshapingservice:
+lar1nd_signalshapingservice:
 {
   ADCTicksPerPCAtLowestASICGainSetting: 25172.1 #ADC/pC
   #ASICGain: Options: (4.7, 7.8, 14, 25). Default: 7.8
@@ -35,7 +35,7 @@ lariat_signalshapingservice:
   
   GetFilterFromHisto:   false  
 
-  FilterFunctionFname:  "lariat_filters_v0.1.root"
+  FilterFunctionFname:  "lar1nd_filters_v0.1.root"
   FilterHistoName:	"noisefilter_%d"       
   
 

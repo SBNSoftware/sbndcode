@@ -1,64 +1,64 @@
-#include "geometry_lariat.fcl"
-#include "detectorproperties_lariat.fcl"
-#include "larproperties_lariat.fcl"
-#include "larfft_lariat.fcl"
+#include "geometry_lar1nd.fcl"
+#include "detectorproperties_lar1nd.fcl"
+#include "larproperties_lar1nd.fcl"
+#include "larfft_lar1nd.fcl"
 #include "messageservice.fcl"
-#include "simulationservices_lariat.fcl"
-#include "signalservices_lariat.fcl"
+#include "simulationservices_lar1nd.fcl"
+#include "signalservices_lar1nd.fcl"
 #include "magfield.fcl"
-#include "databaseutil_lariat.fcl"
+#include "databaseutil_lar1nd.fcl"
 #include "backtracker.fcl"
-## #include "photpropservices_lariat.fcl"
-##include "opticaldetectorservices_lariat.fcl"
-## #include "sam_lariat.fcl"
-#include "timeservice_lariat.fcl"
+## #include "photpropservices_lar1nd.fcl"
+##include "opticaldetectorservices_lar1nd.fcl"
+## #include "sam_lar1nd.fcl"
+#include "timeservice_lar1nd.fcl"
 
 BEGIN_PROLOG
 
-# Define lariat_services (exclude simulatio specific component)
-lariat_services:
+# Define lar1nd_services (exclude simulatio specific component)
+lar1nd_services:
 {
- ExptGeoHelperInterface:         @local::lariat_geometry_helper
- Geometry:                       @local::lariat_geo 	       
- DetectorProperties:             @local::lariat_detproperties 
- LArProperties:                  @local::lariat_properties    
- LArFFT:                         @local::lariat_larfft        
- DatabaseUtil:	                 @local::lariat_database      
- SignalShapingServiceT1034: @local::lariat_signalshapingservice
+ ExptGeoHelperInterface:         @local::lar1nd_geometry_helper
+ Geometry:                       @local::lar1nd_geo 	       
+ DetectorProperties:             @local::lar1nd_detproperties 
+ LArProperties:                  @local::lar1nd_properties    
+ LArFFT:                         @local::lar1nd_larfft        
+ DatabaseUtil:	                 @local::lar1nd_database      
+ SignalShapingServiceT1034: @local::lar1nd_signalshapingservice
  BackTracker:                    @local::standard_backtracker  
-#OpDigiProperties:               @local::lariat_opdigiproperties
-TimeService:                    @local::lariat_timeservice
+#OpDigiProperties:               @local::lar1nd_opdigiproperties
+TimeService:                    @local::lar1nd_timeservice
 
 }
 
-# Define lariat_optical_service (exclude simulation specific component)
-#lariat_optical_services:                          @local::lariat_services
+# Define lar1nd_optical_service (exclude simulation specific component)
+#lar1nd_optical_services:                          @local::lar1nd_services
 
-# Define lariat_simulation_services
-lariat_simulation_services:
+# Define lar1nd_simulation_services
+lar1nd_simulation_services:
 {
- LArG4Parameters:                @local::lariat_largeantparameters 
- LArVoxelCalculator:             @local::lariat_larvoxelcalculator 
- ExptGeoHelperInterface:         @local::lariat_geometry_helper
- Geometry:                       @local::lariat_geo 	           
- DetectorProperties:             @local::lariat_detproperties      
- LArProperties:                  @local::lariat_properties	   
- LArFFT:                         @local::lariat_larfft             
- DatabaseUtil:	                 @local::lariat_database           
- SignalShapingServiceT1034: @local::lariat_signalshapingservice
+ LArG4Parameters:                @local::lar1nd_largeantparameters 
+ LArVoxelCalculator:             @local::lar1nd_larvoxelcalculator 
+ ExptGeoHelperInterface:         @local::lar1nd_geometry_helper
+ Geometry:                       @local::lar1nd_geo 	           
+ DetectorProperties:             @local::lar1nd_detproperties      
+ LArProperties:                  @local::lar1nd_properties	   
+ LArFFT:                         @local::lar1nd_larfft             
+ DatabaseUtil:	                 @local::lar1nd_database           
+ SignalShapingServiceT1034: @local::lar1nd_signalshapingservice
  MagneticField:                  @local::no_mag 	       
  BackTracker:                    @local::standard_backtracker
- TimeService:                    @local::lariat_timeservice
+ TimeService:                    @local::lar1nd_timeservice
 }
 
-# Define lariat_optical_simulation_services
-#lariat_optical_simulation_services:                          @local::lariat_simulation_services
-#lariat_optical_simulation_services.PhotonVisibilityService:  @local::lariat_photonvisibilityservice
-#lariat_optical_simulation_services.OpDigiProperties:         @local::lariat_opdigiproperties 
-#lariat_optical_simulation_services.LArProperties.ScintYield: 24000
-#lariat_optical_simulation_services.LArProperties.EnableCerenkovLight: false
-#lariat_optical_simulation_services.LArG4Parameters.UseCustomPhysics: true
-#lariat_optical_simulation_services.LArG4Parameters.EnabledPhysics: [ "Em",
+# Define lar1nd_optical_simulation_services
+#lar1nd_optical_simulation_services:                          @local::lar1nd_simulation_services
+#lar1nd_optical_simulation_services.PhotonVisibilityService:  @local::lar1nd_photonvisibilityservice
+#lar1nd_optical_simulation_services.OpDigiProperties:         @local::lar1nd_opdigiproperties 
+#lar1nd_optical_simulation_services.LArProperties.ScintYield: 24000
+#lar1nd_optical_simulation_services.LArProperties.EnableCerenkovLight: false
+#lar1nd_optical_simulation_services.LArG4Parameters.UseCustomPhysics: true
+#lar1nd_optical_simulation_services.LArG4Parameters.EnabledPhysics: [ "Em",
 #                                                                         "FastOptical",
 #                                                                         "SynchrotronAndGN",
 #                                                                         "Ion",
@@ -73,7 +73,7 @@ lariat_simulation_services:
 
 ### Following is for message service. Whoever modified should add comments or say "only for expert hence no comment" or something. ###
 
-lariat_message_services:
+lar1nd_message_services:
 {
   debugModules: ["*"]
 
@@ -107,18 +107,18 @@ lariat_message_services:
   }
 }
 
-lariat_message_services_prod_debug:
+lar1nd_message_services_prod_debug:
 {
   debugModules: ["*"]
 
   destinations: {
 
-  LogDebugFile:      @local::lariat_message_services.destinations.LogDebugFile
-  LogStandardOut:    @local::lariat_message_services.destinations.LogStandardOut
-  LogStandardError:  @local::lariat_message_services.destinations.LogStandardError
+  LogDebugFile:      @local::lar1nd_message_services.destinations.LogDebugFile
+  LogStandardOut:    @local::lar1nd_message_services.destinations.LogStandardOut
+  LogStandardError:  @local::lar1nd_message_services.destinations.LogStandardError
   }
 }
-lariat_message_services_prod_debug.destinations.LogDebugFile.categories:{
+lar1nd_message_services_prod_debug.destinations.LogDebugFile.categories:{
   default: { }
   RecoBaseDefaultCtor: { limit: 0 }
   AnaBaseDefaultCtor:  { limit: 0 }
@@ -127,33 +127,33 @@ lariat_message_services_prod_debug.destinations.LogDebugFile.categories:{
 }
 
 
-lariat_message_services_prod:
+lar1nd_message_services_prod:
 {
   debugModules: ["*"]
 
   destinations: {
-    LogStandardOut:    @local::lariat_message_services.destinations.LogStandardOut
-    LogStandardError:  @local::lariat_message_services.destinations.LogStandardError
+    LogStandardOut:    @local::lar1nd_message_services.destinations.LogStandardOut
+    LogStandardError:  @local::lar1nd_message_services.destinations.LogStandardError
   }
 }
 
-lariat_message_services_interactive:
+lar1nd_message_services_interactive:
 {
   debugModules: ["*"]
 
   destinations: {
 
-    LogDebugFile:      @local::lariat_message_services.destinations.LogDebugFile
-    LogStandardOut:    @local::lariat_message_services.destinations.LogStandardOut
-    LogStandardError:  @local::lariat_message_services.destinations.LogStandardError
+    LogDebugFile:      @local::lar1nd_message_services.destinations.LogDebugFile
+    LogStandardOut:    @local::lar1nd_message_services.destinations.LogStandardOut
+    LogStandardError:  @local::lar1nd_message_services.destinations.LogStandardError
   }
 }
-lariat_message_services_interactive.destinations.LogStandardOut.threshold:  "INFO"
-lariat_message_services_interactive.destinations.LogStandardOut.categories:{
+lar1nd_message_services_interactive.destinations.LogStandardOut.threshold:  "INFO"
+lar1nd_message_services_interactive.destinations.LogStandardOut.categories:{
   default: { limit: 0 }
 }
-lariat_message_services_interactive.destinations.LogStandardError.threshold:  "WARNING"
-lariat_message_services_interactive.destinations.LogStandardError.categories:{
+lar1nd_message_services_interactive.destinations.LogStandardError.threshold:  "WARNING"
+lar1nd_message_services_interactive.destinations.LogStandardError.categories:{
   default: { }
   RecoBaseDefaultCtor: { limit: 1 }
   AnaBaseDefaultCtor:  { limit: 1 }

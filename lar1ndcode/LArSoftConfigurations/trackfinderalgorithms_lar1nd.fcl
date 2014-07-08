@@ -2,8 +2,8 @@
 
 BEGIN_PROLOG
 
-lariat_spacepointalg:   @local::standard_spacepointalg
+lar1nd_spacepointalg:   @local::standard_spacepointalg
 
-lariat_kalmanfilteralg: @local::standard_kalmanfilteralg
+lar1nd_kalmanfilteralg: @local::standard_kalmanfilteralg
 
 END_PROLOG

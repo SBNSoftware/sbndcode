@@ -2,6 +2,6 @@
 
 BEGIN_PROLOG
 
-lariat_larfft:   @local::standard_larfft
+lar1nd_larfft:   @local::standard_larfft
 
 END_PROLOG

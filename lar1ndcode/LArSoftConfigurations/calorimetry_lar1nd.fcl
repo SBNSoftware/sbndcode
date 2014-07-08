@@ -2,13 +2,13 @@
 
 BEGIN_PROLOG
 
-lariat_calorimetryalgdata:    @local::standard_calorimetryalgdata
-lariat_calorimetryalgmc:      @local::standard_calorimetryalgmc
+lar1nd_calorimetryalgdata:    @local::standard_calorimetryalgdata
+lar1nd_calorimetryalgmc:      @local::standard_calorimetryalgmc
 
-lariat_calodata:              @local::standard_calodata
-lariat_calodata.CaloAlg:      @local::lariat_calorimetryalgdata
+lar1nd_calodata:              @local::standard_calodata
+lar1nd_calodata.CaloAlg:      @local::lar1nd_calorimetryalgdata
 
-lariat_calomc:                @local::standard_calomc
-lariat_calomc.CaloAlg:        @local::lariat_calorimetryalgmc
+lar1nd_calomc:                @local::standard_calomc
+lar1nd_calomc.CaloAlg:        @local::lar1nd_calorimetryalgmc
 
 END_PROLOG

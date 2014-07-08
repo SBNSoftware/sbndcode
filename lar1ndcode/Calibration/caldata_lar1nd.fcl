@@ -2,7 +2,7 @@
 
 BEGIN_PROLOG
 
-lariat_calroi:
+lar1nd_calroi:
 {
  module_type:        "CalWireROI"
  DigitModuleLabel:   "daq"
@@ -17,7 +17,7 @@ lariat_calroi:
  FFTSize:     2048      # re-initialize FFT service to this size
 }
 
-lariat_calwire:
+lar1nd_calwire:
 {
  module_type:        "CalWireT1034"
  DigitModuleLabel:   "daq"
@@ -29,6 +29,6 @@ lariat_calwire:
 
 
 
-lariat_calwireana: @local::standard_calwireana
+lar1nd_calwireana: @local::standard_calwireana
 
 END_PROLOG

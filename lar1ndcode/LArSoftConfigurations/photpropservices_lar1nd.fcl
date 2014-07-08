@@ -2,6 +2,6 @@
 
 BEGIN_PROLOG
 
-lariat_photonvisibilityservice: @local::standard_photonvisibilityservice
+lar1nd_photonvisibilityservice: @local::standard_photonvisibilityservice
 
 END_PROLOG

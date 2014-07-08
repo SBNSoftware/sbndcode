@@ -2,14 +2,14 @@
 
 BEGIN_PROLOG
 
-lariat_detproperties:                   @local::standard_detproperties
-lariat_detproperties.ElectronsToADC:    6.8906513e-3 # 1fC = 43.008 ADC counts for MicroBooNE  
-lariat_detproperties.NumberTimeSamples: 1536
-lariat_detproperties.TimeOffsetU:       0.
-lariat_detproperties.TimeOffsetV:       0.
-lariat_detproperties.TimeOffsetZ:       0.
-lariat_detproperties.ReadOutWindowSize: 1536
-lariat_detproperties.InheritNumberTimeSamples: false
+lar1nd_detproperties:                   @local::standard_detproperties
+lar1nd_detproperties.ElectronsToADC:    6.8906513e-3 # 1fC = 43.008 ADC counts for MicroBooNE  
+lar1nd_detproperties.NumberTimeSamples: 1536
+lar1nd_detproperties.TimeOffsetU:       0.
+lar1nd_detproperties.TimeOffsetV:       0.
+lar1nd_detproperties.TimeOffsetZ:       0.
+lar1nd_detproperties.ReadOutWindowSize: 1536
+lar1nd_detproperties.InheritNumberTimeSamples: false
 
 
 END_PROLOG

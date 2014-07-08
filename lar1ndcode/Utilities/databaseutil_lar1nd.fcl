@@ -2,11 +2,11 @@
 
 BEGIN_PROLOG
 
-lariat_database:               @local::standard_database
-lariat_database.PassFileName:  ".apswd"
-lariat_database.DBName:	 "argoneut_dev"
-lariat_database.DBUser:	 "argoneut_reader"
-lariat_database.ShouldConnect: false       # enable it when DB is available
-lariat_database.ToughErrorTreatment: false # enable it when DB is available too
+lar1nd_database:               @local::standard_database
+lar1nd_database.PassFileName:  ".apswd"
+lar1nd_database.DBName:	 "argoneut_dev"
+lar1nd_database.DBUser:	 "argoneut_reader"
+lar1nd_database.ShouldConnect: false       # enable it when DB is available
+lar1nd_database.ToughErrorTreatment: false # enable it when DB is available too
 
 END_PROLOG

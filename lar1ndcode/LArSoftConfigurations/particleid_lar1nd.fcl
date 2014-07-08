@@ -1,7 +1,7 @@
 #include "particleid.fcl"
 BEGIN_PROLOG
 
-lariat_chi2pid:
+lar1nd_chi2pid:
 {
  module_type:            "Chi2ParticleID"
  TrackModuleLabel:       "spacepts"

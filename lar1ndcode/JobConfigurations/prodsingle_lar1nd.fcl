@@ -1,7 +1,7 @@
-#include "services_lariat.fcl"
-#include "singles_lariat.fcl"
-#include "largeantmodules_lariat.fcl"
-#include "detsimmodules_lariat.fcl"
+#include "services_lar1nd.fcl"
+#include "singles_lar1nd.fcl"
+#include "largeantmodules_lar1nd.fcl"
+#include "detsimmodules_lar1nd.fcl"
 
 process_name: SinglesGen
 
@@ -11,7 +11,7 @@ services:
   TFileService: { fileName: "single_hist.root" }
   Timing:       {}
   RandomNumberGenerator: {} #ART native random number generator
-  user:         @local::lariat_simulation_services
+  user:         @local::lar1nd_simulation_services
 }
 
 
@@ -32,9 +32,9 @@ physics:
 
  producers:
  {
-   generator: @local::lariat_singlep	  
-   largeant:  @local::lariat_largeant	  
-   daq:       @local::lariat_simwire       
+   generator: @local::lar1nd_singlep	  
+   largeant:  @local::lar1nd_largeant	  
+   daq:       @local::lar1nd_simwire       
    rns:       { module_type: "RandomNumberSaver" }
  }
 
