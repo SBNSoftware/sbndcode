@@ -81,7 +81,7 @@
    TPC. "kInch" will be interpreted in make_gdml.pl
    </parameter>
 
-   <parameter name="TPCWireThickness" value="0.015">
+   <parameter name="TPCWireThickness" value="0.015">  <!--0.015"> -->
    The diameter of a wire in a TPC plane.
    </parameter>
 
@@ -97,7 +97,20 @@
    Y (vertical). The order of the planes is always U, V, and Y, in the
    direction of the electron drift.
    </parameter>
-   
+
+	<parameter name="TotalWireCount" value="4736">
+	Total number of wires in UVY planes
+	</parameter>
+
+ 	<parameter name="YWireCount" value="1216">
+ 	Number of wires in Y plane.
+ 	</parameter>
+
+	<parameter name="UVWireCount" value="1760">
+	Number of wires in U or V plane. There are 1760 wires in the U plane
+	and 1760 wires in the V plane.
+	</parameter>
+
    <!-- The following wire shifts are for adjusting the nominal wire
         positions within the "frame" of a TPC plane. They are mainly
         meant to allow for a constant offset due to wrapping the wires

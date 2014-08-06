@@ -12,6 +12,7 @@
  <box name="TPCSideCrossA" lunit="cm" x="20/2" y="127.28" z="127.28"/> 
  <box name="TPCSideCrossB" lunit="cm" x="20/2+ 0.1" y="127.28-20/2" z="127.28-20/2"/> 
 
+
    <subtraction name="TPCFrame0">
      <first ref="TPCFrameA"/> <second ref="TPCFrameB"/>
      <position name="posTPCSubtraction" x="0" y="0" z="0"/>
@@ -77,13 +78,27 @@
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
 	<physvol>
+		<volumeref ref="volTPCPlane"/>
+		<position name="posTPCPlane0" unit="cm" x="-400/2 + 0.6" y="0" z="0" />
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPCPlane"/>
+		<position name="posTPCPlane1" unit="cm" x="-400/2 +0.3" y="0" z="0" />
+     	<rotationref ref="rPlus180AboutY"/> 
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPCPlane"/>
+		<position name="posTPCPlane2" unit="cm" x="400/2 - 0.3" y="0" z="0" />
+     	<rotationref ref="rPlus180AboutY"/> 
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPCPlane"/>
+		<position name="posTPCPlane3" unit="cm" x="400/2 - 0.6" y="0" z="0" />
+	</physvol>
+	<physvol>
 		 <volumeref ref="volTPCPlaneVert"/>
 		 <position name="posTPCPlaneVert" unit="cm" x="-400/2" y="0" z="0" />
 	 </physvol>
-<!--	<physvol>
-		 <volumeref ref="volTPCFrame"/>
-		 <position name="posTEST" unit="cm" x="400/2" y="0" z="1000" />
-	 </physvol> -->
 	<physvol>
 		 <volumeref ref="volTPCPlaneVert"/>
 		 <position name="posTPCPlaneVert2" unit="cm" x="400/2" y="0" z="0" />

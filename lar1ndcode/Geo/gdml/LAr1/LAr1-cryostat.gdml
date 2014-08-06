@@ -2,7 +2,7 @@
 <gdml>
 <solids>
  <tube name="Cryostat" rmax="93" z="2000" deltaphi="360" aunit="deg" lunit="cm"/>
- <sphere name="EndCap" rmin="144*2.54" rmax="144.5*2.54" deltaphi="360" deltatheta="0.01" aunit="deg" lunit="cm"/>
+ <sphere name="EndCap" rmin="144*2.54" rmax="144.5*2.54" deltaphi="360" deltatheta="0.001" aunit="deg" lunit="cm"/>
 </solids>
 
 <structure>

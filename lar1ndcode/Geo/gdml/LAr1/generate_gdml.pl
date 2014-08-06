@@ -90,6 +90,7 @@ gen_rotations();
 gen_materials();
 
 gen_wirevertplane();
+gen_wireplane();
 gen_cathode();		# physical volumes defined in gen_tpc()
 gen_tpc();
 
@@ -109,8 +110,7 @@ sub usage()
     print "       -i/--input can be omitted; <parameters-file> contains geometry and material parameters\n";
     print "       if -o is omitted, output goes to STDOUT; <fragments-file> is input to make_gdml.pl\n";
     print "       -s <string> appends the string to the file names; useful for multiple detector versions\n";
-    print " 	  -w wires excludes wires from gdml when wires=0, default to wires=1; -c cryostat excludes\n";
-    print "	  cryostat, default to cryostat=1\n"; 
+    print " 	  -w wires excludes wires from gdml when wires=0, default to wires=1\n";
     print "       -h prints this message, then quits\n";
 }
 
@@ -125,6 +125,9 @@ sub gen_defs()
     #TPCWirePlaneWidth is the size in the y direction
     $TPCWirePlaneLengthZ	=	365;
     $TPCWirePlaneWidthY		=	400;
+
+	$TPCWirePlaneLengthUVZ  = 365 ;
+	$TPCWirePlaneWidthUVY   = 400 ;
 
     $pi   = pi;
     $inch = 2.54;
@@ -166,6 +169,8 @@ sub gen_rotations()
 <define>
    <rotation name="rPlus45AboutX" unit="deg" x="45" y="0" z="0"/>
    <rotation name="rPlus90AboutX" unit="deg" x="90" y="0" z="0"/>
+   <rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
+   <rotation name="rPlus180AboutY" unit="deg" x="0" y="180" z="0"/>
 </define>
 EOF
     close (ROTATIONS);
@@ -196,6 +201,152 @@ EOF
 
     close (MATERIALS);
 }
+
+#=begincomment
+sub gen_wireplane()
+{
+    $GDML = "LAr1-wireplane" . $suffix . ".gdml";
+    push (@gdmlFiles, $GDML); # Add file to list of GDML fragments
+    $GDML = ">" . $GDML;
+    open(GDML) or die("Could not open file $GDML for writing");
+
+    my $TPCYWirePitch = $TPCWirePitch / $SinUVAngle;
+    my $TPCZWirePitch = $TPCWirePitch / $CosUVAngle;
+
+  # Calculate the number of wire ends on a given z-edge of the plane.
+    my $NumberWiresPerEdge = 0;
+    if ( $wires_on == 1 )
+      {  $NumberWiresPerEdge = int( $TPCWirePlaneLengthUVZ / $TPCZWirePitch );}
+
+  # The number of full-length "center" wires.
+   my $NumberCenterWires = 0.;
+   if ( $wires_on == 1 )
+	  { $NumberCenterWires = $UVWireCount - 2*$NumberWiresPerEdge ; }
+
+ #####################
+ # Define the solids
+  print GDML <<EOF;
+<?xml version='1.0'?>
+<gdml>
+<solids>
+EOF
+
+  # End wires 
+  for($i = 0; $i < $NumberWiresPerEdge; ++$i)
+  {
+  print GDML <<EOF;
+<tube name="TPCWire$i"
+  rmax="0.5*$TPCWireThickness"
+  z="$TPCYWirePitch*($i+1) * 2"    
+  deltaphi="360"
+  aunit="deg"
+  lunit="cm"/> 
+EOF
+    }
+
+   
+ print GDML <<EOF;
+<tube name="TPCWireCommon"
+  rmax="0.5*$TPCWireThickness"
+  z="365/$SinUVAngle"
+  deltaphi="360"
+  aunit="deg"
+  lunit="cm"/>
+<box name="TPCPlane"
+  x="$TPCWirePlaneThickness"
+  y="$TPCWirePlaneWidthUVY"
+  z="$TPCWirePlaneLengthUVZ"
+  lunit="cm"/>
+</solids>
+<structure>
+EOF
+
+    # Wires of varying lengths 
+  for ($i = 0; $i < $NumberWiresPerEdge; ++$i)
+    {
+    print GDML <<EOF;
+    <volume name="volTPCWire$i">
+    <materialref ref="Titanium"/>
+    <solidref ref="TPCWire$i"/>
+    </volume>
+EOF
+    }
+
+    # Center wires and plane
+   print GDML <<EOF;
+    <volume name="volTPCWireCommon">
+      <materialref ref="Titanium"/>
+      <solidref ref="TPCWireCommon"/>
+    </volume>
+    <volume name="volTPCPlane">
+      <materialref ref="LAr"/>
+      <solidref ref="TPCPlane"/>
+EOF
+
+#$ypos= 0;
+
+  # The wires at the -z, +y end (For +60 deg-- can rotate by 180 later for -60)
+  for ($i = 0; $i < $NumberWiresPerEdge; $i++)
+  {
+
+    print GDML <<EOF;
+   <physvol>
+     <volumeref ref="volTPCWire$i"/> 
+     <position name="posTPCWireF$i" unit="cm" y="0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1)" z="-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1)" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/> 
+    </physvol> 
+EOF
+  $ypos=0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1);
+  $zpos=-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1);
+  open (MYFILE, '>>data.txt');
+  print MYFILE "TPCWire$j y=$ypos z=$zpos\n";
+  }
+
+  # The wires in the middle.
+for ($i = 0; $i < $NumberCenterWires ; $i++)
+  {
+      my $j = $NumberWiresPerEdge  +$i;
+      $ypos=0.5*$TPCWirePlaneWidthY - $TPCYWirePitch*(0.5*$NumberWiresPerEdge + $i+1) ; 
+
+      print GDML <<EOF;
+   <physvol>
+     <volumeref ref="volTPCWireCommon"/>
+     <position name="posTPCWire$j" unit="cm" y="$ypos" z="0" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/>
+    </physvol>
+EOF
+  }
+
+  # The wires at the +z end
+  for ($i = 0; $i < $NumberWiresPerEdge; $i++)
+  {
+
+	  my $j = $NumberWiresPerEdge + $NumberCenterWires + $i ;
+	  my $k = $NumberWiresPerEdge - $i - 1 ;
+      $ypos =0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($NumberWiresPerEdge + 2*$NumberCenterWires + $i +1 ) ; 
+	
+    print GDML <<EOF;
+  <physvol>
+     <volumeref ref="volTPCWire$k"/> 
+     <position name="posTPCWireB$j" unit="cm" y="$ypos" z="0.5*$TPCZWirePitch*($i+1)" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/>
+    </physvol> 
+EOF
+
+  }
+
+      print GDML <<EOF;
+  </volume>
+</structure>
+</gdml>
+EOF
+
+  close(GDML);
+
+}
+#=endcomment
+#=cut
+
 
 #=begin comment
 sub gen_wirevertplane()
@@ -241,11 +392,11 @@ sub gen_wirevertplane()
 EOF
     for ( $i = 0; $i < $NumberWires; ++$i){    
     print GDML <<EOF;
-       <physvol>
+      <physvol>
         <volumeref ref="volTPCWireVert"/>
         <position name="posTPCWireVert$i" unit="cm" z="-0.5*$TPCWirePlaneLengthZ+$TPCWirePitch*($i+1)" x="0" y="0"/>
         <rotationref ref="rPlus90AboutX"/>
-      </physvol>
+      </physvol> 
 EOF
 	}
 
@@ -323,6 +474,7 @@ sub gen_tpc()
  <box name="TPCSideCrossA" lunit="cm" x="$AnodeWidthX/2" y="127.28" z="127.28"/> 
  <box name="TPCSideCrossB" lunit="cm" x="$AnodeWidthX/2+ 0.1" y="127.28-$AnodeWidthX/2" z="127.28-$AnodeWidthX/2"/> 
 
+
    <subtraction name="TPCFrame0">
      <first ref="TPCFrameA"/> <second ref="TPCFrameB"/>
      <position name="posTPCSubtraction" x="0" y="0" z="0"/>
@@ -391,13 +543,27 @@ EOF
 
      print GDML <<EOF;
 	<physvol>
+		<volumeref ref="volTPCPlane"/>
+		<position name="posTPCPlane0" unit="cm" x="-$TPCWidth/2 + 0.6" y="0" z="0" />
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPCPlane"/>
+		<position name="posTPCPlane1" unit="cm" x="-$TPCWidth/2 +0.3" y="0" z="0" />
+     	<rotationref ref="rPlus180AboutY"/> 
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPCPlane"/>
+		<position name="posTPCPlane2" unit="cm" x="$TPCWidth/2 - 0.3" y="0" z="0" />
+     	<rotationref ref="rPlus180AboutY"/> 
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPCPlane"/>
+		<position name="posTPCPlane3" unit="cm" x="$TPCWidth/2 - 0.6" y="0" z="0" />
+	</physvol>
+	<physvol>
 		 <volumeref ref="volTPCPlaneVert"/>
 		 <position name="posTPCPlaneVert" unit="cm" x="-$TPCWidth/2" y="0" z="0" />
 	 </physvol>
-<!--	<physvol>
-		 <volumeref ref="volTPCFrame"/>
-		 <position name="posTEST" unit="cm" x="$TPCWidth/2" y="0" z="1000" />
-	 </physvol> -->
 	<physvol>
 		 <volumeref ref="volTPCPlaneVert"/>
 		 <position name="posTPCPlaneVert2" unit="cm" x="$TPCWidth/2" y="0" z="0" />
@@ -522,7 +688,7 @@ sub gen_cryostat()
 <gdml>
 <solids>
  <tube name="Cryostat" rmax="93" z="2000" deltaphi="360" aunit="deg" lunit="cm"/>
- <sphere name="EndCap" rmin="144*2.54" rmax="144.5*2.54" deltaphi="360" deltatheta="0.01" aunit="deg" lunit="cm"/>
+ <sphere name="EndCap" rmin="144*2.54" rmax="144.5*2.54" deltaphi="360" deltatheta="0.001" aunit="deg" lunit="cm"/>
 </solids>
 
 <structure>
