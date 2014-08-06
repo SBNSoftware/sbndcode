@@ -24,6 +24,7 @@
       <filename> LAr1-rotations.gdml </filename>
       <filename> materials.gdml </filename>
       <filename> LAr1-wirevertplane.gdml </filename>
+      <filename> LAr1-wireplane.gdml </filename>
       <filename> LAr1-cathode.gdml </filename>
       <filename> LAr1-tpc.gdml </filename>
       <filename> LAr1-cryostat.gdml </filename>
