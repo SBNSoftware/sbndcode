@@ -126,9 +126,6 @@ sub gen_defs()
     $TPCWirePlaneLengthZ	=	365;
     $TPCWirePlaneWidthY		=	400;
 
-	$TPCWirePlaneLengthUVZ  = 365 ;
-	$TPCWirePlaneWidthUVY   = 400 ;
-
     $pi   = pi;
     $inch = 2.54;
 
@@ -216,7 +213,7 @@ sub gen_wireplane()
   # Calculate the number of wire ends on a given z-edge of the plane.
     my $NumberWiresPerEdge = 0;
     if ( $wires_on == 1 )
-      {  $NumberWiresPerEdge = int( $TPCWirePlaneLengthUVZ / $TPCZWirePitch );}
+      {  $NumberWiresPerEdge = int( $TPCWirePlaneLengthZ / $TPCZWirePitch );}
 
   # The number of full-length "center" wires.
    my $NumberCenterWires = 0.;
@@ -248,14 +245,14 @@ EOF
  print GDML <<EOF;
 <tube name="TPCWireCommon"
   rmax="0.5*$TPCWireThickness"
-  z="365/$SinUVAngle"
+  z="$TPCWirePlaneLengthZ/$SinUVAngle"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
 <box name="TPCPlane"
   x="$TPCWirePlaneThickness"
-  y="$TPCWirePlaneWidthUVY"
-  z="$TPCWirePlaneLengthUVZ"
+  y="$TPCWirePlaneWidthY"
+  z="$TPCWirePlaneLengthZ"
   lunit="cm"/>
 </solids>
 <structure>
@@ -282,8 +279,6 @@ EOF
       <materialref ref="LAr"/>
       <solidref ref="TPCPlane"/>
 EOF
-
-#$ypos= 0;
 
   # The wires at the -z, +y end (For +60 deg-- can rotate by 180 later for -60)
   for ($i = 0; $i < $NumberWiresPerEdge; $i++)
@@ -332,7 +327,6 @@ EOF
      <rotationref ref="rPlusUVAngleAboutX"/>
     </physvol> 
 EOF
-
   }
 
       print GDML <<EOF;
@@ -352,8 +346,6 @@ EOF
 sub gen_wirevertplane()
 {
   my $NumberWires = 0; 
-
-#	$NumberWires = 500;  
 
  if ( $wires_on == 1 )  
     { $NumberWires = int( $TPCWirePlaneLengthZ / $TPCWirePitch );} 
