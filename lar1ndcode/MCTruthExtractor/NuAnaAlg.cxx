@@ -14,7 +14,7 @@ namespace lar1nd{
     xhigh = geom -> DetHalfWidth();
     ylow  = - geom -> DetHalfHeight();
     yhigh = geom -> DetHalfHeight();
-    zlow  = 0.0
+    zlow  = 0.0;
     zhigh = geom -> DetLength();
 
     return;

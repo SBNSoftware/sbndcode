@@ -1,7 +1,7 @@
 
-art_make_library(      NuAna 
-		 SOURCE NuAnaAlg
-                 LIBRARIES
+art_make_library( LIBRARY_NAME NuAna 
+                  SOURCE NuAnaAlg
+                  LIBRARIES
                         Geometry
                         Geometry_service
                         Simulation
@@ -25,6 +25,6 @@ art_make_library(      NuAna
                         ${CETLIB}
                         ${CLHEP}
                         ${ROOT_BASIC_LIB_LIST}
-              BASENAME_ONLY
+                  #BASENAME_ONLY
 )
 
