@@ -1,5 +1,7 @@
 
-simple_plugin(NuAna "module"
+art_make_library(      NuAna 
+		 SOURCE NuAnaAlg
+                 LIBRARIES
                         Geometry
                         Geometry_service
                         Simulation
