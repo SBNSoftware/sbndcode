@@ -8,7 +8,7 @@ namespace lar1nd{
   }
 
 
-  void NuAnaAlg::configureGeometry(art::ServiceHandle<geo::Geometry> ){
+  void NuAnaAlg::configureGeometry(art::ServiceHandle<geo::Geometry> geom){
   
     xlow  = - geom -> DetHalfWidth();
     xhigh = geom -> DetHalfWidth();
