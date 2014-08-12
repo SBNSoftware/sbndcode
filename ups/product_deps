@@ -31,7 +31,7 @@ bindir	fq_dir		bin
 # Add the dependent product and version
 
 product          version
-larsoft		v02_02_00
+larsoft		v02_04_00
 gcc		v4_8_2
 
 # list products required ONLY for the build
