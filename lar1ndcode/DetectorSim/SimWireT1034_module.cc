@@ -254,7 +254,7 @@ namespace detsim {
 
       // get the sim::SimChannel for this channel
       const sim::SimChannel* sc = channels.at(chan);
-
+      std::fill(chargeWork.begin(), chargeWork.end(), 0.);
       if( sc ){
 
 	// loop over the tdcs and grab the number of electrons for each
