@@ -10,6 +10,8 @@ art_make_library( LIBRARY_NAME NuAna
                         Filters
                         RawData
                         SignalShapingServiceT1034_service
+                        NuReweightArt
+                        ${SIMULATIONBASE}
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_PRINCIPAL}
                         ${ART_FRAMEWORK_SERVICES_REGISTRY}
