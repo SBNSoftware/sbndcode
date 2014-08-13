@@ -4,9 +4,14 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "Geometry/Geometry.h"
 
-
 #include "SimulationBase/MCParticle.h"
+#include "NuReweight/art/NuReweight.h" //GENIEReweight.h"
+#include "SimulationBase/MCNeutrino.h"
+#include "SimulationBase/MCTruth.h"
+#include "SimulationBase/MCFlux.h"
 
+#include "TVector3.h"
+#include "TLorentzVector.h"
 
 
 namespace lar1nd{
@@ -19,17 +24,52 @@ namespace lar1nd{
     ~NuAnaAlg();
   
     void configureGeometry(art::ServiceHandle<geo::Geometry> );
-    void GetPhotonConversionInfo( simb::MCParticle& photon,
-                                  TLorentzVector& ConversionPos,
-                                  TLorentzVector& ConversionMom);
+
+
+
+    // get the basic neutrino info:
+    void packNeutrinoInfo(const simb::MCNeutrino& neutrino, 
+                          int& nuchan,
+                          int& inno,
+                          double& enugen,
+                          int& isCC,
+                          double& mode,
+                          double& thetaLep,
+                          double& phiLep,
+                          double& Elep,
+                          TLorentzVector& neutMom,
+                          TVector3& vertex);
+
+    // Pack up the flux info:
+    void packFluxInfo(const art::Ptr<simb::MCFlux >& flux, 
+                            int& ptype, int& tptype, int& ndecay,
+                            TVector3& ParentVertex,
+                            TVector3& nuParentMomAtDecay,
+                            TVector3& nuParentMomAtProd,
+                            TVector3& nuParentMomTargetExit);
+
+    // Pack up the genie info:
+    void packGenieInfo(art::Ptr<simb::MCTruth> truth,
+                            std::vector<int> & GeniePDG,
+                            std::vector<TLorentzVector>& GenieMomentum,
+                            std::vector<std::string>& GenieProc
+                            int& NPi0,
+                            int& NPi0FinalState,
+                            int& NGamma);
+
+
 
   private:
     simb::MCParticle getParticleByID(
-            art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int );
+            art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
     simb::MCParticle getParticleByPDG(
-            art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int );
-    bool isInTPC(TVector3) const;
-
+            art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
+    bool isInTPC(TVector3 &) const;
+    void GetPhotonConversionInfo( simb::MCParticle& photon,
+                                  TLorentzVector& ConversionPos,
+                                  TLorentzVector& ConversionMom);
+    // The reweighting utility class:
+    rwgt::NuReweight reweight;
 
     // geometry boundaries:
     double xlow, xhigh, ylow, yhigh, zlow, zhigh;

@@ -20,6 +20,7 @@
 #include "SimulationBase/MCFlux.h"
 #include "SimulationBase/MCNeutrino.h"
 #include "SimulationBase/MCTruth.h"
+#include "SimulationBase/GTruth.h"
 #include "SimulationBase/MCParticle.h"
 #include "SummaryData/POTSummary.h"
 
@@ -79,15 +80,14 @@ namespace lar1nd{
 
     TLorentzVector     neutMom;      // Neutrino Momentum
     
-    //Track the muon, if there is one.
-    //If there is no muon, these vectors will be size 0
-    std::vector< TLorentzVector > muonPos;
-    std::vector< TLorentzVector > muonMom;
+    // Information about the lepton:
+    // muons are tracked till they exit, electrons are just the initial
+    // particle's position and momemtum (since they are showering)
+    std::vector< TLorentzVector > leptonPos; // pos of lepton till it exits
+    std::vector< TLorentzVector > leptonMom; // mom of lepton till it exits
+    double Elep;                // Energy of the produced lepton
+    double thetaLep, phiLep;    // angles in the detector of the produced lepton
     
-    //Track the electron, if there is one.
-    //If there is no muon, these vectors will be size 0
-    std::vector< TLorentzVector > electronPos;
-    std::vector< TLorentzVector > electronMom;
     
     int NPi0FinalState;     // Number of neutral pions in Final State Particles
     int NPi0;               // Number of neutral pions in larg4, which could be different
@@ -122,12 +122,9 @@ namespace lar1nd{
     //Info from the genie truth:
     std::vector<int>    GeniePDG;       // Contains the pdg of the FSP in genie generated
     std::vector<TLorentzVector> GenieMomentum;
-    // std::vector<double> GenieE;         // Energy of particles in genie FSP
-    // std::vector<double> GeniePx;        // Contains the x momentum of the particles in genie
-    // std::vector<double> GeniePy;        // Contains the y momentum of the particles in genie
-    // std::vector<double> GeniePz;        // Contains the z momentum of the particles in genie   
     std::vector<std::string> GenieProc; // Contains the process information 
-    
+    // Genie Reweight vectors:
+    std::vector< std::vector< float > > genieReweights;
 
     int iflux;                      // represents the sample, 0 = nu, 1 = nu_fosc, 2 = nubar, 3 = nubar_fosc
     int ibkg;                       // A bit outdated, represents what type of background an event might be
@@ -137,21 +134,15 @@ namespace lar1nd{
     int ndecay;                     // Type of decay, for flux reweighing
     int isCC;                       // isCC event? isCC == 1 means CC, isCC == 0 means NC
     int mode;                       // beam mode
-    double enugen,energy;           // Energy of the neutrino (both)
+    double enugen;                  // Energy of the neutrino
     double nuleng;                  // Length the neutrino traveled. 
-    double wgt;                     // Some weighting function, not filled here (but used in ntuples)
     TVector3 vertex;                // Vertex location
-    double Vdist;                   // Not sure why this is here...
-    double ParVx, ParVy, ParVz;     // Parent Vertex (not in detector)
-    double ParPx, ParPy, ParPz;     // Parent Momentum
-    double pdpx, pdpy, pdpz;        // nu parent momentum at the time of decay
-    double pppx, pppy, pppz;        // nu parent momentum at production point
-    double tpx, tpy, tpz;           // momentum of parent off the target
+    TVector3 ParentVertex;          // Parent Vertex (not in detector)
+    TVector3 nuParentMomAtDecay;    // nu parent momentum at the time of decay
+    TVector3 nuParentMomAtProd;     // nu parent momentum at production point
+    TVector3 nuParentMomTargetExit; // parent particle moment at target exit
     int    ptype, tptype;
-    double LepPx, LepPy, LepPz;     // Lepton Momentum, initial
-    double Elep, ElepSmeared;       // Energy of the produced lepton
-    double thetaLep, phiLep, thetaLepSmeared, phiLepSmeared; //angles in the detector of the produced lepton
-    double POT;                     //POT of the whole file.
+    double POT;                     // POT of the whole file.
 
     /*
     For more information on some of the neutrino parentage information, start here
@@ -189,6 +180,13 @@ namespace lar1nd{
     fBaseline         = pset.get< double      > ("Baseline");
     fGenieModuleLabel = pset.get< std::string > ("GenieModuleLabel");
     fLarg4ModuleLabel = pset.get< std::string > ("LArG4ModuleLabel");
+
+    // iflux doesn't change among files, assign it here:
+    iflux == -999;
+    if (fMode == "nu") iflux = 0;
+    if (fMode == "nubar") iflux = 2;
+    if (fFullOscTrue) iflux ++;
+
     return;
   }
 
@@ -203,65 +201,43 @@ namespace lar1nd{
 
     fTreeTot = tfs->make<TTree>("EventsTot", "Event info for ALL types");
 
-    fTreeTot->Branch("iflux",          &iflux,          "iflux/I");
-    fTreeTot->Branch("ibkg",           &ibkg,           "ibkg/I");
-    fTreeTot->Branch("nuchan",         &nuchan,         "nuchan/I");
-    fTreeTot->Branch("inno",           &inno,           "inno/I");
-    fTreeTot->Branch("enugen",         &enugen,         "enugen/D");
-    fTreeTot->Branch("energy",         &energy,         "energy/D");
-    fTreeTot->Branch("nuleng",         &nuleng,         "nuleng/D");
-    fTreeTot->Branch("parid",          &parid,          "parid/I");
-    fTreeTot->Branch("ndecay",         &ndecay,         "ndecay/I");
-    fTreeTot->Branch("wgt",            &wgt,            "wgt/D");
+    // Neutrino/event variables:
+    fTreeTot->Branch("iflux",    &iflux,    "iflux/I");
+    fTreeTot->Branch("ibkg",     &ibkg,     "ibkg/I");
+    fTreeTot->Branch("nuchan",   &nuchan,   "nuchan/I");
+    fTreeTot->Branch("inno",     &inno,     "inno/I");
+    fTreeTot->Branch("enugen",   &enugen,   "enugen/D");
+    fTreeTot->Branch("nuleng",   &nuleng,   "nuleng/D");
+    fTreeTot->Branch("isCC",     &isCC,     "isCC/I");
+    fTreeTot->Branch("mode",     &mode,     "mode/I");
+    fTreeTot->Branch("ThetaLep", &thetaLep, "ThetaLep/D");
+    fTreeTot->Branch("PhiLep",   &phiLep,   "PhiLep/D");
+    fTreeTot->Branch("Elep",     &Elep,     "Elep/D");
+    fTreeTot->Branch("neutMom", "neutMom", &neutMom, 32000, 0);
+    fTreeTot->Branch("vertex",  "vertex",  &vertex, 32000, 0);
+
+    // Genie Variables
+    fTreeTot->Branch("GeniePDG",       &GeniePDG);
+    fTreeTot->Branch("GenieMomentum",  &GenieMomentum);  
+    fTreeTot->Branch("GenieProc", "GenieProc", &GenieProc, 32000, 0);
+          
+    // Flux variables:
+    fTreeTot->Branch("ptype", &ptype, "ptype/I");
+    fTreeTot->Branch("tptype",&tptype,"tptype/I");
+    fTreeTot->Branch("ndecay",&ndecay,"ndecay/I");
+    fTreeTot->Branch("ParentVertex", "ParentVertex", &ParentVertex, 32000, 0);
+    fTreeTot->Branch("nuParentMomAtDecay", "nuParentMomAtDecay", &nuParentMomAtDecay, 32000, 0);
+    fTreeTot->Branch("nuParentMomAtProd",  "nuParentMomAtProd",  &nuParentMomAtProd, 32000, 0);
+    fTreeTot->Branch("nuParentMomTargetExit", "nuParentMomTargetExit", &nuParentMomTargetExit, 32000, 0);
+
+    // larg4 info
+    fTreeTot->Branch("leptonPos","leptonPos", &leptonPos, 32000, 0);
+    fTreeTot->Branch("leptonMom","leptonMom", &leptonMom, 32000, 0);
     fTreeTot->Branch("NPi0",           &NPi0,           "NPi0/I");
     fTreeTot->Branch("NPi0FinalState", &NPi0FinalState, "NPi0FinalState/I");
     fTreeTot->Branch("NGamma",         &NGamma,         "NGamma/I");
     fTreeTot->Branch("FoundPhotons",   &foundAllPhotons,"FoundAllPhotons/B");
-    fTreeTot->Branch("GeniePDG",       &GeniePDG);
-    fTreeTot->Branch("GenieMomentum",  &GenieMomentum);  
-    fTreeTot->Branch("GenieProc",      &GenieProc);
-
-    fTreeTot->Branch("isCC",  &isCC,"isCC/I");
-    fTreeTot->Branch("mode",  &mode,"mode/I");
-    fTreeTot->Branch("vertex",&vertex);
-    fTreeTot->Branch("ParVx", &ParVx,"ParVx/D");
-    fTreeTot->Branch("ParVy", &ParVy,"ParVy/D");
-    fTreeTot->Branch("ParVz", &ParVz,"ParVz/D");
-    fTreeTot->Branch("ParPx", &ParPx,"ParPx/D");
-    fTreeTot->Branch("ParPy", &ParPy,"ParPy/D");
-    fTreeTot->Branch("ParPz", &ParPz,"ParPz/D");
-    fTreeTot->Branch("LepPx", &LepPx,"LepPx/D");
-    fTreeTot->Branch("LepPy", &LepPy,"LepPy/D");
-    fTreeTot->Branch("LepPz", &LepPz,"LepPz/D");
-
-    fTreeTot->Branch("pdpx",  &pdpx,"pdpx/D");      // nu parent momentum at the time of decay
-    fTreeTot->Branch("pdpy",  &pdpy,"pdpy/D");
-    fTreeTot->Branch("pdpz",  &pdpz,"pdpz/D");        
-    fTreeTot->Branch("pppx",  &pppx,"pppx/D");      // nu parent momentum at production point
-    fTreeTot->Branch("pppy",  &pppy,"pppy/D");
-    fTreeTot->Branch("pppz",  &pppz,"pppz/D");        
-    fTreeTot->Branch("tpx",   &tpx,"tpx/D");         // momentum of parent off the target
-    fTreeTot->Branch("tpy",   &tpy,"tpy/D");
-    fTreeTot->Branch("tpx",   &tpx,"tpx/D");           
-    
-    
-    fTreeTot->Branch("ptype", &ptype,"ptype/I");
-    fTreeTot->Branch("tptype",&tptype,"tptype/I");
-    fTreeTot->Branch("neutMom", "neutMom", &neutMom, 32000, 0);
-
-
-    fTreeTot->Branch("ThetaLep", &thetaLep, "ThetaLep/D");
-    fTreeTot->Branch("PhiLep", &phiLep, "PhiLep/D");
-    fTreeTot->Branch("ThetaLepSmeared", &thetaLepSmeared, "ThetaLepSmeared/D");
-    fTreeTot->Branch("PhiLepSmeared", &phiLepSmeared, "PhiLepSmeared/D");
-    fTreeTot->Branch("Elep", &Elep, "Elep/D");
-    fTreeTot->Branch("ElepSmeared", &ElepSmeared, "ElepSmeared/D");
-    
-    fTreeTot->Branch("MuonPos","MuonPos", &muonPos, 32000, 0);
-    fTreeTot->Branch("MuonMom","MuonMom", &muonMom, 32000, 0);
-    fTreeTot->Branch("ElectronPos","ElectronPos", &electronPos, 32000, 0);
-    fTreeTot->Branch("ElectronMom","ElectronMom", &electronMom, 32000, 0);
-    fTreeTot->Branch("p1PhotonConversionPos", "p1PhotonConversionPos", &p1PhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("p1PhotonConversionPos","p1PhotonConversionPos", &p1PhotonConversionPos, 32000, 0);
     fTreeTot->Branch("p1PhotonConversionMom","p1PhotonConversionMom", &p1PhotonConversionMom, 32000, 0);
     fTreeTot->Branch("p2PhotonConversionPos","p2PhotonConversionPos", &p2PhotonConversionPos, 32000, 0);
     fTreeTot->Branch("p2PhotonConversionMom","p2PhotonConversionMom", &p2PhotonConversionMom, 32000, 0);
@@ -282,15 +258,185 @@ namespace lar1nd{
     return;
   }
 
-  void NuAna::analyze(const art::Event& evt){
-    return;
-  }
+
   void NuAna::beginSubRun(const art::SubRun& subrun){
+    // Go through POTSummary objects 
+    art::Handle< sumdata::POTSummary > potHandle;
+    subrun.getByLabel(fGenieModuleLabel, potHandle);
+    const sumdata::POTSummary& potSum = (*potHandle);
+    POT = potSum.totpot;
+    PoTTree->Fill();
     return;
   }
   void NuAna::reset(){
+    
+    // This method takes ANYTHING that goes into the ntuple and sets it to default.
+    
+    // Start by making sure the appropriate vectors are cleared and emptied:
+    eventWeights.clear();
+    leptonPos.clear();
+    leptonMom.clear();
+    p1PhotonConversionPos.clear();
+    p1PhotonConversionMom.clear();
+    p2PhotonConversionPos.clear();
+    p2PhotonConversionMom.clear();
+    miscPhotonConversionPos.clear();
+    miscPhotonConversionMom.clear();
+    pionPos.clear();
+    pionMom.clear();
+    chargedPionPos.clear();
+    chargedPionMom.clear();
+    chargePionSign.clear();
+    
+    GeniePDG.clear();
+    GenieMomentum.clear();
+    GenieProc.clear();
+    
+    NPi0            = 0;
+    NPi0FinalState  = 0;
+    NGamma          = 0;
+    foundAllPhotons = true;
+
+    ptype  = 0;
+    tptype = 0;
+
+
+    // Clear out the root vectors
+    vertex.Clear();
+    ParentVertex.Clear();
+    nuParentMomAtDecay.Clear();
+    nuParentMomAtProd.Clear();
+    nuParentMomTargetExit.Clear();
+    neutMom.Clear();
+
+    // iflux    = -999;             // represents the sample, 0 = nu, 1 = nu_fosc, 2 = nubar, 3 = nubar_fosc
+    ibkg     = -999;             // A bit outdated, represents what type of background an event might be
+    nuchan   = -999;             // Type of neutrino interaction
+    inno     = -999;             // Type of neutrino, PDG code.  Not sure why it's inno...
+    parid    = -999;             // ID of the parent, for flux reweighing
+    ndecay   = -999;             // Type of decay, for flux reweighing
+    isCC     = -999;             // isCC event? isCC == 1 means CC, isCC == 0 means NC
+    mode     = -999;             // beam mode
+    enugen   = -999;             // Energy of the neutrino (both)
+    nuleng   = -999;             // Length the neutrino traveled.    
+    Elep     = -999;
+    thetaLep = -999;
+    phiLep   = -999;
+    // POT      = -999;             //POT of the whole file.
+
+    // eventReweight.clear();
+    // eventReweight.resize(7);
+    // for (auto & weight : eventReweight)
+    // {
+    //   weight.clear();
+    //   weight.resize(1000); 
+    // }
+
     return;
   }
+
+  void NuAna::analyze(const art::Event& evt){
+    
+    //get the MC generator information out of the event       
+    //these are all handles to mc information.
+    std::cout << "Checkpoint 0\n";
+    art::Handle< std::vector<simb::MCTruth> > mclistGENIE;  
+    art::Handle< std::vector<simb::MCParticle> > mclistLARG4;
+    art::Handle< std::vector<simb::MCFlux> > mcflux;
+    art::Handle< std::vector<simb::GTruth> > mcgtruth;
+
+    std::cout << "Checkpoint 1\n";
+
+    //actually go and get the stuff
+    evt.getByLabel(fGenieModuleLabel,mclistGENIE);
+    evt.getByLabel(fGenieModuleLabel,mcflux);
+    evt.getByLabel(fGenieModuleLabel,mcgtruth);
+    if (fFullOscTrue) 
+        std::cout << "This is a fullosc file." << std::endl;
+    else
+        evt.getByLabel(fLarg4ModuleLabel,mclistLARG4);
+    std::cout << "Checkpoint 2\n";
+
+    // contains the mctruth object from genie
+    art::Ptr<simb::MCTruth> mc(mclistGENIE,0);
+    
+    // contains the mcflux object
+    art::Ptr<simb::MCFlux > flux(mcflux,0);
+
+    // contains the gtruth object
+    art::Ptr<simb::GTruth > gtruth(mcgtruth,0)
+
+    // Contains the neutrino info
+    simb::MCNeutrino neutrino = mc -> GetNeutrino();
+
+    std::cout << "Checkpoint 3\n";
+
+    // Now start packing up the variables to fill the tree
+    // In general, have the algorithm do this:
+    
+    // get the basic neutrino info:
+    fNuAnaAlg.packNeutrinoInfo(neutrino, fBaseline,
+                            nuchan,
+                            inno,
+                            enugen,
+                            isCC,
+                            mode,
+                            thetaLep,
+                            phiLep,
+                            Elep,
+                            neutMom,
+                            vertex);
+    std::cout << "Checkpoint 4\n";
+
+    // Pack up the flux info:
+    fNuAnaAlg.packFluxInfo(flux, 
+                            ptype, tptype, ndecay,
+                            ParentVertex,
+                            nuParentMomAtDecay,
+                            nuParentMomAtProd,
+                            nuParentMomTargetExit);
+
+    // nuleng needs special attention:
+    TVector3 length(vertex.X() - ParentVertex.X(),
+                    vertex.Y() - ParentVertex.Y(),
+                    100*fBaseline + vertex.Z() - ParentVertex.Z());
+    nuleng = length.Mag();
+
+    // Pack up the genie info:
+    fNuAnaAlg.packGenieInfo(mc,
+                            GeniePDG,
+                            GenieMomentum,
+                            GenieProc);
+
+    // pack up the larg4 photon info:
+    
+    // For right now, print out a list of larg4 particles and useful info:
+    for (auto particle & : (*mclistLARG4)){
+        std::cout << "On particle " << particle.TrackId() 
+                  << " with PDG " << particle.PdgCode() << "\n";
+        std::cout << "  Mother: ......" << particle.Mother() << "\n"
+                  << "  StatusCode: .." << particle.StatusCode() << "\n"
+                  << "  NDaughters: .." << particle.NumberDaughters() << "\n"
+                  << "  NPoints: ....." << particle.NumberTrajectoryPoints() << "\n"
+                  << "  Process: ....." << particle.Process() << "\n"
+    }
+    
+    // If needed, set up the weights.
+    
+    if (packFluxWeights){
+
+    }
+    if (packXSecWeights){
+
+    }
+
+    // Fill the ttree:
+    fTreeTot->Fill();
+
+
+    return;
+  }
+
 }
 
 
