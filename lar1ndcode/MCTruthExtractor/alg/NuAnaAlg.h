@@ -21,19 +21,19 @@ namespace lar1nd{
   public:
 
     NuAnaAlg();
-    ~NuAnaAlg();
+    ~NuAnaAlg(){};
   
     void configureGeometry(art::ServiceHandle<geo::Geometry> );
 
 
 
     // get the basic neutrino info:
-    void packNeutrinoInfo(const simb::MCNeutrino& neutrino, 
+    void packNeutrinoInfo(simb::MCNeutrino * neutrino, 
                           int& nuchan,
                           int& inno,
                           double& enugen,
                           int& isCC,
-                          double& mode,
+                          int& mode,
                           double& thetaLep,
                           double& phiLep,
                           double& Elep,
@@ -41,7 +41,7 @@ namespace lar1nd{
                           TVector3& vertex);
 
     // Pack up the flux info:
-    void packFluxInfo(const art::Ptr<simb::MCFlux >& flux, 
+    void packFluxInfo(art::Ptr<simb::MCFlux >  flux, 
                             int& ptype, int& tptype, int& ndecay,
                             TVector3& ParentVertex,
                             TVector3& nuParentMomAtDecay,
@@ -49,11 +49,10 @@ namespace lar1nd{
                             TVector3& nuParentMomTargetExit);
 
     // Pack up the genie info:
-    void packGenieInfo(art::Ptr<simb::MCTruth> truth,
+    void packGenieInfo(art::Ptr<simb::MCTruth>  truth,
                             std::vector<int> & GeniePDG,
                             std::vector<TLorentzVector>& GenieMomentum,
-                            std::vector<std::string>& GenieProc
-                            int& NPi0,
+                            std::vector<std::string>& GenieProc,
                             int& NPi0FinalState,
                             int& NGamma);
 
@@ -69,7 +68,7 @@ namespace lar1nd{
                                   TLorentzVector& ConversionPos,
                                   TLorentzVector& ConversionMom);
     // The reweighting utility class:
-    rwgt::NuReweight reweight;
+    // rwgt::NuReweight reweight;
 
     // geometry boundaries:
     double xlow, xhigh, ylow, yhigh, zlow, zhigh;
