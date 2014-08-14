@@ -4,7 +4,7 @@
 namespace lar1nd{
 
   NuAnaAlg::NuAnaAlg(){
-    
+    std::cout << "This is the fucking default ctor.  Deal with it.\n";
   }
 
 
@@ -21,12 +21,12 @@ namespace lar1nd{
   }
 
   // get the basic neutrino info:
-  void NuAnaAlg::packNeutrinoInfo(const simb::MCNeutrino& neutrino, 
+  void NuAnaAlg::packNeutrinoInfo(simb::MCNeutrino * neutrino, 
                                   int& nuchan,
                                   int& inno,
                                   double& enugen,
                                   int& isCC,
-                                  double& mode,
+                                  int& mode,
                                   double& thetaLep,
                                   double& phiLep,
                                   double& Elep,
@@ -35,27 +35,27 @@ namespace lar1nd{
     // Fill in all the variables that need to be filled!
 
     // 1000 is the offset value used for NUANCE
-    nuchan = (neutrino.InteractionType() - 1000); 
-    inno = neutrino.Nu().PdgCode();
-    enugen = neutrino.Nu().E();
+    nuchan = (neutrino->InteractionType() - 1000); 
+    inno = neutrino->Nu().PdgCode();
+    enugen = neutrino->Nu().E();
     // Is it a CC or NC interaction?
-    if (neutrino.CCNC()==simb::kCC) isCC = 1;
-    else if (neutrino.CCNC()==simb::kNC)  isCC = 0;
-    mode = neutrino.Mode();
+    if (neutrino->CCNC()==simb::kCC) isCC = 1;
+    else if (neutrino->CCNC()==simb::kNC)  isCC = 0;
+    mode = neutrino->Mode();
 
-    simb::MCParticle lepton = neutrino.Lepton();
+    simb::MCParticle lepton = neutrino->Lepton();
     // thetaLep is the angle the lepton makes with the beam
     double tempNumerator = lepton.Px()*lepton.Px() + lepton.Py()*lepton.Py();
     thetaLep = atan(sqrt(tempNumerator)/lepton.Pz());
     phiLep = atan(lepton.Px()/lepton.Py());
     Elep = lepton.E();
-    vertex = neutrino.Nu().Position().Vect();
+    vertex = neutrino->Nu().Position().Vect();
 
-    neutMom = neutrino.Nu().Momentum();
+    neutMom = neutrino->Nu().Momentum();
 
   }
 
-  void NuAnaAlg::packFluxInfo(const art::Ptr<simb::MCFlux >& flux, 
+  void NuAnaAlg::packFluxInfo(art::Ptr<simb::MCFlux > flux, 
                               int& ptype, int& tptype, int& ndecay,
                               TVector3& ParentVertex,
                               TVector3& nuParentMomAtDecay,
@@ -74,11 +74,10 @@ namespace lar1nd{
   }
 
   // Pack up the genie info:
-  void NuAnaAlg::packGenieInfo(art::Ptr<simb::MCTruth> truth,
+  void NuAnaAlg::packGenieInfo(art::Ptr<simb::MCTruth>  truth,
                                std::vector<int> & GeniePDG,
                                std::vector<TLorentzVector>& GenieMomentum,
                                std::vector<std::string>& GenieProc,
-                               int& NPi0,
                                int& NPi0FinalState,
                                int& NGamma){
     int i = 0;
@@ -90,7 +89,7 @@ namespace lar1nd{
         GenieProc.push_back(part.Process());
         if (part.PdgCode() == 22) NGamma ++;
         if (part.PdgCode() == 111) NPi0FinalState ++;
-        if (abs(part.PdgCode()) == 211) NChargedPions ++;
+        // if (abs(part.PdgCode()) == 211) NChargedPions ++;
       }
       i++;
     }
