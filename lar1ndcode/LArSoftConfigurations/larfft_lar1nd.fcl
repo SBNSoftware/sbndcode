@@ -1,0 +1,7 @@
+#include "larfft.fcl"
+
+BEGIN_PROLOG
+
+lar1nd_larfft:   @local::standard_larfft
+
+END_PROLOG

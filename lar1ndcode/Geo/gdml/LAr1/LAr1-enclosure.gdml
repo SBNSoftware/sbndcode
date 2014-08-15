@@ -1,0 +1,17 @@
+<?xml version='1.0'?>
+<gdml>
+<solids>
+ <box name="DetEnclosure" lunit="cm" x="700" y="850" z="490" />
+</solids>
+
+<structure>
+ <volume name="volDetEnclosure">
+  <materialref ref="Air"/>
+  <solidref ref="DetEnclosure"/>
+  <physvol>
+   <volumeref ref="volCryostat"/>
+   <position name="posCryostat" unit="cm" x="0" y="0" z="0"/>
+  </physvol>
+ </volume>
+</structure>
+</gdml>

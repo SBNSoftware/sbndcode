@@ -1,0 +1,26 @@
+<?xml version='1.0'?>
+<gdml>
+<solids>
+ <tube name="Cryostat" rmax="93" z="2000" deltaphi="360" aunit="deg" lunit="cm"/>
+ <sphere name="EndCap" rmin="144*2.54" rmax="144.5*2.54" deltaphi="360" deltatheta="0.001" aunit="deg" lunit="cm"/>
+</solids>
+
+<structure>
+ <volume name="volEndCap">
+   <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+   <solidref ref="EndCap"/>
+ </volume>
+ <volume name="volCryostat">
+   <materialref ref="LAr"/>
+   <solidref ref="Cryostat"/>
+	  <physvol>
+   	 	 <volumeref ref="volEndCap"/>
+         <position name="posEndCap1" unit="cm" x="0" y="0" z="6"/>
+   	  </physvol>    
+  	  <physvol>
+   	 	 <volumeref ref="volTPC"/>
+   		 <position name="posTPC" unit="cm" x="0.0" y="0" z="0"/>
+  	  </physvol>
+ </volume>
+</structure>
+</gdml>

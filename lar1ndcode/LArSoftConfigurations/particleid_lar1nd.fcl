@@ -1,0 +1,12 @@
+#include "particleid.fcl"
+BEGIN_PROLOG
+
+lar1nd_chi2pid:
+{
+ module_type:            "Chi2ParticleID"
+ TrackModuleLabel:       "spacepts"
+ CalorimetryModuleLabel: "calo"
+ Chi2PIDAlg:             @local::standard_chi2pidalg
+}
+
+END_PROLOG
