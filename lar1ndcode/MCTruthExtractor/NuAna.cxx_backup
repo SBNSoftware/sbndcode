@@ -1,0 +1,918 @@
+////////////////////////////////////////////////////////////////////////
+/// \file NuAna.h  
+//
+// roxanne.guenette@yale.edu
+// corey.adams@yale.edu
+//
+//	Explination of backgrounds:
+//	1 - numu CC
+//  2 - nue CC
+//	3 - NC not delta or pion
+//	4 - NC pion with one photon converting outside the fiducial volume
+//	5 - NC delta
+//	
+//	
+//	
+////////////////////////////////////////////////////////////////////////
+
+#include "NuAna.h"
+
+namespace lar1nd{
+
+  //......................................................................                                                       
+
+  NuAna::NuAna(fhicl::ParameterSet const& parameterSet){
+    //fGenieModuleLabel(pset.get< std::string >("GenieModuleLabel"))
+    // Read in the parameters from the .fcl file.
+    fMode        = parameterSet.get< std::string > ("Mode");
+    fFullOscTrue = parameterSet.get< bool        > ("FullOsc");
+    fBaseline    = parameterSet.get< double      > ("Baseline");
+    
+    this->reconfigure(parameterSet);
+    //fGenieModuleLabel(pset.getParameter< std::string >("GenieModuleLabel"))
+          
+    std::cout << "\nThe mode is " << fMode << std::endl;
+    std::cout << "This set of events is ";
+    if (fFullOscTrue) std::cout << "fullosc" << std::endl;
+    else std::cout << "not fullosc" << std::endl;
+    std::cout << "The baseline for this detector is " << fBaseline << "m." << std::endl << std::endl;
+
+    // gotta do some explicit root shenanigans to make the TTree happy.
+    // gROOT -> ProcessLine(".L loadDictionaries.C+");
+
+
+    //     TDatabasePDG *db = TDatabasePDG::Instance();
+    //     std::string path = gSystem->Getenv("GENIE");
+    //     path += "/data/pdg/genie_pdg_table.txt";
+    //     db->ReadPDGTable(path.c_str());
+  }
+
+
+  void NuAna::beginJob(){
+  
+    
+
+    // get access to the TFile service  
+    art::ServiceHandle<art::TFileService> tfs;
+
+    // get the geometry to figure out something for the histogram
+    //art::ServiceHandle<geo::Geometry> geo;
+
+    fTreeTot = tfs->make<TTree>("EventsTot", "Event info for ALL types");
+    PoTTree  = tfs->make<TTree>("POT", "POT");
+    
+    PoTTree ->Branch("POT",&POT,"POT/D");
+    
+    fTreeTot->Branch("iflux",&iflux,"iflux/I");
+    fTreeTot->Branch("ibkg",&ibkg,"ibkg/I");
+    fTreeTot->Branch("nuchan",&nuchan,"nuchan/I");
+    fTreeTot->Branch("inno",&inno,"inno/I");
+    fTreeTot->Branch("enugen",&enugen,"enugen/D");
+    fTreeTot->Branch("energy",&energy,"energy/D");
+    fTreeTot->Branch("nuleng",&nuleng,"nuleng/D");
+    fTreeTot->Branch("parid",&parid,"parid/I");
+    fTreeTot->Branch("ndecay",&ndecay,"ndecay/I");
+    fTreeTot->Branch("wgt",&wgt,"wgt/D");
+
+    fTreeTot->Branch("NPi0",&NPi0,"NPi0/I");
+    fTreeTot->Branch("NPi0FinalState",&NPi0FinalState,"NPi0FinalState/I");
+    fTreeTot->Branch("NGamma",&NGamma,"NGamma/I");
+    fTreeTot->Branch("FoundPhotons",&foundAllPhotons,"FoundAllPhotons/B");
+    
+    fTreeTot -> Branch("GeniePDG",  &GeniePDG  );
+    fTreeTot -> Branch("GenieE",    &GenieE    );  
+    fTreeTot -> Branch("GeniePx",   &GeniePx  ); 
+    fTreeTot -> Branch("GeniePy", 	&GeniePy	); 
+    fTreeTot -> Branch("GeniePz", 	&GeniePz	);
+    fTreeTot -> Branch("GenieProc",	&GenieProc	);
+
+    fTreeTot->Branch("isCC", &isCC,"isCC/I");
+    fTreeTot->Branch("mode",&mode,"mode/I");
+    fTreeTot->Branch("Vx",&Vx,"Vx/D");
+    fTreeTot->Branch("Vy",&Vy,"Vy/D");
+    fTreeTot->Branch("Vz",&Vz,"Vz/D");
+    fTreeTot->Branch("ParVx",&ParVx,"ParVx/D");
+    fTreeTot->Branch("ParVy",&ParVy,"ParVy/D");
+    fTreeTot->Branch("ParVz",&ParVz,"ParVz/D");
+    fTreeTot->Branch("ParPx",&ParPx,"ParPx/D");
+    fTreeTot->Branch("ParPy",&ParPy,"ParPy/D");
+    fTreeTot->Branch("ParPz",&ParPz,"ParPz/D");
+    fTreeTot->Branch("LepPx",&LepPx,"LepPx/D");
+    fTreeTot->Branch("LepPy",&LepPy,"LepPy/D");
+    fTreeTot->Branch("LepPz",&LepPz,"LepPz/D");
+
+    fTreeTot->Branch("pdpx",&pdpx,"pdpx/D");      // nu parent momentum at the time of decay
+    fTreeTot->Branch("pdpy",&pdpy,"pdpy/D");
+    fTreeTot->Branch("pdpz",&pdpz,"pdpz/D");        
+    fTreeTot->Branch("pppx",&pppx,"pppx/D");      // nu parent momentum at production point
+    fTreeTot->Branch("pppy",&pppy,"pppy/D");
+    fTreeTot->Branch("pppz",&pppz,"pppz/D");        
+    fTreeTot->Branch("tpx",&tpx,"tpx/D");         // momentum of parent off the target
+    fTreeTot->Branch("tpy",&tpy,"tpy/D");
+    fTreeTot->Branch("tpx",&tpx,"tpx/D");           
+    
+    
+    fTreeTot->Branch("ptype", &ptype,"ptype/I");
+    fTreeTot->Branch("tptype",&tptype,"tptype/I");
+    fTreeTot->Branch("neutMom", "neutMom", &neutMom, 32000, 0);
+
+
+    fTreeTot->Branch("ThetaLep", &thetaLep, "ThetaLep/D");
+    fTreeTot->Branch("PhiLep", &phiLep, "PhiLep/D");
+    fTreeTot->Branch("ThetaLepSmeared", &thetaLepSmeared, "ThetaLepSmeared/D");
+    fTreeTot->Branch("PhiLepSmeared", &phiLepSmeared, "PhiLepSmeared/D");
+    fTreeTot->Branch("Elep", &Elep, "Elep/D");
+    fTreeTot->Branch("ElepSmeared", &ElepSmeared, "ElepSmeared/D");
+    
+    fTreeTot->Branch("MuonPos","MuonPos", &muonPos, 32000, 0);
+    fTreeTot->Branch("MuonMom","MuonMom", &muonMom, 32000, 0);
+    fTreeTot->Branch("ElectronPos","ElectronPos", &electronPos, 32000, 0);
+    fTreeTot->Branch("ElectronMom","ElectronMom", &electronMom, 32000, 0);
+    fTreeTot->Branch("p1PhotonConversionPos", "p1PhotonConversionPos", &p1PhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("p1PhotonConversionMom","p1PhotonConversionMom", &p1PhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("p2PhotonConversionPos","p2PhotonConversionPos", &p2PhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("p2PhotonConversionMom","p2PhotonConversionMom", &p2PhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("miscPhotonConversionPos","miscPhotonConversionPos", &miscPhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("miscPhotonConversionMom","miscPhotonConversionMom", &miscPhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("PionPos","PionPos", &pionPos, 32000, 0);
+    fTreeTot->Branch("PionMom","PionMom", &pionMom, 32000, 0);
+    fTreeTot->Branch("ChargedPionPos","ChargedPionPos",&chargedPionPos, 32000,0);
+    fTreeTot->Branch("ChargedPionMom","ChargedPionMom",&chargedPionMom, 32000,0);
+    fTreeTot->Branch("ChargePionSign","ChargePionSign",&chargePionSign, 32000,0);
+    
+
+    // fTreeTot->Branch("MultiWeight","MultiWeight",&eventReweight,32000,0);
+    
+    art::ServiceHandle<geo::Geometry> geom;
+
+	//set up the fiducial volume for each baseline.  Default is zero, to let you know something is wrong    
+	xlow=0; xhigh=0; ylow=0; yhigh=0; zlow=0; zhigh=0;
+	
+	double halfHeight, halfWidth, length;
+	halfWidth 	= geom -> DetHalfWidth();
+	halfHeight 	= geom -> DetHalfHeight();
+	length 		= geom -> DetLength();
+	double ActHalfHeight, ActHalfWidth, ActLength;
+	ActHalfHeight 	= geom -> DetHalfWidth();
+	ActHalfWidth 	= geom -> DetHalfHeight();
+	ActLength 		= geom -> DetLength();
+	
+// 	double activeMass = geom -> ActiveMass();
+	
+	std::cout << "The detector sizes are : " << std::endl;
+	std::cout << "\tx: 0 to " << 2*halfWidth << std::endl;
+	std::cout << "\ty: " << - halfHeight << " to " <<  halfHeight <<std::endl;
+	std::cout << "\tz: 0 to " << length << "\n" << std::endl;
+	
+	std::cout << "The active detector sizes are : " << std::endl;
+	std::cout << "\tx: 0 to " << 2*ActHalfWidth << std::endl;
+	std::cout << "\ty: " << - ActHalfHeight << " to " <<  ActHalfHeight <<std::endl;
+	std::cout << "\tz: 0 to " << ActLength << "\n" << std::endl;
+// 	std::cout << "\tTotal active mass is " << activeMass << std::endl;
+	
+	double fiducialCut = 0.0; 
+
+    xlow  = fiducialCut;
+    xhigh = 2*halfWidth - fiducialCut;
+    ylow  = -halfHeight + fiducialCut;
+    yhigh = halfHeight - fiducialCut;
+    zlow  = fiducialCut;
+    zhigh = length - fiducialCut;
+  
+  
+  }
+  //----------------------------------------------------------------------
+  void NuAna::beginSubRun(const art::SubRun& subrun)
+  {
+    // Go through POTSummary objects 
+    art::Handle< sumdata::POTSummary > potHandle;
+    subrun.getByLabel(fGenieModuleLabel, potHandle);
+    const sumdata::POTSummary& potSum = (*potHandle);
+    POT = potSum.totpot;
+
+    PoTTree->Fill();
+
+           
+    return;
+  }
+  //..................................................................
+  
+  NuAna::~NuAna()
+  {
+  }
+
+//-----------------------------------------------------------------------
+  void NuAna::reconfigure(fhicl::ParameterSet const& p)
+  {
+    // Read parameters from the .fcl file. The names in the arguments
+    // to p.get<TYPE> must match names in the .fcl file.
+    fGenieModuleLabel = p.get< std::string >("GenieModuleLabel");
+    fLarg4ModuleLabel = p.get< std::string >("LArG4ModuleLabel");
+    return;
+  }	
+//-----------------------------------------------------------------------
+  //..........................................................
+
+  void NuAna::reset(){
+    
+    // This method takes ANYTHING that goes into the ntuple and sets it to default.
+    
+    // Start by making sure the appropriate vectors are cleared and emptied:
+  	muonPos.clear();
+  	muonMom.clear();
+  	electronPos.clear();
+  	electronMom.clear();
+  	p1PhotonConversionPos.clear();
+  	p1PhotonConversionMom.clear();
+  	p2PhotonConversionPos.clear();
+  	p2PhotonConversionMom.clear();
+  	miscPhotonConversionPos.clear();
+  	miscPhotonConversionMom.clear();
+  	pionPos.clear();
+  	pionMom.clear();
+  	chargedPionPos.clear();
+    chargedPionMom.clear();
+    chargePionSign.clear();
+    
+    GeniePDG.clear();
+    GenieE.clear();
+    GeniePx.clear();
+    GeniePy.clear();
+    GeniePz.clear();
+    GenieProc.clear();
+  	
+  	NPi0 			= 0;
+  	NPi0FinalState 	= 0;
+  	NGamma 			= 0;
+    foundAllPhotons = true;
+
+    pdpx = 0.0;
+    pdpy = 0.0;
+    pdpz = 0.0;
+    pppx = 0.0;
+    pppy = 0.0;
+    pppz = 0.0;
+    tpx = 0.0;
+    tpy = 0.0;
+    tpx = 0.0;
+    ptype = 0;
+    tptype = 0;
+    neutMom.SetX(0.0);
+    neutMom.SetY(0.0);
+    neutMom.SetZ(0.0);
+    neutMom.SetT(0.0);
+
+    iflux	 = -999;  // represents the sample, 0 = nu, 1 = nu_fosc, 2 = nubar, 3 = nubar_fosc
+    ibkg	 = -999;	// A bit outdated, represents what type of background an event might be
+    nuchan	 = -999;	// Type of neutrino interaction
+    inno	 = -999;	// Type of neutrino, PDG code.  Not sure why it's inno...
+    parid	 = -999;	// ID of the parent, for flux reweighing
+    ndecay	 = -999;	// Type of decay, for flux reweighing
+    isCC	 = -999;	// isCC event? isCC == 1 means CC, isCC == 0 means NC
+    mode	 = -999;	// beam mode
+    enugen	 = -999;
+    energy	 = -999;			// Energy of the neutrino (both)
+    nuleng	 = -999;					// Length the neutrino traveled. 
+    wgt		 = -999;						// Some weighting function, not filled here (but used in ntuples)
+    Vx		 = -999;
+    Vy		 = -999;
+    Vz		 = -999;				// Vertex location
+    Vdist	 = -999;					// Not sure why this is here...
+    ParVx	 = -999;	// Parent Vertex (not in detector)
+    ParVy	 = -999;
+    ParVz	 = -999;
+    LepPx	 = -999;
+    LepPy	 = -999;
+    LepPz	 = -999;		
+    ParPx	 = -999;
+    ParPy	 = -999;
+    ParPz	 = -999;		// Parent Momentum
+    Elep	 = -999;
+    ElepSmeared = -999; 		// Energy of the produced lepton
+    thetaLep = -999;
+    phiLep	 = -999;
+    thetaLepSmeared = -999;
+    phiLepSmeared = -999; //angles in the detector of the produced lepton
+    POT		 = -999;	//POT of the whole file.
+
+    // eventReweight.clear();
+    // eventReweight.resize(7);
+    // for (auto & weight : eventReweight)
+    // {
+    //   weight.clear();
+    //   weight.resize(1000); 
+    // }
+
+  	return;
+  }
+
+  void NuAna::analyze(const art::Event& evt)
+  {
+  
+  	reset();
+
+  	  
+  	//stupid test to make sure root isn't being awful:
+//   	p1PhotonConversionPos.resize(1);
+// 	TLorentzVector a(1,2,3,4);
+//   	p1PhotonConversionPos.push_back(a);
+//   	p1PhotonConversionPos.push_back(a);
+
+    //get the MC generator information out of the event       
+    //these are all handles to mc information.
+    art::Handle< std::vector<simb::MCTruth> > mclistGENIE;  
+    art::Handle< std::vector<simb::MCParticle> > mclistLARG4;
+    art::Handle< std::vector<simb::MCFlux> > mcflux;
+    
+    //actually go and get the stuff
+    evt.getByLabel(fGenieModuleLabel,mclistGENIE);
+    if (fFullOscTrue) std::cout << "This is a fullosc file." << std::endl;
+    if (!fFullOscTrue) evt.getByLabel(fLarg4ModuleLabel,mclistLARG4);
+    evt.getByLabel(fGenieModuleLabel,mcflux);
+
+
+	  //contains the mctruth object from genie
+    art::Ptr<simb::MCTruth> mc(mclistGENIE,0);
+    
+    //contains the mcflux object
+    art::Ptr<simb::MCFlux > flux(mcflux,0);
+
+	std::cout << "Got " << mclistGENIE -> size() << " mclist from genie." << std::endl;
+	if (!fFullOscTrue) std::cout << "Got " << mclistLARG4 -> size() << " mcparticles from larg4." << std::endl;
+	
+	// for (std::vector<simb::MCParticle>::const_iterator i = mclistLARG4->begin(); i != mclistLARG4->end(); ++i)
+	// {
+	// 	std::cout << (*i).PdgCode() << std::endl;
+	// }
+
+	// Ok, got all the larsoft goodies.   Now have to decide what to do in processing.
+	// If there was no larg4 processing, just fill the genie truth information.
+	// Might as well do that first, that way it's all accesible to make it easier to decide
+	// What info to get next.
+
+
+
+	int i = 0;
+	//First step, loop over the mc truth info before larg4 to see what category of event this is.
+	while( i < mc -> NParticles()){
+		simb::MCParticle  part = mc -> GetParticle(i);
+		if (part.StatusCode() == 1){
+			GeniePDG.push_back(part.PdgCode());
+			GenieE.push_back(part.E());
+			GeniePx.push_back(part.Px());
+			GeniePy.push_back(part.Py());
+			GeniePz.push_back(part.Pz());
+			GenieProc.push_back(part.Process());
+		}
+		i++;
+	}
+
+    simb::MCNeutrino neutrino = mc -> GetNeutrino();
+    // std::cout << " The neutrino vertex is (" << neutrino.Nu().Vx() << ", " << neutrino.Nu().Vy() << ", " 
+    // 	<< neutrino.Nu().Vz() << ")" << std::endl;
+
+    neutMom.SetPx(neutrino.Nu().Trajectory().Px(0));
+    neutMom.SetPy(neutrino.Nu().Trajectory().Py(0));
+    neutMom.SetPz(neutrino.Nu().Trajectory().Pz(0));
+    neutMom.SetE (neutrino.Nu().Trajectory().E(0));
+
+    std::cout << "The trajectory size for the neutrino is " 
+              << neutrino.Nu().Trajectory().size() << std::endl;
+
+
+    // Vertex information
+    Vx = neutrino.Nu().Vx();
+    Vy = neutrino.Nu().Vy();
+    Vz = neutrino.Nu().Vz();
+    	
+    //Small vertex cut, asking that the vertex be in the TPC
+    //This is NOT a fiducial cut
+    TVector3 vert(Vx, Vy, Vz);
+    //if (!isInTPC(vert)) return;
+    
+    
+    Vdist = sqrt( (neutrino.Nu().Vx()*neutrino.Nu().Vx()) + (neutrino.Nu().Vy()*neutrino.Nu().Vy()) + (neutrino.Nu().Vz()*neutrino.Nu().Vz())  ) / 100.0;
+    
+    //Fill some of the tree variable
+    //to fill iflux, let:
+    // 0 = nu, not fullosc
+    // 1 = nu, fullosc
+    // 2 = nubar, not fullosc
+    // 3 = nubar, fullosc
+    // -999 everything else (undefined behavior)
+    iflux = -999;
+    if (fMode == "nu") iflux = 0;
+    if (fMode == "nubar") iflux = 2;
+    if (fFullOscTrue) iflux ++;
+    
+    // Get information about the interaction.  Mode, isCC
+    mode = mc->GetNeutrino().Mode();
+
+    // Is it a CC interaction?
+    if (mc->GetNeutrino().CCNC()==simb::kCC) isCC = 1;
+
+    // Is it a NC interaction?
+    else if (mc->GetNeutrino().CCNC()==simb::kNC)  isCC = 0;
+    
+    nuchan = (neutrino.InteractionType() - 1000); //1000 is the offset value used for NUANCE
+    inno = neutrino.Nu().PdgCode();
+    
+    if (isCC) std::cout << "This event is CC." << std::endl;
+    else std::cout << "This event is not CC." << std::endl;
+    
+    //determine what kind of background this is:
+    ibkg = -999;
+    if      ( neutrino.CCNC()==simb::kCC && (inno == 14 || inno==-14)) ibkg = 1;
+    else if ( neutrino.CCNC()==simb::kCC && (inno == 12 || inno==-12)) ibkg = 2;
+
+/* Using -999 to account for all other backgrounds */
+
+  
+	  // Neutrino Energy, some flux things
+	  enugen = neutrino.Nu().E();
+	  energy = neutrino.Nu().E();
+	  parid = flux->ftptype;
+	  ndecay = flux->fndecay;
+
+  
+    pdpx   = flux->fpdpx;
+    pdpy   = flux->fpdpy;
+    pdpz   = flux->fpdpz;
+    // pppx   = flux->fpppx;
+    // pppy   = flux->fpppy;
+    pppz   = flux->fpppz;
+    tpx    = flux->ftpx;
+    tpy    = flux->ftpy;
+    tpz    = flux->ftpz;
+    ptype  = flux->fptype;
+    tptype = flux->ftptype;
+
+    // Now copy over the multisim weights:
+    // for (int i = 0; i < 7; i ++)
+    // {
+    //   for (int j = 0; j < 1000; ++j)
+    //   {
+    //     eventReweight[i][j]=flux->eventReweight[i*1000+j];
+    //   }
+    // }
+
+    // // Verify that worked:
+    // for (int i = 0; i < 50; i ++)
+    // {
+    //   for (int j = 0; j < 7; ++j)
+    //   {
+    //     std::cout << eventReweight[j][i] << " ";
+    //   }
+    //   std::cout << "\n";
+    // }
+  
+  
+	wgt = 1.0;
+
+
+	ParVx = flux -> fvx;
+	ParVy = flux -> fvy;
+	ParVz = flux -> fvz;
+	ParPx = flux -> ftpx;
+	ParPy = flux -> ftpy;
+	ParPz = flux -> ftpz;
+
+	double detect_dist = fBaseline; //in meters
+// 	double Vx_center;
+// 		if (fBaseline == 100) Vx_center = 0; //in cm
+// 		else if (fBaseline == 470) Vx_center = 128.15; //in cm
+// 		else if (fBaseline == 700) Vx_center = 0;
+ 
+	//calculate the distance the neutrino traveled:
+	TVector3 length( 	ParVx - Vx, 
+		ParVy - Vy,
+		detect_dist*100 + Vz - ParVz); //in cm
+		//had detect_dist*100 + Vz + (5000-ParVz)
+
+	nuleng = length.Mag();
+  
+  	// The following code is to get the lepton angles in the detector:
+//-----begin lep  
+	if (isCC){
+		double LepPx = neutrino.Lepton().Px();
+		double LepPy = neutrino.Lepton().Py();
+		double LepPz = neutrino.Lepton().Pz();
+
+		double dcosx_truth = LepPx;
+		double dcosy_truth = LepPy;
+		double dcosz_truth = LepPz;
+	
+
+		//verify normalization:
+		double norm  = dcosx_truth*dcosx_truth + dcosy_truth*dcosy_truth + dcosz_truth*dcosz_truth;
+		norm = sqrt(norm);
+
+		dcosx_truth /= norm;
+		dcosy_truth /= norm;
+		dcosz_truth /= norm;
+
+		if (dcosx_truth == 0.0 && dcosz_truth == 0.0) phiLep = 0.0;
+		else {
+			phiLep = TMath::ATan2(dcosx_truth,dcosz_truth);
+		}
+		if (dcosx_truth == 0.0 && dcosy_truth == 0.0 && dcosz_truth == 0.0) thetaLep = 0.0;
+		else {
+			thetaLep =  TMath::Pi()*0.5-TMath::ATan2(sqrt(dcosx_truth*dcosx_truth + dcosz_truth*dcosz_truth),dcosy_truth);
+		}
+
+		//convert angles from radians to degrees:
+		phiLep *= 180/TMath::Pi();
+		thetaLep *= 180/TMath::Pi();
+
+		// Ok, got the angles.  Get the lepton energy:
+
+		Elep = neutrino.Lepton().E();
+  
+		TRandom rand(time(0) );
+
+	/*
+		Change smearing to 	12% for EM Showers
+							10% for muons
+	*/
+
+		/// /* Smear the Lepton energy: */
+		if (Elep > 2.0) ElepSmeared = rand.Gaus(Elep, 0.12*Elep);
+		else if (Elep <= 2.0 && Elep > 0.5) ElepSmeared = rand.Gaus(Elep, 0.6*Elep);
+		else ElepSmeared = rand.Gaus(Elep, 0.12*Elep);
+
+		/// /* Smear the Lepton Angles: */
+		//Using 2 degrees as smearing.
+		thetaLepSmeared = thetaLep + rand.Gaus(0,2);
+		phiLepSmeared = phiLep + rand.Gaus(0,2);
+	}
+//----------end lep
+
+	std::cout << "Vertex is (" << Vx << ", " << Vy << ", " << Vz << ")" << std::endl;
+
+	//Alright, we've got all the information from the genie final state list that we get in every case.
+	//Let's find out if larg4 simulated.  If not, we're done.  If yes, keep on trucking.
+	bool larg4Sim = false;
+	if (!fFullOscTrue)  larg4Sim = true;
+
+	//alright, let's do this
+	if (larg4Sim) {
+		//First, is there a muon?
+		bool isMuon = false;
+		if (isCC == 1 && (inno == 14 || inno == -14) ) isMuon = true;
+		//Next, is there an electron?
+		bool isElectron = false;
+		if (isCC == 1 && (inno == 12 || inno == -12) ) isElectron = true;
+		
+		// Next, how many pi0 or gammas in the final state?
+		int i = 0;
+		std::vector<simb::MCParticle> pionVec; // Only for pions in FSP
+		std::vector<simb::MCParticle> gammaVec; // Only for gammas in FSP
+		std::vector<simb::MCParticle> chargedPionVec; // Only for charged pions in FSP
+		while( i < mc -> NParticles()){
+			simb::MCParticle  part = mc -> GetParticle(i);
+			// std::cout << "In the loop over particles, found PDG: " << part.PdgCode() << " with TrackID " << part.TrackId() << ", status code " << part.StatusCode() << " and energy " << part.E() << std::endl;
+			if ( part.PdgCode() == pi0ID && part.StatusCode() == 1 ){
+				NPi0FinalState ++;
+				//pionVec.push_back(part);  //Don't save this, get the one from larg4
+				std::cout << "Found a pion with " << part.NumberDaughters() << " daughters." << std::endl;
+			}
+			if ( part.PdgCode() == gammaID && part.StatusCode() == 1) {
+				NGamma ++;
+				std::cout << "Found a gamma with ID " << part.TrackId() << ", parent " << part.Mother() << ", status " << part.StatusCode() << " and energy " << part.E() << std::endl;
+				gammaVec.push_back(part);  //Gonna need these to match against particles in larg4 list
+					// The track IDs aren't going to match.  It's gonna be harder than that...
+			}
+			if ( (part.PdgCode() == 211 || part.PdgCode() == -211) && part.StatusCode() == 1 )
+			{
+				NChargedPions ++;
+				//pionVec.push_back(part);  //Don't save this, get the one from larg4
+				std::cout << "Found a pion with " << part.NumberDaughters() << " daughters." << std::endl;
+
+			}
+			i++;
+		}
+	
+		std::cout<<std::endl;
+		std::cout<<std::endl;
+		std::cout<<std::endl;
+	
+		unsigned int j = 0;
+	
+		int NGammaFound = 0;
+	
+		while( j < mclistLARG4 -> size()){
+			simb::MCParticle  part = mclistLARG4 -> at(j);
+			// std::cout << "In the loop over particles, found PDG: " << part.PdgCode() << " with TrackID " << part.TrackId() << ", status code " << part.StatusCode() << " and energy " << part.E() << std::endl;
+			if ( part.PdgCode() == pi0ID ){
+				NPi0 ++;
+				pionVec.push_back(part);
+				std::cout << "Found a pion with " << part.NumberDaughters() << " daughters." << std::endl;
+			}
+			if ( part.PdgCode() == gammaID && (NGammaFound < NGamma)){ //see if it's a gamma, and there are still some out there.
+				//Gotta find all the gammas.
+				//I suspect the starting energy is gonna match if it's the same gamma.  So let's check that.
+				
+				std::cout << "Found a gamma with ID " << part.TrackId() << ", parent " << part.Mother() << ", status " << part.StatusCode() << " and energy " << part.E() << std::endl;
+
+				for (unsigned int gammaIt = 0; gammaIt < gammaVec.size(); gammaIt ++){
+					if (part.Mother() == 0)
+					{
+						std::cout << "Have a candidate..." << std::endl;
+						//Also check that the energy matches.  Will insist on matching within 0.5% for energy
+						if (part.E() < gammaVec[gammaIt].E() *1.005 && part.E() > gammaVec[gammaIt].E()*0.995){
+							std::cout << "Made a match!" << std::endl;
+							//found a match!  replace the gamma in gamma vec with the larg4 version
+							gammaVec[gammaIt] = part;
+							// Make a note that we found one:
+							NGammaFound ++;
+						}
+					}
+				}
+			}
+			if (part.PdgCode() == 211){
+				chargedPionVec.push_back(part);
+				chargePionSign.push_back(1);
+
+			}
+			if (part.PdgCode() == -211){
+				chargedPionVec.push_back(part);
+				chargePionSign.push_back(-1);
+			}
+			j++;
+		}
+		
+		// Alright, now we know whether there is a muon/electron, and how many pi0 or gamma in FSP
+		// Get the lepton info first.
+		if (isMuon){
+			// Initially tried to get the muon from neutrino->Lepton.  But that doesn't work.
+			// The neutrino is coming from pre-larg4 info.  Gotta dig the muon out of the particle
+			// list.  This is easy since there's only 1 muon.  Hard for the electron...
+			simb::MCParticle muon;
+			if (inno == 14){
+				muon = getParticleByPDG(mclistLARG4, 13);
+			}
+			else{
+				muon = getParticleByPDG(mclistLARG4, -13);
+			}
+			// Do some reduction for really big, long muon tracks
+			// Ask for sampling every centimeter, on average.
+			// So, find out the total number of trajectory points and the total length;
+// 			int npoints = muon.NumberTrajectoryPoints();
+// 			double length = muon.Trajectory().TotalLength();
+// 			// Now get the "point density" or points per cm:
+// 			float p_dens = npoints / length;
+// 			// catch the exceptions:
+// 			if (p_dens == 0) p_dens = 1;
+// 			// Say, p_dens = 7.4 or something.  Then that means, to get 1 point per cm, take 
+// 			// only 1 in 7.4 points.  Leave a little bit of room for adjustment:
+// 			int target = 1; // points per cm
+// 			int fAlias = p_dens/target;
+// 			std::cout << "Using npoints of " << npoints << std::endl;
+// 			std::cout << "Using length of " << length << std::endl;
+// 			std::cout << "Using aliasing of " << fAlias << std::endl;
+// 			//std::cout << muon.Trajectory() << std::endl;
+// 			if (muon.NumberTrajectoryPoints() < 50) fAlias = 1;
+// 			muonMom.resize(muon.NumberTrajectoryPoints()/fAlias );
+// 			muonPos.resize(muon.NumberTrajectoryPoints()/fAlias );
+// 			for (unsigned int i = 0; i < muonMom.size()/fAlias; i++){
+// 				muonMom[i] = makeLVL( muon.Trajectory().Momentum(fAlias*i));
+// 				muonPos[i] = makeLVL( muon.Trajectory().Position(fAlias*i) );
+// 			}
+
+			// Abandoning the aliasing, just requiring that the muon stay in the TPC.
+			// Once it leaves, forget it.
+			unsigned int i = 0;
+			for ( i = 0; i < muon.NumberTrajectoryPoints(); i++){
+				// if (!isInTPC(muon.Position(i).Vect())) break;
+				muonMom.push_back( muon.Trajectory().Momentum(i) );
+				muonPos.push_back( muon.Trajectory().Position(i) );
+			}
+			std::cout << "Tracked the muon for " << i << " points before it exited." << std::endl;
+			
+
+		}
+		chargedPionPos.resize(chargedPionVec.size());
+		chargedPionMom.resize(chargedPionVec.size());
+
+		// Get the info about the charged pions
+		// Looping over the charged pions
+		for (unsigned int i = 0; i < chargedPionVec.size(); i++)
+		{
+			// Looping over the trajectory of each pion
+			for (unsigned int j = 0; j < chargedPionVec[i].NumberTrajectoryPoints(); ++j)
+			{
+				chargedPionPos[i].push_back( chargedPionVec[i].Trajectory().Position(j) );
+				chargedPionMom[i].push_back( chargedPionVec[i].Trajectory().Momentum(j) );
+			}
+		}
+
+		if (isElectron){
+			//I guess this is OK for now, get the initial momentum at least
+			electronMom.resize(neutrino.Lepton().NumberTrajectoryPoints() );
+			electronPos.resize(neutrino.Lepton().NumberTrajectoryPoints() );
+			for (unsigned int i = 0; i < electronMom.size(); i++){
+				electronMom[i] = neutrino.Lepton().Trajectory().Momentum(i);
+				electronPos[i] = neutrino.Lepton().Trajectory().Position(i);
+			}
+		}
+		
+		// Only thing that's left is to get photon containment.
+		// gammaVec and pionVec contain the larg4 particles.  We should at least check that
+		// all of the photons from the final state particles are found:
+		if (NGammaFound != NGamma) foundAllPhotons = false;
+		
+		//Ok, get the containment of the photons if we got 'em all (and there are any!):
+		if (foundAllPhotons && gammaVec.size() != 0){
+			miscPhotonConversionPos.resize(gammaVec.size());
+			miscPhotonConversionMom.resize(gammaVec.size());
+			for (unsigned int j = 0; j < gammaVec.size(); j++){
+				GetPhotonConversionInfo(gammaVec.at(j), miscPhotonConversionPos.at(j), miscPhotonConversionMom.at(j));
+			}
+		}
+		
+		//Done with the photons.  Hit up those pions for some containment info.
+		
+		//Need to make sure that we've got space for this stuff:
+		p2PhotonConversionPos.resize(NPi0);
+		p2PhotonConversionMom.resize(NPi0);
+		p1PhotonConversionMom.resize(NPi0);
+		p1PhotonConversionPos.resize(NPi0);
+		pionPos.resize(NPi0);
+		pionMom.resize(NPi0);
+		
+		for (unsigned int i_pion = 0; i_pion < pionVec.size(); i_pion++){
+			//For each pion, need to get it's conversion point and it's daughters.
+			
+			//Get the pion's conversion point info:
+			pionPos[i_pion] = pionVec[i_pion].EndPosition();
+			pionMom[i_pion] = pionVec[i_pion].Momentum();
+			
+			//There's the chance, at 1% that the pion will decay to gamma + e+/e- pair, I think.
+			//In that case, I'll just keep the gamma for now.
+			if (pionVec[i_pion].NumberDaughters() == 2) {
+				//in the 2 photon case.
+				// Need to actually dig out the photons.
+				simb::MCParticle photon1 = getParticleByID(mclistLARG4, pionVec[i_pion].Daughter(0));
+				simb::MCParticle photon2 = getParticleByID(mclistLARG4, pionVec[i_pion].Daughter(1));
+				std::cout << "Photon1 has " << photon1.NumberTrajectoryPoints() << " trajectory points." << std::endl;
+				std::cout << "Photon2 has " << photon2.NumberTrajectoryPoints() << " trajectory points." << std::endl;
+				GetPhotonConversionInfo(photon1, p1PhotonConversionPos[i_pion], p1PhotonConversionMom[i_pion]);
+				GetPhotonConversionInfo(photon2, p2PhotonConversionPos[i_pion], p2PhotonConversionMom[i_pion]);				
+			}
+			
+			else {
+				// in the other case.  Find the photon, and just keep it.
+				//Make sure the other vector is NULL and empty!
+				//loop over the daughters
+				std::cout << "This pion has " << pionVec.at(i_pion).NumberDaughters() << " daughters!";
+				for (int i_daughter = 0; i_daughter < pionVec.at(i_pion).NumberDaughters(); i_daughter ++){
+					//Is this one a photon?
+					simb::MCParticle part = getParticleByID(mclistLARG4, pionVec[i_pion].Daughter(i_daughter));
+					if (part.PdgCode() == gammaID){
+						//got the photon.
+						GetPhotonConversionInfo(part, p1PhotonConversionPos[i_pion], p1PhotonConversionMom[i_pion]);
+					}
+				}
+			}
+		}
+
+		// Stupid test, just say we got some:
+		std::cout << "Found " << NPi0 << " pions in this event." << std::endl;
+		std::cout << "Found " << NGamma << " gammas in this event." << std::endl;
+		if (isMuon) std::cout << "Muon started with energy " << muonMom.front().E() << std::endl;
+		if (isElectron) std::cout << "Electron started with energy " << electronMom.front().E() << std::endl;
+		
+		
+	}
+
+	std::cout << std::endl;
+	std::cout << "Filling tree" << std::endl;
+	std::cout << std::endl;
+
+	fTreeTot->Fill();
+
+    return;
+	}//end of analyze method 
+
+  
+// Method to take in a photon and determine where it started converting.
+// Looks at the photon's energy at each step.  
+  void NuAna::GetPhotonConversionInfo(simb::MCParticle& photon, TLorentzVector& ConversionPos, TLorentzVector& ConversionMom){
+	// Just loop over the photons Trajectory points in momentum space and wait for a change.
+	// If it gets through the whole trajectory, the conversion point must be the end of the trajectory.
+	// When it changed, return the trajectory point immediately before to get the last point of the photon that's 
+	// not converted.
+	
+	// Going to be watching for changes in energy, so we'd better know the start energy.
+	double E = photon.E(0);
+	std::cout << "Starting Energy is " << E << std::endl;
+	std::cout << "Looking at photon 4 vector, momentum currently starts \n\t("
+			<< photon.Momentum().X() << ", "
+			<< photon.Momentum().Y() << ", "
+			<< photon.Momentum().Z() << ", "
+			<< photon.Momentum().T() << ") ";
+	std::cout << " At position \n\t( "
+			<< photon.Position().X() << ", "
+			<< photon.Position().Y() << ", "
+			<< photon.Position().Z() << ", "
+			<< photon.Position().T() << ") " << std::endl;
+	//Catch some special cases first.	
+	if (photon.NumberTrajectoryPoints() == 0) return;		
+	if (photon.NumberTrajectoryPoints() == 1){
+		ConversionPos = photon.EndPosition();
+		ConversionMom = photon.EndMomentum();
+		return;
+	}
+
+	for(unsigned int i = 1; i < photon.NumberTrajectoryPoints(); i ++){
+		//ok, check if the energy has changed.
+		std::cout << "Looking at photon 4 vector, momentum currently is \n\t("
+				<< photon.Momentum(i).X() << ", "
+				<< photon.Momentum(i).Y() << ", "
+				<< photon.Momentum(i).Z() << ", "
+				<< photon.Momentum(i).T() << ") ";
+		std::cout << " At position \n\t("
+				<< photon.Position(i).X() << ", "
+				<< photon.Position(i).Y() << ", "
+				<< photon.Position(i).Z() << ", "
+				<< photon.Position(i).T() << ") " << std::endl;
+		if (photon.E(i) != E) {
+			//then the energy is different.  Must be scattering or something.
+			//set the conversion points and bail!
+
+			ConversionPos = photon.Position(i); 
+			ConversionMom = photon.Momentum(i-1); //<- This should be OK since i starts at 1.
+// 			std::cout << "Conversion Pos is " << ConversionPos << std::endl;
+			return;
+		}
+	} 
+
+	// If we made it out here, the photon must have ended without changing energy.
+	// So send back end position, momentum.
+	ConversionPos = photon.EndPosition();
+	ConversionMom = photon.EndMomentum();
+
+	return;
+  }
+
+  simb::MCParticle NuAna::getParticleByID(art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int TrackId){
+  	//This function just loops over the mcparticle vector until if finds one with the requested trackID.
+  	//If it's not found, return the default constructed particle.  In other words, junk.
+  	simb::MCParticle part;
+  	for(unsigned int i = 0; i < mclistLARG4 -> size(); i ++){
+  		if ( mclistLARG4 -> at(i).TrackId() == TrackId){
+  			return mclistLARG4 -> at(i);
+  		}
+  	}
+  	return part;
+  }
+
+  simb::MCParticle NuAna::getParticleByPDG(art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int PDG){
+  	//This function just loops over the mcparticle vector until if finds one with the requested trackID.
+  	//If it's not found, return the default constructed particle.  In other words, junk.
+  	simb::MCParticle part;
+  	for(unsigned int i = 0; i < mclistLARG4 -> size(); i ++){
+  		if ( mclistLARG4 -> at(i).PdgCode() == PDG){
+  			return mclistLARG4 -> at(i);
+  		}
+  	}
+  	return part;
+  }
+
+// TLorentzVector NuAna::makeLVL(TLorentzVector& vect){
+
+// 	TLorentzVector a;
+// 	a.SetX(vect.X() );
+// 	a.SetY(vect.Y() );
+// 	a.SetZ(vect.Z() );
+// 	a.SetT(vect.T() );
+//     return a;
+// }
+
+// TLorentzVector NuAna::makeLVL(const TLorentzVector& vect){
+
+// 	TLorentzVector a;
+// 	a.SetX(vect.X() );
+// 	a.SetY(vect.Y() );
+// 	a.SetZ(vect.Z() );
+// 	a.SetT(vect.T() );
+//     return a;
+// }
+  bool NuAna::isInTPC(TVector3 v) const{
+  	//series of if statements that exclude points outside the TPC
+  	
+
+  	//accounting for geometry fixes:
+  	if (fBaseline == 100){
+  		if ( v.X() > (xhigh + 130) || v.X() < xlow - 130) return false;
+  	}
+  	
+  	else {
+  		if (v.X() > xhigh || v.X() < xlow) return false;
+  	}
+  	if (v.Y() > yhigh || v.Y() < ylow) return false;
+  	if (v.Z() > zhigh || v.Z() < zlow) return false;
+  	return true;
+  }
+
+} //end of gan

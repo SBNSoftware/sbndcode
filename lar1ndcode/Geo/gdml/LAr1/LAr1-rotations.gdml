@@ -1,0 +1,7 @@
+<?xml version='1.0'?>
+<define>
+   <rotation name="rPlus45AboutX" unit="deg" x="45" y="0" z="0"/>
+   <rotation name="rPlus90AboutX" unit="deg" x="90" y="0" z="0"/>
+   <rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
+   <rotation name="rPlus180AboutY" unit="deg" x="0" y="180" z="0"/>
+</define>

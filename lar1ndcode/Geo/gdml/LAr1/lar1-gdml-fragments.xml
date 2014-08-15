@@ -1,0 +1,36 @@
+<?xml version='1.0'?>
+
+<!-- Input to Geometry/gdml/make_gdml.pl; define the GDML fragments
+     that will be zipped together to create a detector description. 
+     -->
+
+<config>
+
+   <constantfiles>
+
+      <!-- These files contain GDML <constant></constant>
+           blocks. They are read in separately, so they can be
+           interpreted into the remaining GDML. See make_gdml.pl for
+           more information. 
+	   -->
+	   
+
+   </constantfiles>
+
+   <gdmlfiles>
+
+      <!-- The GDML file fragments to be zipped together. -->
+
+      <filename> LAr1-rotations.gdml </filename>
+      <filename> materials.gdml </filename>
+      <filename> LAr1-wirevertplane.gdml </filename>
+      <filename> LAr1-wireplane.gdml </filename>
+      <filename> LAr1-cathode.gdml </filename>
+      <filename> LAr1-tpc.gdml </filename>
+      <filename> LAr1-cryostat.gdml </filename>
+      <filename> LAr1-enclosure.gdml </filename>
+      <filename> LAr1-world.gdml </filename>
+
+   </gdmlfiles>
+
+</config>

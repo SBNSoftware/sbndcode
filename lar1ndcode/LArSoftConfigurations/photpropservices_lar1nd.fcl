@@ -1,0 +1,7 @@
+#include "photpropservices.fcl"
+
+BEGIN_PROLOG
+
+lar1nd_photonvisibilityservice: @local::standard_photonvisibilityservice
+
+END_PROLOG

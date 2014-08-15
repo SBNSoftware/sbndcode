@@ -1,0 +1,35 @@
+#include "trackfindermodules_noinclude_base.fcl"
+
+BEGIN_PROLOG
+
+lar1nd_track:                               @local::standard_track3Dreco 
+ 
+lar1nd_cosmictracker:                       @local::standard_cosmictracker  
+lar1nd_cosmictracker.TMatch:                20.0
+lar1nd_cosmictracker.SMatch:                1.0
+lar1nd_cosmictracker.Toler1:                60
+lar1nd_cosmictracker.Toler2:                40
+
+lar1nd_kalman:                              @local::standard_track3Dkalman
+
+lar1nd_spacepts:                            @local::standard_spacepts     
+
+lar1nd_spacepoint:                          @local::standard_spacepointana
+lar1nd_spacepoint.SpacePointAlgTime:        @local::lar1nd_spacepointalg
+lar1nd_spacepoint.SpacePointAlgTime.MaxDT:  50.
+lar1nd_spacepoint.SpacePointAlgSep:         @local::lar1nd_spacepointalg
+lar1nd_spacepoint.SpacePointAlgSep.MaxS:    10.
+lar1nd_spacepoint.SpacePointAlgDefault:     @local::lar1nd_spacepointalg
+lar1nd_spacepoint_finder:                   @local::standard_spacepointalg    
+lar1nd_spacepoint_finder.SpacePointAlg:     @local::lar1nd_spacepointalg    
+
+lar1nd_spacepointcheater:                   @local::standard_spacepointcheater
+lar1nd_spacepointcheater.SpacePointAlg:     @local::lar1nd_spacepointalg    
+
+lar1nd_track3Dkalmanhit:                    @local::standard_track3Dkalmanhit
+lar1nd_track3Dkalmanhit.KalmanFilterAlg:    @local::lar1nd_kalmanfilteralg
+lar1nd_track3Dkalmanhit.SeedFinderAlg.ExtendThresh: 0.
+lar1nd_track3Dkalmanhit.SpacePointAlg:      @local::lar1nd_spacepointalg
+lar1nd_track3Dkalmanhit.SpacePointAlg.MinViews:     2
+
+END_PROLOG

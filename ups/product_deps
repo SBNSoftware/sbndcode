@@ -1,0 +1,54 @@
+# This @product_deps@ file defines dependencies for this package. 
+
+# The *parent* line must the first non-commented line and defines this product and version
+# The version should be of the form vxx_yy_zz (e.g. v01_02_03)
+parent lar1ndcode v00_01_00
+defaultqual e5
+
+# These optional lines define the installed directories where headers,
+# libraries, and executables will be found.
+# Use them only if your product does not conform to the defaults
+#
+# Format: directory_type directory_path directory_name
+#
+# The only recognized values of the first field are fcldir, gdmldir, incdir, libdir, and bindir
+# The only recognized values of the second field are product_dir, fq_dir, and -
+# The third field is not constrained.
+#
+# Defaults:
+# incdir  product_dir  include
+# fcldir  product_dir  fcl
+# libdir  fq_dir       lib
+# bindir  fq_dir       bin
+# gdmldir -  
+# fwdir   -  
+#
+incdir	product_dir	include
+libdir	fq_dir		lib
+bindir	fq_dir		bin
+gdmldir product_dir
+fcldir  product_dir
+
+# With "product  version" table below, we now define depdendencies
+# Add the dependent product and version
+
+product          version
+larsoft		v02_04_00
+gcc		v4_8_2
+
+# list products required ONLY for the build
+# any products here must NOT have qualifiers
+only_for_build  cetbuildtools   v3_11_00   
+
+# We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
+# Make a table by adding columns before "notes". 
+qualifier	larsoft	 	gcc	notes
+e5:debug	e5:debug	-nq-
+e5:opt		e5:opt		-nq-
+e5:prof		e5:prof		-nq-
+
+# Preserve tabs and formatting in emacs and vi / vim:
+
+### Local Variables:
+### tab-width: 8
+### End:
