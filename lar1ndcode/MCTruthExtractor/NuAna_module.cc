@@ -130,7 +130,6 @@ namespace lar1nd{
     std::vector< std::vector< float > > genieReweights;
 
     int iflux;                      // represents the sample, 0 = nu, 1 = nu_fosc, 2 = nubar, 3 = nubar_fosc
-    int ibkg;                       // A bit outdated, represents what type of background an event might be
     int nuchan;                     // Type of neutrino interaction
     int inno;                       // Type of neutrino, PDG code.  Not sure why it's call inno...
     int parid;                      // ID of the parent, for flux reweighing
@@ -173,7 +172,6 @@ namespace lar1nd{
     else std::cout << "not fullosc" << std::endl;
     std::cout << "The baseline for this detector is " << fBaseline << "m." << std::endl << std::endl;
 
-    // gROOT->ProcessLine(".L loadDictionaries.C+");
 
     return;
 
@@ -186,8 +184,6 @@ namespace lar1nd{
     fGenieModuleLabel = pset.get< std::string > ("GenieModuleLabel");
     fLarg4ModuleLabel = pset.get< std::string > ("LArG4ModuleLabel");
 
-    std::cout << "reconfigure runs! ... \n\n\n\n\n\n\n\n\n";
-
     // iflux doesn't change among files, assign it here:
     if (fMode == "nu") iflux = 0;
     if (fMode == "nubar") iflux = 2;
@@ -198,24 +194,20 @@ namespace lar1nd{
 
   void NuAna::beginJob(){
 
-    std::cout << "Calling Begin Job..." << std::endl;
     reset();
+    gROOT->ProcessLine(".L loadDictionaries.C+");
 
     // This function sets up the ttrees
     // get access to the TFile service  
     art::ServiceHandle<art::TFileService> tfs;
-    std::cout << "Checkpoint 1\n";
 
     PoTTree  = tfs->make<TTree>("POT", "POT");
     PoTTree ->Branch("POT",&POT,"POT/D");
-    std::cout << "Checkpoint 2\n";
 
     fTreeTot = tfs->make<TTree>("EventsTot", "Event info for ALL types");
-    std::cout << "Checkpoint 3\n";
 
     // Neutrino/event variables:
     fTreeTot->Branch("iflux",    &iflux,    "iflux/I");
-    fTreeTot->Branch("ibkg",     &ibkg,     "ibkg/I");
     fTreeTot->Branch("nuchan",   &nuchan,   "nuchan/I");
     fTreeTot->Branch("inno",     &inno,     "inno/I");
     fTreeTot->Branch("enugen",   &enugen,   "enugen/D");
@@ -227,13 +219,11 @@ namespace lar1nd{
     fTreeTot->Branch("Elep",     &Elep,     "Elep/D");
     fTreeTot->Branch("neutMom", "neutMom", &neutMom, 32000, 0);
     fTreeTot->Branch("vertex",  "vertex",  &vertex, 32000, 0);
-    std::cout << "Checkpoint 3a\n";
 
     // Genie Variables
     fTreeTot->Branch("GeniePDG",       &GeniePDG);
-    // fTreeTot->Branch("GenieMomentum",  &GenieMomentum);  
+    fTreeTot->Branch("GenieMomentum", "GenieMomentum",  &GenieMomentum,32000,0);  
     fTreeTot->Branch("GenieProc",      &GenieProc);
-    std::cout << "Checkpoint 3b\n";
           
     // Flux variables:
     fTreeTot->Branch("ptype", &ptype, "ptype/I");
@@ -243,34 +233,32 @@ namespace lar1nd{
     fTreeTot->Branch("nuParentMomAtDecay", "nuParentMomAtDecay", &nuParentMomAtDecay, 32000, 0);
     fTreeTot->Branch("nuParentMomAtProd",  "nuParentMomAtProd",  &nuParentMomAtProd, 32000, 0);
     fTreeTot->Branch("nuParentMomTargetExit", "nuParentMomTargetExit", &nuParentMomTargetExit, 32000, 0);
-    std::cout << "Checkpoint 3c\n";
 
     // larg4 info
-    // fTreeTot->Branch("leptonPos","leptonPos", &leptonPos, 32000, 0);
-    // fTreeTot->Branch("leptonMom","leptonMom", &leptonMom, 32000, 0);
-    // fTreeTot->Branch("NPi0",           &NPi0,           "NPi0/I");
-    // fTreeTot->Branch("NPi0FinalState", &NPi0FinalState, "NPi0FinalState/I");
-    // fTreeTot->Branch("NGamma",         &NGamma,         "NGamma/I");
-    // fTreeTot->Branch("FoundPhotons",   &foundAllPhotons,"FoundAllPhotons/B");
-    // fTreeTot->Branch("p1PhotonConversionPos","p1PhotonConversionPos", &p1PhotonConversionPos, 32000, 0);
-    // fTreeTot->Branch("p1PhotonConversionMom","p1PhotonConversionMom", &p1PhotonConversionMom, 32000, 0);
-    // fTreeTot->Branch("p2PhotonConversionPos","p2PhotonConversionPos", &p2PhotonConversionPos, 32000, 0);
-    // fTreeTot->Branch("p2PhotonConversionMom","p2PhotonConversionMom", &p2PhotonConversionMom, 32000, 0);
-    // fTreeTot->Branch("miscPhotonConversionPos","miscPhotonConversionPos", &miscPhotonConversionPos, 32000, 0);
-    // fTreeTot->Branch("miscPhotonConversionMom","miscPhotonConversionMom", &miscPhotonConversionMom, 32000, 0);
-    // fTreeTot->Branch("PionPos","PionPos", &pionPos, 32000, 0);
-    // fTreeTot->Branch("PionMom","PionMom", &pionMom, 32000, 0);
-    // fTreeTot->Branch("ChargedPionPos","ChargedPionPos",&chargedPionPos, 32000,0);
-    // fTreeTot->Branch("ChargedPionMom","ChargedPionMom",&chargedPionMom, 32000,0);
-    // fTreeTot->Branch("ChargePionSign","ChargePionSign",&chargePionSign, 32000,0);
+    fTreeTot->Branch("leptonPos","leptonPos", &leptonPos, 32000, 0);
+    fTreeTot->Branch("leptonMom","leptonMom", &leptonMom, 32000, 0);
+    fTreeTot->Branch("NPi0",           &NPi0,           "NPi0/I");
+    fTreeTot->Branch("NPi0FinalState", &NPi0FinalState, "NPi0FinalState/I");
+    fTreeTot->Branch("NGamma",         &NGamma,         "NGamma/I");
+    fTreeTot->Branch("FoundPhotons",   &foundAllPhotons,"FoundAllPhotons/B");
+    fTreeTot->Branch("p1PhotonConversionPos","p1PhotonConversionPos", &p1PhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("p1PhotonConversionMom","p1PhotonConversionMom", &p1PhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("p2PhotonConversionPos","p2PhotonConversionPos", &p2PhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("p2PhotonConversionMom","p2PhotonConversionMom", &p2PhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("miscPhotonConversionPos","miscPhotonConversionPos", &miscPhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("miscPhotonConversionMom","miscPhotonConversionMom", &miscPhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("PionPos","PionPos", &pionPos, 32000, 0);
+    fTreeTot->Branch("PionMom","PionMom", &pionMom, 32000, 0);
+    fTreeTot->Branch("ChargedPionPos","ChargedPionPos",&chargedPionPos, 32000,0);
+    fTreeTot->Branch("ChargedPionMom","ChargedPionMom",&chargedPionMom, 32000,0);
+    fTreeTot->Branch("ChargePionSign","ChargePionSign",&chargePionSign, 32000,0);
     
-    std::cout << "Checkpoint 4\n";
 
     // fTreeTot->Branch("MultiWeight","MultiWeight",&eventReweight,32000,0);
     art::ServiceHandle<geo::Geometry> geom;
     // configure the geometry in the worker function:
     fNuAnaAlg.configureGeometry(geom);
-    std::cout << "Checkpoint 5\n";
+    // fNuAnaAlg.configureReWeight();
 
     return;
   }
@@ -278,7 +266,6 @@ namespace lar1nd{
 
   void NuAna::beginSubRun(const art::SubRun& subrun){
     
-    std::cout << "Anything?\n\n\n\n\n\n";
     // Go through POTSummary objects 
     art::Handle< sumdata::POTSummary > potHandle;
     subrun.getByLabel(fGenieModuleLabel, potHandle);
@@ -313,6 +300,7 @@ namespace lar1nd{
     
     NPi0            = 0;
     NPi0FinalState  = 0;
+    NChargedPions   = 0;
     NGamma          = 0;
     foundAllPhotons = true;
 
@@ -329,7 +317,6 @@ namespace lar1nd{
     neutMom.Clear();
 
     // iflux    = -999;             // represents the sample, 0 = nu, 1 = nu_fosc, 2 = nubar, 3 = nubar_fosc
-    ibkg     = -999;             // A bit outdated, represents what type of background an event might be
     nuchan   = -999;             // Type of neutrino interaction
     inno     = -999;             // Type of neutrino, PDG code.  Not sure why it's inno...
     parid    = -999;             // ID of the parent, for flux reweighing
@@ -355,26 +342,23 @@ namespace lar1nd{
   }
 
   void NuAna::analyze(const art::Event& evt){
+
+    reset();
     
     //get the MC generator information out of the event       
     //these are all handles to mc information.
-    std::cout << "Checkpoint 0\n";
     art::Handle< std::vector<simb::MCTruth> > mclistGENIE;  
     art::Handle< std::vector<simb::MCParticle> > mclistLARG4;
     art::Handle< std::vector<simb::MCFlux> > mcflux;
     art::Handle< std::vector<simb::GTruth> > mcgtruth;
 
-    std::cout << "Checkpoint 1\n";
 
     //actually go and get the stuff
     evt.getByLabel(fGenieModuleLabel,mclistGENIE);
     evt.getByLabel(fGenieModuleLabel,mcflux);
     evt.getByLabel(fGenieModuleLabel,mcgtruth);
-    if (fFullOscTrue) 
-        std::cout << "This is a fullosc file." << std::endl;
-    else
+    if (!fFullOscTrue) 
         evt.getByLabel(fLarg4ModuleLabel,mclistLARG4);
-    std::cout << "Checkpoint 2\n";
 
     // contains the mctruth object from genie
     art::Ptr<simb::MCTruth> mc(mclistGENIE,0);
@@ -385,10 +369,23 @@ namespace lar1nd{
     // contains the gtruth object
     art::Ptr<simb::GTruth > gtruth(mcgtruth,0);
 
+
+
     // Contains the neutrino info
     simb::MCNeutrino neutrino = mc -> GetNeutrino();
-
-    std::cout << "Checkpoint 3\n";
+    
+    std::cout << "The interaction info is: \n" 
+              << "  gtruth->ftgtPDG................." << gtruth->ftgtPDG << "\n"
+              << "  gtruth->ftgtZ..................." << gtruth->ftgtZ << "\n"
+              << "  gtruth->ftgtA..................." << gtruth->ftgtA << "\n"
+              << "  gtruth->fGint..................." << gtruth->fGint << "\n"
+              << "  gtruth->fGscatter..............." << gtruth->fGscatter << "\n"
+              << "  gtruth->fweight................." << gtruth->fweight << "\n"
+              << "  neutrino.Mode()................." << neutrino.Mode() << "\n"
+              << "  neutrino.InteractionType()......" << neutrino.InteractionType() << "\n"
+              << "  neutrino.CCNC()................." << neutrino.CCNC() << "\n"
+              << "  neutrino.Target()..............." << neutrino.Target() << "\n"
+              << std::endl;
 
     // Now start packing up the variables to fill the tree
     // In general, have the algorithm do this:
@@ -406,7 +403,6 @@ namespace lar1nd{
                             neutMom,
                             vertex);
 
-    std::cout << "Checkpoint 4\n";
 
     // Pack up the flux info:
     fNuAnaAlg.packFluxInfo(flux, 
@@ -428,46 +424,73 @@ namespace lar1nd{
                             GenieMomentum,
                             GenieProc,
                             NPi0FinalState,
-                            NGamma);
+                            NGamma,
+                            NChargedPions);
+    
+    // int i = 0;
+    // while( i < mc -> NParticles()){
+    //   auto particle = mc -> GetParticle(i);
+    //   if (particle.StatusCode() == 1){
+    //     std::cout << "On particle " << particle.TrackId() 
+    //               << " with PDG " << particle.PdgCode() << "\n";
+    //     std::cout << "  Mother: ......" << particle.Mother() << "\n"
+    //               << "  Energy: ......" << particle.E() << "\n"
+    //               << "  StatusCode: .." << particle.StatusCode() << "\n"
+    //               << "  NDaughters: .." << particle.NumberDaughters() << "\n"
+    //               << "  NPoints: ....." << particle.NumberTrajectoryPoints() << "\n"
+    //               << "  Process: ....." << particle.Process() << "\n";        
+    //   }
+    //   i++;
+    // }
 
-    int i = 0;
-    while( i < mc -> NParticles()){
-      auto particle = mc -> GetParticle(i);
-      if (particle.StatusCode() == 1){
-        std::cout << "On particle " << particle.TrackId() 
-                  << " with PDG " << particle.PdgCode() << "\n";
-        std::cout << "  Mother: ......" << particle.Mother() << "\n"
-                  << "  Energy: ......" << particle.E() << "\n"
-                  << "  StatusCode: .." << particle.StatusCode() << "\n"
-                  << "  NDaughters: .." << particle.NumberDaughters() << "\n"
-                  << "  NPoints: ....." << particle.NumberTrajectoryPoints() << "\n"
-                  << "  Process: ....." << particle.Process() << "\n";        
-      }
-      i++;
-    }
+
+    if(!fFullOscTrue)
+        fNuAnaAlg.packLarg4Info(mclistLARG4, NPi0FinalState, NGamma, NChargedPions,
+                                leptonPos,
+                                leptonMom,
+                                p1PhotonConversionPos,
+                                p1PhotonConversionMom,
+                                p2PhotonConversionPos,
+                                p2PhotonConversionMom,
+                                miscPhotonConversionPos,
+                                miscPhotonConversionMom,
+                                pionPos,
+                                pionMom,
+                                chargedPionPos,
+                                chargedPionMom,
+                                chargePionSign);
+
+
+
     // pack up the larg4 photon info:
     
-    std::cout << "\n\n\n----larg4:\n\n";
+    // std::cout << "\n\n\n----larg4:\n\n";
 
-    // For right now, print out a list of larg4 particles and useful info:
-    for (auto & particle : (*mclistLARG4)){
-      if (particle.Mother() == 0){
-        std::cout << "On particle " << particle.TrackId() 
-                  << " with PDG " << particle.PdgCode() << "\n";
-        std::cout << "  Mother: ......" << particle.Mother() << "\n"
-                  << "  Energy: ......" << particle.E() << "\n"
-                  << "  StatusCode: .." << particle.StatusCode() << "\n"
-                  << "  NDaughters: .." << particle.NumberDaughters() << "\n"
-                  << "  NPoints: ....." << particle.NumberTrajectoryPoints() << "\n"
-                  << "  Process: ....." << particle.Process() << "\n";
-      }
-    }
-    
+    // // For right now, print out a list of larg4 particles and useful info:
+    // for (auto & particle : (*mclistLARG4)){
+    //   if (particle.Mother() == 0){
+    //     std::cout << "On particle " << particle.TrackId() 
+    //               << " with PDG " << particle.PdgCode() << "\n";
+    //     std::cout << "  Mother: ......" << particle.Mother() << "\n"
+    //               << "  Energy: ......" << particle.E() << "\n"
+    //               << "  StatusCode: .." << particle.StatusCode() << "\n"
+    //               << "  NDaughters: .." << particle.NumberDaughters() << "\n"
+    //               << "  NPoints: ....." << particle.NumberTrajectoryPoints() << "\n"
+    //               << "  Process: ....." << particle.Process() << "\n";
+    //   }
+    // }
+
     // If needed, set up the weights.
     
     // if (packFluxWeights){
 
     // }
+    
+    // Find a new weight for this event:
+    // std::cout << "Nu weight is: " <<  fNuAnaAlg.calcWeight(mc, gtruth) << std::endl;
+
+
+    
     // if (packXSecWeights){
 
     // }
