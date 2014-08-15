@@ -8,6 +8,7 @@
 #include "NuReweight/art/NuReweight.h" //GENIEReweight.h"
 #include "SimulationBase/MCNeutrino.h"
 #include "SimulationBase/MCTruth.h"
+#include "SimulationBase/GTruth.h"
 #include "SimulationBase/MCFlux.h"
 
 #include "TVector3.h"
@@ -25,7 +26,9 @@ namespace lar1nd{
   
     void configureGeometry(art::ServiceHandle<geo::Geometry> );
 
+    void configureReWeight();
 
+    double calcWeight(art::Ptr<simb::MCTruth>  truth, art::Ptr<simb::GTruth >);
 
     // get the basic neutrino info:
     void packNeutrinoInfo(simb::MCNeutrino * neutrino, 
@@ -54,21 +57,35 @@ namespace lar1nd{
                             std::vector<TLorentzVector>& GenieMomentum,
                             std::vector<std::string>& GenieProc,
                             int& NPi0FinalState,
-                            int& NGamma);
+                            int& NGamma,
+                            int& NChargedPions);
 
-
+    void packLarg4Info(art::Handle< std::vector<simb::MCParticle> > mclarg4, int, int, int,
+                            std::vector<TLorentzVector> & leptonPos,
+                            std::vector<TLorentzVector> & leptonMom,
+                            std::vector<TLorentzVector> & p1PhotonConversionPos,
+                            std::vector<TLorentzVector> & p1PhotonConversionMom,
+                            std::vector<TLorentzVector> & p2PhotonConversionPos,
+                            std::vector<TLorentzVector> & p2PhotonConversionMom,
+                            std::vector<TLorentzVector> & miscPhotonConversionPos,
+                            std::vector<TLorentzVector> & miscPhotonConversionMom,
+                            std::vector<TLorentzVector> & pionPos,
+                            std::vector<TLorentzVector> & pionMom,
+                            std::vector<std::vector<TLorentzVector> > & chargedPionPos,
+                            std::vector<std::vector<TLorentzVector> > & chargedPionMom,
+                            std::vector<int> & chargePionSign);
 
   private:
-    simb::MCParticle getParticleByID(
+    art::Ptr<simb::MCParticle> getParticleByID(
             art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
-    simb::MCParticle getParticleByPDG(
+    art::Ptr<simb::MCParticle> getParticleByPDG(
             art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
     bool isInTPC(TVector3 &) const;
-    void GetPhotonConversionInfo( simb::MCParticle& photon,
+    void GetPhotonConversionInfo( art::Ptr<simb::MCParticle> photon,
                                   TLorentzVector& ConversionPos,
                                   TLorentzVector& ConversionMom);
     // The reweighting utility class:
-    // rwgt::NuReweight reweight;
+    rwgt::NuReweight * reweight;
 
     // geometry boundaries:
     double xlow, xhigh, ylow, yhigh, zlow, zhigh;
