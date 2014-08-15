@@ -34,6 +34,7 @@
 # simple_plugin()
 
 add_subdirectory(alg)
+include_directories ( $ENV{GENIE_INC}/GENIE )
 
 art_make( BASENAME_ONLY
           LIBRARY_NAME Ntuples          
