@@ -6,6 +6,11 @@ namespace lar1nd{
   NuAnaAlg::NuAnaAlg(){
   }
 
+  // NuAnaAlg::~NuAnaAlg(){
+  //   // if (reweight) delete reweight;
+  //   // reweight = NULL;
+  // }
+
   void NuAnaAlg::configureGeometry(art::ServiceHandle<geo::Geometry> geom){
   
     xlow  = - geom -> DetHalfWidth();
@@ -24,14 +29,19 @@ namespace lar1nd{
   }
 
   void NuAnaAlg::configureReWeight(){
-    reweight = new rwgt::NuReweight();
+    reweight = new rwgt::NuReweight;
     reweight -> ReweightQEMA(1.5);
     reweight -> ReweightCCRes(1.5);
     reweight -> Configure();
+    // reweight = std::unique_ptr<rwgt::NuReweight>(new rwgt::NuReweight);
+    // reweight.ReweightQEMA(1.5);
+    // reweight.ReweightCCRes(1.5);
+    // reweight.Configure();
   }
 
   double NuAnaAlg::calcWeight(art::Ptr<simb::MCTruth> mctruth,
                               art::Ptr<simb::GTruth > gtruth){
+    // return reweight.CalcWeight(*mctruth,*gtruth);
     return reweight -> CalcWeight(*mctruth,*gtruth);
   }
 
@@ -244,13 +254,17 @@ namespace lar1nd{
       chargedPionPos.resize(NChargedPions);
       chargedPionMom.resize(NChargedPions);
 
+
       // loop over the particles, extending the pion vectors as it goes.
       for (unsigned int i = 0; i < mclarg4 -> size(); i ++){
         art::Ptr<simb::MCParticle> particle(mclarg4,i);
 
 
         if (particle -> Mother() == 0 ){ // then this is a primary
-          if (abs(particle -> PdgCode()) == 11 ||
+          // std::cout << "On particle " << particle -> TrackId() 
+          //           << " with PDG " << particle -> PdgCode() << std::endl;
+
+           if (abs(particle -> PdgCode()) == 11 ||
               abs(particle -> PdgCode()) == 12 ||
               abs(particle -> PdgCode()) == 13 ||
               abs(particle -> PdgCode()) == 14 )
@@ -314,12 +328,12 @@ namespace lar1nd{
           {
             chargedPionSign.push_back(particle ->PdgCode() / 211);
             int nTrajectoryPoints = particle -> NumberTrajectoryPoints();
-            unsigned int index = chargedPionSign.size();
+            unsigned int index = chargedPionSign.size() - 1;
             chargedPionPos[index].reserve(nTrajectoryPoints);
             chargedPionMom[index].reserve(nTrajectoryPoints);
             for (int traj_point = 0; traj_point < nTrajectoryPoints; ++ traj_point){
-              chargedPionPos.back().push_back(particle -> Position(traj_point));
-              chargedPionMom.back().push_back(particle -> Momentum(traj_point));
+              chargedPionPos[index].push_back(particle -> Position(traj_point));
+              chargedPionMom[index].push_back(particle -> Momentum(traj_point));
             }
           }
         } // end of if primary
