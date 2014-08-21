@@ -2,7 +2,7 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent lar1ndcode v02_02_00
+parent lar1ndcode v00_01_00
 defaultqual e5
 
 # These optional lines define the installed directories where headers,
@@ -26,17 +26,19 @@ defaultqual e5
 incdir	product_dir	include
 libdir	fq_dir		lib
 bindir	fq_dir		bin
+gdmldir product_dir
+fcldir  product_dir
 
 # With "product  version" table below, we now define depdendencies
 # Add the dependent product and version
 
 product          version
-larsoft		v02_02_00
+larsoft		v02_04_00
 gcc		v4_8_2
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-only_for_build  cetbuildtools   v3_10_01   
+only_for_build  cetbuildtools   v3_11_00   
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
