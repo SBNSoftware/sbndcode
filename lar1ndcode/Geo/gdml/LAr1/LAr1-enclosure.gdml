@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <box name="DetEnclosure" lunit="cm" x="700" y="850" z="490" />
+ <box name="DetEnclosure" lunit="cm" x="700+0.1" y="850+0.1" z="490+0.1" />
 </solids>
 
 <structure>
@@ -12,6 +12,10 @@
    <volumeref ref="volCryostat"/>
    <position name="posCryostat" unit="cm" x="0" y="0" z="0"/>
   </physvol>
+     <physvol>
+        <volumeref ref="volInsulation"/>
+        <position name="posInsulation" unit="cm" x="0" y="0" z="0"/>
+      </physvol>
  </volume>
 </structure>
 </gdml>
