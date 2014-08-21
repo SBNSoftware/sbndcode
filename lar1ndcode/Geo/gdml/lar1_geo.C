@@ -9,7 +9,7 @@ lar1_geo(TString volName="")
   gSystem->Load("libGeom");
   gSystem->Load("libGdml");
 
-  TGeoManager::Import("lar1.gdml");
+  TGeoManager::Import("lar1_nowires.gdml");
 
   drawopt optuboone[] = {
 	{"volTPCHorizontalBeam",	  kGreen+2},
