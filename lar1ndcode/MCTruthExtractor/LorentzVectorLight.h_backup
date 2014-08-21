@@ -1,0 +1,95 @@
+/*
+	This is a stupid little class that I needed to make to keep some output files under control
+	in terms of size.  It has the 4 vector and the getters, but none of the other nice functionality
+	Really, it's a sucky class but it makes output fiels smaller by 40x.  So, there's that.
+*/
+#include "TLorentzVector.h"
+
+namespace gan {
+
+	class LorentzVectorLight {
+	public:
+		LorentzVectorLight();
+		LorentzVectorLight(float, float, float, float);
+		LorentzVectorLight(TLorentzVector&);
+		LorentzVectorLight(const TLorentzVector&);
+	
+	private:
+		
+		float fX;
+		float fY;
+		float fZ;
+		float fT;
+	
+	public:
+		
+		float X() 	const;				
+		float Y() 	const;		
+		float Z() 	const;		
+		float T() 	const;
+		float Px() 	const;				
+		float Py() 	const;		
+		float Pz() 	const;		
+		float E() 	const;
+		void SetX(float val);				
+		void SetY(float val);		
+		void SetZ(float val);		
+		void SetT(float val);
+		void SetPx(float val);				
+		void SetPy(float val);		
+		void SetPz(float val);		
+		void SetE(float val);			
+	
+	};
+
+
+	inline float LorentzVectorLight::X() 	const		{return fX;}
+	inline float LorentzVectorLight::Y() 	const		{return fY;}
+	inline float LorentzVectorLight::Z() 	const		{return fZ;}
+	inline float LorentzVectorLight::T() 	const		{return fT;}
+	inline float LorentzVectorLight::Px()	const		{return fX;}
+	inline float LorentzVectorLight::Py()	const		{return fY;}
+	inline float LorentzVectorLight::Pz()	const		{return fZ;}
+	inline float LorentzVectorLight::E() 	const		{return fT;}
+	inline void  LorentzVectorLight::SetX(float val)	{fX = val;}
+	inline void  LorentzVectorLight::SetY(float val)	{fY = val;}
+	inline void  LorentzVectorLight::SetZ(float val)	{fZ = val;}
+	inline void  LorentzVectorLight::SetT(float val)	{fT = val;}
+	inline void  LorentzVectorLight::SetPx(float val)	{fX = val;}
+	inline void  LorentzVectorLight::SetPy(float val)	{fY = val;}
+	inline void  LorentzVectorLight::SetPz(float val)	{fZ = val;}
+	inline void  LorentzVectorLight::SetE(float val)	{fT = val;}
+
+}
+
+namespace gan
+{
+	LorentzVectorLight::LorentzVectorLight(){
+		fX = 0.0;
+		fY = 0.0;
+		fZ = 0.0;
+		fT = 0.0;
+		return;
+	}
+	LorentzVectorLight::LorentzVectorLight(float a, float b, float c, float d){
+		fX = a;
+		fY = b;
+		fZ = c;
+		fT = d;
+		return;
+	}
+	LorentzVectorLight::LorentzVectorLight(TLorentzVector& vec){
+		fX = vec.X();
+		fY = vec.Y();
+		fZ = vec.Z();
+		fT = vec.T();
+		return;
+	}
+	LorentzVectorLight::LorentzVectorLight(const TLorentzVector& vec){
+		fX = vec.X();
+		fY = vec.Y();
+		fZ = vec.Z();
+		fT = vec.T();
+		return;
+	}
+}
