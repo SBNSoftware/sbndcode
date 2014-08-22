@@ -536,63 +536,63 @@ sub make_APA()
      </physvol>
      <physvol>
     	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="80" z="-$TPCLength/2"/>
+         <position name="posTPCHorizontalBeam5" unit="cm" x="0" y="80" z="-$TPCLength/2"/>
      </physvol>
      <physvol>
          <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="80*2" z="-$TPCLength/2"/>
+         <position name="posTPCHorizontalBeam6" unit="cm" x="0" y="80*2" z="-$TPCLength/2"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="-80" z="-$TPCLength/2"/>
+         <position name="posTPCHorizontalBeam7" unit="cm" x="0" y="-80" z="-$TPCLength/2"/>
    	 </physvol>
    	 <physvol>
       	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="-80*2" z="-$TPCLength/2"/>
+         <position name="posTPCHorizontalBeam8" unit="cm" x="0" y="-80*2" z="-$TPCLength/2"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="0" z="-$TPCLength/2"/>
+        <position name="posTPCHorizontalBeam9" unit="cm" x="0" y="0" z="-$TPCLength/2"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="$TPCHeight/2" z="0"/>
+        <position name="posTPCHorizontalBeam10" unit="cm" x="0" y="$TPCHeight/2" z="0"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="$TPCHeight/2" z="80"/>
+        <position name="posTPCHorizontalBeam11" unit="cm" x="0" y="$TPCHeight/2" z="80"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="$TPCHeight/2" z="80*2"/>
+        <position name="posTPCHorizontalBeam12" unit="cm" x="0" y="$TPCHeight/2" z="80*2"/>
      </physvol>
      <physvol>
         <volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="$TPCHeight/2" z="-80"/>
+        <position name="posTPCHorizontalBeam13" unit="cm" x="0" y="$TPCHeight/2" z="-80"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volTPCHorizontalBeam"/>
-      	 <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="$TPCHeight/2" z="-80*2"/>
+      	 <position name="posTPCHorizontalBeam14" unit="cm" x="0" y="$TPCHeight/2" z="-80*2"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volTPCHorizontalBeam"/>
-      	 <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="-$TPCHeight/2" z="0"/>
+      	 <position name="posTPCHorizontalBeam15" unit="cm" x="0" y="-$TPCHeight/2" z="0"/>
      </physvol>
      <physvol>
       	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="-$TPCHeight/2" z="80"/>
+         <position name="posTPCHorizontalBeam16" unit="cm" x="0" y="-$TPCHeight/2" z="80"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-    	 <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="-$TPCHeight/2" z="80*2"/>
+    	 <position name="posTPCHorizontalBeam17" unit="cm" x="0" y="-$TPCHeight/2" z="80*2"/>
   	 </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="-$TPCHeight/2" z="-80"/>
+         <position name="posTPCHorizontalBeam18" unit="cm" x="0" y="-$TPCHeight/2" z="-80"/>
    	 </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="-$TPCHeight/2" z="-80*2"/>
+         <position name="posTPCHorizontalBeam19" unit="cm" x="0" y="-$TPCHeight/2" z="-80*2"/>
      </physvol> 
 	<physvol>
 		<volumeref ref="volTPC"/>
@@ -675,7 +675,7 @@ sub gen_cryostat()
       </union>
 	<union name="TPCFrame">
 		<first ref="TPCFrame5"/> <second ref="TPCSideCross"/>
-		 <position name="posTPCSideCross0" unit="cm" x="0" y="-($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
+		 <position name="posTPCSideCross3" unit="cm" x="0" y="-($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
  		 <rotationref ref="rPlus45AboutX"/>
       </union>
 
