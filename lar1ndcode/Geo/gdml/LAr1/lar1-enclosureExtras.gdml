@@ -1,0 +1,19 @@
+<?xml version='1.0'?>
+<gdml>
+<solids>
+  <box name="InsulationOuter" lunit="cm" x="600" y="550" z="490"/>
+  <box name="InsulationInner" lunit="cm" x="510+0.2" y=" + 0.2" z="440+0.2"/>
+
+   <subtraction name="Insulation">
+     <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
+     <position name="posTPCSubtraction" x="0" y="0" z="0"/>
+   </subtraction>
+</solids>
+
+<structure>
+  <volume name="volInsulation">
+	<materialref ref="PU_foam_light"/>
+	<solidref ref="Insulation"/>
+  </volume>
+</structure>
+</gdml>

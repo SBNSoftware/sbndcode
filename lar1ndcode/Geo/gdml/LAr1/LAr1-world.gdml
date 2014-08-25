@@ -2,16 +2,33 @@
 <gdml>
 <solids>
   <box name="World" lunit="cm" x="70000" y="85000" z="49000"/>
+  <box name="ConcreteEnclosureOuter" lunit="cm" x="700+8" y="850+8" z="490+8"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="700" y="850" z="490"/>
+
+  <subtraction name="ConcreteEnclosure">
+	<first ref="ConcreteEnclosureOuter"/> <second ref="ConcreteEnclosureInner"/>
+	<position name="posConcreteEnclosureSubtraction" x="0" y="0" z="0"/>
+  </subtraction>
 </solids>
 
 <structure>
+  <volume name="volConcreteEnclosure">
+	<materialref ref="Concrete"/>
+	<solidref ref="ConcreteEnclosure"/>
+  </volume>
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
+	<physvol>
+	  <volumeref ref="volConcreteEnclosure"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="0"/>
+	 </physvol>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
       <position name="posDetEnclosure" unit="cm" x="0" y="0" z="0"/>
     </physvol>
+
+	
   </volume> 
 </structure>
 </gdml>
