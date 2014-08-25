@@ -10,10 +10,10 @@ cet_find_library( BOOST_DATE_TIME     NAMES boost_date_time     PATHS ENV BOOST_
 # source
 add_subdirectory(LArSoftConfigurations)
 add_subdirectory(JobConfigurations)
+add_subdirectory(Geo)
 add_subdirectory(Utilities)
 add_subdirectory(Calibration)
 add_subdirectory(DetectorSim)
-add_subdirectory(Geo)
 add_subdirectory(MCTruthExtractor)
 
 
