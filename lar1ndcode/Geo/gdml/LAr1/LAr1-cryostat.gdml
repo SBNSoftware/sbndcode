@@ -1,26 +1,186 @@
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <tube name="Cryostat" rmax="93" z="2000" deltaphi="360" aunit="deg" lunit="cm"/>
- <sphere name="EndCap" rmin="144*2.54" rmax="144.5*2.54" deltaphi="360" deltatheta="0.001" aunit="deg" lunit="cm"/>
+ <box name="Cryostat" lunit="cm" x="510+0.1" y="480+0.1" z="440+0.1" /> 
+ <box name="SteelBox" lunit="cm" x="510" y="480" z="440"/>
+ 
+ <box name="TPCFrameA" lunit="cm" x="20" y="400" z="365"/>
+ <box name="TPCFrameB" lunit="cm" x="20+ 0.1" y="400-20" z="365 -20"/>
+ <box name="TPCFrameC" lunit="cm" x="20/2" y="400-20" z="20/2"/>
+ <box name="TPCFrameD" lunit="cm" x="20/2" y="400-35" z="20/2"/>
+
+ <box name="TPCHorizontalBeam" lunit="cm" x="200*2+20" y="5" z="10"/>
+
+ <box name="TPCSideCrossA" lunit="cm" x="20/2" y="127.28" z="127.28"/> 
+ <box name="TPCSideCrossB" lunit="cm" x="20/2+ 0.1" y="127.28-20/2" z="127.28-20/2"/> 
+
+
+   <subtraction name="TPCFrame0">
+     <first ref="TPCFrameA"/> <second ref="TPCFrameB"/>
+     <position name="posTPCSubtraction" x="0" y="0" z="0"/>
+   </subtraction>
+
+	<union name="TPCFrame1">
+	  <first ref="TPCFrame0"/> <second ref="TPCFrameC"/>
+	  <position name="posTPCUnion0" x="0" y="0" z="0"/>
+	</union>
+
+	<union name="TPCFrame2">
+	   <first ref="TPCFrame1"/> <second ref="TPCFrameD"/>
+	   <position name="posTPCUnion1" x="0" y="0" z="0"/>
+	   <rotationref ref="rPlus90AboutX"/>
+	</union>
+ 
+   <subtraction name="TPCSideCross">
+	 <first ref="TPCSideCrossA"/> <second ref="TPCSideCrossB"/>
+	 <position name="posTPCSideCross" x="0" y="0" z="0"/>
+   </subtraction>
+
+	<union name="TPCFrame3">
+		<first ref="TPCFrame2"/> <second ref="TPCSideCross"/>
+		 <position name="posTPCSideCross0" unit="cm" x="0" y="(400-20)/4" z="(365-20)/4"/>
+ 		 <rotationref ref="rPlus45AboutX"/>
+      </union>
+	<union name="TPCFrame4">
+		<first ref="TPCFrame3"/> <second ref="TPCSideCross"/>
+		 <position name="posTPCSideCross1" unit="cm" x="0" y="(400-20)/4" z="-(365-20)/4"/>
+ 		 <rotationref ref="rPlus45AboutX"/>
+      </union>
+	<union name="TPCFrame5">
+		<first ref="TPCFrame4"/> <second ref="TPCSideCross"/>
+		 <position name="posTPCSideCross2" unit="cm" x="0" y="-(400-20)/4" z="-(365-20)/4"/>
+ 		 <rotationref ref="rPlus45AboutX"/>
+      </union>
+	<union name="TPCFrame">
+		<first ref="TPCFrame5"/> <second ref="TPCSideCross"/>
+		 <position name="posTPCSideCross3" unit="cm" x="0" y="-(400-20)/4" z="(365-20)/4"/>
+ 		 <rotationref ref="rPlus45AboutX"/>
+      </union>
+
 </solids>
 
 <structure>
- <volume name="volEndCap">
+ <volume name="volTPCFrame">
    <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
-   <solidref ref="EndCap"/>
+   <solidref ref="TPCFrame"/>
+ </volume>
+ <volume name="volTPCHorizontalBeam">
+   <materialref ref="G10"/>
+   <solidref ref="TPCHorizontalBeam"/>
+ </volume>
+ <volume name="volSteelBox">
+   <materialref ref="STEEL_STAINLESS_Fe7Cr1Ni"/>
+   <solidref ref="SteelBox"/>
  </volume>
  <volume name="volCryostat">
    <materialref ref="LAr"/>
    <solidref ref="Cryostat"/>
-	  <physvol>
-   	 	 <volumeref ref="volEndCap"/>
-         <position name="posEndCap1" unit="cm" x="0" y="0" z="6"/>
-   	  </physvol>    
-  	  <physvol>
-   	 	 <volumeref ref="volTPC"/>
-   		 <position name="posTPC" unit="cm" x="0.0" y="0" z="0"/>
-  	  </physvol>
+	<physvol>
+	  <volumeref ref="volSteelBox"/>
+	  <position name="posSteelBox" unit="cm" x="0" y="0" z="0"/>
+	</physvol>
+    <physvol> 
+       <volumeref ref="volCathodePlate"/>
+ 	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
+	 </physvol>
+ 	 <physvol>
+   		 <volumeref ref="volTPCFrame"/>
+    	 <position name="posTPCFrame" unit="cm" x="200 +10" y="0" z="0"/>
+   	 </physvol>
+   	 <physvol>
+    	 <volumeref ref="volTPCFrame"/>
+         <position name="posTPCFrame1" unit="cm" x="-200 - 10" y="0" z="0"/>
+   	 </physvol>
+   	 <physvol>
+    	<volumeref ref="volTPCHorizontalBeam"/>
+        <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="80" z="365/2"/>
+     </physvol>
+     <physvol>
+     	 <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="80*2" z="365/2"/>
+     </physvol>
+     <physvol>
+    	 <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="-80" z="365/2"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volTPCHorizontalBeam"/>
+        <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="-80*2" z="365/2"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volTPCHorizontalBeam"/>
+        <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="0" z="365/2"/>
+     </physvol>
+     <physvol>
+    	 <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam5" unit="cm" x="0" y="80" z="-365/2"/>
+     </physvol>
+     <physvol>
+         <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam6" unit="cm" x="0" y="80*2" z="-365/2"/>
+     </physvol>
+     <physvol>
+     	 <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam7" unit="cm" x="0" y="-80" z="-365/2"/>
+   	 </physvol>
+   	 <physvol>
+      	 <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam8" unit="cm" x="0" y="-80*2" z="-365/2"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volTPCHorizontalBeam"/>
+        <position name="posTPCHorizontalBeam9" unit="cm" x="0" y="0" z="-365/2"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volTPCHorizontalBeam"/>
+        <position name="posTPCHorizontalBeam10" unit="cm" x="0" y="400/2" z="0"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volTPCHorizontalBeam"/>
+        <position name="posTPCHorizontalBeam11" unit="cm" x="0" y="400/2" z="80"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volTPCHorizontalBeam"/>
+        <position name="posTPCHorizontalBeam12" unit="cm" x="0" y="400/2" z="80*2"/>
+     </physvol>
+     <physvol>
+        <volumeref ref="volTPCHorizontalBeam"/>
+        <position name="posTPCHorizontalBeam13" unit="cm" x="0" y="400/2" z="-80"/>
+     </physvol>
+     <physvol>
+    	 <volumeref ref="volTPCHorizontalBeam"/>
+      	 <position name="posTPCHorizontalBeam14" unit="cm" x="0" y="400/2" z="-80*2"/>
+     </physvol>
+     <physvol>
+    	 <volumeref ref="volTPCHorizontalBeam"/>
+      	 <position name="posTPCHorizontalBeam15" unit="cm" x="0" y="-400/2" z="0"/>
+     </physvol>
+     <physvol>
+      	 <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam16" unit="cm" x="0" y="-400/2" z="80"/>
+     </physvol>
+     <physvol>
+     	 <volumeref ref="volTPCHorizontalBeam"/>
+    	 <position name="posTPCHorizontalBeam17" unit="cm" x="0" y="-400/2" z="80*2"/>
+  	 </physvol>
+     <physvol>
+     	 <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam18" unit="cm" x="0" y="-400/2" z="-80"/>
+   	 </physvol>
+     <physvol>
+     	 <volumeref ref="volTPCHorizontalBeam"/>
+         <position name="posTPCHorizontalBeam19" unit="cm" x="0" y="-400/2" z="-80*2"/>
+     </physvol> 
+	<physvol>
+		<volumeref ref="volTPC"/>
+		<position name="posTPC1" unit="cm" x="200/2" y="0" z="0" />
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPC"/>
+		<position name="posTPC2" unit="cm" x="-200/2" y="0" z="0" />
+		<rotationref ref="rPlus180AboutY"/>
+	</physvol>  
+
  </volume>
 </structure>
 </gdml>

@@ -51,7 +51,19 @@
    The size of the detector enclosure along the z-axis.
    </parameter>
 
-   <parameter name="TPCWidth" value="400">
+   <parameter name="CryostatWidth" value="510">
+   The size of the cryostat along the x-axis.
+   </parameter>
+   
+   <parameter name="CryostatHeight" value="480">
+   The size of the cryostat along the y-axis.
+   </parameter>
+
+   <parameter name="CryostatLength" value="440">
+   The size of the cryostat along the z-axis.
+   </parameter>
+
+   <parameter name="TPCWidth" value="200">
    The size of the LAr TPC along the x-axis.
    </parameter>
 

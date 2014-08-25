@@ -27,6 +27,7 @@
       <filename> LAr1-wireplane.gdml </filename>
       <filename> LAr1-cathode.gdml </filename>
       <filename> LAr1-tpc.gdml </filename>
+      <filename> lar1-enclosureExtras.gdml </filename>
       <filename> LAr1-cryostat.gdml </filename>
       <filename> LAr1-enclosure.gdml </filename>
       <filename> LAr1-world.gdml </filename>
