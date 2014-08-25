@@ -691,7 +691,7 @@ sub gen_cryostat()
    <solidref ref="TPCHorizontalBeam"/>
  </volume>
  <volume name="volSteelBox">
-   <materialref ref="STEEL_STAINLESS_Fe7Cr1Ni"/>
+   <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
    <solidref ref="SteelBox"/>
  </volume>
  <volume name="volCryostat">
