@@ -14,7 +14,7 @@
   </physvol>
      <physvol>
         <volumeref ref="volInsulation"/>
-        <position name="posInsulation" unit="cm" x="0" y="0" z="0"/>
+        <position name="posInsulation" unit="cm" x="0" y="15" z="0"/>
       </physvol>
  </volume>
 </structure>

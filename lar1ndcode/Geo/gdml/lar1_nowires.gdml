@@ -264,12 +264,13 @@
  <box name="TPCActive" lunit="cm" x="196.4" y="399.8" z="364.8"/>
 
   <box name="InsulationOuter" lunit="cm" x="600" y="550" z="490"/>
-  <box name="InsulationInner" lunit="cm" x="510+0.2" y=" + 0.2" z="440+0.2"/>
+  <box name="InsulationInner" lunit="cm" x="510" y="" z="440"/>
 
    <subtraction name="Insulation">
      <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
-     <position name="posTPCSubtraction" x="0" y="0" z="0"/>
+     <position name="posInsulationSubtraction" x="0" y="-15" z="0"/>
    </subtraction>
+
 
  <box name="Cryostat" lunit="cm" x="510+0.1" y="480+0.1" z="440+0.1" /> 
  <box name="SteelBoxA" lunit="cm" x="510" y="480" z="440"/>
@@ -378,16 +379,16 @@
    <solidref ref="TPC"/>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane2" unit="cm" x="200/2 - 0.3" y="0" z="0" />
+		<position name="posTPCPlane2" unit="cm" x="200/2 - 0.3 -0.1" y="0" z="0" />
      	<rotationref ref="rPlus180AboutY"/> 
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane3" unit="cm" x="200/2 - 0.6" y="0" z="0" />
+		<position name="posTPCPlane3" unit="cm" x="200/2 - 0.6 -0.1" y="0" z="0" />
 	</physvol>
 	<physvol>
 		 <volumeref ref="volTPCPlaneVert"/>
-		 <position name="posTPCPlaneVert2" unit="cm" x="200/2" y="0" z="0" />
+		 <position name="posTPCPlaneVert2" unit="cm" x="200/2-0.1" y="0" z="0" />
 	 </physvol>
 	<physvol>
 	 	 <volumeref ref="volTPCActive"/>
@@ -532,7 +533,7 @@
   </physvol>
      <physvol>
         <volumeref ref="volInsulation"/>
-        <position name="posInsulation" unit="cm" x="0" y="0" z="0"/>
+        <position name="posInsulation" unit="cm" x="0" y="15" z="0"/>
       </physvol>
  </volume>
 
