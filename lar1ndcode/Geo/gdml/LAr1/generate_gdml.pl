@@ -472,16 +472,16 @@ EOF
      print GDML <<EOF;
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane2" unit="cm" x="$TPCWidth/2 - 0.3" y="0" z="0" />
+		<position name="posTPCPlane2" unit="cm" x="$TPCWidth/2 - 0.3 -0.1" y="0" z="0" />
      	<rotationref ref="rPlus180AboutY"/> 
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane3" unit="cm" x="$TPCWidth/2 - 0.6" y="0" z="0" />
+		<position name="posTPCPlane3" unit="cm" x="$TPCWidth/2 - 0.6 -0.1" y="0" z="0" />
 	</physvol>
 	<physvol>
 		 <volumeref ref="volTPCPlaneVert"/>
-		 <position name="posTPCPlaneVert2" unit="cm" x="$TPCWidth/2" y="0" z="0" />
+		 <position name="posTPCPlaneVert2" unit="cm" x="$TPCWidth/2-0.1" y="0" z="0" />
 	 </physvol>
 	<physvol>
 	 	 <volumeref ref="volTPCActive"/>
@@ -756,7 +756,7 @@ EOF
     print GDML <<EOF;
      <physvol>
         <volumeref ref="volInsulation"/>
-        <position name="posInsulation" unit="cm" x="0" y="0" z="0"/>
+        <position name="posInsulation" unit="cm" x="0" y="15" z="0"/>
       </physvol>
 EOF
 	}
@@ -827,7 +827,7 @@ EOF
 
 sub gen_enclosureExtras()
 {
-    $GDML = "lar1-enclosureExtras" . $suffix . ".gdml";
+    $GDML = "LAr1-enclosureExtras" . $suffix . ".gdml";
     push (@gdmlFiles, $GDML); # Add file to list of GDML fragments
     $GDML = ">" . $GDML;
     open(GDML) or die("Could not open file $GDML for writing");
@@ -838,12 +838,13 @@ sub gen_enclosureExtras()
 <gdml>
 <solids>
   <box name="InsulationOuter" lunit="cm" x="600" y="550" z="490"/>
-  <box name="InsulationInner" lunit="cm" x="$CryostatWidth+0.2" y="$CryostHeight + 0.2" z="$CryostatLength+0.2"/>
+  <box name="InsulationInner" lunit="cm" x="$CryostatWidth" y="$CryostHeight" z="$CryostatLength"/>
 
    <subtraction name="Insulation">
      <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
-     <position name="posTPCSubtraction" x="0" y="0" z="0"/>
+     <position name="posInsulationSubtraction" x="0" y="-15" z="0"/>
    </subtraction>
+
 </solids>
 
 <structure>
