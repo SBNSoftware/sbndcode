@@ -115,7 +115,7 @@ namespace lar1nd{
     
     std::vector< std::vector < TLorentzVector > > chargedPionPos; // store position of charged pions
     std::vector< std::vector < TLorentzVector > > chargedPionMom; // store momentum of charged pions
-    std::vector< int > chargePionSign;  // Sign (+/-) of the charged pions, one to one with above vectors
+    std::vector< int > chargedPionSign;  // Sign (+/-) of the charged pions, one to one with above vectors
     
     // Track any pions
     // Only keeping the position of decay and the momentum at decay
@@ -251,14 +251,14 @@ namespace lar1nd{
     fTreeTot->Branch("PionMom","PionMom", &pionMom, 32000, 0);
     fTreeTot->Branch("ChargedPionPos","ChargedPionPos",&chargedPionPos, 32000,0);
     fTreeTot->Branch("ChargedPionMom","ChargedPionMom",&chargedPionMom, 32000,0);
-    fTreeTot->Branch("ChargePionSign","ChargePionSign",&chargePionSign, 32000,0);
+    fTreeTot->Branch("ChargedPionSign","ChargedPionSign",&chargedPionSign, 32000,0);
     
 
     // fTreeTot->Branch("MultiWeight","MultiWeight",&eventReweight,32000,0);
     art::ServiceHandle<geo::Geometry> geom;
     // configure the geometry in the worker function:
     fNuAnaAlg.configureGeometry(geom);
-    // fNuAnaAlg.configureReWeight();
+    fNuAnaAlg.configureReWeight();
 
     return;
   }
@@ -292,7 +292,7 @@ namespace lar1nd{
     pionMom.clear();
     chargedPionPos.clear();
     chargedPionMom.clear();
-    chargePionSign.clear();
+    chargedPionSign.clear();
     
     GeniePDG.clear();
     GenieMomentum.clear();
@@ -343,7 +343,7 @@ namespace lar1nd{
 
   void NuAna::analyze(const art::Event& evt){
 
-    reset();
+    this -> reset();
     
     //get the MC generator information out of the event       
     //these are all handles to mc information.
@@ -390,6 +390,7 @@ namespace lar1nd{
     // Now start packing up the variables to fill the tree
     // In general, have the algorithm do this:
     
+
     // get the basic neutrino info:
     fNuAnaAlg.packNeutrinoInfo(&neutrino,
                             nuchan,
@@ -458,7 +459,7 @@ namespace lar1nd{
                                 pionMom,
                                 chargedPionPos,
                                 chargedPionMom,
-                                chargePionSign);
+                                chargedPionSign);
 
 
 
@@ -487,7 +488,7 @@ namespace lar1nd{
     // }
     
     // Find a new weight for this event:
-    // std::cout << "Nu weight is: " <<  fNuAnaAlg.calcWeight(mc, gtruth) << std::endl;
+    std::cout << "Nu weight is: " <<  fNuAnaAlg.calcWeight(mc, gtruth) << std::endl;
 
 
     
