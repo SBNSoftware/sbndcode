@@ -624,18 +624,24 @@ sub gen_cryostat()
 <gdml>
 <solids>
  <box name="Cryostat" lunit="cm" x="$CryostatWidth+0.1" y="$CryostatHeight+0.1" z="$CryostatLength+0.1" /> 
- <box name="SteelBox" lunit="cm" x="$CryostatWidth" y="$CryostatHeight" z="$CryostatLength"/>
+ <box name="SteelBoxA" lunit="cm" x="$CryostatWidth" y="$CryostatHeight" z="$CryostatLength"/>
+ <box name="SteelBoxB" lunit="cm" x="$CryostatWidth-5" y="$CryostatHeight-5" z="$CryostatLength-5"/>
  
  <box name="TPCFrameA" lunit="cm" x="$AnodeWidthX" y="$AnodeHeightY" z="$AnodeLengthZ"/>
  <box name="TPCFrameB" lunit="cm" x="$AnodeWidthX+ 0.1" y="$AnodeHeightY-20" z="$AnodeLengthZ -20"/>
  <box name="TPCFrameC" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-20" z="$AnodeWidthX/2"/>
  <box name="TPCFrameD" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-35" z="$AnodeWidthX/2"/>
 
- <box name="TPCHorizontalBeam" lunit="cm" x="$TPCWidth*2+$AnodeWidthX" y="5" z="10"/>
+ <box name="TPCHorizontalBeam" lunit="cm" x="$TPCWidth*2" y="5" z="10"/>
 
  <box name="TPCSideCrossA" lunit="cm" x="$AnodeWidthX/2" y="127.28" z="127.28"/> 
  <box name="TPCSideCrossB" lunit="cm" x="$AnodeWidthX/2+ 0.1" y="127.28-$AnodeWidthX/2" z="127.28-$AnodeWidthX/2"/> 
 
+
+  <subtraction name="SteelBox">
+	<first ref="SteelBoxA"/> <second ref="SteelBoxB"/>
+	<position name="posSteelBoxSubtraction" x="0" y="0" z="0"/>
+  </subtraction>
 
    <subtraction name="TPCFrame0">
      <first ref="TPCFrameA"/> <second ref="TPCFrameB"/>
@@ -798,14 +804,15 @@ sub gen_world()
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
-	<physvol>
-	  <volumeref ref="volConcreteEnclosure"/>
-	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="0"/>
-	 </physvol>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
       <position name="posDetEnclosure" unit="cm" x="0" y="0" z="0"/>
     </physvol>
+	<physvol>
+	  <volumeref ref="volConcreteEnclosure"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="0"/>
+	 </physvol>
+
 
 	
   </volume> 
