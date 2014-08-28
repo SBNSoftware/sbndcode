@@ -754,10 +754,10 @@ sub gen_enclosure()
 EOF
   if ( $enclosureExtras eq "on" ) {
     print GDML <<EOF;
-     <physvol>
+  <!--   <physvol>
         <volumeref ref="volInsulation"/>
         <position name="posInsulation" unit="cm" x="0" y="15" z="0"/>
-      </physvol>
+      </physvol>-->
 EOF
 	}
 
@@ -807,7 +807,7 @@ sub gen_world()
     <physvol>
       <volumeref ref="volDetEnclosure"/>
       <position name="posDetEnclosure" unit="cm" x="0" y="0" z="0"/>
-    </physvol>
+    </physvol> 
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
 	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="0"/>

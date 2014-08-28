@@ -11,7 +11,7 @@ lar1_geo(TString volName="")
 
   TGeoManager::Import("lar1_nowires.gdml");
 
-  drawopt optuboone[] = {
+  drawopt optlar1[] = {
 	{"volTPCHorizontalBeam",	  kGreen+2},
 	//{"volTPCFrame",			  kGray+1},
     //"volCathodePlate",          kGray+1}, 
@@ -19,8 +19,8 @@ lar1_geo(TString volName="")
   };
 
   for (int i=0;; ++i) {
- 		if (optuboone[i].volume==0) break;
-        gGeoManager->FindVolumeFast(optuboone[i].volume)->SetLineColor(optuboone[i].color);
+ 		if (optlar1[i].volume==0) break;
+        gGeoManager->FindVolumeFast(optlar1[i].volume)->SetLineColor(optlar1[i].color);
   }
   TList* mat = gGeoManager->GetListOfMaterials();
   TIter next(mat);
@@ -31,7 +31,6 @@ lar1_geo(TString volName="")
 
   gGeoManager->GetTopNode();
   //gGeoManager->CheckOverlaps(0.0000001);
-  //need to fix some overlaps, for now save some time
   gGeoManager->CheckOverlaps(10e-10);
   gGeoManager->PrintOverlaps();
   gGeoManager->SetMaxVisNodes(70000);
