@@ -14,6 +14,7 @@
 #include "TVector3.h"
 #include "TLorentzVector.h"
 
+#include <memory>
 
 namespace lar1nd{
 
@@ -22,7 +23,7 @@ namespace lar1nd{
   public:
 
     NuAnaAlg();
-    ~NuAnaAlg(){};
+    // ~NuAnaAlg();
   
     void configureGeometry(art::ServiceHandle<geo::Geometry> );
 
@@ -76,6 +77,7 @@ namespace lar1nd{
                             std::vector<int> & chargePionSign);
 
   private:
+
     art::Ptr<simb::MCParticle> getParticleByID(
             art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
     art::Ptr<simb::MCParticle> getParticleByPDG(
@@ -85,6 +87,7 @@ namespace lar1nd{
                                   TLorentzVector& ConversionPos,
                                   TLorentzVector& ConversionMom);
     // The reweighting utility class:
+    // std::unique_ptr<rwgt::NuReweight> reweight;
     rwgt::NuReweight * reweight;
 
     // geometry boundaries:
