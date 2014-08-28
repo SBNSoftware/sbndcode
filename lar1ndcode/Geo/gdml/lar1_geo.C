@@ -32,7 +32,7 @@ lar1_geo(TString volName="")
   gGeoManager->GetTopNode();
   //gGeoManager->CheckOverlaps(0.0000001);
   //need to fix some overlaps, for now save some time
- // gGeoManager->CheckOverlaps(10e-10);
+  gGeoManager->CheckOverlaps(10e-10);
   gGeoManager->PrintOverlaps();
   gGeoManager->SetMaxVisNodes(70000);
 

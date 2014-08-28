@@ -2,18 +2,24 @@
 <gdml>
 <solids>
  <box name="Cryostat" lunit="cm" x="510+0.1" y="480+0.1" z="440+0.1" /> 
- <box name="SteelBox" lunit="cm" x="510" y="480" z="440"/>
+ <box name="SteelBoxA" lunit="cm" x="510" y="480" z="440"/>
+ <box name="SteelBoxB" lunit="cm" x="510-5" y="480-5" z="440-5"/>
  
  <box name="TPCFrameA" lunit="cm" x="20" y="400" z="365"/>
  <box name="TPCFrameB" lunit="cm" x="20+ 0.1" y="400-20" z="365 -20"/>
  <box name="TPCFrameC" lunit="cm" x="20/2" y="400-20" z="20/2"/>
  <box name="TPCFrameD" lunit="cm" x="20/2" y="400-35" z="20/2"/>
 
- <box name="TPCHorizontalBeam" lunit="cm" x="200*2+20" y="5" z="10"/>
+ <box name="TPCHorizontalBeam" lunit="cm" x="200*2" y="5" z="10"/>
 
  <box name="TPCSideCrossA" lunit="cm" x="20/2" y="127.28" z="127.28"/> 
  <box name="TPCSideCrossB" lunit="cm" x="20/2+ 0.1" y="127.28-20/2" z="127.28-20/2"/> 
 
+
+  <subtraction name="SteelBox">
+	<first ref="SteelBoxA"/> <second ref="SteelBoxB"/>
+	<position name="posSteelBoxSubtraction" x="0" y="0" z="0"/>
+  </subtraction>
 
    <subtraction name="TPCFrame0">
      <first ref="TPCFrameA"/> <second ref="TPCFrameB"/>
