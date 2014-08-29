@@ -21339,16 +21339,16 @@
    <solidref ref="TPC"/>
 	<physvol>
 		 <volumeref ref="volTPCPlaneVert"/>
-		 <position name="posTPCPlaneVert2" unit="cm" x="100*200/2-0.1" y="0" z="0" />
+		 <position name="posTPCPlaneVert2" unit="cm" x="200/2-0.1" y="0" z="0" />
 	 </physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane2" unit="cm" x="100*200/2 - 0.3 -0.1" y="0" z="0" />
+		<position name="posTPCPlane2" unit="cm" x="200/2 - 0.3 -0.1" y="0" z="0" />
      	<rotationref ref="rPlus180AboutY"/> 
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane3" unit="cm" x="100*200/2 - 0.6 -0.1" y="0" z="0" />
+		<position name="posTPCPlane3" unit="cm" x="200/2 - 0.6 -0.1" y="0" z="0" />
 	</physvol>
 
 	<physvol>
