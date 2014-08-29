@@ -27,9 +27,14 @@ namespace lar1nd{
   
     void configureGeometry(art::ServiceHandle<geo::Geometry> );
 
-    void configureReWeight();
+    void configureReWeight(std::vector<std::string> &,
+                           std::vector<float>&,
+                           std::vector<float>&,
+                           int);
 
-    double calcWeight(art::Ptr<simb::MCTruth>  truth, art::Ptr<simb::GTruth >);
+    void calcWeight(art::Ptr<simb::MCTruth>,
+                    art::Ptr<simb::GTruth >,
+                    std::vector<std::vector<float>>& );
 
     // get the basic neutrino info:
     void packNeutrinoInfo(simb::MCNeutrino * neutrino, 
@@ -88,7 +93,7 @@ namespace lar1nd{
                                   TLorentzVector& ConversionMom);
     // The reweighting utility class:
     // std::unique_ptr<rwgt::NuReweight> reweight;
-    rwgt::NuReweight * reweight;
+    std::vector<std::vector<rwgt::NuReweight *> > reweightVector;
 
     // geometry boundaries:
     double xlow, xhigh, ylow, yhigh, zlow, zhigh;
