@@ -88,7 +88,7 @@ namespace lar1nd{
     TTree* fTreeTot;    //This tree stores all the important information from an event
     TTree* PoTTree;     //This tree only stores the POT of the file, nothing else.
 
-    std::vector<float> eventWeights;  
+    std::vector<std::vector<float> > eventWeights;  
 
     TLorentzVector     neutMom;      // Neutrino Momentum
     
@@ -275,7 +275,8 @@ namespace lar1nd{
     fTreeTot->Branch("ChargedPionSign","ChargedPionSign",&chargedPionSign, 32000,0);
     
 
-    // fTreeTot->Branch("MultiWeight","MultiWeight",&eventReweight,32000,0);
+    if (fXSecReweight)
+      fTreeTot->Branch("MultiWeight","MultiWeight",&eventWeights,32000,0);
     art::ServiceHandle<geo::Geometry> geom;
     // configure the geometry in the worker function:
     fNuAnaAlg.configureGeometry(geom);
@@ -510,15 +511,15 @@ namespace lar1nd{
     // }
     
     // Find a new weight for this event:
-    std::vector<std::vector<float> > weights;
+    // std::vector<std::vector<float> > weights;
     if (fXSecReweight){
-      fNuAnaAlg.calcWeight(mc, gtruth,weights);
+      fNuAnaAlg.calcWeight(mc, gtruth,eventWeights);
       std::cout << "Printing weights for this event:\n";
       for (auto s : fWeights) std::cout << s << "\t";
       std::cout << "Total\n";
-      for (unsigned int row = 0; row < weights.front().size(); row ++){
-        for (unsigned int column = 0; column < weights.size(); column ++){
-          std::cout << weights[column][row] << "\t";
+      for (unsigned int row = 0; row < eventWeights.front().size(); row ++){
+        for (unsigned int column = 0; column < eventWeights.size(); column ++){
+          std::cout << eventWeights[column][row] << "\t";
         }
         std::cout << std::endl;
       }
