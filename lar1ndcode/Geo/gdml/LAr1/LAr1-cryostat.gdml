@@ -99,83 +99,83 @@
    	 </physvol>
    	 <physvol>
     	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="80" z="365/2"/>
+        <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="80" z="365 /2"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="80*2" z="365/2"/>
+         <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="80*2" z="365 /2"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="-80" z="365/2"/>
+         <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="-80" z="365 /2"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="-80*2" z="365/2"/>
+        <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="-80*2" z="365 /2"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="0" z="365/2"/>
+        <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="0" z="365 /2"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam5" unit="cm" x="0" y="80" z="-365/2"/>
+         <position name="posTPCHorizontalBeam5" unit="cm" x="0" y="80" z="-365 /2"/>
      </physvol>
      <physvol>
          <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam6" unit="cm" x="0" y="80*2" z="-365/2"/>
+         <position name="posTPCHorizontalBeam6" unit="cm" x="0" y="80*2" z="-365 /2"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam7" unit="cm" x="0" y="-80" z="-365/2"/>
+         <position name="posTPCHorizontalBeam7" unit="cm" x="0" y="-80" z="-365 /2"/>
    	 </physvol>
    	 <physvol>
       	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam8" unit="cm" x="0" y="-80*2" z="-365/2"/>
+         <position name="posTPCHorizontalBeam8" unit="cm" x="0" y="-80*2" z="-365 /2"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam9" unit="cm" x="0" y="0" z="-365/2"/>
+        <position name="posTPCHorizontalBeam9" unit="cm" x="0" y="0" z="-365 /2"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam10" unit="cm" x="0" y="400/2" z="0"/>
+        <position name="posTPCHorizontalBeam10" unit="cm" x="0" y="400 /2" z="0"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam11" unit="cm" x="0" y="400/2" z="80"/>
+        <position name="posTPCHorizontalBeam11" unit="cm" x="0" y="400 /2" z="80"/>
      </physvol>
      <physvol>
      	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam12" unit="cm" x="0" y="400/2" z="80*2"/>
+        <position name="posTPCHorizontalBeam12" unit="cm" x="0" y="400 /2" z="80*2"/>
      </physvol>
      <physvol>
         <volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam13" unit="cm" x="0" y="400/2" z="-80"/>
+        <position name="posTPCHorizontalBeam13" unit="cm" x="0" y="400 /2" z="-80"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volTPCHorizontalBeam"/>
-      	 <position name="posTPCHorizontalBeam14" unit="cm" x="0" y="400/2" z="-80*2"/>
+      	 <position name="posTPCHorizontalBeam14" unit="cm" x="0" y="400 /2" z="-80*2"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volTPCHorizontalBeam"/>
-      	 <position name="posTPCHorizontalBeam15" unit="cm" x="0" y="-400/2" z="0"/>
+      	 <position name="posTPCHorizontalBeam15" unit="cm" x="0" y="-400 /2" z="0"/>
      </physvol>
      <physvol>
       	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam16" unit="cm" x="0" y="-400/2" z="80"/>
+         <position name="posTPCHorizontalBeam16" unit="cm" x="0" y="-400 /2" z="80"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-    	 <position name="posTPCHorizontalBeam17" unit="cm" x="0" y="-400/2" z="80*2"/>
+    	 <position name="posTPCHorizontalBeam17" unit="cm" x="0" y="-400 /2" z="80*2"/>
   	 </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam18" unit="cm" x="0" y="-400/2" z="-80"/>
+         <position name="posTPCHorizontalBeam18" unit="cm" x="0" y="-400 /2" z="-80"/>
    	 </physvol>
      <physvol>
      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam19" unit="cm" x="0" y="-400/2" z="-80*2"/>
+         <position name="posTPCHorizontalBeam19" unit="cm" x="0" y="-400 /2" z="-80*2"/>
      </physvol> 
 	<physvol>
 		<volumeref ref="volTPC"/>
