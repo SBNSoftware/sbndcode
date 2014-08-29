@@ -89,8 +89,12 @@ gen_defs();
 gen_rotations();
 gen_materials();
 
+
+#if ( $wires eq "on"){
 gen_wirevertplane();
-gen_wireplane();
+gen_wireplane(); 
+#}
+
 gen_cathode();		# physical volumes defined in gen_tpc()
 gen_tpc();
 
@@ -123,8 +127,8 @@ sub gen_defs()
 {
     #TPCWirePlaneLength is the size in the z direction
     #TPCWirePlaneWidth is the size in the y direction
-    $TPCWirePlaneLengthZ	=	365;
-    $TPCWirePlaneWidthY		=	400;
+    $TPCWirePlaneLengthZ	=	365  ;
+    $TPCWirePlaneWidthY		=	400  ;
 
     $pi   = pi;
     $inch = 2.54;
@@ -142,11 +146,6 @@ sub gen_defs()
     $AnodeLengthZ   =   365;
     $AnodeWidthX    =   20;
     $AnodeHeightY   =   400;
-
-    #Below are numbers for uboone Geometry
-    $TPCTotalLength	=	1011.6;
-    $TPCTotalWidth	=	207.6;
-    $TPCTotalHeight	=	256;
 
 }
 
@@ -228,13 +227,14 @@ sub gen_wireplane()
 <solids>
 EOF
 
+
   # End wires 
-  for($i = 0; $i < $NumberWiresPerEdge; ++$i)
+  for($i = 0; $i < $NumberWiresPerEdge; $i++)
   {
   print GDML <<EOF;
 <tube name="TPCWire$i"
   rmax="0.5*$TPCWireThickness"
-  z="$TPCYWirePitch*($i+1) * 2"    
+  z="$TPCYWirePitch*($i+1) * 2  - 0.075" 
   deltaphi="360"
   aunit="deg"
   lunit="cm"/> 
@@ -245,21 +245,21 @@ EOF
  print GDML <<EOF;
 <tube name="TPCWireCommon"
   rmax="0.5*$TPCWireThickness"
-  z="$TPCWirePlaneLengthZ/$SinUVAngle"
+  z="$TPCWirePlaneLengthZ/$SinUVAngle - 0.075 "
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
 <box name="TPCPlane"
   x="$TPCWirePlaneThickness"
   y="$TPCWirePlaneWidthY"
-  z="$TPCWirePlaneLengthZ"
+  z="$TPCWirePlaneLengthZ + 0.35"
   lunit="cm"/>
 </solids>
 <structure>
 EOF
 
     # Wires of varying lengths 
-  for ($i = 0; $i < $NumberWiresPerEdge; ++$i)
+  for ($i = 0; $i < $NumberWiresPerEdge; $i++)
     {
     print GDML <<EOF;
     <volume name="volTPCWire$i">
@@ -281,20 +281,20 @@ EOF
 EOF
 
   # The wires at the -z, +y end (For +60 deg-- can rotate by 180 later for -60)
-  for ($i = 0; $i < $NumberWiresPerEdge; $i++)
+  for ($i = 0; $i < $NumberWiresPerEdge ; $i++)
   {
 
     print GDML <<EOF;
-   <physvol>
+  <physvol>
      <volumeref ref="volTPCWire$i"/> 
-     <position name="posTPCWireF$i" unit="cm" y="0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1)" z="-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1)" x="0"/>
+     <position name="posTPCWire$i" unit="cm" y="0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1)" z="-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1)" x="0"/>
      <rotationref ref="rPlusUVAngleAboutX"/> 
-    </physvol> 
+    </physvol>  
 EOF
   $ypos=0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1);
   $zpos=-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1);
   open (MYFILE, '>>data.txt');
-  print MYFILE "TPCWire$j y=$ypos z=$zpos\n";
+  print MYFILE "TPCWire$i y=$ypos z=$zpos\n";
   }
 
   # The wires in the middle.
@@ -308,7 +308,7 @@ for ($i = 0; $i < $NumberCenterWires ; $i++)
      <volumeref ref="volTPCWireCommon"/>
      <position name="posTPCWire$j" unit="cm" y="$ypos" z="0" x="0"/>
      <rotationref ref="rPlusUVAngleAboutX"/>
-    </physvol>
+    </physvol> 
 EOF
   }
 
@@ -321,7 +321,7 @@ EOF
       $ypos =0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($NumberWiresPerEdge + 2*$NumberCenterWires + $i +1 ) ; 
 	
     print GDML <<EOF;
-  <physvol>
+   <physvol>
      <volumeref ref="volTPCWire$k"/> 
      <position name="posTPCWireB$j" unit="cm" y="$ypos" z="0.5*$TPCZWirePitch*($i+1)" x="0"/>
      <rotationref ref="rPlusUVAngleAboutX"/>
@@ -388,7 +388,7 @@ EOF
         <volumeref ref="volTPCWireVert"/>
         <position name="posTPCWireVert$i" unit="cm" z="-0.5*$TPCWirePlaneLengthZ+$TPCWirePitch*($i+1)" x="0" y="0"/>
         <rotationref ref="rPlus90AboutX"/>
-      </physvol> 
+      </physvol>  
 EOF
 	}
 
@@ -451,11 +451,12 @@ sub gen_tpc()
     $TPCActiveHeight = $TPCWirePlaneWidthY-0.2;   #  
     $TPCActiveLength = $TPCWirePlaneLengthZ-0.2;   # extra subtraction to arrive at TPCActive values in the TDR
 
+#The addition of 0.35 below is to avoid overlap extrusions
     print GDML <<EOF;
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <box name="TPC" lunit="cm" x="$TPCWidth" y="$TPCHeight" z="$TPCLength"/>
+ <box name="TPC" lunit="cm" x="$TPCWidth" y="$TPCHeight" z="$TPCLength+0.35"/>
  <box name="TPCActive" lunit="cm" x="$TPCActiveDepth" y="$TPCActiveHeight" z="$TPCActiveLength"/>
 </solids>
 
@@ -471,6 +472,10 @@ EOF
 
      print GDML <<EOF;
 	<physvol>
+		 <volumeref ref="volTPCPlaneVert"/>
+		 <position name="posTPCPlaneVert2" unit="cm" x="$TPCWidth/2-0.1" y="0" z="0" />
+	 </physvol>
+	<physvol>
 		<volumeref ref="volTPCPlane"/>
 		<position name="posTPCPlane2" unit="cm" x="$TPCWidth/2 - 0.3 -0.1" y="0" z="0" />
      	<rotationref ref="rPlus180AboutY"/> 
@@ -479,10 +484,9 @@ EOF
 		<volumeref ref="volTPCPlane"/>
 		<position name="posTPCPlane3" unit="cm" x="$TPCWidth/2 - 0.6 -0.1" y="0" z="0" />
 	</physvol>
-	<physvol>
-		 <volumeref ref="volTPCPlaneVert"/>
-		 <position name="posTPCPlaneVert2" unit="cm" x="$TPCWidth/2-0.1" y="0" z="0" />
-	 </physvol>
+
+EOF
+	print GDML <<EOF;
 	<physvol>
 	 	 <volumeref ref="volTPCActive"/>
 	     <position name="posTPCActive" unit="cm" x="0" y="0" z="0"/>
@@ -754,10 +758,10 @@ sub gen_enclosure()
 EOF
   if ( $enclosureExtras eq "on" ) {
     print GDML <<EOF;
-  <!--   <physvol>
+     <physvol>
         <volumeref ref="volInsulation"/>
-        <position name="posInsulation" unit="cm" x="0" y="15" z="0"/>
-      </physvol>-->
+        <position name="posInsulation" unit="cm" x="0" y="2" z="0"/>
+      </physvol>
 EOF
 	}
 
@@ -788,7 +792,7 @@ sub gen_world()
 <solids>
   <box name="World" lunit="cm" x="$WorldWidth" y="$WorldHeight" z="$WorldLength"/>
   <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+8" y="$DetEnclosureHeight+8" z="$DetEnclosureLength+8"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth" y="$DetEnclosureHeight" z="$DetEnclosureLength"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+0.1" z="$DetEnclosureLength+0.1"/>
 
   <subtraction name="ConcreteEnclosure">
 	<first ref="ConcreteEnclosureOuter"/> <second ref="ConcreteEnclosureInner"/>
@@ -838,11 +842,11 @@ sub gen_enclosureExtras()
 <gdml>
 <solids>
   <box name="InsulationOuter" lunit="cm" x="600" y="550" z="490"/>
-  <box name="InsulationInner" lunit="cm" x="$CryostatWidth" y="$CryostHeight" z="$CryostatLength"/>
+  <box name="InsulationInner" lunit="cm" x="$CryostatWidth+0.1" y="$CryostatHeight+0.1" z="$CryostatLength+0.1"/>
 
    <subtraction name="Insulation">
      <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
-     <position name="posInsulationSubtraction" x="0" y="-15" z="0"/>
+     <position name="posInsulationSubtraction" x="0" y="-20" z="0"/>
    </subtraction>
 
 </solids>
