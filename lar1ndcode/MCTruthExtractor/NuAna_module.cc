@@ -52,7 +52,7 @@ namespace lar1nd{
     virtual ~NuAna(){};
 
     void beginJob();    
-    void reconfigure(fhicl::ParameterSet const& pset);
+    // void reconfigure(fhicl::ParameterSet const& pset);
     void analyze(const art::Event& evt);
     void beginSubRun (const art::SubRun& subrun);
     void reset();
@@ -63,14 +63,23 @@ namespace lar1nd{
     // art and packs all of the variables into the ttree
     NuAnaAlg fNuAnaAlg;
 
-    //Variables needed from the .fcl file to get things out of the event
-    std::string fGenieModuleLabel;
-    std::string fLarg4ModuleLabel;
+
 
     // Other variables from the fcl file
     std::string fMode;      // mode is beam mode, nu or nubar
     double fBaseline;       // baseline is 100, 470, or 600 meters
     bool fFullOscTrue;      // fullosctrue is obvious.
+    
+    //Variables needed from the .fcl file to get things out of the event
+    std::string fGenieModuleLabel;
+    std::string fLarg4ModuleLabel;
+
+    bool fXSecReweight;
+    std::vector<std::string> fWeights;
+    std::vector<float> fWeightRangeHigh;
+    std::vector<float> fWeightRangeLow;
+    int fNWeights;
+
 
     // #---------------------------------------------------------------
     // #This is the list of analysis variables needed for the ttree:
@@ -163,9 +172,41 @@ namespace lar1nd{
   
   NuAna::NuAna(fhicl::ParameterSet const& pset)
     : EDAnalyzer(pset)
+    , fMode             (pset.get< std::string >              ("Mode"))
+    , fBaseline         (pset.get< double >                   ("Baseline"))
+    , fFullOscTrue      (pset.get< bool >                     ("FullOsc"))
+    , fGenieModuleLabel (pset.get< std::string >              ("GenieModuleLabel"))
+    , fLarg4ModuleLabel (pset.get< std::string >              ("LArG4ModuleLabel"))
+    , fXSecReweight     (pset.get< bool >                     ("XSecReweight"))
+    , fWeights          (pset.get< std::vector<std::string> > ("Weights"))
+    , fWeightRangeHigh  (pset.get< std::vector<float> >       ("WeightRangeHigh"))
+    , fWeightRangeLow   (pset.get< std::vector<float> >       ("WeightRangeLow"))
+    , fNWeights         (pset.get< int >                      ("NWeights"))
   {
-    this -> reconfigure(pset);
-    // beginJob();sdkfj
+
+  }
+
+  // void NuAna::reconfigure(fhicl::ParameterSet const& pset){
+  //   fMode             = pset.get< std::string > ("Mode");
+  //   fFullOscTrue      = pset.get< bool        > ("FullOsc");
+  //   fBaseline         = pset.get< double      > ("Baseline");
+  //   fWeights          = pset.get< std::vector<std::string>>("Weights");
+  //   fWeightRange      = pset.get< std::vector<std::string>>("WeightRange");
+  //   fGenieModuleLabel = pset.get< std::string > ("GenieModuleLabel");
+  //   fLarg4ModuleLabel = pset.get< std::string > ("LArG4ModuleLabel");
+
+
+
+  //   // iflux doesn't change among files, assign it here:
+  //   if (fMode == "nu") iflux = 0;
+  //   if (fMode == "nubar") iflux = 2;
+  //   if (fFullOscTrue) iflux ++;
+
+  //   return;
+  // }
+
+  void NuAna::beginJob(){
+
     std::cout << "\nThe mode is " << fMode << std::endl;
     std::cout << "This set of events is ";
     if (fFullOscTrue) std::cout << "fullosc" << std::endl;
@@ -173,26 +214,6 @@ namespace lar1nd{
     std::cout << "The baseline for this detector is " << fBaseline << "m." << std::endl << std::endl;
 
 
-    return;
-
-  }
-
-  void NuAna::reconfigure(fhicl::ParameterSet const& pset){
-    fMode             = pset.get< std::string > ("Mode");
-    fFullOscTrue      = pset.get< bool        > ("FullOsc");
-    fBaseline         = pset.get< double      > ("Baseline");
-    fGenieModuleLabel = pset.get< std::string > ("GenieModuleLabel");
-    fLarg4ModuleLabel = pset.get< std::string > ("LArG4ModuleLabel");
-
-    // iflux doesn't change among files, assign it here:
-    if (fMode == "nu") iflux = 0;
-    if (fMode == "nubar") iflux = 2;
-    if (fFullOscTrue) iflux ++;
-
-    return;
-  }
-
-  void NuAna::beginJob(){
 
     reset();
     gROOT->ProcessLine(".L loadDictionaries.C+");
@@ -258,7 +279,8 @@ namespace lar1nd{
     art::ServiceHandle<geo::Geometry> geom;
     // configure the geometry in the worker function:
     fNuAnaAlg.configureGeometry(geom);
-    fNuAnaAlg.configureReWeight();
+    if (fXSecReweight)
+      fNuAnaAlg.configureReWeight(fWeights,fWeightRangeHigh, fWeightRangeLow,fNWeights);
 
     return;
   }
@@ -488,13 +510,20 @@ namespace lar1nd{
     // }
     
     // Find a new weight for this event:
-    std::cout << "Nu weight is: " <<  fNuAnaAlg.calcWeight(mc, gtruth) << std::endl;
+    std::vector<std::vector<float> > weights;
+    if (fXSecReweight){
+      fNuAnaAlg.calcWeight(mc, gtruth,weights);
+      std::cout << "Printing weights for this event:\n";
+      for (auto s : fWeights) std::cout << s << "\t";
+      std::cout << "Total\n";
+      for (unsigned int row = 0; row < weights.front().size(); row ++){
+        for (unsigned int column = 0; column < weights.size(); column ++){
+          std::cout << weights[column][row] << "\t";
+        }
+        std::cout << std::endl;
+      }
 
-
-    
-    // if (packXSecWeights){
-
-    // }
+    }
 
     // Fill the ttree:
     fTreeTot->Fill();
