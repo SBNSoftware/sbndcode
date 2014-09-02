@@ -5,10 +5,8 @@ lar1nd_geo:
 {
  SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
  Name:     "lar1nd"
- GDML:     "lar1.gdml"
- ROOT:     "lar1.gdml"
-#GDML:     "lariat_wdisk.gdml"
-#ROOT:     "lariat_wdisk.gdml"
+ GDML:     "lar1nd.gdml"
+ ROOT:     "lar1nd.gdml"
 }
 
 lar1nd_geometry_helper:
