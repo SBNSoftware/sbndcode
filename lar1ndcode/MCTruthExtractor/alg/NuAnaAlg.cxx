@@ -37,21 +37,20 @@ namespace lar1nd{
 * switches on for all weighting parameters.
 */
   void NuAnaAlg::configureReWeight(std::vector<std::string> & weights,
-                                   std::vector<float>& rangeHigh,
-                                   std::vector<float>& rangeLow, int nWeights){
+                         const std::vector<std::vector<float>>& reweightingSigmas){
+                         // std::vector<float>& rangeLow, int nWeights){
 
     // Expand the vector to the correct number of physical knobs plus 1
     reweightVector.resize(weights.size()+1);
 
-    if (weights.size() != rangeHigh.size() || 
-        weights.size() != rangeLow.size()){
+    if (weights.size() != reweightingSigmas.size()){
       std::cerr << "Error configuring the reweights, the number of weights must be"
                 << " equal to the number of boundaries (range).\n";
       exit(-1);
     }
  
     // don't forget the last vector with all of the weights
-    reweightVector.back().resize(nWeights);
+    reweightVector.back().resize(reweightingSigmas.front().size());
     for (auto & ptr : reweightVector.back()) ptr = new rwgt::NuReweight;
 
     // loop over the physical knobs and expand to the correct number of weights
@@ -61,14 +60,19 @@ namespace lar1nd{
     {
       // resize this row to accomodate all of the weight points 
       // (2sigma, 1.5 sigma, ... -1.5sigma, -2sigma etc.)
-      reweightVector[i_reweightingKnob].resize(nWeights);
+      reweightVector[i_reweightingKnob].resize(
+            reweightingSigmas[i_reweightingKnob].size());
 
-      for (int weight_point = 0; weight_point < nWeights; weight_point++){
+      for (unsigned int weight_point = 0; 
+           weight_point < reweightingSigmas[i_reweightingKnob].size(); 
+           weight_point++){
 
         // Figure out what is the value going in to this reweight
-        double stepSize = (rangeHigh[i_reweightingKnob] - rangeLow[i_reweightingKnob])/(nWeights-1);
-        double reweightingValue = rangeLow[i_reweightingKnob] 
-                                + weight_point*stepSize;
+        // double stepSize = (reweightingSigmas[i_reweightingKnob] 
+        //                - rangeLow[i_reweightingKnob])/(nWeights-1);
+        // double reweightingValue = rangeLow[i_reweightingKnob] 
+        //                         + weight_point*stepSize;
+        double reweightingValue = reweightingSigmas[i_reweightingKnob][weight_point];
 
         reweightVector[i_reweightingKnob][weight_point] = new rwgt::NuReweight;
 
@@ -110,7 +114,8 @@ namespace lar1nd{
     } // loop over physical knobs
 
 
-    std::cout << "\n\n\nsetup finished, running configure on each weight......\n\n\n";
+    std::cout << "\n\n\nsetup finished, running"
+              << " configure on each weight......\n\n\n";
 
     // Tell all of the reweight drivers to configure themselves:
     for(auto & vec : reweightVector){
@@ -121,6 +126,24 @@ namespace lar1nd{
 
     return;
 
+  }
+
+  void NuAnaAlg::prepareSigmas(int NWeights, 
+                           const std::vector<float> & WeightRangeSigma,
+                           unsigned int RandSeed,
+                           std::vector<std::vector<float> > & reweightingSigmas)
+  {
+
+    reweightingSigmas.resize(WeightRangeSigma.size());
+    for (unsigned int i = 0; i < WeightRangeSigma.size(); ++i)
+    {
+      reweightingSigmas[i].resize(NWeights);
+      TRandom rand;
+      rand.SetSeed(RandSeed);
+      for (int j = 0; j < NWeights; j ++)
+        reweightingSigmas[i][j] = rand.Gaus(0,WeightRangeSigma[i]);
+    }
+    return;
   }
 
   void NuAnaAlg::calcWeight(art::Ptr<simb::MCTruth> mctruth,

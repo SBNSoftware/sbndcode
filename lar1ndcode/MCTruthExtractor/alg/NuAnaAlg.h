@@ -13,6 +13,7 @@
 
 #include "TVector3.h"
 #include "TLorentzVector.h"
+#include "TRandom.h"
 
 #include <memory>
 
@@ -28,13 +29,17 @@ namespace lar1nd{
     void configureGeometry(art::ServiceHandle<geo::Geometry> );
 
     void configureReWeight(std::vector<std::string> &,
-                           std::vector<float>&,
-                           std::vector<float>&,
-                           int);
+                           const std::vector<std::vector<float>>&);
+                           // std::vector<float>&,
+                           // int);
 
     void calcWeight(art::Ptr<simb::MCTruth>,
                     art::Ptr<simb::GTruth >,
                     std::vector<std::vector<float>>& );
+
+    void prepareSigmas(int, const std::vector<float> &,
+                       unsigned int,
+                       std::vector<std::vector<float> > & );
 
     // get the basic neutrino info:
     void packNeutrinoInfo(simb::MCNeutrino * neutrino, 

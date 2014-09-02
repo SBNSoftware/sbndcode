@@ -76,10 +76,11 @@ namespace lar1nd{
 
     bool fXSecReweight;
     std::vector<std::string> fWeights;
-    std::vector<float> fWeightRangeHigh;
-    std::vector<float> fWeightRangeLow;
+    std::vector<float> fWeightRangeSigma;
+    unsigned int fRandSeed;
     int fNWeights;
 
+    std::vector< std::vector<float> > reweightingSigmas;
 
     // #---------------------------------------------------------------
     // #This is the list of analysis variables needed for the ttree:
@@ -179,8 +180,8 @@ namespace lar1nd{
     , fLarg4ModuleLabel (pset.get< std::string >              ("LArG4ModuleLabel"))
     , fXSecReweight     (pset.get< bool >                     ("XSecReweight"))
     , fWeights          (pset.get< std::vector<std::string> > ("Weights"))
-    , fWeightRangeHigh  (pset.get< std::vector<float> >       ("WeightRangeHigh"))
-    , fWeightRangeLow   (pset.get< std::vector<float> >       ("WeightRangeLow"))
+    , fWeightRangeSigma (pset.get< std::vector<float> >       ("WeightRangeSigma"))
+    , fRandSeed         (pset.get< unsigned int >             ("RandSeed"))
     , fNWeights         (pset.get< int >                      ("NWeights"))
   {
 
@@ -277,11 +278,17 @@ namespace lar1nd{
 
     if (fXSecReweight)
       fTreeTot->Branch("MultiWeight","MultiWeight",&eventWeights,32000,0);
+    
+
+
     art::ServiceHandle<geo::Geometry> geom;
     // configure the geometry in the worker function:
     fNuAnaAlg.configureGeometry(geom);
-    if (fXSecReweight)
-      fNuAnaAlg.configureReWeight(fWeights,fWeightRangeHigh, fWeightRangeLow,fNWeights);
+
+    if (fXSecReweight){
+      fNuAnaAlg.prepareSigmas(fNWeights, fWeightRangeSigma, fRandSeed,reweightingSigmas);
+      fNuAnaAlg.configureReWeight(fWeights,reweightingSigmas);
+    }
 
     return;
   }
