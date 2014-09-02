@@ -39,8 +39,10 @@ lar1_geo(TString volName="")
   if ( ! volName.IsNull() ) gGeoManager->FindVolumeFast(volName)->Draw("ogl");
   //gGeoManager->FindVolumeFast("volWorld")->Draw("ogl");
 
-  TGeoVolume *TPC = gGeoManager->FindVolumeFast("volTPC");
-  float m_tpc = TPC->Weight();
+  TGeoVolume *TPC1 = gGeoManager->FindVolumeFast("volTPC1");
+  float m_tpc = TPC1->Weight();
+  TGeoVolume *TPC2 = gGeoManager->FindVolumeFast("volTPC2");
+  float m_tpc = TPC2->Weight();
   TGeoVolume *Cathode = gGeoManager->FindVolumeFast("volCathodePlate");
   float m_cathode = Cathode->Weight();
 
