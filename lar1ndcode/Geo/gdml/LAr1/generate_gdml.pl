@@ -331,6 +331,64 @@ EOF
 
       print GDML <<EOF;
   </volume>
+
+    <volume name="volTPCPlane2">
+      <materialref ref="LAr"/>
+      <solidref ref="TPCPlane"/>
+EOF
+
+  # The wires at the -z, +y end (For +60 deg-- can rotate by 180 later for -60)
+  for ($i = 0; $i < $NumberWiresPerEdge ; $i++)
+  {
+
+    print GDML <<EOF;
+  <physvol>
+     <volumeref ref="volTPCWire$i"/> 
+     <position name="posTPCWire$i" unit="cm" y="0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1)" z="-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1)" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/> 
+    </physvol>  
+EOF
+  $ypos=0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1);
+  $zpos=-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1);
+  open (MYFILE, '>>data.txt');
+  print MYFILE "TPCWire$i y=$ypos z=$zpos\n";
+  }
+
+  # The wires in the middle.
+for ($i = 0; $i < $NumberCenterWires ; $i++)
+  {
+      my $j = $NumberWiresPerEdge  +$i;
+      $ypos=0.5*$TPCWirePlaneWidthY - $TPCYWirePitch*(0.5*$NumberWiresPerEdge + $i+1) ; 
+
+      print GDML <<EOF;
+   <physvol>
+     <volumeref ref="volTPCWireCommon"/>
+     <position name="posTPCWire$j" unit="cm" y="$ypos" z="0" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/>
+    </physvol> 
+EOF
+  }
+
+  # The wires at the +z end
+  for ($i = 0; $i < $NumberWiresPerEdge; $i++)
+  {
+
+	  my $j = $NumberWiresPerEdge + $NumberCenterWires + $i ;
+	  my $k = $NumberWiresPerEdge - $i - 1 ;
+      $ypos =0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($NumberWiresPerEdge + 2*$NumberCenterWires + $i +1 ) ; 
+	
+    print GDML <<EOF;
+   <physvol>
+     <volumeref ref="volTPCWire$k"/> 
+     <position name="posTPCWireB$j" unit="cm" y="$ypos" z="0.5*$TPCZWirePitch*($i+1)" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/>
+    </physvol> 
+EOF
+  }
+
+      print GDML <<EOF;
+  </volume>
+
 </structure>
 </gdml>
 EOF
@@ -394,6 +452,23 @@ EOF
 
 	print GDML <<EOF ;
   </volume>
+  <volume name="volTPCPlaneVert2">
+    <materialref ref="LAr"/>       
+    <solidref ref="TPCPlaneVert"/>
+EOF
+    for ( $i = 0; $i < $NumberWires; ++$i){    
+    print GDML <<EOF;
+      <physvol>
+        <volumeref ref="volTPCWireVert"/>
+        <position name="posTPCWireVert$i" unit="cm" z="-0.5*$TPCWirePlaneLengthZ+$TPCWirePitch*($i+1)" x="0" y="0"/>
+        <rotationref ref="rPlus90AboutX"/>
+      </physvol>  
+EOF
+	}
+
+	print GDML <<EOF ;
+  </volume>
+
 </structure>
 </gdml>
 EOF
@@ -465,6 +540,10 @@ sub gen_tpc()
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
  </volume>
+ <volume name="volTPCActive2">
+   <materialref ref="LAr"/>
+   <solidref ref="TPCActive"/>
+ </volume>
  <volume name="volTPC1">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
@@ -504,23 +583,23 @@ EOF
 
      print GDML <<EOF;
 	<physvol>
-		 <volumeref ref="volTPCPlaneVert"/>
-		 <position name="posTPCPlaneVert2" unit="cm" x="-$TPCWidth/2 +0.1" y="0" z="0" />
+		 <volumeref ref="volTPCPlaneVert2"/>
+		 <position name="posTPCPlaneVert3" unit="cm" x="-$TPCWidth/2 +0.1" y="0" z="0" />
 	 </physvol>
 	<physvol>
-		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane2" unit="cm" x="-$TPCWidth/2 + 0.3 +0.1" y="0" z="0" />
+		<volumeref ref="volTPCPlane2"/>
+		<position name="posTPCPlane4" unit="cm" x="-$TPCWidth/2 + 0.3 +0.1" y="0" z="0" />
      	<rotationref ref="rPlus180AboutY"/> 
 	</physvol>
 	<physvol>
-		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane3" unit="cm" x="-$TPCWidth/2 + 0.6 +0.1" y="0" z="0" />
+		<volumeref ref="volTPCPlane2"/>
+		<position name="posTPCPlane5" unit="cm" x="-$TPCWidth/2 + 0.6 +0.1" y="0" z="0" />
 	</physvol>
 
 EOF
 	print GDML <<EOF;
 	<physvol>
-	 	 <volumeref ref="volTPCActive"/>
+	 	 <volumeref ref="volTPCActive2"/>
 	     <position name="posTPCActive" unit="cm" x="0" y="0" z="0"/>
 	</physvol>
 </volume>
@@ -634,7 +713,7 @@ sub make_APA()
 	<physvol>
 		<volumeref ref="volTPC2"/>
 		<position name="posTPC2" unit="cm" x="-$TPCWidth/2" y="0" z="0" />
-		<rotationref ref="rPlus180AboutY"/>
+	<!--	<rotationref ref="rPlus180AboutY"/>-->
 	</physvol>  
 
 EOF
@@ -744,15 +823,6 @@ sub gen_cryostat()
        <volumeref ref="volCathodePlate"/>
  	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
 	 </physvol> 
-	<physvol>
-		<volumeref ref="volTPC"/>
-		<position name="posTPC1" unit="cm" x="$TPCWidth/2" y="0" z="0" />
-	</physvol>
-	<physvol>
-		<volumeref ref="volTPC"/>
-		<position name="posTPC2" unit="cm" x="-$TPCWidth/2" y="0" z="0" />
-		<rotationref ref="rPlus180AboutY"/>
-	</physvol>  
 EOF
 	make_APA();
 
