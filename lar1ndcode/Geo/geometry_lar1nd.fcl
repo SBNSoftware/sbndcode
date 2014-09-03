@@ -7,6 +7,14 @@ lar1nd_geo:
  Name:     "lar1nd"
  GDML:     "lar1nd.gdml"
  ROOT:     "lar1nd.gdml"
+
+ SortingParameters: { 
+   DetectorVersion: "lar1nd" 
+ } 
+
+ SurfaceY:           0.0e2               #in cm, vertical distance to the surface
+ DisableWiresInG4:   false
+
 }
 
 lar1nd_geometry_helper:

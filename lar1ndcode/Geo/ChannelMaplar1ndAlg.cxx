@@ -60,17 +60,23 @@ namespace geo{
 
     fTopChannel = 0;
 
+  std::cout<<"fNcryostat: "<<fNcryostat<<std::endl;
+   std::cout<<"fPlanePerAPA: "<<fPlanesPerAPA<<std::endl;
+
+
     // Size some vectors and initialize the FirstChannel vectors.
     for(unsigned int cs = 0; cs != fNcryostat; ++cs){
       
       fNTPC[cs] = cgeo[cs]->NTPC();
 
+	   std::cout<<"fNTPC["<<cs<<"]: "<<fNTPC[cs]<<std::endl;
+
       nAnchoredWires[cs].resize(fNTPC[cs]);
       fWiresPerPlane[cs].resize(fNTPC[cs]);
-      fFirstChannelInThisPlane[cs].resize(fNTPC[cs]/2);
-      fFirstChannelInNextPlane[cs].resize(fNTPC[cs]/2);
+      fFirstChannelInThisPlane[cs].resize(fNTPC[cs]);
+      fFirstChannelInNextPlane[cs].resize(fNTPC[cs]);
 
-      for(unsigned int apa = 0; apa != fNTPC[cs]/2; ++apa){
+      for(unsigned int apa = 0; apa != fNTPC[cs]; ++apa){
 	
         nAnchoredWires[cs][apa].resize(fPlanesPerAPA);
 	fWiresPerPlane[cs][apa].resize(fPlanesPerAPA);
@@ -82,11 +88,15 @@ namespace geo{
 
     // Find the number of wires anchored to the frame
     for(unsigned int c = 0; c != fNcryostat; ++c){
-      for(unsigned int a = 0; a != fNTPC[c]/2; ++a){
+      for(unsigned int a = 0; a != fNTPC[c]; ++a){
         for(unsigned int p = 0; p != fPlanesPerAPA; ++p){
 
-          unsigned int t = 2*a;
+		  //was originally t=2*a for LBNE 
+          unsigned int t = a;
           fWiresPerPlane[c][a][p] = cgeo[c]->TPC(t).Plane(p).Nwires();
+
+           std::cout<<"fWiresPerPlane["<<c<<"]["<<a<<"]["<<p<<"] "<< cgeo[c]->TPC(t).Plane(p).Nwires()<<std::endl;
+
           double xyz[3] = {0.};
           double xyz_next[3] = {0.};
 
@@ -97,6 +107,7 @@ namespace geo{
 	    // for vertical planes
 	    if(cgeo[c]->TPC(t).Plane(p).View() == geo::kZ)   { 
 	      nAnchoredWires[c][a][p] = fWiresPerPlane[c][a][p];      
+//	      std::cout<<"nAnchoredWires[0][0]["<<p<<"] ="<< fWiresPerPlane[c][a][p]<<std::endl;      
 	      break;
 	    }
 
@@ -116,11 +127,11 @@ namespace geo{
     static uint32_t CurrentChannel = 0;
  
     for(unsigned int cs = 0; cs != fNcryostat; ++cs){
-      for(unsigned int apa = 0; apa != fNTPC[cs]/2; ++apa){  
+      for(unsigned int apa = 0; apa != fNTPC[cs]; ++apa){  
         for(unsigned int p = 0; p != fPlanesPerAPA; ++p){
 
           fFirstChannelInThisPlane[cs][apa][p] = CurrentChannel;
-          CurrentChannel = CurrentChannel + 2*nAnchoredWires[cs][apa][p];
+          CurrentChannel = CurrentChannel + nAnchoredWires[cs][apa][p];
           fFirstChannelInNextPlane[cs][apa][p] = CurrentChannel;
 
         }// end plane loop
@@ -175,8 +186,8 @@ namespace geo{
 
 
     mf::LogVerbatim("GeometryTest") << "fNchannels = " << fNchannels ; 
-    mf::LogVerbatim("GeometryTest") << "U channels per APA = " << 2*nAnchoredWires[0][0][0] ;
-    mf::LogVerbatim("GeometryTest") << "V channels per APA = " << 2*nAnchoredWires[0][0][1] ;
+    mf::LogVerbatim("GeometryTest") << "U channels per APA = " << fWiresPerPlane[0][0][0]; //2*nAnchoredWires[0][0][0] ;
+    mf::LogVerbatim("GeometryTest") << "V channels per APA = " << fWiresPerPlane[0][0][1]; //2*nAnchoredWires[0][0][1] ;
     mf::LogVerbatim("GeometryTest") << "Z channels per APA side = " << nAnchoredWires[0][0][2] ;
 
     return;

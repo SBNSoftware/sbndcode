@@ -136,7 +136,7 @@ namespace geo{
 
   //----------------------------------------------------------------------------
   GeoObjectSorterlar1nd::GeoObjectSorterlar1nd(fhicl::ParameterSet const& p)
-    : fDetVersion(p.get< std::string >("DetectorVersion", "lar1ndlar1ndt4apa"))
+    : fDetVersion(p.get< std::string >("DetectorVersion", "lar1nd"))
   {
   }
 
