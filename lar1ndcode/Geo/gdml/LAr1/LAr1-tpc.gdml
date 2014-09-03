@@ -33,7 +33,7 @@
 
 	<physvol>
 	 	 <volumeref ref="volTPCActive"/>
-	     <position name="posTPCActive" unit="cm" x="0" y="0" z="0"/>
+	     <position name="posTPCActive1" unit="cm" x="0" y="0" z="0"/>
 	</physvol>
  </volume> 
 
@@ -56,7 +56,7 @@
 
 	<physvol>
 	 	 <volumeref ref="volTPCActive2"/>
-	     <position name="posTPCActive" unit="cm" x="0" y="0" z="0"/>
+	     <position name="posTPCActive2" unit="cm" x="0" y="0" z="0"/>
 	</physvol>
 </volume>
 

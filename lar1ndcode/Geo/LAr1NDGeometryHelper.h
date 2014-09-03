@@ -24,7 +24,7 @@ class TString;
 namespace geo
 {
   class ChannelMapAlg;
-  class CryostaGeo;
+  class CryostatGeo;
   class ExptGeoHelperInterface;
 }
 
