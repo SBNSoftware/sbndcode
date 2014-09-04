@@ -60,7 +60,7 @@ namespace geo{
 
     fTopChannel = 0;
 
-  std::cout<<"fNcryostat: "<<fNcryostat<<std::endl;
+   std::cout<<"fNcryostat: "<<fNcryostat<<std::endl;
    std::cout<<"fPlanePerAPA: "<<fPlanesPerAPA<<std::endl;
 
 
@@ -91,7 +91,7 @@ namespace geo{
       for(unsigned int a = 0; a != fNTPC[c]; ++a){
         for(unsigned int p = 0; p != fPlanesPerAPA; ++p){
 
-		  //was originally t=2*a for LBNE 
+		  //was originally t=2*a for LBNE--no anchored vs unanchored wires for LAr1ND 
           unsigned int t = a;
           fWiresPerPlane[c][a][p] = cgeo[c]->TPC(t).Plane(p).Nwires();
 
@@ -107,7 +107,6 @@ namespace geo{
 	    // for vertical planes
 	    if(cgeo[c]->TPC(t).Plane(p).View() == geo::kZ)   { 
 	      nAnchoredWires[c][a][p] = fWiresPerPlane[c][a][p];      
-//	      std::cout<<"nAnchoredWires[0][0]["<<p<<"] ="<< fWiresPerPlane[c][a][p]<<std::endl;      
 	      break;
 	    }
 
@@ -207,7 +206,7 @@ namespace geo{
   std::vector<geo::WireID> ChannelMaplar1ndAlg::ChannelToWire(uint32_t channel)  const
   {
 
-	std::cout<<"NUMBER OF CHANNELS: "<<channel<<", "<<fNchannels<<std::endl;
+//	std::cout<<"NUMBER OF CHANNELS: "<<channel<<", "<<fNchannels<<std::endl;
     // first check if this channel ID is legal
     if(channel >= fNchannels )
       throw cet::exception("Geometry") << "ILLEGAL CHANNEL ID for channel " << channel << "\n";
@@ -331,7 +330,7 @@ namespace geo{
     if (dwire-iwire>fWirePitch[plane]*0.5) ++iwire;
     //uint32_t maxwireminus1=fWiresPerPlane[0][tpc/2][plane]-1;
     uint32_t maxwireminus1=fWiresPerPlane[0][tpc][plane]-1;
-	std::cout<<"MAX WIRE MUNIS 1: "<<maxwireminus1<<std::endl;
+//	std::cout<<"MAX WIRE MUNIS 1: "<<maxwireminus1<<std::endl;
     if(iwire>maxwireminus1) iwire=maxwireminus1;
 
     WireID wid(cryostat, tpc, plane, iwire);
@@ -360,10 +359,10 @@ namespace geo{
     // the other side, it is offset by the number of wires on the first side.
    // Channel += (OtherSideWires + wire)%(2*nAnchoredWires[cstat][std::floor(tpc/2)][plane]);
 	
-	std::cout<<"CHANNEL TO WIRE THINGS: "<<Channel<<std::endl;
+//	std::cout<<"CHANNEL TO WIRE THINGS: "<<Channel<<std::endl;
 	Channel += wire;
-	std::cout<<"CHANNEL TO WIRE THINGS: "<<Channel<<std::endl;
-	std::cout<<"WIRE  IS :"<<wire<<std::endl;
+//	std::cout<<"CHANNEL TO WIRE THINGS: "<<Channel<<std::endl;
+//	std::cout<<"WIRE  IS :"<<wire<<std::endl;
     return Channel;
 
   }
