@@ -1,16 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////////
-/// \file LArIATGeometryHelper.h
-/// \brief Geometry helper service for LArIAT geometries. 
+/// \file LAR1NDGeometryHelper.h
+/// \brief Geometry helper service for LAR1ND geometries. 
 /// 
-/// Handles LArIAT-specific information for the generic Geometry service
+/// Handles LAR1ND-specific information for the generic Geometry service
 /// within LArSoft. Derived from the ExptGeoHelperInterface class
 ///
 /// \verion $Id
-/// \author brebel@fnal.gov
+/// \author rs@fnal.gov
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef LArIAT_ExptGeoHelperInterface_h
-#define LArIAT_ExptGeoHelperInterface_h
+#ifndef LAR1ND_ExptGeoHelperInterface_h
+#define LAR1ND_ExptGeoHelperInterface_h
 
 #include "Geometry/ExptGeoHelperInterface.h"
 
@@ -24,21 +24,25 @@ class TString;
 namespace geo
 {
   class ChannelMapAlg;
-  class CryostaGeo;
+  class CryostatGeo;
   class ExptGeoHelperInterface;
+}
+
+namespace geo
+{
+  class ChannelMapAlg;
 }
 
 // Declaration
 //
-namespace lariatgeo
+namespace lar1nd
 {
-  class LArIATGeometryHelper : public geo::ExptGeoHelperInterface
+  class LAR1NDGeometryHelper : public geo::ExptGeoHelperInterface
   {
   public:
   
-    LArIATGeometryHelper(fhicl::ParameterSet const & pset, 
-			 art::ActivityRegistry &reg );
-    ~LArIATGeometryHelper() throw();
+    LAR1NDGeometryHelper( fhicl::ParameterSet const & pset, art::ActivityRegistry &reg );
+    ~LAR1NDGeometryHelper() throw();
 
     // Public interface for ExptGeoHelperInterface (for reference purposes)
     //
@@ -55,18 +59,18 @@ namespace lariatgeo
   
   private:
     
-    void  doConfigureChannelMapAlg(const TString & detectorName,
-				   fhicl::ParameterSet const & sortingParam,
-				   std::vector<geo::CryostatGeo*> & c ) override;
+    void  doConfigureChannelMapAlg( const TString & detectorName,
+                                    fhicl::ParameterSet const & sortingParam,
+                                    std::vector<geo::CryostatGeo*> & c ) override;
     std::shared_ptr<const geo::ChannelMapAlg> doGetChannelMapAlg() const override;
     
-    fhicl::ParameterSet   const&        fPset;       ///< configuration parameter set
-    art::ActivityRegistry      &        fReg;        ///< activity registry
-    std::shared_ptr<geo::ChannelMapAlg> fChannelMap; ///< channel map
+    fhicl::ParameterSet const & fPset;
+    art::ActivityRegistry & fReg;
+    std::shared_ptr<geo::ChannelMapAlg> fChannelMap;
   
   };
 
 }
-DECLARE_ART_SERVICE_INTERFACE_IMPL(lariatgeo::LArIATGeometryHelper, geo::ExptGeoHelperInterface, LEGACY)
+DECLARE_ART_SERVICE_INTERFACE_IMPL(lar1nd::LAR1NDGeometryHelper, geo::ExptGeoHelperInterface, LEGACY)
 
-#endif // LArIAT_ExptGeoHelperInterface_h
+#endif // LAR1ND_ExptGeoHelperInterface_h
