@@ -4,16 +4,22 @@ BEGIN_PROLOG
 lar1nd_geo:
 {
  SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
- Name:     "lariat"
- GDML:     "lariat.gdml"
- ROOT:     "lariat.gdml"
-#GDML:     "lariat_wdisk.gdml"
-#ROOT:     "lariat_wdisk.gdml"
+ Name:     "lar1nd"
+ GDML:     "lar1nd.gdml"
+ ROOT:     "lar1nd.gdml"
+
+ SortingParameters: { 
+   DetectorVersion: "lar1nd" 
+ } 
+
+ SurfaceY:           0.0e2               #in cm, vertical distance to the surface
+ DisableWiresInG4:   false
+
 }
 
 lar1nd_geometry_helper:
 {
- service_provider : LArIATGeometryHelper
+ service_provider : LAr1NDGeometryHelper
 }
 
 END_PROLOG

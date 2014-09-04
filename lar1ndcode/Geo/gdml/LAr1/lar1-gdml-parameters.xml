@@ -67,11 +67,11 @@
    The size of the LAr TPC along the x-axis.
    </parameter>
 
-   <parameter name="TPCHeight" value="400">
+   <parameter name="TPCHeight" value="400 ">
    The size of the LAr TPC along the y-axis.
    </parameter>
 
-   <parameter name="TPCLength" value="365">
+   <parameter name="TPCLength" value="365 ">
    The size of the LAr TPC along the z-axis.
    </parameter>
 
@@ -93,7 +93,7 @@
    TPC. "kInch" will be interpreted in make_gdml.pl
    </parameter>
 
-   <parameter name="TPCWireThickness" value="0.015">  <!--0.015"> -->
+   <parameter name="TPCWireThickness" value="0.015">  <!--"0.015"> -->   
    The diameter of a wire in a TPC plane.
    </parameter>
 

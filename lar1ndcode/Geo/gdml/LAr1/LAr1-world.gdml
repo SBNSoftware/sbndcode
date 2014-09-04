@@ -3,7 +3,7 @@
 <solids>
   <box name="World" lunit="cm" x="70000" y="85000" z="49000"/>
   <box name="ConcreteEnclosureOuter" lunit="cm" x="700+8" y="850+8" z="490+8"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="700" y="850" z="490"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="700+0.1" y="850+0.1" z="490+0.1"/>
 
   <subtraction name="ConcreteEnclosure">
 	<first ref="ConcreteEnclosureOuter"/> <second ref="ConcreteEnclosureInner"/>
