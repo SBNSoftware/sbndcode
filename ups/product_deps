@@ -33,7 +33,7 @@ fcldir  product_dir
 # Add the dependent product and version
 
 product          version
-larsoft		v02_05_01
+larsoft		v02_05_02
 gcc		v4_8_2
 
 # list products required ONLY for the build
