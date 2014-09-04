@@ -713,7 +713,7 @@ sub make_APA()
 	<physvol>
 		<volumeref ref="volTPC2"/>
 		<position name="posTPC2" unit="cm" x="-$TPCWidth/2" y="0" z="0" />
-		<rotationref ref="rPlus180AboutY"/>
+	<!--	<rotationref ref="rPlus180AboutY"/> -->
 	</physvol>  
 
 EOF

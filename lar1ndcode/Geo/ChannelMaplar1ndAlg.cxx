@@ -131,7 +131,7 @@ namespace geo{
         for(unsigned int p = 0; p != fPlanesPerAPA; ++p){
 
           fFirstChannelInThisPlane[cs][apa][p] = CurrentChannel;
-          CurrentChannel = CurrentChannel + nAnchoredWires[cs][apa][p];
+          CurrentChannel = CurrentChannel + fWiresPerPlane[cs][apa][p] ; //nAnchoredWires[cs][apa][p];
           fFirstChannelInNextPlane[cs][apa][p] = CurrentChannel;
 
         }// end plane loop
@@ -188,7 +188,7 @@ namespace geo{
     mf::LogVerbatim("GeometryTest") << "fNchannels = " << fNchannels ; 
     mf::LogVerbatim("GeometryTest") << "U channels per APA = " << fWiresPerPlane[0][0][0]; //2*nAnchoredWires[0][0][0] ;
     mf::LogVerbatim("GeometryTest") << "V channels per APA = " << fWiresPerPlane[0][0][1]; //2*nAnchoredWires[0][0][1] ;
-    mf::LogVerbatim("GeometryTest") << "Z channels per APA side = " << nAnchoredWires[0][0][2] ;
+    mf::LogVerbatim("GeometryTest") << "Z channels per APA side = " << fWiresPerPlane[0][0][2] ; //nAnchoredWires[0][0][2];
 
     return;
 
@@ -207,11 +207,13 @@ namespace geo{
   std::vector<geo::WireID> ChannelMaplar1ndAlg::ChannelToWire(uint32_t channel)  const
   {
 
+	std::cout<<"NUMBER OF CHANNELS: "<<channel<<", "<<fNchannels<<std::endl;
     // first check if this channel ID is legal
     if(channel >= fNchannels )
       throw cet::exception("Geometry") << "ILLEGAL CHANNEL ID for channel " << channel << "\n";
 
-    std::vector< WireID > AllSegments;
+ //   std::vector< WireID > AllSegments;
+    std::vector< WireID > ChannelWire;
     
     static unsigned int cstat;
     static unsigned int tpc;
@@ -224,18 +226,18 @@ namespace geo{
       
       bool breakVariable = false;
       
-      for(unsigned int apaloop = 0; apaloop != fNTPC[csloop]/2; ++apaloop){
-	for(unsigned int planeloop = 0; planeloop != fPlanesPerAPA; ++planeloop){
+      for(unsigned int apaloop = 0; apaloop != fNTPC[csloop]; ++apaloop){
+  	   	for(unsigned int planeloop = 0; planeloop != fPlanesPerAPA; ++planeloop){
 	  
-	  NextPlane = fFirstChannelInNextPlane[csloop][apaloop][planeloop];
+	 	  NextPlane = fFirstChannelInNextPlane[csloop][apaloop][planeloop];
        	  ThisPlane = fFirstChannelInThisPlane[csloop][apaloop][planeloop];
 	  
-	  if(channel < NextPlane){
+	 	 if(channel < NextPlane){
 	    
-	    cstat = csloop;
-	    tpc   = 2*apaloop;
-	    plane = planeloop;
-	    wireThisPlane  = channel - ThisPlane;
+	    	cstat = csloop;
+	   	 	tpc   = apaloop;
+	    	plane = planeloop;
+	    	wireThisPlane  = channel - ThisPlane;
 	    
 	    breakVariable = true;
 	    break;
@@ -249,13 +251,15 @@ namespace geo{
       if(breakVariable) break;
       
     }// end cryostat loop
-    
+ 
+   geo::WireID CodeWire(cstat,tpc,plane,wireThisPlane);   
+   ChannelWire.push_back(CodeWire);
 
-    int WrapDirection = 1; // go from tpc to (tpc+1) or tpc to (tpc-1)
+  /*  int WrapDirection = 1; // go from tpc to (tpc+1) or tpc to (tpc-1)
 
     // find the lowest wire
-    uint32_t ChannelGroup = std::floor( wireThisPlane/nAnchoredWires[cstat][tpc/2][plane] );
-    unsigned int bottomwire = wireThisPlane-ChannelGroup*nAnchoredWires[cstat][tpc/2][plane];
+    uint32_t ChannelGroup = std::floor( wireThisPlane/nAnchoredWires[cstat][tpc][plane] );
+    unsigned int bottomwire = wireThisPlane-ChannelGroup*nAnchoredWires[cstat][tpc][plane];
     
     if(ChannelGroup%2==1){
       // start in the other TPC
@@ -279,8 +283,10 @@ namespace geo{
       
     } //end WireSegmentCount loop
     
-    
     return AllSegments;
+  */
+
+	return ChannelWire;
   }
 
 
@@ -323,7 +329,9 @@ namespace geo{
     double dwire=distance/fWirePitch[plane];
     uint32_t iwire=int(dwire);
     if (dwire-iwire>fWirePitch[plane]*0.5) ++iwire;
-    uint32_t maxwireminus1=fWiresPerPlane[0][tpc/2][plane]-1;
+    //uint32_t maxwireminus1=fWiresPerPlane[0][tpc/2][plane]-1;
+    uint32_t maxwireminus1=fWiresPerPlane[0][tpc][plane]-1;
+	std::cout<<"MAX WIRE MUNIS 1: "<<maxwireminus1<<std::endl;
     if(iwire>maxwireminus1) iwire=maxwireminus1;
 
     WireID wid(cryostat, tpc, plane, iwire);
@@ -338,20 +346,24 @@ namespace geo{
 					       unsigned int cstat) const
   {
 
-    unsigned int OtherSideWires = 0;
+ //   unsigned int OtherSideWires = 0;
 
-    uint32_t Channel = fFirstChannelInThisPlane[cstat][std::floor(tpc/2)][plane];
+    uint32_t Channel = fFirstChannelInThisPlane[cstat][tpc][plane];
 
     // get number of wires starting on the first side of the APA if starting
     // on the other side TPC.
-    OtherSideWires += (tpc%2)*nAnchoredWires[cstat][std::floor(tpc/2)][plane];
+  //  OtherSideWires += (tpc%2)*nAnchoredWires[cstat][tpc][plane];
     
     // Lastly, account for the fact that channel number while moving up wire number in one
     // plane resets after 2 times the number of wires anchored -- one for each APA side.
     // At the same time, OtherSideWires accounts for the fact that if a channel starts on
     // the other side, it is offset by the number of wires on the first side.
-    Channel += (OtherSideWires + wire)%(2*nAnchoredWires[cstat][std::floor(tpc/2)][plane]);
-
+   // Channel += (OtherSideWires + wire)%(2*nAnchoredWires[cstat][std::floor(tpc/2)][plane]);
+	
+	std::cout<<"CHANNEL TO WIRE THINGS: "<<Channel<<std::endl;
+	Channel += wire;
+	std::cout<<"CHANNEL TO WIRE THINGS: "<<Channel<<std::endl;
+	std::cout<<"WIRE  IS :"<<wire<<std::endl;
     return Channel;
 
   }
