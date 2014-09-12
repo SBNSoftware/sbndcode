@@ -544,7 +544,7 @@ sub gen_tpc()
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
  </volume>
- <volume name="volTPC1">
+ <volume name="volTPC">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
 EOF
@@ -576,7 +576,7 @@ EOF
     print GDML <<EOF;
  </volume> 
 
- <volume name="volTPC2">
+<!-- <volume name="volTPC2">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
 EOF
@@ -602,7 +602,7 @@ EOF
 	 	 <volumeref ref="volTPCActive2"/>
 	     <position name="posTPCActive2" unit="cm" x="0" y="0" z="0"/>
 	</physvol>
-</volume>
+</volume>-->
 
 </structure>
 </gdml>
@@ -628,92 +628,92 @@ sub make_APA()
    	 </physvol>
    	 <physvol>
     	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam0" unit="cm" x="0" y="80" z="$TPCLength/2"/>
+        <position name="posHorizontalBeam0" unit="cm" x="0" y="80" z="$TPCLength/2+5"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam1" unit="cm" x="0" y="80*2" z="$TPCLength/2"/>
+         <position name="posHorizontalBeam1" unit="cm" x="0" y="80*2" z="$TPCLength/2+5"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam2" unit="cm" x="0" y="-80" z="$TPCLength/2"/>
+         <position name="posHorizontalBeam2" unit="cm" x="0" y="-80" z="$TPCLength/2+ 5"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam3" unit="cm" x="0" y="-80*2" z="$TPCLength/2"/>
+        <position name="posHorizontalBeam3" unit="cm" x="0" y="-80*2" z="$TPCLength/2+5"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam4" unit="cm" x="0" y="0" z="$TPCLength/2"/>
+        <position name="posHorizontalBeam4" unit="cm" x="0" y="0" z="$TPCLength/2 + 5"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam5" unit="cm" x="0" y="80" z="-$TPCLength/2"/>
+         <position name="posHorizontalBeam5" unit="cm" x="0" y="80" z="-$TPCLength/2 - 5"/>
      </physvol>
      <physvol>
          <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam6" unit="cm" x="0" y="80*2" z="-$TPCLength/2"/>
+         <position name="posHorizontalBeam6" unit="cm" x="0" y="80*2" z="-$TPCLength/2 - 5"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam7" unit="cm" x="0" y="-80" z="-$TPCLength/2"/>
+         <position name="posHorizontalBeam7" unit="cm" x="0" y="-80" z="-$TPCLength/2 - 5"/>
    	 </physvol>
    	 <physvol>
       	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam8" unit="cm" x="0" y="-80*2" z="-$TPCLength/2"/>
+         <position name="posHorizontalBeam8" unit="cm" x="0" y="-80*2" z="-$TPCLength/2 - 5"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam9" unit="cm" x="0" y="0" z="-$TPCLength/2"/>
+        <position name="posHorizontalBeam9" unit="cm" x="0" y="0" z="-$TPCLength/2 - 5 "/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam10" unit="cm" x="0" y="$TPCHeight/2" z="0"/>
+        <position name="posHorizontalBeam10" unit="cm" x="0" y="$TPCHeight/2 + 5" z="0"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam11" unit="cm" x="0" y="$TPCHeight/2" z="80"/>
+        <position name="posHorizontalBeam11" unit="cm" x="0" y="$TPCHeight/2 +5" z="80"/>
      </physvol> 
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam12" unit="cm" x="0" y="$TPCHeight/2" z="80*2"/>
+        <position name="posHorizontalBeam12" unit="cm" x="0" y="$TPCHeight/2+5" z="80*2"/>
      </physvol>
     <physvol>
         <volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam13" unit="cm" x="0" y="$TPCHeight/2" z="-80"/>
+        <position name="posHorizontalBeam13" unit="cm" x="0" y="$TPCHeight/2+5" z="-80"/>
      </physvol> 
      <physvol>
     	 <volumeref ref="volHorizontalBeam"/>
-      	 <position name="posHorizontalBeam14" unit="cm" x="0" y="$TPCHeight/2" z="-80*2"/>
+      	 <position name="posHorizontalBeam14" unit="cm" x="0" y="$TPCHeight/2+5" z="-80*2"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volHorizontalBeam"/>
-      	 <position name="posHorizontalBeam15" unit="cm" x="0" y="-$TPCHeight/2" z="0"/>
+      	 <position name="posHorizontalBeam15" unit="cm" x="0" y="-$TPCHeight/2-5" z="0"/>
      </physvol>
      <physvol>
       	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam16" unit="cm" x="0" y="-$TPCHeight/2" z="80"/>
+         <position name="posHorizontalBeam16" unit="cm" x="0" y="-$TPCHeight/2-5" z="80"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-    	 <position name="posHorizontalBeam17" unit="cm" x="0" y="-$TPCHeight/2" z="80*2"/>
+    	 <position name="posHorizontalBeam17" unit="cm" x="0" y="-$TPCHeight/2-5" z="80*2"/>
   	 </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam18" unit="cm" x="0" y="-$TPCHeight/2" z="-80"/>
+         <position name="posHorizontalBeam18" unit="cm" x="0" y="-$TPCHeight/2-5" z="-80"/>
    	 </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam19" unit="cm" x="0" y="-$TPCHeight/2" z="-80*2"/>
+         <position name="posHorizontalBeam19" unit="cm" x="0" y="-$TPCHeight/2-5" z="-80*2"/>
      </physvol>   
 	<physvol>
-		<volumeref ref="volTPC1"/>
-		<position name="posTPC1" unit="cm" x="$TPCWidth/2" y="0" z="0" />
+		<volumeref ref="volTPC"/>
+		<position name="posTPC1" unit="cm" x="$TPCWidth/2+2.5" y="0" z="0" />
 	</physvol>
 	<physvol>
-		<volumeref ref="volTPC2"/>
-		<position name="posTPC2" unit="cm" x="-$TPCWidth/2" y="0" z="0" />
-	<!--	<rotationref ref="rPlus180AboutY"/> -->
+		<volumeref ref="volTPC"/>
+		<position name="posTPC2" unit="cm" x="-$TPCWidth/2-2.5" y="0" z="0" />
+		<rotationref ref="rPlus180AboutY"/> 
 	</physvol>  
 
 EOF
@@ -744,7 +744,7 @@ sub gen_cryostat()
  <box name="APAFrameC" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-20" z="$AnodeWidthX/2"/>
  <box name="APAFrameD" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-35" z="$AnodeWidthX/2"/>
 
- <box name="HorizontalBeam" lunit="cm" x="$TPCWidth*2" y="5" z="10"/>
+ <box name="HorizontalBeam" lunit="cm" x="$TPCWidth*2" y="5" z="5"/>
 
  <box name="APASideCrossA" lunit="cm" x="$AnodeWidthX/2" y="127.28" z="127.28"/> 
  <box name="APASideCrossB" lunit="cm" x="$AnodeWidthX/2+ 0.1" y="127.28-$AnodeWidthX/2" z="127.28-$AnodeWidthX/2"/> 

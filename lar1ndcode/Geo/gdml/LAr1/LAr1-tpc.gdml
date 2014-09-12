@@ -14,7 +14,7 @@
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
  </volume>
- <volume name="volTPC1">
+ <volume name="volTPC">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
 	<physvol>
@@ -37,7 +37,7 @@
 	</physvol>
  </volume> 
 
- <volume name="volTPC2">
+<!-- <volume name="volTPC2">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
 	<physvol>
@@ -58,7 +58,7 @@
 	 	 <volumeref ref="volTPCActive2"/>
 	     <position name="posTPCActive2" unit="cm" x="0" y="0" z="0"/>
 	</physvol>
-</volume>
+</volume>-->
 
 </structure>
 </gdml>
