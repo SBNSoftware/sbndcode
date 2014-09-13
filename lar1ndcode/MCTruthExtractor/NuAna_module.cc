@@ -180,7 +180,6 @@ namespace lar1nd{
     , fLarg4ModuleLabel (pset.get< std::string >              ("LArG4ModuleLabel"))
     , fXSecReweight     (pset.get< bool >                     ("XSecReweight"))
     , fWeights          (pset.get< std::vector<std::string> > ("Weights"))
-    , fWeightRangeSigma (pset.get< std::vector<float> >       ("WeightRangeSigma"))
     , fRandSeed         (pset.get< unsigned int >             ("RandSeed"))
     , fNWeights         (pset.get< int >                      ("NWeights"))
   {
@@ -286,8 +285,10 @@ namespace lar1nd{
     fNuAnaAlg.configureGeometry(geom);
 
     if (fXSecReweight){
-      fNuAnaAlg.prepareSigmas(fNWeights, fWeightRangeSigma, fRandSeed,reweightingSigmas);
-      fNuAnaAlg.configureReWeight(fWeights,reweightingSigmas);
+      std::vector<reweight> reweights;
+      fNuAnaAlg.parseWeights(fWeights, reweights);
+      fNuAnaAlg.prepareSigmas(fNWeights, fRandSeed, reweightingSigmas);
+      fNuAnaAlg.configureReWeight(reweights, reweightingSigmas);
     }
 
     return;
@@ -474,9 +475,24 @@ namespace lar1nd{
     //   i++;
     // }
 
+    // std::cout << "\n\n\n----larg4:\n\n";
+
+    // For right now, print out a list of larg4 particles and useful info:
+    // for (auto & particle : (*mclistLARG4)){
+    //   if (particle.Mother() == 0){
+    //     std::cout << "On particle " << particle.TrackId() 
+    //               << " with PDG " << particle.PdgCode() << "\n";
+    //     std::cout << "  Mother: ......" << particle.Mother() << "\n"
+    //               << "  Energy: ......" << particle.E() << "\n"
+    //               << "  StatusCode: .." << particle.StatusCode() << "\n"
+    //               << "  NDaughters: .." << particle.NumberDaughters() << "\n"
+    //               << "  NPoints: ....." << particle.NumberTrajectoryPoints() << "\n"
+    //               << "  Process: ....." << particle.Process() << "\n";
+    //   }
+    // }
 
     if(!fFullOscTrue)
-        fNuAnaAlg.packLarg4Info(mclistLARG4, NPi0FinalState, NGamma, NChargedPions,
+        fNuAnaAlg.packLarg4Info(mclistLARG4, isCC, NPi0FinalState, NGamma, NChargedPions,
                                 leptonPos,
                                 leptonMom,
                                 p1PhotonConversionPos,
@@ -495,21 +511,6 @@ namespace lar1nd{
 
     // pack up the larg4 photon info:
     
-    // std::cout << "\n\n\n----larg4:\n\n";
-
-    // // For right now, print out a list of larg4 particles and useful info:
-    // for (auto & particle : (*mclistLARG4)){
-    //   if (particle.Mother() == 0){
-    //     std::cout << "On particle " << particle.TrackId() 
-    //               << " with PDG " << particle.PdgCode() << "\n";
-    //     std::cout << "  Mother: ......" << particle.Mother() << "\n"
-    //               << "  Energy: ......" << particle.E() << "\n"
-    //               << "  StatusCode: .." << particle.StatusCode() << "\n"
-    //               << "  NDaughters: .." << particle.NumberDaughters() << "\n"
-    //               << "  NPoints: ....." << particle.NumberTrajectoryPoints() << "\n"
-    //               << "  Process: ....." << particle.Process() << "\n";
-    //   }
-    // }
 
     // If needed, set up the weights.
     

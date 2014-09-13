@@ -19,6 +19,11 @@
 
 namespace lar1nd{
 
+  enum reweight {kNCEL, kQEMA, kQEVec, kResGanged, kCCRes, kNCRes, 
+        kCoh, kNonResRvp1pi, kNonResRvbarp1pi, kNonResRvp2pi,
+        kNonResRvbarp2pi, kResDecay, kNC, kDIS, kDISnucl, 
+        kAGKY, kNReWeights};
+  
   class NuAnaAlg
   {
   public:
@@ -28,7 +33,7 @@ namespace lar1nd{
   
     void configureGeometry(art::ServiceHandle<geo::Geometry> );
 
-    void configureReWeight(std::vector<std::string> &,
+    void configureReWeight(const std::vector<reweight> &,
                            const std::vector<std::vector<float>>&);
                            // std::vector<float>&,
                            // int);
@@ -37,9 +42,10 @@ namespace lar1nd{
                     art::Ptr<simb::GTruth >,
                     std::vector<std::vector<float>>& );
 
-    void prepareSigmas(int, const std::vector<float> &,
-                       unsigned int,
+    void prepareSigmas(int, unsigned int,
                        std::vector<std::vector<float> > & );
+
+    void parseWeights(const std::vector<std::string> &, std::vector<reweight> &);
 
     // get the basic neutrino info:
     void packNeutrinoInfo(simb::MCNeutrino * neutrino, 
@@ -71,7 +77,7 @@ namespace lar1nd{
                             int& NGamma,
                             int& NChargedPions);
 
-    void packLarg4Info(art::Handle< std::vector<simb::MCParticle> > mclarg4, int, int, int,
+    void packLarg4Info(art::Handle< std::vector<simb::MCParticle> > mclarg4, int, int, int, int,
                             std::vector<TLorentzVector> & leptonPos,
                             std::vector<TLorentzVector> & leptonMom,
                             std::vector<TLorentzVector> & p1PhotonConversionPos,
