@@ -9,18 +9,18 @@ lar1_geo(TString volName="")
   gSystem->Load("libGeom");
   gSystem->Load("libGdml");
 
-  TGeoManager::Import("lar1_nowires.gdml");
+  TGeoManager::Import("lar1nd_nowires.gdml");
 
-  drawopt optlar1[] = {
-	{"volTPCHorizontalBeam",	  kGreen+2},
+  drawopt optuboone[] = {
+	{"volHorizontalBeam",	  kGreen+2},
 	//{"volTPCFrame",			  kGray+1},
     //"volCathodePlate",          kGray+1}, 
     {0, 0}
   };
 
   for (int i=0;; ++i) {
- 		if (optlar1[i].volume==0) break;
-        gGeoManager->FindVolumeFast(optlar1[i].volume)->SetLineColor(optlar1[i].color);
+ 		if (optuboone[i].volume==0) break;
+        gGeoManager->FindVolumeFast(optuboone[i].volume)->SetLineColor(optuboone[i].color);
   }
   TList* mat = gGeoManager->GetListOfMaterials();
   TIter next(mat);
@@ -31,6 +31,7 @@ lar1_geo(TString volName="")
 
   gGeoManager->GetTopNode();
   //gGeoManager->CheckOverlaps(0.0000001);
+  //need to fix some overlaps, for now save some time
   gGeoManager->CheckOverlaps(10e-10);
   gGeoManager->PrintOverlaps();
   gGeoManager->SetMaxVisNodes(70000);
@@ -41,6 +42,8 @@ lar1_geo(TString volName="")
 
   TGeoVolume *TPC = gGeoManager->FindVolumeFast("volTPC");
   float m_tpc = TPC->Weight();
+//  TGeoVolume *TPC2 = gGeoManager->FindVolumeFast("volTPC2");
+//  float m_tpc = TPC2->Weight();
   TGeoVolume *Cathode = gGeoManager->FindVolumeFast("volCathodePlate");
   float m_cathode = Cathode->Weight();
 
