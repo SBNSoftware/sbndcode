@@ -36,30 +36,66 @@ namespace lar1nd{
 * This will also make a "total" reweight object that will set all the
 * switches on for all weighting parameters.
 */
-  void NuAnaAlg::configureReWeight(std::vector<std::string> & weights,
+  void NuAnaAlg::configureReWeight(const std::vector<reweight> & weights,
                          const std::vector<std::vector<float>>& reweightingSigmas){
-                         // std::vector<float>& rangeLow, int nWeights){
 
     // Expand the vector to the correct number of physical knobs plus 1
     reweightVector.resize(weights.size()+1);
 
-    if (weights.size() != reweightingSigmas.size()){
-      std::cerr << "Error configuring the reweights, the number of weights must be"
-                << " equal to the number of boundaries (range).\n";
-      exit(-1);
-    }
+    // if (weights.size()+1 != reweightingSigmas.size()){
+    //   std::cerr << "Error configuring the reweights, the number of weights must be"
+    //             << " equal to the number of boundaries (range).\n";
+    //   exit(-1);
+    // }
  
     // don't forget the last vector with all of the weights
     reweightVector.back().resize(reweightingSigmas.front().size());
     for (auto & ptr : reweightVector.back()) ptr = new rwgt::NuReweight;
+
+    for (unsigned int i_weight = 0; i_weight < reweightingSigmas.front().size(); ++i_weight)
+    {
+      // reweightVector.back().at(i_weight) 
+      //     -> ReweightNCEL(reweightingSigmas[kNCEL][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightQEMA(reweightingSigmas[kQEMA][i_weight]);
+      // reweightVector.back().at(i_weight) 
+      //     -> ReweightQEVec(reweightingSigmas[kQEVec][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightResGanged(reweightingSigmas[kResGanged][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightCCRes(reweightingSigmas[kCCRes][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightNCRes(reweightingSigmas[kNCRes][i_weight]);
+      // reweightVector.back().at(i_weight) 
+      //     -> ReweightCoh(reweightingSigmas[kCoh][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightNonResRvp1pi(reweightingSigmas[kNonResRvp1pi][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightNonResRvbarp1pi(reweightingSigmas[kNonResRvbarp1pi][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightNonResRvp2pi(reweightingSigmas[kNonResRvp2pi][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightNonResRvbarp2pi(reweightingSigmas[kNonResRvbarp2pi][i_weight]);
+      // reweightVector.back().at(i_weight) 
+      //     -> ReweightResDecay(reweightingSigmas[kResDecay][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightNC(reweightingSigmas[kNC][i_weight]);
+      // reweightVector.back().at(i_weight) 
+      //     -> ReweightDIS(reweightingSigmas[kDIS][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightDISnucl(reweightingSigmas[kDISnucl][i_weight]);
+      // reweightVector.back().at(i_weight) 
+      //     -> ReweightAGKY(reweightingSigmas[kAGKY][i_weight]);
+    }
+
 
     // loop over the physical knobs and expand to the correct number of weights
     for (unsigned int i_reweightingKnob = 0;
          i_reweightingKnob < reweightVector.size()-1; 
          i_reweightingKnob++) 
     {
+
       // resize this row to accomodate all of the weight points 
-      // (2sigma, 1.5 sigma, ... -1.5sigma, -2sigma etc.)
       reweightVector[i_reweightingKnob].resize(
             reweightingSigmas[i_reweightingKnob].size());
 
@@ -72,46 +108,85 @@ namespace lar1nd{
         //                - rangeLow[i_reweightingKnob])/(nWeights-1);
         // double reweightingValue = rangeLow[i_reweightingKnob] 
         //                         + weight_point*stepSize;
-        double reweightingValue = reweightingSigmas[i_reweightingKnob][weight_point];
 
         reweightVector[i_reweightingKnob][weight_point] = new rwgt::NuReweight;
 
-        
-        if (weights[i_reweightingKnob] == "QEMA"){
-          std::cout << "\n\nAbout to configure a QE axial mass driver with ma = "
-                    << reweightingValue << std::endl<< std::endl<< std::endl;
-          reweightVector[i_reweightingKnob][weight_point] 
-            -> ReweightQEMA(reweightingValue);
-          reweightVector.back().at(weight_point)          
-            -> ReweightQEMA(reweightingValue);
-        }
-        if (weights[i_reweightingKnob] == "CCRes"){
-          std::cout << "\n\nAbout to configure a CC res  driver with sigma = "
-                    << reweightingValue << std::endl<< std::endl<< std::endl;
-          reweightVector[i_reweightingKnob][weight_point] 
-            -> ReweightCCRes(reweightingValue);
-          reweightVector.back().at(weight_point)          
-            -> ReweightCCRes(reweightingValue);
-        }
-        if (weights[i_reweightingKnob] == "QEVec"){
-          std::cout << "\n\nAbout to configure a QE vec  driver with sigma = "
-                    << reweightingValue << std::endl<< std::endl<< std::endl;
-          reweightVector[i_reweightingKnob][weight_point] 
-            -> ReweightQEVec(reweightingValue);
-          reweightVector.back().at(weight_point)          
-            -> ReweightQEVec(reweightingValue);
-        }
-        if (weights[i_reweightingKnob] == "NCRes"){
-          std::cout << "\n\nAbout to configure a NC res  driver with sigma = "
-                    << reweightingValue << std::endl<< std::endl<< std::endl;
-          reweightVector[i_reweightingKnob][weight_point] 
-            -> ReweightNCRes(reweightingValue);
-          reweightVector.back().at(weight_point)          
-            -> ReweightNCRes(reweightingValue);
+        switch (weights[i_reweightingKnob]){
+          case kNCEL:
+            // reweightVector[i_reweightingKnob][weight_point]
+            //   -> ReweightNCEL(reweightingSigmas[kNCEL][weight_point]);
+            break;
+          case kQEMA:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightQEMA(reweightingSigmas[kQEMA][weight_point]);
+            break;
+          case kQEVec:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightQEVec(reweightingSigmas[kQEVec][weight_point]);
+            break;
+          case kResGanged:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightResGanged(reweightingSigmas[kResGanged][weight_point]);
+            break;
+          case kCCRes:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightCCRes(reweightingSigmas[kCCRes][weight_point]);
+            break;
+          case kNCRes:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightNCRes(reweightingSigmas[kNCRes][weight_point]);
+            break;
+          case kCoh:
+            // reweightVector[i_reweightingKnob][weight_point]
+            //   -> ReweightCoh(reweightingSigmas[kCoh][weight_point]);
+            break;
+          case kNonResRvp1pi:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightNonResRvp1pi(reweightingSigmas[kNonResRvp1pi][weight_point]);
+            break;
+          case kNonResRvbarp1pi:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightNonResRvbarp1pi(reweightingSigmas[kNonResRvbarp1pi][weight_point]);
+            break;
+          case kNonResRvp2pi:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightNonResRvp2pi(reweightingSigmas[kNonResRvp2pi][weight_point]);
+            break;
+          case kNonResRvbarp2pi:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightNonResRvbarp2pi(reweightingSigmas[kNonResRvbarp2pi][weight_point]);
+            break;
+          case kResDecay:
+            // reweightVector[i_reweightingKnob][weight_point]
+            //   -> ReweightResDecay(reweightingSigmas[kResDecay][weight_point]);
+            break;
+          case kNC:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightNC(reweightingSigmas[kNC][weight_point]);
+            break;
+          case kDIS:
+            // reweightVector[i_reweightingKnob][weight_point]
+            //   -> ReweightDIS(reweightingSigmas[kDIS][weight_point]);
+            break;
+          case kDISnucl:
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightDISnucl(reweightingSigmas[kDISnucl][weight_point]);
+            break;
+          case kAGKY:
+            // reweightVector[i_reweightingKnob][weight_point]
+            //   -> ReweightAGKY(reweightingSigmas[kAGKY][weight_point]);
+            break;
+          case kNReWeights:
+            break;
         }
 
       } //loop over nWeights
     } // loop over physical knobs
+
+
+
+
+
 
 
     std::cout << "\n\n\nsetup finished, running"
@@ -129,22 +204,50 @@ namespace lar1nd{
   }
 
   void NuAnaAlg::prepareSigmas(int NWeights, 
-                           const std::vector<float> & WeightRangeSigma,
                            unsigned int RandSeed,
                            std::vector<std::vector<float> > & reweightingSigmas)
   {
 
-    reweightingSigmas.resize(WeightRangeSigma.size());
-    for (unsigned int i = 0; i < WeightRangeSigma.size(); ++i)
+    TRandom rand;
+    rand.SetSeed(RandSeed);
+    
+    reweightingSigmas.resize(kNReWeights);
+    for (unsigned int i = 0; i < reweightingSigmas.size(); ++i)
     {
       reweightingSigmas[i].resize(NWeights);
-      TRandom rand;
-      rand.SetSeed(RandSeed);
       for (int j = 0; j < NWeights; j ++)
-        reweightingSigmas[i][j] = rand.Gaus(0,WeightRangeSigma[i]);
+        reweightingSigmas[i][j] = rand.Gaus(0,1);
     }
     return;
   }
+
+  void NuAnaAlg::parseWeights(const std::vector<std::string> & string_weights,
+                              std::vector<reweight> & enum_weights){
+
+    enum_weights.resize(string_weights.size());
+    for( auto & s : string_weights){
+      if (s == "NCEL") enum_weights.push_back(kNCEL);
+      else if (s == "QEMA") enum_weights.push_back(kQEMA);
+      else if (s == "QEVec") enum_weights.push_back(kQEVec);
+      else if (s == "ResGanged") enum_weights.push_back(kResGanged);
+      else if (s == "CCRes") enum_weights.push_back(kCCRes);
+      else if (s == "NCRes") enum_weights.push_back(kNCRes);
+      else if (s == "Coh") enum_weights.push_back(kCoh);
+      else if (s == "NonResRvp1pi") enum_weights.push_back(kNonResRvp1pi);
+      else if (s == "NonResRvbarp1pi") enum_weights.push_back(kNonResRvbarp1pi);
+      else if (s == "NonResRvp2pi") enum_weights.push_back(kNonResRvp2pi);
+      else if (s == "NonResRvbarp2pi") enum_weights.push_back(kNonResRvbarp2pi);
+      else if (s == "ResDecay") enum_weights.push_back(kResDecay);
+      else if (s == "NC") enum_weights.push_back(kNC);
+      else if (s == "DIS") enum_weights.push_back(kDIS);
+      else if (s == "DISnucl") enum_weights.push_back(kDISnucl);
+      else if (s == "AGKY") enum_weights.push_back(kAGKY);
+    }
+
+
+
+  }
+
 
   void NuAnaAlg::calcWeight(art::Ptr<simb::MCTruth> mctruth,
                             art::Ptr<simb::GTruth > gtruth,
@@ -348,7 +451,7 @@ namespace lar1nd{
     return;
   }
 
-  void NuAnaAlg::packLarg4Info( art::Handle< std::vector<simb::MCParticle> > mclarg4,
+  void NuAnaAlg::packLarg4Info( art::Handle< std::vector<simb::MCParticle> > mclarg4, int isCC,
                                 int NPi0FinalState, int NGamma, int NChargedPions,
                                 std::vector<TLorentzVector> & leptonPos,
                                 std::vector<TLorentzVector> & leptonMom,
@@ -393,11 +496,15 @@ namespace lar1nd{
         art::Ptr<simb::MCParticle> particle(mclarg4,i);
 
 
+
         if (particle -> Mother() == 0 ){ // then this is a primary
           // std::cout << "On particle " << particle -> TrackId() 
           //           << " with PDG " << particle -> PdgCode() << std::endl;
 
-           if (abs(particle -> PdgCode()) == 11 ||
+          // For older files, set the nPrimaryLepton up since it didn't track neutrinos
+          if (isCC == 0) nPrimaryLepton ++;
+
+          if (abs(particle -> PdgCode()) == 11 ||
               abs(particle -> PdgCode()) == 12 ||
               abs(particle -> PdgCode()) == 13 ||
               abs(particle -> PdgCode()) == 14 )
@@ -477,12 +584,12 @@ namespace lar1nd{
         } // end of if primary
       } // end of loop over particles
 
-    if (nPrimaryLepton != 1){
-      std::cerr << "Major problems here ... nPrimaryLepton\n"
-                << "  Should be " << 1
-                << " but is " << nPrimaryLepton << "\n";
-      exit(-1);
-    }
+    // if (nPrimaryLepton < 1){
+    //   std::cerr << "Major problems here ... nPrimaryLepton\n"
+    //             << "  Should be " << 1
+    //             << " but is " << nPrimaryLepton << "\n";
+    //   exit(-1);
+    // }
     if (nPrimaryGamma != NGamma){
       std::cerr << "Major problems here ... nPrimaryGamma\n"
                 << "  Should be " << NGamma
