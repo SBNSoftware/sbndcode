@@ -1,0 +1,39 @@
+<solids>
+ <box name="lightguidebar"
+  lunit="cm"
+  x="0.25*2.54"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidebarcoating"
+  lunit="cm"
+  x=".05"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidedetector"
+  lunit="cm"
+  x="0.25*2.54+0.1"
+  y="100"
+  z="2.54"/>
+</solids>
+<structure>
+ <volume name="volOpDetSensitive">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidebarcoating"/>
+ </volume>
+ <volume name="vollightguidebar">
+  <materialref ref="Acrylic"/>
+  <solidref ref="lightguidebar"/>
+ </volume>
+ <volume name="vollightguidedetector">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidedetector"/>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="(0.125*2.54)+0.025" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vollightguidebar"/>
+   <position name="poslightguidebar" unit="cm" x="0" y="0" z="0"/>
+  </physvol>
+ </volume>
+</structure>
