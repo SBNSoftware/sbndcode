@@ -7,14 +7,15 @@ BEGIN_PROLOG
 lar1nd_colordrawingopt:                       @local::standard_colordrawingopt
 lar1nd_rawdrawingopt:                         @local::standard_rawdrawingopt
 lar1nd_recodrawingopt:                        @local::standard_recodrawingopt
-lar1nd_analysisdrawingopt:
-{
- DrawCalorimetry:                             1                                     
- DrawParticleID:                              1                                     
- CalorimetryModuleLabels:                     ["calo"]                              
- ParticleIDModuleLabels:                      ["pid"]                               
- CalorTemplateFileNames:                      ["dEdxKinErestemplate.root"]          
-}                                                                                      
+lar1nd_analysisdrawingopt:                    @local::standard_analysisdrawingopt
+#{
+# DrawCalorimetry:                             1                                     
+# DrawParticleID:                              1                                     
+# DrawShowerCalor:                 	      0
+# CalorimetryModuleLabels:                     ["calo"]                              
+# ParticleIDModuleLabels:                      ["pid"]                               
+# CalorTemplateFileNames:                      ["dEdxKinErestemplate.root"]          
+#}                                                                                      
 lar1nd_simdrawingopt:                         @local::standard_simdrawingopt        
 lar1nd_evdlayoutopt:   		              @local::standard_evdlayoutopt         
 lar1nd_evdlayoutopt.ShowSideBar:	      1                                     
