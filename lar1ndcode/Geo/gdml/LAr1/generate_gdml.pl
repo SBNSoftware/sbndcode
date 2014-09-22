@@ -963,6 +963,7 @@ EOF
 # Parameterize the dirt mound that surrounds the enclosure.
 sub gen_world()
 {
+	#Ground info from Fig4.1(Right) from LAr1ND Dec 2013 proposal(for now)
     # Set up the output file.
     $GDML = "LAr1-world" . $suffix . ".gdml";
     push (@gdmlFiles, $GDML); # Add file to list of GDML fragments
@@ -976,10 +977,18 @@ sub gen_world()
   <box name="World" lunit="cm" x="$WorldWidth" y="$WorldHeight" z="$WorldLength"/>
   <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+8" y="$DetEnclosureHeight+8" z="$DetEnclosureLength+8"/>
   <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+0.1" z="$DetEnclosureLength+0.1"/>
+  <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 8 + 100" y="(28*12)*2.54" z="$DetEnclosureLength+8+100"/>
+  <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 8.1" y="(28*12)*2.54+0.1" z="$DetEnclosureLength+8.1"/>
+
 
   <subtraction name="ConcreteEnclosure">
 	<first ref="ConcreteEnclosureOuter"/> <second ref="ConcreteEnclosureInner"/>
 	<position name="posConcreteEnclosureSubtraction" x="0" y="0" z="0"/>
+  </subtraction>
+
+  <subtraction name="Ground">
+	<first ref="GroundOuter"/> <second ref="GroundInner"/>
+	<position name="posGroundSubtraction" x="0" y="0" z="0"/>
   </subtraction>
 </solids>
 
@@ -988,20 +997,25 @@ sub gen_world()
 	<materialref ref="Concrete"/>
 	<solidref ref="ConcreteEnclosure"/>
   </volume>
+  <volume name="volGround">
+	<materialref ref="Dirt"/>
+	<solidref ref="Ground"/>
+  </volume>
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="($TPCLength)/2"/>
+      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
     </physvol> 
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
 	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
 	 </physvol>
-
-
-	
+	<physvol>
+	  <volumeref ref="volGround"/>
+	  <position name="posGround" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
+	</physvol>
   </volume> 
 </structure>
 </gdml>

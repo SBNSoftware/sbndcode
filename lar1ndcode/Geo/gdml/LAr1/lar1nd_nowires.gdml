@@ -356,10 +356,18 @@
   <box name="World" lunit="cm" x="70000" y="85000" z="49000"/>
   <box name="ConcreteEnclosureOuter" lunit="cm" x="700+8" y="850+8" z="490+8"/>
   <box name="ConcreteEnclosureInner" lunit="cm" x="700+0.1" y="850+0.1" z="490+0.1"/>
+  <box name="GroundOuter" lunit="cm" x="700 + 8 + 100" y="(28*12)*2.54" z="490+8+100"/>
+  <box name="GroundInner" lunit="cm" x="700 + 8.1" y="(28*12)*2.54+0.1" z="490+8.1"/>
+
 
   <subtraction name="ConcreteEnclosure">
 	<first ref="ConcreteEnclosureOuter"/> <second ref="ConcreteEnclosureInner"/>
 	<position name="posConcreteEnclosureSubtraction" x="0" y="0" z="0"/>
+  </subtraction>
+
+  <subtraction name="Ground">
+	<first ref="GroundOuter"/> <second ref="GroundInner"/>
+	<position name="posGroundSubtraction" x="0" y="0" z="0"/>
   </subtraction>
 </solids>
 <structure>
@@ -5118,20 +5126,25 @@
 	<materialref ref="Concrete"/>
 	<solidref ref="ConcreteEnclosure"/>
   </volume>
+  <volume name="volGround">
+	<materialref ref="Dirt"/>
+	<solidref ref="Ground"/>
+  </volume>
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="(365 )/2"/>
+      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="(365 )/2"/>
     </physvol> 
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
 	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="(365 )/2"/>
 	 </physvol>
-
-
-	
+	<physvol>
+	  <volumeref ref="volGround"/>
+	  <position name="posGround" unit="cm" x="-40" y="0" z="(365 )/2"/>
+	</physvol>
   </volume> 
 </structure>
 
