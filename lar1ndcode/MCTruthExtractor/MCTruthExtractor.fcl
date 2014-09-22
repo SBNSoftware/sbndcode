@@ -4,17 +4,16 @@ BEGIN_PROLOG
 standard_nuana:
 {
   module_type:        "NuAna"
-  #  Include the default things, for now:
-  Baseline:   "470"      #choices are 100, 470, 700 as of 4/3/12
-  FullOsc:    "false"    #use true or false
-  Mode:       "nu"       #use nu or nubar
-  XSecReweight:    true
-  Weights:         ["QEMA", "CCRes", "QEVec", "NCRes"]
-  WeightRangeHigh: [1     , 1      , 1      , 1      ]
-  WeightRangeLow:  [-1    , -1     , -1     , -1     ]
-  NWeights:        2
-  GenieModuleLabel: generator
-  LArG4ModuleLabel: largeant
+  Baseline:           "470"      #choices are 100, 470, 700 as of 4/3/12
+  FullOsc:            "false"    #use true or false
+  Mode:               "nu"       #use nu or nubar
+  XSecReweight:       true
+  Weights:            ["QEMA", "CCRes", "QEVec", "NCRes"]
+  WeightRangeSigma:   [1     , 1      , 1      , 1      ]
+  RandSeed:           65539
+  NWeights:           2
+  GenieModuleLabel:   generator
+  LArG4ModuleLabel:   largeant
 }
 
 END_PROLOG
