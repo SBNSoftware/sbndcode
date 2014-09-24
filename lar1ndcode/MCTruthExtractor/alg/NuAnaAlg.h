@@ -49,47 +49,47 @@ namespace lar1nd{
 
     // get the basic neutrino info:
     void packNeutrinoInfo(simb::MCNeutrino * neutrino, 
-                          int& nuchan,
-                          int& inno,
-                          double& enugen,
-                          int& isCC,
-                          int& mode,
-                          double& thetaLep,
-                          double& phiLep,
-                          double& Elep,
-                          TLorentzVector& neutMom,
-                          TVector3& vertex);
+                            int& nuchan,
+                            int& inno,
+                            double& enugen,
+                            int& isCC,
+                            int& mode,
+                            double& thetaLep,
+                            double& phiLep,
+                            double& Elep,
+                            std::vector<float>& neutMom,
+                            std::vector<float>& vertex);
 
     // Pack up the flux info:
     void packFluxInfo(art::Ptr<simb::MCFlux >  flux, 
                             int& ptype, int& tptype, int& ndecay,
-                            TVector3& ParentVertex,
-                            TVector3& nuParentMomAtDecay,
-                            TVector3& nuParentMomAtProd,
-                            TVector3& nuParentMomTargetExit);
+                            std::vector<float>& ParentVertex,
+                            std::vector<float>& nuParentMomAtDecay,
+                            std::vector<float>& nuParentMomAtProd,
+                            std::vector<float>& nuParentMomTargetExit);
 
     // Pack up the genie info:
     void packGenieInfo(art::Ptr<simb::MCTruth>  truth,
                             std::vector<int> & GeniePDG,
-                            std::vector<TLorentzVector>& GenieMomentum,
+                            std::vector<std::vector<float>>& GenieMomentum,
                             std::vector<std::string>& GenieProc,
                             int& NPi0FinalState,
                             int& NGamma,
                             int& NChargedPions);
 
     void packLarg4Info(art::Handle< std::vector<simb::MCParticle> > mclarg4, int, int, int, int,
-                            std::vector<TLorentzVector> & leptonPos,
-                            std::vector<TLorentzVector> & leptonMom,
-                            std::vector<TLorentzVector> & p1PhotonConversionPos,
-                            std::vector<TLorentzVector> & p1PhotonConversionMom,
-                            std::vector<TLorentzVector> & p2PhotonConversionPos,
-                            std::vector<TLorentzVector> & p2PhotonConversionMom,
-                            std::vector<TLorentzVector> & miscPhotonConversionPos,
-                            std::vector<TLorentzVector> & miscPhotonConversionMom,
-                            std::vector<TLorentzVector> & pionPos,
-                            std::vector<TLorentzVector> & pionMom,
-                            std::vector<std::vector<TLorentzVector> > & chargedPionPos,
-                            std::vector<std::vector<TLorentzVector> > & chargedPionMom,
+                            std::vector<std::vector<float> > & leptonPos,
+                            std::vector<std::vector<float> > & leptonMom,
+                            std::vector<std::vector<float> > & p1PhotonConversionPos,
+                            std::vector<std::vector<float> > & p1PhotonConversionMom,
+                            std::vector<std::vector<float> > & p2PhotonConversionPos,
+                            std::vector<std::vector<float> > & p2PhotonConversionMom,
+                            std::vector<std::vector<float> > & miscPhotonConversionPos,
+                            std::vector<std::vector<float> > & miscPhotonConversionMom,
+                            std::vector<std::vector<float> > & pionPos,
+                            std::vector<std::vector<float> > & pionMom,
+                            std::vector<std::vector<std::vector<float> > > & chargedPionPos,
+                            std::vector<std::vector<std::vector<float> > > & chargedPionMom,
                             std::vector<int> & chargePionSign);
 
   private:
@@ -98,6 +98,11 @@ namespace lar1nd{
             art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
     art::Ptr<simb::MCParticle> getParticleByPDG(
             art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
+
+
+    void pack4Vector(const TLorentzVector& input, std::vector<float>& output) const;
+    void pack3Vector(const TVector3& input, std::vector<float>& output) const;
+
     bool isInTPC(TVector3 &) const;
     void GetPhotonConversionInfo( art::Ptr<simb::MCParticle> photon,
                                   TLorentzVector& ConversionPos,
