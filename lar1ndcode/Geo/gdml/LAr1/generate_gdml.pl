@@ -98,6 +98,7 @@ gen_wireplane();
 gen_cathode();		# physical volumes defined in gen_tpc()
 gen_tpc();
 
+if ( $pmt_switch eq "on" ) {  gen_pmt();	}	# physical volumes defined in gen_cryostat()
 if ( $enclosureExtras eq "on" ) {  gen_enclosureExtras(); } #generation of insulation, etc. will happen if specified
 gen_cryostat();
 
@@ -230,7 +231,7 @@ EOF
 
   # End wires 
   for($i = 0; $i < $NumberWiresPerEdge; $i++)
-  {
+{
   print GDML <<EOF;
 <tube name="TPCWire$i"
   rmax="0.5*$TPCWireThickness"
@@ -239,7 +240,7 @@ EOF
   aunit="deg"
   lunit="cm"/> 
 EOF
-    }
+}
 
    
  print GDML <<EOF;
@@ -407,7 +408,7 @@ sub gen_wirevertplane()
 
  if ( $wires_on == 1 )  
     { $NumberWires = int( $TPCWirePlaneLengthZ / $TPCWirePitch );} 
-  
+
 
     $GDML = "LAr1-wirevertplane" . $suffix . ".gdml";
     push (@gdmlFiles, $GDML); # Add file to list of GDML fragments
@@ -440,7 +441,7 @@ sub gen_wirevertplane()
     <materialref ref="LAr"/>       
     <solidref ref="TPCPlaneVert"/>
 EOF
-    for ( $i = 0; $i < $NumberWires; ++$i){    
+    for ( $i = 0; $i < $NumberWires; ++$i) {    
     print GDML <<EOF;
       <physvol>
         <volumeref ref="volTPCWireVert"/>
@@ -720,6 +721,58 @@ EOF
 
 }
 
+# Generates Ben Jones's PMT micro-pmtdef (with temporary edit to ellipsoid shapes
+sub gen_pmt {
+
+    $PMT = "lar1nd-lightguidedef" . $suffix . ".gdml";
+    push (@gdmlFiles, $PMT); # Add file to list of GDML fragments
+    $PMT = ">" . $PMT;
+    open(PMT) or die("Could not open file $PMT for writing");
+
+	print PMT <<EOF;
+<solids>
+ <box name="lightguidebar"
+  lunit="cm"
+  x="0.25*2.54"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidebarcoating"
+  lunit="cm"
+  x=".05"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidedetector"
+  lunit="cm"
+  x="0.25*2.54+0.1"
+  y="100"
+  z="2.54"/>
+</solids>
+<structure>
+ <volume name="volOpDetSensitive">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidebarcoating"/>
+ </volume>
+ <volume name="vollightguidebar">
+  <materialref ref="Acrylic"/>
+  <solidref ref="lightguidebar"/>
+ </volume>
+ <volume name="vollightguidedetector">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidedetector"/>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="(0.125*2.54)+0.025" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vollightguidebar"/>
+   <position name="poslightguidebar" unit="cm" x="0" y="0" z="0"/>
+  </physvol>
+ </volume>
+</structure>
+EOF
+
+}
+
 
 #Parameterize the steel cryostat that encloses the TPC.
 sub gen_cryostat()
@@ -826,6 +879,28 @@ sub gen_cryostat()
 EOF
 	make_APA();
 
+    if ( $pmt_switch eq "on" ) {
+	for ( $i=0; $i<125; ++$i ){
+	    for ($j=0; $j<4; ++$j ){
+		for ($k=0; $k<2; ++$k){  
+		    print CRYOSTAT <<EOF;
+		    <physvol>
+			<volumeref ref="vollightguidedetector"/>
+			<position name="lightguidedetector-$i-$j-$k" unit="cm" x="(-1)**$k*($TPCWidth+20+(0.25*2.54+0.1)/2)" y="(2*$j+1)*$TPCHeight/8-$TPCHeight/2" z="-($TPCLength/2-20)+2.6*($i+1)" />
+EOF
+			if ( $k==1 ) {
+                            print CRYOSTAT <<EOF;
+                            <rotationref ref="rPlus180AboutY"/>
+EOF
+                        }  
+                   print CRYOSTAT<<EOF;
+                   </physvol>
+EOF
+        }
+      }
+    } 
+ }
+
 	print CRYOSTAT <<EOF;
  </volume>
 </structure>
@@ -888,6 +963,7 @@ EOF
 # Parameterize the dirt mound that surrounds the enclosure.
 sub gen_world()
 {
+	#Ground info from Fig4.1(Right) from LAr1ND Dec 2013 proposal(for now)
     # Set up the output file.
     $GDML = "LAr1-world" . $suffix . ".gdml";
     push (@gdmlFiles, $GDML); # Add file to list of GDML fragments
@@ -901,10 +977,18 @@ sub gen_world()
   <box name="World" lunit="cm" x="$WorldWidth" y="$WorldHeight" z="$WorldLength"/>
   <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+8" y="$DetEnclosureHeight+8" z="$DetEnclosureLength+8"/>
   <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+0.1" z="$DetEnclosureLength+0.1"/>
+  <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 8 + 100" y="(28*12)*2.54" z="$DetEnclosureLength+8+100"/>
+  <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 8.1" y="(28*12)*2.54+0.1" z="$DetEnclosureLength+8.1"/>
+
 
   <subtraction name="ConcreteEnclosure">
 	<first ref="ConcreteEnclosureOuter"/> <second ref="ConcreteEnclosureInner"/>
 	<position name="posConcreteEnclosureSubtraction" x="0" y="0" z="0"/>
+  </subtraction>
+
+  <subtraction name="Ground">
+	<first ref="GroundOuter"/> <second ref="GroundInner"/>
+	<position name="posGroundSubtraction" x="0" y="0" z="0"/>
   </subtraction>
 </solids>
 
@@ -913,20 +997,25 @@ sub gen_world()
 	<materialref ref="Concrete"/>
 	<solidref ref="ConcreteEnclosure"/>
   </volume>
+  <volume name="volGround">
+	<materialref ref="Dirt"/>
+	<solidref ref="Ground"/>
+  </volume>
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="0"/>
+      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="($TPCLength)/2"/>
     </physvol> 
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
-	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="0"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
 	 </physvol>
-
-
-	
+	<physvol>
+	  <volumeref ref="volGround"/>
+	  <position name="posGround" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
+	</physvol>
   </volume> 
 </structure>
 </gdml>
