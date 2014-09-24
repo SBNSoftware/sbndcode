@@ -1006,7 +1006,7 @@ sub gen_world()
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
+      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="($TPCLength)/2"/>
     </physvol> 
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
