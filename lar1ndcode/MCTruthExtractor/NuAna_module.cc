@@ -91,13 +91,13 @@ namespace lar1nd{
 
     std::vector<std::vector<float> > eventWeights;  
 
-    TLorentzVector     neutMom;      // Neutrino Momentum
+    std::vector<float>     neutMom;      // Neutrino Momentum
     
     // Information about the lepton:
     // muons are tracked till they exit, electrons are just the initial
     // particle's position and momemtum (since they are showering)
-    std::vector< TLorentzVector > leptonPos; // pos of lepton till it exits
-    std::vector< TLorentzVector > leptonMom; // mom of lepton till it exits
+    std::vector< std::vector<float> > leptonPos; // pos of lepton till it exits
+    std::vector< std::vector<float> > leptonMom; // mom of lepton till it exits
     double Elep;                // Energy of the produced lepton
     double thetaLep, phiLep;    // angles in the detector of the produced lepton
     
@@ -114,27 +114,27 @@ namespace lar1nd{
     // Keep track of where photons convert and what their energy is.
     // Except in categories 1, 3, 5, these are probably not filled.
     // The vectors here labeled p1 and p2 keep track only of photons from neutral pion decay
-    std::vector< TLorentzVector > p1PhotonConversionPos;  // Store the position of conversion
-    std::vector< TLorentzVector > p1PhotonConversionMom;  // Store the momentum 4vector at conversion
-    std::vector< TLorentzVector > p2PhotonConversionPos;  // Store the position of conversion
-    std::vector< TLorentzVector > p2PhotonConversionMom;  // Store the momentum 4vector at conversion
+    std::vector< std::vector<float> > p1PhotonConversionPos;  // Store the position of conversion
+    std::vector< std::vector<float> > p1PhotonConversionMom;  // Store the momentum 4vector at conversion
+    std::vector< std::vector<float> > p2PhotonConversionPos;  // Store the position of conversion
+    std::vector< std::vector<float> > p2PhotonConversionMom;  // Store the momentum 4vector at conversion
     
     // These vectors keep track of any other photon conversions we need to look at.
-    std::vector< TLorentzVector > miscPhotonConversionPos;  // Store the position of conversion
-    std::vector< TLorentzVector > miscPhotonConversionMom;    // Store the momentum 4vector at conversion
+    std::vector< std::vector<float> > miscPhotonConversionPos;  // Store the position of conversion
+    std::vector< std::vector<float> > miscPhotonConversionMom;    // Store the momentum 4vector at conversion
     
-    std::vector< std::vector < TLorentzVector > > chargedPionPos; // store position of charged pions
-    std::vector< std::vector < TLorentzVector > > chargedPionMom; // store momentum of charged pions
+    std::vector< std::vector < std::vector<float> > > chargedPionPos; // store position of charged pions
+    std::vector< std::vector < std::vector<float> > > chargedPionMom; // store momentum of charged pions
     std::vector< int > chargedPionSign;  // Sign (+/-) of the charged pions, one to one with above vectors
     
     // Track any pions
     // Only keeping the position of decay and the momentum at decay
-    std::vector< TLorentzVector > pionPos;  // Position at decay
-    std::vector< TLorentzVector > pionMom;  // Momentum at decay                            
+    std::vector< std::vector<float> > pionPos;  // Position at decay
+    std::vector< std::vector<float> > pionMom;  // Momentum at decay                            
     
     //Info from the genie truth:
     std::vector<int>    GeniePDG;       // Contains the pdg of the FSP in genie generated
-    std::vector<TLorentzVector> GenieMomentum;
+    std::vector<std::vector<float>> GenieMomentum;
     std::vector<std::string> GenieProc; // Contains the process information 
     // Genie Reweight vectors:
     std::vector< std::vector< float > > genieReweights;
@@ -148,11 +148,11 @@ namespace lar1nd{
     int mode;                       // beam mode
     double enugen;                  // Energy of the neutrino
     double nuleng;                  // Length the neutrino traveled. 
-    TVector3 vertex;                // Vertex location
-    TVector3 ParentVertex;          // Parent Vertex (not in detector)
-    TVector3 nuParentMomAtDecay;    // nu parent momentum at the time of decay
-    TVector3 nuParentMomAtProd;     // nu parent momentum at production point
-    TVector3 nuParentMomTargetExit; // parent particle moment at target exit
+    std::vector<float> vertex;                // Vertex location
+    std::vector<float> ParentVertex;          // Parent Vertex (not in detector)
+    std::vector<float> nuParentMomAtDecay;    // nu parent momentum at the time of decay
+    std::vector<float> nuParentMomAtProd;     // nu parent momentum at production point
+    std::vector<float> nuParentMomTargetExit; // parent particle moment at target exit
     int    ptype, tptype;
     double POT;                     // POT of the whole file.
 
@@ -340,12 +340,12 @@ namespace lar1nd{
 
 
     // Clear out the root vectors
-    vertex.Clear();
-    ParentVertex.Clear();
-    nuParentMomAtDecay.Clear();
-    nuParentMomAtProd.Clear();
-    nuParentMomTargetExit.Clear();
-    neutMom.Clear();
+    vertex.clear();
+    ParentVertex.clear();
+    nuParentMomAtDecay.clear();
+    nuParentMomAtProd.clear();
+    nuParentMomTargetExit.clear();
+    neutMom.clear();
 
     // iflux    = -999;             // represents the sample, 0 = nu, 1 = nu_fosc, 2 = nubar, 3 = nubar_fosc
     nuchan   = -999;             // Type of neutrino interaction
@@ -445,9 +445,9 @@ namespace lar1nd{
                             nuParentMomTargetExit);
 
     // nuleng needs special attention:
-    TVector3 length(vertex.X() - ParentVertex.X(),
-                    vertex.Y() - ParentVertex.Y(),
-                    100*fBaseline + vertex.Z() - ParentVertex.Z());
+    TVector3 length(vertex[0] - ParentVertex[0],
+                    vertex[1] - ParentVertex[1],
+                    100*fBaseline + vertex[2] - ParentVertex[2]);
     nuleng = length.Mag();
 
     // Pack up the genie info:
