@@ -557,12 +557,12 @@ EOF
 	 </physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane2" unit="cm" x="$TPCWidth/2 - 0.3 -0.1" y="0" z="0" />
+		<position name="posTPCPlane2" unit="cm" x="$TPCWidth/2 - 0.6 -0.1" y="0" z="0" />
      	<rotationref ref="rPlus180AboutY"/> 
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane3" unit="cm" x="$TPCWidth/2 - 0.6 -0.1" y="0" z="0" />
+		<position name="posTPCPlane3" unit="cm" x="$TPCWidth/2 - 0.3 -0.1" y="0" z="0" />
 	</physvol>
 
 EOF
@@ -1015,7 +1015,7 @@ sub gen_world()
 	<physvol>
 	  <volumeref ref="volGround"/>
 	  <position name="posGround" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
-	</physvol>
+	</physvol> 
   </volume> 
 </structure>
 </gdml>

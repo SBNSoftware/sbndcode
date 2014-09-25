@@ -42,7 +42,7 @@
 	<physvol>
 	  <volumeref ref="volGround"/>
 	  <position name="posGround" unit="cm" x="-40" y="0" z="(365 )/2"/>
-	</physvol>
+	</physvol> 
   </volume> 
 </structure>
 </gdml>
