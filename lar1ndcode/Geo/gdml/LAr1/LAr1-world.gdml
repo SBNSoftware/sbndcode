@@ -5,8 +5,8 @@
   <box name="ConcreteEnclosureOuter" lunit="cm" x="700+8" y="850+8" z="490+8"/>
   <box name="ConcreteEnclosureInner" lunit="cm" x="700+0.1" y="850+0.1" z="490+0.1"/>
   <box name="GroundOuterTemp" lunit="cm" x="700 + 8 + 100" y="(28*12)*2.54" z="490+8+100"/>
-  <box name="GroundOuter" lunit="cm" x="700 + 8 + 1000" y="(28*12)*2.54" z="490+ 8 + 2500" />
-  <box name="GroundInner" lunit="cm" x="700 + 8.1" y="(28*12)*2.54+0.1" z="490+8.1"/>
+  <box name="GroundOuter" lunit="cm" x="700 + 8 + 1000" y="(28*12)*2.54+1000" z="490+ 8 + 2500" />
+  <box name="GroundInner" lunit="cm" x="700 + 8.1" y="(28*12)*2.54 +5" z="490+8.1"/>
 
 
   <subtraction name="ConcreteEnclosure">
