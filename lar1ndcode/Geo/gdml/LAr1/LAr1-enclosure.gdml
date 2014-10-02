@@ -10,11 +10,11 @@
   <solidref ref="DetEnclosure"/>
   <physvol>
    <volumeref ref="volCryostat"/>
-   <position name="posCryostat" unit="cm" x="0" y="0" z="0"/>
+   <position name="posCryostat" unit="cm" x="40" y="0" z="0"/>
   </physvol>
      <physvol>
         <volumeref ref="volInsulation"/>
-        <position name="posInsulation" unit="cm" x="0" y="2" z="0"/>
+        <position name="posInsulation" unit="cm" x="40" y="2" z="0"/>
       </physvol>
  </volume>
 </structure>

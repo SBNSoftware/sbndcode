@@ -9,7 +9,7 @@ lar1_geo(TString volName="")
   gSystem->Load("libGeom");
   gSystem->Load("libGdml");
 
-  TGeoManager::Import("lar1nd.gdml");
+  TGeoManager::Import("lar1nd_nowires.gdml");
 
   drawopt optuboone[] = {
 	{"volHorizontalBeam",	  kGreen+2},
@@ -33,7 +33,7 @@ lar1_geo(TString volName="")
   gGeoManager->GetTopNode();
   //gGeoManager->CheckOverlaps(0.0000001);
   //need to fix some overlaps, for now save some time
- // gGeoManager->CheckOverlaps(10e-25);
+  gGeoManager->CheckOverlaps(10e-11);
   gGeoManager->PrintOverlaps();
   gGeoManager->SetMaxVisNodes(70000);
 
