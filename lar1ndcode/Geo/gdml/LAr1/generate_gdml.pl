@@ -978,8 +978,8 @@ sub gen_world()
   <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+8" y="$DetEnclosureHeight+8" z="$DetEnclosureLength+8"/>
   <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+0.1" z="$DetEnclosureLength+0.1"/>
   <box name="GroundOuterTemp" lunit="cm" x="$DetEnclosureWidth + 8 + 100" y="(28*12)*2.54" z="$DetEnclosureLength+8+100"/>
-  <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 8 + 1000" y="(28*12)*2.54" z="$DetEnclosureLength+ 8 + 2500" />
-  <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 8.1" y="(28*12)*2.54+0.1" z="$DetEnclosureLength+8.1"/>
+  <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 8 + 1000" y="(28*12)*2.54+1000" z="$DetEnclosureLength+ 8 + 2500" />
+  <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 8.1" y="(28*12)*2.54 +5" z="$DetEnclosureLength+8.1"/>
 
 
   <subtraction name="ConcreteEnclosure">
