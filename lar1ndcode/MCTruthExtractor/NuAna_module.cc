@@ -80,6 +80,8 @@ namespace lar1nd{
     unsigned int fRandSeed;
     int fNWeights;
 
+    unsigned int FinalRandSeed;
+
     std::vector< std::vector<float> > reweightingSigmas;
 
     // #---------------------------------------------------------------
@@ -87,7 +89,7 @@ namespace lar1nd{
     // #---------------------------------------------------------------
     // These are the ttrees themselves:
     TTree* fTreeTot;    //This tree stores all the important information from an event
-    TTree* PoTTree;     //This tree only stores the POT of the file, nothing else.
+    // TTree* PoTTree;     //This tree only stores the POT of the file, nothing else.
 
     std::vector<std::vector<float> > eventWeights;  
 
@@ -149,6 +151,7 @@ namespace lar1nd{
     double enugen;                  // Energy of the neutrino
     double nuleng;                  // Length the neutrino traveled. 
     std::vector<float> vertex;                // Vertex location
+    std::vector<float> neutVertexInWindow;    // origin of neutrino in flux window
     std::vector<float> ParentVertex;          // Parent Vertex (not in detector)
     std::vector<float> nuParentMomAtDecay;    // nu parent momentum at the time of decay
     std::vector<float> nuParentMomAtProd;     // nu parent momentum at production point
@@ -216,17 +219,19 @@ namespace lar1nd{
 
 
     reset();
-    gROOT->ProcessLine(".L loadDictionaries.C+");
+    // gROOT->ProcessLine(".L loadDictionaries.C+");
 
     // This function sets up the ttrees
     // get access to the TFile service  
     art::ServiceHandle<art::TFileService> tfs;
 
-    PoTTree  = tfs->make<TTree>("POT", "POT");
-    PoTTree ->Branch("POT",&POT,"POT/D");
+    // PoTTree  = tfs->make<TTree>("POT", "POT");
+
 
     fTreeTot = tfs->make<TTree>("EventsTot", "Event info for ALL types");
-
+    
+    fTreeTot->Branch("POT",&POT,"POT/D");
+    
     // Neutrino/event variables:
     fTreeTot->Branch("iflux",    &iflux,    "iflux/I");
     fTreeTot->Branch("nuchan",   &nuchan,   "nuchan/I");
@@ -243,42 +248,43 @@ namespace lar1nd{
 
     // Genie Variables
     fTreeTot->Branch("GeniePDG",       &GeniePDG);
-    fTreeTot->Branch("GenieMomentum", "GenieMomentum",  &GenieMomentum,32000,0);  
+    fTreeTot->Branch("GenieMomentum", "std::vector< std::vector<float> >",  &GenieMomentum,32000,0);  
     fTreeTot->Branch("GenieProc",      &GenieProc);
           
     // Flux variables:
     fTreeTot->Branch("ptype", &ptype, "ptype/I");
     fTreeTot->Branch("tptype",&tptype,"tptype/I");
     fTreeTot->Branch("ndecay",&ndecay,"ndecay/I");
+    fTreeTot->Branch("neutVertexInWindow", "neutVertexInWindow", &neutVertexInWindow, 32000, 0);
     fTreeTot->Branch("ParentVertex", "ParentVertex", &ParentVertex, 32000, 0);
     fTreeTot->Branch("nuParentMomAtDecay", "nuParentMomAtDecay", &nuParentMomAtDecay, 32000, 0);
     fTreeTot->Branch("nuParentMomAtProd",  "nuParentMomAtProd",  &nuParentMomAtProd, 32000, 0);
     fTreeTot->Branch("nuParentMomTargetExit", "nuParentMomTargetExit", &nuParentMomTargetExit, 32000, 0);
 
     // larg4 info
-    fTreeTot->Branch("leptonPos","leptonPos", &leptonPos, 32000, 0);
-    fTreeTot->Branch("leptonMom","leptonMom", &leptonMom, 32000, 0);
+    fTreeTot->Branch("leptonPos","std::vector< std::vector<float> > ", &leptonPos, 32000, 0);
+    fTreeTot->Branch("leptonMom","std::vector< std::vector<float> > ", &leptonMom, 32000, 0);
     fTreeTot->Branch("NPi0",           &NPi0,           "NPi0/I");
     fTreeTot->Branch("NPi0FinalState", &NPi0FinalState, "NPi0FinalState/I");
     fTreeTot->Branch("NGamma",         &NGamma,         "NGamma/I");
     fTreeTot->Branch("FoundPhotons",   &foundAllPhotons,"FoundAllPhotons/B");
-    fTreeTot->Branch("p1PhotonConversionPos","p1PhotonConversionPos", &p1PhotonConversionPos, 32000, 0);
-    fTreeTot->Branch("p1PhotonConversionMom","p1PhotonConversionMom", &p1PhotonConversionMom, 32000, 0);
-    fTreeTot->Branch("p2PhotonConversionPos","p2PhotonConversionPos", &p2PhotonConversionPos, 32000, 0);
-    fTreeTot->Branch("p2PhotonConversionMom","p2PhotonConversionMom", &p2PhotonConversionMom, 32000, 0);
-    fTreeTot->Branch("miscPhotonConversionPos","miscPhotonConversionPos", &miscPhotonConversionPos, 32000, 0);
-    fTreeTot->Branch("miscPhotonConversionMom","miscPhotonConversionMom", &miscPhotonConversionMom, 32000, 0);
-    fTreeTot->Branch("PionPos","PionPos", &pionPos, 32000, 0);
-    fTreeTot->Branch("PionMom","PionMom", &pionMom, 32000, 0);
-    fTreeTot->Branch("ChargedPionPos","ChargedPionPos",&chargedPionPos, 32000,0);
-    fTreeTot->Branch("ChargedPionMom","ChargedPionMom",&chargedPionMom, 32000,0);
+    fTreeTot->Branch("p1PhotonConversionPos","std::vector< std::vector<float> > ", &p1PhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("p1PhotonConversionMom","std::vector< std::vector<float> > ", &p1PhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("p2PhotonConversionPos","std::vector< std::vector<float> > ", &p2PhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("p2PhotonConversionMom","std::vector< std::vector<float> > ", &p2PhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("miscPhotonConversionPos","std::vector< std::vector<float> > ", &miscPhotonConversionPos, 32000, 0);
+    fTreeTot->Branch("miscPhotonConversionMom","std::vector< std::vector<float> > ", &miscPhotonConversionMom, 32000, 0);
+    fTreeTot->Branch("PionPos","std::vector< std::vector<float> >", &pionPos, 32000, 0);
+    fTreeTot->Branch("PionMom","std::vector< std::vector<float> >", &pionMom, 32000, 0);
+    fTreeTot->Branch("ChargedPionPos","std::vector<std::vector< std::vector<float> > >",&chargedPionPos, 32000,0);
+    fTreeTot->Branch("ChargedPionMom","std::vector<std::vector< std::vector<float> > >",&chargedPionMom, 32000,0);
     fTreeTot->Branch("ChargedPionSign","ChargedPionSign",&chargedPionSign, 32000,0);
     
 
-    if (fXSecReweight)
+    if (fXSecReweight){
       fTreeTot->Branch("MultiWeight","MultiWeight",&eventWeights,32000,0);
-    
-
+      fTreeTot->Branch("FinalRandSeed", &FinalRandSeed, "FinalRandSeed/I");
+    }
 
     art::ServiceHandle<geo::Geometry> geom;
     // configure the geometry in the worker function:
@@ -287,7 +293,8 @@ namespace lar1nd{
     if (fXSecReweight){
       std::vector<reweight> reweights;
       fNuAnaAlg.parseWeights(fWeights, reweights);
-      fNuAnaAlg.prepareSigmas(fNWeights, fRandSeed, reweightingSigmas);
+      FinalRandSeed = fNuAnaAlg.prepareSigmas(fNWeights,
+                                              fRandSeed, reweightingSigmas);
       fNuAnaAlg.configureReWeight(reweights, reweightingSigmas);
     }
 
@@ -302,7 +309,7 @@ namespace lar1nd{
     subrun.getByLabel(fGenieModuleLabel, potHandle);
     const sumdata::POTSummary& potSum = (*potHandle);
     POT = potSum.totpot;
-    PoTTree->Fill();
+    // PoTTree->Fill();
     return;
   }
   void NuAna::reset(){
@@ -338,6 +345,7 @@ namespace lar1nd{
     ptype  = 0;
     tptype = 0;
 
+    // POT = 0;
 
     // Clear out the root vectors
     vertex.clear();
@@ -382,6 +390,11 @@ namespace lar1nd{
     art::Handle< std::vector<simb::MCParticle> > mclistLARG4;
     art::Handle< std::vector<simb::MCFlux> > mcflux;
     art::Handle< std::vector<simb::GTruth> > mcgtruth;
+
+    // Start by getting the POT for this neutrino's file:
+    // art::Handle< sumdata::POTSummary > potHandle;
+    // evt.getByLabel(fGenieModuleLabel, potHandle);
+    // POT = potHandle->totpot;
 
 
     //actually go and get the stuff
@@ -439,6 +452,7 @@ namespace lar1nd{
     // Pack up the flux info:
     fNuAnaAlg.packFluxInfo(flux, 
                             ptype, tptype, ndecay,
+                            neutVertexInWindow,  
                             ParentVertex,
                             nuParentMomAtDecay,
                             nuParentMomAtProd,
