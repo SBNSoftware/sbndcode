@@ -39,13 +39,14 @@ namespace lar1nd{
                            // int);
 
     void calcWeight(art::Ptr<simb::MCTruth>,
-                    art::Ptr<simb::GTruth >,
-                    std::vector<std::vector<float>>& );
+                            art::Ptr<simb::GTruth >,
+                            std::vector<std::vector<float>>& );
 
-    void prepareSigmas(int, unsigned int,
-                       std::vector<std::vector<float> > & );
+    unsigned int prepareSigmas(int, unsigned int,
+                            std::vector<std::vector<float> > & );
 
-    void parseWeights(const std::vector<std::string> &, std::vector<reweight> &);
+    void parseWeights(const std::vector<std::string> &, 
+                            std::vector<reweight> &);
 
     // get the basic neutrino info:
     void packNeutrinoInfo(simb::MCNeutrino * neutrino, 
@@ -63,6 +64,7 @@ namespace lar1nd{
     // Pack up the flux info:
     void packFluxInfo(art::Ptr<simb::MCFlux >  flux, 
                             int& ptype, int& tptype, int& ndecay,
+                            std::vector<float>& neutVertexInWindow,
                             std::vector<float>& ParentVertex,
                             std::vector<float>& nuParentMomAtDecay,
                             std::vector<float>& nuParentMomAtProd,
