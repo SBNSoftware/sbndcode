@@ -18,7 +18,9 @@ GetOptions( "input|i:s" => \$input,
 	    "help|h" => \$help,
 	    "suffix|s:s" => \$suffix,
 	    "output|o:s" => \$output,
-	    "wires|w:s" => \$wires);
+	    "wires|w:s" => \$wires,
+ #  		"pmt32|p32:s" => \$pmt32,
+   		"pmt16|p16:s" => \$pmt16);
 
 if ( defined $help )
 {
@@ -168,6 +170,8 @@ sub gen_rotations()
    <rotation name="rPlus90AboutX" unit="deg" x="90" y="0" z="0"/>
    <rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
    <rotation name="rPlus180AboutY" unit="deg" x="0" y="180" z="0"/>
+   <rotation name="rPMTRotation"  unit="deg" x="90"  y="270"   z="0"/>
+
 </define>
 EOF
     close (ROTATIONS);
@@ -729,6 +733,118 @@ sub gen_pmt {
     $PMT = ">" . $PMT;
     open(PMT) or die("Could not open file $PMT for writing");
 
+  #The below pmt geo is a placeholder--"PMTVolume" contains pmt info from microboone--ahack
+  print PMT <<EOF;
+<solids>
+ <tube name="PMTVolume"
+  rmax="(6.1*2.54)"
+  z="(11.1*2.54)+0.005"
+  deltaphi="360"
+  aunit="deg"
+  lunit="cm"/>
+
+ <tube name="PMT_AcrylicPlate"
+  rmax="(6.0*2.54)"
+  z="(0.2)"
+  deltaphi="360"
+  aunit="deg"
+  lunit="cm"/>
+ <tube name="PMT_Stalk"
+  rmax="(1.25*2.54)"
+  z="(3.0*2.54)"
+  deltaphi="360"
+  aunit="deg"
+  lunit="cm"/>
+ <tube name="PMT_SteelBase"
+  rmax="(6.0*2.54)"
+  z="(1.5*2.54)"
+  deltaphi="360"
+  aunit="deg"
+  lunit="cm"/>
+ <tube name="PMT_Underside"
+  rmax="2.54*4.0"
+  z="2.54*2.5"
+  deltaphi="360"
+  aunit="deg"
+  lunit="cm"/>
+EOF
+    print PMT <<EOF;
+ <tube name="PMT_Lens"
+  rmax="2.54*4.0"
+  z="2.54*2.5"
+  deltaphi="360"
+  aunit="deg"
+  lunit="cm"/>
+EOF
+
+    print PMT <<EOF;
+</solids>
+<structure>
+ <volume name="volOpDetSensitive">
+  <materialref ref="LAr"/>
+  <solidref ref="PMT_AcrylicPlate"/>
+ </volume>
+ <volume name="vol_PMT_AcrylicPlate">
+  <materialref ref="Acrylic"/>
+
+
+ <solidref ref="PMT_AcrylicPlate"/>
+ </volume>
+ <volume name="vol_PMT_Stalk">
+  <materialref ref="Glass"/>
+  <solidref ref="PMT_Stalk"/>
+ </volume>
+ <volume name="vol_PMT_SteelBase">
+  <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+  <solidref ref="PMT_SteelBase"/>
+ </volume>
+ <volume name="vol_PMT_Underside">
+  <materialref ref="Glass"/>
+  <solidref ref="PMT_Underside"/>
+ </volume>
+EOF
+    print PMT <<EOF;
+ <volume name="vol_PMT_Lens">
+  <materialref ref="LAr"/>
+  <solidref ref="PMT_Lens"/>
+ </volume>
+EOF
+    print PMT <<EOF;
+ <volume name="volPMT">
+  <materialref ref="LAr"/>
+  <solidref ref="PMTVolume"/>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="0" y="0" z="(5.5 * 2.54) - 0.1"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_AcrylicPlate"/>
+   <position name="pos_PMT_AcrylicPlate" unit="cm" x="0" y="0" z="(5.5 * 2.54) - 0.3"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_Stalk"/>
+   <position name="pos_PMT_Stalk" unit="cm" x="0" y="0" z="(3.0 * 2.54)-(5.5 * 2.54)"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_SteelBase"/>
+   <position name="pos_PMT_SteelBase" unit="cm" x="0" y="0" z="(0.75 * 2.54)-(5.5 * 2.54)"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_Lens"/>
+   <position name="pos_PMT_Lens" unit="cm" x="0" y="0" z="(7.0 * 2.54)-(5.5 * 2.54)"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_Underside"/>
+   <position name="pos_PMT_Underside" unit="cm" x="0" y="0" z="(7.0 * 2.54)-(5.5 * 2.54)"/>
+  </physvol>
+EOF
+
+    print PMT <<EOF;
+ </volume>
+</structure>
+EOF
+
+
 	print PMT <<EOF;
 <solids>
  <box name="lightguidebar"
@@ -871,7 +987,7 @@ sub gen_cryostat()
 	<physvol>
 	  <volumeref ref="volSteelBox"/>
 	  <position name="posSteelBox" unit="cm" x="0" y="0" z="0"/>
-	</physvol>
+	</physvol> 
     <physvol> 
        <volumeref ref="volCathodePlate"/>
  	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
@@ -879,7 +995,32 @@ sub gen_cryostat()
 EOF
 	make_APA();
 
+
+	@pmt_pos = ( ' x="-220" y="0 " z="0" ',
+				 ' x="-220" y="-(400-20)/4 " z="(365 - 20)/4" ',
+				 ' x="-220" y="-(400-20)/4 " z="(365 - 20)/4" ',
+				 ' x="-220" y="(400-20)/4 " z="-(365 - 20)/4" ',
+				 ' x="-220" y="-(400-20)/4 " z="-(365 - 20)/4" ' );
+
+#		 <position name="posAPASideCross0" unit="cm" x="0" y="($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
+
     if ( $pmt_switch eq "on" ) {
+	  for( $ii=0; $ii < 3; ++$ii){
+ 	 print CRYOSTAT <<EOF ;
+  	  <physvol>
+	  <volumeref ref="volPMT"/>
+	  <position name="posPMT$ii" unit="cm" @pmt_pos[$ii]/> 
+	  <rotationref ref="rPMTRotation"/>
+	  </physvol>
+EOF
+	}
+
+}
+
+
+#=begin
+#Commented out temporarily to do some pmt positioning
+
 	for ( $i=0; $i<125; ++$i ){
 	    for ($j=0; $j<4; ++$j ){
 		for ($k=0; $k<2; ++$k){  
@@ -888,7 +1029,7 @@ EOF
 			<volumeref ref="vollightguidedetector"/>
 			<position name="lightguidedetector-$i-$j-$k" unit="cm" x="(-1)**$k*($TPCWidth+20+(0.25*2.54+0.1)/2)" y="(2*$j+1)*$TPCHeight/8-$TPCHeight/2" z="-($TPCLength/2-20)+2.6*($i+1)" />
 EOF
-			if ( $k==1 ) {
+			if ( $k==0 ) {
                             print CRYOSTAT <<EOF;
                             <rotationref ref="rPlus180AboutY"/>
 EOF
@@ -898,8 +1039,11 @@ EOF
 EOF
         }
       }
-    } 
- }
+    }
+#=end
+#=cut
+ 
+# }
 
 	print CRYOSTAT <<EOF;
  </volume>
