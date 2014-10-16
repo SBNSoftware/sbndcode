@@ -189,21 +189,21 @@ namespace lar1nd{
 
 
 
-    std::cout << "\n\n\nsetup finished, running"
-              << " configure on each weight......\n\n\n";
+    // std::cout << "\n\n\nsetup finished, running"
+    //           << " configure on each weight......\n\n\n";
 
-    // Tell all of the reweight drivers to configure themselves:
-    for(auto & vec : reweightVector){
-      for (auto & driver : vec){
-        driver -> Configure();
-      }
-    }
+    // // Tell all of the reweight drivers to configure themselves:
+    // for(auto & vec : reweightVector){
+    //   for (auto & driver : vec){
+    //     driver -> Configure();
+    //   }
+    // }
 
     return;
 
   }
 
-  void NuAnaAlg::prepareSigmas(int NWeights, 
+  unsigned int NuAnaAlg::prepareSigmas(int NWeights,
                            unsigned int RandSeed,
                            std::vector<std::vector<float> > & reweightingSigmas)
   {
@@ -218,13 +218,13 @@ namespace lar1nd{
       for (int j = 0; j < NWeights; j ++)
         reweightingSigmas[i][j] = rand.Gaus(0,1);
     }
-    return;
+    return rand.GetSeed();
   }
 
   void NuAnaAlg::parseWeights(const std::vector<std::string> & string_weights,
                               std::vector<reweight> & enum_weights){
 
-    enum_weights.resize(string_weights.size());
+    enum_weights.reserve(string_weights.size());
     for( auto & s : string_weights){
       if (s == "NCEL") enum_weights.push_back(kNCEL);
       else if (s == "QEMA") enum_weights.push_back(kQEMA);
@@ -327,20 +327,25 @@ namespace lar1nd{
 
   void NuAnaAlg::packFluxInfo(art::Ptr<simb::MCFlux > flux, 
                               int& ptype, int& tptype, int& ndecay,
+                              std::vector<float>& neutVertexInWindow,
                               std::vector<float>& ParentVertex,
                               std::vector<float>& nuParentMomAtDecay,
                               std::vector<float>& nuParentMomAtProd,
                               std::vector<float>& nuParentMomTargetExit){
 
-    ptype = flux -> fptype;
+    ptype  = flux -> fptype;
     tptype = flux->ftptype;
     ndecay = flux->fndecay;
 
+    neutVertexInWindow.clear();
     ParentVertex.clear();
     nuParentMomAtDecay.clear();
     nuParentMomAtProd.clear();
     nuParentMomTargetExit.clear();
 
+    neutVertexInWindow.push_back(flux -> fgenx);
+    neutVertexInWindow.push_back(flux -> fgeny);
+    neutVertexInWindow.push_back(flux -> fgenz);
     ParentVertex.push_back(flux -> fvx);
     ParentVertex.push_back(flux -> fvy);
     ParentVertex.push_back(flux -> fvz);
@@ -500,19 +505,19 @@ namespace lar1nd{
       // This function loops over the larg4 object and packs all the info
       // up into the vectors provided (which are written to ntuple)
       // We know from the genie function how many pi0 and gammas there are already
-      
+      // std::cout << "Got to here. 1"<<std::endl;
       std::vector<float> empty4Vector;
       empty4Vector.resize(4);
 
       // prepare the pi0 and photon vectors:
-      p1PhotonConversionPos.resize(NPi0FinalState);
-      p1PhotonConversionMom.resize(NPi0FinalState);
-      p2PhotonConversionPos.resize(NPi0FinalState);
-      p2PhotonConversionMom.resize(NPi0FinalState);
-      pionPos.resize(NPi0FinalState);
-      pionMom.resize(NPi0FinalState);
-      miscPhotonConversionPos.resize(NGamma);
-      miscPhotonConversionMom.resize(NGamma);
+      p1PhotonConversionPos.reserve(NPi0FinalState);
+      p1PhotonConversionMom.reserve(NPi0FinalState);
+      p2PhotonConversionPos.reserve(NPi0FinalState);
+      p2PhotonConversionMom.reserve(NPi0FinalState);
+      pionPos.reserve(NPi0FinalState);
+      pionMom.reserve(NPi0FinalState);
+      miscPhotonConversionPos.reserve(NGamma);
+      miscPhotonConversionMom.reserve(NGamma);
 
       // some counting variables to ensure everything is done correctly 
       int nPrimaryLepton(0);  // should be == 1 at the end
@@ -521,6 +526,7 @@ namespace lar1nd{
       
       chargedPionPos.resize(NChargedPions);
       chargedPionMom.resize(NChargedPions);
+      // std::cout << "Got to here. 2"<<std::endl;
 
 
       // loop over the particles, extending the pion vectors as it goes.
@@ -541,6 +547,8 @@ namespace lar1nd{
               abs(particle -> PdgCode()) == 13 ||
               abs(particle -> PdgCode()) == 14 )
           {
+      // std::cout << "Got to here. 3a"<<std::endl;
+
             // then this is definitely the lepton.
             nPrimaryLepton ++;
             int nTrajectoryPoints = particle -> NumberTrajectoryPoints();
@@ -552,10 +560,12 @@ namespace lar1nd{
               leptonMom.push_back(empty4Vector);
               pack4Vector(particle -> Momentum(traj_point),leptonMom.back());
             }
+      // std::cout << "Got to here. 3b"<<std::endl;
           } // end lepton if block
 
           if (particle -> PdgCode() == 22)  //  misc gamma
           {
+      // std::cout << "Got to here. 4a"<<std::endl;
             nPrimaryGamma ++;
             TLorentzVector conversionPoint, conversionMom;
             GetPhotonConversionInfo(particle, conversionPoint,conversionMom);
@@ -563,10 +573,12 @@ namespace lar1nd{
             miscPhotonConversionMom.push_back(empty4Vector);
             pack4Vector(conversionPoint,miscPhotonConversionPos.back());
             pack4Vector(conversionMom,  miscPhotonConversionMom.back());
+      // std::cout << "Got to here. 4b"<<std::endl;
           }
 
           if (particle -> PdgCode() == 111)  // neutral pion
           {
+      // std::cout << "Got to here. 5a"<<std::endl;
             pionPos.push_back(empty4Vector);
             pionMom.push_back(empty4Vector);
             pack4Vector(particle->EndPosition(),pionPos.back());
@@ -594,8 +606,10 @@ namespace lar1nd{
               p2PhotonConversionMom.push_back(empty4Vector);
               pack4Vector(conversionPoint,p2PhotonConversionPos.back());
               pack4Vector(conversionMom,  p2PhotonConversionMom.back());              
+      // std::cout << "Got to here. 5b"<<std::endl;
             }
             else{ // this is the "dalitz" decay
+      // std::cout << "Got to here. 6a"<<std::endl;
               // Only take the photon, but be sure to find it
               TLorentzVector conversionPoint, conversionMom;
               p2PhotonConversionPos.push_back(empty4Vector);
@@ -614,12 +628,14 @@ namespace lar1nd{
                   break;
                 }
               }
+      // std::cout << "Got to here. 6b"<<std::endl;
             }
             
           }
 
           if (abs(particle -> PdgCode()) == 211)  // charged pion
           {
+      // std::cout << "Got to here. 7a"<<std::endl;
             chargedPionSign.push_back(particle ->PdgCode() / 211);
             int nTrajectoryPoints = particle -> NumberTrajectoryPoints();
             unsigned int index = chargedPionSign.size() - 1;
@@ -633,6 +649,7 @@ namespace lar1nd{
               pack4Vector(particle -> Momentum(traj_point),
                           chargedPionMom[index].back());
             }
+      // std::cout << "Got to here. 7b"<<std::endl;
           }
         } // end of if primary
       } // end of loop over particles
