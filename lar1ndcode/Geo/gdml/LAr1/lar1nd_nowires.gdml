@@ -709,21 +709,21 @@
 		<rotationref ref="rPlus180AboutY"/> 
 	</physvol>  
 
-  	  <physvol>
+  <!--	  <physvol>
 	  <volumeref ref="volPMT"/>
 	  <position name="posPMT0" unit="cm"  x="-220" y="0 " z="0" /> 
 	  <rotationref ref="rPMTRotation"/>
-	  </physvol>
-  	  <physvol>
+	  </physvol> -->
+  <!--	  <physvol>
 	  <volumeref ref="volPMT"/>
 	  <position name="posPMT1" unit="cm"  x="-220" y="-(400-20)/4 " z="(365 - 20)/4" /> 
 	  <rotationref ref="rPMTRotation"/>
-	  </physvol>
-  	  <physvol>
+	  </physvol> -->
+  <!--	  <physvol>
 	  <volumeref ref="volPMT"/>
 	  <position name="posPMT2" unit="cm"  x="-220" y="-(400-20)/4 " z="(365 - 20)/4" /> 
 	  <rotationref ref="rPMTRotation"/>
-	  </physvol>
+	  </physvol> -->
 		    <physvol>
 			<volumeref ref="vollightguidedetector"/>
 			<position name="lightguidedetector-0-0-0" unit="cm" x="(-1)**0*(200+20+(0.25*2.54+0.1)/2)" y="(2*0+1)*400 /8-400 /2" z="-(365 /2-20)+2.6*(0+1)" />
