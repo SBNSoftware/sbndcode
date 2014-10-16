@@ -1007,11 +1007,11 @@ EOF
     if ( $pmt_switch eq "on" ) {
 	  for( $ii=0; $ii < 3; ++$ii){
  	 print CRYOSTAT <<EOF ;
-  	  <physvol>
+  <!--	  <physvol>
 	  <volumeref ref="volPMT"/>
 	  <position name="posPMT$ii" unit="cm" @pmt_pos[$ii]/> 
 	  <rotationref ref="rPMTRotation"/>
-	  </physvol>
+	  </physvol> -->
 EOF
 	}
 
