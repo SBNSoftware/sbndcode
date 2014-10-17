@@ -19,6 +19,7 @@ GetOptions( "input|i:s" => \$input,
 	    "suffix|s:s" => \$suffix,
 	    "output|o:s" => \$output,
 	    "wires|w:s" => \$wires,
+		"bars|b:s" => \$bars,
 		"tpb|t:s" => \$tpb) ;
 
 if ( defined $help )
@@ -73,6 +74,7 @@ my $TanUVAngle = tan( deg2rad($UVAngle) );
 my $inch=2.54;
 my $wires_on=0; 			# turn wires on=1 or off=0
 my $tpb_coverage = 0 ;      # multiplier to determine amount fo tpb coverage--default is 0
+my $scint_bars = 0;			# turn on bars=1 or off=0 
 
 if ( defined $wires )
 {
@@ -84,6 +86,10 @@ if ( defined $tpb )
 $tpb_coverage = $tpb ;
 }
 
+if ( defined $bars) 
+{
+$scint_bars=$bars ;
+}
 
 my $NumberOfTPCPlanes=3;
 my $pmt_switch="on";		#turn on or off depending on pmts wanted
@@ -122,6 +128,8 @@ sub usage()
     print "       if -o is omitted, output goes to STDOUT; <fragments-file> is input to make_gdml.pl\n";
     print "       -s <string> appends the string to the file names; useful for multiple detector versions\n";
     print " 	  -w wires excludes wires from gdml when wires=0, default to wires=1\n";
+	print "		  -t percentage indicates the percentage of wavelength shifter user wants \n";
+	print "		  -b bars includes the scintillator bars behind wires when user indicates bars=1\n";
     print "       -h prints this message, then quits\n";
 }
 
@@ -1035,10 +1043,10 @@ sub gen_cryostat()
  <volume name="volCryostat">
    <materialref ref="LAr"/>
    <solidref ref="Cryostat"/>
-	<physvol>
+<!--	<physvol>
 	  <volumeref ref="volSteelBox"/>
 	  <position name="posSteelBox" unit="cm" x="0" y="0" z="0"/>
-	</physvol>  
+	</physvol>  -->
     <physvol> 
        <volumeref ref="volCathodePlate"/>
  	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
@@ -1046,7 +1054,7 @@ sub gen_cryostat()
 EOF
 	make_APA();
 
-
+#For PMTs behind the wire plane:
 #The following several parameters can be adjusted based on desired pmt 
 #configuration (they form polygonal shapes in (3 maximum) circular layers currently)
 $pmt_number  = 30 ; 	#Number of PMTs behind wires
@@ -1071,10 +1079,16 @@ if ( $pmt_switch eq "on" ) {
 	if ( abs($z) < 10**-6 ){ $z =0 ; }
 
 	 print CRYOSTAT <<EOF ;
+
   	  <physvol>
 		  <volumeref ref="volPMT"/>
 		  <position name="posPMT$i" unit="cm" x="-220" y="$y" z="$z" /> 
 		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT$i" unit="cm" x="220" y="$y" z="$z" /> 
+   		  <rotation name="rPMTRotation0"  unit="deg" x="90"  y="90"   z="0"/>
 	  </physvol> 
 EOF
   	$angle = int( 360 / ($center_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
@@ -1097,6 +1111,11 @@ $new_radius = $z ;
 		  <volumeref ref="volPMT"/>
 		  <position name="posPMT$k" unit="cm" x="-220" y="$y" z="$z" /> 
 		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT$k" unit="cm" x="220" y="$y" z="$z" /> 
+   		  <rotation name="rPMTRotation1"  unit="deg" x="90"  y="90"   z="0"/>
 	  </physvol> 
 EOF
   	$angle = int( 360 / ($middle_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
@@ -1121,6 +1140,11 @@ $new_radius = $z ;
 		  <volumeref ref="volPMT"/>
 		  <position name="posPMT$l" unit="cm" x="-220" y="$y" z="$z" /> 
 		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT$l" unit="cm" x="220" y="$y" z="$z" /> 
+   		  <rotation name="rPMTRotation2"  unit="deg" x="90"  y="90"   z="0"/>
 	  </physvol> 
 EOF
   	$angle = int( 360 / ($outer_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
@@ -1161,9 +1185,10 @@ EOF
 =cut
 
 
-=begin
+#=begin
 #Commented out temporarily to do some pmt positioning
 
+if( $scint_bars) {
 	for ( $i=0; $i<125; ++$i ){
 	    for ($j=0; $j<4; ++$j ){
 		for ($k=0; $k<2; ++$k){  
@@ -1183,10 +1208,10 @@ EOF
         }
       }
     }
-=end
-=cut
+}
+#=end
+#=cut
  
-# }
 
 	print CRYOSTAT <<EOF;
  </volume>
@@ -1228,10 +1253,10 @@ sub gen_enclosure()
 EOF
   if ( $enclosureExtras eq "on" ) {
     print GDML <<EOF;
-     <physvol>
+<!--     <physvol>
         <volumeref ref="volInsulation"/>
         <position name="posInsulation" unit="cm" x="40" y="2" z="0"/>
-      </physvol> 
+      </physvol> -->
 EOF
 	}
 
