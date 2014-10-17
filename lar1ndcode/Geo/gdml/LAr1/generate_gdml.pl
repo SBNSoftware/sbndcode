@@ -1035,10 +1035,10 @@ sub gen_cryostat()
  <volume name="volCryostat">
    <materialref ref="LAr"/>
    <solidref ref="Cryostat"/>
-<!--	<physvol>
+	<physvol>
 	  <volumeref ref="volSteelBox"/>
 	  <position name="posSteelBox" unit="cm" x="0" y="0" z="0"/>
-	</physvol>  -->
+	</physvol>  
     <physvol> 
        <volumeref ref="volCathodePlate"/>
  	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
@@ -1136,10 +1136,10 @@ sub gen_enclosure()
 EOF
   if ( $enclosureExtras eq "on" ) {
     print GDML <<EOF;
-<!--     <physvol>
+     <physvol>
         <volumeref ref="volInsulation"/>
         <position name="posInsulation" unit="cm" x="40" y="2" z="0"/>
-      </physvol> -->
+      </physvol> 
 EOF
 	}
 
