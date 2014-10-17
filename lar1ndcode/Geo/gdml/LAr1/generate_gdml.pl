@@ -19,8 +19,7 @@ GetOptions( "input|i:s" => \$input,
 	    "suffix|s:s" => \$suffix,
 	    "output|o:s" => \$output,
 	    "wires|w:s" => \$wires,
- #  		"pmt32|p32:s" => \$pmt32,
-   		"pmt16|p16:s" => \$pmt16);
+		"tpb|t:s" => \$tpb) ;
 
 if ( defined $help )
 {
@@ -73,11 +72,16 @@ my $TanUVAngle = tan( deg2rad($UVAngle) );
 
 my $inch=2.54;
 my $wires_on=0; 			# turn wires on=1 or off=0
+my $tpb_coverage = 0 ;      # multiplier to determine amount fo tpb coverage--default is 0
 
 if ( defined $wires )
 {
 #The user supplied the wires on parameter, so using that. Otherwise the default=1 is used.
 $wires_on = $wires;
+}
+if ( defined $tpb )
+{
+$tpb_coverage = $tpb ;
 }
 
 
@@ -538,6 +542,11 @@ sub gen_tpc()
 <solids>
  <box name="TPC" lunit="cm" x="$TPCWidth" y="$TPCHeight" z="$TPCLength+0.35"/>
  <box name="TPCActive" lunit="cm" x="$TPCActiveDepth" y="$TPCActiveHeight" z="$TPCActiveLength"/>
+
+ <box name="TPBLayerXY" lunit="cm" x="$tpb_coverage*$TPCActiveDepth" y="$tpb_coverage*$TPCActiveHeight" z="0.01"/>
+ <box name="TPBLayerXZ" lunit="cm" x="$tpb_coverage*$TPCActiveDepth" y="0.01" z="$tpb_coverage*$TPCActiveLength"/>
+ <box name="TPBLayerCathode" lunit="cm" x="0.01" y="$tpb_coverage*$TPCActiveHeight" z="$tpb_coverage*$TPCActiveLength"/>
+ 
 </solids>
 
 <structure>
@@ -548,6 +557,18 @@ sub gen_tpc()
  <volume name="volTPCActive2">
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
+ </volume>
+ <volume name="volTPBLayerXY">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerXY"/>
+ </volume>
+ <volume name="volTPBLayerXZ">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerXZ"/>
+ </volume>
+ <volume name="volTPBLayerCathode">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerCathode"/>
  </volume>
  <volume name="volTPC">
    <materialref ref="LAr"/>
@@ -570,6 +591,34 @@ EOF
 	</physvol>
 
 EOF
+
+if( $tpb_coverage != 0 ){ 
+    print GDML <<EOF ;
+    <physvol>
+        <volumeref ref="volTPBLayerXY"/>
+        <position name="posTPBLayerXY0" unit="cm" x="0" y="0" z="$TPCActiveLength/2-0.005"/>
+    </physvol>
+    <physvol>
+        <volumeref ref="volTPBLayerXY"/>
+        <position name="posTPBLayerXY1" unit="cm" x="0" y="0" z="-$TPCActiveLength/2 + 0.005"/>
+    </physvol>
+    <physvol>
+        <volumeref ref="volTPBLayerXZ"/>
+        <position name="posTPBLayerXZ0" unit="cm" x="0" y="$TPCActiveHeight/2 - 0.005" z="0"/>
+    </physvol>
+    <physvol>
+        <volumeref ref="volTPBLayerXZ"/>
+        <position name="posTPBLayerXZ1" unit="cm" x="0" y="-$TPCActiveHeight/2+0.005" z="0"/>
+    </physvol>
+
+	<physvol>
+		<volumeref ref="volTPBLayerCathode"/>
+		<position name="posTPBLayerCathode" unit="cm" x="-$TPCActiveDepth/2+0.005" y="0" z="0"/>
+	</physvol>
+
+EOF
+}
+
 	print GDML <<EOF;
 	<physvol>
 	 	 <volumeref ref="volTPCActive"/>
@@ -907,7 +956,8 @@ sub gen_cryostat()
  <box name="Cryostat" lunit="cm" x="$CryostatWidth+0.1" y="$CryostatHeight+0.1" z="$CryostatLength+0.1" /> 
  <box name="SteelBoxA" lunit="cm" x="$CryostatWidth" y="$CryostatHeight" z="$CryostatLength"/>
  <box name="SteelBoxB" lunit="cm" x="$CryostatWidth-5" y="$CryostatHeight-5" z="$CryostatLength-5"/>
- 
+
+
  <box name="APAFrameA" lunit="cm" x="$AnodeWidthX" y="$AnodeHeightY" z="$AnodeLengthZ"/>
  <box name="APAFrameB" lunit="cm" x="$AnodeWidthX+ 0.1" y="$AnodeHeightY-20" z="$AnodeLengthZ -20"/>
  <box name="APAFrameC" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-20" z="$AnodeWidthX/2"/>
@@ -981,13 +1031,14 @@ sub gen_cryostat()
    <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
    <solidref ref="SteelBox"/>
  </volume>
+
  <volume name="volCryostat">
    <materialref ref="LAr"/>
    <solidref ref="Cryostat"/>
-	<physvol>
+<!--	<physvol>
 	  <volumeref ref="volSteelBox"/>
 	  <position name="posSteelBox" unit="cm" x="0" y="0" z="0"/>
-	</physvol> 
+	</physvol>  -->
     <physvol> 
        <volumeref ref="volCathodePlate"/>
  	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
@@ -1018,7 +1069,7 @@ EOF
 }
 
 
-#=begin
+=begin
 #Commented out temporarily to do some pmt positioning
 
 	for ( $i=0; $i<125; ++$i ){
@@ -1040,8 +1091,8 @@ EOF
         }
       }
     }
-#=end
-#=cut
+=end
+=cut
  
 # }
 
@@ -1085,10 +1136,10 @@ sub gen_enclosure()
 EOF
   if ( $enclosureExtras eq "on" ) {
     print GDML <<EOF;
-     <physvol>
+<!--     <physvol>
         <volumeref ref="volInsulation"/>
         <position name="posInsulation" unit="cm" x="40" y="2" z="0"/>
-      </physvol>
+      </physvol> -->
 EOF
 	}
 

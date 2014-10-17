@@ -19,8 +19,7 @@ GetOptions( "input|i:s" => \$input,
 	    "suffix|s:s" => \$suffix,
 	    "output|o:s" => \$output,
 	    "wires|w:s" => \$wires,
- #  		"pmt32|p32:s" => \$pmt32,
-   		"pmt16|p16:s" => \$pmt16);
+		"tpb|t:s" => \$tpb) ; 
 
 if ( defined $help )
 {
@@ -73,6 +72,7 @@ my $TanUVAngle = tan( deg2rad($UVAngle) );
 
 my $inch=2.54;
 my $wires_on=0; 			# turn wires on=1 or off=0
+my $tpb_coverage = 0 ;		# multiplier to determine amount fo tpb coverage--default is 0
 
 if ( defined $wires )
 {
@@ -80,10 +80,18 @@ if ( defined $wires )
 $wires_on = $wires;
 }
 
+if ( defined $tpb )
+{
+$tpb_coverage = $tpb ;
+}
 
 my $NumberOfTPCPlanes=3;
 my $pmt_switch="on";		#turn on or off depending on pmts wanted
 my $enclosureExtras="on"; 
+
+#To be used soon, but not yet
+my $bar_switch="off";		#switch for SiPM bars
+my $shifter_switch = "off" ;  #switch for layer of TPB which may line the inside of detector
 
 # The routines that create the GDML sub-files. Most of the explanatory
 # comments are in gen_defs().
@@ -91,11 +99,8 @@ gen_defs();
 gen_rotations();
 gen_materials();
 
-
-#if ( $wires eq "on"){
 gen_wirevertplane();
 gen_wireplane(); 
-#}
 
 gen_cathode();		# physical volumes defined in gen_tpc()
 gen_tpc();
@@ -538,6 +543,8 @@ sub gen_tpc()
 <solids>
  <box name="TPC" lunit="cm" x="$TPCWidth" y="$TPCHeight" z="($TPCLength)/2 + 0.35"/>
  <box name="TPCActive" lunit="cm" x="$TPCActiveDepth" y="$TPCActiveHeight" z="$TPCActiveLength"/>
+
+
 </solids>
 
 <structure>
@@ -549,6 +556,9 @@ sub gen_tpc()
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
  </volume>
+
+
+
  <volume name="volTPC">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
@@ -721,7 +731,7 @@ sub make_APA()
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPC"/>
-		<position name="posTPC3" unit="cm" x="-$TPCWidth/2-2.5" y="0" z="$TPCLength/4" />
+		<position name="posTPC3" unit="cm" x="-$TPCWidth/2 -2.5" y="0" z="$TPCLength/4" />
 		<rotationref ref="rPlus180AboutY"/> 
 	</physvol>  
 	<physvol>
@@ -903,6 +913,9 @@ EOF
 sub gen_cryostat()
 {
 
+	# Note: Cryostat contains definition&placement of layer of argon which 
+	# will later act as wavelength shifter
+	#
     # Set up the output file.
     $CRYOSTAT = "LAr1-cryostat" . $suffix . ".gdml";
     push (@gdmlFiles, $CRYOSTAT); # Add file to list of GDML fragments
@@ -916,6 +929,10 @@ sub gen_cryostat()
  <box name="Cryostat" lunit="cm" x="$CryostatWidth+0.1" y="$CryostatHeight+0.1" z="$CryostatLength+0.1" /> 
  <box name="SteelBoxA" lunit="cm" x="$CryostatWidth" y="$CryostatHeight" z="$CryostatLength"/>
  <box name="SteelBoxB" lunit="cm" x="$CryostatWidth-5" y="$CryostatHeight-5" z="$CryostatLength-5"/>
+
+ <box name="TPBLayerXY" lunit="cm" x="$tpb_coverage*$TPCActiveDepth" y="$tpb_coverage*$TPCActiveHeight" z="0.01"/>
+ <box name="TPBLayerXZ" lunit="cm" x="$tpb_coverage*$TPCActiveDepth" y="0.01" z="$tpb_coverage*$TPCActiveLength"/>
+ <box name="TPBLayerCathode" lunit="cm" x="0.01" y="$tpb_coverage*$TPCActiveHeight" z="$tpb_coverage*$TPCActiveLength"/>
  
  <box name="APAFrameA" lunit="cm" x="$AnodeWidthX" y="$AnodeHeightY" z="$AnodeLengthZ"/>
  <box name="APAFrameB" lunit="cm" x="$AnodeWidthX+ 0.1" y="$AnodeHeightY-20" z="$AnodeLengthZ -20"/>
@@ -990,6 +1007,19 @@ sub gen_cryostat()
    <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
    <solidref ref="SteelBox"/>
  </volume>
+ <volume name="volTPBLayerXY">
+	<materialref ref="LAr"/>
+	<solidref ref="TPBLayerXY"/>
+ </volume>
+ <volume name="volTPBLayerXZ">
+	<materialref ref="LAr"/>
+	<solidref ref="TPBLayerXZ"/>
+ </volume>
+ <volume name="volTPBLayerCathode">
+	<materialref ref="LAr"/>
+	<solidref ref="TPBLayerCathode"/>
+ </volume>
+
  <volume name="volCryostat">
    <materialref ref="LAr"/>
    <solidref ref="Cryostat"/>
@@ -1004,14 +1034,52 @@ sub gen_cryostat()
 EOF
 	make_APA();
 
+  if( $tpb_coverage != 0 ){
+	print CRYOSTAT <<EOF ;
+	<physvol>
+		<volumeref ref="volTPBLayerXY"/>
+		<position name="posTPBLayerXY0" unit="cm" x="$TPCActiveDepth/2" y="0" z="$TPCActiveLength/2"/>
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPBLayerXY"/>
+		<position name="posTPBLayerXY1" unit="cm" x="$TPCActiveDepth/2" y="0" z="-$TPCActiveLength/2"/>
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPBLayerXY"/>
+		<position name="posTPBLayerXY2" unit="cm" x="-$TPCActiveDepth/2" y="0" z="$TPCActiveLength/2"/>
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPBLayerXY"/>
+		<position name="posTPBLayerXY3" unit="cm" x="-$TPCActiveDepth/2" y="0" z="-$TPCActiveLength/2"/>
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPBLayerXZ"/>
+		<position name="posTPBLayerXZ0" unit="cm" x="$TPCActiveDepth/2" y="$TPCActiveHeight/2" z="0"/>
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPBLayerXZ"/>
+		<position name="posTPBLayerXZ1" unit="cm" x="$TPCActiveDepth/2" y="-$TPCActiveHeigth/2" z="0"/>
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPBLayerXZ"/>
+		<position name="posTPBLayerXZ2" unit="cm" x="-$TPCActiveDepth/2" y="$TPCActiveHeight/2" z="0"/>
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPBLayerXZ"/>
+		<position name="posTPBLayerXZ3" unit="cm" x="-$TPCActiveDepth/2" y="$TPCActiveHeight/2" z="0"/>
+	</physvol>
+		
+		
 
+EOF
+}
 	@pmt_pos = ( ' x="-220" y="0 " z="0" ',
 				 ' x="-220" y="-(400-20)/4 " z="(365 - 20)/4" ',
 				 ' x="-220" y="-(400-20)/4 " z="(365 - 20)/4" ',
 				 ' x="-220" y="(400-20)/4 " z="-(365 - 20)/4" ',
 				 ' x="-220" y="-(400-20)/4 " z="-(365 - 20)/4" ' );
 
-#		 <position name="posAPASideCross0" unit="cm" x="0" y="($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
+
 
     if ( $pmt_switch eq "on" ) {
 	  for( $ii=0; $ii < 3; ++$ii){

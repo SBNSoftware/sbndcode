@@ -3,6 +3,11 @@
 <solids>
  <box name="TPC" lunit="cm" x="200" y="400 " z="365 +0.35"/>
  <box name="TPCActive" lunit="cm" x="196.4" y="399.8" z="364.8"/>
+
+ <box name="TPBLayerXY" lunit="cm" x="0*196.4" y="0*399.8" z="0.01"/>
+ <box name="TPBLayerXZ" lunit="cm" x="0*196.4" y="0.01" z="0*364.8"/>
+ <box name="TPBLayerCathode" lunit="cm" x="0.01" y="0*399.8" z="0*364.8"/>
+ 
 </solids>
 
 <structure>
@@ -13,6 +18,18 @@
  <volume name="volTPCActive2">
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
+ </volume>
+ <volume name="volTPBLayerXY">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerXY"/>
+ </volume>
+ <volume name="volTPBLayerXZ">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerXZ"/>
+ </volume>
+ <volume name="volTPBLayerCathode">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerCathode"/>
  </volume>
  <volume name="volTPC">
    <materialref ref="LAr"/>

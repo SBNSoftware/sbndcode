@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Generate geometry without wires
-./manyTPCs_gdml.pl -w 0 -i lar1-gdml-parameters.xml -o lar1-gdml-fragments.xml
+./manyTPCs_gdml.pl -w 0 -t 0.5 -i lar1-gdml-parameters.xml -o lar1-gdml-fragments.xml
 ./make_gdml.pl -i lar1-gdml-fragments.xml -o manyTPClar1nd_nowires.gdml
 
 #Generate geometry with wires
