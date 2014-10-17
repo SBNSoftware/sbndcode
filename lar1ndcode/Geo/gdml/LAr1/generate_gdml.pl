@@ -302,8 +302,8 @@ EOF
 EOF
   $ypos=0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1);
   $zpos=-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1);
-  open (MYFILE, '>>data.txt');
-  print MYFILE "TPCWire$i y=$ypos z=$zpos\n";
+ # open (MYFILE, '>>data.txt');
+ # print MYFILE "TPCWire$i y=$ypos z=$zpos\n";
   }
 
   # The wires in the middle.
@@ -1047,26 +1047,118 @@ EOF
 	make_APA();
 
 
-	@pmt_pos = ( ' x="-220" y="0 " z="0" ',
-				 ' x="-220" y="-(400-20)/4 " z="(365 - 20)/4" ',
-				 ' x="-220" y="-(400-20)/4 " z="(365 - 20)/4" ',
-				 ' x="-220" y="(400-20)/4 " z="-(365 - 20)/4" ',
-				 ' x="-220" y="-(400-20)/4 " z="-(365 - 20)/4" ' );
+#The following several parameters can be adjusted based on desired pmt 
+#configuration (they form polygonal shapes in (3 maximum) circular layers currently)
+$pmt_number  = 30 ; 	#Number of PMTs behind wires
+$center_pmts = 6 ;		#Number of PMTs in inner layer
+$middle_pmts = 10 ;		#Number of PMTs in second layer
+$radius 	 = 32 ; 	#Distance from (0,0,0) you want to set your first PMT layer 
+$mult 		 = 2.5;  	#Multiplier for distance from (0,0,0) for middle layer of PMTs
 
-#		 <position name="posAPASideCross0" unit="cm" x="0" y="($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
+$multOuter   = 5 ;		#Multiplier for distance from (0,0,0) for 3rd layer of PMTs
 
-    if ( $pmt_switch eq "on" ) {
-	  for( $ii=0; $ii < 3; ++$ii){
- 	 print CRYOSTAT <<EOF ;
-  <!--	  <physvol>
-	  <volumeref ref="volPMT"/>
-	  <position name="posPMT$ii" unit="cm" @pmt_pos[$ii]/> 
-	  <rotationref ref="rPMTRotation"/>
-	  </physvol> -->
+$outer_pmts = $pmt_number - $middle_pmts - $center_pmts ; #Only if 3rd layer of pmts is used
+$new_radius= $radius;   
+
+$y = 0;
+$z = $radius ;
+$angle = 0 ;
+
+if ( $pmt_switch eq "on" ) {
+  for( $i = 0; $i < $center_pmts; $i++){
+ 
+	if ( abs($y) < 10**-6 ){ $y =0 ; }
+	if ( abs($z) < 10**-6 ){ $z =0 ; }
+
+	 print CRYOSTAT <<EOF ;
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT$i" unit="cm" x="-220" y="$y" z="$z" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
 EOF
+  	$angle = int( 360 / ($center_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
+	$y = $new_radius*sin($angle) ;
+	$z = $new_radius*cos($angle) ;
 	}
 
+$j = $i ;
+$y=0 ;
+$z= $mult*$radius ;
+$new_radius = $z ;
+
+  for( $i = 0; $i < $middle_pmts; $i++){
+	$k=$i+$j ; 
+	if ( abs($y) < 10**-6 ){ $y =0 ; }
+	if ( abs($z) < 10**-6 ){ $z =0 ; }
+
+	 print CRYOSTAT <<EOF ;
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT$k" unit="cm" x="-220" y="$y" z="$z" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+EOF
+  	$angle = int( 360 / ($middle_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
+	
+	$y = $new_radius*sin($angle) ;
+	$z = $new_radius*cos($angle) ;
+	}
+
+$j=$k;
+$y=0 ;
+$z= $multOuter*$radius ;
+$new_radius = $z ;
+
+
+  for( $i = 0; $i < $outer_pmts; $i++){
+ 	$l = $j + $i ;
+	if ( abs($y) < 10**-6 ){ $y =0 ; }
+	if ( abs($z) < 10**-6 ){ $z =0 ; }
+
+	 print CRYOSTAT <<EOF ;
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT$l" unit="cm" x="-220" y="$y" z="$z" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+EOF
+  	$angle = int( 360 / ($outer_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
+	
+	$y = $new_radius*sin($angle) ;
+	$z = $new_radius*cos($angle) ;
+	}
+
+
+
 }
+=begin
+	#for inner layer
+	if($pmt_number > $center_pmts  && $i < ($center_pmts-1)){
+		$angle = ( 360 / $center_pmts )*$pi/180*($i+1) ;  #get inner angle of some ngon
+	}
+	#for middle layer if called for
+	elsif($pmt_number > $center_pmts && $pmt_number = ($center_pmts+$middle_pmts) && $i >= ($center_pmts - 1)){
+  		$angle = int( 360 / ($pmt_number - $center_pmts ))*$pi/180*($i - $center_pmts - 1 ) ;  #get inner angle of some ngon
+	 	$new_radius = $mult*$radius ;
+	}
+	#for outer layer, if called for
+	elsif($pmt_number > $center_pmts && $pmt_number > ($center_pmts+$middle_pmts) && $i >= ($middle_pmts + $center_pmts - 1)){
+  		$angle = int( 360 / ($pmt_number - $center_pmts - $middle_pmts ))*$pi/180*($i - $center_pmts - $middle_pmts - 1) ;  #get inner angle of some ngon
+	 	$new_radius = $multOuter*$radius ;
+	}
+	#for 1 layer 
+	else{
+  		$angle = int( 360 / ($pmt_number ))*$pi/180*($i+1) ;  #get inner angle of some ngon
+		}
+
+#    open (MYFILE, '>>pmt.txt');
+#    print MYFILE "i=$i y=$y z=$z radius=$new_radius angle=$angle \n";
+
+	$y = $new_radius*sin($angle) ;
+	$z = $new_radius*cos($angle) ;
+=end
+=cut
 
 
 =begin

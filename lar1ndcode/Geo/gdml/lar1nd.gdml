@@ -36568,21 +36568,156 @@
 		<rotationref ref="rPlus180AboutY"/> 
 	</physvol>  
 
-  <!--	  <physvol>
-	  <volumeref ref="volPMT"/>
-	  <position name="posPMT0" unit="cm"  x="-220" y="0 " z="0" /> 
-	  <rotationref ref="rPMTRotation"/>
-	  </physvol> -->
-  <!--	  <physvol>
-	  <volumeref ref="volPMT"/>
-	  <position name="posPMT1" unit="cm"  x="-220" y="-(400-20)/4 " z="(365 - 20)/4" /> 
-	  <rotationref ref="rPMTRotation"/>
-	  </physvol> -->
-  <!--	  <physvol>
-	  <volumeref ref="volPMT"/>
-	  <position name="posPMT2" unit="cm"  x="-220" y="-(400-20)/4 " z="(365 - 20)/4" /> 
-	  <rotationref ref="rPMTRotation"/>
-	  </physvol> -->
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT0" unit="cm" x="-220" y="0" z="32" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT1" unit="cm" x="-220" y="27.712812921102" z="16" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT2" unit="cm" x="-220" y="27.712812921102" z="-16" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT3" unit="cm" x="-220" y="0" z="-32" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT4" unit="cm" x="-220" y="-27.712812921102" z="-16" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT5" unit="cm" x="-220" y="-27.712812921102" z="16" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT6" unit="cm" x="-220" y="0" z="80" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT7" unit="cm" x="-220" y="47.0228201833979" z="64.7213595499958" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT8" unit="cm" x="-220" y="76.0845213036123" z="24.7213595499958" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT9" unit="cm" x="-220" y="76.0845213036123" z="-24.7213595499958" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT10" unit="cm" x="-220" y="47.0228201833979" z="-64.7213595499958" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT11" unit="cm" x="-220" y="0" z="-80" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT12" unit="cm" x="-220" y="-47.0228201833978" z="-64.7213595499958" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT13" unit="cm" x="-220" y="-76.0845213036123" z="-24.7213595499958" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT14" unit="cm" x="-220" y="-76.0845213036123" z="24.7213595499958" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT15" unit="cm" x="-220" y="-47.0228201833979" z="64.7213595499958" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT15" unit="cm" x="-220" y="0" z="160" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT16" unit="cm" x="-220" y="67.6189218785119" z="145.009245925864" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT17" unit="cm" x="-220" y="122.567110899036" z="102.846017549846" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT18" unit="cm" x="-220" y="154.548132206251" z="41.4110472164033" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT19" unit="cm" x="-220" y="157.569240481953" z="-27.7837084267088" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT20" unit="cm" x="-220" y="131.064327086239" z="-91.7722298161674" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT21" unit="cm" x="-220" y="80" z="-138.56406460551" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT22" unit="cm" x="-220" y="13.9449188396253" z="-159.391151694679" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT23" unit="cm" x="-220" y="-54.723222932107" z="-150.350819325745" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT24" unit="cm" x="-220" y="-113.137084989848" z="-113.137084989848" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT25" unit="cm" x="-220" y="-150.350819325745" z="-54.723222932107" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT26" unit="cm" x="-220" y="-159.391151694679" z="13.9449188396253" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT27" unit="cm" x="-220" y="-138.56406460551" z="80" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT28" unit="cm" x="-220" y="-91.7722298161674" z="131.064327086239" /> 
+		  <rotationref ref="rPMTRotation"/>
+	  </physvol> 
  </volume>
 
  <volume name="volDetEnclosure">
