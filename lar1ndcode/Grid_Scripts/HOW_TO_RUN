@@ -1,0 +1,5 @@
+#### This command will launch a Grid job using the script run_lar.sh 
+#### alternative is run_job.sh - both need to be edited for specific user 
+#### This will be fixed soon.
+
+jobsub_submit -G lar1nd --role=Analysis -N 3 -M --resource-provides=usage_model=OPPORTUNISTIC --OS=SL5,SL6 file://`pwd`/run_lar.sh
