@@ -3913,9 +3913,9 @@
  <box name="TPC" lunit="cm" x="200" y="400 " z="365 +0.35"/>
  <box name="TPCActive" lunit="cm" x="196.4" y="399.8" z="364.8"/>
 
- <box name="TPBLayerXY" lunit="cm" x="0*196.4" y="0*399.8" z="0.01"/>
- <box name="TPBLayerXZ" lunit="cm" x="0*196.4" y="0.01" z="0*364.8"/>
- <box name="TPBLayerCathode" lunit="cm" x="0.01" y="0*399.8" z="0*364.8"/>
+ <!--box name="TPBLayerXY" lunit="cm" x="0*196.4" y="0*399.8" z="0.01"/-->
+ <!--box name="TPBLayerXZ" lunit="cm" x="0*196.4" y="0.01" z="0*364.8"/-->
+ <!--box name="TPBLayerCathode" lunit="cm" x="0.01" y="0*399.8" z="0*364.8"/-->
  
 
  <box name="lightguidebar"
@@ -36306,18 +36306,18 @@
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
  </volume>
- <volume name="volTPBLayerXY">
+ <!--volume name="volTPBLayerXY">
     <materialref ref="LAr"/>
     <solidref ref="TPBLayerXY"/>
- </volume>
- <volume name="volTPBLayerXZ">
+ </volume-->
+ <!--volume name="volTPBLayerXZ">
     <materialref ref="LAr"/>
     <solidref ref="TPBLayerXZ"/>
  </volume>
  <volume name="volTPBLayerCathode">
     <materialref ref="LAr"/>
     <solidref ref="TPBLayerCathode"/>
- </volume>
+ </volume-->
  <volume name="volTPC">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
@@ -36386,10 +36386,10 @@
   </physvol>
  </volume>
 
- <volume name="volOpDetSensitive">
+  <!--volume name="volOpDetSensitive" >
   <materialref ref="LAr"/>
   <solidref ref="PMT_AcrylicPlate"/>
- </volume>
+ </volume-->
  <volume name="vol_PMT_AcrylicPlate">
   <materialref ref="Acrylic"/>
 
@@ -36415,10 +36415,10 @@
  <volume name="volPMT">
   <materialref ref="LAr"/>
   <solidref ref="PMTVolume"/>
-  <physvol>
+  <!--physvol>
    <volumeref ref="volOpDetSensitive"/>
    <position name="posOpDetSensitive" unit="cm" x="0" y="0" z="(5.5 * 2.54) - 0.1"/>
-  </physvol>
+  </physvol-->
   <physvol>
    <volumeref ref="vol_PMT_AcrylicPlate"/>
    <position name="pos_PMT_AcrylicPlate" unit="cm" x="0" y="0" z="(5.5 * 2.54) - 0.3"/>
@@ -36569,7 +36569,7 @@
 	</physvol>  
 
 
-  	  <physvol>
+  	  <!--physvol>
 		  <volumeref ref="volPMT"/>
 		  <position name="posPMT0" unit="cm" x="-220" y="0" z="32" /> 
 		  <rotationref ref="rPMTRotation"/>
@@ -36873,7 +36873,7 @@
 		  <volumeref ref="volPMT"/>
 		  <position name="posPMT28" unit="cm" x="220" y="-91.7722298161674" z="131.064327086239" /> 
    		  <rotation name="rPMTRotation2"  unit="deg" x="90"  y="90"   z="0"/>
-	  </physvol> 
+	  </physvol>  -->
  </volume>
 
  <volume name="volDetEnclosure">
