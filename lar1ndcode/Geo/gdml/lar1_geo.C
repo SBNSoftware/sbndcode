@@ -14,7 +14,9 @@ lar1_geo(TString volName="")
   drawopt optuboone[] = {
 	{"volHorizontalBeam",	  kGreen+2},
 	{"volGround",				kOrange+4},
-	//{"volTPCFrame",			  kGray+1},
+	{"volTPBLayerXY",			  kBlue},
+	{"volTPBLayerXZ",			  kBlue},
+	{"volTPBLayerCathode",			  kBlue},
     //"volCathodePlate",          kGray+1}, 
     {0, 0}
   };
@@ -31,8 +33,6 @@ lar1_geo(TString volName="")
   }
 
   gGeoManager->GetTopNode();
-  //gGeoManager->CheckOverlaps(0.0000001);
-  //need to fix some overlaps, for now save some time
   gGeoManager->CheckOverlaps(10e-11);
   gGeoManager->PrintOverlaps();
   gGeoManager->SetMaxVisNodes(70000);
@@ -48,19 +48,7 @@ lar1_geo(TString volName="")
   TGeoVolume *Cathode = gGeoManager->FindVolumeFast("volCathodePlate");
   float m_cathode = Cathode->Weight();
 
-/*  TGeoVolume *Ground = gGeoManager->FindVolumeFast("volGroundPlate");
-  float m_ground = Ground->Weight();
-  TGeoVolume *UVPlane = gGeoManager->FindVolumeFast("volTPCPlane");
-  float m_uvplane = UVPlane->Weight();
-  TGeoVolume *YPlane = gGeoManager->FindVolumeFast("volTPCPlaneVert");
-  float m_yplane = YPlane->Weight();
-  TGeoVolume *FieldCageH = gGeoManager->FindVolumeFast("volFieldCageTubeTop");
-  float m_fchoriz = FieldCageH->Weight();
-  TGeoVolume *FieldCageV = gGeoManager->FindVolumeFast("volFieldCageTubeFront");
-  float m_fcvert = FieldCageV->Weight();
-*/
   float m_tpc_argon = m_tpc - m_cathode ;
-//( m_cathode -m_yplane + m_ground + 2*m_uvplane + m_yplane + 50*(m_fchoriz + m_fcvert));
   cout << "LAr weight in TPC = " << m_tpc_argon << " kg\n" <<endl;
 
   TFile *tf = new TFile("lar1.root", "RECREATE");
