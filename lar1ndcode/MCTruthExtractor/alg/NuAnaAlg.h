@@ -1,5 +1,7 @@
 #ifndef LAR1ND_NUANA_ALG_H
-#define LAR1ND_NUANA_ALG_H value
+#define LAR1ND_NUANA_ALG_H 
+
+#define CUSTOM_NUTOOLS
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "Geometry/Geometry.h"
@@ -38,9 +40,12 @@ namespace lar1nd{
                            // std::vector<float>&,
                            // int);
 
-    void calcWeight(art::Ptr<simb::MCTruth>,
+    void calcWeight(        art::Ptr<simb::MCTruth>,
                             art::Ptr<simb::GTruth >,
                             std::vector<std::vector<float>>& );
+
+    void packFluxWeight(    art::Ptr<simb::MCFlux >  flux,
+                            std::vector<std::vector<float>>&);
 
     unsigned int prepareSigmas(int, unsigned int,
                             std::vector<std::vector<float> > & );
@@ -105,7 +110,7 @@ namespace lar1nd{
     void pack4Vector(const TLorentzVector& input, std::vector<float>& output) const;
     void pack3Vector(const TVector3& input, std::vector<float>& output) const;
 
-    bool isInTPC(TVector3 &) const;
+    bool isInTPC(const TVector3 &) const;
     void GetPhotonConversionInfo( art::Ptr<simb::MCParticle> photon,
                                   TLorentzVector& ConversionPos,
                                   TLorentzVector& ConversionMom);
