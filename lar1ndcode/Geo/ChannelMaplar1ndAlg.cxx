@@ -160,7 +160,7 @@ namespace geo{
 	    fPlaneData[cs][tpc].resize(fPlanesPerAPA);
         for (unsigned int plane=0; plane<fPlanesPerAPA; plane++){
 	  PlaneData_t& PlaneData = fPlaneData[cs][tpc][plane];
-          fPlaneIDs.emplace(PlaneID(cs, tpc, plane));
+          fPlaneIDs.emplace(cs, tpc, plane);
           double xyz[3]={0.0, 0.0, 0.0};
           const geo::PlaneGeo& thePlane = cgeo[cs]->TPC(tpc).Plane(plane);
           thePlane.Wire(0).GetCenter(xyz);
@@ -353,15 +353,28 @@ namespace geo{
 					 unsigned int    cryostat)     const
   {
 
-    float dwire = std::abs(WireCoordinate(xyz[1], xyz[2], plane, tpc, cryostat));
-
-       // check to see if we are on the edge
-       //  uint32_t iwire=int(dwire);
-      //  if (dwire-iwire>fWirePitch[plane]*0.5) ++iwire;
-      uint32_t iwire = int(dwire + 0.5);
-    	
-     return { cryostat, tpc, plane, iwire };
-
+      // add 0.5 to have the correct rounding
+    int NearestWireNumber
+      = int (0.5 + WireCoordinate(xyz.Y(), xyz.Z(), plane, tpc, cryostat));
+    // If we are outside of the wireplane range, throw an exception
+    // (this response maintains consistency with the previous
+    // implementation based on geometry lookup)
+    if(NearestWireNumber < 0 ||
+       NearestWireNumber >= (int) fWiresPerPlane[cryostat][tpc/2][plane])
+    {
+      const int wireNumber = NearestWireNumber; // save for the output
+      if(wireNumber < 0 ) NearestWireNumber = 0;
+      else                NearestWireNumber = fWiresPerPlane[cryostat][tpc/2][plane] - 1;
+    /*
+      // comment in the following statement to throw an exception instead
+      throw InvalidWireIDError("Geometry", wireNumber, NearestWireNumber)
+        << "ChannelMap35Alg::NearestWireID(): can't Find Nearest Wire for position (" 
+        << xyz.X() << "," << xyz.Y() << "," << xyz.Z() << ")"
+        << " approx wire number # " << wireNumber
+        << " (capped from " << NearestWireNumber << ")\n";
+    */
+    } // if invalid wire
+    return { cryostat, tpc, plane, (unsigned int) NearestWireNumber };
   }
   
   //----------------------------------------------------------------------------
