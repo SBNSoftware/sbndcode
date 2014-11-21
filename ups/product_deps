@@ -33,12 +33,12 @@ fcldir  product_dir
 # Add the dependent product and version
 
 product          version
-larsoft		v03_03_00
+larsoft		v03_04_01
 gcc		v4_9_1
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-only_for_build  cetbuildtools   v4_02_02   
+only_for_build  cetbuildtools   v4_03_03   
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
