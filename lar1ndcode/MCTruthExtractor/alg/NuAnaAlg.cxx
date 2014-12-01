@@ -1,6 +1,8 @@
 
 #include "NuAnaAlg.h"
 
+#define CUSTOM_NUTOOLS
+
 namespace lar1nd{
 
   NuAnaAlg::NuAnaAlg(){
@@ -19,6 +21,11 @@ namespace lar1nd{
     yhigh = geom -> DetHalfHeight();
     zlow  = 0.0;
     zhigh = geom -> DetLength();
+
+    if (geom -> DetectorName() == "uboone_basic"){
+      xlow = 0.0;
+      xhigh = 2*xhigh;
+    }
 
     std::cout << "The dimensions of this detector are read to be:\n"
               << "  x: " << xlow << " to " << xhigh << "\n"
@@ -66,8 +73,8 @@ namespace lar1nd{
           -> ReweightCCRes(reweightingSigmas[kCCRes][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightNCRes(reweightingSigmas[kNCRes][i_weight]);
-      // reweightVector.back().at(i_weight) 
-      //     -> ReweightCoh(reweightingSigmas[kCoh][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightCoh(reweightingSigmas[kCoh][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightNonResRvp1pi(reweightingSigmas[kNonResRvp1pi][i_weight]);
       reweightVector.back().at(i_weight) 
@@ -76,12 +83,12 @@ namespace lar1nd{
           -> ReweightNonResRvp2pi(reweightingSigmas[kNonResRvp2pi][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightNonResRvbarp2pi(reweightingSigmas[kNonResRvbarp2pi][i_weight]);
-      // reweightVector.back().at(i_weight) 
-      //     -> ReweightResDecay(reweightingSigmas[kResDecay][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightResDecay(reweightingSigmas[kResDecay][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightNC(reweightingSigmas[kNC][i_weight]);
-      // reweightVector.back().at(i_weight) 
-      //     -> ReweightDIS(reweightingSigmas[kDIS][i_weight]);
+      reweightVector.back().at(i_weight) 
+          -> ReweightDIS(reweightingSigmas[kDIS][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightDISnucl(reweightingSigmas[kDISnucl][i_weight]);
       // reweightVector.back().at(i_weight) 
@@ -137,8 +144,8 @@ namespace lar1nd{
               -> ReweightNCRes(reweightingSigmas[kNCRes][weight_point]);
             break;
           case kCoh:
-            // reweightVector[i_reweightingKnob][weight_point]
-            //   -> ReweightCoh(reweightingSigmas[kCoh][weight_point]);
+            reweightVector[i_reweightingKnob][weight_point]
+              -> ReweightCoh(reweightingSigmas[kCoh][weight_point]);
             break;
           case kNonResRvp1pi:
             reweightVector[i_reweightingKnob][weight_point]
@@ -415,7 +422,7 @@ namespace lar1nd{
     art::Ptr<simb::MCParticle> part;
     return part;
   }
-  bool NuAnaAlg::isInTPC(TVector3 & v) const{
+  bool NuAnaAlg::isInTPC(const TVector3 & v) const{
     if (v.X() > xhigh || v.X() < xlow) return false;
     if (v.Y() > yhigh || v.Y() < ylow) return false;
     if (v.Z() > zhigh || v.Z() < zlow) return false;
@@ -505,7 +512,6 @@ namespace lar1nd{
       // This function loops over the larg4 object and packs all the info
       // up into the vectors provided (which are written to ntuple)
       // We know from the genie function how many pi0 and gammas there are already
-      // std::cout << "Got to here. 1"<<std::endl;
       std::vector<float> empty4Vector;
       empty4Vector.resize(4);
 
@@ -526,7 +532,6 @@ namespace lar1nd{
       
       chargedPionPos.resize(NChargedPions);
       chargedPionMom.resize(NChargedPions);
-      // std::cout << "Got to here. 2"<<std::endl;
 
 
       // loop over the particles, extending the pion vectors as it goes.
@@ -547,7 +552,6 @@ namespace lar1nd{
               abs(particle -> PdgCode()) == 13 ||
               abs(particle -> PdgCode()) == 14 )
           {
-      // std::cout << "Got to here. 3a"<<std::endl;
 
             // then this is definitely the lepton.
             nPrimaryLepton ++;
@@ -559,13 +563,12 @@ namespace lar1nd{
               pack4Vector(particle -> Position(traj_point),leptonPos.back());
               leptonMom.push_back(empty4Vector);
               pack4Vector(particle -> Momentum(traj_point),leptonMom.back());
+              if (!isInTPC(particle -> Position(traj_point).Vect())) break;
             }
-      // std::cout << "Got to here. 3b"<<std::endl;
           } // end lepton if block
 
           if (particle -> PdgCode() == 22)  //  misc gamma
           {
-      // std::cout << "Got to here. 4a"<<std::endl;
             nPrimaryGamma ++;
             TLorentzVector conversionPoint, conversionMom;
             GetPhotonConversionInfo(particle, conversionPoint,conversionMom);
@@ -573,12 +576,10 @@ namespace lar1nd{
             miscPhotonConversionMom.push_back(empty4Vector);
             pack4Vector(conversionPoint,miscPhotonConversionPos.back());
             pack4Vector(conversionMom,  miscPhotonConversionMom.back());
-      // std::cout << "Got to here. 4b"<<std::endl;
           }
 
           if (particle -> PdgCode() == 111)  // neutral pion
           {
-      // std::cout << "Got to here. 5a"<<std::endl;
             pionPos.push_back(empty4Vector);
             pionMom.push_back(empty4Vector);
             pack4Vector(particle->EndPosition(),pionPos.back());
@@ -606,10 +607,8 @@ namespace lar1nd{
               p2PhotonConversionMom.push_back(empty4Vector);
               pack4Vector(conversionPoint,p2PhotonConversionPos.back());
               pack4Vector(conversionMom,  p2PhotonConversionMom.back());              
-      // std::cout << "Got to here. 5b"<<std::endl;
             }
             else{ // this is the "dalitz" decay
-      // std::cout << "Got to here. 6a"<<std::endl;
               // Only take the photon, but be sure to find it
               TLorentzVector conversionPoint, conversionMom;
               p2PhotonConversionPos.push_back(empty4Vector);
@@ -628,14 +627,12 @@ namespace lar1nd{
                   break;
                 }
               }
-      // std::cout << "Got to here. 6b"<<std::endl;
             }
             
           }
 
           if (abs(particle -> PdgCode()) == 211)  // charged pion
           {
-      // std::cout << "Got to here. 7a"<<std::endl;
             chargedPionSign.push_back(particle ->PdgCode() / 211);
             int nTrajectoryPoints = particle -> NumberTrajectoryPoints();
             unsigned int index = chargedPionSign.size() - 1;
@@ -649,7 +646,6 @@ namespace lar1nd{
               pack4Vector(particle -> Momentum(traj_point),
                           chargedPionMom[index].back());
             }
-      // std::cout << "Got to here. 7b"<<std::endl;
           }
         } // end of if primary
       } // end of loop over particles
@@ -691,6 +687,40 @@ namespace lar1nd{
     output[2] = input.Z();
     return;
   }
+
+
+#ifdef CUSTOM_NUTOOLS
+    void NuAnaAlg::packFluxWeight(    art::Ptr<simb::MCFlux >  flux,
+                            std::vector<std::vector<float>>& eventReweight)
+    {
+      // This is getting the flux weights from the flux object.
+      // It's a total hack, it's hardcoded, and requires a custom version of 
+      // the nutools software.  
+      eventReweight.clear();
+      eventReweight.resize(7);
+      for (int i = 0; i < 7; i ++)
+      {
+        eventReweight[i].resize(1000);
+        for (int j = 0; j < 1000; ++j)
+        {
+          eventReweight[i][j]=flux->eventReweight[i*1000+j];
+        }
+      }
+
+      return;
+    }
+
+#else
+     void NuAnaAlg::packFluxWeight(    art::Ptr<simb::MCFlux >  flux,
+                             std::vector<std::vector<float>>&)
+    {
+
+      std::cerr << "You are asking to pack flux weights but the version "
+                << "of nutools you use does not appear to support it.\n";
+      return;
+    }   
+
+#endif
 
 } // end of namespace lar1nd
 
