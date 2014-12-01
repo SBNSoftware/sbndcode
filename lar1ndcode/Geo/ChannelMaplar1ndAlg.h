@@ -3,7 +3,7 @@
 /// \brief Interface to algorithm class for a specific detector channel mapping
 ///
 /// \version $Id:  $
-/// \author  tylerdalion@gmail.com
+/// \author  tylerdalion@gmail.com // adapted for LAr1ND by ariana.hackenburg@yale.edu
 ////////////////////////////////////////////////////////////////////////
 #ifndef GEO_CHANNELlar1ndMAPALG_H
 #define GEO_CHANNELlar1ndMAPALG_H
@@ -33,6 +33,11 @@ namespace geo{
 					   unsigned int    PlaneNo,
 					   unsigned int    TPCNo,
 					   unsigned int    cstat)   const;
+    float 		     WireCoordinate(float Ypos, float Zpos,
+                                          unsigned int PlaneNo,
+                                          unsigned int TPCNo,
+                                          unsigned int cstat) const;
+
     uint32_t                 PlaneWireToChannel(unsigned int plane,
 						unsigned int wire,
 						unsigned int tpc,
@@ -60,11 +65,19 @@ namespace geo{
                                                                           ///< in the heirachy
     geo::GeoObjectSorterlar1nd                               fSorter;         ///< sorts geo::XXXGeo objects
     
-    std::vector<std::vector<std::vector<double>>> fFirstWireCenterY;
-    std::vector<std::vector<std::vector<double>>> fFirstWireCenterZ;
+        /// all data we need for each APA
+    typedef struct {
+      double fFirstWireCenterY;
+      double fFirstWireCenterZ;
+      /// +1 if the wire ID order follow z (larger z, or smaller intercept => larger wire ID); -1 otherwise
+      float fWireSortingInZ;
+    } PlaneData_t;
+    ///< collects all data we need for each plane (indices: c t p)
+    std::vector<std::vector<std::vector<PlaneData_t>>> fPlaneData;
+
     std::vector< double > fWirePitch;
     std::vector< double > fOrientation;
-    std::vector< double > fTanOrientation; // to explore improving speed
+    std::vector< double > fSinOrientation; // to explore improving speed
     std::vector< double > fCosOrientation; // to explore improving speed
 
 

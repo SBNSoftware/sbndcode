@@ -3,7 +3,7 @@
 /// \brief Interface to algorithm class for a specific detector channel mapping
 ///
 /// \version $Id:  $
-/// \author  tylerdalion@gmail.com
+/// \author  tylerdalion@gmail.com // adapted for LAr1ND by ariana.hackenburg@yale.edu
 ////////////////////////////////////////////////////////////////////////
 
 #include "lar1ndcode/Geo/ChannelMaplar1ndAlg.h"
@@ -144,42 +144,44 @@ namespace geo{
     // Save the number of channels
     fChannelsPerAPA = fFirstChannelInNextPlane[0][0][fPlanesPerAPA-1];
 
-    //resize vectors
-    fFirstWireCenterY.resize(fNcryostat);
-    fFirstWireCenterZ.resize(fNcryostat);
-    for (unsigned int cs=0; cs<fNcryostat; cs++){
-      fFirstWireCenterY[cs].resize(fNTPC[cs]);
-      fFirstWireCenterZ[cs].resize(fNTPC[cs]);
-      for (unsigned int tpc=0; tpc<fNTPC[cs]; tpc++){
-        fFirstWireCenterY[cs][tpc].resize(fPlanesPerAPA);
-        fFirstWireCenterZ[cs][tpc].resize(fPlanesPerAPA);
-      }                                                                   
-    }
+    
 
     fWirePitch.resize(fPlanesPerAPA);
     fOrientation.resize(fPlanesPerAPA);
-    fTanOrientation.resize(fPlanesPerAPA);
+    fSinOrientation.resize(fPlanesPerAPA);
     fCosOrientation.resize(fPlanesPerAPA);
 
 
-    //save data into fFirstWireCenterY and fFirstWireCenterZ
+        //save data into fFirstWireCenterY, fFirstWireCenterZ and fWireSortingInZ
+   fPlaneData.resize(fNcryostat);
     for (unsigned int cs=0; cs<fNcryostat; cs++){
+        fPlaneData[cs].resize(fNTPC[cs]);
       for (unsigned int tpc=0; tpc<fNTPC[cs]; tpc++){
+	    fPlaneData[cs][tpc].resize(fPlanesPerAPA);
         for (unsigned int plane=0; plane<fPlanesPerAPA; plane++){
-	  fPlaneIDs.emplace(PlaneID(cs, tpc, plane));
+	  PlaneData_t& PlaneData = fPlaneData[cs][tpc][plane];
+          fPlaneIDs.emplace(cs, tpc, plane);
           double xyz[3]={0.0, 0.0, 0.0};
-          cgeo[cs]->TPC(tpc).Plane(plane).Wire(0).GetCenter(xyz);
-          fFirstWireCenterY[cs][tpc][plane]=xyz[1];
-          fFirstWireCenterZ[cs][tpc][plane]=xyz[2];
-        }
-      }
-    }
+          const geo::PlaneGeo& thePlane = cgeo[cs]->TPC(tpc).Plane(plane);
+          thePlane.Wire(0).GetCenter(xyz);
+          PlaneData.fFirstWireCenterY = xyz[1];
+          PlaneData.fFirstWireCenterZ = xyz[2];
+          // we are interested in the ordering of wire numbers: we find that a
+          // point is N wires left of a wire W: is that wire W + N or W - N?
+          // In fact, for TPC #0 it is W + N for V and Z planes, W - N for U
+          // plane; for TPC #0 it is W + N for V and Z planes, W - N for U
+          PlaneData.fWireSortingInZ = thePlane.WireIDincreasesWithZ()? +1.: -1.;
+        } // for plane
+      } // for TPC
+    } // for cryostat
 
+    
+    
     //initialize fWirePitch and fOrientation
     for (unsigned int plane=0; plane<fPlanesPerAPA; plane++){
       fWirePitch[plane]=cgeo[0]->TPC(0).WirePitch(0,1,plane);
       fOrientation[plane]=cgeo[0]->TPC(0).Plane(plane).Wire(0).ThetaZ();
-      fTanOrientation[plane] = tan(fOrientation[plane]);
+      fSinOrientation[plane] = sin(fOrientation[plane]);
       fCosOrientation[plane] = cos(fOrientation[plane]);
     }
 
@@ -189,6 +191,12 @@ namespace geo{
     mf::LogVerbatim("GeometryTest") << "V channels per APA = " << fWiresPerPlane[0][0][1]; //2*nAnchoredWires[0][0][1] ;
     mf::LogVerbatim("GeometryTest") << "Z channels per APA side = " << fWiresPerPlane[0][0][2] ; //nAnchoredWires[0][0][2];
 
+
+    mf::LogVerbatim("GeometryTest") << "Pitch in U Plane = " << fWirePitch[0] ;
+    mf::LogVerbatim("GeometryTest") << "Pitch in V Plane = " << fWirePitch[1] ;
+    mf::LogVerbatim("GeometryTest") << "Pitch in Z Plane = " << fWirePitch[2] ;
+
+    
     return;
 
   }
@@ -294,6 +302,48 @@ namespace geo{
   {
     return fNchannels;
   }
+
+
+
+  //----------------------------------------------------------------------------
+  float ChannelMaplar1ndAlg::WireCoordinate(float YPos, float ZPos,
+					  unsigned int PlaneNo,
+					  unsigned int TPCNo,
+					  unsigned int cstat) const
+{
+    // Returns the wire number corresponding to a (Y,Z) position in PlaneNo
+    // with float precision.
+    // Core code ripped from original NearestWireID() implementation
+
+    const PlaneData_t& PlaneData = fPlaneData[cstat][TPCNo][PlaneNo];
+
+
+    //get the orientation angle of a given plane and calculate the distance between first wire
+    //and a point projected in the plane
+
+	
+
+    // const double rotate = (TPCNo % 2 == 1)? -1.: +1.;
+    // the formula used here is geometric:
+    // distance = delta_y cos(theta_z) + delta_z sin(theta_z)
+    // with a correction for the orientation of the TPC:
+    // odd TPCs have supplementary wire angle (pi-theta_z), changing cosine sign
+
+	
+
+    const bool bSuppl = (TPCNo % 2) == 1;
+    float distance = 
+      -(YPos - PlaneData.fFirstWireCenterY) * (bSuppl? -1.: +1.) * fCosOrientation[PlaneNo]
+      +(ZPos - PlaneData.fFirstWireCenterZ) * fSinOrientation[PlaneNo];
+
+
+    // The sign of this formula is correct if the wire with larger ID is on the
+    // "right" (intuitively, larger z; rigorously, smaller intercept)
+    // than this one.
+    // Of course, we are not always that lucky. fWireSortingInZ fixes our luck.
+      
+    return PlaneData.fWireSortingInZ * distance/fWirePitch[PlaneNo];
+}  // ChannelMarlar1ndAlf::WireCoordinate()
   
 
   //----------------------------------------------------------------------------
@@ -303,39 +353,28 @@ namespace geo{
 					 unsigned int    cryostat)     const
   {
 
-    //get the position of first wire in a given cryostat, tpc and plane
-    double firstxyz[3]={0.0, 0.0, 0.0};
-    firstxyz[1]=fFirstWireCenterY[cryostat][tpc][plane];
-    firstxyz[2]=fFirstWireCenterZ[cryostat][tpc][plane];
-
-    double distance = 0.;
-
-    //get the orientation angle of a given plane and calculate the distance between first wire
-    //and a point projected in the plane
-    int rotate = 1;
-    if (tpc%2 == 1) rotate = -1;
- 
-    distance = std::abs( (xyz[1]-firstxyz[1] -rotate*fTanOrientation[plane]*(xyz[2]-firstxyz[2]))
-                                * fCosOrientation[plane]);
-
-    //if the distance between the wire and a given point is greater than the half of wirepitch,
-    //then the point is closer to a i+1 wire thus add one
-    //double res = distance/fWirePitch[plane] - int( distance/fWirePitch[plane] );
-    //if (res > fWirePitch[plane]/2)	iwire+=1;
-
-    // do it, but also check to see if we are on the edge
-
-    double dwire=distance/fWirePitch[plane];
-    uint32_t iwire=int(dwire);
-    if (dwire-iwire>fWirePitch[plane]*0.5) ++iwire;
-    //uint32_t maxwireminus1=fWiresPerPlane[0][tpc/2][plane]-1;
-    uint32_t maxwireminus1=fWiresPerPlane[0][tpc][plane]-1;
-//	std::cout<<"MAX WIRE MUNIS 1: "<<maxwireminus1<<std::endl;
-    if(iwire>maxwireminus1) iwire=maxwireminus1;
-
-    WireID wid(cryostat, tpc, plane, iwire);
-    return wid;
-
+      // add 0.5 to have the correct rounding
+    int NearestWireNumber
+      = int (0.5 + WireCoordinate(xyz.Y(), xyz.Z(), plane, tpc, cryostat));
+    // If we are outside of the wireplane range, throw an exception
+    // (this response maintains consistency with the previous
+    // implementation based on geometry lookup)
+    if(NearestWireNumber < 0 ||
+       NearestWireNumber >= (int) fWiresPerPlane[cryostat][tpc/2][plane])
+    {
+      const int wireNumber = NearestWireNumber; // save for the output
+      if(wireNumber < 0 ) NearestWireNumber = 0;
+      else                NearestWireNumber = fWiresPerPlane[cryostat][tpc/2][plane] - 1;
+    /*
+      // comment in the following statement to throw an exception instead
+      throw InvalidWireIDError("Geometry", wireNumber, NearestWireNumber)
+        << "ChannelMap35Alg::NearestWireID(): can't Find Nearest Wire for position (" 
+        << xyz.X() << "," << xyz.Y() << "," << xyz.Z() << ")"
+        << " approx wire number # " << wireNumber
+        << " (capped from " << NearestWireNumber << ")\n";
+    */
+    } // if invalid wire
+    return { cryostat, tpc, plane, (unsigned int) NearestWireNumber };
   }
   
   //----------------------------------------------------------------------------
