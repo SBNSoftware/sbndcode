@@ -368,8 +368,8 @@ EOF
 EOF
   $ypos=0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1);
   $zpos=-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1);
-  open (MYFILE, '>>data.txt');
-  print MYFILE "TPCWire$i y=$ypos z=$zpos\n";
+#  open (MYFILE, '>>data.txt');
+#  print MYFILE "TPCWire$i y=$ypos z=$zpos\n";
   }
 
   # The wires in the middle.
