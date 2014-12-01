@@ -4,9 +4,9 @@
  <box name="TPC" lunit="cm" x="200" y="400 " z="365 +0.35"/>
  <box name="TPCActive" lunit="cm" x="196.4" y="399.8" z="364.8"/>
 
- <box name="TPBLayerXY" lunit="cm" x="0*196.4" y="0*399.8" z="0.01"/>
- <box name="TPBLayerXZ" lunit="cm" x="0*196.4" y="0.01" z="0*364.8"/>
- <box name="TPBLayerCathode" lunit="cm" x="0.01" y="0*399.8" z="0*364.8"/>
+ <box name="TPBLayerXY" lunit="cm" x="1*196.4" y="1*399.8" z="0.01"/>
+ <box name="TPBLayerXZ" lunit="cm" x="1*196.4" y="0.01" z="1*364.8"/>
+ <box name="TPBLayerCathode" lunit="cm" x="0.01" y="1*399.8" z="1*364.8"/>
  
 </solids>
 

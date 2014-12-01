@@ -183,6 +183,7 @@ sub gen_rotations()
    <rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
    <rotation name="rPlus180AboutY" unit="deg" x="0" y="180" z="0"/>
    <rotation name="rPMTRotation"  unit="deg" x="90"  y="270"   z="0"/>
+   <rotation name="rPMTRotation1"  unit="deg" x="90"  y="90"   z="0"/>
 
 </define>
 EOF
@@ -600,32 +601,32 @@ EOF
 
 EOF
 
-if( $tpb_coverage != 0 ){ 
-    print GDML <<EOF ;
-    <physvol>
-        <volumeref ref="volTPBLayerXY"/>
-        <position name="posTPBLayerXY0" unit="cm" x="0" y="0" z="$TPCActiveLength/2-0.005"/>
-    </physvol>
-    <physvol>
-        <volumeref ref="volTPBLayerXY"/>
-        <position name="posTPBLayerXY1" unit="cm" x="0" y="0" z="-$TPCActiveLength/2 + 0.005"/>
-    </physvol>
-    <physvol>
-        <volumeref ref="volTPBLayerXZ"/>
-        <position name="posTPBLayerXZ0" unit="cm" x="0" y="$TPCActiveHeight/2 - 0.005" z="0"/>
-    </physvol>
-    <physvol>
-        <volumeref ref="volTPBLayerXZ"/>
-        <position name="posTPBLayerXZ1" unit="cm" x="0" y="-$TPCActiveHeight/2+0.005" z="0"/>
-    </physvol>
-
-	<physvol>
-		<volumeref ref="volTPBLayerCathode"/>
-		<position name="posTPBLayerCathode" unit="cm" x="-$TPCActiveDepth/2+0.005" y="0" z="0"/>
-	</physvol>
-
-EOF
-}
+#if( $tpb_coverage != 0 ){ 
+#    print GDML <<EOF ;
+#    <physvol>
+#        <volumeref ref="volTPBLayerXY"/>
+#        <position name="posTPBLayerXY0" unit="cm" x="0" y="0" z="$TPCActiveLength/2-0.005"/>
+#    </physvol>
+#    <physvol>
+#        <volumeref ref="volTPBLayerXY"/>
+#        <position name="posTPBLayerXY1" unit="cm" x="0" y="0" z="-$TPCActiveLength/2 + 0.005"/>
+#    </physvol>
+#    <physvol>
+#        <volumeref ref="volTPBLayerXZ"/>
+#        <position name="posTPBLayerXZ0" unit="cm" x="0" y="$TPCActiveHeight/2 - 0.005" z="0"/>
+#    </physvol>
+#    <physvol>
+#        <volumeref ref="volTPBLayerXZ"/>
+#        <position name="posTPBLayerXZ1" unit="cm" x="0" y="-$TPCActiveHeight/2+0.005" z="0"/>
+#    </physvol>
+#
+#	<physvol>
+#		<volumeref ref="volTPBLayerCathode"/>
+#		<position name="posTPBLayerCathode" unit="cm" x="-$TPCActiveDepth/2+0.005" y="0" z="0"/>
+#	</physvol>
+#
+#EOF
+#}
 
 	print GDML <<EOF;
 	<physvol>
@@ -793,45 +794,15 @@ sub gen_pmt {
   #The below pmt geo is a placeholder--"PMTVolume" contains pmt info from microboone--ahack
   print PMT <<EOF;
 <solids>
- <tube name="PMTVolume"
-  rmax="(6.1*2.54)"
-  z="(11.1*2.54)+0.005"
-  deltaphi="360"
-  aunit="deg"
-  lunit="cm"/>
+ <tube name="PMTVolume" rmax="(5.1*2.54)" z="(11.1*2.54)+0.005" deltaphi="360" aunit="deg" lunit="cm"/>
 
- <tube name="PMT_AcrylicPlate"
-  rmax="(6.0*2.54)"
-  z="(0.2)"
-  deltaphi="360"
-  aunit="deg"
-  lunit="cm"/>
- <tube name="PMT_Stalk"
-  rmax="(1.25*2.54)"
-  z="(3.0*2.54)"
-  deltaphi="360"
-  aunit="deg"
-  lunit="cm"/>
- <tube name="PMT_SteelBase"
-  rmax="(6.0*2.54)"
-  z="(1.5*2.54)"
-  deltaphi="360"
-  aunit="deg"
-  lunit="cm"/>
- <tube name="PMT_Underside"
-  rmax="2.54*4.0"
-  z="2.54*2.5"
-  deltaphi="360"
-  aunit="deg"
-  lunit="cm"/>
+ <tube name="PMT_AcrylicPlate" rmax="(6.0*5.1/6.1*2.54)" z="(0.2)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Stalk" rmax="(1.25*5.1/6.1*2.54)" z="(3.0*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_SteelBase" rmax="(6.0*5.1/6.1*2.54)" z="(1.5*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Underside" rmax="2.54*4.0*5.1/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
 EOF
     print PMT <<EOF;
- <tube name="PMT_Lens"
-  rmax="2.54*4.0"
-  z="2.54*2.5"
-  deltaphi="360"
-  aunit="deg"
-  lunit="cm"/>
+ <tube name="PMT_Lens" rmax="2.54*4.0*5.1/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
 EOF
 
     print PMT <<EOF;
@@ -1054,14 +1025,15 @@ sub gen_cryostat()
 EOF
 	make_APA();
 
+=begin
 #For PMTs behind the wire plane:
 #The following several parameters can be adjusted based on desired pmt 
 #configuration (they form polygonal shapes in (3 maximum) circular layers currently)
-$pmt_number  = 30 ; 	#Number of PMTs behind wires
-$center_pmts = 6 ;		#Number of PMTs in inner layer
-$middle_pmts = 10 ;		#Number of PMTs in second layer
+$pmt_number  = 20 ; 	#Number of PMTs behind wires
+$center_pmts = 4 ;		#Number of PMTs in inner layer
+$middle_pmts = 9 ;		#Number of PMTs in second layer
 $radius 	 = 32 ; 	#Distance from (0,0,0) you want to set your first PMT layer 
-$mult 		 = 2.5;  	#Multiplier for distance from (0,0,0) for middle layer of PMTs
+$mult 		 = 3 ;  	#Multiplier for distance from (0,0,0) for middle layer of PMTs
 
 $multOuter   = 5 ;		#Multiplier for distance from (0,0,0) for 3rd layer of PMTs
 
@@ -1152,66 +1124,76 @@ EOF
 	$y = $new_radius*sin($angle) ;
 	$z = $new_radius*cos($angle) ;
 	}
-
-
-
 }
-=begin
-	#for inner layer
-	if($pmt_number > $center_pmts  && $i < ($center_pmts-1)){
-		$angle = ( 360 / $center_pmts )*$pi/180*($i+1) ;  #get inner angle of some ngon
-	}
-	#for middle layer if called for
-	elsif($pmt_number > $center_pmts && $pmt_number = ($center_pmts+$middle_pmts) && $i >= ($center_pmts - 1)){
-  		$angle = int( 360 / ($pmt_number - $center_pmts ))*$pi/180*($i - $center_pmts - 1 ) ;  #get inner angle of some ngon
-	 	$new_radius = $mult*$radius ;
-	}
-	#for outer layer, if called for
-	elsif($pmt_number > $center_pmts && $pmt_number > ($center_pmts+$middle_pmts) && $i >= ($middle_pmts + $center_pmts - 1)){
-  		$angle = int( 360 / ($pmt_number - $center_pmts - $middle_pmts ))*$pi/180*($i - $center_pmts - $middle_pmts - 1) ;  #get inner angle of some ngon
-	 	$new_radius = $multOuter*$radius ;
-	}
-	#for 1 layer 
-	else{
-  		$angle = int( 360 / ($pmt_number ))*$pi/180*($i+1) ;  #get inner angle of some ngon
-		}
 
-#    open (MYFILE, '>>pmt.txt');
-#    print MYFILE "i=$i y=$y z=$z radius=$new_radius angle=$angle \n";
+#Add in also PMTs on the sides of the detector
+#Second for loop is for TPC
+for( $i = 0; $i<4; $i++ ){
+	for( $j = 0; $j<2; $j++){
 
-	$y = $new_radius*sin($angle) ;
-	$z = $new_radius*cos($angle) ;
+	$l = $pmt_number + $i ;
+		print CRYOSTAT <<EOF;
+  	  <physvol>
+		  <volumeref ref="volPMT"/>
+		  <position name="posPMT$l" unit="cm" x="(-1)**$j*(220/2)" y="$TPCHeight/2 + 10" z="$TPCLength/2 - ($i+1)*(47.4 + 15)" /> 
+		  <rotation name="rPMTRotation3" unit="deg" x="90" y="0" z="0"/>
+	  </physvol> 
+EOF
+	}
+}
 =end
 =cut
 
+if ( $pmt_switch eq "on" ) {
+	
+	for( $i = 0; $i < 11; $i++){
+		for( $j = 0; $j < 11; $j++){
+			$k = $i*11+$j ;
+			$l = 120 + $k ; 
+			print CRYOSTAT<<EOF;
+			<physvol>
+				<volumeref ref="volPMT"/>
+				<position name="posPMT$k" unit="cm" x="220" y="$TPCHeight/12*($j+1) - $TPCHeight/2" z="$TPCLength/12*($i+1) - $TPCLength/2"/>
+				<rotationref ref="rPMTRotation1"/>
+			</physvol> 
 
-#=begin
-#Commented out temporarily to do some pmt positioning
+			<physvol>
+				<volumeref ref="volPMT"/>
+				<position name="posPMT$l" unit="cm" x="-220" y="$TPCHeight/12*($j+1) - $TPCHeight/2" z="$TPCLength/12*($i+1) - $TPCLength/2"/>
+				<rotationref ref="rPMTRotation"/>
+			</physvol> 
 
-if( $scint_bars) {
-	for ( $i=0; $i<125; ++$i ){
-	    for ($j=0; $j<4; ++$j ){
-		for ($k=0; $k<2; ++$k){  
-		    print CRYOSTAT <<EOF;
-		    <physvol>
-			<volumeref ref="vollightguidedetector"/>
-			<position name="lightguidedetector-$i-$j-$k" unit="cm" x="(-1)**$k*($TPCWidth+20+(0.25*2.54+0.1)/2)" y="(2*$j+1)*$TPCHeight/8-$TPCHeight/2" z="-($TPCLength/2-20)+2.6*($i+1)" />
 EOF
-			if ( $k==0 ) {
-                            print CRYOSTAT <<EOF;
-                            <rotationref ref="rPlus180AboutY"/>
-EOF
-                        }  
-                   print CRYOSTAT<<EOF;
-                   </physvol>
-EOF
-        }
-      }
-    }
-}
-#=end
-#=cut
- 
+			}	
+
+
+		}
+
+
+ }
+#
+#if( $scint_bars) {
+#	for ( $i=0; $i<125; ++$i ){
+#	    for ($j=0; $j<4; ++$j ){
+#		for ($k=0; $k<2; ++$k){  
+#		    print CRYOSTAT <<EOF;
+#		    <physvol>
+#			<volumeref ref="vollightguidedetector"/>
+#			<position name="lightguidedetector-$i-$j-$k" unit="cm" x="(-1)**$k*($TPCWidth+20+(0.25*2.54+0.1)/2)" y="(2*$j+1)*$TPCHeight/8-$TPCHeight/2" z="-($TPCLength/2-20)+2.6*($i+1)" />
+#EOF
+#			if ( $k==0 ) {
+#                            print CRYOSTAT <<EOF;
+#                            <rotationref ref="rPlus180AboutY"/>
+#EOF
+#                        }  
+#                   print CRYOSTAT<<EOF;
+#                   </physvol> 
+#EOF
+#        }
+#       }
+#      }
+#   }
+# 
 
 	print CRYOSTAT <<EOF;
  </volume>
