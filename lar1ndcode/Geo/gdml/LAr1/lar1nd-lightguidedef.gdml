@@ -81,7 +81,7 @@
   z="2.54"/>
 </solids>
 <structure>
- <volume name="volOpDetSensitive">
+<!-- <volume name="volOpDetSensitive">
   <materialref ref="LAr"/>
   <solidref ref="lightguidebarcoating"/>
  </volume>
@@ -100,5 +100,5 @@
    <volumeref ref="vollightguidebar"/>
    <position name="poslightguidebar" unit="cm" x="0" y="0" z="0"/>
   </physvol>
- </volume>
+ </volume>-->
 </structure>
