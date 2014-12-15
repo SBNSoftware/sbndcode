@@ -43,15 +43,11 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
 cet_report_compiler_flags()
 
 # these are minimum required versions, not the actual product versions
-find_ups_product( larcore v1_00_00 )
-find_ups_product( lardata v1_00_00 )
-find_ups_product( larevt v1_00_00 )
 find_ups_product( larsim v1_00_00 )
 find_ups_product( nutools v1_00_00 )
 find_ups_product( art v1_09_00 )
 find_ups_product( cetbuildtools v3_10_00 )
-
-
+find_ups_product( postgresql v9_1_5 )
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
