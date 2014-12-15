@@ -892,7 +892,7 @@ EOF
   z="2.54"/>
 </solids>
 <structure>
- <volume name="volOpDetSensitive">
+<!-- <volume name="volOpDetSensitive">
   <materialref ref="LAr"/>
   <solidref ref="lightguidebarcoating"/>
  </volume>
@@ -911,7 +911,7 @@ EOF
    <volumeref ref="vollightguidebar"/>
    <position name="poslightguidebar" unit="cm" x="0" y="0" z="0"/>
   </physvol>
- </volume>
+ </volume>-->
 </structure>
 EOF
 
@@ -936,11 +936,11 @@ sub gen_cryostat()
  <box name="SteelBoxA" lunit="cm" x="$CryostatWidth" y="$CryostatHeight" z="$CryostatLength"/>
  <box name="SteelBoxB" lunit="cm" x="$CryostatWidth-5" y="$CryostatHeight-5" z="$CryostatLength-5"/>
 
-
  <box name="APAFrameA" lunit="cm" x="$AnodeWidthX" y="$AnodeHeightY" z="$AnodeLengthZ"/>
  <box name="APAFrameB" lunit="cm" x="$AnodeWidthX+ 0.1" y="$AnodeHeightY-20" z="$AnodeLengthZ -20"/>
- <box name="APAFrameC" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-20" z="$AnodeWidthX/2"/>
- <box name="APAFrameD" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-35" z="$AnodeWidthX/2"/>
+
+ <!--<box name="APAFrameC" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-20" z="$AnodeWidthX/2"/>
+ <box name="APAFrameD" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-35" z="$AnodeWidthX/2"/> -->
 
  <box name="HorizontalBeam" lunit="cm" x="$TPCWidth*2" y="5" z="5"/>
 
@@ -953,12 +953,12 @@ sub gen_cryostat()
 	<position name="posSteelBoxSubtraction" x="0" y="0" z="0"/>
   </subtraction>
 
-   <subtraction name="APAFrame0">
+   <subtraction name="APAFrame">
      <first ref="APAFrameA"/> <second ref="APAFrameB"/>
      <position name="posTPCSubtraction" x="0" y="0" z="0"/>
    </subtraction>
 
-	<union name="APAFrame1">
+<!--	<union name="APAFrame1">
 	  <first ref="APAFrame0"/> <second ref="APAFrameC"/>
 	  <position name="posTPCUnion0" x="0" y="0" z="0"/>
 	</union>
@@ -993,7 +993,7 @@ sub gen_cryostat()
 		<first ref="APAFrame5"/> <second ref="APASideCross"/>
 		 <position name="posAPASideCross3" unit="cm" x="0" y="-($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
  		 <rotationref ref="rPlus45AboutX"/>
-      </union>
+      </union> -->
 
 </solids>
 
@@ -1025,131 +1025,12 @@ sub gen_cryostat()
 EOF
 	make_APA();
 
-=begin
-#For PMTs behind the wire plane:
-#The following several parameters can be adjusted based on desired pmt 
-#configuration (they form polygonal shapes in (3 maximum) circular layers currently)
-$pmt_number  = 20 ; 	#Number of PMTs behind wires
-$center_pmts = 4 ;		#Number of PMTs in inner layer
-$middle_pmts = 9 ;		#Number of PMTs in second layer
-$radius 	 = 32 ; 	#Distance from (0,0,0) you want to set your first PMT layer 
-$mult 		 = 3 ;  	#Multiplier for distance from (0,0,0) for middle layer of PMTs
-
-$multOuter   = 5 ;		#Multiplier for distance from (0,0,0) for 3rd layer of PMTs
-
-$outer_pmts = $pmt_number - $middle_pmts - $center_pmts ; #Only if 3rd layer of pmts is used
-$new_radius= $radius;   
-
-$y = 0;
-$z = $radius ;
-$angle = 0 ;
-
-if ( $pmt_switch eq "on" ) {
-  for( $i = 0; $i < $center_pmts; $i++){
- 
-	if ( abs($y) < 10**-6 ){ $y =0 ; }
-	if ( abs($z) < 10**-6 ){ $z =0 ; }
-
-	 print CRYOSTAT <<EOF ;
-
-  	  <physvol>
-		  <volumeref ref="volPMT"/>
-		  <position name="posPMT$i" unit="cm" x="-220" y="$y" z="$z" /> 
-		  <rotationref ref="rPMTRotation"/>
-	  </physvol> 
-  	  <physvol>
-		  <volumeref ref="volPMT"/>
-		  <position name="posPMT$i" unit="cm" x="220" y="$y" z="$z" /> 
-   		  <rotation name="rPMTRotation0"  unit="deg" x="90"  y="90"   z="0"/>
-	  </physvol> 
-EOF
-  	$angle = int( 360 / ($center_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
-	$y = $new_radius*sin($angle) ;
-	$z = $new_radius*cos($angle) ;
-	}
-
-$j = $i ;
-$y=0 ;
-$z= $mult*$radius ;
-$new_radius = $z ;
-
-  for( $i = 0; $i < $middle_pmts; $i++){
-	$k=$i+$j ; 
-	if ( abs($y) < 10**-6 ){ $y =0 ; }
-	if ( abs($z) < 10**-6 ){ $z =0 ; }
-
-	 print CRYOSTAT <<EOF ;
-  	  <physvol>
-		  <volumeref ref="volPMT"/>
-		  <position name="posPMT$k" unit="cm" x="-220" y="$y" z="$z" /> 
-		  <rotationref ref="rPMTRotation"/>
-	  </physvol> 
-  	  <physvol>
-		  <volumeref ref="volPMT"/>
-		  <position name="posPMT$k" unit="cm" x="220" y="$y" z="$z" /> 
-   		  <rotation name="rPMTRotation1"  unit="deg" x="90"  y="90"   z="0"/>
-	  </physvol> 
-EOF
-  	$angle = int( 360 / ($middle_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
-	
-	$y = $new_radius*sin($angle) ;
-	$z = $new_radius*cos($angle) ;
-	}
-
-$j=$k;
-$y=0 ;
-$z= $multOuter*$radius ;
-$new_radius = $z ;
-
-
-  for( $i = 0; $i < $outer_pmts; $i++){
- 	$l = $j + $i ;
-	if ( abs($y) < 10**-6 ){ $y =0 ; }
-	if ( abs($z) < 10**-6 ){ $z =0 ; }
-
-	 print CRYOSTAT <<EOF ;
-  	  <physvol>
-		  <volumeref ref="volPMT"/>
-		  <position name="posPMT$l" unit="cm" x="-220" y="$y" z="$z" /> 
-		  <rotationref ref="rPMTRotation"/>
-	  </physvol> 
-  	  <physvol>
-		  <volumeref ref="volPMT"/>
-		  <position name="posPMT$l" unit="cm" x="220" y="$y" z="$z" /> 
-   		  <rotation name="rPMTRotation2"  unit="deg" x="90"  y="90"   z="0"/>
-	  </physvol> 
-EOF
-  	$angle = int( 360 / ($outer_pmts ))*$pi/180*($i+1) ;  #get inner angle of some ngon
-	
-	$y = $new_radius*sin($angle) ;
-	$z = $new_radius*cos($angle) ;
-	}
-}
-
-#Add in also PMTs on the sides of the detector
-#Second for loop is for TPC
-for( $i = 0; $i<4; $i++ ){
-	for( $j = 0; $j<2; $j++){
-
-	$l = $pmt_number + $i ;
-		print CRYOSTAT <<EOF;
-  	  <physvol>
-		  <volumeref ref="volPMT"/>
-		  <position name="posPMT$l" unit="cm" x="(-1)**$j*(220/2)" y="$TPCHeight/2 + 10" z="$TPCLength/2 - ($i+1)*(47.4 + 15)" /> 
-		  <rotation name="rPMTRotation3" unit="deg" x="90" y="0" z="0"/>
-	  </physvol> 
-EOF
-	}
-}
-=end
-=cut
-
 if ( $pmt_switch eq "on" ) {
 	
 	for( $i = 0; $i < 11; $i++){
 		for( $j = 0; $j < 11; $j++){
 			$k = $i*11+$j ;
-			$l = 120 + $k ; 
+			$l = 121 + $k ; 
 			print CRYOSTAT<<EOF;
 			<physvol>
 				<volumeref ref="volPMT"/>
