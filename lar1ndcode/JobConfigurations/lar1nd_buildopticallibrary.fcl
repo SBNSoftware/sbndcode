@@ -122,8 +122,8 @@ physics.producers.generator.FillTree: true #false
 physics.analyzers.pmtresponse.MakeAllPhotonsTree: true #false
 
 #physics.analyzers.pmtresponse.UsePMTEff: true
-physics.analyzers.pmtresponse.WavelengthCutLow: 300
-physics.analyzers.pmtresponse.WavelengthCutLow: 600
+#physics.analyzers.pmtresponse.WavelengthCutLow: 300
+#physics.analyzers.pmtresponse.WavelengthCutHigh: 600
 
 physics.analyzers.pmtresponse.MakeDetectedPhotonsTree: true
 physics.analyzers.pmtresponse.MakeSimPhotonssTree: true
