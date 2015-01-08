@@ -3935,13 +3935,13 @@
   y="100"
   z="2.54"/>
 
- <tube name="PMTVolume" rmax="(5.1*2.54)" z="(11.1*2.54)+0.005" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMTVolume" rmax="(3.*2.54)" z="(11.1*2.54)+0.005" deltaphi="360" aunit="deg" lunit="cm"/>
 
- <tube name="PMT_AcrylicPlate" rmax="(6.0*5.1/6.1*2.54)" z="(0.2)" deltaphi="360" aunit="deg" lunit="cm"/>
- <tube name="PMT_Stalk" rmax="(1.25*5.1/6.1*2.54)" z="(3.0*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
- <tube name="PMT_SteelBase" rmax="(6.0*5.1/6.1*2.54)" z="(1.5*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
- <tube name="PMT_Underside" rmax="2.54*4.0*5.1/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
- <tube name="PMT_Lens" rmax="2.54*4.0*5.1/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_AcrylicPlate" rmax="(6.0*3/6.1*2.54)" z="(0.2)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Stalk" rmax="(1.25*3/6.1*2.54)" z="(3.0*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_SteelBase" rmax="(6.0*3/6.1*2.54)" z="(1.5*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Underside" rmax="2.54*4.0*3/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Lens" rmax="2.54*4.0*3/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
 
   <box name="InsulationOuter" lunit="cm" x="600" y="550" z="490"/>
   <box name="InsulationInner" lunit="cm" x="510+0.1" y="480+0.1" z="440+0.1"/>
