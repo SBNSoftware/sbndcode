@@ -794,15 +794,15 @@ sub gen_pmt {
   #The below pmt geo is a placeholder--"PMTVolume" contains pmt info from microboone--ahack
   print PMT <<EOF;
 <solids>
- <tube name="PMTVolume" rmax="(5.1*2.54)" z="(11.1*2.54)+0.005" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMTVolume" rmax="(3.*2.54)" z="(11.1*2.54)+0.005" deltaphi="360" aunit="deg" lunit="cm"/>
 
- <tube name="PMT_AcrylicPlate" rmax="(6.0*5.1/6.1*2.54)" z="(0.2)" deltaphi="360" aunit="deg" lunit="cm"/>
- <tube name="PMT_Stalk" rmax="(1.25*5.1/6.1*2.54)" z="(3.0*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
- <tube name="PMT_SteelBase" rmax="(6.0*5.1/6.1*2.54)" z="(1.5*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
- <tube name="PMT_Underside" rmax="2.54*4.0*5.1/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_AcrylicPlate" rmax="(6.0*3/6.1*2.54)" z="(0.2)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Stalk" rmax="(1.25*3/6.1*2.54)" z="(3.0*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_SteelBase" rmax="(6.0*3/6.1*2.54)" z="(1.5*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Underside" rmax="2.54*4.0*3/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
 EOF
     print PMT <<EOF;
- <tube name="PMT_Lens" rmax="2.54*4.0*5.1/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Lens" rmax="2.54*4.0*3/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
 EOF
 
     print PMT <<EOF;
