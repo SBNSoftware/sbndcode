@@ -33,7 +33,7 @@ extern "C" {
 
 #include "lar1ndcode/Utilities/SignalShapingServiceT1034.h"
 #include "Geometry/Geometry.h"
-#include "Filters/ChannelFilter.h"
+//#include "Filters/ChannelFilter.h"
 #include "RawData/RawDigit.h"
 #include "RawData/raw.h"
 #include "RecoBase/Wire.h"
@@ -172,7 +172,7 @@ namespace caldata {
     uint32_t     channel(0); // channel number
     unsigned int bin(0);     // time bin loop variable
     
-    filter::ChannelFilter *chanFilt = new filter::ChannelFilter();  
+///    filter::ChannelFilter *chanFilt = new filter::ChannelFilter();  
 
     std::vector<float> holder;                // holds signal data
     std::vector<short> rawadc(transformSize);  // vector holding uncompressed adc values
@@ -188,7 +188,8 @@ namespace caldata {
       channel = digitVec->Channel();
 
       // skip bad channels
-      if(!chanFilt->BadChannel(channel)) {
+    //  if(!chanFilt->BadChannel(channel)) {
+      if(true) {
 
         // resize and pad with zeros
 	holder.resize(transformSize, 0.);
@@ -233,7 +234,7 @@ namespace caldata {
     else evt.put(std::move(wirecol));
 
 
-    delete chanFilt;
+   // delete chanFilt;
     return;
   }
   

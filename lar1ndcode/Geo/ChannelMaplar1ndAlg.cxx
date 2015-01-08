@@ -306,7 +306,7 @@ namespace geo{
 
 
   //----------------------------------------------------------------------------
-  float ChannelMaplar1ndAlg::WireCoordinate(float YPos, float ZPos,
+  double ChannelMaplar1ndAlg::WireCoordinate(double YPos, double ZPos,
 					  unsigned int PlaneNo,
 					  unsigned int TPCNo,
 					  unsigned int cstat) const

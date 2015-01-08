@@ -33,10 +33,11 @@ namespace geo{
 					   unsigned int    PlaneNo,
 					   unsigned int    TPCNo,
 					   unsigned int    cstat)   const;
-    float 		     WireCoordinate(float Ypos, float Zpos,
+    double 		     WireCoordinate(double Ypos, double Zpos,
                                           unsigned int PlaneNo,
                                           unsigned int TPCNo,
                                           unsigned int cstat) const;
+	
 
     uint32_t                 PlaneWireToChannel(unsigned int plane,
 						unsigned int wire,
