@@ -24,7 +24,7 @@ lar1nd_services:
  LArProperties:                  @local::lar1nd_properties    
  LArFFT:                         @local::lar1nd_larfft        
  DatabaseUtil:	                 @local::lar1nd_database      
- SignalShapingServiceT1034: @local::lar1nd_signalshapingservice
+ SignalShapingServiceT1053: @local::lar1nd_signalshapingservice
  BackTracker:                    @local::standard_backtracker  
 #OpDigiProperties:               @local::lar1nd_opdigiproperties
 TimeService:                    @local::lar1nd_timeservice
@@ -45,7 +45,7 @@ lar1nd_simulation_services:
  LArProperties:                  @local::lar1nd_properties	   
  LArFFT:                         @local::lar1nd_larfft             
  DatabaseUtil:	                 @local::lar1nd_database           
- SignalShapingServiceT1034: @local::lar1nd_signalshapingservice
+ SignalShapingServiceT1053: @local::lar1nd_signalshapingservice
  MagneticField:                  @local::no_mag 	       
  BackTracker:                    @local::standard_backtracker
  TimeService:                    @local::lar1nd_timeservice

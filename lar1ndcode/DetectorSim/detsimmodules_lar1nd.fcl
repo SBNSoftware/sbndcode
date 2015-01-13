@@ -4,7 +4,7 @@ BEGIN_PROLOG
 
 lar1nd_simwire:  
 { 
- module_type:        "SimWireT1034"
+ module_type:        "SimWireT1053"
  TrigModName:        "triggersim"
  DriftEModuleLabel:  "largeant"
  NoiseFact:          0.15       #Noise Scale to use with histogram
@@ -25,7 +25,7 @@ lar1nd_simwire:
 #lar1nd_simwireana: @local::standard_simwireana
 lar1nd_simwireana:
 {
-    module_type: "SimWiret1034Ana"
+    module_type: "SimWiret1054Ana"
     DigitModuleLabel: "daq"
 
 }

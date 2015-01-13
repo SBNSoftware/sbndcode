@@ -19,7 +19,7 @@ lar1nd_calroi:
 
 lar1nd_calwire:
 {
- module_type:        "CalWireT1034"
+ module_type:        "CalWireT1053"
  DigitModuleLabel:   "daq"
  PostsampleBins:       0
  BaseSampleBins:      40  # set > 0 for baseline subtraction. Value should be

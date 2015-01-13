@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////
 ///
-/// \file   SignalShapingServiceT1034.h
+/// \file   SignalShapingServiceT1053.h
 ///
 /// \brief  Service to provide microboone-specific signal shaping for
 ///         simulation (convolution) and reconstruction (deconvolution).
@@ -39,14 +39,14 @@
 
 
 namespace util {
-  class SignalShapingServiceT1034 {
+  class SignalShapingServiceT1053 {
   public:
 
     // Constructor, destructor.
 
-    SignalShapingServiceT1034(const fhicl::ParameterSet& pset,
+    SignalShapingServiceT1053(const fhicl::ParameterSet& pset,
 				   art::ActivityRegistry& reg);
-    ~SignalShapingServiceT1034();
+    ~SignalShapingServiceT1053();
 
     // Update configuration parameters.
 
@@ -70,11 +70,11 @@ namespace util {
 
     // Post-constructor initialization.
 
-    void init() const{const_cast<SignalShapingServiceT1034*>(this)->init();}
+    void init() const{const_cast<SignalShapingServiceT1053*>(this)->init();}
     void init();
 
     // Calculate response functions.
-    // Copied from SimWireT1034.
+    // Copied from SimWireT1053.
 
     void SetFieldResponse();
     void SetElectResponse();
@@ -140,7 +140,7 @@ namespace util {
 }
 //----------------------------------------------------------------------
 // Do convolution.
-template <class T> inline void util::SignalShapingServiceT1034::Convolute(unsigned int channel, std::vector<T>& func) const
+template <class T> inline void util::SignalShapingServiceT1053::Convolute(unsigned int channel, std::vector<T>& func) const
 {
   SignalShaping(channel).Convolute(func);
 }
@@ -148,10 +148,10 @@ template <class T> inline void util::SignalShapingServiceT1034::Convolute(unsign
 
 //----------------------------------------------------------------------
 // Do deconvolution.
-template <class T> inline void util::SignalShapingServiceT1034::Deconvolute(unsigned int channel, std::vector<T>& func) const
+template <class T> inline void util::SignalShapingServiceT1053::Deconvolute(unsigned int channel, std::vector<T>& func) const
 {
   SignalShaping(channel).Deconvolute(func);
 }
 
-DECLARE_ART_SERVICE(util::SignalShapingServiceT1034, LEGACY)
+DECLARE_ART_SERVICE(util::SignalShapingServiceT1053, LEGACY)
 #endif

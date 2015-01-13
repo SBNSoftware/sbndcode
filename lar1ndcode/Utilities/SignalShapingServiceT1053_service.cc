@@ -1,10 +1,10 @@
 
 ////////////////////////////////////////////////////////////////////////
-/// \file   SignalShapingServiceT1034_service.cc
+/// \file   SignalShapingServiceT1053_service.cc
 /// \author H. Greenlee   (adapted to LArIAT by A. Szelc)
 ////////////////////////////////////////////////////////////////////////
 
-#include "lar1ndcode/Utilities/SignalShapingServiceT1034.h"
+#include "lar1ndcode/Utilities/SignalShapingServiceT1053.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "cetlib/exception.h"
@@ -18,7 +18,7 @@
 
 //----------------------------------------------------------------------
 // Constructor.
-util::SignalShapingServiceT1034::SignalShapingServiceT1034(const fhicl::ParameterSet& pset,
+util::SignalShapingServiceT1053::SignalShapingServiceT1053(const fhicl::ParameterSet& pset,
 								    art::ActivityRegistry& /* reg */) 
   : fInit(false)
 {
@@ -28,13 +28,13 @@ util::SignalShapingServiceT1034::SignalShapingServiceT1034(const fhicl::Paramete
 
 //----------------------------------------------------------------------
 // Destructor.
-util::SignalShapingServiceT1034::~SignalShapingServiceT1034()
+util::SignalShapingServiceT1053::~SignalShapingServiceT1053()
 {}
 
 
 //----------------------------------------------------------------------
 // Reconfigure method.
-void util::SignalShapingServiceT1034::reconfigure(const fhicl::ParameterSet& pset)
+void util::SignalShapingServiceT1053::reconfigure(const fhicl::ParameterSet& pset)
 {
   // Reset initialization flag.
 
@@ -68,7 +68,7 @@ void util::SignalShapingServiceT1034::reconfigure(const fhicl::ParameterSet& pse
   // Construct parameterized collection filter function.
   if(!fGetFilterFromHisto) {
 
-    mf::LogInfo("SignalShapingServiceT1034") << "Getting Filter from .fcl file" ;
+    mf::LogInfo("SignalShapingServiceT1053") << "Getting Filter from .fcl file" ;
     std::string colFilt = pset.get<std::string>("ColFilter");
     std::vector<double> colFiltParams = pset.get<std::vector<double> >("ColFilterParams");
     fColFilterFunc = new TF1("colFilter", colFilt.c_str());
@@ -91,7 +91,7 @@ void util::SignalShapingServiceT1034::reconfigure(const fhicl::ParameterSet& pse
   } else {
   
     std::string histoname = pset.get<std::string>("FilterHistoName");
-    mf::LogInfo("SignalShapingServiceT1034") << " using filter from .root file " ;
+    mf::LogInfo("SignalShapingServiceT1053") << " using filter from .root file " ;
     int fNPlanes=3;
    
     // constructor decides if initialized value is a path or an environment variable
@@ -143,7 +143,7 @@ void util::SignalShapingServiceT1034::reconfigure(const fhicl::ParameterSet& pse
 //----------------------------------------------------------------------
 // Accessor for single-plane signal shaper.
 const util::SignalShaping&
-util::SignalShapingServiceT1034::SignalShaping(unsigned int channel) const
+util::SignalShapingServiceT1053::SignalShaping(unsigned int channel) const
 {
   if(!fInit)
     init();
@@ -164,7 +164,7 @@ util::SignalShapingServiceT1034::SignalShaping(unsigned int channel) const
   else if (sigtype == geo::kCollection)
       return fColSignalShaping;
   else
-    throw cet::exception("SignalShapingServiceT1034")<< "can't determine"
+    throw cet::exception("SignalShapingServiceT1053")<< "can't determine"
                                                           << " SignalType\n";  
   
 //   if(view == geo::kU)
@@ -182,7 +182,7 @@ util::SignalShapingServiceT1034::SignalShaping(unsigned int channel) const
 // Initialization method.
 // Here we do initialization that can't be done in the constructor.
 // All public methods should ensure that this method is called as necessary.
-void util::SignalShapingServiceT1034::init()
+void util::SignalShapingServiceT1053::init()
 {
   if(!fInit) {
     fInit = true;
@@ -229,7 +229,7 @@ void util::SignalShapingServiceT1034::init()
 
 //----------------------------------------------------------------------
 // Calculate microboone field response.
-void util::SignalShapingServiceT1034::SetFieldResponse()
+void util::SignalShapingServiceT1053::SetFieldResponse()
 {
   // Get services.
 
@@ -301,7 +301,7 @@ void util::SignalShapingServiceT1034::SetFieldResponse()
 
   } else if (fUseSimpleFieldShape) {
    
-    mf::LogInfo("SignalShapingServiceT1034") << " using try-2 hard-coded field shapes " ;
+    mf::LogInfo("SignalShapingServiceT1053") << " using try-2 hard-coded field shapes " ;
 
     const int nbincPlane = 16;
     double cPlaneResponse[nbincPlane] = {
@@ -339,7 +339,7 @@ void util::SignalShapingServiceT1034::SetFieldResponse()
       0.007524035112,   0.00771213599,  0.007900236868,  0.008088337746,  0.008276438623, 
       0.008464539501,  0.008652640379,  0.008840741257,  0.009028842135,  0.009216943012, 
       0.00940504389,  0.009593144768,  0.009781245646,  0.009969346524,    0.0101574474, 
-      0.01034554828,   0.01053364916,   0.01072175003,   0.01090985091,   0.01109795179, 
+      0.01053554828,   0.01053364916,   0.01072175003,   0.01090985091,   0.01109795179, 
       0.01128605267,   0.01147415355,   0.01166225442,    0.0118503553,   0.01203845618, 
       0.01222655706,   0.01241465794,   0.01260275881,   0.01279085969,   0.01297896057, 
       0.01316706145,   0.01335516232,    0.0135432632,   0.01373136408,   0.01391946496, 
@@ -397,7 +397,7 @@ void util::SignalShapingServiceT1034::SetFieldResponse()
    } else {
 
     //////////////////////////////////////////////////
-    mf::LogInfo("SignalShapingServiceT1034") << " using the old field shape " ;
+    mf::LogInfo("SignalShapingServiceT1053") << " using the old field shape " ;
     int nbinc = TMath::Nint(fCol3DCorrection*(std::abs(pitch))/(driftvelocity*detprop->SamplingRate())); ///number of bins //KP
     
     double integral = 0.;
@@ -431,7 +431,7 @@ void util::SignalShapingServiceT1034::SetFieldResponse()
 
 //----------------------------------------------------------------------
 // Calculate microboone field response.
-void util::SignalShapingServiceT1034::SetElectResponse()
+void util::SignalShapingServiceT1053::SetElectResponse()
 {
   // Get services.
 
@@ -439,7 +439,7 @@ void util::SignalShapingServiceT1034::SetElectResponse()
   art::ServiceHandle<util::DetectorProperties> detprop;
   art::ServiceHandle<util::LArFFT> fft;
 
-  LOG_DEBUG("SignalShapingT1034") << "Setting T1034 electronics response function...";
+  LOG_DEBUG("SignalShapingT1053") << "Setting T1053 electronics response function...";
 
   int nticks = fft->FFTSize();
   fElectResponse.resize(nticks, 0.);
@@ -450,12 +450,12 @@ void util::SignalShapingServiceT1034::SetElectResponse()
   double To = fShapeTimeConst[1];  //peaking time
     
   // this is actually sampling time, in ns
-  // mf::LogInfo("SignalShapingT1034") << "Check sampling intervals: " 
+  // mf::LogInfo("SignalShapingT1053") << "Check sampling intervals: " 
   //                                  << fSampleRate << " ns" 
   //                                  << "Check number of samples: " << fNTicks;
 
   // The following sets the microboone electronics response function in 
-  // time-space. Function comes from BNL SPICE simulation of T1034 
+  // time-space. Function comes from BNL SPICE simulation of T1053 
   // electronics. SPICE gives the electronics transfer function in 
   // frequency-space. The inverse laplace transform of that function 
   // (in time-space) was calculated in Mathematica and is what is being 
@@ -486,7 +486,7 @@ void util::SignalShapingServiceT1034::SetElectResponse()
       integral+=fElectResponse[i];
   }// end loop over time buckets
     
-  LOG_DEBUG("SignalShapingT1034") << " Done.";
+  LOG_DEBUG("SignalShapingT1053") << " Done.";
 
   // normalize fElectResponse[i], before the convolution
   // Put in overall normalization in a pedantic way:
@@ -508,7 +508,7 @@ void util::SignalShapingServiceT1034::SetElectResponse()
 
 //----------------------------------------------------------------------
 // Calculate microboone filter functions.
-void util::SignalShapingServiceT1034::SetFilters()
+void util::SignalShapingServiceT1053::SetFilters()
 {
   // Get services.
 
@@ -578,6 +578,6 @@ void util::SignalShapingServiceT1034::SetFilters()
 
 namespace util {
 
-  DEFINE_ART_SERVICE(SignalShapingServiceT1034)
+  DEFINE_ART_SERVICE(SignalShapingServiceT1053)
 
 }
