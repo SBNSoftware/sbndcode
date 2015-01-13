@@ -1,13 +1,12 @@
 
-simple_plugin(SimWireT1034 "module"
+simple_plugin(SimWireT1053 "module"
 			Geometry
                         Geometry_service
                         Simulation
                         Utilities
                         TimeService_service
-                        Filters
                         RawData
-                        SignalShapingServiceT1034_service
+                        SignalShapingServiceT1053_service
 			${ART_FRAMEWORK_CORE}
 			${ART_FRAMEWORK_PRINCIPAL}
 			${ART_FRAMEWORK_SERVICES_REGISTRY}

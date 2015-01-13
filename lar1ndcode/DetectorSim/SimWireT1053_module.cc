@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: SimWireT1034.cxx,v 1.22 2010/04/23 20:30:53 seligman Exp $
+// $Id: SimWireT1053.cxx,v 1.22 2010/04/23 20:30:53 seligman Exp $
 //
-// SimWireT1034 class designed to simulate signal on a wire in the TPC
+// SimWireT1053 class designed to simulate signal on a wire in the TPC
 //
 // katori@fnal.gov
 //
@@ -37,7 +37,7 @@ extern "C" {
 #include "RawData/TriggerData.h"
 #include "Utilities/LArProperties.h"
 #include "Utilities/TimeService.h"
-#include "lar1ndcode/Utilities/SignalShapingServiceT1034.h"
+#include "lar1ndcode/Utilities/SignalShapingServiceT1053.h"
 #include "Geometry/Geometry.h"
 #include "Simulation/sim.h"
 #include "Simulation/SimChannel.h"
@@ -58,12 +58,12 @@ extern "C" {
 namespace detsim {
 
   // Base class for creation of raw signals on wires. 
-  class SimWireT1034 : public art::EDProducer {
+  class SimWireT1053 : public art::EDProducer {
     
   public:
         
-    explicit SimWireT1034(fhicl::ParameterSet const& pset); 
-    virtual ~SimWireT1034();
+    explicit SimWireT1053(fhicl::ParameterSet const& pset); 
+    virtual ~SimWireT1053();
     
     // read/write access to event
     void produce (art::Event& evt);
@@ -104,12 +104,12 @@ namespace detsim {
     
     ::util::ElecClock fClock; ///< TPC electronics clock
     
-  }; // class SimWireT1034
+  }; // class SimWireT1053
   
-  DEFINE_ART_MODULE(SimWireT1034)
+  DEFINE_ART_MODULE(SimWireT1053)
 
   //-------------------------------------------------
-  SimWireT1034::SimWireT1034(fhicl::ParameterSet const& pset)
+  SimWireT1053::SimWireT1053(fhicl::ParameterSet const& pset)
   {
     this->reconfigure(pset);
 
@@ -127,13 +127,13 @@ namespace detsim {
   }
 
   //-------------------------------------------------
-  SimWireT1034::~SimWireT1034()
+  SimWireT1053::~SimWireT1053()
   {
     delete fNoiseHist;
   }
 
   //-------------------------------------------------
-  void SimWireT1034::reconfigure(fhicl::ParameterSet const& p) 
+  void SimWireT1053::reconfigure(fhicl::ParameterSet const& p) 
   {
     fDriftEModuleLabel= p.get< std::string         >("DriftEModuleLabel");
     fNoiseFact        = p.get< double              >("NoiseFact");
@@ -165,7 +165,7 @@ namespace detsim {
 	temp->Copy(*fNoiseHist);
       }
       else
-	throw cet::exception("SimWireT1034") << " Could not find noise histogram in Root file\n";
+	throw cet::exception("SimWireT1053") << " Could not find noise histogram in Root file\n";
       in->Close();
     
       }
@@ -179,7 +179,7 @@ namespace detsim {
   }
 
   //-------------------------------------------------
-  void SimWireT1034::beginJob() 
+  void SimWireT1053::beginJob() 
   { 
 
     // get access to the TFile service
@@ -191,11 +191,11 @@ namespace detsim {
     fNTicks = fFFT->FFTSize();
 
    if ( fNTicks%2 != 0 ) 
-      LOG_DEBUG("SimWireT1034") << "Warning: FFTSize not a power of 2. "
+      LOG_DEBUG("SimWireT1053") << "Warning: FFTSize not a power of 2. "
 				     << "May cause issues in (de)convolution.\n";
 
     if ( fNTimeSamples > fNTicks ) 
-      mf::LogError("SimWireT1034") << "Cannot have number of readout samples "
+      mf::LogError("SimWireT1053") << "Cannot have number of readout samples "
 					<< "greater than FFTSize!";
     
     return;
@@ -203,10 +203,10 @@ namespace detsim {
   }
 
   //-------------------------------------------------
-  void SimWireT1034::endJob() 
+  void SimWireT1053::endJob() 
   {}
 
-  void SimWireT1034::produce(art::Event& evt)
+  void SimWireT1053::produce(art::Event& evt)
   {
 
     art::ServiceHandle<util::TimeService> ts;
@@ -221,7 +221,7 @@ namespace detsim {
     evt.getView(fDriftEModuleLabel,chanHandle);
 
     //Get fIndShape and fColShape from SignalShapingService, on the fly
-    art::ServiceHandle<util::SignalShapingServiceT1034> sss;
+    art::ServiceHandle<util::SignalShapingServiceT1053> sss;
 
     // make a vector of const sim::SimChannel* that has same number
     // of entries as the number of channels in the detector
@@ -335,7 +335,7 @@ namespace detsim {
   }
   
   //-------------------------------------------------                                                                                                 
-  void SimWireT1034::GenNoiseInTime(std::vector<float> &noise)
+  void SimWireT1053::GenNoiseInTime(std::vector<float> &noise)
   {
     //ART random number service                                                                                                                       
     art::ServiceHandle<art::RandomNumberGenerator> rng;
@@ -352,14 +352,14 @@ namespace detsim {
 
 
   //-------------------------------------------------
-  void SimWireT1034::GenNoiseInFreq(std::vector<float> &noise)
+  void SimWireT1053::GenNoiseInFreq(std::vector<float> &noise)
   {
     art::ServiceHandle<art::RandomNumberGenerator> rng;
     CLHEP::HepRandomEngine &engine = rng->getEngine();
     CLHEP::RandFlat flat(engine,-1,1);
 
     if(noise.size() != fNTicks)
-      throw cet::exception("SimWireT1034")
+      throw cet::exception("SimWireT1053")
 	<< "\033[93m"
 	<< "Frequency noise vector length must match fNTicks (FFT size)"
 	<< " ... " << noise.size() << " != " << fNTicks
@@ -396,7 +396,7 @@ namespace detsim {
 	{
 	  
 	  pval = fNoiseHist->GetBinContent(i)*((1-fNoiseRand)+2*fNoiseRand*rnd[0])*fNoiseFact; 
-	  //mf::LogInfo("SimWireT1034")  << " pval: " << pval;
+	  //mf::LogInfo("SimWireT1053")  << " pval: " << pval;
 	}
       
       phase = rnd[1]*2.*TMath::Pi();
@@ -405,7 +405,7 @@ namespace detsim {
     }
     
     
-    // mf::LogInfo("SimWireT1034") << "filled noise freq";
+    // mf::LogInfo("SimWireT1053") << "filled noise freq";
     
     // inverse FFT MCSignal
     art::ServiceHandle<util::LArFFT> fFFT;

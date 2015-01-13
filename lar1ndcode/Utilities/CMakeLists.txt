@@ -18,7 +18,7 @@ set( lariat_util_lib_list LArFFT_service
     )
 
 
-simple_plugin( SignalShapingServiceT1034  "service"
+simple_plugin( SignalShapingServiceT1053  "service"
                ${lariat_util_lib_list}
 	       BASENAME_ONLY
         )

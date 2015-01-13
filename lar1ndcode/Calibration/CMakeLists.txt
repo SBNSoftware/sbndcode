@@ -1,10 +1,10 @@
 
-simple_plugin(CalWireT1034 "module"
+simple_plugin(CalWireT1053 "module"
 			Utilities
                        # Filters
 			RawData
 	                RecoBase
-		        SignalShapingServiceT1034_service
+		        SignalShapingServiceT1053_service
                         ${ART_FRAMEWORK_CORE}
 			${ART_FRAMEWORK_PRINCIPAL}
 			${ART_FRAMEWORK_SERVICES_REGISTRY}
