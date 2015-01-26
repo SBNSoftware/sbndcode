@@ -10,7 +10,7 @@
 #include "backtracker.fcl"
 ## #include "photpropservices_lar1nd.fcl"
 ##include "opticaldetectorservices_lar1nd.fcl"
-## #include "sam_lar1nd.fcl"
+#include "sam_lar1nd.fcl"
 #include "timeservice_lar1nd.fcl"
 
 BEGIN_PROLOG
