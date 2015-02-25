@@ -39,7 +39,7 @@
         reasons.  
 	-->
 
-   <parameter name="DetEnclosureWidth" value="700">
+   <parameter name="DetEnclosureWidth" value="878">
    The size of the detector enclosure along the x-axis.
    </parameter>
 
@@ -47,11 +47,11 @@
    The size of the detector enclosure along the y-axis.
    </parameter>
 
-   <parameter name="DetEnclosureLength" value="490">
+   <parameter name="DetEnclosureLength" value="1170"> <!--490">-->
    The size of the detector enclosure along the z-axis.
    </parameter>
 
-   <parameter name="CryostatWidth" value="510">
+   <parameter name="CryostatWidth" value="517">
    The size of the cryostat along the x-axis.
    </parameter>
    
@@ -59,7 +59,7 @@
    The size of the cryostat along the y-axis.
    </parameter>
 
-   <parameter name="CryostatLength" value="440">
+   <parameter name="CryostatLength" value="638">
    The size of the cryostat along the z-axis.
    </parameter>
 
@@ -71,7 +71,7 @@
    The size of the LAr TPC along the y-axis.
    </parameter>
 
-   <parameter name="TPCLength" value="365 ">
+   <parameter name="TPCLength" value="500 ">
    The size of the LAr TPC along the z-axis.
    </parameter>
 

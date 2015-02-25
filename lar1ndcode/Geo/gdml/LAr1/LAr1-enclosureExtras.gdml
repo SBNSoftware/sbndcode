@@ -1,8 +1,8 @@
 <?xml version='1.0'?>
 <gdml>
 <solids>
-  <box name="InsulationOuter" lunit="cm" x="600" y="550" z="490"/>
-  <box name="InsulationInner" lunit="cm" x="510+0.1" y="480+0.1" z="440+0.1"/>
+  <box name="InsulationOuter" lunit="cm" x="517+120" y="480+120" z="638+120"/>
+  <box name="InsulationInner" lunit="cm" x="517+0.1" y="480+0.1" z="638+0.1"/>
 
    <subtraction name="Insulation">
      <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
