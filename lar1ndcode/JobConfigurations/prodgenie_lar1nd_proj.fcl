@@ -54,15 +54,15 @@ standard_genie:
  FluxFiles:         ["gsimple_microboone-100-onaxis_numintp_*.root"] #name of file with flux histos
  BeamName:         "bnb"          #numi or booster at this point - really for bookkeeping
  TopVolume:        "volDetEnclosure"        #volume in which to produce interactions
- EventsPerSpill:   1.              #set != 0 to get n events per spill
- POTPerSpill:      5.e13           #should be obvious
+ EventsPerSpill:   0.              #set != 0 to get n events per spill
+ POTPerSpill:      5.e12           #should be obvious
  MonoEnergy:       2.              #in GEV
  BeamCenter:       [-1400., -350., 0.]  #center of the beam in cm relative to detector coordinate origin, in meters for GENIE
  BeamDirection:    [0., 0., 1.]    #all in the z direction
  BeamRadius:       3.              #in meters for GENIE
  SurroundingMass:  0.0             #mass surrounding the detector to use
- GlobalTimeOffset: 10000.          #in ns - 10000 means the spill appears 10 us into the readout window
- RandomTimeOffset: 10000.          #length of spill in ns
+ GlobalTimeOffset: 1.25e6          #in ns - 10000 means the spill appears 10 us into the readout window
+ RandomTimeOffset: 1600.          #length of spill in ns
  FiducialCut:      "none"          #fiducial cut, see https://cdcvs.fnal.gov/redmine/projects/nusoft/wiki/GENIEHelper
  GenFlavors:       [12,14,-12,-14] #pdg codes of flux generator neutrino flavors
  Environment:      ["GPRODMODE", 
