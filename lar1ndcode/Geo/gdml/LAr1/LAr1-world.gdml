@@ -1,12 +1,16 @@
 <?xml version='1.0'?>
 <gdml>
 <solids>
-  <box name="World" lunit="cm" x="70000" y="85000" z="49000"/>
-  <box name="ConcreteEnclosureOuter" lunit="cm" x="700+8" y="850+8" z="490+8"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="700+0.1" y="850+0.1" z="490+0.1"/>
-  <box name="GroundOuterTemp" lunit="cm" x="700 + 8 + 100" y="(28*12)*2.54" z="490+8+100"/>
-  <box name="GroundOuter" lunit="cm" x="700 + 8 + 1000" y="(28*12)*2.54+1000" z="490+ 8 + 2500" />
-  <box name="GroundInner" lunit="cm" x="700 + 8.1" y="(28*12)*2.54 +5" z="490+8.1"/>
+  <box name="World" lunit="cm" x="87800" y="85000" z="117000"/>
+  <box name="ConcreteEnclosureOuter" lunit="cm" x="878+8" y="850+8" z="1170+8"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="878+0.1" y="850+0.1" z="1170+0.1"/>
+  <box name="GroundOuterTemp" lunit="cm" x="878 + 8 + 100" y="(28*12)*2.54" z="1170+8+100"/>
+  <box name="GroundOuter" lunit="cm" x="878 + 8 + 1000" y="(28*12)*2.54+1000" z="1170+ 8 + 2500" />
+  <box name="GroundInner" lunit="cm" x="878 + 8.1" y="(28*12)*2.54 +5" z="1170+8.1"/>
+  <box name="SciBooneSpace0" lunit="cm" x="394+307 + 18*2.54+0.1" y="28*12*2.54+0.1" z="488+18*2.54+0.1"/>
+  <box name="SciBooneOuter" lunit="cm" x="394+307 + 18*2.54" y="28*12*2.54" z="488+18*2.54"/>
+  <box name="SciBooneInner" lunit="cm" x="394+307" y="28*12*2.54" z="488"/>
+
 
 
   <subtraction name="ConcreteEnclosure">
@@ -14,14 +18,24 @@
 	<position name="posConcreteEnclosureSubtraction" unit="cm" x="0" y="0" z="0"/>
   </subtraction>
 
+  <subtraction name="SciBooneHall">
+	<first ref="SciBooneOuter"/> <second ref="SciBooneInner"/>
+	<position name="posSciBooneSubtraction" unit="cm" x="0" y="9*2.54" z="0"/>
+  </subtraction>
+
   <subtraction name="GroundTemp">
 	<first ref="GroundOuterTemp"/> <second ref="GroundInner"/>
 	<position name="posGroundTempSubtraction" unit="cm" x="0" y="0" z="0"/>
   </subtraction>
 
-  <subtraction name="Ground">
+  <subtraction name="Ground0">
 	<first ref="GroundOuter"/> <second ref="GroundInner"/>
 	<position name="posGroundSubtraction" unit="cm" x="0" y="0" z="859.05"/>
+  </subtraction>
+
+  <subtraction name="Ground">
+	<first ref="Ground0"/> <second ref="SciBooneSpace0"/>
+	<position name="posSciBooneSpace" unit="cm" x="0" y="0" z="-593"/>
   </subtraction>
 
 </solids>
@@ -31,10 +45,16 @@
 	<materialref ref="Concrete"/>
 	<solidref ref="ConcreteEnclosure"/>
   </volume>
+  <volume name="volSciBooneHall">
+	<materialref ref="Concrete"/>
+	<solidref ref="SciBooneHall"/>
+  </volume>
   <volume name="volGround">
 	<materialref ref="Dirt"/>
 	<solidref ref="Ground"/>
+
   </volume>
+
   <volume name="volTempGround">
 	<materialref ref="Dirt"/>
 	<solidref ref="GroundTemp"/>
@@ -44,20 +64,24 @@
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="(365 )/2"/>
+      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="(500 )/2"/>
     </physvol> 
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
-	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="(365 )/2"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="(500 )/2"/>
 	 </physvol>
 	<physvol>
 	  <volumeref ref="volGround"/>
-	  <position name="posGround" unit="cm" x="-40" y="0" z="(365 )/2-859.05"/>
+	  <position name="posGround" unit="cm" x="-40" y="0" z="(500 )/2-859.05"/>
+	</physvol>
+	<physvol>
+	  <volumeref ref="volSciBooneHall"/>
+	  <position name="posSciBooneHall" unit="cm" x="-40" y="0" z="(500 )/2-1452.05"/>
 	</physvol>
 
 <!--	<physvol>
 	  <volumeref ref="volTempGround"/>
-	  <position name="posGroundTemp" unit="cm" x="-40" y="0" z="(365 )/2"/>
+	  <position name="posGroundTemp" unit="cm" x="-40" y="0" z="(500 )/2"/>
 	</physvol> -->
   </volume> 
 </structure>

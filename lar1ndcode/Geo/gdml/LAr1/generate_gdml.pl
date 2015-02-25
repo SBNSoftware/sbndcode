@@ -142,7 +142,7 @@ sub gen_defs()
 {
     #TPCWirePlaneLength is the size in the z direction
     #TPCWirePlaneWidth is the size in the y direction
-    $TPCWirePlaneLengthZ	=	365  ;
+    $TPCWirePlaneLengthZ	=	$TPCLength  ;
     $TPCWirePlaneWidthY		=	400  ;
 
     $pi   = pi;
@@ -153,14 +153,14 @@ sub gen_defs()
     $WorldLength	=	100.0*$DetEnclosureLength;
 
     $CathodePlateDepth	=	0.1;
-    $CathodeLengthZ	=	365;
+    $CathodeLengthZ	=	$TPCLength;
     $CathodeWidthX	=	5;
-    $CathodeHeightY	=	400;
+    $CathodeHeightY	=	$TPCHeight;
 
 
-    $AnodeLengthZ   =   365;
+    $AnodeLengthZ   =   $TPCLength;
     $AnodeWidthX    =   20;
-    $AnodeHeightY   =   400;
+    $AnodeHeightY   =   $TPCHeight;
 
 }
 
@@ -1014,10 +1014,10 @@ sub gen_cryostat()
  <volume name="volCryostat">
    <materialref ref="LAr"/>
    <solidref ref="Cryostat"/>
-<!--	<physvol>
+	<physvol>
 	  <volumeref ref="volSteelBox"/>
 	  <position name="posSteelBox" unit="cm" x="0" y="0" z="0"/>
-	</physvol>  -->
+	</physvol>  
     <physvol> 
        <volumeref ref="volCathodePlate"/>
  	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
@@ -1116,10 +1116,10 @@ sub gen_enclosure()
 EOF
   if ( $enclosureExtras eq "on" ) {
     print GDML <<EOF;
-<!--     <physvol>
+     <physvol>
         <volumeref ref="volInsulation"/>
         <position name="posInsulation" unit="cm" x="40" y="2" z="0"/>
-      </physvol> -->
+      </physvol>
 EOF
 	}
 
@@ -1155,6 +1155,10 @@ sub gen_world()
   <box name="GroundOuterTemp" lunit="cm" x="$DetEnclosureWidth + 8 + 100" y="(28*12)*2.54" z="$DetEnclosureLength+8+100"/>
   <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 8 + 1000" y="(28*12)*2.54+1000" z="$DetEnclosureLength+ 8 + 2500" />
   <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 8.1" y="(28*12)*2.54 +5" z="$DetEnclosureLength+8.1"/>
+  <box name="SciBooneSpace0" lunit="cm" x="394+307 + 18*2.54+0.1" y="28*12*2.54+0.1" z="488+18*2.54+0.1"/>
+  <box name="SciBooneOuter" lunit="cm" x="394+307 + 18*2.54" y="28*12*2.54" z="488+18*2.54"/>
+  <box name="SciBooneInner" lunit="cm" x="394+307" y="28*12*2.54" z="488"/>
+
 
 
   <subtraction name="ConcreteEnclosure">
@@ -1162,14 +1166,24 @@ sub gen_world()
 	<position name="posConcreteEnclosureSubtraction" unit="cm" x="0" y="0" z="0"/>
   </subtraction>
 
+  <subtraction name="SciBooneHall">
+	<first ref="SciBooneOuter"/> <second ref="SciBooneInner"/>
+	<position name="posSciBooneSubtraction" unit="cm" x="0" y="9*2.54" z="0"/>
+  </subtraction>
+
   <subtraction name="GroundTemp">
 	<first ref="GroundOuterTemp"/> <second ref="GroundInner"/>
 	<position name="posGroundTempSubtraction" unit="cm" x="0" y="0" z="0"/>
   </subtraction>
 
-  <subtraction name="Ground">
+  <subtraction name="Ground0">
 	<first ref="GroundOuter"/> <second ref="GroundInner"/>
 	<position name="posGroundSubtraction" unit="cm" x="0" y="0" z="859.05"/>
+  </subtraction>
+
+  <subtraction name="Ground">
+	<first ref="Ground0"/> <second ref="SciBooneSpace0"/>
+	<position name="posSciBooneSpace" unit="cm" x="0" y="0" z="-593"/>
   </subtraction>
 
 </solids>
@@ -1179,10 +1193,16 @@ sub gen_world()
 	<materialref ref="Concrete"/>
 	<solidref ref="ConcreteEnclosure"/>
   </volume>
+  <volume name="volSciBooneHall">
+	<materialref ref="Concrete"/>
+	<solidref ref="SciBooneHall"/>
+  </volume>
   <volume name="volGround">
 	<materialref ref="Dirt"/>
 	<solidref ref="Ground"/>
+
   </volume>
+
   <volume name="volTempGround">
 	<materialref ref="Dirt"/>
 	<solidref ref="GroundTemp"/>
@@ -1201,6 +1221,10 @@ sub gen_world()
 	<physvol>
 	  <volumeref ref="volGround"/>
 	  <position name="posGround" unit="cm" x="-40" y="0" z="($TPCLength)/2-859.05"/>
+	</physvol>
+	<physvol>
+	  <volumeref ref="volSciBooneHall"/>
+	  <position name="posSciBooneHall" unit="cm" x="-40" y="0" z="($TPCLength)/2-1452.05"/>
 	</physvol>
 
 <!--	<physvol>
@@ -1229,7 +1253,7 @@ sub gen_enclosureExtras()
 <?xml version='1.0'?>
 <gdml>
 <solids>
-  <box name="InsulationOuter" lunit="cm" x="600" y="550" z="490"/>
+  <box name="InsulationOuter" lunit="cm" x="$CryostatWidth+120" y="$CryostatHeight+120" z="$CryostatLength+120"/>
   <box name="InsulationInner" lunit="cm" x="$CryostatWidth+0.1" y="$CryostatHeight+0.1" z="$CryostatLength+0.1"/>
 
    <subtraction name="Insulation">
