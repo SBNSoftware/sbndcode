@@ -34,7 +34,7 @@ fcldir  product_dir
 
 product          version
 larsoft		v03_08_02
-lar1ndutil      v01_10_01
+lar1ndutil      v01_10_02
 gcc		v4_9_1
 
 # list products required ONLY for the build
