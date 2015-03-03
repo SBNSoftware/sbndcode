@@ -61,7 +61,8 @@ namespace lar1nd
     
     void  doConfigureChannelMapAlg( const TString & detectorName,
                                     fhicl::ParameterSet const & sortingParam,
-                                    std::vector<geo::CryostatGeo*> & c ) override;
+                                    std::vector<geo::CryostatGeo*> & c ,
+			            std::vector<geo::AuxDetGeo*>   & ad	) override;
     std::shared_ptr<const geo::ChannelMapAlg> doGetChannelMapAlg() const override;
     
     fhicl::ParameterSet const & fPset;
