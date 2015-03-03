@@ -43,10 +43,10 @@ only_for_build  cetbuildtools   v4_03_03
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
-qualifier	larsoft	 	gcc	notes
-e6:debug	e6:debug	-nq-
-e6:opt		e6:opt		-nq-
-e6:prof		e6:prof		-nq-
+qualifier	larsoft	 	lar1ndutil	gcc	notes
+e6:debug	e6:debug	e6:debug	-nq-
+e6:opt		e6:opt		ed:opt		-nq-
+e6:prof		e6:prof		e6:prof		-nq-
 
 # Preserve tabs and formatting in emacs and vi / vim:
 
