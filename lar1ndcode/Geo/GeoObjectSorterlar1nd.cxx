@@ -11,6 +11,7 @@
 #include "Geometry/TPCGeo.h"
 #include "Geometry/PlaneGeo.h"
 #include "Geometry/WireGeo.h"
+#include "Geometry/AuxDetGeo.h"
 
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
@@ -186,5 +187,19 @@ namespace geo{
 
     return;
   }
+
+
+
+  //----------------------------------------------------------------------------
+  
+ void GeoObjectSorterlar1nd::SortAuxDets(std::vector<geo::AuxDetGeo*> & adgeo) const
+   	  {
+//  	    std::sort(adgeo.begin(), adgeo.end(), sortAuxDetLAr1ND);
+
+   	    return;
+    	  }
+  
+
+
 
 }

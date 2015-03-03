@@ -26,7 +26,7 @@ namespace geo{
     void SortPlanes   (std::vector<geo::PlaneGeo*>    & pgeo,
 		       geo::DriftDirection_t     const& driftDir) const;
     void SortWires    (std::vector<geo::WireGeo*>     & wgeo)     const;
-    
+    void SortAuxDets  (std::vector<geo::AuxDetGeo*>   & adgeo)    const;    
   private:
     
     std::string fDetVersion;  ///< string of the detector version
