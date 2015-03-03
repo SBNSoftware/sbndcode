@@ -33,7 +33,8 @@ namespace lar1nd
   
   void LAR1NDGeometryHelper::doConfigureChannelMapAlg( const TString & detectorName,
                                                      fhicl::ParameterSet const & sortingParam,
-                                                     std::vector<geo::CryostatGeo*> & c )
+                                                     std::vector<geo::CryostatGeo*> & c,
+					             std::vector<geo::AuxDetGeo*>   & ad  )
   {
     fChannelMap = nullptr;
     
@@ -42,7 +43,7 @@ namespace lar1nd
   
     if ( fChannelMap )
     {
-      fChannelMap->Initialize( c );
+      fChannelMap->Initialize( c, ad );
     }
   }
   
