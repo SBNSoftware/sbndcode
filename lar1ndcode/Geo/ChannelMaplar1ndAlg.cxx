@@ -11,6 +11,7 @@
 #include "Geometry/TPCGeo.h"
 #include "Geometry/PlaneGeo.h"
 #include "Geometry/WireGeo.h"
+#include "Geometry/AuxDetGeo.h"
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h" 
@@ -29,7 +30,8 @@ namespace geo{
   }
 
   //----------------------------------------------------------------------------
-  void ChannelMaplar1ndAlg::Initialize(std::vector<geo::CryostatGeo*> & cgeo)
+  void ChannelMaplar1ndAlg::Initialize(std::vector<geo::CryostatGeo*> & cgeo,
+		                       std::vector<geo::AuxDetGeo*>   & adgeo )
   {
 
     if(!fFirstChannelInThisPlane.empty() || !fFirstChannelInNextPlane.empty())
@@ -42,6 +44,7 @@ namespace geo{
     
     mf::LogInfo("ChannelMaplar1ndAlg") << "Sorting...";
 
+   // fSorter.SortAuxDets(adgeo);
     fSorter.SortCryostats(cgeo);
     for(size_t c = 0; c < cgeo.size(); ++c) 
       cgeo[c]->SortSubVolumes(fSorter);
