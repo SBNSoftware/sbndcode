@@ -3,5 +3,20 @@
 BEGIN_PROLOG
 
 lar1nd_photonvisibilityservice: @local::standard_photonvisibilityservice
+lar1nd_photonvisibilityservice.DoNotLoadLibrary: false 
+lar1nd_photonvisibilityservice.LibraryBuildJob: false
+lar1nd_photonvisibilityservice.UseCryoBoundary: false 
+lar1nd_photonvisibilityservice.XMin: 1 
+lar1nd_photonvisibilityservice.XMax: 199 
+lar1nd_photonvisibilityservice.YMin: -199 
+lar1nd_photonvisibilityservice.YMax: 199 
+lar1nd_photonvisibilityservice.ZMin: 1
+lar1nd_photonvisibilityservice.ZMax: 499 
+lar1nd_photonvisibilityservice.NX: 66  
+lar1nd_photonvisibilityservice.NY: 133 
+lar1nd_photonvisibilityservice.NZ: 166 
+lar1nd_photonvisibilityservice.LibraryFile: "/uboone/app/users/ahack/LAr1_v5/PhotonLibrary.root"
+
+
 
 END_PROLOG
