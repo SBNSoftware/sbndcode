@@ -9,7 +9,7 @@
 #include "databaseutil_lar1nd.fcl"
 #include "backtracker.fcl"
 ## #include "photpropservices_lar1nd.fcl"
-##include "opticaldetectorservices_lar1nd.fcl"
+#include "opticaldetectorservices_lar1nd.fcl"
 #include "sam_lar1nd.fcl"
 #include "timeservice_lar1nd.fcl"
 
@@ -50,6 +50,24 @@ lar1nd_simulation_services:
  BackTracker:                    @local::standard_backtracker
  TimeService:                    @local::lar1nd_timeservice
 }
+
+lar1nd_opsimulation_services:
+{
+ LArG4Parameters:                @local::lar1nd_largeantparameters 
+ LArVoxelCalculator:             @local::lar1nd_larvoxelcalculator 
+ ExptGeoHelperInterface:         @local::lar1nd_geometry_helper
+ Geometry:                       @local::lar1nd_geo 	           
+ DetectorProperties:             @local::lar1nd_detproperties      
+ LArProperties:                  @local::lar1nd_properties	   
+ LArFFT:                         @local::lar1nd_larfft             
+ DatabaseUtil:	                 @local::lar1nd_database           
+ SignalShapingServiceT1053: @local::lar1nd_signalshapingservice
+ MagneticField:                  @local::no_mag 	       
+ BackTracker:                    @local::standard_backtracker
+ TimeService:                    @local::lar1nd_timeservice
+}
+
+lar1nd_opsimulation_services.OpDetResponseInterface: @local::lar1nd_opdetresponse
 
 # Define lar1nd_optical_simulation_services
 #lar1nd_optical_simulation_services:                          @local::lar1nd_simulation_services
