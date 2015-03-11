@@ -23,6 +23,10 @@ services.user.OpDigiProperties:        @local::lar1nd_opdigiproperties
 
 services.user.PhotonVisibilityService.LibraryFile: "photonlibrary_temp.root" 
 
+#Generation specific voxelization
+services.user.PhotonVisibilityService.NX: 40
+services.user.PhotonVisibilityService.NY: 80 
+services.user.PhotonVisibilityService.NZ: 100 
 
 #Start each new event with an empty event.
 source:
