@@ -5,13 +5,13 @@ BEGIN_PROLOG
 lar1nd_opdigiproperties:           @local::standard_opdigiproperties
 lar1nd_opdigiproperties_3windows:  @local::standard_opdigiproperties_3windows
 
-#lar1nd_opdetresponse:
-#{
-#   service_provider:        MicrobooneOpDetResponse
-#   QuantumEfficiency:       1
-#   WavelengthCutLow:        0 
-#   WavelengthCutHigh:       10000
-#}
-#
+lar1nd_opdetresponse:
+{
+   service_provider:        MicrobooneOpDetResponse
+   QuantumEfficiency:       1
+   WavelengthCutLow:        0 
+   WavelengthCutHigh:       10000
+}
+
 
 END_PROLOG
