@@ -681,6 +681,7 @@ sub make_APA()
 #This goes inside volCryostat
 	
 	print CRYOSTAT <<EOF;
+
  	 <physvol>
    		 <volumeref ref="volAPAFrame"/>
     	 <position name="posAPAFrame" unit="cm" x="$TPCWidth +10" y="0" z="0"/>
@@ -1027,20 +1028,20 @@ EOF
 
 if ( $pmt_switch eq "on" ) {
 	
-	for( $i = 0; $i < 11; $i++){
+	for( $i = 0; $i < 14; $i++){
 		for( $j = 0; $j < 11; $j++){
 			$k = $i*11+$j ;
 			$l = 121 + $k ; 
 			print CRYOSTAT<<EOF;
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT$k" unit="cm" x="220" y="$TPCHeight/12*($j+1) - $TPCHeight/2" z="$TPCLength/12*($i+1) - $TPCLength/2"/>
+				<position name="posPMT$k" unit="cm" x="220" y="$TPCHeight/12*($j+1) - $TPCHeight/2" z="$TPCLength/15*($i+1) - $TPCLength/2"/>
 				<rotationref ref="rPMTRotation1"/>
 			</physvol> 
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT$l" unit="cm" x="-220" y="$TPCHeight/12*($j+1) - $TPCHeight/2" z="$TPCLength/12*($i+1) - $TPCLength/2"/>
+				<position name="posPMT$l" unit="cm" x="-220" y="$TPCHeight/12*($j+1) - $TPCHeight/2" z="$TPCLength/15*($i+1) - $TPCLength/2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1102,13 +1103,109 @@ sub gen_enclosure()
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <box name="DetEnclosure" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+0.1" z="$DetEnclosureLength+0.1" />
+ <box name="DetEnclosure" lunit="cm" x="$DetEnclosureWidth+0.01" y="$DetEnclosureHeight+0.01" z="$DetEnclosureLength+0.01" />
+<!-- <box name="DetEnclosure" lunit="cm" x="520.2+2*60+2*25" y="542.3+2*60+2*25" z="702.7+2*60+2*25" /> -->
+
+ <box name="TaggerUpper0" lunit="cm" x="702.7+2*60+2*25+2*2" y="300+2*2" z="702.7+2*60+2*25+2*2" />
+<box name="VoidTaggerUpper" lunit="cm" x="832+120" y="300" z="1189-60+60" />
+  <subtraction name="TaggerUpper">
+    <first ref="TaggerUpper0"/> <second ref="VoidTaggerUpper"/>
+    <position name="posConcreteEnclosureSubtraction" unit="cm" x="0" y="0" z="0"/>
+  </subtraction>
+
+
+ <box name="TaggerMain0" lunit="cm" x="520.2+2*60+2*25+2*2" y="542.3+2*60+2*25+2*2" z="702.7+2*60+2*25+2*2" />
+<box name="VoidTaggerMain" lunit="cm" x="520.2+2*60+2*25+0.05" y="542.3+2*60+2*25+0.05" z="702.7+2*60+2*25+0.05" />
+  <subtraction name="TaggerMain">
+    <first ref="TaggerMain0"/> <second ref="VoidTaggerMain"/>
+    <position name="posConcreteEnclosureSubtraction" unit="cm" x="0" y="0" z="0"/>
+  </subtraction>
+
+
+ <box name="TaggerTop" lunit="cm" x="702.7+2*60+2*25-0.1" y="2-0.1" z="702.7+2*60+2*25-0.1" />
+ <box name="TaggerFace" lunit="cm" x="520.2+2*60+2*25-0.1" y="542.3+2*60+2*25-0.1" z="2-0.1" />
+ <box name="TaggerSide" lunit="cm" x="2-0.1" y="542.3+2*60+2*25-0.1" z="702.7+2*60+2*25-0.1" />
+ <box name="TaggerBot" lunit="cm" x="520.2+2*60+2*25-0.1" y="2-0.1" z="702.7+2*60+2*25-0.1" />
+
+  <box name="Building0" lunit="cm" x="1418" y="762" z="1560"/>
+  <box name="BuildingVoid" lunit="cm" x="1418-2*10" y="762-10" z="1560-2*10"/>
+ <subtraction name="Building">
+    <first ref="Building0"/> <second ref="BuildingVoid"/>
+    <position name="posBuildingVoid" unit="cm" x="0" y="-10" z="0"/>
+  </subtraction>
+
 </solids>
 
 <structure>
+ <volume name="volTaggerTop">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerTop"/>
+ </volume>
+ <volume name="volTaggerFace">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerFace"/>
+ </volume>
+ <volume name="volTaggerSide">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerSide"/>
+ </volume>
+ <volume name="volTaggerBot">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerBot"/>
+ </volume>
+
+ <volume name="volTaggerUpper">
+  <materialref ref="Air"/>
+  <solidref ref="TaggerUpper"/>
+  <physvol>
+   <volumeref ref="volTaggerTop"/>
+   <position name="posTaggerTop1" unit="cm" x="0" y="2/2 +300/2" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volTaggerTop"/>
+   <position name="posTaggerTop2" unit="cm" x="0" y="-2/2 -300/2" z="0"/>
+  </physvol>
+ </volume>
+
+ <volume name="volTaggerMain">
+  <materialref ref="Air"/>
+  <solidref ref="TaggerMain"/>
+  <physvol>
+   <volumeref ref="volTaggerFace"/>
+   <position name="posTaggerFront" unit="cm" x="0" y="0" z="-702.7/2-60-25-2/2"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volTaggerFace"/>
+   <position name="posTaggerBack" unit="cm" x="0" y="0" z="702.7/2+60+25+2/2"/>
+  </physvol>
+<physvol>
+   <volumeref ref="volTaggerSide"/>
+   <position name="posTaggerLeft" unit="cm" x="520.2/2+60+25+2/2" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volTaggerSide"/>
+   <position name="posTaggerRight" unit="cm" x="-520.2/2-60-25-2/2" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volTaggerBot"/>
+   <position name="posTaggerBot" unit="cm" x="0" y="-542.3/2-60-25-2/2" z="0"/>
+  </physvol>
+ </volume>
+
+
+
  <volume name="volDetEnclosure">
   <materialref ref="Air"/>
   <solidref ref="DetEnclosure"/>
+     <physvol>
+        <volumeref ref="volStructure"/>
+        <position name="posStructure" unit="cm" x="40" y="2" z="0"/>
+      </physvol>
+
+     <physvol>
+        <volumeref ref="volTaggerMain"/>
+        <position name="posTaggerMain" unit="cm" x="40" y="1" z="0"/>
+      </physvol>
   <physvol>
    <volumeref ref="volCryostat"/>
    <position name="posCryostat" unit="cm" x="40" y="0" z="0"/>
@@ -1151,13 +1248,17 @@ sub gen_world()
 <solids>
   <box name="World" lunit="cm" x="$WorldWidth" y="$WorldHeight" z="$WorldLength"/>
   <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+8" y="$DetEnclosureHeight+8" z="$DetEnclosureLength+8"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+0.1" z="$DetEnclosureLength+0.1"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+1.5" y="$DetEnclosureHeight+8" z="$DetEnclosureLength+1.5"/>
   <box name="GroundOuterTemp" lunit="cm" x="$DetEnclosureWidth + 8 + 100" y="(28*12)*2.54" z="$DetEnclosureLength+8+100"/>
   <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 8 + 1000" y="(28*12)*2.54+1000" z="$DetEnclosureLength+ 8 + 2500" />
   <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 8.1" y="(28*12)*2.54 +5" z="$DetEnclosureLength+8.1"/>
+  <!--<box name="GroundInnerMez" lunit="cm"  x="1418+0.1" y="762" z="1560+0.1"/>-->
+  <box name="GroundInnerMez" lunit="cm"  x="832 + 120.1" y="762" z="1189-60+84+0.1+262"/>
+
   <box name="SciBooneSpace0" lunit="cm" x="394+307 + 18*2.54+0.1" y="28*12*2.54+0.1" z="488+18*2.54+0.1"/>
   <box name="SciBooneOuter" lunit="cm" x="394+307 + 18*2.54" y="28*12*2.54" z="488+18*2.54"/>
   <box name="SciBooneInner" lunit="cm" x="394+307" y="28*12*2.54" z="488"/>
+ <box name="Overburden" lunit="cm" x="832+120-0.1" y="300-0.1" z="1189-60+60-0.1"/>
 
 
 
@@ -1181,10 +1282,16 @@ sub gen_world()
 	<position name="posGroundSubtraction" unit="cm" x="0" y="0" z="859.05"/>
   </subtraction>
 
-  <subtraction name="Ground">
+  <subtraction name="Ground1">
 	<first ref="Ground0"/> <second ref="SciBooneSpace0"/>
 	<position name="posSciBooneSpace" unit="cm" x="0" y="0" z="-593"/>
   </subtraction>
+
+ <subtraction name="Ground">
+    <first ref="Ground1"/> <second ref="GroundInnerMez"/>
+    <position name="posGroundInnerMez" unit="cm" x="20" y="800" z="-200 + 859.05+131"/>
+  </subtraction>
+
 
 </solids>
 
@@ -1200,8 +1307,18 @@ sub gen_world()
   <volume name="volGround">
 	<materialref ref="Dirt"/>
 	<solidref ref="Ground"/>
-
   </volume>
+
+ <volume name="volOverburden">
+    <materialref ref="Concrete"/>
+    <solidref ref="Overburden"/>
+  </volume>
+  <volume name="volBuilding">
+    <materialref ref="Concrete"/>
+    <solidref ref="Building"/>
+  </volume>
+
+
 
   <volume name="volTempGround">
 	<materialref ref="Dirt"/>
@@ -1226,6 +1343,19 @@ sub gen_world()
 	  <volumeref ref="volSciBooneHall"/>
 	  <position name="posSciBooneHall" unit="cm" x="-40" y="0" z="($TPCLength)/2-1452.05"/>
 	</physvol>
+  <!--  <physvol>
+      <volumeref ref="volOverburden"/>
+      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+60+25+2/2+300/2+300+762" z="(531.2)/2+-100+60+30"/>
+    </physvol> -->
+   <physvol>
+      <volumeref ref="volBuilding"/>
+      <position name="posBuilding" unit="cm" x="0" y="((28*12)*2.54+1000)/2+762/2+1" z="(531.2)/2+95-150"/>
+    </physvol>
+
+     <physvol>
+        <volumeref ref="volTaggerUpper"/>
+        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+60+25+2/2+300/2" z="(531.2)/2"/>
+      </physvol>
 
 <!--	<physvol>
 	  <volumeref ref="volTempGround"/>
@@ -1255,6 +1385,13 @@ sub gen_enclosureExtras()
 <solids>
   <box name="InsulationOuter" lunit="cm" x="$CryostatWidth+120" y="$CryostatHeight+120" z="$CryostatLength+120"/>
   <box name="InsulationInner" lunit="cm" x="$CryostatWidth+0.1" y="$CryostatHeight+0.1" z="$CryostatLength+0.1"/>
+  <box name="StructureOuter" lunit="cm" x="$CryostatWidth+120+2*25-0.1" y="$CryostatHeight+120+2*25-0.1" z="$CryostatLength+120+2*25-0.1"/>
+  <box name="StructureInner" lunit="cm" x="$CryostatWidth+120+0.2" y="$CryostatHeight+120+0.2" z="$CryostatLength+120+0.2"/>
+
+   <subtraction name="Structure">
+     <first ref="StructureOuter"/> <second ref="StructureInner"/>
+     <position name="posStructureSubtraction" x="0" y="0" z="0"/>
+   </subtraction>
 
    <subtraction name="Insulation">
      <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
@@ -1267,6 +1404,11 @@ sub gen_enclosureExtras()
   <volume name="volInsulation">
 	<materialref ref="PU_foam_light"/>
 	<solidref ref="Insulation"/>
+  </volume>
+
+  <volume name="volStructure">
+    <materialref ref="Concrete"/>
+    <solidref ref="Structure"/>
   </volume>
 </structure>
 </gdml>
