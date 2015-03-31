@@ -93,7 +93,7 @@
    TPC. "kInch" will be interpreted in make_gdml.pl
    </parameter>
 
-   <parameter name="TPCWireThickness" value=".015">  <!--"0.015"> -->   
+   <parameter name="TPCWireThickness" value="0.015">  <!--"0.015"> -->   
    The diameter of a wire in a TPC plane.
    </parameter>
 
