@@ -39,7 +39,7 @@ gcc		v4_9_1
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-only_for_build  cetbuildtools   v4_04_03   
+only_for_build  cetbuildtools   v4_05_00   
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 

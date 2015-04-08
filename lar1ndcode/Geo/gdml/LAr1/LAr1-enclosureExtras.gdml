@@ -3,6 +3,13 @@
 <solids>
   <box name="InsulationOuter" lunit="cm" x="517+120" y="480+120" z="638+120"/>
   <box name="InsulationInner" lunit="cm" x="517+0.1" y="480+0.1" z="638+0.1"/>
+  <box name="StructureOuter" lunit="cm" x="517+120+2*25-0.1" y="480+120+2*25-0.1" z="638+120+2*25-0.1"/>
+  <box name="StructureInner" lunit="cm" x="517+120+0.2" y="480+120+0.2" z="638+120+0.2"/>
+
+   <subtraction name="Structure">
+     <first ref="StructureOuter"/> <second ref="StructureInner"/>
+     <position name="posStructureSubtraction" x="0" y="0" z="0"/>
+   </subtraction>
 
    <subtraction name="Insulation">
      <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
@@ -15,6 +22,11 @@
   <volume name="volInsulation">
 	<materialref ref="PU_foam_light"/>
 	<solidref ref="Insulation"/>
+  </volume>
+
+  <volume name="volStructure">
+    <materialref ref="Concrete"/>
+    <solidref ref="Structure"/>
   </volume>
 </structure>
 </gdml>
