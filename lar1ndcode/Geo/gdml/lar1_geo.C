@@ -14,9 +14,9 @@ lar1_geo(TString volName="")
   drawopt optuboone[] = {
 	{"volHorizontalBeam",	  kGreen+2},
 	{"volGround",				kOrange+4},
-	{"volTPBLayerXY",			  kBlue},
-	{"volTPBLayerXZ",			  kBlue},
-	{"volTPBLayerCathode",			  kBlue},
+//	{"volTPBLayerXY",			  kBlue},
+//	{"volTPBLayerXZ",			  kBlue},
+//	{"volTPBLayerCathode",			  kBlue},
     //"volCathodePlate",          kGray+1}, 
     {0, 0}
   };
