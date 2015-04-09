@@ -198,7 +198,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT121" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT154" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -210,7 +210,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT122" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT155" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -222,7 +222,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT123" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT156" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -234,7 +234,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT124" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT157" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -246,7 +246,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT125" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT158" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -258,7 +258,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT126" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT159" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -270,7 +270,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT127" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT160" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -282,7 +282,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT128" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT161" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -294,7 +294,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT129" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT162" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -306,7 +306,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT130" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT163" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -318,7 +318,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT131" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
+				<position name="posPMT164" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(0+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -330,7 +330,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT132" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT165" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -342,7 +342,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT133" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT166" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -354,7 +354,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT134" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT167" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -366,7 +366,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT135" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT168" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -378,7 +378,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT136" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT169" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -390,7 +390,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT137" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT170" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -402,7 +402,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT138" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT171" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -414,7 +414,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT139" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT172" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -426,7 +426,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT140" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT173" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -438,7 +438,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT141" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT174" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -450,7 +450,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT142" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
+				<position name="posPMT175" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(1+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -462,7 +462,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT143" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT176" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -474,7 +474,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT144" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT177" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -486,7 +486,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT145" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT178" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -498,7 +498,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT146" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT179" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -510,7 +510,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT147" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT180" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -522,7 +522,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT148" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT181" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -534,7 +534,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT149" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT182" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -546,7 +546,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT150" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT183" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -558,7 +558,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT151" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT184" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -570,7 +570,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT152" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT185" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -582,7 +582,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT153" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
+				<position name="posPMT186" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(2+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -594,7 +594,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT154" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT187" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -606,7 +606,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT155" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT188" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -618,7 +618,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT156" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT189" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -630,7 +630,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT157" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT190" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -642,7 +642,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT158" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT191" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -654,7 +654,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT159" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT192" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -666,7 +666,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT160" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT193" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -678,7 +678,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT161" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT194" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -690,7 +690,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT162" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT195" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -702,7 +702,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT163" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT196" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -714,7 +714,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT164" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
+				<position name="posPMT197" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(3+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -726,7 +726,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT165" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT198" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -738,7 +738,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT166" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT199" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -750,7 +750,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT167" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT200" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -762,7 +762,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT168" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT201" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -774,7 +774,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT169" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT202" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -786,7 +786,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT170" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT203" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -798,7 +798,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT171" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT204" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -810,7 +810,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT172" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT205" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -822,7 +822,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT173" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT206" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -834,7 +834,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT174" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT207" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -846,7 +846,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT175" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
+				<position name="posPMT208" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(4+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -858,7 +858,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT176" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT209" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -870,7 +870,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT177" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT210" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -882,7 +882,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT178" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT211" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -894,7 +894,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT179" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT212" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -906,7 +906,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT180" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT213" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -918,7 +918,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT181" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT214" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -930,7 +930,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT182" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT215" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -942,7 +942,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT183" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT216" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -954,7 +954,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT184" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT217" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -966,7 +966,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT185" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT218" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -978,7 +978,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT186" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
+				<position name="posPMT219" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(5+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -990,7 +990,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT187" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT220" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1002,7 +1002,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT188" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT221" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1014,7 +1014,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT189" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT222" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1026,7 +1026,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT190" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT223" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1038,7 +1038,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT191" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT224" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1050,7 +1050,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT192" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT225" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1062,7 +1062,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT193" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT226" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1074,7 +1074,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT194" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT227" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1086,7 +1086,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT195" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT228" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1098,7 +1098,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT196" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT229" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1110,7 +1110,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT197" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
+				<position name="posPMT230" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(6+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1122,7 +1122,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT198" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT231" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1134,7 +1134,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT199" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT232" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1146,7 +1146,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT200" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT233" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1158,7 +1158,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT201" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT234" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1170,7 +1170,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT202" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT235" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1182,7 +1182,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT203" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT236" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1194,7 +1194,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT204" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT237" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1206,7 +1206,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT205" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT238" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1218,7 +1218,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT206" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT239" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1230,7 +1230,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT207" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT240" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1242,7 +1242,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT208" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
+				<position name="posPMT241" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(7+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1254,7 +1254,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT209" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT242" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1266,7 +1266,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT210" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT243" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1278,7 +1278,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT211" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT244" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1290,7 +1290,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT212" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT245" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1302,7 +1302,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT213" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT246" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1314,7 +1314,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT214" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT247" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1326,7 +1326,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT215" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT248" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1338,7 +1338,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT216" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT249" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1350,7 +1350,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT217" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT250" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1362,7 +1362,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT218" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT251" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1374,7 +1374,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT219" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
+				<position name="posPMT252" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(8+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1386,7 +1386,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT220" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT253" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1398,7 +1398,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT221" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT254" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1410,7 +1410,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT222" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT255" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1422,7 +1422,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT223" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT256" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1434,7 +1434,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT224" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT257" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1446,7 +1446,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT225" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT258" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1458,7 +1458,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT226" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT259" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1470,7 +1470,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT227" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT260" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1482,7 +1482,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT228" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT261" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1494,7 +1494,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT229" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT262" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1506,7 +1506,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT230" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
+				<position name="posPMT263" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(9+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1518,7 +1518,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT231" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT264" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1530,7 +1530,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT232" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT265" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1542,7 +1542,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT233" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT266" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1554,7 +1554,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT234" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT267" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1566,7 +1566,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT235" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT268" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1578,7 +1578,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT236" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT269" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1590,7 +1590,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT237" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT270" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1602,7 +1602,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT238" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT271" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1614,7 +1614,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT239" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT272" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1626,7 +1626,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT240" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT273" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1638,7 +1638,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT241" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
+				<position name="posPMT274" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(10+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1650,7 +1650,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT242" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT275" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1662,7 +1662,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT243" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT276" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1674,7 +1674,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT244" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT277" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1686,7 +1686,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT245" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT278" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1698,7 +1698,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT246" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT279" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1710,7 +1710,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT247" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT280" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1722,7 +1722,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT248" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT281" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1734,7 +1734,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT249" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT282" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1746,7 +1746,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT250" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT283" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1758,7 +1758,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT251" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT284" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1770,7 +1770,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT252" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
+				<position name="posPMT285" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(11+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1782,7 +1782,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT253" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT286" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1794,7 +1794,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT254" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT287" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1806,7 +1806,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT255" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT288" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1818,7 +1818,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT256" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT289" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1830,7 +1830,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT257" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT290" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1842,7 +1842,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT258" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT291" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1854,7 +1854,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT259" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT292" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1866,7 +1866,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT260" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT293" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1878,7 +1878,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT261" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT294" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1890,7 +1890,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT262" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT295" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1902,7 +1902,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT263" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
+				<position name="posPMT296" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(12+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1914,7 +1914,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT264" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT297" unit="cm" x="-220" y="400 /12*(0+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1926,7 +1926,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT265" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT298" unit="cm" x="-220" y="400 /12*(1+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1938,7 +1938,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT266" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT299" unit="cm" x="-220" y="400 /12*(2+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1950,7 +1950,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT267" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT300" unit="cm" x="-220" y="400 /12*(3+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1962,7 +1962,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT268" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT301" unit="cm" x="-220" y="400 /12*(4+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1974,7 +1974,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT269" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT302" unit="cm" x="-220" y="400 /12*(5+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1986,7 +1986,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT270" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT303" unit="cm" x="-220" y="400 /12*(6+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -1998,7 +1998,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT271" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT304" unit="cm" x="-220" y="400 /12*(7+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -2010,7 +2010,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT272" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT305" unit="cm" x="-220" y="400 /12*(8+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -2022,7 +2022,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT273" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT306" unit="cm" x="-220" y="400 /12*(9+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
@@ -2034,7 +2034,7 @@
 
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT274" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
+				<position name="posPMT307" unit="cm" x="-220" y="400 /12*(10+1) - 400 /2" z="500 /15*(13+1) - 500 /2"/>
 				<rotationref ref="rPMTRotation"/>
 			</physvol> 
 
