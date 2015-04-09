@@ -1031,7 +1031,7 @@ if ( $pmt_switch eq "on" ) {
 	for( $i = 0; $i < 14; $i++){
 		for( $j = 0; $j < 11; $j++){
 			$k = $i*11+$j ;
-			$l = 121 + $k ; 
+			$l = 154 + $k ; 
 			print CRYOSTAT<<EOF;
 			<physvol>
 				<volumeref ref="volPMT"/>
@@ -1110,7 +1110,7 @@ sub gen_enclosure()
 <box name="VoidTaggerUpper" lunit="cm" x="832+120" y="300" z="1189-60+60" />
   <subtraction name="TaggerUpper">
     <first ref="TaggerUpper0"/> <second ref="VoidTaggerUpper"/>
-    <position name="posConcreteEnclosureSubtraction" unit="cm" x="0" y="0" z="0"/>
+    <position name="posConcreteEnclosureSubtraction0" unit="cm" x="0" y="0" z="0"/>
   </subtraction>
 
 
@@ -1118,7 +1118,7 @@ sub gen_enclosure()
 <box name="VoidTaggerMain" lunit="cm" x="520.2+2*60+2*25+0.05" y="542.3+2*60+2*25+0.05" z="702.7+2*60+2*25+0.05" />
   <subtraction name="TaggerMain">
     <first ref="TaggerMain0"/> <second ref="VoidTaggerMain"/>
-    <position name="posConcreteEnclosureSubtraction" unit="cm" x="0" y="0" z="0"/>
+    <position name="posConcreteEnclosureSubtraction1" unit="cm" x="0" y="0" z="0"/>
   </subtraction>
 
 
