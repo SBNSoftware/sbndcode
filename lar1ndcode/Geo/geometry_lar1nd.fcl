@@ -4,9 +4,9 @@ BEGIN_PROLOG
 lar1nd_geo:
 {
  SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
- Name:     "lar1nd"
- GDML:     "lar1nd.gdml"
- ROOT:     "lar1nd.gdml"
+ Name:     "lar1ndv0"
+ GDML:     "lar1ndv0.gdml"
+ ROOT:     "lar1ndv0.gdml"
 
  SortingParameters: { 
    DetectorVersion: "lar1nd" 

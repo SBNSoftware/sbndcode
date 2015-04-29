@@ -2732,20 +2732,19 @@
 	  <volumeref ref="volSciBooneHall"/>
 	  <position name="posSciBooneHall" unit="cm" x="0" y="0" z="(500 )/2-1452.05"/>
 	</physvol>
-    <physvol>
+ <!--  <physvol>
       <volumeref ref="volOverburden"/>
-      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+85 + 72" z="(531.2)/2"/>
-     <!-- <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+60+25+2/2+300/2+300+762" z="(531.2)/2+-100+60+30"/>-->
-    </physvol> 
+      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+85 + 76" z="(531.2)/2"/>
+    </physvol> -->
    <physvol>
       <volumeref ref="volBuilding"/>
       <position name="posBuilding" unit="cm" x="0" y="((28*12)*2.54+1000)/2+762/2+1" z="(531.2)/2+95-150"/>
     </physvol>
 
-  <!--   <physvol>
+     <physvol>
         <volumeref ref="volTaggerUpper"/>
-        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+60+25+2/2+300/2" z="(531.2)/2"/>
-      </physvol>-->
+        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+ 175" z="(531.2)/2"/>
+      </physvol>
 
   </volume> 
 </structure>

@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <box name="DetEnclosure" lunit="cm" x="878+0.01" y="850+0.01" z="1170+0.01" />
+ <box name="DetEnclosure" lunit="cm" x="1006 - 62+0.01" y="1099+0.01" z="1280 - 62+0.01" />
 <!-- <box name="DetEnclosure" lunit="cm" x="520.2+2*60+2*25" y="542.3+2*60+2*25" z="702.7+2*60+2*25" /> -->
 
  <box name="TaggerUpper0" lunit="cm" x="702.7+2*60+2*25+2*2" y="300+2*2" z="702.7+2*60+2*25+2*2" />
@@ -97,20 +97,20 @@
   <solidref ref="DetEnclosure"/>
      <physvol>
         <volumeref ref="volStructure"/>
-        <position name="posStructure" unit="cm" x="40" y="2" z="0"/>
+        <position name="posStructure" unit="cm" x="0" y="2" z="0"/>
       </physvol>
 
      <physvol>
         <volumeref ref="volTaggerMain"/>
-        <position name="posTaggerMain" unit="cm" x="40" y="1" z="0"/>
+        <position name="posTaggerMain" unit="cm" x="0" y="1" z="0"/>
       </physvol>
   <physvol>
    <volumeref ref="volCryostat"/>
-   <position name="posCryostat" unit="cm" x="40" y="0" z="0"/>
+   <position name="posCryostat" unit="cm" x="0" y="0" z="0"/>
   </physvol>
      <physvol>
         <volumeref ref="volInsulation"/>
-        <position name="posInsulation" unit="cm" x="40" y="2" z="0"/>
+        <position name="posInsulation" unit="cm" x="0" y="2" z="0"/>
       </physvol>
  </volume>
 </structure>

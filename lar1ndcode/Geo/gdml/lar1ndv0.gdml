@@ -5373,7 +5373,7 @@
       </union> -->
 
 
- <box name="DetEnclosure" lunit="cm" x="878+0.01" y="850+0.01" z="1170+0.01" />
+ <box name="DetEnclosure" lunit="cm" x="1006 - 62+0.01" y="1099+0.01" z="1280 - 62+0.01" />
 <!-- <box name="DetEnclosure" lunit="cm" x="520.2+2*60+2*25" y="542.3+2*60+2*25" z="702.7+2*60+2*25" /> -->
 
  <box name="TaggerUpper0" lunit="cm" x="702.7+2*60+2*25+2*2" y="300+2*2" z="702.7+2*60+2*25+2*2" />
@@ -5405,19 +5405,18 @@
   </subtraction>
 
 
-  <box name="World" lunit="cm" x="87800" y="85000" z="117000"/>
-  <box name="ConcreteEnclosureOuter" lunit="cm" x="878+8" y="850+8" z="1170+8"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="878+1.5" y="850+8" z="1170+1.5"/>
-  <box name="GroundOuterTemp" lunit="cm" x="878 + 8 + 100" y="(28*12)*2.54" z="1170+8+100"/>
-  <box name="GroundOuter" lunit="cm" x="878 + 8 + 1000" y="(28*12)*2.54+1000" z="1170+ 8 + 2500" />
-  <box name="GroundInner" lunit="cm" x="878 + 8.1" y="(28*12)*2.54 +5" z="1170+8.1"/>
-  <!--<box name="GroundInnerMez" lunit="cm"  x="1418+0.1" y="762" z="1560+0.1"/>-->
-  <box name="GroundInnerMez" lunit="cm"  x="832 + 120.1" y="762" z="1189-60+84+0.1+262"/>
+  <box name="World" lunit="cm" x="100600" y="109900" z="128000"/>
+  <box name="ConcreteEnclosureOuter" lunit="cm" x="1006 - 62+62" y="1099+62" z="1280 - 62+62"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="1006 - 62+0.1" y="1099+0.1" z="1280 - 62+0.1"/>
+  <box name="GroundOuter" lunit="cm" x="1006 - 62 + 62 +1000" y="(28*12)*2.54+1000" z="1280 - 62+ 62 + 2500 + 500" />
+  <box name="GroundInner" lunit="cm" x="1006 - 62 + 63" y="1099 +63" z="1280 - 62+63"/>
+  <box name="GroundInnerMez" lunit="cm"  x="1006 - 62+64" y="762" z="1189-60+84+0.1+262"/>
 
   <box name="SciBooneSpace0" lunit="cm" x="394+307 + 18*2.54+0.1" y="28*12*2.54+0.1" z="488+18*2.54+0.1"/>
   <box name="SciBooneOuter" lunit="cm" x="394+307 + 18*2.54" y="28*12*2.54" z="488+18*2.54"/>
   <box name="SciBooneInner" lunit="cm" x="394+307" y="28*12*2.54" z="488"/>
- <box name="Overburden" lunit="cm" x="832+120-0.1" y="300-0.1" z="1189-60+60-0.1"/>
+  <box name="OverburdenOld" lunit="cm" x="832+120-0.1" y="300-0.1" z="1189-60+60-0.1"/>
+ <box name="Overburden" lunit="cm" x="1006" y="274.5" z="1280"/>
 
 
 
@@ -5429,11 +5428,6 @@
   <subtraction name="SciBooneHall">
 	<first ref="SciBooneOuter"/> <second ref="SciBooneInner"/>
 	<position name="posSciBooneSubtraction" unit="cm" x="0" y="9*2.54" z="0"/>
-  </subtraction>
-
-  <subtraction name="GroundTemp">
-	<first ref="GroundOuterTemp"/> <second ref="GroundInner"/>
-	<position name="posGroundTempSubtraction" unit="cm" x="0" y="0" z="0"/>
   </subtraction>
 
   <subtraction name="Ground0">
@@ -5448,7 +5442,7 @@
 
  <subtraction name="Ground">
     <first ref="Ground1"/> <second ref="GroundInnerMez"/>
-    <position name="posGroundInnerMez" unit="cm" x="20" y="800" z="-200 + 859.05+131"/>
+    <position name="posGroundInnerMez" unit="cm" x="0" y="800" z="-200 + 859.05+135"/>
   </subtraction>
 
 
@@ -47488,20 +47482,20 @@
   <solidref ref="DetEnclosure"/>
      <physvol>
         <volumeref ref="volStructure"/>
-        <position name="posStructure" unit="cm" x="40" y="2" z="0"/>
+        <position name="posStructure" unit="cm" x="0" y="2" z="0"/>
       </physvol>
 
      <physvol>
         <volumeref ref="volTaggerMain"/>
-        <position name="posTaggerMain" unit="cm" x="40" y="1" z="0"/>
+        <position name="posTaggerMain" unit="cm" x="0" y="1" z="0"/>
       </physvol>
   <physvol>
    <volumeref ref="volCryostat"/>
-   <position name="posCryostat" unit="cm" x="40" y="0" z="0"/>
+   <position name="posCryostat" unit="cm" x="0" y="0" z="0"/>
   </physvol>
      <physvol>
         <volumeref ref="volInsulation"/>
-        <position name="posInsulation" unit="cm" x="40" y="2" z="0"/>
+        <position name="posInsulation" unit="cm" x="0" y="2" z="0"/>
       </physvol>
  </volume>
 
@@ -47529,32 +47523,28 @@
 
 
 
-  <volume name="volTempGround">
-	<materialref ref="Dirt"/>
-	<solidref ref="GroundTemp"/>
-  </volume>
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="(500 )/2"/>
+      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="(500 )/2"/>
     </physvol> 
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
-	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="(500 )/2"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="0" y="0" z="(500 )/2"/>
 	 </physvol>
 	<physvol>
 	  <volumeref ref="volGround"/>
-	  <position name="posGround" unit="cm" x="-40" y="0" z="(500 )/2-859.05"/>
+	  <position name="posGround" unit="cm" x="0" y="0" z="(500 )/2-859.05"/>
 	</physvol>
 	<physvol>
 	  <volumeref ref="volSciBooneHall"/>
-	  <position name="posSciBooneHall" unit="cm" x="-40" y="0" z="(500 )/2-1452.05"/>
+	  <position name="posSciBooneHall" unit="cm" x="0" y="0" z="(500 )/2-1452.05"/>
 	</physvol>
-  <!--  <physvol>
+ <!--  <physvol>
       <volumeref ref="volOverburden"/>
-      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+60+25+2/2+300/2+300+762" z="(531.2)/2+-100+60+30"/>
+      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+85 + 76" z="(531.2)/2"/>
     </physvol> -->
    <physvol>
       <volumeref ref="volBuilding"/>
@@ -47563,13 +47553,9 @@
 
      <physvol>
         <volumeref ref="volTaggerUpper"/>
-        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+60+25+2/2+300/2" z="(531.2)/2"/>
+        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+ 175" z="(531.2)/2"/>
       </physvol>
 
-<!--	<physvol>
-	  <volumeref ref="volTempGround"/>
-	  <position name="posGroundTemp" unit="cm" x="-40" y="0" z="(500 )/2"/>
-	</physvol> -->
   </volume> 
 </structure>
 
