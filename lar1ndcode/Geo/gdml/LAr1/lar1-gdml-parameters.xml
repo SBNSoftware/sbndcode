@@ -39,15 +39,15 @@
         reasons.  
 	-->
 
-   <parameter name="DetEnclosureWidth" value="878">
+   <parameter name="DetEnclosureWidth" value="1006 - 62" > <!--878"-->
    The size of the detector enclosure along the x-axis.
    </parameter>
 
-   <parameter name="DetEnclosureHeight" value="850">
+   <parameter name="DetEnclosureHeight" value="1099"> <!--850"-->
    The size of the detector enclosure along the y-axis.
    </parameter>
 
-   <parameter name="DetEnclosureLength" value="1170"> <!--490">-->
+   <parameter name="DetEnclosureLength" value="1280 - 62"> <!--1170"--> 
    The size of the detector enclosure along the z-axis.
    </parameter>
 

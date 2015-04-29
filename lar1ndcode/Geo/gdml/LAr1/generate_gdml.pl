@@ -1199,23 +1199,23 @@ sub gen_enclosure()
   <solidref ref="DetEnclosure"/>
      <physvol>
         <volumeref ref="volStructure"/>
-        <position name="posStructure" unit="cm" x="40" y="2" z="0"/>
+        <position name="posStructure" unit="cm" x="0" y="2" z="0"/>
       </physvol>
 
      <physvol>
         <volumeref ref="volTaggerMain"/>
-        <position name="posTaggerMain" unit="cm" x="40" y="1" z="0"/>
+        <position name="posTaggerMain" unit="cm" x="0" y="1" z="0"/>
       </physvol>
   <physvol>
    <volumeref ref="volCryostat"/>
-   <position name="posCryostat" unit="cm" x="40" y="0" z="0"/>
+   <position name="posCryostat" unit="cm" x="0" y="0" z="0"/>
   </physvol>
 EOF
   if ( $enclosureExtras eq "on" ) {
     print GDML <<EOF;
      <physvol>
         <volumeref ref="volInsulation"/>
-        <position name="posInsulation" unit="cm" x="40" y="2" z="0"/>
+        <position name="posInsulation" unit="cm" x="0" y="2" z="0"/>
       </physvol>
 EOF
 	}
@@ -1247,18 +1247,17 @@ sub gen_world()
 <gdml>
 <solids>
   <box name="World" lunit="cm" x="$WorldWidth" y="$WorldHeight" z="$WorldLength"/>
-  <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+8" y="$DetEnclosureHeight+8" z="$DetEnclosureLength+8"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+1.5" y="$DetEnclosureHeight+8" z="$DetEnclosureLength+1.5"/>
-  <box name="GroundOuterTemp" lunit="cm" x="$DetEnclosureWidth + 8 + 100" y="(28*12)*2.54" z="$DetEnclosureLength+8+100"/>
-  <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 8 + 1000" y="(28*12)*2.54+1000" z="$DetEnclosureLength+ 8 + 2500" />
-  <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 8.1" y="(28*12)*2.54 +5" z="$DetEnclosureLength+8.1"/>
-  <!--<box name="GroundInnerMez" lunit="cm"  x="1418+0.1" y="762" z="1560+0.1"/>-->
-  <box name="GroundInnerMez" lunit="cm"  x="832 + 120.1" y="762" z="1189-60+84+0.1+262"/>
+  <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+62" y="$DetEnclosureHeight+62" z="$DetEnclosureLength+62"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+0.1" z="$DetEnclosureLength+0.1"/>
+  <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 62 +1000" y="(28*12)*2.54+1000" z="$DetEnclosureLength+ 62 + 2500 + 500" />
+  <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 63" y="$DetEnclosureHeight +63" z="$DetEnclosureLength+63"/>
+  <box name="GroundInnerMez" lunit="cm"  x="$DetEnclosureWidth+64" y="762" z="1189-60+84+0.1+262"/>
 
   <box name="SciBooneSpace0" lunit="cm" x="394+307 + 18*2.54+0.1" y="28*12*2.54+0.1" z="488+18*2.54+0.1"/>
   <box name="SciBooneOuter" lunit="cm" x="394+307 + 18*2.54" y="28*12*2.54" z="488+18*2.54"/>
   <box name="SciBooneInner" lunit="cm" x="394+307" y="28*12*2.54" z="488"/>
- <box name="Overburden" lunit="cm" x="832+120-0.1" y="300-0.1" z="1189-60+60-0.1"/>
+  <box name="OverburdenOld" lunit="cm" x="832+120-0.1" y="300-0.1" z="1189-60+60-0.1"/>
+ <box name="Overburden" lunit="cm" x="1006" y="274.5" z="1280"/>
 
 
 
@@ -1270,11 +1269,6 @@ sub gen_world()
   <subtraction name="SciBooneHall">
 	<first ref="SciBooneOuter"/> <second ref="SciBooneInner"/>
 	<position name="posSciBooneSubtraction" unit="cm" x="0" y="9*2.54" z="0"/>
-  </subtraction>
-
-  <subtraction name="GroundTemp">
-	<first ref="GroundOuterTemp"/> <second ref="GroundInner"/>
-	<position name="posGroundTempSubtraction" unit="cm" x="0" y="0" z="0"/>
   </subtraction>
 
   <subtraction name="Ground0">
@@ -1289,7 +1283,7 @@ sub gen_world()
 
  <subtraction name="Ground">
     <first ref="Ground1"/> <second ref="GroundInnerMez"/>
-    <position name="posGroundInnerMez" unit="cm" x="20" y="800" z="-200 + 859.05+131"/>
+    <position name="posGroundInnerMez" unit="cm" x="0" y="800" z="-200 + 859.05+135"/>
   </subtraction>
 
 
@@ -1320,32 +1314,28 @@ sub gen_world()
 
 
 
-  <volume name="volTempGround">
-	<materialref ref="Dirt"/>
-	<solidref ref="GroundTemp"/>
-  </volume>
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
+      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="($TPCLength)/2"/>
     </physvol> 
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
-	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="0" y="0" z="($TPCLength)/2"/>
 	 </physvol>
 	<physvol>
 	  <volumeref ref="volGround"/>
-	  <position name="posGround" unit="cm" x="-40" y="0" z="($TPCLength)/2-859.05"/>
+	  <position name="posGround" unit="cm" x="0" y="0" z="($TPCLength)/2-859.05"/>
 	</physvol>
 	<physvol>
 	  <volumeref ref="volSciBooneHall"/>
-	  <position name="posSciBooneHall" unit="cm" x="-40" y="0" z="($TPCLength)/2-1452.05"/>
+	  <position name="posSciBooneHall" unit="cm" x="0" y="0" z="($TPCLength)/2-1452.05"/>
 	</physvol>
-  <!--  <physvol>
+ <!--  <physvol>
       <volumeref ref="volOverburden"/>
-      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+60+25+2/2+300/2+300+762" z="(531.2)/2+-100+60+30"/>
+      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+85 + 76" z="(531.2)/2"/>
     </physvol> -->
    <physvol>
       <volumeref ref="volBuilding"/>
@@ -1354,13 +1344,9 @@ sub gen_world()
 
      <physvol>
         <volumeref ref="volTaggerUpper"/>
-        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+60+25+2/2+300/2" z="(531.2)/2"/>
+        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+ 175" z="(531.2)/2"/>
       </physvol>
 
-<!--	<physvol>
-	  <volumeref ref="volTempGround"/>
-	  <position name="posGroundTemp" unit="cm" x="-40" y="0" z="($TPCLength)/2"/>
-	</physvol> -->
   </volume> 
 </structure>
 </gdml>
