@@ -409,7 +409,7 @@
 
   <box name="World" lunit="cm" x="100600" y="109900" z="128000"/>
   <box name="ConcreteEnclosureOuter" lunit="cm" x="1006 - 62+62" y="1099+62" z="1280 - 62+62"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="1006 - 62+0.1" y="1099+0.1" z="1280 - 62+0.1"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="1006 - 62+0.1" y="1099+62+0.1" z="1280 - 62+0.1"/>
   <box name="GroundOuter" lunit="cm" x="1006 - 62 + 62 +1000" y="(28*12)*2.54+1000" z="1280 - 62+ 62 + 2500 + 500" />
   <box name="GroundInner" lunit="cm" x="1006 - 62 + 63" y="1099 +63" z="1280 - 62+63"/>
   <box name="GroundInnerMez" lunit="cm"  x="1006 - 62+64" y="762" z="1189-60+84+0.1+262"/>

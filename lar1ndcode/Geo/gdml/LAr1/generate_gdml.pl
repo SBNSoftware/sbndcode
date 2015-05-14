@@ -1248,7 +1248,7 @@ sub gen_world()
 <solids>
   <box name="World" lunit="cm" x="$WorldWidth" y="$WorldHeight" z="$WorldLength"/>
   <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+62" y="$DetEnclosureHeight+62" z="$DetEnclosureLength+62"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+0.1" z="$DetEnclosureLength+0.1"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+62+0.1" z="$DetEnclosureLength+0.1"/>
   <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 62 +1000" y="(28*12)*2.54+1000" z="$DetEnclosureLength+ 62 + 2500 + 500" />
   <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 63" y="$DetEnclosureHeight +63" z="$DetEnclosureLength+63"/>
   <box name="GroundInnerMez" lunit="cm"  x="$DetEnclosureWidth+64" y="762" z="1189-60+84+0.1+262"/>
