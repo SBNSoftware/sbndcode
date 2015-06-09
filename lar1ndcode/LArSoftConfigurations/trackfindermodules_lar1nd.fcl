@@ -1,4 +1,5 @@
-#include "trackfindermodules_base.fcl"
+#include "trackfindermodules.fcl"
+#include "trackfinderalgorithms_lar1nd.fcl"
 
 BEGIN_PROLOG
 
@@ -31,5 +32,15 @@ lar1nd_track3Dkalmanhit.KalmanFilterAlg:    @local::lar1nd_kalmanfilteralg
 lar1nd_track3Dkalmanhit.SeedFinderAlg.ExtendThresh: 0.
 lar1nd_track3Dkalmanhit.SpacePointAlg:      @local::lar1nd_spacepointalg
 lar1nd_track3Dkalmanhit.SpacePointAlg.MinViews:     2
+
+
+lar1nd_trackstitcher:                               @local::standard_trackstitcher
+lar1nd_trackstitcher.TrackModuleLabel:              "trackkalsps"
+lar1nd_trackstitcher.SpptModuleLabel:               "spacepointfinder"
+lar1nd_trackstitcher.StitchAlg:                     @local::lar1nd_trackstitcheralg
+
+
+lar1nd_beziertrackermodule:                         @local::standard_beziertrackermodule
+lar1nd_beziertrackermodule.BezierTrackerAlgorithm:  @local::lar1nd_beziertrackeralgorithm
 
 END_PROLOG
