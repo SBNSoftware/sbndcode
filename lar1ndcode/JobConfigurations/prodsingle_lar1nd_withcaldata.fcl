@@ -36,13 +36,13 @@ physics:
    generator: @local::lar1nd_singlep	  
    largeant:  @local::lar1nd_largeant	  
    daq:       @local::lar1nd_simwire       
-   caldata:       @local::lar1nd_caldata     
+   caldata:       @local::lar1nd_calwire     
    rns:       { module_type: "RandomNumberSaver" }
  }
 
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
- simulate: [ generator, largeant, daq, calwire, rns ] 
+ simulate: [ generator, largeant, daq, caldata, rns ] 
  
  #define the output stream, there could be more than one if using filters 
  stream1:  [ out1 ]
