@@ -20,6 +20,7 @@ GetOptions( "input|i:s" => \$input,
 	    "output|o:s" => \$output,
 	    "wires|w:s" => \$wires,
 		"bars|b:s" => \$bars,
+		"pmts|p:s" => \$pmts,
 		"tpb|t:s" => \$tpb) ;
 
 if ( defined $help )
@@ -75,6 +76,7 @@ my $inch=2.54;
 my $wires_on=0; 			# turn wires on=1 or off=0
 my $tpb_coverage = 0 ;      # multiplier to determine amount fo tpb coverage--default is 0
 my $scint_bars = 0;			# turn on bars=1 or off=0 
+my $pmt_switch = "off";
 
 if ( defined $wires )
 {
@@ -88,11 +90,15 @@ $tpb_coverage = $tpb ;
 
 if ( defined $bars) 
 {
-$scint_bars=$bars ;
+$scint_bars=1 ;
+}
+if ( defined $pmts)
+{
+    $pmt_switch = "on";
 }
 
 my $NumberOfTPCPlanes=3;
-my $pmt_switch="on";		#turn on or off depending on pmts wanted
+#my $pmt_switch="on";		#turn on or off depending on pmts wanted
 my $enclosureExtras="on"; 
 
 # The routines that create the GDML sub-files. Most of the explanatory
@@ -111,6 +117,7 @@ gen_cathode();		# physical volumes defined in gen_tpc()
 gen_tpc();
 
 if ( $pmt_switch eq "on" ) {  gen_pmt();	}	# physical volumes defined in gen_cryostat()
+elsif ( $scint_bars ) {  gen_bars();	}	# physical volumes defined in gen_cryostat()
 if ( $enclosureExtras eq "on" ) {  gen_enclosureExtras(); } #generation of insulation, etc. will happen if specified
 gen_cryostat();
 
@@ -551,13 +558,21 @@ sub gen_tpc()
 <solids>
  <box name="TPC" lunit="cm" x="$TPCWidth" y="$TPCHeight" z="$TPCLength+0.35"/>
  <box name="TPCActive" lunit="cm" x="$TPCActiveDepth" y="$TPCActiveHeight" z="$TPCActiveLength"/>
+EOF
+if($tpb_coverage) {
+    print GDML <<EOF;
 
  <box name="TPBLayerXY" lunit="cm" x="$tpb_coverage*$TPCActiveDepth" y="$tpb_coverage*$TPCActiveHeight" z="0.01"/>
  <box name="TPBLayerXZ" lunit="cm" x="$tpb_coverage*$TPCActiveDepth" y="0.01" z="$tpb_coverage*$TPCActiveLength"/>
  <box name="TPBLayerCathode" lunit="cm" x="0.01" y="$tpb_coverage*$TPCActiveHeight" z="$tpb_coverage*$TPCActiveLength"/>
- 
-</solids>
 
+EOF
+}
+print GDML <<EOF;
+</solids>
+EOF
+
+print GDML <<EOF;
 <structure>
  <volume name="volTPCActive">
    <materialref ref="LAr"/>
@@ -567,6 +582,9 @@ sub gen_tpc()
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
  </volume>
+EOF
+if($tpb_coverage) {
+    print GDML <<EOF;
  <volume name="volTPBLayerXY">
     <materialref ref="LAr"/>
     <solidref ref="TPBLayerXY"/>
@@ -579,6 +597,9 @@ sub gen_tpc()
     <materialref ref="LAr"/>
     <solidref ref="TPBLayerCathode"/>
  </volume>
+EOF
+}
+    print GDML <<EOF;
  <volume name="volTPC">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
@@ -919,6 +940,62 @@ EOF
 }
 
 
+sub gen_bars {
+
+    $PMT = "lar1nd-lightguidebardef" . $suffix . ".gdml";
+    push (@gdmlFiles, $PMT); # Add file to list of GDML fragments
+    $PMT = ">" . $PMT;
+    open(PMT) or die("Could not open file $PMT for writing");
+
+	print PMT <<EOF;
+<solids>
+ <box name="lightguidebar"
+  lunit="cm"
+  x="0.25*2.54"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidebarcoating"
+  lunit="cm"
+  x=".05"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidedetector"
+  lunit="cm"
+  x="0.25*2.54+0.1"
+  y="100"
+  z="2.54"/>
+</solids>
+<structure>
+ <volume name="volOpDetSensitive">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidebarcoating"/>
+ </volume>
+ <volume name="vollightguidebar">
+  <materialref ref="Acrylic"/>
+  <solidref ref="lightguidebar"/>
+ </volume>
+ <volume name="vollightguidedetector">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidedetector"/>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="(0.125*2.54)+0.025" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="-(0.125*2.54)-0.025" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vollightguidebar"/>
+   <position name="poslightguidebar" unit="cm" x="0" y="0" z="0"/>
+  </physvol>
+ </volume>
+</structure>
+EOF
+
+}
+
+
 #Parameterize the steel cryostat that encloses the TPC.
 sub gen_cryostat()
 {
@@ -1053,29 +1130,29 @@ EOF
 
 
  }
-#
-#if( $scint_bars) {
-#	for ( $i=0; $i<125; ++$i ){
-#	    for ($j=0; $j<4; ++$j ){
-#		for ($k=0; $k<2; ++$k){  
-#		    print CRYOSTAT <<EOF;
-#		    <physvol>
-#			<volumeref ref="vollightguidedetector"/>
-#			<position name="lightguidedetector-$i-$j-$k" unit="cm" x="(-1)**$k*($TPCWidth+20+(0.25*2.54+0.1)/2)" y="(2*$j+1)*$TPCHeight/8-$TPCHeight/2" z="-($TPCLength/2-20)+2.6*($i+1)" />
-#EOF
-#			if ( $k==0 ) {
-#                            print CRYOSTAT <<EOF;
-#                            <rotationref ref="rPlus180AboutY"/>
-#EOF
-#                        }  
-#                   print CRYOSTAT<<EOF;
-#                   </physvol> 
-#EOF
-#        }
-#       }
-#      }
-#   }
-# 
+
+elsif( $scint_bars) {
+	for ( $i=0; $i<175; ++$i ){
+	    for ($j=0; $j<4; ++$j ){
+		for ($k=0; $k<2; ++$k){  
+		    print CRYOSTAT <<EOF;
+		    <physvol>
+			<volumeref ref="vollightguidedetector"/>
+			<position name="lightguidedetector-$i-$j-$k" unit="cm" x="(-1)**$k*($TPCWidth+20+(0.25*2.54+0.1)/2)" y="(2*$j+1)*$TPCHeight/8-$TPCHeight/2" z="-($TPCLength/2-20+2.62857/2.0)+2.62857*($i+1)" />
+EOF
+			if ( $k==0 ) {
+                            print CRYOSTAT <<EOF;
+                            <rotationref ref="rPlus180AboutY"/>
+EOF
+                        }  
+                   print CRYOSTAT<<EOF;
+                   </physvol> 
+EOF
+        }
+       }
+      }
+   }
+ 
 
 	print CRYOSTAT <<EOF;
  </volume>
