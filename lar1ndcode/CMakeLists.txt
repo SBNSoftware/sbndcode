@@ -14,6 +14,7 @@ add_subdirectory(Geo)
 add_subdirectory(Utilities)
 add_subdirectory(Calibration)
 add_subdirectory(DetectorSim)
+add_subdirectory(AnalysisTree)
 #add_subdirectory(MCTruthExtractor)
 
 
