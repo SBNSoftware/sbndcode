@@ -38,6 +38,7 @@ extern "C" {
 #include "RawData/raw.h"
 #include "RecoBase/Wire.h"
 #include "Utilities/LArFFT.h"
+#include "Utilities/sparse_vector.h"
 
 #include "TComplex.h"
 #include "TFile.h"
@@ -51,6 +52,8 @@ namespace caldata {
 
   public:
     
+    typedef lar::sparse_vector<float> RegionsOfInterest_t;
+
     // create calibrated signals on wires. this class runs 
     // an fft to remove the electronics shaping.     
     explicit CalWireT1053(fhicl::ParameterSet const& pset); 
@@ -137,6 +140,7 @@ namespace caldata {
     // Get signal shaping service.
     art::ServiceHandle<util::SignalShapingServiceT1053> sss;
 
+
     // make a collection of Wires
     std::unique_ptr<std::vector<recob::Wire> > wirecol(new std::vector<recob::Wire>);
     
@@ -155,12 +159,12 @@ namespace caldata {
 
     if( (unsigned int)transformSize < dataSize){
       mf::LogWarning("CalWireT1053")<<"FFT size (" << transformSize << ") "
-					 << "is smaller than the data size (" << dataSize << ") "
-					 << "\nResizing the FFT now...";
+                                    << "is smaller than the data size (" << dataSize << ") "
+                                    << "\nResizing the FFT now...";
       fFFT->ReinitializeFFT(dataSize,fFFT->FFTOptions(),fFFT->FFTFitBins());
       transformSize = fFFT->FFTSize();
       mf::LogWarning("CalWireT1053")<<"FFT size is now (" << transformSize << ") "
-					 << "and should be larger than the data size (" << dataSize << ")";
+                                    << "and should be larger than the data size (" << dataSize << ")";
     }
 
     mf::LogInfo("CalWireT1053") << "Data size is " << dataSize << " and transform size is " << transformSize;
@@ -188,23 +192,23 @@ namespace caldata {
       channel = digitVec->Channel();
 
       // skip bad channels
-    //  if(!chanFilt->BadChannel(channel)) {
+      //  if(!chanFilt->BadChannel(channel)) {
       if(true) {
 
         // resize and pad with zeros
-	holder.resize(transformSize, 0.);
-	
-	// uncompress the data
-	raw::Uncompress(digitVec->fADC, rawadc, digitVec->Compression());
-	
-	// loop over all adc values and subtract the pedestal
+        holder.resize(transformSize, 0.);
+        
+        // uncompress the data
+        raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
+        
+        // loop over all adc values and subtract the pedestal
         float pdstl = digitVec->GetPedestal();
-	
-	for(bin = 0; bin < dataSize; ++bin) 
-	  holder[bin]=(rawadc[bin]-pdstl);
+        
+        for(bin = 0; bin < dataSize; ++bin) 
+          holder[bin]=(rawadc[bin]-pdstl);
 
-	// Do deconvolution.
-	sss->Deconvolute(channel, holder);
+        // Do deconvolution.
+        sss->Deconvolute(channel, holder);
 
       } // end if not a bad channel 
       
@@ -213,8 +217,8 @@ namespace caldata {
       //This restores the DC component to signal removed by the deconvolution.
       if(fPostsample) {
         float average=0.0;
-	for(bin=0; bin < (unsigned short)fPostsample; ++bin) 
-	  average += holder[holder.size()-1+bin];
+        for(bin=0; bin < (unsigned short)fPostsample; ++bin) 
+          average += holder[holder.size()-1+bin];
         average = average / (float)fPostsample;
         for(bin = 0; bin < holder.size(); ++bin) holder[bin]-=average;
       }  
@@ -222,7 +226,10 @@ namespace caldata {
       if(fBaseSampleBins) SubtractBaseline(holder, fBaseSampleBins);
 
       // Make a single ROI that spans the entire data size
-      wirecol->emplace_back(holder,digitVec);
+      RegionsOfInterest_t sparse_holder;
+      sparse_holder.add_range(0,holder.begin(),holder.end());
+      auto view = geom->View(digitVec->Channel());
+      wirecol->emplace_back(sparse_holder,digitVec->Channel(),view);
     }
 
 
