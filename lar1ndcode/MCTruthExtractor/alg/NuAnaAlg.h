@@ -1,7 +1,6 @@
 #ifndef LAR1ND_NUANA_ALG_H
 #define LAR1ND_NUANA_ALG_H 
 
-#define CUSTOM_NUTOOLS
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "Geometry/Geometry.h"

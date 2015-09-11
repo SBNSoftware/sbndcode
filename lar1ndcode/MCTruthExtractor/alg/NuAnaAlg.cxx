@@ -1,7 +1,7 @@
 
 #include "NuAnaAlg.h"
 
-#define CUSTOM_NUTOOLS
+////#define CUSTOM_NUTOOLS
 
 namespace lar1nd{
 
@@ -73,8 +73,8 @@ namespace lar1nd{
           -> ReweightCCRes(reweightingSigmas[kCCRes][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightNCRes(reweightingSigmas[kNCRes][i_weight]);
-      reweightVector.back().at(i_weight) 
-          -> ReweightCoh(reweightingSigmas[kCoh][i_weight]);
+      // reweightVector.back().at(i_weight) 
+          // -> ReweightCoh(reweightingSigmas[kCoh][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightNonResRvp1pi(reweightingSigmas[kNonResRvp1pi][i_weight]);
       reweightVector.back().at(i_weight) 
@@ -83,12 +83,12 @@ namespace lar1nd{
           -> ReweightNonResRvp2pi(reweightingSigmas[kNonResRvp2pi][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightNonResRvbarp2pi(reweightingSigmas[kNonResRvbarp2pi][i_weight]);
-      reweightVector.back().at(i_weight) 
-          -> ReweightResDecay(reweightingSigmas[kResDecay][i_weight]);
+      // reweightVector.back().at(i_weight) 
+          // -> ReweightResDecay(reweightingSigmas[kResDecay][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightNC(reweightingSigmas[kNC][i_weight]);
-      reweightVector.back().at(i_weight) 
-          -> ReweightDIS(reweightingSigmas[kDIS][i_weight]);
+      // reweightVector.back().at(i_weight) 
+          // -> ReweightDIS(reweightingSigmas[kDIS][i_weight]);
       reweightVector.back().at(i_weight) 
           -> ReweightDISnucl(reweightingSigmas[kDISnucl][i_weight]);
       // reweightVector.back().at(i_weight) 
@@ -144,8 +144,8 @@ namespace lar1nd{
               -> ReweightNCRes(reweightingSigmas[kNCRes][weight_point]);
             break;
           case kCoh:
-            reweightVector[i_reweightingKnob][weight_point]
-              -> ReweightCoh(reweightingSigmas[kCoh][weight_point]);
+          //   reweightVector[i_reweightingKnob][weight_point]
+          //     -> ReweightCoh(reweightingSigmas[kCoh][weight_point]);
             break;
           case kNonResRvp1pi:
             reweightVector[i_reweightingKnob][weight_point]
