@@ -22,19 +22,19 @@ art_file_catalog_data.fileType:  "data"
 # Standard configurations for FileCatalogMetadataExtras service.
 # Both fields and values are microboone-specific.
 
-microboone_file_catalog:
-{
-  Metadata: [ "group",          "lar1nd",   # This field should move to FileCatalogMetadata. 
-              "fileFormat",     "root",     # This field should move to FileCatalogMetadata.
-              "fclName",        "",
-              "fclVersion",     "",
-              "projectName",    "",
-              "projectStage",   "",
-              "projectVersion", "" ]
-  GeneratePerFileMetadata: true
-  CopyMetadataAttributes:  [ "fileType", "runType" ]
-  RenameTemplate:          ""
-  RenameOverwrite:         true
-}
+# microboone_file_catalog:
+# {
+#   Metadata: [ "group",          "lar1nd",   # This field should move to FileCatalogMetadata. 
+#               "fileFormat",     "root",     # This field should move to FileCatalogMetadata.
+#               "fclName",        "",
+#               "fclVersion",     "",
+#               "projectName",    "",
+#               "projectStage",   "",
+#               "projectVersion", "" ]
+#   GeneratePerFileMetadata: true
+#   CopyMetadataAttributes:  [ "fileType", "runType" ]
+#   RenameTemplate:          ""
+#   RenameOverwrite:         true
+# }
 
 END_PROLOG
