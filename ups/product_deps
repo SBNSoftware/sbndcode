@@ -2,7 +2,7 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent lar1ndcode v00_07_00
+parent lar1ndcode v04_00_00
 defaultqual e6
 
 # These optional lines define the installed directories where headers,
@@ -23,9 +23,9 @@ defaultqual e6
 # gdmldir -  
 # fwdir   -  
 #
-incdir	product_dir	include
-libdir	fq_dir		lib
-bindir	fq_dir		bin
+incdir  product_dir  include
+libdir  fq_dir       lib
+bindir  fq_dir       bin
 gdmldir product_dir
 fcldir  product_dir
 
@@ -34,7 +34,7 @@ fcldir  product_dir
 
 product          version
 larsoft          v04_00_00
-#lar1ndutil      v01_10_02
+lar1ndutil       v01_11_00
 gcc              v4_9_1
 
 # list products required ONLY for the build
@@ -43,11 +43,17 @@ only_for_build  cetbuildtools   v4_05_00
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
-qualifier        larsoft       gcc   notes
-e6:debug         e6:debug     -nq-
-e6:opt           e6:opt       -nq-
-e6:prof          e6:prof  	  -nq-
+qualifier        larsoft      lar1ndutil gcc   notes
+e6:debug         e6:debug     e6:debug   -nq-
+e6:opt           e6:opt       e6:opt     -nq-
+e6:prof          e6:prof      e6:prof    -nq-
+e6:noifdh:debug  e6:debug     -          -nq-
+e6:noifdh:opt    e6:opt       -          -nq-
+e6:noifdh:prof   e6:prof      -          -nq-
+
     
+    
+
 # Preserve tabs and formatting in emacs and vi / vim:
 
 ### Local Variables:
