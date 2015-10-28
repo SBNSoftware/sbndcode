@@ -7,6 +7,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include "lar1ndcode/Geo/ChannelMaplar1ndAlg.h"
+#include "Geometry/GeometryCore.h"
 #include "Geometry/CryostatGeo.h"
 #include "Geometry/TPCGeo.h"
 #include "Geometry/PlaneGeo.h"
@@ -30,14 +31,12 @@ ChannelMaplar1ndAlg::~ChannelMaplar1ndAlg()
 }
 
 //----------------------------------------------------------------------------
-void ChannelMaplar1ndAlg::Initialize(std::vector<geo::CryostatGeo*> & cgeo,
-                                     std::vector<geo::AuxDetGeo*>   & adgeo )
+void ChannelMaplar1ndAlg::Initialize(GeometryData_t& geodata )
 {
 
-  if (!fFirstChannelInThisPlane.empty() || !fFirstChannelInNextPlane.empty())
-  {
-    this->Uninitialize();
-  }
+  Uninitialize();
+  std::vector<geo::CryostatGeo*>& cgeo = geodata.cryostats;
+  std::vector<geo::AuxDetGeo*>  & adgeo = geodata.auxDets;
 
 
   fNcryostat = cgeo.size();
