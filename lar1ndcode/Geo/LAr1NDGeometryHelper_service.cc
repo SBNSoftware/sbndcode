@@ -7,6 +7,7 @@
 
 // Migration note:
 // Geometry --> lar1nd/Geometry
+#include "Geometry/GeometryCore.h"
 #include "lar1ndcode/Geo/LAr1NDGeometryHelper.h"
 
 #include "Geometry/ChannelMapAlg.h"
@@ -22,32 +23,25 @@
 namespace lar1nd
 {
 
-  LAR1NDGeometryHelper::LAR1NDGeometryHelper( fhicl::ParameterSet const & pset, art::ActivityRegistry & reg )
-  :  fPset( pset ),
-     fReg( reg ),
-     fChannelMap()
+  LAR1NDGeometryHelper::LAR1NDGeometryHelper( fhicl::ParameterSet const & pset, art::ActivityRegistry & )
+    :  fPset( pset ),
+       fChannelMap()
   {}
 
-  LAR1NDGeometryHelper::~LAR1NDGeometryHelper() throw()
-  {}  
-  
-  void LAR1NDGeometryHelper::doConfigureChannelMapAlg( const TString & detectorName,
-                                                     fhicl::ParameterSet const & sortingParam,
-                                                     std::vector<geo::CryostatGeo*> & c,
-					             std::vector<geo::AuxDetGeo*>   & ad  )
+
+  void  LAR1NDGeometryHelper::doConfigureChannelMapAlg(fhicl::ParameterSet const& sortingParameters, geo::GeometryCore* geom)
   {
-    fChannelMap = nullptr;
-    
-  
-      fChannelMap = std::shared_ptr<geo::ChannelMapAlg>( new geo::ChannelMaplar1ndAlg( sortingParam ) );
-  
+    fChannelMap.reset();
+
+
+    fChannelMap = std::make_shared<geo::ChannelMaplar1ndAlg>( sortingParameters );
     if ( fChannelMap )
     {
-      fChannelMap->Initialize( c, ad );
+      geom->ApplyChannelMap(fChannelMap);
     }
   }
-  
-  
+
+
   std::shared_ptr<const geo::ChannelMapAlg> LAR1NDGeometryHelper::doGetChannelMapAlg() const
   {
     return fChannelMap;

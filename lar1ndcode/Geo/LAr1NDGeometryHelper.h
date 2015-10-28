@@ -13,28 +13,17 @@
 #define LAR1ND_ExptGeoHelperInterface_h
 
 #include "Geometry/ExptGeoHelperInterface.h"
+#include "Geometry/CryostatGeo.h"
+#include "Geometry/AuxDetGeo.h"
 
 #include <memory>
-#include <vector>
 
-// Forward declarations
-//
-class TString;
 
-namespace geo
-{
+namespace geo{
   class ChannelMapAlg;
-  class CryostatGeo;
-  class ExptGeoHelperInterface;
+  class GeometryCore;
 }
 
-namespace geo
-{
-  class ChannelMapAlg;
-}
-
-// Declaration
-//
 namespace lar1nd
 {
   class LAR1NDGeometryHelper : public geo::ExptGeoHelperInterface
@@ -42,7 +31,6 @@ namespace lar1nd
   public:
   
     LAR1NDGeometryHelper( fhicl::ParameterSet const & pset, art::ActivityRegistry &reg );
-    ~LAR1NDGeometryHelper() throw();
 
     // Public interface for ExptGeoHelperInterface (for reference purposes)
     //
@@ -59,14 +47,11 @@ namespace lar1nd
   
   private:
     
-    void  doConfigureChannelMapAlg( const TString & detectorName,
-                                    fhicl::ParameterSet const & sortingParam,
-                                    std::vector<geo::CryostatGeo*> & c ,
-			            std::vector<geo::AuxDetGeo*>   & ad	) override;
-    std::shared_ptr<const geo::ChannelMapAlg> doGetChannelMapAlg() const override;
-    
+
+    void  doConfigureChannelMapAlg(fhicl::ParameterSet const& sortingParameters, geo::GeometryCore* geom) override;
+    virtual ChannelMapAlgPtr_t doGetChannelMapAlg() const override;
+        
     fhicl::ParameterSet const & fPset;
-    art::ActivityRegistry & fReg;
     std::shared_ptr<geo::ChannelMapAlg> fChannelMap;
   
   };
