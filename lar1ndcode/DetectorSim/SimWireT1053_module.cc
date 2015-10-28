@@ -31,6 +31,10 @@ extern "C" {
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+// art extensions
+#include "artextensions/SeedService/SeedService.hh"
+
+
 #include "Utilities/LArFFT.h"
 #include "RawData/RawDigit.h"
 #include "RawData/raw.h"
@@ -119,11 +123,13 @@ namespace detsim {
     TString compression(pset.get< std::string >("CompressionType"));
     if(compression.Contains("Huffman",TString::kIgnoreCase)) fCompression = raw::kHuffman;    
 
-    // get the random number seed, use a random default if not specified    
-    // in the configuration file.  
-    unsigned int seed = pset.get< unsigned int >("Seed", sim::GetRandomNumberSeed());
+    // create a default random engine; obtain the random seed from SeedService,
+    // unless overridden in configuration with key "Seed" and "SeedPedestal"
+    art::ServiceHandle<artext::SeedService> Seeds; 
+    Seeds->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed");
+    Seeds->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal");
 
-    createEngine(seed);
+
   }
 
   //-------------------------------------------------
