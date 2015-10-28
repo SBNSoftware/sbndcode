@@ -12,10 +12,11 @@
 #include "opticaldetectorservices_lar1nd.fcl"
 #include "sam_lar1nd.fcl"
 #include "timeservice_lar1nd.fcl"
+#include "seedservices_lar1nd.fcl"
 
 BEGIN_PROLOG
 
-# Define lar1nd_services (exclude simulatio specific component)
+# Define lar1nd_services (exclude simulation specific component)
 lar1nd_services:
 {
  ExptGeoHelperInterface:         @local::lar1nd_geometry_helper
@@ -24,11 +25,11 @@ lar1nd_services:
  LArProperties:                  @local::lar1nd_properties    
  LArFFT:                         @local::lar1nd_larfft        
  DatabaseUtil:	                 @local::lar1nd_database      
- SignalShapingServiceT1053: @local::lar1nd_signalshapingservice
+ SignalShapingServiceT1053:      @local::lar1nd_signalshapingservice
  BackTracker:                    @local::standard_backtracker  
 #OpDigiProperties:               @local::lar1nd_opdigiproperties
-TimeService:                    @local::lar1nd_timeservice
-
+ TimeService:                    @local::lar1nd_timeservice
+ SeedService:                    @local::lar1nd_seedservice
 }
 
 # Define lar1nd_optical_service (exclude simulation specific component)
@@ -49,6 +50,7 @@ lar1nd_simulation_services:
  MagneticField:                  @local::no_mag 	       
  BackTracker:                    @local::standard_backtracker
  TimeService:                    @local::lar1nd_timeservice
+ SeedService:                    @local::lar1nd_seedservice
 }
 
 lar1nd_opsimulation_services:
@@ -65,6 +67,7 @@ lar1nd_opsimulation_services:
  MagneticField:                  @local::no_mag 	       
  BackTracker:                    @local::standard_backtracker
  TimeService:                    @local::lar1nd_timeservice
+ SeedService:                    @local::lar1nd_seedservice
 }
 
 lar1nd_opsimulation_services.OpDetResponseInterface: @local::lar1nd_opdetresponse
