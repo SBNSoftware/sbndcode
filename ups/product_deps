@@ -2,8 +2,8 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent lar1ndcode v04_24_00
-defaultqual e7
+parent lar1ndcode v04_30_00
+defaultqual e9
 
 # These optional lines define the installed directories where headers,
 # libraries, and executables will be found.
@@ -33,22 +33,22 @@ fcldir  product_dir
 # Add the dependent product and version
 
 product          version
-larsoft          v04_24_00
+larsoft          v04_30_00
 lar1ndutil       v01_12_03 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-only_for_build  cetbuildtools   v4_13_00   
+only_for_build  cetbuildtools   v4_17_03   
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
 qualifier        larsoft      lar1ndutil notes
-e7:debug         e7:debug     e7:debug   
-e7:opt           e7:opt       e7:opt     
-e7:prof          e7:prof      e7:prof    
-e7:noifdh:debug  e7:debug     -          
-e7:noifdh:opt    e7:opt       -          
-e7:noifdh:prof   e7:prof      -          
+e9:debug         e9:debug     e9:debug   
+e9:opt           e9:opt       e9:opt     
+e9:prof          e9:prof      e9:prof    
+e9:noifdh:debug  e9:debug     -          
+e9:noifdh:opt    e9:opt       -          
+e9:noifdh:prof   e9:prof      -          
 
     
     
