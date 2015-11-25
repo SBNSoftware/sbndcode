@@ -1,6 +1,5 @@
 
-art_make( BASENAME_ONLY
-          MODULE_LIBRARIES Geometry
+art_make( MODULE_LIBRARIES Geometry
 			Geometry_service
 			Simulation
 			BackTracker_service
