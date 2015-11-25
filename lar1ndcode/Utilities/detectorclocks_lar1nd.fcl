@@ -1,0 +1,20 @@
+#include "detectorclocks.fcl"
+
+BEGIN_PROLOG
+
+lar1nd_detectorclocks: @local::standard_detectorclocks
+
+lar1nd_detectorclocks.TrigModuleName:     "triggersim"
+lar1nd_detectorclocks.InheritClockConfig: true
+lar1nd_detectorclocks.G4RefTime:        0      # G4 time [us] where electronics clock counting start
+lar1nd_detectorclocks.TriggerOffsetTPC:  0  # Time [us] for TPC readout start w.r.t. trigger time
+lar1nd_detectorclocks.FramePeriod:       1.25e3 # Frame period [us]
+lar1nd_detectorclocks.ClockSpeedTPC:     2.    # TPC clock speed in MHz
+lar1nd_detectorclocks.ClockSpeedOptical: 64.   # Optical clock speed in MHz
+lar1nd_detectorclocks.ClockSpeedTrigger: 16.   # Trigger clock speed in MHz
+lar1nd_detectorclocks.DefaultTrigTime:   0. # Default trigger time [us].
+lar1nd_detectorclocks.DefaultBeamTime:   0. # Default beam time [us].
+
+
+
+END_PROLOG

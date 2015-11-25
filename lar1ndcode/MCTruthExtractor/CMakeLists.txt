@@ -41,7 +41,6 @@ art_make( BASENAME_ONLY
           MODULE_LIBRARIES 
             NuAnaAlg
             Geometry_service
-            TimeService_service
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
             Geometry

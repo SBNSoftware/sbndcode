@@ -4,8 +4,8 @@ simple_plugin(SimWireT1053 "module"
                            Geometry_service
                            Simulation
                            Utilities
-                           TimeService_service
                            RawData
+                           DetectorClocksServiceStandard_service
                            SignalShapingServiceT1053_service
                            ${SEEDSERVICE_SERVICE} # artextensions
                            ${ART_FRAMEWORK_CORE}

@@ -34,8 +34,8 @@ lar1nd_disp:
 {                                                                                  
  ExptGeoHelperInterface:                      @local::lar1nd_geometry_helper        
  Geometry:                                    @local::lar1nd_geo                    
- LArProperties:                               @local::lar1nd_properties             
- DetectorProperties:                          @local::lar1nd_detproperties          
+ LArPropertiesService:                               @local::lar1nd_properties             
+ DetectorPropertiesService:                          @local::lar1nd_detproperties          
  DatabaseUtil:		                      @local::lar1nd_database               
  ColorDrawingOptions:                         @local::lar1nd_colordrawingopt        
  SimulationDrawingOptions:                    @local::lar1nd_simdrawingopt          
@@ -48,7 +48,7 @@ lar1nd_disp:
  LArG4Parameters:                             @local::lar1nd_largeantparameters     
  LArVoxelCalculator:                          @local::lar1nd_larvoxelcalculator     
  InfoTransfer:		                      @local::lar1nd_infotransfer    
- TimeService:                  		       @local::lar1nd_timeservice
+ DetectorClocksService:                  		       @local::lar1nd_detectorclocks
 }                                                                                  
                                                                                    
                                                                                    

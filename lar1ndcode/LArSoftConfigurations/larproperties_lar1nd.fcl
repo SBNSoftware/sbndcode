@@ -4,7 +4,6 @@ BEGIN_PROLOG
 
 lar1nd_properties: @local::standard_properties
 lar1nd_properties.Temperature: 88.4  #(measured in ArgoNeut)
-lar1nd_properties.Efield:      [0.481,0.700,0.890]  #(measured in ArgoNeut)
 
 
 

@@ -110,7 +110,7 @@ physics.producers.generator.N: 200000
 # Begin optical specific parts:
 
 # set quantum efficiency supressed scint yield to 0.03 * 24000 
-services.user.LArProperties.ScintYield: 72
+services.user.LArPropertiesService.ScintYield: 72
 
 # enable optical physics in LArG4
 services.user.LArG4Parameters.EnabledPhysics: [ "Em", 

@@ -39,13 +39,14 @@ extern "C" {
 #include "RawData/RawDigit.h"
 #include "RawData/raw.h"
 #include "RawData/TriggerData.h"
-#include "Utilities/LArProperties.h"
-#include "Utilities/TimeService.h"
+#include "DetectorInfoServices/LArPropertiesService.h"
+#include "DetectorInfoServices/DetectorClocksService.h"
+#include "DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lar1ndcode/Utilities/SignalShapingServiceT1053.h"
 #include "Geometry/Geometry.h"
 #include "Simulation/sim.h"
 #include "Simulation/SimChannel.h"
-#include "Utilities/DetectorProperties.h"
+#include "DetectorInfoServices/DetectorPropertiesService.h"
 
 #include "TMath.h"
 #include "TComplex.h"
@@ -106,7 +107,7 @@ private:
   //be made a fcl parameter but not likely to ever change
   const float adcsaturation = 4095;
 
-  ::util::ElecClock fClock; ///< TPC electronics clock
+  ::detinfo::ElecClock fClock; ///< TPC electronics clock
 
 }; // class SimWireT1053
 
@@ -176,7 +177,7 @@ void SimWireT1053::reconfigure(fhicl::ParameterSet const& p)
 
   }
   //detector properties information
-  art::ServiceHandle<util::DetectorProperties> detprop;
+  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   fNTimeSamples  = detprop->NumberTimeSamples();
 
 
@@ -215,9 +216,12 @@ void SimWireT1053::endJob()
 void SimWireT1053::produce(art::Event& evt)
 {
 
-  art::ServiceHandle<util::TimeService> ts;
+  // the following code is non-portable;
+  // it relies on the presence of a specific implementation of DetectorClocksService
+  art::ServiceHandle<detinfo::DetectorClocksServiceStandard> tss;
   // In case trigger simulation is run in the same job...
-  ts->preProcessEvent(evt);
+  tss->preProcessEvent(evt);
+  auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
 
   // get the geometry to be able to figure out signal types and chan -> plane mappings
   art::ServiceHandle<geo::Geometry> geo;

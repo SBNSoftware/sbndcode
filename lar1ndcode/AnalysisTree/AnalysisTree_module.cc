@@ -103,9 +103,9 @@
 #include "AnalysisBase/ParticleID.h"
 #include "RawData/RawDigit.h"
 #include "RawData/BeamInfo.h"
-#include "Utilities/LArProperties.h"
+#include "DetectorInfoServices/LArPropertiesService.h"
 #include "Utilities/AssociationUtil.h"
-#include "Utilities/DetectorProperties.h"
+#include "DetectorInfoServices/DetectorPropertiesService.h"
 #include "SummaryData/POTSummary.h"
 #include "MCCheater/BackTracker.h"
 #include "RecoBase/Track.h"
@@ -1660,8 +1660,8 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
   //services
   art::ServiceHandle<geo::Geometry> geom;
   art::ServiceHandle<cheat::BackTracker> bt;
-  art::ServiceHandle<util::DetectorProperties> detprop;
-  art::ServiceHandle<util::LArProperties> LArProp;
+//  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
+//  auto const* LArProp = lar::providerFrom<detinfo::LArPropertiesService>();
 
   // collect the sizes which might me needed to resize the tree data structure:
   bool isMC = !evt.isRealData();
@@ -2475,7 +2475,7 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
             
     }//if (mcevts_truth)
   }//if (isMC){
-  //fData->taulife = LArProp->ElectronLifetime();
+  //fData->taulife = detprop->ElectronLifetime();
   fTree->Fill();
   
   if (mf::isDebugEnabled()) {
@@ -2598,7 +2598,7 @@ double microboone::AnalysisTree::length(const simb::MCParticle& part, TVector3& 
 {
   // Get geometry.
   art::ServiceHandle<geo::Geometry> geom;
-  art::ServiceHandle<util::DetectorProperties> detprop;
+//  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
 
   // Get active volume boundary.
   //double xmin = 0.;
