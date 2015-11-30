@@ -3,9 +3,5 @@
 BEGIN_PROLOG
 
 lar1nd_properties: @local::standard_properties
-lar1nd_properties.Temperature: 88.4  #(measured in ArgoNeut)
-
-
-
 
 END_PROLOG
