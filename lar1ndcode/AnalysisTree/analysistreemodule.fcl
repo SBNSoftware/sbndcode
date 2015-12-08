@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 lar1nd_analysistree:
 { 
- module_type:              "AnalysisTree"
+ module_type:              "lar1ndcode/AnalysisTree/AnalysisTree"
  DigitModuleLabel:         "daq"
  HitsModuleLabel:          "gaushit"
  LArGeantModuleLabel:      "largeant"
