@@ -2,7 +2,7 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent lar1ndcode v05_00_00_rc0
+parent lar1ndcode v05_00_00_rc1
 defaultqual e9
 
 # These optional lines define the installed directories where headers,
@@ -33,7 +33,7 @@ fcldir  product_dir
 # Add the dependent product and version
 
 product          version
-larsoft          v05_00_00_rc0
+larsoft          v05_00_00_rc1
 lar1ndutil       v01_12_03 - optional
 
 # list products required ONLY for the build
