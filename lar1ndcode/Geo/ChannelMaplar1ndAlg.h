@@ -12,7 +12,7 @@
 #include <set>
 #include <stdint.h>
 
-#include "Geometry/ChannelMapAlg.h"
+#include "larcore/Geometry/ChannelMapAlg.h"
 #include "lar1ndcode/Geo/GeoObjectSorterlar1nd.h"
 #include "fhiclcpp/ParameterSet.h"
 

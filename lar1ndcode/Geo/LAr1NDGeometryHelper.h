@@ -12,9 +12,9 @@
 #ifndef LAR1ND_ExptGeoHelperInterface_h
 #define LAR1ND_ExptGeoHelperInterface_h
 
-#include "Geometry/ExptGeoHelperInterface.h"
-#include "Geometry/CryostatGeo.h"
-#include "Geometry/AuxDetGeo.h"
+#include "larcore/Geometry/ExptGeoHelperInterface.h"
+#include "larcore/Geometry/CryostatGeo.h"
+#include "larcore/Geometry/AuxDetGeo.h"
 
 #include <memory>
 

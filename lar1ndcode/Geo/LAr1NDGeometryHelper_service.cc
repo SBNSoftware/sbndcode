@@ -7,10 +7,10 @@
 
 // Migration note:
 // Geometry --> lar1nd/Geometry
-#include "Geometry/GeometryCore.h"
+#include "larcore/Geometry/GeometryCore.h"
 #include "lar1ndcode/Geo/LAr1NDGeometryHelper.h"
 
-#include "Geometry/ChannelMapAlg.h"
+#include "larcore/Geometry/ChannelMapAlg.h"
 
 // Migration note:
 // Geometry --> lar1nd/Geometry for the two below

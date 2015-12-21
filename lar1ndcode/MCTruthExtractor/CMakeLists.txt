@@ -4,7 +4,7 @@
 #                  LIBRARIES
 #                        NuAna
 #                        Geometry
-#                        Geometry_service
+#                        larcore_Geometry_Geometry_service
 #                        Simulation
 #                        Utilities
 #                        TimeService_service
@@ -40,7 +40,7 @@ art_make( BASENAME_ONLY
           LIBRARY_NAME Ntuples          
           MODULE_LIBRARIES 
             NuAnaAlg
-            Geometry_service
+            larcore_Geometry_Geometry_service
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
             Geometry
