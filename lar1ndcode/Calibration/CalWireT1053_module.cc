@@ -34,11 +34,13 @@ extern "C" {
 #include "lar1ndcode/Utilities/SignalShapingServiceT1053.h"
 #include "Geometry/Geometry.h"
 //#include "Filters/ChannelFilter.h"
+
 #include "RawData/RawDigit.h"
 #include "RawData/raw.h"
 #include "RecoBase/Wire.h"
 #include "Utilities/LArFFT.h"
 #include "Utilities/sparse_vector.h"
+#include "Utilities/AssociationUtil.h"  //--Hec
 
 #include "TComplex.h"
 #include "TFile.h"
@@ -90,10 +92,12 @@ namespace caldata {
     fSpillName="";
     this->reconfigure(pset);
 
-    if(fSpillName.size()<1) produces< std::vector<recob::Wire> >();
-    else produces< std::vector<recob::Wire> >(fSpillName);
-  }
+    //--Hec if(fSpillName.size()<1) produces< std::vector<recob::Wire> >();
+    //--Hec else produces< std::vector<recob::Wire> >(fSpillName);
   
+    produces< std::vector<recob::Wire> >(fSpillName);
+    produces<art::Assns<raw::RawDigit, recob::Wire>>(fSpillName);
+  }
   //-------------------------------------------------
   CalWireT1053::~CalWireT1053()
   {
@@ -143,6 +147,10 @@ namespace caldata {
 
     // make a collection of Wires
     std::unique_ptr<std::vector<recob::Wire> > wirecol(new std::vector<recob::Wire>);
+    
+    // ... and an association set     --Hec
+    std::unique_ptr<art::Assns<raw::RawDigit,recob::Wire> > WireDigitAssn
+      (new art::Assns<raw::RawDigit,recob::Wire>);
     
     // Read in the digit List object(s). 
     art::Handle< std::vector<raw::RawDigit> > digitVecHandle;
@@ -230,17 +238,27 @@ namespace caldata {
       sparse_holder.add_range(0,holder.begin(),holder.end());
       auto view = geom->View(digitVec->Channel());
       wirecol->emplace_back(sparse_holder,digitVec->Channel(),view);
+    
+      // add an association between the last object in wirecol--Hec
+      // (that we just inserted) and digitVec
+      if (!util::CreateAssn(*this, evt, *wirecol, digitVec, *WireDigitAssn, fSpillName)) {
+        throw art::Exception(art::errors::InsertFailure)
+          << "Can't associate wire #" << (wirecol->size() - 1)
+          << " with raw digit #" << digitVec.key();
+      } // if failed to add association
     }
 
 
     if(wirecol->size() == 0)
       mf::LogWarning("CalWireT1053") << "No wires made for this event.";
 
-    if(fSpillName.size()>0)
-      evt.put(std::move(wirecol), fSpillName);
-    else evt.put(std::move(wirecol));
+    //--Hec if(fSpillName.size()>0)
+    //--Hec   evt.put(std::move(wirecol), fSpillName);
+    //--Hec else evt.put(std::move(wirecol));
 
-
+    evt.put(std::move(wirecol), fSpillName);        //--Hec
+    evt.put(std::move(WireDigitAssn), fSpillName);  //--Hec
+    
    // delete chanFilt;
     return;
   }
