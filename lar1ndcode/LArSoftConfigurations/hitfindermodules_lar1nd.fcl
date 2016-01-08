@@ -3,14 +3,12 @@
 BEGIN_PROLOG
 
 lar1nd_hitfinder:              @local::standard_hitfinder
-#lar1nd_gaushitfinder:          @local::gaus_hitfinder
 lar1nd_mc_hitfinder:           @local::standard_hitfinder
 lar1nd_mc_hitfinder.AreaNorms: [ 12.89, 14.51 ]
 
-
 # lar1nd_gaushitfinder:          @local::gaus_hitfinder
 # generic (ArgoNeuT) GausHitFinder configuration from LArSoft 4.24.00:
-	
+
 lar1nd_gaushitfinder:
 {
 module_type:	     "GausHitFinder"
@@ -28,6 +26,5 @@ Chi2NDFRetry:	      25.0	       # If the first hit returns a Chi2/NDF greater th
 				       # number (for single pulse) it will try a second fit
 Chi2NDF:	      2000	       # maximum Chisquared / NDF allowed for a hit to be saved (Set very high by default)
 }
-
 
 END_PROLOG
