@@ -1,9 +1,9 @@
 cet_enable_asserts()
 
 set( lar1nd_util_lib_list lardata_Utilities_LArFFT_service
-			Geometry
+			larcore_Geometry
 			larcore_Geometry_Geometry_service
-			Utilities
+			lardata_Utilities
   			${ART_FRAMEWORK_CORE}
 			${ART_FRAMEWORK_PRINCIPAL}
 			${ART_FRAMEWORK_SERVICES_REGISTRY}

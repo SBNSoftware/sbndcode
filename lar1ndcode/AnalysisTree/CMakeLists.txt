@@ -1,14 +1,14 @@
 
-art_make( MODULE_LIBRARIES Geometry
+art_make( MODULE_LIBRARIES larcore_Geometry
 			larcore_Geometry_Geometry_service
-			Simulation
+			larsim_Simulation
 			larsim_MCCheater_BackTracker_service
-	                Utilities
-			Filters
-			RawData
-			RecoBase
-			RecoObjects  
-			#RecoAlg
+	                lardata_Utilities
+			larevt_Filters
+			lardata_RawData
+			lardata_RecoBase
+			lardata_RecoObjects  
+			#larreco_RecoAlg
 			#SignalShapingServiceMicroBooNE_service
                         ${SIMULATIONBASE}
                         ${LARRECO_LIB}

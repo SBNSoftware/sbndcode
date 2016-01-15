@@ -1,9 +1,9 @@
 
 simple_plugin(CalWireT1053 "module"
-			Utilities
-                       # Filters
-			RawData
-	                RecoBase
+			lardata_Utilities
+                       # larevt_Filters
+			lardata_RawData
+	                lardata_RecoBase
 		        SignalShapingServiceT1053_service
                         ${ART_FRAMEWORK_CORE}
 			${ART_FRAMEWORK_PRINCIPAL}

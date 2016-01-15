@@ -6,7 +6,7 @@ art_make( BASENAME_ONLY
           LIBRARY_NAME NuAnaAlg
           LIB_LIBRARIES 
             larcore_Geometry_Geometry_service
-            Geometry
+            larcore_Geometry
             NuReweightArt
             NuReweight
             ${SIMULATIONBASE}
