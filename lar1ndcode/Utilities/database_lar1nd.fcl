@@ -1,0 +1,30 @@
+#
+# File:    database_lar1nd.fcl
+# Purpose: configuration for database-accessing services for LAr1ND
+# Date:    January 8th, 2016
+#
+#
+
+#include "database_standard.fcl"
+
+BEGIN_PROLOG
+
+# ##############################################################################
+# pedestal access;
+# ------------------------------------------------------------------------------
+# the default configuration has database access disabled,
+# and returns a fixed value no matter what.
+# We can override that value here.
+lar1nd_detpedestalservice: {
+  service_provider: SIOVDetPedestalService
+  DetPedestalRetrievalAlg: @local::standard_pedestalretrievalalg
+}
+
+# Ditto: we set the pedestals to reflect the current simulation settings from
+# detsimmodules_lar1nd.fcl
+lar1nd_detpedestalservice.DetPedestalRetrievalAlg.DefaultCollMean: 400
+lar1nd_detpedestalservice.DetPedestalRetrievalAlg.DefaultIndMean: 2048
+
+# ##############################################################################
+
+END_PROLOG
