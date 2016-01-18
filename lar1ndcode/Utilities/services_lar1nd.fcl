@@ -30,6 +30,8 @@ lar1nd_services:
 #OpDigiProperties:               @local::lar1nd_opdigiproperties
  TimeService:                    @local::lar1nd_timeservice
  SeedService:                    @local::lar1nd_seedservice
+# ChannelStatusService:           @local::lar1nd_channelstatus
+# DetPedestalService:             @local::lar1nd_detpedestalservice
 }
 
 # Define lar1nd_optical_service (exclude simulation specific component)
