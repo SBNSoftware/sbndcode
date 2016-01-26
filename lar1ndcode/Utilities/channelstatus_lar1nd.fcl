@@ -1,0 +1,22 @@
+#
+# Channel filter service configuration for SBND
+#
+#
+BEGIN_PROLOG
+
+lar1nd_channelstatus: {
+  # implements IChannelStatusService
+
+  service_provider: SimpleChannelStatusService
+  
+  # list of bad channels:
+  #BadChannels:   [ 22, 65, 237, 307, 308, 309, 310, 311, 410, 412, 438, 439, 448 ]
+  BadChannels:   [ ]
+  
+  # list of bad noisy channels:
+  #NoisyChannels: [ 31, 41, 108, 120, 121, 124, 392, 399 ]
+  NoisyChannels: [ ]
+  
+} # lar1nd_channel_filter
+
+END_PROLOG
