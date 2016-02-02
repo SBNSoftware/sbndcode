@@ -50,8 +50,12 @@ e7:noifdh:debug  e7:debug     -
 e7:noifdh:opt    e7:opt       -          
 e7:noifdh:prof   e7:prof      -          
 
-    
-    
+# table fragment to set FW_SEARCH_PATH needed 
+# to find gdml and xml files:
+table_fragment_begin
+    pathPrepend(FW_SEARCH_PATH, ${LAR1NDCODE_DIR}/scripts)
+table_fragment_end
+
 
 # Preserve tabs and formatting in emacs and vi / vim:
 

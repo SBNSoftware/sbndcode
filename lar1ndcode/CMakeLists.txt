@@ -16,5 +16,5 @@ add_subdirectory(Calibration)
 add_subdirectory(DetectorSim)
 add_subdirectory(AnalysisTree)
 add_subdirectory(MCTruthExtractor)
-
+add_subdirectory(SBNDPandora)
 
