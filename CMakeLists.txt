@@ -36,7 +36,7 @@ set_install_root()
 cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
-  EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
+  EXTRA_FLAGS -std=c++14 -pedantic -Wno-unused-local-typedefs
 )
 
 cet_report_compiler_flags()
@@ -47,6 +47,7 @@ find_ups_product( lardata v1_00_00 )
 find_ups_product( larcore v1_00_00 )
 find_ups_product( nutools v1_00_00 )
 find_ups_product( art v1_09_00 )
+find_ups_product( artextensions v1_00_00 )
 find_ups_product( cetbuildtools v3_10_00 )
 find_ups_product( postgresql v9_1_5 )
 

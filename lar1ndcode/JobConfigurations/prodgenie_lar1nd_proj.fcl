@@ -4,46 +4,6 @@
 
 process_name: GenieGen
 
-############ Stolen from uboone:
- 
-# Standard configurations for art's built-in FileCatalogMetadata service.
-# Metadata fields are standard, but values are still microboone-specific.
-
-art_file_catalog:
-{
-  # Note sam application name is taken from "process_name" fcl parameter in main job file.
-  applicationFamily:   "art"
-  applicationVersion:  "development"
-  group:               "lar1nd"
-  fileFormat:          "root"
-  fileType:            "unknown"
-}
-
-art_file_catalog_mc:           @local::art_file_catalog
-art_file_catalog_mc.fileType:  "mc"
-
-art_file_catalog_data:           @local::art_file_catalog
-art_file_catalog_data.fileType:  "data"
-
-
-lar1nd_file_catalog:
-{
-  Metadata: [ "group",          "lar1nd",   # This field should move to FileCatalogMetadata. 
-              "fileFormat",     "root",     # This field should move to FileCatalogMetadata.
-              "fclName",        "",
-              "fclVersion",     "",
-              "projectName",    "",
-              "projectStage",   "",
-              "projectVersion", "" ]
-  GeneratePerFileMetadata: true
-  CopyMetadataAttributes:  [ "fileType", "runType" ]
-  RenameTemplate:          ""
-  RenameOverwrite:         true
-}
-
-
-############
-
 standard_genie:
 
 {
@@ -51,8 +11,8 @@ standard_genie:
  module_type:      "GENIEGen"
  PassEmptySpills:  false
  FluxType:         "simple_flux"     #mono, histogram, ntuple, or simple_flux
- FluxFiles:         ["gsimple_microboone-100-onaxis_numintp_*.root"] #name of file with flux histos
- BeamName:         "bnb"          #numi or booster at this point - really for bookkeeping
+ FluxFiles:         ["gsimple_LAr1ND_april07_baseline_z20_00001.root"] #name of file with flux histos
+ BeamName:         "booster"          #numi or booster at this point - really for bookkeeping
  TopVolume:        "volDetEnclosure"        #volume in which to produce interactions
  EventsPerSpill:   0.              #set != 0 to get n events per spill
  POTPerSpill:      5.e12           #should be obvious

@@ -36,7 +36,7 @@ void ChannelMaplar1ndAlg::Initialize(GeometryData_t& geodata )
 
   Uninitialize();
   std::vector<geo::CryostatGeo*>& cgeo = geodata.cryostats;
-  std::vector<geo::AuxDetGeo*>  & adgeo = geodata.auxDets;
+  // std::vector<geo::AuxDetGeo*>  & adgeo = geodata.auxDets;
 
 
   fNcryostat = cgeo.size();
