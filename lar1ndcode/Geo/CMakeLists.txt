@@ -1,5 +1,5 @@
 # simple_plugin( LArIATGeometryHelper service
-# 	  	Geometry
+# 	  	larcore_Geometry
 # 		${ART_FRAMEWORK_CORE}
 # 		${ART_FRAMEWORK_IO_SOURCES}
 # 		${ART_FRAMEWORK_PRINCIPAL}

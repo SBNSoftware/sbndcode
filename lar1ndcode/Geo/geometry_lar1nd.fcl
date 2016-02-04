@@ -13,7 +13,7 @@ lar1nd_geo:
  } 
 
  SurfaceY:           0.0e2               #in cm, vertical distance to the surface
- DisableWiresInG4:   false
+ DisableWiresInG4:   true
 
 }
 

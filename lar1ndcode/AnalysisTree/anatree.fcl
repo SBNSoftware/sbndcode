@@ -1,5 +1,5 @@
 #include "services_lar1nd.fcl"
-#include "srcs/lar1ndcode/lar1ndcode/AnalysisTree/analysistreemodule.fcl"
+#include "analysistreemodule.fcl"
 
 
 
