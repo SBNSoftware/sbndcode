@@ -10,7 +10,7 @@
 
 #include <vector>
 #include <string>
-#include "Geometry/GeoObjectSorter.h"
+#include "larcore/Geometry/GeoObjectSorter.h"
 
 
 

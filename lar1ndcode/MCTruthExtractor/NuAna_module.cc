@@ -12,7 +12,7 @@
 #include "fhiclcpp/ParameterSet.h"
 
 // Larsoft includes
-#include "Geometry/Geometry.h"
+#include "larcore/Geometry/Geometry.h"
 
 // nusoft includes
 #include "SimulationBase/MCFlux.h"
@@ -20,7 +20,7 @@
 #include "SimulationBase/MCTruth.h"
 #include "SimulationBase/GTruth.h"
 #include "SimulationBase/MCParticle.h"
-#include "SummaryData/POTSummary.h"
+#include "larcore/SummaryData/POTSummary.h"
 
 // root includes
 #include <TTree.h>

@@ -3,7 +3,7 @@
 
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "Geometry/Geometry.h"
+#include "larcore/Geometry/Geometry.h"
 
 #include "SimulationBase/MCParticle.h"
 #include "NuReweight/art/NuReweight.h" //GENIEReweight.h"

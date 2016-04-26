@@ -94,30 +94,30 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
-#include "Geometry/Geometry.h"
+#include "larcore/Geometry/Geometry.h"
 #include "SimulationBase/MCTruth.h"
 #include "SimulationBase/MCFlux.h"
-#include "Simulation/SimChannel.h"
-#include "Simulation/AuxDetSimChannel.h"
-#include "AnalysisBase/Calorimetry.h"
-#include "AnalysisBase/ParticleID.h"
-#include "RawData/RawDigit.h"
-#include "RawData/BeamInfo.h"
-#include "Utilities/LArProperties.h"
-#include "Utilities/AssociationUtil.h"
-#include "Utilities/DetectorProperties.h"
-#include "SummaryData/POTSummary.h"
-#include "MCCheater/BackTracker.h"
-#include "RecoBase/Track.h"
-#include "RecoBase/Cluster.h"
-#include "RecoBase/Hit.h"
-#include "RecoBase/EndPoint2D.h"
-#include "RecoBase/Vertex.h"
-#include "SimpleTypesAndConstants/geo_types.h"
-#include "RecoObjects/BezierTrack.h"
-//#include "RecoAlg/TrackMomentumCalculator.h"
-#include "AnalysisBase/CosmicTag.h"
-#include "AnalysisBase/FlashMatch.h"
+#include "larsim/Simulation/SimChannel.h"
+#include "larsim/Simulation/AuxDetSimChannel.h"
+#include "lardata/AnalysisBase/Calorimetry.h"
+#include "lardata/AnalysisBase/ParticleID.h"
+#include "lardata/RawData/RawDigit.h"
+#include "lardata/RawData/BeamInfo.h"
+// #include "larcore/Utilities/LArProperties.h"
+// #include "larcore/Utilities/AssociationUtil.h"
+// #include "larcore/Utilities/DetectorProperties.h"
+#include "larcore/SummaryData/POTSummary.h"
+#include "larsim/MCCheater/BackTracker.h"
+#include "lardata/RecoBase/Track.h"
+#include "lardata/RecoBase/Cluster.h"
+#include "lardata/RecoBase/Hit.h"
+#include "lardata/RecoBase/EndPoint2D.h"
+#include "lardata/RecoBase/Vertex.h"
+#include "larcore/SimpleTypesAndConstants/geo_types.h"
+#include "lardata/RecoObjects/BezierTrack.h"
+//#include "lardata/RecoAlg/TrackMomentumCalculator.h"
+#include "lardata/AnalysisBase/CosmicTag.h"
+#include "lardata/AnalysisBase/FlashMatch.h"
 	
 
 #include <cstring> // std::memcpy()
@@ -1660,8 +1660,8 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
   //services
   art::ServiceHandle<geo::Geometry> geom;
   art::ServiceHandle<cheat::BackTracker> bt;
-  art::ServiceHandle<util::DetectorProperties> detprop;
-  art::ServiceHandle<util::LArProperties> LArProp;
+  // art::ServiceHandle<util::DetectorProperties> detprop;
+  // art::ServiceHandle<util::LArProperties> LArProp;
 
   // collect the sizes which might me needed to resize the tree data structure:
   bool isMC = !evt.isRealData();
@@ -2598,7 +2598,7 @@ double microboone::AnalysisTree::length(const simb::MCParticle& part, TVector3& 
 {
   // Get geometry.
   art::ServiceHandle<geo::Geometry> geom;
-  art::ServiceHandle<util::DetectorProperties> detprop;
+  // art::ServiceHandle<util::DetectorProperties> detprop;
 
   // Get active volume boundary.
   //double xmin = 0.;

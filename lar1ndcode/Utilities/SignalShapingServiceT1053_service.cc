@@ -8,12 +8,11 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "cetlib/exception.h"
-#include "Geometry/Geometry.h"
-#include "Geometry/TPCGeo.h"
-#include "Geometry/PlaneGeo.h"
-#include "Utilities/DetectorProperties.h"
-#include "Utilities/LArProperties.h"
-#include "Utilities/LArFFT.h"
+#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/TPCGeo.h"
+#include "larcore/Geometry/PlaneGeo.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/Utilities/LArFFT.h"
 #include "TFile.h"
 
 //----------------------------------------------------------------------
@@ -234,8 +233,7 @@ void util::SignalShapingServiceT1053::SetFieldResponse()
   // Get services.
 
   art::ServiceHandle<geo::Geometry> geo;
-  art::ServiceHandle<util::DetectorProperties> detprop;
-  art::ServiceHandle<util::LArProperties> larp;
+  auto const* detprop = lar::providerFrom<::detinfo::DetectorPropertiesService>();
 
   // Get plane pitch.
  
@@ -257,7 +255,7 @@ void util::SignalShapingServiceT1053::SetFieldResponse()
   // set the response for the collection plane first
   // the first entry is 0
 
-  double driftvelocity=larp->DriftVelocity()/1000.;  
+  double driftvelocity=detprop->DriftVelocity()/1000.;  
   double integral = 0.;
   ////////////////////////////////////////////////////
   if(fUseFunctionFieldShape) {
@@ -436,7 +434,7 @@ void util::SignalShapingServiceT1053::SetElectResponse()
   // Get services.
 
   art::ServiceHandle<geo::Geometry> geo;
-  art::ServiceHandle<util::DetectorProperties> detprop;
+  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
 
   LOG_DEBUG("SignalShapingT1053") << "Setting T1053 electronics response function...";
@@ -512,7 +510,7 @@ void util::SignalShapingServiceT1053::SetFilters()
 {
   // Get services.
 
-  art::ServiceHandle<util::DetectorProperties> detprop;
+  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
 
   double ts = detprop->SamplingRate();
