@@ -35,17 +35,17 @@ extern "C" {
 #include "artextensions/SeedService/SeedService.hh"
 
 
-#include "Utilities/LArFFT.h"
-#include "RawData/RawDigit.h"
-#include "RawData/raw.h"
-#include "RawData/TriggerData.h"
-#include "Utilities/LArProperties.h"
-#include "Utilities/TimeService.h"
+#include "lardata/Utilities/LArFFT.h"
+#include "lardata/RawData/RawDigit.h"
+#include "lardata/RawData/raw.h"
+#include "lardata/RawData/TriggerData.h"
+// #include "lardata/Utilities/LArProperties.h"
+#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lar1ndcode/Utilities/SignalShapingServiceT1053.h"
-#include "Geometry/Geometry.h"
-#include "Simulation/sim.h"
-#include "Simulation/SimChannel.h"
-#include "Utilities/DetectorProperties.h"
+#include "larcore/Geometry/Geometry.h"
+#include "larsim/Simulation/sim.h"
+#include "larsim/Simulation/SimChannel.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 #include "TMath.h"
 #include "TComplex.h"
@@ -106,7 +106,7 @@ private:
   //be made a fcl parameter but not likely to ever change
   const float adcsaturation = 4095;
 
-  ::util::ElecClock fClock; ///< TPC electronics clock
+  ::detinfo::ElecClock fClock; ///< TPC electronics clock
 
 }; // class SimWireT1053
 
@@ -175,9 +175,10 @@ void SimWireT1053::reconfigure(fhicl::ParameterSet const& p)
     in->Close();
 
   }
+  
   //detector properties information
-  art::ServiceHandle<util::DetectorProperties> detprop;
-  fNTimeSamples  = detprop->NumberTimeSamples();
+  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
+  fNTimeSamples  = detprop->NumberTimeSamples();    
 
 
 
@@ -215,9 +216,11 @@ void SimWireT1053::endJob()
 void SimWireT1053::produce(art::Event& evt)
 {
 
-  art::ServiceHandle<util::TimeService> ts;
+  // art::ServiceHandle<util::TimeService> ts;
+  art::ServiceHandle<detinfo::DetectorClocksServiceStandard> tss;
   // In case trigger simulation is run in the same job...
-  ts->preProcessEvent(evt);
+  tss->preProcessEvent(evt);
+  auto const* ts = tss->provider();
 
   // get the geometry to be able to figure out signal types and chan -> plane mappings
   art::ServiceHandle<geo::Geometry> geo;

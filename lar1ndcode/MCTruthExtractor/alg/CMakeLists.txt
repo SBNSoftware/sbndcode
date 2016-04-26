@@ -5,8 +5,8 @@ include_directories ( $ENV{GENIE_INC}/GENIE )
 art_make( BASENAME_ONLY
           LIBRARY_NAME NuAnaAlg
           LIB_LIBRARIES 
-            Geometry_service
-            Geometry
+            larcore_Geometry_Geometry_service
+            larcore_Geometry
             NuReweightArt
             NuReweight
             ${SIMULATIONBASE}

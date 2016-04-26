@@ -1,11 +1,12 @@
 
 simple_plugin(SimWireT1053 "module"
-                           Geometry
-                           Geometry_service
-                           Simulation
-                           Utilities
-                           TimeService_service
-                           RawData
+                           larcore_Geometry
+                           larcore_Geometry_Geometry_service
+                           larsim_Simulation
+                           lardata_Utilities
+                           #TimeService_service
+                           lardata_RawData
+                           lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                            SignalShapingServiceT1053_service
                            ${SEEDSERVICE_SERVICE} # artextensions
                            ${ART_FRAMEWORK_CORE}
