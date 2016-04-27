@@ -1,18 +1,5 @@
 BEGIN_PROLOG
 
-lar1nd_pandora:
-{
-  module_type:           "SBNDPandora"
-  ConfigFile:            "PandoraSettings_SBND_Neutrino.xml"
-  GeantModuleLabel:      "largeant"
-  HitFinderModuleLabel:  "gaushit"
-  EnableMCParticles:     false
-  EnableProduction:      true
-  EnableMonitoring:      false
-  UseHitWidths:          false
-  UseLeftVolume:         true
-  UseRightVolume:        true
-  BuildTracks:           true
-}
+lar1nd_pandora:  @local::standard_pandora
 
 END_PROLOG
