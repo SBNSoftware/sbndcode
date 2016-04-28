@@ -1,0 +1,20 @@
+
+
+BEGIN_PROLOG
+standard_nuana:
+{
+  module_type:        "NuAna"
+  Baseline:           "470"      #choices are 100, 470, 600 as of 10/21/14
+  FullOsc:            "false"    #use true or false
+  Mode:               "nu"       #use nu or nubar
+  XSecReweight:       false
+  FluxReweight:       false
+  Weights:            ["QEMA", "CCRes", "QEVec", "NCRes"]
+  WeightRangeSigma:   [1     , 1      , 1      , 1      ]
+  RandSeed:           65539
+  NWeights:           2
+  GenieModuleLabel:   generator
+  LArG4ModuleLabel:   largeant
+}
+
+END_PROLOG

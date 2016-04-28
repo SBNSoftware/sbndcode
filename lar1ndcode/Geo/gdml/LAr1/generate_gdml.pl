@@ -18,7 +18,10 @@ GetOptions( "input|i:s" => \$input,
 	    "help|h" => \$help,
 	    "suffix|s:s" => \$suffix,
 	    "output|o:s" => \$output,
-	    "wires|w:s" => \$wires);
+	    "wires|w:s" => \$wires,
+		"bars|b:s" => \$bars,
+		"pmts|p:s" => \$pmts,
+		"tpb|t:s" => \$tpb) ;
 
 if ( defined $help )
 {
@@ -71,17 +74,32 @@ my $TanUVAngle = tan( deg2rad($UVAngle) );
 
 my $inch=2.54;
 my $wires_on=0; 			# turn wires on=1 or off=0
+my $tpb_coverage = 0 ;      # multiplier to determine amount fo tpb coverage--default is 0
+my $scint_bars = 0;			# turn on bars=1 or off=0 
+my $pmt_switch = "off";
 
 if ( defined $wires )
 {
 #The user supplied the wires on parameter, so using that. Otherwise the default=1 is used.
 $wires_on = $wires;
 }
+if ( defined $tpb )
+{
+$tpb_coverage = $tpb ;
+}
 
+if ( defined $bars) 
+{
+$scint_bars=1 ;
+}
+if ( defined $pmts)
+{
+    $pmt_switch = "on";
+}
 
 my $NumberOfTPCPlanes=3;
-my $pmt_switch="on";		#turn on or off depending on pmts wanted
-
+#my $pmt_switch="on";		#turn on or off depending on pmts wanted
+my $enclosureExtras="on"; 
 
 # The routines that create the GDML sub-files. Most of the explanatory
 # comments are in gen_defs().
@@ -89,12 +107,18 @@ gen_defs();
 gen_rotations();
 gen_materials();
 
+
+#if ( $wires eq "on"){
 gen_wirevertplane();
-gen_wireplane();
+gen_wireplane(); 
+#}
+
 gen_cathode();		# physical volumes defined in gen_tpc()
 gen_tpc();
 
-
+if ( $pmt_switch eq "on" ) {  gen_pmt();	}	# physical volumes defined in gen_cryostat()
+elsif ( $scint_bars ) {  gen_bars();	}	# physical volumes defined in gen_cryostat()
+if ( $enclosureExtras eq "on" ) {  gen_enclosureExtras(); } #generation of insulation, etc. will happen if specified
 gen_cryostat();
 
 gen_enclosure();
@@ -111,6 +135,8 @@ sub usage()
     print "       if -o is omitted, output goes to STDOUT; <fragments-file> is input to make_gdml.pl\n";
     print "       -s <string> appends the string to the file names; useful for multiple detector versions\n";
     print " 	  -w wires excludes wires from gdml when wires=0, default to wires=1\n";
+	print "		  -t percentage indicates the percentage of wavelength shifter user wants \n";
+	print "		  -b bars includes the scintillator bars behind wires when user indicates bars=1\n";
     print "       -h prints this message, then quits\n";
 }
 
@@ -123,8 +149,8 @@ sub gen_defs()
 {
     #TPCWirePlaneLength is the size in the z direction
     #TPCWirePlaneWidth is the size in the y direction
-    $TPCWirePlaneLengthZ	=	365;
-    $TPCWirePlaneWidthY		=	400;
+    $TPCWirePlaneLengthZ	=	$TPCLength  ;
+    $TPCWirePlaneWidthY		=	400  ;
 
     $pi   = pi;
     $inch = 2.54;
@@ -134,19 +160,14 @@ sub gen_defs()
     $WorldLength	=	100.0*$DetEnclosureLength;
 
     $CathodePlateDepth	=	0.1;
-    $CathodeLengthZ	=	365;
+    $CathodeLengthZ	=	$TPCLength;
     $CathodeWidthX	=	5;
-    $CathodeHeightY	=	400;
+    $CathodeHeightY	=	$TPCHeight;
 
 
-    $AnodeLengthZ   =   365;
+    $AnodeLengthZ   =   $TPCLength;
     $AnodeWidthX    =   20;
-    $AnodeHeightY   =   400;
-
-    #Below are numbers for uboone Geometry
-    $TPCTotalLength	=	1011.6;
-    $TPCTotalWidth	=	207.6;
-    $TPCTotalHeight	=	256;
+    $AnodeHeightY   =   $TPCHeight;
 
 }
 
@@ -168,6 +189,9 @@ sub gen_rotations()
    <rotation name="rPlus90AboutX" unit="deg" x="90" y="0" z="0"/>
    <rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
    <rotation name="rPlus180AboutY" unit="deg" x="0" y="180" z="0"/>
+   <rotation name="rPMTRotation"  unit="deg" x="90"  y="270"   z="0"/>
+   <rotation name="rPMTRotation1"  unit="deg" x="90"  y="90"   z="0"/>
+
 </define>
 EOF
     close (ROTATIONS);
@@ -228,38 +252,39 @@ sub gen_wireplane()
 <solids>
 EOF
 
+
   # End wires 
-  for($i = 0; $i < $NumberWiresPerEdge; ++$i)
-  {
+  for($i = 0; $i < $NumberWiresPerEdge; $i++)
+{
   print GDML <<EOF;
 <tube name="TPCWire$i"
   rmax="0.5*$TPCWireThickness"
-  z="$TPCYWirePitch*($i+1) * 2"    
+  z="$TPCYWirePitch*($i+1) * 2  - 0.075" 
   deltaphi="360"
   aunit="deg"
   lunit="cm"/> 
 EOF
-    }
+}
 
    
  print GDML <<EOF;
 <tube name="TPCWireCommon"
   rmax="0.5*$TPCWireThickness"
-  z="$TPCWirePlaneLengthZ/$SinUVAngle"
+  z="$TPCWirePlaneLengthZ/$SinUVAngle - 0.075 "
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
 <box name="TPCPlane"
   x="$TPCWirePlaneThickness"
   y="$TPCWirePlaneWidthY"
-  z="$TPCWirePlaneLengthZ"
+  z="$TPCWirePlaneLengthZ + 0.35"
   lunit="cm"/>
 </solids>
 <structure>
 EOF
 
     # Wires of varying lengths 
-  for ($i = 0; $i < $NumberWiresPerEdge; ++$i)
+  for ($i = 0; $i < $NumberWiresPerEdge; $i++)
     {
     print GDML <<EOF;
     <volume name="volTPCWire$i">
@@ -281,20 +306,20 @@ EOF
 EOF
 
   # The wires at the -z, +y end (For +60 deg-- can rotate by 180 later for -60)
-  for ($i = 0; $i < $NumberWiresPerEdge; $i++)
+  for ($i = 0; $i < $NumberWiresPerEdge ; $i++)
   {
 
     print GDML <<EOF;
-   <physvol>
+  <physvol>
      <volumeref ref="volTPCWire$i"/> 
-     <position name="posTPCWireF$i" unit="cm" y="0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1)" z="-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1)" x="0"/>
+     <position name="posTPCWire$i" unit="cm" y="0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1)" z="-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1)" x="0"/>
      <rotationref ref="rPlusUVAngleAboutX"/> 
-    </physvol> 
+    </physvol>  
 EOF
   $ypos=0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1);
   $zpos=-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1);
-  open (MYFILE, '>>data.txt');
-  print MYFILE "TPCWire$j y=$ypos z=$zpos\n";
+ # open (MYFILE, '>>data.txt');
+ # print MYFILE "TPCWire$i y=$ypos z=$zpos\n";
   }
 
   # The wires in the middle.
@@ -308,7 +333,7 @@ for ($i = 0; $i < $NumberCenterWires ; $i++)
      <volumeref ref="volTPCWireCommon"/>
      <position name="posTPCWire$j" unit="cm" y="$ypos" z="0" x="0"/>
      <rotationref ref="rPlusUVAngleAboutX"/>
-    </physvol>
+    </physvol> 
 EOF
   }
 
@@ -321,7 +346,7 @@ EOF
       $ypos =0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($NumberWiresPerEdge + 2*$NumberCenterWires + $i +1 ) ; 
 	
     print GDML <<EOF;
-  <physvol>
+   <physvol>
      <volumeref ref="volTPCWire$k"/> 
      <position name="posTPCWireB$j" unit="cm" y="$ypos" z="0.5*$TPCZWirePitch*($i+1)" x="0"/>
      <rotationref ref="rPlusUVAngleAboutX"/>
@@ -331,6 +356,64 @@ EOF
 
       print GDML <<EOF;
   </volume>
+
+    <volume name="volTPCPlane2">
+      <materialref ref="LAr"/>
+      <solidref ref="TPCPlane"/>
+EOF
+
+  # The wires at the -z, +y end (For +60 deg-- can rotate by 180 later for -60)
+  for ($i = 0; $i < $NumberWiresPerEdge ; $i++)
+  {
+
+    print GDML <<EOF;
+  <physvol>
+     <volumeref ref="volTPCWire$i"/> 
+     <position name="posTPCWireVol2$i" unit="cm" y="0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1)" z="-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1)" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/> 
+    </physvol>  
+EOF
+  $ypos=0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($i+1);
+  $zpos=-0.5*$TPCWirePlaneLengthZ+0.5*$TPCZWirePitch*($i+1);
+#  open (MYFILE, '>>data.txt');
+#  print MYFILE "TPCWire$i y=$ypos z=$zpos\n";
+  }
+
+  # The wires in the middle.
+for ($i = 0; $i < $NumberCenterWires ; $i++)
+  {
+      my $j = $NumberWiresPerEdge  +$i;
+      $ypos=0.5*$TPCWirePlaneWidthY - $TPCYWirePitch*(0.5*$NumberWiresPerEdge + $i+1) ; 
+
+      print GDML <<EOF;
+   <physvol>
+     <volumeref ref="volTPCWireCommon"/>
+     <position name="posTPCWireVol2$j" unit="cm" y="$ypos" z="0" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/>
+    </physvol> 
+EOF
+  }
+
+  # The wires at the +z end
+  for ($i = 0; $i < $NumberWiresPerEdge; $i++)
+  {
+
+	  my $j = $NumberWiresPerEdge + $NumberCenterWires + $i ;
+	  my $k = $NumberWiresPerEdge - $i - 1 ;
+      $ypos =0.5*$TPCWirePlaneWidthY - 0.5*$TPCYWirePitch*($NumberWiresPerEdge + 2*$NumberCenterWires + $i +1 ) ; 
+	
+    print GDML <<EOF;
+   <physvol>
+     <volumeref ref="volTPCWire$k"/> 
+     <position name="posTPCWireBVol2$j" unit="cm" y="$ypos" z="0.5*$TPCZWirePitch*($i+1)" x="0"/>
+     <rotationref ref="rPlusUVAngleAboutX"/>
+    </physvol> 
+EOF
+  }
+
+      print GDML <<EOF;
+  </volume>
+
 </structure>
 </gdml>
 EOF
@@ -349,7 +432,7 @@ sub gen_wirevertplane()
 
  if ( $wires_on == 1 )  
     { $NumberWires = int( $TPCWirePlaneLengthZ / $TPCWirePitch );} 
-  
+
 
     $GDML = "LAr1-wirevertplane" . $suffix . ".gdml";
     push (@gdmlFiles, $GDML); # Add file to list of GDML fragments
@@ -382,18 +465,35 @@ sub gen_wirevertplane()
     <materialref ref="LAr"/>       
     <solidref ref="TPCPlaneVert"/>
 EOF
-    for ( $i = 0; $i < $NumberWires; ++$i){    
+    for ( $i = 0; $i < $NumberWires; ++$i) {    
     print GDML <<EOF;
       <physvol>
         <volumeref ref="volTPCWireVert"/>
         <position name="posTPCWireVert$i" unit="cm" z="-0.5*$TPCWirePlaneLengthZ+$TPCWirePitch*($i+1)" x="0" y="0"/>
         <rotationref ref="rPlus90AboutX"/>
-      </physvol> 
+      </physvol>  
 EOF
 	}
 
 	print GDML <<EOF ;
   </volume>
+  <volume name="volTPCPlaneVert2">
+    <materialref ref="LAr"/>       
+    <solidref ref="TPCPlaneVert"/>
+EOF
+    for ( $i = 0; $i < $NumberWires; ++$i){    
+    print GDML <<EOF;
+      <physvol>
+        <volumeref ref="volTPCWireVert"/>
+        <position name="posTPCWireVertVol2$i" unit="cm" z="-0.5*$TPCWirePlaneLengthZ+$TPCWirePitch*($i+1)" x="0" y="0"/>
+        <rotationref ref="rPlus90AboutX"/>
+      </physvol>  
+EOF
+	}
+
+	print GDML <<EOF ;
+  </volume>
+
 </structure>
 </gdml>
 EOF
@@ -448,86 +548,58 @@ sub gen_tpc()
     $aTPC_xos_wires = 3*$TPCWirePlaneSpacing + $TPCWirePlaneThickness;
     $aTPC_xoffset = $aTPC_xos_cathode - $aTPC_xos_wires ; 
     $TPCActiveDepth  = $TPCWidth - $aTPC_xos_cathode - $aTPC_xos_wires ; 
-    $TPCActiveHeight = $TPCWirePlaneWidthY;   #  
+    $TPCActiveHeight = $TPCWirePlaneWidthY-0.2;   #  
     $TPCActiveLength = $TPCWirePlaneLengthZ-0.2;   # extra subtraction to arrive at TPCActive values in the TDR
 
+#The addition of 0.35 below is to avoid overlap extrusions
     print GDML <<EOF;
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <box name="TPC" lunit="cm" x="$TPCWidth" y="$TPCHeight" z="$TPCLength"/>
+ <box name="TPC" lunit="cm" x="$TPCWidth" y="$TPCHeight" z="$TPCLength+0.35"/>
  <box name="TPCActive" lunit="cm" x="$TPCActiveDepth" y="$TPCActiveHeight" z="$TPCActiveLength"/>
- <box name="TPCFrameA" lunit="cm" x="$AnodeWidthX" y="$AnodeHeightY" z="$AnodeLengthZ"/>
- <box name="TPCFrameB" lunit="cm" x="$AnodeWidthX+ 0.1" y="$AnodeHeightY-20" z="$AnodeLengthZ -20"/>
- <box name="TPCFrameC" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-20" z="$AnodeWidthX/2"/>
- <box name="TPCFrameD" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-35" z="$AnodeWidthX/2"/>
- <box name="TPCHorizontalBeam" lunit="cm" x="$TPCWidth+$AnodeWidthX" y="5" z="10"/>
+EOF
+if($tpb_coverage) {
+    print GDML <<EOF;
 
- <box name="TPCSideCrossA" lunit="cm" x="$AnodeWidthX/2" y="127.28" z="127.28"/> 
- <box name="TPCSideCrossB" lunit="cm" x="$AnodeWidthX/2+ 0.1" y="127.28-$AnodeWidthX/2" z="127.28-$AnodeWidthX/2"/> 
+ <box name="TPBLayerXY" lunit="cm" x="$tpb_coverage*$TPCActiveDepth" y="$tpb_coverage*$TPCActiveHeight" z="0.01"/>
+ <box name="TPBLayerXZ" lunit="cm" x="$tpb_coverage*$TPCActiveDepth" y="0.01" z="$tpb_coverage*$TPCActiveLength"/>
+ <box name="TPBLayerCathode" lunit="cm" x="0.01" y="$tpb_coverage*$TPCActiveHeight" z="$tpb_coverage*$TPCActiveLength"/>
 
-
-   <subtraction name="TPCFrame0">
-     <first ref="TPCFrameA"/> <second ref="TPCFrameB"/>
-     <position name="posTPCSubtraction" x="0" y="0" z="0"/>
-   </subtraction>
-
-	<union name="TPCFrame1">
-	  <first ref="TPCFrame0"/> <second ref="TPCFrameC"/>
-	  <position name="posTPCUnion0" x="0" y="0" z="0"/>
-	</union>
-
-	<union name="TPCFrame2">
-	   <first ref="TPCFrame1"/> <second ref="TPCFrameD"/>
-	   <position name="posTPCUnion1" x="0" y="0" z="0"/>
-	   <rotationref ref="rPlus90AboutX"/>
-	</union>
- 
-   <subtraction name="TPCSideCross">
-	 <first ref="TPCSideCrossA"/> <second ref="TPCSideCrossB"/>
-	 <position name="posTPCSideCross" x="0" y="0" z="0"/>
-   </subtraction>
-
-	<union name="TPCFrame3">
-		<first ref="TPCFrame2"/> <second ref="TPCSideCross"/>
-		 <position name="posTPCSideCross0" unit="cm" x="0" y="($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
- 		 <rotationref ref="rPlus45AboutX"/>
-      </union>
-	<union name="TPCFrame4">
-		<first ref="TPCFrame3"/> <second ref="TPCSideCross"/>
-		 <position name="posTPCSideCross1" unit="cm" x="0" y="($AnodeHeightY-20)/4" z="-($AnodeLengthZ-20)/4"/>
- 		 <rotationref ref="rPlus45AboutX"/>
-      </union>
-	<union name="TPCFrame5">
-		<first ref="TPCFrame4"/> <second ref="TPCSideCross"/>
-		 <position name="posTPCSideCross2" unit="cm" x="0" y="-($AnodeHeightY-20)/4" z="-($AnodeLengthZ-20)/4"/>
- 		 <rotationref ref="rPlus45AboutX"/>
-      </union>
-	<union name="TPCFrame">
-		<first ref="TPCFrame5"/> <second ref="TPCSideCross"/>
-		 <position name="posTPCSideCross0" unit="cm" x="0" y="-($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
- 		 <rotationref ref="rPlus45AboutX"/>
-      </union>
-
-
+EOF
+}
+print GDML <<EOF;
 </solids>
+EOF
+
+print GDML <<EOF;
 <structure>
  <volume name="volTPCActive">
    <materialref ref="LAr"/>
    <solidref ref="TPCActive"/>
  </volume>
- <volume name="volTPCFrame">
-   <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
-   <solidref ref="TPCFrame"/>
+ <volume name="volTPCActive2">
+   <materialref ref="LAr"/>
+   <solidref ref="TPCActive"/>
  </volume>
- <volume name="volTPCHorizontalBeam">
-   <materialref ref="G10"/>
-   <solidref ref="TPCHorizontalBeam"/>
+EOF
+if($tpb_coverage) {
+    print GDML <<EOF;
+ <volume name="volTPBLayerXY">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerXY"/>
  </volume>
- <volume name="volTPCSideCross">
-	<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
-	<solidref ref="TPCSideCross"/>
+ <volume name="volTPBLayerXZ">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerXZ"/>
  </volume>
+ <volume name="volTPBLayerCathode">
+    <materialref ref="LAr"/>
+    <solidref ref="TPBLayerCathode"/>
+ </volume>
+EOF
+}
+    print GDML <<EOF;
  <volume name="volTPC">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
@@ -535,135 +607,394 @@ EOF
 
      print GDML <<EOF;
 	<physvol>
-		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane0" unit="cm" x="-$TPCWidth/2 + 0.6" y="0" z="0" />
-	</physvol>
+		 <volumeref ref="volTPCPlaneVert"/>
+		 <position name="posTPCPlaneVert2" unit="cm" x="$TPCWidth/2-0.1" y="0" z="0" />
+	 </physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane1" unit="cm" x="-$TPCWidth/2 +0.3" y="0" z="0" />
+		<position name="posTPCPlane2" unit="cm" x="$TPCWidth/2 - 0.6 -0.1" y="0" z="0" />
      	<rotationref ref="rPlus180AboutY"/> 
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane2" unit="cm" x="$TPCWidth/2 - 0.3" y="0" z="0" />
-     	<rotationref ref="rPlus180AboutY"/> 
+		<position name="posTPCPlane3" unit="cm" x="$TPCWidth/2 - 0.3 -0.1" y="0" z="0" />
 	</physvol>
-	<physvol>
-		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane3" unit="cm" x="$TPCWidth/2 - 0.6" y="0" z="0" />
-	</physvol>
-	<physvol>
-		 <volumeref ref="volTPCPlaneVert"/>
-		 <position name="posTPCPlaneVert" unit="cm" x="-$TPCWidth/2" y="0" z="0" />
-	 </physvol>
-	<physvol>
-		 <volumeref ref="volTPCPlaneVert"/>
-		 <position name="posTPCPlaneVert2" unit="cm" x="$TPCWidth/2" y="0" z="0" />
-	 </physvol>
-    <physvol>
-       <volumeref ref="volCathodePlate"/>
- 	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
-	 </physvol>
- 	 <physvol>
-   		 <volumeref ref="volTPCFrame"/>
-    	 <position name="posTPCFrame" unit="cm" x="$TPCWidth/2 +10" y="0" z="0"/>
-   	 </physvol>
-   	 <physvol>
-    	 <volumeref ref="volTPCFrame"/>
-         <position name="posTPCFrame1" unit="cm" x="-$TPCWidth/2 - 10" y="0" z="0"/>
-   	 </physvol>
-   	 <physvol>
-    	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="80" z="$TPCLength/2"/>
-     </physvol>
-     <physvol>
-     	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="80*2" z="$TPCLength/2"/>
-     </physvol>
-     <physvol>
-    	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="-80" z="$TPCLength/2"/>
-     </physvol>
-     <physvol>
-     	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="-80*2" z="$TPCLength/2"/>
-     </physvol>
-     <physvol>
-     	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="0" z="$TPCLength/2"/>
-     </physvol>
-     <physvol>
-    	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="80" z="-$TPCLength/2"/>
-     </physvol>
-     <physvol>
-         <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="80*2" z="-$TPCLength/2"/>
-     </physvol>
-     <physvol>
-     	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="-80" z="-$TPCLength/2"/>
-   	 </physvol>
-   	 <physvol>
-      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="-80*2" z="-$TPCLength/2"/>
-     </physvol>
-     <physvol>
-     	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="0" z="-$TPCLength/2"/>
-     </physvol>
-     <physvol>
-     	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="$TPCHeight/2" z="0"/>
-     </physvol>
-     <physvol>
-     	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="$TPCHeight/2" z="80"/>
-     </physvol>
-     <physvol>
-     	<volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="$TPCHeight/2" z="80*2"/>
-     </physvol>
-     <physvol>
-        <volumeref ref="volTPCHorizontalBeam"/>
-        <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="$TPCHeight/2" z="-80"/>
-     </physvol>
-     <physvol>
-    	 <volumeref ref="volTPCHorizontalBeam"/>
-      	 <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="$TPCHeight/2" z="-80*2"/>
-     </physvol>
-     <physvol>
-    	 <volumeref ref="volTPCHorizontalBeam"/>
-      	 <position name="posTPCHorizontalBeam0" unit="cm" x="0" y="-$TPCHeight/2" z="0"/>
-     </physvol>
-     <physvol>
-      	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam1" unit="cm" x="0" y="-$TPCHeight/2" z="80"/>
-     </physvol>
-     <physvol>
-     	 <volumeref ref="volTPCHorizontalBeam"/>
-    	 <position name="posTPCHorizontalBeam2" unit="cm" x="0" y="-$TPCHeight/2" z="80*2"/>
-  	 </physvol>
-     <physvol>
-     	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam3" unit="cm" x="0" y="-$TPCHeight/2" z="-80"/>
-   	 </physvol>
-     <physvol>
-     	 <volumeref ref="volTPCHorizontalBeam"/>
-         <position name="posTPCHorizontalBeam4" unit="cm" x="0" y="-$TPCHeight/2" z="-80*2"/>
-     </physvol> 
 
+EOF
+
+#if( $tpb_coverage != 0 ){ 
+#    print GDML <<EOF ;
+#    <physvol>
+#        <volumeref ref="volTPBLayerXY"/>
+#        <position name="posTPBLayerXY0" unit="cm" x="0" y="0" z="$TPCActiveLength/2-0.005"/>
+#    </physvol>
+#    <physvol>
+#        <volumeref ref="volTPBLayerXY"/>
+#        <position name="posTPBLayerXY1" unit="cm" x="0" y="0" z="-$TPCActiveLength/2 + 0.005"/>
+#    </physvol>
+#    <physvol>
+#        <volumeref ref="volTPBLayerXZ"/>
+#        <position name="posTPBLayerXZ0" unit="cm" x="0" y="$TPCActiveHeight/2 - 0.005" z="0"/>
+#    </physvol>
+#    <physvol>
+#        <volumeref ref="volTPBLayerXZ"/>
+#        <position name="posTPBLayerXZ1" unit="cm" x="0" y="-$TPCActiveHeight/2+0.005" z="0"/>
+#    </physvol>
+#
+#	<physvol>
+#		<volumeref ref="volTPBLayerCathode"/>
+#		<position name="posTPBLayerCathode" unit="cm" x="-$TPCActiveDepth/2+0.005" y="0" z="0"/>
+#	</physvol>
+#
+#EOF
+#}
+
+	print GDML <<EOF;
+	<physvol>
+	 	 <volumeref ref="volTPCActive"/>
+	     <position name="posTPCActive1" unit="cm" x="0" y="0" z="0"/>
+	</physvol>
 EOF
 
     # Closes TPC volume definition space
     print GDML <<EOF;
  </volume> 
+
+<!-- <volume name="volTPC2">
+   <materialref ref="LAr"/>
+   <solidref ref="TPC"/>
+EOF
+
+     print GDML <<EOF;
+	<physvol>
+		 <volumeref ref="volTPCPlaneVert2"/>
+		 <position name="posTPCPlaneVert3" unit="cm" x="-$TPCWidth/2 +0.1" y="0" z="0" />
+	 </physvol>
+	<physvol>
+		<volumeref ref="volTPCPlane2"/>
+		<position name="posTPCPlane4" unit="cm" x="-$TPCWidth/2 + 0.3 +0.1" y="0" z="0" />
+     	<rotationref ref="rPlus180AboutY"/> 
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPCPlane2"/>
+		<position name="posTPCPlane5" unit="cm" x="-$TPCWidth/2 + 0.6 +0.1" y="0" z="0" />
+	</physvol>
+
+EOF
+	print GDML <<EOF;
+	<physvol>
+	 	 <volumeref ref="volTPCActive2"/>
+	     <position name="posTPCActive2" unit="cm" x="0" y="0" z="0"/>
+	</physvol>
+</volume>-->
+
 </structure>
 </gdml>
 EOF
 
    close(GDML);
 }
+
+sub make_APA()
+{
+
+#Place only physical volumes here
+#This goes inside volCryostat
+	
+	print CRYOSTAT <<EOF;
+
+ 	 <physvol>
+   		 <volumeref ref="volAPAFrame"/>
+    	 <position name="posAPAFrame" unit="cm" x="$TPCWidth +10" y="0" z="0"/>
+   	 </physvol>
+   	 <physvol>
+    	 <volumeref ref="volAPAFrame"/>
+         <position name="posAPAFrame1" unit="cm" x="-$TPCWidth - 10" y="0" z="0"/>
+   	 </physvol>
+   	 <physvol>
+    	<volumeref ref="volHorizontalBeam"/>
+        <position name="posHorizontalBeam0" unit="cm" x="0" y="80" z="$TPCLength/2+5"/>
+     </physvol>
+     <physvol>
+     	 <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam1" unit="cm" x="0" y="80*2" z="$TPCLength/2+5"/>
+     </physvol>
+     <physvol>
+    	 <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam2" unit="cm" x="0" y="-80" z="$TPCLength/2+ 5"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volHorizontalBeam"/>
+        <position name="posHorizontalBeam3" unit="cm" x="0" y="-80*2" z="$TPCLength/2+5"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volHorizontalBeam"/>
+        <position name="posHorizontalBeam4" unit="cm" x="0" y="0" z="$TPCLength/2 + 5"/>
+     </physvol>
+     <physvol>
+    	 <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam5" unit="cm" x="0" y="80" z="-$TPCLength/2 - 5"/>
+     </physvol>
+     <physvol>
+         <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam6" unit="cm" x="0" y="80*2" z="-$TPCLength/2 - 5"/>
+     </physvol>
+     <physvol>
+     	 <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam7" unit="cm" x="0" y="-80" z="-$TPCLength/2 - 5"/>
+   	 </physvol>
+   	 <physvol>
+      	 <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam8" unit="cm" x="0" y="-80*2" z="-$TPCLength/2 - 5"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volHorizontalBeam"/>
+        <position name="posHorizontalBeam9" unit="cm" x="0" y="0" z="-$TPCLength/2 - 5 "/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volHorizontalBeam"/>
+        <position name="posHorizontalBeam10" unit="cm" x="0" y="$TPCHeight/2 + 5" z="0"/>
+     </physvol>
+     <physvol>
+     	<volumeref ref="volHorizontalBeam"/>
+        <position name="posHorizontalBeam11" unit="cm" x="0" y="$TPCHeight/2 +5" z="80"/>
+     </physvol> 
+     <physvol>
+     	<volumeref ref="volHorizontalBeam"/>
+        <position name="posHorizontalBeam12" unit="cm" x="0" y="$TPCHeight/2+5" z="80*2"/>
+     </physvol>
+    <physvol>
+        <volumeref ref="volHorizontalBeam"/>
+        <position name="posHorizontalBeam13" unit="cm" x="0" y="$TPCHeight/2+5" z="-80"/>
+     </physvol> 
+     <physvol>
+    	 <volumeref ref="volHorizontalBeam"/>
+      	 <position name="posHorizontalBeam14" unit="cm" x="0" y="$TPCHeight/2+5" z="-80*2"/>
+     </physvol>
+     <physvol>
+    	 <volumeref ref="volHorizontalBeam"/>
+      	 <position name="posHorizontalBeam15" unit="cm" x="0" y="-$TPCHeight/2-5" z="0"/>
+     </physvol>
+     <physvol>
+      	 <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam16" unit="cm" x="0" y="-$TPCHeight/2-5" z="80"/>
+     </physvol>
+     <physvol>
+     	 <volumeref ref="volHorizontalBeam"/>
+    	 <position name="posHorizontalBeam17" unit="cm" x="0" y="-$TPCHeight/2-5" z="80*2"/>
+  	 </physvol>
+     <physvol>
+     	 <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam18" unit="cm" x="0" y="-$TPCHeight/2-5" z="-80"/>
+   	 </physvol>
+     <physvol>
+     	 <volumeref ref="volHorizontalBeam"/>
+         <position name="posHorizontalBeam19" unit="cm" x="0" y="-$TPCHeight/2-5" z="-80*2"/>
+     </physvol>   
+	<physvol>
+		<volumeref ref="volTPC"/>
+		<position name="posTPC1" unit="cm" x="$TPCWidth/2+2.5" y="0" z="0" />
+	</physvol>
+	<physvol>
+		<volumeref ref="volTPC"/>
+		<position name="posTPC2" unit="cm" x="-$TPCWidth/2-2.5" y="0" z="0" />
+		<rotationref ref="rPlus180AboutY"/> 
+	</physvol>  
+
+EOF
+
+}
+
+# Generates Ben Jones's PMT micro-pmtdef (with temporary edit to ellipsoid shapes
+sub gen_pmt {
+
+    $PMT = "lar1nd-lightguidedef" . $suffix . ".gdml";
+    push (@gdmlFiles, $PMT); # Add file to list of GDML fragments
+    $PMT = ">" . $PMT;
+    open(PMT) or die("Could not open file $PMT for writing");
+
+  #The below pmt geo is a placeholder--"PMTVolume" contains pmt info from microboone--ahack
+  print PMT <<EOF;
+<solids>
+ <tube name="PMTVolume" rmax="(3.*2.54)" z="(11.1*2.54)+0.005" deltaphi="360" aunit="deg" lunit="cm"/>
+
+ <tube name="PMT_AcrylicPlate" rmax="(6.0*3/6.1*2.54)" z="(0.2)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Stalk" rmax="(1.25*3/6.1*2.54)" z="(3.0*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_SteelBase" rmax="(6.0*3/6.1*2.54)" z="(1.5*2.54)" deltaphi="360" aunit="deg" lunit="cm"/>
+ <tube name="PMT_Underside" rmax="2.54*4.0*3/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
+EOF
+    print PMT <<EOF;
+ <tube name="PMT_Lens" rmax="2.54*4.0*3/6.1" z="2.54*2.5" deltaphi="360" aunit="deg" lunit="cm"/>
+EOF
+
+    print PMT <<EOF;
+</solids>
+<structure>
+ <volume name="volOpDetSensitive">
+  <materialref ref="LAr"/>
+  <solidref ref="PMT_AcrylicPlate"/>
+ </volume>
+ <volume name="vol_PMT_AcrylicPlate">
+  <materialref ref="Acrylic"/>
+
+
+ <solidref ref="PMT_AcrylicPlate"/>
+ </volume>
+ <volume name="vol_PMT_Stalk">
+  <materialref ref="Glass"/>
+  <solidref ref="PMT_Stalk"/>
+ </volume>
+ <volume name="vol_PMT_SteelBase">
+  <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+  <solidref ref="PMT_SteelBase"/>
+ </volume>
+ <volume name="vol_PMT_Underside">
+  <materialref ref="Glass"/>
+  <solidref ref="PMT_Underside"/>
+ </volume>
+EOF
+    print PMT <<EOF;
+ <volume name="vol_PMT_Lens">
+  <materialref ref="LAr"/>
+  <solidref ref="PMT_Lens"/>
+ </volume>
+EOF
+    print PMT <<EOF;
+ <volume name="volPMT">
+  <materialref ref="LAr"/>
+  <solidref ref="PMTVolume"/>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="0" y="0" z="(5.5 * 2.54) - 0.1"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_AcrylicPlate"/>
+   <position name="pos_PMT_AcrylicPlate" unit="cm" x="0" y="0" z="(5.5 * 2.54) - 0.3"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_Stalk"/>
+   <position name="pos_PMT_Stalk" unit="cm" x="0" y="0" z="(3.0 * 2.54)-(5.5 * 2.54)"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_SteelBase"/>
+   <position name="pos_PMT_SteelBase" unit="cm" x="0" y="0" z="(0.75 * 2.54)-(5.5 * 2.54)"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_Lens"/>
+   <position name="pos_PMT_Lens" unit="cm" x="0" y="0" z="(7.0 * 2.54)-(5.5 * 2.54)"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vol_PMT_Underside"/>
+   <position name="pos_PMT_Underside" unit="cm" x="0" y="0" z="(7.0 * 2.54)-(5.5 * 2.54)"/>
+  </physvol>
+EOF
+
+    print PMT <<EOF;
+ </volume>
+</structure>
+EOF
+
+
+	print PMT <<EOF;
+<solids>
+ <box name="lightguidebar"
+  lunit="cm"
+  x="0.25*2.54"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidebarcoating"
+  lunit="cm"
+  x=".05"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidedetector"
+  lunit="cm"
+  x="0.25*2.54+0.1"
+  y="100"
+  z="2.54"/>
+</solids>
+<structure>
+<!-- <volume name="volOpDetSensitive">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidebarcoating"/>
+ </volume>
+ <volume name="vollightguidebar">
+  <materialref ref="Acrylic"/>
+  <solidref ref="lightguidebar"/>
+ </volume>
+ <volume name="vollightguidedetector">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidedetector"/>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="(0.125*2.54)+0.025" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vollightguidebar"/>
+   <position name="poslightguidebar" unit="cm" x="0" y="0" z="0"/>
+  </physvol>
+ </volume>-->
+</structure>
+EOF
+
+}
+
+
+sub gen_bars {
+
+    $PMT = "lar1nd-lightguidebardef" . $suffix . ".gdml";
+    push (@gdmlFiles, $PMT); # Add file to list of GDML fragments
+    $PMT = ">" . $PMT;
+    open(PMT) or die("Could not open file $PMT for writing");
+
+	print PMT <<EOF;
+<solids>
+ <box name="lightguidebar"
+  lunit="cm"
+  x="0.25*2.54"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidebarcoating"
+  lunit="cm"
+  x=".05"
+  y="100"
+  z="2.54"/>
+ <box name="lightguidedetector"
+  lunit="cm"
+  x="0.25*2.54+0.1"
+  y="100"
+  z="2.54"/>
+</solids>
+<structure>
+ <volume name="volOpDetSensitive">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidebarcoating"/>
+ </volume>
+ <volume name="vollightguidebar">
+  <materialref ref="Acrylic"/>
+  <solidref ref="lightguidebar"/>
+ </volume>
+ <volume name="vollightguidedetector">
+  <materialref ref="LAr"/>
+  <solidref ref="lightguidedetector"/>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="(0.125*2.54)+0.025" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volOpDetSensitive"/>
+   <position name="posOpDetSensitive" unit="cm" x="-(0.125*2.54)-0.025" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="vollightguidebar"/>
+   <position name="poslightguidebar" unit="cm" x="0" y="0" z="0"/>
+  </physvol>
+ </volume>
+</structure>
+EOF
+
+}
+
 
 #Parameterize the steel cryostat that encloses the TPC.
 sub gen_cryostat()
@@ -679,27 +1010,149 @@ sub gen_cryostat()
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <tube name="Cryostat" rmax="93" z="2000" deltaphi="360" aunit="deg" lunit="cm"/>
- <sphere name="EndCap" rmin="144*2.54" rmax="144.5*2.54" deltaphi="360" deltatheta="0.001" aunit="deg" lunit="cm"/>
+ <box name="Cryostat" lunit="cm" x="$CryostatWidth+0.1" y="$CryostatHeight+0.1" z="$CryostatLength+0.1" /> 
+ <box name="SteelBoxA" lunit="cm" x="$CryostatWidth" y="$CryostatHeight" z="$CryostatLength"/>
+ <box name="SteelBoxB" lunit="cm" x="$CryostatWidth-5" y="$CryostatHeight-5" z="$CryostatLength-5"/>
+
+ <box name="APAFrameA" lunit="cm" x="$AnodeWidthX" y="$AnodeHeightY" z="$AnodeLengthZ"/>
+ <box name="APAFrameB" lunit="cm" x="$AnodeWidthX+ 0.1" y="$AnodeHeightY-20" z="$AnodeLengthZ -20"/>
+
+ <!--<box name="APAFrameC" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-20" z="$AnodeWidthX/2"/>
+ <box name="APAFrameD" lunit="cm" x="$AnodeWidthX/2" y="$AnodeHeightY-35" z="$AnodeWidthX/2"/> -->
+
+ <box name="HorizontalBeam" lunit="cm" x="$TPCWidth*2" y="5" z="5"/>
+
+ <box name="APASideCrossA" lunit="cm" x="$AnodeWidthX/2" y="127.28" z="127.28"/> 
+ <box name="APASideCrossB" lunit="cm" x="$AnodeWidthX/2+ 0.1" y="127.28-$AnodeWidthX/2" z="127.28-$AnodeWidthX/2"/> 
+
+
+  <subtraction name="SteelBox">
+	<first ref="SteelBoxA"/> <second ref="SteelBoxB"/>
+	<position name="posSteelBoxSubtraction" x="0" y="0" z="0"/>
+  </subtraction>
+
+   <subtraction name="APAFrame">
+     <first ref="APAFrameA"/> <second ref="APAFrameB"/>
+     <position name="posTPCSubtraction" x="0" y="0" z="0"/>
+   </subtraction>
+
+<!--	<union name="APAFrame1">
+	  <first ref="APAFrame0"/> <second ref="APAFrameC"/>
+	  <position name="posTPCUnion0" x="0" y="0" z="0"/>
+	</union>
+
+	<union name="APAFrame2">
+	   <first ref="APAFrame1"/> <second ref="APAFrameD"/>
+	   <position name="posTPCUnion1" x="0" y="0" z="0"/>
+	   <rotationref ref="rPlus90AboutX"/>
+	</union>
+ 
+   <subtraction name="APASideCross">
+	 <first ref="APASideCrossA"/> <second ref="APASideCrossB"/>
+	 <position name="posAPASideCross" x="0" y="0" z="0"/>
+   </subtraction>
+
+	<union name="APAFrame3">
+		<first ref="APAFrame2"/> <second ref="APASideCross"/>
+		 <position name="posAPASideCross0" unit="cm" x="0" y="($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
+ 		 <rotationref ref="rPlus45AboutX"/>
+      </union>
+	<union name="APAFrame4">
+		<first ref="APAFrame3"/> <second ref="APASideCross"/>
+		 <position name="posAPASideCross1" unit="cm" x="0" y="($AnodeHeightY-20)/4" z="-($AnodeLengthZ-20)/4"/>
+ 		 <rotationref ref="rPlus45AboutX"/>
+      </union>
+	<union name="APAFrame5">
+		<first ref="APAFrame4"/> <second ref="APASideCross"/>
+		 <position name="posAPASideCross2" unit="cm" x="0" y="-($AnodeHeightY-20)/4" z="-($AnodeLengthZ-20)/4"/>
+ 		 <rotationref ref="rPlus45AboutX"/>
+      </union>
+	<union name="APAFrame">
+		<first ref="APAFrame5"/> <second ref="APASideCross"/>
+		 <position name="posAPASideCross3" unit="cm" x="0" y="-($AnodeHeightY-20)/4" z="($AnodeLengthZ-20)/4"/>
+ 		 <rotationref ref="rPlus45AboutX"/>
+      </union> -->
+
 </solids>
 
 <structure>
- <volume name="volEndCap">
+ <volume name="volAPAFrame">
    <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
-   <solidref ref="EndCap"/>
+   <solidref ref="APAFrame"/>
  </volume>
+ <volume name="volHorizontalBeam">
+   <materialref ref="G10"/>
+   <solidref ref="HorizontalBeam"/>
+ </volume>
+ <volume name="volSteelBox">
+   <materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+   <solidref ref="SteelBox"/>
+ </volume>
+
  <volume name="volCryostat">
    <materialref ref="LAr"/>
    <solidref ref="Cryostat"/>
-	  <physvol>
-   	 	 <volumeref ref="volEndCap"/>
-         <position name="posEndCap1" unit="cm" x="0" y="0" z="6"/>
-   	  </physvol>    
-  	  <physvol>
-   	 	 <volumeref ref="volTPC"/>
-   		 <position name="posTPC" unit="cm" x="0.0" y="0" z="0"/>
-  	  </physvol>
+	<physvol>
+	  <volumeref ref="volSteelBox"/>
+	  <position name="posSteelBox" unit="cm" x="0" y="0" z="0"/>
+	</physvol>  
+    <physvol> 
+       <volumeref ref="volCathodePlate"/>
+ 	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
+	 </physvol> 
 EOF
+	make_APA();
+
+if ( $pmt_switch eq "on" ) {
+	
+	for( $i = 0; $i < 14; $i++){
+		for( $j = 0; $j < 11; $j++){
+			$k = $i*11+$j ;
+			$l = 154 + $k ; 
+			print CRYOSTAT<<EOF;
+			<physvol>
+				<volumeref ref="volPMT"/>
+				<position name="posPMT$k" unit="cm" x="220" y="$TPCHeight/12*($j+1) - $TPCHeight/2" z="$TPCLength/15*($i+1) - $TPCLength/2"/>
+				<rotationref ref="rPMTRotation1"/>
+			</physvol> 
+
+			<physvol>
+				<volumeref ref="volPMT"/>
+				<position name="posPMT$l" unit="cm" x="-220" y="$TPCHeight/12*($j+1) - $TPCHeight/2" z="$TPCLength/15*($i+1) - $TPCLength/2"/>
+				<rotationref ref="rPMTRotation"/>
+			</physvol> 
+
+EOF
+			}	
+
+
+		}
+
+
+ }
+
+elsif( $scint_bars) {
+	for ( $i=0; $i<175; ++$i ){
+	    for ($j=0; $j<4; ++$j ){
+		for ($k=0; $k<2; ++$k){  
+		    print CRYOSTAT <<EOF;
+		    <physvol>
+			<volumeref ref="vollightguidedetector"/>
+			<position name="lightguidedetector-$i-$j-$k" unit="cm" x="(-1)**$k*($TPCWidth+20+(0.25*2.54+0.1)/2)" y="(2*$j+1)*$TPCHeight/8-$TPCHeight/2" z="-($TPCLength/2-20+2.62857/2.0)+2.62857*($i+1)" />
+EOF
+			if ( $k==0 ) {
+                            print CRYOSTAT <<EOF;
+                            <rotationref ref="rPlus180AboutY"/>
+EOF
+                        }  
+                   print CRYOSTAT<<EOF;
+                   </physvol> 
+EOF
+        }
+       }
+      }
+   }
+ 
 
 	print CRYOSTAT <<EOF;
  </volume>
@@ -720,22 +1173,130 @@ sub gen_enclosure()
     $GDML = ">" . $GDML;
     open(GDML) or die("Could not open file $GDML for writing");
 
+
+#Note for below--To understand coordinate placements for Cryostat etc, 
+#see page 20&21 of Dec 31, 2013 LAr1ND proposal
     print GDML <<EOF;
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <box name="DetEnclosure" lunit="cm" x="$DetEnclosureWidth" y="$DetEnclosureHeight" z="$DetEnclosureLength" />
+ <box name="DetEnclosure" lunit="cm" x="$DetEnclosureWidth+0.01" y="$DetEnclosureHeight+0.01" z="$DetEnclosureLength+0.01" />
+<!-- <box name="DetEnclosure" lunit="cm" x="520.2+2*60+2*25" y="542.3+2*60+2*25" z="702.7+2*60+2*25" /> -->
+
+ <box name="TaggerUpper0" lunit="cm" x="702.7+2*60+2*25+2*2" y="300+2*2" z="702.7+2*60+2*25+2*2" />
+<box name="VoidTaggerUpper" lunit="cm" x="832+120" y="300" z="1189-60+60" />
+  <subtraction name="TaggerUpper">
+    <first ref="TaggerUpper0"/> <second ref="VoidTaggerUpper"/>
+    <position name="posConcreteEnclosureSubtraction0" unit="cm" x="0" y="0" z="0"/>
+  </subtraction>
+
+
+ <box name="TaggerMain0" lunit="cm" x="520.2+2*60+2*25+2*2" y="542.3+2*60+2*25+2*2" z="702.7+2*60+2*25+2*2" />
+<box name="VoidTaggerMain" lunit="cm" x="520.2+2*60+2*25+0.05" y="542.3+2*60+2*25+0.05" z="702.7+2*60+2*25+0.05" />
+  <subtraction name="TaggerMain">
+    <first ref="TaggerMain0"/> <second ref="VoidTaggerMain"/>
+    <position name="posConcreteEnclosureSubtraction1" unit="cm" x="0" y="0" z="0"/>
+  </subtraction>
+
+
+ <box name="TaggerTop" lunit="cm" x="702.7+2*60+2*25-0.1" y="2-0.1" z="702.7+2*60+2*25-0.1" />
+ <box name="TaggerFace" lunit="cm" x="520.2+2*60+2*25-0.1" y="542.3+2*60+2*25-0.1" z="2-0.1" />
+ <box name="TaggerSide" lunit="cm" x="2-0.1" y="542.3+2*60+2*25-0.1" z="702.7+2*60+2*25-0.1" />
+ <box name="TaggerBot" lunit="cm" x="520.2+2*60+2*25-0.1" y="2-0.1" z="702.7+2*60+2*25-0.1" />
+
+  <box name="Building0" lunit="cm" x="1418" y="762" z="1560"/>
+  <box name="BuildingVoid" lunit="cm" x="1418-2*10" y="762-10" z="1560-2*10"/>
+ <subtraction name="Building">
+    <first ref="Building0"/> <second ref="BuildingVoid"/>
+    <position name="posBuildingVoid" unit="cm" x="0" y="-10" z="0"/>
+  </subtraction>
+
 </solids>
 
 <structure>
+ <volume name="volTaggerTop">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerTop"/>
+ </volume>
+ <volume name="volTaggerFace">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerFace"/>
+ </volume>
+ <volume name="volTaggerSide">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerSide"/>
+ </volume>
+ <volume name="volTaggerBot">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerBot"/>
+ </volume>
+
+ <volume name="volTaggerUpper">
+  <materialref ref="Air"/>
+  <solidref ref="TaggerUpper"/>
+  <physvol>
+   <volumeref ref="volTaggerTop"/>
+   <position name="posTaggerTop1" unit="cm" x="0" y="2/2 +300/2" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volTaggerTop"/>
+   <position name="posTaggerTop2" unit="cm" x="0" y="-2/2 -300/2" z="0"/>
+  </physvol>
+ </volume>
+
+ <volume name="volTaggerMain">
+  <materialref ref="Air"/>
+  <solidref ref="TaggerMain"/>
+  <physvol>
+   <volumeref ref="volTaggerFace"/>
+   <position name="posTaggerFront" unit="cm" x="0" y="0" z="-702.7/2-60-25-2/2"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volTaggerFace"/>
+   <position name="posTaggerBack" unit="cm" x="0" y="0" z="702.7/2+60+25+2/2"/>
+  </physvol>
+<physvol>
+   <volumeref ref="volTaggerSide"/>
+   <position name="posTaggerLeft" unit="cm" x="520.2/2+60+25+2/2" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volTaggerSide"/>
+   <position name="posTaggerRight" unit="cm" x="-520.2/2-60-25-2/2" y="0" z="0"/>
+  </physvol>
+  <physvol>
+   <volumeref ref="volTaggerBot"/>
+   <position name="posTaggerBot" unit="cm" x="0" y="-542.3/2-60-25-2/2" z="0"/>
+  </physvol>
+ </volume>
+
+
+
  <volume name="volDetEnclosure">
   <materialref ref="Air"/>
   <solidref ref="DetEnclosure"/>
+     <physvol>
+        <volumeref ref="volStructure"/>
+        <position name="posStructure" unit="cm" x="0" y="2" z="0"/>
+      </physvol>
+
+     <physvol>
+        <volumeref ref="volTaggerMain"/>
+        <position name="posTaggerMain" unit="cm" x="0" y="1" z="0"/>
+      </physvol>
   <physvol>
    <volumeref ref="volCryostat"/>
    <position name="posCryostat" unit="cm" x="0" y="0" z="0"/>
   </physvol>
 EOF
+  if ( $enclosureExtras eq "on" ) {
+    print GDML <<EOF;
+     <physvol>
+        <volumeref ref="volInsulation"/>
+        <position name="posInsulation" unit="cm" x="0" y="2" z="0"/>
+      </physvol>
+EOF
+	}
+
 #if the extra pieces in the enclosure are desired, place within volEnclosure(insulation, racks, etc)
 
     print GDML <<EOF;
@@ -751,6 +1312,7 @@ EOF
 # Parameterize the dirt mound that surrounds the enclosure.
 sub gen_world()
 {
+	#Ground info from Fig4.1(Right) from LAr1ND Dec 2013 proposal(for now)
     # Set up the output file.
     $GDML = "LAr1-world" . $suffix . ".gdml";
     push (@gdmlFiles, $GDML); # Add file to list of GDML fragments
@@ -762,16 +1324,106 @@ sub gen_world()
 <gdml>
 <solids>
   <box name="World" lunit="cm" x="$WorldWidth" y="$WorldHeight" z="$WorldLength"/>
+  <box name="ConcreteEnclosureOuter" lunit="cm" x="$DetEnclosureWidth+62" y="$DetEnclosureHeight+62" z="$DetEnclosureLength+62"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="$DetEnclosureWidth+0.1" y="$DetEnclosureHeight+62+0.1" z="$DetEnclosureLength+0.1"/>
+  <box name="GroundOuter" lunit="cm" x="$DetEnclosureWidth + 62 +1000" y="(28*12)*2.54+1000" z="$DetEnclosureLength+ 62 + 2500 + 500" />
+  <box name="GroundInner" lunit="cm" x="$DetEnclosureWidth + 63" y="$DetEnclosureHeight +63" z="$DetEnclosureLength+63"/>
+  <box name="GroundInnerMez" lunit="cm"  x="$DetEnclosureWidth+64" y="762" z="1189-60+84+0.1+262"/>
+
+  <box name="SciBooneSpace0" lunit="cm" x="394+307 + 18*2.54+0.1" y="28*12*2.54+0.1" z="488+18*2.54+0.1"/>
+  <box name="SciBooneOuter" lunit="cm" x="394+307 + 18*2.54" y="28*12*2.54" z="488+18*2.54"/>
+  <box name="SciBooneInner" lunit="cm" x="394+307" y="28*12*2.54" z="488"/>
+  <box name="OverburdenOld" lunit="cm" x="832+120-0.1" y="300-0.1" z="1189-60+60-0.1"/>
+ <box name="Overburden" lunit="cm" x="1006" y="274.5" z="1280"/>
+
+
+
+  <subtraction name="ConcreteEnclosure">
+	<first ref="ConcreteEnclosureOuter"/> <second ref="ConcreteEnclosureInner"/>
+	<position name="posConcreteEnclosureSubtraction" unit="cm" x="0" y="0" z="0"/>
+  </subtraction>
+
+  <subtraction name="SciBooneHall">
+	<first ref="SciBooneOuter"/> <second ref="SciBooneInner"/>
+	<position name="posSciBooneSubtraction" unit="cm" x="0" y="9*2.54" z="0"/>
+  </subtraction>
+
+  <subtraction name="Ground0">
+	<first ref="GroundOuter"/> <second ref="GroundInner"/>
+	<position name="posGroundSubtraction" unit="cm" x="0" y="0" z="859.05"/>
+  </subtraction>
+
+  <subtraction name="Ground1">
+	<first ref="Ground0"/> <second ref="SciBooneSpace0"/>
+	<position name="posSciBooneSpace" unit="cm" x="0" y="0" z="-593"/>
+  </subtraction>
+
+ <subtraction name="Ground">
+    <first ref="Ground1"/> <second ref="GroundInnerMez"/>
+    <position name="posGroundInnerMez" unit="cm" x="0" y="800" z="-200 + 859.05+135"/>
+  </subtraction>
+
+
 </solids>
 
 <structure>
+  <volume name="volConcreteEnclosure">
+	<materialref ref="Concrete"/>
+	<solidref ref="ConcreteEnclosure"/>
+  </volume>
+  <volume name="volSciBooneHall">
+	<materialref ref="Concrete"/>
+	<solidref ref="SciBooneHall"/>
+  </volume>
+  <volume name="volGround">
+	<materialref ref="Dirt"/>
+	<solidref ref="Ground"/>
+  </volume>
+
+ <volume name="volOverburden">
+    <materialref ref="Concrete"/>
+    <solidref ref="Overburden"/>
+  </volume>
+  <volume name="volBuilding">
+    <materialref ref="Concrete"/>
+    <solidref ref="Building"/>
+  </volume>
+
+
+
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="0"/>
+      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="($TPCLength)/2"/>
+    </physvol> 
+	<physvol>
+	  <volumeref ref="volConcreteEnclosure"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="0" y="0" z="($TPCLength)/2"/>
+	 </physvol>
+	<physvol>
+	  <volumeref ref="volGround"/>
+	  <position name="posGround" unit="cm" x="0" y="0" z="($TPCLength)/2-859.05"/>
+	</physvol>
+	<physvol>
+	  <volumeref ref="volSciBooneHall"/>
+	  <position name="posSciBooneHall" unit="cm" x="0" y="0" z="($TPCLength)/2-1452.05"/>
+	</physvol>
+ <!--  <physvol>
+      <volumeref ref="volOverburden"/>
+      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+85 + 76" z="(531.2)/2"/>
+    </physvol> -->
+   <physvol>
+      <volumeref ref="volBuilding"/>
+      <position name="posBuilding" unit="cm" x="0" y="((28*12)*2.54+1000)/2+762/2+1" z="(531.2)/2+95-150"/>
     </physvol>
+
+     <physvol>
+        <volumeref ref="volTaggerUpper"/>
+        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+ 175" z="(531.2)/2"/>
+      </physvol>
+
   </volume> 
 </structure>
 </gdml>
@@ -781,6 +1433,54 @@ EOF
 }
 
 ####################################
+
+sub gen_enclosureExtras()
+{
+    $GDML = "LAr1-enclosureExtras" . $suffix . ".gdml";
+    push (@gdmlFiles, $GDML); # Add file to list of GDML fragments
+    $GDML = ">" . $GDML;
+    open(GDML) or die("Could not open file $GDML for writing");
+
+# Define the solids and structures associated with the "enclosureExtras" 
+ print GDML <<EOF;
+<?xml version='1.0'?>
+<gdml>
+<solids>
+  <box name="InsulationOuter" lunit="cm" x="$CryostatWidth+120" y="$CryostatHeight+120" z="$CryostatLength+120"/>
+  <box name="InsulationInner" lunit="cm" x="$CryostatWidth+0.1" y="$CryostatHeight+0.1" z="$CryostatLength+0.1"/>
+  <box name="StructureOuter" lunit="cm" x="$CryostatWidth+120+2*25-0.1" y="$CryostatHeight+120+2*25-0.1" z="$CryostatLength+120+2*25-0.1"/>
+  <box name="StructureInner" lunit="cm" x="$CryostatWidth+120+0.2" y="$CryostatHeight+120+0.2" z="$CryostatLength+120+0.2"/>
+
+   <subtraction name="Structure">
+     <first ref="StructureOuter"/> <second ref="StructureInner"/>
+     <position name="posStructureSubtraction" x="0" y="0" z="0"/>
+   </subtraction>
+
+   <subtraction name="Insulation">
+     <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
+     <position name="posInsulationSubtraction" x="0" y="-20" z="0"/>
+   </subtraction>
+
+</solids>
+
+<structure>
+  <volume name="volInsulation">
+	<materialref ref="PU_foam_light"/>
+	<solidref ref="Insulation"/>
+  </volume>
+
+  <volume name="volStructure">
+    <materialref ref="Concrete"/>
+    <solidref ref="Structure"/>
+  </volume>
+</structure>
+</gdml>
+EOF
+
+	close(GDML);
+}
+
+
 
 
 sub write_fragments()

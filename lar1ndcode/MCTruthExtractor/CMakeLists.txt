@@ -40,15 +40,15 @@ art_make( BASENAME_ONLY
           LIBRARY_NAME Ntuples          
           MODULE_LIBRARIES 
             NuAnaAlg
-            Geometry_service
-            TimeService_service
+            larcore_Geometry_Geometry_service
+            # TimeService_service
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-            Geometry
-            Simulation
-            Utilities
-            Filters
-            RawData
+            larcore_Geometry
+            larsim_Simulation
+            lardata_Utilities
+            larevt_Filters
+            lardata_RawData
             NuReweightArt
             ${SIMULATIONBASE}
             ${ART_FRAMEWORK_CORE}
@@ -67,6 +67,6 @@ art_make( BASENAME_ONLY
           )
 
 install_headers()
-# install_fhicl()
+install_fhicl()
 # install_source()
 

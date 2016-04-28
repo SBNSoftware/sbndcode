@@ -1,0 +1,10 @@
+#include "prodgenie_common_cosmic_lar1nd.fcl"
+
+process_name: GenieGen
+
+outputs.out1.fileName: "prodgenie_bnb_nu_cosmic_lar1nd_%tc_gen.root"
+
+physics.producers.generator: @local::lar1nd_genie_simple
+physics.producers.generator.GlobalTimeOffset: 0.
+physics.producers.generator.RandomTimeOffset: 1280.
+physics.producers.generator.TopVolume: "volCryostat"

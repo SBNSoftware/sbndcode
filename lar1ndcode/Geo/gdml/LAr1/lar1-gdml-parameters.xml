@@ -39,27 +39,39 @@
         reasons.  
 	-->
 
-   <parameter name="DetEnclosureWidth" value="700">
+   <parameter name="DetEnclosureWidth" value="1006 - 62" > <!--878"-->
    The size of the detector enclosure along the x-axis.
    </parameter>
 
-   <parameter name="DetEnclosureHeight" value="850">
+   <parameter name="DetEnclosureHeight" value="1099"> <!--850"-->
    The size of the detector enclosure along the y-axis.
    </parameter>
 
-   <parameter name="DetEnclosureLength" value="490">
+   <parameter name="DetEnclosureLength" value="1280 - 62"> <!--1170"--> 
    The size of the detector enclosure along the z-axis.
    </parameter>
 
-   <parameter name="TPCWidth" value="400">
+   <parameter name="CryostatWidth" value="517">
+   The size of the cryostat along the x-axis.
+   </parameter>
+   
+   <parameter name="CryostatHeight" value="480">
+   The size of the cryostat along the y-axis.
+   </parameter>
+
+   <parameter name="CryostatLength" value="638">
+   The size of the cryostat along the z-axis.
+   </parameter>
+
+   <parameter name="TPCWidth" value="200">
    The size of the LAr TPC along the x-axis.
    </parameter>
 
-   <parameter name="TPCHeight" value="400">
+   <parameter name="TPCHeight" value="400 ">
    The size of the LAr TPC along the y-axis.
    </parameter>
 
-   <parameter name="TPCLength" value="365">
+   <parameter name="TPCLength" value="500 ">
    The size of the LAr TPC along the z-axis.
    </parameter>
 
@@ -81,7 +93,7 @@
    TPC. "kInch" will be interpreted in make_gdml.pl
    </parameter>
 
-   <parameter name="TPCWireThickness" value="0.015">  <!--0.015"> -->
+   <parameter name="TPCWireThickness" value="0.015">  <!--"0.015"> -->   
    The diameter of a wire in a TPC plane.
    </parameter>
 
@@ -98,15 +110,15 @@
    direction of the electron drift.
    </parameter>
 
-	<parameter name="TotalWireCount" value="4736">
+	<parameter name="TotalWireCount" value="5632"> <!--4736">-->
 	Total number of wires in UVY planes
 	</parameter>
 
- 	<parameter name="YWireCount" value="1216">
+ 	<parameter name="YWireCount" value="1667"> <!--"1216">-->
  	Number of wires in Y plane.
  	</parameter>
 
-	<parameter name="UVWireCount" value="1760">
+	<parameter name="UVWireCount" value="1982"> <!--1760"-->
 	Number of wires in U or V plane. There are 1760 wires in the U plane
 	and 1760 wires in the V plane.
 	</parameter>

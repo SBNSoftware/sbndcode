@@ -1,0 +1,8 @@
+#include "lightsource.fcl"
+
+BEGIN_PROLOG
+
+lar1nd_lightsource: @local::standard_lightsource
+
+END_PROLOG
+
