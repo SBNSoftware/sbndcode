@@ -3,8 +3,28 @@
 BEGIN_PROLOG
 
 lar1nd_hitfinder:              @local::standard_hitfinder
-lar1nd_gaushitfinder:          @local::gaus_hitfinder
 lar1nd_mc_hitfinder:           @local::standard_hitfinder
 lar1nd_mc_hitfinder.AreaNorms: [ 12.89, 14.51 ]
+
+# lar1nd_gaushitfinder:          @local::gaus_hitfinder
+# generic (ArgoNeuT) GausHitFinder configuration from LArSoft 4.24.00:
+
+lar1nd_gaushitfinder:
+{
+module_type:	     "GausHitFinder"
+CalDataModuleLabel:  "caldata"      
+MinSig: 	      [ 6.0, 6.0, 11.0 ] # signal height threshold, per plane (U, V, Z)
+InitWidth:	      [ 6.0, 6.0, 7.8 ]  # initial width for fit, per plane
+MinWidth:	      [ 4.0, 4.0, 6.0 ]  # hit width threshold, per plane
+MaxMultiHit:	      10	       # maximum hits for multi fit   
+AreaMethod:	      0 	       # 0 = area by integral, 1 = area by gaussian area formula
+AreaNorms:	      [ 13.25, 13.25, 26.31 ] # normalizations that put signal area in 
+					      # same scale as peak height. 
+TryNplus1Fits:        0 	       # 0 = will try to re-fit poorly modled hits with n+1 gaussians
+        			       # 1 = will NOT try to re-fit poorly modled hits
+Chi2NDFRetry:	      25.0	       # If the first hit returns a Chi2/NDF greater than (2X) this 
+				       # number (for single pulse) it will try a second fit
+Chi2NDF:	      2000	       # maximum Chisquared / NDF allowed for a hit to be saved (Set very high by default)
+}
 
 END_PROLOG

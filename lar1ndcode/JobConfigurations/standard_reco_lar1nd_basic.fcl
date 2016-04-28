@@ -1,0 +1,224 @@
+#include "services_lar1nd.fcl"
+#include "caldata_lar1nd.fcl"
+#include "hitfindermodules_lar1nd.fcl"
+#include "cluster_lar1nd.fcl"
+#include "trackfindermodules_lar1nd.fcl"
+#include "calorimetry_lar1nd.fcl"
+#include "showerfindermodules.fcl"
+#include "databaseutil_lar1nd.fcl"
+##include "opticaldetectormodules_lar1nd.fcl"
+#include "vertexfindermodules.fcl"
+##include "pandoramodules.fcl"
+##include "triggeralgo_service.fcl"
+##include "photpropservices_lar1nd.fcl"
+
+process_name: Reco
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "reco_hist.root" }
+  Timing:       {}
+  SimpleMemoryCheck:     { ignoreTotal: 1 } # default is one
+  RandomNumberGenerator: {} #ART native random number generator
+  message:      @local::lar1nd_message_services_prod_debug
+  FileCatalogMetadata:  @local::art_file_catalog_mc
+  user:         @local::lar1nd_simulation_services
+}
+#services.user.PhotonVisibilityService: @local::lar1nd_photonvisibilityservice
+services.user.DatabaseUtil.ShouldConnect: false
+
+#source is now a root file
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1        # Number of events to create
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+ producers:
+ {
+  ### random number saver
+  rns:                 { module_type: RandomNumberSaver }
+
+  ### flash finders
+ # opflash:             @local::lar1nd_opflash
+
+  ### calwire producers
+  caldata:             @local::lar1nd_calwire
+
+  ### hit-finder producers
+  gaushit:             @local::lar1nd_gaushitfinder
+#  rffhit:              @local::lar1nd_rffhitfinder
+
+  ### corner-finder
+  corner:              @local::standard_cornerfinder    
+
+  ### cluster-finder producers
+  fuzzycluster:        @local::lar1nd_fuzzycluster
+  cccluster:           @local::lar1nd_clustercrawler
+  hough:               @local::standard_houghlinefinder
+  linemerger:          @local::standard_linemerger
+  spacepts:            @local::lar1nd_spacepts
+
+  ### pandora
+ # pandora:             @local::standard_pandora
+  
+  ### track-finder producers
+  trackkalmanhit:      @local::lar1nd_track3Dkalmanhit
+  spacepointfinder:    @local::lar1nd_spacepoint_finder
+  trackkalsps:         @local::lar1nd_kalman
+ #trackkalsps:         @local::lar1nd_kalman_sps
+  stitch:	       @local::lar1nd_trackstitcher
+  stitchkalmanhit:     @local::lar1nd_trackstitcher
+  beziertracker:       @local::lar1nd_beziertrackermodule
+  spacepointfindercc:  @local::lar1nd_spacepoint_finder
+  trackkalspscc:       @local::lar1nd_kalman
+ #trackkalspscc:       @local::lar1nd_kalman_sps
+  stitchcc:	       @local::lar1nd_trackstitcher
+  beziertrackercc:     @local::lar1nd_beziertrackermodule
+
+
+  ### shower-finder producers
+
+  ### vertex-finder producers
+
+  ### calorimetry producers
+  trackkalmanhitcalo:  @local::lar1nd_calomc
+  trackkalspscalo:     @local::lar1nd_calomc
+  stitchcalo:          @local::lar1nd_calomc
+  beziercalo:          @local::lar1nd_beziercalorimetry
+
+  ### flash-track matching
+ # beamflashcompat:     @local::standard_beamflashcompat
+ }
+
+ #define the producer and filter modules for this path, order matters, 
+ #filters reject all following items.  see lines starting physics.producers below
+ reco: [ rns,
+  #       opflash,
+         caldata, 
+         gaushit,
+   # rffhit,
+   #      corner,
+         fuzzycluster, cccluster, hough, linemerger, spacepts,
+   #      pandora,
+   #      trackkalmanhit, spacepointfinder, trackkalsps, stitch, stitchkalmanhit, beziertracker
+          spacepointfindercc, trackkalspscc, stitchcc 
+          #, beziertrackercc
+   #      trackkalmanhitcalo, trackkalspscalo, stitchcalo, beziercalo
+#         beamflashcompat
+ ]
+
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [ out1 ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [reco] 
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [stream1]  
+}
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "%ifb_%tc_reco.root"
+   dataTier:    "reconstructed"
+   compressionLevel: 1
+ }
+}
+
+
+### Here, we overwrite ALL module labels with the ones defined above.
+
+#physics.producers.opflash.InputModule:                          "optreadout"
+#physics.producers.opflash.GenModule:                            "generator"
+
+physics.producers.caldata.DigitModuleLabel:                     "daq"
+
+physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
+#physics.producers.rffhit.CalDataModuleLabel:                    "caldata"
+
+#physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
+#physics.producers.corner.CornerAlgParamSet.CalDataModuleLabel:  "caldata"
+
+physics.producers.fuzzycluster.HitsModuleLabel:                 "gaushit"
+physics.producers.fuzzycluster.CalDataModuleLabel:              "caldata"
+
+physics.producers.hough.DBScanModuleLabel:                      "fuzzycluster"
+physics.producers.hough.HitsPerCluster: 3
+
+physics.producers.linemerger.ClusterModuleLabel:                "hough"
+
+physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
+physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
+
+#physics.producers.pandora.GeantModuleLabel:                     "largeant"
+#physics.producers.pandora.HitFinderModuleLabel:                 "gaushit"
+
+physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
+#physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"
+physics.producers.trackkalmanhit.ClusterModuleLabel:		"linemerger"
+
+
+physics.producers.spacepointfinder.ClusterModuleLabel:          "fuzzycluster"
+#physics.producers.spacepointfinder.ClusterModuleLabel:          "linemerger"
+
+#physics.producers.trackkalsps.ClusterModuleLabel:               "fuzzycluster"
+physics.producers.trackkalsps.ClusterModuleLabel:               "cluster"
+physics.producers.trackkalsps.SpptModuleLabel:                  "spacepointfinder"
+physics.producers.trackkalsps.GenieGenModuleLabel:		"generator"
+physics.producers.trackkalsps.G4ModuleLabel:			"largeant"
+
+physics.producers.stitch.TrackModuleLabel:                      "trackkalsps"
+physics.producers.stitch.SpptModuleLabel:                       "spacepointfinder"
+
+#physics.producers.stitchkalmanhit.TrackModuleLabel:		"trackkalmanhit"
+physics.producers.stitchkalmanhit.TrackModuleLabel:		"trackkalsps"
+physics.producers.stitchkalmanhit.SpptModuleLabel:		"trackkalmanhit"
+
+physics.producers.beziertracker.ClusterModuleLabel:             "fuzzycluster"
+physics.producers.beziertracker.SpacePointModuleLabel:          "spacepointfinder"
+
+physics.producers.spacepointfindercc.ClusterModuleLabel:        "cccluster"
+
+physics.producers.trackkalspscc.ClusterModuleLabel:             "cccluster"
+physics.producers.trackkalspscc.SpptModuleLabel:                "spacepointfindercc"
+physics.producers.trackkalspscc.GenieGenModuleLabel:            "generator"
+physics.producers.trackkalspscc.G4ModuleLabel:                  "largeant"
+
+physics.producers.stitchcc.TrackModuleLabel:                    "trackkalspscc"
+physics.producers.stitchcc.SpptModuleLabel:                     "spacepointfindercc"
+
+physics.producers.beziertrackercc.ClusterModuleLabel:           "cccluster"
+physics.producers.beziertrackercc.SpacePointModuleLabel:        "spacepointfinder"
+
+physics.producers.trackkalmanhitcalo.TrackModuleLabel:          "trackkalmanhit"
+physics.producers.trackkalmanhitcalo.SpacePointModuleLabel:     "trackkalmanhit"
+
+physics.producers.trackkalspscalo.TrackModuleLabel:             "trackkalsps"
+physics.producers.trackkalspscalo.SpacePointModuleLabel:        "spacepointfinder"
+
+physics.producers.stitchcalo.TrackModuleLabel:                  "stitch"
+physics.producers.stitchcalo.SpacePointModuleLabel:             "spacepointfinder"
+
+physics.producers.beziercalo.BTrackModuleLabel:                 "beziertracker"
+
+#physics.producers.beamflashcompat.TrackModuleLabel:             "beziertracker"
+#physics.producers.beamflashcompat.FlashModuleLabel:             "opflash"
+
+
+

@@ -2,7 +2,7 @@
 <?xml version='1.0'?>
 <gdml>
 <solids>
- <box name="CathodePlate" lunit="cm" x="5" y="400" z="365"/>
+ <box name="CathodePlate" lunit="cm" x="5" y="400 " z="500 "/>
 </solids>
 <structure>
  <volume name="volCathodePlate">

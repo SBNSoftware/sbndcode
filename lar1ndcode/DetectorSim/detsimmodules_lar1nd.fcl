@@ -4,7 +4,7 @@ BEGIN_PROLOG
 
 lar1nd_simwire:  
 { 
- module_type:        "SimWireT1034"
+ module_type:        "SimWireT1053"
  TrigModName:        "triggersim"
  DriftEModuleLabel:  "largeant"
  NoiseFact:          0.15       #Noise Scale to use with histogram
@@ -15,8 +15,13 @@ lar1nd_simwire:
  GenNoise:            false        #gen noise...if false function not called
  GetNoiseFromHisto:   false
  GenNoiseInTime:      false
- CollectionPed:       400         #ADC baseline for coll plane
- InductionPed:        2048        #ADC baseline for ind plane
+ # the two settings below determine the ADC baseline for collection and induction plane, respectively;
+ # here we read the settings from the pedestal service configuration,
+ # so that we have only one maintenance point
+# CollectionPed:       @local::lar1nd_detpedestalservice.DetPedestalRetrievalAlg.DefaultCollMean # used to be 400
+ CollectionPed:        400
+# InductionPed:        @local::lar1nd_detpedestalservice.DetPedestalRetrievalAlg.DefaultIndMean  # used to be 2048
+ InductionPed:         2048
  BaselineRMS:         0.3         #ADC baseline fluctuation within channel        
  NoiseFileFname:      "uboone_noise_v0.1.root"
  NoiseHistoName:      "NoiseFreq"    
@@ -25,7 +30,7 @@ lar1nd_simwire:
 #lar1nd_simwireana: @local::standard_simwireana
 lar1nd_simwireana:
 {
-    module_type: "SimWiret1034Ana"
+    module_type: "SimWiret1054Ana"
     DigitModuleLabel: "daq"
 
 }

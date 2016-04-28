@@ -1,4 +1,4 @@
-#include "signalservices.fcl"
+####include "signalservices.fcl"
 
 BEGIN_PROLOG
 
@@ -40,7 +40,7 @@ lar1nd_signalshapingservice:
   
 
   UseFunctionFieldShape: false
-  UseSimpleFieldShape: false
+  UseSimpleFieldShape: true
   IndUFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
   IndUFieldParams:  [.00843,.1534,1.77,0.,0.5]    #last parameter needs to be half of FFT vector, correct for in code
   IndVFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"

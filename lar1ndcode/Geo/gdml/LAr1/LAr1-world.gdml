@@ -1,17 +1,107 @@
 <?xml version='1.0'?>
 <gdml>
 <solids>
-  <box name="World" lunit="cm" x="70000" y="85000" z="49000"/>
+  <box name="World" lunit="cm" x="100600" y="109900" z="128000"/>
+  <box name="ConcreteEnclosureOuter" lunit="cm" x="1006 - 62+62" y="1099+62" z="1280 - 62+62"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="1006 - 62+0.1" y="1099+62+0.1" z="1280 - 62+0.1"/>
+  <box name="GroundOuter" lunit="cm" x="1006 - 62 + 62 +1000" y="(28*12)*2.54+1000" z="1280 - 62+ 62 + 2500 + 500" />
+  <box name="GroundInner" lunit="cm" x="1006 - 62 + 63" y="1099 +63" z="1280 - 62+63"/>
+  <box name="GroundInnerMez" lunit="cm"  x="1006 - 62+64" y="762" z="1189-60+84+0.1+262"/>
+
+  <box name="SciBooneSpace0" lunit="cm" x="394+307 + 18*2.54+0.1" y="28*12*2.54+0.1" z="488+18*2.54+0.1"/>
+  <box name="SciBooneOuter" lunit="cm" x="394+307 + 18*2.54" y="28*12*2.54" z="488+18*2.54"/>
+  <box name="SciBooneInner" lunit="cm" x="394+307" y="28*12*2.54" z="488"/>
+  <box name="OverburdenOld" lunit="cm" x="832+120-0.1" y="300-0.1" z="1189-60+60-0.1"/>
+ <box name="Overburden" lunit="cm" x="1006" y="274.5" z="1280"/>
+
+
+
+  <subtraction name="ConcreteEnclosure">
+	<first ref="ConcreteEnclosureOuter"/> <second ref="ConcreteEnclosureInner"/>
+	<position name="posConcreteEnclosureSubtraction" unit="cm" x="0" y="0" z="0"/>
+  </subtraction>
+
+  <subtraction name="SciBooneHall">
+	<first ref="SciBooneOuter"/> <second ref="SciBooneInner"/>
+	<position name="posSciBooneSubtraction" unit="cm" x="0" y="9*2.54" z="0"/>
+  </subtraction>
+
+  <subtraction name="Ground0">
+	<first ref="GroundOuter"/> <second ref="GroundInner"/>
+	<position name="posGroundSubtraction" unit="cm" x="0" y="0" z="859.05"/>
+  </subtraction>
+
+  <subtraction name="Ground1">
+	<first ref="Ground0"/> <second ref="SciBooneSpace0"/>
+	<position name="posSciBooneSpace" unit="cm" x="0" y="0" z="-593"/>
+  </subtraction>
+
+ <subtraction name="Ground">
+    <first ref="Ground1"/> <second ref="GroundInnerMez"/>
+    <position name="posGroundInnerMez" unit="cm" x="0" y="800" z="-200 + 859.05+135"/>
+  </subtraction>
+
+
 </solids>
 
 <structure>
+  <volume name="volConcreteEnclosure">
+	<materialref ref="Concrete"/>
+	<solidref ref="ConcreteEnclosure"/>
+  </volume>
+  <volume name="volSciBooneHall">
+	<materialref ref="Concrete"/>
+	<solidref ref="SciBooneHall"/>
+  </volume>
+  <volume name="volGround">
+	<materialref ref="Dirt"/>
+	<solidref ref="Ground"/>
+  </volume>
+
+ <volume name="volOverburden">
+    <materialref ref="Concrete"/>
+    <solidref ref="Overburden"/>
+  </volume>
+  <volume name="volBuilding">
+    <materialref ref="Concrete"/>
+    <solidref ref="Building"/>
+  </volume>
+
+
+
   <volume name="volWorld" >
     <materialref ref="Air"/> 
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="0"/>
+      <position name="posDetEnclosure" unit="cm" x="0" y="0" z="(500 )/2"/>
+    </physvol> 
+	<physvol>
+	  <volumeref ref="volConcreteEnclosure"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="0" y="0" z="(500 )/2"/>
+	 </physvol>
+	<physvol>
+	  <volumeref ref="volGround"/>
+	  <position name="posGround" unit="cm" x="0" y="0" z="(500 )/2-859.05"/>
+	</physvol>
+	<physvol>
+	  <volumeref ref="volSciBooneHall"/>
+	  <position name="posSciBooneHall" unit="cm" x="0" y="0" z="(500 )/2-1452.05"/>
+	</physvol>
+ <!--  <physvol>
+      <volumeref ref="volOverburden"/>
+      <position name="posOverburden" unit="cm" x="0" y="290+542.3/2+85 + 76" z="(531.2)/2"/>
+    </physvol> -->
+   <physvol>
+      <volumeref ref="volBuilding"/>
+      <position name="posBuilding" unit="cm" x="0" y="((28*12)*2.54+1000)/2+762/2+1" z="(531.2)/2+95-150"/>
     </physvol>
+
+     <physvol>
+        <volumeref ref="volTaggerUpper"/>
+        <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+ 175" z="(531.2)/2"/>
+      </physvol>
+
   </volume> 
 </structure>
 </gdml>
