@@ -21,8 +21,8 @@ services:
 # services_argoneut.fcl
 services.user.ExptGeoHelperInterface: @local::argoneut_geometry_helper
 services.user.Geometry:           @local::argoneut_geo 
-services.user.DetectorProperties: @local::argoneut_detproperties
-services.user.LArProperties:      @local::argoneut_properties
+services.user.DetectorPropertiesService: @local::argoneut_detproperties
+services.user.LArPropertiesService:      @local::argoneut_properties
 services.user.LArFFT:             @local::argoneut_larfft  
 services.user.DatabaseUtil:       @local::argoneut_database
 services.user.BackTracker:        @local::argoneut_backtracker

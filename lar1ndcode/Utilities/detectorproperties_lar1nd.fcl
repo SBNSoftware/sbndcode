@@ -3,6 +3,8 @@
 BEGIN_PROLOG
 
 lar1nd_detproperties:                   @local::standard_detproperties
+lar1nd_detproperties.Temperature:       88.4  #(measured in ArgoNeut)
+lar1nd_detproperties.Efield:           [0.481,0.700,0.890]  #(measured in ArgoNeut)
 lar1nd_detproperties.ElectronsToADC:    6.8906513e-3 # 1fC = 43.008 ADC counts for MicroBooNE  
 lar1nd_detproperties.NumberTimeSamples: 2500
 lar1nd_detproperties.TimeOffsetU:       0.

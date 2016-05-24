@@ -39,7 +39,7 @@ extern "C" {
 #include "lardata/RawData/RawDigit.h"
 #include "lardata/RawData/raw.h"
 #include "lardata/RawData/TriggerData.h"
-// #include "lardata/Utilities/LArProperties.h"
+// #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lar1ndcode/Utilities/SignalShapingServiceT1053.h"
 #include "larcore/Geometry/Geometry.h"
@@ -216,7 +216,7 @@ void SimWireT1053::endJob()
 void SimWireT1053::produce(art::Event& evt)
 {
 
-  // art::ServiceHandle<util::TimeService> ts;
+  // auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
   art::ServiceHandle<detinfo::DetectorClocksServiceStandard> tss;
   // In case trigger simulation is run in the same job...
   tss->preProcessEvent(evt);
