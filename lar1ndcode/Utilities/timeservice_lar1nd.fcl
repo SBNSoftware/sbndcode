@@ -1,20 +1,10 @@
-#include "timeservice.fcl"
+#
+# Deprecated, legacy configuration file -- use detectorclocks_lar1nd.fcl directly instead
+#
+#include "detectorclocks_lar1nd.fcl"
 
 BEGIN_PROLOG
 
-lar1nd_timeservice: @local::standard_timeservice
-
-lar1nd_timeservice.TrigModuleName:     "triggersim"
-lar1nd_timeservice.InheritClockConfig: true
-lar1nd_timeservice.G4RefTime:        0      # G4 time [us] where electronics clock counting start
-lar1nd_timeservice.TriggerOffsetTPC:  0  # Time [us] for TPC readout start w.r.t. trigger time
-lar1nd_timeservice.FramePeriod:       1.25e3 # Frame period [us]
-lar1nd_timeservice.ClockSpeedTPC:     2.    # TPC clock speed in MHz
-lar1nd_timeservice.ClockSpeedOptical: 64.   # Optical clock speed in MHz
-lar1nd_timeservice.ClockSpeedTrigger: 16.   # Trigger clock speed in MHz
-lar1nd_timeservice.DefaultTrigTime:   0. # Default trigger time [us].
-lar1nd_timeservice.DefaultBeamTime:   0. # Default beam time [us].
-
-
+lar1nd_timeservice: @local::lar1nd_detectorclocks
 
 END_PROLOG
