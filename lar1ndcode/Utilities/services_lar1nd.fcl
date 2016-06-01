@@ -30,7 +30,7 @@ lar1nd_services:
  BackTracker:                    @local::standard_backtracker  
 #OpDigiProperties:               @local::lar1nd_opdigiproperties
  DetectorClocksService:                    @local::lar1nd_detectorclocks
- SeedService:                    @local::lar1nd_seedservice
+ LArSeedService:                    @local::lar1nd_seedservice
 # ChannelStatusService:           @local::lar1nd_channelstatus
 # DetPedestalService:             @local::lar1nd_detpedestalservice
 
@@ -54,7 +54,7 @@ lar1nd_simulation_services:
  MagneticField:                  @local::no_mag 	       
  BackTracker:                    @local::standard_backtracker
  DetectorClocksService:                    @local::lar1nd_detectorclocks
- SeedService:                    @local::lar1nd_seedservice
+ LArSeedService:                    @local::lar1nd_seedservice
 #ChannelStatusService:           @local::lar1nd_channelstatus
 }
 
@@ -72,7 +72,7 @@ lar1nd_opsimulation_services:
  MagneticField:                  @local::no_mag 	       
  BackTracker:                    @local::standard_backtracker
  DetectorClocksService:                    @local::lar1nd_detectorclocks
- SeedService:                    @local::lar1nd_seedservice
+ LArSeedService:                    @local::lar1nd_seedservice
 # ChannelStatusService:           @local::lar1nd_channelstatus
 }
 

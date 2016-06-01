@@ -32,7 +32,7 @@ extern "C" {
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 // art extensions
-#include "artextensions/SeedService/SeedService.hh"
+#include "larsim/RandomUtils/LArSeedService.h"
 
 
 #include "lardata/Utilities/LArFFT.h"
@@ -123,9 +123,9 @@ SimWireT1053::SimWireT1053(fhicl::ParameterSet const& pset)
   TString compression(pset.get< std::string >("CompressionType"));
   if (compression.Contains("Huffman", TString::kIgnoreCase)) fCompression = raw::kHuffman;
 
-  // create a default random engine; obtain the random seed from SeedService,
+  // create a default random engine; obtain the random seed from LArSeedService,
   // unless overridden in configuration with key "Seed" and "SeedPedestal"
-  art::ServiceHandle<artext::SeedService> Seeds;
+  art::ServiceHandle<sim::LArSeedService> Seeds;
   Seeds->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed");
   Seeds->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal");
 
