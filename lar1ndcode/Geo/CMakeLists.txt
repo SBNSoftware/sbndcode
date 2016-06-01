@@ -12,12 +12,11 @@
 #                 ${FHICLCPP}
 #                 ${CETLIB}
 #                 ${ROOT_BASIC_LIB_LIST}                
-#                 BASENAME_ONLY
 # )
 
 
 
-art_make( BASENAME_ONLY
+art_make(
           LIBRARY_NAME lar1nd_Geometry
           LIB_LIBRARIES larcore_Geometry
                         ${MF_MESSAGELOGGER}

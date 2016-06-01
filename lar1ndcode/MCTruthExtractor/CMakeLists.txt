@@ -28,7 +28,6 @@
 #                        ${CETLIB}
 #                        ${CLHEP}
 #                        ${ROOT_BASIC_LIB_LIST}
-#                  #BASENAME_ONLY
 #)
 
 # simple_plugin()
@@ -36,7 +35,7 @@
 add_subdirectory(alg)
 include_directories ( $ENV{GENIE_INC}/GENIE )
 
-art_make( BASENAME_ONLY
+art_make(
           LIBRARY_NAME Ntuples          
           MODULE_LIBRARIES 
             NuAnaAlg

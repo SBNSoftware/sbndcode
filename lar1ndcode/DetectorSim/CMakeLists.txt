@@ -4,10 +4,9 @@ simple_plugin(SimWireT1053 "module"
                            larcore_Geometry_Geometry_service
                            larsim_Simulation
                            lardata_Utilities
-                           #TimeService_service
                            lardata_RawData
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-                           SignalShapingServiceT1053_service
+                           lar1ndcode_Utilities_SignalShapingServiceT1053_service
                            larsim_RandomUtils_LArSeedService_service
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
@@ -24,7 +23,6 @@ simple_plugin(SimWireT1053 "module"
                            ${CETLIB}
                            ${CLHEP}
                            ${ROOT_BASIC_LIB_LIST}
-              BASENAME_ONLY
 )
 
 install_headers()
