@@ -24,13 +24,11 @@ set( lar1nd_util_lib_list lardata_Utilities_LArFFT_service
 
 simple_plugin( SignalShapingServiceT1053  "service"
                ${lar1nd_util_lib_list}
-               BASENAME_ONLY
         )
              
  
 simple_plugin( FileCatalogMetadataLAr1ND  "service"
                ${lar1nd_util_lib_list}
-               BASENAME_ONLY
         )
 install_headers()
 install_fhicl()

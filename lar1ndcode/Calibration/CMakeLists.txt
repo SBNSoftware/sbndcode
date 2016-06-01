@@ -1,10 +1,9 @@
 
 simple_plugin(CalWireT1053 "module"
                         lardata_Utilities
-                       # Filters
                         lardata_RawData
                         lardata_RecoBase
-                        SignalShapingServiceT1053_service
+                        lar1ndcode_Utilities_SignalShapingServiceT1053_service
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_PRINCIPAL}
                         ${ART_FRAMEWORK_SERVICES_REGISTRY}
@@ -21,7 +20,6 @@ simple_plugin(CalWireT1053 "module"
                         ${ROOT_XMLIO}
                         ${ROOT_GDML}
                         ${ROOT_BASIC_LIB_LIST}
-              BASENAME_ONLY
 )
 
 install_headers()

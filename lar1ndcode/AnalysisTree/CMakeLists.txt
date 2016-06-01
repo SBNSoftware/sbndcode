@@ -1,5 +1,5 @@
 
-art_make( BASENAME_ONLY
+art_make(
           MODULE_LIBRARIES larcore_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation

@@ -2,7 +2,7 @@ include_directories ( $ENV{GENIE_INC}/GENIE )
 
 
 
-art_make( BASENAME_ONLY
+art_make(
           LIBRARY_NAME NuAnaAlg
           LIB_LIBRARIES 
             larcore_Geometry_Geometry_service
