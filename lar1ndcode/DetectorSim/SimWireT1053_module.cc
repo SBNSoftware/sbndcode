@@ -21,6 +21,7 @@ extern "C" {
 #include <sys/stat.h>
 }
 
+#include "art/Utilities/Exception.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Event.h"
@@ -99,7 +100,7 @@ private:
   bool fGenNoise;                           ///< if True -> Gen Noise. if False -> Skip noise generation entierly
   std::string fNoiseFileFname;
   std::string fNoiseHistoName;
-  TH1D*             fNoiseHist;             ///< distribution of noise counts
+  TH1D*                  fNoiseHist = nullptr; ///< distribution of noise counts
 
   std::string fTrigModName;                 ///< Trigger data product producer name
   //define max ADC value - if one wishes this can
@@ -162,18 +163,22 @@ void SimWireT1053::reconfigure(fhicl::ParameterSet const& p)
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(p.get<std::string>("NoiseFileFname"), fNoiseFileFname);
 
-    TFile * in = new TFile(fNoiseFileFname.c_str(), "READ");
-    TH1D * temp = (TH1D *)in->Get(fNoiseHistoName.c_str());
-
-    if (temp != NULL)
-    {
-      fNoiseHist = new TH1D(fNoiseHistoName.c_str(), fNoiseHistoName.c_str(), temp->GetNbinsX(), 0, temp->GetNbinsX());
-      temp->Copy(*fNoiseHist);
+    TFile in(fNoiseFileFname.c_str(), "READ");
+    if (!in.IsOpen()) {
+      throw art::Exception(art::errors::FileOpenError)
+        << "Could not find Root file '" << fNoiseHistoName
+        << "' for noise histogram\n";
     }
-    else
-      throw cet::exception("SimWireT1053") << " Could not find noise histogram in Root file\n";
-    in->Close();
+    fNoiseHist = (TH1D*) in.Get(fNoiseHistoName.c_str());
 
+    if (!fNoiseHist) {
+      throw art::Exception(art::errors::NotFound)
+        << "Could not find noise histogram '" << fNoiseHistoName
+        << "' in Root file '" << in.GetPath() << "'\n";
+    }
+    // release the histogram from its file; now we own it
+    fNoiseHist->SetDirectory(nullptr);
+    in.Close();
   }
   
   //detector properties information
