@@ -1,4 +1,4 @@
-#include "services_lar1nd.fcl"
+#include "simulationservices_lar1nd.fcl"
 #include "largeantmodules_lar1nd.fcl"
 #include "mcreco.fcl"
 process_name: G4

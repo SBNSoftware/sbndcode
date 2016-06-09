@@ -1,8 +1,28 @@
-#include "calorimetry.fcl"
+#
+# File:    evdservices_lar1nd.fcl
+# Purpose: service settings for SBND event display in LArSoft
+# Version: 1.1
+# 
+# Provides:
+# 
+# - lar1nd_disp: bundle of event display services
+# - lar1nd_graphcluster: configuration of a GraphCluster module
+# 
+# Use as:
+#     
+#     services: {
+#       @table::lar1nd_disp
+#       # ...
+#     }
+# 
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.1]
+#   update for LArSoft 5.12
+#
+
 #include "services_lar1nd.fcl"
 #include "evdservices_base.fcl"
-##include "channelstatus_lar1nd.fcl"
-#include "database_lar1nd.fcl"
+#include "calorimetry.fcl"
 
 BEGIN_PROLOG
 
@@ -10,54 +30,36 @@ lar1nd_colordrawingopt:                       @local::standard_colordrawingopt
 lar1nd_rawdrawingopt:                         @local::standard_rawdrawingopt
 lar1nd_recodrawingopt:                        @local::standard_recodrawingopt
 lar1nd_analysisdrawingopt:                    @local::standard_analysisdrawingopt
-#{
-# DrawCalorimetry:                             1                                     
-# DrawParticleID:                              1                                     
-# DrawShowerCalor:                 	      0
-# CalorimetryModuleLabels:                     ["calo"]                              
-# ParticleIDModuleLabels:                      ["pid"]                               
-# CalorTemplateFileNames:                      ["dEdxKinErestemplate.root"]          
-#}                                                                                      
-lar1nd_simdrawingopt:                         @local::standard_simdrawingopt        
-lar1nd_evdlayoutopt:   		              @local::standard_evdlayoutopt         
-lar1nd_evdlayoutopt.ShowSideBar:	      1                                     
-lar1nd_evdlayoutopt.AutoZoomInterest:	      0                                     
-lar1nd_evdlayoutopt.PrintTotalCharge:	      0                                     
-lar1nd_evdlayoutopt.ShowEndPointSection:      1	                             
-lar1nd_evdlayoutopt.ShowEndPointMarkers:      1                                     
-lar1nd_evdlayoutopt.MakeSeeds:	              0                                     
-lar1nd_evdlayoutopt.ChangeWire:	              0                                     
-lar1nd_evdlayoutopt.MakeSeeds:	              0                                     
-lar1nd_evdlayoutopt.ChangeWire:	              1                                     
-lar1nd_scanopt:                               @local::standard_scanopt              
-lar1nd_evd:                                   @local::standard_evd                  
-lar1nd_infotransfer:                          @local::standard_infotransfer         
+lar1nd_simdrawingopt:                         @local::standard_simdrawingopt
+lar1nd_scanopt:                               @local::standard_scanopt
+lar1nd_evd:                                   @local::standard_evd
+lar1nd_infotransfer:                          @local::standard_infotransfer
+
+lar1nd_evdlayoutopt:                          @local::standard_evdlayoutopt
+lar1nd_evdlayoutopt.ShowSideBar:              1
+lar1nd_evdlayoutopt.AutoZoomInterest:         0
+lar1nd_evdlayoutopt.PrintTotalCharge:         0
+lar1nd_evdlayoutopt.ShowEndPointSection:      1
+lar1nd_evdlayoutopt.ShowEndPointMarkers:      1
+lar1nd_evdlayoutopt.MakeSeeds:                0
+lar1nd_evdlayoutopt.ChangeWire:               1
+
 lar1nd_disp:                                                                       
 {                                                                                  
- ExptGeoHelperInterface:                      @local::lar1nd_geometry_helper        
- Geometry:                                    @local::lar1nd_geo                    
- LArPropertiesService:                               @local::lar1nd_properties             
- DetectorPropertiesService:                          @local::lar1nd_detproperties          
- DatabaseUtil:		                      @local::lar1nd_database               
- ColorDrawingOptions:                         @local::lar1nd_colordrawingopt        
- SimulationDrawingOptions:                    @local::lar1nd_simdrawingopt          
- RawDrawingOptions:                           @local::lar1nd_rawdrawingopt          
- RecoDrawingOptions:                          @local::lar1nd_recodrawingopt         
- AnalysisDrawingOptions:                      @local::lar1nd_analysisdrawingopt     
- EvdLayoutOptions:	                      @local::lar1nd_evdlayoutopt           
- EventDisplay:                                @local::lar1nd_evd                    
- ScanOptions:                                 @local::lar1nd_scanopt                
- LArG4Parameters:                             @local::lar1nd_largeantparameters     
- LArVoxelCalculator:                          @local::lar1nd_larvoxelcalculator     
- InfoTransfer:		                      @local::lar1nd_infotransfer    
- DetectorClocksService:                  		      @local::lar1nd_detectorclocks
-#ChannelStatusService:                        @local::lar1nd_channelstatus
- DetPedestalService:      		      @local::lar1nd_detpedestalservice
-}                                                                                  
-                                                                                   
-                                                                                   
-#######################################                                            
-                                                                                   
-lar1nd_graphcluster:                          @local::standard_graphcluster         
+                                               @table::lar1nd_services
+  ColorDrawingOptions:                         @local::lar1nd_colordrawingopt
+  SimulationDrawingOptions:                    @local::lar1nd_simdrawingopt
+  RawDrawingOptions:                           @local::lar1nd_rawdrawingopt
+  RecoDrawingOptions:                          @local::lar1nd_recodrawingopt
+  AnalysisDrawingOptions:                      @local::lar1nd_analysisdrawingopt
+  EvdLayoutOptions:                            @local::lar1nd_evdlayoutopt
+  ScanOptions:                                 @local::lar1nd_scanopt
+  InfoTransfer:                                @local::lar1nd_infotransfer
+  EventDisplay:                                @local::lar1nd_evd
+}
+
+#######################################
+
+lar1nd_graphcluster:                          @local::standard_graphcluster
 
 END_PROLOG

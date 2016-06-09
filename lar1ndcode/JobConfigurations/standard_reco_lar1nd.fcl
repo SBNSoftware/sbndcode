@@ -1,4 +1,4 @@
-#include "services_lar1nd.fcl"
+#include "simulationservices_lar1nd.fcl"
 #include "caldata_lar1nd.fcl"
 #include "hitfindermodules_lar1nd.fcl"
 #include "cluster_lar1nd.fcl"

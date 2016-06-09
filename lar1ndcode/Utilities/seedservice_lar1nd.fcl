@@ -25,6 +25,6 @@ BEGIN_PROLOG
 #     timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
 # 
 
-lar1nd_seedservice: @local::perevent_seedservice # from seedservice.fcl
+lar1nd_seedservice: @local::per_event_seedservice # from seedservice.fcl
 
 END_PROLOG

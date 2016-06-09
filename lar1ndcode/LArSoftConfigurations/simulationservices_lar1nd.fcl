@@ -1,8 +1,77 @@
+#
+# File:    simulationservices_lar1nd.fcl
+# Purpose: collection of standard simulation service settings for SBND
+# Version: 1.1
+# 
+# Provides:
+# 
+# - lar1nd_simulation_services: bundle of services including Geant4, optical
+#   and electronics simulation (also includes the core ones)
+# - lar1nd_opsimulation_services: currently the same as lar1nd_simulation_services
+# 
+# Use as:
+#     
+#     services: {
+#       @table::lar1nd_simulation_services
+#       # ...
+#     }
+#
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.1]
+#   content moved from services_lar1nd.fcl
+#
+#
+
+#include "services_lar1nd.fcl"
 #include "simulationservices.fcl"
+#include "spacecharge_lar1nd.fcl"
+#include "larfft_lar1nd.fcl"
+#include "signalservices_lar1nd.fcl"
+#include "magfield.fcl"
+#include "backtracker.fcl"
+#include "spacecharge.fcl"
 
 BEGIN_PROLOG
 
-lar1nd_largeantparameters:   @local::standard_largeantparameters
-lar1nd_larvoxelcalculator:   @local::standard_larvoxelcalculator
+lar1nd_largeantparameters:   @local::standard_largeantparameters # from simulationservices.fcl
+lar1nd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
+
+
+# Define lar1nd_simulation_services
+lar1nd_simulation_services:
+{
+  RandomNumberGenerator:     {} # art random number generator manager
+                             @table::lar1nd_services
+  LArG4Parameters:           @local::lar1nd_largeantparameters 
+  LArVoxelCalculator:        @local::lar1nd_larvoxelcalculator 
+  MagneticField:             @local::no_mag
+  LArFFT:                    @local::lar1nd_larfft
+  SignalShapingServiceT1053: @local::lar1nd_signalshapingservice # from signalservices_lar1nd.fcl
+  SpaceCharge:               @local::lar1nd_spacecharge
+}
+
+
+lar1nd_opsimulation_services:
+{
+                            @table::lar1nd_simulation_services
+  OpDetResponseInterface:   @local::lar1nd_opdetresponse
+#  PhotonVisibilityService:  @local::lar1nd_photonvisibilityservice
+#  OpDigiProperties:         @local::lar1nd_opdigiproperties 
+}
+
+
+# Define lar1nd_optical_simulation_services
+#lar1nd_optical_simulation_services.LArPropertiesService.ScintYield: 24000
+#lar1nd_optical_simulation_services.LArPropertiesService.EnableCerenkovLight: false
+#lar1nd_optical_simulation_services.LArG4Parameters.UseCustomPhysics: true
+#lar1nd_optical_simulation_services.LArG4Parameters.EnabledPhysics: [ "Em",
+#                                                                     "FastOptical",
+#                                                                     "SynchrotronAndGN",
+#                                                                     "Ion",
+#                                                                     "Hadron",
+#                                                                     "Decay",
+#                                                                     "HadronElastic",
+#                                                                     "Stopping",
+#                                                                     "NeutronTrackingCut" ]
 
 END_PROLOG
