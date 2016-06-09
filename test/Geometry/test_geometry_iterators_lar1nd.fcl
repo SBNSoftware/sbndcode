@@ -1,0 +1,68 @@
+#
+# Geometry iterators test module on SBND detector geometry
+# 
+# Version: 1.1
+#
+
+#include "geometry_lar1nd.fcl"
+
+process_name: testGeoIter
+
+services: {
+  
+  Geometry:               @local::lar1nd_geo
+  ExptGeoHelperInterface: @local::lar1nd_geometry_helper
+  
+  message: {
+    destinations: {
+      LogDebugFile: {
+        type:       "file"
+        filename:   "debug.log"
+        append:     false
+        threshold:  "DEBUG"
+        categories: {
+          default:  { limit: -1 }
+        }
+      }
+      LogStandardOut: {
+        type:       "cout"
+        threshold:  "INFO"
+        categories: {
+          default:               { limit: -1 }
+          RecoBaseDefaultCtor:   { limit: 0 }
+          AnaBaseDefaultCtor:    { limit: 0 }
+          GeometryBadInputPoint: { limit: 5 timespan: 1000}
+        }
+      }
+      LogStandardError: {
+        type:       "cerr"
+        threshold:  "ERROR"
+        categories:{
+          default:{ }
+        }
+      }
+    }
+  }
+}
+
+source: {
+  module_type: EmptyEvent
+  maxEvents:   1       # Number of events to create
+}
+
+outputs: { }
+
+physics: {
+
+  analyzers: {
+    geoitertest: {
+      module_type: "GeometryIteratorTest"
+    }
+  }
+
+  ana:           [ geoitertest ]
+
+  trigger_paths: [ ]
+  end_paths:     [ ana ]
+}
+

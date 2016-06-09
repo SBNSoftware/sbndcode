@@ -1,7 +1,7 @@
 #
-# Geometry test module on LAr1ND detector geometry
+# Geometry test module on SBND detector geometry
 # 
-# Version: 1.0
+# Version: 1.1
 #
 
 #include "geometry_lar1nd.fcl"
@@ -9,10 +9,10 @@
 process_name: testGeo
 
 services: {
-  user: {
-    Geometry:               @local::lar1nd_geo
-    ExptGeoHelperInterface: @local::lar1nd_geometry_helper
-  }
+  
+  Geometry:               @local::lar1nd_geo
+  ExptGeoHelperInterface: @local::lar1nd_geometry_helper
+  
   message: {
     destinations: {
       LogDebugFile: { 
@@ -58,7 +58,22 @@ physics: {
   analyzers: {
     geotest: {
       module_type: "GeometryTest"
-      PrintWires:  true
+      
+      # Tests can be selected individually using a list of strings called
+      # RunTests.
+      # See GeometryTestAlg documentation for specific strings in case new tests
+      # are added.
+      RunTests: [
+        # run the default test suite (actually unnecessary):
+        "@default",
+        # in addition (overriding the default): print wires
+        "+PrintWires"
+      ]
+      
+      # wire pitch for planes #0, #1 and #2
+      ExpectedWirePitch: [ 0.3, 0.3, 0.3 ]
+      # plane pitches (#0 -> #1, #1 -> #2)
+      ExpectedWirePitch: [ 0.3, 0.3 ]
     }
   }
 
