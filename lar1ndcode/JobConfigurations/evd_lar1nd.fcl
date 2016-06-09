@@ -1,49 +1,41 @@
-#include "evdservices_lar1nd.fcl"
+#
+# File:    evd_lar1nd.fcl
+# Purpose: launches the standard event display configuration for SBND
+# Version: 1.1
+# 
+# 
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.1]
+#   update fo LArSoft 5.12
+#
 
+#include "evdservices_lar1nd.fcl"
+#include "messages_lar1nd.fcl"
 
 process_name: EVD
 
 services:
 {
-  # Load the service that manages root files for histograms.
-  TFileService: { fileName: "cosmics_hist.root" closeFileFast: false }
-  Timing:       {}
-  RandomNumberGenerator: {} #ART native random number generator
-  message:      @local::evd_message
-  user:         @local::lar1nd_disp
+                @table::lar1nd_disp
+  message:      @local::lar1nd_message_services_interactive
 }
 
-# Define the services
-
-#Look at the input files
 source:
 {
   module_type: RootInput
-  fileNames:  [ "data.root" ]
-  maxEvents:   -1       # Number of events to create
-  #inputCommands:["keep*","drop sim::PMTHits_*_*_*"]
 }
 
-outputs:{}
 
-# Define and configure some modules to do work on each event.
-# First modules are defined; they are scheduled later.
-# Modules are grouped by type.
 physics:
 {
-
- producers: 
- {
- }
-
- filters:{}
-
- analyzers:
- {
-  evdisp: {module_type: EVD}
- }
  
- #list the modules for this path, order matters, filters reject all following items
- evd: [ evdisp ] 
- recopath: []
+  analyzers:
+  {
+    evdisp: {module_type: EVD}
+  }
+  
+  evd: [ evdisp ]
+  
+  trigger_paths: []
+  end_paths: [ evd ]
 }
