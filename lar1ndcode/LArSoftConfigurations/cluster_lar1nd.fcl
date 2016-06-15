@@ -13,13 +13,11 @@ lar1nd_clustercrawleralg.ChgCut:                  [2., 2., 2.]
 lar1nd_clustercrawleralg.HitErrFac:               0.6                               
                                                                                     
 lar1nd_cchitfinderalg:                            @local::standard_cchitfinderalg   
-lar1nd_cchitfinderalg.MinSigInd:                  1.8                               
-lar1nd_cchitfinderalg.MinSigCol:                  2.5                               
+lar1nd_cchitfinderalg.MinPeak:                    [8, 5, 5]
 lar1nd_cchitfinderalg.MinRMSInd:                  5.                                
 lar1nd_cchitfinderalg.MinRMSCol:                  10.                               
 lar1nd_cchitfinderalg.ChiNorms:                   [0.5, 2.7]                        
 lar1nd_cchitfinderalg.ChgNorms:                   [1.0, 1.0]                        
-lar1nd_cchitrefineralg:                           @local::standard_cchitrefineralg  
                                                                                     
 lar1nd_fuzzyclusteralg:                           @local::standard_fuzzyclusteralg  
                                                                                     
@@ -34,7 +32,6 @@ lar1nd_endpointalg:                               @local::standard_endpointalg
 lar1nd_clustercrawler:                            @local::standard_clustercrawler   
 lar1nd_clustercrawler.ClusterCrawlerAlg:          @local::lar1nd_clustercrawleralg  
 lar1nd_clustercrawler.CCHitFinderAlg:             @local::lar1nd_cchitfinderalg     
-lar1nd_clustercrawler.CCHitRefinerAlg:            @local::lar1nd_cchitrefineralg    
 
 lar1nd_clustercrawlermc:                          @local::lar1nd_clustercrawler      
 lar1nd_clustercrawlermc.CCHitFinderAlg.MinRMSInd: 6.7
