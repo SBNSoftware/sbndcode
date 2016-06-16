@@ -1,0 +1,77 @@
+#
+# File:    simulationservices_sbnd.fcl
+# Purpose: collection of standard simulation service settings for SBND
+# Version: 1.1
+# 
+# Provides:
+# 
+# - sbnd_simulation_services: bundle of services including Geant4, optical
+#   and electronics simulation (also includes the core ones)
+# - sbnd_opsimulation_services: currently the same as sbnd_simulation_services
+# 
+# Use as:
+#     
+#     services: {
+#       @table::sbnd_simulation_services
+#       # ...
+#     }
+#
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.1]
+#   content moved from services_sbnd.fcl
+#
+#
+
+#include "services_sbnd.fcl"
+#include "simulationservices.fcl"
+#include "spacecharge_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+#include "magfield.fcl"
+#include "backtracker.fcl"
+#include "spacecharge.fcl"
+
+BEGIN_PROLOG
+
+sbnd_largeantparameters:   @local::standard_largeantparameters # from simulationservices.fcl
+sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
+
+
+# Define sbnd_simulation_services
+sbnd_simulation_services:
+{
+  RandomNumberGenerator:     {} # art random number generator manager
+                             @table::sbnd_services
+  LArG4Parameters:           @local::sbnd_largeantparameters 
+  LArVoxelCalculator:        @local::sbnd_larvoxelcalculator 
+  MagneticField:             @local::no_mag
+  LArFFT:                    @local::sbnd_larfft
+  SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  SpaceCharge:               @local::sbnd_spacecharge
+}
+
+
+sbnd_opsimulation_services:
+{
+                            @table::sbnd_simulation_services
+  OpDetResponseInterface:   @local::sbnd_opdetresponse
+#  PhotonVisibilityService:  @local::sbnd_photonvisibilityservice
+#  OpDigiProperties:         @local::sbnd_opdigiproperties 
+}
+
+
+# Define sbnd_optical_simulation_services
+#sbnd_optical_simulation_services.LArPropertiesService.ScintYield: 24000
+#sbnd_optical_simulation_services.LArPropertiesService.EnableCerenkovLight: false
+#sbnd_optical_simulation_services.LArG4Parameters.UseCustomPhysics: true
+#sbnd_optical_simulation_services.LArG4Parameters.EnabledPhysics: [ "Em",
+#                                                                     "FastOptical",
+#                                                                     "SynchrotronAndGN",
+#                                                                     "Ion",
+#                                                                     "Hadron",
+#                                                                     "Decay",
+#                                                                     "HadronElastic",
+#                                                                     "Stopping",
+#                                                                     "NeutronTrackingCut" ]
+
+END_PROLOG

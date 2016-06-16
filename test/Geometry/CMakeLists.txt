@@ -5,10 +5,10 @@
 # they are fast and always run.
 # FCL files need to be copied to the test area (DATAFILES directive) since they
 # are not installed.
-cet_test(geometry_lar1nd HANDBUILT
-  DATAFILES test_geometry_lar1nd.fcl
+cet_test(geometry_sbnd HANDBUILT
+  DATAFILES test_geometry_sbnd.fcl
   TEST_EXEC lar
-  TEST_ARGS --rethrow-all --config ./test_geometry_lar1nd.fcl
+  TEST_ARGS --rethrow-all --config ./test_geometry_sbnd.fcl
 )
 
 
@@ -16,10 +16,10 @@ cet_test(geometry_lar1nd HANDBUILT
 # the following are tests equivalent to the module ones, but with no framework
 #
 # unit test (use the hard-coded configuration for SBND v0 geometry)
-cet_test(geometry_lar1nd_test
-  SOURCES geometry_lar1nd_test.cxx
-  DATAFILES test_geometry_lar1nd.fcl
-  TEST_ARGS ./test_geometry_lar1nd.fcl
+cet_test(geometry_sbnd_test
+  SOURCES geometry_sbnd_test.cxx
+  DATAFILES test_geometry_sbnd.fcl
+  TEST_ARGS ./test_geometry_sbnd.fcl
   LIBRARIES larcore_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
@@ -32,8 +32,8 @@ cet_test(geometry_lar1nd_test
 
 # unit test (use the hard-coded configuration for SBND v0 geometry)
 # this uses BOOST for the test
-cet_test(geometry_iterator_lar1nd_test
-  SOURCES geometry_iterator_lar1nd_test.cxx
+cet_test(geometry_iterator_sbnd_test
+  SOURCES geometry_iterator_sbnd_test.cxx
   LIBRARIES larcore_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
@@ -46,8 +46,8 @@ cet_test(geometry_iterator_lar1nd_test
 
 
 # unit test (use the hard-coded configuration for SBND v0 geometry)
-cet_test(geometry_iterator_loop_lar1nd_test
-  SOURCES geometry_iterator_loop_lar1nd_test.cxx
+cet_test(geometry_iterator_loop_sbnd_test
+  SOURCES geometry_iterator_loop_sbnd_test.cxx
   LIBRARIES larcore_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
@@ -60,9 +60,9 @@ cet_test(geometry_iterator_loop_lar1nd_test
 
 # FCL files need to be copied to the test area (DATAFILES directive) since they
 # are not installed.
-cet_test(dump_channel_map_lar1nd_test HANDBUILT
-  DATAFILES dump_lar1nd_channelmap.fcl
+cet_test(dump_channel_map_sbnd_test HANDBUILT
+  DATAFILES dump_sbnd_channelmap.fcl
   TEST_EXEC lar
-  TEST_ARGS --rethrow-all --config ./dump_lar1nd_channelmap.fcl
+  TEST_ARGS --rethrow-all --config ./dump_sbnd_channelmap.fcl
 )
 

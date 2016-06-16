@@ -1,0 +1,22 @@
+#include "trackfinderalgorithms.fcl"
+
+BEGIN_PROLOG
+
+sbnd_spacepointalg:   @local::standard_spacepointalg
+
+sbnd_kalmanfilteralg: @local::standard_kalmanfilteralg
+
+sbnd_trackstitcheralg:  @local::standard_trackstitcheralg
+
+
+
+
+sbnd_seedfinderalgorithm:                          @local::standard_seedfinderalgorithm
+sbnd_seedfinderalgorithm.SpacePointAlg :           @local::sbnd_spacepointalg
+sbnd_seedfinderalgorithm.SpacePointAlg.PreferColl: true
+sbnd_seedfinderalgorithm.SpacePointAlg.Filter:     false
+
+sbnd_beziertrackeralgorithm:                       @local::standard_beziertrackeralgorithm
+sbnd_beziertrackeralgorithm.SeedFinder:            @local::sbnd_seedfinderalgorithm
+
+END_PROLOG

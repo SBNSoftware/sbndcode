@@ -1,0 +1,17 @@
+#include "opticaldetectorservices.fcl"
+
+BEGIN_PROLOG
+
+sbnd_opdigiproperties:           @local::standard_opdigiproperties
+sbnd_opdigiproperties_3windows:  @local::standard_opdigiproperties_3windows
+
+sbnd_opdetresponse:
+{
+   service_provider:        MicrobooneOpDetResponse
+   QuantumEfficiency:       1
+   WavelengthCutLow:        0 
+   WavelengthCutHigh:       10000
+}
+
+
+END_PROLOG

@@ -1,0 +1,88 @@
+#
+# Geometry test module on SBND detector geometry
+# 
+# Version: 1.1
+#
+
+#include "geometry_sbnd.fcl"
+
+process_name: testGeo
+
+services: {
+  
+  Geometry:               @local::sbnd_geo
+  ExptGeoHelperInterface: @local::sbnd_geometry_helper
+  
+  message: {
+    destinations: {
+      LogDebugFile: { 
+        type:       "file"
+        filename:   "geometry_sbnd.txt"
+        append:     false
+        threshold:  "INFO"
+        categories:{
+          default:      { limit: 0 }
+          GeometryTest: { limit: -1 }
+        }
+      }
+      LogStandardOut: {
+        type:       "cout"
+        threshold:  "INFO"
+        categories:{
+          default:{ limit: -1 }
+          RecoBaseDefaultCtor: { limit: 0 }
+          AnaBaseDefaultCtor:  { limit: 0 }
+          GeometryBadInputPoint: { limit: 5 timespan: 1000}
+        }
+      }
+      LogStandardError: {
+        type:       "cerr"
+        threshold:  "ERROR"
+        categories:{
+          default:{ }
+        }
+      }
+    }
+  }
+}
+
+source: {
+  module_type: EmptyEvent
+  maxEvents:   1       # Number of events to create
+}
+
+outputs: { }
+
+physics: {
+
+  analyzers: {
+    geotest: {
+      module_type: "GeometryTest"
+      
+      # Tests can be selected individually using a list of strings called
+      # RunTests.
+      # See GeometryTestAlg documentation for specific strings in case new tests
+      # are added.
+      RunTests: [
+        # run the default test suite (actually unnecessary):
+        "@default",
+        # in addition (overriding the default): print wires
+        "+PrintWires"
+      ]
+      
+      # wire pitch for planes #0, #1 and #2
+      ExpectedWirePitch: [ 0.3, 0.3, 0.3 ]
+      # plane pitches (#0 -> #1, #1 -> #2)
+      ExpectedWirePitch: [ 0.3, 0.3 ]
+    }
+  }
+
+  ana:           [ geotest ]
+
+  trigger_paths: [ ]
+  end_paths:     [ ana ]
+}
+
+# Uncomment if you want to check for overlaps
+# physics.analyzers.geotest.CheckForOverlaps: true 
+

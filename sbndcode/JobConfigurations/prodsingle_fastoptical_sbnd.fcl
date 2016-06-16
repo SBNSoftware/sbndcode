@@ -1,0 +1,124 @@
+#include "simulationservices_sbnd.fcl"
+#include "singles_sbnd.fcl"
+#include "largeantmodules_sbnd.fcl"
+#include "detsimmodules_sbnd.fcl"
+#include "mccheatermodules.fcl"
+#include "opticaldetectormodules_sbnd.fcl"
+#include "opticaldetectorservices_sbnd.fcl"
+#include "photpropservices_sbnd.fcl"
+
+
+process_name: SinglesGen
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "single_hist_sbnd.root" }
+  Timing:       {}
+  RandomNumberGenerator: {} #ART native random number generator
+  user:         @local::sbnd_opsimulation_services	
+}
+services.user.PhotonVisibilityService: @local::sbnd_photonvisibilityservice 
+services.user.OpDigiProperties:        @local::sbnd_opdigiproperties			
+
+services.user.PhotonVisibilityService.LibraryFile: "photonlibrary_temp.root" 
+
+#Generation specific voxelization
+services.user.PhotonVisibilityService.NX: 40
+services.user.PhotonVisibilityService.NY: 80 
+services.user.PhotonVisibilityService.NZ: 100 
+
+#Start each new event with an empty event.
+source:
+{
+  module_type: EmptyEvent
+  maxEvents:   5        # Number of events to create
+  firstRun:    1           # Run number to use for this file
+  firstEvent:  1           # number of first event in the file
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+ producers:
+ {
+   generator: @local::sbnd_singlep	 		  
+   largeant:  @local::sbnd_largeant	 		  
+   daq:       @local::sbnd_simwire 			  
+   backtrack: @local::standard_backtrackerloader 
+   opdigi:    @local::sbnd_opdigi				 
+   rns:       {module_type: "RandomNumberSaver"}
+ }
+
+ analyzers:
+ {
+   largana:   @local::sbnd_largeantana		 
+   pmtresponse: @local::sbnd_simphotoncounter  
+   opdigiana: @local::sbnd_opdigiana			  
+ }
+
+ #define the producer and filter modules for this path, order matters, 
+ #filters reject all following items.  see lines starting physics.producers below
+ simulate: [ generator, largeant, daq, backtrack, opdigi, rns ] 
+ analyzeIt:  [ largana, pmtresponse, opdigiana ]
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [ out1 ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [simulate] 
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [analyzeIt, stream1]  
+}
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "single_gen_sbnd.root" #default file name, can override from command line with -o or --output
+ }
+}
+
+# set quantum efficiency supressed scint yield to 0.03 * 24000
+services.user.LArPropertiesService.ScintYield: 24000
+
+# enable optical physics in LArG4
+services.user.LArG4Parameters.EnabledPhysics: [ "Em",
+                                                "FastOptical",
+                                                "SynchrotronAndGN",
+                                                "Ion",
+                                                "Hadron",
+                                                "Decay",
+                                                "HadronElastic",
+                                                "Stopping",
+                                                "NeutronTrackingCut" ]
+
+# enable this custom physics list
+services.user.LArG4Parameters.UseCustomPhysics: true
+
+# disable cerenkov light
+services.user.LArPropertiesService.EnableCerenkovLight: false
+
+
+
+physics.producers.generator.P0: [1. ]
+physics.producers.generator.X0: [100. ]
+physics.producers.generator.Y0: [0. ]
+physics.producers.generator.Z0: [-245. ]
+physics.producers.generator.Theta0XZ: [0. ]
+physics.producers.generator.Theta0YZ: [0. ]
+
+physics.analyzers.pmtresponse.MakeAllPhotonsTree: true
+physics.analyzers.pmtresponse.MakeDetectedPhotonsTree: true
+physics.analyzers.pmtresponse.MakeSimPhotonsTree: true
+physics.analyzers.pmtresponse.MakeOpDetsTree: true
+physics.analyzers.pmtresponse.MakeOpDetEventsTree: true

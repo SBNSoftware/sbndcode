@@ -1,0 +1,46 @@
+#include "trackfindermodules.fcl"
+#include "trackfinderalgorithms_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_track:                               @local::standard_track3Dreco  
+
+sbnd_cosmictracker:                       @local::standard_cosmictracker  
+sbnd_cosmictracker.TMatch:                2.5
+sbnd_cosmictracker.SMatch:                1.0
+sbnd_cosmictracker.Toler1:                60
+sbnd_cosmictracker.Toler2:                40
+
+sbnd_kalman:                              @local::standard_track3Dkalman
+
+sbnd_spacepts:                            @local::standard_spacepts     
+
+sbnd_spacepoint:                          @local::standard_spacepointana
+sbnd_spacepoint.SpacePointAlgTime:        @local::sbnd_spacepointalg
+sbnd_spacepoint.SpacePointAlgTime.MaxDT:  50.
+sbnd_spacepoint.SpacePointAlgSep:         @local::sbnd_spacepointalg
+sbnd_spacepoint.SpacePointAlgSep.MaxS:    10.
+sbnd_spacepoint.SpacePointAlgDefault:     @local::sbnd_spacepointalg
+sbnd_spacepoint_finder:                   @local::standard_spacepointfinder   
+sbnd_spacepoint_finder.SpacePointAlg:     @local::sbnd_spacepointalg    
+
+sbnd_spacepointcheater:                   @local::standard_spacepointcheater
+sbnd_spacepointcheater.SpacePointAlg:     @local::sbnd_spacepointalg    
+
+sbnd_track3Dkalmanhit:                    @local::standard_track3Dkalmanhit
+sbnd_track3Dkalmanhit.KalmanFilterAlg:    @local::sbnd_kalmanfilteralg
+sbnd_track3Dkalmanhit.SeedFinderAlg.ExtendThresh: 0.
+sbnd_track3Dkalmanhit.SpacePointAlg:      @local::sbnd_spacepointalg
+sbnd_track3Dkalmanhit.SpacePointAlg.MinViews:     2
+
+
+sbnd_trackstitcher:                               @local::standard_trackstitcher
+sbnd_trackstitcher.TrackModuleLabel:              "trackkalsps"
+sbnd_trackstitcher.SpptModuleLabel:               "spacepointfinder"
+sbnd_trackstitcher.StitchAlg:                     @local::sbnd_trackstitcheralg
+
+
+sbnd_beziertrackermodule:                         @local::standard_beziertrackermodule
+sbnd_beziertrackermodule.BezierTrackerAlgorithm:  @local::sbnd_beziertrackeralgorithm
+
+END_PROLOG

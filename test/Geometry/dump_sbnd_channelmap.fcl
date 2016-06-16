@@ -1,0 +1,82 @@
+#
+# File:    dump_sbnd_channelmap.fcl
+# Purpose: dumps the full channel mapping of SBND detector
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    June 6, 2016
+# Version: 1.0
+# 
+# Dependencies:
+# - geometry service
+#
+
+#include "geometry_sbnd.fcl"
+
+process_name: DumpChannelMap
+
+services: {
+  
+  Geometry:               @local::sbnd_geo
+  ExptGeoHelperInterface: @local::sbnd_geometry_helper
+  
+  message: {
+    destinations: {
+      LogChannelMap: { 
+        type:       "file"
+        filename:   "sbnd_channelmap.txt"
+        append:     false
+        threshold:  "INFO"
+        categories:{
+          default:        { limit:  0 }
+          DumpChannelMap: { limit: -1 }
+        }
+      }
+      LogStandardOut: {
+        type:       "cout"
+        threshold:  "INFO"
+        categories:{
+          default:{ limit: -1 }
+          RecoBaseDefaultCtor: { limit: 0 }
+          AnaBaseDefaultCtor:  { limit: 0 }
+          GeometryBadInputPoint: { limit: 5 timespan: 1000}
+        }
+      }
+      LogStandardError: {
+        type:       "cerr"
+        threshold:  "ERROR"
+        categories:{
+          default:{ }
+        }
+      }
+    } # destinations
+  } # message
+} # services
+
+source: {
+  module_type: EmptyEvent
+  maxEvents:   1       # Number of events to create
+}
+
+outputs: { }
+
+physics: {
+  
+  analyzers: {
+    dumpchannelmap: {
+      module_type:  "DumpChannelMap"
+      module_label: "dumpchannelmap"
+      
+      ChannelToWires: true
+      WireToChannel:  true
+      
+      OutputCategory: DumpChannelMap
+      
+    } # dumpchannelmap
+  } # analyzers
+  
+  ana:           [ dumpchannelmap ]
+  
+  trigger_paths: [ ]
+  end_paths:     [ ana ]
+  
+} # physics
+

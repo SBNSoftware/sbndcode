@@ -1,0 +1,12 @@
+#include "databaseutil.fcl"
+
+BEGIN_PROLOG
+
+sbnd_database:               @local::standard_database
+sbnd_database.PassFileName:  ".apswd"
+sbnd_database.DBName:	 "argoneut_dev"
+sbnd_database.DBUser:	 "argoneut_reader"
+sbnd_database.ShouldConnect: false       # enable it when DB is available
+sbnd_database.ToughErrorTreatment: false # enable it when DB is available too
+
+END_PROLOG
