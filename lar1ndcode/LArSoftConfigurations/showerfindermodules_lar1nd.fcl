@@ -1,8 +1,0 @@
-#include "calorimetry.fcl"
-#include "showerfindermodules.fcl"
-
-BEGIN_PROLOG
-
-lar1nd_shower:     @local::standard_shower
-
-END_PROLOG

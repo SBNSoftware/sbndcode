@@ -1,7 +1,0 @@
-#include "larproperties.fcl"
-
-BEGIN_PROLOG
-
-lar1nd_properties: @local::standard_properties
-
-END_PROLOG
