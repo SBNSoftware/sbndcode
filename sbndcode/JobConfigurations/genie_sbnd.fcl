@@ -8,14 +8,14 @@ sbnd_genie.GlobalTimeOffset:   1.28e6                  #sbnd reads out 1.6ms bef
 
 sbnd_genie_hist:               @local::sbnd_genie
 sbnd_genie_hist.FluxType:       "histogram"
-sbnd_genie_hist.FluxFiles:     ["/sbnd/data/flux/gsimple_microboone-100-onaxis_numintp_*.root"] 
+sbnd_genie_hist.FluxFiles:     ["/lar1nd/data/flux/gsimple_microboone-100-onaxis_numintp_*.root"] 
 sbnd_genie_hist.BeamCenter:    [0., 0., 0.]  
 sbnd_genie_hist.BeamDirection: [0., 0., 1.]    
 sbnd_genie_hist.BeamRadius:    4.              
 
 sbnd_genie_simple:                @local::sbnd_genie
 sbnd_genie_simple.FluxType:       "simple_flux"
-sbnd_genie_simple.FluxFiles:      ["/sbnd/data/flux/gsimple_microboone-100-onaxis_numintp_*.root"]
+sbnd_genie_simple.FluxFiles:      ["/lar1nd/data/flux/gsimple_microboone-100-onaxis_numintp_*.root"]
 sbnd_genie_simple.EventsPerSpill: 0
 sbnd_genie_simple.POTPerSpill: 5e12
 
