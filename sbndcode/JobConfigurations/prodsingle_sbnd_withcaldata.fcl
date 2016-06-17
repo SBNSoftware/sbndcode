@@ -1,72 +1,39 @@
-#include "simulationservices_sbnd.fcl"
-#include "singles_sbnd.fcl"
-#include "largeantmodules_sbnd.fcl"
-#include "detsimmodules_sbnd.fcl"
+#
+# File:    prodsingle_sbnd_withcaldata.fcl
+# Purpose: Produce single muon events including full SBND detector simulation
+#          and calibration data
+# Version: 1.1
+# 
+# This configuration runs event generation, simulation of propagation through
+# matter, readout simulation and signal processing (the first reconstruction
+# step).
+# 
+# Input: no input file required
+# 
+# Dependencies:
+# - uses prodsingle_sbnd.fcl as baseline
+#
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.1]
+#   - rewritten to be based on prodsingle_sbnd.fcl
+#
+
+
 #include "caldata_sbnd.fcl"
 
-process_name: SinglesGen
+# include the base configuration
 
-services:
-{
-  # Load the service that manages root files for histograms.
-  TFileService: { fileName: "single_hist.root" }
-  Timing:       {}
-  RandomNumberGenerator: {} #ART native random number generator
-  user:         @local::sbnd_simulation_services
-}
+#include "prodsingle_sbnd.fcl"
 
 
-#Start each new event with an empty event.
-source:
-{
-  module_type: EmptyEvent
-  maxEvents:   10          # Number of events to create
-  firstRun:    1           # Run number to use for this file
-  firstEvent:  1           # number of first event in the file
-}
+# configure the additional module we want to call:
+physics.producers.calwire: @local::sbnd_calwire
 
-# Define and configure some modules to do work on each event.
-# First modules are defined; they are scheduled later.
-# Modules are grouped by type.
-physics:
-{
+# ... and add it to the standard path
 
- producers:
- {
-   generator: @local::sbnd_singlep	  
-   largeant:  @local::sbnd_largeant	  
-   daq:       @local::sbnd_simwire       
-   caldata:       @local::sbnd_calwire     
-   rns:       { module_type: "RandomNumberSaver" }
- }
+physics.simulate: [ rns, generator, largeant, daq, calwire ] 
 
- #define the producer and filter modules for this path, order matters, 
- #filters reject all following items.  see lines starting physics.producers below
- simulate: [ generator, largeant, daq, caldata, rns ] 
- 
- #define the output stream, there could be more than one if using filters 
- stream1:  [ out1 ]
-
- #ie analyzers and output streams.  these all run simultaneously
- end_paths:     [stream1]  
-}
-
-#block to define where the output goes.  if you defined a filter in the physics
-#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
-#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
-outputs:
-{
- out1:
- {
-   module_type: RootOutput
-   fileName:    "single_gen.root" #default file name, can override from command line with -o or --output
- }
-}
-
-services.user.SignalShapingServiceT1053.ASICGainInMVPerFC: 14
-
-
-physics.producers.generator.X0: [ 100 ]
-physics.producers.generator.Y0: [ 100 ]
-physics.producers.generator.Z0: [ 10 ]
-physics.producers.generator.ThetaXZ0: [ 10 ]
+#
+# at the end of the configuration, we can override single parameters to reflect our needs:
+#
+services.SignalShapingServiceT1053.ASICGainInMVPerFC: 14
