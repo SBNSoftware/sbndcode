@@ -9,7 +9,7 @@ process_name: SinglesGen
 # Standard configurations for art's built-in FileCatalogMetadata service.
 # Metadata fields are standard, but values are still microboone-specific.
 
-art_file_catalog:
+sbnd_file_catalog:
 {
   # Note sam application name is taken from "process_name" fcl parameter in main job file.
   applicationFamily:   "art"
@@ -19,11 +19,11 @@ art_file_catalog:
   fileType:            "unknown"
 }
 
-art_file_catalog_mc:           @local::art_file_catalog
-art_file_catalog_mc.fileType:  "mc"
+sbnd_file_catalog_mc:           @local::sbnd_file_catalog
+sbnd_file_catalog_mc.fileType:  "mc"
 
-art_file_catalog_data:           @local::art_file_catalog
-art_file_catalog_data.fileType:  "data"
+sbnd_file_catalog_data:           @local::sbnd_file_catalog
+sbnd_file_catalog_data.fileType:  "data"
 
 
 sbnd_file_catalog:
@@ -47,7 +47,7 @@ services:
   TFileService: { fileName: "single_hist.root" }
   Timing:       {}
   RandomNumberGenerator: {} #ART native random number generator
-  FileCatalogMetadata:  @local::art_file_catalog_mc
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc
   user:         @local::sbnd_simulation_services
 }
 

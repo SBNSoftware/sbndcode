@@ -11,7 +11,7 @@ services:
   TFileService: { fileName: "ntuple.root" }
   TimeTracker:       {}
   SimpleMemoryCheck:     { ignoreTotal: 1 } # default is one
-  FileCatalogMetadata:  @local::art_file_catalog_mc
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc
                         @table::sbnd_services
 }
 
