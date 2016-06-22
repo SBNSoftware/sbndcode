@@ -25,6 +25,16 @@ TryNplus1Fits:        0 	       # 0 = will try to re-fit poorly modled hits with
 Chi2NDFRetry:	      25.0	       # If the first hit returns a Chi2/NDF greater than (2X) this 
 				       # number (for single pulse) it will try a second fit
 Chi2NDF:	      2000	       # maximum Chisquared / NDF allowed for a hit to be saved (Set very high by default)
-}
+
+FilterHits:           false            # do not apply any filter to the hits
+
+# issue #12979: remove the following line after issue #12978 is fixed
+HitFilterAlg: {
+   AlgName: "HitFilterAlg"
+   MinPulseHeight: [5.0, 5.0, 5.0]
+   MinPulseSigma:  [1.0, 1.0, 1.0]
+} # HitFilterAlg
+
+} # sbnd_gaushitfinder
 
 END_PROLOG
