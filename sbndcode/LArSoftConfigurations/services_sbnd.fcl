@@ -35,6 +35,7 @@
 #include "opticaldetectorservices_sbnd.fcl"
 #include "channelstatus_sbnd.fcl"
 #include "database_sbnd.fcl"
+#include "sam_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -45,6 +46,7 @@ BEGIN_PROLOG
 sbnd_services:
 {
   message:                        @local::sbnd_message_services
+  FileCatalogMetadata:            @local::sbnd_file_catalog_mc
 #                                  @table::sbnd_resourcemonitorservices
   LArSeedService:                 @local::sbnd_seedservice
   ExptGeoHelperInterface:         @local::sbnd_geometry_helper     # from geometry_sbnd.fcl

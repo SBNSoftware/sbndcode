@@ -19,7 +19,7 @@ services:
   TFileService: { fileName: "PhotonLibraryFile.root" }
   Timing:       {}
   RandomNumberGenerator: {} #ART native random number generator
-  FileCatalogMetadata:  @local::art_file_catalog_mc
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc
   user:         @local::sbnd_opsimulation_services
 }
 
