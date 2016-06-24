@@ -1,6 +1,10 @@
-# cmake driver file for testing
+# cmake driver file for testing from CET build tools
+include(CetTest)
 
-# Enable asserts
+# Always enable asserts (for tests only)
 cet_enable_asserts()
 
-# Add test items here
+# test directories
+add_subdirectory(Geometry)
+add_subdirectory(JobConfigurations)
+

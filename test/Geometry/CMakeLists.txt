@@ -9,6 +9,7 @@ cet_test(geometry_sbnd HANDBUILT
   DATAFILES test_geometry_sbnd.fcl
   TEST_EXEC lar
   TEST_ARGS --rethrow-all --config ./test_geometry_sbnd.fcl
+  OPTIONAL_GROUPS Broken
 )
 
 
@@ -27,6 +28,7 @@ cet_test(geometry_sbnd_test
             ${FHICLCPP}
             ${CETLIB}
 	    ${ROOT_CORE}
+  OPTIONAL_GROUPS Broken
 )
 
 
