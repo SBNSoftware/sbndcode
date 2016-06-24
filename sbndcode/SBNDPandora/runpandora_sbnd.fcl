@@ -1,0 +1,90 @@
+#include "services_sbnd.fcl"
+#include "caldata_sbnd.fcl"
+#include "hitfindermodules_sbnd.fcl"
+#include "pandoramodules_sbnd.fcl"
+
+process_name: SBNDPandora
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "ntuple.root" }
+  TimeTracker:       {}
+  SimpleMemoryCheck:     { ignoreTotal: 1 } # default is one
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc
+                        @table::sbnd_services
+}
+
+
+### Define input file format
+source:
+{
+  module_type: RootInput
+}
+
+### Define output file format
+outputs:
+{
+
+}
+
+### Define the modules and create chains
+physics:
+{
+  producers:{
+    caldata:           @local::sbnd_calwire	
+    gaushit:           @local::sbnd_gaushitfinder
+    pandora:           @local::sbnd_pandora
+  }
+
+  filters:{
+
+  } 
+
+  analyzers:{
+    pandorana:         {module_type: PFParticleAnalysis}
+    pandoramonitoring: {module_type: PFParticleMonitoring}
+    pandorahits:       {module_type: PFParticleHitDumper}
+  }
+
+  ### Set up a chain of Producer modules
+  reco: [ caldata, gaushit, pandora ]
+
+  ### Set up a chain of Analyzer modules
+  ana: [ pandorana, pandoramonitoring, pandorahits ]
+  
+  ### Set up the trigger paths (these are the modules that modify the event) 
+  trigger_paths: [ reco ] 
+
+  ### Set up the end paths (these are the modules that do not modify the event)
+  end_paths: [ ana ]
+}
+
+### Configure the Geometry
+####services.Geometry: @local::sbnd
+
+### Configure the Producer modules
+physics.producers.caldata.DigitModuleLabel: "daq"
+physics.producers.gaushit.CalDataModuleLabel: "caldata"
+physics.producers.pandora.HitFinderModuleLabel: "gaushit"
+physics.producers.pandora.EnableMonitoring: true
+
+####physics.producers.pandora.UseLeftVolume: false
+####physics.producers.pandora.UseRightVolume: true
+####physics.producers.pandora.ConfigFile: "PandoraSettings_SBND_Cosmic.xml"
+
+
+### Configure the Pandora Analyzer modules
+physics.analyzers.pandoramonitoring.UseDaughterPFParticles:  true
+physics.analyzers.pandoramonitoring.HitFinderModule: "gaushit"
+physics.analyzers.pandoramonitoring.SpacePointModule: "pandora"
+physics.analyzers.pandoramonitoring.PFParticleModule: "pandora"
+physics.analyzers.pandoramonitoring.TrackModule: "pandora"
+physics.analyzers.pandorahits.HitFinderModule: "gaushit"
+physics.analyzers.pandorahits.SpacePointModule: "pandora"
+physics.analyzers.pandorahits.PFParticleModule: "pandora"
+physics.analyzers.pandorahits.TrackModule: "pandora"
+physics.analyzers.pandorana.SpacePointModule: "pandora"
+physics.analyzers.pandorana.PFParticleModule: "pandora"
+physics.analyzers.pandorana.TrackModule: "pandora"
+

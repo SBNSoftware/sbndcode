@@ -1,0 +1,3 @@
+Tests to full FHiCL files should be included in the Continuous Integration test suite.
+Here is a single exception to verify the very basics without triggering the full C.I.
+

@@ -1,0 +1,8 @@
+#include "calorimetry.fcl"
+#include "showerfindermodules.fcl"
+
+BEGIN_PROLOG
+
+sbnd_shower:     @local::standard_shower
+
+END_PROLOG

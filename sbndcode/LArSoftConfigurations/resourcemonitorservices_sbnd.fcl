@@ -1,0 +1,51 @@
+#
+# File:    resourcemonitorservices_sbnd.fcl
+# Purpose: SBND "standard" configuration for services monitoring resource usage
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    June 1st, 2016
+# Version: 1.0
+# 
+# Provided settings:
+# - sbnd_resourcemonitorservices:
+#   art services to track memory and CPU usage; the configuration will create
+#   a database file in the local directory and print summaries on screen
+# 
+# Usage:
+#     
+#     services: {
+#       ...
+#       @table::sbnd_resourcemonitorservices
+#     }
+#     
+#     
+# 
+# 
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.0]
+#   original version
+#
+#
+
+BEGIN_PROLOG
+
+sbnd_resourcemonitorservices: {
+  
+  TimeTracker: {
+    printSummary: true
+    dbOutput: {
+      filename: "cputime.db"
+      overwrite: true
+    }
+  }
+  
+  MemoryTracker: {
+    printSummary: true
+    dbOutput: {
+      filename: "memory.db"
+      overwrite: true
+    }
+  }
+  
+} # sbnd_resourcemonitorservices
+
+END_PROLOG

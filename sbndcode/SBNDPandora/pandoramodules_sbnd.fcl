@@ -1,0 +1,7 @@
+#include "pandoramodules.fcl"
+
+BEGIN_PROLOG
+
+sbnd_pandora:  @local::standard_pandora
+
+END_PROLOG

@@ -1,0 +1,7 @@
+#include "photpropmodules.fcl"
+
+BEGIN_PROLOG
+
+sbnd_photonlibraryanalyzer: @local::standard_photonlibraryanalyzer
+
+END_PROLOG

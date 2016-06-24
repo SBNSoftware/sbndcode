@@ -1,0 +1,30 @@
+#
+# File:    database_sbnd.fcl
+# Purpose: configuration for database-accessing services for SBND
+# Date:    January 8th, 2016
+#
+#
+
+#include "database_standard.fcl"
+
+BEGIN_PROLOG
+
+# ##############################################################################
+# pedestal access;
+# ------------------------------------------------------------------------------
+# the default configuration has database access disabled,
+# and returns a fixed value no matter what.
+# We can override that value here.
+sbnd_detpedestalservice: {
+  service_provider: SIOVDetPedestalService
+  DetPedestalRetrievalAlg: @local::standard_pedestalretrievalalg
+}
+
+# Ditto: we set the pedestals to reflect the current simulation settings from
+# detsimmodules_sbnd.fcl
+sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultCollMean: 400
+sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultIndMean: 2048
+
+# ##############################################################################
+
+END_PROLOG

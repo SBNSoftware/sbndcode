@@ -1,0 +1,45 @@
+#include "genie.fcl"
+
+BEGIN_PROLOG
+
+sbnd_genie:                    @local::standard_genie
+sbnd_genie.BeamName:           "booster"
+sbnd_genie.GlobalTimeOffset:   1.28e6                  #sbnd reads out 1.6ms before the spill
+
+sbnd_genie_hist:               @local::sbnd_genie
+sbnd_genie_hist.FluxType:       "histogram"
+sbnd_genie_hist.FluxFiles:     ["/lar1nd/data/flux/gsimple_microboone-100-onaxis_numintp_*.root"] 
+sbnd_genie_hist.BeamCenter:    [0., 0., 0.]  
+sbnd_genie_hist.BeamDirection: [0., 0., 1.]    
+sbnd_genie_hist.BeamRadius:    4.              
+
+sbnd_genie_simple:                @local::sbnd_genie
+sbnd_genie_simple.FluxType:       "simple_flux"
+sbnd_genie_simple.FluxFiles:      ["/lar1nd/data/flux/gsimple_microboone-100-onaxis_numintp_*.root"]
+sbnd_genie_simple.EventsPerSpill: 0
+sbnd_genie_simple.POTPerSpill: 5e12
+
+
+sbnd_genie_simple_dirt:                @local::sbnd_genie
+sbnd_genie_simple_dirt.FluxType:       "simple_flux"
+sbnd_genie_simple_dirt.FluxFiles:      ["uboonebeam/bnb_gsimple_fluxes_02.28.2014_470_dirt/gsimple_sbnd-470-onaxis-dirt_mc_nu_dummy_ntrd_*.root"]
+sbnd_genie_simple_dirt.EventsPerSpill: 0
+sbnd_genie_simple_dirt.POTPerSpill: 5e12
+
+sbnd_genie_simple_numi:                   @local::standard_genie
+sbnd_genie_simple_numi.BeamName:          "numi"
+sbnd_genie_simple_numi.GlobalTimeOffset:  1.6e6
+sbnd_genie_simple_numi.POTPerSpill:       3e13
+sbnd_genie_simple_numi.EventsPerSpill:    0
+sbnd_genie_simple_numi.FluxType:       "simple_flux"
+sbnd_genie_simple_numi.FluxFiles:      ["uboonebeam/numi_gsimple_fluxes_12.17.2015_470/gsimple_*.root"]					      
+ 
+sbnd_genie_simple_numi_dirt:                   @local::sbnd_genie_simple_numi
+sbnd_genie_simple_numi_dirt.FluxFiles:      ["numi_gsimple_fluxes_02.27.2014/normal_window_dirt/second_try/*.root",
+   					           "numi_gsimple_fluxes_02.27.2014/length_window_dirt/second_try/*.root",
+					           "numi_gsimple_fluxes_02.27.2014/bottom_window_dirt/second_try/*.root"]
+
+
+
+
+END_PROLOG

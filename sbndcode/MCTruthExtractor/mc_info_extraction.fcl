@@ -1,0 +1,109 @@
+#include "simulationservices_sbnd.fcl"
+#include "MCTruthExtractor.fcl"
+
+process_name: NuAna
+
+############ Stolen from uboone:
+ 
+# Standard configurations for art's built-in FileCatalogMetadata service.
+# Metadata fields are standard, but values are still microboone-specific.
+
+sbnd_file_catalog:
+{
+  # Note sam application name is taken from "process_name" fcl parameter in main job file.
+  applicationFamily:   "art"
+  applicationVersion:  "development"
+  group:               "sbnd"
+  fileFormat:          "root"
+  fileType:            "unknown"
+}
+
+sbnd_file_catalog_mc:           @local::sbnd_file_catalog
+sbnd_file_catalog_mc.fileType:  "mc"
+
+sbnd_file_catalog_data:           @local::sbnd_file_catalog
+sbnd_file_catalog_data.fileType:  "data"
+
+
+sbnd_file_catalog:
+{
+  Metadata: [ "group",          "sbnd",   # This field should move to FileCatalogMetadata. 
+              "fileFormat",     "root",     # This field should move to FileCatalogMetadata.
+              "fclName",        "",
+              "fclVersion",     "",
+              "projectName",    "",
+              "projectStage",   "",
+              "projectVersion", "" ]
+  GeneratePerFileMetadata: true
+  CopyMetadataAttributes:  [ "fileType", "runType" ]
+  RenameTemplate:          ""
+  RenameOverwrite:         true
+}
+
+
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "nuana_hist.root" }
+  Timing:       {}
+  SimpleMemoryCheck:     { ignoreTotal: 1 } # default is one
+  RandomNumberGenerator: {} #ART native random number generator
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc
+  user:                 @local::sbnd_simulation_services
+}
+
+#Start each new event with an empty event.
+source:
+{
+  module_type: RootInput
+  maxEvents:   10          # Number of events to create
+  firstRun:    1           # Run number to use for this file
+  firstEvent:  1           # number of first event in the file
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+ producers:
+ {
+   # rns:       { module_type: "RandomNumberSaver" }
+ }
+ analyzers:
+ {
+   nuana: @local::standard_nuana
+
+ }
+
+ #define the producer and filter modules for this path, order matters, 
+ #filters reject all following items.  see lines starting physics.producers below
+ ana:   [nuana]
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [ out1 ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [simulate] 
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [stream1,ana]  
+}
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   dataTier:    "generated" 
+   fileName:    "nuana.root" #default file name, can override from command line with -o or --output
+ }
+}
+
+physics.analyzers.nuana.FullOsc:            "true"    #use true or false

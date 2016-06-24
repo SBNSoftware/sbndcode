@@ -1,0 +1,39 @@
+#
+# File:    prodsingle_sbnd_withcaldata.fcl
+# Purpose: Produce single muon events including full SBND detector simulation
+#          and calibration data
+# Version: 1.1
+# 
+# This configuration runs event generation, simulation of propagation through
+# matter, readout simulation and signal processing (the first reconstruction
+# step).
+# 
+# Input: no input file required
+# 
+# Dependencies:
+# - uses prodsingle_sbnd.fcl as baseline
+#
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.1]
+#   - rewritten to be based on prodsingle_sbnd.fcl
+#
+
+
+#include "caldata_sbnd.fcl"
+
+# include the base configuration
+
+#include "prodsingle_sbnd.fcl"
+
+
+# configure the additional module we want to call:
+physics.producers.calwire: @local::sbnd_calwire
+
+# ... and add it to the standard path
+
+physics.simulate: [ rns, generator, largeant, daq, calwire ] 
+
+#
+# at the end of the configuration, we can override single parameters to reflect our needs:
+#
+services.SignalShapingServiceT1053.ASICGainInMVPerFC: 14

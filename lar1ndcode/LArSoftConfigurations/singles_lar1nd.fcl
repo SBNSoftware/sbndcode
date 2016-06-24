@@ -1,7 +1,0 @@
-#include "singles.fcl"
-
-BEGIN_PROLOG
-
-lar1nd_singlep: @local::standard_singlep
-
-END_PROLOG

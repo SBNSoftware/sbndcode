@@ -1,0 +1,44 @@
+BEGIN_PROLOG
+
+# Standard configurations for art's built-in FileCatalogMetadata service.
+# Metadata fields are standard, but values are still microboone-specific.
+
+sbnd_file_catalog:
+{
+  # Note sam application name is taken from "process_name" fcl parameter in main job file.
+  applicationFamily:   "art"
+  applicationVersion:  "development"
+  group:               "sbnd"
+  runType:             "physics"
+  fileType:            "unknown"
+}
+
+sbnd_file_catalog_mc:           @local::sbnd_file_catalog
+sbnd_file_catalog_mc.fileType:  "mc"
+
+sbnd_file_catalog_data:           @local::sbnd_file_catalog
+sbnd_file_catalog_data.fileType:  "data"
+
+# Standard configurations for FileCatalogMetadataExtras service.
+# Both fields and values are microboone-specific.
+
+# microboone_file_catalog:
+# {
+#   Metadata: [ "group",          "sbnd",   # This field should move to FileCatalogMetadata. 
+#               "fileFormat",     "root",     # This field should move to FileCatalogMetadata.
+#               "fclName",        "",
+#               "fclVersion",     "",
+#               "projectName",    "",
+#               "projectStage",   "",
+#               "projectVersion", "" ]
+#   GeneratePerFileMetadata: true
+#   CopyMetadataAttributes:  [ "fileType", "runType" ]
+#   RenameTemplate:          ""
+#   RenameOverwrite:         true
+# }
+
+# this is for backward compatibility only; users should use the definitions above
+art_file_catalog_mc:   @local::sbnd_file_catalog_mc
+art_file_catalog_data: @local::sbnd_file_catalog_data
+
+END_PROLOG

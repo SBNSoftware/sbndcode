@@ -1,8 +1,0 @@
-#include "simulationservices.fcl"
-
-BEGIN_PROLOG
-
-lar1nd_largeantparameters:   @local::standard_largeantparameters
-lar1nd_larvoxelcalculator:   @local::standard_larvoxelcalculator
-
-END_PROLOG

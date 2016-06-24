@@ -1,0 +1,18 @@
+#include "calorimetry.fcl"
+
+BEGIN_PROLOG
+
+sbnd_calorimetryalgdata:    @local::standard_calorimetryalgdata
+sbnd_calorimetryalgmc:      @local::standard_calorimetryalgmc
+
+sbnd_calodata:              @local::standard_calodata
+sbnd_calodata.CaloAlg:      @local::sbnd_calorimetryalgdata
+
+sbnd_calomc:                @local::standard_calomc
+sbnd_calomc.CaloAlg:        @local::sbnd_calorimetryalgmc
+
+
+sbnd_beziercalorimetry:         @local::standard_beziercalorimetry
+sbnd_beziercalorimetry.CaloAlg: @local::sbnd_calorimetryalgmc
+
+END_PROLOG
