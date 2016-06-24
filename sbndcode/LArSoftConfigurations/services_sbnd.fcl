@@ -1,13 +1,15 @@
 #
 # File:    services_sbnd.fcl
 # Purpose: collection of standard service settings for SBND
-# Version: 1.1
+# Version: 1.2
 # 
 # Provides:
 # 
 # - sbnd_services: bundle of services including message configuration, core
 #   services (geometry, properties, conditions); missing optical for now;
 #   targeted to reconstruction jobs (no backtracker though)
+# - sbnd_prod_services: extends the scope of sbnd_services with services
+#   intended for production (e.g. SAM storage)
 # 
 # Use as:
 #     
@@ -17,6 +19,9 @@
 #     }
 # 
 # Changes:
+# 20160623 (petrillo@fnal.gov) [v1.2]
+#   created a sbnd_prod_services table;
+#   SAM-related service removed from sbnd_services
 # 20160601 (petrillo@fnal.gov) [v1.1]
 #   moved to sbndcode/LArSoftConfigurations;
 #   message configuration content moved to messages_sbnd.fcl;
@@ -40,13 +45,14 @@
 BEGIN_PROLOG
 
 #
-# Define sbnd_services
+# sbnd_services
+#
+# Complete set of reconstruction services
 # (simulation specific services are defined in simulationservices_sbnd.fcl)
 #
 sbnd_services:
 {
   message:                        @local::sbnd_message_services
-  FileCatalogMetadata:            @local::sbnd_file_catalog_mc
 #                                  @table::sbnd_resourcemonitorservices
   LArSeedService:                 @local::sbnd_seedservice
   ExptGeoHelperInterface:         @local::sbnd_geometry_helper     # from geometry_sbnd.fcl
@@ -58,6 +64,17 @@ sbnd_services:
   ChannelStatusService:           @local::sbnd_channelstatus
   DetPedestalService:             @local::sbnd_detpedestalservice  # from database_sbnd.fcl
 } # sbnd_services
+
+
+#
+# sbnd_prod_services
+#
+# Complete set of reconstruction services, in addition to production-specific services
+#
+sbnd_prod_services: {
+                       @table::sbnd_services
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+} # sbnd_prod_services
 
 
 END_PROLOG

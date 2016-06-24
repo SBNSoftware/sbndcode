@@ -21,11 +21,22 @@
 #
 #
 
+#
+# services
+#
+
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
+
+#
+# modules
+#
+
 #include "singles_sbnd.fcl"
 #include "largeantmodules_sbnd.fcl"
 #include "detsimmodules_sbnd.fcl"
+
+
 
 process_name: SingleGen
 
