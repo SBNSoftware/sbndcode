@@ -1,0 +1,72 @@
+#include "simulationservices_sbnd.fcl"
+#include "analysistreemodule.fcl"
+
+
+
+process_name: AnaTree
+
+services:
+{
+  #Load the service that manages root files for histograms.
+  TFileService: { fileName: "standard_reco_hist.root" }
+  Timing:       {}
+  SimpleMemoryCheck:     { ignoreTotal: 1 }     #default is one
+  RandomNumberGenerator: {}                     #ART native random number generator
+  user:         @local::sbnd_simulation_services
+  message:      @local::standard_info
+}
+
+#source is now a root file
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1            # Number of events to create
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "standard_reco.root"    #default file name, can override from command line with -o or --output
+   fastCloning: false
+ } 
+}
+
+physics:
+{
+ producers:{### calorimetry producers
+  }
+ filters:  {} 
+ analyzers:{}
+ 
+ #define the producer and filter modules for this path, order matters, 
+ #filters reject all following items.  see lines starting physics.producers below
+ ana:  [ analysistree ]
+ #ana: []
+ 
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [ out1 ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [] 
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [ stream1, ana ] 
+ #end_paths:     [  ana ] 
+}
+
+# define the list of LArSoft modules to run through the simulate path
+
+physics.analyzers.analysistree:  @local::sbnd_analysistree
+
+physics.analyzers.analysistree.GenieGenModuleLabel:     "generator"
+#physics.analyzers.analysistree.POTModuleLabel:          "generator"
+physics.analyzers.analysistree.CryGenModuleLabel: "generator"
+
+physics.analyzers.analysistree.SaveCryInfo: true
+physics.analyzers.analysistree.SaveGenieInfo: false
+physics.analyzers.analysistree.SaveGeantInfo: true
+#physics.analyzers.analysistree.SaveAuxDetInfo: false

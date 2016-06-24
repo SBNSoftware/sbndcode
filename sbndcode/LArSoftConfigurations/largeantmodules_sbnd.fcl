@@ -1,0 +1,8 @@
+#include "largeantmodules.fcl"
+
+BEGIN_PROLOG
+
+sbnd_largeant:    @local::standard_largeant
+sbnd_largeantana: @local::standard_largeantana
+
+END_PROLOG

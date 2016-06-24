@@ -1,0 +1,25 @@
+
+BEGIN_PROLOG
+
+sbnd_geo:
+{
+ SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
+ Name:     "sbndv0"
+ GDML:     "sbndv0.gdml"
+ ROOT:     "sbndv0.gdml"
+
+ SortingParameters: { 
+   DetectorVersion: "sbnd" 
+ } 
+
+ SurfaceY:           0.0e2               #in cm, vertical distance to the surface
+ DisableWiresInG4:   true
+
+}
+
+sbnd_geometry_helper:
+{
+ service_provider : SBNDGeometryHelper
+}
+
+END_PROLOG

@@ -1,0 +1,65 @@
+#
+# File:    evdservices_sbnd.fcl
+# Purpose: service settings for SBND event display in LArSoft
+# Version: 1.1
+# 
+# Provides:
+# 
+# - sbnd_disp: bundle of event display services
+# - sbnd_graphcluster: configuration of a GraphCluster module
+# 
+# Use as:
+#     
+#     services: {
+#       @table::sbnd_disp
+#       # ...
+#     }
+# 
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.1]
+#   update for LArSoft 5.12
+#
+
+#include "services_sbnd.fcl"
+#include "evdservices_base.fcl"
+#include "calorimetry.fcl"
+
+BEGIN_PROLOG
+
+sbnd_colordrawingopt:                       @local::standard_colordrawingopt
+sbnd_rawdrawingopt:                         @local::standard_rawdrawingopt
+sbnd_recodrawingopt:                        @local::standard_recodrawingopt
+sbnd_analysisdrawingopt:                    @local::standard_analysisdrawingopt
+sbnd_simdrawingopt:                         @local::standard_simdrawingopt
+sbnd_scanopt:                               @local::standard_scanopt
+sbnd_evd:                                   @local::standard_evd
+sbnd_infotransfer:                          @local::standard_infotransfer
+
+sbnd_evdlayoutopt:                          @local::standard_evdlayoutopt
+sbnd_evdlayoutopt.ShowSideBar:              1
+sbnd_evdlayoutopt.AutoZoomInterest:         0
+sbnd_evdlayoutopt.PrintTotalCharge:         0
+sbnd_evdlayoutopt.ShowEndPointSection:      1
+sbnd_evdlayoutopt.ShowEndPointMarkers:      1
+sbnd_evdlayoutopt.MakeSeeds:                0
+sbnd_evdlayoutopt.ChangeWire:               1
+
+sbnd_disp:                                                                       
+{                                                                                  
+                                               @table::sbnd_services
+  ColorDrawingOptions:                         @local::sbnd_colordrawingopt
+  SimulationDrawingOptions:                    @local::sbnd_simdrawingopt
+  RawDrawingOptions:                           @local::sbnd_rawdrawingopt
+  RecoDrawingOptions:                          @local::sbnd_recodrawingopt
+  AnalysisDrawingOptions:                      @local::sbnd_analysisdrawingopt
+  EvdLayoutOptions:                            @local::sbnd_evdlayoutopt
+  ScanOptions:                                 @local::sbnd_scanopt
+  InfoTransfer:                                @local::sbnd_infotransfer
+  EventDisplay:                                @local::sbnd_evd
+}
+
+#######################################
+
+sbnd_graphcluster:                          @local::standard_graphcluster
+
+END_PROLOG

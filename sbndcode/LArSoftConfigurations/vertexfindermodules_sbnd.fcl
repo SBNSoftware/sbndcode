@@ -1,0 +1,11 @@
+#include "vertexfindermodules.fcl"
+
+BEGIN_PROLOG
+
+sbnd_harris:        @local::standard_harrisvertexfinder
+sbnd_vertexmatch:   @local::standard_vertexmatch
+sbnd_primaryvertex: @local::standard_primaryvertexfinder
+sbnd_vertex2d:      @local::standard_vertexfinder2d
+
+
+END_PROLOG

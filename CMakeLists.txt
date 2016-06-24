@@ -16,7 +16,7 @@
 # use cmake 2.8 or later
 cmake_minimum_required (VERSION 2.8)
 
-project(lar1ndcode)
+project(sbndcode)
 
 # cetbuildtools contains our cmake modules
 SET ( CETBUILDTOOLS_VERSION $ENV{CETBUILDTOOLS_VERSION} )
@@ -48,7 +48,6 @@ find_ups_product( lardata v1_00_00 )
 find_ups_product( larcore v1_00_00 )
 find_ups_product( nutools v1_00_00 )
 find_ups_product( art v1_09_00 )
-find_ups_product( artextensions v1_00_00 )
 find_ups_product( cetbuildtools v3_10_00 )
 find_ups_product( postgresql v9_1_5 )
 
@@ -58,7 +57,7 @@ include(ArtMake)
 include(BuildPlugins)
 
 # ADD SOURCE CODE SUBDIRECTORIES HERE
-add_subdirectory(lar1ndcode)
+add_subdirectory(sbndcode)
 # subdirectory for test code
 add_subdirectory(test)
 # ups - table and config files

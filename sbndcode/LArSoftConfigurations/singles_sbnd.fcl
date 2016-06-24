@@ -1,0 +1,12 @@
+#include "singles.fcl"
+
+BEGIN_PROLOG
+
+sbnd_singlep: @local::standard_singlep
+
+physics.producers.generator.X0: [ 100 ]
+physics.producers.generator.Y0: [ 100 ]
+physics.producers.generator.Z0: [ 10 ]
+
+
+END_PROLOG

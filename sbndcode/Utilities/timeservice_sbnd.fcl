@@ -1,0 +1,10 @@
+#
+# Deprecated, legacy configuration file -- use detectorclocks_sbnd.fcl directly instead
+#
+#include "detectorclocks_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_timeservice: @local::sbnd_detectorclocks
+
+END_PROLOG

@@ -1,0 +1,239 @@
+#
+# File:    messages_sbnd.fcl
+# Purpose: presets for art message logging
+# Author:  Gianluca Petrillo
+# Date:    June 1st, 2016
+# Version: 1.0
+# 
+# Provided presets:
+# - sbnd_message_services: kind of "standard"
+# - sbnd_message_services_prod: non-interactive jobs (like in production)
+# - sbnd_message_services_prod_debug: non-interactive jobs with debugging
+# - sbnd_message_services_interactive: interactive jobs
+# - sbnd_message_services_interactive_debug: interactive jobs with debugging
+# 
+# Reminder: to limit a number of messages in a specific category,
+# add in a destination a configuration for that category:
+#     
+#     categories: {
+#       
+#       # suppress all the messages in "UselessMessage" category
+#       UselessMessage: { limit: 0 }
+#       
+#       # reduce the messages from "AnnoyingMessage" category;
+#       # they will still appear now and then
+#       AnnoyingMessage: { limit: 5 timespan: 10 }
+#       
+#       # this means no limit
+#       default: {}
+#     
+#     }
+#     
+# 
+# Usage:
+#     
+#     services.message: @local::sbnd_message_services
+#     
+# 
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.0]
+#   content moved from old services_sbnd.fcl;
+#   tuned the various presets, added a couple
+#
+
+
+BEGIN_PROLOG
+
+#
+# standard SBND message destinations
+#
+message_debugfile_sbnd: {
+  #
+  # message destination: all debug messages to a file
+  #
+  type:       "file"
+  filename:   "debug.log"
+  append:     false
+  threshold:  "DEBUG"
+  categories: {
+    default: {}
+  }
+} # message_debugfile_sbnd
+
+
+message_infofile_sbnd: {
+  #
+  # message destination: all debug messages to a file
+  #
+  type:       "file"
+  filename:   "messages.log"
+  append:     false
+  threshold:  "INFO"
+  categories: {
+    default: {}
+  }
+} # message_infofile_sbnd
+
+
+message_errorfile_sbnd: {
+  #
+  # message destination: all error messages to "errors.log" file
+  #
+  type:       "file"
+  filename:   "errors.log"
+  append:     false
+  threshold:  "ERROR"
+  categories: {
+    default:  {}
+  }
+} # message_errorfile_sbnd
+
+
+message_stdout_warning_sbnd: {
+  #
+  # message destination: all warning messages to standard output
+  #
+  type:       "cout"
+  threshold:  "WARNING"
+  categories:{
+    default:  {}
+    GeometryBadInputPoint: { limit: 5 timespan: 1000}
+  }
+} # message_stdout_warning_sbnd
+
+
+message_stderr_sbnd: {
+  #
+  # message destination: all error messages to standard error
+  #
+  type:       "cerr"
+  threshold:  "ERROR"
+  categories:{
+    default: {}
+  }
+} # message_stderr_sbnd
+
+
+
+#
+# sbnd_message_services
+# ------------------------
+# 
+# Enables debug messages. Errors saved in a file.
+#
+# - standard output with only WARNING and worse
+# - "errors.log" collecting error messages (also included in standard output)
+# - "debug.log" with DEBUG (that is, every message) for all modules;
+#   in non-debug qualifier builds, LOG_DEBUG and LOG_TRACE are disabled and
+#   their messages are never produced (that is, won't be in "debug.log" either).
+# 
+# No special stream for errors.
+#
+sbnd_message_services:
+{
+  destinations: {
+    LogStandardOut:   @local::message_stdout_warning_sbnd
+    LogInfoFile:      @local::message_infofile_sbnd
+    LogErrorFile:     @local::message_errorfile_sbnd
+  }
+  
+} # sbnd_message_services
+
+
+#
+# sbnd_message_services_prod_debug
+# -----------------------------------
+# 
+# Enables debug messages.
+#
+# - standard error with only ERROR and worse
+# - standard output with only WARNING and worse (will also repeat the error
+#   messages, that will appear in error messages being printed twice if the
+#   standard output and error are directed to the same file or to the console)
+# - "debug.log" with DEBUG (that is, every message) for all modules;
+#   in non-debug qualifier builds, LOG_DEBUG and LOG_TRACE are disabled and
+#   their messages are never produced (that is, won't be in "debug.log" either).
+#
+sbnd_message_services_prod_debug:
+{
+  debugModules: ["*"]
+
+  destinations: {
+    LogDebugFile:     @local::message_debugfile_sbnd
+    LogStandardOut:   @local::message_stdout_warning_sbnd
+    LogStandardError: @local::message_stderr_sbnd
+  }
+} # sbnd_message_services_prod_debug
+
+
+sbnd_message_services_prod_debug.destinations.LogDebugFile.categories:{
+  default: { }
+  GeometryBadInputPoint: { limit: 5 timespan: 1000}
+}
+
+
+#
+# sbnd_message_services_prod
+# -----------------------------
+# 
+# - standard error with only ERROR and worse
+# - standard output with only WARNING and worse (will also repeat the error
+#   messages, that will appear in error messages being printed twice if the
+#   standard output and error are directed to the same file or to the console)
+#
+#
+sbnd_message_services_prod:
+{
+  destinations: {
+    LogStandardOut:   @local::message_stdout_warning_sbnd
+    LogStandardError: @local::message_stderr_sbnd
+  }
+}
+
+
+#
+# sbnd_message_services_interactive
+# ------------------------------------
+# 
+# - standard output with only INFO and worse
+# - "errors.log" collecting warning and error messages (also included in
+#   standard output)
+# 
+# No special stream for errors.
+#
+#
+sbnd_message_services_interactive:
+{
+  destinations: {
+    LogStandardOut:   @local::message_stdout_warning_sbnd
+    LogErrorFile:     @local::message_errorfile_sbnd
+  }
+}
+sbnd_message_services_interactive.destinations.LogStandardOut.threshold: "INFO"
+sbnd_message_services_interactive.destinations.LogErrorFile.threshold: "WARNING"
+
+
+#
+# sbnd_message_services_interactive_debug
+# ------------------------------------------
+# 
+# Enables debug messages.
+#
+# - standard output with only INFO and worse
+# - "errors.log" collecting warning and error messages (also included in
+#   standard output)
+# - "debug.log" with DEBUG (that is, every message) for all modules;
+#   in non-debug qualifier builds, LOG_DEBUG and LOG_TRACE are disabled and
+#   their messages are never produced (that is, won't be in "debug.log" either).
+# 
+# No special stream for errors.
+#
+#
+sbnd_message_services_interactive_debug: {
+  debugModules: ["*"]
+  @table::sbnd_message_services_interactive
+}
+sbnd_message_services_interactive_debug.destinations.LogDebugFile: @local::message_debugfile_sbnd
+
+
+END_PROLOG

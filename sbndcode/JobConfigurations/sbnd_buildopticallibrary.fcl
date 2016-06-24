@@ -1,0 +1,130 @@
+#include "simulationservices_sbnd.fcl"
+#include "singles_sbnd.fcl"
+#include "largeantmodules_sbnd.fcl"
+#include "detsimmodules_sbnd.fcl"
+#include "opticaldetectormodules_sbnd.fcl"
+#include "photpropservices_sbnd.fcl"
+#include "lightsource_sbnd.fcl"
+
+
+process_name: LibraryBuild
+
+
+
+
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "PhotonLibraryFile.root" }
+  Timing:       {}
+  RandomNumberGenerator: {} #ART native random number generator
+  user:         @local::sbnd_simulation_services
+}
+
+
+services.user.PhotonVisibilityService: @local::standard_photonvisibilityservice_buildlib
+services.user.PhotonVisibilityService.DoNotLoadLibrary: true
+services.user.PhotonVisibilityService.LibraryBuildJob: true
+services.user.PhotonVisibilityService.UseCryoBoundary: false
+services.user.PhotonVisibilityService.XMin: 0
+services.user.PhotonVisibilityService.XMax: 200
+services.user.PhotonVisibilityService.YMin: -200 
+services.user.PhotonVisibilityService.YMax: 200
+services.user.PhotonVisibilityService.ZMin: 0
+services.user.PhotonVisibilityService.ZMax: 365
+
+services.user.PhotonVisibilityService.NX: 3 
+services.user.PhotonVisibilityService.NY: 3
+services.user.PhotonVisibilityService.NZ: 3 
+
+services.user.Geometry.GDML: "sbnd.gdml"
+
+#services.user.BackTracker: ""
+#services.user.LArFFT: ""
+#services.user.SignalShapingServiceT1034: ""
+
+#Start each new event with an empty event.
+source:
+{
+  module_type: EmptyEvent
+  maxEvents:   27           # Number of events to create
+  firstRun:    1           # Run number to use for this file
+  firstEvent:  1           # number of first event in the file
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+ producers:
+ {
+   generator: @local::sbnd_lightsource	  
+   largeant:  @local::sbnd_largeant	  
+ }
+
+ analyzers:
+ {
+   pmtresponse: @local::sbnd_simphotoncounter
+ }
+
+ #define the producer and filter modules for this path, order matters, 
+ #filters reject all following items.  see lines starting physics.producers below
+ simulate: [ generator, largeant ] 
+ analyzeIt:  [ pmtresponse ]
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [ ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [simulate] 
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [analyzeIt, stream1]  
+}
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "single_gen_sbnd.root" #default file name, can override from command line with -o or --output
+ }
+}
+
+# Begin optical specific parts:
+
+# set quantum efficiency supressed scint yield to 0.03 * 24000 
+services.user.LArPropertiesService.ScintYield: 72
+
+# enable optical physics in LArG4
+services.user.LArG4Parameters.EnabledPhysics: [ "Em", 
+						"Optical", 
+						"SynchrotronAndGN", 
+						"Ion", 
+						"Hadron", 
+						"Decay", 
+						"HadronElastic", 
+						"Stopping", 
+						"NeutronTrackingCut" ]
+
+# enable this custom physics list
+services.user.LArG4Parameters.UseCustomPhysics: true
+
+# do not allow lightsource to write output into root file
+physics.producers.generator.FillTree: true #false
+physics.analyzers.pmtresponse.MakeAllPhotonsTree: true #false
+
+#physics.analyzers.pmtresponse.UsePMTEff: true
+#physics.analyzers.pmtresponse.WavelengthCutLow: 300
+#physics.analyzers.pmtresponse.WavelengthCutHigh: 600
+
+physics.analyzers.pmtresponse.MakeDetectedPhotonsTree: true
+physics.analyzers.pmtresponse.MakeSimPhotonssTree: true
+#physics.analyzers.pmtresponse.MakeEventsTree: false

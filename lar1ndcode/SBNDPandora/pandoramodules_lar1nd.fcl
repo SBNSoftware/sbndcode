@@ -1,5 +1,0 @@
-BEGIN_PROLOG
-
-lar1nd_pandora:  @local::standard_pandora
-
-END_PROLOG
