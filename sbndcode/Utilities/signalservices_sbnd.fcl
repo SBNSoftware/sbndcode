@@ -15,7 +15,10 @@ sbnd_signalshapingservice:
   # To turn off Noise
   #NoiseFactVec = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]];
 
-  FieldBins:        75
+  #FieldBins:        75 #For UseFunctionFieldShape: true
+  FieldBins:       1000
+  InputFieldRespSamplingPeriod: 30.  #in nano seconds  
+
   Col3DCorrection:  2.5
   Ind3DCorrection:  1.5
   #ColFieldRespAmp:  0.0354
@@ -25,6 +28,8 @@ sbnd_signalshapingservice:
   #IndVFieldRespAmp:  0.018
   IndVFieldRespAmp:  1.0
 
+  FieldResponseTOffset: [-26.6e3, -26.3e3, -26e3]   #in ns, time offset of field response shape
+ 
   # For IndFilter and ColFilter, frequency (x) is measured in
   # cycles/microsecond.  The conversion to frequency bin depends on FFT size
   # samping rate.
@@ -44,9 +49,12 @@ sbnd_signalshapingservice:
   FilterFunctionFname:  "sbnd_filters_v0.1.root"
   FilterHistoName:	"noisefilter_%d"       
   
-
   UseFunctionFieldShape: false
-  UseSimpleFieldShape: true
+  UseSimpleFieldShape: false
+  UseHistogramFieldShape: true
+  FieldResponseFname:  "sbnd_response_v1.3.root"
+  FieldResponseHistoName: "FieldResponse"
+
   IndUFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
   IndUFieldParams:  [.00843,.1534,1.77,0.,0.5]    #last parameter needs to be half of FFT vector, correct for in code
   IndVFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
