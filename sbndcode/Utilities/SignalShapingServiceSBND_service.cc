@@ -58,7 +58,8 @@ void util::SignalShapingServiceT1053::reconfigure(const fhicl::ParameterSet& pse
   fIndUFieldRespAmp = pset.get<double>("IndUFieldRespAmp");
   fIndVFieldRespAmp = pset.get<double>("IndVFieldRespAmp");
   fShapeTimeConst = pset.get<std::vector<double> >("ShapeTimeConst");
-
+  fNoiseFactVec = pset.get<std::vector<DoubleVec> >("NoiseFactVec");
+  
   fUseFunctionFieldShape= pset.get<bool>("UseFunctionFieldShape");
   fUseSimpleFieldShape = pset.get<bool>("UseSimpleFieldShape");
   if(fUseSimpleFieldShape) {
@@ -178,6 +179,111 @@ util::SignalShapingServiceT1053::SignalShaping(unsigned int channel) const
   return fColSignalShaping;
 }
 
+//---Give Gain Settings to SimWire ---//
+double util::SignalShapingServiceT1053::GetASICGain(unsigned int const channel) const
+{
+  art::ServiceHandle<geo::Geometry> geom;
+  geo::SigType_t sigtype = geom->SignalType(channel);
+
+  double gain = 0.0;
+  if(sigtype == geo::kInduction)
+    gain = fASICGainInMVPerFC.at(0);
+  else if(sigtype == geo::kCollection)
+    gain = fASICGainInMVPerFC.at(1);
+  else
+    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+                                                    << " SignalType\n";
+  return gain;
+} 
+
+//---Give Shaping time Settings to SimWire ---//
+double util::SignalShapingServiceT1053::GetShapingTime(unsigned int const channel) const
+{
+  art::ServiceHandle<geo::Geometry> geom;
+  geo::SigType_t sigtype = geom->SignalType(channel);
+
+  double shaping_time = 0.0;
+  if(sigtype == geo::kInduction)
+    shaping_time = fASICGainInMVPerFC.at(0);
+  else if(sigtype == geo::kCollection)
+    shaping_time = fASICGainInMVPerFC.at(1);
+  else
+    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+                                                    << " SignalType\n";
+  return shaping_time;
+} 
+
+double util::SignalShapingServiceT1053::GetRawNoise(unsigned int const channel) const
+{
+  unsigned int plane;
+  art::ServiceHandle<geo::Geometry> geom;
+  geo::SigType_t sigtype = geom->SignalType(channel);
+
+  if(sigtype == geo::kInduction)
+    plane = 0;
+  else if(sigtype == geo::kCollection)
+    plane = 1;
+  else
+    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+                                                    << " SignalType\n";
+
+  double shapingtime = fShapeTimeConst.at(plane);
+  double gain = fASICGainInMVPerFC.at(plane);
+  int temp;
+  if (shapingtime == 0.5){
+    temp = 0;
+  }else if (shapingtime = 1.0){
+    temp = 1;
+  }else if (shapingtime = 2.0){
+    temp = 2;
+  }else{
+    temp = 3;
+  }
+  double rawNoise;
+  
+  auto tempNoise = fNoiseFactVec.at(plane);
+  rawNoise = tempNoise.at(temp);
+
+  rawNoise *= gain/4.7;
+  return rawNoise;
+}
+
+double util::SignalShapingServiceT1053::GetDeconNoise(unsigned int const channel) const
+{
+  unsigned int plane;
+  art::ServiceHandle<geo::Geometry> geom;
+  geo::SigType_t sigtype = geom->SignalType(channel);
+
+  if(sigtype == geo::kInduction)
+    plane = 0;
+  else if(sigtype == geo::kCollection)
+    plane = 1;
+  else
+    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+                                                    << " SignalType\n";
+
+  double shapingtime = fShapeTimeConst.at(plane);
+  double gain = fASICGainInMVPerFC.at(plane);
+  int temp;
+  if (shapingtime == 0.5){
+    temp = 0;
+  }else if (shapingtime = 1.0){
+    temp = 1;
+  }else if (shapingtime = 2.0){
+    temp = 2;
+  }else{
+    temp = 3;
+  }
+  double deconNoise;
+  
+  auto tempNoise = fNoiseFactVec.at(plane);
+  deconNoise = tempNoise.at(temp);
+
+  deconNoise = deconNoise /4096.*2000./4.7 *6.241*1000/fDeconNorm;
+  return deconNoise;
+}
+
+
 
 //----------------------------------------------------------------------
 // Initialization method.
@@ -194,7 +300,7 @@ void util::SignalShapingServiceT1053::init()
     // Calculate field and electronics response functions.
 
     SetFieldResponse();
-    SetElectResponse(fShapeTimeConst.at(0),fASICGainInMVPerFC.at(0));
+    SetElectResponse(fShapeTimeConst.at(1),fASICGainInMVPerFC.at(1));
 
     // Configure convolution kernels.
 
@@ -202,7 +308,7 @@ void util::SignalShapingServiceT1053::init()
     fColSignalShaping.AddResponseFunction(fElectResponse);
     fColSignalShaping.SetPeakResponseTime(0.);
 
-    SetElectResponse(fShapeTimeConst.at(1),fASICGainInMVPerFC.at(1));
+    SetElectResponse(fShapeTimeConst.at(0),fASICGainInMVPerFC.at(0));
 
     fIndUSignalShaping.AddResponseFunction(fIndUFieldResponse);
     fIndUSignalShaping.AddResponseFunction(fElectResponse);
