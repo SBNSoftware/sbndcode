@@ -59,9 +59,12 @@ void util::SignalShapingServiceT1053::reconfigure(const fhicl::ParameterSet& pse
   fIndVFieldRespAmp = pset.get<double>("IndVFieldRespAmp");
   fShapeTimeConst = pset.get<std::vector<double> >("ShapeTimeConst");
   fNoiseFactVec = pset.get<std::vector<DoubleVec> >("NoiseFactVec");
+  fInputFieldRespSamplingPeriod = pset.get<double>("InputFieldRespSamplingPeriod"); 
   
   fUseFunctionFieldShape= pset.get<bool>("UseFunctionFieldShape");
   fUseSimpleFieldShape = pset.get<bool>("UseSimpleFieldShape");
+  fUseHistogramFieldShape = pset.get<bool>("UseHistogramFieldShape");
+
   if(fUseSimpleFieldShape) {
     fNFieldBins = 300;
   }
@@ -137,6 +140,32 @@ void util::SignalShapingServiceT1053::reconfigure(const fhicl::ParameterSet& pse
       fIndVFieldFunc->SetParameter(i, indVFieldParams[i]);
     // Warning, last parameter needs to be multiplied by the FFTSize, in current version of the code,
 
+  } else if (fUseHistogramFieldShape){
+    mf::LogInfo(":SignalShapingServiceT1053") << " using the field response provided from a .root file" ;
+    int fNPlanes = 3;
+
+    //constructor decides if initialized value is a path or an environment variable
+    std::string fname;
+    cet::search_path sp("FW_SEARCH_PATH");
+    sp.find_file( pset.get<std::string>("FieldResponseFname"), fname);
+    std::string histoname = pset.get<std::string>("FieldResponseHistoName");
+
+    std::unique_ptr<TFile> fin(new TFile(fname.c_str(), "READ"));
+    if ( !fin->IsOpen() ) throw art::Exception( art::errors::NotFound ) << "Could not find the field response file" << fname << "!" << std::endl;
+
+    std::string iPlane[3] = {"U", "V", "Y"};
+
+    for( int i=0; i<fNPlanes; i++){
+      TString iHistoName = Form( "%s_%s", histoname.c_str(), iPlane[i].c_str());
+      TH1F *temp = (TH1F*) fin->Get(iHistoName);
+      if (!temp) throw art::Exception( art::errors::InvalidNumber ) << "Could not find the field response histogram" << iHistoName << std::endl; 
+      if (temp->GetNbinsX() > fNFieldBins()) throw art::Exception( art::errors::InvalidNumber ) << "FieldBins should always be larger than or equal to the number of the bins in the input histogram!" << std::endl;
+      
+      fFieldResponseHist[i] = new TH1F( iHistoName, iHistoName, temp->GetNbinsX(), temp->GetBinLowEdge(1), temo->GetBinLowEdge(temp->GetNbinsX() + 1));
+      temp->Copy(*fFieldResponseHist[i]);
+      }
+
+    fin->Close();
   }
 
 }
@@ -306,17 +335,20 @@ void util::SignalShapingServiceT1053::init()
 
     fColSignalShaping.AddResponseFunction(fColFieldResponse);
     fColSignalShaping.AddResponseFunction(fElectResponse);
-    fColSignalShaping.SetPeakResponseTime(0.);
+    fColSignalShaping.set_normflag(false);
+    //fColSignalShaping.SetPeakResponseTime(0.);
 
     SetElectResponse(fShapeTimeConst.at(0),fASICGainInMVPerFC.at(0));
 
     fIndUSignalShaping.AddResponseFunction(fIndUFieldResponse);
     fIndUSignalShaping.AddResponseFunction(fElectResponse);
-    fIndUSignalShaping.SetPeakResponseTime(0.);
+    fIndUSignalShaping.set_normflag(false);
+    //fIndUSignalShaping.SetPeakResponseTime(0.);
 
     fIndVSignalShaping.AddResponseFunction(fIndVFieldResponse);
     fIndVSignalShaping.AddResponseFunction(fElectResponse);
-    fIndVSignalShaping.SetPeakResponseTime(0.);
+    fIndUSignalShaping.set_normflag(false);
+    //fIndVSignalShaping.SetPeakResponseTime(0.);
 
     // Calculate filter functions.
 
@@ -406,6 +438,25 @@ void util::SignalShapingServiceT1053::SetFieldResponse()
     //this might be not necessary if the function definition is not defined in the middle of the signal range  
     fft->ShiftData(fIndUFieldResponse,signalSize/2.0);
     fft->ShiftData(fIndVFieldResponse,signalSize/2.0);
+
+  }else if (fUseHistogramFieldShape){ 
+    //Ticks in nanoseconds
+    //Calculate the normalization of the collection plane
+
+    for(int ibin=1; ibin<=fFieldResponseHist[2]->GetNbinsX(); ibin++)
+      integral += fFieldResponseHist[2]->GetBinCenter(ibin);
+
+    //Induction U Plane
+    for(int ibin=1; ibin<=fFieldResponseHist[0]->GetNbinsX(); ibin++)
+      fIndUFieldResponse[ibin-1] = fIndUFieldRespAmp*fFieldResonseHist[0]->GetBinContent(ibin)/integral;
+    
+    //Induction V Plane
+    for(int ibin=1; ibin<=fFieldResponseHist[1]->GetNbinsX(); ibin++)
+      fIndVFieldResponse[ibin-1] = fIndVFieldRespAmp*fFieldResonseHist[1]->GetBinContent(ibin)/integral;
+
+    //Collection Plane
+    for(int ibin=1; ibin<=fFieldResponseHist[2]->GetNbinsX(); ibin++)
+      fColFieldResponse[ibin-1] = fColFieldRespAmp*fFieldResonseHist[2]->GetBinContent(ibin)/integral;
 
   } else if (fUseSimpleFieldShape) {
    
