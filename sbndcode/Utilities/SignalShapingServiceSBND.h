@@ -58,12 +58,14 @@ namespace util {
     double GetASICGain(unsigned int const channel) const;
     double GetShapingTime(unsigned int const channel) const;
     
-    double RawNoise(unsigned int const channel) const;
-    double DeconNoise(unsigned int const channel) const;
+    double GetRawNoise(unsigned int const channel) const;
+    double GetDeconNoise(unsigned int const channel) const;
 
     // Accessors.
 
     const util::SignalShaping& SignalShaping(unsigned int channel) const;
+
+    int FieldResponseTOffset(unsigned int const channel) const;
 
     // Do convolution calcution (for simulation).
 
@@ -99,6 +101,8 @@ namespace util {
 
     bool fInit;               ///< Initialization flag.
 
+    void SetResponseSampling();
+
     // Fcl parameters.
     double fASICGainInMVPerFC;                  ///< Cold electronics ASIC gain setting in mV/fC
     double fDeconNorm;
@@ -107,6 +111,9 @@ namespace util {
     std::vector<DoubleVec> fNoiseFactVec;
     std::vector<double> fASICGainInMVPerFC; 
     std::vector<double> fShapeTimeConst;  	///< time constants for exponential shaping
+
+    std::vector<double> fFieldResponseTOffset;  ///<Time offset for field response in ns
+    double fInputFieldRespSamplingPeriod;       ///< Sampling Period in the input field response
 
     int fNFieldBins;         			///< number of bins for field response
     double fCol3DCorrection; 			///< correction factor to account for 3D path of 
@@ -123,11 +130,13 @@ namespace util {
     
     bool fUseFunctionFieldShape;   		///< Flag that allows to use a parameterized field response instead of the hardcoded version
     bool fUseSimpleFieldShape;                 ///< Flag that turns on new field response shapes
+    bool fUseHistogramFieldShape;              ///< Flag that truns on field response shaped from histograms
     bool fGetFilterFromHisto;   		///< Flag that allows to use a filter function from a histogram instead of the functional dependency
     TF1* fColFieldFunc;      			///< Parameterized collection field shape function.
     TF1* fIndUFieldFunc;      			///< Parameterized induction field shape function for U plane.
     TF1* fIndVFieldFunc;      			///< Parameterized induction field shape function for V plane.
     
+    TH1F *fFieldResponseHist[3];                ///< Histogram used to hold the field response, hardcoded for the time being 
     TH1D *fFilterHist[3];    			///< Histogram used to hold the collection filter, hardcoded for the time being
     
     // Following attributes hold the convolution and deconvolution kernels
