@@ -64,6 +64,8 @@ namespace util {
 
     template <class T> void Deconvolute(unsigned int channel, std::vector<T>& func) const;
 
+    double GetDeconNorm(){return fDeconNorm;};
+
   private:
 
     // Private configuration methods.
@@ -77,9 +79,10 @@ namespace util {
     // Copied from SimWireT1053.
 
     void SetFieldResponse();
-    void SetElectResponse();
+    void SetElectResponse(double shapingtime, double gain);
 
     // Calculate filter functions.
+
 
     void SetFilters();
 
@@ -88,9 +91,12 @@ namespace util {
     bool fInit;               ///< Initialization flag.
 
     // Fcl parameters.
-    double fADCTicksPerPCAtLowestASICGainSetting; ///< Pulse area (in ADC*ticks) for a 1 pc charge impulse after convoluting it the with field and electronics response with the lowest ASIC gain setting of 4.7 mV/fC
-
     double fASICGainInMVPerFC;                  ///< Cold electronics ASIC gain setting in mV/fC
+    double fDeconNorm;
+    double fADCPerPCAtLowestASICGain;    ///Pulse amplitude gain for a 1 pc charge impulse after convoluting it with field and electronics response with the lowest ASIC gain setting of 4.7 mV/fC
+
+    std::vector<double> fASICGainInMVPerFC; 
+    std::vector<double> fShapeTimeConst;  	///< time constants for exponential shaping
 
     int fNFieldBins;         			///< number of bins for field response
     double fCol3DCorrection; 			///< correction factor to account for 3D path of 
@@ -100,7 +106,6 @@ namespace util {
     double fColFieldRespAmp;  			///< amplitude of response to field 
     double fIndUFieldRespAmp;  			///< amplitude of response to field in U plane
     double fIndVFieldRespAmp;  			///< amplitude of response to field in V plane
-    std::vector<double> fShapeTimeConst;  	///< time constants for exponential shaping
     TF1* fColFilterFunc;      			///< Parameterized collection filter function.
     TF1* fIndUFilterFunc;      			///< Parameterized induction filter function for U plane.
     TF1* fIndVFilterFunc;      			///< Parameterized induction filter function for V plane
