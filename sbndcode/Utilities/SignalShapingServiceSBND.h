@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////
 ///
-/// \file   SignalShapingServiceT1053.h
+/// \file   SignalShapingServiceSBND.h
 ///
 /// \brief  Service to provide microboone-specific signal shaping for
 ///         simulation (convolution) and reconstruction (deconvolution).
@@ -41,14 +41,14 @@
 using DoubleVec = std::vector<double>;
 
 namespace util {
-  class SignalShapingServiceT1053 {
+  class SignalShapingServiceSBND {
   public:
 
     // Constructor, destructor.
 
-    SignalShapingServiceT1053(const fhicl::ParameterSet& pset,
+    SignalShapingServiceSBND(const fhicl::ParameterSet& pset,
 				   art::ActivityRegistry& reg);
-    ~SignalShapingServiceT1053();
+    ~SignalShapingServiceSBND();
 
     // Update configuration parameters.
 
@@ -83,11 +83,11 @@ namespace util {
 
     // Post-constructor initialization.
 
-    void init() const{const_cast<SignalShapingServiceT1053*>(this)->init();}
+    void init() const{const_cast<SignalShapingServiceSBND*>(this)->init();}
     void init();
 
     // Calculate response functions.
-    // Copied from SimWireT1053.
+    // Copied from SimWireSBND.
 
     void SetFieldResponse();
     void SetElectResponse(double shapingtime, double gain);
@@ -104,7 +104,6 @@ namespace util {
     void SetResponseSampling();
 
     // Fcl parameters.
-    double fASICGainInMVPerFC;                  ///< Cold electronics ASIC gain setting in mV/fC
     double fDeconNorm;
     double fADCPerPCAtLowestASICGain;    ///Pulse amplitude gain for a 1 pc charge impulse after convoluting it with field and electronics response with the lowest ASIC gain setting of 4.7 mV/fC
 
@@ -164,7 +163,7 @@ namespace util {
 }
 //----------------------------------------------------------------------
 // Do convolution.
-template <class T> inline void util::SignalShapingServiceT1053::Convolute(unsigned int channel, std::vector<T>& func) const
+template <class T> inline void util::SignalShapingServiceSBND::Convolute(unsigned int channel, std::vector<T>& func) const
 {
   SignalShaping(channel).Convolute(func);
 }
@@ -172,10 +171,10 @@ template <class T> inline void util::SignalShapingServiceT1053::Convolute(unsign
 
 //----------------------------------------------------------------------
 // Do deconvolution.
-template <class T> inline void util::SignalShapingServiceT1053::Deconvolute(unsigned int channel, std::vector<T>& func) const
+template <class T> inline void util::SignalShapingServiceSBND::Deconvolute(unsigned int channel, std::vector<T>& func) const
 {
   SignalShaping(channel).Deconvolute(func);
 }
 
-DECLARE_ART_SERVICE(util::SignalShapingServiceT1053, LEGACY)
+DECLARE_ART_SERVICE(util::SignalShapingServiceSBND, LEGACY)
 #endif
