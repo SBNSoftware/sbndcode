@@ -185,26 +185,22 @@ util::SignalShapingServiceSBND::SignalShaping(unsigned int channel) const
   //geo::SigType_t sigtype = geom->SignalType(channel);
 
   // we need to distiguish the U and V planes
-  //geo::View_t view = geom->View(channel);
+  geo::View_t view = geom->View(channel);
 
   // Return appropriate shaper.
+  //geo::SigType_t sigtype = geom->SignalType(channel);
 
-  geo::SigType_t sigtype = geom->SignalType(channel);
-  if (sigtype == geo::kInduction)
-      return fIndUSignalShaping;
-  else if (sigtype == geo::kCollection)
-      return fColSignalShaping;
+  if (sigtype == geo::kU)
+    return fIndUSignalShaping;
+  else if (sigtype == geo::kV)
+    return fIndVSignalShaping;
+  else if (sigtype == geo::kZ)
+    return fColSignalShaping;
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
                                                           << " SignalType\n";  
   
-//   if(view == geo::kU)
-//     
-//   else if(view == geo::kV)
-    
-//   else if(view == geo::kZ)
-//     return fColSignalShaping;
-  
+
   return fColSignalShaping;
 }
 
@@ -212,13 +208,18 @@ util::SignalShapingServiceSBND::SignalShaping(unsigned int channel) const
 double util::SignalShapingServiceSBND::GetASICGain(unsigned int const channel) const
 {
   art::ServiceHandle<geo::Geometry> geom;
-  geo::SigType_t sigtype = geom->SignalType(channel);
+  //geo::SigType_t sigtype = geom->SignalType(channel);
+
+  // we need to distiguish the U and V planes
+  geo::View_t view = geom->View(channel);
 
   double gain = 0.0;
-  if(sigtype == geo::kInduction)
+  if(sigtype == geo::kU)
     gain = fASICGainInMVPerFC.at(0);
-  else if(sigtype == geo::kCollection)
-    gain = fASICGainInMVPerFC.at(1);
+  else if(sigtype == geo::kV)
+     gain = fASICGainInMVPerFC.at(1);
+  else if(sigtype == geo::kZ)
+    gain = fASICGainInMVPerFC.at(2);
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
                                                     << " SignalType\n";
@@ -229,13 +230,18 @@ double util::SignalShapingServiceSBND::GetASICGain(unsigned int const channel) c
 double util::SignalShapingServiceSBND::GetShapingTime(unsigned int const channel) const
 {
   art::ServiceHandle<geo::Geometry> geom;
-  geo::SigType_t sigtype = geom->SignalType(channel);
+  //geo::SigType_t sigtype = geom->SignalType(channel);
+
+  // we need to distiguish the U and V planes
+  geo::View_t view = geom->View(channel);
 
   double shaping_time = 0.0;
-  if(sigtype == geo::kInduction)
-    shaping_time = fASICGainInMVPerFC.at(0);
-  else if(sigtype == geo::kCollection)
-    shaping_time = fASICGainInMVPerFC.at(1);
+  if(sigtype == geo::kU)
+    shaping_time = fShapeTimeConst.at(0);
+  if(sigtype == geo::kV)
+    shaping_time = fShapeTimeConst.at(1);
+  else if(sigtype == geo::kZ)
+    shaping_time = fShapeTimeConst.at(2);
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
                                                     << " SignalType\n";
@@ -246,12 +252,17 @@ double util::SignalShapingServiceSBND::GetRawNoise(unsigned int const channel) c
 {
   unsigned int plane;
   art::ServiceHandle<geo::Geometry> geom;
-  geo::SigType_t sigtype = geom->SignalType(channel);
+  //geo::SigType_t sigtype = geom->SignalType(channel);
 
-  if(sigtype == geo::kInduction)
+  // we need to distiguish the U and V planes
+  geo::View_t view = geom->View(channel);
+
+  if(sigtype == geo::kU)
     plane = 0;
-  else if(sigtype == geo::kCollection)
+  else if(sigtype == geo::kV)
     plane = 1;
+  else if(sigtype == geo::kZ)
+    plane = 2;
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
                                                     << " SignalType\n";
@@ -281,12 +292,17 @@ double util::SignalShapingServiceSBND::GetDeconNoise(unsigned int const channel)
 {
   unsigned int plane;
   art::ServiceHandle<geo::Geometry> geom;
-  geo::SigType_t sigtype = geom->SignalType(channel);
+  //geo::SigType_t sigtype = geom->SignalType(channel);
 
-  if(sigtype == geo::kInduction)
+  // we need to distiguish the U and V planes
+  geo::View_t view = geom->View(channel);
+
+  if(sigtype == geo::kU)
     plane = 0;
-  else if(sigtype == geo::kCollection)
+  else if(sigtype == geo::kV)
     plane = 1;
+  else if(sigtype == geo::kZ)
+    plane = 2;
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
                                                     << " SignalType\n";
@@ -328,7 +344,7 @@ void util::SignalShapingServiceSBND::init()
     // Calculate field and electronics response functions.
 
     SetFieldResponse();
-    SetElectResponse(fShapeTimeConst.at(1),fASICGainInMVPerFC.at(1));
+    SetElectResponse(fShapeTimeConst.at(2),fASICGainInMVPerFC.at(2));
 
     // Configure convolution kernels.
 
@@ -343,6 +359,8 @@ void util::SignalShapingServiceSBND::init()
     fIndUSignalShaping.AddResponseFunction(fElectResponse);
     fIndUSignalShaping.set_normflag(false);
     //fIndUSignalShaping.SetPeakResponseTime(0.);
+
+    SetElectResponse(fShapeTimeConst.at(1),fASICGainInMVPerFC.at(1));
 
     fIndVSignalShaping.AddResponseFunction(fIndVFieldResponse);
     fIndVSignalShaping.AddResponseFunction(fElectResponse);
