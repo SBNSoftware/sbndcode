@@ -1,8 +1,26 @@
+#
+# File:    prod_eminus_0.1_0.9_sbnd.fcl
+# Purpose: Generation of electrons with energy in 100-900 MeV range
+# Version: 1.1
+# 
+# This configuration runs event generation only.
+# 
+# It is a customization of prodsingle_common_sbnd.fcl .
+# 
+# Input: no input file required
+# 
+#
+# Changes:
+# 20160707 (petrillo@fnal.gov) [v1.1]
+#   - uniformed to prodsingle_sbnd.fcl
+#
+
+
 #include "prodsingle_common_sbnd.fcl"
 
 process_name: SinglesGen
 
-outputs.out1.fileName: "prod_eminus_0.1-0.9GeV_sbnd_%tc_gen.root"
+outputs.out1.fileName: "prod_eminus_0.1_0.9_sbnd_%p-%tc.root"
 
 physics.producers.generator.PDG: [ 11 ]            # e-
 physics.producers.generator.PosDist: 0             # Flat position dist.
@@ -10,9 +28,9 @@ physics.producers.generator.X0: [ 25.0 ]
 physics.producers.generator.Y0: [ 0.0 ]
 physics.producers.generator.Z0: [ -42. ]
 physics.producers.generator.T0: [ 0.0 ]
-physics.producers.generator.SigmaX: [ 5.0 ]      # x = (0, 256)
-physics.producers.generator.SigmaY: [ 5.5 ]      # y = (-116.5, 116.5)
-physics.producers.generator.SigmaZ: [ 0 ]      # z = (0, 1037)
+physics.producers.generator.SigmaX: [ 5.0 ]        # x = (0, 256)
+physics.producers.generator.SigmaY: [ 5.5 ]        # y = (-116.5, 116.5)
+physics.producers.generator.SigmaZ: [ 0 ]          # z = (0, 1037)
 physics.producers.generator.SigmaT: [ 0.0 ]        # In time
 physics.producers.generator.PDist: 0               # Flat momentum dist. (0.1-2.0 GeV)
 physics.producers.generator.P0: [ 0.5 ]
@@ -20,5 +38,5 @@ physics.producers.generator.SigmaP: [ 0.45 ]
 physics.producers.generator.AngleDist: 0           # Flat angle dist.
 physics.producers.generator.Theta0XZ: [ 0. ]       # y-azimuth
 physics.producers.generator.Theta0YZ: [ 0. ]       # y-latitude
-physics.producers.generator.SigmaThetaXZ: [ 10. ] # Quasi-isotropic
+physics.producers.generator.SigmaThetaXZ: [ 10. ]  # Quasi-isotropic
 physics.producers.generator.SigmaThetaYZ: [ 10. ]

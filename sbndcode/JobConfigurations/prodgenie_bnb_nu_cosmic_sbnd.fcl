@@ -1,8 +1,32 @@
+#
+# File:    prodgenie_bnb_nu_cosmic_sbnd.fcl
+# Purpose: Generation of neutrinos from Booster Neutrino Beam with cosmic rays
+# Version: 1.1
+# 
+# This configuration runs event generation only, with neutrino events generated
+# by Genie and with Corsika as cosmic ray generator.
+# 
+# It is a customization of prodgenie_common_cosmic_sbnd.fcl .
+# 
+# Input: no input file required
+# 
+# Dependencies:
+# - uses the bundle of SBND simulation services
+# - will require flux files for Genie and Corsika
+#
+# Changes:
+# 20160707 (petrillo@fnal.gov) [v1.1]
+#   - uniformed to prodsingle_sbnd.fcl
+#
+
+
 #include "prodgenie_common_cosmic_sbnd.fcl"
 
 process_name: GenieGen
 
-outputs.out1.fileName: "prodgenie_bnb_nu_cosmic_sbnd_%tc_gen.root"
+# output files
+services.TFileService.fileName: "prodgenie_bnb_nu_cosmic_sbnd_%p-%tc_hists.root"
+outputs.out1.fileName: "prodgenie_bnb_nu_cosmic_sbnd_%p-%tc.root"
 
 physics.producers.generator: @local::sbnd_genie_simple
 physics.producers.generator.GlobalTimeOffset: 0.

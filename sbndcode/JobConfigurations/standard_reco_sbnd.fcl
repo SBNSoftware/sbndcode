@@ -32,10 +32,10 @@ services:
 {
   # Load the service that manages root files for histograms.
   TFileService:              { fileName: "reco_hist.root" }
-  RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
+                             @table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceT1053: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
 }
