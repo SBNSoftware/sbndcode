@@ -7,13 +7,13 @@ sbnd_signalshapingservice:
   #ADCTicksPerPCAtLowestASICGainSetting: 25172.1 #ADC/pC
   ADCPerPCAtLowestASICGain:  9390 #ADC/pC
   #ASICGain: Options: (4.7, 7.8, 14, 25). Default: 7.8
-  ASICGainInMVPerFC:  [7.8, 7.8]     #mV/fC
-  ShapeTimeConst:  [2.0, 2.0]  
+  ASICGainInMVPerFC:  [14.0, 14.0, 14.0]     #mV/fC
+  ShapeTimeConst:  [2.0, 2.0, 2.0]  
 
   # Noise Factor - rms ADCs @ lowest ASIC Gain Setting - 4.7 mV/fC
-  NoiseFactVec = [[1.12, 0.86, 0.60, 0.55], [0.89, 0.66, 0.48, 0.43]];
+  NoiseFactVec = [[1.12, 0.86, 0.60, 0.55], [1.12, 0.86, 0.60, 0.55], [0.89, 0.66, 0.48, 0.43]];
   # To turn off Noise
-  #NoiseFactVec = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]];
+  #NoiseFactVec = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]];
 
   #FieldBins:        75 #For UseFunctionFieldShape: true
   FieldBins:       1000
@@ -28,7 +28,7 @@ sbnd_signalshapingservice:
   #IndVFieldRespAmp:  0.018
   IndVFieldRespAmp:  1.0
 
-  FieldResponseTOffset: [-26.6e3, -26e3]   #in ns, time offset of field response shape
+  FieldResponseTOffset: [-32.5e3, -32.5e3, -32.5e3]   #in ns, time offset of field response shape
  
   # For IndFilter and ColFilter, frequency (x) is measured in
   # cycles/microsecond.  The conversion to frequency bin depends on FFT size

@@ -4,7 +4,7 @@ BEGIN_PROLOG
 
 sbnd_simwire:  
 { 
- module_type:        "SimWireT1053"
+ module_type:        "SimWireSBND"
  TrigModName:        "triggersim"
  DriftEModuleLabel:  "largeant"
  #NoiseFact:          0.15       #Noise Scale to use with histogram
