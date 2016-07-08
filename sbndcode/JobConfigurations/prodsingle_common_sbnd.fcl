@@ -1,26 +1,48 @@
-#include "simulationservices_sbnd.fcl"
+#
+# File:    prodsingle_common_sbnd.fcl
+# Purpose: Base configuration for the generation of single particle
+# Version: 1.1
+# 
+# This configuration runs event generation only.
+# 
+# Input: no input file required
+# 
+#
+# Changes:
+# 20160707 (petrillo@fnal.gov) [v1.1]
+#   - uniformed to prodsingle_sbnd.fcl
+#
+
+#
+# services
+#
+
+#include "services_sbnd.fcl"
+
+#
+# algorithms
+#
+
 #include "singles_sbnd.fcl"
 
 process_name: SinglesGen
 
 services:
 {
-  # Load the service that manages root files for histograms.
-  TFileService: { fileName: "single_hist_sbnd.root" }
-  Timing:       {}
-  SimpleMemoryCheck:     { ignoreTotal: 1 } # default is one
-  RandomNumberGenerator: {} #ART native random number generator
+                        @table::sbnd_basic_services
+                        @table::sbnd_random_services
+  TFileService:         { fileName: "prodeminus_0.1_0.9_sbnd_%p-%tc_hists.root" }
   FileCatalogMetadata:  @local::sbnd_file_catalog_mc
-  user:         @local::sbnd_simulation_services
 }
 
 #Start each new event with an empty event.
 source:
 {
-  module_type: EmptyEvent
-  maxEvents:   10          # Number of events to create
-  firstRun:    1           # Run number to use for this file
-  firstEvent:  1           # number of first event in the file
+  module_type:     EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:      10  # Number of events to create
+  firstRun:        1  # Run number to use for this file
+  firstEvent:      1  # number of first event in the file
 }
 
 # Define and configure some modules to do work on each event.
@@ -56,13 +78,13 @@ physics:
 #entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
 outputs:
 {
- out1:
- {
-   module_type: RootOutput
-   fileName:    "single_gen_sbnd.root"
-   dataTier:    "generated"
-   compressionLevel: 1
- }
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "prodeminus_0.1_0.9_sbnd_%p-%tc.root"
+    dataTier:    "generated"
+    compressionLevel: 1
+  }
 }
 
 physics.producers.generator.X0: [ 0.0 ]
