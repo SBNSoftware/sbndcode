@@ -5,6 +5,8 @@
 # 
 # Provides:
 # 
+# - sbnd_g4_services: services needed by LArG4
+# - sbnd_detsim_services: services needed by readout simulation
 # - sbnd_simulation_services: bundle of services including Geant4, optical
 #   and electronics simulation (also includes the core ones)
 # - sbnd_opsimulation_services: currently the same as sbnd_simulation_services
@@ -37,17 +39,35 @@ sbnd_largeantparameters:   @local::standard_largeantparameters # from simulation
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
 
 
-# Define sbnd_simulation_services
-sbnd_simulation_services:
+# Define sbnd_g4_services
+sbnd_g4_services:
 {
-  RandomNumberGenerator:     {} # art random number generator manager
                              @table::sbnd_services
+                             @table::sbnd_random_services
   LArG4Parameters:           @local::sbnd_largeantparameters 
   LArVoxelCalculator:        @local::sbnd_larvoxelcalculator 
   MagneticField:             @local::no_mag
+  SpaceCharge:               @local::sbnd_spacecharge
+} # sbnd_g4_services
+
+  
+# Define sbnd_detsim_services
+sbnd_detsim_services:
+{
+                             @table::sbnd_services
+                             @table::sbnd_random_services
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
-  SpaceCharge:               @local::sbnd_spacecharge
+} # sbnd_detsim_services
+
+  
+# Define sbnd_simulation_services
+sbnd_simulation_services:
+{
+                             @table::sbnd_services
+                             @table::sbnd_random_services
+                             @table::sbnd_g4_services
+                             @table::sbnd_detsim_services
 }
 
 

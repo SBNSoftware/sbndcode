@@ -5,6 +5,9 @@
 # 
 # Provides:
 # 
+# - sbnd_basic_services: bundle of services including message configuration,
+#   geometry, and basic art services
+# - sbnd_random_services: services for random number management
 # - sbnd_services: bundle of services including message configuration, core
 #   services (geometry, properties, conditions); missing optical for now;
 #   targeted to reconstruction jobs (no backtracker though)
@@ -45,6 +48,30 @@
 BEGIN_PROLOG
 
 #
+# sbnd_basic_services
+#
+# Services mostly art-related, that it's hard to get away without
+# (includes geometry)
+#
+sbnd_basic_services:
+{
+  scheduler:                      { defaultExceptions: false } # Make all uncaught exceptions fatal
+  message:                        @local::sbnd_message_services
+                                  @table::sbnd_resourcemonitorservices
+                                  @table::sbnd_geometry_services
+} # sbnd_basic_services
+
+
+#
+# services for random number management
+#
+sbnd_random_services: {
+  RandomNumberGenerator: {} # art random number generator manager
+  LArSeedService:        @local::sbnd_seedservice
+} # sbnd_random_services
+
+
+#
 # sbnd_services
 #
 # Complete set of reconstruction services
@@ -52,11 +79,7 @@ BEGIN_PROLOG
 #
 sbnd_services:
 {
-  message:                        @local::sbnd_message_services
-#                                  @table::sbnd_resourcemonitorservices
-  LArSeedService:                 @local::sbnd_seedservice
-  ExptGeoHelperInterface:         @local::sbnd_geometry_helper     # from geometry_sbnd.fcl
-  Geometry:                       @local::sbnd_geo                 # from geometry_sbnd.fcl
+                                  @table::sbnd_basic_services
   LArPropertiesService:           @local::sbnd_properties    
   DetectorClocksService:          @local::sbnd_detectorclocks
   DetectorPropertiesService:      @local::sbnd_detproperties 

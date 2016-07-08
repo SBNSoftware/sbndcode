@@ -39,11 +39,11 @@ sbnd_resourcemonitorservices: {
   }
   
   MemoryTracker: {
-    printSummary: true
-    dbOutput: {
-      filename: "memory.db"
-      overwrite: true
-    }
+#     printSummary: true
+#     dbOutput: {
+#       filename: "memory.db"
+#       overwrite: true
+#     }
   }
   
 } # sbnd_resourcemonitorservices

@@ -1,0 +1,93 @@
+#
+# File:    standard_detsim_sbnd.fcl
+# Purpose: Simulates readout response to induced and collected charge
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    July 7, 2016
+# Version: 1.0
+# 
+# This configuration runs event generation, simulation of propagation through
+# matter and readout simulation.
+# 
+# Input:
+# - output from LArG4 module (in particular, SimChannels)
+# 
+# Output:
+# - daq: RawDigit collection with simulated TPC readout response as waveforms
+# - includes the whole input data
+# 
+# 
+# Dependencies:
+# - uses the bundle of SBND simulation services for readout simulation
+#
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.0]
+#   first version
+#
+#
+
+#
+# services
+#
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+#
+# modules
+#
+
+#include "detsimmodules_sbnd.fcl"
+
+
+
+process_name: DetSim
+
+services:
+{
+  TFileService:        { fileName: "standard_detsim_sbnd_%p-%tc_hists.root" }
+                       @table::sbnd_detsim_services
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+}
+
+
+source:
+{
+  module_type:     RootInput
+}
+
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+  producers:
+  {
+    rns:       { module_type: "RandomNumberSaver" }
+    daq:       @local::sbnd_simwire
+  }
+
+  #define the producer and filter modules for this path, order matters, 
+  simulate:  [ rns, daq ] 
+
+  #define the output stream, there could be more than one if using filters 
+  stream1:   [ out1 ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]  
+}
+
+# block to define where the output goes.  if you defined a filter in the physics
+# block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+# entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "%ifb_%p-%tc.root"
+    dataTier:    "simulated"
+    compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
+  }
+}
