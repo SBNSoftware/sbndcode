@@ -190,11 +190,11 @@ util::SignalShapingServiceSBND::SignalShaping(unsigned int channel) const
   // Return appropriate shaper.
   //geo::SigType_t sigtype = geom->SignalType(channel);
 
-  if (sigtype == geo::kU)
+  if (view == geo::kU)
     return fIndUSignalShaping;
-  else if (sigtype == geo::kV)
+  else if (view == geo::kV)
     return fIndVSignalShaping;
-  else if (sigtype == geo::kZ)
+  else if (view == geo::kZ)
     return fColSignalShaping;
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
@@ -214,11 +214,11 @@ double util::SignalShapingServiceSBND::GetASICGain(unsigned int const channel) c
   geo::View_t view = geom->View(channel);
 
   double gain = 0.0;
-  if(sigtype == geo::kU)
+  if(view == geo::kU)
     gain = fASICGainInMVPerFC.at(0);
-  else if(sigtype == geo::kV)
+  else if(view == geo::kV)
      gain = fASICGainInMVPerFC.at(1);
-  else if(sigtype == geo::kZ)
+  else if(view == geo::kZ)
     gain = fASICGainInMVPerFC.at(2);
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
@@ -236,11 +236,11 @@ double util::SignalShapingServiceSBND::GetShapingTime(unsigned int const channel
   geo::View_t view = geom->View(channel);
 
   double shaping_time = 0.0;
-  if(sigtype == geo::kU)
+  if(view == geo::kU)
     shaping_time = fShapeTimeConst.at(0);
-  if(sigtype == geo::kV)
+  if(view == geo::kV)
     shaping_time = fShapeTimeConst.at(1);
-  else if(sigtype == geo::kZ)
+  else if(view == geo::kZ)
     shaping_time = fShapeTimeConst.at(2);
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
@@ -257,11 +257,11 @@ double util::SignalShapingServiceSBND::GetRawNoise(unsigned int const channel) c
   // we need to distiguish the U and V planes
   geo::View_t view = geom->View(channel);
 
-  if(sigtype == geo::kU)
+  if(view == geo::kU)
     plane = 0;
-  else if(sigtype == geo::kV)
+  else if(view == geo::kV)
     plane = 1;
-  else if(sigtype == geo::kZ)
+  else if(view == geo::kZ)
     plane = 2;
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
@@ -297,11 +297,11 @@ double util::SignalShapingServiceSBND::GetDeconNoise(unsigned int const channel)
   // we need to distiguish the U and V planes
   geo::View_t view = geom->View(channel);
 
-  if(sigtype == geo::kU)
+  if(view == geo::kU)
     plane = 0;
-  else if(sigtype == geo::kV)
+  else if(view == geo::kV)
     plane = 1;
-  else if(sigtype == geo::kZ)
+  else if(view == geo::kZ)
     plane = 2;
   else
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"

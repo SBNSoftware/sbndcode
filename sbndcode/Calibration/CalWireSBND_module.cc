@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////
 //
-// CalWireT1053 class
+// CalWireSBND class
 //
 // brebel@fnal.gov
 //
@@ -31,7 +31,7 @@ extern "C" {
 #include "cetlib/exception.h"
 #include "cetlib/search_path.h"
 
-#include "sbndcode/Utilities/SignalShapingServiceT1053.h"
+#include "sbndcode/Utilities/SignalShapingServiceSBND.h"
 #include "larcore/Geometry/Geometry.h"
 //#include "Filters/ChannelFilter.h"
 
@@ -50,7 +50,7 @@ extern "C" {
 ///creation of calibrated signals on wires
 namespace caldata {
 
-  class CalWireT1053 : public art::EDProducer {
+  class CalWireSBND : public art::EDProducer {
 
   public:
     
@@ -58,8 +58,8 @@ namespace caldata {
 
     // create calibrated signals on wires. this class runs 
     // an fft to remove the electronics shaping.     
-    explicit CalWireT1053(fhicl::ParameterSet const& pset); 
-    virtual ~CalWireT1053();
+    explicit CalWireSBND(fhicl::ParameterSet const& pset); 
+    virtual ~CalWireSBND();
     
     void produce(art::Event& evt); 
     void beginJob(); 
@@ -82,12 +82,12 @@ namespace caldata {
 
   protected: 
     
-  }; // class CalWireT1053
+  }; // class CalWireSBND
 
-  DEFINE_ART_MODULE(CalWireT1053)
+  DEFINE_ART_MODULE(CalWireSBND)
   
   //-------------------------------------------------
-  CalWireT1053::CalWireT1053(fhicl::ParameterSet const& pset)
+  CalWireSBND::CalWireSBND(fhicl::ParameterSet const& pset)
   {
     fSpillName="";
     this->reconfigure(pset);
@@ -99,12 +99,12 @@ namespace caldata {
     produces<art::Assns<raw::RawDigit, recob::Wire>>(fSpillName);
   }
   //-------------------------------------------------
-  CalWireT1053::~CalWireT1053()
+  CalWireSBND::~CalWireSBND()
   {
   }
 
   //////////////////////////////////////////////////////
-  void CalWireT1053::reconfigure(fhicl::ParameterSet const& p)
+  void CalWireSBND::reconfigure(fhicl::ParameterSet const& p)
   {
     fDigitModuleLabel = p.get< std::string >("DigitModuleLabel", "daq");
     fPostsample       = p.get< int >        ("PostsampleBins");
@@ -122,17 +122,17 @@ namespace caldata {
   }
 
   //-------------------------------------------------
-  void CalWireT1053::beginJob()
+  void CalWireSBND::beginJob()
   {  
   }
 
   //////////////////////////////////////////////////////
-  void CalWireT1053::endJob()
+  void CalWireSBND::endJob()
   {  
   }
   
   //////////////////////////////////////////////////////
-  void CalWireT1053::produce(art::Event& evt)
+  void CalWireSBND::produce(art::Event& evt)
   {      
     // get the geometry
     art::ServiceHandle<geo::Geometry> geom;
@@ -142,7 +142,7 @@ namespace caldata {
     int transformSize = fFFT->FFTSize();
 
     // Get signal shaping service.
-    art::ServiceHandle<util::SignalShapingServiceT1053> sss;
+    art::ServiceHandle<util::SignalShapingServiceSBND> sss;
 
 
     // make a collection of Wires
@@ -158,7 +158,7 @@ namespace caldata {
     else evt.getByLabel(fDigitModuleLabel, digitVecHandle);
 
     if (!digitVecHandle->size())  return;
-    mf::LogInfo("CalWireT1053") << "CalWireT1053:: digitVecHandle size is " << digitVecHandle->size();
+    mf::LogInfo("CalWireSBND") << "CalWireSBND:: digitVecHandle size is " << digitVecHandle->size();
 
     // Use the handle to get a particular (0th) element of collection.
     art::Ptr<raw::RawDigit> digitVec0(digitVecHandle, 0);
@@ -166,19 +166,19 @@ namespace caldata {
     unsigned int dataSize = digitVec0->Samples(); //size of raw data vectors
 
     if( (unsigned int)transformSize < dataSize){
-      mf::LogWarning("CalWireT1053")<<"FFT size (" << transformSize << ") "
+      mf::LogWarning("CalWireSBND")<<"FFT size (" << transformSize << ") "
                                     << "is smaller than the data size (" << dataSize << ") "
                                     << "\nResizing the FFT now...";
       fFFT->ReinitializeFFT(dataSize,fFFT->FFTOptions(),fFFT->FFTFitBins());
       transformSize = fFFT->FFTSize();
-      mf::LogWarning("CalWireT1053")<<"FFT size is now (" << transformSize << ") "
+      mf::LogWarning("CalWireSBND")<<"FFT size is now (" << transformSize << ") "
                                     << "and should be larger than the data size (" << dataSize << ")";
     }
 
-    mf::LogInfo("CalWireT1053") << "Data size is " << dataSize << " and transform size is " << transformSize;
+    mf::LogInfo("CalWireSBND") << "Data size is " << dataSize << " and transform size is " << transformSize;
 
     if(fBaseSampleBins > 0 && dataSize % fBaseSampleBins != 0) {
-      mf::LogError("CalWireT1053")<<"Set BaseSampleBins modulo dataSize= "<<dataSize;
+      mf::LogError("CalWireSBND")<<"Set BaseSampleBins modulo dataSize= "<<dataSize;
     }
 
     uint32_t     channel(0); // channel number
@@ -250,7 +250,7 @@ namespace caldata {
 
 
     if(wirecol->size() == 0)
-      mf::LogWarning("CalWireT1053") << "No wires made for this event.";
+      mf::LogWarning("CalWireSBND") << "No wires made for this event.";
 
     //--Hec if(fSpillName.size()>0)
     //--Hec   evt.put(std::move(wirecol), fSpillName);
@@ -263,7 +263,7 @@ namespace caldata {
     return;
   }
   
-  void CalWireT1053::SubtractBaseline(std::vector<float>& holder,
+  void CalWireSBND::SubtractBaseline(std::vector<float>& holder,
      int fBaseSampleBins)
   {
     // subtract baseline using linear interpolation between regions defined
