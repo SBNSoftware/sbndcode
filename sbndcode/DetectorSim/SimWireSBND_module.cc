@@ -101,6 +101,7 @@ private:
   std::string fNoiseHistoName;
   TH1D*                  fNoiseHist = nullptr; ///< distribution of noise counts
 
+  std::map< double, int > fShapingTimeOrder;
   std::string fTrigModName;                 ///< Trigger data product producer name
   //define max ADC value - if one wishes this can
   //be made a fcl parameter but not likely to ever change
@@ -152,12 +153,11 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   fInductionPed     = p.get< float               >("InductionPed");
   fBaselineRMS      = p.get< float               >("BaselineRMS");
   
-  std::map< double, int > fShapingTimeOrder;
   fTrigModName      = p.get< std::string         >("TrigModName");
 
   //Map the Shaping times to the entry position for the noise ADC
   //level in fNoiseFactInd and fNoiseFactColl
-  fShapingTimeOrder = { {0.5, 0 }, {1.0, 1}, {2.0, 2}, {3.0, 3} }
+  fShapingTimeOrder = { {0.5, 0 }, {1.0, 1}, {2.0, 2}, {3.0, 3} };
 
 
   if (fGetNoiseFromHisto)
@@ -292,11 +292,13 @@ void SimWireSBND::produce(art::Event& evt)
 
     //Generate Noise:
 
+    size_t view = (size_t)geo->View(chan);
+
     double noise_factor;
     auto tempNoiseVec = sss->GetNoiseFactVec();
     double shapingTime = sss->GetShapingTime(chan);
     double asicGain = sss->GetASICGain(chan);
-    std::cout << "Sim params: " << chan << " " << shappingTime << " " << asicGain << std::endl;
+    std::cout << "Sim params: " << chan << " " << shapingTime << " " << asicGain << std::endl;
     
     if (fShapingTimeOrder.find( shapingTime ) != fShapingTimeOrder.end() ) {
       noise_factor = tempNoiseVec[view].at( fShapingTimeOrder.find( shapingTime )->second );
