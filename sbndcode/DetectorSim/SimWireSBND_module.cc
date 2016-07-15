@@ -78,13 +78,12 @@ public:
 
 private:
 
-  void GenNoiseInTime(std::vector<float> &noise);
-  void GenNoiseInFreq(std::vector<float> &noise);
+  void GenNoiseInTime(std::vector<float> &noise, double noise_factor) const;
+  void GenNoiseInFreq(std::vector<float> &noise, double noise_factor) const;
 
   std::string            fDriftEModuleLabel;///< module making the ionization electrons
   raw::Compress_t        fCompression;      ///< compression type to use
 
-  double                 fNoiseFact;        ///< noise scale factor (ADC RMS for gaussian noise)
   double                 fNoiseWidth;       ///< exponential noise width (kHz)
   double                 fNoiseRand;        ///< fraction of random "wiggle" in noise in freq. spectrum
   double                 fLowCutoff;        ///< low frequency filter cutoff (kHz)
@@ -143,7 +142,6 @@ SimWireSBND::~SimWireSBND()
 void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
 {
   fDriftEModuleLabel = p.get< std::string         >("DriftEModuleLabel");
-  fNoiseFact        = p.get< double              >("NoiseFact");
   fNoiseWidth       = p.get< double              >("NoiseWidth");
   fNoiseRand        = p.get< double              >("NoiseRand");
   fLowCutoff        = p.get< double              >("LowCutoff");
@@ -153,8 +151,14 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   fCollectionPed    = p.get< float               >("CollectionPed");
   fInductionPed     = p.get< float               >("InductionPed");
   fBaselineRMS      = p.get< float               >("BaselineRMS");
-
+  
+  std::map< double, int > fShapingTimeOrder;
   fTrigModName      = p.get< std::string         >("TrigModName");
+
+  //Map the Shaping times to the entry position for the noise ADC
+  //level in fNoiseFactInd and fNoiseFactColl
+  fShapingTimeOrder = { {0.5, 0 }, {1.0, 1}, {2.0, 2}, {3.0, 3} }
+
 
   if (fGetNoiseFromHisto)
   {
@@ -184,8 +188,6 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   //detector properties information
   auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   fNTimeSamples  = detprop->NumberTimeSamples();    
-
-
 
   return;
 }
@@ -289,12 +291,34 @@ void SimWireSBND::produce(art::Event& evt)
     }
 
     //Generate Noise:
+
+    double noise_factor;
+    auto tempNoiseVec = sss->GetNoiseFactVec();
+    double shapingTime = sss->GetShapingTime(chan);
+    double asicGain = sss->GetASICGain(chan);
+    std::cout << "Sim params: " << chan << " " << shappingTime << " " << asicGain << std::endl;
+    
+    if (fShapingTimeOrder.find( shapingTime ) != fShapingTimeOrder.end() ) {
+      noise_factor = tempNoiseVec[view].at( fShapingTimeOrder.find( shapingTime )->second );
+      noise_factor *= asicGain/4.7;
+    }
+    else {
+      throw cet::exception("SimWireSBND")
+      << "\033[93m"
+      << "Shaping Time recieved from signalshapingservices_sbnd.fcl is not one of the allowed values"
+      << std::endl
+      << "Allowed values: 0.5, 1.0, 2.0, 3.0 us" 
+      << "\033[00m"
+      << std::endl;	   
+    }
+
+
     std::vector<float> noisetmp(fNTicks, 0.);
     if (fGenNoise) {
       if (fGenNoiseInTime)
-        GenNoiseInTime(noisetmp);
+        GenNoiseInTime(noisetmp, noise_factor);
       else
-        GenNoiseInFreq(noisetmp);
+        GenNoiseInFreq(noisetmp, noise_factor);
     }
 
     //Pedestal determination
@@ -349,12 +373,12 @@ void SimWireSBND::produce(art::Event& evt)
 }
 
 //-------------------------------------------------
-void SimWireSBND::GenNoiseInTime(std::vector<float> &noise)
+  void SimWireSBND::GenNoiseInTime(std::vector<float> &noise, double noise_factor) const
 {
   //ART random number service
   art::ServiceHandle<art::RandomNumberGenerator> rng;
   CLHEP::HepRandomEngine &engine = rng->getEngine("noise");
-  CLHEP::RandGaussQ rGauss(engine, 0.0, fNoiseFact);
+  CLHEP::RandGaussQ rGauss(engine, 0.0, noise_factor);
 
   //In this case fNoiseFact is a value in ADC counts
   //It is going to be the Noise RMS
@@ -366,7 +390,7 @@ void SimWireSBND::GenNoiseInTime(std::vector<float> &noise)
 
 
 //-------------------------------------------------
-void SimWireSBND::GenNoiseInFreq(std::vector<float> &noise)
+  void SimWireSBND::GenNoiseInFreq(std::vector<float> &noise, double noise_factor) const
 {
   art::ServiceHandle<art::RandomNumberGenerator> rng;
   CLHEP::HepRandomEngine &engine = rng->getEngine("noise");
@@ -397,7 +421,7 @@ void SimWireSBND::GenNoiseInFreq(std::vector<float> &noise)
     //if not from histo or in time --> then hardcoded freq. spectrum
     if ( !fGetNoiseFromHisto )
     {
-      pval = fNoiseFact * exp(-(double)i * binWidth / fNoiseWidth);
+      pval = noise_factor * exp(-(double)i * binWidth / fNoiseWidth);
       // low frequency cutoff
       lofilter = 1.0 / (1.0 + exp(-(i - fLowCutoff / binWidth) / 0.5));
       // randomize 10%
@@ -409,7 +433,7 @@ void SimWireSBND::GenNoiseInFreq(std::vector<float> &noise)
     else
     {
 
-      pval = fNoiseHist->GetBinContent(i) * ((1 - fNoiseRand) + 2 * fNoiseRand * rnd[0]) * fNoiseFact;
+      pval = fNoiseHist->GetBinContent(i) * ((1 - fNoiseRand) + 2 * fNoiseRand * rnd[0]) * noise_factor;
       //mf::LogInfo("SimWireSBND")  << " pval: " << pval;
     }
 
