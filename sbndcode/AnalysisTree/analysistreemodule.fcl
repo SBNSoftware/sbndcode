@@ -2,7 +2,9 @@ BEGIN_PROLOG
 
 sbnd_analysistree:
 { 
- module_type:              "AnalysisTree"
+ # we specify the full path of the module, because there are way too many
+ # "AnalysisTree" modules on the market
+ module_type:              "sbndcode/AnalysisTree/AnalysisTree"
  DigitModuleLabel:         "daq"
  HitsModuleLabel:          "gaushit"
  LArGeantModuleLabel:      "largeant"
