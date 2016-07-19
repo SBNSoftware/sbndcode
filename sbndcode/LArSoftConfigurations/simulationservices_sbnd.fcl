@@ -37,7 +37,7 @@ BEGIN_PROLOG
 
 sbnd_largeantparameters:   @local::standard_largeantparameters # from simulationservices.fcl
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
-
+sbnd_backtracker:          @local::standard_backtracker        # from backtracker.fcl
 
 # Define sbnd_g4_services
 sbnd_g4_services:

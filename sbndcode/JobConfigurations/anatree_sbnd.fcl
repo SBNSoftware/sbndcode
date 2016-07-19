@@ -1,0 +1,52 @@
+#
+# File:    anatree_sbnd.fcl
+# Purpose: Write generated and reconstructed information in a ROOT tree
+# 
+# Changes:
+# 20160719 (petrillo@fnal.gov)
+#   restyled and updated service configuration
+#
+#
+
+#
+# service configuration
+#
+#include "simulationservices_sbnd.fcl"
+#include "backtracker.fcl"
+
+#
+# algorithm configuration
+#
+#include "analysistreemodule.fcl"
+
+
+process_name: AnaTree
+
+services:
+{
+  # this is the real output file
+  TFileService: { fileName: "anatree_sbnd-%p_%tc.root" }
+                @table::sbnd_services
+  BackTracker:  @local::sbnd_backtracker
+}
+
+source: {
+  module_type: RootInput
+}
+
+physics:
+{
+  producers:{}
+  filters:  {} 
+  analyzers:{
+    
+    analysistree: @local::sbnd_analysistree
+    
+  } # analyzers
+ 
+  ana:  [ analysistree ]
+ 
+  trigger_paths: [] 
+  end_paths:     [ ana ] 
+  
+} # physics
