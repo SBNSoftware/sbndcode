@@ -1929,30 +1929,34 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
       for(size_t iTrk=0; iTrk < NTracks; ++iTrk){//loop over tracks
       
         //Cosmic Tagger information
-        art::FindManyP<anab::CosmicTag> fmct(trackListHandle[iTracker],evt,fCosmicTaggerAssocLabel[iTracker]);
-        if (fmct.isValid()){          
-          TrackerData.trkncosmictags_tagger[iTrk]     = fmct.at(iTrk).size();
-          if (fmct.at(iTrk).size()>0){
-            if(fmct.at(iTrk).size()>1)
-              std::cerr << "\n Warning : more than one cosmic tag per track in module! assigning the first tag to the track" << fCosmicTaggerAssocLabel[iTracker];
-            TrackerData.trkcosmicscore_tagger[iTrk] = fmct.at(iTrk).at(0)->CosmicScore();
-            TrackerData.trkcosmictype_tagger[iTrk] = fmct.at(iTrk).at(0)->CosmicType();
+        if (fCosmicTaggerAssocLabel.size() > iTracker) {
+          art::FindManyP<anab::CosmicTag> fmct(trackListHandle[iTracker],evt,fCosmicTaggerAssocLabel[iTracker]);
+          if (fmct.isValid()){          
+            TrackerData.trkncosmictags_tagger[iTrk]     = fmct.at(iTrk).size();
+            if (fmct.at(iTrk).size()>0){
+              if(fmct.at(iTrk).size()>1)
+                std::cerr << "\n Warning : more than one cosmic tag per track in module! assigning the first tag to the track" << fCosmicTaggerAssocLabel[iTracker];
+              TrackerData.trkcosmicscore_tagger[iTrk] = fmct.at(iTrk).at(0)->CosmicScore();
+              TrackerData.trkcosmictype_tagger[iTrk] = fmct.at(iTrk).at(0)->CosmicType();
+            }
           }
-        }
+        } // if we have matching fCosmicTaggerAssocLabel
 
         //Flash match compatibility information
-        //Unlike CosmicTagger, Flash match doesn't assign a cosmic tag for every track. For those tracks, AnalysisTree initializes them with -9999 or -99999
-        art::FindManyP<anab::CosmicTag> fmbfm(trackListHandle[iTracker],evt,fFlashMatchAssocLabel[iTracker]);
-        if (fmbfm.isValid()){  
-          TrackerData.trkncosmictags_flashmatch[iTrk] = fmbfm.at(iTrk).size();
-          if (fmbfm.at(iTrk).size()>0){
-            if(fmbfm.at(iTrk).size()>1) 
-              std::cerr << "\n Warning : more than one cosmic tag per track in module! assigning the first tag to the track" << fFlashMatchAssocLabel[iTracker];
-  	      TrackerData.trkcosmicscore_flashmatch[iTrk] = fmbfm.at(iTrk).at(0)->CosmicScore();
-              TrackerData.trkcosmictype_flashmatch[iTrk] = fmbfm.at(iTrk).at(0)->CosmicType();
-	    //std::cout<<"\n"<<evt.event()<<"\t"<<iTrk<<"\t"<<fmbfm.at(iTrk).at(0)->CosmicScore()<<"\t"<<fmbfm.at(iTrk).at(0)->CosmicType();
+        if (fFlashMatchAssocLabel.size() > iTracker) {
+          //Unlike CosmicTagger, Flash match doesn't assign a cosmic tag for every track. For those tracks, AnalysisTree initializes them with -9999 or -99999
+          art::FindManyP<anab::CosmicTag> fmbfm(trackListHandle[iTracker],evt,fFlashMatchAssocLabel[iTracker]);
+          if (fmbfm.isValid()){  
+            TrackerData.trkncosmictags_flashmatch[iTrk] = fmbfm.at(iTrk).size();
+            if (fmbfm.at(iTrk).size()>0){
+              if(fmbfm.at(iTrk).size()>1) 
+                std::cerr << "\n Warning : more than one cosmic tag per track in module! assigning the first tag to the track" << fFlashMatchAssocLabel[iTracker];
+            TrackerData.trkcosmicscore_flashmatch[iTrk] = fmbfm.at(iTrk).at(0)->CosmicScore();
+                TrackerData.trkcosmictype_flashmatch[iTrk] = fmbfm.at(iTrk).at(0)->CosmicType();
+        //std::cout<<"\n"<<evt.event()<<"\t"<<iTrk<<"\t"<<fmbfm.at(iTrk).at(0)->CosmicScore()<<"\t"<<fmbfm.at(iTrk).at(0)->CosmicType();
+            }
           }
-        }
+        } // if we have matching fFlashMatchAssocLabel
      			 	   
         art::Ptr<recob::Track> ptrack(trackListHandle[iTracker], iTrk);
         const recob::Track& track = *ptrack;
