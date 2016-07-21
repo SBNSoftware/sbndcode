@@ -12,6 +12,7 @@
 #include "larcore/Geometry/TPCGeo.h"
 #include "larcore/Geometry/PlaneGeo.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/Utilities/LArFFT.h"
 #include "TFile.h"
 
@@ -619,7 +620,7 @@ void util::SignalShapingServiceSBND::SetElectResponse(double shapingtime, double
   // Get services.
 
   art::ServiceHandle<geo::Geometry> geo;
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
+  //auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
 
   LOG_DEBUG("SignalShapingSBND") << "Setting SBND electronics response function...";
@@ -648,10 +649,10 @@ void util::SignalShapingServiceSBND::SetElectResponse(double shapingtime, double
   // actual electronics response. Default params are Ao=1.4, To=0.5us. 
   double max=0.;
   
-  for(int i = 0; i < fElectResponse.size(); ++i){
+  for(size_t i = 0; i < fElectResponse.size(); ++i){
 
     //convert time to microseconds, to match fElectResponse[i] definition
-    time[i] = (1.*i)*fInputFieldResponseSamplingPeriod*1e-3; 
+    time[i] = (1.*i)*fInputFieldRespSamplingPeriod*1e-3; 
     fElectResponse[i] = 
       4.31054*exp(-2.94809*time[i]/To)*Ao - 2.6202*exp(-2.82833*time[i]/To)*cos(1.19361*time[i]/To)*Ao
       -2.6202*exp(-2.82833*time[i]/To)*cos(1.19361*time[i]/To)*cos(2.38722*time[i]/To)*Ao
@@ -763,12 +764,12 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
 {
   //Get services
   art::ServiceHandle<geo::Geometry> geo;
-  art::ServiceHandle<util:: LArPropoerties> larp;
   art::ServiceHandle<util::LArFFT> fft;
+  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
 
   //Operations permitted only if output of rebinning has a larger bin size
-  if( fInputFieldResponseSamplingPeriod > detprop->SamplingRate() )
-    throw cet::exception(_FUNCTION_) << "\033[93m"
+  if( fInputFieldRespSamplingPeriod > detprop->SamplingRate() )
+    throw cet::exception("SignalShapingServiceSBND") << "\033[93m"
                                      << "Invalid operation: cannot rebin to a more finely binned vector!"    
                                      << "\033[00m" << std::endl;
   
@@ -784,15 +785,15 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
     switch( iplane ) {
     case 0: pResp = &(fIndUSignalShaping.Response_save()); break;
     case 1: pResp = &(fIndVSignalShaping.Response_save()); break;
-    defualt: pResp = &(fColSignalShaping.Response_save()); break;          
+    default: pResp = &(fColSignalShaping.Response_save()); break;          
     }
   
   std::vector<double> SamplingResp(nticks, 0.);
   
   int nticks_input = pResp->size();
-  std::vector<double> Input Time(nticks_input, 0.);
+  std::vector<double> InputTime(nticks_input, 0.);
   for(int itime = 0; itime < nticks_input; itime++) {
-    InputTime[itime] = (1.*itime) * fInputFieldResponseSamplingPeriod;
+    InputTime[itime] = (1.*itime) * fInputFieldRespSamplingPeriod;
   }
 
   /*
@@ -825,7 +826,7 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
   switch( iplane ) {
   case 0: fIndUSignalShaping.AddResponseFunction(SamplingResp, true); break;
   case 1: fIndVSignalShaping.AddResponseFunction(SamplingResp, true);; break;
-  defualt: fColSignalShaping.AddResponseFunction(SamplingResp, true);; break;
+  default: fColSignalShaping.AddResponseFunction(SamplingResp, true);; break;
   }
 
   }// for(int iplane = 0; iplane < 2; iplane++)
@@ -833,7 +834,7 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
   return;
 }
 
-int util::SignalShapingServiceSBND::FieldResponseOffset(unsigned int const channel) const
+int util::SignalShapingServiceSBND::FieldResponseTOffset(unsigned int const channel) const
 {
   art::ServiceHandle<geo::Geometry> geom;
   geo::View_t view = geom->View(channel);
@@ -849,7 +850,8 @@ int util::SignalShapingServiceSBND::FieldResponseOffset(unsigned int const chann
     throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
                                                     << " SignalType\n";
 
-  auto tpc_clock = art::ServiceHandle<util::TimeService>()->TPCCLOCK();
+  //auto tpc_clock = art::ServiceHandle<util::TimeService>()->TPCCLOCK();
+  auto tpc_clock = lar::providerFrom<detinfo::DetectorClocksService>()->TPCClock();
   return tpc_clock.Ticks(time_offset/1.e3);
 }
 
