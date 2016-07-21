@@ -1,3 +1,14 @@
+#
+# File:    sam_sbnd.fcl
+# Purpose: Configuration for SAM database (metadata)
+# Version: 1.1
+#
+# Changes:
+# 20160721 (petrillo@fnal.gov) [v1.1]
+#   added "extra" configuration
+#
+#
+
 BEGIN_PROLOG
 
 # Standard configurations for art's built-in FileCatalogMetadata service.
@@ -13,11 +24,27 @@ sbnd_file_catalog:
   fileType:            "unknown"
 }
 
+
 sbnd_file_catalog_mc:           @local::sbnd_file_catalog
 sbnd_file_catalog_mc.fileType:  "mc"
 
 sbnd_file_catalog_data:           @local::sbnd_file_catalog
 sbnd_file_catalog_data.fileType:  "data"
+
+
+#
+# this configuration is for FileCatalogMetadataSBND;
+# not that useful, since all members are job-specific
+#
+sbnd_file_catalog_extra:
+{
+  fclName:         @nil
+  fclVersion:      @nil
+  projectName:     @nil
+  projectStage:    @nil
+  projectVersion:  @nil  
+} # sbnd_file_catalog_extra
+
 
 # Standard configurations for FileCatalogMetadataExtras service.
 # Both fields and values are microboone-specific.
@@ -40,5 +67,6 @@ sbnd_file_catalog_data.fileType:  "data"
 # this is for backward compatibility only; users should use the definitions above
 art_file_catalog_mc:   @local::sbnd_file_catalog_mc
 art_file_catalog_data: @local::sbnd_file_catalog_data
+
 
 END_PROLOG
