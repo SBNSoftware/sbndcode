@@ -19,11 +19,12 @@ sbnd_calroi:
 
 sbnd_calwire:
 {
- module_type:        "CalWireT1053"
+ module_type:        "CalWireSBND"
  DigitModuleLabel:   "daq"
  PostsampleBins:       0
  BaseSampleBins:      40  # set > 0 for baseline subtraction. Value should be
                           # modulo the data size (3200 for uB)
+ DoBaselineSub:       true			  
  BaseVarCut:         25.  # Variance cut for selecting baseline points
 }
 
