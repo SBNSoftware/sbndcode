@@ -59,8 +59,10 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
   fIndVFieldRespAmp = pset.get<double>("IndVFieldRespAmp");
   fShapeTimeConst = pset.get<std::vector<double> >("ShapeTimeConst");
   fNoiseFactVec = pset.get<std::vector<DoubleVec> >("NoiseFactVec");
+
   fInputFieldRespSamplingPeriod = pset.get<double>("InputFieldRespSamplingPeriod"); 
-  
+  fFieldResponseTOffset = pset.get<std::vector<double> >("FieldResponseTOffset");  
+
   fUseFunctionFieldShape= pset.get<bool>("UseFunctionFieldShape");
   fUseSimpleFieldShape = pset.get<bool>("UseSimpleFieldShape");
   fUseHistogramFieldShape = pset.get<bool>("UseHistogramFieldShape");
@@ -350,6 +352,7 @@ void util::SignalShapingServiceSBND::init()
 
     fColSignalShaping.AddResponseFunction(fColFieldResponse);
     fColSignalShaping.AddResponseFunction(fElectResponse);
+    fColSignalShaping.save_response();
     fColSignalShaping.set_normflag(false);
     //fColSignalShaping.SetPeakResponseTime(0.);
 
@@ -357,6 +360,7 @@ void util::SignalShapingServiceSBND::init()
 
     fIndUSignalShaping.AddResponseFunction(fIndUFieldResponse);
     fIndUSignalShaping.AddResponseFunction(fElectResponse);
+    fIndUSignalShaping.save_response();
     fIndUSignalShaping.set_normflag(false);
     //fIndUSignalShaping.SetPeakResponseTime(0.);
 
@@ -364,8 +368,11 @@ void util::SignalShapingServiceSBND::init()
 
     fIndVSignalShaping.AddResponseFunction(fIndVFieldResponse);
     fIndVSignalShaping.AddResponseFunction(fElectResponse);
+    fIndVSignalShaping.save_response();
     fIndUSignalShaping.set_normflag(false);
     //fIndVSignalShaping.SetPeakResponseTime(0.);
+
+    SetResponseSampling();
 
     // Calculate filter functions.
 
@@ -641,10 +648,10 @@ void util::SignalShapingServiceSBND::SetElectResponse(double shapingtime, double
   // actual electronics response. Default params are Ao=1.4, To=0.5us. 
   double max=0.;
   
-  for(int i = 0; i < nticks; ++i){
+  for(int i = 0; i < fElectResponse.size(); ++i){
 
     //convert time to microseconds, to match fElectResponse[i] definition
-    time[i] = (1.*i)*detprop->SamplingRate()*1e-3; 
+    time[i] = (1.*i)*fInputFieldResponseSamplingPeriod*1e-3; 
     fElectResponse[i] = 
       4.31054*exp(-2.94809*time[i]/To)*Ao - 2.6202*exp(-2.82833*time[i]/To)*cos(1.19361*time[i]/To)*Ao
       -2.6202*exp(-2.82833*time[i]/To)*cos(1.19361*time[i]/To)*cos(2.38722*time[i]/To)*Ao
@@ -749,6 +756,102 @@ void util::SignalShapingServiceSBND::SetFilters()
   
 }
 
+//---------------------------------------------------------------
+// Sample SBND response (the convoluted field and electronics
+// response)
+void util::SignalShapingServiceSBND::SetResponseSampling()
+{
+  //Get services
+  art::ServiceHandle<geo::Geometry> geo;
+  art::ServiceHandle<util:: LArPropoerties> larp;
+  art::ServiceHandle<util::LArFFT> fft;
+
+  //Operations permitted only if output of rebinning has a larger bin size
+  if( fInputFieldResponseSamplingPeriod > detprop->SamplingRate() )
+    throw cet::exception(_FUNCTION_) << "\033[93m"
+                                     << "Invalid operation: cannot rebin to a more finely binned vector!"    
+                                     << "\033[00m" << std::endl;
+  
+  int nticks = fft->FFTSize();
+  std::vector<double> SamplingTime(nticks,0.);
+  for(int itime = 0; itime < nticks; itime++) {
+    SamplingTime[itime] = (1.*itime) * detprop->SamplingRate();
+  }
+
+  //Sampling
+  for(int iplane = 0; iplane < 2; iplane++) {
+    const std::vector<double>* pResp;
+    switch( iplane ) {
+    case 0: pResp = &(fIndUSignalShaping.Response_save()); break;
+    case 1: pResp = &(fIndVSignalShaping.Response_save()); break;
+    defualt: pResp = &(fColSignalShaping.Response_save()); break;          
+    }
+  
+  std::vector<double> SamplingResp(nticks, 0.);
+  
+  int nticks_input = pResp->size();
+  std::vector<double> Input Time(nticks_input, 0.);
+  for(int itime = 0; itime < nticks_input; itime++) {
+    InputTime[itime] = (1.*itime) * fInputFieldResponseSamplingPeriod;
+  }
+
+  /*
+    Much more sophisticated approach using a linear (trapezoidal) interpolation
+    current deafult!
+  */
+  int SamplingCount = 0;
+  for(int itime = 0; itime < nticks; itime++) {
+    int low = -1, up = -1;
+    for(int jtime = 0; jtime < nticks; jtime++) {
+      if(InputTime[jtime] == SamplingTime[itime]) {
+	SamplingResp[itime] = (*pResp)[jtime];
+	SamplingCount++;
+	break;
+      } else if(InputTime[jtime] > SamplingTime[itime]) {
+	low = jtime - 1;
+	up = jtime;
+	SamplingResp[itime] = (*pResp)[low] + (SamplingTime[itime] - InputTime[low]) * ( (*pResp)[up] - (*pResp)[low]) / (InputTime[up] - InputTime[low] );
+	SamplingCount++;
+	break;
+      } else {
+	SamplingResp[itime] = 0;
+      }
+    }// for(int jtime = 0; jtime < nticks; jtime++)
+    
+  }// for(int itime = 0; itime < nticks; itime++)
+
+  SamplingResp.resize(SamplingCount, 0.);
+
+  switch( iplane ) {
+  case 0: fIndUSignalShaping.AddResponseFunction(SamplingResp, true); break;
+  case 1: fIndVSignalShaping.AddResponseFunction(SamplingResp, true);; break;
+  defualt: fColSignalShaping.AddResponseFunction(SamplingResp, true);; break;
+  }
+
+  }// for(int iplane = 0; iplane < 2; iplane++)
+
+  return;
+}
+
+int util::SignalShapingServiceSBND::FieldResponseOffset(unsigned int const channel) const
+{
+  art::ServiceHandle<geo::Geometry> geom;
+  geo::View_t view = geom->View(channel);
+
+  double time_offset = 0;
+  if(view == geo::kU)
+    time_offset = fFieldResponseTOffset.at(0);
+  else if(view == geo::kV)
+    time_offset = fFieldResponseTOffset.at(1);
+  else if(view == geo::kZ)
+    time_offset = fFieldResponseTOffset.at(2);
+  else
+    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+                                                    << " SignalType\n";
+
+  auto tpc_clock = art::ServiceHandle<util::TimeService>()->TPCCLOCK();
+  return tpc_clock.Ticks(time_offset/1.e3);
+}
 
 
 namespace util {
