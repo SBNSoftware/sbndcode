@@ -30,15 +30,15 @@
 
 process_name: SinglesGen
 
-services.FileCatalogMetadata:       @local::sbnd_file_catalog_mc  # from sam_sbnd.fcl
-services.FileCatalogMetadataSBND: {
-  @table::sbnd_file_catalog_extra
-  FCLName:        "prodgenie_sbnd_proj.fcl"
-  FCLVersion:     "v1_1"
-  ProjectName:    ""
-  ProjectStage:   ""
-  ProjectVersion: ""  
-} # services.FileCatalogMetadataSBND
+#services.FileCatalogMetadata:       @local::sbnd_file_catalog_mc  # from sam_sbnd.fcl
+#services.FileCatalogMetadataSBND: {
+#  @table::sbnd_file_catalog_extra
+#  FCLName:        "prodgenie_sbnd_proj.fcl"
+#  FCLVersion:     "v1_1"
+#  ProjectName:    ""
+#  ProjectStage:   ""
+#  ProjectVersion: ""  
+#} # services.FileCatalogMetadataSBND
 
 
 # only run the generator step
