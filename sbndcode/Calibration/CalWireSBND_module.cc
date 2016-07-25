@@ -240,7 +240,7 @@ namespace caldata {
       }  
       // adaptive baseline subtraction
       //if(fBaseSampleBins) SubtractBaseline(holder, fBaseSampleBins);
-      if(doBaselineSub) SubtractBaseline(holder);
+      if(fDoBaselineSub) SubtractBaseline(holder);
 
       // Make a single ROI that spans the entire data size
       RegionsOfInterest_t sparse_holder;
@@ -287,7 +287,7 @@ namespace caldata {
 	h1->Fill(holder[bin]);
       }
       float ped = h1->GetMaximum();
-      float ave = 0. ncount = 0;
+      float ave = 0, ncount = 0;
       for(unsigned int bin = 0; bin < holder.size(); bin++){
 	if (fabs(holder[bin]-ped) < 2){
 	  ave += holder[bin];
