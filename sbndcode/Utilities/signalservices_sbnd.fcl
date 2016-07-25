@@ -17,8 +17,8 @@ sbnd_signalshapingservice:
   #NoiseFactVec = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
 
   #FieldBins:        75 #For UseFunctionFieldShape: true
-  FieldBins:       1000
-  InputFieldRespSamplingPeriod: 30.  #in nano seconds  
+  FieldBins:       2000
+  InputFieldRespSamplingPeriod: 50.  #in nano seconds  
 
   Col3DCorrection:  2.5
   Ind3DCorrection:  1.5
@@ -29,7 +29,7 @@ sbnd_signalshapingservice:
   #IndVFieldRespAmp:  0.018
   IndVFieldRespAmp:  1.0
 
-  FieldResponseTOffset: [-32.5e3, -32.5e3, -32.5e3]   #in ns, time offset of field response shape
+  FieldResponseTOffset: [-26.6e3, -26.6e3, -26e3]   #in ns, time offset of field response shape
  
   # For IndFilter and ColFilter, frequency (x) is measured in
   # cycles/microsecond.  The conversion to frequency bin depends on FFT size
