@@ -296,7 +296,7 @@ void SimWireSBND::produce(art::Event& evt)
 
     double noise_factor;
     auto tempNoiseVec = sss->GetNoiseFactVec();
-    double shapingTime = sss->GetShapingTime(chan);
+    double shapingTime = 2.0; //sss->GetShapingTime(chan);
     double asicGain = sss->GetASICGain(chan);
     std::cout << "Sim params: " << chan << " " << shapingTime << " " << asicGain << std::endl;
     
