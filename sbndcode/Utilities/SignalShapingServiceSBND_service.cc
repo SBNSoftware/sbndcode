@@ -153,6 +153,8 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
     sp.find_file( pset.get<std::string>("FieldResponseFname"), fname);
     std::string histoname = pset.get<std::string>("FieldResponseHistoName");
 
+    std::cout << "Field Response" << " " << fname << " " << histoname << std::endl;
+
     std::unique_ptr<TFile> fin(new TFile(fname.c_str(), "READ"));
     if ( !fin->IsOpen() ) throw art::Exception( art::errors::NotFound ) << "Could not find the field response file" << fname << "!" << std::endl;
 
@@ -160,6 +162,9 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
 
     for( int i=0; i<fNPlanes; i++){
       TString iHistoName = Form( "%s_%s", histoname.c_str(), iPlane[i].c_str());
+      
+      std::cout << "Field Response 2" << " " << iHistoName << std::endl;
+      
       TH1F *temp = (TH1F*) fin->Get(iHistoName);
       if (!temp) throw art::Exception( art::errors::InvalidNumber ) << "Could not find the field response histogram" << iHistoName << std::endl; 
       if (temp->GetNbinsX() > fNFieldBins) throw art::Exception( art::errors::InvalidNumber ) << "FieldBins should always be larger than or equal to the number of the bins in the input histogram!" << std::endl;
@@ -200,7 +205,7 @@ util::SignalShapingServiceSBND::SignalShaping(unsigned int channel) const
   else if (view == geo::kZ)
     return fColSignalShaping;
   else
-    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+    throw cet::exception("SignalShapingServiceSBND")<< "1 can't determine"
                                                           << " SignalType\n";  
   
 
@@ -224,32 +229,32 @@ double util::SignalShapingServiceSBND::GetASICGain(unsigned int const channel) c
   else if(view == geo::kZ)
     gain = fASICGainInMVPerFC.at(2);
   else
-    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+    throw cet::exception("SignalShapingServiceSBND")<< "2 can't determine"
                                                     << " SignalType\n";
   return gain;
 } 
 
-//---Give Shaping time Settings to SimWire ---//
-double util::SignalShapingServiceSBND::GetShapingTime(unsigned int const channel) const
-{
-  art::ServiceHandle<geo::Geometry> geom;
-  //geo::SigType_t sigtype = geom->SignalType(channel);
+// //---Give Shaping time Settings to SimWire ---//
+// double util::SignalShapingServiceSBND::GetShapingTime(unsigned int const channel) const
+// {
+//   art::ServiceHandle<geo::Geometry> geom;
+//   //geo::SigType_t sigtype = geom->SignalType(channel);
 
-  // we need to distiguish the U and V planes
-  geo::View_t view = geom->View(channel);
+//   // we need to distiguish the U and V planes
+//   geo::View_t view = geom->View(channel);
 
-  double shaping_time = 0.0;
-  if(view == geo::kU)
-    shaping_time = fShapeTimeConst.at(0);
-  if(view == geo::kV)
-    shaping_time = fShapeTimeConst.at(1);
-  else if(view == geo::kZ)
-    shaping_time = fShapeTimeConst.at(2);
-  else
-    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
-                                                    << " SignalType\n";
-  return shaping_time;
-} 
+//   double shaping_time = 0;
+//   if(view == geo::kU)
+//     shaping_time = fShapeTimeConst.at(0);
+//   if(view == geo::kV)
+//     shaping_time = fShapeTimeConst.at(1);
+//   else if(view == geo::kZ)
+//     shaping_time = fShapeTimeConst.at(2);
+//   else
+//     throw cet::exception("SignalShapingServiceSBND")<< "3 can't determine"
+//                                                     << " SignalType\n";
+//   return shaping_time;
+// } 
 
 double util::SignalShapingServiceSBND::GetRawNoise(unsigned int const channel) const
 {
@@ -267,7 +272,7 @@ double util::SignalShapingServiceSBND::GetRawNoise(unsigned int const channel) c
   else if(view == geo::kZ)
     plane = 2;
   else
-    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+    throw cet::exception("SignalShapingServiceSBND")<< "4 can't determine"
                                                     << " SignalType\n";
 
   double shapingtime = fShapeTimeConst.at(plane);
@@ -307,7 +312,7 @@ double util::SignalShapingServiceSBND::GetDeconNoise(unsigned int const channel)
   else if(view == geo::kZ)
     plane = 2;
   else
-    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+    throw cet::exception("SignalShapingServiceSBND")<< "5 can't determine"
                                                     << " SignalType\n";
 
   double shapingtime = fShapeTimeConst.at(plane);
@@ -469,7 +474,7 @@ void util::SignalShapingServiceSBND::SetFieldResponse()
     //Calculate the normalization of the collection plane
 
     for(int ibin=1; ibin<=fFieldResponseHist[2]->GetNbinsX(); ibin++)
-      integral += fFieldResponseHist[2]->GetBinCenter(ibin);
+      integral += fFieldResponseHist[2]->GetBinContent(ibin);
 
     //Induction U Plane
     for(int ibin=1; ibin<=fFieldResponseHist[0]->GetNbinsX(); ibin++)
@@ -847,7 +852,7 @@ int util::SignalShapingServiceSBND::FieldResponseTOffset(unsigned int const chan
   else if(view == geo::kZ)
     time_offset = fFieldResponseTOffset.at(2);
   else
-    throw cet::exception("SignalShapingServiceSBND")<< "can't determine"
+    throw cet::exception("SignalShapingServiceSBND")<< "6 can't determine"
                                                     << " SignalType\n";
 
   //auto tpc_clock = art::ServiceHandle<util::TimeService>()->TPCCLOCK();
