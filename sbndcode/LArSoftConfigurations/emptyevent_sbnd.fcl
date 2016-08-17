@@ -1,0 +1,41 @@
+#
+# File:    emptyevent_sbnd.fcl
+# Purpose: Configuration for input source from an empty event
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    August 17, 2016
+# Version: 1.0
+#
+# Provides:
+# 
+# - emptyevent_sbnd: creation of an empty event (maximum 10 by default).
+#   Use it as:
+#       
+#       source: @local::emptyevent_sbnd
+#       
+# 
+#
+# Changes:
+# 21060817 (petrillo@fnal.gov) [v1.0]
+#   first version
+#
+
+BEGIN_PROLOG
+
+#
+# emptyevent_sbnd
+# 
+# Creates an empty event, starting with run and subrun #1.
+# Initialises the time stamp with the execution node clock.
+#
+emptyevent_sbnd:
+{
+  
+  module_type:     EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:      10          # Number of events to create
+  firstRun:        1          # Run number to use for this file
+  firstEvent:      1          # number of first event in the file
+
+} # emptyevent_sbnd
+
+END_PROLOG
