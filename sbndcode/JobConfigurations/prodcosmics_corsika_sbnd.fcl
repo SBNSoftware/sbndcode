@@ -16,6 +16,9 @@
 # Output:
 #  - generator: includes MCTruth and MCParticle information
 #
+# Documentation at:
+# https://cdcvs.fnal.gov/redmine/projects/sbndcode/wiki/Cosmics
+#
 # Changes:
 # 20160817 (petrillo@fnal.gov) [v1.0]
 #   stole the essentials from Roxanne Guenette and made a FHiCL file out of them
