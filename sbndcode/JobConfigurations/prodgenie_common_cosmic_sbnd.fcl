@@ -1,19 +1,11 @@
 #
 # File:    prodgenie_common_cosmic_sbnd.fcl
 # Purpose: Base generation of neutrino events overlaid with cosmic rays
-# Version: 1.1
+# Version: 1.2
 # 
 # This configuration runs event generation only, with neutrino events generated
 # by Genie and with Corsika as cosmic ray generator.
 # 
-#  *********************************** BUG ***********************************
-#  
-#                         Corsika is currently disabled!
-#                             No cosmic rays at all!
-#  
-#  *********************************** BUG ***********************************
-# 
-# TODO reintroduce Corsika when database files are available for SBND
 # TODO rename GENIE flux files
 # 
 # Input: no input file required
@@ -26,7 +18,8 @@
 # 20160707 (petrillo@fnal.gov) [v1.1]
 #   - uniformed to prodsingle_sbnd.fcl
 #   - removed Corsika from execution path
-#
+# 20160817 (petrillo@fnal.gov) [v1.2]
+#   enabled cosmic ray generation
 #
 
 #
@@ -40,44 +33,40 @@
 # modules
 #
 
+#include "emptyevent_sbnd.fcl"
 #include "genie_sbnd.fcl"
 #include "corsika_sbnd.fcl"
+
 
 process_name: GenieGen
 
 
+#
+# services
+#
 services: {
   
   TFileService:          { fileName: "prodgenie_common_cosmic_sbnd_%p-%tc_hists.root" }
-  RandomNumberGenerator: {} # art random number generator manager
+                         @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
+                         @table::sbnd_random_services  # from simulationservices_sbnd.fcl
+  FileCatalogMetadata:   @local::sbnd_file_catalog_mc  # from sam_sbnd.fcl
   
   # since this is a configuration expected to be run pro production,
   # we set up message configuration accordingly:
   message:               @local::sbnd_message_services_prod
 
-                         @table::sbnd_resourcemonitorservices
-  
-  LArSeedService:        @local::sbnd_seedservice
-                         @table::sbnd_geometry_services
-  FileCatalogMetadata:   @local::sbnd_file_catalog_mc
-  
 } # services
 
 
-# Start each new event with an empty event.
-source:
-{
-  module_type:     EmptyEvent
-  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
-  maxEvents:      10          # Number of events to create
-  firstRun:        1          # Run number to use for this file
-  firstEvent:      1          # number of first event in the file
-}
+#
+# input
+#
+source: @local::emptyevent_sbnd
 
 
-# Define and configure some modules to do work on each event.
-# First modules are defined; they are scheduled later.
-# Modules are grouped by type.
+#
+# processing
+#
 physics:
 {
 
@@ -89,9 +78,7 @@ physics:
   }
 
   #define the producer and filter modules for this path, order matters, 
-#  simulate:  [ rns, generator, corsika ] 
-# 20160707 (petrillo@fnal.gov) - disabling Corsika until we can access its database files
-  simulate:  [ rns, generator ] 
+  simulate:  [ rns, generator, corsika ] 
 
   #define the output stream, there could be more than one if using filters 
   stream1:   [ out1 ]
@@ -107,9 +94,9 @@ physics:
 } # physics
 
 
-# block to define where the output goes.  if you defined a filter in the physics
-# block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
-# entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+#
+# output
+#
 outputs:
 {
   out1:
@@ -120,3 +107,10 @@ outputs:
     compressionLevel: 1
   }
 } # outputs
+
+
+#
+# override
+#
+physics.producers.generator.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
+
