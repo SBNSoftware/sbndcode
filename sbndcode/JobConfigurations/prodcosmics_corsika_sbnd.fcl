@@ -1,0 +1,122 @@
+#
+# File:    prodcosmics_corsika_sbnd.fcl
+# Purpose: Generates cosmic ray events for SBND by CORSIKA
+# Author:  Roxanne Guenette (Roxanne.Guenette@physics.ox.ac.uk)
+# Date:    August 17, 2016
+# Version: 1.0
+#
+# Description:
+#
+# CORSIKA is used to generate cosmic ray events for SBND detector.
+# No detector simulation is performed.
+# 
+# Input:
+#  - CORSIKA database files as specified in the included CORSIKA configuration
+# 
+# Output:
+#  - generator: includes MCTruth and MCParticle information
+#
+# Documentation at:
+# https://cdcvs.fnal.gov/redmine/projects/sbndcode/wiki/Cosmics
+#
+# Changes:
+# 20160817 (petrillo@fnal.gov) [v1.0]
+#   stole the essentials from Roxanne Guenette and made a FHiCL file out of them
+#
+
+#
+# service configuration
+#
+
+#include "simulationservices_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+#
+# module configuration
+#
+
+#include "emptyevent_sbnd.fcl"
+#include "corsika_sbnd.fcl"
+
+
+process_name: CosmicsGen
+
+
+#
+# services
+#
+services:
+{
+
+  TFileService:         { fileName: "prodcosmics_corsika_sbnd_%p-%tc_hists.root" }
+                        @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
+                        @table::sbnd_random_services  # from simulationservices_sbnd.fcl
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc  # from sam_sbnd.fcl
+
+} # services
+
+
+#
+# input
+#
+source: @local::emptyevent_sbnd
+
+
+#
+# processing
+#
+physics:
+{
+  
+  #
+  # module configuration
+  #
+  
+  producers:
+  {
+    
+    rns:       { module_type: "RandomNumberSaver" }
+    
+    generator: @local::sbnd_corsika_cmc  # see at the bottom for setting override
+    
+  } # producers
+  
+  
+  #
+  # path configuration
+  #
+  
+  # simulation path
+  simulate: [ rns, generator ] 
+  
+  # output path
+  stream1:  [ out1 ]
+  
+  
+  # art paths
+  trigger_paths: [ simulate ] 
+  end_paths:     [ stream1 ]  
+ 
+} # physics
+
+
+#
+# output
+#
+outputs:
+{
+  out1:
+  {
+    module_type:       RootOutput
+    fileName:         "prodcosmics_corsika_sbnd_%p-%tc.root"
+    dataTier:         "generated"
+    compressionLevel:  1
+  }
+} # outputs
+
+
+#
+# override
+#
+physics.producers.generator.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
+
