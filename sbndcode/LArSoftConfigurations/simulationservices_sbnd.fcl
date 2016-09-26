@@ -57,7 +57,8 @@ sbnd_detsim_services:
                              @table::sbnd_services
                              @table::sbnd_random_services
   LArFFT:                    @local::sbnd_larfft
-  SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+#  SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
 } # sbnd_detsim_services
 
   
@@ -68,6 +69,10 @@ sbnd_simulation_services:
                              @table::sbnd_random_services
                              @table::sbnd_g4_services
                              @table::sbnd_detsim_services
+=======
+  SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  SpaceCharge:               @local::sbnd_spacecharge
+>>>>>>> Modify simulation fhicl file
 }
 
 
