@@ -6,7 +6,7 @@ sbnd_signalshapingservice:
 {
   DeconNorm: 200
   #ADCTicksPerPCAtLowestASICGainSetting: 25172.1 #ADC/pC
-  ADCPerPCAtLowestASICGain:  9390 #ADC/pC
+  ADCPerPCAtLowestASICGain:  13160 #ADC/pC
   #ASICGain: Options: (4.7, 7.8, 14, 25). Default: 7.8
   ASICGainInMVPerFC:  [14.0, 14.0, 14.0]     #mV/fC
   ShapeTimeConst:  [2.0, 2.0, 2.0]  
