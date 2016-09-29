@@ -30,7 +30,29 @@ BEGIN_PROLOG
 
 sbnd_colordrawingopt:                       @local::standard_colordrawingopt
 sbnd_rawdrawingopt:                         @local::standard_rawdrawingopt
-sbnd_recodrawingopt:                        @local::standard_recodrawingopt
+sbnd_recodrawingopt: {
+  @table::standard_recodrawingopt
+  
+  # override product labels; these follow the ones from standard_reco_sbnd_basic.fcl v. 1.2
+ HitModuleLabels:           ["gaushit"]         # list of module labels in which to look for recob::Hits
+ EndPoint2DModuleLabels:    ["linecluster"]     # list of module labels in which to look for recob::EndPoint2Ds
+ SpacePointModuleLabels:    ["pmalgtrackmaker"] # list of module labels in which to look for recob::SpacePoints     
+ ProngModuleLabels:         []                  # list of module labels in which to look for recob::Prongs     
+ ClusterModuleLabels:       ["linecluster"]     # list of module labels in which to look for recob::Clusters  
+ PFParticleModuleLabels:    ["pmalgtrackmaker"] # list of module labels in which to look for recob::PFParticles 
+ TrackModuleLabels:         ["pmalgtrackmaker"] # list of module labels in which to look for recob::Tracks     
+ ShowerModuleLabels:        []                  # list of module labels in which to look for recob::Showers    
+ VertexModuleLabels:        []                  # list of module labels in which to look for recob::Vertexs    
+ SeedModuleLabels:          ["pmalgtrackmaker"] # list of module labels in which to look for recob::Seeds  
+ BezierTrackModuleLabels:   []                  # list of module labels in which to look for Bezier Tracks    
+ OpFlashModuleLabels:       [""]                # list of module labels in which to look for recob::OpFlashes
+ CosmicTagModuleLabels:     [""]                # list of module labels in which to look for recob::Tracks
+ TrkVtxTrackLabels:         ["pmalgtrackmaker"] # list of track producers for track/vertex associations
+ TrkVtxCosmicLabels:        []                  # list of vertex producers for track/vertex associations
+ TrkVtxFilterLabels:        []                  # list of producers of associations between the two above
+
+} # sbnd_recodrawingopt
+
 sbnd_analysisdrawingopt:                    @local::standard_analysisdrawingopt
 sbnd_simdrawingopt:                         @local::standard_simdrawingopt
 sbnd_scanopt:                               @local::standard_scanopt
@@ -70,3 +92,4 @@ sbnd_disp:
 sbnd_graphcluster:                          @local::standard_graphcluster
 
 END_PROLOG
+
