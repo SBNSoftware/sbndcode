@@ -8,8 +8,18 @@ sbnd_kalmanfilteralg: @local::standard_kalmanfilteralg
 
 sbnd_trackstitcheralg:  @local::standard_trackstitcheralg
 
-
-
+#
+# Projection Matching Algorithm SBND settings
+#
+sbnd_projectionmatchingalg: @local::standard_projectionmatchingalg
+sbnd_pmavertexalg:          @local::standard_pmavertexalg
+# this bundle an be added as a @table to override all algoritms configurations at once
+sbnd_pmaalgs: {
+  ProjectionMatchingAlg:  @local::sbnd_projectionmatchingalg
+# newer version of PMA will have parameters moved into a separate table:
+#  PMAlgTracking:          @local::sbnd_pmalgtracker
+  PMAlgVertexing:         @local::sbnd_pmavertexalg
+} # sbnd_pmaalgs
 
 sbnd_seedfinderalgorithm:                          @local::standard_seedfinderalgorithm
 sbnd_seedfinderalgorithm.SpacePointAlg :           @local::sbnd_spacepointalg
