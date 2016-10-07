@@ -46,7 +46,7 @@ sbnd_simulation_services:
   LArVoxelCalculator:        @local::sbnd_larvoxelcalculator 
   MagneticField:             @local::no_mag
   LArFFT:                    @local::sbnd_larfft
-  SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  #SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
   SpaceCharge:               @local::sbnd_spacecharge
 }
