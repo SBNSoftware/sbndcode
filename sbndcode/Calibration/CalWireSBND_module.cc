@@ -6,6 +6,7 @@
 //
 // 11-3-09 Pulled all FFT code out and put into Utilitiess/LArFFT
 //  copied over to 1053 - andrzej.szelc@yale.edu
+//  copied over and modified to SBND   
 ////////////////////////////////////////////////////////////////////////
 
 #include <string>
@@ -146,7 +147,7 @@ namespace caldata {
 
     // Get signal shaping service.
     art::ServiceHandle<util::SignalShapingServiceSBND> sss;
-
+    double DeconNorm = sss->GetDeconNorm();
 
     // make a collection of Wires
     std::unique_ptr<std::vector<recob::Wire> > wirecol(new std::vector<recob::Wire>);
@@ -225,7 +226,7 @@ namespace caldata {
 
         // Do deconvolution.
         sss->Deconvolute(channel, holder);
-
+        for(bin = 0; bin < holder.size(); ++bin) holder[bin]=holder[bin]/DeconNorm;
       } // end if not a bad channel 
       
       holder.resize(dataSize,1e-5);
@@ -303,123 +304,5 @@ namespace caldata {
     }
   }
   
-  
-  // void CalWireSBND::SubtractBaseline(std::vector<float>& holder,
-  //    int fBaseSampleBins)
-  // {
-  //   // subtract baseline using linear interpolation between regions defined
-  //   // by the datasize and fBaseSampleBins
-
-  //   // number of points to characterize the baseline
-  //   unsigned short nBasePts = holder.size() / fBaseSampleBins;
-
-  //   // the baseline offset vector
-  //   std::vector<float> base;
-  //   for(unsigned short ii = 0; ii < nBasePts; ++ii) base.push_back(0.);
-  //   // find the average value in each region, using values that are
-  //   // similar
-  //   float fbins = fBaseSampleBins;
-  //   unsigned short nfilld = 0;
-  //   for(unsigned short ii = 0; ii < nBasePts; ++ii) {
-  //     unsigned short loBin = ii * fBaseSampleBins;
-  //     unsigned short hiBin = loBin + fBaseSampleBins;
-  //     float ave = 0.;
-  //     float sum = 0.;
-  //     for(unsigned short bin = loBin; bin < hiBin; ++bin) {
-  //       ave += holder[bin];
-  //       sum += holder[bin] * holder[bin];
-  //     } // jj
-  //     ave = ave / fbins;
-  //     float var = (sum - fbins * ave * ave) / (fbins - 1.);
-  //     // Set the baseline for this region if the variance is small
-  //     if(var < fBaseVarCut) {
-  //       base[ii] = ave;
-  //       ++nfilld;
-  //     }
-  //   } // ii
-  //   // fill in any missing points if there aren't too many missing
-  //   if(nfilld < nBasePts && nfilld > nBasePts / 2) {
-  //     bool baseOK = true;
-  //     // check the first region
-  //     if(base[0] == 0) {
-  //       unsigned short ii1 = 0;
-  //       for(unsigned short ii = 1; ii < nBasePts; ++ii) {
-  //         if(base[ii] != 0) {
-  //           ii1 = ii;
-  //           break;
-  //         }
-  //       } // ii
-  //       unsigned short ii2 = 0;
-  //       for(unsigned short ii = ii1 + 1; ii < nBasePts; ++ii) {
-  //         if(base[ii] != 0) {
-  //           ii2 = ii;
-  //           break;
-  //         }
-  //       } // ii
-  //       // failure
-  //       if(ii2 > 0) {
-  //         float slp = (base[ii2] - base[ii1]) / (float)(ii2 - ii1);
-  //         base[0] = base[ii1] - slp * ii1;
-  //       } else {
-  //         baseOK = false;
-  //       }
-  //     } // base[0] == 0
-  //     // check the last region
-  //     if(baseOK && base[nBasePts] == 0) {
-  //       unsigned short ii2 = 0;
-  //       for(unsigned short ii = nBasePts - 1; ii > 0; --ii) {
-  //         if(base[ii] != 0) {
-  //           ii2 = ii;
-  //           break;
-  //         }
-  //       } // ii
-  //       baseOK = false; // assume the worst, hope for better
-  //       unsigned short ii1 = 0;
-  //       if (ii2 >= 1) {
-  //         for(unsigned short ii = ii2 - 1; ii > 0; --ii) {
-  //           if(base[ii] != 0) {
-  //             ii1 = ii;
-  //             baseOK = true;
-  //             break;
-  //           } // if base[ii]
-  //         } // ii
-  //       } // if ii2
-  //       if (baseOK) {
-  //         float slp = (base[ii2] - base[ii1]) / (float)(ii2 - ii1);
-  //         base[nBasePts] = base[ii2] + slp * (nBasePts - ii2);
-  //       }
-  //     } // baseOK && base[nBasePts] == 0
-  //     // now fill in any intermediate points
-  //     for(unsigned short ii = 1; ii < nBasePts - 1; ++ii) {
-  //       if(base[ii] == 0) {
-  //         // find the next non-zero region
-  //         for(unsigned short jj = ii + 1; jj < nBasePts; ++jj) {
-  //           if(base[jj] != 0) {
-  //             float slp = (base[jj] - base[ii - 1]) / (jj - ii + 1);
-  //             base[ii] = base[ii - 1] + slp;
-  //             break;
-  //           }
-  //         } // jj
-  //       } // base[ii] == 0
-  //     } // ii
-  //   } // nfilld < nBasePts
-
-  //   // interpolate and subtract
-  //   float slp = (base[1] - base[0]) / (float)fBaseSampleBins;
-  //   // bin offset to the origin (the center of the region)
-  //   unsigned short bof = fBaseSampleBins / 2;
-  //   unsigned short lastRegion = 0;
-  //   for(unsigned short bin = 0; bin < holder.size(); ++bin) {
-  //     // in a new region?
-  //     unsigned short region = bin / fBaseSampleBins;
-  //     if(region > lastRegion) {
-  //       // update the slope and offset
-  //       slp = (base[region] - base[lastRegion]) / (float)fBaseSampleBins;
-  //       bof += fBaseSampleBins;
-  //       lastRegion = region;
-  //     }
-  //     holder[bin] -= base[region] + (bin - bof) * slp;
-  //   }
-  // } // SubtractBaseline
   
 } // end namespace caldata
