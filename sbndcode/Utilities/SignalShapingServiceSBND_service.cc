@@ -364,7 +364,7 @@ void util::SignalShapingServiceSBND::init()
 
     SetElectResponse(fShapeTimeConst.at(0),fASICGainInMVPerFC.at(0));
 
-    fIndUSignalShaping.AddResponseFunction(fIndVFieldResponse);
+    fIndUSignalShaping.AddResponseFunction(fIndUFieldResponse);
     fIndUSignalShaping.AddResponseFunction(fElectResponse);
     fIndUSignalShaping.save_response();
     fIndUSignalShaping.set_normflag(false);
