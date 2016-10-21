@@ -171,6 +171,8 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
       
       fFieldResponseHist[i] = new TH1F( iHistoName, iHistoName, temp->GetNbinsX(), temp->GetBinLowEdge(1), temp->GetBinLowEdge(temp->GetNbinsX() + 1));
       temp->Copy(*fFieldResponseHist[i]);
+      std::cout << "RESPONSE HISTOGRAM: " << i << " " << fFieldResponseHist[i]->GetEntries() << " " << fFieldResponseHist[i]->GetNbinsX() << " " << fFieldResponseHist[i]->GetBinLowEdge(1) 
+      << " " <<fFieldResponseHist[i]->GetBinLowEdge(temp->GetNbinsX() + 1) << std::endl;
       }
 
     fin->Close();
@@ -785,7 +787,7 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
   }
 
   //Sampling
-  for(int iplane = 0; iplane < 2; iplane++) {
+  for(int iplane = 0; iplane <= 2; iplane++) {
     const std::vector<double>* pResp;
     switch( iplane ) {
     case 0: pResp = &(fIndUSignalShaping.Response_save()); break;
@@ -854,6 +856,7 @@ int util::SignalShapingServiceSBND::FieldResponseTOffset(unsigned int const chan
   else
     throw cet::exception("SignalShapingServiceSBND")<< "6 can't determine"
                                                     << " SignalType\n";
+// std::cout << "TIME OFFSET" << 	time_offset << " " << view << std::endl;
 
   //auto tpc_clock = art::ServiceHandle<util::TimeService>()->TPCCLOCK();
   auto tpc_clock = lar::providerFrom<detinfo::DetectorClocksService>()->TPCClock();
