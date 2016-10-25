@@ -220,8 +220,9 @@ namespace caldata {
           holder[bin]=(rawadc[bin]-pdstl);
 
 	//fill the remaining bin with data
-	for(bin = 0; bin < holder.size(); bin++){
-	  holder[bin] = (rawadc[bin-dataSize]-digitVec->GetPedestal());
+	for(bin = dataSize; bin < holder.size(); bin++){
+	  //	  holder[bin] = (rawadc[bin-dataSize]-pdstl);
+	  holder[bin] = 0.0;
 	}
 
         // Do deconvolution.
