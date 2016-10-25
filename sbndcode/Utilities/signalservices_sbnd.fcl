@@ -12,9 +12,9 @@ sbnd_signalshapingservice:
   ShapeTimeConst:  [2.0, 2.0, 2.0]  
 
   # Noise Factor - rms ADCs @ lowest ASIC Gain Setting - 4.7 mV/fC
-  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
+#  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
   # To turn off Noise
-  #NoiseFactVec = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
 
   #FieldBins:        75 #For UseFunctionFieldShape: true
   FieldBins:       1000
@@ -49,7 +49,7 @@ sbnd_signalshapingservice:
   ColFilter:       "(x>0)*[0]*exp(-0.5*(((x-[1])/[2])^2)^[3])"
   # ColFilterParams: [ 79258.0, 0.0, 0.1875, 1.5 ]
   #ColFilterParams: [ 0.0792580, 0.0, 0.1875, 1.5 ]
-  ColFilterParams: [ 1.034516, 0.08, 0.15, 0.0, 2.17 ]
+  ColFilterParams: [ 1.034516, 0.08, 0.15, 2.17 ]
   
   GetFilterFromHisto:   false  
 
