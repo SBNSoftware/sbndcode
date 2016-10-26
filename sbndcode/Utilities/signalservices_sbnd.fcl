@@ -12,9 +12,9 @@ sbnd_signalshapingservice:
   ShapeTimeConst:  [2.0, 2.0, 2.0]  
 
   # Noise Factor - rms ADCs @ lowest ASIC Gain Setting - 4.7 mV/fC
-#  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
+  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
   # To turn off Noise
-  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+#  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
 
   #FieldBins:        75 #For UseFunctionFieldShape: true
   FieldBins:       1000
@@ -23,13 +23,12 @@ sbnd_signalshapingservice:
   Col3DCorrection:  2.5
   Ind3DCorrection:  1.5
   #ColFieldRespAmp:  0.0354
-  ColFieldRespAmp:  1.0
+  ColFieldRespAmp:  0.350
   #IndUFieldRespAmp:  0.018
-  IndUFieldRespAmp:  1.0
+  IndUFieldRespAmp:  0.100
   #IndVFieldRespAmp:  0.018
-  IndVFieldRespAmp:  1.0
+  IndVFieldRespAmp:  0.180
 
- # FieldResponseTOffset: [-26.6e3, -26.6e3, -456.6e3]   #in ns, time offset of field response shape
  FieldResponseTOffset: [-26.6e3, -26.6e3, -26.6e3]   #in ns, time offset of field response shape 
  
   # For IndFilter and ColFilter, frequency (x) is measured in
