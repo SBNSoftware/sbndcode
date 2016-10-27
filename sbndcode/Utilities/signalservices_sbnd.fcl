@@ -25,9 +25,9 @@ sbnd_signalshapingservice:
   #ColFieldRespAmp:  0.0354
   ColFieldRespAmp:  0.350
   #IndUFieldRespAmp:  0.018
-  IndUFieldRespAmp:  0.100
+  IndUFieldRespAmp:  0.115
   #IndVFieldRespAmp:  0.018
-  IndVFieldRespAmp:  0.180
+  IndVFieldRespAmp:  0.208
 
  FieldResponseTOffset: [-26.6e3, -26.6e3, -26.6e3]   #in ns, time offset of field response shape 
  
