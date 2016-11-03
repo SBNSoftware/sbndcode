@@ -35,6 +35,12 @@ sbnd_simwireana:
 
 }
 
+sbnd_crtsim:
+{
+  module_type: "CRTSimDigits"
+  G4ModuleLabel: "largeant"
+}
+
 sbnd_wienerfilterana: @local::standard_wienerfilterana
 
 END_PROLOG
