@@ -2610,19 +2610,31 @@
 
  </volume>
 
- <volume name="volTaggerTop">
+ <volume name="volAuxDetTaggerTopHigh">
   <materialref ref="Polystyrene"/>
   <solidref ref="TaggerTop"/>
  </volume>
- <volume name="volTaggerFace">
+ <volume name="volAuxDetTaggerTopLow">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerTop"/>
+ </volume>
+ <volume name="volAuxDetTaggerFaceFront">
   <materialref ref="Polystyrene"/>
   <solidref ref="TaggerFace"/>
  </volume>
- <volume name="volTaggerSide">
+ <volume name="volAuxDetTaggerFaceBack">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerFace"/>
+ </volume>
+ <volume name="volAuxDetTaggerSideLeft">
   <materialref ref="Polystyrene"/>
   <solidref ref="TaggerSide"/>
  </volume>
- <volume name="volTaggerBot">
+ <volume name="volAuxDetTaggerSideRight">
+  <materialref ref="Polystyrene"/>
+  <solidref ref="TaggerSide"/>
+ </volume>
+ <volume name="volAuxDetTaggerBot">
   <materialref ref="Polystyrene"/>
   <solidref ref="TaggerBot"/>
  </volume>
@@ -2631,12 +2643,12 @@
   <materialref ref="Air"/>
   <solidref ref="TaggerUpper"/>
   <physvol>
-   <volumeref ref="volTaggerTop"/>
-   <position name="posTaggerTop1" unit="cm" x="0" y="2/2 +300/2" z="0"/>
+   <volumeref ref="volAuxDetTaggerTopHigh"/>
+   <position name="posTaggerTopHigh" unit="cm" x="0" y="2/2 +300/2" z="0"/>
   </physvol>
   <physvol>
-   <volumeref ref="volTaggerTop"/>
-   <position name="posTaggerTop2" unit="cm" x="0" y="-2/2 -300/2" z="0"/>
+   <volumeref ref="volAuxDetTaggerTopLow"/>
+   <position name="posTaggerTopLow" unit="cm" x="0" y="-2/2 -300/2" z="0"/>
   </physvol>
  </volume>
 
@@ -2644,23 +2656,23 @@
   <materialref ref="Air"/>
   <solidref ref="TaggerMain"/>
   <physvol>
-   <volumeref ref="volTaggerFace"/>
+   <volumeref ref="volAuxDetTaggerFaceFront"/>
    <position name="posTaggerFront" unit="cm" x="0" y="0" z="-702.7/2-60-25-2/2"/>
   </physvol>
   <physvol>
-   <volumeref ref="volTaggerFace"/>
+   <volumeref ref="volAuxDetTaggerFaceBack"/>
    <position name="posTaggerBack" unit="cm" x="0" y="0" z="702.7/2+60+25+2/2"/>
   </physvol>
 <physvol>
-   <volumeref ref="volTaggerSide"/>
+   <volumeref ref="volAuxDetTaggerSideLeft"/>
    <position name="posTaggerLeft" unit="cm" x="520.2/2+60+25+2/2" y="0" z="0"/>
   </physvol>
   <physvol>
-   <volumeref ref="volTaggerSide"/>
+   <volumeref ref="volAuxDetTaggerSideRight"/>
    <position name="posTaggerRight" unit="cm" x="-520.2/2-60-25-2/2" y="0" z="0"/>
   </physvol>
   <physvol>
-   <volumeref ref="volTaggerBot"/>
+   <volumeref ref="volAuxDetTaggerBot"/>
    <position name="posTaggerBot" unit="cm" x="0" y="-542.3/2-60-25-2/2" z="0"/>
   </physvol>
  </volume>
