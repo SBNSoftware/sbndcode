@@ -80,7 +80,7 @@ void CRTSimDigits::produce(art::Event & e) {
       std::vector<sim::AuxDetIDE> adSimIDEs = adIter->AuxDetIDEs();
 
       for (auto ideIt=adSimIDEs.begin(); ideIt!=adSimIDEs.end(); ++ideIt) {
-        double crtT = gRandom->Gaus(ideIt->entryT, 2.0);
+        //double crtT = gRandom->Gaus(ideIt->entryT, 2.0);
         double crtQ = gRandom->Gaus(ideIt->energyDeposited, 0.01);
 
         short q = 512.0 + 1000.0 * crtQ;  // "Digitizer"
