@@ -55,15 +55,36 @@ namespace geo {
     for (size_t a=0; a<adgeo.size(); a++){
       std::string volName(adgeo[a]->TotalVolume()->GetName());
 
+      std::cout << ">> " << volName
+                << " " << adgeo[a]->NSensitiveVolume() << std::endl;
+
       fADGeoToName[a] = volName;
       fNameToADGeo[volName] = a;
 
       double origin[3] = {0,0,0};
       adgeo[a]->GetCenter(origin);
+      std::cout << "origin: "
+                << origin[0] << " " << origin[1] << " " << origin[2]
+                << std::endl;
 
       // For now, one channel per module
-      if (volName.find("Tagger") != std::string::npos) {
-        for (size_t c=0; c<1; c++) {
+      if (volName.find("TaggerTop") != std::string::npos) {
+        for (size_t c=0; c<20; c++) {
+          fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
+        }
+      }
+      else if (volName.find("TaggerSide") != std::string::npos) {
+        for (size_t c=0; c<18; c++) {
+          fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
+        }
+      }
+      else if (volName.find("TaggerFace") != std::string::npos) {
+        for (size_t c=0; c<16; c++) {
+          fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
+        }
+      }
+      else if (volName.find("TaggerBot") != std::string::npos) {
+        for (size_t c=0; c<34; c++) {
           fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
         }
       }
