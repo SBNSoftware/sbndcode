@@ -221,13 +221,15 @@ namespace caldata {
 
 	//fill the remaining bin with data
 	for(bin = dataSize; bin < holder.size(); bin++){
+	  //  philosophy change - don't repeat data but instead fill extra space with zeros.
+          //    not sure that one is better than the other.
 	  //	  holder[bin] = (rawadc[bin-dataSize]-pdstl);
 	  holder[bin] = 0.0;
 	}
 
         // Do deconvolution.
         sss->Deconvolute(channel, holder);
-        for(bin = 0; bin < holder.size(); ++bin) holder[bin]=holder[bin]/DeconNorm;
+	  for(bin = 0; bin < holder.size(); ++bin) holder[bin]=holder[bin]/DeconNorm;
       } // end if not a bad channel 
       
       holder.resize(dataSize,1e-5);
