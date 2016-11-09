@@ -12,9 +12,9 @@ sbnd_signalshapingservice:
   ShapeTimeConst:  [2.0, 2.0, 2.0]  
 
   # Noise Factor - rms ADCs @ lowest ASIC Gain Setting - 4.7 mV/fC
-  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
+#  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
   # To turn off Noise
-#  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
 
   #FieldBins:        75 #For UseFunctionFieldShape: true
   FieldBins:       1000
@@ -23,11 +23,14 @@ sbnd_signalshapingservice:
   Col3DCorrection:  2.5
   Ind3DCorrection:  1.5
   #ColFieldRespAmp:  0.0354
-  ColFieldRespAmp:  0.350
+#  ColFieldRespAmp:  0.350
+  ColFieldRespAmp:  1.0
   #IndUFieldRespAmp:  0.018
-  IndUFieldRespAmp:  0.115
+  IndUFieldRespAmp:  1.0
+#  IndUFieldRespAmp:  0.115
   #IndVFieldRespAmp:  0.018
-  IndVFieldRespAmp:  0.208
+#  IndVFieldRespAmp:  0.208
+  IndVFieldRespAmp:  1.0
 
  FieldResponseTOffset: [-26.6e3, -26.6e3, -26.6e3]   #in ns, time offset of field response shape 
  
@@ -43,7 +46,9 @@ sbnd_signalshapingservice:
   IndVFilter:       "(x>0.0)*gaus*exp(-0.5*pow(x/[3],[4]))"
   # IndVFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
   #IndVFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
-  IndVFilterParams: [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+  # IndVFilterParams: [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+  IndVFilterParams: [ 1.73, 1.69, 1.55, 0.19, 3.75 ]
+
 
   ColFilter:       "(x>0)*[0]*exp(-0.5*(((x-[1])/[2])^2)^[3])"
   # ColFilterParams: [ 79258.0, 0.0, 0.1875, 1.5 ]
