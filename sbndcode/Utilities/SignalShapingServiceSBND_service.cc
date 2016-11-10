@@ -333,7 +333,8 @@ double util::SignalShapingServiceSBND::GetDeconNoise(unsigned int const channel)
   auto tempNoise = fNoiseFactVec.at(plane);
   deconNoise = tempNoise.at(temp);
 
-  deconNoise = deconNoise /4096.*2000./4.7 *6.241*1000/fDeconNorm;
+  // replaced 2000 with fADCPerPCAtLowestASICGain/4.7 because 2000 V/ADC is specific to MicroBooNE
+  deconNoise = deconNoise /4096.*(fADCPerPCAtLowestASICGain/4.7/4.7) *6.241*1000/fDeconNorm;
   return deconNoise;
 }
 
@@ -377,7 +378,7 @@ void util::SignalShapingServiceSBND::init()
     fIndVSignalShaping.AddResponseFunction(fIndVFieldResponse);
     fIndVSignalShaping.AddResponseFunction(fElectResponse);
     fIndVSignalShaping.save_response();
-    fIndUSignalShaping.set_normflag(false);
+    fIndVSignalShaping.set_normflag(false);
     //fIndVSignalShaping.SetPeakResponseTime(0.);
 
     SetResponseSampling();
