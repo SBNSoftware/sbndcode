@@ -4,24 +4,30 @@ BEGIN_PROLOG
 
 sbnd_signalshapingservice:
 {
-  DeconNorm: 200
-  ADCTicksPerPCAtLowestASICGainSetting: 13160 #ADC/pC
-  ADCPerPCAtLowestASICGain:  13160 #ADC/pC
+#  If you change this number, the downstream calorimetry module needs a new calibration
+#  DeconNorm: 200
+  DeconNorm: 100  
+  ADCTicksPerPCAtLowestASICGainSetting: 13198 #ADC/pC
+  ADCPerPCAtLowestASICGain:  13198 #ADC/pC
   #ASICGain: Options: (4.7, 7.8, 14, 25). Default: 7.8
   ASICGainInMVPerFC:  [14.0, 14.0, 14.0]     #mV/fC
   ShapeTimeConst:  [2.0, 2.0, 2.0]  
 
   # Noise Factor - rms ADCs @ lowest ASIC Gain Setting - 4.7 mV/fC
+  # index is shaping time constant, and plane
 #
 #  35ton noise simulation
 #  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
 #
   # To turn off Noise
-#  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
 #
+# From 35ton, changed 2 us values to be 
 # thermal noise from microboone public note 1016, used 4m wire length collection
 # and 4*sqrt(2) for induction
-  NoiseFactVec: [[0.6706, 0.0, 0.0, 0.0], [0.6706, 0.0, 0.0, 0.0], [0.5744, 0.0, 0.0, 0.0]]
+#  NoiseFactVec:         [[ 1.12, 0.86, 0.6706, 0.55 ], [ 1.12, 0.86, 0.6706, 0.55 ], [ 0.89, 0.66, 0.5744, 0.43 ]]
+#
+#
 
   #FieldBins:        75 #For UseFunctionFieldShape: true
   FieldBins:       1000
