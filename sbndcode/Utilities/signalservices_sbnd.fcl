@@ -12,14 +12,20 @@ sbnd_signalshapingservice:
   ShapeTimeConst:  [2.0, 2.0, 2.0]  
 
   # Noise Factor - rms ADCs @ lowest ASIC Gain Setting - 4.7 mV/fC
+#
+#  35ton noise simulation
 #  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
+#
   # To turn off Noise
 #  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+#
+# thermal noise from microboone public note 1016, used 4m wire length collection
+# and 4*sqrt(2) for induction
   NoiseFactVec: [[0.6706, 0.0, 0.0, 0.0], [0.6706, 0.0, 0.0, 0.0], [0.5744, 0.0, 0.0, 0.0]]
 
   #FieldBins:        75 #For UseFunctionFieldShape: true
   FieldBins:       1000
-  InputFieldRespSamplingPeriod: 50.  #in nano seconds  
+  InputFieldRespSamplingPeriod: 30.  #in nano seconds  
 
   Col3DCorrection:  2.5
   Ind3DCorrection:  1.5
