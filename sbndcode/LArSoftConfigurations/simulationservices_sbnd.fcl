@@ -71,19 +71,8 @@ sbnd_simulation_services:
                              @table::sbnd_random_services
                              @table::sbnd_g4_services
                              @table::sbnd_detsim_services
-=======
-=======
-  SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
->>>>>>> Modify simulation fhicl file
-=======
-  #SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
->>>>>>> Added some fhicl changes recommended by Michelle
-=======
-  #SignalShapingServiceT1053: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
->>>>>>> origin/feature/jyoti_sim
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
   SpaceCharge:               @local::sbnd_spacecharge
->>>>>>> Modify simulation fhicl file
 }
 
 
