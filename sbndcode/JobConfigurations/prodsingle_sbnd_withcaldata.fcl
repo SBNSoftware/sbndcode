@@ -36,5 +36,5 @@ physics.simulate: [ rns, generator, largeant, daq, caldata ]
 #
 # at the end of the configuration, we can override single parameters to reflect our needs:
 #
-services.SignalShapingServiceT1053.ASICGainInMVPerFC: 14
+services.SignalShapingServiceSBND.ASICGainInMVPerFC: 14
 
