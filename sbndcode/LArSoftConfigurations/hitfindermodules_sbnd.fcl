@@ -22,7 +22,10 @@ CalDataModuleLabel:  "caldata"
 MinSig: 	      [ 10.0, 10.0, 10.0 ] # signal height threshold, per plane (U, V, Z)
 InitWidth:	      [ 6.0, 6.0, 7.8 ]  # initial width for fit, per plane
 MinWidth:	      [ 1.5, 1.5, 2.0 ]  # bound on fit
+<<<<<<< HEAD
 >>>>>>> tune thresholds
+=======
+>>>>>>> origin/feature/jyoti_sim
 MaxMultiHit:	      10	       # maximum hits for multi fit   
 AreaMethod:	      0 	       # 0 = area by integral, 1 = area by gaussian area formula
 AreaNorms:	      [ 13.25, 13.25, 26.31 ] # normalizations that put signal area in 

@@ -16,9 +16,12 @@ sbnd_calodata.CaloAlg.CalAreaConstants: [ 0.31e-2 , 0.31e-2 , 0.830e-2 ]
 sbnd_calomc:                @local::standard_calomc
 sbnd_calomc.CaloAlg:        @local::sbnd_calorimetryalgmc
 <<<<<<< HEAD
+<<<<<<< HEAD
 sbnd_calomc.CaloAlg.CalAreaConstants: [ 0.31e-2 , 0.31e-2 , 0.830e-2 ]
 =======
 >>>>>>> calorimetry tuned; area method only
+=======
+>>>>>>> origin/feature/jyoti_sim
 
 sbnd_beziercalorimetry:         @local::standard_beziercalorimetry
 sbnd_beziercalorimetry.CaloAlg: @local::sbnd_calorimetryalgmc
