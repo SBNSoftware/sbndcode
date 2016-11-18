@@ -4,43 +4,81 @@ BEGIN_PROLOG
 
 sbnd_signalshapingservice:
 {
-  ADCTicksPerPCAtLowestASICGainSetting: 25172.1 #ADC/pC
+#  If you change this number, the downstream calorimetry module needs a new calibration
+#  DeconNorm: 200
+  DeconNorm: 50  
+  ADCTicksPerPCAtLowestASICGainSetting: 13198 #ADC/pC
+  ADCPerPCAtLowestASICGain:  13198 #ADC/pC
   #ASICGain: Options: (4.7, 7.8, 14, 25). Default: 7.8
-  ASICGainInMVPerFC:                    7.8     #mV/fC
-  
-  FieldBins:        75
+  ASICGainInMVPerFC:  [14.0, 14.0, 14.0]     #mV/fC
+  ShapeTimeConst:  [2.0, 2.0, 2.0]  
+
+  # Noise Factor - rms ADCs @ lowest ASIC Gain Setting - 4.7 mV/fC
+  # index is shaping time constant, and plane
+#
+#  35ton noise simulation
+#  NoiseFactVec:         [[ 1.12, 0.86, 0.60, 0.55 ], [ 1.12, 0.86, 0.60, 0.55 ], [ 0.89, 0.66, 0.48, 0.43 ]]
+#
+  # To turn off Noise
+#  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+#
+# From 35ton, changed 2 us values to be 
+# thermal noise from microboone public note 1016, used 4m wire length collection
+# and 4*sqrt(2) for induction
+  NoiseFactVec:         [[ 1.12, 0.86, 0.6778, 0.55 ], [ 1.12, 0.86, 0.6778, 0.55 ], [ 0.89, 0.66, 0.5744, 0.43 ]]
+#
+#
+
+  #FieldBins:        75 #For UseFunctionFieldShape: true
+  FieldBins:       1000
+  InputFieldRespSamplingPeriod: 30.  #in nano seconds  
+
   Col3DCorrection:  2.5
   Ind3DCorrection:  1.5
   #ColFieldRespAmp:  0.0354
+#  ColFieldRespAmp:  0.350
   ColFieldRespAmp:  1.0
   #IndUFieldRespAmp:  0.018
   IndUFieldRespAmp:  1.0
+#  IndUFieldRespAmp:  0.115
   #IndVFieldRespAmp:  0.018
+#  IndVFieldRespAmp:  0.208
   IndVFieldRespAmp:  1.0
-  ShapeTimeConst:  [ 1.4, 0.5 ] #Gain and Peaking time (microseconds)
 
+ FieldResponseTOffset: [-26.6e3, -26.6e3, -26.6e3]   #in ns, time offset of field response shape 
+ 
   # For IndFilter and ColFilter, frequency (x) is measured in
   # cycles/microsecond.  The conversion to frequency bin depends on FFT size
   # samping rate.
 
   IndUFilter:       "(x>0.0)*gaus*exp(-0.5*pow(x/[3],[4]))"
   # IndUFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
-  IndUFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
+  #IndUFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
+  IndUFilterParams: [ 1.803396, 1.69, 1.55, 0.19, 3.75 ]
+
   IndVFilter:       "(x>0.0)*gaus*exp(-0.5*pow(x/[3],[4]))"
   # IndVFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
-  IndVFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
+  #IndVFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
+  # IndVFilterParams: [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+  IndVFilterParams: [ 1.73, 1.69, 1.55, 0.19, 3.75 ]
+
+
   ColFilter:       "(x>0)*[0]*exp(-0.5*(((x-[1])/[2])^2)^[3])"
   # ColFilterParams: [ 79258.0, 0.0, 0.1875, 1.5 ]
-  ColFilterParams: [ 0.0792580, 0.0, 0.1875, 1.5 ]
+  #ColFilterParams: [ 0.0792580, 0.0, 0.1875, 1.5 ]
+  ColFilterParams: [ 1.034516, 0.08, 0.15, 2.17 ]
   
   GetFilterFromHisto:   false  
 
   FilterFunctionFname:  "sbnd_filters_v0.1.root"
   FilterHistoName:	"noisefilter_%d"       
   
-
   UseFunctionFieldShape: false
-  UseSimpleFieldShape: true
+  UseSimpleFieldShape: false
+  UseHistogramFieldShape: true
+  FieldResponseFname:  "sbnd_response_v1.0.root"
+  FieldResponseHistoName: "FieldResponse"
+
   IndUFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
   IndUFieldParams:  [.00843,.1534,1.77,0.,0.5]    #last parameter needs to be half of FFT vector, correct for in code
   IndVFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
