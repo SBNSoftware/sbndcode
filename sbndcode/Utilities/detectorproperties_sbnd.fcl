@@ -5,7 +5,8 @@ BEGIN_PROLOG
 sbnd_detproperties:                   @local::standard_detproperties
 sbnd_detproperties.Temperature:       88.4  #(measured in ArgoNeut)
 sbnd_detproperties.Efield:           [0.5,0.666,0.8]  #reasonable values 
-sbnd_detproperties.ElectronsToADC:    6.8906513e-3 # 1fC = 43.008 ADC counts for MicroBooNE  
+sbnd_detproperties.Electronlifetime:  3.0e3  # microseconds
+sbnd_detproperties.ElectronsToADC:    6.29778e-3 
 sbnd_detproperties.NumberTimeSamples: 3000
 sbnd_detproperties.TimeOffsetU:       0.
 sbnd_detproperties.TimeOffsetV:       0.
