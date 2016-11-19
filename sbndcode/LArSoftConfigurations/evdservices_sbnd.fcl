@@ -68,7 +68,7 @@ sbnd_evdlayoutopt.ShowEndPointMarkers:      1
 sbnd_evdlayoutopt.MakeSeeds:                0
 sbnd_evdlayoutopt.ChangeWire:               1
 
-sbnd_rawdrawingopt.TotalTicks: 2500
+sbnd_rawdrawingopt.TotalTicks: 3000
 
 sbnd_disp:                                                                       
 {                                                                                  
