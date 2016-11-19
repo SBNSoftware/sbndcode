@@ -14,7 +14,7 @@ sbnd_calroi:
  zPlaneROIPad: [  10, 10 ] # number of bins to pad both ends of the ROIs
  DoBaselineSub:    true # subtract baseline after deconvolution?
  uPlaneRamp:       true # Set true if U plane response includes a pre-ROI ramp
- FFTSize:     2500      # re-initialize FFT service to this size
+ FFTSize:     3000      # re-initialize FFT service to this size
 }
 
 sbnd_calwire:
@@ -26,7 +26,7 @@ sbnd_calwire:
                           # modulo the data size (3200 for uB)
  DoBaselineSub:       true			  
  BaseVarCut:         25.  # Variance cut for selecting baseline points
- FFTSize:     2500      # re-initialize FFT service to this size
+ FFTSize:     3000      # re-initialize FFT service to this size
 }
 
 
