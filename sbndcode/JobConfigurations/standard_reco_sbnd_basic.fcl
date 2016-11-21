@@ -49,7 +49,7 @@ services:
                              @table::sbnd_services              # from services_sbnd.fcl
                              @table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
   LArFFT:                    @local::sbnd_larfft
-  SignalShapingServiceT1053: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
 }
 
 #source is now a root file
