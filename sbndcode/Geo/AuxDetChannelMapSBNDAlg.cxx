@@ -67,27 +67,32 @@ namespace geo {
                 << origin[0] << " " << origin[1] << " " << origin[2]
                 << std::endl;
 
-      // For now, one channel per module
-      if (volName.find("TaggerTop") != std::string::npos) {
-        for (size_t c=0; c<20; c++) {
-          fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
-        }
-      }
-      else if (volName.find("TaggerSide") != std::string::npos) {
-        for (size_t c=0; c<18; c++) {
-          fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
-        }
-      }
-      else if (volName.find("TaggerFace") != std::string::npos) {
+      if (volName.find("CRTModule") != std::string::npos) {
         for (size_t c=0; c<16; c++) {
           fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
         }
       }
-      else if (volName.find("TaggerBot") != std::string::npos) {
-        for (size_t c=0; c<34; c++) {
-          fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
-        }
-      }
+      // For now, one channel per strip
+      //if (volName.find("TaggerTop") != std::string::npos) {
+      //  for (size_t c=0; c<20*16; c++) {
+      //    fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
+      //  }
+      //}
+      //else if (volName.find("TaggerSide") != std::string::npos) {
+      //  for (size_t c=0; c<18*16; c++) {
+      //    fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
+      //  }
+      //}
+      //else if (volName.find("TaggerFace") != std::string::npos) {
+      //  for (size_t c=0; c<16*16; c++) {
+      //    fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
+      //  }
+      //}
+      //else if (volName.find("TaggerBot") != std::string::npos) {
+      //  for (size_t c=0; c<34*16; c++) {
+      //    fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
+      //  }
+      //}
     }
   }
 
@@ -100,6 +105,7 @@ namespace geo {
       std::vector<geo::AuxDetGeo*> const& auxDets,
       size_t& ad,
       size_t& sv) const {
+
     // Set the default to be that we don't find the position in any AuxDet
     uint32_t channel = UINT_MAX;
 
