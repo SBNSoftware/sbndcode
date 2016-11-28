@@ -353,6 +353,13 @@
     </subtraction>
     <box lunit="cm" name="TaggerSideRight_eab2f4d8" x="900.0" y="720.0" z="3.6"/>
     <box lunit="cm" name="TaggerFaceFront_6a1133a7" x="720.0" y="720.0" z="3.6"/>
+    <box lunit="cm" name="CRTModule_7bc35404" x="180.0" y="180.0" z="1.8"/>
+    <box lunit="cm" name="CRTStripArray_975dd36e" x="179.2" y="179.2" z="1.0"/>
+    <box lunit="cm" name="CRTStrip_1a327c57" x="11.2" y="179.2" z="1.0"/>
+    <subtraction name="CRTModuleCover_7bc35404">
+     <first ref="CRTModule_7bc35404"/>
+     <second ref="CRTStripArray_975dd36e"/>
+    </subtraction>
     <box lunit="cm" name="TaggerFaceBack_6a1133a7" x="720.0" y="720.0" z="3.6"/>
     <box lunit="cm" name="TaggerBot" x="839.0" y="956.0" z="3.6"/>
     <box lunit="cm" name="CRTModule_657903aa" x="96.0" y="272.0" z="1.8"/>
@@ -362,6 +369,7 @@
      <first ref="CRTModule_657903aa"/>
      <second ref="CRTStripArray_24b21b7b"/>
     </subtraction>
+    <box lunit="cm" name="World" x="10000" y="10000" z="10000"/>
     <!-- End CRT solids -->
     <box name="TaggerUpper0" lunit="cm" x="900+10" y="300+4*(1.0+2*0.4)" z="900+10"/>
     <box name="VoidTaggerUpper" lunit="cm" x="900.3-10" y="300" z="900-10"/>
@@ -5141,92 +5149,92 @@
      <solidref ref="TaggerTopHigh_a9c6763c"/>
      <physvol>
       <volumeref ref="volCRTModule_18"/>
-      <position name="posvolCRTModule_18" unit="cm" x="-360.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_18" unit="cm" x="-360.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_37"/>
-      <position name="posvolCRTModule_37" unit="cm" x="-360.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_37" unit="cm" x="-360.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_56"/>
-      <position name="posvolCRTModule_56" unit="cm" x="-180.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_56" unit="cm" x="-180.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_75"/>
-      <position name="posvolCRTModule_75" unit="cm" x="-180.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_75" unit="cm" x="-180.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_94"/>
-      <position name="posvolCRTModule_94" unit="cm" x="0.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_94" unit="cm" x="0.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_113"/>
-      <position name="posvolCRTModule_113" unit="cm" x="0.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_113" unit="cm" x="0.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_132"/>
-      <position name="posvolCRTModule_132" unit="cm" x="180.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_132" unit="cm" x="180.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_151"/>
-      <position name="posvolCRTModule_151" unit="cm" x="180.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_151" unit="cm" x="180.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_170"/>
-      <position name="posvolCRTModule_170" unit="cm" x="360.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_170" unit="cm" x="360.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_189"/>
-      <position name="posvolCRTModule_189" unit="cm" x="360.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_189" unit="cm" x="360.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_208"/>
-      <position name="posvolCRTModule_208" unit="cm" x="-225.0" y="-360.0" z="0.9"/>
+      <position name="posvolCRTModule_208" unit="cm" x="-225.0" y="-360.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_208" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_227"/>
-      <position name="posvolCRTModule_227" unit="cm" x="225.0" y="-360.0" z="0.9"/>
+      <position name="posvolCRTModule_227" unit="cm" x="225.0" y="-360.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_227" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_246"/>
-      <position name="posvolCRTModule_246" unit="cm" x="-225.0" y="-180.0" z="0.9"/>
+      <position name="posvolCRTModule_246" unit="cm" x="-225.0" y="-180.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_246" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_265"/>
-      <position name="posvolCRTModule_265" unit="cm" x="225.0" y="-180.0" z="0.9"/>
+      <position name="posvolCRTModule_265" unit="cm" x="225.0" y="-180.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_265" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_284"/>
-      <position name="posvolCRTModule_284" unit="cm" x="-225.0" y="0.0" z="0.9"/>
+      <position name="posvolCRTModule_284" unit="cm" x="-225.0" y="0.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_284" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_303"/>
-      <position name="posvolCRTModule_303" unit="cm" x="225.0" y="0.0" z="0.9"/>
+      <position name="posvolCRTModule_303" unit="cm" x="225.0" y="0.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_303" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_322"/>
-      <position name="posvolCRTModule_322" unit="cm" x="-225.0" y="180.0" z="0.9"/>
+      <position name="posvolCRTModule_322" unit="cm" x="-225.0" y="180.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_322" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_341"/>
-      <position name="posvolCRTModule_341" unit="cm" x="225.0" y="180.0" z="0.9"/>
+      <position name="posvolCRTModule_341" unit="cm" x="225.0" y="180.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_341" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_360"/>
-      <position name="posvolCRTModule_360" unit="cm" x="-225.0" y="360.0" z="0.9"/>
+      <position name="posvolCRTModule_360" unit="cm" x="-225.0" y="360.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_360" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_379"/>
-      <position name="posvolCRTModule_379" unit="cm" x="225.0" y="360.0" z="0.9"/>
+      <position name="posvolCRTModule_379" unit="cm" x="225.0" y="360.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_379" unit="deg" x="0" y="0" z="90"/>
      </physvol>
     </volume>
@@ -8195,92 +8203,92 @@
      <solidref ref="TaggerTopLow_a9c6763c"/>
      <physvol>
       <volumeref ref="volCRTModule_398"/>
-      <position name="posvolCRTModule_398" unit="cm" x="-360.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_398" unit="cm" x="-360.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_417"/>
-      <position name="posvolCRTModule_417" unit="cm" x="-360.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_417" unit="cm" x="-360.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_436"/>
-      <position name="posvolCRTModule_436" unit="cm" x="-180.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_436" unit="cm" x="-180.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_455"/>
-      <position name="posvolCRTModule_455" unit="cm" x="-180.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_455" unit="cm" x="-180.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_474"/>
-      <position name="posvolCRTModule_474" unit="cm" x="0.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_474" unit="cm" x="0.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_493"/>
-      <position name="posvolCRTModule_493" unit="cm" x="0.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_493" unit="cm" x="0.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_512"/>
-      <position name="posvolCRTModule_512" unit="cm" x="180.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_512" unit="cm" x="180.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_531"/>
-      <position name="posvolCRTModule_531" unit="cm" x="180.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_531" unit="cm" x="180.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_550"/>
-      <position name="posvolCRTModule_550" unit="cm" x="360.0" y="-225.0" z="-0.9"/>
+      <position name="posvolCRTModule_550" unit="cm" x="360.0" y="-225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_569"/>
-      <position name="posvolCRTModule_569" unit="cm" x="360.0" y="225.0" z="-0.9"/>
+      <position name="posvolCRTModule_569" unit="cm" x="360.0" y="225.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_588"/>
-      <position name="posvolCRTModule_588" unit="cm" x="-225.0" y="-360.0" z="0.9"/>
+      <position name="posvolCRTModule_588" unit="cm" x="-225.0" y="-360.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_588" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_607"/>
-      <position name="posvolCRTModule_607" unit="cm" x="225.0" y="-360.0" z="0.9"/>
+      <position name="posvolCRTModule_607" unit="cm" x="225.0" y="-360.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_607" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_626"/>
-      <position name="posvolCRTModule_626" unit="cm" x="-225.0" y="-180.0" z="0.9"/>
+      <position name="posvolCRTModule_626" unit="cm" x="-225.0" y="-180.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_626" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_645"/>
-      <position name="posvolCRTModule_645" unit="cm" x="225.0" y="-180.0" z="0.9"/>
+      <position name="posvolCRTModule_645" unit="cm" x="225.0" y="-180.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_645" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_664"/>
-      <position name="posvolCRTModule_664" unit="cm" x="-225.0" y="0.0" z="0.9"/>
+      <position name="posvolCRTModule_664" unit="cm" x="-225.0" y="0.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_664" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_683"/>
-      <position name="posvolCRTModule_683" unit="cm" x="225.0" y="0.0" z="0.9"/>
+      <position name="posvolCRTModule_683" unit="cm" x="225.0" y="0.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_683" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_702"/>
-      <position name="posvolCRTModule_702" unit="cm" x="-225.0" y="180.0" z="0.9"/>
+      <position name="posvolCRTModule_702" unit="cm" x="-225.0" y="180.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_702" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_721"/>
-      <position name="posvolCRTModule_721" unit="cm" x="225.0" y="180.0" z="0.9"/>
+      <position name="posvolCRTModule_721" unit="cm" x="225.0" y="180.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_721" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_740"/>
-      <position name="posvolCRTModule_740" unit="cm" x="-225.0" y="360.0" z="0.9"/>
+      <position name="posvolCRTModule_740" unit="cm" x="-225.0" y="360.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_740" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_759"/>
-      <position name="posvolCRTModule_759" unit="cm" x="225.0" y="360.0" z="0.9"/>
+      <position name="posvolCRTModule_759" unit="cm" x="225.0" y="360.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_759" unit="deg" x="0" y="0" z="90"/>
      </physvol>
     </volume>
@@ -10953,82 +10961,82 @@
      <solidref ref="TaggerSideLeft_eab2f4d8"/>
      <physvol>
       <volumeref ref="volCRTModule_778"/>
-      <position name="posvolCRTModule_778" unit="cm" x="-360.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_778" unit="cm" x="-360.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_797"/>
-      <position name="posvolCRTModule_797" unit="cm" x="-360.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_797" unit="cm" x="-360.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_816"/>
-      <position name="posvolCRTModule_816" unit="cm" x="-180.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_816" unit="cm" x="-180.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_835"/>
-      <position name="posvolCRTModule_835" unit="cm" x="-180.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_835" unit="cm" x="-180.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_854"/>
-      <position name="posvolCRTModule_854" unit="cm" x="0.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_854" unit="cm" x="0.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_873"/>
-      <position name="posvolCRTModule_873" unit="cm" x="0.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_873" unit="cm" x="0.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_892"/>
-      <position name="posvolCRTModule_892" unit="cm" x="180.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_892" unit="cm" x="180.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_911"/>
-      <position name="posvolCRTModule_911" unit="cm" x="180.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_911" unit="cm" x="180.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_930"/>
-      <position name="posvolCRTModule_930" unit="cm" x="360.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_930" unit="cm" x="360.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_949"/>
-      <position name="posvolCRTModule_949" unit="cm" x="360.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_949" unit="cm" x="360.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_968"/>
-      <position name="posvolCRTModule_968" unit="cm" x="-225.0" y="-270.0" z="0.9"/>
+      <position name="posvolCRTModule_968" unit="cm" x="-225.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_968" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_987"/>
-      <position name="posvolCRTModule_987" unit="cm" x="225.0" y="-270.0" z="0.9"/>
+      <position name="posvolCRTModule_987" unit="cm" x="225.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_987" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1006"/>
-      <position name="posvolCRTModule_1006" unit="cm" x="-225.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1006" unit="cm" x="-225.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1006" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1025"/>
-      <position name="posvolCRTModule_1025" unit="cm" x="225.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1025" unit="cm" x="225.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1025" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1044"/>
-      <position name="posvolCRTModule_1044" unit="cm" x="-225.0" y="90.0" z="0.9"/>
+      <position name="posvolCRTModule_1044" unit="cm" x="-225.0" y="90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1044" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1063"/>
-      <position name="posvolCRTModule_1063" unit="cm" x="225.0" y="90.0" z="0.9"/>
+      <position name="posvolCRTModule_1063" unit="cm" x="225.0" y="90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1063" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1082"/>
-      <position name="posvolCRTModule_1082" unit="cm" x="-225.0" y="270.0" z="0.9"/>
+      <position name="posvolCRTModule_1082" unit="cm" x="-225.0" y="270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1082" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1101"/>
-      <position name="posvolCRTModule_1101" unit="cm" x="225.0" y="270.0" z="0.9"/>
+      <position name="posvolCRTModule_1101" unit="cm" x="225.0" y="270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1101" unit="deg" x="0" y="0" z="90"/>
      </physvol>
     </volume>
@@ -13701,152 +13709,152 @@
      <solidref ref="TaggerSideRight_eab2f4d8"/>
      <physvol>
       <volumeref ref="volCRTModule_1120"/>
-      <position name="posvolCRTModule_1120" unit="cm" x="-360.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1120" unit="cm" x="-360.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1139"/>
-      <position name="posvolCRTModule_1139" unit="cm" x="-360.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1139" unit="cm" x="-360.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1158"/>
-      <position name="posvolCRTModule_1158" unit="cm" x="-180.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1158" unit="cm" x="-180.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1177"/>
-      <position name="posvolCRTModule_1177" unit="cm" x="-180.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1177" unit="cm" x="-180.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1196"/>
-      <position name="posvolCRTModule_1196" unit="cm" x="0.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1196" unit="cm" x="0.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1215"/>
-      <position name="posvolCRTModule_1215" unit="cm" x="0.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1215" unit="cm" x="0.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1234"/>
-      <position name="posvolCRTModule_1234" unit="cm" x="180.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1234" unit="cm" x="180.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1253"/>
-      <position name="posvolCRTModule_1253" unit="cm" x="180.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1253" unit="cm" x="180.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1272"/>
-      <position name="posvolCRTModule_1272" unit="cm" x="360.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1272" unit="cm" x="360.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1291"/>
-      <position name="posvolCRTModule_1291" unit="cm" x="360.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1291" unit="cm" x="360.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1310"/>
-      <position name="posvolCRTModule_1310" unit="cm" x="-225.0" y="-270.0" z="0.9"/>
+      <position name="posvolCRTModule_1310" unit="cm" x="-225.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1310" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1329"/>
-      <position name="posvolCRTModule_1329" unit="cm" x="225.0" y="-270.0" z="0.9"/>
+      <position name="posvolCRTModule_1329" unit="cm" x="225.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1329" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1348"/>
-      <position name="posvolCRTModule_1348" unit="cm" x="-225.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1348" unit="cm" x="-225.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1348" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1367"/>
-      <position name="posvolCRTModule_1367" unit="cm" x="225.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1367" unit="cm" x="225.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1367" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1386"/>
-      <position name="posvolCRTModule_1386" unit="cm" x="-225.0" y="90.0" z="0.9"/>
+      <position name="posvolCRTModule_1386" unit="cm" x="-225.0" y="90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1386" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1405"/>
-      <position name="posvolCRTModule_1405" unit="cm" x="225.0" y="90.0" z="0.9"/>
+      <position name="posvolCRTModule_1405" unit="cm" x="225.0" y="90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1405" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1424"/>
-      <position name="posvolCRTModule_1424" unit="cm" x="-225.0" y="270.0" z="0.9"/>
+      <position name="posvolCRTModule_1424" unit="cm" x="-225.0" y="270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1424" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1443"/>
-      <position name="posvolCRTModule_1443" unit="cm" x="225.0" y="270.0" z="0.9"/>
+      <position name="posvolCRTModule_1443" unit="cm" x="225.0" y="270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1443" unit="deg" x="0" y="0" z="90"/>
      </physvol>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1444">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1445">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1446">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1447">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1448">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1449">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1450">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1451">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1452">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1453">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1454">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1455">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1456">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1457">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1458">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1459">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1460">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_cb5315dc"/>
+     <solidref ref="CRTStripArray_975dd36e"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1444"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1444" unit="cm" x="-84.0" y="0" z="0"/>
@@ -13914,11 +13922,11 @@
     </volume>
     <volume name="volCRTModuleCover_1461">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_24302887"/>
+     <solidref ref="CRTModuleCover_7bc35404"/>
     </volume>
     <volume name="volCRTModule_1462">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_24302887"/>
+     <solidref ref="CRTModule_7bc35404"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1461"/>
       <position name="posCRTModuleCover_1461" unit="cm" x="0" y="0" z="0"/>
@@ -14966,71 +14974,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1596">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1597">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1598">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1599">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1600">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1601">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1602">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1603">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1604">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1605">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1606">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1607">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1608">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1609">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1610">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1611">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1612">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_cb5315dc"/>
+     <solidref ref="CRTStripArray_975dd36e"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1596"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1596" unit="cm" x="-84.0" y="0" z="0"/>
@@ -15098,11 +15106,11 @@
     </volume>
     <volume name="volCRTModuleCover_1613">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_24302887"/>
+     <solidref ref="CRTModuleCover_7bc35404"/>
     </volume>
     <volume name="volCRTModule_1614">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_24302887"/>
+     <solidref ref="CRTModule_7bc35404"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1613"/>
       <position name="posCRTModuleCover_1613" unit="cm" x="0" y="0" z="0"/>
@@ -15114,71 +15122,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1615">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1616">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1617">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1618">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1619">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1620">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1621">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1622">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1623">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1624">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1625">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1626">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1627">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1628">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1629">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1630">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1631">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_cb5315dc"/>
+     <solidref ref="CRTStripArray_975dd36e"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1615"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1615" unit="cm" x="-84.0" y="0" z="0"/>
@@ -15246,11 +15254,11 @@
     </volume>
     <volume name="volCRTModuleCover_1632">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_24302887"/>
+     <solidref ref="CRTModuleCover_7bc35404"/>
     </volume>
     <volume name="volCRTModule_1633">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_24302887"/>
+     <solidref ref="CRTModule_7bc35404"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1632"/>
       <position name="posCRTModuleCover_1632" unit="cm" x="0" y="0" z="0"/>
@@ -15410,71 +15418,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1653">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1654">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1655">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1656">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1657">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1658">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1659">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1660">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1661">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1662">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1663">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1664">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1665">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1666">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1667">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1668">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1669">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_cb5315dc"/>
+     <solidref ref="CRTStripArray_975dd36e"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1653"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1653" unit="cm" x="-84.0" y="0" z="0"/>
@@ -15542,11 +15550,11 @@
     </volume>
     <volume name="volCRTModuleCover_1670">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_24302887"/>
+     <solidref ref="CRTModuleCover_7bc35404"/>
     </volume>
     <volume name="volCRTModule_1671">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_24302887"/>
+     <solidref ref="CRTModule_7bc35404"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1670"/>
       <position name="posCRTModuleCover_1670" unit="cm" x="0" y="0" z="0"/>
@@ -16153,74 +16161,70 @@
      <solidref ref="TaggerFaceFront_6a1133a7"/>
      <physvol>
       <volumeref ref="volCRTModule_1462"/>
-      <position name="posvolCRTModule_1462" unit="cm" x="-270.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1462" unit="cm" x="-270.0" y="-90.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1481"/>
-      <position name="posvolCRTModule_1481" unit="cm" x="-270.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1481" unit="cm" x="-270.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1500"/>
-      <position name="posvolCRTModule_1500" unit="cm" x="-90.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1500" unit="cm" x="-90.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1519"/>
-      <position name="posvolCRTModule_1519" unit="cm" x="-90.0" y="180.0" z="-0.9"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volCRTModule_1538"/>
-      <position name="posvolCRTModule_1538" unit="cm" x="90.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1519" unit="cm" x="-90.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1557"/>
-      <position name="posvolCRTModule_1557" unit="cm" x="90.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1557" unit="cm" x="90.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1576"/>
-      <position name="posvolCRTModule_1576" unit="cm" x="270.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1576" unit="cm" x="270.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1595"/>
-      <position name="posvolCRTModule_1595" unit="cm" x="270.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1595" unit="cm" x="270.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1614"/>
-      <position name="posvolCRTModule_1614" unit="cm" x="-180.0" y="-270.0" z="0.9"/>
+      <position name="posvolCRTModule_1614" unit="cm" x="-90.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1614" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1633"/>
-      <position name="posvolCRTModule_1633" unit="cm" x="180.0" y="-270.0" z="0.9"/>
+      <position name="posvolCRTModule_1633" unit="cm" x="270.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1633" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1652"/>
-      <position name="posvolCRTModule_1652" unit="cm" x="-180.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1652" unit="cm" x="-180.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1652" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1671"/>
-      <position name="posvolCRTModule_1671" unit="cm" x="180.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1671" unit="cm" x="270.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1671" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1690"/>
-      <position name="posvolCRTModule_1690" unit="cm" x="-180.0" y="90.0" z="0.9"/>
+      <position name="posvolCRTModule_1690" unit="cm" x="-180.0" y="90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1690" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1709"/>
-      <position name="posvolCRTModule_1709" unit="cm" x="180.0" y="90.0" z="0.9"/>
+      <position name="posvolCRTModule_1709" unit="cm" x="180.0" y="90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1709" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1728"/>
-      <position name="posvolCRTModule_1728" unit="cm" x="-180.0" y="270.0" z="0.9"/>
+      <position name="posvolCRTModule_1728" unit="cm" x="-180.0" y="270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1728" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1747"/>
-      <position name="posvolCRTModule_1747" unit="cm" x="180.0" y="270.0" z="0.9"/>
+      <position name="posvolCRTModule_1747" unit="cm" x="180.0" y="270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1747" unit="deg" x="0" y="0" z="90"/>
      </physvol>
     </volume>
@@ -18597,74 +18601,74 @@
      <solidref ref="TaggerFaceBack_6a1133a7"/>
      <physvol>
       <volumeref ref="volCRTModule_1766"/>
-      <position name="posvolCRTModule_1766" unit="cm" x="-270.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1766" unit="cm" x="-270.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1785"/>
-      <position name="posvolCRTModule_1785" unit="cm" x="-270.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1785" unit="cm" x="-270.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1804"/>
-      <position name="posvolCRTModule_1804" unit="cm" x="-90.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1804" unit="cm" x="-90.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1823"/>
-      <position name="posvolCRTModule_1823" unit="cm" x="-90.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1823" unit="cm" x="-90.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1842"/>
-      <position name="posvolCRTModule_1842" unit="cm" x="90.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1842" unit="cm" x="90.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1861"/>
-      <position name="posvolCRTModule_1861" unit="cm" x="90.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1861" unit="cm" x="90.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1880"/>
-      <position name="posvolCRTModule_1880" unit="cm" x="270.0" y="-180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1880" unit="cm" x="270.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1899"/>
-      <position name="posvolCRTModule_1899" unit="cm" x="270.0" y="180.0" z="-0.9"/>
+      <position name="posvolCRTModule_1899" unit="cm" x="270.0" y="180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1918"/>
-      <position name="posvolCRTModule_1918" unit="cm" x="-180.0" y="-270.0" z="0.9"/>
+      <position name="posvolCRTModule_1918" unit="cm" x="-180.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1918" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1937"/>
-      <position name="posvolCRTModule_1937" unit="cm" x="180.0" y="-270.0" z="0.9"/>
+      <position name="posvolCRTModule_1937" unit="cm" x="180.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1937" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1956"/>
-      <position name="posvolCRTModule_1956" unit="cm" x="-180.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1956" unit="cm" x="-180.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1956" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1975"/>
-      <position name="posvolCRTModule_1975" unit="cm" x="180.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1975" unit="cm" x="180.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1975" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1994"/>
-      <position name="posvolCRTModule_1994" unit="cm" x="-180.0" y="90.0" z="0.9"/>
+      <position name="posvolCRTModule_1994" unit="cm" x="-180.0" y="90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1994" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_2013"/>
-      <position name="posvolCRTModule_2013" unit="cm" x="180.0" y="90.0" z="0.9"/>
+      <position name="posvolCRTModule_2013" unit="cm" x="180.0" y="90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_2013" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_2032"/>
-      <position name="posvolCRTModule_2032" unit="cm" x="-180.0" y="270.0" z="0.9"/>
+      <position name="posvolCRTModule_2032" unit="cm" x="-180.0" y="270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_2032" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_2051"/>
-      <position name="posvolCRTModule_2051" unit="cm" x="180.0" y="270.0" z="0.9"/>
+      <position name="posvolCRTModule_2051" unit="cm" x="180.0" y="270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_2051" unit="deg" x="0" y="0" z="90"/>
      </physvol>
     </volume>

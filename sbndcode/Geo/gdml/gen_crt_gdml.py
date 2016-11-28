@@ -152,8 +152,13 @@ def module(x, y, z=1.0, nx=16):
     return s, v
 
 
-def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16):
-    '''Build a tagger: a stack of two perpendicular planes.'''
+def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16, front=False):
+    '''Build a tagger: a stack of two perpendicular planes.
+
+    The front face tagger has two openings to provide clearances for the pump
+    pit and the cryogenic supply line and support. These deletions are enabled
+    when front is True.
+    '''
     # Tagger solid
     xx = str((x1 * nxs + 2 * PAD) * nx1)
     yy = str(y1 * ny1)
@@ -169,22 +174,29 @@ def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16):
     # Solids for planes of modules
     planes = []
     pd = ((x1, y1, nx1, ny1), (x2, y2, nx2, ny2))
-    for plane in pd:
+    xshort, yshort = 11.2, 180.0
+    for k, plane in enumerate(pd):
         px, py, pnx, pny = plane
 
-        p1xx = str((px * nxs + 2 * PAD) * pnx)
-        p1yy = str(py * pny)
-        p1zz = str(z + 2 * PAD)
+        #p1xx = str((px * nxs + 2 * PAD) * pnx)
+        #p1yy = str(py * pny)
+        #p1zz = str(z + 2 * PAD)
 
         modules = []
         for i in range(pnx):
             for j in range(pny):
-                modules.append(module(px, py, z, nxs))
+                if front and ((k == 0 and i == 0 and j == 0) or
+                              (k == 1 and i == 0 and j == 0) or
+                              (k == 1 and i == 0 and j == 1) or
+                              (k == 1 and i == 1 and j == 1)):
+                    modules.append(module(xshort, yshort, z, nxs))
+                else:
+                    modules.append(module(px, py, z, nxs))
  
         planes.append(modules)
 
     # Tagger volume
-    name = 'Tagger' + name #+ '_' + sequential_id()
+    name = 'Tagger' + name
     vname = 'vol' + name
     v = ET.SubElement(structure, 'volume', name=vname)
     ET.SubElement(v, 'materialref', ref='ALUMINUM_Al')
@@ -195,6 +207,9 @@ def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16):
         px, py, pnx, pny = p
         for i in range(pnx):
             for j in range(pny):
+                if front and k == 0 and i == 2 and j == 0:
+                    continue
+
                 es, ev = modules[j + i*pny]
 
                 pv = ET.SubElement(v, 'physvol')
@@ -203,12 +218,17 @@ def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16):
                 dx = 1.0 * (2*i - pnx + 1) / 2 * (px * nxs + 2 * PAD)
                 dy = 1.0 * (2*j - pny + 1) / 2 * py
                 dz = (z + 2 * PAD) / 2
-                if k == 0:
+
+                # The short modules shift up by half a length
+                if front and ((k == 0 and i == 0 and j == 0) or
+                              (k == 1 and i == 0 and j == 0) or
+                              (k == 1 and i == 0 and j == 1) or
+                              (k == 1 and i == 1 and j == 1)):
+                    dy += py / 4
+
+                if k == 1:
                     dz *= -1
-                else:
-                    dt = dx
-                    dx = dy
-                    dy = dt
+                    dx, dy = dy, dx
 
                 posname = 'pos' + ev.attrib['name']
                 ET.SubElement(pv, 'position', name=posname,
@@ -329,7 +349,7 @@ tths, tthv = tagger('TopHigh',   11.2, 450.0, 5, 2, 11.2, 450.0, 5, 2)
 ttls, ttlv = tagger('TopLow',    11.2, 450.0, 5, 2, 11.2, 450.0, 5, 2)
 tsls, tslv = tagger('SideLeft',  11.2, 360.0, 5, 2, 11.2, 450.0, 4, 2)
 tsrs, tsrv = tagger('SideRight', 11.2, 360.0, 5, 2, 11.2, 450.0, 4, 2)
-tffs, tffv = tagger('FaceFront', 11.2, 360.0, 4, 2, 11.2, 360.0, 4, 2)
+tffs, tffv = tagger('FaceFront', 11.2, 360.0, 4, 2, 11.2, 360.0, 4, 2, front=True)
 tfbs, tfbv = tagger('FaceBack',  11.2, 360.0, 4, 2, 11.2, 360.0, 4, 2)
 tbbs, tbbv = tagger_bot()
 
@@ -343,6 +363,8 @@ tbbs, tbbv = tagger_bot()
 #ET.SubElement(pv, 'position', name='posA', unit="cm", x='0', y='0', z='0')
 #setup = ET.SubElement(gdml, 'setup', name='Default', version='1.0')
 #ET.SubElement(setup, 'world', ref='volWorld')
+#mats = ET.parse('mats.gdml')
+#gdml.insert(0, mats.getroot())
 
 with open('crt.gdml', 'w') as f:
     f.write(minidom.parseString(ET.tostring(gdml)).toprettyxml(indent=' '))
