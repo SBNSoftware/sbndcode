@@ -65,7 +65,7 @@ class SBNDGeometryIteratorTestFixture:
 
 BOOST_FIXTURE_TEST_SUITE
   (GeometryIteratorsSBND, SBNDGeometryIteratorTestFixture)
-// BOOST_GLOBAL_FIXTURE(SBNDGeometryIteratorTestFixture)
+// BOOST_GLOBAL_FIXTURE(SBNDGeometryIteratorTestFixture);
 
 
 BOOST_AUTO_TEST_CASE( AllTests )
