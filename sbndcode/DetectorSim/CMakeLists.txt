@@ -2,9 +2,9 @@
 simple_plugin(SimWireT1053 "module"
                            larcore_Geometry
                            larcore_Geometry_Geometry_service
-                           larsim_Simulation
+                           larsim_Simulation lardataobj_Simulation
                            lardata_Utilities
-                           lardata_RawData
+                           lardataobj_RawData
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                            sbndcode_Utilities_SignalShapingServiceT1053_service
                            larsim_RandomUtils_LArSeedService_service
@@ -14,9 +14,9 @@ simple_plugin(SimWireT1053 "module"
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-                           ${ART_PERSISTENCY_COMMON}
-                           ${ART_PERSISTENCY_PROVENANCE}
-                           ${ART_UTILITIES}
+                           art_Persistency_Common canvas_Persistency_Common
+                           art_Persistency_Provenance canvas_Persistency_Provenance
+                           art_Utilities canvas_Utilities
                            ${MF_MESSAGELOGGER}
                            ${MF_UTILITIES}
                            ${FHICLCPP}

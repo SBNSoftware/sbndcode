@@ -5,12 +5,12 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "larcore/Geometry/Geometry.h"
 
-#include "SimulationBase/MCParticle.h"
-#include "NuReweight/art/NuReweight.h" //GENIEReweight.h"
-#include "SimulationBase/MCNeutrino.h"
-#include "SimulationBase/MCTruth.h"
-#include "SimulationBase/GTruth.h"
-#include "SimulationBase/MCFlux.h"
+#include "nusimdata/SimulationBase/MCParticle.h"
+#include "nutools/NuReweight/art/NuReweight.h" //GENIEReweight.h"
+#include "nusimdata/SimulationBase/MCNeutrino.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
+#include "nusimdata/SimulationBase/GTruth.h"
+#include "nusimdata/SimulationBase/MCFlux.h"
 
 #include "TVector3.h"
 #include "TLorentzVector.h"
