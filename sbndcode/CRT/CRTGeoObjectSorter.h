@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-/// \file AuxDetGeoObjectSorterSBND.h
+/// \file CRTGeoObjectSorter.h
 /// \brief Interface to algorithm class for sorting of AuxDetGeo objects
 ///
 /// Ported from AuxDetGeoObjectSorterLArIAT.h (Author: brebel@fnal.gov)
@@ -8,8 +8,8 @@
 /// \author mastbaum@uchicago.edu
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SBND_AuxDetGeoObjectSorterSBND_h
-#define SBND_AuxDetGeoObjectSorterSBND_h
+#ifndef SBND_CRTGeoObjectSorter_h
+#define SBND_CRTGeoObjectSorter_h
 
 #include <vector>
 
@@ -17,12 +17,12 @@
 
 namespace geo {
 
-  class AuxDetGeoObjectSorterSBND : public AuxDetGeoObjectSorter {
+  class CRTGeoObjectSorter : public AuxDetGeoObjectSorter {
   public:
 
-    AuxDetGeoObjectSorterSBND(fhicl::ParameterSet const& p);
+    CRTGeoObjectSorter(fhicl::ParameterSet const& p);
 
-    ~AuxDetGeoObjectSorterSBND();
+    ~CRTGeoObjectSorter();
 
     void SortAuxDets (std::vector<geo::AuxDetGeo*>& adgeo) const;
     void SortAuxDetSensitive(std::vector<geo::AuxDetSensitiveGeo*>& adsgeo) const;
@@ -31,5 +31,5 @@ namespace geo {
 
 }
 
-#endif  // SBND_AuxDetGeoObjectSorterSBND_h
+#endif  // SBND_CRTGeoObjectSorter_h
 

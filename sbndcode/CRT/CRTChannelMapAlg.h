@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-/// \file AuxDetChannelMapSBNDAlg.h
+/// \file CRTChannelMapAlg.h
 /// \brief Algorithm class for SBND auxiliary detector channel mapping
 ///
 /// Ported from AuxDetChannelMapLArIATAlg.h (Author: brebel@fnal.gov)
@@ -8,21 +8,20 @@
 /// \author mastbaum@uchicago.edu
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SBND_AuxDetChannelMapSBNDAlg_h
-#define SBND_AuxDetChannelMapSBNDAlg_h
+#ifndef SBND_CRTChannelMapAlg_h
+#define SBND_CRTChannelMapAlg_h
 
-#include <vector>
-#include <set>
 #include "larcore/Geometry/AuxDetChannelMapAlg.h"
-#include "sbndcode/Geo/AuxDetGeoObjectSorterSBND.h"
+#include "sbndcode/CRT/CRTGeoObjectSorter.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "TVector3.h"
+#include <vector>
 
 namespace geo {
 
-  class AuxDetChannelMapSBNDAlg : public AuxDetChannelMapAlg {
+  class CRTChannelMapAlg : public AuxDetChannelMapAlg {
   public:
-    AuxDetChannelMapSBNDAlg(fhicl::ParameterSet const& p);
+    CRTChannelMapAlg(fhicl::ParameterSet const& p);
 
     void Initialize(AuxDetGeometryData_t& geodata) override;
 
@@ -40,10 +39,10 @@ namespace geo {
         std::vector<geo::AuxDetGeo*> const& auxDets) const;
 
   private:
-    geo::AuxDetGeoObjectSorterSBND fSorter; ///< Class to sort geo objects
+    geo::CRTGeoObjectSorter fSorter; ///< Class to sort geo objects
   };
 
 }  // namespace geo
 
-#endif  // SBND_AuxDetChannelMapSBNDAlg_h
+#endif  // SBND_CRTChannelMapAlg_h
 

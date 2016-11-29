@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+sbnd_crtsim:
+{
+  module_type: "CRTDetSim"
+  G4ModuleLabel: "largeant"
+}
+
+END_PROLOG
