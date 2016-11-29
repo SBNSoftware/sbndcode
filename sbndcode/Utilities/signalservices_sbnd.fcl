@@ -23,10 +23,10 @@ sbnd_signalshapingservice:
   # cycles/microsecond.  The conversion to frequency bin depends on FFT size
   # samping rate.
 
-  IndUFilter:       "(x>0.0)*gaus*exp(-0.5*pow(x/[3],[4]))"
+  IndUFilter:       "(x>0.0)*gaus(0)*exp(-0.5*pow(x/[3],[4]))"
   # IndUFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
   IndUFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
-  IndVFilter:       "(x>0.0)*gaus*exp(-0.5*pow(x/[3],[4]))"
+  IndVFilter:       "(x>0.0)*gaus(0)*exp(-0.5*pow(x/[3],[4]))"
   # IndVFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
   IndVFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
   ColFilter:       "(x>0)*[0]*exp(-0.5*(((x-[1])/[2])^2)^[3])"
