@@ -50,7 +50,7 @@
    <composite n="6" ref="oxygen"/>
    <composite n="4" ref="bromine"/>
   </material>
-  
+
   <material name="PU_foam_dense" formula="C25H42N2O6">
    <D value=".224" unit="g/cm3"/>
    <composite n="25" ref="carbon"/>
@@ -58,7 +58,7 @@
    <composite n="2" ref="nitrogen"/>
    <composite n="6" ref="oxygen"/>
  </material>
- 
+
  <material name="PU_foam_light" formula="C25H42N2O6">
 	 <D value=".0384" unit="g/cm3"/>
 	 <composite n="25" ref="carbon"/>
@@ -66,7 +66,7 @@
 	 <composite n="2" ref="nitrogen"/>
 	 <composite n="6" ref="oxygen"/>
  </material>
-	     
+
   <material name="SiO2" formula="SiO2">
    <D value="2.2" unit="g/cm3"/>
    <composite n="1" ref="silicon"/>
@@ -165,7 +165,7 @@
   </material>
 
   <material formula=" " name="ShotRock">
-   <D value="2.7*0.6" unit="g/cm3"/>
+   <D value="1.62" unit="g/cm3"/>
    <fraction n="0.438" ref="oxygen"/>
    <fraction n="0.257" ref="silicon"/>
    <fraction n="0.222" ref="sodium"/>
@@ -237,39 +237,39 @@
 </materials>
 <solids>
 <tube name="TPCWireVert"
-  rmax="0.5*0.015"
+  rmax="0.0075"
   z="400"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
 <box name="TPCPlaneVert"
-  x="0.15" 
-  y="400" 
+  x="0.15"
+  y="400"
   z="182.5"
   lunit="cm"/>
 
 <tube name="TPCWireCommon"
-  rmax="0.5*0.015"
-  z="182.5/0.866025403784439 - 0.075 "
+  rmax="0.0075"
+  z="210.657848254"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
 <box name="TPCPlane"
   x="0.15"
   y="400"
-  z="182.5 + 0.35"
+  z="182.85"
   lunit="cm"/>
 
  <box name="CathodePlate" lunit="cm" x="5" y="400" z="365"/>
 
- <box name="TPC" lunit="cm" x="200" y="400 " z="(365 )/2 + 0.35"/>
+ <box name="TPC" lunit="cm" x="200" y="400 " z="182.85"/>
  <box name="TPCActive" lunit="cm" x="196.4" y="399.8" z="182.3"/>
 
 
 
  <box name="lightguidebar"
   lunit="cm"
-  x="0.25*2.54"
+  x="0.635"
   y="100"
   z="2.54"/>
  <box name="lightguidebarcoating"
@@ -279,50 +279,50 @@
   z="2.54"/>
  <box name="lightguidedetector"
   lunit="cm"
-  x="0.25*2.54+0.1"
+  x="0.735"
   y="100"
   z="2.54"/>
 
  <tube name="PMTVolume"
-  rmax="(6.1*2.54)"
-  z="(11.1*2.54)+0.005"
+  rmax="15.494"
+  z="28.199"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
 
  <tube name="PMT_AcrylicPlate"
-  rmax="(6.0*2.54)"
-  z="(0.2)"
+  rmax="15.24"
+  z="0.2"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
  <tube name="PMT_Stalk"
-  rmax="(1.25*2.54)"
-  z="(3.0*2.54)"
+  rmax="3.175"
+  z="7.62"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
  <tube name="PMT_SteelBase"
-  rmax="(6.0*2.54)"
-  z="(1.5*2.54)"
+  rmax="15.24"
+  z="3.81"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
  <tube name="PMT_Underside"
-  rmax="2.54*4.0"
-  z="2.54*2.5"
+  rmax="10.16"
+  z="6.35"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
  <tube name="PMT_Lens"
-  rmax="2.54*4.0"
-  z="2.54*2.5"
+  rmax="10.16"
+  z="6.35"
   deltaphi="360"
   aunit="deg"
   lunit="cm"/>
 
   <box name="InsulationOuter" lunit="cm" x="600" y="550" z="490"/>
-  <box name="InsulationInner" lunit="cm" x="510+0.1" y="480+0.1" z="440+0.1"/>
+  <box name="InsulationInner" lunit="cm" x="510.1" y="480.1" z="440.1"/>
 
    <subtraction name="Insulation">
      <first ref="InsulationOuter"/> <second ref="InsulationInner"/>
@@ -330,23 +330,23 @@
    </subtraction>
 
 
- <box name="Cryostat" lunit="cm" x="510+0.1" y="480+0.1" z="440+0.1" /> 
+ <box name="Cryostat" lunit="cm" x="510.1" y="480.1" z="440.1" />
  <box name="SteelBoxA" lunit="cm" x="510" y="480" z="440"/>
- <box name="SteelBoxB" lunit="cm" x="510-5" y="480-5" z="440-5"/>
+ <box name="SteelBoxB" lunit="cm" x="505.0" y="475.0" z="435.0"/>
 
- <box name="TPBLayerXY" lunit="cm" x="0.5*196.4" y="0.5*399.8" z="0.01"/>
- <box name="TPBLayerXZ" lunit="cm" x="0.5*196.4" y="0.01" z="0.5*182.3"/>
- <box name="TPBLayerCathode" lunit="cm" x="0.01" y="0.5*399.8" z="0.5*182.3"/>
- 
+ <box name="TPBLayerXY" lunit="cm" x="98.2" y="199.9" z="0.01"/>
+ <box name="TPBLayerXZ" lunit="cm" x="98.2" y="0.01" z="91.15"/>
+ <box name="TPBLayerCathode" lunit="cm" x="0.01" y="199.9" z="91.15"/>
+
  <box name="APAFrameA" lunit="cm" x="20" y="400" z="365"/>
- <box name="APAFrameB" lunit="cm" x="20+ 0.1" y="400-20" z="365 -20"/>
- <box name="APAFrameC" lunit="cm" x="20/2" y="400-20" z="20/2"/>
- <box name="APAFrameD" lunit="cm" x="20/2" y="400-35" z="20/2"/>
+ <box name="APAFrameB" lunit="cm" x="20.1" y="380.0" z="345.0"/>
+ <box name="APAFrameC" lunit="cm" x="10.0" y="380.0" z="10.0"/>
+ <box name="APAFrameD" lunit="cm" x="10.0" y="365.0" z="10.0"/>
 
- <box name="HorizontalBeam" lunit="cm" x="200*2" y="5" z="5"/>
+ <box name="HorizontalBeam" lunit="cm" x="400.0" y="5" z="5"/>
 
- <box name="APASideCrossA" lunit="cm" x="20/2" y="127.28" z="127.28"/> 
- <box name="APASideCrossB" lunit="cm" x="20/2+ 0.1" y="127.28-20/2" z="127.28-20/2"/> 
+ <box name="APASideCrossA" lunit="cm" x="10.0" y="127.28" z="127.28"/>
+ <box name="APASideCrossB" lunit="cm" x="10.1" y="117.28" z="117.28"/>
 
 
   <subtraction name="SteelBox">
@@ -369,7 +369,7 @@
 	   <position name="posTPCUnion1" x="0" y="0" z="0"/>
 	   <rotationref ref="rPlus90AboutX"/>
 	</union>
- 
+
    <subtraction name="APASideCross">
 	 <first ref="APASideCrossA"/> <second ref="APASideCrossB"/>
 	 <position name="posAPASideCross" x="0" y="0" z="0"/>
@@ -377,34 +377,34 @@
 
 	<union name="APAFrame3">
 		<first ref="APAFrame2"/> <second ref="APASideCross"/>
-		 <position name="posAPASideCross0" unit="cm" x="0" y="(400-20)/4" z="(365-20)/4"/>
+		 <position name="posAPASideCross0" unit="cm" x="0" y="95.0" z="86.25"/>
  		 <rotationref ref="rPlus45AboutX"/>
       </union>
 	<union name="APAFrame4">
 		<first ref="APAFrame3"/> <second ref="APASideCross"/>
-		 <position name="posAPASideCross1" unit="cm" x="0" y="(400-20)/4" z="-(365-20)/4"/>
+		 <position name="posAPASideCross1" unit="cm" x="0" y="95.0" z="-86.25"/>
  		 <rotationref ref="rPlus45AboutX"/>
       </union>
 	<union name="APAFrame5">
 		<first ref="APAFrame4"/> <second ref="APASideCross"/>
-		 <position name="posAPASideCross2" unit="cm" x="0" y="-(400-20)/4" z="-(365-20)/4"/>
+		 <position name="posAPASideCross2" unit="cm" x="0" y="-95.0" z="-86.25"/>
  		 <rotationref ref="rPlus45AboutX"/>
       </union>
 	<union name="APAFrame">
 		<first ref="APAFrame5"/> <second ref="APASideCross"/>
-		 <position name="posAPASideCross3" unit="cm" x="0" y="-(400-20)/4" z="(365-20)/4"/>
+		 <position name="posAPASideCross3" unit="cm" x="0" y="-95.0" z="86.25"/>
  		 <rotationref ref="rPlus45AboutX"/>
       </union>
 
 
- <box name="DetEnclosure" lunit="cm" x="700+0.1" y="850+0.1" z="490+0.1" />
+ <box name="DetEnclosure" lunit="cm" x="700.1" y="850.1" z="490.1" />
 
   <box name="World" lunit="cm" x="70000" y="85000" z="49000"/>
-  <box name="ConcreteEnclosureOuter" lunit="cm" x="700+8" y="850+8" z="490+8"/>
-  <box name="ConcreteEnclosureInner" lunit="cm" x="700+0.1" y="850+0.1" z="490+0.1"/>
-  <box name="GroundOuterTemp" lunit="cm" x="700 + 8 + 100" y="(28*12)*2.54" z="490+8+100"/>
-  <box name="GroundOuter" lunit="cm" x="700 + 8 + 1000" y="(28*12)*2.54+1000" z="490+ 8 + 2500" />
-  <box name="GroundInner" lunit="cm" x="700 + 8.1" y="(28*12)*2.54 +5" z="490+8.1"/>
+  <box name="ConcreteEnclosureOuter" lunit="cm" x="708.0" y="858.0" z="498.0"/>
+  <box name="ConcreteEnclosureInner" lunit="cm" x="700.1" y="850.1" z="490.1"/>
+  <box name="GroundOuterTemp" lunit="cm" x="808.0" y="853.44" z="598.0"/>
+  <box name="GroundOuter" lunit="cm" x="1708.0" y="1853.44" z="2998.0" />
+  <box name="GroundInner" lunit="cm" x="708.1" y="858.44" z="498.1"/>
 
 
   <subtraction name="ConcreteEnclosure">
@@ -429,11 +429,11 @@
     <solidref ref="TPCWireVert"/>
   </volume>
   <volume name="volTPCPlaneVert">
-    <materialref ref="LAr"/>       
+    <materialref ref="LAr"/>
     <solidref ref="TPCPlaneVert"/>
   </volume>
   <volume name="volTPCPlaneVert2">
-    <materialref ref="LAr"/>       
+    <materialref ref="LAr"/>
     <solidref ref="TPCPlaneVert"/>
   </volume>
 
@@ -474,39 +474,39 @@
    <solidref ref="TPC"/>
 	<physvol>
 		 <volumeref ref="volTPCPlaneVert"/>
-		 <position name="posTPCPlaneVert2" unit="cm" x="200/2 - 0.1" y="0" z="0" />
+		 <position name="posTPCPlaneVert2" unit="cm" x="99.9" y="0" z="0" />
 	 </physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane2" unit="cm" x="200/2 - 0.6 -0.1" y="0" z="0" />
-     	<rotationref ref="rPlus180AboutY"/> 
-	</physvol> 
+		<position name="posTPCPlane2" unit="cm" x="99.3" y="0" z="0" />
+     	<rotationref ref="rPlus180AboutY"/>
+	</physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane"/>
-		<position name="posTPCPlane3" unit="cm" x="200/2 - 0.3 -0.1" y="0" z="0" />
-	</physvol> 
+		<position name="posTPCPlane3" unit="cm" x="99.6" y="0" z="0" />
+	</physvol>
 
 	<physvol>
 	 	 <volumeref ref="volTPCActive"/>
 	     <position name="posTPCActive1" unit="cm" x="0" y="0" z="0"/>
 	</physvol>
- </volume> 
+ </volume>
 
 <!-- <volume name="volTPC2">
    <materialref ref="LAr"/>
    <solidref ref="TPC"/>
 	<physvol>
 		 <volumeref ref="volTPCPlaneVert2"/>
-		 <position name="posTPCPlaneVert3" unit="cm" x="-200/2 +0.1" y="0" z="0" />
+		 <position name="posTPCPlaneVert3" unit="cm" x="-99.9" y="0" z="0" />
 	 </physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane2"/>
-		<position name="posTPCPlane4" unit="cm" x="-200/2 + 0.3 +0.1" y="0" z="0" />
-     	<rotationref ref="rPlus180AboutY"/> 
+		<position name="posTPCPlane4" unit="cm" x="-99.6" y="0" z="0" />
+     	<rotationref ref="rPlus180AboutY"/>
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPCPlane2"/>
-		<position name="posTPCPlane5" unit="cm" x="-200/2 + 0.6 +0.1" y="0" z="0" />
+		<position name="posTPCPlane5" unit="cm" x="-99.3" y="0" z="0" />
 	</physvol>
 
 	<physvol>
@@ -529,7 +529,7 @@
   <solidref ref="lightguidedetector"/>
   <physvol>
    <volumeref ref="volOpDetSensitive"/>
-   <position name="posOpDetSensitive" unit="cm" x="(0.125*2.54)+0.025" y="0" z="0"/>
+   <position name="posOpDetSensitive" unit="cm" x="0.3425" y="0" z="0"/>
   </physvol>
   <physvol>
    <volumeref ref="vollightguidebar"/>
@@ -568,27 +568,27 @@
   <solidref ref="PMTVolume"/>
   <physvol>
    <volumeref ref="volOpDetSensitive"/>
-   <position name="posOpDetSensitive" unit="cm" x="0" y="0" z="(5.5 * 2.54) - 0.1"/>
+   <position name="posOpDetSensitive" unit="cm" x="0" y="0" z="13.87"/>
   </physvol>
   <physvol>
    <volumeref ref="vol_PMT_AcrylicPlate"/>
-   <position name="pos_PMT_AcrylicPlate" unit="cm" x="0" y="0" z="(5.5 * 2.54) - 0.3"/>
+   <position name="pos_PMT_AcrylicPlate" unit="cm" x="0" y="0" z="13.67"/>
   </physvol>
   <physvol>
    <volumeref ref="vol_PMT_Stalk"/>
-   <position name="pos_PMT_Stalk" unit="cm" x="0" y="0" z="(3.0 * 2.54)-(5.5 * 2.54)"/>
+   <position name="pos_PMT_Stalk" unit="cm" x="0" y="0" z="-6.35"/>
   </physvol>
   <physvol>
    <volumeref ref="vol_PMT_SteelBase"/>
-   <position name="pos_PMT_SteelBase" unit="cm" x="0" y="0" z="(0.75 * 2.54)-(5.5 * 2.54)"/>
+   <position name="pos_PMT_SteelBase" unit="cm" x="0" y="0" z="-12.065"/>
   </physvol>
   <physvol>
    <volumeref ref="vol_PMT_Lens"/>
-   <position name="pos_PMT_Lens" unit="cm" x="0" y="0" z="(7.0 * 2.54)-(5.5 * 2.54)"/>
+   <position name="pos_PMT_Lens" unit="cm" x="0" y="0" z="3.81"/>
   </physvol>
   <physvol>
    <volumeref ref="vol_PMT_Underside"/>
-   <position name="pos_PMT_Underside" unit="cm" x="0" y="0" z="(7.0 * 2.54)-(5.5 * 2.54)"/>
+   <position name="pos_PMT_Underside" unit="cm" x="0" y="0" z="3.81"/>
   </physvol>
  </volume>
 
@@ -628,166 +628,166 @@
 	<physvol>
 	  <volumeref ref="volSteelBox"/>
 	  <position name="posSteelBox" unit="cm" x="0" y="0" z="0"/>
-	</physvol> 
-    <physvol> 
+	</physvol>
+    <physvol>
        <volumeref ref="volCathodePlate"/>
  	   <position name="posCathodePlate" unit="cm" x="0" y="0" z="0"/>
-	 </physvol> 
+	 </physvol>
  	 <physvol>
    		 <volumeref ref="volAPAFrame"/>
-    	 <position name="posAPAFrame" unit="cm" x="200 +10" y="0" z="0"/>
+    	 <position name="posAPAFrame" unit="cm" x="210.0" y="0" z="0"/>
    	 </physvol>
    	 <physvol>
     	 <volumeref ref="volAPAFrame"/>
-         <position name="posAPAFrame1" unit="cm" x="-200 - 10" y="0" z="0"/>
+         <position name="posAPAFrame1" unit="cm" x="-210.0" y="0" z="0"/>
    	 </physvol>
    	 <physvol>
     	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam0" unit="cm" x="0" y="80" z="365 /2+5"/>
+        <position name="posHorizontalBeam0" unit="cm" x="0" y="80" z="187.5"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam1" unit="cm" x="0" y="80*2" z="365 /2+5"/>
+         <position name="posHorizontalBeam1" unit="cm" x="0" y="160.0" z="187.5"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam2" unit="cm" x="0" y="-80" z="365 /2+ 5"/>
+         <position name="posHorizontalBeam2" unit="cm" x="0" y="-80" z="187.5"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam3" unit="cm" x="0" y="-80*2" z="365 /2+5"/>
+        <position name="posHorizontalBeam3" unit="cm" x="0" y="-160.0" z="187.5"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam4" unit="cm" x="0" y="0" z="365 /2 + 5"/>
+        <position name="posHorizontalBeam4" unit="cm" x="0" y="0" z="187.5"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam5" unit="cm" x="0" y="80" z="-365 /2 - 5"/>
+         <position name="posHorizontalBeam5" unit="cm" x="0" y="80" z="-187.5"/>
      </physvol>
      <physvol>
          <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam6" unit="cm" x="0" y="80*2" z="-365 /2 - 5"/>
+         <position name="posHorizontalBeam6" unit="cm" x="0" y="160.0" z="-187.5"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam7" unit="cm" x="0" y="-80" z="-365 /2 - 5"/>
+         <position name="posHorizontalBeam7" unit="cm" x="0" y="-80" z="-187.5"/>
    	 </physvol>
    	 <physvol>
       	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam8" unit="cm" x="0" y="-80*2" z="-365 /2 - 5"/>
+         <position name="posHorizontalBeam8" unit="cm" x="0" y="-160.0" z="-187.5"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam9" unit="cm" x="0" y="0" z="-365 /2 - 5 "/>
+        <position name="posHorizontalBeam9" unit="cm" x="0" y="0" z="-187.5"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam10" unit="cm" x="0" y="400 /2 + 5" z="0"/>
+        <position name="posHorizontalBeam10" unit="cm" x="0" y="205.0" z="0"/>
      </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam11" unit="cm" x="0" y="400 /2 +5" z="80"/>
-     </physvol> 
+        <position name="posHorizontalBeam11" unit="cm" x="0" y="205.0" z="80"/>
+     </physvol>
      <physvol>
      	<volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam12" unit="cm" x="0" y="400 /2+5" z="80*2"/>
+        <position name="posHorizontalBeam12" unit="cm" x="0" y="205.0" z="160.0"/>
      </physvol>
     <physvol>
         <volumeref ref="volHorizontalBeam"/>
-        <position name="posHorizontalBeam13" unit="cm" x="0" y="400 /2+5" z="-80"/>
-     </physvol> 
-     <physvol>
-    	 <volumeref ref="volHorizontalBeam"/>
-      	 <position name="posHorizontalBeam14" unit="cm" x="0" y="400 /2+5" z="-80*2"/>
+        <position name="posHorizontalBeam13" unit="cm" x="0" y="205.0" z="-80"/>
      </physvol>
      <physvol>
     	 <volumeref ref="volHorizontalBeam"/>
-      	 <position name="posHorizontalBeam15" unit="cm" x="0" y="-400 /2-5" z="0"/>
+      	 <position name="posHorizontalBeam14" unit="cm" x="0" y="205.0" z="-160.0"/>
+     </physvol>
+     <physvol>
+    	 <volumeref ref="volHorizontalBeam"/>
+      	 <position name="posHorizontalBeam15" unit="cm" x="0" y="-205.0" z="0"/>
      </physvol>
      <physvol>
       	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam16" unit="cm" x="0" y="-400 /2-5" z="80"/>
+         <position name="posHorizontalBeam16" unit="cm" x="0" y="-205.0" z="80"/>
      </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-    	 <position name="posHorizontalBeam17" unit="cm" x="0" y="-400 /2-5" z="80*2"/>
+    	 <position name="posHorizontalBeam17" unit="cm" x="0" y="-205.0" z="160.0"/>
   	 </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam18" unit="cm" x="0" y="-400 /2-5" z="-80"/>
+         <position name="posHorizontalBeam18" unit="cm" x="0" y="-205.0" z="-80"/>
    	 </physvol>
      <physvol>
      	 <volumeref ref="volHorizontalBeam"/>
-         <position name="posHorizontalBeam19" unit="cm" x="0" y="-400 /2-5" z="-80*2"/>
-     </physvol>   
+         <position name="posHorizontalBeam19" unit="cm" x="0" y="-205.0" z="-160.0"/>
+     </physvol>
 	<physvol>
 		<volumeref ref="volTPC"/>
-		<position name="posTPC1" unit="cm" x="200/2+2.5" y="0" z="365 /4" />
+		<position name="posTPC1" unit="cm" x="102.5" y="0" z="91.25" />
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPC"/>
-		<position name="posTPC2" unit="cm" x="200/2+2.5" y="0" z="-365 /4" />
+		<position name="posTPC2" unit="cm" x="102.5" y="0" z="-91.25" />
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPC"/>
-		<position name="posTPC3" unit="cm" x="-200/2 -2.5" y="0" z="365 /4" />
-		<rotationref ref="rPlus180AboutY"/> 
-	</physvol>  
+		<position name="posTPC3" unit="cm" x="-102.5" y="0" z="91.25" />
+		<rotationref ref="rPlus180AboutY"/>
+	</physvol>
 	<physvol>
 		<volumeref ref="volTPC"/>
-		<position name="posTPC4" unit="cm" x="-200/2-2.5" y="0" z="-365 /4" />
-		<rotationref ref="rPlus180AboutY"/> 
-	</physvol>  
+		<position name="posTPC4" unit="cm" x="-102.5" y="0" z="-91.25" />
+		<rotationref ref="rPlus180AboutY"/>
+	</physvol>
 
 	<physvol>
 		<volumeref ref="volTPBLayerXY"/>
-		<position name="posTPBLayerXY0" unit="cm" x="196.4/2" y="0" z="182.3/2"/>
+		<position name="posTPBLayerXY0" unit="cm" x="98.2" y="0" z="91.15"/>
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPBLayerXY"/>
-		<position name="posTPBLayerXY1" unit="cm" x="196.4/2" y="0" z="-182.3/2"/>
+		<position name="posTPBLayerXY1" unit="cm" x="98.2" y="0" z="-91.15"/>
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPBLayerXY"/>
-		<position name="posTPBLayerXY2" unit="cm" x="-196.4/2" y="0" z="182.3/2"/>
+		<position name="posTPBLayerXY2" unit="cm" x="-98.2" y="0" z="91.15"/>
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPBLayerXY"/>
-		<position name="posTPBLayerXY3" unit="cm" x="-196.4/2" y="0" z="-182.3/2"/>
+		<position name="posTPBLayerXY3" unit="cm" x="-98.2" y="0" z="-91.15"/>
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPBLayerXZ"/>
-		<position name="posTPBLayerXZ0" unit="cm" x="196.4/2" y="399.8/2" z="0"/>
+		<position name="posTPBLayerXZ0" unit="cm" x="98.2" y="199.9" z="0"/>
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPBLayerXZ"/>
-		<position name="posTPBLayerXZ1" unit="cm" x="196.4/2" y="-/2" z="0"/>
+		<position name="posTPBLayerXZ1" unit="cm" x="98.2" y="-/2" z="0"/>
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPBLayerXZ"/>
-		<position name="posTPBLayerXZ2" unit="cm" x="-196.4/2" y="399.8/2" z="0"/>
+		<position name="posTPBLayerXZ2" unit="cm" x="-98.2" y="199.9" z="0"/>
 	</physvol>
 	<physvol>
 		<volumeref ref="volTPBLayerXZ"/>
-		<position name="posTPBLayerXZ3" unit="cm" x="-196.4/2" y="399.8/2" z="0"/>
+		<position name="posTPBLayerXZ3" unit="cm" x="-98.2" y="199.9" z="0"/>
 	</physvol>
-		
-		
+
+
 
   <!--	  <physvol>
 	  <volumeref ref="volPMT"/>
-	  <position name="posPMT0" unit="cm"  x="-220" y="0 " z="0" /> 
+	  <position name="posPMT0" unit="cm"  x="-220" y="0 " z="0" />
 	  <rotationref ref="rPMTRotation"/>
 	  </physvol> -->
   <!--	  <physvol>
 	  <volumeref ref="volPMT"/>
-	  <position name="posPMT1" unit="cm"  x="-220" y="-(400-20)/4 " z="(365 - 20)/4" /> 
+	  <position name="posPMT1" unit="cm"  x="-220" y="-95.0" z="86.25" />
 	  <rotationref ref="rPMTRotation"/>
 	  </physvol> -->
   <!--	  <physvol>
 	  <volumeref ref="volPMT"/>
-	  <position name="posPMT2" unit="cm"  x="-220" y="-(400-20)/4 " z="(365 - 20)/4" /> 
+	  <position name="posPMT2" unit="cm"  x="-220" y="-95.0" z="86.25" />
 	  <rotationref ref="rPMTRotation"/>
 	  </physvol> -->
  </volume>
@@ -818,26 +818,26 @@
 	<solidref ref="GroundTemp"/>
   </volume>
   <volume name="volWorld" >
-    <materialref ref="Air"/> 
+    <materialref ref="Air"/>
     <solidref ref="World"/>
     <physvol>
       <volumeref ref="volDetEnclosure"/>
-      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="(365 )/2"/>
-    </physvol> 
+      <position name="posDetEnclosure" unit="cm" x="-40" y="0" z="182.5"/>
+    </physvol>
 	<physvol>
 	  <volumeref ref="volConcreteEnclosure"/>
-	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="(365 )/2"/>
+	  <position name="posConcreteEnclosure" unit="cm" x="-40" y="0" z="182.5"/>
 	 </physvol>
 	<physvol>
 	  <volumeref ref="volGround"/>
-	  <position name="posGround" unit="cm" x="-40" y="0" z="(365 )/2-859.05"/>
+	  <position name="posGround" unit="cm" x="-40" y="0" z="-676.55"/>
 	</physvol>
 
 <!--	<physvol>
 	  <volumeref ref="volTempGround"/>
-	  <position name="posGroundTemp" unit="cm" x="-40" y="0" z="(365 )/2"/>
+	  <position name="posGroundTemp" unit="cm" x="-40" y="0" z="182.5"/>
 	</physvol> -->
-  </volume> 
+  </volume>
 </structure>
 
 <setup name="Default" version="1.0">
