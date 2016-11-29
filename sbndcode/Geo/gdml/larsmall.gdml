@@ -7,7 +7,7 @@
    <rotation name="rPlus60AboutX"  unit="deg" x="60"  y="0"   z="0"/>
    <rotation name="rPlus90AboutX"  unit="deg" x="90"  y="0"   z="0"/>
    <rotation name="rMinus90AboutX"  unit="deg" x="-90"  y="0"   z="0"/>
-   <rotation name="rPlusUVAngleAboutX"  unit="deg" x="90+60" y="0"   z="0"/>
+   <rotation name="rPlusUVAngleAboutX"  unit="deg" x="150.0" y="0"   z="0"/>
    <rotation name="rPlus150AboutX"      unit="deg" x="150" y="0"   z="0"/>
    <rotation name="rPlus180AboutX"      unit="deg" x="180" y="0"   z="0"/>
    <rotation name="rMinusUVAngleAboutX" unit="deg" x="-30" y="0"   z="0"/>
@@ -56,7 +56,7 @@
       <D value="1.e-25" unit="g/cm3"/>
       <fraction n="1.0" ref="videRef"/>
     </material>
-  
+
     <material name="STEEL_STAINLESS_Fe7Cr2Ni" formula="STEEL_STAINLESS_Fe7Cr2Ni">
       <D value="7.9300" unit="g/cm3"/>
       <fraction n="0.0010" ref="carbon"/>
@@ -64,19 +64,19 @@
       <fraction n="0.7298" ref="iron"/>
       <fraction n="0.0900" ref="nickel"/>
     </material>
-  
+
     <material name="LAr" formula="LAr">
       <D value="1.40" unit="g/cm3"/>
       <fraction n="1.0000" ref="argon"/>
     </material>
-  
+
     <material formula=" " name="Air">
       <D value="0.001205" unit="g/cm3"/>
       <fraction n="0.78084" ref="nitrogen"/>
       <fraction n="0.209476" ref="oxygen"/>
       <fraction n="0.00934" ref="argon"/>
     </material>
-  
+
     <material formula=" " name="Granite">
       <D value="2.7" unit="g/cm3"/>
       <fraction n="0.438" ref="oxygen"/>
@@ -86,7 +86,7 @@
       <fraction n="0.019" ref="iron"/>
       <fraction n="0.015" ref="potassium"/>
     </material>
- 
+
     <material formula=" " name="Dirt">
       <D value="1.7" unit="g/cm3"/>
       <fraction n="0.438" ref="oxygen"/>
@@ -96,7 +96,7 @@
       <fraction n="0.019" ref="iron"/>
       <fraction n="0.015" ref="potassium"/>
     </material>
-  
+
     <material formula=" " name="Concrete">
       <D value="2.3" unit="g/cm3"/>
       <fraction n="0.530" ref="oxygen"/>
@@ -114,45 +114,45 @@
 
   </materials>
   <solids>
-    <box name="World" lunit="cm" 
-      x="2*720" 
-      y="2*720" 
-      z="4*480"/>
-    <box name="DetEnclosure" lunit="cm" 
-      x="720" 
-      y="720" 
-      z="2*480"/>
-    <box name="Cryostat" lunit="cm" 
+    <box name="World" lunit="cm"
+      x="1440.0"
+      y="1440.0"
+      z="1920.0"/>
+    <box name="DetEnclosure" lunit="cm"
+      x="720"
+      y="720"
+      z="960.0"/>
+    <box name="Cryostat" lunit="cm"
       x="710"
       y="710"
-      z="2*450" />
-    <box name="TPC" lunit="cm" 
-      x="700" 
-      y="700" 
-      z="2*420"/>
+      z="900.0" />
+    <box name="TPC" lunit="cm"
+      x="700"
+      y="700"
+      z="840.0"/>
     <box name="TPCActive" lunit="cm"
       x="675"
       y="675"
-      z="2*400"/>
-    <box name="TPCPlane" lunit="cm" 
-      x="0.15" 
-      y="480" 
+      z="800.0"/>
+    <box name="TPCPlane" lunit="cm"
+      x="0.15"
+      y="480"
       z="250"/>
 <!--     <tube name="SteelShell"
       rmin="190.46"
-      rmax="193-0.1"
+      rmax="192.9"
       z="1400"
       deltaphi="360"
       aunit="deg"
       lunit="cm"/>   -->
     <tube name="TPCWire"
-      rmax="0.5*0.015"
-      z="400/0.866025403784439-0.01498648"    
+      rmax="0.0075"
+      z="461.865228872"
       deltaphi="360"
       aunit="deg"
       lunit="cm"/>
     <tube name="TPCWireVert"
-      rmax="0.5*0.015"
+      rmax="0.0075"
       z="480"
       deltaphi="360"
       aunit="deg"
@@ -214,7 +214,7 @@
           <rotationref ref="rPlus90AboutX"/>
         </physvol>
     </volume> -->
-    
+
     <volume name="volTPC">
       <materialref ref="LAr" />
       <solidref ref="TPC" />
@@ -224,15 +224,15 @@
       </physvol>
 <!--       <physvol>
         <volumeref ref="volTPCPlaneVert"/>
-        <position name="posTPCPlaneVert" unit="cm" x="-0.5*675-2*0.3" y="0" z="0"/>
+        <position name="posTPCPlaneVert" unit="cm" x="-338.1" y="0" z="0"/>
       </physvol> -->
       <physvol>
         <volumeref ref="volTPCPlane"/>
-        <position name="posTPCPlane" unit="cm" x="-0.5*675-0.3" y="0" z="0"/>
+        <position name="posTPCPlane" unit="cm" x="-337.8" y="0" z="0"/>
       </physvol>
 <!--       <physvol>
         <volumeref ref="volTPCPlane"/>
-        <position name="posTPCPlane2" unit="cm" x="-0.5*675" y="0" z="0"/>
+        <position name="posTPCPlane2" unit="cm" x="-337.5" y="0" z="0"/>
         <rotationref ref="rPlus180AboutY"/>
       </physvol> -->
     </volume>
@@ -261,7 +261,7 @@
       <solidref ref="World"/>
       <physvol>
         <volumeref ref="volDetEnclosure"/>
-        <position name="posDetEnclosure" unit="cm" x="0" y="0" z="0.5*800"/>
+        <position name="posDetEnclosure" unit="cm" x="0" y="0" z="400.0"/>
       </physvol>
     </volume>
   </structure>
