@@ -38,7 +38,7 @@ sbnd_simwireana:
 sbnd_crtsim:
 {
   module_type: "CRTSimDigits"
-  G4ModuleLabel: "largeant"
+  ADSCLabel: "sim::AuxDetSimChannel"
 }
 
 sbnd_wienerfilterana: @local::standard_wienerfilterana

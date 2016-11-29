@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-/// \file AuxDetChannelMapSBNDAlg.cxx
+/// \file CRTChannelMapAlg.cxx
 /// \brief Algorithm class for SBND auxiliary detector channel mapping
 ///
 /// Ported from AuxDetChannelMapLArIATAlg.cxx (Author: brebel@fnal.gov)
@@ -13,25 +13,26 @@
 #include "larcore/Geometry/AuxDetGeo.h"
 #include "larcore/Geometry/AuxDetSensitiveGeo.h"
 #include "larcore/Geometry/AuxDetGeometryCore.h"
-#include "sbndcode/Geo/AuxDetChannelMapSBNDAlg.h"
+#include "sbndcode/CRT/CRTChannelMapAlg.h"
+#include "TVector3.h"
 #include <iostream>
 #include <ostream>
 
 namespace geo {
 
   void throwBadSDCountException(std::string& volName, size_t n, size_t ne) {
-    throw cet::exception("AuxDetChannelMapSBND")
+    throw cet::exception("CRTChannelMap")
     << "Wrong number of sensitive volumes for CRT volume "
     << volName << " (got " << n << ", expected " << ne << ")" << std::endl;
   }
 
   //---------------------------------------------------------------------------
-  AuxDetChannelMapSBNDAlg::AuxDetChannelMapSBNDAlg(
+  CRTChannelMapAlg::CRTChannelMapAlg(
       fhicl::ParameterSet const& p)
-    : fSorter(geo::AuxDetGeoObjectSorterSBND(p)) {}
+    : fSorter(geo::CRTGeoObjectSorter(p)) {}
 
   //---------------------------------------------------------------------------
-  void AuxDetChannelMapSBNDAlg::Initialize(AuxDetGeometryData_t& geodata) {
+  void CRTChannelMapAlg::Initialize(AuxDetGeometryData_t& geodata) {
     Uninitialize();
 
     std::vector<geo::AuxDetGeo*>& adgeo = geodata.auxDets;
@@ -97,10 +98,10 @@ namespace geo {
   }
 
   //----------------------------------------------------------------------------
-  void AuxDetChannelMapSBNDAlg::Uninitialize() {}
+  void CRTChannelMapAlg::Uninitialize() {}
 
   //----------------------------------------------------------------------------
-  uint32_t AuxDetChannelMapSBNDAlg::PositionToAuxDetChannel(
+  uint32_t CRTChannelMapAlg::PositionToAuxDetChannel(
       double const worldLoc[3],
       std::vector<geo::AuxDetGeo*> const& auxDets,
       size_t& ad,
@@ -126,7 +127,7 @@ namespace geo {
       auto csvItr = fADGeoToChannelAndSV.find(ad);
       std::cout << "NAME " << gnItr->second << std::endl;
       if (csvItr == fADGeoToChannelAndSV.end()) {
-        throw cet::exception("AuxDetChannelMapSBNDAlg")
+        throw cet::exception("CRTChannelMapAlg")
         << "No entry in channel and sensitive volume"
         << " map for AuxDet index " << ad << " bail";
       }
@@ -137,7 +138,7 @@ namespace geo {
     }
 
     if (channel == UINT_MAX) {
-      throw cet::exception("AuxDetChannelMapSBNDAlg")
+      throw cet::exception("CRTChannelMapAlg")
       << "position ("
       << worldLoc[0] << "," << worldLoc[1] << "," << worldLoc[2]
       << ") does not correspond to any AuxDet";
@@ -147,7 +148,7 @@ namespace geo {
   }
 
   //----------------------------------------------------------------------------
-  const TVector3 AuxDetChannelMapSBNDAlg::AuxDetChannelToPosition(
+  const TVector3 CRTChannelMapAlg::AuxDetChannelToPosition(
       uint32_t const& channel,
       std::string const& auxDetName,
       std::vector<geo::AuxDetGeo*> const& auxDets) const {
@@ -161,14 +162,14 @@ namespace geo {
       ad = fNameToADGeo.find(auxDetName)->second;
     }
     else {
-      throw cet::exception("AuxDetChannelMapSBNDAlg")
+      throw cet::exception("CRTChannelMapAlg")
       << "No AuxDetGeo with name " << auxDetName;
     }
 
     // Get the vector of channel and sensitive volume pairs
     auto csvItr = fADGeoToChannelAndSV.find(ad);
     if (csvItr == fADGeoToChannelAndSV.end()) {
-      throw cet::exception("AuxDetChannelMapSBNDAlg")
+      throw cet::exception("CRTChannelMapAlg")
       << "No entry in channel and sensitive volume"
       << " map for AuxDet index " << ad << " bail";
     }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-/// \file SBNDAuxDetGeometryHelper.h
+/// \file CRTGeometryHelper.h
 /// \brief Auxiliary detector geometry helper service for SBND geometries.
 ///
 /// Handles SBND-specific information for the generic Geometry service
@@ -11,19 +11,21 @@
 /// \author mastbaum@uchicago.edu
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SBND_AuxDetExptGeoHelperInterface_h
-#define SBND_AuxDetExptGeoHelperInterface_h
+#ifndef SBND_CRTExptGeoHelperInterface_h
+#define SBND_CRTExptGeoHelperInterface_h
 
-#include <memory>
 #include "larcore/Geometry/AuxDetExptGeoHelperInterface.h"
+#include "larcore/Geometry/AuxDetChannelMapAlg.h"
+#include "sbndcode/CRT/CRTChannelMapAlg.h"
+#include <memory>
 
 namespace sbnd {
 
-  class SBNDAuxDetGeometryHelper : public geo::AuxDetExptGeoHelperInterface {
+  class CRTGeometryHelper : public geo::AuxDetExptGeoHelperInterface {
   public:
 
-    SBNDAuxDetGeometryHelper(fhicl::ParameterSet const & pset,
-			     art::ActivityRegistry &);
+    CRTGeometryHelper(fhicl::ParameterSet const & pset,
+                      art::ActivityRegistry &);
 
   private:
 
@@ -34,13 +36,13 @@ namespace sbnd {
     virtual AuxDetChannelMapAlgPtr_t doGetAuxDetChannelMapAlg() const override;
 
     fhicl::ParameterSet fPset; ///< Copy of configuration parameter set
-    std::shared_ptr<geo::AuxDetChannelMapAlg> fChannelMap; ///< Channel map
+    std::shared_ptr<geo::CRTChannelMapAlg> fChannelMap; ///< Channel map
 
   };
 
 }  // namespace sbnd
 
-DECLARE_ART_SERVICE_INTERFACE_IMPL(sbnd::SBNDAuxDetGeometryHelper, geo::AuxDetExptGeoHelperInterface, LEGACY)
+DECLARE_ART_SERVICE_INTERFACE_IMPL(sbnd::CRTGeometryHelper, geo::AuxDetExptGeoHelperInterface, LEGACY)
 
-#endif  // SBND_AuxDetExptGeoHelperInterface_h
+#endif  // SBND_CRTExptGeoHelperInterface_h
 
