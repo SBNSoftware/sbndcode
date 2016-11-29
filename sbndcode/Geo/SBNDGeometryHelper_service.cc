@@ -17,7 +17,8 @@
 #include "sbndcode/Geo/ChannelMapsbndAlg.h"
 
 
-#include "TString.h"
+// framework libraries
+#include "canvas/Utilities/Exception.h"
 
 
 namespace sbnd
@@ -35,10 +36,11 @@ namespace sbnd
 
 
     fChannelMap = std::make_shared<geo::ChannelMapsbndAlg>( sortingParameters );
-    if ( fChannelMap )
-    {
-      geom->ApplyChannelMap(fChannelMap);
+    if (!fChannelMap) {
+      throw art::Exception(art::errors::NullPointerError)
+        << "Failed to create a channel map for SBND geometry!\n";
     }
+    geom->ApplyChannelMap(fChannelMap);
   }
 
 
