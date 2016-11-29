@@ -44,7 +44,7 @@ art_make(
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
             larcore_Geometry
-            larsim_Simulation lardataobj_Simulation
+            larsim_Simulation nutools_ParticleNavigation lardataobj_Simulation
             lardata_Utilities
             larevt_Filters
             lardataobj_RawData

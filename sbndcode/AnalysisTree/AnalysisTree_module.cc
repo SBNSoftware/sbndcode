@@ -114,7 +114,7 @@
 #include "lardataobj/RecoBase/EndPoint2D.h"
 #include "lardataobj/RecoBase/Vertex.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
-#include "lardata/RecoObjects/BezierTrack.h"
+#include "larreco/Deprecated/BezierTrack.h"
 //#include "lardata/RecoAlg/TrackMomentumCalculator.h"
 #include "lardataobj/AnalysisBase/CosmicTag.h"
 #include "lardataobj/AnalysisBase/FlashMatch.h"

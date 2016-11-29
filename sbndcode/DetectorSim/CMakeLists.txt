@@ -2,7 +2,7 @@
 simple_plugin(SimWireT1053 "module"
                            larcore_Geometry
                            larcore_Geometry_Geometry_service
-                           larsim_Simulation lardataobj_Simulation
+                           larsim_Simulation nutools_ParticleNavigation lardataobj_Simulation
                            lardata_Utilities
                            lardataobj_RawData
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
