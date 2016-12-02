@@ -41217,11 +41217,6 @@
     <volume name="volTPCActive">
       <materialref ref="LAr"/>
       <solidref ref="TPCActive"/>
-      <physvol>
-        <volumeref ref="volCRTModule_18"/>
-        <position name="posTestModule" unit="cm" x="200/2-0.1" y="15" z="0"/>
-        <rotation name="rosTestModule" unit="deg" x="90" y="90" z="0"/>
-      </physvol>
     </volume>
     <volume name="volTPCActive2">
       <materialref ref="LAr"/>
@@ -64666,6 +64661,7 @@
     <volume name="volTaggerUpper">
       <materialref ref="Air"/>
       <solidref ref="TaggerUpper"/>
+<!--
       <physvol>
         <volumeref ref="volTaggerTopHigh"/>
         <position name="posTaggerTop1" unit="cm" x="0" y="300/2-1-2*0.4" z="0"/>
@@ -64675,6 +64671,12 @@
         <volumeref ref="volTaggerTopLow"/>
         <position name="posTaggerTop2" unit="cm" x="0" y="-300/2+1+2*0.4" z="0"/>
         <rotation name="rotTaggerTop2" unit="deg" x="90" y="0" z="0"/>
+      </physvol>
+-->
+      <physvol>
+        <volumeref ref="volCRTModule_18"/>
+        <position name="posTestModule" unit="cm" x="0" y="-300/2-3*0.4" z="0"/>
+        <rotation name="rotTestModule" unit="deg" x="90" y="0" z="0"/>
       </physvol>
     </volume>
     <volume name="volTaggerMain">
@@ -64771,12 +64773,10 @@
         <volumeref ref="volBuilding"/>
         <position name="posBuilding" unit="cm" x="0" y="((28*12)*2.54+1000)/2+762/2+1" z="(531.2)/2+95-150"/>
       </physvol>
-<!--
       <physvol>
         <volumeref ref="volTaggerUpper"/>
         <position name="posTaggerUpper" unit="cm" x="0" y="290+542.3/2+ 175" z="(531.2)/2"/>
       </physvol>
--->
     </volume>
   </structure>
   <setup name="Default" version="1.0">

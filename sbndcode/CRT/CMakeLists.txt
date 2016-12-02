@@ -9,14 +9,17 @@ art_make( LIBRARY_NAME sbndcode_crt
                         sbnd_Geometry
                         sbndcode_crt
                         larcore_Geometry_Geometry_service
-                        larsim_Simulation 
+                        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+                        lardata_RawData
                         lardata_Utilities
                         larevt_Filters
-                        lardata_RawData
+                        larsim_RandomUtils_LArSeedService_service
+                        larsim_Simulation 
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_PRINCIPAL}
                         ${ART_FRAMEWORK_SERVICES_REGISTRY}
                         ${ART_FRAMEWORK_SERVICES_OPTIONAL}
+                         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
                         ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
                         art_Persistency_Common 
                         art_Persistency_Provenance 
