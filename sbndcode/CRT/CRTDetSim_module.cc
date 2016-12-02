@@ -73,10 +73,7 @@ void CRTDetSim::produce(art::Event & e) {
     const geo::AuxDetSensitiveGeo& adsGeo = \
         adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
 
-    std::string moduleName = adGeo.TotalVolume()->GetName();  // Strip array
-    std::cout << "n "
-              << adGeo.TotalVolume()->GetNtotal() << " / "
-              << adsGeo.TotalVolume()->GetNtotal() << std::endl;
+    //std::string moduleName = adGeo.TotalVolume()->GetName();  // Strip array
 
     for (auto ide : adsc.AuxDetIDEs()) {
       // Number adjacent channels on a strip sequentially
@@ -85,47 +82,40 @@ void CRTDetSim::produce(art::Event & e) {
       uint32_t channel1ID = 2 * stripID + 1;
 
       // Simulate the CRT response
-      // Distance from the hit centroid to the readout end. Which way is
-      // "outside" depends on which module was hit.
       double x = (ide.entryX + ide.exitX) / 2;
       double y = (ide.entryY + ide.exitY) / 2;
       double z = (ide.entryZ + ide.exitZ) / 2;
       double world[3] = {x, y, z};
 
-
       // Hit position in strip's local coordinates
       double svHitPosLocal[3];
       adsGeo.WorldToLocal(world, svHitPosLocal);
 
-      // Center of the module in local coordinates
-      double svCenterPosWorld[3];
-      adsGeo.GetCenter(svCenterPosWorld);
-      double svCenterPosLocal[3];
-      adGeo.WorldToLocal(svCenterPosWorld, svCenterPosLocal);
-
       // Distance to the readout end ("outside") depends on module position
-      double distToReadout = -1;
-      if (svCenterPosLocal[1] > 0) {
-        distToReadout = abs(0 - adsGeo.HalfHeight());
-      }
-      else {
-        distToReadout = abs(0 + adsGeo.HalfHeight());
-      }
+      // FOR NOW ASSUME ALL THE SAME
+      double distToReadout = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);
 
       // The expected number of PE for relativistic muons, based on an
       // exponential fit to the data in Figure 4.4 of SBND Document 685-v5
-      int npeExpected = 43.62 * exp(-distToReadout/652.51);
-      int npeTruth = gRandom->Poisson(npeExpected);
+      double npeExpected = 43.62 * exp(-distToReadout / 652.51);
 
-      // Gaussian smearing for resolution
-      double npe = gRandom->Gaus(npeTruth, 0.25);
+      // Put PE on channels weighted by 1/r^2
+      double d0 = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]) / (2 * adsGeo.HalfWidth1());  // L
+      double d1 = abs( adsGeo.HalfWidth1() - svHitPosLocal[0]) / (2 * adsGeo.HalfWidth1());  // R
+      double npeExp0 = npeExpected * (d0*d0) / (d0*d0 + d1*d1);
+      double npeExp1 = npeExpected * (d1*d1) / (d0*d0 + d1*d1);
+      
+      // Observed PE, with Gaussian smearing
+      double npe0 = gRandom->Gaus(gRandom->Poisson(npeExp0), 0.25);
+      double npe1 = gRandom->Gaus(gRandom->Poisson(npeExp1), 0.25);
 
       // Made-up "Digitizer" cf. SBND Document 685-v5, Figure 3.8
-      short q = 100.0 * (1.0 * npe);
+      short q0 = 100.0 * (1.0 * npe0);
+      short q1 = 100.0 * (1.0 * npe1);
 
       // Write AuxDetDigit for each channel (currently the same waveform)
-      crtHits->push_back(::crt::CRTData(channel0ID, 21, 42, q));
-      crtHits->push_back(::crt::CRTData(channel1ID, 21, 42, q));
+      crtHits->push_back(::crt::CRTData(channel0ID, 21, 42, q0));
+      crtHits->push_back(::crt::CRTData(channel1ID, 21, 42, q1));
     }
   }
 
