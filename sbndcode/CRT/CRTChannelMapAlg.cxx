@@ -20,12 +20,6 @@
 
 namespace geo {
 
-  void throwBadSDCountException(std::string& volName, size_t n, size_t ne) {
-    throw cet::exception("CRTChannelMap")
-    << "Wrong number of sensitive volumes for CRT volume "
-    << volName << " (got " << n << ", expected " << ne << ")" << std::endl;
-  }
-
   //---------------------------------------------------------------------------
   CRTChannelMapAlg::CRTChannelMapAlg(
       fhicl::ParameterSet const& p)
@@ -43,57 +37,48 @@ namespace geo {
     // Map the AuxDetGeo names to their position in the sorted vector
     //
     // Each tagger is composed of scintillator modules, composed of 16 strips.
-    // Each strip has two SiPM channels, one per optical fiber.
+    // In the geometry, CRTStripArrays are AuxDets and CRTStrips are the
+    // AuxDetSensitives. Each strip has two SiPM channels, one per optical
+    // fiber (not in the geometry).
     //
-    // 2x TaggerTop:  (5x2+5x2)x16 = 320 strips,  640 channels
-    // 2x TaggerSide: (4x2+5x2)x16 = 288 strips,  576 channels
-    // 2x TaggerFace: (4x2+4x2)x16 = 256 strips,  512 channels
-    // 1x TaggerBot:         34x16 = 544 strips, 1088 channels
-    //
+    // 2x TaggerTop:  (5x2  +5x2)x16 = 320 strips,  640 channels
+    // 2x TaggerSide: (4x2  +5x2)x16 = 288 strips,  576 channels
+    // 1x TaggerFace: (4x2  +4x2)x16 = 256 strips,  512 channels
+    // 1x TaggerFace: (4x2-1+4x2)x16 = 240 strips,  480 channels
+    // 1x TaggerBot:           34x16 = 544 strips, 1088 channels
+
     fADGeoToName.clear();
     fADGeoToChannelAndSV.clear();
 
     for (size_t a=0; a<adgeo.size(); a++){
       std::string volName(adgeo[a]->TotalVolume()->GetName());
 
-      std::cout << ">> " << volName
-                << " " << adgeo[a]->NSensitiveVolume() << std::endl;
+      size_t nsv = adgeo[a]->NSensitiveVolume();
+      if (nsv != 16) {
+        throw cet::exception("CRTChannelMap")
+        << "Wrong number of sensitive volumes for CRT volume "
+        << volName << " (got " << nsv << ", expected 16)" << std::endl;
+      }
 
       fADGeoToName[a] = volName;
       fNameToADGeo[volName] = a;
 
       double origin[3] = {0,0,0};
+
+      // Debug
       adgeo[a]->GetCenter(origin);
       std::cout << "origin: "
                 << origin[0] << " " << origin[1] << " " << origin[2]
                 << std::endl;
 
-      if (volName.find("CRTModule") != std::string::npos) {
-        for (size_t c=0; c<16; c++) {
-          fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
+      if (volName.find("CRTStripArray") != std::string::npos) {
+        for (size_t svID=0; svID<16; svID++) {
+          for (size_t ich=0; ich<2; ich++) {
+            size_t chID = 2 * svID + ich;
+            fADGeoToChannelAndSV[a].push_back(std::make_pair(chID, svID));
+          }
         }
       }
-      // For now, one channel per strip
-      //if (volName.find("TaggerTop") != std::string::npos) {
-      //  for (size_t c=0; c<20*16; c++) {
-      //    fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
-      //  }
-      //}
-      //else if (volName.find("TaggerSide") != std::string::npos) {
-      //  for (size_t c=0; c<18*16; c++) {
-      //    fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
-      //  }
-      //}
-      //else if (volName.find("TaggerFace") != std::string::npos) {
-      //  for (size_t c=0; c<16*16; c++) {
-      //    fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
-      //  }
-      //}
-      //else if (volName.find("TaggerBot") != std::string::npos) {
-      //  for (size_t c=0; c<34*16; c++) {
-      //    fADGeoToChannelAndSV[a].push_back(std::make_pair(c, c));
-      //  }
-      //}
     }
   }
 
@@ -125,16 +110,15 @@ namespace geo {
     if (gnItr != fADGeoToName.end()){
       // Get the vector of channel and sensitive volume pairs
       auto csvItr = fADGeoToChannelAndSV.find(ad);
-      std::cout << "NAME " << gnItr->second << std::endl;
+
       if (csvItr == fADGeoToChannelAndSV.end()) {
         throw cet::exception("CRTChannelMapAlg")
-        << "No entry in channel and sensitive volume"
-        << " map for AuxDet index " << ad << " bail";
+        << "No entry in channel and sensitive volume map for AuxDet index "
+        << ad;
       }
 
-      if (gnItr->second.find("Tagger") != std::string::npos) {
-        channel = sv;
-      }
+      // N.B. This is the ID on the nth channel, and the strip has n and n+1
+      channel = 2 * sv + 0;
     }
 
     if (channel == UINT_MAX) {
@@ -168,6 +152,7 @@ namespace geo {
 
     // Get the vector of channel and sensitive volume pairs
     auto csvItr = fADGeoToChannelAndSV.find(ad);
+
     if (csvItr == fADGeoToChannelAndSV.end()) {
       throw cet::exception("CRTChannelMapAlg")
       << "No entry in channel and sensitive volume"
@@ -185,11 +170,9 @@ namespace geo {
         auxDets[ad]->SensitiveVolume(csv.second).LocalToWorld(localOrigin,
                                                               svOrigin);
 
-        if (auxDetName.find("Tagger") != std::string::npos) {
-          x = svOrigin[0];
-          y = svOrigin[1];
-          z = svOrigin[2];
-        }
+        x = svOrigin[0];
+        y = svOrigin[1];
+        z = svOrigin[2];
 
         break;
       }
