@@ -1226,154 +1226,6 @@
     </subtraction>
   </solids>
   <structure>
-    <volume name="volAuxDetSensitiveCRTStrip_0">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_1">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_2">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_3">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_4">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_5">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_6">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_7">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_8">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_9">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_10">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_11">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_12">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_13">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_14">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetSensitiveCRTStrip_15">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_eeb1bb44"/>
-    </volume>
-    <volume name="volAuxDetCRTStripArray_16">
-     <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_9bb04853"/>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_0"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_0" unit="cm" x="-84.0" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_1"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_1" unit="cm" x="-72.8" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_2"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_2" unit="cm" x="-61.6" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_3"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_3" unit="cm" x="-50.4" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_4"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_4" unit="cm" x="-39.2" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_5"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_5" unit="cm" x="-28.0" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_6"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_6" unit="cm" x="-16.8" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_7"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_7" unit="cm" x="-5.6" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_8"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_8" unit="cm" x="5.6" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_9"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_9" unit="cm" x="16.8" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_10"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_10" unit="cm" x="28.0" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_11"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_11" unit="cm" x="39.2" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_12"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_12" unit="cm" x="50.4" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_13"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_13" unit="cm" x="61.6" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_14"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_14" unit="cm" x="72.8" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetSensitiveCRTStrip_15"/>
-      <position name="posvolAuxDetSensitiveCRTStrip_15" unit="cm" x="84.0" y="0" z="0"/>
-     </physvol>
-    </volume>
-    <volume name="volCRTModuleCover_17">
-     <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_b172b21e"/>
-    </volume>
-    <volume name="volCRTModule_18">
-     <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_b172b21e"/>
-     <physvol>
-      <volumeref ref="volCRTModuleCover_17"/>
-      <position name="posCRTModuleCover_17" unit="cm" x="0" y="0" z="0"/>
-     </physvol>
-     <physvol>
-      <volumeref ref="volAuxDetCRTStripArray_16"/>
-      <position name="posvolAuxDetCRTStripArray_16" unit="cm" x="0" y="0" z="0"/>
-     </physvol>
-    </volume>
     <volume name="volTPCWireVert">
       <materialref ref="Titanium"/>
       <solidref ref="TPCWireVert"/>
@@ -42977,7 +42829,6 @@
       </physvol>
     </volume>
     <!-- Begin CRT structure -->
-<!--
     <volume name="volAuxDetSensitiveCRTStrip_0">
      <materialref ref="Polystyrene"/>
      <solidref ref="CRTStrip_eeb1bb44"/>
@@ -43126,7 +42977,6 @@
       <position name="posvolAuxDetCRTStripArray_16" unit="cm" x="0" y="0" z="0"/>
      </physvol>
     </volume>
--->
     <volume name="volAuxDetSensitiveCRTStrip_19">
      <materialref ref="Polystyrene"/>
      <solidref ref="CRTStrip_eeb1bb44"/>
@@ -64661,7 +64511,6 @@
     <volume name="volTaggerUpper">
       <materialref ref="Air"/>
       <solidref ref="TaggerUpper"/>
-<!--
       <physvol>
         <volumeref ref="volTaggerTopHigh"/>
         <position name="posTaggerTop1" unit="cm" x="0" y="300/2-1-2*0.4" z="0"/>
@@ -64671,12 +64520,6 @@
         <volumeref ref="volTaggerTopLow"/>
         <position name="posTaggerTop2" unit="cm" x="0" y="-300/2+1+2*0.4" z="0"/>
         <rotation name="rotTaggerTop2" unit="deg" x="90" y="0" z="0"/>
-      </physvol>
--->
-      <physvol>
-        <volumeref ref="volCRTModule_18"/>
-        <position name="posTestModule" unit="cm" x="0" y="-300/2-3*0.4" z="0"/>
-        <rotation name="rotTestModule" unit="deg" x="90" y="0" z="0"/>
       </physvol>
     </volume>
     <volume name="volTaggerMain">
@@ -64715,12 +64558,10 @@
         <volumeref ref="volStructure"/>
         <position name="posStructure" unit="cm" x="0" y="2" z="0"/>
       </physvol>
-<!--
       <physvol>
         <volumeref ref="volTaggerMain"/>
         <position name="posTaggerMain" unit="cm" x="0" y="1" z="0"/>
       </physvol>
--->
       <physvol>
         <volumeref ref="volCryostat"/>
         <position name="posCryostat" unit="cm" x="0" y="0" z="0"/>
