@@ -39,7 +39,8 @@ sbnd_crtsim:
   QRMS: 15.0
 
   // Effective absorption length [cm]
-  AbsLenEff: 4.0
+  AbsLenEff: 8.5
 }
 
 END_PROLOG
+
