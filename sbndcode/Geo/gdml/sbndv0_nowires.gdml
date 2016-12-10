@@ -353,6 +353,7 @@
     </subtraction>
     <box lunit="cm" name="TaggerSideRight_eab2f4d8" x="900.0" y="720.0" z="3.6"/>
     <box lunit="cm" name="TaggerFaceFront_6a1133a7" x="720.0" y="720.0" z="3.6"/>
+    <box lunit="cm" name="TaggerFaceBack_6a1133a7" x="720.0" y="720.0" z="3.6"/>
     <box lunit="cm" name="CRTModule_7bc35404" x="180.0" y="180.0" z="1.8"/>
     <box lunit="cm" name="CRTStripArray_975dd36e" x="179.2" y="179.2" z="1.0"/>
     <box lunit="cm" name="CRTStrip_1a327c57" x="11.2" y="179.2" z="1.0"/>
@@ -360,7 +361,6 @@
      <first ref="CRTModule_7bc35404"/>
      <second ref="CRTStripArray_975dd36e"/>
     </subtraction>
-    <box lunit="cm" name="TaggerFaceBack_6a1133a7" x="720.0" y="720.0" z="3.6"/>
     <box lunit="cm" name="TaggerBot" x="839.0" y="956.0" z="3.6"/>
     <box lunit="cm" name="CRTModule_657903aa" x="96.0" y="272.0" z="1.8"/>
     <box lunit="cm" name="CRTStripArray_24b21b7b" x="95.2" y="271.2" z="1.0"/>
@@ -13790,71 +13790,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1444">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1445">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1446">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1447">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1448">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1449">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1450">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1451">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1452">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1453">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1454">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1455">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1456">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1457">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1458">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1459">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1460">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_975dd36e"/>
+     <solidref ref="CRTStripArray_cb5315dc"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1444"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1444" unit="cm" x="-84.0" y="0" z="0"/>
@@ -13922,11 +13922,11 @@
     </volume>
     <volume name="volCRTModuleCover_1461">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_7bc35404"/>
+     <solidref ref="CRTModuleCover_24302887"/>
     </volume>
     <volume name="volCRTModule_1462">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_7bc35404"/>
+     <solidref ref="CRTModule_24302887"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1461"/>
       <position name="posCRTModuleCover_1461" unit="cm" x="0" y="0" z="0"/>
@@ -14974,71 +14974,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1596">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1597">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1598">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1599">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1600">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1601">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1602">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1603">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1604">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1605">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1606">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1607">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1608">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1609">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1610">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1611">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1612">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_975dd36e"/>
+     <solidref ref="CRTStripArray_cb5315dc"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1596"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1596" unit="cm" x="-84.0" y="0" z="0"/>
@@ -15106,11 +15106,11 @@
     </volume>
     <volume name="volCRTModuleCover_1613">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_7bc35404"/>
+     <solidref ref="CRTModuleCover_24302887"/>
     </volume>
     <volume name="volCRTModule_1614">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_7bc35404"/>
+     <solidref ref="CRTModule_24302887"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1613"/>
       <position name="posCRTModuleCover_1613" unit="cm" x="0" y="0" z="0"/>
@@ -15122,71 +15122,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1615">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1616">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1617">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1618">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1619">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1620">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1621">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1622">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1623">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1624">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1625">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1626">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1627">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1628">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1629">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1630">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1631">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_975dd36e"/>
+     <solidref ref="CRTStripArray_cb5315dc"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1615"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1615" unit="cm" x="-84.0" y="0" z="0"/>
@@ -15254,11 +15254,11 @@
     </volume>
     <volume name="volCRTModuleCover_1632">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_7bc35404"/>
+     <solidref ref="CRTModuleCover_24302887"/>
     </volume>
     <volume name="volCRTModule_1633">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_7bc35404"/>
+     <solidref ref="CRTModule_24302887"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1632"/>
       <position name="posCRTModuleCover_1632" unit="cm" x="0" y="0" z="0"/>
@@ -15418,71 +15418,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1653">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1654">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1655">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1656">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1657">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1658">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1659">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1660">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1661">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1662">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1663">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1664">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1665">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1666">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1667">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1668">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_1a327c57"/>
+     <solidref ref="CRTStrip_84cb5faf"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1669">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_975dd36e"/>
+     <solidref ref="CRTStripArray_cb5315dc"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1653"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1653" unit="cm" x="-84.0" y="0" z="0"/>
@@ -15550,11 +15550,11 @@
     </volume>
     <volume name="volCRTModuleCover_1670">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_7bc35404"/>
+     <solidref ref="CRTModuleCover_24302887"/>
     </volume>
     <volume name="volCRTModule_1671">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_7bc35404"/>
+     <solidref ref="CRTModule_24302887"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1670"/>
       <position name="posCRTModuleCover_1670" unit="cm" x="0" y="0" z="0"/>
@@ -16161,7 +16161,7 @@
      <solidref ref="TaggerFaceFront_6a1133a7"/>
      <physvol>
       <volumeref ref="volCRTModule_1462"/>
-      <position name="posvolCRTModule_1462" unit="cm" x="-270.0" y="-90.0" z="0.9"/>
+      <position name="posvolCRTModule_1462" unit="cm" x="-270.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1481"/>
@@ -16174,6 +16174,10 @@
      <physvol>
       <volumeref ref="volCRTModule_1519"/>
       <position name="posvolCRTModule_1519" unit="cm" x="-90.0" y="180.0" z="0.9"/>
+     </physvol>
+     <physvol>
+      <volumeref ref="volCRTModule_1538"/>
+      <position name="posvolCRTModule_1538" unit="cm" x="90.0" y="-180.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1557"/>
@@ -16189,12 +16193,12 @@
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1614"/>
-      <position name="posvolCRTModule_1614" unit="cm" x="-90.0" y="-270.0" z="-0.9"/>
+      <position name="posvolCRTModule_1614" unit="cm" x="-180.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1614" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1633"/>
-      <position name="posvolCRTModule_1633" unit="cm" x="270.0" y="-270.0" z="-0.9"/>
+      <position name="posvolCRTModule_1633" unit="cm" x="180.0" y="-270.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1633" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
@@ -16204,7 +16208,7 @@
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1671"/>
-      <position name="posvolCRTModule_1671" unit="cm" x="270.0" y="-90.0" z="-0.9"/>
+      <position name="posvolCRTModule_1671" unit="cm" x="180.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1671" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
@@ -16822,71 +16826,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1824">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1825">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1826">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1827">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1828">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1829">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1830">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1831">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1832">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1833">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1834">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1835">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1836">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1837">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1838">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1839">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1840">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_cb5315dc"/>
+     <solidref ref="CRTStripArray_975dd36e"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1824"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1824" unit="cm" x="-84.0" y="0" z="0"/>
@@ -16954,11 +16958,11 @@
     </volume>
     <volume name="volCRTModuleCover_1841">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_24302887"/>
+     <solidref ref="CRTModuleCover_7bc35404"/>
     </volume>
     <volume name="volCRTModule_1842">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_24302887"/>
+     <solidref ref="CRTModule_7bc35404"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1841"/>
       <position name="posCRTModuleCover_1841" unit="cm" x="0" y="0" z="0"/>
@@ -17858,71 +17862,71 @@
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1957">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1958">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1959">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1960">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1961">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1962">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1963">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1964">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1965">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1966">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1967">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1968">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1969">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1970">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1971">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetSensitiveCRTStrip_1972">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStrip_84cb5faf"/>
+     <solidref ref="CRTStrip_1a327c57"/>
     </volume>
     <volume name="volAuxDetCRTStripArray_1973">
      <materialref ref="Polystyrene"/>
-     <solidref ref="CRTStripArray_cb5315dc"/>
+     <solidref ref="CRTStripArray_975dd36e"/>
      <physvol>
       <volumeref ref="volAuxDetSensitiveCRTStrip_1957"/>
       <position name="posvolAuxDetSensitiveCRTStrip_1957" unit="cm" x="-84.0" y="0" z="0"/>
@@ -17990,11 +17994,11 @@
     </volume>
     <volume name="volCRTModuleCover_1974">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModuleCover_24302887"/>
+     <solidref ref="CRTModuleCover_7bc35404"/>
     </volume>
     <volume name="volCRTModule_1975">
      <materialref ref="ALUMINUM_Al"/>
-     <solidref ref="CRTModule_24302887"/>
+     <solidref ref="CRTModule_7bc35404"/>
      <physvol>
       <volumeref ref="volCRTModuleCover_1974"/>
       <position name="posCRTModuleCover_1974" unit="cm" x="0" y="0" z="0"/>
@@ -18617,7 +18621,7 @@
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1842"/>
-      <position name="posvolCRTModule_1842" unit="cm" x="90.0" y="-180.0" z="0.9"/>
+      <position name="posvolCRTModule_1842" unit="cm" x="90.0" y="-270.0" z="0.9"/>
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1861"/>
@@ -18648,7 +18652,7 @@
      </physvol>
      <physvol>
       <volumeref ref="volCRTModule_1975"/>
-      <position name="posvolCRTModule_1975" unit="cm" x="180.0" y="-90.0" z="-0.9"/>
+      <position name="posvolCRTModule_1975" unit="cm" x="270.0" y="-90.0" z="-0.9"/>
       <rotation name="rotvolCRTModule_1975" unit="deg" x="0" y="0" z="90"/>
      </physvol>
      <physvol>
@@ -23860,6 +23864,14 @@
       <volumeref ref="volCRTModule_2697"/>
       <position name="posvolCRTModule_2697" unit="cm" x="263.5" y="-430.0" z="0.9"/>
       <rotation name="rotvolCRTModule_2697" unit="deg" x="0" y="0" z="90"/>
+     </physvol>
+    </volume>
+    <volume name="volWorld">
+     <materialref ref="Air"/>
+     <solidref ref="World"/>
+     <physvol>
+      <volumeref ref="volTaggerFaceFront"/>
+      <position name="posA" unit="cm" x="0" y="0" z="0"/>
      </physvol>
     </volume>
     <!-- End CRT structure -->

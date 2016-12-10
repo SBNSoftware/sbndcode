@@ -152,12 +152,11 @@ def module(x, y, z=1.0, nx=16):
     return s, v
 
 
-def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16, front=False):
+def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16, back=False):
     '''Build a tagger: a stack of two perpendicular planes.
 
-    The front face tagger has two openings to provide clearances for the pump
-    pit and the cryogenic supply line and support. These deletions are enabled
-    when front is True.
+    The back face tagger has a 1.8m x 1.8m opening to provide clearance for
+    cryogenics equipment. These deletions are enabled when back is True.
     '''
     # Tagger solid
     xx = str((x1 * nxs + 2 * PAD) * nx1)
@@ -178,17 +177,11 @@ def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16, front=False)
     for k, plane in enumerate(pd):
         px, py, pnx, pny = plane
 
-        #p1xx = str((px * nxs + 2 * PAD) * pnx)
-        #p1yy = str(py * pny)
-        #p1zz = str(z + 2 * PAD)
-
         modules = []
         for i in range(pnx):
             for j in range(pny):
-                if front and ((k == 0 and i == 0 and j == 0) or
-                              (k == 1 and i == 0 and j == 0) or
-                              (k == 1 and i == 0 and j == 1) or
-                              (k == 1 and i == 1 and j == 1)):
+                if back and ((k == 0 and i == 2 and j == 0) or
+                             (k == 1 and i == 1 and j == 1)):
                     modules.append(module(xshort, yshort, z, nxs))
                 else:
                     modules.append(module(px, py, z, nxs))
@@ -207,9 +200,6 @@ def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16, front=False)
         px, py, pnx, pny = p
         for i in range(pnx):
             for j in range(pny):
-                if front and k == 0 and i == 2 and j == 0:
-                    continue
-
                 es, ev = modules[j + i*pny]
 
                 pv = ET.SubElement(v, 'physvol')
@@ -220,10 +210,9 @@ def tagger(name, x1, y1, nx1, ny1, x2, y2, nx2, ny2, z=1.0, nxs=16, front=False)
                 dz = (z + 2 * PAD) / 2
 
                 # The short modules shift up by half a length
-                if front and ((k == 0 and i == 0 and j == 0) or
-                              (k == 1 and i == 0 and j == 0) or
-                              (k == 1 and i == 0 and j == 1) or
-                              (k == 1 and i == 1 and j == 1)):
+                if back and k == 0 and i == 2 and j == 0:
+                    dy -= py / 4
+                if back and k == 1 and i == 1 and j == 1:
                     dy += py / 4
 
                 if k == 1:
@@ -349,22 +338,22 @@ tths, tthv = tagger('TopHigh',   11.2, 450.0, 5, 2, 11.2, 450.0, 5, 2)
 ttls, ttlv = tagger('TopLow',    11.2, 450.0, 5, 2, 11.2, 450.0, 5, 2)
 tsls, tslv = tagger('SideLeft',  11.2, 360.0, 5, 2, 11.2, 450.0, 4, 2)
 tsrs, tsrv = tagger('SideRight', 11.2, 360.0, 5, 2, 11.2, 450.0, 4, 2)
-tffs, tffv = tagger('FaceFront', 11.2, 360.0, 4, 2, 11.2, 360.0, 4, 2, front=True)
-tfbs, tfbv = tagger('FaceBack',  11.2, 360.0, 4, 2, 11.2, 360.0, 4, 2)
+tffs, tffv = tagger('FaceFront', 11.2, 360.0, 4, 2, 11.2, 360.0, 4, 2)
+tfbs, tfbv = tagger('FaceBack',  11.2, 360.0, 4, 2, 11.2, 360.0, 4, 2, back=True)
 tbbs, tbbv = tagger_bot()
 
 # Generate GDML for the world volume, for testing
-#ws = ET.SubElement(solids, 'box', name='World', lunit="cm", x='10000', y='10000', z='10000')
-#w = ET.SubElement(structure, 'volume', name='volWorld')
-#ET.SubElement(w, 'materialref', ref='Air')
-#ET.SubElement(w, 'solidref', ref='World')
-#pv = ET.SubElement(w, 'physvol')
-#ET.SubElement(pv, 'volumeref', ref=tffv.attrib['name'])
-#ET.SubElement(pv, 'position', name='posA', unit="cm", x='0', y='0', z='0')
-#setup = ET.SubElement(gdml, 'setup', name='Default', version='1.0')
-#ET.SubElement(setup, 'world', ref='volWorld')
-#mats = ET.parse('mats.gdml')
-#gdml.insert(0, mats.getroot())
+ws = ET.SubElement(solids, 'box', name='World', lunit="cm", x='10000', y='10000', z='10000')
+w = ET.SubElement(structure, 'volume', name='volWorld')
+ET.SubElement(w, 'materialref', ref='Air')
+ET.SubElement(w, 'solidref', ref='World')
+pv = ET.SubElement(w, 'physvol')
+ET.SubElement(pv, 'volumeref', ref=tffv.attrib['name'])
+ET.SubElement(pv, 'position', name='posA', unit="cm", x='0', y='0', z='0')
+setup = ET.SubElement(gdml, 'setup', name='Default', version='1.0')
+ET.SubElement(setup, 'world', ref='volWorld')
+mats = ET.parse('mats.gdml')
+gdml.insert(0, mats.getroot())
 
 with open('crt.gdml', 'w') as f:
     f.write(minidom.parseString(ET.tostring(gdml)).toprettyxml(indent=' '))
