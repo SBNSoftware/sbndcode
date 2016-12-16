@@ -12,8 +12,8 @@ services:
   user:    {  
         LandedSocket: {}
         ExptGeoHelperInterface:         @local::sbnd_geometry_helper
-        Geometry:                       @local::sbnd_geo            
-        MagneticField:                  @local::no_mag  
+        Geometry:                       @local::sbnd_geo
+        MagneticField:                  @local::no_mag_larsoft
         }
 }
 
