@@ -1,6 +1,6 @@
 #
 # File:    seedservice_sbnd.fcl
-# Desc:    custom configurations of LArSeedService for sbnd
+# Desc:    custom configurations of NuRandomService for sbnd
 # Author:  Gianluca Petrillo (petrillo@fnal.gov)
 # Date:    February 13th, 2015
 # Version: 1.1
@@ -25,6 +25,6 @@ BEGIN_PROLOG
 #     timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
 # 
 
-sbnd_seedservice: @local::per_event_seedservice # from seedservice.fcl
+sbnd_seedservice: @local::per_event_NuRandomService # from seedservice.fcl
 
 END_PROLOG
