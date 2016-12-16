@@ -7,7 +7,7 @@ simple_plugin(SimWireT1053 "module"
                            lardataobj_RawData
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                            sbndcode_Utilities_SignalShapingServiceT1053_service
-                           larsim_RandomUtils_LArSeedService_service
+                           nutools_RandomUtils_NuRandomService_service
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
                            ${ART_FRAMEWORK_SERVICES_REGISTRY}
