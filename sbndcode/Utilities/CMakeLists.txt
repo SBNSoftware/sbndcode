@@ -25,8 +25,11 @@ set( sbnd_util_lib_list lardata_Utilities_LArFFT_service
 simple_plugin( SignalShapingServiceT1053  "service"
                ${sbnd_util_lib_list}
         )
+
+simple_plugin( SignalShapingServiceSBND  "service"
+               ${sbnd_util_lib_list}
+        )
              
- 
 simple_plugin( FileCatalogMetadataSBND  "service"
                ${sbnd_util_lib_list}
         )
