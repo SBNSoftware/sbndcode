@@ -45,6 +45,9 @@ sbnd_dbclusterana:                              @local::standard_dbclusterana
                                                                                       
 sbnd_fuzzycluster:                              @local::standard_fuzzycluster       
 sbnd_fuzzycluster.fuzzyClusterAlg:              @local::sbnd_fuzzyclusteralg      
+
+sbnd_linecluster:                               @local::standard_linecluster
+sbnd_linecluster.ClusterCrawlerAlg:             @local::sbnd_clustercrawleralg
                                                                                       
 sbnd_houghlinefinder:                           @local::standard_houghlinefinder    
 sbnd_houghlinefinder.HoughBaseAlg:              @local::sbnd_houghbasealg         
