@@ -1,13 +1,16 @@
 #
 # File:    standard_reco_sbnd_basic.fcl
 # Purpose: run basic reconstruction with SBND detector
-# Version: 1.2
+# Version: 1.3
 #
 # Changes:
 # 20160621 (petrillo@fnal.gov) [v1.1]
 #   updated with sbndcode services
 # 20160929 (petrillo@fnal.gov) [v1.2]
 #   replace tracker from TrackKalman3D to PMTrackMaker
+#
+# 20161223 (petrillo@fnal.gov) [v1.3]
+#   - adopted shared root output configuration
 #
 
 #
@@ -36,6 +39,7 @@
 ##include "pandoramodules.fcl"
 ##include "triggeralgo_service.fcl"
 ##include "photpropservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
 
 
 process_name: Reco
@@ -150,10 +154,8 @@ outputs:
 {
  out1:
  {
-   module_type: RootOutput
-   fileName:    "%ifb_%p-%tc.root"
+                @table::sbnd_rootoutput
    dataTier:    "reconstructed"
-   compressionLevel: 1
  }
 }
 
