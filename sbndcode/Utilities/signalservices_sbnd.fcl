@@ -76,7 +76,7 @@ sbnd_signalshapingservice:
   UseFunctionFieldShape: false
   UseSimpleFieldShape: false
   UseHistogramFieldShape: true
-  FieldResponseFname:  "sbnd_response_v1.0.root"
+  FieldResponseFname:  "Response/sbnd_response_v1.0.root"
   FieldResponseHistoName: "FieldResponse"
 
   IndUFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"

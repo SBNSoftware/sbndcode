@@ -34,6 +34,7 @@ fcldir  product_dir
 
 product          version
 larsoft          v06_18_00
+sbnd_data        v01_00_00 - optional
 sbndutil         v01_15_00 - optional
 
 # list products required ONLY for the build
@@ -42,11 +43,11 @@ only_for_build  cetbuildtools   v5_06_00
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
-qualifier        larsoft      sbndutil notes
-e10:debug         e10:debug     e10:debug   
-e10:prof          e10:prof      e10:prof    
-e10:noifdh:debug  e10:debug     -          
-e10:noifdh:prof   e10:prof      -          
+qualifier        larsoft       sbndutil    sbnd_data  notes
+e10:debug         e10:debug     e10:debug   -nq-
+e10:prof          e10:prof      e10:prof    -nq-
+e10:noifdh:debug  e10:debug     -           -nq-
+e10:noifdh:prof   e10:prof      -           -nq-
 
 # table fragment to set FW_SEARCH_PATH needed 
 # to find gdml and xml files:
