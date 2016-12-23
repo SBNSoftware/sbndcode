@@ -188,8 +188,7 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 
 physics.producers.pmalgtrackmaker.HitModuleLabel:               "linecluster"
 physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "linecluster"
-# physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # future
-physics.producers.pmalgtrackmaker.T0ModuleLabel:                ""
+physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # do not exculde any cluster
 
 
 #physics.producers.spacepointfinder.ClusterModuleLabel:          "fuzzycluster"
