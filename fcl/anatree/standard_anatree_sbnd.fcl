@@ -1,0 +1,7 @@
+#include "anatree_sbnd.fcl"
+
+physics.analyzers.analysistree.SaveHitInfo: true
+physics.analyzers.analysistree.SaveTrackInfo: true
+physics.analyzers.analysistree.SaveVertexInfo: true
+physics.analyzers.analysistree.TrackModuleLabel: ["pmalgtrackmaker"]
+physics.analyzers.analysistree.CalorimetryModuleLabel: ["pmatrackcalo"]
