@@ -22,10 +22,11 @@ sbnd_signalshapingservice:
   # To turn off Noise
 #  NoiseFactVec: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
 #
-# From 35ton, changed 2 us values to be 
+# From 35ton, changed only 2 us values to be 
 # thermal noise from microboone public note 1016, used 4m wire length collection
 # and 4*sqrt(2) for induction
-  NoiseFactVec:         [[ 1.12, 0.86, 0.6778, 0.55 ], [ 1.12, 0.86, 0.6778, 0.55 ], [ 0.89, 0.66, 0.5744, 0.43 ]]
+# scaled all shaping times by ADC gain ratio 2.8/2.2 (SBND/uB)
+  NoiseFactVec:         [[ 1.43, 1.095, 0.9668, 0.70 ], [ 1.43, 1.095, 0.9668, 0.70], [ 1.13, 0.84, 0.8158, 0.55 ]]
 #
 #
 
