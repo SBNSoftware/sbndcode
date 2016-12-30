@@ -39,7 +39,7 @@ sbndutil         v01_15_00 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-only_for_build  cetbuildtools   v5_06_00   
+only_for_build  cetbuildtools   v5_06_01  
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
