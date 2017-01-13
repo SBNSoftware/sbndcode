@@ -1,8 +1,8 @@
 #include "prodsingle_sbnd_proj.fcl"
 
-hysics.producers.generator.PDG: [13, 13, 13, 13]
+physics.producers.generator.PDG: [13, 13, 13, 13]
 physics.producers.generator.P0: [10, 10, 10, 10]
-physics.producers.generator.SigmaP: [0]
+physics.producers.generator.SigmaP: [0, 0, 0, 0]
 physics.producers.generator.PDist: 0
 physics.producers.generator.X0: [205.96, -5.96, 5.96, -205.96]
 physics.producers.generator.Y0: [211.93, -211.93, 211.93, -211.93]
