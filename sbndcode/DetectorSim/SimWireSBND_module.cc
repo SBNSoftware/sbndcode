@@ -351,7 +351,7 @@ void SimWireSBND::produce(art::Event& evt)
       if ( adcval < 0 )
         adcval = 0;
 
-      adcvec.at(i) = (unsigned short)(adcval);
+      adcvec.at(i) = (unsigned short)(adcval+0.5);
 
     }// end loop over signal size
 
