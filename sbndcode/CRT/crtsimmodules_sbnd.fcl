@@ -1,5 +1,3 @@
-BEGIN_PROLOG
-
 sbnd_crtsim:
 {
   module_type: "CRTDetSim"
@@ -41,6 +39,4 @@ sbnd_crtsim:
   // Effective absorption length [cm]
   AbsLenEff: 8.5
 }
-
-END_PROLOG
 

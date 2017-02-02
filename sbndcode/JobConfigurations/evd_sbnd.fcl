@@ -39,3 +39,7 @@ physics:
   trigger_paths: []
   end_paths: [ evd ]
 }
+
+
+services.RawDrawingOptions.MinimumSignal:              10.
+

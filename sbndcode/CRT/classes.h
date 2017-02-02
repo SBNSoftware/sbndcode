@@ -1,5 +1,6 @@
-#include "art/Persistency/Common/Wrapper.h"
+#include "canvas/Persistency/Common/Wrapper.h"
 #include "sbndcode/CRT/CRTData.hh"
+#include <vector>
 
 namespace {
   struct dictionary {

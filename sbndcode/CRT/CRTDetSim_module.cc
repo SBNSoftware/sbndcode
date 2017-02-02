@@ -14,19 +14,16 @@
 #include "art/Framework/Principal/Handle.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-#include "larsim/RandomUtils/LArSeedService.h"
+#include "nutools/RandomUtils/NuRandomService.h"
 
-#include "lardata/DetectorInfo/DetectorProperties.h"
-#include "lardata/DetectorInfo/DetectorClocks.h"
-#include "lardata/DetectorInfo/ElecClock.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfo/ElecClock.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/Geometry/AuxDetGeo.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
-#include "larsim/Simulation/AuxDetSimChannel.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
 
+#include "CLHEP/Random/RandomEngine.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGauss.h"
 #include "CLHEP/Random/RandPoisson.h"
@@ -118,10 +115,10 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
 
 
 CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p) {
-  this->reconfigure(p);
-
-  art::ServiceHandle<sim::LArSeedService> seeds;
+  art::ServiceHandle<rndm::NuRandomService> seeds;
   seeds->createEngine(*this, "HepJamesRandom", "crt", p, "Seed");
+
+  this->reconfigure(p);
 
   produces<std::vector<crt::CRTData> >();
 }
@@ -165,8 +162,9 @@ void CRTDetSim::produce(art::Event & e) {
   // Services: Geometry, DetectorClocks, RandomNumberGenerator
   art::ServiceHandle<geo::Geometry> geoService;
 
-  auto const* detClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-  detinfo::ElecClock trigClock = detClocks->TriggerClock();
+  art::ServiceHandle<detinfo::DetectorClocksService> detClocks;
+
+  detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();
 
   art::ServiceHandle<art::RandomNumberGenerator> rng;
   CLHEP::HepRandomEngine* engine = &rng->getEngine("crt");

@@ -11,17 +11,17 @@
 #                        Filters
 #                        RawData
 #                        SignalShapingServiceT1034_service
-#                        NuReweightArt
-#                        ${SIMULATIONBASE}
+#                        nutools_NuReweight_art
+#                        nusimdata_SimulationBase
 #                        ${ART_FRAMEWORK_CORE}
 #                        ${ART_FRAMEWORK_PRINCIPAL}
 #                        ${ART_FRAMEWORK_SERVICES_REGISTRY}
 #                        ${ART_FRAMEWORK_SERVICES_OPTIONAL}
 #                        ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
 #                        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-#                        ${ART_PERSISTENCY_COMMON}
-#                        ${ART_PERSISTENCY_PROVENANCE}
-#                        ${ART_UTILITIES}
+#                        art_Persistency_Common canvas_Persistency_Common
+#                        art_Persistency_Provenance canvas_Persistency_Provenance
+#                        art_Utilities canvas_Utilities
 #                        ${MF_MESSAGELOGGER}
 #                        ${MF_UTILITIES}
 #                        ${FHICLCPP}
@@ -44,19 +44,19 @@ art_make(
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
             larcore_Geometry
-            larsim_Simulation
+            larsim_Simulation nutools_ParticleNavigation lardataobj_Simulation
             lardata_Utilities
             larevt_Filters
-            lardata_RawData
-            NuReweightArt
-            ${SIMULATIONBASE}
+            lardataobj_RawData
+            nutools_NuReweight_art
+            nusimdata_SimulationBase
             ${ART_FRAMEWORK_CORE}
             ${ART_FRAMEWORK_PRINCIPAL}
             ${ART_FRAMEWORK_SERVICES_REGISTRY}
             ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-            ${ART_PERSISTENCY_COMMON}
-            ${ART_PERSISTENCY_PROVENANCE}
-            ${ART_UTILITIES}
+            art_Persistency_Common canvas_Persistency_Common
+            art_Persistency_Provenance canvas_Persistency_Provenance
+            art_Utilities canvas_Utilities
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
             ${FHICLCPP}

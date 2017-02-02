@@ -1,0 +1,32 @@
+# File:    prodsingle_sbnd_crt.fcl
+# Purpose: Produce single muon events in full SBND detector simulation with CRTs
+# Version: 1.0
+# 
+# This configuration runs event generation, simulation of propagation through
+# matter and readout simulation.
+# 
+# Input: no input file required
+# 
+# Dependencies:
+# - uses the bundle of SBND simulation services including CRT
+#
+# Changes:
+# 20170202 (mastbaum@uchicago.edu)
+#   - Initial version
+
+#include "prodsingle_sbnd.fcl"
+#include "crtsimmodules_sbnd.fcl"
+
+services.AuxDetGeometry: {
+ Name:     "sbndv0"
+ GDML:     "sbndv0.gdml"
+ ROOT:     "sbndv0.gdml"
+}
+
+services.AuxDetExptGeoHelperInterface: {
+  service_provider: "CRTGeometryHelper"
+}
+
+physics.producers.crt: @local::sbnd_crtsim
+physics.simulate: [ @sequence::physics.simulate, crt ]
+

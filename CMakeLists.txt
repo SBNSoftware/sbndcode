@@ -24,7 +24,7 @@ IF (NOT CETBUILDTOOLS_VERSION)
     MESSAGE (FATAL_ERROR "ERROR: setup cetbuildtools to get the cmake modules")
 ENDIF()
 
-set(CMAKE_MODULE_PATH $ENV{ART_DIR}/Modules
+set(CMAKE_MODULE_PATH $ENV{CANVAS_DIR}/Modules
 		      $ENV{CETBUILDTOOLS_DIR}/Modules
 		      ${CMAKE_MODULE_PATH})
 
@@ -36,7 +36,7 @@ set_install_root()
 cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
-  EXTRA_FLAGS -std=c++14 -pedantic -Wno-unused-local-typedefs
+  EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
 )
 
 cet_report_compiler_flags()
@@ -62,6 +62,8 @@ add_subdirectory(sbndcode)
 add_subdirectory(test)
 # ups - table and config files
 add_subdirectory(ups)
+# fcl - contains job level fcl files (useful for the MCC)
+add_subdirectory(fcl)
 
 # packaging utility
 include(UseCPack)

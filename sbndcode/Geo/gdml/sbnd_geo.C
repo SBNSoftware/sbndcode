@@ -3,7 +3,7 @@ typedef struct _drawopt  {
   int color;
 } drawopt;
 
-lar1_geo(TString volName="") {
+sbnd_geo(TString volName="") {
   gSystem->Load("libGeom");
   gSystem->Load("libGdml");
 

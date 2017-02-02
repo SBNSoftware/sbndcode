@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////
-/// \file  ChannelMapAPAAlg.h
+/// \file  ChannelMapsbndAlg.h
 /// \brief Interface to algorithm class for a specific detector channel mapping
 ///
 /// \version $Id:  $
 /// \author  tylerdalion@gmail.com // adapted for SBND by ariana.hackenburg@yale.edu
 ////////////////////////////////////////////////////////////////////////
-#ifndef GEO_CHANNELsbndMAPALG_H
-#define GEO_CHANNELsbndMAPALG_H
+#ifndef GEO_CHANNELMAPSBNDALG_H
+#define GEO_CHANNELMAPSBNDALG_H
 
 #include <vector>
 #include <set>
@@ -88,5 +88,5 @@ private:
 };
 
 }
-#endif // GEO_CHANNELMAPsbndALG_H
+#endif // GEO_CHANNELMAPSBNDALG_H
 

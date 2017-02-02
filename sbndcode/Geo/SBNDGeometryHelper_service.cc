@@ -13,11 +13,12 @@
 #include "larcore/Geometry/ChannelMapAlg.h"
 
 // Migration note:
-// Geometry --> sbnd/Geometry for the two below
-#include "sbndcode/Geo/ChannelMapsbndAlg.h"
+// #include "sbndcode/Geo/ChannelMapsbndAlg.h"
+#include "larcore/Geometry/ChannelMapStandardAlg.h"
 
 
-#include "TString.h"
+// framework libraries
+#include "canvas/Utilities/Exception.h"
 
 
 namespace sbnd
@@ -34,11 +35,13 @@ namespace sbnd
     fChannelMap.reset();
 
 
-    fChannelMap = std::make_shared<geo::ChannelMapsbndAlg>( sortingParameters );
-    if ( fChannelMap )
-    {
-      geom->ApplyChannelMap(fChannelMap);
+//    fChannelMap = std::make_shared<geo::ChannelMapsbndAlg>( sortingParameters );
+    fChannelMap = std::make_shared<geo::ChannelMapStandardAlg>( sortingParameters );
+    if (!fChannelMap) {
+      throw art::Exception(art::errors::NullPointerError)
+        << "Failed to create a channel map for SBND geometry!\n";
     }
+    geom->ApplyChannelMap(fChannelMap);
   }
 
 
