@@ -15,7 +15,7 @@
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_sbnd.h"
 #include "test/Geometry/GeometryIteratorTestAlg.h"
-#include "test/Geometry/boost_unit_test_base.h"
+#include "larcore/TestUtils/boost_unit_test_base.h"
 #include "larcore/Geometry/ChannelMapStandardAlg.h"
 
 //------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class SBNDGeometryIteratorTestFixture:
 
 BOOST_FIXTURE_TEST_SUITE
   (GeometryIteratorsSBND, SBNDGeometryIteratorTestFixture)
-// BOOST_GLOBAL_FIXTURE(SBNDGeometryIteratorTestFixture)
+// BOOST_GLOBAL_FIXTURE(SBNDGeometryIteratorTestFixture);
 
 
 BOOST_AUTO_TEST_CASE( AllTests )

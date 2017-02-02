@@ -15,12 +15,12 @@
 #include "larcore/Geometry/Geometry.h"
 
 // nusoft includes
-#include "SimulationBase/MCFlux.h"
-#include "SimulationBase/MCNeutrino.h"
-#include "SimulationBase/MCTruth.h"
-#include "SimulationBase/GTruth.h"
-#include "SimulationBase/MCParticle.h"
-#include "larcore/SummaryData/POTSummary.h"
+#include "nusimdata/SimulationBase/MCFlux.h"
+#include "nusimdata/SimulationBase/MCNeutrino.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
+#include "nusimdata/SimulationBase/GTruth.h"
+#include "nusimdata/SimulationBase/MCParticle.h"
+#include "larcoreobj/SummaryData/POTSummary.h"
 
 // root includes
 #include <TTree.h>

@@ -12,16 +12,15 @@ sbnd_mc_hitfinder.AreaNorms: [ 12.89, 14.51 ]
 sbnd_gaushitfinder:
 {
 module_type:	     "GausHitFinder"
-CalDataModuleLabel:  "caldata"     
-MinSig: 	      [ 6.0, 6.0, 2.0 ] # signal height threshold, per plane (U, V, Z)
-InitWidth:	      [ 6.0, 6.0, 4.0 ]  # initial width for fit, per plane
-MinWidth:	      [ 1.0, 1.0, 0.5 ]  # hit width threshold, per plane
+CalDataModuleLabel:  "caldata"      
+MinSig: 	      [ 10.0, 10.0, 10.0 ] # signal height threshold, per plane (U, V, Z)
+InitWidth:	      [ 6.0, 6.0, 7.8 ]  # initial width for fit, per plane
+MinWidth:	      [ 1.5, 1.5, 2.0 ]  # bound on fit
 MaxMultiHit:	      10	       # maximum hits for multi fit   
 AreaMethod:	      0 	       # 0 = area by integral, 1 = area by gaussian area formula
 AreaNorms:	      [ 13.25, 13.25, 26.31 ] # normalizations that put signal area in 
 					      # same scale as peak height. 
-TryNplus1Fits:        0 	       # 0 = will try to re-fit poorly modled hits with n+1 gaussians
-        			       # 1 = will NOT try to re-fit poorly modled hits
+TryNplus1Fits:        false            # whether to try to re-fit poorly modled hits with n+1 gaussians
 Chi2NDFRetry:	      25.0	       # If the first hit returns a Chi2/NDF greater than (2X) this 
 				       # number (for single pulse) it will try a second fit
 Chi2NDF:	      2000	       # maximum Chisquared / NDF allowed for a hit to be saved (Set very high by default)

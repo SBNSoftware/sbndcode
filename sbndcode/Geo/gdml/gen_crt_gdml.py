@@ -343,17 +343,17 @@ tfbs, tfbv = tagger('FaceBack',  11.2, 360.0, 4, 2, 11.2, 360.0, 4, 2, back=True
 tbbs, tbbv = tagger_bot()
 
 # Generate GDML for the world volume, for testing
-ws = ET.SubElement(solids, 'box', name='World', lunit="cm", x='10000', y='10000', z='10000')
-w = ET.SubElement(structure, 'volume', name='volWorld')
-ET.SubElement(w, 'materialref', ref='Air')
-ET.SubElement(w, 'solidref', ref='World')
-pv = ET.SubElement(w, 'physvol')
-ET.SubElement(pv, 'volumeref', ref=tffv.attrib['name'])
-ET.SubElement(pv, 'position', name='posA', unit="cm", x='0', y='0', z='0')
-setup = ET.SubElement(gdml, 'setup', name='Default', version='1.0')
-ET.SubElement(setup, 'world', ref='volWorld')
-mats = ET.parse('mats.gdml')
-gdml.insert(0, mats.getroot())
+#ws = ET.SubElement(solids, 'box', name='World', lunit="cm", x='10000', y='10000', z='10000')
+#w = ET.SubElement(structure, 'volume', name='volWorld')
+#ET.SubElement(w, 'materialref', ref='Air')
+#ET.SubElement(w, 'solidref', ref='World')
+#pv = ET.SubElement(w, 'physvol')
+#ET.SubElement(pv, 'volumeref', ref=tffv.attrib['name'])
+#ET.SubElement(pv, 'position', name='posA', unit="cm", x='0', y='0', z='0')
+#setup = ET.SubElement(gdml, 'setup', name='Default', version='1.0')
+#ET.SubElement(setup, 'world', ref='volWorld')
+#mats = ET.parse('mats.gdml')
+#gdml.insert(0, mats.getroot())
 
 with open('crt.gdml', 'w') as f:
     f.write(minidom.parseString(ET.tostring(gdml)).toprettyxml(indent=' '))

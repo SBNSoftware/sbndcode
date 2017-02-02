@@ -1,7 +1,7 @@
 #
 # File:    prodsingle_sbnd.fcl
 # Purpose: Produce single muon events including full SBND detector simulation
-# Version: 1.1
+# Version: 1.2
 # 
 # This configuration runs event generation, simulation of propagation through
 # matter and readout simulation.
@@ -19,6 +19,10 @@
 #   - added MemoryTracker module
 #   - tuned message facility configuration
 #
+# 20161223 (petrillo@fnal.gov) [v1.2]
+#   - changed the default generation parametrs (in singles_sbnd.fcl)
+#   - adopted shared root output configuration
+#
 #
 
 #
@@ -35,6 +39,7 @@
 #include "singles_sbnd.fcl"
 #include "largeantmodules_sbnd.fcl"
 #include "detsimmodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
 
 
 
@@ -94,8 +99,8 @@ outputs:
 {
   out1:
   {
-    module_type: RootOutput
-    fileName:    "prodsingle_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
+              @table::sbnd_rootoutput # inherit shared settings
+    fileName: "prodsingle_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
   }
 }
 

@@ -63,14 +63,6 @@ namespace geo {
       fADGeoToName[a] = volName;
       fNameToADGeo[volName] = a;
 
-      double origin[3] = {0,0,0};
-
-      // Debug
-      adgeo[a]->GetCenter(origin);
-      std::cout << "origin: "
-                << origin[0] << " " << origin[1] << " " << origin[2]
-                << std::endl;
-
       if (volName.find("CRTStripArray") != std::string::npos) {
         for (size_t svID=0; svID<16; svID++) {
           for (size_t ich=0; ich<2; ich++) {
