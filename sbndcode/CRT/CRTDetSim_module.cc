@@ -1,12 +1,8 @@
-///////////////////////////////////////////////////////////////////////////////
-/// Class: CRTDetSim
-/// Module Type: producer
-/// File: CRTDetSim_module.cc
+////////////////////////////////////////////////////////////////////////////////
+/// \file CRTDetSim_module.cc
 ///
-/// Based on LArIAT TOFSimDigits.cc (Author: Lucas Mendes Santos)
-///
-/// Author: mastbaum@uchicago.edu
-///////////////////////////////////////////////////////////////////////////////
+/// \author mastbaum@uchicago.edu
+////////////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -18,10 +14,11 @@
 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfo/ElecClock.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/Geometry/AuxDetGeo.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
+#include "larcore/Geometry/CryostatGeo.h"
 
 #include "CLHEP/Random/RandomEngine.h"
 #include "CLHEP/Random/RandFlat.h"
@@ -30,63 +27,16 @@
 
 #include "TFile.h"
 #include "TNtuple.h"
+#include "TGeoManager.h"
+#include "TGeoNode.h"
 #include "CRTData.hh"
+#include "CRTDetSim.h"
 
 #include <cmath>
 #include <memory>
+#include <string>
 
 namespace crt {
-
-class CRTDetSim : public art::EDProducer {
-public:
-  explicit CRTDetSim(fhicl::ParameterSet const & p);
-
-  CRTDetSim(CRTDetSim const &) = delete;
-  CRTDetSim(CRTDetSim &&) = delete;
-  CRTDetSim& operator = (CRTDetSim const &) = delete;
-  CRTDetSim& operator = (CRTDetSim &&) = delete;
-  void reconfigure(fhicl::ParameterSet const & p) override;
-
-  void produce(art::Event & e) override;
-  std::string fG4ModuleLabel;
-
-private:
-  /**
-   * Get the channel trigger time relative to the start of the MC event.
-   *
-   * @param engine The random number generator engine
-   * @param clock The clock to count ticks on
-   * @param t0 The starting time (which delay is added to)
-   * @param npe Number of observed photoelectrons
-   * @param r Distance between the energy deposit and strip readout end [mm]
-   * @return The channel trigger time [ns]
-   */
-  double getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
-                                detinfo::ElecClock& clock,
-                                float t0, float npeMean, float r);
-
-  float fTDelayNorm;  //!< Time delay fit: Gaussian normalization
-  float fTDelayShift;  //!< Time delay fit: Gaussian x shift
-  float fTDelaySigma;  //!< Time delay fit: Gaussian width
-  float fTDelayOffset;  //!< Time delay fit: Gaussian baseline offset
-  float fTDelayRMSGausNorm;  //!< Time delay RMS fit: Gaussian normalization
-  float fTDelayRMSGausShift;  //!< Time delay RMS fit: Gaussian x shift
-  float fTDelayRMSGausSigma;  //!< Time delay RMS fit: Gaussian width
-  float fTDelayRMSExpNorm;  //!< Time delay RMS fit: Exponential normalization
-  float fTDelayRMSExpShift;  //!< Time delay RMS fit: Exponential x shift
-  float fTDelayRMSExpScale;  //!< Time delay RMS fit: Exponential scale
-  float fNpeScaleNorm;  //!< Npe vs. distance: 1/r^2 scale
-  float fNpeScaleShift;  //!< Npe vs. distance: 1/r^2 x shift
-  float fQ0;  // Average energy deposited for mips, for charge scaling [GeV]
-  float fQPed;  // ADC offset for the single-peak peak mean [ADC]
-  float fQSlope;  // Slope in mean ADC / Npe [ADC]
-  float fQRMS;  // ADC single-pe spectrum width [ADC]
-  float fTResInterpolator;  // Interpolator time resolution [ns]
-  float fPropDelay;  // Delay in pulse arrival time [ns/m]
-  float fPropDelayError;  // Delay in pulse arrival time, uncertainty [ns/m]
-  float fAbsLenEff;  // Effective abs. length for transverse Npe scaling [cm]
-};
-
 
 void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fG4ModuleLabel = p.get<std::string>("G4ModuleLabel");
@@ -110,6 +60,8 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fQPed = p.get<double>("QPed");
   fQSlope = p.get<double>("QSlope");
   fQRMS = p.get<double>("QRMS");
+  fQThreshold = p.get<double>("QThreshold");
+  fStripCoincidenceWindow = p.get<double>("StripCoincidenceWindow");
   fAbsLenEff = p.get<double>("AbsLenEff");
 }
 
@@ -141,23 +93,36 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
+  std::cout << "TIMING: t0=" << t0 << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS << ", tDelay=" << tDelay << ", tDelay(interp)=";
+
   // Time resolution of the interpolator
   tDelay += CLHEP::RandGauss::shoot(engine, 0, fTResInterpolator);
+
+  std::cout << tDelay << ", tProp=";
 
   // Propagation time
   double tProp = CLHEP::RandGauss::shoot(fPropDelay, fPropDelayError) * r;
 
+  std::cout << tProp << ", t=";
+
   double t = t0 + tProp + tDelay;
 
+  std::cout << t << std::endl;
+
   // Get clock ticks
-  clock.SetTime(t);
+  clock.SetTime(t / 1e3);  // SetTime takes microseconds
   return clock.Ticks();
 }
 
 
+struct Tagger {
+  std::set<unsigned> planesHit;
+  std::vector<crt::CRTData> data;
+};
+
+
 void CRTDetSim::produce(art::Event & e) {
-  std::unique_ptr<std::vector<crt::CRTData> > crtHits(
-      new std::vector<crt::CRTData>);
+  std::map<std::string, Tagger> taggers;
 
   // Services: Geometry, DetectorClocks, RandomNumberGenerator
   art::ServiceHandle<geo::Geometry> geoService;
@@ -166,12 +131,33 @@ void CRTDetSim::produce(art::Event & e) {
 
   detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();
 
+  //std::cout << "TRIGGER CLOCK f = " << trigClock.Frequency() * 1e6 << " MHz" << std::endl;
+
   art::ServiceHandle<art::RandomNumberGenerator> rng;
   CLHEP::HepRandomEngine* engine = &rng->getEngine("crt");
 
   // Handle for (truth) AuxDetSimChannels
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
   e.getByLabel(fG4ModuleLabel, channels);
+
+  //// MC TRUTH
+  //art::Handle<std::vector<simb::MCParticle> > mcp;
+  //e.getByLabel(fG4ModuleLabel, mcp);
+
+  //std::cout << "MCParticles" << std::endl;
+  //for (auto& p : *mcp) {
+  //  std::cout << "pdg " << p.PdgCode() << std::endl;
+  //  std::cout << "x " << p.Vx() << std::endl;
+  //  std::cout << "y " << p.Vy() << std::endl;
+  //  std::cout << "z " << p.Vz() << std::endl;
+  //  std::cout << "endx " << p.EndX() << std::endl;
+  //  std::cout << "endy " << p.EndY() << std::endl;
+  //  std::cout << "endz " << p.EndZ() << std::endl;
+  //  std::cout << "px " << p.Px() << std::endl;
+  //  std::cout << "py " << p.Py() << std::endl;
+  //  std::cout << "pz " << p.Pz() << std::endl;
+  //  std::cout << std::endl;
+  //}
 
   // Loop through truth AD channels
   for (auto& adsc : *channels) {
@@ -180,6 +166,10 @@ void CRTDetSim::produce(art::Event & e) {
 
     const geo::AuxDetSensitiveGeo& adsGeo = \
         adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
+
+    if (!adsc.AuxDetIDEs().empty()) {
+      std::cout << "Channel " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << ": " << adsc.AuxDetIDEs().size() << std::endl;
+    }
 
     // Simulate the CRT response for each hit
     for (auto ide : adsc.AuxDetIDEs()) {
@@ -191,9 +181,64 @@ void CRTDetSim::produce(art::Event & e) {
       double svHitPosLocal[3];
       adsGeo.WorldToLocal(world, svHitPosLocal);
 
-      // Distance to the readout end ("outside") depends on module position
-      // FIXME: FOR NOW ASSUME ALL THE SAME DIRECTION
-      double distToReadout = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);
+      std::cout << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl;
+      std::cout << "POS " << x << " " << y << " " << z << std::endl;
+
+      // Find the path to the strip geo node, to locate it in the hierarchy
+      std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
+      std::vector<std::vector<TGeoNode const*> > paths = \
+        geoService->FindAllVolumePaths(volNames);
+
+      std::string path = "";
+      for (size_t inode=0; inode<paths.at(0).size(); inode++) {
+        path += paths.at(0).at(inode)->GetName();
+        if (inode < paths.at(0).size() - 1) {
+          path += "/";
+        }
+      }
+
+      std::cout << "PATH: " << path << std::endl;
+      TGeoManager* manager = geoService->ROOTGeoManager();
+      manager->cd(path.c_str());
+
+      TGeoNode* nodeStrip = manager->GetCurrentNode();
+      std::cout << "level 0 (strip): " << nodeStrip->GetName() << std::endl;
+
+      TGeoNode* nodeArray = manager->GetMother(1);
+      std::cout << "level 1 (array): " << nodeArray->GetName() << std::endl;
+      TGeoNode* nodeModule = manager->GetMother(2);
+      std::cout << "level 2 (module): " << nodeModule->GetName() << std::endl;
+      TGeoNode* nodeTagger = manager->GetMother(3);
+      std::cout << "level 3 (tagger): " << nodeTagger->GetName() << std::endl;
+
+      // Module position in parent (tagger) frame
+      double origin[3] = {0, 0, 0};
+      double modulePosMother[3];
+      nodeModule->LocalToMaster(origin, modulePosMother);
+      std::cout << "module pos " << modulePosMother[0] << " "
+                                 << modulePosMother[1] << " "
+                                 << modulePosMother[2] << " "
+                                 << std::endl;
+
+      // Determine plane ID (0 for z>0, 1 for z<0 in local coordinates)
+      unsigned planeID = (modulePosMother[2] > 0);
+      std::cout << "planeID = " << planeID << std::endl;
+
+      // Determine module orientation: which way is the top (readout end)?
+      bool top;
+      if (planeID == 0) {
+        top = (modulePosMother[1] > 0);
+      }
+      else {
+        top = (modulePosMother[0] < 0);
+      }
+
+      // Finally, what is the distance from the hit to the readout end?
+      // FIXME
+      double distToReadout;
+      if (top || true) {
+        distToReadout = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);
+      }
 
       // The expected number of PE
       double qr = ide.energyDeposited / fQ0;  // Scale linearly with charge
@@ -219,15 +264,15 @@ void CRTDetSim::produce(art::Event & e) {
       uint32_t t1 = \
         getChannelTriggerTicks(engine, trigClock, tTrue, npe1, distToReadout);
 
-      // Time relative to PPS: Random for now
+      // Time relative to PPS: Random for now! (FIXME)
       uint32_t ppsTicks = \
         CLHEP::RandFlat::shootInt(engine, trigClock.Frequency() * 1e6);
 
       // SiPM and ADC response: Npe to ADC counts
       short q0 = \
-        CLHEP::RandGauss::shoot(engine, fQPed + fQSlope * npe0, fQRMS * npe0);
+        CLHEP::RandGauss::shoot(engine, fQPed + fQSlope * npe0, fQRMS * sqrt(npe0));
       short q1 = \
-        CLHEP::RandGauss::shoot(engine, fQPed + fQSlope * npe1, fQRMS * npe1);
+        CLHEP::RandGauss::shoot(engine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
 
       // Adjacent channels on a strip are numbered sequentially
       uint32_t moduleID = adsc.AuxDetID();
@@ -235,13 +280,40 @@ void CRTDetSim::produce(art::Event & e) {
       uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
       uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
 
-      // Write AuxDetDigit for each channel
-      crtHits->push_back(::crt::CRTData(channel0ID, t0, ppsTicks, q0));
-      crtHits->push_back(::crt::CRTData(channel1ID, t1, ppsTicks, q1));
+      // Apply ADC threshold and strip-level coincidence
+      std::cout << "q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
+      if (q0 > fQThreshold && q1 > fQThreshold && abs(t0 - t1) < fStripCoincidenceWindow) {
+        Tagger& tagger = taggers[nodeTagger->GetName()];
+        tagger.planesHit.insert(planeID);
+        tagger.data.push_back(crt::CRTData(channel0ID, t0, ppsTicks, q0));
+        tagger.data.push_back(crt::CRTData(channel1ID, t1, ppsTicks, q1));
+      }
     }
   }
 
-  e.put(std::move(crtHits));
+  // Apply coincidence trigger requirement
+  std::unique_ptr<std::vector<crt::CRTData> > triggeredCRTHits(
+      new std::vector<crt::CRTData>);
+
+  // TRIGGER ME TIMBERS
+
+  std::cout << "COINCIDENCE" << std::endl;
+  for (auto trg : taggers) {
+    std::cout << trg.first << ": total " << trg.second.planesHit.size() << std::endl;
+    for (auto pl : trg.second.planesHit) {
+      std::cout << " " << pl;
+    }
+    std::cout << std::endl;
+
+    if (trg.first.find("TaggerBot") != std::string::npos || trg.second.planesHit.size() > 1) {
+      for (auto d : trg.second.data) {
+        triggeredCRTHits->push_back(d);
+      }
+    }
+  }
+
+  std::cout << "ndatas: " << triggeredCRTHits->size() << std::endl;
+  e.put(std::move(triggeredCRTHits));
 }
 
 DEFINE_ART_MODULE(CRTDetSim)
