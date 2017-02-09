@@ -5474,7 +5474,7 @@
   <union name="TaggerMainA">
     <first ref="TaggerMain0"/>
     <second ref="TaggerBot"/>
-    <position name="posTaggerBotA" unit="cm" x="0.0" y="-357.15" z="0.0"/>
+    <position name="posTaggerBotA" unit="cm" x="0.0" y="-367.15" z="0.0"/>
     <rotation name="rotTaggerBotA" unit="deg" x="90" y="0" z="0"/>
   </union>
   <subtraction name="TaggerMain">
@@ -69147,12 +69147,12 @@
    <solidref ref="TaggerUpper"/>
    <physvol>
      <volumeref ref="volTaggerTopHigh"/>
-     <position name="posTaggerTop1" unit="cm" x="0" y="148.2" z="0"/>
+     <position name="posTaggerTop1" unit="cm" x="0" y="151.8" z="0"/>
      <rotation name="rotTaggerTop1" unit="deg" x="90" y="0" z="0"/>
    </physvol>
    <physvol>
      <volumeref ref="volTaggerTopLow"/>
-     <position name="posTaggerTop2" unit="cm" x="0" y="-148.2" z="0"/>
+     <position name="posTaggerTop2" unit="cm" x="0" y="-151.8" z="0"/>
      <rotation name="rotTaggerTop2" unit="deg" x="90" y="0" z="0"/>
    </physvol>
  </volume>
@@ -69161,27 +69161,27 @@
    <solidref ref="TaggerMain"/>
    <physvol>
      <volumeref ref="volTaggerFaceFront"/>
-     <position name="posTaggerFront" unit="cm" x="0" y="0" z="-437.35"/>
+     <position name="posTaggerFront" unit="cm" x="0" y="0" z="-452.35"/>
      <rotation name="rotTaggerFront" unit="deg" x="0" y="0" z="0"/>
    </physvol>
    <physvol>
      <volumeref ref="volTaggerFaceBack"/>
-     <position name="posTaggerBack" unit="cm" x="0" y="0" z="437.35"/>
+     <position name="posTaggerBack" unit="cm" x="0" y="0" z="452.35"/>
      <rotation name="rotTaggerBack" unit="deg" x="0" y="0" z="0"/>
    </physvol>
    <physvol>
      <volumeref ref="volTaggerSideRight"/>
-     <position name="posTaggerLeft" unit="cm" x="346.1" y="0" z="0"/>
+     <position name="posTaggerLeft" unit="cm" x="357.0" y="0" z="0"/>
      <rotation name="rotTaggerLeft" unit="deg" x="0" y="90" z="0"/>
    </physvol>
    <physvol>
      <volumeref ref="volTaggerSideLeft"/>
-     <position name="posTaggerRight" unit="cm" x="-346.1" y="0" z="0"/>
+     <position name="posTaggerRight" unit="cm" x="-357.0" y="0" z="0"/>
      <rotation name="rotTaggerRight" unit="deg" x="0" y="90" z="0"/>
    </physvol>
    <physvol>
      <volumeref ref="volTaggerBot"/>
-     <position name="posTaggerBot" unit="cm" x="0" y="-357.15" z="0"/>
+     <position name="posTaggerBot" unit="cm" x="0" y="-367.15" z="0"/>
      <rotation name="rotTaggerBot" unit="deg" x="90" y="0" z="0"/>
    </physvol>
  </volume>

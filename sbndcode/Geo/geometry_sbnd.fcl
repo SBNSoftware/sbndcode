@@ -62,7 +62,7 @@ sbnd_geometry_helper:
 
 sbnd_auxdetgeo:
 {
- Name:            "sbnd"
+ Name:            "sbndv0"
  GDML:            "sbndv0.gdml"
  ROOT:            "sbndv0.gdml"
  SortingParameters: {}                   # empty parameter set for default

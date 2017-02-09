@@ -35,8 +35,12 @@ sbnd_crtsim:
   QPed: 63.6
   QSlope: 131.9
   QRMS: 15.0
+  QThreshold: 100.0
 
-  // Effective absorption length [cm]
+  // Coincidence window for two fibers on a strip [ns]
+  StripCoincidenceWindow: 30.0
+
+  // Effective absorption length (for transverse response) [cm]
   AbsLenEff: 8.5
 }
 
