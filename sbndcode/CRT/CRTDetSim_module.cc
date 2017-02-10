@@ -93,21 +93,25 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
-  std::cout << "TIMING: t0=" << t0 << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS << ", tDelay=" << tDelay << ", tDelay(interp)=";
+  /////////////////////////////////////////////////////////////////////////////
+  // Debugging output
+  std::cout << "CRT TIMING: t0=" << t0
+            << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
+            << ", tDelay=" << tDelay << ", tDelay(interp)=";
+  /////////////////////////////////////////////////////////////////////////////
 
   // Time resolution of the interpolator
   tDelay += CLHEP::RandGauss::shoot(engine, 0, fTResInterpolator);
 
-  std::cout << tDelay << ", tProp=";
-
   // Propagation time
   double tProp = CLHEP::RandGauss::shoot(fPropDelay, fPropDelayError) * r;
 
-  std::cout << tProp << ", t=";
-
   double t = t0 + tProp + tDelay;
 
-  std::cout << t << std::endl;
+  /////////////////////////////////////////////////////////////////////////////
+  // Debugging output
+  std::cout << tDelay << ", tProp=" << tProp << ", t=" << t << std::endl;
+  /////////////////////////////////////////////////////////////////////////////
 
   // Get clock ticks
   clock.SetTime(t / 1e3);  // SetTime takes microseconds
@@ -127,10 +131,6 @@ void CRTDetSim::produce(art::Event & e) {
 
   // Services: Geometry, DetectorClocks, RandomNumberGenerator
   art::ServiceHandle<geo::Geometry> geoService;
-
-  art::ServiceHandle<geo::AuxDetGeometry> adGeoService;
-  const geo::AuxDetGeometry* adG = &(*adGeoService);
-  const geo::AuxDetGeometryCore* adGeoCore = adG->GetProviderPtr();
 
   art::ServiceHandle<detinfo::DetectorClocksService> detClocks;
   detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();
@@ -152,22 +152,6 @@ void CRTDetSim::produce(art::Event & e) {
 
     // Simulate the CRT response for each hit
     for (auto ide : adsc.AuxDetIDEs()) {
-      // Get the hit position in strip's local coordinates
-      double x = (ide.entryX + ide.exitX) / 2;
-      double y = (ide.entryY + ide.exitY) / 2;
-      double z = (ide.entryZ + ide.exitZ) / 2;
-      double world[3] = {x, y, z};
-      double svHitPosLocal[3];
-      adsGeo.WorldToLocal(world, svHitPosLocal);
-
-      std::cout << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl;
-      std::cout << "POS " << x << " " << y << " " << z << std::endl;
-
-
-      size_t adID, svID;
-      const uint32_t chID = adGeoCore->PositionToAuxDetChannel(world, adID, svID);
-      std::cout << "AD CHANNEL: " << chID << " AD: " << adID << " SV: " << svID << std::endl;
-
       // Find the path to the strip geo node, to locate it in the hierarchy
       std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
       std::vector<std::vector<TGeoNode const*> > paths = \
@@ -181,40 +165,34 @@ void CRTDetSim::produce(art::Event & e) {
         }
       }
 
-      std::cout << "PATH: " << path << std::endl;
       TGeoManager* manager = geoService->ROOTGeoManager();
       manager->cd(path.c_str());
 
       TGeoNode* nodeStrip = manager->GetCurrentNode();
-      std::cout << "level 0 (strip): " << nodeStrip->GetName() << std::endl;
       TGeoNode* nodeArray = manager->GetMother(1);
-      std::cout << "level 1 (array): " << nodeArray->GetName() << std::endl;
       TGeoNode* nodeModule = manager->GetMother(2);
-      std::cout << "level 2 (module): " << nodeModule->GetName() << std::endl;
       TGeoNode* nodeTagger = manager->GetMother(3);
-      std::cout << "level 3 (tagger): " << nodeTagger->GetName() << std::endl;
 
       // Module position in parent (tagger) frame
       double origin[3] = {0, 0, 0};
       double modulePosMother[3];
       nodeModule->LocalToMaster(origin, modulePosMother);
-      std::cout << "module pos " << modulePosMother[0] << " "
-                                 << modulePosMother[1] << " "
-                                 << modulePosMother[2] << " "
-                                 << std::endl;
 
-      double poss[3];
-      adsGeo.LocalToWorld(origin, poss);
-      std::cout << "STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl;
-
-      // Determine plane ID (0 for z > 0, 1 for z < 0 in local coordinates)
+      // Determine plane ID (1 for z > 0, 0 for z < 0 in local coordinates)
       unsigned planeID = (modulePosMother[2] > 0);
-      std::cout << "planeID = " << planeID << std::endl;
 
       // Determine module orientation: which way is the top (readout end)?
-      bool top = (planeID == 0) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+      bool top = (planeID == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
 
-      // Finally, what is the distance from the hit to the readout end?
+      // Finally, what is the distance from the hit (centroid of the entry
+      // and exit points) to the readout end?
+      double x = (ide.entryX + ide.exitX) / 2;
+      double y = (ide.entryY + ide.exitY) / 2;
+      double z = (ide.entryZ + ide.exitZ) / 2;
+      double world[3] = {x, y, z};
+      double svHitPosLocal[3];
+      adsGeo.WorldToLocal(world, svHitPosLocal);
+
       double distToReadout;
       if (top) {
         distToReadout = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);
@@ -223,12 +201,14 @@ void CRTDetSim::produce(art::Event & e) {
         distToReadout = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);
       }
 
-      // The expected number of PE
+      // The expected number of PE, using a quadratic model for the distance
+      // dependence
       double qr = ide.energyDeposited / fQ0;  // Scale linearly with charge
       double npeExpected = \
         fNpeScaleNorm / pow(distToReadout - fNpeScaleShift, 2) * qr;
 
-      // Put PE on channels weighted by distance
+      // Put PE on channels weighted by transverse distance across the strip,
+      // using an exponential model
       double d0 = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]);  // L
       double d1 = abs( adsGeo.HalfWidth1() - svHitPosLocal[0]);  // R
       double abs0 = exp(-d0 / fAbsLenEff);
@@ -236,11 +216,12 @@ void CRTDetSim::produce(art::Event & e) {
       double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
       double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
 
-      // Observed PE
+      // Observed PE (Poisson-fluctuated)
       long npe0 = CLHEP::RandPoisson::shoot(engine, npeExp0);
       long npe1 = CLHEP::RandPoisson::shoot(engine, npeExp1);
 
-      // Time relative to trigger
+      // Time relative to trigger, accounting for propagation delay and 'walk'
+      // for the fixed-threshold discriminator
       double tTrue = (ide.entryT + ide.exitT) / 2;
       uint32_t t0 = \
         getChannelTriggerTicks(engine, trigClock, tTrue, npe0, distToReadout);
@@ -257,49 +238,66 @@ void CRTDetSim::produce(art::Event & e) {
       short q1 = \
         CLHEP::RandGauss::shoot(engine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
 
-      // Adjacent channels on a strip are numbered sequentially
-      uint32_t moduleID = adsc.AuxDetID();
+      // Adjacent channels on a strip are numbered sequentially. Channels are
+      // identified by an AuxDet name (retrievable given the hit AuxDet ID)
+      // which specifies a module, and a channel number from 0 to 32.
       uint32_t stripID = adsc.AuxDetSensitiveID();
-      uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
-      uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
+      uint32_t channel0ID = 2 * stripID + 0;
+      uint32_t channel1ID = 2 * stripID + 1;
 
-      std::string name = geoService->AuxDet(moduleID).TotalVolume()->GetName();
-      TVector3 pos = adGeoCore->AuxDetChannelToPosition(2*stripID, name);
-      std::cout << "AD POS: " << pos.x() << " " << pos.y() << " " << pos.z() << std::endl;
-
-      // Apply ADC threshold and strip-level coincidence
-      std::cout << "q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
-      if (q0 > fQThreshold && q1 > fQThreshold && abs(t0 - t1) < fStripCoincidenceWindow) {
+      // Apply ADC threshold and strip-level coincidence (both fibers fire)
+      if (q0 > fQThreshold &&
+          q1 > fQThreshold &&
+          abs(t0 - t1) < fStripCoincidenceWindow) {
         Tagger& tagger = taggers[nodeTagger->GetName()];
         tagger.planesHit.insert(planeID);
         tagger.data.push_back(crt::CRTData(channel0ID, t0, ppsTicks, q0));
         tagger.data.push_back(crt::CRTData(channel1ID, t1, ppsTicks, q1));
       }
+
+      /////////////////////////////////////////////////////////////////////////
+      // Debugging output
+      double poss[3];
+      adsGeo.LocalToWorld(origin, poss);
+      std::cout << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl;
+      std::cout << "CRT HIT POS " << x << " " << y << " " << z << std::endl;
+      std::cout << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl;
+      std::cout << "CRT MODULE POS" << modulePosMother[0] << " "
+                                    << modulePosMother[1] << " "
+                                    << modulePosMother[2] << " "
+                                    << std::endl;
+      std::cout << "CRT PATH: " << path << std::endl;
+      std::cout << "CRT level 0 (strip): " << nodeStrip->GetName() << std::endl;
+      std::cout << "CRT level 1 (array): " << nodeArray->GetName() << std::endl;
+      std::cout << "CRT level 2 (module): " << nodeModule->GetName() << std::endl;
+      std::cout << "CRT level 3 (tagger): " << nodeTagger->GetName() << std::endl;
+      std::cout << "CRT PLANE ID: " << planeID << std::endl;
+      std::cout << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << std::endl;
+      std::cout << "CRT q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
+      /////////////////////////////////////////////////////////////////////////
     }
   }
 
   // Apply coincidence trigger requirement
-  //
-  // Logic: For normal taggers, require at least one hit in each perpendicular
-  // plane. For the bottom tagger, all hits are read out.
   std::unique_ptr<std::vector<crt::CRTData> > triggeredCRTHits(
       new std::vector<crt::CRTData>);
 
+  // Logic: For normal taggers, require at least one hit in each perpendicular
+  // plane. For the bottom tagger, any hit triggers read out.
   for (auto trg : taggers) {
-    std::cout << trg.first << ": total " << trg.second.planesHit.size() << std::endl;
-    for (auto pl : trg.second.planesHit) {
-      std::cout << " " << pl;
-    }
-    std::cout << std::endl;
-
-    if (trg.first.find("TaggerBot") != std::string::npos || trg.second.planesHit.size() > 1) {
+    if (trg.first.find("TaggerBot") != std::string::npos ||
+        trg.second.planesHit.size() > 1) {
       for (auto d : trg.second.data) {
         triggeredCRTHits->push_back(d);
       }
     }
   }
 
-  std::cout << "ndatas: " << triggeredCRTHits->size() << std::endl;
+  /////////////////////////////////////////////////////////////////////////////
+  // Debugging output
+  std::cout << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << std::endl;
+  /////////////////////////////////////////////////////////////////////////////
+
   e.put(std::move(triggeredCRTHits));
 }
 
