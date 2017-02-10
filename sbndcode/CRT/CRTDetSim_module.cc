@@ -238,12 +238,15 @@ void CRTDetSim::produce(art::Event & e) {
       short q1 = \
         CLHEP::RandGauss::shoot(engine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
 
-      // Adjacent channels on a strip are numbered sequentially. Channels are
-      // identified by an AuxDet name (retrievable given the hit AuxDet ID)
-      // which specifies a module, and a channel number from 0 to 32.
+      // Adjacent channels on a strip are numbered sequentially.
+      //
+      // In the AuxDetChannelMapAlg methods, channels are identified by an
+      // AuxDet name (retrievable given the hit AuxDet ID) which specifies a
+      // module, and a channel number from 0 to 32.
+      uint32_t moduleID = adsc.AuxDetSensitiveID();
       uint32_t stripID = adsc.AuxDetSensitiveID();
-      uint32_t channel0ID = 2 * stripID + 0;
-      uint32_t channel1ID = 2 * stripID + 1;
+      uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
+      uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
 
       // Apply ADC threshold and strip-level coincidence (both fibers fire)
       if (q0 > fQThreshold &&
