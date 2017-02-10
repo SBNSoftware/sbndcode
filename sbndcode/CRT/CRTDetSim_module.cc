@@ -122,16 +122,18 @@ struct Tagger {
 
 
 void CRTDetSim::produce(art::Event & e) {
+  // A list of hit taggers, before any coincidence requirement
   std::map<std::string, Tagger> taggers;
 
   // Services: Geometry, DetectorClocks, RandomNumberGenerator
   art::ServiceHandle<geo::Geometry> geoService;
 
+  art::ServiceHandle<geo::AuxDetGeometry> adGeoService;
+  const geo::AuxDetGeometry* adG = &(*adGeoService);
+  const geo::AuxDetGeometryCore* adGeoCore = adG->GetProviderPtr();
+
   art::ServiceHandle<detinfo::DetectorClocksService> detClocks;
-
   detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();
-
-  //std::cout << "TRIGGER CLOCK f = " << trigClock.Frequency() * 1e6 << " MHz" << std::endl;
 
   art::ServiceHandle<art::RandomNumberGenerator> rng;
   CLHEP::HepRandomEngine* engine = &rng->getEngine("crt");
@@ -140,25 +142,6 @@ void CRTDetSim::produce(art::Event & e) {
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
   e.getByLabel(fG4ModuleLabel, channels);
 
-  //// MC TRUTH
-  //art::Handle<std::vector<simb::MCParticle> > mcp;
-  //e.getByLabel(fG4ModuleLabel, mcp);
-
-  //std::cout << "MCParticles" << std::endl;
-  //for (auto& p : *mcp) {
-  //  std::cout << "pdg " << p.PdgCode() << std::endl;
-  //  std::cout << "x " << p.Vx() << std::endl;
-  //  std::cout << "y " << p.Vy() << std::endl;
-  //  std::cout << "z " << p.Vz() << std::endl;
-  //  std::cout << "endx " << p.EndX() << std::endl;
-  //  std::cout << "endy " << p.EndY() << std::endl;
-  //  std::cout << "endz " << p.EndZ() << std::endl;
-  //  std::cout << "px " << p.Px() << std::endl;
-  //  std::cout << "py " << p.Py() << std::endl;
-  //  std::cout << "pz " << p.Pz() << std::endl;
-  //  std::cout << std::endl;
-  //}
-
   // Loop through truth AD channels
   for (auto& adsc : *channels) {
     const geo::AuxDetGeo& adGeo = \
@@ -166,10 +149,6 @@ void CRTDetSim::produce(art::Event & e) {
 
     const geo::AuxDetSensitiveGeo& adsGeo = \
         adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
-
-    if (!adsc.AuxDetIDEs().empty()) {
-      std::cout << "Channel " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << ": " << adsc.AuxDetIDEs().size() << std::endl;
-    }
 
     // Simulate the CRT response for each hit
     for (auto ide : adsc.AuxDetIDEs()) {
@@ -183,6 +162,11 @@ void CRTDetSim::produce(art::Event & e) {
 
       std::cout << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl;
       std::cout << "POS " << x << " " << y << " " << z << std::endl;
+
+
+      size_t adID, svID;
+      const uint32_t chID = adGeoCore->PositionToAuxDetChannel(world, adID, svID);
+      std::cout << "AD CHANNEL: " << chID << " AD: " << adID << " SV: " << svID << std::endl;
 
       // Find the path to the strip geo node, to locate it in the hierarchy
       std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
@@ -203,7 +187,6 @@ void CRTDetSim::produce(art::Event & e) {
 
       TGeoNode* nodeStrip = manager->GetCurrentNode();
       std::cout << "level 0 (strip): " << nodeStrip->GetName() << std::endl;
-
       TGeoNode* nodeArray = manager->GetMother(1);
       std::cout << "level 1 (array): " << nodeArray->GetName() << std::endl;
       TGeoNode* nodeModule = manager->GetMother(2);
@@ -220,23 +203,23 @@ void CRTDetSim::produce(art::Event & e) {
                                  << modulePosMother[2] << " "
                                  << std::endl;
 
-      // Determine plane ID (0 for z>0, 1 for z<0 in local coordinates)
+      double poss[3];
+      adsGeo.LocalToWorld(origin, poss);
+      std::cout << "STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl;
+
+      // Determine plane ID (0 for z > 0, 1 for z < 0 in local coordinates)
       unsigned planeID = (modulePosMother[2] > 0);
       std::cout << "planeID = " << planeID << std::endl;
 
       // Determine module orientation: which way is the top (readout end)?
-      bool top;
-      if (planeID == 0) {
-        top = (modulePosMother[1] > 0);
-      }
-      else {
-        top = (modulePosMother[0] < 0);
-      }
+      bool top = (planeID == 0) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
 
       // Finally, what is the distance from the hit to the readout end?
-      // FIXME
       double distToReadout;
-      if (top || true) {
+      if (top) {
+        distToReadout = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);
+      }
+      else {
         distToReadout = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);
       }
 
@@ -280,6 +263,10 @@ void CRTDetSim::produce(art::Event & e) {
       uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
       uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
 
+      std::string name = geoService->AuxDet(moduleID).TotalVolume()->GetName();
+      TVector3 pos = adGeoCore->AuxDetChannelToPosition(2*stripID, name);
+      std::cout << "AD POS: " << pos.x() << " " << pos.y() << " " << pos.z() << std::endl;
+
       // Apply ADC threshold and strip-level coincidence
       std::cout << "q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
       if (q0 > fQThreshold && q1 > fQThreshold && abs(t0 - t1) < fStripCoincidenceWindow) {
@@ -292,12 +279,12 @@ void CRTDetSim::produce(art::Event & e) {
   }
 
   // Apply coincidence trigger requirement
+  //
+  // Logic: For normal taggers, require at least one hit in each perpendicular
+  // plane. For the bottom tagger, all hits are read out.
   std::unique_ptr<std::vector<crt::CRTData> > triggeredCRTHits(
       new std::vector<crt::CRTData>);
 
-  // TRIGGER ME TIMBERS
-
-  std::cout << "COINCIDENCE" << std::endl;
   for (auto trg : taggers) {
     std::cout << trg.first << ": total " << trg.second.planesHit.size() << std::endl;
     for (auto pl : trg.second.planesHit) {
