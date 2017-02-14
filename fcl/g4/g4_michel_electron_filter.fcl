@@ -6,6 +6,9 @@ physics.simulate: [ rns, largeant, filter, mcreco ]
 
 
 physics.filters.filter: @local::sbnd_larg4particlefilter
-physics.filters.filter.InterestingPDGs: [ 13 ] 
-physics.filters.filter.StopInTPC: true
+physics.filters.filter.InterestingPDGs: [ 13 , 11 ] 
+physics.filters.filter.ParticleMinMomentum: [ -1, 0 ]
+physics.filters.filter.ParticleMaxMomentum: [ -1 , 0.053 ]
+physics.filters.filter.StopInTPC: [ 1, 1 ]
+physics.filters.filter.ParticleMinTPCLength: [ -1, -1 ]
 outputs.out1.SelectEvents: [ "simulate" ]
