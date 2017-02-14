@@ -1,5 +1,6 @@
 #include "prodgenie_sbnd.fcl"
 
 physics.producers.generator.FluxCopyMethod: "DIRECT"
-physics.producers.generator.FluxSearchPaths: "/pnfs/sbnd/persistent"
+physics.producers.generator.FluxSearchPaths: "/pnfs/sbnd/persistent/flux"
+physics.producers.generator.FluxFiles: [ "gsimple_microboone-100-onaxis_numintp_*.root" ]
 physics.producers.generator.TopVolume: "volCryostat"
