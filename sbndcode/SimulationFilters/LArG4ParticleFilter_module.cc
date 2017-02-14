@@ -31,8 +31,8 @@ namespace filt{
 
 
       std::vector<int> fInterestingPDGs;
-      double fParticleMinEnergy;
-      double fParticleMaxEnergy;
+      double fParticleMinMomentum;
+      double fParticleMaxMomentum;
       bool fStopInTPC;
       double fParticleMinTPCLength;
 
@@ -49,10 +49,10 @@ namespace filt{
     for (unsigned int i = 0; i < fInterestingPDGs.size(); i++){
       std::cout<<"-- PDG: " << fInterestingPDGs[i] << std::endl; 
     }
-    fParticleMinEnergy = pset.get<double>("ParticleMinEnergy",-1.);
-    std::cout<<"Min particle energy: " << fParticleMinEnergy << std::endl;
-    fParticleMaxEnergy = pset.get<double>("ParticleMaxEnergy",-1.);
-    std::cout<<"Max particle energy: " << fParticleMaxEnergy << std::endl;
+    fParticleMinMomentum = pset.get<double>("ParticleMinMomentum",-1.);
+    std::cout<<"Min particle momentum: " << fParticleMinMomentum << std::endl;
+    fParticleMaxMomentum = pset.get<double>("ParticleMaxMomentum",-1.);
+    std::cout<<"Max particle momentum: " << fParticleMaxMomentum << std::endl;
     fStopInTPC = pset.get<bool>("StopInTPC",false);
     std::cout<<"Stop in TPC: " << fStopInTPC << std::endl;
     fParticleMinTPCLength = pset.get<double>("ParticleMinTPCLength",-1.);
@@ -147,11 +147,11 @@ namespace filt{
       if (!OK) return false;
     }
 
-    //Check the minimum particle energy
-    if (fParticleMinEnergy > 0 && particle->Momentum(0).T() < fParticleMinEnergy) return false;
+    //Check the minimum particle momentum
+    if (fParticleMinMomentum > 0 && particle->Momentum(0).Vect().Mag() < fParticleMinMomentum) return false;
 
-    //Check the max energy
-    if (fParticleMaxEnergy > 0 && particle->Momentum(0).T() > fParticleMaxEnergy) return false;
+    //Check the max momentum
+    if (fParticleMaxMomentum > 0 && particle->Momentum(0).Vect().Mag() > fParticleMaxMomentum) return false;
 
     //Check if the particle stops in the TPC
     OK = false;
