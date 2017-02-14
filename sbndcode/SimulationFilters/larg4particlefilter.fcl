@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+sbnd_larg4particlefilter:
+{
+   module_type:              "LArG4ParticleFilter"
+   InterestingPDGs:          [ 13, -13 ]
+   ParticleMinEnergy:        -1.
+   ParticleMaxEnergy:        99999.
+   StopInTPC:                false
+   ParticleMinTPCLength:     -1.
+}
+
+END_PROLOG

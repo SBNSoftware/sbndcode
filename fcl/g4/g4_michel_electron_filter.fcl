@@ -1,0 +1,10 @@
+#include "larg4particlefilter.fcl"
+#include "standard_g4_sbnd.fcl"
+
+physics.filters.filter: @local::sbnd_larg4particlefilter
+
+simulate: [ rns, largeant, filter, mcreco ]
+
+physics.filters.filter.InterestingPDGs: [ 13 ] 
+physics.filters.filter.StopInTPC: true
+outputs.out1.SelectEvents: {SelectEvents:[simulate]}
