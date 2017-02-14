@@ -40,7 +40,9 @@ namespace filt{
       std::vector<int> fInterestingPDGs;
       std::vector<double> fParticleMinMomentum;
       std::vector<double> fParticleMaxMomentum;
+      std::vector<int> fStartInTPC;
       std::vector<int> fStopInTPC;
+
       std::vector<double> fParticleMinTPCLength;
       std::vector<bool> fFoundInterestingParticles;
 
