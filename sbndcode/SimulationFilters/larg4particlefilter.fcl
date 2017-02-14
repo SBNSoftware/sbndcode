@@ -4,10 +4,10 @@ sbnd_larg4particlefilter:
 {
    module_type:              "LArG4ParticleFilter"
    InterestingPDGs:          [ 13, -13 ]
-   ParticleMinMomentum:        -1.
-   ParticleMaxMomentum:        -1.
-   StopInTPC:                false
-   ParticleMinTPCLength:     -1.
+   ParticleMinMomentum:      [ -1., 50 ] # Units are GeV. Negative value means ingore check
+   ParticleMaxMomentum:      [ -1., -1 ] # Units are GeV. Negative value means ingore check
+   StopInTPC:                [ 0, 1 ]  # 0: don't care if it stops in TPC or not, 1: particle must stop in TPC, 2: particle must not stop in TPC
+   ParticleMinTPCLength:     [ -1., 200 ] # Units are cm. Negative value means ignore check
 }
 
 END_PROLOG
