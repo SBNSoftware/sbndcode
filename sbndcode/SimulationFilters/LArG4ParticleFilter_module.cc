@@ -28,6 +28,7 @@ namespace filt{
       bool PDGCheck(const art::Ptr<simb::MCParticle> particle, int index);
       bool MinMomentumCheck(const art::Ptr<simb::MCParticle> particle, int index);
       bool MaxMomentumCheck(const art::Ptr<simb::MCParticle> particle, int index);
+      bool StartInTPCCheck(const art::Ptr<simb::MCParticle> particle, int index);
       bool StopInTPCCheck(const art::Ptr<simb::MCParticle> particle, int index);
       bool TPCTrajLengthCheck(const art::Ptr<simb::MCParticle> particle, int index);
 
@@ -55,19 +56,10 @@ namespace filt{
 
   void LArG4ParticleFilter::reconfigure(fhicl::ParameterSet const& pset){
     fInterestingPDGs = pset.get<std::vector<int> >("InterestingPDGs");
-    std::cout<<"NInteresting PDGs: " << fInterestingPDGs.size() << std::endl;
-    for (unsigned int i = 0; i < fInterestingPDGs.size(); i++){
-      std::cout<<"-- PDG: " << fInterestingPDGs[i] << std::endl; 
-    }
     fParticleMinMomentum = pset.get<std::vector<double> >("ParticleMinMomentum");
-    //std::cout<<"Min particle momentum: " << fParticleMinMomentum << std::endl;
     fParticleMaxMomentum = pset.get<std::vector<double> >("ParticleMaxMomentum");
-    //std::cout<<"Max particle momentum: " << fParticleMaxMomentum << std::endl;
     fStopInTPC = pset.get<std::vector<int> >("StopInTPC");
-    //std::cout<<"Stop in TPC: " << fStopInTPC << std::endl;
     fParticleMinTPCLength = pset.get<std::vector<double> >("ParticleMinTPCLength");
-    //std::cout<<"Min particle TPC length: " << fParticleMinTPCLength << std::endl;
-
     return;
   }
 
@@ -90,9 +82,7 @@ namespace filt{
       //Loop over the list of particles we want and compare it with the particle we are looking it
       for (unsigned int interest_i = 0; interest_i < fInterestingPDGs.size(); interest_i++){
         if (IsInterestingParticle(particle,interest_i)) {
-          std::cout<<"Found interesting particle"<<std::endl;
           fFoundInterestingParticles[interest_i] = true;
-
           bool foundThemAll = true;
           for (unsigned int found_i = 0; found_i < fFoundInterestingParticles.size(); found_i++){
             if (fFoundInterestingParticles[found_i] == false){
@@ -101,7 +91,6 @@ namespace filt{
             }
           }
           if (foundThemAll){
-            std::cout<<"Found all of the interesting particles!"<<std::endl;
             return true;
           }
         }
@@ -126,137 +115,6 @@ namespace filt{
     if (!TPCTrajLengthCheck(particle,index)) return false;
 
     return true;
-
-    /*
-    //Create a test particle for the purpose testing the filter checks
-    simb::MCParticle *testParticle = new simb::MCParticle(10000,13,"test",-1,105,1);
-    TLorentzVector test_position1(0.,30.,30.,30);
-    TLorentzVector test_position2(0.,40.,40.,40);
-    TLorentzVector test_position3(0.,50.,50.,50);
-    TLorentzVector test_position4(0.,60.,60.,60);
-    TLorentzVector test_position5(0.,70.,70.,70);
-    TLorentzVector test_position6(0.,1000.,70.,70);
-    TLorentzVector test_position7(0.,1002.,70.,70);
-    TLorentzVector test_position8(0.,1003.,70.,70);
-    TLorentzVector test_position9(0.,1005.,70.,70);
-
-    //Particle should have several points in the TPC and then several out, followed by the same sequence again.  Finally the last point is within the TPC
-    testParticle->AddTrajectoryPoint(test_position1,test_position1);
-    testParticle->AddTrajectoryPoint(test_position2,test_position2);
-    testParticle->AddTrajectoryPoint(test_position3,test_position3);
-    testParticle->AddTrajectoryPoint(test_position4,test_position4);
-    testParticle->AddTrajectoryPoint(test_position5,test_position5);
-    testParticle->AddTrajectoryPoint(test_position6,test_position6);
-    testParticle->AddTrajectoryPoint(test_position7,test_position7);
-    testParticle->AddTrajectoryPoint(test_position8,test_position8);
-    testParticle->AddTrajectoryPoint(test_position9,test_position9);
-    testParticle->AddTrajectoryPoint(test_position1,test_position1);
-    testParticle->AddTrajectoryPoint(test_position2,test_position2);
-    testParticle->AddTrajectoryPoint(test_position3,test_position3);
-    testParticle->AddTrajectoryPoint(test_position4,test_position4);
-    testParticle->AddTrajectoryPoint(test_position5,test_position5);
-    testParticle->AddTrajectoryPoint(test_position6,test_position6);
-    testParticle->AddTrajectoryPoint(test_position7,test_position7);
-    testParticle->AddTrajectoryPoint(test_position8,test_position8);
-    testParticle->AddTrajectoryPoint(test_position9,test_position9);
-    testParticle->AddTrajectoryPoint(test_position1,test_position1);
-    */
-
-
-
-
-    /*
-
-
-    //Check the particle PDG
-    bool OK = false;
-    if (fInterestingPDGs.size() > 0){
-      int pdg = particle->PdgCode();
-      //Loop through the PDG vector and see if we have a match
-      for (unsigned int i = 0; i < fInterestingPDGs.size(); i++){
-        if (pdg == fInterestingPDGs[i]){
-          OK = true;
-          break;
-        }
-      }
-      if (!OK) return false;
-    }
-
-    //Check the minimum particle momentum
-    if (fParticleMinMomentum > 0 && particle->Momentum(0).Vect().Mag() < fParticleMinMomentum) return false;
-
-    //Check the max momentum
-    if (fParticleMaxMomentum > 0 && particle->Momentum(0).Vect().Mag() > fParticleMaxMomentum) return false;
-
-    //Check if the particle stops in the TPC
-    OK = false;
-    if (fStopInTPC){
-      //Get final position of particle
-      TLorentzVector final_position_4vect = particle->Position(particle->NumberTrajectoryPoints()-1);
-      double final_position[3];
-      final_position[0] = final_position_4vect.X();
-      final_position[1] = final_position_4vect.Y();
-      final_position[2] = final_position_4vect.Z();
-
-      //std::cout<<"X: " << final_position[0] << "  Y: " << final_position[1] << "  Z: " << final_position[2] << std::endl;
-      geo::TPCID tpcid = fGeom->FindTPCAtPosition(final_position);
-      //If the tpcid is NOT valid, then the particle did not stop in the TPC so reject this particle
-      if (!tpcid.isValid) return false; 
-    }
-
-    //Check the length of a particle in the TPC
-    OK = false;
-    if (fParticleMinTPCLength > 0){
-      //To do this, we need to collect the sequential particle positions which are contained in the TPC into segments.  The reason for doing this is that the particle may enter a TPC, leave it and enter it again and if this isn't taken into account, the length might be grossly overestimated
-      //It is easiest to store the positions in a vector of vectors
-      std::vector< std::vector<TVector3> > position_segments;
-      //We are also going to need an empty vector to store in the above vector
-      std::vector<TVector3> position_segment;
-      //Loop through the trajectory points
-      for (unsigned int i = 0; i < particle->NumberTrajectoryPoints(); i++){
-        //Extract the current position of the particle
-        double curr_pos[3];
-        curr_pos[0] = particle->Position(i).X();
-        curr_pos[1] = particle->Position(i).Y();
-        curr_pos[2] = particle->Position(i).Z();
-        geo::TPCID curr_tpcid = fGeom->FindTPCAtPosition(curr_pos);
-        //std::cout<<curr_tpcid.isValid<<"  X: "<<curr_pos[0] << "  Y: " << curr_pos[1] << "  Z: " << curr_pos[2] << std::endl;
-        //There are a couple of things to check here.  If the particle is currently in the TPC, then we need to store that particular position.  If it is NOT in the TPC, then its either exited the TPC or has not yet entered.  If it has just exited, then the position_segment should have some positions stored in it, it which case we now need to store this segment.  If it has not yet entered the TPC, then we don't need to do anything
-        //If it is currently in the TPC
-        if (curr_tpcid.isValid) position_segment.push_back(particle->Position(i).Vect());
-        //It has just exited the TPC
-        else if (position_segment.size() > 0){
-          //Store the segment
-          position_segments.push_back(position_segment);
-          //Now reset the segment
-          position_segment.clear();
-        }
-        //There is nothing to do because the particle has remained outside of the TPC
-      }
-      //We need to check once more if the position_segment vector has been filled
-      if (position_segment.size() > 0){
-        position_segments.push_back(position_segment);
-        position_segment.clear();
-      }
-      //Now lets check the length of each segment
-      //Firstly, if we didn't store a segment then the particle fails the check
-      if (position_segments.size() == 0) return false;
-      //Now loop through the segments and check if they are above threshold
-      for (unsigned int i = 0; i < position_segments.size(); i++){
-        double segment_length = CalculateLength(position_segments[i]);
-        if (segment_length > fParticleMinTPCLength){
-          //We found a track segment in the TPC which passes the length threshold so don't flag as bad
-          OK = true;
-          break;
-        }
-      }
-      if (!OK) return false;
-    }
-
-
-
-    return true;
-    */
   }
 
   bool LArG4ParticleFilter::PDGCheck(const art::Ptr<simb::MCParticle> particle, int index){
@@ -264,7 +122,6 @@ namespace filt{
     if (particle->PdgCode() != pdg) return false;
     return true;
   }
-
 
   bool LArG4ParticleFilter::MinMomentumCheck(const art::Ptr<simb::MCParticle> particle, int index){
     if (fParticleMinMomentum[index] > 0 && particle->Momentum(0).Vect().Mag() < fParticleMinMomentum[index]) return false;
@@ -275,6 +132,36 @@ namespace filt{
     if (fParticleMaxMomentum[index] > 0 && particle->Momentum(0).Vect().Mag() > fParticleMaxMomentum[index]) return false;
     return true;
   }
+
+  bool LArG4ParticleFilter::StartInTPCCheck(const art::Ptr<simb::MCParticle> particle, int index){
+    //Firstly check if we even care if the particle starts in the TPC or not
+    int demand = fStartInTPC[index];
+    if (demand == 0) return true; //We don't care if the particle starts in the TPC or not so pass the check
+    //Get starting position of particle
+    TLorentzVector starting_position_4vect = particle->Position(0);
+    double starting_position[3];
+    starting_position[0] = starting_position_4vect.X();
+    starting_position[1] = starting_position_4vect.Y();
+    starting_position[2] = starting_position_4vect.Z();
+
+    geo::TPCID tpcid = fGeom->FindTPCAtPosition(starting_position);
+    bool validtpc = tpcid.isValid;
+    //Now we need to compare if we have a TPC that we started in with whether we wanted to start in a TPC at all
+    if (validtpc){
+      //The particle DID start in a TPC.  Now, did we WANT this to happen
+      if (demand == 1) return true; //We DID want this to happen
+      else return false;
+    }
+    else{
+      //The particle did NOT start in a TPC.  Did we WANT this to happen?
+      if (demand == 2) return true; //We DID want this to happen
+      else return false;
+    }
+
+    //Assume true by default
+    return true;
+  }
+
 
   bool LArG4ParticleFilter::StopInTPCCheck(const art::Ptr<simb::MCParticle> particle, int index){
     //Firstly check if we even care if the particle stops in the TPC or not
@@ -287,7 +174,6 @@ namespace filt{
     final_position[1] = final_position_4vect.Y();
     final_position[2] = final_position_4vect.Z();
 
-    //std::cout<<"X: " << final_position[0] << "  Y: " << final_position[1] << "  Z: " << final_position[2] << std::endl;
     geo::TPCID tpcid = fGeom->FindTPCAtPosition(final_position);
     bool validtpc = tpcid.isValid;
     //Now we need to compare if we have a TPC that we stopped in with whether we wanted to stop in a TPC at all
@@ -327,7 +213,6 @@ namespace filt{
       curr_pos[1] = particle->Position(i).Y();
       curr_pos[2] = particle->Position(i).Z();
       geo::TPCID curr_tpcid = fGeom->FindTPCAtPosition(curr_pos);
-      //std::cout<<curr_tpcid.isValid<<"  X: "<<curr_pos[0] << "  Y: " << curr_pos[1] << "  Z: " << curr_pos[2] << std::endl;
       //There are a couple of things to check here.  If the particle is currently in the TPC, then we need to store that particular position.  If it is NOT in the TPC, then its either exited the TPC or has not yet entered.  If it has just exited, then the position_segment should have some positions stored in it, it which case we now need to store this segment.  If it has not yet entered the TPC, then we don't need to do anything
       //If it is currently in the TPC
       if (curr_tpcid.isValid) position_segment.push_back(particle->Position(i).Vect());
