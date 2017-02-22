@@ -1,3 +1,6 @@
 #include "prodcosmics_corsika_sbnd.fcl"
 
 physics.producers.generator: @local::sbnd_corsika_cmc
+
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: michel_electron, G4: g4_michel_electron_filter.fcl
