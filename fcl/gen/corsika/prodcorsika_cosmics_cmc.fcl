@@ -1,0 +1,3 @@
+#include "prodcosmics_corsika_sbnd.fcl"
+
+physics.producers.generator: @local::sbnd_corsika_cmc
