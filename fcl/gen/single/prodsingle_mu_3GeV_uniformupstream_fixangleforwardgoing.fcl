@@ -14,3 +14,11 @@ physics.producers.generator.SigmaThetaYZ: [0,0]
 
 physics.producers.generator.ParticleSelectionMode: 1
 physics.producers.generator.PadOutVectors: true
+
+
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: 0.75ms_electronlifetime, G4: g4_0.75ms_electron_lifetime.fcl
+#MCCSTATEMENT: 1.5ms_electronlifetime, G4: g4_1.5ms_electron_lifetime.fcl
+#MCCSTATEMENT: 5ms_electronlifetime, G4: g4_5ms_electron_lifetime.fcl
+#MCCSTATEMENT: 7ms_electronlifetime, G4: g4_7ms_electron_lifetime.fcl
+#MCCSTATEMENT: 10ms_electronlifetime, G4: g4_10ms_electron_lifetime.fcl
