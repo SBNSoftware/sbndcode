@@ -22,3 +22,6 @@ physics.producers.generator.PadOutVectors: true
 #MCCSTATEMENT: 5ms_electronlifetime, G4: g4_5ms_electron_lifetime.fcl
 #MCCSTATEMENT: 7ms_electronlifetime, G4: g4_7ms_electron_lifetime.fcl
 #MCCSTATEMENT: 10ms_electronlifetime, G4: g4_10ms_electron_lifetime.fcl
+#MCCSTATEMENT: no_tran_diff, G4: g4_no_transverse_diffusion.fcl
+#MCCSTATEMENT: no_long_diff, G4: g4_no_longitudinal_diffusion.fcl
+#MCCSTATEMENT: no_diff, G4: g4_no_diffusion.fcl
