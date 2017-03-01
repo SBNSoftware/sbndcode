@@ -1,0 +1,90 @@
+#
+# File:    corsika_sbnd.fcl
+# Purpose: standard SBND configuration for CORSIKA cosmic ray generator
+# Date:    August 17, 2016
+# Version: 1.1
+#
+# Provides:
+#  - sbnd_corsika_p: module configuration for generation of protons; use as:
+#      
+#      physics: {
+#        producers: {
+#          generator: @local::sbnd_corsika_p
+#        }
+#      }
+#      
+#  - sbnd_corsika_cmc: module configuration for generation of assorted cosmic
+#    rays from different primary nuclei; use as:
+#      
+#      physics: {
+#        producers: {
+#          generator: @local::sbnd_corsika_cmc
+#        }
+#      }
+#      
+#
+# Documentation at:
+# https://cdcvs.fnal.gov/redmine/projects/sbndcode/wiki/Cosmics
+#
+# Changes:
+# 20160817 (petrillo@fnal.gov) [v1.1]
+#   restyling (added comments)
+#
+
+#
+# inherited configuration
+#
+
+#include "CORSIKAGen.fcl"
+
+
+BEGIN_PROLOG
+
+#
+# sbnd_corsika_p
+# 
+# Cosmic rays from proton primary.
+#
+sbnd_corsika_p: {
+  
+                    @table::standard_CORSIKAGen_protons  # from CORSIKAGen.fcl
+  SampleTime:       5.32e-3   # 0.2 ms (G4 rise time) + 1.28 ms (1 full drift window) + 3.84 ms (readout) @ -70 kv, 114 cm/ms
+  TimeOffset:      -2.76e-3   # 3.84 ms readout should start at -1.28 ms to match data
+  BufferBox:        [ -300.0, +300.0, -300.0, +300.0, -300.0, +300.0 ]  # [cm]
+  ProjectToHeight:  1800      # height to which particles are projected [cm] 
+  
+  # use the shared copy of CORSIKA database files
+  ShowerInputFiles: [
+    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/p_showers_*.db"
+  ] # ShowerInputFiles
+  
+  
+} # sbnd_corsika_p
+
+
+#
+# sbnd_corsika_cmc
+# 
+# Cosmic rays from mix of primaries.
+#
+sbnd_corsika_cmc: {
+  
+                    @table::standard_CORSIKAGen_CMC  # from CORSIKAGen.fcl
+  SampleTime:       5.32e-3  # 0.2 ms (g4 rise time) + 1.28 ms (1 full drift window) + 3.84 ms (readout) @ -70 kv, 114 cm/ms
+  TimeOffset:      -2.76e-3  # 3.84 ms readout should start at -1.28 ms to match data
+  BufferBox:        [ -300.0, +300.0, -300.0, +300.0, -300.0, +300.0 ]  # [ cm ]
+  ProjectToHeight:  1800     # height to which particles are projected [ cm ]
+
+  # use the shared copy of CORSIKA database files
+  ShowerInputFiles: [
+    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/p_showers_*.db",
+    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/He_showers_*.db",
+    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/N_showers_*.db",
+    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/Mg_showers_*.db",
+    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/Fe_showers_*.db"
+  ] # ShowerInputFiles
+  
+  
+} # sbnd_corsika_cmc
+
+END_PROLOG

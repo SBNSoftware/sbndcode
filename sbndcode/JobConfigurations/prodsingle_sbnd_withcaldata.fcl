@@ -27,13 +27,14 @@
 
 
 # configure the additional module we want to call:
-physics.producers.calwire: @local::sbnd_calwire
+physics.producers.caldata: @local::sbnd_calwire
 
 # ... and add it to the standard path
 
-physics.simulate: [ rns, generator, largeant, daq, calwire ] 
+physics.simulate: [ rns, generator, largeant, daq, caldata ] 
 
 #
 # at the end of the configuration, we can override single parameters to reflect our needs:
 #
-services.SignalShapingServiceT1053.ASICGainInMVPerFC: 14
+services.SignalShapingServiceSBND.ASICGainInMVPerFC: 14
+
