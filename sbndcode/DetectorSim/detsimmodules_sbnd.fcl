@@ -4,17 +4,19 @@ BEGIN_PROLOG
 
 sbnd_simwire:  
 { 
- module_type:        "SimWireT1053"
+ module_type:        "SimWireSBND"
  TrigModName:        "triggersim"
  DriftEModuleLabel:  "largeant"
- NoiseFact:          0.15       #Noise Scale to use with histogram
+ #NoiseFact:          0.15       #Noise Scale to use with histogram
  NoiseWidth:         62.4         #Exponential Noise width (kHz)
  NoiseRand:          0.1          #frac of randomness of noise freq-spec
  LowCutoff:          7.5          #Low frequency filter cutoff (kHz)
  CompressionType:    "none"       #could also be none		
- GenNoise:            false        #gen noise...if false function not called
+ GenNoise:            true        #gen noise...if false function not called
  GetNoiseFromHisto:   false
- GenNoiseInTime:      false
+ GenNoiseInTime:      true
+ 
+
  # the two settings below determine the ADC baseline for collection and induction plane, respectively;
  # here we read the settings from the pedestal service configuration,
  # so that we have only one maintenance point

@@ -24,6 +24,9 @@ case $GROUP in
 sbnd)
 SCRATCH_DIR="/pnfs/sbnd/scratch/users"
 ;;
+lar1nd)
+SCRATCH_DIR="/pnfs/sbnd/scratch/users"
+;;
 esac
 
 voms-proxy-info --all
@@ -67,7 +70,7 @@ cd $_CONDOR_SCRATCH_DIR
 #### ( If applicable )
 ####################################
 
- ifdh cp /pnfs/sbnd/scratch/users/andrzejs/hello.out .
+ ifdh cp /pnfs/sbnd/persistent/users/andrzejs/hello.out .
 
 ####### 
 ####### ifdh cp does not preserve permissions, so need to add executable. #########

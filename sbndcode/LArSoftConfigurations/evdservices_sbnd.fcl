@@ -1,7 +1,7 @@
 #
 # File:    evdservices_sbnd.fcl
 # Purpose: service settings for SBND event display in LArSoft
-# Version: 1.1
+# Version: 1.2
 # 
 # Provides:
 # 
@@ -18,9 +18,11 @@
 # Changes:
 # 20160601 (petrillo@fnal.gov) [v1.1]
 #   update for LArSoft 5.12
+# 20160712 (petrillo@fnal.gov) [v1.2]
+#   added simulation services
 #
 
-#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "evdservices_base.fcl"
 #include "calorimetry.fcl"
 
@@ -28,7 +30,29 @@ BEGIN_PROLOG
 
 sbnd_colordrawingopt:                       @local::standard_colordrawingopt
 sbnd_rawdrawingopt:                         @local::standard_rawdrawingopt
-sbnd_recodrawingopt:                        @local::standard_recodrawingopt
+sbnd_recodrawingopt: {
+  @table::standard_recodrawingopt
+  
+  # override product labels; these follow the ones from standard_reco_sbnd_basic.fcl v. 1.2
+ HitModuleLabels:           ["gaushit"]         # list of module labels in which to look for recob::Hits
+ EndPoint2DModuleLabels:    ["linecluster"]     # list of module labels in which to look for recob::EndPoint2Ds
+ SpacePointModuleLabels:    ["pmalgtrackmaker"] # list of module labels in which to look for recob::SpacePoints     
+ ProngModuleLabels:         []                  # list of module labels in which to look for recob::Prongs     
+ ClusterModuleLabels:       ["linecluster"]     # list of module labels in which to look for recob::Clusters  
+ PFParticleModuleLabels:    ["pmalgtrackmaker"] # list of module labels in which to look for recob::PFParticles 
+ TrackModuleLabels:         ["pmalgtrackmaker"] # list of module labels in which to look for recob::Tracks     
+ ShowerModuleLabels:        []                  # list of module labels in which to look for recob::Showers    
+ VertexModuleLabels:        []                  # list of module labels in which to look for recob::Vertexs    
+ SeedModuleLabels:          ["pmalgtrackmaker"] # list of module labels in which to look for recob::Seeds  
+ BezierTrackModuleLabels:   []                  # list of module labels in which to look for Bezier Tracks    
+ OpFlashModuleLabels:       [""]                # list of module labels in which to look for recob::OpFlashes
+ CosmicTagModuleLabels:     [""]                # list of module labels in which to look for recob::Tracks
+ TrkVtxTrackLabels:         ["pmalgtrackmaker"] # list of track producers for track/vertex associations
+ TrkVtxCosmicLabels:        []                  # list of vertex producers for track/vertex associations
+ TrkVtxFilterLabels:        []                  # list of producers of associations between the two above
+
+} # sbnd_recodrawingopt
+
 sbnd_analysisdrawingopt:                    @local::standard_analysisdrawingopt
 sbnd_simdrawingopt:                         @local::standard_simdrawingopt
 sbnd_scanopt:                               @local::standard_scanopt
@@ -44,9 +68,11 @@ sbnd_evdlayoutopt.ShowEndPointMarkers:      1
 sbnd_evdlayoutopt.MakeSeeds:                0
 sbnd_evdlayoutopt.ChangeWire:               1
 
+sbnd_rawdrawingopt.TotalTicks: 3000
+
 sbnd_disp:                                                                       
 {                                                                                  
-                                               @table::sbnd_services
+                                               @table::sbnd_simulation_services
   ColorDrawingOptions:                         @local::sbnd_colordrawingopt
   SimulationDrawingOptions:                    @local::sbnd_simdrawingopt
   RawDrawingOptions:                           @local::sbnd_rawdrawingopt
@@ -58,8 +84,12 @@ sbnd_disp:
   EventDisplay:                                @local::sbnd_evd
 }
 
+
+
+
 #######################################
 
 sbnd_graphcluster:                          @local::standard_graphcluster
 
 END_PROLOG
+

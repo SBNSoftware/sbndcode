@@ -1,12 +1,13 @@
 #
 # File:    standard_reco_sbnd_basic.fcl
 # Purpose: run basic reconstruction with SBND detector
-# Version: 1.1
+# Version: 1.2
 #
 # Changes:
 # 20160621 (petrillo@fnal.gov) [v1.1]
 #   updated with sbndcode services
-#
+# 20160929 (petrillo@fnal.gov) [v1.2]
+#   replace tracker from TrackKalman3D to PMTrackMaker
 #
 
 #
@@ -43,12 +44,12 @@ services:
 {
   # Load the service that manages root files for histograms.
   TFileService:              { fileName: "reco_hist.root" }
-  RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
+                             @table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
   LArFFT:                    @local::sbnd_larfft
-  SignalShapingServiceT1053: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
 }
 
 #source is now a root file
@@ -84,9 +85,8 @@ physics:
 
   ### cluster-finder producers
   fuzzycluster:        @local::sbnd_fuzzycluster
+  linecluster:         @local::sbnd_linecluster
   cccluster:           @local::sbnd_clustercrawler
-  hough:               @local::standard_houghlinefinder
-  linemerger:          @local::standard_linemerger
   spacepts:            @local::sbnd_spacepts
 
   ### pandora
@@ -96,26 +96,16 @@ physics:
   trackkalmanhit:      @local::sbnd_track3Dkalmanhit
   spacepointfinder:    @local::sbnd_spacepoint_finder
   trackkalsps:         @local::sbnd_kalman
- #trackkalsps:         @local::sbnd_kalman_sps
-  stitch:	       @local::sbnd_trackstitcher
-  stitchkalmanhit:     @local::sbnd_trackstitcher
-  beziertracker:       @local::sbnd_beziertrackermodule
-  spacepointfindercc:  @local::sbnd_spacepoint_finder
-  trackkalspscc:       @local::sbnd_kalman
- #trackkalspscc:       @local::sbnd_kalman_sps
-  stitchcc:	       @local::sbnd_trackstitcher
-  beziertrackercc:     @local::sbnd_beziertrackermodule
-
-
+  
+  pmalgtrackmaker:     @local::sbnd_pmalgtrackmaker
+    
   ### shower-finder producers
 
   ### vertex-finder producers
 
   ### calorimetry producers
   trackkalmanhitcalo:  @local::sbnd_calomc
-  trackkalspscalo:     @local::sbnd_calomc
-  stitchcalo:          @local::sbnd_calomc
-  beziercalo:          @local::sbnd_beziercalorimetry
+  pmatrackcalo:        @local::sbnd_calomc
 
   ### flash-track matching
  # beamflashcompat:     @local::standard_beamflashcompat
@@ -123,19 +113,22 @@ physics:
 
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
- reco: [ rns,
-  #       opflash,
-         caldata, 
-         gaushit,
-   # rffhit,
-   #      corner,
-         fuzzycluster, cccluster, hough, linemerger, spacepts,
-   #      pandora,
-   #      trackkalmanhit, spacepointfinder, trackkalsps, stitch, stitchkalmanhit, beziertracker
-          spacepointfindercc, trackkalspscc, stitchcc 
-          #, beziertrackercc
-   #      trackkalmanhitcalo, trackkalspscalo, stitchcalo, beziercalo
-#         beamflashcompat
+ reco: [ rns
+   #     , opflash
+         , caldata 
+         , gaushit
+   #      , rffhit
+   #      , corner
+   #      , fuzzycluster
+         , linecluster
+   #      , cccluster
+   #      , spacepts,
+   #      , pandora,
+   #      , trackkalmanhit, spacepointfinder, trackkalsps,
+         , pmalgtrackmaker
+   #      , trackkalmanhitcalo,
+         , pmatrackcalo
+   #      , beamflashcompat
  ]
 
  #define the output stream, there could be more than one if using filters 
@@ -158,7 +151,7 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   fileName:    "%ifb_%tc_reco.root"
+   fileName:    "%ifb_%p-%tc.root"
    dataTier:    "reconstructed"
    compressionLevel: 1
  }
@@ -177,68 +170,36 @@ physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
 
 #physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
 #physics.producers.corner.CornerAlgParamSet.CalDataModuleLabel:  "caldata"
+#
+physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 
-physics.producers.fuzzycluster.HitsModuleLabel:                 "gaushit"
-physics.producers.fuzzycluster.CalDataModuleLabel:              "caldata"
+#physics.producers.fuzzycluster.HitsModuleLabel:                 "gaushit"
+#physics.producers.fuzzycluster.CalDataModuleLabel:              "caldata"
 
-physics.producers.hough.DBScanModuleLabel:                      "fuzzycluster"
-physics.producers.hough.HitsPerCluster: 3
-
-physics.producers.linemerger.ClusterModuleLabel:                "hough"
-
-physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
-physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
+#physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
+#physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
 #physics.producers.pandora.GeantModuleLabel:                     "largeant"
 #physics.producers.pandora.HitFinderModuleLabel:                 "gaushit"
 
-physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
+#physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"
-physics.producers.trackkalmanhit.ClusterModuleLabel:		"linemerger"
+#physics.producers.trackkalmanhit.ClusterModuleLabel:		"cccluster"
+
+physics.producers.pmalgtrackmaker.HitModuleLabel:               "linecluster"
+physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "linecluster"
+# physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # future
+physics.producers.pmalgtrackmaker.T0ModuleLabel:                ""
 
 
-physics.producers.spacepointfinder.ClusterModuleLabel:          "fuzzycluster"
-#physics.producers.spacepointfinder.ClusterModuleLabel:          "linemerger"
+#physics.producers.spacepointfinder.ClusterModuleLabel:          "fuzzycluster"
+#physics.producers.spacepointfinder.ClusterModuleLabel:          "cccluster"
 
-#physics.producers.trackkalsps.ClusterModuleLabel:               "fuzzycluster"
-physics.producers.trackkalsps.ClusterModuleLabel:               "cluster"
-physics.producers.trackkalsps.SpptModuleLabel:                  "spacepointfinder"
-physics.producers.trackkalsps.GenieGenModuleLabel:		"generator"
-physics.producers.trackkalsps.G4ModuleLabel:			"largeant"
+#physics.producers.trackkalmanhitcalo.TrackModuleLabel:          "trackkalmanhit"
+#physics.producers.trackkalmanhitcalo.SpacePointModuleLabel:     "trackkalmanhit"
 
-physics.producers.stitch.TrackModuleLabel:                      "trackkalsps"
-physics.producers.stitch.SpptModuleLabel:                       "spacepointfinder"
-
-#physics.producers.stitchkalmanhit.TrackModuleLabel:		"trackkalmanhit"
-physics.producers.stitchkalmanhit.TrackModuleLabel:		"trackkalsps"
-physics.producers.stitchkalmanhit.SpptModuleLabel:		"trackkalmanhit"
-
-physics.producers.beziertracker.ClusterModuleLabel:             "fuzzycluster"
-physics.producers.beziertracker.SpacePointModuleLabel:          "spacepointfinder"
-
-physics.producers.spacepointfindercc.ClusterModuleLabel:        "cccluster"
-
-physics.producers.trackkalspscc.ClusterModuleLabel:             "cccluster"
-physics.producers.trackkalspscc.SpptModuleLabel:                "spacepointfindercc"
-physics.producers.trackkalspscc.GenieGenModuleLabel:            "generator"
-physics.producers.trackkalspscc.G4ModuleLabel:                  "largeant"
-
-physics.producers.stitchcc.TrackModuleLabel:                    "trackkalspscc"
-physics.producers.stitchcc.SpptModuleLabel:                     "spacepointfindercc"
-
-physics.producers.beziertrackercc.ClusterModuleLabel:           "cccluster"
-physics.producers.beziertrackercc.SpacePointModuleLabel:        "spacepointfinder"
-
-physics.producers.trackkalmanhitcalo.TrackModuleLabel:          "trackkalmanhit"
-physics.producers.trackkalmanhitcalo.SpacePointModuleLabel:     "trackkalmanhit"
-
-physics.producers.trackkalspscalo.TrackModuleLabel:             "trackkalsps"
-physics.producers.trackkalspscalo.SpacePointModuleLabel:        "spacepointfinder"
-
-physics.producers.stitchcalo.TrackModuleLabel:                  "stitch"
-physics.producers.stitchcalo.SpacePointModuleLabel:             "spacepointfinder"
-
-physics.producers.beziercalo.BTrackModuleLabel:                 "beziertracker"
+physics.producers.pmatrackcalo.TrackModuleLabel:                "pmalgtrackmaker"
+physics.producers.pmatrackcalo.SpacePointModuleLabel:           "pmalgtrackmaker"
 
 #physics.producers.beamflashcompat.TrackModuleLabel:             "beziertracker"
 #physics.producers.beamflashcompat.FlashModuleLabel:             "opflash"

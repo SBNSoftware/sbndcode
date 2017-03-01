@@ -1,0 +1,47 @@
+#
+# File:    cry_sbnd.fcl
+# Purpose: standard SBND configuration for CRY cosmic ray generator
+# Author:  Roxanne Guenette (Roxanne.Guenette@physics.ox.ac.uk)
+# Date:    August 17, 2016
+# Version: 1.0
+#
+# Provides:
+#  - sbnd_cry: configuration for generation of cosmic rays, with electronics
+#    timings customised for SBND; use as:
+#      
+#      physics: {
+#        producers: {
+#          generator: @local::sbnd_cry
+#        }
+#      }
+#      
+#
+# Documentation at:
+# https://cdcvs.fnal.gov/redmine/projects/sbndcode/wiki/Cosmics
+#
+# Changes:
+# 20160817 (petrillo@fnal.gov) [v1.0]
+#   created from restyling Roxanne Guenette's configuration
+#
+
+#
+# inherited configuration
+#
+
+#include "cry.fcl"
+
+
+BEGIN_PROLOG
+
+
+sbnd_cry:
+{
+  
+  @table::standard_cry  # from cry.fcl
+  SampleTime:           5.12e-3            # integration time in seconds (4 x 1.28ms window)
+  TimeOffset:          -2.56e-3            # time in seconds before a spill to begin the interactions (starts 2 window frames earlier 2x 1.28ms)
+
+} # sbnd_cry
+
+
+END_PROLOG
