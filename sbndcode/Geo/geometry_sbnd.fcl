@@ -60,12 +60,27 @@ sbnd_geometry_helper:
  service_provider : SBNDGeometryHelper
 }
 
+sbnd_auxdetgeo:
+{
+ Name:            "sbndv0"
+ GDML:            "sbndv0.gdml"
+ ROOT:            "sbndv0.gdml"
+ SortingParameters: {}                   # empty parameter set for default
+}
+
+sbnd_auxdetgeometry_helper:
+{
+ service_provider: CRTGeometryHelper
+}
+
 #
 # sbnd_geometry_services
 #
 sbnd_geometry_services: {
   ExptGeoHelperInterface:         @local::sbnd_geometry_helper
   Geometry:                       @local::sbnd_geo
+  AuxDetExptGeoHelperInterface:   @local::sbnd_auxdetgeometry_helper
+  AuxDetGeometry:                 @local::sbnd_auxdetgeo
 } # sbnd_geometry_services
 
 
