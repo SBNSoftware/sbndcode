@@ -1,4 +1,3 @@
-
 simple_plugin(SimWireT1053 "module"
                            larcore_Geometry_Geometry_service
                            lardataobj_Simulation
@@ -45,3 +44,4 @@ simple_plugin(SimWireSBND "module"
 install_headers()
 install_fhicl()
 install_source()
+
