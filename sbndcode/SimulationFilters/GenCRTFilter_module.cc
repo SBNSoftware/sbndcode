@@ -1,6 +1,4 @@
 #include <iostream>
-#include <utility>
-#include <complex>
 #include <algorithm>
 
 #include "TGeoManager.h"
@@ -10,9 +8,6 @@
 #include "art/Framework/Principal/Event.h" 
 #include "larcore/Geometry/Geometry.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
-#include "lardataobj/RawData/RawDigit.h"
-#include "lardataobj/RawData/raw.h"
-#include "lardataobj/RecoBase/Wire.h"
 
 namespace filt{
 
