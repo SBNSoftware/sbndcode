@@ -18,6 +18,7 @@ art_make(
             ${CLHEP}
             ${Boost_SYSTEM_LIBRARY}
             ${ROOT_BASIC_LIB_LIST}
+            ${ROOT_GEOM}
 
 #          MODULE_LIBRARIES larcore_Geometry
 #                           larcore_Geometry_Geometry_service
