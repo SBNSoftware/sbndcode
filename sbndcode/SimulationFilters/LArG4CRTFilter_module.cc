@@ -75,6 +75,9 @@ namespace filt{
     for (unsigned int part_i = 0; part_i < particles->size(); part_i++){
       const art::Ptr<simb::MCParticle> particle(particles,part_i);
       if (!IsInterestingParticle(particle)) continue;
+      //std::cout<<"particlePDG: " << particle->PdgCode() << std::endl;
+      //particle->Position().Vect().Print();
+      //particle->Momentum().Vect().Print();
       if (fUseTopHighCRTs){
         bool OK = UsesCRTAuxDets(particle,fTopHighCRTAuxDetIDs);
         if (!OK) continue;
@@ -111,6 +114,7 @@ namespace filt{
         //std::cout<<"RightCRTs: " << OK << std::endl;
       }
 
+      //std::cout<<"Particle hit all CRTs"<<std::endl;
       return true;
     }
 
@@ -229,6 +233,12 @@ namespace filt{
         //So we got an ID.  Lets compare it to all of the CRT IDs we are interested in
         for (unsigned int crt_i = 0; crt_i < crt_auxdet_vector.size(); crt_i++){
           if (crt_id == crt_auxdet_vector[crt_i]){
+            /*
+            std::cout<<"Hit a CRT we wanted: DUMPING" <<std::endl;
+            for (unsigned int i = 0; i < particle->NumberTrajectoryPoints(); i++){
+              particle->Position(i).Print();
+            }
+            */
             //We found a CRT that we are interested in at this poisition!!!
             //We can leave now
             return true;
