@@ -1,0 +1,24 @@
+#include "gencrtfilter.fcl"
+#include "prodcosmics_corsika_sbnd.fcl"
+
+physics.producers.generator: @local::sbnd_corsika_cmc
+physics.filters.filter: @local::sbnd_gencrtfilter
+
+physics.simulate: [ generator, filter ]
+
+physics.filters.filter.UseTopHighCRTs: false
+physics.filters.filter.UseTopLowCRTs: false
+physics.filters.filter.UseBottomCRTs: false
+physics.filters.filter.UseFrontCRTs: true
+physics.filters.filter.UseBackCRTs: true
+physics.filters.filter.UseLeftCRTs: false
+physics.filters.filter.UseRightCRTs:false
+physics.filters.filter.PDGs: [ 13 ]
+physics.filters.filter.MinMomentums: [ -999 ]
+physics.filters.filter.MaxMomentums: [ -999 ]
+physics.filters.filter.CRTDimensionScaling: 1.2
+
+outputs.out1.SelectEvents: [ "simulate" ]
+
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: michel_electron, G4: g4_mu_frontbackcrt_filter.fcl
