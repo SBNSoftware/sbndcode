@@ -77,41 +77,44 @@ namespace filt{
       if (!IsInterestingParticle(particle)) continue;
       if (fUseTopHighCRTs){
         bool OK = UsesCRTAuxDets(particle,fTopHighCRTAuxDetIDs);
-        if (!OK) return false;
+        if (!OK) continue;
         //std::cout<<"TopHighCRTs: " << OK << std::endl;
       }
       if (fUseTopLowCRTs){
         bool OK = UsesCRTAuxDets(particle,fTopLowCRTAuxDetIDs);
-        if (!OK) return false;
+        if (!OK) continue;
         //std::cout<<"TopLowCRTs: " << OK << std::endl;
       }
       if (fUseBottomCRTs){
         bool OK = UsesCRTAuxDets(particle,fBottomCRTAuxDetIDs);
-        if (!OK) return false;
+        if (!OK) continue;
         //std::cout<<"BottomCRTs: " << OK << std::endl;
       }
       if (fUseFrontCRTs){
         bool OK = UsesCRTAuxDets(particle,fFrontCRTAuxDetIDs);
-        if (!OK) return false;
+        if (!OK) continue;
         //std::cout<<"FrontCRTs: " << OK << std::endl;
       }
       if (fUseBackCRTs){
         bool OK = UsesCRTAuxDets(particle,fBackCRTAuxDetIDs);
-        if (!OK) return false;
+        if (!OK) continue;
         //std::cout<<"BackCRTs: " << OK << std::endl;
       }
       if (fUseLeftCRTs){
         bool OK = UsesCRTAuxDets(particle,fLeftCRTAuxDetIDs);
-        if (!OK) return false;
+        if (!OK) continue;
         //std::cout<<"LeftCRTs: " << OK << std::endl;
       }
       if (fUseRightCRTs){
         bool OK = UsesCRTAuxDets(particle,fRightCRTAuxDetIDs);
-        if (!OK) return false;
+        if (!OK) continue;
         //std::cout<<"RightCRTs: " << OK << std::endl;
       }
+
+      return true;
     }
-    return true;
+
+    return false;
   }
 
 
