@@ -3,11 +3,11 @@ BEGIN_PROLOG
 sbnd_larg4particlefilter:
 {
    module_type:              "LArG4ParticleFilter"
-   InterestingPDGs:          [ 13 ]
+   InterestingPDGs:          [ 0 ]   # Specify the PDG of the particles you want to save.  0 means you don't care what the PDG is for a particular particle
    ParticleMinMomentum:      [ -1. ] # Units are GeV. Negative value means ingore check
    ParticleMaxMomentum:      [ -1. ] # Units are GeV. Negative value means ingore check
    StartInTPC:                [ 0 ]  # 0: don't care if it starts in TPC or not, 1: particle must start in TPC, 2: particle must not start in TPC
-   StopInTPC:                [ 0 ]  # 0: don't care if it stops in TPC or not, 1: particle must stop in TPC, 2: particle must not stop in TPC
+   StopInTPC:                [ 0 ]   # 0: don't care if it stops in TPC or not, 1: particle must stop in TPC, 2: particle must not stop in TPC
    ParticleMinTPCLength:     [ -1. ] # Minimum particle trajectory length inside of the TPC.  Units are cm.  Negative value means ignore check
 }
 

@@ -121,6 +121,7 @@ namespace filt{
 
   bool LArG4ParticleFilter::PDGCheck(const art::Ptr<simb::MCParticle> particle, int index){
     int pdg = fInterestingPDGs[index];
+    if (pdg == 0) return true; //User does not care what the PDG is
     if (particle->PdgCode() != pdg) return false;
     return true;
   }
