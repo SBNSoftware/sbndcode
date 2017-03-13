@@ -8,3 +8,7 @@ physics.producers.generator.FluxSearchPaths: "/pnfs/sbnd/persistent/fluxFiles/bn
 physics.producers.generator.FluxFiles: [ "gsimple_configB-v1_5e7POT*.root" ]
 physics.producers.generator.TopVolume: "volWorld"
 physics.producers.generator.FluxUpstreamZ: -18 #Start the flux rays at 18m upstream of the TPC frontface.  Chosen as this is the distance a muon of 8 GeV (max flux sim. energy) can travel
+
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: SKIPDEFAULT
+#MCCSTATEMENT: enters_tpc, G4: g4_enterstpc_filter.fcl
