@@ -1,0 +1,144 @@
+#
+# File:    prodmarley_sbnd_1event.fcl # 
+# Purpose: Produce single supernova neutrino events including full SBND detector simulation
+# Version: 1.1
+# 
+# This configuration runs event generation, simulation of propagation through
+# matter and readout simulation.
+# 
+# Input: no input file required
+# 
+# Dependencies:
+# - uses the bundle of SBND simulation services
+#
+# Changes:
+# 20160601 (petrillo@fnal.gov) [v1.1]
+#   - added inline documentation
+#   - moved service configuration from services.user (deprecated) to services
+#   - changed Timing module (deprecated) with TimeTracker
+#   - added MemoryTracker module
+#   - tuned message facility configuration
+#
+#
+
+#
+# services
+#
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "marley.fcl"  
+
+#
+# modules
+#
+
+#include "singles_sbnd.fcl"
+#include "largeantmodules_sbnd.fcl"
+#include "detsimmodules_sbnd.fcl"
+
+
+
+process_name: SingleGen
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "hists_prodmarley_sbnd__1event_-_%p-%tc.root" }
+                @table::sbnd_simulation_services # load simulation services in bulk
+}
+
+# since this is a configuration typically run as interactive test,
+# we set up message configuration accordingly:
+services.message: @local::sbnd_message_services_interactive # from messages_sbnd.fcl
+
+
+# Start each new event with an empty event.
+source:
+{
+  module_type:     EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:       1          # Number of events to create
+  firstRun:        1          # Run number to use for this file
+  firstEvent:      1          # number of first event in the file
+}
+
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+  producers:
+  {
+    rns:       { module_type: "RandomNumberSaver" }
+    generator: @local::standard_marley # marley events
+    # generator: @local::sbnd_singlep
+    largeant:  @local::sbnd_largeant
+    daq:       @local::sbnd_simwire
+  }
+
+  #define the producer and filter modules for this path, order matters, 
+  simulate:  [ rns, generator, largeant, daq ] 
+
+  #define the output stream, there could be more than one if using filters 
+  stream1:   [ out1 ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [ stream1 ]   
+}
+
+# block to define where the output goes.  if you defined a filter in the physics
+# block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+# entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput               # _%p-%tc   - timestamp
+    fileName:    "prodmarley_sbnd_1event_-_%p-%tc.root" # default file name, can override from command line with -o or --output
+    fastCloning : true
+  }
+}
+
+#
+# at the end of the configuration, we can override single parameters to reflect our needs:
+# defining an electron using pdg reference
+
+#physics.producers.generator.PDG: [ 11 ]
+#physics.producers.generator.P0: [ 1. ] # central value of momentum in GeV for each particle
+#physics.producers.generator.PDist:  0         # 0 - uniform, 1 -gaussian
+#physics.producers.generator.SigmaP: [ 1. ]  	      
+#physics.producers.generator.Theta0XZ: [ 0. ]
+#physics.producers.generator.Theta0YZ: [ 0. ]
+#physics.producers.generator.X0: [ -90 ] # for particles i.e PDG 11
+#physics.producers.generator.Y0: [ 0. ]
+#physics.producers.generator.Z0: [ 100 ] # cm
+#physics.producers.generator.SigmaX: [ 0. ] # smear by ~10 
+#physics.producers.generator.SigmaY: [ 0. ] # smear by ~10
+#physics.producers.generator.SigmaZ: [ 0. ] # smear by ~10
+#physics.producers.generator.SigmaThetaXZ: [ 0 ] # in degrees
+#physics.producers.generator.SigmaThetaYZ: [ 0. ] # in degrees
+
+# PDG:                   [ 13 ]      # list of pdg codes for particles to make
+#  P0:                    [ 6. ]      # central value of momentum for each particle
+# SigmaP:                [ 0. ]      # variation about the central value 
+ # PDist:                 1           # 0 - uniform, 1 - gaussian distribution                               
+ # X0:                    [ 25. ]     # in cm in world coordinates, ie x = 0 is at the wire plane          
+                                    # and increases away from the wire plane                             
+#  Y0:                    [ 0. ]      # in cm in world coordinates, ie y = 0 is at the center of the TPC   
+#  Z0:                    [ 20. ]     # in cm in world coordinates, ie z = 0 is at the upstream edge of    
+                                    # the TPC and increases with the beam direction                      
+ # T0:                    [ 0. ]      # starting time
+ # SigmaX:                [ 0. ]      # variation in the starting x position
+ # SigmaY:                [ 0. ]      # variation in the starting y position                            
+ # SigmaZ:                [ 0.0 ]     # variation in the starting z position                            
+ # SigmaT:                [ 0.0 ]     # variation in the starting time
+ # PosDist:               0           # 0 - uniform, 1 - gaussian
+ # TDist:                 0           # 0 - uniform, 1 - gaussian         
+ # Theta0XZ:              [ 0. ]      #angle in XZ plane (degrees)                                         
+ # Theta0YZ:              [ -3.3 ]    #angle in YZ plane (degrees)                                         
+ # SigmaThetaXZ:          [ 0. ]      #in degrees                                                          
+ # SigmaThetaYZ:          [ 0. ]      #in degrees                                                          
+ # AngleDist:             1           # 0 - uniform, 1 - gaussian
