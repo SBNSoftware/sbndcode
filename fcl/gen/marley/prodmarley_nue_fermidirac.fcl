@@ -1,0 +1,3 @@
+#include "prodmarley_sbnd_1event.fcl"
+
+physics.simulate: [rns, generator ]
