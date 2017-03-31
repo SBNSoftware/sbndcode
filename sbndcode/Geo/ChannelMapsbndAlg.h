@@ -26,7 +26,7 @@ public:
   ChannelMapsbndAlg(fhicl::ParameterSet const& p);
   ~ChannelMapsbndAlg();
 
-  void                     Initialize( GeometryData_t& geodata ) override;
+  void                     Initialize(GeometryData_t const& geodata) override;
   void                     Uninitialize();
   std::vector<WireID>      ChannelToWire(uint32_t channel)        const;
   uint32_t                 Nchannels()                            const;
