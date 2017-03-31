@@ -1,7 +1,6 @@
 cet_enable_asserts()
 
 set( sbnd_util_lib_list lardata_Utilities_LArFFT_service
-                          lardata_DetectorInfoServices_LArPropertiesServiceStandard_service
                           larcore_Geometry
                           larcore_Geometry_Geometry_service
                           lardata_Utilities
@@ -19,6 +18,7 @@ set( sbnd_util_lib_list lardata_Utilities_LArFFT_service
                           ${MF_UTILITIES}
                           ${CETLIB}
                           ${ROOT_BASIC_LIB_LIST}
+                          ${ROOT_GEOM}
     )
 
 
