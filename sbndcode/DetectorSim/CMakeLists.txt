@@ -11,11 +11,11 @@ simple_plugin(SimWireT1053 "module"
                            ${ART_FRAMEWORK_PRINCIPAL}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-                           canvas_Utilities
+                           canvas
                            ${MF_MESSAGELOGGER}
                            ${MF_UTILITIES}
                            ${FHICLCPP}
-                           ${CETLIB}
+                           cetlib cetlib_except
                            ${CLHEP}
                            ${ROOT_BASIC_LIB_LIST}
 )
@@ -32,11 +32,11 @@ simple_plugin(SimWireSBND "module"
                            ${ART_FRAMEWORK_PRINCIPAL}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-                           canvas_Utilities
+                           canvas
                            ${MF_MESSAGELOGGER}
                            ${MF_UTILITIES}
                            ${FHICLCPP}
-                           ${CETLIB}
+                           cetlib cetlib_except
                            ${CLHEP}
                            ${ROOT_BASIC_LIB_LIST}
 )
