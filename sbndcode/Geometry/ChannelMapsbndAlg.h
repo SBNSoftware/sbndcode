@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 #include "larcore/Geometry/ChannelMapAlg.h"
-#include "sbndcode/Geo/GeoObjectSortersbnd.h"
+#include "sbndcode/Geometry/GeoObjectSortersbnd.h"
 #include "fhiclcpp/ParameterSet.h"
 
 

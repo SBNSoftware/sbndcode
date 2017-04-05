@@ -8,12 +8,12 @@
 // Migration note:
 // Geometry --> sbnd/Geometry
 #include "larcore/Geometry/GeometryCore.h"
-#include "sbndcode/Geo/SBNDGeometryHelper.h"
+#include "sbndcode/Geometry/SBNDGeometryHelper.h"
 
 #include "larcore/Geometry/ChannelMapAlg.h"
 
 // Migration note:
-// #include "sbndcode/Geo/ChannelMapsbndAlg.h"
+// #include "sbndcode/Geometry/ChannelMapsbndAlg.h"
 #include "larcore/Geometry/ChannelMapStandardAlg.h"
 
 
