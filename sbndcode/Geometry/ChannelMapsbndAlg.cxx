@@ -6,7 +6,7 @@
 /// \author  tylerdalion@gmail.com // adapted for SBND by ariana.hackenburg@yale.edu
 ////////////////////////////////////////////////////////////////////////
 
-#include "sbndcode/Geo/ChannelMapsbndAlg.h"
+#include "sbndcode/Geometry/ChannelMapsbndAlg.h"
 #include "larcore/Geometry/GeometryCore.h"
 #include "larcore/Geometry/CryostatGeo.h"
 #include "larcore/Geometry/TPCGeo.h"
