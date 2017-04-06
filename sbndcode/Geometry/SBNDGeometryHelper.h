@@ -1,22 +1,24 @@
-////////////////////////////////////////////////////////////////////////////////
-/// \file SBNDGeometryHelper.h
-/// \brief Geometry helper service for SBND geometries. 
-/// 
-/// Handles SBND-specific information for the generic Geometry service
-/// within LArSoft. Derived from the ExptGeoHelperInterface class
-///
-/// \verion $Id
-/// \author rs@fnal.gov
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @file   SBNDGeometryHelper.h
+ * @brief  Geometry helper service for SBND geometries.
+ * @author Erica Snider (erica@fnal.gov)
+ * 
+ * Handles SBND-specific information for the generic Geometry service
+ * within LArSoft. Derived from the `geo::ExptGeoHelperInterface` class.
+ */
 
-#ifndef SBND_ExptGeoHelperInterface_h
-#define SBND_ExptGeoHelperInterface_h
+#ifndef SBNDCODE_GEOMETY_SBNDGEOMETRYHELPER_H
+#define SBNDCODE_GEOMETY_SBNDGEOMETRYHELPER_H
 
+
+// LArSoft libraries
 #include "larcore/Geometry/ExptGeoHelperInterface.h"
 #include "larcore/Geometry/CryostatGeo.h"
 #include "larcore/Geometry/AuxDetGeo.h"
 
-#include <memory>
+// C++ libraries
+#include <memory> // std::shared_ptr<>
+
 
 
 namespace geo{
@@ -59,4 +61,4 @@ namespace sbnd
 }
 DECLARE_ART_SERVICE_INTERFACE_IMPL(sbnd::SBNDGeometryHelper, geo::ExptGeoHelperInterface, LEGACY)
 
-#endif // SBND_ExptGeoHelperInterface_h
+#endif // SBNDCODE_GEOMETY_SBNDGEOMETRYHELPER_H

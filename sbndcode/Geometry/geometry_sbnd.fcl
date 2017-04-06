@@ -34,6 +34,8 @@
 #
 #
 
+#include "geometry.fcl"
+
 BEGIN_PROLOG
 
 #
@@ -43,8 +45,8 @@ sbnd_geo:
 {
  SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
  Name:     "sbndv0"
- GDML:     "sbndv0.gdml"
- ROOT:     "sbndv0.gdml"
+ GDML:     "sbnd_v00_07.gdml"
+ ROOT:     "sbnd_v00_07.gdml"
 
  SortingParameters: { 
    DetectorVersion: "sbnd" 
@@ -65,6 +67,7 @@ sbnd_geometry_helper:
 #
 sbnd_geometry_services: {
   ExptGeoHelperInterface:         @local::sbnd_geometry_helper
+#  ExptGeoHelperInterface:         @local::standard_geometry_helper
   Geometry:                       @local::sbnd_geo
 } # sbnd_geometry_services
 

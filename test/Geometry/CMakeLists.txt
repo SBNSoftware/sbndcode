@@ -21,7 +21,8 @@ cet_test(geometry_sbnd_test
   SOURCES geometry_sbnd_test.cxx
   DATAFILES test_geometry_sbnd.fcl
   TEST_ARGS ./test_geometry_sbnd.fcl
-  LIBRARIES larcore_Geometry
+  LIBRARIES sbnd_Geometry
+            larcore_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
@@ -36,7 +37,8 @@ cet_test(geometry_sbnd_test
 # this uses BOOST for the test
 cet_test(geometry_iterator_sbnd_test
   SOURCES geometry_iterator_sbnd_test.cxx
-  LIBRARIES larcore_Geometry
+  LIBRARIES sbnd_Geometry
+            larcore_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
@@ -50,7 +52,8 @@ cet_test(geometry_iterator_sbnd_test
 # unit test (use the hard-coded configuration for SBND v0 geometry)
 cet_test(geometry_iterator_loop_sbnd_test
   SOURCES geometry_iterator_loop_sbnd_test.cxx
-  LIBRARIES larcore_Geometry
+  LIBRARIES sbnd_Geometry
+            larcore_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
