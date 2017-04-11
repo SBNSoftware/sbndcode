@@ -93,12 +93,10 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Debugging output
-  std::cout << "CRT TIMING: t0=" << t0
-            << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
-            << ", tDelay=" << tDelay << ", tDelay(interp)=";
-  /////////////////////////////////////////////////////////////////////////////
+  LOG_DEBUG("CRT")
+    << "CRT TIMING: t0=" << t0
+    << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
+    << ", tDelay=" << tDelay << ", tDelay(interp)=";
 
   // Time resolution of the interpolator
   tDelay += CLHEP::RandGauss::shoot(engine, 0, fTResInterpolator);
@@ -108,10 +106,7 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double t = t0 + tProp + tDelay;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Debugging output
-  std::cout << tDelay << ", tProp=" << tProp << ", t=" << t << std::endl;
-  /////////////////////////////////////////////////////////////////////////////
+  LOG_DEBUG("CRT") << tDelay << ", tProp=" << tProp << ", t=" << t << std::endl;
 
   // Get clock ticks
   clock.SetTime(t / 1e3);  // SetTime takes microseconds
@@ -258,26 +253,24 @@ void CRTDetSim::produce(art::Event & e) {
         tagger.data.push_back(crt::CRTData(channel1ID, t1, ppsTicks, q1));
       }
 
-      /////////////////////////////////////////////////////////////////////////
-      // Debugging output
       double poss[3];
       adsGeo.LocalToWorld(origin, poss);
-      std::cout << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl;
-      std::cout << "CRT HIT POS " << x << " " << y << " " << z << std::endl;
-      std::cout << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl;
-      std::cout << "CRT MODULE POS" << modulePosMother[0] << " "
-                                    << modulePosMother[1] << " "
-                                    << modulePosMother[2] << " "
-                                    << std::endl;
-      std::cout << "CRT PATH: " << path << std::endl;
-      std::cout << "CRT level 0 (strip): " << nodeStrip->GetName() << std::endl;
-      std::cout << "CRT level 1 (array): " << nodeArray->GetName() << std::endl;
-      std::cout << "CRT level 2 (module): " << nodeModule->GetName() << std::endl;
-      std::cout << "CRT level 3 (tagger): " << nodeTagger->GetName() << std::endl;
-      std::cout << "CRT PLANE ID: " << planeID << std::endl;
-      std::cout << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << std::endl;
-      std::cout << "CRT q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
-      /////////////////////////////////////////////////////////////////////////
+      LOG_DEBUG("CRT")
+        << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl
+        << "CRT HIT POS " << x << " " << y << " " << z << std::endl
+        << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl
+        << "CRT MODULE POS" << modulePosMother[0] << " "
+                             << modulePosMother[1] << " "
+                             << modulePosMother[2] << " "
+                             << std::endl
+        << "CRT PATH: " << path << std::endl
+        << "CRT level 0 (strip): " << nodeStrip->GetName() << std::endl
+        << "CRT level 1 (array): " << nodeArray->GetName() << std::endl
+        << "CRT level 2 (module): " << nodeModule->GetName() << std::endl
+        << "CRT level 3 (tagger): " << nodeTagger->GetName() << std::endl
+        << "CRT PLANE ID: " << planeID << std::endl
+        << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << std::endl
+        << "CRT q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
     }
   }
 
@@ -296,10 +289,7 @@ void CRTDetSim::produce(art::Event & e) {
     }
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Debugging output
-  std::cout << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << std::endl;
-  /////////////////////////////////////////////////////////////////////////////
+  LOG_DEBUG("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << std::endl;
 
   e.put(std::move(triggeredCRTHits));
 }

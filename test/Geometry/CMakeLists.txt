@@ -26,7 +26,7 @@ cet_test(geometry_sbnd_test
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
             ${FHICLCPP}
-            ${CETLIB}
+            cetlib_except
 	    ${ROOT_CORE}
   OPTIONAL_GROUPS Broken
 )
@@ -41,7 +41,7 @@ cet_test(geometry_iterator_sbnd_test
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
             ${FHICLCPP}
-            ${CETLIB}
+            cetlib_except
 	    ${ROOT_CORE}
   USE_BOOST_UNIT
 )
@@ -55,7 +55,7 @@ cet_test(geometry_iterator_loop_sbnd_test
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
             ${FHICLCPP}
-            ${CETLIB}
+            cetlib_except
 	    ${ROOT_CORE}
 )
 

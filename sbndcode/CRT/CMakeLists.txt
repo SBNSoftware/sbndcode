@@ -14,12 +14,7 @@ art_make( BASENAME_ONLY
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
-        art_Persistency_Common
-        canvas_Persistency_Common
-        art_Persistency_Provenance
-        canvas_Persistency_Provenance
-        art_Utilities
-        canvas_Utilities
+        canvas
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${MF_MESSAGELOGGER}
         ${MF_UTILITIES}
@@ -34,6 +29,7 @@ art_make_library( LIBRARY_NAME CRT
         CRTChannelMapAlg.cxx
     LIBRARIES larcore_Geometry
         CRTData
+        cetlib_except
         ${MF_MESSAGELOGGER}
         ${MF_UTILITIES}
         ${FHICLCPP}
@@ -48,12 +44,8 @@ simple_plugin( CRTGeometryHelper service
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
-        art_Persistency_Common
-        canvas_Persistency_Common
-        art_Persistency_Provenance
-        canvas_Persistency_Provenance
-        art_Utilities
-        canvas_Utilities
+        canvas
+        cetlib_except
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${MF_MESSAGELOGGER}
         ${MF_UTILITIES}
@@ -69,12 +61,8 @@ simple_plugin( CRTDetSim module
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
-        art_Persistency_Common
-        canvas_Persistency_Common
-        art_Persistency_Provenance
-        canvas_Persistency_Provenance
-        art_Utilities
-        canvas_Utilities
+        canvas
+        cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
         nutools_RandomUtils_NuRandomService_service
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
