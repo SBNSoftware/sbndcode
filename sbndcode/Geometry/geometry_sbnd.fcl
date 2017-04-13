@@ -45,8 +45,8 @@ sbnd_geo:
 {
  SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
  Name:     "sbndv0"
- GDML:     "sbnd_v00_07.gdml"
- ROOT:     "sbnd_v00_07.gdml"
+ GDML:     "sbnd_v00_08.gdml"
+ ROOT:     "sbnd_v00_08.gdml"
 
  SortingParameters: { 
    DetectorVersion: "sbnd" 
