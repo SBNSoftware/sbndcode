@@ -136,6 +136,15 @@ future_sbnd_geo.sbnd_geometry_services: {
 } # future_sbnd_geo.sbnd_geometry_services
   
 ###############################################################################
+#
+
+# ********************************************************
+# ***  USE FUTURE GEOMETRY  (for test branch only!!!)  ***
+# ********************************************************
+
+sbnd_geometry_services: @local::future_sbnd_geo.sbnd_geometry_services
+
+###############################################################################
 
 END_PROLOG
 
