@@ -124,9 +124,15 @@ future_sbnd_geo.sbnd_geo: {
   @table::future_sbnd_geo.sbnd_geo_source # overriding geometry source
 } # future_sbnd_geo.sbnd_geo
   
+future_sbnd_geo.sbnd_auxdetgeo: {
+  @table::sbnd_auxdetgeo
+  @table::future_sbnd_geo.sbnd_geo_source # overriding geometry source
+} # future_sbnd_geo.sbnd_auxdetgeo
+  
 future_sbnd_geo.sbnd_geometry_services: {
-            @table::sbnd_geometry_services
-  Geometry: @local::future_sbnd_geo.sbnd_geo
+                  @table::sbnd_geometry_services
+  Geometry:       @local::future_sbnd_geo.sbnd_geo
+  AuxDetGeometry: @local::future_sbnd_geo.sbnd_auxdetgeo
 } # future_sbnd_geo.sbnd_geometry_services
   
 ###############################################################################
