@@ -1,61 +1,50 @@
-typedef struct _drawopt 
-{
+typedef struct _drawopt  {
   const char* volume;
-  int         color;
-  int	      transparency;
+  int color;
 } drawopt;
 
-void geoVis_sbnd(TString volName="")
-{
-	gSystem->Load("libGeom");
-	gSystem->Load("libGdml");
+sbnd_geo(TString volName="") {
+  gSystem->Load("libGeom");
+  gSystem->Load("libGdml");
 
-	TGeoManager::Import("sbnd_v00_08.gdml");
+  TGeoManager::Import("sbndvX_nowires.gdml");
 
-drawopt optsbnd[] = {
-	{"volTheBuilding", kYellow-8,0},
-	{"volBuildingBase",kYellow-8,0},
-	{"volGlassWindow", kBlue+4,50},
-	{"volMezzanine",kYellow-8,0},
-	{"volDetectorHall",kYellow-5,0},
-	{"volGroundLevel0",kOrange+3,80},
-	{"volGroundLevel1",kOrange+4,80},
-	{"volGroundLevel2",kOrange+5,80},
-	{"volOpDetSensitive", kYellow, 10},
-	{"volTPCActive",  kCyan-9,50},
-	{"volTPCPlane_U", kBlue-4,   80},
-	{"volTPCPlane_V", kGreen-6,  80},
-	{"volTPCPlane_Y", kRed-7,    80},
-	{"volOneAPA", 	  kMagenta,    80},	
-	{"volInsulation", kMagenta,    80},
-	{"volStructureLid", kBlue-2,    0},
-	{"volAuxDetSensitiveCRT_X", kBlue,0},
-	{"volAuxDetSensitiveCRT_Z", kBlue,0},
-	{"volShieldingLid", kYellow-5, 0},
-	{"volShieldingTop", kWhite, 0},
-	{"volMezzanineLid", kWhite, 0},
-	{0, 0}
-};
+  drawopt opts[] = {
+    {"volHorizontalBeam", kGreen+2},
+    {"volGround", kOrange+4},
+    {0, 0}
+  };
 
+  for (int i=0;; i++) {
+    if (opts[i].volume == 0) break;
+      gGeoManager->FindVolumeFast(opts[i].volume)->SetLineColor(opts[i].color);
+  }
 
-TGeoVolume *vol;
-for (int i=0;; ++i) {
-	if (optsbnd[i].volume==0) break;
-	vol=gGeoManager->FindVolumeFast(optsbnd[i].volume);
-	if(vol){
-		vol->SetLineColor(optsbnd[i].color);
-		vol->SetTransparency(optsbnd[i].transparency);
-	}
+  TList* mat = gGeoManager->GetListOfMaterials();
+  TIter next(mat);
+  TObject* obj;
+  while (obj = next()) {
+    obj->Print();
+  }
+
+  gGeoManager->GetTopNode();
+  gGeoManager->CheckOverlaps(10e-11);
+  gGeoManager->PrintOverlaps();
+  gGeoManager->SetMaxVisNodes(70000);
+
+  if (!volName.IsNull())
+    gGeoManager->FindVolumeFast(volName)->Draw("ogl");
+
+  TGeoVolume* TPC = gGeoManager->FindVolumeFast("volTPC");
+  float m_tpc = TPC->Weight();
+  TGeoVolume* Cathode = gGeoManager->FindVolumeFast("volCathodePlate");
+  float m_cathode = Cathode->Weight();
+
+  float m_tpc_argon = m_tpc - m_cathode ;
+  cout << "LAr weight in TPC = " << m_tpc_argon << " kg\n" <<endl;
+
+  TFile* tf = new TFile("sbnd.root", "RECREATE");
+  gGeoManager->Write();
+  tf->Close();
 }
 
-gGeoManager->GetTopNode();
-gGeoManager->CheckOverlaps(10e-11);
-gGeoManager->PrintOverlaps();
-gGeoManager->SetMaxVisNodes(70000);
-
-if ( ! volName.IsNull() ) {gGeoManager->FindVolumeFast(volName)->Draw("ogl");} 
-else  {gGeoManager->FindVolumeFast("volWorld")->Draw("ogl");}
-
-//gGeoManager->FindVolumeFast("volMainBeams")->Weight();
-
-}
