@@ -26,7 +26,21 @@
 #       
 #       # ...
 #     } # services
+#
 # 
+# Future geometry
+# ---------------
+# The future geometry is currently the v00_08 (by Gustavo Valdiviesso).
+# To use it with an existing configuration (e.g., standard_g4_sbnd.fcl),
+# a complete FHiCL file may look like:
+#     
+#     #include "standard_g4_sbnd.fcl"
+#
+#     services: {
+#       @local::services # everything unchanged...
+#       @local::future_sbnd_geo::sbnd_geometry_services
+#     }
+#     
 # 
 # Changes:
 # 20160707 (petrillo@fnal.gov) [1.1]
@@ -39,14 +53,22 @@
 BEGIN_PROLOG
 
 #
+# sourec of geometry description
+#
+sbnd_geo_source: {
+  Name:     "sbndv0"
+  GDML:  "sbndv0.gdml"
+  ROOT:  "sbndv0.gdml"
+} # sbnd_geo_source
+
+#
 # standard SBND geometry
 #
 sbnd_geo:
 {
  SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
- Name:     "sbndv0"
- GDML:     "sbnd_v00_08.gdml"
- ROOT:     "sbnd_v00_08.gdml"
+ 
+ @table::sbnd_geo_source
 
  SortingParameters: { 
    DetectorVersion: "sbnd" 
@@ -64,10 +86,8 @@ sbnd_geometry_helper:
 
 sbnd_auxdetgeo:
 {
- Name:            "sbndv0"
- GDML:            "sbndv0.gdml"
- ROOT:            "sbndv0.gdml"
- SortingParameters: {}                   # empty parameter set for default
+  @table::sbnd_geo_source
+  SortingParameters: {}                   # empty parameter set for default
 }
 
 sbnd_auxdetgeometry_helper:
@@ -87,4 +107,29 @@ sbnd_geometry_services: {
 } # sbnd_geometry_services
 
 
+###############################################################################
+#
+# Future geometry configuration
+#
+future_sbnd_geo: {}
+  
+future_sbnd_geo.sbnd_geo_source: {
+  Name:     "sbndv0"
+  GDML:     "sbnd_v00_08.gdml"
+  ROOT:     "sbnd_v00_08.gdml"
+} # future_sbnd_geo.sbnd_geo_source
+  
+future_sbnd_geo.sbnd_geo: {
+  @table::sbnd_geo
+  @table::future_sbnd_geo.sbnd_geo_source # overriding geometry source
+} # future_sbnd_geo.sbnd_geo
+  
+future_sbnd_geo.sbnd_geometry_services: {
+            @table::sbnd_geometry_services
+  Geometry: @local::future_sbnd_geo.sbnd_geo
+} # future_sbnd_geo.sbnd_geometry_services
+  
+###############################################################################
+
 END_PROLOG
+
