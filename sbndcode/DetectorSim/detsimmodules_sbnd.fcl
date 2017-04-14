@@ -37,6 +37,12 @@ sbnd_simwireana:
 
 }
 
+sbnd_crtsim:
+{
+  module_type: "CRTSimDigits"
+  ADSCLabel: "sim::AuxDetSimChannel"
+}
+
 sbnd_wienerfilterana: @local::standard_wienerfilterana
 
 END_PROLOG
