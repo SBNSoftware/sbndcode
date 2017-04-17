@@ -20,8 +20,7 @@ MaxMultiHit:	      10	       # maximum hits for multi fit
 AreaMethod:	      0 	       # 0 = area by integral, 1 = area by gaussian area formula
 AreaNorms:	      [ 13.25, 13.25, 26.31 ] # normalizations that put signal area in 
 					      # same scale as peak height. 
-TryNplus1Fits:        0 	       # 0 = will try to re-fit poorly modled hits with n+1 gaussians
-        			       # 1 = will NOT try to re-fit poorly modled hits
+TryNplus1Fits:        false            # whether to try to re-fit poorly modled hits with n+1 gaussians
 Chi2NDFRetry:	      25.0	       # If the first hit returns a Chi2/NDF greater than (2X) this 
 				       # number (for single pulse) it will try a second fit
 Chi2NDF:	      2000	       # maximum Chisquared / NDF allowed for a hit to be saved (Set very high by default)
