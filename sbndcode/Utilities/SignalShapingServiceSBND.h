@@ -135,8 +135,8 @@ namespace util {
     TF1* fIndUFieldFunc;      			///< Parameterized induction field shape function for U plane.
     TF1* fIndVFieldFunc;      			///< Parameterized induction field shape function for V plane.
     
-    TH1F *fFieldResponseHist[3];                ///< Histogram used to hold the field response, hardcoded for the time being 
-    TH1D *fFilterHist[3];    			///< Histogram used to hold the collection filter, hardcoded for the time being
+    TH1 const* fFieldResponseHist[3];           ///< Histogram used to hold the field response, hardcoded for the time being 
+    TH1 const* fFilterHist[3];    		///< Histogram used to hold the collection filter, hardcoded for the time being
     
     // Following attributes hold the convolution and deconvolution kernels
 

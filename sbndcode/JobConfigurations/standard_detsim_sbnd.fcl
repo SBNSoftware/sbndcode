@@ -2,8 +2,8 @@
 # File:    standard_detsim_sbnd.fcl
 # Purpose: Simulates readout response to induced and collected charge
 # Author:  Gianluca Petrillo (petrillo@fnal.gov)
-# Date:    July 7, 2016
-# Version: 1.0
+# Date:    December 23, 2016
+# Version: 1.1
 # 
 # This configuration runs event generation, simulation of propagation through
 # matter and readout simulation.
@@ -23,6 +23,9 @@
 # 20160601 (petrillo@fnal.gov) [v1.0]
 #   first version
 #
+# 20161223 (petrillo@fnal.gov) [v1.1]
+#   - adopted shared root output configuration
+#
 #
 
 #
@@ -37,6 +40,7 @@
 #
 
 #include "detsimmodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
 
 
 
@@ -85,8 +89,7 @@ outputs:
 {
   out1:
   {
-    module_type: RootOutput
-    fileName:    "%ifb_%p-%tc.root"
+    @table::sbnd_rootoutput # inherit shared settings
     dataTier:    "simulated"
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
   }

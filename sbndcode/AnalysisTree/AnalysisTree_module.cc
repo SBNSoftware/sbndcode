@@ -85,39 +85,39 @@
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/View.h"
-#include "art/Persistency/Common/Ptr.h"
-#include "art/Persistency/Common/PtrVector.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art/Framework/Services/Optional/TFileService.h"
 #include "art/Framework/Services/Optional/TFileDirectory.h"
-#include "art/Framework/Core/FindMany.h"
+#include "canvas/Persistency/Common/FindMany.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "larcore/Geometry/Geometry.h"
-#include "SimulationBase/MCTruth.h"
-#include "SimulationBase/MCFlux.h"
-#include "larsim/Simulation/SimChannel.h"
-#include "larsim/Simulation/AuxDetSimChannel.h"
-#include "lardata/AnalysisBase/Calorimetry.h"
-#include "lardata/AnalysisBase/ParticleID.h"
-#include "lardata/RawData/RawDigit.h"
-#include "lardata/RawData/BeamInfo.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
+#include "nusimdata/SimulationBase/MCFlux.h"
+#include "lardataobj/Simulation/SimChannel.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
+#include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "lardataobj/AnalysisBase/ParticleID.h"
+#include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RawData/BeamInfo.h"
 // #include "larcore/DetectorInfoServices/LArPropertiesService.h"
 // #include "larcore/Utilities/AssociationUtil.h"
 // #include "larcore/DetectorInfoServices/DetectorPropertiesService.h"
-#include "larcore/SummaryData/POTSummary.h"
+#include "larcoreobj/SummaryData/POTSummary.h"
 #include "larsim/MCCheater/BackTracker.h"
-#include "lardata/RecoBase/Track.h"
-#include "lardata/RecoBase/Cluster.h"
-#include "lardata/RecoBase/Hit.h"
-#include "lardata/RecoBase/EndPoint2D.h"
-#include "lardata/RecoBase/Vertex.h"
-#include "larcore/SimpleTypesAndConstants/geo_types.h"
-#include "lardata/RecoObjects/BezierTrack.h"
+#include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Cluster.h"
+#include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/EndPoint2D.h"
+#include "lardataobj/RecoBase/Vertex.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "larreco/Deprecated/BezierTrack.h"
 //#include "lardata/RecoAlg/TrackMomentumCalculator.h"
-#include "lardata/AnalysisBase/CosmicTag.h"
-#include "lardata/AnalysisBase/FlashMatch.h"
+#include "lardataobj/AnalysisBase/CosmicTag.h"
+#include "lardataobj/AnalysisBase/FlashMatch.h"
 	
 
 #include <cstring> // std::memcpy()
@@ -1856,15 +1856,14 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
            if(fSimChannels[sc]->Channel() == hitlist[i]->Channel()) chan = fSimChannels[sc];
          }
          if (chan){
-           const std::map<unsigned short, std::vector<sim::IDE> >& tdcidemap = chan->TDCIDEMap();
-           for(auto mapitr = tdcidemap.begin(); mapitr != tdcidemap.end(); mapitr++){
+           for (auto const& tdcide: chan->TDCIDEMap()) {
              // loop over the vector of IDE objects.
-             const std::vector<sim::IDE> idevec = (*mapitr).second;
-             for(size_t iv = 0; iv < idevec.size(); ++iv){
-                fData -> hit_nelec[i] += idevec[iv].numElectrons;
-                fData -> hit_energy[i] += idevec[iv].energy;
-             }
-           }
+             std::vector<sim::IDE> const& idevec = tdcide.second;
+             for(auto const& ide: idevec) {
+                fData -> hit_nelec[i] += ide.numElectrons;
+                fData -> hit_energy[i] += ide.energy;
+             } // all IDEs in the TDC tick
+           } // all TDC ticks
          }
        }
     }
@@ -1983,7 +1982,7 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
             end.SetXYZ(xyz[0],xyz[1],xyz[2]);
 
             tlen = btrack.GetLength();
-            if (btrack.NumberFitMomentum() > 0)
+            // if (btrack.hasMomentum() > 0)
               //mom = btrack.VertexMomentum();
             // fill bezier track reco branches
             TrackID = iTrk;  //bezier has some screwed up track IDs
@@ -1998,7 +1997,7 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
             end       = track.End();
 
             tlen        = length(track);
-            if(track.NumberFitMomentum() > 0)
+          //  if(track.hasMomentum() > 0)
               //mom = track.VertexMomentum();
             // fill non-bezier-track reco branches
             TrackID = track.ID();

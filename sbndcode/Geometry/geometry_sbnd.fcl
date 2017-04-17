@@ -1,0 +1,141 @@
+#
+# File:    geometry_sbnd.fcl
+# Purpose: configuration of SBND geometry services
+# Version: 1.1
+# 
+# Offsers:
+# * single service configuration:
+#   - sbnd_geo: configuration for Geometry service (standard SBND geometry);
+#     configure it in services table as:
+#     
+#     services.Geometry: @local::sbnd_geo
+#     
+#   - sbnd_geometry_helper: configuration for ExptGeoHelperInterface service
+#     configure it in services table as:
+#     
+#     services.ExptGeoHelperInterface: @local::sbnd_geometry_helper
+#     
+# * bundles:
+#   - sbnd_geometry_services: complete geometry configuration; add it to
+#     the service table as:
+#     
+#     services: {
+#       # ...
+#       
+#       @table::sbnd_geometry_services
+#       
+#       # ...
+#     } # services
+#
+# 
+# Future geometry
+# ---------------
+# The future geometry is currently the v00_08 (by Gustavo Valdiviesso).
+# To use it with an existing configuration (e.g., standard_g4_sbnd.fcl),
+# a complete FHiCL file may look like:
+#     
+#     #include "standard_g4_sbnd.fcl"
+#
+#     services: {
+#       @local::services # everything unchanged...
+#       @local::future_sbnd_geo::sbnd_geometry_services
+#     }
+#     
+# 
+# Changes:
+# 20160707 (petrillo@fnal.gov) [1.1]
+#   added sbnd_geometry_services
+#
+#
+
+#include "geometry.fcl"
+
+BEGIN_PROLOG
+
+#
+# sourec of geometry description
+#
+sbnd_geo_source: {
+  Name:     "sbndv0"
+  GDML:  "sbndv0.gdml"
+  ROOT:  "sbndv0.gdml"
+} # sbnd_geo_source
+
+#
+# standard SBND geometry
+#
+sbnd_geo:
+{
+ SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
+ 
+ @table::sbnd_geo_source
+
+ SortingParameters: { 
+   DetectorVersion: "sbnd" 
+ } 
+
+ SurfaceY:           0.0e2               #in cm, vertical distance to the surface
+ DisableWiresInG4:   true
+
+} # sbnd_geo
+
+sbnd_geometry_helper:
+{
+ service_provider : SBNDGeometryHelper
+}
+
+sbnd_auxdetgeo:
+{
+  @table::sbnd_geo_source
+  SortingParameters: {}                   # empty parameter set for default
+}
+
+sbnd_auxdetgeometry_helper:
+{
+ service_provider: CRTGeometryHelper
+}
+
+#
+# sbnd_geometry_services
+#
+sbnd_geometry_services: {
+  ExptGeoHelperInterface:         @local::sbnd_geometry_helper
+#  ExptGeoHelperInterface:         @local::standard_geometry_helper
+  Geometry:                       @local::sbnd_geo
+  AuxDetExptGeoHelperInterface:   @local::sbnd_auxdetgeometry_helper
+  AuxDetGeometry:                 @local::sbnd_auxdetgeo
+} # sbnd_geometry_services
+
+
+###############################################################################
+#
+# Future geometry configuration
+#
+future_sbnd_geo: {}
+  
+future_sbnd_geo.sbnd_geo_source: {
+  Name:     "sbndv0"
+  GDML:     "sbnd_v00_08.gdml"
+  ROOT:     "sbnd_v00_08.gdml"
+} # future_sbnd_geo.sbnd_geo_source
+  
+future_sbnd_geo.sbnd_geo: {
+  @table::sbnd_geo
+  @table::future_sbnd_geo.sbnd_geo_source # overriding geometry source
+} # future_sbnd_geo.sbnd_geo
+  
+future_sbnd_geo.sbnd_auxdetgeo: {
+  @table::sbnd_auxdetgeo
+  @table::future_sbnd_geo.sbnd_geo_source # overriding geometry source
+} # future_sbnd_geo.sbnd_auxdetgeo
+  
+future_sbnd_geo.sbnd_geometry_services: {
+                  @table::sbnd_geometry_services
+  Geometry:       @local::future_sbnd_geo.sbnd_geo
+  AuxDetGeometry: @local::future_sbnd_geo.sbnd_auxdetgeo
+} # future_sbnd_geo.sbnd_geometry_services
+  
+###############################################################################
+
+END_PROLOG
+
