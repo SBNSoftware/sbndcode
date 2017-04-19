@@ -1,7 +1,7 @@
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 include_directories( $ENV{NUTOOLS_INC} )
 
-art_make( BASENAME_ONLY
+art_make(
     EXCLUDE
         CRTChannelMapAlg.cxx
         CRTGeometryHelper_service.cc
@@ -51,7 +51,6 @@ simple_plugin( CRTGeometryHelper service
         ${MF_UTILITIES}
         ${ROOT_BASIC_LIB_LIST}
         ${CETLIB}
-    BASENAME_ONLY
 )
 
 simple_plugin( CRTDetSim module
@@ -72,7 +71,6 @@ simple_plugin( CRTDetSim module
         ${ROOT_BASIC_LIB_LIST}
         ${CLHEP}
         ${CETLIB}
-    BASENAME_ONLY
 )
 
 install_headers()
