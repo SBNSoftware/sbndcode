@@ -7,7 +7,7 @@ art_make(
         CRTGeometryHelper_service.cc
         CRTDetSim_module.cc
     LIBRARY_NAME
-        CRTData
+        sbndcode_CRTData
     LIB_LIBRARIES
         larcore_Geometry
         larcore_Geometry_Geometry_service
@@ -24,11 +24,11 @@ art_make(
         ${CETLIB}
 )
 
-art_make_library( LIBRARY_NAME CRT
+art_make_library( LIBRARY_NAME sbndcode_CRT
     SOURCE
         CRTChannelMapAlg.cxx
     LIBRARIES larcore_Geometry
-        CRTData
+        sbndcode_CRTData
         cetlib_except
         ${MF_MESSAGELOGGER}
         ${MF_UTILITIES}
@@ -40,7 +40,7 @@ art_make_library( LIBRARY_NAME CRT
 
 simple_plugin( CRTGeometryHelper service
         larcore_Geometry
-        CRT
+        sbndcode_CRT
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
@@ -55,8 +55,8 @@ simple_plugin( CRTGeometryHelper service
 
 simple_plugin( CRTDetSim module
         larcore_Geometry
-        CRT
-        CRTData
+        sbndcode_CRT
+        sbndcode_CRTData
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}

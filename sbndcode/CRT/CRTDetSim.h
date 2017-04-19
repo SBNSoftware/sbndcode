@@ -16,6 +16,7 @@
 
 #include <string>
 
+namespace sbnd {
 namespace crt {
 
 class CRTDetSim : public art::EDProducer {
@@ -71,4 +72,5 @@ private:
 };
 
 }  // namespace crt
+}  // namespace sbnd
 
