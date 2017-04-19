@@ -4,9 +4,9 @@
 
 namespace {
   struct dictionary {
-    art::Wrapper<crt::CRTData> w;
-    std::vector<crt::CRTData> v;
-    art::Wrapper<std::vector<crt::CRTData> > wv;
+    art::Wrapper<sbnd::crt::CRTData> w;
+    std::vector<sbnd::crt::CRTData> v;
+    art::Wrapper<std::vector<sbnd::crt::CRTData> > wv;
   };
 }
 
