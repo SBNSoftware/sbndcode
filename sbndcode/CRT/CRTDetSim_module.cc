@@ -36,6 +36,7 @@
 #include <memory>
 #include <string>
 
+namespace sbnd {
 namespace crt {
 
 void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
@@ -72,7 +73,7 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p) {
 
   this->reconfigure(p);
 
-  produces<std::vector<crt::CRTData> >();
+  produces<std::vector<sbnd::crt::CRTData> >();
 }
 
 
@@ -116,7 +117,7 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
 struct Tagger {
   std::set<unsigned> planesHit;
-  std::vector<crt::CRTData> data;
+  std::vector<sbnd::crt::CRTData> data;
 };
 
 
@@ -249,8 +250,8 @@ void CRTDetSim::produce(art::Event & e) {
           abs(t0 - t1) < fStripCoincidenceWindow) {
         Tagger& tagger = taggers[nodeTagger->GetName()];
         tagger.planesHit.insert(planeID);
-        tagger.data.push_back(crt::CRTData(channel0ID, t0, ppsTicks, q0));
-        tagger.data.push_back(crt::CRTData(channel1ID, t1, ppsTicks, q1));
+        tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0));
+        tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1));
       }
 
       double poss[3];
@@ -275,8 +276,8 @@ void CRTDetSim::produce(art::Event & e) {
   }
 
   // Apply coincidence trigger requirement
-  std::unique_ptr<std::vector<crt::CRTData> > triggeredCRTHits(
-      new std::vector<crt::CRTData>);
+  std::unique_ptr<std::vector<sbnd::crt::CRTData> > triggeredCRTHits(
+      new std::vector<sbnd::crt::CRTData>);
 
   // Logic: For normal taggers, require at least one hit in each perpendicular
   // plane. For the bottom tagger, any hit triggers read out.
@@ -297,4 +298,5 @@ void CRTDetSim::produce(art::Event & e) {
 DEFINE_ART_MODULE(CRTDetSim)
 
 }  // namespace crt
+}  // namespace sbnd
 
