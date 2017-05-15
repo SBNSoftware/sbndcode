@@ -39,7 +39,7 @@ sbnd_simwireana:
 
 sbnd_crtsim:
 {
-  module_type: "CRTSimDigits"
+  module_type: "sbndcode/CRT/CRTSimDigits"
   ADSCLabel: "sim::AuxDetSimChannel"
 }
 

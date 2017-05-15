@@ -92,7 +92,7 @@ sbnd_auxdetgeo:
 
 sbnd_auxdetgeometry_helper:
 {
- service_provider: CRTGeometryHelper
+ service_provider: "sbndcode/CRT/CRTGeometryHelper"
 }
 
 #
