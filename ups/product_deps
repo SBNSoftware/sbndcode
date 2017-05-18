@@ -2,7 +2,7 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent sbndcode v06_32_00
+parent sbndcode v06_36_00
 defaultqual e14
 
 # These optional lines define the installed directories where headers,
@@ -33,7 +33,7 @@ fcldir  product_dir
 # Add the dependent product and version
 
 product          version
-larsoft          v06_32_00
+larsoft          v06_36_00
 sbnd_data        v01_00_00 - optional
 sbndutil         v01_15_00 - optional
 
