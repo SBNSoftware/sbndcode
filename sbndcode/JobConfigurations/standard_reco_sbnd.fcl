@@ -161,7 +161,7 @@ outputs:
 physics.producers.caldata.DigitModuleLabel:                     "daq"
 
 physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
-physics.producers.fasthit.CalDataModuleLabel:                   "caldata"
+physics.producers.fasthit.DigitModuleLabel:                      "daq"
 #physics.producers.rffhit.CalDataModuleLabel:                    "caldata"
 
 #physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
