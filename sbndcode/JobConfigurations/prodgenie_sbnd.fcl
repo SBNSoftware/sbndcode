@@ -27,7 +27,7 @@
 
 
 
-process_name: SingleGen
+process_name: GenieGen
 
 services:
 {
