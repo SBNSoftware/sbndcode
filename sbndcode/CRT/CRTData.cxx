@@ -1,5 +1,6 @@
 #include "sbndcode/CRT/CRTData.hh"
 
+namespace sbnd{
 namespace crt{
 
   CRTData::CRTData(): fChannel(0), fT0(0), fT1(0){
@@ -25,4 +26,5 @@ namespace crt{
   uint32_t CRTData::ADC(){
     return this->fADC;
   }
-}
+} // namespace crt
+} // namespace sbnd

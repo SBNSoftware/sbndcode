@@ -1,6 +1,6 @@
 <lcgdict>
-  <class name="crt::CRTData"/>
-  <class name="std::vector<crt::CRTData>"/>
-  <class name="art::Wrapper<crt::CRTData>"/>
-  <class name="art::Wrapper<std::vector<crt::CRTData> >"/>
+  <class name="sbnd::crt::CRTData"/>
+  <class name="std::vector<sbnd::crt::CRTData>"/>
+  <class name="art::Wrapper<sbnd::crt::CRTData>"/>
+  <class name="art::Wrapper<std::vector<sbnd::crt::CRTData> >"/>
 </lcgdict>
