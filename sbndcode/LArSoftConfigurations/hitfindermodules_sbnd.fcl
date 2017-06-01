@@ -38,8 +38,8 @@ HitFilterAlg: {
 
 sbnd_fasthitfinder:                     @local::standard_fasthitfinder
 sbnd_fasthitfinder:DigitModuleLabel:    "daq"
-sbnd_fasthitfinder.MinSigInd:           15.0
-sbnd_fasthitfinder.MinSigCol:           15.0
+sbnd_fasthitfinder.MinSigInd:           10.0
+sbnd_fasthitfinder.MinSigCol:           10.0
 sbnd_fasthitfinder.IncludeMoreTail:     3.0
 sbnd_fasthitfinder.UncompressWithPed:   false
 
