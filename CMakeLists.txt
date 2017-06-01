@@ -36,6 +36,7 @@ set_install_root()
 cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
+  ALLOW_DEPRECATIONS
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
 )
 
@@ -64,6 +65,8 @@ add_subdirectory(test)
 add_subdirectory(ups)
 # fcl - contains job level fcl files (useful for the MCC)
 add_subdirectory(fcl)
+# subdirectory for scripts
+add_subdirectory(bin)
 
 # packaging utility
 include(UseCPack)

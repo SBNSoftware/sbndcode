@@ -3,6 +3,7 @@
 
 #include <stdint.h> //uint32_t
 
+namespace sbnd {
 namespace crt {
 
   class CRTData {
@@ -20,6 +21,7 @@ namespace crt {
     uint32_t ADC();
   };
 
-}
+} // namespace crt
+} // namespace sbnd
 
 #endif

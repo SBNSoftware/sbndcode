@@ -17,7 +17,7 @@
 
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_base.h"
-// #include "sbndcode/Geo/ChannelMapsbndAlg.h"
+// #include "sbndcode/Geometry/ChannelMapsbndAlg.h"
 #include "larcore/Geometry/ChannelMapStandardAlg.h"
 
 // C/C++ standard libraries

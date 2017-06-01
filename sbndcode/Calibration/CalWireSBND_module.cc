@@ -255,9 +255,9 @@ namespace caldata {
       // add an association between the last object in wirecol--Hec
       // (that we just inserted) and digitVec
       if (!util::CreateAssn(*this, evt, *wirecol, digitVec, *WireDigitAssn, fSpillName)) {
-        throw art::Exception(art::errors::InsertFailure)
+        throw cet::exception("CalWireSBND")
           << "Can't associate wire #" << (wirecol->size() - 1)
-          << " with raw digit #" << digitVec.key();
+          << " with raw digit #" << digitVec.key() << "\n";
       } // if failed to add association
     }
 

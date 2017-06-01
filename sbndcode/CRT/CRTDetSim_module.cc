@@ -36,6 +36,7 @@
 #include <memory>
 #include <string>
 
+namespace sbnd {
 namespace crt {
 
 void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
@@ -72,7 +73,7 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p) {
 
   this->reconfigure(p);
 
-  produces<std::vector<crt::CRTData> >();
+  produces<std::vector<sbnd::crt::CRTData> >();
 }
 
 
@@ -93,12 +94,10 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Debugging output
-  std::cout << "CRT TIMING: t0=" << t0
-            << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
-            << ", tDelay=" << tDelay << ", tDelay(interp)=";
-  /////////////////////////////////////////////////////////////////////////////
+  LOG_DEBUG("CRT")
+    << "CRT TIMING: t0=" << t0
+    << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
+    << ", tDelay=" << tDelay << ", tDelay(interp)=";
 
   // Time resolution of the interpolator
   tDelay += CLHEP::RandGauss::shoot(engine, 0, fTResInterpolator);
@@ -108,10 +107,7 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double t = t0 + tProp + tDelay;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Debugging output
-  std::cout << tDelay << ", tProp=" << tProp << ", t=" << t << std::endl;
-  /////////////////////////////////////////////////////////////////////////////
+  LOG_DEBUG("CRT") << tDelay << ", tProp=" << tProp << ", t=" << t << std::endl;
 
   // Get clock ticks
   clock.SetTime(t / 1e3);  // SetTime takes microseconds
@@ -121,7 +117,7 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
 struct Tagger {
   std::set<unsigned> planesHit;
-  std::vector<crt::CRTData> data;
+  std::vector<sbnd::crt::CRTData> data;
 };
 
 
@@ -254,36 +250,34 @@ void CRTDetSim::produce(art::Event & e) {
           abs(t0 - t1) < fStripCoincidenceWindow) {
         Tagger& tagger = taggers[nodeTagger->GetName()];
         tagger.planesHit.insert(planeID);
-        tagger.data.push_back(crt::CRTData(channel0ID, t0, ppsTicks, q0));
-        tagger.data.push_back(crt::CRTData(channel1ID, t1, ppsTicks, q1));
+        tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0));
+        tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1));
       }
 
-      /////////////////////////////////////////////////////////////////////////
-      // Debugging output
       double poss[3];
       adsGeo.LocalToWorld(origin, poss);
-      std::cout << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl;
-      std::cout << "CRT HIT POS " << x << " " << y << " " << z << std::endl;
-      std::cout << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl;
-      std::cout << "CRT MODULE POS" << modulePosMother[0] << " "
-                                    << modulePosMother[1] << " "
-                                    << modulePosMother[2] << " "
-                                    << std::endl;
-      std::cout << "CRT PATH: " << path << std::endl;
-      std::cout << "CRT level 0 (strip): " << nodeStrip->GetName() << std::endl;
-      std::cout << "CRT level 1 (array): " << nodeArray->GetName() << std::endl;
-      std::cout << "CRT level 2 (module): " << nodeModule->GetName() << std::endl;
-      std::cout << "CRT level 3 (tagger): " << nodeTagger->GetName() << std::endl;
-      std::cout << "CRT PLANE ID: " << planeID << std::endl;
-      std::cout << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << std::endl;
-      std::cout << "CRT q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
-      /////////////////////////////////////////////////////////////////////////
+      LOG_DEBUG("CRT")
+        << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl
+        << "CRT HIT POS " << x << " " << y << " " << z << std::endl
+        << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl
+        << "CRT MODULE POS" << modulePosMother[0] << " "
+                             << modulePosMother[1] << " "
+                             << modulePosMother[2] << " "
+                             << std::endl
+        << "CRT PATH: " << path << std::endl
+        << "CRT level 0 (strip): " << nodeStrip->GetName() << std::endl
+        << "CRT level 1 (array): " << nodeArray->GetName() << std::endl
+        << "CRT level 2 (module): " << nodeModule->GetName() << std::endl
+        << "CRT level 3 (tagger): " << nodeTagger->GetName() << std::endl
+        << "CRT PLANE ID: " << planeID << std::endl
+        << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << std::endl
+        << "CRT q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
     }
   }
 
   // Apply coincidence trigger requirement
-  std::unique_ptr<std::vector<crt::CRTData> > triggeredCRTHits(
-      new std::vector<crt::CRTData>);
+  std::unique_ptr<std::vector<sbnd::crt::CRTData> > triggeredCRTHits(
+      new std::vector<sbnd::crt::CRTData>);
 
   // Logic: For normal taggers, require at least one hit in each perpendicular
   // plane. For the bottom tagger, any hit triggers read out.
@@ -296,10 +290,7 @@ void CRTDetSim::produce(art::Event & e) {
     }
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Debugging output
-  std::cout << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << std::endl;
-  /////////////////////////////////////////////////////////////////////////////
+  LOG_DEBUG("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << std::endl;
 
   e.put(std::move(triggeredCRTHits));
 }
@@ -307,4 +298,5 @@ void CRTDetSim::produce(art::Event & e) {
 DEFINE_ART_MODULE(CRTDetSim)
 
 }  // namespace crt
+}  // namespace sbnd
 
