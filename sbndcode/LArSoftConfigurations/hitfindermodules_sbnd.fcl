@@ -36,4 +36,11 @@ HitFilterAlg: {
 
 } # sbnd_gaushitfinder
 
+sbnd_fasthitfinder:                     @local::standard_fasthitfinder
+sbnd_fasthitfinder:CalDataModuleLabel:  "caldata"
+sbnd_fasthitfinder.MinSigInd:           15.0
+sbnd_fasthitfinder.MinSigCol:           15.0
+sbnd_fasthitfinder.IncludeMoreTail:     3.0
+sbnd_fasthitfinder.UncompressWithPed:   false
+
 END_PROLOG
