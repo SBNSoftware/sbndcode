@@ -2,31 +2,26 @@
 art_make(
           MODULE_LIBRARIES larcore_Geometry
                            larcore_Geometry_Geometry_service
-                           larsim_Simulation
+                           larsim_Simulation lardataobj_Simulation
                            larsim_MCCheater_BackTracker_service
                            lardata_Utilities
                            larevt_Filters
-                           lardata_RawData
-                           lardata_RecoBase
-                           lardata_RecoObjects  
-                           lardata_RecoBase
-                           lardata_RecoObjects  
+                           lardataobj_RawData
+                           lardataobj_RecoBase
+                           lardata_RecoObjects larreco_Deprecated  
                            larpandora_LArPandoraInterface
-                           ${SIMULATIONBASE}
-                           ${LARRECO_LIB}
-                           ${LARDATA_LIB}
+                           nusimdata_SimulationBase
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
                            ${ART_FRAMEWORK_SERVICES_REGISTRY}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-                           ${ART_PERSISTENCY_COMMON}
-                           ${ART_PERSISTENCY_PROVENANCE}
-                           ${ART_UTILITIES}
+                           art_Persistency_Common canvas
+                           art_Persistency_Provenance canvas
+                           art_Utilities canvas
                            ${MF_MESSAGELOGGER}
                            ${MF_UTILITIES}
                            ${FHICLCPP}
-                           ${CETLIB}
                            ${ROOT_GEOM}
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}

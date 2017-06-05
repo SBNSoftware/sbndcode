@@ -1,0 +1,54 @@
+#
+# File:    rootoutput_sbnd.fcl
+# Brief:   common settings for the RootOutput module
+# Date:    December 23rd, 2016
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Version: 1.0
+#
+# Provides:
+# 
+# - sbnd_rootoutput: base setting (to be overridden) for ROOT output;
+#     to completely override the output file name (needed when using
+#     EmptyEvent as input module):
+#
+#     outputs: {
+#       out1: {
+#         @table::sbnd_rootoutput  # inherit common SBND settings
+#         
+#         fileName: "..."
+#       } # out1
+#     } # outputs
+#     
+#   or, to accept everything::
+#     
+#     outputs: { out1: @local::sbnd_rootoutput }
+#     
+# 
+
+#BEGIN_PROLOG
+
+#
+# sbnd_rootoutput: settings for RootOutput module
+# 
+# This configuration sets compression level and possibly other details.
+# but the output file name (fileName) must be provided
+# 
+# The output file name is made out of the input file name, plus the
+# process name (%p) and the time of creation of the output file (%tc).
+# This is a good default unless there is no input file name (like in a generation
+# process using EmptyEvent as input module).
+#
+# The compression level 0 will not compress at all. This saves quite some memory.
+# Compression level of 7 (default) is slow. Compression level 1 compresses almost
+# as much as 7, but it takes much, much less time. 
+#
+sbnd_rootoutput: {
+  module_type:      RootOutput
+  
+  fileName:         "%ifb_%p-%tc.root"
+  compressionLevel:  1  # minimum compression, but some
+  
+} # sbnd_rootoutput
+
+#END_PROLOG
+

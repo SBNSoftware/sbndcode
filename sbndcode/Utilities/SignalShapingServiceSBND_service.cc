@@ -97,25 +97,35 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
     for(unsigned int i=0; i<indVFiltParams.size(); ++i)
       fIndVFilterFunc->SetParameter(i, indVFiltParams[i]);
   } else {
-  
+    constexpr unsigned int NPlanes = 3;
+    
     std::string histoname = pset.get<std::string>("FilterHistoName");
     mf::LogInfo("SignalShapingServiceSBND") << " using filter from .root file " ;
-    int fNPlanes=3;
    
     // constructor decides if initialized value is a path or an environment variable
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(pset.get<std::string>("FilterFunctionFname"), fname);
     
-    TFile * in=new TFile(fname.c_str(),"READ");
-    for(int i=0;i<fNPlanes;i++){
-      TH1D * temp=(TH1D *)in->Get(Form(histoname.c_str(),i));
-      fFilterHist[i]=new TH1D(Form(histoname.c_str(),i),Form(histoname.c_str(),i),temp->GetNbinsX(),0,temp->GetNbinsX());
-      temp->Copy(*fFilterHist[i]); 
+    TFile in(fname.c_str(), "READ");
+    if (!in.IsOpen()) {
+      throw cet::exception("SignalShapingServiceSBND")
+        << "Can't open filter function file '" << fname << "'!\n";
     }
-   
-    in->Close();
-   
+    mf::LogInfo("SignalShapingServiceSBND")
+      << "Reading filter histograms from '" << fname << "'";
+    for(unsigned int i = 0; i < NPlanes; ++i) {
+      auto pHist = dynamic_cast<TH1*>(in.Get(Form(histoname.c_str(),i)));
+      if (!pHist) {
+        // this happens also if there is an object but it's not a TH1
+        throw cet::exception("SignalShapingServiceSBND")
+          << "Can't find filter histogram '" << histoname << "' for plane #" << i
+          << " in '" << fname << "'!\n";
+      }
+      pHist->SetDirectory(nullptr); // detach the histogram from its source file
+      fFilterHist[i] = pHist;
+    }
+    in.Close();
   }
  
   /////////////////////////////////////
@@ -144,38 +154,52 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
     // Warning, last parameter needs to be multiplied by the FFTSize, in current version of the code,
 
   } else if (fUseHistogramFieldShape){
-    mf::LogInfo(":SignalShapingServiceSBND") << " using the field response provided from a .root file" ;
-    int fNPlanes = 3;
+    constexpr unsigned int NPlanes = 3;
 
     //constructor decides if initialized value is a path or an environment variable
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file( pset.get<std::string>("FieldResponseFname"), fname);
     std::string histoname = pset.get<std::string>("FieldResponseHistoName");
+    
+    mf::LogInfo("SignalShapingServiceSBND")
+      << "Using the field response provided from '" << fname
+      << "' (histograms '" << histoname << "_*')";
 
-    std::cout << "Field Response" << " " << fname << " " << histoname << std::endl;
+    TFile fin(fname.c_str(), "READ");
+    if ( !fin.IsOpen() ) {
+      throw cet::exception("SignalShapingServiceSBND")
+        << "Could not find the field response file '" << fname << "'!\n";
+    }
 
-    std::unique_ptr<TFile> fin(new TFile(fname.c_str(), "READ"));
-    if ( !fin->IsOpen() ) throw art::Exception( art::errors::NotFound ) << "Could not find the field response file" << fname << "!" << std::endl;
+    const std::string iPlane[3] = {"U", "V", "Y"};
 
-    std::string iPlane[3] = {"U", "V", "Y"};
-
-    for( int i=0; i<fNPlanes; i++){
-      TString iHistoName = Form( "%s_%s", histoname.c_str(), iPlane[i].c_str());
+    for(unsigned int i = 0; i < NPlanes; ++i) {
+      std::string PlaneHistoName = histoname + "_" + iPlane[i];
+      LOG_DEBUG("SignalShapingServiceSBND")
+        << "Field Response " << i << ": " << PlaneHistoName;
       
-      std::cout << "Field Response 2" << " " << iHistoName << std::endl;
-      
-      TH1F *temp = (TH1F*) fin->Get(iHistoName);
-      if (!temp) throw art::Exception( art::errors::InvalidNumber ) << "Could not find the field response histogram" << iHistoName << std::endl; 
-      if (temp->GetNbinsX() > fNFieldBins) throw art::Exception( art::errors::InvalidNumber ) << "FieldBins should always be larger than or equal to the number of the bins in the input histogram!" << std::endl;
-      
-      fFieldResponseHist[i] = new TH1F( iHistoName, iHistoName, temp->GetNbinsX(), temp->GetBinLowEdge(1), temp->GetBinLowEdge(temp->GetNbinsX() + 1));
-      temp->Copy(*fFieldResponseHist[i]);
-      std::cout << "RESPONSE HISTOGRAM: " << i << " " << fFieldResponseHist[i]->GetEntries() << " " << fFieldResponseHist[i]->GetNbinsX() << " " << fFieldResponseHist[i]->GetBinLowEdge(1) 
-      << " " <<fFieldResponseHist[i]->GetBinLowEdge(temp->GetNbinsX() + 1) << std::endl;
+      auto pHist = dynamic_cast<TH1*>(fin.Get(PlaneHistoName.c_str()));
+      if (!pHist) {
+        throw cet::exception("SignalShapingServiceSBND")
+          << "Could not find the field response histogram '" << PlaneHistoName
+          << "' in file '" << fname << "'\n";
+      } 
+      if (pHist->GetNbinsX() > fNFieldBins) {
+        throw art::Exception( art::errors::Configuration ) << "FieldBins (" << fNFieldBins
+          << ") should always be larger than or equal to the number of the bins in the input histogram ("
+          << pHist->GetNbinsX() << " in '" << PlaneHistoName << "')!\n";
       }
+      pHist->SetDirectory(nullptr); // detach the histogram from his source file
+      
+      fFieldResponseHist[i] = pHist;
+      LOG_DEBUG("SignalShapingServiceSBND")
+        << "RESPONSE HISTOGRAM " << iPlane[i] << ": " << pHist->GetEntries() << " entries in "
+        << pHist->GetNbinsX() << " bins (" << pHist->GetBinLowEdge(1)
+        << " to " << pHist->GetBinLowEdge(pHist->GetNbinsX() + 1);
+    }
 
-    fin->Close();
+    fin.Close();
   }
 
 }

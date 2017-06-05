@@ -29,7 +29,7 @@
 #include "spacecharge_sbnd.fcl"
 #include "larfft_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
-#include "magfield.fcl"
+#include "magfield_larsoft.fcl"
 #include "backtracker.fcl"
 #include "spacecharge.fcl"
 
@@ -46,7 +46,7 @@ sbnd_g4_services:
                              @table::sbnd_random_services
   LArG4Parameters:           @local::sbnd_largeantparameters 
   LArVoxelCalculator:        @local::sbnd_larvoxelcalculator 
-  MagneticField:             @local::no_mag
+  MagneticField:             @local::no_mag_larsoft
   SpaceCharge:               @local::sbnd_spacecharge
 } # sbnd_g4_services
 
