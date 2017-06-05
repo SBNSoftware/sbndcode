@@ -21,8 +21,8 @@ extern "C" {
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Event.h" 
 #include "art/Framework/Principal/Handle.h" 
-#include "art/Persistency/Common/Ptr.h" 
-#include "art/Persistency/Common/PtrVector.h" 
+#include "canvas/Persistency/Common/Ptr.h" 
+#include "canvas/Persistency/Common/PtrVector.h" 
 #include "art/Framework/Services/Registry/ServiceHandle.h" 
 #include "art/Framework/Services/Optional/TFileService.h" 
 #include "art/Framework/Services/Optional/TFileDirectory.h" 
@@ -35,11 +35,11 @@ extern "C" {
 #include "larcore/Geometry/Geometry.h"
 //#include "Filters/ChannelFilter.h"
 
-#include "lardata/RawData/RawDigit.h"
-#include "lardata/RawData/raw.h"
-#include "lardata/RecoBase/Wire.h"
+#include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RawData/raw.h"
+#include "lardataobj/RecoBase/Wire.h"
 #include "lardata/Utilities/LArFFT.h"
-#include "lardata/Utilities/sparse_vector.h"
+#include "lardataobj/Utilities/sparse_vector.h"
 #include "lardata/Utilities/AssociationUtil.h"  //--Hec
 
 #include "TComplex.h"
@@ -242,9 +242,9 @@ namespace caldata {
       // add an association between the last object in wirecol--Hec
       // (that we just inserted) and digitVec
       if (!util::CreateAssn(*this, evt, *wirecol, digitVec, *WireDigitAssn, fSpillName)) {
-        throw art::Exception(art::errors::InsertFailure)
+        throw cet::exception("CalWireSBND")
           << "Can't associate wire #" << (wirecol->size() - 1)
-          << " with raw digit #" << digitVec.key();
+          << " with raw digit #" << digitVec.key() << "\n";
       } // if failed to add association
     }
 

@@ -67,7 +67,7 @@ sbnd_basic_services:
 #
 sbnd_random_services: {
   RandomNumberGenerator: {} # art random number generator manager
-  LArSeedService:        @local::sbnd_seedservice
+  NuRandomService:        @local::sbnd_seedservice
 } # sbnd_random_services
 
 

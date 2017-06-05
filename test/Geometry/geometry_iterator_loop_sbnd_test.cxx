@@ -13,11 +13,13 @@
  */
 
 
+// SBND libraries
+#include "sbndcode/Geometry/ChannelMapSBNDAlg.h"
+
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_sbnd.h"
 #include "test/Geometry/GeometryIteratorLoopTestAlg.h"
 #include "larcore/Geometry/GeometryCore.h"
-#include "larcore/Geometry/ChannelMapStandardAlg.h"
 
 // utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -32,7 +34,7 @@
 // environment allows us to tailor it at run time.
 using SBNDGeometryConfiguration
   = sbnd::testing::SBNDGeometryEnvironmentConfiguration
-    <geo::ChannelMapStandardAlg>;
+    <geo::ChannelMapSBNDAlg>;
 
 /*
  * GeometryTesterFixture, configured with the object above, is used in a

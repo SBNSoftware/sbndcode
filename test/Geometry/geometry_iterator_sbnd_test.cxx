@@ -12,11 +12,13 @@
 // a main() function; Boost is pulled in by geometry_boost_unit_test_base.h
 #define BOOST_TEST_MODULE GeometryIteratorTestSBND
 
+// SBND libraries
+#include "sbndcode/Geometry/ChannelMapSBNDAlg.h"
+
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_sbnd.h"
 #include "test/Geometry/GeometryIteratorTestAlg.h"
-#include "test/Geometry/boost_unit_test_base.h"
-#include "larcore/Geometry/ChannelMapStandardAlg.h"
+#include "larcore/TestUtils/boost_unit_test_base.h"
 
 //------------------------------------------------------------------------------
 //---  The test environment
@@ -31,7 +33,7 @@
 struct SBNDGeometryConfiguration:
   public testing::BoostCommandLineConfiguration<
     sbnd::testing::SBNDGeometryEnvironmentConfiguration
-      <geo::ChannelMapStandardAlg>
+      <geo::ChannelMapSBNDAlg>
     >
 {
   /// Constructor: overrides the application name; ignores command line
@@ -65,7 +67,7 @@ class SBNDGeometryIteratorTestFixture:
 
 BOOST_FIXTURE_TEST_SUITE
   (GeometryIteratorsSBND, SBNDGeometryIteratorTestFixture)
-// BOOST_GLOBAL_FIXTURE(SBNDGeometryIteratorTestFixture)
+// BOOST_GLOBAL_FIXTURE(SBNDGeometryIteratorTestFixture);
 
 
 BOOST_AUTO_TEST_CASE( AllTests )

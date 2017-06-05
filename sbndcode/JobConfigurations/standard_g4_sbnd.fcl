@@ -1,7 +1,7 @@
 #
 # File:    standard_g4_sbnd.fcl
 # Purpose: Propagation of generated particle through matter (Geant4 simulation)
-# Version: 1.1
+# Version: 1.2
 # 
 # This configuration runs:
 # - LArG4: produces:
@@ -23,6 +23,9 @@
 # 20160707 (petrillo@fnal.gov) [v1.1]
 #   - uniformed to prodsingle_sbnd.fcl
 #
+# 20161223 (petrillo@fnal.gov) [v1.2]
+#   - adopted shared root output configuration
+#
 
 #
 # services
@@ -34,6 +37,7 @@
 #
 #include "largeantmodules_sbnd.fcl"
 #include "mcreco.fcl"
+#include "rootoutput_sbnd.fcl"
 
 
 process_name: G4
@@ -88,10 +92,8 @@ outputs:
 {
   out1:
   {
-    module_type: RootOutput
-    fileName:    "%ifb_%p-%tc.root"
-    dataTier:    "simulated"
-    compressionLevel: 1
+              @table::sbnd_rootoutput # inherit shared settings
+    dataTier: "simulated"
   }
 }
 

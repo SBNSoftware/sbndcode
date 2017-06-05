@@ -42,10 +42,6 @@ sbnd_trackstitcher.StitchAlg:                     @local::sbnd_trackstitcheralg
 sbnd_pmalgtrackmaker: {
   @table::standard_pmalgtrackmaker  # use the standard configuration...
   @table::sbnd_pmaalgs              # ... but override all the algorithm configurations
-  
-  RunVertexing:                 true  # want vertices
-  FlipToBeam:                   true
-  MakePFPs:                     true  # want PFParticles
 } # sbnd_pmalgtrackmaker
 
 sbnd_beziertrackermodule:                         @local::standard_beziertrackermodule
