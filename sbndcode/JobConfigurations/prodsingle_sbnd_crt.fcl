@@ -24,7 +24,7 @@ services.AuxDetGeometry: {
 }
 
 services.AuxDetExptGeoHelperInterface: {
-  service_provider: "CRTGeometryHelper"
+  service_provider: "sbndcode/CRT/RTGeometryHelper"
 }
 
 physics.producers.crt: @local::sbnd_crtsim
