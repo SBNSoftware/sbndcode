@@ -1,6 +1,6 @@
 sbnd_crtsim:
 {
-  module_type: "CRTDetSim"
+  module_type: "sbndcode/CRT/CRTDetSim"
   G4ModuleLabel: "largeant"
 
   // Shape parameters for mean time delay vs. Npe
