@@ -1,41 +1,45 @@
-typedef struct _drawopt  {
+#include "TGeoManager.h"
+
+typedef struct {
   const char* volume;
   int color;
 } drawopt;
 
-sbnd_geo(TString volName="") {
+int sbnd_geo(TString volName="") {
   gSystem->Load("libGeom");
   gSystem->Load("libGdml");
 
-  TGeoManager::Import("sbndvX_nowires.gdml");
+  TGeoManager::Import("sbnd_v00_08.gdml");
 
   drawopt opts[] = {
-    {"volHorizontalBeam", kGreen+2},
-    {"volGround", kOrange+4},
+    {"volTPCActive", kGreen+2},
+    {"volCryostat", kOrange+4},
     {0, 0}
   };
 
   for (int i=0;; i++) {
     if (opts[i].volume == 0) break;
+    std::cout << "Painting '" << opts[i].volume << "'" << std::endl;
       gGeoManager->FindVolumeFast(opts[i].volume)->SetLineColor(opts[i].color);
   }
 
   TList* mat = gGeoManager->GetListOfMaterials();
   TIter next(mat);
   TObject* obj;
-  while (obj = next()) {
+  while ((obj = next())) {
     obj->Print();
   }
 
   gGeoManager->GetTopNode();
-  gGeoManager->CheckOverlaps(10e-11);
+//  gGeoManager->CheckOverlaps(10e-11);
   gGeoManager->PrintOverlaps();
   gGeoManager->SetMaxVisNodes(70000);
 
   if (!volName.IsNull())
     gGeoManager->FindVolumeFast(volName)->Draw("ogl");
-
-  TGeoVolume* TPC = gGeoManager->FindVolumeFast("volTPC");
+  return 0;
+  
+  TGeoVolume* TPC = gGeoManager->FindVolumeFast("volTPCActive");
   float m_tpc = TPC->Weight();
   TGeoVolume* Cathode = gGeoManager->FindVolumeFast("volCathodePlate");
   float m_cathode = Cathode->Weight();
@@ -46,5 +50,6 @@ sbnd_geo(TString volName="") {
   TFile* tf = new TFile("sbnd.root", "RECREATE");
   gGeoManager->Write();
   tf->Close();
+  return 0;
 }
 
