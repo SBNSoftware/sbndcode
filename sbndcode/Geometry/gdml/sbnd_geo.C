@@ -1,3 +1,6 @@
+#include "TGeoManager.h"
+
+
 typedef struct _drawopt 
 {
   const char* volume;
@@ -5,7 +8,7 @@ typedef struct _drawopt
   int	      transparency;
 } drawopt;
 
-void geoVis_sbnd(TString volName="")
+void sbnd_geo(TString volName="")
 {
 	gSystem->Load("libGeom");
 	gSystem->Load("libGdml");
