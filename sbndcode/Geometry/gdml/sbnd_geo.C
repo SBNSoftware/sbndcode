@@ -1,49 +1,50 @@
-typedef struct _drawopt 
-{
+typedef struct _drawopt  {
   const char* volume;
-  int         color;
+  int color;
 } drawopt;
 
-sbnd_geo(TString volName="")
-{
+sbnd_geo(TString volName="") {
   gSystem->Load("libGeom");
   gSystem->Load("libGdml");
 
   TGeoManager::Import("sbnd_v00_08.gdml");
 
-  drawopt optuboone[] = {
-    {"volWorld",        0},
-    {"volDetEnclosure", kWhite},
-    {"volCryostat",     kOrange},
-    {"volTPC",          kOrange-5},
-    {"volTPCBackWall",  kRed},
-    {"volTPCVertWall",  kCyan-5},
-    {"volTPCHorizWall", kOrange},
+  drawopt opts[] = {
+    {"volHorizontalBeam", kGreen+2},
+    {"volGround", kOrange+4},
     {0, 0}
   };
 
-  // for (int i=0;; ++i) {
-  //   if (optuboone[i].volume==0) break;
-  //     gGeoManager->FindVolumeFast(optuboone[i].volume)->SetLineColor(optuboone[i].color);
-  // }
+  for (int i=0;; i++) {
+    if (opts[i].volume == 0) break;
+      gGeoManager->FindVolumeFast(opts[i].volume)->SetLineColor(opts[i].color);
+  }
+
   TList* mat = gGeoManager->GetListOfMaterials();
   TIter next(mat);
-  TObject *obj;
+  TObject* obj;
   while (obj = next()) {
     obj->Print();
   }
 
   gGeoManager->GetTopNode();
-  gGeoManager->CheckOverlaps(0.01);
+  gGeoManager->CheckOverlaps(10e-11);
   gGeoManager->PrintOverlaps();
   gGeoManager->SetMaxVisNodes(70000);
 
-  //gGeoManager->GetTopVolume()->Draw();
-  if ( ! volName.IsNull() ) gGeoManager->FindVolumeFast(volName)->Draw("ogl");
+  if (!volName.IsNull())
+    gGeoManager->FindVolumeFast(volName)->Draw("ogl");
 
-  TFile *tf = new TFile("sbnd.root", "RECREATE");
- 
+  TGeoVolume* TPC = gGeoManager->FindVolumeFast("volTPC");
+  float m_tpc = TPC->Weight();
+  TGeoVolume* Cathode = gGeoManager->FindVolumeFast("volCathodePlate");
+  float m_cathode = Cathode->Weight();
+
+  float m_tpc_argon = m_tpc - m_cathode ;
+  cout << "LAr weight in TPC = " << m_tpc_argon << " kg\n" <<endl;
+
+  TFile* tf = new TFile("sbnd.root", "RECREATE");
   gGeoManager->Write();
-
   tf->Close();
 }
+
