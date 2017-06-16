@@ -1173,6 +1173,11 @@
 
 	<constant name="wireScaleFactor" value="2*wirePitch_Z / wireMax_Z" />
 	<constant name="wireUnit_L" value="wireScaleFactor * commonWire_L" />
+	
+	<!--fixes to make pitches uniform     -->
+	<constant name="dp1" value="3.-2.95327" />
+	<constant name="dp2" value="3.12786-3" />
+	
 </define>
 
 <solids>
@@ -1235,7 +1240,7 @@
 		<physvol> 
 			<volumeref ref="volTPCWire_iWire_3"/> 
 			<rotationref ref="rotateP30X"/> 
-			<position  name="posWire_U1_iWire_3" unit="mm" x="0" y="-(1+iWire_3)*wirePitch_Y1+originWires_Y1" z="(1+iWire_3)*wirePitch_Z+originWires_Z"/>
+			<position  name="posWire_U1_iWire_3" unit="mm" x="0" y="-(1+iWire_3)*wirePitch_Y1+originWires_Y1+dp1*Cos30" z="(1+iWire_3)*wirePitch_Z+originWires_Z-dp1*Sin30"/>
 		</physvol>
 		</loop>
 
@@ -1253,7 +1258,7 @@
 		<physvol> 
 			<volumeref ref="volTPCWire_iWire_5"/>
 			<rotationref ref="rotateP30X"/> 
-			<position  name="posWire_U3_iWire_5" unit="mm" x="0" y="(iWire_5+1)*wirePitch_Y1-originWires_Y1" z="-(iWire_5+1)*wirePitch_Z-originWires_Z"/>
+			<position  name="posWire_U3_iWire_5" unit="mm" x="0" y="(iWire_5+1)*wirePitch_Y1-originWires_Y1+dp2*Cos30" z="-(iWire_5+1)*wirePitch_Z-originWires_Z-dp2*Sin30"/>
 		</physvol>
 		</loop>
 	</volume>
@@ -1268,7 +1273,7 @@
 		<physvol> 
 			<volumeref ref="volTPCWire_iWire_6"/>
 			<rotationref ref="rotateN30X"/> 
-			<position  name="posWire_V3_iWire_6" unit="mm" x="0" y="(iWire_6+1)*wirePitch_Y1-originWires_Y1" z="(iWire_6+1)*wirePitch_Z+originWires_Z"/>
+			<position  name="posWire_V3_iWire_6" unit="mm" x="0" y="(iWire_6+1)*wirePitch_Y1-originWires_Y1+dp2*Cos30" z="(iWire_6+1)*wirePitch_Z+originWires_Z+dp2*Sin30"/>
 		</physvol>
 		</loop>
 
@@ -1286,7 +1291,7 @@
 		<physvol> 
 			<volumeref ref="volTPCWire_iWire_8"/> 
 			<rotationref ref="rotateN30X"/> 
-			<position  name="posWire_V1_iWire_8" unit="mm" x="0" y="originWires_Y1-(1+iWire_8)*wirePitch_Y1" z="-originWires_Z-(1+iWire_8)*wirePitch_Z"/>
+			<position  name="posWire_V1_iWire_8" unit="mm" x="0" y="originWires_Y1-(1+iWire_8)*wirePitch_Y1+dp1*Cos30" z="-originWires_Z-(1+iWire_8)*wirePitch_Z+dp1*Sin30"/>
 		</physvol>
 		</loop>
 
@@ -2485,6 +2490,10 @@
 
 <setup name="Default" version="1.0">
 	<world ref="volWorld" />
+</setup>
+
+<setup name="DetectorOnly" version="1.0">
+	<world ref="volDetEnclosure" />
 </setup>
 
 </gdml>
