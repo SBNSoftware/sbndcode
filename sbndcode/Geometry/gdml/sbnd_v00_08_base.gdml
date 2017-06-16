@@ -1187,7 +1187,7 @@
 
 	<variable name="iWire_1" value="0"/> 
 	<loop for ="iWire_1" to="832" step="1"> <!-- #wire -->
-        <tube name="tubeWire_iWire_1" lunit="mm" rmax="commonWire_R" z="(1+iWire_1)*wireUnit_L" aunit="deg" deltaphi="360." />
+        <tube name="tubeWire_iWire_1" lunit="mm" rmax="commonWire_R" z="(1+iWire_1)*wireUnit_L-4*0.04" aunit="deg" deltaphi="360." />
 	</loop>
 </solids>
 
