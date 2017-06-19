@@ -34355,4 +34355,7 @@
 <setup name="Default" version="1.0">
 	<world ref="volWorld" />
 </setup>
+<setup name="DetectorOnly" version="1.0">
+	<world ref="volDetEnclosure" />
+</setup>
 </gdml>
