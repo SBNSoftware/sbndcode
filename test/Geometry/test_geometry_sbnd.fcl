@@ -10,7 +10,7 @@ process_name: testGeo
 
 services: {
   
-  @table::sbnd_geometry_services 
+  @table::future_sbnd_geo.sbnd_geometry_services 
   
   message: {
     destinations: {
