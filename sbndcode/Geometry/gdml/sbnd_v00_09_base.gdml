@@ -1,0 +1,2509 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<gdml xmlns:gdml="http://cern.ch/2001/Schemas/GDML"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="GDMLSchema/gdml.xsd">
+
+<!-- =========================================
+
+	The SBND "Geometry"
+	
+	GDML file with description of
+	
+	- Materials
+	- Dimensions
+	- Geometry
+	
+	GDML Manual at http://gdml.web.cern.ch/GDML/doc/GDMLmanual.pdf
+	
+	version 1.0 developed by Gustavo.Valdiviesso@unifal-mg.edu.br
+	technote at doc-db [XXX]
+	
+	Version History (latest on top)
+	v0.9
+		> Bugfixes: 
+			*[16] Wire Pitch fixed via adding a small constant
+			*[17] removed overlap resulting from [16]
+			*[18] swapped ordering of APA planes in negative plane to correspond to reality.
+		> Known Problems
+			+[12] CRT Placeholders colliding;
+			+[13] Building's material budget has to be discussed with specialists;
+  
+	v0.8
+		+ Loop tags added in compliance with preparser;
+		> Bugfixes:
+			*[14] Wires did not cover the whole plane: area expanded to cover all APA; 
+			*[15] Removed APA structure causing "scale" error on LArSoft6; 
+		> Known problems:
+			+[12] CRT Placeholders colliding;
+			+[13] Building's material budget has to be discussed with specialists;
+			+[16] Wires pitch seems irregular withing desired precision;
+	
+
+	v0.7
+		+ NEW PMT model from Diego;
+		> Bugfixes:
+			*[12] Solved collisions between container volumes: building and detector; 
+		> Known problems:
+			+[12] CRT Placeholders colliding;
+			+[13] Building's material budget has to be discussed with specialists;
+	
+	v0.6
+		+ Placeholders for CRT Panels;
+		+ Added Concrete Shieldings;
+		> Bugfixes:
+			*[10] Solved collisions between container volumes: building and detector; 
+			*[11] Constants' declarations reviewed;
+			*[0]  Material budget mostly reviewd;
+		> Known problems:
+			+[12] Building's material budget has to be discussed with specialists;
+
+	v0.5
+		+ Cryostat and external structure;
+		> Bugfixes:
+			* [7] New PMTs assembling implemented;
+			* [8] Changed volTPCPlane_Y to volTPCPlaneVert (magical word);
+		> Known problems:
+			+[10] Collisions between container volumes: building and detector; 
+			+[11] Need review of constants' declarations.
+			= [0] Material budget off on several parts;
+
+	v0.4
+		+ New Detector in development by Gustavo Valdiviesso;
+		> Bugfixes:
+			* [5] Pitch in UV planes are now read as 0.3cm: diagonal tubes should not be scaled;
+			* [4] BadTGeoNode no longer issues exception: volPMT must be daugther of volCryostat;
+			* [6] LArVoxelReadoutGeometry no longer issues exception: volTPC2 with reflection. Don't use reflections, ever!;
+		> Known problems: 
+			+ [7] New PMTs assembling needed;
+			+ [8] Can't find volTPCPlaneVert to connect OpDetSensitive to;
+			+ [9] G4Exception from G4SDStructure::AddNewDetector(): AuxDetSD_AuxDet0_0 had already been stored in /. Object pointer is overwitten.;
+			= [0] Material budget off on several parts;
+
+	v0.3
+		+ New Detector in development by Gustavo Valdiviesso;
+		> Bugfixes:
+			* [4] BadTGeoNode no longer issues exception: volPMT must be daugther of volCryostat;
+			* [6] LArVoxelReadoutGeometry no longer issues exception: volTPC2 with reflection. Don't use reflections, ever!;
+		> Known problems: 
+			= [5] Pitch in UV planes appears as 0;
+			= [0] Material budget off on several parts;
+
+	v0.2
+		+ New Detector in development by Gustavo Valdiviesso;
+		- Building temporary removed for code clarity;
+		> Bugfixes:
+			* [2] Volume ordering corrected to what LArSoft expects; 
+			* [3] Global origin is now where LArSoft expects;
+		> Known problems:
+			+ [4] BadTGeoNode issues exception "exceeded maximum TGeoNode depth";
+			+ [5] Pitch in UV planes appears as 0;
+			+ [6] LArVoxelReadoutGeometry issues exception "The LAr TPC volume is not a box or a tube";
+			= [0] Material budget off on several parts;
+
+	v0.1
+		* Dimensions and number of PMTs updated on Old detector (Gustavo Valdiviesso);
+		> Bugfixes:
+			* [3] Dimensions updated from current project;
+		> Known problems: 
+			= [2] Volume ordering mismatched from what LArSoft expects; 
+			= [1] Global origin not where LArSoft expects;
+			= [0] Material budget off on several parts;
+		
+
+	v0.0
+		= Old detector by Ariana Hackenburg;
+		+ New building and surroundings by Gustavo Valdiviesso;
+		+ Cleanup and debugs by Laura Ferraris-Bouchez;
+		> Known problems: 
+			+[3] Dimensions mismatched from current project;
+			+[2] Volume ordering mismatched from what LArSoft expects; 
+			+[1] Global origin not where LArSoft expects;
+			+[0] Material budget off on several parts;
+	
+     ========================================= -->
+
+	
+	
+<!--========================================================================-->
+<!--                  Global Dimensions Definitions                         -->
+<!--========================================================================-->
+
+<define>
+	<!-- all units of lenght are mm by default -->
+	<constant name="worldSize" value="1e6"/>
+	<position name="center"/>
+	<rotation name="identity"/>
+	<constant name="eD" value="1e-3"/>
+
+	<constant name="Cos30" value="0.86602540378" />
+	<constant name="Cos60" value="0.5" />
+	<constant name="Sin30" value="Cos60" />
+	<constant name="Sin60" value="Cos30" />
+	<constant name="Tan30" value="Sin30/Cos30" />
+	<constant name="Tan60" value="Sin60/Cos60" />
+	
+	<rotation name="rotateP90Y" unit="deg" x="0" y="90" z="0"/>  
+	<rotation name="rotateN90Y" unit="deg" x="0" y="-90" z="0"/>
+	<rotation name="rotateP90X" unit="deg" x="90" y="0" z="0"/>
+	<rotation name="rotateN90X" unit="deg" x="-90" y="0" z="0"/>
+	<rotation name="rotateN150X" unit="deg" x="-150" y="0" z="0"/>
+	<rotation name="rotateP150X" unit="deg" x="150" y="0" z="0"/>
+	<rotation name="rotateN30X" unit="deg" x="-30" y="0" z="0"/>
+	<rotation name="rotateP30X" unit="deg" x="30" y="0" z="0"/>
+	<rotation name="rotate180Y" unit="deg" x="0" y="180" z="0"/>
+
+	<!-- Ground dimentions (mm) -->
+	<constant name="theGround_X" value="4.e4"/>
+	<constant name="theGround_Y" value="4.e4"/>
+	<constant name="theGround_Z" value="4.e4"/>
+
+	<!-- Building dimentions (mm) -->
+	<constant name="buildingInternalSpace_X" value="15240"/>
+	<constant name="buildingInternalSpace_Y" value="10670"/>
+	<constant name="buildingInternalSpace_Z" value="28040"/>
+	<constant name="wallWidth" value="100" />
+	<constant name="buildingRoofTop" value="860"/>
+	<constant name="glassWallSize_X" value="20"/>
+	<constant name="glassWallSize_Y" value="9760"/>
+	<constant name="glassWallSize_Z" value="buildingInternalSpace_Z"/>
+	<constant name="freePath_W" value="530"/>
+	<constant name="freePassage_W" value="1830"/>
+
+	<!-- Undergound dimentions (1ft = 304.8mm) -->
+	<constant name="ft" value="304.8"/>
+	<constant name="detectorHall_X" value="31*ft"/>
+	<constant name="detectorHall_Y" value="22*ft"/>
+	<constant name="detectorHall_Z" value="40*ft"/>
+	<constant name="concreteWallWidth" value="2*ft"/>
+	<constant name="concreteVerticalSlab" value="14*ft"/>
+	<constant name="concreteFoundationSlab_X" value="detectorHall_X+2*(concreteWallWidth+concreteVerticalSlab)"/>
+	<constant name="concreteFoundationSlab_Y" value="3*ft"/>
+	<constant name="concreteFoundationSlab_Z" value="detectorHall_Z+2*(concreteWallWidth+concreteVerticalSlab)"/>
+	<constant name="pumpHall_X" value="9*ft"/>
+	<constant name="pumpHall_Y" value="8*ft"/>
+	<constant name="pumpHall_Z" value="(detectorHall_Z+concreteWallWidth)/3-concreteWallWidth"/>
+
+	<constant name="mezzanineFloorSlab_Y" value="0.50*ft"/>
+	<constant name="mezzanine_Y" value="11*ft+mezzanineFloorSlab_Y"/>
+	<constant name="mezzanine_Z" value="20.25*ft"/>
+
+	<constant name="buildingBaseWidth" value="0.50*ft"/>
+
+
+	<!-- Detector's dimensions -->
+	<constant name="theSBND_X" value="4000.0" />
+	<constant name="theSBND_Y" value="4000.0" />
+	<constant name="theSBND_Z" value="5000.0" />
+	
+	<constant name="theCryostat_W" value="25.0" />		
+	<constant name="theCPA_W" value="50.0" />
+	<constant name="theTPCPlane_W" value="3.0" />
+
+	<constant name="theTPC_X" value="(theSBND_X-theCPA_W)/2" />
+	<constant name="theTPC_Y" value="theSBND_Y" />
+	<constant name="theTPC_Z" value="theSBND_Z" />
+	<constant name="theTPCActive_W" value="theTPC_X-3*theTPCPlane_W" />
+	<constant name="theAPA_Structure_W" value="500" />
+	
+	<constant name="theCryo_X" value="5202" />
+	<constant name="theCryo_Y" value="5423" />
+	<constant name="theCryo_Z" value="7027" />
+    
+        <constant name="IPE_Beam_L" value="7779" />
+        <constant name="IPE_Beam_W" value="450" />
+        <constant name="IPE_Beam_T" value="45" />
+        
+        <constant name="structure_X" value="6406" />
+        <constant name="structure_Y" value="6627" />
+        <constant name="structure_Z" value="8231" />
+        <constant name="structure_W" value="6" />
+        
+        <constant name="system_DZ" value="417.5" />
+        <constant name="system_DY" value="12.899" />
+
+        <constant name="IPE_Beam_DZ" value="structure_Z/14" />
+        <constant name="IPE_Beam_DX" value="structure_X/6" />
+        <constant name="IPE_Beam_DY" value="(IPE_Beam_L-(structure_Y+2*structure_W))/2-IPE_Beam_W" />
+
+	<constant name="topLid_W"     value="690" />
+	<constant name="theShield_W"  value="2000" />
+	<constant name="aCRTModule_W" value="20" />	
+	<constant name="aCRTModule_H" value="1800" /> 
+	<constant name="theCRT_W"     value="2*aCRTModule_W" />
+
+	<constant name="theEnclosure_X" value="2*IPE_Beam_W+structure_X+2*structure_W+2*theCRT_W" />
+	<constant name="theEnclosure_Y" value="2*IPE_Beam_W+structure_Y+2*structure_W" />
+	<constant name="theEnclosure_Z" value="2*IPE_Beam_W+structure_Z+2*structure_W+2*theCRT_W" />
+
+	<constant name="aCRT_Top1"    value="buildingBaseWidth+mezzanine_Y+detectorHall_Y-(IPE_Beam_W+structure_Y/2+structure_W)+system_DY+37.102" />
+	<constant name="aCRT_Top2"  value="theShield_W+theCRT_W" /> 
+
+	<constant name="aCRTModule_X_L" value="5*aCRTModule_H/2" />	
+	<constant name="aCRTModule_X_H" value="aCRTModule_H" />	
+	<constant name="aCRTModule_Y_L" value="4*aCRTModule_H/2" />	
+	<constant name="aCRTModule_Y_H" value="aCRTModule_H" />	
+	<constant name="theCRT_X" value="2*aCRTModule_Y_L"/>
+	<constant name="theCRT_Y" value="theCRT_X"/>
+	<constant name="theCRT_Z" value="2*aCRTModule_X_L"/>
+	<constant name="theCRT_T" value="aCRT_Top1+aCRT_Top2" /> 
+
+
+	<constant name="theStructure_T" value="structure_Y/2+structure_W+topLid_W"/>
+	<constant name="theEncTower_T"  value="theStructure_T+theCRT_T"/>
+	<!-- the TRUE Enclosure Height is theEnclosure_Y+theEncTower_T -->
+
+	<rotation name="rotPlusAroundX" unit="deg" x="30" y="0" z="0"/>
+	<rotation name="rotCableAroundX" unit="deg" x="60" y="0" z="0"/>
+
+	<constant name="rWire"  value="0.15*0.5" />
+
+	<constant name="metalon_H" value="150" /> 
+	<constant name="metalon_W" value="100" /> 
+	<constant name="metalon_T" value="5"   /> 
+	<constant name="metalon_L1" value="theTPC_Y" /> 
+	<constant name="metalon_L2" value="(theTPC_Z/2-3*metalon_W)/2" />
+
+	<constant name="junction_L" value="330" />
+	<constant name="junction_W" value="100" />
+	<constant name="junction_H" value="100" />
+	<constant name="junction_T" value="6"   />
+	<constant name="cable_L" value="4500"   />
+	<constant name="cable_R" value="25"   />
+
+	<constant name="APAFrame_H" value="1333" />
+
+	<!-- Position of TPC in relation to Detector Hall (mm) -->
+	<constant name="whereTPC_X" value="0"/>
+	<constant name="whereTPC_Y" value="700-5.3995"/>
+	<constant name="whereTPC_Z" value="0"/>
+
+	<!-- Position of Building (mm) -->
+	<constant name="whereBuild_X" value="0"/>
+	<constant name="whereBuild_Y" value="(buildingBaseWidth+buildingInternalSpace_Y+detectorHall_Y)/2+mezzanine_Y-system_DY"/>
+	<constant name="whereBuild_Z" value="1300"/>
+
+	<position name="posUnderground" unit="mm" x="whereTPC_X" y="whereTPC_Y-theCryo_Y/2" z="whereTPC_Z+theTPC_Z/2"/>
+	<position name="posBuilding"    unit="mm" x="whereBuild_X" y="whereBuild_Y" z="whereBuild_Z"/>	
+	<position name="posBuildingVoid" unit="mm" x="0" y="-(wallWidth+buildingRoofTop)/2-eD" z="0"/>
+
+        <position name="posCryostat"    unit="mm" x="0" y="0" z="theTPC_Z/2-system_DZ" />
+        <position name="posStructure"   unit="mm" x="0" y="0" z="theTPC_Z/2-system_DZ" />
+
+	<constant name="S460L_D" value="3.8321" /> 
+
+	<position name="posEquipLid" x="0" y="theStructure_T-topLid_W/2" z="0"/>
+	<position name="posTopTower" x="0" y="theCRT_T/2" z="0"/>
+	<position name="posShieldingLid" x="0" y="theCRT_T-theCRT_W-theShield_W/2" z="0"/>
+	<position name="posShieldingTop" x="0" y="theCRT_T-theCRT_W-theShield_W/2" z="1600"/>
+	<position name="posMezzanineLid" x="0" y="theCRT_T-theCRT_W-theShield_W+mezzanineFloorSlab_Y/2" z="8600+mezzanine_Z/2"/>
+
+</define>
+
+<!--========================================================================-->
+<!--                        Materials Definitions                           -->
+<!--========================================================================-->
+<materials>
+	<element name="hydrogen"    formula="H"  Z="1">  	<atom value="1.00794"/>   </element>
+	<element name="carbon"      formula="C"  Z="6">  	<atom value="12.0107"/>   </element>
+	<element name="nitrogen"    formula="N"  Z="7">  	<atom value="14.0067"/>   </element>
+	<element name="oxygen"      formula="O"  Z="8">  	<atom value="15.9994"/>   </element>
+	<element name="sodium"      formula="Na" Z="11"> 	<atom value="22.989769"/> </element>
+	<element name="magnesium"   formula="Mg" Z="12"> 	<atom value="24.305"/>    </element>
+	<element name="aluminum"    formula="Al" Z="13"> 	<atom value="26.981539"/> </element>
+	<element name="silicon"     formula="Si" Z="14"> 	<atom value="28.0855"/>   </element>
+	<element name="phosphorous" formula="P"  Z="15"> 	<atom value="30.974"/>   </element>
+	<element name="sulfur"      formula="S"  Z="16"> 	<atom value="32.06"/>   </element>
+	<element name="argon"       formula="Ar" Z="18"> 	<atom value="39.948"/>    </element>
+	<element name="potassium"   formula="K"  Z="19"> 	<atom value="39.0983"/>   </element>
+	<element name="calcium"     formula="Ca" Z="20"> 	<atom value="40.078"/>    </element>
+	<element name="titanium"    formula="Ti" Z="22"> 	<atom value="47.867"/>    </element>
+	<element name="vanadium"    formula="V"  Z="23"> 	<atom value="50.9415"/>   </element>
+	<element name="chromium"    formula="Cr" Z="24"> 	<atom value="51.9961"/>   </element>
+	<element name="manganese"   formula="Mn" Z="25"> 	<atom value="54.938"/>    </element>
+	<element name="iron"        formula="Fe" Z="26"> 	<atom value="55.845"/>    </element>
+	<element name="nickel"      formula="Ni" Z="28"> 	<atom value="58.6934"/>   </element>
+	<element name="copper"      formula="Cu" Z="29"> 	<atom value="63.546"/>   </element>
+	<element name="bromine"     formula="Br" Z="35"> 	<atom value="79.904"/>    </element>
+	<element name="niobium"     formula="Nb" Z="41"> 	<atom value="92.906"/>    </element>
+	<element name="molybdenum"  formula="Mo" Z="42"> 	<atom value="95.95"/>    </element>
+
+	<material Z="1" formula=" " name="Vacuum">
+		<D value="1.e-25" unit="g/cm3"/>
+	</material>
+
+  	<material formula=" " name="Air">
+		<D value="0.001205" unit="g/cm3"/>
+   		<fraction n="0.781154" ref="nitrogen"/>
+   		<fraction n="0.209476" ref="oxygen"/>
+		<fraction n="0.00937"  ref="argon"/>
+	</material>
+
+	<material formula="H2O" name="Water">
+		<D value="1.0" unit="g/cm3"/>
+		<fraction n="0.1119" ref="hydrogen"/>
+		<fraction n="0.8881" ref="oxygen"/>
+	</material>
+
+	<material formula=" " name="Granite">
+		<D value="2.7" unit="g/cm3"/>
+		<fraction n="0.438" ref="oxygen"/>
+		<fraction n="0.257" ref="silicon"/>
+		<fraction n="0.222" ref="sodium"/>
+		<fraction n="0.049" ref="aluminum"/>
+		<fraction n="0.019" ref="iron"/>
+		<fraction n="0.015" ref="potassium"/>
+	</material>
+
+	<material formula=" " name="ShotRock">
+		<D value="2.7*0.6" unit="g/cm3"/>
+		<fraction n="0.438" ref="oxygen"/>
+		<fraction n="0.257" ref="silicon"/>
+		<fraction n="0.222" ref="sodium"/>
+		<fraction n="0.049" ref="aluminum"/>
+		<fraction n="0.019" ref="iron"/>
+		<fraction n="0.015" ref="potassium"/>
+	</material>
+
+	<material formula=" " name="Dirt">
+		<D value="1.7" unit="g/cm3"/>
+		<fraction n="0.438" ref="oxygen"/>
+		<fraction n="0.257" ref="silicon"/>
+		<fraction n="0.222" ref="sodium"/>
+		<fraction n="0.049" ref="aluminum"/>
+		<fraction n="0.019" ref="iron"/>
+		<fraction n="0.015" ref="potassium"/>
+	</material>
+
+	<material formula=" " name="Concrete">
+		<D value="2.3" unit="g/cm3"/>
+		<fraction n="0.530" ref="oxygen"/>
+		<fraction n="0.335" ref="silicon"/>
+		<fraction n="0.060" ref="calcium"/>
+		<fraction n="0.015" ref="sodium"/>
+		<fraction n="0.020" ref="iron"/>
+		<fraction n="0.040" ref="aluminum"/>
+  	</material>
+
+
+	<material name="ALUMINUM_Al" formula="ALUMINUM_Al">
+		<D value="2.6990" unit="g/cm3"/>
+		<fraction n="1.0000" ref="aluminum"/>
+	</material>
+
+	<material name="SILICON_Si" formula="SILICON_Si">
+		<D value="2.3300" unit="g/cm3"/>
+		<fraction n="1.0000" ref="silicon"/>
+	</material>
+
+	<material name="epoxy_resin" formula="C38H40O6Br4">
+		<D value="1.1250" unit="g/cm3"/>
+		<composite n="38" ref="carbon"/>
+		<composite n="40" ref="hydrogen"/>
+		<composite n="6" ref="oxygen"/>
+		<composite n="4" ref="bromine"/>
+	</material>
+  
+	<material name="PU_foam_dense" formula="C25H42N2O6">
+		<D value=".224" unit="g/cm3"/>
+		<composite n="25" ref="carbon"/>
+		<composite n="42" ref="hydrogen"/>
+		<composite n="2" ref="nitrogen"/>
+		<composite n="6" ref="oxygen"/>
+	</material>
+ 
+	<material name="PU_foam_light" formula="C25H42N2O6">
+		<D value=".0384" unit="g/cm3"/>
+		<composite n="25" ref="carbon"/>
+		<composite n="42" ref="hydrogen"/>
+		<composite n="2" ref="nitrogen"/>
+		<composite n="6" ref="oxygen"/>
+	</material>
+	     
+	<material name="SiO2" formula="SiO2">
+		<D value="2.2" unit="g/cm3"/>
+		<composite n="1" ref="silicon"/>
+		<composite n="2" ref="oxygen"/>
+	</material>
+
+	<material name="Al2O3" formula="Al2O3">
+		<D value="3.97" unit="g/cm3"/>
+		<composite n="2" ref="aluminum"/>
+		<composite n="3" ref="oxygen"/>
+	</material>
+
+	<material name="Fe2O3" formula="Fe2O3">
+		<D value="5.24" unit="g/cm3"/>
+		<composite n="2" ref="iron"/>
+		<composite n="3" ref="oxygen"/>
+	</material>
+
+	<material name="CaO" formula="CaO">
+		<D value="3.35" unit="g/cm3"/>
+		<composite n="1" ref="calcium"/>
+		<composite n="1" ref="oxygen"/>
+	</material>
+
+	<material name="MgO" formula="MgO">
+		<D value="3.58" unit="g/cm3"/>
+		<composite n="1" ref="magnesium"/>
+		<composite n="1" ref="oxygen"/>
+	</material>
+
+	<material name="Na2O" formula="Na2O">
+		<D value="2.27" unit="g/cm3"/>
+		<composite n="2" ref="sodium"/>
+		<composite n="1" ref="oxygen"/>
+	</material>
+
+	<material name="TiO2" formula="TiO2">
+		<D value="4.23" unit="g/cm3"/>
+		<composite n="1" ref="titanium"/>
+		<composite n="2" ref="oxygen"/>
+	</material>
+
+	<material name="fibrous_glass">
+		<D value="2.74351" unit="g/cm3"/>
+		<fraction n="0.600" ref="SiO2"/>
+		<fraction n="0.118" ref="Al2O3"/>
+		<fraction n="0.001" ref="Fe2O3"/>
+		<fraction n="0.224" ref="CaO"/>
+		<fraction n="0.034" ref="MgO"/>
+		<fraction n="0.010" ref="Na2O"/>
+		<fraction n="0.013" ref="TiO2"/>
+	</material>
+
+	<material name="FR4">
+		<D value="1.98281" unit="g/cm3"/>
+		<fraction n="0.47" ref="epoxy_resin"/>
+		<fraction n="0.53" ref="fibrous_glass"/>
+	</material>
+
+	<material name="STEEL_STAINLESS_Fe7Cr2Ni" formula="STEEL_STAINLESS_Fe7Cr2Ni">
+		<D value="7.9300" unit="g/cm3"/>
+		<fraction n="0.0010" ref="carbon"/>
+		<fraction n="0.1792" ref="chromium"/>
+		<fraction n="0.7298" ref="iron"/>
+		<fraction n="0.0900" ref="nickel"/>
+	</material>
+
+	<material name="STEEL_STRUCTURAL_S460L" formula="S460L">
+		<D value="S460L_D" unit="g/cm3"/>
+		<fraction n="0.95380" ref="iron"/>
+		<fraction n="0.01700" ref="manganese"/>        
+		<fraction n="0.00800" ref="nickel"/>
+		<fraction n="0.00600" ref="silicon"/>
+		<fraction n="0.00550" ref="copper"/>
+		<fraction n="0.00300" ref="chromium"/>
+		<fraction n="0.00200" ref="molybdenum"/>
+		<fraction n="0.00160" ref="carbon"/>
+		<fraction n="0.00120" ref="vanadium"/>
+		<fraction n="0.00050" ref="niobium"/>
+		<fraction n="0.00050" ref="titanium"/>         
+		<fraction n="0.00025" ref="phosphorous"/>
+		<fraction n="0.00025" ref="nitrogen"/>
+		<fraction n="0.00020" ref="sulfur"/>
+		<fraction n="0.00020" ref="aluminum"/>
+	</material>
+
+    <material name="LAr" formula="LAr">
+		<D value="1.40" unit="g/cm3"/>
+		<fraction n="1.0000" ref="argon"/>
+	</material>
+
+	<material formula=" " name="G10">
+		<D value="1.7" unit="g/cm3"/>
+		<fraction n="0.2805" ref="silicon"/>
+		<fraction n="0.3954" ref="oxygen"/>
+		<fraction n="0.2990" ref="carbon"/>
+		<fraction n="0.0251" ref="hydrogen"/>
+	</material>
+
+
+	<material formula="Ti_Metal" name="Titanium">
+		<D value="4.506" unit="g/cm3"/>
+		<fraction n="1." ref="titanium"/>
+	</material>
+
+	<material name="TPB" formula="TPB">
+		<D value="1.40" unit="g/cm3"/>
+		<fraction n="1.0000" ref="argon"/>
+	</material>
+
+	<material name="Glass">
+		<D value="2.74351" unit="g/cm3"/>
+		<fraction n="0.600" ref="SiO2"/>
+		<fraction n="0.118" ref="Al2O3"/>
+		<fraction n="0.001" ref="Fe2O3"/>
+		<fraction n="0.224" ref="CaO"/>
+		<fraction n="0.034" ref="MgO"/>
+		<fraction n="0.010" ref="Na2O"/>
+		<fraction n="0.013" ref="TiO2"/>
+	</material>
+
+	<material name="Acrylic">
+		<D value="1.19" unit="g/cm3"/>
+		<fraction n="0.600" ref="carbon"/>
+		<fraction n="0.320" ref="oxygen"/>
+		<fraction n="0.080" ref="hydrogen"/>
+	</material>
+
+	<material name="Polystyrene">
+		<D value="1.06" unit="g/cm3"/>
+		<fraction n="0.077418" ref="hydrogen"/>
+		<fraction n="0.922582" ref="carbon"/>
+	</material>
+
+</materials>
+
+
+<!--========================================================================-->
+<!--                            Building                                    -->
+<!--========================================================================-->
+<define>
+	<!-- local aliases to global variables -->
+	<constant name="wX" value="buildingInternalSpace_X" />
+	<constant name="wY" value="buildingInternalSpace_Y" />
+	<constant name="wZ" value="buildingInternalSpace_Z" />
+	<constant name="rT" value="buildingRoofTop" />
+	<constant name="wW" value="wallWidth" />
+	<constant name="gX" value="glassWallSize_X" />
+	<constant name="gY" value="glassWallSize_Y" />
+	<constant name="gZ" value="glassWallSize_Z" />
+
+	<constant name="mX_B" value="detectorHall_X" />
+	<constant name="mY_B" value="mezzanine_Y" />
+	<constant name="mZ_B" value="mezzanine_Z+detectorHall_Z" />
+</define>
+
+<solids>
+	<box name="boxBuildingVoid"     lunit="mm" x="wX" y="wY" z="wZ"/>
+	<box name="boxBuildingExternal" lunit="mm" x="wX+2*wW" y="wY+wW+rT" z="wZ+2*wW"/>
+	<box name="boxBuildingGlassSpace" lunit="mm" x="wW+2*eD" y="gY+eD" z="gZ"/>
+	<box name="boxBuildingRoofSpace"  lunit="mm" x="wX" y="rT" z="wZ"/>
+
+	<subtraction name="BuildingWalls">
+    		<first  ref="boxBuildingExternal"/> 
+    		<second ref="boxBuildingVoid"/>
+    		<positionref ref="posBuildingVoid"/>
+  	</subtraction>
+	<subtraction name="BuildingWallsRoof">
+		<first  ref="BuildingWalls"/> 
+		<second ref="boxBuildingRoofSpace"/>
+		<position name="posBuildingRS" unit="mm" x="0" y="(wY+wW)/2+eD" z="0"/>
+	</subtraction>
+	<subtraction name="Building">
+		<first  ref="BuildingWallsRoof"/> 
+		<second ref="boxBuildingGlassSpace"/>
+		<position name="posBuildingGS" unit="mm" x="-(wX+wW)/2" y="-(wY+rT+wW+eD-gY)/2" z="0"/>
+	</subtraction>
+	<box name="boxGlassWindow" lunit="mm" x="gX" y="gY" z="gZ"/>
+
+	<box name="boxBuildingBase"  lunit="mm" x="buildingInternalSpace_X" y="buildingBaseWidth" z="buildingInternalSpace_Z" />
+
+	<box name="boxMezzanineEntrance"  lunit="mm" x="mX_B" y="mY_B+eD" z="mZ_B" />
+
+	<subtraction name="buildingBase">
+		<first  ref="boxBuildingBase"/> 
+		<second ref="boxMezzanineEntrance"/>
+		<position name="posBuildingBaseEntrance" unit="mm" x="0" y="0" z="wZ/2-mZ_B/2-freePath_W"/>
+	</subtraction>
+
+	<subtraction name="boxBuildingContainer1">
+    		<first  ref="boxBuildingExternal"/> 
+    		<second ref="boxBuildingVoid"/>
+    		<positionref ref="posBuildingVoid"/>
+  	</subtraction>
+
+	<union name="boxBuildingContainer">
+    		<first  ref="boxBuildingContainer1"/> 
+    		<second ref="buildingBase"/>
+		<position name="posBuildingBase2" unit="mm" x="0" y="buildingBaseWidth/2-(wY+rT)/2" z="0" />
+  	</union>
+
+	<!-- this is part of the building, but will be used later on -->
+	<box name="boxShieldingLid" lunit="mm" x="theEnclosure_X" y="theShield_W" z="theEnclosure_Z"/>
+	<box name="boxShieldingTop_0" lunit="mm" x="theEnclosure_X" y="theShield_W+eD" z="theEnclosure_Z"/>
+	<box name="boxShieldingTop_1" lunit="mm" x="detectorHall_X+2*concreteWallWidth" y="theShield_W" z="detectorHall_Z+2*concreteWallWidth-freePassage_W"/>
+
+	<subtraction name="boxShieldingTop">
+		<first ref="boxShieldingTop_1"/>
+		<second ref="boxShieldingTop_0"/>
+		<position name="posShieldPassage" unit="mm" x="0" y="0" z="482.5"/>
+	</subtraction>
+
+	<box name="boxMezzanineLid" lunit="mm" x="detectorHall_X+2*concreteWallWidth" y="mezzanineFloorSlab_Y" z="mezzanine_Z"/>
+</solids>
+
+<structure>
+	<volume name="volTheBuilding">
+		<materialref ref="Concrete"/>
+		<solidref ref="Building"/>
+	</volume>
+	<volume name="volGlassWindow">
+		<materialref ref="Glass"/>
+		<solidref ref="boxGlassWindow"/>
+	</volume>
+	<volume name="volBuildingBase">
+		<materialref ref="Concrete"/>
+		<solidref ref="buildingBase"/>
+	</volume>
+	<volume name="volShieldingLid">
+		<materialref ref="Concrete"/>
+		<solidref ref="boxShieldingLid"/>
+	</volume>
+	<volume name="volShieldingTop">
+		<materialref ref="Concrete"/>
+		<solidref ref="boxShieldingTop"/>
+	</volume>
+	<volume name="volMezzanineLid">
+		<materialref ref="Concrete"/>
+		<solidref ref="boxMezzanineLid"/>
+	</volume>
+	<volume name="volBuilding" >
+    		<materialref ref="Air"/> 
+		<solidref ref="boxBuildingContainer"/>
+		<physvol>
+			<volumeref ref="volTheBuilding"/>
+			<positionref ref="center"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volGlassWindow"/>
+			<position name="posGlassWindow" unit="mm" x="-wX/2-wW+gX" y="-(wY+rT+wW-gY)/2" z="0"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volBuildingBase"/>
+			<position name="posBuildingBase" unit="mm" x="0" y="buildingBaseWidth/2-(wY+rT)/2" z="0" />
+		</physvol>
+	</volume>
+
+</structure>
+<!-- end of Building -->
+
+<!--========================================================================-->
+<!--                          Undergrounounds                               -->
+<!--========================================================================-->
+<define>
+	<!-- local aliases to global variables -->
+	<constant name="dHX" value="detectorHall_X" />
+	<constant name="dHY" value="detectorHall_Y" />
+	<constant name="dHZ" value="detectorHall_Z" />
+	<constant name="fSX" value="concreteFoundationSlab_X" />
+	<constant name="fSY" value="concreteFoundationSlab_Y" />
+	<constant name="fSZ" value="concreteFoundationSlab_Z" />
+	<constant name="concW" value="concreteWallWidth" />
+	<constant name="s_W" value="concreteVerticalSlab" />
+	<constant name="mX" value="detectorHall_X" />
+	<constant name="mY" value="mezzanine_Y" />
+	<constant name="mZ" value="mezzanine_Z+detectorHall_Z" />
+	<constant name="centerHall" value="(mZ-dHZ)/2"/>
+	<constant name="uGY" value="mY+2*dHY"/>
+</define>
+
+<solids>
+	<box name="boxGroundExterior" lunit="mm" x="theGround_X" y="uGY" z="theGround_Z" />
+
+	<box name="boxFoundationSlab" 		lunit="mm" x="fSX" y="fSY" z="fSZ" />
+	<box name="boxDetectorHall"  		lunit="mm" x="dHX" y="dHY+eD" z="dHZ" />
+	<box name="boxDetectorHallExterior"  	lunit="mm" x="dHX+2*concW" y="dHY" z="dHZ+2*concW" />
+	<box name="boxVerticalSlab"  		lunit="mm" x="s_W" y="dHY+eD" z="concW" />
+	<box name="boxPumpHall" 		lunit="mm" x="pumpHall_X" y="pumpHall_Y" z="pumpHall_Z"/>
+	<box name="boxPumpHallExterior" 	lunit="mm" x="pumpHall_X+concW/2" y="pumpHall_Y+concW" z="pumpHall_Z+2*concW"/>
+	
+	<subtraction name="boxGround_1">
+		<first  ref="boxGroundExterior"/> 
+		<second ref="boxDetectorHall"/>
+		<position name="posAirHall1" unit="mm" x="0" y="3*dHY/2-uGY/2" z="0"/>
+	</subtraction>
+
+	<subtraction name="boxGround">
+		<first  ref="boxGround_1"/> 
+		<second ref="boxDetectorHall"/>
+		<position name="posAirHall2" unit="mm" x="0" y="2*dHY+mY-mezzanineFloorSlab_Y-uGY/2" z="0"/>
+	</subtraction>
+
+	<subtraction name="detectorHallWalls">
+		<first  ref="boxDetectorHallExterior"/> 
+		<second ref="boxDetectorHall"/>
+		<positionref ref="center"/>
+	</subtraction>
+
+	<union name="detectorPumpHall">
+		<first  ref="detectorHallWalls"/> 
+		<second ref="boxPumpHallExterior"/>
+		<position name="posPumpHallExt" unit="mm" x="(dHX+pumpHall_X)/2+concW/4" y="-(dHY-pumpHall_Y-concW)/2" z="(dHZ+concW)/3"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<subtraction name="detectorPumpHallWalls">
+		<first  ref="detectorPumpHall"/> 
+		<second ref="boxPumpHall"/>
+		<position name="posPumpHall" unit="mm" x="(dHX+pumpHall_X)/2-eD" y="-(dHY-pumpHall_Y)/2" z="(dHZ+concW)/3"/>
+		<rotationref ref="identity"/>
+	</subtraction>
+
+	<union name="build0">
+		<first  ref="detectorPumpHallWalls"/> 
+		<second ref="boxFoundationSlab"/>
+		<position name="posFoundationSlab" unit="mm" x="0" y="-(dHY+fSY)/2-eD" z="0"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="build1">
+		<first  ref="build0"/> 
+		<second ref="boxVerticalSlab"/>
+		<position name="posVS1" unit="mm" x="(dHX+s_W)/2+concW" y="-eD" z="(dHZ+concW)/6"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="build2">
+		<first  ref="build1"/> 
+		<second ref="boxVerticalSlab"/>
+		<position name="posVS2" unit="mm" x="(dHX+s_W)/2+concW" y="-eD" z="-(dHZ+concW)/6"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="build3">
+		<first  ref="build2"/> 
+		<second ref="boxVerticalSlab"/>
+		<position name="posVS3" unit="mm" x="-((dHX+s_W)/2+concW)" y="-eD" z="(dHZ+concW)/6"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="build4">
+		<first  ref="build3"/> 
+		<second ref="boxVerticalSlab"/>
+		<position name="posVS4" unit="mm" x="-((dHX+s_W)/2+concW)" y="-eD" z="-(dHZ+concW)/6"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="build5">
+		<first  ref="build4"/> 
+		<second ref="boxVerticalSlab"/>
+		<position name="posVS5" unit="mm" x="0" y="-eD" z="-((dHZ+s_W)/2+concW)"/>
+		<rotationref ref="rotateP90Y"/>
+	</union>
+
+	<union name="build6">
+		<first  ref="build5"/> 
+		<second ref="boxVerticalSlab"/>
+		<position name="posVS6" unit="mm" x="0" y="-eD" z="((dHZ+s_W)/2+concW)"/>
+		<rotationref ref="rotateP90Y"/>
+	</union>
+
+	<box name="boxMezzanine"  lunit="mm" x="mX" y="mY+eD" z="mZ" />
+	<box name="boxMezzanineExterior"  lunit="mm" x="mX+2*concW" y="mY" z="mZ+2*concW" />
+	<box name="boxMezzanineFloor"  lunit="mm" x="mX+eD" y="mezzanineFloorSlab_Y" z="(mZ-dHZ)" />
+	<box name="boxVerticalSlab_2"  lunit="mm" x="s_W/2" y="mY" z="concW" />
+
+	<subtraction name="mezzanineBuild1">
+		<first  ref="boxMezzanineExterior"/> 
+		<second ref="boxMezzanine"/>
+		<positionref ref="center"/>
+	</subtraction>
+
+	<union name="mezzanineBuild2">
+		<first  ref="mezzanineBuild1"/> 
+		<second ref="boxMezzanineFloor"/>
+		<position name="posMezzanineFloor" unit="mm" x="0" y="-(mY-mezzanineFloorSlab_Y)/2" z="(dHZ)/2"/>
+	</union>
+
+	<union name="mezzanineBuild3">
+		<first  ref="mezzanineBuild2"/> 
+		<second ref="boxVerticalSlab_2"/>
+		<position name="posVS21" unit="mm" x="(dHX+s_W/2)/2+concW" y="0" z="(dHZ+concW)/6-centerHall"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="mezzanineBuild4">
+		<first  ref="mezzanineBuild3"/> 
+		<second ref="boxVerticalSlab_2"/>
+		<position name="posVS22" unit="mm" x="(dHX+s_W/2)/2+concW" y="0" z="-(dHZ+concW)/6-centerHall"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="mezzanineBuild5">
+		<first  ref="mezzanineBuild4"/> 
+		<second ref="boxVerticalSlab_2"/>
+		<position name="posVS23" unit="mm" x="-(dHX+s_W/2)/2-concW" y="0" z="(dHZ+concW)/6-centerHall"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="mezzanineBuild6">
+		<first  ref="mezzanineBuild5"/> 
+		<second ref="boxVerticalSlab_2"/>
+		<position name="posVS24" unit="mm" x="-(dHX+s_W/2)/2-concW" y="0" z="-(dHZ+concW)/6-centerHall"/>
+		<rotationref ref="identity"/>
+	</union>
+
+	<union name="mezzanineBuild7">
+		<first  ref="mezzanineBuild6"/> 
+		<second ref="boxVerticalSlab_2"/>
+		<position name="posVS25" unit="mm" x="0" y="0" z="-centerHall-dHZ/2-s_W/2+concW"/>
+		<rotationref ref="rotateP90Y"/>
+	</union>
+
+	<box name="boxGroundLevel0" lunit="mm" x="theGround_X" y="dHY-2*eD" z="theGround_Z" />
+	<box name="boxGroundLevel2" lunit="mm" x="theGround_X" y="mY-2*eD" z="theGround_Z" />
+
+	<subtraction name="groundLevel0">
+		<first  ref="boxGroundLevel0"/> 
+		<second ref="boxFoundationSlab"/>
+		<position name="posGL0" unit="mm" x="0" y="(dHY-fSY)/2-eD" z="0"/>
+	</subtraction>
+
+	<subtraction name="groundBuild1">
+		<first  ref="boxGroundLevel0"/> 
+		<second ref="boxDetectorHallExterior"/>
+		<positionref ref="center"/>
+	</subtraction>
+
+	<subtraction name="groundBuild2">
+		<first  ref="groundBuild1"/> 
+		<second ref="boxPumpHallExterior"/>
+		<position name="posGL1" unit="mm" x="(dHX+pumpHall_X)/2+concW/4" y="-(dHY-pumpHall_Y-concW)/2" z="(dHZ+concW)/3"/>
+	</subtraction>
+
+	<subtraction name="groundLevel1">
+		<first  ref="groundBuild2"/> 
+		<second ref="build6"/>
+		<positionref ref="center"/>
+	</subtraction>
+
+	<subtraction name="groundBuild3">
+		<first  ref="boxGroundLevel2"/> 
+		<second ref="boxMezzanineExterior"/>
+		<position name="posGL2" unit="mm" x="0" y="0" z="centerHall"/>
+	</subtraction>
+
+	<subtraction name="groundLevel2">
+		<first  ref="groundBuild3"/> 
+		<second ref="mezzanineBuild7"/>
+		<position name="posGL2bis" unit="mm" x="0" y="0" z="centerHall"/>
+	</subtraction>
+
+</solids>
+
+<structure>
+	<volume name="volDetectorHall">
+		<materialref ref="Concrete"/>
+		<solidref ref="build6"/>
+	</volume>
+	<volume name="volMezzanine">
+		<materialref ref="Concrete"/>
+		<solidref ref="mezzanineBuild7"/>
+	</volume>
+	<volume name="volGroundLevel0">
+		<materialref ref="Dirt"/>
+		<solidref ref="groundLevel0"/>
+	</volume>
+	<volume name="volGroundLevel1">
+		<materialref ref="Dirt"/>
+		<solidref ref="groundLevel1"/>
+	</volume>
+	<volume name="volGroundLevel2">
+		<materialref ref="Dirt"/>
+		<solidref ref="groundLevel2"/>
+	</volume>
+  	<volume name="volUndergrounds" >
+    		<materialref ref="Air"/> 
+		<solidref ref="boxGround"/>
+	<physvol>
+			<volumeref ref="volDetectorHall"/>
+			<position name="posDetectorHall" unit="mm" x="0" y="3*dHY/2-uGY/2" z="0" />
+		</physvol>
+		<physvol>
+			<volumeref ref="volMezzanine"/>
+			<position name="posMezzanine" unit="mm" x="0" y="mY/2+2*dHY-uGY/2" z="centerHall" />
+		</physvol>
+		<physvol>
+			<volumeref ref="volGroundLevel0"/>
+			<position name="posGroundLevel0" unit="mm" x="0" y="dHY/2-uGY/2" z="0" />
+		</physvol>
+		<physvol>
+			<volumeref ref="volGroundLevel1"/>
+			<position name="posGroundLevel1" unit="mm" x="0" y="3*dHY/2-uGY/2" z="0" />
+		</physvol>
+		<physvol>
+			<volumeref ref="volGroundLevel2"/>
+			<position name="posGroundLevel2" unit="mm" x="0" y="mY/2+2*dHY-uGY/2" z="0" />
+		</physvol>
+	</volume>
+
+</structure>
+<!-- end of Undergrounds -->
+
+<!--========================================================================-->
+<!--                Metal Structure for Half an APA Frame                   -->
+<!--========================================================================-->
+<define>
+	<!-- local aliases to global variables -->
+	<position name="APAbeamHoriz_1" unit="mm" x="0" y="metalon_L1/2-metalon_W/2" z="metalon_L2/2+metalon_W/2" />
+	<position name="APAbeamHoriz_2" unit="mm" x="0" y="metalon_L1/2-APAFrame_H" z="metalon_L2/2+metalon_W/2" />
+	<position name="APAbeamHoriz_3" unit="mm" x="0" y="-metalon_L1/2+APAFrame_H" z="metalon_L2/2+metalon_W/2" />
+	<position name="APAbeamHoriz_4" unit="mm" x="0" y="-metalon_L1/2+metalon_W/2" z="metalon_L2/2+metalon_W/2" />
+
+	<position name="APAbeamVerti_1" unit="mm" x="0" y="0" z="metalon_L2+metalon_W" />
+	<position name="APAbeamVerti_2" unit="mm" x="0" y="0" z="2*(metalon_L2+metalon_W)" />
+	<position name="APAbeamVerti_3" unit="mm" x="0" y="0" z="-(metalon_L2+1.5*metalon_W)" />
+
+	<position name="APAJunction_1" unit="mm" x="-(metalon_H+junction_H)/2" y="metalon_L1/2-metalon_W/2" z="(junction_L-metalon_W)/2" />
+	<position name="APAJunction_2" unit="mm" x="-(metalon_H+junction_H)/2" y="-metalon_L1/2+APAFrame_H" z="(junction_L-metalon_W)/2" />
+	<position name="APAJunction_3" unit="mm" x="-(metalon_H+junction_H)/2" y="metalon_L1/2-metalon_W/2" z="2*metalon_L2+2.5*metalon_W-junction_L/2" />
+	<position name="APAJunction_4" unit="mm" x="-(metalon_H+junction_H)/2" y="-(metalon_L1/2-metalon_W/2)" z="2*metalon_L2+2.5*metalon_W-junction_L/2" />
+	<position name="APACable" unit="mm" x="-(metalon_H+junction_H)/2" y="0" z="metalon_L2+metalon_W" />
+
+	<constant name="APAdistance_planes" value="0" />
+
+	<position name="centerAtBorder" unit="mm" x="0" y="0" z="(metalon_W)/2-eD/2" />
+
+	<position name="firstAPA" unit="mm" x="0" y="0" z="0" />
+	<position name="secondAPA" unit="mm" x="0" y="0" z="0" />
+</define>
+
+<solids>
+	<box name="boxAPAFrameBeamLongOuter"  lunit="mm" x="metalon_H"   y="metalon_L1"   z="metalon_W"/>
+	<box name="boxAPAFrameBeamLongInner"  lunit="mm" x="metalon_H - metalon_T"   y="metalon_L1+eD"   z="metalon_W - metalon_T"/>
+	<box name="centerBolt" x="eD" y="eD" z="eD" /> 
+
+	<subtraction name="boxAPAFrameBeamLong">
+		<first  ref="boxAPAFrameBeamLongOuter"/> 
+		<second ref="boxAPAFrameBeamLongInner"/>
+		<positionref ref="center"/>
+	</subtraction>
+
+	<box name="boxAPAFrameBeamShortOuter"  lunit="mm" x="metalon_H"   y="metalon_W"   z="metalon_L2+eD"/>
+	<box name="boxAPAFrameBeamShortInner"  lunit="mm" x="metalon_H - metalon_T"   y="metalon_W - metalon_T"   z="metalon_L2+2*eD"/>
+	<subtraction name="boxAPAFrameBeamShort">
+		<first  ref="boxAPAFrameBeamShortOuter"/> 
+		<second ref="boxAPAFrameBeamShortInner"/>
+		<positionref ref="center"/>
+	</subtraction>
+
+	<union name="preFrameAPA_1">
+		<first  ref="boxAPAFrameBeamLong"/> 
+		<second ref="boxAPAFrameBeamShort"/>
+		<positionref ref="APAbeamHoriz_1"/>
+	</union>
+	<union name="preFrameAPA_2">
+		<first  ref="preFrameAPA_1"/> 
+		<second ref="boxAPAFrameBeamShort"/>
+		<positionref ref="APAbeamHoriz_2"/>
+	</union>
+	<union name="preFrameAPA_3">
+		<first  ref="preFrameAPA_2"/> 
+		<second ref="boxAPAFrameBeamShort"/>
+		<positionref ref="APAbeamHoriz_3"/>
+	</union>
+	<union name="preFrameAPA_4">
+		<first  ref="preFrameAPA_3"/> 
+		<second ref="boxAPAFrameBeamShort"/>
+		<positionref ref="APAbeamHoriz_4"/>
+	</union>
+
+	<union name="preAPAFrame">
+		<first  ref="preFrameAPA_4"/> 
+		<second ref="preFrameAPA_4"/>
+		<positionref ref="APAbeamVerti_1"/>
+	</union>
+
+	<union name="oneAPAFrameNoJunction">
+		<first  ref="preAPAFrame"/> 
+		<second ref="boxAPAFrameBeamLong"/>
+		<positionref ref="APAbeamVerti_2"/>
+	</union>
+
+	<box name="boxAPAFrameJunctionOuter"  x="junction_H"   y="junction_W"   z="junction_L"  lunit="mm"/>
+	<box name="boxAPAFrameJunctionInner"  x="junction_H - junction_T"   y="junction_W - junction_T"   z="junction_L+2*eD"  lunit="mm"/>
+	<subtraction name="boxAPAFrameJunction">
+		<first  ref="boxAPAFrameJunctionOuter"/> 
+		<second ref="boxAPAFrameJunctionInner"/>
+		<positionref ref="center"/>
+	</subtraction>
+
+	<union name="preFrameAPA_5">
+		<first  ref="oneAPAFrameNoJunction"/> 
+		<second ref="boxAPAFrameJunction"/>
+		<positionref ref="APAJunction_1"/>
+	</union>
+
+	<union name="preFrameAPA_6">
+		<first  ref="preFrameAPA_5"/> 
+		<second ref="boxAPAFrameJunction"/>
+		<positionref ref="APAJunction_2"/>
+	</union>
+
+	<union name="preFrameAPA_7">
+		<first  ref="preFrameAPA_6"/> 
+		<second ref="boxAPAFrameJunction"/>
+		<positionref ref="APAJunction_3"/>
+	</union>
+
+	<union name="preFrameAPA_8">
+		<first  ref="preFrameAPA_7"/> 
+		<second ref="boxAPAFrameJunction"/>
+		<positionref ref="APAJunction_4"/>
+	</union>
+
+	<tube name="diagonalCable"  rmax="cable_R"  z="cable_L"   deltaphi="360"  aunit="deg"  lunit="mm"/> 
+
+	<union name="preFrameAPA_9">
+		<first  ref="preFrameAPA_8"/> 
+		<second ref="diagonalCable"/>
+		<positionref ref="APACable"/>
+		<rotationref ref="rotCableAroundX"/>
+	</union>
+
+	<union name="oneAPAFrame">
+		<first ref="centerBolt"/>
+		<second  ref="preFrameAPA_8"/> 
+		<positionref ref="centerAtBorder"/>
+	</union>
+</solids>
+
+<structure> <!-- APA Frame (metal structure) -->
+	<volume name="volOneAPAFrame">
+		<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+		<solidref ref="oneAPAFrame"/>
+	</volume>
+</structure>
+<!-- end of APA Frame -->
+
+
+<!--========================================================================-->
+<!--                           A Single PMT                                 -->
+<!--========================================================================-->
+
+<solids>
+	<tube name="PMTVolume" rmax="(4.5*2.54)" z="(11.1*2.54)+0.005" deltaphi="360" aunit="deg" lunit="cm"/>
+	<tube name="PMT_Underside" rmax="2.54*4.0" z="0.1" deltaphi="360" aunit="deg" lunit="cm"/>
+	<tube name="PMT_Back" rmax="2.54*4.0" z="0.5" deltaphi="360" aunit="deg" lunit="cm"/>
+</solids>
+
+<structure>
+	<volume name="volOpDetSensitive">
+		<materialref ref="LAr"/> <!-- for some reason, has to be LAr -->
+		<solidref ref="PMT_Underside"/>
+	</volume>
+
+	<volume name="vol_PMT_Back">
+		<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+		<solidref ref="PMT_Back"/>
+	</volume>
+
+	<volume name="volPMT">
+		<materialref ref="LAr"/>
+		<solidref ref="PMTVolume"/>
+
+		<physvol>
+			<volumeref ref="vol_PMT_Back"/>
+			<position name="pos_PMT_Back" unit="cm" x="0" y="0" z="(3.0 * 2.54) + 1.25*2.54/2 - (5.5 * 2.54) - 0.5/2+(3.0*2.54)/2 + 1.25*2.54/2 + (2.54*2.5 - 0.1)"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volOpDetSensitive"/>
+			<position name="pos_PMT_Underside" unit="cm" x="0" y="0" z="(7.0 * 2.54)-(5.5 * 2.54) + (2.54*2.5 - 0.1)/2"/>
+		</physvol>
+	</volume>
+</structure>
+
+<!--========================================================================-->
+<!--                 Assembling a Full APA                                  -->
+<!--========================================================================-->
+<define>
+	<position name="posHalfAPA_pZ" unit="mm" x="0" y="0" z="(theTPC_Z)/4"/>
+	<position name="posHalfAPA_nZ" unit="mm" x="0" y="0" z="-(theTPC_Z)/4"/>	
+	<position name="posAPAFrame" unit="mm" x="(theAPA_Structure_W-metalon_H)/2" y="0" z="-(theTPC_Z)/4+eD/2"/>
+</define>
+	
+<solids>
+	<box name="boxHalfSideAPA" lunit="mm" x="theAPA_Structure_W" y="theTPC_Y" z="theTPC_Z/2"/>
+	<box name="boxFullSideAPA" lunit="mm" x="theAPA_Structure_W" y="theTPC_Y" z="theTPC_Z"/>
+</solids>
+
+<structure> <!-- APA Frame: contains metal structure and Optical Detectors -->
+
+	<volume name="volHalfAPA">
+		<materialref ref="LAr"/>
+		<solidref ref="boxHalfSideAPA"/>
+		<physvol>
+			<volumeref ref="volOneAPAFrame"/>
+			<positionref ref="posAPAFrame"/> 
+		</physvol>
+	</volume>
+	
+	<volume	name="volOneAPA">
+		<materialref ref="LAr" />
+		<solidref ref="boxFullSideAPA"/>
+		<physvol>
+			<volumeref ref="volHalfAPA"/>
+			<positionref ref="posHalfAPA_nZ"/>
+		</physvol>
+<!--
+		<physvol>
+			<volumeref ref="volHalfAPA"/>
+			<positionref ref="posHalfAPA_pZ"/>
+			<scaleref ref="reflection_Z" />
+		</physvol>
+-->
+	</volume>
+</structure>
+
+<!--========================================================================-->
+<!--                          Wire Planes                                   -->
+<!--========================================================================-->
+<define>
+
+	<constant name="visibleWires" value="1" />
+	<rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
+	<constant name="commonWire_D" value="visibleWires*0.015" /> 
+	<constant name="commonWire_R" value="0.5*commonWire_D" />
+
+	<constant name="planeFrameGap" value="0" /> 
+	<constant name="tpcPLANE_Y" value="theTPC_Y - 2*planeFrameGap" />
+	<constant name="tpcPLANE_Z" value="theTPC_Z - 2*planeFrameGap" />
+	<constant name="tpcPLANE_Border" value="2*commonWire_R*Sin30"/>
+	<constant name="wireMax_Z" value="tpcPLANE_Z-2*tpcPLANE_Border" />
+	<constant name="wireMax_Y" value="tpcPLANE_Y-2*tpcPLANE_Border" />
+	<constant name="commonWire_L" value="wireMax_Z/Cos30" />
+
+	<constant name="TanAlpha" value="wireMax_Y/wireMax_Z"/>
+	<constant name="CosAlpha" value="0.784045824462"/>
+	<constant name="SinAlpha" value="0.620702944366"/>
+
+	<constant name="wirePitch_Z" value="3" />
+	<constant name="wirePitch_Y1" value="wirePitch_Z * Tan30" />
+	<constant name="wirePitch_Y2" value="wirePitch_Z / Cos30" />
+	
+	<constant name="originWires_Z"  value="-wireMax_Z/2"/>
+	<constant name="originWires_Y1" value="wireMax_Y/2" />
+	<constant name="originWires_Y2" value="originWires_Y1 - (wireMax_Z/2 * Tan30) + 1.2" />
+	<constant name="originWires_Y3" value="(wireMax_Z - wireMax_Y)*Tan30/2" />
+	<constant name="originWires_Z3" value="-tpcPLANE_Z/2 + tpcPLANE_Border - 1.2" />
+
+	<constant name="wireScaleFactor" value="2*wirePitch_Z / wireMax_Z" />
+	<constant name="wireUnit_L" value="wireScaleFactor * commonWire_L" />
+	
+	<!--fixes to make pitches uniform     -->
+	<constant name="dp1" value="3.-2.95327" />
+	<constant name="dp2" value="3.12786-3" />
+	
+</define>
+
+<solids>
+	<box  name="boxTPCPlane"  lunit="mm" x="theTPCPlane_W"  y="tpcPLANE_Y" z="tpcPLANE_Z"/>
+	<tube name="tubeWire" lunit="mm" rmax="commonWire_R" z="commonWire_L" aunit="deg" deltaphi="360." />
+	<tube name="tubeWireVert" lunit="mm" rmax="commonWire_R" z="wireMax_Y" aunit="deg" deltaphi="360." />
+
+	<variable name="iWire_1" value="0"/> 
+	<loop for ="iWire_1" to="832" step="1"> <!-- #wire -->
+        <tube name="tubeWire_iWire_1" lunit="mm" rmax="commonWire_R" z="(1+iWire_1)*wireUnit_L-4*0.04" aunit="deg" deltaphi="360." />
+	</loop>
+</solids>
+
+<structure>
+	<volume name="volTPCWire">
+		<materialref ref="Titanium"/>
+		<solidref ref="tubeWire"/>
+	</volume>
+
+	<volume name="volTPCWireVert">
+		<materialref ref="Titanium"/>
+		<solidref ref="tubeWireVert"/>
+	</volume>
+
+	<variable name="iWire_2" value="0"/> 
+	<loop for ="iWire_2" to="832" step="1"> <!-- #wire -->
+	<volume name="volTPCWire_iWire_2">
+		<materialref ref="Titanium"/>
+		<solidref ref="tubeWire_iWire_2"/>
+	</volume>
+	</loop>
+</structure>
+
+<structure>	
+	<volume name="volTPCPlaneVert">
+		<materialref ref="LAr"/>
+		<solidref ref="boxTPCPlane"/>
+
+		<!-- Place Y Wires here -->
+		<variable name="iWire_Y" value="0"/>
+		<loop for ="iWire_Y" to="1665" step="1"> <!-- #wire -->	
+		<physvol>
+			<volumeref ref="volTPCWireVert"/>
+			<rotationref ref="rotateN90X"/>
+			<position  name="posWire_Y_iWire_Y" unit="mm" x="0" y="0" z="(1+iWire_Y)*wirePitch_Z+originWires_Z"/>
+		</physvol>
+		</loop>
+
+	</volume>
+</structure>
+
+<structure>	
+	<volume name="volTPCPlane_U">
+		<materialref ref="LAr"/>
+		<solidref ref="boxTPCPlane"/>
+
+		<!-- Place U Wires here -->
+		<variable name="iWire_3" value="0"/>
+		<loop for ="iWire_3" to="832" step="1">	<!-- #wire -->	
+		<physvol> 
+			<volumeref ref="volTPCWire_iWire_3"/> 
+			<rotationref ref="rotateP30X"/> 
+			<position  name="posWire_U1_iWire_3" unit="mm" x="0" y="-(1+iWire_3)*wirePitch_Y1+originWires_Y1+dp1*Cos30" z="(1+iWire_3)*wirePitch_Z+originWires_Z-dp1*Sin30"/>
+		</physvol>
+		</loop>
+
+		<variable name="iWire_4" value="833"/>
+		<loop for ="iWire_4" to="1153" step="1"> <!-- #wire -->	
+		<physvol> 
+			<volumeref ref="volTPCWire"/> 
+			<rotationref ref="rotateP30X"/> 
+			<position  name="posWire_U2_iWire_4" unit="mm" x="0" y="-(1+iWire_4-833)*wirePitch_Y2+originWires_Y2" z="0"/>
+		</physvol>
+		</loop>
+
+		<variable name="iWire_5" value="832"/>
+		<loop for ="iWire_5" to="1" step="-1">	<!-- #wire -->	
+		<physvol> 
+			<volumeref ref="volTPCWire_iWire_5"/>
+			<rotationref ref="rotateP30X"/> 
+			<position  name="posWire_U3_iWire_5" unit="mm" x="0" y="(iWire_5+1)*wirePitch_Y1-originWires_Y1+dp2*Cos30" z="-(iWire_5+1)*wirePitch_Z-originWires_Z-dp2*Sin30"/>
+		</physvol>
+		</loop>
+	</volume>
+
+	<volume name="volTPCPlane_V">
+		<materialref ref="LAr"/>
+		<solidref ref="boxTPCPlane"/>
+
+		<!-- Place V Wires here -->
+		<variable name="iWire_6" value="0"/>
+		<loop for ="iWire_6" to="832" step="1">	<!-- #wire -->	
+		<physvol> 
+			<volumeref ref="volTPCWire_iWire_6"/>
+			<rotationref ref="rotateN30X"/> 
+			<position  name="posWire_V3_iWire_6" unit="mm" x="0" y="(iWire_6+1)*wirePitch_Y1-originWires_Y1+dp2*Cos30" z="(iWire_6+1)*wirePitch_Z+originWires_Z+dp2*Sin30"/>
+		</physvol>
+		</loop>
+
+		<variable name="iWire_7" value="1153"/>
+		<loop for ="iWire_7" to="833" step="-1"> <!-- #wire -->	
+		<physvol> 
+			<volumeref ref="volTPCWire"/> 
+			<rotationref ref="rotateN30X"/> 
+			<position  name="posWire_V2_iWire_7" unit="mm" x="0" y="-(1+iWire_7-833)*wirePitch_Y2+originWires_Y2" z="0"/>
+		</physvol>
+		</loop>
+
+		<variable name="iWire_8" value="832"/>
+		<loop for ="iWire_8" to="1" step="-1">	<!-- #wire -->	
+		<physvol> 
+			<volumeref ref="volTPCWire_iWire_8"/> 
+			<rotationref ref="rotateN30X"/> 
+			<position  name="posWire_V1_iWire_8" unit="mm" x="0" y="originWires_Y1-(1+iWire_8)*wirePitch_Y1+dp1*Cos30" z="-originWires_Z-(1+iWire_8)*wirePitch_Z+dp1*Sin30"/>
+		</physvol>
+		</loop>
+
+
+
+	</volume>
+
+
+</structure>
+
+
+<!--========================================================================-->
+<!--                 The Detector                                           -->
+<!--========================================================================-->
+<define>
+	<rotation name="rPlus45AboutX" unit="deg" x="45" y="0" z="0"/>
+	<rotation name="rPlus90AboutX" unit="deg" x="90" y="0" z="0"/>
+	<rotation name="rPlus180AboutY" unit="deg" x="0" y="180" z="0"/>
+
+	<position name="posTPCatCryo_p" unit="mm" x="(theTPC_X+theCPA_W)/2" y="0" z="system_DZ"/>
+	<position name="posTPCatCryo_n" unit="mm" x="-(theTPC_X+theCPA_W)/2" y="0" z="system_DZ"/>
+	<position name="posTPC" unit="mm" x="0" y="0" z="theTPC_Z/2"/>
+
+	<position name="posTPCPlane_pU" unit="mm" x="(theTPC_X-5*theTPCPlane_W)/2" y="0" z="0"/>
+	<position name="posTPCPlane_pV" unit="mm" x="(theTPC_X-3*theTPCPlane_W)/2" y="0" z="0"/>
+	<position name="posTPCPlane_pY" unit="mm" x="(theTPC_X-1*theTPCPlane_W)/2" y="0" z="0"/>
+	<position name="posTPCActive_p" unit="mm" x="(theTPC_X-theTPCActive_W-6*theTPCPlane_W)/2" y="0" z="0"/>
+	<position name="posAPAFrame_pX" unit="mm" x="(theTPC_X+theAPA_Structure_W/2+theCPA_W/2)" y="0" z="0" />
+
+	<position name="posAPA_p" 	unit="mm" x="(theTPC_X+theAPA_Structure_W)/2" y="0" z="theTPC_Z/2"/>
+
+	<position name="posTPCPlane_nU" unit="mm" x="-(theTPC_X-5*theTPCPlane_W)/2" y="0" z="0"/>
+	<position name="posTPCPlane_nV" unit="mm" x="-(theTPC_X-3*theTPCPlane_W)/2" y="0" z="0"/>
+	<position name="posTPCPlane_nY" unit="mm" x="-(theTPC_X-1*theTPCPlane_W)/2" y="0" z="0"/>
+	<position name="posTPCActive_n" unit="mm" x="-(theTPC_X-theTPCActive_W-6*theTPCPlane_W)/2" y="0" z="0"/>
+	<position name="posAPAFrame_nX" unit="mm" x="-(theTPC_X+theAPA_Structure_W/2+theCPA_W/2)" y="0" z="0" />    
+</define>
+
+<define>
+	<constant name="pmt_DZ" value="275" />
+	<constant name="pmt_DY" value="275" />
+	<constant name="pmtSet_DZ" value="(theTPC_Z)/8"/> 
+	<constant name="pmtSet_DY" value="(theTPC_Y)/3"/>
+	<constant name="pmt_X" value="theTPC_X+180" />
+	<constant name="frame_DZ" value="(theTPC_Z)/4" />
+
+	<position name="posAPAFrame_nXnZ" unit="mm" x="-(theTPC_X+metalon_H/2+theCPA_W/2)" y="0" z="-(theTPC_Z)/2+system_DZ" />    
+	<position name="posAPAFrame_nXpZ" unit="mm" x="-(theTPC_X+metalon_H/2+theCPA_W/2)" y="0" z="(theTPC_Z)/2+system_DZ" />    
+	<position name="posAPAFrame_pXnZ" unit="mm" x="(theTPC_X+metalon_H/2+theCPA_W/2)" y="0" z="-(theTPC_Z)/2+system_DZ" />    
+	<position name="posAPAFrame_pXpZ" unit="mm" x="(theTPC_X+metalon_H/2+theCPA_W/2)" y="0" z="(theTPC_Z)/2+system_DZ" />    
+</define>
+
+
+<solids>
+	<box name="boxTPC" lunit="mm" x="theTPC_X" y="theTPC_Y" z="theTPC_Z"/>
+	<box name="boxTPCActive" lunit="mm" x="theTPCActive_W" y="theTPC_Y" z="theTPC_Z"/>
+</solids>
+
+<structure> <!-- a TPC with 1 active volume and 3 planes each -->
+	<volume name="volTPCActive">
+		<materialref ref="LAr"/>
+		<solidref ref="boxTPCActive"/>
+	</volume>
+
+	<volume name="volTPC_N"> <!-- a TPC at Negative X -->
+		<materialref ref="LAr"/>
+		<solidref ref="boxTPC"/>
+		<physvol>
+			<volumeref ref="volTPCActive"/>
+			<positionref ref="posTPCActive_n"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volTPCPlane_V"/>
+			<positionref ref="posTPCPlane_nV"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volTPCPlane_U"/>
+			<positionref ref="posTPCPlane_nU"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volTPCPlaneVert"/>
+			<positionref ref="posTPCPlane_nY"/>
+		</physvol>
+	</volume>
+
+	<volume name="volTPC_P"> <!-- a TPC at Positive X -->
+		<materialref ref="LAr"/>
+		<solidref ref="boxTPC"/>
+		<physvol>
+			<volumeref ref="volTPCActive"/>
+			<positionref ref="posTPCActive_p"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volTPCPlane_V"/>
+			<positionref ref="posTPCPlane_pU"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volTPCPlane_U"/>
+			<positionref ref="posTPCPlane_pV"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volTPCPlaneVert"/>
+			<positionref ref="posTPCPlane_pY"/>
+		</physvol>
+	</volume>
+</structure>
+
+<solids>
+	<box name="boxIPE450Beam_V" lunit="mm" x="IPE_Beam_T" y="IPE_Beam_L" z="IPE_Beam_W"/>	
+	<box name="boxIPE450Beam_H1" lunit="mm" x="IPE_Beam_T" y="structure_Z+2*structure_W" z="IPE_Beam_W"/>	
+	<box name="boxIPE450Beam_H2" lunit="mm" x="IPE_Beam_T+eD" y="IPE_Beam_W" z="structure_X+2*structure_W"/>	
+	<box name="boxStructureOuter" lunit="mm" x="structure_X+structure_W" y="structure_Y+structure_W" z="structure_Z+structure_W"/>	
+	<box name="boxStructureInner" lunit="mm" x="structure_X" y="structure_Y" z="structure_Z"/>	
+	<subtraction name="boxStructure_NoBeams">
+		<first ref="boxStructureOuter"/>
+		<second ref="boxStructureInner"/>
+		<positionref ref="center"/>
+	</subtraction>
+    <union name="boxStructure_1_Beams">
+		<first ref="boxStructure_NoBeams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_1" unit="mm" x="IPE_Beam_DX" y="IPE_Beam_DY" z="-((structure_Z+IPE_Beam_W)/2+structure_W)" />
+    </union>
+    <union name="boxStructure_2_Beams">
+		<first ref="boxStructure_1_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_2" unit="mm" x="-IPE_Beam_DX" y="IPE_Beam_DY" z="-((structure_Z+IPE_Beam_W)/2+structure_W)" />        
+    </union>
+    <union name="boxStructure_3_Beams">
+		<first ref="boxStructure_2_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_3" unit="mm" x="IPE_Beam_DX" y="IPE_Beam_DY" z="((structure_Z+IPE_Beam_W)/2+structure_W)" />        
+    </union>
+    <union name="boxStructure_4_Beams">
+		<first ref="boxStructure_3_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_4" unit="mm" x="-IPE_Beam_DX" y="IPE_Beam_DY" z="((structure_Z+IPE_Beam_W)/2+structure_W)" />        
+    </union>
+    <union name="boxStructure_5_Beams">
+		<first ref="boxStructure_4_Beams"/>
+		<second ref="boxIPE450Beam_H1"/>
+		<position name="posIPEBeam_5" unit="mm" x="-IPE_Beam_DX" y="-((structure_Y+IPE_Beam_W)/2+structure_W)" z="0" />
+        <rotationref ref="rotateN90X"/>
+    </union>
+    <union name="boxStructure_6_Beams">
+		<first ref="boxStructure_5_Beams"/>
+		<second ref="boxIPE450Beam_H1"/>
+		<position name="posIPEBeam_6" unit="mm" x="IPE_Beam_DX" y="-((structure_Y+IPE_Beam_W)/2+structure_W)" z="0" />
+        <rotationref ref="rotateN90X"/>
+    </union>
+    <union name="boxStructure_7_Beams">
+		<first ref="boxStructure_6_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_7" unit="mm" x="-((structure_X+IPE_Beam_W)/2+structure_W)" y="IPE_Beam_DY" z="-IPE_Beam_DZ*3" />        
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_8_Beams">
+		<first ref="boxStructure_7_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_8" unit="mm" x="-((structure_X+IPE_Beam_W)/2+structure_W)" y="IPE_Beam_DY" z="-IPE_Beam_DZ*1" />
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_9_Beams">
+		<first ref="boxStructure_8_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_9" unit="mm" x="-((structure_X+IPE_Beam_W)/2+structure_W)" y="IPE_Beam_DY" z="IPE_Beam_DZ*1" />        
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_10_Beams">
+		<first ref="boxStructure_9_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_10" unit="mm" x="-((structure_X+IPE_Beam_W)/2+structure_W)" y="IPE_Beam_DY" z="IPE_Beam_DZ*3" />
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_11_Beams">
+		<first ref="boxStructure_10_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_11" unit="mm" x="((structure_X+IPE_Beam_W)/2+structure_W)" y="IPE_Beam_DY" z="-IPE_Beam_DZ*3" />        
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_12_Beams">
+		<first ref="boxStructure_11_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_12" unit="mm" x="((structure_X+IPE_Beam_W)/2+structure_W)" y="IPE_Beam_DY" z="-IPE_Beam_DZ*1" />
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_13_Beams">
+		<first ref="boxStructure_12_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_13" unit="mm" x="((structure_X+IPE_Beam_W)/2+structure_W)" y="IPE_Beam_DY" z="IPE_Beam_DZ*1" />        
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_14_Beams">
+		<first ref="boxStructure_13_Beams"/>
+		<second ref="boxIPE450Beam_V"/>
+		<position name="posIPEBeam_14" unit="mm" x="((structure_X+IPE_Beam_W)/2+structure_W)" y="IPE_Beam_DY" z="IPE_Beam_DZ*3" />
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_15_Beams">
+		<first ref="boxStructure_14_Beams"/>
+		<second ref="boxIPE450Beam_H2"/>
+		<position name="posIPEBeam_15" unit="mm" x="0" y="-((structure_Y+IPE_Beam_W)/2+structure_W)" z="-IPE_Beam_DZ*3" />
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_16_Beams">
+		<first ref="boxStructure_15_Beams"/>
+		<second ref="boxIPE450Beam_H2"/>
+		<position name="posIPEBeam_16" unit="mm" x="0" y="-((structure_Y+IPE_Beam_W)/2+structure_W)" z="-IPE_Beam_DZ*1" />
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_17_Beams">
+		<first ref="boxStructure_16_Beams"/>
+		<second ref="boxIPE450Beam_H2"/>
+		<position name="posIPEBeam_17" unit="mm" x="0" y="-((structure_Y+IPE_Beam_W)/2+structure_W)" z="IPE_Beam_DZ*3" />
+        <rotationref ref="rotateN90Y"/>
+    </union>
+    <union name="boxStructure_Beams">
+		<first ref="boxStructure_17_Beams"/>
+		<second ref="boxIPE450Beam_H2"/>
+		<position name="posIPEBeam_18" unit="mm" x="0" y="-((structure_Y+IPE_Beam_W)/2+structure_W)" z="IPE_Beam_DZ*1" />
+        <rotationref ref="rotateN90Y"/>
+    </union>
+
+
+	<box name="boxCryostat" lunit="mm" x="theCryo_X" y="theCryo_Y" z="theCryo_Z"/>	
+	<box name="boxSteel" lunit="mm" x="theCryo_X+theCryostat_W" y="theCryo_Y+theCryostat_W" z="theCryo_Z+theCryostat_W"/>
+    
+	<subtraction name="boxSteelCryostat">
+		<first ref="boxSteel"/>
+		<second ref="boxCryostat"/>
+		<positionref ref="center"/>
+	</subtraction>
+
+	<subtraction name="boxInsulation">
+		<first ref="boxStructureInner"/>
+		<second ref="boxSteel"/>
+		<positionref ref="center"/>
+	</subtraction>
+</solids>
+
+<structure> <!-- SBND has a single Cryostat, with 2 TPCs -->
+	<volume name="volCryostat">
+		<materialref ref="LAr"/>
+		<solidref ref="boxCryostat"/>
+		<physvol>
+			<volumeref ref="volTPC_N"/>
+			<positionref ref="posTPCatCryo_n"/>
+		</physvol>
+<!--
+		<physvol>
+			<volumeref ref="volOneAPAFrame"/>
+			<positionref ref="posAPAFrame_nXnZ"/> 
+		</physvol>
+		<physvol>
+			<volumeref ref="volOneAPAFrame"/>
+			<positionref ref="posAPAFrame_nXpZ"/> 
+            		<scaleref ref="reflection_Z"/>
+		</physvol>
+-->
+	        <physvol>
+			<volumeref ref="volTPC_P"/>
+			<positionref ref="posTPCatCryo_p"/>
+		</physvol>
+<!--
+		<physvol>
+			<volumeref ref="volOneAPAFrame"/>
+			<positionref ref="posAPAFrame_pXpZ"/> 
+			<rotationref ref="rotate180Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volOneAPAFrame"/>
+			<positionref ref="posAPAFrame_pXnZ"/> 
+			<rotationref ref="rotate180Y"/>
+			<scaleref ref="reflection_Z"/>
+		</physvol>
+-->
+
+        <!-- Place PMTs here -->
+		<physvol>
+			<volumeref ref="volPMT"/>
+			<position name="posPMT_0" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+			<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_1" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_2" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_3" unit="mm" x="(-1)*pmt_X" y="0+(1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_4" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_5" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_6" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_7" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_8" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_9" unit="mm" x="(-1)*pmt_X" y="0+(1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_10" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_11" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_12" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_13" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_14" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_15" unit="mm" x="(-1)*pmt_X" y="0+(0)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_16" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_17" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_18" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_19" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_20" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_21" unit="mm" x="(-1)*pmt_X" y="0+(0)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_22" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_23" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_24" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_25" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_26" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_27" unit="mm" x="(-1)*pmt_X" y="0+(-1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_28" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_29" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_30" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_31" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_32" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_33" unit="mm" x="(-1)*pmt_X" y="0+(-1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_34" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_35" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_36" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_37" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_38" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_39" unit="mm" x="(-1)*pmt_X" y="0+(1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_40" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_41" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_42" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_43" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_44" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_45" unit="mm" x="(-1)*pmt_X" y="0+(1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_46" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_47" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_48" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_49" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_50" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_51" unit="mm" x="(-1)*pmt_X" y="0+(0)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_52" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_53" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_54" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_55" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_56" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_57" unit="mm" x="(-1)*pmt_X" y="0+(0)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_58" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_59" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_60" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_61" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_62" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_63" unit="mm" x="(-1)*pmt_X" y="0+(-1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_64" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_65" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_66" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_67" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_68" unit="mm" x="(-1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_69" unit="mm" x="(-1)*pmt_X" y="0+(-1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_70" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_71" unit="mm" x="(-1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateP90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_72" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_73" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_74" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_75" unit="mm" x="(1)*pmt_X" y="0+(1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_76" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_77" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_78" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_79" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_80" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_81" unit="mm" x="(1)*pmt_X" y="0+(1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_82" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_83" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_84" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_85" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_86" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_87" unit="mm" x="(1)*pmt_X" y="0+(0)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_88" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_89" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_90" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_91" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_92" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_93" unit="mm" x="(1)*pmt_X" y="0+(0)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_94" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_95" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_96" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_97" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_98" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_99" unit="mm" x="(1)*pmt_X" y="0+(-1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_100" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_101" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_102" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_103" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_104" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_105" unit="mm" x="(1)*pmt_X" y="0+(-1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_106" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_107" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(-1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_108" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_109" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_110" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_111" unit="mm" x="(1)*pmt_X" y="0+(1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_112" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_113" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_114" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_115" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_116" unit="mm" x="(1)*pmt_X" y="pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_117" unit="mm" x="(1)*pmt_X" y="0+(1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_118" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_119" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_120" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_121" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_122" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_123" unit="mm" x="(1)*pmt_X" y="0+(0)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_124" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_125" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_126" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_127" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_128" unit="mm" x="(1)*pmt_X" y="pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_129" unit="mm" x="(1)*pmt_X" y="0+(0)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_130" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_131" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(0)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_132" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_133" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_134" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_135" unit="mm" x="(1)*pmt_X" y="0+(-1)*pmtSet_DY" z="0+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_136" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_137" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(-1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_138" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_139" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_140" unit="mm" x="(1)*pmt_X" y="pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_141" unit="mm" x="(1)*pmt_X" y="0+(-1)*pmtSet_DY" z="0+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_142" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="-pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_143" unit="mm" x="(1)*pmt_X" y="-pmt_DY+(-1)*pmtSet_DY" z="pmt_DZ+(1)*pmtSet_DZ+(1)*frame_DZ+system_DZ"/>
+				<rotationref ref="rotateN90Y"/>
+		</physvol>
+
+	</volume>
+</structure>
+
+<!--========================================================================-->
+<!--                  Cosmic Ray Tagging - CRT Panels                       -->
+<!--========================================================================-->
+<solids>
+	<box name="boxCRTPanel_Z" lunit="mm" x="theCRT_X" y="theCRT_Y" z="theCRT_W"/>
+	<box name="boxCRTPanel_X" lunit="mm" x="theCRT_W" y="theCRT_Y" z="theCRT_Z"/>
+	<box name="boxCRTPanel_T" lunit="mm" x="theCRT_X" y="theCRT_W" z="theCRT_Z"/>
+</solids>
+
+<structure>
+	<!-- insert CRT sub-panels here -->
+	<volume name="volAuxDetSensitiveCRT_Z"> <!-- one single SD, to be replaced with several pieces -->
+		<materialref ref="Acrylic" />
+		<solidref ref="boxCRTPanel_Z"/>
+	</volume>
+	<volume name="volAuxDetSensitiveCRT_X"> <!-- one single SD, to be replaced with several pieces -->
+		<materialref ref="Acrylic" />
+		<solidref ref="boxCRTPanel_X"/>
+	</volume>
+	<volume name="volAuxDetSensitiveCRT_T"> <!-- one single SD, to be replaced with several pieces -->
+		<materialref ref="Acrylic" />
+		<solidref ref="boxCRTPanel_T"/>
+	</volume>
+
+	<volume name="volAuxDetCRT_nZ">
+		<materialref ref="Air" />
+		<solidref ref="boxCRTPanel_Z"/>
+		<physvol>
+			<volumeref ref="volAuxDetSensitiveCRT_Z"/>
+			<positionref ref="center"/>
+		</physvol>
+	</volume>
+	<volume name="volAuxDetCRT_pZ">
+		<materialref ref="Air" />
+		<solidref ref="boxCRTPanel_Z"/>
+		<physvol>
+			<volumeref ref="volAuxDetSensitiveCRT_Z"/>
+			<positionref ref="center"/>
+		</physvol>
+	</volume>
+	<volume name="volAuxDetCRT_nX">
+		<materialref ref="Air" />
+		<solidref ref="boxCRTPanel_X"/>
+		<physvol>
+			<volumeref ref="volAuxDetSensitiveCRT_X"/>
+			<positionref ref="center"/>
+		</physvol>
+	</volume>
+	<volume name="volAuxDetCRT_pX">
+		<materialref ref="Air" />
+		<solidref ref="boxCRTPanel_X"/>
+		<physvol>
+			<volumeref ref="volAuxDetSensitiveCRT_X"/>
+			<positionref ref="center"/>
+		</physvol>
+	</volume>
+
+	<volume name="volAuxDetCRT_Top1">
+		<materialref ref="Air" />
+		<solidref ref="boxCRTPanel_T"/>
+		<physvol>
+			<volumeref ref="volAuxDetSensitiveCRT_T"/>
+			<positionref ref="center"/>
+		</physvol>
+	</volume>
+	<volume name="volAuxDetCRT_Top2">
+		<materialref ref="Air" />
+		<solidref ref="boxCRTPanel_T"/>
+		<physvol>
+			<volumeref ref="volAuxDetSensitiveCRT_T"/>
+			<positionref ref="center"/>
+		</physvol>
+	</volume>
+</structure>
+
+<!--========================================================================-->
+<!--                 Presenting... the SBND                                 -->
+<!--========================================================================-->
+<solids>
+	<box name="boxWorld" lunit="mm" x="worldSize" y="worldSize" z="worldSize"/>
+	<box name="boxDetectorEnclosure_1"   lunit="mm" x="theEnclosure_X" y="theEnclosure_Y" z="theEnclosure_Z"/>
+	<box name="boxDetectorEnclosure_Tower" lunit="mm" x="theEnclosure_X" y="theCRT_T" z="theEnclosure_Z"/>
+	<union name="boxDetectorEnclosure">
+		<first ref="boxDetectorEnclosure_1"/>
+		<second ref="boxDetectorEnclosure_Tower"/>
+		<positionref ref="posTopTower"/>
+	</union>
+	<box name="boxStructureLid" lunit="mm" x="structure_X+2*structure_W" y="topLid_W" z="structure_Z+2*structure_W"/>
+</solids>
+
+
+<structure>	
+	<volume name="volSteelCryostat">
+		<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni" />
+		<solidref ref="boxSteelCryostat"/>
+	</volume>
+	<volume name="volInsulation">
+		<materialref ref="PU_foam_dense" />
+		<solidref ref="boxInsulation"/>
+	</volume>
+	<volume name="volStructure">
+		<materialref ref="STEEL_STRUCTURAL_S460L" />
+		<solidref ref="boxStructure_Beams"/>
+	</volume>
+	<volume name="volStructureLid">
+		<materialref ref="STEEL_STRUCTURAL_S460L" />
+		<solidref ref="boxStructureLid"/>
+	</volume>
+
+	<volume name="volDummy">
+		<materialref ref="PU_foam_dense" />
+		<solidref ref="boxDetectorEnclosure"/>
+	</volume>
+
+	<volume name="volDetEnclosure" >
+		<materialref ref="Air"/> 
+		<solidref ref="boxDetectorEnclosure"/>
+		<physvol>
+			<volumeref ref="volShieldingLid"/>
+			<positionref ref="posShieldingLid"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volAuxDetCRT_Top1"/>
+			<position name="posCRT_T1" unit="mm" x="0" y="theCRT_T-aCRT_Top2-theCRT_W/2" z="0"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volAuxDetCRT_Top2"/>
+			<position name="posCRTT2" unit="mm" x="0" y="theCRT_T-theCRT_W/2" z="0"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volAuxDetCRT_nZ"/>
+			<position name="posCRT_nZ" unit="mm" x="0" y="0" z="-(theCRT_Z-theCRT_W)/2"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volAuxDetCRT_pZ"/>
+			<position name="posCRT_pZ" unit="mm" x="0" y="0" z="(theCRT_Z-theCRT_W)/2"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volAuxDetCRT_nX"/>
+			<position name="posCRT_nX" unit="mm" x="-(theCRT_X-theCRT_W)/2" y="0" z="0"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volAuxDetCRT_pX"/>
+			<position name="posCRT_pX" unit="mm" x="(theCRT_X-theCRT_W)/2" y="0" z="0"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volStructure"/>
+			<positionref ref="center"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volStructureLid"/>
+			<positionref ref="posEquipLid"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volSteelCryostat"/>
+			<positionref ref="center"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volInsulation"/>
+			<positionref ref="center"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volCryostat"/>
+			<positionref ref="center"/>
+		</physvol>
+	</volume>
+
+	<volume name="volWorld" >
+		<materialref ref="Air"/> 
+		<solidref ref="boxWorld"/>
+		<physvol>
+			<volumeref ref="volBuilding"/>
+			<positionref ref="posBuilding"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volShieldingTop"/>
+			<positionref ref="posShieldingTop"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volMezzanineLid"/>
+			<positionref ref="posMezzanineLid"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volUndergrounds"/>
+			<positionref  ref="posUnderground"/>
+		</physvol>
+		<physvol>
+			<volumeref ref="volDetEnclosure"/>
+			<positionref ref="posCryostat"/>
+		</physvol>
+
+	</volume> 
+</structure>
+
+
+<setup name="DetectorOnly" version="1.0">
+	<world ref="volDetEnclosure" />
+</setup>
+
+<setup name="Default" version="1.0">
+	<world ref="volWorld" />
+</setup>
+</gdml>
+
+
