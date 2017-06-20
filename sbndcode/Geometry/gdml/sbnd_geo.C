@@ -1,14 +1,11 @@
 #include "TGeoManager.h"
 
-
-typedef struct _drawopt 
-{
+typedef struct {
   const char* volume;
-  int         color;
-  int	      transparency;
+  int color;
 } drawopt;
 
-void sbnd_geo(TString volName="")
+int sbnd_geo(TString volName="")
 {
 	gSystem->Load("libGeom");
 	gSystem->Load("libGdml");
@@ -16,27 +13,27 @@ void sbnd_geo(TString volName="")
 	TGeoManager::Import("sbnd_v00_09.gdml");
 
 drawopt optsbnd[] = {
-	{"volTheBuilding", kYellow-8,0},
-	{"volBuildingBase",kYellow-8,0},
-	{"volGlassWindow", kBlue+4,50},
-	{"volMezzanine",kYellow-8,0},
-	{"volDetectorHall",kYellow-5,0},
-	{"volGroundLevel0",kOrange+3,80},
-	{"volGroundLevel1",kOrange+4,80},
-	{"volGroundLevel2",kOrange+5,80},
-	{"volOpDetSensitive", kYellow, 10},
-	{"volTPCActive",  kCyan-9,50},
-	{"volTPCPlane_U", kBlue-4,   80},
-	{"volTPCPlane_V", kGreen-6,  80},
-	{"volTPCPlane_Y", kRed-7,    80},
-	{"volOneAPA", 	  kMagenta,    80},	
-	{"volInsulation", kMagenta,    80},
-	{"volStructureLid", kBlue-2,    0},
-	{"volAuxDetSensitiveCRT_X", kBlue,0},
-	{"volAuxDetSensitiveCRT_Z", kBlue,0},
-	{"volShieldingLid", kYellow-5, 0},
-	{"volShieldingTop", kWhite, 0},
-	{"volMezzanineLid", kWhite, 0},
+	{"volTheBuilding", kYellow-8},
+	{"volBuildingBase",kYellow-8},
+	{"volGlassWindow", kBlue+4},
+	{"volMezzanine",kYellow-8},
+	{"volDetectorHall",kYellow-5},
+	{"volGroundLevel0",kOrange+3},
+	{"volGroundLevel1",kOrange+4},
+	{"volGroundLevel2",kOrange+5},
+	{"volOpDetSensitive", kYellow},
+	{"volTPCActive",  kCyan-9},
+	{"volTPCPlane_U", kBlue-4},
+	{"volTPCPlane_V", kGreen-6},
+	{"volTPCPlane_Y", kRed-7},
+	{"volOneAPA", 	  kMagenta},	
+	{"volInsulation", kMagenta},
+	{"volStructureLid", kBlue},
+	{"volAuxDetSensitiveCRT_X", kBlue},
+	{"volAuxDetSensitiveCRT_Z", kBlue},
+	{"volShieldingLid", kYellow-5},
+	{"volShieldingTop", kWhite},
+	{"volMezzanineLid", kWhite},
 	{0, 0}
 };
 
@@ -47,18 +44,35 @@ for (int i=0;; ++i) {
 	vol=gGeoManager->FindVolumeFast(optsbnd[i].volume);
 	if(vol){
 		vol->SetLineColor(optsbnd[i].color);
-		vol->SetTransparency(optsbnd[i].transparency);
+	//	vol->SetTransparency(optsbnd[i].transparency);
 	}
+	}
+  TList* mat = gGeoManager->GetListOfMaterials();
+  TIter next(mat);
+  TObject* obj;
+  while ((obj = next())) {
+    obj->Print();
+  }
+
+  gGeoManager->GetTopNode();
+//  gGeoManager->CheckOverlaps(10e-11);
+  gGeoManager->PrintOverlaps();
+  gGeoManager->SetMaxVisNodes(70000);
+
+  if (!volName.IsNull())
+    gGeoManager->FindVolumeFast(volName)->Draw("ogl");
+  
+  TGeoVolume* TPC = gGeoManager->FindVolumeFast("volTPCActive");
+  float m_tpc = TPC->Weight();
+//  TGeoVolume* Cathode = gGeoManager->FindVolumeFast("volCathode");
+//  float m_cathode = Cathode->Weight();
+
+//  float m_tpc_argon = m_tpc - m_cathode ;
+//  cout << "LAr weight in TPC = " << m_tpc_argon << " kg\n" <<endl;
+
+  TFile* tf = new TFile("sbnd.root", "RECREATE");
+  gGeoManager->Write();
+  tf->Close();
+  return 0;
 }
 
-gGeoManager->GetTopNode();
-gGeoManager->CheckOverlaps(10e-11);
-gGeoManager->PrintOverlaps();
-gGeoManager->SetMaxVisNodes(70000);
-
-if ( ! volName.IsNull() ) {gGeoManager->FindVolumeFast(volName)->Draw("ogl");} 
-else  {gGeoManager->FindVolumeFast("volWorld")->Draw("ogl");}
-
-//gGeoManager->FindVolumeFast("volMainBeams")->Weight();
-
-}
