@@ -1,7 +1,7 @@
 cet_enable_asserts()
 
 set( sbnd_util_lib_list lardata_Utilities_LArFFT_service
-                          larcore_Geometry
+                          larcorealg_Geometry
                           larcore_Geometry_Geometry_service
                           lardata_Utilities
                           ${ART_FRAMEWORK_CORE}

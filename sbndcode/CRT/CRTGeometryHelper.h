@@ -15,7 +15,7 @@
 #define SBND_CRTExptGeoHelperInterface_h
 
 #include "larcore/Geometry/AuxDetExptGeoHelperInterface.h"
-#include "larcore/Geometry/AuxDetChannelMapAlg.h"
+#include "larcorealg/Geometry/AuxDetChannelMapAlg.h"
 #include "sbndcode/CRT/CRTChannelMapAlg.h"
 #include <memory>
 
