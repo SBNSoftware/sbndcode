@@ -29,7 +29,7 @@ Usage
 
 To see if it works, run
     
-    preparseGDML -help
+    preparseGDML --help
     
 and a short help screen will appear.
 
@@ -37,15 +37,14 @@ Some basic examples:
     
     preparseGDML sbnd_v00_08_base.gdml
     
-makes `sbnd_v00_08.gdml` with all the wires and default setup. precision
-might be a little lacky at first, so I always specify the amount of decimal
-places in scientific notation, like this:
-    
-    preparseGDML sbnd_v00_08_base.gdml -sci 10
-    
+makes `sbnd_v00_08.gdml` with all the wires and default setup.
+The precision of the numbers is critical. By default, the output is set to use
+always the maximum number of significant digits for double precision numbers.
+Using the `--prec` or `--sci` options it is possible to change that number.
+
 If I also want a file with no wires (which is always the case), then I use:
     
-    preparseGDML sbnd_v00_08_base.gdml -nowires
+    preparseGDML sbnd_v00_08_base.gdml --nowires
     
 and it will make `sbnd_v00_08.gdml` and `sbnd_v00_08_nowires.gdml`.
 
@@ -54,14 +53,14 @@ base file as a _base in the name.
 
 If I want a different setup, then:
     
-    preparseGDML sbnd_v00_08_base.gdml -setup DetectorOnly
+    preparseGDML sbnd_v00_08_base.gdml --setup DetectorOnly
     
 Of course, the setup must exist or you will get an error message.
 
 Some more advanced options: you may not want to abide by the rules and name
 your files whatever you want. In that cause, you must be more specific:
     
-    preparseGDML myBaseGeometry.gdml -o WithWires.gdml -nowires NoWires.gdml
+    preparseGDML myBaseGeometry.gdml -o WithWires.gdml --nowires NoWires.gdml
     
 All the options can be used in any combination. As a bonus, I am also
 sending my root macro for visualization. You can used it for adding color
