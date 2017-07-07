@@ -1,7 +1,4 @@
-# include_directories ( $ENV{XERCES_C_INC} )
-
-art_make_exec(NAME preparse
-  SOURCE preparse.cpp
+art_make_exec(NAME preparseGDML
   LIBRARIES
     ${ROOT_BASIC_LIB_LIST}
   )

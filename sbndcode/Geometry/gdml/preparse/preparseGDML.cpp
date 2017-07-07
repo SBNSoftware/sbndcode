@@ -423,21 +423,23 @@ int main(int argc, char **argv)
 	}
 
 	} else {
+		std::string programName = argv[0];
+		if (programName.rfind('/') != std::string::npos) programName.erase(programName.rfind('/'));
 		cout << "GDML Preparser v 1.0 (gustavo.valdiviesso@unifal-mg.edu.br)\n" << endl;
-		cout << "Basic usage: \n preparse [file_base.gdml] [flags] \n";
+		cout << "Basic usage: \n " << programName << " [file_base.gdml] [flags] \n";
 		cout << "     Generate file.gdml with the following configuration flags:" << endl;
 		cout << "     -nowires\t\t : Generate file_nowires.gdml, ignoring all <loop> with <!--wire--> comment." << endl;
 		cout << "     -sci\t     : Uses scientific notation for numbers\n" << endl;
-		cout << "Example: preparse geometry_base.gdml -nowires" << endl;
+		cout << "Example: " << programName << " geometry_base.gdml -nowires" << endl;
 		cout << "Outputs geometry.gdml and geometry_nowires.gdml with standard numeric notation." << endl;
 		cout << endl;
-		cout << "Advanced usage: \n preparse [inputfile.gdml] -o [outputfile.gdml] [flags] \n";
+		cout << "Advanced usage: \n " << programName << " [inputfile.gdml] -o [outputfile.gdml] [flags] \n";
 		cout << "     Inputfile does not need the _base keyword, and output is defined by -o flag." << endl;
 		cout << "     Advanced flag options:" << endl;
 		cout << "     -nowires <nowires.gdml> \t : specifies the file name for No Wires output." << endl;
 		cout << "     -sci n \t : specifies the number of decimal places." << endl;
 		cout << "     -setup <setup:version> \t : specifies the <setup> instead of Default. Version is optional." << endl;
-		cout << "Example: preparse geometry_base.gdml -setup Cryostat:1.0" << endl;
+		cout << "Example: " << programName << " geometry_base.gdml -setup Cryostat:1.0" << endl;
 		cout << "Outputs geometry.gdml making setup Cryostat (version 1.0) the volWorld required by LArSoft." << endl;
 
 	}
