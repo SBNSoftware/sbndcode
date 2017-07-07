@@ -69,9 +69,9 @@ physics: {
       ]
       
       # wire pitch for planes #0, #1 and #2
-      ExpectedWirePitch: [ 0.3, 0.3, 0.3 ]
+      ExpectedWirePitches: [ 0.3, 0.3, 0.3 ]
       # plane pitches (#0 -> #1, #1 -> #2)
-      ExpectedPlanePitch: [ 0.3, 0.3 ]
+      ExpectedPlanePitches: [ 0.3, 0.3 ]
     }
   }
 
