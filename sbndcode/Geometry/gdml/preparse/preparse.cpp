@@ -252,12 +252,10 @@ void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TSt
 	aSetup theSetup;	
 
 	TString name, loopkey;
-	float value;
 	bool inLoop = 0;
 	bool inSetup = 0;
 	bool isWire = 0;
 	bool keepLoop = 1;
-	int i=1;
 	do{
 		key.ReadLine(input,0);
 //		cout << i << endl; i++;
@@ -357,9 +355,7 @@ void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TSt
 				ifstream input1(inNameVec[k]);
 
 				inSetup=0;
-				i=1;
 				do{
-					//cout << k << "\t" << i << endl; i++;
 					key.ReadLine(input1,0);
 					if((!key.Contains("<setup") && !inSetup) ){
 						replaceKeyword(key,"volWorld","volIgnoredOnThisSetup");
