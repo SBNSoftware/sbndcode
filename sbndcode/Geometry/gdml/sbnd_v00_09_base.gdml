@@ -1186,6 +1186,16 @@
 	<constant name="dp1" value="3.-2.95327" />
 	<constant name="dp2" value="3.12786-3" />
 	
+	<variable name="iWire_1" value="0"/> 
+	<variable name="iWire_2" value="0"/> 
+	<variable name="iWire_Y" value="0"/>
+	<variable name="iWire_3" value="0"/>
+	<variable name="iWire_4" value="833"/>
+	<variable name="iWire_5" value="832"/>
+	<variable name="iWire_6" value="0"/>
+	<variable name="iWire_7" value="1153"/>
+	<variable name="iWire_8" value="832"/>
+	
 </define>
 
 <solids>
@@ -1193,7 +1203,7 @@
 	<tube name="tubeWire" lunit="mm" rmax="commonWire_R" z="commonWire_L" aunit="deg" deltaphi="360." />
 	<tube name="tubeWireVert" lunit="mm" rmax="commonWire_R" z="wireMax_Y" aunit="deg" deltaphi="360." />
 
-	<variable name="iWire_1" value="0"/> 
+	<!-- starts from 0 -->
 	<loop for ="iWire_1" to="832" step="1"> <!-- #wire -->
         <tube name="tubeWire_iWire_1" lunit="mm" rmax="commonWire_R" z="(1+iWire_1)*wireUnit_L-4*0.04" aunit="deg" deltaphi="360." />
 	</loop>
@@ -1210,7 +1220,7 @@
 		<solidref ref="tubeWireVert"/>
 	</volume>
 
-	<variable name="iWire_2" value="0"/> 
+	<!-- starts from 0 -->
 	<loop for ="iWire_2" to="832" step="1"> <!-- #wire -->
 	<volume name="volTPCWire_iWire_2">
 		<materialref ref="Titanium"/>
@@ -1225,7 +1235,7 @@
 		<solidref ref="boxTPCPlane"/>
 
 		<!-- Place Y Wires here -->
-		<variable name="iWire_Y" value="0"/>
+		<!-- starts from 0 -->
 		<loop for ="iWire_Y" to="1665" step="1"> <!-- #wire -->	
 		<physvol>
 			<volumeref ref="volTPCWireVert"/>
@@ -1243,7 +1253,7 @@
 		<solidref ref="boxTPCPlane"/>
 
 		<!-- Place U Wires here -->
-		<variable name="iWire_3" value="0"/>
+		<!-- starts from 0 -->
 		<loop for ="iWire_3" to="832" step="1">	<!-- #wire -->	
 		<physvol> 
 			<volumeref ref="volTPCWire_iWire_3"/> 
@@ -1252,7 +1262,7 @@
 		</physvol>
 		</loop>
 
-		<variable name="iWire_4" value="833"/>
+		<!-- starts from 833 -->
 		<loop for ="iWire_4" to="1153" step="1"> <!-- #wire -->	
 		<physvol> 
 			<volumeref ref="volTPCWire"/> 
@@ -1261,7 +1271,7 @@
 		</physvol>
 		</loop>
 
-		<variable name="iWire_5" value="832"/>
+		<!-- starts from 832 -->
 		<loop for ="iWire_5" to="1" step="-1">	<!-- #wire -->	
 		<physvol> 
 			<volumeref ref="volTPCWire_iWire_5"/>
@@ -1276,7 +1286,7 @@
 		<solidref ref="boxTPCPlane"/>
 
 		<!-- Place V Wires here -->
-		<variable name="iWire_6" value="0"/>
+		<!-- starts from 0 -->
 		<loop for ="iWire_6" to="832" step="1">	<!-- #wire -->	
 		<physvol> 
 			<volumeref ref="volTPCWire_iWire_6"/>
@@ -1285,7 +1295,7 @@
 		</physvol>
 		</loop>
 
-		<variable name="iWire_7" value="1153"/>
+		<!-- starts from 1153 -->
 		<loop for ="iWire_7" to="833" step="-1"> <!-- #wire -->	
 		<physvol> 
 			<volumeref ref="volTPCWire"/> 
@@ -1294,7 +1304,7 @@
 		</physvol>
 		</loop>
 
-		<variable name="iWire_8" value="832"/>
+		<!-- starts from 832 -->
 		<loop for ="iWire_8" to="1" step="-1">	<!-- #wire -->	
 		<physvol> 
 			<volumeref ref="volTPCWire_iWire_8"/> 
