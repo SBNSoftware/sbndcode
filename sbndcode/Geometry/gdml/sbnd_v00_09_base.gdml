@@ -135,8 +135,8 @@
 	<rotation name="identity"/>
 	<constant name="eD" value="1e-3"/>
 
-	<constant name="Cos30" value="0.86602540378" />
-	<constant name="Cos60" value="0.5" />
+	<constant name="Cos30" value="cos(30*degree)" />
+	<constant name="Cos60" value="cos(60*degree)" />
 	<constant name="Sin30" value="Cos60" />
 	<constant name="Sin60" value="Cos30" />
 	<constant name="Tan30" value="Sin30/Cos30" />
