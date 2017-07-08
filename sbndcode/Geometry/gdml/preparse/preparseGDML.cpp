@@ -22,8 +22,8 @@ using namespace std;
 
 struct aLoop{
 	std::string	varName;
-	float	varTo;
-	float	varStep;
+	double varTo;
+	double varStep;
 };	
 
 struct aSetup{
@@ -32,6 +32,7 @@ struct aSetup{
 	std::string	stpVersion;
 };	
 
+typedef std::map<std::string, double> Variables_t;
 
 bool isComment(TString key) {
 
@@ -51,23 +52,27 @@ bool isComment(TString key) {
 	return k;
 }
 
-void replaceVariable(TString &key, std::map<std::string,float> &variables ){
+void replaceVariable(TString &key, Variables_t const& variables ){
 
-	std::map<std::string,float>::iterator it;
+	Variables_t::const_iterator it;
 	std::stringstream stream;
-	TString varName, varValue;
-	float value;
+	TString varValue;
 	int i;
 	TString temp;
-	if(sci) stream.precision(prec);
+	stream.precision(prec);
 	for (it=variables.begin(); it!=variables.end(); ++it) { 
-		varName = it->first;
-		value = it->second;
+		TString const& varName = it->first;
+		double value = it->second;
+		if (!key.Contains("=") || !key.Contains(varName) ) continue;
+		if (debug >= 3) {
+			std::cout.precision(prec);
+			std::cout << "REPL '" << varName << "' => " << prec << std::endl;
+		}
 		stream.str("");
 		stream.clear();	
 		if(0) { stream << scientific << value;} else {stream << value;}
 		stream >> varValue;
-		if (key.Contains("=") && key.Contains(varName) ) do {
+		do {
 			i = key.Index(varName);
 			if (i>0) {
 				temp = key;
@@ -93,10 +98,9 @@ void replaceKeyword(TString &key, TString word, TString keyword){
 
 }
 
-void getVariable(TString key, std::map<std::string,float> &variables){
+void getVariable(TString key, Variables_t& variables){
 
 	TString name;
-	float value;
 
 	replaceVariable(key,variables);
 
@@ -115,8 +119,12 @@ void getVariable(TString key, std::map<std::string,float> &variables){
 
 	TFormula formula("formula",varValue);
 	name = varName;
-	value = formula.Eval(0);
+	double value = formula.Eval(0);
 
+	if (debug >= 2) {
+		std::cout.precision(prec);
+		std::cout << "VAR " << name << "=\"" << varValue << "\" => " << value << std::endl;
+	}
 	variables[name.Data()]=value;
 
 //	if(varName.Length()==1) cout << varName << "\t"<< value<< endl;
@@ -145,7 +153,11 @@ void evalFormulas(TString &key){
 		TString varFormula = key;
 		varFormula.Remove(pos2);
 		TFormula formula("",varFormula);
-		float value = formula.Eval(0);
+		double value = formula.Eval(0);
+		if (debug >= 2) {
+			std::cout.precision(prec);
+			std::cout << "FML " << lookFor[i] << "='" << varFormula << "' => " << value << std::endl;
+		}
 		TString varValue;
 		std::stringstream stream;
 		stream.precision(prec);
@@ -197,6 +209,13 @@ void getFileNames(TString inName, TString &outName1, TString &outName2){
 	if (outName1.IsNull()) outName1 = temp+".gdml";
 	if (outName2.IsNull()) outName2 = temp+"_nowires.gdml";
 }
+
+void SetDefaultVariables(Variables_t& variables) {
+	
+	variables["degree"] = M_PI / 180.0;
+	
+} // SetDefaultVariables()
+
 
 void getSetup(TString key, aSetup &theSetup){
 	int pos;
@@ -253,7 +272,8 @@ int preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TStr
 
 	ifstream input(inName);
 	TString key;
-	std::map<std::string,float> variables;
+	Variables_t variables;
+	SetDefaultVariables(variables);
 	
 	std::vector<std::string> loopLine;
 	aLoop theLoop;
@@ -350,8 +370,6 @@ int preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TStr
 		
 		if(goAhead){
 
-			TString mv = "mv ";
-			TString rm = "rm ";
 			TString inName1, inName2, comm;
 			inName1 = outName1+"~";
 			inName2 = outName2+"~";
