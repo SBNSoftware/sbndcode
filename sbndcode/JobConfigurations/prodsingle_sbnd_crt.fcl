@@ -19,8 +19,8 @@
 
 services.AuxDetGeometry: {
  Name:     "sbndv0"
- GDML:     "sbndv0.gdml"
- ROOT:     "sbndv0.gdml"
+ GDML:     "sbnd_v00_09.gdml"
+ ROOT:     "sbnd_v00_09.gdml"
 }
 
 services.AuxDetExptGeoHelperInterface: {

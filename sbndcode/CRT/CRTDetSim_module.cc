@@ -94,7 +94,7 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
-  LOG_DEBUG("CRT")
+  mf::LogInfo("CRT")
     << "CRT TIMING: t0=" << t0
     << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
     << ", tDelay=" << tDelay << ", tDelay(interp)=";
@@ -107,7 +107,7 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double t = t0 + tProp + tDelay;
 
-  LOG_DEBUG("CRT") << tDelay << ", tProp=" << tProp << ", t=" << t << std::endl;
+  mf::LogInfo("CRT") << tDelay << ", tProp=" << tProp << ", t=" << t << std::endl;
 
   // Get clock ticks
   clock.SetTime(t / 1e3);  // SetTime takes microseconds
@@ -256,7 +256,7 @@ void CRTDetSim::produce(art::Event & e) {
 
       double poss[3];
       adsGeo.LocalToWorld(origin, poss);
-      LOG_DEBUG("CRT")
+      mf::LogInfo("CRT")
         << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl
         << "CRT HIT POS " << x << " " << y << " " << z << std::endl
         << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl
@@ -290,7 +290,7 @@ void CRTDetSim::produce(art::Event & e) {
     }
   }
 
-  LOG_DEBUG("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << std::endl;
+  mf::LogInfo("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << std::endl;
 
   e.put(std::move(triggeredCRTHits));
 }
