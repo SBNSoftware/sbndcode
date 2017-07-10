@@ -24104,7 +24104,7 @@
 			<position name="posCRT_pZ" unit="mm" x="0" y="0" z="(theCRT_Z-theCRT_W)/2"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volTaggerTaggerSideRight"/>
+			<volumeref ref="volTaggerSideRight"/>
 			<position name="posCRT_nX" unit="mm" x="-(theCRT_X-theCRT_W)/2-2" y="0" z="0"/>
 			<rotation name="rotCRT_nX" unit="deg" x="0" y="90" z="0"/>
 		</physvol>
