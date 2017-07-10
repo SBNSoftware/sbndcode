@@ -8,18 +8,22 @@
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
+#include <limits> // std::numeric_limits<>
+#include <getopt.h> // getopt_long(), option
+#include <stdexcept> // std::runtime_error
 
-bool sci=0;
-bool setupChoice=0;
+bool sci = false;
+bool setupChoice = false;
+int debug = 0;
 TString mySetup;
-int prec=5;
+int prec = std::numeric_limits<double>::max_digits10;
 
 using namespace std;
 
 struct aLoop{
 	std::string	varName;
-	float	varTo;
-	float	varStep;
+	double varTo;
+	double varStep;
 };	
 
 struct aSetup{
@@ -28,6 +32,7 @@ struct aSetup{
 	std::string	stpVersion;
 };	
 
+typedef std::map<std::string, double> Variables_t;
 
 bool isComment(TString key) {
 
@@ -47,23 +52,27 @@ bool isComment(TString key) {
 	return k;
 }
 
-void replaceVariable(TString &key, std::map<std::string,float> &variables ){
+void replaceVariable(TString &key, Variables_t const& variables ){
 
-	std::map<std::string,float>::iterator it;
+	Variables_t::const_iterator it;
 	std::stringstream stream;
-	TString varName, varValue;
-	float value;
+	TString varValue;
 	int i;
 	TString temp;
-	if(sci) stream.precision(prec);
+	stream.precision(prec);
 	for (it=variables.begin(); it!=variables.end(); ++it) { 
-		varName = it->first;
-		value = it->second;
+		TString const& varName = it->first;
+		double value = it->second;
+		if (!key.Contains("=") || !key.Contains(varName) ) continue;
+		if (debug >= 3) {
+			std::cout.precision(prec);
+			std::cout << "REPL '" << varName << "' => " << prec << std::endl;
+		}
 		stream.str("");
 		stream.clear();	
 		if(0) { stream << scientific << value;} else {stream << value;}
 		stream >> varValue;
-		if (key.Contains("=") && key.Contains(varName) ) do {
+		do {
 			i = key.Index(varName);
 			if (i>0) {
 				temp = key;
@@ -89,10 +98,9 @@ void replaceKeyword(TString &key, TString word, TString keyword){
 
 }
 
-void getVariable(TString key, std::map<std::string,float> &variables){
+void getVariable(TString key, Variables_t& variables){
 
 	TString name;
-	float value;
 
 	replaceVariable(key,variables);
 
@@ -111,8 +119,12 @@ void getVariable(TString key, std::map<std::string,float> &variables){
 
 	TFormula formula("formula",varValue);
 	name = varName;
-	value = formula.Eval(0);
+	double value = formula.Eval(0);
 
+	if (debug >= 2) {
+		std::cout.precision(prec);
+		std::cout << "VAR " << name << "=\"" << varValue << "\" => " << value << std::endl;
+	}
 	variables[name.Data()]=value;
 
 //	if(varName.Length()==1) cout << varName << "\t"<< value<< endl;
@@ -141,10 +153,14 @@ void evalFormulas(TString &key){
 		TString varFormula = key;
 		varFormula.Remove(pos2);
 		TFormula formula("",varFormula);
-		float value = formula.Eval(0);
+		double value = formula.Eval(0);
+		if (debug >= 2) {
+			std::cout.precision(prec);
+			std::cout << "FML " << lookFor[i] << "='" << varFormula << "' => " << value << std::endl;
+		}
 		TString varValue;
 		std::stringstream stream;
-		if(sci) stream.precision(prec);
+		stream.precision(prec);
 		if(sci) { stream << scientific << value;} else {stream << value;}
 		stream << "\"";
 		stream >> varValue;
@@ -189,10 +205,17 @@ void getFileNames(TString inName, TString &outName1, TString &outName2){
 	int pos = inName.Index("_base");
 	TString temp = inName;
 	temp.Remove(pos);
-
-	outName1 = temp+".gdml";
-	outName2 = temp+"_nowires.gdml";
+	
+	if (outName1.IsNull()) outName1 = temp+".gdml";
+	if (outName2.IsNull()) outName2 = temp+"_nowires.gdml";
 }
+
+void SetDefaultVariables(Variables_t& variables) {
+	
+	variables["degree"] = M_PI / 180.0;
+	
+} // SetDefaultVariables()
+
 
 void getSetup(TString key, aSetup &theSetup){
 	int pos;
@@ -229,8 +252,14 @@ void getSetup(TString key, aSetup &theSetup){
 
 }
 
-void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TString outName2=""){
+int preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TString outName2=""){
 	
+	std::cout << "Preparsing '" << inName << "'"
+		"\n => '" << outName1 << "' (complete description)";
+  if (!outName2.IsNull())
+		std::cout << "\n => '" << outName2 << "' (without TPC wires)";
+	std::cout << "\n" << std::endl;
+  
 //	cout << sci << "\t" << prec << endl;
 
 	bool noWiresFiles = 1;
@@ -243,7 +272,8 @@ void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TSt
 
 	ifstream input(inName);
 	TString key;
-	std::map<std::string,float> variables;
+	Variables_t variables;
+	SetDefaultVariables(variables);
 	
 	std::vector<std::string> loopLine;
 	aLoop theLoop;
@@ -252,12 +282,10 @@ void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TSt
 	aSetup theSetup;	
 
 	TString name, loopkey;
-	float value;
 	bool inLoop = 0;
 	bool inSetup = 0;
 	bool isWire = 0;
 	bool keepLoop = 1;
-	int i=1;
 	do{
 		key.ReadLine(input,0);
 //		cout << i << endl; i++;
@@ -273,10 +301,12 @@ void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TSt
 					loopkey = *it;
 					replaceVariable(loopkey,variables);
 					if(loopkey.Contains("--")) {
-					  std::cout << "checking double minus sign " << std::endl;
-					  std::cout << loopkey << std::endl;
+					  if (debug) {
+					    std::cout << "checking double minus sign " << std::endl;
+					    std::cout << loopkey << std::endl;
+					  }
 					  loopkey.ReplaceAll("--","+");
-					  std::cout << loopkey << std::endl; 
+					  if (debug) std::cout << loopkey << std::endl; 
 					}
 					evalFormulas(loopkey);
 					output1 << loopkey << endl;
@@ -340,8 +370,6 @@ void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TSt
 		
 		if(goAhead){
 
-			TString mv = "mv ";
-			TString rm = "rm ";
 			TString inName1, inName2, comm;
 			inName1 = outName1+"~";
 			inName2 = outName2+"~";
@@ -351,15 +379,18 @@ void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TSt
 			const int kmax = 1+(!noWiresFiles);
 	
 			for(int k=0; k<kmax; k++){
-				comm = mv + outNameVec[k] +" " + inNameVec[k];
-				system(comm.Data());
+				errno = 0;
+				rename(outNameVec[k], inNameVec[k]);
+				if (errno != 0) {
+				  std::cerr << "Error renaming '" << outNameVec[k] << "' into '" << inNameVec[k] << "': "
+				    << strerror(errno) << std::endl;
+          return errno;
+				}
 				output1.open(outNameVec[k]);
 				ifstream input1(inNameVec[k]);
 
 				inSetup=0;
-				i=1;
 				do{
-					//cout << k << "\t" << i << endl; i++;
 					key.ReadLine(input1,0);
 					if((!key.Contains("<setup") && !inSetup) ){
 						replaceKeyword(key,"volWorld","volIgnoredOnThisSetup");
@@ -374,77 +405,171 @@ void preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TSt
 				output1 << "</gdml>" << endl;
 				output1.close();
 				input1.close();
-				comm = rm + inNameVec[k];
-				system(comm);
+				remove(inNameVec[k]);
 			}
 		}else { cout << "Setup or its version not found. " << endl;}
 	}
+	return 0;
+} // preparse()
 
-}
 
 //---- Main program ------------------------------------------------------------
 # ifndef __CINT__
+
+bool genNoWires = false, printHelp = false;
+TString inFile="sbnd_base.gdml", outFile, outFile2, noWires, withWires;
+
+void parseArguments(unsigned int argc, char** argv) {
+
+  static const option longopts[] = {
+    { "output",    required_argument, NULL, 'o' },
+    { "nowires",   optional_argument, NULL, 'w' },
+    { "sci",       optional_argument, NULL, 's' },
+    { "prec",      required_argument, NULL, 'p' },
+    { "setup",     required_argument, NULL, 'S' },
+    { "debug",     optional_argument, NULL, 'd' },
+    { "help",      no_argument,       NULL, 'h' },
+    { NULL,        0,                 NULL,  0  }
+  }; // longopts
+  
+  // automatically build the short option string from the long one
+  std::string shortopts = ":"; // this means no error printout
+  for (auto const& longopt: longopts) {
+    if (!longopt.name) break;
+    if (longopt.val == 0) continue;
+    shortopts += (char) longopt.val;
+    if (longopt.has_arg != no_argument) shortopts += ':';
+    if (longopt.has_arg == optional_argument) shortopts += ':';
+  } // for
+  
+  // ----------------------------------------------------------------------
+  // options
+  char ch;
+  optind = 1;
+  while
+    ((ch = getopt_long(argc, argv, shortopts.c_str(), longopts, NULL)) != -1)
+  {
+    switch (ch) {
+      case 'o': // -o, --output
+        outFile = optarg;
+        continue;
+      case 'w': // -w, --nowires
+        genNoWires = true;
+        if (optarg) outFile2 = optarg;
+        continue;
+      case 'S': // -S, --setup
+        setupChoice = true;
+        mySetup = optarg;
+        continue;
+      case 's': // -s, --sci
+        sci = true;
+        if (optarg) {
+          TString par = optarg;
+          if (!par.IsDigit())
+            throw std::runtime_error("Invalid precision in -s option.");
+          prec = par.Atoi();
+        }
+        continue;
+      case 'd': // -d, --debug
+        if (optarg) {
+          TString par = optarg;
+          if (!par.IsDigit())
+            throw std::runtime_error("Invalid debug level in -d option.");
+          debug = par.Atoi();
+        }
+        else debug = 1;
+        continue;
+      case 'p': // -p, --prec
+        {
+          TString par = optarg;
+          if (!par.IsDigit())
+            throw std::runtime_error("Invalid precision in -s option.");
+          prec = par.Atoi();
+        }
+        continue;
+      case 'h': // -h, --help
+        printHelp = true;
+        continue;
+     } // switch
+  } // while
+  
+  // ----------------------------------------------------------------------
+  // arguments
+  if (optind < (int) argc) inFile = argv[optind++];
+  
+  if (optind < (int) argc) {
+    std::cerr << "Spurious arguments: '" << argv[optind] << "'";
+    if (optind + 1 < (int) argc)
+      std::cerr << " and " << (argc - optind - 1) << " more";
+    std::cerr << "." << std::endl;
+    throw std::runtime_error("Too many arguments on the command line!");
+  }
+  
+} // parseArguments()
+
+
+
 int main(int argc, char **argv)
 {
 
-	TString inFile="sbnd_base.gdml", outFile="", outFile2="", noWires="", withWires="";
-	bool genNoWires = 0;
-	bool printHelp = 0;
-	TString flag,par;
-	for(int i=1; i<argc; i++){
-		par = argv[i];
-		if(i>2) flag = argv[i-1];
-		if(i==1 && par.Contains(".gdml")) {inFile=par;}
-		if(flag=="-o" && par.Contains(".gdml")) {outFile=par;}
-		if(par=="-nowires") genNoWires=1;
-		if(flag=="-nowires" && par.Contains(".gdml")) {outFile2=par;}
-		if(par=="-sci") sci=1; 
-		if(flag=="-sci" && par.IsDigit()){prec=par.Atoi();}
-		if(flag=="-setup") {mySetup=par; setupChoice=1;}
-		if((flag=="-man") || (flag=="-h" || flag=="-help")) {printHelp=1;}
-		if((par=="-man") || (par=="-h" || par=="-help")) {printHelp=1;}
-	}
+	parseArguments(argc, argv);
 	
-	if(!printHelp){
+	if (printHelp) {
+		std::string programName = argv[0];
+		if (programName.rfind('/') != std::string::npos) programName.erase(programName.rfind('/'));
+		
+		cout <<
+		  "\nGDML Preparser v 1.0 (gustavo.valdiviesso@unifal-mg.edu.br)"
+		  "\nBasic usage:"
+		  "\n  " << programName << " [file_base.gdml] [flags]"
+		  "\n"
+		  "\nGenerate file.gdml with the following configuration flags:"
+		  "\n-w , --nowires[=nowirename]"
+		  "\n    Generate file_nowires.gdml, ignoring all <loop> with <!--wire--> comment."
+		  "\n-p , --prec=precision"
+		  "\n    Set numerical output precision (current precision: " << prec << " digits)"
+		  "\n-s , --sci[=precision]"
+		  "\n    Uses scientific notation for numbers (optionally alter numerical output precision)"
+		  "\n-o , --output=outputname"
+		  "\n    Uses this file name as main output name"
+		  "\n-S , --setup=setupname"
+		  "\n    Uses the specified setup name instead of default one"
+		  "\n-d , --debug"
+		  "\n    Enable debugging messages"
+		  "\n"
+		  "\nExamples:"
+		  "\n"
+		  "\n  " << programName << " geometry_base.gdml --nowires"
+		  "\n    Outputs geometry.gdml and geometry_nowires.gdml with standard numeric notation."
+		  "\n"
+		  "\n  " << programName << " geometry_base.gdml -setup Cryostat:1.0"
+		  "\n    Outputs geometry.gdml making setup Cryostat (version 1.0) the volWorld required by LArSoft."
+		  "\n"
+		  << endl;
+		return 0;
+	}
 
 	ifstream input(inFile);
-	if (!input.is_open()) {perror("ERROR ");}
-	else{
-		if(inFile.Contains("_base.gdml")) {getFileNames(inFile,withWires,noWires);}
-		else {
-			withWires = inFile+"_preparsed.gdml";
-			noWires = inFile+"_nowires.gdml";
-		}
-		if(outFile!="") {
-			withWires = outFile;
-			noWires = outFile;
-			int pos = outFile.Index(".gdml");
-			noWires.Replace(pos,5,"_nowires.gdml");
-		}
-		if(outFile2!="") { noWires = outFile2; }
-		if(!genNoWires) noWires="";
-		preparse(inFile,withWires,noWires);
+	if (!input.is_open()) { 
+		std::cerr << "Error opening '" << inFile << "': " << strerror(errno) << std::endl;
+		return errno;
 	}
 
-	} else {
-		cout << "GDML Preparser v 1.0 (gustavo.valdiviesso@unifal-mg.edu.br)\n" << endl;
-		cout << "Basic usage: \n preparse [file_base.gdml] [flags] \n";
-		cout << "     Generate file.gdml with the following configuration flags:" << endl;
-		cout << "     -nowires\t\t : Generate file_nowires.gdml, ignoring all <loop> with <!--wire--> comment." << endl;
-		cout << "     -sci\t     : Uses scientific notation for numbers\n" << endl;
-		cout << "Example: preparse geometry_base.gdml -nowires" << endl;
-		cout << "Outputs geometry.gdml and geometry_nowires.gdml with standard numeric notation." << endl;
-		cout << endl;
-		cout << "Advanced usage: \n preparse [inputfile.gdml] -o [outputfile.gdml] [flags] \n";
-		cout << "     Inputfile does not need the _base keyword, and output is defined by -o flag." << endl;
-		cout << "     Advanced flag options:" << endl;
-		cout << "     -nowires <nowires.gdml> \t : specifies the file name for No Wires output." << endl;
-		cout << "     -sci n \t : specifies the number of decimal places." << endl;
-		cout << "     -setup <setup:version> \t : specifies the <setup> instead of Default. Version is optional." << endl;
-		cout << "Example: preparse geometry_base.gdml -setup Cryostat:1.0" << endl;
-		cout << "Outputs geometry.gdml making setup Cryostat (version 1.0) the volWorld required by LArSoft." << endl;
-
+	if(inFile.Contains("_base.gdml")) {getFileNames(inFile,withWires,noWires);}
+	else {
+		withWires = inFile+"_preparsed.gdml";
+		noWires = inFile+"_nowires.gdml";
 	}
-   return 0;
-}
-#endif
+	if(outFile!="") {
+		withWires = outFile;
+		noWires = outFile;
+		int pos = outFile.Index(".gdml");
+		noWires.Replace(pos,5,"_nowires.gdml");
+	}
+	if(outFile2!="") { noWires = outFile2; }
+	if(!genNoWires) noWires="";
+	
+	return preparse(inFile,withWires,noWires);
+	
+} // main()
+#endif // __CINT__
