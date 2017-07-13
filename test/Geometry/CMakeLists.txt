@@ -22,7 +22,7 @@ cet_test(geometry_sbnd_test
   DATAFILES test_geometry_sbnd.fcl
   TEST_ARGS ./test_geometry_sbnd.fcl
   LIBRARIES sbnd_Geometry
-            larcore_Geometry
+            larcorealg_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
@@ -38,7 +38,7 @@ cet_test(geometry_sbnd_test
 cet_test(geometry_iterator_sbnd_test
   SOURCES geometry_iterator_sbnd_test.cxx
   LIBRARIES sbnd_Geometry
-            larcore_Geometry
+            larcorealg_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}
@@ -53,7 +53,7 @@ cet_test(geometry_iterator_sbnd_test
 cet_test(geometry_iterator_loop_sbnd_test
   SOURCES geometry_iterator_loop_sbnd_test.cxx
   LIBRARIES sbnd_Geometry
-            larcore_Geometry
+            larcorealg_Geometry
             GeometryTestLib
             ${MF_MESSAGELOGGER}
             ${MF_UTILITIES}

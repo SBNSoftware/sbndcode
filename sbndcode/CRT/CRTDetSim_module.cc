@@ -16,9 +16,9 @@
 #include "lardata/DetectorInfo/ElecClock.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/Geometry.h"
-#include "larcore/Geometry/AuxDetGeo.h"
+#include "larcorealg/Geometry/AuxDetGeo.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
-#include "larcore/Geometry/CryostatGeo.h"
+#include "larcorealg/Geometry/CryostatGeo.h"
 
 #include "CLHEP/Random/RandomEngine.h"
 #include "CLHEP/Random/RandFlat.h"
