@@ -10,7 +10,7 @@
 
 
 // LArSoft libraries
-#include "larcore/Geometry/GeoObjectSorter.h"
+#include "larcorealg/Geometry/GeoObjectSorter.h"
 
 // C/C++ standard libraries
 #include <vector>

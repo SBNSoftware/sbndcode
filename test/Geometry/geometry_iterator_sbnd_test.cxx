@@ -18,7 +18,7 @@
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_sbnd.h"
 #include "test/Geometry/GeometryIteratorTestAlg.h"
-#include "larcore/TestUtils/boost_unit_test_base.h"
+#include "larcorealg/TestUtils/boost_unit_test_base.h"
 
 //------------------------------------------------------------------------------
 //---  The test environment
