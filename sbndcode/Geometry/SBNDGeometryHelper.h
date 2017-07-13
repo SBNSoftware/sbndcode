@@ -13,8 +13,8 @@
 
 // LArSoft libraries
 #include "larcore/Geometry/ExptGeoHelperInterface.h"
-#include "larcore/Geometry/CryostatGeo.h"
-#include "larcore/Geometry/AuxDetGeo.h"
+#include "larcorealg/Geometry/CryostatGeo.h"
+#include "larcorealg/Geometry/AuxDetGeo.h"
 
 // C++ libraries
 #include <memory> // std::shared_ptr<>
