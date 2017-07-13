@@ -9,8 +9,8 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include "sbndcode/CRT/CRTGeoObjectSorter.h"
-#include "larcore/Geometry/AuxDetGeo.h"
-#include "larcore/Geometry/AuxDetSensitiveGeo.h"
+#include "larcorealg/Geometry/AuxDetGeo.h"
+#include "larcorealg/Geometry/AuxDetSensitiveGeo.h"
 
 namespace geo {
 

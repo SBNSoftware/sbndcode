@@ -1,6 +1,6 @@
 art_make(
           LIBRARY_NAME sbnd_Geometry
-          LIB_LIBRARIES larcore_Geometry
+          LIB_LIBRARIES larcorealg_Geometry
                         ${MF_MESSAGELOGGER}
                         cetlib
                         cetlib_except
@@ -9,7 +9,7 @@ art_make(
                         ${ROOT_GEOM}
           SERVICE_LIBRARIES
                         sbnd_Geometry
-                        larcore_Geometry
+                        larcorealg_Geometry
                         art_Framework_Services_Registry
                         canvas
                         ${MF_UTILITIES}

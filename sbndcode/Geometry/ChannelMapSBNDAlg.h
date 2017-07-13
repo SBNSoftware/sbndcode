@@ -16,7 +16,7 @@
 #include "sbndcode/Geometry/GeoObjectSorterSBND.h"
 
 // LArSoft libraries
-#include "larcore/Geometry/ChannelMapStandardAlg.h"
+#include "larcorealg/Geometry/ChannelMapStandardAlg.h"
 
 
 namespace geo {
