@@ -282,7 +282,10 @@
 	<constant name="whereBuild_Y" value="(buildingBaseWidth+buildingInternalSpace_Y+detectorHall_Y)/2+mezzanine_Y-system_DY"/>
 	<constant name="whereBuild_Z" value="1300"/>
 
-	<position name="posUnderground" unit="mm" x="whereTPC_X" y="whereTPC_Y-theCryo_Y/2" z="whereTPC_Z+theTPC_Z/2"/>
+	<!-- Andrzej Correction -->
+	<constant name="AndrzejCorrection" value="-0.5"/>
+	
+	<position name="posUnderground" unit="mm" x="whereTPC_X" y="whereTPC_Y-theCryo_Y/2+AndrzejCorrection" z="whereTPC_Z+theTPC_Z/2"/>
 	<position name="posBuilding"    unit="mm" x="whereBuild_X" y="whereBuild_Y" z="whereBuild_Z"/>	
 	<position name="posBuildingVoid" unit="mm" x="0" y="-(wallWidth+buildingRoofTop)/2-_eD_" z="0"/>
 

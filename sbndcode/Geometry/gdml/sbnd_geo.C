@@ -10,7 +10,7 @@ int sbnd_geo(TString volName="")
 	gSystem->Load("libGeom");
 	gSystem->Load("libGdml");
 
-	TGeoManager::Import("sbnd_v00_09_nowires.gdml");
+	TGeoManager::Import("sbnd_v00_09.gdml");
 
 drawopt optsbnd[] = {
 	{"volTheBuilding", kYellow-8},
@@ -55,7 +55,7 @@ for (int i=0;; ++i) {
   }
 
   gGeoManager->GetTopNode();
-//  gGeoManager->CheckOverlaps(10e-11);
+  gGeoManager->CheckOverlaps(10e-11);
   gGeoManager->PrintOverlaps();
   gGeoManager->SetMaxVisNodes(70000);
 
@@ -64,7 +64,7 @@ for (int i=0;; ++i) {
   
   TGeoVolume* TPC = gGeoManager->FindVolumeFast("volTPCActive");
   float m_tpc = TPC->Weight();
-//  TGeoVolume* Cathode = gGeoManager->FindVolumeFast("volCathode");
+//  TGeoVolume* Cathode = gGeoManager->FindVolumeFast("volWorld");
 //  float m_cathode = Cathode->Weight();
 
 //  float m_tpc_argon = m_tpc - m_cathode ;
