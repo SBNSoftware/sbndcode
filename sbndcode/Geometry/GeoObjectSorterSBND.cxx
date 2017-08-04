@@ -8,11 +8,11 @@
 #include "sbndcode/Geometry/GeoObjectSorterSBND.h"
 
 // LArSoft libraries
-#include "larcore/Geometry/CryostatGeo.h"
-#include "larcore/Geometry/TPCGeo.h"
-#include "larcore/Geometry/PlaneGeo.h"
-#include "larcore/Geometry/WireGeo.h"
-#include "larcore/Geometry/AuxDetGeo.h"
+#include "larcorealg/Geometry/CryostatGeo.h"
+#include "larcorealg/Geometry/TPCGeo.h"
+#include "larcorealg/Geometry/PlaneGeo.h"
+#include "larcorealg/Geometry/WireGeo.h"
+#include "larcorealg/Geometry/AuxDetGeo.h"
 
 // framework libraries
 #include "cetlib_except/exception.h"
