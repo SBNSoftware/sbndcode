@@ -10,9 +10,9 @@
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-#include "larcore/Geometry/AuxDetGeo.h"
-#include "larcore/Geometry/AuxDetSensitiveGeo.h"
-#include "larcore/Geometry/AuxDetGeometryCore.h"
+#include "larcorealg/Geometry/AuxDetGeo.h"
+#include "larcorealg/Geometry/AuxDetSensitiveGeo.h"
+#include "larcorealg/Geometry/AuxDetGeometryCore.h"
 #include "sbndcode/CRT/CRTChannelMapAlg.h"
 #include "TVector3.h"
 #include <iostream>

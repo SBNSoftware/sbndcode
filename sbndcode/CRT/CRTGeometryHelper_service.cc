@@ -7,9 +7,9 @@
 /// \author mastbaum@uchicago.edu
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "larcore/Geometry/AuxDetChannelMapAlg.h"
-#include "larcore/Geometry/AuxDetGeometryCore.h"
-#include "larcore/Geometry/AuxDetGeo.h"
+#include "larcorealg/Geometry/AuxDetChannelMapAlg.h"
+#include "larcorealg/Geometry/AuxDetGeometryCore.h"
+#include "larcorealg/Geometry/AuxDetGeo.h"
 #include "sbndcode/CRT/CRTGeometryHelper.h"
 #include "sbndcode/CRT/CRTChannelMapAlg.h"
 #include <memory>
