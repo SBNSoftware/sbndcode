@@ -2,7 +2,7 @@
 art_make(
           MODULE_LIBRARIES
             larcore_Geometry_Geometry_service
-            larcore_Geometry
+            larcorealg_Geometry
             nusimdata_SimulationBase
             ${ART_FRAMEWORK_CORE}
             ${ART_FRAMEWORK_PRINCIPAL}
