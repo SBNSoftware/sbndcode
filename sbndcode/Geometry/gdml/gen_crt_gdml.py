@@ -356,5 +356,5 @@ tbbs, tbbv = tagger_bot()
 #gdml.insert(0, mats.getroot())
 
 with open('crt.gdml', 'w') as f:
-    f.write(minidom.parseString(ET.tostring(gdml)).toprettyxml(indent=' '))
+    f.write(minidom.parseString(ET.tostring(gdml)).toprettyxml(indent='\t'))
 
