@@ -27,13 +27,6 @@ Chi2NDF:	      2000	       # maximum Chisquared / NDF allowed for a hit to be sa
 
 FilterHits:           false            # do not apply any filter to the hits
 
-# issue #12979: remove the following line after issue #12978 is fixed
-HitFilterAlg: {
-   AlgName: "HitFilterAlg"
-   MinPulseHeight: [5.0, 5.0, 5.0]
-   MinPulseSigma:  [1.0, 1.0, 1.0]
-} # HitFilterAlg
-
 } # sbnd_gaushitfinder
 
 sbnd_fasthitfinder:                     @local::standard_fasthitfinder

@@ -37,8 +37,8 @@
 #     #include "standard_g4_sbnd.fcl"
 #
 #     services: {
-#       @local::services # everything unchanged...
-#       @local::future_sbnd_geo::sbnd_geometry_services
+#       @table::services # everything unchanged...
+#       @table::future_sbnd_geo::sbnd_geometry_services
 #     }
 #     
 # 
@@ -115,8 +115,8 @@ future_sbnd_geo: {}
   
 future_sbnd_geo.sbnd_geo_source: {
   Name:     "sbndv0"
-  GDML:     "sbnd_v00_08.gdml"
-  ROOT:     "sbnd_v00_08.gdml"
+  GDML:     "sbnd_v00_09.gdml"
+  ROOT:     "sbnd_v00_09.gdml"
 } # future_sbnd_geo.sbnd_geo_source
   
 future_sbnd_geo.sbnd_geo: {
@@ -135,6 +135,15 @@ future_sbnd_geo.sbnd_geometry_services: {
   AuxDetGeometry: @local::future_sbnd_geo.sbnd_auxdetgeo
 } # future_sbnd_geo.sbnd_geometry_services
   
+###############################################################################
+#
+
+# ********************************************************
+# ***  USE FUTURE GEOMETRY  (for test branch only!!!)  ***
+# ********************************************************
+
+sbnd_geometry_services: @local::future_sbnd_geo.sbnd_geometry_services
+
 ###############################################################################
 
 END_PROLOG

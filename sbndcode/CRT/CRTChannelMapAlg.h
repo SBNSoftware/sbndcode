@@ -11,7 +11,7 @@
 #ifndef SBND_CRTChannelMapAlg_h
 #define SBND_CRTChannelMapAlg_h
 
-#include "larcore/Geometry/AuxDetChannelMapAlg.h"
+#include "larcorealg/Geometry/AuxDetChannelMapAlg.h"
 #include "sbndcode/CRT/CRTGeoObjectSorter.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "TVector3.h"

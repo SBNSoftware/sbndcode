@@ -46,6 +46,7 @@ cet_report_compiler_flags()
 find_ups_product( larpandora v1_00_00 )
 find_ups_product( larsim v1_00_00 )
 find_ups_product( lardata v1_00_00 )
+find_ups_product( lardataobj )
 find_ups_product( larcore v1_00_00 )
 find_ups_product( nutools v1_00_00 )
 find_ups_product( art v1_09_00 )
@@ -70,3 +71,4 @@ add_subdirectory(bin)
 
 # packaging utility
 include(UseCPack)
+

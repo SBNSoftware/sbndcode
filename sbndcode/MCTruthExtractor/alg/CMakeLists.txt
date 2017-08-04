@@ -6,7 +6,7 @@ art_make(
           LIBRARY_NAME NuAnaAlg
           LIB_LIBRARIES 
             larcore_Geometry_Geometry_service
-            larcore_Geometry
+            larcorealg_Geometry
             nutools_NuReweight_art
             nutools_NuReweight
             nusimdata_SimulationBase
