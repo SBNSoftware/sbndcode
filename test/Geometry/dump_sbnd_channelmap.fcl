@@ -15,8 +15,7 @@ process_name: DumpChannelMap
 
 services: {
   
-  Geometry:               @local::sbnd_geo
-  ExptGeoHelperInterface: @local::sbnd_geometry_helper
+  @table::sbnd_geometry_services 
   
   message: {
     destinations: {
