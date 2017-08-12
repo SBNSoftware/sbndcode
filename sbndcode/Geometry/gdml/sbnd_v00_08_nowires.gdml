@@ -109,29 +109,29 @@
 	<position name="center"/>
 	<rotation name="identity"/>
 	
-	<rotation name="rotateP90Y" unit="deg" x="0.000000000000000e+00" y="9.000000000000000e+01" z="0.000000000000000e+00"/>  
-	<rotation name="rotateN90Y" unit="deg" x="0.000000000000000e+00" y="-9.000000000000000e+01" z="0.000000000000000e+00"/>
-	<rotation name="rotateP90X" unit="deg" x="9.000000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rotateN90X" unit="deg" x="-9.000000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rotateN150X" unit="deg" x="-1.500000000000000e+02" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rotateP150X" unit="deg" x="1.500000000000000e+02" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rotateN30X" unit="deg" x="-3.000000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rotateP30X" unit="deg" x="3.000000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rotate180Y" unit="deg" x="0.000000000000000e+00" y="1.800000000000000e+02" z="0.000000000000000e+00"/>
+	<rotation name="rotateP90Y" unit="deg" x="0.0000000000e+00" y="9.0000000000e+01" z="0.0000000000e+00"/>  
+	<rotation name="rotateN90Y" unit="deg" x="0.0000000000e+00" y="-9.0000000000e+01" z="0.0000000000e+00"/>
+	<rotation name="rotateP90X" unit="deg" x="9.0000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rotateN90X" unit="deg" x="-9.0000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rotateN150X" unit="deg" x="-1.5000000000e+02" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rotateP150X" unit="deg" x="1.5000000000e+02" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rotateN30X" unit="deg" x="-3.0000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rotateP30X" unit="deg" x="3.0000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rotate180Y" unit="deg" x="0.0000000000e+00" y="1.8000000000e+02" z="0.0000000000e+00"/>
 	
 	
-	<rotation name="rotPlusAroundX" unit="deg" x="3.000000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rotCableAroundX" unit="deg" x="6.000000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posUnderground" unit="mm" x="0.000000000000000e+00" y="-2.016899414062500e+03" z="2.500000000000000e+03"/>
-	<position name="posBuilding"    unit="mm" x="0.000000000000000e+00" y="1.225630078125000e+04" z="1.300000000000000e+03"/>	
-	<position name="posBuildingVoid" unit="mm" x="0.000000000000000e+00" y="-4.800010070800781e+02" z="0.000000000000000e+00"/>
-        <position name="posCryostat"    unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="2.082500000000000e+03" />
-        <position name="posStructure"   unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="2.082500000000000e+03" />
-	<position name="posEquipLid" x="0.000000000000000e+00" y="3.664500000000000e+03" z="0.000000000000000e+00"/>
-	<position name="posTopTower" x="0.000000000000000e+00" y="4.341850585937500e+03" z="0.000000000000000e+00"/>
-	<position name="posShieldingLid" x="0.000000000000000e+00" y="7.643701171875000e+03" z="0.000000000000000e+00"/>
-	<position name="posShieldingTop" x="0.000000000000000e+00" y="7.643701171875000e+03" z="1.600000000000000e+03"/>
-	<position name="posMezzanineLid" x="0.000000000000000e+00" y="6.719901367187500e+03" z="1.168609960937500e+04"/>
+	<rotation name="rotPlusAroundX" unit="deg" x="3.0000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rotCableAroundX" unit="deg" x="6.0000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posUnderground" unit="mm" x="0.0000000000e+00" y="-2.0163995361e+03" z="2.5000000000e+03"/>
+	<position name="posBuilding"    unit="mm" x="0.0000000000e+00" y="1.2256300781e+04" z="1.3000000000e+03"/>	
+	<position name="posBuildingVoid" unit="mm" x="0.0000000000e+00" y="-4.8000100708e+02" z="0.0000000000e+00"/>
+        <position name="posCryostat"    unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="2.0825000000e+03" />
+        <position name="posStructure"   unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="2.0825000000e+03" />
+	<position name="posEquipLid" x="0.0000000000e+00" y="3.6640000000e+03" z="0.0000000000e+00"/>
+	<position name="posTopTower" x="0.0000000000e+00" y="4.3421005859e+03" z="0.0000000000e+00"/>
+	<position name="posShieldingLid" x="0.0000000000e+00" y="7.6442011719e+03" z="0.0000000000e+00"/>
+	<position name="posShieldingTop" x="0.0000000000e+00" y="7.6442011719e+03" z="1.6000000000e+03"/>
+	<position name="posMezzanineLid" x="0.0000000000e+00" y="6.7204013672e+03" z="1.1686099609e+04"/>
 </define>
 <materials>
 	<element name="hydrogen"    formula="H"  Z="1">  	<atom value="1.00794"/>   </element>
@@ -295,7 +295,7 @@
 		<fraction n="0.0900" ref="nickel"/>
 	</material>
 	<material name="STEEL_STRUCTURAL_S460L" formula="S460L">
-		<D value="3.83209991455078" unit="g/cm3"/>
+		<D value="3.832099915" unit="g/cm3"/>
 		<fraction n="0.95380" ref="iron"/>
 		<fraction n="0.01700" ref="manganese"/>        
 		<fraction n="0.00800" ref="nickel"/>
@@ -356,10 +356,10 @@
 <define>
 </define>
 <solids>
-	<box name="boxBuildingVoid"     lunit="mm" x="1.524000000000000e+04" y="1.067000000000000e+04" z="2.804000000000000e+04"/>
-	<box name="boxBuildingExternal" lunit="mm" x="1.544000000000000e+04" y="1.163000000000000e+04" z="2.824000000000000e+04"/>
-	<box name="boxBuildingGlassSpace" lunit="mm" x="1.000019989013672e+02" y="9.760000976562500e+03" z="2.804000000000000e+04"/>
-	<box name="boxBuildingRoofSpace"  lunit="mm" x="1.524000000000000e+04" y="8.600000000000000e+02" z="2.804000000000000e+04"/>
+	<box name="boxBuildingVoid"     lunit="mm" x="1.5240000000e+04" y="1.0670000000e+04" z="2.8040000000e+04"/>
+	<box name="boxBuildingExternal" lunit="mm" x="1.5440000000e+04" y="1.1630000000e+04" z="2.8240000000e+04"/>
+	<box name="boxBuildingGlassSpace" lunit="mm" x="1.0000199890e+02" y="9.7600009766e+03" z="2.8040000000e+04"/>
+	<box name="boxBuildingRoofSpace"  lunit="mm" x="1.5240000000e+04" y="8.6000000000e+02" z="2.8040000000e+04"/>
 	<subtraction name="BuildingWalls">
     		<first  ref="boxBuildingExternal"/> 
     		<second ref="boxBuildingVoid"/>
@@ -368,20 +368,20 @@
 	<subtraction name="BuildingWallsRoof">
 		<first  ref="BuildingWalls"/> 
 		<second ref="boxBuildingRoofSpace"/>
-		<position name="posBuildingRS" unit="mm" x="0.000000000000000e+00" y="5.385000976562500e+03" z="0.000000000000000e+00"/>
+		<position name="posBuildingRS" unit="mm" x="0.0000000000e+00" y="5.3850009766e+03" z="0.0000000000e+00"/>
 	</subtraction>
 	<subtraction name="Building">
 		<first  ref="BuildingWallsRoof"/> 
 		<second ref="boxBuildingGlassSpace"/>
-		<position name="posBuildingGS" unit="mm" x="-7.670000000000000e+03" y="-9.350004882812500e+02" z="0.000000000000000e+00"/>
+		<position name="posBuildingGS" unit="mm" x="-7.6700000000e+03" y="-9.3500048828e+02" z="0.0000000000e+00"/>
 	</subtraction>
-	<box name="boxGlassWindow" lunit="mm" x="2.000000000000000e+01" y="9.760000000000000e+03" z="2.804000000000000e+04"/>
-	<box name="boxBuildingBase"  lunit="mm" x="1.524000000000000e+04" y="1.523999938964844e+02" z="2.804000000000000e+04" />
-	<box name="boxMezzanineEntrance"  lunit="mm" x="9.448799804687500e+03" y="3.505200927734375e+03" z="1.836419921875000e+04" />
+	<box name="boxGlassWindow" lunit="mm" x="2.0000000000e+01" y="9.7600000000e+03" z="2.8040000000e+04"/>
+	<box name="boxBuildingBase"  lunit="mm" x="1.5240000000e+04" y="1.5239999390e+02" z="2.8040000000e+04" />
+	<box name="boxMezzanineEntrance"  lunit="mm" x="9.4487998047e+03" y="3.5052009277e+03" z="1.8364199219e+04" />
 	<subtraction name="buildingBase">
 		<first  ref="boxBuildingBase"/> 
 		<second ref="boxMezzanineEntrance"/>
-		<position name="posBuildingBaseEntrance" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="4.307900390625000e+03"/>
+		<position name="posBuildingBaseEntrance" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="4.3079003906e+03"/>
 	</subtraction>
 	<subtraction name="boxBuildingContainer1">
     		<first  ref="boxBuildingExternal"/> 
@@ -391,17 +391,17 @@
 	<union name="boxBuildingContainer">
     		<first  ref="boxBuildingContainer1"/> 
     		<second ref="buildingBase"/>
-		<position name="posBuildingBase2" unit="mm" x="0.000000000000000e+00" y="-5.688799804687500e+03" z="0.000000000000000e+00" />
+		<position name="posBuildingBase2" unit="mm" x="0.0000000000e+00" y="-5.6887998047e+03" z="0.0000000000e+00" />
   	</union>
-	<box name="boxShieldingLid" lunit="mm" x="7.398000000000000e+03" y="2.000000000000000e+03" z="9.223000000000000e+03"/>
-	<box name="boxShieldingTop_0" lunit="mm" x="7.398000000000000e+03" y="2.000000976562500e+03" z="9.223000000000000e+03"/>
-	<box name="boxShieldingTop_1" lunit="mm" x="1.066800000000000e+04" y="2.000000000000000e+03" z="1.158120019531250e+04"/>
+	<box name="boxShieldingLid" lunit="mm" x="7.3980000000e+03" y="2.0000000000e+03" z="9.2230000000e+03"/>
+	<box name="boxShieldingTop_0" lunit="mm" x="7.3980000000e+03" y="2.0000009766e+03" z="9.2230000000e+03"/>
+	<box name="boxShieldingTop_1" lunit="mm" x="1.0668000000e+04" y="2.0000000000e+03" z="1.1581200195e+04"/>
 	<subtraction name="boxShieldingTop">
 		<first ref="boxShieldingTop_1"/>
 		<second ref="boxShieldingTop_0"/>
-		<position name="posShieldPassage" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="4.825000000000000e+02"/>
+		<position name="posShieldPassage" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="4.8250000000e+02"/>
 	</subtraction>
-	<box name="boxMezzanineLid" lunit="mm" x="1.066800000000000e+04" y="1.523999938964844e+02" z="6.172199707031250e+03"/>
+	<box name="boxMezzanineLid" lunit="mm" x="1.0668000000e+04" y="1.5239999390e+02" z="6.1721997070e+03"/>
 </solids>
 <structure>
 	<volume name="volTheBuilding">
@@ -437,34 +437,34 @@
 		</physvol>
 		<physvol>
 			<volumeref ref="volGlassWindow"/>
-			<position name="posGlassWindow" unit="mm" x="-7.700000000000000e+03" y="-9.350000000000000e+02" z="0.000000000000000e+00"/>
+			<position name="posGlassWindow" unit="mm" x="-7.7000000000e+03" y="-9.3500000000e+02" z="0.0000000000e+00"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volBuildingBase"/>
-			<position name="posBuildingBase" unit="mm" x="0.000000000000000e+00" y="-5.688799804687500e+03" z="0.000000000000000e+00" />
+			<position name="posBuildingBase" unit="mm" x="0.0000000000e+00" y="-5.6887998047e+03" z="0.0000000000e+00" />
 		</physvol>
 	</volume>
 </structure>
 <define>
 </define>
 <solids>
-	<box name="boxGroundExterior" lunit="mm" x="4.000000000000000e+04" y="1.691639843750000e+04" z="4.000000000000000e+04" />
-	<box name="boxFoundationSlab" 		lunit="mm" x="1.920239843750000e+04" y="9.143999633789062e+02" z="2.194559960937500e+04" />
-	<box name="boxDetectorHall"  		lunit="mm" x="9.448799804687500e+03" y="6.705600585937500e+03" z="1.219200000000000e+04" />
-	<box name="boxDetectorHallExterior"  	lunit="mm" x="1.066800000000000e+04" y="6.705599609375000e+03" z="1.341120019531250e+04" />
-	<box name="boxVerticalSlab"  		lunit="mm" x="4.267199707031250e+03" y="6.705600585937500e+03" z="6.095999755859375e+02" />
-	<box name="boxPumpHall" 		lunit="mm" x="2.743199951171875e+03" y="2.438399902343750e+03" z="3.657600097656250e+03"/>
-	<box name="boxPumpHallExterior" 	lunit="mm" x="3.048000000000000e+03" y="3.048000000000000e+03" z="4.876800292968750e+03"/>
+	<box name="boxGroundExterior" lunit="mm" x="4.0000000000e+04" y="1.6916398438e+04" z="4.0000000000e+04" />
+	<box name="boxFoundationSlab" 		lunit="mm" x="1.9202398438e+04" y="9.1439996338e+02" z="2.1945599609e+04" />
+	<box name="boxDetectorHall"  		lunit="mm" x="9.4487998047e+03" y="6.7056005859e+03" z="1.2192000000e+04" />
+	<box name="boxDetectorHallExterior"  	lunit="mm" x="1.0668000000e+04" y="6.7055996094e+03" z="1.3411200195e+04" />
+	<box name="boxVerticalSlab"  		lunit="mm" x="4.2671997070e+03" y="6.7056005859e+03" z="6.0959997559e+02" />
+	<box name="boxPumpHall" 		lunit="mm" x="2.7431999512e+03" y="2.4383999023e+03" z="3.6576000977e+03"/>
+	<box name="boxPumpHallExterior" 	lunit="mm" x="3.0480000000e+03" y="3.0479997559e+03" z="4.8768002930e+03"/>
 	
 	<subtraction name="boxGround_1">
 		<first  ref="boxGroundExterior"/> 
 		<second ref="boxDetectorHall"/>
-		<position name="posAirHall1" unit="mm" x="0.000000000000000e+00" y="1.600200195312500e+03" z="0.000000000000000e+00"/>
+		<position name="posAirHall1" unit="mm" x="0.0000000000e+00" y="1.6002001953e+03" z="0.0000000000e+00"/>
 	</subtraction>
 	<subtraction name="boxGround">
 		<first  ref="boxGround_1"/> 
 		<second ref="boxDetectorHall"/>
-		<position name="posAirHall2" unit="mm" x="0.000000000000000e+00" y="8.305799804687500e+03" z="0.000000000000000e+00"/>
+		<position name="posAirHall2" unit="mm" x="0.0000000000e+00" y="8.3057998047e+03" z="0.0000000000e+00"/>
 	</subtraction>
 	<subtraction name="detectorHallWalls">
 		<first  ref="boxDetectorHallExterior"/> 
@@ -474,61 +474,61 @@
 	<union name="detectorPumpHall">
 		<first  ref="detectorHallWalls"/> 
 		<second ref="boxPumpHallExterior"/>
-		<position name="posPumpHallExt" unit="mm" x="6.248399902343750e+03" y="-1.828799804687500e+03" z="4.267200195312500e+03"/>
+		<position name="posPumpHallExt" unit="mm" x="6.2483999023e+03" y="-1.8287998047e+03" z="4.2672001953e+03"/>
 		<rotationref ref="identity"/>
 	</union>
 	<subtraction name="detectorPumpHallWalls">
 		<first  ref="detectorPumpHall"/> 
 		<second ref="boxPumpHall"/>
-		<position name="posPumpHall" unit="mm" x="6.095999023437500e+03" y="-2.133599853515625e+03" z="4.267200195312500e+03"/>
+		<position name="posPumpHall" unit="mm" x="6.0959990234e+03" y="-2.1335998535e+03" z="4.2672001953e+03"/>
 		<rotationref ref="identity"/>
 	</subtraction>
 	<union name="build0">
 		<first  ref="detectorPumpHallWalls"/> 
 		<second ref="boxFoundationSlab"/>
-		<position name="posFoundationSlab" unit="mm" x="0.000000000000000e+00" y="-3.810000732421875e+03" z="0.000000000000000e+00"/>
+		<position name="posFoundationSlab" unit="mm" x="0.0000000000e+00" y="-3.8100007324e+03" z="0.0000000000e+00"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="build1">
 		<first  ref="build0"/> 
 		<second ref="boxVerticalSlab"/>
-		<position name="posVS1" unit="mm" x="7.467599609375000e+03" y="-1.000000047497451e-03" z="2.133600097656250e+03"/>
+		<position name="posVS1" unit="mm" x="7.4675996094e+03" y="-1.0000000475e-03" z="2.1336000977e+03"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="build2">
 		<first  ref="build1"/> 
 		<second ref="boxVerticalSlab"/>
-		<position name="posVS2" unit="mm" x="7.467599609375000e+03" y="-1.000000047497451e-03" z="-2.133600097656250e+03"/>
+		<position name="posVS2" unit="mm" x="7.4675996094e+03" y="-1.0000000475e-03" z="-2.1336000977e+03"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="build3">
 		<first  ref="build2"/> 
 		<second ref="boxVerticalSlab"/>
-		<position name="posVS3" unit="mm" x="-7.467599609375000e+03" y="-1.000000047497451e-03" z="2.133600097656250e+03"/>
+		<position name="posVS3" unit="mm" x="-7.4675996094e+03" y="-1.0000000475e-03" z="2.1336000977e+03"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="build4">
 		<first  ref="build3"/> 
 		<second ref="boxVerticalSlab"/>
-		<position name="posVS4" unit="mm" x="-7.467599609375000e+03" y="-1.000000047497451e-03" z="-2.133600097656250e+03"/>
+		<position name="posVS4" unit="mm" x="-7.4675996094e+03" y="-1.0000000475e-03" z="-2.1336000977e+03"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="build5">
 		<first  ref="build4"/> 
 		<second ref="boxVerticalSlab"/>
-		<position name="posVS5" unit="mm" x="0.000000000000000e+00" y="-1.000000047497451e-03" z="-8.839200195312500e+03"/>
+		<position name="posVS5" unit="mm" x="0.0000000000e+00" y="-1.0000000475e-03" z="-8.8392001953e+03"/>
 		<rotationref ref="rotateP90Y"/>
 	</union>
 	<union name="build6">
 		<first  ref="build5"/> 
 		<second ref="boxVerticalSlab"/>
-		<position name="posVS6" unit="mm" x="0.000000000000000e+00" y="-1.000000047497451e-03" z="8.839200195312500e+03"/>
+		<position name="posVS6" unit="mm" x="0.0000000000e+00" y="-1.0000000475e-03" z="8.8392001953e+03"/>
 		<rotationref ref="rotateP90Y"/>
 	</union>
-	<box name="boxMezzanine"  lunit="mm" x="9.448799804687500e+03" y="3.505200927734375e+03" z="1.836419921875000e+04" />
-	<box name="boxMezzanineExterior"  lunit="mm" x="1.066800000000000e+04" y="3.505199951171875e+03" z="1.958339843750000e+04" />
-	<box name="boxMezzanineFloor"  lunit="mm" x="9.448800781250000e+03" y="1.523999938964844e+02" z="6.172199218750000e+03" />
-	<box name="boxVerticalSlab_2"  lunit="mm" x="2.133599853515625e+03" y="3.505199951171875e+03" z="6.095999755859375e+02" />
+	<box name="boxMezzanine"  lunit="mm" x="9.4487998047e+03" y="3.5052009277e+03" z="1.8364199219e+04" />
+	<box name="boxMezzanineExterior"  lunit="mm" x="1.0668000000e+04" y="3.5051999512e+03" z="1.9583398438e+04" />
+	<box name="boxMezzanineFloor"  lunit="mm" x="9.4488007812e+03" y="1.5239999390e+02" z="6.1721992188e+03" />
+	<box name="boxVerticalSlab_2"  lunit="mm" x="2.1335998535e+03" y="3.5051999512e+03" z="6.0959997559e+02" />
 	<subtraction name="mezzanineBuild1">
 		<first  ref="boxMezzanineExterior"/> 
 		<second ref="boxMezzanine"/>
@@ -537,44 +537,44 @@
 	<union name="mezzanineBuild2">
 		<first  ref="mezzanineBuild1"/> 
 		<second ref="boxMezzanineFloor"/>
-		<position name="posMezzanineFloor" unit="mm" x="0.000000000000000e+00" y="-1.676400024414062e+03" z="6.096000000000000e+03"/>
+		<position name="posMezzanineFloor" unit="mm" x="0.0000000000e+00" y="-1.6764000244e+03" z="6.0960000000e+03"/>
 	</union>
 	<union name="mezzanineBuild3">
 		<first  ref="mezzanineBuild2"/> 
 		<second ref="boxVerticalSlab_2"/>
-		<position name="posVS21" unit="mm" x="6.400799804687500e+03" y="0.000000000000000e+00" z="-9.524996337890625e+02"/>
+		<position name="posVS21" unit="mm" x="6.4007998047e+03" y="0.0000000000e+00" z="-9.5249963379e+02"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="mezzanineBuild4">
 		<first  ref="mezzanineBuild3"/> 
 		<second ref="boxVerticalSlab_2"/>
-		<position name="posVS22" unit="mm" x="6.400799804687500e+03" y="0.000000000000000e+00" z="-5.219699707031250e+03"/>
+		<position name="posVS22" unit="mm" x="6.4007998047e+03" y="0.0000000000e+00" z="-5.2196997070e+03"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="mezzanineBuild5">
 		<first  ref="mezzanineBuild4"/> 
 		<second ref="boxVerticalSlab_2"/>
-		<position name="posVS23" unit="mm" x="-6.400799804687500e+03" y="0.000000000000000e+00" z="-9.524996337890625e+02"/>
+		<position name="posVS23" unit="mm" x="-6.4007998047e+03" y="0.0000000000e+00" z="-9.5249963379e+02"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="mezzanineBuild6">
 		<first  ref="mezzanineBuild5"/> 
 		<second ref="boxVerticalSlab_2"/>
-		<position name="posVS24" unit="mm" x="-6.400799804687500e+03" y="0.000000000000000e+00" z="-5.219699707031250e+03"/>
+		<position name="posVS24" unit="mm" x="-6.4007998047e+03" y="0.0000000000e+00" z="-5.2196997070e+03"/>
 		<rotationref ref="identity"/>
 	</union>
 	<union name="mezzanineBuild7">
 		<first  ref="mezzanineBuild6"/> 
 		<second ref="boxVerticalSlab_2"/>
-		<position name="posVS25" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="-1.070609960937500e+04"/>
+		<position name="posVS25" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="-1.0706099609e+04"/>
 		<rotationref ref="rotateP90Y"/>
 	</union>
-	<box name="boxGroundLevel0" lunit="mm" x="4.000000000000000e+04" y="6.705597656250000e+03" z="4.000000000000000e+04" />
-	<box name="boxGroundLevel2" lunit="mm" x="4.000000000000000e+04" y="3.505197998046875e+03" z="4.000000000000000e+04" />
+	<box name="boxGroundLevel0" lunit="mm" x="4.0000000000e+04" y="6.7055976562e+03" z="4.0000000000e+04" />
+	<box name="boxGroundLevel2" lunit="mm" x="4.0000000000e+04" y="3.5051979980e+03" z="4.0000000000e+04" />
 	<subtraction name="groundLevel0">
 		<first  ref="boxGroundLevel0"/> 
 		<second ref="boxFoundationSlab"/>
-		<position name="posGL0" unit="mm" x="0.000000000000000e+00" y="2.895598876953125e+03" z="0.000000000000000e+00"/>
+		<position name="posGL0" unit="mm" x="0.0000000000e+00" y="2.8955988770e+03" z="0.0000000000e+00"/>
 	</subtraction>
 	<subtraction name="groundBuild1">
 		<first  ref="boxGroundLevel0"/> 
@@ -584,7 +584,7 @@
 	<subtraction name="groundBuild2">
 		<first  ref="groundBuild1"/> 
 		<second ref="boxPumpHallExterior"/>
-		<position name="posGL1" unit="mm" x="6.248399902343750e+03" y="-1.828799804687500e+03" z="4.267200195312500e+03"/>
+		<position name="posGL1" unit="mm" x="6.2483999023e+03" y="-1.8287998047e+03" z="4.2672001953e+03"/>
 	</subtraction>
 	<subtraction name="groundLevel1">
 		<first  ref="groundBuild2"/> 
@@ -594,12 +594,12 @@
 	<subtraction name="groundBuild3">
 		<first  ref="boxGroundLevel2"/> 
 		<second ref="boxMezzanineExterior"/>
-		<position name="posGL2" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="3.086099609375000e+03"/>
+		<position name="posGL2" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="3.0860996094e+03"/>
 	</subtraction>
 	<subtraction name="groundLevel2">
 		<first  ref="groundBuild3"/> 
 		<second ref="mezzanineBuild7"/>
-		<position name="posGL2bis" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="3.086099609375000e+03"/>
+		<position name="posGL2bis" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="3.0860996094e+03"/>
 	</subtraction>
 </solids>
 <structure>
@@ -628,54 +628,54 @@
 		<solidref ref="boxGround"/>
 	<physvol>
 			<volumeref ref="volDetectorHall"/>
-			<position name="posDetectorHall" unit="mm" x="0.000000000000000e+00" y="1.600200195312500e+03" z="0.000000000000000e+00" />
+			<position name="posDetectorHall" unit="mm" x="0.0000000000e+00" y="1.6002001953e+03" z="0.0000000000e+00" />
 		</physvol>
 		<physvol>
 			<volumeref ref="volMezzanine"/>
-			<position name="posMezzanine" unit="mm" x="0.000000000000000e+00" y="6.705600097656250e+03" z="3.086099609375000e+03" />
+			<position name="posMezzanine" unit="mm" x="0.0000000000e+00" y="6.7056000977e+03" z="3.0860996094e+03" />
 		</physvol>
 		<physvol>
 			<volumeref ref="volGroundLevel0"/>
-			<position name="posGroundLevel0" unit="mm" x="0.000000000000000e+00" y="-5.105399414062500e+03" z="0.000000000000000e+00" />
+			<position name="posGroundLevel0" unit="mm" x="0.0000000000e+00" y="-5.1053994141e+03" z="0.0000000000e+00" />
 		</physvol>
 		<physvol>
 			<volumeref ref="volGroundLevel1"/>
-			<position name="posGroundLevel1" unit="mm" x="0.000000000000000e+00" y="1.600200195312500e+03" z="0.000000000000000e+00" />
+			<position name="posGroundLevel1" unit="mm" x="0.0000000000e+00" y="1.6002001953e+03" z="0.0000000000e+00" />
 		</physvol>
 		<physvol>
 			<volumeref ref="volGroundLevel2"/>
-			<position name="posGroundLevel2" unit="mm" x="0.000000000000000e+00" y="6.705600097656250e+03" z="0.000000000000000e+00" />
+			<position name="posGroundLevel2" unit="mm" x="0.0000000000e+00" y="6.7056000977e+03" z="0.0000000000e+00" />
 		</physvol>
 	</volume>
 </structure>
 <define>
-	<position name="APAbeamHoriz_1" unit="mm" x="0.000000000000000e+00" y="1.950000000000000e+03" z="6.000000000000000e+02" />
-	<position name="APAbeamHoriz_2" unit="mm" x="0.000000000000000e+00" y="6.670000000000000e+02" z="6.000000000000000e+02" />
-	<position name="APAbeamHoriz_3" unit="mm" x="0.000000000000000e+00" y="-6.670000000000000e+02" z="6.000000000000000e+02" />
-	<position name="APAbeamHoriz_4" unit="mm" x="0.000000000000000e+00" y="-1.950000000000000e+03" z="6.000000000000000e+02" />
-	<position name="APAbeamVerti_1" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="1.200000000000000e+03" />
-	<position name="APAbeamVerti_2" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="2.400000000000000e+03" />
-	<position name="APAbeamVerti_3" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="-1.250000000000000e+03" />
-	<position name="APAJunction_1" unit="mm" x="-1.250000000000000e+02" y="1.950000000000000e+03" z="1.150000000000000e+02" />
-	<position name="APAJunction_2" unit="mm" x="-1.250000000000000e+02" y="-6.670000000000000e+02" z="1.150000000000000e+02" />
-	<position name="APAJunction_3" unit="mm" x="-1.250000000000000e+02" y="1.950000000000000e+03" z="2.285000000000000e+03" />
-	<position name="APAJunction_4" unit="mm" x="-1.250000000000000e+02" y="-1.950000000000000e+03" z="2.285000000000000e+03" />
-	<position name="APACable" unit="mm" x="-1.250000000000000e+02" y="0.000000000000000e+00" z="1.200000000000000e+03" />
-	<position name="centerAtBorder" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="4.999950027465820e+01" />
-	<position name="firstAPA" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="0.000000000000000e+00" />
-	<position name="secondAPA" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="0.000000000000000e+00" />
+	<position name="APAbeamHoriz_1" unit="mm" x="0.0000000000e+00" y="1.9500000000e+03" z="6.0000000000e+02" />
+	<position name="APAbeamHoriz_2" unit="mm" x="0.0000000000e+00" y="6.6700000000e+02" z="6.0000000000e+02" />
+	<position name="APAbeamHoriz_3" unit="mm" x="0.0000000000e+00" y="-6.6700000000e+02" z="6.0000000000e+02" />
+	<position name="APAbeamHoriz_4" unit="mm" x="0.0000000000e+00" y="-1.9500000000e+03" z="6.0000000000e+02" />
+	<position name="APAbeamVerti_1" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="1.2000000000e+03" />
+	<position name="APAbeamVerti_2" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="2.4000000000e+03" />
+	<position name="APAbeamVerti_3" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="-1.2500000000e+03" />
+	<position name="APAJunction_1" unit="mm" x="-1.2500000000e+02" y="1.9500000000e+03" z="1.1500000000e+02" />
+	<position name="APAJunction_2" unit="mm" x="-1.2500000000e+02" y="-6.6700000000e+02" z="1.1500000000e+02" />
+	<position name="APAJunction_3" unit="mm" x="-1.2500000000e+02" y="1.9500000000e+03" z="2.2850000000e+03" />
+	<position name="APAJunction_4" unit="mm" x="-1.2500000000e+02" y="-1.9500000000e+03" z="2.2850000000e+03" />
+	<position name="APACable" unit="mm" x="-1.2500000000e+02" y="0.0000000000e+00" z="1.2000000000e+03" />
+	<position name="centerAtBorder" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="4.9999500275e+01" />
+	<position name="firstAPA" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="0.0000000000e+00" />
+	<position name="secondAPA" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="0.0000000000e+00" />
 </define>
 <solids>
-	<box name="boxAPAFrameBeamLongOuter"  lunit="mm" x="1.500000000000000e+02"   y="4.000000000000000e+03"   z="1.000000000000000e+02"/>
-	<box name="boxAPAFrameBeamLongInner"  lunit="mm" x="1.450000000000000e+02"   y="4.000000976562500e+03"   z="9.500000000000000e+01"/>
-	<box name="centerBolt" x="1.000000047497451e-03" y="1.000000047497451e-03" z="1.000000047497451e-03" /> 
+	<box name="boxAPAFrameBeamLongOuter"  lunit="mm" x="1.5000000000e+02"   y="4.0000000000e+03"   z="1.0000000000e+02"/>
+	<box name="boxAPAFrameBeamLongInner"  lunit="mm" x="1.4500000000e+02"   y="4.0000009766e+03"   z="9.5000000000e+01"/>
+	<box name="centerBolt" x="1.0000000475e-03" y="1.0000000475e-03" z="1.0000000475e-03" /> 
 	<subtraction name="boxAPAFrameBeamLong">
 		<first  ref="boxAPAFrameBeamLongOuter"/> 
 		<second ref="boxAPAFrameBeamLongInner"/>
 		<positionref ref="center"/>
 	</subtraction>
-	<box name="boxAPAFrameBeamShortOuter"  lunit="mm" x="1.500000000000000e+02"   y="1.000000000000000e+02"   z="1.100000976562500e+03"/>
-	<box name="boxAPAFrameBeamShortInner"  lunit="mm" x="1.450000000000000e+02"   y="9.500000000000000e+01"   z="1.100001953125000e+03"/>
+	<box name="boxAPAFrameBeamShortOuter"  lunit="mm" x="1.5000000000e+02"   y="1.0000000000e+02"   z="1.1000009766e+03"/>
+	<box name="boxAPAFrameBeamShortInner"  lunit="mm" x="1.4500000000e+02"   y="9.5000000000e+01"   z="1.1000019531e+03"/>
 	<subtraction name="boxAPAFrameBeamShort">
 		<first  ref="boxAPAFrameBeamShortOuter"/> 
 		<second ref="boxAPAFrameBeamShortInner"/>
@@ -711,8 +711,8 @@
 		<second ref="boxAPAFrameBeamLong"/>
 		<positionref ref="APAbeamVerti_2"/>
 	</union>
-	<box name="boxAPAFrameJunctionOuter"  x="1.000000000000000e+02"   y="1.000000000000000e+02"   z="3.300000000000000e+02"  lunit="mm"/>
-	<box name="boxAPAFrameJunctionInner"  x="9.400000000000000e+01"   y="9.400000000000000e+01"   z="3.300020141601562e+02"  lunit="mm"/>
+	<box name="boxAPAFrameJunctionOuter"  x="1.0000000000e+02"   y="1.0000000000e+02"   z="3.3000000000e+02"  lunit="mm"/>
+	<box name="boxAPAFrameJunctionInner"  x="9.4000000000e+01"   y="9.4000000000e+01"   z="3.3000201416e+02"  lunit="mm"/>
 	<subtraction name="boxAPAFrameJunction">
 		<first  ref="boxAPAFrameJunctionOuter"/> 
 		<second ref="boxAPAFrameJunctionInner"/>
@@ -738,7 +738,7 @@
 		<second ref="boxAPAFrameJunction"/>
 		<positionref ref="APAJunction_4"/>
 	</union>
-	<tube name="diagonalCable"  rmax="2.500000000000000e+01"  z="4.500000000000000e+03"   deltaphi="3.600000000000000e+02"  aunit="deg"  lunit="mm"/> 
+	<tube name="diagonalCable"  rmax="2.5000000000e+01"  z="4.5000000000e+03"   deltaphi="3.6000000000e+02"  aunit="deg"  lunit="mm"/> 
 	<union name="preFrameAPA_9">
 		<first  ref="preFrameAPA_8"/> 
 		<second ref="diagonalCable"/>
@@ -758,9 +758,9 @@
 	</volume>
 </structure>
 <solids>
-	<tube name="PMTVolume" rmax="1.143000030517578e+01" z="2.819899940490723e+01" deltaphi="3.600000000000000e+02" aunit="deg" lunit="cm"/>
-	<tube name="PMT_Underside" rmax="1.015999984741211e+01" z="1.000000014901161e-01" deltaphi="3.600000000000000e+02" aunit="deg" lunit="cm"/>
-	<tube name="PMT_Back" rmax="1.015999984741211e+01" z="5.000000000000000e-01" deltaphi="3.600000000000000e+02" aunit="deg" lunit="cm"/>
+	<tube name="PMTVolume" rmax="1.1430000305e+01" z="2.8198999405e+01" deltaphi="3.6000000000e+02" aunit="deg" lunit="cm"/>
+	<tube name="PMT_Underside" rmax="1.0159999847e+01" z="1.0000000149e-01" deltaphi="3.6000000000e+02" aunit="deg" lunit="cm"/>
+	<tube name="PMT_Back" rmax="1.0159999847e+01" z="5.0000000000e-01" deltaphi="3.6000000000e+02" aunit="deg" lunit="cm"/>
 </solids>
 <structure>
 	<volume name="volOpDetSensitive">
@@ -776,23 +776,23 @@
 		<solidref ref="PMTVolume"/>
 		<physvol>
 			<volumeref ref="vol_PMT_Back"/>
-			<position name="pos_PMT_Back" unit="cm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="6.635000228881836e+00"/>
+			<position name="pos_PMT_Back" unit="cm" x="0.0000000000e+00" y="0.0000000000e+00" z="6.6350002289e+00"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volOpDetSensitive"/>
-			<position name="pos_PMT_Underside" unit="cm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="6.934999942779541e+00"/>
+			<position name="pos_PMT_Underside" unit="cm" x="0.0000000000e+00" y="0.0000000000e+00" z="6.9349999428e+00"/>
 		</physvol>
 	</volume>
 </structure>
 <define>
-	<position name="posHalfAPA_pZ" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="1.250000000000000e+03"/>
-	<position name="posHalfAPA_nZ" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="-1.250000000000000e+03"/>	
-	<position name="posAPAFrame" unit="mm" x="1.750000000000000e+02" y="0.000000000000000e+00" z="-1.249999511718750e+03"/>
+	<position name="posHalfAPA_pZ" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="1.2500000000e+03"/>
+	<position name="posHalfAPA_nZ" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="-1.2500000000e+03"/>	
+	<position name="posAPAFrame" unit="mm" x="1.7500000000e+02" y="0.0000000000e+00" z="-1.2499995117e+03"/>
 </define>
 	
 <solids>
-	<box name="boxHalfSideAPA" lunit="mm" x="5.000000000000000e+02" y="4.000000000000000e+03" z="2.500000000000000e+03"/>
-	<box name="boxFullSideAPA" lunit="mm" x="5.000000000000000e+02" y="4.000000000000000e+03" z="5.000000000000000e+03"/>
+	<box name="boxHalfSideAPA" lunit="mm" x="5.0000000000e+02" y="4.0000000000e+03" z="2.5000000000e+03"/>
+	<box name="boxFullSideAPA" lunit="mm" x="5.0000000000e+02" y="4.0000000000e+03" z="5.0000000000e+03"/>
 </solids>
 <structure> <!-- APA Frame: contains metal structure and Optical Detectors -->
 	<volume name="volHalfAPA">
@@ -821,13 +821,15 @@
 	</volume>
 </structure>
 <define>
-	<rotation name="rPlusUVAngleAboutX" unit="deg" x="3.000000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
+	<rotation name="rPlusUVAngleAboutX" unit="deg" x="3.0000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	
+	
 	
 </define>
 <solids>
-	<box  name="boxTPCPlane"  lunit="mm" x="3.000000000000000e+00"  y="4.000000000000000e+03" z="5.000000000000000e+03"/>
-	<tube name="tubeWire" lunit="mm" rmax="7.499999832361937e-03" z="5.773485351562500e+03" aunit="deg" deltaphi="3.600000000000000e+02" />
-	<tube name="tubeWireVert" lunit="mm" rmax="7.499999832361937e-03" z="3.999985107421875e+03" aunit="deg" deltaphi="3.600000000000000e+02" />
+	<box  name="boxTPCPlane"  lunit="mm" x="3.0000000000e+00"  y="4.0000000000e+03" z="5.0000000000e+03"/>
+	<tube name="tubeWire" lunit="mm" rmax="7.4999998324e-03" z="5.7734853516e+03" aunit="deg" deltaphi="3.6000000000e+02" />
+	<tube name="tubeWireVert" lunit="mm" rmax="7.4999998324e-03" z="3.9999851074e+03" aunit="deg" deltaphi="3.6000000000e+02" />
 </solids>
 <structure>
 	<volume name="volTPCWire">
@@ -856,33 +858,33 @@
 	</volume>
 </structure>
 <define>
-	<rotation name="rPlus45AboutX" unit="deg" x="4.500000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rPlus90AboutX" unit="deg" x="9.000000000000000e+01" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<rotation name="rPlus180AboutY" unit="deg" x="0.000000000000000e+00" y="1.800000000000000e+02" z="0.000000000000000e+00"/>
-	<position name="posTPCatCryo_p" unit="mm" x="1.012500000000000e+03" y="0.000000000000000e+00" z="4.175000000000000e+02"/>
-	<position name="posTPCatCryo_n" unit="mm" x="-1.012500000000000e+03" y="0.000000000000000e+00" z="4.175000000000000e+02"/>
-	<position name="posTPC" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="2.500000000000000e+03"/>
-	<position name="posTPCPlane_pU" unit="mm" x="9.800000000000000e+02" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posTPCPlane_pV" unit="mm" x="9.830000000000000e+02" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posTPCPlane_pY" unit="mm" x="9.860000000000000e+02" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posTPCActive_p" unit="mm" x="-4.500000000000000e+00" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posAPAFrame_pX" unit="mm" x="2.250000000000000e+03" y="0.000000000000000e+00" z="0.000000000000000e+00" />
-	<position name="posAPA_p" 	unit="mm" x="1.237500000000000e+03" y="0.000000000000000e+00" z="2.500000000000000e+03"/>
-	<position name="posTPCPlane_nU" unit="mm" x="-9.800000000000000e+02" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posTPCPlane_nV" unit="mm" x="-9.830000000000000e+02" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posTPCPlane_nY" unit="mm" x="-9.860000000000000e+02" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posTPCActive_n" unit="mm" x="4.500000000000000e+00" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
-	<position name="posAPAFrame_nX" unit="mm" x="-2.250000000000000e+03" y="0.000000000000000e+00" z="0.000000000000000e+00" />    
+	<rotation name="rPlus45AboutX" unit="deg" x="4.5000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rPlus90AboutX" unit="deg" x="9.0000000000e+01" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<rotation name="rPlus180AboutY" unit="deg" x="0.0000000000e+00" y="1.8000000000e+02" z="0.0000000000e+00"/>
+	<position name="posTPCatCryo_p" unit="mm" x="1.0120000000e+03" y="0.0000000000e+00" z="4.1750000000e+02"/>
+	<position name="posTPCatCryo_n" unit="mm" x="-1.0120000000e+03" y="0.0000000000e+00" z="4.1750000000e+02"/>
+	<position name="posTPC" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="2.5000000000e+03"/>
+	<position name="posTPCPlane_pU" unit="mm" x="9.8000000000e+02" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posTPCPlane_pV" unit="mm" x="9.8300000000e+02" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posTPCPlane_pY" unit="mm" x="9.8600000000e+02" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posTPCActive_p" unit="mm" x="-4.0000000000e+00" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posAPAFrame_pX" unit="mm" x="2.2500000000e+03" y="0.0000000000e+00" z="0.0000000000e+00" />
+	<position name="posAPA_p" 	unit="mm" x="1.2370000000e+03" y="0.0000000000e+00" z="2.5000000000e+03"/>
+	<position name="posTPCPlane_nU" unit="mm" x="-9.8000000000e+02" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posTPCPlane_nV" unit="mm" x="-9.8300000000e+02" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posTPCPlane_nY" unit="mm" x="-9.8600000000e+02" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posTPCActive_n" unit="mm" x="4.0000000000e+00" y="0.0000000000e+00" z="0.0000000000e+00"/>
+	<position name="posAPAFrame_nX" unit="mm" x="-2.2500000000e+03" y="0.0000000000e+00" z="0.0000000000e+00" />    
 </define>
 <define>
-	<position name="posAPAFrame_nXnZ" unit="mm" x="-2.075000000000000e+03" y="0.000000000000000e+00" z="-2.082500000000000e+03" />    
-	<position name="posAPAFrame_nXpZ" unit="mm" x="-2.075000000000000e+03" y="0.000000000000000e+00" z="2.917500000000000e+03" />    
-	<position name="posAPAFrame_pXnZ" unit="mm" x="2.075000000000000e+03" y="0.000000000000000e+00" z="-2.082500000000000e+03" />    
-	<position name="posAPAFrame_pXpZ" unit="mm" x="2.075000000000000e+03" y="0.000000000000000e+00" z="2.917500000000000e+03" />    
+	<position name="posAPAFrame_nXnZ" unit="mm" x="-2.0750000000e+03" y="0.0000000000e+00" z="-2.0825000000e+03" />    
+	<position name="posAPAFrame_nXpZ" unit="mm" x="-2.0750000000e+03" y="0.0000000000e+00" z="2.9175000000e+03" />    
+	<position name="posAPAFrame_pXnZ" unit="mm" x="2.0750000000e+03" y="0.0000000000e+00" z="-2.0825000000e+03" />    
+	<position name="posAPAFrame_pXpZ" unit="mm" x="2.0750000000e+03" y="0.0000000000e+00" z="2.9175000000e+03" />    
 </define>
 <solids>
-	<box name="boxTPC" lunit="mm" x="1.975000000000000e+03" y="4.000000000000000e+03" z="5.000000000000000e+03"/>
-	<box name="boxTPCActive" lunit="mm" x="1.966000000000000e+03" y="4.000000000000000e+03" z="5.000000000000000e+03"/>
+	<box name="boxTPC" lunit="mm" x="1.9750000000e+03" y="4.0000000000e+03" z="5.0000000000e+03"/>
+	<box name="boxTPCActive" lunit="mm" x="1.9660000000e+03" y="4.0000000000e+03" z="5.0000000000e+03"/>
 </solids>
 <structure> <!-- a TPC with 1 active volume and 3 planes each -->
 	<volume name="volTPCActive">
@@ -931,11 +933,11 @@
 	</volume>
 </structure>
 <solids>
-	<box name="boxIPE450Beam_V" lunit="mm" x="4.500000000000000e+01" y="7.779000000000000e+03" z="4.500000000000000e+02"/>	
-	<box name="boxIPE450Beam_H1" lunit="mm" x="4.500000000000000e+01" y="8.243000000000000e+03" z="4.500000000000000e+02"/>	
-	<box name="boxIPE450Beam_H2" lunit="mm" x="4.500099945068359e+01" y="4.500000000000000e+02" z="6.418000000000000e+03"/>	
-	<box name="boxStructureOuter" lunit="mm" x="6.412000000000000e+03" y="6.633000000000000e+03" z="8.237000000000000e+03"/>	
-	<box name="boxStructureInner" lunit="mm" x="6.406000000000000e+03" y="6.627000000000000e+03" z="8.231000000000000e+03"/>	
+	<box name="boxIPE450Beam_V" lunit="mm" x="4.5000000000e+01" y="7.7790000000e+03" z="4.5000000000e+02"/>	
+	<box name="boxIPE450Beam_H1" lunit="mm" x="4.5000000000e+01" y="8.2430000000e+03" z="4.5000000000e+02"/>	
+	<box name="boxIPE450Beam_H2" lunit="mm" x="4.5000999451e+01" y="4.5000000000e+02" z="6.4180000000e+03"/>	
+	<box name="boxStructureOuter" lunit="mm" x="6.4120000000e+03" y="6.6330000000e+03" z="8.2370000000e+03"/>	
+	<box name="boxStructureInner" lunit="mm" x="6.4060000000e+03" y="6.6270000000e+03" z="8.2310000000e+03"/>	
 	<subtraction name="boxStructure_NoBeams">
 		<first ref="boxStructureOuter"/>
 		<second ref="boxStructureInner"/>
@@ -944,109 +946,109 @@
     <union name="boxStructure_1_Beams">
 		<first ref="boxStructure_NoBeams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_1" unit="mm" x="1.067666625976562e+03" y="1.200000000000000e+02" z="-4.346500000000000e+03" />
+		<position name="posIPEBeam_1" unit="mm" x="1.0670000000e+03" y="1.2000000000e+02" z="-4.3460000000e+03" />
     </union>
     <union name="boxStructure_2_Beams">
 		<first ref="boxStructure_1_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_2" unit="mm" x="-1.067666625976562e+03" y="1.200000000000000e+02" z="-4.346500000000000e+03" />        
+		<position name="posIPEBeam_2" unit="mm" x="-1.0670000000e+03" y="1.2000000000e+02" z="-4.3460000000e+03" />        
     </union>
     <union name="boxStructure_3_Beams">
 		<first ref="boxStructure_2_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_3" unit="mm" x="1.067666625976562e+03" y="1.200000000000000e+02" z="4.346500000000000e+03" />        
+		<position name="posIPEBeam_3" unit="mm" x="1.0670000000e+03" y="1.2000000000e+02" z="4.3460000000e+03" />        
     </union>
     <union name="boxStructure_4_Beams">
 		<first ref="boxStructure_3_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_4" unit="mm" x="-1.067666625976562e+03" y="1.200000000000000e+02" z="4.346500000000000e+03" />        
+		<position name="posIPEBeam_4" unit="mm" x="-1.0670000000e+03" y="1.2000000000e+02" z="4.3460000000e+03" />        
     </union>
     <union name="boxStructure_5_Beams">
 		<first ref="boxStructure_4_Beams"/>
 		<second ref="boxIPE450Beam_H1"/>
-		<position name="posIPEBeam_5" unit="mm" x="-1.067666625976562e+03" y="-3.544500000000000e+03" z="0.000000000000000e+00" />
+		<position name="posIPEBeam_5" unit="mm" x="-1.0670000000e+03" y="-3.5440000000e+03" z="0.0000000000e+00" />
         <rotationref ref="rotateN90X"/>
     </union>
     <union name="boxStructure_6_Beams">
 		<first ref="boxStructure_5_Beams"/>
 		<second ref="boxIPE450Beam_H1"/>
-		<position name="posIPEBeam_6" unit="mm" x="1.067666625976562e+03" y="-3.544500000000000e+03" z="0.000000000000000e+00" />
+		<position name="posIPEBeam_6" unit="mm" x="1.0670000000e+03" y="-3.5440000000e+03" z="0.0000000000e+00" />
         <rotationref ref="rotateN90X"/>
     </union>
     <union name="boxStructure_7_Beams">
 		<first ref="boxStructure_6_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_7" unit="mm" x="-3.434000000000000e+03" y="1.200000000000000e+02" z="-1.763785766601562e+03" />        
+		<position name="posIPEBeam_7" unit="mm" x="-3.4340000000e+03" y="1.2000000000e+02" z="-1.7610000000e+03" />        
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_8_Beams">
 		<first ref="boxStructure_7_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_8" unit="mm" x="-3.434000000000000e+03" y="1.200000000000000e+02" z="-5.879285888671875e+02" />
+		<position name="posIPEBeam_8" unit="mm" x="-3.4340000000e+03" y="1.2000000000e+02" z="-5.8700000000e+02" />
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_9_Beams">
 		<first ref="boxStructure_8_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_9" unit="mm" x="-3.434000000000000e+03" y="1.200000000000000e+02" z="5.879285888671875e+02" />        
+		<position name="posIPEBeam_9" unit="mm" x="-3.4340000000e+03" y="1.2000000000e+02" z="5.8700000000e+02" />        
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_10_Beams">
 		<first ref="boxStructure_9_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_10" unit="mm" x="-3.434000000000000e+03" y="1.200000000000000e+02" z="1.763785766601562e+03" />
+		<position name="posIPEBeam_10" unit="mm" x="-3.4340000000e+03" y="1.2000000000e+02" z="1.7610000000e+03" />
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_11_Beams">
 		<first ref="boxStructure_10_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_11" unit="mm" x="3.434000000000000e+03" y="1.200000000000000e+02" z="-1.763785766601562e+03" />        
+		<position name="posIPEBeam_11" unit="mm" x="3.4340000000e+03" y="1.2000000000e+02" z="-1.7610000000e+03" />        
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_12_Beams">
 		<first ref="boxStructure_11_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_12" unit="mm" x="3.434000000000000e+03" y="1.200000000000000e+02" z="-5.879285888671875e+02" />
+		<position name="posIPEBeam_12" unit="mm" x="3.4340000000e+03" y="1.2000000000e+02" z="-5.8700000000e+02" />
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_13_Beams">
 		<first ref="boxStructure_12_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_13" unit="mm" x="3.434000000000000e+03" y="1.200000000000000e+02" z="5.879285888671875e+02" />        
+		<position name="posIPEBeam_13" unit="mm" x="3.4340000000e+03" y="1.2000000000e+02" z="5.8700000000e+02" />        
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_14_Beams">
 		<first ref="boxStructure_13_Beams"/>
 		<second ref="boxIPE450Beam_V"/>
-		<position name="posIPEBeam_14" unit="mm" x="3.434000000000000e+03" y="1.200000000000000e+02" z="1.763785766601562e+03" />
+		<position name="posIPEBeam_14" unit="mm" x="3.4340000000e+03" y="1.2000000000e+02" z="1.7610000000e+03" />
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_15_Beams">
 		<first ref="boxStructure_14_Beams"/>
 		<second ref="boxIPE450Beam_H2"/>
-		<position name="posIPEBeam_15" unit="mm" x="0.000000000000000e+00" y="-3.544500000000000e+03" z="-1.763785766601562e+03" />
+		<position name="posIPEBeam_15" unit="mm" x="0.0000000000e+00" y="-3.5440000000e+03" z="-1.7610000000e+03" />
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_16_Beams">
 		<first ref="boxStructure_15_Beams"/>
 		<second ref="boxIPE450Beam_H2"/>
-		<position name="posIPEBeam_16" unit="mm" x="0.000000000000000e+00" y="-3.544500000000000e+03" z="-5.879285888671875e+02" />
+		<position name="posIPEBeam_16" unit="mm" x="0.0000000000e+00" y="-3.5440000000e+03" z="-5.8700000000e+02" />
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_17_Beams">
 		<first ref="boxStructure_16_Beams"/>
 		<second ref="boxIPE450Beam_H2"/>
-		<position name="posIPEBeam_17" unit="mm" x="0.000000000000000e+00" y="-3.544500000000000e+03" z="1.763785766601562e+03" />
+		<position name="posIPEBeam_17" unit="mm" x="0.0000000000e+00" y="-3.5440000000e+03" z="1.7610000000e+03" />
         <rotationref ref="rotateN90Y"/>
     </union>
     <union name="boxStructure_Beams">
 		<first ref="boxStructure_17_Beams"/>
 		<second ref="boxIPE450Beam_H2"/>
-		<position name="posIPEBeam_18" unit="mm" x="0.000000000000000e+00" y="-3.544500000000000e+03" z="5.879285888671875e+02" />
+		<position name="posIPEBeam_18" unit="mm" x="0.0000000000e+00" y="-3.5440000000e+03" z="5.8700000000e+02" />
         <rotationref ref="rotateN90Y"/>
     </union>
-	<box name="boxCryostat" lunit="mm" x="5.202000000000000e+03" y="5.423000000000000e+03" z="7.027000000000000e+03"/>	
-	<box name="boxSteel" lunit="mm" x="5.227000000000000e+03" y="5.448000000000000e+03" z="7.052000000000000e+03"/>
+	<box name="boxCryostat" lunit="mm" x="5.2020000000e+03" y="5.4230000000e+03" z="7.0270000000e+03"/>	
+	<box name="boxSteel" lunit="mm" x="5.2270000000e+03" y="5.4480000000e+03" z="7.0520000000e+03"/>
 	<subtraction name="boxSteelCryostat">
 		<first ref="boxSteel"/>
 		<second ref="boxCryostat"/>
@@ -1096,730 +1098,730 @@
 -->
 		<physvol>
 			<volumeref ref="volPMT"/>
-			<position name="posPMT_0" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="-1.732500000000000e+03"/>
+			<position name="posPMT_0" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="-1.7325000000e+03"/>
 			<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_1" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="-1.457500000000000e+03"/>
+				<position name="posPMT_1" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_2" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="-1.182500000000000e+03"/>
+				<position name="posPMT_2" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_3" unit="mm" x="-2.155000000000000e+03" y="1.333333374023438e+03" z="-1.457500000000000e+03"/>
+				<position name="posPMT_3" unit="mm" x="-2.1550000000e+03" y="1.3330000000e+03" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_4" unit="mm" x="-2.155000000000000e+03" y="1.058333374023438e+03" z="-1.732500000000000e+03"/>
+				<position name="posPMT_4" unit="mm" x="-2.1550000000e+03" y="1.0580000000e+03" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_5" unit="mm" x="-2.155000000000000e+03" y="1.058333374023438e+03" z="-1.182500000000000e+03"/>
+				<position name="posPMT_5" unit="mm" x="-2.1550000000e+03" y="1.0580000000e+03" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_6" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="-4.825000000000000e+02"/>
+				<position name="posPMT_6" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_7" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="-2.075000000000000e+02"/>
+				<position name="posPMT_7" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_8" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="6.750000000000000e+01"/>
+				<position name="posPMT_8" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="6.7500000000e+01"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_9" unit="mm" x="-2.155000000000000e+03" y="1.333333374023438e+03" z="-2.075000000000000e+02"/>
+				<position name="posPMT_9" unit="mm" x="-2.1550000000e+03" y="1.3330000000e+03" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_10" unit="mm" x="-2.155000000000000e+03" y="1.058333374023438e+03" z="-4.825000000000000e+02"/>
+				<position name="posPMT_10" unit="mm" x="-2.1550000000e+03" y="1.0580000000e+03" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_11" unit="mm" x="-2.155000000000000e+03" y="1.058333374023438e+03" z="6.750000000000000e+01"/>
+				<position name="posPMT_11" unit="mm" x="-2.1550000000e+03" y="1.0580000000e+03" z="6.7500000000e+01"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_12" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="-1.732500000000000e+03"/>
+				<position name="posPMT_12" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_13" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="-1.457500000000000e+03"/>
+				<position name="posPMT_13" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_14" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="-1.182500000000000e+03"/>
+				<position name="posPMT_14" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_15" unit="mm" x="-2.155000000000000e+03" y="0.000000000000000e+00" z="-1.457500000000000e+03"/>
+				<position name="posPMT_15" unit="mm" x="-2.1550000000e+03" y="0.0000000000e+00" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_16" unit="mm" x="-2.155000000000000e+03" y="-2.750000000000000e+02" z="-1.732500000000000e+03"/>
+				<position name="posPMT_16" unit="mm" x="-2.1550000000e+03" y="-2.7500000000e+02" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_17" unit="mm" x="-2.155000000000000e+03" y="-2.750000000000000e+02" z="-1.182500000000000e+03"/>
+				<position name="posPMT_17" unit="mm" x="-2.1550000000e+03" y="-2.7500000000e+02" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_18" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="-4.825000000000000e+02"/>
+				<position name="posPMT_18" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_19" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="-2.075000000000000e+02"/>
+				<position name="posPMT_19" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_20" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="6.750000000000000e+01"/>
+				<position name="posPMT_20" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="6.7500000000e+01"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_21" unit="mm" x="-2.155000000000000e+03" y="0.000000000000000e+00" z="-2.075000000000000e+02"/>
+				<position name="posPMT_21" unit="mm" x="-2.1550000000e+03" y="0.0000000000e+00" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_22" unit="mm" x="-2.155000000000000e+03" y="-2.750000000000000e+02" z="-4.825000000000000e+02"/>
+				<position name="posPMT_22" unit="mm" x="-2.1550000000e+03" y="-2.7500000000e+02" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_23" unit="mm" x="-2.155000000000000e+03" y="-2.750000000000000e+02" z="6.750000000000000e+01"/>
+				<position name="posPMT_23" unit="mm" x="-2.1550000000e+03" y="-2.7500000000e+02" z="6.7500000000e+01"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_24" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="-1.732500000000000e+03"/>
+				<position name="posPMT_24" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_25" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="-1.457500000000000e+03"/>
+				<position name="posPMT_25" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_26" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="-1.182500000000000e+03"/>
+				<position name="posPMT_26" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_27" unit="mm" x="-2.155000000000000e+03" y="-1.333333374023438e+03" z="-1.457500000000000e+03"/>
+				<position name="posPMT_27" unit="mm" x="-2.1550000000e+03" y="-1.3330000000e+03" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_28" unit="mm" x="-2.155000000000000e+03" y="-1.608333374023438e+03" z="-1.732500000000000e+03"/>
+				<position name="posPMT_28" unit="mm" x="-2.1550000000e+03" y="-1.6080000000e+03" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_29" unit="mm" x="-2.155000000000000e+03" y="-1.608333374023438e+03" z="-1.182500000000000e+03"/>
+				<position name="posPMT_29" unit="mm" x="-2.1550000000e+03" y="-1.6080000000e+03" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_30" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="-4.825000000000000e+02"/>
+				<position name="posPMT_30" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_31" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="-2.075000000000000e+02"/>
+				<position name="posPMT_31" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_32" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="6.750000000000000e+01"/>
+				<position name="posPMT_32" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="6.7500000000e+01"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_33" unit="mm" x="-2.155000000000000e+03" y="-1.333333374023438e+03" z="-2.075000000000000e+02"/>
+				<position name="posPMT_33" unit="mm" x="-2.1550000000e+03" y="-1.3330000000e+03" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_34" unit="mm" x="-2.155000000000000e+03" y="-1.608333374023438e+03" z="-4.825000000000000e+02"/>
+				<position name="posPMT_34" unit="mm" x="-2.1550000000e+03" y="-1.6080000000e+03" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_35" unit="mm" x="-2.155000000000000e+03" y="-1.608333374023438e+03" z="6.750000000000000e+01"/>
+				<position name="posPMT_35" unit="mm" x="-2.1550000000e+03" y="-1.6080000000e+03" z="6.7500000000e+01"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_36" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="7.675000000000000e+02"/>
+				<position name="posPMT_36" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="7.6750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_37" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="1.042500000000000e+03"/>
+				<position name="posPMT_37" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="1.0425000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_38" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="1.317500000000000e+03"/>
+				<position name="posPMT_38" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="1.3175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_39" unit="mm" x="-2.155000000000000e+03" y="1.333333374023438e+03" z="1.042500000000000e+03"/>
+				<position name="posPMT_39" unit="mm" x="-2.1550000000e+03" y="1.3330000000e+03" z="1.0425000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_40" unit="mm" x="-2.155000000000000e+03" y="1.058333374023438e+03" z="7.675000000000000e+02"/>
+				<position name="posPMT_40" unit="mm" x="-2.1550000000e+03" y="1.0580000000e+03" z="7.6750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_41" unit="mm" x="-2.155000000000000e+03" y="1.058333374023438e+03" z="1.317500000000000e+03"/>
+				<position name="posPMT_41" unit="mm" x="-2.1550000000e+03" y="1.0580000000e+03" z="1.3175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_42" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="2.017500000000000e+03"/>
+				<position name="posPMT_42" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="2.0175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_43" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="2.292500000000000e+03"/>
+				<position name="posPMT_43" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="2.2925000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_44" unit="mm" x="-2.155000000000000e+03" y="1.608333374023438e+03" z="2.567500000000000e+03"/>
+				<position name="posPMT_44" unit="mm" x="-2.1550000000e+03" y="1.6080000000e+03" z="2.5675000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_45" unit="mm" x="-2.155000000000000e+03" y="1.333333374023438e+03" z="2.292500000000000e+03"/>
+				<position name="posPMT_45" unit="mm" x="-2.1550000000e+03" y="1.3330000000e+03" z="2.2925000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_46" unit="mm" x="-2.155000000000000e+03" y="1.058333374023438e+03" z="2.017500000000000e+03"/>
+				<position name="posPMT_46" unit="mm" x="-2.1550000000e+03" y="1.0580000000e+03" z="2.0175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_47" unit="mm" x="-2.155000000000000e+03" y="1.058333374023438e+03" z="2.567500000000000e+03"/>
+				<position name="posPMT_47" unit="mm" x="-2.1550000000e+03" y="1.0580000000e+03" z="2.5675000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_48" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="7.675000000000000e+02"/>
+				<position name="posPMT_48" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="7.6750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_49" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="1.042500000000000e+03"/>
+				<position name="posPMT_49" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="1.0425000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_50" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="1.317500000000000e+03"/>
+				<position name="posPMT_50" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="1.3175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_51" unit="mm" x="-2.155000000000000e+03" y="0.000000000000000e+00" z="1.042500000000000e+03"/>
+				<position name="posPMT_51" unit="mm" x="-2.1550000000e+03" y="0.0000000000e+00" z="1.0425000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_52" unit="mm" x="-2.155000000000000e+03" y="-2.750000000000000e+02" z="7.675000000000000e+02"/>
+				<position name="posPMT_52" unit="mm" x="-2.1550000000e+03" y="-2.7500000000e+02" z="7.6750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_53" unit="mm" x="-2.155000000000000e+03" y="-2.750000000000000e+02" z="1.317500000000000e+03"/>
+				<position name="posPMT_53" unit="mm" x="-2.1550000000e+03" y="-2.7500000000e+02" z="1.3175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_54" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="2.017500000000000e+03"/>
+				<position name="posPMT_54" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="2.0175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_55" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="2.292500000000000e+03"/>
+				<position name="posPMT_55" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="2.2925000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_56" unit="mm" x="-2.155000000000000e+03" y="2.750000000000000e+02" z="2.567500000000000e+03"/>
+				<position name="posPMT_56" unit="mm" x="-2.1550000000e+03" y="2.7500000000e+02" z="2.5675000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_57" unit="mm" x="-2.155000000000000e+03" y="0.000000000000000e+00" z="2.292500000000000e+03"/>
+				<position name="posPMT_57" unit="mm" x="-2.1550000000e+03" y="0.0000000000e+00" z="2.2925000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_58" unit="mm" x="-2.155000000000000e+03" y="-2.750000000000000e+02" z="2.017500000000000e+03"/>
+				<position name="posPMT_58" unit="mm" x="-2.1550000000e+03" y="-2.7500000000e+02" z="2.0175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_59" unit="mm" x="-2.155000000000000e+03" y="-2.750000000000000e+02" z="2.567500000000000e+03"/>
+				<position name="posPMT_59" unit="mm" x="-2.1550000000e+03" y="-2.7500000000e+02" z="2.5675000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_60" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="7.675000000000000e+02"/>
+				<position name="posPMT_60" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="7.6750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_61" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="1.042500000000000e+03"/>
+				<position name="posPMT_61" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="1.0425000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_62" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="1.317500000000000e+03"/>
+				<position name="posPMT_62" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="1.3175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_63" unit="mm" x="-2.155000000000000e+03" y="-1.333333374023438e+03" z="1.042500000000000e+03"/>
+				<position name="posPMT_63" unit="mm" x="-2.1550000000e+03" y="-1.3330000000e+03" z="1.0425000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_64" unit="mm" x="-2.155000000000000e+03" y="-1.608333374023438e+03" z="7.675000000000000e+02"/>
+				<position name="posPMT_64" unit="mm" x="-2.1550000000e+03" y="-1.6080000000e+03" z="7.6750000000e+02"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_65" unit="mm" x="-2.155000000000000e+03" y="-1.608333374023438e+03" z="1.317500000000000e+03"/>
+				<position name="posPMT_65" unit="mm" x="-2.1550000000e+03" y="-1.6080000000e+03" z="1.3175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_66" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="2.017500000000000e+03"/>
+				<position name="posPMT_66" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="2.0175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_67" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="2.292500000000000e+03"/>
+				<position name="posPMT_67" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="2.2925000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_68" unit="mm" x="-2.155000000000000e+03" y="-1.058333374023438e+03" z="2.567500000000000e+03"/>
+				<position name="posPMT_68" unit="mm" x="-2.1550000000e+03" y="-1.0580000000e+03" z="2.5675000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_69" unit="mm" x="-2.155000000000000e+03" y="-1.333333374023438e+03" z="2.292500000000000e+03"/>
+				<position name="posPMT_69" unit="mm" x="-2.1550000000e+03" y="-1.3330000000e+03" z="2.2925000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_70" unit="mm" x="-2.155000000000000e+03" y="-1.608333374023438e+03" z="2.017500000000000e+03"/>
+				<position name="posPMT_70" unit="mm" x="-2.1550000000e+03" y="-1.6080000000e+03" z="2.0175000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_71" unit="mm" x="-2.155000000000000e+03" y="-1.608333374023438e+03" z="2.567500000000000e+03"/>
+				<position name="posPMT_71" unit="mm" x="-2.1550000000e+03" y="-1.6080000000e+03" z="2.5675000000e+03"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_72" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="-1.732500000000000e+03"/>
+				<position name="posPMT_72" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_73" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="-1.457500000000000e+03"/>
+				<position name="posPMT_73" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_74" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="-1.182500000000000e+03"/>
+				<position name="posPMT_74" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_75" unit="mm" x="2.155000000000000e+03" y="1.333333374023438e+03" z="-1.457500000000000e+03"/>
+				<position name="posPMT_75" unit="mm" x="2.1550000000e+03" y="1.3330000000e+03" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_76" unit="mm" x="2.155000000000000e+03" y="1.058333374023438e+03" z="-1.732500000000000e+03"/>
+				<position name="posPMT_76" unit="mm" x="2.1550000000e+03" y="1.0580000000e+03" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_77" unit="mm" x="2.155000000000000e+03" y="1.058333374023438e+03" z="-1.182500000000000e+03"/>
+				<position name="posPMT_77" unit="mm" x="2.1550000000e+03" y="1.0580000000e+03" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_78" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="-4.825000000000000e+02"/>
+				<position name="posPMT_78" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_79" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="-2.075000000000000e+02"/>
+				<position name="posPMT_79" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_80" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="6.750000000000000e+01"/>
+				<position name="posPMT_80" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="6.7500000000e+01"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_81" unit="mm" x="2.155000000000000e+03" y="1.333333374023438e+03" z="-2.075000000000000e+02"/>
+				<position name="posPMT_81" unit="mm" x="2.1550000000e+03" y="1.3330000000e+03" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_82" unit="mm" x="2.155000000000000e+03" y="1.058333374023438e+03" z="-4.825000000000000e+02"/>
+				<position name="posPMT_82" unit="mm" x="2.1550000000e+03" y="1.0580000000e+03" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_83" unit="mm" x="2.155000000000000e+03" y="1.058333374023438e+03" z="6.750000000000000e+01"/>
+				<position name="posPMT_83" unit="mm" x="2.1550000000e+03" y="1.0580000000e+03" z="6.7500000000e+01"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_84" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="-1.732500000000000e+03"/>
+				<position name="posPMT_84" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_85" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="-1.457500000000000e+03"/>
+				<position name="posPMT_85" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_86" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="-1.182500000000000e+03"/>
+				<position name="posPMT_86" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_87" unit="mm" x="2.155000000000000e+03" y="0.000000000000000e+00" z="-1.457500000000000e+03"/>
+				<position name="posPMT_87" unit="mm" x="2.1550000000e+03" y="0.0000000000e+00" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_88" unit="mm" x="2.155000000000000e+03" y="-2.750000000000000e+02" z="-1.732500000000000e+03"/>
+				<position name="posPMT_88" unit="mm" x="2.1550000000e+03" y="-2.7500000000e+02" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_89" unit="mm" x="2.155000000000000e+03" y="-2.750000000000000e+02" z="-1.182500000000000e+03"/>
+				<position name="posPMT_89" unit="mm" x="2.1550000000e+03" y="-2.7500000000e+02" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_90" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="-4.825000000000000e+02"/>
+				<position name="posPMT_90" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_91" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="-2.075000000000000e+02"/>
+				<position name="posPMT_91" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_92" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="6.750000000000000e+01"/>
+				<position name="posPMT_92" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="6.7500000000e+01"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_93" unit="mm" x="2.155000000000000e+03" y="0.000000000000000e+00" z="-2.075000000000000e+02"/>
+				<position name="posPMT_93" unit="mm" x="2.1550000000e+03" y="0.0000000000e+00" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_94" unit="mm" x="2.155000000000000e+03" y="-2.750000000000000e+02" z="-4.825000000000000e+02"/>
+				<position name="posPMT_94" unit="mm" x="2.1550000000e+03" y="-2.7500000000e+02" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_95" unit="mm" x="2.155000000000000e+03" y="-2.750000000000000e+02" z="6.750000000000000e+01"/>
+				<position name="posPMT_95" unit="mm" x="2.1550000000e+03" y="-2.7500000000e+02" z="6.7500000000e+01"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_96" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="-1.732500000000000e+03"/>
+				<position name="posPMT_96" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_97" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="-1.457500000000000e+03"/>
+				<position name="posPMT_97" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_98" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="-1.182500000000000e+03"/>
+				<position name="posPMT_98" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_99" unit="mm" x="2.155000000000000e+03" y="-1.333333374023438e+03" z="-1.457500000000000e+03"/>
+				<position name="posPMT_99" unit="mm" x="2.1550000000e+03" y="-1.3330000000e+03" z="-1.4575000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_100" unit="mm" x="2.155000000000000e+03" y="-1.608333374023438e+03" z="-1.732500000000000e+03"/>
+				<position name="posPMT_100" unit="mm" x="2.1550000000e+03" y="-1.6080000000e+03" z="-1.7325000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_101" unit="mm" x="2.155000000000000e+03" y="-1.608333374023438e+03" z="-1.182500000000000e+03"/>
+				<position name="posPMT_101" unit="mm" x="2.1550000000e+03" y="-1.6080000000e+03" z="-1.1825000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_102" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="-4.825000000000000e+02"/>
+				<position name="posPMT_102" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_103" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="-2.075000000000000e+02"/>
+				<position name="posPMT_103" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_104" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="6.750000000000000e+01"/>
+				<position name="posPMT_104" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="6.7500000000e+01"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_105" unit="mm" x="2.155000000000000e+03" y="-1.333333374023438e+03" z="-2.075000000000000e+02"/>
+				<position name="posPMT_105" unit="mm" x="2.1550000000e+03" y="-1.3330000000e+03" z="-2.0750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_106" unit="mm" x="2.155000000000000e+03" y="-1.608333374023438e+03" z="-4.825000000000000e+02"/>
+				<position name="posPMT_106" unit="mm" x="2.1550000000e+03" y="-1.6080000000e+03" z="-4.8250000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_107" unit="mm" x="2.155000000000000e+03" y="-1.608333374023438e+03" z="6.750000000000000e+01"/>
+				<position name="posPMT_107" unit="mm" x="2.1550000000e+03" y="-1.6080000000e+03" z="6.7500000000e+01"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_108" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="7.675000000000000e+02"/>
+				<position name="posPMT_108" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="7.6750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_109" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="1.042500000000000e+03"/>
+				<position name="posPMT_109" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="1.0425000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_110" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="1.317500000000000e+03"/>
+				<position name="posPMT_110" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="1.3175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_111" unit="mm" x="2.155000000000000e+03" y="1.333333374023438e+03" z="1.042500000000000e+03"/>
+				<position name="posPMT_111" unit="mm" x="2.1550000000e+03" y="1.3330000000e+03" z="1.0425000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_112" unit="mm" x="2.155000000000000e+03" y="1.058333374023438e+03" z="7.675000000000000e+02"/>
+				<position name="posPMT_112" unit="mm" x="2.1550000000e+03" y="1.0580000000e+03" z="7.6750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_113" unit="mm" x="2.155000000000000e+03" y="1.058333374023438e+03" z="1.317500000000000e+03"/>
+				<position name="posPMT_113" unit="mm" x="2.1550000000e+03" y="1.0580000000e+03" z="1.3175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_114" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="2.017500000000000e+03"/>
+				<position name="posPMT_114" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="2.0175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_115" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="2.292500000000000e+03"/>
+				<position name="posPMT_115" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="2.2925000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_116" unit="mm" x="2.155000000000000e+03" y="1.608333374023438e+03" z="2.567500000000000e+03"/>
+				<position name="posPMT_116" unit="mm" x="2.1550000000e+03" y="1.6080000000e+03" z="2.5675000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_117" unit="mm" x="2.155000000000000e+03" y="1.333333374023438e+03" z="2.292500000000000e+03"/>
+				<position name="posPMT_117" unit="mm" x="2.1550000000e+03" y="1.3330000000e+03" z="2.2925000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_118" unit="mm" x="2.155000000000000e+03" y="1.058333374023438e+03" z="2.017500000000000e+03"/>
+				<position name="posPMT_118" unit="mm" x="2.1550000000e+03" y="1.0580000000e+03" z="2.0175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_119" unit="mm" x="2.155000000000000e+03" y="1.058333374023438e+03" z="2.567500000000000e+03"/>
+				<position name="posPMT_119" unit="mm" x="2.1550000000e+03" y="1.0580000000e+03" z="2.5675000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_120" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="7.675000000000000e+02"/>
+				<position name="posPMT_120" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="7.6750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_121" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="1.042500000000000e+03"/>
+				<position name="posPMT_121" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="1.0425000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_122" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="1.317500000000000e+03"/>
+				<position name="posPMT_122" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="1.3175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_123" unit="mm" x="2.155000000000000e+03" y="0.000000000000000e+00" z="1.042500000000000e+03"/>
+				<position name="posPMT_123" unit="mm" x="2.1550000000e+03" y="0.0000000000e+00" z="1.0425000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_124" unit="mm" x="2.155000000000000e+03" y="-2.750000000000000e+02" z="7.675000000000000e+02"/>
+				<position name="posPMT_124" unit="mm" x="2.1550000000e+03" y="-2.7500000000e+02" z="7.6750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_125" unit="mm" x="2.155000000000000e+03" y="-2.750000000000000e+02" z="1.317500000000000e+03"/>
+				<position name="posPMT_125" unit="mm" x="2.1550000000e+03" y="-2.7500000000e+02" z="1.3175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_126" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="2.017500000000000e+03"/>
+				<position name="posPMT_126" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="2.0175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_127" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="2.292500000000000e+03"/>
+				<position name="posPMT_127" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="2.2925000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_128" unit="mm" x="2.155000000000000e+03" y="2.750000000000000e+02" z="2.567500000000000e+03"/>
+				<position name="posPMT_128" unit="mm" x="2.1550000000e+03" y="2.7500000000e+02" z="2.5675000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_129" unit="mm" x="2.155000000000000e+03" y="0.000000000000000e+00" z="2.292500000000000e+03"/>
+				<position name="posPMT_129" unit="mm" x="2.1550000000e+03" y="0.0000000000e+00" z="2.2925000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_130" unit="mm" x="2.155000000000000e+03" y="-2.750000000000000e+02" z="2.017500000000000e+03"/>
+				<position name="posPMT_130" unit="mm" x="2.1550000000e+03" y="-2.7500000000e+02" z="2.0175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_131" unit="mm" x="2.155000000000000e+03" y="-2.750000000000000e+02" z="2.567500000000000e+03"/>
+				<position name="posPMT_131" unit="mm" x="2.1550000000e+03" y="-2.7500000000e+02" z="2.5675000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_132" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="7.675000000000000e+02"/>
+				<position name="posPMT_132" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="7.6750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_133" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="1.042500000000000e+03"/>
+				<position name="posPMT_133" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="1.0425000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_134" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="1.317500000000000e+03"/>
+				<position name="posPMT_134" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="1.3175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_135" unit="mm" x="2.155000000000000e+03" y="-1.333333374023438e+03" z="1.042500000000000e+03"/>
+				<position name="posPMT_135" unit="mm" x="2.1550000000e+03" y="-1.3330000000e+03" z="1.0425000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_136" unit="mm" x="2.155000000000000e+03" y="-1.608333374023438e+03" z="7.675000000000000e+02"/>
+				<position name="posPMT_136" unit="mm" x="2.1550000000e+03" y="-1.6080000000e+03" z="7.6750000000e+02"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_137" unit="mm" x="2.155000000000000e+03" y="-1.608333374023438e+03" z="1.317500000000000e+03"/>
+				<position name="posPMT_137" unit="mm" x="2.1550000000e+03" y="-1.6080000000e+03" z="1.3175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_138" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="2.017500000000000e+03"/>
+				<position name="posPMT_138" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="2.0175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_139" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="2.292500000000000e+03"/>
+				<position name="posPMT_139" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="2.2925000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_140" unit="mm" x="2.155000000000000e+03" y="-1.058333374023438e+03" z="2.567500000000000e+03"/>
+				<position name="posPMT_140" unit="mm" x="2.1550000000e+03" y="-1.0580000000e+03" z="2.5675000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_141" unit="mm" x="2.155000000000000e+03" y="-1.333333374023438e+03" z="2.292500000000000e+03"/>
+				<position name="posPMT_141" unit="mm" x="2.1550000000e+03" y="-1.3330000000e+03" z="2.2925000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_142" unit="mm" x="2.155000000000000e+03" y="-1.608333374023438e+03" z="2.017500000000000e+03"/>
+				<position name="posPMT_142" unit="mm" x="2.1550000000e+03" y="-1.6080000000e+03" z="2.0175000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_143" unit="mm" x="2.155000000000000e+03" y="-1.608333374023438e+03" z="2.567500000000000e+03"/>
+				<position name="posPMT_143" unit="mm" x="2.1550000000e+03" y="-1.6080000000e+03" z="2.5675000000e+03"/>
 				<rotationref ref="rotateN90Y"/>
 		</physvol>
 	</volume>
 </structure>
 <solids>
-	<box name="boxCRTPanel_Z" lunit="mm" x="7.200000000000000e+03" y="7.200000000000000e+03" z="4.000000000000000e+01"/>
-	<box name="boxCRTPanel_X" lunit="mm" x="4.000000000000000e+01" y="7.200000000000000e+03" z="9.000000000000000e+03"/>
-	<box name="boxCRTPanel_T" lunit="mm" x="7.200000000000000e+03" y="4.000000000000000e+01" z="9.000000000000000e+03"/>
+	<box name="boxCRTPanel_Z" lunit="mm" x="7.2000000000e+03" y="7.2000000000e+03" z="4.0000000000e+01"/>
+	<box name="boxCRTPanel_X" lunit="mm" x="4.0000000000e+01" y="7.2000000000e+03" z="9.0000000000e+03"/>
+	<box name="boxCRTPanel_T" lunit="mm" x="7.2000000000e+03" y="4.0000000000e+01" z="9.0000000000e+03"/>
 </solids>
 <structure>
 	<volume name="volAuxDetSensitiveCRT_Z"> <!-- one single SD, to be replaced with several pieces -->
@@ -1884,15 +1886,15 @@
 	</volume>
 </structure>
 <solids>
-	<box name="boxWorld" lunit="mm" x="1.000000000000000e+06" y="1.000000000000000e+06" z="1.000000000000000e+06"/>
-	<box name="boxDetectorEnclosure_1"   lunit="mm" x="7.398000000000000e+03" y="7.539000000000000e+03" z="9.223000000000000e+03"/>
-	<box name="boxDetectorEnclosure_Tower" lunit="mm" x="7.398000000000000e+03" y="8.683701171875000e+03" z="9.223000000000000e+03"/>
+	<box name="boxWorld" lunit="mm" x="1.0000000000e+06" y="1.0000000000e+06" z="1.0000000000e+06"/>
+	<box name="boxDetectorEnclosure_1"   lunit="mm" x="7.3980000000e+03" y="7.5390000000e+03" z="9.2230000000e+03"/>
+	<box name="boxDetectorEnclosure_Tower" lunit="mm" x="7.3980000000e+03" y="8.6842011719e+03" z="9.2230000000e+03"/>
 	<union name="boxDetectorEnclosure">
 		<first ref="boxDetectorEnclosure_1"/>
 		<second ref="boxDetectorEnclosure_Tower"/>
 		<positionref ref="posTopTower"/>
 	</union>
-	<box name="boxStructureLid" lunit="mm" x="6.418000000000000e+03" y="6.900000000000000e+02" z="8.243000000000000e+03"/>
+	<box name="boxStructureLid" lunit="mm" x="6.4180000000e+03" y="6.9000000000e+02" z="8.2430000000e+03"/>
 </solids>
 <structure>	
 	<volume name="volSteelCryostat">
@@ -1924,27 +1926,27 @@
 		</physvol>
 		<physvol>
 			<volumeref ref="volAuxDetCRT_Top1"/>
-			<position name="posCRT_T1" unit="mm" x="0.000000000000000e+00" y="6.623701171875000e+03" z="0.000000000000000e+00"/>
+			<position name="posCRT_T1" unit="mm" x="0.0000000000e+00" y="6.6242011719e+03" z="0.0000000000e+00"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volAuxDetCRT_Top2"/>
-			<position name="posCRTT2" unit="mm" x="0.000000000000000e+00" y="8.663701171875000e+03" z="0.000000000000000e+00"/>
+			<position name="posCRTT2" unit="mm" x="0.0000000000e+00" y="8.6642011719e+03" z="0.0000000000e+00"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volAuxDetCRT_nZ"/>
-			<position name="posCRT_nZ" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="-4.480000000000000e+03"/>
+			<position name="posCRT_nZ" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="-4.4800000000e+03"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volAuxDetCRT_pZ"/>
-			<position name="posCRT_pZ" unit="mm" x="0.000000000000000e+00" y="0.000000000000000e+00" z="4.480000000000000e+03"/>
+			<position name="posCRT_pZ" unit="mm" x="0.0000000000e+00" y="0.0000000000e+00" z="4.4800000000e+03"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volAuxDetCRT_nX"/>
-			<position name="posCRT_nX" unit="mm" x="-3.580000000000000e+03" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
+			<position name="posCRT_nX" unit="mm" x="-3.5800000000e+03" y="0.0000000000e+00" z="0.0000000000e+00"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volAuxDetCRT_pX"/>
-			<position name="posCRT_pX" unit="mm" x="3.580000000000000e+03" y="0.000000000000000e+00" z="0.000000000000000e+00"/>
+			<position name="posCRT_pX" unit="mm" x="3.5800000000e+03" y="0.0000000000e+00" z="0.0000000000e+00"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volStructure"/>
@@ -1994,5 +1996,8 @@
 </structure>
 <setup name="Default" version="1.0">
 	<world ref="volWorld" />
+</setup>
+<setup name="DetectorOnly" version="1.0">
+	<world ref="volDetEnclosure" />
 </setup>
 </gdml>

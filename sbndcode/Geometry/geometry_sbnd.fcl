@@ -37,8 +37,8 @@
 #     #include "standard_g4_sbnd.fcl"
 #
 #     services: {
-#       @local::services # everything unchanged...
-#       @local::future_sbnd_geo::sbnd_geometry_services
+#       @table::services # everything unchanged...
+#       @table::future_sbnd_geo::sbnd_geometry_services
 #     }
 #     
 # 
@@ -56,9 +56,9 @@ BEGIN_PROLOG
 # sourec of geometry description
 #
 sbnd_geo_source: {
-  Name:     "sbndv0"
-  GDML:  "sbndv0.gdml"
-  ROOT:  "sbndv0.gdml"
+  Name:  "sbndv1"
+  GDML:  "sbnd_v01_00.gdml"
+  ROOT:  "sbnd_v01_00.gdml"
 } # sbnd_geo_source
 
 #
@@ -109,15 +109,13 @@ sbnd_geometry_services: {
 
 ###############################################################################
 #
-# Future geometry configuration
+# Future geometry configuration;
+#
+# no furure geometry configuration right now...
 #
 future_sbnd_geo: {}
   
-future_sbnd_geo.sbnd_geo_source: {
-  Name:     "sbndv0"
-  GDML:     "sbnd_v00_08.gdml"
-  ROOT:     "sbnd_v00_08.gdml"
-} # future_sbnd_geo.sbnd_geo_source
+future_sbnd_geo.sbnd_geo_source: @local::sbnd_geo_source
   
 future_sbnd_geo.sbnd_geo: {
   @table::sbnd_geo
@@ -135,6 +133,15 @@ future_sbnd_geo.sbnd_geometry_services: {
   AuxDetGeometry: @local::future_sbnd_geo.sbnd_auxdetgeo
 } # future_sbnd_geo.sbnd_geometry_services
   
+###############################################################################
+#
+
+# ********************************************************
+# ***  USE FUTURE GEOMETRY  (for test branch only!!!)  ***
+# ********************************************************
+
+sbnd_geometry_services: @local::future_sbnd_geo.sbnd_geometry_services
+
 ###############################################################################
 
 END_PROLOG
