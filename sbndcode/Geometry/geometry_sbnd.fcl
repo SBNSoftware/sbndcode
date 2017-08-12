@@ -56,9 +56,9 @@ BEGIN_PROLOG
 # sourec of geometry description
 #
 sbnd_geo_source: {
-  Name:     "sbndv0"
-  GDML:  "sbndv0.gdml"
-  ROOT:  "sbndv0.gdml"
+  Name:  "sbndv1"
+  GDML:  "sbnd_v01_00.gdml"
+  ROOT:  "sbnd_v01_00.gdml"
 } # sbnd_geo_source
 
 #
@@ -109,15 +109,13 @@ sbnd_geometry_services: {
 
 ###############################################################################
 #
-# Future geometry configuration
+# Future geometry configuration;
+#
+# no furure geometry configuration right now...
 #
 future_sbnd_geo: {}
   
-future_sbnd_geo.sbnd_geo_source: {
-  Name:     "sbndv0"
-  GDML:     "sbnd_v00_09.gdml"
-  ROOT:     "sbnd_v00_09.gdml"
-} # future_sbnd_geo.sbnd_geo_source
+future_sbnd_geo.sbnd_geo_source: @local::sbnd_geo_source
   
 future_sbnd_geo.sbnd_geo: {
   @table::sbnd_geo
