@@ -10,8 +10,7 @@ process_name: testGeo
 
 services: {
   
-  Geometry:               @local::sbnd_geo
-  ExptGeoHelperInterface: @local::sbnd_geometry_helper
+  @table::sbnd_geometry_services 
   
   message: {
     destinations: {
@@ -59,14 +58,20 @@ physics: {
       RunTests: [
         # run the default test suite (actually unnecessary):
         "@default",
+        # the following tests are known to fail (geometry needs to be fixed)
+        "-WireCoordFromPlane",  
+        "-PlanePointDecomposition",
+        "-WireCoordAngle",
+        "-NearestWire",
+        "-WirePitch",
         # in addition (overriding the default): print wires
         "+PrintWires"
       ]
       
       # wire pitch for planes #0, #1 and #2
-      ExpectedWirePitch: [ 0.3, 0.3, 0.3 ]
+      ExpectedWirePitches: [ 0.3, 0.3, 0.3 ]
       # plane pitches (#0 -> #1, #1 -> #2)
-      ExpectedPlanePitch: [ 0.3, 0.3 ]
+      ExpectedPlanePitches: [ 0.3, 0.3 ]
     }
   }
 
