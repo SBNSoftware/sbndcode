@@ -42,6 +42,7 @@ namespace crt {
 void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fG4ModuleLabel = p.get<std::string>("G4ModuleLabel");
 
+  fGlobalT0Offset = p.get<double>("GlobalT0Offset");
   fTDelayNorm = p.get<double>("TDelayNorm");
   fTDelayShift = p.get<double>("TDelayShift");
   fTDelaySigma = p.get<double>("TDelaySigma");
@@ -57,6 +58,7 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fTResInterpolator = p.get<double>("TResInterpolator");
   fNpeScaleNorm = p.get<double>("NpeScaleNorm");
   fNpeScaleShift = p.get<double>("NpeScaleShift");
+  fUseEdep = p.get<bool>("UseEdep");
   fQ0 = p.get<double>("Q0");
   fQPed = p.get<double>("QPed");
   fQSlope = p.get<double>("QSlope");
@@ -77,7 +79,7 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p) {
 }
 
 
-double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
+uint32_t CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
                                          detinfo::ElecClock& clock,
                                          float t0, float npeMean, float r) {
   // Hit timing, with smearing and NPE dependence
@@ -94,11 +96,6 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
-  mf::LogInfo("CRT")
-    << "CRT TIMING: t0=" << t0
-    << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
-    << ", tDelay=" << tDelay << ", tDelay(interp)=";
-
   // Time resolution of the interpolator
   tDelay += CLHEP::RandGauss::shoot(engine, 0, fTResInterpolator);
 
@@ -107,10 +104,15 @@ double CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 
   double t = t0 + tProp + tDelay;
 
-  mf::LogInfo("CRT") << tDelay << ", tProp=" << tProp << ", t=" << t << std::endl;
-
   // Get clock ticks
   clock.SetTime(t / 1e3);  // SetTime takes microseconds
+
+  mf::LogInfo("CRT")
+    << "CRT TIMING: t0=" << t0
+    << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
+    << ", tDelay=" << tDelay << ", tDelay(interp)="
+    << tDelay << ", tProp=" << tProp << ", t=" << t << ", ticks=" << clock.Ticks() << "\n";
+
   return clock.Ticks();
 }
 
@@ -198,8 +200,9 @@ void CRTDetSim::produce(art::Event & e) {
       }
 
       // The expected number of PE, using a quadratic model for the distance
-      // dependence
-      double qr = ide.energyDeposited / fQ0;  // Scale linearly with charge
+      // dependence, and scaling linearly with deposited energy.
+      double qr = fUseEdep ? 1.0 * ide.energyDeposited / fQ0 : 1.0;
+
       double npeExpected = \
         fNpeScaleNorm / pow(distToReadout - fNpeScaleShift, 2) * qr;
 
@@ -218,7 +221,7 @@ void CRTDetSim::produce(art::Event & e) {
 
       // Time relative to trigger, accounting for propagation delay and 'walk'
       // for the fixed-threshold discriminator
-      double tTrue = (ide.entryT + ide.exitT) / 2;
+      double tTrue = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       uint32_t t0 = \
         getChannelTriggerTicks(engine, trigClock, tTrue, npe0, distToReadout);
       uint32_t t1 = \
@@ -239,7 +242,7 @@ void CRTDetSim::produce(art::Event & e) {
       // In the AuxDetChannelMapAlg methods, channels are identified by an
       // AuxDet name (retrievable given the hit AuxDet ID) which specifies a
       // module, and a channel number from 0 to 32.
-      uint32_t moduleID = adsc.AuxDetSensitiveID();
+      uint32_t moduleID = adsc.AuxDetID();
       uint32_t stripID = adsc.AuxDetSensitiveID();
       uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
       uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
@@ -257,21 +260,21 @@ void CRTDetSim::produce(art::Event & e) {
       double poss[3];
       adsGeo.LocalToWorld(origin, poss);
       mf::LogInfo("CRT")
-        << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << std::endl
-        << "CRT HIT POS " << x << " " << y << " " << z << std::endl
-        << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << std::endl
-        << "CRT MODULE POS" << modulePosMother[0] << " "
+        << "CRT HIT in " << adsc.AuxDetID() << "/" << adsc.AuxDetSensitiveID() << "\n"
+        << "CRT HIT POS " << x << " " << y << " " << z << "\n"
+        << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << "\n"
+        << "CRT MODULE POS " << modulePosMother[0] << " "
                              << modulePosMother[1] << " "
                              << modulePosMother[2] << " "
-                             << std::endl
-        << "CRT PATH: " << path << std::endl
-        << "CRT level 0 (strip): " << nodeStrip->GetName() << std::endl
-        << "CRT level 1 (array): " << nodeArray->GetName() << std::endl
-        << "CRT level 2 (module): " << nodeModule->GetName() << std::endl
-        << "CRT level 3 (tagger): " << nodeTagger->GetName() << std::endl
-        << "CRT PLANE ID: " << planeID << std::endl
-        << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << std::endl
-        << "CRT q0: " << q0 << ", q1: " << q1 << ", dt: " << abs(t0-t1) << std::endl;
+                             << "\n"
+        << "CRT PATH: " << path << "\n"
+        << "CRT level 0 (strip): " << nodeStrip->GetName() << "\n"
+        << "CRT level 1 (array): " << nodeArray->GetName() << "\n"
+        << "CRT level 2 (module): " << nodeModule->GetName() << "\n"
+        << "CRT level 3 (tagger): " << nodeTagger->GetName() << "\n"
+        << "CRT PLANE ID: " << planeID << "\n"
+        << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << "\n"
+        << "CRT q0: " << q0 << ", q1: " << q1 << ", t0: " << t0 << ", t1: " << t1 << ", dt: " << abs(t0-t1) << "\n";
     }
   }
 
@@ -290,7 +293,7 @@ void CRTDetSim::produce(art::Event & e) {
     }
   }
 
-  mf::LogInfo("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << std::endl;
+  mf::LogInfo("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << "\n";
 
   e.put(std::move(triggeredCRTHits));
 }

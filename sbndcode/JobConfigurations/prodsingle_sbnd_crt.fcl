@@ -18,9 +18,7 @@
 #include "crtsimmodules_sbnd.fcl"
 
 services.AuxDetGeometry: {
- Name:     "sbndv0"
- GDML:     "sbnd_v00_09.gdml"
- ROOT:     "sbnd_v00_09.gdml"
+ @table::sbnd_geo_source
 }
 
 services.AuxDetExptGeoHelperInterface: {

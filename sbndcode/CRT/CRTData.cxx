@@ -14,17 +14,17 @@ namespace crt{
     }
   CRTData::~CRTData(){
   }
-  uint32_t CRTData::Channel(){
-    return this->fChannel;
+  uint32_t CRTData::Channel() const {
+    return fChannel;
   }
-  uint32_t CRTData::T0(){
-    return this->fT0;
+  uint32_t CRTData::T0() const {
+    return fT0;
   }
-  uint32_t CRTData::T1(){
-    return this->fT1;
+  uint32_t CRTData::T1() const {
+    return fT1;
   }
-  uint32_t CRTData::ADC(){
-    return this->fADC;
+  uint32_t CRTData::ADC() const {
+    return fADC;
   }
 } // namespace crt
 } // namespace sbnd
