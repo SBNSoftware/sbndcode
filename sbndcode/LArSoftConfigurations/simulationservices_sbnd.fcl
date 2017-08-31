@@ -73,7 +73,6 @@ sbnd_simulation_services:
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
   SpaceCharge:               @local::sbnd_spacecharge
 }
-sbnd
 
 
 sbnd_opsimulation_services:
