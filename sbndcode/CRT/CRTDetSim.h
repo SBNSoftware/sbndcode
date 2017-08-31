@@ -41,34 +41,36 @@ private:
    * @param t0 The starting time (which delay is added to)
    * @param npe Number of observed photoelectrons
    * @param r Distance between the energy deposit and strip readout end [mm]
-   * @return The channel trigger time [ns]
+   * @return Trigger clock ticks at this true hit time
    */
-  double getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
+  uint32_t getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
                                 detinfo::ElecClock& clock,
                                 float t0, float npeMean, float r);
 
-  float fTDelayNorm;  //!< Time delay fit: Gaussian normalization
-  float fTDelayShift;  //!< Time delay fit: Gaussian x shift
-  float fTDelaySigma;  //!< Time delay fit: Gaussian width
-  float fTDelayOffset;  //!< Time delay fit: Gaussian baseline offset
-  float fTDelayRMSGausNorm;  //!< Time delay RMS fit: Gaussian normalization
-  float fTDelayRMSGausShift;  //!< Time delay RMS fit: Gaussian x shift
-  float fTDelayRMSGausSigma;  //!< Time delay RMS fit: Gaussian width
-  float fTDelayRMSExpNorm;  //!< Time delay RMS fit: Exponential normalization
-  float fTDelayRMSExpShift;  //!< Time delay RMS fit: Exponential x shift
-  float fTDelayRMSExpScale;  //!< Time delay RMS fit: Exponential scale
-  float fNpeScaleNorm;  //!< Npe vs. distance: 1/r^2 scale
-  float fNpeScaleShift;  //!< Npe vs. distance: 1/r^2 x shift
-  float fQ0;  //!< Average energy deposited for mips, for charge scaling [GeV]
-  float fQPed;  //!< ADC offset for the single-peak peak mean [ADC]
-  float fQSlope;  //!< Slope in mean ADC / Npe [ADC]
-  float fQRMS;  //!< ADC single-pe spectrum width [ADC]
-  float fQThreshold;  //!< ADC charge threshold [ADC]
-  float fTResInterpolator;  //!< Interpolator time resolution [ns]
-  float fPropDelay;  //!< Delay in pulse arrival time [ns/m]
-  float fPropDelayError;  //!< Delay in pulse arrival time, uncertainty [ns/m]
-  float fStripCoincidenceWindow;  //!< Time window for two-fiber coincidence [ns]
-  float fAbsLenEff;  //!< Effective abs. length for transverse Npe scaling [cm]
+  double fGlobalT0Offset;  //!< Time delay fit: Gaussian normalization
+  double fTDelayNorm;  //!< Time delay fit: Gaussian normalization
+  double fTDelayShift;  //!< Time delay fit: Gaussian x shift
+  double fTDelaySigma;  //!< Time delay fit: Gaussian width
+  double fTDelayOffset;  //!< Time delay fit: Gaussian baseline offset
+  double fTDelayRMSGausNorm;  //!< Time delay RMS fit: Gaussian normalization
+  double fTDelayRMSGausShift;  //!< Time delay RMS fit: Gaussian x shift
+  double fTDelayRMSGausSigma;  //!< Time delay RMS fit: Gaussian width
+  double fTDelayRMSExpNorm;  //!< Time delay RMS fit: Exponential normalization
+  double fTDelayRMSExpShift;  //!< Time delay RMS fit: Exponential x shift
+  double fTDelayRMSExpScale;  //!< Time delay RMS fit: Exponential scale
+  double fNpeScaleNorm;  //!< Npe vs. distance: 1/r^2 scale
+  double fNpeScaleShift;  //!< Npe vs. distance: 1/r^2 x shift
+  double fQ0;  //!< Average energy deposited for mips, for charge scaling [GeV]
+  double fQPed;  //!< ADC offset for the single-peak peak mean [ADC]
+  double fQSlope;  //!< Slope in mean ADC / Npe [ADC]
+  double fQRMS;  //!< ADC single-pe spectrum width [ADC]
+  double fQThreshold;  //!< ADC charge threshold [ADC]
+  double fTResInterpolator;  //!< Interpolator time resolution [ns]
+  double fPropDelay;  //!< Delay in pulse arrival time [ns/m]
+  double fPropDelayError;  //!< Delay in pulse arrival time, uncertainty [ns/m]
+  double fStripCoincidenceWindow;  //!< Time window for two-fiber coincidence [ns]
+  double fAbsLenEff;  //!< Effective abs. length for transverse Npe scaling [cm]
+  bool fUseEdep;  //!< Use the true G4 energy deposited, assume mip if false.
 };
 
 }  // namespace crt
