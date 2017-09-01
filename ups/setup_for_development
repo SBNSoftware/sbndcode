@@ -77,6 +77,8 @@ echo ----------------------------------------------------------------
 source $CETBUILDTOOLS_DIR/bin/set_dev_lib
 # add bin to path
 source $CETBUILDTOOLS_DIR/bin/set_dev_bin
+# set FW_SEARCH_PATH
+source $CETBUILDTOOLS_DIR/bin/set_dev_fwsearch
 
 # final sanity check and report
 source $CETBUILDTOOLS_DIR/bin/set_dev_check_report
