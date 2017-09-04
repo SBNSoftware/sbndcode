@@ -164,8 +164,8 @@
 	<element name="nickel"      formula="Ni" Z="28"> 	<atom value="58.6934"/>   </element>
 	<element name="copper"      formula="Cu" Z="29"> 	<atom value="63.546"/>   </element>
 	<element name="bromine"     formula="Br" Z="35"> 	<atom value="79.904"/>    </element>
-	<element name="niobium"     formula="Nb" Z="41"> 	<atom value="92.906"/>    </element>
-	<element name="molybdenum"  formula="Mo" Z="42"> 	<atom value="95.95"/>    </element>
+	<!--element name="niobium"     formula="Nb" Z="41"> 	<atom value="92.906"/>    </element>
+	<element name="molybdenum"  formula="Mo" Z="42"> 	<atom value="95.95"/>    </element-->
 	<material Z="1" formula=" " name="Vacuum">
 		<D value="1.e-25" unit="g/cm3"/>
 	</material>
@@ -304,22 +304,23 @@
 		<fraction n="0.0900" ref="nickel"/>
 	</material>
 	<material name="STEEL_STRUCTURAL_S460L" formula="S460L">
-		<D value="3.8321000000000001" unit="g/cm3"/>
-		<fraction n="0.95380" ref="iron"/>
-		<fraction n="0.01700" ref="manganese"/>        
-		<fraction n="0.00800" ref="nickel"/>
-		<fraction n="0.00600" ref="silicon"/>
-		<fraction n="0.00550" ref="copper"/>
-		<fraction n="0.00300" ref="chromium"/>
-		<fraction n="0.00200" ref="molybdenum"/>
-		<fraction n="0.00160" ref="carbon"/>
-		<fraction n="0.00120" ref="vanadium"/>
-		<fraction n="0.00050" ref="niobium"/>
-		<fraction n="0.00050" ref="titanium"/>         
-		<fraction n="0.00025" ref="phosphorous"/>
-		<fraction n="0.00025" ref="nitrogen"/>
-		<fraction n="0.00020" ref="sulfur"/>
-		<fraction n="0.00020" ref="aluminum"/>
+		 <D value="3.8321000000000001" unit="g/cm3"/>
+                <!--fraction n="0.95380" ref="iron"/-->
+                <fraction n="0.95630" ref="iron"/>
+                <fraction n="0.01700" ref="manganese"/>
+                <fraction n="0.00800" ref="nickel"/>
+                <fraction n="0.00600" ref="silicon"/>
+                <fraction n="0.00550" ref="copper"/>
+                <fraction n="0.00300" ref="chromium"/>
+                <!--fraction n="0.00200" ref="molybdenum"/-->
+                <fraction n="0.00160" ref="carbon"/>
+                <fraction n="0.00120" ref="vanadium"/>
+                <!--fraction n="0.00050" ref="niobium"/-->
+                <fraction n="0.00050" ref="titanium"/>
+                <fraction n="0.00025" ref="phosphorous"/>
+                <fraction n="0.00025" ref="nitrogen"/>
+                <fraction n="0.00020" ref="sulfur"/>
+                <fraction n="0.00020" ref="aluminum"/>
 	</material>
     <material name="LAr" formula="LAr">
 		<D value="1.40" unit="g/cm3"/> 
