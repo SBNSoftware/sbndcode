@@ -10,7 +10,7 @@ int sbnd_geo(TString volName="")
 	gSystem->Load("libGeom");
 	gSystem->Load("libGdml");
 
-	TGeoManager::Import("sbnd_v00_09.gdml");
+	TGeoManager::Import("sbnd_v01_01.gdml");
 
 drawopt optsbnd[] = {
 	{"volTheBuilding", kYellow-8},

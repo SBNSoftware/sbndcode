@@ -82,6 +82,7 @@ physics:
 
   ### hit-finder producers
   gaushit:             @local::sbnd_gaushitfinder
+  fasthit:             @local::sbnd_fasthitfinder
 #  rffhit:              @local::sbnd_rffhitfinder
 
   ### corner-finder
@@ -121,6 +122,7 @@ physics:
    #     , opflash
          , caldata 
          , gaushit
+         , fasthit
    #      , rffhit
    #      , corner
    #      , fuzzycluster
@@ -168,6 +170,7 @@ outputs:
 physics.producers.caldata.DigitModuleLabel:                     "daq"
 
 physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
+physics.producers.fasthit.DigitModuleLabel:                     "daq"
 #physics.producers.rffhit.CalDataModuleLabel:                    "caldata"
 
 #physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"

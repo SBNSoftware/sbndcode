@@ -3,6 +3,10 @@ sbnd_crtsim:
   module_type: "sbndcode/CRT/CRTDetSim"
   G4ModuleLabel: "largeant"
 
+  // Global timing offset [ns]
+  // For Corsika cosmics, use 2.76e6 (see corsika_sbnd.fcl)
+  GlobalT0Offset: 0.0
+
   // Shape parameters for mean time delay vs. Npe
   TDelayNorm: 4125.74
   TDelayShift: -300.31
@@ -29,6 +33,7 @@ sbnd_crtsim:
   NpeScaleShift: -1085.0
 
   // Mean deposited charge for mips [GeV]
+  UseEdep: false
   Q0: 1.75e-3
 
   // ADC model: Pedestal offset [ADC], slope [ADC/photon], RMS [ADC]
