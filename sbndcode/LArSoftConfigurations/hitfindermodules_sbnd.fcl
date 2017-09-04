@@ -42,4 +42,11 @@ PulseRatioCuts:    [0.35, 0.40, 0.20] # Ratio of pulse height to width
 
 } # sbnd_gaushitfinder
 
+sbnd_fasthitfinder:                     @local::standard_fasthitfinder
+sbnd_fasthitfinder.DigitModuleLabel:    "daq"
+sbnd_fasthitfinder.MinSigInd:           10.0
+sbnd_fasthitfinder.MinSigCol:           10.0
+sbnd_fasthitfinder.IncludeMoreTail:     3.0
+sbnd_fasthitfinder.UncompressWithPed:   false
+
 END_PROLOG

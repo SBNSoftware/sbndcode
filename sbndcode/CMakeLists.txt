@@ -10,5 +10,6 @@ add_subdirectory(CRT)
 add_subdirectory(DetectorSim)
 add_subdirectory(MCTruthExtractor)
 add_subdirectory(SBNDPandora)
+add_subdirectory(SimulationFilters)
 add_subdirectory(AnalysisTree)
 
