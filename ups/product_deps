@@ -34,6 +34,7 @@ fcldir  product_dir
 
 product          version
 larsoft          v06_48_00
+genie_xsec       v2_12_6
 sbnd_data        v01_00_00 - optional
 sbndutil         v01_24_00 - optional
 
@@ -43,11 +44,11 @@ only_for_build  cetbuildtools   v5_14_00
 
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
-qualifier        larsoft       sbndutil    sbnd_data  notes
-e14:debug         e14:debug     e14:debug   -nq-
-e14:prof          e14:prof      e14:prof    -nq-
-e10:debug         e10:debug     e10:debug   -nq-
-e10:prof          e10:prof      e10:prof    -nq-
+qualifier     genie_xsec               larsoft       sbndutil    sbnd_data  notes
+e14:debug     DefaultPlusMECWithNC     e14:debug     e14:debug   -nq-
+e14:prof      DefaultPlusMECWithNC     e14:prof      e14:prof    -nq-
+e10:debug     DefaultPlusMECWithNC     e10:debug     e10:debug   -nq-
+e10:prof      DefaultPlusMECWithNC     e10:prof      e10:prof    -nq-
 
 # table fragment to set FW_SEARCH_PATH needed to find XML files:
 table_fragment_begin
