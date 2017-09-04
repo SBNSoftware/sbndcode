@@ -5,6 +5,7 @@ BEGIN_PROLOG
 sbnd_genie:                    @local::standard_genie
 sbnd_genie.BeamName:           "booster"
 sbnd_genie.GlobalTimeOffset:   1.28e6                  #sbnd reads out 1.6ms before the spill
+sbnd_genie.EventGeneratorList:      "Default+CCMEC+NCMEC"
 
 sbnd_genie_hist:               @local::sbnd_genie
 sbnd_genie_hist.FluxType:       "histogram"

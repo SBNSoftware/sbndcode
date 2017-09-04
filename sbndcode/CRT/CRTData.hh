@@ -15,10 +15,10 @@ namespace crt {
     CRTData();
     CRTData(uint32_t channel, uint32_t t0, uint32_t t1, uint32_t adc);
     virtual ~CRTData();
-    uint32_t Channel();
-    uint32_t T0();
-    uint32_t T1();
-    uint32_t ADC();
+    uint32_t Channel() const;
+    uint32_t T0() const;
+    uint32_t T1() const;
+    uint32_t ADC() const;
   };
 
 } // namespace crt

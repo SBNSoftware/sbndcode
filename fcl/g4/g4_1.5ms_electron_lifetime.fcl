@@ -1,0 +1,4 @@
+#include "standard_g4_sbnd.fcl"
+
+services.DetectorPropertiesService.Electronlifetime:  1.5e3 #microseconds
+
