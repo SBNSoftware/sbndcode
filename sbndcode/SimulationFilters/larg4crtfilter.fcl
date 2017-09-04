@@ -1,0 +1,19 @@
+BEGIN_PROLOG
+
+sbnd_larg4crtfilter:
+{
+  module_type:              "LArG4CRTFilter"
+  UseTopHighCRTs:           true        #Demand particle goes through the top (high) CRTs
+  UseTopLowCRTs:            true        #Demand particle goes through the top (low) CRTs
+  UseBottomCRTs:            true        #Demand particle goes through the bottom CRTs
+  UseFrontCRTs:             true        #Demand particle goes through the front CRTs
+  UseBackCRTs:              true        #Demand particle goes through the back CRTs
+  UseLeftCRTs:              true        #Demand particle goes through the left CRTs
+  UseRightCRTs:             true        #Demand particle goes through the right CRTs
+  PDGs:                     [ 0 ]       #Request that the particle passing through the CRTs has a specific PDG.  You can specify multiple PDGs.  Specify 0 for any PDG
+  MinMomentums:             [ -999 ]    #Minimum momentum of particle(s) passing through thet CRTs.  Specify 0 to ignore min momentum.  Vector should be same length as PDG
+  MaxMomentums:             [ -999 ]    #Same but for maximum momentum
+  LArG4ModuleName:          "largeant"  #The name of the module which contains the simb::MCParticle data product we want to use
+}
+
+END_PROLOG

@@ -1,0 +1,15 @@
+#include "larg4particlefilter.fcl"
+#include "standard_g4_sbnd.fcl"
+
+
+physics.simulate: [ rns, largeant, filter, mcreco ]
+
+
+physics.filters.filter: @local::sbnd_larg4particlefilter
+physics.filters.filter.InterestingPDGs: [ 0 ]  #Don't demand the particle is of a particular type
+physics.filters.filter.ParticleMinMomentum: [ -1 ]
+physics.filters.filter.ParticleMaxMomentum: [ -1 ]
+physics.filters.filter.StartInTPC: [ -1 ] 
+physics.filters.filter.StopInTPC: [ -1 ]
+physics.filters.filter.ParticleMinTPCLength: [ 0.1 ]  #Demand the particle travels at least 1 mm inside of the TPC (basically demands its enters the TPC)
+outputs.out1.SelectEvents: [ "simulate" ]

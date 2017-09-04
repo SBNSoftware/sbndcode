@@ -1,0 +1,4 @@
+#include "standard_g4_sbnd.fcl"
+
+services.LArG4Parameters.LongitudinalDiffusion: 1e-15 #in cm^2/ns
+
