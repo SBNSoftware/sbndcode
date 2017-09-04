@@ -40,6 +40,7 @@
 #
 
 #include "detsimmodules_sbnd.fcl"
+#include "crtsimmodules_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 
@@ -48,9 +49,11 @@ process_name: DetSim
 
 services:
 {
-  TFileService:        { fileName: "standard_detsim_sbnd_%p-%tc_hists.root" }
-                       @table::sbnd_detsim_services
+  TFileService: { fileName: "standard_detsim_sbnd_%p-%tc_hists.root" }
+  @table::sbnd_detsim_services
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
+  AuxDetGeometry: { @table::sbnd_geo_source }
 }
 
 
@@ -70,10 +73,11 @@ physics:
   {
     rns:       { module_type: "RandomNumberSaver" }
     daq:       @local::sbnd_simwire
+    crt:       @local::sbnd_crtsim
   }
 
   #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, daq ] 
+  simulate:  [ rns, daq, crt ]
 
   #define the output stream, there could be more than one if using filters 
   stream1:   [ out1 ]
