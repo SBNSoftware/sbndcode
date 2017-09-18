@@ -56059,10 +56059,12 @@
 	<volume name="volDetEnclosure" >
 		<materialref ref="Air"/> 
 		<solidref ref="boxDetectorEnclosure"/>
+		<!--
 		<physvol>
 			<volumeref ref="volShieldingLid"/>
 			<positionref ref="posShieldingLid"/>
 		</physvol>
+		-->
 		<physvol>
 			<volumeref ref="volTaggerTopLow"/>
 			<position name="posCRT_T1" unit="mm" x="0" y="6624.2010000000009" z="0"/>
@@ -56124,6 +56126,7 @@
 			<volumeref ref="volBuilding"/>
 			<positionref ref="posBuilding"/>
 		</physvol>
+		<!--
 		<physvol>
 			<volumeref ref="volShieldingTop"/>
 			<positionref ref="posShieldingTop"/>
@@ -56132,6 +56135,7 @@
 			<volumeref ref="volMezzanineLid"/>
 			<positionref ref="posMezzanineLid"/>
 		</physvol>
+		-->
 		<physvol>
 			<volumeref ref="volUndergrounds"/>
 			<positionref  ref="posUnderground"/>
