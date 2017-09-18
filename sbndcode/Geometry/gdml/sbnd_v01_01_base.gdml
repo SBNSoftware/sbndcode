@@ -24258,10 +24258,13 @@
 		<materialref ref="Air"/> 
 		<solidref ref="boxDetectorEnclosure"/>
         
+		<!-- This is part of the overburden, and is off -->
+		<!--
 		<physvol>
 			<volumeref ref="volShieldingLid"/>
 			<positionref ref="posShieldingLid"/>
 		</physvol>
+		-->
 		<physvol>
 			<volumeref ref="volTaggerTopLow"/>
 			<position name="posCRT_T1" unit="mm" x="0" y="theCRT_T-aCRT_Top2-theCRT_W/2" z="0"/>
@@ -24324,6 +24327,9 @@
 			<volumeref ref="volBuilding"/>
 			<positionref ref="posBuilding"/>
 		</physvol>
+
+		<!-- This is the overburden. It is off until further notice -->
+		<!--
 		<physvol>
 			<volumeref ref="volShieldingTop"/>
 			<positionref ref="posShieldingTop"/>
@@ -24332,6 +24338,7 @@
 			<volumeref ref="volMezzanineLid"/>
 			<positionref ref="posMezzanineLid"/>
 		</physvol>
+		-->
 		<physvol>
 			<volumeref ref="volUndergrounds"/>
 			<positionref  ref="posUnderground"/>
