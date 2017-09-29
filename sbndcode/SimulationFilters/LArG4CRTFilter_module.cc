@@ -14,8 +14,7 @@ namespace filt{
   class LArG4CRTFilter : public art::EDFilter {
     public:
       explicit LArG4CRTFilter(fhicl::ParameterSet const & pset);
-      virtual ~LArG4CRTFilter() {};
-      virtual bool filter(art::Event& e);
+      virtual bool filter(art::Event& e) override;
       void reconfigure(fhicl::ParameterSet const& pset);
       void beginJob();
 
@@ -47,7 +46,7 @@ namespace filt{
   };
 
 
-  LArG4CRTFilter::LArG4CRTFilter::LArG4CRTFilter(fhicl::ParameterSet const & pset)
+  LArG4CRTFilter::LArG4CRTFilter(fhicl::ParameterSet const & pset)
   {
     this->reconfigure(pset);
   }
@@ -152,9 +151,9 @@ namespace filt{
   void LArG4CRTFilter::LoadCRTAuxDetIDs(){
     art::ServiceHandle<geo::Geometry> geom;
 
-    for (unsigned int auxdet_i = 0; auxdet_i < geom->AuxDetGeoVec().size(); auxdet_i++){
-      geo::AuxDetGeo* crt = geom->AuxDetGeoVec()[auxdet_i];
-      const TGeoVolume* volModule = crt->TotalVolume();
+    for (unsigned int auxdet_i = 0; auxdet_i < geom->NAuxDets(); auxdet_i++){
+      geo::AuxDetGeo const& crt = geom->AuxDet(auxdet_i);
+      const TGeoVolume* volModule = crt.TotalVolume();
       std::set<std::string> volNames = { volModule->GetName() };
       std::vector<std::vector<TGeoNode const*> > paths = geom->FindAllVolumePaths(volNames);
 
