@@ -1,0 +1,36 @@
+#
+# File:    dettest_sbnd.fcl
+# Purpose: test loading of DetectorProperties service with SBND configuration
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    October 5th, 2017
+# Version: 1.0
+# 
+# Description:
+# Test to load DetectorPropertiesService (or its provider).
+# No test module is actually run, but the service is constructed.
+# This test triggers construction, configuration and its validation.
+# 
+# Dependencies:
+# - DetectorPropertiesService service and its dependencies:
+#   - LArProperties service and its dependencies
+#   - DetectorClocks service and its dependencies
+#   - Geometry service and its dependencies
+# 
+# Changes:
+# 20171005 (petrillo@fnal.gov) [v1.0]
+#   adapted from current dettest_lartpcdetector.fcl
+#
+
+#include "detectorproperties_sbnd.fcl"
+#include "larproperties_sbnd.fcl"
+#include "detectorclocks_sbnd.fcl"
+#include "geometry_sbnd.fcl"
+
+process_name: DetPropStandardTest
+
+services: {
+                             @table::sbnd_geometry_services
+  LArPropertiesService:      @local::sbnd_properties
+  DetectorClocksService:     @local::sbnd_detectorclocks
+  DetectorPropertiesService: @local::sbnd_detproperties
+}
