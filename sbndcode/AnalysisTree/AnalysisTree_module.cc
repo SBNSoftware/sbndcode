@@ -345,6 +345,7 @@ namespace microboone {
 
     // hit information (non-resizeable, 45x kMaxHits = 900k bytes worth)
     Int_t    no_hits;                  //number of hits
+    Short_t  hit_tpc[kMaxHits];        //tpc number
     Short_t  hit_plane[kMaxHits];      //plane number
     Short_t  hit_wire[kMaxHits];       //wire number
     Short_t  hit_channel[kMaxHits];    //channel ID
@@ -715,15 +716,15 @@ namespace microboone {
         if (!fData) {
           fData = new AnalysisTreeDataStruct(GetNTrackers());
           fData->SetBits(AnalysisTreeDataStruct::tdAuxDet, !fSaveAuxDetInfo);
-	  fData->SetBits(AnalysisTreeDataStruct::tdCry, !fSaveCryInfo);	  
-	  fData->SetBits(AnalysisTreeDataStruct::tdGenie, !fSaveGenieInfo);
-	  fData->SetBits(AnalysisTreeDataStruct::tdGeant, !fSaveGeantInfo); 
+          fData->SetBits(AnalysisTreeDataStruct::tdCry, !fSaveCryInfo);	  
+          fData->SetBits(AnalysisTreeDataStruct::tdGenie, !fSaveGenieInfo);
+          fData->SetBits(AnalysisTreeDataStruct::tdGeant, !fSaveGeantInfo); 
         }
         else {
           fData->SetBits(AnalysisTreeDataStruct::tdHit, !fSaveHitInfo);	
-	  fData->SetBits(AnalysisTreeDataStruct::tdTrack, !fSaveTrackInfo);	
-	  fData->SetBits(AnalysisTreeDataStruct::tdVtx, !fSaveVertexInfo);	  	  	    	  	    	  	    	  
-	  fData->SetTrackers(GetNTrackers());
+          fData->SetBits(AnalysisTreeDataStruct::tdTrack, !fSaveTrackInfo);	
+          fData->SetBits(AnalysisTreeDataStruct::tdVtx, !fSaveVertexInfo);	  	  	    	  	    	  	    	  
+          fData->SetTrackers(GetNTrackers());
           if (bClearData) fData->Clear();
         }
       } // CreateData()
@@ -1154,7 +1155,8 @@ void microboone::AnalysisTreeDataStruct::ClearLocalData() {
   //taulife = -99999;
 
   no_hits = 0;
-  
+ 
+  std::fill(hit_tpc, hit_tpc + sizeof(hit_tpc)/sizeof(hit_tpc[0]), -9999);
   std::fill(hit_plane, hit_plane + sizeof(hit_plane)/sizeof(hit_plane[0]), -9999);
   std::fill(hit_wire, hit_wire + sizeof(hit_wire)/sizeof(hit_wire[0]), -9999);
   std::fill(hit_channel, hit_channel + sizeof(hit_channel)/sizeof(hit_channel[0]), -9999);
@@ -1406,6 +1408,7 @@ void microboone::AnalysisTreeDataStruct::SetAddresses(
 
   if (hasHitInfo()){
     CreateBranch("no_hits",&no_hits,"no_hits/I");
+    CreateBranch("hit_tpc",hit_tpc,"hit_tpc[no_hits]/S");
     CreateBranch("hit_plane",hit_plane,"hit_plane[no_hits]/S");
     CreateBranch("hit_wire",hit_wire,"hit_wire[no_hits]/S");
     CreateBranch("hit_channel",hit_channel,"hit_channel[no_hits]/S");
@@ -1793,12 +1796,14 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
     art::fill_ptr_vector(fluxlist, mcfluxListHandle);
 
   std::vector<const sim::AuxDetSimChannel*> fAuxDetSimChannels;
-  if (fSaveAuxDetInfo){
+  if (fSaveAuxDetInfo && fSaveGeantInfo){
     evt.getView(fLArG4ModuleLabel, fAuxDetSimChannels);
   }
 
   std::vector<const sim::SimChannel*> fSimChannels;
-  evt.getView(fLArG4ModuleLabel, fSimChannels);
+  if (isMC && fSaveGeantInfo){
+    evt.getView(fLArG4ModuleLabel, fSimChannels);
+  }
 
   fData->run = evt.run();
   fData->subrun = evt.subRun();
@@ -1830,13 +1835,14 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
     }
     for (size_t i = 0; i < NHits && i < kMaxHits ; ++i){//loop over hits
       fData->hit_channel[i] = hitlist[i]->Channel();
+      fData->hit_tpc[i]     = hitlist[i]->WireID().TPC;
       fData->hit_plane[i]   = hitlist[i]->WireID().Plane;
       fData->hit_wire[i]    = hitlist[i]->WireID().Wire;
       fData->hit_peakT[i]   = hitlist[i]->PeakTime();
-      //fData->hit_charge[i]  = hitlist[i]->Integral();
-      //fData->hit_ph[i]  = hitlist[i]->PeakAmplitude();
-      //fData->hit_startT[i] = hitlist[i]->PeakTimeMinusRMS();
-      //fData->hit_endT[i] = hitlist[i]->PeakTimePlusRMS();
+      fData->hit_charge[i]  = hitlist[i]->Integral();
+      fData->hit_ph[i]  = hitlist[i]->PeakAmplitude();
+      fData->hit_startT[i] = hitlist[i]->PeakTimeMinusRMS();
+      fData->hit_endT[i] = hitlist[i]->PeakTimePlusRMS();
       /*
       for (unsigned int it=0; it<fTrackModuleLabel.size();++it){
         art::FindManyP<recob::Track> fmtk(hitListHandle,evt,fTrackModuleLabel[it]);
@@ -2085,23 +2091,23 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
       art::FindMany<anab::ParticleID> fmpid(trackListHandle[iTracker], evt, fParticleIDModuleLabel[iTracker]);
       if(fmpid.isValid()) {
         std::vector<const anab::ParticleID*> pids = fmpid.at(iTrk);
-        //if(pids.size() > 1) {
-          //mf::LogError("AnalysisTree:limits")
-            //<< "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
-            //<< " has " << pids.size() 
-            //<< " set of ParticleID variables. Only one stored in the tree";
-        //}
+        if(pids.size() > 1) {
+          mf::LogError("AnalysisTree:limits")
+            << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
+            << " has " << pids.size() 
+            << " set of ParticleID variables. Only one stored in the tree";
+        }
         for (size_t ipid = 0; ipid < pids.size(); ++ipid){
-	  //if (!pids[ipid]->PlaneID().isValid) continue;
-	  //int planenum = pids[ipid]->PlaneID().Plane;
-	  //if (planenum<0||planenum>2) continue;
-          //TrackerData.trkpidpdg[iTrk][planenum] = pids[ipid]->Pdg();
-          //TrackerData.trkpidchi[iTrk][planenum] = pids[ipid]->MinChi2();
-          //TrackerData.trkpidchipr[iTrk][planenum] = pids[ipid]->Chi2Proton();
-          //TrackerData.trkpidchika[iTrk][planenum] = pids[ipid]->Chi2Kaon();
-          //TrackerData.trkpidchipi[iTrk][planenum] = pids[ipid]->Chi2Pion();
-          //TrackerData.trkpidchimu[iTrk][planenum] = pids[ipid]->Chi2Muon();
-          //TrackerData.trkpidpida[iTrk][planenum] = pids[ipid]->PIDA();
+	        if (!pids[ipid]->PlaneID().isValid) continue;
+	        int planenum = pids[ipid]->PlaneID().Plane;
+	        if (planenum<0||planenum>2) continue;
+          TrackerData.trkpidpdg[iTrk][planenum] = pids[ipid]->Pdg();
+          TrackerData.trkpidchi[iTrk][planenum] = pids[ipid]->MinChi2();
+          TrackerData.trkpidchipr[iTrk][planenum] = pids[ipid]->Chi2Proton();
+          TrackerData.trkpidchika[iTrk][planenum] = pids[ipid]->Chi2Kaon();
+          TrackerData.trkpidchipi[iTrk][planenum] = pids[ipid]->Chi2Pion();
+          TrackerData.trkpidchimu[iTrk][planenum] = pids[ipid]->Chi2Muon();
+          TrackerData.trkpidpida[iTrk][planenum] = pids[ipid]->PIDA();
         }
       } // fmpid.isValid()
       
@@ -2328,7 +2334,7 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
             fData->pdg[iPart]=pPart->PdgCode();
             fData->status[iPart] = pPart->StatusCode();
             fData->Eng[iPart]=pPart->E();
-	    fData->EndE[iPart]=pPart->EndE();
+	          fData->EndE[iPart]=pPart->EndE();
             fData->Mass[iPart]=pPart->Mass();
             fData->Px[iPart]=pPart->Px();
             fData->Py[iPart]=pPart->Py();
@@ -2475,7 +2481,7 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
         ++currentMergedId;
       } // for merging check
      } // if (fSaveGeantInfo) 
-            
+      
     }//if (mcevts_truth)
   }//if (isMC){
   //fData->taulife = detprop->ElectronLifetime();
