@@ -6,5 +6,6 @@ cet_enable_asserts()
 
 # test directories
 add_subdirectory(Geometry)
+add_subdirectory(LArSoftConfigurations)
 add_subdirectory(JobConfigurations)
 
