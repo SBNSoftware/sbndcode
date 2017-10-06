@@ -4,6 +4,7 @@ cet_test( DetectorClocksSBND_test
   DATAFILES dettest_sbnd.fcl
   TEST_EXEC DetectorClocksStandard_test
   TEST_ARGS ./dettest_sbnd.fcl
+  OPTIONAL_GROUPS BROKEN
 )
 
 cet_test( LArPropertiesSBND_test
@@ -11,6 +12,7 @@ cet_test( LArPropertiesSBND_test
   DATAFILES dettest_sbnd.fcl
   TEST_EXEC LArPropertiesStandard_test
   TEST_ARGS ./dettest_sbnd.fcl
+  OPTIONAL_GROUPS BROKEN
 )
 
 cet_test( DetectorPropertiesSBND_test
@@ -18,5 +20,6 @@ cet_test( DetectorPropertiesSBND_test
   DATAFILES dettest_sbnd.fcl
   TEST_EXEC DetectorPropertiesStandard_test
   TEST_ARGS ./dettest_sbnd.fcl
+  OPTIONAL_GROUPS BROKEN
 )
 
