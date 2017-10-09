@@ -14,7 +14,7 @@ int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit) {
   return likelyTrackID;
 }
 
-int RecoUtils::TrueParticleID(const std::vector<art::Ptr<recob::Hit> >& hits) {
+int RecoUtils::TrueParticleIDFromTotalCharge(const std::vector<art::Ptr<recob::Hit> >& hits) {
   // Make a map of the tracks which are associated with this object and the charge each contributes
   std::map<int,double> trackMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
@@ -29,6 +29,27 @@ int RecoUtils::TrueParticleID(const std::vector<art::Ptr<recob::Hit> >& hits) {
   for (std::map<int,double>::iterator trackIt = trackMap.begin(); trackIt != trackMap.end(); ++trackIt) {
     if (trackIt->second > highestCharge) {
       highestCharge = trackIt->second;
+      objectTrack  = trackIt->first;
+    }
+  }
+  return objectTrack;
+}
+
+int RecoUtils::TrueParticleIDFromTotalCharge(const std::vector<art::Ptr<recob::Hit> >& hits) {
+  // Make a map of the tracks which are associated with this object and the number of hits they are the primary contributor to
+  std::map<int,int> trackMap;
+  for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
+    art::Ptr<recob::Hit> hit = *hitIt;
+    int trackID = TrueParticleID(hit);
+    trackMap[trackID]++
+  }
+
+  // Pick the track which is the primary contributor to the most hits as the 'true track'
+  int objectTrack = 0;
+  int highestCount = -1;
+  for (std::map<int,int>::iterator trackIt = trackMap.begin(); trackIt != trackMap.end(); ++trackIt) {
+    if (trackIt->second > highestCount) {
+      highestCount = trackIt->second;
       objectTrack  = trackIt->first;
     }
   }
