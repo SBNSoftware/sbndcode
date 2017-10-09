@@ -43,7 +43,8 @@
 
 namespace RecoUtils{
   int TrueParticleID(const art::Ptr<recob::Hit>& hit);
-  int TrueParticleID(const std::vector<art::Ptr<recob::Hit> >& hits);
+  int TrueParticleIDFromTotalCharge(const std::vector<art::Ptr<recob::Hit> >& hits);
+  int TrueParticleIDFromTotalHits(const std::vector<art::Ptr<recob::Hit> >& hits);
   bool IsInsideTPC(TVector3 position, double distance_buffer);
 }
 
