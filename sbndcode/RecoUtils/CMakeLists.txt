@@ -29,7 +29,7 @@ art_make(
                            ${Boost_SYSTEM_LIBRARY}
         )
 
-# install_headers()
+install_headers()
 install_fhicl()
 install_source()
 
