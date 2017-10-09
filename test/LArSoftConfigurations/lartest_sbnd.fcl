@@ -1,0 +1,27 @@
+#
+# File:    lartest_sbnd.fcl
+# Purpose: test loading of LArProperties service with SBND configuration
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    October 5th, 2017
+# Version: 1.0
+# 
+# Description:
+# Test to load LArPropertiesService (or its provider).
+# No test module is actually run, but the service is constructed.
+# This test triggers construction, configuration and its validation.
+# 
+# Dependencies:
+# - LArProperties service and its dependencies (none to date)
+# 
+# Changes:
+# 20171005 (petrillo@fnal.gov) [v1.0]
+#   adapted from current lartest_lartpcdetector.fcl
+#
+
+#include "larproperties_sbnd.fcl"
+
+process_name: LArPropStandardTest
+
+services: {
+  LArPropertiesService: @local::sbnd_properties
+}
