@@ -28,7 +28,7 @@ int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<reco
 
   //Loop over the map and find the track which contributes the highest energy to the hit vector
   double maxenergy = -1;
-  int objectTrack = 0;
+  int objectTrack = -99999;
   for (std::map<int,double>::iterator mapIt = trackIDToEDepMap.begin(); mapIt != trackIDToEDepMap.end(); mapIt++){
     double energy = mapIt->second;
     double trackid = mapIt->first;
@@ -54,7 +54,7 @@ int RecoUtils::TrueParticleIDFromTotalRecoCharge(const std::vector<art::Ptr<reco
 
   // Pick the track with the highest charge as the 'true track'
   double highestCharge = 0;
-  int objectTrack = 0;
+  int objectTrack = -99999;
   for (std::map<int,double>::iterator trackIt = trackMap.begin(); trackIt != trackMap.end(); ++trackIt) {
     if (trackIt->second > highestCharge) {
       highestCharge = trackIt->second;
@@ -76,7 +76,7 @@ int RecoUtils::TrueParticleIDFromTotalRecoHits(const std::vector<art::Ptr<recob:
   }
 
   // Pick the track which is the primary contributor to the most hits as the 'true track'
-  int objectTrack = 0;
+  int objectTrack = -99999;
   int highestCount = -1;
   for (std::map<int,int>::iterator trackIt = trackMap.begin(); trackIt != trackMap.end(); ++trackIt) {
     if (trackIt->second > highestCount) {
