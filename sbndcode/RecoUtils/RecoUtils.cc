@@ -8,7 +8,7 @@ int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit) {
   for (unsigned int idIt = 0; idIt < trackIDs.size(); ++idIt) {
     if (trackIDs.at(idIt).energy > particleEnergy) {
       particleEnergy = trackIDs.at(idIt).energy;
-      likelyTrackID = TMath::Abs(trackIDs.at(idIt).trackID);
+      likelyTrackID = trackIDs.at(idIt).trackID;
     }
   }
   return likelyTrackID;
