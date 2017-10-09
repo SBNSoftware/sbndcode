@@ -26,6 +26,7 @@ art_make(
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}
                            ${ROOT_BASIC_LIB_LIST}
+                           sbndcode_RecoUtils
         )
 
 # install_headers()
