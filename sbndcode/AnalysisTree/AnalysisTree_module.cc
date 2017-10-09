@@ -118,7 +118,8 @@
 //#include "lardata/RecoAlg/TrackMomentumCalculator.h"
 #include "lardataobj/AnalysisBase/CosmicTag.h"
 #include "lardataobj/AnalysisBase/FlashMatch.h"
-	
+
+#include "sbndcode/RecoUtils/RecoUtils.h"
 
 #include <cstring> // std::memcpy()
 #include <vector>
@@ -228,6 +229,9 @@ namespace microboone {
       Short_t  ntracks;             //number of reconstructed tracks
       PlaneData_t<Float_t>    trkke;
       PlaneData_t<Float_t>    trkrange;
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totaltrueenergy;  //true geant trackid from TrueParticleIDFromTotalTrueEnergy in RecoUtils 
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totalrecocharge;  //true geant trackid from TrueParticleIDFromTotalRecoCharge in RecoUtils 
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totalrecohits;  //true geant trackid from TrueParticleIDFromTotalTrueHits in RecoUtils 
       PlaneData_t<Int_t>      trkidtruth;  //true geant trackid
       PlaneData_t<Short_t>    trkorigin;   //_ev_origin 0: unknown, 1: cosmic, 2: neutrino, 3: supernova, 4: singles
       PlaneData_t<Int_t>      trkpdgtruth; //true pdg code
@@ -851,6 +855,9 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
   
   trkke.resize(MaxTracks);
   trkrange.resize(MaxTracks);
+  trkidtruth_recoutils_totaltrueenergy.resize(MaxTracks);
+  trkidtruth_recoutils_totalrecocharge.resize(MaxTracks);
+  trkidtruth_recoutils_totalrecohits.resize(MaxTracks);
   trkidtruth.resize(MaxTracks);
   trkorigin.resize(MaxTracks);
   trkpdgtruth.resize(MaxTracks);
@@ -914,6 +921,9 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
     // their iterators traverse all the array dimensions
     FillWith(trkke[iTrk]      , -99999.);
     FillWith(trkrange[iTrk]   , -99999.);
+    FillWith(trkidtruth_recoutils_totaltrueenergy[iTrk] , -99999 );
+    FillWith(trkidtruth_recoutils_totalrecocharge[iTrk] , -99999 );
+    FillWith(trkidtruth_recoutils_totalrecohits[iTrk] , -99999 );
     FillWith(trkidtruth[iTrk] , -99999 );
     FillWith(trkorigin[iTrk]  , -1 );
     FillWith(trkpdgtruth[iTrk], -99999 );
@@ -989,6 +999,15 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   BranchName = "trkrange_" + TrackLabel;
   CreateBranch(BranchName, trkrange, BranchName + NTracksIndexStr + "[3]/F");
    
+  BranchName = "trkidtruth_recoutils_totaltrueenergy_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totaltrueenergy, BranchName + NTracksIndexStr + "[3]/I");
+
+  BranchName = "trkidtruth_recoutils_totalrecocharge_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totalrecocharge, BranchName + NTracksIndexStr + "[3]/I");
+
+  BranchName = "trkidtruth_recoutils_totalrecohits_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totalrecohits, BranchName + NTracksIndexStr + "[3]/I");
+
   BranchName = "trkidtruth_" + TrackLabel;
   CreateBranch(BranchName, trkidtruth, BranchName + NTracksIndexStr + "[3]/I");
 
@@ -2180,6 +2199,9 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
         }
         
         for (size_t ipl = 0; ipl < 3; ++ipl){
+          TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits[ipl]);
+          TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(hits[ipl]);
+          TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(hits[ipl]);
           double maxe = 0;
           HitsPurity(hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
         //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
@@ -2619,7 +2641,7 @@ double microboone::AnalysisTree::length(const simb::MCParticle& part, TVector3& 
   double zmax = geom->DetLength();
   //double vDrift = 160*pow(10,-6);
 
-  std::cout << "DET DIMENSIONS:   xmin = " << xmin << "  xmax = " << xmax << "  ymin = " << ymin << "  ymax = " << ymax << "  zmin = " << zmin << "  zmax = " << zmax << std::endl;
+  //std::cout << "DET DIMENSIONS:   xmin = " << xmin << "  xmax = " << xmax << "  ymin = " << ymin << "  ymax = " << ymax << "  zmin = " << zmin << "  zmax = " << zmax << std::endl;
 
   double result = 0.;
   TVector3 disp;
