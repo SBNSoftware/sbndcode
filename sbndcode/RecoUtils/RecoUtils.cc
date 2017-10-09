@@ -14,7 +14,36 @@ int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit) {
   return likelyTrackID;
 }
 
-int RecoUtils::TrueParticleIDFromTotalCharge(const std::vector<art::Ptr<recob::Hit> >& hits) {
+
+int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<recob::Hit> >& hits) {
+  art::ServiceHandle<cheat::BackTracker> bt;
+  std::map<int,double> trackIDToEDepMap;
+  for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
+    art::Ptr<recob::Hit> hit = *hitIt;
+    std::vector<sim::TrackIDE> trackIDs = bt->HitToTrackID(hit);
+    for (unsigned int idIt = 0; idIt < trackIDs.size(); ++idIt) {
+      trackIDToEDepMap[trackIDs[idIt].trackID] += trackIDs[idIt].energy;
+    }
+  }
+
+  //Loop over the map and find the track which contributes the highest energy to the hit vector
+  double maxenergy = -1;
+  int objectTrack = 0;
+  for (std::map<int,double>::iterator mapIt = trackIDToEDepMap.begin(); mapIt != trackIDToEDepMap.end(); mapIt++){
+    double energy = mapIt->second;
+    double trackid = mapIt->first;
+    if (energy > maxenergy){
+      maxenergy = energy;
+      objectTrack = trackid;
+    }
+  }
+
+  return objectTrack;
+}
+
+
+
+int RecoUtils::TrueParticleIDFromTotalRecoCharge(const std::vector<art::Ptr<recob::Hit> >& hits) {
   // Make a map of the tracks which are associated with this object and the charge each contributes
   std::map<int,double> trackMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
@@ -35,13 +64,15 @@ int RecoUtils::TrueParticleIDFromTotalCharge(const std::vector<art::Ptr<recob::H
   return objectTrack;
 }
 
-int RecoUtils::TrueParticleIDFromTotalCharge(const std::vector<art::Ptr<recob::Hit> >& hits) {
+
+
+int RecoUtils::TrueParticleIDFromTotalRecoHits(const std::vector<art::Ptr<recob::Hit> >& hits) {
   // Make a map of the tracks which are associated with this object and the number of hits they are the primary contributor to
   std::map<int,int> trackMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
     art::Ptr<recob::Hit> hit = *hitIt;
     int trackID = TrueParticleID(hit);
-    trackMap[trackID]++
+    trackMap[trackID]++;
   }
 
   // Pick the track which is the primary contributor to the most hits as the 'true track'
@@ -55,6 +86,8 @@ int RecoUtils::TrueParticleIDFromTotalCharge(const std::vector<art::Ptr<recob::H
   }
   return objectTrack;
 }
+
+
 
 bool RecoUtils::IsInsideTPC(TVector3 position, double distance_buffer){
   double vtx[3] = {position.X(), position.Y(), position.Z()};
