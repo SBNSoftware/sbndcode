@@ -14,8 +14,7 @@ namespace filt{
   class GenFilter : public art::EDFilter {
     public:
       explicit GenFilter(fhicl::ParameterSet const & pset);
-      virtual ~GenFilter() {};
-      virtual bool filter(art::Event& e);
+      virtual bool filter(art::Event& e) override;
       void reconfigure(fhicl::ParameterSet const& pset);
       void beginJob();
 
@@ -44,12 +43,12 @@ namespace filt{
       bool IsInterestingParticle(const simb::MCParticle &particle);
       void LoadCRTAuxDetIDs();
       bool UsesCRTAuxDets(const simb::MCParticle &particle, const std::vector<unsigned int> &crt_auxdet_vector);
-      bool UsesCRTAuxDet(const simb::MCParticle &particle, geo::AuxDetGeo* const crt);
+      bool UsesCRTAuxDet(const simb::MCParticle &particle, geo::AuxDetGeo const& crt);
       bool RayIntersectsBox(TVector3 ray_origin, TVector3 ray_direction, TVector3 box_min_extent, TVector3 box_max_extent);
   };
 
 
-  GenFilter::GenFilter::GenFilter(fhicl::ParameterSet const & pset)
+  GenFilter::GenFilter(fhicl::ParameterSet const & pset)
   {
     this->reconfigure(pset);
   }
@@ -156,9 +155,9 @@ namespace filt{
   void GenFilter::LoadCRTAuxDetIDs(){
     art::ServiceHandle<geo::Geometry> geom;
 
-    for (unsigned int auxdet_i = 0; auxdet_i < geom->AuxDetGeoVec().size(); auxdet_i++){
-      geo::AuxDetGeo* crt = geom->AuxDetGeoVec()[auxdet_i];
-      const TGeoVolume* volModule = crt->TotalVolume();
+    for (unsigned int auxdet_i = 0; auxdet_i < geom->NAuxDets(); auxdet_i++){
+      geo::AuxDetGeo const& crt = geom->AuxDet(auxdet_i);
+      const TGeoVolume* volModule = crt.TotalVolume();
       std::set<std::string> volNames = { volModule->GetName() };
       std::vector<std::vector<TGeoNode const*> > paths = geom->FindAllVolumePaths(volNames);
 
@@ -224,7 +223,7 @@ namespace filt{
 
     for (unsigned int i = 0; i < crt_auxdet_vector.size(); i++){
       unsigned int auxdet_index = crt_auxdet_vector[i];
-      geo::AuxDetGeo* crt = geom->AuxDetGeoVec()[auxdet_index];
+      geo::AuxDetGeo const& crt = geom->AuxDet(auxdet_index);
       if (UsesCRTAuxDet(particle,crt)){
         return true;
       }
@@ -233,7 +232,7 @@ namespace filt{
     return false;
   }
 
-  bool GenFilter::UsesCRTAuxDet(const simb::MCParticle &particle, geo::AuxDetGeo* const crt){
+  bool GenFilter::UsesCRTAuxDet(const simb::MCParticle &particle, geo::AuxDetGeo const& crt){
     //We need to prepare the particle's position and direction and construct a bounding box from the CRT for the ray-box collision algorithm
     //Start with the particle
     double particle_position_array[3], particle_direction_array[3], particle_local_position_array[3], particle_local_direction_array[3];
@@ -243,20 +242,20 @@ namespace filt{
     particle_direction_array[0] = particle.Momentum(0).X()/particle.Momentum(0).Vect().Mag();
     particle_direction_array[1] = particle.Momentum(0).Y()/particle.Momentum(0).Vect().Mag();
     particle_direction_array[2] = particle.Momentum(0).Z()/particle.Momentum(0).Vect().Mag();
-    crt->WorldToLocal(particle_position_array,particle_local_position_array);
-    crt->WorldToLocalVect(particle_direction_array,particle_local_direction_array);
+    crt.WorldToLocal(particle_position_array,particle_local_position_array);
+    crt.WorldToLocalVect(particle_direction_array,particle_local_direction_array);
     TVector3 particle_local_position(particle_local_position_array[0],particle_local_position_array[1],particle_local_position_array[2]);
     TVector3 particle_local_direction(particle_local_direction_array[0],particle_local_direction_array[1],particle_local_direction_array[2]);
     double norm[3], lnorm[3];
     double center[3];
-    crt->GetNormalVector(norm);
-    crt->WorldToLocalVect(norm,lnorm);
-    crt->GetCenter(center);
+    crt.GetNormalVector(norm);
+    crt.WorldToLocalVect(norm,lnorm);
+    crt.GetCenter(center);
 
     //Now make the bounding box min and max extent from the CRT
     //In local coordinates, the normal of the CRT is parallel to the z-axis, the length is parallel to z, width parallel to x and height parallel to y
     //A gotchya: AuxDets pass half widths and half heights but FULL lengths.  So, divide length by 2
-    TVector3 crt_min_extent(-1.*crt->HalfWidth1(),-1.*crt->HalfHeight(),-1.*crt->Length()/2.);
+    TVector3 crt_min_extent(-1.*crt.HalfWidth1(),-1.*crt.HalfHeight(),-1.*crt.Length()/2.);
     //Scale the dimensions if the user wants them scaling
     crt_min_extent*=fCRTDimensionScaling;
     //Now make the max extent
