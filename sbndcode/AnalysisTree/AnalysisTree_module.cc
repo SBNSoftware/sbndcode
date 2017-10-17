@@ -392,10 +392,10 @@ namespace microboone {
     std::vector<Float_t>  lep_dcosz_truth; //lepton dcos z
 
     //flux information
-    Float_t  tpx_flux;        //Px of parent particle leaving BNB target
-    Float_t  tpy_flux;        //Py of parent particle leaving BNB target
-    Float_t  tpz_flux;        //Pz of parent particle leaving BNB target
-    Int_t     tptype_flux;     //Type of parent particle leaving BNB target
+    std::vector<Float_t>  tpx_flux;        //Px of parent particle leaving BNB target
+    std::vector<Float_t>  tpy_flux;        //Py of parent particle leaving BNB target
+    std::vector<Float_t>  tpz_flux;        //Pz of parent particle leaving BNB target
+    std::vector<Int_t>     tptype_flux;     //Type of parent particle leaving BNB target
 
     //genie information
     size_t MaxGeniePrimaries = 0;
@@ -1216,10 +1216,10 @@ void microboone::AnalysisTreeDataStruct::ClearLocalData() {
   FillWith(lep_dcosx_truth,-99999);
   FillWith(lep_dcosy_truth,-99999);
   FillWith(lep_dcosz_truth,-99999);
-  tpx_flux = -99999;
-  tpy_flux = -99999;
-  tpz_flux = -99999;
-  tptype_flux = -99999;
+  FillWith(tpx_flux,-99999);
+  FillWith(tpy_flux,-99999);
+  FillWith(tpz_flux,-99999);
+  FillWith(tptype_flux,-99999);
 
   genie_no_primaries = 0;
   cry_no_primaries = 0;
@@ -1336,6 +1336,11 @@ void microboone::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
   lep_dcosx_truth.resize(MaxMCNeutrinos);
   lep_dcosy_truth.resize(MaxMCNeutrinos);
   lep_dcosz_truth.resize(MaxMCNeutrinos);
+  //Also resize the flux information here as it's a 1:1 with the MCNeutrino
+  tpx_flux.resize(MaxMCNeutrinos);
+  tpy_flux.resize(MaxMCNeutrinos);
+  tpz_flux.resize(MaxMCNeutrinos);
+  tptype_flux.resize(MaxMCNeutrinos);
 
   return;
 } // microboone::AnalysisTreeDataStruct::ResizeMCNeutrino()
@@ -1511,10 +1516,10 @@ void microboone::AnalysisTreeDataStruct::SetAddresses(
     CreateBranch("lep_dcosy_truth",lep_dcosy_truth,"lep_dcosy_truth[mcevts_truth]/F");
     CreateBranch("lep_dcosz_truth",lep_dcosz_truth,"lep_dcosz_truth[mcevts_truth]/F");
 
-    CreateBranch("tpx_flux",&tpx_flux,"tpx_flux/F");
-    CreateBranch("tpy_flux",&tpy_flux,"tpy_flux/F");
-    CreateBranch("tpz_flux",&tpz_flux,"tpz_flux/F");
-    CreateBranch("tptype_flux",&tptype_flux,"tptype_flux/I");
+    CreateBranch("tpx_flux",tpx_flux,"tpx_flux[mcevts_truth]/F");
+    CreateBranch("tpy_flux",tpy_flux,"tpy_flux[mcevts_truth]/F");
+    CreateBranch("tpz_flux",tpz_flux,"tpz_flux[mcevts_truth]/F");
+    CreateBranch("tptype_flux",tptype_flux,"tptype_flux[mcevts_truth]/I");
 
     CreateBranch("genie_no_primaries",&genie_no_primaries,"genie_no_primaries/I");
     CreateBranch("genie_primaries_pdg",genie_primaries_pdg,"genie_primaries_pdg[genie_no_primaries]/I");
@@ -1754,7 +1759,10 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
   int nGeniePrimaries = 0, nGEANTparticles = 0, nMCNeutrinos = 0;
   
   art::Ptr<simb::MCTruth> mctruth;
-  int imc = 0;
+  //Brailsford 2017/10/16
+  //Fix for issue 17917
+  //With the code change to accept multiple neutrinos per TTree::Entry into the TTree, this int is no longer needed (it makes compilation fail due to a warning)
+  //int imc = 0;
   if (isMC) { //is MC
     // GENIE
     if (!mclist.empty()){//at least one mc record
@@ -2290,8 +2298,13 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
         fData->cry_mother[iPartc]=partc.Mother();
       } // for cry particles  
     }// end fSaveCryInfo   
-    //save neutrino interaction information
+
     fData->mcevts_truth = mclist.size();
+    //Brailsford 2017/10/16
+    //Issue 17917
+    //To keep a 1:1 between neutrinos and 'flux' we need the assns
+    art::FindOneP<simb::MCFlux> fmFluxNeutrino(mctruthListHandle, evt, fGenieGenModuleLabel);
+
     if (fData->mcevts_truth > 0){//at least one mc record
     if (fSaveGenieInfo){
 
@@ -2326,6 +2339,15 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
           fData->lep_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Py()/curr_mctruth->GetNeutrino().Lepton().P();
           fData->lep_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Pz()/curr_mctruth->GetNeutrino().Lepton().P();
         }
+        //We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
+        if (fmFluxNeutrino.isValid()){
+          art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(i_mctruth);
+          fData->tpx_flux[i_mctruth] = curr_mcflux->ftpx;
+          fData->tpy_flux[i_mctruth] = curr_mcflux->ftpy;
+          fData->tpz_flux[i_mctruth] = curr_mcflux->ftpz;
+          fData->tptype_flux[i_mctruth] = curr_mcflux->ftptype;
+        }
+
         //Let's increase the neutrino count
         fData->mcevts_truth++;
       }
@@ -2356,13 +2378,13 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
           fData->lep_dcosy_truth = mctruth->GetNeutrino().Lepton().Py()/mctruth->GetNeutrino().Lepton().P();
           fData->lep_dcosz_truth = mctruth->GetNeutrino().Lepton().Pz()/mctruth->GetNeutrino().Lepton().P();
         }
-        */
         //flux information
         art::Ptr<simb::MCFlux>  mcflux = fluxlist[imc];
         fData->tpx_flux = mcflux->ftpx;
         fData->tpy_flux = mcflux->ftpy;
         fData->tpz_flux = mcflux->ftpz;
         fData->tptype_flux = mcflux->ftptype;
+        */
 
         //genie particles information
         fData->genie_no_primaries = mctruth->NParticles();
