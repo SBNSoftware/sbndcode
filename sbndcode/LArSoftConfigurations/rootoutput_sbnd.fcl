@@ -25,7 +25,7 @@
 #     
 # 
 
-#BEGIN_PROLOG
+BEGIN_PROLOG
 
 #
 # sbnd_rootoutput: settings for RootOutput module
@@ -50,5 +50,5 @@ sbnd_rootoutput: {
   
 } # sbnd_rootoutput
 
-#END_PROLOG
+END_PROLOG
 
