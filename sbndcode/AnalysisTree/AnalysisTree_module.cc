@@ -151,7 +151,7 @@ struct total_extent {
 }; // total_extent<>
 
 
-namespace microboone {
+namespace sbnd {
 
   /// Data structure with all the tree information.
   /// 
@@ -780,8 +780,8 @@ namespace microboone {
         throw art::Exception(art::errors::LogicError)
           << "AnalysisTree::" << caller << ": no tree";
       } // CheckData()
-  }; // class microboone::AnalysisTree
-} // namespace microboone
+  }; // class sbnd::AnalysisTree
+} // namespace sbnd
 
 
 namespace { // local namespace
@@ -813,7 +813,7 @@ namespace { // local namespace
 //---  AnalysisTreeDataStruct::TrackDataStruct
 //---
 
-void microboone::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
+void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
 {
   MaxTracks = nTracks;
   
@@ -881,9 +881,9 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
   trkresrg.resize(MaxTracks);
   trkxyz.resize(MaxTracks);
   
-} // microboone::AnalysisTreeDataStruct::TrackDataStruct::Resize()
+} // sbnd::AnalysisTreeDataStruct::TrackDataStruct::Resize()
 
-void microboone::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
+void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
   Resize(MaxTracks);
   ntracks = 0;
   
@@ -957,15 +957,15 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
     FillWith(trkpidpida[iTrk]   , -99999.);
   } // for track
   
-} // microboone::AnalysisTreeDataStruct::TrackDataStruct::Clear()
+} // sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear()
 
 
-void microboone::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
+void sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   TTree* pTree, std::string tracker, bool isCosmics
 ) {
   if (MaxTracks == 0) return; // no tracks, no tree!
   
-  microboone::AnalysisTreeDataStruct::BranchCreator CreateBranch(pTree);
+  sbnd::AnalysisTreeDataStruct::BranchCreator CreateBranch(pTree);
 
   AutoResettingStringSteam sstr;
   sstr() << kMaxTrackHits;
@@ -1160,13 +1160,13 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   BranchName = "trkpidbestplane_" + TrackLabel;
   CreateBranch(BranchName, trkpidbestplane, BranchName + NTracksIndexStr + "/S");
 
-} // microboone::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses()
+} // sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses()
 
 //------------------------------------------------------------------------------
 //---  AnalysisTreeDataStruct
 //---
 
-void microboone::AnalysisTreeDataStruct::ClearLocalData() {
+void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
 
 //  RunData.Clear();
   SubRunData.Clear();
@@ -1310,16 +1310,16 @@ void microboone::AnalysisTreeDataStruct::ClearLocalData() {
     for (auto& partInfo: *cont) FillWith(partInfo, -99999.);
   } // for container
   
-} // microboone::AnalysisTreeDataStruct::ClearLocalData()
+} // sbnd::AnalysisTreeDataStruct::ClearLocalData()
 
 
-void microboone::AnalysisTreeDataStruct::Clear() {
+void sbnd::AnalysisTreeDataStruct::Clear() {
   ClearLocalData();
   std::for_each
     (TrackData.begin(), TrackData.end(), std::mem_fun_ref(&TrackDataStruct::Clear));
-} // microboone::AnalysisTreeDataStruct::Clear()
+} // sbnd::AnalysisTreeDataStruct::Clear()
 
-void microboone::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
+void sbnd::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
 
   //min size is 1, to guarantee an address
   MaxMCNeutrinos = (size_t) std::max(nNeutrinos, 1);
@@ -1348,9 +1348,9 @@ void microboone::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
   tptype_flux.resize(MaxMCNeutrinos);
 
   return;
-} // microboone::AnalysisTreeDataStruct::ResizeMCNeutrino()
+} // sbnd::AnalysisTreeDataStruct::ResizeMCNeutrino()
 
-void microboone::AnalysisTreeDataStruct::ResizeGEANT(int nParticles) {
+void sbnd::AnalysisTreeDataStruct::ResizeGEANT(int nParticles) {
 
   // minimum size is 1, so that we always have an address
   MaxGEANTparticles = (size_t) std::max(nParticles, 1);
@@ -1409,9 +1409,9 @@ void microboone::AnalysisTreeDataStruct::ResizeGEANT(int nParticles) {
   exitPz.resize(MaxGEANTparticles);
   CombinedEnergyDep.resize(MaxGEANTparticles);
   
-} // microboone::AnalysisTreeDataStruct::ResizeGEANT()
+} // sbnd::AnalysisTreeDataStruct::ResizeGEANT()
 
-void microboone::AnalysisTreeDataStruct::ResizeGenie(int nPrimaries) {
+void sbnd::AnalysisTreeDataStruct::ResizeGenie(int nPrimaries) {
   
   // minimum size is 1, so that we always have an address
   MaxGeniePrimaries = (size_t) std::max(nPrimaries, 1);
@@ -1427,9 +1427,9 @@ void microboone::AnalysisTreeDataStruct::ResizeGenie(int nPrimaries) {
   genie_ND.resize(MaxGeniePrimaries);
   genie_mother.resize(MaxGeniePrimaries);
 
-} // microboone::AnalysisTreeDataStruct::ResizeGenie()
+} // sbnd::AnalysisTreeDataStruct::ResizeGenie()
 
-void microboone::AnalysisTreeDataStruct::ResizeCry(int nPrimaries) {
+void sbnd::AnalysisTreeDataStruct::ResizeCry(int nPrimaries) {
 
   cry_primaries_pdg.resize(nPrimaries);
   cry_Eng.resize(nPrimaries);
@@ -1446,9 +1446,9 @@ void microboone::AnalysisTreeDataStruct::ResizeCry(int nPrimaries) {
   cry_ND.resize(nPrimaries);
   cry_mother.resize(nPrimaries);
 
-} // microboone::AnalysisTreeDataStruct::ResizeCry()
+} // sbnd::AnalysisTreeDataStruct::ResizeCry()
 
-void microboone::AnalysisTreeDataStruct::SetAddresses(
+void sbnd::AnalysisTreeDataStruct::SetAddresses(
   TTree* pTree,
   const std::vector<std::string>& trackers,
   bool isCosmics
@@ -1631,14 +1631,14 @@ void microboone::AnalysisTreeDataStruct::SetAddresses(
       "CombinedEnergyDep[geant_list_size]" + MaxAuxDetIndexStr + "/F");
   } // if hasAuxDetector
   
-} // microboone::AnalysisTreeDataStruct::SetAddresses()
+} // sbnd::AnalysisTreeDataStruct::SetAddresses()
 
 
 //------------------------------------------------------------------------------
 //---  AnalysisTree
 //---
 
-microboone::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
+sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   EDAnalyzer(pset),
   fTree(nullptr), fData(nullptr),
   fDigitModuleLabel         (pset.get< std::string >("DigitModuleLabel")        ),
@@ -1687,25 +1687,25 @@ microboone::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
       << "fTrackModuleLabel.size() = "<<fTrackModuleLabel.size()<<" does not match "
       << "fParticleIDModuleLabel.size() = "<<fParticleIDModuleLabel.size();
   }
-} // microboone::AnalysisTree::AnalysisTree()
+} // sbnd::AnalysisTree::AnalysisTree()
 
 //-------------------------------------------------
-microboone::AnalysisTree::~AnalysisTree()
+sbnd::AnalysisTree::~AnalysisTree()
 {
   DestroyData();
 }
 
-void microboone::AnalysisTree::CreateTree(bool bClearData /* = false */) {
+void sbnd::AnalysisTree::CreateTree(bool bClearData /* = false */) {
   if (!fTree) {
     art::ServiceHandle<art::TFileService> tfs;
     fTree = tfs->make<TTree>("anatree","analysis tree");
   }
   CreateData(bClearData);
   SetAddresses();
-} // microboone::AnalysisTree::CreateTree()
+} // sbnd::AnalysisTree::CreateTree()
 
 
-void microboone::AnalysisTree::beginSubRun(const art::SubRun& sr)
+void sbnd::AnalysisTree::beginSubRun(const art::SubRun& sr)
 {
 
   art::Handle< sumdata::POTSummary > potListHandle;
@@ -1718,7 +1718,7 @@ void microboone::AnalysisTree::beginSubRun(const art::SubRun& sr)
 
 }
 
-void microboone::AnalysisTree::analyze(const art::Event& evt)
+void sbnd::AnalysisTree::analyze(const art::Event& evt)
 {
   //services
   art::ServiceHandle<geo::Geometry> geom;
@@ -2665,9 +2665,9 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
     LOG_DEBUG("AnalysisTreeStructure") << "Freeing the tree data structure";
     DestroyData();
   }
-} // microboone::AnalysisTree::analyze()
+} // sbnd::AnalysisTree::analyze()
 
-void microboone::AnalysisTree::HitsPurity(std::vector< art::Ptr<recob::Hit> > const& hits, Int_t& trackid, Float_t& purity, double& maxe){
+void sbnd::AnalysisTree::HitsPurity(std::vector< art::Ptr<recob::Hit> > const& hits, Int_t& trackid, Float_t& purity, double& maxe){
 
   trackid = -1;
   purity = -1;
@@ -2708,7 +2708,7 @@ void microboone::AnalysisTree::HitsPurity(std::vector< art::Ptr<recob::Hit> > co
 }
 
 // Calculate distance to boundary.
-double microboone::AnalysisTree::bdist(const TVector3& pos)
+double sbnd::AnalysisTree::bdist(const TVector3& pos)
 {
   // Get geometry.
   art::ServiceHandle<geo::Geometry> geom;
@@ -2725,7 +2725,7 @@ double microboone::AnalysisTree::bdist(const TVector3& pos)
 }
 
 // Length of reconstructed track, trajectory by trajectory.
-double microboone::AnalysisTree::length(const recob::Track& track)
+double sbnd::AnalysisTree::length(const recob::Track& track)
 {
   double result = 0.;
   TVector3 disp = track.LocationAtPoint(0);
@@ -2741,7 +2741,7 @@ double microboone::AnalysisTree::length(const recob::Track& track)
 }
 
 // Length of MC particle, trajectory by trajectory.
-double microboone::AnalysisTree::length(const simb::MCParticle& part, TVector3& start, TVector3& end)
+double sbnd::AnalysisTree::length(const simb::MCParticle& part, TVector3& start, TVector3& end)
 {
   // Get geometry.
   art::ServiceHandle<geo::Geometry> geom;
@@ -2798,7 +2798,7 @@ double microboone::AnalysisTree::length(const simb::MCParticle& part, TVector3& 
 }
 
 
-namespace microboone{
+namespace sbnd{
 
   DEFINE_ART_MODULE(AnalysisTree)
 
