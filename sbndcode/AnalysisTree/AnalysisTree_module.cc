@@ -373,6 +373,7 @@ namespace microboone {
     //mctruth information
     size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
     Int_t     mcevts_truth;    //number of neutrino Int_teractions in the spill
+    std::vector<Int_t>     nuID_truth;      //Unique ID of each true neutrino
     std::vector<Int_t>     nuPDG_truth;     //neutrino PDG code
     std::vector<Int_t>     ccnc_truth;      //0=CC 1=NC
     std::vector<Int_t>     mode_truth;      //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
@@ -470,6 +471,7 @@ namespace microboone {
     std::vector<Int_t>    process_primary;
     std::vector<std::string> processname;
     std::vector<Int_t>    MergedId; //geant track segments, which belong to the same particle, get the same
+    std::vector<Int_t>    MotherNuId; //The unique ID of the mother neutrino
     
     // Auxiliary detector variables saved for each geant track
     // This data is saved as a vector (one item per GEANT particle) of C arrays
@@ -1199,6 +1201,7 @@ void microboone::AnalysisTreeDataStruct::ClearLocalData() {
 
   mcevts_truth = 0;
   mcevts_truthcry = -99999;
+  FillWith(nuID_truth,-99999);
   FillWith(nuPDG_truth,-99999);
   FillWith(ccnc_truth,-99999);
   FillWith(mode_truth,-99999);
@@ -1263,6 +1266,7 @@ void microboone::AnalysisTreeDataStruct::ClearLocalData() {
   FillWith(process_primary, -99999);
   FillWith(processname, "noname");
   FillWith(MergedId, -99999);
+  FillWith(MotherNuId, -99999);
   FillWith(genie_primaries_pdg, -99999);
   FillWith(genie_Eng, -99999.);
   FillWith(genie_Px, -99999.);
@@ -1319,6 +1323,7 @@ void microboone::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
 
   //min size is 1, to guarantee an address
   MaxMCNeutrinos = (size_t) std::max(nNeutrinos, 1);
+  nuID_truth.resize(MaxMCNeutrinos);
   nuPDG_truth.resize(MaxMCNeutrinos);
   ccnc_truth.resize(MaxMCNeutrinos);
   mode_truth.resize(MaxMCNeutrinos);
@@ -1386,6 +1391,7 @@ void microboone::AnalysisTreeDataStruct::ResizeGEANT(int nParticles) {
   process_primary.resize(MaxGEANTparticles);
   processname.resize(MaxGEANTparticles);
   MergedId.resize(MaxGEANTparticles);
+  MotherNuId.resize(MaxGEANTparticles);
   
   // auxiliary detector structure
   NAuxDets.resize(MaxGEANTparticles);
@@ -1498,6 +1504,7 @@ void microboone::AnalysisTreeDataStruct::SetAddresses(
 
   if (hasGenieInfo()){
     CreateBranch("mcevts_truth",&mcevts_truth,"mcevts_truth/I");
+    CreateBranch("nuID_truth",nuID_truth,"nuID_truth[mcevts_truth]/I");
     CreateBranch("nuPDG_truth",nuPDG_truth,"nuPDG_truth[mcevts_truth]/I");
     CreateBranch("ccnc_truth",ccnc_truth,"ccnc_truth[mcevts_truth]/I");
     CreateBranch("mode_truth",mode_truth,"mode_truth[mcevts_truth]/I");
@@ -1591,6 +1598,7 @@ void microboone::AnalysisTreeDataStruct::SetAddresses(
     CreateBranch("Mother",Mother,"Mother[geant_list_size]/I");
     CreateBranch("TrackId",TrackId,"TrackId[geant_list_size]/I");
     CreateBranch("MergedId", MergedId, "MergedId[geant_list_size]/I");
+    CreateBranch("MotherNuId", MotherNuId, "MotherNuId[geant_list_size]/I");
     CreateBranch("process_primary",process_primary,"process_primary[geant_list_size]/I");
     CreateBranch("processname", processname);
   }
