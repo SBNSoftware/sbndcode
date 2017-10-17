@@ -2347,6 +2347,11 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
           fData->lep_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Py()/curr_mctruth->GetNeutrino().Lepton().P();
           fData->lep_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Pz()/curr_mctruth->GetNeutrino().Lepton().P();
         }
+        //Brailsford
+        //2017/10/17
+        //Issue 12918
+        //Use the art::Ptr key as the neutrino's unique ID
+        fData->nuID_truth[i_mctruth] = curr_mctruth.key();
         //We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
         if (fmFluxNeutrino.isValid()){
           art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(i_mctruth);
@@ -2490,6 +2495,12 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
               fData->EndPointy_tpcAV[iPart] = mcend.Y();
               fData->EndPointz_tpcAV[iPart] = mcend.Z();
             }		       
+            //Brailsford
+            //2017/10/17
+            //Issue 17918
+            //Get the mother neutrino of this particle and use the hosting art::Ptr key as the matched ID
+            const art::Ptr<simb::MCTruth> matched_mctruth = bt->ParticleToMCTruth(pPart);
+            fData->MotherNuId[iPart] = matched_mctruth.key();
            } 
             //access auxiliary detector parameters
             if (fSaveAuxDetInfo) {
