@@ -21,4 +21,4 @@ physics.filters.filter.CRTDimensionScaling: 1.2
 outputs.out1.SelectEvents: [ "simulate" ]
 
 #DO NOT DELETE.  NEEDED FOR MCC
-#MCCSTATEMENT: michel_electron, G4: g4_mu_frontbackcrt_filter.fcl
+#MCCSTATEMENT: frontbackcrtfilter, G4: g4_mu_frontbackcrt_filter.fcl

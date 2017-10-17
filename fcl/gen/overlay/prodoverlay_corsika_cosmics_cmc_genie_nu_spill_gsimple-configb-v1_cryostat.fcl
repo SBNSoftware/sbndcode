@@ -4,3 +4,6 @@ physics.producers.generator.FluxCopyMethod: "IFDH"
 physics.producers.generator.FluxSearchPaths: "/pnfs/sbnd/persistent/fluxFiles/bnb/gsimple/v2_8_6d/configB-v1/april07/neutrinoMode"
 physics.producers.generator.FluxFiles: [ "gsimple_configB-v1_5e7POT*.root" ]
 physics.producers.generator.TopVolume: "volCryostat"
+
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: production, ANATREE: anatree_prodoverlay_corsika_genie.fcl 
