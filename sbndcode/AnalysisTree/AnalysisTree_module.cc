@@ -118,7 +118,8 @@
 //#include "lardata/RecoAlg/TrackMomentumCalculator.h"
 #include "lardataobj/AnalysisBase/CosmicTag.h"
 #include "lardataobj/AnalysisBase/FlashMatch.h"
-	
+
+#include "sbndcode/RecoUtils/RecoUtils.h"
 
 #include <cstring> // std::memcpy()
 #include <vector>
@@ -228,6 +229,9 @@ namespace microboone {
       Short_t  ntracks;             //number of reconstructed tracks
       PlaneData_t<Float_t>    trkke;
       PlaneData_t<Float_t>    trkrange;
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totaltrueenergy;  //true geant trackid from TrueParticleIDFromTotalTrueEnergy in RecoUtils 
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totalrecocharge;  //true geant trackid from TrueParticleIDFromTotalRecoCharge in RecoUtils 
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totalrecohits;  //true geant trackid from TrueParticleIDFromTotalTrueHits in RecoUtils 
       PlaneData_t<Int_t>      trkidtruth;  //true geant trackid
       PlaneData_t<Short_t>    trkorigin;   //_ev_origin 0: unknown, 1: cosmic, 2: neutrino, 3: supernova, 4: singles
       PlaneData_t<Int_t>      trkpdgtruth; //true pdg code
@@ -367,30 +371,31 @@ namespace microboone {
     std::vector<TrackDataStruct> TrackData;
     
     //mctruth information
+    size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
     Int_t     mcevts_truth;    //number of neutrino Int_teractions in the spill
-    Int_t     nuPDG_truth;     //neutrino PDG code
-    Int_t     ccnc_truth;      //0=CC 1=NC
-    Int_t     mode_truth;      //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
-    Float_t  enu_truth;       //true neutrino energy
-    Float_t  Q2_truth;        //Momentum transfer squared
-    Float_t  W_truth;         //hadronic invariant mass
-    Int_t     hitnuc_truth;    //hit nucleon
-    Float_t  nuvtxx_truth;    //neutrino vertex x
-    Float_t  nuvtxy_truth;    //neutrino vertex y
-    Float_t  nuvtxz_truth;    //neutrino vertex z
-    Float_t  nu_dcosx_truth;  //neutrino dcos x
-    Float_t  nu_dcosy_truth;  //neutrino dcos y
-    Float_t  nu_dcosz_truth;  //neutrino dcos z
-    Float_t  lep_mom_truth;   //lepton momentum
-    Float_t  lep_dcosx_truth; //lepton dcos x
-    Float_t  lep_dcosy_truth; //lepton dcos y
-    Float_t  lep_dcosz_truth; //lepton dcos z
+    std::vector<Int_t>     nuPDG_truth;     //neutrino PDG code
+    std::vector<Int_t>     ccnc_truth;      //0=CC 1=NC
+    std::vector<Int_t>     mode_truth;      //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
+    std::vector<Float_t>  enu_truth;       //true neutrino energy
+    std::vector<Float_t>  Q2_truth;        //Momentum transfer squared
+    std::vector<Float_t>  W_truth;         //hadronic invariant mass
+    std::vector<Int_t>     hitnuc_truth;    //hit nucleon
+    std::vector<Float_t>  nuvtxx_truth;    //neutrino vertex x
+    std::vector<Float_t>  nuvtxy_truth;    //neutrino vertex y
+    std::vector<Float_t>  nuvtxz_truth;    //neutrino vertex z
+    std::vector<Float_t>  nu_dcosx_truth;  //neutrino dcos x
+    std::vector<Float_t>  nu_dcosy_truth;  //neutrino dcos y
+    std::vector<Float_t>  nu_dcosz_truth;  //neutrino dcos z
+    std::vector<Float_t>  lep_mom_truth;   //lepton momentum
+    std::vector<Float_t>  lep_dcosx_truth; //lepton dcos x
+    std::vector<Float_t>  lep_dcosy_truth; //lepton dcos y
+    std::vector<Float_t>  lep_dcosz_truth; //lepton dcos z
 
     //flux information
-    Float_t  tpx_flux;        //Px of parent particle leaving BNB target
-    Float_t  tpy_flux;        //Py of parent particle leaving BNB target
-    Float_t  tpz_flux;        //Pz of parent particle leaving BNB target
-    Int_t     tptype_flux;     //Type of parent particle leaving BNB target
+    std::vector<Float_t>  tpx_flux;        //Px of parent particle leaving BNB target
+    std::vector<Float_t>  tpy_flux;        //Py of parent particle leaving BNB target
+    std::vector<Float_t>  tpz_flux;        //Pz of parent particle leaving BNB target
+    std::vector<Int_t>     tptype_flux;     //Type of parent particle leaving BNB target
 
     //genie information
     size_t MaxGeniePrimaries = 0;
@@ -534,6 +539,9 @@ namespace microboone {
     
     /// Allocates data structures for the given number of trackers (no Clear())
     void SetTrackers(size_t nTrackers) { TrackData.resize(nTrackers); }
+
+    /// Resize the data structure for MCNeutrino particles
+    void ResizeMCNeutrino(int nNeutrinos);
     
     /// Resize the data strutcure for GEANT particles
     void ResizeGEANT(int nParticles);
@@ -851,6 +859,9 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
   
   trkke.resize(MaxTracks);
   trkrange.resize(MaxTracks);
+  trkidtruth_recoutils_totaltrueenergy.resize(MaxTracks);
+  trkidtruth_recoutils_totalrecocharge.resize(MaxTracks);
+  trkidtruth_recoutils_totalrecohits.resize(MaxTracks);
   trkidtruth.resize(MaxTracks);
   trkorigin.resize(MaxTracks);
   trkpdgtruth.resize(MaxTracks);
@@ -914,6 +925,9 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
     // their iterators traverse all the array dimensions
     FillWith(trkke[iTrk]      , -99999.);
     FillWith(trkrange[iTrk]   , -99999.);
+    FillWith(trkidtruth_recoutils_totaltrueenergy[iTrk] , -99999 );
+    FillWith(trkidtruth_recoutils_totalrecocharge[iTrk] , -99999 );
+    FillWith(trkidtruth_recoutils_totalrecohits[iTrk] , -99999 );
     FillWith(trkidtruth[iTrk] , -99999 );
     FillWith(trkorigin[iTrk]  , -1 );
     FillWith(trkpdgtruth[iTrk], -99999 );
@@ -989,6 +1003,15 @@ void microboone::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   BranchName = "trkrange_" + TrackLabel;
   CreateBranch(BranchName, trkrange, BranchName + NTracksIndexStr + "[3]/F");
    
+  BranchName = "trkidtruth_recoutils_totaltrueenergy_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totaltrueenergy, BranchName + NTracksIndexStr + "[3]/I");
+
+  BranchName = "trkidtruth_recoutils_totalrecocharge_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totalrecocharge, BranchName + NTracksIndexStr + "[3]/I");
+
+  BranchName = "trkidtruth_recoutils_totalrecohits_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totalrecohits, BranchName + NTracksIndexStr + "[3]/I");
+
   BranchName = "trkidtruth_" + TrackLabel;
   CreateBranch(BranchName, trkidtruth, BranchName + NTracksIndexStr + "[3]/I");
 
@@ -1174,29 +1197,29 @@ void microboone::AnalysisTreeDataStruct::ClearLocalData() {
     std::fill(vtx[ivtx], vtx[ivtx]+3, -99999.);
   }
 
-  mcevts_truth = -99999;
+  mcevts_truth = 0;
   mcevts_truthcry = -99999;
-  nuPDG_truth = -99999;
-  ccnc_truth = -99999;
-  mode_truth = -99999;
-  enu_truth = -99999;
-  Q2_truth = -99999;
-  W_truth = -99999;
-  hitnuc_truth = -99999;
-  nuvtxx_truth = -99999;
-  nuvtxy_truth = -99999;
-  nuvtxz_truth = -99999;
-  nu_dcosx_truth = -99999;
-  nu_dcosy_truth = -99999;
-  nu_dcosz_truth = -99999;
-  lep_mom_truth = -99999;
-  lep_dcosx_truth = -99999;
-  lep_dcosy_truth = -99999;
-  lep_dcosz_truth = -99999;
-  tpx_flux = -99999;
-  tpy_flux = -99999;
-  tpz_flux = -99999;
-  tptype_flux = -99999;
+  FillWith(nuPDG_truth,-99999);
+  FillWith(ccnc_truth,-99999);
+  FillWith(mode_truth,-99999);
+  FillWith(enu_truth,-99999);
+  FillWith(Q2_truth,-99999);
+  FillWith(W_truth,-99999);
+  FillWith(hitnuc_truth,-99999);
+  FillWith(nuvtxx_truth,-99999);
+  FillWith(nuvtxy_truth,-99999);
+  FillWith(nuvtxz_truth,-99999);
+  FillWith(nu_dcosx_truth,-99999);
+  FillWith(nu_dcosy_truth,-99999);
+  FillWith(nu_dcosz_truth,-99999);
+  FillWith(lep_mom_truth,-99999);
+  FillWith(lep_dcosx_truth,-99999);
+  FillWith(lep_dcosy_truth,-99999);
+  FillWith(lep_dcosz_truth,-99999);
+  FillWith(tpx_flux,-99999);
+  FillWith(tpy_flux,-99999);
+  FillWith(tpz_flux,-99999);
+  FillWith(tptype_flux,-99999);
 
   genie_no_primaries = 0;
   cry_no_primaries = 0;
@@ -1292,6 +1315,35 @@ void microboone::AnalysisTreeDataStruct::Clear() {
     (TrackData.begin(), TrackData.end(), std::mem_fun_ref(&TrackDataStruct::Clear));
 } // microboone::AnalysisTreeDataStruct::Clear()
 
+void microboone::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
+
+  //min size is 1, to guarantee an address
+  MaxMCNeutrinos = (size_t) std::max(nNeutrinos, 1);
+  nuPDG_truth.resize(MaxMCNeutrinos);
+  ccnc_truth.resize(MaxMCNeutrinos);
+  mode_truth.resize(MaxMCNeutrinos);
+  enu_truth.resize(MaxMCNeutrinos);
+  Q2_truth.resize(MaxMCNeutrinos);
+  W_truth.resize(MaxMCNeutrinos);
+  hitnuc_truth.resize(MaxMCNeutrinos);
+  nuvtxx_truth.resize(MaxMCNeutrinos);
+  nuvtxy_truth.resize(MaxMCNeutrinos);
+  nuvtxz_truth.resize(MaxMCNeutrinos);
+  nu_dcosx_truth.resize(MaxMCNeutrinos);
+  nu_dcosy_truth.resize(MaxMCNeutrinos);
+  nu_dcosz_truth.resize(MaxMCNeutrinos);
+  lep_mom_truth.resize(MaxMCNeutrinos);
+  lep_dcosx_truth.resize(MaxMCNeutrinos);
+  lep_dcosy_truth.resize(MaxMCNeutrinos);
+  lep_dcosz_truth.resize(MaxMCNeutrinos);
+  //Also resize the flux information here as it's a 1:1 with the MCNeutrino
+  tpx_flux.resize(MaxMCNeutrinos);
+  tpy_flux.resize(MaxMCNeutrinos);
+  tpz_flux.resize(MaxMCNeutrinos);
+  tptype_flux.resize(MaxMCNeutrinos);
+
+  return;
+} // microboone::AnalysisTreeDataStruct::ResizeMCNeutrino()
 
 void microboone::AnalysisTreeDataStruct::ResizeGEANT(int nParticles) {
 
@@ -1446,28 +1498,28 @@ void microboone::AnalysisTreeDataStruct::SetAddresses(
 
   if (hasGenieInfo()){
     CreateBranch("mcevts_truth",&mcevts_truth,"mcevts_truth/I");
-    CreateBranch("nuPDG_truth",&nuPDG_truth,"nuPDG_truth/I");
-    CreateBranch("ccnc_truth",&ccnc_truth,"ccnc_truth/I");
-    CreateBranch("mode_truth",&mode_truth,"mode_truth/I");
-    CreateBranch("enu_truth",&enu_truth,"enu_truth/F");
-    CreateBranch("Q2_truth",&Q2_truth,"Q2_truth/F");
-    CreateBranch("W_truth",&W_truth,"W_truth/F");
-    CreateBranch("hitnuc_truth",&hitnuc_truth,"hitnuc_truth/I");
-    CreateBranch("nuvtxx_truth",&nuvtxx_truth,"nuvtxx_truth/F");
-    CreateBranch("nuvtxy_truth",&nuvtxy_truth,"nuvtxy_truth/F");
-    CreateBranch("nuvtxz_truth",&nuvtxz_truth,"nuvtxz_truth/F");
-    CreateBranch("nu_dcosx_truth",&nu_dcosx_truth,"nu_dcosx_truth/F");
-    CreateBranch("nu_dcosy_truth",&nu_dcosy_truth,"nu_dcosy_truth/F");
-    CreateBranch("nu_dcosz_truth",&nu_dcosz_truth,"nu_dcosz_truth/F");
-    CreateBranch("lep_mom_truth",&lep_mom_truth,"lep_mom_truth/F");
-    CreateBranch("lep_dcosx_truth",&lep_dcosx_truth,"lep_dcosx_truth/F");
-    CreateBranch("lep_dcosy_truth",&lep_dcosy_truth,"lep_dcosy_truth/F");
-    CreateBranch("lep_dcosz_truth",&lep_dcosz_truth,"lep_dcosz_truth/F");
+    CreateBranch("nuPDG_truth",nuPDG_truth,"nuPDG_truth[mcevts_truth]/I");
+    CreateBranch("ccnc_truth",ccnc_truth,"ccnc_truth[mcevts_truth]/I");
+    CreateBranch("mode_truth",mode_truth,"mode_truth[mcevts_truth]/I");
+    CreateBranch("enu_truth",enu_truth,"enu_truth[mcevts_truth]/F");
+    CreateBranch("Q2_truth",Q2_truth,"Q2_truth[mcevts_truth]/F");
+    CreateBranch("W_truth",W_truth,"W_truth[mcevts_truth]/F");
+    CreateBranch("hitnuc_truth",hitnuc_truth,"hitnuc_truth[mcevts_truth]/I");
+    CreateBranch("nuvtxx_truth",nuvtxx_truth,"nuvtxx_truth[mcevts_truth]/F");
+    CreateBranch("nuvtxy_truth",nuvtxy_truth,"nuvtxy_truth[mcevts_truth]/F");
+    CreateBranch("nuvtxz_truth",nuvtxz_truth,"nuvtxz_truth[mcevts_truth]/F");
+    CreateBranch("nu_dcosx_truth",nu_dcosx_truth,"nu_dcosx_truth[mcevts_truth]/F");
+    CreateBranch("nu_dcosy_truth",nu_dcosy_truth,"nu_dcosy_truth[mcevts_truth]/F");
+    CreateBranch("nu_dcosz_truth",nu_dcosz_truth,"nu_dcosz_truth[mcevts_truth]/F");
+    CreateBranch("lep_mom_truth",lep_mom_truth,"lep_mom_truth[mcevts_truth]/F");
+    CreateBranch("lep_dcosx_truth",lep_dcosx_truth,"lep_dcosx_truth[mcevts_truth]/F");
+    CreateBranch("lep_dcosy_truth",lep_dcosy_truth,"lep_dcosy_truth[mcevts_truth]/F");
+    CreateBranch("lep_dcosz_truth",lep_dcosz_truth,"lep_dcosz_truth[mcevts_truth]/F");
 
-    CreateBranch("tpx_flux",&tpx_flux,"tpx_flux/F");
-    CreateBranch("tpy_flux",&tpy_flux,"tpy_flux/F");
-    CreateBranch("tpz_flux",&tpz_flux,"tpz_flux/F");
-    CreateBranch("tptype_flux",&tptype_flux,"tptype_flux/I");
+    CreateBranch("tpx_flux",tpx_flux,"tpx_flux[mcevts_truth]/F");
+    CreateBranch("tpy_flux",tpy_flux,"tpy_flux[mcevts_truth]/F");
+    CreateBranch("tpz_flux",tpz_flux,"tpz_flux[mcevts_truth]/F");
+    CreateBranch("tptype_flux",tptype_flux,"tptype_flux[mcevts_truth]/I");
 
     CreateBranch("genie_no_primaries",&genie_no_primaries,"genie_no_primaries/I");
     CreateBranch("genie_primaries_pdg",genie_primaries_pdg,"genie_primaries_pdg[genie_no_primaries]/I");
@@ -1704,10 +1756,13 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
     nCryPrimaries = mctruthcry->NParticles();  
   } 
   
-  int nGeniePrimaries = 0, nGEANTparticles = 0;
+  int nGeniePrimaries = 0, nGEANTparticles = 0, nMCNeutrinos = 0;
   
   art::Ptr<simb::MCTruth> mctruth;
-  int imc = 0;
+  //Brailsford 2017/10/16
+  //Fix for issue 17917
+  //With the code change to accept multiple neutrinos per TTree::Entry into the TTree, this int is no longer needed (it makes compilation fail due to a warning)
+  //int imc = 0;
   if (isMC) { //is MC
     // GENIE
     if (!mclist.empty()){//at least one mc record
@@ -1761,9 +1816,15 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
       << nGeniePrimaries << " GENIE particles";
   } // if MC
   
+  //Brailsford 2017/10/16
+  //Initially call the number of neutrinos to be stored the number of MCTruth objects.  This is not strictly true i.e. BNB + cosmic overlay but we will count the number of neutrinos later
+  nMCNeutrinos = mclist.size();
+
   CreateData(); // tracker data is created with default constructor
-  if (fSaveGenieInfo)
+  if (fSaveGenieInfo){
     fData->ResizeGenie(nGeniePrimaries);
+    fData->ResizeMCNeutrino(nMCNeutrinos);
+  }
   if (fSaveCryInfo)
     fData->ResizeCry(nCryPrimaries);
   if (fSaveGeantInfo)    
@@ -2180,6 +2241,9 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
         }
         
         for (size_t ipl = 0; ipl < 3; ++ipl){
+          TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits[ipl]);
+          TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(hits[ipl]);
+          TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(hits[ipl]);
           double maxe = 0;
           HitsPurity(hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
         //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
@@ -2234,11 +2298,65 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
         fData->cry_mother[iPartc]=partc.Mother();
       } // for cry particles  
     }// end fSaveCryInfo   
-    //save neutrino interaction information
+
     fData->mcevts_truth = mclist.size();
+    //Brailsford 2017/10/16
+    //Issue 17917
+    //To keep a 1:1 between neutrinos and 'flux' we need the assns
+    art::FindOneP<simb::MCFlux> fmFluxNeutrino(mctruthListHandle, evt, fGenieGenModuleLabel);
+
     if (fData->mcevts_truth > 0){//at least one mc record
     if (fSaveGenieInfo){
+
+      //Brailsford 2017/10/16 
+      //Issue 17917
+      //Loop over every truth in the spill rather than just looking at the first one.
+      //Because MCTruth could be a neutrino OR something else (e.g. cosmics) we are going to have to count up how many neutrinos there are
+      fData->mcevts_truth = 0;
+      for (unsigned int i_mctruth = 0; i_mctruth < mclist.size(); i_mctruth++){
+        //fetch an mctruth
+        art::Ptr<simb::MCTruth> curr_mctruth = mclist[i_mctruth];
+        //Check if it's a neutrino
+        if (!curr_mctruth->NeutrinoSet()) continue;
+        fData->nuPDG_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().PdgCode();
+        fData->ccnc_truth[i_mctruth] = curr_mctruth->GetNeutrino().CCNC();
+        fData->mode_truth[i_mctruth] = curr_mctruth->GetNeutrino().Mode();
+        fData->Q2_truth[i_mctruth] = curr_mctruth->GetNeutrino().QSqr();
+        fData->W_truth[i_mctruth] = curr_mctruth->GetNeutrino().W();
+        fData->hitnuc_truth[i_mctruth] = curr_mctruth->GetNeutrino().HitNuc();
+        fData->enu_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().E();
+        fData->nuvtxx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vx();
+        fData->nuvtxy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vy();
+        fData->nuvtxz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vz();
+        if (curr_mctruth->GetNeutrino().Nu().P()){
+          fData->nu_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Px()/curr_mctruth->GetNeutrino().Nu().P();
+          fData->nu_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Py()/curr_mctruth->GetNeutrino().Nu().P();
+          fData->nu_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Pz()/curr_mctruth->GetNeutrino().Nu().P();
+        }
+        fData->lep_mom_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().P();
+        if (curr_mctruth->GetNeutrino().Lepton().P()){
+          fData->lep_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Px()/curr_mctruth->GetNeutrino().Lepton().P();
+          fData->lep_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Py()/curr_mctruth->GetNeutrino().Lepton().P();
+          fData->lep_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Pz()/curr_mctruth->GetNeutrino().Lepton().P();
+        }
+        //We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
+        if (fmFluxNeutrino.isValid()){
+          art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(i_mctruth);
+          fData->tpx_flux[i_mctruth] = curr_mcflux->ftpx;
+          fData->tpy_flux[i_mctruth] = curr_mcflux->ftpy;
+          fData->tpz_flux[i_mctruth] = curr_mcflux->ftpz;
+          fData->tptype_flux[i_mctruth] = curr_mcflux->ftptype;
+        }
+
+        //Let's increase the neutrino count
+        fData->mcevts_truth++;
+      }
+
       if (mctruth->NeutrinoSet()){
+        //Brailsford 2017/10/16
+        //Issue 17917
+        //Bypass this section of filling code as there can now be multiple neutrinos per TTree::entry stored in the TTree
+        /*
         fData->nuPDG_truth = mctruth->GetNeutrino().Nu().PdgCode();
         fData->ccnc_truth = mctruth->GetNeutrino().CCNC();
         fData->mode_truth = mctruth->GetNeutrino().Mode();
@@ -2266,6 +2384,7 @@ void microboone::AnalysisTree::analyze(const art::Event& evt)
         fData->tpy_flux = mcflux->ftpy;
         fData->tpz_flux = mcflux->ftpz;
         fData->tptype_flux = mcflux->ftptype;
+        */
 
         //genie particles information
         fData->genie_no_primaries = mctruth->NParticles();
@@ -2619,7 +2738,7 @@ double microboone::AnalysisTree::length(const simb::MCParticle& part, TVector3& 
   double zmax = geom->DetLength();
   //double vDrift = 160*pow(10,-6);
 
-  std::cout << "DET DIMENSIONS:   xmin = " << xmin << "  xmax = " << xmax << "  ymin = " << ymin << "  ymax = " << ymax << "  zmin = " << zmin << "  zmax = " << zmax << std::endl;
+  //std::cout << "DET DIMENSIONS:   xmin = " << xmin << "  xmax = " << xmax << "  ymin = " << ymin << "  ymax = " << ymax << "  zmin = " << zmin << "  zmax = " << zmax << std::endl;
 
   double result = 0.;
   TVector3 disp;
