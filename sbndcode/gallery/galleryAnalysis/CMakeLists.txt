@@ -17,6 +17,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(galleryAnalysis CXX)
 
+# install in the same directory as the source
+set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR})
+
 #
 # include directories
 #
@@ -59,3 +62,4 @@ target_link_libraries(galleryAnalysis
   ${SBNDGEOMETRY_LIBS} # if using geometry
   ${SBNDDETINFO_LIBS}  # if using LAr properties, detector clocks or detector properties
   )
+install(TARGETS galleryAnalysis DESTINATION .)
