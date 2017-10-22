@@ -100,8 +100,8 @@ int galleryAnalysis
   // DetectorClocks setup
   auto detclk = testing::setupProvider<detinfo::DetectorClocksStandard>
     (config.get<fhicl::ParameterSet>("services.DetectorClocksService"));
-  // DetectorProperties setup
   
+  // DetectorProperties setup
   auto detp = testing::setupProvider<detinfo::DetectorPropertiesStandard>(
     config.get<fhicl::ParameterSet>("services.DetectorPropertiesService"),
     detinfo::DetectorPropertiesStandard::providers_type{
