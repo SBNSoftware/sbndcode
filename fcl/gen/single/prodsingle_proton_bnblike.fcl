@@ -1,0 +1,20 @@
+#include "prodsingle_sbnd_proj.fcl"
+
+physics.producers.generator.PDG: [ 2212 ]
+physics.producers.generator.PosDist: 0   #Flat position dist.
+physics.producers.generator.X0: [ 0 ]
+physics.producers.generator.SigmaX: [ 200 ]
+physics.producers.generator.Y0: [ 0 ]
+physics.producers.generator.SigmaY: [ 200 ]
+physics.producers.generator.Z0:[ 250 ]
+physics.producers.generator.SigmaZ: [ 250 ]
+physics.producers.generator.PHist: [ "dummy" ] #suggested to ensure we get a gaussian throw
+physics.producers.generator.PDist: 1                # Gaussian momentum dist.
+physics.producers.generator.P0: [ 0.3 ]
+physics.producers.generator.SigmaP: [ 0.2 ]
+physics.producers.generator.ThetaXzYzHist: [ "dummy" ] #suggested to ensure we get a gaussian throw
+physics.producers.generator.AngleDist: 1            # Gaussian angle dist.
+physics.producers.generator.Theta0XZ: [ 0. ]      
+physics.producers.generator.Theta0YZ: [ 0. ]     
+physics.producers.generator.SigmaThetaXZ: [ 60. ]
+physics.producers.generator.SigmaThetaYZ: [ 60. ]

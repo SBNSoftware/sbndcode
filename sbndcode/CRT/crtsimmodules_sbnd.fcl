@@ -1,3 +1,5 @@
+BEGIN_PROLOG
+
 sbnd_crtsim:
 {
   module_type: "sbndcode/CRT/CRTDetSim"
@@ -49,3 +51,4 @@ sbnd_crtsim:
   AbsLenEff: 8.5
 }
 
+END_PROLOG

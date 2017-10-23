@@ -1,0 +1,3 @@
+#include "standard_anatree_sbnd.fcl"
+
+physics.analyzers.analysistree.CryGenModuleLabel: "corsika"
