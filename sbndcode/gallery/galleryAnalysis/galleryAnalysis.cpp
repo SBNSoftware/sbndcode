@@ -16,10 +16,15 @@
  * 
  */
 
+// our additional code
+#include "TrackAnalysis.h"
+
 // SBND code
 #include "sbndcode/gallery/helpers/expandInputFiles.h"
 
 // LArSoft
+// - data products
+#include "lardataobj/RecoBase/Track.h"
 // - DetectorProperties
 #include "lardata/DetectorInfo/DetectorPropertiesStandardTestHelpers.h"
 #include "lardata/DetectorInfo/DetectorPropertiesStandard.h"
@@ -43,11 +48,12 @@
 #include "fhiclcpp/ParameterSet.h"
 
 // ROOT
-// nothing yet
+#include "TFile.h"
 
 // C/C++ standard libraries
 #include <string>
 #include <vector>
+#include <memory> // std::make_unique()
 #include <iostream> // std::cerr
 
 
@@ -121,6 +127,29 @@ int galleryAnalysis
   std::vector<std::string> const allInputFiles = expandInputFiles(inputFiles);
   
   /*
+   * other parameters
+   */
+  auto trackTag = analysisConfig.get<art::InputTag>("tracks");
+  
+  /*
+   * preparation of histogram output file
+   */
+  std::unique_ptr<TFile> pHistFile;
+  if (analysisConfig.has_key("histogramFile")) {
+    std::string fileName = analysisConfig.get<std::string>("histogramFile");
+    std::cout << "Creating output file: '" << fileName << "'" << std::endl;
+    pHistFile = std::make_unique<TFile>(fileName.c_str(), "RECREATE");
+  }
+  
+  /*
+   * preparation of the algorithm class
+   */
+  TrackAnalysis trackAnalysis
+    (analysisConfig.get<fhicl::ParameterSet>("trackAnalysis"));
+  trackAnalysis.setup(*geom, pHistFile.get());
+  trackAnalysis.prepare();
+  
+  /*
    * the event loop
    */
   for (gallery::Event event(allInputFiles); !event.atEnd(); event.next()) {
@@ -132,11 +161,16 @@ int galleryAnalysis
     mf::LogVerbatim("galleryAnalysis")
       << "This is event " << event.fileEntry() << "-" << event.eventEntry();
     
+    trackAnalysis.processTracks
+      (*(event.getValidHandle<std::vector<recob::Track>>(trackTag)));
+    
     // *************************************************************************
     // ***  SINGLE EVENT PROCESSING END    *************************************
     // *************************************************************************
     
   } // for
+  
+  trackAnalysis.finish();
   
   return 0;
   
