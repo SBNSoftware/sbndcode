@@ -71,3 +71,5 @@ cet_test(dump_channel_map_sbnd_test HANDBUILT
   TEST_ARGS --rethrow-all --config ./dump_sbnd_channelmap.fcl
 )
 
+
+install_headers()

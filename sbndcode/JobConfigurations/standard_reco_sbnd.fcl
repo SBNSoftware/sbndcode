@@ -21,7 +21,7 @@
 #include "databaseutil_sbnd.fcl"
 ##include "opticaldetectormodules_sbnd.fcl"
 #include "vertexfindermodules.fcl"
-##include "pandoramodules.fcl"
+#include "pandoramodules_sbnd.fcl"
 ##include "triggeralgo_service.fcl"
 ##include "photpropservices_sbnd.fcl"
 
@@ -81,7 +81,8 @@ physics:
   linemerger:          @local::standard_linemerger
 
   ### pandora
- # pandora:             @local::standard_pandora
+  pandoraCosmic:       @local::sbnd_pandoraAllHitsCR
+  pandoraNu:           @local::sbnd_pandoraAllHitsSliceNu
   
   ### track-finder producers
   trackkalmanhit:      @local::sbnd_track3Dkalmanhit
@@ -119,7 +120,7 @@ physics:
    # rffhit,
    #      corner,
          fuzzycluster, cccluster, hough, linemerger,
-   #      pandora,
+         pandoraCosmic, pandoraNu,
          trackkalmanhit, spacepointfinder, trackkalsps, stitch, stitchkalmanhit, beziertracker, 
          spacepointfindercc, trackkalspscc, stitchcc, beziertrackercc, 
          trackkalmanhitcalo, trackkalspscalo, stitchcalo, beziercalo
@@ -178,8 +179,9 @@ physics.producers.linemerger.ClusterModuleLabel:                "hough"
 physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
 physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
-#physics.producers.pandora.GeantModuleLabel:                     "largeant"
-#physics.producers.pandora.HitFinderModuleLabel:                 "gaushit"
+physics.producers.pandoraCosmic.HitFinderModuleLabel:             "gaushit"
+# TODO input hit collection for neutrino hypothesis should ultimately have all clear cosmic-ray related hits removed
+physics.producers.pandoraNu.HitFinderModuleLabel:                 "gaushit"
 
 physics.producers.trackkalmanhit.HitModuleLabel:                "gaushit"
 physics.producers.trackkalmanhit.ClusterModuleLabel:            "fuzzycluster"

@@ -1,0 +1,26 @@
+#include "messages_sbnd.fcl"
+#include "geometry_sbnd.fcl"
+#include "larproperties_sbnd.fcl"
+#include "detectorclocks_sbnd.fcl"
+#include "detectorproperties_sbnd.fcl"
+
+services: {
+  message:                        @local::sbnd_message_services_interactive
+                                  @table::sbnd_geometry_services
+  LArPropertiesService:           @local::sbnd_properties
+  DetectorClocksService:          @local::sbnd_detectorclocks
+  DetectorPropertiesService:      @local::sbnd_detproperties
+}
+
+analysis: {
+  
+  skipEvents: 2
+  
+  histogramFile: "trackAnalysis.root"
+  tracks: "pmalgtrackmaker"
+  
+  trackAnalysis: {
+    MinLength: 3.0 # cm
+  }
+  
+}

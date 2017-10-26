@@ -1,0 +1,213 @@
+#
+# File:    sbnd_gallery_setup
+# Purpose: setup for use of gallery macros with SBND
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    October 19, 2017
+# Version: 1.0
+# 
+# Usage:
+# To set up the gallery/larsoftobj version compatible with a specific experiment
+# code version (e.g. v06_53_00 with qualifiers e14:prof):
+#     
+#     setup sbndcode v06_53_00 -q e14:prof # or any suitable version
+#     source sbnd_gallery_setup
+#     
+# or let sbndcode setup happen inside this setup script:
+#     
+#     source sbnd_gallery_setup v06_53_00 e14:prof
+#     
+# Note that while the setup of experiment code is not in principle necessary,
+# currently the setup relying exclusively on larsoftobj lacks most LArSoft
+# service providers (one exception is geometry).
+#
+
+function DoSBNDgallerySetup() {
+  
+  ##############################################################################
+  ### Experiment-specific setup
+  local -r ExpName='SBND'
+  local -r ExpCode='sbndcode'
+  
+  ##############################################################################
+  ### LArSoft-specific setup
+  ### 
+  local -r ReferencePkgs=( 'larcorealg' 'lardataobj' )
+  local -r TargetPkg='larsoftobj'
+  
+  ##############################################################################
+  ### Argument parsing
+  ### 
+  local ExpCodeVersion="$1"
+  local Qualifiers="$2"
+  
+  ##############################################################################
+  ### Main setup script
+  ### 
+  # reference package names need to be lexicographically sorted
+  local -r SortedReferencePkgs=( $(tr ' ' '\n' <<< "${ReferencePkgs[@]}" | sort -u | grep -v '^$' ) )
+  local -ir nReferencePkgs="${#ReferencePkgs[@]}"
+  
+  local PkgName PkgVersion PkgFlavor PkgQualifiers PkgDatabase Dummy
+  local StrictQualifiers
+  
+  #
+  # 
+  #
+  local -r ExpSetupVarName="SETUP_${ExpCode^^}"
+  if [[ -n "${!ExpSetupVarName}" ]]; then
+    #
+    # if we have sbndcode set up, check that the version is not unexpected
+    #
+    # expecting (UPS 5.2.0):
+    # sbndcode v06_53_00 -f Linux64bit+2.6-2.12 -q e14:prof -z /cvmfs/sbnd.opensciencegrid.org/products/sbnd
+    read PkgName PkgVersion Dummy PkgFlavor Dummy PkgDatabase Dummy PkgQualifiers <<< "${!ExpSetupVarName}"
+    echo "${ExpName} code version: ${PkgName} ${PkgVersion} -q ${PkgQualifiers}"
+    
+    if [[ -n "$ExpCodeVersion" ]]; then 
+      
+      if [[ "$ExpCodeVersion" != "$PkgVersion" ]]; then
+        echo "ERROR: ${ExpCode} ${PkgVersion} already set up, can't set up version ${ExpCodeVersion} now." >&2
+        return 1
+      fi
+      if [[ -n "$Qualifiers" ]]; then
+        StrictQualifiers="+${Qualifiers//:/+:}"
+        
+        # doing this again will ensure that the qualifiers are the same
+        setup -B "$ExpCode" "$ExpCodeVersion" -q "$StrictQualifiers" || return $?
+        
+      else
+        Qualifiers="$PkgQualifiers"
+        StrictQualifiers="+${Qualifiers//:/+:}"
+      fi
+    fi
+  elif [[ -n "$MRB_QUALS" ]]; then
+    local -r ExpVersionVarName="${ExpCode^^}_VERSION"
+    if [[ -z "${!ExpVersionVarName}" ]]; then
+      cat <<EOM >&2
+To set up gallery environment, you either need:
+a) ${ExpCode} already set up (it's not), or
+b) to specify the ${ExpCode} version and qualifiers (you didn't);
+   for example: source ${BASH_SOURCE[0]} v06_53_00 e14:prof
+c) to have a MRB area set up (which you have) with ${ExpCode} checked out and with \`mrbsetenv\` run (which you don't)
+EOM
+      return 1
+    fi
+    
+    ExpCodeVersion="${!ExpVersionVarName}"
+    Qualifiers="$MRB_QUALS"
+    StrictQualifiers="+${Qualifiers//:/:+}"
+    echo "${ExpName} code version: ${ExpCode} ${ExpCodeVersion} -q ${Qualifiers} in MRB development area"
+    
+  else
+    #
+    # if we don't have experiment code package set up, it's that time now, but we need to know which version
+    #
+    
+    if [[ -z "$ExpCodeVersion" ]] || [[ -z "$Qualifiers" ]]; then
+      cat <<EOM >&2
+To set up gallery environment, you either need:
+a) ${ExpCode} already set up (it's not), or
+b) to specify the ${ExpCode} version and qualifiers (you didn't);
+   for example: source ${BASH_SOURCE[0]} v06_53_00 e14:prof
+c) to have a MRB area set up (which you don't have) with ${ExpCode} checked out (and with \`mrbsetenv\` run)
+EOM
+      return 1
+    fi
+    
+    StrictQualifiers="+${Qualifiers//:/:+}"
+    echo "setup -B ${ExpCode} '${ExpCodeVersion}' -q '${StrictQualifiers}'"
+    setup -B "$ExpCode" "$ExpCodeVersion" -q "$StrictQualifiers" || return $?
+    
+  fi
+  
+  #
+  # which reference package versions do we depend on?
+  #
+  local -a ReferencePkgVersions
+  local -a ReferencePkgQualifiers
+  for ReferencePkg in "${SortedReferencePkgs[@]}" ; do
+    local ReferencePkgSetupVarName="SETUP_${ReferencePkg^^}"
+    if [[ -z "${!ReferencePkgSetupVarName}" ]]; then
+      echo "ERROR: configuration mess! the reference UPS product ${ReferencePkg} is not set up (or at least, there is no '${ReferencePkgSetupVarName}' variable in the environment)." >&2
+      return 1
+    fi
+    
+    # expecting (UPS 5.2.0):
+    # canvas v3_00_02 -f Linux64bit+2.6-2.12 -q e14:nu:prof -z /grid/fermiapp/products/larsoft
+    read PkgName PkgVersion Dummy PkgFlavor Dummy PkgDatabase Dummy PkgQualifiers <<< "${!ReferencePkgSetupVarName}"
+    ReferencePkgVersions+=( "$PkgVersion" )
+    ReferencePkgQualifiers+=( "$PkgQualifiers" )
+    # echo "Requiring ${ReferencePkg} version: ${PkgName} ${PkgVersion} -q ${PkgQualifiers}"
+  done
+  
+  #
+  # which target package depends from the reference package we have set up?
+  #
+  # expecting (UPS 5.2.0):
+  # "larsoftobj" "v1_29_00" "Darwin64bit+16" "debug:e14" ""
+  local TargetPkgVersion=""
+  local TargetPkgQualifiers=""
+  
+  local -i iReference
+  while read PkgName PkgVersion PkgFlavor PkgQualifiers Dummy ; do
+    local StrictPkgQualifiers="+${PkgQualifiers//:/:+}"
+    # echo "Testing ${TargetPkg} ${PkgVersion} -q ${StrictPkgQualifiers}"
+    
+    # to speed up the N^2 search, we have sorted the dependencies
+    iReference=0
+    
+    local DepName DepVersion DepQuals
+    while read DepName DepVersion DepQuals ; do
+      
+      # is this the dependency we are looking for now? (if not, check the next dependency of this target version)
+      DepName="${DepName//\"/}"
+      [[ "$DepName" == "${SortedReferencePkgs[iReference]}" ]] || continue
+      
+      # echo "Comparing dependency ${DepName} ${DepVersion} ${DepQuals} with the required ${ReferencePkgVersions[iReference]} ${ReferencePkgQualifiers[iReference]}"
+      
+      # is this the desired version? (if not, the target version is wrong)
+      DepVersion="${DepVersion//\"/}"
+      [[ "$DepVersion" == "${ReferencePkgVersions[iReference]}" ]] || continue 2
+      
+      # has this the desired qualifiers? (if not, the target version is wrong)
+      DepQuals="${DepQuals//\"/}"
+      [[ "$DepQuals" == "${ReferencePkgQualifiers[iReference]}" ]] || continue 2
+      
+      # echo " => ${TargetPkg} ${PkgVersion} -q ${StrictPkgQualifiers} has the required ${DepName} (${DepVersion} ${DepQuals})"
+      
+      # this dependency is fulfilled; let's go to the next
+      let ++iReference
+      [[ $iReference -ge $nReferencePkgs ]] && break
+      
+    done < <(ups depend -K 'PRODUCT:VERSION:QUALIFIERS' "$TargetPkg" "$PkgVersion" -q "$PkgQualifiers" | sort)
+    
+    # have we found all the dependencies we were looking for? (if not, the target version is wrong)
+    [[ $iReference -ge $nReferencePkgs ]] || continue
+    
+    TargetPkgVersion="$PkgVersion"
+    TargetPkgQualifiers="$PkgQualifiers"
+    break
+    
+  done < <(ups list -aK+ "$TargetPkg" | sort -r -k 2 | tr -d '"')
+  
+  if [[ -z "$TargetPkgVersion" ]]; then
+    echo "ERROR: can't find the ${TargetPkg} version depending on the reference products:"
+    for (( iReference = 0 ; iReference < $nReferencePkgs ; ++iReference )); do
+      echo " * ${ReferencePkgs[iReference]} ${ReferencePkgVersions[iReference]} (qualifiers '${ReferencePkgQualifiers[iReference]}')" >&2
+    done
+    return 1
+  fi
+  
+  local StrictTargetPkgQualifiers="+${TargetPkgQualifiers//:/:+}"
+  echo "setup -B ${TargetPkg} '${TargetPkgVersion}' -q '${StrictTargetPkgQualifiers}'"
+  setup -B "$TargetPkg" "$TargetPkgVersion" -q "$StrictTargetPkgQualifiers" || return $?
+  
+  # set up cmake only if not there already
+  [[ -z "$SETUP_CMAKE" ]] && setup cmake
+  
+  unset DoSBNDgallerySetup
+} # DoSBNDgallerySetup()
+
+
+DoSBNDgallerySetup "$@"
+

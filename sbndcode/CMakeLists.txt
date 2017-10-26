@@ -13,3 +13,6 @@ add_subdirectory(SBNDPandora)
 add_subdirectory(SimulationFilters)
 add_subdirectory(AnalysisTree)
 add_subdirectory(RecoUtils)
+
+# subdirectory for gallery stuff
+add_subdirectory(gallery)
