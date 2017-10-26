@@ -202,7 +202,8 @@ EOM
   echo "setup -B ${TargetPkg} '${TargetPkgVersion}' -q '${StrictTargetPkgQualifiers}'"
   setup -B "$TargetPkg" "$TargetPkgVersion" -q "$StrictTargetPkgQualifiers" || return $?
   
-  setup cmake
+  # set up cmake only if not there already
+  [[ -z "$SETUP_CMAKE" ]] && setup cmake
   
   unset DoSBNDgallerySetup
 } # DoSBNDgallerySetup()
