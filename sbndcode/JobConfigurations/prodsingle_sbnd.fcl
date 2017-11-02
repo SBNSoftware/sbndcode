@@ -107,4 +107,4 @@ outputs:
 #
 # at the end of the configuration, we can override single parameters to reflect our needs:
 #
-physics.producers.generator.ThetaXZ0: [ 10 ]
+physics.producers.generator.Theta0XZ: [ 10 ]
