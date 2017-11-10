@@ -105,7 +105,12 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
     // constructor decides if initialized value is a path or an environment variable
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
-    sp.find_file(pset.get<std::string>("FilterFunctionFname"), fname);
+    auto requestedFilterFunctionPath = pset.get<std::string>("FilterFunctionFname");
+    if (!sp.find_file(requestedFilterFunctionPath, fname)) {
+      throw art::Exception(art::errors::Configuration)
+        << "Filter function file '" << requestedFilterFunctionPath
+        << "' not found in FW_SEARCH_PATH";
+    }
     
     TFile in(fname.c_str(), "READ");
     if (!in.IsOpen()) {
@@ -159,7 +164,12 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
     //constructor decides if initialized value is a path or an environment variable
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
-    sp.find_file( pset.get<std::string>("FieldResponseFname"), fname);
+    auto requestedFieldResponsePath = pset.get<std::string>("FieldResponseFname");
+    if (!sp.find_file(requestedFieldResponsePath, fname)) {
+      throw art::Exception(art::errors::Configuration)
+        << "Field response file '" << requestedFieldResponsePath
+        << "' not found in FW_SEARCH_PATH";
+    }
     std::string histoname = pset.get<std::string>("FieldResponseHistoName");
     
     mf::LogInfo("SignalShapingServiceSBND")
