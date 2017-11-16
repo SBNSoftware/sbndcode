@@ -2682,7 +2682,6 @@ void sbnd::AnalysisTree::HitsPurity(std::vector< art::Ptr<recob::Hit> > const& h
 
     art::Ptr<recob::Hit> hit = hits[h];
     std::vector<sim::IDE> ides;
-    //bt->HitToSimIDEs(hit,ides);
     std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToEveTrackIDEs(hit);
 
     for(size_t e = 0; e < eveIDs.size(); ++e){
