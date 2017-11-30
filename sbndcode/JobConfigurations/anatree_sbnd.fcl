@@ -12,7 +12,7 @@
 # service configuration
 #
 #include "simulationservices_sbnd.fcl"
-#include "backtracker.fcl"
+#include "backtrackerservice.fcl"
 
 #
 # algorithm configuration
@@ -27,7 +27,7 @@ services:
   # this is the real output file
   TFileService: { fileName: "anatree_sbnd-%p_%tc.root" }
                 @table::sbnd_services
-  BackTracker:  @local::sbnd_backtracker
+  BackTrackerService:  @local::sbnd_backtracker
 }
 
 source: {
