@@ -3,8 +3,8 @@
 int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit) {
   double particleEnergy = 0;
   int likelyTrackID = 0;
-  art::ServiceHandle<cheat::BackTracker> bt;
-  std::vector<sim::TrackIDE> trackIDs = bt->HitToTrackID(hit);
+  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
+  std::vector<sim::TrackIDE> trackIDs = bt_serv->HitToTrackIDEs(hit);
   for (unsigned int idIt = 0; idIt < trackIDs.size(); ++idIt) {
     if (trackIDs.at(idIt).energy > particleEnergy) {
       particleEnergy = trackIDs.at(idIt).energy;
@@ -16,11 +16,11 @@ int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit) {
 
 
 int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<recob::Hit> >& hits) {
-  art::ServiceHandle<cheat::BackTracker> bt;
+  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
   std::map<int,double> trackIDToEDepMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
     art::Ptr<recob::Hit> hit = *hitIt;
-    std::vector<sim::TrackIDE> trackIDs = bt->HitToTrackID(hit);
+    std::vector<sim::TrackIDE> trackIDs = bt_serv->HitToTrackIDEs(hit);
     for (unsigned int idIt = 0; idIt < trackIDs.size(); ++idIt) {
       trackIDToEDepMap[trackIDs[idIt].trackID] += trackIDs[idIt].energy;
     }

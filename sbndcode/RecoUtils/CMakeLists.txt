@@ -2,7 +2,8 @@ art_make(
              LIB_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
-                           larsim_MCCheater_BackTracker_service
+                           larsim_MCCheater_BackTrackerService_service
+                           larsim_MCCheater_ParticleInventoryService_service
                            lardata_Utilities
                            larevt_Filters
                            lardataobj_RawData
@@ -38,7 +39,7 @@ install_source()
 #	  LIB_LIBRARIES larcorealg_Geometry
 #	  	        larcore_Geometry_Geometry_service
 #		        larsim_Simulation nutools_ParticleNavigation lardataobj_Simulation
-# 	  	        larsim_MCCheater_BackTracker_service
+# 	  	        larsim_MCCheater_BackTrackerService_service
 #	  	        lardata_Utilities
 #larevt_Filters
 #	  	        lardataobj_RawData

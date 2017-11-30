@@ -48,7 +48,7 @@ physics:
    generator: @local::sbnd_singlep	 		  
    largeant:  @local::sbnd_largeant	 		  
    daq:       @local::sbnd_simwire 			  
-   backtrack: @local::standard_backtrackerloader 
+   backtrack: @local::standard_backtrackerloader
    opdigi:    @local::sbnd_opdigi				 
    rns:       {module_type: "RandomNumberSaver"}
  }
@@ -62,7 +62,7 @@ physics:
 
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
- simulate: [ generator, largeant, daq, backtrack, opdigi, rns ] 
+ simulate: [ generator, largeant, daq, backtrack,  opdigi, rns ] 
  analyzeIt:  [ largana, pmtresponse, opdigiana ]
  #define the output stream, there could be more than one if using filters 
  stream1:  [ out1 ]
