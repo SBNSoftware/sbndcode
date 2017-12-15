@@ -81,8 +81,9 @@ physics:
   linemerger:          @local::standard_linemerger
 
   ### pandora
-  pandoraCosmic:       @local::sbnd_pandoraAllHitsCR
-  pandoraNu:           @local::sbnd_pandoraAllHitsSliceNu
+  pandora:             @local::sbnd_pandora
+  pandoraTrack:        @local::sbnd_pandoraTrackCreation
+  pandoraShower:       @local::sbnd_pandoraShowerCreation
   
   ### track-finder producers
   trackkalmanhit:      @local::sbnd_track3Dkalmanhit
@@ -120,7 +121,7 @@ physics:
    # rffhit,
    #      corner,
          fuzzycluster, cccluster, hough, linemerger,
-         pandoraCosmic, pandoraNu,
+         pandora, pandoraTrack, pandoraShower,
          trackkalmanhit, spacepointfinder, trackkalsps, stitch, stitchkalmanhit, beziertracker, 
          spacepointfindercc, trackkalspscc, stitchcc, beziertrackercc, 
          trackkalmanhitcalo, trackkalspscalo, stitchcalo, beziercalo
@@ -179,9 +180,9 @@ physics.producers.linemerger.ClusterModuleLabel:                "hough"
 physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
 physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
-physics.producers.pandoraCosmic.HitFinderModuleLabel:             "gaushit"
-# TODO input hit collection for neutrino hypothesis should ultimately have all clear cosmic-ray related hits removed
-physics.producers.pandoraNu.HitFinderModuleLabel:                 "gaushit"
+physics.producers.pandora.HitFinderModuleLabel:                 "gaushit"
+physics.producers.pandoraTrack.PFParticleLabel:                 "pandora"
+physics.producers.pandoraShower.PFParticleLabel:                "pandora"
 
 physics.producers.trackkalmanhit.HitModuleLabel:                "gaushit"
 physics.producers.trackkalmanhit.ClusterModuleLabel:            "fuzzycluster"
