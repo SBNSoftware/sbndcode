@@ -13,6 +13,7 @@
 #
 #include "simulationservices_sbnd.fcl"
 #include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
 
 #
 # algorithm configuration
@@ -27,7 +28,8 @@ services:
   # this is the real output file
   TFileService: { fileName: "anatree_sbnd-%p_%tc.root" }
                 @table::sbnd_services
-  BackTrackerService:  @local::sbnd_backtracker
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  @local::standard_backtrackerservice
 }
 
 source: {
