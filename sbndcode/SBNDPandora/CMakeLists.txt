@@ -3,5 +3,5 @@
 
 install_fhicl()
 
-add_subdirectory(scripts)
+# add_subdirectory(scripts)
 
