@@ -8,7 +8,7 @@ art_make(
                            larevt_Filters
                            lardataobj_RawData
                            lardataobj_RecoBase
-                           lardata_RecoObjects larreco_Deprecated  
+                           lardata_RecoObjects  
                            larpandora_LArPandoraInterface
                            nusimdata_SimulationBase
                            cetlib cetlib_except
@@ -44,7 +44,7 @@ install_source()
 #larevt_Filters
 #	  	        lardataobj_RawData
 #	  	        lardataobj_RecoBase
-#	  	        lardata_RecoObjects larreco_Deprecated
+#	  	        lardata_RecoObjects
 #larreco_RecoAlg
 #larreco_Calorimetry
 #larpandora_LArPandoraInterface
