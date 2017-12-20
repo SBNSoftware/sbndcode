@@ -9,7 +9,7 @@ art_make(
                            larevt_Filters
                            lardataobj_RawData
                            lardataobj_RecoBase
-                           lardata_RecoObjects larreco_Deprecated  
+                           lardata_RecoObjects  
                            larpandora_LArPandoraInterface
                            nusimdata_SimulationBase
                            ${ART_FRAMEWORK_CORE}

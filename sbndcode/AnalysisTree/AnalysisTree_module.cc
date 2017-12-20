@@ -91,6 +91,7 @@
 #include "art/Framework/Services/Optional/TFileService.h"
 #include "art/Framework/Services/Optional/TFileDirectory.h"
 #include "canvas/Persistency/Common/FindMany.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
@@ -115,7 +116,6 @@
 #include "lardataobj/RecoBase/EndPoint2D.h"
 #include "lardataobj/RecoBase/Vertex.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
-#include "larreco/Deprecated/BezierTrack.h"
 //#include "lardata/RecoAlg/TrackMomentumCalculator.h"
 #include "lardataobj/AnalysisBase/CosmicTag.h"
 #include "lardataobj/AnalysisBase/FlashMatch.h"
@@ -2042,46 +2042,18 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         double tlen = 0.; //mom = 0.;
         int TrackID = -1;
       
-        int ntraj = 0;
-        //we need to use Bezier methods for Bezier tracks
-        if (fTrackModuleLabel[iTracker].find("beziertracker")!=std::string::npos) {
-          trkf::BezierTrack btrack(*ptrack);
-          ntraj = btrack.NSegments();
-          if(ntraj > 0) {
-            double xyz[3];
-            btrack.GetTrackPoint(0,xyz);
-            pos.SetXYZ(xyz[0],xyz[1],xyz[2]);
-            btrack.GetTrackDirection(0,xyz);
-            dir_start.SetXYZ(xyz[0],xyz[1],xyz[2]);
-            btrack.GetTrackDirection(1,xyz);
-            dir_end.SetXYZ(xyz[0],xyz[1],xyz[2]);
-            btrack.GetTrackPoint(1,xyz);
-            end.SetXYZ(xyz[0],xyz[1],xyz[2]);
-
-            tlen = btrack.GetLength();
-            // if (btrack.hasMomentum() > 0)
-              //mom = btrack.VertexMomentum();
-            // fill bezier track reco branches
-            TrackID = iTrk;  //bezier has some screwed up track IDs
-          }
-        }
-        else {   //use the normal methods for other kinds of tracks
-          ntraj = track.NumberTrajectoryPoints();
-          if (ntraj > 0) {
-            pos       = track.Vertex();
-            dir_start = track.VertexDirection();
-            dir_end   = track.EndDirection();
-            end       = track.End();
-
-            tlen        = length(track);
-          //  if(track.hasMomentum() > 0)
-              //mom = track.VertexMomentum();
-            // fill non-bezier-track reco branches
-            TrackID = track.ID();
-          }
-        }
-      
+        int ntraj = track.NumberTrajectoryPoints();
         if (ntraj > 0) {
+          pos       = track.Vertex();
+          dir_start = track.VertexDirection();
+          dir_end   = track.EndDirection();
+          end       = track.End();
+
+          tlen        = length(track);
+        //  if(track.hasMomentum() > 0)
+            //mom = track.VertexMomentum();
+          TrackID = track.ID();
+          
           double theta_xz = std::atan2(dir_start.X(), dir_start.Z());
           double theta_yz = std::atan2(dir_start.Y(), dir_start.Z());
           double dpos = bdist(pos);

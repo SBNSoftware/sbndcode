@@ -35,11 +35,17 @@ cet_cmake_env()
 
 set_install_root()
 
+# The specification of the C++ standard is required because CET macros
+# set it to C++98 by default, and then override it depending on the
+# compiler version, as determined by the compiler qualifier.
+# Removing that qualifier, we need to supply that information manually,
+# and maintain it too.
 cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
   ALLOW_DEPRECATIONS
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
+  EXTRA_CXX_FLAGS -std=c++14
 )
 
 cet_report_compiler_flags()
