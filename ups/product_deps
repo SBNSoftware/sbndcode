@@ -2,8 +2,8 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent sbndcode v06_61_00
-defaultqual prof
+parent sbndcode v06_62_00
+defaultqual e14
 
 # These optional lines define the installed directories where headers,
 # libraries, and executables will be found.
@@ -35,10 +35,10 @@ fwdir   product_dir scripts
 # Add the dependent product and version
 
 product          version
-larsoft          v06_61_00
+larsoft          v06_62_00
 genie_xsec       v2_12_8
 sbnd_data        v01_00_00 - optional
-sbndutil         v01_37_00 - optional
+sbndutil         v01_38_00 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
@@ -46,9 +46,11 @@ only_for_build  cetbuildtools   v5_14_04
 
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
-qualifier genie_xsec               larsoft       sbndutil    sbnd_data  notes
-debug     DefaultPlusMECWithNC     e14:debug     debug       -nq-
-prof      DefaultPlusMECWithNC     e14:prof      prof        -nq-
+qualifier     genie_xsec               larsoft       sbndutil        sbnd_data  notes
+e14:debug     DefaultPlusMECWithNC     e14:debug     e14:debug       -nq-
+e14:prof      DefaultPlusMECWithNC     e14:prof      e14:prof        -nq-
+e10:debug     DefaultPlusMECWithNC     e10:debug     e10:debug       -nq-
+e10:prof      DefaultPlusMECWithNC     e10:prof      e10:prof        -nq-
 
 # table fragment to set FW_SEARCH_PATH needed to find XML files:
 table_fragment_begin
