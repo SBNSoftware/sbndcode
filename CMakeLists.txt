@@ -49,6 +49,16 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
 
 cet_report_compiler_flags()
 
+# save the repository tag
+unset(GIT_REPOSITORY_TAG)
+execute_process(
+  COMMAND git -C "${CMAKE_CURRENT_SOURCE_DIR}" describe --dirty
+  OUTPUT_VARIABLE GIT_REPOSITORY_TAG
+  )
+file(WRITE RepositoryTag "${GIT_REPOSITORY_TAG}")
+message(STATUS "Repository tag: ${GIT_REPOSITORY_TAG}")
+install_source(LIST RepositoryTag)
+
 # these are minimum required versions, not the actual product versions
 find_ups_product( larpandora v1_00_00 )
 find_ups_product( larsim v1_00_00 )
