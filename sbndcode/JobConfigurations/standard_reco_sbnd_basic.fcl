@@ -114,8 +114,6 @@ physics:
   trackkalmanhitcalo:  @local::sbnd_calomc
   pmatrackcalo:        @local::sbnd_calomc
 
-  ### flash-track matching
- # beamflashcompat:     @local::standard_beamflashcompat
  }
 
  #define the producer and filter modules for this path, order matters, 
@@ -136,7 +134,6 @@ physics:
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
          , pmatrackcalo
-   #      , beamflashcompat
  ]
 
  #define the output stream, there could be more than one if using filters 
@@ -207,9 +204,5 @@ physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # do not excu
 
 physics.producers.pmatrackcalo.TrackModuleLabel:                "pmalgtrackmaker"
 physics.producers.pmatrackcalo.SpacePointModuleLabel:           "pmalgtrackmaker"
-
-#physics.producers.beamflashcompat.TrackModuleLabel:             "beziertracker"
-#physics.producers.beamflashcompat.FlashModuleLabel:             "opflash"
-
 
 
