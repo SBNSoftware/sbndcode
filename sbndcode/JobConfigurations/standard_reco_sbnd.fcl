@@ -81,8 +81,9 @@ physics:
   linemerger:          @local::standard_linemerger
 
   ### pandora
-  pandoraCosmic:       @local::sbnd_pandoraAllHitsCR
-  pandoraNu:           @local::sbnd_pandoraAllHitsSliceNu
+  pandora:             @local::sbnd_pandora
+  pandoraTrack:        @local::sbnd_pandoraTrackCreation
+  pandoraShower:       @local::sbnd_pandoraShowerCreation
   
   ### track-finder producers
   trackkalmanhit:      @local::sbnd_track3Dkalmanhit
@@ -90,11 +91,9 @@ physics:
   trackkalsps:         @local::sbnd_kalman
   stitch:	       @local::sbnd_trackstitcher
   stitchkalmanhit:     @local::sbnd_trackstitcher
-  beziertracker:       @local::sbnd_beziertrackermodule
   spacepointfindercc:  @local::sbnd_spacepoint_finder
   trackkalspscc:       @local::sbnd_kalman
   stitchcc:	       @local::sbnd_trackstitcher
-  beziertrackercc:     @local::sbnd_beziertrackermodule
 
   ### shower-finder producers
 
@@ -104,10 +103,7 @@ physics:
   trackkalmanhitcalo:  @local::sbnd_calomc
   trackkalspscalo:     @local::sbnd_calomc
   stitchcalo:          @local::sbnd_calomc
-  beziercalo:          @local::sbnd_beziercalorimetry
 
-  ### flash-track matching
- # beamflashcompat:     @local::standard_beamflashcompat
  }
 
  #define the producer and filter modules for this path, order matters, 
@@ -120,11 +116,10 @@ physics:
    # rffhit,
    #      corner,
          fuzzycluster, cccluster, hough, linemerger,
-         pandoraCosmic, pandoraNu,
-         trackkalmanhit, spacepointfinder, trackkalsps, stitch, stitchkalmanhit, beziertracker, 
-         spacepointfindercc, trackkalspscc, stitchcc, beziertrackercc, 
-         trackkalmanhitcalo, trackkalspscalo, stitchcalo, beziercalo
-#         beamflashcompat
+         pandora, pandoraTrack, pandoraShower,
+         trackkalmanhit, spacepointfinder, trackkalsps, stitch, stitchkalmanhit,
+         spacepointfindercc, trackkalspscc, stitchcc,
+         trackkalmanhitcalo, trackkalspscalo, stitchcalo,
  ]
 
  #define the output stream, there could be more than one if using filters 
@@ -179,9 +174,9 @@ physics.producers.linemerger.ClusterModuleLabel:                "hough"
 physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
 physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
-physics.producers.pandoraCosmic.HitFinderModuleLabel:             "gaushit"
-# TODO input hit collection for neutrino hypothesis should ultimately have all clear cosmic-ray related hits removed
-physics.producers.pandoraNu.HitFinderModuleLabel:                 "gaushit"
+physics.producers.pandora.HitFinderModuleLabel:                 "gaushit"
+physics.producers.pandoraTrack.PFParticleLabel:                 "pandora"
+physics.producers.pandoraShower.PFParticleLabel:                "pandora"
 
 physics.producers.trackkalmanhit.HitModuleLabel:                "gaushit"
 physics.producers.trackkalmanhit.ClusterModuleLabel:            "fuzzycluster"
@@ -199,8 +194,6 @@ physics.producers.stitch.SpptModuleLabel:                       "spacepointfinde
 physics.producers.stitchkalmanhit.TrackModuleLabel:             "trackkalmanhit"
 physics.producers.stitchkalmanhit.SpptModuleLabel:              "trackkalmanhit"
 
-physics.producers.beziertracker.ClusterModuleLabel:             "fuzzycluster"
-
 physics.producers.spacepointfindercc.ClusterModuleLabel:        "cccluster"
 
 physics.producers.trackkalspscc.ClusterModuleLabel:             "cccluster"
@@ -211,8 +204,6 @@ physics.producers.trackkalspscc.G4ModuleLabel:                  "largeant"
 physics.producers.stitchcc.TrackModuleLabel:                    "trackkalspscc"
 physics.producers.stitchcc.SpptModuleLabel:                     "spacepointfindercc"
 
-physics.producers.beziertrackercc.ClusterModuleLabel:           "cccluster"
-
 physics.producers.trackkalmanhitcalo.TrackModuleLabel:          "trackkalmanhit"
 physics.producers.trackkalmanhitcalo.SpacePointModuleLabel:     "trackkalmanhit"
 
@@ -221,12 +212,4 @@ physics.producers.trackkalspscalo.SpacePointModuleLabel:        "spacepointfinde
 
 physics.producers.stitchcalo.TrackModuleLabel:                  "stitch"
 physics.producers.stitchcalo.SpacePointModuleLabel:             "spacepointfinder"
-
-physics.producers.beziercalo.BTrackModuleLabel:                 "beziertracker"
-
-#physics.producers.beamflashcompat.TrackModuleLabel:             "beziertracker"
-#physics.producers.beamflashcompat.FlashModuleLabel:             "opflash"
-
-
-
 

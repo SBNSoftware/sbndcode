@@ -95,8 +95,9 @@ physics:
   spacepts:            @local::sbnd_spacepts
 
   ### pandora
-  pandoraCosmic:       @local::sbnd_pandoraAllHitsCR
-  pandoraNu:           @local::sbnd_pandoraAllHitsSliceNu
+  pandora:             @local::sbnd_pandora
+  pandoraTrack:        @local::sbnd_pandoraTrackCreation
+  pandoraShower:       @local::sbnd_pandoraShowerCreation
   
   ### track-finder producers
   trackkalmanhit:      @local::sbnd_track3Dkalmanhit
@@ -113,8 +114,6 @@ physics:
   trackkalmanhitcalo:  @local::sbnd_calomc
   pmatrackcalo:        @local::sbnd_calomc
 
-  ### flash-track matching
- # beamflashcompat:     @local::standard_beamflashcompat
  }
 
  #define the producer and filter modules for this path, order matters, 
@@ -130,12 +129,11 @@ physics:
          , linecluster
    #      , cccluster
    #      , spacepts,
-         , pandoraCosmic, pandoraNu
+         , pandora, pandoraTrack, pandoraShower
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
          , pmatrackcalo
-   #      , beamflashcompat
  ]
 
  #define the output stream, there could be more than one if using filters 
@@ -185,9 +183,9 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 #physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
 #physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
-physics.producers.pandoraCosmic.HitFinderModuleLabel:             "linecluster"
-# TODO input hit collection for neutrino hypothesis should ultimately have all clear cosmic-ray related hits removed
-physics.producers.pandoraNu.HitFinderModuleLabel:                 "linecluster"
+physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
+physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
+physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
 
 #physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"
@@ -206,9 +204,5 @@ physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # do not excu
 
 physics.producers.pmatrackcalo.TrackModuleLabel:                "pmalgtrackmaker"
 physics.producers.pmatrackcalo.SpacePointModuleLabel:           "pmalgtrackmaker"
-
-#physics.producers.beamflashcompat.TrackModuleLabel:             "beziertracker"
-#physics.producers.beamflashcompat.FlashModuleLabel:             "opflash"
-
 
 
