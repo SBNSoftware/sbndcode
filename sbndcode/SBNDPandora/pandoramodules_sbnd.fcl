@@ -1,54 +1,48 @@
 BEGIN_PROLOG
 
-sbnd_pandora:
+sbnd_basicpandora:
 {
-  module_type:                                          "StandardPandora"
-  GeantModuleLabel:                                     "largeant"
-  HitFinderModuleLabel:                                 "linecluster"
-  EnableMCParticles:                                    false
-  EnableProduction:                                     true
-  EnableLineGaps:                                       true
-  UseHitWidths:                                         true
-  BuildTracks:                                          true
-  BuildShowers:                                         true
-  RunStitchingInstance:                                 false
-  BuildStitchedParticles:                               false
-  ConfigFile:                                           "PandoraSettings_SBND.xml"
-  ShouldRunAllHitsCosmicReco:                           false
-  ShouldRunCosmicHitRemoval:                            false
-  ShouldRunSlicing:                                     false
-  ShouldRunNeutrinoRecoOption:                          false
-  ShouldRunCosmicRecoOption:                            false
-  ShouldIdentifyNeutrinoSlice:                          false
-  PrintOverallRecoStatus:                               false
+    module_type:                                                    "StandardPandora"
+    GeantModuleLabel:                                               "largeant"
+    HitFinderModuleLabel:                                           "linecluster"
+    EnableMCParticles:                                              false
+    EnableProduction:                                               true
+    EnableLineGaps:                                                 true
+    UseGlobalCoordinates:                                           true
+    UseHitWidths:                                                   false
+    ShouldRunAllHitsCosmicReco:                                     false
+    ShouldRunStitching:                                             false
+    ShouldRunCosmicHitRemoval:                                      false
+    ShouldRunSlicing:                                               false
+    ShouldRunNeutrinoRecoOption:                                    false
+    ShouldRunCosmicRecoOption:                                      false
+    ShouldPerformSliceId:                                           false
+    PrintOverallRecoStatus:                                         false
 }
 
-sbnd_pandoraAllHitsCR:                                  @local::sbnd_pandora
-sbnd_pandoraAllHitsCR.ShouldRunAllHitsCosmicReco:       true
-sbnd_pandoraAllHitsCR.StitchingConfigFile:              "PandoraSettings_SBND_Stitching.xml"
-sbnd_pandoraAllHitsCR.UseGlobalCoordinates:             true
-sbnd_pandoraAllHitsCR.RunStitchingInstance:             true
-sbnd_pandoraAllHitsCR.BuildStitchedParticles:           true
+sbnd_pandora:                                                       @local::sbnd_basicpandora
+sbnd_pandora.ConfigFile:                                            "PandoraSettings_Master_Standard.xml"
+sbnd_pandora.ShouldRunAllHitsCosmicReco:                            true
+sbnd_pandora.ShouldRunStitching:                                    true
+sbnd_pandora.ShouldRunCosmicHitRemoval:                             true
+sbnd_pandora.ShouldRunSlicing:                                      true
+sbnd_pandora.ShouldRunNeutrinoRecoOption:                           true
+sbnd_pandora.ShouldRunCosmicRecoOption:                             true
+sbnd_pandora.ShouldPerformSliceId:                                  true
 
-sbnd_pandoraAllHitsNu:                                  @local::sbnd_pandora
-sbnd_pandoraAllHitsNu.ShouldRunNeutrinoRecoOption:      true
-sbnd_pandoraAllHitsNu.UseGlobalDriftVolume:             true
+sbnd_pandorawriter:                                                 @local::sbnd_basicpandora
+sbnd_pandorawriter.ConfigFile:                                      "PandoraSettings_Write.xml"
+sbnd_pandorawriter.EnableMCParticles:                               true
+sbnd_pandorawriter.EnableProduction:                                false
 
-sbnd_pandoraAllHitsSliceCR:                             @local::sbnd_pandora
-sbnd_pandoraAllHitsSliceCR.ShouldRunSlicing:            true
-sbnd_pandoraAllHitsSliceCR.ShouldRunCosmicRecoOption:   true
-sbnd_pandoraAllHitsSliceCR.UseGlobalDriftVolume:        true
+sbnd_pandoraTrackCreation:
+{
+    module_type:                                                    "LArPandoraTrackCreation"
+}
 
-sbnd_pandoraAllHitsSliceNu:                             @local::sbnd_pandora
-sbnd_pandoraAllHitsSliceNu.ShouldRunSlicing:            true
-sbnd_pandoraAllHitsSliceNu.ShouldRunNeutrinoRecoOption: true
-sbnd_pandoraAllHitsSliceNu.UseGlobalDriftVolume:        true
-
-sbnd_pandorawriter:                                     @local::sbnd_pandora
-sbnd_pandorawriter.ConfigFile:                          "PandoraSettings_Write.xml"
-sbnd_pandorawriter.StitchingConfigFile:                 "PandoraSettings_SBND_Stitching.xml"
-sbnd_pandorawriter.EnableMCParticles:                   true
-sbnd_pandorawriter.EnableProduction:                    false
-sbnd_pandorawriter.UniqueInstanceSettings:              true
+sbnd_pandoraShowerCreation:
+{
+    module_type:                                                    "LArPandoraShowerCreation"
+}
 
 END_PROLOG

@@ -44,7 +44,4 @@ sbnd_pmalgtrackmaker: {
   @table::sbnd_pmaalgs              # ... but override all the algorithm configurations
 } # sbnd_pmalgtrackmaker
 
-sbnd_beziertrackermodule:                         @local::standard_beziertrackermodule
-sbnd_beziertrackermodule.BezierTrackerAlgorithm:  @local::sbnd_beziertrackeralgorithm
-
 END_PROLOG

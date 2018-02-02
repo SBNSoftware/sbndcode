@@ -18,13 +18,15 @@ cmake_minimum_required (VERSION 2.8)
 
 project(sbndcode)
 
+message(STATUS "\n\n  ==========================   ${PROJECT_NAME}   ==========================")
+
 # cetbuildtools contains our cmake modules
 SET ( CETBUILDTOOLS_VERSION $ENV{CETBUILDTOOLS_VERSION} )
 IF (NOT CETBUILDTOOLS_VERSION)
     MESSAGE (FATAL_ERROR "ERROR: setup cetbuildtools to get the cmake modules")
 ENDIF()
 
-set(CMAKE_MODULE_PATH $ENV{CANVAS_DIR}/Modules
+set(CMAKE_MODULE_PATH $ENV{CANVAS_ROOT_IO_DIR}/Modules
 		      $ENV{CETBUILDTOOLS_DIR}/Modules
 		      ${CMAKE_MODULE_PATH})
 
@@ -33,6 +35,11 @@ cet_cmake_env()
 
 set_install_root()
 
+# The specification of the C++ standard is required because CET macros
+# set it to C++98 by default, and then override it depending on the
+# compiler version, as determined by the compiler qualifier.
+# Removing that qualifier, we need to supply that information manually,
+# and maintain it too.
 cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
@@ -47,7 +54,9 @@ find_ups_product( larpandora v1_00_00 )
 find_ups_product( larsim v1_00_00 )
 find_ups_product( lardata v1_00_00 )
 find_ups_product( lardataobj )
+find_ups_product( larevt )
 find_ups_product( larcore v1_00_00 )
+find_ups_product( larcoreobj v1_00_00 )
 find_ups_product( nutools v1_00_00 )
 find_ups_product( art v1_09_00 )
 find_ups_product( cetbuildtools v3_10_00 )

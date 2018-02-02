@@ -25,7 +25,7 @@ services.user.DetectorPropertiesService: @local::argoneut_detproperties
 services.user.LArPropertiesService:      @local::argoneut_properties
 services.user.LArFFT:             @local::argoneut_larfft  
 services.user.DatabaseUtil:       @local::argoneut_database
-services.user.BackTracker:        @local::argoneut_backtracker
+services.user.BackTrackerService:        @local::argoneut_backtracker
 
 services.message.destinations.debugmsg.type: "cout"
 services.message.destinations.debugmsg.categories.default.limit: 1000000

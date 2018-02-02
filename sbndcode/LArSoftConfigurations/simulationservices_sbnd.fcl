@@ -30,7 +30,7 @@
 #include "larfft_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
 #include "magfield_larsoft.fcl"
-#include "backtracker.fcl"
+#include "backtrackerservice.fcl"
 #include "spacecharge.fcl"
 
 BEGIN_PROLOG
@@ -41,7 +41,7 @@ sbnd_largeantparameters.ElectronClusterSize: 20.0
 sbnd_largeantparameters.UseCustomPhysics: true
 sbnd_largeantparameters.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
-sbnd_backtracker:          @local::standard_backtracker        # from backtracker.fcl
+sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
 
 # Define sbnd_g4_services
 sbnd_g4_services:

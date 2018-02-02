@@ -72,19 +72,6 @@ standard_optical_readout:
 ###################################################################
 
 
-standard_beamflashcompat:
-{
-  module_type:            "BeamFlashCompatibilityCheck"
-  TrackModuleLabel:       "beziertracker"
-  FlashModuleLabel:       "opflash"
-  BezierResolution:       100
-  SingleChannelCut:       4
-  IntegralCut:            4
-}
-
-###################################################################
-
-
 standard_flashclustermatch:
 {
   module_type:            "FlashClusterMatch"
@@ -185,16 +172,6 @@ standard_opdigiana:
   MakeUnipolarHist:        true
 }
 
-standard_flashpurity:
-{
-  module_type:            "FlashPurityCheckAna"
-  GenieGenModuleLabel:    "generator"  
-  TrackModuleLabel:       "beziertracker"
-  MatchModuleLabel:       "beamflashcompat"
-  OpFlashModuleLabel:     "opflash" 		
-}
-
-
 standard_opflashtruth:
 {
   module_type:            "OpFlashMCTruthAna"
@@ -251,24 +228,6 @@ standard_opflash:
 
 
 
-
-standard_tracktimeassoc:
-{
-  module_type:            "TrackTimeAssoc"
-  TrackModuleLabel:       "beziertracker"
-  FlashModuleLabel:       "opflash"
-  BezierResolution:       100
-  PairingMode:            1
-  LengthCut:              20
-  PECut:                  20
-}
-
-
-standard_tracktimeassocana:
-{
-  module_type:            "TrackTimeAssocAna"
-  MatchModuleLabel:       "tracktimeassoc"
-}
 
 standard_bodataframeinput:
 {
