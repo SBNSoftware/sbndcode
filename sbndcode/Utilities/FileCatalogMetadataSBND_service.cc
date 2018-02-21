@@ -41,11 +41,11 @@ void util::FileCatalogMetadataSBND::postBeginJob()
 
   // Add metadata.
 
-  mds->addMetadata("fclName", fFCLName);
-  mds->addMetadata("fclVersion", fFCLVersion);
-  mds->addMetadata("ubProjectName", fProjectName);
-  mds->addMetadata("ubProjectStage", fProjectStage);
-  mds->addMetadata("ubProjectVersion", fProjectVersion);
+  mds->addMetadata("fcl.name", fFCLName);
+  mds->addMetadata("fcl.version", fFCLVersion);
+  mds->addMetadata("sbnd_project.name", fProjectName);
+  mds->addMetadata("sbnd_project.stage", fProjectStage);
+  mds->addMetadata("sbnd_project.version", fProjectVersion);
 }
 
 DEFINE_ART_SERVICE(util::FileCatalogMetadataSBND)
