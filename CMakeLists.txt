@@ -18,7 +18,8 @@ cmake_minimum_required (VERSION 2.8)
 
 project(sbndcode)
 
-message(STATUS "\n\n  ==========================   ${PROJECT_NAME}   ==========================")
+message(STATUS "")
+message(STATUS "  ==========================   ${PROJECT_NAME}   ==========================")
 
 # cetbuildtools contains our cmake modules
 SET ( CETBUILDTOOLS_VERSION $ENV{CETBUILDTOOLS_VERSION} )
@@ -56,7 +57,7 @@ execute_process(
   OUTPUT_VARIABLE GIT_REPOSITORY_TAG
   )
 file(WRITE RepositoryTag "${GIT_REPOSITORY_TAG}")
-message(STATUS "Repository tag: ${GIT_REPOSITORY_TAG}")
+message(STATUS "${PROJECT_NAME} repository tag: ${GIT_REPOSITORY_TAG}")
 install_source(LIST RepositoryTag)
 
 # these are minimum required versions, not the actual product versions
