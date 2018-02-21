@@ -68,5 +68,14 @@ sbnd_file_catalog_extra:
 art_file_catalog_mc:   @local::sbnd_file_catalog_mc
 art_file_catalog_data: @local::sbnd_file_catalog_data
 
+#D. Brailsford 21/02/18
+#Parameter set that describes the metadata for the pure root files.  The TFile metadata service produces a json file for SAM declaration
+sbnd_tfile_metadata:
+{
+  JSONFileName:          "ana_hist.root.json"
+  GenerateTFileMetadata: true
+  dataTier:              "root-tuple"
+  fileFormat:            "root"
+}
 
 END_PROLOG
