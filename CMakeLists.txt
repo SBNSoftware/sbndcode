@@ -18,7 +18,8 @@ cmake_minimum_required (VERSION 2.8)
 
 project(sbndcode)
 
-message(STATUS "\n\n  ==========================   ${PROJECT_NAME}   ==========================")
+message(STATUS "")
+message(STATUS "  ==========================   ${PROJECT_NAME}   ==========================")
 
 # cetbuildtools contains our cmake modules
 SET ( CETBUILDTOOLS_VERSION $ENV{CETBUILDTOOLS_VERSION} )
@@ -48,6 +49,16 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
 )
 
 cet_report_compiler_flags()
+
+# save the repository tag
+unset(GIT_REPOSITORY_TAG)
+execute_process(
+  COMMAND git -C "${CMAKE_CURRENT_SOURCE_DIR}" describe --dirty
+  OUTPUT_VARIABLE GIT_REPOSITORY_TAG
+  )
+file(WRITE RepositoryTag "${GIT_REPOSITORY_TAG}")
+message(STATUS "${PROJECT_NAME} repository tag: ${GIT_REPOSITORY_TAG}")
+install_source(LIST RepositoryTag)
 
 # these are minimum required versions, not the actual product versions
 find_ups_product( larpandora v1_00_00 )
