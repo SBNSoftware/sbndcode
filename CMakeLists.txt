@@ -18,8 +18,9 @@ cmake_minimum_required (VERSION 2.8)
 
 project(sbndcode)
 
+message(STATUS "\n")
+message(STATUS "=================================   ${PROJECT_NAME}   =================================")
 message(STATUS "")
-message(STATUS "  ==========================   ${PROJECT_NAME}   ==========================")
 
 # cetbuildtools contains our cmake modules
 SET ( CETBUILDTOOLS_VERSION $ENV{CETBUILDTOOLS_VERSION} )
