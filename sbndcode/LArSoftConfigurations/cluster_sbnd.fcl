@@ -38,6 +38,28 @@ sbnd_clustercrawlermc.CCHitFinderAlg.MinRMSInd: 6.7
 sbnd_clustercrawlermc.CCHitFinderAlg.MinRMSCol: 7.6
 sbnd_clustercrawlermc.CCHitFinderAlg.ChiNorms:  [ 1.6, 7.5 ]
 
+
+#Initial tuning has been applied to blurred cluster but it is no longer supported. 
+sbnd_blurredclusteralg:                     @local::standard_blurredclusteralg
+physics.producers.blurredcluster.CreateDebugPDF:      false
+sbnd_blurredclusteralg.BlurWire:            20
+sbnd_blurredclusteralg.BlurTick:            12
+sbnd_blurredclusteralg.SigmaWire:           14
+sbnd_blurredclusteralg.SigmaTick:           6
+sbnd_blurredclusteralg.ClusterWireDistance: 8
+sbnd_blurredclusteralg.ClusterTickDistance: 2
+sbnd_blurredclusteralg.MaxTickWidthBlur:    10
+sbnd_blurredclusteralg.NeighboursThreshold: 8
+sbnd_blurredclusteralg.MinNeighbours:       0
+sbnd_blurredclusteralg.MinSize:             8
+sbnd_blurredclusteralg.MinSeed:             0.5
+sbnd_blurredclusteralg.TimeThreshold:       500
+sbnd_blurredclusteralg.ChargeThreshold:     20
+
+sbnd_blurredcluster:                            @local::standard_blurredcluster
+sbnd_blurredcluster.BlurredClusterAlg:          @local::sbnd_blurredclusteralg
+
+
 sbnd_dbcluster:                                 @local::standard_dbcluster          
 sbnd_dbcluster.DBScanAlg:                       @local::sbnd_dbscanalg            
                                                                                       
