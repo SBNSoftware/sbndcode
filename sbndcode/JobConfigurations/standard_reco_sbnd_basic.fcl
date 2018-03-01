@@ -32,7 +32,7 @@
 #include "cluster_sbnd.fcl"
 #include "trackfindermodules_sbnd.fcl"
 #include "calorimetry_sbnd.fcl"
-#include "showerfindermodules.fcl"
+#include "showerfindermodules_sbnd.fcl"
 #include "databaseutil_sbnd.fcl"
 ##include "opticaldetectormodules_sbnd.fcl"
 #include "vertexfindermodules.fcl"
@@ -41,6 +41,9 @@
 ##include "photpropservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
+#Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
+#include "backtrackerservice.fcl" 
+#include "particleinventoryservice.fcl"
 
 process_name: Reco
 
@@ -54,6 +57,10 @@ services:
                              @table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+
+  #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018 
+  BackTrackerService:  @local::standard_backtrackerservice 
+  ParticleInventoryService: @local::standard_particleinventoryservice
 }
 
 #source is now a root file
@@ -93,6 +100,7 @@ physics:
   linecluster:         @local::sbnd_linecluster
   cccluster:           @local::sbnd_clustercrawler
   spacepts:            @local::sbnd_spacepts
+  blurredcluster:      @local::sbnd_blurredcluster
 
   ### pandora
   pandora:             @local::sbnd_pandora
@@ -107,6 +115,7 @@ physics:
   pmalgtrackmaker:     @local::sbnd_pmalgtrackmaker
     
   ### shower-finder producers
+  emshower:            @local::sbnd_emshower
 
   ### vertex-finder producers
 
@@ -129,11 +138,13 @@ physics:
          , linecluster
    #      , cccluster
    #      , spacepts,
-         , pandora, pandoraTrack, pandoraShower
+          , blurredcluster 
+          , pandora, pandoraTrack, pandoraShower
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
          , pmatrackcalo
+         , emshower 
  ]
 
  #define the output stream, there could be more than one if using filters 
@@ -206,3 +217,12 @@ physics.producers.pmatrackcalo.TrackModuleLabel:                "pmalgtrackmaker
 physics.producers.pmatrackcalo.SpacePointModuleLabel:           "pmalgtrackmaker"
 
 
+physics.producers.blurredcluster.HitsModuleLabel:               "linecluster"
+physics.producers.blurredcluster.TrackModuleLabel:              "pmalgtrackmaker"
+physics.producers.blurredcluster.VertexModuleLabel:             "linecluster"
+
+#To use Blurred Cluster the ClusterModuleLabel to blurredcluster and comment out the PFParticle module label, add blurred cluster to the reco chain.
+physics.producers.emshower.ClusterModuleLabel:                  "pandora"
+physics.producers.emshower.HitsModuleLabel:                     "linecluster"
+physics.producers.emshower.PFParticleModuleLabel:                "pandora"
+physics.producers.emshower.TrackModuleLabel:                    "pmalgtrackmaker"
