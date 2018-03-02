@@ -1,8 +1,26 @@
 #include "calorimetry.fcl"
 #include "showerfindermodules.fcl"
+#include "showeralgorithms.fcl"                                                                     
+#include "calorimetry_sbnd.fcl"    
 
 BEGIN_PROLOG
 
 sbnd_shower:     @local::standard_shower
+sbnd_emshower:   @local::standard_emshower
+
+sbnd_emshoweralg:     @local::standard_emshoweralg
+
+sbnd_showerenergyalg: @local::standard_showerenergyalg
+sbnd_showerenergyalg.UGradient:   0.00519904
+sbnd_showerenergyalg.UIntercept:  31.1799
+sbnd_showerenergyalg.VGradient:   0.00518307
+sbnd_showerenergyalg.VIntercept:  24.1015
+sbnd_showerenergyalg.ZGradient:   0.00455425
+sbnd_showerenergyalg.ZIntercept:  25.2336
+
+sbnd_emshower.EMShowerAlg: @local::sbnd_emshoweralg
+sbnd_emshower.EMShowerAlg.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
+sbnd_emshower.EMShowerAlg.ShowerEnergyAlg: @local::sbnd_showerenergyalg
+
 
 END_PROLOG
