@@ -49,7 +49,7 @@ BEGIN_PROLOG
 sbnd_flux_bnb_nu_Bv1: {
   FluxType:       "simple_flux"
   FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/fluxFiles/bnb/gsimple/v2_8_6d/configB-v1/april07/neutrinoMode"
+  FluxSearchPaths: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/sbnd/persistent/fluxFiles/bnb/gsimple/v2_8_6d/configB-v1/april07/neutrinoMode"
   FluxFiles: [ "gsimple_configB-v1_5e7POT*.root" ]
 }
 
@@ -63,7 +63,7 @@ sbnd_flux_bnb_nu_Bv1_hist: {
 #
 sbnd_flux_bnb_nu_Cv1: {
   FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/fluxFiles/bnb/gsimple/v2_8_6d/configC-v1/april07/neutrinoMode"
+  FluxSearchPaths: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/sbnd/persistent/fluxFiles/bnb/gsimple/v2_8_6d/configC-v1/april07/neutrinoMode"
   FluxFiles: [ "gsimple_configC-v1_5e7POT*.root" ]
 }
 
