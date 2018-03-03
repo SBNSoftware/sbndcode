@@ -27,7 +27,7 @@ public:
   CRTDetSim(CRTDetSim &&) = delete;
   CRTDetSim& operator = (CRTDetSim const &) = delete;
   CRTDetSim& operator = (CRTDetSim &&) = delete;
-  void reconfigure(fhicl::ParameterSet const & p) override;
+  void reconfigure(fhicl::ParameterSet const & p) ;
 
   void produce(art::Event & e) override;
   std::string fG4ModuleLabel;
