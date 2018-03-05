@@ -1,1 +1,1 @@
-#include "sbnd_ci_sbndcode_quick_single_detsim.fcl"
+#include "sbnd_ci_single_detsim_quick_test_sbndcode.fcl"
