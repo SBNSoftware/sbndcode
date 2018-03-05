@@ -1,1 +1,1 @@
-#include "sbnd_ci_sbndcode_quick_single_gen.fcl"
+#include "sbnd_ci_single_gen_quick_test_sbndcode.fcl"

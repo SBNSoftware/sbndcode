@@ -1,1 +1,1 @@
-#include "sbnd_ci_sbndcode_quick_single_anatree.fcl"
+#include "sbnd_ci_single_anatree_quick_test_sbndcode.fcl"
