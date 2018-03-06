@@ -1,0 +1,12 @@
+#include "prodgenie_sbnd.fcl"
+
+physics.producers.generator.EventsPerSpill: 0
+physics.producers.generator.FluxCopyMethod: "IFDH"
+physics.producers.generator.FluxSearchPaths: "/pnfs/sbnd/persistent/users/zarko/bnb_gsimple_neutrino_sbnd_dirt"
+physics.producers.generator.FluxFiles: [ "converted_beammc_sbnd_dirt*.root" ]
+physics.producers.generator.TopVolume: "volWorld"
+physics.producers.generator.FluxUpstreamZ: -18 #Start the flux rays at 18m upstream of the TPC frontface.  Chosen as this is the distance a muon of 8 GeV (max flux sim. energy) can travel
+
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: SKIPDEFAULT
+#MCCSTATEMENT: enters_tpc, G4: g4_enterstpc_filter.fcl
