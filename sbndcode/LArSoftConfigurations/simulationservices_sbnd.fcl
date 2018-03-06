@@ -43,6 +43,14 @@ sbnd_largeantparameters.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadr
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
 sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
 
+#Define sbnd_genie_services
+sbnd_genie_services:
+{
+                             @table::sbnd_services
+                             @table::sbnd_random_services
+                             IFDH: {}  #D. Brailsford 06/03/18 Required after LArSoft v06_69_00 breaking change
+}
+
 # Define sbnd_g4_services
 sbnd_g4_services:
 {
@@ -71,6 +79,7 @@ sbnd_simulation_services:
 {
                              @table::sbnd_services
                              @table::sbnd_random_services
+                             @table::sbnd_genie_services
                              @table::sbnd_g4_services
                              @table::sbnd_detsim_services
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
