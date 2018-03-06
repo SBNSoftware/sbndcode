@@ -315,7 +315,7 @@ void util::TFileMetadataSBND::postEndJob()
 
 
 
-namespace util{
+//namespace util{
 
   DEFINE_ART_SERVICE(util::TFileMetadataSBND)
-}//namespace util
+//}//namespace util
