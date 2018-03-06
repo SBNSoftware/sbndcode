@@ -143,7 +143,7 @@ physics:
    #      , spacepts,
           , blurredcluster 
           , pandora, pandoraTrack, pandoraShower
-          , pandoraPid, pandoraCalo
+          , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
