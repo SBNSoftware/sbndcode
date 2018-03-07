@@ -1,7 +1,8 @@
 #include "prodgenie_sbnd.fcl"
 
-physics.producers.generator.EventsPerSpill: 1
-physics.producers.generator.FluxCopyMethod: "IFDH"
-physics.producers.generator.FluxSearchPaths: "/pnfs/sbnd/persistent/users/zarko/bnb_gsimple_neutrino_sbnd"
-physics.producers.generator.FluxFiles: [ "converted_beammc_sbnd*.root" ]
-physics.producers.generator.TopVolume: "volCryostat"
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_nu_Dv1
+     EventsPerSpill: 1
+     TopVolume: "volCryostat"
+}
