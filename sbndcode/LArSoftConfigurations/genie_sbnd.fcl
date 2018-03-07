@@ -81,8 +81,6 @@ sbnd_flux_bnb_nu_Dv1: {
 #
 sbnd_flux_bnb_nu_Ev1: {
   FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/users/zarko/bnb_gsimple_neutrino_sbnd"
-  FluxFiles: [ "converted_beammc_sbnd*.root" ]
   FluxSearchPaths: "/pnfs/sbnd/persistent/users/zarko/bnb_gsimple_neutrino_sbnd_dirt"
   FluxFiles: [ "converted_beammc_sbnd_dirt*.root" ]
 }
