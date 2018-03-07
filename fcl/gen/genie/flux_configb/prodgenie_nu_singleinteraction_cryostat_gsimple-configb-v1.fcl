@@ -1,7 +1,8 @@
 #include "prodgenie_sbnd.fcl"
 
-physics.producers.generator.EventsPerSpill: 1
-physics.producers.generator.FluxCopyMethod: "IFDH"
-physics.producers.generator.FluxSearchPaths: "/pnfs/sbnd/persistent/fluxFiles/bnb/gsimple/v2_8_6d/configB-v1/april07/neutrinoMode"
-physics.producers.generator.FluxFiles: [ "gsimple_configB-v1_5e7POT*.root" ]
-physics.producers.generator.TopVolume: "volCryostat"
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_nu_Bv1
+     EventsPerSpill: 1
+     TopVolume: "volCryostat"
+}
