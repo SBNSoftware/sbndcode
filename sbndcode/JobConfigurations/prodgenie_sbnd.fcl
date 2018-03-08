@@ -33,6 +33,7 @@ services:
 {
   # Load the service that manages root files for histograms.
   TFileService: { fileName: "hists_prodgenie_sbnd_%p-%tc.root" }
+  IFDH:         {} # required by GENIEGen
                 @table::sbnd_simulation_services # load simulation services in bulk
 }
 
