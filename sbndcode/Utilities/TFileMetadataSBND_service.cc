@@ -95,7 +95,7 @@ util::TFileMetadataSBND::~TFileMetadataSBND()
 void util::TFileMetadataSBND::reconfigure(fhicl::ParameterSet const& pset)
 {    
   // Get parameters.
-  fGenerateTFileMetadata = pset.get<bool>("GenerateTFileMetadata", true);
+  fGenerateTFileMetadata = pset.get<bool>("GenerateTFileMetadata", false);
   fJSONFileName = pset.get<std::string>("JSONFileName");
     
   if (!fGenerateTFileMetadata) return;
@@ -221,22 +221,6 @@ void util::TFileMetadataSBND::postEndJob()
   md.fProjectSoftware = paramhandle->GetProjectSoftware();
   md.fProductionName = paramhandle->GetProductionName();
   md.fProductionType = paramhandle->GetProductionType();
-  //md.fMCGenerators =		paramhandle->MCGenerators();			  
-  //md.fMCOscillationP =          paramhandle->MCOscillationP();         
-  //md.fMCTriggerListVersion =	paramhandle->MCTriggerListVersion();		  
-  //md.fMCBeamEnergy =		paramhandle->MCBeamEnergy();			  
-  //md.fMCBeamFluxID =		paramhandle->MCBeamFluxID();			  
-  //md.fMCName =	                paramhandle->MCName();	                
-  //md.fMCDetectorType =          paramhandle->MCDetectorType();         
-  //md.fMCNeutrinoFlavors =	paramhandle->MCNeutrinoFlavors();	
-  //md.fMCMassHierarchy =         paramhandle->MCMassHierarchy();        
-  //md.fMCMiscellaneous =         paramhandle->MCMiscellaneous();        
-  //md.fMCGeometryVersion =	paramhandle->MCGeometryVersion();	
-  //md.fMCOverlay =		paramhandle->MCOverlay();		
-  //md.fDataRunMode =		paramhandle->DataRunMode();			  
-  //md.fDataDetectorType =        paramhandle->DataDetectorType();	
-  //md.fDataName =		paramhandle->DataName();		
-  //md.fStageName =               paramhandle->StageName();              
 
   //update end time
   md.fend_time = time(0);
@@ -260,8 +244,6 @@ void util::TFileMetadataSBND::postEndJob()
   jsonfile<<std::get<1>(md.fapplication)<<",\n    \"version\": "<<std::get<2>(md.fapplication)<<"\n  },\n  ";
   jsonfile<<"\"data_tier\": \""<<md.fdata_tier<<"\",\n  ";
   jsonfile<<"\"event_count\": "<<md.fevent_count<<",\n  ";
-  //jsonfile<<"\"fcl.name\": \""<<md.ffcl_name<<"\",\n  ";
-  //jsonfile<<"\"fcl.version\":  \""<<md.ffcl_version<<"\",\n  ";
   jsonfile<<"\"file_format\": \""<<md.ffile_format<<"\",\n  ";
   jsonfile<<"\"file_type\": "<<md.ffile_type<<",\n  ";
   jsonfile<<"\"first_event\": "<<md.ffirst_event<<",\n  ";
@@ -290,21 +272,6 @@ void util::TFileMetadataSBND::postEndJob()
   }
   jsonfile<<"  ],\n";          
 
-  if (md.fMCGenerators!="") jsonfile << "\"lbne_MC.generators\": \"" << md.fMCGenerators << "\",\n";
-  if (md.fMCOscillationP!="") jsonfile << "\"lbne_MC.oscillationP\": \"" << md.fMCOscillationP << "\",\n";
-  if (md.fMCTriggerListVersion!="") jsonfile << "\"lbne_MC.trigger-list-version\": \"" << md.fMCTriggerListVersion << "\",\n";
-  if (md.fMCBeamEnergy!="") jsonfile << "\"lbne_MC.beam_energy\": \"" << md.fMCBeamEnergy << "\",\n";
-  if (md.fMCBeamFluxID!="") jsonfile << "\"lbne_MC.beam_flux_ID\": \"" << md.fMCBeamFluxID << "\",\n";
-  if (md.fMCName!="") jsonfile << "\"lbne_MC.name\": \"" << md.fMCName << "\",\n";
-  if (md.fMCDetectorType!="") jsonfile << "\"lbne_MC.detector_type\": \"" << md.fMCDetectorType << "\",\n";
-  if (md.fMCNeutrinoFlavors!="") jsonfile << "\"lbne_MC.neutrino_flavors\": \"" << md.fMCNeutrinoFlavors << "\",\n";
-  if (md.fMCMassHierarchy!="") jsonfile << "\"lbne_MC.mass_hierarchy\": \"" << md.fMCMassHierarchy << "\",\n";
-  if (md.fMCMiscellaneous!="") jsonfile << "\"lbne_MC.miscellaneous\": \"" << md.fMCMiscellaneous << "\",\n";
-  if (md.fMCGeometryVersion!="") jsonfile << "\"lbne_MC.geometry_version\": \"" << md.fMCGeometryVersion << "\",\n";
-  if (md.fMCOverlay!="") jsonfile << "\"lbne_MC.overlay\": \"" << md.fMCOverlay << "\",\n";
-  if (md.fDataRunMode!="") jsonfile << "\"lbne_data.run_mode\": \"" << md.fDataRunMode << "\",\n";
-  if (md.fDataDetectorType!="") jsonfile << "\"lbne_data.detector_type\": \"" << md.fDataDetectorType << "\",\n";
-  if (md.fDataName!="") jsonfile << "\"lbne_data.name\": \"" << md.fDataName << "\",\n";
   if (md.fFCLName!="") jsonfile << "\"fcl.name\": \"" << md.fFCLName << "\",\n";
   if (md.fProjectName!="") jsonfile << "\"sbnd_project.name\": \"" << md.fProjectName << "\",\n";
   if (md.fProjectStage!="") jsonfile << "\"sbnd_project.stage\": \"" << md.fProjectStage << "\",\n";
@@ -313,17 +280,10 @@ void util::TFileMetadataSBND::postEndJob()
   if (md.fProductionName!="") jsonfile << "\"production.name\": \"" << md.fProductionName << "\",\n";
   if (md.fProductionType!="") jsonfile << "\"production.type\": \"" << md.fProductionType << "\",\n";
 
-
-  // fStageName appears not to be in our metadata spec
-
   // put these at the end because we know they'll be there and the last one needs to not have a comma
-
   jsonfile<<"\"start_time\": \""<<startbuf<<"\",\n";
   jsonfile<<"\"end_time\": \""<<endbuf<<"\"\n";
   
-  //jsonfile<<"  \"ub_project.name\": \""<<md.fproject_name<<"\",\n  ";
-  //jsonfile<<"\"ub_project.stage\": \""<<md.fproject_stage;
-  //jsonfile<<"\",\n  \"ub_project.version\": \""<<md.fproject_version<<"\"\n";
   
   jsonfile<<"}\n";
   jsonfile.close();  
