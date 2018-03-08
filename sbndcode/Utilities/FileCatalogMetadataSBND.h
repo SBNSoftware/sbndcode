@@ -42,13 +42,13 @@ namespace util {
 
     // Accessors.
 
-    const std::string& FCLName() const {return fFCLName;}
-    const std::string& ProjectName() const {return fProjectName;}
-    const std::string& ProjectStage() const {return fProjectStage;}
-    const std::string& ProjectVersion() const {return fProjectVersion;}
-    const std::string& ProjectSoftware() const {return fProjectSoftware;}
-    const std::string& ProductionName() const {return fProductionName;}
-    const std::string& ProductionType() const {return fProductionType;}
+    const std::string& GetFCLName() const {return fFCLName;}
+    const std::string& GetProjectName() const {return fProjectName;}
+    const std::string& GetProjectStage() const {return fProjectStage;}
+    const std::string& GetProjectVersion() const {return fProjectVersion;}
+    const std::string& GetProjectSoftware() const {return fProjectSoftware;}
+    const std::string& GetProductionName() const {return fProductionName;}
+    const std::string& GetProductionType() const {return fProductionType;}
 
 
   private:
