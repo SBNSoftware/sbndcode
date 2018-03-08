@@ -1,0 +1,3 @@
+#include "prodgenie_nu_singleinteraction_cryostat_gsimple-configd-v1.fcl"
+
+physics.producers.generator.EventsPerSpill: 0

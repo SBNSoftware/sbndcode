@@ -1,4 +1,6 @@
-install_fhicl()
+add_subdirectory(flux_configb)
+add_subdirectory(flux_configc)
+add_subdirectory(flux_configd)
+add_subdirectory(flux_confige)
 
-FILE(GLOB fcl_files *.fcl)
-install_source(EXTRAS  ${fcl_files} )
+install_fhicl()

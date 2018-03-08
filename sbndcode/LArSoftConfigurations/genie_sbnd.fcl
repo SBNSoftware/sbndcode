@@ -64,13 +64,31 @@ sbnd_flux_bnb_nu_Bv1_hist: {
 sbnd_flux_bnb_nu_Cv1: {
   FluxCopyMethod: "IFDH"
   FluxSearchPaths: "/pnfs/sbnd/persistent/fluxFiles/bnb/gsimple/v2_8_6d/configC-v1/april07/neutrinoMode"
-  FluxFiles: [ "gsimple_configC-v1_5e7POT*.root" ]
+  FluxFiles: [ "gsimple_configC-v1_april07_baseline*.root" ]
+}
+
+#
+# Booster Neutrino Beam, neutrino mode, configuration D (v1)
+#
+sbnd_flux_bnb_nu_Dv1: {
+  FluxCopyMethod: "IFDH"
+  FluxSearchPaths: "/pnfs/sbnd/persistent/users/zarko/bnb_gsimple_neutrino_sbnd"
+  FluxFiles: [ "converted_beammc_sbnd*.root" ]
+}
+
+#
+# Booster Neutrino Beam, neutrino mode, configuration D (v1)
+#
+sbnd_flux_bnb_nu_Ev1: {
+  FluxCopyMethod: "IFDH"
+  FluxSearchPaths: "/pnfs/sbnd/persistent/users/zarko/bnb_gsimple_neutrino_sbnd_dirt"
+  FluxFiles: [ "converted_beammc_sbnd_dirt*.root" ]
 }
 
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
 #
-sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Bv1
+sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Dv1
 
 #
 # Booster Neutrino Beam, interaction from dirt (placeholder)
