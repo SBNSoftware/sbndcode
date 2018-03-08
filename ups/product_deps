@@ -37,7 +37,7 @@ fwdir   product_dir scripts
 product          version
 larsoft          v06_70_00
 genie_xsec       v2_12_8
-sbnd_data        v01_01_00 - optional
+sbnd_data        v01_02_00 - optional
 sbndutil         v01_46_00 - optional
 
 # list products required ONLY for the build
