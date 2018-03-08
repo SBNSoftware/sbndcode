@@ -214,6 +214,13 @@ void util::TFileMetadataSBND::postEndJob()
   // get metadata from the FileCatalogMetadataSBND service, which is filled on its construction
         
   art::ServiceHandle<util::FileCatalogMetadataSBND> paramhandle; 
+  md.fFCLName = paramhandle->GetFCLName();
+  md.fProjectName = paramhandle->GetProjectName();
+  md.fProjectStage = paramhandle->GetProjectStage();
+  md.fProjectVersion = paramhandle->GetProjectVersion();
+  md.fProjectSoftware = paramhandle->GetProjectSoftware();
+  md.fProductionName = paramhandle->GetProductionName();
+  md.fProductionType = paramhandle->GetProductionType();
   //md.fMCGenerators =		paramhandle->MCGenerators();			  
   //md.fMCOscillationP =          paramhandle->MCOscillationP();         
   //md.fMCTriggerListVersion =	paramhandle->MCTriggerListVersion();		  
@@ -298,6 +305,15 @@ void util::TFileMetadataSBND::postEndJob()
   if (md.fDataRunMode!="") jsonfile << "\"lbne_data.run_mode\": \"" << md.fDataRunMode << "\",\n";
   if (md.fDataDetectorType!="") jsonfile << "\"lbne_data.detector_type\": \"" << md.fDataDetectorType << "\",\n";
   if (md.fDataName!="") jsonfile << "\"lbne_data.name\": \"" << md.fDataName << "\",\n";
+  if (md.fFCLName!="") jsonfile << "\"fcl.name\": \"" << md.fFCLName << "\",\n";
+  if (md.fProjectName!="") jsonfile << "\"sbnd_project.name\": \"" << md.fProjectName << "\",\n";
+  if (md.fProjectStage!="") jsonfile << "\"sbnd_project.stage\": \"" << md.fProjectStage << "\",\n";
+  if (md.fProjectVersion!="") jsonfile << "\"sbnd_project.version\": \"" << md.fProjectVersion << "\",\n";
+  if (md.fProjectSoftware!="") jsonfile << "\"sbnd_project.software\": \"" << md.fProjectSoftware << "\",\n";
+  if (md.fProductionName!="") jsonfile << "\"production.name\": \"" << md.fProductionName << "\",\n";
+  if (md.fProductionType!="") jsonfile << "\"production.type\": \"" << md.fProductionType << "\",\n";
+
+
   // fStageName appears not to be in our metadata spec
 
   // put these at the end because we know they'll be there and the last one needs to not have a comma

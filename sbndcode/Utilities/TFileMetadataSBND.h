@@ -65,6 +65,14 @@ namespace util{
       std::string fDataDetectorType;		
       std::string fDataName;			
       std::string fStageName;           
+      std::string fFCLName;
+      std::string fProjectName;
+      std::string fProjectStage;
+      std::string fProjectVersion;
+      std::string fProjectSoftware;
+      std::string fProductionName; //Production parameter, do not use if not running a production
+    std::string fProductionType; //Production parameter, do not use if not running a production
+
     };
     
     metadata md;
