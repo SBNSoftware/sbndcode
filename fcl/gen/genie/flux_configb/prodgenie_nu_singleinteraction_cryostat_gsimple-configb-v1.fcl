@@ -1,0 +1,8 @@
+#include "prodgenie_sbnd.fcl"
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_nu_Bv1
+     EventsPerSpill: 1
+     TopVolume: "volCryostat"
+}
