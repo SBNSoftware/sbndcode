@@ -1,0 +1,14 @@
+#include "messages_sbnd.fcl"
+#include "prodgenie_bnb_nu_cosmic_sbnd.fcl"
+
+# non-interactive output settings, but keep them verbose
+services.message: @local::sbnd_message_services_prod_debug
+
+# the test uses an input file (empty events with set timestamp)
+source: @erase
+
+# Override flux file configuration to use exactly one of them
+physics.producers.generator.FluxFiles: [ "gsimple_configB-v1_5e7POT_2018_02018.root" ]
+
+# be as strict as possible with random seeds: GENIE is wild!
+physics.producers.generator.Seed: 63213
