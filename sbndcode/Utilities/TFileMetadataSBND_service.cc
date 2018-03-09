@@ -63,6 +63,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "art/Framework/Services/Optional/TFileService.h"
+
 using namespace std;
 
 
@@ -71,7 +73,8 @@ using namespace std;
 // Constructor.
 util::TFileMetadataSBND::TFileMetadataSBND(fhicl::ParameterSet const& pset, 
 					   art::ActivityRegistry& reg):
-  fGenerateTFileMetadata(false)							
+  fGenerateTFileMetadata(false),	
+  fFileStats("",art::ServiceHandle<art::TriggerNamesService const>{}->getProcessName())
 {
   reconfigure(pset);
 
@@ -79,9 +82,10 @@ util::TFileMetadataSBND::TFileMetadataSBND(fhicl::ParameterSet const& pset,
  
   reg.sPostBeginJob.watch(this, &TFileMetadataSBND::postBeginJob);
   reg.sPostOpenFile.watch(this, &TFileMetadataSBND::postOpenFile);
-  reg.sPostEndJob.watch(this, &TFileMetadataSBND::postEndJob);
+  reg.sPostCloseFile.watch(this, &TFileMetadataSBND::postCloseFile);
   reg.sPostProcessEvent.watch(this, &TFileMetadataSBND::postEvent);
   reg.sPostBeginSubRun.watch(this, &TFileMetadataSBND::postBeginSubRun);
+  reg.sPostCloseOutputFile.watch(this, &TFileMetadataSBND::postCloseOutputFile);
 }
 
 //--------------------------------------------------------------------
@@ -156,14 +160,23 @@ void util::TFileMetadataSBND::postOpenFile(std::string const& fn)
   
   // save parent input files here
   md.fParents.insert(fn);
+  fFileStats.recordInputFile(fn);
+}
+
+//--------------------------------------------------------------------        
+// PostOpenOutputFile callback.
+void util::TFileMetadataSBND::postCloseOutputFile(art::OutputFileInfo const& outputinfo)
+{
+  if (!fGenerateTFileMetadata) return;
   
+  //Set the output name of the json using the standard format
+ 
 }
 
 //--------------------------------------------------------------------  	
 // PostEvent callback.
 void util::TFileMetadataSBND::postEvent(art::Event const& evt)
 {
- 
   if(!fGenerateTFileMetadata) return;	
   
   art::RunNumber_t run = evt.run();
@@ -205,9 +218,11 @@ void util::TFileMetadataSBND::postBeginSubRun(art::SubRun const& sr)
 
 //--------------------------------------------------------------------
 // PostCloseFile callback.
-void util::TFileMetadataSBND::postEndJob()
+void util::TFileMetadataSBND::postCloseFile()
 {
-	
+
+  
+ 
   // Do nothing if generating TFile metadata is disabled.	
   if(!fGenerateTFileMetadata) return;	
   
@@ -287,6 +302,10 @@ void util::TFileMetadataSBND::postEndJob()
   
   jsonfile<<"}\n";
   jsonfile.close();  
+
+  fFileStats.recordFileClose();
+  //TODO figure out how to make the name identical to the TFile
+  //std::string new_name = fRenamer.maybeRenameFile("myjson.json",fJSONFileName);
 }
 
 

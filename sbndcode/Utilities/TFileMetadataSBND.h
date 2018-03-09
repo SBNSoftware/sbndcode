@@ -19,6 +19,12 @@
 #include "art/Framework/Principal/RunPrincipal.h"
 #include "art/Framework/Principal/SubRunPrincipal.h"
 #include "art/Framework/Principal/Event.h"
+#include "art/Framework/IO/PostCloseFileRenamer.h"
+#include "art/Framework/IO/FileStatsCollector.h"
+
+  
+#include "art/Framework/Services/System/TriggerNamesService.h"
+
 #include <iostream>
 #include <fstream>
 
@@ -70,7 +76,8 @@ namespace util{
     void postOpenFile(std::string const& fn);
     void postEvent(art::Event const& ev);
     void postBeginSubRun(art::SubRun const& subrun);
-    void postEndJob();
+    void postCloseOutputFile(art::OutputFileInfo const& outputinfo);
+    void postCloseFile();
 
     // Private member functions.
 
@@ -80,6 +87,8 @@ namespace util{
     bool fGenerateTFileMetadata;  
     std::string frunType;                     
     std::string fJSONFileName;
+    art::FileStatsCollector fFileStats;
+    art::PostCloseFileRenamer fRenamer{fFileStats};
 
   }; // class TFileMetadataSBND
 
