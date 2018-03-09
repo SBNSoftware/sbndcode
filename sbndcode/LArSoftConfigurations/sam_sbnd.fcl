@@ -38,11 +38,12 @@ sbnd_file_catalog_data.fileType:  "data"
 #
 sbnd_file_catalog_extra:
 {
-  fclName:         @nil
-  fclVersion:      @nil
-  projectName:     @nil
-  projectStage:    @nil
-  projectVersion:  @nil  
+  FCLName:         @nil
+  ProjectName:     @nil
+  ProjectStage:    @nil
+  ProjectVersion:  @nil  
+  ProductionName:  @nil
+  ProductionType:  @nil
 } # sbnd_file_catalog_extra
 
 
