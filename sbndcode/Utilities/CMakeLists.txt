@@ -37,6 +37,8 @@ simple_plugin( FileCatalogMetadataSBND  "service"
 
 simple_plugin( TFileMetadataSBND "service"
                ${sbnd_util_lib_list}
+               art_Framework_IO
+               art_Framework_IO_detail
         )
 install_headers()
 install_fhicl()
