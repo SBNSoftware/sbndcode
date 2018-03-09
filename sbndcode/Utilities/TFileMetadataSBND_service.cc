@@ -99,13 +99,13 @@ util::TFileMetadataSBND::~TFileMetadataSBND()
 void util::TFileMetadataSBND::reconfigure(fhicl::ParameterSet const& pset)
 {    
   // Get parameters.
-  fGenerateTFileMetadata = pset.get<bool>("GenerateTFileMetadata", false);
+  fGenerateTFileMetadata = pset.get<bool>("GenerateTFileMetadata");
   fJSONFileName = pset.get<std::string>("JSONFileName");
     
   if (!fGenerateTFileMetadata) return;
 
-  md.fdata_tier  	   = pset.get<std::string>("dataTier","root-tuple");	   
-  md.ffile_format	   = pset.get<std::string>("fileFormat","root");              
+  md.fdata_tier  	   = pset.get<std::string>("dataTier");	   
+  md.ffile_format	   = pset.get<std::string>("fileFormat");  
 }
 
 //--------------------------------------------------------------------
