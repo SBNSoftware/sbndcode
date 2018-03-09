@@ -49,7 +49,7 @@ process_name: DetSim
 
 services:
 {
-  TFileService: { fileName: "standard_detsim_sbnd_%p-%tc_hists.root" }
+  TFileService: { fileName: fileName: @local::sbnd_tfileoutput.fileName }
   @table::sbnd_detsim_services
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
