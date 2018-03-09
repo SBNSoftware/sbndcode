@@ -1,0 +1,192 @@
+#include "simulationservices_sbnd.fcl"
+#include "singles_sbnd.fcl"
+#include "largeantmodules_sbnd.fcl"
+#include "detsimmodules_sbnd.fcl"
+#include "mccheatermodules.fcl"
+#include "opticaldetectormodules_sbnd.fcl"
+#include "opticaldetectormodules.fcl"
+
+#include "opticaldetectorservices_sbnd.fcl"
+#include "photpropservices_sbnd.fcl"
+#include "photpropmodules_sbnd.fcl"
+#include "mcreco.fcl"
+
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+process_name: SinglesGen
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "single_hist_sbnd.root" }
+  		@table::sbnd_opsimulation_services
+  BackTrackerService:  @local::microboone_backtrackerservice # defined in backtrackerservice.fcl
+  ParticleInventoryService:  @local::standard_particleinventoryservice # defined in backtrackerservice.fcl	
+
+	
+}
+#services.PhotonVisibilityService: @local::sbnd_photonvisibilityservice 
+services.PhotonVisibilityService: @local::sbnd_timeparametrization_photonvisibilityservice
+services.OpDigiProperties:        @local::sbnd_opdigiproperties
+#services.BackTrackerService:             @local::standard_backtrackerservice
+
+#Generation specific voxelization
+services.PhotonVisibilityService.NX: 40
+services.PhotonVisibilityService.NY: 80 
+services.PhotonVisibilityService.NZ: 100 
+
+services.PhotonVisibilityService.XMin: 2.5
+services.PhotonVisibilityService.XMax: 202.5
+services.PhotonVisibilityService.YMin: -200 
+services.PhotonVisibilityService.YMax: 200
+services.PhotonVisibilityService.ZMin: 0
+services.PhotonVisibilityService.ZMax: 500
+
+
+#Start each new event with an empty event.
+source:
+{
+  module_type: EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }	
+  maxEvents:   1           # Number of events to create
+  firstRun:    1           # Run number to use for this file
+  firstEvent:  1           # number of first event in the file
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+ producers:
+ {
+   generator: @local::sbnd_singlep	 		  
+   largeant:  @local::sbnd_largeant	 		  
+   mcreco:    @local::standard_mcreco				  
+   daq:       @local::sbnd_simwire 			  
+   backtrack: @local::standard_backtrackerloader 
+   opdigi:    @local::sbnd_opdigi				 
+   rns:       {module_type: "RandomNumberSaver"}
+ }
+
+ analyzers:
+ {
+   libana:      @local::sbnd_photonlibraryanalyzer
+   largana:     @local::sbnd_largeantana		 
+   pmtresponse: @local::sbnd_simphotoncounter  
+   opdigiana:   @local::sbnd_opdigiana	
+   flash:       @local::standard_flashhypothesisanamodule		  
+ }
+
+ #define the producer and filter modules for this path, order matters,
+ #filters reject all following items.  see lines starting physics.producers below
+ simulate: [ generator, largeant, mcreco , daq, backtrack, opdigi, rns ]
+ analyzeIt:  [ pmtresponse ]
+ #define the output stream, there could be more than one if using filters
+ stream1:  [ out1 ]
+}
+
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "single_gen_sbnd.root" #default file name, can override from command line with -o or --output
+ }
+}
+
+
+
+# set quantum efficiency supressed scint yield to 0.03 * 24000
+services.LArPropertiesService.ScintYield: 24000
+
+# enable optical physics in LArG4
+services.LArG4Parameters.EnabledPhysics: [ "Em",
+                                                "FastOptical",
+                                                "SynchrotronAndGN",
+                                                "Ion",
+                                                "Hadron",
+                                                "Decay",
+                                                "HadronElastic",
+                                                "Stopping",
+                                                "NeutronTrackingCut" ]
+
+# enable this custom physics list
+services.LArG4Parameters.UseCustomPhysics: true
+
+# disable cerenkov light
+services.LArPropertiesService.EnableCerenkovLight: false
+
+physics.analyzers.flash.MCTrackLabel: "mcreco"
+
+
+
+
+physics.producers.largeant.KeepParticlesInVolumes: ["volCryostat"]
+
+
+#inition condition for the sample generation:
+physics.producers.generator.PDG: [13]
+physics.producers.generator.P0: [0.5]
+physics.producers.generator.X0: [100.]
+physics.producers.generator.Y0: [0.]
+physics.producers.generator.Z0: [250.]
+physics.producers.generator.Theta0XZ: [0.]
+physics.producers.generator.Theta0YZ: [0.]
+
+physics.producers.generator.SigmaP: [0.]
+physics.producers.generator.SigmaX: [0.]
+physics.producers.generator.SigmaY: [0.]
+physics.producers.generator.SigmaZ: [0.]
+physics.producers.generator.SigmaThetaXZ: [30.]
+physics.producers.generator.SigmaThetaYZ: [10.]
+physics.producers.generator.T0: [0.]
+physics.producers.generator.SigmaT: [0.]
+
+# 0 - uniform, 1 - gaussian distribution
+physics.producers.generator.PDist: 0
+physics.producers.generator.PosDist: 0
+physics.producers.generator.AngleDist: 0
+
+physics.producers.mcreco.MCTrackRecoAlg.DebugMode: false
+physics.producers.mcreco.MCRecoPart.SavePathPDGList: [11, -11, 13, -13, 22, 211, -211, 321, -321, 2212, 2112, 1000170390, 1000180400]
+#I want to leave free the G4stepping action (not impose 0.03 mm max step length)
+services.LArVoxelCalculator.VoxelSizeX: 1000. #cm
+services.LArVoxelCalculator.VoxelSizeY: 1000. #cm
+services.LArVoxelCalculator.VoxelSizeZ: 1000. #cm
+services.LArVoxelCalculator.VoxelEnergyCut: 1.e-6   #in GeV
+
+#services.SimulationDrawingOptions.MinimumEnergyDeposition: 5e-5 # in GeV
+services.LArG4Parameters.ParticleKineticEnergyCut: 0.01e-3  #in GeV
+services.LArG4Parameters.StoreTrajectories:        true
+#services.LArG4Parameters.VisualizationEnergyCut:   10.e-3  #depricated, in GeV
+#services.LArG4Parameters.VisualizeNeutrals:        false   #depricated
+services.LArG4Parameters.KeepEMShowerDaughters:    true   #save secondary, tertiary, etc particles in EM showers
+
+physics.analyzers.pmtresponse.MakeAllPhotonsTree: false
+physics.analyzers.pmtresponse.MakeDetectedPhotonsTree: false
+physics.analyzers.pmtresponse.MakeOpDetsTree: false
+physics.analyzers.pmtresponse.MakeOpDetEventsTree: false
+physics.analyzers.pmtresponse.MakeLightAnalysisTree: true
+
+
+services.Geometry.GDML: "sbnd_v01_02.gdml"
+services.PhotonVisibilityService.LibraryFile: "OpticalLibrary/op_library_sbnd_v2.root"
+
+# for a geometry without wires uncomment this line
+services.Geometry.DisableWiresInG4:   true
+
+services.LArPropertiesService.ScintByParticleType:  true
+services.LArPropertiesService.ScintPreScale: 1
+
+services.PhotonVisibilityService.StoreReflected: true
+services.PhotonVisibilityService.StoreReflT0: true
+services.PhotonVisibilityService.IncludePropTime: true
+services.PhotonVisibilityService.TF1_sampling_factor: 1.
+services.LArPropertiesService.LoadExtraMatProperties: true
