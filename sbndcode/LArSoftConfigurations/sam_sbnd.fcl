@@ -71,7 +71,7 @@ art_file_catalog_data: @local::sbnd_file_catalog_data
 
 #D. Brailsford 21/02/18
 #Parameter set that describes the metadata for the pure root files.  The TFile metadata service produces a json file for SAM declaration
-sbnd_tfile_metadata:
+sbnd_file_catalog_tfile:
 {
   JSONFileName:          "tfile.json"
   GenerateTFileMetadata: false
