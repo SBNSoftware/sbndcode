@@ -14,15 +14,8 @@
 	GDML Manual at http://gdml.web.cern.ch/GDML/doc/GDMLmanual.pdf
 	
 	version 1.0 developed by Gustavo.Valdiviesso@unifal-mg.edu.br
-	version 1.1 developed by Gustavo.Valdiviesso@unifal-mg.edu.br, Andrzej andrzej.szelc@manchester.ac.uk, Andy Mastbaum mastbaum@uchicago.edu, ...
-	version 1.2 developed by Gustavo.Valdiviesso@unifal-mg.edu.br, Andrzej andrzej.szelc@manchester.ac.uk, Andy, Marina mrguzzo@ifi.unicamp.br, Diego diego.garciagamez@manchester.ac.uk
-	
-	
 	technote at doc-db [XXX]
 	
-	Version History (latest on top)
-	v1.2
-		> +Added ARAPUCA, bar and foils
 	Version History (latest on top)
 	v0.9
 		> Bugfixes: 
@@ -141,8 +134,8 @@
 	<position name="posUnderground" unit="mm" x="0" y="-2016.8995" z="2500"/>
 	<position name="posBuilding"    unit="mm" x="0" y="12256.301000000001" z="1300"/>	
 	<position name="posBuildingVoid" unit="mm" x="0" y="-480.00099999999998" z="0"/>
-	<position name="posCryostat"    unit="mm" x="0" y="0" z="2917.5" />
-	<position name="posStructure"   unit="mm" x="0" y="0" z="2917.5" />
+        <position name="posCryostat"    unit="mm" x="0" y="0" z="2082.5" />
+        <position name="posStructure"   unit="mm" x="0" y="0" z="2082.5" />
 	<position name="posEquipLid" x="0" y="3664" z="0"/>
 	<position name="posTopTower" x="0" y="4342.1005000000005" z="0"/>
 	<position name="posShieldingLid" x="0" y="7644.2010000000009" z="0"/>
@@ -171,10 +164,8 @@
 	<element name="nickel"      formula="Ni" Z="28"> 	<atom value="58.6934"/>   </element>
 	<element name="copper"      formula="Cu" Z="29"> 	<atom value="63.546"/>   </element>
 	<element name="bromine"     formula="Br" Z="35"> 	<atom value="79.904"/>    </element>
-	<element name="beryllium"   formula="Be" Z="4">         <atom value="9.0121831"/>  </element>
-<!-- <element name="niobium"     formula="Nb" Z="41"> 	<atom value="92.906"/>    </element>
-	<element name="molybdenum"  formula="Mo" Z="42"> 	<atom value="95.95"/>    </element> -->
-	
+	<!--element name="niobium"     formula="Nb" Z="41"> 	<atom value="92.906"/>    </element>
+	<element name="molybdenum"  formula="Mo" Z="42"> 	<atom value="95.95"/>    </element-->
 	<material Z="1" formula=" " name="Vacuum">
 		<D value="1.e-25" unit="g/cm3"/>
 	</material>
@@ -313,20 +304,23 @@
 		<fraction n="0.0900" ref="nickel"/>
 	</material>
 	<material name="STEEL_STRUCTURAL_S460L" formula="S460L">
-		<D value="3.8321000000000001" unit="g/cm3"/>
-		<fraction n="0.95630" ref="iron"/>
-		<fraction n="0.01700" ref="manganese"/>        
-		<fraction n="0.00800" ref="nickel"/>
-		<fraction n="0.00600" ref="silicon"/>
-		<fraction n="0.00550" ref="copper"/>
-		<fraction n="0.00300" ref="chromium"/>
-		<fraction n="0.00160" ref="carbon"/>
-		<fraction n="0.00120" ref="vanadium"/>
-		<fraction n="0.00050" ref="titanium"/>         
-		<fraction n="0.00025" ref="phosphorous"/>
-		<fraction n="0.00025" ref="nitrogen"/>
-		<fraction n="0.00020" ref="sulfur"/>
-		<fraction n="0.00020" ref="aluminum"/>
+		 <D value="3.8321000000000001" unit="g/cm3"/>
+                <!--fraction n="0.95380" ref="iron"/-->
+                <fraction n="0.95630" ref="iron"/>
+                <fraction n="0.01700" ref="manganese"/>
+                <fraction n="0.00800" ref="nickel"/>
+                <fraction n="0.00600" ref="silicon"/>
+                <fraction n="0.00550" ref="copper"/>
+                <fraction n="0.00300" ref="chromium"/>
+                <!--fraction n="0.00200" ref="molybdenum"/-->
+                <fraction n="0.00160" ref="carbon"/>
+                <fraction n="0.00120" ref="vanadium"/>
+                <!--fraction n="0.00050" ref="niobium"/-->
+                <fraction n="0.00050" ref="titanium"/>
+                <fraction n="0.00025" ref="phosphorous"/>
+                <fraction n="0.00025" ref="nitrogen"/>
+                <fraction n="0.00020" ref="sulfur"/>
+                <fraction n="0.00020" ref="aluminum"/>
 	</material>
     <material name="LAr" formula="LAr">
 		<D value="1.40" unit="g/cm3"/> 
@@ -372,16 +366,6 @@
 		<D value="2.865328573424478" unit="g/cm3"/>
 		<fraction n="0.62104145935931376" ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 		<fraction n="0.37895854064068635" ref="LAr"/>
-	</material>
-	<material name="vm2000" formula="vm2000">
-	  <D value="1.2" unit="g/cm3"/>
-	  <composite n="2" ref="carbon"/>
-	  <composite n="4" ref="hydrogen"/>
-	</material>
-	<material name="Copper_Beryllium_alloy25" formula="Copper_Beryllium_alloy25">
-	  <D value="8.26" unit="g/cm3"/>
-	  <fraction n="0.981" ref="copper"/>
-	  <fraction n="0.019" ref="beryllium"/>
 	</material>
 </materials>
 <define>
@@ -680,14 +664,11 @@
 	</volume>
 </structure>
 <define>
-    <position name="posCPA_UStream" unit="mm" x="0" y="0" z="-1718.5"/>
-    <position name="posCPA_DStream" unit="mm" x="0" y="0" z="883.5"/>
+    <position name="posCPA_UStream" unit="mm" x="0" y="0" z="-883.5"/>
+    <position name="posCPA_DStream" unit="mm" x="0" y="0" z="1718.5"/>
 </define>
 <solids>
     <box  name="boxCPAMesh"  lunit="mm" x="1"  y="1009" z="1249"/>
-  <box name="boxCPAMesh_new"  lunit="mm" x="1"  y="1009" z="1249"/>
-  <box name="boxCPAFoil" lunit="mm" x="1.1015999999999999" y="1009" z="1249"/>
-  <box name="boxCPATPB" lunit="mm" x="1.1016459999999999" y="1009" z="1249"/>
     <box  name="boxCPAPlane"  lunit="mm" x="52"  y="4192" z="2602"/>
     <tube name="tubeLongCPABar_Outter"  rmax="26"  z="4192"   deltaphi="360"  aunit="deg"  lunit="mm"/> 
     <tube name="tubeLongCPABar_Inner"  rmax="25"  z="4192"   deltaphi="360"  aunit="deg"  lunit="mm"/> 
@@ -743,30 +724,9 @@
     </union>
 </solids>
 <structure>
-<!--	<volume name="volCPAMesh_new">
-	  <materialref ref="SteelMesh"/>
-	  <solidref ref="boxCPAMesh_new"/>
-	</volume> -->
 	<volume name="volCPAMesh">
 		<materialref ref="SteelMesh"/>
 		<solidref ref="boxCPAMesh"/>
-	</volume>
-	<volume name="volCPAFoil">
-	  <materialref ref="vm2000"/>
-	  <solidref ref="boxCPAFoil"/>
-	  <physvol>
-	    <volumeref ref="volCPAMesh"/>
-	    <positionref ref="center"/> 
-	  </physvol>
-	</volume>
-	
-	<volume name="volCPATPB">
-	  <materialref ref="TPB"/>
-	  <solidref ref="boxCPATPB"/>
-	  <physvol>
-	    <volumeref ref="volCPAFoil"/>
-	    <positionref ref="center"/> 
-	  </physvol>
 	</volume>
 	<volume name="volCPAHorizontalBar">
 		<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
@@ -784,35 +744,35 @@
 			<positionref  ref="center"/>
 		</physvol>
         <physvol>
-			<volumeref ref="volCPATPB"/> 
+			<volumeref ref="volCPAMesh"/> 
             <position name="posCPAMesh_1" unit="mm" x="0" y="517" z="637"/>         
 		</physvol>
 		<physvol>
-			<volumeref ref="volCPATPB"/> 
+			<volumeref ref="volCPAMesh"/> 
             <position name="posCPAMesh_2" unit="mm" x="0" y="1552" z="637"/>         
 		</physvol>
 		<physvol>
-			<volumeref ref="volCPATPB"/> 
+			<volumeref ref="volCPAMesh"/> 
             <position name="posCPAMesh_3" unit="mm" x="0" y="-517" z="637"/>         
 		</physvol>
 		<physvol>
-			<volumeref ref="volCPATPB"/> 
+			<volumeref ref="volCPAMesh"/> 
             <position name="posCPAMesh_4" unit="mm" x="0" y="-1552" z="637"/>         
 		</physvol>
         <physvol>
-			<volumeref ref="volCPATPB"/> 
+			<volumeref ref="volCPAMesh"/> 
             <position name="posCPAMesh_5" unit="mm" x="0" y="517" z="-637"/>         
 		</physvol>
 		<physvol>
-			<volumeref ref="volCPATPB"/> 
+			<volumeref ref="volCPAMesh"/> 
             <position name="posCPAMesh_6" unit="mm" x="0" y="1552" z="-637"/>         
 		</physvol>
 		<physvol>
-			<volumeref ref="volCPATPB"/> 
+			<volumeref ref="volCPAMesh"/> 
             <position name="posCPAMesh_7" unit="mm" x="0" y="-517" z="-637"/>         
 		</physvol>
 		<physvol>
-			<volumeref ref="volCPATPB"/> 
+			<volumeref ref="volCPAMesh"/> 
             <position name="posCPAMesh_8" unit="mm" x="0" y="-1552" z="-637"/>         
 		</physvol>
 	</volume>
@@ -927,12 +887,12 @@
 	</volume>
 </structure>
 <solids>
-	<tube name="PMTVolume" rmax="10.16" z="28.198999999999998" deltaphi="360" aunit="deg" lunit="cm"/>
+	<tube name="PMTVolume" rmax="11.43" z="28.198999999999998" deltaphi="360" aunit="deg" lunit="cm"/>
 	<tube name="PMT_Underside" rmax="10.16" z="0.10000000000000001" deltaphi="360" aunit="deg" lunit="cm"/>
 	<tube name="PMT_Back" rmax="10.16" z="0.5" deltaphi="360" aunit="deg" lunit="cm"/>
 </solids>
 <structure>
-	<volume name="volOpDetSensitive_PMT">
+	<volume name="volOpDetSensitive">
 		<materialref ref="LAr"/> <!-- for some reason, has to be LAr -->
 		<solidref ref="PMT_Underside"/>
 	</volume>
@@ -948,7 +908,7 @@
 			<position name="pos_PMT_Back" unit="cm" x="0" y="0" z="6.6349999999999989"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_PMT"/>
+			<volumeref ref="volOpDetSensitive"/>
 			<position name="pos_PMT_Underside" unit="cm" x="0" y="0" z="6.9350000000000005"/>
 		</physvol>
 	</volume>
@@ -1003,11 +963,11 @@
 </solids>
 <structure>
 	<volume name="volTPCWire">
-		<materialref ref="Copper_Beryllium_alloy25"/>
+		<materialref ref="Titanium"/>
 		<solidref ref="tubeWire"/>
 	</volume>
 	<volume name="volTPCWireVert">
-		<materialref ref="Copper_Beryllium_alloy25"/>
+		<materialref ref="Titanium"/>
 		<solidref ref="tubeWireVert"/>
 	</volume>
 </structure>
@@ -1031,8 +991,8 @@
 	<rotation name="rPlus45AboutX" unit="deg" x="45" y="0" z="0"/>
 	<rotation name="rPlus90AboutX" unit="deg" x="90" y="0" z="0"/>
 	<rotation name="rPlus180AboutY" unit="deg" x="0" y="180" z="0"/>
-	<position name="posTPCatCryo_p" unit="mm" x="1013" y="0" z="-417.5"/>
-	<position name="posTPCatCryo_n" unit="mm" x="-1013" y="0" z="-417.5"/>
+	<position name="posTPCatCryo_p" unit="mm" x="1013" y="0" z="417.5"/>
+	<position name="posTPCatCryo_n" unit="mm" x="-1013" y="0" z="417.5"/>
 	<position name="posTPC" unit="mm" x="0" y="0" z="2500"/>
 	<position name="posTPCPlane_pU" unit="mm" x="979" y="0" z="0"/>
 	<position name="posTPCPlane_pV" unit="mm" x="982" y="0" z="0"/>
@@ -1047,10 +1007,10 @@
 	<position name="posAPAFrame_nX" unit="mm" x="-2250" y="0" z="0" />    
 </define>
 <define>
-	<position name="posAPAFrame_nXnZ" unit="mm" x="-2075" y="0" z="-2917.5" />    
-	<position name="posAPAFrame_nXpZ" unit="mm" x="-2075" y="0" z="-417.5" />    
-	<position name="posAPAFrame_pXnZ" unit="mm" x="2075" y="0" z="-2917.5" />    
-	<position name="posAPAFrame_pXpZ" unit="mm" x="2075" y="0" z="-417.5" />    
+	<position name="posAPAFrame_nXnZ" unit="mm" x="-2075" y="0" z="-2082.5" />    
+	<position name="posAPAFrame_nXpZ" unit="mm" x="-2075" y="0" z="417.5" />    
+	<position name="posAPAFrame_pXnZ" unit="mm" x="2075" y="0" z="-2082.5" />    
+	<position name="posAPAFrame_pXpZ" unit="mm" x="2075" y="0" z="417.5" />    
 </define>
 <solids>
 	<box name="boxTPC" lunit="mm" x="1974" y="4000" z="5000"/>
@@ -1230,56 +1190,6 @@
 		<positionref ref="center"/>
 	</subtraction>
 </solids>
-<solids>
-	<box name="ArapucaOut"  lunit="mm"  x="12.800000000000001"  y="92"  z="117.5" />
-	<box name="ArapucaIn"   lunit="mm"  x="8"     y="80"   z="100"   /> <!-- inner volume + acceptance window -->
-	<box name="ArapucaAcceptanceWindow" lunit="mm" x="2" y="80" z="100" />
-	<box name="ArapucaVolume" lunit="mm" x="15" y="190" z="130" />
-	<subtraction name="SingleArapucaWalls">
-		<first ref="ArapucaOut"/>
-		<second ref="ArapucaIn"/>
-		<position name="posArapucaIn" unit="mm" x="2.4000000000000004" y="0" z="0"/> <!-- 12.8mm = ArapucaOut in X / 6mm = ArapucaIn in X / 2mm = ArapucaAcceptanceWindow in X -->
-	</subtraction>
-</solids>
-<structure>
-	<volume name="volOpDetSensitive_Arapuca">
-		<materialref ref="LAr"/>
-		<solidref ref="ArapucaAcceptanceWindow"/>
-	</volume>
-	<volume name="volSingleArapuca">
-		<materialref ref="vm2000"/>
-		<solidref ref="SingleArapucaWalls"/>
-	</volume>
-	<volume name="volArapuca">
-		<materialref ref="LAr"/>
-		<solidref ref="ArapucaVolume"/>
-		<physvol> 
-			<volumeref ref="volSingleArapuca"/>
-			<position name="posArapuca1" unit="mm" x="0" y="46" z="0"/> <!-- 92 = ArapucaOut in Y -->
-		</physvol> 
-		<physvol> 
-			<volumeref ref="volOpDetSensitive_Arapuca"/>
-			<position name="posArapucaWindow1" unit="mm" x="5.4000000000000004" y="46" z="0"/> <!-- 12.8mm = ArapucaOut in X / 92mm = ArapucaIn in Y-->
-		</physvol>
-		<physvol> 
-			<volumeref ref="volSingleArapuca"/>
-			<position name="posArapuca2" unit="mm" x="0" y="-46" z="0"/> <!-- 92mm = ArapucaIn in Y -->
-		</physvol>
-		<physvol> 
-			<volumeref ref="volOpDetSensitive_Arapuca"/>
-			<position name="posArapucaWindow2" unit="mm" x="5.4000000000000004" y="-46" z="0"/> <!-- 12.8mm = ArapucaOut in X / 92mm = ArapucaIn in Y-->
-		</physvol>
-	</volume>
-</structure>
-<solids>
-	<box name="lightguidebar" lunit="cm" x="0.59999999999999998" y="115" z="8.5999999999999996"/>
-</solids>
-<structure>
-	<volume name="volOpDetSensitive_Bar">
-		<materialref ref="LAr"/>
-		<solidref ref="lightguidebar"/>
-	</volume>
-</structure>
 <structure> <!-- SBND has a single Cryostat, with 2 TPCs -->
 	<volume name="volCryostat">
 		<materialref ref="LAr"/>
@@ -1318,1179 +1228,723 @@
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_0" unit="mm" x="-2154" y="1700" z="-2567.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_1" unit="mm" x="-2154" y="1700" z="-2267.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_2" unit="mm" x="-2154" y="1700" z="-1967.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_3" unit="mm" x="-2154" y="1300" z="-2267.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_4" unit="mm" x="-2154" y="900" z="-2567.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_5" unit="mm" x="-2154" y="900" z="-1967.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_6" unit="mm" x="-2154" y="1700" z="-1367.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_7" unit="mm" x="-2154" y="1700" z="-1067.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_8" unit="mm" x="-2154" y="1700" z="-767.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_9" unit="mm" x="-2154" y="1300" z="-1067.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_10" unit="mm" x="-2154" y="900" z="-1367.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_11" unit="mm" x="-2154" y="900" z="-767.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_12" unit="mm" x="-2154" y="400" z="-2567.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_13" unit="mm" x="-2154" y="400" z="-2267.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_14" unit="mm" x="-2154" y="400" z="-1967.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol> 
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_15" unit="mm" x="-2154" y="0" z="-2267.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_16" unit="mm" x="-2154" y="-400" z="-2567.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_17" unit="mm" x="-2154" y="-400" z="-1967.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_18" unit="mm" x="-2154" y="400" z="-1367.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_19" unit="mm" x="-2154" y="400" z="-1067.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol> 
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_20" unit="mm" x="-2154" y="400" z="-767.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_21" unit="mm" x="-2154" y="0" z="-1067.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_22" unit="mm" x="-2154" y="-400" z="-1367.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_23" unit="mm" x="-2154" y="-400" z="-767.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_24" unit="mm" x="-2154" y="-900" z="-2567.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_25" unit="mm" x="-2154" y="-900" z="-2267.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol> 
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_26" unit="mm" x="-2154" y="-900" z="-1967.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_27" unit="mm" x="-2154" y="-1300" z="-2267.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_28" unit="mm" x="-2154" y="-1700" z="-2567.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_29" unit="mm" x="-2154" y="-1700" z="-1967.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_30" unit="mm" x="-2154" y="-900" z="-1367.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_31" unit="mm" x="-2154" y="-900" z="-1067.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol> 
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_32" unit="mm" x="-2154" y="-900" z="-767.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_33" unit="mm" x="-2154" y="-1300" z="-1067.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_34" unit="mm" x="-2154" y="-1700" z="-1367.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_35" unit="mm" x="-2154" y="-1700" z="-767.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_36" unit="mm" x="-2154" y="1700" z="-67.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_37" unit="mm" x="-2154" y="1700" z="232.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_38" unit="mm" x="-2154" y="1700" z="532.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_39" unit="mm" x="-2154" y="1300" z="232.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_40" unit="mm" x="-2154" y="900" z="-67.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_41" unit="mm" x="-2154" y="900" z="532.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_42" unit="mm" x="-2154" y="1700" z="1132.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_43" unit="mm" x="-2154" y="1700" z="1432.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol> 
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_44" unit="mm" x="-2154" y="1700" z="1732.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_45" unit="mm" x="-2154" y="1300" z="1432.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_46" unit="mm" x="-2154" y="900" z="1132.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_47" unit="mm" x="-2154" y="900" z="1732.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_48" unit="mm" x="-2154" y="400" z="-67.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_49" unit="mm" x="-2154" y="400" z="232.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_50" unit="mm" x="-2154" y="400" z="532.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_51" unit="mm" x="-2154" y="0" z="232.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_52" unit="mm" x="-2154" y="-400" z="-67.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_53" unit="mm" x="-2154" y="-400" z="532.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_54" unit="mm" x="-2154" y="400" z="1132.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_55" unit="mm" x="-2154" y="400" z="1432.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_56" unit="mm" x="-2154" y="400" z="1732.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_57" unit="mm" x="-2154" y="0" z="1432.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_58" unit="mm" x="-2154" y="-400" z="1132.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_59" unit="mm" x="-2154" y="-400" z="1732.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_60" unit="mm" x="-2154" y="-900" z="-67.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_61" unit="mm" x="-2154" y="-900" z="232.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_62" unit="mm" x="-2154" y="-900" z="532.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_63" unit="mm" x="-2154" y="-1300" z="232.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_64" unit="mm" x="-2154" y="-1700" z="-67.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_65" unit="mm" x="-2154" y="-1700" z="532.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_66" unit="mm" x="-2154" y="-900" z="1132.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_67" unit="mm" x="-2154" y="-900" z="1432.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_68" unit="mm" x="-2154" y="-900" z="1732.5"/>
-				<rotationref ref="rotateN90Y"/>
+			<position name="posPMT_0" unit="mm" x="-2154" y="1608" z="-1732.5"/>
+			<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_69" unit="mm" x="-2154" y="-1300" z="1432.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_70" unit="mm" x="-2154" y="-1700" z="1132.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_71" unit="mm" x="-2154" y="-1700" z="1732.5"/>
-				<rotationref ref="rotateN90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volPMT"/>
-				<position name="posPMT_72" unit="mm" x="2154" y="1700" z="-2567.5"/>
+				<position name="posPMT_1" unit="mm" x="-2154" y="1608" z="-1457.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_73" unit="mm" x="2154" y="1700" z="-2267.5"/>
+				<position name="posPMT_2" unit="mm" x="-2154" y="1608" z="-1182.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_74" unit="mm" x="2154" y="1700" z="-1967.5"/>
+				<position name="posPMT_3" unit="mm" x="-2154" y="1333" z="-1457.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_75" unit="mm" x="2154" y="1300" z="-2267.5"/>
+				<position name="posPMT_4" unit="mm" x="-2154" y="1058" z="-1732.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_76" unit="mm" x="2154" y="900" z="-2567.5"/>
+				<position name="posPMT_5" unit="mm" x="-2154" y="1058" z="-1182.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_77" unit="mm" x="2154" y="900" z="-1967.5"/>
+				<position name="posPMT_6" unit="mm" x="-2154" y="1608" z="-482.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_78" unit="mm" x="2154" y="1700" z="-1367.5"/>
+				<position name="posPMT_7" unit="mm" x="-2154" y="1608" z="-207.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_79" unit="mm" x="2154" y="1700" z="-1067.5"/>
+				<position name="posPMT_8" unit="mm" x="-2154" y="1608" z="67.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_80" unit="mm" x="2154" y="1700" z="-767.5"/>
+				<position name="posPMT_9" unit="mm" x="-2154" y="1333" z="-207.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_81" unit="mm" x="2154" y="1300" z="-1067.5"/>
+				<position name="posPMT_10" unit="mm" x="-2154" y="1058" z="-482.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_82" unit="mm" x="2154" y="900" z="-1367.5"/>
+				<position name="posPMT_11" unit="mm" x="-2154" y="1058" z="67.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_83" unit="mm" x="2154" y="900" z="-767.5"/>
+				<position name="posPMT_12" unit="mm" x="-2154" y="275" z="-1732.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_84" unit="mm" x="2154" y="400" z="-2567.5"/>
+				<position name="posPMT_13" unit="mm" x="-2154" y="275" z="-1457.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_85" unit="mm" x="2154" y="400" z="-2267.5"/>
+				<position name="posPMT_14" unit="mm" x="-2154" y="275" z="-1182.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_86" unit="mm" x="2154" y="400" z="-1967.5"/>
+				<position name="posPMT_15" unit="mm" x="-2154" y="0" z="-1457.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_87" unit="mm" x="2154" y="0" z="-2267.5"/>
+				<position name="posPMT_16" unit="mm" x="-2154" y="-275" z="-1732.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_89" unit="mm" x="2154" y="-400" z="-2567.5"/>
+				<position name="posPMT_17" unit="mm" x="-2154" y="-275" z="-1182.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_90" unit="mm" x="2154" y="-400" z="-1967.5"/>
+				<position name="posPMT_18" unit="mm" x="-2154" y="275" z="-482.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_90_" unit="mm" x="2154" y="400" z="-1367.5"/>
+				<position name="posPMT_19" unit="mm" x="-2154" y="275" z="-207.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_91" unit="mm" x="2154" y="400" z="-1067.5"/>
+				<position name="posPMT_20" unit="mm" x="-2154" y="275" z="67.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_92" unit="mm" x="2154" y="400" z="-767.5"/>
+				<position name="posPMT_21" unit="mm" x="-2154" y="0" z="-207.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_93" unit="mm" x="2154" y="0" z="-1067.5"/>
+				<position name="posPMT_22" unit="mm" x="-2154" y="-275" z="-482.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_94" unit="mm" x="2154" y="-400" z="-1367.5"/>
+				<position name="posPMT_23" unit="mm" x="-2154" y="-275" z="67.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_95" unit="mm" x="2154" y="-400" z="-767.5"/>
+				<position name="posPMT_24" unit="mm" x="-2154" y="-1058" z="-1732.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_96" unit="mm" x="2154" y="-900" z="-2567.5"/>
+				<position name="posPMT_25" unit="mm" x="-2154" y="-1058" z="-1457.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_97" unit="mm" x="2154" y="-900" z="-2267.5"/>
+				<position name="posPMT_26" unit="mm" x="-2154" y="-1058" z="-1182.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_98" unit="mm" x="2154" y="-900" z="-1967.5"/>
+				<position name="posPMT_27" unit="mm" x="-2154" y="-1333" z="-1457.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_99" unit="mm" x="2154" y="-1300" z="-2267.5"/>
+				<position name="posPMT_28" unit="mm" x="-2154" y="-1608" z="-1732.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_100" unit="mm" x="2154" y="-1700" z="-2567.5"/>
+				<position name="posPMT_29" unit="mm" x="-2154" y="-1608" z="-1182.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_101" unit="mm" x="2154" y="-1700" z="-1967.5"/>
+				<position name="posPMT_30" unit="mm" x="-2154" y="-1058" z="-482.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_102" unit="mm" x="2154" y="-900" z="-1367.5"/>
+				<position name="posPMT_31" unit="mm" x="-2154" y="-1058" z="-207.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_103" unit="mm" x="2154" y="-900" z="-1067.5"/>
+				<position name="posPMT_32" unit="mm" x="-2154" y="-1058" z="67.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_104" unit="mm" x="2154" y="-900" z="-767.5"/>
+				<position name="posPMT_33" unit="mm" x="-2154" y="-1333" z="-207.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_105" unit="mm" x="2154" y="-1300" z="-1067.5"/>
+				<position name="posPMT_34" unit="mm" x="-2154" y="-1608" z="-482.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_106" unit="mm" x="2154" y="-1700" z="-1367.5"/>
+				<position name="posPMT_35" unit="mm" x="-2154" y="-1608" z="67.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_107" unit="mm" x="2154" y="-1700" z="-767.5"/>
+				<position name="posPMT_36" unit="mm" x="-2154" y="1608" z="767.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_108" unit="mm" x="2154" y="1700" z="-67.5"/>
+				<position name="posPMT_37" unit="mm" x="-2154" y="1608" z="1042.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_109" unit="mm" x="2154" y="1700" z="232.5"/>
+				<position name="posPMT_38" unit="mm" x="-2154" y="1608" z="1317.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_110" unit="mm" x="2154" y="1700" z="532.5"/>
+				<position name="posPMT_39" unit="mm" x="-2154" y="1333" z="1042.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_111" unit="mm" x="2154" y="1300" z="232.5"/>
+				<position name="posPMT_40" unit="mm" x="-2154" y="1058" z="767.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_112" unit="mm" x="2154" y="900" z="-67.5"/>
+				<position name="posPMT_41" unit="mm" x="-2154" y="1058" z="1317.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_113" unit="mm" x="2154" y="900" z="532.5"/>
+				<position name="posPMT_42" unit="mm" x="-2154" y="1608" z="2017.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_114" unit="mm" x="2154" y="1700" z="1132.5"/>
+				<position name="posPMT_43" unit="mm" x="-2154" y="1608" z="2292.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_115" unit="mm" x="2154" y="1700" z="1432.5"/>
+				<position name="posPMT_44" unit="mm" x="-2154" y="1608" z="2567.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_116" unit="mm" x="2154" y="1700" z="1732.5"/>
+				<position name="posPMT_45" unit="mm" x="-2154" y="1333" z="2292.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_117" unit="mm" x="2154" y="1300" z="1432.5"/>
+				<position name="posPMT_46" unit="mm" x="-2154" y="1058" z="2017.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_118" unit="mm" x="2154" y="900" z="1132.5"/>
+				<position name="posPMT_47" unit="mm" x="-2154" y="1058" z="2567.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_119" unit="mm" x="2154" y="900" z="1732.5"/>
+				<position name="posPMT_48" unit="mm" x="-2154" y="275" z="767.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_120" unit="mm" x="2154" y="400" z="-67.5"/>
+				<position name="posPMT_49" unit="mm" x="-2154" y="275" z="1042.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_121" unit="mm" x="2154" y="400" z="232.5"/>
+				<position name="posPMT_50" unit="mm" x="-2154" y="275" z="1317.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_122" unit="mm" x="2154" y="400" z="532.5"/>
+				<position name="posPMT_51" unit="mm" x="-2154" y="0" z="1042.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_123" unit="mm" x="2154" y="0" z="232.5"/>
+				<position name="posPMT_52" unit="mm" x="-2154" y="-275" z="767.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_124" unit="mm" x="2154" y="-400" z="-67.5"/>
+				<position name="posPMT_53" unit="mm" x="-2154" y="-275" z="1317.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_125" unit="mm" x="2154" y="-400" z="532.5"/>
+				<position name="posPMT_54" unit="mm" x="-2154" y="275" z="2017.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_126" unit="mm" x="2154" y="400" z="1132.5"/>
+				<position name="posPMT_55" unit="mm" x="-2154" y="275" z="2292.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_127" unit="mm" x="2154" y="400" z="1432.5"/>
+				<position name="posPMT_56" unit="mm" x="-2154" y="275" z="2567.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_128" unit="mm" x="2154" y="400" z="1732.5"/>
+				<position name="posPMT_57" unit="mm" x="-2154" y="0" z="2292.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_129" unit="mm" x="2154" y="0" z="1432.5"/>
+				<position name="posPMT_58" unit="mm" x="-2154" y="-275" z="2017.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_130" unit="mm" x="2154" y="-400" z="1132.5"/>
+				<position name="posPMT_59" unit="mm" x="-2154" y="-275" z="2567.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_131" unit="mm" x="2154" y="-400" z="1732.5"/>
+				<position name="posPMT_60" unit="mm" x="-2154" y="-1058" z="767.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_132" unit="mm" x="2154" y="-900" z="-67.5"/>
+				<position name="posPMT_61" unit="mm" x="-2154" y="-1058" z="1042.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_133" unit="mm" x="2154" y="-900" z="232.5"/>
+				<position name="posPMT_62" unit="mm" x="-2154" y="-1058" z="1317.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_134" unit="mm" x="2154" y="-900" z="532.5"/>
+				<position name="posPMT_63" unit="mm" x="-2154" y="-1333" z="1042.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_135" unit="mm" x="2154" y="-1300" z="232.5"/>
+				<position name="posPMT_64" unit="mm" x="-2154" y="-1608" z="767.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_136" unit="mm" x="2154" y="-1700" z="-67.5"/>
+				<position name="posPMT_65" unit="mm" x="-2154" y="-1608" z="1317.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_137" unit="mm" x="2154" y="-1700" z="532.5"/>
+				<position name="posPMT_66" unit="mm" x="-2154" y="-1058" z="2017.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_138" unit="mm" x="2154" y="-900" z="1132.5"/>
+				<position name="posPMT_67" unit="mm" x="-2154" y="-1058" z="2292.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_139" unit="mm" x="2154" y="-900" z="1432.5"/>
+				<position name="posPMT_68" unit="mm" x="-2154" y="-1058" z="2567.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_140" unit="mm" x="2154" y="-900" z="1732.5"/>
+				<position name="posPMT_69" unit="mm" x="-2154" y="-1333" z="2292.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_141" unit="mm" x="2154" y="-1300" z="1432.5"/>
+				<position name="posPMT_70" unit="mm" x="-2154" y="-1608" z="2017.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_142" unit="mm" x="2154" y="-1700" z="1132.5"/>
+				<position name="posPMT_71" unit="mm" x="-2154" y="-1608" z="2567.5"/>
 				<rotationref ref="rotateP90Y"/>
 		</physvol>
 		<physvol>
 			<volumeref ref="volPMT"/>
-				<position name="posPMT_143" unit="mm" x="2154" y="-1700" z="1732.5"/>
-				<rotationref ref="rotateP90Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_1" unit="mm" x="-2223.3499999999999" y="1300" z="-767.5"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_2" unit="mm" x="-2223.3499999999999" y="0" z="-1367.5"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_3" unit="mm" x="-2223.3499999999999" y="0" z="-767.5"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_4" unit="mm" x="-2223.3499999999999" y="-1300" z="-767.5"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_5" unit="mm" x="-2223.3499999999999" y="1300" z="-67.5"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_6" unit="mm" x="-2223.3499999999999" y="0" z="-67.5"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_7" unit="mm" x="-2223.3499999999999" y="0" z="532.5"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_8" unit="mm" x="-2223.3499999999999" y="-1300" z="-67.5"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_9" unit="mm" x="2223.3499999999999" y="1300" z="-767.5"/>
-				<rotationref ref="rotate180Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_10" unit="mm" x="2223.3499999999999" y="0" z="-1367.5"/>
-				<rotationref ref="rotate180Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_11" unit="mm" x="2223.3499999999999" y="0" z="-767.5"/>
-				<rotationref ref="rotate180Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_12" unit="mm" x="2223.3499999999999" y="-1300" z="-767.5"/>
-				<rotationref ref="rotate180Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_13" unit="mm" x="2223.3499999999999" y="1300" z="-67.5"/>
-				<rotationref ref="rotate180Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_14" unit="mm" x="2223.3499999999999" y="0" z="-67.5"/>
-				<rotationref ref="rotate180Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_15" unit="mm" x="2223.3499999999999" y="0" z="532.5"/>
-				<rotationref ref="rotate180Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volArapuca"/>
-				<position name="posArapuca_16" unit="mm" x="2223.3499999999999" y="-1300" z="-67.5"/>
-				<rotationref ref="rotate180Y"/>
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_1" unit="mm" x="-2223.3499999999999" y="1300" z="-2717.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_2" unit="mm" x="-2223.3499999999999" y="1300" z="-2417.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_3" unit="mm" x="-2223.3499999999999" y="1300" z="-2117.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_4" unit="mm" x="-2223.3499999999999" y="1300" z="-1817.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_5" unit="mm" x="-2223.3499999999999" y="1300" z="-1517.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_6" unit="mm" x="-2223.3499999999999" y="1300" z="-1217.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_7" unit="mm" x="-2223.3499999999999" y="1300" z="-917.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_8" unit="mm" x="-2223.3499999999999" y="1300" z="-617.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_9" unit="mm" x="-2223.3499999999999" y="0" z="-2717.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_10" unit="mm" x="-2223.3499999999999" y="0" z="-2417.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_11" unit="mm" x="-2223.3499999999999" y="0" z="-2117.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_12" unit="mm" x="-2223.3499999999999" y="0" z="-1817.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_13" unit="mm" x="-2223.3499999999999" y="0" z="-1517.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_14" unit="mm" x="-2223.3499999999999" y="0" z="-1217.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_15" unit="mm" x="-2223.3499999999999" y="0" z="-917.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_16" unit="mm" x="-2223.3499999999999" y="0" z="-617.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_17" unit="mm" x="-2223.3499999999999" y="-1300" z="-2717.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_18" unit="mm" x="-2223.3499999999999" y="-1300" z="-2417.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_19" unit="mm" x="-2223.3499999999999" y="-1300" z="-2117.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_20" unit="mm" x="-2223.3499999999999" y="-1300" z="-1817.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_21" unit="mm" x="-2223.3499999999999" y="-1300" z="-1517.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_22" unit="mm" x="-2223.3499999999999" y="-1300" z="-1217.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_23" unit="mm" x="-2223.3499999999999" y="-1300" z="-917.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_24" unit="mm" x="-2223.3499999999999" y="-1300" z="-617.5" />
-		</physvol>
-		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_25" unit="mm" x="-2223.3499999999999" y="1300" z="-217.5" />
+				<position name="posPMT_72" unit="mm" x="2154" y="1608" z="-1732.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_26" unit="mm" x="-2223.3499999999999" y="1300" z="82.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_73" unit="mm" x="2154" y="1608" z="-1457.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_27" unit="mm" x="-2223.3499999999999" y="1300" z="382.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_74" unit="mm" x="2154" y="1608" z="-1182.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_28" unit="mm" x="-2223.3499999999999" y="1300" z="682.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_75" unit="mm" x="2154" y="1333" z="-1457.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_29" unit="mm" x="-2223.3499999999999" y="1300" z="982.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_76" unit="mm" x="2154" y="1058" z="-1732.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_30" unit="mm" x="-2223.3499999999999" y="1300" z="1282.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_77" unit="mm" x="2154" y="1058" z="-1182.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_31" unit="mm" x="-2223.3499999999999" y="1300" z="1582.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_78" unit="mm" x="2154" y="1608" z="-482.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_32" unit="mm" x="-2223.3499999999999" y="1300" z="1882.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_79" unit="mm" x="2154" y="1608" z="-207.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_33" unit="mm" x="-2223.3499999999999" y="0" z="-217.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_80" unit="mm" x="2154" y="1608" z="67.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_34" unit="mm" x="-2223.3499999999999" y="0" z="82.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_81" unit="mm" x="2154" y="1333" z="-207.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_35" unit="mm" x="-2223.3499999999999" y="0" z="382.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_82" unit="mm" x="2154" y="1058" z="-482.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_36" unit="mm" x="-2223.3499999999999" y="0" z="682.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_83" unit="mm" x="2154" y="1058" z="67.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_37" unit="mm" x="-2223.3499999999999" y="0" z="982.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_84" unit="mm" x="2154" y="275" z="-1732.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_38" unit="mm" x="-2223.3499999999999" y="0" z="1282.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_85" unit="mm" x="2154" y="275" z="-1457.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_39" unit="mm" x="-2223.3499999999999" y="0" z="1582.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_86" unit="mm" x="2154" y="275" z="-1182.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_40" unit="mm" x="-2223.3499999999999" y="0" z="1882.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_87" unit="mm" x="2154" y="0" z="-1457.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_41" unit="mm" x="-2223.3499999999999" y="-1300" z="-217.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_88" unit="mm" x="2154" y="-275" z="-1732.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_42" unit="mm" x="-2223.3499999999999" y="-1300" z="82.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_89" unit="mm" x="2154" y="-275" z="-1182.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_43" unit="mm" x="-2223.3499999999999" y="-1300" z="382.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_90" unit="mm" x="2154" y="275" z="-482.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_44" unit="mm" x="-2223.3499999999999" y="-1300" z="682.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_91" unit="mm" x="2154" y="275" z="-207.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_45" unit="mm" x="-2223.3499999999999" y="-1300" z="982.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_92" unit="mm" x="2154" y="275" z="67.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_46" unit="mm" x="-2223.3499999999999" y="-1300" z="1282.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_93" unit="mm" x="2154" y="0" z="-207.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_47" unit="mm" x="-2223.3499999999999" y="-1300" z="1582.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_94" unit="mm" x="2154" y="-275" z="-482.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_48" unit="mm" x="-2223.3499999999999" y="-1300" z="1882.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_95" unit="mm" x="2154" y="-275" z="67.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_49" unit="mm" x="2223.3499999999999" y="1300" z="-2717.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_96" unit="mm" x="2154" y="-1058" z="-1732.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_50" unit="mm" x="2223.3499999999999" y="1300" z="-2417.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_97" unit="mm" x="2154" y="-1058" z="-1457.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_51" unit="mm" x="2223.3499999999999" y="1300" z="-2117.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_98" unit="mm" x="2154" y="-1058" z="-1182.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_52" unit="mm" x="2223.3499999999999" y="1300" z="-1817.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_99" unit="mm" x="2154" y="-1333" z="-1457.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_53" unit="mm" x="2223.3499999999999" y="1300" z="-1517.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_100" unit="mm" x="2154" y="-1608" z="-1732.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_54" unit="mm" x="2223.3499999999999" y="1300" z="-1217.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_101" unit="mm" x="2154" y="-1608" z="-1182.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_55" unit="mm" x="2223.3499999999999" y="1300" z="-917.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_102" unit="mm" x="2154" y="-1058" z="-482.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_56" unit="mm" x="2223.3499999999999" y="1300" z="-617.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_103" unit="mm" x="2154" y="-1058" z="-207.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_57" unit="mm" x="2223.3499999999999" y="0" z="-2717.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_104" unit="mm" x="2154" y="-1058" z="67.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_58" unit="mm" x="2223.3499999999999" y="0" z="-2417.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_105" unit="mm" x="2154" y="-1333" z="-207.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_59" unit="mm" x="2223.3499999999999" y="0" z="-2117.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_106" unit="mm" x="2154" y="-1608" z="-482.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_60" unit="mm" x="2223.3499999999999" y="0" z="-1817.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_107" unit="mm" x="2154" y="-1608" z="67.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_61" unit="mm" x="2223.3499999999999" y="0" z="-1517.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_108" unit="mm" x="2154" y="1608" z="767.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_62" unit="mm" x="2223.3499999999999" y="0" z="-1217.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_109" unit="mm" x="2154" y="1608" z="1042.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_63" unit="mm" x="2223.3499999999999" y="0" z="-917.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_110" unit="mm" x="2154" y="1608" z="1317.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_64" unit="mm" x="2223.3499999999999" y="0" z="-617.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_111" unit="mm" x="2154" y="1333" z="1042.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_65" unit="mm" x="2223.3499999999999" y="-1300" z="-2717.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_112" unit="mm" x="2154" y="1058" z="767.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_66" unit="mm" x="2223.3499999999999" y="-1300" z="-2417.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_113" unit="mm" x="2154" y="1058" z="1317.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_67" unit="mm" x="2223.3499999999999" y="-1300" z="-2117.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_114" unit="mm" x="2154" y="1608" z="2017.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_68" unit="mm" x="2223.3499999999999" y="-1300" z="-1817.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_115" unit="mm" x="2154" y="1608" z="2292.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_69" unit="mm" x="2223.3499999999999" y="-1300" z="-1517.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_116" unit="mm" x="2154" y="1608" z="2567.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_70" unit="mm" x="2223.3499999999999" y="-1300" z="-1217.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_117" unit="mm" x="2154" y="1333" z="2292.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_71" unit="mm" x="2223.3499999999999" y="-1300" z="-917.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_118" unit="mm" x="2154" y="1058" z="2017.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_72" unit="mm" x="2223.3499999999999" y="-1300" z="-617.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_119" unit="mm" x="2154" y="1058" z="2567.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_73" unit="mm" x="2223.3499999999999" y="1300" z="-217.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_120" unit="mm" x="2154" y="275" z="767.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_74" unit="mm" x="2223.3499999999999" y="1300" z="82.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_121" unit="mm" x="2154" y="275" z="1042.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_75" unit="mm" x="2223.3499999999999" y="1300" z="382.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_122" unit="mm" x="2154" y="275" z="1317.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_76" unit="mm" x="2223.3499999999999" y="1300" z="682.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_123" unit="mm" x="2154" y="0" z="1042.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_77" unit="mm" x="2223.3499999999999" y="1300" z="982.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_124" unit="mm" x="2154" y="-275" z="767.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_78" unit="mm" x="2223.3499999999999" y="1300" z="1282.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_125" unit="mm" x="2154" y="-275" z="1317.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_79" unit="mm" x="2223.3499999999999" y="1300" z="1582.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_126" unit="mm" x="2154" y="275" z="2017.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_80" unit="mm" x="2223.3499999999999" y="1300" z="1882.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_127" unit="mm" x="2154" y="275" z="2292.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_81" unit="mm" x="2223.3499999999999" y="0" z="-217.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_128" unit="mm" x="2154" y="275" z="2567.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_82" unit="mm" x="2223.3499999999999" y="0" z="82.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_129" unit="mm" x="2154" y="0" z="2292.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_83" unit="mm" x="2223.3499999999999" y="0" z="382.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_130" unit="mm" x="2154" y="-275" z="2017.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_84" unit="mm" x="2223.3499999999999" y="0" z="682.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_131" unit="mm" x="2154" y="-275" z="2567.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_85" unit="mm" x="2223.3499999999999" y="0" z="982.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_132" unit="mm" x="2154" y="-1058" z="767.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_86" unit="mm" x="2223.3499999999999" y="0" z="1282.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_133" unit="mm" x="2154" y="-1058" z="1042.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_87" unit="mm" x="2223.3499999999999" y="0" z="1582.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_134" unit="mm" x="2154" y="-1058" z="1317.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_88" unit="mm" x="2223.3499999999999" y="0" z="1882.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_135" unit="mm" x="2154" y="-1333" z="1042.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_89" unit="mm" x="2223.3499999999999" y="-1300" z="-217.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_136" unit="mm" x="2154" y="-1608" z="767.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_90" unit="mm" x="2223.3499999999999" y="-1300" z="82.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_137" unit="mm" x="2154" y="-1608" z="1317.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_91" unit="mm" x="2223.3499999999999" y="-1300" z="382.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_138" unit="mm" x="2154" y="-1058" z="2017.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_92" unit="mm" x="2223.3499999999999" y="-1300" z="682.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_139" unit="mm" x="2154" y="-1058" z="2292.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_93" unit="mm" x="2223.3499999999999" y="-1300" z="982.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_140" unit="mm" x="2154" y="-1058" z="2567.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_94" unit="mm" x="2223.3499999999999" y="-1300" z="1282.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_141" unit="mm" x="2154" y="-1333" z="2292.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_95" unit="mm" x="2223.3499999999999" y="-1300" z="1582.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_142" unit="mm" x="2154" y="-1608" z="2017.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 		<physvol>
-			<volumeref ref="volOpDetSensitive_Bar"/>
-				<position name="posBar_96" unit="mm" x="2223.3499999999999" y="-1300" z="1882.5" />
+			<volumeref ref="volPMT"/>
+				<position name="posPMT_143" unit="mm" x="2154" y="-1608" z="2567.5"/>
+				<rotationref ref="rotateN90Y"/>
 		</physvol>
 	</volume>
 </structure>
