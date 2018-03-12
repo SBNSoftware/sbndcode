@@ -141,7 +141,7 @@ physics:
          , linecluster
    #      , cccluster
    #      , spacepts,
-          , blurredcluster 
+   #      , blurredcluster 
           , pandora, pandoraTrack, pandoraShower
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
