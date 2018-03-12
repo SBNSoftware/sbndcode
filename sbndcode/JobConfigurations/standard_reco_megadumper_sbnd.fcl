@@ -1,7 +1,7 @@
 #
 # File:    standard_reco_megadumper_sbnd.fcl
 # Purpose: Dumps a lot of stuff on text files.
-# Version: 1.1
+# Version: 1.2
 #
 # This job dumps into text files most of the data products contained in a
 # typical SBND reconstruction output file.
@@ -30,7 +30,7 @@
 #     - `fasthit`                                    (`DumpHitsFast.log`)
 #     - `linecluster`                                (`DumpHitsLC.log`)
 #   * clustering            (`recob::Cluster`)
-#     - `blurredcluster`:                            (`DumpClustersBlurred.log`)
+#     - `blurredcluster`:                            (`DumpClustersBlurred.log` [v1.0--1.1])
 #     - `linecluster`:                               (`DumpClustersLineCluster.log`)
 #     - `pandora`:                                   (`DumpClustersPandora.log`)
 #   * tracking              (`recob::Track`)
@@ -60,8 +60,8 @@
 #     - `recob::Track`       `pandoraTrack`          (`DumpTracksPandora.log`)
 #     - `recob::Shower`      `pandoraShower`         not dumped (no dumper available)
 #     - `recob::PCAxis`      `pandoraShower`         (`DumpPCAxesPandoraShower.log`)
-#     - `anab::Calorimetry`  `pandoraCalo`           not dumped (no dumper available)
-#     - `anab::ParticleID`   `pandoraPid`            not dumped (no dumper available)
+#     - `anab::Calorimetry`  `pandoraCalo`           not dumped (no dumper available [v1.1+])
+#     - `anab::ParticleID`   `pandoraPid`            not dumped (no dumper available [v1.1+])
 #   * Projection Matching Algorithm (`pmalgtrackmaker`):
 #     - `recob::PFParticle`                          (`DumpPFParticlesPMA.log`)
 #     - `recob::Vertex`      `pmalgtrackmaker`, `pmalgtrackmaker:node`, `pmalgtrackmaker:kink` (`DumpVerticesPMA.log`)
@@ -81,6 +81,8 @@
 # 
 # 
 # Changes:
+# 20180309 (petrillo@fnal.gov) [v1.2]
+#   removed dump of `blurredcluster` products from Dominic Barker's changes
 # 20180309 (petrillo@fnal.gov) [v1.1]
 #   "added" dump of data products from Rhiannon Jones's changes
 # 20180309 (petrillo@fnal.gov) [v1.0]
@@ -812,7 +814,7 @@ physics: {
     , dumphitsfast
     , dumpclusterspandora
     , dumpclusterslc
-    , dumpclustersblurred
+  #  , dumpclustersblurred
     , dumptrackspma
     , dumpparticlespandora
     , dumptrackspandora
