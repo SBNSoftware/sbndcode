@@ -4,4 +4,17 @@ BEGIN_PROLOG
 
 sbnd_properties: @local::standard_properties
 
+sbnd_properties.ReflectiveSurfaceEnergies:         [ 1.77, 2.0675, 2.481, 2.819, 2.953, 3.1807, 3.54, 4.135, 4.962, 5.39, 7., 15. ]
+sbnd_properties.ReflectiveSurfaceNames:            [ "STEEL_STAINLESS_Fe7Cr2Ni", "Copper_Beryllium_alloy25", "G10", "vm2000" ]
+sbnd_properties.ReflectiveSurfaceReflectances:     [ [ 0.66, 0.64, 0.62, 0.60, 0.59, 0.57, 0.53, 0.47, 0.39, 0.36, 0.27, 0.25 ],
+                                                       [ 0.902, 0.841, 0.464, 0.379, 0.345, 0.299, 0.287, 0.264, 0.337, 0.3, 0.0, 0.0 ],
+                                                       [ 0.393, 0.405, 0.404, 0.352, 0.323, 0.243, 0.127, 0.065, 0.068, 0.068, 0.0, 0.0 ],
+                                                       [ 0.93, 0.93, 0.93, 0.93, 0.93, 0.93, 0.1, 0.1, 0.7, 0.3, 0.0, 0.0 ] ]
+
+#the information below is used for the "simple boundary simulation". We are not using it in sbnd (values irrelevant for us)
+sbnd_properties.ReflectiveSurfaceDiffuseFractions: [ [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                                     [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                                     [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                                     [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ]
+
 END_PROLOG
