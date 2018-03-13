@@ -52,7 +52,7 @@ sbnd_largeantparameters: {
   UseCustomPhysics: true
   EnabledPhysics: [
     "Em",
-#    "FastOptical",
+    "FastOptical",
     "SynchrotronAndGN",
     "Ion",
     "Hadron",

@@ -1,7 +1,7 @@
 #
 # File:    standard_g4_sbnd.fcl
 # Purpose: Propagation of generated particle through matter (Geant4 simulation)
-# Version: 1.2
+# Version: 1.3
 # 
 # This configuration runs:
 # - LArG4: produces:
@@ -20,11 +20,14 @@
 # - will require flux files for Genie and Corsika
 #
 # Changes:
-# 20160707 (petrillo@fnal.gov) [v1.1]
-#   - uniformed to prodsingle_sbnd.fcl
-#
+# 20180313 (petrillo@fnal.gov) [v1.3]
+#   - removed the custom physics list override (now inherited from the service)
+# 
 # 20161223 (petrillo@fnal.gov) [v1.2]
 #   - adopted shared root output configuration
+#
+# 20160707 (petrillo@fnal.gov) [v1.1]
+#   - uniformed to prodsingle_sbnd.fcl
 #
 
 #
@@ -100,13 +103,3 @@ outputs:
 # only keep MCParticles that cross the cryostat;
 # this is relevant in extensive cosmic ray generators (like Corsika)
 physics.producers.largeant.KeepParticlesInVolumes: ["volCryostat"] 
-
-services.LArG4Parameters.EnabledPhysics: [ "Em",
-                                                "FastOptical",
-                                                "SynchrotronAndGN",
-                                                "Ion",
-                                                "Hadron",
-                                                "Decay",
-                                                "HadronElastic",
-                                                "Stopping",
-                                                "NeutronTrackingCut" ]

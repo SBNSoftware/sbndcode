@@ -51,8 +51,11 @@ sbnd_timeparametrization_photonvisibilityservice: {
 
   LibraryFile: "OpticalLibrary/op_library_sbnd_v2.root"
 
-  UseCryoBoundary: true
-  # these are not used when `UseCryoBoundary` is true
+  # there is no visibility information outside the active volumes,
+  # so we need to use their specific size;
+  # further, there is information for only one drift volume, and our
+  # custom branch of LArSoft reflects the points from the other
+  UseCryoBoundary: false
   XMin: 2.5
   XMax: 202.5
   YMin: -200 
