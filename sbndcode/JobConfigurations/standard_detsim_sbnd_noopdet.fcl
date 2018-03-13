@@ -1,0 +1,39 @@
+#
+# File:    standard_detsim_sbnd_noopdet.fcl
+# Purpose: Simulates readout response to induced and collected charge,
+#          excluding the photon detection system
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    March 13, 2018
+# Version: 1.0
+# 
+# This configuration runs event generation, simulation of propagation through
+# matter and readout simulation.
+# 
+# Input:
+# - output from LArG4 module (in particular, SimChannels)
+# 
+# Output:
+# - daq: RawDigit collection with simulated TPC readout response as waveforms
+# - includes the whole input data
+# 
+# 
+# Dependencies:
+# - uses the bundle of SBND simulation services for readout simulation
+#
+# Changes:
+# 20180313 (petrillo@fnal.gov) [v1.0]
+#   - first version, based on `standard_sbnd_sbnd.fcl` v1.2
+#
+
+#
+# base configuration
+#
+#include "standard_detsim_sbnd.fcl"
+
+
+services.PhotonVisibilityService:  @erase
+services.ParticleInventoryService: @erase
+
+physics.simulate: [ rns, daq, crt ] # removed opdigi
+physics.analyze:  []                # removed pmtresponse
+  

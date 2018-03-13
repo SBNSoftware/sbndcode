@@ -1,0 +1,44 @@
+#
+# File:    standard_g4_sbnd_noopdet.fcl
+# Purpose: Propagation of generated particle through matter (Geant4 simulation)
+#          excluding the photon detection system
+# Version: 1.1
+# 
+# This configuration is based on `standard_g4_sbnd.fcl`, with the following
+# difference:
+#  * no photon processes are simulated, photon visibility service is not loaded
+# 
+# This configuration runs:
+# - LArG4: produces:
+#   * MCParticle's (particles produced by interaction with matter)
+#   * SimChannels (charge and energy deposited by each particle reaching
+#       each TPC readout channel)
+#   * SimPhotons (empty)
+# 
+# Input: a file with generated particles; all MCTruth data products in the input
+#        file are processed.
+# 
+# Dependencies:
+# - uses the bundle of SBND simulation services
+#
+# Changes:
+# 20180313 (petrillo@fnal.gov) [v1.1]
+#   - simplified after the introduction of `standard_g4_sbnd.fcl` v1.4
+# 20180313 (petrillo@fnal.gov) [v1.0]
+#   - first version, based on `standard_g4_sbnd.fcl` v1.3
+#
+
+#
+# service configurations
+#
+#include "simulationservices_sbnd.fcl"
+
+#
+# base configuration
+#
+#include "standard_g4_sbnd.fcl"
+
+
+services.PhotonVisibilityService: @erase
+services.LArG4Parameters: @local::sbnd_largeantparameters_noopdet # simulationservices_sbnd.fcl
+

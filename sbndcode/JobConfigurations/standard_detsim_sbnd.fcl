@@ -9,10 +9,11 @@
 # matter and readout simulation.
 # 
 # Input:
-# - output from LArG4 module (in particular, SimChannels)
+# - output from LArG4 module (in particular, SimChannels and SimPhotons)
 # 
 # Output:
 # - daq: RawDigit collection with simulated TPC readout response as waveforms
+# - opdigi: OpDetPulse collection from optical detector channels
 # - includes the whole input data
 # 
 # 
@@ -84,7 +85,7 @@ physics:
   }
 
   analyzers: {
-    pmtresponse: @local::sbnd_simphotoncounter  
+    pmtresponse: @local::sbnd_simphotoncounter
   }
   
   #define the producer and filter modules for this path, order matters, 
