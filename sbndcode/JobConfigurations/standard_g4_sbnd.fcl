@@ -17,7 +17,6 @@
 # 
 # Dependencies:
 # - uses the bundle of SBND simulation services
-# - will require flux files for Genie and Corsika
 #
 # Changes:
 # 20180313 (petrillo@fnal.gov) [v1.3]
