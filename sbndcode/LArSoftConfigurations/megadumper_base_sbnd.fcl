@@ -1,7 +1,7 @@
 #
 # File:    standard_megadumper_base_sbnd.fcl
 # Purpose: Settings to dump a lot of stuff on text files.
-# Version: 1.4
+# Version: 1.5
 #
 # These settings help to dumps into text files most of the data products
 # contained in a typical SBND reconstruction output file.
@@ -19,8 +19,8 @@
 #                            `sim::SimPhotonsLite`   (`DumpSimPhotons.log`)
 #                            `sim::AuxDetSimChannel` not dumped (no dumper available)
 #                            `sbnd::crt::CRTData`    not dumped (no dumper available)
-#   -   `mcreco`:            `sim::MCTrack`          (`DumpMCTracks.log`)
-#                            `sim::MCShower`         (`DumpMCShowers.log`)
+#   -   `mcreco`:            `sim::MCTrack`          (`DumpMCTracks.log`) [-v1.4]
+#                            `sim::MCShower`         (`DumpMCShowers.log`) [-v1.4]
 # * digitisation and back:
 #   -   `daq`:               `raw::RawDigit`         (`DumpDigits.log`)
 # * reconstruction:
@@ -167,17 +167,29 @@ megadump_g4_logs: {
     type: "file"
   } # LogMCParticles
   
-  # grab all the "DumpMCShowers" messages and put them in DumpMCShowers.log
-  LogMCShowers: {
-    append: false
-    categories: {
-      DumpMCShowers: { limit: -1 }
-      default: { limit: 0 }
-    }
-    filename: "DumpMCShowers.log"
-    threshold: "INFO"
-    type: "file"
-  } # LogMCShowers
+#  # grab all the "DumpMCTracks" messages and put them in DumpMCTracks.log
+#  LogMCTracks: {
+#    append: false
+#    categories: {
+#      DumpMCTracks: { limit: -1 }
+#      default: { limit: 0 }
+#    }
+#    filename: "DumpMCTracks.log"
+#    threshold: "INFO"
+#    type: "file"
+#  } # LogMCTracks
+#  
+#  # grab all the "DumpMCShowers" messages and put them in DumpMCShowers.log
+#  LogMCShowers: {
+#    append: false
+#    categories: {
+#      DumpMCShowers: { limit: -1 }
+#      default: { limit: 0 }
+#    }
+#    filename: "DumpMCShowers.log"
+#    threshold: "INFO"
+#    type: "file"
+#  } # LogMCShowers
   
   # grab all the "DumpSimChannels" messages and put them in DumpSimChannels.log
   LogSimChannels: {
@@ -219,31 +231,12 @@ megadump_g4_log_category_filters: {
 megadump_g4_module_list: [
   
     dumpmcparticles
-  , dumpmctracks, dumpmcshowers
+#  , dumpmctracks, dumpmcshowers
   , dumpsimchannels, dumpsimphotons
   
 ] # megadump_g4_module_list
 
 megadump_g4_modules: {
-  
-  #
-  # simb::MCTruth from all generators
-  #
-  dumpmctruth: {
-    module_type:  DumpMCTruth
-    
-    # output category ("OutputCategory" by default), useful for filtering (see above)
-    OutputCategory: "DumpMCTruth"
-    
-    # specify the label of the simb::MCTruth data products (or producers)
-    # if not specified, will print all of them
-  #  InputTruth: [ "generator" ]
-    
-    # print this many trajectory points per output line (default: 3; 0 skips all)
-  #  PointsPerLine: 2
-    
-  } # dumpmctruth
-  
   
   #
   # simb::MCParticles from LArG4 (`largeant`)
@@ -262,33 +255,34 @@ megadump_g4_modules: {
     
   } # dumpmcparticles
   
-  #
-  # sim::MCTrack (actually not supported by LArSoft)
-  #
-  dumpmctracks: {
-    module_type:  DumpMCTracks
-    
-    # output category ("OutputCategory" by default), useful for filtering (see above)
-    OutputCategory: "DumpMCTracks"
-    
-    # specify the label of the sim::MCTrack data product (or producer)
-    InputTracks: "mcreco"
-    
-  } # dumpmctracks
-  
-  #
-  # sim::MCShower (actually not supported by LArSoft)
-  #
-  dumpmcshowers: {
-    module_type:  DumpMCShowers
-    
-    # output category ("OutputCategory" by default), useful for filtering (see above)
-    OutputCategory: "DumpMCShowers"
-    
-    # specify the label of the sim::MCShower data product (or producer)
-    InputShowers: "mcreco"
-    
-  } # dumpmcshowers
+#  #
+#  # sim::MCTrack (actually not supported by LArSoft)
+#  #
+#  dumpmctracks: {
+#    module_type:  DumpMCTracks
+#    
+#    # output category ("OutputCategory" by default), useful for filtering (see above)
+#    OutputCategory: "DumpMCTracks"
+#    
+#    # specify the label of the sim::MCTrack data product (or producer)
+#    InputTracks: "mcreco"
+#    
+#  } # dumpmctracks
+#  
+#  
+#  #
+#  # sim::MCShower (actually not supported by LArSoft)
+#  #
+#  dumpmcshowers: {
+#    module_type:  DumpMCShowers
+#    
+#    # output category ("OutputCategory" by default), useful for filtering (see above)
+#    OutputCategory: "DumpMCShowers"
+#    
+#    # specify the label of the sim::MCShower data product (or producer)
+#    InputShowers: "mcreco"
+#    
+#  } # dumpmcshowers
   
   
   #

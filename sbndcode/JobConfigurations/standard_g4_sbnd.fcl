@@ -1,7 +1,7 @@
 #
 # File:    standard_g4_sbnd.fcl
 # Purpose: Propagation of generated particle through matter (Geant4 simulation)
-# Version: 1.3
+# Version: 1.4
 # 
 # This configuration runs:
 # - LArG4: produces:
@@ -9,8 +9,6 @@
 #   * SimChannels (charge and energy deposited by each particle reaching
 #       each TPC readout channel)
 #   * SimPhotons (photons reaching each optical readout channel)
-# - MCReco: produces:
-#   * MCTrack, MCShower: deposited energy from each MCParticle
 # 
 # Input: a file with generated particles; all MCTruth data products in the input
 #        file are processed.
@@ -19,6 +17,9 @@
 # - uses the bundle of SBND simulation services
 #
 # Changes:
+# 20180313 (petrillo@fnal.gov) [v1.4]
+#   - removed mcreco (does not support SBND-like geometry anyway)
+# 
 # 20180313 (petrillo@fnal.gov) [v1.3]
 #   - removed the custom physics list override (now inherited from the service)
 # 
@@ -38,7 +39,6 @@
 # algorithms
 #
 #include "largeantmodules_sbnd.fcl"
-#include "mcreco.fcl"
 #include "rootoutput_sbnd.fcl"
 
 
@@ -68,12 +68,11 @@ physics:
  {
    rns:      { module_type: "RandomNumberSaver" }
    largeant: @local::sbnd_largeant
-   mcreco:   @local::standard_mcreco
  }
 
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
- simulate: [ rns, largeant, mcreco ]
+ simulate: [ rns, largeant ]
  
  #define the output stream, there could be more than one if using filters 
  stream1:  [ out1 ]
