@@ -19,7 +19,7 @@ services:
 {
   # Load the service that manages root files for histograms.
   TFileService: { fileName: "single_hist_sbnd.root" }
-  		@table::sbnd_opsimulation_services
+  @table::sbnd_simulation_services
   BackTrackerService:  @local::microboone_backtrackerservice # defined in backtrackerservice.fcl
   ParticleInventoryService:  @local::standard_particleinventoryservice # defined in backtrackerservice.fcl	
 

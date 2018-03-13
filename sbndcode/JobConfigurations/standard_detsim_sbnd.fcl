@@ -3,7 +3,7 @@
 # Purpose: Simulates readout response to induced and collected charge
 # Author:  Gianluca Petrillo (petrillo@fnal.gov)
 # Date:    December 23, 2016
-# Version: 1.1
+# Version: 1.2
 # 
 # This configuration runs event generation, simulation of propagation through
 # matter and readout simulation.
@@ -18,13 +18,16 @@
 # 
 # Dependencies:
 # - uses the bundle of SBND simulation services for readout simulation
+# - PhotonVisibilityService and ParticleInventoryService needed by `pmtresponse`
 #
 # Changes:
+# 20180313 (petrillo@fnal.gov) [v1.2]
+#   added optical detector digitization
+# 20161223 (petrillo@fnal.gov) [v1.1]
+#   - adopted shared root output configuration
 # 20160601 (petrillo@fnal.gov) [v1.0]
 #   first version
 #
-# 20161223 (petrillo@fnal.gov) [v1.1]
-#   - adopted shared root output configuration
 #
 #
 
@@ -33,7 +36,9 @@
 #
 
 #include "simulationservices_sbnd.fcl"
+#include "opticaldetectorservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
+#include "backtrackerservice.fcl"
 
 #
 # modules
@@ -41,6 +46,7 @@
 
 #include "detsimmodules_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
+#include "opticaldetectormodules_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 
@@ -49,11 +55,11 @@ process_name: DetSim
 
 services:
 {
-  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
-  @table::sbnd_detsim_services
-  FileCatalogMetadata: @local::sbnd_file_catalog_mc
-  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
-  AuxDetGeometry: { @table::sbnd_geo_source }
+  TFileService:              { fileName: @local::sbnd_tfileoutput.fileName }
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc
+                             @table::sbnd_detsim_services
+  PhotonVisibilityService:   @local::sbnd_photonvisibilityservice
+  ParticleInventoryService:  @local::standard_particleinventoryservice # defined in backtrackerservice.fcl
 }
 
 
@@ -74,16 +80,24 @@ physics:
     rns:       { module_type: "RandomNumberSaver" }
     daq:       @local::sbnd_simwire
     crt:       @local::sbnd_crtsim
+    opdigi:    @local::sbnd_opdigi
   }
 
+  analyzers: {
+    pmtresponse: @local::sbnd_simphotoncounter  
+  }
+  
   #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, daq, crt ]
+  simulate:  [ rns, daq, crt, opdigi ]
 
+  #define the analyzers to be run
+  analyze: [ pmtresponse ]
+  
   #define the output stream, there could be more than one if using filters 
   stream1:   [ out1 ]
 
   #ie analyzers and output streams.  these all run simultaneously
-  end_paths: [stream1]  
+  end_paths: [ analyze, stream1 ]  
 }
 
 # block to define where the output goes.  if you defined a filter in the physics

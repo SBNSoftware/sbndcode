@@ -1,0 +1,72 @@
+#
+# File:    standard_reco_only_megadumper_sbnd.fcl
+# Purpose: Dumps data products for reconstruction stage only.
+# Version: 1.0
+#
+# This job configuration dumps all and only the data products created during the
+# reconstruction stage.
+# See `megadumper_base_sbnd.fcl` for the content of the dump.
+# 
+#
+# Service dependencies:
+# - message facility
+# 
+# 
+# Changes:
+# 20180312 (petrillo@fnal.gov) [v1.0]
+#   split into settings and job configuration
+#
+
+
+#include "megadumper_base_sbnd.fcl"
+
+
+process_name: MegaDumpRecoOnly
+
+services: {
+  
+  message: {
+  #   debugModules: [ "*" ]
+    destinations: {
+      
+      # definition of the log streams
+      @table::megadump_reco_logs
+      
+      # the rest of the output
+      LogStandardOut: {
+        categories: {
+          @table::megadump_reco_log_category_filters
+          default: {}
+        }
+        threshold: "WARNING"
+        type: "cout"
+      } # LogStandardOut
+      
+    } # destinations
+  } # message
+} # services
+
+
+source: {
+  module_type: RootInput
+} # source
+
+
+physics: {
+  producers:{}
+  filters:  {}
+  analyzers: {
+    
+    @table::megadump_reco_modules
+    
+  } # analyzers
+  
+  dumpers: [
+    @sequence::megadump_reco_module_list
+    ]
+  
+  trigger_paths: []
+  end_paths:     [ dumpers ]
+  
+} # physics
+

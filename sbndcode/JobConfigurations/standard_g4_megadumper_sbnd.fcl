@@ -1,10 +1,10 @@
 #
-# File:    standard_reco_megadumper_sbnd.fcl
-# Purpose: Dumps data products for all stages up to reconstruction.
-# Version: 1.3
+# File:    standard_g4_megadumper_sbnd.fcl
+# Purpose: Dumps data products for all stages up to detector simulation (G4).
+# Version: 1.0
 #
 # This job configuration dumps all the data products created up to the
-# reconstruction stage.
+# detector simulation (G4) stage.
 # See `megadumper_base_sbnd.fcl` for the content of the dump.
 # 
 #
@@ -13,21 +13,16 @@
 # 
 # 
 # Changes:
-# 20180312 (petrillo@fnal.gov) [v1.3]
-#   split into settings and job configuration
-# 20180309 (petrillo@fnal.gov) [v1.2]
-#   removed dump of `blurredcluster` products from Dominic Barker's changes
-# 20180309 (petrillo@fnal.gov) [v1.1]
-#   "added" dump of data products from Rhiannon Jones's changes
-# 20180309 (petrillo@fnal.gov) [v1.0]
-#   first version, based on current `standard_reco_basic_sbnd.fcl`
+# 20180312 (petrillo@fnal.gov) [v1.0]
+#   first version, based on current `standard_g4_basic_sbnd.fcl`
 #
 
 
 #include "megadumper_base_sbnd.fcl"
 
 
-process_name: MegaDumpReco
+process_name: MegaDumpG4
+
 
 services: {
   
@@ -37,8 +32,6 @@ services: {
       
       @table::megadump_gen_logs
       @table::megadump_g4_logs
-      @table::megadump_detsim_logs
-      @table::megadump_reco_logs
       
       
       # the rest of the output
@@ -46,8 +39,6 @@ services: {
         categories: {
           @table::megadump_gen_log_category_filters
           @table::megadump_g4_log_category_filters
-          @table::megadump_detsim_log_category_filters
-          @table::megadump_reco_log_category_filters
           default: {}
         }
         threshold: "WARNING"
@@ -71,16 +62,12 @@ physics: {
     
     @table::megadump_gen_modules
     @table::megadump_g4_modules
-    @table::megadump_destim_modules
-    @table::megadump_reco_modules
     
   } # analyzers
   
   dumpers: [
     @sequence::megadump_gen_module_list
     @sequence::megadump_g4_module_list
-    @sequence::megadump_detsim_module_list
-    @sequence::megadump_reco_module_list
     ]
   
   trigger_paths: []

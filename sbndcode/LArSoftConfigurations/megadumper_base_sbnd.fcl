@@ -1,0 +1,924 @@
+#
+# File:    standard_megadumper_base_sbnd.fcl
+# Purpose: Settings to dump a lot of stuff on text files.
+# Version: 1.4
+#
+# These settings help to dumps into text files most of the data products
+# contained in a typical SBND reconstruction output file.
+# The list of files is shown below. The size of the output is huge, especially
+# because of the complete dump of raw digits and wire signals (and, for crowded
+# events, charge at the anode). And it takes quite a while to complete (seen
+# >2' per crowded event on sbndbuild01.fnal.gov).
+# 
+# 
+# Dumping:
+# * event generation:
+#   - all generator          `simb::MCTruth`         (`DumpMCTruth.log`)
+# * detector simulation:
+#   -   `largeant`:          `sim::SimChannel`       (`DumpSimChannels.log`)
+#                            `sim::SimPhotonsLite`   (`DumpSimPhotons.log`)
+#                            `sim::AuxDetSimChannel` not dumped (no dumper available)
+#                            `sbnd::crt::CRTData`    not dumped (no dumper available)
+#   -   `mcreco`:            `sim::MCTrack`          (`DumpMCTracks.log`)
+#                            `sim::MCShower`         (`DumpMCShowers.log`)
+# * digitisation and back:
+#   -   `daq`:               `raw::RawDigit`         (`DumpDigits.log`)
+# * reconstruction:
+#   -   `caldata`:           `recob::Wire`           (`DumpWires.log`)
+#   * hit finding           (`recob::Hit`)
+#     - `gaushit`                                    (`DumpHitsGaus.log`)
+#     - `fasthit`                                    (`DumpHitsFast.log`)
+#     - `linecluster`                                (`DumpHitsLC.log`)
+#   * clustering            (`recob::Cluster`)
+#     - `blurredcluster`:                            (`DumpClustersBlurred.log` [v1.0--1.1])
+#     - `linecluster`:                               (`DumpClustersLineCluster.log`)
+#     - `pandora`:                                   (`DumpClustersPandora.log`)
+#   * tracking              (`recob::Track`)
+#     - `pandora`                                    (`DumpTracksPandora.log`)
+#     - `pmalgtrackmaker`                            (`DumpTracksPMA.log`)
+#   * showers               (`recob::Shower`)        none (no dumper available)
+#     - `pandoraShower`                              not dumped (no dumper available)
+#     - `emshower`                                   not dumped (no dumper available)
+#   * vertices              (`recob::Vertex`)
+#     - `pandora`                                    (`DumpVerticesPandora.log`)
+#     - `pmalgtrackmaker`                            (`DumpVerticesPMA.log`)
+#     - `linecluster`                                (`DumpVerticesLC.log`)
+#   * particle flow objects (`recob::PFParticle`)
+#     - `pandora`                                    (`DumpPFParticlesPandora.log`)
+#     - `pmalgtrackmaker`                            (`DumpPFParticlesPMA.log`)
+#   * space points          (`recob::SpacePoint`)
+#     - `emshower`                                   (`DumpSpacePointsEMShower.log`)
+#     - `pandora`                                    (`DumpSpacePointsPandora.log`)
+# 
+# Per algorithm:
+#   * pandora (`pandora`, `pandoraShower`, `pandoraTrack`):
+#     - `recob::Clusters`                            (`DumpClustersPandora.log`)
+#     - `recob::PFParticle`                          (`DumpPFParticlesPandora.log`)
+#     - `recob::Vertex`                              (`DumpVerticesPandora.log`)
+#     - `recob::SpacePoint`                          (`DumpSpacePointsPandora.log`)
+#     - `recob::T0`                                  not dumped (no dumper available)
+#     - `recob::Track`       `pandoraTrack`          (`DumpTracksPandora.log`)
+#     - `recob::Shower`      `pandoraShower`         not dumped (no dumper available)
+#     - `recob::PCAxis`      `pandoraShower`         (`DumpPCAxesPandoraShower.log`)
+#     - `anab::Calorimetry`  `pandoraCalo`           not dumped (no dumper available [v1.1+])
+#     - `anab::ParticleID`   `pandoraPid`            not dumped (no dumper available [v1.1+])
+#   * Projection Matching Algorithm (`pmalgtrackmaker`):
+#     - `recob::PFParticle`                          (`DumpPFParticlesPMA.log`)
+#     - `recob::Vertex`      `pmalgtrackmaker`, `pmalgtrackmaker:node`, `pmalgtrackmaker:kink` (`DumpVerticesPMA.log`)
+#     - `recob::Track`                               (`DumpTracksPMA.log`)
+#     - `recob::SpacePoint`                          (`DumpTracksPMA.log`)
+#     - `recob::T0`:                                 not dumped (no dumper available)
+#     - `recob::CosmicTag`                           not dumped (no dumper available)
+#     - `anab::Calorimetry`  `pmatrackcalo`          not dumped (no dumper available)
+#   * line cluster/trajectory cluster (`linecluster`):
+#     - `recob::Clusters`                            (`DumpClustersLineCluster.log`)
+#     - `recob::Vertex`                              (`DumpVerticesLineCluster.log`)
+#     - `recob::EndPoint2D`                          not dumped (no dumper available)
+# 
+#
+# Changes:
+# 20180312 (petrillo@fnal.gov) [v1.4]
+#   photon dumper replaced from DumpSimPhotons to DumpSimPhotonsLite
+# 20180312 (petrillo@fnal.gov) [v1.3]
+#   split into settings and job configuration
+# 20180309 (petrillo@fnal.gov) [v1.2]
+#   removed dump of `blurredcluster` products from Dominic Barker's changes
+# 20180309 (petrillo@fnal.gov) [v1.1]
+#   "added" dump of data products from Rhiannon Jones's changes
+# 20180309 (petrillo@fnal.gov) [v1.0]
+#   first version, based on current `standard_reco_basic_sbnd.fcl`
+#
+
+
+BEGIN_PROLOG
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Generation stage
+#
+
+megadump_gen_logs: {
+  
+  # grab all the "DumpMCTruth" messages and put them in DumpMCTruth.log
+  LogMCTruth: {
+    append: false
+    categories: {
+      DumpMCTruth: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpMCTruth.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogMCTruth
+  
+} # megadump_gen_logs
+
+megadump_gen_log_category_filters: {
+  
+  DumpMCTruth:             { limit: 0 }
+  
+} # megadump_gen_log_category_filters
+
+
+megadump_gen_module_list: [
+  
+    dumpmctruth
+  
+] # megadump_gen_module_list
+
+megadump_gen_modules: {
+  
+  #
+  # simb::MCTruth from all generators
+  #
+  dumpmctruth: {
+    module_type:  DumpMCTruth
+    
+    # output category ("OutputCategory" by default), useful for filtering (see above)
+    OutputCategory: "DumpMCTruth"
+    
+    # specify the label of the simb::MCTruth data products (or producers)
+    # if not specified, will print all of them
+  #  InputTruth: [ "generator" ]
+    
+    # print this many trajectory points per output line (default: 3; 0 skips all)
+  #  PointsPerLine: 2
+    
+  } # dumpmctruth
+  
+  
+} # megadump_gen_modules
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Detector propagation stage
+#
+
+megadump_g4_logs: {
+  
+  # grab all the "DumpMCParticles" messages and put them in DumpMCParticles.log
+  LogMCParticles: {
+    append: false
+    categories: {
+      DumpMCParticles: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpMCParticles.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogMCParticles
+  
+  # grab all the "DumpMCShowers" messages and put them in DumpMCShowers.log
+  LogMCShowers: {
+    append: false
+    categories: {
+      DumpMCShowers: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpMCShowers.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogMCShowers
+  
+  # grab all the "DumpSimChannels" messages and put them in DumpSimChannels.log
+  LogSimChannels: {
+    append: false
+    categories: {
+      DumpSimChannels: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpSimChannels.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogSimChannels
+  
+  # grab all the "DumpSimPhotons" messages and put them in DumpSimPhotons.log
+  LogSimPhotons: {
+    append: false
+    categories: {
+      DumpSimPhotons: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpSimPhotons.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogSimPhotons
+  
+} # megadump_g4_logs
+
+megadump_g4_log_category_filters: {
+  
+  DumpMCParticles:         { limit: 0 }
+  DumpMCTracks:            { limit: 0 }
+  DumpMCShowers:           { limit: 0 }
+  DumpSimChannels:         { limit: 0 }
+  DumpSimPhotons:          { limit: 0 }
+  
+} # megadump_g4_log_category_filters
+
+
+megadump_g4_module_list: [
+  
+    dumpmcparticles
+  , dumpmctracks, dumpmcshowers
+  , dumpsimchannels, dumpsimphotons
+  
+] # megadump_g4_module_list
+
+megadump_g4_modules: {
+  
+  #
+  # simb::MCTruth from all generators
+  #
+  dumpmctruth: {
+    module_type:  DumpMCTruth
+    
+    # output category ("OutputCategory" by default), useful for filtering (see above)
+    OutputCategory: "DumpMCTruth"
+    
+    # specify the label of the simb::MCTruth data products (or producers)
+    # if not specified, will print all of them
+  #  InputTruth: [ "generator" ]
+    
+    # print this many trajectory points per output line (default: 3; 0 skips all)
+  #  PointsPerLine: 2
+    
+  } # dumpmctruth
+  
+  
+  #
+  # simb::MCParticles from LArG4 (`largeant`)
+  #
+  dumpmcparticles: {
+    module_type:  DumpMCParticles
+    
+    # output category ("OutputCategory" by default), useful for filtering (see above)
+    OutputCategory: "DumpMCParticles"
+    
+    # specify the label of the simb::MCParticle data product (or producer)
+    InputParticles: "largeant"
+    
+    # print this many trajectory points per output line (default: 3; 0 skips all)
+    PointsPerLine: 2
+    
+  } # dumpmcparticles
+  
+  #
+  # sim::MCTrack (actually not supported by LArSoft)
+  #
+  dumpmctracks: {
+    module_type:  DumpMCTracks
+    
+    # output category ("OutputCategory" by default), useful for filtering (see above)
+    OutputCategory: "DumpMCTracks"
+    
+    # specify the label of the sim::MCTrack data product (or producer)
+    InputTracks: "mcreco"
+    
+  } # dumpmctracks
+  
+  #
+  # sim::MCShower (actually not supported by LArSoft)
+  #
+  dumpmcshowers: {
+    module_type:  DumpMCShowers
+    
+    # output category ("OutputCategory" by default), useful for filtering (see above)
+    OutputCategory: "DumpMCShowers"
+    
+    # specify the label of the sim::MCShower data product (or producer)
+    InputShowers: "mcreco"
+    
+  } # dumpmcshowers
+  
+  
+  #
+  # sim::SimChannel from LArG4 (`largeant`)
+  #
+  dumpsimchannels: {
+    module_type:  DumpSimChannels
+    
+    # output category ("OutputCategory" by default), useful for filtering (see above)
+    OutputCategory: "DumpSimChannels"
+    
+    # specify the label of the sim::SimChannels data product (or producer)
+    InputSimChannels: "largeant"
+    
+  } # dumpsimchannels
+  
+  
+  #
+  # sim::SimPhotonsLite from LArG4 (`largeant`)
+  #
+  dumpsimphotons: {
+    module_type:  DumpSimPhotonsLite
+    
+    # output category ("OutputCategory" by default), useful for filtering (see above)
+    OutputCategory: "DumpSimPhotons"
+    
+    # specify the label of the sim::SimPhotonsLite data product (or producer)
+    InputPhotons: "largeant"
+    
+  } # dumpsimphotons
+  
+  
+} # megadump_g4_modules
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Digitization stage
+#
+
+megadump_detsim_logs: {
+  
+  # grab all the "DumpDigits" messages and put them in DumpRawDigits.log
+  LogRawDigits: {
+    append: false
+    categories: {
+      DumpDigits: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpRawDigits.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogRawDigits
+  
+  
+} # megadump_detsim_logs
+
+megadump_detsim_log_category_filters: {
+  
+  DumpRawDigits:           { limit: 0 }
+  
+} # megadump_detsim_log_category_filters
+
+
+megadump_detsim_module_list: [
+  
+    dumpdigits
+  
+] # megadump_detsim_module_list
+
+megadump_detsim_modules: {
+  
+  #
+  # raw::RawDigit (`daq`)
+  #
+  dumpdigits: {
+    module_type:  DumpRawDigits
+    
+    # specify the label of the raw::RawDigit producer
+    # in the comment, default is reported
+    DetSimModuleLabel:  "daq"
+    
+    # output category ("DumpDigits" by default), useful for filtering (see above)
+    OutputCategory: "DumpDigits"
+    
+    # set DigitsPerLine to 0 to suppress the output of the wire content
+    DigitsPerLine: 20
+    
+    # set the pedestal to be subtracted to all the digits (default: 0)
+    Pedestal: 2048
+    
+  } # dumpdigits
+  
+  
+} # megadump_detsim_modules
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Reconstruction stage
+#
+
+megadump_reco_logs: {
+  
+  # grab all the "DumpWires" messages and put them in DumpWires.log
+  LogWires: {
+    append: false
+    categories: {
+      DumpWires: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpWires.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogWires
+  
+  # grab all the "DumpHitsGaus" messages and put them in DumpHitsGaus.log
+  LogHitsGaus: {
+    append: false
+    categories: {
+      DumpHitsGaus: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpHitsGaus.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogHitsGaus
+  
+  # grab all the "DumpHitsLC" messages and put them in DumpHitsLineCluster.log
+  LogHitsLineCluster: {
+    append: false
+    categories: {
+      DumpHitsLC: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpHitsLineCluster.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogHitsLineCluster
+  
+  # grab all the "DumpHitsFast" messages and put them in DumpHitsFast.log
+  LogHitsFast: {
+    append: false
+    categories: {
+      DumpHitsFast: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpHitsFast.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogHitsFast
+  
+  # grab all the "DumpClustersPandora" messages and put them in DumpClustersPandora.log
+  LogClustersPandora: {
+    append: false
+    categories: {
+      DumpClustersPandora: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpClustersPandora.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogClustersPandora
+  
+  # grab all the "DumpClustersLC" messages and put them in DumpClustersLineCluster.log
+  LogClustersLC: {
+    append: false
+    categories: {
+      DumpClustersLC: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpClustersLineCluster.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogClustersLC
+  
+  # grab all the "DumpClustersBlurred" messages and put them in DumpClustersBlurred.log
+  LogClustersBlurred: {
+    append: false
+    categories: {
+      DumpClustersBlurred: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpClustersBlurred.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogClustersBlurred
+  
+  # grab all the "DumpPFParticlesPandora" messages and put them in DumpPFParticlesPandora.log
+  # (also grab "DumpSeedsPandora", "DumpVerticesPandora", "DumpTracksPandora" and "DumpPCAxesPandoraShower)
+  LogPFParticlesPandora: {
+    append: false
+    categories: {
+      DumpSeedsPandora:        { limit: -1 }
+      DumpVerticesPandora:     { limit: -1 }
+      DumpTracksPandora:       { limit: -1 }
+      DumpPFParticlesPandora:  { limit: -1 }
+      DumpSpacePointsPandora:  { limit: -1 }
+      DumpPCAxesPandoraShower: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpPFParticlesPandora.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogPFParticlesPandora
+  
+  # grab all the "DumpPFParticlesPMA" messages and put them in DumpPFParticlesPMA.log
+  # (also grab "DumpSeedsPMA", "DumpVerticesPMA" and "DumpTracksPMA")
+  LogPFParticlesPMA: {
+    append: false
+    categories: {
+      DumpSeedsPMA:       { limit: -1 }
+      DumpVerticesPMA:    { limit: -1 }
+      DumpTracksPMA:      { limit: -1 }
+      DumpPFParticlesPMA: { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpPFParticlesPMA.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogPFParticlesPMA
+  
+  # grab all the "DumpVerticesLC" messages and put them in DumpVerticesLineCluster.log
+  LogVerticesLC: {
+    append: false
+    categories: {
+      DumpVerticesLC:    { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpVerticesLineCluster.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogVerticesLC
+  
+  # grab all the "DumpSpacePointsEMShower" messages and put them in DumpSpacePointsEMShower.log
+  LogSpacePointsEMShower: {
+    append: false
+    categories: {
+      DumpSpacePointsEMShower:    { limit: -1 }
+      default: { limit: 0 }
+    }
+    filename: "DumpSpacePointsEMShower.log"
+    threshold: "INFO"
+    type: "file"
+  } # LogSpacePointsEMShower
+  
+  
+} # megadump_reco_logs
+
+megadump_reco_log_category_filters: {
+  
+  DumpWires:               { limit: 0 }
+  DumpHitsGaus:            { limit: 0 }
+  DumpHitsFast:            { limit: 0 }
+  DumpHitsLC:              { limit: 0 }
+  DumpClustersPandora:     { limit: 0 }
+  DumpClustersLineCluster: { limit: 0 }
+  DumpClustersBlurred:     { limit: 0 }
+  DumpSeedsPandora:        { limit: 0 }
+  DumpSpacePointsPandora:  { limit: 0 }
+  DumpVerticesPandora:     { limit: 0 }
+  DumpTracksPandora:       { limit: 0 }
+  DumpPCAxesPandoraShower: { limit: 0 }
+  DumpPFParticlesPandora:  { limit: 0 }
+  DumpSeedsPMA:            { limit: 0 }
+  DumpVerticesPMA:         { limit: 0 }
+  DumpTracksPMA:           { limit: 0 }
+  DumpPFParticlesPMA:      { limit: 0 }
+  DumpVerticesLC:          { limit: 0 }
+  DumpSpacePointsEMShower: { limit: 0 }
+  
+} # megadump_reco_log_category_filters
+
+
+megadump_reco_module_list: [
+  
+    dumpwires
+  , dumphitsgaus
+  , dumphitslc
+  , dumphitsfast
+  , dumpclusterspandora
+  , dumpclusterslc
+#  , dumpclustersblurred
+  , dumptrackspma
+  , dumpparticlespandora
+  , dumptrackspandora
+  , dumpspacepointspandora
+  , dumpverticespandora
+  , dumppxaxespandorashower
+  , dumpparticlespma
+  , dumptrackspma
+  , dumpverticespma
+  , dumpverticespmanode
+  , dumpverticespmakink
+  , dumpverticeslc
+  , dumpspacepointsemshower
+  
+] # megadump_reco_module_list
+
+megadump_reco_modules: {
+  
+  #
+  # recob::Wire (`caldata`)
+  #
+  dumpwires: {
+    module_type:  DumpWires
+    
+    # specify the label of the recob::Wire producer
+    CalWireModuleLabel: "caldata"
+    
+    # output category ("DumpWires" by default), useful for filtering (see above)
+    OutputCategory: "DumpWires"
+    
+    # set DigitsPerLine to 0 to suppress the output of the wire content
+    DigitsPerLine: 20
+    
+  } # dumpwires
+  
+  
+  #
+  # recob:Hit (`gaushit`)
+  #
+  dumphitsgaus: {
+    module_type:  DumpHits
+    
+    # output category ("DumpHits" by default), useful for filtering (see above)
+    OutputCategory: "DumpHitsGaus"
+    
+    # specify the label of the recob::Hit producer
+    HitModuleLabel:  "gaushit"
+    
+    # check that the correct raw digit is associated to each hit
+    CheckRawDigitAssociation: true
+    # check that the correct wire is associated to each hit
+    CheckWireAssociation:     true
+    
+  } # dumphitsgaus
+  
+  
+  #
+  # recob:Hit (`linecluster`)
+  #
+  dumphitslc: {
+    module_type:  DumpHits
+    
+    # output category ("DumpHits" by default), useful for filtering (see above)
+    OutputCategory: "DumpHitsLC"
+    
+    # specify the label of the recob::Hit producer
+    HitModuleLabel:  "linecluster"
+    
+    # do not check that the correct raw digit is associated to each hit (associations are not produced)
+    CheckRawDigitAssociation: false
+    # do not check that the correct wire is associated to each hit (associations are not produced)
+    CheckWireAssociation:     false
+    
+  } # dumphitslc
+  
+  
+  #
+  # recob:Hit (`fasthit`)
+  #
+  dumphitsfast: {
+    module_type:  DumpHits
+    
+    # output category ("DumpHits" by default), useful for filtering (see above)
+    OutputCategory: "DumpHitsFast"
+    
+    # specify the label of the recob::Hit producer
+    HitModuleLabel:  "fasthit"
+    
+    # check that the correct raw digit is associated to each hit
+    CheckRawDigitAssociation: true
+    # do not check that the correct wire is associated to each hit (associations are not produced)
+    CheckWireAssociation:     false
+    
+  } # dumphitsfast
+  
+  
+  #
+  # recob::Cluster (`pandora`)
+  #
+  dumpclusterspandora: {
+    module_type:  DumpClusters
+    
+    # output category ("DumpClusters" by default), useful for filtering (see above)
+    OutputCategory: "DumpClustersPandora"
+    # set HitsPerLine to 0 to suppress the output of the cluster hits
+    HitsPerLine: 20
+    
+    # specify the label of the recob::Cluster and recob::Hit producers
+    # (the latter is currently unused)
+    ClusterModuleLabel: "pandora"
+  #  HitModuleLabel:  "gaushit"
+    
+  } # dumpclusterspandora
+  
+  
+  #
+  # recob::Cluster (`linecluster`)
+  #
+  dumpclusterslc: {
+    module_type:  DumpClusters
+    
+    # output category ("DumpClusters" by default), useful for filtering (see above)
+    OutputCategory: "DumpClustersLC"
+    # set HitsPerLine to 0 to suppress the output of the cluster hits
+    HitsPerLine: 20
+    
+    # specify the label of the recob::Cluster and recob::Hit producers
+    # (the latter is currently unused)
+    ClusterModuleLabel: "linecluster"
+  #  HitModuleLabel:  "linecluster"
+    
+  } # dumpclusterslc
+  
+  
+  #
+  # recob::Cluster (`blurredcluster`)
+  #
+  dumpclustersblurred: {
+    module_type:  DumpClusters
+    
+    # output category ("DumpClusters" by default), useful for filtering (see above)
+    OutputCategory: "DumpClustersBlurred"
+    # set HitsPerLine to 0 to suppress the output of the cluster hits
+    HitsPerLine: 20
+    
+    # specify the label of the recob::Cluster and recob::Hit producers
+    # (the latter is currently unused)
+    ClusterModuleLabel: "blurredcluster"
+  #  HitModuleLabel:  "gaushit"
+    
+  } # dumpclustersblurred
+  
+  
+  #
+  # `pandora`: recob::PFParticle, recob::Track (`pandoraTrack`), recob::Seed,
+  # `          recob::Vertex, recob::PCAxis (`pandoraShower`)
+  #
+  dumpparticlespandora: {
+    module_type:  DumpPFParticles
+    
+    # output category ("DumpPFParticles" by default), useful for filtering (see above)
+    OutputCategory: "DumpPFParticlesPandora"
+    
+    # specify the label of recob::PFParticle producer
+    PFModuleLabel: "pandora"
+    
+    # max descend steps into particle hierarchy
+    MaxDepth: 50
+    
+    # do not produce dot files (false by default)
+    MakeParticleGraphs: false
+    
+  } # dumpparticlespandora
+  
+  dumptrackspandora: {
+    module_type:  DumpTracks
+    
+    # output category ("DumpTracks" by default), useful for filtering (see above)
+    OutputCategory: "DumpTracksPandora"
+    # approximate number of way point printed
+    WayPoints: 50
+    
+    # specify the label of the recob::Track producer
+    TrackModuleLabel: "pandoraTrack"
+    
+    # print the number of associated hits? (default: true)
+    HitAssociations:        true
+    # print the index of associated hits? (default: false)
+    PrintHits:              true
+    # do not print the number and index of associated space points (not available)
+    SpacePointAssociations: false
+    PrintSpacePoints:       false
+    # print the number and index of associated particle-flow particles? (default: true)
+    ParticleAssociations:   true
+    
+  } # dumptrackspandora
+  
+  dumpspacepointspandora: {
+    module_type:  DumpSpacePoints
+    
+    # output category ("DumpSpacePoints" by default), useful for filtering (see above)
+    OutputCategory: "DumpSpacePointsPandora"
+    
+    # specify the label of recob::SpacePoint producer
+    SpacePointModuleLabel: "pandora"
+    
+  } # dumpspacepointspandora
+  
+  dumpverticespandora: {
+    module_type:  DumpVertices
+    
+    # output category ("DumpVertices" by default), useful for filtering (see above)
+    OutputCategory: "DumpVerticesPandora"
+    
+    # specify the label of recob::Vertex producer
+    VertexModuleLabel: "pandora"
+    
+  } # dumpparticlespandora
+  
+  dumppxaxespandorashower: {
+    module_type:  DumpVertices
+    
+    # output category ("DumpVertices" by default), useful for filtering (see above)
+    OutputCategory: "DumpPCAxesPandoraShower"
+    
+    # specify the label of recob::Vertex producer
+    VertexModuleLabel: "pandora"
+    
+  } # dumppxaxespandorashower
+  
+  
+  #
+  # `pmalgtrackmaker`: recob::Track, recob::PFParticle, recob::Seed, recob::Vertex
+  #
+  dumpparticlespma: {
+    module_type:  DumpPFParticles
+    
+    # output category ("DumpPFParticles" by default), useful for filtering (see above)
+    OutputCategory: "DumpPFParticlesPMA"
+    
+    # specify the label of recob::PFParticle producer
+    PFModuleLabel: "pmalgtrackmaker"
+    
+    # max descend steps into particle hierarchy
+    MaxDepth: 50
+    
+    # do not produce dot files (false by default)
+    MakeParticleGraphs: false
+    
+  } # dumpparticlespma
+  
+  dumptrackspma: {
+    module_type:  DumpTracks
+    
+    # output category ("DumpTracks" by default), useful for filtering (see above)
+    OutputCategory: "DumpTracksPMA"
+    # approximate number of way point printed
+    WayPoints: 50
+    
+    # specify the label of the recob::Track producer
+    TrackModuleLabel: "pmalgtrackmaker"
+    
+    # print the number of associated hits? (default: true)
+    HitAssociations:        true
+    # print the index of associated hits? (default: false)
+    PrintHits:              true
+    # print the number of associated space points? (default: true)
+    SpacePointAssociations: true
+    # print the index of associated space points? (default: false)
+    PrintSpacePoints:       true
+    # print the number and index of associated particle-flow particles? (default: true)
+    ParticleAssociations:   true
+    
+  } # dumptrackspma
+  
+  dumpverticespma: {
+    module_type:  DumpVertices
+    
+    # output category ("DumpVertices" by default), useful for filtering (see above)
+    OutputCategory: "DumpVerticesPMA"
+    
+    # specify the label of recob::Vertex producer
+    VertexModuleLabel: "pmalgtrackmaker"
+    
+  } # dumpverticespma
+  
+  dumpverticespmanode: {
+    module_type:  DumpVertices
+    
+    # output category ("DumpVertices" by default), useful for filtering (see above)
+    OutputCategory: "DumpVerticesPMA"
+    
+    # specify the label of recob::Vertex producer
+    VertexModuleLabel: "pmalgtrackmaker:node"
+    
+  } # dumpverticespmanode
+  
+  dumpverticespmakink: {
+    module_type:  DumpVertices
+    
+    # output category ("DumpVertices" by default), useful for filtering (see above)
+    OutputCategory: "DumpVerticesPMA"
+    
+    # specify the label of recob::Vertex producer
+    VertexModuleLabel: "pmalgtrackmaker:kink"
+    
+  } # dumpverticespmakink
+  
+  
+  #
+  # recob::Vertex (`linecluster`)
+  #
+  dumpverticeslc: {
+    module_type:  DumpVertices
+    
+    # output category ("DumpVertices" by default), useful for filtering (see above)
+    OutputCategory: "DumpVerticesLC"
+    
+    # specify the label of recob::Vertex producer
+    VertexModuleLabel: "linecluster"
+    
+  } # dumpverticeslc
+  
+  
+  #
+  # recob::SpacePoint (`emshower`)
+  #
+  dumpspacepointsemshower: {
+    module_type:  DumpSpacePoints
+    
+    # output category ("DumpSpacePoints" by default), useful for filtering (see above)
+    OutputCategory: "DumpSpacePointsEMShower"
+    
+    # specify the label of recob::SpacePoint producer
+    SpacePointModuleLabel: "emshower"
+    
+  } # dumpspacepointsemshower
+  
+  
+  
+  
+} # megadump_reco_modules
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+END_PROLOG
+

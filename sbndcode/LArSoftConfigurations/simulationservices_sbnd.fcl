@@ -1,7 +1,7 @@
 #
 # File:    simulationservices_sbnd.fcl
 # Purpose: collection of standard simulation service settings for SBND
-# Version: 1.1
+# Version: 1.2
 # 
 # Provides:
 # 
@@ -19,6 +19,12 @@
 #     }
 #
 # Changes:
+# 20180312 (petrillo@fnal.gov) [v1.2]
+#   added `PhotonVisibilityService` among the Geant4 services;
+#   removed `sbnd_opsimulation_services` which is now in everywhere by default,
+#   and introduced a `sbnd_simulation_services_nooptical` configuration without
+#   services for optical detectors;
+#   added fast photon simulation to the default Geant4 physics processes list
 # 20160601 (petrillo@fnal.gov) [v1.1]
 #   content moved from services_sbnd.fcl
 #
@@ -27,6 +33,8 @@
 #include "services_sbnd.fcl"
 #include "simulationservices.fcl"
 #include "spacecharge_sbnd.fcl"
+#include "photpropservices_sbnd.fcl"
+#include "opticaldetectorservices_sbnd.fcl"
 #include "larfft_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
 #include "magfield_larsoft.fcl"
@@ -35,14 +43,32 @@
 
 BEGIN_PROLOG
 
-sbnd_largeantparameters:   @local::standard_largeantparameters # from simulationservices.fcl
-sbnd_largeantparameters.ElectronClusterSize: 20.0
-#Brailsford 27/10/09: Enable the custom physics list and disable its neutron killer 
-sbnd_largeantparameters.UseCustomPhysics: true
-sbnd_largeantparameters.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
+sbnd_largeantparameters: {
+  @table::standard_largeantparameters # from simulationservices.fcl
+  
+  ElectronClusterSize: 20.0
+  
+  # Brailsford 27/10/09: Enable the custom physics list and disable its neutron killer 
+  UseCustomPhysics: true
+  EnabledPhysics: [
+    "Em",
+#    "FastOptical",
+    "SynchrotronAndGN",
+    "Ion",
+    "Hadron",
+    "Decay",
+    "HadronElastic",
+    "Stopping"
+    # Removed "NeutronTrackingCut"
+    ]
+  
+  # setting this to false will save million of photons... one by one.
+  UseLitePhotons: true
+  
+} # sbnd_largeantparameters
+
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
 sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
-
 
 # Define sbnd_g4_services
 sbnd_g4_services:
@@ -53,6 +79,8 @@ sbnd_g4_services:
   LArVoxelCalculator:        @local::sbnd_larvoxelcalculator 
   MagneticField:             @local::no_mag_larsoft
   SpaceCharge:               @local::sbnd_spacecharge
+  PhotonVisibilityService:   @local::sbnd_photonvisibilityservice
+  
 } # sbnd_g4_services
 
 
@@ -62,8 +90,12 @@ sbnd_detsim_services:
 {
                              @table::sbnd_services
                              @table::sbnd_random_services
+  LArG4Parameters:           @local::sbnd_largeantparameters 
   LArFFT:                    @local::sbnd_larfft
-  SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  SignalShapingServiceSBND:  @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  OpDetResponseInterface:    @local::sbnd_opdetresponse
+  OpDigiProperties:          @local::sbnd_opdigiproperties # from opticaldetectorservices_sbnd.fcl
+  
 } # sbnd_detsim_services
 
   
@@ -79,27 +111,17 @@ sbnd_simulation_services:
 }
 
 
-sbnd_opsimulation_services:
+sbnd_simulation_services_nooptical:
 {
                             @table::sbnd_simulation_services
-  OpDetResponseInterface:   @local::sbnd_opdetresponse
-#  PhotonVisibilityService:  @local::sbnd_photonvisibilityservice
-#  OpDigiProperties:         @local::sbnd_opdigiproperties 
+  OpDetResponseInterface:   @erase
+  PhotonVisibilityService:  @erase
+  OpDigiProperties:         @erase
 }
 
 
 # Define sbnd_optical_simulation_services
 #sbnd_optical_simulation_services.LArPropertiesService.ScintYield: 24000
 #sbnd_optical_simulation_services.LArPropertiesService.EnableCerenkovLight: false
-#sbnd_optical_simulation_services.LArG4Parameters.UseCustomPhysics: true
-#sbnd_optical_simulation_services.LArG4Parameters.EnabledPhysics: [ "Em",
-#                                                                     "FastOptical",
-#                                                                     "SynchrotronAndGN",
-#                                                                     "Ion",
-#                                                                     "Hadron",
-#                                                                     "Decay",
-#                                                                     "HadronElastic",
-#                                                                     "Stopping",
-#                                                                     "NeutronTrackingCut" ]
 
 END_PROLOG

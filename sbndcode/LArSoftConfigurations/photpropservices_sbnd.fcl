@@ -1,21 +1,125 @@
+#
+# File:    photpropservices_sbnd.fcl
+# Purpose: Configuration of LArSoft photon visibility service for SBND
+# Version: 1.1
+# 
+# The current "standard" configuration is named `sbnd_photonvisibilityservice`.
+# 
+# 
+# Changes:
+# 20180312 [v1.1] (petrillo@fnal.gov)
+#   picked configuration bits from feature/dgg_fastop_mcc (larsim, sbndcode)
+#   from Diego Garcia Gamez, and cooked a new configuration out of it
+#
+
 #include "photpropservices.fcl"
 
 BEGIN_PROLOG
 
-sbnd_photonvisibilityservice: @local::standard_photonvisibilityservice
-sbnd_photonvisibilityservice.DoNotLoadLibrary: false 
-sbnd_photonvisibilityservice.LibraryBuildJob: false
-sbnd_photonvisibilityservice.UseCryoBoundary: false 
-sbnd_photonvisibilityservice.XMin: 1 
-sbnd_photonvisibilityservice.XMax: 199 
-sbnd_photonvisibilityservice.YMin: -199 
-sbnd_photonvisibilityservice.YMax: 199 
-sbnd_photonvisibilityservice.ZMin: 1
-sbnd_photonvisibilityservice.ZMax: 499 
-sbnd_photonvisibilityservice.NX: 66  
-sbnd_photonvisibilityservice.NY: 133 
-sbnd_photonvisibilityservice.NZ: 166 
-sbnd_photonvisibilityservice.LibraryFile: "/uboone/app/users/ahack/LAr1_v5/PhotonLibrary.root"
+#
+# This configuration is older and obsolete.
+#
+sbnd_photonvisibilityservice_notiming: {
+  @table::standard_photonvisibilityservice
+  
+  DoNotLoadLibrary: false 
+  LibraryBuildJob: false
+  UseCryoBoundary: false 
+  XMin: 1 
+  XMax: 199 
+  YMin: -199 
+  YMax: 199 
+  ZMin: 1
+  ZMax: 499 
+  NX: 66  
+  NY: 133 
+  NZ: 166 
+  LibraryFile: "/uboone/app/users/ahack/LAr1_v5/PhotonLibrary.root"
+} # sbnd_photonvisibilityservice_notiming
+
+
+#
+# Configuration with time parametrization
+#
+sbnd_timeparametrization_photonvisibilityservice: {
+  
+  # generation specific voxelization
+  NX: 40
+  NY: 80 
+  NZ: 100 
+  Interpolate: false
+
+  LibraryFile: "OpticalLibrary/op_library_sbnd_v2.root"
+
+  UseCryoBoundary: true
+  # these are not used when `UseCryoBoundary` is true
+  XMin: 2.5
+  XMax: 202.5
+  YMin: -200 
+  YMax: 200
+  ZMin: 0
+  ZMax: 500
+  
+  StoreReflected:  true
+  StoreReflT0:     true
+  IncludePropTime: false
+  TF1_sampling_factor: 1.0
+  
+  # ----------  Direct/VUV component modeled with a Landau + Expontial function -------- #
+  # The 5 parameters are parametrized as a function of the distance
+  
+  Direct_landauNormpars:  [ 7.85903, -0.108075, 0.00110999, -6.90009e-06, 2.52576e-08, -5.39078e-11, 6.20863e-14, -2.97559e-17 ]
+  Direct_landauMPVpars:   [ 1.20259, 0.0582674, 0.000308053, -2.71782e-07, -3.37159e-10 ]
+  Direct_landauWidthpars: [ 0.346667, -0.00768231, 0.000211825, -3.81361e-07 ]
+  Direct_expoCtepars:     [ 13.6592, -0.188798, 0.00192431, -1.10689e-05, 3.38425e-08, -5.20737e-11, 3.17657e-14 ]
+  Direct_expoSlopepars:   [ -0.57011, 0.0156393, -0.000197461, 1.34491e-06, -5.24544e-09, 1.1703e-11, -1.38811e-14, 6.78368e-18 ]
+  
+  # At long distances we extrapolate the behaviour of the parameters:  
+  Direct_landauNormpars_far: [ 2.23151, -0.00627503 ]
+  Direct_landauMPVpars_far:  [ -3.04952, 0.128638 ]
+  Direct_expoCtepars_far:    [ 3.69578, -0.00989582 ]
+  
+  Direct_functions: ["pol7", "pol4", "pol3", "pol6", "pol7", "expo", "pol1", "expo"]
+  
+  # range of distances where the parametrization is valid [~10 - 500cm], then:
+  D_break: 500.
+
+  # farther are extrapolations [cm]
+  D_max: 750.
+
+  # increase by this factor the number of points used to sample the function
+  # improve the accuracy when the scintillation happens very close to the PMT
+  # where the signal shape (function) is VERY sharp. BUT SLOW DOWN THE SIMULATION! 
+  
+  TF1_sampling_factor: 1
+
+  # ----------  Direct/VUV component modeled with a Landau + Expontial function -------- #
+  # The 5 parameters are parametrized as a function of the distance
+  Reflected_landauNormpars:  [ 7.54642, -0.441946, 0.0107579, -9.53399e-05 ]
+  Reflected_landauMPVpars:   [ -1.61482, 1.18624, 0.00105223, -9.52016e-05 ]
+  Reflected_landauWidthpars: [ 0.440124, -0.0557912, 0.00544957, -9.39128e-05 ]
+  Reflected_expoCtepars:     [ 14.6874, -0.896761, 0.0214977, -0.000185728 ]
+  Reflected_expoSlopepars:   [ -0.650584, 0.0800897, -0.00379933, 7.91909e-05, -6.10836e-07 ]
+
+  # range of t0s where the parametrization is valid [~8 - 55ns], then:
+  T0_max: 55.
+
+  Reflected_functions: ["pol3", "pol3", "pol3", "pol3", "pol4"]
+
+  # ns after the parametrization must be corrected (lack of statistics!)
+  T0_break_point: 42.
+
+  DoNotLoadLibrary: false
+  LibraryBuildJob: false
+  
+  
+} # sbnd_timeparametrization_photonvisibilityservice
+
+
+#
+# This is the "standard" configuration for SBND photon visibility service
+#
+sbnd_photonvisibilityservice: @local::sbnd_timeparametrization_photonvisibilityservice
 
 
 
