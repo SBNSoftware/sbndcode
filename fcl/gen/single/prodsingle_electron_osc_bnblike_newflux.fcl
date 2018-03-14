@@ -1,0 +1,6 @@
+# Produce BNB-like oscillated electrons for SBN workshop 0318
+# Author: Tom Brooks (tbrooks@fnal.gov)
+
+#include "prodsingle_mu_bnblike_newflux.fcl"
+
+physics.producers.generator.PDG: [ 11 ]
