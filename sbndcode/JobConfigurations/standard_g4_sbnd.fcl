@@ -45,7 +45,7 @@ process_name: G4
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:        { fileName: "standard_g4_sbnd_%p-%tc_hist.root" }
+  TFileService:        { fileName: @local::sbnd_tfileoutput.fileName }
                        @table::sbnd_g4_services
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
 }
