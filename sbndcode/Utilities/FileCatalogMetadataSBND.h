@@ -42,11 +42,14 @@ namespace util {
 
     // Accessors.
 
-    const std::string& FCLName() const {return fFCLName;}
-    const std::string& FCLVersion() const {return fFCLVersion;}
-    const std::string& ProjectName() const {return fProjectName;}
-    const std::string& ProjectStage() const {return fProjectStage;}
-    const std::string& ProjectVersion() const {return fProjectVersion;}
+    const std::string& GetFCLName() const {return fFCLName;}
+    const std::string& GetProjectName() const {return fProjectName;}
+    const std::string& GetProjectStage() const {return fProjectStage;}
+    const std::string& GetProjectVersion() const {return fProjectVersion;}
+    const std::string& GetProjectSoftware() const {return fProjectSoftware;}
+    const std::string& GetProductionName() const {return fProductionName;}
+    const std::string& GetProductionType() const {return fProductionType;}
+
 
   private:
 
@@ -57,10 +60,12 @@ namespace util {
     // Data members.
 
     std::string fFCLName;
-    std::string fFCLVersion;
     std::string fProjectName;
     std::string fProjectStage;
     std::string fProjectVersion;
+    std::string fProjectSoftware;
+    std::string fProductionName; //Production parameter, do not use if not running a production
+    std::string fProductionType; //Production parameter, do not use if not running a production
   };
 
 } // namespace util

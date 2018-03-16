@@ -19,14 +19,17 @@
 # algorithm configuration
 #
 #include "analysistreemodule.fcl"
+#include "rootoutput_sbnd.fcl"
 
 
 process_name: AnaTree
 
 services:
 {
+FileCatalogMetadata: @local::sbnd_file_catalog_mc
   # this is the real output file
-  TFileService: { fileName: "anatree_sbnd-%p_%tc.root" }
+  # DBrailsf 09/03/18 Use the standard outputfile naming for anatree
+  TFileService: { fileName: @local::sbnd_rootoutput.fileName }
                 @table::sbnd_services
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService:  @local::standard_backtrackerservice

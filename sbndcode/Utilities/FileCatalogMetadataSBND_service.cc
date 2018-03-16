@@ -20,10 +20,13 @@ FileCatalogMetadataSBND(fhicl::ParameterSet const& pset, art::ActivityRegistry& 
   // Get parameters.
 
   fFCLName = pset.get<std::string>("FCLName");
-  fFCLVersion = pset.get<std::string>("FCLVersion");
   fProjectName = pset.get<std::string>("ProjectName");
   fProjectStage = pset.get<std::string>("ProjectStage");
   fProjectVersion = pset.get<std::string>("ProjectVersion");    
+  fProjectSoftware = pset.get<std::string>("ProjectSoftware");    
+  fProductionName = pset.get<std::string>("ProductionName");  //Leave as default value if not running a production   
+  fProductionType = pset.get<std::string>("ProductionType"); //Leave as default value if not running a production
+
 
   // Register for callbacks.
 
@@ -41,11 +44,13 @@ void util::FileCatalogMetadataSBND::postBeginJob()
 
   // Add metadata.
 
-  mds->addMetadata("fclName", fFCLName);
-  mds->addMetadata("fclVersion", fFCLVersion);
-  mds->addMetadata("ubProjectName", fProjectName);
-  mds->addMetadata("ubProjectStage", fProjectStage);
-  mds->addMetadata("ubProjectVersion", fProjectVersion);
+  mds->addMetadata("fcl.name", fFCLName);
+  mds->addMetadata("sbnd_project.name", fProjectName);
+  mds->addMetadata("sbnd_project.stage", fProjectStage);
+  mds->addMetadata("sbnd_project.version", fProjectVersion);
+  mds->addMetadata("sbnd_project.software", fProjectSoftware);
+  mds->addMetadata("production.name", fProductionName);
+  mds->addMetadata("production.type", fProductionType);
 }
 
 DEFINE_ART_SERVICE(util::FileCatalogMetadataSBND)

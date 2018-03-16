@@ -34,6 +34,12 @@ simple_plugin( SignalShapingServiceSBND  "service"
 simple_plugin( FileCatalogMetadataSBND  "service"
                ${sbnd_util_lib_list}
         )
+
+simple_plugin( TFileMetadataSBND "service"
+               ${sbnd_util_lib_list}
+               art_Framework_IO
+               art_Framework_IO_detail
+        )
 install_headers()
 install_fhicl()
 install_source()

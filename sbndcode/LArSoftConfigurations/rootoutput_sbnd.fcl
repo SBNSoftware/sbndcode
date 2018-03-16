@@ -50,5 +50,6 @@ sbnd_rootoutput: {
   
 } # sbnd_rootoutput
 
+sbnd_tfileoutput.fileName: "hists_%ifb_%p-%tc.root"
 END_PROLOG
 
