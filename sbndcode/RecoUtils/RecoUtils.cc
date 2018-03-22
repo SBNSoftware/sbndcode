@@ -1,6 +1,7 @@
 #include "RecoUtils.h"
 
-int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit, bool rollup_unsaved_ids) {
+
+int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit> hit, bool rollup_unsaved_ids) {
   std::map<int,double> id_to_energy_map;
   art::ServiceHandle<cheat::BackTrackerService> bt_serv;
   std::vector<sim::TrackIDE> track_ides = bt_serv->HitToTrackIDEs(hit);
@@ -22,6 +23,7 @@ int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit, bool rollup_unsav
   }
   return likely_track_id;
 }
+
 
 
 int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
@@ -157,7 +159,19 @@ bool RecoUtils::IsInsideTPC(TVector3 position, double distance_buffer){
   }
 
   return inside;
-
-
-
 }
+
+double RecoUtils::CalculateTrackLength(const art::Ptr<recob::Track> track){
+  double length = 0;
+  if (track->NumberTrajectoryPoints()==1) return length; //Nothing to calculate if there is only one point
+
+  for (size_t i_tp = 0; i_tp < track->NumberTrajectoryPoints()-1; i_tp++){ //Loop from the first to 2nd to last point
+    TVector3 this_point(track->TrajectoryPoint(i_tp).position.X(),track->TrajectoryPoint(i_tp).position.Y(),track->TrajectoryPoint(i_tp).position.Z());
+    TVector3 next_point(track->TrajectoryPoint(i_tp+1).position.X(),track->TrajectoryPoint(i_tp+1).position.Y(),track->TrajectoryPoint(i_tp+1).position.Z());
+    length+=(next_point-this_point).Mag();
+  }
+  return length;
+}
+
+
+
