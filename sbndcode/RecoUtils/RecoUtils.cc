@@ -167,7 +167,16 @@ double RecoUtils::CalculateTrackLength(const art::Ptr<recob::Track> track){
 
   for (size_t i_tp = 0; i_tp < track->NumberTrajectoryPoints()-1; i_tp++){ //Loop from the first to 2nd to last point
     TVector3 this_point(track->TrajectoryPoint(i_tp).position.X(),track->TrajectoryPoint(i_tp).position.Y(),track->TrajectoryPoint(i_tp).position.Z());
+    if (!RecoUtils::IsInsideTPC(this_point,0)){
+      std::cout<<"RecoUtils::CalculateTrackLength - Current trajectory point not in the TPC volume.  Skip over this point in the track length calculation"<<std::endl;
+      continue;
+    }
     TVector3 next_point(track->TrajectoryPoint(i_tp+1).position.X(),track->TrajectoryPoint(i_tp+1).position.Y(),track->TrajectoryPoint(i_tp+1).position.Z());
+    if (!RecoUtils::IsInsideTPC(next_point,0)){
+      std::cout<<"RecoUtils::CalculateTrackLength - Next trajectory point not in the TPC volume.  Skip over this point in the track length calculation"<<std::endl;
+      continue;
+    }
+
     length+=(next_point-this_point).Mag();
   }
   return length;
