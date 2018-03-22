@@ -101,7 +101,7 @@ int RecoUtils::TrueParticleIDFromTotalRecoHits(const std::vector<art::Ptr<recob:
     }
   }
   if (NHighestCounts > 1){
-    std::cout<<"RecoUtils::TrueParticleIDFromTotalRecoHits - There are " << NHighestCounts << " particles which tie for highest number of contributing hits (" << highestCount<<" hits).  Using RecoUtils::TrueParticleIDFromTotalTrueEnergy instead.";
+    std::cout<<"RecoUtils::TrueParticleIDFromTotalRecoHits - There are " << NHighestCounts << " particles which tie for highest number of contributing hits (" << highestCount<<" hits).  Using RecoUtils::TrueParticleIDFromTotalTrueEnergy instead."<<std::endl;
     objectTrack = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits,rollup_unsaved_ids);
   }
   return objectTrack;
