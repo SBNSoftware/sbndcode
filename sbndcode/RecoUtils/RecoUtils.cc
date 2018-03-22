@@ -1,28 +1,39 @@
 #include "RecoUtils.h"
 
-int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit) {
-  double particleEnergy = 0;
-  int likelyTrackID = 0;
+int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit>& hit, bool rollup_unsaved_ids) {
+  std::map<int,double> id_to_energy_map;
   art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-  std::vector<sim::TrackIDE> trackIDs = bt_serv->HitToTrackIDEs(hit);
-  for (unsigned int idIt = 0; idIt < trackIDs.size(); ++idIt) {
-    if (trackIDs.at(idIt).energy > particleEnergy) {
-      particleEnergy = trackIDs.at(idIt).energy;
-      likelyTrackID = trackIDs.at(idIt).trackID;
+  std::vector<sim::TrackIDE> track_ides = bt_serv->HitToTrackIDEs(hit);
+  for (unsigned int idIt = 0; idIt < track_ides.size(); ++idIt) {
+    int id = track_ides.at(idIt).trackID;
+    if (rollup_unsaved_ids) id = std::abs(id);
+    double energy = track_ides.at(idIt).energy;
+    id_to_energy_map[id]+=energy;
+  }
+  //Now loop over the map to find the maximum contributor
+  double likely_particle_contrib_energy = -99999;
+  int likely_track_id = 0;
+  for (std::map<int,double>::iterator mapIt = id_to_energy_map.begin(); mapIt != id_to_energy_map.end(); mapIt++){
+    double particle_contrib_energy = mapIt->second;
+    if (particle_contrib_energy > likely_particle_contrib_energy){
+      likely_particle_contrib_energy = particle_contrib_energy;
+      likely_track_id = mapIt->first;
     }
   }
-  return likelyTrackID;
+  return likely_track_id;
 }
 
 
-int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<recob::Hit> >& hits) {
+int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
   art::ServiceHandle<cheat::BackTrackerService> bt_serv;
   std::map<int,double> trackIDToEDepMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
     art::Ptr<recob::Hit> hit = *hitIt;
     std::vector<sim::TrackIDE> trackIDs = bt_serv->HitToTrackIDEs(hit);
     for (unsigned int idIt = 0; idIt < trackIDs.size(); ++idIt) {
-      trackIDToEDepMap[trackIDs[idIt].trackID] += trackIDs[idIt].energy;
+      int id = trackIDs[idIt].trackID;
+      if (rollup_unsaved_ids) id = std::abs(id);
+      trackIDToEDepMap[id] += trackIDs[idIt].energy;
     }
   }
 
@@ -43,12 +54,12 @@ int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<reco
 
 
 
-int RecoUtils::TrueParticleIDFromTotalRecoCharge(const std::vector<art::Ptr<recob::Hit> >& hits) {
+int RecoUtils::TrueParticleIDFromTotalRecoCharge(const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
   // Make a map of the tracks which are associated with this object and the charge each contributes
   std::map<int,double> trackMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
     art::Ptr<recob::Hit> hit = *hitIt;
-    int trackID = TrueParticleID(hit);
+    int trackID = TrueParticleID(hit, rollup_unsaved_ids);
     trackMap[trackID] += hit->Integral();
   }
 
@@ -66,23 +77,32 @@ int RecoUtils::TrueParticleIDFromTotalRecoCharge(const std::vector<art::Ptr<reco
 
 
 
-int RecoUtils::TrueParticleIDFromTotalRecoHits(const std::vector<art::Ptr<recob::Hit> >& hits) {
+int RecoUtils::TrueParticleIDFromTotalRecoHits(const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
   // Make a map of the tracks which are associated with this object and the number of hits they are the primary contributor to
   std::map<int,int> trackMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
     art::Ptr<recob::Hit> hit = *hitIt;
-    int trackID = TrueParticleID(hit);
+    int trackID = TrueParticleID(hit, rollup_unsaved_ids);
     trackMap[trackID]++;
   }
 
   // Pick the track which is the primary contributor to the most hits as the 'true track'
   int objectTrack = -99999;
   int highestCount = -1;
+  int NHighestCounts = 0;
   for (std::map<int,int>::iterator trackIt = trackMap.begin(); trackIt != trackMap.end(); ++trackIt) {
     if (trackIt->second > highestCount) {
       highestCount = trackIt->second;
       objectTrack  = trackIt->first;
+      NHighestCounts = 1;
     }
+    else if (trackIt->second == highestCount){
+      NHighestCounts++;
+    }
+  }
+  if (NHighestCounts > 1){
+    std::cout<<"RecoUtils::TrueParticleIDFromTotalRecoHits - There are " << NHighestCounts << " particles which tie for highest number of contributing hits (" << highestCount<<" hits).  Using RecoUtils::TrueParticleIDFromTotalTrueEnergy instead.";
+    objectTrack = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits,rollup_unsaved_ids);
   }
   return objectTrack;
 }
