@@ -63,7 +63,7 @@ namespace caldata {
  
   private:
     
-    int          fDataSize;          ///< size of raw data on one wire
+  //  int          fDataSize;          ///< size of raw data on one wire
     int          fPostsample;        ///< number of postsample bins
     int          fBaseSampleBins;        ///< number of postsample bins
     float        fBaseVarCut;        ///< baseline variance cut
