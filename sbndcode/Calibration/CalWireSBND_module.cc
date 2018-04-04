@@ -13,11 +13,6 @@
 #include <vector>
 #include <stdint.h>
 
-extern "C" {
-#include <sys/types.h>
-#include <sys/stat.h>
-}
-
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Event.h" 
