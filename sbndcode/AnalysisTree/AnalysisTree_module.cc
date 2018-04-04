@@ -130,7 +130,7 @@
 #include <sstream>
 #include <fstream>
 #include <algorithm>
-#include <functional> // std::mem_fun_ref
+#include <functional> // std::mem_fn()
 #include <typeinfo>
 
 #include "TTree.h"
@@ -1317,7 +1317,7 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
 void sbnd::AnalysisTreeDataStruct::Clear() {
   ClearLocalData();
   std::for_each
-    (TrackData.begin(), TrackData.end(), std::mem_fun_ref(&TrackDataStruct::Clear));
+    (TrackData.begin(), TrackData.end(), std::mem_fn(&TrackDataStruct::Clear));
 } // sbnd::AnalysisTreeDataStruct::Clear()
 
 void sbnd::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
