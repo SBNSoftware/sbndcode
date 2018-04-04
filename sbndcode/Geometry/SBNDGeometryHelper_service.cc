@@ -24,9 +24,8 @@
 namespace sbnd
 {
 
-  SBNDGeometryHelper::SBNDGeometryHelper( fhicl::ParameterSet const & pset, art::ActivityRegistry & )
-    :  fPset( pset ),
-       fChannelMap()
+  SBNDGeometryHelper::SBNDGeometryHelper( fhicl::ParameterSet const & , art::ActivityRegistry & )
+    :  fChannelMap()
   {}
 
 
