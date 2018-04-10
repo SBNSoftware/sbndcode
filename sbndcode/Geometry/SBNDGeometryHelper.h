@@ -53,7 +53,6 @@ namespace sbnd
     void  doConfigureChannelMapAlg(fhicl::ParameterSet const& sortingParameters, geo::GeometryCore* geom) override;
     virtual ChannelMapAlgPtr_t doGetChannelMapAlg() const override;
         
-    fhicl::ParameterSet const & fPset;
     std::shared_ptr<geo::ChannelMapAlg> fChannelMap;
   
   };
