@@ -25,18 +25,18 @@ namespace geo {
 
     void Initialize(AuxDetGeometryData_t& geodata) override;
 
-    void Uninitialize();
+    void Uninitialize() override;
 
     uint32_t PositionToAuxDetChannel(
         double const worldLoc[3],
         std::vector<geo::AuxDetGeo*> const& auxDets,
         size_t& ad,
-        size_t& sv) const;
+        size_t& sv) const override;
 
     const TVector3 AuxDetChannelToPosition(
         uint32_t const& channel,
         std::string const& auxDetName,
-        std::vector<geo::AuxDetGeo*> const& auxDets) const;
+        std::vector<geo::AuxDetGeo*> const& auxDets) const override;
 
   private:
     geo::CRTGeoObjectSorter fSorter; ///< Class to sort geo objects
