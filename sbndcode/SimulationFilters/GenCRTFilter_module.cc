@@ -16,7 +16,7 @@ namespace filt{
       explicit GenFilter(fhicl::ParameterSet const & pset);
       virtual bool filter(art::Event& e) override;
       void reconfigure(fhicl::ParameterSet const& pset);
-      void beginJob();
+      virtual void beginJob() override;
 
     private:
 
