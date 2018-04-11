@@ -46,7 +46,6 @@ mkdir "$BuildDir"
 #
 # set up gallery
 #
-ups active
 source "${SBNDgalleryBaseDir}/helpers/sbnd_gallery_setup"
 
 #
