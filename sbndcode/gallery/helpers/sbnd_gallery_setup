@@ -126,18 +126,27 @@ EOM
   local -a ReferencePkgVersions
   local -a ReferencePkgQualifiers
   for ReferencePkg in "${SortedReferencePkgs[@]}" ; do
+    # if we are in a running environment, the SETUP_XXX variables should be set;
+    # in a MRB (development) environment, if the package is checked out the
+    # SETUP_XXX variable will not be set, but XXX_VERSION will; in that case,
+    # we are forced to assume the same qualifiers as for the main package
     local ReferencePkgSetupVarName="SETUP_${ReferencePkg^^}"
-    if [[ -z "${!ReferencePkgSetupVarName}" ]]; then
+    local ReferencePkgVersionVarName="${ReferencePkg^^}_VERSION"
+    if [[ -n "${!ReferencePkgSetupVarName}" ]]; then
+      # expecting (UPS 5.2.0):
+      # canvas v3_00_02 -f Linux64bit+2.6-2.12 -q e14:nu:prof -z /grid/fermiapp/products/larsoft
+      read PkgName PkgVersion Dummy PkgFlavor Dummy PkgDatabase Dummy PkgQualifiers <<< "${!ReferencePkgSetupVarName}"
+      ReferencePkgVersions+=( "$PkgVersion" )
+      ReferencePkgQualifiers+=( "$PkgQualifiers" )
+      # echo "Requiring ${ReferencePkg} version: ${PkgName} ${PkgVersion} -q ${PkgQualifiers}"
+    elif [[ -n "${!ReferencePkgVersionVarName}" ]]; then
+      ReferencePkgVersions+=( "${!ReferencePkgVersionVarName}" )
+      ReferencePkgQualifiers+=( "$Qualifiers" )
+    else
       echo "ERROR: configuration mess! the reference UPS product ${ReferencePkg} is not set up (or at least, there is no '${ReferencePkgSetupVarName}' variable in the environment)." >&2
       return 1
     fi
     
-    # expecting (UPS 5.2.0):
-    # canvas v3_00_02 -f Linux64bit+2.6-2.12 -q e14:nu:prof -z /grid/fermiapp/products/larsoft
-    read PkgName PkgVersion Dummy PkgFlavor Dummy PkgDatabase Dummy PkgQualifiers <<< "${!ReferencePkgSetupVarName}"
-    ReferencePkgVersions+=( "$PkgVersion" )
-    ReferencePkgQualifiers+=( "$PkgQualifiers" )
-    # echo "Requiring ${ReferencePkg} version: ${PkgName} ${PkgVersion} -q ${PkgQualifiers}"
   done
   
   #
