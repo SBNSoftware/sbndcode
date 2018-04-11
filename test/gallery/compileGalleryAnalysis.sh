@@ -19,7 +19,10 @@ if ! declare -f setup >& /dev/null ; then
   if [[ -z "$SETUP_UPS" ]]; then
     echo "UPS not correctly set up!!"
   else
-    setup ${SETUP_UPS} || exit $?
+    # provide setup and unsetup functions; compared to the ones from UPS,
+    # the `ups` executable is searched in PATH rather than hard-coded
+    function setup() { source "$(ups setup "$@")" ; }
+    function unsetup() { source "$(ups unsetup "$@")" ; }
   fi
 fi
 
@@ -43,6 +46,7 @@ mkdir "$BuildDir"
 #
 # set up gallery
 #
+ups active
 source "${SBNDgalleryBaseDir}/helpers/sbnd_gallery_setup"
 
 #
