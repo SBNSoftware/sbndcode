@@ -18,7 +18,7 @@ declare -r WorkDir="${CWD}/galleryTest"
 declare -r SourceDir="${WorkDir}/source"
 declare -r BuildDir="${WorkDir}/build"
 
-declare -r SBNDgalleryBaseDir="${SBNDCODE_DIR}/sbndcode/gallery"
+declare -r SBNDgalleryBaseDir="${SBNDCODE_DIR}/examples/gallery"
 
 rm -Rf "$WorkDir"
 mkdir "$WorkDir"
