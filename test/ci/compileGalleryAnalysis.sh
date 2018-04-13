@@ -13,20 +13,6 @@ declare -r CWD="$(pwd)"
 declare -r WorkDir="${CWD}/galleryTest"
 
 #
-# check that `setup` function is available
-#
-if ! declare -f setup >& /dev/null ; then
-  if [[ -z "$SETUP_UPS" ]]; then
-    echo "UPS not correctly set up!!"
-  else
-    # provide setup and unsetup functions; compared to the ones from UPS,
-    # the `ups` executable is searched in PATH rather than hard-coded
-    function setup() { source "$(ups setup "$@")" ; }
-    function unsetup() { source "$(ups unsetup "$@")" ; }
-  fi
-fi
-
-#
 # create a working area
 #
 declare -r SourceDir="${WorkDir}/source"
@@ -42,11 +28,6 @@ cp -a "${SBNDgalleryBaseDir}/galleryAnalysis" "$SourceDir"
 
 rm -Rf "$BuildDir"
 mkdir "$BuildDir"
-
-#
-# set up gallery
-#
-source "${SBNDgalleryBaseDir}/helpers/sbnd_gallery_setup"
 
 #
 # proceed with compilation
