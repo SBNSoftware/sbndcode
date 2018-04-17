@@ -37,14 +37,20 @@ include_directories($ENV{SBNDCODE_INC})
 # link directories and libraries
 #
 set(ROOT_LIBDIRS $ENV{ROOTSYS}/lib )
-set(GALLERY_LIBDIRS ${ROOT_LIBDIRS} $ENV{CANVAS_ROOT_IO_LIB} $ENV{CANVAS_LIB} $ENV{CETLIB_EXCEPT_LIB} $ENV{CETLIB_LIB} $ENV{GALLERY_LIB})
+set(GALLERY_LIBDIRS
+  ${ROOT_LIBDIRS}
+  $ENV{FHICLCPP_LIB} $ENV{MESSAGEFACILITY_LIB}
+  $ENV{CETLIB_EXCEPT_LIB} $ENV{CETLIB_LIB}
+  $ENV{CANVAS_ROOT_IO_LIB} $ENV{CANVAS_LIB}
+  $ENV{GALLERY_LIB}
+  )
 set(LARSOFTOBJ_LIBDIRS $ENV{NUSIMDATA_LIB} $ENV{LARCOREOBJ_LIB} $ENV{LARDATAOBJ_LIB})
 set(LARSOFT_LIBDIRS $ENV{CLHEP_LIB_DIR} $ENV{LARCOREALG_LIB} $ENV{LARDATA_LIB})
 set(SBNDCODE_LIBDIRS $ENV{SBNDCODE_LIB})
 
 link_directories(${GALLERY_LIBDIRS} ${LARSOFTOBJ_LIBDIRS} ${LARSOFT_LIBDIRS} ${SBNDCODE_LIBDIRS})
 
-set(GALLERY_LIBS canvas cetlib_except cetlib gallery)
+set(GALLERY_LIBS fhiclcpp MF_Utilities MF_MessageLogger canvas cetlib_except cetlib gallery)
 set(ROOT_CORELIBS Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread)
 set(LARSOFTOBJ_LIBS nusimdata_SimulationBase larcoreobj_SummaryData lardataobj_RawData lardataobj_OpticalDetectorData lardataobj_RecoBase lardataobj_AnalysisBase lardataobj_MCBase lardataobj_Simulation)
 
