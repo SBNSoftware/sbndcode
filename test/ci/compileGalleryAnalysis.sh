@@ -30,8 +30,14 @@ rm -Rf "$BuildDir"
 mkdir "$BuildDir"
 
 #
+# set up
+#
+source "$(ups setup cmake 'v3_10_1')"
+
+#
 # proceed with compilation
 #
+cd "$BuildDir"
 cmake "$SourceDir"
 make
 
