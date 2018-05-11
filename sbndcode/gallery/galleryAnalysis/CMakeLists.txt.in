@@ -12,10 +12,22 @@
 ###      cmake ..
 ###      make
 ###      
+###  This CMakeLists.txt file was configured to use:
+###  - C++ compiler: @CMAKE_CXX_COMPILER@ with standard C++@MyStandardsAreBetter@
+###  - C compiler:   @CMAKE_C_COMPILER@
+###  - build type:   @CMAKE_BUILD_TYPE@
 ###
 ################################################################################
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
+
+# ensure that the right compiler is used (may fail miserably):
+set(CMAKE_BUILD_TYPE   "@CMAKE_BUILD_TYPE@" )
+set(CMAKE_C_COMPILER   "@CMAKE_C_COMPILER@" )
+set(CMAKE_CXX_COMPILER "@CMAKE_CXX_COMPILER@" )
+set(CMAKE_CXX_STANDARD "@MyStandardsAreBetter@" )
+
 project(galleryAnalysis CXX)
+
 
 # install in the same directory as the source
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR})
@@ -61,7 +73,6 @@ set(SBNDDETINFO_LIBS lardata_DetectorInfo)
 ###  EXECUTABLE DIRECTIVES
 ################################################################################
 add_executable(galleryAnalysis galleryAnalysis.cpp TrackAnalysis.cpp)
-set_property(TARGET galleryAnalysis PROPERTY CXX_STANDARD 14)
 target_link_libraries(galleryAnalysis
   ${ROOT_CORELIBS} ${GALLERY_LIBS} ${LARSOFTOBJ_LIBS}
   ${SBNDGEOMETRY_LIBS} # if using geometry
