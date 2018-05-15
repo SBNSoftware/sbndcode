@@ -16,7 +16,7 @@ set( sbnd_util_lib_list lardata_Utilities_LArFFT_service
                           art_Utilities
                           canvas
                           ${MF_MESSAGELOGGER}
-                          ${MF_UTILITIES}
+                          
                           cetlib cetlib_except
                           ${ROOT_BASIC_LIB_LIST}
                           ${ROOT_GEOM}
