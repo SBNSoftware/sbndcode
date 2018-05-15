@@ -17,7 +17,7 @@ art_make(
         canvas
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
+        
         ${FHICLCPP}
         ${ROOT_BASIC_LIB_LIST}
         ${ROOT_GEOM}
@@ -31,7 +31,7 @@ art_make_library( LIBRARY_NAME sbndcode_CRT
         sbndcode_CRTData
         cetlib_except
         ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
+        
         ${FHICLCPP}
         ${ROOT_BASIC_LIB_LIST}
         ${ROOT_GEOM}
@@ -48,7 +48,7 @@ simple_plugin( CRTGeometryHelper service
         cetlib_except
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
+        
         ${ROOT_BASIC_LIB_LIST}
         ${CETLIB}
 )
@@ -67,7 +67,7 @@ simple_plugin( CRTDetSim module
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
         ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
+        
         ${ROOT_BASIC_LIB_LIST}
         ${CLHEP}
         ${CETLIB}

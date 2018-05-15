@@ -12,7 +12,7 @@ simple_plugin(SimWireT1053 "module"
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
                            canvas
                            ${MF_MESSAGELOGGER}
-                           ${MF_UTILITIES}
+                           
                            ${FHICLCPP}
                            cetlib cetlib_except
                            ${CLHEP}
@@ -33,7 +33,7 @@ simple_plugin(SimWireSBND "module"
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
                            canvas
                            ${MF_MESSAGELOGGER}
-                           ${MF_UTILITIES}
+                           
                            ${FHICLCPP}
                            cetlib cetlib_except
                            ${CLHEP}
