@@ -12,7 +12,7 @@
 #include "art/Framework/Principal/Event.h"
 #include "fhiclcpp/ParameterSet.h"
 
-#include "lardata/DetectorInfo/ElecClock.h"
+#include "lardataalg/DetectorInfo/ElecClock.h"
 
 #include <string>
 
