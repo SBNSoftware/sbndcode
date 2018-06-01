@@ -62,7 +62,7 @@ set(SBNDCODE_LIBDIRS $ENV{SBNDCODE_LIB})
 
 link_directories(${GALLERY_LIBDIRS} ${LARSOFTOBJ_LIBDIRS} ${LARSOFT_LIBDIRS} ${SBNDCODE_LIBDIRS})
 
-set(GALLERY_LIBS fhiclcpp MF_Utilities MF_MessageLogger canvas cetlib_except cetlib gallery)
+set(GALLERY_LIBS fhiclcpp MF_MessageLogger canvas cetlib_except cetlib gallery)
 set(ROOT_CORELIBS Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread)
 set(LARSOFTOBJ_LIBS nusimdata_SimulationBase larcoreobj_SummaryData lardataobj_RawData lardataobj_OpticalDetectorData lardataobj_RecoBase lardataobj_AnalysisBase lardataobj_MCBase lardataobj_Simulation)
 
