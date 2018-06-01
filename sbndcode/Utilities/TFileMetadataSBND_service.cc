@@ -54,7 +54,7 @@
 #include "art/Utilities/OutputFileInfo.h"
 #include "art/Framework/IO/Root/RootDB/SQLite3Wrapper.h"
 #include "art/Framework/IO/Root/RootDB/SQLErrMsg.h"
-#include "cetlib/exception.h"
+#include "cetlib_except/exception.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "TROOT.h"
 #include "TFile.h"
