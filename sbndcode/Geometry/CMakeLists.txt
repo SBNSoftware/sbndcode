@@ -12,7 +12,7 @@ art_make(
                         larcorealg_Geometry
                         art_Framework_Services_Registry
                         canvas
-                        ${MF_UTILITIES}
+                        
                         ${FHICLCPP}
                         cetlib_except
                         ${ROOT_CORE}

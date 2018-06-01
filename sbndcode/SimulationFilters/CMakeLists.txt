@@ -12,7 +12,7 @@ art_make(
             art_Persistency_Provenance canvas
             art_Utilities canvas
             ${MF_MESSAGELOGGER}
-            ${MF_UTILITIES}
+            
             ${FHICLCPP}
             ${CETLIB}
             ${CLHEP}
@@ -38,7 +38,7 @@ art_make(
 #                           ${ART_PERSISTENCY_PROVENANCE}
 #                           ${ART_UTILITIES}
 #                           ${MF_MESSAGELOGGER}
-#                           ${MF_UTILITIES}
+#                           
 #                           ${FHICLCPP}
 #                           ${CETLIB}
 #                           ${ROOT_GEOM}
