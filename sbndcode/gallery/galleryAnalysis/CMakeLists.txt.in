@@ -41,7 +41,7 @@ include_directories($ENV{CETLIB_INC} $ENV{CETLIB_EXCEPT_INC} $ENV{CANVAS_INC} $E
 include_directories($ENV{FHICLCPP_INC} $ENV{MESSAGEFACILITY_INC})
 include_directories($ENV{GALLERY_INC})
 include_directories($ENV{NUSIMDATA_INC} $ENV{LARCOREOBJ_INC} $ENV{LARDATAOBJ_INC})
-include_directories($ENV{LARCOREALG_INC} $ENV{LARDATA_INC})
+include_directories($ENV{LARCOREALG_INC} $ENV{LARDATAALG_INC})
 
 include_directories($ENV{SBNDCODE_INC})
 
@@ -57,17 +57,17 @@ set(GALLERY_LIBDIRS
   $ENV{GALLERY_LIB}
   )
 set(LARSOFTOBJ_LIBDIRS $ENV{NUSIMDATA_LIB} $ENV{LARCOREOBJ_LIB} $ENV{LARDATAOBJ_LIB})
-set(LARSOFT_LIBDIRS $ENV{CLHEP_LIB_DIR} $ENV{LARCOREALG_LIB} $ENV{LARDATA_LIB})
+set(LARSOFT_LIBDIRS $ENV{CLHEP_LIB_DIR} $ENV{LARCOREALG_LIB} $ENV{LARDATAALG_LIB})
 set(SBNDCODE_LIBDIRS $ENV{SBNDCODE_LIB})
 
 link_directories(${GALLERY_LIBDIRS} ${LARSOFTOBJ_LIBDIRS} ${LARSOFT_LIBDIRS} ${SBNDCODE_LIBDIRS})
 
-set(GALLERY_LIBS fhiclcpp MF_Utilities MF_MessageLogger canvas cetlib_except cetlib gallery)
+set(GALLERY_LIBS fhiclcpp MF_MessageLogger canvas cetlib_except cetlib gallery)
 set(ROOT_CORELIBS Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread)
 set(LARSOFTOBJ_LIBS nusimdata_SimulationBase larcoreobj_SummaryData lardataobj_RawData lardataobj_OpticalDetectorData lardataobj_RecoBase lardataobj_AnalysisBase lardataobj_MCBase lardataobj_Simulation)
 
 set(SBNDGEOMETRY_LIBS larcorealg_Geometry)
-set(SBNDDETINFO_LIBS lardata_DetectorInfo)
+set(SBNDDETINFO_LIBS lardataalg_DetectorInfo)
 
 ################################################################################
 ###  EXECUTABLE DIRECTIVES
