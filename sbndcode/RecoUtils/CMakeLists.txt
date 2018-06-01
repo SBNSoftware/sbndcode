@@ -21,7 +21,7 @@ art_make(
                            art_Persistency_Provenance canvas
                            art_Utilities canvas
                            ${MF_MESSAGELOGGER}
-                           ${MF_UTILITIES}
+                           
                            ${FHICLCPP}
                            ${ROOT_GEOM}
                            ${ROOT_XMLIO}
@@ -52,7 +52,7 @@ install_source()
 #          	        ${LARRECO_LIB}
 #          	        ${LARDATA_LIB}
 #	  	        ${MF_MESSAGELOGGER}
-#	  	        ${MF_UTILITIES}
+#	  	        
 #	  	        ${FHICLCPP}
 #	  	        cetlib cetlib_except
 #          	        ${ROOT_GEOM}
