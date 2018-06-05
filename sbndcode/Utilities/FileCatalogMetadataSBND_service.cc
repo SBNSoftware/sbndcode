@@ -23,9 +23,9 @@ FileCatalogMetadataSBND(fhicl::ParameterSet const& pset, art::ActivityRegistry& 
   fProjectName = pset.get<std::string>("ProjectName");
   fProjectStage = pset.get<std::string>("ProjectStage");
   fProjectVersion = pset.get<std::string>("ProjectVersion");    
-  fProjectSoftware = pset.get<std::string>("ProjectSoftware");    
-  fProductionName = pset.get<std::string>("ProductionName");  //Leave as default value if not running a production   
-  fProductionType = pset.get<std::string>("ProductionType"); //Leave as default value if not running a production
+  fProjectSoftware = pset.get<std::string>("ProjectSoftware","");    
+  fProductionName = pset.get<std::string>("ProductionName","");  //Leave as default value if not running a production   
+  fProductionType = pset.get<std::string>("ProductionType",""); //Leave as default value if not running a production
 
 
   // Register for callbacks.
