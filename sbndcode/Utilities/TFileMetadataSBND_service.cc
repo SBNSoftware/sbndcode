@@ -159,7 +159,8 @@ void util::TFileMetadataSBND::postOpenFile(std::string const& fn)
   if (!fGenerateTFileMetadata) return;
   
   // save parent input files here
-  md.fParents.insert(fn);
+  // 08/06 DBrailsford: Only save the parent string if the string is filled.  The string still exists (with 0 characters) for generation stage files.  See redmine issue 20124
+  if (fn.length() > 0) md.fParents.insert(fn);
   fFileStats.recordInputFile(fn);
 }
 
@@ -266,18 +267,22 @@ void util::TFileMetadataSBND::postCloseFile()
   jsonfile<<"\"last_event\": "<<md.flast_event<<",\n  ";
   //if (md.fdataTier != "generated"){
   unsigned int c=0;
-  jsonfile<<"\"parents\": [\n";
-  for(auto parent : md.fParents) {
-    c++;
-    size_t n = parent.find_last_of('/');
-    size_t f1 = (n == std::string::npos ? 0 : n+1);
-    jsonfile<<"    {\n     \"file_name\": \""<<parent.substr(f1)<<"\"\n    }";
-    if (md.fParents.size()==1 || c==md.fParents.size()) jsonfile<<"\n";
-    else jsonfile<<",\n"; 
-  }      
-  jsonfile<<"  ],\n  "; 
-  //}   
-  c=0;
+  //08/06 DBrailsford.  Only create the parent json object if there are parent names in the set.
+  if (md.fParents.size() > 0){
+    jsonfile<<"\"parents\": [\n";
+    for(auto parent : md.fParents) {
+      std::cout<<"Parent " << c << ": " << parent << std::endl;
+      c++;
+      size_t n = parent.find_last_of('/');
+      size_t f1 = (n == std::string::npos ? 0 : n+1);
+      jsonfile<<"    {\n     \"file_name\": \""<<parent.substr(f1)<<"\"\n    }";
+      if (md.fParents.size()==1 || c==md.fParents.size()) jsonfile<<"\n";
+      else jsonfile<<",\n"; 
+    }      
+    jsonfile<<"  ],\n  "; 
+    //}   
+    c=0;
+  }
   jsonfile<<"\"runs\": [\n";
   for(auto &t : md.fruns){
     c++;
