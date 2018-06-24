@@ -2,45 +2,21 @@
 
 BEGIN_PROLOG
 
-sbnd_hitfinder:              @local::standard_hitfinder
-sbnd_mc_hitfinder:           @local::standard_hitfinder
-sbnd_mc_hitfinder.AreaNorms: [ 12.89, 14.51 ]
+sbnd_hitfinder:               @local::standard_hitfinder
+sbnd_mc_hitfinder:            @local::standard_hitfinder
+sbnd_mc_hitfinder.AreaNorms:  [ 12.89, 14.51 ]
 
 # sbnd_gaushitfinder:          @local::gaus_hitfinder
 # generic (ArgoNeuT) GausHitFinder configuration from LArSoft 4.24.00:
 
-sbnd_gaushitfinder:
-{
-module_type:	     "GausHitFinder"
-CalDataModuleLabel:  "caldata"      
-MinSig: 	      [ 10.0, 10.0, 10.0 ] # signal height threshold, per plane (U, V, Z)
-InitWidth:	      [ 6.0, 6.0, 7.8 ]  # initial width for fit, per plane
-MinWidth:	      [ 1.5, 1.5, 2.0 ]  # bound on fit
-MaxMultiHit:	      10	       # maximum hits for multi fit   
-AreaMethod:	      0 	       # 0 = area by integral, 1 = area by gaussian area formula
-AreaNorms:	      [ 13.25, 13.25, 26.31 ] # normalizations that put signal area in 
-					      # same scale as peak height. 
-TryNplus1Fits:        false            # whether to try to re-fit poorly modled hits with n+1 gaussians
-Chi2NDF:	      2000	       # maximum Chisquared / NDF allowed for a hit to be saved (Set very high by default)
+sbnd_gaushitfinder:           @local::gaus_hitfinder
 
-CandidateHits:        @local::candhitfinder_standard
-PeakFitter:           @local::peakfitter_gaussian
-
-AllHitsInstanceName:  ""           # If non-null then this will be the instance name of all hits output to event
-                                   # in this case there will be two hit collections, one filtered and one containing all hits
-FilterHits:           false        # do not apply any filter to the hits
-HitFilterAlg:
-{
-  AlgName: "HitFilterAlg"
-  MinPulseHeight: [5.0, 5.0, 5.0]        #minimum hit peak amplitude per plane
-  MinPulseSigma:  [1.0, 1.0, 1.0]        #minimum hit rms per plane
-}
-                                         # In addition to the filter alg we can also filter hits on the same pulse train
-PulseHeightCuts:   [3.0,  3.0,  3.0 ] # Minimum pulse height
-PulseWidthCuts:    [2.0,  1.5,  1.0 ] # Minimum pulse width
-PulseRatioCuts:    [0.35, 0.40, 0.20] # Ratio of pulse height to width
-
-} # sbnd_gaushitfinder
+sbnd_gaushitfinder.MinSig:        [ 10.0,  10.0,  10.0  ]  # signal height threshold, per plane (U, V, Z)
+sbnd_gaushitfinder.InitWidth:     [ 6.0,    6.0,   7.8  ]  # initial width for fit, per plane
+sbnd_gaushitfinder.MinWidth:      [ 1.5,    1.5,   2.0  ]  # bound on fit
+sbnd_gaushitfinder.AreaNorms:     [ 13.25, 13.25, 26.31 ]  # normalizations that put signal area in 
+					                                       # same scale as peak height. 
+sbnd_gaushitfinder.TryNplus1Fits: false                    # whether to try to re-fit poorly modled hits with n+1 gaussians
 
 sbnd_fasthitfinder:                     @local::standard_fasthitfinder
 sbnd_fasthitfinder.DigitModuleLabel:    "daq"
