@@ -6,17 +6,14 @@ sbnd_hitfinder:               @local::standard_hitfinder
 sbnd_mc_hitfinder:            @local::standard_hitfinder
 sbnd_mc_hitfinder.AreaNorms:  [ 12.89, 14.51 ]
 
-# sbnd_gaushitfinder:          @local::gaus_hitfinder
 # generic (ArgoNeuT) GausHitFinder configuration from LArSoft 4.24.00:
-
-sbnd_gaushitfinder:           @local::gaus_hitfinder
-
-sbnd_gaushitfinder.MinSig:        [ 10.0,  10.0,  10.0  ]  # signal height threshold, per plane (U, V, Z)
-sbnd_gaushitfinder.InitWidth:     [ 6.0,    6.0,   7.8  ]  # initial width for fit, per plane
-sbnd_gaushitfinder.MinWidth:      [ 1.5,    1.5,   2.0  ]  # bound on fit
-sbnd_gaushitfinder.AreaNorms:     [ 13.25, 13.25, 26.31 ]  # normalizations that put signal area in 
-					                                       # same scale as peak height. 
-sbnd_gaushitfinder.TryNplus1Fits: false                    # whether to try to re-fit poorly modled hits with n+1 gaussians
+sbnd_gaushitfinder:                                                   @local::gaus_hitfinder
+sbnd_gaushitfinder.AreaNorms:                                         [ 13.25, 13.25, 26.31 ]  # normalizations that put signal area in 
+				                                                                               # same scale as peak height. 
+sbnd_gaushitfinder.TryNplus1Fits:                                     false                    # whether to try to re-fit poorly modled hits with n+1 gaussians
+sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane0.RoiThreshold: 10.
+sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane1.RoiThreshold: 10.
+sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane2.RoiThreshold: 10.
 
 sbnd_fasthitfinder:                     @local::standard_fasthitfinder
 sbnd_fasthitfinder.DigitModuleLabel:    "daq"
