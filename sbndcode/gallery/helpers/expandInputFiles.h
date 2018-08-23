@@ -15,6 +15,7 @@
 // C/C++ libraries
 #if __cplusplus >= 201703L // C++17
 # define HAS_STD_FILESYSTEM 1
+# undef HAS_STD_FILESYSTEM // FIXME: <filesystem> not found for e17 builds
 # if __clang__
 #   if (__clang_major__ < 6) // as of Clang 5.0, there is no <filesystem> there
 #     undef HAS_STD_FILESYSTEM
