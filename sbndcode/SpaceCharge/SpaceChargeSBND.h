@@ -33,10 +33,12 @@ namespace spacecharge
 	geo::Vector_t GetPosOffsets(geo::Point_t const& point) const override;
 	geo::Vector_t GetEfieldOffsets(geo::Point_t const& point) const override;
 
+    private:
     protected:
-	int initialSpatialFitPolN[3] = {3, 4, 3};;
-	int intermediateSpatialFitPolN[3] = {4, 4, 4};;
-	int initialEFieldFitPolN[3] = {3, 3, 3};;
+
+	int initialSpatialFitPolN[3] = {3, 4, 3};
+	int intermediateSpatialFitPolN[3] = {4, 4, 4};
+	int initialEFieldFitPolN[3] = {3, 3, 3};
 	int intermediateEFieldFitPolN[3] = {6, 4, 4};
 	double DriftField = 500.0; // 500 V/cm
 

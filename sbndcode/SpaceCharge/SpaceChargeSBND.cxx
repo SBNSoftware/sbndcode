@@ -2,17 +2,19 @@
 // SpaceChargeSBND.cxx; brief implementation of class for storing/accessing space charge distortions for SBND
 // arbint@bnl.gov
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// C++ language includes
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <math.h>
 #include <stdio.h>
-#include <TFile.h>
-#include <TCanvas.h>
 
+// LArSoft includes
 #include "sbndcode/SpaceCharge/SpaceChargeSBND.h"
+
+// Framework includes
+#include "cetlib_except/exception.h"
 
 spacecharge::SpaceChargeSBND::SpaceChargeSBND(fhicl::ParameterSet const& pset)
 {
@@ -46,7 +48,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                         {
                             for(int j = 0; j < intermediateSpatialFitPolN[0] + 1; j++)
                                 {
-                                    gSpatialGraphX[i][j] = (TGraph*)infile.Get(Form("deltaX/g%i_%i", i, j));
+                                    gSpatialGraphX[i][j] = (TGraph*)infile->Get(Form("deltaX/g%i_%i", i, j));
 
                                 }
                             intermediateSpatialFitFunctionX[i] = new TF1(Form("intermediateSpatialFitFunctionX_%i", i), Form("pol%i", intermediateSpatialFitPolN[0]));
@@ -55,7 +57,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                         {
                             for(int j = 0; j < intermediateSpatialFitPolN[1] + 1; j++)
                                 {
-                                    gSpatialGraphY[i][j] = (TGraph*)infile.Get(Form("deltaY/g%i_%i", i, j));
+                                    gSpatialGraphY[i][j] = (TGraph*)infile->Get(Form("deltaY/g%i_%i", i, j));
 
                                 }
                             intermediateSpatialFitFunctionY[i] = new TF1(Form("intermediateSpatialFitFunctionY_%i", i), Form("pol%i", intermediateSpatialFitPolN[1]));
@@ -64,7 +66,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                         {
                             for(int j = 0; j < intermediateSpatialFitPolN[2] + 1; j++)
                                 {
-                                    gSpatialGraphZ[i][j] = (TGraph*)infile.Get(Form("deltaZ/g%i_%i", i, j));
+                                    gSpatialGraphZ[i][j] = (TGraph*)infile->Get(Form("deltaZ/g%i_%i", i, j));
 
                                 }
                             intermediateSpatialFitFunctionZ[i] = new TF1(Form("intermediateSpatialFitFunctionZ_%i", i), Form("pol%i", intermediateSpatialFitPolN[2]));
@@ -78,7 +80,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                         {
                             for(int j = 0; j < intermediateEFieldFitPolN[0] + 1; j++)
                                 {
-                                    gEFieldGraphX[i][j] = (TGraph*)infile.Get(Form("deltaEx/g%i_%i", i, j));
+                                    gEFieldGraphX[i][j] = (TGraph*)infile->Get(Form("deltaEx/g%i_%i", i, j));
 
                                 }
                             intermediateEFieldFitFunctionX[i] = new TF1(Form("intermediateEFieldFitFunctionX_%i", i), Form("pol%i", intermediateEFieldFitPolN[0]));
@@ -87,7 +89,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                         {
                             for(int j = 0; j < intermediateEFieldFitPolN[1] + 1; j++)
                                 {
-                                    gEFieldGraphY[i][j] = (TGraph*)infile.Get(Form("deltaEy/g%i_%i", i, j));
+                                    gEFieldGraphY[i][j] = (TGraph*)infile->Get(Form("deltaEy/g%i_%i", i, j));
 
                                 }
                             intermediateEFieldFitFunctionY[i] = new TF1(Form("intermediateEFieldFitFunctionY_%i", i), Form("pol%i", intermediateEFieldFitPolN[1]));
@@ -96,7 +98,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                         {
                             for(int j = 0; j < intermediateEFieldFitPolN[2] + 1; j++)
                                 {
-                                    gEFieldGraphZ[i][j] = (TGraph*)infile.Get(Form("deltaEz/g%i_%i", i, j));
+                                    gEFieldGraphZ[i][j] = (TGraph*)infile->Get(Form("deltaEz/g%i_%i", i, j));
 
                                 }
                             intermediateEFieldFitFunctionZ[i] = new TF1(Form("intermediateEFieldFitFunctionZ_%i", i), Form("pol%i", intermediateEFieldFitPolN[2]));
