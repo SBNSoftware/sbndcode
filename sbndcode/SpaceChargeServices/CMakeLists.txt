@@ -1,5 +1,5 @@
 simple_plugin(SpaceChargeServiceSBND "service"
-              #sbnd_SpaceCharge
+              sbndcode_SpaceCharge
 	      ${ART_FRAMEWORK_CORE}
 	      ${ART_FRAMEWORK_PRINCIPAL}
 	      ${ART_FRAMEWORK_SERVICES_REGISTRY}
