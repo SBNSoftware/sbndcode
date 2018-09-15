@@ -47,7 +47,8 @@ void SpaceChargeTools::SpaceChargeTest::endJob() {}
 void SpaceChargeTools::SpaceChargeTest::analyze(art::Event const & evt)
 {
     auto const* SCE = lar::providerFrom<spacecharge::SpaceChargeService>();
-    cout << SCE->EnableSimSpatialSCE() << endl;
+    cout << "Is Spatial SCE enabled? " << bool(SCE->EnableSimSpatialSCE()) << endl;
+    cout << "Is E-field SCE enabled? " << bool(SCE->EnableSimEfieldSCE()) << endl;
 }
 
 DEFINE_ART_MODULE(SpaceChargeTools::SpaceChargeTest)
