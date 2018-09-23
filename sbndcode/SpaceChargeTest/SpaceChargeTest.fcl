@@ -17,8 +17,8 @@ physics:
       module_type: "SpaceChargeTest"
     }
   }
-  analysis: [ SpaceChargeTest ] //Directory for histograms
-  end_paths: [ analysis ]
+  analysis: [SpaceChargeTest] //Directory for histograms
+  end_paths: [analysis]
 }
 
 outputs:{}
