@@ -1,0 +1,27 @@
+#include "spacecharge_sbnd.fcl"
+
+process_name: SpaceChargeTest
+
+services:
+{
+  TFileService: { fileName: "SpaceChargeTest_hist.root" }
+  SpaceCharge: @local::sbnd_spacecharge
+}
+
+physics:
+{
+  analyzers:
+  {
+    SpaceChargeTest:
+    {
+      module_type: "SpaceChargeTest"
+    }
+  }
+  analysis: [SpaceChargeTest] //Directory for histograms
+  end_paths: [analysis]
+}
+
+outputs:{}
+
+services.SpaceCharge.EnableSimSpatialSCE: true
+services.SpaceCharge.EnableSimEfieldSCE: true
