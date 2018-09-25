@@ -37,16 +37,25 @@
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
+#include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "lardataobj/AnalysisBase/ParticleID.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Shower.h"
+#include "lardataobj/RecoBase/MCSFitResult.h"
 #include "lardataobj/MCBase/MCTrack.h"
+#include "larreco/RecoAlg/TrajectoryMCSFitter.h"
+#include "larreco/RecoAlg/TrackMomentumCalculator.h"
+#include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "larreco/RecoAlg/PMAlg/PmaTrack3D.h"
-#include "lardataobj/AnalysisBase/Calorimetry.h"
-#include "lardataobj/AnalysisBase/ParticleID.h"
 #include "sbndcode/RecoUtils/RecoUtils.h"
+
+#include "fhiclcpp/ParameterSet.h"
+#include "fhiclcpp/types/Table.h"
+#include "fhiclcpp/types/Atom.h"
 
 #include <sstream>
 #include <cmath>
@@ -65,14 +74,104 @@
 
 #include <typeinfo>
 
-namespace trees {
+namespace sbnd {
   class AnalysisNTuple;
 }
 
 
-class trees::AnalysisNTuple : public art::EDAnalyzer {
+class sbnd::AnalysisNTuple : public art::EDAnalyzer {
+
 public:
-  explicit AnalysisNTuple(fhicl::ParameterSet const & p);
+ 
+  struct Inputs {
+    using Name    = fhicl::Name;
+    using Comment = fhicl::Comment;
+
+    fhicl::Atom<float> detectorLengthX{
+      Name("DetectorLengthX"),
+      Comment("Detetector length in the x direction")
+    };
+    fhicl::Atom<float> detectorLengthY{
+      Name("DetectorLengthY"),
+      Comment("Detetector length in the y direction")
+    };
+    fhicl::Atom<float> detectorLengthZ{
+      Name("DetectorLengthZ"),
+      Comment("Detetector length in the z direction")
+    };
+    fhicl::Atom<float> coordinateOffsetX{
+      Name("CoordinateOffsetX"),
+      Comment("Shift in the x direction of the origin")
+    };
+    fhicl::Atom<float> coordinateOffsetY{
+      Name("CoordinateOffsetY"),
+      Comment("Shift in the y direction of the origin")
+    };
+    fhicl::Atom<float> coordinateOffsetZ{
+      Name("CoordinateOffsetZ"),
+      Comment("Shift in the z direction of the origin")
+    };
+    fhicl::Atom<float> selectedBorderX{
+      Name("SelectedBorderX"),
+      Comment("Shift in the x direction of the origin")
+    };
+    fhicl::Atom<float> selectedBorderY{
+      Name("SelectedBorderY"),
+      Comment("Shift in the y direction of the origin")
+    };
+    fhicl::Atom<float> selectedBorderZ{
+      Name("SelectedBorderZ"),
+      Comment("Shift in the z direction of the origin")
+    };
+    fhicl::Atom<art::InputTag> generator_label{
+      Name("TruthLabel"),
+      Comment("Generator label")
+    };
+    fhicl::Atom<art::InputTag> geant_label{
+      Name("G4Label"),
+      Comment("G4 label")
+    };
+    fhicl::Atom<art::InputTag> pandora_label{
+      Name("PandoraLabel"),
+      Comment("Pandora label")
+    };
+    fhicl::Atom<art::InputTag> reco_track_label{
+      Name("RecoTrackLabel"),
+      Comment("Pandora track label")
+    };
+    fhicl::Atom<art::InputTag> reco_shower_label{
+      Name("RecoShowerLabel"),
+      Comment("EM shower label")
+    };
+    fhicl::Atom<art::InputTag> reco_track_calorimetry_label{
+      Name("RecoTrackCalorimetryLabel"),
+      Comment("Track calorimetry label")
+    };
+    fhicl::Atom<art::InputTag> reco_track_particleid_label{
+      Name("RecoTrackParticleIDLabel"),
+      Comment("Track PID label")
+    };
+    fhicl::Atom<art::InputTag> hit_label{
+      Name("HitLabel"),
+      Comment("Hit label")
+    };
+  };
+  struct Config {
+    using Name    = fhicl::Name;
+    using Comment = fhicl::Comment;
+  
+    fhicl::Table<AnalysisNTuple::Inputs> inputs {
+      Name("inputs"), 
+    };
+    fhicl::Table<trkf::TrajectoryMCSFitter::Config> fitter {
+      Name("fitter"),
+    };
+  };
+
+  using Parameters = art::EDAnalyzer::Table<Config>;
+  
+  explicit AnalysisNTuple(Parameters const & config);
+
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
@@ -88,17 +187,14 @@ public:
   // Selected optional functions.
   void beginJob() override;
   void endJob() override;
-  void reconfigure(fhicl::ParameterSet const & p);
 
 private:
 
   // Declare member data here.
-  
   // Geometry 
-  std::map< std::vector< int >, int > m_selection;
-  float m_detectorHalfLengthX;
-  float m_detectorHalfLengthY;
-  float m_detectorHalfLengthZ;
+  float m_detectorLengthX;
+  float m_detectorLengthY;
+  float m_detectorLengthZ;
   float m_coordinateOffsetX;
   float m_coordinateOffsetY;
   float m_coordinateOffsetZ;
@@ -107,20 +203,24 @@ private:
   float m_selectedBorderZ;
 
   // Handle labels 
-  std::string m_generator_label;
-  std::string m_geant_label;
-  std::string m_pandora_label;
-  std::string m_reco_track_label;
-  std::string m_reco_shower_label;
-  std::string m_reco_track_calorimetry_label;
-  std::string m_reco_track_particleid_label;
-  std::string m_hit_label;
+  art::InputTag m_generator_label;
+  art::InputTag m_geant_label;
+  art::InputTag m_pandora_label;
+  art::InputTag m_reco_track_label;
+  art::InputTag m_reco_shower_label;
+  art::InputTag m_reco_track_calorimetry_label;
+  art::InputTag m_reco_track_particleid_label;
+  art::InputTag m_hit_label;
   
+  // Momentum fitters
+  trkf::TrajectoryMCSFitter m_mcs_fitter;
+  trkf::TrackMomentumCalculator m_range_fitter;
+
   // Counters
   unsigned int pfparticle, primary_pfparticle;
 
   // ROOT
-  TTree *event_tree, *mcparticle_tree, *recotrack_tree, *recoshower_tree, *cut_tree;
+  TTree *event_tree, *mcparticle_tree, *recotrack_tree, *recoshower_tree, *mcsstudy_tree;
 
   // Variables associated with event_tree
   // Universal
@@ -147,6 +247,7 @@ private:
   unsigned int tr_dedx_size, tr_residual_range_size;
   int tr_n_hits, tr_id_energy, tr_id_charge, tr_id_hits;
   double tr_pida, tr_chi2_mu, tr_chi2_pi, tr_chi2_pr, tr_chi2_ka;
+  double tr_range_mom_proton, tr_range_mom_muon, tr_mcs_mom_muon;
   double tr_vertex[3], tr_end[3], tr_dedx[100000], tr_residual_range[100000];
   double tr_length, tr_kinetic_energy, tr_range, tr_missing_energy;
 
@@ -155,23 +256,37 @@ private:
   int sh_n_hits, sh_id_energy, sh_id_charge, sh_id_hits;
   double sh_start[3], sh_direction[3], sh_length, sh_open_angle, sh_energy, sh_dedx;
 
-  // Cut tree
-  unsigned int c_total, c_beam, c_contained, c_contained_tracks, c_min_one;
-  
+  // Variables for MCS momentum study
+  double mcs_cluster_width;
+  int mcs_pdgcode;
 };
 
-
-trees::AnalysisNTuple::AnalysisNTuple(fhicl::ParameterSet const & p)
+// Constructor
+sbnd::AnalysisNTuple::AnalysisNTuple(Parameters const & config)
   :
-  EDAnalyzer(p)  // ,
- // More initializers here.
+  EDAnalyzer(config),
+  m_detectorLengthX(config().inputs().detectorLengthX()),
+  m_detectorLengthY(config().inputs().detectorLengthY()),
+  m_detectorLengthZ(config().inputs().detectorLengthZ()),
+  m_coordinateOffsetX(config().inputs().coordinateOffsetX()),
+  m_coordinateOffsetY(config().inputs().coordinateOffsetY()),
+  m_coordinateOffsetZ(config().inputs().coordinateOffsetZ()),
+  m_selectedBorderX(config().inputs().selectedBorderX()),
+  m_selectedBorderY(config().inputs().selectedBorderY()),
+  m_selectedBorderZ(config().inputs().selectedBorderZ()),
+  m_generator_label(config().inputs().generator_label()),
+  m_geant_label(config().inputs().geant_label()),
+  m_pandora_label(config().inputs().pandora_label()),
+  m_reco_track_label(config().inputs().reco_track_label()),
+  m_reco_shower_label(config().inputs().reco_shower_label()),
+  m_reco_track_calorimetry_label(config().inputs().reco_track_calorimetry_label()),
+  m_reco_track_particleid_label(config().inputs().reco_track_particleid_label()),
+  m_hit_label(config().inputs().hit_label()),
+  m_mcs_fitter(config().fitter)
 {
-
-  this->reconfigure(p);
-
 }
 
-void trees::AnalysisNTuple::analyze(art::Event const & e)
+void sbnd::AnalysisNTuple::analyze(art::Event const & e)
 {
 
   art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
@@ -183,9 +298,6 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
   // Get current time stamp
   time_now = std::time(nullptr);
   
-  // Counter for all events in the sample
-  c_total++;
-
   // Proceed with the nTuple-filling if 
   //    True neutrino vertex contained
   //  & True and reconstructed neutrino vertex contained
@@ -244,7 +356,6 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
 // ------------------------------------------------------------------------------
     
     // Initialise counter for the number of reconstructed primary particles
-    unsigned int contained_track      = 0; 
     unsigned int n_primaries          = 0;
     unsigned int n_primary_tracks     = 0;
     unsigned int n_primary_showers    = 0;
@@ -269,6 +380,14 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
 
     if(!neutrino_found) return;
 
+    // Get the GEANT information of the particles 
+    art::FindManyP< simb::MCParticle > fmcp( mct_handle, e, m_geant_label );
+    art::FindManyP< simb::GTruth > fmgt( mct_handle, e, m_generator_label );
+    art::Ptr< simb::MCTruth > mct(mct_handle, 0);
+    std::vector< art::Ptr<simb::MCParticle> > mcp_assn = fmcp.at(0);
+    std::vector< art::Ptr<simb::GTruth> > mcgt_assn = fmgt.at(0);
+    simb::MCNeutrino nu = mct->GetNeutrino();
+
     // Get vertex association
     art::FindManyP< recob::Vertex  > fvtx( pfp_handle, e, m_pandora_label );
     std::vector< art::Ptr<recob::Vertex> > vtx_assn = fvtx.at(neutrino_id);
@@ -283,17 +402,16 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
     float reco_vertex_z = r_vertex[2];
     
     // Make sure reconstructed vertex is within the TPC fiducial volume
-    if (    (reco_vertex_x > (m_detectorHalfLengthX - m_coordinateOffsetX - m_selectedBorderX)) 
+    if (    (reco_vertex_x > (m_detectorLengthX - m_coordinateOffsetX - m_selectedBorderX)) 
          || (reco_vertex_x < (-m_coordinateOffsetX + m_selectedBorderX)) 
-         || (reco_vertex_y > (m_detectorHalfLengthY - m_coordinateOffsetY - m_selectedBorderY)) 
+         || (reco_vertex_y > (m_detectorLengthY - m_coordinateOffsetY - m_selectedBorderY)) 
          || (reco_vertex_y < (-m_coordinateOffsetY + m_selectedBorderY)) 
-         || (reco_vertex_z > (m_detectorHalfLengthZ - m_coordinateOffsetZ - m_selectedBorderZ)) 
+         || (reco_vertex_z > (m_detectorLengthZ - m_coordinateOffsetZ - m_selectedBorderZ)) 
          || (reco_vertex_z < (-m_coordinateOffsetZ + m_selectedBorderZ))) return;
     
-    c_contained++;
-
     // Get track associations with PFParticles from Pandora
-    art::FindManyP< recob::Track  > fmtrk( pfp_handle, e, m_reco_track_label );
+    art::FindManyP< recob::Track   > fmtrk( pfp_handle, e, m_reco_track_label );
+    art::FindManyP< recob::Cluster > fmclu( pfp_handle, e, m_pandora_label );
 
     // Find the number of reconstructed primary final state particles 
     for(int k = 0; k < pfp_size; ++k) {
@@ -311,7 +429,8 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
       // For primary PFParticles get associated tracks and their calorimetry
       n_primaries++;
     
-      std::vector< art::Ptr<recob::Track> > trk_assn = fmtrk.at(pfp->Self());
+      std::vector< art::Ptr<recob::Track>   > trk_assn = fmtrk.at(pfp->Self());
+      std::vector< art::Ptr<recob::Cluster> > clu_assn = fmclu.at(pfp->Self());
 
       if(trk_assn.size()) {
       
@@ -328,6 +447,29 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
           float track_end_x = trk_assn[i]->End()[0];
           float track_end_y = trk_assn[i]->End()[1];
           float track_end_z = trk_assn[i]->End()[2];
+
+          // The border for contained tracks should be the edge of the active volume,
+          // since this is where we can measure energy up to
+          // Find out if one end of a track escapes (if so, MCS)
+          bool does_vtx_escape =                                                                   
+            (     (track_vtx_x > (m_detectorLengthX - m_coordinateOffsetX))                                     
+               || (track_vtx_x < (-m_coordinateOffsetX))                                                    
+               || (track_vtx_y > (m_detectorLengthY - m_coordinateOffsetY))                                     
+               || (track_vtx_y < (-m_coordinateOffsetY))     
+               || (track_vtx_z > (m_detectorLengthZ - m_coordinateOffsetZ))                                     
+               || (track_vtx_z < (-m_coordinateOffsetZ)));                                                  
+                                                                                                   
+          bool does_end_escape =                                                                   
+            (     (track_end_x > (m_detectorLengthX - m_coordinateOffsetX))                                     
+               || (track_end_x < (-m_coordinateOffsetX))                                                    
+               || (track_end_y > (m_detectorLengthY - m_coordinateOffsetY))                                     
+               || (track_end_y < (-m_coordinateOffsetY))                                                    
+               || (track_end_z > (m_detectorLengthZ - m_coordinateOffsetZ))                                     
+               || (track_end_z < (-m_coordinateOffsetZ)));                                                  
+                                                                                                   
+          bool one_end_escapes = true;                                                             
+          if(does_vtx_escape && does_end_escape)   one_end_escapes = false;                        
+          if(!does_vtx_escape && !does_end_escape) one_end_escapes = false;      
           
           // Get the track-based variables
           std::vector< art::Ptr<anab::Calorimetry> > cal_assn = fmcal.at(trk_assn[i]->ID());
@@ -396,24 +538,60 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
               tr_end[2] = track_end_z;
 
               tr_length = trk_assn[i]->Length();
+
+              // Momentum
+              //    Assign a momentum of 0 to every parameter and then 
+              //    fill with the relevant value based on:
+              //    Whether the track escapes
+              //      - can have an MCS momentum
+              //    If it is contained
+              //      - proton range-based
+              //      - muon range-based
+              //
+              // Further down the line, once PID has been performed properly, 
+              // this should be strictly selected.
+              tr_range_mom_proton = 0.;
+              tr_range_mom_muon   = 0.;
+              tr_mcs_mom_muon     = 0.;
+              double reco_momentum_muon, reco_momentum_proton;
+              if(one_end_escapes){
+                recob::MCSFitResult mcs_result = m_mcs_fitter.fitMcs(*trk_assn[i]);
+                reco_momentum_muon = mcs_result.bestMomentum();
+                if(reco_momentum_muon < 0) tr_mcs_mom_muon = 0.;
+                tr_mcs_mom_muon = reco_momentum_muon;
+              }
+              else if(!does_vtx_escape && !does_end_escape){
+                reco_momentum_muon   = m_range_fitter.GetTrackMomentum(tr_length, 13); 
+                reco_momentum_proton = m_range_fitter.GetTrackMomentum(tr_length, 2212); 
+                if(reco_momentum_muon   == 0) tr_range_mom_muon   = 0.;
+                if(reco_momentum_proton == 0) tr_range_mom_proton = 0.;
+                tr_range_mom_muon   = reco_momentum_muon;
+                tr_range_mom_proton = reco_momentum_proton;
+              }
               
+              // MCS Muon-Pion study
+              //    Find a known muon
+              //      Get the width of the cluster associated to the PFParticle
+              //    Repeat for known charged pions
+              //    Plot widths for both muons and pions
+              if(clu_assn.size() == 0) continue;
+              for(art::Ptr<simb::MCParticle> part : mcp_assn) {
+
+                // Define a temporary histogram to fit
+                // ATTENTION: Cut on PGD codes which refer to elements (Argon39 and above) 
+                // Only interested in the final state PARTICLES
+                std::cout << " MC ID : " << part->TrackId() << ", reco ID : " << tr_id_hits << std::endl;
+                if(part->Process() != "primary" || part->PdgCode() >= 1000018039) continue;
+                if(part->TrackId() != tr_id_hits) continue;
+                if(part->PdgCode() == 13 || part->PdgCode() == 211 || part->PdgCode() == -211){
+                  mcs_cluster_width = clu_assn[i]->Width();
+                  mcs_pdgcode       = part->PdgCode();
+                }
+              }
+              mcsstudy_tree->Fill();
               recotrack_tree->Fill();
             }
           }
-          // Check that the primary track's start and end position is within the detector volume
-          if (    (track_vtx_x < (m_detectorHalfLengthX - m_coordinateOffsetX - m_selectedBorderX)) 
-               || (track_vtx_x > (-m_coordinateOffsetX + m_selectedBorderX)) 
-               || (track_vtx_y < (m_detectorHalfLengthY - m_coordinateOffsetY - m_selectedBorderY)) 
-               || (track_vtx_y > (-m_coordinateOffsetY + m_selectedBorderY)) 
-               || (track_vtx_z < (m_detectorHalfLengthZ - m_coordinateOffsetZ - m_selectedBorderZ)) 
-               || (track_vtx_z > (-m_coordinateOffsetZ + m_selectedBorderZ))
-               || (track_end_x < (m_detectorHalfLengthX - m_coordinateOffsetX - m_selectedBorderX)) 
-               || (track_end_x > (-m_coordinateOffsetX + m_selectedBorderX)) 
-               || (track_end_y < (m_detectorHalfLengthY - m_coordinateOffsetY - m_selectedBorderY)) 
-               || (track_end_y > (-m_coordinateOffsetY + m_selectedBorderY)) 
-               || (track_end_z < (m_detectorHalfLengthZ - m_coordinateOffsetZ - m_selectedBorderZ)) 
-               || (track_end_z > (-m_coordinateOffsetZ + m_selectedBorderZ))) contained_track++;
-
         }
       }
     }
@@ -474,44 +652,9 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
     r_tracks    = n_primary_tracks;
     r_showers   = n_primary_showers; 
     r_particles = n_primaries;
-
-    if(contained_track != 0)  c_contained_tracks++;
-    if(n_primary_tracks != 0) c_min_one++;
 // ------------------------------------------------------------------------------
 //                     EVENT-TREE TRUTH INFORMATION
 // ------------------------------------------------------------------------------
-
-    // Get the GEANT information of the particles 
-    art::FindManyP< simb::MCParticle > fmcp( mct_handle, e, m_geant_label );
-    art::FindManyP< simb::GTruth > fmgt( mct_handle, e, m_generator_label );
-    art::Ptr< simb::MCTruth > mct(mct_handle, 0);
-    std::vector< art::Ptr<simb::MCParticle> > mcp_assn = fmcp.at(0);
-    std::vector< art::Ptr<simb::GTruth> > mcgt_assn = fmgt.at(0);
-    simb::MCNeutrino nu = mct->GetNeutrino();
-
-    /*
-    // For getting hits associated with MCParticles
-    // Write a map of track Id's to a vector of art::Ptr<recob::Hits>
-    // For every hit, push it back onto the correct map key (track id)
-    // Could just push back a counter for the number of hits, 
-    // but might want to use the full hits at a later stage
-    std::map< int, std::vector< art::Ptr< recob::Hit > > TrackIdToHits;
-
-    for(int i = 0; i < hit_size; ++i) {
-      
-      art::Ptr< recob::Hit > hit( hit_handle, i );
-      
-      // Vector of tracks associated with individual hit
-      std::vector<sim::TrackIDE> trackIDs = bt_serv->HitToTrackIDEs(hit);
-
-      // Loop over vector of tracks and push the hit onto the map for each one
-      for (unsigned int idIt = 0; idIt < trackIDs.size(); ++idIt) {
-        // Push back the current hit onto each of the tracks associated with it
-        TrackIdToHits[trackIDs[idIt].trackID].push_back(hit);
-      }
-    }
-    */
-
 
     // Start defining truth variables
     t_nu_pdgcode          = nu.Nu().PdgCode();
@@ -593,20 +736,13 @@ void trees::AnalysisNTuple::analyze(art::Event const & e)
   }
 }
 
-void trees::AnalysisNTuple::beginJob()
+void sbnd::AnalysisNTuple::beginJob()
 {
   // Implementation of optional member function here.
   // Event id
   event_id = 0;
 
   // Initialise the counters
-  // Event based
-  c_total            = 0;
-  c_beam             = 0; 
-  c_contained        = 0; 
-  c_contained_tracks = 0;
-  c_min_one          = 0;
-  
   // Particle based
   pfparticle         = 0;
   primary_pfparticle = 0;
@@ -616,7 +752,7 @@ void trees::AnalysisNTuple::beginJob()
   mcparticle_tree = new TTree("particle_tree",   "MCParticle tree: True SBND initial and final state topology information");
   recotrack_tree  = new TTree("recotrack_tree",  "Track tree: Reconstructed final state track information");
   recoshower_tree = new TTree("recoshower_tree", "Shower tree: Reconstructed final state shower information");
-  cut_tree        = new TTree("cut_tree",        "Cut tree: Information on cuts implements at various stages");
+  mcsstudy_tree   = new TTree("mcsstudy_tree",   "MCS tree: Cluster information for studying the MCS behaviour of muons and pions");
 
   // Event tree branches
   event_tree->Branch("event_id",                   &event_id,              "event_id/I");
@@ -677,6 +813,9 @@ void trees::AnalysisNTuple::beginJob()
   recotrack_tree->Branch("tr_chi2_pi",             &tr_chi2_pi,             "tr_chi2_pi/D");
   recotrack_tree->Branch("tr_chi2_pr",             &tr_chi2_pr,             "tr_chi2_pr/D");
   recotrack_tree->Branch("tr_chi2_ka",             &tr_chi2_ka,             "tr_chi2_ka/D");
+  recotrack_tree->Branch("tr_range_mom_proton",    &tr_range_mom_proton,    "tr_range_mom_proton/D");
+  recotrack_tree->Branch("tr_range_mom_muon",      &tr_range_mom_muon,      "tr_range_mom_muon/D");
+  recotrack_tree->Branch("tr_mcs_mom_muon",        &tr_mcs_mom_muon,        "tr_mcs_mom_muon/D");
   recotrack_tree->Branch("tr_vertex",              &tr_vertex,              "tr_vertex[3]/D");
   recotrack_tree->Branch("tr_end",                 &tr_end,                 "tr_end[3]/D");
   recotrack_tree->Branch("tr_dedx",                &tr_dedx,                ("tr_dedx[" + std::to_string(100000)+"]/D").c_str());
@@ -701,26 +840,20 @@ void trees::AnalysisNTuple::beginJob()
   recoshower_tree->Branch("sh_energy",             &sh_energy,              "sh_energy/D");
   recoshower_tree->Branch("sh_dedx",               &sh_dedx,                "sh_dedx/D");
 
-  cut_tree->Branch("c_total",                      &c_total,                "c_total/i");
-  cut_tree->Branch("c_beam",                       &c_beam,                 "c_beam/i");
-  cut_tree->Branch("c_contained",                  &c_contained,            "c_contained/i");
-  cut_tree->Branch("c_contained_tracks",           &c_contained_tracks,     "c_contained_tracks/i");
-  cut_tree->Branch("c_min_one",                    &c_min_one,              "c_min_one/i");
-  
+  // Muon, pion cluster info
+  mcsstudy_tree->Branch("mcs_cluster_width", &mcs_cluster_width, "mcs_cluster_width/D");
+  mcsstudy_tree->Branch("mcs_pdgcode",       &mcs_pdgcode,       "mcs_pdgcode/I");
+
   // Set directories
   event_tree->SetDirectory(0);
   mcparticle_tree->SetDirectory(0);
   recotrack_tree->SetDirectory(0);
   recoshower_tree->SetDirectory(0);
-  cut_tree->SetDirectory(0);
-
+  mcsstudy_tree->SetDirectory(0);
 }
 
-void trees::AnalysisNTuple::endJob()
+void sbnd::AnalysisNTuple::endJob()
 {
-  // Implementation of optional member function here.
-  cut_tree->Fill();
-
   // Print the tree, write the file, close
   // This relative path is needed for grid jobs
   TFile file("output_file.root", "RECREATE");
@@ -729,7 +862,7 @@ void trees::AnalysisNTuple::endJob()
   mcparticle_tree->Write();
   recotrack_tree->Write();
   recoshower_tree->Write();
-  cut_tree->Write();
+  mcsstudy_tree->Write();
   file.Write();
   file.Close();
 
@@ -737,55 +870,7 @@ void trees::AnalysisNTuple::endJob()
   delete mcparticle_tree;
   delete recotrack_tree;
   delete recoshower_tree;
+  delete mcsstudy_tree;
 
 }
-
-void trees::AnalysisNTuple::reconfigure(fhicl::ParameterSet const & p)
-{
-   std::vector< int > blankVect;
-   std::vector< std::vector< int > > input;
- 
-   std::vector< int > selection1 = p.get< std::vector< int > >("Selection1",        blankVect);
-   if ( selection1.size() != 0 ) input.push_back(selection1);
- 
-   std::vector< int > selection2 = p.get< std::vector< int > >("Selection2",        blankVect);
-   if ( selection2.size() != 0 ) input.push_back(selection2);
- 
-   for ( auto & inputVect : input ) {
-     if ( inputVect.size() < 2 ) {
-       std::cerr << " Error: Selection vector must have at least 2 elements " <<    std::endl;
-       std::cerr << "        First element:     Number of particles of PDG code(s)  specified " << std::endl;
-       std::cerr << "        Remaining element: PDG codes to filter on " << std::   endl;
-       exit(1);
-     }
- 
-     int count = inputVect[0];
-     inputVect.erase( inputVect.begin() );
- 
-     m_selection.insert( std::make_pair( inputVect, count ) );
-   }
- 
-  // Implementation of optional member function here. 
-  // Geometry
-  m_detectorHalfLengthX = p.get<float>("DetectorHalfLengthX");
-  m_detectorHalfLengthY = p.get<float>("DetectorHalfLengthY");
-  m_detectorHalfLengthZ = p.get<float>("DetectorHalfLengthZ");
-  m_coordinateOffsetX   = p.get<float>("CoordinateOffsetX");
-  m_coordinateOffsetY   = p.get<float>("CoordinateOffsetY");
-  m_coordinateOffsetZ   = p.get<float>("CoordinateOffsetZ");
-  m_selectedBorderX     = p.get<float>("SelectedBorderX");
-  m_selectedBorderY     = p.get<float>("SelectedBorderY");
-  m_selectedBorderZ     = p.get<float>("SelectedBorderZ");
-
-  // Handle labels 
-  m_generator_label              = p.get<std::string>("TruthLabel");
-  m_geant_label                  = p.get<std::string>("G4Label");
-  m_pandora_label                = p.get<std::string>("PandoraLabel");
-  m_reco_track_label             = p.get<std::string>("RecoTrackLabel");
-  m_reco_shower_label            = p.get<std::string>("RecoShowerLabel");
-  m_reco_track_calorimetry_label = p.get<std::string>("RecoTrackCalorimetryLabel");
-  m_reco_track_particleid_label  = p.get<std::string>("RecoTrackParticleIDLabel");
-  m_hit_label                    = p.get<std::string>("HitLabel");
-}
-
-DEFINE_ART_MODULE(trees::AnalysisNTuple)
+DEFINE_ART_MODULE(sbnd::AnalysisNTuple)

@@ -32,7 +32,7 @@ physics: {
   }
   analyzers: {
      # ParameterSets for zero or more analyzer modules
-    analysisNTuple: @local::analysisNTuple  
+    analysisNTuple: @local::analysisNTuple
   }
 
   filters: {
