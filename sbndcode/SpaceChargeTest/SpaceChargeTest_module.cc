@@ -82,7 +82,10 @@ void SpaceChargeTools::SpaceChargeTest::analyze(art::Event const & evt)
     cout << "Is Spatial SCE enabled? " << bool(SCE->EnableSimSpatialSCE()) << endl;
     cout << "Is E-field SCE enabled? " << bool(SCE->EnableSimEfieldSCE()) << endl;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> e227d2da1c022a118acbb025b0df9d847b164deb
 
     int nSkip = 5;
     for(int iX = xMin; iX <= xMax - nSkip; iX++)
@@ -120,7 +123,10 @@ void SpaceChargeTools::SpaceChargeTest::analyze(art::Event const & evt)
                         }
                 }
         }
+<<<<<<< HEAD
 >>>>>>> SpaceChargeTest successful- able to make parameterized plots to compare with input
+=======
+>>>>>>> e227d2da1c022a118acbb025b0df9d847b164deb
 }
 
 DEFINE_ART_MODULE(SpaceChargeTools::SpaceChargeTest)
