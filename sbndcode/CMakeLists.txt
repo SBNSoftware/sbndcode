@@ -16,3 +16,8 @@ add_subdirectory(RecoUtils)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
+
+# for Space Charge
+add_subdirectory(SpaceChargeServices)
+add_subdirectory(SpaceCharge)
+add_subdirectory(SpaceChargeTest)
