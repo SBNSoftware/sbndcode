@@ -2,7 +2,7 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent sbndcode v07_06_01_01
+parent sbndcode v07_06_02
 defaultqual e17
 
 # These optional lines define the installed directories where headers,
@@ -35,10 +35,10 @@ fwdir   product_dir scripts
 # Add the dependent product and version
 
 product          version
-larsoft          v07_06_01_01
-genie_xsec       v3_0_0beta4
+larsoft          v07_06_02
+genie_xsec       v2_12_10
 sbnd_data        v01_02_00 - optional
-sbndutil         v07_06_01 - optional
+sbndutil         v07_06_02 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
@@ -47,12 +47,12 @@ only_for_build  cetbuildtools   v7_04_00
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
 qualifier     genie_xsec               larsoft       sbndutil        sbnd_data  notes
-e17:debug     G0000a00000:e400:k150     e17:debug     e17:debug       -nq-
-e17:prof      G0000a00000:e400:k150     e17:prof      e17:prof        -nq-
-c2:debug      G0000a00000:e400:k150     c2:debug      c2:debug        -nq-
-c2:prof       G0000a00000:e400:k150     c2:prof       c2:prof         -nq-
-e15:debug     G0000a00000:e400:k150     e15:debug     e15:debug       -nq-
-e15:prof      G0000a00000:e400:k150     e15:prof      e15:prof        -nq-
+e17:debug     DefaultPlusMECWithNC     e17:debug     e17:debug       -nq-
+e17:prof      DefaultPlusMECWithNC     e17:prof      e17:prof        -nq-
+c2:debug      DefaultPlusMECWithNC     c2:debug      c2:debug        -nq-
+c2:prof       DefaultPlusMECWithNC     c2:prof       c2:prof         -nq-
+e15:debug     DefaultPlusMECWithNC     e15:debug     e15:debug       -nq-
+e15:prof      DefaultPlusMECWithNC     e15:prof      e15:prof        -nq-
 
 # table fragment to set FW_SEARCH_PATH needed to find XML files:
 table_fragment_begin
