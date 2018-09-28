@@ -29,6 +29,8 @@ BEGIN_PROLOG
 
 
 sbnd_spacecharge: @local::standard_spacecharge
+sbnd_spacecharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500.root"
+sbnd_spacecharge.service_provider: SpaceChargeServiceSBND
 
 
 END_PROLOG
