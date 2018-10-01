@@ -42,6 +42,7 @@ sbnd_file_catalog_extra:
   ProjectName:     @nil
   ProjectStage:    @nil
   ProjectVersion:  @nil  
+  ProjectSoftware: @nil
   ProductionName:  @nil
   ProductionType:  @nil
 } # sbnd_file_catalog_extra
