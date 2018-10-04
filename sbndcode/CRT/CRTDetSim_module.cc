@@ -135,7 +135,9 @@ void CRTDetSim::produce(art::Event & e) {
   detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();
 
   art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine* engine = &rng->getEngine("crt");
+  CLHEP::HepRandomEngine* engine = &rng->getEngine(art::ScheduleID::first(),
+                                                   moduleDescription().moduleLabel(),
+                                                   "crt");
 
   // Handle for (truth) AuxDetSimChannels
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
