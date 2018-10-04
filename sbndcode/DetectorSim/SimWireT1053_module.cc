@@ -306,7 +306,9 @@ void SimWireT1053::produce(art::Event& evt)
       ped_mean = fCollectionPed;
     //slight variation on ped on order of RMS of baselien variation
     art::ServiceHandle<art::RandomNumberGenerator> rng;
-    CLHEP::HepRandomEngine &engine = rng->getEngine("pedestal");
+    CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
+                                                    moduleDescription().moduleLabel(),
+                                                    "pedestal");
     CLHEP::RandGaussQ rGaussPed(engine, 0.0, fBaselineRMS);
     ped_mean += rGaussPed.fire();
 
@@ -353,7 +355,9 @@ void SimWireT1053::GenNoiseInTime(std::vector<float> &noise)
 {
   //ART random number service
   art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine &engine = rng->getEngine("noise");
+  CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
+                                                  moduleDescription().moduleLabel(),
+                                                  "noise");
   CLHEP::RandGaussQ rGauss(engine, 0.0, fNoiseFact);
 
   //In this case fNoiseFact is a value in ADC counts
@@ -369,7 +373,9 @@ void SimWireT1053::GenNoiseInTime(std::vector<float> &noise)
 void SimWireT1053::GenNoiseInFreq(std::vector<float> &noise)
 {
   art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine &engine = rng->getEngine("noise");
+  CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
+                                                  moduleDescription().moduleLabel(),
+                                                  "noise");
   CLHEP::RandFlat flat(engine, -1, 1);
 
   if (noise.size() != fNTicks)
