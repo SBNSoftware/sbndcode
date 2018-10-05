@@ -1,4 +1,4 @@
-# Produce BNB-like pi0 for SBN workshop 0218
+# Produce BNB-like pi+ for SBN workshop 0218
 # Author: Tom Brooks (tbrooks@fnal.gov)
 
 #include "prodsingle_sbnd_proj.fcl"
@@ -12,7 +12,7 @@ physics.producers.generator.SigmaY: [ 200 ]
 physics.producers.generator.Z0:[ 250 ]
 physics.producers.generator.SigmaZ: [ 250 ]
 physics.producers.generator.PDist: 2                # Histogram momentum dist.
-physics.producers.generator.HistogramFile: "${SBND_DATA_DIR}/ParticleGunHists/particlegun_bnb_hists.root"
+physics.producers.generator.HistogramFile: "ParticleGunHists/particlegun_bnb_hists.root"
 physics.producers.generator.PHist: [ "hPHist_pi" ]
 physics.producers.generator.P0: @erase
 physics.producers.generator.SigmaP: @erase
