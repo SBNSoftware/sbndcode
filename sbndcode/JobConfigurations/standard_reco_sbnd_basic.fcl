@@ -39,6 +39,7 @@
 #include "pandoramodules_sbnd.fcl"
 ##include "triggeralgo_service.fcl"
 ##include "photpropservices_sbnd.fcl"
+#include "particleid_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
@@ -106,7 +107,9 @@ physics:
   pandora:             @local::sbnd_pandora
   pandoraTrack:        @local::sbnd_pandoraTrackCreation
   pandoraShower:       @local::sbnd_pandoraShowerCreation
-  
+  pandoraCalo:         @local::sbnd_calomc                                        
+  pandoraPid:          @local::sbnd_chi2pid  
+
   ### track-finder producers
   trackkalmanhit:      @local::sbnd_track3Dkalmanhit
   spacepointfinder:    @local::sbnd_spacepoint_finder
@@ -140,6 +143,7 @@ physics:
    #      , spacepts,
           , blurredcluster 
           , pandora, pandoraTrack, pandoraShower
+          , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
@@ -197,6 +201,13 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
+
+### Added for Rhiannon's analysis work                                            
+physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"   
+physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"        
+physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"   
+physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"    
+                                                                                   
 
 #physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"

@@ -11,12 +11,12 @@ sbnd_emshower:   @local::standard_emshower
 sbnd_emshoweralg:     @local::standard_emshoweralg
 
 sbnd_showerenergyalg: @local::standard_showerenergyalg
-sbnd_showerenergyalg.UGradient:   0.00519904
-sbnd_showerenergyalg.UIntercept:  31.1799
-sbnd_showerenergyalg.VGradient:   0.00518307
-sbnd_showerenergyalg.VIntercept:  24.1015
-sbnd_showerenergyalg.ZGradient:   0.00455425
-sbnd_showerenergyalg.ZIntercept:  25.2336
+sbnd_showerenergyalg.UGradient:   0.00155644
+sbnd_showerenergyalg.UIntercept:  5.92931
+sbnd_showerenergyalg.VGradient:   0.00173915
+sbnd_showerenergyalg.VIntercept:  -2.13307
+sbnd_showerenergyalg.ZGradient:   0.00153631
+sbnd_showerenergyalg.ZIntercept:  5.19711
 
 sbnd_emshower.EMShowerAlg: @local::sbnd_emshoweralg
 sbnd_emshower.EMShowerAlg.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
