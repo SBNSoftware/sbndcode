@@ -1,4 +1,4 @@
-# Produce BNB-like pi0 for SBN workshop 0218
+# Produce BNB-like pi+ for SBN workshop 0218
 # Author: Tom Brooks (tbrooks@fnal.gov)
 
 #include "prodsingle_sbnd_proj.fcl"
