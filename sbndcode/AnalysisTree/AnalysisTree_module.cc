@@ -126,6 +126,7 @@
 #include "larreco/RecoAlg/TrajectoryMCSFitter.h"
 #include "lardataobj/RecoBase/MCSFitResult.h"
 #include "larreco/RecoAlg/PMAlg/PmaTrack3D.h"
+#include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 
 #include "sbndcode/RecoUtils/RecoUtils.h"
 
@@ -141,6 +142,7 @@
 #include <algorithm>
 #include <functional> // std::mem_fn()
 #include <typeinfo>
+#include <cmath>
 
 #include "TTree.h"
 #include "TTimeStamp.h"
@@ -299,7 +301,13 @@ namespace sbnd {
       PlaneData_t<Float_t> trkpidchimu;   // particle PID chisq for muon
       PlaneData_t<Float_t> trkpidpida;    // particle PIDA
       TrackData_t<Short_t> trkpidbestplane; // this is defined as the plane with most hits     
-       
+      
+      /// If SaveHierarchyInfo is true, there are additional variables:
+      TrackData_t<Int_t>   trkisprimary;   // If the track is a daughter of the neutrino
+      TrackData_t<Int_t>   trkndaughters;  // Number of daughters the track has
+      TrackData_t<Int_t>   trkpfpid;       // The track's pfparticle ID
+      TrackData_t<Int_t>   trkparentpfpid; // The parent of the track's pfparticle ID
+
       /// Creates an empty tracker data structure
       TrackDataStruct(): MaxTracks(0) { Clear(); }
       /// Creates a tracker data structure allowing up to maxTracks tracks
@@ -891,6 +899,11 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
   trkpitchc.resize(MaxTracks);
   ntrkhits.resize(MaxTracks);
   
+  trkisprimary.resize(MaxTracks);  
+  trkndaughters.resize(MaxTracks); 
+  trkpfpid.resize(MaxTracks);      
+  trkparentpfpid.resize(MaxTracks);
+
   trkdedx.resize(MaxTracks);
   trkdqdx.resize(MaxTracks);
   trkresrg.resize(MaxTracks);
@@ -909,32 +922,37 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
   FillWith(trkncosmictags_flashmatch, -9999  );
   FillWith(trkcosmicscore_flashmatch, -99999.);
   FillWith(trkcosmictype_flashmatch, -9999  );
-  FillWith(trkstartx    , -99999.);
-  FillWith(trkstarty    , -99999.);
-  FillWith(trkstartz    , -99999.);
-  FillWith(trkstartd    , -99999.);
-  FillWith(trkendx      , -99999.);
-  FillWith(trkendy      , -99999.);
-  FillWith(trkendz      , -99999.);
-  FillWith(trkendd      , -99999.);
-  FillWith(trktheta     , -99999.);
-  FillWith(trkphi       , -99999.);
-  FillWith(trkstartdcosx, -99999.);
-  FillWith(trkstartdcosy, -99999.);
-  FillWith(trkstartdcosz, -99999.);
-  FillWith(trkenddcosx  , -99999.);
-  FillWith(trkenddcosy  , -99999.);
-  FillWith(trkenddcosz  , -99999.);
-  FillWith(trkthetaxz   , -99999.);
-  FillWith(trkthetayz   , -99999.);
-  FillWith(trkmom       , -99999.);
-  FillWith(trkmomrange  , -99999.);  
-  FillWith(trkmommschi2 , -99999.);  
-  FillWith(trkmommsllhd , -99999.);  
-  FillWith(trklen       , -99999.);
-  FillWith(trksvtxid    , -1);
-  FillWith(trkevtxid    , -1);
+  FillWith(trkstartx    ,   -99999.);
+  FillWith(trkstarty    ,   -99999.);
+  FillWith(trkstartz    ,   -99999.);
+  FillWith(trkstartd    ,   -99999.);
+  FillWith(trkendx      ,   -99999.);
+  FillWith(trkendy      ,   -99999.);
+  FillWith(trkendz      ,   -99999.);
+  FillWith(trkendd      ,   -99999.);
+  FillWith(trktheta     ,   -99999.);
+  FillWith(trkphi       ,   -99999.);
+  FillWith(trkstartdcosx,   -99999.);
+  FillWith(trkstartdcosy,   -99999.);
+  FillWith(trkstartdcosz,   -99999.);
+  FillWith(trkenddcosx  ,   -99999.);
+  FillWith(trkenddcosy  ,   -99999.);
+  FillWith(trkenddcosz  ,   -99999.);
+  FillWith(trkthetaxz   ,   -99999.);
+  FillWith(trkthetayz   ,   -99999.);
+  FillWith(trkmom       ,   -99999.);
+  FillWith(trkmomrange  ,   -99999.);  
+  FillWith(trkmommschi2 ,   -99999.);  
+  FillWith(trkmommsllhd ,   -99999.);  
+  FillWith(trklen       ,   -99999.);
+  FillWith(trksvtxid    ,   -1);
+  FillWith(trkevtxid    ,   -1);
   FillWith(trkpidbestplane, -1); 
+  FillWith(trkisprimary,   -1);  
+  FillWith(trkndaughters,  -1);  
+  FillWith(trkpfpid,       -1);  
+  FillWith(trkparentpfpid, -1);  
+
  
   for (size_t iTrk = 0; iTrk < MaxTracks; ++iTrk){
     
@@ -970,6 +988,7 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
     FillWith(trkpidchipi[iTrk]  , -99999.);
     FillWith(trkpidchimu[iTrk]  , -99999.);
     FillWith(trkpidpida[iTrk]   , -99999.);
+    
   } // for track
   
 } // sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear()
@@ -1175,6 +1194,19 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   BranchName = "trkpidbestplane_" + TrackLabel;
   CreateBranch(BranchName, trkpidbestplane, BranchName + NTracksIndexStr + "/S");
 
+  if(saveHierarchyInfo){
+    BranchName = "trkisprimary_" + TrackLabel;
+    CreateBranch(BranchName, trkisprimary, BranchName + NTracksIndexStr + "/O");
+  
+    BranchName = "trkndaughters_" + TrackLabel;
+    CreateBranch(BranchName, trkndaughters, BranchName + NTracksIndexStr + "/I");
+  
+    BranchName = "trkpfpid_" + TrackLabel;
+    CreateBranch(BranchName, trkpfpid, BranchName + NTracksIndexStr + "/I");
+  
+    BranchName = "trkparentpfpid_" + TrackLabel;
+    CreateBranch(BranchName, trkparentpfpid, BranchName + NTracksIndexStr + "/I");
+  }
 } // sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses()
 
 //------------------------------------------------------------------------------
@@ -1480,6 +1512,7 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
   CreateBranch("evttime",&evttime,"evttime/D");
   CreateBranch("beamtime",&beamtime,"beamtime/D");
   CreateBranch("pot",&SubRunData.pot,"pot/D");
+
   CreateBranch("isdata",&isdata,"isdata/B");
   //CreateBranch("taulife",&taulife,"taulife/D");
 
@@ -1885,6 +1918,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   typedef std::map<art::Ptr<recob::Vertex>, art::Ptr<recob::PFParticle> >::const_iterator vtxPfpMapIt;
   trkPfpMap trackPFParticleMap;
   vtxPfpMap vertexPFParticleMap;
+  lar_pandora::PFParticleVector pfplist;
+  lar_pandora::PFParticleMap pfpmap;
   std::vector< trkPfpMap > trackerPFParticleMaps;
 
   /*****************************************************************************/
@@ -1908,6 +1943,9 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       mf::LogError("AnalysisTree:limits") << " Event has no PFParticle information ";
     }
     if(pfpHandle->size()){
+      art::fill_ptr_vector(pfplist, pfpHandle);
+      lar_pandora::LArPandoraHelper::BuildPFParticleMap(pfplist, pfpmap);
+
       // Vertex and track associations
       art::FindManyP<recob::Vertex> fvtx(pfpHandle, evt, fVertexModuleLabel);
 
@@ -1943,7 +1981,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         trackerPFParticleMaps.emplace_back(trackPFParticleMap);
       }
     }
-  }
+  }// end save maps for fSaveHierarchyInfo
 
   // * vertices
   if (evt.getByLabel(fVertexModuleLabel,vtxListHandle))
@@ -2079,7 +2117,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         art::Ptr<recob::PFParticle> tempParticle = it->second;
         if(tempParticle->IsPrimary()) fData->primaryvtx = true;
         else fData->primaryvtx = false;
-      }
+      }// end (fSaveHierarchyInfo)
     }
   }// end (fSaveVertexInfo)
     
@@ -2108,7 +2146,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     
       //call the track momentum algorithm that gives you momentum based on track range
       trkf::TrackMomentumCalculator trkm;
-      
+
       for(size_t iTrk=0; iTrk < NTracks; ++iTrk){//loop over tracks
         //Cosmic Tagger information
         if (fCosmicTaggerAssocLabel.size() > iTracker) {
@@ -2191,6 +2229,24 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           TrackerData.trkmommschi2[iTrk]	        = trkm.GetMomentumMultiScatterChi2(ptrack);
           TrackerData.trkmommsllhd[iTrk]	        = trkm.GetMomentumMultiScatterLLHD(ptrack);
         } // if we have trajectory
+
+        // If saving the hierarchy info
+        if(fSaveHierarchyInfo){
+          trkPfpMapIt it;
+          // Check there is a map entry for this vertex
+          it = trackerPFParticleMaps[iTracker].find(ptrack);
+          if(it == trackerPFParticleMaps[iTracker].end()){
+            throw cet::exception("AnalysisTree:limits") << "Track has no associated PFParticle ";
+          }
+
+          art::Ptr<recob::PFParticle> tempParticle = it->second;
+          // Get information, find the neutrino and then call its daughters 
+          // primary tracks
+          TrackerData.trkisprimary[iTrk]   = std::round(static_cast<Int_t>(lar_pandora::LArPandoraHelper::IsFinalState(pfpmap,tempParticle)));
+          TrackerData.trkndaughters[iTrk]  = tempParticle->NumDaughters();
+          TrackerData.trkpfpid[iTrk]       = tempParticle->Self();
+          TrackerData.trkparentpfpid[iTrk] = tempParticle->Parent();
+        }
 
       // find vertices associated with this track
      /* 

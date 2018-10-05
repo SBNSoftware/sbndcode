@@ -26,7 +26,7 @@ sbnd_analysistree:
  SaveHitInfo:              true
  SaveTrackInfo:            true
  SaveVertexInfo:           true
- SaveHierarchyInfo:        false
+ SaveHierarchyInfo:        true
  SaveCaloCosmics:          false
  isCosmics:		             false
  G4MinE:                   0.01
