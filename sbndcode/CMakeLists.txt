@@ -14,6 +14,7 @@ add_subdirectory(SimulationFilters)
 add_subdirectory(AnalysisTree)
 add_subdirectory(SlimAnalysisTree)
 add_subdirectory(RecoUtils)
+add_subdirectory(ChargedPionFits)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
