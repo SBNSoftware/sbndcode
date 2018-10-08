@@ -1,4 +1,4 @@
-#include "sbndcode/CRT/CRTData.hh"
+#include "sbndcode/CRT/CRTProducts/CRTData.hh"
 
 namespace sbnd{
 namespace crt{
@@ -6,11 +6,12 @@ namespace crt{
   CRTData::CRTData(): fChannel(0), fT0(0), fT1(0){
   }
   CRTData::CRTData(uint32_t channel, uint32_t t0, 
-    uint32_t t1, uint32_t adc):
+    uint32_t t1, uint32_t adc, int trackID):
     fChannel(channel),
     fT0(t0),
     fT1(t1),
-    fADC(adc) {
+    fADC(adc),
+    fTrackID(trackID) {
     }
   CRTData::~CRTData(){
   }
@@ -25,6 +26,9 @@ namespace crt{
   }
   uint32_t CRTData::ADC() const {
     return fADC;
+  }
+  int CRTData::TrackID() const {
+    return fTrackID;
   }
 } // namespace crt
 } // namespace sbnd
