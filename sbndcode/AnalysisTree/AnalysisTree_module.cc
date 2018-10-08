@@ -2550,11 +2550,11 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         if(fmpid.isValid()) {
           
           std::vector<const anab::ParticleID*> pids = fmpid.at(iTrk);
-          if(pids.size() > 1) {
+          if(pids.size() > TrackerData.GetMaxPlanesPerTrack(iTrk)) {
             mf::LogError("AnalysisTree:limits")
               << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
               << " has " << pids.size() 
-              << " set of ParticleID variables. Only one stored in the tree";
+              << " set of ParticleID variables. Only " << TrackerData.GetMaxPlanesPerTrack(iTrk) << " stored in the tree";
           }
           for (size_t ipid = 0; ipid < pids.size(); ++ipid){
             if (!pids[ipid]->PlaneID().isValid) continue;
