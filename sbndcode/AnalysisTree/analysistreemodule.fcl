@@ -13,6 +13,7 @@ sbnd_analysistree:
  CryGenModuleLabel:        "generator"
  G4ModuleLabel:            "largeant"
  TrackModuleLabel:         [ "pandoraTrack" ]
+ ShowerModuleLabel:        "pandoraShower"
  PFParticleModuleLabel:    "pandora"
  VertexModuleLabel:        "pandora"
  CalorimetryModuleLabel:   [ "pandoraCalo" ]
@@ -25,6 +26,7 @@ sbnd_analysistree:
  SaveGeantInfo:            true
  SaveHitInfo:              true
  SaveTrackInfo:            true
+ SaveShowerInfo:           true
  SaveVertexInfo:           true
  SaveHierarchyInfo:        true
  SaveCaloCosmics:          false
