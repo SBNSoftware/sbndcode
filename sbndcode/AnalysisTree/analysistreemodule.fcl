@@ -24,11 +24,11 @@ sbnd_analysistree:
  SaveCryInfo:              true
  SaveGenieInfo:            true
  SaveGeantInfo:            true
- SaveHitInfo:              true
- SaveTrackInfo:            true
- SaveShowerInfo:           true
- SaveVertexInfo:           true
- SaveHierarchyInfo:        true
+ SaveHitInfo:              false
+ SaveTrackInfo:            false
+ SaveShowerInfo:           false
+ SaveVertexInfo:           false
+ SaveHierarchyInfo:        false
  SaveCaloCosmics:          false
  isCosmics:		             false
  G4MinE:                   0.01
