@@ -1,8 +1,7 @@
 BEGIN_PROLOG
 
-sbnd_crtsim:
-{
-  module_type: "sbndcode/CRT/CRTDetSim"
+sbnd_crtsim: {
+  module_type: "CRTDetSim"
   G4ModuleLabel: "largeant"
 
   // Global timing offset [ns]
@@ -35,7 +34,7 @@ sbnd_crtsim:
   NpeScaleShift: -1085.0
 
   // Mean deposited charge for mips [GeV]
-  UseEdep: false
+  UseEdep: true
   Q0: 1.75e-3
 
   // ADC model: Pedestal offset [ADC], slope [ADC/photon], RMS [ADC]
@@ -47,8 +46,14 @@ sbnd_crtsim:
   // Coincidence window for two fibers on a strip [ns]
   StripCoincidenceWindow: 30.0
 
+  // Coincidence for hits in a tagger [ticks]
+  TaggerPlaneCoincidenceWindow: 5
+
   // Effective absorption length (for transverse response) [cm]
   AbsLenEff: 8.5
+
+  // Minimum time between energy deposits that SiPMs can resolve [ns]
+  SipmTimeResponse: 2.0
 }
 
 END_PROLOG

@@ -42,6 +42,8 @@
 #include "particleid_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
+#include "crtsimhitproducer.fcl"
+
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
 #include "backtrackerservice.fcl" 
 #include "particleinventoryservice.fcl"
@@ -126,6 +128,8 @@ physics:
   trackkalmanhitcalo:  @local::sbnd_calomc
   pmatrackcalo:        @local::sbnd_calomc
 
+  crthit:              @local::standard_crtsimhitproducer
+
  }
 
  #define the producer and filter modules for this path, order matters, 
@@ -141,7 +145,7 @@ physics:
          , linecluster
    #      , cccluster
    #      , spacepts,
-          , blurredcluster 
+   #       , blurredcluster 
           , pandora, pandoraTrack, pandoraShower
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
@@ -149,6 +153,7 @@ physics:
    #      , trackkalmanhitcalo,
          , pmatrackcalo
          , emshower 
+         , crthit
  ]
 
  #define the output stream, there could be more than one if using filters 
