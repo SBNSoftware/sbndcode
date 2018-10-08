@@ -224,7 +224,8 @@ void SimWireT1053::produce(art::Event& evt)
   // auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
   art::ServiceHandle<detinfo::DetectorClocksServiceStandard> tss;
   // In case trigger simulation is run in the same job...
-  tss->preProcessEvent(evt);
+  //FIXME: you should never call preProcessEvent
+  tss->preProcessEvent(evt, art::ScheduleContext::invalid());
   auto const* ts = tss->provider();
 
   // get the geometry to be able to figure out signal types and chan -> plane mappings
