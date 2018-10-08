@@ -32,7 +32,7 @@ namespace geo {
     std::vector<geo::AuxDetGeo*>& adgeo = geodata.auxDets;
 
     // Sort the AuxDetGeo objects and map them to names of the detectors
-    fSorter.SortAuxDets(adgeo);
+    //fSorter.SortAuxDets(adgeo);
 
     // Map the AuxDetGeo names to their position in the sorted vector
     //
