@@ -39,7 +39,10 @@
 #include "pandoramodules_sbnd.fcl"
 ##include "triggeralgo_service.fcl"
 ##include "photpropservices_sbnd.fcl"
+#include "particleid_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
+
+#include "crtsimhitproducer.fcl"
 
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
 #include "backtrackerservice.fcl" 
@@ -106,7 +109,9 @@ physics:
   pandora:             @local::sbnd_pandora
   pandoraTrack:        @local::sbnd_pandoraTrackCreation
   pandoraShower:       @local::sbnd_pandoraShowerCreation
-  
+  pandoraCalo:         @local::sbnd_calomc                                        
+  pandoraPid:          @local::sbnd_chi2pid  
+
   ### track-finder producers
   trackkalmanhit:      @local::sbnd_track3Dkalmanhit
   spacepointfinder:    @local::sbnd_spacepoint_finder
@@ -122,6 +127,9 @@ physics:
   ### calorimetry producers
   trackkalmanhitcalo:  @local::sbnd_calomc
   pmatrackcalo:        @local::sbnd_calomc
+  pmatrackpid:         @local::sbnd_chi2pid
+
+  crthit:              @local::standard_crtsimhitproducer
 
  }
 
@@ -138,13 +146,16 @@ physics:
          , linecluster
    #      , cccluster
    #      , spacepts,
-          , blurredcluster 
+   #       , blurredcluster 
           , pandora, pandoraTrack, pandoraShower
+          , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
          , pmatrackcalo
+         , pmatrackpid
          , emshower 
+         , crthit
  ]
 
  #define the output stream, there could be more than one if using filters 
@@ -198,6 +209,13 @@ physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
 
+### Added for Rhiannon's analysis work                                            
+physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"   
+physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"        
+physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"   
+physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"    
+                                                                                   
+
 #physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:		"cccluster"
@@ -215,6 +233,8 @@ physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # do not excu
 
 physics.producers.pmatrackcalo.TrackModuleLabel:                "pmalgtrackmaker"
 physics.producers.pmatrackcalo.SpacePointModuleLabel:           "pmalgtrackmaker"
+physics.producers.pmatrackpid.TrackModuleLabel:                 "pmalgtrackmaker"
+physics.producers.pmatrackpid.CalorimetryModuleLabel:           "pmatrackcalo"
 
 
 physics.producers.blurredcluster.HitsModuleLabel:               "linecluster"

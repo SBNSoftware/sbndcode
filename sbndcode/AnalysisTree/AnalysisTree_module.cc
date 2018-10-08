@@ -91,11 +91,13 @@
 #include "art/Framework/Services/Optional/TFileService.h"
 #include "art/Framework/Services/Optional/TFileDirectory.h"
 #include "canvas/Persistency/Common/FindMany.h"
+#include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Persistency/Common/FindOneP.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "larcore/Geometry/Geometry.h"
+#include "nusimdata/SimulationBase/GTruth.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
 #include "lardataobj/Simulation/SimChannel.h"
@@ -111,27 +113,37 @@
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Shower.h"
+#include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/EndPoint2D.h"
 #include "lardataobj/RecoBase/Vertex.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
-//#include "lardata/RecoAlg/TrackMomentumCalculator.h"
 #include "lardataobj/AnalysisBase/CosmicTag.h"
 #include "lardataobj/AnalysisBase/FlashMatch.h"
+#include "lardataobj/RecoBase/MCSFitResult.h"
+#include "larreco/RecoAlg/TrackMomentumCalculator.h"
+#include "larreco/RecoAlg/TrajectoryMCSFitter.h"
+#include "lardataobj/RecoBase/MCSFitResult.h"
+#include "larreco/RecoAlg/PMAlg/PmaTrack3D.h"
+#include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 
 #include "sbndcode/RecoUtils/RecoUtils.h"
 
 #include <cstring> // std::memcpy()
 #include <vector>
 #include <map>
+#include <utility>
 #include <iterator> // std::begin(), std::end()
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include <algorithm>
 #include <functional> // std::mem_fn()
 #include <typeinfo>
+#include <cmath>
 
 #include "TTree.h"
 #include "TTimeStamp.h"
@@ -139,9 +151,11 @@
 constexpr int kNplanes       = 3;     //number of wire planes
 constexpr int kMaxHits       = 25000; //maximum number of hits;
 constexpr int kMaxTrackHits  = 2000;  //maximum number of hits on a track
+constexpr int kMaxShowerHits = 2000;  //maximum number of hits on a shower
 constexpr int kMaxTrackers   = 15;    //number of trackers passed into fTrackModuleLabel
-constexpr unsigned short kMaxVertices   = 100;    //max number of 3D vertices
-constexpr unsigned short kMaxAuxDets = 4; ///< max number of auxiliary detector cells per MC particle
+constexpr unsigned short kMaxVertices = 100;    //max number of 3D vertices
+constexpr unsigned short kMaxShowers = 100;    //max number of 3D showers
+constexpr unsigned short kMaxAuxDets  = 4; ///< max number of auxiliary detector cells per MC particle
 
 /// total_extent\<T\>::value has the total number of elements of an array
 template <typename T>
@@ -275,14 +289,14 @@ namespace sbnd {
       TrackData_t<Float_t> trkenddcosz;
       TrackData_t<Float_t> trkthetaxz;    // theta_xz.
       TrackData_t<Float_t> trkthetayz;    // theta_yz.
-      //TrackData_t<Float_t> trkmom;        // momentum.
+      TrackData_t<Float_t> trkmom;        // momentum.
       TrackData_t<Float_t> trklen;        // length.
-      //TrackData_t<Float_t> trkmomrange;    // track momentum from range using CSDA tables
-      //TrackData_t<Float_t> trkmommschi2;   // track momentum from multiple scattering Chi2 method
-      //TrackData_t<Float_t> trkmommsllhd;   // track momentum from multiple scattering LLHD method
+      TrackData_t<Float_t> trkmomrange;   // track momentum from range using CSDA tables
+      TrackData_t<Float_t> trkmommschi2;  // track momentum from multiple scattering Chi2 method
+      TrackData_t<Float_t> trkmommsllhd;  // track momentum from multiple scattering LLHD method
       TrackData_t<Short_t> trksvtxid;     // Vertex ID associated with the track start
       TrackData_t<Short_t> trkevtxid;     // Vertex ID associated with the track end
-      PlaneData_t<Int_t> trkpidpdg;       // particle PID pdg code
+      PlaneData_t<Int_t>   trkpidpdg;     // particle PID pdg code
       PlaneData_t<Float_t> trkpidchi;
       PlaneData_t<Float_t> trkpidchipr;   // particle PID chisq for proton
       PlaneData_t<Float_t> trkpidchika;   // particle PID chisq for kaon
@@ -290,7 +304,13 @@ namespace sbnd {
       PlaneData_t<Float_t> trkpidchimu;   // particle PID chisq for muon
       PlaneData_t<Float_t> trkpidpida;    // particle PIDA
       TrackData_t<Short_t> trkpidbestplane; // this is defined as the plane with most hits     
-       
+      
+      /// If SaveHierarchyInfo is true, there are additional variables:
+      TrackData_t<Int_t>   trkisprimary;   // If the track is a daughter of the neutrino
+      TrackData_t<Int_t>   trkndaughters;  // Number of daughters the track has
+      TrackData_t<Int_t>   trkpfpid;       // The track's pfparticle ID
+      TrackData_t<Int_t>   trkparentpfpid; // The parent of the track's pfparticle ID
+
       /// Creates an empty tracker data structure
       TrackDataStruct(): MaxTracks(0) { Clear(); }
       /// Creates a tracker data structure allowing up to maxTracks tracks
@@ -299,7 +319,7 @@ namespace sbnd {
       void SetMaxTracks(size_t maxTracks)
         { MaxTracks = maxTracks; Resize(MaxTracks); }
       void Resize(size_t nTracks);
-      void SetAddresses(TTree* pTree, std::string tracker, bool isCosmics);
+      void SetAddresses(TTree* pTree, std::string tracker, bool isCosmics, bool saveHierarchyInfo);
       
       size_t GetMaxTracks() const { return MaxTracks; }
       size_t GetMaxPlanesPerTrack(int /* iTrack */ = 0) const
@@ -309,6 +329,56 @@ namespace sbnd {
       
     }; // class TrackDataStruct
     
+    /*
+     * Added by Rhiannon 8th October 2018
+     */
+    /// Shower algorithm result
+    /// 
+    /// Can connect to a tree, clear its fields and resize its data.
+    class ShowerDataStruct {
+        public:
+      
+      template <typename T>
+      using ShowerData_t = std::vector<T>;
+      
+      size_t MaxShowers; ///< maximum number of storable showers
+      
+      Short_t  nshowers;                  // Number of reconstructed showers
+      ShowerData_t<Int_t>   shwId;        // shower ID
+      ShowerData_t<Int_t>   shwbestplane; // shower best plane
+      ShowerData_t<Float_t> shwlength;    // Length of the shower
+      ShowerData_t<Float_t> shwopenangle; // Opening angle of the shower
+      ShowerData_t<Float_t> shwstartx;    // Shower start position, x 
+      ShowerData_t<Float_t> shwstarty;    // Shower start position, y 
+      ShowerData_t<Float_t> shwstartz;    // Shower start position, z 
+      ShowerData_t<Float_t> shwdirx;      // Shower direction, x 
+      ShowerData_t<Float_t> shwdiry;      // Shower direction, y 
+      ShowerData_t<Float_t> shwdirz;      // Shower direction, z
+      
+      /// If SaveHierarchyInfo is true, there are additional variables:
+      ShowerData_t<Int_t>   shwisprimary; // If the shower is a primary particle
+      ShowerData_t<Int_t>   shwndaughters; // Number of daughters the shower has
+      ShowerData_t<Int_t>   shwpfpid;      // PFParticle shower ID
+      ShowerData_t<Int_t>   shwparentpfpid;      // PFParticle shower ID
+      
+      /// Creates an empty tracker data structure
+      ShowerDataStruct(): MaxShowers(0) { Clear(); }
+      /// Creates a tracker data structure allowing up to maxShowers tracks
+      ShowerDataStruct(size_t maxShowers): MaxShowers(maxShowers) { Clear(); }
+      void Clear();
+      void SetMaxShowers(size_t maxShowers)
+        { MaxShowers = maxShowers; Resize(MaxShowers); }
+      void Resize(size_t nShowers);
+      void SetShowerAddresses(TTree* pTree, std::string showerLabel, bool saveHierarchyInfo);
+      
+      size_t GetMaxShowers() const { return MaxShowers; }
+      size_t GetMaxPlanesPerShower(int /* iShower */ = 0) const
+        { return (size_t) kNplanes; }
+      size_t GetMaxHitsPerShower(int /* iShower */ = 0, int /* ipl */ = 0) const
+        { return (size_t) kMaxShowerHits; }
+      
+    }; // class ShowerDataStruct
+    
  
     enum DataBits_t: unsigned int {
       tdAuxDet = 0x01,
@@ -317,6 +387,7 @@ namespace sbnd {
       tdGeant = 0x08,
       tdHit = 0x10,
       tdTrack = 0x20,
+      tdShower = 0x20,
       tdVtx = 0x40,
       tdDefault = 0
     }; // DataBits_t
@@ -365,33 +436,38 @@ namespace sbnd {
 
     // vertex information
     Short_t  nvtx;                     //number of vertices
-    Float_t  vtx[kMaxVertices][3];     //vtx[3]  
+    Float_t  vtx[kMaxVertices][3];     //vtx[3] 
+    std::vector<Int_t> primaryvtx;     // Whether the vertex is the primary or not
 
-    //track information
+    // track information
     Char_t   kNTracker;
     std::vector<TrackDataStruct> TrackData;
-    
+
+    // shower information
+    ShowerDataStruct ShowerData;
+
     //mctruth information
     size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
     Int_t     mcevts_truth;    //number of neutrino Int_teractions in the spill
-    std::vector<Int_t>     nuID_truth;      //Unique ID of each true neutrino
-    std::vector<Int_t>     nuPDG_truth;     //neutrino PDG code
-    std::vector<Int_t>     ccnc_truth;      //0=CC 1=NC
-    std::vector<Int_t>     mode_truth;      //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
-    std::vector<Float_t>  enu_truth;       //true neutrino energy
-    std::vector<Float_t>  Q2_truth;        //Momentum transfer squared
-    std::vector<Float_t>  W_truth;         //hadronic invariant mass
-    std::vector<Int_t>     hitnuc_truth;    //hit nucleon
-    std::vector<Float_t>  nuvtxx_truth;    //neutrino vertex x
-    std::vector<Float_t>  nuvtxy_truth;    //neutrino vertex y
-    std::vector<Float_t>  nuvtxz_truth;    //neutrino vertex z
-    std::vector<Float_t>  nu_dcosx_truth;  //neutrino dcos x
-    std::vector<Float_t>  nu_dcosy_truth;  //neutrino dcos y
-    std::vector<Float_t>  nu_dcosz_truth;  //neutrino dcos z
-    std::vector<Float_t>  lep_mom_truth;   //lepton momentum
-    std::vector<Float_t>  lep_dcosx_truth; //lepton dcos x
-    std::vector<Float_t>  lep_dcosy_truth; //lepton dcos y
-    std::vector<Float_t>  lep_dcosz_truth; //lepton dcos z
+    std::vector<Int_t>     nuScatterCode_truth; //Scattering code given by Genie for each neutrino
+    std::vector<Int_t>     nuID_truth;          //Unique ID of each true neutrino
+    std::vector<Int_t>     nuPDG_truth;         //neutrino PDG code
+    std::vector<Int_t>     ccnc_truth;          //0=CC 1=NC
+    std::vector<Int_t>     mode_truth;          //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
+    std::vector<Float_t>   enu_truth;           //true neutrino energy
+    std::vector<Float_t>   Q2_truth;            //Momentum transfer squared
+    std::vector<Float_t>   W_truth;             //hadronic invariant mass
+    std::vector<Int_t>     hitnuc_truth;        //hit nucleon
+    std::vector<Float_t>   nuvtxx_truth;        //neutrino vertex x
+    std::vector<Float_t>   nuvtxy_truth;        //neutrino vertex y
+    std::vector<Float_t>   nuvtxz_truth;        //neutrino vertex z
+    std::vector<Float_t>   nu_dcosx_truth;      //neutrino dcos x
+    std::vector<Float_t>   nu_dcosy_truth;      //neutrino dcos y
+    std::vector<Float_t>   nu_dcosz_truth;      //neutrino dcos z
+    std::vector<Float_t>   lep_mom_truth;       //lepton momentum
+    std::vector<Float_t>   lep_dcosx_truth;     //lepton dcos x
+    std::vector<Float_t>   lep_dcosy_truth;     //lepton dcos y
+    std::vector<Float_t>   lep_dcosz_truth;     //lepton dcos z
 
     //flux information
     std::vector<Float_t>  tpx_flux;        //Px of parent particle leaving BNB target
@@ -513,6 +589,9 @@ namespace sbnd {
     /// Returns whether we have Track data
     bool hasTrackInfo() const { return bits & tdTrack; }
     
+    /// Returns whether we have Track data
+    bool hasShowerInfo() const { return bits & tdShower; }
+    
     /// Returns whether we have Vertex data
     bool hasVertexInfo() const { return bits & tdVtx; }
     
@@ -532,13 +611,14 @@ namespace sbnd {
     const TrackDataStruct& GetTrackerData(size_t iTracker) const
       { return TrackData.at(iTracker); }
     
+    ShowerDataStruct& GetShowerData()
+      { return ShowerData; }
     
     /// Clear all fields if this object (not the tracker algorithm data)
     void ClearLocalData();
     
     /// Clear all fields
     void Clear();
-    
     
     /// Allocates data structures for the given number of trackers (no Clear())
     void SetTrackers(size_t nTrackers) { TrackData.resize(nTrackers); }
@@ -556,8 +636,10 @@ namespace sbnd {
     void ResizeCry(int nPrimaries);
     
     /// Connect this object with a tree
-    void SetAddresses(TTree* pTree, const std::vector<std::string>& trackers, bool isCosmics);
+    void SetAddresses(TTree* pTree, const std::vector<std::string>& trackers, std::string showerLabel, bool isCosmics, bool saveHierarchyInfo);
     
+    /// Connect this object with a tree
+    void SetShowerAddresses(TTree* pTree, std::string showerLabel, bool saveHierarchyInfo);
     
     /// Returns the number of trackers for which data structures are allocated
     size_t GetNTrackers() const { return TrackData.size(); }
@@ -698,7 +780,9 @@ namespace sbnd {
     std::string fGenieGenModuleLabel;
     std::string fCryGenModuleLabel;
     std::string fG4ModuleLabel;
+    std::string fPFParticleModuleLabel;
     std::string fVertexModuleLabel;
+    std::string fShowerModuleLabel;
     std::vector<std::string> fTrackModuleLabel;
     std::vector<std::string> fCalorimetryModuleLabel;
     std::vector<std::string> fParticleIDModuleLabel;
@@ -710,17 +794,20 @@ namespace sbnd {
     bool fSaveGeantInfo; ///whether to extract and save Geant information
     bool fSaveHitInfo; ///whether to extract and save Hit information
     bool fSaveTrackInfo; ///whether to extract and save Track information
+    bool fSaveShowerInfo; ///whether to extract and save Shower information
     bool fSaveVertexInfo; ///whether to extract and save Vertex information
+    bool fSaveHierarchyInfo;  ///< if the user wants to access the tracks with their hierarchy
     
     std::vector<std::string> fCosmicTaggerAssocLabel;
     std::vector<std::string> fFlashMatchAssocLabel;
 
-    bool isCosmics;      ///< if it contains cosmics
+    bool isCosmics;        ///< if it contains cosmics
     bool fSaveCaloCosmics; ///< save calorimetry information for cosmics
     float fG4minE;         ///< Energy threshold to save g4 particle info
+    
     /// Returns the number of trackers configured
     size_t GetNTrackers() const { return fTrackModuleLabel.size(); }
-       
+    
     /// Creates the structure for the tree data; optionally initializes it
     void CreateData(bool bClearData = false)
       {
@@ -734,17 +821,18 @@ namespace sbnd {
         else {
           fData->SetBits(AnalysisTreeDataStruct::tdHit, !fSaveHitInfo);	
           fData->SetBits(AnalysisTreeDataStruct::tdTrack, !fSaveTrackInfo);	
+          fData->SetBits(AnalysisTreeDataStruct::tdShower, !fSaveShowerInfo);	
           fData->SetBits(AnalysisTreeDataStruct::tdVtx, !fSaveVertexInfo);	  	  	    	  	    	  	    	  
           fData->SetTrackers(GetNTrackers());
           if (bClearData) fData->Clear();
         }
       } // CreateData()
-    
+   
     /// Sets the addresses of all the tree branches, creating the missing ones
     void SetAddresses()
       {
         CheckData("SetAddress()"); CheckTree("SetAddress()");
-        fData->SetAddresses(fTree, fTrackModuleLabel, isCosmics);
+        fData->SetAddresses(fTree, fTrackModuleLabel, fShowerModuleLabel, isCosmics, fSaveHierarchyInfo);
       } // SetAddresses()
     
     /// Sets the addresses of all the tree branches of the specified tracking algo,
@@ -758,8 +846,15 @@ namespace sbnd {
             << " (" << fData->GetNTrackers() << " available)";
         }
         fData->GetTrackerData(iTracker) \
-          .SetAddresses(fTree, fTrackModuleLabel[iTracker], isCosmics);
+          .SetAddresses(fTree, fTrackModuleLabel[iTracker], isCosmics, fSaveHierarchyInfo);
       } // SetTrackerAddresses()
+    
+    /// Sets the addresses of all the tree branches, creating the missing ones
+    void SetShowerAddresses()
+      {
+        CheckData("SetShowerAddress()"); CheckTree("SetShowerAddress()");
+        fData->ShowerData.SetShowerAddresses(fTree, fShowerModuleLabel, fSaveHierarchyInfo);
+      } // SetShowerAddresses()
     
     /// Create the output tree and the data structures, if needed
     void CreateTree(bool bClearData = false);
@@ -843,10 +938,10 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
   trkenddcosz.resize(MaxTracks);
   trkthetaxz.resize(MaxTracks);
   trkthetayz.resize(MaxTracks);
-  //trkmom.resize(MaxTracks);
-  //trkmomrange.resize(MaxTracks);
-  //trkmommschi2.resize(MaxTracks);
-  //trkmommsllhd.resize(MaxTracks);  
+  trkmom.resize(MaxTracks);
+  trkmomrange.resize(MaxTracks);
+  trkmommschi2.resize(MaxTracks);
+  trkmommsllhd.resize(MaxTracks);  
   trklen.resize(MaxTracks);
   trksvtxid.resize(MaxTracks);
   trkevtxid.resize(MaxTracks);
@@ -877,6 +972,11 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
   trkpitchc.resize(MaxTracks);
   ntrkhits.resize(MaxTracks);
   
+  trkisprimary.resize(MaxTracks);  
+  trkndaughters.resize(MaxTracks); 
+  trkpfpid.resize(MaxTracks);      
+  trkparentpfpid.resize(MaxTracks);
+
   trkdedx.resize(MaxTracks);
   trkdqdx.resize(MaxTracks);
   trkresrg.resize(MaxTracks);
@@ -895,32 +995,37 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
   FillWith(trkncosmictags_flashmatch, -9999  );
   FillWith(trkcosmicscore_flashmatch, -99999.);
   FillWith(trkcosmictype_flashmatch, -9999  );
-  FillWith(trkstartx    , -99999.);
-  FillWith(trkstarty    , -99999.);
-  FillWith(trkstartz    , -99999.);
-  FillWith(trkstartd    , -99999.);
-  FillWith(trkendx      , -99999.);
-  FillWith(trkendy      , -99999.);
-  FillWith(trkendz      , -99999.);
-  FillWith(trkendd      , -99999.);
-  FillWith(trktheta     , -99999.);
-  FillWith(trkphi       , -99999.);
-  FillWith(trkstartdcosx, -99999.);
-  FillWith(trkstartdcosy, -99999.);
-  FillWith(trkstartdcosz, -99999.);
-  FillWith(trkenddcosx  , -99999.);
-  FillWith(trkenddcosy  , -99999.);
-  FillWith(trkenddcosz  , -99999.);
-  FillWith(trkthetaxz   , -99999.);
-  FillWith(trkthetayz   , -99999.);
-  //FillWith(trkmom       , -99999.);
-  //FillWith(trkmomrange  , -99999.);  
-  //FillWith(trkmommschi2 , -99999.);  
-  //FillWith(trkmommsllhd , -99999.);  
-  FillWith(trklen       , -99999.);
-  FillWith(trksvtxid    , -1);
-  FillWith(trkevtxid    , -1);
+  FillWith(trkstartx    ,   -99999.);
+  FillWith(trkstarty    ,   -99999.);
+  FillWith(trkstartz    ,   -99999.);
+  FillWith(trkstartd    ,   -99999.);
+  FillWith(trkendx      ,   -99999.);
+  FillWith(trkendy      ,   -99999.);
+  FillWith(trkendz      ,   -99999.);
+  FillWith(trkendd      ,   -99999.);
+  FillWith(trktheta     ,   -99999.);
+  FillWith(trkphi       ,   -99999.);
+  FillWith(trkstartdcosx,   -99999.);
+  FillWith(trkstartdcosy,   -99999.);
+  FillWith(trkstartdcosz,   -99999.);
+  FillWith(trkenddcosx  ,   -99999.);
+  FillWith(trkenddcosy  ,   -99999.);
+  FillWith(trkenddcosz  ,   -99999.);
+  FillWith(trkthetaxz   ,   -99999.);
+  FillWith(trkthetayz   ,   -99999.);
+  FillWith(trkmom       ,   -99999.);
+  FillWith(trkmomrange  ,   -99999.);  
+  FillWith(trkmommschi2 ,   -99999.);  
+  FillWith(trkmommsllhd ,   -99999.);  
+  FillWith(trklen       ,   -99999.);
+  FillWith(trksvtxid    ,   -1);
+  FillWith(trkevtxid    ,   -1);
   FillWith(trkpidbestplane, -1); 
+  FillWith(trkisprimary,   -9999);  
+  FillWith(trkndaughters,  -9999);  
+  FillWith(trkpfpid,       -9999);  
+  FillWith(trkparentpfpid, -9999);  
+
  
   for (size_t iTrk = 0; iTrk < MaxTracks; ++iTrk){
     
@@ -956,13 +1061,14 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
     FillWith(trkpidchipi[iTrk]  , -99999.);
     FillWith(trkpidchimu[iTrk]  , -99999.);
     FillWith(trkpidpida[iTrk]   , -99999.);
+    
   } // for track
   
 } // sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear()
 
 
 void sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
-  TTree* pTree, std::string tracker, bool isCosmics
+  TTree* pTree, std::string tracker, bool isCosmics, bool saveHierarchyInfo
 ) {
   if (MaxTracks == 0) return; // no tracks, no tree!
   
@@ -1116,17 +1222,17 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   BranchName = "trkthetayz_" + TrackLabel;
   CreateBranch(BranchName, trkthetayz, BranchName + NTracksIndexStr + "/F");
   
-  //BranchName = "trkmom_" + TrackLabel;
-  //CreateBranch(BranchName, trkmom, BranchName + NTracksIndexStr + "/F");
+  BranchName = "trkmom_" + TrackLabel;
+  CreateBranch(BranchName, trkmom, BranchName + NTracksIndexStr + "/F");
   
-  //BranchName = "trkmomrange_" + TrackLabel;
-  //CreateBranch(BranchName, trkmomrange, BranchName + NTracksIndexStr + "/F");
+  BranchName = "trkmomrange_" + TrackLabel;
+  CreateBranch(BranchName, trkmomrange, BranchName + NTracksIndexStr + "/F");
 
-  //BranchName = "trkmommschi2_" + TrackLabel;
-  //CreateBranch(BranchName, trkmommschi2, BranchName + NTracksIndexStr + "/F");
+  BranchName = "trkmommschi2_" + TrackLabel;
+  CreateBranch(BranchName, trkmommschi2, BranchName + NTracksIndexStr + "/F");
 
-  //BranchName = "trkmommsllhd_" + TrackLabel;
-  //CreateBranch(BranchName, trkmommsllhd, BranchName + NTracksIndexStr + "/F");
+  BranchName = "trkmommsllhd_" + TrackLabel;
+  CreateBranch(BranchName, trkmommsllhd, BranchName + NTracksIndexStr + "/F");
   
   BranchName = "trklen_" + TrackLabel;
   CreateBranch(BranchName, trklen, BranchName + NTracksIndexStr + "/F");
@@ -1161,7 +1267,133 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   BranchName = "trkpidbestplane_" + TrackLabel;
   CreateBranch(BranchName, trkpidbestplane, BranchName + NTracksIndexStr + "/S");
 
+  if(saveHierarchyInfo){
+    BranchName = "trkisprimary_" + TrackLabel;
+    CreateBranch(BranchName, trkisprimary, BranchName + NTracksIndexStr + "/O");
+  
+    BranchName = "trkndaughters_" + TrackLabel;
+    CreateBranch(BranchName, trkndaughters, BranchName + NTracksIndexStr + "/I");
+  
+    BranchName = "trkpfpid_" + TrackLabel;
+    CreateBranch(BranchName, trkpfpid, BranchName + NTracksIndexStr + "/I");
+  
+    BranchName = "trkparentpfpid_" + TrackLabel;
+    CreateBranch(BranchName, trkparentpfpid, BranchName + NTracksIndexStr + "/I");
+  }
 } // sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses()
+
+//------------------------------------------------------------------------------
+//---  AnalysisTreeDataStruct::ShowerDataStruct
+//---
+
+void sbnd::AnalysisTreeDataStruct::ShowerDataStruct::Resize(size_t nShowers)
+{
+  MaxShowers = nShowers;
+  
+  shwId.resize(MaxShowers);  
+  shwbestplane.resize(MaxShowers);
+  shwlength.resize(MaxShowers);   
+  shwopenangle.resize(MaxShowers);
+  shwstartx.resize(MaxShowers);   
+  shwstarty.resize(MaxShowers);   
+  shwstartz.resize(MaxShowers);   
+  shwdirx.resize(MaxShowers);     
+  shwdiry.resize(MaxShowers);     
+  shwdirz.resize(MaxShowers);     
+  shwisprimary.resize(MaxShowers);
+  shwndaughters.resize(MaxShowers);
+  shwpfpid.resize(MaxShowers);
+  shwparentpfpid.resize(MaxShowers);
+
+} // AnalysisTreeDataStruct::ShowerDataStruct.Resize()
+
+void sbnd::AnalysisTreeDataStruct::ShowerDataStruct::Clear() {
+  Resize(MaxShowers);
+  nshowers = 0;
+
+  // For variables with the ShowerData_t form
+  FillWith(shwId,          -9999);
+  FillWith(shwbestplane,   -9999);
+  FillWith(shwlength,      -9999.);
+  FillWith(shwopenangle,   -9999.);
+  FillWith(shwstartx,      -9999.);
+  FillWith(shwstarty,      -9999.);
+  FillWith(shwstartz,      -9999.);
+  FillWith(shwdirx,        -9999.);
+  FillWith(shwdiry,        -9999.);
+  FillWith(shwdirz,        -9999.);
+  FillWith(shwisprimary,   -9999);
+  FillWith(shwndaughters,  -9999);
+  FillWith(shwpfpid,       -9999);
+  FillWith(shwparentpfpid, -9999);
+  
+} // sbnd::AnalysisTreeDataStruct::ShowerDataStruct::Clear()
+
+void sbnd::AnalysisTreeDataStruct::ShowerDataStruct::SetShowerAddresses(
+  TTree* pTree, std::string showerLabel, bool saveHierarchyInfo
+) {
+  if (MaxShowers == 0) return; // no tracks, no tree!
+  
+  sbnd::AnalysisTreeDataStruct::BranchCreator CreateBranch(pTree);
+
+  AutoResettingStringSteam sstr;
+  sstr() << kMaxShowerHits;
+  std::string MaxShowerHitsIndexStr("[" + sstr.str() + "]");
+  
+  std::string ShowerLabel = showerLabel;
+  std::string BranchName;
+
+  BranchName = "nshowers_" + ShowerLabel;
+  CreateBranch(BranchName, &nshowers, BranchName + "/S");
+  std::string NShowersIndexStr = "[" + BranchName + "]";
+  
+  BranchName = "shwId_" + ShowerLabel;
+  CreateBranch(BranchName, shwId, BranchName + NShowersIndexStr + "/I");
+  
+  BranchName = "shwbestplane_" + ShowerLabel;
+  CreateBranch(BranchName, shwbestplane, BranchName + NShowersIndexStr + "/I");
+  
+  BranchName = "shwlength_" + ShowerLabel;
+  CreateBranch(BranchName, shwlength, BranchName + NShowersIndexStr + "/F");
+  
+  BranchName = "shwlength_" + ShowerLabel;
+  CreateBranch(BranchName, shwlength, BranchName + NShowersIndexStr + "/F");
+  
+  BranchName = "shwopenangle_" + ShowerLabel;
+  CreateBranch(BranchName, shwopenangle, BranchName + NShowersIndexStr + "/F");
+  
+  BranchName = "shwstartx_" + ShowerLabel;
+  CreateBranch(BranchName, shwstartx, BranchName + NShowersIndexStr + "/F");
+  
+  BranchName = "shwstarty_" + ShowerLabel;
+  CreateBranch(BranchName, shwstarty, BranchName + NShowersIndexStr + "/F");
+  
+  BranchName = "shwstartz_" + ShowerLabel;
+  CreateBranch(BranchName, shwstartz, BranchName + NShowersIndexStr + "/F");
+  
+  BranchName = "shwdirx_" + ShowerLabel;
+  CreateBranch(BranchName, shwdirx, BranchName + NShowersIndexStr + "/F");
+  
+  BranchName = "shwdiry_" + ShowerLabel;
+  CreateBranch(BranchName, shwdiry, BranchName + NShowersIndexStr + "/F");
+  
+  BranchName = "shwdirz_" + ShowerLabel;
+  CreateBranch(BranchName, shwdirz, BranchName + NShowersIndexStr + "/F");
+  
+  if(saveHierarchyInfo){
+    BranchName = "shwisprimary_" + ShowerLabel;
+    CreateBranch(BranchName, shwisprimary, BranchName + NShowersIndexStr + "/O");
+  
+    BranchName = "shwndaughters_" + ShowerLabel;
+    CreateBranch(BranchName, shwndaughters, BranchName + NShowersIndexStr + "/I");
+  
+    BranchName = "shwpfpid_" + ShowerLabel;
+    CreateBranch(BranchName, shwpfpid, BranchName + NShowersIndexStr + "/I");
+  
+    BranchName = "shwparentpfpid_" + ShowerLabel;
+    CreateBranch(BranchName, shwparentpfpid, BranchName + NShowersIndexStr + "/I");
+  }
+} // sbnd::AnalysisTreeDataStruct::ShowerDataStruct::SetShowerAddresses()
 
 //------------------------------------------------------------------------------
 //---  AnalysisTreeDataStruct
@@ -1199,9 +1431,11 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   for (size_t ivtx = 0; ivtx < kMaxVertices; ++ivtx) {
     std::fill(vtx[ivtx], vtx[ivtx]+3, -99999.);
   }
+  FillWith(primaryvtx, -9999);
 
   mcevts_truth = 0;
   mcevts_truthcry = -99999;
+  FillWith(nuScatterCode_truth,-99999);
   FillWith(nuID_truth,-99999);
   FillWith(nuPDG_truth,-99999);
   FillWith(ccnc_truth,-99999);
@@ -1324,6 +1558,7 @@ void sbnd::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
 
   //min size is 1, to guarantee an address
   MaxMCNeutrinos = (size_t) std::max(nNeutrinos, 1);
+  nuScatterCode_truth.resize(MaxMCNeutrinos);
   nuID_truth.resize(MaxMCNeutrinos);
   nuPDG_truth.resize(MaxMCNeutrinos);
   ccnc_truth.resize(MaxMCNeutrinos);
@@ -1452,7 +1687,9 @@ void sbnd::AnalysisTreeDataStruct::ResizeCry(int nPrimaries) {
 void sbnd::AnalysisTreeDataStruct::SetAddresses(
   TTree* pTree,
   const std::vector<std::string>& trackers,
-  bool isCosmics
+  const std::string showerLabel,
+  bool isCosmics,
+  bool saveHierarchyInfo
 ) {
   BranchCreator CreateBranch(pTree);
 
@@ -1462,6 +1699,7 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
   CreateBranch("evttime",&evttime,"evttime/D");
   CreateBranch("beamtime",&beamtime,"beamtime/D");
   CreateBranch("pot",&SubRunData.pot,"pot/D");
+
   CreateBranch("isdata",&isdata,"isdata/B");
   //CreateBranch("taulife",&taulife,"taulife/D");
 
@@ -1484,6 +1722,8 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
   if (hasVertexInfo()){
     CreateBranch("nvtx",&nvtx,"nvtx/S");
     CreateBranch("vtx",vtx,"vtx[nvtx][3]/F");
+    if(saveHierarchyInfo)
+      CreateBranch("primaryvtx",primaryvtx,"primaryvtx[nvtx]/I");
   }  
 
   if (hasTrackInfo()){
@@ -1499,12 +1739,18 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
 
       // note that if the tracker data has maximum number of tracks 0,
       // nothing is initialized (branches are not even created)
-      TrackData[i].SetAddresses(pTree, TrackLabel, isCosmics);    
+      TrackData[i].SetAddresses(pTree, TrackLabel, isCosmics, saveHierarchyInfo);    
     } // for trackers
   } 
+  
+  if (hasShowerInfo()){
+    std::string ShowerLabel = showerLabel;
+    ShowerData.SetShowerAddresses(pTree, ShowerLabel, saveHierarchyInfo);    
+  }
 
   if (hasGenieInfo()){
     CreateBranch("mcevts_truth",&mcevts_truth,"mcevts_truth/I");
+    CreateBranch("nuScatterCode_truth",nuScatterCode_truth,"nuScatterCode_truth[mcevts_truth]/I");
     CreateBranch("nuID_truth",nuID_truth,"nuID_truth[mcevts_truth]/I");
     CreateBranch("nuPDG_truth",nuPDG_truth,"nuPDG_truth[mcevts_truth]/I");
     CreateBranch("ccnc_truth",ccnc_truth,"ccnc_truth[mcevts_truth]/I");
@@ -1642,26 +1888,31 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
 sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   EDAnalyzer(pset),
   fTree(nullptr), fData(nullptr),
-  fDigitModuleLabel         (pset.get< std::string >("DigitModuleLabel")        ),
-  fHitsModuleLabel          (pset.get< std::string >("HitsModuleLabel")         ),
-  fLArG4ModuleLabel         (pset.get< std::string >("LArGeantModuleLabel")     ),
-  fCalDataModuleLabel       (pset.get< std::string >("CalDataModuleLabel")      ),
-  fGenieGenModuleLabel      (pset.get< std::string >("GenieGenModuleLabel")     ),
-  fCryGenModuleLabel        (pset.get< std::string >("CryGenModuleLabel")       ), 
-  fG4ModuleLabel            (pset.get< std::string >("G4ModuleLabel")           ),
-  fVertexModuleLabel        (pset.get< std::string> ("VertexModuleLabel")       ),
-  fTrackModuleLabel         (pset.get< std::vector<std::string> >("TrackModuleLabel")),
+  fDigitModuleLabel         (pset.get< std::string >("DigitModuleLabel")                   ),
+  fHitsModuleLabel          (pset.get< std::string >("HitsModuleLabel")                    ),
+  fLArG4ModuleLabel         (pset.get< std::string >("LArGeantModuleLabel")                ),
+  fCalDataModuleLabel       (pset.get< std::string >("CalDataModuleLabel")                 ),
+  fGenieGenModuleLabel      (pset.get< std::string >("GenieGenModuleLabel")                ),
+  fCryGenModuleLabel        (pset.get< std::string >("CryGenModuleLabel")                  ), 
+  fG4ModuleLabel            (pset.get< std::string >("G4ModuleLabel")                      ),
+  fPFParticleModuleLabel    (pset.get< std::string> ("PFParticleModuleLabel")              ),
+  fVertexModuleLabel        (pset.get< std::string> ("VertexModuleLabel")                  ),
+  fShowerModuleLabel        (pset.get< std::string> ("ShowerModuleLabel")                  ),
+  fTrackModuleLabel         (pset.get< std::vector<std::string> >("TrackModuleLabel")      ),
   fCalorimetryModuleLabel   (pset.get< std::vector<std::string> >("CalorimetryModuleLabel")),
-  fParticleIDModuleLabel    (pset.get< std::vector<std::string> >("ParticleIDModuleLabel")   ),
-  fPOTModuleLabel           (pset.get< std::string >("POTModuleLabel")          ),
+  fParticleIDModuleLabel    (pset.get< std::vector<std::string> >("ParticleIDModuleLabel") ),
+  fPOTModuleLabel           (pset.get< std::string >("POTModuleLabel")                     ),
+
   fUseBuffer                (pset.get< bool >("UseBuffers", false)),
   fSaveAuxDetInfo           (pset.get< bool >("SaveAuxDetInfo", false)),
   fSaveCryInfo              (pset.get< bool >("SaveCryInfo", false)),  
-  fSaveGenieInfo	    (pset.get< bool >("SaveGenieInfo", false)), 
-  fSaveGeantInfo	    (pset.get< bool >("SaveGeantInfo", false)), 
+  fSaveGenieInfo	          (pset.get< bool >("SaveGenieInfo", false)), 
+  fSaveGeantInfo	          (pset.get< bool >("SaveGeantInfo", false)), 
   fSaveHitInfo	            (pset.get< bool >("SaveHitInfo", false)), 
-  fSaveTrackInfo	    (pset.get< bool >("SaveTrackInfo", false)), 
-  fSaveVertexInfo	    (pset.get< bool >("SaveVertexInfo", false)),
+  fSaveTrackInfo	          (pset.get< bool >("SaveTrackInfo", false)), 
+  fSaveShowerInfo	          (pset.get< bool >("SaveShowerInfo", false)), 
+  fSaveVertexInfo	          (pset.get< bool >("SaveVertexInfo", false)),
+  fSaveHierarchyInfo        (pset.get< bool >("SaveHierarchyInfo", false)),
   //fCosmicTaggerAssocLabel  (pset.get<std::vector< std::string > >("CosmicTaggerAssocLabel") ),
   //fFlashMatchAssocLabel (pset.get<std::vector< std::string > >("FlashMatchAssocLabel") ),
   isCosmics(false),
@@ -1708,7 +1959,6 @@ void sbnd::AnalysisTree::CreateTree(bool bClearData /* = false */) {
 
 void sbnd::AnalysisTree::beginSubRun(const art::SubRun& sr)
 {
-
   art::Handle< sumdata::POTSummary > potListHandle;
   //sr.getByLabel(fPOTModuleLabel,potListHandle);
 
@@ -1716,7 +1966,6 @@ void sbnd::AnalysisTree::beginSubRun(const art::SubRun& sr)
     SubRunData.pot=potListHandle->totpot;
   else
     SubRunData.pot=0.;
-
 }
 
 void sbnd::AnalysisTree::analyze(const art::Event& evt)
@@ -1737,12 +1986,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   if (evt.getByLabel(fHitsModuleLabel,hitListHandle))
     art::fill_ptr_vector(hitlist, hitListHandle);
 
-  // * vertices
-  art::Handle< std::vector<recob::Vertex> > vtxListHandle;
-  std::vector<art::Ptr<recob::Vertex> > vtxlist;
-  if (evt.getByLabel(fVertexModuleLabel,vtxListHandle))
-    art::fill_ptr_vector(vtxlist, vtxListHandle);
-
 
   // * MC truth information
   art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
@@ -1757,7 +2000,14 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     if (evt.getByLabel(fCryGenModuleLabel,mctruthcryListHandle))
       art::fill_ptr_vector(mclistcry, mctruthcryListHandle);
   }       
-    
+  
+  // * vertices
+  art::Handle< std::vector<recob::Vertex> > vtxListHandle;
+  std::vector< art::Ptr<recob::Vertex> > vtxlist;
+  if (evt.getByLabel(fVertexModuleLabel,vtxListHandle))
+    art::fill_ptr_vector(vtxlist, vtxListHandle);
+  const size_t NVertices = vtxlist.size(); // number of vertices
+  
   art::Ptr<simb::MCTruth> mctruthcry;
   int nCryPrimaries = 0;
    
@@ -1839,12 +2089,14 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     fData->ResizeCry(nCryPrimaries);
   if (fSaveGeantInfo)    
     fData->ResizeGEANT(nGEANTparticles);
+  if(fSaveVertexInfo)
+    fData->primaryvtx.resize(NVertices);
+  
   fData->ClearLocalData(); // don't bother clearing tracker data yet
   
 //  const size_t Nplanes       = 3; // number of wire planes; pretty much constant...
   const size_t NTrackers = GetNTrackers(); // number of trackers passed into fTrackModuleLabel
   const size_t NHits     = hitlist.size(); // number of hits
-  const size_t NVertices = vtxlist.size(); // number of vertices
   // make sure there is the data, the tree and everything;
   CreateTree();
 
@@ -1853,9 +2105,111 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   fData->SubRunData = SubRunData;
 
   fData->isdata = int(!isMC);
-  
+ 
+  /// Declare the track handle and vector for all the different tracking producers
   std::vector< art::Handle< std::vector<recob::Track> > > trackListHandle(NTrackers);
-  std::vector< std::vector<art::Ptr<recob::Track> > > tracklist(NTrackers);
+  art::Handle< std::vector<recob::Shower> >               showerHandle;
+  std::vector< std::vector<art::Ptr<recob::Track> > >     tracklist(NTrackers);
+  std::vector< art::Ptr<recob::Shower> >                  shwlist;
+
+  // Declare maps for track and vertex to pfparticle associations 
+  //  this is the opposite way around to how they are produced
+  typedef std::map<art::Ptr<recob::Track>,  art::Ptr<recob::PFParticle> > trkPfpMap;
+  typedef std::map<art::Ptr<recob::Vertex>, art::Ptr<recob::PFParticle> > vtxPfpMap;
+  typedef std::map<art::Ptr<recob::Shower>, art::Ptr<recob::PFParticle> > shwPfpMap;
+  typedef std::map<art::Ptr<recob::Track>,  art::Ptr<recob::PFParticle> >::const_iterator trkPfpMapIt;
+  typedef std::map<art::Ptr<recob::Vertex>, art::Ptr<recob::PFParticle> >::const_iterator vtxPfpMapIt;
+  typedef std::map<art::Ptr<recob::Shower>, art::Ptr<recob::PFParticle> >::const_iterator shwPfpMapIt;
+
+  trkPfpMap trackPFParticleMap;
+  vtxPfpMap vertexPFParticleMap;
+  shwPfpMap showerPFParticleMap;
+
+  lar_pandora::PFParticleVector pfplist;
+  lar_pandora::PFParticleMap pfpmap;
+  std::vector< trkPfpMap > trackerPFParticleMaps;
+
+  /*****************************************************************************/
+  //            Added by Rhiannon on 2nd October 2018 for MCP 0.9
+  // If the user is requesting to save hierarchical information, the producers
+  // must be from pandora and are therefore able to go via PFParticles to get
+  // track and vertex associations and their corresponding hierarchy
+  //
+  // IF saving the hierarchy has been requested, check that the pfparticle
+  // object exists, and that it has track and vertex associations 
+  //  Fill maps with tracks and vertices as the key, and pfparticles as the object
+  //  When saving track and vertex information, add additional query for 
+  //  saving the hierarchy and save the information
+  //
+  if(fSaveHierarchyInfo){
+
+    // Get and check that the pfparticle handle is valid and exists
+    art::Handle< std::vector<recob::PFParticle> > pfpHandle;
+    if(!evt.getByLabel(fPFParticleModuleLabel,pfpHandle)){
+      if(!pfpHandle->size())
+      mf::LogError("AnalysisTree:limits") << " Event has no PFParticle information ";
+    }
+    if(pfpHandle->size()){
+      art::fill_ptr_vector(pfplist, pfpHandle);
+      lar_pandora::LArPandoraHelper::BuildPFParticleMap(pfplist, pfpmap);
+
+      // Vertex, shower and track associations
+      art::FindManyP<recob::Vertex> fvtx(pfpHandle, evt, fVertexModuleLabel);
+      art::FindManyP<recob::Shower> fshw(pfpHandle, evt, fShowerModuleLabel);
+
+      for(unsigned int i = 0; i < pfpHandle->size(); ++i) {
+        art::Ptr< recob::PFParticle > pfp( pfpHandle, i );
+
+        // Get vertex association
+        std::vector< art::Ptr<recob::Vertex> > vtxAssn = fvtx.at(pfp->Self());
+
+        // Make sure there is exactly 1 vertex associated to each pfparticle
+        if(vtxAssn.size()  > 1){
+          mf::LogError("AnalysisTree:limits") << "PFParticle has " << vtxAssn.size() << " associated vertices, should only have 1 or 0 ";
+          continue;
+        }
+        if(vtxAssn.size() == 0) continue;
+        vertexPFParticleMap.emplace(vtxAssn[0],pfp);
+      }
+      for(unsigned int i = 0; i < pfpHandle->size(); ++i) {
+        art::Ptr< recob::PFParticle > pfp( pfpHandle, i );
+
+        // Get vertex association
+        std::vector< art::Ptr<recob::Shower> > shwAssn = fshw.at(pfp->Self());
+
+        // Make sure there is maximum 1 shower associated to each pfparticle
+        if(shwAssn.size()  > 1){
+          mf::LogError("AnalysisTree:limits") << "PFParticle has " << shwAssn.size() << " associated showers, should only have 1 or 0 ";
+          continue;
+        }
+        if(shwAssn.size() == 0) continue;
+        showerPFParticleMap.emplace(shwAssn[0],pfp);
+
+      }
+      // Loop over the trackers and repeat the process, filling the vector of maps
+      for (unsigned int it = 0; it < NTrackers; ++it){
+        art::FindManyP<recob::Track> fmtrk(pfpHandle, evt, fTrackModuleLabel[it]);
+
+        for(unsigned int i = 0; i < pfpHandle->size(); ++i) {
+          art::Ptr< recob::PFParticle > pfp( pfpHandle, i );
+
+          std::vector< art::Ptr<recob::Track> >  trkAssn = fmtrk.at(pfp->Self());
+          if(trkAssn.size()  > 1){
+            mf::LogError("AnalysisTree:limits") << "PFParticle has " << trkAssn.size() << " associated tracks, should only have 1 or 0 ";
+            continue;
+          }
+          if(trkAssn.size() == 0) continue;
+          trackPFParticleMap.emplace(trkAssn[0],pfp);
+        }
+        trackerPFParticleMaps.emplace_back(trackPFParticleMap);
+      }
+    }
+  }// end save maps for fSaveHierarchyInfo
+
+  if (evt.getByLabel(fShowerModuleLabel,showerHandle))
+    art::fill_ptr_vector(shwlist, showerHandle);
+  const size_t NShowers = shwlist.size();
+  
   for (unsigned int it = 0; it < NTrackers; ++it){
     if (evt.getByLabel(fTrackModuleLabel[it],trackListHandle[it]))
       art::fill_ptr_vector(tracklist[it], trackListHandle[it]);
@@ -1962,6 +2316,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
   //vertex information
   if (fSaveVertexInfo){
+
     fData->nvtx = NVertices;
     if (NVertices > kMaxVertices){
       // got this error? consider increasing kMaxVerticestra
@@ -1973,9 +2328,68 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       Double_t xyz[3] = {};
       vtxlist[i]->XYZ(xyz);
       for (size_t j = 0; j<3; ++j) fData->vtx[i][j] = xyz[j];
+      
+      // If also saving the hierarchy info, set the primaryvtx boolean
+      if(fSaveHierarchyInfo){
+        vtxPfpMapIt it;
+        // Check there is a map entry for this vertex
+        it = vertexPFParticleMap.find(vtxlist[i]);
+        if(it == vertexPFParticleMap.end()) continue;
+
+        art::Ptr<recob::PFParticle> tempParticle = it->second;
+        if(tempParticle->IsPrimary())
+          fData->primaryvtx[i] = 1;
+        else fData->primaryvtx[i] = 0;
+      }// end (fSaveHierarchyInfo)
     }
   }// end (fSaveVertexInfo)
+  
+  // shower information
+  if (fSaveShowerInfo){
+    AnalysisTreeDataStruct::ShowerDataStruct& ShowerData = fData->GetShowerData();
+    if (NShowers > kMaxShowers){
+      // got this error? consider increasing kMaxShowers
+      // (or ask for a redesign using vectors)
+      mf::LogError("AnalysisTree:limits") << "event has " << NShowers
+        << " showers, only kMaxShowers=" << kMaxShowers << " stored in tree";
+    }
+    ShowerData.SetMaxShowers(std::max(NShowers, (size_t) 1));
+    ShowerData.Clear();
+
+    ShowerData.nshowers = (int) NShowers;
     
+    SetShowerAddresses();
+
+    for (size_t i = 0; i < NShowers && i < kMaxShowers ; ++i){//loop over showers
+      const art::Ptr<recob::Shower> &shw = shwlist[i];
+     
+      ShowerData.shwId[i]        = shw->ID();
+      ShowerData.shwbestplane[i] = shw->best_plane();
+      ShowerData.shwlength[i]    = shw->Length();
+      ShowerData.shwopenangle[i] = shw->OpenAngle();
+      ShowerData.shwstartx[i]    = shw->ShowerStart()[0];
+      ShowerData.shwstarty[i]    = shw->ShowerStart()[1];
+      ShowerData.shwstartz[i]    = shw->ShowerStart()[2];
+      ShowerData.shwdirx[i]      = shw->Direction()[0];
+      ShowerData.shwdiry[i]      = shw->Direction()[1];
+      ShowerData.shwdirz[i]      = shw->Direction()[2];
+      
+      // If also saving the hierarchy info, set the primaryvtx boolean
+      if(fSaveHierarchyInfo){
+        shwPfpMapIt it;
+        // Check there is a map entry for this vertex
+        it = showerPFParticleMap.find(shwlist[i]);
+        if(it == showerPFParticleMap.end()) continue;
+
+        art::Ptr<recob::PFParticle> tempParticle = it->second;
+        ShowerData.shwisprimary[i]   = std::round(static_cast<Int_t>(lar_pandora::LArPandoraHelper::IsFinalState(pfpmap,tempParticle)));
+        ShowerData.shwndaughters[i]  = tempParticle->NumDaughters();
+        ShowerData.shwpfpid[i]       = tempParticle->Self();
+        ShowerData.shwparentpfpid[i] = tempParticle->Parent();
+      }// end (fSaveHierarchyInfo)
+    }
+  }// end (fSaveShowerInfo)
+
   //track information for multiple trackers
   if (fSaveTrackInfo){
     for (unsigned int iTracker=0; iTracker < NTrackers; ++iTracker){
@@ -2000,10 +2414,9 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       }
     
       //call the track momentum algorithm that gives you momentum based on track range
-      //trkf::TrackMomentumCalculator trkm;
-       
+      trkf::TrackMomentumCalculator trkm;
+
       for(size_t iTrk=0; iTrk < NTracks; ++iTrk){//loop over tracks
-      
         //Cosmic Tagger information
         if (fCosmicTaggerAssocLabel.size() > iTracker) {
           art::FindManyP<anab::CosmicTag> fmct(trackListHandle[iTracker],evt,fCosmicTaggerAssocLabel[iTracker]);
@@ -2033,15 +2446,16 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
             }
           }
         } // if we have matching fFlashMatchAssocLabel
-     			 	   
+        
         art::Ptr<recob::Track> ptrack(trackListHandle[iTracker], iTrk);
         const recob::Track& track = *ptrack;
-      
+
         TVector3 pos, dir_start, dir_end, end;        
 
-        double tlen = 0.; //mom = 0.;
+        double tlen = 0.; 
+        double mom = 0.;
         int TrackID = -1;
-      
+ 
         int ntraj = track.NumberTrajectoryPoints();
         if (ntraj > 0) {
           pos       = track.Vertex();
@@ -2050,8 +2464,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           end       = track.End();
 
           tlen        = length(track);
-        //  if(track.hasMomentum() > 0)
-            //mom = track.VertexMomentum();
+          if(track.HasMomentum() > 0)
+            mom = track.VertexMomentum();
           TrackID = track.ID();
           
           double theta_xz = std::atan2(dir_start.X(), dir_start.Z());
@@ -2063,198 +2477,213 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           TrackerData.trkstartx[iTrk]             = pos.X();
           TrackerData.trkstarty[iTrk]             = pos.Y();
           TrackerData.trkstartz[iTrk]             = pos.Z();
-          TrackerData.trkstartd[iTrk]		  = dpos;
-          TrackerData.trkendx[iTrk]		  = end.X();
-          TrackerData.trkendy[iTrk]		  = end.Y();
-          TrackerData.trkendz[iTrk]		  = end.Z();
-          TrackerData.trkendd[iTrk]		  = dend;
-          TrackerData.trktheta[iTrk]		  = dir_start.Theta();
-          TrackerData.trkphi[iTrk]		  = dir_start.Phi();
-          TrackerData.trkstartdcosx[iTrk]	  = dir_start.X();
-          TrackerData.trkstartdcosy[iTrk]	  = dir_start.Y();
-          TrackerData.trkstartdcosz[iTrk]	  = dir_start.Z();
-          TrackerData.trkenddcosx[iTrk] 	  = dir_end.X();
-          TrackerData.trkenddcosy[iTrk] 	  = dir_end.Y();
-          TrackerData.trkenddcosz[iTrk] 	  = dir_end.Z();
-          TrackerData.trkthetaxz[iTrk]  	  = theta_xz;
-          TrackerData.trkthetayz[iTrk]  	  = theta_yz;
-          //TrackerData.trkmom[iTrk]		  = mom;
-          TrackerData.trklen[iTrk]		  = tlen;
-          //TrackerData.trkmomrange[iTrk] 	  = trkm.GetTrackMomentum(tlen,13);
-          //TrackerData.trkmommschi2[iTrk]	  = trkm.GetMomentumMultiScatterChi2(ptrack);
-          //TrackerData.trkmommsllhd[iTrk]	  = trkm.GetMomentumMultiScatterLLHD(ptrack);
+          TrackerData.trkstartd[iTrk]		          = dpos;
+          TrackerData.trkendx[iTrk]		            = end.X();
+          TrackerData.trkendy[iTrk]		            = end.Y();
+          TrackerData.trkendz[iTrk]		            = end.Z();
+          TrackerData.trkendd[iTrk]		            = dend;
+          TrackerData.trktheta[iTrk]		          = dir_start.Theta();
+          TrackerData.trkphi[iTrk]		            = dir_start.Phi();
+          TrackerData.trkstartdcosx[iTrk]	        = dir_start.X();
+          TrackerData.trkstartdcosy[iTrk]	        = dir_start.Y();
+          TrackerData.trkstartdcosz[iTrk]	        = dir_start.Z();
+          TrackerData.trkenddcosx[iTrk] 	        = dir_end.X();
+          TrackerData.trkenddcosy[iTrk] 	        = dir_end.Y();
+          TrackerData.trkenddcosz[iTrk] 	        = dir_end.Z();
+          TrackerData.trkthetaxz[iTrk]  	        = theta_xz;
+          TrackerData.trkthetayz[iTrk]  	        = theta_yz;
+          TrackerData.trkmom[iTrk]		            = mom;
+          TrackerData.trklen[iTrk]		            = tlen;
+          TrackerData.trkmomrange[iTrk] 	        = trkm.GetTrackMomentum(tlen,13);
+          TrackerData.trkmommschi2[iTrk]	        = trkm.GetMomentumMultiScatterChi2(ptrack);
+          TrackerData.trkmommsllhd[iTrk]	        = trkm.GetMomentumMultiScatterLLHD(ptrack);
         } // if we have trajectory
 
-      // find vertices associated with this track
-      /*
-      art::FindMany<recob::Vertex> fmvtx(trackListHandle[iTracker], evt, fVertexModuleLabel[iTracker]);
-      if(fmvtx.isValid()) {
-        std::vector<const recob::Vertex*> verts = fmvtx.at(iTrk);
-        // should have two at most
-        for(size_t ivx = 0; ivx < verts.size(); ++ivx) {
-          verts[ivx]->XYZ(xyz);
-          // find the vertex in TrackerData to get the index
-          short theVtx = -1;
-          for(short jvx = 0; jvx < TrackerData.nvtx; ++jvx) {
-            if(TrackerData.vtx[jvx][2] == xyz[2]) {
-              theVtx = jvx;
-              break;
+        // find vertices associated with this track
+       /* 
+        art::FindMany<recob::Vertex> fmvtx(trackListHandle[iTracker], evt, fVertexModuleLabel[iTracker]);
+        if(fmvtx.isValid()) {
+          std::vector<const recob::Vertex*> verts = fmvtx.at(iTrk);
+          // should have two at most
+          for(size_t ivx = 0; ivx < verts.size(); ++ivx) {
+            verts[ivx]->XYZ(xyz);
+            // find the vertex in TrackerData to get the index
+            short theVtx = -1;
+            for(short jvx = 0; jvx < TrackerData.nvtx; ++jvx) {
+              if(TrackerData.vtx[jvx][2] == xyz[2]) {
+                theVtx = jvx;
+                break;
+              }
+            } // jvx
+            // decide if it should be assigned to the track Start or End.
+            // A simple dz test should suffice
+            if(fabs(xyz[2] - TrackerData.trkstartz[iTrk]) < 
+               fabs(xyz[2] - TrackerData.trkendz[iTrk])) {
+              TrackerData.trksvtxid[iTrk] = theVtx;
+            } else {
+              TrackerData.trkevtxid[iTrk] = theVtx;
             }
-          } // jvx
-          // decide if it should be assigned to the track Start or End.
-          // A simple dz test should suffice
-          if(fabs(xyz[2] - TrackerData.trkstartz[iTrk]) < 
-             fabs(xyz[2] - TrackerData.trkendz[iTrk])) {
-            TrackerData.trksvtxid[iTrk] = theVtx;
-          } else {
-            TrackerData.trkevtxid[iTrk] = theVtx;
+          } // vertices
+        } // fmvtx.isValid()
+        */
+        Float_t minsdist = 10000;
+        Float_t minedist = 10000;
+        for (int ivx = 0; ivx < fData->nvtx && ivx < kMaxVertices; ++ivx){
+          Float_t sdist = sqrt(pow(TrackerData.trkstartx[iTrk]-fData->vtx[ivx][0],2)+
+                               pow(TrackerData.trkstarty[iTrk]-fData->vtx[ivx][1],2)+
+                               pow(TrackerData.trkstartz[iTrk]-fData->vtx[ivx][2],2));
+          Float_t edist = sqrt(pow(TrackerData.trkendx[iTrk]-fData->vtx[ivx][0],2)+
+                               pow(TrackerData.trkendy[iTrk]-fData->vtx[ivx][1],2)+
+                               pow(TrackerData.trkendz[iTrk]-fData->vtx[ivx][2],2));
+          if (sdist<minsdist){
+            minsdist = sdist;
+            if (minsdist<10) TrackerData.trksvtxid[iTrk] = ivx;
           }
-        } // vertices
-      } // fmvtx.isValid()
-      */
-      Float_t minsdist = 10000;
-      Float_t minedist = 10000;
-      for (int ivx = 0; ivx < fData->nvtx && ivx < kMaxVertices; ++ivx){
-        Float_t sdist = sqrt(pow(TrackerData.trkstartx[iTrk]-fData->vtx[ivx][0],2)+
-                             pow(TrackerData.trkstarty[iTrk]-fData->vtx[ivx][1],2)+
-                             pow(TrackerData.trkstartz[iTrk]-fData->vtx[ivx][2],2));
-        Float_t edist = sqrt(pow(TrackerData.trkendx[iTrk]-fData->vtx[ivx][0],2)+
-                             pow(TrackerData.trkendy[iTrk]-fData->vtx[ivx][1],2)+
-                             pow(TrackerData.trkendz[iTrk]-fData->vtx[ivx][2],2));
-        if (sdist<minsdist){
-          minsdist = sdist;
-          if (minsdist<10) TrackerData.trksvtxid[iTrk] = ivx;
-        }
-        if (edist<minedist){
-          minedist = edist;
-          if (minedist<10) TrackerData.trkevtxid[iTrk] = ivx;
-        }
-      }
-      // find particle ID info
-      art::FindMany<anab::ParticleID> fmpid(trackListHandle[iTracker], evt, fParticleIDModuleLabel[iTracker]);
-      if(fmpid.isValid()) {
-        std::vector<const anab::ParticleID*> pids = fmpid.at(iTrk);
-        if(pids.size() > 1) {
-          mf::LogError("AnalysisTree:limits")
-            << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
-            << " has " << pids.size() 
-            << " set of ParticleID variables. Only one stored in the tree";
-        }
-        for (size_t ipid = 0; ipid < pids.size(); ++ipid){
-	        if (!pids[ipid]->PlaneID().isValid) continue;
-	        int planenum = pids[ipid]->PlaneID().Plane;
-	        if (planenum<0||planenum>2) continue;
-          TrackerData.trkpidpdg[iTrk][planenum] = pids[ipid]->Pdg();
-          TrackerData.trkpidchi[iTrk][planenum] = pids[ipid]->MinChi2();
-          TrackerData.trkpidchipr[iTrk][planenum] = pids[ipid]->Chi2Proton();
-          TrackerData.trkpidchika[iTrk][planenum] = pids[ipid]->Chi2Kaon();
-          TrackerData.trkpidchipi[iTrk][planenum] = pids[ipid]->Chi2Pion();
-          TrackerData.trkpidchimu[iTrk][planenum] = pids[ipid]->Chi2Muon();
-          TrackerData.trkpidpida[iTrk][planenum] = pids[ipid]->PIDA();
-        }
-      } // fmpid.isValid()
-      
-      
-
-      art::FindMany<anab::Calorimetry> fmcal(trackListHandle[iTracker], evt, fCalorimetryModuleLabel[iTracker]);
-      if (fmcal.isValid()){
-        std::vector<const anab::Calorimetry*> calos = fmcal.at(iTrk);
-        if (calos.size() > TrackerData.GetMaxPlanesPerTrack(iTrk)) {
-          // if you get this message, there is probably a bug somewhere since
-          // the calorimetry planes should be 3.
-          mf::LogError("AnalysisTree:limits")
-            << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
-            << " has " << calos.size() << " planes for calorimetry , only "
-            << TrackerData.GetMaxPlanesPerTrack(iTrk) << " stored in tree";
-        }
-        for (size_t ical = 0; ical<calos.size(); ++ical){
-	  if (!calos[ical]) continue;
-	  if (!calos[ical]->PlaneID().isValid) continue;
-	  int planenum = calos[ical]->PlaneID().Plane;
-	  if (planenum<0||planenum>2) continue;
-          TrackerData.trkke[iTrk][planenum]    = calos[ical]->KineticEnergy();
-          TrackerData.trkrange[iTrk][planenum] = calos[ical]->Range();
-          //For now make the second argument as 13 for muons. 
-          TrackerData.trkpitchc[iTrk][planenum]= calos[ical] -> TrkPitchC();
-          const size_t NHits = calos[ical] -> dEdx().size();
-          TrackerData.ntrkhits[iTrk][planenum] = (int) NHits;
-          if (NHits > TrackerData.GetMaxHitsPerTrack(iTrk, planenum)) {
-            // if you get this error, you'll have to increase kMaxTrackHits
-            mf::LogError("AnalysisTree:limits")
-              << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
-              << " has " << NHits << " hits on calorimetry plane #" << planenum
-              <<", only "
-              << TrackerData.GetMaxHitsPerTrack(iTrk, planenum) << " stored in tree";
-          }
-	  if (!isCosmics){
-	    for(size_t iTrkHit = 0; iTrkHit < NHits && iTrkHit < TrackerData.GetMaxHitsPerTrack(iTrk, planenum); ++iTrkHit) {
-	      TrackerData.trkdedx[iTrk][planenum][iTrkHit]  = (calos[ical] -> dEdx())[iTrkHit];
-	      TrackerData.trkdqdx[iTrk][planenum][iTrkHit]  = (calos[ical] -> dQdx())[iTrkHit];
-	      TrackerData.trkresrg[iTrk][planenum][iTrkHit] = (calos[ical] -> ResidualRange())[iTrkHit];
-	      const auto& TrkPos = (calos[ical] -> XYZ())[iTrkHit];
-	      auto& TrkXYZ = TrackerData.trkxyz[iTrk][planenum][iTrkHit];
-	      TrkXYZ[0] = TrkPos.X();
-	      TrkXYZ[1] = TrkPos.Y();
-	      TrkXYZ[2] = TrkPos.Z();
-	    } // for track hits
-	  }
-	} // for calorimetry info
-        if(TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
-        else if(TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 1;
-        else if(TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
-        else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
-        else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0]) TrackerData.trkpidbestplane[iTrk] = 2;
-        else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
-        else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 2;
-      } // if has calorimetry info
-
-      //track truth information
-      if (isMC){
-        //get the hits on each plane
-        art::FindManyP<recob::Hit>      fmht(trackListHandle[iTracker], evt, fTrackModuleLabel[iTracker]);
-        std::vector< art::Ptr<recob::Hit> > allHits = fmht.at(iTrk);
-        std::vector< art::Ptr<recob::Hit> > hits[kNplanes];
-
-        for(size_t ah = 0; ah < allHits.size(); ++ah){
-          if (/* allHits[ah]->WireID().Plane >= 0 && */ // always true
-            allHits[ah]->WireID().Plane <  3){
-            hits[allHits[ah]->WireID().Plane].push_back(allHits[ah]);
+          if (edist<minedist){
+            minedist = edist;
+            if (minedist<10) TrackerData.trkevtxid[iTrk] = ivx;
           }
         }
         
-        for (size_t ipl = 0; ipl < 3; ++ipl){
-          TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits[ipl]);
-          TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(hits[ipl]);
-          TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(hits[ipl]);
-          double maxe = 0;
-          HitsPurity(hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
-        //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
-          if (TrackerData.trkidtruth[iTrk][ipl]>0){
-            const art::Ptr<simb::MCTruth> mc = pi_serv->TrackIdToMCTruth_P(TrackerData.trkidtruth[iTrk][ipl]);
-            TrackerData.trkorigin[iTrk][ipl] = mc->Origin();
-            const simb::MCParticle *particle = pi_serv->TrackIdToParticle_P(TrackerData.trkidtruth[iTrk][ipl]);
-            double tote = 0;
-            const std::vector<const sim::IDE*> vide(bt_serv->TrackIdToSimIDEs_Ps(TrackerData.trkidtruth[iTrk][ipl]));
-            for (auto ide: vide) {
-               tote += ide->energy;
-               TrackerData.trksimIDEenergytruth[iTrk][ipl] = ide->energy;
-               TrackerData.trksimIDExtruth[iTrk][ipl] = ide->x;
-               TrackerData.trksimIDEytruth[iTrk][ipl] = ide->y;
-               TrackerData.trksimIDEztruth[iTrk][ipl] = ide->z;
-            }
-            TrackerData.trkpdgtruth[iTrk][ipl] = particle->PdgCode();
-            TrackerData.trkefftruth[iTrk][ipl] = maxe/(tote/kNplanes); //tote include both induction and collection energies
-          //std::cout<<"\n"<<trkpdgtruth[iTracker][iTrk][ipl]<<"\t"<<trkefftruth[iTracker][iTrk][ipl];
+        // find particle ID info
+        art::FindMany<anab::ParticleID> fmpid(trackListHandle[iTracker], evt, fParticleIDModuleLabel[iTracker]);
+        if(fmpid.isValid()) {
+          
+          std::vector<const anab::ParticleID*> pids = fmpid.at(iTrk);
+          if(pids.size() > TrackerData.GetMaxPlanesPerTrack(iTrk)) {
+            mf::LogError("AnalysisTree:limits")
+              << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
+              << " has " << pids.size() 
+              << " set of ParticleID variables. Only " << TrackerData.GetMaxPlanesPerTrack(iTrk) << " stored in the tree";
           }
-        }
-      }//end if (isMC)
-    }//end loop over track
-  }//end loop over track module labels
- }// end (fSaveTrackInfo) 
+          for (size_t ipid = 0; ipid < pids.size(); ++ipid){
+            if (!pids[ipid]->PlaneID().isValid) continue;
+            int planenum = pids[ipid]->PlaneID().Plane;
+            if (planenum<0||planenum>2) continue;
+            TrackerData.trkpidpdg[iTrk][planenum] = pids[ipid]->Pdg();
+            TrackerData.trkpidchi[iTrk][planenum] = pids[ipid]->MinChi2();
+            TrackerData.trkpidchipr[iTrk][planenum] = pids[ipid]->Chi2Proton();
+            TrackerData.trkpidchika[iTrk][planenum] = pids[ipid]->Chi2Kaon();
+            TrackerData.trkpidchipi[iTrk][planenum] = pids[ipid]->Chi2Pion();
+            TrackerData.trkpidchimu[iTrk][planenum] = pids[ipid]->Chi2Muon();
+            TrackerData.trkpidpida[iTrk][planenum] = pids[ipid]->PIDA();
+          }
+        } // fmpid.isValid()
+      
+        art::FindMany<anab::Calorimetry> fmcal(trackListHandle[iTracker], evt, fCalorimetryModuleLabel[iTracker]);
+        if (fmcal.isValid()){
+          std::vector<const anab::Calorimetry*> calos = fmcal.at(iTrk);
+          if (calos.size() > TrackerData.GetMaxPlanesPerTrack(iTrk)) {
+            // if you get this message, there is probably a bug somewhere since
+            // the calorimetry planes should be 3.
+            mf::LogError("AnalysisTree:limits")
+              << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
+              << " has " << calos.size() << " planes for calorimetry , only "
+              << TrackerData.GetMaxPlanesPerTrack(iTrk) << " stored in tree";
+          }
+          for (size_t ical = 0; ical<calos.size(); ++ical){
+            if (!calos[ical]) continue;
+            if (!calos[ical]->PlaneID().isValid) continue;
+            int planenum = calos[ical]->PlaneID().Plane;
+            if (planenum<0||planenum>2) continue;
+            TrackerData.trkke[iTrk][planenum]    = calos[ical]->KineticEnergy();
+            TrackerData.trkrange[iTrk][planenum] = calos[ical]->Range();
+            //For now make the second argument as 13 for muons. 
+            TrackerData.trkpitchc[iTrk][planenum]= calos[ical] -> TrkPitchC();
+            const size_t NHits = calos[ical] -> dEdx().size();
+            TrackerData.ntrkhits[iTrk][planenum] = (int) NHits;
+            if (NHits > TrackerData.GetMaxHitsPerTrack(iTrk, planenum)) {
+              // if you get this error, you'll have to increase kMaxTrackHits
+              mf::LogError("AnalysisTree:limits")
+                << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
+                << " has " << NHits << " hits on calorimetry plane #" << planenum
+                <<", only "
+                << TrackerData.GetMaxHitsPerTrack(iTrk, planenum) << " stored in tree";
+            }
+            if (!isCosmics){
+              for(size_t iTrkHit = 0; iTrkHit < NHits && iTrkHit < TrackerData.GetMaxHitsPerTrack(iTrk, planenum); ++iTrkHit) {
+                TrackerData.trkdedx[iTrk][planenum][iTrkHit]  = (calos[ical] -> dEdx())[iTrkHit];
+                TrackerData.trkdqdx[iTrk][planenum][iTrkHit]  = (calos[ical] -> dQdx())[iTrkHit];
+                TrackerData.trkresrg[iTrk][planenum][iTrkHit] = (calos[ical] -> ResidualRange())[iTrkHit];
+                const auto& TrkPos = (calos[ical] -> XYZ())[iTrkHit];
+                auto& TrkXYZ = TrackerData.trkxyz[iTrk][planenum][iTrkHit];
+                TrkXYZ[0] = TrkPos.X();
+                TrkXYZ[1] = TrkPos.Y();
+                TrkXYZ[2] = TrkPos.Z();
+              } // for track hits
+            }
+          } // for calorimetry info
+          if(TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
+          else if(TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 1;
+          else if(TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
+          else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
+          else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0]) TrackerData.trkpidbestplane[iTrk] = 2;
+          else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
+          else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 2;
+        } // if has calorimetry info
+
+        //track truth information
+        if (isMC){
+          //get the hits on each plane
+          art::FindManyP<recob::Hit>      fmht(trackListHandle[iTracker], evt, fTrackModuleLabel[iTracker]);
+          std::vector< art::Ptr<recob::Hit> > allHits = fmht.at(iTrk);
+          std::vector< art::Ptr<recob::Hit> > hits[kNplanes];
+
+          for(size_t ah = 0; ah < allHits.size(); ++ah){
+            if (/* allHits[ah]->WireID().Plane >= 0 && */ // always true
+              allHits[ah]->WireID().Plane <  3){
+              hits[allHits[ah]->WireID().Plane].push_back(allHits[ah]);
+            }
+          }
+          
+          for (size_t ipl = 0; ipl < 3; ++ipl){
+            TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(hits[ipl]);
+            double maxe = 0;
+            HitsPurity(hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
+          //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
+            if (TrackerData.trkidtruth[iTrk][ipl]>0){
+              const art::Ptr<simb::MCTruth> mc = pi_serv->TrackIdToMCTruth_P(TrackerData.trkidtruth[iTrk][ipl]);
+              TrackerData.trkorigin[iTrk][ipl] = mc->Origin();
+              const simb::MCParticle *particle = pi_serv->TrackIdToParticle_P(TrackerData.trkidtruth[iTrk][ipl]);
+              double tote = 0;
+              const std::vector<const sim::IDE*> vide(bt_serv->TrackIdToSimIDEs_Ps(TrackerData.trkidtruth[iTrk][ipl]));
+              for (auto ide: vide) {
+                 tote += ide->energy;
+                 TrackerData.trksimIDEenergytruth[iTrk][ipl] = ide->energy;
+                 TrackerData.trksimIDExtruth[iTrk][ipl] = ide->x;
+                 TrackerData.trksimIDEytruth[iTrk][ipl] = ide->y;
+                 TrackerData.trksimIDEztruth[iTrk][ipl] = ide->z;
+              }
+              TrackerData.trkpdgtruth[iTrk][ipl] = particle->PdgCode();
+              TrackerData.trkefftruth[iTrk][ipl] = maxe/(tote/kNplanes); //tote include both induction and collection energies
+            //std::cout<<"\n"<<trkpdgtruth[iTracker][iTrk][ipl]<<"\t"<<trkefftruth[iTracker][iTrk][ipl];
+            }
+          }
+        }//end if (isMC)
+        // If saving the hierarchy info
+        if(fSaveHierarchyInfo){
+          trkPfpMapIt it;
+          // Check there is a map entry for this vertex
+          it = trackerPFParticleMaps[iTracker].find(ptrack);
+          if(it == trackerPFParticleMaps[iTracker].end()) continue;
+
+          art::Ptr<recob::PFParticle> tempParticle = it->second;
+          // Get information, find the neutrino and then call its daughters 
+          // primary tracks
+          TrackerData.trkisprimary[iTrk]   = std::round(static_cast<Int_t>(lar_pandora::LArPandoraHelper::IsFinalState(pfpmap,tempParticle)));
+          TrackerData.trkndaughters[iTrk]  = tempParticle->NumDaughters();
+          TrackerData.trkpfpid[iTrk]       = tempParticle->Self();
+          TrackerData.trkparentpfpid[iTrk] = tempParticle->Parent();
+        } // end save hierarchy info
+      }//end loop over track
+    }//end loop over track module labels
+  }// end (fSaveTrackInfo) 
   
-  /*trkf::TrackMomentumCalculator trkm;  
+  trkf::TrackMomentumCalculator trkm;  
   std::cout<<"\t"<<trkm.GetTrackMomentum(200,2212)<<"\t"<<trkm.GetTrackMomentum(-10, 13)<<"\t"<<trkm.GetTrackMomentum(300,-19)<<"\n";
-*/
+
   //mc truth information
   if (isMC){
     if (fSaveCryInfo){ 
@@ -2270,9 +2699,9 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         fData->cry_Py[iPartc]=partc.Py();
         fData->cry_Pz[iPartc]=partc.Pz();
         fData->cry_P[iPartc]=partc.P();
-	fData->cry_StartPointx[iPartc] = partc.Vx();
-	fData->cry_StartPointy[iPartc] = partc.Vy();
-	fData->cry_StartPointz[iPartc] = partc.Vz();	
+        fData->cry_StartPointx[iPartc] = partc.Vx();
+        fData->cry_StartPointy[iPartc] = partc.Vy();
+        fData->cry_StartPointz[iPartc] = partc.Vz();	
         fData->cry_status_code[iPartc]=partc.StatusCode();
         fData->cry_mass[iPartc]=partc.Mass();
         fData->cry_trackID[iPartc]=partc.TrackId();
@@ -2286,6 +2715,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     //Issue 17917
     //To keep a 1:1 between neutrinos and 'flux' we need the assns
     art::FindOneP<simb::MCFlux> fmFluxNeutrino(mctruthListHandle, evt, fGenieGenModuleLabel);
+    // Get GTruth information for scattering code
+    art::FindManyP< simb::GTruth > fmgt( mctruthListHandle, evt, fGenieGenModuleLabel );
 
     if (fData->mcevts_truth > 0){//at least one mc record
     if (fSaveGenieInfo){
@@ -2300,6 +2731,12 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         art::Ptr<simb::MCTruth> curr_mctruth = mclist[i_mctruth];
         //Check if it's a neutrino
         if (!curr_mctruth->NeutrinoSet()) continue;
+
+        // Genie Truth association only for the neutrino
+        std::vector< art::Ptr<simb::GTruth> > mcgtAssn = fmgt.at(i_mctruth);
+        
+        fData->nuScatterCode_truth[i_mctruth] = mcgtAssn[0]->fGscatter;
+
         fData->nuPDG_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().PdgCode();
         fData->ccnc_truth[i_mctruth] = curr_mctruth->GetNeutrino().CCNC();
         fData->mode_truth[i_mctruth] = curr_mctruth->GetNeutrino().Mode();

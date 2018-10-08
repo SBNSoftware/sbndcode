@@ -1,0 +1,25 @@
+<lcgdict>
+  <class name="sbnd::crt::CRTData" ClassVersion="10">
+   <version ClassVersion="10" checksum="4014796032"/>
+  </class>
+  <class name="std::vector<sbnd::crt::CRTData>"/>
+  <class name="art::Wrapper<sbnd::crt::CRTData>"/>
+  <class name="art::Wrapper<std::vector<sbnd::crt::CRTData> >"/>
+
+  <class name="sbnd::crt::CRTHit" ClassVersion="14">
+   <version ClassVersion="14" checksum="1444826046"/>
+   <version ClassVersion="13" checksum="3216187151"/>
+   <version ClassVersion="12" checksum="1882709306"/>
+   <version ClassVersion="11" checksum="3783352173"/>
+   <version ClassVersion="10" checksum="202575031"/>
+  </class>
+  <class name="std::vector<sbnd::crt::CRTHit>"/>
+  <class name="art::Wrapper<sbnd::crt::CRTHit>"/>
+  <class name="art::Wrapper<std::vector<sbnd::crt::CRTHit> >"/>
+
+  <class name="std::map< uint8_t, uint16_t >"/>
+  <class name="std::map< unsigned char, std::vector< std::pair<int,float> > > "/>
+
+  <!-- associations  -->
+
+</lcgdict>

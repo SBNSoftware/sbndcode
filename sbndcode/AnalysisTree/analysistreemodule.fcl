@@ -12,10 +12,12 @@ sbnd_analysistree:
  GenieGenModuleLabel:      "generator"
  CryGenModuleLabel:        "generator"
  G4ModuleLabel:            "largeant"
- TrackModuleLabel:         [ "track3d" ]
- VertexModuleLabel:        "vertex3d"
- CalorimetryModuleLabel:   [ "calo" ]
- ParticleIDModuleLabel:    [ "pid" ]
+ TrackModuleLabel:         [ "pandoraTrack" ]
+ ShowerModuleLabel:        "pandoraShower"
+ PFParticleModuleLabel:    "pandora"
+ VertexModuleLabel:        "pandora"
+ CalorimetryModuleLabel:   [ "pandoraCalo" ]
+ ParticleIDModuleLabel:    [ "pandoraPid" ]
  POTModuleLabel:           "generator"
  UseBuffers:               false
  SaveAuxDetInfo:           false
@@ -24,9 +26,11 @@ sbnd_analysistree:
  SaveGeantInfo:            true
  SaveHitInfo:              false
  SaveTrackInfo:            false
+ SaveShowerInfo:           false
  SaveVertexInfo:           false
+ SaveHierarchyInfo:        false
  SaveCaloCosmics:          false
- isCosmics:		   false
+ isCosmics:		             false
  G4MinE:                   0.01
 }
 
