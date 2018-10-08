@@ -127,6 +127,7 @@ physics:
   ### calorimetry producers
   trackkalmanhitcalo:  @local::sbnd_calomc
   pmatrackcalo:        @local::sbnd_calomc
+  pmatrackpid:         @local::sbnd_chi2pid
 
   crthit:              @local::standard_crtsimhitproducer
 
@@ -152,6 +153,7 @@ physics:
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
          , pmatrackcalo
+         , pmatrackpid
          , emshower 
          , crthit
  ]
@@ -231,6 +233,8 @@ physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # do not excu
 
 physics.producers.pmatrackcalo.TrackModuleLabel:                "pmalgtrackmaker"
 physics.producers.pmatrackcalo.SpacePointModuleLabel:           "pmalgtrackmaker"
+physics.producers.pmatrackpid.TrackModuleLabel:                 "pmalgtrackmaker"
+physics.producers.pmatrackpid.CalorimetryModuleLabel:           "pmatrackcalo"
 
 
 physics.producers.blurredcluster.HitsModuleLabel:               "linecluster"

@@ -2,6 +2,9 @@
 
 physics.analyzers.analysistree.SaveHitInfo: true
 physics.analyzers.analysistree.SaveTrackInfo: true
+physics.analyzers.analysistree.SaveShowerInfo: true
 physics.analyzers.analysistree.SaveVertexInfo: true
-physics.analyzers.analysistree.TrackModuleLabel: ["pmalgtrackmaker"]
-physics.analyzers.analysistree.CalorimetryModuleLabel: ["pmatrackcalo"]
+physics.analyzers.analysistree.SaveHierarchyInfo: true
+physics.analyzers.analysistree.TrackModuleLabel: ["pmalgtrackmaker", "pandoraTrack"]
+physics.analyzers.analysistree.CalorimetryModuleLabel: ["pmatrackcalo", "pandoraCalo"]
+physics.analyzers.analysistree.ParticleIDModuleLabel: ["pmatrackpid", "pandoraPid"]

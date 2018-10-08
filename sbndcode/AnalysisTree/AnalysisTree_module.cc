@@ -2499,14 +2499,175 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           TrackerData.trkmommsllhd[iTrk]	        = trkm.GetMomentumMultiScatterLLHD(ptrack);
         } // if we have trajectory
 
+        // find vertices associated with this track
+       /* 
+        art::FindMany<recob::Vertex> fmvtx(trackListHandle[iTracker], evt, fVertexModuleLabel[iTracker]);
+        if(fmvtx.isValid()) {
+          std::vector<const recob::Vertex*> verts = fmvtx.at(iTrk);
+          // should have two at most
+          for(size_t ivx = 0; ivx < verts.size(); ++ivx) {
+            verts[ivx]->XYZ(xyz);
+            // find the vertex in TrackerData to get the index
+            short theVtx = -1;
+            for(short jvx = 0; jvx < TrackerData.nvtx; ++jvx) {
+              if(TrackerData.vtx[jvx][2] == xyz[2]) {
+                theVtx = jvx;
+                break;
+              }
+            } // jvx
+            // decide if it should be assigned to the track Start or End.
+            // A simple dz test should suffice
+            if(fabs(xyz[2] - TrackerData.trkstartz[iTrk]) < 
+               fabs(xyz[2] - TrackerData.trkendz[iTrk])) {
+              TrackerData.trksvtxid[iTrk] = theVtx;
+            } else {
+              TrackerData.trkevtxid[iTrk] = theVtx;
+            }
+          } // vertices
+        } // fmvtx.isValid()
+        */
+        Float_t minsdist = 10000;
+        Float_t minedist = 10000;
+        for (int ivx = 0; ivx < fData->nvtx && ivx < kMaxVertices; ++ivx){
+          Float_t sdist = sqrt(pow(TrackerData.trkstartx[iTrk]-fData->vtx[ivx][0],2)+
+                               pow(TrackerData.trkstarty[iTrk]-fData->vtx[ivx][1],2)+
+                               pow(TrackerData.trkstartz[iTrk]-fData->vtx[ivx][2],2));
+          Float_t edist = sqrt(pow(TrackerData.trkendx[iTrk]-fData->vtx[ivx][0],2)+
+                               pow(TrackerData.trkendy[iTrk]-fData->vtx[ivx][1],2)+
+                               pow(TrackerData.trkendz[iTrk]-fData->vtx[ivx][2],2));
+          if (sdist<minsdist){
+            minsdist = sdist;
+            if (minsdist<10) TrackerData.trksvtxid[iTrk] = ivx;
+          }
+          if (edist<minedist){
+            minedist = edist;
+            if (minedist<10) TrackerData.trkevtxid[iTrk] = ivx;
+          }
+        }
+        
+        // find particle ID info
+        art::FindMany<anab::ParticleID> fmpid(trackListHandle[iTracker], evt, fParticleIDModuleLabel[iTracker]);
+        if(fmpid.isValid()) {
+          
+          std::vector<const anab::ParticleID*> pids = fmpid.at(iTrk);
+          if(pids.size() > 1) {
+            mf::LogError("AnalysisTree:limits")
+              << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
+              << " has " << pids.size() 
+              << " set of ParticleID variables. Only one stored in the tree";
+          }
+          for (size_t ipid = 0; ipid < pids.size(); ++ipid){
+            if (!pids[ipid]->PlaneID().isValid) continue;
+            int planenum = pids[ipid]->PlaneID().Plane;
+            if (planenum<0||planenum>2) continue;
+            TrackerData.trkpidpdg[iTrk][planenum] = pids[ipid]->Pdg();
+            TrackerData.trkpidchi[iTrk][planenum] = pids[ipid]->MinChi2();
+            TrackerData.trkpidchipr[iTrk][planenum] = pids[ipid]->Chi2Proton();
+            TrackerData.trkpidchika[iTrk][planenum] = pids[ipid]->Chi2Kaon();
+            TrackerData.trkpidchipi[iTrk][planenum] = pids[ipid]->Chi2Pion();
+            TrackerData.trkpidchimu[iTrk][planenum] = pids[ipid]->Chi2Muon();
+            TrackerData.trkpidpida[iTrk][planenum] = pids[ipid]->PIDA();
+          }
+        } // fmpid.isValid()
+      
+        art::FindMany<anab::Calorimetry> fmcal(trackListHandle[iTracker], evt, fCalorimetryModuleLabel[iTracker]);
+        if (fmcal.isValid()){
+          std::vector<const anab::Calorimetry*> calos = fmcal.at(iTrk);
+          if (calos.size() > TrackerData.GetMaxPlanesPerTrack(iTrk)) {
+            // if you get this message, there is probably a bug somewhere since
+            // the calorimetry planes should be 3.
+            mf::LogError("AnalysisTree:limits")
+              << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
+              << " has " << calos.size() << " planes for calorimetry , only "
+              << TrackerData.GetMaxPlanesPerTrack(iTrk) << " stored in tree";
+          }
+          for (size_t ical = 0; ical<calos.size(); ++ical){
+            if (!calos[ical]) continue;
+            if (!calos[ical]->PlaneID().isValid) continue;
+            int planenum = calos[ical]->PlaneID().Plane;
+            if (planenum<0||planenum>2) continue;
+            TrackerData.trkke[iTrk][planenum]    = calos[ical]->KineticEnergy();
+            TrackerData.trkrange[iTrk][planenum] = calos[ical]->Range();
+            //For now make the second argument as 13 for muons. 
+            TrackerData.trkpitchc[iTrk][planenum]= calos[ical] -> TrkPitchC();
+            const size_t NHits = calos[ical] -> dEdx().size();
+            TrackerData.ntrkhits[iTrk][planenum] = (int) NHits;
+            if (NHits > TrackerData.GetMaxHitsPerTrack(iTrk, planenum)) {
+              // if you get this error, you'll have to increase kMaxTrackHits
+              mf::LogError("AnalysisTree:limits")
+                << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
+                << " has " << NHits << " hits on calorimetry plane #" << planenum
+                <<", only "
+                << TrackerData.GetMaxHitsPerTrack(iTrk, planenum) << " stored in tree";
+            }
+            if (!isCosmics){
+              for(size_t iTrkHit = 0; iTrkHit < NHits && iTrkHit < TrackerData.GetMaxHitsPerTrack(iTrk, planenum); ++iTrkHit) {
+                TrackerData.trkdedx[iTrk][planenum][iTrkHit]  = (calos[ical] -> dEdx())[iTrkHit];
+                TrackerData.trkdqdx[iTrk][planenum][iTrkHit]  = (calos[ical] -> dQdx())[iTrkHit];
+                TrackerData.trkresrg[iTrk][planenum][iTrkHit] = (calos[ical] -> ResidualRange())[iTrkHit];
+                const auto& TrkPos = (calos[ical] -> XYZ())[iTrkHit];
+                auto& TrkXYZ = TrackerData.trkxyz[iTrk][planenum][iTrkHit];
+                TrkXYZ[0] = TrkPos.X();
+                TrkXYZ[1] = TrkPos.Y();
+                TrkXYZ[2] = TrkPos.Z();
+              } // for track hits
+            }
+          } // for calorimetry info
+          if(TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
+          else if(TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 1;
+          else if(TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
+          else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
+          else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0]) TrackerData.trkpidbestplane[iTrk] = 2;
+          else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
+          else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 2;
+        } // if has calorimetry info
+
+        //track truth information
+        if (isMC){
+          //get the hits on each plane
+          art::FindManyP<recob::Hit>      fmht(trackListHandle[iTracker], evt, fTrackModuleLabel[iTracker]);
+          std::vector< art::Ptr<recob::Hit> > allHits = fmht.at(iTrk);
+          std::vector< art::Ptr<recob::Hit> > hits[kNplanes];
+
+          for(size_t ah = 0; ah < allHits.size(); ++ah){
+            if (/* allHits[ah]->WireID().Plane >= 0 && */ // always true
+              allHits[ah]->WireID().Plane <  3){
+              hits[allHits[ah]->WireID().Plane].push_back(allHits[ah]);
+            }
+          }
+          
+          for (size_t ipl = 0; ipl < 3; ++ipl){
+            TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(hits[ipl]);
+            double maxe = 0;
+            HitsPurity(hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
+          //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
+            if (TrackerData.trkidtruth[iTrk][ipl]>0){
+              const art::Ptr<simb::MCTruth> mc = pi_serv->TrackIdToMCTruth_P(TrackerData.trkidtruth[iTrk][ipl]);
+              TrackerData.trkorigin[iTrk][ipl] = mc->Origin();
+              const simb::MCParticle *particle = pi_serv->TrackIdToParticle_P(TrackerData.trkidtruth[iTrk][ipl]);
+              double tote = 0;
+              const std::vector<const sim::IDE*> vide(bt_serv->TrackIdToSimIDEs_Ps(TrackerData.trkidtruth[iTrk][ipl]));
+              for (auto ide: vide) {
+                 tote += ide->energy;
+                 TrackerData.trksimIDEenergytruth[iTrk][ipl] = ide->energy;
+                 TrackerData.trksimIDExtruth[iTrk][ipl] = ide->x;
+                 TrackerData.trksimIDEytruth[iTrk][ipl] = ide->y;
+                 TrackerData.trksimIDEztruth[iTrk][ipl] = ide->z;
+              }
+              TrackerData.trkpdgtruth[iTrk][ipl] = particle->PdgCode();
+              TrackerData.trkefftruth[iTrk][ipl] = maxe/(tote/kNplanes); //tote include both induction and collection energies
+            //std::cout<<"\n"<<trkpdgtruth[iTracker][iTrk][ipl]<<"\t"<<trkefftruth[iTracker][iTrk][ipl];
+            }
+          }
+        }//end if (isMC)
         // If saving the hierarchy info
         if(fSaveHierarchyInfo){
           trkPfpMapIt it;
           // Check there is a map entry for this vertex
           it = trackerPFParticleMaps[iTracker].find(ptrack);
-          if(it == trackerPFParticleMaps[iTracker].end()){
-            throw cet::exception("AnalysisTree:limits") << "Track has no associated PFParticle ";
-          }
+          if(it == trackerPFParticleMaps[iTracker].end()) continue;
 
           art::Ptr<recob::PFParticle> tempParticle = it->second;
           // Get information, find the neutrino and then call its daughters 
@@ -2515,176 +2676,10 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           TrackerData.trkndaughters[iTrk]  = tempParticle->NumDaughters();
           TrackerData.trkpfpid[iTrk]       = tempParticle->Self();
           TrackerData.trkparentpfpid[iTrk] = tempParticle->Parent();
-        }
-
-      // find vertices associated with this track
-     /* 
-      art::FindMany<recob::Vertex> fmvtx(trackListHandle[iTracker], evt, fVertexModuleLabel[iTracker]);
-      if(fmvtx.isValid()) {
-        std::vector<const recob::Vertex*> verts = fmvtx.at(iTrk);
-        // should have two at most
-        for(size_t ivx = 0; ivx < verts.size(); ++ivx) {
-          verts[ivx]->XYZ(xyz);
-          // find the vertex in TrackerData to get the index
-          short theVtx = -1;
-          for(short jvx = 0; jvx < TrackerData.nvtx; ++jvx) {
-            if(TrackerData.vtx[jvx][2] == xyz[2]) {
-              theVtx = jvx;
-              break;
-            }
-          } // jvx
-          // decide if it should be assigned to the track Start or End.
-          // A simple dz test should suffice
-          if(fabs(xyz[2] - TrackerData.trkstartz[iTrk]) < 
-             fabs(xyz[2] - TrackerData.trkendz[iTrk])) {
-            TrackerData.trksvtxid[iTrk] = theVtx;
-          } else {
-            TrackerData.trkevtxid[iTrk] = theVtx;
-          }
-        } // vertices
-      } // fmvtx.isValid()
-      */
-      Float_t minsdist = 10000;
-      Float_t minedist = 10000;
-      for (int ivx = 0; ivx < fData->nvtx && ivx < kMaxVertices; ++ivx){
-        Float_t sdist = sqrt(pow(TrackerData.trkstartx[iTrk]-fData->vtx[ivx][0],2)+
-                             pow(TrackerData.trkstarty[iTrk]-fData->vtx[ivx][1],2)+
-                             pow(TrackerData.trkstartz[iTrk]-fData->vtx[ivx][2],2));
-        Float_t edist = sqrt(pow(TrackerData.trkendx[iTrk]-fData->vtx[ivx][0],2)+
-                             pow(TrackerData.trkendy[iTrk]-fData->vtx[ivx][1],2)+
-                             pow(TrackerData.trkendz[iTrk]-fData->vtx[ivx][2],2));
-        if (sdist<minsdist){
-          minsdist = sdist;
-          if (minsdist<10) TrackerData.trksvtxid[iTrk] = ivx;
-        }
-        if (edist<minedist){
-          minedist = edist;
-          if (minedist<10) TrackerData.trkevtxid[iTrk] = ivx;
-        }
-      }
-      
-      // find particle ID info
-      art::FindMany<anab::ParticleID> fmpid(trackListHandle[iTracker], evt, fParticleIDModuleLabel[iTracker]);
-      if(fmpid.isValid()) {
-        
-        std::vector<const anab::ParticleID*> pids = fmpid.at(iTrk);
-        if(pids.size() > 1) {
-          mf::LogError("AnalysisTree:limits")
-            << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
-            << " has " << pids.size() 
-            << " set of ParticleID variables. Only one stored in the tree";
-        }
-        for (size_t ipid = 0; ipid < pids.size(); ++ipid){
-	        if (!pids[ipid]->PlaneID().isValid) continue;
-	        int planenum = pids[ipid]->PlaneID().Plane;
-	        if (planenum<0||planenum>2) continue;
-          TrackerData.trkpidpdg[iTrk][planenum] = pids[ipid]->Pdg();
-          TrackerData.trkpidchi[iTrk][planenum] = pids[ipid]->MinChi2();
-          TrackerData.trkpidchipr[iTrk][planenum] = pids[ipid]->Chi2Proton();
-          TrackerData.trkpidchika[iTrk][planenum] = pids[ipid]->Chi2Kaon();
-          TrackerData.trkpidchipi[iTrk][planenum] = pids[ipid]->Chi2Pion();
-          TrackerData.trkpidchimu[iTrk][planenum] = pids[ipid]->Chi2Muon();
-          TrackerData.trkpidpida[iTrk][planenum] = pids[ipid]->PIDA();
-        }
-      } // fmpid.isValid()
-      
-      
-
-      art::FindMany<anab::Calorimetry> fmcal(trackListHandle[iTracker], evt, fCalorimetryModuleLabel[iTracker]);
-      if (fmcal.isValid()){
-        std::vector<const anab::Calorimetry*> calos = fmcal.at(iTrk);
-        if (calos.size() > TrackerData.GetMaxPlanesPerTrack(iTrk)) {
-          // if you get this message, there is probably a bug somewhere since
-          // the calorimetry planes should be 3.
-          mf::LogError("AnalysisTree:limits")
-            << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
-            << " has " << calos.size() << " planes for calorimetry , only "
-            << TrackerData.GetMaxPlanesPerTrack(iTrk) << " stored in tree";
-        }
-        for (size_t ical = 0; ical<calos.size(); ++ical){
-          if (!calos[ical]) continue;
-          if (!calos[ical]->PlaneID().isValid) continue;
-          int planenum = calos[ical]->PlaneID().Plane;
-          if (planenum<0||planenum>2) continue;
-          TrackerData.trkke[iTrk][planenum]    = calos[ical]->KineticEnergy();
-          TrackerData.trkrange[iTrk][planenum] = calos[ical]->Range();
-          //For now make the second argument as 13 for muons. 
-          TrackerData.trkpitchc[iTrk][planenum]= calos[ical] -> TrkPitchC();
-          const size_t NHits = calos[ical] -> dEdx().size();
-          TrackerData.ntrkhits[iTrk][planenum] = (int) NHits;
-          if (NHits > TrackerData.GetMaxHitsPerTrack(iTrk, planenum)) {
-            // if you get this error, you'll have to increase kMaxTrackHits
-            mf::LogError("AnalysisTree:limits")
-              << "the " << fTrackModuleLabel[iTracker] << " track #" << iTrk
-              << " has " << NHits << " hits on calorimetry plane #" << planenum
-              <<", only "
-              << TrackerData.GetMaxHitsPerTrack(iTrk, planenum) << " stored in tree";
-          }
-          if (!isCosmics){
-            for(size_t iTrkHit = 0; iTrkHit < NHits && iTrkHit < TrackerData.GetMaxHitsPerTrack(iTrk, planenum); ++iTrkHit) {
-              TrackerData.trkdedx[iTrk][planenum][iTrkHit]  = (calos[ical] -> dEdx())[iTrkHit];
-              TrackerData.trkdqdx[iTrk][planenum][iTrkHit]  = (calos[ical] -> dQdx())[iTrkHit];
-              TrackerData.trkresrg[iTrk][planenum][iTrkHit] = (calos[ical] -> ResidualRange())[iTrkHit];
-              const auto& TrkPos = (calos[ical] -> XYZ())[iTrkHit];
-              auto& TrkXYZ = TrackerData.trkxyz[iTrk][planenum][iTrkHit];
-              TrkXYZ[0] = TrkPos.X();
-              TrkXYZ[1] = TrkPos.Y();
-              TrkXYZ[2] = TrkPos.Z();
-            } // for track hits
-          }
-        } // for calorimetry info
-        if(TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
-        else if(TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 1;
-        else if(TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
-        else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
-        else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0]) TrackerData.trkpidbestplane[iTrk] = 2;
-        else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
-        else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 2;
-      } // if has calorimetry info
-
-      //track truth information
-      if (isMC){
-        //get the hits on each plane
-        art::FindManyP<recob::Hit>      fmht(trackListHandle[iTracker], evt, fTrackModuleLabel[iTracker]);
-        std::vector< art::Ptr<recob::Hit> > allHits = fmht.at(iTrk);
-        std::vector< art::Ptr<recob::Hit> > hits[kNplanes];
-
-        for(size_t ah = 0; ah < allHits.size(); ++ah){
-          if (/* allHits[ah]->WireID().Plane >= 0 && */ // always true
-            allHits[ah]->WireID().Plane <  3){
-            hits[allHits[ah]->WireID().Plane].push_back(allHits[ah]);
-          }
-        }
-        
-        for (size_t ipl = 0; ipl < 3; ++ipl){
-          TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits[ipl]);
-          TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(hits[ipl]);
-          TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(hits[ipl]);
-          double maxe = 0;
-          HitsPurity(hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
-        //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
-          if (TrackerData.trkidtruth[iTrk][ipl]>0){
-            const art::Ptr<simb::MCTruth> mc = pi_serv->TrackIdToMCTruth_P(TrackerData.trkidtruth[iTrk][ipl]);
-            TrackerData.trkorigin[iTrk][ipl] = mc->Origin();
-            const simb::MCParticle *particle = pi_serv->TrackIdToParticle_P(TrackerData.trkidtruth[iTrk][ipl]);
-            double tote = 0;
-            const std::vector<const sim::IDE*> vide(bt_serv->TrackIdToSimIDEs_Ps(TrackerData.trkidtruth[iTrk][ipl]));
-            for (auto ide: vide) {
-               tote += ide->energy;
-               TrackerData.trksimIDEenergytruth[iTrk][ipl] = ide->energy;
-               TrackerData.trksimIDExtruth[iTrk][ipl] = ide->x;
-               TrackerData.trksimIDEytruth[iTrk][ipl] = ide->y;
-               TrackerData.trksimIDEztruth[iTrk][ipl] = ide->z;
-            }
-            TrackerData.trkpdgtruth[iTrk][ipl] = particle->PdgCode();
-            TrackerData.trkefftruth[iTrk][ipl] = maxe/(tote/kNplanes); //tote include both induction and collection energies
-          //std::cout<<"\n"<<trkpdgtruth[iTracker][iTrk][ipl]<<"\t"<<trkefftruth[iTracker][iTrk][ipl];
-          }
-        }
-      }//end if (isMC)
-    }//end loop over track
-  }//end loop over track module labels
- }// end (fSaveTrackInfo) 
+        } // end save hierarchy info
+      }//end loop over track
+    }//end loop over track module labels
+  }// end (fSaveTrackInfo) 
   
   trkf::TrackMomentumCalculator trkm;  
   std::cout<<"\t"<<trkm.GetTrackMomentum(200,2212)<<"\t"<<trkm.GetTrackMomentum(-10, 13)<<"\t"<<trkm.GetTrackMomentum(300,-19)<<"\n";
