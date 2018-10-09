@@ -115,6 +115,7 @@ DEFINE_ART_MODULE(SimWireSBND)
 
 //-------------------------------------------------
 SimWireSBND::SimWireSBND(fhicl::ParameterSet const& pset)
+  : EDProducer{pset}
 {
   this->reconfigure(pset);
 
@@ -470,4 +471,3 @@ void SimWireSBND::produce(art::Event& evt)
 
 
 }
-
