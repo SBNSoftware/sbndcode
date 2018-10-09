@@ -32,8 +32,8 @@ public:
     explicit SpaceChargeTest(fhicl::ParameterSet const & p);
     virtual ~SpaceChargeTest();
 
-    virtual void beginJob();
-    virtual void endJob();
+    virtual void beginJob() override;
+    virtual void endJob() override;
 
     // Required function
     void analyze(art::Event const & e) override;
