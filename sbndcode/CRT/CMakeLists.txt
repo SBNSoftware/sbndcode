@@ -4,7 +4,7 @@ include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 
 add_subdirectory(CRTProducts)
 
-art_make( BASENAME_ONLY
+art_make( 
     EXCLUDE
         CRTChannelMapAlg.cxx
         CRTGeometryHelper_service.cc
