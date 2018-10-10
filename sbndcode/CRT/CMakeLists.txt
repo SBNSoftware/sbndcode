@@ -4,7 +4,7 @@ include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 
 add_subdirectory(CRTProducts)
 
-art_make( BASENAME_ONLY
+art_make( 
     EXCLUDE
         CRTChannelMapAlg.cxx
         CRTGeometryHelper_service.cc
@@ -81,7 +81,6 @@ simple_plugin( CRTDetSim module
         ${ROOT_BASIC_LIB_LIST}
         ${CLHEP}
         ${CETLIB}
-    BASENAME_ONLY
 )
 
 simple_plugin( CRTSimHitProducer module
