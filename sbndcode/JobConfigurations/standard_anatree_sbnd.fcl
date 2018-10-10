@@ -4,7 +4,9 @@ physics.analyzers.analysistree.SaveHitInfo: true
 physics.analyzers.analysistree.SaveTrackInfo: true
 physics.analyzers.analysistree.SaveShowerInfo: true
 physics.analyzers.analysistree.SaveVertexInfo: true
-physics.analyzers.analysistree.SaveHierarchyInfo: true
+physics.analyzers.analysistree.SaveShowerHierarchyInfo: true
+physics.analyzers.analysistree.SaveHierarchyInfo: [ false, true ]
+physics.analyzers.analysistree.VertexModuleLabel: ["pmalgtrackmaker", "pandora"]
 physics.analyzers.analysistree.TrackModuleLabel: ["pmalgtrackmaker", "pandoraTrack"]
 physics.analyzers.analysistree.CalorimetryModuleLabel: ["pmatrackcalo", "pandoraCalo"]
 physics.analyzers.analysistree.ParticleIDModuleLabel: ["pmatrackpid", "pandoraPid"]
