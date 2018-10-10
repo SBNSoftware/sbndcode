@@ -15,7 +15,7 @@ sbnd_analysistree:
  TrackModuleLabel:         [ "pandoraTrack" ]
  ShowerModuleLabel:        "pandoraShower"
  PFParticleModuleLabel:    "pandora"
- VertexModuleLabel:        "pandora"
+ VertexModuleLabel:        [ "pandora" ]
  CalorimetryModuleLabel:   [ "pandoraCalo" ]
  ParticleIDModuleLabel:    [ "pandoraPid" ]
  POTModuleLabel:           "generator"
@@ -28,7 +28,8 @@ sbnd_analysistree:
  SaveTrackInfo:            false
  SaveShowerInfo:           false
  SaveVertexInfo:           false
- SaveHierarchyInfo:        false
+ SaveHierarchyInfo:        [ false ]
+ SaveShowerHierarchyInfo:  false
  SaveCaloCosmics:          false
  isCosmics:		             false
  G4MinE:                   0.01
