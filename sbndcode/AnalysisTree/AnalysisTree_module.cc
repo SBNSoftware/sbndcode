@@ -151,7 +151,6 @@
 constexpr int kNplanes       = 3;     //number of wire planes
 constexpr int kMaxHits       = 25000; //maximum number of hits;
 constexpr int kMaxTrackHits  = 2000;  //maximum number of hits on a track
-constexpr int kMaxShowerHits = 2000;  //maximum number of hits on a shower
 constexpr int kMaxTrackers   = 15;    //number of trackers passed into fTrackModuleLabel
 constexpr unsigned short kMaxVertices = 100;    //max number of 3D vertices
 constexpr unsigned short kMaxShowers = 100;    //max number of 3D showers
@@ -361,9 +360,9 @@ namespace sbnd {
       ShowerData_t<Int_t>   shwpfpid;      // PFParticle shower ID
       ShowerData_t<Int_t>   shwparentpfpid;      // PFParticle shower ID
       
-      /// Creates an empty tracker data structure
+      /// Creates an empty showerer data structure
       ShowerDataStruct(): MaxShowers(0) { Clear(); }
-      /// Creates a tracker data structure allowing up to maxShowers tracks
+      /// Creates a shower data structure allowing up to maxShowers showers
       ShowerDataStruct(size_t maxShowers): MaxShowers(maxShowers) { Clear(); }
       void Clear();
       void SetMaxShowers(size_t maxShowers)
@@ -374,11 +373,43 @@ namespace sbnd {
       size_t GetMaxShowers() const { return MaxShowers; }
       size_t GetMaxPlanesPerShower(int /* iShower */ = 0) const
         { return (size_t) kNplanes; }
-      size_t GetMaxHitsPerShower(int /* iShower */ = 0, int /* ipl */ = 0) const
-        { return (size_t) kMaxShowerHits; }
       
     }; // class ShowerDataStruct
     
+    /*
+     * Added by Rhiannon 8th October 2018
+     */
+    /// Vertices
+    /// 
+    /// Can connect to a tree, clear its fields and resize its data.
+    class VertexDataStruct {
+        public:
+      
+      template <typename T>
+      using VertexData_t = std::vector<T>;
+      template <typename T>
+      using VtxCoordData_t = std::vector<BoxedArray<T[3]> >;
+      
+      size_t MaxVertices; ///< maximum number of storable vertices
+      
+      // vertex information
+      Short_t  nvtx;                  // Number of reconstructed vertices
+      VtxCoordData_t<Float_t> vtx;    // 3D position of the vertex
+      VertexData_t<Int_t> primaryvtx; // Whether the vertex is primary or not
+
+      /// Creates an empty tracker data structure
+      VertexDataStruct(): MaxVertices(0) { Clear(); }
+      /// Creates a vertex data structure allowing up to maxVertices vertices
+      VertexDataStruct(size_t maxVertices): MaxVertices(maxVertices) { Clear(); }
+      void Clear();
+      void SetMaxVertices(size_t maxVertices)
+        { MaxVertices = maxVertices; Resize(MaxVertices); }
+      void Resize(size_t nVertices);
+      void SetAddresses(TTree* pTree, std::string vertexLabel, bool saveHierarchyInfo);
+      
+      size_t GetMaxVertices() const { return MaxVertices; }
+      
+    }; // class VertexDataStruct
  
     enum DataBits_t: unsigned int {
       tdAuxDet = 0x01,
@@ -434,14 +465,12 @@ namespace sbnd {
     Float_t  hit_energy[kMaxHits];       //hit energy
     Short_t  hit_trkid[kMaxHits];      //is this hit associated with a reco track?
 
-    // vertex information
-    Short_t  nvtx;                     //number of vertices
-    Float_t  vtx[kMaxVertices][3];     //vtx[3] 
-    std::vector<Int_t> primaryvtx;     // Whether the vertex is the primary or not
-
     // track information
-    Char_t   kNTracker;
+    Char_t kNTracker;
     std::vector<TrackDataStruct> TrackData;
+
+    // vertex information
+    std::vector<VertexDataStruct> VertexData;
 
     // shower information
     ShowerDataStruct ShowerData;
@@ -604,12 +633,15 @@ namespace sbnd {
       
     /// Constructor; clears all fields
     AnalysisTreeDataStruct(size_t nTrackers = 0): bits(tdDefault) 
-      { SetTrackers(nTrackers); Clear(); }
+      { SetTrackers(nTrackers); SetVertices(nTrackers); Clear(); }
 
     TrackDataStruct& GetTrackerData(size_t iTracker)
       { return TrackData.at(iTracker); }
     const TrackDataStruct& GetTrackerData(size_t iTracker) const
       { return TrackData.at(iTracker); }
+    
+    VertexDataStruct& GetVertexData(size_t iTracker)
+      { return VertexData.at(iTracker); }
     
     ShowerDataStruct& GetShowerData()
       { return ShowerData; }
@@ -622,6 +654,9 @@ namespace sbnd {
     
     /// Allocates data structures for the given number of trackers (no Clear())
     void SetTrackers(size_t nTrackers) { TrackData.resize(nTrackers); }
+
+    /// Allocates data structures for the given number of trackers (no Clear())
+    void SetVertices(size_t nTrackers) { VertexData.resize(nTrackers); }
 
     /// Resize the data structure for MCNeutrino particles
     void ResizeMCNeutrino(int nNeutrinos);
@@ -636,7 +671,7 @@ namespace sbnd {
     void ResizeCry(int nPrimaries);
     
     /// Connect this object with a tree
-    void SetAddresses(TTree* pTree, const std::vector<std::string>& trackers, std::string showerLabel, bool isCosmics, bool saveHierarchyInfo);
+    void SetAddresses(TTree* pTree, const std::vector<std::string>& trackers, std::string showerLabel, const std::vector< std::string> &vertexLabels, bool isCosmics, const std::vector<bool>& saveHierarchyInfo, bool saveShowerHierarchyInfo);
     
     /// Connect this object with a tree
     void SetShowerAddresses(TTree* pTree, std::string showerLabel, bool saveHierarchyInfo);
@@ -781,8 +816,8 @@ namespace sbnd {
     std::string fCryGenModuleLabel;
     std::string fG4ModuleLabel;
     std::string fPFParticleModuleLabel;
-    std::string fVertexModuleLabel;
     std::string fShowerModuleLabel;
+    std::vector<std::string> fVertexModuleLabel;
     std::vector<std::string> fTrackModuleLabel;
     std::vector<std::string> fCalorimetryModuleLabel;
     std::vector<std::string> fParticleIDModuleLabel;
@@ -796,7 +831,8 @@ namespace sbnd {
     bool fSaveTrackInfo; ///whether to extract and save Track information
     bool fSaveShowerInfo; ///whether to extract and save Shower information
     bool fSaveVertexInfo; ///whether to extract and save Vertex information
-    bool fSaveHierarchyInfo;  ///< if the user wants to access the tracks with their hierarchy
+    std::vector<bool> fSaveHierarchyInfo;  ///< if the user wants to access the tracks with their hierarchy for each tracker
+    bool fSaveShowerHierarchyInfo;  ///< if the user wants to access the showers with their hierarchy
     
     std::vector<std::string> fCosmicTaggerAssocLabel;
     std::vector<std::string> fFlashMatchAssocLabel;
@@ -824,6 +860,7 @@ namespace sbnd {
           fData->SetBits(AnalysisTreeDataStruct::tdShower, !fSaveShowerInfo);	
           fData->SetBits(AnalysisTreeDataStruct::tdVtx, !fSaveVertexInfo);	  	  	    	  	    	  	    	  
           fData->SetTrackers(GetNTrackers());
+          fData->SetVertices(GetNTrackers());
           if (bClearData) fData->Clear();
         }
       } // CreateData()
@@ -832,7 +869,7 @@ namespace sbnd {
     void SetAddresses()
       {
         CheckData("SetAddress()"); CheckTree("SetAddress()");
-        fData->SetAddresses(fTree, fTrackModuleLabel, fShowerModuleLabel, isCosmics, fSaveHierarchyInfo);
+        fData->SetAddresses(fTree, fTrackModuleLabel, fShowerModuleLabel, fVertexModuleLabel, isCosmics, fSaveHierarchyInfo, fSaveShowerHierarchyInfo);
       } // SetAddresses()
     
     /// Sets the addresses of all the tree branches of the specified tracking algo,
@@ -846,14 +883,26 @@ namespace sbnd {
             << " (" << fData->GetNTrackers() << " available)";
         }
         fData->GetTrackerData(iTracker) \
-          .SetAddresses(fTree, fTrackModuleLabel[iTracker], isCosmics, fSaveHierarchyInfo);
+          .SetAddresses(fTree, fTrackModuleLabel[iTracker], isCosmics, fSaveHierarchyInfo[iTracker]);
       } // SetTrackerAddresses()
+    
+    void SetVerticesAddresses(size_t iTracker)
+      {
+        CheckData("SetVerticesAddresses()"); CheckTree("SetVerticesAddresses()");
+        if (iTracker >= fData->GetNTrackers()) {
+          throw art::Exception(art::errors::LogicError)
+            << "AnalysisTree::SetVerticesAddresses(): no tracker #" << iTracker
+            << " (" << fData->GetNTrackers() << " available)";
+        }
+        fData->GetVertexData(iTracker) \
+          .SetAddresses(fTree, fVertexModuleLabel[iTracker], fSaveHierarchyInfo[iTracker]);
+      } // SetVerticesAddresses()
     
     /// Sets the addresses of all the tree branches, creating the missing ones
     void SetShowerAddresses()
       {
         CheckData("SetShowerAddress()"); CheckTree("SetShowerAddress()");
-        fData->ShowerData.SetShowerAddresses(fTree, fShowerModuleLabel, fSaveHierarchyInfo);
+        fData->ShowerData.SetShowerAddresses(fTree, fShowerModuleLabel, fSaveShowerHierarchyInfo);
       } // SetShowerAddresses()
     
     /// Create the output tree and the data structures, if needed
@@ -1336,10 +1385,6 @@ void sbnd::AnalysisTreeDataStruct::ShowerDataStruct::SetShowerAddresses(
   
   sbnd::AnalysisTreeDataStruct::BranchCreator CreateBranch(pTree);
 
-  AutoResettingStringSteam sstr;
-  sstr() << kMaxShowerHits;
-  std::string MaxShowerHitsIndexStr("[" + sstr.str() + "]");
-  
   std::string ShowerLabel = showerLabel;
   std::string BranchName;
 
@@ -1396,6 +1441,51 @@ void sbnd::AnalysisTreeDataStruct::ShowerDataStruct::SetShowerAddresses(
 } // sbnd::AnalysisTreeDataStruct::ShowerDataStruct::SetShowerAddresses()
 
 //------------------------------------------------------------------------------
+//---  AnalysisTreeDataStruct::VertexDataStruct
+//---
+
+void sbnd::AnalysisTreeDataStruct::VertexDataStruct::Resize(size_t nVertices)
+{
+  MaxVertices = nVertices;
+ 
+  vtx.resize(MaxVertices);
+  primaryvtx.resize(MaxVertices);
+} // AnalysisTreeDataStruct::VertexDataStruct::Resize()
+
+void sbnd::AnalysisTreeDataStruct::VertexDataStruct::Clear() {
+  Resize(MaxVertices);
+  nvtx = 0;
+
+  for (size_t iVtx = 0; iVtx < MaxVertices; ++iVtx){
+    FillWith(vtx[iVtx], -9999.);
+  }
+  FillWith(primaryvtx, -9999);  
+} // AnalysisTreeDataStruct::VertexDataStruct::Clear()
+
+void sbnd::AnalysisTreeDataStruct::VertexDataStruct::SetAddresses(
+  TTree* pTree, std::string vertices, bool saveHierarchyInfo
+) {
+  if (MaxVertices == 0) return; // no vertices, no tree!
+  
+  sbnd::AnalysisTreeDataStruct::BranchCreator CreateBranch(pTree);
+
+  std::string VertexLabel = vertices;
+  std::string BranchName;
+
+  BranchName = "nvtx_" + VertexLabel;
+  CreateBranch(BranchName, &nvtx, BranchName + "/S");
+  std::string NVertexIndexStr = "[" + BranchName + "]";
+ 
+  if(saveHierarchyInfo){
+    BranchName = "primaryvtx_" + VertexLabel;
+    CreateBranch(BranchName, primaryvtx, BranchName + NVertexIndexStr + "/I");
+  }
+
+  BranchName = "vtx_" + VertexLabel;
+  CreateBranch(BranchName, vtx, BranchName + NVertexIndexStr + "[3]/F");
+} // AnalysisTreeDataStruct::VertexDataStruct::SetAddresses()
+
+//------------------------------------------------------------------------------
 //---  AnalysisTreeDataStruct
 //---
 
@@ -1427,11 +1517,13 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   std::fill(hit_nelec, hit_nelec + sizeof(hit_nelec)/sizeof(hit_nelec[0]), -99999.);
   std::fill(hit_energy, hit_energy + sizeof(hit_energy)/sizeof(hit_energy[0]), -99999.);
 
+  /*
   nvtx = 0;
   for (size_t ivtx = 0; ivtx < kMaxVertices; ++ivtx) {
     std::fill(vtx[ivtx], vtx[ivtx]+3, -99999.);
   }
   FillWith(primaryvtx, -9999);
+*/
 
   mcevts_truth = 0;
   mcevts_truthcry = -99999;
@@ -1552,6 +1644,9 @@ void sbnd::AnalysisTreeDataStruct::Clear() {
   ClearLocalData();
   std::for_each
     (TrackData.begin(), TrackData.end(), std::mem_fn(&TrackDataStruct::Clear));
+  std::for_each
+    (VertexData.begin(), VertexData.end(), std::mem_fn(&VertexDataStruct::Clear));
+  std::mem_fn(&ShowerDataStruct::Clear);
 } // sbnd::AnalysisTreeDataStruct::Clear()
 
 void sbnd::AnalysisTreeDataStruct::ResizeMCNeutrino(int nNeutrinos){
@@ -1665,6 +1760,7 @@ void sbnd::AnalysisTreeDataStruct::ResizeGenie(int nPrimaries) {
 
 } // sbnd::AnalysisTreeDataStruct::ResizeGenie()
 
+// minimum size is 1, so that we always have an address
 void sbnd::AnalysisTreeDataStruct::ResizeCry(int nPrimaries) {
 
   cry_primaries_pdg.resize(nPrimaries);
@@ -1688,8 +1784,10 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
   TTree* pTree,
   const std::vector<std::string>& trackers,
   const std::string showerLabel,
+  const std::vector<std::string>& vertexLabels,
   bool isCosmics,
-  bool saveHierarchyInfo
+  const std::vector<bool>& saveHierarchyInfo,
+  bool saveShowerHierarchyInfo
 ) {
   BranchCreator CreateBranch(pTree);
 
@@ -1720,10 +1818,21 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
   }
 
   if (hasVertexInfo()){
+    /*
     CreateBranch("nvtx",&nvtx,"nvtx/S");
     CreateBranch("vtx",vtx,"vtx[nvtx][3]/F");
     if(saveHierarchyInfo)
       CreateBranch("primaryvtx",primaryvtx,"primaryvtx[nvtx]/I");
+      */
+
+    kNTracker = trackers.size();
+    for(int i=0; i<kNTracker; i++){
+      std::string VertexLabel = vertexLabels[i];
+
+      // note that if the tracker data has maximum number of tracks 0,
+      // nothing is initialized (branches are not even created)
+      VertexData[i].SetAddresses(pTree, VertexLabel, saveHierarchyInfo[i]);   
+    }
   }  
 
   if (hasTrackInfo()){
@@ -1739,13 +1848,13 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
 
       // note that if the tracker data has maximum number of tracks 0,
       // nothing is initialized (branches are not even created)
-      TrackData[i].SetAddresses(pTree, TrackLabel, isCosmics, saveHierarchyInfo);    
+      TrackData[i].SetAddresses(pTree, TrackLabel, isCosmics, saveHierarchyInfo[i]);    
     } // for trackers
   } 
   
   if (hasShowerInfo()){
     std::string ShowerLabel = showerLabel;
-    ShowerData.SetShowerAddresses(pTree, ShowerLabel, saveHierarchyInfo);    
+    ShowerData.SetShowerAddresses(pTree, ShowerLabel, saveShowerHierarchyInfo);    
   }
 
   if (hasGenieInfo()){
@@ -1896,8 +2005,8 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   fCryGenModuleLabel        (pset.get< std::string >("CryGenModuleLabel")                  ), 
   fG4ModuleLabel            (pset.get< std::string >("G4ModuleLabel")                      ),
   fPFParticleModuleLabel    (pset.get< std::string> ("PFParticleModuleLabel")              ),
-  fVertexModuleLabel        (pset.get< std::string> ("VertexModuleLabel")                  ),
   fShowerModuleLabel        (pset.get< std::string> ("ShowerModuleLabel")                  ),
+  fVertexModuleLabel        (pset.get< std::vector<std::string> >("VertexModuleLabel")     ),
   fTrackModuleLabel         (pset.get< std::vector<std::string> >("TrackModuleLabel")      ),
   fCalorimetryModuleLabel   (pset.get< std::vector<std::string> >("CalorimetryModuleLabel")),
   fParticleIDModuleLabel    (pset.get< std::vector<std::string> >("ParticleIDModuleLabel") ),
@@ -1912,7 +2021,8 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   fSaveTrackInfo	          (pset.get< bool >("SaveTrackInfo", false)), 
   fSaveShowerInfo	          (pset.get< bool >("SaveShowerInfo", false)), 
   fSaveVertexInfo	          (pset.get< bool >("SaveVertexInfo", false)),
-  fSaveHierarchyInfo        (pset.get< bool >("SaveHierarchyInfo", false)),
+  fSaveHierarchyInfo        (pset.get< std::vector<bool> >("SaveHierarchyInfo", {false})),
+  fSaveShowerHierarchyInfo  (pset.get< bool >("SaveShowerHierarchyInfo", false)),
   //fCosmicTaggerAssocLabel  (pset.get<std::vector< std::string > >("CosmicTaggerAssocLabel") ),
   //fFlashMatchAssocLabel (pset.get<std::vector< std::string > >("FlashMatchAssocLabel") ),
   isCosmics(false),
@@ -1929,6 +2039,11 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
       << " tracking algorithms, but " << GetNTrackers() << " are specified."
       << "\nYou can increase kMaxTrackers and recompile.";
   } // if too many trackers
+  if (fTrackModuleLabel.size() != fVertexModuleLabel.size()){
+    throw art::Exception(art::errors::Configuration)
+      << "fTrackModuleLabel.size() = "<<fTrackModuleLabel.size()<<" does not match "
+      << "fVertexModuleLabel.size() = "<<fVertexModuleLabel.size();
+  }
   if (fTrackModuleLabel.size() != fCalorimetryModuleLabel.size()){
     throw art::Exception(art::errors::Configuration)
       << "fTrackModuleLabel.size() = "<<fTrackModuleLabel.size()<<" does not match "
@@ -1938,6 +2053,11 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
     throw art::Exception(art::errors::Configuration)
       << "fTrackModuleLabel.size() = "<<fTrackModuleLabel.size()<<" does not match "
       << "fParticleIDModuleLabel.size() = "<<fParticleIDModuleLabel.size();
+  }
+  if (fTrackModuleLabel.size() != fSaveHierarchyInfo.size()){
+    throw art::Exception(art::errors::Configuration)
+      << "fTrackModuleLabel.size() = "<<fTrackModuleLabel.size()<<" does not match "
+      << "fSaveHierarchyInfo.size() = "<<fSaveHierarchyInfo.size();
   }
 } // sbnd::AnalysisTree::AnalysisTree()
 
@@ -2000,13 +2120,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     if (evt.getByLabel(fCryGenModuleLabel,mctruthcryListHandle))
       art::fill_ptr_vector(mclistcry, mctruthcryListHandle);
   }       
-  
-  // * vertices
-  art::Handle< std::vector<recob::Vertex> > vtxListHandle;
-  std::vector< art::Ptr<recob::Vertex> > vtxlist;
-  if (evt.getByLabel(fVertexModuleLabel,vtxListHandle))
-    art::fill_ptr_vector(vtxlist, vtxListHandle);
-  const size_t NVertices = vtxlist.size(); // number of vertices
   
   art::Ptr<simb::MCTruth> mctruthcry;
   int nCryPrimaries = 0;
@@ -2089,9 +2202,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     fData->ResizeCry(nCryPrimaries);
   if (fSaveGeantInfo)    
     fData->ResizeGEANT(nGEANTparticles);
-  if(fSaveVertexInfo)
-    fData->primaryvtx.resize(NVertices);
-  
   fData->ClearLocalData(); // don't bother clearing tracker data yet
   
 //  const size_t Nplanes       = 3; // number of wire planes; pretty much constant...
@@ -2106,29 +2216,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
   fData->isdata = int(!isMC);
  
-  /// Declare the track handle and vector for all the different tracking producers
-  std::vector< art::Handle< std::vector<recob::Track> > > trackListHandle(NTrackers);
-  art::Handle< std::vector<recob::Shower> >               showerHandle;
-  std::vector< std::vector<art::Ptr<recob::Track> > >     tracklist(NTrackers);
-  std::vector< art::Ptr<recob::Shower> >                  shwlist;
-
-  // Declare maps for track and vertex to pfparticle associations 
-  //  this is the opposite way around to how they are produced
-  typedef std::map<art::Ptr<recob::Track>,  art::Ptr<recob::PFParticle> > trkPfpMap;
-  typedef std::map<art::Ptr<recob::Vertex>, art::Ptr<recob::PFParticle> > vtxPfpMap;
-  typedef std::map<art::Ptr<recob::Shower>, art::Ptr<recob::PFParticle> > shwPfpMap;
-  typedef std::map<art::Ptr<recob::Track>,  art::Ptr<recob::PFParticle> >::const_iterator trkPfpMapIt;
-  typedef std::map<art::Ptr<recob::Vertex>, art::Ptr<recob::PFParticle> >::const_iterator vtxPfpMapIt;
-  typedef std::map<art::Ptr<recob::Shower>, art::Ptr<recob::PFParticle> >::const_iterator shwPfpMapIt;
-
-  trkPfpMap trackPFParticleMap;
-  vtxPfpMap vertexPFParticleMap;
-  shwPfpMap showerPFParticleMap;
-
-  lar_pandora::PFParticleVector pfplist;
-  lar_pandora::PFParticleMap pfpmap;
-  std::vector< trkPfpMap > trackerPFParticleMaps;
-
   /*****************************************************************************/
   //            Added by Rhiannon on 2nd October 2018 for MCP 0.9
   // If the user is requesting to save hierarchical information, the producers
@@ -2141,9 +2228,81 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   //  When saving track and vertex information, add additional query for 
   //  saving the hierarchy and save the information
   //
-  if(fSaveHierarchyInfo){
+  /// Declare the track handle and vector for all the different tracking producers
+  std::vector< art::Handle< std::vector<recob::Track> > >  trackListHandle(NTrackers);
+  std::vector< art::Handle< std::vector<recob::Vertex> > > vtxListHandle(NTrackers);
+  art::Handle< std::vector<recob::Shower> >                showerHandle;
+  std::vector< std::vector<art::Ptr<recob::Track> > >      tracklist(NTrackers);
+  std::vector< std::vector< art::Ptr<recob::Vertex> > >    vtxlist(NTrackers);
+  std::vector< art::Ptr<recob::Shower> >                   shwlist;
+  std::vector< int > NVertices;
+
+  // Declare maps for track and vertex to pfparticle associations 
+  //  this is the opposite way around to how they are produced
+  typedef std::map<art::Ptr<recob::Track>,  art::Ptr<recob::PFParticle> > trkPfpMap;
+  typedef std::map<art::Ptr<recob::Vertex>, art::Ptr<recob::PFParticle> > vtxPfpMap;
+  typedef std::map<art::Ptr<recob::Shower>, art::Ptr<recob::PFParticle> > shwPfpMap;
+  typedef std::map<art::Ptr<recob::Track>,  art::Ptr<recob::PFParticle> >::const_iterator trkPfpMapIt;
+  typedef std::map<art::Ptr<recob::Vertex>, art::Ptr<recob::PFParticle> >::const_iterator vtxPfpMapIt;
+  typedef std::map<art::Ptr<recob::Shower>, art::Ptr<recob::PFParticle> >::const_iterator shwPfpMapIt;
+
+  shwPfpMap showerPFParticleMap;
+  lar_pandora::PFParticleVector pfplist;
+  lar_pandora::PFParticleMap pfpmap;
+  std::vector< trkPfpMap > trackerPFParticleMaps;
+  std::vector< vtxPfpMap > verticesPFParticleMaps;
+
+  art::Handle< std::vector<recob::PFParticle> > pfpHandle;
+  if(evt.getByLabel(fPFParticleModuleLabel,pfpHandle)){
+    if(pfpHandle->size()){
+      art::fill_ptr_vector(pfplist, pfpHandle);
+      lar_pandora::LArPandoraHelper::BuildPFParticleMap(pfplist, pfpmap);
+    }
+  }
+  trkPfpMap trackPFParticleMap;
+  vtxPfpMap vertexPFParticleMap;
+  // Loop over trackers and see if the hierarchy information needs saving
+  for (unsigned int iTracker=0; iTracker < NTrackers; ++iTracker){
+    verticesPFParticleMaps.push_back(vertexPFParticleMap);
+    trackerPFParticleMaps.push_back(trackPFParticleMap);
+  
+    if(!fSaveHierarchyInfo[iTracker]) continue;
 
     // Get and check that the pfparticle handle is valid and exists
+    if(pfpHandle->empty())
+      mf::LogError("AnalysisTree:limits") << " Event has no PFParticle information ";
+
+    // Vertex, shower and track associations
+    art::FindManyP<recob::Vertex> fvtx(pfpHandle, evt, fVertexModuleLabel[iTracker]);
+    art::FindManyP<recob::Track> fmtrk(pfpHandle, evt, fTrackModuleLabel[iTracker]);
+
+    for(unsigned int i = 0; i < pfpHandle->size(); ++i) {
+      const art::Ptr< recob::PFParticle > pfp( pfpHandle, i );
+
+      // Get vertex association
+      std::vector< art::Ptr<recob::Vertex> > vtxAssn = fvtx.at(pfp.key());
+
+      // Make sure there is exactly 1 vertex associated to each pfparticle
+      if(vtxAssn.size() > 1){
+        throw cet::exception("AnalysisTree:limits") << "PFParticle has " << vtxAssn.size() << " associated vertices, should only have 1 or 0 ";
+      }
+      if(vtxAssn.size() == 0) continue;
+      verticesPFParticleMaps.at(iTracker).emplace(vtxAssn.front(),pfp);
+    }
+    // Fill the vector of maps for each tracker
+    for(unsigned int i = 0; i < pfpHandle->size(); ++i) {
+      const art::Ptr< recob::PFParticle > pfp( pfpHandle, i );
+
+      std::vector< art::Ptr<recob::Track> >  trkAssn = fmtrk.at(pfp.key());
+      if(trkAssn.size()  > 1){
+        throw cet::exception("AnalysisTree:limits") << "PFParticle has " << trkAssn.size() << " associated tracks, should only have 1 or 0 ";
+      }
+      if(trkAssn.size() == 0) continue;
+      trackerPFParticleMaps.at(iTracker).emplace(trkAssn.front(),pfp);
+    }
+  }// end loop over trackers
+
+  if(fSaveShowerHierarchyInfo){
     art::Handle< std::vector<recob::PFParticle> > pfpHandle;
     if(!evt.getByLabel(fPFParticleModuleLabel,pfpHandle)){
       if(!pfpHandle->size())
@@ -2152,25 +2311,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     if(pfpHandle->size()){
       art::fill_ptr_vector(pfplist, pfpHandle);
       lar_pandora::LArPandoraHelper::BuildPFParticleMap(pfplist, pfpmap);
-
-      // Vertex, shower and track associations
-      art::FindManyP<recob::Vertex> fvtx(pfpHandle, evt, fVertexModuleLabel);
+  
       art::FindManyP<recob::Shower> fshw(pfpHandle, evt, fShowerModuleLabel);
-
-      for(unsigned int i = 0; i < pfpHandle->size(); ++i) {
-        art::Ptr< recob::PFParticle > pfp( pfpHandle, i );
-
-        // Get vertex association
-        std::vector< art::Ptr<recob::Vertex> > vtxAssn = fvtx.at(pfp->Self());
-
-        // Make sure there is exactly 1 vertex associated to each pfparticle
-        if(vtxAssn.size()  > 1){
-          mf::LogError("AnalysisTree:limits") << "PFParticle has " << vtxAssn.size() << " associated vertices, should only have 1 or 0 ";
-          continue;
-        }
-        if(vtxAssn.size() == 0) continue;
-        vertexPFParticleMap.emplace(vtxAssn[0],pfp);
-      }
       for(unsigned int i = 0; i < pfpHandle->size(); ++i) {
         art::Ptr< recob::PFParticle > pfp( pfpHandle, i );
 
@@ -2186,25 +2328,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         showerPFParticleMap.emplace(shwAssn[0],pfp);
 
       }
-      // Loop over the trackers and repeat the process, filling the vector of maps
-      for (unsigned int it = 0; it < NTrackers; ++it){
-        art::FindManyP<recob::Track> fmtrk(pfpHandle, evt, fTrackModuleLabel[it]);
-
-        for(unsigned int i = 0; i < pfpHandle->size(); ++i) {
-          art::Ptr< recob::PFParticle > pfp( pfpHandle, i );
-
-          std::vector< art::Ptr<recob::Track> >  trkAssn = fmtrk.at(pfp->Self());
-          if(trkAssn.size()  > 1){
-            mf::LogError("AnalysisTree:limits") << "PFParticle has " << trkAssn.size() << " associated tracks, should only have 1 or 0 ";
-            continue;
-          }
-          if(trkAssn.size() == 0) continue;
-          trackPFParticleMap.emplace(trkAssn[0],pfp);
-        }
-        trackerPFParticleMaps.emplace_back(trackPFParticleMap);
-      }
     }
-  }// end save maps for fSaveHierarchyInfo
+  } // save maps for SaveShowerHierarchyInfo
 
   if (evt.getByLabel(fShowerModuleLabel,showerHandle))
     art::fill_ptr_vector(shwlist, showerHandle);
@@ -2213,6 +2338,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   for (unsigned int it = 0; it < NTrackers; ++it){
     if (evt.getByLabel(fTrackModuleLabel[it],trackListHandle[it]))
       art::fill_ptr_vector(tracklist[it], trackListHandle[it]);
+    if (evt.getByLabel(fVertexModuleLabel[it],vtxListHandle[it]))
+      art::fill_ptr_vector(vtxlist[it], vtxListHandle[it]);
   }
 
   art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
@@ -2316,32 +2443,51 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
   //vertex information
   if (fSaveVertexInfo){
+    for (unsigned int iTracker=0; iTracker < NTrackers; ++iTracker){
+      AnalysisTreeDataStruct::VertexDataStruct& VertexData = fData->GetVertexData(iTracker);
+    
+      size_t NVertices = vtxlist[iTracker].size();
+      // allocate enough space for this number of tracks (but at least for one of them!)
+      VertexData.SetMaxVertices(std::max(NVertices, (size_t) 1));
+      VertexData.Clear(); // clear all the data
+    
+      VertexData.nvtx = static_cast<int>(NVertices);
+    
+      // now set the tree addresses to the newly allocated memory;
+      // this creates the tree branches in case they are not there yet
+      SetVerticesAddresses(iTracker);
+      if (NVertices > VertexData.GetMaxVertices()) {
+        // got this error? it might be a bug,
+        // since we are supposed to have allocated enough space to fit all vertices
+        mf::LogError("AnalysisTree:limits") << "event has " << NVertices
+          << " " << fVertexModuleLabel[iTracker] << " vertices, only "
+          << VertexData.GetMaxVertices() << " stored in tree";
+      }
 
-    fData->nvtx = NVertices;
-    if (NVertices > kMaxVertices){
-      // got this error? consider increasing kMaxVerticestra
-      // (or ask for a redesign using vectors)
-      mf::LogError("AnalysisTree:limits") << "event has " << NVertices
-        << " vertices, only kMaxVertices=" << kMaxVertices << " stored in tree";
-    }
-    for (size_t i = 0; i < NVertices && i < kMaxVertices ; ++i){//loop over hits
-      Double_t xyz[3] = {};
-      vtxlist[i]->XYZ(xyz);
-      for (size_t j = 0; j<3; ++j) fData->vtx[i][j] = xyz[j];
-      
-      // If also saving the hierarchy info, set the primaryvtx boolean
-      if(fSaveHierarchyInfo){
-        vtxPfpMapIt it;
-        // Check there is a map entry for this vertex
-        it = vertexPFParticleMap.find(vtxlist[i]);
-        if(it == vertexPFParticleMap.end()) continue;
+      for (size_t i = 0; i < NVertices && i < kMaxVertices ; ++i){//loop over vertices
+        art::Ptr<recob::Vertex> pvertex(vtxListHandle[iTracker], i);
+//      art::Ptr<recob::Vertex> pvertex = vtxlist[iTracker].at(i);
+        Double_t xyz[3];
+        pvertex->XYZ(xyz);
+        for (size_t j = 0; j<3; ++j){
+          VertexData.vtx[i][j] = xyz[j];
+        }
+        
+        // If also saving the hierarchy info, set the primaryvtx boolean
+        if(fSaveHierarchyInfo[iTracker]){
+          vtxPfpMap vertexPFParticleMap = verticesPFParticleMaps.at(iTracker);
+          vtxPfpMapIt it = vertexPFParticleMap.find(pvertex);
+          // Check there is a map entry for this vertex
+          
+          if(it == vertexPFParticleMap.end()) continue;
 
-        art::Ptr<recob::PFParticle> tempParticle = it->second;
-        if(tempParticle->IsPrimary())
-          fData->primaryvtx[i] = 1;
-        else fData->primaryvtx[i] = 0;
-      }// end (fSaveHierarchyInfo)
-    }
+          art::Ptr<recob::PFParticle> tempParticle = it->second;
+          if(tempParticle->IsPrimary())
+            VertexData.primaryvtx[i] = 1;
+          else VertexData.primaryvtx[i] = 0;
+        }// end (fSaveHierarchyInfo)
+      }// end loop over vertices
+    }// end loop over trackers
   }// end (fSaveVertexInfo)
   
   // shower information
@@ -2375,10 +2521,10 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       ShowerData.shwdirz[i]      = shw->Direction()[2];
       
       // If also saving the hierarchy info, set the primaryvtx boolean
-      if(fSaveHierarchyInfo){
+      if(fSaveShowerHierarchyInfo){
         shwPfpMapIt it;
         // Check there is a map entry for this vertex
-        it = showerPFParticleMap.find(shwlist[i]);
+        it = showerPFParticleMap.find(shw);
         if(it == showerPFParticleMap.end()) continue;
 
         art::Ptr<recob::PFParticle> tempParticle = it->second;
@@ -2411,6 +2557,20 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         mf::LogError("AnalysisTree:limits") << "event has " << NTracks
           << " " << fTrackModuleLabel[iTracker] << " tracks, only "
           << TrackerData.GetMaxTracks() << " stored in tree";
+      }
+      AnalysisTreeDataStruct::VertexDataStruct& VertexData = fData->GetVertexData(iTracker);
+    
+      size_t NVertices = vtxlist[iTracker].size();
+    
+      // now set the tree addresses to the newly allocated memory;
+      // this creates the tree branches in case they are not there yet
+      SetVerticesAddresses(iTracker);
+      if (NVertices > VertexData.GetMaxVertices()) {
+        // got this error? it might be a bug,
+        // since we are supposed to have allocated enough space to fit all tracks
+        mf::LogError("AnalysisTree:limits") << "event has " << NVertices
+          << " " << fVertexModuleLabel[iTracker] << " vertices, only "
+          << VertexData.GetMaxVertices() << " stored in tree";
       }
     
       //call the track momentum algorithm that gives you momentum based on track range
@@ -2528,13 +2688,13 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         */
         Float_t minsdist = 10000;
         Float_t minedist = 10000;
-        for (int ivx = 0; ivx < fData->nvtx && ivx < kMaxVertices; ++ivx){
-          Float_t sdist = sqrt(pow(TrackerData.trkstartx[iTrk]-fData->vtx[ivx][0],2)+
-                               pow(TrackerData.trkstarty[iTrk]-fData->vtx[ivx][1],2)+
-                               pow(TrackerData.trkstartz[iTrk]-fData->vtx[ivx][2],2));
-          Float_t edist = sqrt(pow(TrackerData.trkendx[iTrk]-fData->vtx[ivx][0],2)+
-                               pow(TrackerData.trkendy[iTrk]-fData->vtx[ivx][1],2)+
-                               pow(TrackerData.trkendz[iTrk]-fData->vtx[ivx][2],2));
+        for (int ivx = 0; ivx < VertexData.nvtx && ivx < kMaxVertices; ++ivx){
+          Float_t sdist = sqrt(pow(TrackerData.trkstartx[iTrk]-VertexData.vtx[ivx][0],2)+
+                               pow(TrackerData.trkstarty[iTrk]-VertexData.vtx[ivx][1],2)+
+                               pow(TrackerData.trkstartz[iTrk]-VertexData.vtx[ivx][2],2));
+          Float_t edist = sqrt(pow(TrackerData.trkendx[iTrk]-VertexData.vtx[ivx][0],2)+
+                               pow(TrackerData.trkendy[iTrk]-VertexData.vtx[ivx][1],2)+
+                               pow(TrackerData.trkendz[iTrk]-VertexData.vtx[ivx][2],2));
           if (sdist<minsdist){
             minsdist = sdist;
             if (minsdist<10) TrackerData.trksvtxid[iTrk] = ivx;
@@ -2663,11 +2823,12 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           }
         }//end if (isMC)
         // If saving the hierarchy info
-        if(fSaveHierarchyInfo){
+        if(fSaveHierarchyInfo[iTracker]){
+          trkPfpMap trackPFParticleMap = trackerPFParticleMaps[iTracker];
           trkPfpMapIt it;
           // Check there is a map entry for this vertex
-          it = trackerPFParticleMaps[iTracker].find(ptrack);
-          if(it == trackerPFParticleMaps[iTracker].end()) continue;
+          it = trackPFParticleMap.find(ptrack);
+          if(it == trackPFParticleMap.end()) continue;
 
           art::Ptr<recob::PFParticle> tempParticle = it->second;
           // Get information, find the neutrino and then call its daughters 
