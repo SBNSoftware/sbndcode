@@ -1,7 +1,7 @@
 BEGIN_PROLOG
 
 sbnd_crtsim: {
-  module_type: "CRTDetSim"
+  module_type: "sbndcode/CRT/CRTDetSim"
   G4ModuleLabel: "largeant"
 
   // Global timing offset [ns]
