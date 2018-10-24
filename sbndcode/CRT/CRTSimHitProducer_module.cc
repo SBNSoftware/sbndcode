@@ -76,8 +76,6 @@ namespace sbnd {
     uint32_t channel; 
     double x; 
     double ex; 
-    int id1; 
-    int id2; 
     double pes;
     std::pair<std::string, unsigned> tagger;
   };
@@ -114,7 +112,9 @@ namespace sbnd {
 
     bool CheckModuleOverlap(uint32_t channel);
 
-    crt::CRTHit FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, double x, double ex, double y, double ey, double z, double ez, std::string tagger); 
+    crt::CRTHit FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, 
+                           std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, 
+                           double x, double ex, double y, double ey, double z, double ez, std::string tagger); 
 
   private:
 
@@ -210,6 +210,7 @@ namespace sbnd {
         if(!(t1 >= -driftTimeTicks && t1 <= readoutWindow)) continue;
       }
 
+      // Get strip info from the geometry service
       uint32_t channel = crtList[i]->Channel();
       int strip = (channel >> 1) & 15;
       int module = (channel >> 5);
@@ -219,9 +220,6 @@ namespace sbnd {
       double width = 2*stripGeo.HalfWidth1();
 
       std::pair<std::string,unsigned> tagger = ChannelToTagger(channel);
-      
-      int id1 = crtList[i]->TrackID();
-      int id2 = crtList[i+1]->TrackID(); 
 
       // Get the time of hit on the second SiPM
       double t2 = (double)(int)crtList[i+1]->T0()/8.;
@@ -236,7 +234,7 @@ namespace sbnd {
       double ex = 1.92380e+00+1.47186e-02*normx-5.29446e-03*normx*normx;
       double time = (t1 + t2)/2.;
 
-      CRTStrip stripHit = {time, channel, x, ex, id1, id2, npe1+npe2, tagger};
+      CRTStrip stripHit = {time, channel, x, ex, npe1+npe2, tagger};
       taggerStrips[tagger].push_back(stripHit);
 
     }
@@ -287,12 +285,14 @@ namespace sbnd {
               // Average the time
               double time = (t0_1 + t0_2)/2;
               // Create a CRT hit
-              crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
+              crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), 
+                                              mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
               CRTHitcol->push_back(crtHit);
               nHits++;
             }
           }
         }
+        // If module doesn't overlap with a perpendicular one create 1D hits
         else{
           TVector3 mean((limits1[0] + limits1[1])/2., 
                         (limits1[2] + limits1[3])/2., 
@@ -302,14 +302,17 @@ namespace sbnd {
                          std::abs((limits1[5] - limits1[4])/2.));
           double time = tagStrip.second[hit_i].t0;
           // Just use the single plane limits as the crt hit
-          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
+          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), 
+                                          mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
           CRTHitcol->push_back(crtHit);
           nHits++;
         }
       }
+      // Loop over tagger modules on the perpendicular plane to look for 1D hits
       for (size_t hit_j = 0; hit_j < taggerStrips[otherPlane].size(); hit_j++){
         // Get the limits in the two variable directions
         std::vector<double> limits1 = ChannelToLimits(taggerStrips[otherPlane][hit_j]);
+        // Check if module overlaps with a perpendicular one
         if(!CheckModuleOverlap(taggerStrips[otherPlane][hit_j].channel)){
           TVector3 mean((limits1[0] + limits1[1])/2., 
                         (limits1[2] + limits1[3])/2., 
@@ -319,7 +322,8 @@ namespace sbnd {
                          std::abs((limits1[5] - limits1[4])/2.));
           double time = taggerStrips[otherPlane][hit_j].t0;
           // Just use the single plane limits as the crt hit
-          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
+          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), 
+                                          mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
           CRTHitcol->push_back(crtHit);
           nHits++;
         }
@@ -374,7 +378,7 @@ namespace sbnd {
     return null;
   } // CRTRecoAna::CRTOverlap()
 
-    std::pair<std::string,unsigned> CRTSimHitProducer::ChannelToTagger(uint32_t channel){
+  std::pair<std::string,unsigned> CRTSimHitProducer::ChannelToTagger(uint32_t channel){
     int strip = (channel >> 1) & 15;
     int module = (channel >> 5);
     std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
@@ -481,26 +485,27 @@ namespace sbnd {
     return hasOverlap;
   }
 
-  crt::CRTHit CRTSimHitProducer::FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, double x, double ex, double y, double ey, double z, double ez, std::string tagger){
+  crt::CRTHit CRTSimHitProducer::FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, 
+                                            std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, 
+                                            double x, double ex, double y, double ey, double z, double ez, std::string tagger){
     crt::CRTHit crtHit;
-    crtHit.feb_id = tfeb_id;
-    crtHit.pesmap = tpesmap;
-    crtHit.peshit = peshit;
-    crtHit.ts0_s_corr = 0;
-    crtHit.ts0_ns = time * 0.5 * 10e3;
+    crtHit.feb_id      = tfeb_id;
+    crtHit.pesmap      = tpesmap;
+    crtHit.peshit      = peshit;
+    crtHit.ts0_s_corr  = 0;
+    crtHit.ts0_ns      = time * 0.5 * 10e3;
     crtHit.ts0_ns_corr = 0;
-    crtHit.ts1_ns = time * 0.5 * 10e3;
-    crtHit.ts0_s = time * 0.5 * 10e-6; 
-    crtHit.x_pos = x;
-    crtHit.x_err = ex;
-    crtHit.y_pos = y; 
-    crtHit.y_err = ey;
-    crtHit.z_pos = z;
-    crtHit.z_err = ez;
-    crtHit.tagger = tagger;
+    crtHit.ts1_ns      = time * 0.5 * 10e3;
+    crtHit.ts0_s       = time * 0.5 * 10e-6; 
+    crtHit.x_pos       = x;
+    crtHit.x_err       = ex;
+    crtHit.y_pos       = y; 
+    crtHit.y_err       = ey;
+    crtHit.z_pos       = z;
+    crtHit.z_err       = ez;
+    crtHit.tagger      = tagger;
     return crtHit;
   }
-
 
   DEFINE_ART_MODULE(CRTSimHitProducer)
 
