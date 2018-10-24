@@ -20,6 +20,24 @@
   <class name="std::map< uint8_t, uint16_t >"/>
   <class name="std::map< unsigned char, std::vector< std::pair<int,float> > > "/>
 
+  <class name="sbnd::crt::CRTTzero" ClassVersion="10">
+   <version ClassVersion="10" checksum="4009481135"/>
+  </class>
+  <class name="std::vector<sbnd::crt::CRTTzero>"/>
+  <class name="art::Wrapper< std::vector<sbnd::crt::CRTTzero> >"/>
+
+  <class name="sbnd::crt::CRTTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="2681413750"/>
+  </class>
+  <class name="std::vector<sbnd::crt::CRTTrack>"/>
+  <class name="art::Wrapper< std::vector<sbnd::crt::CRTTrack> >"/>
+
   <!-- associations  -->
+
+ <class name="art::Assns<sbnd::crt::CRTTzero, sbnd::crt::CRTHit,    void>"           />
+ <class name="art::Wrapper< art::Assns<sbnd::crt::CRTTzero, sbnd::crt::CRTHit, void> >"           />
+
+ <class name="art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTzero,    void>"           />
+ <class name="art::Wrapper< art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTzero, void> >"           />
 
 </lcgdict>
