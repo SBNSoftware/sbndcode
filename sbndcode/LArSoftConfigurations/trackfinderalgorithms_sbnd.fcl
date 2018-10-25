@@ -18,6 +18,8 @@ sbnd_pmalgtracker: {
 
   RunVertexing:  true
   FlipToBeam:    true
+
+  MatchT0inAPACrossing: true
 } # sbnd_pmalgtracker
 
 # this bundle an be added as a @table to override all algoritms configurations at once
