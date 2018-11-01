@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 standard_crtsimhitproducer:
 {
-    module_type:          "CRTSimHitProducer"
+    module_type:          "sbndcode/CRT/CRTSimHitProducer"
     CrtModuleLabel:       "crt"
     Verbose:              false
     TimeCoincidenceLimit: 0.15  # Minimum time between two overlapping hit crt strips
