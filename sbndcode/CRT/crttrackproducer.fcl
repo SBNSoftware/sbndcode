@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 standard_crttrackproducer:
 {
-    module_type:          "CRTTrackProducer"
+    module_type:          "sbndcode/CRT/CRTTrackProducer"
     data_label_hits:      "crthit"
     data_label_tzeros:    "crttzero"
     track_method_type:    4    # method 1 = all, method 2 = ave, method 3 = pure, method 4 = multi-hit
