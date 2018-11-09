@@ -2610,8 +2610,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         art::Ptr<recob::Track> ptrack(trackListHandle[iTracker], iTrk);
         const recob::Track& track = *ptrack;
 
-        //TVector3 pos, dir_start, dir_end, end;        
-
         double tlen = 0.; 
         double mom = 0.;
         int TrackID = -1;
