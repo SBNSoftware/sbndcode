@@ -797,7 +797,7 @@ namespace sbnd {
     void   HitsPurity(std::vector< art::Ptr<recob::Hit> > const& hits, Int_t& trackid, Float_t& purity, double& maxe);
     double length(const recob::Track& track);
     double length(const simb::MCParticle& part, TVector3& start, TVector3& end);
-    double bdist(const TVector3& pos);
+    double bdist(const recob::Track::Point_t& pos);
 
     TTree* fTree;
 
@@ -2610,7 +2610,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         art::Ptr<recob::Track> ptrack(trackListHandle[iTracker], iTrk);
         const recob::Track& track = *ptrack;
 
-        TVector3 pos, dir_start, dir_end, end;        
+        //TVector3 pos, dir_start, dir_end, end;        
 
         double tlen = 0.; 
         double mom = 0.;
@@ -2618,10 +2618,10 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
  
         int ntraj = track.NumberTrajectoryPoints();
         if (ntraj > 0) {
-          pos       = track.Vertex();
-          dir_start = track.VertexDirection();
-          dir_end   = track.EndDirection();
-          end       = track.End();
+          const auto& pos       = track.Vertex();
+          const auto& dir_start = track.VertexDirection();
+          const auto& dir_end   = track.EndDirection();
+          const auto& end       = track.End();
 
           tlen        = length(track);
           if(track.HasMomentum() > 0)
@@ -3279,7 +3279,7 @@ void sbnd::AnalysisTree::HitsPurity(std::vector< art::Ptr<recob::Hit> > const& h
 }
 
 // Calculate distance to boundary.
-double sbnd::AnalysisTree::bdist(const TVector3& pos)
+double sbnd::AnalysisTree::bdist(const recob::Track::Point_t& pos)
 {
   // Get geometry.
   art::ServiceHandle<geo::Geometry> geom;
@@ -3298,17 +3298,7 @@ double sbnd::AnalysisTree::bdist(const TVector3& pos)
 // Length of reconstructed track, trajectory by trajectory.
 double sbnd::AnalysisTree::length(const recob::Track& track)
 {
-  double result = 0.;
-  TVector3 disp = track.LocationAtPoint(0);
-  int n = track.NumberTrajectoryPoints();
-
-  for(int i = 1; i < n; ++i) {
-    const TVector3& pos = track.LocationAtPoint(i);
-    disp -= pos;
-    result += disp.Mag();
-    disp = pos;
-  }
-  return result;
+  return track.Length();
 }
 
 // Length of MC particle, trajectory by trajectory.
