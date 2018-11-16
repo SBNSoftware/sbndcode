@@ -169,7 +169,7 @@ void CRTTrackProducer::produce(art::Event & evt)
   if(track_method_type_ == 4){
     //Get the hits from the event
     std::vector<art::Ptr<crt::CRTHit> > hitlist;
-    if (evt.getByLabel(data_label_hits_,rawHandle))
+    if (evt.getByLabel(data_label_hits_, rawHandle))
       art::fill_ptr_vector(hitlist, rawHandle);
 
     std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTzeroVect;
@@ -544,7 +544,7 @@ crt::CRTTrack CRTTrackProducer::FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2,
   newtr.ts0_ns_err_h2 = hit2.ts0_ns_corr;
   newtr.ts0_ns        = (uint32_t)((hit1.ts0_ns + hit2.ts0_ns)/2.);
   newtr.ts0_ns_err    = (uint16_t)(sqrt(hit1.ts0_ns_corr*hit1.ts0_ns_corr + hit2.ts0_ns_corr*hit2.ts0_ns_corr)/2.);
-  newtr.ts1_ns        = (int32_t)((hit1.ts1_ns + hit2.ts1_ns)/2.);
+  newtr.ts1_ns        = (int32_t)(((double)(int)hit1.ts1_ns + (double)(int)hit2.ts1_ns)/2.);
   newtr.ts1_ns_err    = (uint16_t)(sqrt(hit1.ts0_ns_corr*hit1.ts0_ns_corr + hit2.ts0_ns_corr*hit2.ts0_ns_corr)/2.);
   newtr.peshit        = hit1.peshit+hit2.peshit;
   newtr.x1_pos        = hit1.x_pos;
@@ -621,8 +621,6 @@ crt::CRTHit CRTTrackProducer::DoAverage(std::vector<art::Ptr<crt::CRTHit>> hits)
   double xmax = -99999; double xmin = 99999;
   double ymax = -99999; double ymin = 99999;
   double zmax = -99999; double zmin = 99999;
-  double ts0_s = 0.;
-  double ts0_ns = 0.;
   double ts1_ns = 0.;
   int nhits = 0;
 
@@ -632,9 +630,7 @@ crt::CRTHit CRTTrackProducer::DoAverage(std::vector<art::Ptr<crt::CRTHit>> hits)
     xpos += hit->x_pos;
     ypos += hit->y_pos;
     zpos += hit->z_pos;
-    ts0_s += hit->ts0_s;
-    ts0_ns += hit->ts0_ns;
-    ts1_ns += hit->ts1_ns;
+    ts1_ns += (double)(int)hit->ts1_ns;
     // For the errors get the maximum limits
     if(hit->x_pos + hit->x_err > xmax) xmax = hit->x_pos + hit->x_err;
     if(hit->x_pos - hit->x_err < xmin) xmin = hit->x_pos - hit->x_err;
@@ -647,7 +643,7 @@ crt::CRTHit CRTTrackProducer::DoAverage(std::vector<art::Ptr<crt::CRTHit>> hits)
   }
   // Create a hit
   crt::CRTHit crtHit = FillCrtHit(hits[0]->feb_id, hits[0]->pesmap, hits[0]->peshit, 
-                                  (ts0_ns/nhits)/(0.5*10e3), xpos/nhits, (xmax-xmin)/2, 
+                                  (ts1_ns/nhits)/(0.5*10e3), xpos/nhits, (xmax-xmin)/2, 
                                   ypos/nhits, (ymax-ymin)/2., zpos/nhits, (zmax-zmin)/2., tagger);
   return crtHit;
 }
@@ -681,7 +677,7 @@ std::vector<crt::CRTTrack> CRTTrackProducer::CreateTracks(std::vector<crt::CRTHi
 
   //Sort map by distance
   std::sort(hitPairDist.begin(), hitPairDist.end(), [](auto& left, auto& right){
-              return left.second > right.second;});
+            return left.second > right.second;});
 
   //Store potential hit collections + distance along 1D hit
   std::vector<std::pair<std::vector<size_t>, double>> tracks;

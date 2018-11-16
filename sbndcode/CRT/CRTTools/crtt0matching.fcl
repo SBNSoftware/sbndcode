@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+standard_crtt0matching:
+{
+    module_type:         "sbndcode/CRT/CRTTools/CRTT0Matching"
+    CrtHitModuleLabel:   "crthit"
+    TpcTrackModuleLabel: "pmalgtrackmaker"
+    DistanceLimit:       40.
+    MinTrackLength:      20.
+    TrackDirectionFrac:   0.5
+    Verbose:             true
+}
+
+END_PROLOG
