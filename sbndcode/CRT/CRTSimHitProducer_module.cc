@@ -113,7 +113,7 @@ namespace sbnd {
     bool CheckModuleOverlap(uint32_t channel);
 
     crt::CRTHit FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, 
-                           std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, 
+                           std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, int plane, 
                            double x, double ex, double y, double ey, double z, double ez, std::string tagger); 
 
   private:
@@ -285,7 +285,7 @@ namespace sbnd {
               // Average the time
               double time = (t0_1 + t0_2)/2;
               // Create a CRT hit
-              crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), 
+              crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, 0, mean.X(), error.X(), 
                                               mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
               CRTHitcol->push_back(crtHit);
               nHits++;
@@ -302,7 +302,7 @@ namespace sbnd {
                          std::abs((limits1[5] - limits1[4])/2.));
           double time = tagStrip.second[hit_i].t0;
           // Just use the single plane limits as the crt hit
-          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), 
+          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, 0, mean.X(), error.X(), 
                                           mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
           CRTHitcol->push_back(crtHit);
           nHits++;
@@ -322,7 +322,7 @@ namespace sbnd {
                          std::abs((limits1[5] - limits1[4])/2.));
           double time = taggerStrips[otherPlane][hit_j].t0;
           // Just use the single plane limits as the crt hit
-          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, mean.X(), error.X(), 
+          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, 0, time, 0, mean.X(), error.X(), 
                                           mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
           CRTHitcol->push_back(crtHit);
           nHits++;
@@ -486,7 +486,7 @@ namespace sbnd {
   }
 
   crt::CRTHit CRTSimHitProducer::FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, 
-                                            std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, 
+                                            std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, int plane, 
                                             double x, double ex, double y, double ey, double z, double ez, std::string tagger){
     crt::CRTHit crtHit;
     crtHit.feb_id      = tfeb_id;
@@ -497,6 +497,7 @@ namespace sbnd {
     crtHit.ts0_ns_corr = 0;
     crtHit.ts1_ns      = time * 0.5 * 10e3;
     crtHit.ts0_s       = time * 0.5 * 10e-6; 
+    crtHit.plane       = plane;
     crtHit.x_pos       = x;
     crtHit.x_err       = ex;
     crtHit.y_pos       = y; 
