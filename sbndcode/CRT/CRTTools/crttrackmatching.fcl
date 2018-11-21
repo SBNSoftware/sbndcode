@@ -5,7 +5,9 @@ standard_crttrackmatching:
     module_type:         "sbndcode/CRT/CRTTools/CRTTrackMatching"
     CrtTrackModuleLabel: "crttrack"
     TpcTrackModuleLabel: "pmalgtrackmaker"
-    Verbose:             true
+    Verbose:             false
+    MaxAngleDiff:        0.15
+    MaxDistance:         60.
 }
 
 END_PROLOG

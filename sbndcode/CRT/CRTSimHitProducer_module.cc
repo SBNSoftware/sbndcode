@@ -65,7 +65,6 @@
 
 namespace {
   // Local namespace for local functions
-
     
 }
 
@@ -129,6 +128,7 @@ namespace sbnd {
     // Other variables shared between different methods.
     geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
+    detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
     art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
     const geo::AuxDetGeometry* fAuxDetGeo;
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;
@@ -145,6 +145,7 @@ namespace sbnd {
     // Get a pointer to the geometry service provider
     fGeometryService = lar::providerFrom<geo::Geometry>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
+    fDetectorClocks     = lar::providerFrom<detinfo::DetectorClocksService>(); 
     fAuxDetGeo = &(*fAuxDetGeoService);
     fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
 
@@ -493,10 +494,10 @@ namespace sbnd {
     crtHit.pesmap      = tpesmap;
     crtHit.peshit      = peshit;
     crtHit.ts0_s_corr  = 0;
-    crtHit.ts0_ns      = time * 0.5 * 10e3;
+    crtHit.ts0_ns      = time * 0.5e3;
     crtHit.ts0_ns_corr = 0;
-    crtHit.ts1_ns      = time * 0.5 * 10e3;
-    crtHit.ts0_s       = time * 0.5 * 10e-6; 
+    crtHit.ts1_ns      = time * 0.5e3;
+    crtHit.ts0_s       = time * 0.5e-6; 
     crtHit.x_pos       = x;
     crtHit.x_err       = ex;
     crtHit.y_pos       = y; 

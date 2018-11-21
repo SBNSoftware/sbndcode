@@ -137,10 +137,10 @@ namespace sbnd {
   {
     fTpcTrackModuleLabel = (p.get<art::InputTag> ("TpcTrackModuleLabel"));
     fCrtHitModuleLabel   = (p.get<art::InputTag> ("CrtHitModuleLabel")); 
-    fDistanceLimit       = (p.get<double> ("DistanceLimit")); 
-    fMinTrackLength      = (p.get<double> ("MinTrackLength")); 
-    fTrackDirectionFrac   = (p.get<double> ("TrackDirectionFrac")); 
-    fVerbose             = (p.get<bool> ("Verbose"));
+    fDistanceLimit       = (p.get<double>        ("DistanceLimit")); 
+    fMinTrackLength      = (p.get<double>        ("MinTrackLength")); 
+    fTrackDirectionFrac  = (p.get<double>        ("TrackDirectionFrac")); 
+    fVerbose             = (p.get<bool>          ("Verbose"));
   }
 
   void CRTT0Matching::beginJob()
@@ -268,7 +268,7 @@ namespace sbnd {
           if(fVerbose) std::cout<<"Best time = "<<bestTime<<", bestDist = "<<bestDist<<"\n";
         }
 
-        T0col->push_back(anab::T0(bestTime * 2e3, 0, trackList[track_i]->ID(), (*T0col).size(), bestDist));
+        T0col->push_back(anab::T0(bestTime * 2e3, 0, trackList[track_i]->ID(), (*T0col).size(), bestDist)); //FIXME
         util::CreateAssn(*this, event, *T0col, trackList[track_i], *Trackassn);
 
       } // Loop over tracks  
