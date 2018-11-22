@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+standard_crttrackmatching:
+{
+    module_type:         "sbndcode/CRT/CRTTools/CRTTrackMatching"
+    CrtTrackModuleLabel: "crttrack"         # name of track producer
+    TpcTrackModuleLabel: "pmalgtrackmaker"  # name of crt producer
+    Verbose:             false              # print info
+    MaxAngleDiff:        0.15               # max difference between CRT and TPC angles
+    MaxDistance:         60.                # max distance between CRT and TPC start/end positions
+}
+
+END_PROLOG

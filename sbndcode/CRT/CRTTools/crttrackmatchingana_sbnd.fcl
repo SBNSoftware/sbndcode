@@ -1,16 +1,16 @@
-# A script to run an analysis module: CRTRecoAna
+# A script to run an analysis module: CRTTrackMatchingAna
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
 
-process_name: CRTRecoAna
+process_name: CRTTrackMatchingAna
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "crtrecoana.root" }
+  TFileService:           { fileName: "crttrackmatchingana.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -46,34 +46,26 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CRTRecoAna: 
+    CRTTrackMatchingAna: 
     {
       # The "module_type" tells us which module to run. The name here
       # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CRT/CRTRecoAna"
+      module_type:     "sbndcode/CRT/CRTTools/CRTTrackMatchingAna"
 
       # The input parameters
-      SimModuleLabel:       "largeant"  # Simulation producer module label
-      CRTModuleLabel:       "crt"       # CRT producer module label
-      Verbose:              true        # Print extra information about what's going on
-      VeryVerbose:          true        # Print detailed information about every muon
-      Plot:                 true        # Draw truth and reco tracks in event
-      PlotTrackID:          165         # ID of true track to plot
-      # Hit reconstruction
-      TimeCoincidenceLimit: 0.15        # Minimum time between two overlapping hit crt strips
-      QPed:                 63.6        # Pedestal offset [ADC]
-      QSlope:               131.9       # Pedestal slope [ADC/photon]
-      UseReadoutWindow:     true        # Only reconstruct hits within readout window
-      # Track reconstruction
-      TimeLimit:            0.2         # Maximum time difference to combine hits into a tzero [us]
-      AverageHitDistance:   30.         # Maximum distance to avarage hits on the same tagger over [cm]
-      DistanceLimit:        25.         # Maximum distance from CRTTrack to absorb a new CRTHit [cm]
-      UseTopPlane:          true        # Use hits from the top plane (SBND specific)
+      SimModuleLabel:      "largeant"        # Simulation producer module label
+      CrtTrackModuleLabel: "crttrack"        # CRT track producer module label
+      TpcTrackModuleLabel: "pmalgtrackmaker" # TPC track producer module label
+      Verbose:             false             # Print extra information about what's going on
+      MaxAngleDiff:        0.15              # Max difference between CRT and TPC track angles [rad]
+      MaxDistance:         60                # Max distance between CRT and TPC start/end positions [cm]
+      Plot:                false             # Plot what's going on
+      PlotID:              -1                # TPC track ID to plot (-1 for all)
     }
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ CRTRecoAna ]
+  analysis: [ CRTTrackMatchingAna ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.
