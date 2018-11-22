@@ -181,9 +181,9 @@ namespace sbnd {
   void CRTSimHitProducer::produce(art::Event & event)
   {
 
-    std::vector<uint8_t> tfeb_id = {0}; //FIXME
-    std::map<uint8_t, std::vector<std::pair<int,float>>> tpesmap; //FIXME
-    tpesmap[0] = {std::make_pair(0,0)}; //FIXME
+    std::vector<uint8_t> tfeb_id = {0};
+    std::map<uint8_t, std::vector<std::pair<int,float>>> tpesmap;
+    tpesmap[0] = {std::make_pair(0,0)};
 
     int nHits = 0;
 
@@ -195,7 +195,7 @@ namespace sbnd {
 
     // Detector properties
     double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = 2.0*(2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); //FIXME
+    double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity());
 
     // Retrieve list of CRT hits
     art::Handle< std::vector<crt::CRTData>> crtListHandle;
@@ -215,7 +215,7 @@ namespace sbnd {
     // Loop over all the SiPM hits in 2 (should be in pairs due to trigger)
     for (size_t i = 0; i < crtList.size(); i+=2){
       // Get the time, channel, center and width
-      double t1 = (double)(int)crtList[i]->T0()/8.; //FIXME? units?
+      double t1 = (double)(int)crtList[i]->T0()/8.; // [ticks]
 
       if(fUseReadoutWindow){
         if(!(t1 >= -driftTimeTicks && t1 <= readoutWindow)) continue;
@@ -570,11 +570,11 @@ namespace sbnd {
     crtHit.feb_id      = tfeb_id;
     crtHit.pesmap      = tpesmap;
     crtHit.peshit      = peshit;
-    crtHit.ts0_s_corr  = 0; //FIXME
-    crtHit.ts0_ns      = time * 0.5e3; //FIXME
-    crtHit.ts0_ns_corr = 0; //FIXME
-    crtHit.ts1_ns      = time * 0.5e3; //FIXME
-    crtHit.ts0_s       = time * 0.5e-6; //FIXME
+    crtHit.ts0_s_corr  = 0; 
+    crtHit.ts0_ns      = fDetectorClocks->TPCTick2Time(time) * 1e3;
+    crtHit.ts0_ns_corr = 0; 
+    crtHit.ts1_ns      = fDetectorClocks->TPCTick2Time(time) * 1e3;
+    crtHit.ts0_s       = fDetectorClocks->TPCTick2Time(time) * 1e-6;
     crtHit.x_pos       = x;
     crtHit.x_err       = ex;
     crtHit.y_pos       = y; 

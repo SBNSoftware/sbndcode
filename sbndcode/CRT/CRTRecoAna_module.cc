@@ -18,6 +18,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
@@ -302,6 +303,7 @@ namespace sbnd {
     // Other variables shared between different methods.
     geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
+    detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
     art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
     const geo::AuxDetGeometry* fAuxDetGeo;
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;
@@ -358,6 +360,7 @@ namespace sbnd {
     // Get a pointer to the fGeometryServiceetry service provider
     fGeometryService = lar::providerFrom<geo::Geometry>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
+    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
     fAuxDetGeo = &(*fAuxDetGeoService);
     fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
   }
@@ -436,7 +439,7 @@ namespace sbnd {
 
     // Detector properties
     double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = 2.0*(2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); //FIXME
+    double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity());
 
     // Store the true x (CRT width direction) and y (CRT length direction) crossing points
     std::vector<TVector3> *taggerXYZ = new std::vector<TVector3>[nTaggers];
@@ -451,7 +454,7 @@ namespace sbnd {
     std::vector<simb::MCParticle> particles;
     for (auto const& particle: (*particleHandle)){
       int partId = particle.TrackId();
-      double pt = 2.*(particle.T()*1e-9)/(1e-6); //FIXME
+      double pt = fDetectorClocks->TPCG4Time2Tick(particle.T());
       // Check particle is a muon
       int pdg = std::abs(particle.PdgCode());
       if(pdg != 13){ muonIDs.push_back(partId); continue;}
@@ -499,7 +502,7 @@ namespace sbnd {
     // Loop over all the SiPM hits in 2 (should be in pairs due to trigger)
     for (size_t i = 0; i < crtList.size(); i+=2){
       // Get the time, channel, center and width
-      double t1 = (double)(int)crtList[i]->T0()/8.; // FIXME
+      double t1 = (double)(int)crtList[i]->T0()/8.; // [ticks]
       uint32_t channel = crtList[i]->Channel();
       int strip = (channel >> 1) & 15;
       int module = (channel >> 5);
@@ -526,7 +529,7 @@ namespace sbnd {
       truthMatch[id2].sipmHits.push_back(std::make_pair(tagger, crtList[i+1]));
 
       // Get the time of hit on the second SiPM
-      double t2 = (double)(int)crtList[i+1]->T0()/8.; // FIXME
+      double t2 = (double)(int)crtList[i+1]->T0()/8.; // [ticks]
       // Calculate the number of photoelectrons at each SiPM
       double npe1 = ((double)crtList[i]->ADC() - fQPed)/fQSlope;
       double npe2 = ((double)crtList[i+1]->ADC() - fQPed)/fQSlope;
@@ -603,7 +606,7 @@ namespace sbnd {
                              std::abs((overlap[3] - overlap[2])/2.), 
                              std::abs((overlap[5] - overlap[4])/2.));
               // Average the time
-              double time = (t0_1 + t0_2)/2;
+              double time = fDetectorClocks->TPCTick2Time((t0_1 + t0_2)/2);
               // Create a CRT hit
               // If the PID matches one of the true crossing particles calculate the resolution
               std::vector<int> ids = {tagStrip.second[hit_i].id1, 
@@ -615,7 +618,7 @@ namespace sbnd {
               ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
               CRTHit crtHit = {tagStrip.first.first, mean.X(), mean.Y(), mean.Z(), 
                                error.X(), error.Y(), error.Z(), 
-                               time*0.5*1e-6, time*0.5*1e3, time*0.5*1e3, ids}; //FIXME
+                               time*1e-6, time*1e3, time*1e3, ids};
               crtHits.push_back(crtHit);
 
               int tag_i = nameToInd[tagStrip.first.first];
@@ -646,7 +649,7 @@ namespace sbnd {
                          std::abs((limits1[3] - limits1[2])/2.), 
                          std::abs((limits1[5] - limits1[4])/2.));
           nHits++;
-          double time = tagStrip.second[hit_i].t0;
+          double time = fDetectorClocks->TPCTick2Time(tagStrip.second[hit_i].t0);
           // Just use the single plane limits as the crt hit
           // If the PID matches calculate the resolution
           std::vector<int> ids = {tagStrip.second[hit_i].id1, tagStrip.second[hit_i].id2};
@@ -655,7 +658,7 @@ namespace sbnd {
           ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
           CRTHit crtHit = {tagStrip.first.first, mean.X(), mean.Y(), mean.Z(), 
                            error.X(), error.Y(), error.Z(), 
-                           time*0.5*1e-6, time*0.5*1e3, time*0.5*1e3, ids}; //FIXME
+                           time*1e-6, time*1e3, time*1e3, ids};
           crtHits.push_back(crtHit);
 
           int tag_i = nameToInd[tagStrip.first.first];
@@ -688,7 +691,7 @@ namespace sbnd {
                          std::abs((limits1[3] - limits1[2])/2.), 
                          std::abs((limits1[5] - limits1[4])/2.));
           nHits++;
-          double time = taggerStrips[otherPlane][hit_j].t0;
+          double time = fDetectorClocks->TPCTick2Time(taggerStrips[otherPlane][hit_j].t0);
           // Just use the single plane limits as the crt hit
           // If the PID matches calculate the resolution
           std::vector<int> ids = {taggerStrips[otherPlane][hit_j].id1, taggerStrips[otherPlane][hit_j].id2};
@@ -697,7 +700,7 @@ namespace sbnd {
           ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
           CRTHit crtHit = {otherPlane.first, mean.X(), mean.Y(), mean.Z(), 
                            error.X(), error.Y(), error.Z(), 
-                           time*0.5*1e-6, time*0.5*1e3, time*0.5*1e3, ids}; //FIXME
+                           time*1e-6, time*1e3, time*1e3, ids};
           crtHits.push_back(crtHit);
 
           int tag_i = nameToInd[tagStrip.first.first];
@@ -756,8 +759,8 @@ namespace sbnd {
           if(iflag[j]==0){
             // If ts1_ns - ts1_ns < diff then put them in a vector
             double time_ns_B = crtHits[j].ts1_ns;
-            double diff = std::abs(time_ns_B - time_ns_A)/(0.5*1e3); // FIXME
-            if(diff < fTimeLimit){ // FIXME
+            double diff = fDetectorClocks->TPCG4Time2Tick(std::abs(time_ns_B - time_ns_A));
+            if(diff < fTimeLimit){
               iflag[j]=1;
               CRTTzero.push_back(crtHits[j]);
               nPlanes[crtHits[j].tagger]++;
@@ -867,7 +870,7 @@ namespace sbnd {
       for(auto const& particle : particles){
         int partId = particle.TrackId();
         //Print the crossing points
-        std::cout<<"\nParticle "<<partId<<": Start("<<particle.Vx()<<","<<particle.Vy()<<","<<particle.Vz()<<") End("<<particle.EndX()<<","<<particle.EndY()<<","<<particle.EndZ()<<") time = "<<2.*(particle.T()*1e-9)/(1e-6)<<" ticks \nTrue crossing points:\n"; // FIXME
+        std::cout<<"\nParticle "<<partId<<": Start("<<particle.Vx()<<","<<particle.Vy()<<","<<particle.Vz()<<") End("<<particle.EndX()<<","<<particle.EndY()<<","<<particle.EndZ()<<") time = "<<fDetectorClocks->TPCG4Time2Tick(particle.T())<<" ticks \nTrue crossing points:\n"; 
         for(size_t tag_i = 0; tag_i < nTaggers; tag_i++){
           if(partXYZ[tag_i].find(partId)!=partXYZ[tag_i].end()){
             std::cout<<"Tagger "<<tag_i<<": Coordinates = ("<<partXYZ[tag_i][partId].X()<<", "<<partXYZ[tag_i][partId].Y()<<", "<<partXYZ[tag_i][partId].Z()<<")\n";
@@ -878,7 +881,7 @@ namespace sbnd {
         std::cout<<"->Reco tracks:\n";
         for(size_t trk_i = 0; trk_i < rt.crtTracks.size(); trk_i++){
           CRTTrack tr = rt.crtTracks[trk_i];
-          std::cout<<"  Start = ("<<tr.xstart<<","<<tr.ystart<<","<<tr.zstart<<") End = ("<<tr.xend<<","<<tr.yend<<","<<tr.zend<<") time = "<<tr.time/(0.5*1e3)<<" ticks, ids = "; // FIXME
+          std::cout<<"  Start = ("<<tr.xstart<<","<<tr.ystart<<","<<tr.zstart<<") End = ("<<tr.xend<<","<<tr.yend<<","<<tr.zend<<") time = "<<fDetectorClocks->TPCG4Time2Tick(tr.time)<<" ticks, ids = ";
           for(int id : tr.ids) std::cout<<id<<" ";
           std::cout<<"\n";
         }
@@ -886,7 +889,7 @@ namespace sbnd {
         std::cout<<"-->Average hits:\n";
         for(size_t hit_i = 0; hit_i < rt.crtAveHits.size(); hit_i++){
           CRTHit ah = rt.crtAveHits[hit_i];
-          std::cout<<"   "<<ah.tagger<<": Coordinates = ("<<ah.xpos<<","<<ah.ypos<<","<<ah.zpos<<") time = "<<ah.ts1_ns/(0.5*1e3)<<" ticks, ids = "; // FIXME
+          std::cout<<"   "<<ah.tagger<<": Coordinates = ("<<ah.xpos<<","<<ah.ypos<<","<<ah.zpos<<") time = "<<fDetectorClocks->TPCG4Time2Tick(ah.ts1_ns)<<" ticks, ids = ";
           for(int id : ah.ids) std::cout<<id<<" ";
           std::cout<<"\n";
         }
@@ -894,7 +897,7 @@ namespace sbnd {
         std::cout<<"--->Reco crossing points:\n";
         for(size_t hit_i = 0; hit_i < rt.crtHits.size(); hit_i++){
           CRTHit ht = rt.crtHits[hit_i];
-          std::cout<<"    "<<ht.tagger<<": Coordinates = ("<<ht.xpos<<", "<<ht.ypos<<", "<<ht.zpos<<") time = "<<ht.ts0_ns/(0.5*1e3)<<" ticks, ids = "; // FIXME
+          std::cout<<"    "<<ht.tagger<<": Coordinates = ("<<ht.xpos<<", "<<ht.ypos<<", "<<ht.zpos<<") time = "<<fDetectorClocks->TPCG4Time2Tick(ht.ts1_ns)<<" ticks, ids = "; 
           for(int id : ht.ids){ std::cout<<id<<" ";}
           std::cout<<"\n";
         }
@@ -1511,7 +1514,7 @@ namespace sbnd {
       CRTHit jhit = hits[hit_j];
 
       //If the bottom plane hit is a 1D hit
-      if(ihit.xerr>100. || ihit.zerr>100.){ // FIXME
+      if(ihit.xerr>100. || ihit.zerr>100.){
         double facMax = 1;
         std::vector<size_t> nhitsMax;
         double minDist = 99999;
@@ -1621,7 +1624,7 @@ namespace sbnd {
         TVector3 end(jhit.xpos, jhit.ypos, jhit.zpos);
         TVector3 diff = (end - start).Unit();
         //Project the end of the track into the tpc
-        TVector3 projEnd(start.X()+1000.*diff.X(), start.Y()+1000.*diff.Y(), start.Z()+1000.*diff.Z()); // FIXME
+        TVector3 projEnd(start.X()+1000.*diff.X(), start.Y()+1000.*diff.Y(), start.Z()+1000.*diff.Z()); 
         CRTTrack t_crtTrack = {start.X(), start.Y(), start.Z(), projEnd.X(), projEnd.Y(), projEnd.Z(), time, ids, false};
         crtTrack = t_crtTrack;
       }
