@@ -11,7 +11,7 @@
 #include "crtt0matching.fcl"
 #include "rootoutput_sbnd.fcl"
 
-process_name: T0
+process_name: CRTT0Matching
 
 services:
 {
