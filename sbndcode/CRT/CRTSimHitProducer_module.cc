@@ -114,7 +114,7 @@ namespace sbnd {
 
     // Function to make filling a CRTHit a bit faster
     crt::CRTHit FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, 
-                           std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, 
+                           std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, int plane, 
                            double x, double ex, double y, double ey, double z, double ez, std::string tagger); 
 
   private:
@@ -303,7 +303,7 @@ namespace sbnd {
               double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
 
               // Create a CRT hit
-              crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, mean.X(), error.X(), 
+              crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
                                               mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
               CRTHitcol->push_back(crtHit);
               nHits++;
@@ -325,7 +325,7 @@ namespace sbnd {
           double pes = tagStrip.second[hit_i].pes;
 
           // Just use the single plane limits as the crt hit
-          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, mean.X(), error.X(), 
+          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
                                           mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
           CRTHitcol->push_back(crtHit);
           nHits++;
@@ -350,7 +350,7 @@ namespace sbnd {
           double pes = taggerStrips[otherPlane][hit_j].pes;
 
           // Just use the single plane limits as the crt hit
-          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, mean.X(), error.X(), 
+          crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
                                           mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
           CRTHitcol->push_back(crtHit);
           nHits++;
@@ -562,7 +562,7 @@ namespace sbnd {
 
   // Function to make filling a CRTHit a bit faster
   crt::CRTHit CRTSimHitProducer::FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, 
-                                            std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, 
+                                            std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, int plane, 
                                             double x, double ex, double y, double ey, double z, double ez, std::string tagger){
 
     crt::CRTHit crtHit;
