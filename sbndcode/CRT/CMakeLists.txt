@@ -3,6 +3,7 @@ include_directories( $ENV{NUTOOLS_INC} )
 include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 
 add_subdirectory(CRTProducts)
+add_subdirectory(CRTTools)
 
 art_make( 
     EXCLUDE
