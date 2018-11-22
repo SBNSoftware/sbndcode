@@ -16,8 +16,6 @@
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
-#include "larcore/Geometry/AuxDetGeometry.h"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
@@ -69,10 +67,10 @@ namespace sbnd {
   struct TrackMatch{
     int tpc;
     int trueID;
-    // TODO maybe change to vector
     std::vector<int> crtIDs;
     double trueTime;
   };
+
 
   struct RecoCRTTrack{
     int crtID;
@@ -83,6 +81,7 @@ namespace sbnd {
     bool complete;
   };
 
+
   struct RecoTruth{
     std::vector<simb::MCParticle> particles;
     std::vector<recob::Track> tpcTracks;
@@ -90,6 +89,7 @@ namespace sbnd {
     std::map<int, TrackMatch> matchingMap;
     std::vector<RecoCRTTrack> recoCrtTracks;
   };
+
 
   class CRTTrackMatchingAna : public art::EDAnalyzer {
   public:
@@ -129,6 +129,16 @@ namespace sbnd {
         Name("MaxDistance"),
         Comment("Maximum distance between CRT and TPC track start/end positions")
       };
+
+      fhicl::Atom<bool> Plot {
+        Name("Plot"),
+        Comment("Plot what's going on")
+      };
+
+      fhicl::Atom<int> PlotID {
+        Name("PlotID"),
+        Comment("TPC track ID to plot")
+      };
       
     }; // Config
  
@@ -146,22 +156,29 @@ namespace sbnd {
     // Called once, at end of the job
     virtual void endJob() override;
 
+    // Function to convert CRT track into expected reco track
     std::vector<RecoCRTTrack> CrtToRecoTrack(crt::CRTTrack, int id);
 
-    std::vector<RecoCRTTrack> CreateRecoCRTTrack(TVector3 start, TVector3 end, double shift, int tpc, int id, double time, bool complete);
+    // Function to shift CRT track and work out how much is reconstructed
+    std::vector<RecoCRTTrack> CreateRecoCRTTrack(TVector3 start, TVector3 end, double shift, 
+                                                 int tpc, int id, double time, bool complete);
 
-    //std::vector<RecoCRTTrack> CreateRecoCRTTrackErrors(crt::CRTTrack track, int tpc, int id);
-
+    // Function to draw true and reco tracks
     void DrawTrueTracks(RecoTruth truthMatch, bool truth, bool tpctracks, bool crttracks, bool crtreco, int id);
 
+    // Draw a cube
     void DrawCube(TCanvas *c1, double *rmin, double *rmax, int col);
 
+    // Function to determine if CRT track crosses TPC volume
     bool CrossesTPC(crt::CRTTrack track);
 
+    // Function to calculate the distance to a CRT track start/end point
     double DistToCrtTrack(TVector3 trackPos, TVector3 crtCross, TVector3 crtErr);
 
+    // Function to calculate the CRT crossing points of a true particle
     std::pair<TVector3, TVector3> TpcCrossPoints(simb::MCParticle const& particle);
 
+    // Function the calculate the average squared distance between a CRT and TPC track
     double TrackAveDistSq(recob::Track track, TVector3 start, TVector3 end);
 
   private:
@@ -173,6 +190,8 @@ namespace sbnd {
     bool          fVerbose;             ///< print information about what's going on
     double        fMaxAngleDiff;        ///< max difference between CRT and TPC angles
     double        fMaxDistance;         ///< max distance between CRT and TPC start/end positions
+    bool          fPlot;                ///< plot what's going on
+    bool          fPlotID;              ///< tpc track ID to plot
 
     // histograms
     TH1D* fDeltaLengthMatch;
@@ -205,6 +224,7 @@ namespace sbnd {
 
   }; // class CRTTrackMatchingAna
 
+
   // Constructor
   CRTTrackMatchingAna::CRTTrackMatchingAna(Parameters const& config)
     : EDAnalyzer(config)
@@ -214,12 +234,17 @@ namespace sbnd {
     , fVerbose              (config().Verbose())
     , fMaxAngleDiff         (config().MaxAngleDiff())
     , fMaxDistance          (config().MaxDistance())
+    , fPlot                 (config().Plot())
+    , fPlotID               (config().PlotID())
   {
+
     // Get a pointer to the geometry service provider
     fGeometryService    = lar::providerFrom<geo::Geometry>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
     fDetectorClocks     = lar::providerFrom<detinfo::DetectorClocksService>(); 
-  }
+
+  } // CRTTrackMatchingAna()
+
 
   void CRTTrackMatchingAna::beginJob()
   {
@@ -244,6 +269,7 @@ namespace sbnd {
     if(fVerbose) std::cout<<"----------------- CRT Track Matching Ana Module -------------------"<<std::endl;
 
   } // CRTTrackMatchingAna::beginJob()
+
 
   void CRTTrackMatchingAna::analyze(const art::Event& event)
   {
@@ -352,7 +378,7 @@ namespace sbnd {
         // Only look at tracks which cross the TPC
         if(!CrossesTPC(crtTrack)){ crtIndex++; continue; }
         // Find the time difference with the true particle
-        double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)crtTrack.ts1_ns/10); // ns -> ticks
+        double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)crtTrack.ts1_ns); // ns -> ticks
         double timeDiff = std::abs(crtTimeTicks - trueTimeTicks);
 
         // Find the distance between start and end points and the true particle
@@ -551,11 +577,14 @@ namespace sbnd {
     truthMatch.tpcTracks = tpcTracks;
     truthMatch.matchingMap = matchingMap;
     truthMatch.recoCrtTracks = recoCrtTracks;
-    //DrawTrueTracks(truthMatch, true, true, true, true, 49);
+    if(fPlot){
+      DrawTrueTracks(truthMatch, true, true, true, true, fPlotID);
+    }
 
     //--------------------------------- Performance Analysis ----------------------------------
 
   } // CRTTrackMatchingAna::analyze()
+
 
   void CRTTrackMatchingAna::endJob(){
 
@@ -570,14 +599,14 @@ namespace sbnd {
   
   } // CRTTrackMatchingAna::endJob()
 
+
+  // Function to convert CRT track into expected reco track
   std::vector<RecoCRTTrack> CRTTrackMatchingAna::CrtToRecoTrack(crt::CRTTrack track, int id){
     std::vector<RecoCRTTrack> recoCrtTracks;
     // Get the time of the track
-    double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)track.ts1_ns/10); // ns -> tick
+    double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)track.ts1_ns); // ns -> tick
     // Convert time into a x shift
-    double xShift = 0.5*crtTimeTicks*fDetectorProperties->DriftVelocity(); //FIXME
-    double xShift2 = fDetectorClocks->TPCTick2Time(crtTimeTicks)*fDetectorProperties->DriftVelocity(); //FIXME
-    std::cout<<"X shift = "<<xShift<<"  "<<xShift2<<"\n";
+    double xShift = fDetectorClocks->TPCTick2Time(crtTimeTicks)*fDetectorProperties->DriftVelocity();
 
     // Shift track, remembering to take into account the tpc, if the track crosses the cpa and 
     //the size of the readout window
@@ -587,7 +616,7 @@ namespace sbnd {
     if(!track.complete){
       // Find point where track crosses bottom plane
       TVector3 diff = (crtEnd - crtStart).Unit();
-      TVector3 newEnd = crtStart + 5000*diff; //FIXME
+      TVector3 newEnd = crtStart + 5000*diff; 
       crtEnd = newEnd;
     }
 
@@ -598,12 +627,12 @@ namespace sbnd {
     TVector3 cpaCrossStart, cpaCrossEnd;
     // Calculate the expected reconstructed length, angle and start and end position
     std::vector<int> crtTpc;
-    if(crtStart.X() < 0. && crtEnd.X() < 0.){ //FIXME
+    if(crtStart.X() < 0. && crtEnd.X() < 0.){ 
       // Track in TPC 0
       std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 0, id, crtTimeTicks, track.complete);
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
     }
-    else if(crtStart.X() > 0. && crtEnd.X() > 0.){ //FIXME
+    else if(crtStart.X() > 0. && crtEnd.X() > 0.){
       // Track in TPC 1
       std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 1, id, crtTimeTicks, track.complete);
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
@@ -611,11 +640,11 @@ namespace sbnd {
     else {
       // Track in both TPCs and will be split
       TVector3 direction = crtStart - crtEnd;
-      double step = (0. - crtStart.X())/direction.X(); //FIXME
-      TVector3 cpaCross(0., crtStart.Y() + step*direction.Y(), crtStart.Z() + step*direction.Z()); //FIXME
+      double step = (0. - crtStart.X())/direction.X();
+      TVector3 cpaCross(0., crtStart.Y() + step*direction.Y(), crtStart.Z() + step*direction.Z());
       cpaCrossStart = cpaCross;
       cpaCrossEnd = cpaCross;
-      if(crtStart.X() < 0.){ //FIXME
+      if(crtStart.X() < 0.){
         std::vector<RecoCRTTrack> tempTracks0 = CreateRecoCRTTrack(crtStart, cpaCrossStart, xShift, 0, id, crtTimeTicks, track.complete);
         recoCrtTracks.insert(recoCrtTracks.end(), tempTracks0.begin(), tempTracks0.end());
 
@@ -630,10 +659,15 @@ namespace sbnd {
         recoCrtTracks.insert(recoCrtTracks.end(), tempTracks1.begin(), tempTracks1.end());
       }
     }
+
     return recoCrtTracks;
+
   } // CRTTrackMatchingAna::CRTToRecoTrack()
 
+
+  // Function to shift CRT track and work out how much is reconstructed
   std::vector<RecoCRTTrack> CRTTrackMatchingAna::CreateRecoCRTTrack(TVector3 start, TVector3 end, double shift, int tpc, int id, double time, bool complete){
+
     std::vector<RecoCRTTrack> recoCrtTracks;
 
     // Get the true entry and exit points in the TPC
@@ -643,10 +677,12 @@ namespace sbnd {
     double ymax = fGeometryService->DetHalfHeight();
     double zmin = 0.;
     double zmax = fGeometryService->DetLength();
+
     // Get track info
     TVector3 diff = end - start;
     TVector3 startTPC, endTPC;
     bool first = true;
+
     // Loop over trajectory points
     int npts = 1000;
     for (int traj_i = 0; traj_i <= npts; traj_i++){
@@ -664,7 +700,7 @@ namespace sbnd {
     }
 
     // Don't shift if not inside TPC
-    if(startTPC.X()==0 && endTPC.X()==0){ //FIXME
+    if(startTPC.X() == endTPC.X()){
       if(fVerbose) std::cout<<"Doesn't pass through TPC "<<tpc<<"!\n";
       return recoCrtTracks;
     }
@@ -682,8 +718,8 @@ namespace sbnd {
     }
     
     double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = 2.0*(2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); //FIXME
-    double deltaX = (readoutWindow - driftTimeTicks)*0.5*fDetectorProperties->DriftVelocity(); //FIXME
+    double driftTimeTicks = fDetectorClocks->Time2Tick((2. * fGeometryService->DetHalfWidth()) / fDetectorProperties->DriftVelocity());
+    double deltaX = fDetectorClocks->TPCTick2Time(readoutWindow - driftTimeTicks) * fDetectorProperties->DriftVelocity();
 
     if(tpc == 0) xmax = deltaX;
     if(tpc == 1) xmin = -deltaX;
@@ -692,6 +728,7 @@ namespace sbnd {
     TVector3 diffTPC = endTPC - startTPC;
     TVector3 startCut, endCut;
     first = true;
+
     // Loop over trajectory points
     for (int traj_i = 0; traj_i <= npts; traj_i++){
       TVector3 trajPoint = startTPC + ((traj_i)/((double)npts))*diffTPC;
@@ -707,7 +744,7 @@ namespace sbnd {
       }
     }
 
-    if(!(startCut.X()==0 && endCut.X()==0)){ //FIXME
+    if(!(startCut.X() == endCut.X())){
       RecoCRTTrack recoCrtTrack = {id, tpc, startCut, endCut, time, complete};
       recoCrtTracks.push_back(recoCrtTrack);
 
@@ -721,8 +758,11 @@ namespace sbnd {
     return recoCrtTracks;
 
   } // CRTTrackMatchingAna::CreateRecoCRTTrack()
+
   
+  // Function to draw true and reco tracks
   void CRTTrackMatchingAna::DrawTrueTracks(RecoTruth rt, bool truth, bool tpcTracks, bool crtTracks, bool crtreco, int id){
+
     // Positions of the CRT planes
     std::vector<double> crtPlanes = {-359.1, -357.3, 357.3, 359.1, -358.9, -357.1, 661.52, 663.32, 865.52, 867.32, -240.65, -238.85, 655.35, 657.15};
     std::vector<int> fixCoord   = {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2}; // Fixed coordinate for each plane
@@ -763,6 +803,7 @@ namespace sbnd {
     int ncrt = 0;
     int nparts = 0;
     size_t lim = rt.particles.size();
+
     if(truth){
       for(size_t i = 0; i < lim; i++){
         int trueID = rt.particles[i].TrackId();
@@ -792,6 +833,7 @@ namespace sbnd {
         }
       }
     }
+
     if(crtTracks){
       // Plot the tracks
       for(size_t i = 0; i < rt.crtTracks.size(); i++){
@@ -822,6 +864,7 @@ namespace sbnd {
         }
       }
     }
+
     if(crtreco){
       // Plot the tracks
       for(size_t i = 0; i < rt.recoCrtTracks.size(); i++){
@@ -840,6 +883,7 @@ namespace sbnd {
         }
       }
     }
+
     if(tpcTracks){
       // Plot the tracks
       for(size_t i = 0; i < rt.tpcTracks.size(); i++){
@@ -859,9 +903,13 @@ namespace sbnd {
     }
 
     c1->SaveAs("crtTagger.root");
-  }
 
+  } // CRTTrackMatchingAna::DrawTrueTracks()
+
+
+  // Draw a cube
   void CRTTrackMatchingAna::DrawCube(TCanvas *c1, double *rmin, double *rmax, int col){
+
     c1->cd();
     TList *outline = new TList;
     TPolyLine3D *p1 = new TPolyLine3D(4);
@@ -882,9 +930,13 @@ namespace sbnd {
     p2->Draw();
     p3->Draw();
     p4->Draw();
-  } 
 
+  } // CRTTrackMatchingAna::DrawCube()
+
+
+  // Function to determine if CRT track crosses TPC volume
   bool CRTTrackMatchingAna::CrossesTPC(crt::CRTTrack track){
+
     // Check if particle enters the TPC
     bool enters = false;
     double xmin = -2.0 * fGeometryService->DetHalfWidth();
@@ -893,6 +945,7 @@ namespace sbnd {
     double ymax = fGeometryService->DetHalfHeight();
     double zmin = 0.;
     double zmax = fGeometryService->DetLength();
+
     if(track.complete){
       // Get track info
       TVector3 start(track.x1_pos, track.y1_pos, track.z1_pos);
@@ -917,17 +970,22 @@ namespace sbnd {
       TVector3 diff = (end - start).Unit();
       int npts = 100;
       for (int traj_i = 0; traj_i < npts; traj_i++){
-        TVector3 trajPoint = start + (100.*(traj_i+1))*diff; //FIXME
+        TVector3 trajPoint = start + (100.*(traj_i+1))*diff;
         // Check if point is within reconstructable volume
         if (trajPoint[0] >= xmin-5 && trajPoint[0] <= xmax+5 && trajPoint[1] >= ymin-5 && trajPoint[1] <= ymax+5 && trajPoint[2] >= zmin-5 && trajPoint[2] <= zmax+5){
           enters = true;
         }
       }
     }
-    return enters;
-  }
 
+    return enters;
+
+  } // CRTTrackMatchingAna::CrossesTPC()
+
+
+  // Function to calculate the distance to a CRT track start/end point
   double CRTTrackMatchingAna::DistToCrtTrack(TVector3 trackPos, TVector3 crtCross, TVector3 crtErr){
+
     double minDistX = 99999;
     // Loop over size of hit to find the min dist
     for(int i = 0; i < 20.; i++){
@@ -935,6 +993,7 @@ namespace sbnd {
       double distX = std::abs(trackPos.X() - xpos);
       if(distX < minDistX) minDistX = distX;
     }
+
     double minDistY = 99999;
     // Loop over size of hit to find the min dist
     for(int i = 0; i < 20.; i++){
@@ -942,6 +1001,7 @@ namespace sbnd {
       double distY = std::abs(trackPos.Y() - ypos);
       if(distY < minDistY) minDistY = distY;
     }
+
     double minDistZ = 99999;
     // Loop over size of hit to find the min dist
     for(int i = 0; i < 20.; i++){
@@ -949,11 +1009,16 @@ namespace sbnd {
       double distZ = std::abs(trackPos.Z() - zpos);
       if(distZ < minDistZ) minDistZ = distZ;
     }
+
     double dist = std::sqrt(std::pow(minDistX, 2) + std::pow(minDistY, 2) + std::pow(minDistZ, 2));
     return dist;
+
   } // CRTTrackMatchingAna::DistToCrtTrack()
 
+
+  // Function to calculate the CRT crossing points of a true particle
   std::pair<TVector3, TVector3> CRTTrackMatchingAna::TpcCrossPoints(simb::MCParticle const& particle){
+
     double xmin = -2.0 * fGeometryService->DetHalfWidth();
     double xmax = 2.0 * fGeometryService->DetHalfWidth();
     double ymin = -fGeometryService->DetHalfHeight();
@@ -961,9 +1026,11 @@ namespace sbnd {
     double zmin = 0.;
     double zmax = fGeometryService->DetLength();
     TVector3 start, end;
+
     bool first = true;
     // Get the trajectory of the true particle
     size_t npts = particle.NumberTrajectoryPoints();
+
     // Loop over particle trajectory
     for (size_t i = 0; i < npts; i++){
       TVector3 trajPoint(particle.Vx(i), particle.Vy(i), particle.Vz(i));
@@ -976,10 +1043,15 @@ namespace sbnd {
         end = trajPoint;
       }
     }
+
     return std::make_pair(start, end);
+
   } // CRTTrackMatchingAna::TpcCrossPoints()
 
+
+  // Function the calculate the average squared distance between a CRT and TPC track
   double CRTTrackMatchingAna::TrackAveDistSq(recob::Track track, TVector3 start, TVector3 end){
+
     // Draw line between start and end
     TVector3 diff = start - end;
     double p0 = start.X() - (start.Z()*(diff.X())/(diff.Z()));
@@ -989,6 +1061,7 @@ namespace sbnd {
     TVector3 x0(p0, p2, 0.);
     TVector3 x1(p0+p1, p2+p3, 1.);
     TVector3 u = (x1-x0).Unit();
+
     // Loop over track trajectory
     int nTraj = track.NumberTrajectoryPoints();
     int ipt = 0;
@@ -999,16 +1072,12 @@ namespace sbnd {
       xres += d2;
       ipt++;
     }
+
     return xres/ipt;
+
   } // CRTTrackMatchingAna::TrackAveDistSq()
+
 
   DEFINE_ART_MODULE(CRTTrackMatchingAna)
 } // namespace sbnd
-
-// Back to local namespace.
-namespace {
-
-
-} // local namespace
-
 

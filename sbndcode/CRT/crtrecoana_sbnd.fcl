@@ -50,15 +50,25 @@ physics:
     {
       # The "module_type" tells us which module to run. The name here
       # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "CRTRecoAna"
+      module_type:     "sbndcode/CRT/CRTRecoAna"
 
       # The input parameters
-      SimModuleLabel:   "largeant"        # Simulation producer module label
-      CRTModuleLabel:   "crt"             # CRT producer module label
-      Verbose:          true              # Print extra information about what's going on
-      VeryVerbose:      true              # Print detailed information about every muon
-      Plot:             true              # Draw truth and reco tracks in event
-      PlotTrackID:      165               # ID of true track to plot
+      SimModuleLabel:       "largeant"  # Simulation producer module label
+      CRTModuleLabel:       "crt"       # CRT producer module label
+      Verbose:              true        # Print extra information about what's going on
+      VeryVerbose:          true        # Print detailed information about every muon
+      Plot:                 true        # Draw truth and reco tracks in event
+      PlotTrackID:          165         # ID of true track to plot
+      # Hit reconstruction
+      TimeCoincidenceLimit: 0.15        # Minimum time between two overlapping hit crt strips
+      QPed:                 63.6        # Pedestal offset [ADC]
+      QSlope:               131.9       # Pedestal slope [ADC/photon]
+      UseReadoutWindow:     true        # Only reconstruct hits within readout window
+      # Track reconstruction
+      TimeLimit:            0.2         # Maximum time difference to combine hits into a tzero [us]
+      AverageHitDistance:   30.         # Maximum distance to avarage hits on the same tagger over [cm]
+      DistanceLimit:        25.         # Maximum distance from CRTTrack to absorb a new CRTHit [cm]
+      UseTopPlane:          true        # Use hits from the top plane (SBND specific)
     }
   }
 

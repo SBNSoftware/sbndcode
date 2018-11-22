@@ -59,6 +59,7 @@ namespace {
 
 namespace sbnd {
 
+
   struct RecoCRTTrack{
     int crtID;
     int tpc;
@@ -67,6 +68,7 @@ namespace sbnd {
     double trueTime;
     bool complete;
   };
+
   
   class CRTTrackMatching : public art::EDProducer {
   public:
@@ -92,11 +94,14 @@ namespace sbnd {
 
     void reconfigure(fhicl::ParameterSet const & p);
 
+    // Function to transform a CRTTrack into an expected reconstructed track
     std::vector<RecoCRTTrack> CrtToRecoTrack(crt::CRTTrack, int id);
 
+    // Function to shift CRTTrack in X and work out how much is reconstructed
     std::vector<RecoCRTTrack> CreateRecoCRTTrack(TVector3 start, TVector3 end, double shift, 
                                                  int tpc, int id, double time, bool complete);
 
+    // Function to calculate if a CRTTrack crosses the TPC volume
     bool CrossesTPC(crt::CRTTrack track);
 
   private:
@@ -131,21 +136,26 @@ namespace sbnd {
     reconfigure(p);
   } // CRTTrackMatching()
 
+
   void CRTTrackMatching::reconfigure(fhicl::ParameterSet const & p)
   {
+
     fTpcTrackModuleLabel = (p.get<art::InputTag> ("TpcTrackModuleLabel"));
     fCrtTrackModuleLabel = (p.get<art::InputTag> ("CrtTrackModuleLabel")); 
     fVerbose             = (p.get<bool>          ("Verbose"));
     fMaxAngleDiff        = (p.get<double>        ("MaxAngleDiff"));
     fMaxDistance         = (p.get<double>        ("MaxDistance"));
-  }
+
+  } // CRTTrackMatching::reconfigure()
+
 
   void CRTTrackMatching::beginJob()
   {
     // Implementation of optional member function here.
     art::ServiceHandle<art::TFileService> tfs;
 
-  } // beginJob()
+  } // CRTTrackMatching::beginJob()
+
 
   void CRTTrackMatching::produce(art::Event & event)
   {
@@ -226,7 +236,8 @@ namespace sbnd {
           // Find the difference with the CRT track
           double dDist1 = (crtStart-tpcStart).Mag();
           double dDist2 = (crtEnd-tpcEnd).Mag();
-          if(std::max((crtStart-tpcStart).Mag(), (crtEnd-tpcEnd).Mag()) > std::max((crtStart-tpcEnd).Mag(), (crtEnd-tpcStart).Mag())){
+          if(std::max((crtStart-tpcStart).Mag(), (crtEnd-tpcEnd).Mag()) > 
+             std::max((crtStart-tpcEnd).Mag(), (crtEnd-tpcStart).Mag())){
             crtTheta = (crtEnd - crtStart).Theta();
             crtPhi = (crtEnd - crtStart).Phi();
             dDist1 = (crtEnd-tpcStart).Mag();
@@ -236,7 +247,8 @@ namespace sbnd {
           double dPhi = atan2(sin(tpcPhi - crtPhi), cos(tpcPhi - crtPhi));
  
           // Do the actual matching
-          if((std::abs(dTheta) < fMaxAngleDiff && std::abs(dPhi) < fMaxAngleDiff && tpc == recoCrtTrack.tpc) && (dDist1<fMaxDistance||dDist2<fMaxDistance)){
+          if(std::abs(dTheta) < fMaxAngleDiff && std::abs(dPhi) < fMaxAngleDiff && 
+             tpc == recoCrtTrack.tpc && (dDist1<fMaxDistance||dDist2<fMaxDistance)){
             crtTpcMatchCandidates.push_back(std::make_pair(trackID, std::abs(dTheta)));
           }
              
@@ -250,7 +262,8 @@ namespace sbnd {
           if(fVerbose) std::cout<<"Matched time "<<recoCrtTrack.trueTime<<" ticks to track "<<matchedTrackID<<"\n";
         }
         if(matchedTrackID != -99999){
-          T0col->push_back(anab::T0(recoCrtTrack.trueTime*2e3, 0, matchedTrackID, (*T0col).size(), crtTpcMatchCandidates[0].second)); //FIXME
+          T0col->push_back(anab::T0(fDetectorClocks->TPCTick2Time(recoCrtTrack.trueTime)*1e3, 0, 
+                                    matchedTrackID, (*T0col).size(), crtTpcMatchCandidates[0].second)); 
           util::CreateAssn(*this, event, *T0col, tpcTrackList[matchedTrackID], *Trackassn);
         }
  
@@ -261,19 +274,24 @@ namespace sbnd {
     event.put(std::move(T0col));
     event.put(std::move(Trackassn));
     
-  } // produce()
+  } // CRTTrackMatching::produce()
+
 
   void CRTTrackMatching::endJob()
   {
 
-  }
+  } // CRTTrackMatching::endJob()
 
+  
+  // Function to transform a CRTTrack into an expected reconstructed track
   std::vector<RecoCRTTrack> CRTTrackMatching::CrtToRecoTrack(crt::CRTTrack track, int id){
+
+    // TODO: could be more detector agnositic (pos of cpa, drift directions, max length of track)
     std::vector<RecoCRTTrack> recoCrtTracks;
     // Get the time of the track
-    double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)track.ts1_ns/10); // ns -> tick
+    double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)track.ts1_ns); // ns -> tick
     // Convert time into a x shift
-    double xShift = 0.5*crtTimeTicks*fDetectorProperties->DriftVelocity(); //FIXME
+    double xShift = fDetectorClocks->TPCTick2Time(crtTimeTicks) * fDetectorProperties->DriftVelocity();
 
     // Shift track, remembering to take into account the tpc, if the track crosses the cpa and 
     //the size of the readout window
@@ -283,31 +301,36 @@ namespace sbnd {
     if(!track.complete){
       // Find point where track crosses bottom plane
       TVector3 diff = (crtEnd - crtStart).Unit();
-      TVector3 newEnd = crtStart + 5000*diff; //FIXME
+      TVector3 newEnd = crtStart + 5000*diff; 
       crtEnd = newEnd;
     }
 
     TVector3 cpaCrossStart, cpaCrossEnd;
     // Calculate the expected reconstructed length, angle and start and end position
     std::vector<int> crtTpc;
-    if(crtStart.X() < 0. && crtEnd.X() < 0.){ //FIXME
+    if(crtStart.X() < 0. && crtEnd.X() < 0.){
+
       // Track in TPC 0
-      std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 0, id, crtTimeTicks, track.complete);
+      std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 0, 
+                                                                id, crtTimeTicks, track.complete);
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
     }
-    else if(crtStart.X() > 0. && crtEnd.X() > 0.){ //FIXME
+    else if(crtStart.X() > 0. && crtEnd.X() > 0.){
+
       // Track in TPC 1
-      std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 1, id, crtTimeTicks, track.complete);
+      std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 1, 
+                                                                id, crtTimeTicks, track.complete);
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
     }
     else {
       // Track in both TPCs and will be split
       TVector3 direction = crtStart - crtEnd;
-      double step = (0. - crtStart.X())/direction.X(); //FIXME
-      TVector3 cpaCross(0., crtStart.Y() + step*direction.Y(), crtStart.Z() + step*direction.Z()); //FIXME
+      double step = (0. - crtStart.X())/direction.X(); 
+      TVector3 cpaCross(0., crtStart.Y() + step*direction.Y(), crtStart.Z() + step*direction.Z());
       cpaCrossStart = cpaCross;
       cpaCrossEnd = cpaCross;
-      if(crtStart.X() < 0.){ //FIXME
+
+      if(crtStart.X() < 0.){ 
         std::vector<RecoCRTTrack> tempTracks0 = CreateRecoCRTTrack(crtStart, cpaCrossStart, xShift, 0, 
                                                                    id, crtTimeTicks, track.complete);
         recoCrtTracks.insert(recoCrtTracks.end(), tempTracks0.begin(), tempTracks0.end());
@@ -325,11 +348,18 @@ namespace sbnd {
                                                                    id, crtTimeTicks, track.complete);
         recoCrtTracks.insert(recoCrtTracks.end(), tempTracks1.begin(), tempTracks1.end());
       }
+
     }
+
     return recoCrtTracks;
+
   } // CRTTrackMatching::CRTToRecoTrack()
 
-  std::vector<RecoCRTTrack> CRTTrackMatching::CreateRecoCRTTrack(TVector3 start, TVector3 end, double shift, int tpc, int id, double time, bool complete){
+
+  // Function to shift CRTTrack in X and work out how much is reconstructed
+  std::vector<RecoCRTTrack> CRTTrackMatching::CreateRecoCRTTrack(TVector3 start, TVector3 end, double shift, 
+                                                                 int tpc, int id, double time, bool complete){
+
     std::vector<RecoCRTTrack> recoCrtTracks;
 
     // Get the true entry and exit points in the TPC
@@ -339,10 +369,12 @@ namespace sbnd {
     double ymax = fGeometryService->DetHalfHeight();
     double zmin = 0.;
     double zmax = fGeometryService->DetLength();
+
     // Get track info
     TVector3 diff = end - start;
     TVector3 startTPC, endTPC;
     bool first = true;
+
     // Loop over trajectory points
     int npts = 1000;
     for (int traj_i = 0; traj_i <= npts; traj_i++){
@@ -360,7 +392,7 @@ namespace sbnd {
     }
 
     // Don't shift if not inside TPC
-    if(startTPC.X()==0 && endTPC.X()==0){ //FIXME
+    if(startTPC == endTPC){
       return recoCrtTracks;
     }
 
@@ -377,8 +409,8 @@ namespace sbnd {
     }
     
     double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = 2.0*(2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); //FIXME
-    double deltaX = (readoutWindow - driftTimeTicks)*0.5*fDetectorProperties->DriftVelocity(); //FIXME
+    double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity());
+    double deltaX = fDetectorClocks->TPCTick2Time(readoutWindow - driftTimeTicks) * fDetectorProperties->DriftVelocity();
 
     if(tpc == 0) xmax = deltaX;
     if(tpc == 1) xmin = -deltaX;
@@ -402,17 +434,19 @@ namespace sbnd {
       }
     }
 
-    if(!(startCut.X()==0 && endCut.X()==0)){ //FIXME
+    if(!(startCut.X() == endCut.X())){
       RecoCRTTrack recoCrtTrack = {id, tpc, startCut, endCut, time, complete};
       recoCrtTracks.push_back(recoCrtTrack);
-
     }
 
     return recoCrtTracks;
 
   } // CRTTrackMatching::CreateRecoCRTTrack()
 
+
+  // Function to calculate if a CRTTrack crosses the TPC volume
   bool CRTTrackMatching::CrossesTPC(crt::CRTTrack track){
+
     // Check if particle enters the TPC
     bool enters = false;
     double xmin = -2.0 * fGeometryService->DetHalfWidth();
@@ -445,15 +479,19 @@ namespace sbnd {
       TVector3 diff = (end - start).Unit();
       int npts = 100;
       for (int traj_i = 0; traj_i < npts; traj_i++){
-        TVector3 trajPoint = start + (100.*(traj_i+1))*diff; //FIXME
+        // TODO: length of track needs to be more detector agnostic
+        TVector3 trajPoint = start + (100.*(traj_i+1))*diff;
         // Check if point is within reconstructable volume
         if (trajPoint[0] >= xmin-5 && trajPoint[0] <= xmax+5 && trajPoint[1] >= ymin-5 && trajPoint[1] <= ymax+5 && trajPoint[2] >= zmin-5 && trajPoint[2] <= zmax+5){
           enters = true;
         }
       }
     }
+
     return enters;
+
   } // CRTTrackMatching::CrossesTPC()
+
 
   DEFINE_ART_MODULE(CRTTrackMatching)
 
