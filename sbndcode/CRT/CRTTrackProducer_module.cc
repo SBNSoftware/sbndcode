@@ -22,6 +22,8 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "art/Framework/Services/Optional/TFileService.h"
 
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTzero.hh"
@@ -97,6 +99,8 @@ private:
   double       fDistanceLimit;
   bool         fUseTopPlane;
 
+  detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
+
 }; // class CRTTrackProducer
 
 
@@ -156,6 +160,8 @@ CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const & p)
   if(fStoreTrack == 1) 
     produces< std::vector<crt::CRTTrack>   >();
 
+  fDetectorClocks     = lar::providerFrom<detinfo::DetectorClocksService>(); 
+  
 } // CRTTrackProducer()
 
 
@@ -211,7 +217,7 @@ void CRTTrackProducer::produce(art::Event & evt)
           if(iflag[j] == 0){
             // If ts1_ns - ts1_ns < diff then put them in a vector
             double time_ns_B = hitlist[j]->ts1_ns;
-            double diff = std::abs(time_ns_B - time_ns_A)/(0.5*10e3);
+            double diff = fDetectorClocks->TPCG4Time2Tick(std::abs(time_ns_B - time_ns_A));
             if(diff < fTimeLimit){
               iflag[j] = 1;
               CRTTzero.push_back(hitlist[j]);
@@ -557,10 +563,10 @@ crt::CRTHit CRTTrackProducer::FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<
     crtHit.pesmap      = tpesmap;
     crtHit.peshit      = peshit;
     crtHit.ts0_s_corr  = 0;
-    crtHit.ts0_ns      = time * 0.5 * 10e3; // FIXME
+    crtHit.ts0_ns      = fDetectorClocks->TPCTick2Time(time) * 1e3;
     crtHit.ts0_ns_corr = 0;
-    crtHit.ts1_ns      = time * 0.5 * 10e3; // FIXME
-    crtHit.ts0_s       = time * 0.5 * 10e-6; // FIXME
+    crtHit.ts1_ns      = fDetectorClocks->TPCTick2Time(time) * 1e3;
+    crtHit.ts0_s       = fDetectorClocks->TPCTick2Time(time) * 1e-6;
     crtHit.x_pos       = x;
     crtHit.x_err       = ex;
     crtHit.y_pos       = y; 
@@ -698,8 +704,8 @@ crt::CRTHit CRTTrackProducer::DoAverage(std::vector<art::Ptr<crt::CRTHit>> hits)
 
   // Create a hit
   crt::CRTHit crtHit = FillCrtHit(hits[0]->feb_id, hits[0]->pesmap, hits[0]->peshit, 
-                                  (ts1_ns/nhits)/(0.5*10e3), xpos/nhits, (xmax-xmin)/2, 
-                                  ypos/nhits, (ymax-ymin)/2., zpos/nhits, (zmax-zmin)/2., tagger); //FIXME
+                                  fDetectorClocks->TPCG4Time2Tick(ts1_ns/nhits), xpos/nhits, (xmax-xmin)/2, 
+                                  ypos/nhits, (ymax-ymin)/2., zpos/nhits, (zmax-zmin)/2., tagger);
 
   return crtHit;
 
@@ -754,7 +760,7 @@ std::vector<crt::CRTTrack> CRTTrackProducer::CreateTracks(std::vector<crt::CRTHi
     crt::CRTHit jhit = hits[hit_j];
 
     //If the bottom plane hit is a 1D hit
-    if(ihit.x_err>100. || ihit.z_err>100.){ //FIXME
+    if(ihit.x_err>100. || ihit.z_err>100.){
       double facMax = 1;
       std::vector<size_t> nhitsMax;
       double minDist = 99999;
