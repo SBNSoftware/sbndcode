@@ -8,7 +8,7 @@
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
 
-#include "crtt0matching.fcl"
+#include "crtt0matchingalg_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 process_name: CRTT0Matching

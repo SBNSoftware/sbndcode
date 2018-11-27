@@ -1,4 +1,4 @@
-# A script to run the full crt reconstruction chain
+# A script to run the producer module: CRTSimHitProducer
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
@@ -7,11 +7,9 @@
 #include "sam_sbnd.fcl"
 
 #include "crtsimhitproducer_sbnd.fcl"
-#include "crttzeroproducer_sbnd.fcl"
-#include "crttrackproducer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-process_name: CRTSimReco
+process_name: CRTSimHitProducer
 
 services:
 {
@@ -56,13 +54,11 @@ physics:
 {
   producers:
   {
-    crthit:   @local::standard_crtsimhitproducer
-    crttzero: @local::standard_crttzeroproducer
-    crttrack: @local::standard_crttrackproducer
+    crthit: @local::standard_crtsimhitproducer
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  reco: [ crthit, crttzero, crttrack ]
+  reco: [ crthit ]
 
   stream1: [ out1 ]
 

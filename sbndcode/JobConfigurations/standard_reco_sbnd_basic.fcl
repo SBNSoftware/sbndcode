@@ -42,9 +42,9 @@
 #include "particleid_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-#include "crtsimhitproducer.fcl"
-#include "crttzeroproducer.fcl"
-#include "crttrackproducer.fcl"
+#include "crtsimhitproducer_sbnd.fcl"
+#include "crttzeroproducer_sbnd.fcl"
+#include "crttrackproducer_sbnd.fcl"
 
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
 #include "backtrackerservice.fcl" 

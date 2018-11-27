@@ -5,7 +5,7 @@
 #include "services_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-#include "crttrackmatching.fcl"
+#include "crttrackmatchingalg_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 process_name: CRTTrackMatching
