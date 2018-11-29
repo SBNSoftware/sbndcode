@@ -1,22 +1,24 @@
-# A script to run the full crt reconstruction chain
+# A script to run the producer module: CRTT0Matching
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "services_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
 #include "sam_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
 
-#include "crtsimhitproducer_sbnd.fcl"
-#include "crttzeroproducer_sbnd.fcl"
-#include "crttrackproducer_sbnd.fcl"
+#include "crtt0matchingalg_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-process_name: CRTSimReco
+process_name: CRTT0Matching
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "crtsimhitproducer_hist.root" }
+  TFileService:           { fileName: "crtt0_hist.root" }
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService: @local::standard_backtrackerservice
 
   # This parameter controls the level of descriptive output from various LArSoft modules.
   message:                @local::sbnd_message_services_prod
@@ -56,13 +58,11 @@ physics:
 {
   producers:
   {
-    crthit:   @local::standard_crtsimhitproducer
-    crttzero: @local::standard_crttzeroproducer
-    crttrack: @local::standard_crttrackproducer
+    t0: @local::standard_crtt0matching
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  reco: [ crthit, crttzero, crttrack ]
+  reco: [ t0 ]
 
   stream1: [ out1 ]
 
