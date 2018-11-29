@@ -5,9 +5,9 @@
 struct RecoCRTTrack{
   int crtID;
   int tpc;
-  TVector3 start;
-  TVector3 end;
-  double trueTime;
+  TVector3 start; // [cm]
+  TVector3 end; // [cm]
+  double trueTime; // [us]
   bool complete;
 };
 
@@ -42,7 +42,6 @@ bool CrossesTPC(sbnd::crt::CRTTrack track);
 
 std::vector<std::vector<sbnd::crt::CRTHit>> CRTAnaUtils::CreateCRTTzeros(std::vector<sbnd::crt::CRTHit> crtHits, double fTimeLimit){
 
-  detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
   std::vector<std::vector<sbnd::crt::CRTHit>> CRTTzeroVect;
   int iflag[2000] = {};
 
@@ -60,7 +59,7 @@ std::vector<std::vector<sbnd::crt::CRTHit>> CRTAnaUtils::CreateCRTTzeros(std::ve
         if(iflag[j] == 0){
           // If ts1_ns - ts1_ns < diff then put them in a vector
           double time_ns_B = crtHits[j].ts1_ns;
-          double diff = fDetectorClocks->TPCG4Time2Tick(std::abs(time_ns_B - time_ns_A)); //FIXME
+          double diff = std::abs(time_ns_B - time_ns_A) * 1e-3; // [us]
           if(diff < fTimeLimit){
             iflag[j] = 1;
             CRTTzero.push_back(crtHits[j]);
@@ -276,7 +275,6 @@ std::vector<sbnd::crt::CRTTrack> CRTAnaUtils::CreateCRTTracks(std::vector<sbnd::
 
 double CRTAnaUtils::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc, double fMinTrackLength, double fTrackDirectionFrac, double fDistanceLimit){
   
-  detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
   if (tpcTrack.Length() < fMinTrackLength) return -99999; 
 
   // Calculate direction as an average over directions
@@ -306,23 +304,22 @@ double CRTAnaUtils::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::
   // Loop over all the CRT hits
   for(auto &crtHit : crtHits){
     // Check if hit is within the allowed t0 range
-    double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)crtHit.ts1_ns);
-    double crtTimeNs = (double)(int)crtHit.ts1_ns;
-    if (!(crtTimeTicks >= t0MinMax.first - 20. && crtTimeTicks <= t0MinMax.second + 20.)) continue;
+    double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3;
+    if (!(crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.)) continue;
     TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
   
     // Calculate the distance between the crossing point and the CRT hit
-    double startDist = DistOfClosestApproach(start, startDir, crtHit, tpc, crtTimeNs);
+    double startDist = DistOfClosestApproach(start, startDir, crtHit, tpc, crtTime);
     // If the distance is less than some limit record the time
     if (startDist < fDistanceLimit){ 
-      t0Candidates.push_back(std::make_pair(startDist, crtTimeTicks));
+      t0Candidates.push_back(std::make_pair(startDist, crtTime));
     }
   
     // Calculate the distance between the crossing point and the CRT hit
-    double endDist = DistOfClosestApproach(end, endDir, crtHit, tpc, crtTimeNs);
+    double endDist = DistOfClosestApproach(end, endDir, crtHit, tpc, crtTime);
     // If the distance is less than some limit record the time
     if (endDist < fDistanceLimit){ 
-      t0Candidates.push_back(std::make_pair(endDist, crtTimeTicks));
+      t0Candidates.push_back(std::make_pair(endDist, crtTime));
     }
   
   }
@@ -421,10 +418,10 @@ sbnd::crt::CRTHit FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t,
     crtHit.pesmap      = tpesmap;
     crtHit.peshit      = peshit;
     crtHit.ts0_s_corr  = 0;
-    crtHit.ts0_ns      = time;
+    crtHit.ts0_ns      = time * 1e3;
     crtHit.ts0_ns_corr = 0;
-    crtHit.ts1_ns      = time;
-    crtHit.ts0_s       = time;
+    crtHit.ts1_ns      = time * 1e3;
+    crtHit.ts0_s       = time * 1e-6;
     crtHit.x_pos       = x;
     crtHit.x_err       = ex;
     crtHit.y_pos       = y; 
@@ -561,7 +558,7 @@ sbnd::crt::CRTHit DoAverage(std::vector<sbnd::crt::CRTHit> hits)
 
   // Create a hit
   sbnd::crt::CRTHit crtHit = FillCrtHit(hits[0].feb_id, hits[0].pesmap, hits[0].peshit, 
-                                  ts1_ns/nhits, xpos/nhits, (xmax-xmin)/2, 
+                                  (ts1_ns/nhits)*1e-3, xpos/nhits, (xmax-xmin)/2,
                                   ypos/nhits, (ymax-ymin)/2., zpos/nhits, (zmax-zmin)/2., tagger);
 
   return crtHit;
@@ -622,8 +619,8 @@ std::pair<double, double> TrackT0Range(double startX, double endX, int tpc){
     double highX = std::min(startX, endX);
     // xmax is shift from closest to APA
     double xmin = -(2.0*fGeometryService->DetHalfWidth()+3.) - highX;
-    double t0max = -2.*xmin/Vd;
-    double t0min = -2.*xmax/Vd;
+    double t0max = -(xmin/Vd);
+    double t0min = -(xmax/Vd);
     result = std::make_pair(t0min, t0max);
   }
 
@@ -636,8 +633,8 @@ std::pair<double, double> TrackT0Range(double startX, double endX, int tpc){
     double highX = std::max(startX, endX);
     // xmax is shift from closest to APA
     double xmax = (2.0*fGeometryService->DetHalfWidth()+3.) - highX;
-    double t0min = 2.*xmin/Vd;
-    double t0max = 2.*xmax/Vd;
+    double t0min = xmin/Vd;
+    double t0max = xmax/Vd;
     result = std::make_pair(t0min, t0max);
   }
 
@@ -651,7 +648,7 @@ double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, sbnd::crt::CR
   double minDist = 99999;
 
   // Convert the t0 into an x shift
-  double shift = t0 * 1e-3 * fDetectorProperties->DriftVelocity();
+  double shift = t0 * fDetectorProperties->DriftVelocity();
   // Apply the shift depending on which TPC the track is in
   if (tpc == 1) trackPos[0] += shift;
   if (tpc == 0) trackPos[0] -= shift;
@@ -703,13 +700,12 @@ double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, sbnd::crt::CR
 // Function to transform a CRTTrack into an expected reconstructed track
 std::vector<RecoCRTTrack> CrtToRecoTrack(sbnd::crt::CRTTrack track, int id){
 
-  detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
   detinfo::DetectorProperties const* fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
   std::vector<RecoCRTTrack> recoCrtTracks;
   // Get the time of the track
-    double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)track.ts1_ns);
+  double crtTime = ((double)(int)track.ts1_ns) * 1e-3;
   // Convert time into a x shift
-  double xShift = fDetectorClocks->TPCTick2Time(crtTimeTicks) * fDetectorProperties->DriftVelocity();
+  double xShift = crtTime * fDetectorProperties->DriftVelocity();
 
   // Shift track, remembering to take into account the tpc, if the track crosses the cpa and 
   //the size of the readout window
@@ -730,14 +726,14 @@ std::vector<RecoCRTTrack> CrtToRecoTrack(sbnd::crt::CRTTrack track, int id){
 
     // Track in TPC 0
     std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 0, 
-                                                              id, crtTimeTicks, track.complete);
+                                                              id, crtTime, track.complete); 
     recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
   }
   else if(crtStart.X() > 0. && crtEnd.X() > 0.){
 
     // Track in TPC 1
     std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 1, 
-                                                              id, crtTimeTicks, track.complete);
+                                                              id, crtTime, track.complete); 
     recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
   }
   else {
@@ -750,20 +746,20 @@ std::vector<RecoCRTTrack> CrtToRecoTrack(sbnd::crt::CRTTrack track, int id){
 
     if(crtStart.X() < 0.){ 
       std::vector<RecoCRTTrack> tempTracks0 = CreateRecoCRTTrack(crtStart, cpaCrossStart, xShift, 0, 
-                                                                 id, crtTimeTicks, track.complete);
+                                                                 id, crtTime, track.complete); 
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks0.begin(), tempTracks0.end());
 
       std::vector<RecoCRTTrack> tempTracks1 = CreateRecoCRTTrack(crtEnd, cpaCrossEnd, xShift, 1, 
-                                                                 id, crtTimeTicks, track.complete);
+                                                                 id, crtTime, track.complete); 
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks1.begin(), tempTracks1.end());
     }
     else {
       std::vector<RecoCRTTrack> tempTracks0 = CreateRecoCRTTrack(crtEnd, cpaCrossEnd, xShift, 0, 
-                                                                 id, crtTimeTicks, track.complete);
+                                                                 id, crtTime, track.complete); 
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks0.begin(), tempTracks0.end());
 
       std::vector<RecoCRTTrack> tempTracks1 = CreateRecoCRTTrack(crtStart, cpaCrossStart, xShift, 1, 
-                                                                 id, crtTimeTicks, track.complete);
+                                                                 id, crtTime, track.complete); 
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks1.begin(), tempTracks1.end());
     }
 
@@ -829,9 +825,9 @@ std::vector<RecoCRTTrack> CreateRecoCRTTrack(TVector3 start, TVector3 end, doubl
     endTPC[0] += shift;
   }
   
-  double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-  double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity());
-  double deltaX = fDetectorClocks->TPCTick2Time(readoutWindow - driftTimeTicks) * fDetectorProperties->DriftVelocity();
+  double readoutWindow  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize());
+  double driftTimeTicks = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity();
+  double deltaX = (readoutWindow - driftTimeTicks) * fDetectorProperties->DriftVelocity();
 
   if(tpc == 0) xmax = deltaX;
   if(tpc == 1) xmin = -deltaX;
