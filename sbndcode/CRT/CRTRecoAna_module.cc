@@ -304,6 +304,7 @@ namespace sbnd {
     geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
     detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
+    detinfo::ElecClock fTrigClock;
     art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
     const geo::AuxDetGeometry* fAuxDetGeo;
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;
@@ -361,6 +362,7 @@ namespace sbnd {
     fGeometryService = lar::providerFrom<geo::Geometry>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
     fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
+    fTrigClock = fDetectorClocks->TriggerClock();
     fAuxDetGeo = &(*fAuxDetGeoService);
     fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
   }
@@ -438,8 +440,8 @@ namespace sbnd {
     }
 
     // Detector properties
-    double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity());
+    double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
+    double driftTimeMuS = (2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); // [us]
 
     // Store the true x (CRT width direction) and y (CRT length direction) crossing points
     std::vector<TVector3> *taggerXYZ = new std::vector<TVector3>[nTaggers];
@@ -454,15 +456,17 @@ namespace sbnd {
     std::vector<simb::MCParticle> particles;
     for (auto const& particle: (*particleHandle)){
       int partId = particle.TrackId();
-      double pt = fDetectorClocks->TPCG4Time2Tick(particle.T());
+      double pt = particle.T() * 1e-3; // [us]
+
       // Check particle is a muon
       int pdg = std::abs(particle.PdgCode());
       if(pdg != 13){ muonIDs.push_back(partId); continue;}
-      //if(pdg != 13 && pdg != 11 && pdg != 211 && pdg != 312 && pdg != 2212){ muonIDs.push_back(partId); continue;}
+
       // Check if the particle is in the reconstructible time window
       if(fUseReadoutWindow){
-        if(pt < -driftTimeTicks || pt > readoutWindow) continue;
+        if(pt < -driftTimeMuS || pt > readoutWindowMuS) continue;
       }
+
       // Check particle is through-going
       if(!IsThroughGoing(particle)) continue;
       int ntag = 0;
@@ -476,10 +480,10 @@ namespace sbnd {
         partXYZ[tag_i][partId] = crossPoint;
         ntag++;
       }
-      //std::cout<<"PartID = "<<partId<<" Length = "<<particle.Trajectory().TotalLength()<<" time = "<<pt<<std::endl;
+
       particles.push_back(particle);
-      //if(ntag>0 && particle.Trajectory().TotalLength()>10) particles.push_back(particle);
       nParts++;
+
       if(ntag==1) nSinglePlane++;
       if(nstrp>1) nTwoStripPlanes++;
     }
@@ -501,8 +505,10 @@ namespace sbnd {
     
     // Loop over all the SiPM hits in 2 (should be in pairs due to trigger)
     for (size_t i = 0; i < crtList.size(); i+=2){
+
       // Get the time, channel, center and width
-      double t1 = (double)(int)crtList[i]->T0()/8.; // [ticks]
+      fTrigClock.SetTime(crtList[i]->T0());
+      double t1 = fTrigClock.Time(); // [us]
       uint32_t channel = crtList[i]->Channel();
       int strip = (channel >> 1) & 15;
       int module = (channel >> 5);
@@ -516,7 +522,7 @@ namespace sbnd {
 
       // Check hit is inside the reconstructible window
       if(fUseReadoutWindow){
-        if (!(t1 >= -driftTimeTicks && t1 <= readoutWindow)) continue;
+        if (!(t1 >= -driftTimeMuS && t1 <= readoutWindowMuS)) continue;
       }
       nSipms += 2;
 
@@ -529,10 +535,13 @@ namespace sbnd {
       truthMatch[id2].sipmHits.push_back(std::make_pair(tagger, crtList[i+1]));
 
       // Get the time of hit on the second SiPM
-      double t2 = (double)(int)crtList[i+1]->T0()/8.; // [ticks]
+      fTrigClock.SetTime(crtList[i+1]->T0());
+      double t2 = fTrigClock.Time(); // [us]
+
       // Calculate the number of photoelectrons at each SiPM
       double npe1 = ((double)crtList[i]->ADC() - fQPed)/fQSlope;
       double npe2 = ((double)crtList[i+1]->ADC() - fQPed)/fQSlope;
+
       // Calculate the distance between the SiPMs
       double x = (width/2.)*atan(log(1.*npe2/npe1)) + (width/2.);
       if(tagger.first=="volTaggerTopLow_0"||tagger.first=="volTaggerTopHigh_0") fSipmDist->Fill(x);
@@ -578,26 +587,35 @@ namespace sbnd {
 
     // TODO: Save any strips with no overlaps as hits (may increase noise hits too much)
     for (auto &tagStrip : taggerStrips){
+
       if (std::find(usedTaggers.begin(),usedTaggers.end(),tagStrip.first.first)!=usedTaggers.end()) continue;
+
       usedTaggers.push_back(tagStrip.first.first);
+
       unsigned planeID = 0;
       if(tagStrip.first.second==0) planeID = 1;
       std::pair<std::string,unsigned> otherPlane = std::make_pair(tagStrip.first.first, planeID);
+
       for (size_t hit_i = 0; hit_i < tagStrip.second.size(); hit_i++){
         // Get the position (in real space) of the 4 corners of the hit, taking charge sharing into account
         std::vector<double> limits1 =  ChannelToLimits(tagStrip.second[hit_i]);
+
         // Check for overlaps on the first plane
         if(CheckModuleOverlap(tagStrip.second[hit_i].channel)){
+
           // Loop over all the hits on the parallel (odd) plane
           for (size_t hit_j = 0; hit_j < taggerStrips[otherPlane].size(); hit_j++){
+
             // Get the limits in the two variable directions
             std::vector<double> limits2 = ChannelToLimits(taggerStrips[otherPlane][hit_j]);
             // If the time and position match then record the pair of hits
             std::vector<double> overlap = CrtOverlap(limits1, limits2);
             double t0_1 = tagStrip.second[hit_i].t0;
             double t0_2 = taggerStrips[otherPlane][hit_j].t0;
-            if (overlap[0] != -99999 && std::abs(t0_1 - t0_2)<fTimeCoincidenceLimit){
+
+            if (overlap[0] != -99999 && std::abs(t0_1 - t0_2) < fTimeCoincidenceLimit){
               nHits++;
+
               // Calculate the mean and error in x, y, z
               TVector3 mean((overlap[0] + overlap[1])/2., 
                             (overlap[2] + overlap[3])/2., 
@@ -605,9 +623,10 @@ namespace sbnd {
               TVector3 error(std::abs((overlap[1] - overlap[0])/2.), 
                              std::abs((overlap[3] - overlap[2])/2.), 
                              std::abs((overlap[5] - overlap[4])/2.));
+
               // Average the time
-              double time = fDetectorClocks->TPCTick2Time((t0_1 + t0_2)/2);
-              // Create a CRT hit
+              double time = (t0_1 + t0_2)/2; // [us]
+
               // If the PID matches one of the true crossing particles calculate the resolution
               std::vector<int> ids = {tagStrip.second[hit_i].id1, 
                                       tagStrip.second[hit_i].id2, 
@@ -616,6 +635,8 @@ namespace sbnd {
 
               std::sort(ids.begin(), ids.end());
               ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+
+              // Create a CRT hit
               CRTHit crtHit = {tagStrip.first.first, mean.X(), mean.Y(), mean.Z(), 
                                error.X(), error.Y(), error.Z(), 
                                time*1e-6, time*1e3, time*1e3, ids};
@@ -648,14 +669,18 @@ namespace sbnd {
           TVector3 error(std::abs((limits1[1] - limits1[0])/2.), 
                          std::abs((limits1[3] - limits1[2])/2.), 
                          std::abs((limits1[5] - limits1[4])/2.));
+
           nHits++;
-          double time = fDetectorClocks->TPCTick2Time(tagStrip.second[hit_i].t0);
-          // Just use the single plane limits as the crt hit
+
+          double time = tagStrip.second[hit_i].t0; // [us]
+
           // If the PID matches calculate the resolution
           std::vector<int> ids = {tagStrip.second[hit_i].id1, tagStrip.second[hit_i].id2};
 
           std::sort(ids.begin(), ids.end());
           ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+
+          // Just use the single plane limits as the crt hit
           CRTHit crtHit = {tagStrip.first.first, mean.X(), mean.Y(), mean.Z(), 
                            error.X(), error.Y(), error.Z(), 
                            time*1e-6, time*1e3, time*1e3, ids};
@@ -683,21 +708,25 @@ namespace sbnd {
       for (size_t hit_j = 0; hit_j < taggerStrips[otherPlane].size(); hit_j++){
         // Get the limits in the two variable directions
         std::vector<double> limits1 = ChannelToLimits(taggerStrips[otherPlane][hit_j]);
+
         if(!CheckModuleOverlap(taggerStrips[otherPlane][hit_j].channel)){
+
           TVector3 mean((limits1[0] + limits1[1])/2., 
                         (limits1[2] + limits1[3])/2., 
                         (limits1[4] + limits1[5])/2.);
           TVector3 error(std::abs((limits1[1] - limits1[0])/2.), 
                          std::abs((limits1[3] - limits1[2])/2.), 
                          std::abs((limits1[5] - limits1[4])/2.));
+
           nHits++;
-          double time = fDetectorClocks->TPCTick2Time(taggerStrips[otherPlane][hit_j].t0);
-          // Just use the single plane limits as the crt hit
+          double time = taggerStrips[otherPlane][hit_j].t0; // [us]
+
           // If the PID matches calculate the resolution
           std::vector<int> ids = {taggerStrips[otherPlane][hit_j].id1, taggerStrips[otherPlane][hit_j].id2};
-
           std::sort(ids.begin(), ids.end());
           ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+
+          // Just use the single plane limits as the crt hit
           CRTHit crtHit = {otherPlane.first, mean.X(), mean.Y(), mean.Z(), 
                            error.X(), error.Y(), error.Z(), 
                            time*1e-6, time*1e3, time*1e3, ids};
@@ -744,22 +773,29 @@ namespace sbnd {
     std::vector<std::vector<CRTHit>> CRTTzeroVect;
     std::vector<int> npvec;
     int iflag[2000] = {};
+
     // Loop over crt hits
     for(size_t i = 0; i<crtHits.size(); i++){
-      if (iflag[i]==0){
+
+      if (iflag[i] == 0){
         std::vector<CRTHit> CRTTzero;
         std::map<std::string,int> nPlanes;
+
         double time_ns_A = crtHits[i].ts1_ns;
-        iflag[i]=1;
+
+        iflag[i] = 1;
         CRTTzero.push_back(crtHits[i]);
         nPlanes[crtHits[i].tagger]++;
+
         // Get the t0
         // Loop over all the other CRT hits
         for(size_t j = i+1; j<crtHits.size(); j++){
-          if(iflag[j]==0){
+
+          if(iflag[j] == 0){
             // If ts1_ns - ts1_ns < diff then put them in a vector
             double time_ns_B = crtHits[j].ts1_ns;
-            double diff = fDetectorClocks->TPCG4Time2Tick(std::abs(time_ns_B - time_ns_A));
+            double diff = std::abs(time_ns_B - time_ns_A) * 1e-3; // [us]
+
             if(diff < fTimeLimit){
               iflag[j]=1;
               CRTTzero.push_back(crtHits[j]);
@@ -767,10 +803,12 @@ namespace sbnd {
             }
           }
         }
+
         int np = 0;
         for(auto &nPlane : nPlanes){
           if(nPlane.second>0 && nPlane.first!="volTaggerTopHigh_0") np++;
         }
+
         CRTTzeroVect.push_back(CRTTzero);
         npvec.push_back(np);
       }
@@ -823,16 +861,20 @@ namespace sbnd {
 
     for(auto const& particle : particles){
       int partId = particle.TrackId();
+
       RecoTruth rt = truthMatch[partId];
       fSipmHitsPerTrack->Fill(rt.sipmHits.size());
       fStripHitsPerTrack->Fill(rt.stripHits.size());
       fCrtHitsPerTrack->Fill(rt.crtHits.size());
       fAveHitsPerTrack->Fill(rt.crtAveHits.size());
       fTracksPerTrack->Fill(rt.crtTracks.size());
+
       if(rt.crtTracks.size()>0) nMatchTrack++;
+
       if(rt.crtTracks.size()>0){
         double minxres = 999999;
         double minipt = 1;
+
         for(size_t i = 0; i < rt.crtTracks.size(); i++){
           double sx = rt.crtTracks[i].xstart;
           double sy = rt.crtTracks[i].ystart;
@@ -847,6 +889,7 @@ namespace sbnd {
           ROOT::Math::XYZVector x0(p0, p2, 0.);
           ROOT::Math::XYZVector x1(p0+p1, p2+p3, 1.);
           ROOT::Math::XYZVector u = (x1-x0).Unit();
+
           int nTraj = particle.NumberTrajectoryPoints();
           int ipt = 0;
           double xres = 0;
@@ -859,8 +902,10 @@ namespace sbnd {
               ipt++;
             }
           }
+
           if(xres < minxres) {minxres = xres; minipt = ipt;}
         }
+
         fTrackDist->Fill(minxres/minipt);
       }
     }
@@ -870,7 +915,7 @@ namespace sbnd {
       for(auto const& particle : particles){
         int partId = particle.TrackId();
         //Print the crossing points
-        std::cout<<"\nParticle "<<partId<<": Start("<<particle.Vx()<<","<<particle.Vy()<<","<<particle.Vz()<<") End("<<particle.EndX()<<","<<particle.EndY()<<","<<particle.EndZ()<<") time = "<<fDetectorClocks->TPCG4Time2Tick(particle.T())<<" ticks \nTrue crossing points:\n"; 
+        std::cout<<"\nParticle "<<partId<<": Start("<<particle.Vx()<<","<<particle.Vy()<<","<<particle.Vz()<<") End("<<particle.EndX()<<","<<particle.EndY()<<","<<particle.EndZ()<<") time = "<<particle.T()*1e-3<<" us \nTrue crossing points:\n"; //FIXME to us
         for(size_t tag_i = 0; tag_i < nTaggers; tag_i++){
           if(partXYZ[tag_i].find(partId)!=partXYZ[tag_i].end()){
             std::cout<<"Tagger "<<tag_i<<": Coordinates = ("<<partXYZ[tag_i][partId].X()<<", "<<partXYZ[tag_i][partId].Y()<<", "<<partXYZ[tag_i][partId].Z()<<")\n";
@@ -881,7 +926,7 @@ namespace sbnd {
         std::cout<<"->Reco tracks:\n";
         for(size_t trk_i = 0; trk_i < rt.crtTracks.size(); trk_i++){
           CRTTrack tr = rt.crtTracks[trk_i];
-          std::cout<<"  Start = ("<<tr.xstart<<","<<tr.ystart<<","<<tr.zstart<<") End = ("<<tr.xend<<","<<tr.yend<<","<<tr.zend<<") time = "<<fDetectorClocks->TPCG4Time2Tick(tr.time)<<" ticks, ids = ";
+          std::cout<<"  Start = ("<<tr.xstart<<","<<tr.ystart<<","<<tr.zstart<<") End = ("<<tr.xend<<","<<tr.yend<<","<<tr.zend<<") time = "<<tr.time*1e-3<<" us, ids = ";
           for(int id : tr.ids) std::cout<<id<<" ";
           std::cout<<"\n";
         }
@@ -889,7 +934,7 @@ namespace sbnd {
         std::cout<<"-->Average hits:\n";
         for(size_t hit_i = 0; hit_i < rt.crtAveHits.size(); hit_i++){
           CRTHit ah = rt.crtAveHits[hit_i];
-          std::cout<<"   "<<ah.tagger<<": Coordinates = ("<<ah.xpos<<","<<ah.ypos<<","<<ah.zpos<<") time = "<<fDetectorClocks->TPCG4Time2Tick(ah.ts1_ns)<<" ticks, ids = ";
+          std::cout<<"   "<<ah.tagger<<": Coordinates = ("<<ah.xpos<<","<<ah.ypos<<","<<ah.zpos<<") time = "<<ah.ts1_ns*1e-3<<" us, ids = ";
           for(int id : ah.ids) std::cout<<id<<" ";
           std::cout<<"\n";
         }
@@ -897,7 +942,7 @@ namespace sbnd {
         std::cout<<"--->Reco crossing points:\n";
         for(size_t hit_i = 0; hit_i < rt.crtHits.size(); hit_i++){
           CRTHit ht = rt.crtHits[hit_i];
-          std::cout<<"    "<<ht.tagger<<": Coordinates = ("<<ht.xpos<<", "<<ht.ypos<<", "<<ht.zpos<<") time = "<<fDetectorClocks->TPCG4Time2Tick(ht.ts1_ns)<<" ticks, ids = "; 
+          std::cout<<"    "<<ht.tagger<<": Coordinates = ("<<ht.xpos<<", "<<ht.ypos<<", "<<ht.zpos<<") time = "<<ht.ts1_ns*1e-3<<" us, ids = ";
           for(int id : ht.ids){ std::cout<<id<<" ";}
           std::cout<<"\n";
         }
@@ -912,7 +957,9 @@ namespace sbnd {
         for(size_t hit_i = 0; hit_i < rt.sipmHits.size(); hit_i++){
           std::pair<std::string,unsigned> tagger = rt.sipmHits[hit_i].first;
           art::Ptr<crt::CRTData> si = rt.sipmHits[hit_i].second;
-          std::cout<<"      "<<tagger.first<<" ("<<tagger.second<<"): Channel = "<<si->Channel()<<" time = "<<(double)(int)si->T0()/8.<<" ticks, ID = "<<si->TrackID()<<"\n";
+          fTrigClock.SetTime(si->T0());
+          double t1 = fTrigClock.Time(); // [us]
+          std::cout<<"      "<<tagger.first<<" ("<<tagger.second<<"): Channel = "<<si->Channel()<<" time = "<<t1<<" us, ID = "<<si->TrackID()<<"\n";
         }
       }
     }

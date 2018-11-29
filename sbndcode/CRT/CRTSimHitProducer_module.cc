@@ -67,10 +67,10 @@
 namespace sbnd {
 
   struct CRTStrip {
-    double t0; 
+    double t0; // [us]
     uint32_t channel; 
-    double x; 
-    double ex; 
+    double x; // [cm]
+    double ex; // [cm]
     double pes;
     std::pair<std::string, unsigned> tagger;
   };
@@ -131,6 +131,7 @@ namespace sbnd {
     geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
     detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
+    detinfo::ElecClock fTrigClock;
     art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
     const geo::AuxDetGeometry* fAuxDetGeo;
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;
@@ -149,6 +150,7 @@ namespace sbnd {
     fGeometryService = lar::providerFrom<geo::Geometry>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
     fDetectorClocks     = lar::providerFrom<detinfo::DetectorClocksService>(); 
+    fTrigClock = fDetectorClocks->TriggerClock();
     fAuxDetGeo = &(*fAuxDetGeoService);
     fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
 
@@ -194,8 +196,8 @@ namespace sbnd {
     }
 
     // Detector properties
-    double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity());
+    double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
+    double driftTimeMuS = (2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); // [us]
 
     // Retrieve list of CRT hits
     art::Handle< std::vector<crt::CRTData>> crtListHandle;
@@ -203,7 +205,6 @@ namespace sbnd {
     if (event.getByLabel(fCrtModuleLabel, crtListHandle))
       art::fill_ptr_vector(crtList, crtListHandle);
 
-    // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<crt::CRTHit> > CRTHitcol( new std::vector<crt::CRTHit>);
 
     // Fill a vector of pairs of time and width direction for each CRT plane
@@ -215,10 +216,11 @@ namespace sbnd {
     // Loop over all the SiPM hits in 2 (should be in pairs due to trigger)
     for (size_t i = 0; i < crtList.size(); i+=2){
       // Get the time, channel, center and width
-      double t1 = (double)(int)crtList[i]->T0()/8.; // [ticks]
+      fTrigClock.SetTime(crtList[i]->T0());
+      double t1 = fTrigClock.Time(); // [us]
 
       if(fUseReadoutWindow){
-        if(!(t1 >= -driftTimeTicks && t1 <= readoutWindow)) continue;
+        if(!(t1 >= -driftTimeMuS && t1 <= readoutWindowMuS)) continue;
       }
 
       // Get strip info from the geometry service
@@ -233,10 +235,13 @@ namespace sbnd {
       std::pair<std::string,unsigned> tagger = ChannelToTagger(channel);
 
       // Get the time of hit on the second SiPM
-      double t2 = (double)(int)crtList[i+1]->T0()/8.;
+      fTrigClock.SetTime(crtList[i+1]->T0());
+      double t2 = fTrigClock.Time(); // [us]
+
       // Calculate the number of photoelectrons at each SiPM
       double npe1 = ((double)crtList[i]->ADC() - fQPed)/fQSlope;
       double npe2 = ((double)crtList[i+1]->ADC() - fQPed)/fQSlope;
+
       // Calculate the distance between the SiPMs
       double x = (width/2.)*atan(log(1.*npe2/npe1)) + (width/2.);
 
@@ -289,7 +294,7 @@ namespace sbnd {
             std::vector<double> overlap = CrtOverlap(limits1, limits2);
             double t0_1 = tagStrip.second[hit_i].t0;
             double t0_2 = taggerStrips[otherPlane][hit_j].t0;
-            if (overlap[0] != -99999 && std::abs(t0_1 - t0_2)<fTimeCoincidenceLimit){
+            if (overlap[0] != -99999 && std::abs(t0_1 - t0_2) < fTimeCoincidenceLimit){
               // Calculate the mean and error in x, y, z
               TVector3 mean((overlap[0] + overlap[1])/2., 
                             (overlap[2] + overlap[3])/2., 
@@ -571,10 +576,10 @@ namespace sbnd {
     crtHit.pesmap      = tpesmap;
     crtHit.peshit      = peshit;
     crtHit.ts0_s_corr  = 0; 
-    crtHit.ts0_ns      = fDetectorClocks->TPCTick2Time(time) * 1e3;
+    crtHit.ts0_ns      = time * 1e3;
     crtHit.ts0_ns_corr = 0; 
-    crtHit.ts1_ns      = fDetectorClocks->TPCTick2Time(time) * 1e3;
-    crtHit.ts0_s       = fDetectorClocks->TPCTick2Time(time) * 1e-6;
+    crtHit.ts1_ns      = time * 1e3;
+    crtHit.ts0_s       = time * 1e-6;
     crtHit.x_pos       = x;
     crtHit.x_err       = ex;
     crtHit.y_pos       = y; 

@@ -62,9 +62,9 @@ namespace sbnd {
   struct RecoCRTTrack{
     int crtID;
     int tpc;
-    TVector3 start;
-    TVector3 end;
-    double trueTime;
+    TVector3 start; //[cm]
+    TVector3 end; //[cm]
+    double trueTime; // [us]
     bool complete;
   };
 
@@ -269,8 +269,7 @@ namespace sbnd {
           if(fVerbose) std::cout<<"Matched time "<<recoCrtTrack.trueTime<<" ticks to track "<<matchedTrackID<<"\n";
         }
         if(matchedTrackID != -99999){
-          T0col->push_back(anab::T0(fDetectorClocks->TPCTick2Time(recoCrtTrack.trueTime)*1e3, 0, 
-                                    matchedTrackID, (*T0col).size(), crtTpcMatchCandidates[0].second)); 
+          T0col->push_back(anab::T0(recoCrtTrack.trueTime*1e3, 0, matchedTrackID, (*T0col).size(), crtTpcMatchCandidates[0].second)); 
           util::CreateAssn(*this, event, *T0col, tpcTrackMap[matchedTrackID], *Trackassn);
           util::CreateAssn(*this, event, crtTrackList[recoCrtTrack.crtID], tpcTrackMap[matchedTrackID], *Crtassn);
         }
@@ -298,9 +297,9 @@ namespace sbnd {
     // TODO: could be more detector agnositic (pos of cpa, drift directions, max length of track)
     std::vector<RecoCRTTrack> recoCrtTracks;
     // Get the time of the track
-    double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)track.ts1_ns); // ns -> tick
+    double crtTime = ((double)(int)track.ts1_ns) * 1e-3; // [us]
     // Convert time into a x shift
-    double xShift = fDetectorClocks->TPCTick2Time(crtTimeTicks) * fDetectorProperties->DriftVelocity();
+    double xShift = crtTime * fDetectorProperties->DriftVelocity();
 
     // Shift track, remembering to take into account the tpc, if the track crosses the cpa and 
     //the size of the readout window
@@ -321,14 +320,14 @@ namespace sbnd {
 
       // Track in TPC 0
       std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 0, 
-                                                                id, crtTimeTicks, track.complete);
+                                                                id, crtTime, track.complete);
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
     }
     else if(crtStart.X() > 0. && crtEnd.X() > 0.){
 
       // Track in TPC 1
       std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 1, 
-                                                                id, crtTimeTicks, track.complete);
+                                                                id, crtTime, track.complete);
       recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
     }
     else {
@@ -341,20 +340,20 @@ namespace sbnd {
 
       if(crtStart.X() < 0.){ 
         std::vector<RecoCRTTrack> tempTracks0 = CreateRecoCRTTrack(crtStart, cpaCrossStart, xShift, 0, 
-                                                                   id, crtTimeTicks, track.complete);
+                                                                   id, crtTime, track.complete);
         recoCrtTracks.insert(recoCrtTracks.end(), tempTracks0.begin(), tempTracks0.end());
 
         std::vector<RecoCRTTrack> tempTracks1 = CreateRecoCRTTrack(crtEnd, cpaCrossEnd, xShift, 1, 
-                                                                   id, crtTimeTicks, track.complete);
+                                                                   id, crtTime, track.complete);
         recoCrtTracks.insert(recoCrtTracks.end(), tempTracks1.begin(), tempTracks1.end());
       }
       else {
         std::vector<RecoCRTTrack> tempTracks0 = CreateRecoCRTTrack(crtEnd, cpaCrossEnd, xShift, 0, 
-                                                                   id, crtTimeTicks, track.complete);
+                                                                   id, crtTime, track.complete);
         recoCrtTracks.insert(recoCrtTracks.end(), tempTracks0.begin(), tempTracks0.end());
 
         std::vector<RecoCRTTrack> tempTracks1 = CreateRecoCRTTrack(crtStart, cpaCrossStart, xShift, 1, 
-                                                                   id, crtTimeTicks, track.complete);
+                                                                   id, crtTime, track.complete);
         recoCrtTracks.insert(recoCrtTracks.end(), tempTracks1.begin(), tempTracks1.end());
       }
 
@@ -417,9 +416,9 @@ namespace sbnd {
       endTPC[0] += shift;
     }
     
-    double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity());
-    double deltaX = fDetectorClocks->TPCTick2Time(readoutWindow - driftTimeTicks) * fDetectorProperties->DriftVelocity();
+    double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
+    double driftTimeMuS = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); // [us]
+    double deltaX = (readoutWindowMuS - driftTimeMuS) * fDetectorProperties->DriftVelocity(); // [cm]
 
     if(tpc == 0) xmax = deltaX;
     if(tpc == 1) xmin = -deltaX;
@@ -464,6 +463,7 @@ namespace sbnd {
     double ymax = fGeometryService->DetHalfHeight();
     double zmin = 0.;
     double zmax = fGeometryService->DetLength();
+
     if(track.complete){
       // Get track info
       TVector3 start(track.x1_pos, track.y1_pos, track.z1_pos);
@@ -479,6 +479,7 @@ namespace sbnd {
         }
       }
     }
+
     // If track just between top two planes
     else{
       //

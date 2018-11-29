@@ -15,7 +15,6 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
@@ -189,7 +188,6 @@ namespace sbnd {
     // Other variables shared between different methods.
     geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
-    detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
 
     // Positions of the CRT planes
     std::vector<double> crtPlanes = {-359.1, -357.3, 357.3, 359.1, -358.9, -357.1, 661.52, 663.32, 865.52, 867.32, -240.65, -238.85, 655.35, 657.15};
@@ -236,7 +234,6 @@ namespace sbnd {
     // Get a pointer to the geometry service provider
     fGeometryService = lar::providerFrom<geo::Geometry>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
 
   } //CRTT0MatchingAna()
 
@@ -289,13 +286,6 @@ namespace sbnd {
                <<"============================================"<<std::endl;
     }
 
-    // Detector properties
-    double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity());
-
-    if(fVerbose) std::cout<<"Readout window = "<<readoutWindow<<" ticks, Drift time = "<<driftTimeTicks
-                          <<" ticks, Drift velocity = "<<fDetectorProperties->DriftVelocity()<<" cm/us \n";
-
     // Retrieve all the truth info in the events
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
     // Fill a map of true particles
@@ -339,11 +329,11 @@ namespace sbnd {
       if (particles.find(trueId) == particles.end()){ if (fVerbose) std::cout<<"No valid true track!\n"; continue; }
 
       // Get the true T0
-      double trueTime = fDetectorClocks->TPCG4Time2Tick(particles[trueId].T());
+      double trueTime = particles[trueId].T() * 1e-3; // [us]
       fTrueTime->Fill(trueTime);
 
       if(fVerbose) std::cout<<"True particle information:\n"<<"PDG = "<<particles[trueId].PdgCode()<<", length = "
-                            <<particles[trueId].Trajectory().TotalLength()<<" cm, time = "<<trueTime<<" ticks\n\n";
+                            <<particles[trueId].Trajectory().TotalLength()<<" cm, time = "<<trueTime<<" us\n\n";
 
       nTracks++;
 
@@ -377,7 +367,7 @@ namespace sbnd {
       //Shift start and end by true time
       TVector3 startShift = start;
       TVector3 endShift = end;
-      double timeToShift = fDetectorClocks->TPCTick2Time(trueTime) * fDetectorProperties->DriftVelocity();
+      double timeToShift = trueTime * fDetectorProperties->DriftVelocity();
       if(tpc == 0){
         timeToShift = -timeToShift;
       }
@@ -417,10 +407,10 @@ namespace sbnd {
         // Loop over the hits on the tagger
         for(auto &crtHit : taggerHits.second){
           double trueDist = DistToCrtHit(trueCross, crtHit);
-          double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)crtHit.ts1_ns);
-          if(trueDist<20. && std::abs(crtTimeTicks-trueTime)<2.) {
+          double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3; // [us]
+          if(trueDist<20. && std::abs(crtTime - trueTime)<1.) {
             if(fVerbose) std::cout<<tagger<<": CRT pos = ("<<crtHit.x_pos<<", "<<crtHit.y_pos<<", "<<crtHit.z_pos
-                                  <<"), time = "<<crtTimeTicks<<"\nTrue pos = ("<<trueCross.X()<<", "
+                                  <<"), time = "<<crtTime<<"\nTrue pos = ("<<trueCross.X()<<", "
                                   <<trueCross.Y()<<", "<<trueCross.Z()<<"), dist = "<<trueDist<<std::endl;
             trueCrtCross = true;
             isMatch = true;
@@ -472,40 +462,40 @@ namespace sbnd {
         // Loop over all the CRT hits
         for(auto &crtHit : taggerHits.second){
           // Check if hit is within the allowed t0 range
-          double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)crtHit.ts1_ns);
-          if (!(crtTimeTicks >= t0MinMax.first-20. && crtTimeTicks <= t0MinMax.second+20.)) continue;
+          double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3; // [us]
+          if (!(crtTime >= t0MinMax.first-10. && crtTime <= t0MinMax.second+10.)) continue;
           TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
 
           // Calculate the distance between the crossing point and the CRT hit
-          TVector3 startTrackPos = T0ToXYZPosition(start, startDir, tagger, tpc, crtTimeTicks);
+          TVector3 startTrackPos = T0ToXYZPosition(start, startDir, tagger, tpc, crtTime);
           //double startDist = DistToCrtHit(startTrackPos, crtHit);
-          double startDist = DistOfClosestApproach(start, startDir, crtHit, tpc, crtTimeTicks);
+          double startDist = DistOfClosestApproach(start, startDir, crtHit, tpc, crtTime);
           if (startDist < minDistance) minDistance = startDist;
 
           // If the distance is less than some limit record the time
           if (startDist < fDistanceLimit){ 
-            if(fVerbose) std::cout<<"Match! Time = "<<crtTimeTicks<<", Position = ("<<startTrackPos.X()<<", "
+            if(fVerbose) std::cout<<"Match! Time = "<<crtTime<<", Position = ("<<startTrackPos.X()<<", "
                                   <<startTrackPos.Y()<<", "<<startTrackPos.Z()<<") dist = "<<startDist<<std::endl;
-            t0Candidates.push_back(std::make_pair(startDist, crtTimeTicks));
+            t0Candidates.push_back(std::make_pair(startDist, crtTime));
           }
 
           // Calculate the distance between the crossing point and the CRT hit
-          TVector3 endTrackPos = T0ToXYZPosition(end, endDir, tagger, tpc, crtTimeTicks);
+          TVector3 endTrackPos = T0ToXYZPosition(end, endDir, tagger, tpc, crtTime);
           //double endDist = DistToCrtHit(endTrackPos, crtHit);
-          double endDist = DistOfClosestApproach(end, endDir, crtHit, tpc, crtTimeTicks);
+          double endDist = DistOfClosestApproach(end, endDir, crtHit, tpc, crtTime);
           if (endDist < minDistance) minDistance = endDist;
 
           // If the distance is less than some limit record the time
           if (endDist < fDistanceLimit){ 
-            if(fVerbose) std::cout<<"Match! Time = "<<crtTimeTicks<<", Position = ("<<endTrackPos.X()<<", "
+            if(fVerbose) std::cout<<"Match! Time = "<<crtTime<<", Position = ("<<endTrackPos.X()<<", "
                                   <<endTrackPos.Y()<<", "<<endTrackPos.Z()<<") dist = "<<endDist<<std::endl;
-            t0Candidates.push_back(std::make_pair(endDist, crtTimeTicks));
+            t0Candidates.push_back(std::make_pair(endDist, crtTime));
           }
 
           // Loop over different distance limits
           for(int i = 0; i < nLims; i++){
-            if(startDist < (i+1.)*mindx) t0candLim[i].push_back(std::make_pair(startDist, crtTimeTicks));
-            if(endDist < (i+1.)*mindx) t0candLim[i].push_back(std::make_pair(startDist, crtTimeTicks));
+            if(startDist < (i+1.)*mindx) t0candLim[i].push_back(std::make_pair(startDist, crtTime));
+            if(endDist < (i+1.)*mindx) t0candLim[i].push_back(std::make_pair(endDist, crtTime));
           }
         }
       }
@@ -685,8 +675,8 @@ namespace sbnd {
       double highX = std::min(startX, endX);
       // xmax is shift from closest to APA
       double xmin = -(2.0*fGeometryService->DetHalfWidth()+3.) - highX;
-      double t0max = -2.*xmin/Vd;
-      double t0min = -2.*xmax/Vd;
+      double t0max = -(xmin/Vd);
+      double t0min = -(xmax/Vd);
       result = std::make_pair(t0min, t0max);
     }
     else{
@@ -698,8 +688,8 @@ namespace sbnd {
       double highX = std::max(startX, endX);
       // xmax is shift from closest to APA
       double xmax = (2.0*fGeometryService->DetHalfWidth()+3.) - highX;
-      double t0min = 2.*xmin/Vd;
-      double t0max = 2.*xmax/Vd;
+      double t0min = xmin/Vd;
+      double t0max = xmax/Vd;
       result = std::make_pair(t0min, t0max);
     }
 
@@ -716,7 +706,7 @@ namespace sbnd {
     int crt_i = nameToInd[tagger];
 
     // Convert the t0 into an x shift
-    double shift = fDetectorClocks->TPCTick2Time(t0) * fDetectorProperties->DriftVelocity();
+    double shift = t0 * fDetectorProperties->DriftVelocity();
     // Apply the shift depending on which TPC the track is in
     if (tpc == 1) position[0] += shift;
     if (tpc == 0) position[0] -= shift;
@@ -776,7 +766,7 @@ namespace sbnd {
     double minDist = 99999;
 
     // Convert the t0 into an x shift
-    double shift = fDetectorClocks->TPCTick2Time(t0) * fDetectorProperties->DriftVelocity();
+    double shift = t0 * fDetectorProperties->DriftVelocity();
     // Apply the shift depending on which TPC the track is in
     if (tpc == 1) trackPos[0] += shift;
     if (tpc == 0) trackPos[0] -= shift;
