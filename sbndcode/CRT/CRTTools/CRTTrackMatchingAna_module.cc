@@ -179,7 +179,10 @@ namespace sbnd {
     std::pair<TVector3, TVector3> TpcCrossPoints(simb::MCParticle const& particle);
 
     // Function the calculate the average squared distance between a CRT and TPC track
-    double TrackAveDistSq(recob::Track track, TVector3 start, TVector3 end);
+    double TrackAveDCA(recob::Track track, TVector3 start, TVector3 end);
+
+    // Function the calculate the average squared distance between a CRT and TPC track
+    double TrueAveDCA(simb::MCParticle particle, TVector3 start, TVector3 end);
 
   private:
 
@@ -191,7 +194,7 @@ namespace sbnd {
     double        fMaxAngleDiff;        ///< max difference between CRT and TPC angles
     double        fMaxDistance;         ///< max distance between CRT and TPC start/end positions
     bool          fPlot;                ///< plot what's going on
-    bool          fPlotID;              ///< tpc track ID to plot
+    int           fPlotID;              ///< tpc track ID to plot
 
     // histograms
     TH1D* fDeltaLengthMatch;
@@ -208,6 +211,9 @@ namespace sbnd {
     TH2D* fDeltaAnglesNoMatch;
     TH1D* fNCrtCandidates;
     TH1D* fNTpcCandidates;
+    TH1D* fDCACrtTrue;
+    TH1D* fDCACrtReco;
+    TH1D* fDCARecoTrue;
 
     // Other variables shared between different methods.
     geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
@@ -264,6 +270,9 @@ namespace sbnd {
     fDeltaAnglesNoMatch = tfs->make<TH2D>("deltaanglesnomatch", "#Delta #theta (rad);#Delta #phi (rad)", 50, -4, 4, 50, -4, 4);
     fNCrtCandidates     = tfs->make<TH1D>("ncrtcandidates", ";N CRT candidates", 5, 0, 5);
     fNTpcCandidates     = tfs->make<TH1D>("ntpccandidates", ";N CRT candidates", 5, 0, 5);
+    fDCACrtTrue      = tfs->make<TH1D>("distsqcrttrue", ";d^2", 50, 0, 100);
+    fDCACrtReco      = tfs->make<TH1D>("distsqcrtreco", ";d^2", 50, 0, 100);
+    fDCARecoTrue     = tfs->make<TH1D>("distsqrecotrue", ";d^2", 50, 0, 50);
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- CRT Track Matching Ana Module -------------------"<<std::endl;
@@ -311,6 +320,7 @@ namespace sbnd {
     if(fVerbose) std::cout<<"\n----------------------------------   Truth Matching   -----------------------------------\n";
 
     std::map<int, TrackMatch> matchingMap;
+    std::map<int, recob::Track> recoTracks;
     std::vector<recob::Track> tpcTracks;
     // Loop over TPC tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
@@ -318,6 +328,8 @@ namespace sbnd {
       trackMatch.trueTime = -99999;
       int trackID = tpcTrack.ID();
       if(fVerbose) std::cout<<"\n-->TPC Track:"<<trackID<<"\n";
+
+      recoTracks[trackID] = tpcTrack;
 
       tpcTracks.push_back(tpcTrack);
       TVector3 tpcStart = tpcTrack.Vertex();
@@ -442,6 +454,14 @@ namespace sbnd {
     for (auto const& recoCrtTrack : recoCrtTracks){
       if(fVerbose) std::cout<<"\nRecoCRTTrack: "<<recoCrtTrack.crtID<<"\n";
       std::vector<std::pair<int, double>> crtTpcMatchCandidates;
+
+      // Get the length, angle and start and end position of the TPC track
+      TVector3 crtStart = recoCrtTrack.start;
+      TVector3 crtEnd = recoCrtTrack.end;
+      double crtLength = (crtStart - crtEnd).Mag();
+      double crtTheta = (crtStart - crtEnd).Theta();
+      double crtPhi = (crtStart - crtEnd).Phi();
+
       // Loop over the TPC tracks
       for (auto const& tpcTrack : (*tpcTrackHandle)){
         int trackID = tpcTrack.ID();
@@ -458,13 +478,6 @@ namespace sbnd {
         double tpcTheta = (tpcStart - tpcEnd).Theta();
         double tpcPhi = (tpcStart - tpcEnd).Phi();
 
-        // Get the length, angle and start and end position of the TPC track
-        TVector3 crtStart = recoCrtTrack.start;
-        TVector3 crtEnd = recoCrtTrack.end;
-        double crtLength = (crtStart - crtEnd).Mag();
-        double crtTheta = (crtStart - crtEnd).Theta();
-        double crtPhi = (crtStart - crtEnd).Phi();
-
         // Find the difference with the CRT track
         double dDist1 = (crtStart-tpcStart).Mag();
         double dDist2 = (crtEnd-tpcEnd).Mag();
@@ -477,7 +490,7 @@ namespace sbnd {
         double dLength = tpcLength - crtLength;
         double dTheta = atan2(sin(tpcTheta - crtTheta), cos(tpcTheta - crtTheta));
         double dPhi = atan2(sin(tpcPhi - crtPhi), cos(tpcPhi - crtPhi));
-        double aveDistSq = TrackAveDistSq(tpcTrack, crtStart, crtEnd);
+        double aveDCA = TrackAveDCA(tpcTrack, crtStart, crtEnd);
 
         // Plot difference for tracks with and without true match
         if(std::find(matchingMap[trackID].crtIDs.begin(), matchingMap[trackID].crtIDs.end(), recoCrtTrack.crtID) != matchingMap[trackID].crtIDs.end()
@@ -493,7 +506,7 @@ namespace sbnd {
           fDeltaThetaMatch->Fill(dTheta*180/(TMath::Pi()));
           fDeltaPhiMatch->Fill(dPhi*180/(TMath::Pi()));
           fDeltaDistMatch->Fill(std::min(dDist1,dDist2));
-          fChiSqMatch->Fill(aveDistSq);
+          fChiSqMatch->Fill(aveDCA);
           fDeltaAnglesMatch->Fill(dTheta, dPhi);
         }
         else {
@@ -501,7 +514,7 @@ namespace sbnd {
           fDeltaThetaNoMatch->Fill(dTheta*180/(TMath::Pi()));
           fDeltaPhiNoMatch->Fill(dPhi*180/(TMath::Pi()));
           fDeltaDistNoMatch->Fill(std::min(dDist1,dDist2));
-          fChiSqNoMatch->Fill(aveDistSq);
+          fChiSqNoMatch->Fill(aveDCA);
           fDeltaAnglesNoMatch->Fill(dTheta, dPhi);
         }
 
@@ -512,17 +525,17 @@ namespace sbnd {
 
           if(std::find(matchingMap[trackID].crtIDs.begin(), matchingMap[trackID].crtIDs.end(), recoCrtTrack.crtID) != matchingMap[trackID].crtIDs.end()){ 
             if(fVerbose) std::cout<<"Correct match! ID = "<<trackID<<" dTheta = "<<dTheta<<" dPhi = "<<dPhi<<" dist1 = "<<dDist1
-                                  <<" dist2 = "<<dDist2<<" dLength = "<<dLength<<" aveDistSq = "<<aveDistSq<<"\n";
+                                  <<" dist2 = "<<dDist2<<" dLength = "<<dLength<<" aveDCA = "<<aveDCA<<"\n";
           }
           else{ 
             if(fVerbose) std::cout<<"Incorrect match! ID = "<<trackID<<" dTheta = "<<dTheta<<" dPhi = "<<dPhi<<" dist1 = "<<dDist1
-                                  <<" dist2 = "<<dDist2<<" dLength = "<<dLength<<" aveDistSq = "<<aveDistSq<<"\n";
+                                  <<" dist2 = "<<dDist2<<" dLength = "<<dLength<<" aveDCA = "<<aveDCA<<"\n";
           }
 
         }
         else if(std::find(matchingMap[trackID].crtIDs.begin(), matchingMap[trackID].crtIDs.end(), recoCrtTrack.crtID) != matchingMap[trackID].crtIDs.end() && tpc == recoCrtTrack.tpc){
           if(fVerbose) std::cout<<"Incorrect non match! ID = "<<trackID<<" Theta = "<<dTheta<<" dPhi = "<<dPhi<<" dist1 = "<<dDist1
-                                <<" dist2 = "<<dDist2<<" dLength = "<<dLength<<" aveDistSq = "<<aveDistSq<<"\n";
+                                <<" dist2 = "<<dDist2<<" dLength = "<<dLength<<" aveDCA = "<<aveDCA<<"\n";
         } 
       }
       // Choose the track which matches the closest
@@ -547,6 +560,27 @@ namespace sbnd {
         }
         if(std::abs(matchingMap[matchedTrackID].trueTime - recoCrtTrack.trueTime) < 5.) nCorrectTime++;
         else nIncorrectTime++;
+        // Check the errors on the CRT track
+        bool smallErrors = true;
+        int ind = 0;
+        TVector3 start, end;
+        for (auto const& crtTrack : (*crtTrackHandle)){
+          if(ind != recoCrtTrack.crtID){ind++; continue;}
+          if(crtTrack.x1_err<10. && crtTrack.x2_err<10. && crtTrack.y1_err<10. && crtTrack.y2_err<10. && crtTrack.z1_err<10. && crtTrack.z2_err<10.){ 
+            smallErrors = true;
+            start[0] = crtTrack.x1_pos; start[1] = crtTrack.y1_pos; start[2] = crtTrack.z1_pos;
+            end[0] = crtTrack.x2_pos; end[1] = crtTrack.y2_pos; end[2] = crtTrack.z2_pos;
+          }
+          ind++;
+        }
+        // If small then fill the dist^2 histograms
+        if(smallErrors){
+          double trackAveDca = TrackAveDCA(recoTracks[matchedTrackID], crtStart, crtEnd);
+          double trueAveDca = TrueAveDCA(particles[matchingMap[matchedTrackID].trueID], start, end);
+          fDCACrtReco->Fill(trackAveDca);
+          fDCACrtTrue->Fill(trueAveDca);
+          fDCARecoTrue->Fill(std::abs(trackAveDca-trueAveDca));
+        }
       }
       else{
         bool matchable = false;
@@ -578,7 +612,7 @@ namespace sbnd {
     truthMatch.matchingMap = matchingMap;
     truthMatch.recoCrtTracks = recoCrtTracks;
     if(fPlot){
-      DrawTrueTracks(truthMatch, true, true, true, true, fPlotID);
+      DrawTrueTracks(truthMatch, true, false, false, false, fPlotID);
     }
 
     //--------------------------------- Performance Analysis ----------------------------------
@@ -596,6 +630,20 @@ namespace sbnd {
              <<"Efficiency = "<<((double)(nCorrectMatch+nCorrectNoMatch))/((double)(nCorrectMatch+nCorrectNoMatch+nIncorrectMatch+nIncorrectNoMatch))<<"\n"
              <<"Purity = "<<((double)(nCorrectMatch))/((double)(nCorrectMatch+nIncorrectMatch))<<"\n"
              <<"Number of matches with correct time = "<<nCorrectTime<<", incorrect time = "<<nIncorrectTime<<" purity = "<<((double)nCorrectTime)/(nCorrectTime+nIncorrectTime)<<"\n";
+
+    
+    TCanvas *c2 = new TCanvas("c2","",700,700);
+    fDeltaThetaNoMatch->Draw();
+    fDeltaThetaMatch->Draw("SAME");
+    c2->SaveAs("deltaTheta.root");
+    TCanvas *c3 = new TCanvas("c3","",700,700);
+    fDeltaPhiNoMatch->Draw();
+    fDeltaPhiMatch->Draw("SAME");
+    c3->SaveAs("deltaPhi.root");
+    TCanvas *c4 = new TCanvas("c4","",700,700);
+    fDeltaDistNoMatch->Draw();
+    fDeltaDistMatch->Draw("SAME");
+    c4->SaveAs("deltaDist.root");
   
   } // CRTTrackMatchingAna::endJob()
 
@@ -791,8 +839,11 @@ namespace sbnd {
     double zmin = 0.;
     double zmax = fGeometryService->DetLength();
     double rmin[3] = {xmin, ymin, zmin};
-    double rmax[3] = {xmax, ymax, zmax};
-    DrawCube(c1, rmin, rmax, 2);
+    double rmax[3] = {0, ymax, zmax};
+    DrawCube(c1, rmin, rmax, 1);
+    double rmin1[3] = {0, ymin, zmin};
+    double rmax1[3] = {xmax, ymax, zmax};
+    DrawCube(c1, rmin1, rmax1, 1);
 
     // Draw the true particles
     TPolyLine3D *trajectories[100];
@@ -1050,17 +1101,9 @@ namespace sbnd {
 
 
   // Function the calculate the average squared distance between a CRT and TPC track
-  double CRTTrackMatchingAna::TrackAveDistSq(recob::Track track, TVector3 start, TVector3 end){
+  double CRTTrackMatchingAna::TrackAveDCA(recob::Track track, TVector3 start, TVector3 end){
 
-    // Draw line between start and end
-    TVector3 diff = start - end;
-    double p0 = start.X() - (start.Z()*(diff.X())/(diff.Z()));
-    double p1 = (diff.X())/(diff.Z());
-    double p2 = start.Y() - (start.Z()*(diff.Y())/(diff.Z()));
-    double p3 = (diff.Y())/(diff.Z());
-    TVector3 x0(p0, p2, 0.);
-    TVector3 x1(p0+p1, p2+p3, 1.);
-    TVector3 u = (x1-x0).Unit();
+    double denominator = (end - start).Mag();
 
     // Loop over track trajectory
     int nTraj = track.NumberTrajectoryPoints();
@@ -1068,14 +1111,52 @@ namespace sbnd {
     double xres = 0;
     for(int j = 0; j < nTraj; j++){
       TVector3 xp = track.LocationAtPoint(j);
-      double d2 = ((xp-x0).Cross(u)).Mag2();
+      double numerator = ((xp - start).Cross(xp - end)).Mag();
+      if(xp[0]==-999) continue;
+      double d2 = numerator/denominator;
       xres += d2;
       ipt++;
     }
 
     return xres/ipt;
 
-  } // CRTTrackMatchingAna::TrackAveDistSq()
+  } // CRTTrackMatchingAna::TrackAveDCA()
+
+
+  // Function the calculate the average squared distance between a CRT and TPC track
+  double CRTTrackMatchingAna::TrueAveDCA(simb::MCParticle particle, TVector3 start, TVector3 end){
+
+    double denominator = (end - start).Mag();
+
+    double xmin = -2.0 * fGeometryService->DetHalfWidth();
+    double xmax = 2.0 * fGeometryService->DetHalfWidth();
+    double ymin = -fGeometryService->DetHalfHeight();
+    double ymax = fGeometryService->DetHalfHeight();
+    double zmin = 0.;
+    double zmax = fGeometryService->DetLength();
+
+    // Get the trajectory of the true particle
+    size_t npts = particle.NumberTrajectoryPoints();
+    int ipt = 0;
+    double xres = 0;
+
+    // Loop over particle trajectory
+    for (size_t i = 0; i < npts; i++){
+      TVector3 trajPoint(particle.Vx(i), particle.Vy(i), particle.Vz(i));
+      // If the particle is inside the tagger volume then set to true.
+      if(trajPoint[0]>xmin && trajPoint[0]<xmax &&
+         trajPoint[1]>ymin && trajPoint[1]<ymax &&
+         trajPoint[2]>zmin && trajPoint[2]<zmax){
+        double numerator = ((trajPoint - start).Cross(trajPoint - end)).Mag();
+        double d2 = numerator/denominator;
+        xres += d2;
+        ipt++;
+      }
+    }
+
+    return xres/ipt;
+
+  } // CRTTrackMatchingAna::TrueAveDCA()
 
 
   DEFINE_ART_MODULE(CRTTrackMatchingAna)

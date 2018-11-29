@@ -6,7 +6,6 @@
 /// Author:         Thomas Brooks
 /// E-mail address: tbrooks@fnal.gov
 ///
-/// Modified from CRTTrackMatching by Thomas Warburton.
 /////////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
@@ -125,6 +124,7 @@ namespace sbnd {
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
     // Call appropriate produces<>() functions here.
+    // TODO add CRT-TPC association
     produces< std::vector<anab::T0> >();
     produces< art::Assns<recob::Track , anab::T0> >();
     
