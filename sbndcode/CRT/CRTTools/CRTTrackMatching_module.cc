@@ -124,9 +124,9 @@ namespace sbnd {
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
     // Call appropriate produces<>() functions here.
-    // TODO add CRT-TPC association
     produces< std::vector<anab::T0> >();
     produces< art::Assns<recob::Track , anab::T0> >();
+    produces< art::Assns<recob::Track , crt::CRTTrack> >();
     
     // Get a pointer to the geometry service provider
     fGeometryService = lar::providerFrom<geo::Geometry>();
@@ -169,6 +169,7 @@ namespace sbnd {
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
+    std::unique_ptr< art::Assns<recob::Track, crt::CRTTrack> > Crtassn( new art::Assns<recob::Track, crt::CRTTrack>);
 
     // Get TPC tracks
     art::Handle< std::vector<recob::Track> > tpcTrackListHandle;
@@ -208,6 +209,12 @@ namespace sbnd {
         crtIndex++;
       }
  
+      std::map<int, art::Ptr<recob::Track>> tpcTrackMap;
+      for (size_t tpc_i = 0; tpc_i < tpcTrackList.size(); tpc_i++){
+        int trackID = tpcTrackList[tpc_i]->ID();
+        tpcTrackMap[trackID] = tpcTrackList[tpc_i];
+      }
+        
       // Loop over the reco crt tracks
       for (auto const& recoCrtTrack : recoCrtTracks){
 
@@ -264,7 +271,8 @@ namespace sbnd {
         if(matchedTrackID != -99999){
           T0col->push_back(anab::T0(fDetectorClocks->TPCTick2Time(recoCrtTrack.trueTime)*1e3, 0, 
                                     matchedTrackID, (*T0col).size(), crtTpcMatchCandidates[0].second)); 
-          util::CreateAssn(*this, event, *T0col, tpcTrackList[matchedTrackID], *Trackassn);
+          util::CreateAssn(*this, event, *T0col, tpcTrackMap[matchedTrackID], *Trackassn);
+          util::CreateAssn(*this, event, crtTrackList[recoCrtTrack.crtID], tpcTrackMap[matchedTrackID], *Crtassn);
         }
  
       }
@@ -273,6 +281,7 @@ namespace sbnd {
    
     event.put(std::move(T0col));
     event.put(std::move(Trackassn));
+    event.put(std::move(Crtassn));
     
   } // CRTTrackMatching::produce()
 
