@@ -91,7 +91,6 @@ private:
   std::string  fDataLabelTZeros;
   int          fTrackMethodType;
   int          fStoreTrack;
-  int          fVerbose = 0;
   double       fTimeLimit;
   double       fAverageHitDistance;
   double       fDistanceLimit;
@@ -145,7 +144,6 @@ CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const & p)
   fDataLabelHits      = p.get<std::string>("DataLabelHits");      // CRTHit producer module name
   fDataLabelTZeros    = p.get<std::string>("DataLabelTZeros");    // CRTTzero producer module name
   fStoreTrack         = p.get<int>        ("StoreTrack");         // method 1 = all, method 2 = ave, method 3 = pure, method 4 = top plane
-  fVerbose            = p.get<int>        ("Verbose");            // Produce CRTTracks
   fTrackMethodType    = p.get<int>        ("TrackMethodType");    // Print stuff
   fTimeLimit          = p.get<double>     ("TimeLimit");          // Maximum time difference to combine hits into a tzero [us]
   fAverageHitDistance = p.get<double>     ("AverageHitDistance"); // Maximum distance to avarage hits on the same tagger over [cm]
@@ -176,10 +174,8 @@ void CRTTrackProducer::produce(art::Event & evt)
 
   // Check to make sure the data we asked for is valid                                                                         
   if(!rawHandle.isValid()){
-    std::cout << "Run " << evt.run() << ", subrun " << evt.subRun()
-              << ", event " << evt.event() << " has zero"
-              << " CRTHits " << " in module " << fDataLabelHits << std::endl;
-    std::cout << std::endl;
+    mf::LogWarning("CRTTrackProducer")
+      <<"No CRTHits from producer module "<<fDataLabelHits;
     return;
   }
 
@@ -271,10 +267,8 @@ void CRTTrackProducer::produce(art::Event & evt)
     
     //check to make sure the data we asked for is valid                                                                            
     if(!rawHandletzero.isValid()){
-      std::cout << "Run " << evt.run() << ", subrun " << evt.subRun()
-                << ", event " << evt.event() << " has zero"
-                << " CRTTzeros " << " in module " << fDataLabelTZeros << std::endl;
-      std::cout << std::endl;
+      mf::LogWarning("CRTTrackProducer")
+        <<"No CRTTzeros from producer module "<<fDataLabelTZeros;
       return;
     }
     
@@ -405,11 +399,10 @@ void CRTTrackProducer::produce(art::Event & evt)
   if(fStoreTrack == 1)
     evt.put(std::move(CRTTrackCol));
 
-  if(fVerbose){ 
-    std::cout<<"Number of tracks = "<<nTrack<<std::endl
-             <<"Number of complete tracks = "<<nCompTrack<<std::endl
-             <<"Number of incomplete tracks = "<<nIncTrack<<std::endl;
-  }
+  mf::LogInfo("CRTTrackProducer")
+    <<"Number of tracks            = "<<"\n"
+    <<"Number of complete tracks   = "<<"\n"
+    <<"Number of incomplete tracks = "<<nIncTrack;
   
 } // CRTTrackProducer::produce()
 

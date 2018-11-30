@@ -108,7 +108,6 @@ namespace sbnd {
     // Params got from fcl file.......
     art::InputTag fTpcTrackModuleLabel; ///< name of track producer
     art::InputTag fCrtTrackModuleLabel; ///< name of crt producer
-    bool          fVerbose;             ///< print info
     double        fMaxAngleDiff;        ///< max difference between CRT and TPC angles
     double        fMaxDistance;         ///< max distance between CRT and TPC start/end positions
 
@@ -142,7 +141,6 @@ namespace sbnd {
 
     fTpcTrackModuleLabel = (p.get<art::InputTag> ("TpcTrackModuleLabel"));
     fCrtTrackModuleLabel = (p.get<art::InputTag> ("CrtTrackModuleLabel")); 
-    fVerbose             = (p.get<bool>          ("Verbose"));
     fMaxAngleDiff        = (p.get<double>        ("MaxAngleDiff"));
     fMaxDistance         = (p.get<double>        ("MaxDistance"));
 
@@ -160,12 +158,6 @@ namespace sbnd {
   void CRTTrackMatching::produce(art::Event & event)
   {
 
-    if(fVerbose){
-      std::cout<<"============================================"<<std::endl
-               <<"Run = "<<event.run()<<", SubRun = "<<event.subRun()<<", Event = "<<event.id().event()<<std::endl
-               <<"============================================"<<std::endl;
-    }
-    
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
@@ -189,8 +181,9 @@ namespace sbnd {
     // Validity check
     if (tpcTrackListHandle.isValid() && crtTrackListHandle.isValid() ){
 
-      if(fVerbose) std::cout<<"Number of TPC tracks = "<<tpcTrackList.size()<<"\n"
-                            <<"Number of CRT tracks = "<<crtTrackList.size()<<"\n";
+      mf::LogInfo("CRTTrackMatching")
+        <<"Number of TPC tracks = "<<tpcTrackList.size()<<"\n"
+        <<"Number of CRT tracks = "<<crtTrackList.size();
 
       //TODO Account for crt track errors
       int crtIndex = 0;
@@ -266,7 +259,8 @@ namespace sbnd {
           std::sort(crtTpcMatchCandidates.begin(), crtTpcMatchCandidates.end(), [](auto& left, auto& right){
                     return left.second < right.second;});
           matchedTrackID = crtTpcMatchCandidates[0].first;
-          if(fVerbose) std::cout<<"Matched time "<<recoCrtTrack.trueTime<<" ticks to track "<<matchedTrackID<<"\n";
+          mf::LogInfo("CRTTrackMatching")
+            <<"Matched time "<<recoCrtTrack.trueTime<<" ticks to track "<<matchedTrackID;
         }
         if(matchedTrackID != -99999){
           T0col->push_back(anab::T0(recoCrtTrack.trueTime*1e3, 0, matchedTrackID, (*T0col).size(), crtTpcMatchCandidates[0].second)); 

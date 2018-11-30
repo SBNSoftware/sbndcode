@@ -95,7 +95,6 @@ namespace sbnd {
     double        fDistanceLimit;       ///< Maximum distance between projected crossing point and CRT hit
     double        fMinTrackLength;      ///< Minimum track length to perform T0 matching on
     double        fTrackDirectionFrac;  ///< Minimum track length to perform T0 matching on
-    bool          fVerbose;             ///< print info
 
     // Other variables shared between different methods.
     geo::GeometryCore const* fGeometryService;              ///< pointer to Geometry provider
@@ -129,7 +128,6 @@ namespace sbnd {
     fDistanceLimit       = (p.get<double>        ("DistanceLimit")); 
     fMinTrackLength      = (p.get<double>        ("MinTrackLength")); 
     fTrackDirectionFrac  = (p.get<double>        ("TrackDirectionFrac")); 
-    fVerbose             = (p.get<bool>          ("Verbose"));
 
   } // CRTT0Matching::reconfigure()
 
@@ -141,12 +139,6 @@ namespace sbnd {
 
   void CRTT0Matching::produce(art::Event & event)
   {
-
-    if(fVerbose){
-      std::cout<<"============================================"<<std::endl
-               <<"Run = "<<event.run()<<", SubRun = "<<event.subRun()<<", Event = "<<event.id().event()<<std::endl
-               <<"============================================"<<std::endl;
-    }
 
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
@@ -173,8 +165,9 @@ namespace sbnd {
     // Get track to hit associations
     art::FindManyP<recob::Hit> findManyHits(trackListHandle, event, fTpcTrackModuleLabel);
 
-    if(fVerbose) std::cout<<"Number of reconstructed tracks = "<<trackList.size()
-                          <<"\nNumber of CRT hits = "<<crtList.size()<<"\n";
+    mf::LogInfo("CRTT0Matching")
+      <<"Number of reconstructed tracks = "<<trackList.size()<<"\n"
+      <<"Number of CRT hits = "<<crtList.size();
    
     if (trackListHandle.isValid() && crtListHandle.isValid() ){
       
@@ -250,7 +243,8 @@ namespace sbnd {
         if(t0Candidates.size()>0) {
           bestTime = t0Candidates[0].second;
           bestDist = t0Candidates[0].first;
-          if(fVerbose) std::cout<<"Matched time = "<<bestTime<<" us to track "<<trackList[track_i]->ID()<<"\n";
+          mf::LogInfo("CRTT0Matching")
+            <<"Matched time = "<<bestTime<<" [us] to track "<<trackList[track_i]->ID();
         }
 
         T0col->push_back(anab::T0(bestTime * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), bestDist));
