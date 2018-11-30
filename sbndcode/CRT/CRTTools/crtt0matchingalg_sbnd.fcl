@@ -8,7 +8,6 @@ standard_crtt0matching:
     DistanceLimit:       40.                # Maximum distance between projected crossing point and CRT hit
     MinTrackLength:      20.                # Minimum track length to perform T0 matching on
     TrackDirectionFrac:  0.5                # Minimum track length to perform T0 matching on
-    Verbose:             false              # Print info
 }
 
 END_PROLOG

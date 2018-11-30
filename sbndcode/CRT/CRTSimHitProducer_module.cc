@@ -121,7 +121,6 @@ namespace sbnd {
 
     // Params from fcl file.......
     art::InputTag fCrtModuleLabel;      ///< name of crt producer
-    bool          fVerbose;             ///< print info
     double        fTimeCoincidenceLimit;///< minimum time between two overlapping hit crt strips [ticks]
     double        fQPed;                ///< Pedestal offset of SiPMs [ADC]
     double        fQSlope;              ///< Pedestal slope of SiPMs [ADC/photon]
@@ -163,7 +162,6 @@ namespace sbnd {
   {
 
     fCrtModuleLabel       = (p.get<art::InputTag> ("CrtModuleLabel")); 
-    fVerbose              = (p.get<bool>          ("Verbose"));
     fTimeCoincidenceLimit = (p.get<double>        ("TimeCoincidenceLimit"));
     fQPed                 = (p.get<double>        ("QPed"));
     fQSlope               = (p.get<double>        ("QSlope"));
@@ -174,8 +172,6 @@ namespace sbnd {
 
   void CRTSimHitProducer::beginJob()
   {
-
-    if(fVerbose){std::cout<<"----------------- CRT Hit Reco Module -------------------"<<std::endl;}
 
   } // CRTSimHitProducer::beginJob()
 
@@ -188,12 +184,6 @@ namespace sbnd {
     tpesmap[0] = {std::make_pair(0,0)};
 
     int nHits = 0;
-
-    if(fVerbose){
-      std::cout<<"============================================"<<std::endl
-               <<"Run = "<<event.run()<<", SubRun = "<<event.subRun()<<", Event = "<<event.id().event()<<std::endl
-               <<"============================================"<<std::endl;
-    }
 
     // Detector properties
     double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
@@ -211,7 +201,8 @@ namespace sbnd {
     // The y crossing point of z planes and z crossing point of y planes would be constant
     std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips;
 
-    if(fVerbose) std::cout<<"Number of SiPM hits = "<<crtList.size()<<"\n";
+    mf::LogInfo("CRTSimHitProducer")
+      <<"Number of SiPM hits = "<<crtList.size();
 
     // Loop over all the SiPM hits in 2 (should be in pairs due to trigger)
     for (size_t i = 0; i < crtList.size(); i+=2){
@@ -367,7 +358,8 @@ namespace sbnd {
 
     event.put(std::move(CRTHitcol));
 
-    if(fVerbose) std::cout<<"Number of CRT hits produced = "<<nHits<<std::endl;
+    mf::LogInfo("CRTSimHitProducer")
+      <<"Number of CRT hits produced = "<<nHits;
     
   } // CRTSimHitProducer::produce()
 
