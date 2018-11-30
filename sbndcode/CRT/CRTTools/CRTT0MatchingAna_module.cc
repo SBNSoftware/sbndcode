@@ -343,19 +343,19 @@ namespace sbnd {
       double xTotStart = 0; double yTotStart = 0; double zTotStart = 0;
       double xTotEnd = 0; double yTotEnd = 0; double zTotEnd = 0;
       for(int i = 0; i < endPoint; i++){
-        xTotStart -= track.DirectionAtPoint(i)[0];
-        yTotStart -= track.DirectionAtPoint(i)[1];
-        zTotStart -= track.DirectionAtPoint(i)[2];
-        xTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1))[0];
-        yTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1))[1];
-        zTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1))[2];
+        xTotStart -= track.DirectionAtPoint(i).X();
+        yTotStart -= track.DirectionAtPoint(i).Y();
+        zTotStart -= track.DirectionAtPoint(i).Z();
+        xTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1)).X();
+        yTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1)).Y();
+        zTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1)).Z();
       } 
       TVector3 startDir = {xTotStart/endPoint, yTotStart/endPoint, zTotStart/endPoint};
       TVector3 endDir = {xTotEnd/endPoint, yTotEnd/endPoint, zTotEnd/endPoint};
 
       // Get the start and end points
-      TVector3 start = track.Vertex();
-      TVector3 end = track.End();
+      TVector3 start = track.Vertex<TVector3>();
+      TVector3 end = track.End<TVector3>();
 
       if (fVerbose){
         PrintVect(start, "Track start");

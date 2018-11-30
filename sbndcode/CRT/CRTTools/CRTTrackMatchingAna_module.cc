@@ -332,8 +332,8 @@ namespace sbnd {
       recoTracks[trackID] = tpcTrack;
 
       tpcTracks.push_back(tpcTrack);
-      TVector3 tpcStart = tpcTrack.Vertex();
-      TVector3 tpcEnd = tpcTrack.End();
+      TVector3 tpcStart = tpcTrack.Vertex<TVector3>();
+      TVector3 tpcEnd = tpcTrack.End<TVector3>();
 
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -472,8 +472,8 @@ namespace sbnd {
         //if (tpc != (int)hits[hits.size()-1]->WireID().TPC){ if(fVerbose) std::cout<<"Track has been stitched!\n"; continue;}
 
         // Get the length, angle and start and end position of the TPC track
-        TVector3 tpcStart = tpcTrack.Vertex();
-        TVector3 tpcEnd = tpcTrack.End();
+        TVector3 tpcStart = tpcTrack.Vertex<TVector3>();
+        TVector3 tpcEnd = tpcTrack.End<TVector3>();
         double tpcLength = (tpcStart - tpcEnd).Mag();
         double tpcTheta = (tpcStart - tpcEnd).Theta();
         double tpcPhi = (tpcStart - tpcEnd).Phi();
@@ -943,7 +943,7 @@ namespace sbnd {
         size_t npts = tr.NumberTrajectoryPoints();
         tpctrack[i] = new TPolyLine3D(npts);
         for(size_t j = 0; j < npts; j++){
-          TVector3 pos = tr.LocationAtPoint(j);
+          auto& pos = tr.LocationAtPoint(j);
           tpctrack[i]->SetPoint(j, pos.X(), pos.Y(), pos.Z());
         }
         // Draw a line between them
@@ -1110,7 +1110,7 @@ namespace sbnd {
     int ipt = 0;
     double xres = 0;
     for(int j = 0; j < nTraj; j++){
-      TVector3 xp = track.LocationAtPoint(j);
+      TVector3 xp = track.LocationAtPoint<TVector3>(j);
       double numerator = ((xp - start).Cross(xp - end)).Mag();
       if(xp[0]==-999) continue;
       double d2 = numerator/denominator;
