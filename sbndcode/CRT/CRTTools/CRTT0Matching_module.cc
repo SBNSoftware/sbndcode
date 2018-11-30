@@ -189,18 +189,18 @@ namespace sbnd {
         double xTotStart = 0; double yTotStart = 0; double zTotStart = 0;
         double xTotEnd = 0; double yTotEnd = 0; double zTotEnd = 0;
         for(int i = 0; i < endPoint; i++){
-          xTotStart += trackList[track_i]->DirectionAtPoint(i)[0];
-          yTotStart += trackList[track_i]->DirectionAtPoint(i)[1];
-          zTotStart += trackList[track_i]->DirectionAtPoint(i)[2];
-          xTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1))[0];
-          yTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1))[1];
-          zTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1))[2];
+          xTotStart += trackList[track_i]->DirectionAtPoint(i).X();
+          yTotStart += trackList[track_i]->DirectionAtPoint(i).Y();
+          zTotStart += trackList[track_i]->DirectionAtPoint(i).Z();
+          xTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1)).X();
+          yTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1)).Y();
+          zTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1)).Z();
         }
         TVector3 startDir = {-xTotStart/endPoint, -yTotStart/endPoint, -zTotStart/endPoint};
         TVector3 endDir = {xTotEnd/endPoint, yTotEnd/endPoint, zTotEnd/endPoint};
 
-        TVector3 start = trackList[track_i]->Vertex();
-        TVector3 end = trackList[track_i]->End();
+        TVector3 start = trackList[track_i]->Vertex<TVector3>();
+        TVector3 end = trackList[track_i]->End<TVector3>();
 
         // ====================== Matching Algorithm ========================== //
         // Get the allowed t0 range

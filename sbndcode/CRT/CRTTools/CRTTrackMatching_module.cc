@@ -222,8 +222,8 @@ namespace sbnd {
           int tpc = hits[0]->WireID().TPC;
  
           // Get the length, angle and start and end position of the TPC track
-          TVector3 tpcStart = tpcTrack.Vertex();
-          TVector3 tpcEnd = tpcTrack.End();
+          TVector3 tpcStart = tpcTrack.Vertex<TVector3>();
+          TVector3 tpcEnd = tpcTrack.End<TVector3>();
           double tpcTheta = (tpcStart - tpcEnd).Theta();
           double tpcPhi = (tpcStart - tpcEnd).Phi();
  
