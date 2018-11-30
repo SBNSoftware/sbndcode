@@ -90,6 +90,7 @@ simple_plugin( CRTSimHitProducer module
         sbndcode_CRT
         sbndcode_CRTData
         sbndcode_CRTProducts
+        sbndcode_CRTUtils
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
@@ -111,6 +112,7 @@ simple_plugin(CRTTrackProducer module
         sbndcode_CRT
         sbndcode_CRTData
         sbndcode_CRTProducts
+        sbndcode_CRTUtils
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
@@ -154,6 +156,7 @@ simple_plugin(CRTRecoAna module
         sbndcode_CRTData
         sbndcode_CRTProducts
         sbndcode_RecoUtils
+        sbndcode_CRTUtils
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}

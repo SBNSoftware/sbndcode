@@ -1,4 +1,4 @@
-art_make(
+art_make(    LIBRARY_NAME sbndcode_CRTUtils
              LIB_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
