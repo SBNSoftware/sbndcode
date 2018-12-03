@@ -236,6 +236,7 @@ sbnd::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::m
   crtHit.ts0_ns_corr = 0; 
   crtHit.ts1_ns      = time * 1e3;
   crtHit.ts0_s       = time * 1e-6;
+  crtHit.plane       = plane;
   crtHit.x_pos       = x;
   crtHit.x_err       = ex;
   crtHit.y_pos       = y; 
