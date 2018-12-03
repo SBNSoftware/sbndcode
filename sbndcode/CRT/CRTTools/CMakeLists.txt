@@ -34,6 +34,7 @@ art_make(
                            sbndcode_RecoUtils
                            sbndcode_CRT
                            sbndcode_CRTProducts
+                           sbndcode_CRTUtils
         )
 
 install_headers()

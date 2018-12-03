@@ -283,18 +283,18 @@ double CRTAnaUtils::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::
   double xTotStart = 0; double yTotStart = 0; double zTotStart = 0;
   double xTotEnd = 0; double yTotEnd = 0; double zTotEnd = 0;
   for(int i = 0; i < endPoint; i++){
-    xTotStart += tpcTrack.DirectionAtPoint(i)[0];
-    yTotStart += tpcTrack.DirectionAtPoint(i)[1];
-    zTotStart += tpcTrack.DirectionAtPoint(i)[2];
-    xTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1))[0];
-    yTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1))[1];
-    zTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1))[2];
+    xTotStart += tpcTrack.DirectionAtPoint(i).X();
+    yTotStart += tpcTrack.DirectionAtPoint(i).Y();
+    zTotStart += tpcTrack.DirectionAtPoint(i).Z();
+    xTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1)).X();
+    yTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1)).Y();
+    zTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1)).Z();
   }
   TVector3 startDir = {-xTotStart/endPoint, -yTotStart/endPoint, -zTotStart/endPoint};
   TVector3 endDir = {xTotEnd/endPoint, yTotEnd/endPoint, zTotEnd/endPoint};
 
-  TVector3 start = tpcTrack.Vertex();
-  TVector3 end = tpcTrack.End();
+  auto start = tpcTrack.Vertex<TVector3>();
+  auto end = tpcTrack.End<TVector3>();
 
   // ====================== Matching Algorithm ========================== //
   // Get the allowed t0 range
@@ -339,8 +339,8 @@ double CRTAnaUtils::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::
 double CRTAnaUtils::T0FromCRTTracks(recob::Track tpcTrack, std::vector<sbnd::crt::CRTTrack> crtTracks, int tpc, double fMaxAngleDiff, double fMaxDistance){
 
   // Get the length, angle and start and end position of the TPC track
-  TVector3 tpcStart = tpcTrack.Vertex();
-  TVector3 tpcEnd = tpcTrack.End();
+  TVector3 tpcStart = tpcTrack.Vertex<TVector3>();
+  TVector3 tpcEnd = tpcTrack.End<TVector3>();
   double tpcTheta = (tpcStart - tpcEnd).Theta();
   double tpcPhi = (tpcStart - tpcEnd).Phi();
 
