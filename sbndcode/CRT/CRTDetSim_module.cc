@@ -11,6 +11,8 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nutools/RandomUtils/NuRandomService.h"
+#include "canvas/Persistency/Common/Ptr.h" 
+#include "art/Persistency/Common/PtrMaker.h"
 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataalg/DetectorInfo/ElecClock.h"
@@ -30,8 +32,8 @@
 #include "TNtuple.h"
 #include "TGeoManager.h"
 #include "TGeoNode.h"
-#include "CRTProducts/CRTData.hh"
-#include "CRTDetSim.h"
+#include "sbndcode/CRT/CRTProducts/CRTData.hh"
+#include "sbndcode/CRT/CRTDetSim.h"
 
 #include <cmath>
 #include <memory>
@@ -79,6 +81,8 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p) {
   this->reconfigure(p);
 
   produces<std::vector<sbnd::crt::CRTData> >();
+  produces<std::vector<sim::AuxDetIDE> >();
+  produces< art::Assns<sbnd::crt::CRTData , sim::AuxDetIDE> >();
 }
 
 
@@ -123,6 +127,7 @@ uint32_t CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
 struct Tagger {
   std::vector<std::pair<unsigned, uint32_t> > planesHit;
   std::vector<sbnd::crt::CRTData> data;
+  std::vector<std::vector<sim::AuxDetIDE>> ides;
 };
 
 
@@ -207,6 +212,9 @@ void CRTDetSim::produce(art::Event & e) {
       double eDep = ide.energyDeposited;
       double maxEdep = eDep;
 
+      std::vector<sim::AuxDetIDE> trueIdes;
+      trueIdes.push_back(ide);
+
       //ADD UP HITS AT THE SAME TIME - 2NS DIFF IS A GUESS -VERY APPROXIMATE
       if(ide_i < ides.size() - 1){
         while(ide_i < ides.size() - 1 && std::abs(tTrue-((ides[ide_i+1].entryT + ides[ide_i+1].exitT) / 2 + fGlobalT0Offset)) < fSipmTimeResponse){
@@ -216,6 +224,9 @@ void CRTDetSim::produce(art::Event & e) {
           z = (z + ((ides[ide_i].entryZ + ides[ide_i].exitZ) / 2))/2;
           eDep += ides[ide_i].energyDeposited;
           tTrue = (tTrue + ((ides[ide_i].entryT + ides[ide_i].exitT) / 2))/2;
+
+          trueIdes.push_back(ides[ide_i]);
+
           if(ides[ide_i].energyDeposited > maxEdep && ides[ide_i].trackID > 0){
             trackID = ides[ide_i].trackID;
             maxEdep = ides[ide_i].energyDeposited;
@@ -293,7 +304,9 @@ void CRTDetSim::produce(art::Event & e) {
         Tagger& tagger = taggers[nodeTagger->GetName()];
         tagger.planesHit.push_back({planeID, t0});
         tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0, trackID));
+        tagger.ides.push_back(trueIdes);
         tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1, trackID));
+        tagger.ides.push_back(trueIdes);
       }
 
       double poss[3];
@@ -320,6 +333,13 @@ void CRTDetSim::produce(art::Event & e) {
   // Apply coincidence trigger requirement
   std::unique_ptr<std::vector<sbnd::crt::CRTData> > triggeredCRTHits(
       new std::vector<sbnd::crt::CRTData>);
+  art::PtrMaker<sbnd::crt::CRTData> makeDataPtr(e, *this);
+
+  std::unique_ptr<std::vector<sim::AuxDetIDE> > auxDetIdes(
+      new std::vector<sim::AuxDetIDE>);
+  art::PtrMaker<sim::AuxDetIDE> makeIdePtr(e, *this);
+
+  std::unique_ptr< art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE> > Dataassn( new art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE>);
 
   // Logic: For normal taggers, require at least one hit in each perpendicular
   // plane. For the bottom tagger, any hit triggers read out.
@@ -343,8 +363,17 @@ void CRTDetSim::produce(art::Event & e) {
 
     if (trigger || trg.first.find("TaggerBot") != std::string::npos) {
       // Write out all hits on a tagger when there is any coincidence
-      for (auto d : trg.second.data) {
-        triggeredCRTHits->push_back(d);
+      //for (auto d : trg.second.data) {
+      for (size_t d_i = 0; d_i < trg.second.data.size(); d_i++) {
+        triggeredCRTHits->push_back(trg.second.data[d_i]);
+        art::Ptr<sbnd::crt::CRTData> dataPtr = makeDataPtr(triggeredCRTHits->size()-1);
+        if(trg.second.data.size() == trg.second.ides.size()){
+          for (size_t i_i = 0; i_i < trg.second.ides[d_i].size(); i_i++){
+            auxDetIdes->push_back(trg.second.ides[d_i][i_i]);
+            art::Ptr<sim::AuxDetIDE> idePtr = makeIdePtr(auxDetIdes->size()-1);
+            Dataassn->addSingle(dataPtr, idePtr);
+          }
+        }
       }
     }
   }
@@ -352,6 +381,8 @@ void CRTDetSim::produce(art::Event & e) {
   mf::LogInfo("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << "\n";
 
   e.put(std::move(triggeredCRTHits));
+  e.put(std::move(auxDetIdes));
+  e.put(std::move(Dataassn));
 }
 
 DEFINE_ART_MODULE(CRTDetSim)

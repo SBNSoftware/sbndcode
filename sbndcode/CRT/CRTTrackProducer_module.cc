@@ -21,6 +21,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "art/Framework/Services/Optional/TFileService.h"
+#include "art/Persistency/Common/PtrMaker.h"
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
@@ -131,8 +132,10 @@ CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const & p)
   fUseTopPlane        = p.get<bool>       ("UseTopPlane");        // Use hits from the top plane (SBND specific)
   
   // Call appropriate produces<>() functions here.
-  if(fStoreTrack == 1) 
+  if(fStoreTrack == 1){ 
     produces< std::vector<crt::CRTTrack>   >();
+    produces< art::Assns<crt::CRTTrack , crt::CRTHit> >();
+  } 
 
 } // CRTTrackProducer()
 
@@ -147,6 +150,8 @@ void CRTTrackProducer::produce(art::Event & evt)
 
   // CRTTrack collection on this event                                                                         
   std::unique_ptr<std::vector<crt::CRTTrack> > CRTTrackCol(new std::vector<crt::CRTTrack>);
+  std::unique_ptr< art::Assns<crt::CRTTrack, crt::CRTHit> > Trackassn( new art::Assns<crt::CRTTrack, crt::CRTHit>);
+  art::PtrMaker<crt::CRTTrack> makeTrackPtr(evt, *this);
 
   // Implementation of required member function here.
   art::Handle< std::vector<crt::CRTHit> > rawHandle;
@@ -233,6 +238,11 @@ void CRTTrackProducer::produce(art::Event & evt)
       nTrack += trackCandidates.size();
       for(size_t j = 0; j < trackCandidates.size(); j++){
         CRTTrackCol->emplace_back(trackCandidates[j]);
+
+        art::Ptr<crt::CRTTrack> trackPtr = makeTrackPtr(CRTTrackCol->size()-1);
+        for (size_t ah = 0; ah< CRTTzeroVect[i].size(); ++ah){        
+          Trackassn->addSingle(trackPtr, CRTTzeroVect[i][ah]);
+        }
         if(trackCandidates[j].complete) nCompTrack++;
         else nIncTrack++;
       }
@@ -376,8 +386,10 @@ void CRTTrackProducer::produce(art::Event & evt)
   }
   
   //store track collection into event
-  if(fStoreTrack == 1)
+  if(fStoreTrack == 1){
     evt.put(std::move(CRTTrackCol));
+    evt.put(std::move(Trackassn));
+  }
 
   mf::LogInfo("CRTTrackProducer")
     <<"Number of tracks            = "<<"\n"

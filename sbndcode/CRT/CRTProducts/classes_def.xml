@@ -1,5 +1,7 @@
 <lcgdict>
-  <class name="sbnd::crt::CRTData" ClassVersion="10">
+  <class name="sbnd::crt::CRTData" ClassVersion="12">
+   <version ClassVersion="12" checksum="4014796032"/>
+   <version ClassVersion="11" checksum="3272996027"/>
    <version ClassVersion="10" checksum="4014796032"/>
   </class>
   <class name="std::vector<sbnd::crt::CRTData>"/>
@@ -36,8 +38,23 @@
 
  <class name="art::Assns<sbnd::crt::CRTTzero, sbnd::crt::CRTHit,    void>"           />
  <class name="art::Wrapper< art::Assns<sbnd::crt::CRTTzero, sbnd::crt::CRTHit, void> >"           />
-
  <class name="art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTzero,    void>"           />
  <class name="art::Wrapper< art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTzero, void> >"           />
+
+ <class name="art::Wrapper< std::vector<sim::AuxDetIDE> >"/>
+ <class name="art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE,    void>"           />
+ <class name="art::Wrapper< art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE, void> >"           />
+ <class name="art::Assns<sim::AuxDetIDE, sbnd::crt::CRTData,    void>"           />
+ <class name="art::Wrapper< art::Assns<sim::AuxDetIDE, sbnd::crt::CRTData, void> >"           />
+
+ <class name="art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTData,    void>"           />
+ <class name="art::Wrapper< art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTData, void> >"           />
+ <class name="art::Assns<sbnd::crt::CRTData, sbnd::crt::CRTHit,    void>"           />
+ <class name="art::Wrapper< art::Assns<sbnd::crt::CRTData, sbnd::crt::CRTHit, void> >"           />
+
+ <class name="art::Assns<sbnd::crt::CRTTrack, sbnd::crt::CRTHit,    void>"           />
+ <class name="art::Wrapper< art::Assns<sbnd::crt::CRTTrack, sbnd::crt::CRTHit, void> >"           />
+ <class name="art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTrack,    void>"           />
+ <class name="art::Wrapper< art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTrack, void> >"           />
 
 </lcgdict>
