@@ -28,6 +28,7 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "art/Persistency/Common/PtrMaker.h"
 
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
@@ -121,6 +122,7 @@ namespace sbnd {
 
     // Call appropriate produces<>() functions here.
     produces< std::vector<crt::CRTHit> >();
+    produces< art::Assns<crt::CRTHit , crt::CRTData> >();
     
     // Get a pointer to the geometry service provider
     fGeometryService = lar::providerFrom<geo::Geometry>();
@@ -157,6 +159,10 @@ namespace sbnd {
   void CRTSimHitProducer::produce(art::Event & event)
   {
 
+    std::unique_ptr< std::vector<crt::CRTHit> > CRTHitcol( new std::vector<crt::CRTHit>);
+    std::unique_ptr< art::Assns<crt::CRTHit, crt::CRTData> > Hitassn( new art::Assns<crt::CRTHit, crt::CRTData>);
+    art::PtrMaker<crt::CRTHit> makeHitPtr(event, *this);
+
     std::vector<uint8_t> tfeb_id = {0};
     std::map<uint8_t, std::vector<std::pair<int,float>>> tpesmap;
     tpesmap[0] = {std::make_pair(0,0)};
@@ -172,8 +178,6 @@ namespace sbnd {
     std::vector<art::Ptr<crt::CRTData> > crtList;
     if (event.getByLabel(fCrtModuleLabel, crtListHandle))
       art::fill_ptr_vector(crtList, crtListHandle);
-
-    std::unique_ptr< std::vector<crt::CRTHit> > CRTHitcol( new std::vector<crt::CRTHit>);
 
     // Fill a vector of pairs of time and width direction for each CRT plane
     // The y crossing point of z planes and z crossing point of y planes would be constant
@@ -219,7 +223,7 @@ namespace sbnd {
       double ex = 1.92380e+00+1.47186e-02*normx-5.29446e-03*normx*normx;
       double time = (t1 + t2)/2.;
 
-      CRTStrip stripHit = {time, channel, x, ex, npe1+npe2, tagger};
+      CRTStrip stripHit = {time, channel, x, ex, npe1+npe2, tagger, i};
       taggerStrips[tagger].push_back(stripHit);
 
     }
@@ -280,6 +284,11 @@ namespace sbnd {
               crt::CRTHit crtHit = hitAlg.FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
                                               mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
               CRTHitcol->push_back(crtHit);
+              art::Ptr<crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
+              Hitassn->addSingle(hitPtr, crtList[tagStrip.second[hit_i].dataID]);
+              Hitassn->addSingle(hitPtr, crtList[tagStrip.second[hit_i].dataID+1]);
+              Hitassn->addSingle(hitPtr, crtList[taggerStrips[otherPlane][hit_j].dataID]);
+              Hitassn->addSingle(hitPtr, crtList[taggerStrips[otherPlane][hit_j].dataID+1]);
               nHits++;
             }
 
@@ -302,6 +311,9 @@ namespace sbnd {
           crt::CRTHit crtHit = hitAlg.FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
                                           mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
           CRTHitcol->push_back(crtHit);
+          art::Ptr<crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
+          Hitassn->addSingle(hitPtr, crtList[tagStrip.second[hit_i].dataID]);
+          Hitassn->addSingle(hitPtr, crtList[tagStrip.second[hit_i].dataID+1]);
           nHits++;
         }
 
@@ -327,6 +339,9 @@ namespace sbnd {
           crt::CRTHit crtHit = hitAlg.FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
                                           mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
           CRTHitcol->push_back(crtHit);
+          art::Ptr<crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
+          Hitassn->addSingle(hitPtr, crtList[taggerStrips[otherPlane][hit_j].dataID]);
+          Hitassn->addSingle(hitPtr, crtList[taggerStrips[otherPlane][hit_j].dataID+1]);
           nHits++;
         }
 
@@ -335,6 +350,7 @@ namespace sbnd {
     }
 
     event.put(std::move(CRTHitcol));
+    event.put(std::move(Hitassn));
 
     mf::LogInfo("CRTSimHitProducer")
       <<"Number of CRT hits produced = "<<nHits;

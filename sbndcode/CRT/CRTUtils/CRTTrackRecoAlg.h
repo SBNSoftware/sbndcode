@@ -84,6 +84,8 @@ namespace sbnd{
     CRTTrackRecoAlg(const fhicl::ParameterSet& pset) :
       CRTTrackRecoAlg(fhicl::Table<Config>(pset, {})()) {}
 
+    CRTTrackRecoAlg(double aveHitDist, double distLim);
+
     ~CRTTrackRecoAlg();
 
     void reconfigure(const Config& config);

@@ -65,6 +65,7 @@ namespace sbnd{
     double ex; // [cm]
     double pes;
     std::pair<std::string, unsigned> tagger;
+    size_t dataID;
   };
 
 
