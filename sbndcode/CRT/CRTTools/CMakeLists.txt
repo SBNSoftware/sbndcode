@@ -9,8 +9,8 @@ art_make(
                            larevt_Filters
                            lardataobj_RawData
                            lardataobj_RecoBase
-                           larreco_RecoAlg
-                           lardata_RecoObjects  
+                           lardataobj_AnalysisBase
+                           lardata_RecoObjects
                            larpandora_LArPandoraInterface
                            nusimdata_SimulationBase
                            ${ART_FRAMEWORK_CORE}
@@ -22,16 +22,21 @@ art_make(
                            art_Persistency_Provenance canvas
                            art_Utilities canvas
                            ${MF_MESSAGELOGGER}
-                           
+                           ${MF_UTILITIES}
                            ${FHICLCPP}
                            ${ROOT_GEOM}
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}
                            ${ROOT_BASIC_LIB_LIST}
+                           ${ROOT_SPECTRUM}
+                           ${ROOT_ROOFIT}
+                           ${ROOT_ROOFITCORE} 
                            sbndcode_RecoUtils
+                           sbndcode_CRT
+                           sbndcode_CRTProducts
         )
 
-# install_headers()
+install_headers()
 install_fhicl()
 install_source()
 
