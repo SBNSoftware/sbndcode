@@ -851,7 +851,7 @@ namespace sbnd {
                <<"Number of incomplete tracks = "<<nIncTracks<<std::endl;
     }
 
-    if(fPlot) DrawTrueTracks(particles, truthMatch, true, false, false, true, false, fPlotTrackID);
+    if(fPlot) DrawTrueTracks(particles, truthMatch, true, true, false, true, true, fPlotTrackID);
 
     for(auto const& particle : particles){
       int partId = particle.TrackId();
@@ -1065,8 +1065,11 @@ namespace sbnd {
       double zmin = 0.;
       double zmax = fGeometryService->DetLength();
       double rmin[3] = {xmin, ymin, zmin};
-      double rmax[3] = {xmax, ymax, zmax};
-      truthAlg.DrawCube(c1, rmin, rmax, 2);
+      double rmax[3] = {0, ymax, zmax};
+      truthAlg.DrawCube(c1, rmin, rmax, 1);
+      double rmin1[3] = {0, ymin, zmin};
+      double rmax1[3] = {xmax, ymax, zmax};
+      truthAlg.DrawCube(c1, rmin1, rmax1, 1);
     }
 
     // Draw the true particles

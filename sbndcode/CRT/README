@@ -1,6 +1,8 @@
 Main folder for SBND CRT simulation and reconstruction
+For general information on the CRT system see docdb: 685
 
 //// SIMULATION FILES
+(docdb: 1507)
 
 // SOURCE
 -- CRTGeoObjectSorter.h && CRTGeoObjectSorter.cxx  
@@ -26,6 +28,7 @@ Contains simulation configuration parameters
 
 
 //// RECONSTRUCTION FILES
+(docdb: 6608, 7107, 8248)
 
 // SOURCE
 -- CRTSimHitProducer_module.cc
