@@ -52,22 +52,24 @@
 #include "TTree.h"
 
 
+namespace sbnd{
 namespace CRTAnaUtils{
 
-  std::vector<std::vector<art::Ptr<sbnd::crt::CRTHit>>> CreateCRTTzeros(std::vector<art::Ptr<sbnd::crt::CRTHit>> crtHits, double fTimeLimit);
+  std::vector<std::vector<art::Ptr<crt::CRTHit>>> CreateCRTTzeros(std::vector<art::Ptr<crt::CRTHit>> crtHits, double fTimeLimit);
 
-  std::vector<sbnd::crt::CRTTrack> CreateCRTTracks(std::vector<std::vector<art::Ptr<sbnd::crt::CRTHit>>> crtTzeros, 
-                                                   double fAverageHitDist, bool fUseTopPlane, double fDistanceLimit);
+  std::vector<crt::CRTTrack> CreateCRTTracks(std::vector<std::vector<art::Ptr<crt::CRTHit>>> crtTzeros, 
+                                             double fAverageHitDist, bool fUseTopPlane, double fDistanceLimit);
 
-  std::vector<sbnd::crt::CRTTrack> CreateCRTTracks(std::vector<art::Ptr<sbnd::crt::CRTHit>> crtHits, double fTimeLimit, 
-                                                   double fAverageHitDist, bool fUseTopPlane, double fDistanceLimit);
+  std::vector<crt::CRTTrack> CreateCRTTracks(std::vector<art::Ptr<crt::CRTHit>> crtHits, double fTimeLimit, 
+                                             double fAverageHitDist, bool fUseTopPlane, double fDistanceLimit);
 
-  double T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc, double fMinTrackLength, 
+  double T0FromCRTHits(recob::Track tpcTrack, std::vector<crt::CRTHit> crtHits, int tpc, double fMinTrackLength, 
                        double fTrackDirectionFrac, double fDistanceLimit);
 
-  double T0FromCRTTracks(recob::Track tpcTrack, std::vector<sbnd::crt::CRTTrack> crtTracks, int tpc, double fMaxAngleDiff, 
+  double T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, int tpc, double fMaxAngleDiff, 
                          double fMaxDistance);
 
+}
 }
 
 #endif

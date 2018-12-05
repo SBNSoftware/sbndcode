@@ -57,7 +57,7 @@ physics:
       CRTModuleLabel:       "crt"       # CRT producer module label
       Verbose:              true        # Print extra information about what's going on
       VeryVerbose:          true        # Print detailed information about every muon
-      Plot:                 false        # Draw truth and reco tracks in event
+      Plot:                 true        # Draw truth and reco tracks in event
       PlotTrackID:          165         # ID of true track to plot
       # Hit reconstruction
       TimeCoincidenceLimit: 0.15        # Minimum time between two overlapping hit crt strips [us]

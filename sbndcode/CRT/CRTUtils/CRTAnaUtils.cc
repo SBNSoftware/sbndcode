@@ -1,5 +1,7 @@
 #include "CRTAnaUtils.h"
 
+namespace sbnd{
+
 // =============================== UTILITY FUNCTIONS ==============================
 
 std::vector<std::vector<art::Ptr<sbnd::crt::CRTHit>>> CRTAnaUtils::CreateCRTTzeros(std::vector<art::Ptr<sbnd::crt::CRTHit>> crtHits, double fTimeLimit){
@@ -213,5 +215,7 @@ double CRTAnaUtils::T0FromCRTTracks(recob::Track tpcTrack, std::vector<sbnd::crt
   }
   
   return bestTime;
+
+}
 
 }

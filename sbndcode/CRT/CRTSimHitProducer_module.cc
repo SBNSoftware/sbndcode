@@ -3,10 +3,10 @@
 /// Module Type: producer
 /// File:        CRTSimHitProducer_module.cc
 ///
+/// Producer module for constructing CRTHits from simulated CRT data
+///
 /// Author:         Thomas Brooks
 /// E-mail address: tbrooks@fnal.gov
-///
-/// Modified from CRTSimHitProducer by Thomas Warburton.
 /////////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes

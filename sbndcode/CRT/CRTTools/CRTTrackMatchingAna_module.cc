@@ -586,7 +586,7 @@ namespace sbnd {
     truthMatch.matchingMap = matchingMap;
     truthMatch.recoCrtTracks = recoCrtTracks;
     if(fPlot){
-      DrawTrueTracks(truthMatch, true, false, false, false, fPlotID);
+      DrawTrueTracks(truthMatch, true, true, false, false, fPlotID);
     }
 
     //--------------------------------- Performance Analysis ----------------------------------
@@ -763,7 +763,8 @@ namespace sbnd {
         // Draw a line between them
         tpctrack[i]->SetLineColor(3);
         tpctrack[i]->SetLineWidth(2);
-        if(id == -1 || tr.ID() == id) tpctrack[i]->Draw();
+        //if(id == -1 || tr.ID() == id) tpctrack[i]->Draw();
+        if(tr.ID() == 3 || tr.ID() == id) tpctrack[i]->Draw();
       }
     }
 

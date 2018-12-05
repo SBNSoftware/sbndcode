@@ -59,7 +59,7 @@ physics:
       Verbose:             true             # Print extra information about what's going on
       MaxAngleDiff:        0.15              # Max difference between CRT and TPC track angles [rad]
       MaxDistance:         60                # Max distance between CRT and TPC start/end positions [cm]
-      Plot:                false             # Plot what's going on
+      Plot:                true             # Plot what's going on
       PlotID:              -1                # TPC track ID to plot (-1 for all)
     }
   }

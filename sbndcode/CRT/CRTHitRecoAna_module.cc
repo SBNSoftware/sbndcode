@@ -3,7 +3,7 @@
 // Module Type: analyzer
 // File:        CRTHitRecoAna_module.cc
 //
-// Analysis module for evaluating CRT reconstruction on through going
+// Analysis module for evaluating CRT hit reconstruction on through going
 // muons.
 //
 // Tom Brooks (tbrooks@fnal.gov)

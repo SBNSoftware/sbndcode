@@ -1,5 +1,7 @@
 #include "CRTTruthMatchUtils.h"
 
+namespace sbnd{
+
 // =============================== UTILITY FUNCTIONS ==============================
 
 std::vector<int> CRTTruthMatchUtils::AllTrueIds(art::Handle<std::vector<sbnd::crt::CRTHit>> hitHandle, const art::Event& event, art::InputTag hitLabel, int hit_i){
@@ -180,5 +182,7 @@ int CRTTruthMatchUtils::TrueIdFromTotalEnergy(art::Handle<std::vector<sbnd::crt:
   }
 
   return trueId;
+
+}
 
 }
