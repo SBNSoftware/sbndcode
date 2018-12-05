@@ -52,9 +52,13 @@ namespace CRTTruthMatchUtils{
 
   std::vector<int> AllTrueIds(art::Handle<std::vector<sbnd::crt::CRTTrack>> trackHandle, const art::Event& event, art::InputTag trackLabel, art::InputTag hitLabel, int track_i);
 
+  std::vector<int> AllTrueIds(art::Handle<std::vector<sbnd::crt::CRTData>> dataHandle, const art::Event& event, art::InputTag dataLabel, int data_i);
+
   std::vector<int> AllTrueIds(art::Handle<std::vector<sbnd::crt::CRTHit>> hitHandle, const art::Event& event, art::InputTag hitLabel, art::InputTag dataLabel, int hit_i);
 
   std::vector<int> AllTrueIds(art::Handle<std::vector<sbnd::crt::CRTTrack>> trackHandle, const art::Event& event, art::InputTag trackLabel, art::InputTag hitLabel, art::InputTag dataLabel, int track_i);
+
+  int TrueIdFromTotalEnergy(art::Handle<std::vector<sbnd::crt::CRTData>> dataHandle, const art::Event& event, art::InputTag dataLabel, int data_i);
 
   int TrueIdFromTotalEnergy(art::Handle<std::vector<sbnd::crt::CRTHit>> hitHandle, const art::Event& event, art::InputTag hitLabel, art::InputTag dataLabel, int hit_i);
 

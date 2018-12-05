@@ -10,6 +10,7 @@
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
 
 // LArSoft includes
 #include "lardataobj/RecoBase/Hit.h"
@@ -143,14 +144,8 @@ namespace sbnd {
     // Function to draw true and reco tracks
     void DrawTrueTracks(RecoTruth truthMatch, bool truth, bool tpctracks, bool crttracks, bool crtreco, int id);
 
-    // Draw a cube
-    void DrawCube(TCanvas *c1, double *rmin, double *rmax, int col);
-
     // Function to calculate the distance to a CRT track start/end point
     double DistToCrtTrack(TVector3 trackPos, TVector3 crtCross, TVector3 crtErr);
-
-    // Function to calculate the CRT crossing points of a true particle
-    std::pair<TVector3, TVector3> TpcCrossPoints(simb::MCParticle const& particle);
 
     // Function the calculate the average squared distance between a CRT and TPC track
     double TrackAveDCA(recob::Track track, TVector3 start, TVector3 end);
@@ -195,6 +190,7 @@ namespace sbnd {
     detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
 
     CRTTrackMatchAlg trackAlg;
+    CRTTruthRecoAlg truthAlg;
 
     // Performance Counters
     int nCorrectMatch = 0;
@@ -219,6 +215,7 @@ namespace sbnd {
     , fPlot                 (config().Plot())
     , fPlotID               (config().PlotID())
     , trackAlg()
+    , truthAlg()
   {
 
     // Get a pointer to the geometry service provider
@@ -331,7 +328,7 @@ namespace sbnd {
       simb::MCParticle particle = particles[trueId];
 
       // Match angles to get rid of secondary particles
-      std::pair<TVector3, TVector3> trueStartEnd = TpcCrossPoints(particle);
+      std::pair<TVector3, TVector3> trueStartEnd = truthAlg.TpcCrossPoints(particle);
       TVector3 trueStart = trueStartEnd.first;
       TVector3 trueEnd = trueStartEnd.second;
       double tpcTheta = (tpcStart - tpcEnd).Theta();
@@ -646,7 +643,7 @@ namespace sbnd {
       if(tag_i==5 || tag_i==6){ tagDim[0] = 360; tagDim[1] = 360; tagDim[2] = 1.8; }
       double rmin[3] = {tagCenter[0]-tagDim[0],tagCenter[1]-tagDim[1],tagCenter[2]-tagDim[2]};
       double rmax[3] = {tagCenter[0]+tagDim[0],tagCenter[1]+tagDim[1],tagCenter[2]+tagDim[2]};
-      DrawCube(c1, rmin, rmax, 1);
+      truthAlg.DrawCube(c1, rmin, rmax, 1);
     }
 
     double xmin = -2.0 * fGeometryService->DetHalfWidth();
@@ -657,10 +654,10 @@ namespace sbnd {
     double zmax = fGeometryService->DetLength();
     double rmin[3] = {xmin, ymin, zmin};
     double rmax[3] = {0, ymax, zmax};
-    DrawCube(c1, rmin, rmax, 1);
+    truthAlg.DrawCube(c1, rmin, rmax, 1);
     double rmin1[3] = {0, ymin, zmin};
     double rmax1[3] = {xmax, ymax, zmax};
-    DrawCube(c1, rmin1, rmax1, 1);
+    truthAlg.DrawCube(c1, rmin1, rmax1, 1);
 
     // Draw the true particles
     TPolyLine3D *trajectories[100];
@@ -774,34 +771,6 @@ namespace sbnd {
 
   } // CRTTrackMatchingAna::DrawTrueTracks()
 
-
-  // Draw a cube
-  void CRTTrackMatchingAna::DrawCube(TCanvas *c1, double *rmin, double *rmax, int col){
-
-    c1->cd();
-    TList *outline = new TList;
-    TPolyLine3D *p1 = new TPolyLine3D(4);
-    TPolyLine3D *p2 = new TPolyLine3D(4);
-    TPolyLine3D *p3 = new TPolyLine3D(4);
-    TPolyLine3D *p4 = new TPolyLine3D(4);
-    p1->SetLineColor(col);
-    p1->SetLineWidth(2);
-    p1->Copy(*p2);
-    p1->Copy(*p3);
-    p1->Copy(*p4);
-    outline->Add(p1);
-    outline->Add(p2);
-    outline->Add(p3);
-    outline->Add(p4); 
-    TPolyLine3D::DrawOutlineCube(outline, rmin, rmax);
-    p1->Draw();
-    p2->Draw();
-    p3->Draw();
-    p4->Draw();
-
-  } // CRTTrackMatchingAna::DrawCube()
-
-
   // Function to calculate the distance to a CRT track start/end point
   double CRTTrackMatchingAna::DistToCrtTrack(TVector3 trackPos, TVector3 crtCross, TVector3 crtErr){
 
@@ -833,39 +802,6 @@ namespace sbnd {
     return dist;
 
   } // CRTTrackMatchingAna::DistToCrtTrack()
-
-
-  // Function to calculate the CRT crossing points of a true particle
-  std::pair<TVector3, TVector3> CRTTrackMatchingAna::TpcCrossPoints(simb::MCParticle const& particle){
-
-    double xmin = -2.0 * fGeometryService->DetHalfWidth();
-    double xmax = 2.0 * fGeometryService->DetHalfWidth();
-    double ymin = -fGeometryService->DetHalfHeight();
-    double ymax = fGeometryService->DetHalfHeight();
-    double zmin = 0.;
-    double zmax = fGeometryService->DetLength();
-    TVector3 start, end;
-
-    bool first = true;
-    // Get the trajectory of the true particle
-    size_t npts = particle.NumberTrajectoryPoints();
-
-    // Loop over particle trajectory
-    for (size_t i = 0; i < npts; i++){
-      TVector3 trajPoint(particle.Vx(i), particle.Vy(i), particle.Vz(i));
-      // If the particle is inside the tagger volume then set to true.
-      if(trajPoint[0]>xmin && trajPoint[0]<xmax &&
-         trajPoint[1]>ymin && trajPoint[1]<ymax &&
-         trajPoint[2]>zmin && trajPoint[2]<zmax){
-        if(first) start = trajPoint;
-        first = false;
-        end = trajPoint;
-      }
-    }
-
-    return std::make_pair(start, end);
-
-  } // CRTTrackMatchingAna::TpcCrossPoints()
 
 
   // Function the calculate the average squared distance between a CRT and TPC track

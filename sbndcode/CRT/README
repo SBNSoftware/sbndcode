@@ -1,0 +1,85 @@
+Main folder for SBND CRT simulation and reconstruction
+
+//// SIMULATION FILES
+
+// SOURCE
+-- CRTGeoObjectSorter.h && CRTGeoObjectSorter.cxx  
+Interface to algorithm class for sorting of AuxDetGeo objects
+
+-- CRTChannelMapAlg.h && CRTChannelMapAlg.cxx    
+Algorithm class for SBND auxiliary detector channel mapping
+
+-- CRTGeometryHelper.h && CRTGeometryHelper_service.cc  
+Auxiliary detector geometry helper service for SBND geometries
+Handles SBND-specific information for the generic Geometry service within LArSoft. Derived from the ExptGeoHelperInterface class.
+
+-- CRTDetSim.h && CRTDetSim_module.cc    
+The module that performs the actual CRT detector simulation, produces CRTData products
+
+
+// CONFIG
+-- crtsim_sbnd.fcl             
+Runs the CRT simulation
+
+-- crtsimmodules_sbnd.fcl
+Contains simulation configuration parameters
+
+
+//// RECONSTRUCTION FILES
+
+// SOURCE
+-- CRTSimHitProducer_module.cc
+Module for producing simulated CRTHits
+
+-- CRTTrackProducer_module.cc  
+Module for producing CRTTracks
+
+-- CRTTzeroProducer_module.cc   
+Module for producing CRTTzeros
+
+-- CRTHitRecoAna_module.cc   
+Module for analysing CRT hit reconstruction performance
+
+-- CRTTrackRecoAna_module.cc    
+Module for analysing CRT track reconstruction performance
+
+-- CRTRecoAna_module.cc  
+Module for analysing entire CRT reconstruction chain
+
+
+// CONFIG
+-- crtsimhitproducer_sbnd.fcl  
+Configuration for simulated CRT hit reconstruction algorithm
+
+-- crttzeroproducer_sbnd.fcl
+Configuration for CRT t0 producer module (not really used in sbnd)
+
+-- crttrackproducer_sbnd.fcl
+Configuration for CRT track reconstruction algorithms
+
+-- crthitrecoana_sbnd.fcl
+Runs CRTHitRecoAna module
+
+-- crttrackrecoana_sbnd.fcl
+Runs CRTTrackRecoAna module
+
+-- crtrecoana_sbnd.fcl  
+Runs CRTRecoAna module
+
+-- crtsimhitreco_sbnd.fcl
+Runs CRTSimHitProducer module
+
+-- crtsimreco_sbnd.fcl
+Runs CRTSimHitProducer, CRTTzeroProducer, and CRTTrackProducer modules
+
+
+//// SUB-FOLDERS
+
+-- CRTUtils/
+Contains utility functions for use in analysis modules and algorithms that are used by the modules
+
+-- CRTProducts/
+Contains CRT related products
+
+-- CRTTools/
+Contains tools for doing things like t0 matching with CRTs

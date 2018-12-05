@@ -10,6 +10,7 @@
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
 
 // LArSoft includes
 #include "lardataobj/Simulation/SimChannel.h"
@@ -142,12 +143,6 @@ namespace sbnd {
     // Called once, at end of the job
     virtual void endJob() override;
 
-    // Calculate the position that an MC particle crosses a crt plane
-    TVector3 TaggerCrossPoint(const simb::MCParticle& particle, int tag_i);
-
-    // Convert start time to CRT crossing point
-    TVector3 T0ToXYZPosition(TVector3 position, TVector3 direction, std::string tagger, int tpc, double t0);
-
     // Calculate the distance from the track crossing point to CRT overlap coordinates
     double DistToCrtHit(TVector3 trackPos, crt::CRTHit crtHit);
 
@@ -163,6 +158,7 @@ namespace sbnd {
     bool          fVerbose;             ///< print information about what's going on
 
     CRTT0MatchAlg t0Alg;
+    CRTTruthRecoAlg truthAlg;
 
     // n-tuples
     TH1D* fDistance;               ///< Distance between projected (at true T0) and true crossing points
@@ -182,13 +178,13 @@ namespace sbnd {
     // Other variables shared between different methods.
     geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
-
+/*
     // Positions of the CRT planes
     std::vector<double> crtPlanes = {-359.1, -357.3, 357.3, 359.1, -358.9, -357.1, 661.52, 663.32, 865.52, 867.32, -240.65, -238.85, 655.35, 657.15};
     std::vector<int> fixCoord   = {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2}; // Fixed coordinate for each plane
     std::vector<int> widthCoord = {2, 1, 2, 1, 0, 2, 2, 0, 2, 0, 1, 0, 1, 0}; // Width direction for each plane
     std::vector<int> lenCoord   = {1, 2, 1, 2, 2, 0, 0, 2, 0, 2, 0, 1, 0, 1}; // Length direction for each plane
-
+*/
     // Performance Counters
     int nCorrectExit = 0; // True track crosses CRT and algorithm assigns the right T0
     int nIncorrectExit = 0; // True track crosses CRT and algorithm assigns wrong/no T0
@@ -224,6 +220,7 @@ namespace sbnd {
     , fTrackDirectionFrac  (config().TrackDirectionFrac())
     , fVerbose             (config().Verbose())
     , t0Alg()
+    , truthAlg()
   {
 
     // Get a pointer to the geometry service provider
@@ -395,7 +392,7 @@ namespace sbnd {
         std::string tagger = taggerHits.first;
         // Calculate the crossing point of the true particle
         int tag_i = nameToInd[tagger];
-        TVector3 trueCross = TaggerCrossPoint(particles[trueId], tag_i);
+        TVector3 trueCross = truthAlg.TaggerCrossPoint(particles[trueId], tag_i);
         trueXYZ[tagger] = trueCross;
         bool isMatch = false;
 
@@ -437,8 +434,8 @@ namespace sbnd {
         if (fVerbose) std::cout<<"\nTagger "<<tagger<<"\n";
 
         // Calculate the start and end crossing points at the true T0
-        TVector3 trueStartPos = T0ToXYZPosition(start, startDir, tagger, tpc, trueTime);
-        TVector3 trueEndPos = T0ToXYZPosition(end, endDir, tagger, tpc, trueTime);
+        TVector3 trueStartPos = truthAlg.T0ToXYZPosition(start, startDir, tagger, tpc, trueTime);
+        TVector3 trueEndPos = truthAlg.T0ToXYZPosition(end, endDir, tagger, tpc, trueTime);
         if(fVerbose && trueStartPos[0] != -99999) PrintVect(trueStartPos, "Cross point at true time");
         if(fVerbose && trueEndPos[0] != -99999) PrintVect(trueEndPos, "Cross point at true time");
 
@@ -592,68 +589,6 @@ namespace sbnd {
     fEffLength->Draw("ap");
 
   } // CRTT0MatchingAna::endJob()
-
-
-  // Function to calculate the point where a true particle crosses a CRT tagger
-  TVector3 CRTT0MatchingAna::TaggerCrossPoint(simb::MCParticle const& particle, int tag_i){
-
-    double tagCenter[3] = {0, 0, 208.25};
-    tagCenter[fixCoord[tag_i*2]] = (crtPlanes[tag_i*2]+crtPlanes[tag_i*2+1])/2;
-    double tagDim[3] = {0, 0, 0};
-    if(tag_i==0 || tag_i==1){ tagDim[0] = 1.8; tagDim[1] = 360; tagDim[2] = 450; }
-    if(tag_i==2){ tagDim[0] = 399.5; tagDim[1] = 1.8; tagDim[2] = 478; }
-    if(tag_i==3 || tag_i==4){ tagDim[0] = 450; tagDim[1] = 1.8; tagDim[2] = 450; }
-    if(tag_i==5 || tag_i==6){ tagDim[0] = 360; tagDim[1] = 360; tagDim[2] = 1.8; }
-    TVector3 start, end;
-    bool first = true;
-    // Get the trajectory of the true particle
-    size_t npts = particle.NumberTrajectoryPoints();
-    // Loop over particle trajectory
-    for (size_t i = 0; i < npts; i++){
-      TVector3 trajPoint(particle.Vx(i), particle.Vy(i), particle.Vz(i));
-      // If the particle is inside the tagger volume then set to true.
-      if(trajPoint[0]>tagCenter[0]-tagDim[0] && trajPoint[0]<tagCenter[0]+tagDim[0] &&
-         trajPoint[1]>tagCenter[1]-tagDim[1] && trajPoint[1]<tagCenter[1]+tagDim[1] &&
-         trajPoint[2]>tagCenter[2]-tagDim[2] && trajPoint[2]<tagCenter[2]+tagDim[2]){
-        if(first) start = trajPoint;
-        first = false;
-        end = trajPoint;
-      }
-    }
-    TVector3 crossPoint((start.X()+end.X())/2,(start.Y()+end.Y())/2,(start.Z()+end.Z())/2);
-
-    return crossPoint;
-
-  } // CRTT0MatchingAna::TaggerCrossPoint()
-
-
-  // Function to project a track position on to a tagger
-  TVector3 CRTT0MatchingAna::T0ToXYZPosition(TVector3 position, TVector3 direction, std::string tagger, int tpc, double t0){
-
-    //Here crt_i is index of tagger, so runs from 0 to 6
-    TVector3 returnVal(-99999, -99999, -99999);
-    int crt_i = nameToInd[tagger];
-
-    // Convert the t0 into an x shift
-    double shift = t0 * fDetectorProperties->DriftVelocity();
-    // Apply the shift depending on which TPC the track is in
-    if (tpc == 1) position[0] += shift;
-    if (tpc == 0) position[0] -= shift;
-
-    // Calculate the step to the CRT plane
-    double step = (crtPlanes[crt_i*2]- position[fixCoord[crt_i*2]])/direction[fixCoord[crt_i*2]];
-
-    // If the step is < 0 return a null position
-    if (step < 0) return returnVal;
-
-    // Calculate the CRT crossing point of the output coordinate
-    returnVal[lenCoord[crt_i*2]] = position[lenCoord[crt_i*2]] + step*direction[lenCoord[crt_i*2]];
-    returnVal[widthCoord[crt_i*2]] = position[widthCoord[crt_i*2]] + step*direction[widthCoord[crt_i*2]];
-    returnVal[fixCoord[crt_i*2]] = crtPlanes[crt_i*2];
-
-    return returnVal;
-
-  } // CRTT0MatchingAna::T0ToXYZPosition()
 
 
   // Function to calculate the distance between a projected cross point and a CRT hit
