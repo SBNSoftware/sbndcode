@@ -96,27 +96,14 @@ namespace sbnd {
 
     // Params from fcl file.......
     art::InputTag fCrtModuleLabel;      ///< name of crt producer
-    double        fTimeCoincidenceLimit;///< minimum time between two overlapping hit crt strips [ticks]
-    double        fQPed;                ///< Pedestal offset of SiPMs [ADC]
-    double        fQSlope;              ///< Pedestal slope of SiPMs [ADC/photon]
-    bool          fUseReadoutWindow;    ///< Only reconstruct hits within readout window
    
-    // Other variables shared between different methods.
-    geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
-    detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
-    detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
-    detinfo::ElecClock fTrigClock;
-    art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
-    const geo::AuxDetGeometry* fAuxDetGeo;
-    const geo::AuxDetGeometryCore* fAuxDetGeoCore;
-
     CRTHitRecoAlg hitAlg;
 
   }; // class CRTSimHitProducer
 
 
   CRTSimHitProducer::CRTSimHitProducer(fhicl::ParameterSet const & p)
-  : hitAlg()
+  : hitAlg(p.get<fhicl::ParameterSet>("HitAlg"))
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 
@@ -124,15 +111,6 @@ namespace sbnd {
     produces< std::vector<crt::CRTHit> >();
     produces< art::Assns<crt::CRTHit , crt::CRTData> >();
     
-    // Get a pointer to the geometry service provider
-    fGeometryService = lar::providerFrom<geo::Geometry>();
-    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-    fDetectorClocks     = lar::providerFrom<detinfo::DetectorClocksService>(); 
-    fTrigClock = fDetectorClocks->TriggerClock();
-    fAuxDetGeo = &(*fAuxDetGeoService);
-    fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
-
-
     reconfigure(p);
 
   } // CRTSimHitProducer()
@@ -142,10 +120,6 @@ namespace sbnd {
   {
 
     fCrtModuleLabel       = (p.get<art::InputTag> ("CrtModuleLabel")); 
-    fTimeCoincidenceLimit = (p.get<double>        ("TimeCoincidenceLimit"));
-    fQPed                 = (p.get<double>        ("QPed"));
-    fQSlope               = (p.get<double>        ("QSlope"));
-    fUseReadoutWindow     = (p.get<bool>          ("UseReadoutWindow"));
 
   } // CRTSimHitProducer::reconfigure()
 
@@ -163,15 +137,7 @@ namespace sbnd {
     std::unique_ptr< art::Assns<crt::CRTHit, crt::CRTData> > Hitassn( new art::Assns<crt::CRTHit, crt::CRTData>);
     art::PtrMaker<crt::CRTHit> makeHitPtr(event, *this);
 
-    std::vector<uint8_t> tfeb_id = {0};
-    std::map<uint8_t, std::vector<std::pair<int,float>>> tpesmap;
-    tpesmap[0] = {std::make_pair(0,0)};
-
     int nHits = 0;
-
-    // Detector properties
-    double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    double driftTimeMuS = (2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); // [us]
 
     // Retrieve list of CRT hits
     art::Handle< std::vector<crt::CRTData>> crtListHandle;
@@ -181,173 +147,22 @@ namespace sbnd {
 
     // Fill a vector of pairs of time and width direction for each CRT plane
     // The y crossing point of z planes and z crossing point of y planes would be constant
-    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips;
+    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips = hitAlg.CreateTaggerStrips(crtList);
 
     mf::LogInfo("CRTSimHitProducer")
       <<"Number of SiPM hits = "<<crtList.size();
 
-    // Loop over all the SiPM hits in 2 (should be in pairs due to trigger)
-    for (size_t i = 0; i < crtList.size(); i+=2){
-      // Get the time, channel, center and width
-      fTrigClock.SetTime(crtList[i]->T0());
-      double t1 = fTrigClock.Time(); // [us]
+    std::vector<std::pair<crt::CRTHit, std::vector<int>>> crtHitPairs = hitAlg.CreateCRTHits(taggerStrips);
 
-      if(fUseReadoutWindow){
-        if(!(t1 >= -driftTimeMuS && t1 <= readoutWindowMuS)) continue;
+    for(auto const& crtHitPair : crtHitPairs){
+      CRTHitcol->push_back(crtHitPair.first);
+      art::Ptr<crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
+      nHits++;
+      for(auto const& data_i : crtHitPair.second){
+        Hitassn->addSingle(hitPtr, crtList[data_i]);
       }
-
-      // Get strip info from the geometry service
-      uint32_t channel = crtList[i]->Channel();
-      int strip = (channel >> 1) & 15;
-      int module = (channel >> 5);
-      std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
-      TVector3 center = fAuxDetGeoCore->AuxDetChannelToPosition(2*strip, name);
-      const geo::AuxDetSensitiveGeo stripGeo = fAuxDetGeoCore->ChannelToAuxDetSensitive(name, 2*strip);
-      double width = 2*stripGeo.HalfWidth1();
-
-      std::pair<std::string,unsigned> tagger = hitAlg.ChannelToTagger(channel);
-
-      // Get the time of hit on the second SiPM
-      fTrigClock.SetTime(crtList[i+1]->T0());
-      double t2 = fTrigClock.Time(); // [us]
-
-      // Calculate the number of photoelectrons at each SiPM
-      double npe1 = ((double)crtList[i]->ADC() - fQPed)/fQSlope;
-      double npe2 = ((double)crtList[i+1]->ADC() - fQPed)/fQSlope;
-
-      // Calculate the distance between the SiPMs
-      double x = (width/2.)*atan(log(1.*npe2/npe1)) + (width/2.);
-
-      // Calculate the error
-      double normx = x + 0.344677*x - 1.92045;
-      double ex = 1.92380e+00+1.47186e-02*normx-5.29446e-03*normx*normx;
-      double time = (t1 + t2)/2.;
-
-      CRTStrip stripHit = {time, channel, x, ex, npe1+npe2, tagger, i};
-      taggerStrips[tagger].push_back(stripHit);
-
     }
-
-    // Remove any duplicate (same channel and time) hit strips
-    for(auto &tagStrip : taggerStrips){
-      std::sort(tagStrip.second.begin(), tagStrip.second.end(),
-                [](const CRTStrip & a, const CRTStrip & b) -> bool{
-                  return (a.t0 < b.t0) || 
-                         ((a.t0 == b.t0) && (a.channel < b.channel));
-                });
-      // Remove hits with the same time and channel
-      tagStrip.second.erase(std::unique(tagStrip.second.begin(), tagStrip.second.end(),
-                                           [](const CRTStrip & a, const CRTStrip & b) -> bool{
-                                             return a.t0 == b.t0 && a.channel == b.channel;
-                                            }), tagStrip.second.end());
-    }
-
-    std::vector<std::string> usedTaggers;
-
-    for (auto &tagStrip : taggerStrips){
-      if (std::find(usedTaggers.begin(),usedTaggers.end(),tagStrip.first.first)!=usedTaggers.end()) continue;
-      usedTaggers.push_back(tagStrip.first.first);
-      unsigned planeID = 0;
-      if(tagStrip.first.second==0) planeID = 1;
-      std::pair<std::string,unsigned> otherPlane = std::make_pair(tagStrip.first.first, planeID);
-
-      for (size_t hit_i = 0; hit_i < tagStrip.second.size(); hit_i++){
-        // Get the position (in real space) of the 4 corners of the hit, taking charge sharing into account
-        std::vector<double> limits1 =  hitAlg.ChannelToLimits(tagStrip.second[hit_i]);
-
-        // Check for overlaps on the first plane
-        if(hitAlg.CheckModuleOverlap(tagStrip.second[hit_i].channel)){
-
-          // Loop over all the hits on the parallel (odd) plane
-          for (size_t hit_j = 0; hit_j < taggerStrips[otherPlane].size(); hit_j++){
-            // Get the limits in the two variable directions
-            std::vector<double> limits2 = hitAlg.ChannelToLimits(taggerStrips[otherPlane][hit_j]);
-
-            // If the time and position match then record the pair of hits
-            std::vector<double> overlap = hitAlg.CrtOverlap(limits1, limits2);
-            double t0_1 = tagStrip.second[hit_i].t0;
-            double t0_2 = taggerStrips[otherPlane][hit_j].t0;
-            if (overlap[0] != -99999 && std::abs(t0_1 - t0_2) < fTimeCoincidenceLimit){
-              // Calculate the mean and error in x, y, z
-              TVector3 mean((overlap[0] + overlap[1])/2., 
-                            (overlap[2] + overlap[3])/2., 
-                            (overlap[4] + overlap[5])/2.);
-              TVector3 error(std::abs((overlap[1] - overlap[0])/2.), 
-                             std::abs((overlap[3] - overlap[2])/2.), 
-                             std::abs((overlap[5] - overlap[4])/2.));
-
-              // Average the time
-              double time = (t0_1 + t0_2)/2;
-              double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
-
-              // Create a CRT hit
-              crt::CRTHit crtHit = hitAlg.FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
-                                              mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
-              CRTHitcol->push_back(crtHit);
-              art::Ptr<crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
-              Hitassn->addSingle(hitPtr, crtList[tagStrip.second[hit_i].dataID]);
-              Hitassn->addSingle(hitPtr, crtList[tagStrip.second[hit_i].dataID+1]);
-              Hitassn->addSingle(hitPtr, crtList[taggerStrips[otherPlane][hit_j].dataID]);
-              Hitassn->addSingle(hitPtr, crtList[taggerStrips[otherPlane][hit_j].dataID+1]);
-              nHits++;
-            }
-
-          }
-
-        }
-        // If module doesn't overlap with a perpendicular one create 1D hits
-        else{
-          TVector3 mean((limits1[0] + limits1[1])/2., 
-                        (limits1[2] + limits1[3])/2., 
-                        (limits1[4] + limits1[5])/2.);
-          TVector3 error(std::abs((limits1[1] - limits1[0])/2.), 
-                         std::abs((limits1[3] - limits1[2])/2.), 
-                         std::abs((limits1[5] - limits1[4])/2.));
-
-          double time = tagStrip.second[hit_i].t0;
-          double pes = tagStrip.second[hit_i].pes;
-
-          // Just use the single plane limits as the crt hit
-          crt::CRTHit crtHit = hitAlg.FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
-                                          mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
-          CRTHitcol->push_back(crtHit);
-          art::Ptr<crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
-          Hitassn->addSingle(hitPtr, crtList[tagStrip.second[hit_i].dataID]);
-          Hitassn->addSingle(hitPtr, crtList[tagStrip.second[hit_i].dataID+1]);
-          nHits++;
-        }
-
-      }
-      // Loop over tagger modules on the perpendicular plane to look for 1D hits
-      for (size_t hit_j = 0; hit_j < taggerStrips[otherPlane].size(); hit_j++){
-        // Get the limits in the two variable directions
-        std::vector<double> limits1 = hitAlg.ChannelToLimits(taggerStrips[otherPlane][hit_j]);
-
-        // Check if module overlaps with a perpendicular one
-        if(!hitAlg.CheckModuleOverlap(taggerStrips[otherPlane][hit_j].channel)){
-          TVector3 mean((limits1[0] + limits1[1])/2., 
-                        (limits1[2] + limits1[3])/2., 
-                        (limits1[4] + limits1[5])/2.);
-          TVector3 error(std::abs((limits1[1] - limits1[0])/2.), 
-                         std::abs((limits1[3] - limits1[2])/2.), 
-                         std::abs((limits1[5] - limits1[4])/2.));
-
-          double time = taggerStrips[otherPlane][hit_j].t0;
-          double pes = taggerStrips[otherPlane][hit_j].pes;
-
-          // Just use the single plane limits as the crt hit
-          crt::CRTHit crtHit = hitAlg.FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
-                                          mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
-          CRTHitcol->push_back(crtHit);
-          art::Ptr<crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
-          Hitassn->addSingle(hitPtr, crtList[taggerStrips[otherPlane][hit_j].dataID]);
-          Hitassn->addSingle(hitPtr, crtList[taggerStrips[otherPlane][hit_j].dataID+1]);
-          nHits++;
-        }
-
-      }
-
-    }
+      
 
     event.put(std::move(CRTHitcol));
     event.put(std::move(Hitassn));

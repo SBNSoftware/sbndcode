@@ -40,6 +40,7 @@
 #include "cetlib/pow.h" // cet::sum_of_squares()
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbndcode/CRT/CRTProducts/CRTData.hh"
 
 // c++
 #include <iostream>
@@ -75,15 +76,45 @@ namespace sbnd{
     struct Config {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
+
+      fhicl::Atom<bool> UseReadoutWindow {
+        Name("UseReadoutWindow"),
+        Comment("Only reconstruct hits within readout window")
+      };
+
+      fhicl::Atom<double> QPed {
+        Name("QPed"),
+        Comment("Pedestal offset [ADC]")
+      };
+
+      fhicl::Atom<double> QSlope {
+        Name("QSlope"),
+        Comment("Pedestal slope [ADC/photon]")
+      };
+
+      fhicl::Atom<double> TimeCoincidenceLimit {
+        Name("TimeCoincidenceLimit"),
+        Comment("Minimum time between two overlapping hit crt strips")
+      };
+
     };
 
     CRTHitRecoAlg(const Config& config);
+
+    CRTHitRecoAlg(const fhicl::ParameterSet& pset) :
+      CRTHitRecoAlg(fhicl::Table<Config>(pset, {})()) {}
 
     CRTHitRecoAlg();
 
     ~CRTHitRecoAlg();
 
     void reconfigure(const Config& config);
+
+    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CreateTaggerStrips(std::vector<art::Ptr<crt::CRTData>> data);
+
+    CRTStrip CreateCRTStrip(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2, size_t ind);
+    
+    std::vector<std::pair<crt::CRTHit, std::vector<int>>> CreateCRTHits(std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips);
 
     // Function to calculate the strip position limits in real space from channel
     std::vector<double> ChannelToLimits(CRTStrip strip);
@@ -105,9 +136,17 @@ namespace sbnd{
   private:
 
     geo::GeometryCore const* fGeometryService;
+    detinfo::DetectorClocks const* fDetectorClocks;
+    detinfo::DetectorProperties const* fDetectorProperties;
+    detinfo::ElecClock fTrigClock;
     art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
     const geo::AuxDetGeometry* fAuxDetGeo;
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;
+
+    bool fUseReadoutWindow;
+    double fQPed;
+    double fQSlope;
+    double fTimeCoincidenceLimit;
 
   };
 

@@ -71,9 +71,6 @@ private:
   std::string  fDataLabelTZeros;
   int          fTrackMethodType;
   int          fStoreTrack;
-  double       fTimeLimit;
-  double       fAverageHitDistance;
-  double       fDistanceLimit;
   bool         fUseTopPlane;
 
   CRTTrackRecoAlg trackAlg;
@@ -128,7 +125,6 @@ CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const & p)
   fDataLabelTZeros    = p.get<std::string>("DataLabelTZeros");    // CRTTzero producer module name
   fStoreTrack         = p.get<int>        ("StoreTrack");         // method 1 = all, method 2 = ave, method 3 = pure, method 4 = top plane
   fTrackMethodType    = p.get<int>        ("TrackMethodType");    // Print stuff
-  fTimeLimit          = p.get<double>     ("TimeLimit");          // Maximum time difference to combine hits into a tzero [us]
   fUseTopPlane        = p.get<bool>       ("UseTopPlane");        // Use hits from the top plane (SBND specific)
   
   // Call appropriate produces<>() functions here.
@@ -172,43 +168,12 @@ void CRTTrackProducer::produce(art::Event & evt)
     if (evt.getByLabel(fDataLabelHits, rawHandle))
       art::fill_ptr_vector(hitlist, rawHandle);
 
-    std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTzeroVect;
-    std::vector<int> npvec;
-    int iflag[2000] = {};
-
-    // Loop over crt hits
+    std::map<art::Ptr<crt::CRTHit>, int> hitIds;
     for(size_t i = 0; i<hitlist.size(); i++){
-      if(iflag[i] == 0){
-        std::vector<art::Ptr<crt::CRTHit>> CRTTzero;
-        std::map<std::string, int> nPlanes;
-        double time_ns_A = hitlist[i]->ts1_ns;
-        iflag[i]=1;
-        CRTTzero.push_back(hitlist[i]);
-        nPlanes[hitlist[i]->tagger]++;
-
-        // Sort into a Tzero collection
-        // Loop over all the other CRT hits
-        for(size_t j = i+1; j<hitlist.size(); j++){
-          if(iflag[j] == 0){
-            // If ts1_ns - ts1_ns < diff then put them in a vector
-            double time_ns_B = hitlist[j]->ts1_ns;
-            double diff = std::abs(time_ns_B - time_ns_A) * 1e-3; // [us]
-            if(diff < fTimeLimit){
-              iflag[j] = 1;
-              CRTTzero.push_back(hitlist[j]);
-              nPlanes[hitlist[j]->tagger]++;
-            }
-          }
-        }
-
-        int np = 0;
-        for(auto &nPlane : nPlanes){
-          if(nPlane.second>0 && nPlane.first != "volTaggerTopHigh_0") np++;
-        }
-        CRTTzeroVect.push_back(CRTTzero);
-        npvec.push_back(np);
-      }
+      hitIds[hitlist[i]] = i;
     }
+
+    std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTzeroVect = trackAlg.CreateCRTTzeros(hitlist);
 
     // Loop over tzeros
     for(size_t i = 0; i<CRTTzeroVect.size(); i++){
@@ -221,10 +186,10 @@ void CRTTrackProducer::produce(art::Event & evt)
       } // loop over hits
       
       //loop over planes and calculate average hits
-      std::vector<crt::CRTHit> allHits;
+      std::vector<std::pair<crt::CRTHit, std::vector<int>>> allHits;
       for (auto &keyVal : hits){
         std::string ip = keyVal.first;
-        std::vector<crt::CRTHit> ahits = trackAlg.AverageHits(hits[ip]);
+        std::vector<std::pair<crt::CRTHit, std::vector<int>>> ahits = trackAlg.AverageHits(hits[ip], hitIds);
         if(fUseTopPlane && ip == "volTaggerTopHigh_0"){ 
           allHits.insert(allHits.end(), ahits.begin(), ahits.end());
         }
@@ -234,16 +199,16 @@ void CRTTrackProducer::produce(art::Event & evt)
       }
 
       //Create tracks with hits at the same tzero
-      std::vector<crt::CRTTrack> trackCandidates = trackAlg.CreateTracks(allHits);
+      std::vector<std::pair<crt::CRTTrack, std::vector<int>>> trackCandidates = trackAlg.CreateTracks(allHits);
       nTrack += trackCandidates.size();
       for(size_t j = 0; j < trackCandidates.size(); j++){
-        CRTTrackCol->emplace_back(trackCandidates[j]);
+        CRTTrackCol->emplace_back(trackCandidates[j].first);
 
         art::Ptr<crt::CRTTrack> trackPtr = makeTrackPtr(CRTTrackCol->size()-1);
         for (size_t ah = 0; ah< CRTTzeroVect[i].size(); ++ah){        
           Trackassn->addSingle(trackPtr, CRTTzeroVect[i][ah]);
         }
-        if(trackCandidates[j].complete) nCompTrack++;
+        if(trackCandidates[j].first.complete) nCompTrack++;
         else nIncTrack++;
       }
     }
