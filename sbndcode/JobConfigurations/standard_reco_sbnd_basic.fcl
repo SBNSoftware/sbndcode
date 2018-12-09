@@ -43,7 +43,7 @@
 #include "rootoutput_sbnd.fcl"
 
 #include "crtsimhitproducer_sbnd.fcl"
-#include "crttzeroproducer_sbnd.fcl"
+##include "crttzeroproducer_sbnd.fcl"
 #include "crttrackproducer_sbnd.fcl"
 
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
@@ -132,7 +132,7 @@ physics:
   pmatrackpid:         @local::sbnd_chi2pid
 
   crthit:              @local::standard_crtsimhitproducer
-  crttzero:            @local::standard_crttzeroproducer
+  #crttzero:            @local::standard_crttzeroproducer
   crttrack:            @local::standard_crttrackproducer
 
  }
@@ -160,7 +160,7 @@ physics:
          , pmatrackpid
          , emshower 
          , crthit
-         , crttzero
+   #      , crttzero
          , crttrack
  ]
 
