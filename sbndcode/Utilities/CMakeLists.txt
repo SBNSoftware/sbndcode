@@ -13,10 +13,10 @@ set( sbnd_util_lib_list lardata_Utilities_LArFFT_service
                           ${ART_FRAMEWORK_SERVICES_OPTIONAL}
                           ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
                           ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}
+                          art_Framework_Services_System_TriggerNamesService_service
                           art_Utilities
                           canvas
                           ${MF_MESSAGELOGGER}
-                          
                           cetlib cetlib_except
                           ${ROOT_BASIC_LIB_LIST}
                           ${ROOT_GEOM}
@@ -43,6 +43,3 @@ simple_plugin( TFileMetadataSBND "service"
 install_headers()
 install_fhicl()
 install_source()
-
-
-

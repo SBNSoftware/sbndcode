@@ -39,73 +39,55 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include <string>
-#include <sstream>
+#include <algorithm>
+#include <ctime>
 #include <iomanip>
-#include <vector>
 #include <iostream>
 #include <fstream>
-#include <algorithm>
+#include <sstream>
+#include <stdio.h>
+#include <string>
+#include <vector>
+
 #include "sbndcode/Utilities/TFileMetadataSBND.h"
 #include "sbndcode/Utilities/FileCatalogMetadataSBND.h"
+
+#include "art/Framework/IO/Root/RootDB/SQLite3Wrapper.h"
+#include "art/Framework/IO/Root/RootDB/SQLErrMsg.h"
+#include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art/Framework/Services/System/FileCatalogMetadata.h"
+#include "art/Framework/Services/System/TriggerNamesService.h"
 #include "art/Utilities/OutputFileInfo.h"
-#include "art/Framework/IO/Root/RootDB/SQLite3Wrapper.h"
-#include "art/Framework/IO/Root/RootDB/SQLErrMsg.h"
 #include "cetlib_except/exception.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+
 #include "TROOT.h"
 #include "TFile.h"
 #include "TTimeStamp.h"
-#include <ctime>
-#include <stdio.h>
-#include <time.h>
-
-#include "art/Framework/Services/Optional/TFileService.h"
 
 using namespace std;
-
 
 //--------------------------------------------------------------------
 
 // Constructor.
 util::TFileMetadataSBND::TFileMetadataSBND(fhicl::ParameterSet const& pset, 
 					   art::ActivityRegistry& reg):
-  fGenerateTFileMetadata(false),	
-  fFileStats("",art::ServiceHandle<art::TriggerNamesService const>{}->getProcessName())
+  fGenerateTFileMetadata{pset.get<bool>("GenerateTFileMetadata")},
+  fJSONFileName{pset.get<std::string>("JSONFileName")},
+  fFileStats{"", art::ServiceHandle<art::TriggerNamesService const>{}->getProcessName()}
 {
-  reconfigure(pset);
+  if (fGenerateTFileMetadata) {
+    md.fdata_tier   = pset.get<std::string>("dataTier");
+    md.ffile_format = pset.get<std::string>("fileFormat");
 
-  // Register for callbacks.
- 
-  reg.sPostBeginJob.watch(this, &TFileMetadataSBND::postBeginJob);
-  reg.sPostOpenFile.watch(this, &TFileMetadataSBND::postOpenFile);
-  reg.sPostCloseFile.watch(this, &TFileMetadataSBND::postCloseFile);
-  reg.sPostProcessEvent.watch(this, &TFileMetadataSBND::postEvent);
-  reg.sPostBeginSubRun.watch(this, &TFileMetadataSBND::postBeginSubRun);
-  reg.sPostCloseOutputFile.watch(this, &TFileMetadataSBND::postCloseOutputFile);
-}
-
-//--------------------------------------------------------------------
-// Destructor.
-util::TFileMetadataSBND::~TFileMetadataSBND()
-{
-}
-
-//--------------------------------------------------------------------
-// Set service paramters
-void util::TFileMetadataSBND::reconfigure(fhicl::ParameterSet const& pset)
-{    
-  // Get parameters.
-  fGenerateTFileMetadata = pset.get<bool>("GenerateTFileMetadata");
-  fJSONFileName = pset.get<std::string>("JSONFileName");
-    
-  if (!fGenerateTFileMetadata) return;
-
-  md.fdata_tier  	   = pset.get<std::string>("dataTier");	   
-  md.ffile_format	   = pset.get<std::string>("fileFormat");  
+    reg.sPostBeginJob.watch(this, &TFileMetadataSBND::postBeginJob);
+    reg.sPostOpenFile.watch(this, &TFileMetadataSBND::postOpenInputFile);
+    reg.sPostCloseFile.watch(this, &TFileMetadataSBND::postCloseInputFile);
+    reg.sPostProcessEvent.watch(this, &TFileMetadataSBND::postEvent);
+    reg.sPostBeginSubRun.watch(this, &TFileMetadataSBND::postBeginSubRun);
+  }
 }
 
 //--------------------------------------------------------------------
@@ -113,9 +95,6 @@ void util::TFileMetadataSBND::reconfigure(fhicl::ParameterSet const& pset)
 // Insert per-job metadata via TFileMetadata service.
 void util::TFileMetadataSBND::postBeginJob()
 { 
-  // only generate metadata when this is true
-  if (!fGenerateTFileMetadata) return;
-    
   // get the start time  
   md.fstart_time = time(0); 
   
@@ -154,32 +133,18 @@ void util::TFileMetadataSBND::postBeginJob()
 
 //--------------------------------------------------------------------        
 // PostOpenFile callback.
-void util::TFileMetadataSBND::postOpenFile(std::string const& fn)
+void util::TFileMetadataSBND::postOpenInputFile(std::string const& fn)
 {
-  if (!fGenerateTFileMetadata) return;
-  
   // save parent input files here
   // 08/06 DBrailsford: Only save the parent string if the string is filled.  The string still exists (with 0 characters) for generation stage files.  See redmine issue 20124
   if (fn.length() > 0) md.fParents.insert(fn);
   fFileStats.recordInputFile(fn);
 }
 
-//--------------------------------------------------------------------        
-// PostOpenOutputFile callback.
-void util::TFileMetadataSBND::postCloseOutputFile(art::OutputFileInfo const& outputinfo)
-{
-  if (!fGenerateTFileMetadata) return;
-  
-  //Set the output name of the json using the standard format
- 
-}
-
 //--------------------------------------------------------------------  	
 // PostEvent callback.
-void util::TFileMetadataSBND::postEvent(art::Event const& evt)
+void util::TFileMetadataSBND::postEvent(art::Event const& evt, art::ScheduleContext)
 {
-  if(!fGenerateTFileMetadata) return;	
-  
   art::RunNumber_t run = evt.run();
   art::SubRunNumber_t subrun = evt.subRun();
   art::EventNumber_t event = evt.event();
@@ -203,9 +168,6 @@ void util::TFileMetadataSBND::postEvent(art::Event const& evt)
 // PostSubRun callback.
 void util::TFileMetadataSBND::postBeginSubRun(art::SubRun const& sr)
 {
-
-  if(!fGenerateTFileMetadata) return;
-
   art::RunNumber_t run = sr.run();
   art::SubRunNumber_t subrun = sr.subRun();
   art::SubRunID srid = sr.id();
@@ -219,14 +181,8 @@ void util::TFileMetadataSBND::postBeginSubRun(art::SubRun const& sr)
 
 //--------------------------------------------------------------------
 // PostCloseFile callback.
-void util::TFileMetadataSBND::postCloseFile()
+void util::TFileMetadataSBND::postCloseInputFile()
 {
-
-  
- 
-  // Do nothing if generating TFile metadata is disabled.	
-  if(!fGenerateTFileMetadata) return;	
-  
   // get metadata from the FileCatalogMetadataSBND service, which is filled on its construction
         
   art::ServiceHandle<util::FileCatalogMetadataSBND> paramhandle; 
@@ -313,9 +269,4 @@ void util::TFileMetadataSBND::postCloseFile()
   //std::string new_name = fRenamer.maybeRenameFile("myjson.json",fJSONFileName);
 }
 
-
-
-//namespace util{
-
-  DEFINE_ART_SERVICE(util::TFileMetadataSBND)
-//}//namespace util
+DEFINE_ART_SERVICE(util::TFileMetadataSBND)
