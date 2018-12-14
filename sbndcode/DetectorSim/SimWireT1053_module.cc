@@ -115,6 +115,7 @@ DEFINE_ART_MODULE(SimWireT1053)
 
 //-------------------------------------------------
 SimWireT1053::SimWireT1053(fhicl::ParameterSet const& pset)
+  : EDProducer{pset}
 {
   this->reconfigure(pset);
 
@@ -224,7 +225,8 @@ void SimWireT1053::produce(art::Event& evt)
   // auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
   art::ServiceHandle<detinfo::DetectorClocksServiceStandard> tss;
   // In case trigger simulation is run in the same job...
-  tss->preProcessEvent(evt);
+  //FIXME: you should never call preProcessEvent
+  tss->preProcessEvent(evt, art::ScheduleContext::invalid());
   auto const* ts = tss->provider();
 
   // get the geometry to be able to figure out signal types and chan -> plane mappings
@@ -306,7 +308,9 @@ void SimWireT1053::produce(art::Event& evt)
       ped_mean = fCollectionPed;
     //slight variation on ped on order of RMS of baselien variation
     art::ServiceHandle<art::RandomNumberGenerator> rng;
-    CLHEP::HepRandomEngine &engine = rng->getEngine("pedestal");
+    CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
+                                                    moduleDescription().moduleLabel(),
+                                                    "pedestal");
     CLHEP::RandGaussQ rGaussPed(engine, 0.0, fBaselineRMS);
     ped_mean += rGaussPed.fire();
 
@@ -353,7 +357,9 @@ void SimWireT1053::GenNoiseInTime(std::vector<float> &noise)
 {
   //ART random number service
   art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine &engine = rng->getEngine("noise");
+  CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
+                                                  moduleDescription().moduleLabel(),
+                                                  "noise");
   CLHEP::RandGaussQ rGauss(engine, 0.0, fNoiseFact);
 
   //In this case fNoiseFact is a value in ADC counts
@@ -369,7 +375,9 @@ void SimWireT1053::GenNoiseInTime(std::vector<float> &noise)
 void SimWireT1053::GenNoiseInFreq(std::vector<float> &noise)
 {
   art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine &engine = rng->getEngine("noise");
+  CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
+                                                  moduleDescription().moduleLabel(),
+                                                  "noise");
   CLHEP::RandFlat flat(engine, -1, 1);
 
   if (noise.size() != fNTicks)
@@ -436,4 +444,3 @@ void SimWireT1053::GenNoiseInFreq(std::vector<float> &noise)
 
 
 }
-
