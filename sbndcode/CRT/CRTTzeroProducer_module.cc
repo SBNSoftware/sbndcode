@@ -129,7 +129,7 @@ void CRTTzeroProducer::produce(art::Event & evt)
   std::unique_ptr<art::Assns<crt::CRTTzero, crt::CRTHit>> outputHits(new art::Assns<crt::CRTTzero, crt::CRTHit>);
   //  auto outputHits    = std::make_unique<art::Assns<crt::CRTTzero, crt::CRTHit>>();
   art::PtrMaker<crt::CRTHit> hitPtrMaker(evt, rawHandle.id());
-  art::PtrMaker<crt::CRTTzero> tzeroPtrMaker(evt, *this);
+  art::PtrMaker<crt::CRTTzero> tzeroPtrMaker(evt);
  
   int N_CRTHits = CRTHitCollection.size();
 
