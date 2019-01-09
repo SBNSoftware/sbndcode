@@ -43,11 +43,11 @@ physics:
   producers:
   {
     rns:       { module_type: "RandomNumberSaver" }
-    crtnew:       @local::sbnd_crtsim
+    crt:       @local::sbnd_crtsim
   }
 
   #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, crtnew ]
+  simulate:  [ rns, crt ]
 
   #define the output stream, there could be more than one if using filters 
   stream1:   [ out1 ]

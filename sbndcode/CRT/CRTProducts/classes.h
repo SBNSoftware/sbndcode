@@ -4,6 +4,7 @@
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTzero.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include <vector>
 #include <utility>
 
@@ -25,6 +26,22 @@ template class std::vector<sbnd::crt::CRTTrack>;
 template class art::Wrapper< std::vector<sbnd::crt::CRTTrack> >;
 
 template class art::Assns<sbnd::crt::CRTTzero, sbnd::crt::CRTHit, void>;
-template class art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTzero, void>;
 template class art::Wrapper<art::Assns<sbnd::crt::CRTTzero, sbnd::crt::CRTHit, void> >;
+template class art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTzero, void>;
 template class art::Wrapper<art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTzero, void> >;
+
+template class art::Wrapper<std::vector<sim::AuxDetIDE>>;
+template class art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE, void>;
+template class art::Wrapper<art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE, void> >;
+template class art::Assns<sim::AuxDetIDE, sbnd::crt::CRTData, void>;
+template class art::Wrapper<art::Assns<sim::AuxDetIDE, sbnd::crt::CRTData, void> >;
+
+template class art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTData, void>;
+template class art::Wrapper<art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTData, void> >;
+template class art::Assns<sbnd::crt::CRTData, sbnd::crt::CRTHit, void>;
+template class art::Wrapper<art::Assns<sbnd::crt::CRTData, sbnd::crt::CRTHit, void> >;
+
+template class art::Assns<sbnd::crt::CRTTrack, sbnd::crt::CRTHit, void>;
+template class art::Wrapper<art::Assns<sbnd::crt::CRTTrack, sbnd::crt::CRTHit, void> >;
+template class art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTrack, void>;
+template class art::Wrapper<art::Assns<sbnd::crt::CRTHit, sbnd::crt::CRTTrack, void> >;
