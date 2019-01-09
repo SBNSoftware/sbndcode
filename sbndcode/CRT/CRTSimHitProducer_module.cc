@@ -135,7 +135,7 @@ namespace sbnd {
 
     std::unique_ptr< std::vector<crt::CRTHit> > CRTHitcol( new std::vector<crt::CRTHit>);
     std::unique_ptr< art::Assns<crt::CRTHit, crt::CRTData> > Hitassn( new art::Assns<crt::CRTHit, crt::CRTData>);
-    art::PtrMaker<crt::CRTHit> makeHitPtr(event, *this);
+    art::PtrMaker<crt::CRTHit> makeHitPtr(event);
 
     int nHits = 0;
 
