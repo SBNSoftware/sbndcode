@@ -74,6 +74,7 @@ simple_plugin( CRTDetSim module
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
+	${ART_PERSISTENCY_PROVENANCE}
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
@@ -96,6 +97,7 @@ simple_plugin( CRTSimHitProducer module
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
+	${ART_PERSISTENCY_PROVENANCE}
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
@@ -118,6 +120,7 @@ simple_plugin(CRTTrackProducer module
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
+	${ART_PERSISTENCY_PROVENANCE}
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
@@ -139,6 +142,7 @@ simple_plugin(CRTTzeroProducer module
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
+	${ART_PERSISTENCY_PROVENANCE}
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
@@ -162,6 +166,7 @@ simple_plugin(CRTRecoAna module
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
+	${ART_PERSISTENCY_PROVENANCE}
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
@@ -173,7 +178,6 @@ simple_plugin(CRTRecoAna module
         ${ROOT_BASIC_LIB_LIST}
         ${CLHEP}
         ${CETLIB}
-
         larcore_Geometry_Geometry_service
         larsim_Simulation lardataobj_Simulation
         larsim_MCCheater_BackTrackerService_service

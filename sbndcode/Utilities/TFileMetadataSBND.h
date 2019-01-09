@@ -12,23 +12,21 @@
 #ifndef TFILEMETADATASBND_H
 #define TFILEMETADATASBND_H
 
-#include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Services/Registry/ActivityRegistry.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art/Framework/Services/Registry/ServiceMacros.h"
-#include "art/Framework/Principal/RunPrincipal.h"
-#include "art/Framework/Principal/SubRunPrincipal.h"
-#include "art/Framework/Principal/Event.h"
+#include "art/Framework/Principal/fwd.h"
 #include "art/Framework/IO/PostCloseFileRenamer.h"
 #include "art/Framework/IO/FileStatsCollector.h"
+#include "art/Persistency/Provenance/ScheduleContext.h"
+#include "canvas/Persistency/Provenance/IDNumber.h"
+#include "fhiclcpp/ParameterSet.h"
 
-  
-#include "art/Framework/Services/System/TriggerNamesService.h"
-
-#include <iostream>
+#include <time.h>
 #include <fstream>
-
-using namespace std;
+#include <set>
+#include <string>
+#include <tuple>
+#include <vector>
 
 namespace util{
 
@@ -36,9 +34,6 @@ namespace util{
   {
   public:
     TFileMetadataSBND(fhicl::ParameterSet const& pset, art::ActivityRegistry& reg);
-    ~TFileMetadataSBND();
-      
-    void reconfigure(fhicl::ParameterSet const& p);
     
     struct metadata {
       std::tuple<std::string, std::string, std::string> fapplication;
@@ -62,7 +57,6 @@ namespace util{
       std::string fProjectSoftware;
       std::string fProductionName; //Production parameter, do not use if not running a production
     std::string fProductionType; //Production parameter, do not use if not running a production
-
     };
     
     metadata md;
@@ -73,15 +67,10 @@ namespace util{
    
     // Callbacks.
     void postBeginJob();
-    void postOpenFile(std::string const& fn);
-    void postEvent(art::Event const& ev);
+    void postOpenInputFile(std::string const& fn);
+    void postEvent(art::Event const& ev, art::ScheduleContext);
     void postBeginSubRun(art::SubRun const& subrun);
-    void postCloseOutputFile(art::OutputFileInfo const& outputinfo);
-    void postCloseFile();
-
-    // Private member functions.
-
-    // Data members.
+    void postCloseInputFile();
 
     // Fcl parameters.
     bool fGenerateTFileMetadata;  
@@ -89,7 +78,6 @@ namespace util{
     std::string fJSONFileName;
     art::FileStatsCollector fFileStats;
     art::PostCloseFileRenamer fRenamer{fFileStats};
-
   }; // class TFileMetadataSBND
 
 } //namespace utils
