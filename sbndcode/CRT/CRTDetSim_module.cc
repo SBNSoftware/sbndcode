@@ -347,11 +347,11 @@ void CRTDetSim::produce(art::Event & e) {
   // Apply coincidence trigger requirement
   std::unique_ptr<std::vector<sbnd::crt::CRTData> > triggeredCRTHits(
       new std::vector<sbnd::crt::CRTData>);
-  art::PtrMaker<sbnd::crt::CRTData> makeDataPtr(e, *this);
+  art::PtrMaker<sbnd::crt::CRTData> makeDataPtr(e);
 
   std::unique_ptr<std::vector<sim::AuxDetIDE> > auxDetIdes(
       new std::vector<sim::AuxDetIDE>);
-  art::PtrMaker<sim::AuxDetIDE> makeIdePtr(e, *this);
+  art::PtrMaker<sim::AuxDetIDE> makeIdePtr(e);
 
   std::unique_ptr< art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE> > Dataassn( new art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE>);
 

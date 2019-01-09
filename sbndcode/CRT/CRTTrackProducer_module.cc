@@ -147,7 +147,7 @@ void CRTTrackProducer::produce(art::Event & evt)
   // CRTTrack collection on this event                                                                         
   std::unique_ptr<std::vector<crt::CRTTrack> > CRTTrackCol(new std::vector<crt::CRTTrack>);
   std::unique_ptr< art::Assns<crt::CRTTrack, crt::CRTHit> > Trackassn( new art::Assns<crt::CRTTrack, crt::CRTHit>);
-  art::PtrMaker<crt::CRTTrack> makeTrackPtr(evt, *this);
+  art::PtrMaker<crt::CRTTrack> makeTrackPtr(evt);
 
   // Implementation of required member function here.
   art::Handle< std::vector<crt::CRTHit> > rawHandle;
