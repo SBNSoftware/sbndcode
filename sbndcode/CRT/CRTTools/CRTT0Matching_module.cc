@@ -11,6 +11,7 @@
 
 // sbndcode includes
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 
 // Framework includes
 #include "art/Framework/Core/EDProducer.h"
@@ -46,7 +47,6 @@
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RawData/ExternalTrigger.h"
 #include "larcoreobj/SimpleTypesAndConstants/PhysicalConstants.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
@@ -82,12 +82,6 @@ namespace sbnd {
 
     void reconfigure(fhicl::ParameterSet const & p);
 
-    // Utility function that determines the possible x range of a track
-    std::pair<double, double> TrackT0Range(double startX, double endX, int tpc);
-
-    // Calculate the distance of closest approach between the end of a track and a crt hit
-    double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int tpc, double t0);
-
   private:
 
     // Params got from fcl file.......
@@ -96,17 +90,14 @@ namespace sbnd {
     double        fDistanceLimit;       ///< Maximum distance between projected crossing point and CRT hit
     double        fMinTrackLength;      ///< Minimum track length to perform T0 matching on
     double        fTrackDirectionFrac;  ///< Minimum track length to perform T0 matching on
-    bool          fVerbose;             ///< print info
 
-    // Other variables shared between different methods.
-    geo::GeometryCore const* fGeometryService;              ///< pointer to Geometry provider
-    detinfo::DetectorProperties const* fDetectorProperties; ///< pointer to detector properties provider
-    detinfo::DetectorClocks const* fDetectorClocks;         ///< pointer to detector clocks provider
+    CRTT0MatchAlg t0Alg;
 
   }; // class CRTT0Matching
 
 
   CRTT0Matching::CRTT0Matching(fhicl::ParameterSet const & p)
+    : t0Alg()
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 
@@ -114,11 +105,6 @@ namespace sbnd {
     produces< std::vector<anab::T0>               >();
     produces< art::Assns<recob::Track , anab::T0> >();
     
-    // Get a pointer to the geometry service provider
-    fGeometryService = lar::providerFrom<geo::Geometry>();
-    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
-
     reconfigure(p);
 
   } // CRTT0Matching()
@@ -132,7 +118,6 @@ namespace sbnd {
     fDistanceLimit       = (p.get<double>        ("DistanceLimit")); 
     fMinTrackLength      = (p.get<double>        ("MinTrackLength")); 
     fTrackDirectionFrac  = (p.get<double>        ("TrackDirectionFrac")); 
-    fVerbose             = (p.get<bool>          ("Verbose"));
 
   } // CRTT0Matching::reconfigure()
 
@@ -144,12 +129,6 @@ namespace sbnd {
 
   void CRTT0Matching::produce(art::Event & event)
   {
-
-    if(fVerbose){
-      std::cout<<"============================================"<<std::endl
-               <<"Run = "<<event.run()<<", SubRun = "<<event.subRun()<<", Event = "<<event.id().event()<<std::endl
-               <<"============================================"<<std::endl;
-    }
 
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
@@ -176,8 +155,9 @@ namespace sbnd {
     // Get track to hit associations
     art::FindManyP<recob::Hit> findManyHits(trackListHandle, event, fTpcTrackModuleLabel);
 
-    if(fVerbose) std::cout<<"Number of reconstructed tracks = "<<trackList.size()
-                          <<"\nNumber of CRT hits = "<<crtList.size()<<"\n";
+    mf::LogInfo("CRTT0Matching")
+      <<"Number of reconstructed tracks = "<<trackList.size()<<"\n"
+      <<"Number of CRT hits = "<<crtList.size();
    
     if (trackListHandle.isValid() && crtListHandle.isValid() ){
       
@@ -214,7 +194,7 @@ namespace sbnd {
 
         // ====================== Matching Algorithm ========================== //
         // Get the allowed t0 range
-        std::pair<double, double> t0MinMax = TrackT0Range(start.X(), end.X(), tpc);
+        std::pair<double, double> t0MinMax = t0Alg.TrackT0Range(start.X(), end.X(), tpc); // [us]
         std::vector<std::pair<double, double>> t0Candidates;
 
         // Loop over the taggers
@@ -224,22 +204,22 @@ namespace sbnd {
           // Loop over all the CRT hits
           for(auto &crtHit : taggerHits.second){
             // Check if hit is within the allowed t0 range
-            double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)crtHit.ts1_ns);
-            if (!(crtTimeTicks >= t0MinMax.first - 20. && crtTimeTicks <= t0MinMax.second + 20.)) continue;
+            double crtTime = (double)(int)crtHit.ts1_ns * 1e-3; // [us]
+            if (!(crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.)) continue;
             TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
        
             // Calculate the distance between the crossing point and the CRT hit
-            double startDist = DistOfClosestApproach(start, startDir, crtHit, tpc, crtTimeTicks);
+            double startDist = t0Alg.DistOfClosestApproach(start, startDir, crtHit, tpc, crtTime);
             // If the distance is less than some limit record the time
             if (startDist < fDistanceLimit){ 
-              t0Candidates.push_back(std::make_pair(startDist, crtTimeTicks));
+              t0Candidates.push_back(std::make_pair(startDist, crtTime));
             }
        
             // Calculate the distance between the crossing point and the CRT hit
-            double endDist = DistOfClosestApproach(end, endDir, crtHit, tpc, crtTimeTicks);
+            double endDist = t0Alg.DistOfClosestApproach(end, endDir, crtHit, tpc, crtTime);
             // If the distance is less than some limit record the time
             if (endDist < fDistanceLimit){ 
-              t0Candidates.push_back(std::make_pair(endDist, crtTimeTicks));
+              t0Candidates.push_back(std::make_pair(endDist, crtTime));
             }
        
           }
@@ -253,10 +233,11 @@ namespace sbnd {
         if(t0Candidates.size()>0) {
           bestTime = t0Candidates[0].second;
           bestDist = t0Candidates[0].first;
-          if(fVerbose) std::cout<<"Matched time = "<<bestTime<<" ticks to track "<<trackList[track_i]->ID()<<"\n";
+          mf::LogInfo("CRTT0Matching")
+            <<"Matched time = "<<bestTime<<" [us] to track "<<trackList[track_i]->ID();
         }
 
-        T0col->push_back(anab::T0(fDetectorClocks->TPCTick2Time(bestTime) * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), bestDist));
+        T0col->push_back(anab::T0(bestTime * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), bestDist));
         util::CreateAssn(*this, event, *T0col, trackList[track_i], *Trackassn);
 
       } // Loop over tracks  
@@ -273,102 +254,6 @@ namespace sbnd {
   {
 
   } // CRTT0Matching::endJob()
-
-
-  // Utility function that determines the possible t0 range of a track
-  std::pair<double, double> CRTT0Matching::TrackT0Range(double startX, double endX, int tpc){
-
-    std::pair<double, double> result;
-    double Vd = fDetectorProperties->DriftVelocity();
-
-    // Whole track must be within tpc
-    // Find which TPC the track hits are detected in
-    if(tpc == 0){
-      // Lowest |X| is furthest from APA
-      double lowX = std::max(startX, endX);
-      // xmin is shift from furthest to 0 (the CPA)
-      double xmax = 0 - lowX;
-      // Highest |X| is closest to APA
-      double highX = std::min(startX, endX);
-      // xmax is shift from closest to APA
-      double xmin = -(2.0*fGeometryService->DetHalfWidth()+3.) - highX;
-      double t0max = -2.*xmin/Vd;
-      double t0min = -2.*xmax/Vd;
-      result = std::make_pair(t0min, t0max);
-    }
-
-    else{
-      // Lowest |X| is furthest from APA
-      double lowX = std::min(startX, endX);
-      // xmin is shift from furthest to 0 (the CPA)
-      double xmin = 0 - lowX;
-      // Highest |X| is closest to APA
-      double highX = std::max(startX, endX);
-      // xmax is shift from closest to APA
-      double xmax = (2.0*fGeometryService->DetHalfWidth()+3.) - highX;
-      double t0min = 2.*xmin/Vd;
-      double t0max = 2.*xmax/Vd;
-      result = std::make_pair(t0min, t0max);
-    }
-
-    return result;
-
-  } // CRTT0Matching::TrackT0Range()
-
-
-  double CRTT0Matching::DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int tpc, double t0){
-
-    double minDist = 99999;
-
-    // Convert the t0 into an x shift
-    double shift = fDetectorClocks->TPCTick2Time(t0) * fDetectorProperties->DriftVelocity();
-    // Apply the shift depending on which TPC the track is in
-    if (tpc == 1) trackPos[0] += shift;
-    if (tpc == 0) trackPos[0] -= shift;
-
-    TVector3 endPos = trackPos + trackDir;
-    double denominator = (endPos - trackPos).Mag();
-    // 1D hits should only have a lot of variance in one direction
-    if(crtHit.x_err > 50.){
-      // Loop over size of hit to find the min dist
-      for(int i = 0; i < 20.; i++){
-        double xpos = crtHit.x_pos + ((i+1.)/10. - 1.)*crtHit.x_err;
-        TVector3 crtPoint(xpos, crtHit.y_pos, crtHit.z_pos);
-        double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-        double dca = numerator/denominator;
-        if(dca < minDist) minDist = dca;
-      }
-    }
-    else if(crtHit.y_err > 50.){
-      // Loop over size of hit to find the min dist
-      for(int i = 0; i < 20.; i++){
-        double ypos = crtHit.y_pos + ((i+1.)/10. - 1.)*crtHit.y_err;
-        TVector3 crtPoint(crtHit.x_pos, ypos, crtHit.z_pos);
-        double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-        double dca = numerator/denominator;
-        if(dca < minDist) minDist = dca;
-      }
-    }
-    else if(crtHit.y_err > 50.){
-      // Loop over size of hit to find the min dist
-      for(int i = 0; i < 20.; i++){
-        double zpos = crtHit.z_pos + ((i+1.)/10. - 1.)*crtHit.z_err;
-        TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, zpos);
-        double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-        double dca = numerator/denominator;
-        if(dca < minDist) minDist = dca;
-      }
-    }
-    else{
-      TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
-      double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-      double dca = numerator/denominator;
-      if(dca < minDist) minDist = dca;
-    }
-
-    return minDist;
-
-  } // CRTT0Matching::DistToOfClosestApproach()
 
 
   DEFINE_ART_MODULE(CRTT0Matching)
