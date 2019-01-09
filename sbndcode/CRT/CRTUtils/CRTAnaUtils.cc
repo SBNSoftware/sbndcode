@@ -175,7 +175,7 @@ double CRTAnaUtils::T0FromCRTTracks(recob::Track tpcTrack, std::vector<sbnd::crt
     crtIndex++;
   }
  
-  std::vector<std::pair<int, double>> crtTpcMatchCandidates;
+  std::vector<std::pair<double, double>> crtTpcMatchCandidates;
   // Loop over the reco crt tracks
   for (auto const& recoCrtTrack : recoCrtTracks){
  
@@ -207,7 +207,7 @@ double CRTAnaUtils::T0FromCRTTracks(recob::Track tpcTrack, std::vector<sbnd::crt
   }
 
   // Choose the track which matches the closest
-  int bestTime = -99999;
+  double bestTime = -99999;
   if(crtTpcMatchCandidates.size() > 0){
     std::sort(crtTpcMatchCandidates.begin(), crtTpcMatchCandidates.end(), [](auto& left, auto& right){
               return left.second < right.second;});
