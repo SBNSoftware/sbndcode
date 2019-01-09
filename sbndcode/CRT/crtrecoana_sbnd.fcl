@@ -53,12 +53,12 @@ physics:
       module_type:     "sbndcode/CRT/CRTRecoAna"
 
       # The input parameters
-      SimModuleLabel:       "largeant"  # Simulation producer module label
+      SimModuleLabel:       "filter"  # Simulation producer module label
       CRTModuleLabel:       "crt"       # CRT producer module label
       Verbose:              true        # Print extra information about what's going on
       VeryVerbose:          true        # Print detailed information about every muon
       Plot:                 true        # Draw truth and reco tracks in event
-      PlotTrackID:          165         # ID of true track to plot
+      PlotTrackID:          -99999         # ID of true track to plot
       # Hit reconstruction
       TimeCoincidenceLimit: 0.15        # Minimum time between two overlapping hit crt strips [us]
       QPed:                 63.6        # Pedestal offset [ADC]

@@ -207,8 +207,10 @@ void CRTDetSim::produce(art::Event & e) {
       double x = (ide.entryX + ide.exitX) / 2;
       double y = (ide.entryY + ide.exitY) / 2;
       double z = (ide.entryZ + ide.exitZ) / 2;
+      int nides = 1;
 
       double tTrue = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
+      double tTrueLast = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       double eDep = ide.energyDeposited;
       double maxEdep = eDep;
 
@@ -217,13 +219,16 @@ void CRTDetSim::produce(art::Event & e) {
 
       //ADD UP HITS AT THE SAME TIME - 2NS DIFF IS A GUESS -VERY APPROXIMATE
       if(ide_i < ides.size() - 1){
-        while(ide_i < ides.size() - 1 && std::abs(tTrue-((ides[ide_i+1].entryT + ides[ide_i+1].exitT) / 2 + fGlobalT0Offset)) < fSipmTimeResponse){
+        while(ide_i < ides.size() - 1 && std::abs(tTrueLast-((ides[ide_i+1].entryT + ides[ide_i+1].exitT) / 2 + fGlobalT0Offset)) < fSipmTimeResponse){
           ide_i++;
-          x = (x + ((ides[ide_i].entryX + ides[ide_i].exitX) / 2))/2;
-          y = (y + ((ides[ide_i].entryY + ides[ide_i].exitY) / 2))/2;
-          z = (z + ((ides[ide_i].entryZ + ides[ide_i].exitZ) / 2))/2;
+          x += (ides[ide_i].entryX + ides[ide_i].exitX) / 2;
+          y += (ides[ide_i].entryY + ides[ide_i].exitY) / 2;
+          z += (ides[ide_i].entryZ + ides[ide_i].exitZ) / 2;
           eDep += ides[ide_i].energyDeposited;
-          tTrue = (tTrue + ((ides[ide_i].entryT + ides[ide_i].exitT) / 2))/2;
+          tTrue += (ides[ide_i].entryT + ides[ide_i].exitT) / 2;
+          tTrueLast = (ides[ide_i].entryT + ides[ide_i].exitT) / 2;
+
+          nides++;
 
           trueIdes.push_back(ides[ide_i]);
 
@@ -237,6 +242,11 @@ void CRTDetSim::produce(art::Event & e) {
           }
         }
       }
+
+      x = x/nides;
+      y = y/nides;
+      z = z/nides;
+      tTrue = tTrue/nides;
 
       double world[3] = {x, y, z};
       double svHitPosLocal[3];

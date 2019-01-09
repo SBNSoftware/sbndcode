@@ -851,7 +851,7 @@ namespace sbnd {
                <<"Number of incomplete tracks = "<<nIncTracks<<std::endl;
     }
 
-    if(fPlot) DrawTrueTracks(particles, truthMatch, true, true, false, true, true, fPlotTrackID);
+    if(fPlot) DrawTrueTracks(particles, truthMatch, true, false, false, false, true, fPlotTrackID);
 
     for(auto const& particle : particles){
       int partId = particle.TrackId();
@@ -1082,7 +1082,7 @@ namespace sbnd {
       bool plot = true;
       if(ind >= 0){ 
         plot = false;
-        if(id == ind) plot = true;
+        if(id == ind || ind == -99999) plot = true;
       }
       if(truth && plot){
         int nTraj = particle[i].NumberTrajectoryPoints();
