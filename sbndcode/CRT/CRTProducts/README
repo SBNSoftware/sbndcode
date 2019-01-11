@@ -1,0 +1,16 @@
+Directory for CRT related data products
+
+-- CRTData.cxx && CRTData.hh  
+Raw simulated data product, corresponds to one SiPM channel
+
+-- CRTHit.cc &&  CRTHit.hh  
+A 3D hit formed from the overlap of scintillating strips in perpendicular modules
+
+-- CRTTzero.hh  
+Collections of CRTHits in a given time limit
+
+-- CRTTrack.cc && CRTTrack.hh  
+3D tracks formed from 2 or more CRT hits on different taggers
+
+-- classes.h && classes_def.xml
+Define classes and associations here

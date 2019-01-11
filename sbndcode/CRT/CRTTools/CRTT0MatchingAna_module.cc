@@ -9,13 +9,14 @@
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
 
 // LArSoft includes
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
@@ -142,23 +143,8 @@ namespace sbnd {
     // Called once, at end of the job
     virtual void endJob() override;
 
-    // Calculate the position that an MC particle crosses a crt plane
-    TVector3 TaggerCrossPoint(const simb::MCParticle& particle, int tag_i);
-
-    // Utility function that determines the possible x range of a track
-    std::pair<double, double> TrackT0Range(double startX, double endX, int tpc);
-
-    // Convert an xyz position to a CRT channel ID
-    uint32_t PositionToChannel(TVector3 position);
-
-    // Convert start time to CRT crossing point
-    TVector3 T0ToXYZPosition(TVector3 position, TVector3 direction, std::string tagger, int tpc, double t0);
-
     // Calculate the distance from the track crossing point to CRT overlap coordinates
     double DistToCrtHit(TVector3 trackPos, crt::CRTHit crtHit);
-
-    // Calculate the distance of closest approach between the end of a track and a crt hit
-    double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int tpc, double t0);
 
   private:
 
@@ -170,6 +156,9 @@ namespace sbnd {
     double        fMinTrackLength;      ///< Minimum track length to perform T0 matching on
     double        fTrackDirectionFrac;  ///< Minimum track length to perform T0 matching on
     bool          fVerbose;             ///< print information about what's going on
+
+    CRTT0MatchAlg t0Alg;
+    CRTTruthRecoAlg truthAlg;
 
     // n-tuples
     TH1D* fDistance;               ///< Distance between projected (at true T0) and true crossing points
@@ -189,14 +178,13 @@ namespace sbnd {
     // Other variables shared between different methods.
     geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
-    detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
-
+/*
     // Positions of the CRT planes
     std::vector<double> crtPlanes = {-359.1, -357.3, 357.3, 359.1, -358.9, -357.1, 661.52, 663.32, 865.52, 867.32, -240.65, -238.85, 655.35, 657.15};
     std::vector<int> fixCoord   = {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2}; // Fixed coordinate for each plane
     std::vector<int> widthCoord = {2, 1, 2, 1, 0, 2, 2, 0, 2, 0, 1, 0, 1, 0}; // Width direction for each plane
     std::vector<int> lenCoord   = {1, 2, 1, 2, 2, 0, 0, 2, 0, 2, 0, 1, 0, 1}; // Length direction for each plane
-
+*/
     // Performance Counters
     int nCorrectExit = 0; // True track crosses CRT and algorithm assigns the right T0
     int nIncorrectExit = 0; // True track crosses CRT and algorithm assigns wrong/no T0
@@ -231,12 +219,13 @@ namespace sbnd {
     , fMinTrackLength      (config().MinTrackLength())
     , fTrackDirectionFrac  (config().TrackDirectionFrac())
     , fVerbose             (config().Verbose())
+    , t0Alg()
+    , truthAlg()
   {
 
     // Get a pointer to the geometry service provider
     fGeometryService = lar::providerFrom<geo::Geometry>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
 
   } //CRTT0MatchingAna()
 
@@ -289,13 +278,6 @@ namespace sbnd {
                <<"============================================"<<std::endl;
     }
 
-    // Detector properties
-    double readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize();
-    double driftTimeTicks = fDetectorClocks->Time2Tick((2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity());
-
-    if(fVerbose) std::cout<<"Readout window = "<<readoutWindow<<" ticks, Drift time = "<<driftTimeTicks
-                          <<" ticks, Drift velocity = "<<fDetectorProperties->DriftVelocity()<<" cm/us \n";
-
     // Retrieve all the truth info in the events
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
     // Fill a map of true particles
@@ -339,11 +321,11 @@ namespace sbnd {
       if (particles.find(trueId) == particles.end()){ if (fVerbose) std::cout<<"No valid true track!\n"; continue; }
 
       // Get the true T0
-      double trueTime = fDetectorClocks->TPCG4Time2Tick(particles[trueId].T());
+      double trueTime = particles[trueId].T() * 1e-3; // [us]
       fTrueTime->Fill(trueTime);
 
       if(fVerbose) std::cout<<"True particle information:\n"<<"PDG = "<<particles[trueId].PdgCode()<<", length = "
-                            <<particles[trueId].Trajectory().TotalLength()<<" cm, time = "<<trueTime<<" ticks\n\n";
+                            <<particles[trueId].Trajectory().TotalLength()<<" cm, time = "<<trueTime<<" us\n\n";
 
       nTracks++;
 
@@ -377,7 +359,7 @@ namespace sbnd {
       //Shift start and end by true time
       TVector3 startShift = start;
       TVector3 endShift = end;
-      double timeToShift = fDetectorClocks->TPCTick2Time(trueTime) * fDetectorProperties->DriftVelocity();
+      double timeToShift = trueTime * fDetectorProperties->DriftVelocity();
       if(tpc == 0){
         timeToShift = -timeToShift;
       }
@@ -410,17 +392,17 @@ namespace sbnd {
         std::string tagger = taggerHits.first;
         // Calculate the crossing point of the true particle
         int tag_i = nameToInd[tagger];
-        TVector3 trueCross = TaggerCrossPoint(particles[trueId], tag_i);
+        TVector3 trueCross = truthAlg.TaggerCrossPoint(particles[trueId], tag_i);
         trueXYZ[tagger] = trueCross;
         bool isMatch = false;
 
         // Loop over the hits on the tagger
         for(auto &crtHit : taggerHits.second){
           double trueDist = DistToCrtHit(trueCross, crtHit);
-          double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)crtHit.ts1_ns);
-          if(trueDist<20. && std::abs(crtTimeTicks-trueTime)<2.) {
+          double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3; // [us]
+          if(trueDist<20. && std::abs(crtTime - trueTime)<1.) {
             if(fVerbose) std::cout<<tagger<<": CRT pos = ("<<crtHit.x_pos<<", "<<crtHit.y_pos<<", "<<crtHit.z_pos
-                                  <<"), time = "<<crtTimeTicks<<"\nTrue pos = ("<<trueCross.X()<<", "
+                                  <<"), time = "<<crtTime<<"\nTrue pos = ("<<trueCross.X()<<", "
                                   <<trueCross.Y()<<", "<<trueCross.Z()<<"), dist = "<<trueDist<<std::endl;
             trueCrtCross = true;
             isMatch = true;
@@ -434,7 +416,7 @@ namespace sbnd {
 
       // ====================== Matching Algorithm ========================== //
       // Get the allowed t0 range
-      std::pair<double, double> t0MinMax = TrackT0Range(start.X(), end.X(), tpc);
+      std::pair<double, double> t0MinMax = t0Alg.TrackT0Range(start.X(), end.X(), tpc);
       if(fVerbose) std::cout<<"T0 range: min = "<<t0MinMax.first<<", max = "<<t0MinMax.second<<", truth = "<<trueTime<<std::endl;
 
       std::vector<std::pair<double, double>> t0Candidates;
@@ -452,8 +434,8 @@ namespace sbnd {
         if (fVerbose) std::cout<<"\nTagger "<<tagger<<"\n";
 
         // Calculate the start and end crossing points at the true T0
-        TVector3 trueStartPos = T0ToXYZPosition(start, startDir, tagger, tpc, trueTime);
-        TVector3 trueEndPos = T0ToXYZPosition(end, endDir, tagger, tpc, trueTime);
+        TVector3 trueStartPos = truthAlg.T0ToXYZPosition(start, startDir, tagger, tpc, trueTime);
+        TVector3 trueEndPos = truthAlg.T0ToXYZPosition(end, endDir, tagger, tpc, trueTime);
         if(fVerbose && trueStartPos[0] != -99999) PrintVect(trueStartPos, "Cross point at true time");
         if(fVerbose && trueEndPos[0] != -99999) PrintVect(trueEndPos, "Cross point at true time");
 
@@ -472,40 +454,34 @@ namespace sbnd {
         // Loop over all the CRT hits
         for(auto &crtHit : taggerHits.second){
           // Check if hit is within the allowed t0 range
-          double crtTimeTicks = fDetectorClocks->TPCG4Time2Tick((double)(int)crtHit.ts1_ns);
-          if (!(crtTimeTicks >= t0MinMax.first-20. && crtTimeTicks <= t0MinMax.second+20.)) continue;
+          double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3; // [us]
+          if (!(crtTime >= t0MinMax.first-10. && crtTime <= t0MinMax.second+10.)) continue;
           TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
 
           // Calculate the distance between the crossing point and the CRT hit
-          TVector3 startTrackPos = T0ToXYZPosition(start, startDir, tagger, tpc, crtTimeTicks);
-          //double startDist = DistToCrtHit(startTrackPos, crtHit);
-          double startDist = DistOfClosestApproach(start, startDir, crtHit, tpc, crtTimeTicks);
+          double startDist = t0Alg.DistOfClosestApproach(start, startDir, crtHit, tpc, crtTime);
           if (startDist < minDistance) minDistance = startDist;
 
           // If the distance is less than some limit record the time
           if (startDist < fDistanceLimit){ 
-            if(fVerbose) std::cout<<"Match! Time = "<<crtTimeTicks<<", Position = ("<<startTrackPos.X()<<", "
-                                  <<startTrackPos.Y()<<", "<<startTrackPos.Z()<<") dist = "<<startDist<<std::endl;
-            t0Candidates.push_back(std::make_pair(startDist, crtTimeTicks));
+            if(fVerbose) std::cout<<"Match! Time = "<<crtTime<<", dist = "<<startDist<<std::endl;
+            t0Candidates.push_back(std::make_pair(startDist, crtTime));
           }
 
           // Calculate the distance between the crossing point and the CRT hit
-          TVector3 endTrackPos = T0ToXYZPosition(end, endDir, tagger, tpc, crtTimeTicks);
-          //double endDist = DistToCrtHit(endTrackPos, crtHit);
-          double endDist = DistOfClosestApproach(end, endDir, crtHit, tpc, crtTimeTicks);
+          double endDist = t0Alg.DistOfClosestApproach(end, endDir, crtHit, tpc, crtTime);
           if (endDist < minDistance) minDistance = endDist;
 
           // If the distance is less than some limit record the time
           if (endDist < fDistanceLimit){ 
-            if(fVerbose) std::cout<<"Match! Time = "<<crtTimeTicks<<", Position = ("<<endTrackPos.X()<<", "
-                                  <<endTrackPos.Y()<<", "<<endTrackPos.Z()<<") dist = "<<endDist<<std::endl;
-            t0Candidates.push_back(std::make_pair(endDist, crtTimeTicks));
+            if(fVerbose) std::cout<<"Match! Time = "<<crtTime<<", dist = "<<endDist<<std::endl;
+            t0Candidates.push_back(std::make_pair(endDist, crtTime));
           }
 
           // Loop over different distance limits
           for(int i = 0; i < nLims; i++){
-            if(startDist < (i+1.)*mindx) t0candLim[i].push_back(std::make_pair(startDist, crtTimeTicks));
-            if(endDist < (i+1.)*mindx) t0candLim[i].push_back(std::make_pair(startDist, crtTimeTicks));
+            if(startDist < (i+1.)*mindx) t0candLim[i].push_back(std::make_pair(startDist, crtTime));
+            if(endDist < (i+1.)*mindx) t0candLim[i].push_back(std::make_pair(endDist, crtTime));
           }
         }
       }
@@ -518,28 +494,7 @@ namespace sbnd {
       std::sort(t0Candidates.begin(), t0Candidates.end(), [](auto& left, auto& right){
                 return left.first < right.first;});
       if(fVerbose) std::cout<<"Number of t0 candidates = "<<t0Candidates.size()<<std::endl;
-      // Loop over the candidates
-      //double bestTime = -99999;
-      //int bestOccur = 0;
-      /*size_t t0_i = 0;
-      bool containsTrue = false;
-      while (t0_i < t0Candidates.size()){
-        // Record the current time
-        double currentTime = t0Candidates[t0_i].second;
-        //int nOccur = 1;
-        t0_i++;
-        if(std::abs(currentTime-trueTime)<2.) containsTrue = true;
-        // Loop over all times within 1 tick of this time
-        while (std::abs(currentTime-t0Candidates[t0_i])<1.){
-          nOccur++;
-          t0_i++;
-        }
-        if (fVerbose) std::cout<<"t0 candidate = "<<currentTime<<": Number of occurences = "<<nOccur<<std::endl;
-        if (nOccur>bestOccur){
-          bestTime = currentTime;
-          bestOccur = nOccur;
-        }
-      }*/
+      
       double bestTime = -99999;
       if(t0Candidates.size()>0) bestTime = t0Candidates[0].second;
 
@@ -636,107 +591,6 @@ namespace sbnd {
   } // CRTT0MatchingAna::endJob()
 
 
-  // Function to calculate the point where a true particle crosses a CRT tagger
-  TVector3 CRTT0MatchingAna::TaggerCrossPoint(simb::MCParticle const& particle, int tag_i){
-
-    double tagCenter[3] = {0, 0, 208.25};
-    tagCenter[fixCoord[tag_i*2]] = (crtPlanes[tag_i*2]+crtPlanes[tag_i*2+1])/2;
-    double tagDim[3] = {0, 0, 0};
-    if(tag_i==0 || tag_i==1){ tagDim[0] = 1.8; tagDim[1] = 360; tagDim[2] = 450; }
-    if(tag_i==2){ tagDim[0] = 399.5; tagDim[1] = 1.8; tagDim[2] = 478; }
-    if(tag_i==3 || tag_i==4){ tagDim[0] = 450; tagDim[1] = 1.8; tagDim[2] = 450; }
-    if(tag_i==5 || tag_i==6){ tagDim[0] = 360; tagDim[1] = 360; tagDim[2] = 1.8; }
-    TVector3 start, end;
-    bool first = true;
-    // Get the trajectory of the true particle
-    size_t npts = particle.NumberTrajectoryPoints();
-    // Loop over particle trajectory
-    for (size_t i = 0; i < npts; i++){
-      TVector3 trajPoint(particle.Vx(i), particle.Vy(i), particle.Vz(i));
-      // If the particle is inside the tagger volume then set to true.
-      if(trajPoint[0]>tagCenter[0]-tagDim[0] && trajPoint[0]<tagCenter[0]+tagDim[0] &&
-         trajPoint[1]>tagCenter[1]-tagDim[1] && trajPoint[1]<tagCenter[1]+tagDim[1] &&
-         trajPoint[2]>tagCenter[2]-tagDim[2] && trajPoint[2]<tagCenter[2]+tagDim[2]){
-        if(first) start = trajPoint;
-        first = false;
-        end = trajPoint;
-      }
-    }
-    TVector3 crossPoint((start.X()+end.X())/2,(start.Y()+end.Y())/2,(start.Z()+end.Z())/2);
-
-    return crossPoint;
-
-  } // CRTT0MatchingAna::TaggerCrossPoint()
-
-
-  // Utility function that determines the possible x range of a track
-  std::pair<double, double> CRTT0MatchingAna::TrackT0Range(double startX, double endX, int tpc){
-
-    std::pair<double, double> result;
-    double Vd = fDetectorProperties->DriftVelocity();
-    // Whole track must be within tpc
-    // Find which TPC the track hits are detected in
-    if(tpc == 0){
-      // Lowest |X| is furthest from APA
-      double lowX = std::max(startX, endX);
-      // xmin is shift from furthest to 0 (the CPA)
-      double xmax = 0 - lowX;
-      // Highest |X| is closest to APA
-      double highX = std::min(startX, endX);
-      // xmax is shift from closest to APA
-      double xmin = -(2.0*fGeometryService->DetHalfWidth()+3.) - highX;
-      double t0max = -2.*xmin/Vd;
-      double t0min = -2.*xmax/Vd;
-      result = std::make_pair(t0min, t0max);
-    }
-    else{
-      // Lowest |X| is furthest from APA
-      double lowX = std::min(startX, endX);
-      // xmin is shift from furthest to 0 (the CPA)
-      double xmin = 0 - lowX;
-      // Highest |X| is closest to APA
-      double highX = std::max(startX, endX);
-      // xmax is shift from closest to APA
-      double xmax = (2.0*fGeometryService->DetHalfWidth()+3.) - highX;
-      double t0min = 2.*xmin/Vd;
-      double t0max = 2.*xmax/Vd;
-      result = std::make_pair(t0min, t0max);
-    }
-
-    return result;
-
-  } // CRTT0MatchingAna::TrackT0Range()
-
-
-  // Function to project a track position on to a tagger
-  TVector3 CRTT0MatchingAna::T0ToXYZPosition(TVector3 position, TVector3 direction, std::string tagger, int tpc, double t0){
-
-    //Here crt_i is index of tagger, so runs from 0 to 6
-    TVector3 returnVal(-99999, -99999, -99999);
-    int crt_i = nameToInd[tagger];
-
-    // Convert the t0 into an x shift
-    double shift = fDetectorClocks->TPCTick2Time(t0) * fDetectorProperties->DriftVelocity();
-    // Apply the shift depending on which TPC the track is in
-    if (tpc == 1) position[0] += shift;
-    if (tpc == 0) position[0] -= shift;
-
-    // Calculate the step to the CRT plane
-    double step = (crtPlanes[crt_i*2]- position[fixCoord[crt_i*2]])/direction[fixCoord[crt_i*2]];
-
-    // If the step is < 0 return a null position
-    if (step < 0) return returnVal;
-
-    // Calculate the CRT crossing point of the output coordinate
-    returnVal[lenCoord[crt_i*2]] = position[lenCoord[crt_i*2]] + step*direction[lenCoord[crt_i*2]];
-    returnVal[widthCoord[crt_i*2]] = position[widthCoord[crt_i*2]] + step*direction[widthCoord[crt_i*2]];
-    returnVal[fixCoord[crt_i*2]] = crtPlanes[crt_i*2];
-
-    return returnVal;
-
-  } // CRTT0MatchingAna::T0ToXYZPosition()
-
-
   // Function to calculate the distance between a projected cross point and a CRT hit
   double CRTT0MatchingAna::DistToCrtHit(TVector3 trackPos, crt::CRTHit crtHit){
 
@@ -766,62 +620,6 @@ namespace sbnd {
 
     double dist = std::sqrt(std::pow(minDistX, 2) + std::pow(minDistY, 2) + std::pow(minDistZ, 2));
     return dist;
-
-  } // CRTT0MatchingAna::DistToCrtHit()
-
-
-  // Function to calculate the distance of closest approach to a CRT hit
-  double CRTT0MatchingAna::DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int tpc, double t0){
-
-    double minDist = 99999;
-
-    // Convert the t0 into an x shift
-    double shift = fDetectorClocks->TPCTick2Time(t0) * fDetectorProperties->DriftVelocity();
-    // Apply the shift depending on which TPC the track is in
-    if (tpc == 1) trackPos[0] += shift;
-    if (tpc == 0) trackPos[0] -= shift;
-
-    TVector3 endPos = trackPos + trackDir;
-    double denominator = (endPos - trackPos).Mag();
-    // 1D hits should only have a lot of variance in one direction
-    if(crtHit.x_err > 50.){
-      // Loop over size of hit to find the min dist
-      for(int i = 0; i < 20.; i++){
-        double xpos = crtHit.x_pos + ((i+1.)/10. - 1.)*crtHit.x_err;
-        TVector3 crtPoint(xpos, crtHit.y_pos, crtHit.z_pos);
-        double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-        double dca = numerator/denominator;
-        if(dca < minDist) minDist = dca;
-      }
-    }
-    else if(crtHit.y_err > 50.){
-      // Loop over size of hit to find the min dist
-      for(int i = 0; i < 20.; i++){
-        double ypos = crtHit.y_pos + ((i+1.)/10. - 1.)*crtHit.y_err;
-        TVector3 crtPoint(crtHit.x_pos, ypos, crtHit.z_pos);
-        double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-        double dca = numerator/denominator;
-        if(dca < minDist) minDist = dca;
-      }
-    }
-    else if(crtHit.y_err > 50.){
-      // Loop over size of hit to find the min dist
-      for(int i = 0; i < 20.; i++){
-        double zpos = crtHit.z_pos + ((i+1.)/10. - 1.)*crtHit.z_err;
-        TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, zpos);
-        double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-        double dca = numerator/denominator;
-        if(dca < minDist) minDist = dca;
-      }
-    }
-    else{
-      TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
-      double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-      double dca = numerator/denominator;
-      if(dca < minDist) minDist = dca;
-    }
-
-    return minDist;
 
   } // CRTT0MatchingAna::DistToCrtHit()
 

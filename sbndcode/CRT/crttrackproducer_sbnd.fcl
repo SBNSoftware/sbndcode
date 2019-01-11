@@ -1,5 +1,12 @@
 BEGIN_PROLOG
 
+standard_crttrackalg:
+{
+    AverageHitDistance: 30.         # Maximum distance to avarage hits on the same tagger over [cm]
+    DistanceLimit:      25.         # Maximum distance from CRTTrack to absorb a new CRTHit [cm]
+    TimeLimit:          0.1         # Maximum time difference to combine hits into a tzero [us]
+}
+
 standard_crttrackproducer:
 {
     module_type:        "sbndcode/CRT/CRTTrackProducer"
@@ -7,11 +14,8 @@ standard_crttrackproducer:
     DataLabelTZeros:    "crttzero"  # CRTTzero producer module name
     TrackMethodType:    4           # method 1 = all, method 2 = ave, method 3 = pure, method 4 = top plane (sbnd)
     StoreTrack:         1           # Produce CRTTracks
-    Verbose:            0           # Print stuff
-    TimeLimit:          0.2         # Maximum time difference to combine hits into a tzero [us]
-    AverageHitDistance: 30.         # Maximum distance to avarage hits on the same tagger over [cm]
-    DistanceLimit:      25.         # Maximum distance from CRTTrack to absorb a new CRTHit [cm]
     UseTopPlane:        true        # Use hits from the top plane (SBND specific)
+    TrackAlg:           @local::standard_crttrackalg
 }
 
 END_PROLOG
