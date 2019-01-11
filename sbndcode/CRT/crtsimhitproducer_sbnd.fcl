@@ -1,14 +1,19 @@
 BEGIN_PROLOG
 
+standard_crtsimhitalg:
+{
+    TimeCoincidenceLimit: 0.08  # Minimum time between two overlapping hit crt strips [us]
+    QPed:                 63.6  # Pedestal offset [ADC]
+    QSlope:               131.9 # Pedestal slope [ADC/photon]
+    UseReadoutWindow:     true  # Only reconstruct hits within readout window
+}
+
+
 standard_crtsimhitproducer:
 {
     module_type:          "sbndcode/CRT/CRTSimHitProducer"
     CrtModuleLabel:       "crt"
-    Verbose:              false
-    TimeCoincidenceLimit: 0.15  # Minimum time between two overlapping hit crt strips
-    QPed:                 63.6  # Pedestal offset [ADC]
-    QSlope:               131.9 # Pedestal slope [ADC/photon]
-    UseReadoutWindow:     true  # Only reconstruct hits within readout window
+    HitAlg:               @local::standard_crtsimhitalg
 }
 
 END_PROLOG
