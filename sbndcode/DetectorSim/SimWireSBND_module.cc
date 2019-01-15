@@ -206,7 +206,7 @@ void SimWireSBND::beginJob()
   fNTicks = fFFT->FFTSize();
 
   if ( fNTicks % 2 != 0 )
-    LOG_DEBUG("SimWireSBND") << "Warning: FFTSize not a power of 2. "
+    MF_LOG_DEBUG("SimWireSBND") << "Warning: FFTSize not a power of 2. "
                               << "May cause issues in (de)convolution.\n";
 
   if ( fNTimeSamples > fNTicks )
