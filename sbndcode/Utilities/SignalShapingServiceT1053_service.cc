@@ -437,7 +437,7 @@ void util::SignalShapingServiceT1053::SetElectResponse()
   auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
 
-  LOG_DEBUG("SignalShapingT1053") << "Setting T1053 electronics response function...";
+  MF_LOG_DEBUG("SignalShapingT1053") << "Setting T1053 electronics response function...";
 
   int nticks = fft->FFTSize();
   fElectResponse.resize(nticks, 0.);
@@ -484,7 +484,7 @@ void util::SignalShapingServiceT1053::SetElectResponse()
       integral+=fElectResponse[i];
   }// end loop over time buckets
     
-  LOG_DEBUG("SignalShapingT1053") << " Done.";
+  MF_LOG_DEBUG("SignalShapingT1053") << " Done.";
 
   // normalize fElectResponse[i], before the convolution
   // Put in overall normalization in a pedantic way:
