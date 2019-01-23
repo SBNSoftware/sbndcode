@@ -14,6 +14,8 @@ sbnd_larg4crtfilter:
   MinMomentums:             [ -999 ]    #Minimum momentum of particle(s) passing through thet CRTs.  Specify 0 to ignore min momentum.  Vector should be same length as PDG
   MaxMomentums:             [ -999 ]    #Same but for maximum momentum
   LArG4ModuleName:          "largeant"  #The name of the module which contains the simb::MCParticle data product we want to use
+  UseReadoutWindow:         true        #Demand particle crosses CRTs within the reconstructable time window
+  UseTPC:                   true        #Demand particle crosses the TPC enclosed volume
 }
 
 END_PROLOG
