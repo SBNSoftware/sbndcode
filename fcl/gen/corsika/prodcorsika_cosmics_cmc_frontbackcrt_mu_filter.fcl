@@ -13,9 +13,9 @@ physics.filters.filter.UseFrontCRTs: true
 physics.filters.filter.UseBackCRTs: true
 physics.filters.filter.UseLeftCRTs: false
 physics.filters.filter.UseRightCRTs:false
-physics.filters.filter.PDGs: [ 13 ]
-physics.filters.filter.MinMomentums: [ -999 ]
-physics.filters.filter.MaxMomentums: [ -999 ]
+physics.filters.filter.PDGs: [ 13, -13 ]
+physics.filters.filter.MinMomentums: [ -999., -999. ]
+physics.filters.filter.MaxMomentums: [ -999., -999. ]
 physics.filters.filter.CRTDimensionScaling: 1.2
 
 outputs.out1.SelectEvents: [ "simulate" ]

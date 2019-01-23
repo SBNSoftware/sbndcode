@@ -7,6 +7,9 @@
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Principal/Event.h" 
 #include "larcore/Geometry/Geometry.h"
+#include "larcorealg/Geometry/GeometryCore.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 
 namespace filt{
@@ -39,6 +42,13 @@ namespace filt{
       std::vector<double> fMinMomentums;
       std::vector<double> fMaxMomentums;
       double fCRTDimensionScaling;
+      bool fUseReadoutWindow;
+
+      geo::GeometryCore const* fGeometryService;
+      detinfo::DetectorClocks const* fDetectorClocks;
+      detinfo::DetectorProperties const* fDetectorProperties;
+      double readoutWindow;
+      double driftTime;
 
       bool IsInterestingParticle(const simb::MCParticle &particle);
       void LoadCRTAuxDetIDs();
@@ -51,6 +61,13 @@ namespace filt{
   GenFilter::GenFilter(fhicl::ParameterSet const & pset)
   {
     this->reconfigure(pset);
+    
+    fGeometryService = lar::providerFrom<geo::Geometry>();
+    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
+    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
+    readoutWindow  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
+    readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize(); // [us]
+    driftTime = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); // [us]
   }
 
 
@@ -66,6 +83,7 @@ namespace filt{
     fMinMomentums = pset.get<std::vector<double> >("MinMomentums");
     fMaxMomentums = pset.get<std::vector<double> >("MaxMomentums");
     fCRTDimensionScaling = pset.get<double>("CRTDimensionScaling");
+    fUseReadoutWindow = pset.get<bool>("UseReadoutWindow");
   }
 
 
@@ -79,6 +97,10 @@ namespace filt{
         for (int part = 0; part < mc_truth->NParticles(); part++){
           const simb::MCParticle particle = mc_truth->GetParticle(part);
           if (!IsInterestingParticle(particle)) continue;
+          double time = particle.T() * 1e-3; //[us]
+          if (fUseReadoutWindow){
+            if (time < -driftTime || time > readoutWindow) continue;
+          }
           if (fUseTopHighCRTs){
             bool OK = UsesCRTAuxDets(particle,fTopHighCRTAuxDetIDs);
             if (!OK) continue;
@@ -135,20 +157,16 @@ namespace filt{
     int pdg = particle.PdgCode();
 
     for (unsigned int particle_i = 0; particle_i < fPDGs.size(); particle_i++){
+      bool matched = true;
       //Check minimum momentum
-      if (fMinMomentums[particle_i] > 0 && mom < fMinMomentums[particle_i]){
-        return false;
-      }
+      if (fMinMomentums[particle_i] > 0 && mom < fMinMomentums[particle_i]) matched = false;
       //Check maximum momentum
-      if (fMaxMomentums[particle_i] > 0 && mom > fMaxMomentums[particle_i]){
-        return false;
-      }
+      if (fMaxMomentums[particle_i] > 0 && mom > fMaxMomentums[particle_i]) matched = false;
       //Check PDG
-      if (fPDGs[particle_i]!=0 && pdg!=fPDGs[particle_i]){
-        return false;
-      }
+      if (fPDGs[particle_i]!=0 && pdg!=fPDGs[particle_i]) matched = false;
+      if(matched) return true;
     }
-    return true;
+    return false;
   }
 
 

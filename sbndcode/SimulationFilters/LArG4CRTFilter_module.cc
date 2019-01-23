@@ -2,11 +2,17 @@
 #include <algorithm>
 
 #include "TGeoManager.h"
+#include "TVector3.h"
 
 #include "art/Framework/Core/EDFilter.h" 
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Principal/Event.h" 
 #include "larcore/Geometry/Geometry.h"
+#include "larcorealg/Geometry/GeometryCore.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
+#include "larcore/Geometry/AuxDetGeometry.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 
 namespace filt{
@@ -39,16 +45,31 @@ namespace filt{
       std::vector<double> fMinMomentums;
       std::vector<double> fMaxMomentums;
       std::string fLArG4ModuleName;
+      bool fUseReadoutWindow;
+      bool fUseTPC;
 
+      geo::GeometryCore const* fGeometryService;
+      detinfo::DetectorClocks const* fDetectorClocks;
+      detinfo::DetectorProperties const* fDetectorProperties;
+      double readoutWindow;
+      double driftTime;
+      
       bool IsInterestingParticle(const art::Ptr<simb::MCParticle> particle);
       void LoadCRTAuxDetIDs();
       bool UsesCRTAuxDets(const art::Ptr<simb::MCParticle> particle, const std::vector<unsigned int> &crt_auxdet_vector);
+      bool EntersTPC(const art::Ptr<simb::MCParticle> particle);
   };
 
 
   LArG4CRTFilter::LArG4CRTFilter(fhicl::ParameterSet const & pset)
   {
     this->reconfigure(pset);
+
+    fGeometryService = lar::providerFrom<geo::Geometry>();
+    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
+    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
+    readoutWindow  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
+    driftTime = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); // [us]
   }
 
 
@@ -64,6 +85,8 @@ namespace filt{
     fMinMomentums = pset.get<std::vector<double> >("MinMomentums");
     fMaxMomentums = pset.get<std::vector<double> >("MaxMomentums");
     fLArG4ModuleName = pset.get<std::string>("LArG4ModuleName");
+    fUseReadoutWindow = pset.get<bool>("UseReadoutWindow");
+    fUseTPC = pset.get<bool>("UseTPC");
   }
 
 
@@ -77,6 +100,11 @@ namespace filt{
       //std::cout<<"particlePDG: " << particle->PdgCode() << std::endl;
       //particle->Position().Vect().Print();
       //particle->Momentum().Vect().Print();
+      double time = particle->T() * 1e-3; //[us]
+      if (fUseReadoutWindow){
+        if (time < -driftTime || time > readoutWindow) continue;
+      }
+      if (fUseTPC && !EntersTPC(particle)) continue;
       if (fUseTopHighCRTs){
         bool OK = UsesCRTAuxDets(particle,fTopHighCRTAuxDetIDs);
         if (!OK) continue;
@@ -112,7 +140,6 @@ namespace filt{
         if (!OK) continue;
         //std::cout<<"RightCRTs: " << OK << std::endl;
       }
-
       //std::cout<<"Particle hit all CRTs"<<std::endl;
       return true;
     }
@@ -131,20 +158,16 @@ namespace filt{
     int pdg = particle->PdgCode();
 
     for (unsigned int particle_i = 0; particle_i < fPDGs.size(); particle_i++){
+      bool matched = true;
       //Check minimum momentum
-      if (fMinMomentums[particle_i] > 0 && mom < fMinMomentums[particle_i]){
-        return false;
-      }
+      if (fMinMomentums[particle_i] > 0 && mom < fMinMomentums[particle_i]) matched = false;
       //Check maximum momentum
-      if (fMaxMomentums[particle_i] > 0 && mom > fMaxMomentums[particle_i]){
-        return false;
-      }
+      if (fMaxMomentums[particle_i] > 0 && mom > fMaxMomentums[particle_i]) matched = false;
       //Check PDG
-      if (fPDGs[particle_i]!=0 && pdg!=fPDGs[particle_i]){
-        return false;
-      }
+      if (fPDGs[particle_i]!=0 && pdg!=fPDGs[particle_i]) matched = false;
+      if(matched) return true;
     }
-    return true;
+    return false;
   }
 
 
@@ -216,6 +239,9 @@ namespace filt{
   bool LArG4CRTFilter::UsesCRTAuxDets(const art::Ptr<simb::MCParticle> particle, const std::vector<unsigned int> &crt_auxdet_vector){
     //Loop over the aux dets, extract each one and then perform the test
     art::ServiceHandle<geo::Geometry> geom;
+    //art:: ServiceHandle <geo:: AuxDetGeometry > adGeoService;
+    //const  geo:: AuxDetGeometry* adG = &(* adGeoService);   // !!
+    //const  geo:: AuxDetGeometryCore* adGeoCore = adG ->GetProviderPtr ();
 
     //Loop over the trajectory points made by this particle
     for (unsigned int pt_i = 0; pt_i < particle->NumberTrajectoryPoints(); pt_i++){
@@ -229,9 +255,12 @@ namespace filt{
       //The find the auxdet function throws a wobbler (an exception) if it can't find an auxdet.  Wrap what we want to do in a try catch statement pair
       try{
         unsigned int crt_id = geom->FindAuxDetAtPosition(position);
+        //size_t adID , svID;
+        //adGeoCore ->PositionToAuxDetChannel(position , adID , svID);
         //So we got an ID.  Lets compare it to all of the CRT IDs we are interested in
         for (unsigned int crt_i = 0; crt_i < crt_auxdet_vector.size(); crt_i++){
           if (crt_id == crt_auxdet_vector[crt_i]){
+          //if (adID == crt_auxdet_vector[crt_i]){
             /*
             std::cout<<"Hit a CRT we wanted: DUMPING" <<std::endl;
             for (unsigned int i = 0; i < particle->NumberTrajectoryPoints(); i++){
@@ -248,6 +277,27 @@ namespace filt{
     }
     return false;
   }
+
+  bool LArG4CRTFilter::EntersTPC(const art::Ptr<simb::MCParticle> particle){
+    bool enters = false;
+    double xmin = -2.0 * fGeometryService->DetHalfWidth();
+    double xmax = 2.0 * fGeometryService->DetHalfWidth();
+    double ymin = -fGeometryService->DetHalfHeight();
+    double ymax = fGeometryService->DetHalfHeight();
+    double zmin = 0.;
+    double zmax = fGeometryService->DetLength();
+
+    int nTrajPoints = particle->NumberTrajectoryPoints();
+    for (int traj_i = 0; traj_i < nTrajPoints; traj_i++){
+      TVector3 trajPoint(particle->Vx(traj_i), particle->Vy(traj_i), particle->Vz(traj_i));
+      // Check if point is within reconstructable volume
+      if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax && trajPoint[2] >= zmin && trajPoint[2] <= zmax){
+        enters = true;
+      }
+    }
+    return enters;
+  }
+
 
   DEFINE_ART_MODULE(LArG4CRTFilter)
 
