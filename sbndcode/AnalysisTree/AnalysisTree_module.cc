@@ -708,16 +708,16 @@ namespace sbnd {
           TBranch* pBranch = pTree->GetBranch(name.c_str());
           if (!pBranch) {
             pTree->Branch(name.c_str(), address, leaflist.c_str() /*, bufsize */);
-            LOG_DEBUG("AnalysisTreeStructure")
+            MF_LOG_DEBUG("AnalysisTreeStructure")
               << "Creating branch '" << name << " with leaf '" << leaflist << "'";
           }
           else if (pBranch->GetAddress() != address) {
             pBranch->SetAddress(address);
-            LOG_DEBUG("AnalysisTreeStructure")
+            MF_LOG_DEBUG("AnalysisTreeStructure")
               << "Reassigning address to branch '" << name << "'";
           }
           else {
-            LOG_DEBUG("AnalysisTreeStructure")
+            MF_LOG_DEBUG("AnalysisTreeStructure")
               << "Branch '" << name << "' is fine";
           }
         } // operator()
@@ -743,7 +743,7 @@ namespace sbnd {
             pTree->Branch(name.c_str(), &data);
             // ROOT needs a TClass definition for T in order to create a branch,
             // se we are sure that at this point the TClass exists
-            LOG_DEBUG("AnalysisTreeStructure")
+            MF_LOG_DEBUG("AnalysisTreeStructure")
               << "Creating object branch '" << name
               << " with " << TClass::GetClass(typeid(T))->ClassName();
           }
@@ -756,11 +756,11 @@ namespace sbnd {
             // member. Here we check that the address of the object in fObject
             // is the same as the address of our current data type
             pBranch->SetObject(&data);
-            LOG_DEBUG("AnalysisTreeStructure")
+            MF_LOG_DEBUG("AnalysisTreeStructure")
               << "Reassigning object to branch '" << name << "'";
           }
           else {
-            LOG_DEBUG("AnalysisTreeStructure")
+            MF_LOG_DEBUG("AnalysisTreeStructure")
               << "Branch '" << name << "' is fine";
           }
         } // operator()
@@ -2184,7 +2184,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       // to know the number of particles in AV would require
       // looking at all of them; so we waste some memory here
     } // if have MC truth
-    LOG_DEBUG("AnalysisTree") << "Expected "
+    MF_LOG_DEBUG("AnalysisTree") << "Expected "
       << nGEANTparticles << " GEANT particles, "
       << nGeniePrimaries << " GENIE particles";
   } // if MC
@@ -3145,7 +3145,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       fData->no_primaries = primary;
       fData->geant_list_size = geant_particle;
       
-      LOG_DEBUG("AnalysisTree") << "Counted "
+      MF_LOG_DEBUG("AnalysisTree") << "Counted "
         << fData->geant_list_size << " GEANT particles ("
         << fData->geant_list_size_in_tpcAV << " in AV), "
         << fData->no_primaries << " primaries, "
@@ -3196,7 +3196,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   fTree->Fill();
   
   if (mf::isDebugEnabled()) {
-    // use mf::LogDebug instead of LOG_DEBUG because we reuse it in many lines;
+    // use mf::LogDebug instead of MF_LOG_DEBUG because we reuse it in many lines;
     // thus, we protect this part of the code with the line above
     mf::LogDebug logStream("AnalysisTreeStructure");
     logStream
@@ -3232,7 +3232,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   // if we don't use a permanent buffer (which can be huge),
   // delete the current buffer, and we'll create a new one on the next event
   if (!fUseBuffer) {
-    LOG_DEBUG("AnalysisTreeStructure") << "Freeing the tree data structure";
+    MF_LOG_DEBUG("AnalysisTreeStructure") << "Freeing the tree data structure";
     DestroyData();
   }
 } // sbnd::AnalysisTree::analyze()

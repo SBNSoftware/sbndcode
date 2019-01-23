@@ -186,7 +186,7 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
 
     for(unsigned int i = 0; i < NPlanes; ++i) {
       std::string PlaneHistoName = histoname + "_" + iPlane[i];
-      LOG_DEBUG("SignalShapingServiceSBND")
+      MF_LOG_DEBUG("SignalShapingServiceSBND")
         << "Field Response " << i << ": " << PlaneHistoName;
       
       auto pHist = dynamic_cast<TH1*>(fin.Get(PlaneHistoName.c_str()));
@@ -203,7 +203,7 @@ void util::SignalShapingServiceSBND::reconfigure(const fhicl::ParameterSet& pset
       pHist->SetDirectory(nullptr); // detach the histogram from his source file
       
       fFieldResponseHist[i] = pHist;
-      LOG_DEBUG("SignalShapingServiceSBND")
+      MF_LOG_DEBUG("SignalShapingServiceSBND")
         << "RESPONSE HISTOGRAM " << iPlane[i] << ": " << pHist->GetEntries() << " entries in "
         << pHist->GetNbinsX() << " bins (" << pHist->GetBinLowEdge(1)
         << " to " << pHist->GetBinLowEdge(pHist->GetNbinsX() + 1);
@@ -665,7 +665,7 @@ void util::SignalShapingServiceSBND::SetElectResponse(double shapingtime, double
   //auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
 
-  LOG_DEBUG("SignalShapingSBND") << "Setting SBND electronics response function...";
+  MF_LOG_DEBUG("SignalShapingSBND") << "Setting SBND electronics response function...";
 
   int nticks = fft->FFTSize();
   fElectResponse.resize(nticks, 0.);
@@ -712,7 +712,7 @@ void util::SignalShapingServiceSBND::SetElectResponse(double shapingtime, double
       if(fElectResponse[i] > max) max = fElectResponse[i];
   }// end loop over time buckets
     
-  LOG_DEBUG("SignalShapingSBND") << " Done.";
+  MF_LOG_DEBUG("SignalShapingSBND") << " Done.";
 
   // normalize fElectResponse[i], before the convolution
   // Put in overall normalization in a pedantic way:
