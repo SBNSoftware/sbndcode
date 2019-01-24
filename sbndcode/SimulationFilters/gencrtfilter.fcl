@@ -14,6 +14,7 @@ sbnd_gencrtfilter:
   MinMomentums:             [ -999 ]    #Minimum momentum of particle(s) passing through thet CRTs.  Specify 0 to ignore min momentum.  Vector should be same length as PDG
   MaxMomentums:             [ -999 ]    #Same but for maximum momentum
   CRTDimensionScaling:      1.          #An artifical scaling factor to temporarily increase the CRT target size.  Useful for if you want to try and catch multiple scatterers
+  UseReadoutWindow:         true        #Demand particle crosses CRTs within the reconstructable time window
 }
 
 END_PROLOG
