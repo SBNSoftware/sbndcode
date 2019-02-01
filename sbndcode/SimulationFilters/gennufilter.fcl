@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+sbnd_gennufilter:
+{
+  module_type:              "GenNuFilter"
+  VtxInTPC:                 false
+  LepPDGs:                  [0]
+  CC:                       true
+  NC:                       true
+}
+
+END_PROLOG
