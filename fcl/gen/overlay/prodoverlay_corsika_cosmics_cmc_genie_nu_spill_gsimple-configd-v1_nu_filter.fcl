@@ -1,0 +1,23 @@
+#include "gennufilter.fcl"
+#include "prodgenie_bnb_nu_cosmic_sbnd.fcl"
+
+
+physics.producers.generator: {
+    @table::physics.producers.generator
+    @table::sbnd_flux_bnb_nu_Dv1
+}
+physics.producers.generator.FluxCopyMethod: "DIRECT"
+
+#physics.producers.rns: @table::physics.producers.rns
+#physics.producers.corsika: @table::physics.producers.corsika
+
+physics.filters.filter: @local::sbnd_gennufilter
+physics.filters.filter.VtxInTPC: true
+physics.filters.filter.LepPDGs:  [0]
+physics.filters.filter.CC:       true
+physics.filters.filter.NC:        true
+
+physics.simulate: [ rns, generator, corsika, filter ]
+
+outputs.out1.SelectEvents: [ "simulate" ]
+
