@@ -11,7 +11,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nutools/RandomUtils/NuRandomService.h"
-#include "canvas/Persistency/Common/Ptr.h" 
+#include "canvas/Persistency/Common/Ptr.h"
 #include "art/Persistency/Common/PtrMaker.h"
 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
@@ -76,10 +76,8 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
 
 CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
   : EDProducer{p}
+  , fEngine{art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "crt", p, "Seed")}
 {
-  art::ServiceHandle<rndm::NuRandomService> seeds;
-  seeds->createEngine(*this, "HepJamesRandom", "crt", p, "Seed");
-
   this->reconfigure(p);
 
   produces<std::vector<sbnd::crt::CRTData> >();
@@ -92,12 +90,12 @@ uint32_t CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
                                          detinfo::ElecClock& clock,
                                          float t0, float npeMean, float r) {
   // Hit timing, with smearing and NPE dependence
-  double tDelayMean = \
+  double tDelayMean =
     fTDelayNorm *
       exp(-0.5 * pow((npeMean - fTDelayShift) / fTDelaySigma, 2)) +
     fTDelayOffset;
 
-  double tDelayRMS = \
+  double tDelayRMS =
     fTDelayRMSGausNorm *
       exp(-pow(npeMean - fTDelayRMSGausShift, 2) / fTDelayRMSGausSigma) +
     fTDelayRMSExpNorm *
@@ -143,33 +141,28 @@ void CRTDetSim::produce(art::Event & e) {
   art::ServiceHandle<detinfo::DetectorClocksService> detClocks;
   detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();
 
-  art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine* engine = &rng->getEngine(art::ScheduleID::first(),
-                                                   moduleDescription().moduleLabel(),
-                                                   "crt");
-
   // Handle for (truth) AuxDetSimChannels
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
   e.getByLabel(fG4ModuleLabel, channels);
 
   // Loop through truth AD channels
   for (auto& adsc : *channels) {
-    const geo::AuxDetGeo& adGeo = \
+    const geo::AuxDetGeo& adGeo =
         geoService->AuxDet(adsc.AuxDetID());
 
-    const geo::AuxDetSensitiveGeo& adsGeo = \
+    const geo::AuxDetSensitiveGeo& adsGeo =
         adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
 
     // Return the vector of IDEs
     std::vector<sim::AuxDetIDE> ides = adsc.AuxDetIDEs();
-    std::sort(ides.begin(), ides.end(), 
+    std::sort(ides.begin(), ides.end(),
               [](const sim::AuxDetIDE & a, const sim::AuxDetIDE & b) -> bool{
                 return ((a.entryT + a.exitT)/2) < ((b.entryT + b.exitT)/2);
               });
 
     // Find the path to the strip geo node, to locate it in the hierarchy
     std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
-    std::vector<std::vector<TGeoNode const*> > paths = \
+    std::vector<std::vector<TGeoNode const*> > paths =
       geoService->FindAllVolumePaths(volNames);
 
     std::string path = "";
@@ -201,7 +194,7 @@ void CRTDetSim::produce(art::Event & e) {
 
     // Simulate the CRT response for each hit
     for (size_t ide_i = 0; ide_i < ides.size(); ide_i++) {
-      
+
       sim::AuxDetIDE ide = ides[ide_i];
 
       int trackID = ide.trackID;
@@ -268,7 +261,7 @@ void CRTDetSim::produce(art::Event & e) {
       // dependence, and scaling linearly with deposited energy.
       double qr = fUseEdep ? 1.0 * eDep / fQ0 : 1.0;
 
-      double npeExpected = \
+      double npeExpected =
         fNpeScaleNorm / pow(distToReadout - fNpeScaleShift, 2) * qr;
 
       // Put PE on channels weighted by transverse distance across the strip,
@@ -281,25 +274,25 @@ void CRTDetSim::produce(art::Event & e) {
       double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
 
       // Observed PE (Poisson-fluctuated)
-      long npe0 = CLHEP::RandPoisson::shoot(engine, npeExp0);
-      long npe1 = CLHEP::RandPoisson::shoot(engine, npeExp1);
+      long npe0 = CLHEP::RandPoisson::shoot(&fEngine, npeExp0);
+      long npe1 = CLHEP::RandPoisson::shoot(&fEngine, npeExp1);
 
       // Time relative to trigger, accounting for propagation delay and 'walk'
       // for the fixed-threshold discriminator
-      uint32_t t0 = \
-        getChannelTriggerTicks(engine, trigClock, tTrue, npe0, distToReadout);
-      uint32_t t1 = \
-        getChannelTriggerTicks(engine, trigClock, tTrue, npe1, distToReadout);
+      uint32_t t0 =
+        getChannelTriggerTicks(&fEngine, trigClock, tTrue, npe0, distToReadout);
+      uint32_t t1 =
+        getChannelTriggerTicks(&fEngine, trigClock, tTrue, npe1, distToReadout);
 
       // Time relative to PPS: Random for now! (FIXME)
-      uint32_t ppsTicks = \
-        CLHEP::RandFlat::shootInt(engine, trigClock.Frequency() * 1e6);
+      uint32_t ppsTicks =
+        CLHEP::RandFlat::shootInt(&fEngine, trigClock.Frequency() * 1e6);
 
       // SiPM and ADC response: Npe to ADC counts
-      short q0 = \
-        CLHEP::RandGauss::shoot(engine, fQPed + fQSlope * npe0, fQRMS * sqrt(npe0));
-      short q1 = \
-        CLHEP::RandGauss::shoot(engine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
+      short q0 =
+        CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe0, fQRMS * sqrt(npe0));
+      short q1 =
+        CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
 
       // Adjacent channels on a strip are numbered sequentially.
       //
