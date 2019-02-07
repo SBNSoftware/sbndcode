@@ -76,7 +76,7 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
 
 CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
   : EDProducer{p}
-  , fEngine{art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "crt", p, "Seed")}
+  , fEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "crt", p, "Seed"))
 {
   this->reconfigure(p);
 

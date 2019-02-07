@@ -120,8 +120,8 @@ SimWireSBND::SimWireSBND(fhicl::ParameterSet const& pset)
   : EDProducer{pset}
   // create a default random engine; obtain the random seed from NuRandomService,
   // unless overridden in configuration with key "Seed" and "SeedPedestal"
-  , fNoiseEngine{art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed")}
-  , fPedestalEngine{art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal")}
+  , fNoiseEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed"))
+  , fPedestalEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal"))
 {
   this->reconfigure(pset);
 
