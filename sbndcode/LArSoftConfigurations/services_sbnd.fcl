@@ -44,6 +44,7 @@
 #include "channelstatus_sbnd.fcl"
 #include "database_sbnd.fcl"
 #include "sam_sbnd.fcl"
+#include "spacecharge_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -86,6 +87,7 @@ sbnd_services:
 # OpDigiProperties:               @local::sbnd_opdigiproperties
   ChannelStatusService:           @local::sbnd_channelstatus
   DetPedestalService:             @local::sbnd_detpedestalservice  # from database_sbnd.fcl
+  SpaceCharge:                    @local::sbnd_spacecharge
 } # sbnd_services
 
 
