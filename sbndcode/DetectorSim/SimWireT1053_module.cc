@@ -64,19 +64,13 @@ namespace detsim {
 
 // Base class for creation of raw signals on wires.
 class SimWireT1053 : public art::EDProducer {
-
 public:
-
   explicit SimWireT1053(fhicl::ParameterSet const& pset);
-  virtual ~SimWireT1053();
-
-  // read/write access to event
-  void produce (art::Event& evt);
-  void beginJob();
-  void endJob();
-  void reconfigure(fhicl::ParameterSet const& p);
 
 private:
+  void produce (art::Event& evt) override;
+  void beginJob() override;
+  void reconfigure(fhicl::ParameterSet const& p);
 
   void GenNoiseInTime(std::vector<float> &noise);
   void GenNoiseInFreq(std::vector<float> &noise);
@@ -100,15 +94,17 @@ private:
   bool fGenNoise;                           ///< if True -> Gen Noise. if False -> Skip noise generation entierly
   std::string fNoiseFileFname;
   std::string fNoiseHistoName;
-  TH1D*                  fNoiseHist = nullptr; ///< distribution of noise counts
+  std::unique_ptr<TH1D> fNoiseHist = nullptr; ///< distribution of noise counts
 
   std::string fTrigModName;                 ///< Trigger data product producer name
   //define max ADC value - if one wishes this can
   //be made a fcl parameter but not likely to ever change
-  const float adcsaturation = 4095;
+  static constexpr float adcsaturation{4095};
 
   ::detinfo::ElecClock fClock; ///< TPC electronics clock
 
+  CLHEP::HepRandomEngine& fNoiseEngine;
+  CLHEP::HepRandomEngine& fPedestalEngine;
 }; // class SimWireT1053
 
 DEFINE_ART_MODULE(SimWireT1053)
@@ -116,6 +112,10 @@ DEFINE_ART_MODULE(SimWireT1053)
 //-------------------------------------------------
 SimWireT1053::SimWireT1053(fhicl::ParameterSet const& pset)
   : EDProducer{pset}
+  // create a default random engine; obtain the random seed from NuRandomService,
+  // unless overridden in configuration with key "Seed" and "SeedPedestal"
+  , fNoiseEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed"))
+  , fPedestalEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal"))
 {
   this->reconfigure(pset);
 
@@ -124,20 +124,6 @@ SimWireT1053::SimWireT1053(fhicl::ParameterSet const& pset)
   fCompression = raw::kNone;
   TString compression(pset.get< std::string >("CompressionType"));
   if (compression.Contains("Huffman", TString::kIgnoreCase)) fCompression = raw::kHuffman;
-
-  // create a default random engine; obtain the random seed from NuRandomService,
-  // unless overridden in configuration with key "Seed" and "SeedPedestal"
-  art::ServiceHandle<rndm::NuRandomService> Seeds;
-  Seeds->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed");
-  Seeds->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal");
-
-
-}
-
-//-------------------------------------------------
-SimWireT1053::~SimWireT1053()
-{
-  delete fNoiseHist;
 }
 
 //-------------------------------------------------
@@ -170,7 +156,7 @@ void SimWireT1053::reconfigure(fhicl::ParameterSet const& p)
         << "Could not find Root file '" << fNoiseHistoName
         << "' for noise histogram\n";
     }
-    fNoiseHist = (TH1D*) in.Get(fNoiseHistoName.c_str());
+    fNoiseHist.reset((TH1D*)in.Get(fNoiseHistoName.c_str()));
 
     if (!fNoiseHist) {
       throw art::Exception(art::errors::NotFound)
@@ -181,14 +167,10 @@ void SimWireT1053::reconfigure(fhicl::ParameterSet const& p)
     fNoiseHist->SetDirectory(nullptr);
     in.Close();
   }
-  
+
   //detector properties information
   auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fNTimeSamples  = detprop->NumberTimeSamples();    
-
-
-
-  return;
+  fNTimeSamples  = detprop->NumberTimeSamples();
 }
 
 //-------------------------------------------------
@@ -210,15 +192,9 @@ void SimWireT1053::beginJob()
   if ( fNTimeSamples > fNTicks )
     mf::LogError("SimWireT1053") << "Cannot have number of readout samples "
                                  << "greater than FFTSize!";
-
-  return;
-
 }
 
 //-------------------------------------------------
-void SimWireT1053::endJob()
-{}
-
 void SimWireT1053::produce(art::Event& evt)
 {
 
@@ -306,12 +282,8 @@ void SimWireT1053::produce(art::Event& evt)
       ped_mean = fInductionPed;
     else if (sigtype == geo::kCollection)
       ped_mean = fCollectionPed;
-    //slight variation on ped on order of RMS of baselien variation
-    art::ServiceHandle<art::RandomNumberGenerator> rng;
-    CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
-                                                    moduleDescription().moduleLabel(),
-                                                    "pedestal");
-    CLHEP::RandGaussQ rGaussPed(engine, 0.0, fBaselineRMS);
+    //slight variation on ped on order of RMS of baseline variation
+    CLHEP::RandGaussQ rGaussPed(fPedestalEngine, 0.0, fBaselineRMS);
     ped_mean += rGaussPed.fire();
 
     for (unsigned int i = 0; i < fNTimeSamples; ++i) {
@@ -349,18 +321,12 @@ void SimWireT1053::produce(art::Event& evt)
   }// end loop over channels
 
   evt.put(std::move(digcol));
-  return;
 }
 
 //-------------------------------------------------
 void SimWireT1053::GenNoiseInTime(std::vector<float> &noise)
 {
-  //ART random number service
-  art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
-                                                  moduleDescription().moduleLabel(),
-                                                  "noise");
-  CLHEP::RandGaussQ rGauss(engine, 0.0, fNoiseFact);
+  CLHEP::RandGaussQ rGauss(fNoiseEngine, 0.0, fNoiseFact);
 
   //In this case fNoiseFact is a value in ADC counts
   //It is going to be the Noise RMS
@@ -374,11 +340,7 @@ void SimWireT1053::GenNoiseInTime(std::vector<float> &noise)
 //-------------------------------------------------
 void SimWireT1053::GenNoiseInFreq(std::vector<float> &noise)
 {
-  art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
-                                                  moduleDescription().moduleLabel(),
-                                                  "noise");
-  CLHEP::RandFlat flat(engine, -1, 1);
+  CLHEP::RandFlat flat(fNoiseEngine, -1, 1);
 
   if (noise.size() != fNTicks)
     throw cet::exception("SimWireT1053")
@@ -412,8 +374,6 @@ void SimWireT1053::GenNoiseInFreq(std::vector<float> &noise)
 
       pval *= lofilter * ((1 - fNoiseRand) + 2 * fNoiseRand * rnd[0]);
     }
-
-
     else
     {
 
