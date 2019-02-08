@@ -105,9 +105,11 @@ private:
   std::string fTrigModName;                 ///< Trigger data product producer name
   //define max ADC value - if one wishes this can
   //be made a fcl parameter but not likely to ever change
-  const float adcsaturation = 4095;
+  static constexpr float adcsaturation{4095};
 
   ::detinfo::ElecClock fClock; ///< TPC electronics clock
+  CLHEP::HepRandomEngine& fNoiseEngine;
+  CLHEP::HepRandomEngine& fPedestalEngine;
 
 }; // class SimWireSBND
 
@@ -116,6 +118,10 @@ DEFINE_ART_MODULE(SimWireSBND)
 //-------------------------------------------------
 SimWireSBND::SimWireSBND(fhicl::ParameterSet const& pset)
   : EDProducer{pset}
+  // create a default random engine; obtain the random seed from NuRandomService,
+  // unless overridden in configuration with key "Seed" and "SeedPedestal"
+  , fNoiseEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed"))
+  , fPedestalEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal"))
 {
   this->reconfigure(pset);
 
@@ -124,14 +130,6 @@ SimWireSBND::SimWireSBND(fhicl::ParameterSet const& pset)
   fCompression = raw::kNone;
   TString compression(pset.get< std::string >("CompressionType"));
   if (compression.Contains("Huffman", TString::kIgnoreCase)) fCompression = raw::kHuffman;
-
-  // create a default random engine; obtain the random seed from NuRandomService,
-  // unless overridden in configuration with key "Seed" and "SeedPedestal"
-  art::ServiceHandle<rndm::NuRandomService> Seeds;
-  Seeds->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed");
-  Seeds->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal");
-
-
 }
 
 //-------------------------------------------------
@@ -153,7 +151,7 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   fCollectionPed    = p.get< float               >("CollectionPed");
   fInductionPed     = p.get< float               >("InductionPed");
   fBaselineRMS      = p.get< float               >("BaselineRMS");
-  
+
   fTrigModName      = p.get< std::string         >("TrigModName");
 
   //Map the Shaping times to the entry position for the noise ADC
@@ -185,10 +183,10 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
     fNoiseHist->SetDirectory(nullptr);
     in.Close();
   }
-  
+
   //detector properties information
   auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fNTimeSamples  = detprop->NumberTimeSamples();    
+  fNTimeSamples  = detprop->NumberTimeSamples();
 
   return;
 }
@@ -300,9 +298,9 @@ void SimWireSBND::produce(art::Event& evt)
     auto tempNoiseVec = sss->GetNoiseFactVec();
     double shapingTime = 2.0; //sss->GetShapingTime(chan);
     double asicGain = sss->GetASICGain(chan);
-    
+
     //std::cout << "Sim params: " << chan << " " << shapingTime << " " << asicGain << std::endl;
-    
+
     if (fShapingTimeOrder.find( shapingTime ) != fShapingTimeOrder.end() ) {
       noise_factor = tempNoiseVec[view].at( fShapingTimeOrder.find( shapingTime )->second );
       noise_factor *= asicGain/4.7;
@@ -312,9 +310,9 @@ void SimWireSBND::produce(art::Event& evt)
       << "\033[93m"
       << "Shaping Time recieved from signalshapingservices_sbnd.fcl is not one of the allowed values"
       << std::endl
-      << "Allowed values: 0.5, 1.0, 2.0, 3.0 us" 
+      << "Allowed values: 0.5, 1.0, 2.0, 3.0 us"
       << "\033[00m"
-      << std::endl;	   
+      << std::endl;
     }
 
 
@@ -333,12 +331,8 @@ void SimWireSBND::produce(art::Event& evt)
       ped_mean = fInductionPed;
     else if (sigtype == geo::kCollection)
       ped_mean = fCollectionPed;
-    //slight variation on ped on order of RMS of baselien variation
-    art::ServiceHandle<art::RandomNumberGenerator> rng;
-    CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
-                                                    moduleDescription().moduleLabel(),
-                                                    "pedestal");
-    CLHEP::RandGaussQ rGaussPed(engine, 0.0, fBaselineRMS);
+    //slight variation on ped on order of RMS of baseline variation
+    CLHEP::RandGaussQ rGaussPed(fPedestalEngine, 0.0, fBaselineRMS);
     ped_mean += rGaussPed.fire();
 
     for (unsigned int i = 0; i < fNTimeSamples; ++i) {
@@ -376,18 +370,12 @@ void SimWireSBND::produce(art::Event& evt)
   }// end loop over channels
 
   evt.put(std::move(digcol));
-  return;
 }
 
 //-------------------------------------------------
   void SimWireSBND::GenNoiseInTime(std::vector<float> &noise, double noise_factor) const
 {
-  //ART random number service
-  art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
-                                                  moduleDescription().moduleLabel(),
-                                                  "noise");
-  CLHEP::RandGaussQ rGauss(engine, 0.0, noise_factor);
+  CLHEP::RandGaussQ rGauss(fNoiseEngine, 0.0, noise_factor);
 
   //In this case fNoiseFact is a value in ADC counts
   //It is going to be the Noise RMS
@@ -401,11 +389,7 @@ void SimWireSBND::produce(art::Event& evt)
 //-------------------------------------------------
   void SimWireSBND::GenNoiseInFreq(std::vector<float> &noise, double noise_factor) const
 {
-  art::ServiceHandle<art::RandomNumberGenerator> rng;
-  CLHEP::HepRandomEngine &engine = rng->getEngine(art::ScheduleID::first(),
-                                                  moduleDescription().moduleLabel(),
-                                                  "noise");
-  CLHEP::RandFlat flat(engine, -1, 1);
+  CLHEP::RandFlat flat(fNoiseEngine, -1, 1);
 
   if (noise.size() != fNTicks)
     throw cet::exception("SimWireSBND")

@@ -73,8 +73,8 @@ private:
   double fAbsLenEff;  //!< Effective abs. length for transverse Npe scaling [cm]
   bool fUseEdep;  //!< Use the true G4 energy deposited, assume mip if false.
   double fSipmTimeResponse; //!< Minimum time to resolve separate energy deposits [ns]
+  CLHEP::HepRandomEngine& fEngine; //!< Reference to art-managed random-number engine
 };
 
 }  // namespace crt
 }  // namespace sbnd
-
