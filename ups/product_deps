@@ -2,7 +2,7 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent sbndcode v08_08_00
+parent sbndcode v08_08_00_1_MCP1_0
 defaultqual e17
 
 # These optional lines define the installed directories where headers,
@@ -38,7 +38,7 @@ product          version
 larsoft          v08_08_00
 genie_xsec       v2_12_10
 sbnd_data        v01_02_00 - optional
-sbndutil         v08_08_00 - optional
+sbndutil         v08_08_00_1_MCP1_0 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
