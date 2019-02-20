@@ -52,7 +52,6 @@ sbnd_g4_services:
   LArG4Parameters:           @local::sbnd_largeantparameters 
   LArVoxelCalculator:        @local::sbnd_larvoxelcalculator 
   MagneticField:             @local::no_mag_larsoft
-  SpaceCharge:               @local::sbnd_spacecharge
 } # sbnd_g4_services
 
 
