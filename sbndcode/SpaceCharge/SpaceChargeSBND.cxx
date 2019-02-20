@@ -25,7 +25,9 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
 {
     fEnableSimSpatialSCE = pset.get<bool>("EnableSimSpatialSCE");
     fEnableSimEfieldSCE = pset.get<bool>("EnableSimEfieldSCE");
-    fEnableCorrSCE = pset.get<bool>("EnableCorrSCE");
+    //fEnableCorrSCE = pset.get<bool>("EnableCorrSCE");
+    fEnableCalSpatialSCE = pset.get<bool>("EnableCalSpatialSCE");
+    fEnableCalEfieldSCE = pset.get<bool>("EnableCalEfieldSCE");
 
     if((fEnableSimSpatialSCE == true) || (fEnableSimEfieldSCE == true))
         {
@@ -143,9 +145,21 @@ bool spacecharge::SpaceChargeSBND::EnableSimEfieldSCE() const
 }
 
 // Whether or not to apply SCE corrections
-bool spacecharge::SpaceChargeSBND::EnableCorrSCE() const
+//bool spacecharge::SpaceChargeSBND::EnableCorrSCE() const
+//{
+//    return fEnableCorrSCE;
+//}
+
+// Return boolean indicating whether or not to apply SCE corrections
+bool spacecharge::SpaceChargeSBND::EnableCalSpatialSCE() const
 {
-    return fEnableCorrSCE;
+  return fEnableCalSpatialSCE;
+}
+
+// Return boolean indicating whether or not to apply SCE corrections
+bool spacecharge::SpaceChargeSBND::EnableCalEfieldSCE() const
+{
+  return fEnableCalEfieldSCE;
 }
 
 // Primary working method of service that provides position offsets
