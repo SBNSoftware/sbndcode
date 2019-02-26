@@ -193,15 +193,37 @@ namespace opdet{
 //    std::cout << "UseLitePhotons= " << lgp->UseLitePhotons() <<std::endl;
 
     if(fUseLitePhotons==1){//using SimPhotonsLite (no info on energy)
-      std::cout << "WARNING: With SimPhotonsLite, only waveforms for coated PMTs are generated. For uncoated PMTs please use SimPhotons to account for the photon energy." << std::endl;
+     // std::cout << "WARNING: With SimPhotonsLite, only waveforms for coated PMTs are generated. For uncoated PMTs please use SimPhotons to account for the photon energy." << std::endl;
 
-      art::Handle< std::vector<sim::SimPhotonsLite> > pmtHandle;
-      e.getByLabel(fInputModuleName, pmtHandle);
+    //  art::Handle< std::vector<sim::SimPhotonsLite> > pmtHandle;
+    //  e.getByLabel(fInputModuleName, pmtHandle);
 
-      if(!pmtHandle.isValid()){
-        std::cout <<Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
-      }
-  
+      //Get *ALL* SimPhotonsCollectionLite from Event
+      std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles;
+      e.getManyByType(photon_handles);
+      if (photon_handles.size() == 0)
+        throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotons retrieved and you requested them.";
+      
+      
+     // Loop over direct/reflected photons
+        for (auto pmtHandle: photon_handles) {
+          // Do some checking before we proceed
+          if (!pmtHandle.isValid()) continue;  
+          if (pmtHandle.provenance()->moduleLabel() != fInputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
+ 
+      //this now tells you if light collection is reflected
+          bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
+      
+//       if(!pmtHandle.isValid()){
+//         std::cout <<Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
+//       }
+    
+	  if(Reflected)
+	  {std::cout << "looking at reflected/visible lite photons" << std::endl; }
+	  else
+	  {std::cout << "looking at direct/vuv lite photons" << std::endl;  }  
+	  
+	  
       std::cout << "Number of photon channels: " << pmtHandle->size() << std::endl;
    // unsigned int nChannels = pmtHandle->size();
       unsigned int nChannels = 272;
@@ -221,15 +243,36 @@ namespace opdet{
 	  
 	}
       }
+     }  //end loop on simphoton lite collections
       e.put(std::move(pulseVecPtr));
     }else{ //for SimPhotons
-      art::Handle< std::vector<sim::SimPhotons> > pmtHandle;
-      e.getByLabel(fInputModuleName, pmtHandle);
+      //art::Handle< std::vector<sim::SimPhotons> > pmtHandle;
+      //e.getByLabel(fInputModuleName, pmtHandle);
 
-      if(!pmtHandle.isValid()){
-        std::cout <<Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
-      }
-  
+      //Get *ALL* SimPhotonsCollection from Event
+      std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles;
+      e.getManyByType(photon_handles);
+      if (photon_handles.size() == 0)
+	throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotons retrieved and you requested them.";
+      
+      // Loop over direct/reflected photons
+      for (auto pmtHandle: photon_handles) {
+       // Do some checking before we proceed
+        if (!pmtHandle.isValid()) continue;  
+        if (pmtHandle.provenance()->moduleLabel() != fInputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
+ 
+      //this now tells you if light collection is reflected
+        bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
+      
+//       if(!pmtHandle.isValid()){
+//         std::cout <<Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
+//       }
+       if(Reflected)
+	  {std::cout << "looking at reflected/visible photons" << std::endl; }
+	  else
+	  {std::cout << "looking at direct/vuv photons" << std::endl;  }  
+	
+	
       std::cout << "Number of photon channels: " << pmtHandle->size() << std::endl;
       unsigned int nChannels = pmtHandle->size();
 
@@ -247,6 +290,7 @@ namespace opdet{
 	  pulseVecPtr->emplace_back(std::move(adcVec));
 	}
       }
+     }  //end loop on photon collections.
     e.put(std::move(pulseVecPtr));
     }
   }
