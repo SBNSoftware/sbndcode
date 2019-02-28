@@ -102,7 +102,7 @@ sbnd_flux_bnb_nu_Dv1_test1: {
 sbnd_flux_bnb_nu_Ev1: {
   FluxType:       "simple_flux"
   FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/fluxFiles/bnb/BooNEtoGSimple/configD-v1/april07/neutrinoMode"
+  FluxSearchPaths: "/pnfs/sbnd/persistent/fluxFiles/bnb/BooNEtoGSimple/configE-v1/april07/neutrinoMode"
   FluxFiles: [ "converted_beammc_sbnd_dirt*.root" ]
 }
 
