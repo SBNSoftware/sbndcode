@@ -6,16 +6,16 @@ sbnd_photonvisibilityservice: @local::standard_photonvisibilityservice
 sbnd_photonvisibilityservice.DoNotLoadLibrary: false 
 sbnd_photonvisibilityservice.LibraryBuildJob: false
 sbnd_photonvisibilityservice.UseCryoBoundary: false 
-sbnd_photonvisibilityservice.XMin: 1 
-sbnd_photonvisibilityservice.XMax: 199 
-sbnd_photonvisibilityservice.YMin: -199 
-sbnd_photonvisibilityservice.YMax: 199 
-sbnd_photonvisibilityservice.ZMin: 1
-sbnd_photonvisibilityservice.ZMax: 499 
-sbnd_photonvisibilityservice.NX: 66  
-sbnd_photonvisibilityservice.NY: 133 
-sbnd_photonvisibilityservice.NZ: 166 
-sbnd_photonvisibilityservice.LibraryFile: "/uboone/app/users/ahack/LAr1_v5/PhotonLibrary.root"
+sbnd_photonvisibilityservice.XMin: -260.1
+sbnd_photonvisibilityservice.XMax: 260.1
+sbnd_photonvisibilityservice.YMin: -271.15
+sbnd_photonvisibilityservice.YMax: 271.15
+sbnd_photonvisibilityservice.ZMin: -143.1
+sbnd_photonvisibilityservice.ZMax: 559.6
+sbnd_photonvisibilityservice.NX: 104 
+sbnd_photonvisibilityservice.NY: 109 
+sbnd_photonvisibilityservice.NZ: 141 
+sbnd_photonvisibilityservice.LibraryFile: "OpLib_SBN_ND_v0.root"
 
 
 
