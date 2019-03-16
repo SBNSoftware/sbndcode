@@ -18,8 +18,8 @@ services.PhotonVisibilityService.ZMax: 559.6
 # Optical library definition
 services.PhotonVisibilityService.LibraryFile: "OpLib_SBN_ND_v0.root"
 # SBND geometry with PMTs + Bars + ARAPUCAS + Foils
-#services.Geometry.GDML: "sbnd_v01_03.gdml"
-#services.AuxDetGeometry.GDML: "sbnd_v01_03.gdml"
+services.Geometry.GDML: "sbnd_v01_03.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v01_03.gdml"
 # Loading the TPB spectra information
 services.LArPropertiesService.LoadExtraMatProperties: true
 
