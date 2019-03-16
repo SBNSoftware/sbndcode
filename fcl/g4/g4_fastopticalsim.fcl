@@ -1,0 +1,34 @@
+#include "opticaldetectormodules.fcl"
+#include "photpropservices_sbnd.fcl"
+#include "standard_g4_sbnd.fcl"
+
+services.PhotonVisibilityService: @local::sbnd_library_vuv_vis_prop_timing_photonvisibilityservice
+# Generation specific voxelization
+# Must be the same used for the library generation
+services.PhotonVisibilityService.NX: 104
+services.PhotonVisibilityService.NY: 109
+services.PhotonVisibilityService.NZ: 141
+# This borders define the cryostat (equivalent to UseCryo:true)
+services.PhotonVisibilityService.XMin: -260.1
+services.PhotonVisibilityService.XMax: 260.1
+services.PhotonVisibilityService.YMin: -271.15
+services.PhotonVisibilityService.YMax: 271.15
+services.PhotonVisibilityService.ZMin: -143.1
+services.PhotonVisibilityService.ZMax: 559.6
+# Optical library definition
+services.PhotonVisibilityService.LibraryFile: "OpLib_SBN_ND_v0.root"
+# SBND geometry with PMTs + Bars + ARAPUCAS + Foils
+services.Geometry.GDML: "sbnd_v01_03.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v01_03.gdml"
+# Loading the TPB spectra information
+services.LArPropertiesService.LoadExtraMatProperties: true
+
+services.LArG4Parameters.EnabledPhysics: [ "Em",
+                                           "FastOptical",
+                                           "SynchrotronAndGN",
+                                           "Ion",
+                                           "Hadron",
+                                           "Decay",
+                                           "HadronElastic",
+                                           "Stopping" ]
+
