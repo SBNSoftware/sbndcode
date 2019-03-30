@@ -30,7 +30,8 @@ sbnd_simpmt:
  BeamGateTriggerRepPeriod:  2.0     #Repetition Period (us) for BeamGateTriggers
  BeamGateTriggerNReps:      10      #Number of beamgate trigger reps to produce
  UseLitePhotons:            1       #1 = use SimPhotonsLite; 0 = use SimPhotons
- QE:                        0.07    #TPB coated PMT quantum efficiency
+ QEDirect:                  0.07    #PMT quantum efficiency for direct (VUV) light
+ QEReflected:               0.15    #PMT quantum efficiency for reflected (TPB converted) light
 }
 
 END_PROLOG

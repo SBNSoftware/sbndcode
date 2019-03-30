@@ -27,7 +27,8 @@ sbnd_simarapuca:
  Sampling:           0.5     #Give the desired value in GHz or use -1 for extracting from DetectorClocksService->OpticalClock().Frequency
  ArapucaEffT1:       0.02    #Arapuca T1 efficiency
  ArapucaEffT2:       0.027   #Arapuca T2 efficiency 
- UseLitePhotons:     0       #1 = use SimPhotonsLite; 0 = use SimPhotons
+ ArapucaEffx:        0.02    #Arapuca T2 efficiency 
+ UseLitePhotons:     1       #1 = use SimPhotonsLite; 0 = use SimPhotons
 }
 
 END_PROLOG
