@@ -1,22 +1,64 @@
+#include "opticalsimparameterisations_sbnd.fcl"
 #include "photpropservices.fcl"
+
 
 BEGIN_PROLOG
 
-sbnd_photonvisibilityservice: @local::standard_photonvisibilityservice
-sbnd_photonvisibilityservice.DoNotLoadLibrary: false 
-sbnd_photonvisibilityservice.LibraryBuildJob: false
-sbnd_photonvisibilityservice.UseCryoBoundary: false 
-sbnd_photonvisibilityservice.XMin: -260.1
-sbnd_photonvisibilityservice.XMax: 260.1
-sbnd_photonvisibilityservice.YMin: -271.15
-sbnd_photonvisibilityservice.YMax: 271.15
-sbnd_photonvisibilityservice.ZMin: -143.1
-sbnd_photonvisibilityservice.ZMax: 559.6
-sbnd_photonvisibilityservice.NX: 104 
-sbnd_photonvisibilityservice.NY: 109 
-sbnd_photonvisibilityservice.NZ: 141 
-sbnd_photonvisibilityservice.LibraryFile: "OpLib_SBN_ND_v0.root"
+sbnd_Library_photonvisibilityservice:
+{
+
+ DoNotLoadLibrary: false
+ LibraryBuildJob: false
+ UseCryoBoundary: false
+
+ XMin: -260.1
+ XMax: 260.1
+ YMin: -271.15
+ YMax: 271.15
+ ZMin: -143.1
+ ZMax: 559.6
+ NX: 104
+ NY: 109
+ NZ: 141
+ LibraryFile: "OpLib_SBN_ND_v0.root"
+  
+}
+
+
+sbnd_library_vuv_prop_timing_photonvisibilityservice:
+{
+   # Start from the standard sbnd visibility service
+   @table::sbnd_Library_photonvisibilityservice
+
+   # Flag to enable time parameterizations
+   IncludePropTime: true
+
+   # Generic VUV timing parameterization
+   @table::common_vuv_timing_parameterization
+
+}
+
+#
+# Enable direct and reflected timing parameterization on top of a photon library.
+# Works only for SBND.
+#
+sbnd_library_vuv_vis_prop_timing_photonvisibilityservice:
+{
+   # This will need to be repalced in sbndcode with
+   # sbnd-specific library settings
+   @table::sbnd_library_vuv_prop_timing_photonvisibilityservice
+
+   # Flag to enable visible light simulation
+   StoreReflected: true
+   
+   # SBND-specific VIS parameterization
+   @table::sbnd_vis_timing_parameterization
+
+}
+
 
 
 
 END_PROLOG
+
+
