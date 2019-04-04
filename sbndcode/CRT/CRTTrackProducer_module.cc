@@ -20,7 +20,7 @@
 #include "canvas/Persistency/Common/PtrVector.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-#include "art/Framework/Services/Optional/TFileService.h"
+#include "art_root_io/TFileService.h"
 #include "art/Persistency/Common/PtrMaker.h"
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
