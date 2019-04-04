@@ -96,7 +96,7 @@ namespace sbnd {
 
 
   CRTTrackMatching::CRTTrackMatching(fhicl::ParameterSet const & p)
-  : trackAlg()
+  : EDProducer(p), trackAlg()
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 

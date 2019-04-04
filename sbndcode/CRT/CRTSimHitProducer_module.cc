@@ -103,7 +103,7 @@ namespace sbnd {
 
 
   CRTSimHitProducer::CRTSimHitProducer(fhicl::ParameterSet const & p)
-  : hitAlg(p.get<fhicl::ParameterSet>("HitAlg"))
+  : EDProducer(p), hitAlg(p.get<fhicl::ParameterSet>("HitAlg"))
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 
