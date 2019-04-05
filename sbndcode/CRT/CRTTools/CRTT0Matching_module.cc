@@ -97,7 +97,7 @@ namespace sbnd {
 
 
   CRTT0Matching::CRTT0Matching(fhicl::ParameterSet const & p)
-    : t0Alg()
+    : EDProducer(p), t0Alg()
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 
