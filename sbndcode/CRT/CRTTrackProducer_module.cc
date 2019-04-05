@@ -117,7 +117,7 @@ crt::CRTTrack shcut(CRTavehit ppA,CRTavehit ppb, uint32_t time0s,uint16_t terr);
 
 // Constructor
 CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const & p)
-  : trackAlg(p.get<fhicl::ParameterSet>("TrackAlg"))
+  : EDProducer(p), trackAlg(p.get<fhicl::ParameterSet>("TrackAlg"))
 {  
 
   // Initialize member data here.

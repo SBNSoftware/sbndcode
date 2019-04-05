@@ -86,6 +86,7 @@ namespace caldata {
   
   //-------------------------------------------------
   CalWireSBND::CalWireSBND(fhicl::ParameterSet const& pset)
+  : EDProducer(pset)
   {
     fSpillName="";
     this->reconfigure(pset);
