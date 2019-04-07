@@ -274,8 +274,13 @@ namespace opdet{
 
   std::string sbndPDMapAlg::pdName(int ch)
   {
-    if(ch<272) return PDmap[ch];
+    if(ch<(int)PDmap.size()) return PDmap[ch];
     return "There is no such channel";
+  }
+
+  int sbndPDMapAlg::size()
+  {
+    return (int)PDmap.size();
   }
 }
 
