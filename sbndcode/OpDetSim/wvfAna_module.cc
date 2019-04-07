@@ -113,7 +113,7 @@ void wvfAna::analyze(art::Event const & e)
 
   for(auto const& wvf : (*waveHandle)){
 	fChNumber = wvf.ChannelNumber();
-  	std::cout << "Photon channel: " << fChNumber << std::endl;
+ // 	std::cout << "Photon channel: " << fChNumber << std::endl;
 //	std::stringstream histName;
 	histname.str(std::string());
 	histname << "event_" << fEvNumber 

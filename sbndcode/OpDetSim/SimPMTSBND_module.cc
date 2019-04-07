@@ -64,6 +64,7 @@ namespace opdet{
     void produce(art::Event & e) override;
 
     opdet::sbndPDMapAlg map; // map for photon detector types
+    unsigned int nChannels = map.size();
 
   private:
 
@@ -104,17 +105,15 @@ namespace opdet{
     int fUseLitePhotons; //1 for using SimLitePhotons and 0 for SimPhotons (more complete)
     std::unordered_map< raw::Channel_t,std::vector<double> > fFullWaveforms;  
 
-    void CreatePDWaveform(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave); 
-    void CreatePDWaveformAll(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave, int ch, std::map<int,sim::SimPhotons> auxmap); 
-    void CreatePDWaveformLiteAll(std::map< int, int > const& photonMap, double t_min, std::vector<double>& wave, int ch, std::map<int,sim::SimPhotonsLite> auxmap); 
-    void CreatePDWaveformLite(std::map< int, int > const& photonMap, double t_min, std::vector<double>& wave); 
+    void CreatePDWaveform(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave, int ch, std::map<int,sim::SimPhotons> auxmap); 
+    void CreatePDWaveformLite(sim::SimPhotonsLite const& litesimphotons, double t_min, std::vector<double>& wave, int ch, std::map<int, sim::SimPhotonsLite> auxmap);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
     void AddLineNoise(std::vector<double>& wave); //add noise to baseline
     void AddDarkNoise(std::vector<double>& wave); //add dark noise
-    double FindMinimumTime(sim::SimPhotons const&);
-    double FindMinimumTimeAll(sim::SimPhotons const&, int ch, std::map<int,sim::SimPhotons> auxmap);
-    double FindMinimumTimeLite(std::map< int, int > const& photonMap);  
-    double FindMinimumTimeLiteAll(sim::SimPhotonsLite const& litesimphotons, int ch, std::map<int, sim::SimPhotonsLite> auxmap);  
+    double FindMinimumTime(sim::SimPhotons const&, int ch, std::map<int,sim::SimPhotons> auxmap);
+    double FindMinimumTimeLite(sim::SimPhotonsLite const& litesimphotons, int ch, std::map<int, sim::SimPhotonsLite> auxmap);  
+    void CreateDirectPhotonMap(std::map<int,sim::SimPhotons>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles);
+    void CreateDirectPhotonMapLite(std::map<int,sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles);
   };
 
   SimPMTSBND::SimPMTSBND(fhicl::ParameterSet const & p)
@@ -148,10 +147,10 @@ namespace opdet{
       fQEDirect = temp_fQEDirect; //not using scintprescale yet
       fQERefl = temp_fQERefl; //not using scintprescale yet
   
-    std::cout << "PMT corrected efficiencies = " << fQEDirect << fQERefl << std::endl;
+    std::cout << "PMT corrected efficiencies = " << fQEDirect << " " << fQERefl << std::endl;
 
-    if(fQERefl>1.0001)
-	std::cout << "WARNING: Quantum efficiency set in fhicl file " << temp_fQERefl << " seems to be too large! Final QE must be equal or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << LarProp->ScintPreScale() << std::endl;
+    if(fQERefl>1.0001 || fQEDirect>1.0001)
+	std::cout << "WARNING: Quantum efficiency set in fhicl file " << temp_fQERefl << " or " << temp_fQEDirect << " seems to be too large! Final QE must be equal or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << LarProp->ScintPreScale() << std::endl;
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
     fSampling = (timeService->OpticalClock().Frequency())/1000.0; //in GHz
@@ -183,7 +182,6 @@ namespace opdet{
 
     for(int i=0; i<pulsesize; i++){
 	wsp[i]=(Pulse1PE(static_cast< double >(i)/fSampling));
-	//	std::cout << wsp[i] << std::endl;
     }
 
   }
@@ -200,69 +198,44 @@ namespace opdet{
  
     if(fUseLitePhotons==1){//using SimPhotonsLite
 
+      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
+      std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
+ 
       std::map<int,sim::SimPhotonsLite> auxmap;   // to temporarily store channel and combined (direct and converted) time profiles
-      //Get *ALL* SimPhotonsCollectionLite from Event
+ 
+     //Get *ALL* SimPhotonsCollectionLite from Event
       std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles;
       e.getManyByType(photon_handles);
       if (photon_handles.size() == 0)
         throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotonsLite retrieved and you requested them.";
       
-      // Loop over direct/reflected photons
-      for (auto pmtHandle: photon_handles) {
-       // Do some checking before we proceed
-        if (!pmtHandle.isValid()) continue;  
-        if (pmtHandle.provenance()->moduleLabel() != fInputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
- 
-      //this now tells you if light collection is reflected
-        bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
-      
-        for (auto const& litesimphotons : (*pmtHandle)){
-	  ch = litesimphotons.OpChannel;
-	  if(map.pdType(ch, "pmt") && !Reflected)
-            auxmap.insert(std::make_pair(ch,litesimphotons));
-        }
-      }
-      
+      CreateDirectPhotonMapLite(auxmap, photon_handles); //to store direct VUV light for coated PMT waveforms
+
      // Loop over direct/reflected photons
       for (auto pmtHandle: photon_handles) {
  
       //this now tells you if light collection is reflected
       bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
       
-      if(Reflected)
-	  {std::cout << "looking at reflected/visible lite photons" << std::endl; }
-      else
-	  {std::cout << "looking at direct/vuv lite photons" << std::endl;  } 
-	  
       std::cout << "Number of photon channels: " << pmtHandle->size() << std::endl;
-      unsigned int nChannels = pmtHandle->size();
-
-      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
-      std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
 
       for (auto const& litesimphotons : (*pmtHandle)){
 	ch = litesimphotons.OpChannel;
-	if(map.pdType(ch, "barepmt") && Reflected){ //Non-coated PMTs
-  	    std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
-  	    t_min=FindMinimumTimeLite(photonMap);
-	    CreatePDWaveformLite(photonMap, t_min, waves[ch]);
- 	    waveforms[ch] = std::vector<short unsigned int> (waves[ch].begin(), waves[ch].end());
-	    raw::OpDetWaveform adcVec(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-	    pulseVecPtr->emplace_back(std::move(adcVec));
-          }
-	if(map.pdType(ch, "pmt")&& Reflected){ //only getting PMT TPB coated channels
-  	  std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
-  	  t_min=FindMinimumTimeLiteAll(litesimphotons, ch, auxmap);
-	  CreatePDWaveformLiteAll(photonMap, t_min, waves[ch], ch, auxmap);
+	if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch, "pmt") )){ //All PMT channels
+  	  t_min=FindMinimumTimeLite(litesimphotons, ch, auxmap);
+	  std::cout <<"tmin = " << t_min << std::endl;
+	  CreatePDWaveformLite(litesimphotons, t_min, waves[ch], ch, auxmap);
 	  waveforms[ch] = std::vector<short unsigned int> (waves[ch].begin(), waves[ch].end());
 	  raw::OpDetWaveform adcVec(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
 	  pulseVecPtr->emplace_back(std::move(adcVec));
-	  
 	}
       }
      }  //end loop on simphoton lite collections
       e.put(std::move(pulseVecPtr));
     }else{ //for SimPhotons
+
+      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
+      std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
 
       std::map<int,sim::SimPhotons> auxmap;   // to temporarily store channel and direct light distribution
       //Get *ALL* SimPhotonsCollection from Event
@@ -271,46 +244,18 @@ namespace opdet{
       if (photon_handles.size() == 0)
 	throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotons retrieved and you requested them.";
       
-      // Loop over direct/reflected photons
-      for (auto pmtHandle: photon_handles) {
-       // Do some checking before we proceed
-        if (!pmtHandle.isValid()) continue;  
-        if (pmtHandle.provenance()->moduleLabel() != fInputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
- 
-      //this now tells you if light collection is reflected
-        bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
-      
-        for (auto const& simphotons : (*pmtHandle)){
-	  ch = simphotons.OpChannel();
-	  if(map.pdType(ch, "pmt") && !Reflected)
-            auxmap.insert(std::make_pair(ch,simphotons));
-        }
-      }
+      CreateDirectPhotonMap(auxmap, photon_handles); //to store direct VUV light for coated PMT waveforms
+
       for (auto pmtHandle: photon_handles) {
         bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
-        if(Reflected)
-	  {std::cout << "looking at reflected/visible photons" << std::endl; }
-	else
-	  {std::cout << "looking at direct/vuv photons" << std::endl;  }  
 
         std::cout << "Number of photon channels: " << pmtHandle->size() << std::endl;
-        unsigned int nChannels = pmtHandle->size();
-
-        std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
-        std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
 
         for (auto const& simphotons : (*pmtHandle)){
 	  ch = simphotons.OpChannel();
-	  if(map.pdType(ch, "barepmt") && Reflected){ //Non-coated PMTs
-  	    t_min=FindMinimumTime(simphotons);
-	    CreatePDWaveform(simphotons, t_min, waves[ch]);
- 	    waveforms[ch] = std::vector<short unsigned int> (waves[ch].begin(), waves[ch].end());
-	    raw::OpDetWaveform adcVec(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-	    pulseVecPtr->emplace_back(std::move(adcVec));
-          }
-	  if(map.pdType(ch, "pmt") && Reflected){ //TPB coated PMTs
-  	    t_min=FindMinimumTimeAll(simphotons, ch, auxmap);
-	    CreatePDWaveformAll(simphotons, t_min, waves[ch], ch, auxmap);
+	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch,"pmt"))){ //all PMTs
+  	    t_min=FindMinimumTime(simphotons, ch, auxmap);
+	    CreatePDWaveform(simphotons, t_min, waves[ch], ch, auxmap);
  	    waveforms[ch] = std::vector<short unsigned int> (waves[ch].begin(), waves[ch].end());
 	    raw::OpDetWaveform adcVec(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
 	    pulseVecPtr->emplace_back(std::move(adcVec));
@@ -323,6 +268,44 @@ namespace opdet{
 
   DEFINE_ART_MODULE(SimPMTSBND)
 
+
+  void SimPMTSBND::CreateDirectPhotonMap(std::map<int,sim::SimPhotons>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles)
+  {
+    int ch;
+    // Loop over direct/reflected photons
+    for (auto pmtHandle: photon_handles) {
+       // Do some checking before we proceed
+        if (!pmtHandle.isValid()) continue;  
+        if (pmtHandle.provenance()->moduleLabel() != fInputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
+      //this now tells you if light collection is reflected
+      bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
+      
+      for (auto const& simphotons : (*pmtHandle)){
+	  ch = simphotons.OpChannel();
+	  if(map.pdType(ch, "pmt") && !Reflected)
+            auxmap.insert(std::make_pair(ch,simphotons));
+      }
+    }
+  }
+
+  void SimPMTSBND::CreateDirectPhotonMapLite(std::map<int,sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles)
+  {
+    int ch;
+    // Loop over direct/reflected photons
+    for (auto pmtHandle: photon_handles) {
+       // Do some checking before we proceed
+        if (!pmtHandle.isValid()) continue;  
+        if (pmtHandle.provenance()->moduleLabel() != fInputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
+      //this now tells you if light collection is reflected
+      bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
+      
+      for (auto const& litesimphotons : (*pmtHandle)){
+	  ch = litesimphotons.OpChannel;
+	  if(map.pdType(ch, "pmt") && !Reflected)
+            auxmap.insert(std::make_pair(ch,litesimphotons));
+      }
+    }
+  }
 
   double SimPMTSBND::Pulse1PE(double time)//single pulse waveform
   {
@@ -360,30 +343,22 @@ namespace opdet{
     }
   }
 
-  void SimPMTSBND::CreatePDWaveform(sim::SimPhotons const& simphotons, double t_min, std::vector<double>& wave){
 
-   for(size_t i=0; i<simphotons.size(); i++){
-     if((gRandom->Uniform(1.0))<fQERefl) 
-     AddSPE((tadd+simphotons[i].Time-t_min)*fSampling,wave);
-   }
-    if(fBaselineRMS>0.0) AddLineNoise(wave);
-    if(fDarkNoiseRate > 0.0) AddDarkNoise(wave);
-    CreateSaturation(wave);
-  }
+  void SimPMTSBND::CreatePDWaveform(sim::SimPhotons const& simphotons, double t_min, std::vector<double>& wave, int ch, std::map<int,sim::SimPhotons> auxmap){
 
-  void SimPMTSBND::CreatePDWaveformAll(sim::SimPhotons const& simphotons, double t_min, std::vector<double>& wave, int ch, std::map<int,sim::SimPhotons> auxmap){
-
-    double ttpb = 0; //not including TPB (covering pmt) emission time
-    sim::SimPhotons auxphotons;
-    for (auto& mapMember: auxmap)
- 	 if(mapMember.first==ch) auxphotons=mapMember.second;
-    for(size_t i=0; i<simphotons.size(); i++){//simphotons is reflected light
-	if((gRandom->Uniform(1.0))<fQERefl) AddSPE((tadd+simphotons[i].Time+ttpb-t_min)*fSampling,wave);
+    for(size_t i=0; i<simphotons.size(); i++){//simphotons is here reflected light. To be added for all PMTs
+      if((gRandom->Uniform(1.0))<fQERefl) AddSPE((tadd+simphotons[i].Time-t_min)*fSampling,wave);
     }
-    for(size_t j=0; j<auxphotons.size(); j++){//auxphotons is direct light
-      if((gRandom->Uniform(1.0))<fQEDirect){ 
-        double ttpb = timeTPB->GetRandom(); //for including TPB emission time
-        AddSPE((tadd+simphotons[j].Time+ttpb-t_min)*fSampling,wave);
+    if(map.pdType(ch, "pmt")){ //To add direct light for TPB coated PMTs
+      sim::SimPhotons auxphotons;
+      double ttpb = 0; 
+      for (auto& mapMember: auxmap){
+ 	 if(mapMember.first==ch) auxphotons=mapMember.second; }
+      for(size_t j=0; j<auxphotons.size(); j++){//auxphotons is direct light
+        if((gRandom->Uniform(1.0))<fQEDirect){ 
+          ttpb = timeTPB->GetRandom(); //for including TPB emission time
+          AddSPE((tadd+simphotons[j].Time+ttpb-t_min)*fSampling,wave);
+        }
       }
     }
     if(fBaselineRMS>0.0) AddLineNoise(wave);
@@ -391,40 +366,28 @@ namespace opdet{
     CreateSaturation(wave);
   }
 
+  void SimPMTSBND::CreatePDWaveformLite(sim::SimPhotonsLite const& litesimphotons, double t_min, std::vector<double>& wave, int ch, std::map<int, sim::SimPhotonsLite> auxmap){
 
-  void SimPMTSBND::CreatePDWaveformLite(std::map< int, int > const& photonMap, double t_min, std::vector<double>& wave){
-
-    for (auto const& mapMember: photonMap){
+    std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
+    for (auto const& mapMember: photonMap){ //including reflected light for all PMT channels
       for(int i=0; i<mapMember.second; i++){
    	 if((gRandom->Uniform(1.0))<(fQERefl)){
- 	   AddSPE((tadd+mapMember.first-t_min)*fSampling,wave);
-         }
+ 	   AddSPE((tadd+mapMember.first-t_min)*fSampling,wave); }
       }
     }
-    if(fBaselineRMS>0.0) AddLineNoise(wave);
-    if(fDarkNoiseRate > 0.0) AddDarkNoise(wave);
-    CreateSaturation(wave);
-  }
-
-  void SimPMTSBND::CreatePDWaveformLiteAll(std::map< int, int > const& photonMap, double t_min, std::vector<double>& wave, int ch, std::map<int, sim::SimPhotonsLite> auxmap){
-
-    double ttpb = 0; //not including TPB (covering pmt) emission time
-    sim::SimPhotonsLite auxphotons;
-    for (auto const& mapMember: photonMap){ //photonMap is reflected light
-      for(int i=0; i<mapMember.second; i++){
-   	 if((gRandom->Uniform(1.0))<(fQERefl)) AddSPE((tadd+mapMember.first-t_min)*fSampling,wave);
-      }
-    }
-
-    for (auto& mapMember: auxmap) //auxphotons is direct light
+    if(map.pdType(ch, "pmt")){ //To add direct light for TPB coated PMTs
+      double ttpb;
+      sim::SimPhotonsLite auxphotons;
+      for (auto& mapMember: auxmap) //auxphotons is direct light
  	 if(mapMember.first==ch) auxphotons=mapMember.second;
-    std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
-    for (auto& mapMember2: auxphotonMap){ 
-      for(int i=0; i<mapMember2.second; i++){
-   	 if((gRandom->Uniform(1.0))<(fQEDirect)){
+      std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
+      for (auto& mapMember2: auxphotonMap){ 
+        for(int i=0; i<mapMember2.second; i++){
+   	  if((gRandom->Uniform(1.0))<(fQEDirect)){
            ttpb = timeTPB->GetRandom(); //for including TPB emission time
            AddSPE((tadd+mapMember2.first+ttpb-t_min)*fSampling,wave);
-         }
+          }
+        }
       }
     }
 
@@ -466,44 +429,42 @@ namespace opdet{
     }
   }
 
-  double SimPMTSBND::FindMinimumTime(sim::SimPhotons const& simphotons){
+  double SimPMTSBND::FindMinimumTime(sim::SimPhotons const& simphotons, int ch, std::map<int,sim::SimPhotons> auxmap){
+
     double t_min=1e15;
-    for(size_t i=0; i<simphotons.size(); i++){	 	 
-      if(simphotons[i].Time<t_min) t_min = simphotons[i].Time;
+
+    if(map.pdType(ch, "barepmt")){ //TPB non-coated PMTs
+      for(size_t i=0; i<simphotons.size(); i++){	 	 
+        if(simphotons[i].Time<t_min) t_min = simphotons[i].Time;
+      }
+    }else{//for coated PMTs
+      sim::SimPhotons auxphotons;
+      for (auto& mapMember: auxmap)
+ 	 if(mapMember.first==ch) auxphotons=mapMember.second;
+      auxphotons+=(simphotons); 
+      for(size_t i=0; i<auxphotons.size(); i++){	 	 
+        if(auxphotons[i].Time<t_min) t_min = auxphotons[i].Time;
+      }
     }
     return t_min;
   }
 
+  double SimPMTSBND::FindMinimumTimeLite(sim::SimPhotonsLite const& litesimphotons, int ch, std::map<int,sim::SimPhotonsLite>auxmap){
 
-  double SimPMTSBND::FindMinimumTimeAll(sim::SimPhotons const& simphotons, int ch, std::map<int,sim::SimPhotons> auxmap){
-    double t_min=1e15;
-    sim::SimPhotons auxphotons;
-    for (auto& mapMember: auxmap)
- 	 if(mapMember.first==ch) auxphotons=mapMember.second;
-    auxphotons+=(simphotons); 
-    t_min=FindMinimumTime(auxphotons);
-//    std::cout << " tmin = " << t_min <<std::endl;
-    return t_min;
-  }
-
-  double SimPMTSBND::FindMinimumTimeLiteAll(sim::SimPhotonsLite const& litesimphotons, int ch, std::map<int,sim::SimPhotonsLite>auxmap){
-
-    sim::SimPhotonsLite auxphotons;
-    for (auto& mapMember: auxmap)
- 	 if(mapMember.first==ch) auxphotons=mapMember.second;
-    auxphotons+=(litesimphotons);
-    std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
-    for (auto & mapMember: auxphotonMap){
+    if(map.pdType(ch, "barepmt")){ //TPB non-coated PMTs
+      std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
+      for (auto const& mapMember: photonMap){
  	 if(mapMember.second!=0) return (double)mapMember.first;
-    }
-    return 1e5;
-  }
-
-
-  double SimPMTSBND::FindMinimumTimeLite(std::map< int, int > const& photonMap){
-
-    for (auto const& mapMember: photonMap){
+      }
+    }else{
+      sim::SimPhotonsLite auxphotons;
+      for (auto& mapMember: auxmap)
+ 	 if(mapMember.first==ch) auxphotons=mapMember.second;
+      auxphotons+=(litesimphotons);
+      std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
+      for (auto & mapMember: auxphotonMap){
  	 if(mapMember.second!=0) return (double)mapMember.first;
+      }
     }
     return 1e5;
   }

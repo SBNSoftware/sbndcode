@@ -64,6 +64,7 @@ namespace opdet{
     void produce(art::Event & e) override;
 
     opdet::sbndPDMapAlg map; //map for photon detector types
+    unsigned int nChannels = map.size();
 
   private:
 
@@ -104,7 +105,7 @@ namespace opdet{
     double Pulse1PE(double time) const;
     void AddLineNoise(std::vector<double>& wave);
     void AddDarkNoise(std::vector<double>& wave);
-    double FindMinimumTime(sim::SimPhotons const& simphotons, std::string pdtype);
+    double FindMinimumTime(sim::SimPhotons const& simphotons);
     double FindMinimumTimeLite(std::map< int, int > const& photonMap);  
     void CreatePDWaveform(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave, std::string pdtype);
     void CreatePDWaveformLite(std::map< int, int > const& photonMap, double t_min, std::vector<double>& wave, std::string pdtype); 
@@ -143,8 +144,8 @@ namespace opdet{
 
     std::cout << "arapucas corrected efficiencies = " << fArapucaEffT1 << ", " << fArapucaEffT2 << " and " << fArapucaEffx << std::endl;
 
-    if(fArapucaEffT1>1.0001 || fArapucaEffT2>1.0001)
-	std::cout << "WARNING: Quantum efficiency set in fhicl file " << AraEffT1 << " or " << AraEffT2 << " seems to be too large! Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << LarProp->ScintPreScale() << std::endl;
+    if(fArapucaEffT1>1.0001 || fArapucaEffT2>1.0001 || fArapucaEffx>1.0001)
+	std::cout << "WARNING: Quantum efficiency set in fhicl file " << AraEffT1 << " or " << AraEffT2 << " or " << AraEffx << " seems to be too large! Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << LarProp->ScintPreScale() << std::endl;
 
   // Call appropriate produces<>() functions here.
 
@@ -193,6 +194,8 @@ namespace opdet{
 
     if(fUseLitePhotons==1){//using SimPhotonsLite
 
+      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
+      std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
       //Get *ALL* SimPhotonsCollectionLite from Event
       std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles;
       e.getManyByType(photon_handles);
@@ -214,16 +217,11 @@ namespace opdet{
 	  {std::cout << "looking at direct/vuv lite photons" << std::endl;  }  	  
 	  
         std::cout << "Number of photon channels: " << opHandle->size() << std::endl;
-        unsigned int nChannels = opHandle->size();
-
-        std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
-        std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
       
         for (auto const& litesimphotons : (*opHandle)){
 	  ch = litesimphotons.OpChannel;
           t_min=1e15;
 	  if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected)){//getting only arapuca channels with appropriate type of light
-	    std::cout << "channel: " << ch << " " << map.pdName(ch) << std::endl;
   	    std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
   	    t_min=FindMinimumTimeLite(photonMap);
 	    CreatePDWaveformLite(photonMap, t_min, waves[ch], map.pdName(ch));
@@ -232,18 +230,14 @@ namespace opdet{
 	    pulseVecPtr->emplace_back(std::move(adcVec));  
 	  }
 	  if((map.pdType(ch,"xarapucaprime") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
-	    std::cout << "channel: " << ch << " " << map.pdName(ch) << std::endl;
             sim::SimPhotonsLite auxLite;
             for (auto const& litesimphotons : (*opHandle)){
               channel= litesimphotons.OpChannel;
-	     //   std::cout << "channels " << channel << std::endl;
               if(channel==ch){
                 auxLite =(litesimphotons);
-	        std::cout << "first xara channel ";
               }
               if(channel==(ch+2)){
                 auxLite+=(litesimphotons);
-	        std::cout << "second ara channel " << std::endl;
               }
  	    }
   	    std::map< int, int > const& photonMap = auxLite.DetectedPhotons;
@@ -257,6 +251,8 @@ namespace opdet{
        }  //end loop on simphoton lite collections
     e.put(std::move(pulseVecPtr));
     }else{ //for SimPhotons
+      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
+      std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
       //Get *ALL* SimPhotonsCollection from Event
       std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles;
       e.getManyByType(photon_handles);
@@ -277,40 +273,31 @@ namespace opdet{
 	  else
 	  {std::cout << "looking at direct/vuv photons" << std::endl;  }  
 	
-	
       std::cout << "Number of photon channels: " << opHandle->size() << std::endl;
-      unsigned int nChannels = opHandle->size();
-
-      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
-      std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
 
       for (auto const& simphotons : (*opHandle)){
 	ch = simphotons.OpChannel();
 	t_min=1e15;
 
 	if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected)){//getting only arapuca channels with appropriate type of light
-  	  t_min=FindMinimumTime(simphotons, map.pdName(ch));
+  	  t_min=FindMinimumTime(simphotons);
 	  CreatePDWaveform(simphotons, t_min, waves[ch], map.pdName(ch));
  	  waveforms[ch] = std::vector<short unsigned int> (waves[ch].begin(), waves[ch].end());
 	  raw::OpDetWaveform adcVec(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
 	  pulseVecPtr->emplace_back(std::move(adcVec));
 	}
 	if((map.pdType(ch,"xarapucaprime") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
-	  std::cout << "channel: " << ch << " " << map.pdName(ch) << std::endl;
           sim::SimPhotons auxPhotons;
           for (auto const& simphotons : (*opHandle)){
             channel= simphotons.OpChannel();
-	     //   std::cout << "channels " << channel << std::endl;
             if(channel==ch){
               auxPhotons =(simphotons);
-	      std::cout << "first xara channel n photons " << simphotons.size();
             }
             if(channel==(ch+2)){
               auxPhotons+=(simphotons);
-	      std::cout << "second ara channel n photons " << simphotons.size() << " total size " << auxPhotons.size() << std::endl;
             }
  	  }
-  	  t_min=FindMinimumTime(auxPhotons, map.pdName(ch));
+  	  t_min=FindMinimumTime(auxPhotons);
 	  CreatePDWaveform(auxPhotons, t_min, waves[ch], map.pdName(ch));
  	  waveforms[ch] = std::vector<short unsigned int> (waves[ch].begin(), waves[ch].end());
 	  raw::OpDetWaveform adcVec(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
@@ -369,7 +356,7 @@ namespace opdet{
     }
   }
 
-  double SimArapucaSBND::FindMinimumTime(sim::SimPhotons const& simphotons, std::string pdtype){
+  double SimArapucaSBND::FindMinimumTime(sim::SimPhotons const& simphotons){
     double t_min=1e15;
       for(size_t i=0; i<simphotons.size(); i++){	 	 
       	if(simphotons[i].Time<t_min) t_min = simphotons[i].Time;
@@ -383,8 +370,8 @@ namespace opdet{
     double tphoton=0;
     if(pdtype=="arapucaT1"){
 	for(size_t i=0; i<simphotons.size(); i++){
-	  tphoton=simphotons[i].Time;
 	  if((gRandom->Uniform(1.0))<fArapucaEffT1){ //Sample a random subset according to Arapuca's efficiency
+	    tphoton=simphotons[i].Time;
 	    tphoton+=(TimeArapucaT1->GetRandom());
 	    tphoton+=(fPreTrigger-t_min);
  	    if(fCrossTalk>0.0 && (gRandom->Uniform(1.0))<fCrossTalk) nCT=2;
@@ -395,8 +382,8 @@ namespace opdet{
     }
     if(pdtype=="arapucaT2"){   
 	for(size_t i=0; i<simphotons.size(); i++){
-	  tphoton=simphotons[i].Time;
  	  if((gRandom->Uniform(1.0))<fArapucaEffT2){ //Sample a random subset according to Arapuca's efficiency.
+	    tphoton=simphotons[i].Time;
   	    tphoton+=(TimeArapucaT2->GetRandom());
 	    tphoton+=(fPreTrigger-t_min);
  	    if(fCrossTalk>0.0 && (gRandom->Uniform(1.0))<fCrossTalk) nCT=2;
@@ -407,9 +394,9 @@ namespace opdet{
     }
     if(pdtype=="xarapucaprime"){   
 	for(size_t i=0; i<simphotons.size(); i++){
-	  tphoton=simphotons[i].Time;
  	  if((gRandom->Uniform(1.0))<fArapucaEffx){ 
- // 	    tphoton+=(TimeArapucaT2->GetRandom());//PROPER TIMING YET TO BE IMPLEMENTED FOR X-ARAPUCA
+	    tphoton=simphotons[i].Time;
+ 	    tphoton+=(TimeArapucaT1->GetRandom());//PROPER TIMING YET TO BE IMPLEMENTED FOR X-ARAPUCA
 	    tphoton+=(fPreTrigger-t_min);
  	    if(fCrossTalk>0.0 && (gRandom->Uniform(1.0))<fCrossTalk) nCT=2;
 	    else nCT=1;
@@ -438,21 +425,21 @@ namespace opdet{
     for (auto const& mapMember: photonMap){
       for(int i=0; i<mapMember.second; i++){
          if(pdtype=="arapucaT1" && (gRandom->Uniform(1.0))<fArapucaEffT1){
-  	    tphoton+=(TimeArapucaT1->GetRandom());
- 	   tphoton+=mapMember.first+fPreTrigger-t_min;
+  	    tphoton=(TimeArapucaT1->GetRandom());
+ 	    tphoton+=mapMember.first+fPreTrigger-t_min;
  	    if(fCrossTalk>0.0 && (gRandom->Uniform(1.0))<fCrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
          }
          if(pdtype=="arapucaT2" && (gRandom->Uniform(1.0))<fArapucaEffT2){
-  	    tphoton+=(TimeArapucaT2->GetRandom());
- 	   tphoton+=mapMember.first+fPreTrigger-t_min;
+  	    tphoton=(TimeArapucaT2->GetRandom());
+ 	    tphoton+=mapMember.first+fPreTrigger-t_min;
  	    if(fCrossTalk>0.0 && (gRandom->Uniform(1.0))<fCrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
          }
 	if(pdtype=="xarapucaprime" && (gRandom->Uniform(1.0))<fArapucaEffx){
-	   tphoton+=(TimeArapucaT1->GetRandom()); //TO BE CORRECTED LATER
+	   tphoton=(TimeArapucaT1->GetRandom()); //TO BE CORRECTED LATER
 	   tphoton+=mapMember.first+fPreTrigger-t_min;
  	   if(fCrossTalk>0.0 && (gRandom->Uniform(1.0))<fCrossTalk) nCT=2;
 	   else nCT=1;

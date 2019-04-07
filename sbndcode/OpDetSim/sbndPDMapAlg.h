@@ -2,7 +2,7 @@
 // File:        sbndPDMapAlg.h
 // Authors: Laura Paulucci and Franciole Marinho
 //
-// This class stores the SBND PDS type map and implements a function for getting the proper type
+// This class stores the SBND PDS type map and implements a few functions
 // 
 ////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +33,7 @@ namespace opdet {
 
   bool pdType(int ch, std::string pdname);
   std::string pdName(int ch);
+  int size();
         
   private:	 
   std::map<int, std::string> PDmap;
