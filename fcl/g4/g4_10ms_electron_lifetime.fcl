@@ -1,4 +1,7 @@
 #include "standard_g4_sbnd.fcl"
 
 services.DetectorPropertiesService.Electronlifetime:  10e3 #microseconds
-
+services.DetectorClocksService.G4RefTime: -2.75e3
+services.DetectorClocksService.TriggerOffsetTPC:  0
+services.DetectorClocksService.DefaultTrigTime:   0
+services.DetectorClocksService.DefaultBeamTime:   0
