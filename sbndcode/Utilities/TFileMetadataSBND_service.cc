@@ -52,8 +52,8 @@
 #include "sbndcode/Utilities/TFileMetadataSBND.h"
 #include "sbndcode/Utilities/FileCatalogMetadataSBND.h"
 
-#include "art/Framework/IO/Root/RootDB/SQLite3Wrapper.h"
-#include "art/Framework/IO/Root/RootDB/SQLErrMsg.h"
+#include "art_root_io/RootDB/SQLite3Wrapper.h"
+#include "art_root_io/RootDB/SQLErrMsg.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
