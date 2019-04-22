@@ -23,7 +23,7 @@
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-#include "art/Framework/Services/Optional/TFileService.h"
+#include "art_root_io/TFileService.h"
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
@@ -86,7 +86,7 @@ void vmanip(std::vector<double> v, double* ave, double* rms);
 void set_def(crt::CRTTzero tz);
 
 CRTTzeroProducer::CRTTzeroProducer(fhicl::ParameterSet const & p)
-  :
+  : EDProducer(p),
 
   // Initialize member data here.
   data_label_(p.get<std::string>("data_label")),

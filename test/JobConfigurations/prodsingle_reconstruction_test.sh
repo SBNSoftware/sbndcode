@@ -146,7 +146,7 @@ for TestName in "${TestNames[@]}" ; do
 	###
 	### prepare the command
 	###
-	declare -a Cmd=( 'lar' '--rethrow-all' )
+	declare -a Cmd=( 'lar' '--rethrow-all' '--prune-config' )
 	
 	ConfigFile="${TestName}.fcl"
 	ConfigDumpFile="${ConfigFile%.fcl}.cfg"
