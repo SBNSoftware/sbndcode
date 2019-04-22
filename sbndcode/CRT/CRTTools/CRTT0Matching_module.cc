@@ -23,8 +23,8 @@
 #include "canvas/Persistency/Common/PtrVector.h" 
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
-#include "art/Framework/Services/Optional/TFileService.h" 
-#include "art/Framework/Services/Optional/TFileDirectory.h"
+#include "art_root_io/TFileService.h"
+#include "art_root_io/TFileDirectory.h"
 
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
@@ -97,7 +97,7 @@ namespace sbnd {
 
 
   CRTT0Matching::CRTT0Matching(fhicl::ParameterSet const & p)
-    : t0Alg()
+    : EDProducer(p), t0Alg()
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 
