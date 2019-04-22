@@ -35,4 +35,13 @@ sbnd_analysistree:
  G4MinE:                   0.01
 }
 
+
+sbnd_hitanalyzer:
+{
+module_type:		SBNDHitAnalyzerExample
+HitModuleLabel:		"gaushit"
+fminNumberHits: 	100
+
+}
+
 END_PROLOG
