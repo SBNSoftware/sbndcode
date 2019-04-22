@@ -30,6 +30,7 @@ namespace filt{
 
 
   GenNuFilter::GenNuFilter(fhicl::ParameterSet const & pset)
+  : EDFilter(pset)
   {
     this->reconfigure(pset);
     
