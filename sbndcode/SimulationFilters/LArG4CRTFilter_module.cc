@@ -62,6 +62,7 @@ namespace filt{
 
 
   LArG4CRTFilter::LArG4CRTFilter(fhicl::ParameterSet const & pset)
+  : EDFilter(pset)
   {
     this->reconfigure(pset);
 
