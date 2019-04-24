@@ -2096,7 +2096,9 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
   // auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   // auto const* LArProp = lar::providerFrom<detinfo::LArPropertiesService>();
-
+   
+   std::cout<<"This is an example change"<<std::endl;
+   
   // collect the sizes which might me needed to resize the tree data structure:
   bool isMC = !evt.isRealData();
   
