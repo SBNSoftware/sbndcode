@@ -2,11 +2,9 @@
 
 BEGIN_PROLOG
 
-sbnd_simarapuca:
+sbnd_digiarapuca_alg:
 {
- module_type:        "SimArapucaSBND"
- InputModule:        "largeant"
-
+# module_type:        "DigiArapucaSBNDAlg"
 #Assume 25v bias with sensl c series SiPM. Values should be changed if SiPMs are to be ganged and/or of different manufacturer
 #Values of MaxAmplitude, BackTime and VoltageToADC to be confirmed
 
@@ -19,16 +17,14 @@ sbnd_simarapuca:
  ReadoutWindow:      12000.0 #ns
  PulseLength:        4000.0  #ns
  PeakTime:           260.0   #ns
- MaxAmplitude:       0.12    #mV 
- FrontTime:          9.0     #ns
- BackTime:	     476.0   #ns
+ MeanAmplitude:      0.12    #mV 
+ RiseTime:           9.0     #ns
+ FallTime:	     476.0   #ns
  Saturation:         300     #in number of p.e. to see saturation effects in the signal
- QE:     	     0.25    #SiPM quantum efficiency
- Sampling:           0.5     #Give the desired value in GHz or use -1 for extracting from DetectorClocksService->OpticalClock().Frequency
+# Sampling:           0.5     #Give the desired value in GHz or use -1 for extracting from DetectorClocksService->OpticalClock().Frequency
  ArapucaEffT1:       0.02    #Arapuca T1 efficiency
  ArapucaEffT2:       0.027   #Arapuca T2 efficiency 
  ArapucaEffx:        0.02    #Arapuca T2 efficiency 
- UseLitePhotons:     1       #1 = use SimPhotonsLite; 0 = use SimPhotons
 }
 
 END_PROLOG
