@@ -98,13 +98,13 @@ physics:
 #  rffhit:              @local::sbnd_rffhitfinder
 
   ### corner-finder
-  corner:              @local::standard_cornerfinder    
+  #corner:              @local::standard_cornerfinder    
 
   ### cluster-finder producers
-  fuzzycluster:        @local::sbnd_fuzzycluster
+  #fuzzycluster:        @local::sbnd_fuzzycluster
   linecluster:         @local::sbnd_linecluster
-  cccluster:           @local::sbnd_clustercrawler
-  spacepts:            @local::sbnd_spacepts
+  #cccluster:           @local::sbnd_clustercrawler
+  #spacepts:            @local::sbnd_spacepts
   blurredcluster:      @local::sbnd_blurredcluster
 
   ### pandora
@@ -115,9 +115,9 @@ physics:
   pandoraPid:          @local::sbnd_chi2pid  
 
   ### track-finder producers
-  trackkalmanhit:      @local::sbnd_track3Dkalmanhit
-  spacepointfinder:    @local::sbnd_spacepoint_finder
-  trackkalsps:         @local::sbnd_kalman
+  #trackkalmanhit:      @local::sbnd_track3Dkalmanhit
+  #spacepointfinder:    @local::sbnd_spacepoint_finder
+  #trackkalsps:         @local::sbnd_kalman
   
   pmalgtrackmaker:     @local::sbnd_pmalgtrackmaker
     
@@ -127,7 +127,7 @@ physics:
   ### vertex-finder producers
 
   ### calorimetry producers
-  trackkalmanhitcalo:  @local::sbnd_calomc
+  #trackkalmanhitcalo:  @local::sbnd_calomc
   pmatrackcalo:        @local::sbnd_calomc
   pmatrackpid:         @local::sbnd_chi2pid
 

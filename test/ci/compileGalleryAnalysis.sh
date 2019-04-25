@@ -32,7 +32,8 @@ mkdir "$BuildDir"
 #
 # set up
 #
-source "$(ups setup cmake 'v3_10_1')"
+# set up some UPS version of CMake only if none is set up already:
+[[ -n "$CMAKE_DIR" ]] || source "$(ups setup cmake 'v3_10_1')"
 
 #
 # proceed with compilation
