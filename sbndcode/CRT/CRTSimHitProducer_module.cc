@@ -23,8 +23,8 @@
 #include "canvas/Persistency/Common/PtrVector.h" 
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
-#include "art/Framework/Services/Optional/TFileService.h" 
-#include "art/Framework/Services/Optional/TFileDirectory.h"
+#include "art_root_io/TFileService.h"
+#include "art_root_io/TFileDirectory.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "canvas/Persistency/Common/FindManyP.h"
@@ -103,7 +103,7 @@ namespace sbnd {
 
 
   CRTSimHitProducer::CRTSimHitProducer(fhicl::ParameterSet const & p)
-  : hitAlg(p.get<fhicl::ParameterSet>("HitAlg"))
+  : EDProducer(p), hitAlg(p.get<fhicl::ParameterSet>("HitAlg"))
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 
