@@ -112,7 +112,7 @@ namespace opdet{
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
   };
 
-  SimArapucaSBND::SimArapucaSBND(fhicl::ParameterSet const & p)
+  SimArapucaSBND::SimArapucaSBND(fhicl::ParameterSet const & p) : art::EDProducer{p}
 // : 
 // Initialize member data here.
   {

@@ -19,7 +19,7 @@
 #include "canvas/Utilities/Exception.h"
 #include "canvas/Utilities/InputTag.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "art/Framework/Services/Optional/TFileService.h"
+#include "art_root_io/TFileService.h"
 
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/RawData/OpDetWaveform.h"
@@ -88,7 +88,7 @@ namespace opdet{
     std::stringstream histname;
   };
 
-  opHitFinderSBND::opHitFinderSBND(fhicl::ParameterSet const & p)
+  opHitFinderSBND::opHitFinderSBND(fhicl::ParameterSet const & p) : art::EDProducer{p}
 // :
 // Initialize member data here.
   {
