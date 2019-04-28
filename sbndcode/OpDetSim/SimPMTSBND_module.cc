@@ -116,7 +116,7 @@ namespace opdet{
     void CreateDirectPhotonMapLite(std::map<int,sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles);
   };
 
-  SimPMTSBND::SimPMTSBND(fhicl::ParameterSet const & p)
+  SimPMTSBND::SimPMTSBND(fhicl::ParameterSet const & p)  : art::EDProducer{p}
 // :
 // Initialize member data here.
   {
