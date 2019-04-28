@@ -104,8 +104,8 @@ simple_plugin( CRTSimHitProducer module
         nutools_RandomUtils_NuRandomService_service
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
+	${ART_ROOT_IO_TFILESERVICE_SERVICE}
         ${MF_MESSAGELOGGER}
-        
         ${ROOT_BASIC_LIB_LIST}
         ${CLHEP}
         ${CETLIB}
@@ -127,6 +127,7 @@ simple_plugin(CRTTrackProducer module
         nutools_RandomUtils_NuRandomService_service
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
+	${ART_ROOT_IO_TFILESERVICE_SERVICE}
         ${MF_MESSAGELOGGER}
         ${MF_UTILITIES}
         ${ROOT_BASIC_LIB_LIST}
@@ -149,6 +150,7 @@ simple_plugin(CRTTzeroProducer module
         nutools_RandomUtils_NuRandomService_service
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
+	${ART_ROOT_IO_TFILESERVICE_SERVICE}
         ${MF_MESSAGELOGGER}
         ${MF_UTILITIES}
         ${ROOT_BASIC_LIB_LIST}
@@ -190,8 +192,8 @@ simple_plugin(CRTRecoAna module
         lardata_RecoObjects
         larpandora_LArPandoraInterface
         nusimdata_SimulationBase
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
+        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
+        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
         art_Persistency_Common canvas
         art_Persistency_Provenance canvas
         art_Utilities canvas
@@ -236,8 +238,8 @@ simple_plugin(CRTHitRecoAna module
         lardata_RecoObjects
         larpandora_LArPandoraInterface
         nusimdata_SimulationBase
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
+        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
+        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
         art_Persistency_Common canvas
         art_Persistency_Provenance canvas
         art_Utilities canvas
@@ -282,8 +284,8 @@ simple_plugin(CRTTrackRecoAna module
         lardata_RecoObjects
         larpandora_LArPandoraInterface
         nusimdata_SimulationBase
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
+        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
+        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
         art_Persistency_Common canvas
         art_Persistency_Provenance canvas
         art_Utilities canvas

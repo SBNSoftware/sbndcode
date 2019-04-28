@@ -7,8 +7,8 @@ simple_plugin(CalWireT1053 "module"
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_PRINCIPAL}
                         ${ART_FRAMEWORK_SERVICES_REGISTRY}
-                        ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-                        ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
+                        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
+                        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
                         canvas
                         ${MF_MESSAGELOGGER}
                         
@@ -28,8 +28,8 @@ simple_plugin(CalWireSBND "module"
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_PRINCIPAL}
                         ${ART_FRAMEWORK_SERVICES_REGISTRY}
-                        ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-                        ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
+                        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
+                        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
                         canvas
                         ${MF_MESSAGELOGGER}
                         
