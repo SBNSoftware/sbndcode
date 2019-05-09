@@ -6,7 +6,6 @@ CRTTruthRecoAlg::CRTTruthRecoAlg(const Config& config){
 
   this->reconfigure(config);
   
-  fGeometryService = lar::providerFrom<geo::Geometry>();
   fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
   fAuxDetGeo = &(*fAuxDetGeoService);
   fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
@@ -24,7 +23,6 @@ CRTTruthRecoAlg::CRTTruthRecoAlg(const Config& config){
 
 CRTTruthRecoAlg::CRTTruthRecoAlg(){
 
-  fGeometryService = lar::providerFrom<geo::Geometry>();
   fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
   fAuxDetGeo = &(*fAuxDetGeoService);
   fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
@@ -152,18 +150,12 @@ bool CRTTruthRecoAlg::IsThroughGoing(const simb::MCParticle& particle){
 
   // Check if particle enters the TPC
   bool enters = false;
-  /*double xmin = -2.0 * fGeometryService->DetHalfWidth();
-  double xmax = 2.0 * fGeometryService->DetHalfWidth();
-  double ymin = -fGeometryService->DetHalfHeight();
-  double ymax = fGeometryService->DetHalfHeight();
-  double zmin = 0.;
-  double zmax = fGeometryService->DetLength();*/
+
   // Loop over trajectory points
   int nTrajPoints = particle.NumberTrajectoryPoints();
   for (int traj_i = 0; traj_i < nTrajPoints; traj_i++){
     TVector3 trajPoint(particle.Vx(traj_i), particle.Vy(traj_i), particle.Vz(traj_i));
     // Check if point is within reconstructable volume
-    //if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax && trajPoint[2] >= zmin && trajPoint[2] <= zmax){
     if (trajPoint[0] >= crtPlanes[0] && trajPoint[0] <= crtPlanes[3] && trajPoint[1] >= crtPlanes[4] && trajPoint[1] <= -crtPlanes[4] && trajPoint[2] >= crtPlanes[10] && trajPoint[2] <= crtPlanes[13]){
       enters = true;
     }
@@ -202,12 +194,12 @@ void CRTTruthRecoAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int col)
 // Function to calculate the CRT crossing points of a true particle
 std::pair<TVector3, TVector3> CRTTruthRecoAlg::TpcCrossPoints(simb::MCParticle const& particle){
 
-  double xmin = -2.0 * fGeometryService->DetHalfWidth();
-  double xmax = 2.0 * fGeometryService->DetHalfWidth();
-  double ymin = -fGeometryService->DetHalfHeight();
-  double ymax = fGeometryService->DetHalfHeight();
-  double zmin = 0.;
-  double zmax = fGeometryService->DetLength();
+  double xmin = fTpcGeo.MinX();
+  double xmax = fTpcGeo.MaxX();
+  double ymin = fTpcGeo.MinY();
+  double ymax = fTpcGeo.MaxY();
+  double zmin = fTpcGeo.MinZ();
+  double zmax = fTpcGeo.MaxZ();
   TVector3 start, end;
 
   bool first = true;
@@ -230,6 +222,46 @@ std::pair<TVector3, TVector3> CRTTruthRecoAlg::TpcCrossPoints(simb::MCParticle c
   return std::make_pair(start, end);
 
 } // CRTTrackMatchingAna::TpcCrossPoints()
+
+// Function to calculate the CRT crossing points of a true particle
+double CRTTruthRecoAlg::TpcLength(simb::MCParticle const& particle){
+
+  double xmin = fTpcGeo.MinX();
+  double xmax = fTpcGeo.MaxX();
+  double ymin = fTpcGeo.MinY();
+  double ymax = fTpcGeo.MaxY();
+  double zmin = fTpcGeo.MinZ();
+  double zmax = fTpcGeo.MaxZ();
+  
+  TVector3 start, end;
+  TVector3 disp;
+  double length = 0.;
+
+  bool first = true;
+  // Get the trajectory of the true particle
+  size_t npts = particle.NumberTrajectoryPoints();
+
+  // Loop over particle trajectory
+  for (size_t i = 0; i < npts; i++){
+    TVector3 trajPoint(particle.Vx(i), particle.Vy(i), particle.Vz(i));
+    // If the particle is inside the tagger volume then set to true.
+    if(trajPoint[0]>xmin && trajPoint[0]<xmax &&
+       trajPoint[1]>ymin && trajPoint[1]<ymax &&
+       trajPoint[2]>zmin && trajPoint[2]<zmax){
+      if(first) start = trajPoint;
+      else{
+        disp -= trajPoint;
+        length += disp.Mag();
+      }
+      first = false;
+      disp = trajPoint;
+      end = trajPoint;
+    }
+  }
+
+  return length;
+
+} // CRTTrackMatchingAna::TpcLength()
 
 // Function to project a track position on to a tagger
 TVector3 CRTTruthRecoAlg::T0ToXYZPosition(TVector3 position, TVector3 direction, std::string tagger, int tpc, double t0){

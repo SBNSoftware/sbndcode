@@ -35,7 +35,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTTrackRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
-
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // c++
 #include <iostream>
@@ -66,8 +66,14 @@ namespace CRTAnaUtils{
   double T0FromCRTHits(recob::Track tpcTrack, std::vector<crt::CRTHit> crtHits, int tpc, double fMinTrackLength, 
                        double fTrackDirectionFrac, double fDistanceLimit);
 
+  std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::vector<crt::CRTHit> crtHits, int tpc, double fTrackDirectionFrac);
+
   double T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, int tpc, double fMaxAngleDiff, 
                          double fMaxDistance);
+
+  std::vector<double> ApaT0sFromCRTHits(std::vector<art::Ptr<crt::CRTHit>> crtHits, double fTimeLimit);
+
+  std::vector<double> ApaT0sFromCRTTracks(std::vector<crt::CRTTrack> crtTracks);
 
 }
 }

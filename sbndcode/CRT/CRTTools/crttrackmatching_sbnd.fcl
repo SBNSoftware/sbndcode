@@ -50,11 +50,17 @@ physics:
 {
   producers:
   {
-    crttrackmatch: @local::standard_crttrackmatching
+    CRTTrackMatching:
+    {
+      module_type:         "sbndcode/CRT/CRTTools/CRTTrackMatching"
+      CrtTrackModuleLabel: "crttrack"         # name of track producer
+      TpcTrackModuleLabel: "pmalgtrackmaker"  # name of crt producer
+      CrtTrackAlg:         @local::standard_crttrackmatchingalg
+    }
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  reco: [ crttrackmatch ]
+  reco: [ CRTTrackMatching ]
 
   stream1: [ out1 ]
 

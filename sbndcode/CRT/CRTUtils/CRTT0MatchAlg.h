@@ -40,6 +40,7 @@
 #include "cetlib/pow.h" // cet::sum_of_squares()
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // c++
 #include <iostream>
@@ -64,6 +65,22 @@ namespace sbnd{
     struct Config {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
+
+      fhicl::Atom<double> MinTrackLength {
+        Name("MinTrackLength"),
+        Comment("")
+      };
+
+      fhicl::Atom<double> TrackDirectionFrac {
+        Name("TrackDirectionFrac"),
+        Comment("")
+      };
+
+      fhicl::Atom<double> DistanceLimit {
+        Name("DistanceLimit"),
+        Comment("")
+      };
+
     };
 
     CRTT0MatchAlg(const Config& config);
@@ -83,10 +100,20 @@ namespace sbnd{
     // Calculate the distance of closest approach between the end of a track and a crt hit
     double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int tpc, double t0);
 
+    std::pair<TVector3, TVector3> TrackDirectionAverage(recob::Track track, double frac);
+
+    std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc);
+
+    double T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc);
+
   private:
 
-    geo::GeometryCore const* fGeometryService;
     detinfo::DetectorProperties const* fDetectorProperties;
+    TPCGeoAlg fTpcGeo;
+
+    double fMinTrackLength;
+    double fTrackDirectionFrac;
+    double fDistanceLimit;
 
   };
 

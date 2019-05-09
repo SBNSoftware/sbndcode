@@ -1,17 +1,17 @@
-# A script to run an analysis module: CRTTrackRecoAna
+# A script to run an analysis module: CRTHitRecoAna
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "crttrackproducer_sbnd.fcl"
+#include "crtsimhitproducer_sbnd.fcl"
 
-process_name: CRTTrackRecoAna
+process_name: CRTHitRecoAna
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "crttrackrecoana.root" }
+  TFileService:           { fileName: "crthitrecoana.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -47,29 +47,26 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CRTTrackRecoAna: 
+    CRTHitRecoAna: 
     {
       # The "module_type" tells us which module to run. The name here
       # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CRT/CRTTrackRecoAna"
+      module_type:     "sbndcode/CRT/CRTAna/CRTHitRecoAna"
 
       # The input parameters
       SimModuleLabel:       "largeant"  # Simulation producer module label
       CRTModuleLabel:       "crt"       # CRT producer module label
-      CRTHitModuleLabel:       "crthit"       # CRT producer module label
       Verbose:              true        # Print extra information about what's going on
       VeryVerbose:          true        # Print detailed information about every muon
       Plot:                 false        # Draw truth and reco tracks in event
       PlotTrackID:          165         # ID of true track to plot
-      UseReadoutWindow:     true        # Only reconstruct hits within readout window
-      # Track reconstruction
-      TrackAlg:             @local::standard_crttrackalg
-      UseTopPlane:          true        # Use hits from the top plane (SBND specific)
+      # Hit reconstruction
+      HitAlg:               @local::standard_crtsimhitalg
     }
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ CRTTrackRecoAna ]
+  analysis: [ CRTHitRecoAna ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.

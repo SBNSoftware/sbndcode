@@ -117,7 +117,6 @@ namespace sbnd{
 
   private:
 
-    geo::GeometryCore const* fGeometryService;
     art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
     const geo::AuxDetGeometry* fAuxDetGeo;
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;

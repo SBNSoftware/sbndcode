@@ -40,6 +40,7 @@
 #include "cetlib/pow.h" // cet::sum_of_squares()
 
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // c++
 #include <iostream>
@@ -73,6 +74,22 @@ namespace sbnd{
     struct Config {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
+
+      fhicl::Atom<double> MaxAngleDiff {
+        Name("MaxAngleDiff"),
+        Comment("")
+      };
+
+      fhicl::Atom<double> MaxDistance {
+        Name("MaxDistance"),
+        Comment("")
+      };
+
+      fhicl::Atom<bool> StitchAcrossCPA {
+        Name("StitchAcrossCPA"),
+        Comment("")
+      };
+
     };
 
     CRTTrackMatchAlg(const Config& config);
@@ -96,11 +113,23 @@ namespace sbnd{
     // Function to calculate if a CRTTrack crosses the TPC volume
     bool CrossesTPC(crt::CRTTrack track);
 
+    // Function to calculate if a CRTTrack crosses the TPC volume
+    bool CrossesAPA(crt::CRTTrack track);
+
+    int GetMatchedCRTTrackId(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, int tpc);
+
+    double T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, int tpc);
+
   private:
 
-    geo::GeometryCore const* fGeometryService;
     detinfo::DetectorProperties const* fDetectorProperties;
     detinfo::DetectorClocks const* fDetectorClocks;
+
+    TPCGeoAlg fTpcGeo;
+
+    double fMaxAngleDiff;
+    double fMaxDistance;
+    bool fStitchAcrossCPA;
 
   };
 

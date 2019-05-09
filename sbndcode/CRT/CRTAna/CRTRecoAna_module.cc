@@ -13,6 +13,7 @@
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CRT/CRTProducts/CRTData.hh"
 #include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
 #include "lardataobj/Simulation/SimChannel.h"
@@ -301,6 +302,7 @@ namespace sbnd {
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;
 
     CRTTruthRecoAlg truthAlg;
+    TPCGeoAlg fTpcGeo;
 
     // Positions of the CRT planes
     std::vector<double> crtPlanes = {-359.1, -357.3, 357.3, 359.1, -358.9, -357.1, 661.52, 663.32, 865.52, 867.32, -240.65, -238.85, 655.35, 657.15};
@@ -435,7 +437,7 @@ namespace sbnd {
 
     // Detector properties
     double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    double driftTimeMuS = (2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); // [us]
+    double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
 
     // Store the true x (CRT width direction) and y (CRT length direction) crossing points
     std::vector<TVector3> *taggerXYZ = new std::vector<TVector3>[nTaggers];
@@ -1058,12 +1060,12 @@ namespace sbnd {
     }
 
     if(tpc){
-      double xmin = -2.0 * fGeometryService->DetHalfWidth();
-      double xmax = 2.0 * fGeometryService->DetHalfWidth();
-      double ymin = -fGeometryService->DetHalfHeight();
-      double ymax = fGeometryService->DetHalfHeight();
-      double zmin = 0.;
-      double zmax = fGeometryService->DetLength();
+      double xmin = fTpcGeo.MinX();
+      double xmax = fTpcGeo.MaxX();
+      double ymin = fTpcGeo.MinY();
+      double ymax = fTpcGeo.MaxY();
+      double zmin = fTpcGeo.MinZ();
+      double zmax = fTpcGeo.MaxZ();
       double rmin[3] = {xmin, ymin, zmin};
       double rmax[3] = {0, ymax, zmax};
       truthAlg.DrawCube(c1, rmin, rmax, 1);
@@ -1262,12 +1264,12 @@ namespace sbnd {
   bool CRTRecoAna::CrossesTPC(CRTTrack track){
     // Check if particle enters the TPC
     bool enters = false;
-    double xmin = -2.0 * fGeometryService->DetHalfWidth();
-    double xmax = 2.0 * fGeometryService->DetHalfWidth();
-    double ymin = -fGeometryService->DetHalfHeight();
-    double ymax = fGeometryService->DetHalfHeight();
-    double zmin = 0.;
-    double zmax = fGeometryService->DetLength();
+    double xmin = fTpcGeo.MinX();
+    double xmax = fTpcGeo.MaxX();
+    double ymin = fTpcGeo.MinY();
+    double ymax = fTpcGeo.MaxY();
+    double zmin = fTpcGeo.MinZ();
+    double zmax = fTpcGeo.MaxZ();
     // Get track info
     TVector3 start(track.xstart, track.ystart, track.zstart);
     TVector3 end(track.xend, track.yend, track.zend);

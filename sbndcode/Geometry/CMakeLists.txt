@@ -25,3 +25,5 @@ install_source()
 
 # GDML detector descriptions
 add_subdirectory(gdml)
+# Wrappers for easier access to geometry properties
+add_subdirectory(GeometryWrappers)

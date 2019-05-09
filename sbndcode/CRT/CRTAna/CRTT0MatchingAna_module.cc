@@ -35,7 +35,7 @@
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Utilities/Exception.h"
 #include "larsim/MCCheater/BackTrackerService.h"
-
+#include "larsim/MCCheater/ParticleInventoryService.h"
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -267,6 +267,7 @@ namespace sbnd {
 
   void CRTT0MatchingAna::analyze(const art::Event& event)
   {
+    art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
 
     int nTracks = 0;
     int nMatches = 0;
@@ -284,7 +285,10 @@ namespace sbnd {
     std::map<int, simb::MCParticle> particles;
     for (auto const& particle: (*particleHandle)){
       int partId = particle.TrackId();
-      particles[partId] = particle;
+      art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(partId);
+      if(truth->Origin() == simb::kBeamNeutrino){
+        particles[partId] = particle;
+      }
     }
 
     if(fVerbose) std::cout<<"Number of true particles = "<<particles.size()<<std::endl;
@@ -330,20 +334,9 @@ namespace sbnd {
       nTracks++;
 
       // Calculate direction as an average over directions
-      size_t nTrackPoints = track.NumberTrajectoryPoints();
-      int endPoint = (int)floor(nTrackPoints*fTrackDirectionFrac);
-      double xTotStart = 0; double yTotStart = 0; double zTotStart = 0;
-      double xTotEnd = 0; double yTotEnd = 0; double zTotEnd = 0;
-      for(int i = 0; i < endPoint; i++){
-        xTotStart -= track.DirectionAtPoint(i).X();
-        yTotStart -= track.DirectionAtPoint(i).Y();
-        zTotStart -= track.DirectionAtPoint(i).Z();
-        xTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1)).X();
-        yTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1)).Y();
-        zTotEnd += track.DirectionAtPoint(nTrackPoints - (i+1)).Z();
-      } 
-      TVector3 startDir = {xTotStart/endPoint, yTotStart/endPoint, zTotStart/endPoint};
-      TVector3 endDir = {xTotEnd/endPoint, yTotEnd/endPoint, zTotEnd/endPoint};
+      std::pair<TVector3, TVector3> startEndDir = t0Alg.TrackDirectionAverage(track, fTrackDirectionFrac);
+      TVector3 startDir = startEndDir.first;
+      TVector3 endDir = startEndDir.second;
 
       // Get the start and end points
       TVector3 start = track.Vertex<TVector3>();
@@ -399,7 +392,7 @@ namespace sbnd {
         // Loop over the hits on the tagger
         for(auto &crtHit : taggerHits.second){
           double trueDist = DistToCrtHit(trueCross, crtHit);
-          double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3; // [us]
+          double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-4; // [us]
           if(trueDist<20. && std::abs(crtTime - trueTime)<1.) {
             if(fVerbose) std::cout<<tagger<<": CRT pos = ("<<crtHit.x_pos<<", "<<crtHit.y_pos<<", "<<crtHit.z_pos
                                   <<"), time = "<<crtTime<<"\nTrue pos = ("<<trueCross.X()<<", "
@@ -454,7 +447,7 @@ namespace sbnd {
         // Loop over all the CRT hits
         for(auto &crtHit : taggerHits.second){
           // Check if hit is within the allowed t0 range
-          double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3; // [us]
+          double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-4; // [us]
           if (!(crtTime >= t0MinMax.first-10. && crtTime <= t0MinMax.second+10.)) continue;
           TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
 

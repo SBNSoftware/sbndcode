@@ -87,9 +87,6 @@ namespace sbnd {
     // Params got from fcl file.......
     art::InputTag fTpcTrackModuleLabel; ///< name of track producer
     art::InputTag fCrtHitModuleLabel;   ///< name of crt producer
-    double        fDistanceLimit;       ///< Maximum distance between projected crossing point and CRT hit
-    double        fMinTrackLength;      ///< Minimum track length to perform T0 matching on
-    double        fTrackDirectionFrac;  ///< Minimum track length to perform T0 matching on
 
     CRTT0MatchAlg t0Alg;
 
@@ -97,7 +94,7 @@ namespace sbnd {
 
 
   CRTT0Matching::CRTT0Matching(fhicl::ParameterSet const & p)
-    : EDProducer(p), t0Alg()
+    : EDProducer(p), t0Alg(p.get<fhicl::ParameterSet>("T0Alg"))
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 
@@ -115,9 +112,6 @@ namespace sbnd {
 
     fTpcTrackModuleLabel = (p.get<art::InputTag> ("TpcTrackModuleLabel"));
     fCrtHitModuleLabel   = (p.get<art::InputTag> ("CrtHitModuleLabel")); 
-    fDistanceLimit       = (p.get<double>        ("DistanceLimit")); 
-    fMinTrackLength      = (p.get<double>        ("MinTrackLength")); 
-    fTrackDirectionFrac  = (p.get<double>        ("TrackDirectionFrac")); 
 
   } // CRTT0Matching::reconfigure()
 
@@ -140,10 +134,9 @@ namespace sbnd {
     if(event.getByLabel(fCrtHitModuleLabel, crtListHandle))
       art::fill_ptr_vector(crtList, crtListHandle);
 
-    // Sort hits into tagger planes
-    std::map<std::string, std::vector<crt::CRTHit>> crtHitMap;
-    for (auto const& crtHit : (crtList)){
-      crtHitMap[crtHit->tagger].push_back(*crtHit);
+    std::vector<crt::CRTHit> crtHits;
+    for (auto const& crtHit : crtList){
+      crtHits.push_back(*crtHit);
     }
 
     // Retrieve track list
@@ -164,81 +157,17 @@ namespace sbnd {
       // Loop over all the reconstructed tracks 
       for(size_t track_i = 0; track_i < trackList.size(); track_i++) {
 
-        if (trackList[track_i]->Length() < fMinTrackLength) continue; 
-
         // Get the TPC of the track
         std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(trackList[track_i]->ID());
         int tpc = hits[0]->WireID().TPC;
 
-        // If track has already been stitched across the CPA then a t0 has already been associated
-        if (tpc != (int)hits[hits.size()-1]->WireID().TPC) continue; 
-
-        // Calculate direction as an average over directions
-        size_t nTrackPoints = trackList[track_i]->NumberTrajectoryPoints();
-        int endPoint = (int)floor(nTrackPoints*fTrackDirectionFrac);
-        double xTotStart = 0; double yTotStart = 0; double zTotStart = 0;
-        double xTotEnd = 0; double yTotEnd = 0; double zTotEnd = 0;
-        for(int i = 0; i < endPoint; i++){
-          xTotStart += trackList[track_i]->DirectionAtPoint(i).X();
-          yTotStart += trackList[track_i]->DirectionAtPoint(i).Y();
-          zTotStart += trackList[track_i]->DirectionAtPoint(i).Z();
-          xTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1)).X();
-          yTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1)).Y();
-          zTotEnd += trackList[track_i]->DirectionAtPoint(nTrackPoints - (i+1)).Z();
-        }
-        TVector3 startDir = {-xTotStart/endPoint, -yTotStart/endPoint, -zTotStart/endPoint};
-        TVector3 endDir = {xTotEnd/endPoint, yTotEnd/endPoint, zTotEnd/endPoint};
-
-        TVector3 start = trackList[track_i]->Vertex<TVector3>();
-        TVector3 end = trackList[track_i]->End<TVector3>();
-
-        // ====================== Matching Algorithm ========================== //
-        // Get the allowed t0 range
-        std::pair<double, double> t0MinMax = t0Alg.TrackT0Range(start.X(), end.X(), tpc); // [us]
-        std::vector<std::pair<double, double>> t0Candidates;
-
-        // Loop over the taggers
-        for(auto &taggerHits : crtHitMap){
-          std::string tagger = taggerHits.first;
-       
-          // Loop over all the CRT hits
-          for(auto &crtHit : taggerHits.second){
-            // Check if hit is within the allowed t0 range
-            double crtTime = (double)(int)crtHit.ts1_ns * 1e-3; // [us]
-            if (!(crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.)) continue;
-            TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
-       
-            // Calculate the distance between the crossing point and the CRT hit
-            double startDist = t0Alg.DistOfClosestApproach(start, startDir, crtHit, tpc, crtTime);
-            // If the distance is less than some limit record the time
-            if (startDist < fDistanceLimit){ 
-              t0Candidates.push_back(std::make_pair(startDist, crtTime));
-            }
-       
-            // Calculate the distance between the crossing point and the CRT hit
-            double endDist = t0Alg.DistOfClosestApproach(end, endDir, crtHit, tpc, crtTime);
-            // If the distance is less than some limit record the time
-            if (endDist < fDistanceLimit){ 
-              t0Candidates.push_back(std::make_pair(endDist, crtTime));
-            }
-       
-          }
-        }
-
-        // Sort the candidates by distance
-        std::sort(t0Candidates.begin(), t0Candidates.end(), [](auto& left, auto& right){
-                  return left.first < right.first;});
-        double bestTime = -99999;
-        double bestDist = -99999;
-        if(t0Candidates.size()>0) {
-          bestTime = t0Candidates[0].second;
-          bestDist = t0Candidates[0].first;
+        double matchedTime = t0Alg.T0FromCRTHits(*trackList[track_i], crtHits, tpc);
+        if(matchedTime != -99999){
           mf::LogInfo("CRTT0Matching")
-            <<"Matched time = "<<bestTime<<" [us] to track "<<trackList[track_i]->ID();
+            <<"Matched time = "<<matchedTime<<" [us] to track "<<trackList[track_i]->ID();
+          T0col->push_back(anab::T0(matchedTime * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), 0.));
+          util::CreateAssn(*this, event, *T0col, trackList[track_i], *Trackassn);
         }
-
-        T0col->push_back(anab::T0(bestTime * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), bestDist));
-        util::CreateAssn(*this, event, *T0col, trackList[track_i], *Trackassn);
 
       } // Loop over tracks  
 
