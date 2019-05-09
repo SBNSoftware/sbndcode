@@ -46,7 +46,7 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
 std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg::CreateTaggerStrips(std::vector<art::Ptr<crt::CRTData>> crtList){
 
   double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-  double driftTimeMuS = (2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); // [us]
+  double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
 
   std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips;
 

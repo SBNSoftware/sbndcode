@@ -92,20 +92,9 @@ double CRTAnaUtils::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::
   if (tpcTrack.Length() < fMinTrackLength) return -99999; 
 
   // Calculate direction as an average over directions
-  size_t nTrackPoints = tpcTrack.NumberTrajectoryPoints();
-  int endPoint = (int)floor(nTrackPoints*fTrackDirectionFrac);
-  double xTotStart = 0; double yTotStart = 0; double zTotStart = 0;
-  double xTotEnd = 0; double yTotEnd = 0; double zTotEnd = 0;
-  for(int i = 0; i < endPoint; i++){
-    xTotStart += tpcTrack.DirectionAtPoint(i).X();
-    yTotStart += tpcTrack.DirectionAtPoint(i).Y();
-    zTotStart += tpcTrack.DirectionAtPoint(i).Z();
-    xTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1)).X();
-    yTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1)).Y();
-    zTotEnd += tpcTrack.DirectionAtPoint(nTrackPoints - (i+1)).Z();
-  }
-  TVector3 startDir = {-xTotStart/endPoint, -yTotStart/endPoint, -zTotStart/endPoint};
-  TVector3 endDir = {xTotEnd/endPoint, yTotEnd/endPoint, zTotEnd/endPoint};
+  std::pair<TVector3, TVector3> startEndDir = t0Alg.TrackDirectionAverage(tpcTrack, fTrackDirectionFrac);
+  TVector3 startDir = startEndDir.first;
+  TVector3 endDir = startEndDir.second;
 
   auto start = tpcTrack.Vertex<TVector3>();
   auto end = tpcTrack.End<TVector3>();
@@ -118,7 +107,7 @@ double CRTAnaUtils::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::
   // Loop over all the CRT hits
   for(auto &crtHit : crtHits){
     // Check if hit is within the allowed t0 range
-    double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3;
+    double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3; // [us]
     if (!(crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.)) continue;
     TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
   
@@ -147,6 +136,55 @@ double CRTAnaUtils::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::
   }
 
   return bestTime;
+
+}
+
+std::pair<crt::CRTHit, double> CRTAnaUtils::ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc, double fTrackDirectionFrac){
+
+  sbnd::CRTT0MatchAlg t0Alg;
+  
+  // Calculate direction as an average over directions
+  std::pair<TVector3, TVector3> startEndDir = t0Alg.TrackDirectionAverage(tpcTrack, fTrackDirectionFrac);
+  TVector3 startDir = startEndDir.first;
+  TVector3 endDir = startEndDir.second;
+
+  auto start = tpcTrack.Vertex<TVector3>();
+  auto end = tpcTrack.End<TVector3>();
+
+  // ====================== Matching Algorithm ========================== //
+  // Get the allowed t0 range
+  std::pair<double, double> t0MinMax = t0Alg.TrackT0Range(start.X(), end.X(), tpc);
+  std::vector<std::pair<crt::CRTHit, double>> t0Candidates;
+
+  // Loop over all the CRT hits
+  for(auto &crtHit : crtHits){
+    // Check if hit is within the allowed t0 range
+    double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3; // [us]
+    if (!(crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.)) continue;
+    TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
+  
+    // Calculate the distance between the crossing point and the CRT hit
+    double startDist = t0Alg.DistOfClosestApproach(start, startDir, crtHit, tpc, crtTime);
+    double endDist = t0Alg.DistOfClosestApproach(end, endDir, crtHit, tpc, crtTime);
+    // If the distance is less than some limit record the time
+    if ((crtPoint-start).Mag() < (crtPoint-end).Mag()){ 
+      t0Candidates.push_back(std::make_pair(crtHit, startDist));
+    }
+    else{
+      t0Candidates.push_back(std::make_pair(crtHit, endDist));
+    }
+  
+  }
+
+  // Sort the candidates by distance
+  std::sort(t0Candidates.begin(), t0Candidates.end(), [](auto& left, auto& right){
+            return left.second < right.second;});
+
+  if(t0Candidates.size() > 0){
+    return t0Candidates[0];
+  }
+  crt::CRTHit hit;
+  return std::make_pair(hit, -99999);
 
 }
 
@@ -216,6 +254,48 @@ double CRTAnaUtils::T0FromCRTTracks(recob::Track tpcTrack, std::vector<sbnd::crt
   
   return bestTime;
 
+}
+
+std::vector<double> CRTAnaUtils::ApaT0sFromCRTHits(std::vector<art::Ptr<crt::CRTHit>> crtHits, double fTimeLimit){
+
+  TPCGeoAlg fTpcGeo;
+
+  std::vector<std::vector<art::Ptr<crt::CRTHit>>> crtT0Ptr = CreateCRTTzeros(crtHits, fTimeLimit);
+  std::vector<double> stopT0;
+  for(size_t i = 0; i < crtT0Ptr.size(); i++){
+    double t0 = 0;
+    double npts = 0;
+    for(size_t j = 0; j < crtT0Ptr[i].size(); j++){
+
+      if(crtT0Ptr[i][j]->tagger == "volTaggerTopHigh_0") continue;
+
+      if(crtT0Ptr[i][j]->tagger == "volTaggerBot_0") continue;
+
+      if(crtT0Ptr[i][j]->y_pos < fTpcGeo.MinY()) continue;
+
+      if(std::abs(crtT0Ptr[i][j]->x_pos) < fTpcGeo.MaxX()) continue;
+
+      t0 += (double)(int)crtT0Ptr[i][0]->ts1_ns*1e-3; // [us]
+      npts++;
+    }
+
+    if(t0 != 0) stopT0.push_back(t0/npts);
+  }
+  return stopT0;
+}
+
+std::vector<double> CRTAnaUtils::ApaT0sFromCRTTracks(std::vector<crt::CRTTrack> crtTracks){
+
+  CRTTrackMatchAlg trackAlg;
+
+  std::vector<double> throughT0;
+
+  for(auto const& crtTrack : crtTracks){
+    double trackT0 = (double)(int)crtTrack.ts1_ns*1e-3;
+    if(trackAlg.CrossesAPA(crtTrack)) throughT0.push_back(trackT0);
+  }
+
+  return throughT0;
 }
 
 }

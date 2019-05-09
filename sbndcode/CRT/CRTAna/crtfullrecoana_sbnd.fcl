@@ -1,16 +1,19 @@
-# A script to run an analysis module: CRTT0Ana
+# A script to run an analysis module: CRTFullRecoAna
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
+#include "crtsimhitproducer_sbnd.fcl"
+#include "crtt0matchingalg_sbnd.fcl"
+#include "crttrackmatchingalg_sbnd.fcl"
 
-process_name: CRTT0MatchingAna
+process_name: CRTFullRecoAna
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "crtt0matchingana.root" }
+  TFileService:           { fileName: "crtfullrecoana.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -46,25 +49,26 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CRTT0MatchingAna: 
+    CRTFullRecoAna: 
     {
       # The "module_type" tells us which module to run. The name here
       # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CRT/CRTTools/CRTT0MatchingAna"
+      module_type:     "sbndcode/CRT/CRTAna/CRTFullRecoAna"
 
       # The input parameters
-      SimModuleLabel:      "largeant"        # Simulation producer module label
-      CrtHitModuleLabel:   "crthit"          # CRT producer module label
-      TpcTrackModuleLabel: "pmalgtrackmaker" # Track producer module label
-      DistanceLimit:       40.               # Max dist between projected crossing point and CRT hit
-      MinTrackLength:      20.               # Minimum track length to do T0 matching on
-      TrackDirectionFrac:  0.5               # Fraction of track to average direction over
-      Verbose:             false             # Print extra information about what's going on
+      SimModuleLabel:       "largeant"  # Simulation producer module label
+      CRTSimLabel:          "crt"       # CRT producer module label
+      CRTHitLabel:          "crthit"       # CRT producer module label
+      CRTTrackLabel:        "crttrack"       # CRT producer module label
+      TPCTrackLabel:        "pandoraTrack"       # CRT producer module label
+      Verbose:              false        # Print extra information about what's going on
+      CRTT0Alg:             @local::standard_crtt0matchingalg
+      CRTTrackAlg:          @local::standard_crttrackmatchingalg
     }
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ CRTT0MatchingAna ]
+  analysis: [ CRTFullRecoAna ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.

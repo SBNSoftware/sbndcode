@@ -17,6 +17,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTrackRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTruthMatchUtils.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
 #include "lardataobj/Simulation/SimChannel.h"
@@ -196,9 +197,9 @@ namespace sbnd {
     TH1D* fTrackDist;
 
     // Other variables shared between different methods.
-    geo::GeometryCore const* fGeometryService;                 ///< pointer to Geometry provider
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
     detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
+    TPCGeoAlg fTpcGeo;
 
     CRTTruthRecoAlg truthAlg;
     CRTTrackRecoAlg trackAlg;
@@ -237,7 +238,6 @@ namespace sbnd {
     , trackAlg(config().TrackAlg())
   {
     // Get a pointer to the fGeometryServiceetry service provider
-    fGeometryService = lar::providerFrom<geo::Geometry>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
     fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
   }
@@ -272,7 +272,7 @@ namespace sbnd {
 
     // Detector properties
     double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    double driftTimeMuS = (2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); // [us]
+    double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
 
     // Store the true x (CRT width direction) and y (CRT length direction) crossing points
     std::map<int,TVector3> *partXYZ = new std::map<int,TVector3>[nTaggers];
@@ -530,12 +530,12 @@ namespace sbnd {
     }
 
     if(tpc){
-      double xmin = -2.0 * fGeometryService->DetHalfWidth();
-      double xmax = 2.0 * fGeometryService->DetHalfWidth();
-      double ymin = -fGeometryService->DetHalfHeight();
-      double ymax = fGeometryService->DetHalfHeight();
-      double zmin = 0.;
-      double zmax = fGeometryService->DetLength();
+      double xmin = fTpcGeo.MinX(); 
+      double xmax = fTpcGeo.MaxX();
+      double ymin = fTpcGeo.MinY();
+      double ymax = fTpcGeo.MaxY();
+      double zmin = fTpcGeo.MinZ();
+      double zmax = fTpcGeo.MaxZ();
       double rmin[3] = {xmin, ymin, zmin};
       double rmax[3] = {xmax, ymax, zmax};
       truthAlg.DrawCube(c1, rmin, rmax, 2);

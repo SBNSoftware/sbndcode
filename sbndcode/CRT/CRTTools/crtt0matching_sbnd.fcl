@@ -58,11 +58,17 @@ physics:
 {
   producers:
   {
-    t0: @local::standard_crtt0matching
+    CRTT0Matching:
+    {
+      module_type:         "sbndcode/CRT/CRTTools/CRTT0Matching"
+      CrtHitModuleLabel:   "crthit"           # name of track producer
+      TpcTrackModuleLabel: "pmalgtrackmaker"  # name of crt producer
+      T0Alg:                @local::standard_crtt0matchingalg
+    }
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  reco: [ t0 ]
+  reco: [ CRTT0Matching ]
 
   stream1: [ out1 ]
 

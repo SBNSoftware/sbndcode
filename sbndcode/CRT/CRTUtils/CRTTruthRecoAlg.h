@@ -41,6 +41,7 @@
 #include "cetlib/pow.h" // cet::sum_of_squares()
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // c++
 #include <iostream>
@@ -90,16 +91,19 @@ namespace sbnd{
     // Function to calculate the CRT crossing points of a true particle
     std::pair<TVector3, TVector3> TpcCrossPoints(simb::MCParticle const& particle);
 
+    double TpcLength(simb::MCParticle const& particle);
+
     // Convert start time to CRT crossing point
     TVector3 T0ToXYZPosition(TVector3 position, TVector3 direction, std::string tagger, int tpc, double t0);
 
   private:
 
-    geo::GeometryCore const* fGeometryService;
     detinfo::DetectorProperties const* fDetectorProperties;
     art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
     const geo::AuxDetGeometry* fAuxDetGeo;
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;
+
+    TPCGeoAlg fTpcGeo;
 
     // Positions of the CRT planes
     std::vector<double> crtPlanes = {-359.1, -357.3, 357.3, 359.1, -358.9, -357.1, 661.52, 663.32, 865.52, 867.32, -240.65, -238.85, 655.35, 657.15};
