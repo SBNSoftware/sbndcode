@@ -214,7 +214,7 @@ void CRTDetSim::produce(art::Event & e) {
       std::vector<sim::AuxDetIDE> trueIdes;
       trueIdes.push_back(ide);
 
-      //ADD UP HITS AT THE SAME TIME - 2NS DIFF IS A GUESS -VERY APPROXIMATE
+      //ADD UP HITS AT THE SAME TIME - FIXME 2NS DIFF IS A GUESS -VERY APPROXIMATE
       if(ide_i < ides.size() - 1){
         while(ide_i < ides.size() - 1 && std::abs(tTrueLast-((ides[ide_i+1].entryT + ides[ide_i+1].exitT) / 2 + fGlobalT0Offset)) < fSipmTimeResponse){
           ide_i++;
@@ -369,7 +369,7 @@ void CRTDetSim::produce(art::Event & e) {
     }
 
     if (trigger || trg.first.find("TaggerBot") != std::string::npos) {
-      // Write out all hits on a tagger when there is any coincidence
+      // Write out all hits on a tagger when there is any coincidence FIXME this reads out everything!
       //for (auto d : trg.second.data) {
       for (size_t d_i = 0; d_i < trg.second.data.size(); d_i++) {
         triggeredCRTHits->push_back(trg.second.data[d_i]);

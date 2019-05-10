@@ -11,11 +11,8 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
-#include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTruthMatchUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
@@ -23,19 +20,15 @@
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
 
 // LArSoft includes
-#include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
-#include "larcore/Geometry/AuxDetGeometry.h"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
-#include "larsim/Simulation/LArG4Parameters.h"
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -54,7 +47,6 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
-#include "cetlib/pow.h" // cet::sum_of_squares()
 
 // ROOT includes. Note: To look up the properties of the ROOT classes,
 // use the ROOT web site; e.g.,
@@ -62,37 +54,14 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
-#include "TTree.h"
-#include "TLorentzVector.h"
 #include "TVector3.h"
-#include "Math/Minimizer.h"
-#include "Math/Functor.h"
-#include "Math/Factory.h"
-#include "TPolyMarker3D.h"
-#include "TPolyLine3D.h"
-#include "TCanvas.h"
 #include "TF1.h"
-#include "TGraphErrors.h"
-#include "TGraph2DErrors.h"
-#include "TLine.h"
-#include "TMarker.h"
-#include "TGraphAsymmErrors.h"
-#include "TLegend.h"
-#include "TBox.h"
-#include "TPad.h"
 #include "TString.h"
-#include "TGeoManager.h"
-#include "Math/Vector3D.h"
-#include "Fit/Fitter.h"
-#include "Math/Functor.h"
-#include "TRandom.h"
 
 // C++ includes
 #include <map>
 #include <vector>
 #include <string>
-#include <cmath>
-#include <algorithm>
 
 namespace sbnd {
 
@@ -212,7 +181,6 @@ namespace sbnd {
     CRTGeoAlg fCrtGeo;
     CRTT0MatchAlg crtT0Alg;
     CRTTrackMatchAlg crtTrackAlg;
-    CRTTruthRecoAlg truthAlg;
 
   }; // class CRTFullRecoAna
 

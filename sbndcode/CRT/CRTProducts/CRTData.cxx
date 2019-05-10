@@ -12,7 +12,7 @@ namespace crt{
     fT0(t0),
     fT1(t1),
     fADC(adc),
-    fTrackID(trackID){ 
+    fTrackID(trackID){
   }
 
   CRTData::~CRTData(){
