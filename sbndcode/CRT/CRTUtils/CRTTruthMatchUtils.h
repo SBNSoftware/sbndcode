@@ -48,12 +48,6 @@
 namespace sbnd{
 namespace CRTTruthMatchUtils{
 
-  std::vector<int> AllTrueIds(art::Handle<std::vector<crt::CRTHit>> hitHandle, 
-                              const art::Event& event, art::InputTag hitLabel, int hit_i);
-
-  std::vector<int> AllTrueIds(art::Handle<std::vector<crt::CRTTrack>> trackHandle, 
-                              const art::Event& event, art::InputTag trackLabel, art::InputTag hitLabel, int track_i);
-
   std::vector<int> AllTrueIds(art::Handle<std::vector<crt::CRTData>> dataHandle, 
                               const art::Event& event, art::InputTag dataLabel, int data_i);
 
