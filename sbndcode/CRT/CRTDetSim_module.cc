@@ -197,8 +197,6 @@ void CRTDetSim::produce(art::Event & e) {
 
       sim::AuxDetIDE ide = ides[ide_i];
 
-      int trackID = ide.trackID;
-
       // Finally, what is the distance from the hit (centroid of the entry
       // and exit points) to the readout end?
       double x = (ide.entryX + ide.exitX) / 2;
@@ -209,7 +207,6 @@ void CRTDetSim::produce(art::Event & e) {
       double tTrue = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       double tTrueLast = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       double eDep = ide.energyDeposited;
-      double maxEdep = eDep;
 
       std::vector<sim::AuxDetIDE> trueIdes;
       trueIdes.push_back(ide);
@@ -228,15 +225,6 @@ void CRTDetSim::produce(art::Event & e) {
           nides++;
 
           trueIdes.push_back(ides[ide_i]);
-
-          if(ides[ide_i].energyDeposited > maxEdep && ides[ide_i].trackID > 0){
-            trackID = ides[ide_i].trackID;
-            maxEdep = ides[ide_i].energyDeposited;
-          }
-          if(trackID < 0 && (ides[ide_i].energyDeposited > maxEdep || ides[ide_i].trackID > 0)){
-            trackID = ides[ide_i].trackID;
-            maxEdep = ides[ide_i].energyDeposited;
-          }
         }
       }
 
@@ -310,9 +298,9 @@ void CRTDetSim::produce(art::Event & e) {
           util::absDiff(t0, t1) < fStripCoincidenceWindow) {
         Tagger& tagger = taggers[nodeTagger->GetName()];
         tagger.planesHit.push_back({planeID, t0});
-        tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0, trackID));
+        tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0));
         tagger.ides.push_back(trueIdes);
-        tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1, trackID));
+        tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1));
         tagger.ides.push_back(trueIdes);
       }
 

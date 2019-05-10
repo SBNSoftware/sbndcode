@@ -13,6 +13,7 @@
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CRT/CRTProducts/CRTData.hh"
 #include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTTruthMatchUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
@@ -525,8 +526,8 @@ namespace sbnd {
       // Sort the hit SiPMs by what plane they're in
       nStrips++;
 
-      int id1 = std::abs(crtList[i]->TrackID());
-      int id2 = std::abs(crtList[i+1]->TrackID()); 
+      int id1 = CRTTruthMatchUtils::TrueIdFromTotalEnergy(crtListHandle, event, fCRTModuleLabel, i);
+      int id2 = CRTTruthMatchUtils::TrueIdFromTotalEnergy(crtListHandle, event, fCRTModuleLabel, i+1);
       truthMatch[id1].sipmHits.push_back(std::make_pair(tagger, crtList[i]));
       truthMatch[id2].sipmHits.push_back(std::make_pair(tagger, crtList[i+1]));
 
@@ -955,7 +956,7 @@ namespace sbnd {
           art::Ptr<crt::CRTData> si = rt.sipmHits[hit_i].second;
           fTrigClock.SetTime(si->T0());
           double t1 = fTrigClock.Time(); // [us]
-          std::cout<<"      "<<tagger.first<<" ("<<tagger.second<<"): Channel = "<<si->Channel()<<" time = "<<t1<<" us, ID = "<<si->TrackID()<<"\n";
+          std::cout<<"      "<<tagger.first<<" ("<<tagger.second<<"): Channel = "<<si->Channel()<<" time = "<<t1<<" us\n";
         }
       }
     }

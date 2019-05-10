@@ -4,43 +4,6 @@ namespace sbnd{
 
 // =============================== UTILITY FUNCTIONS ==============================
 
-std::vector<int> CRTTruthMatchUtils::AllTrueIds(art::Handle<std::vector<sbnd::crt::CRTHit>> hitHandle, const art::Event& event, art::InputTag hitLabel, int hit_i){
-
-  std::vector<int> ids;
-
-  art::FindManyP<sbnd::crt::CRTData> findManyData(hitHandle, event, hitLabel);
-  std::vector<art::Ptr<sbnd::crt::CRTData>> data = findManyData.at(hit_i);
-  for(size_t i = 0; i < data.size(); i++){
-    ids.push_back(data[i]->TrackID());
-  }
-  std::sort(ids.begin(), ids.end());
-  ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
-
-  return ids;
-
-}
-
-
-std::vector<int> CRTTruthMatchUtils::AllTrueIds(art::Handle<std::vector<sbnd::crt::CRTTrack>> trackHandle, const art::Event& event, art::InputTag trackLabel, art::InputTag hitLabel, int track_i){
-
-  std::vector<int> ids;
-
-  art::FindManyP<sbnd::crt::CRTHit> findManyHits(trackHandle, event, trackLabel);
-  std::vector<art::Ptr<sbnd::crt::CRTHit>> hits = findManyHits.at(track_i);
-  art::FindManyP<sbnd::crt::CRTData> findManyData(hits, event, hitLabel);
-  for(size_t i = 0; i < hits.size(); i++){
-    std::vector<art::Ptr<sbnd::crt::CRTData>> data = findManyData.at(i);
-    for(size_t j = 0; j < data.size(); j++){
-      ids.push_back(data[j]->TrackID());
-    }
-  }
-  std::sort(ids.begin(), ids.end());
-  ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
-
-  return ids;
-
-}
-
 std::vector<int> CRTTruthMatchUtils::AllTrueIds(art::Handle<std::vector<sbnd::crt::CRTData>> dataHandle, const art::Event& event, art::InputTag dataLabel, int data_i){
 
   std::vector<int> ids;
