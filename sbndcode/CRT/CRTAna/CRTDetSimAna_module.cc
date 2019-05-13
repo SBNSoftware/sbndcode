@@ -108,6 +108,8 @@ namespace sbnd {
     
     // Histograms
     // ADC as a function of distance from distance along width
+    TH2D *hEndDistanceADC;
+    TH2D *hSipmDistanceADC;
     // ADC as a function of distance from end
     // ADCs of crt data
     TH1D *hADC;
@@ -141,7 +143,10 @@ namespace sbnd {
     art::ServiceHandle<art::TFileService> tfs;
     hADC          = tfs->make<TH1D>("ADC","",100, 0, 20000);
     hTime         = tfs->make<TH1D>("Time","",100, -5000, 5000);
-    hChannel      = tfs->make<TH1D>("Channel", "", 4000, 0, 4000);
+    hChannel      = tfs->make<TH1D>("Channel", "", 400, 0, 10000);
+
+    hEndDistanceADC = tfs->make<TH2D>("EndDistanceADC", "", 20, 0, 500, 20, 0, 10000);
+    hSipmDistanceADC = tfs->make<TH2D>("SipmDistanceADC", "", 20, 0, 12, 20, 0, 10000);
 
     // Initial output
     std::cout<<"----------------- Full CRT Detector Simulation Analysis Module -------------------"<<std::endl;
@@ -173,6 +178,8 @@ namespace sbnd {
     if (event.getByLabel(fCRTSimLabel, crtDataHandle))
       art::fill_ptr_vector(crtDataList, crtDataHandle);
 
+    art::FindManyP<sim::AuxDetIDE> findManyIdes(crtDataHandle, event, fCRTSimLabel);
+
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
@@ -191,12 +198,32 @@ namespace sbnd {
     //                                            ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
-    for(auto const& crtData : (crtDataList)){
-      fTrigClock.SetTime(crtData->T0());
+    for(size_t i  = 0; i < crtDataList.size(); i++){
+      // Get the IDEs associated with the crtData
+      std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(i);
+      // Calculate the average position
+      double x = 0, y = 0, z = 0;
+      for(auto const& ide : ides){
+        x += (ide->entryX + ide->exitX)/2.;
+        y += (ide->entryY + ide->exitY)/2.;
+        z += (ide->entryZ + ide->exitZ)/2.;
+      }
+      x = x/ides.size();
+      y = y/ides.size();
+      z = z/ides.size();
+      geo::Point_t cross {x, y, z};
+      int channel = crtDataList[i]->Channel();
+      std::string stripName = fCrtGeo.ChannelToStripName(channel);
+      // Calculate the distance to the end
+      double distBetweenSipms = std::abs(fCrtGeo.DistanceBetweenSipms(cross, channel));
+      hSipmDistanceADC->Fill(distBetweenSipms, crtDataList[i]->ADC());
+      double distToEnd = std::abs(fCrtGeo.DistanceDownStrip(cross, stripName));
+      hEndDistanceADC->Fill(distToEnd, crtDataList[i]->ADC());
+      fTrigClock.SetTime(crtDataList[i]->T0());
       double time = fTrigClock.Time(); // [us]
-      hADC->Fill(crtData->ADC());
+      hADC->Fill(crtDataList[i]->ADC());
       hTime->Fill(time);
-      hChannel->Fill(crtData->Channel());
+      hChannel->Fill(crtDataList[i]->Channel());
     }
 
 

@@ -27,6 +27,7 @@
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 
 // c++
 #include <vector>
@@ -37,9 +38,19 @@
 
 namespace sbnd{
 
+  struct CRTSipmGeo{
+    uint32_t channel;
+    double x;
+    double y;
+    double z;
+    std::string strip;
+    bool null;
+  };
+
   // CRT strip geometry struct contains dimensions and mother module
   struct CRTStripGeo{
     std::string name;
+    int sensitiveVolumeID;
     double minX;
     double maxX;
     double minY;
@@ -47,12 +58,14 @@ namespace sbnd{
     double minZ;
     double maxZ;
     std::string module;
+    std::pair<int, int> sipms;
     bool null;
   };
 
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
     std::string name;
+    int auxDetID;
     double minX;
     double maxX;
     double minY;
@@ -60,6 +73,7 @@ namespace sbnd{
     double minZ;
     double maxZ;
     size_t planeID;
+    bool top;
     std::string tagger;
     std::map<std::string, CRTStripGeo> strips;
     bool null;
@@ -130,6 +144,20 @@ namespace sbnd{
     // Get the strip geometry object by tagger index, local module index and local strip index
     CRTStripGeo GetStrip(size_t tagger_i, size_t module_i, size_t strip_i) const;
 
+    // Get the name of the strip from the SiPM channel ID
+    std::string ChannelToStripName(size_t channel) const;
+
+    // Get the world position of Sipm from the channel ID
+    geo::Point_t ChannelToSipmPosition(size_t channel) const;
+    
+    // Get the sipm channels on a strip
+    std::pair<int, int> GetStripSipmChannels(std::string stripName) const;
+
+    // Return the distance to a sipm in the plane of the sipms
+    double DistanceBetweenSipms(geo::Point_t position, size_t channel) const;
+    // Return the distance along the strip (from sipm end)
+    double DistanceDownStrip(geo::Point_t position, std::string stripName) const;
+
     // Determine if a point is inside a tagger by name
     bool IsInsideTagger(std::string taggerName, geo::Point_t point);
     bool IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point);
@@ -166,6 +194,7 @@ namespace sbnd{
     std::map<std::string, CRTTaggerGeo> fTaggers;
     std::map<std::string, CRTModuleGeo> fModules;
     std::map<std::string, CRTStripGeo> fStrips;
+    std::map<int, CRTSipmGeo> fSipms;
 
     geo::GeometryCore const* fGeometryService;
     art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
