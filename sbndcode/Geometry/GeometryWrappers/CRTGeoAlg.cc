@@ -17,9 +17,11 @@ CRTGeoAlg::CRTGeoAlg(){
   // Get the auxdets (strip arrays for some reason)
   const std::vector<geo::AuxDetGeo*> auxDets = fAuxDetGeoCore->AuxDetGeoVec();
 
+  int ad_i = 0;
   // Loop over them
   for(auto const auxDet : auxDets){
 
+    int sv_i = 0;
     // Loop over the strips in the arrays
     for(size_t i = 0; i < auxDet->NSensitiveVolume(); i++){
 
@@ -108,10 +110,13 @@ CRTGeoAlg::CRTGeoAlg(){
         double modulePosMother[3];
         nodeModule->LocalToMaster(origin, modulePosMother);
         size_t planeID = (modulePosMother[2] > 0);
+        // Are the sipms at the top or bottom
+        bool top = (planeID == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
 
         // Create a module geometry object
         CRTModuleGeo module = {};
         module.name = moduleName;
+        module.auxDetID = ad_i;
         module.minX = std::min(limitsWorld[0], limitsWorld2[0]);
         module.maxX = std::max(limitsWorld[0], limitsWorld2[0]);
         module.minY = std::min(limitsWorld[1], limitsWorld2[1]);
@@ -120,6 +125,7 @@ CRTGeoAlg::CRTGeoAlg(){
         module.maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
         module.null = false;
         module.planeID = planeID;
+        module.top = top;
         module.tagger = taggerName;
         fModules[moduleName] = module;
       }
@@ -146,6 +152,7 @@ CRTGeoAlg::CRTGeoAlg(){
         // Create a strip geometry object
         CRTStripGeo strip = {};
         strip.name = stripName;
+        strip.sensitiveVolumeID = sv_i;
         strip.minX = std::min(limitsWorld[0], limitsWorld2[0]);
         strip.maxX = std::max(limitsWorld[0], limitsWorld2[0]);
         strip.minY = std::min(limitsWorld[1], limitsWorld2[1]);
@@ -154,12 +161,50 @@ CRTGeoAlg::CRTGeoAlg(){
         strip.maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
         strip.null = false;
         strip.module = moduleName;
-        fStrips[stripName] = strip;
 
+        // Create a sipm geometry object
+        uint32_t channel0 = 32 * ad_i + 2 * sv_i + 0;
+        uint32_t channel1 = 32 * ad_i + 2 * sv_i + 1;
+        // Sipm0 is on the left in local coords
+        double sipm0X = -halfWidth;
+        double sipm1X = halfWidth; 
+        // In local coordinates the Y position is at half height (top if top) (bottom if not)
+        double sipmY = halfHeight;
+        if(!fModules[moduleName].top) sipmY = - halfHeight;
+        double sipm0XYZ[3] = {sipm0X, sipmY, 0};
+        double sipm0XYZWorld[3];
+        auxDetSensitive.LocalToWorld(sipm0XYZ, sipm0XYZWorld);
+
+        CRTSipmGeo sipm0 = {};
+        sipm0.channel = channel0;
+        sipm0.x = sipm0XYZWorld[0];
+        sipm0.y = sipm0XYZWorld[1];
+        sipm0.z = sipm0XYZWorld[2];
+        sipm0.strip = stripName;
+        sipm0.null = false;
+        fSipms[channel0] = sipm0;
+
+        double sipm1XYZ[3] = {sipm1X, sipmY, 0};
+        double sipm1XYZWorld[3];
+        auxDetSensitive.LocalToWorld(sipm1XYZ, sipm1XYZWorld);
+
+        CRTSipmGeo sipm1 = {};
+        sipm1.channel = channel1;
+        sipm1.x = sipm1XYZWorld[0];
+        sipm1.y = sipm1XYZWorld[1];
+        sipm1.z = sipm1XYZWorld[2];
+        sipm1.strip = stripName;
+        sipm1.null = false;
+        fSipms[channel1] = sipm1;
+
+        strip.sipms = std::make_pair(channel0, channel1);
+        fStrips[stripName] = strip;
         // Add the strip to the relevant module
         fModules[moduleName].strips[stripName] = strip;
       }
+      sv_i++;
     }
+    ad_i++;
   }
 
   // Need to fill the tagger modules after all the strip associations have been made
@@ -379,6 +424,77 @@ CRTStripGeo CRTGeoAlg::GetStrip(size_t tagger_i, size_t module_i, size_t strip_i
     index++;
   }
   return nullStrip;
+}
+
+// Get the name of the strip from the SiPM channel ID
+std::string CRTGeoAlg::ChannelToStripName(size_t channel) const{
+  for(auto const& sipm : fSipms){
+    if(sipm.second.channel == channel){
+      return sipm.second.strip;
+    }
+  }
+  return "";
+}
+
+
+// Get the world position of Sipm from the channel ID
+geo::Point_t CRTGeoAlg::ChannelToSipmPosition(size_t channel) const{
+  for(auto const& sipm : fSipms){
+    if(sipm.second.channel == channel){
+      geo::Point_t position {sipm.second.x, sipm.second.y, sipm.second.z};
+      return position;
+    }
+  }
+  geo::Point_t null {-99999, -99999, -99999};
+  return null;
+} 
+
+// Get the sipm channels on a strip
+std::pair<int, int> CRTGeoAlg::GetStripSipmChannels(std::string stripName) const{
+  for(auto const& strip : fStrips){
+    if(stripName == strip.first) return strip.second.sipms;
+  }
+  return std::make_pair(-99999, -99999);
+}
+
+// Return the distance to a sipm in the plane of the sipms
+double CRTGeoAlg::DistanceBetweenSipms(geo::Point_t position, size_t channel) const{
+  double distance = -99999;
+
+  for(auto const& sipm : fSipms){
+    if(sipm.second.channel == channel){
+      geo::Point_t pos {sipm.second.x, sipm.second.y, sipm.second.z};
+      // Get the other sipm
+      int otherChannel = channel + 1;
+      if(channel % 2) otherChannel = channel - 1;
+      // Work out which coordinate is different
+      if(fSipms.at(otherChannel).x != pos.X()) distance = position.X() - pos.X();
+      if(fSipms.at(otherChannel).y != pos.Y()) distance = position.Y() - pos.Y();
+      if(fSipms.at(otherChannel).z != pos.Z()) distance = position.Z() - pos.Z();
+      // Return distance in that coordinate
+      return distance;
+    }
+  }
+  return distance;
+}
+
+// Return the distance along the strip (from sipm end)
+double CRTGeoAlg::DistanceDownStrip(geo::Point_t position, std::string stripName) const{
+  double distance = -99999;
+  for(auto const& strip : fStrips){
+    if(stripName == strip.first){
+      geo::Point_t pos = ChannelToSipmPosition(strip.second.sipms.first);
+      // Work out the longest dimension of strip
+      double xdiff = std::abs(strip.second.maxX-strip.second.minX);
+      double ydiff = std::abs(strip.second.maxY-strip.second.minY);
+      double zdiff = std::abs(strip.second.maxZ-strip.second.minZ);
+      if(xdiff > ydiff && xdiff > zdiff) distance = position.X() - pos.X();
+      if(ydiff > xdiff && ydiff > zdiff) distance = position.Y() - pos.Y();
+      if(zdiff > xdiff && zdiff > ydiff) distance = position.Z() - pos.Z();
+      return distance;
+    }
+  }
+  return distance;
 }
 
 // ----------------------------------------------------------------------------------
