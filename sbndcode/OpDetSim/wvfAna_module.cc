@@ -65,7 +65,7 @@ private:
  // double fAmp;
   double fStartTime;
   double fEndTime;
-  TTree *fWaveformTree;
+  //TTree *fWaveformTree;
 
   // Declare member data here.
   std::string fInputModuleName;
