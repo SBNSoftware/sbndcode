@@ -57,6 +57,7 @@ namespace sbnd{
     double maxY;
     double minZ;
     double maxZ;
+    geo::Vector_t normal;
     double width;
     std::string module;
     std::pair<int, int> sipms;
@@ -73,6 +74,7 @@ namespace sbnd{
     double maxY;
     double minZ;
     double maxZ;
+    geo::Vector_t normal;
     size_t planeID;
     bool top;
     std::string tagger;
@@ -185,6 +187,9 @@ namespace sbnd{
     geo::Point_t ModuleCrossingPoint(std::string moduleName, simb::MCParticle particle);
     // Find the average of the strip entry and exit points of a true particle trajectory
     geo::Point_t StripCrossingPoint(std::string stripName, simb::MCParticle particle);
+
+    // Find the angle of true particle trajectory to tagger
+    double AngleToTagger(std::string taggerName, simb::MCParticle particle);
 
     // Check if a particle enters the CRT volume
     bool EntersVolume(simb::MCParticle particle);

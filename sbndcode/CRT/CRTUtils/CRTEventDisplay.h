@@ -24,6 +24,7 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -31,10 +32,13 @@
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
 
+#include "sbndcode/CRT/CRTProducts/CRTData.hh"
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/RecoUtils/RecoUtils.h"
 
 // c++
 #include <vector>
@@ -85,6 +89,9 @@ namespace sbnd{
       fhicl::Atom<bool> DrawTpc {
         Name("DrawTpc")
       };
+      fhicl::Atom<bool> DrawCrtData {
+        Name("DrawCrtData")
+      };
       fhicl::Atom<bool> DrawCrtHits {
         Name("DrawCrtHits")
       };
@@ -106,6 +113,9 @@ namespace sbnd{
       };
       fhicl::Atom<int> TpcColour {
         Name("TpcColour")
+      };
+      fhicl::Atom<int> CrtDataColour {
+        Name("CrtDataColour")
       };
       fhicl::Atom<int> CrtHitColour {
         Name("CrtHitColour")
@@ -144,6 +154,10 @@ namespace sbnd{
         Name("MaxTime")
       };
 
+      fhicl::Table<CRTBackTracker::Config> CrtBackTrack {
+        Name("CrtBackTrack"),
+      };
+
     };
 
     CRTEventDisplay(const Config& config);
@@ -159,10 +173,14 @@ namespace sbnd{
 
     void SetDrawTaggers(bool tf);
     void SetDrawTpc(bool tf);
+    void SetDrawCrtData(bool tf);
     void SetDrawCrtHits(bool tf);
     void SetDrawCrtTracks(bool tf);
     void SetDrawTpcTracks(bool tf);
     void SetDrawTrueTracks(bool tf);
+    void SetPrint(bool tf);
+
+    void SetTrueId(int id);
 
     bool IsVisible(const simb::MCParticle& particle);
 
@@ -175,6 +193,8 @@ namespace sbnd{
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
 
+    CRTBackTracker fCrtBackTrack;
+
     art::InputTag fSimLabel;
     art::InputTag fCRTDataLabel;
     art::InputTag fCRTHitLabel;
@@ -184,6 +204,7 @@ namespace sbnd{
     bool fDrawTaggers;
     bool fDrawModules;
     bool fDrawTpc;
+    bool fDrawCrtData;
     bool fDrawCrtHits;
     bool fDrawCrtTracks;
     bool fDrawIncompleteTracks;
@@ -192,6 +213,7 @@ namespace sbnd{
 
     int fTaggerColour;
     int fTpcColour;
+    int fCrtDataColour;
     int fCrtHitColour;
     int fCrtTrackColour;
     int fTpcTrackColour;

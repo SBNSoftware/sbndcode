@@ -4,8 +4,8 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "crtsimhitproducer_sbnd.fcl"
 #include "crteventdisplay_sbnd.fcl"
+#include "crtbacktracker_sbnd.fcl"
 
 process_name: CRTHitRecoAna
 
@@ -57,13 +57,14 @@ physics:
       # The input parameters
       SimModuleLabel:       "largeant"  # Simulation producer module label
       CRTModuleLabel:       "crt"       # CRT producer module label
+      CRTHitLabel:          "crthit"       # CRT producer module label
       Verbose:              false        # Print extra information about what's going on
       VeryVerbose:          false        # Print detailed information about every muon
       Plot:                 false        # Draw truth and reco tracks in event
-      PlotTrackID:          165         # ID of true track to plot
+      PlotTrackID:          -99999         # ID of true track to plot
       # Hit reconstruction
-      HitAlg:               @local::standard_crtsimhitalg
       Evd:                  @local::standard_crteventdisplay
+      CrtBackTrack:         @local::standard_crtbacktracker
     }
   }
 
