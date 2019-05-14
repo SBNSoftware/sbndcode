@@ -159,6 +159,7 @@ CRTGeoAlg::CRTGeoAlg(){
         strip.maxY = std::max(limitsWorld[1], limitsWorld2[1]);
         strip.minZ = std::min(limitsWorld[2], limitsWorld2[2]);
         strip.maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
+        strip.width = halfWidth * 2.;
         strip.null = false;
         strip.module = moduleName;
 
@@ -437,6 +438,34 @@ std::string CRTGeoAlg::ChannelToStripName(size_t channel) const{
 }
 
 
+// Recalculate strip limits including charge sharing
+std::vector<double> CRTGeoAlg::StripLimitsWithChargeSharing(std::string stripName, double x, double ex){
+  int module = fModules.at(fStrips.at(stripName).module).auxDetID;
+  std::string moduleName = fGeometryService->AuxDet(module).TotalVolume()->GetName();
+  auto const& sensitiveGeo = fAuxDetGeoCore->ChannelToAuxDetSensitive(moduleName, 
+                                                                      2*fStrips.at(stripName).sensitiveVolumeID);
+  
+  double halfWidth = sensitiveGeo.HalfWidth1();
+  double halfHeight = sensitiveGeo.HalfHeight();
+  double halfLength = sensitiveGeo.HalfLength();
+
+  // Get the maximum strip limits in world coordinates
+  double l1[3] = {-halfWidth + x + ex, halfHeight, halfLength};
+  double w1[3];
+  sensitiveGeo.LocalToWorld(l1, w1);
+
+  // Get the minimum strip limits in world coordinates
+  double l2[3] = {-halfWidth + x - ex, -halfHeight, -halfLength};
+  double w2[3];
+  sensitiveGeo.LocalToWorld(l2, w2);
+
+  // Use this to get the limits in the two variable directions
+  std::vector<double> limits = {std::min(w1[0],w2[0]), std::max(w1[0],w2[0]), 
+                                std::min(w1[1],w2[1]), std::max(w1[1],w2[1]), 
+                                std::min(w1[2],w2[2]), std::max(w1[2],w2[2])};
+  return limits;
+}
+
 // Get the world position of Sipm from the channel ID
 geo::Point_t CRTGeoAlg::ChannelToSipmPosition(size_t channel) const{
   for(auto const& sipm : fSipms){
@@ -572,7 +601,7 @@ bool CRTGeoAlg::IsInsideStrip(const CRTStripGeo& strip, geo::Point_t point){
 bool CRTGeoAlg::CheckOverlap(const CRTModuleGeo& module1, const CRTModuleGeo& module2){
   // Get the minimum and maximum X, Y, Z coordinates
   double minX = std::max(module1.minX, module2.minX);
-  double maxX = std::min(module1.maxX, module2.maxY);
+  double maxX = std::min(module1.maxX, module2.maxX);
   double minY = std::max(module1.minY, module2.minY);
   double maxY = std::min(module1.maxY, module2.maxY);
   double minZ = std::max(module1.minZ, module2.minZ);
@@ -599,6 +628,30 @@ bool CRTGeoAlg::HasOverlap(const CRTModuleGeo& module){
     if(CheckOverlap(module, module2.second)) return true;
   }
   return false;
+}
+
+bool CRTGeoAlg::StripHasOverlap(std::string stripName){
+  return HasOverlap(fModules.at(fStrips.at(stripName).module));
+}
+
+std::vector<double> CRTGeoAlg::StripOverlap(std::string strip1Name, std::string strip2Name){
+  auto const& strip1 = fStrips.at(strip1Name);
+  auto const& strip2 = fStrips.at(strip2Name);
+
+  double minX = std::max(strip1.minX, strip2.minX);
+  double maxX = std::min(strip1.maxX, strip2.maxY);
+  double minY = std::max(strip1.minY, strip2.minY);
+  double maxY = std::min(strip1.maxY, strip2.maxY);
+  double minZ = std::max(strip1.minZ, strip2.minZ);
+  double maxZ = std::min(strip1.maxZ, strip2.maxZ);
+
+  std::vector<double> null = {-99999, -99999, -99999, -99999, -99999, -99999};
+  std::vector<double> overlap = {minX, maxX, minY, maxY, minZ, maxZ};
+
+  // If the two strips overlap in 2 dimensions then return the overlap
+  if ((minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ)) return overlap;
+  // Otherwise return a "null" value
+  return null;
 }
 
 // ----------------------------------------------------------------------------------

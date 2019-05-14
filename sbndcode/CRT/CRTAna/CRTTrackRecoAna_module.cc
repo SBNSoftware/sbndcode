@@ -11,28 +11,22 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTrackRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTruthMatchUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
 // LArSoft includes
-#include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
-#include "larcore/Geometry/Geometry.h"
-#include "larcore/Geometry/AuxDetGeometry.h"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
-#include "larcorealg/Geometry/GeometryCore.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
-#include "larsim/Simulation/LArG4Parameters.h"
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -200,17 +194,12 @@ namespace sbnd {
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
     detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
     TPCGeoAlg fTpcGeo;
+    CRTGeoAlg fCrtGeo;
 
     CRTTruthRecoAlg truthAlg;
     CRTTrackRecoAlg trackAlg;
 
-    // Positions of the CRT planes
-    std::vector<double> crtPlanes = {-359.1, -357.3, 357.3, 359.1, -358.9, -357.1, 661.52, 663.32, 865.52, 867.32, -240.65, -238.85, 655.35, 657.15};
-    std::vector<int> fixCoord   = {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2}; // Fixed coordinate for each plane
-    std::vector<int> widthCoord = {2, 1, 2, 1, 0, 2, 2, 0, 2, 0, 1, 0, 1, 0}; // Width direction for each plane
-    std::vector<int> lenCoord   = {1, 2, 1, 2, 2, 0, 0, 2, 0, 2, 0, 1, 0, 1}; // Length direction for each plane
-
-    const size_t nTaggers = 7;
+    const size_t nTaggers = fCrtGeo.NumTaggers();
 
     // Performance Counters
 
@@ -237,7 +226,6 @@ namespace sbnd {
     , truthAlg()
     , trackAlg(config().TrackAlg())
   {
-    // Get a pointer to the fGeometryServiceetry service provider
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
     fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
   }
@@ -415,6 +403,7 @@ namespace sbnd {
 
     if(fPlot) DrawTrueTracks(particles, truthMatch, true, false, true, false, fPlotTrackID);
 
+    std::vector<double> crtLims = fCrtGeo.CRTLimits();
     for(auto const& particle : particles){
       int partId = particle.TrackId();
 
@@ -448,7 +437,7 @@ namespace sbnd {
           int ipt = 0;
           double xres = 0;
           for(int j = 0; j < nTraj; j++){
-            if (particle.Vx(j) >= crtPlanes[0] && particle.Vx(j) <= crtPlanes[3] && particle.Vy(j) >= crtPlanes[4] && particle.Vy(j) <= -crtPlanes[4] && particle.Vz(j) >= crtPlanes[10] && particle.Vz(j) <= crtPlanes[13]){
+            if (particle.Vx(j) >= crtLims[0] && particle.Vx(j) <= crtLims[3] && particle.Vy(j) >= crtLims[1] && particle.Vy(j) <= crtLims[4] && particle.Vz(j) >= crtLims[2] && particle.Vz(j) <= crtLims[5]){
               TVector3 xp(particle.Vx(j), particle.Vy(j), particle.Vz(j));
               double d2 = ((xp-x0).Cross(u)).Mag2();
               xres += d2;
@@ -516,16 +505,9 @@ namespace sbnd {
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
     // Draw the tagger planes
-    for(int tag_i = 0; tag_i < 7; tag_i++){
-      double tagCenter[3] = {0, 0, 208.25};
-      tagCenter[fixCoord[tag_i*2]] = (crtPlanes[tag_i*2]+crtPlanes[tag_i*2+1])/2;
-      double tagDim[3] = {0, 0, 0};
-      if(tag_i==0 || tag_i==1){ tagDim[0] = 1.8; tagDim[1] = 360; tagDim[2] = 450; }
-      if(tag_i==2){ tagDim[0] = 399.5; tagDim[1] = 1.8; tagDim[2] = 478; }
-      if(tag_i==3 || tag_i==4){ tagDim[0] = 450; tagDim[1] = 1.8; tagDim[2] = 450; }
-      if(tag_i==5 || tag_i==6){ tagDim[0] = 360; tagDim[1] = 360; tagDim[2] = 1.8; }
-      double rmin[3] = {tagCenter[0]-tagDim[0],tagCenter[1]-tagDim[1],tagCenter[2]-tagDim[2]};
-      double rmax[3] = {tagCenter[0]+tagDim[0],tagCenter[1]+tagDim[1],tagCenter[2]+tagDim[2]};
+    for(size_t tag_i = 0; tag_i < fCrtGeo.NumTaggers(); tag_i++){
+      double rmin[3] = {fCrtGeo.GetTagger(tag_i).minX, fCrtGeo.GetTagger(tag_i).minY, fCrtGeo.GetTagger(tag_i).minZ};
+      double rmax[3] = {fCrtGeo.GetTagger(tag_i).maxX, fCrtGeo.GetTagger(tag_i).maxY, fCrtGeo.GetTagger(tag_i).maxZ};
       truthAlg.DrawCube(c1, rmin, rmax, 1);
     }
 
