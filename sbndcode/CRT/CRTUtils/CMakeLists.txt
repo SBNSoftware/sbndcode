@@ -31,6 +31,7 @@ art_make(    LIBRARY_NAME sbndcode_CRTUtils
                            sbndcode_CRT
                            sbndcode_CRTProducts
                            sbndcode_GeoWrappers
+                           sbndcode_RecoUtils
         )
 
 install_headers()

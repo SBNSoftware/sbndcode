@@ -123,6 +123,7 @@ CRTGeoAlg::CRTGeoAlg(){
         module.maxY = std::max(limitsWorld[1], limitsWorld2[1]);
         module.minZ = std::min(limitsWorld[2], limitsWorld2[2]);
         module.maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
+        module.normal = auxDet->GetNormalVector();
         module.null = false;
         module.planeID = planeID;
         module.top = top;
@@ -159,6 +160,7 @@ CRTGeoAlg::CRTGeoAlg(){
         strip.maxY = std::max(limitsWorld[1], limitsWorld2[1]);
         strip.minZ = std::min(limitsWorld[2], limitsWorld2[2]);
         strip.maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
+        strip.normal = auxDetSensitive.GetNormalVector();
         strip.width = halfWidth * 2.;
         strip.null = false;
         strip.module = moduleName;
@@ -718,6 +720,23 @@ geo::Point_t CRTGeoAlg::StripCrossingPoint(std::string stripName, simb::MCPartic
 
   geo::Point_t cross {(entry.X()+exit.X())/2., (entry.Y()+exit.Y())/2., (entry.Z()+exit.Z())/2};
   return cross;
+}
+
+
+// ----------------------------------------------------------------------------------
+// Find the angle of true particle trajectory to tagger
+double CRTGeoAlg::AngleToTagger(std::string taggerName, simb::MCParticle particle){
+  // Get normal to tagger using the top modules
+  TVector3 normal (0,0,0);
+  for(auto const& module : GetTagger(taggerName).modules){
+    if(module.second.top){ 
+      normal.SetXYZ(module.second.normal.X(), module.second.normal.Y(), module.second.normal.Z());
+      break;
+    }
+  }
+  TVector3 start (particle.Vx(), particle.Vy(), particle.Vz());
+  TVector3 end (particle.EndX(), particle.EndY(), particle.EndZ());
+  return normal.Angle(end-start);
 }
 
 
