@@ -17,6 +17,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTruthMatchUtils.h"
+#include "sbndcode/CRT/CRTUtils/CRTEventDisplay.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
@@ -147,6 +148,10 @@ namespace sbnd {
         Name("HitAlg"),
       };
 
+      fhicl::Table<CRTEventDisplay::Config> Evd {
+        Name("Evd"),
+      };
+
     }; // Config
  
     using Parameters = art::EDAnalyzer::Table<Config>;
@@ -176,12 +181,13 @@ namespace sbnd {
     int           fPlotTrackID;         ///< id of track to plot
     bool          fUseReadoutWindow;    ///< Only reconstruct hits within readout window
     
-    // n-tuples
-    TH2D* fTagXYZResolution[7];
-    TH1D* fTagXResolution[7];
-    TH1D* fTagYResolution[7];
+    // histograms
+    TH1D* hHitTime;
+    TH1D* hNpe;
+    TH1D* hSipmDist;
 
-    TH1D* fSipmDist;
+    TH2D* hTrueRecoSipmDist;
+    TH2D* hNpeAngle;
 
     // Other variables shared between different methods.
     detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
@@ -189,17 +195,14 @@ namespace sbnd {
     detinfo::ElecClock fTrigClock;
 
     TPCGeoAlg fTpcGeo;
+    CRTGeoAlg fCrtGeo;
 
     CRTTruthRecoAlg truthAlg;
     CRTHitRecoAlg hitAlg;
 
-    // Positions of the CRT planes
-    std::vector<double> crtPlanes = {-359.1, -357.3, 357.3, 359.1, -358.9, -357.1, 661.52, 663.32, 865.52, 867.32, -240.65, -238.85, 655.35, 657.15};
-    std::vector<int> fixCoord   = {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2}; // Fixed coordinate for each plane
-    std::vector<int> widthCoord = {2, 1, 2, 1, 0, 2, 2, 0, 2, 0, 1, 0, 1, 0}; // Width direction for each plane
-    std::vector<int> lenCoord   = {1, 2, 1, 2, 2, 0, 0, 2, 0, 2, 0, 1, 0, 1}; // Length direction for each plane
+    CRTEventDisplay evd;
 
-    const size_t nTaggers = 7;
+    const size_t nTaggers = fCrtGeo.NumTaggers();
 
     // Performance Counters
     int nSipms = 0;
@@ -234,8 +237,9 @@ namespace sbnd {
     , fPlot                 (config().Plot())
     , fPlotTrackID          (config().PlotTrackID())
     , fUseReadoutWindow     (config().HitAlg().UseReadoutWindow())
-    , truthAlg()
-    , hitAlg(config().HitAlg())
+    , truthAlg              ()
+    , hitAlg                (config().HitAlg())
+    , evd                   (config().Evd())
   {
     // Get a pointer to the fGeometryServiceetry service provider
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
@@ -247,32 +251,14 @@ namespace sbnd {
   {
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
-    // Define n-tuple
-    fTagXYZResolution[0]    = tfs->make<TH2D>("tag0XYZresolution",  ";True Z - reco Z (cm);True Y - reco Y (cm)",  50, -25, 25,  50, -25, 25);
-    fTagXYZResolution[1]    = tfs->make<TH2D>("tag1XYZresolution",  ";True Z - reco Z (cm);True Y - reco Y (cm)",  50, -25, 25,  50, -25, 25);
-    fTagXYZResolution[2]    = tfs->make<TH2D>("tag2XYZresolution",  ";True X - reco X (cm);True Z - reco Z (cm)",  50, -25, 25,  50, -25, 25);
-    fTagXYZResolution[3]    = tfs->make<TH2D>("tag3XYZresolution",  ";True Z - reco Z (cm);True X - reco X (cm)",  50, -25, 25,  50, -25, 25);
-    fTagXYZResolution[4]    = tfs->make<TH2D>("tag4XYZresolution",  ";True Z - reco Z (cm);True X - reco X (cm)",  50, -25, 25,  50, -25, 25);
-    fTagXYZResolution[5]    = tfs->make<TH2D>("tag5XYZresolution",  ";True Y - reco Y (cm);True X - reco X (cm)",  50, -25, 25,  50, -25, 25);
-    fTagXYZResolution[6]    = tfs->make<TH2D>("tag6XYZresolution",  ";True Y - reco Y (cm);True X - reco X (cm)",  50, -25, 25,  50, -25, 25);
+    // Define histograms
 
-    fTagXResolution[0]    = tfs->make<TH1D>("tag0Xresolution",  ";True Z - reco Z (cm);",  50, -25, 25);
-    fTagXResolution[1]    = tfs->make<TH1D>("tag1Xresolution",  ";True Z - reco Z (cm);",  50, -25, 25);
-    fTagXResolution[2]    = tfs->make<TH1D>("tag2Xresolution",  ";True X - reco X (cm);",  50, -25, 25);
-    fTagXResolution[3]    = tfs->make<TH1D>("tag3Xresolution",  ";True Z - reco Z (cm);",  50, -25, 25);
-    fTagXResolution[4]    = tfs->make<TH1D>("tag4Xresolution",  ";True Z - reco Z (cm);",  50, -25, 25);
-    fTagXResolution[5]    = tfs->make<TH1D>("tag5Xresolution",  ";True Y - reco Y (cm);",  50, -25, 25);
-    fTagXResolution[6]    = tfs->make<TH1D>("tag6Xresolution",  ";True Y - reco Y (cm);",  50, -25, 25);
+    hSipmDist    = tfs->make<TH1D>("SipmDist", ";Distance from SiPM (cm);N Tracks",  50, -3, 13);
+    hHitTime    = tfs->make<TH1D>("HitTime", ";Hit time (s);N Tracks",  50, -5000, 5000);
+    hNpe    = tfs->make<TH1D>("Npe", ";Num PE;N Tracks",  50, 0, 500);
 
-    fTagYResolution[0]    = tfs->make<TH1D>("tag0Yresolution",  ";True Y - reco Y (cm);",  50, -25, 25);
-    fTagYResolution[1]    = tfs->make<TH1D>("tag1Yresolution",  ";True Y - reco Y (cm);",  50, -25, 25);
-    fTagYResolution[2]    = tfs->make<TH1D>("tag2Yresolution",  ";True Z - reco Z (cm);",  50, -25, 25);
-    fTagYResolution[3]    = tfs->make<TH1D>("tag3Yresolution",  ";True X - reco X (cm);",  50, -25, 25);
-    fTagYResolution[4]    = tfs->make<TH1D>("tag4Yresolution",  ";True X - reco X (cm);",  50, -25, 25);
-    fTagYResolution[5]    = tfs->make<TH1D>("tag5Yresolution",  ";True X - reco X (cm);",  50, -25, 25);
-    fTagYResolution[6]    = tfs->make<TH1D>("tag6Yresolution",  ";True X - reco X (cm);",  50, -25, 25);
-
-    fSipmDist    = tfs->make<TH1D>("sipmdist", ";Distance from SiPM (cm);N Tracks",  50, -3, 13);
+    hTrueRecoSipmDist    = tfs->make<TH2D>("TrueRecoSipmDist", ";True SiPM dist (cm);Reco SiPM dist (cm)",  20, -3, 13, 20, -3, 13);
+    hNpeAngle            = tfs->make<TH2D>("NpeAngle", ";Angle to tagger (rad);Num PE", 20, -3.2, 3.2, 20, 0, 500);
     // Initial output
     std::cout<<"----------------- CRT Hit Reco Ana Module -------------------"<<std::endl;
 
@@ -402,6 +388,8 @@ namespace sbnd {
     for(auto const& crtHitPair : crtHitPairs){
       crtHits.push_back(crtHitPair.first);
       nHits++;
+      hHitTime->Fill((double)(int)crtHitPair.first.ts1_ns*1e-3);
+      hNpe->Fill(crtHitPair.first.peshit);
       // If the PID matches calculate the resolution
       std::vector<int> ids;
       for(auto const& data_i : crtHitPair.second){
@@ -416,13 +404,6 @@ namespace sbnd {
           nMatchingHits++; 
           nMatchTag[tag_i]++;
           usedXYZ[tag_i][ID] = partXYZ[tag_i][ID];
-          TVector3 mean(crtHitPair.first.x_pos, crtHitPair.first.y_pos, crtHitPair.first.z_pos);
-          TVector3 dist = partXYZ[tag_i][ID] - mean;
-          double distx = dist[widthCoord[tag_i*2]];
-          double disty = dist[lenCoord[tag_i*2]];
-          fTagXYZResolution[tag_i]->Fill(distx,disty); 
-          fTagXResolution[tag_i]->Fill(distx); 
-          fTagYResolution[tag_i]->Fill(disty);
         }
         else{ nNoTruth++; nNoTruthTag[tag_i]++; }
         truthMatch[ID].crtHits.push_back(crtHitPair.first);
@@ -447,7 +428,8 @@ namespace sbnd {
       std::cout<<"Number of hits = "<<crtHits.size()<<std::endl;
     }
 
-    if(fPlot) DrawTrueTracks(particles, truthMatch, true, false, true, false, fPlotTrackID);
+    //if(fPlot) DrawTrueTracks(particles, truthMatch, true, false, true, true, fPlotTrackID);
+    evd.Draw(event);
     
     // Detailed truth matching information for each true particle
     if(fVeryVerbose){
@@ -493,17 +475,6 @@ namespace sbnd {
 
   void CRTHitRecoAna::endJob(){
 
-    TF1 *fx[7];
-    TF1 *fy[7];
-    for(int i = 0; i < 7; i++){
-      TString fxname = Form("f%ix", i);
-      TString fyname = Form("f%iy", i);
-      fx[i] = new TF1(fxname,"gaus");
-      fTagXResolution[i]->Fit(fxname,"Q");
-      fy[i] = new TF1(fyname,"gaus");
-      fTagYResolution[i]->Fit(fyname,"Q");
-    }
-
     std::string Xs[7] = {"Z","Z","X","Z","Z","Y","Y"};
     std::string Ys[7] = {"Y","Y","Z","X","X","X","X"};
 
@@ -521,8 +492,6 @@ namespace sbnd {
              <<"=========================== TAGGER INFORMATION ============================\n";
     for(int i = 0; i < 7; i++){
     std::cout<<"---->"<<indToName[i]<<":\n"
-             <<Xs[i]<<" resolution = "<<fx[i]->GetParameter(2)<<" +/- "<<fx[i]->GetParError(2)<<" cm, bias = "<<fx[i]->GetParameter(1)<<" +/- "<<fx[i]->GetParError(1)<<" cm\n"
-             <<Ys[i]<<" resolution = "<<fy[i]->GetParameter(2)<<" +/- "<<fy[i]->GetParError(2)<<" cm, bias = "<<fy[i]->GetParameter(1)<<" +/- "<<fy[i]->GetParError(1)<<" cm\n"
              <<"Efficiency = "<<(double)nMatchTag[i]/(nMatchTag[i]+nMissTag[i])<<"\n"
              <<nMatchTag[i]<<" matched hits, "<<nMissTag[i]<<" missed hits, "<<nNoTruthTag[i]<<" hits with no truth info\n\n";
     }
@@ -534,16 +503,9 @@ namespace sbnd {
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
     // Draw the tagger planes
-    for(int tag_i = 0; tag_i < 7; tag_i++){
-      double tagCenter[3] = {0, 0, 208.25};
-      tagCenter[fixCoord[tag_i*2]] = (crtPlanes[tag_i*2]+crtPlanes[tag_i*2+1])/2;
-      double tagDim[3] = {0, 0, 0};
-      if(tag_i==0 || tag_i==1){ tagDim[0] = 1.8; tagDim[1] = 360; tagDim[2] = 450; }
-      if(tag_i==2){ tagDim[0] = 399.5; tagDim[1] = 1.8; tagDim[2] = 478; }
-      if(tag_i==3 || tag_i==4){ tagDim[0] = 450; tagDim[1] = 1.8; tagDim[2] = 450; }
-      if(tag_i==5 || tag_i==6){ tagDim[0] = 360; tagDim[1] = 360; tagDim[2] = 1.8; }
-      double rmin[3] = {tagCenter[0]-tagDim[0],tagCenter[1]-tagDim[1],tagCenter[2]-tagDim[2]};
-      double rmax[3] = {tagCenter[0]+tagDim[0],tagCenter[1]+tagDim[1],tagCenter[2]+tagDim[2]};
+    for(size_t tag_i = 0; tag_i < fCrtGeo.NumTaggers(); tag_i++){
+      double rmin[3] = {fCrtGeo.GetTagger(tag_i).minX, fCrtGeo.GetTagger(tag_i).minY, fCrtGeo.GetTagger(tag_i).minZ};
+      double rmax[3] = {fCrtGeo.GetTagger(tag_i).maxX, fCrtGeo.GetTagger(tag_i).maxY, fCrtGeo.GetTagger(tag_i).maxZ};
       truthAlg.DrawCube(c1, rmin, rmax, 1);
     }
 

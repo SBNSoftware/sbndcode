@@ -1,0 +1,39 @@
+BEGIN_PROLOG
+
+standard_crteventdisplay:
+{
+    SimLabel:         "largeant"
+    CRTDataLabel:     "crt"
+    CRTHitLabel:      "crthit"
+    CRTTrackLabel:    "crttrack"
+    TPCTrackLabel:    "pandoraTrack"
+
+    DrawTaggers:          true   
+    DrawModules:          false
+    DrawTpc:              false
+    DrawCrtHits:          false
+    DrawCrtTracks:        true
+    DrawIncompleteTracks: false
+    DrawTrueTracks:       false
+    DrawTpcTracks:        true
+
+    TaggerColour:     1
+    TpcColour:        1
+    CrtHitColour:     2
+    CrtTrackColour:   2
+    TpcTrackColour:   4
+    TrueTrackColour:  8
+
+    UseTrueID:        true
+    TrueID:           1
+
+    Print:            false
+
+    LineWidth:        2.
+    IncompleteTrackLength: 1000.
+    MinTime:          0.
+    MaxTime:          0.
+
+}
+
+END_PROLOG

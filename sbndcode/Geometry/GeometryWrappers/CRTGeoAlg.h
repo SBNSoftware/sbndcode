@@ -57,6 +57,7 @@ namespace sbnd{
     double maxY;
     double minZ;
     double maxZ;
+    double width;
     std::string module;
     std::pair<int, int> sipms;
     bool null;
@@ -153,6 +154,9 @@ namespace sbnd{
     // Get the sipm channels on a strip
     std::pair<int, int> GetStripSipmChannels(std::string stripName) const;
 
+    // Recalculate strip limits including charge sharing
+    std::vector<double> StripLimitsWithChargeSharing(std::string stripName, double x, double ex);
+
     // Return the distance to a sipm in the plane of the sipms
     double DistanceBetweenSipms(geo::Point_t position, size_t channel) const;
     // Return the distance along the strip (from sipm end)
@@ -172,6 +176,8 @@ namespace sbnd{
     bool CheckOverlap(const CRTModuleGeo& module1, const CRTModuleGeo& module2);
     // Check is a module overlaps with a perpendicual module in the same tagger
     bool HasOverlap(const CRTModuleGeo& module);
+    bool StripHasOverlap(std::string stripName);
+    std::vector<double> StripOverlap(std::string strip1Name, std::string strip2Name);
 
     // Find the average of the tagger entry and exit points of a true particle trajectory
     geo::Point_t TaggerCrossingPoint(std::string taggerName, simb::MCParticle particle);
