@@ -48,7 +48,7 @@ std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTrackRecoAlg::CreateCRTTzeros
   for(size_t i = 0; i<hits.size(); i++){
     if(iflag[i] == 0){
       std::vector<art::Ptr<crt::CRTHit>> crtTzero;
-      double time_ns_A = hits[i]->ts1_ns; //FIXME
+      double time_ns_A = hits[i]->ts1_ns;
       iflag[i]=1;
       crtTzero.push_back(hits[i]);
 
@@ -57,7 +57,7 @@ std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTrackRecoAlg::CreateCRTTzeros
       for(size_t j = i+1; j<hits.size(); j++){
         if(iflag[j] == 0){
           // If ts1_ns - ts1_ns < diff then put them in a vector
-          double time_ns_B = hits[j]->ts1_ns; //FIXME
+          double time_ns_B = hits[j]->ts1_ns; 
           double diff = std::abs(time_ns_B - time_ns_A) * 1e-3; // [us]
           if(diff < fTimeLimit){
             iflag[j] = 1;

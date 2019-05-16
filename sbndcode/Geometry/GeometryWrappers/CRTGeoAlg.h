@@ -147,6 +147,9 @@ namespace sbnd{
     // Get the strip geometry object by tagger index, local module index and local strip index
     CRTStripGeo GetStrip(size_t tagger_i, size_t module_i, size_t strip_i) const;
 
+    // Get tagger name from strip or module name
+    std::string GetTaggerName(std::string name) const;
+
     // Get the name of the strip from the SiPM channel ID
     std::string ChannelToStripName(size_t channel) const;
 
@@ -161,9 +164,14 @@ namespace sbnd{
 
     // Return the distance to a sipm in the plane of the sipms
     double DistanceBetweenSipms(geo::Point_t position, size_t channel) const;
+    // Returns max distance from sipms in strip
+    double DistanceBetweenSipms(geo::Point_t position, std::string stripName) const;
     // Return the distance along the strip (from sipm end)
     double DistanceDownStrip(geo::Point_t position, std::string stripName) const;
 
+    // Determine if a point is inside CRT volume
+    bool IsInsideCRT(TVector3 point);
+    bool IsInsideCRT(geo::Point_t point);
     // Determine if a point is inside a tagger by name
     bool IsInsideTagger(std::string taggerName, geo::Point_t point);
     bool IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point);
@@ -182,22 +190,31 @@ namespace sbnd{
     std::vector<double> StripOverlap(std::string strip1Name, std::string strip2Name);
 
     // Find the average of the tagger entry and exit points of a true particle trajectory
-    geo::Point_t TaggerCrossingPoint(std::string taggerName, simb::MCParticle particle);
+    geo::Point_t TaggerCrossingPoint(std::string taggerName, const simb::MCParticle& particle);
+    geo::Point_t TaggerCrossingPoint(const CRTTaggerGeo& tagger, const simb::MCParticle& particle);
+    bool CrossesTagger(const CRTTaggerGeo& tagger, const simb::MCParticle& particle);
     // Find the average of the module entry and exit points of a true particle trajectory
-    geo::Point_t ModuleCrossingPoint(std::string moduleName, simb::MCParticle particle);
+    geo::Point_t ModuleCrossingPoint(std::string moduleName, const simb::MCParticle& particle);
+    geo::Point_t ModuleCrossingPoint(const CRTModuleGeo& module, const simb::MCParticle& particle);
+    bool CrossesModule(const CRTModuleGeo& module, const simb::MCParticle& particle);
     // Find the average of the strip entry and exit points of a true particle trajectory
-    geo::Point_t StripCrossingPoint(std::string stripName, simb::MCParticle particle);
+    geo::Point_t StripCrossingPoint(std::string stripName, const simb::MCParticle& particle);
+    geo::Point_t StripCrossingPoint(const CRTStripGeo& strip, const simb::MCParticle& particle);
+    bool CrossesStrip(const CRTStripGeo& strip, const simb::MCParticle& particle);
+
+    // Work out which strips the true particle crosses
+    std::vector<std::string> CrossesStrips(const simb::MCParticle& particle);
 
     // Find the angle of true particle trajectory to tagger
-    double AngleToTagger(std::string taggerName, simb::MCParticle particle);
+    double AngleToTagger(std::string taggerName, const simb::MCParticle& particle);
 
     // Check if a particle enters the CRT volume
-    bool EntersVolume(simb::MCParticle particle);
+    bool EntersVolume(const simb::MCParticle& particle);
     // Check if a particle crosses the CRT volume
-    bool CrossesVolume(simb::MCParticle particle);
+    bool CrossesVolume(const simb::MCParticle& particle);
 
     // Determine if a particle would be able to produce a hit in a tagger
-    bool ValidCrossingPoint(std::string taggerName, simb::MCParticle particle);
+    bool ValidCrossingPoint(std::string taggerName, const simb::MCParticle& particle);
 
 
   private:

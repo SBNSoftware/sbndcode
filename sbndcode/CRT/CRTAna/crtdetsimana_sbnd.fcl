@@ -4,6 +4,7 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
+#include "crtbacktracker_sbnd.fcl"
 
 process_name: CRTDetSimAna
 
@@ -56,6 +57,7 @@ physics:
       SimModuleLabel:       "largeant"  # Simulation producer module label
       CRTSimLabel:          "crt"       # CRT producer module label
       Verbose:              false        # Print extra information about what's going on
+      CrtBackTrack:         @local::standard_crtbacktracker
     }
   }
 

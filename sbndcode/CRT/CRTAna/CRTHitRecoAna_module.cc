@@ -43,6 +43,7 @@
 // <https://root.cern.ch/doc/master/annotated.html>
 #include "TH1.h"
 #include "TH2.h"
+#include "TGraphAsymmErrors.h"
 #include "TVector3.h"
 
 // C++ includes
@@ -136,19 +137,33 @@ namespace sbnd {
     bool          fVeryVerbose;         ///< print more information about what's going on
     bool          fPlot;                ///< plot tracks
     int           fPlotTrackID;         ///< id of track to plot
-    
+
     // histograms
     TH1D* hHitTime;
     TH1D* hNpe;
-    TH1D* hSipmDist;
+    TH1D* hRecoSipmDist;
+    TH1D* hTrueSipmDist;
+
+    TH1D* hEffWidthTotal;
+    TH1D* hEffWidthReco;
+    TH1D* hEffLengthTotal;
+    TH1D* hEffLengthReco;
 
     TH2D* hTrueRecoSipmDist;
     TH2D* hNpeAngle;
+    TH2D* hNpeSipmDist;
+    TH2D* hNpeStripDist;
+
+    TGraphAsymmErrors* gEffWidth;
+    TGraphAsymmErrors* gEffLength;
 
     // CRT helpers
     CRTGeoAlg fCrtGeo;
     CRTEventDisplay evd;
     CRTBackTracker fCrtBackTrack;
+
+    int nValidCrosses = 0;
+    int nRecoHits = 0;
 
   }; // class CRTHitRecoAna
 
@@ -174,12 +189,23 @@ namespace sbnd {
     art::ServiceHandle<art::TFileService> tfs;
     // Define histograms
 
-    hSipmDist   = tfs->make<TH1D>("SipmDist", ";Distance from SiPM (cm);N Tracks",  50, 0,    13);
-    hHitTime    = tfs->make<TH1D>("HitTime",  ";Hit time (s);N Tracks",             50, -5000, 5000);
-    hNpe        = tfs->make<TH1D>("Npe",      ";Num PE;N Tracks",                   50, 0,     300);
+    hRecoSipmDist   = tfs->make<TH1D>("RecoSipmDist", ";Distance from SiPM (cm);N Tracks",  60, -2,    13);
+    hTrueSipmDist   = tfs->make<TH1D>("TrueSipmDist", ";Distance from SiPM (cm);N Tracks",  60, -2,    13);
+    hHitTime    = tfs->make<TH1D>("HitTime",  ";Hit time (s);N Tracks",             50, -2000, 3000);
+    hNpe        = tfs->make<TH1D>("Npe",      ";Num PE;N Tracks",                   60, 0,     300);
 
-    hTrueRecoSipmDist = tfs->make<TH2D>("TrueRecoSipmDist", ";True SiPM dist (cm);Reco SiPM dist (cm)",  20, -10,   13,  20, 0, 13);
-    hNpeAngle         = tfs->make<TH2D>("NpeAngle",         ";Angle to tagger (rad);Num PE",             40, 0, 3.2, 10, 0,  300);
+    hEffWidthTotal   = tfs->make<TH1D>("EffWidthTotal", ";Distance from SiPM (cm)",  20, 0, 11.2);
+    hEffWidthReco    = tfs->make<TH1D>("EffWidthReco", ";Distance from SiPM (cm)",   20, 0, 11.2);
+    hEffLengthTotal  = tfs->make<TH1D>("EffLengthTotal", ";Distance along strip (cm)", 20, 0,  450);
+    hEffLengthReco   = tfs->make<TH1D>("EffLengthReco", ";Distance along strip (cm)",  20, 0,  450);
+
+    hTrueRecoSipmDist = tfs->make<TH2D>("TrueRecoSipmDist", ";True SiPM dist (cm);Reco SiPM dist (cm)",  30, -2, 13,  30, -2, 13);
+    hNpeAngle         = tfs->make<TH2D>("NpeAngle",         ";Angle to tagger (rad);Num PE", 30, 0, 1.6, 30, 0,  300);
+    hNpeSipmDist      = tfs->make<TH2D>("NpeSipmDist",      ";SiPM dist (cm);Num PE", 30, 0, 11.2, 30, 0,  300);
+    hNpeStripDist      = tfs->make<TH2D>("NpeStripDist",    ";Strip dist (cm);Num PE", 30, 0, 450, 30, 0,  300);
+
+    gEffWidth = tfs->makeAndRegister<TGraphAsymmErrors>("EffWidth", ";SiPM dist (cm)");
+    gEffLength = tfs->makeAndRegister<TGraphAsymmErrors>("EffLength", ";Strip dist (cm)");
     // Initial output
     std::cout<<"----------------- CRT Hit Reco Ana Module -------------------"<<std::endl;
 
@@ -197,43 +223,83 @@ namespace sbnd {
 
     // Retrieve all the truth info in the events
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
+    // Get all the CRT hits
+    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
+    std::map<int, std::vector<crt::CRTHit>> crtHits;
+    double minHitTime = 99999;
+    double maxHitTime = -99999;
+    for(auto const& hit : (*crtHitHandle)){
+      nRecoHits++;
+      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, hit);
+      if(trueId == -99999) continue;
+      crtHits[trueId].push_back(hit);
+      double hitTime = (double)(int)hit.ts1_ns * 1e-3;
+      if(hitTime < minHitTime) minHitTime = hitTime;
+      if(hitTime > maxHitTime) maxHitTime = hitTime;
+    }
+
     // Fill a map of true particles
     std::map<int, simb::MCParticle> particles;
     for (auto const& particle: (*particleHandle)){
       int partId = particle.TrackId();
       particles[partId] = particle;
+
+      // Only consider particles within the time limit of the generated CRT hits
+      double time = particle.T() * 1e-3;
+      if(time < minHitTime || time > maxHitTime) continue;
+
+      if(!(std::abs(particle.PdgCode()) == 13 && particle.Mother()==0)) continue;
+
+      for(size_t i = 0; i < fCrtGeo.NumTaggers(); i++){
+        if(fCrtGeo.ValidCrossingPoint(fCrtGeo.GetTagger(i).name, particle)) nValidCrosses++;
+      }
+
+      //if(!fCrtGeo.EntersVolume(particle)) continue;
+
+      //FIXME should probably do with auxdet IDEs
+      std::vector<std::string> stripNames = fCrtGeo.CrossesStrips(particle);
+
+      for(auto const& stripName : stripNames){
+        if(!fCrtGeo.ValidCrossingPoint(fCrtGeo.GetTaggerName(stripName), particle)) continue;
+        geo::Point_t cross = fCrtGeo.StripCrossingPoint(stripName, particle);
+        double sipmDist = fCrtGeo.DistanceBetweenSipms(cross, stripName);
+        double stripDist = fCrtGeo.DistanceDownStrip(cross, stripName);
+        hEffWidthTotal->Fill(sipmDist);
+        hEffLengthTotal->Fill(stripDist);
+
+        //Loop over crt hits
+        if(crtHits.find(partId) == crtHits.end()) continue;
+        bool match = false;
+        for(size_t i = 0; i < crtHits[partId].size(); i++){
+          //If you find a hit on the same tagger then fill
+          if(crtHits[partId][i].tagger == fCrtGeo.GetTaggerName(stripName)) match = true;
+        }
+
+        if(!match) continue;
+        hEffWidthReco->Fill(sipmDist);
+        hEffLengthReco->Fill(stripDist);
+      }
     }
 
     if(fVerbose) std::cout<<"Number of true particles = "<<particles.size()<<std::endl;
 
-    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
     if(crtHitHandle.isValid()){
       art::FindManyP<crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
       int hit_i = 0;
       for(auto const& hit : (*crtHitHandle)){
         double time = (double)(int)hit.ts1_ns * 1e-3;
         hHitTime->Fill(time);
-        hNpe->Fill(hit.peshit);
+        //hNpe->Fill(hit.peshit);
         geo::Point_t hitPos {hit.x_pos, hit.y_pos, hit.z_pos};
 
         // Get the data associated with the hit
         std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(hit_i);
         hit_i++;
-        std::vector<int> chs;
+        std::vector<std::string> stripNames;
         for(auto const& dat : data){
-          if(!(dat->Channel() % 2)) chs.push_back(dat->Channel());
-        }
-        if(chs.size() == 0) continue;
-        int ch1 = chs[0];
-        int ch2 = chs[0];
-        if(chs.size() == 2) ch2 = chs[1];
-
-        // Work out how far along the strips the hit position is
-        double hitDist1 = std::abs(fCrtGeo.DistanceBetweenSipms(hitPos, ch1));
-        hSipmDist->Fill(hitDist1);
-        double hitDist2 = std::abs(fCrtGeo.DistanceBetweenSipms(hitPos, ch2));
-        if(chs.size() == 2){
-          hSipmDist->Fill(hitDist2);
+          std::string name = fCrtGeo.ChannelToStripName(dat->Channel());
+          if(std::find(stripNames.begin(), stripNames.end(), name) == stripNames.end()) 
+            stripNames.push_back(name);
         }
 
         // Match hit to true track
@@ -241,17 +307,25 @@ namespace sbnd {
         if(particles.find(trueId) == particles.end()) continue;
 
         // Calculate the angle to the tagger
-        double angle = fCrtGeo.AngleToTagger(hit.tagger, particles[trueId]);
+        double angle = TMath::Pi()/2. - fCrtGeo.AngleToTagger(hit.tagger, particles[trueId]);
         hNpeAngle->Fill(angle, hit.peshit);
 
+        if(angle>1.3) hNpe->Fill(hit.peshit);
+
         // Calculate the true distance from the channel
-        geo::Point_t truePos = fCrtGeo.TaggerCrossingPoint(hit.tagger, particles[trueId]);
-        double trueDist1 = std::abs(fCrtGeo.DistanceBetweenSipms(truePos, ch1));
-        hTrueRecoSipmDist->Fill(trueDist1, hitDist1);
-        if(chs.size() == 2){
-          double trueDist2 = std::abs(fCrtGeo.DistanceBetweenSipms(truePos, ch2));
-          hTrueRecoSipmDist->Fill(trueDist2, hitDist2);
+        for(auto const& stripName : stripNames){
+          double hitDist = fCrtGeo.DistanceBetweenSipms(hitPos, stripName);
+          hRecoSipmDist->Fill(hitDist);
+          geo::Point_t truePos = fCrtGeo.StripCrossingPoint(stripName, particles[trueId]);
+          double trueDist = fCrtGeo.DistanceBetweenSipms(truePos, stripName);
+          hTrueSipmDist->Fill(trueDist);
+          hTrueRecoSipmDist->Fill(trueDist, hitDist);
+
+          hNpeSipmDist->Fill(trueDist, hit.peshit);
+          double stripDist = fCrtGeo.DistanceDownStrip(truePos, stripName);
+          hNpeStripDist->Fill(stripDist, hit.peshit);
         }
+
       }
     }
 
@@ -266,6 +340,13 @@ namespace sbnd {
   } // CRTHitRecoAna::analyze()
 
   void CRTHitRecoAna::endJob(){
+
+    std::cout<<"True crosses = "<<nValidCrosses<<", num hits = "<<nRecoHits<<" ("<<(double)nRecoHits/nValidCrosses<<")\n";
+
+    gEffLength->BayesDivide(hEffLengthReco, hEffLengthTotal);
+    gEffLength->Draw("ap");
+    gEffWidth->BayesDivide(hEffWidthReco, hEffWidthTotal);
+    gEffWidth->Draw("ap");
 
   } // CRTHitRecoAna::endJob()
 
