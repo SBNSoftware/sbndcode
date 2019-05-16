@@ -58,7 +58,7 @@ physics:
       SimModuleLabel:       "largeant"  # Simulation producer module label
       CRTModuleLabel:       "crt"       # CRT producer module label
       CRTHitLabel:          "crthit"       # CRT producer module label
-      Verbose:              false        # Print extra information about what's going on
+      Verbose:              true        # Print extra information about what's going on
       VeryVerbose:          false        # Print detailed information about every muon
       Plot:                 false        # Draw truth and reco tracks in event
       PlotTrackID:          -99999         # ID of true track to plot

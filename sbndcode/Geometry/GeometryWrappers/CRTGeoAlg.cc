@@ -429,6 +429,18 @@ CRTStripGeo CRTGeoAlg::GetStrip(size_t tagger_i, size_t module_i, size_t strip_i
   return nullStrip;
 }
 
+
+// Get the tagger name from strip or module name
+std::string CRTGeoAlg::GetTaggerName(std::string name) const{
+  if(fModules.find(name) != fModules.end()){
+    return fModules.at(name).tagger;
+  }
+  if(fStrips.find(name) != fStrips.end()){
+    return fModules.at(fStrips.at(name).module).tagger;
+  }
+  return "";
+}
+
 // Get the name of the strip from the SiPM channel ID
 std::string CRTGeoAlg::ChannelToStripName(size_t channel) const{
   for(auto const& sipm : fSipms){
@@ -509,6 +521,13 @@ double CRTGeoAlg::DistanceBetweenSipms(geo::Point_t position, size_t channel) co
   return distance;
 }
 
+// Returns max distance from sipms in strip
+double CRTGeoAlg::DistanceBetweenSipms(geo::Point_t position, std::string stripName) const{
+  std::pair<int, int> sipms = GetStripSipmChannels(stripName);
+  double sipmDist = std::max(DistanceBetweenSipms(position, sipms.first), DistanceBetweenSipms(position, sipms.second));
+  return sipmDist;
+}
+
 // Return the distance along the strip (from sipm end)
 double CRTGeoAlg::DistanceDownStrip(geo::Point_t position, std::string stripName) const{
   double distance = -99999;
@@ -522,10 +541,26 @@ double CRTGeoAlg::DistanceDownStrip(geo::Point_t position, std::string stripName
       if(xdiff > ydiff && xdiff > zdiff) distance = position.X() - pos.X();
       if(ydiff > xdiff && ydiff > zdiff) distance = position.Y() - pos.Y();
       if(zdiff > xdiff && zdiff > ydiff) distance = position.Z() - pos.Z();
-      return distance;
+      return std::abs(distance);
     }
   }
   return distance;
+}
+
+// ----------------------------------------------------------------------------------
+// Determine if a point is inside CRT volume
+bool CRTGeoAlg::IsInsideCRT(TVector3 point){
+  geo::Point_t pt {point.X(), point.Y(), point.Z()};
+  return IsInsideCRT(pt);
+}
+
+bool CRTGeoAlg::IsInsideCRT(geo::Point_t point){
+  std::vector<double> limits = CRTLimits();
+  if(point.X() > limits[0] && point.Y() > limits[1] && point.Z() > limits[2] 
+     && point.X() < limits[3] && point.Y() < limits[4] && point.Z() < limits[5]){
+    return true;
+  }
+  return false;
 }
 
 // ----------------------------------------------------------------------------------
@@ -569,9 +604,9 @@ bool CRTGeoAlg::IsInsideModule(const CRTModuleGeo& module, geo::Point_t point){
   double ymax = module.maxY;
   double zmax = module.maxZ;
   // Make the width limits a bit more generous to account for steps in true trajectory
-  if(std::abs(xmax-xmin)==1){ xmin-=1; xmax+=1; }
+  /*if(std::abs(xmax-xmin)==1){ xmin-=1; xmax+=1; }
   if(std::abs(ymax-ymin)==1){ ymin-=1; ymax+=1; }
-  if(std::abs(zmax-zmin)==1){ zmin-=1; zmax+=1; }
+  if(std::abs(zmax-zmin)==1){ zmin-=1; zmax+=1; }*/
   if(x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax) return true;
   return false;
 }
@@ -594,6 +629,10 @@ bool CRTGeoAlg::IsInsideStrip(const CRTStripGeo& strip, geo::Point_t point){
   double xmax = strip.maxX;
   double ymax = strip.maxY;
   double zmax = strip.maxZ;
+  // Make the width limits a bit more generous to account for steps in true trajectory
+  /*if(std::abs(xmax-xmin)==1){ xmin-=0.5; xmax+=0.5; }
+  if(std::abs(ymax-ymin)==1){ ymin-=0.5; ymax+=0.5; }
+  if(std::abs(zmax-zmin)==1){ zmin-=0.5; zmax+=0.5; }*/
   if(x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax) return true;
   return false;
 }
@@ -658,10 +697,14 @@ std::vector<double> CRTGeoAlg::StripOverlap(std::string strip1Name, std::string 
 
 // ----------------------------------------------------------------------------------
 // Find the average of the tagger entry and exit points of a true particle trajectory
-geo::Point_t CRTGeoAlg::TaggerCrossingPoint(std::string taggerName, simb::MCParticle particle){
+geo::Point_t CRTGeoAlg::TaggerCrossingPoint(std::string taggerName, const simb::MCParticle& particle){
+  const CRTTaggerGeo& tagger = fTaggers.at(taggerName);
+  return TaggerCrossingPoint(tagger, particle);
+}
+
+geo::Point_t CRTGeoAlg::TaggerCrossingPoint(const CRTTaggerGeo& tagger, const simb::MCParticle& particle){
   geo::Point_t entry {-99999, -99999, -99999};
   geo::Point_t exit {-99999, -99999, -99999};
-  CRTTaggerGeo tagger = GetTagger(taggerName);
 
   bool first = true;
   for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
@@ -678,80 +721,184 @@ geo::Point_t CRTGeoAlg::TaggerCrossingPoint(std::string taggerName, simb::MCPart
   return cross;
 }
 
+bool CRTGeoAlg::CrossesTagger(const CRTTaggerGeo& tagger, const simb::MCParticle& particle){
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
+    geo::Point_t point {particle.Vx(i), particle.Vy(i), particle.Vz(i)};
+    if(IsInsideTagger(tagger, point)) return true;
+  }
+  return false;
+}
+
 // ----------------------------------------------------------------------------------
 // Find the average of the module entry and exit points of a true particle trajectory
-geo::Point_t CRTGeoAlg::ModuleCrossingPoint(std::string moduleName, simb::MCParticle particle){
+geo::Point_t CRTGeoAlg::ModuleCrossingPoint(std::string moduleName, const simb::MCParticle& particle){
+  const CRTModuleGeo& module = fModules.at(moduleName);
+  return ModuleCrossingPoint(module, particle);
+}
+
+geo::Point_t CRTGeoAlg::ModuleCrossingPoint(const CRTModuleGeo& module, const simb::MCParticle& particle){
   geo::Point_t entry {-99999, -99999, -99999};
   geo::Point_t exit {-99999, -99999, -99999};
-  CRTModuleGeo module = GetModule(moduleName);
 
   bool first = true;
   for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
     geo::Point_t point {particle.Vx(i), particle.Vy(i), particle.Vz(i)};
-    if(!IsInsideModule(module, point)) continue;
+    if(!IsInsideModule(module, point)){
+      // Look at the mid point
+      if(i == particle.NumberTrajectoryPoints()-1) continue;
+      geo::Point_t next {particle.Vx(i+1), particle.Vy(i+1), particle.Vz(i+1)};
+      geo::Point_t mid {(point.X()+next.X())/2, (point.Y()+next.Y())/2, (point.Z()+next.Z())/2};
+      if(!IsInsideModule(module, mid)) continue;
+      point = mid;
+    }
     if(first){
       entry = point;
       first = false;
     }
     exit = point;
+
+    if(i == particle.NumberTrajectoryPoints()-1) continue;
+    geo::Point_t next {particle.Vx(i+1), particle.Vy(i+1), particle.Vz(i+1)};
+    geo::Point_t mid {(point.X()+next.X())/2, (point.Y()+next.Y())/2, (point.Z()+next.Z())/2};
+    if(!IsInsideModule(module, mid)) continue;
+    exit = mid;
   }
 
   geo::Point_t cross {(entry.X()+exit.X())/2., (entry.Y()+exit.Y())/2., (entry.Z()+exit.Z())/2};
   return cross;
 }
 
+bool CRTGeoAlg::CrossesModule(const CRTModuleGeo& module, const simb::MCParticle& particle){
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
+    geo::Point_t point {particle.Vx(i), particle.Vy(i), particle.Vz(i)};
+    if(IsInsideModule(module, point)) return true;
+
+    // Also look at midpoint with next point
+    if(i == particle.NumberTrajectoryPoints()-1) continue;
+    geo::Point_t next {particle.Vx(i+1), particle.Vy(i+1), particle.Vz(i+1)};
+    geo::Point_t mid {(point.X()+next.X())/2, (point.Y()+next.Y())/2, (point.Z()+next.Z())/2};
+    if(IsInsideModule(module, mid)) return true;
+  }
+  return false;
+}
+
 // ----------------------------------------------------------------------------------
 // Find the average of the strip entry and exit points of a true particle trajectory
-geo::Point_t CRTGeoAlg::StripCrossingPoint(std::string stripName, simb::MCParticle particle){
+geo::Point_t CRTGeoAlg::StripCrossingPoint(std::string stripName, const simb::MCParticle& particle){
+  const CRTStripGeo& strip = fStrips.at(stripName);
+  return StripCrossingPoint(strip, particle);
+}
+
+geo::Point_t CRTGeoAlg::StripCrossingPoint(const CRTStripGeo& strip, const simb::MCParticle& particle){
   geo::Point_t entry {-99999, -99999, -99999};
   geo::Point_t exit {-99999, -99999, -99999};
-  CRTStripGeo strip = GetStrip(stripName);
 
   bool first = true;
   for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
     geo::Point_t point {particle.Vx(i), particle.Vy(i), particle.Vz(i)};
-    if(!IsInsideStrip(strip, point)) continue;
+    if(!IsInsideStrip(strip, point)){
+      if(i == particle.NumberTrajectoryPoints()-1) continue;
+      geo::Point_t next {particle.Vx(i+1), particle.Vy(i+1), particle.Vz(i+1)};
+      geo::Point_t mid {(point.X()+next.X())/2, (point.Y()+next.Y())/2, (point.Z()+next.Z())/2};
+      if(!IsInsideStrip(strip, mid)) continue;
+      point = mid;
+    }
     if(first){
       entry = point;
       first = false;
     }
     exit = point;
+    if(i == particle.NumberTrajectoryPoints()-1) continue;
+    geo::Point_t next {particle.Vx(i+1), particle.Vy(i+1), particle.Vz(i+1)};
+    geo::Point_t mid {(point.X()+next.X())/2, (point.Y()+next.Y())/2, (point.Z()+next.Z())/2};
+    if(!IsInsideStrip(strip, mid)) continue;
+    exit = mid;
   }
 
   geo::Point_t cross {(entry.X()+exit.X())/2., (entry.Y()+exit.Y())/2., (entry.Z()+exit.Z())/2};
   return cross;
+}
+
+bool CRTGeoAlg::CrossesStrip(const CRTStripGeo& strip, const simb::MCParticle& particle){
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
+    geo::Point_t point {particle.Vx(i), particle.Vy(i), particle.Vz(i)};
+    if(IsInsideStrip(strip, point)) return true;
+
+    // Also look at midpoint with next point
+    if(i == particle.NumberTrajectoryPoints()-1) continue;
+    geo::Point_t next {particle.Vx(i+1), particle.Vy(i+1), particle.Vz(i+1)};
+    geo::Point_t mid {(point.X()+next.X())/2, (point.Y()+next.Y())/2, (point.Z()+next.Z())/2};
+    if(IsInsideStrip(strip, mid)) return true;
+  }
+  return false;
+}
+
+
+// ----------------------------------------------------------------------------------
+// Work out which strips the true particle crosses
+std::vector<std::string> CRTGeoAlg::CrossesStrips(const simb::MCParticle& particle){
+  std::vector<std::string> stripNames;
+  for(auto const& tagger : fTaggers){
+    if(!CrossesTagger(tagger.second, particle)) continue;
+    for(auto const& module : tagger.second.modules){
+      if(!CrossesModule(module.second, particle)) continue;
+      for(auto const& strip : module.second.strips){
+        if(!CrossesStrip(strip.second, particle)) continue;
+        if(std::find(stripNames.begin(), stripNames.end(), strip.first) != stripNames.end()) continue;
+        stripNames.push_back(strip.first);
+      }
+    }
+  }
+  return stripNames;
 }
 
 
 // ----------------------------------------------------------------------------------
 // Find the angle of true particle trajectory to tagger
-double CRTGeoAlg::AngleToTagger(std::string taggerName, simb::MCParticle particle){
+double CRTGeoAlg::AngleToTagger(std::string taggerName, const simb::MCParticle& particle){
   // Get normal to tagger using the top modules
   TVector3 normal (0,0,0);
   for(auto const& module : GetTagger(taggerName).modules){
-    if(module.second.top){ 
-      normal.SetXYZ(module.second.normal.X(), module.second.normal.Y(), module.second.normal.Z());
-      break;
-    }
+    normal.SetXYZ(module.second.normal.X(), module.second.normal.Y(), module.second.normal.Z());
+    break;
   }
+  //FIXME this is pretty horrible
+  if(normal.X()<0.5 && normal.X()>-0.5) normal.SetX(0);
+  if(normal.Y()<0.5 && normal.Y()>-0.5) normal.SetY(0);
+  if(normal.Z()<0.5 && normal.Z()>-0.5) normal.SetZ(0);
+
+  if(std::abs(normal.X())==1 && GetTagger(taggerName).minX < 0) normal.SetX(-1);
+  if(std::abs(normal.X())==1 && GetTagger(taggerName).minX > 0) normal.SetX(1);
+  if(std::abs(normal.Y())==1 && GetTagger(taggerName).minY < 0) normal.SetY(-1);
+  if(std::abs(normal.Y())==1 && GetTagger(taggerName).minY > 0) normal.SetY(1);
+  if(std::abs(normal.Z())==1 && GetTagger(taggerName).minZ < 0) normal.SetZ(-1);
+  if(std::abs(normal.Z())==1 && GetTagger(taggerName).minZ > 0) normal.SetZ(1);
+
   TVector3 start (particle.Vx(), particle.Vy(), particle.Vz());
   TVector3 end (particle.EndX(), particle.EndY(), particle.EndZ());
-  return normal.Angle(end-start);
+  TVector3 diff = end - start;
+
+  if(normal.X() == 1 && start.X() > end.X()) diff = start - end;
+  if(normal.X() == -1 && start.X() < end.X()) diff = start - end;
+  if(normal.Y() == 1 && start.Y() > end.Y()) diff = start - end;
+  if(normal.Y() == -1 && start.Y() < end.Y()) diff = start - end;
+  if(normal.Z() == 1 && start.Z() > end.Z()) diff = start - end;
+  if(normal.Z() == -1 && start.Z() < end.Z()) diff = start - end;
+
+  return normal.Angle(diff);
 }
 
 
 // ----------------------------------------------------------------------------------
 // Check if a particle enters the CRT volume
-bool CRTGeoAlg::EntersVolume(simb::MCParticle particle){
+bool CRTGeoAlg::EntersVolume(const simb::MCParticle& particle){
   bool enters = false;
   bool startOutside = false;
   bool endOutside = false;
   std::vector<double> limits = CRTLimits();
   for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
-    double x = particle.Vx(i); 
-    double y = particle.Vy(i);
-    double z = particle.Vz(i);
-    if(x > limits[0] && y > limits[1] && z > limits[2] && x < limits[3] && y < limits[4] && z < limits[5]){
+    geo::Point_t point {particle.Vx(i), particle.Vy(i), particle.Vz(i)};
+    if(IsInsideCRT(point)){
       enters = true;
     }
     else if(i == 0) startOutside = true;
@@ -763,16 +910,14 @@ bool CRTGeoAlg::EntersVolume(simb::MCParticle particle){
 
 // ----------------------------------------------------------------------------------
 // Check if a particle crosses the CRT volume
-bool CRTGeoAlg::CrossesVolume(simb::MCParticle particle){
+bool CRTGeoAlg::CrossesVolume(const simb::MCParticle& particle){
   bool enters = false;
   bool startOutside = false;
   bool endOutside = false;
   std::vector<double> limits = CRTLimits();
   for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
-    double x = particle.Vx(i); 
-    double y = particle.Vy(i);
-    double z = particle.Vz(i);
-    if(x > limits[0] && y > limits[1] && z > limits[2] && x < limits[3] && y < limits[4] && z < limits[5]){
+    geo::Point_t point {particle.Vx(i), particle.Vy(i), particle.Vz(i)};
+    if(IsInsideCRT(point)){
       enters = true;
     }
     else if(i == 0) startOutside = true;
@@ -785,7 +930,7 @@ bool CRTGeoAlg::CrossesVolume(simb::MCParticle particle){
 
 // ----------------------------------------------------------------------------------
 // Determine if a particle would be able to produce a hit in a tagger
-bool CRTGeoAlg::ValidCrossingPoint(std::string taggerName, simb::MCParticle particle){
+bool CRTGeoAlg::ValidCrossingPoint(std::string taggerName, const simb::MCParticle& particle){
 
   // Get all the crossed strips in the tagger
   std::vector<std::string> crossedModules;
