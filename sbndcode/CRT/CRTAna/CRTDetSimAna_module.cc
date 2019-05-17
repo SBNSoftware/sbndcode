@@ -132,9 +132,6 @@ namespace sbnd {
     std::map<std::string, TH2D*> hStripDistADC;
     std::map<std::string, TH2D*> hSipmDistADC;
 
-    int nTotal = 0;
-    int nReco = 0;
-
     // Other variables shared between different methods.
     detinfo::DetectorClocks const* fDetectorClocks;
     detinfo::ElecClock fTrigClock;
@@ -317,7 +314,6 @@ namespace sbnd {
         hEffStripDistTotal[tagger]->Fill(stripDistIde);
         hEffEDepTotal[tagger]->Fill(ide.energyDeposited);
         hEffLengthTotal[tagger]->Fill(length);
-        nTotal++;
 
         // Get all the CRT data matched to the same true ID
         if(crtData.find(trueID) == crtData.end()) continue;
@@ -334,7 +330,6 @@ namespace sbnd {
         hEffStripDistReco[tagger]->Fill(stripDistIde);
         hEffEDepReco[tagger]->Fill(ide.energyDeposited);
         hEffLengthReco[tagger]->Fill(length);
-        nReco++;
           
       }
     }
@@ -343,8 +338,6 @@ namespace sbnd {
   } // CRTDetSimAna::analyze()
 
   void CRTDetSimAna::endJob(){
-
-    std::cout<<"Total = "<<nTotal<<", reco = "<<nReco<<" ("<<(double)nReco/nTotal<<")\n";
 
   } // CRTDetSimAna::endJob()
   
