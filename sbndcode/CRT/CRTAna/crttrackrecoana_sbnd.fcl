@@ -5,6 +5,8 @@
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
 #include "crttrackproducer_sbnd.fcl"
+#include "crteventdisplay_sbnd.fcl"
+#include "crtbacktracker_sbnd.fcl"
 
 process_name: CRTTrackRecoAna
 
@@ -55,16 +57,14 @@ physics:
 
       # The input parameters
       SimModuleLabel:       "largeant"  # Simulation producer module label
-      CRTModuleLabel:       "crt"       # CRT producer module label
-      CRTHitModuleLabel:       "crthit"       # CRT producer module label
+      CRTHitLabel:          "crthit"       # CRT producer module label
+      CRTTrackLabel:        "crttrack"       # CRT producer module label
       Verbose:              true        # Print extra information about what's going on
       VeryVerbose:          true        # Print detailed information about every muon
       Plot:                 false        # Draw truth and reco tracks in event
       PlotTrackID:          165         # ID of true track to plot
-      UseReadoutWindow:     true        # Only reconstruct hits within readout window
-      # Track reconstruction
-      TrackAlg:             @local::standard_crttrackalg
-      UseTopPlane:          true        # Use hits from the top plane (SBND specific)
+      Evd:                  @local::standard_crteventdisplay
+      CrtBackTrack:         @local::standard_crtbacktracker
     }
   }
 

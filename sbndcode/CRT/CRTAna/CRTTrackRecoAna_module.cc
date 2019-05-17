@@ -10,23 +10,15 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
-#include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTTrackRecoAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTTruthMatchUtils.h"
-#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTEventDisplay.h"
+#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
 // LArSoft includes
-#include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/RecoBase/Track.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
-#include "nusimdata/SimulationBase/MCTruth.h"
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -36,7 +28,6 @@
 #include "art_root_io/TFileService.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "canvas/Persistency/Common/FindManyP.h"
-#include "canvas/Utilities/Exception.h"
 #include "larsim/MCCheater/BackTrackerService.h"
 
 
@@ -45,37 +36,13 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
-#include "cetlib/pow.h" // cet::sum_of_squares()
 
 // ROOT includes. Note: To look up the properties of the ROOT classes,
 // use the ROOT web site; e.g.,
 // <https://root.cern.ch/doc/master/annotated.html>
 #include "TH1.h"
 #include "TH2.h"
-#include "TTree.h"
-#include "TLorentzVector.h"
 #include "TVector3.h"
-#include "Math/Minimizer.h"
-#include "Math/Functor.h"
-#include "Math/Factory.h"
-#include "TPolyMarker3D.h"
-#include "TPolyLine3D.h"
-#include "TCanvas.h"
-#include "TF1.h"
-#include "TGraphErrors.h"
-#include "TGraph2DErrors.h"
-#include "TLine.h"
-#include "TMarker.h"
-#include "TGraphAsymmErrors.h"
-#include "TLegend.h"
-#include "TBox.h"
-#include "TPad.h"
-#include "TString.h"
-#include "TGeoManager.h"
-#include "Math/Vector3D.h"
-#include "Fit/Fitter.h"
-#include "Math/Functor.h"
-#include "TRandom.h"
 
 // C++ includes
 #include <map>
@@ -85,12 +52,6 @@
 #include <algorithm>
 
 namespace sbnd {
-
-  struct RecoTruth{
-    std::vector<crt::CRTHit> crtHits;
-    std::vector<crt::CRTHit> crtAveHits;
-    std::vector<crt::CRTTrack> crtTracks;
-  };
 
   class CRTTrackRecoAna : public art::EDAnalyzer {
   public:
@@ -106,14 +67,14 @@ namespace sbnd {
         Comment("tag of detector simulation data product")
       };
 
-      fhicl::Atom<art::InputTag> CRTModuleLabel {
-        Name("CRTModuleLabel"),
-        Comment("tag of CRT simulation data product")
+      fhicl::Atom<art::InputTag> CRTHitLabel {
+        Name("CRTHitLabel"),
+        Comment("tag of CRT hit data product")
       };
 
-      fhicl::Atom<art::InputTag> CRTHitModuleLabel {
-        Name("CRTHitModuleLabel"),
-        Comment("tag of CRT simulation data product")
+      fhicl::Atom<art::InputTag> CRTTrackLabel {
+        Name("CRTTrackLabel"),
+        Comment("tag of CRT track data product")
       };
 
       fhicl::Atom<bool> Verbose {
@@ -136,19 +97,12 @@ namespace sbnd {
         Comment("ID of track to plot")
       };
 
-      fhicl::Table<CRTTrackRecoAlg::Config> TrackAlg {
-        Name("TrackAlg"),
-        Comment("")
+      fhicl::Table<CRTEventDisplay::Config> Evd {
+        Name("Evd"),
       };
 
-      fhicl::Atom<bool> UseTopPlane {
-        Name("UseTopPlane"),
-        Comment("Use hits from the top plane (SBND specific)")
-      };
-
-      fhicl::Atom<bool> UseReadoutWindow {
-        Name("UseReadoutWindow"),
-        Comment("")
+      fhicl::Table<CRTBackTracker::Config> CrtBackTrack {
+        Name("CrtBackTrack"),
       };
 
     }; // Config
@@ -167,39 +121,34 @@ namespace sbnd {
     // Called once, at end of the job
     virtual void endJob() override;
   
-    void DrawTrueTracks(const std::vector<simb::MCParticle>& particle, std::map<int, RecoTruth> truthMatch, bool truth, bool hits, bool tracks, bool tpc, int ind);
-
-
   private:
 
     // fcl file parameters
     art::InputTag fSimModuleLabel;      ///< name of detsim producer
-    art::InputTag fCRTModuleLabel;      ///< name of CRT hit producer
-    art::InputTag fCRTHitModuleLabel;      ///< name of CRT hit producer
+    art::InputTag fCRTHitLabel;         ///< name of CRT hit producer
+    art::InputTag fCRTTrackLabel;       ///< name of CRT track producer
     bool          fVerbose;             ///< print information about what's going on
     bool          fVeryVerbose;         ///< print more information about what's going on
     bool          fPlot;                ///< plot tracks
     int           fPlotTrackID;         ///< id of track to plot
-    bool          fUseTopPlane;         // Use hits from the top plane (SBND specific)
-    bool          fUseReadoutWindow;         // Use hits from the top plane (SBND specific)
     
     // n-tuples
-    TH1D* fCrtHitsPerTrack;
-    TH1D* fAveHitsPerTrack;
-    TH1D* fTracksPerTrack;
+    std::map<std::string, TH1D*> hTrackDist;
 
-    TH1D* fTrackDist;
+    std::map<std::string, TH1D*> hCrossDistance;
+
+    std::map<std::string, TH1D*> hEffMomTotal;
+    std::map<std::string, TH1D*> hEffMomReco;
+    std::map<std::string, TH1D*> hEffThetaTotal;
+    std::map<std::string, TH1D*> hEffThetaReco;
+    std::map<std::string, TH1D*> hEffPhiTotal;
+    std::map<std::string, TH1D*> hEffPhiReco;
 
     // Other variables shared between different methods.
-    detinfo::DetectorProperties const* fDetectorProperties;    ///< pointer to detector properties provider
-    detinfo::DetectorClocks const* fDetectorClocks;            ///< pointer to detector clocks provider
-    TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
 
-    CRTTruthRecoAlg truthAlg;
-    CRTTrackRecoAlg trackAlg;
-
-    const size_t nTaggers = fCrtGeo.NumTaggers();
+    CRTEventDisplay evd;
+    CRTBackTracker fCrtBackTrack;
 
     // Performance Counters
 
@@ -215,31 +164,36 @@ namespace sbnd {
   CRTTrackRecoAna::CRTTrackRecoAna(Parameters const& config)
     : EDAnalyzer(config)
     , fSimModuleLabel       (config().SimModuleLabel())
-    , fCRTModuleLabel       (config().CRTModuleLabel())
-    , fCRTHitModuleLabel    (config().CRTHitModuleLabel())
+    , fCRTHitLabel          (config().CRTHitLabel())
+    , fCRTTrackLabel        (config().CRTTrackLabel())
     , fVerbose              (config().Verbose())
     , fVeryVerbose          (config().VeryVerbose())
     , fPlot                 (config().Plot())
     , fPlotTrackID          (config().PlotTrackID())
-    , fUseTopPlane          (config().UseTopPlane())
-    , fUseReadoutWindow     (config().UseReadoutWindow())
-    , truthAlg()
-    , trackAlg(config().TrackAlg())
+    , evd                   (config().Evd())
+    , fCrtBackTrack         (config().CrtBackTrack())
   {
-    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
+
   }
 
   void CRTTrackRecoAna::beginJob()
   {
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
+    // Define histograms
+    for(size_t i = 0; i < fCrtGeo.NumTaggers(); i++){
+      std::string tagger = fCrtGeo.GetTagger(i).name;
+      hCrossDistance[tagger] = tfs->make<TH1D>(Form("CrossDistance_%s", tagger.c_str()), "", 40, 0, 100);
+      hTrackDist[tagger]     = tfs->make<TH1D>(Form("TrackDist_%s", tagger.c_str()),     "", 40, 0, 200);
 
-    fCrtHitsPerTrack   = tfs->make<TH1D>("crthitspertrack",    ";CRT Hits;N Tracks",  10, 0, 10);
-    fAveHitsPerTrack   = tfs->make<TH1D>("avehitspertrack",    ";Average Hits;N Tracks",  10, 0, 10);
-    fTracksPerTrack    = tfs->make<TH1D>("trackshitspertrack", ";CRT Tracks;N Tracks",  10, 0, 10);
+      hEffMomTotal[tagger]   = tfs->make<TH1D>(Form("EffMomTotal_%s", tagger.c_str()),   "", 20, 0,    10);
+      hEffMomReco[tagger]    = tfs->make<TH1D>(Form("EffMomReco_%s", tagger.c_str()),    "", 20, 0,    10);
+      hEffThetaTotal[tagger] = tfs->make<TH1D>(Form("EffThetaTotal_%s", tagger.c_str()), "", 20, 0,    3.2);
+      hEffThetaReco[tagger]  = tfs->make<TH1D>(Form("EffThetaReco_%s", tagger.c_str()),  "", 20, 0,    3.2);
+      hEffPhiTotal[tagger]   = tfs->make<TH1D>(Form("EffPhiTotal_%s", tagger.c_str()),   "", 20, -3.2, 3.2);
+      hEffPhiReco[tagger]    = tfs->make<TH1D>(Form("EffPhiReco_%s", tagger.c_str()),    "", 20, -3.2, 3.2);
+    }
 
-    fTrackDist    = tfs->make<TH1D>("trackdist", ";True reco dist^2 (cm^2);N Tracks",  50, 0, 200);
     // Initial output
     std::cout<<"----------------- CRT Track Reco Ana Module -------------------"<<std::endl;
 
@@ -258,336 +212,151 @@ namespace sbnd {
                <<"============================================"<<std::endl;
     }
 
-    // Detector properties
-    double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
-
-    // Store the true x (CRT width direction) and y (CRT length direction) crossing points
-    std::map<int,TVector3> *partXYZ = new std::map<int,TVector3>[nTaggers];
-
-    std::vector<int> muonIDs;
-
+    //----------------------------------------------------------------------------------------------------------
+    //                                          GETTING PRODUCTS
+    //----------------------------------------------------------------------------------------------------------
     // Retrieve all the truth info in the events
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
+
+    // Get all the CRT hits
+    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
+
+    // Get all the CRT tracks
+    auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCRTTrackLabel);
+
+    // Get hit to data associations
+    art::FindManyP<crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
+
+    //----------------------------------------------------------------------------------------------------------
+    //                                          TRUTH MATCHING
+    //----------------------------------------------------------------------------------------------------------
+    std::map<int, std::vector<crt::CRTTrack>> crtTracks;
+    double minTrackTime = 99999;
+    double maxTrackTime = -99999;
+    for(auto const& track : (*crtTrackHandle)){
+      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, track);
+      if(trueId == -99999) continue;
+      crtTracks[trueId].push_back(track);
+      double trackTime = (double)(int)track.ts1_ns * 1e-3;
+      if(trackTime < minTrackTime) minTrackTime = trackTime;
+      if(trackTime > maxTrackTime) maxTrackTime = trackTime;
+    }
+
+    std::map<int, std::vector<crt::CRTHit>> crtHits;
+    for(auto const& hit : (*crtHitHandle)){
+      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, hit);
+      if(trueId == -99999) continue;
+      crtHits[trueId].push_back(hit);
+    }
+
+    //----------------------------------------------------------------------------------------------------------
+    //                                          EFFICIENCIES
+    //----------------------------------------------------------------------------------------------------------
     // Fill a map of true particles
-    std::vector<simb::MCParticle> particles;
+    std::map<int, simb::MCParticle> particles;
     for (auto const& particle: (*particleHandle)){
       int partId = particle.TrackId();
-      double pt = particle.T() * 1e-3; // [us]
+      particles[partId] = particle;
 
-      // Check particle is a muon
-      int pdg = std::abs(particle.PdgCode());
-      if(pdg != 13){ muonIDs.push_back(partId); continue;}
+      // Only consider particles within the time limit of the generated CRT hits
+      double time = particle.T() * 1e-3;
+      if(time < minTrackTime || time > maxTrackTime) continue;
 
-      // Check if the particle is in the reconstructible time window
-      if(fUseReadoutWindow){
-        if(pt < -driftTimeMuS || pt > readoutWindowMuS) continue;
+      if(!(std::abs(particle.PdgCode()) == 13 && particle.Mother()==0)) continue;
+
+      // Only consider particles which generated more than 1 crt hit
+      if(crtHits.find(partId) == crtHits.end()) continue;
+      int nPlanesHit = 0;
+      std::vector<std::string> hitTaggers;
+      for(auto const& hit : crtHits[partId]){
+        if(std::find(hitTaggers.begin(), hitTaggers.end(), hit.tagger) != hitTaggers.end()) continue;
+        hitTaggers.push_back(hit.tagger);
+        nPlanesHit++;
+      }
+      if(nPlanesHit < 2) continue;
+
+      double momentum = particle.P();
+      TVector3 start (particle.Vx(), particle.Vy(), particle.Vz());
+      TVector3 end (particle.EndX(), particle.EndY(), particle.EndZ());
+      double theta = (end-start).Theta();
+      double phi = (end-start).Phi();
+      for(auto const& tagger : hitTaggers){
+        hEffMomTotal[tagger]->Fill(momentum);
+        hEffThetaTotal[tagger]->Fill(theta);
+        hEffPhiTotal[tagger]->Fill(phi);
       }
 
-      // Check particle is through-going
-      if(!truthAlg.IsThroughGoing(particle)) continue;
-      int ntag = 0;
-      int nstrp = 0;
-      // Loop over number of taggers
-      for (size_t tag_i = 0; tag_i < nTaggers; tag_i++){
-        if(!truthAlg.CrossesTagger(particle, tag_i)) continue;
-        if(truthAlg.CrossesStrip(particle, tag_i) && tag_i!=4) nstrp++;
-        TVector3 crossPoint = truthAlg.TaggerCrossPoint(particle, tag_i);
-        partXYZ[tag_i][partId] = crossPoint;
-        ntag++;
-      }
-
-      particles.push_back(particle);
-      nParts++;
-
-      if(ntag==1) nSinglePlane++;
-      if(nstrp>1) nTwoStripPlanes++;
-    }
-
-    if(fVerbose) std::cout<<"Number of true particles = "<<particles.size()<<std::endl;
-
-    // Retrieve list of CRT hits
-    art::Handle< std::vector<crt::CRTHit>> crtListHandle;
-    std::vector<art::Ptr<crt::CRTHit> > crtList;
-    if (event.getByLabel(fCRTHitModuleLabel, crtListHandle))
-      art::fill_ptr_vector(crtList, crtListHandle); 
-
-    if(fVerbose) std::cout<<"Number of CRT hits = "<<crtList.size()<<std::endl;
-
-    std::map<int, RecoTruth> truthMatch;
-
-    std::map<art::Ptr<crt::CRTHit>, int> hitIds;
-    for(size_t i = 0; i < crtList.size(); i++){
-      hitIds[crtList[i]] = i;
-
-      std::vector<int> ids = CRTTruthMatchUtils::AllTrueIds(crtListHandle, event, fCRTHitModuleLabel, fCRTModuleLabel, i);
-      for(int& ID : ids){
-        truthMatch[ID].crtHits.push_back(*crtList[i]);
+      if(crtTracks.find(partId) == crtTracks.end()) continue;
+      for(auto const& tagger : hitTaggers){
+        hEffMomReco[tagger]->Fill(momentum);
+        hEffThetaReco[tagger]->Fill(theta);
+        hEffPhiReco[tagger]->Fill(phi);
       }
     }
 
-    // Fill a vector of pairs of time and width direction for each CRT plane
-    // The y crossing point of z planes and z crossing point of y planes would be constant
+    //----------------------------------------------------------------------------------------------------------
+    //                                        CRT TRACK ANALYSIS
+    //----------------------------------------------------------------------------------------------------------
+    int track_i = 0;
+    for(auto const& track : (*crtTrackHandle)){
 
-    std::vector<std::vector<art::Ptr<crt::CRTHit>>> crtTzeroVect = trackAlg.CreateCRTTzeros(crtList);
+      std::vector<art::Ptr<crt::CRTHit>> hits = findManyHits.at(track_i);
+      track_i++;
+
+      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, track);
+      if(particles.find(trueId) == particles.end()) continue;
+
+      // Calculate the average distance over the length of the track 
+      TVector3 start {track.x1_pos, track.y1_pos, track.z1_pos};
+      TVector3 end {track.x2_pos, track.y2_pos, track.z2_pos};
+      double denominator = (end - start).Mag();
+
+      std::vector<double> crtLims = fCrtGeo.CRTLimits();
+      simb::MCParticle particle = particles[trueId];
+
+      int nTraj = particle.NumberTrajectoryPoints();
+      double aveDCA = 0;
+      double npts = 0;
+      for(int j = 0; j < nTraj; j++){
+        TVector3 pt (particle.Vx(j), particle.Vy(j), particle.Vz(j));
+        if (pt.X() >= crtLims[0] && pt.X() <= crtLims[3] && pt.Y() >= crtLims[1] && pt.Y() <= crtLims[4] && pt.Z() >= crtLims[2] && pt.Z() <= crtLims[5]){
+          double numerator = ((pt - start).Cross(pt - end)).Mag();
+          aveDCA += numerator/denominator;
+          npts++;
+        }
+      }
+
+      aveDCA = aveDCA/npts;
+
+      // Find the taggers and positions of the true crossing points
+      crt::CRTHit startHit, endHit;
+      for(auto const& hit : hits){
+        geo::Point_t trueCross = fCrtGeo.TaggerCrossingPoint(hit->tagger, particles[trueId]);
+        if(trueCross.X() == -99999) continue;
+        // For each tagger calculate the distance between the CRT track and true track
+        double dist = std::sqrt(std::pow(hit->x_pos - trueCross.X(), 2)
+                                + std::pow(hit->y_pos - trueCross.Y(), 2)
+                                + std::pow(hit->z_pos - trueCross.Z(), 2));
+        hCrossDistance[hit->tagger]->Fill(dist);
+        hTrackDist[hit->tagger]->Fill(aveDCA);
+      }
+
+    }
     
-    int nTracks = 0;
-    int nCompTracks = 0;
-    int nIncTracks = 0;
-
-    // Loop over tzeros
-    for(size_t i = 0; i<crtTzeroVect.size(); i++){
-
-      //loop over hits for this tzero, sort by tagger
-      std::map<std::string, std::vector<art::Ptr<crt::CRTHit>>> hits;
-      for (size_t ah = 0; ah< crtTzeroVect[i].size(); ++ah){        
-        std::string ip = crtTzeroVect[i][ah]->tagger;       
-        hits[ip].push_back(crtTzeroVect[i][ah]);
-      } // loop over hits
-      
-      //loop over planes and calculate average hits
-      std::vector<std::pair<crt::CRTHit, std::vector<int>>> allHits;
-      for (auto &keyVal : hits){
-        std::string ip = keyVal.first;
-        std::vector<std::pair<crt::CRTHit, std::vector<int>>> ahits = trackAlg.AverageHits(hits[ip], hitIds);
-        if(fUseTopPlane && ip == "volTaggerTopHigh_0"){ 
-          allHits.insert(allHits.end(), ahits.begin(), ahits.end());
-        }
-        else if(ip != "volTaggerTopHigh_0"){ 
-          allHits.insert(allHits.end(), ahits.begin(), ahits.end());
-        }
-      }
-
-      // Do truth matching
-      for(auto const& allHit : allHits){
-        std::vector<int> ids;
-        for(auto const& hit_i : allHit.second){
-          std::vector<int> trueIds = CRTTruthMatchUtils::AllTrueIds(crtListHandle, event, fCRTHitModuleLabel, fCRTModuleLabel, hit_i);
-          ids.insert(ids.end(), trueIds.begin(), trueIds.end());
-        }
-        std::sort(ids.begin(), ids.end());
-        ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
-        for(int& ID : ids){
-          truthMatch[ID].crtAveHits.push_back(allHit.first);
-        }
-      }
-        
-
-      std::vector<std::pair<crt::CRTTrack, std::vector<int>>> tracks = trackAlg.CreateTracks(allHits);
-      nTracks += tracks.size();
-      for(const auto& track : tracks){
-        if(track.first.complete) nCompTracks++;
-        else nIncTracks++;
-
-        std::vector<int> ids;
-        for(auto const& hit_i : track.second){
-          std::vector<int> trueIds = CRTTruthMatchUtils::AllTrueIds(crtListHandle, event, fCRTHitModuleLabel, fCRTModuleLabel, hit_i);
-          ids.insert(ids.end(), trueIds.begin(), trueIds.end());
-        }
-        std::sort(ids.begin(), ids.end());
-        ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
-        for(int& ID : ids){
-          truthMatch[ID].crtTracks.push_back(track.first);
-        }
-
-      }
+    if(fPlot){
+      evd.SetDrawCrtHits(true);
+      evd.SetDrawCrtTracks(true);
+      if(fVeryVerbose) evd.SetPrint(true);
+      if(fPlotTrackID != -99999) evd.SetTrueId(fPlotTrackID);
+      evd.Draw(event);
     }
 
-    if(fVerbose){
-      std::cout<<"Number of hits = "<<crtList.size()<<std::endl
-               <<"Number of T zero = "<<crtTzeroVect.size()<<std::endl
-               <<"Number of tracks = "<<nTracks<<std::endl
-               <<"Number of complete tracks = "<<nCompTracks<<std::endl
-               <<"Number of incomplete tracks = "<<nIncTracks<<std::endl;
-    }
-
-    if(fPlot) DrawTrueTracks(particles, truthMatch, true, false, true, false, fPlotTrackID);
-
-    std::vector<double> crtLims = fCrtGeo.CRTLimits();
-    for(auto const& particle : particles){
-      int partId = particle.TrackId();
-
-      RecoTruth rt = truthMatch[partId];
-      fCrtHitsPerTrack->Fill(rt.crtHits.size());
-      fAveHitsPerTrack->Fill(rt.crtAveHits.size());
-      fTracksPerTrack->Fill(rt.crtTracks.size());
-
-      if(rt.crtTracks.size()>0) nMatchTrack++;
-
-      if(rt.crtTracks.size()>0){
-        double minxres = 999999;
-        double minipt = 1;
-
-        for(size_t i = 0; i < rt.crtTracks.size(); i++){
-          double sx = rt.crtTracks[i].x1_pos;
-          double sy = rt.crtTracks[i].y1_pos;
-          double sz = rt.crtTracks[i].z1_pos;
-          double ex = rt.crtTracks[i].x2_pos;
-          double ey = rt.crtTracks[i].y2_pos;
-          double ez = rt.crtTracks[i].z2_pos;
-          double p0 = sx - (sz*(sx-ex)/(sz-ez));
-          double p1 = (sx-ex)/(sz-ez);
-          double p2 = sy - (sz*(sy-ey)/(sz-ez));
-          double p3 = (sy-ey)/(sz-ez);
-          TVector3 x0(p0, p2, 0.);
-          TVector3 x1(p0+p1, p2+p3, 1.);
-          TVector3 u = (x1-x0).Unit();
-
-          int nTraj = particle.NumberTrajectoryPoints();
-          int ipt = 0;
-          double xres = 0;
-          for(int j = 0; j < nTraj; j++){
-            if (particle.Vx(j) >= crtLims[0] && particle.Vx(j) <= crtLims[3] && particle.Vy(j) >= crtLims[1] && particle.Vy(j) <= crtLims[4] && particle.Vz(j) >= crtLims[2] && particle.Vz(j) <= crtLims[5]){
-              TVector3 xp(particle.Vx(j), particle.Vy(j), particle.Vz(j));
-              double d2 = ((xp-x0).Cross(u)).Mag2();
-              xres += d2;
-              ipt++;
-            }
-          }
-
-          if(xres < minxres) {minxres = xres; minipt = ipt;}
-        }
-
-        fTrackDist->Fill(minxres/minipt);
-      }
-    }
-
-    // Detailed truth matching information for each true particle
-    if(fVeryVerbose){
-      for(auto const& particle : particles){
-        int partId = particle.TrackId();
-        //Print the crossing points
-        std::cout<<"\nParticle "<<partId<<": Start("<<particle.Vx()<<","<<particle.Vy()<<","<<particle.Vz()<<") End("<<particle.EndX()<<","<<particle.EndY()<<","<<particle.EndZ()<<") time = "<<particle.T()*1e-3<<" us \nTrue crossing points:\n";
-        for(size_t tag_i = 0; tag_i < nTaggers; tag_i++){
-          if(partXYZ[tag_i].find(partId)!=partXYZ[tag_i].end()){
-            std::cout<<"Tagger "<<tag_i<<": Coordinates = ("<<partXYZ[tag_i][partId].X()<<", "<<partXYZ[tag_i][partId].Y()<<", "<<partXYZ[tag_i][partId].Z()<<")\n";
-          }
-        }
-
-        RecoTruth rt = truthMatch[partId];
-        std::cout<<"->Reco tracks:\n";
-        for(size_t trk_i = 0; trk_i < rt.crtTracks.size(); trk_i++){
-          crt::CRTTrack tr = rt.crtTracks[trk_i];
-          std::cout<<"  Start = ("<<tr.x1_pos<<","<<tr.y1_pos<<","<<tr.z1_pos<<") End = ("<<tr.x2_pos<<","<<tr.y2_pos<<","<<tr.z2_pos<<") time = "<<tr.ts1_ns*1e-3<<" us\n";
-        }
-
-        std::cout<<"-->Average hits:\n";
-        for(size_t hit_i = 0; hit_i < rt.crtAveHits.size(); hit_i++){
-          crt::CRTHit ah = rt.crtAveHits[hit_i];
-          std::cout<<"   "<<ah.tagger<<": Coordinates = ("<<ah.x_pos<<","<<ah.y_pos<<","<<ah.z_pos<<") time = "<<ah.ts1_ns*1e-3<<" us\n";
-        }
-
-        std::cout<<"--->Reco crossing points:\n";
-        for(size_t hit_i = 0; hit_i < rt.crtHits.size(); hit_i++){
-          crt::CRTHit ht = rt.crtHits[hit_i];
-          std::cout<<"    "<<ht.tagger<<": Coordinates = ("<<ht.x_pos<<", "<<ht.y_pos<<", "<<ht.z_pos<<") time = "<<ht.ts1_ns*1e-3<<" us\n";
-        }
-      }
-    }
-
-    delete[] partXYZ;
 
   } // CRTTrackRecoAna::analyze()
 
-  void CRTTrackRecoAna::endJob(){
-
-    std::cout<<"=========================== GENERAL INFORMATION ===========================\n"
-             <<"Number of through-going muons = "<<nParts
-             <<"\nNumber of muons that pass through 1 plane = "<<nSinglePlane
-             <<"\nNumber of muons with at least 1 matched track = "<<nMatchTrack
-             <<"\nNumber of muons that cross 2 strips on 2 planes = "<<nTwoStripPlanes<<"\n";
-
+  void CRTTrackRecoAna::endJob(){  
 
   } // CRTTrackRecoAna::endJob()
-
-
-  void CRTTrackRecoAna::DrawTrueTracks(const std::vector<simb::MCParticle>& particle, std::map<int, RecoTruth> truthMatch, bool truth, bool hits, bool tracks, bool tpc, int ind){
-    // Create a canvas 
-    TCanvas *c1 = new TCanvas("c1","",700,700);
-    // Draw the tagger planes
-    for(size_t tag_i = 0; tag_i < fCrtGeo.NumTaggers(); tag_i++){
-      double rmin[3] = {fCrtGeo.GetTagger(tag_i).minX, fCrtGeo.GetTagger(tag_i).minY, fCrtGeo.GetTagger(tag_i).minZ};
-      double rmax[3] = {fCrtGeo.GetTagger(tag_i).maxX, fCrtGeo.GetTagger(tag_i).maxY, fCrtGeo.GetTagger(tag_i).maxZ};
-      truthAlg.DrawCube(c1, rmin, rmax, 1);
-    }
-
-    if(tpc){
-      double xmin = fTpcGeo.MinX(); 
-      double xmax = fTpcGeo.MaxX();
-      double ymin = fTpcGeo.MinY();
-      double ymax = fTpcGeo.MaxY();
-      double zmin = fTpcGeo.MinZ();
-      double zmax = fTpcGeo.MaxZ();
-      double rmin[3] = {xmin, ymin, zmin};
-      double rmax[3] = {xmax, ymax, zmax};
-      truthAlg.DrawCube(c1, rmin, rmax, 2);
-    }
-
-    // Draw the true particles
-    TPolyLine3D *trajectories[100];
-    TPolyLine3D *crttrack[100];
-    int ncrtTracks = 0;
-    size_t lim = particle.size();
-    for(size_t i = 0; i < lim; i++){
-      int id = particle[i].TrackId();
-      bool plot = true;
-      if(ind >= 0){ 
-        plot = false;
-        if(id == ind) plot = true;
-      }
-      if(truth && plot){
-        int nTraj = particle[i].NumberTrajectoryPoints();
-        trajectories[i] = new TPolyLine3D(nTraj);
-        int ipt = 0;
-        for(int j = 0; j < nTraj; j++){
-          if(abs(particle[i].Vx(j))<500 && particle[i].Vy(j)<900 && particle[i].Vy(j)>-450 && particle[i].Vz(j)<700 && particle[i].Vz(j)>-400){
-            trajectories[i]->SetPoint(ipt, particle[i].Vx(j), particle[i].Vy(j), particle[i].Vz(j));
-            ipt++;
-          }
-        }
-        trajectories[i]->SetLineColor(851+i);
-        trajectories[i]->SetLineWidth(2);
-        trajectories[i]->Draw();
-      }
-    }
-    std::map<int, RecoTruth> tMatch = truthMatch;
-    if(truthMatch.find(ind)!=truthMatch.end()){
-      tMatch.clear();
-      tMatch[ind] = truthMatch[ind];
-    }
-    for(auto &irt : tMatch){
-      RecoTruth rt = irt.second;
-      if(hits){
-        // Plot the hits
-        for(size_t j = 0; j < rt.crtHits.size(); j++){
-          crt::CRTHit ht = rt.crtHits[j];
-          // Get the limits
-          double rmin[3] = {ht.x_pos-ht.x_err,ht.y_pos-ht.y_err,ht.z_pos-ht.z_err};
-          double rmax[3] = {ht.x_pos+ht.x_err,ht.y_pos+ht.y_err,ht.z_pos+ht.z_err};
-          truthAlg.DrawCube(c1, rmin, rmax, 3);
-        }
-      }
-      if(tracks){
-        // Plot the tracks
-        for(size_t j = 0; j < rt.crtTracks.size(); j++){
-          // Get the start and end points
-          crt::CRTTrack tr = rt.crtTracks[j];
-          crttrack[ncrtTracks] = new TPolyLine3D(2);
-          crttrack[ncrtTracks]->SetPoint(0, tr.x1_pos, tr.y1_pos, tr.z1_pos);
-          crttrack[ncrtTracks]->SetPoint(1, tr.x2_pos, tr.y2_pos, tr.z2_pos);
-          // Draw a line between them
-          crttrack[ncrtTracks]->SetLineColor(2);
-          crttrack[ncrtTracks]->SetLineWidth(2);
-          if (true/*tr.complete && CrossesTPC(tr)*/){
-            crttrack[ncrtTracks]->Draw();
-          }
-          ncrtTracks++;
-        }
-      }
-    }
-
-    c1->SaveAs("crtTagger.root");
-  }
 
 
   DEFINE_ART_MODULE(CRTTrackRecoAna)
