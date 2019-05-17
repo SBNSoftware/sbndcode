@@ -38,8 +38,12 @@ simple_plugin(SimWireSBND "module"
                            cetlib cetlib_except
                            ${CLHEP}
                            ${ROOT_BASIC_LIB_LIST}
+			   
+			   
+
 )
 
+add_subdirectory(Services)
 
 install_headers()
 install_fhicl()

@@ -1,0 +1,47 @@
+# #include "protoDUNE_detsim.fcl"
+#include "standard_detsim_sbnd.fcl"
+
+# tuned with ProtoDUNE-SP run4696 data
+services.ChannelNoiseService: {
+  service_provider: SPhaseChannelNoiseService
+  NoiseArrayPoints: 1000
+  LogLevel:         0       
+  
+  EnableWhiteNoise: false
+  WhiteNoiseU:   1.6
+  WhiteNoiseV:   1.6
+  WhiteNoiseZ:   1.6
+  
+  EnableGaussianNoise: false
+  GausNormU: [ 30, -3, 15 ]
+  GausMeanU: [ 630, 640, 730 ]
+  GausSigmaU: [ 0.5, 0.5, 0.5 ]
+  GausNormV: [ 30, 40, 15 ]
+  GausMeanV: [ 130, 330, 430 ]
+  GausSigmaV: [ 0.5, 2.0, 0.5 ]
+  GausNormZ: [ 3 ]
+  GausMeanZ: [ 34 ]
+  GausSigmaZ: [ 5 ]
+  
+  EnableMicroBooNoise: true
+  EffectiveNBits: 10.6
+  WireLengthZ:    598.39
+  WireLengthU:    740.06
+  WireLengthV:    737.36
+  NoiseFunctionParameters: [ 3.01209e+00, 1.19921e+08, 3.80152e+03, 6.30041e+02, 1.07059e+02, 1.29703e+00, 1.36047e+00, 1.38162e+00, 6.00000e+03]
+  
+  
+  EnableCoherentNoise: true
+  CohNoiseArrayPoints: 1000
+  NChannelsPerCoherentGroup: 128
+  CohGausNorm: [ 6.88535e+00, 5.21692e-01, 2.00001e+00, 2.03630e+00, 2.00003e+00 ]
+  CohGausMean: [ 3.55622e+01, 6.63823e-02, 1.16200e+02, 1.73900e+02, 2.89800e+02 ]
+  CohGausSigma: [ 1.75992e+01, 3.16607e+02, 3.68024e-01 , 3.26335e-01, 5.14720e-02 ]
+  CohExpNorm:    3.67206e+00
+  CohExpWidth:   3.39581e+00 
+  CohExpOffset: 2.32098e-01
+
+  UseNewNoise: true
+}
+
+physics.producers.daq.SuppressOn:  false
