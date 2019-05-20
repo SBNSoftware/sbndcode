@@ -63,14 +63,6 @@ namespace CRTAnaUtils{
   std::vector<crt::CRTTrack> CreateCRTTracks(std::vector<art::Ptr<crt::CRTHit>> crtHits, double fTimeLimit, 
                                              double fAverageHitDist, bool fUseTopPlane, double fDistanceLimit);
 
-  double T0FromCRTHits(recob::Track tpcTrack, std::vector<crt::CRTHit> crtHits, int tpc, double fMinTrackLength, 
-                       double fTrackDirectionFrac, double fDistanceLimit);
-
-  std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::vector<crt::CRTHit> crtHits, int tpc, double fTrackDirectionFrac);
-
-  double T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, int tpc, double fMaxAngleDiff, 
-                         double fMaxDistance);
-
   std::vector<double> ApaT0sFromCRTHits(std::vector<art::Ptr<crt::CRTHit>> crtHits, double fTimeLimit);
 
   std::vector<double> ApaT0sFromCRTTracks(std::vector<crt::CRTTrack> crtTracks);
