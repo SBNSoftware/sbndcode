@@ -81,6 +81,11 @@ namespace sbnd{
         Comment("")
       };
 
+      fhicl::Atom<art::InputTag> TPCTrackLabel {
+        Name("TPCTrackLabel"),
+        Comment("")
+      };
+
     };
 
     CRTT0MatchAlg(const Config& config);
@@ -95,16 +100,16 @@ namespace sbnd{
     void reconfigure(const Config& config);
 
     // Utility function that determines the possible x range of a track
-    std::pair<double, double> TrackT0Range(double startX, double endX, int tpc);
+    std::pair<double, double> TrackT0Range(double startX, double endX, int driftDirection, std::pair<double, double> xLimits);
 
     // Calculate the distance of closest approach between the end of a track and a crt hit
-    double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int tpc, double t0);
+    double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int driftDirection, double t0);
 
     std::pair<TVector3, TVector3> TrackDirectionAverage(recob::Track track, double frac);
 
-    std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc);
+    std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event);
 
-    double T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc);
+    double T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event);
 
   private:
 
@@ -114,6 +119,8 @@ namespace sbnd{
     double fMinTrackLength;
     double fTrackDirectionFrac;
     double fDistanceLimit;
+
+    art::InputTag fTPCTrackLabel;
 
   };
 

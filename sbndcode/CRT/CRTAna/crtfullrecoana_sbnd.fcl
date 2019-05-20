@@ -7,6 +7,7 @@
 #include "crtsimhitproducer_sbnd.fcl"
 #include "crtt0matchingalg_sbnd.fcl"
 #include "crttrackmatchingalg_sbnd.fcl"
+#include "crtbacktracker_sbnd.fcl"
 
 process_name: CRTFullRecoAna
 
@@ -64,6 +65,7 @@ physics:
       Verbose:              false        # Print extra information about what's going on
       CRTT0Alg:             @local::standard_crtt0matchingalg
       CRTTrackAlg:          @local::standard_crttrackmatchingalg
+      CrtBackTrack:         @local::standard_crtbacktracker
     }
   }
 

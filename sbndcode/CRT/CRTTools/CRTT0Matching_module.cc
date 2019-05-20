@@ -145,9 +145,6 @@ namespace sbnd {
     if (event.getByLabel(fTpcTrackModuleLabel,trackListHandle))
       art::fill_ptr_vector(trackList, trackListHandle);   
 
-    // Get track to hit associations
-    art::FindManyP<recob::Hit> findManyHits(trackListHandle, event, fTpcTrackModuleLabel);
-
     mf::LogInfo("CRTT0Matching")
       <<"Number of reconstructed tracks = "<<trackList.size()<<"\n"
       <<"Number of CRT hits = "<<crtList.size();
@@ -157,11 +154,8 @@ namespace sbnd {
       // Loop over all the reconstructed tracks 
       for(size_t track_i = 0; track_i < trackList.size(); track_i++) {
 
-        // Get the TPC of the track
-        std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(trackList[track_i]->ID());
-        int tpc = hits[0]->WireID().TPC;
-
-        double matchedTime = t0Alg.T0FromCRTHits(*trackList[track_i], crtHits, tpc);
+        // Get the closest matched time
+        double matchedTime = t0Alg.T0FromCRTHits(*trackList[track_i], crtHits, event);
         if(matchedTime != -99999){
           mf::LogInfo("CRTT0Matching")
             <<"Matched time = "<<matchedTime<<" [us] to track "<<trackList[track_i]->ID();

@@ -18,6 +18,7 @@
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 
 // LArSoft includes
 #include "lardataobj/RecoBase/Hit.h"
@@ -124,6 +125,10 @@ namespace sbnd {
         Name("CRTTrackAlg"),
       };
 
+      fhicl::Table<CRTBackTracker::Config> CrtBackTrack {
+        Name("CrtBackTrack"),
+      };
+
     }; // Config
  
     using Parameters = art::EDAnalyzer::Table<Config>;
@@ -177,10 +182,14 @@ namespace sbnd {
     // Other variables shared between different methods.
     detinfo::DetectorClocks const* fDetectorClocks;
     detinfo::DetectorProperties const* fDetectorProperties;
+    
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
+
     CRTT0MatchAlg crtT0Alg;
     CRTTrackMatchAlg crtTrackAlg;
+
+    CRTBackTracker fCrtBackTrack;
 
   }; // class CRTFullRecoAna
 
@@ -195,6 +204,7 @@ namespace sbnd {
     , fVerbose              (config().Verbose())
     , crtT0Alg              (config().CRTT0Alg())
     , crtTrackAlg           (config().CRTTrackAlg())
+    , fCrtBackTrack         (config().CrtBackTrack())
   {
     // Get a pointer to the fGeometryServiceetry service provider
     fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
@@ -349,7 +359,6 @@ namespace sbnd {
     //--------------------------------------------- CRT HIT MATCHING -------------------------------------------
 
     // Loop over CRT hits
-    int hit_i = 0;
     std::vector<crt::CRTHit> crtHits;
     for (auto const& crtHit: (*crtHitHandle)){
       crtHits.push_back(crtHit);
@@ -359,27 +368,24 @@ namespace sbnd {
       hCRTHitTimes->Fill(crtHit.ts1_ns*1e-3);
 
       // Get associated true particle
-      int partID = CRTTruthMatchUtils::TrueIdFromTotalEnergy(crtHitHandle, event, fCRTHitLabel, fCRTSimLabel, hit_i);
-      if(truthMatching.find(partID) == truthMatching.end()){hit_i++; continue;}
+      int partID = fCrtBackTrack.TrueIdFromTotalEnergy(event, crtHit);
+      if(truthMatching.find(partID) == truthMatching.end()) continue;
 
       truthMatching[partID].crtHits[taggerName].push_back(crtHit);
-      hit_i ++;
     }
 
     //------------------------------------------- CRT TRACK MATCHING -------------------------------------------
 
     // Loop over CRT tracks
-    int track_i = 0;
     std::vector<crt::CRTTrack> crtTracks;
     for (auto const& crtTrack : (*crtTrackHandle)){
       crtTracks.push_back(crtTrack);
 
       // Get associated true particle
-      int partID = CRTTruthMatchUtils::TrueIdFromTotalEnergy(crtTrackHandle, event, fCRTTrackLabel, fCRTHitLabel, fCRTSimLabel, track_i);
-      if(truthMatching.find(partID) == truthMatching.end()){track_i++; continue;}
+      int partID = fCrtBackTrack.TrueIdFromTotalEnergy(event, crtTrack);
+      if(truthMatching.find(partID) == truthMatching.end()) continue;
 
       truthMatching[partID].crtTracks.push_back(crtTrack);
-      track_i++;
 
       if(std::find(lepParticleIds.begin(), lepParticleIds.end(), partID) != lepParticleIds.end()){
         hNuMuCRTTrackMom->Fill(particles[partID].P());
@@ -398,14 +404,14 @@ namespace sbnd {
 
       // Calculate t0 from CRT Hit matching
       int tpc = fTpcGeo.DetectedInTPC(hits);
-      double hitT0 = crtT0Alg.T0FromCRTHits(tpcTrack, crtHits, tpc);
+      double hitT0 = crtT0Alg.T0FromCRTHits(tpcTrack, crtHits, event);
       if(hitT0 != -99999) truthMatching[partID].hitT0s.push_back(hitT0);
 
       // Calculate t0 from CRT Track matching
       double trackT0 = crtTrackAlg.T0FromCRTTracks(tpcTrack, crtTracks, tpc);
       if(trackT0 != -99999) truthMatching[partID].trackT0s.push_back(trackT0);
 
-      std::pair<crt::CRTHit, double> closest = crtT0Alg.ClosestCRTHit(tpcTrack, crtHits, tpc);
+      std::pair<crt::CRTHit, double> closest = crtT0Alg.ClosestCRTHit(tpcTrack, crtHits, event);
       if(closest.second != -99999) hHitDCA[closest.first.tagger]->Fill(closest.second);
     }
 

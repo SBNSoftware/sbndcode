@@ -57,6 +57,10 @@ namespace sbnd{
     
     // Determine which TPC a collection of hits is detected in (-1 if multiple)
     int DetectedInTPC(std::vector<art::Ptr<recob::Hit>> hits);
+    // Determine the drift direction for a collection of hits (-1, 0 or 1 assuming drift in X)
+    int DriftDirectionFromHits(std::vector<art::Ptr<recob::Hit>> hits);
+    // Work out the drift limits for a collection of hits
+    std::pair<double, double> XLimitsFromHits(std::vector<art::Ptr<recob::Hit>> hits);
 
     // Determine if a true particle is ever inside the TPC volume
     bool InVolume(simb::MCParticle particle);

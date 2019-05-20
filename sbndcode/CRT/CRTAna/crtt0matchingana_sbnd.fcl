@@ -4,6 +4,8 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
+#include "crtt0matchingalg_sbnd.fcl"
+#include "crtbacktracker_sbnd.fcl"
 
 process_name: CRTT0MatchingAna
 
@@ -54,12 +56,11 @@ physics:
 
       # The input parameters
       SimModuleLabel:      "largeant"        # Simulation producer module label
-      CrtHitModuleLabel:   "crthit"          # CRT producer module label
-      TpcTrackModuleLabel: "pmalgtrackmaker" # Track producer module label
-      DistanceLimit:       40.               # Max dist between projected crossing point and CRT hit
-      MinTrackLength:      20.               # Minimum track length to do T0 matching on
-      TrackDirectionFrac:  0.5               # Fraction of track to average direction over
-      Verbose:             true             # Print extra information about what's going on
+      CRTHitLabel:         "crthit"          # CRT producer module label
+      TPCTrackLabel:       "pandoraTrack" # Track producer module label
+      Verbose:             true              # Print extra information about what's going on
+      CRTT0Alg:            @local::standard_crtt0matchingalg
+      CrtBackTrack:        @local::standard_crtbacktracker
     }
   }
 

@@ -29,61 +29,47 @@ void CRTT0MatchAlg::reconfigure(const Config& config){
   fTrackDirectionFrac = config.TrackDirectionFrac();
   fDistanceLimit = config.DistanceLimit();
 
+  fTPCTrackLabel = config.TPCTrackLabel();
+
   return;
 
 }
  
 
 // Utility function that determines the possible t0 range of a track
-std::pair<double, double> CRTT0MatchAlg::TrackT0Range(double startX, double endX, int tpc){
+std::pair<double, double> CRTT0MatchAlg::TrackT0Range(double startX, double endX, int driftDirection, std::pair<double, double> xLimits){
+
+  // If track is stitched return zeros
+  if(driftDirection == 0) return std::make_pair(0, 0);
 
   std::pair<double, double> result;
-  double Vd = fDetectorProperties->DriftVelocity();
+  double Vd = driftDirection * fDetectorProperties->DriftVelocity();
 
-  // Whole track must be within tpc
-  // Find which TPC the track hits are detected in
-  if(tpc == 0){
-    // Lowest |X| is furthest from APA
-    double lowX = std::max(startX, endX);
-    // xmin is shift from furthest to 0 (the CPA) //FIXME CPA width
-    double xmax = 0 - lowX;
-    // Highest |X| is closest to APA
-    double highX = std::min(startX, endX);
-    // xmax is shift from closest to APA
-    double xmin = fTpcGeo.MinX() - highX;
-    double t0max = -(xmin/Vd);
-    double t0min = -(xmax/Vd);
-    result = std::make_pair(t0min, t0max);
-  }
+  // Shift the most postive end to the most positive limit
+  double maxX = std::max(startX, endX);
+  double maxLimit = std::max(xLimits.first, xLimits.second);
+  double maxShift = maxLimit - maxX;
+  // Shift the most negative end to the most negative limit
+  double minX = std::min(startX, endX);
+  double minLimit = std::min(xLimits.first, xLimits.second);
+  double minShift = minLimit - minX;
+  // Convert to time
+  double t0max = maxShift/Vd;
+  double t0min = minShift/Vd;
 
-  else{
-    // Lowest |X| is furthest from APA
-    double lowX = std::min(startX, endX);
-    // xmin is shift from furthest to 0 (the CPA)
-    double xmin = 0 - lowX;
-    // Highest |X| is closest to APA
-    double highX = std::max(startX, endX);
-    // xmax is shift from closest to APA
-    double xmax = fTpcGeo.MaxX() - highX;
-    double t0min = xmin/Vd; 
-    double t0max = xmax/Vd; 
-    result = std::make_pair(t0min, t0max);
-  }
-
-  return result;
+  return std::make_pair(std::min(t0min, t0max), std::max(t0min, t0max));
 
 } // CRTT0MatchAlg::TrackT0Range()
 
 
-double CRTT0MatchAlg::DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int tpc, double t0){
+double CRTT0MatchAlg::DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int driftDirection, double t0){
 
   double minDist = 99999;
 
   // Convert the t0 into an x shift
   double shift = t0 * fDetectorProperties->DriftVelocity();
   // Apply the shift depending on which TPC the track is in
-  if (tpc == 1) trackPos[0] += shift;
-  if (tpc == 0) trackPos[0] -= shift;
+  trackPos[0] += driftDirection * shift;
 
   TVector3 endPos = trackPos + trackDir;
   double denominator = (endPos - trackPos).Mag();
@@ -161,7 +147,14 @@ std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track 
 
 } // CRTT0MatchAlg::TrackDirectionAverage()
 
-std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc){
+std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
+
+  // Get the drift direction from the TPC
+  auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+  art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
+  std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+  int driftDirection = fTpcGeo.DriftDirectionFromHits(hits);
+  std::pair<double, double> xLimits = fTpcGeo.XLimitsFromHits(hits);
 
   // Calculate direction as an average over directions
   std::pair<TVector3, TVector3> startEndDir = TrackDirectionAverage(tpcTrack, fTrackDirectionFrac);
@@ -173,19 +166,21 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrac
 
   // ====================== Matching Algorithm ========================== //
   // Get the allowed t0 range
-  std::pair<double, double> t0MinMax = TrackT0Range(start.X(), end.X(), tpc);
+  std::pair<double, double> t0MinMax = TrackT0Range(start.X(), end.X(), driftDirection, xLimits);
   std::vector<std::pair<crt::CRTHit, double>> t0Candidates;
 
   // Loop over all the CRT hits
   for(auto &crtHit : crtHits){
     // Check if hit is within the allowed t0 range
     double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3;
-    if (!(crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.)) continue;
+    // If track is stitched then try all hits
+    if (!((crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.) 
+            || t0MinMax.first == t0MinMax.second)) continue;
     TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
   
     // Calculate the distance between the crossing point and the CRT hit
-    double startDist = DistOfClosestApproach(start, startDir, crtHit, tpc, crtTime);
-    double endDist = DistOfClosestApproach(end, endDir, crtHit, tpc, crtTime);
+    double startDist = DistOfClosestApproach(start, startDir, crtHit, driftDirection, crtTime);
+    double endDist = DistOfClosestApproach(end, endDir, crtHit, driftDirection, crtTime);
     // If the distance is less than some limit record the time
     if ((crtPoint-start).Mag() < (crtPoint-end).Mag()){ 
       t0Candidates.push_back(std::make_pair(crtHit, startDist));
@@ -208,11 +203,11 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrac
 
 }
 
-double CRTT0MatchAlg::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, int tpc){
+double CRTT0MatchAlg::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
 
   if (tpcTrack.Length() < fMinTrackLength) return -99999; 
 
-  std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(tpcTrack, crtHits, tpc);
+  std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(tpcTrack, crtHits, event);
   if(closestHit.second == -99999) return -99999;
 
   double crtTime = ((double)(int)closestHit.first.ts1_ns) * 1e-3;
