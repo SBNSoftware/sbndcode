@@ -61,8 +61,8 @@ physics:
     CRTT0Matching:
     {
       module_type:         "sbndcode/CRT/CRTTools/CRTT0Matching"
-      CrtHitModuleLabel:   "crthit"           # name of track producer
-      TpcTrackModuleLabel: "pmalgtrackmaker"  # name of crt producer
+      CrtHitModuleLabel:   "crthit"           # name of crt hit producer
+      TpcTrackModuleLabel: "pandoraTrack"     # name of tpc track producer
       T0Alg:                @local::standard_crtt0matchingalg
     }
   }

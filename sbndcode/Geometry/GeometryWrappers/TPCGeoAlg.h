@@ -55,6 +55,9 @@ namespace sbnd{
     bool InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
                     double maxXCut, double maxYCut, double maxZCut);
     
+    // Is point inside given TPC
+    bool InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buffer=0.);
+
     // Determine which TPC a collection of hits is detected in (-1 if multiple)
     int DetectedInTPC(std::vector<art::Ptr<recob::Hit>> hits);
     // Determine the drift direction for a collection of hits (-1, 0 or 1 assuming drift in X)

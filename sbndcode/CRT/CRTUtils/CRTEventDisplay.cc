@@ -302,7 +302,8 @@ void CRTEventDisplay::Draw(const art::Event& event){
         auto& pos = track.LocationAtPoint(i);
 
         // Don't draw invalid points
-        if(pos.X() == -999 || (pos.X() == 0 && pos.Y() == 0)) continue; 
+        if(!track.HasValidPoint(i)) continue;
+        //if(pos.X() == -999 || (pos.X() == 0 && pos.Y() == 0)) continue; 
 
         if(first){
           first = false;

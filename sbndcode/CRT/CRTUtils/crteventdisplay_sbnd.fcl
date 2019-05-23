@@ -35,8 +35,8 @@ standard_crteventdisplay:
 
     LineWidth:             2.
     IncompleteTrackLength: 500.
-    MinTime:               -1276.
-    MaxTime:               1300.
+    MinTime:               0. #-1276.
+    MaxTime:               0. #1300.
 
     CrtBackTrack:  @local::standard_crtbacktracker
 

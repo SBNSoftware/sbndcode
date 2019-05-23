@@ -75,7 +75,7 @@ namespace sbnd{
     bool HitCompare(const crt::CRTHit& hit1, const crt::CRTHit& hit2);
 
     // Check that two CRT tracks are the same
-    bool TrackCompare(const crt::CRTTrack& hit1, const crt::CRTTrack& track2);
+    bool TrackCompare(const crt::CRTTrack& track1, const crt::CRTTrack& track2);
 
     // Get all the true particle IDs that contributed to the CRT data product
     std::vector<int> AllTrueIds(const art::Event& event, const crt::CRTData& data);
