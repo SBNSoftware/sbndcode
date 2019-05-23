@@ -57,16 +57,7 @@
 
 
 namespace sbnd{
-/*
-  struct RecoCRTTrack{
-    int crtID;
-    int tpc;
-    TVector3 start; //[cm]
-    TVector3 end; //[cm]
-    double trueTime; // [us]
-    bool complete;
-  };
-*/
+
   class CRTTrackMatchAlg {
   public:
 
@@ -81,11 +72,6 @@ namespace sbnd{
 
       fhicl::Atom<double> MaxDistance {
         Name("MaxDistance"),
-        Comment("")
-      };
-
-      fhicl::Atom<bool> StitchAcrossCPA {
-        Name("StitchAcrossCPA"),
         Comment("")
       };
 
@@ -109,24 +95,13 @@ namespace sbnd{
 
     // Calculate intersection between CRT track and TPC
     std::pair<TVector3, TVector3> TpcIntersection(const geo::TPCGeo& tpcGeo, crt::CRTTrack track);
-/*
-    // Function to transform a CRTTrack into an expected reconstructed track
-    std::vector<RecoCRTTrack> CrtToRecoTrack(crt::CRTTrack track, int id);
 
-    // Function to shift CRTTrack in X and work out how much is reconstructed
-    std::vector<RecoCRTTrack> CreateRecoCRTTrack(TVector3 start, TVector3 end, double shift, 
-                                                 int tpc, int id, double time, bool complete);
-*/
     // Function to calculate if a CRTTrack crosses the TPC volume
     bool CrossesTPC(crt::CRTTrack track);
 
     // Function to calculate if a CRTTrack crosses the TPC volume
     bool CrossesAPA(crt::CRTTrack track);
-/*
-    int GetMatchedCRTTrackId(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, int tpc);
 
-    double T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, int tpc);
-*/
     double T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
 
     // Find the closest valid matching CRT track ID
@@ -166,7 +141,6 @@ namespace sbnd{
 
     double fMaxAngleDiff;
     double fMaxDistance;
-    bool fStitchAcrossCPA;
 
     art::InputTag fTPCTrackLabel;
 
