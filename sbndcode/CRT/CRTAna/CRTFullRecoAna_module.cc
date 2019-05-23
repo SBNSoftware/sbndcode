@@ -13,7 +13,6 @@
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
-#include "sbndcode/CRT/CRTUtils/CRTTruthMatchUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
@@ -403,12 +402,12 @@ namespace sbnd {
       truthMatching[partID].hasTpcTrack = true;
 
       // Calculate t0 from CRT Hit matching
-      int tpc = fTpcGeo.DetectedInTPC(hits);
+      //int tpc = fTpcGeo.DetectedInTPC(hits);
       double hitT0 = crtT0Alg.T0FromCRTHits(tpcTrack, crtHits, event);
       if(hitT0 != -99999) truthMatching[partID].hitT0s.push_back(hitT0);
 
       // Calculate t0 from CRT Track matching
-      double trackT0 = crtTrackAlg.T0FromCRTTracks(tpcTrack, crtTracks, tpc);
+      double trackT0 = crtTrackAlg.T0FromCRTTracks(tpcTrack, crtTracks, event);
       if(trackT0 != -99999) truthMatching[partID].trackT0s.push_back(trackT0);
 
       std::pair<crt::CRTHit, double> closest = crtT0Alg.ClosestCRTHit(tpcTrack, crtHits, event);

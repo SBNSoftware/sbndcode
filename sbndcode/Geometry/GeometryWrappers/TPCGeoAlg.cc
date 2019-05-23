@@ -137,6 +137,14 @@ std::pair<double, double> TPCGeoAlg::XLimitsFromHits(std::vector<art::Ptr<recob:
   return std::make_pair(tpcGeo.MinX(), tpcGeo.MaxX());
 }
 
+// Is point inside given TPC
+bool TPCGeoAlg::InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buffer){
+  if(point.X() < (tpc.MinX()-buffer) || point.X() > (tpc.MaxX()+buffer)
+      || point.Y() < (tpc.MinY()-buffer) || point.Y() > (tpc.MaxY()+buffer)
+      || point.Z() < (tpc.MinZ()-buffer) || point.Z() > (tpc.MaxZ()+buffer)) return false;
+  return true;
+}
+
 // ----------------------------------------------------------------------------------
 // Determine if a true particle is ever inside the TPC volume
 bool TPCGeoAlg::InVolume(simb::MCParticle particle){

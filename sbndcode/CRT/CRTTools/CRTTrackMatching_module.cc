@@ -142,7 +142,7 @@ namespace sbnd {
       art::fill_ptr_vector(tpcTrackList, tpcTrackListHandle);   
 
     // Get track to hit associations
-    art::FindManyP<recob::Hit> findManyHits(tpcTrackListHandle, event, fTpcTrackModuleLabel);
+    //art::FindManyP<recob::Hit> findManyHits(tpcTrackListHandle, event, fTpcTrackModuleLabel);
 
     // Get CRT tracks
     art::Handle< std::vector<crt::CRTTrack> > crtTrackListHandle;
@@ -163,10 +163,10 @@ namespace sbnd {
         <<"Number of CRT tracks = "<<crtTrackList.size();
       for (size_t tpc_i = 0; tpc_i < tpcTrackList.size(); tpc_i++){
 
-        std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrackList[tpc_i]->ID());
-        int tpc = fTpcGeo.DetectedInTPC(hits);
+        //std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrackList[tpc_i]->ID());
+        //int tpc = fTpcGeo.DetectedInTPC(hits);
 
-        int matchedID = trackAlg.GetMatchedCRTTrackId(*tpcTrackList[tpc_i], crtTracks, tpc);
+        int matchedID = trackAlg.GetMatchedCRTTrackId(*tpcTrackList[tpc_i], crtTracks, event);
         
         if(matchedID != -99999){
           double crtTime = ((double)(int)crtTracks.at(matchedID).ts1_ns); // [ns]

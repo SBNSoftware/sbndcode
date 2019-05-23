@@ -10,7 +10,6 @@
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
@@ -122,7 +121,6 @@ namespace sbnd {
     bool          fVerbose;             ///< print information about what's going on
 
     CRTT0MatchAlg t0Alg;
-    CRTTruthRecoAlg truthAlg;
 
     CRTGeoAlg fCrtGeo;
     TPCGeoAlg fTpcGeo;

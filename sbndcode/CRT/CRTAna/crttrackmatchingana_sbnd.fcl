@@ -1,9 +1,12 @@
-# A script to run an analysis module: CRTTrackMatchingAna
+# A script to run an analysis module: CRTTrackAna
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
+#include "crttrackmatchingalg_sbnd.fcl"
+#include "crtbacktracker_sbnd.fcl"
+#include "crteventdisplay_sbnd.fcl"
 
 process_name: CRTTrackMatchingAna
 
@@ -54,13 +57,12 @@ physics:
 
       # The input parameters
       SimModuleLabel:      "largeant"        # Simulation producer module label
-      CrtTrackModuleLabel: "crttrack"        # CRT track producer module label
-      TpcTrackModuleLabel: "pmalgtrackmaker" # TPC track producer module label
-      Verbose:             true             # Print extra information about what's going on
-      MaxAngleDiff:        0.15              # Max difference between CRT and TPC track angles [rad]
-      MaxDistance:         60                # Max distance between CRT and TPC start/end positions [cm]
-      Plot:                true             # Plot what's going on
-      PlotID:              -1                # TPC track ID to plot (-1 for all)
+      CRTTrackLabel:       "crttrack"          # CRT producer module label
+      TPCTrackLabel:       "pandoraTrack" # Track producer module label
+      Verbose:             true              # Print extra information about what's going on
+      CRTTrackAlg:         @local::standard_crttrackmatchingalg
+      CrtBackTrack:        @local::standard_crtbacktracker
+      Evd:                 @local::standard_crteventdisplay
     }
   }
 
