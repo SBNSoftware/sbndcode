@@ -231,20 +231,26 @@ namespace sbnd {
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
     std::map<int, std::vector<crt::CRTTrack>> crtTracks;
-    double minTrackTime = 99999;
-    double maxTrackTime = -99999;
+    int trk_i = 0;
+    fCrtBackTrack.Initialize(event);
     for(auto const& track : (*crtTrackHandle)){
-      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, track);
+      int trueId = fCrtBackTrack.TrueIdFromTrackId(event, trk_i);
+      trk_i++;
       if(trueId == -99999) continue;
       crtTracks[trueId].push_back(track);
-      double trackTime = (double)(int)track.ts1_ns * 1e-3;
-      if(trackTime < minTrackTime) minTrackTime = trackTime;
-      if(trackTime > maxTrackTime) maxTrackTime = trackTime;
     }
 
     std::map<int, std::vector<crt::CRTHit>> crtHits;
+    double minHitTime = 99999;
+    double maxHitTime = -99999;
+    int hit_i = 0;
     for(auto const& hit : (*crtHitHandle)){
-      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, hit);
+      double hitTime = (double)(int)hit.ts1_ns * 1e-3;
+      if(hitTime < minHitTime) minHitTime = hitTime;
+      if(hitTime > maxHitTime) maxHitTime = hitTime;
+
+      int trueId = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
+      hit_i++;
       if(trueId == -99999) continue;
       crtHits[trueId].push_back(hit);
     }
@@ -260,7 +266,7 @@ namespace sbnd {
 
       // Only consider particles within the time limit of the generated CRT hits
       double time = particle.T() * 1e-3;
-      if(time < minTrackTime || time > maxTrackTime) continue;
+      if(time < minHitTime || time > maxHitTime) continue;
 
       if(!(std::abs(particle.PdgCode()) == 13 && particle.Mother()==0)) continue;
 
@@ -301,9 +307,9 @@ namespace sbnd {
     for(auto const& track : (*crtTrackHandle)){
 
       std::vector<art::Ptr<crt::CRTHit>> hits = findManyHits.at(track_i);
-      track_i++;
 
-      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, track);
+      int trueId = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
+      track_i++;
       if(particles.find(trueId) == particles.end()) continue;
 
       // Calculate the average distance over the length of the track 

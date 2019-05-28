@@ -233,6 +233,8 @@ namespace sbnd {
     auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
     art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
 
+    fCrtBackTrack.Initialize(event);
+
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
@@ -249,10 +251,19 @@ namespace sbnd {
 
     std::vector<crt::CRTTrack> crtTracks;
     std::map<int, std::vector<crt::CRTTrack>> crtTrackMap;
+    int track_i = 0;
+    double minTrackTime = 99999;
+    double maxTrackTime = -99999;
+
     for(auto const& track : (*crtTrackHandle)){
       crtTracks.push_back(track);
-      int trueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, track);
+      int trueID = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
+      track_i++;
       if(trueID != -99999) crtTrackMap[trueID].push_back(track);
+
+      double trackTime = (double)(int)track.ts1_ns * 1e-3;
+      if(trackTime < minTrackTime) minTrackTime = trackTime;
+      if(trackTime > maxTrackTime) maxTrackTime = trackTime;
     }
 
     //----------------------------------------------------------------------------------------------------------
@@ -266,7 +277,12 @@ namespace sbnd {
       int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
 
       if(particles.find(trackTrueID) == particles.end()) continue;
+      // Only consider primary muons
       if(!(std::abs(particles[trackTrueID].PdgCode()) == 13 && particles[trackTrueID].Mother() == 0)) continue;
+
+      // Only consider particles withing time window of reco track
+      double trueTime = particles[trackTrueID].T() * 1e-3;
+      if(trueTime < minTrackTime || trueTime > maxTrackTime) continue;
 
       //----------------------------------------------------------------------------------------------------------
       //                                        SINGLE ANGLE CUT ANALYSIS
@@ -308,7 +324,6 @@ namespace sbnd {
           // If closest hit is below limit and matched time is correct then fill purity
           double trackTime = closestAngle.first.ts1_ns * 1e-3;
           if(particles.find(trackTrueID) != particles.end()){
-            double trueTime = particles[trackTrueID].T() * 1e-3;
             if(std::abs(trackTime - trueTime) < 2.){
               hPurityAngleReco->Fill(angleCut);
             }
@@ -355,7 +370,6 @@ namespace sbnd {
           // If closest hit is below limit and matched time is correct then fill purity
           double trackTime = closestDCA.first.ts1_ns * 1e-3;
           if(particles.find(trackTrueID) != particles.end()){
-            double trueTime = particles[trackTrueID].T() * 1e-3;
             if(std::abs(trackTime - trueTime) < 2.){
               hPurityDCAReco->Fill(DCAcut);
             }

@@ -173,13 +173,13 @@ namespace sbnd {
       hMatchDCA[tagger]   = tfs->make<TH1D>(Form("MatchDCA_%s", tagger.c_str()),   "", 50, 0, 100);
       hNoMatchDCA[tagger] = tfs->make<TH1D>(Form("NoMatchDCA_%s", tagger.c_str()), "", 50, 0, 100);
       
-      hEffDCATotal[tagger] = tfs->make<TH1D>(Form("EffDCATotal_%s", tagger.c_str()), "", 20, 0, 50);
-      hEffDCAReco[tagger]  = tfs->make<TH1D>(Form("EffDCAReco_%s", tagger.c_str()),  "", 20, 0, 50);
+      hEffDCATotal[tagger] = tfs->make<TH1D>(Form("EffDCATotal_%s", tagger.c_str()), "", 20, 0, 80);
+      hEffDCAReco[tagger]  = tfs->make<TH1D>(Form("EffDCAReco_%s", tagger.c_str()),  "", 20, 0, 80);
       hEffLengthTotal[tagger] = tfs->make<TH1D>(Form("EffLengthTotal_%s", tagger.c_str()), "", 20, 0, 600);
       hEffLengthReco[tagger]  = tfs->make<TH1D>(Form("EffLengthReco_%s", tagger.c_str()),  "", 20, 0, 600);
     
-      hPurityDCATotal[tagger] = tfs->make<TH1D>(Form("PurityDCATotal_%s", tagger.c_str()), "", 20, 0, 50);
-      hPurityDCAReco[tagger]  = tfs->make<TH1D>(Form("PurityDCAReco_%s", tagger.c_str()),  "", 20, 0, 50);
+      hPurityDCATotal[tagger] = tfs->make<TH1D>(Form("PurityDCATotal_%s", tagger.c_str()), "", 20, 0, 80);
+      hPurityDCAReco[tagger]  = tfs->make<TH1D>(Form("PurityDCAReco_%s", tagger.c_str()),  "", 20, 0, 80);
       hPurityLengthTotal[tagger] = tfs->make<TH1D>(Form("PurityLengthTotal_%s", tagger.c_str()), "", 20, 0, 600);
       hPurityLengthReco[tagger]  = tfs->make<TH1D>(Form("PurityLengthReco_%s", tagger.c_str()),  "", 20, 0, 600);
     }
@@ -218,6 +218,8 @@ namespace sbnd {
     auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
     art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
 
+    fCrtBackTrack.Initialize(event);
+
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
@@ -234,9 +236,18 @@ namespace sbnd {
 
     std::map<int, std::vector<std::string>> crtTaggerMap;
     std::vector<crt::CRTHit> crtHits;
+    int hit_i = 0;
+    double minHitTime = 99999;
+    double maxHitTime = -99999;
+
     for(auto const& hit : (*crtHitHandle)){
+      double hitTime = (double)(int)hit.ts1_ns * 1e-3;
+      if(hitTime < minHitTime) minHitTime = hitTime;
+      if(hitTime > maxHitTime) maxHitTime = hitTime;
+
       crtHits.push_back(hit);
-      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, hit);
+      int trueId = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
+      hit_i++;
       if(trueId == -99999) continue;
       if(crtTaggerMap.find(trueId) == crtTaggerMap.end()){
         crtTaggerMap[trueId].push_back(hit.tagger);
@@ -256,7 +267,12 @@ namespace sbnd {
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
       int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
       if(particles.find(trackTrueID) == particles.end()) continue;
+      // Only consider primary muons
       if(!(std::abs(particles[trackTrueID].PdgCode()) == 13 && particles[trackTrueID].Mother() == 0)) continue;
+
+      // Only consider particles inside the reco hit time window
+      double trueTime = particles[trackTrueID].T() * 1e-3;
+      if(trueTime < minHitTime || trueTime > maxHitTime) continue;
 
       // Calculate t0 from CRT Hit matching
       std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(tpcTrack, crtHits, event);
@@ -307,7 +323,6 @@ namespace sbnd {
           // If closest hit is below limit and matched time is correct then fill purity
           double hitTime = closest.first.ts1_ns * 1e-3;
           if(particles.find(trackTrueID) != particles.end()){
-            double trueTime = particles[trackTrueID].T() * 1e-3;
             if(std::abs(hitTime - trueTime) < 2.){
               hPurityDCAReco[closest.first.tagger]->Fill(DCAcut);
               hPurityDCAReco["All"]->Fill(DCAcut);

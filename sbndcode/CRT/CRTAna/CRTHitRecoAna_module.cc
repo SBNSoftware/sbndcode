@@ -221,6 +221,8 @@ namespace sbnd {
 
     // Get hit to data associations
     art::FindManyP<crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
+
+    fCrtBackTrack.Initialize(event);
     
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
@@ -228,8 +230,10 @@ namespace sbnd {
     std::map<int, std::vector<crt::CRTHit>> crtHits;
     double minHitTime = 99999;
     double maxHitTime = -99999;
+    int ht_i = 0;
     for(auto const& hit : (*crtHitHandle)){
-      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, hit);
+      int trueId = fCrtBackTrack.TrueIdFromHitId(event, ht_i);
+      ht_i++;
       if(trueId == -99999) continue;
       crtHits[trueId].push_back(hit);
       double hitTime = (double)(int)hit.ts1_ns * 1e-3;
@@ -292,7 +296,6 @@ namespace sbnd {
 
       // Get the data associated with the hit
       std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(hit_i);
-      hit_i++;
 
       // Get all the strips from the crt hit
       std::vector<std::string> stripNames;
@@ -303,7 +306,8 @@ namespace sbnd {
       }
 
       // Match hit to true track
-      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, hit);
+      int trueId = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
+      hit_i++;
       if(particles.find(trueId) == particles.end()) continue;
 
       // Calculate the angle to the tagger
@@ -335,6 +339,7 @@ namespace sbnd {
     if(fPlot){
       evd.SetDrawCrtData(true);
       evd.SetDrawCrtHits(true);
+      evd.SetDrawCrtTracks(true);
       if(fVeryVerbose) evd.SetPrint(true);
       if(fPlotTrackID != -99999) evd.SetTrueId(fPlotTrackID);
       evd.Draw(event);
