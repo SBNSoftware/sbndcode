@@ -4,7 +4,7 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "crtbacktracker_sbnd.fcl"
+#include "crtanamodules_sbnd.fcl"
 
 process_name: CRTDetSimAna
 
@@ -47,18 +47,8 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CRTDetSimAna: 
-    {
-      # The "module_type" tells us which module to run. The name here
-      # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CRT/CRTAna/CRTDetSimAna"
+    CRTDetSimAna: @local::sbnd_crtdetsimana
 
-      # The input parameters
-      SimModuleLabel:       "largeant"  # Simulation producer module label
-      CRTSimLabel:          "crt"       # CRT producer module label
-      Verbose:              false        # Print extra information about what's going on
-      CrtBackTrack:         @local::standard_crtbacktracker
-    }
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.

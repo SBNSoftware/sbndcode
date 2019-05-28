@@ -4,8 +4,7 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "crtt0matchingalg_sbnd.fcl"
-#include "crtbacktracker_sbnd.fcl"
+#include "crtanamodules_sbnd.fcl"
 
 process_name: CRTT0MatchingAna
 
@@ -48,20 +47,7 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CRTT0MatchingAna: 
-    {
-      # The "module_type" tells us which module to run. The name here
-      # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CRT/CRTAna/CRTT0MatchingAna"
-
-      # The input parameters
-      SimModuleLabel:      "largeant"        # Simulation producer module label
-      CRTHitLabel:         "crthit"          # CRT producer module label
-      TPCTrackLabel:       "pandoraTrack" # Track producer module label
-      Verbose:             true              # Print extra information about what's going on
-      CRTT0Alg:            @local::standard_crtt0matchingalg
-      CrtBackTrack:        @local::standard_crtbacktracker
-    }
+    CRTT0MatchingAna: @local::sbnd_crtt0matchingana 
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.

@@ -1,4 +1,4 @@
-# A script to run an analysis module: CRTFullRecoAna
+# A script to run all crt analysis modules
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
@@ -6,12 +6,12 @@
 #include "particleinventoryservice.fcl"
 #include "crtanamodules_sbnd.fcl"
 
-process_name: CRTFullRecoAna
+process_name: CRTAna
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "crtfullrecoana.root" }
+  TFileService:           { fileName: "fullCrtAnalysis.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -47,11 +47,24 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
+    CRTDetSimAna: @local::sbnd_crtdetsimana
+    CRTHitRecoAna: @local::sbnd_crthitrecoana
+    CRTTrackRecoAna: @local::sbnd_crttrackrecoana
+    CRTT0MatchingAna: @local::sbnd_crtt0matchingana 
+    CRTTrackMatchingAna: @local::sbnd_crttrackmatchingana 
     CRTFullRecoAna: @local::sbnd_crtfullrecoana 
+
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ CRTFullRecoAna ]
+  analysis: [ 
+              CRTDetSimAna, 
+              CRTHitRecoAna, 
+              CRTTrackRecoAna,
+              CRTT0MatchingAna,
+              CRTTrackMatchingAna,
+              CRTFullRecoAna
+            ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.

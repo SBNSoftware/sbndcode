@@ -157,9 +157,6 @@ namespace sbnd {
     // Histograms
     TH1D* hCRTHitTimes;
     std::map<std::string, TH3D*> hTaggerXYZResolution;
-    std::map<std::string, TH1D*> hHitDCA;
-    // Number of tracks associated to numu muons
-    TH1D* hNuMuCRTTrackMom;
 
     std::vector<std::string> stage{"CRTHit", "CRTTrack", "HitT0", "TrackT0"};
     std::vector<std::string> category{"PossMatch", "ShouldMatch", "CRTVol", "TPCVol", "CRTCross", "TPCCross"};
@@ -171,6 +168,8 @@ namespace sbnd {
     std::vector<std::string> trackType{"Complete", "Incomplete", "Both"};
     TH1D* hTrackThetaDiff[3];
     TH1D* hTrackPhiDiff[3];
+    TH2D* hTrackTheta[3];
+    TH2D* hTrackPhi[3];
 
     std::vector<std::string> t0Type{"HitT0", "TrackT0"};
     std::vector<std::string> purity{"Matched", "Correct"};
@@ -217,14 +216,10 @@ namespace sbnd {
 
     hCRTHitTimes = tfs->make<TH1D>("CRTHitTimes","",100, -5000, 5000);
 
-    hNuMuCRTTrackMom = tfs->make<TH1D>("NuMuCRTTrackMom","",20, 0, 10);
-
     for(size_t i = 0; i < fCrtGeo.NumTaggers(); i++){
       std::string taggerName = fCrtGeo.GetTagger(i).name;
       TString histName = Form("%s_resolution", taggerName.c_str());
       hTaggerXYZResolution[taggerName] = tfs->make<TH3D>(histName, "", 50, -25, 25, 50, -25, 25, 50, -25, 25);
-      TString dcaName = Form("%s_dca", taggerName.c_str());
-      hHitDCA[taggerName] = tfs->make<TH1D>(dcaName, "", 50, 0, 100);
     }
 
     for(size_t si = 0; si < stage.size(); si++){
@@ -241,10 +236,14 @@ namespace sbnd {
     }
 
     for(size_t ti = 0; ti < trackType.size(); ti++){
-      TString thetaName = Form("TrackThetaDiff%s", trackType[ti].c_str());
-      hTrackThetaDiff[ti] = tfs->make<TH1D>(thetaName, "", 50, -0.2, 0.2);
-      TString phiName = Form("TrackPhiDiff%s", trackType[ti].c_str());
-      hTrackPhiDiff[ti] = tfs->make<TH1D>(phiName, "", 50, -0.2, 0.2);
+      TString thetaDiffName = Form("TrackThetaDiff%s", trackType[ti].c_str());
+      hTrackThetaDiff[ti] = tfs->make<TH1D>(thetaDiffName, "", 50, -0.2, 0.2);
+      TString phiDiffName = Form("TrackPhiDiff%s", trackType[ti].c_str());
+      hTrackPhiDiff[ti] = tfs->make<TH1D>(phiDiffName, "", 50, -0.2, 0.2);
+      TString thetaName = Form("TrackTheta%s", trackType[ti].c_str());
+      hTrackTheta[ti] = tfs->make<TH2D>(thetaName, "", 20, 0, 3.2, 20, 0, 3.2);
+      TString phiName = Form("TrackPhi%s", trackType[ti].c_str());
+      hTrackPhi[ti] = tfs->make<TH2D>(phiName, "", 20, -3.2, 0, 20, -3.2, 0);
     }
 
     for(size_t ti = 0; ti < t0Type.size(); ti++){
@@ -298,15 +297,22 @@ namespace sbnd {
     auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
     art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
 
+    fCrtBackTrack.Initialize(event);
+
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
      
-    double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
+    // Only evaluate performance over the time window that hits have been reconstructed
+    double minHitTime = 99999;
+    double maxHitTime = -99999;
+    for(auto const& hit : (*crtHitHandle)){
+      double hitTime = (double)(int)hit.ts1_ns * 1e-3;
+      if(hitTime < minHitTime) minHitTime = hitTime;
+      if(hitTime > maxHitTime) maxHitTime = hitTime;
+    }
 
     std::map<int, simb::MCParticle> particles;
-    std::vector<int> lepParticleIds;
     std::map<int, CRTTruthMatch> truthMatching;
     // Loop over the true particles
     for (auto const& particle: (*particleHandle)){
@@ -315,24 +321,12 @@ namespace sbnd {
       // Make map with ID
       int partID = particle.TrackId();
       particles[partID] = particle;
-      int pdg = particle.PdgCode();
       
-      art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(partID);
-      simb::MCNeutrino mcNu = truth->GetNeutrino();
-      if(truth->Origin() == simb::kBeamNeutrino){
-        geo::Point_t vtx;
-        vtx.SetX(mcNu.Nu().Vx()); vtx.SetY(mcNu.Nu().Vy()); vtx.SetZ(mcNu.Nu().Vz());
-
-        if(fTpcGeo.InFiducial(vtx, 0, 0) && std::abs(pdg) == 13 && particle.Mother() == 0){
-          lepParticleIds.push_back(partID);
-        }
-      }
-      
-      // Only consider muons
-      if(std::abs(pdg) != 13) continue;
+      // Only consider primary muons
+      if(!(std::abs(particle.PdgCode()) == 13 && particle.Mother()==0)) continue;
 
       double time = particle.T() * 1e-3;
-      if(time < -driftTimeMuS || time > readoutWindowMuS) continue;
+      if(time < minHitTime || time > maxHitTime) continue;
 
       truthMatch.partID = partID;
       truthMatch.trueT0 = time;
@@ -359,6 +353,7 @@ namespace sbnd {
 
     // Loop over CRT hits
     std::vector<crt::CRTHit> crtHits;
+    int hit_i = 0;
     for (auto const& crtHit: (*crtHitHandle)){
       crtHits.push_back(crtHit);
       // Get tagger of CRT hit
@@ -367,7 +362,8 @@ namespace sbnd {
       hCRTHitTimes->Fill(crtHit.ts1_ns*1e-3);
 
       // Get associated true particle
-      int partID = fCrtBackTrack.TrueIdFromTotalEnergy(event, crtHit);
+      int partID = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
+      hit_i++;
       if(truthMatching.find(partID) == truthMatching.end()) continue;
 
       truthMatching[partID].crtHits[taggerName].push_back(crtHit);
@@ -377,18 +373,17 @@ namespace sbnd {
 
     // Loop over CRT tracks
     std::vector<crt::CRTTrack> crtTracks;
+    int track_i = 0;
     for (auto const& crtTrack : (*crtTrackHandle)){
       crtTracks.push_back(crtTrack);
 
       // Get associated true particle
-      int partID = fCrtBackTrack.TrueIdFromTotalEnergy(event, crtTrack);
+      int partID = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
+      track_i++;
       if(truthMatching.find(partID) == truthMatching.end()) continue;
 
       truthMatching[partID].crtTracks.push_back(crtTrack);
 
-      if(std::find(lepParticleIds.begin(), lepParticleIds.end(), partID) != lepParticleIds.end()){
-        hNuMuCRTTrackMom->Fill(particles[partID].P());
-      }
     }
 
     //------------------------------------------- CRT T0 MATCHING ----------------------------------------------
@@ -410,8 +405,6 @@ namespace sbnd {
       double trackT0 = crtTrackAlg.T0FromCRTTracks(tpcTrack, crtTracks, event);
       if(trackT0 != -99999) truthMatching[partID].trackT0s.push_back(trackT0);
 
-      std::pair<crt::CRTHit, double> closest = crtT0Alg.ClosestCRTHit(tpcTrack, crtHits, event);
-      if(closest.second != -99999) hHitDCA[closest.first.tagger]->Fill(closest.second);
     }
 
     //----------------------------------------------------------------------------------------------------------
@@ -459,6 +452,8 @@ namespace sbnd {
       // RESOLUTIONS
       double minThetaDiff = 99999;
       double minPhiDiff = 99999;
+      double minTheta = 99999;
+      double minPhi = 99999;
       bool complete = true;
       // Get true theta and phi in CRT volume
       simb::MCParticle particle = particles[match.partID];
@@ -480,6 +475,8 @@ namespace sbnd {
         if(thetaDiff < minThetaDiff){
           minThetaDiff = thetaDiff;
           minPhiDiff = phiDiff;
+          minTheta = recoTheta;
+          minPhi = recoPhi;
           complete = crtTrack.complete;
         }
       }
@@ -488,13 +485,19 @@ namespace sbnd {
         if(complete){
           hTrackThetaDiff[0]->Fill(minThetaDiff);
           hTrackPhiDiff[0]->Fill(minPhiDiff);
+          hTrackTheta[0]->Fill(trueTheta, minTheta);
+          hTrackPhi[0]->Fill(truePhi, minPhi);
         }
         else{
           hTrackThetaDiff[1]->Fill(minThetaDiff);
           hTrackPhiDiff[1]->Fill(minPhiDiff);
+          hTrackTheta[1]->Fill(trueTheta, minTheta);
+          hTrackPhi[1]->Fill(truePhi, minPhi);
         }
         hTrackThetaDiff[2]->Fill(minThetaDiff);
         hTrackPhiDiff[2]->Fill(minPhiDiff);
+        hTrackTheta[2]->Fill(trueTheta, minTheta);
+        hTrackPhi[2]->Fill(truePhi, minPhi);
       }
       
       //--------------------------------------- CRT HIT T0 PERFORMANCE -------------------------------------------
@@ -559,12 +562,12 @@ namespace sbnd {
 
       // - Should match: (hits: cross 2 perp strips in tagger, tracks: cross 2 perp strips in 2 taggers, 
       //                  hitT0: hit and tpc track associated, trackT0: crt and tpc track associated)
-      int nValid = 0;
+      bool validHit = false;
       for(auto const& valid : match.validCrosses){
-        if(valid.second) nValid++;
+        if(valid.second) validHit = true;
       }
-      crtHitCategories.push_back(nValid > 0);
-      crtTrackCategories.push_back(nValid > 1);
+      crtHitCategories.push_back(validHit);
+      crtTrackCategories.push_back(match.crtHits.size() > 1);
       hitT0Categories.push_back((match.crtHits.size() > 0 && match.hasTpcTrack));
       trackT0Categories.push_back((match.crtTracks.size() > 0 && match.hasTpcTrack));
 
@@ -576,7 +579,7 @@ namespace sbnd {
       trackT0Categories.push_back((entersCRT && match.hasTpcTrack));
 
       // - Enters TPC volume
-      bool entersTPC = fTpcGeo.EntersVolume(particles[partID]);
+      bool entersTPC = fTpcGeo.EntersVolume(particles[partID]) && entersCRT;
       crtHitCategories.push_back(entersTPC);
       crtTrackCategories.push_back(entersTPC);
       hitT0Categories.push_back((entersTPC && match.hasTpcTrack));
@@ -590,7 +593,7 @@ namespace sbnd {
       trackT0Categories.push_back((crossesCRT && match.hasTpcTrack));
 
       // - Crosses TPC volume
-      bool crossesTPC = fTpcGeo.CrossesVolume(particles[partID]);
+      bool crossesTPC = fTpcGeo.CrossesVolume(particles[partID]) && entersCRT;
       crtHitCategories.push_back(crossesTPC);
       crtTrackCategories.push_back(crossesTPC);
       hitT0Categories.push_back((crossesTPC && match.hasTpcTrack));

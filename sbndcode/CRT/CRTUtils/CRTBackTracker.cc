@@ -5,7 +5,7 @@ namespace sbnd{
 CRTBackTracker::CRTBackTracker(const Config& config){
 
   this->reconfigure(config);
-  
+
 }
 
 
@@ -18,7 +18,6 @@ CRTBackTracker::~CRTBackTracker(){
 
 }
 
-
 void CRTBackTracker::reconfigure(const Config& config){
 
   fCRTDataLabel = config.CRTDataLabel();
@@ -27,6 +26,82 @@ void CRTBackTracker::reconfigure(const Config& config){
 
   return;
 
+}
+
+void CRTBackTracker::Initialize(const art::Event& event){
+
+  // Clear those data structures!
+  fDataTrueIds.clear();
+  fHitTrueIds.clear();
+  fTrackTrueIds.clear();
+  
+  // Get a handle to the CRT data in the event
+  art::Handle< std::vector<crt::CRTData>> crtDataHandle;
+  std::vector<art::Ptr<crt::CRTData> > crtDataList;
+  if (event.getByLabel(fCRTDataLabel, crtDataHandle))
+    art::fill_ptr_vector(crtDataList, crtDataHandle);
+  
+  art::FindManyP<sim::AuxDetIDE> findManyIdes(crtDataHandle, event, fCRTDataLabel);
+
+  std::map<art::Ptr<crt::CRTData>, int> dataPtrMap;
+
+  for(size_t data_i = 0; data_i < crtDataList.size(); data_i++){
+
+    dataPtrMap[crtDataList[data_i]] = data_i;
+
+    // Get all the true IDs from all the IDEs in the hit
+    std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(data_i);
+    for(size_t i = 0; i < ides.size(); i++){
+      fDataTrueIds[data_i][ides[i]->trackID] += ides[i]->energyDeposited;
+    }
+
+  }
+
+  art::Handle< std::vector<crt::CRTHit>> crtHitHandle;
+  std::vector<art::Ptr<crt::CRTHit> > crtHitList;
+  if (event.getByLabel(fCRTHitLabel, crtHitHandle))
+    art::fill_ptr_vector(crtHitList, crtHitHandle);
+
+  art::FindManyP<crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
+
+  std::map<art::Ptr<crt::CRTHit>, int> hitPtrMap;
+
+  for(size_t hit_i = 0; hit_i < crtHitList.size(); hit_i++){
+
+    hitPtrMap[crtHitList[hit_i]] = hit_i;
+
+    std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(hit_i);
+    for(size_t data_i = 0; data_i < data.size(); data_i++){
+
+      int dataID = dataPtrMap[data[data_i]];
+
+      for(auto const& di : fDataTrueIds[dataID]){
+        fHitTrueIds[hit_i][di.first] += di.second;
+      }
+
+    }
+  }
+
+  art::Handle< std::vector<crt::CRTTrack>> crtTrackHandle;
+  std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
+  if (event.getByLabel(fCRTTrackLabel, crtTrackHandle))
+    art::fill_ptr_vector(crtTrackList, crtTrackHandle);
+
+  art::FindManyP<crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
+
+  for(size_t track_i = 0; track_i < crtTrackList.size(); track_i++){
+
+    std::vector<art::Ptr<crt::CRTHit>> hits = findManyHits.at(track_i);
+    for(size_t hit_i = 0; hit_i < hits.size(); hit_i++){
+
+      int hitID = hitPtrMap[hits[hit_i]];
+
+      for(auto const& hi : fHitTrueIds[hitID]){
+        fTrackTrueIds[track_i][hi.first] += hi.second;
+      }
+
+    }
+  }
 }
 
 // Check that two CRT data products are the same
@@ -229,6 +304,24 @@ int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CR
 
 }
 
+int CRTBackTracker::TrueIdFromDataId(const art::Event& event, int data_i){
+
+  if(fDataTrueIds.find(data_i) != fDataTrueIds.end()){ 
+    double maxEnergy = -1;
+    int trueId = -99999;
+    for(auto &id : fDataTrueIds[data_i]){
+      if(id.second > maxEnergy){
+        maxEnergy = id.second;
+        trueId = id.first;
+      }
+    }
+    return trueId;
+  }
+
+  return -99999;
+}
+
+
 // Get the true particle ID that contributed the most energy to the CRT hit
 int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CRTHit& hit){
 
@@ -270,6 +363,23 @@ int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CR
 
   return trueId;
 
+}
+
+int CRTBackTracker::TrueIdFromHitId(const art::Event& event, int hit_i){
+
+  if(fHitTrueIds.find(hit_i) != fHitTrueIds.end()){ 
+    double maxEnergy = -1;
+    int trueId = -99999;
+    for(auto &id : fHitTrueIds[hit_i]){
+      if(id.second > maxEnergy){
+        maxEnergy = id.second;
+        trueId = id.first;
+      }
+    }
+    return trueId;
+  }
+
+  return -99999;
 }
 
 // Get the true particle ID that contributed the most energy to the CRT track
@@ -318,5 +428,25 @@ int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CR
   return trueId;
 
 }
+
+int CRTBackTracker::TrueIdFromTrackId(const art::Event& event, int track_i){
+
+  if(fTrackTrueIds.find(track_i) != fTrackTrueIds.end()){ 
+    double maxEnergy = -1;
+    int trueId = -99999;
+    for(auto &id : fTrackTrueIds[track_i]){
+      if(id.second > maxEnergy){
+        maxEnergy = id.second;
+        trueId = id.first;
+      }
+    }
+
+    return trueId;
+  }
+
+  return -99999;
+
+}
+
 
 }

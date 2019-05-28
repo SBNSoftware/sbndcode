@@ -4,9 +4,7 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "crttrackproducer_sbnd.fcl"
-#include "crteventdisplay_sbnd.fcl"
-#include "crtbacktracker_sbnd.fcl"
+#include "crtanamodules_sbnd.fcl"
 
 process_name: CRTTrackRecoAna
 
@@ -49,23 +47,7 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CRTTrackRecoAna: 
-    {
-      # The "module_type" tells us which module to run. The name here
-      # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CRT/CRTAna/CRTTrackRecoAna"
-
-      # The input parameters
-      SimModuleLabel:       "largeant"  # Simulation producer module label
-      CRTHitLabel:          "crthit"       # CRT producer module label
-      CRTTrackLabel:        "crttrack"       # CRT producer module label
-      Verbose:              true        # Print extra information about what's going on
-      VeryVerbose:          true        # Print detailed information about every muon
-      Plot:                 false        # Draw truth and reco tracks in event
-      PlotTrackID:          165         # ID of true track to plot
-      Evd:                  @local::standard_crteventdisplay
-      CrtBackTrack:         @local::standard_crtbacktracker
-    }
+    CRTTrackRecoAna: @local::sbnd_crttrackrecoana
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
