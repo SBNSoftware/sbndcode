@@ -39,6 +39,7 @@
 
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // c++

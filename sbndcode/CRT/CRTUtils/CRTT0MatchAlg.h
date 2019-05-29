@@ -40,6 +40,7 @@
 #include "cetlib/pow.h" // cet::sum_of_squares()
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // c++

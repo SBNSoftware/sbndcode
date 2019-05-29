@@ -42,80 +42,29 @@ void CRTTrackMatchAlg::reconfigure(const Config& config){
 // (https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection)
 std::pair<TVector3, TVector3> CRTTrackMatchAlg::TpcIntersection(const geo::TPCGeo& tpcGeo, crt::CRTTrack track){
 
-  // TODO allow variations in track start/end points
-
+  // Find the intersection between the track and the TPC
   TVector3 start (track.x1_pos, track.y1_pos, track.z1_pos);
   TVector3 end (track.x2_pos, track.y2_pos, track.z2_pos);
-  TVector3 dir = (end - start);
-  TVector3 invDir (1./dir.X(), 1./dir.Y(), 1/dir.Z());
+  TVector3 min (tpcGeo.MinX(), tpcGeo.MinY(), tpcGeo.MinZ());
+  TVector3 max (tpcGeo.MaxX(), tpcGeo.MaxY(), tpcGeo.MaxZ());
 
-  double tmin, tmax, tymin, tymax, tzmin, tzmax;
+  std::pair<TVector3, TVector3> intersection = CRTCommonUtils::CubeIntersection(min, max, start, end);
+  if(intersection.first.X() != -99999) return intersection;
 
-  TVector3 enter (-99999, -99999, -99999);
-  TVector3 exit (-99999, -99999, -99999);
+  // Allow variations in track start/end points
+  // Try the corners of the allowed region
+  TVector3 min1 (track.x1_pos - track.x1_err, track.y1_pos - track.y1_err, track.z1_pos - track.z1_err);
+  TVector3 min2 (track.x2_pos - track.x2_err, track.y2_pos - track.y2_err, track.z2_pos - track.z2_err);
+  intersection = CRTCommonUtils::CubeIntersection(min, max, min1, min2);
+  if(intersection.first.X() != -99999) return intersection;
 
-  // Find the intersections with the X plane
-  if(invDir.X() >= 0){
-    tmin = (tpcGeo.MinX() - start.X()) * invDir.X();
-    tmax = (tpcGeo.MaxX() - start.X()) * invDir.X();
-  }
-  else{
-    tmin = (tpcGeo.MaxX() - start.X()) * invDir.X();
-    tmax = (tpcGeo.MinX() - start.X()) * invDir.X();
-  }
-
-  // Find the intersections with the Y plane
-  if(invDir.Y() >= 0){
-    tymin = (tpcGeo.MinY() - start.Y()) * invDir.Y();
-    tymax = (tpcGeo.MaxY() - start.Y()) * invDir.Y();
-  }
-  else{
-    tymin = (tpcGeo.MaxY() - start.Y()) * invDir.Y();
-    tymax = (tpcGeo.MinY() - start.Y()) * invDir.Y();
-  }
-
-  // Check that it actually intersects
-  if((tmin > tymax) || (tymin > tmax)) return std::make_pair(enter, exit);
-
-  // Max of the min points is the actual intersection
-  if(tymin > tmin) tmin = tymin;
-
-  // Min of the max points is the actual intersection
-  if(tymax < tmax) tmax = tymax;
-
-  // Find the intersection with the Z plane
-  if(invDir.Z() >= 0){
-    tzmin = (tpcGeo.MinZ() - start.Z()) * invDir.Z();
-    tzmax = (tpcGeo.MaxZ() - start.Z()) * invDir.Z();
-  }
-  else{
-    tzmin = (tpcGeo.MaxZ() - start.Z()) * invDir.Z();
-    tzmax = (tpcGeo.MinZ() - start.Z()) * invDir.Z();
-  }
-
-  // Check for intersection
-  if((tmin > tzmax) || (tzmin > tmax)) return std::make_pair(enter, exit);
-
-  // Find final intersection points
-  if(tzmin > tmin) tmin = tzmin;
-
-  // Find final intersection points
-  if(tzmax < tmax) tmax = tzmax;
-
-  // Calculate the actual crossing points
-  double xmin = start.X() + tmin * dir.X();
-  double xmax = start.X() + tmax * dir.X();
-  double ymin = start.Y() + tmin * dir.Y();
-  double ymax = start.Y() + tmax * dir.Y();
-  double zmin = start.Z() + tmin * dir.Z();
-  double zmax = start.Z() + tmax * dir.Z();
-
-  // Return pair of entry and exit points
-  enter.SetXYZ(xmin, ymin, zmin);
-  exit.SetXYZ(xmax, ymax, zmax);
-  return std::make_pair(enter, exit);
+  TVector3 max1 (track.x1_pos + track.x1_err, track.y1_pos + track.y1_err, track.z1_pos + track.z1_err);
+  TVector3 max2 (track.x2_pos + track.x2_err, track.y2_pos + track.y2_err, track.z2_pos + track.z2_err);
+  intersection = CRTCommonUtils::CubeIntersection(min, max, max1, max2);
+  return intersection;
 
 }
+
 
 // Function to calculate if a CRTTrack crosses the TPC volume
 bool CRTTrackMatchAlg::CrossesTPC(crt::CRTTrack track){
@@ -149,6 +98,7 @@ bool CRTTrackMatchAlg::CrossesAPA(crt::CRTTrack track){
 
 } // CRTTrackMatchAlg::CrossesAPA()
 
+
 double CRTTrackMatchAlg::T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
 
   std::pair<crt::CRTTrack, double> closestAngle = ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
@@ -162,6 +112,7 @@ double CRTTrackMatchAlg::T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt:
   return -99999;
 
 }
+
 
 // Find the closest valid matching CRT track ID
 int CRTTrackMatchAlg::GetMatchedCRTTrackId(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
@@ -322,6 +273,7 @@ double CRTTrackMatchAlg::AngleBetweenTracks(recob::Track tpcTrack, crt::CRTTrack
 
 }
 
+
 // Calculate the average DCA between tracks
 double CRTTrackMatchAlg::AveDCABetweenTracks(recob::Track tpcTrack, crt::CRTTrack crtTrack, double shift){
 
@@ -348,6 +300,7 @@ double CRTTrackMatchAlg::AveDCABetweenTracks(recob::Track tpcTrack, crt::CRTTrac
   return aveDCA/usedPts;
 
 }
+
 
 // Calculate the average DCA between tracks
 double CRTTrackMatchAlg::AveDCABetweenTracks(recob::Track tpcTrack, crt::CRTTrack crtTrack, const art::Event& event){

@@ -299,6 +299,9 @@ namespace sbnd {
 
     fCrtBackTrack.Initialize(event);
 
+    std::cout<<"Num CRT hits = "<<crtHitList.size()<<"\n";
+    std::cout<<"Num CRT tracks = "<<crtTrackList.size()<<"\n";
+
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
