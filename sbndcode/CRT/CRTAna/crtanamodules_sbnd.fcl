@@ -15,6 +15,8 @@ sbnd_crtdetsimana:
       SimModuleLabel:       "largeant"    # Simulation producer module label
       CRTSimLabel:          "crt"         # CRT producer module label
       Verbose:              false         # Print extra information about what's going on
+      QPed:                 0.
+      QSlope:               40.
       CrtBackTrack:         @local::standard_crtbacktracker
 }
 
@@ -31,6 +33,7 @@ sbnd_crthitrecoana:
       VeryVerbose:          false        # Print detailed information about every muon
       Plot:                 false        # Draw truth and reco tracks in event
       PlotTrackID:          -99999         # ID of true track to plot
+      MinAngleNpePlot:      0.          # Minimum angle for plotting Npe (rad)
       # Hit reconstruction
       Evd:                  @local::standard_crteventdisplay
       CrtBackTrack:         @local::standard_crtbacktracker

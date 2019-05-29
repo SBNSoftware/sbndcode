@@ -3,8 +3,8 @@ BEGIN_PROLOG
 standard_crtsimhitalg:
 {
     TimeCoincidenceLimit: 0.08  # Minimum time between two overlapping hit crt strips [us]
-    QPed:                 63.6  # Pedestal offset [ADC]
-    QSlope:               131.9 # Pedestal slope [ADC/photon]
+    QPed:                 0.0 #63.6  # Pedestal offset [ADC]
+    QSlope:               40.0 #131.9 # Pedestal slope [ADC/photon]
     UseReadoutWindow:     false  # Only reconstruct hits within central readout window
 }
 
