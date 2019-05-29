@@ -64,56 +64,19 @@ std::pair<double, double> CRTT0MatchAlg::TrackT0Range(double startX, double endX
 
 double CRTT0MatchAlg::DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int driftDirection, double t0){
 
-  double minDist = 99999;
+  //double minDist = 99999;
 
   // Convert the t0 into an x shift
   double shift = t0 * fDetectorProperties->DriftVelocity();
   // Apply the shift depending on which TPC the track is in
   trackPos[0] += driftDirection * shift;
 
-  TVector3 endPos = trackPos + trackDir;
-  double denominator = (endPos - trackPos).Mag();
-  // 1D hits should only have a lot of variance in one direction
-  if(crtHit.x_err > 50.){
-    // Loop over size of hit to find the min dist
-    for(int i = 0; i < 20.; i++){
-      double xpos = crtHit.x_pos + ((i+1.)/10. - 1.)*crtHit.x_err;
-      TVector3 crtPoint(xpos, crtHit.y_pos, crtHit.z_pos);
-      double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-      double dca = numerator/denominator;
-      if(dca < minDist) minDist = dca;
-    }
-  }
-  else if(crtHit.y_err > 50.){
-    // Loop over size of hit to find the min dist
-    for(int i = 0; i < 20.; i++){
-      double ypos = crtHit.y_pos + ((i+1.)/10. - 1.)*crtHit.y_err;
-      TVector3 crtPoint(crtHit.x_pos, ypos, crtHit.z_pos);
-      double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-      double dca = numerator/denominator;
-      if(dca < minDist) minDist = dca;
-    }
-  }
-  else if(crtHit.y_err > 50.){
-    // Loop over size of hit to find the min dist
-    for(int i = 0; i < 20.; i++){
-      double zpos = crtHit.z_pos + ((i+1.)/10. - 1.)*crtHit.z_err;
-      TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, zpos);
-      double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-      double dca = numerator/denominator;
-      if(dca < minDist) minDist = dca;
-    }
-  }
-  else{
-    TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
-    double numerator = ((crtPoint - trackPos).Cross(crtPoint-endPos)).Mag();
-    double dca = numerator/denominator;
-    if(dca < minDist) minDist = dca;
-  }
+  TVector3 end = trackPos + trackDir;
 
-  return minDist;
+  return CRTCommonUtils::DistToCrtHit(crtHit, trackPos, end);
 
 } // CRTT0MatchAlg::DistToOfClosestApproach()
+
 
 std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track track, double frac){
 
@@ -146,6 +109,7 @@ std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track 
   return std::make_pair(startDir, endDir);
 
 } // CRTT0MatchAlg::TrackDirectionAverage()
+
 
 std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
 
@@ -202,6 +166,7 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrac
   return std::make_pair(hit, -99999);
 
 }
+
 
 double CRTT0MatchAlg::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
 
