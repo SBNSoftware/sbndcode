@@ -410,7 +410,6 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                        PERFORMANCE METRICS
     //----------------------------------------------------------------------------------------------------------
-
     // Loop over all the true particles in the event inside the reco window
     for(auto const& truthMatch : truthMatching){
       CRTTruthMatch match = truthMatch.second;

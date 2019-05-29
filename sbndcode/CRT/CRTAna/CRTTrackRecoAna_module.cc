@@ -181,8 +181,9 @@ namespace sbnd {
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
     // Define histograms
-    for(size_t i = 0; i < fCrtGeo.NumTaggers(); i++){
-      std::string tagger = fCrtGeo.GetTagger(i).name;
+    for(size_t i = 0; i < fCrtGeo.NumTaggers()+1; i++){
+      std::string tagger = "All";
+      if(i < fCrtGeo.NumTaggers()) tagger = fCrtGeo.GetTagger(i).name;
       hCrossDistance[tagger] = tfs->make<TH1D>(Form("CrossDistance_%s", tagger.c_str()), "", 40, 0, 100);
       hTrackDist[tagger]     = tfs->make<TH1D>(Form("TrackDist_%s", tagger.c_str()),     "", 40, 0, 200);
 
@@ -291,6 +292,9 @@ namespace sbnd {
         hEffThetaTotal[tagger]->Fill(theta);
         hEffPhiTotal[tagger]->Fill(phi);
       }
+      hEffMomTotal["All"]->Fill(momentum);
+      hEffThetaTotal["All"]->Fill(theta);
+      hEffPhiTotal["All"]->Fill(phi);
 
       if(crtTracks.find(partId) == crtTracks.end()) continue;
       for(auto const& tagger : hitTaggers){
@@ -298,6 +302,9 @@ namespace sbnd {
         hEffThetaReco[tagger]->Fill(theta);
         hEffPhiReco[tagger]->Fill(phi);
       }
+      hEffMomReco["All"]->Fill(momentum);
+      hEffThetaReco["All"]->Fill(theta);
+      hEffPhiReco["All"]->Fill(phi);
     }
 
     //----------------------------------------------------------------------------------------------------------
@@ -344,8 +351,10 @@ namespace sbnd {
                                 + std::pow(hit->y_pos - trueCross.Y(), 2)
                                 + std::pow(hit->z_pos - trueCross.Z(), 2));
         hCrossDistance[hit->tagger]->Fill(dist);
+        hCrossDistance["All"]->Fill(dist);
         hTrackDist[hit->tagger]->Fill(aveDCA);
       }
+      hTrackDist["All"]->Fill(aveDCA);
 
     }
     

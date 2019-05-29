@@ -98,6 +98,11 @@ namespace sbnd {
         Comment("ID of track to plot")
       };
 
+      fhicl::Atom<double> MinAngleNpePlot {
+        Name("MinAngleNpePlot"),
+        Comment("Minimum angle for plotting Npe per hit")
+      };
+
       fhicl::Table<CRTEventDisplay::Config> Evd {
         Name("Evd"),
       };
@@ -131,6 +136,7 @@ namespace sbnd {
     bool          fVeryVerbose;         ///< print more information about what's going on
     bool          fPlot;                ///< plot tracks
     int           fPlotTrackID;         ///< id of track to plot
+    double        fMinAngleNpePlot;     ///< Maximum angle for plotting Npe per hit
 
     // histograms
     std::map<std::string, TH1D*> hHitTime;
@@ -165,6 +171,7 @@ namespace sbnd {
     , fVeryVerbose          (config().VeryVerbose())
     , fPlot                 (config().Plot())
     , fPlotTrackID          (config().PlotTrackID())
+    , fMinAngleNpePlot      (config().MinAngleNpePlot())
     , evd                   (config().Evd())
     , fCrtBackTrack         (config().CrtBackTrack())
   {
@@ -312,7 +319,7 @@ namespace sbnd {
 
       // Calculate the angle to the tagger
       double angle = TMath::Pi()/2. - fCrtGeo.AngleToTagger(tagger, particles[trueId]);
-      hNpe[tagger]->Fill(hit.peshit);
+      if(angle > fMinAngleNpePlot) hNpe[tagger]->Fill(hit.peshit);
       hAngle[tagger]->Fill(angle);
       hNpeAngle[tagger]->Fill(angle, hit.peshit);
 

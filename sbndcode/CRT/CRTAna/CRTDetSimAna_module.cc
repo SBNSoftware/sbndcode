@@ -83,6 +83,14 @@ namespace sbnd {
         Comment("Print information about what's going on")
       };
 
+      fhicl::Atom<double> QPed {
+        Name("QPed"),
+      };
+
+      fhicl::Atom<double> QSlope {
+        Name("QSlope"),
+      };
+
       fhicl::Table<CRTBackTracker::Config> CrtBackTrack {
         Name("CrtBackTrack"),
       };
@@ -109,10 +117,14 @@ namespace sbnd {
     art::InputTag fSimModuleLabel;      ///< name of detsim producer
     art::InputTag fCRTSimLabel;         ///< name of CRT producer
     bool          fVerbose;             ///< print information about what's going on
+    double        fQPed;
+    double        fQSlope;
     
     // Histograms
     // ADCs of crt data
     std::map<std::string, TH1D*> hADC;
+    std::map<std::string, TH1D*> hNpe;
+    std::map<std::string, TH1D*> hNpeRatio;
     // Time of CRT data
     std::map<std::string, TH1D*> hTime;
     std::map<std::string, TH1D*> hStripDist;
@@ -131,6 +143,9 @@ namespace sbnd {
     // ADC as a function of distance from distance along width
     std::map<std::string, TH2D*> hStripDistADC;
     std::map<std::string, TH2D*> hSipmDistADC;
+    std::map<std::string, TH2D*> hStripDistNpe;
+    std::map<std::string, TH2D*> hSipmDistNpe;
+    std::map<std::string, TH2D*> hSipmDistNpeRatio;
 
     // Other variables shared between different methods.
     detinfo::DetectorClocks const* fDetectorClocks;
@@ -148,6 +163,8 @@ namespace sbnd {
     , fSimModuleLabel       (config().SimModuleLabel())
     , fCRTSimLabel          (config().CRTSimLabel())
     , fVerbose              (config().Verbose())
+    , fQPed                 (config().QPed())
+    , fQSlope               (config().QSlope())
     , fCrtBackTrack         (config().CrtBackTrack())
   {
     // Get a pointer to the fGeometryServiceetry service provider
@@ -163,6 +180,8 @@ namespace sbnd {
     for(size_t i = 0; i < fCrtGeo.NumTaggers(); i++){
       std::string tagger = fCrtGeo.GetTagger(i).name;
       hADC[tagger]          = tfs->make<TH1D>(Form("ADC_%s", tagger.c_str()),       "", 40, 0, 10000);
+      hNpe[tagger]          = tfs->make<TH1D>(Form("Npe_%s", tagger.c_str()),       "", 40, 0, 300);
+      hNpeRatio[tagger]     = tfs->make<TH1D>(Form("NpeRatio_%s", tagger.c_str()),  "", 40, 0, 10);
       hTime[tagger]         = tfs->make<TH1D>(Form("Time_%s", tagger.c_str()),      "", 40, -5000, 5000);
       hStripDist[tagger]    = tfs->make<TH1D>(Form("StripDist_%s", tagger.c_str()), "", 40, 0,     450);
       hSipmDist[tagger]     = tfs->make<TH1D>(Form("SipmDist_%s", tagger.c_str()),  "", 40, 0,     11.2);
@@ -178,6 +197,9 @@ namespace sbnd {
 
       hStripDistADC[tagger] = tfs->make<TH2D>(Form("StripDistADC_%s", tagger.c_str()), "", 20, 0, 450,  20, 0, 10000);
       hSipmDistADC[tagger]  = tfs->make<TH2D>(Form("SipmDistADC_%s", tagger.c_str()),  "", 20, 0, 11.2, 20, 0, 10000);
+      hStripDistNpe[tagger] = tfs->make<TH2D>(Form("StripDistNpe_%s", tagger.c_str()), "", 20, 0, 450,  20, 0, 300);
+      hSipmDistNpe[tagger]  = tfs->make<TH2D>(Form("SipmDistNpe_%s", tagger.c_str()),  "", 20, 0, 11.2, 20, 0, 300);
+      hSipmDistNpeRatio[tagger]  = tfs->make<TH2D>(Form("SipmDistNpeRatio_%s", tagger.c_str()),  "", 20, 0, 11.2, 20, 0, 10);
     }
     
 
@@ -244,6 +266,11 @@ namespace sbnd {
         crtData[id].push_back(*crtDataList[i]);
       }
 
+      int trueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, *crtDataList[i]);
+      // Only consider primary muons
+      if(particles.find(trueID) == particles.end()) continue;
+      if(!(std::abs(particles[trueID].PdgCode()) == 13 && particles[trueID].Mother() == 0)) continue;
+
       // Get the IDEs associated with the crtData
       std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(i);
       // Calculate the average position
@@ -262,17 +289,28 @@ namespace sbnd {
       std::string stripName = fCrtGeo.ChannelToStripName(channel);
       std::string tagger = fCrtGeo.GetTaggerName(stripName);
 
+      double npe = ((double)crtDataList[i]->ADC() - fQPed)/fQSlope;
+
       // Calculate distance to the sipm
       double sipmDist = fCrtGeo.DistanceBetweenSipms(cross, channel);
       hSipmDist[tagger]->Fill(sipmDist);
       hSipmDistADC[tagger]->Fill(sipmDist, crtDataList[i]->ADC());
+      hSipmDistNpe[tagger]->Fill(sipmDist, npe);
+
+      if(channel % 2 == 0){
+        double npe1 = ((double)crtDataList[i+1]->ADC() - fQPed)/fQSlope;
+        hNpeRatio[tagger]->Fill(npe/npe1);
+        hSipmDistNpeRatio[tagger]->Fill(sipmDist, npe/npe1);
+      }
 
       // Calculate the distance to the end
       double stripDist = std::abs(fCrtGeo.DistanceDownStrip(cross, stripName));
       hStripDist[tagger]->Fill(stripDist);
       hStripDistADC[tagger]->Fill(stripDist, crtDataList[i]->ADC());
+      hStripDistNpe[tagger]->Fill(stripDist, npe);
 
       hADC[tagger]->Fill(crtDataList[i]->ADC());
+      hNpe[tagger]->Fill(npe);
 
       fTrigClock.SetTime(crtDataList[i]->T0());
       double time = fTrigClock.Time(); // [us]

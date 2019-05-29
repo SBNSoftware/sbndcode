@@ -452,7 +452,7 @@ std::vector<crt::CRTTrack> CRTTrackRecoAlg::CreateTracks(std::vector<crt::CRTHit
   for(size_t i = 0; i < hits.size(); i++){
     crt::CRTHit hit1 = hits[i];
 
-    for(size_t j = 0; j < hits.size(); j++){
+    for(size_t j = 0; j < hits.size(); j++){ // FIXME j = i
       crt::CRTHit hit2 = hits[j];
       std::pair<size_t, size_t> hitPair = std::make_pair(i, j);
       std::pair<size_t, size_t> rhitPair = std::make_pair(j, i);
@@ -480,12 +480,12 @@ std::vector<crt::CRTTrack> CRTTrackRecoAlg::CreateTracks(std::vector<crt::CRTHit
   for(size_t i = 0; i < hitPairDist.size(); i++){
     size_t hit_i = hitPairDist[i].first.first;
     size_t hit_j = hitPairDist[i].first.second;
-    //Make sure bottom plane hit is always hit_i
+    //Make sure bottom plane hit is always hit_i FIXME don't use explicit names
     if(hits[hit_j].tagger=="volTaggerBot_0") std::swap(hit_i, hit_j);
     crt::CRTHit ihit = hits[hit_i];
     crt::CRTHit jhit = hits[hit_j];
 
-    //If the bottom plane hit is a 1D hit
+    //If the bottom plane hit is a 1D hit FIXME find better way to determine if 1D hit
     if(ihit.x_err>100. || ihit.z_err>100.){
       double facMax = 1;
       std::vector<size_t> nhitsMax;
@@ -576,7 +576,7 @@ std::vector<crt::CRTTrack> CRTTrackRecoAlg::CreateTracks(std::vector<crt::CRTHit
     size_t hit_i = track.first[0];
     size_t hit_j = track.first[1];
 
-    // Make sure the first hit is the top high tagger if there are only two hits
+    // Make sure the first hit is the top high tagger if there are only two hits FIXME don't use explicit names
     if(hits[hit_j].tagger=="volTaggerTopHigh_0") std::swap(hit_i, hit_j);
     crt::CRTHit ihit = hits[hit_i];
     crt::CRTHit jhit = hits[hit_j];
@@ -597,7 +597,7 @@ std::vector<crt::CRTTrack> CRTTrackRecoAlg::CreateTracks(std::vector<crt::CRTHit
     //Create track
     crt::CRTTrack crtTrack = FillCrtTrack(ihit, jhit, true);
 
-    //If only the top two planes are hit create an incomplete/stopping track
+    //If only the top two planes are hit create an incomplete/stopping track FIXME try to work out if it enters cryostat region without using explicit names
     if(track.first.size()==2 && ihit.tagger == "volTaggerTopHigh_0" && jhit.tagger == "volTaggerTopLow_0"){ 
       crtTrack.complete = false;
     }
