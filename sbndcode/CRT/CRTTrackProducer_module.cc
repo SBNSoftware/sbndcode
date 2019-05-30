@@ -71,7 +71,6 @@ private:
   std::string  fDataLabelTZeros;
   int          fTrackMethodType;
   int          fStoreTrack;
-  bool         fUseTopPlane;
 
   CRTTrackRecoAlg trackAlg;
 
@@ -125,7 +124,6 @@ CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const & p)
   fDataLabelTZeros    = p.get<std::string>("DataLabelTZeros");    // CRTTzero producer module name
   fStoreTrack         = p.get<int>        ("StoreTrack");         // method 1 = all, method 2 = ave, method 3 = pure, method 4 = top plane
   fTrackMethodType    = p.get<int>        ("TrackMethodType");    // Print stuff
-  fUseTopPlane        = p.get<bool>       ("UseTopPlane");        // Use hits from the top plane (SBND specific)
   
   // Call appropriate produces<>() functions here.
   if(fStoreTrack == 1){ 
@@ -190,12 +188,7 @@ void CRTTrackProducer::produce(art::Event & evt)
       for (auto &keyVal : hits){
         std::string ip = keyVal.first;
         std::vector<std::pair<crt::CRTHit, std::vector<int>>> ahits = trackAlg.AverageHits(hits[ip], hitIds);
-        if(fUseTopPlane && ip == "volTaggerTopHigh_0"){ 
-          allHits.insert(allHits.end(), ahits.begin(), ahits.end());
-        }
-        else if(ip != "volTaggerTopHigh_0"){ 
-          allHits.insert(allHits.end(), ahits.begin(), ahits.end());
-        }
+        allHits.insert(allHits.end(), ahits.begin(), ahits.end());
       }
 
       //Create tracks with hits at the same tzero

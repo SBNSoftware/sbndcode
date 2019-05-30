@@ -29,221 +29,313 @@ CRTTrackMatchAlg::~CRTTrackMatchAlg(){
 
 void CRTTrackMatchAlg::reconfigure(const Config& config){
 
+  fMaxAngleDiff = config.MaxAngleDiff();
+  fMaxDistance = config.MaxDistance();
+  fTPCTrackLabel = config.TPCTrackLabel();
+
   return;
 
 }
  
 
-// Function to transform a CRTTrack into an expected reconstructed track
-std::vector<RecoCRTTrack> CRTTrackMatchAlg::CrtToRecoTrack(crt::CRTTrack track, int id){
+// Calculate intersection between CRT track and TPC (AABB Ray-Box intersection)
+// (https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection)
+std::pair<TVector3, TVector3> CRTTrackMatchAlg::TpcIntersection(const geo::TPCGeo& tpcGeo, crt::CRTTrack track){
 
-  // TODO: could be more detector agnositic (pos of cpa, drift directions, max length of track)
-  std::vector<RecoCRTTrack> recoCrtTracks;
-  // Get the time of the track
-  double crtTime = ((double)(int)track.ts1_ns) * 1e-3; // [us]
-  // Convert time into a x shift
-  double xShift = crtTime * fDetectorProperties->DriftVelocity();
+  // Find the intersection between the track and the TPC
+  TVector3 start (track.x1_pos, track.y1_pos, track.z1_pos);
+  TVector3 end (track.x2_pos, track.y2_pos, track.z2_pos);
+  TVector3 min (tpcGeo.MinX(), tpcGeo.MinY(), tpcGeo.MinZ());
+  TVector3 max (tpcGeo.MaxX(), tpcGeo.MaxY(), tpcGeo.MaxZ());
 
-  // Shift track, remembering to take into account the tpc, if the track crosses the cpa and 
-  //the size of the readout window
-  TVector3 crtStart(track.x1_pos, track.y1_pos, track.z1_pos);
-  TVector3 crtEnd(track.x2_pos, track.y2_pos, track.z2_pos);
-  if(crtStart.Y() < crtEnd.Y()) std::swap(crtStart, crtEnd);
-  if(!track.complete){
-    // Find point where track crosses bottom plane
-    TVector3 diff = (crtEnd - crtStart).Unit();
-    TVector3 newEnd = crtStart + 5000*diff; 
-    crtEnd = newEnd;
-  }
+  std::pair<TVector3, TVector3> intersection = CRTCommonUtils::CubeIntersection(min, max, start, end);
+  if(intersection.first.X() != -99999) return intersection;
 
-  TVector3 cpaCrossStart, cpaCrossEnd;
-  // Calculate the expected reconstructed length, angle and start and end position
-  std::vector<int> crtTpc;
-  if(crtStart.X() < 0. && crtEnd.X() < 0.){
+  // Allow variations in track start/end points
+  // Try the corners of the allowed region
+  TVector3 min1 (track.x1_pos - track.x1_err, track.y1_pos - track.y1_err, track.z1_pos - track.z1_err);
+  TVector3 min2 (track.x2_pos - track.x2_err, track.y2_pos - track.y2_err, track.z2_pos - track.z2_err);
+  intersection = CRTCommonUtils::CubeIntersection(min, max, min1, min2);
+  if(intersection.first.X() != -99999) return intersection;
 
-    // Track in TPC 0
-    std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 0, 
-                                                              id, crtTime, track.complete);
-    recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
-  }
-  else if(crtStart.X() > 0. && crtEnd.X() > 0.){
+  TVector3 max1 (track.x1_pos + track.x1_err, track.y1_pos + track.y1_err, track.z1_pos + track.z1_err);
+  TVector3 max2 (track.x2_pos + track.x2_err, track.y2_pos + track.y2_err, track.z2_pos + track.z2_err);
+  intersection = CRTCommonUtils::CubeIntersection(min, max, max1, max2);
+  return intersection;
 
-    // Track in TPC 1
-    std::vector<RecoCRTTrack> tempTracks = CreateRecoCRTTrack(crtStart, crtEnd, xShift, 1, 
-                                                              id, crtTime, track.complete);
-    recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
-  }
-  else {
-    // Track in both TPCs and will be split
-    TVector3 direction = crtStart - crtEnd;
-    double step = (0. - crtStart.X())/direction.X(); 
-    TVector3 cpaCross(0., crtStart.Y() + step*direction.Y(), crtStart.Z() + step*direction.Z());
-    cpaCrossStart = cpaCross;
-    cpaCrossEnd = cpaCross;
-
-    if(crtStart.X() < 0.){ 
-      std::vector<RecoCRTTrack> tempTracks0 = CreateRecoCRTTrack(crtStart, cpaCrossStart, xShift, 0, 
-                                                                 id, crtTime, track.complete);
-      recoCrtTracks.insert(recoCrtTracks.end(), tempTracks0.begin(), tempTracks0.end());
-
-      std::vector<RecoCRTTrack> tempTracks1 = CreateRecoCRTTrack(crtEnd, cpaCrossEnd, xShift, 1, 
-                                                                 id, crtTime, track.complete);
-      recoCrtTracks.insert(recoCrtTracks.end(), tempTracks1.begin(), tempTracks1.end());
-    }
-    else {
-      std::vector<RecoCRTTrack> tempTracks0 = CreateRecoCRTTrack(crtEnd, cpaCrossEnd, xShift, 0, 
-                                                                 id, crtTime, track.complete);
-      recoCrtTracks.insert(recoCrtTracks.end(), tempTracks0.begin(), tempTracks0.end());
-
-      std::vector<RecoCRTTrack> tempTracks1 = CreateRecoCRTTrack(crtStart, cpaCrossStart, xShift, 1, 
-                                                                 id, crtTime, track.complete);
-      recoCrtTracks.insert(recoCrtTracks.end(), tempTracks1.begin(), tempTracks1.end());
-    }
-
-  }
-
-  return recoCrtTracks;
-
-} // CRTTrackMatchAlg::CRTToRecoTrack()
-
-
-// Function to shift CRTTrack in X and work out how much is reconstructed
-std::vector<RecoCRTTrack> CRTTrackMatchAlg::CreateRecoCRTTrack(TVector3 start, TVector3 end, double shift, 
-                                                               int tpc, int id, double time, bool complete){
-
-  std::vector<RecoCRTTrack> recoCrtTracks;
-
-  // Get the true entry and exit points in the TPC
-  double xmin = -2.0 * fGeometryService->DetHalfWidth();
-  double xmax = 2.0 * fGeometryService->DetHalfWidth();
-  double ymin = -fGeometryService->DetHalfHeight();
-  double ymax = fGeometryService->DetHalfHeight();
-  double zmin = 0.;
-  double zmax = fGeometryService->DetLength();
-
-  // Get track info
-  TVector3 diff = end - start;
-  TVector3 startTPC, endTPC;
-  bool first = true;
-
-  // Loop over trajectory points
-  int npts = 1000;
-  for (int traj_i = 0; traj_i <= npts; traj_i++){
-    TVector3 trajPoint = start + ((traj_i)/((double)npts))*diff;
-    // Check if point is within reconstructable volume
-    if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax 
-        && trajPoint[2] >= zmin && trajPoint[2] <= zmax && first){
-      first = false;
-      startTPC = trajPoint;
-    }
-    if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax 
-        && trajPoint[2] >= zmin && trajPoint[2] <= zmax){
-      endTPC = trajPoint;
-    }
-  }
-
-  // Don't shift if not inside TPC
-  if(startTPC == endTPC){
-    return recoCrtTracks;
-  }
-
-  // Shift in x depending on TPC
-  if(tpc == 1){
-    // Track in TPC 1
-    startTPC[0] -= shift;
-    endTPC[0] -= shift;
-  }
-  else if(tpc == 0){
-    // Track in TPC 0
-    startTPC[0] += shift;
-    endTPC[0] += shift;
-  }
-  
-  double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-  double driftTimeMuS = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); // [us]
-  double deltaX = (readoutWindowMuS - driftTimeMuS) * fDetectorProperties->DriftVelocity(); // [cm]
-
-  if(tpc == 0) xmax = deltaX;
-  if(tpc == 1) xmin = -deltaX;
-
-  // Get track info
-  TVector3 diffTPC = endTPC - startTPC;
-  TVector3 startCut, endCut;
-  first = true;
-  // Loop over trajectory points
-  for (int traj_i = 0; traj_i <= npts; traj_i++){
-    TVector3 trajPoint = startTPC + ((traj_i)/((double)npts))*diffTPC;
-    // Check if point is within reconstructable volume
-    if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax 
-        && trajPoint[2] >= zmin && trajPoint[2] <= zmax && first){
-      first = false;
-      startCut = trajPoint;
-    }
-    if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax 
-        && trajPoint[2] >= zmin && trajPoint[2] <= zmax){
-      endCut = trajPoint;
-    }
-  }
-
-  if(!(startCut.X() == endCut.X())){
-    RecoCRTTrack recoCrtTrack = {id, tpc, startCut, endCut, time, complete};
-    recoCrtTracks.push_back(recoCrtTrack);
-  }
-
-  return recoCrtTracks;
-
-} // CRTTrackMatchAlg::CreateRecoCRTTrack()
+}
 
 
 // Function to calculate if a CRTTrack crosses the TPC volume
 bool CRTTrackMatchAlg::CrossesTPC(crt::CRTTrack track){
 
-  // Check if particle enters the TPC
-  bool enters = false;
-  double xmin = -2.0 * fGeometryService->DetHalfWidth();
-  double xmax = 2.0 * fGeometryService->DetHalfWidth();
-  double ymin = -fGeometryService->DetHalfHeight();
-  double ymax = fGeometryService->DetHalfHeight();
-  double zmin = 0.;
-  double zmax = fGeometryService->DetLength();
-
-  if(track.complete){
-    // Get track info
-    TVector3 start(track.x1_pos, track.y1_pos, track.z1_pos);
-    TVector3 end(track.x2_pos, track.y2_pos, track.z2_pos);
-    TVector3 diff = end - start;
-    // Loop over trajectory points
-    int npts = 100;
-    for (int traj_i = 0; traj_i < npts; traj_i++){
-      TVector3 trajPoint = start + ((traj_i+1)/100.)*diff;
-      // Check if point is within reconstructable volume
-      if (trajPoint[0] >= xmin-5 && trajPoint[0] <= xmax+5 && trajPoint[1] >= ymin-5 && trajPoint[1] <= ymax+5 && trajPoint[2] >= zmin-5 && trajPoint[2] <= zmax+5){
-        enters = true;
-      }
+  for(size_t c = 0; c < fGeometryService->Ncryostats(); c++){
+    const geo::CryostatGeo& cryostat = fGeometryService->Cryostat(c);
+    for(size_t t = 0; t < cryostat.NTPC(); t++){
+      const geo::TPCGeo& tpcGeo = cryostat.TPC(t);
+      std::pair<TVector3, TVector3> intersection = TpcIntersection(tpcGeo, track);
+      if(intersection.first.X() != -99999) return true;
     }
   }
-
-  // If track just between top two planes
-  else{
-    //
-    TVector3 start(track.x1_pos, track.y1_pos, track.z1_pos);
-    TVector3 end(track.x2_pos, track.y2_pos, track.z2_pos);
-    if(start.Y() < end.Y()) std::swap(start, end);
-    TVector3 diff = (end - start).Unit();
-    int npts = 100;
-    for (int traj_i = 0; traj_i < npts; traj_i++){
-      // TODO: length of track needs to be more detector agnostic
-      TVector3 trajPoint = start + (100.*(traj_i+1))*diff;
-      // Check if point is within reconstructable volume
-      if (trajPoint[0] >= xmin-5 && trajPoint[0] <= xmax+5 && trajPoint[1] >= ymin-5 && trajPoint[1] <= ymax+5 && trajPoint[2] >= zmin-5 && trajPoint[2] <= zmax+5){
-        enters = true;
-      }
-    }
-  }
-
-  return enters;
+  return false;
 
 } // CRTTrackMatchAlg::CrossesTPC()
+
+
+// Function to calculate if a CRTTrack crosses the wire planes
+bool CRTTrackMatchAlg::CrossesAPA(crt::CRTTrack track){
+
+  for(size_t c = 0; c < fGeometryService->Ncryostats(); c++){
+    const geo::CryostatGeo& cryostat = fGeometryService->Cryostat(c);
+    for(size_t t = 0; t < cryostat.NTPC(); t++){
+      const geo::TPCGeo& tpcGeo = cryostat.TPC(t);
+      std::pair<TVector3, TVector3> intersection = TpcIntersection(tpcGeo, track);
+      if(std::abs(intersection.first.X()) == fTpcGeo.CpaWidth()) return true;
+      if(std::abs(intersection.second.X()) == fTpcGeo.CpaWidth()) return true;
+    }
+  }
+  return false;
+
+} // CRTTrackMatchAlg::CrossesAPA()
+
+
+double CRTTrackMatchAlg::T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
+
+  std::pair<crt::CRTTrack, double> closestDCA = ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
+
+  if(closestDCA.second == -99999 || closestDCA > fMaxDistance) return -99999;
+
+  double crtTime = ((double)(int)closestDCA.first.ts1_ns) * 1e-3; // [us]
+
+  return crtTime;
+
+}
+
+
+// Find the closest valid matching CRT track ID
+int CRTTrackMatchAlg::GetMatchedCRTTrackId(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
+
+  std::pair<crt::CRTTrack, double> closestDCA = ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
+
+  if(closestDCA.second == -99999 || closestDCA.second > fMaxAngleDiff) return -99999;
+
+  int crt_i = 0;
+  for(auto const& track : crtTracks){
+    if(fCrtBackTrack.TrackCompare(closestDCA.first, track)) return crt_i;
+    crt_i++;
+  }
+
+  return -99999;
+
+}
+
+
+// Get all CRT tracks that cross the right TPC within an allowed time
+std::vector<crt::CRTTrack> CRTTrackMatchAlg::AllPossibleCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
+
+   std::vector<crt::CRTTrack> trackCandidates;
+
+  // Get the hits associated with the tpc track
+  auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+  art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
+  std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+
+  // Get the drift direction (0 for stitched tracks)
+  int driftDirection = fTpcGeo.DriftDirectionFromHits(hits);
+
+  // Get the TPC Geo object from the tpc track
+  geo::TPCID tpcID = hits[0]->WireID().asTPCID();
+  const geo::TPCGeo& tpcGeo = fGeometryService->GetElement(tpcID);
+
+  // Loop over the crt tracks
+  for(auto const& crtTrack : crtTracks){
+    // Calculate the intersection points for that TPC
+    std::pair<TVector3, TVector3> intersection = TpcIntersection(tpcGeo, crtTrack);
+
+    // Skip if it doesn't intersect
+    if(intersection.first.X() == -99999) continue;
+
+    // Shift the track to the CRT track
+    double crtTime = ((double)(int)crtTrack.ts1_ns) * 1e-3; // [us]
+    double shift = driftDirection * crtTime * fDetectorProperties->DriftVelocity();
+    geo::Point_t start = tpcTrack.Vertex();
+    geo::Point_t end = tpcTrack.End();
+    start.SetX(start.X() + shift);
+    end.SetX(end.X() + shift);
+
+    // Check the track is fully contained in the TPC
+    if(!fTpcGeo.InsideTPC(start, tpcGeo, 2.) && shift != 0) continue;
+    if(!fTpcGeo.InsideTPC(end, tpcGeo, 2.) && shift != 0) continue;
+
+    trackCandidates.push_back(crtTrack);
+    
+  }
+
+  return trackCandidates;
+}
+
+
+// Find the closest matching crt track by angle between tracks within angle and DCA limits
+std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByAngle(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event, double minDCA){
+
+  // Get the hits associated with the tpc track
+  auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+  art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
+  std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+
+  // Get the drift direction (0 for stitched tracks)
+  int driftDirection = fTpcGeo.DriftDirectionFromHits(hits);
+
+  std::vector<crt::CRTTrack> possTracks = AllPossibleCRTTracks(tpcTrack, crtTracks, event);
+
+  std::vector<std::pair<crt::CRTTrack, double>> candidates;
+  for(auto const& possTrack : possTracks){
+    double angle = AngleBetweenTracks(tpcTrack, possTrack);
+
+    if(minDCA != -1){
+      if(minDCA == 0) minDCA = fMaxDistance;
+      double crtTime = ((double)(int)possTrack.ts1_ns) * 1e-3; // [us]
+      double shift = driftDirection * crtTime * fDetectorProperties->DriftVelocity();
+      double DCA = AveDCABetweenTracks(tpcTrack, possTrack, shift);
+      if(DCA > minDCA) continue;
+    }
+      
+    candidates.push_back(std::make_pair(possTrack, angle));
+  }
+
+  std::sort(candidates.begin(), candidates.end(), [](auto& left, auto& right){
+            return left.second < right.second;});
+
+  if(candidates.size() > 0){
+    return candidates[0];
+  }
+  crt::CRTTrack track;
+  return std::make_pair(track, -99999);
+}
+
+
+// Find the closest matching crt track by average DCA between tracks within angle and DCA limits
+std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByDCA(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event, double minAngle){
+
+  // Get the hits associated with the tpc track
+  auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+  art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
+  std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+
+  // Get the drift direction (0 for stitched tracks)
+  int driftDirection = fTpcGeo.DriftDirectionFromHits(hits);
+
+  std::vector<crt::CRTTrack> possTracks = AllPossibleCRTTracks(tpcTrack, crtTracks, event);
+
+  std::vector<std::pair<crt::CRTTrack, double>> candidates;
+  for(auto const& possTrack : possTracks){
+
+    double crtTime = ((double)(int)possTrack.ts1_ns) * 1e-3; // [us]
+    double shift = driftDirection * crtTime * fDetectorProperties->DriftVelocity();
+
+    double DCA = AveDCABetweenTracks(tpcTrack, possTrack, shift);
+
+    if(minAngle != -1){
+      if(minAngle == 0) minAngle = fMaxAngleDiff;
+      double angle = AngleBetweenTracks(tpcTrack, possTrack);
+      if(angle > minAngle) continue;
+    }
+    candidates.push_back(std::make_pair(possTrack, DCA));
+  }
+
+  std::sort(candidates.begin(), candidates.end(), [](auto& left, auto& right){
+            return left.second < right.second;});
+
+  if(candidates.size() > 0){
+    return candidates[0];
+  }
+  crt::CRTTrack track;
+  return std::make_pair(track, -99999);
+
+}
+
+
+// Calculate the angle between tracks assuming start is at the largest Y
+double CRTTrackMatchAlg::AngleBetweenTracks(recob::Track tpcTrack, crt::CRTTrack crtTrack){
+
+  // Calculate the angle between the tracks
+  TVector3 crtStart (crtTrack.x1_pos, crtTrack.y1_pos, crtTrack.z1_pos);
+  TVector3 crtEnd (crtTrack.x2_pos, crtTrack.y2_pos, crtTrack.z2_pos);
+  if(crtStart.Y() < crtEnd.Y()) std::swap(crtStart, crtEnd);
+
+  TVector3 tpcStart = tpcTrack.Vertex<TVector3>();
+  TVector3 tpcEnd  = tpcTrack.End<TVector3>();
+  if(tpcStart.Y() < tpcEnd.Y()) std::swap(tpcStart, tpcEnd);
+
+  return (tpcStart - tpcEnd).Angle(crtStart - crtEnd);
+
+}
+
+
+// Calculate the average DCA between tracks
+double CRTTrackMatchAlg::AveDCABetweenTracks(recob::Track tpcTrack, crt::CRTTrack crtTrack, double shift){
+
+  TVector3 crtStart (crtTrack.x1_pos, crtTrack.y1_pos, crtTrack.z1_pos);
+  TVector3 crtEnd (crtTrack.x2_pos, crtTrack.y2_pos, crtTrack.z2_pos);
+  if(crtStart.Y() < crtEnd.Y()) std::swap(crtStart, crtEnd);
+  double denominator = (crtEnd - crtStart).Mag();
+
+  size_t npts = tpcTrack.NumberTrajectoryPoints();
+
+  double aveDCA = 0;
+  int usedPts = 0;
+  for(size_t i = 0; i < npts; i++){
+    TVector3 point = tpcTrack.LocationAtPoint<TVector3>(i);
+
+    // Pandora produces dummy points
+    if(!tpcTrack.HasValidPoint(i)) continue;
+
+    point.SetX(point.X() + shift);
+    aveDCA += (point - crtStart).Cross(point - crtEnd).Mag()/denominator;
+    usedPts++;
+  }
+
+  return aveDCA/usedPts;
+
+}
+
+
+// Calculate the average DCA between tracks
+double CRTTrackMatchAlg::AveDCABetweenTracks(recob::Track tpcTrack, crt::CRTTrack crtTrack, const art::Event& event){
+
+  // Get the hits associated with the tpc track
+  auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+  art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
+  std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+
+  // Get the drift direction (0 for stitched tracks)
+  int driftDirection = fTpcGeo.DriftDirectionFromHits(hits);
+  double crtTime = ((double)(int)crtTrack.ts1_ns) * 1e-3; // [us]
+  double shift = driftDirection * crtTime * fDetectorProperties->DriftVelocity();
+
+  TVector3 crtStart (crtTrack.x1_pos, crtTrack.y1_pos, crtTrack.z1_pos);
+  TVector3 crtEnd (crtTrack.x2_pos, crtTrack.y2_pos, crtTrack.z2_pos);
+  if(crtStart.Y() < crtEnd.Y()) std::swap(crtStart, crtEnd);
+  double denominator = (crtEnd - crtStart).Mag();
+
+  size_t npts = tpcTrack.NumberTrajectoryPoints();
+
+  double aveDCA = 0;
+  int usedPts = 0;
+  for(size_t i = 0; i < npts; i++){
+    TVector3 point = tpcTrack.LocationAtPoint<TVector3>(i);
+
+    // Pandora produces dummy points
+    if(!tpcTrack.HasValidPoint(i)) continue;
+
+    point.SetX(point.X() + shift);
+    aveDCA += (point - crtStart).Cross(point - crtEnd).Mag()/denominator;
+    usedPts++;
+  }
+
+  return aveDCA/usedPts;
+
+}
 
 
 }

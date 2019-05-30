@@ -1,16 +1,17 @@
-# A script to run an analysis module: CRTTrackMatchingAna
+# A script to run an analysis module: CRTHitRecoAna
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
+#include "crtanamodules_sbnd.fcl"
 
-process_name: CRTTrackMatchingAna
+process_name: CRTHitRecoAna
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "crttrackmatchingana.root" }
+  TFileService:           { fileName: "crthitrecoana.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -46,26 +47,11 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CRTTrackMatchingAna: 
-    {
-      # The "module_type" tells us which module to run. The name here
-      # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CRT/CRTTools/CRTTrackMatchingAna"
-
-      # The input parameters
-      SimModuleLabel:      "largeant"        # Simulation producer module label
-      CrtTrackModuleLabel: "crttrack"        # CRT track producer module label
-      TpcTrackModuleLabel: "pmalgtrackmaker" # TPC track producer module label
-      Verbose:             true             # Print extra information about what's going on
-      MaxAngleDiff:        0.15              # Max difference between CRT and TPC track angles [rad]
-      MaxDistance:         60                # Max distance between CRT and TPC start/end positions [cm]
-      Plot:                true             # Plot what's going on
-      PlotID:              -1                # TPC track ID to plot (-1 for all)
-    }
+    CRTHitRecoAna: @local::sbnd_crthitrecoana 
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ CRTTrackMatchingAna ]
+  analysis: [ CRTHitRecoAna ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.
