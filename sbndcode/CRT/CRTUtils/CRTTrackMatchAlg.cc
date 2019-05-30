@@ -101,15 +101,13 @@ bool CRTTrackMatchAlg::CrossesAPA(crt::CRTTrack track){
 
 double CRTTrackMatchAlg::T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
 
-  std::pair<crt::CRTTrack, double> closestAngle = ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
+  std::pair<crt::CRTTrack, double> closestDCA = ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
 
-  if(closestAngle.second == -99999) return -99999;
-  double crtTime = ((double)(int)closestAngle.first.ts1_ns) * 1e-3; // [us]
+  if(closestDCA.second == -99999 || closestDCA > fMaxDistance) return -99999;
 
-  if(closestAngle.second < fMaxAngleDiff){
-    return crtTime;
-  }
-  return -99999;
+  double crtTime = ((double)(int)closestDCA.first.ts1_ns) * 1e-3; // [us]
+
+  return crtTime;
 
 }
 
@@ -117,13 +115,13 @@ double CRTTrackMatchAlg::T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt:
 // Find the closest valid matching CRT track ID
 int CRTTrackMatchAlg::GetMatchedCRTTrackId(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
 
-  std::pair<crt::CRTTrack, double> closestAngle = ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
+  std::pair<crt::CRTTrack, double> closestDCA = ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
 
-  if(closestAngle.second == -99999 || closestAngle.second > fMaxAngleDiff) return -99999;
+  if(closestDCA.second == -99999 || closestDCA.second > fMaxAngleDiff) return -99999;
 
   int crt_i = 0;
   for(auto const& track : crtTracks){
-    if(fCrtBackTrack.TrackCompare(closestAngle.first, track)) return crt_i;
+    if(fCrtBackTrack.TrackCompare(closestDCA.first, track)) return crt_i;
     crt_i++;
   }
 
