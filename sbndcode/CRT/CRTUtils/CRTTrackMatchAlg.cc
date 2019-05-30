@@ -103,7 +103,7 @@ double CRTTrackMatchAlg::T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt:
 
   std::pair<crt::CRTTrack, double> closestDCA = ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
 
-  if(closestDCA.second == -99999 || closestDCA > fMaxDistance) return -99999;
+  if(closestDCA.second == -99999 || closestDCA.second > fMaxDistance) return -99999;
 
   double crtTime = ((double)(int)closestDCA.first.ts1_ns) * 1e-3; // [us]
 
@@ -117,7 +117,7 @@ int CRTTrackMatchAlg::GetMatchedCRTTrackId(recob::Track tpcTrack, std::vector<cr
 
   std::pair<crt::CRTTrack, double> closestDCA = ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
 
-  if(closestDCA.second == -99999 || closestDCA.second > fMaxAngleDiff) return -99999;
+  if(closestDCA.second == -99999 || closestDCA.second > fMaxDistance) return -99999;
 
   int crt_i = 0;
   for(auto const& track : crtTracks){
