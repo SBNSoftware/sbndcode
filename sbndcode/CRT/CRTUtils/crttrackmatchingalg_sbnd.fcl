@@ -3,7 +3,7 @@ BEGIN_PROLOG
 standard_crttrackmatchingalg:
 {
     MaxAngleDiff:        0.4               # max difference between CRT and TPC angles
-    MaxDistance:         60.                # max distance between CRT and TPC start/end positions
+    MaxDistance:         70.                # max distance between CRT and TPC start/end positions
     TPCTrackLabel:       "pandoraTrack"
 }
 
