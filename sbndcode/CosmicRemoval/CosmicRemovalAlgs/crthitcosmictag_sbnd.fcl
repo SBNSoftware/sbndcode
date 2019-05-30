@@ -1,0 +1,12 @@
+#include "crtt0matchingalg_sbnd.fcl"
+#include "cosmicidconfigs_sbnd.fcl"
+
+BEGIN_PROLOG
+
+standard_crthitcosmictagalg:
+{
+    T0Alg:              @local::standard_crtt0matchingalg
+    BeamTimeLimits:     @local::sbnd_beamtime
+}
+
+END_PROLOG
