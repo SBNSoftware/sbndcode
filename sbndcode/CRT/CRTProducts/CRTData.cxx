@@ -7,12 +7,11 @@ namespace crt{
   }
 
   CRTData::CRTData(uint32_t channel, uint32_t t0, 
-    uint32_t t1, uint32_t adc, int trackID):
+    uint32_t t1, uint32_t adc):
     fChannel(channel),
     fT0(t0),
     fT1(t1),
-    fADC(adc),
-    fTrackID(trackID){ 
+    fADC(adc){
   }
 
   CRTData::~CRTData(){
@@ -29,9 +28,6 @@ namespace crt{
   }
   uint32_t CRTData::ADC() const {
     return fADC;
-  }
-  int CRTData::TrackID() const {
-    return fTrackID;
   }
 
 } // namespace crt

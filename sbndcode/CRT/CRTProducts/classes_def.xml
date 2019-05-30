@@ -1,5 +1,6 @@
 <lcgdict>
-  <class name="sbnd::crt::CRTData" ClassVersion="12">
+  <class name="sbnd::crt::CRTData" ClassVersion="13">
+   <version ClassVersion="13" checksum="2577240595"/>
    <version ClassVersion="12" checksum="4014796032"/>
    <version ClassVersion="11" checksum="3272996027"/>
    <version ClassVersion="10" checksum="4014796032"/>

@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+standard_crtbacktracker:
+{
+    CRTDataLabel:     "crt"
+    CRTHitLabel:      "crthit"
+    CRTTrackLabel:    "crttrack"
+}
+
+END_PROLOG
