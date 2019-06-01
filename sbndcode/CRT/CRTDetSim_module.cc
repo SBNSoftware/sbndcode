@@ -71,6 +71,7 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fTaggerPlaneCoincidenceWindow = p.get<double>("TaggerPlaneCoincidenceWindow");
   fAbsLenEff = p.get<double>("AbsLenEff");
   fSipmTimeResponse = p.get<double>("SipmTimeResponse");
+  fAdcSaturation = p.get<short>("AdcSaturation");
 }
 
 
@@ -197,8 +198,6 @@ void CRTDetSim::produce(art::Event & e) {
 
       sim::AuxDetIDE ide = ides[ide_i];
 
-      int trackID = ide.trackID;
-
       // Finally, what is the distance from the hit (centroid of the entry
       // and exit points) to the readout end?
       double x = (ide.entryX + ide.exitX) / 2;
@@ -209,12 +208,11 @@ void CRTDetSim::produce(art::Event & e) {
       double tTrue = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       double tTrueLast = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       double eDep = ide.energyDeposited;
-      double maxEdep = eDep;
 
       std::vector<sim::AuxDetIDE> trueIdes;
       trueIdes.push_back(ide);
 
-      //ADD UP HITS AT THE SAME TIME - 2NS DIFF IS A GUESS -VERY APPROXIMATE
+      //ADD UP HITS AT THE SAME TIME - FIXME 2NS DIFF IS A GUESS -VERY APPROXIMATE
       if(ide_i < ides.size() - 1){
         while(ide_i < ides.size() - 1 && std::abs(tTrueLast-((ides[ide_i+1].entryT + ides[ide_i+1].exitT) / 2 + fGlobalT0Offset)) < fSipmTimeResponse){
           ide_i++;
@@ -228,15 +226,6 @@ void CRTDetSim::produce(art::Event & e) {
           nides++;
 
           trueIdes.push_back(ides[ide_i]);
-
-          if(ides[ide_i].energyDeposited > maxEdep && ides[ide_i].trackID > 0){
-            trackID = ides[ide_i].trackID;
-            maxEdep = ides[ide_i].energyDeposited;
-          }
-          if(trackID < 0 && (ides[ide_i].energyDeposited > maxEdep || ides[ide_i].trackID > 0)){
-            trackID = ides[ide_i].trackID;
-            maxEdep = ides[ide_i].energyDeposited;
-          }
         }
       }
 
@@ -291,8 +280,10 @@ void CRTDetSim::produce(art::Event & e) {
       // SiPM and ADC response: Npe to ADC counts
       short q0 =
         CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe0, fQRMS * sqrt(npe0));
+      if(q0 > fAdcSaturation) q0 = fAdcSaturation;
       short q1 =
         CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
+      if(q1 > fAdcSaturation) q1 = fAdcSaturation;
 
       // Adjacent channels on a strip are numbered sequentially.
       //
@@ -310,9 +301,9 @@ void CRTDetSim::produce(art::Event & e) {
           util::absDiff(t0, t1) < fStripCoincidenceWindow) {
         Tagger& tagger = taggers[nodeTagger->GetName()];
         tagger.planesHit.push_back({planeID, t0});
-        tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0, trackID));
+        tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0));
         tagger.ides.push_back(trueIdes);
-        tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1, trackID));
+        tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1));
         tagger.ides.push_back(trueIdes);
       }
 
@@ -369,7 +360,7 @@ void CRTDetSim::produce(art::Event & e) {
     }
 
     if (trigger || trg.first.find("TaggerBot") != std::string::npos) {
-      // Write out all hits on a tagger when there is any coincidence
+      // Write out all hits on a tagger when there is any coincidence FIXME this reads out everything!
       //for (auto d : trg.second.data) {
       for (size_t d_i = 0; d_i < trg.second.data.size(); d_i++) {
         triggeredCRTHits->push_back(trg.second.data[d_i]);

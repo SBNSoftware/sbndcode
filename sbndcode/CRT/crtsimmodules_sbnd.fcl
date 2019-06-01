@@ -30,7 +30,7 @@ sbnd_crtsim: {
   TResInterpolator: 1.268
 
   // Model parameters for Npe vs. distance along strip
-  NpeScaleNorm: 5.261e7
+  NpeScaleNorm: 8.023e7 #5.261e7
   NpeScaleShift: -1085.0
 
   // Mean deposited charge for mips [GeV]
@@ -38,10 +38,10 @@ sbnd_crtsim: {
   Q0: 1.75e-3
 
   // ADC model: Pedestal offset [ADC], slope [ADC/photon], RMS [ADC]
-  QPed: 63.6
-  QSlope: 131.9
-  QRMS: 15.0
-  QThreshold: 100.0
+  QPed: 0.0 #63.6
+  QSlope: 40.0 #131.9
+  QRMS: 80.0 #15.0
+  QThreshold: 60.0 #100
 
   // Coincidence window for two fibers on a strip [ns]
   StripCoincidenceWindow: 30.0
@@ -54,6 +54,8 @@ sbnd_crtsim: {
 
   // Minimum time between energy deposits that SiPMs can resolve [ns]
   SipmTimeResponse: 2.0
+
+  AdcSaturation: 4095
 }
 
 END_PROLOG

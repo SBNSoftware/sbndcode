@@ -25,12 +25,8 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "larcore/Geometry/Geometry.h"
-#include "larcorealg/Geometry/GeometryCore.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
-#include "larcore/Geometry/AuxDetGeometry.h"
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -41,6 +37,8 @@
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTData.hh"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
 // c++
 #include <iostream>
@@ -113,6 +111,8 @@ namespace sbnd{
     std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CreateTaggerStrips(std::vector<art::Ptr<crt::CRTData>> data);
 
     CRTStrip CreateCRTStrip(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2, size_t ind);
+
+    std::pair<double, double> DistanceBetweenSipms(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2);
     
     std::vector<std::pair<crt::CRTHit, std::vector<int>>> CreateCRTHits(std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips);
 
@@ -135,13 +135,12 @@ namespace sbnd{
 
   private:
 
-    geo::GeometryCore const* fGeometryService;
     detinfo::DetectorClocks const* fDetectorClocks;
     detinfo::DetectorProperties const* fDetectorProperties;
     detinfo::ElecClock fTrigClock;
-    art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
-    const geo::AuxDetGeometry* fAuxDetGeo;
-    const geo::AuxDetGeometryCore* fAuxDetGeoCore;
+    
+    TPCGeoAlg fTpcGeo;
+    CRTGeoAlg fCrtGeo;
 
     bool fUseReadoutWindow;
     double fQPed;
