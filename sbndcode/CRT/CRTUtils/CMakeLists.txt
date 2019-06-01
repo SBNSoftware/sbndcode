@@ -30,7 +30,10 @@ art_make(    LIBRARY_NAME sbndcode_CRTUtils
                            ${Boost_SYSTEM_LIBRARY}
                            sbndcode_CRT
                            sbndcode_CRTProducts
+                           sbndcode_GeoWrappers
+                           sbndcode_RecoUtils
         )
 
 install_headers()
+install_fhicl()
 install_source()

@@ -25,12 +25,8 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "larcore/Geometry/Geometry.h"
-#include "larcorealg/Geometry/GeometryCore.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
-#include "larcore/Geometry/AuxDetGeometry.h"
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -42,6 +38,8 @@
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
 // c++
 #include <iostream>
@@ -99,6 +97,7 @@ namespace sbnd{
 
     // Function to make creating CRTTracks easier
     crt::CRTTrack FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2, bool complete);
+    crt::CRTTrack FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2, size_t nhits);
 
     // Function to average hits within a certain distance of each other
     std::vector<std::pair<crt::CRTHit, std::vector<int>>> AverageHits(std::vector<art::Ptr<crt::CRTHit>> hits, std::map<art::Ptr<crt::CRTHit>, int> hitIds);
@@ -111,22 +110,15 @@ namespace sbnd{
     std::vector<std::pair<crt::CRTTrack, std::vector<int>>> CreateTracks(std::vector<std::pair<crt::CRTHit, std::vector<int>>> hits);
     std::vector<crt::CRTTrack> CreateTracks(std::vector<crt::CRTHit> hits);
 
-    // Calculate the tagger crossing point of CRTTrack candidate
-    TVector3 CrossPoint(crt::CRTHit hit, TVector3 start, TVector3 diff);
-
 
   private:
-
-    geo::GeometryCore const* fGeometryService;
-    art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
-    const geo::AuxDetGeometry* fAuxDetGeo;
-    const geo::AuxDetGeometryCore* fAuxDetGeoCore;
 
     double fTimeLimit;
     double fAverageHitDistance;
     double fDistanceLimit;
 
     CRTHitRecoAlg hitAlg;
+    CRTGeoAlg fCrtGeo;
 
   };
 

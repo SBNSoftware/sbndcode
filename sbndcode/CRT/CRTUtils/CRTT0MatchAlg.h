@@ -40,6 +40,8 @@
 #include "cetlib/pow.h" // cet::sum_of_squares()
 
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // c++
 #include <iostream>
@@ -64,6 +66,27 @@ namespace sbnd{
     struct Config {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
+
+      fhicl::Atom<double> MinTrackLength {
+        Name("MinTrackLength"),
+        Comment("")
+      };
+
+      fhicl::Atom<double> TrackDirectionFrac {
+        Name("TrackDirectionFrac"),
+        Comment("")
+      };
+
+      fhicl::Atom<double> DistanceLimit {
+        Name("DistanceLimit"),
+        Comment("")
+      };
+
+      fhicl::Atom<art::InputTag> TPCTrackLabel {
+        Name("TPCTrackLabel"),
+        Comment("")
+      };
+
     };
 
     CRTT0MatchAlg(const Config& config);
@@ -78,15 +101,27 @@ namespace sbnd{
     void reconfigure(const Config& config);
 
     // Utility function that determines the possible x range of a track
-    std::pair<double, double> TrackT0Range(double startX, double endX, int tpc);
+    std::pair<double, double> TrackT0Range(double startX, double endX, int driftDirection, std::pair<double, double> xLimits);
 
     // Calculate the distance of closest approach between the end of a track and a crt hit
-    double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int tpc, double t0);
+    double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int driftDirection, double t0);
+
+    std::pair<TVector3, TVector3> TrackDirectionAverage(recob::Track track, double frac);
+
+    std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event);
+
+    double T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event);
 
   private:
 
-    geo::GeometryCore const* fGeometryService;
     detinfo::DetectorProperties const* fDetectorProperties;
+    TPCGeoAlg fTpcGeo;
+
+    double fMinTrackLength;
+    double fTrackDirectionFrac;
+    double fDistanceLimit;
+
+    art::InputTag fTPCTrackLabel;
 
   };
 
