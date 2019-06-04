@@ -185,13 +185,13 @@ namespace sbnd {
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
     // Define histograms
-    hNpeAngleCut         = tfs->make<TH1D>("NpeAngleCut", "", 40, 0,  600);
+    hNpeAngleCut         = tfs->make<TH1D>("NpeAngleCut", "", 60, 0,  600);
     for(size_t i = 0; i < fCrtGeo.NumTaggers(); i++){
       std::string tagger = fCrtGeo.GetTagger(i).name;
       hRecoSipmDist[tagger] = tfs->make<TH1D>(Form("RecoSipmDist_%s", tagger.c_str()), "", 40, -2,    13);
       hTrueSipmDist[tagger] = tfs->make<TH1D>(Form("TrueSipmDist_%s", tagger.c_str()), "", 40, -2,    13);
       hHitTime[tagger]      = tfs->make<TH1D>(Form("HitTime_%s", tagger.c_str()),      "", 40, -2000, 3000);
-      hNpe[tagger]          = tfs->make<TH1D>(Form("Npe_%s", tagger.c_str()),          "", 40, 0,     600);
+      hNpe[tagger]          = tfs->make<TH1D>(Form("Npe_%s", tagger.c_str()),          "", 60, 0,     600);
       hAngle[tagger]        = tfs->make<TH1D>(Form("Angle_%s", tagger.c_str()),        "", 40, 0,     1.6);
 
       hEffWidthTotal[tagger]   = tfs->make<TH1D>(Form("EffWidthTotal_%s", tagger.c_str()),  "",  20, 0, 11.2);
@@ -323,7 +323,7 @@ namespace sbnd {
 
       // Calculate the angle to the tagger
       double angle = TMath::Pi()/2. - fCrtGeo.AngleToTagger(tagger, particles[trueId]);
-      if(angle > fMinAngleNpePlot) hNpeAngleCut->Fill(hit.peshit);
+      if(angle > fMinAngleNpePlot && tagger != "volTaggerBot_0") hNpeAngleCut->Fill(hit.peshit);
       hNpe[tagger]->Fill(hit.peshit);
       hAngle[tagger]->Fill(angle);
       hNpeAngle[tagger]->Fill(angle, hit.peshit);
