@@ -90,6 +90,11 @@ namespace sbnd{
         Comment("Pedestal slope [ADC/photon]")
       };
 
+      fhicl::Atom<double> NpeScaleShift {
+        Name("NpeScaleShift"),
+        Comment("Parameter for correcting for distance along strip")
+      };
+
       fhicl::Atom<double> TimeCoincidenceLimit {
         Name("TimeCoincidenceLimit"),
         Comment("Minimum time between two overlapping hit crt strips")
@@ -133,6 +138,9 @@ namespace sbnd{
                            std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, int plane, 
                            double x, double ex, double y, double ey, double z, double ez, std::string tagger); 
 
+    // Function to correct number of photoelectrons by distance down strip
+    double CorrectNpe(CRTStrip strip1, CRTStrip strip2, TVector3 position);
+
   private:
 
     detinfo::DetectorClocks const* fDetectorClocks;
@@ -145,6 +153,7 @@ namespace sbnd{
     bool fUseReadoutWindow;
     double fQPed;
     double fQSlope;
+    double fNpeScaleShift;
     double fTimeCoincidenceLimit;
 
   };
