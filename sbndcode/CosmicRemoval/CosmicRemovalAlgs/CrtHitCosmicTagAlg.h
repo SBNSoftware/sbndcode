@@ -10,7 +10,8 @@
 ///////////////////////////////////////////////
 
 #include "sbndcode/CosmicRemoval/CosmicRemovalUtils/CosmicRemovalUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTAnaUtils.h"
+#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 
 // framework
 #include "art/Framework/Principal/Event.h"
@@ -27,7 +28,6 @@
 // LArSoft
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Hit.h"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -89,7 +89,7 @@ namespace sbnd{
     void reconfigure(const Config& config);
 
     // Returns true if matched to CRTHit outside beam time
-    bool CrtHitCosmicTag(recob::Track track, std::vector<crt::CRTHit> crtHits, int tpc);
+    bool CrtHitCosmicTag(recob::Track track, std::vector<crt::CRTHit> crtHits, const art::Event& event);
 
   private:
 

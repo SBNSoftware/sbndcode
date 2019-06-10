@@ -32,7 +32,7 @@ bool GeometryCosmicTagAlg::GeometryCosmicTag(recob::Track track, std::vector<art
   double endX = track.End().X();
 
   // Check if track is stitched
-  // If it is check the start/end points are in same TPC
+  // If it isn't check the start/end points are in same TPC
   if(tpc == 0 && (startX>0 || endX>0)) return true;
   else if(tpc == 1 && (startX<0 || endX<0)) return true;
 

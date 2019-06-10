@@ -1,18 +1,16 @@
-# A script to run an analysis module: CosmicIdAna
+# A script to run an analysis module: PandoraNuMuRecoAna
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "cosmicidalg_sbnd.fcl"
-#include "mcsfitter_sbnd.fcl"
 
-process_name: CosmicIdAna
+process_name: PandoraNuMuRecoAna
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "cosmicidana.root" }
+  TFileService:           { fileName: "pandoranumurecoana.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -48,24 +46,38 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CosmicIdAna: 
+    PandoraNuMuRecoAna: 
     {
       # The "module_type" tells us which module to run. The name here
       # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CosmicRemoval/CosmicIdAna"
+      module_type:     "sbndcode/CosmicRemoval/PandoraNuMuRecoAna"
 
       # The input parameters
-      SimModuleLabel:      "largeant"        # Simulation producer module label
-      TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
-      PandoraLabel:        "pandora"
-      Verbose:             false             # Print extra information about what's going on
-      CosIdAlg:            @local::standard_cosmicidalg
-      fitter:              @local::sbnd_mcsfitter
+      inputs: {
+        SimModuleLabel:      "largeant"        # Simulation producer module label
+        TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
+        HitModuleLabel:      "gaushit" # TPC track producer module label
+        ShowerModuleLabel:   "pandoraShower" 
+        PandoraLabel:        "pandora"
+        Verbose:             true             # Print extra information about what's going on
+      }
+      fitter: {
+        pIdHypothesis: 13
+        minNumSegments: 3
+        segmentLength: 14.0
+        minHitsPerSegment: 2
+        nElossSteps: 10
+        eLossMode: 0
+        pMin: 0.01
+        pMax: 7.50
+        pStep: 0.01
+        angResol: 3.0
+      }
     }
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ CosmicIdAna ]
+  analysis: [ PandoraNuMuRecoAna ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.

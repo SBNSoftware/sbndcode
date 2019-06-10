@@ -87,7 +87,7 @@ namespace sbnd{
     void reconfigure(const Config& config);
 
     // Tags track as cosmic if it matches a CRTTrack
-    bool CrtTrackCosmicTag(recob::Track track, std::vector<crt::CRTTrack> crtTracks, int tpc);
+    bool CrtTrackCosmicTag(recob::Track track, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
 
   private:
 

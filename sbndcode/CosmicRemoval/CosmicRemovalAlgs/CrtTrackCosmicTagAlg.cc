@@ -29,9 +29,9 @@ void CrtTrackCosmicTagAlg::reconfigure(const Config& config){
 }
 
 
-bool CrtTrackCosmicTagAlg::CrtTrackCosmicTag(recob::Track track, std::vector<crt::CRTTrack> crtTracks, int tpc){
+bool CrtTrackCosmicTagAlg::CrtTrackCosmicTag(recob::Track track, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
 
-  int crtID = trackMatchAlg.GetMatchedCRTTrackId(track, crtTracks, tpc);
+  int crtID = trackMatchAlg.GetMatchedCRTTrackId(track, crtTracks, event);
 
   // If matching failed
   if(crtID == -99999) return false;

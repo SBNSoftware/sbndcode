@@ -1,18 +1,18 @@
-# A script to run an analysis module: CosmicIdAna
+# A script to run an analysis module: NuMuCCSelectionAna
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "cosmicidalg_sbnd.fcl"
+#include "cosmicidalg.fcl"
 #include "mcsfitter_sbnd.fcl"
 
-process_name: CosmicIdAna
+process_name: NuMuCCSelectionAna
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "cosmicidana.root" }
+  TFileService:           { fileName: "numuccselectionana.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -48,11 +48,11 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CosmicIdAna: 
+    NuMuCCSelectionAna: 
     {
       # The "module_type" tells us which module to run. The name here
       # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/CosmicRemoval/CosmicIdAna"
+      module_type:     "sbndcode/Selection/NuMuCCSelectionAna"
 
       # The input parameters
       SimModuleLabel:      "largeant"        # Simulation producer module label
@@ -65,7 +65,7 @@ physics:
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ CosmicIdAna ]
+  analysis: [ NuMuCCSelectionAna ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.
