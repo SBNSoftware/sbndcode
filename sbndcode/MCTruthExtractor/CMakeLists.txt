@@ -11,7 +11,7 @@
 #                        Filters
 #                        RawData
 #                        SignalShapingServiceT1034_service
-#                        nutools_NuReweight_art
+#                        nugen_NuReweight_art
 #                        nusimdata_SimulationBase
 #                        ${ART_FRAMEWORK_CORE}
 #                        ${ART_FRAMEWORK_PRINCIPAL}
@@ -48,7 +48,7 @@ art_make(
             lardata_Utilities
             larevt_Filters
             lardataobj_RawData
-            nutools_NuReweight_art
+            nugen_NuReweight_art
             nusimdata_SimulationBase
             ${ART_FRAMEWORK_CORE}
             ${ART_FRAMEWORK_PRINCIPAL}
