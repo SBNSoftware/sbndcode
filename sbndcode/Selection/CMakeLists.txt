@@ -1,8 +1,4 @@
 
-add_subdirectory(CosmicRemovalUtils)
-add_subdirectory(CosmicRemovalAlgs)
-add_subdirectory(CosmicRemovalAna)
-
 art_make(
           MODULE_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service

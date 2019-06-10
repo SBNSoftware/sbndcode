@@ -9,10 +9,8 @@
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/CosmicRemoval/CosmicRemovalUtils/CosmicRemovalUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTAnaUtils.h"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
-#include "sbndcode/CRT/CRTUtils/CRTTruthRecoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
 
 // LArSoft includes
@@ -160,7 +158,6 @@ namespace sbnd {
     //2d hist of slope and chi2
 
     // Other variables shared between different methods.
-    CRTTruthRecoAlg truthAlg;
     CRTTrackMatchAlg trackAlg;
 
     std::map<int, std::vector<double>> chi2numu;

@@ -72,7 +72,6 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
   art::FindManyP<anab::Calorimetry> findManyCalo(tpcTrackHandle, event, fCaloModuleLabel);
 
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(track.ID());
-  int tpc = CosmicRemovalUtils::DetectedInTPC(hits);
 
   if(fApplyPandoraT0Cut){
     if(ptTag.PandoraT0CosmicTag(track, event)) return true;
@@ -110,7 +109,7 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
     auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCrtTrackModuleLabel);
     std::vector<crt::CRTTrack> crtTracks = (*crtTrackHandle);
 
-    if(ctTag.CrtTrackCosmicTag(track, crtTracks, tpc)) return true;
+    if(ctTag.CrtTrackCosmicTag(track, crtTracks, event)) return true;
   }
 
   if(fApplyCrtHitCut){
@@ -122,7 +121,7 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
       }
     }
 
-    if(chTag.CrtHitCosmicTag(track, crtHits, tpc)) return true;
+    if(chTag.CrtHitCosmicTag(track, crtHits, event)) return true;
   }
 
   return false;
@@ -164,7 +163,6 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
 
   recob::Track track = nuTracks[0];
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(track.ID());
-  int tpc = CosmicRemovalUtils::DetectedInTPC(hits);
 
   if(fApplyFiducialCut){
     if(fvTag.FiducialVolumeCosmicTag(track)) return true;
@@ -180,7 +178,7 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
     auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCrtTrackModuleLabel);
     std::vector<crt::CRTTrack> crtTracks = (*crtTrackHandle);
 
-    if(ctTag.CrtTrackCosmicTag(track, crtTracks, tpc)) return true;
+    if(ctTag.CrtTrackCosmicTag(track, crtTracks, event)) return true;
   }
 
   if(fApplyCpaCrossCut){
@@ -251,8 +249,8 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
             crtHits.push_back(crtHit);
           }
         }
-        if(chTag.CrtHitCosmicTag(track, crtHits, tpc)) return true;
-        if(chTag.CrtHitCosmicTag(track2, crtHits, tpc)) return true;
+        if(chTag.CrtHitCosmicTag(track, crtHits, event)) return true;
+        if(chTag.CrtHitCosmicTag(track2, crtHits, event)) return true;
       }
     }
     // Don't apply other cuts if angle between tracks is consistent with neutrino interaction
@@ -279,7 +277,7 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
         }
       }
 
-      if(chTag.CrtHitCosmicTag(track, crtHits, tpc)) return true;
+      if(chTag.CrtHitCosmicTag(track, crtHits, event)) return true;
     }
   }
 

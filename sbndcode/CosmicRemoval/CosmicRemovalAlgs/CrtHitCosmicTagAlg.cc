@@ -29,9 +29,9 @@ void CrtHitCosmicTagAlg::reconfigure(const Config& config){
 } //reconfigure()
 
 
-bool CrtHitCosmicTagAlg::CrtHitCosmicTag(recob::Track track, std::vector<crt::CRTHit> crtHits, int tpc){
+bool CrtHitCosmicTagAlg::CrtHitCosmicTag(recob::Track track, std::vector<crt::CRTHit> crtHits, const art::Event& event){
 
-  double crtHitTime = t0Alg.T0FromCRTHits(track, crtHits, tpc);
+  double crtHitTime = t0Alg.T0FromCRTHits(track, crtHits, event);
 
   if(crtHitTime != -99999 && (crtHitTime < fBeamTimeMin || crtHitTime > fBeamTimeMax)) return true;
 
