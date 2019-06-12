@@ -7,8 +7,8 @@ art_make(
           LIB_LIBRARIES 
             larcore_Geometry_Geometry_service
             larcorealg_Geometry
-            nutools_NuReweight_art
-            nutools_NuReweight
+            nugen_NuReweight_art
+            nugen_NuReweight
             nusimdata_SimulationBase
             ${ART_FRAMEWORK_CORE}
             ${ART_FRAMEWORK_PRINCIPAL}
