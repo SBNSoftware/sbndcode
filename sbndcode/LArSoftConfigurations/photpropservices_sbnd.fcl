@@ -71,6 +71,38 @@ sbnd_Nhits_vuv_prop_timing_photonvisibilityservice:
 
 }
 
+sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice:
+{
+   # Flags to enable parameterizations, disable library
+   IncludePropTime: true
+   UseNhitsModel: true
+   StoreReflected: true
+   DoNotLoadLibrary: true
+   
+   # Generic VUV timing parameterization
+   @table::common_vuv_timing_parameterization
+   
+   # SBND-specific VIS timings parameterization
+   @table::sbnd_vis_timing_parameterization
+   
+   # SBND-specific VUV semi-analytic Nhits parameters
+   GH_PARS: @local::GH_RS60cm_SBND
+   # For VUV border correction
+   BORDER_correction: @local::BORDER_correction_SBND
+   
+   # SBND-specific VIS semi-analytic Nhits parameters
+   Plane_Depth: @local::Plane_Depth_SBND  
+   VIS_PARS: @local::VIS_SBND
+   @table::sbnd_cathode_info_for_nhits_vis
+   
+   # For VIS border correction
+   ApplyVISBorderCorrection: true
+   VIS_BORDER_correction_type: @local::VIS_SBND_BORDER_correction_type
+   VIS_BORDER_distances_x: @local::VIS_SBND_BORDER_distances_x
+   VIS_BORDER_distances_r: @local::VIS_SBND_BORDER_distances_r
+   VIS_BORDER_correction: @local::VIS_SBND_BORDER_correction
+}
+
 
 END_PROLOG
 
