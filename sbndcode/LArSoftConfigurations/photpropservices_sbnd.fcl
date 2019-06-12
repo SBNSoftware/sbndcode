@@ -68,7 +68,9 @@ sbnd_Nhits_vuv_prop_timing_photonvisibilityservice:
    GH_PARS: @local::GH_RS60cm_SBND
    # For border correction
    BORDER_correction: @local::BORDER_correction_SBND
-
+  
+   # PMT radius in cm
+   PMT_radius: 10.16
 }
 
 sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice:
@@ -91,9 +93,7 @@ sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice:
    BORDER_correction: @local::BORDER_correction_SBND
    
    # SBND-specific VIS semi-analytic Nhits parameters
-   Plane_Depth: @local::Plane_Depth_SBND  
    VIS_PARS: @local::VIS_SBND
-   @table::sbnd_cathode_info_for_nhits_vis
    
    # For VIS border correction
    ApplyVISBorderCorrection: true
@@ -101,6 +101,9 @@ sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice:
    VIS_BORDER_distances_x: @local::VIS_SBND_BORDER_distances_x
    VIS_BORDER_distances_r: @local::VIS_SBND_BORDER_distances_r
    VIS_BORDER_correction: @local::VIS_SBND_BORDER_correction
+  
+   # PMT radius in cm
+   PMT_radius: 10.16
 }
 
 

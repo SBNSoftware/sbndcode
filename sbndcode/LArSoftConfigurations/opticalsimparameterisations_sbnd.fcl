@@ -33,22 +33,6 @@ BEGIN_PROLOG
 #  VIS semi-analytic model, specific to SBND
 # *************************************************************************************************
 
-# Required parameters
-Plane_Depth_SBND: 0 			       # foils x-coordinated
-CATHODE_height_SBND: 400		       # height of full cathode plane (in cm)
-CATHODE_width_SBND: 500                        # width of full cathode plane (in cm)
-CATHODE_centre_SBND: [0, 0, 250]               # cathode centre coordinates
-
-sbnd_cathode_info_for_nhits_vis:
-{
-  # Cathode properties
-  CATHODE_height: @local::CATHODE_height_SBND
-  CATHODE_width: @local::CATHODE_width_SBND                    
-  CATHODE_centre: @local::CATHODE_centre_SBND
-}
-
-
-
 # VISIBLE/REFLECTED LIGHT: TIMING PARAMETERISATION
   Distances_refl_SBND: [25,40,60,80,100,120,140,160,180,200]
   Cut_off_SBND: [ [220.559,239.781,261.162,280.35,297.07,305.335,316.825,321.326,323.348,321.925],
@@ -62,8 +46,6 @@ sbnd_cathode_info_for_nhits_vis:
 
 sbnd_vis_timing_parameterization:
 {
-  Plane_Depth: @local::Plane_Depth_SBND
-
   # Timing parameterisation:
   #
   # Smearing parameters
