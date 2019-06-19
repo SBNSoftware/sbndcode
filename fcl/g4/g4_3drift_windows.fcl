@@ -7,3 +7,16 @@ services.DetectorClocksService.G4RefTime: -2.75e3
 services.DetectorClocksService.TriggerOffsetTPC:  -1.25e3
 services.DetectorClocksService.DefaultTrigTime:   2750.
 services.DetectorClocksService.DefaultBeamTime:   2750.
+
+phyiscs.filters: {
+  intime_cosmic: {
+    module_type: "FilterSimPhotonTime"
+    SimPhotonsCollectionLabel: largeant
+    TimeWindows: [ [2900,4900] ] # nanoseconds
+    MinPhotonEnergy: -1
+    MinTotalEnergy: 9.7e-5 #10 photons...
+  }
+}
+
+physics.simulate: [@sequence::physics.simulate, intime_cosmic]
+
