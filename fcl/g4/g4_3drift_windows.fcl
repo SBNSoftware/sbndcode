@@ -12,7 +12,12 @@ phyiscs.filters: {
   intime_cosmic: {
     module_type: "FilterSimPhotonTime"
     SimPhotonsCollectionLabel: largeant
-    TimeWindows: [ [2900,4900] ] # nanoseconds
+    # TimeWindows: [ [2900,4900] ] # nanoseconds
+    # Set to window around beam-spill time.
+    # Should have a width of two us, centered on the 
+    # trigger/spill time. In this case, this is equal to
+    # the negative of the corsika "TimeOffset"
+    TimeWindows: [ [1760, 3760] ] # microseconds???
     MinPhotonEnergy: -1
     MinTotalEnergy: 9.7e-5 #10 photons...
   }
