@@ -47,7 +47,7 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
   NO_UNDEFINED
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
 )
-add_definitions(-DGENIE_PRE_R3)
+##add_definitions(-DGENIE_PRE_R3)
 
 cet_report_compiler_flags()
 
@@ -71,6 +71,8 @@ find_ups_product( larevt )
 find_ups_product( larcore v1_00_00 )
 find_ups_product( larcoreobj v1_00_00 )
 find_ups_product( nutools v1_00_00 )
+find_ups_product( nugen v1_00_00 )
+find_ups_product( nurandom v1_00_00 )
 find_ups_product( art v1_09_00 )
 find_ups_product(art_root_io)
 find_ups_product( cetbuildtools v3_10_00 )
