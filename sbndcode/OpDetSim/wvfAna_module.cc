@@ -62,7 +62,6 @@ private:
   size_t fEvNumber;
   size_t fChNumber;
   double fSampling;
- // double fAmp;
   double fStartTime;
   double fEndTime;
   //TTree *fWaveformTree;
@@ -109,12 +108,9 @@ void wvfAna::analyze(art::Event const & e)
   }
 
   std::cout << "Number of photon channel: " <<waveHandle->size() << std::endl;
-//  unsigned int nChannels = pmtHandle->size();
 
   for(auto const& wvf : (*waveHandle)){
 	fChNumber = wvf.ChannelNumber();
- // 	std::cout << "Photon channel: " << fChNumber << std::endl;
-//	std::stringstream histName;
 	histname.str(std::string());
 	histname << "event_" << fEvNumber 
       		 << "_opchannel_" <<fChNumber;
@@ -125,14 +121,8 @@ void wvfAna::analyze(art::Event const & e)
 
 	//Create a new histogram
 	TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);",fStartTime), wvf.size(), fStartTime, fEndTime);
-	//if(fChNumber==0){
-//	  std::copy(wvf.begin(),wvf.end(),fAmp);
  	for(unsigned int i=0; i<wvf.size();i++){
 	  wvfHist->SetBinContent(i+1,(double)wvf[i]);
-//	  fAmp = (double)wvf[i];
-	//  std::cout << fAmp << fTime << std::endl;
-//	  fWaveformTree->Fill();
-	  	//std::cout << wvf[i] << std::endl;
 	}	
   }
 }

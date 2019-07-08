@@ -6,7 +6,7 @@
 #include "larcore/Geometry/Geometry.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"
-#include "nutools/NuReweight/art/NuReweight.h" //GENIEReweight.h"
+#include "nugen/NuReweight/art/NuReweight.h" //GENIEReweight.h"
 #include "nusimdata/SimulationBase/MCNeutrino.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/GTruth.h"
