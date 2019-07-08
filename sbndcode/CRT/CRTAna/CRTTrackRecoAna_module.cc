@@ -159,14 +159,6 @@ namespace sbnd {
     CRTEventDisplay evd;
     CRTBackTracker fCrtBackTrack;
 
-    // Performance Counters
-
-    // Truth Counters
-    int nParts = 0;
-    int nSinglePlane = 0;
-    int nMatchTrack = 0;
-    int nTwoStripPlanes = 0;
-
   }; // class CRTTrackRecoAna
 
   // Constructor

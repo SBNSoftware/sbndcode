@@ -32,6 +32,7 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   fUseReadoutWindow = config.UseReadoutWindow(); 
   fQPed = config.QPed();
   fQSlope = config.QSlope();
+  fNpeScaleShift = config.NpeScaleShift();
   fTimeCoincidenceLimit = config.TimeCoincidenceLimit();
 
   return;
@@ -173,7 +174,8 @@ std::vector<std::pair<crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::CreateCRTHi
 
             // Average the time
             double time = (t0_1 + t0_2)/2;
-            double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
+            //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
+            double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
 
             // Create a CRT hit
             crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
@@ -327,5 +329,26 @@ sbnd::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::m
   return crtHit;
 
 } // CRTHitRecoAlg::FillCrtHit()
+
+
+// Function to correct number of photoelectrons by distance down strip
+double CRTHitRecoAlg::CorrectNpe(CRTStrip strip1, CRTStrip strip2, TVector3 position){
+  geo::Point_t pos {position.X(), position.Y(), position.Z()};
+
+  // Get the strip name from the channel ID
+  std::string name1 = fCrtGeo.ChannelToStripName(strip1.channel);
+  std::string name2 = fCrtGeo.ChannelToStripName(strip2.channel);
+
+  // Get the distance from the CRT hit to the sipm end
+  double stripDist1 = fCrtGeo.DistanceDownStrip(pos, name1);
+  double stripDist2 = fCrtGeo.DistanceDownStrip(pos, name2);
+
+  // Correct the measured pe
+  double pesCorr1 = strip1.pes * pow(stripDist1 - fNpeScaleShift, 2) / pow(fNpeScaleShift, 2);
+  double pesCorr2 = strip2.pes * pow(stripDist2 - fNpeScaleShift, 2) / pow(fNpeScaleShift, 2);
+
+  // Add the two strips together
+  return pesCorr1 + pesCorr2;
+}
 
 }

@@ -139,6 +139,8 @@ namespace sbnd {
     double        fMinAngleNpePlot;     ///< Maximum angle for plotting Npe per hit
 
     // histograms
+    TH1D* hNpeAngleCut;
+
     std::map<std::string, TH1D*> hHitTime;
     std::map<std::string, TH1D*> hNpe;
     std::map<std::string, TH1D*> hAngle;
@@ -183,12 +185,13 @@ namespace sbnd {
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
     // Define histograms
+    hNpeAngleCut         = tfs->make<TH1D>("NpeAngleCut", "", 60, 0,  600);
     for(size_t i = 0; i < fCrtGeo.NumTaggers(); i++){
       std::string tagger = fCrtGeo.GetTagger(i).name;
       hRecoSipmDist[tagger] = tfs->make<TH1D>(Form("RecoSipmDist_%s", tagger.c_str()), "", 40, -2,    13);
       hTrueSipmDist[tagger] = tfs->make<TH1D>(Form("TrueSipmDist_%s", tagger.c_str()), "", 40, -2,    13);
       hHitTime[tagger]      = tfs->make<TH1D>(Form("HitTime_%s", tagger.c_str()),      "", 40, -2000, 3000);
-      hNpe[tagger]          = tfs->make<TH1D>(Form("Npe_%s", tagger.c_str()),          "", 40, 0,     300);
+      hNpe[tagger]          = tfs->make<TH1D>(Form("Npe_%s", tagger.c_str()),          "", 60, 0,     600);
       hAngle[tagger]        = tfs->make<TH1D>(Form("Angle_%s", tagger.c_str()),        "", 40, 0,     1.6);
 
       hEffWidthTotal[tagger]   = tfs->make<TH1D>(Form("EffWidthTotal_%s", tagger.c_str()),  "",  20, 0, 11.2);
@@ -197,9 +200,9 @@ namespace sbnd {
       hEffLengthReco[tagger]   = tfs->make<TH1D>(Form("EffLengthReco_%s", tagger.c_str()),  "",  20, 0,  450);
 
       hTrueRecoSipmDist[tagger] = tfs->make<TH2D>(Form("TrueRecoSipmDist_%s", tagger.c_str()), "", 30, -2, 13,   30, -2, 13);
-      hNpeAngle[tagger]         = tfs->make<TH2D>(Form("NpeAngle_%s", tagger.c_str()),         "", 30, 0,  1.6,  30, 0,  300);
-      hNpeSipmDist[tagger]      = tfs->make<TH2D>(Form("NpeSipmDist_%s", tagger.c_str()),      "", 30, 0,  11.2, 30, 0,  300);
-      hNpeStripDist[tagger]     = tfs->make<TH2D>(Form("NpeStripDist_%s", tagger.c_str()),     "", 30, 0,  450,  30, 0,  300);
+      hNpeAngle[tagger]         = tfs->make<TH2D>(Form("NpeAngle_%s", tagger.c_str()),         "", 30, 0,  1.6,  30, 0,  600);
+      hNpeSipmDist[tagger]      = tfs->make<TH2D>(Form("NpeSipmDist_%s", tagger.c_str()),      "", 30, 0,  11.2, 30, 0,  600);
+      hNpeStripDist[tagger]     = tfs->make<TH2D>(Form("NpeStripDist_%s", tagger.c_str()),     "", 30, 0,  450,  30, 0,  600);
     }
 
     // Initial output
@@ -316,10 +319,12 @@ namespace sbnd {
       int trueId = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
       hit_i++;
       if(particles.find(trueId) == particles.end()) continue;
+      if(!(std::abs(particles[trueId].PdgCode()) == 13 && particles[trueId].Mother()==0)) continue;
 
       // Calculate the angle to the tagger
       double angle = TMath::Pi()/2. - fCrtGeo.AngleToTagger(tagger, particles[trueId]);
-      if(angle > fMinAngleNpePlot) hNpe[tagger]->Fill(hit.peshit);
+      if(angle > fMinAngleNpePlot && tagger != "volTaggerBot_0") hNpeAngleCut->Fill(hit.peshit);
+      hNpe[tagger]->Fill(hit.peshit);
       hAngle[tagger]->Fill(angle);
       hNpeAngle[tagger]->Fill(angle, hit.peshit);
 

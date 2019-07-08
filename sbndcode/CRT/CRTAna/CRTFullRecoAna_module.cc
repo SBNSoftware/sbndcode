@@ -292,15 +292,13 @@ namespace sbnd {
     std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
     if (event.getByLabel(fCRTTrackLabel, crtTrackHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackHandle);
+    art::FindManyP<crt::CRTHit> findManyCrtHits(crtTrackHandle, event, fCRTTrackLabel);
 
     // Get reconstructed tracks from the event
     auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
     art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
 
     fCrtBackTrack.Initialize(event);
-
-    std::cout<<"Num CRT hits = "<<crtHitList.size()<<"\n";
-    std::cout<<"Num CRT tracks = "<<crtTrackList.size()<<"\n";
 
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING

@@ -10,7 +10,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-#include "nutools/RandomUtils/NuRandomService.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
 #include "canvas/Persistency/Common/Ptr.h"
 #include "art/Persistency/Common/PtrMaker.h"
 
@@ -71,6 +71,7 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fTaggerPlaneCoincidenceWindow = p.get<double>("TaggerPlaneCoincidenceWindow");
   fAbsLenEff = p.get<double>("AbsLenEff");
   fSipmTimeResponse = p.get<double>("SipmTimeResponse");
+  fAdcSaturation = p.get<short>("AdcSaturation");
 }
 
 
@@ -279,8 +280,10 @@ void CRTDetSim::produce(art::Event & e) {
       // SiPM and ADC response: Npe to ADC counts
       short q0 =
         CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe0, fQRMS * sqrt(npe0));
+      if(q0 > fAdcSaturation) q0 = fAdcSaturation;
       short q1 =
         CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
+      if(q1 > fAdcSaturation) q1 = fAdcSaturation;
 
       // Adjacent channels on a strip are numbered sequentially.
       //

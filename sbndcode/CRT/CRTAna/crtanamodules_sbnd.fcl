@@ -33,7 +33,7 @@ sbnd_crthitrecoana:
       VeryVerbose:          false        # Print detailed information about every muon
       Plot:                 false        # Draw truth and reco tracks in event
       PlotTrackID:          -99999         # ID of true track to plot
-      MinAngleNpePlot:      0.          # Minimum angle for plotting Npe (rad)
+      MinAngleNpePlot:      1.4          # Minimum angle for plotting Npe (rad)
       # Hit reconstruction
       Evd:                  @local::standard_crteventdisplay
       CrtBackTrack:         @local::standard_crtbacktracker
