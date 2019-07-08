@@ -66,13 +66,16 @@ namespace sbnd{
     std::pair<double, double> XLimitsFromHits(std::vector<art::Ptr<recob::Hit>> hits);
 
     // Determine if a true particle is ever inside the TPC volume
-    bool InVolume(simb::MCParticle particle);
+    bool InVolume(const simb::MCParticle& particle);
     // Determine if a true particle is contained inside the TPC volume
-    bool IsContained(simb::MCParticle particle);
+    bool IsContained(const simb::MCParticle& particle);
     // Determine if a true particle enters the TPC volume
-    bool EntersVolume(simb::MCParticle particle);
+    bool EntersVolume(const simb::MCParticle& particle);
     // Determine if a true particle crosses the TPC volume
-    bool CrossesVolume(simb::MCParticle particle);
+    bool CrossesVolume(const simb::MCParticle& particle);
+
+    std::pair<TVector3, TVector3> CrossingPoints(const simb::MCParticle& particle);
+    double TpcLength(const simb::MCParticle& particle);
 
   private:
 
