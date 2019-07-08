@@ -5,8 +5,9 @@ BEGIN_PROLOG
 
 standard_crthitcosmictagalg:
 {
-    T0Alg:              @local::standard_crtt0matchingalg
+    T0Alg:              @local::sbnd_crtt0matchingalg_crID
     BeamTimeLimits:     @local::sbnd_beamtime
 }
+
 
 END_PROLOG

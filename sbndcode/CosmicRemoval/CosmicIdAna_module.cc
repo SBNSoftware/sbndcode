@@ -428,7 +428,7 @@ namespace sbnd {
                 if(cosIdAlg.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) plot = true;
               }
               if(j == 9){
-                cosIdAlg.SetCuts(true, true, true, true, true, true, true, true);
+                cosIdAlg.SetCuts(true, true, true, false, true, true, true, false);
                 if(cosIdAlg.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) plot = true;
               }
               if(j == 10 && !cosIdAlg.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) plot = true;
