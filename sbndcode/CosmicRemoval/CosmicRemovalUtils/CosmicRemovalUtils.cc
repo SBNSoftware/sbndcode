@@ -80,9 +80,9 @@ namespace sbnd{
         if(pt.X() < 0) TPC0Energy += particle.E(i-1) - particle.E(i);
         else TPC1Energy += particle.E(i-1) - particle.E(i);
       }
-      // If the total energy deposited is > 50 MeV then create fake flash
-      if(TPC0Energy > 0.05) fakeTpc0Flashes.push_back(time);
-      else if(TPC1Energy > 0.05) fakeTpc1Flashes.push_back(time);
+      // If the total energy deposited is > 10 MeV then create fake flash
+      if(TPC0Energy > 0.01) fakeTpc0Flashes.push_back(time);
+      else if(TPC1Energy > 0.01) fakeTpc1Flashes.push_back(time);
     }
 
     std::sort(fakeTpc0Flashes.begin(), fakeTpc0Flashes.end());

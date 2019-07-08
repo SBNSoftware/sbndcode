@@ -237,19 +237,6 @@ namespace sbnd {
     // Get hit to data associations
     art::FindManyP<crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
 
-    ncts=0;
-      art::Handle<std::vector<sbnd::crt::CRTTrack> > crtTrackListHandle;
-      std::vector<art::Ptr<sbnd::crt::CRTTrack> > ctrklist;
-      if (evt.getByLabel(fCRTTrackModuleLabel, crtTrackListHandle))  {
-	art::fill_ptr_vector(ctrklist, crtTrackListHandle);
-        ncts =ctrklist.size();
-        //crtTmpList = ctrklist;                                                                                                                                               
-        TH1D *h_time;
-        h_time = new TH1D("h_time",";Time (nS); Counts;", 100,-700,700);
-        if (ncts>kMaxNCtrks) ncts=kMaxNCtrks;
-        for (int i = 0; i<ncts; ++i){
-          h_time->Fill((double)(int)ctrklist[i]->ts1_ns * 1e-3);
-
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------

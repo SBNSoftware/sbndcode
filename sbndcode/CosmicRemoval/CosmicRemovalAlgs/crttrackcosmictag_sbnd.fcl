@@ -5,7 +5,7 @@ BEGIN_PROLOG
 
 standard_crttrackcosmictagalg:
 {
-    TrackMatchAlg:      @local::standard_crttrackmatchingalg
+    TrackMatchAlg:      @local::sbnd_crttrackmatchingalg_crID
     BeamTimeLimits:     @local::sbnd_beamtime # Limit from t = 0 to remove non-beam tracks [us]
 }
 

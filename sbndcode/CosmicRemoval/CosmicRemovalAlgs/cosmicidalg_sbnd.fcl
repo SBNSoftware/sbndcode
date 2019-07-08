@@ -19,11 +19,11 @@ standard_cosmicidalg:
     ApplyFiducialCut:  true
     ApplyStoppingCut:  true
     ApplyGeometryCut:  true
-    ApplyCpaCrossCut:  true
+    ApplyCpaCrossCut:  false
     ApplyApaCrossCut:  true
     ApplyCrtTrackCut:  true
     ApplyCrtHitCut:    true
-    ApplyPandoraT0Cut: true
+    ApplyPandoraT0Cut: false
 
     UseTrackAngleVeto:    true
     MinSecondTrackLength: 5.

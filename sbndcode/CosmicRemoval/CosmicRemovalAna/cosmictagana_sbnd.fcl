@@ -47,6 +47,7 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
+    CosmicIDAna: @local::sbnd_cosmicidana
     CRTHitCosmicTagAna: @local::sbnd_crthitcosmictagana
     CRTTrackCosmicTagAna: @local::sbnd_crttrackcosmictagana
 
@@ -54,7 +55,8 @@ physics:
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
   analysis: [ 
-              CRTHitCosmicTagAna
+              CosmicIDAna
+              , CRTHitCosmicTagAna
               , CRTTrackCosmicTagAna
             ]
 
