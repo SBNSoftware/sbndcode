@@ -1,4 +1,8 @@
 
+add_subdirectory(Utils)
+add_subdirectory(Algs)
+add_subdirectory(Ana)
+
 art_make(
           MODULE_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service

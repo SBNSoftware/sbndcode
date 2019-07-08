@@ -1,0 +1,61 @@
+#include "cosmicidalg_sbnd.fcl"
+#include "mcsfitter_sbnd.fcl"
+#include "crtt0matchingalg_sbnd.fcl"
+#include "crttrackmatchingalg_sbnd.fcl"
+#include "crtbacktracker_sbnd.fcl"
+#include "crthitcosmicid_sbnd.fcl"
+#include "crttrackcosmicid_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_cosmicidana: 
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/CosmicId/CosmicIdAna"
+
+  # The input parameters
+  SimModuleLabel:      "largeant"        # Simulation producer module label
+  TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
+  PandoraLabel:        "pandora"
+  Verbose:             false             # Print extra information about what's going on
+  CosIdAlg:            @local::standard_cosmicidalg
+  fitter:              @local::sbnd_mcsfitter
+}
+
+sbnd_crthitcosmicidana:
+{
+      # The "module_type" tells us which module to run. The name here
+      # must match the name supplied to DEFINE_ART_MODULE
+      module_type:     "sbndcode/CosmicId/Ana/CRTHitCosmicIdAna"
+
+      # The input parameters
+      SimModuleLabel:      "largeant"         # Simulation producer module label
+      CRTHitLabel:         "crthit"           # CRT producer module label
+      TPCTrackLabel:       "pandoraTrack"     # Track producer module label
+      PandoraLabel:        "pandora"
+      Verbose:             false              # Print extra information about what's going on
+      CRTT0Alg:            @local::standard_crtt0matchingalg
+      CrtBackTrack:        @local::standard_crtbacktracker
+      CHTagAlg:            @local::standard_crthitcosmicidalg
+}
+
+
+sbnd_crttrackcosmicidana:
+{
+      # The "module_type" tells us which module to run. The name here
+      # must match the name supplied to DEFINE_ART_MODULE
+      module_type:     "sbndcode/CosmicId/Ana/CRTTrackCosmicIdAna"
+
+      # The input parameters
+      SimModuleLabel:      "largeant"         # Simulation producer module label
+      CRTTrackLabel:       "crttrack"           # CRT producer module label
+      TPCTrackLabel:       "pandoraTrack"     # Track producer module label
+      PandoraLabel:        "pandora"
+      Verbose:             false              # Print extra information about what's going on
+      TrackMatchAlg:       @local::standard_crttrackmatchingalg
+      CrtBackTrack:        @local::standard_crtbacktracker
+      CTTagAlg:            @local::standard_crttrackcosmicidalg
+}
+
+END_PROLOG

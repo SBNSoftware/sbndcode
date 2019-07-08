@@ -1,0 +1,12 @@
+#include "crttrackmatchingalg_sbnd.fcl"
+#include "cosmicidconfigs_sbnd.fcl"
+
+BEGIN_PROLOG
+
+standard_crttrackcosmicidalg:
+{
+    TrackMatchAlg:      @local::sbnd_crttrackmatchingalg_crID
+    BeamTimeLimits:     @local::sbnd_beamtime # Limit from t = 0 to remove non-beam tracks [us]
+}
+
+END_PROLOG

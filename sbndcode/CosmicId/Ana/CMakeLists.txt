@@ -25,7 +25,6 @@ art_make(
                            ${MF_UTILITIES}
                            ${FHICLCPP}
                            ${ROOT_GEOM}
-                           ${ROOT_GENVECTOR}
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}
                            ${ROOT_BASIC_LIB_LIST}
@@ -33,12 +32,10 @@ art_make(
                            ${ROOT_ROOFIT}
                            ${ROOT_ROOFITCORE} 
                            sbndcode_RecoUtils
-                           sbndcode_CosmicIdUtils
-                           sbndcode_CosmicIdAlgs
-                           sbndcode_CRTUtils
                            sbndcode_CRT
-                           sbndcode_CRTProducts
-                           larreco_RecoAlg
+                           sbndcode_CRTUtils
+                           sbndcode_GeoWrappers
+                           sbndcode_CosmicIdAlgs
         )
 
 install_headers()
