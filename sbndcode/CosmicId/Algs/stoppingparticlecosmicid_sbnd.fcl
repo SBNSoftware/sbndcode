@@ -1,0 +1,14 @@
+#include "cosmicidconfigs_sbnd.fcl"
+
+BEGIN_PROLOG
+
+standard_stoppingparticlecosmicidalg:
+{
+    ContainmentCuts:    @local::sbnd_containmentvolume  # Fiducial volume cut to determine if track exits [cm]
+    ResRangeMin:        10.0  # Minimum residual range for fit [cm]
+    ResRangeMax:        20.0  # Maximum residual range for fit [cm]
+    DEdxMax:            30.0  # Maximum dE/dx for fit [MeV/cm]
+    StoppingChi2Limit:  1.2   # Limit on pol/exp chi2 ratio to decide if stopping [cm]
+}
+
+END_PROLOG

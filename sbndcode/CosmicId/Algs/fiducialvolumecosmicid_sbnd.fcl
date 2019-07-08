@@ -1,0 +1,10 @@
+#include "cosmicidconfigs_sbnd.fcl"
+
+BEGIN_PROLOG
+
+standard_fiducialvolumecosmicidalg:
+{
+    FiducialCuts:       @local::sbnd_fiducialvolume
+}
+
+END_PROLOG

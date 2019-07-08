@@ -1,0 +1,12 @@
+#include "cosmicidconfigs_sbnd.fcl"
+
+BEGIN_PROLOG
+
+standard_pandorat0cosmicidalg:
+{
+    PandoraLabel:        "pandora"
+    TpcTrackModuleLabel: "pandoraTrack"
+    BeamTimeLimits:      @local::sbnd_beamtime
+}
+
+END_PROLOG

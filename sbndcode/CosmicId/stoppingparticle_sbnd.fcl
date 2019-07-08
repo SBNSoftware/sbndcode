@@ -1,16 +1,16 @@
-# A script to run an analysis module: PandoraNuMuRecoAna
+# A script to run an analysis module: StoppingParticle
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
 
-process_name: PandoraNuMuRecoAna
+process_name: StoppingParticle
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "pandoranumurecoana.root" }
+  TFileService:           { fileName: "stoppingparticle.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -46,38 +46,23 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    PandoraNuMuRecoAna: 
+    StoppingParticle: 
     {
       # The "module_type" tells us which module to run. The name here
       # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/Selection/PandoraNuMuRecoAna"
+      module_type:     "sbndcode/CosmicId/StoppingParticle"
 
       # The input parameters
-      inputs: {
-        SimModuleLabel:      "largeant"        # Simulation producer module label
-        TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
-        HitModuleLabel:      "gaushit" # TPC track producer module label
-        ShowerModuleLabel:   "pandoraShower" 
-        PandoraLabel:        "pandora"
-        Verbose:             true             # Print extra information about what's going on
-      }
-      fitter: {
-        pIdHypothesis: 13
-        minNumSegments: 3
-        segmentLength: 14.0
-        minHitsPerSegment: 2
-        nElossSteps: 10
-        eLossMode: 0
-        pMin: 0.01
-        pMax: 7.50
-        pStep: 0.01
-        angResol: 3.0
-      }
+      SimModuleLabel:      "largeant"        # Simulation producer module label
+      TpcTrackModuleLabel: "pmalgtrackmaker" # TPC track producer module label
+      CaloModuleLabel:      "pmatrackcalo" # TPC track producer module label
+      Verbose:             false             # Print extra information about what's going on
+      TrackID:             -99999             # Print extra information about what's going on
     }
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ PandoraNuMuRecoAna ]
+  analysis: [ StoppingParticle ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.
