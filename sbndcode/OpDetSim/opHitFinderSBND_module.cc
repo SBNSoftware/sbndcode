@@ -82,11 +82,11 @@ namespace opdet{
     int fThresholdArapuca; //in ADC
     int fEvNumber;
     int fChNumber;
-    int fSize;
-    int fTimePMT;         //Start time of PMT signal
-    int fTimeMax;         //Time of maximum (minimum) PMT signal
+    //int fSize;
+    //int fTimePMT;         //Start time of PMT signal
+    //int fTimeMax;         //Time of maximum (minimum) PMT signal
     TH1D* wvfHist;          //processed waveform histogram 
-    TH1D* wvfHistPrint;          //processed waveform histogram 
+    //TH1D* wvfHistPrint;          //processed waveform histogram 
     void subtractBaseline(TH1D* hist, std::string pdtype, double& rms);
     bool findPeak(TH1D* h, size_t& time, double& Area, double rms, double& amplitude, std::string type);
     void denoise(TH1D* h);
