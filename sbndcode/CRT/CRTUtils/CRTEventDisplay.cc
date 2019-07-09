@@ -26,6 +26,7 @@ void CRTEventDisplay::reconfigure(const Config& config){
   fCRTHitLabel = config.CRTHitLabel();
   fCRTTrackLabel = config.CRTTrackLabel();
   fTPCTrackLabel = config.TPCTrackLabel();
+  fClockSpeedCRT = config.ClockSpeedCRT();
 
   fDrawTaggers = config.DrawTaggers();
   fDrawModules = config.DrawModules();
@@ -183,13 +184,14 @@ void CRTEventDisplay::Draw(const art::Event& event){
     if(fPrint) std::cout<<"\nCRT data in event:\n";
 
     auto crtDataHandle = event.getValidHandle<std::vector<crt::CRTData>>(fCRTDataLabel);
-    detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-    detinfo::ElecClock fTrigClock = fDetectorClocks->TriggerClock();
+    //detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
+    //detinfo::ElecClock fTrigClock = fDetectorClocks->TriggerClock();
     for(auto const& data : (*crtDataHandle)){
 
       // Skip if outside specified time window if time window used
-      fTrigClock.SetTime(data.T0());
-      double time = fTrigClock.Time();
+      //fTrigClock.SetTime(data.T0());
+      //double time = fTrigClock.Time();
+      double time = (double)(int)data.T0()/fClockSpeedCRT; // [tick -> us]
       if(!(fMinTime == fMaxTime || (time > fMinTime && time < fMaxTime))) continue;
 
       // Skip if it doesn't match the true ID if true ID is used

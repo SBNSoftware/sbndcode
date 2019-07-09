@@ -22,6 +22,10 @@ sbnd_crtsim: {
   TDelayRMSExpShift: 75.6183
   TDelayRMSExpScale: 79.3543
 
+  // Clock speed of the CRT system [MHz] (1 ns = 1 tick @ 1000 MHz)
+  // (was 16 MHz for files before v08_25_00)
+  ClockSpeedCRT: 1000.
+
   // Propagation delay [ns/cm]
   PropDelay: 0.0061
   fPropDelayError: 0.007

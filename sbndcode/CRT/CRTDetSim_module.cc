@@ -56,6 +56,7 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fTDelayRMSExpNorm = p.get<double>("TDelayRMSExpNorm");
   fTDelayRMSExpShift = p.get<double>("TDelayRMSExpShift");
   fTDelayRMSExpScale = p.get<double>("TDelayRMSExpScale");
+  fClockSpeedCRT = p.get<double>("ClockSpeedCRT");
   fPropDelay = p.get<double>("PropDelay");
   fPropDelayError = p.get<double>("fPropDelayError");
   fTResInterpolator = p.get<double>("TResInterpolator");
@@ -88,7 +89,7 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
 
 
 uint32_t CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
-                                         detinfo::ElecClock& clock,
+                                         /*detinfo::ElecClock& clock,*/
                                          float t0, float npeMean, float r) {
   // Hit timing, with smearing and NPE dependence
   double tDelayMean =
@@ -113,15 +114,17 @@ uint32_t CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
   double t = t0 + tProp + tDelay;
 
   // Get clock ticks
-  clock.SetTime(t / 1e3);  // SetTime takes microseconds
+  // FIXME no clock available for CRTs, have to do it by hand
+  //clock.SetTime(t / 1e3);  // SetTime takes microseconds
+  int time = (t / 1e3) * fClockSpeedCRT;
 
   mf::LogInfo("CRT")
     << "CRT TIMING: t0=" << t0
     << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
     << ", tDelay=" << tDelay << ", tDelay(interp)="
-    << tDelay << ", tProp=" << tProp << ", t=" << t << ", ticks=" << clock.Ticks() << "\n";
+    << tDelay << ", tProp=" << tProp << ", t=" << t << /*", ticks=" << clock.Ticks() <<*/ "\n";
 
-  return clock.Ticks();
+  return time;//clock.Ticks();
 }
 
 
@@ -139,8 +142,8 @@ void CRTDetSim::produce(art::Event & e) {
   // Services: Geometry, DetectorClocks, RandomNumberGenerator
   art::ServiceHandle<geo::Geometry> geoService;
 
-  art::ServiceHandle<detinfo::DetectorClocksService> detClocks;
-  detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();
+  /*art::ServiceHandle<detinfo::DetectorClocksService> detClocks;
+  detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();*/
 
   // Handle for (truth) AuxDetSimChannels
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
@@ -269,13 +272,13 @@ void CRTDetSim::produce(art::Event & e) {
       // Time relative to trigger, accounting for propagation delay and 'walk'
       // for the fixed-threshold discriminator
       uint32_t t0 =
-        getChannelTriggerTicks(&fEngine, trigClock, tTrue, npe0, distToReadout);
+        getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe0, distToReadout);
       uint32_t t1 =
-        getChannelTriggerTicks(&fEngine, trigClock, tTrue, npe1, distToReadout);
+        getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe1, distToReadout);
 
       // Time relative to PPS: Random for now! (FIXME)
       uint32_t ppsTicks =
-        CLHEP::RandFlat::shootInt(&fEngine, trigClock.Frequency() * 1e6);
+        CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fClockSpeedCRT * 1e6);
 
       // SiPM and ADC response: Npe to ADC counts
       short q0 =

@@ -6,14 +6,14 @@ sbnd_detectorclocks: @local::standard_detectorclocks
 
 sbnd_detectorclocks.TrigModuleName:     "triggersim"
 sbnd_detectorclocks.InheritClockConfig: true
-sbnd_detectorclocks.G4RefTime:         0.      # G4 time [us] where electronics clock counting start
-sbnd_detectorclocks.TriggerOffsetTPC:  0.  # Time [us] for TPC readout start w.r.t. trigger time
-sbnd_detectorclocks.FramePeriod:       1.25e3   # Frame period [us]
-sbnd_detectorclocks.ClockSpeedTPC:     2.    # TPC clock speed in MHz
-sbnd_detectorclocks.ClockSpeedOptical: 64.   # Optical clock speed in MHz
-sbnd_detectorclocks.ClockSpeedTrigger: 16.   # Trigger clock speed in MHz
-sbnd_detectorclocks.DefaultTrigTime:   0. # Default trigger time [us].
-sbnd_detectorclocks.DefaultBeamTime:   0. # Default beam time [us].
+sbnd_detectorclocks.G4RefTime:          0.      # G4 time [us] where electronics clock counting start
+sbnd_detectorclocks.TriggerOffsetTPC:   0.  # Time [us] for TPC readout start w.r.t. trigger time
+sbnd_detectorclocks.FramePeriod:        1.25e3   # Frame period [us]
+sbnd_detectorclocks.ClockSpeedTPC:      2.    # TPC clock speed in MHz
+sbnd_detectorclocks.ClockSpeedOptical:  64.   # Optical clock speed in MHz
+sbnd_detectorclocks.ClockSpeedTrigger:  16.   # Trigger clock speed in MHz
+sbnd_detectorclocks.DefaultTrigTime:    0. # Default trigger time [us].
+sbnd_detectorclocks.DefaultBeamTime:    0. # Default beam time [us].
 
 
 
