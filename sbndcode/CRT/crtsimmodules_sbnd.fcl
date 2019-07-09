@@ -47,11 +47,11 @@ sbnd_crtsim: {
   QRMS: 80.0 #15.0
   QThreshold: 60.0 #100
 
-  // Coincidence window for two fibers on a strip [ns]
-  StripCoincidenceWindow: 30.0
+  // Coincidence window for two fibers on a strip [ticks = ns]
+  StripCoincidenceWindow: 100.0 #30.0
 
-  // Coincidence for hits in a tagger [ticks]
-  TaggerPlaneCoincidenceWindow: 5
+  // Coincidence for hits in a tagger [ticks = ns]
+  TaggerPlaneCoincidenceWindow: 150.0 #5
 
   // Effective absorption length (for transverse response) [cm]
   AbsLenEff: 8.5
