@@ -98,6 +98,8 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
+    double StoppingChiSq(geo::Point_t end, std::vector<art::Ptr<anab::Calorimetry>> calos);
+
     bool StoppingEnd(geo::Point_t end, std::vector<art::Ptr<anab::Calorimetry>> calos);
 
     bool StoppingParticleCosmicId(recob::Track track, std::vector<art::Ptr<anab::Calorimetry>> calos);

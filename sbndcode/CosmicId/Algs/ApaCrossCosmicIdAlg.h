@@ -95,6 +95,8 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
+    double ApaDistance(recob::Track track, double t0, std::vector<art::Ptr<recob::Hit>> hits);
+
     // Get time by matching tracks which cross the APA
     double T0FromApaCross(recob::Track track, std::vector<double> t0List, int tpc);
 

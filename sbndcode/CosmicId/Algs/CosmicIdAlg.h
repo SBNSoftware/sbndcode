@@ -190,6 +190,15 @@ namespace sbnd{
 
     bool CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
 
+    // Getters
+    StoppingParticleCosmicIdAlg StoppingAlg() const {return spTag;}
+
+    CrtHitCosmicIdAlg CrtHitAlg() const {return chTag;}
+
+    CrtTrackCosmicIdAlg CrtTrackAlg() const {return ctTag;}
+
+    ApaCrossCosmicIdAlg ApaAlg() const {return acTag;}
+
   private:
 
     art::InputTag fTpcTrackModuleLabel;

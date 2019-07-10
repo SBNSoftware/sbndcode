@@ -4,14 +4,14 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "cosmicidanamodules_sbnd.fcl"
+#include "cosmicidtreeconfig_sbnd.fcl"
 
-process_name: CosmicIdAna
+process_name: CosmicIdTree
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "fullCosmicIdAnalysis.root" }
+  TFileService:           { fileName: "cosmicidtree.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -47,19 +47,13 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    CosmicIdAna: @local::sbnd_cosmicidana
-    CRTHitCosmicIdAna: @local::sbnd_crthitcosmicidana
-    CRTTrackCosmicIdAna: @local::sbnd_crttrackcosmicidana
-    StoppingCosmicIdAna: @local::sbnd_stoppingcosmicidana
+    CosmicIdTree: @local::sbnd_cosmicidtree
 
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
   analysis: [ 
-              CosmicIdAna
-              , CRTHitCosmicIdAna
-              , CRTTrackCosmicIdAna
-              , StoppingCosmicIdAna
+              CosmicIdTree
             ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;

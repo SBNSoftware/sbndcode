@@ -35,7 +35,7 @@ void StoppingParticleCosmicIdAlg::reconfigure(const Config& config){
   return;
 }
 
-bool StoppingParticleCosmicIdAlg::StoppingEnd(geo::Point_t end, std::vector<art::Ptr<anab::Calorimetry>> calos){
+double StoppingParticleCosmicIdAlg::StoppingChiSq(geo::Point_t end, std::vector<art::Ptr<anab::Calorimetry>> calos){
   
   //Loop over residual range and dedx
   if(calos.size()==0) return false;
@@ -94,7 +94,15 @@ bool StoppingParticleCosmicIdAlg::StoppingEnd(geo::Point_t end, std::vector<art:
   TF1* expfit = gdedx->GetFunction("expo");
   double expchi2 = expfit->GetChisquare();
 
-  if(polchi2/expchi2 > fStoppingChi2Limit) return true;
+  return polchi2/expchi2;
+
+}
+
+bool StoppingParticleCosmicIdAlg::StoppingEnd(geo::Point_t end, std::vector<art::Ptr<anab::Calorimetry>> calos){
+  
+  double chiSqRatio = StoppingChiSq(end, calos);
+
+  if(chiSqRatio > fStoppingChi2Limit) return true;
 
   return false;
 }
