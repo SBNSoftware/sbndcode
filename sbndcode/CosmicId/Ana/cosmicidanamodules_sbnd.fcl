@@ -5,6 +5,7 @@
 #include "crtbacktracker_sbnd.fcl"
 #include "crthitcosmicid_sbnd.fcl"
 #include "crttrackcosmicid_sbnd.fcl"
+#include "stoppingparticlecosmicid_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -56,6 +57,22 @@ sbnd_crttrackcosmicidana:
       TrackMatchAlg:       @local::standard_crttrackmatchingalg
       CrtBackTrack:        @local::standard_crtbacktracker
       CTTagAlg:            @local::standard_crttrackcosmicidalg
+}
+
+
+sbnd_stoppingcosmicidana: 
+{
+      # The "module_type" tells us which module to run. The name here
+      # must match the name supplied to DEFINE_ART_MODULE
+      module_type:     "sbndcode/CosmicId/Ana/StoppingCosmicIdAna"
+
+      # The input parameters
+      SimModuleLabel:      "largeant"        # Simulation producer module label
+      TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
+      CaloModuleLabel:     "pandoraCalo" # TPC track producer module label
+      PandoraLabel:        "pandora"
+      Verbose:             false             # Print extra information about what's going on
+      SPTagAlg:            @local::standard_stoppingparticlecosmicidalg
 }
 
 END_PROLOG

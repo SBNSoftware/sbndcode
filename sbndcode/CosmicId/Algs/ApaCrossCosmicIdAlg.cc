@@ -33,6 +33,33 @@ void ApaCrossCosmicIdAlg::reconfigure(const Config& config){
   return;
 }
 
+double ApaCrossCosmicIdAlg::ApaDistance(recob::Track track, double t0, std::vector<art::Ptr<recob::Hit>> hits){
+
+  int tpc = CosmicIdUtils::DetectedInTPC(hits);
+
+  double xmax = fTpcGeo.MaxX();
+
+  double startX = track.Vertex().X();
+  double endX = track.End().X();
+  geo::Point_t point = track.Vertex();
+
+  // If in tpc 0 use start/end with lowest X
+  if(tpc == 0 && endX < startX) point = track.End();
+
+  // If in tpc 1 use start/end with highest X
+  if(tpc == 1 && endX > startX) point = track.End();
+
+  // If particle crosses the APA before t = 0 the crossing point won't be reconstructed
+  double shiftedX = point.X();
+  double shift = t0 * fDetectorProperties->DriftVelocity();
+  if(tpc == 0) shiftedX = point.X() - shift;
+  if(tpc == 1) shiftedX = point.X() + shift;
+
+  //Calculate distance between start/end and APA
+  return std::abs(std::abs(shiftedX) - xmax);
+
+}
+
 double ApaCrossCosmicIdAlg::T0FromApaCross(recob::Track track, std::vector<double> t0List, int tpc){
 
   double crossTime = -99999;
