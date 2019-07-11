@@ -323,8 +323,8 @@ namespace sbnd {
     // Define histograms
     fXSecTree = tfs->make<TTree>("interaction", "xsec tree");
 
-    fXSecTree->Branch("true_particles_contained", &true_particles_contained, "true_particles_contained/B");
-    fXSecTree->Branch("true_lep_contained", &true_lep_contained, "true_lep_contained/B");
+    fXSecTree->Branch("true_particles_contained", &true_particles_contained, "true_particles_contained/O");
+    fXSecTree->Branch("true_lep_contained", &true_lep_contained, "true_lep_contained/O");
     fXSecTree->Branch("true_cc", &true_cc, "true_cc/I");
     fXSecTree->Branch("true_nu_pdg", &true_nu_pdg, "true_nu_pdg/I");
     fXSecTree->Branch("true_int_type", &true_int_type, "true_int_type/I");
@@ -344,8 +344,8 @@ namespace sbnd {
     fXSecTree->Branch("true_delta_alphat", &true_delta_alphat, "true_delta_alphat/D");
     fXSecTree->Branch("true_delta_phit", &true_delta_phit, "true_delta_phit/D");
 
-    fXSecTree->Branch("reco_particles_contained", &reco_particles_contained, "reco_particles_contained/B");
-    fXSecTree->Branch("reco_lep_contained", &reco_lep_contained, "reco_lep_contained/B");
+    fXSecTree->Branch("reco_particles_contained", &reco_particles_contained, "reco_particles_contained/O");
+    fXSecTree->Branch("reco_lep_contained", &reco_lep_contained, "reco_lep_contained/O");
     fXSecTree->Branch("reco_cc", &reco_cc, "reco_cc/I");
     fXSecTree->Branch("reco_nu_pdg", &reco_nu_pdg, "reco_nu_pdg/I");
     fXSecTree->Branch("reco_int_type", &reco_int_type, "reco_int_type/I");
