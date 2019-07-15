@@ -109,57 +109,57 @@ namespace opdet{
        using Comment = fhicl::Comment;
 
        fhicl::Atom<double> readoutWindow {
-          Name("ReadoutWindow"),
+          Name("ArapucaReadoutWindow"),
           Comment("Waveform time interval (ns)")
        };
 
        fhicl::Atom<double> preTrigger {
-          Name("PreTrigger"),
+          Name("ArapucaPreTrigger"),
           Comment("Pre trigger window in ns")
        };
 
        fhicl::Atom<double> peakTime {
-          Name("PeakTime"),
+          Name("ArapucaPeakTime"),
           Comment("Single pe: Time of maximum amplitude in the SiPM pulse in ns")
        };
 
        fhicl::Atom<double> pulseLength {
-          Name("PulseLength"),
+          Name("ArapucaPulseLength"),
           Comment("Single pe: Time length of SiPM pulse")
        };
 
        fhicl::Atom<double> meanAmplitude {
-          Name("MeanAmplitude"),
+          Name("ArapucaMeanAmplitude"),
           Comment("Single pe: mean amplitude of SiPM pulse in mV")
        };
 
        fhicl::Atom<double> riseTime {
-          Name("RiseTime"),
+          Name("ArapucaRiseTime"),
           Comment("Single pe: Pulse rise time constant (exponential), from 0.1 to 0.9 of maximum amplitude")
        };
 
        fhicl::Atom<double> fallTime {
-          Name("FallTime"),
+          Name("ArapucaFallTime"),
           Comment("Single pe: Pulse decay time constant (exponential), from 0.1 to 0.9 of maximum amplitude")
        };
 
        fhicl::Atom<double> voltageToADC {
-          Name("VoltageToADC"),
+          Name("ArapucaVoltageToADC"),
           Comment("Voltage to ADC convertion factor")
        };
 
        fhicl::Atom<double> baseline {
-          Name("Baseline"),
+          Name("ArapucaBaseline"),
           Comment("Waveform baseline in ADC")
        };
 
        fhicl::Atom<double> baselineRMS {
-          Name("BaselineRMS"),
+          Name("ArapucaBaselineRMS"),
           Comment("RMS of the electronics noise fluctuations in ADC counts")
        };
 
        fhicl::Atom<double> darkNoiseRate {
-          Name("DarkNoiseRate"),
+          Name("ArapucaDarkNoiseRate"),
           Comment("Dark noise rate in Hz")
        };
 
@@ -169,7 +169,7 @@ namespace opdet{
        };
 
        fhicl::Atom<double> saturation {
-          Name("Saturation"),
+          Name("ArapucaSaturation"),
           Comment("Saturation in number of p.e.")
        };
 

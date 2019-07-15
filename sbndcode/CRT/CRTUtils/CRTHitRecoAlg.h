@@ -100,6 +100,11 @@ namespace sbnd{
         Comment("Minimum time between two overlapping hit crt strips")
       };
 
+      fhicl::Atom<double> ClockSpeedCRT {
+        Name("ClockSpeedCRT"),
+        Comment("Clock speed of the CRT system [MHz]")
+      };
+
     };
 
     CRTHitRecoAlg(const Config& config);
@@ -145,7 +150,7 @@ namespace sbnd{
 
     detinfo::DetectorClocks const* fDetectorClocks;
     detinfo::DetectorProperties const* fDetectorProperties;
-    detinfo::ElecClock fTrigClock;
+    //detinfo::ElecClock fTrigClock;
     
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
@@ -155,6 +160,7 @@ namespace sbnd{
     double fQSlope;
     double fNpeScaleShift;
     double fTimeCoincidenceLimit;
+    double fClockSpeedCRT;
 
   };
 
