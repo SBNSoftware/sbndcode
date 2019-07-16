@@ -301,7 +301,7 @@ void SimWireSBND::produce(art::Event& evt)
     //If not using new noise, use old method.
     if(fUseNewNoise==false){
       //Generate Noise:
-      std::cout<<"Using old noise method"<<std::endl;
+      //std::cout<<"Using old noise method"<<std::endl;
       size_t view = (size_t)geo->View(chan);
 
       double noise_factor;
@@ -334,15 +334,22 @@ void SimWireSBND::produce(art::Event& evt)
       }
     }
     //else if doing new noise calculations
-    else{
+    else if(fUseNewNoise==true){
       
-      std::cout<<"Using new noise method"<<std::endl;
+      //std::cout<<"Using new noise method"<<std::endl;
       chanserv->addNoise(chan,noisetmp);
       //chanserv->addNoise(chan,chargeWork);
       
       //Implement better noise stuff.
     }
 
+    else {
+      throw cet::exception("SimWireSBND")
+	<< "\033[93m"
+	<< "fUseNewNoise set incorrectly. This must be set to true or false"
+	<< "\033[00m"
+	<< std::endl;
+    }
     //Pedestal determination
     float ped_mean = fCollectionPed;
     geo::SigType_t sigtype = geo->SignalType(chan);

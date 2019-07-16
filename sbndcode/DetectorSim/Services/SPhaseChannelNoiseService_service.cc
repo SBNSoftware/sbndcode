@@ -141,26 +141,124 @@ int SPhaseChannelNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) con
     if ( cohNoisechan == fCohNoiseArrayPoints ) cohNoisechan = fCohNoiseArrayPoints-1;
     fCohNoiseChanHist->Fill(cohNoisechan);
   }
-  
+
   art::ServiceHandle<geo::Geometry> geo;
+  std::vector<geo::WireID> wireIDs = geo->ChannelToWire(chan);
+  geo::WireGeo const& wire = geo->Wire(wireIDs.front());
+  double wirelength = wire.Length();
+ 
+  ///This part below has been moved from the generateMicroBooNoise section as it needs to be done differently for SBND due to different wirelengths.
+
+  ////////////////////////////// MicroBooNE noise model/////////////////////////////////
+  // vars
+
+  // Fetch sampling rate.
+  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
+  float sampleRate = detprop->SamplingRate();
+  // Fetch FFT service and # ticks.
+  art::ServiceHandle<util::LArFFT> pfft;
+  unsigned int ntick = pfft->FFTSize(); //waveform_size
+  // width of frequencyBin in kHz
+  double binWidth = 1.0/(ntick*sampleRate*1.0e-6);
+
+  // Create noise spectrum in frequency.
+  unsigned nbin = ntick/2 + 1;
+  std::vector<TComplex> noiseFrequency(nbin, 0.);
+  double pval = 0.;
+  double phase = 0.;
+  double rnd[3] = {0.};
+
+  std::vector<double> noisevector(ntick,0.0);
+  //AdcSignalVectorVector noisevector;
+  double params[1] = {0.};
+  double fitpar[9] = {0.};
+  double wldparams[2] = {0.};
+  
+  //double ENOB=10.91; //Number from MicroBooNE
+  //  double baseline_noise = std::sqrt(ntick/12)*std::pow(2, 12 - ENOB);
+
+  // calculate FFT magnitude of noise from ENOB
+  //double baseline_noise = std::sqrt(ntick*1.0/12)*std::pow(2, 12 - fENOB);
+  // wire length dependence function 
+  TF1* _wld_f = new TF1("_wld_f", "[0] + [1]*x", 0.0, 1000);
+  // custom poisson  
+  TF1* _poisson = new TF1("_poisson", "[0]**(x) * exp(-[0]) / ROOT::Math::tgamma(x+1.)", 0, 30);
+  // gain function in kHz
+  TF1* _pfn_f1 = new TF1("_pfn_f1", "([0]*1/(x/1000*[8]/2) + ([1]*exp(-0.5*(((x/1000*[8]/2)-[2])/[3])**2)*exp(-0.5*pow(x/1000*[8]/(2*[4]),[5])))*[6]) + [7]", 0.0, 0.5*ntick*binWidth);
+  // set data-driven parameters
+  // poisson mean
+  params[0] = 3.30762;
+
+  _poisson->SetParameters(params);
+
+  //wire length dependence parameters
+  wldparams[0] = 0.395;
+  wldparams[1] = 0.001304;
+
+  _wld_f->SetParameters(wldparams);
+  double wldValue = _wld_f->Eval(wirelength);
+
+  fitpar[0] = fNoiseFunctionParameters.at(0);
+  fitpar[1] = fNoiseFunctionParameters.at(1);
+  fitpar[2] = fNoiseFunctionParameters.at(2);
+  fitpar[3] = fNoiseFunctionParameters.at(3);
+  fitpar[4] = fNoiseFunctionParameters.at(4);
+  fitpar[5] = fNoiseFunctionParameters.at(5);
+  fitpar[6] = wldValue; //wire length parameter
+  fitpar[7] = fNoiseFunctionParameters.at(7); //baseline_noise
+  //fitpar[7] = baseline_noise;
+  fitpar[8] = 9596; //uBooNE nticks
+  //fitpar[8] = ntick; //waveform_size
+
+  _pfn_f1->SetParameters(fitpar);
+  _pfn_f1->SetNpx(1000);
+  	
+  for ( unsigned int i=0; i<ntick/2+1; ++i ) {
+    //MicroBooNE noise model
+    double pfnf1val = _pfn_f1->Eval((i+0.5)*binWidth);
+    // define FFT parameters
+    double randomizer = _poisson->GetRandom()/params[0];
+    pval = pfnf1val * randomizer;
+    // random phase angle
+    flat.fireArray(2, rnd, 0, 1);
+    phase = rnd[1]*2.*TMath::Pi();
+    TComplex tc(pval*cos(phase),pval*sin(phase));
+    noiseFrequency[i] += tc;
+  }
+  // Obtain time spectrum from frequency spectrum.
+  //noisevector.clear();
+  //noisevector.resize(ntick,0.0);
+  std::vector<double> tmpnoise(noisevector.size());
+  pfft->DoInvFFT(noiseFrequency, tmpnoise);
+  noiseFrequency.clear();
+  for ( unsigned int itck=0; itck<noisevector.size(); ++itck ) {
+    noisevector[itck] = sqrt(ntick)*tmpnoise[itck];
+  }
+  // end of moved section.
+
+  
+  //art::ServiceHandle<geo::Geometry> geo; //now initialised further up. Remove this if all works ok.
   const geo::View_t view = geo->View(chan);
   for ( unsigned int itck=0; itck<sigs.size(); ++itck ) {
     double tnoise = 0;
     if ( view==geo::kU ) {
       if(fEnableWhiteNoise)    tnoise += fWhiteNoiseU*gaus.fire();
-      if(fEnableMicroBooNoise) tnoise += fMicroBooNoiseU[microbooNoiseChan][itck];
+      if(fEnableMicroBooNoise) tnoise += noisevector[itck];
+      //      if(fEnableMicroBooNoise) tnoise += fMicroBooNoiseU[microbooNoiseChan][itck];
       if(fEnableGaussianNoise) tnoise += fGausNoiseU[gausNoiseChan][itck];
       if(fEnableCoherentNoise) tnoise += fCohNoise[cohNoisechan][itck];
     } 
     else if ( view==geo::kV ) {
-    	if(fEnableWhiteNoise)    tnoise = fWhiteNoiseV*gaus.fire();
-      if(fEnableMicroBooNoise) tnoise += fMicroBooNoiseV[microbooNoiseChan][itck];
+      if(fEnableWhiteNoise)    tnoise += fWhiteNoiseV*gaus.fire();
+      if(fEnableMicroBooNoise) tnoise += noisevector[itck];
+      //      if(fEnableMicroBooNoise) tnoise += fMicroBooNoiseV[microbooNoiseChan][itck];
       if(fEnableGaussianNoise) tnoise += fGausNoiseV[gausNoiseChan][itck];
       if(fEnableCoherentNoise) tnoise += fCohNoise[cohNoisechan][itck];
     } 
     else {
-    	if(fEnableWhiteNoise)    tnoise += fWhiteNoiseZ*gaus.fire();
-    	if(fEnableMicroBooNoise) tnoise += fMicroBooNoiseZ[microbooNoiseChan][itck];
+      if(fEnableWhiteNoise)    tnoise += fWhiteNoiseZ*gaus.fire();
+      if(fEnableMicroBooNoise) tnoise += noisevector[itck];
+      //      if(fEnableMicroBooNoise) tnoise += fMicroBooNoiseZ[microbooNoiseChan][itck];
       if(fEnableGaussianNoise) tnoise += fGausNoiseZ[gausNoiseChan][itck];
       if(fEnableCoherentNoise) tnoise += fCohNoise[cohNoisechan][itck];
     }      
