@@ -1,4 +1,4 @@
-simple_plugin(SPhaseChannelNoiseService   "service"                                                           
+simple_plugin(SBNDChannelNoiseService   "service"                                                           
                 
 		larcorealg_Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
