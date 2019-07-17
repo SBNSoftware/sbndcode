@@ -49,6 +49,9 @@ void CosmicIdAlg::reconfigure(const Config& config){
   ctTag = config.CTTagAlg();
   ptTag = config.PTTagAlg();
 
+  fBeamTimeMin = config.BeamTimeLimits().BeamTimeMin();
+  fBeamTimeMax = config.BeamTimeLimits().BeamTimeMax();
+
   return;
 }
 
@@ -87,8 +90,8 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
   }
 
   if(fApplyGeometryCut){
-    bool tpc0Flash = CosmicIdUtils::BeamFlash(t0Tpc0, 4.);
-    bool tpc1Flash = CosmicIdUtils::BeamFlash(t0Tpc1, 4.);
+    bool tpc0Flash = CosmicIdUtils::BeamFlash(t0Tpc0, fBeamTimeMin, fBeamTimeMax);
+    bool tpc1Flash = CosmicIdUtils::BeamFlash(t0Tpc1, fBeamTimeMin, fBeamTimeMax);
     if(geoTag.GeometryCosmicId(track, hits, tpc0Flash, tpc1Flash)) return true;
   }
 
@@ -169,8 +172,8 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
   }
 
   if(fApplyGeometryCut){
-    bool tpc0Flash = CosmicIdUtils::BeamFlash(t0Tpc0, 4.);
-    bool tpc1Flash = CosmicIdUtils::BeamFlash(t0Tpc1, 4.);
+    bool tpc0Flash = CosmicIdUtils::BeamFlash(t0Tpc0, fBeamTimeMin, fBeamTimeMax);
+    bool tpc1Flash = CosmicIdUtils::BeamFlash(t0Tpc1, fBeamTimeMin, fBeamTimeMax);
     if(geoTag.GeometryCosmicId(track, hits, tpc0Flash, tpc1Flash)) return true;
   }
 

@@ -31,6 +31,8 @@ standard_cosmicidalg:
     CHTagAlg: @local::sbnd_crthitcosmicidalg
     CTTagAlg: @local::sbnd_crttrackcosmicidalg
     PTTagAlg: @local::sbnd_pandorat0cosmicidalg
+
+    BeamTimeLimits: @local::sbnd_beamtime
 }
 
 END_PROLOG

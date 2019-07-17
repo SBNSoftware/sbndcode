@@ -18,6 +18,7 @@ sbnd_cosmicidana:
   TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
   PandoraLabel:        "pandora"
   Verbose:             false             # Print extra information about what's going on
+  BeamTimeLimits:      @local::sbnd_beamtime
   CosIdAlg:            @local::standard_cosmicidalg
   fitter:              @local::sbnd_mcsfitter
 }

@@ -13,46 +13,32 @@
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
 #include "sbndcode/CosmicId/Algs/CosmicIdAlg.h"
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
-#include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
-#include "lardataobj/RecoBase/PFParticleMetadata.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
-#include "larcorealg/CoreUtils/NumericUtils.h" // util::absDiff()
+#include "larsim/MCCheater/BackTrackerService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
-#include "art/Framework/Core/ModuleMacros.h"
 #include "canvas/Persistency/Common/FindManyP.h"
-#include "canvas/Utilities/Exception.h"
-#include "larsim/MCCheater/BackTrackerService.h"
-#include "larsim/MCCheater/ParticleInventoryService.h"
-
-// Utility libraries
-#include "messagefacility/MessageLogger/MessageLogger.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
-#include "cetlib/pow.h" // cet::sum_of_squares()
 
 #include "Pandora/PdgTable.h"
 
 // ROOT includes. Note: To look up the properties of the ROOT classes,
 // use the ROOT web site; e.g.,
 // <https://root.cern.ch/doc/master/annotated.html>
-#include "TH1.h"
-#include "TH2.h"
 #include "TVector3.h"
 
 // C++ includes
@@ -64,6 +50,22 @@ namespace sbnd {
 
   class CosmicIdTree : public art::EDAnalyzer {
   public:
+
+    struct BeamTime {
+      using Name = fhicl::Name;
+      using Comment = fhicl::Comment;
+
+      fhicl::Atom<double> BeamTimeMin {
+        Name("BeamTimeMin"),
+        Comment("")
+      };
+
+      fhicl::Atom<double> BeamTimeMax {
+        Name("BeamTimeMax"),
+        Comment("")
+      };
+
+    };
 
     // Describes configuration parameters of the module
     struct Config {
@@ -113,6 +115,11 @@ namespace sbnd {
       fhicl::Table<CosmicIdAlg::Config> CosIdAlg {
         Name("CosIdAlg"),
       };
+
+      fhicl::Table<BeamTime> BeamTimeLimits {
+        Name("BeamTimeLimits"),
+        Comment("")
+      };
       
     }; // Config
 
@@ -149,8 +156,9 @@ namespace sbnd {
     art::InputTag fCaloModuleLabel; ///< name of CRT producer
     art::InputTag fPandoraLabel;
     bool          fVerbose;             ///< print information about what's going on
+    double fBeamTimeMin;
+    double fBeamTimeMax;
 
-    CRTGeoAlg fCrtGeo;
     TPCGeoAlg fTpcGeo;
 
     CRTBackTracker fCrtBackTrack;
@@ -235,6 +243,8 @@ namespace sbnd {
     , fCaloModuleLabel     (config().CaloModuleLabel())
     , fPandoraLabel        (config().PandoraLabel())
     , fVerbose             (config().Verbose())
+    , fBeamTimeMin         (config().BeamTimeLimits().BeamTimeMin())
+    , fBeamTimeMax         (config().BeamTimeLimits().BeamTimeMax())
     , fCrtBackTrack        (config().CrtBackTrack())
     , fCosId               (config().CosIdAlg())
   {
@@ -452,8 +462,8 @@ namespace sbnd {
     std::pair<std::vector<double>, std::vector<double>> fakeFlashes = CosmicIdUtils::FakeTpcFlashes(parts);
     std::vector<double> fakeTpc0Flashes = fakeFlashes.first;
     std::vector<double> fakeTpc1Flashes = fakeFlashes.second;
-    bool tpc0BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc0Flashes, 4.);
-    bool tpc1BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc1Flashes, 4.);
+    bool tpc0BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc0Flashes, fBeamTimeMin, fBeamTimeMax);
+    bool tpc1BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc1Flashes, fBeamTimeMin, fBeamTimeMax);
 
     // If there are no flashes in time with the beam then ignore the event
     if(!tpc0BeamFlash && !tpc1BeamFlash) return;

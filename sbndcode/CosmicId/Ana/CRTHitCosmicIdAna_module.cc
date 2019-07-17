@@ -11,21 +11,15 @@
 #include "sbndcode/CRT/CRTProducts/CRTHit.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
-#include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
 #include "sbndcode/CosmicId/Algs/CrtHitCosmicIdAlg.h"
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
-#include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
-#include "lardataobj/RecoBase/PFParticleMetadata.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
-#include "larcorealg/CoreUtils/NumericUtils.h" // util::absDiff()
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -33,18 +27,14 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
-#include "art/Framework/Core/ModuleMacros.h"
 #include "canvas/Persistency/Common/FindManyP.h"
-#include "canvas/Utilities/Exception.h"
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 
 // Utility libraries
-#include "messagefacility/MessageLogger/MessageLogger.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
-#include "cetlib/pow.h" // cet::sum_of_squares()
 
 #include "Pandora/PdgTable.h"
 
@@ -52,7 +42,6 @@
 // use the ROOT web site; e.g.,
 // <https://root.cern.ch/doc/master/annotated.html>
 #include "TH1.h"
-#include "TH2.h"
 #include "TVector3.h"
 
 // C++ includes
@@ -140,7 +129,6 @@ namespace sbnd {
 
     CRTT0MatchAlg t0Alg;
 
-    CRTGeoAlg fCrtGeo;
     TPCGeoAlg fTpcGeo;
 
     CRTBackTracker fCrtBackTrack;
