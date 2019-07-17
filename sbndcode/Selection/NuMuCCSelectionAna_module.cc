@@ -323,7 +323,7 @@ namespace sbnd {
         vtx.SetX(truth->GetNeutrino().Nu().Vx()); vtx.SetY(truth->GetNeutrino().Nu().Vy()); vtx.SetZ(truth->GetNeutrino().Nu().Vz());
         double nuE = truth->GetNeutrino().Nu().E();
         // If neutrino vertex is not inside the TPC then call it a dirt particle
-        if(!CosmicIdUtils::InFiducial(vtx, 0, 0)){ 
+        if(!fTpcGeo.InFiducial(vtx, 0, 0)){ 
           dirtParticleIds.push_back(partId);
         }
         // If it's a primary muon
@@ -340,8 +340,8 @@ namespace sbnd {
           std::pair<TVector3, TVector3> se = fTpcGeo.CrossingPoints(particle);
           geo::Point_t trueStart {se.first.X(), se.first.Y(), se.first.Z()};
           geo::Point_t trueEnd {se.second.X(), se.second.Y(), se.second.Z()};
-          bool trueExits = CosmicIdUtils::InFiducial(trueEnd, 5., 5.);
-          bool trueVtxContained = CosmicIdUtils::InFiducial(trueStart, 15., 15., 15., 15., 15., 80.);
+          bool trueExits = fTpcGeo.InFiducial(trueEnd, 5., 5.);
+          bool trueVtxContained = fTpcGeo.InFiducial(trueStart, 15., 15., 15., 15., 15., 80.);
           bool trueSelected = false;
           if(trueExits && trueVtxContained && trueLength > 100.) trueSelected = true;
           if(!trueExits && trueVtxContained && trueLength > 50.) trueSelected = true;
@@ -455,12 +455,12 @@ namespace sbnd {
       }
       
       double recoMomentum = 0.;
-      bool exits = CosmicIdUtils::InFiducial(nuTrack.End(), 5., 5.);
+      bool exits = fTpcGeo.InFiducial(nuTrack.End(), 5., 5.);
       double recoLength = nuTrack.Length();
       double recoTheta = nuTrack.Theta();
       double recoPhi = nuTrack.Phi();
       bool selected = false;
-      bool vertexContained = CosmicIdUtils::InFiducial(nuTrack.Start(), 15., 15., 15., 15., 15., 80.);
+      bool vertexContained = fTpcGeo.InFiducial(nuTrack.Start(), 15., 15., 15., 15., 15., 80.);
 
       // Apply selection criteria
       if(exits){
@@ -513,8 +513,8 @@ namespace sbnd {
           double truePhi = (end-start).Phi();
           geo::Point_t trueStart {se.first.X(), se.first.Y(), se.first.Z()};
           geo::Point_t trueEnd {se.second.X(), se.second.Y(), se.second.Z()};
-          bool trueExits = CosmicIdUtils::InFiducial(trueEnd, 5., 5.);
-          bool trueVtxContained = CosmicIdUtils::InFiducial(trueStart, 15., 15., 15., 15., 15., 80.);
+          bool trueExits = fTpcGeo.InFiducial(trueEnd, 5., 5.);
+          bool trueVtxContained = fTpcGeo.InFiducial(trueStart, 15., 15., 15., 15., 15., 80.);
           bool trueSelected = false;
           if(trueExits && trueVtxContained && trueLength > 100.) trueSelected = true;
           if(!trueExits && trueVtxContained && trueLength > 50.) trueSelected = true;

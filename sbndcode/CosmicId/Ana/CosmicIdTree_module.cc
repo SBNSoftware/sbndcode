@@ -164,6 +164,7 @@ namespace sbnd {
     // Track tree parameters
     std::string track_type;
     bool track_pfp_nu;
+    int track_nu_tpc;
     int track_pdg;
     double track_time;
     double track_length;
@@ -174,29 +175,23 @@ namespace sbnd {
     bool track_crt_hit_cut;
     bool track_crt_hit_true_match;
     double track_crt_hit_dca;
-    double track_crt_hit_time;
-    bool track_crt_track_cut;
     bool track_crt_track_true_match;
     double track_crt_track_dca;
-    double track_crt_track_dca_time;
     double track_crt_track_angle;
-    double track_crt_track_angle_time;
-    bool track_stop_cut;
     bool track_stops;
     double track_stop_ratio_start;
     double track_stop_ratio_end;
-    bool track_fiducial_cut;
     double track_fiducial_dist_start;
     double track_fiducial_dist_end;
-    bool track_geo_cut;
     int track_tpc;
-    bool track_apa_cut;
     bool track_apa_cross;
     double track_apa_dist;
+    double track_apa_min_dist;
 
     // Track tree parameters
     std::string pfp_type;
     bool pfp_nu;
+    int pfp_nu_tpc;
     int pfp_n_tracks;
     int pfp_pdg;
     double pfp_time;
@@ -206,29 +201,26 @@ namespace sbnd {
     double pfp_phi;
     double pfp_tracks_angle;
     double pfp_second_length;
-    bool pfp_total_cut;
-    bool pfp_crt_hit_cut;
     bool pfp_crt_hit_true_match;
     double pfp_crt_hit_dca;
-    double pfp_crt_hit_time;
-    bool pfp_crt_track_cut;
+    double pfp_sec_crt_hit_dca;
     bool pfp_crt_track_true_match;
     double pfp_crt_track_dca;
-    double pfp_crt_track_dca_time;
     double pfp_crt_track_angle;
-    double pfp_crt_track_angle_time;
-    bool pfp_stop_cut;
     bool pfp_stops;
     double pfp_stop_ratio_start;
     double pfp_stop_ratio_end;
-    bool pfp_fiducial_cut;
+    double pfp_sec_stop_ratio_start;
+    double pfp_sec_stop_ratio_end;
     double pfp_fiducial_dist_start;
     double pfp_fiducial_dist_end;
-    bool pfp_geo_cut;
+    double pfp_sec_fiducial_dist_start;
+    double pfp_sec_fiducial_dist_end;
     int pfp_tpc;
-    bool pfp_apa_cut;
     bool pfp_apa_cross;
     double pfp_apa_dist;
+    double pfp_apa_min_dist;
+    double pfp_sec_apa_min_dist;
 
   }; // class CosmicIdTree
 
@@ -259,40 +251,33 @@ namespace sbnd {
 
     fTrackTree->Branch("track_type",                 &track_type);
     fTrackTree->Branch("track_pfp_nu",               &track_pfp_nu, "track_pfp_nu/O");
+    fTrackTree->Branch("track_nu_tpc",               &track_nu_tpc, "track_nu_tpc/I");
     fTrackTree->Branch("track_pdg",                  &track_pdg, "track_pdg/I");
     fTrackTree->Branch("track_time",                 &track_time, "track_time/D");
     fTrackTree->Branch("track_length",               &track_length, "track_length/D");
     fTrackTree->Branch("track_momentum",             &track_momentum, "track_momentum/D");
     fTrackTree->Branch("track_theta",                &track_theta, "track_theta/D");
     fTrackTree->Branch("track_phi",                  &track_phi, "track_phi/D");
-    fTrackTree->Branch("track_total_cut",            &track_total_cut, "track_total_cut/O");
-    fTrackTree->Branch("track_crt_hit_cut",          &track_crt_hit_cut, "track_crt_hit_cut/O");
     fTrackTree->Branch("track_crt_hit_true_match",   &track_crt_hit_true_match, "track_crt_hit_true_match/O");
     fTrackTree->Branch("track_crt_hit_dca",          &track_crt_hit_dca, "track_crt_hit_dca/D");
-    fTrackTree->Branch("track_crt_hit_time",         &track_crt_hit_time, "track_crt_hit_time/D");
-    fTrackTree->Branch("track_crt_track_cut",        &track_crt_track_cut, "track_crt_track_cut/O");
     fTrackTree->Branch("track_crt_track_true_match", &track_crt_track_true_match, "track_crt_track_true_match/O");
     fTrackTree->Branch("track_crt_track_dca",        &track_crt_track_dca, "track_crt_track_dca/D");
-    fTrackTree->Branch("track_crt_track_dca_time",   &track_crt_track_dca_time, "track_crt_track_dca_time/D");
     fTrackTree->Branch("track_crt_track_angle",      &track_crt_track_angle, "track_crt_track_angle/D");
-    fTrackTree->Branch("track_crt_track_angle_time", &track_crt_track_angle_time, "track_crt_track_angle_time/D");
-    fTrackTree->Branch("track_stop_cut",             &track_stop_cut, "track_stop_cut/O");
     fTrackTree->Branch("track_stops",                &track_stops, "track_stops/O");
     fTrackTree->Branch("track_stop_ratio_start",     &track_stop_ratio_start, "track_stop_ratio_start/D");
     fTrackTree->Branch("track_stop_ratio_end",       &track_stop_ratio_end, "track_stop_ratio_end/D");
-    fTrackTree->Branch("track_fiducial_cut",         &track_fiducial_cut, "track_fiducial_cut/O");
     fTrackTree->Branch("track_fiducial_dist_start",  &track_fiducial_dist_start, "track_fiducial_dist_start/D");
     fTrackTree->Branch("track_fiducial_dist_end",    &track_fiducial_dist_end, "track_fiducial_dist_end/D");
-    fTrackTree->Branch("track_geo_cut",              &track_geo_cut, "track_geo_cut/O");
     fTrackTree->Branch("track_tpc",                  &track_tpc, "track_tpc/I");
-    fTrackTree->Branch("track_apa_cut",              &track_apa_cut, "track_apa_cut/O");
     fTrackTree->Branch("track_apa_cross",            &track_apa_cross, "track_apa_cross/O");
     fTrackTree->Branch("track_apa_dist",             &track_apa_dist, "track_apa_dist/D");
+    fTrackTree->Branch("track_apa_min_dist",         &track_apa_min_dist, "track_apa_min_dist/D");
 
     fPfpTree = tfs->make<TTree>("pfps", "pfps");
 
     fPfpTree->Branch("pfp_type",                 &pfp_type);
     fPfpTree->Branch("pfp_nu",                   &pfp_nu, "pfp_nu/O");
+    fPfpTree->Branch("pfp_nu_tpc",               &pfp_nu_tpc, "pfp_nu_tpc/I");
     fPfpTree->Branch("pfp_n_tracks",             &pfp_n_tracks, "pfp_n_tracks/I");
     fPfpTree->Branch("pfp_pdg",                  &pfp_pdg, "pfp_pdg/I");
     fPfpTree->Branch("pfp_time",                 &pfp_time, "pfp_time/D");
@@ -302,29 +287,26 @@ namespace sbnd {
     fPfpTree->Branch("pfp_phi",                  &pfp_phi, "pfp_phi/D");
     fPfpTree->Branch("pfp_tracks_angle",         &pfp_tracks_angle, "pfp_tracks_angle/D");
     fPfpTree->Branch("pfp_second_length",        &pfp_second_length, "pfp_second_length/D");
-    fPfpTree->Branch("pfp_total_cut",            &pfp_total_cut, "pfp_total_cut/O");
-    fPfpTree->Branch("pfp_crt_hit_cut",          &pfp_crt_hit_cut, "pfp_crt_hit_cut/O");
     fPfpTree->Branch("pfp_crt_hit_true_match",   &pfp_crt_hit_true_match, "pfp_crt_hit_true_match/O");
     fPfpTree->Branch("pfp_crt_hit_dca",          &pfp_crt_hit_dca, "pfp_crt_hit_dca/D");
-    fPfpTree->Branch("pfp_crt_hit_time",         &pfp_crt_hit_time, "pfp_crt_hit_time/D");
-    fPfpTree->Branch("pfp_crt_track_cut",        &pfp_crt_track_cut, "pfp_crt_track_cut/O");
+    fPfpTree->Branch("pfp_sec_crt_hit_dca",      &pfp_sec_crt_hit_dca, "pfp_sec_crt_hit_dca/D");
     fPfpTree->Branch("pfp_crt_track_true_match", &pfp_crt_track_true_match, "pfp_crt_track_true_match/O");
     fPfpTree->Branch("pfp_crt_track_dca",        &pfp_crt_track_dca, "pfp_crt_track_dca/D");
-    fPfpTree->Branch("pfp_crt_track_dca_time",   &pfp_crt_track_dca_time, "pfp_crt_track_dca_time/D");
     fPfpTree->Branch("pfp_crt_track_angle",      &pfp_crt_track_angle, "pfp_crt_track_angle/D");
-    fPfpTree->Branch("pfp_crt_track_angle_time", &pfp_crt_track_angle_time, "pfp_crt_track_angle_time/D");
-    fPfpTree->Branch("pfp_stop_cut",             &pfp_stop_cut, "pfp_stop_cut/O");
     fPfpTree->Branch("pfp_stops",                &pfp_stops, "pfp_stops/O");
     fPfpTree->Branch("pfp_stop_ratio_start",     &pfp_stop_ratio_start, "pfp_stop_ratio_start/D");
     fPfpTree->Branch("pfp_stop_ratio_end",       &pfp_stop_ratio_end, "pfp_stop_ratio_end/D");
-    fPfpTree->Branch("pfp_fiducial_cut",         &pfp_fiducial_cut, "pfp_fiducial_cut/O");
+    fPfpTree->Branch("pfp_sec_stop_ratio_start", &pfp_sec_stop_ratio_start, "pfp_sec_stop_ratio_start/D");
+    fPfpTree->Branch("pfp_sec_stop_ratio_end",   &pfp_sec_stop_ratio_end, "pfp_sec_stop_ratio_end/D");
     fPfpTree->Branch("pfp_fiducial_dist_start",  &pfp_fiducial_dist_start, "pfp_fiducial_dist_start/D");
     fPfpTree->Branch("pfp_fiducial_dist_end",    &pfp_fiducial_dist_end, "pfp_fiducial_dist_end/D");
-    fPfpTree->Branch("pfp_geo_cut",              &pfp_geo_cut, "pfp_geo_cut/O");
+    fPfpTree->Branch("pfp_sec_fiducial_dist_start", &pfp_sec_fiducial_dist_start, "pfp_sec_fiducial_dist_start/D");
+    fPfpTree->Branch("pfp_sec_fiducial_dist_end",  &pfp_sec_fiducial_dist_end, "pfp_sec_fiducial_dist_end/D");
     fPfpTree->Branch("pfp_tpc",                  &pfp_tpc, "pfp_tpc/I");
-    fPfpTree->Branch("pfp_apa_cut",              &pfp_apa_cut, "pfp_apa_cut/O");
     fPfpTree->Branch("pfp_apa_cross",            &pfp_apa_cross, "pfp_apa_cross/O");
     fPfpTree->Branch("pfp_apa_dist",             &pfp_apa_dist, "pfp_apa_dist/D");
+    fPfpTree->Branch("pfp_apa_min_dist",         &pfp_apa_min_dist, "pfp_apa_min_dist/D");
+    fPfpTree->Branch("pfp_sec_apa_min_dist",     &pfp_sec_apa_min_dist, "pfp_sec_apa_min_dist/D");
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- Cosmic ID Tree Module -------------------"<<std::endl;
@@ -345,7 +327,6 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                          GETTING PRODUCTS
     //----------------------------------------------------------------------------------------------------------
-
     // Get g4 particles
     art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
@@ -361,11 +342,12 @@ namespace sbnd {
     std::map<int, int> numHitMap;
     int hit_i = 0;
     for(auto const& hit : (crtHitList)){
+      // Don't even bother trying to match CRT hits in time with the beam
+      double hitTime = hit->ts1_ns * 1e-3;
+      if(hitTime > -0.5 && hitTime < 2.5) continue;
       crtHits.push_back(*hit);
       int hitTrueID = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
       hit_i++;
-      double hitTime = hit->ts1_ns * 1e-3;
-      if(hitTime > 0 && hitTime < 4) continue;
       numHitMap[hitTrueID]++;
     }
 
@@ -379,11 +361,12 @@ namespace sbnd {
     std::map<int, int> numTrackMap;
     int track_i = 0;
     for(auto const& track : (crtTrackList)){
+      // Don't even bother trying to match CRT tracks in time with the beam
+      double trackTime = track->ts1_ns * 1e-3;
+      if(trackTime > -0.5 && trackTime < 2.5) continue;
       crtTracks.push_back(*track);
       int trackTrueID = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
       track_i++;
-      double trackTime = track->ts1_ns * 1e-3;
-      if(trackTime > 0 && trackTime < 4) continue;
       numTrackMap[trackTrueID]++;
     }
 
@@ -414,6 +397,7 @@ namespace sbnd {
     std::vector<int> lepParticleIds;
     std::vector<int> dirtParticleIds;
     std::vector<int> crParticleIds;
+    int nuTpc = -2;
     // Loop over the true particles
     for (auto const& particle: (*particleHandle)){
       
@@ -431,7 +415,7 @@ namespace sbnd {
         geo::Point_t vtx;
         vtx.SetX(truth->GetNeutrino().Nu().Vx()); vtx.SetY(truth->GetNeutrino().Nu().Vy()); vtx.SetZ(truth->GetNeutrino().Nu().Vz());
         // If neutrino vertex is not inside the TPC then call it a dirt particle
-        if(!CosmicIdUtils::InFiducial(vtx, 0, 0)){ 
+        if(!fTpcGeo.InFiducial(vtx, 0, 0)){ 
           dirtParticleIds.push_back(partID);
         }
         // If it's a primary muon
@@ -441,6 +425,15 @@ namespace sbnd {
         // Other nu particles
         else{
           nuParticleIds.push_back(partID);
+        }
+        // If primary and charged get the TPC
+        if(particle.Mother()==0 && (pdg==13||pdg==111||pdg==211||pdg==2212||pdg==11)){
+          std::pair<TVector3, TVector3> cross = fTpcGeo.CrossingPoints(particle);
+          if(cross.first.X() != cross.second.X()){
+            if(cross.first.X() < 0 && cross.second.X() < 0 && (nuTpc == 0 || nuTpc == -2)) nuTpc = 0;
+            else if(cross.first.X() > 0 && cross.second.X() > 0 && (nuTpc == 1 || nuTpc == -2)) nuTpc = 1;
+            else nuTpc = -1;
+          }
         }
       }
 
@@ -466,10 +459,9 @@ namespace sbnd {
     if(!tpc0BeamFlash && !tpc1BeamFlash) return;
 
     //----------------------------------------------------------------------------------------------------------
-    //                                DISTANCE OF CLOSEST APPROACH ANALYSIS
+    //                                FILLING THE PFPARTICLE TREE
     //----------------------------------------------------------------------------------------------------------
 
-    
     //Loop over the pfparticle map
     std::map<int, bool> isPfpNu;
     for (PFParticleIdMap::const_iterator it = pfParticleMap.begin(); it != pfParticleMap.end(); ++it){
@@ -479,15 +471,16 @@ namespace sbnd {
       if (!pParticle->IsPrimary()) continue;
 
       ResetPfpVars();
+      pfp_nu_tpc = nuTpc;
 
       // Check if this particle is identified as the neutrino
       const int pdg(pParticle->PdgCode());
       const bool isNeutrino(std::abs(pdg) == pandora::NU_E || std::abs(pdg) == pandora::NU_MU || std::abs(pdg) == pandora::NU_TAU);
       //Find neutrino pfparticle
+      // FIXME Won't ever look at cosmic pfps as they don't have daughters
       pfp_nu = isNeutrino;
 
       std::vector<recob::Track> nuTracks;
-
       // Loop over daughters of pfparticle
       for (const size_t daughterId : pParticle->Daughters()){
 
@@ -517,6 +510,11 @@ namespace sbnd {
         else if(std::find(crParticleIds.begin(), crParticleIds.end(), trueId) != crParticleIds.end()){
           if(pfp_type != "NuMu" && pfp_type != "Nu" && pfp_type != "Dirt") pfp_type = "Cr";
         }
+
+        std::vector<art::Ptr<recob::Hit>> tpcHits = findManyHits.at(tpcTrack.ID());
+        int tpc = fTpcGeo.DetectedInTPC(tpcHits);
+        if(tpc == pfp_tpc || pfp_tpc == -99999) pfp_tpc = tpc;
+        else if(pfp_tpc != tpc) pfp_tpc = -1;
       }
 
       if(nuTracks.size() == 0) continue;
@@ -547,13 +545,15 @@ namespace sbnd {
         if(fTpcGeo.InFiducial(end, 0.)) pfp_stops = true;
         // FIXME this doesn't seem to work
         pfp_apa_cross = fTpcGeo.CrossesApa(particles[trueId]);
-        pfp_apa_dist = fCosId.ApaAlg().ApaDistance(tpcTrack, pfp_time*1e3, hits); 
+        pfp_apa_dist = fCosId.ApaAlg().ApaDistance(tpcTrack, pfp_time/1e3, hits); 
       }
 
       pfp_length = tpcTrack.Length();
       pfp_theta = tpcTrack.Theta();
       pfp_phi = tpcTrack.Phi();
 
+      recob::Track secTrack = tpcTrack;
+      bool useSecTrack = false;
       if(nuTracks.size() > 1){
         TVector3 start = tpcTrack.Vertex<TVector3>();
         TVector3 end = tpcTrack.End<TVector3>();
@@ -565,60 +565,65 @@ namespace sbnd {
           if((start-start2).Mag() > 5.) continue;
           pfp_tracks_angle = (end - start).Angle(end2 - start2);
           pfp_second_length = track2.Length();
+          useSecTrack = true;
+          secTrack = track2;
           break;
         }
       }
 
-      // Total
-      fCosId.SetCuts(true, true, true, false, true, true, true, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) pfp_total_cut = true;
-
       // CRT hit cut
-      fCosId.SetCuts(false, false, false, false, false, false, true, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) pfp_crt_hit_cut = true;
       std::pair<crt::CRTHit, double> closestHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(tpcTrack, crtHits, event);
       pfp_crt_hit_dca = closestHit.second;
-      pfp_crt_hit_time = (double)(int)closestHit.first.ts1_ns;
+      if(useSecTrack){
+        std::pair<crt::CRTHit, double> closestSecHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(secTrack, crtHits, event);
+        pfp_sec_crt_hit_dca = closestHit.second;
+      }
 
       // CRT track cut
-      fCosId.SetCuts(false, false, false, false, false, true, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) pfp_crt_track_cut = true;
       std::pair<crt::CRTTrack, double> closestTrackDca = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
       pfp_crt_track_dca = closestTrackDca.second;
-      pfp_crt_track_dca_time = (double)(int)closestTrackDca.first.ts1_ns;
       std::pair<crt::CRTTrack, double> closestTrackAngle = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
       pfp_crt_track_angle = closestTrackAngle.second;
-      pfp_crt_track_angle_time = (double)(int)closestTrackAngle.first.ts1_ns;
 
       // Stopping cut
-      fCosId.SetCuts(false, true, false, false, false, false, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) pfp_stop_cut = true;
       pfp_stop_ratio_start = fCosId.StoppingAlg().StoppingChiSq(tpcTrack.Vertex(), calos);
       pfp_stop_ratio_end = fCosId.StoppingAlg().StoppingChiSq(tpcTrack.End(), calos);
+      if(useSecTrack){
+        std::vector<art::Ptr<anab::Calorimetry>> secCalos = findManyCalo.at(secTrack.ID());
+        pfp_sec_stop_ratio_start = fCosId.StoppingAlg().StoppingChiSq(secTrack.Vertex(), secCalos);
+        pfp_sec_stop_ratio_end = fCosId.StoppingAlg().StoppingChiSq(secTrack.End(), secCalos);
+      }
 
       // Fiducial cut
-      fCosId.SetCuts(true, false, false, false, false, false, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) pfp_fiducial_cut = true;
       pfp_fiducial_dist_start = fTpcGeo.MinDistToWall(tpcTrack.Vertex());
       pfp_fiducial_dist_end = fTpcGeo.MinDistToWall(tpcTrack.End());
-
-      // Geometry cut
-      fCosId.SetCuts(false, false, true, false, false, false, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) pfp_geo_cut = true;
-      pfp_tpc = fTpcGeo.DetectedInTPC(hits);
+      if(useSecTrack){
+        pfp_sec_fiducial_dist_start = fTpcGeo.MinDistToWall(secTrack.Vertex());
+        pfp_sec_fiducial_dist_end = fTpcGeo.MinDistToWall(secTrack.End());
+      }
 
       // APA cut
-      fCosId.SetCuts(false, false, false, false, true, false, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) pfp_apa_cut = true;
+      std::pair<double, double> ApaMin = fCosId.ApaAlg().MinApaDistance(tpcTrack, hits, fakeTpc0Flashes, fakeTpc1Flashes);
+      pfp_apa_min_dist = ApaMin.first;
+      if(useSecTrack){
+        std::vector<art::Ptr<recob::Hit>> secHits = findManyHits.at(secTrack.ID());
+        std::pair<double, double> ApaMin = fCosId.ApaAlg().MinApaDistance(secTrack, hits, fakeTpc0Flashes, fakeTpc1Flashes);
+        pfp_sec_apa_min_dist = ApaMin.first;
+      }
 
       fPfpTree->Fill();
 
     }
 
+    //----------------------------------------------------------------------------------------------------------
+    //                                      FILLING THE TRACK TREE
+    //----------------------------------------------------------------------------------------------------------
+
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
 
       ResetTrackVars();
+      track_nu_tpc = nuTpc;
 
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -649,58 +654,40 @@ namespace sbnd {
         geo::Point_t end {particles[trueId].EndX(), particles[trueId].EndY(), particles[trueId].EndZ()};
         if(fTpcGeo.InFiducial(end, 0.)) track_stops = true;
         track_apa_cross = fTpcGeo.CrossesApa(particles[trueId]);
-        track_apa_dist = fCosId.ApaAlg().ApaDistance(tpcTrack, track_time*1e3, hits); 
+        track_apa_dist = fCosId.ApaAlg().ApaDistance(tpcTrack, track_time/1e3, hits); 
       }
 
       track_length = tpcTrack.Length();
       track_theta = tpcTrack.Theta();
       track_phi = tpcTrack.Phi();
 
-      // Total
-      fCosId.SetCuts(true, true, true, false, true, true, true, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) track_total_cut = true;
-
       // CRT hit cut
-      fCosId.SetCuts(false, false, false, false, false, false, true, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) track_crt_hit_cut = true;
       std::pair<crt::CRTHit, double> closestHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(tpcTrack, crtHits, event);
       track_crt_hit_dca = closestHit.second;
-      track_crt_hit_time = (double)(int)closestHit.first.ts1_ns;
 
       // CRT track cut
-      fCosId.SetCuts(false, false, false, false, false, true, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) track_crt_track_cut = true;
       std::pair<crt::CRTTrack, double> closestTrackDca = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
       track_crt_track_dca = closestTrackDca.second;
-      track_crt_track_dca_time = (double)(int)closestTrackDca.first.ts1_ns;
       std::pair<crt::CRTTrack, double> closestTrackAngle = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
       track_crt_track_angle = closestTrackAngle.second;
-      track_crt_track_angle_time = (double)(int)closestTrackAngle.first.ts1_ns;
 
       // Stopping cut
-      fCosId.SetCuts(false, true, false, false, false, false, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) track_stop_cut = true;
       track_stop_ratio_start = fCosId.StoppingAlg().StoppingChiSq(tpcTrack.Vertex(), calos);
       track_stop_ratio_end = fCosId.StoppingAlg().StoppingChiSq(tpcTrack.End(), calos);
 
       // Fiducial cut
-      fCosId.SetCuts(true, false, false, false, false, false, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) track_fiducial_cut = true;
       track_fiducial_dist_start = fTpcGeo.MinDistToWall(tpcTrack.Vertex());
       track_fiducial_dist_end = fTpcGeo.MinDistToWall(tpcTrack.End());
 
       // Geometry cut
-      fCosId.SetCuts(false, false, true, false, false, false, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) track_geo_cut = true;
       track_tpc = fTpcGeo.DetectedInTPC(hits);
 
       // APA cut
-      fCosId.SetCuts(false, false, false, false, true, false, false, false);
-      if(fCosId.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) track_apa_cut = true;
+      std::pair<double, double> ApaMin = fCosId.ApaAlg().MinApaDistance(tpcTrack, hits, fakeTpc0Flashes, fakeTpc1Flashes);
+      track_apa_min_dist = ApaMin.first;
 
       fTrackTree->Fill();
     }
-
     
   } // CosmicIdTree::analyze()
 
@@ -722,39 +709,32 @@ namespace sbnd {
   void CosmicIdTree::ResetTrackVars(){
     track_type = "none";
     track_pfp_nu = false;
+    track_nu_tpc = -99999;
     track_pdg = -99999;
     track_length = -99999;
     track_momentum = -99999;
     track_theta = -99999;
     track_phi = -99999;
-    track_crt_hit_cut = false;
     track_crt_hit_true_match = false;
     track_crt_hit_dca = -99999;
-    track_crt_hit_time = -99999;
-    track_crt_track_cut = false;
     track_crt_track_true_match = false;
     track_crt_track_dca = -99999;
-    track_crt_track_dca_time = -99999;
     track_crt_track_angle = -99999;
-    track_crt_track_angle_time = -99999;
-    track_stop_cut = false;
     track_stops = false;
     track_stop_ratio_start = -99999;
     track_stop_ratio_end = -99999;
-    track_fiducial_cut = false;
     track_fiducial_dist_start = -99999;
     track_fiducial_dist_end = -99999;
-    track_geo_cut = false;
     track_tpc = -99999;
-    track_apa_cut = false;
     track_apa_cross = false;
     track_apa_dist = -99999;
-    track_total_cut = false;
+    track_apa_min_dist = -99999;
   }
 
   void CosmicIdTree::ResetPfpVars(){
     pfp_type = "none";
     pfp_nu = false;
+    pfp_nu_tpc = -99999;
     pfp_n_tracks = 0;
     pfp_pdg = -99999;
     pfp_length = -99999;
@@ -763,29 +743,26 @@ namespace sbnd {
     pfp_phi = -99999;
     pfp_tracks_angle = -99999;
     pfp_second_length = -99999;
-    pfp_crt_hit_cut = false;
     pfp_crt_hit_true_match = false;
     pfp_crt_hit_dca = -99999;
-    pfp_crt_hit_time = -99999;
-    pfp_crt_track_cut = false;
+    pfp_sec_crt_hit_dca = -99999;
     pfp_crt_track_true_match = false;
     pfp_crt_track_dca = -99999;
-    pfp_crt_track_dca_time = -99999;
     pfp_crt_track_angle = -99999;
-    pfp_crt_track_angle_time = -99999;
-    pfp_stop_cut = false;
     pfp_stops = false;
     pfp_stop_ratio_start = -99999;
     pfp_stop_ratio_end = -99999;
-    pfp_fiducial_cut = false;
+    pfp_sec_stop_ratio_start = -99999;
+    pfp_sec_stop_ratio_end = -99999;
     pfp_fiducial_dist_start = -99999;
     pfp_fiducial_dist_end = -99999;
-    pfp_geo_cut = false;
+    pfp_sec_fiducial_dist_start = -99999;
+    pfp_sec_fiducial_dist_end = -99999;
     pfp_tpc = -99999;
-    pfp_apa_cut = false;
     pfp_apa_cross = false;
     pfp_apa_dist = -99999;
-    pfp_total_cut = false;
+    pfp_apa_min_dist = -99999;
+    pfp_sec_apa_min_dist = -99999;
   }
   
   DEFINE_ART_MODULE(CosmicIdTree)

@@ -10,9 +10,9 @@ standard_crteventdisplay:
     CRTTrackLabel:    "crttrack"
     TPCTrackLabel:    "pandoraTrack"
 
-    DrawTaggers:          true   
+    DrawTaggers:          false   
     DrawModules:          false
-    DrawTpc:              false
+    DrawTpc:              true
     DrawCrtData:          false
     DrawCrtHits:          false
     DrawCrtTracks:        false

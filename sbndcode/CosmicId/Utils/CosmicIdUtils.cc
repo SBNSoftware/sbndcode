@@ -4,48 +4,9 @@ namespace sbnd{
 
 // =============================== UTILITY FUNCTIONS ==============================
 
-  bool CosmicIdUtils::InFiducial(geo::Point_t point, double fiducial){
-
-    return InFiducial(point, fiducial, fiducial);
-
-  }
-
-  bool CosmicIdUtils::InFiducial(geo::Point_t point, double fiducial, double fiducialTop){
-
-    return InFiducial(point, fiducial, fiducial, fiducial, fiducial, fiducialTop, fiducial);
-
-  }
-
-  bool CosmicIdUtils::InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, double maxXCut, double maxYCut, double maxZCut){
-    
-    TPCGeoAlg geo;
-    double xmin = geo.MinX() + minXCut;
-    double xmax = geo.MaxX() - maxXCut;
-    double ymin = geo.MinY() + minYCut;
-    double ymax = geo.MaxY() - maxYCut;
-    double zmin = geo.MinZ() + minZCut;
-    double zmax = geo.MaxZ() - maxZCut;
-
-    double x = point.X();
-    double y = point.Y();
-    double z = point.Z();
-    if(x>xmin && x<xmax && y>ymin && y<ymax && z>zmin && z<zmax) return true;
-
-    return false;
-  }
-
-  int CosmicIdUtils::DetectedInTPC(std::vector<art::Ptr<recob::Hit>> hits){
-    //
-    int tpc = hits[0]->WireID().TPC;
-    for(size_t i = 0; i < hits.size(); i++){
-      if((int)hits[i]->WireID().TPC != tpc) return -1;
-    }
-    return tpc;
-  }
-
   std::pair<std::vector<double>, std::vector<double>> CosmicIdUtils::FakeTpcFlashes(std::vector<simb::MCParticle> particles){
     //
-    TPCGeoAlg geo;
+    TPCGeoAlg fTpcGeo;
     detinfo::DetectorProperties const* fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
     detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
 
@@ -54,7 +15,7 @@ namespace sbnd{
     std::vector<double> fakeTpc1Flashes;
 
     double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    double driftTimeMuS = geo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
+    double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
 
     // Loop over all true particles
     for (auto const particle: particles){
@@ -75,7 +36,7 @@ namespace sbnd{
       for(int i = 1; i < npts; i++){
         geo::Point_t pt;
         pt.SetX(particle.Vx(i)); pt.SetY(particle.Vy(i)); pt.SetZ(particle.Vz(i));
-        if(!CosmicIdUtils::InFiducial(pt, 0, 0)) continue;
+        if(!fTpcGeo.InFiducial(pt, 0, 0)) continue;
         // Add up the energy deposited in each tpc
         if(pt.X() < 0) TPC0Energy += particle.E(i-1) - particle.E(i);
         else TPC1Energy += particle.E(i-1) - particle.E(i);

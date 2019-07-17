@@ -241,12 +241,12 @@ bool TPCGeoAlg::CrossesApa(const simb::MCParticle& particle){
     double x1 = particle.Vx(i+1); 
     double y1 = particle.Vy(i+1);
     double z1 = particle.Vz(i+1);
-    if(y > fMinY && z > fMinZ && y < fMaxY && z < fMaxZ
-       && y1 > fMinY && z1 > fMinZ && y1 < fMaxY && z1 < fMaxZ){
-      if(x < fMinX && x1 > fMinX) return true;
-      if(x > fMinX && x1 < fMinX) return true;
-      if(x < fMaxX && x1 > fMaxX) return true;
-      if(x > fMaxX && x1 < fMaxX) return true;
+    if(y >= fMinY && z >= fMinZ && y <= fMaxY && z <= fMaxZ
+       && y1 >= fMinY && z1 >= fMinZ && y1 <= fMaxY && z1 <= fMaxZ){
+      if(x <= fMinX && x1 >= fMinX) return true;
+      if(x >= fMinX && x1 <= fMinX) return true;
+      if(x <= fMaxX && x1 >= fMaxX) return true;
+      if(x >= fMaxX && x1 <= fMaxX) return true;
     }
   }
   return false;

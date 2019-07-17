@@ -10,6 +10,7 @@
 ///////////////////////////////////////////////
 
 #include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // framework
 #include "art/Framework/Principal/Event.h"
@@ -87,6 +88,8 @@ namespace sbnd{
     double fMaxX;
     double fMaxY;
     double fMaxZ;
+
+    TPCGeoAlg fTpcGeo;
 
   };
 

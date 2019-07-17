@@ -95,10 +95,14 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
-    double ApaDistance(recob::Track track, double t0, std::vector<art::Ptr<recob::Hit>> hits);
+    std::pair<double, double> MinApaDistance(recob::Track track, std::vector<double> t0List, int tpc);
 
     // Get time by matching tracks which cross the APA
     double T0FromApaCross(recob::Track track, std::vector<double> t0List, int tpc);
+
+    double ApaDistance(recob::Track track, double t0, std::vector<art::Ptr<recob::Hit>> hits);
+
+    std::pair<double, double> MinApaDistance(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
 
     // Tag tracks with times outside the beam
     bool ApaCrossCosmicId(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);

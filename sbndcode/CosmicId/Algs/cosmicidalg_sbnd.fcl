@@ -1,10 +1,4 @@
-#include "fiducialvolumecosmicid_sbnd.fcl"
-#include "stoppingparticlecosmicid_sbnd.fcl"
-#include "cpacrosscosmicid_sbnd.fcl"
-#include "apacrosscosmicid_sbnd.fcl"
-#include "crthitcosmicid_sbnd.fcl"
-#include "crttrackcosmicid_sbnd.fcl"
-#include "pandorat0cosmicid_sbnd.fcl"
+#include "cosmicidmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -28,15 +22,15 @@ standard_cosmicidalg:
     UseTrackAngleVeto:    true
     MinSecondTrackLength: 5.
     MinVertexDistance:    5.
-    MinMergeAngle:        2.5
+    MinMergeAngle:        2.6
 
-    FVTagAlg: @local::standard_fiducialvolumecosmicidalg
-    SPTagAlg: @local::standard_stoppingparticlecosmicidalg
-    CCTagAlg: @local::standard_cpacrosscosmicidalg
-    ACTagAlg: @local::standard_apacrosscosmicidalg
-    CHTagAlg: @local::standard_crthitcosmicidalg
-    CTTagAlg: @local::standard_crttrackcosmicidalg
-    PTTagAlg: @local::standard_pandorat0cosmicidalg
+    FVTagAlg: @local::sbnd_fiducialvolumecosmicidalg
+    SPTagAlg: @local::sbnd_stoppingparticlecosmicidalg
+    CCTagAlg: @local::sbnd_cpacrosscosmicidalg
+    ACTagAlg: @local::sbnd_apacrosscosmicidalg
+    CHTagAlg: @local::sbnd_crthitcosmicidalg
+    CTTagAlg: @local::sbnd_crttrackcosmicidalg
+    PTTagAlg: @local::sbnd_pandorat0cosmicidalg
 }
 
 END_PROLOG

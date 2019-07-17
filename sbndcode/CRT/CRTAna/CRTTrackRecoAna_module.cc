@@ -378,7 +378,7 @@ namespace sbnd {
     if(fPlot){
       //evd.SetDrawCrtData(true);
       //evd.SetDrawCrtHits(true);
-      evd.SetDrawCrtTracks(true);
+      //evd.SetDrawCrtTracks(true);
       evd.SetDrawTrueTracks(true);
       if(fVeryVerbose) evd.SetPrint(true);
       if(fPlotTrackID != -99999) evd.SetTrueId(fPlotTrackID);

@@ -33,7 +33,7 @@ void FiducialVolumeCosmicIdAlg::reconfigure(const Config& config){
 
 bool FiducialVolumeCosmicIdAlg::InFiducial(geo::Point_t point){
 
-  return CosmicIdUtils::InFiducial(point, fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
+  return fTpcGeo.InFiducial(point, fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
 
 }
 
