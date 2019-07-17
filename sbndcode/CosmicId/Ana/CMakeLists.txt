@@ -36,6 +36,8 @@ art_make(
                            sbndcode_CRTUtils
                            sbndcode_GeoWrappers
                            sbndcode_CosmicIdAlgs
+                           sbndcode_CosmicIdUtils
+                           larreco_RecoAlg
         )
 
 install_headers()

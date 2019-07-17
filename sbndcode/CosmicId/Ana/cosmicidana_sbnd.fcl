@@ -57,9 +57,9 @@ physics:
   # Schedule job step(s) for execution by defining the analysis module for this job.
   analysis: [ 
               CosmicIdAna
-              , CRTHitCosmicIdAna
-              , CRTTrackCosmicIdAna
-              , StoppingCosmicIdAna
+              #, CRTHitCosmicIdAna
+              #, CRTTrackCosmicIdAna
+              #, StoppingCosmicIdAna
             ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;

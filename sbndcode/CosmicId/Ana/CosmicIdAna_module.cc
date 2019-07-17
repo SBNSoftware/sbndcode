@@ -299,7 +299,7 @@ namespace sbnd {
         geo::Point_t vtx;
         vtx.SetX(truth->GetNeutrino().Nu().Vx()); vtx.SetY(truth->GetNeutrino().Nu().Vy()); vtx.SetZ(truth->GetNeutrino().Nu().Vz());
         // If neutrino vertex is not inside the TPC then call it a dirt particle
-        if(!CosmicIdUtils::InFiducial(vtx, 0, 0)){ 
+        if(!fTpcGeo.InFiducial(vtx, 0, 0)){ 
           dirtParticleIds.push_back(partId);
         }
         // If it's a primary muon
@@ -450,7 +450,7 @@ namespace sbnd {
 
       recob::Track nuTrack = nuTracks[0];
       double recoMuMomentum = 0.;
-      bool exits = CosmicIdUtils::InFiducial(nuTrack.End(), 5., 5.);
+      bool exits = fTpcGeo.InFiducial(nuTrack.End(), 5., 5.);
       double length = nuTrack.Length();
       double theta = nuTrack.Theta();
       double phi = nuTrack.Phi();
@@ -513,7 +513,7 @@ namespace sbnd {
           }
         }
         if(j == 9){
-          cosIdAlg.SetCuts(true, true, true, true, true, true, true, true);
+          cosIdAlg.SetCuts(true, true, true, false, true, true, true, false);
           if(cosIdAlg.CosmicId(*pParticle, pfParticleMap, event, fakeTpc0Flashes, fakeTpc1Flashes)) plot = true;
         }
         if(j == 10 && !cosIdAlg.CosmicId(*pParticle, pfParticleMap, event, fakeTpc0Flashes, fakeTpc1Flashes)){ 

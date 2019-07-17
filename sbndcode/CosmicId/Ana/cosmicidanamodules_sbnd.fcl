@@ -3,9 +3,7 @@
 #include "crtt0matchingalg_sbnd.fcl"
 #include "crttrackmatchingalg_sbnd.fcl"
 #include "crtbacktracker_sbnd.fcl"
-#include "crthitcosmicid_sbnd.fcl"
-#include "crttrackcosmicid_sbnd.fcl"
-#include "stoppingparticlecosmicid_sbnd.fcl"
+#include "cosmicidmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -13,7 +11,7 @@ sbnd_cosmicidana:
 {
   # The "module_type" tells us which module to run. The name here
   # must match the name supplied to DEFINE_ART_MODULE
-  module_type:     "sbndcode/CosmicId/CosmicIdAna"
+  module_type:     "sbndcode/CosmicId/Ana/CosmicIdAna"
 
   # The input parameters
   SimModuleLabel:      "largeant"        # Simulation producer module label
@@ -38,7 +36,7 @@ sbnd_crthitcosmicidana:
       Verbose:             false              # Print extra information about what's going on
       CRTT0Alg:            @local::standard_crtt0matchingalg
       CrtBackTrack:        @local::standard_crtbacktracker
-      CHTagAlg:            @local::standard_crthitcosmicidalg
+      CHTagAlg:            @local::sbnd_crthitcosmicidalg
 }
 
 
@@ -56,7 +54,7 @@ sbnd_crttrackcosmicidana:
       Verbose:             false              # Print extra information about what's going on
       TrackMatchAlg:       @local::standard_crttrackmatchingalg
       CrtBackTrack:        @local::standard_crtbacktracker
-      CTTagAlg:            @local::standard_crttrackcosmicidalg
+      CTTagAlg:            @local::sbnd_crttrackcosmicidalg
 }
 
 
@@ -72,7 +70,7 @@ sbnd_stoppingcosmicidana:
       CaloModuleLabel:     "pandoraCalo" # TPC track producer module label
       PandoraLabel:        "pandora"
       Verbose:             false             # Print extra information about what's going on
-      SPTagAlg:            @local::standard_stoppingparticlecosmicidalg
+      SPTagAlg:            @local::sbnd_stoppingparticlecosmicidalg
 }
 
 END_PROLOG

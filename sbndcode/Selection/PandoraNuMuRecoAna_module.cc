@@ -395,7 +395,7 @@ namespace sbnd {
         geo::Point_t vtx;
         vtx.SetX(mcNu.Nu().Vx()); vtx.SetY(mcNu.Nu().Vy()); vtx.SetZ(mcNu.Nu().Vz());
 
-        if(!CosmicIdUtils::InFiducial(vtx, 0, 0)) continue;
+        if(!fTpcGeo.InFiducial(vtx, 0, 0)) continue;
 
         if(isNuMuCC && std::find(usedNuVtx.begin(), usedNuVtx.end(), vtx.X())==usedNuVtx.end()){ 
           nNuMuCC++;

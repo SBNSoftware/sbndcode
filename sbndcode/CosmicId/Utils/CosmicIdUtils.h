@@ -56,14 +56,6 @@
 namespace sbnd{
 namespace CosmicIdUtils{
 
-  bool InFiducial(geo::Point_t point, double fiducial);
-
-  bool InFiducial(geo::Point_t point, double fiducial, double fiducialTop);
-
-  bool InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, double maxXCut, double maxYCut, double maxZCut);
-
-  int DetectedInTPC(std::vector<art::Ptr<recob::Hit>> hits);
-
   std::pair<std::vector<double>, std::vector<double>> FakeTpcFlashes(std::vector<simb::MCParticle> particles);
 
   bool BeamFlash(std::vector<double> flashes, double beamTimeLimit);

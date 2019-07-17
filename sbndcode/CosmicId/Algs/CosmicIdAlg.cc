@@ -116,9 +116,9 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
     auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCrtHitModuleLabel);
     std::vector<crt::CRTHit> crtHits;
     for(auto const& crtHit : (*crtHitHandle)){
-      if(crtHit.tagger != "volTaggerTopHigh_0"){
+      //if(crtHit.tagger != "volTaggerTopHigh_0"){
         crtHits.push_back(crtHit);
-      }
+      //}
     }
 
     if(chTag.CrtHitCosmicId(track, crtHits, event)) return true;
@@ -245,9 +245,9 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
         auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCrtHitModuleLabel);
         std::vector<crt::CRTHit> crtHits;
         for(auto const& crtHit : (*crtHitHandle)){
-          if(crtHit.tagger != "volTaggerTopHigh_0"){
+          //if(crtHit.tagger != "volTaggerTopHigh_0"){
             crtHits.push_back(crtHit);
-          }
+          //}
         }
         if(chTag.CrtHitCosmicId(track, crtHits, event)) return true;
         if(chTag.CrtHitCosmicId(track2, crtHits, event)) return true;
@@ -272,9 +272,9 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
       auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCrtHitModuleLabel);
       std::vector<crt::CRTHit> crtHits;
       for(auto const& crtHit : (*crtHitHandle)){
-        if(crtHit.tagger != "volTaggerTopHigh_0"){
+        //if(crtHit.tagger != "volTaggerTopHigh_0"){
           crtHits.push_back(crtHit);
-        }
+        //}
       }
 
       if(chTag.CrtHitCosmicId(track, crtHits, event)) return true;

@@ -90,8 +90,8 @@ std::pair<double, bool> CpaCrossCosmicIdAlg::T0FromCpaStitching(recob::Track t1,
     geo::Point_t mergeStart {t1PosEnd.X(), t1PosEnd.Y(), t1PosEnd.Z()};
     geo::Point_t mergeEnd {t2PosEnd.X(), t2PosEnd.Y(), t2PosEnd.Z()};
     bool exits = false;
-    if(!CosmicIdUtils::InFiducial(mergeStart, fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ) 
-       && !CosmicIdUtils::InFiducial(mergeEnd, fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ)) exits = true;
+    if(!fTpcGeo.InFiducial(mergeStart, fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ) 
+       && !fTpcGeo.InFiducial(mergeEnd, fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ)) exits = true;
 
     // If the distance and angle are within the acceptable limits then record candidate
     if(dist < fCpaStitchDistance && trkCos > cos(TMath::Pi() * fCpaStitchAngle / 180.)){ 
@@ -120,7 +120,7 @@ bool CpaCrossCosmicIdAlg::CpaCrossCosmicId(recob::Track track, std::vector<recob
   for(auto const& tpcTrack : tracks){
     // Work out where the associated wire hits were detected
     std::vector<art::Ptr<recob::Hit>> hits = hitAssoc.at(tpcTrack.ID());
-    int tpc = CosmicIdUtils::DetectedInTPC(hits);
+    int tpc = fTpcGeo.DetectedInTPC(hits);
     double startX = tpcTrack.Start().X();
     double endX = tpcTrack.End().X();
     if(tpc == 0 && !(startX>0 || endX>0)) tpcTracksTPC0.push_back(tpcTrack);
@@ -128,7 +128,7 @@ bool CpaCrossCosmicIdAlg::CpaCrossCosmicId(recob::Track track, std::vector<recob
   }
 
   std::vector<art::Ptr<recob::Hit>> hits = hitAssoc.at(track.ID());
-  int tpc = CosmicIdUtils::DetectedInTPC(hits);
+  int tpc = fTpcGeo.DetectedInTPC(hits);
 
   double stitchTime = -99999;
   bool stitchExit = false;

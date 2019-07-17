@@ -36,9 +36,9 @@ void StoppingParticleCosmicIdAlg::reconfigure(const Config& config){
 }
 
 double StoppingParticleCosmicIdAlg::StoppingChiSq(geo::Point_t end, std::vector<art::Ptr<anab::Calorimetry>> calos){
-  
+
   //Loop over residual range and dedx
-  if(calos.size()==0) return false;
+  if(calos.size()==0) return -99999;
   size_t nhits = 0;
   art::Ptr<anab::Calorimetry> calo = calos[0];
   for( size_t i = calos.size(); i > 0; i--){
@@ -48,6 +48,7 @@ double StoppingParticleCosmicIdAlg::StoppingChiSq(geo::Point_t end, std::vector<
     }
   }
 
+  if(calo->XYZ().size() != nhits || nhits < 1) return -99999;
   double distStart = (calo->XYZ()[0] - end).Mag2();
   double distEnd = (calo->XYZ()[nhits-1] - end).Mag2();
 
@@ -83,14 +84,14 @@ double StoppingParticleCosmicIdAlg::StoppingChiSq(geo::Point_t end, std::vector<
     }
   }
 
-  if(v_dedx.size() < 10) return false;
+  if(v_dedx.size() < 10) return -99999;
 
   TGraph *gdedx = new TGraph(v_dedx.size(), &v_resrg[0], &v_dedx[0]);
-  try{ gdedx->Fit("pol0", "Q"); } catch(...){ return false; }
+  try{ gdedx->Fit("pol0", "Q"); } catch(...){ return -99999; }
   TF1* polfit = gdedx->GetFunction("pol0");
   double polchi2 = polfit->GetChisquare();
 
-  try{ gdedx->Fit("expo", "Q"); } catch(...){ return false; }
+  try{ gdedx->Fit("expo", "Q"); } catch(...){ return -99999; }
   TF1* expfit = gdedx->GetFunction("expo");
   double expchi2 = expfit->GetChisquare();
 
@@ -109,8 +110,8 @@ bool StoppingParticleCosmicIdAlg::StoppingEnd(geo::Point_t end, std::vector<art:
 
 bool StoppingParticleCosmicIdAlg::StoppingParticleCosmicId(recob::Track track, std::vector<art::Ptr<anab::Calorimetry>> calos){
 
-  bool startInFiducial = CosmicIdUtils::InFiducial(track.Vertex(), fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
-  bool endInFiducial = CosmicIdUtils::InFiducial(track.End(), fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
+  bool startInFiducial = fTpcGeo.InFiducial(track.Vertex(), fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
+  bool endInFiducial = fTpcGeo.InFiducial(track.End(), fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
 
   bool startStops = StoppingEnd(track.Vertex(), calos);
   bool endStops = StoppingEnd(track.End(), calos);
@@ -126,8 +127,8 @@ bool StoppingParticleCosmicIdAlg::StoppingParticleCosmicId(recob::Track track, s
 
 bool StoppingParticleCosmicIdAlg::StoppingParticleCosmicId(recob::Track track, recob::Track track2, std::vector<art::Ptr<anab::Calorimetry>> calos, std::vector<art::Ptr<anab::Calorimetry>> calos2){
 
-  bool startInFiducial = CosmicIdUtils::InFiducial(track.End(), fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
-  bool endInFiducial = CosmicIdUtils::InFiducial(track.End(), fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
+  bool startInFiducial = fTpcGeo.InFiducial(track.End(), fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
+  bool endInFiducial = fTpcGeo.InFiducial(track.End(), fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
 
   bool startStops = StoppingEnd(track.End(), calos);
   bool endStops = StoppingEnd(track2.End(), calos2);

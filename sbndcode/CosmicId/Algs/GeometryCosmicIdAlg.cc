@@ -27,7 +27,7 @@ void GeometryCosmicIdAlg::reconfigure(const Config& config){
 bool GeometryCosmicIdAlg::GeometryCosmicId(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, bool tpc0Flash, bool tpc1Flash){
 
   // Remove any tracks that are detected in one TPC and reconstructed in another
-  int tpc = CosmicIdUtils::DetectedInTPC(hits);
+  int tpc = fTpcGeo.DetectedInTPC(hits);
   double startX = track.Start().X();
   double endX = track.End().X();
 

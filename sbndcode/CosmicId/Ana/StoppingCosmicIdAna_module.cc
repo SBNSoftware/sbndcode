@@ -259,7 +259,7 @@ namespace sbnd {
         geo::Point_t vtx;
         vtx.SetX(truth->GetNeutrino().Nu().Vx()); vtx.SetY(truth->GetNeutrino().Nu().Vy()); vtx.SetZ(truth->GetNeutrino().Nu().Vz());
         // If neutrino vertex is not inside the TPC then call it a dirt particle
-        if(!CosmicIdUtils::InFiducial(vtx, 0, 0)){ 
+        if(!fTPCGeo.InFiducial(vtx, 0, 0)){ 
           dirtParticleIds.push_back(partID);
         }
         // If it's a primary muon

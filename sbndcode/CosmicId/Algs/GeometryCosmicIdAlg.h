@@ -10,6 +10,7 @@
 ///////////////////////////////////////////////
 
 #include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // framework
 #include "art/Framework/Principal/Event.h"
@@ -62,6 +63,8 @@ namespace sbnd{
     bool GeometryCosmicId(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, bool tpc0Flash, bool tpc1Flash);
 
   private:
+
+    TPCGeoAlg fTpcGeo;
 
   };
 
