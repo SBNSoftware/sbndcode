@@ -38,7 +38,7 @@ namespace sbnd{
         pt.SetX(particle.Vx(i)); pt.SetY(particle.Vy(i)); pt.SetZ(particle.Vz(i));
         if(!fTpcGeo.InFiducial(pt, 0, 0)) continue;
         // Add up the energy deposited in each tpc
-        if(pt.X() < 0) TPC0Energy += particle.E(i-1) - particle.E(i);
+        if(pt.X() <= 0) TPC0Energy += particle.E(i-1) - particle.E(i);
         else TPC1Energy += particle.E(i-1) - particle.E(i);
       }
       // If the total energy deposited is > 10 MeV then create fake flash
@@ -51,8 +51,8 @@ namespace sbnd{
     // Loop over flashes in tpc 0
     for(size_t i = 0; i < fakeTpc0Flashes.size(); i++){
       double time = fakeTpc0Flashes[i];
-      // Combine flashes within 0.1 us
-      if(std::abs(time-previousTime) < 0.1){
+      // Combine flashes within 0.01 us
+      if(std::abs(time-previousTime) < 0.01){
         fakeTpc0Flashes.erase(fakeTpc0Flashes.begin()+i);
       }
       else previousTime = time;
@@ -60,11 +60,11 @@ namespace sbnd{
 
     std::sort(fakeTpc1Flashes.begin(), fakeTpc1Flashes.end());
     previousTime = -99999;
-    // Loop over flashes in tpc 0
+    // Loop over flashes in tpc 1
     for(size_t i = 0; i < fakeTpc1Flashes.size(); i++){
       double time = fakeTpc1Flashes[i];
-      // Combine flashes within 0.1 us
-      if(std::abs(time-previousTime) < 0.1){
+      // Combine flashes within 0.01 us
+      if(std::abs(time-previousTime) < 0.01){
         fakeTpc1Flashes.erase(fakeTpc1Flashes.begin()+i);
       }
       else previousTime = time;
@@ -73,14 +73,14 @@ namespace sbnd{
     return std::make_pair(fakeTpc0Flashes, fakeTpc1Flashes);
   }
 
-  bool CosmicIdUtils::BeamFlash(std::vector<double> flashes, double beamTimeLimit){
+  bool CosmicIdUtils::BeamFlash(std::vector<double> flashes, double beamTimeMin, double beamTimeMax){
     //
     bool beamFlash = false;
     std::sort(flashes.begin(), flashes.end());
     // Loop over flashes in tpc 0
     for(size_t i = 0; i < flashes.size(); i++){
       double time = flashes[i];
-      if(time > 0 && time < beamTimeLimit) beamFlash = true;
+      if(time > beamTimeMin && time < beamTimeMax) beamFlash = true;
     }
 
     return beamFlash;

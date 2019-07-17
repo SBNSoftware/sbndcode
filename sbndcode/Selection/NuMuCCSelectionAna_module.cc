@@ -13,19 +13,13 @@
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
-#include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/PFParticle.h"
-#include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
-#include "lardataobj/AnalysisBase/ParticleID.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
-#include "larsim/Simulation/LArG4Parameters.h"
-#include "larcorealg/CoreUtils/NumericUtils.h" // util::absDiff()
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 #include "lardataobj/RecoBase/MCSFitResult.h"
@@ -36,20 +30,8 @@
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
-#include "art/Framework/Core/ModuleMacros.h"
 #include "canvas/Persistency/Common/FindManyP.h"
-#include "canvas/Persistency/Common/FindMany.h"
-#include "canvas/Utilities/Exception.h"
-#include "larsim/MCCheater/BackTrackerService.h"
-#include "larsim/MCCheater/ParticleInventoryService.h"
-#include "lardataobj/RecoBase/MCSFitResult.h"
-#include "larreco/RecoAlg/TrajectoryMCSFitter.h"
-#include "larreco/RecoAlg/TrackMomentumCalculator.h"
-
-// Utility libraries
-#include "messagefacility/MessageLogger/MessageLogger.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
@@ -61,31 +43,33 @@
 // <https://root.cern.ch/doc/master/annotated.html>
 #include "TVector3.h"
 #include "TH1.h"
-#include "TF1.h"
-#include "TH2.h"
-#include "TFile.h"
-#include "TCanvas.h"
-#include "TPolyLine3D.h"
 
 // C++ includes
 #include <map>
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
-#include <cmath>
 #include <algorithm>
-
-namespace {
-  // Local namespace for local functions
-  // Declare here, define later
-
-}
 
 namespace sbnd {
 
   class NuMuCCSelectionAna : public art::EDAnalyzer {
   public:
+
+    struct BeamTime {
+      using Name = fhicl::Name;
+      using Comment = fhicl::Comment;
+
+      fhicl::Atom<double> BeamTimeMin {
+        Name("BeamTimeMin"),
+        Comment("")
+      };
+
+      fhicl::Atom<double> BeamTimeMax {
+        Name("BeamTimeMax"),
+        Comment("")
+      };
+
+    };
 
     // Describes configuration parameters of the module
     struct Config {
@@ -121,6 +105,11 @@ namespace sbnd {
         Name("fitter"),
       };
 
+      fhicl::Table<BeamTime> BeamTimeLimits {
+        Name("BeamTimeLimits"),
+        Comment("")
+      };
+
     }; // Inputs
 
     using Parameters = art::EDAnalyzer::Table<Config>;
@@ -141,7 +130,6 @@ namespace sbnd {
     typedef std::map< size_t, art::Ptr<recob::PFParticle> > PFParticleIdMap;
     typedef std::vector< art::Ptr<recob::PFParticle> > PFParticleVector;
     typedef std::vector< art::Ptr<recob::Track> > TrackVector;
-    typedef std::vector< art::Ptr<recob::Shower> > ShowerVector;
 
   private:
 
@@ -150,6 +138,8 @@ namespace sbnd {
     art::InputTag fTpcTrackModuleLabel; ///< name of TPC track producer
     art::InputTag fPandoraLabel;
     bool          fVerbose;             ///< print information about what's going on
+    double        fBeamTimeMin;
+    double        fBeamTimeMax;
 
     CosmicIdAlg cosIdAlg;
     TPCGeoAlg fTpcGeo;
@@ -198,6 +188,8 @@ namespace sbnd {
     , fTpcTrackModuleLabel  (config().TpcTrackModuleLabel())
     , fPandoraLabel         (config().PandoraLabel())
     , fVerbose              (config().Verbose())
+    , fBeamTimeMin          (config().BeamTimeLimits().BeamTimeMin())
+    , fBeamTimeMax          (config().BeamTimeLimits().BeamTimeMax())
     , cosIdAlg              (config().CosIdAlg())
     , fMcsFitter            (config().fitter)
   {
@@ -382,8 +374,8 @@ namespace sbnd {
     std::pair<std::vector<double>, std::vector<double>> fakeFlashes = CosmicIdUtils::FakeTpcFlashes(parts);
     std::vector<double> fakeTpc0Flashes = fakeFlashes.first;
     std::vector<double> fakeTpc1Flashes = fakeFlashes.second;
-    bool tpc0BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc0Flashes, 4.);
-    bool tpc1BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc1Flashes, 4.);
+    bool tpc0BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc0Flashes, fBeamTimeMin, fBeamTimeMax);
+    bool tpc1BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc1Flashes, fBeamTimeMin, fBeamTimeMax);
 
     // If there are no flashes in time with the beam then ignore the event
     if(!tpc0BeamFlash && !tpc1BeamFlash) return;

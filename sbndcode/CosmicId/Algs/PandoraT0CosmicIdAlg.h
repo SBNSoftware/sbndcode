@@ -9,36 +9,23 @@
 // T Brooks (tbrooks@fnal.gov), November 2018
 ///////////////////////////////////////////////
 
-#include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
-
 // framework
 #include "art/Framework/Principal/Event.h"
-#include "art/Framework/Core/ModuleMacros.h"
 #include "fhiclcpp/ParameterSet.h" 
+#include "fhiclcpp/types/Table.h"
+#include "fhiclcpp/types/Atom.h"
 #include "art/Framework/Principal/Handle.h" 
 #include "canvas/Persistency/Common/Ptr.h" 
-#include "canvas/Persistency/Common/PtrVector.h" 
-#include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "art_root_io/TFileService.h" 
-#include "art_root_io/TFileDirectory.h" 
-#include "messagefacility/MessageLogger/MessageLogger.h" 
+#include "canvas/Persistency/Common/FindManyP.h"
 
 // LArSoft
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/AnalysisBase/T0.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-
-// Utility libraries
-#include "messagefacility/MessageLogger/MessageLogger.h"
-#include "fhiclcpp/ParameterSet.h"
-#include "fhiclcpp/types/Table.h"
-#include "fhiclcpp/types/Atom.h"
 
 // c++
 #include <vector>
-#include <utility>
 
 
 namespace sbnd{

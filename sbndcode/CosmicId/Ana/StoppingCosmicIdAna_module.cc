@@ -8,23 +8,17 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
 #include "sbndcode/CosmicId/Algs/StoppingParticleCosmicIdAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
-#include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
-#include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
-#include "lardataobj/AnalysisBase/ParticleID.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
-#include "larsim/Simulation/LArG4Parameters.h"
-#include "larcorealg/CoreUtils/NumericUtils.h" // util::absDiff()
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 
@@ -32,17 +26,8 @@
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
-#include "art/Framework/Core/ModuleMacros.h"
 #include "canvas/Persistency/Common/FindManyP.h"
-#include "canvas/Persistency/Common/FindMany.h"
-#include "canvas/Utilities/Exception.h"
-#include "larsim/MCCheater/BackTrackerService.h"
-
-
-// Utility libraries
-#include "messagefacility/MessageLogger/MessageLogger.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
@@ -54,28 +39,12 @@
 // <https://root.cern.ch/doc/master/annotated.html>
 #include "TVector3.h"
 #include "TH1.h"
-#include "TF1.h"
-#include "TH2.h"
-#include "TFile.h"
-#include "TProfile.h"
-#include "TCanvas.h"
-#include "TPolyLine3D.h"
-#include "TGraphAsymmErrors.h"
 
 // C++ includes
 #include <map>
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
-#include <cmath>
 #include <algorithm>
-
-namespace {
-  // Local namespace for local functions
-  // Declare here, define later
-
-}
 
 namespace sbnd {
 
