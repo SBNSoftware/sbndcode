@@ -195,19 +195,22 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
+    // Change which cuts are run
     void SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT, bool CH, bool PT);
 
+    // Reset which cuts are run from fhicl parameters
+    void ResetCuts();
+
+    // Run cuts to decide if track looks like a cosmic
     bool CosmicId(recob::Track track, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
 
+    // Run cuts to decide if PFParticle looks like a cosmic
     bool CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
 
-    // Getters
+    // Getters for the underlying algorithms
     StoppingParticleCosmicIdAlg StoppingAlg() const {return spTag;}
-
     CrtHitCosmicIdAlg CrtHitAlg() const {return chTag;}
-
     CrtTrackCosmicIdAlg CrtTrackAlg() const {return ctTag;}
-
     ApaCrossCosmicIdAlg ApaAlg() const {return acTag;}
 
   private:
@@ -229,6 +232,8 @@ namespace sbnd{
     bool fApplyCrtTrackCut;
     bool fApplyCrtHitCut;
     bool fApplyPandoraT0Cut;
+
+    std::vector<bool> fOriginalSettings;
 
     bool fUseTrackAngleVeto;
     double fMinSecondTrackLength;

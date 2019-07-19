@@ -24,8 +24,10 @@
 namespace sbnd{
 namespace CosmicIdUtils{
 
+  // Create fake PDS optical flashes from true particle energy deposits
   std::pair<std::vector<double>, std::vector<double>> FakeTpcFlashes(std::vector<simb::MCParticle> particles);
 
+  // Determine if there is a PDS flash in time with the neutrino beam
   bool BeamFlash(std::vector<double> flashes, double beamTimeMin, double beamTimeMax);
   
 }

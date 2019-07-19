@@ -127,8 +127,6 @@ namespace sbnd {
 
     typedef art::Handle< std::vector<recob::PFParticle> > PFParticleHandle;
     typedef std::map< size_t, art::Ptr<recob::PFParticle> > PFParticleIdMap;
-    typedef std::vector< art::Ptr<recob::PFParticle> > PFParticleVector;
-    typedef std::vector< art::Ptr<recob::Track> > TrackVector;
 
   private:
 
@@ -290,7 +288,7 @@ namespace sbnd {
         geo::Point_t vtx;
         vtx.SetX(truth->GetNeutrino().Nu().Vx()); vtx.SetY(truth->GetNeutrino().Nu().Vy()); vtx.SetZ(truth->GetNeutrino().Nu().Vz());
         // If neutrino vertex is not inside the TPC then call it a dirt particle
-        if(!fTpcGeo.InFiducial(vtx, 0, 0)){ 
+        if(!fTpcGeo.InFiducial(vtx, 0.)){ 
           dirtParticleIds.push_back(partId);
         }
         // If it's a primary muon
@@ -375,14 +373,17 @@ namespace sbnd {
           if(pfpType != 0 && pfpType != 4 && pfpType != 1) pfpType = 2;
         }
         
-        // Fill some histograms
+        // Fill cut histograms per track
         if(particles.find(trueId) != particles.end()){
+          // Only look at muons
           if(std::abs(particles[trueId].PdgCode()) == 13){
+            // Calculate the true variables
             std::pair<TVector3, TVector3> se = fTpcGeo.CrossingPoints(particles[trueId]);
             double momentum = particles[trueId].P();
             double length = fTpcGeo.TpcLength(particles[trueId]);
             double theta = (se.second-se.first).Theta();
             double phi = (se.second-se.first).Phi();
+            // Switch on each cut individually
             for(size_t j = 0; j < nCuts; j++){
               bool plot = false;
               if(j == 0) plot = true;
@@ -418,12 +419,14 @@ namespace sbnd {
                 cosIdAlg.SetCuts(false, false, false, false, false, false, false, true);
                 if(cosIdAlg.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) plot = true;
               }
+              // Return to the cuts specified in the fhicl file
               if(j == 9){
-                cosIdAlg.SetCuts(true, true, true, false, true, true, true, false);
+                cosIdAlg.ResetCuts();
                 if(cosIdAlg.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) plot = true;
               }
               if(j == 10 && !cosIdAlg.CosmicId(tpcTrack, event, fakeTpc0Flashes, fakeTpc1Flashes)) plot = true;
               if(!plot) continue;
+              // Fill histograms if track ID'd as cosmic
               hTrueMom[trackType][j]->Fill(momentum);
               hTrueLength[trackType][j]->Fill(length);
               hTrueTheta[trackType][j]->Fill(theta);
@@ -436,10 +439,13 @@ namespace sbnd {
 
       if(nuTracks.size() == 0) continue;
 
+      // Sort tracks by length
       std::sort(nuTracks.begin(), nuTracks.end(), [](auto& left, auto& right){
                 return left.Length() > right.Length();});
 
+      // Choose the longest track as the muon candidate
       recob::Track nuTrack = nuTracks[0];
+      // Calculate the reconstructed variables
       double recoMuMomentum = 0.;
       bool exits = fTpcGeo.InFiducial(nuTrack.End(), 5., 5.);
       double length = nuTrack.Length();
@@ -452,6 +458,7 @@ namespace sbnd {
       else{
         recoMuMomentum = fRangeFitter.GetTrackMomentum(length, 13);
       }
+      // Turn on each cut individually
       for(size_t j = 0; j < nCuts; j++){
         bool plot = false;
         if(j == 0) plot = true;
@@ -503,14 +510,16 @@ namespace sbnd {
             plot = true;
           }
         }
+        // Return to the cuts specified in the fhicl file
         if(j == 9){
-          cosIdAlg.SetCuts(true, true, true, false, true, true, true, false);
+          cosIdAlg.ResetCuts();
           if(cosIdAlg.CosmicId(*pParticle, pfParticleMap, event, fakeTpc0Flashes, fakeTpc1Flashes)) plot = true;
         }
         if(j == 10 && !cosIdAlg.CosmicId(*pParticle, pfParticleMap, event, fakeTpc0Flashes, fakeTpc1Flashes)){ 
           plot = true;
         }
         if(!plot) continue;
+        //Fill histograms if PFP ID'd as a cosmic
         hRecoMom[pfpType][j]->Fill(recoMuMomentum);
         hRecoLength[pfpType][j]->Fill(length);
         hRecoTheta[pfpType][j]->Fill(theta);

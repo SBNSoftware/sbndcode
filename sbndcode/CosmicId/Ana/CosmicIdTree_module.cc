@@ -137,8 +137,8 @@ namespace sbnd {
     // Called once, at end of the job
     virtual void endJob() override;
 
+    // Reset variables in each loop
     void ResetTrackVars();
-
     void ResetPfpVars();
 
     typedef art::Handle< std::vector<recob::PFParticle> > PFParticleHandle;
@@ -196,7 +196,7 @@ namespace sbnd {
     double track_apa_dist;
     double track_apa_min_dist;
 
-    // Track tree parameters
+    // PFParticle tree parameters
     std::string pfp_type;
     bool pfp_nu;
     int pfp_nu_tpc;
@@ -257,6 +257,8 @@ namespace sbnd {
 
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
+
+    // Track tree
     fTrackTree = tfs->make<TTree>("tracks", "tracks");
 
     fTrackTree->Branch("track_type",                 &track_type);
@@ -283,6 +285,7 @@ namespace sbnd {
     fTrackTree->Branch("track_apa_dist",             &track_apa_dist, "track_apa_dist/D");
     fTrackTree->Branch("track_apa_min_dist",         &track_apa_min_dist, "track_apa_min_dist/D");
 
+    // PFParticle tree
     fPfpTree = tfs->make<TTree>("pfps", "pfps");
 
     fPfpTree->Branch("pfp_type",                 &pfp_type);
@@ -347,14 +350,17 @@ namespace sbnd {
     if (event.getByLabel(fCRTHitLabel, crtHitHandle))
       art::fill_ptr_vector(crtHitList, crtHitHandle);
 
+    // Initialize the CRT backtracker for speed
     fCrtBackTrack.Initialize(event);
+
+    // Loop over the CRT hits and match them to true particles
     std::vector<crt::CRTHit> crtHits;
     std::map<int, int> numHitMap;
     int hit_i = 0;
     for(auto const& hit : (crtHitList)){
-      // Don't even bother trying to match CRT hits in time with the beam
+      // Don't try to match CRT hits in time with the beam
       double hitTime = hit->ts1_ns * 1e-3;
-      if(hitTime > -0.5 && hitTime < 2.5) continue;
+      if(hitTime > fBeamTimeMin && hitTime < fBeamTimeMax) continue;
       crtHits.push_back(*hit);
       int hitTrueID = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
       hit_i++;
@@ -367,20 +373,21 @@ namespace sbnd {
     if (event.getByLabel(fCRTTrackLabel, crtTrackHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackHandle);
 
+    // Loop over the CRT tracks and match them to true particles
     std::vector<crt::CRTTrack> crtTracks;
     std::map<int, int> numTrackMap;
     int track_i = 0;
     for(auto const& track : (crtTrackList)){
-      // Don't even bother trying to match CRT tracks in time with the beam
+      // Don't try to match CRT tracks in time with the beam
       double trackTime = track->ts1_ns * 1e-3;
-      if(trackTime > -0.5 && trackTime < 2.5) continue;
+      if(trackTime > fBeamTimeMin && trackTime < fBeamTimeMax) continue;
       crtTracks.push_back(*track);
       int trackTrueID = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
       track_i++;
       numTrackMap[trackTrueID]++;
     }
 
-    // Get reconstructed tracks from the event
+    // Get reconstructed tracks from the event and hit/calorimetry associations
     auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
     art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
     art::FindManyP<anab::Calorimetry> findManyCalo(tpcTrackHandle, event, fCaloModuleLabel);
@@ -401,12 +408,14 @@ namespace sbnd {
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
     
+    // Sort the true particles by type
     std::map<int, simb::MCParticle> particles;
     std::vector<simb::MCParticle> parts;
     std::vector<int> nuParticleIds;
     std::vector<int> lepParticleIds;
     std::vector<int> dirtParticleIds;
     std::vector<int> crParticleIds;
+    // Record where the beam activity occurs
     int nuTpc = -2;
     // Loop over the true particles
     for (auto const& particle: (*particleHandle)){
@@ -419,13 +428,14 @@ namespace sbnd {
       // Get MCTruth
       art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(partID);
       int pdg = std::abs(particle.PdgCode());
+      double time = particle.T() * 1e-3; //[us]
 
       // If origin is a neutrino
       if(truth->Origin() == simb::kBeamNeutrino){
         geo::Point_t vtx;
         vtx.SetX(truth->GetNeutrino().Nu().Vx()); vtx.SetY(truth->GetNeutrino().Nu().Vy()); vtx.SetZ(truth->GetNeutrino().Nu().Vz());
         // If neutrino vertex is not inside the TPC then call it a dirt particle
-        if(!fTpcGeo.InFiducial(vtx, 0, 0)){ 
+        if(!fTpcGeo.InFiducial(vtx, 0.)){ 
           dirtParticleIds.push_back(partID);
         }
         // If it's a primary muon
@@ -436,20 +446,24 @@ namespace sbnd {
         else{
           nuParticleIds.push_back(partID);
         }
-        // If primary and charged get the TPC
-        if(particle.Mother()==0 && (pdg==13||pdg==111||pdg==211||pdg==2212||pdg==11)){
-          std::pair<TVector3, TVector3> cross = fTpcGeo.CrossingPoints(particle);
-          if(cross.first.X() != cross.second.X()){
-            if(cross.first.X() < 0 && cross.second.X() < 0 && (nuTpc == 0 || nuTpc == -2)) nuTpc = 0;
-            else if(cross.first.X() > 0 && cross.second.X() > 0 && (nuTpc == 1 || nuTpc == -2)) nuTpc = 1;
-            else nuTpc = -1;
-          }
-        }
       }
 
       // If origin is a cosmic ray
       else if(truth->Origin() == simb::kCosmicRay){
         crParticleIds.push_back(partID);
+        
+      }
+
+      // If particle is primary, charged and in time with the beam get the TPC
+      if(particle.Mother()==0 && 
+         (pdg==13||pdg==111||pdg==211||pdg==2212||pdg==11) && 
+         time > fBeamTimeMin && time < fBeamTimeMax){
+        std::pair<TVector3, TVector3> cross = fTpcGeo.CrossingPoints(particle);
+        if(cross.first.X() != cross.second.X()){
+          if(cross.first.X() < 0 && cross.second.X() < 0 && (nuTpc == 0 || nuTpc == -2)) nuTpc = 0;
+          else if(cross.first.X() > 0 && cross.second.X() > 0 && (nuTpc == 1 || nuTpc == -2)) nuTpc = 1;
+          else nuTpc = -1;
+        }
       }
       
     }
@@ -486,7 +500,7 @@ namespace sbnd {
       // Check if this particle is identified as the neutrino
       const int pdg(pParticle->PdgCode());
       const bool isNeutrino(std::abs(pdg) == pandora::NU_E || std::abs(pdg) == pandora::NU_MU || std::abs(pdg) == pandora::NU_TAU);
-      //Find neutrino pfparticle
+
       // FIXME Won't ever look at cosmic pfps as they don't have daughters
       pfp_nu = isNeutrino;
 
@@ -521,19 +535,23 @@ namespace sbnd {
           if(pfp_type != "NuMu" && pfp_type != "Nu" && pfp_type != "Dirt") pfp_type = "Cr";
         }
 
+        // Get the TPC the pfp was detected in
         std::vector<art::Ptr<recob::Hit>> tpcHits = findManyHits.at(tpcTrack.ID());
         int tpc = fTpcGeo.DetectedInTPC(tpcHits);
         if(tpc == pfp_tpc || pfp_tpc == -99999) pfp_tpc = tpc;
         else if(pfp_tpc != tpc) pfp_tpc = -1;
       }
 
+      // Don't consider PFParticles with no associated tracks
       if(nuTracks.size() == 0) continue;
 
       pfp_n_tracks = nuTracks.size();
 
+      // Sort tracks by length
       std::sort(nuTracks.begin(), nuTracks.end(), [](auto& left, auto& right){
                 return left.Length() > right.Length();});
 
+      // Choose longest track as cosmic muon candidate
       recob::Track tpcTrack = nuTracks[0];
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
       int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
@@ -545,16 +563,19 @@ namespace sbnd {
         pfp_pdg = particles[trueId].PdgCode();
         pfp_momentum = particles[trueId].P();
         pfp_time = particles[trueId].T();
+        // Does the true particle match any CRT hits or tracks?
         if(numHitMap.find(trueId) != numHitMap.end()){
           if(numHitMap[trueId] > 0) pfp_crt_hit_true_match = true;
         }
         if(numTrackMap.find(trueId) != numTrackMap.end()){
           if(numTrackMap[trueId] > 0) pfp_crt_track_true_match = true;
         }
+        // Does particle stop in the TPC?
         geo::Point_t end {particles[trueId].EndX(), particles[trueId].EndY(), particles[trueId].EndZ()};
         if(fTpcGeo.InFiducial(end, 0.)) pfp_stops = true;
-        // FIXME this doesn't seem to work
+        // Does the true particle cross the APA?
         pfp_apa_cross = fTpcGeo.CrossesApa(particles[trueId]);
+        // Distance from the APA of the reco track at the true time
         pfp_apa_dist = fCosId.ApaAlg().ApaDistance(tpcTrack, pfp_time/1e3, hits); 
       }
 
@@ -562,26 +583,30 @@ namespace sbnd {
       pfp_theta = tpcTrack.Theta();
       pfp_phi = tpcTrack.Phi();
 
+      // Get the second longest track originating from the same vertex
       recob::Track secTrack = tpcTrack;
       bool useSecTrack = false;
       if(nuTracks.size() > 1){
         TVector3 start = tpcTrack.Vertex<TVector3>();
         TVector3 end = tpcTrack.End<TVector3>();
+
         for(size_t i = 1; i < nuTracks.size(); i++){
           recob::Track track2 = nuTracks[i];
           TVector3 start2 = track2.Vertex<TVector3>();
           TVector3 end2 = track2.End<TVector3>();
           // Do they share the same vertex? (no delta rays)
           if((start-start2).Mag() > 5.) continue;
+          // Get the angle between the two longest tracks
           pfp_tracks_angle = (end - start).Angle(end2 - start2);
           pfp_second_length = track2.Length();
           useSecTrack = true;
           secTrack = track2;
           break;
         }
+
       }
 
-      // CRT hit cut
+      // CRT hit cut - get the distance of closest approach for the nearest CRT hit
       std::pair<crt::CRTHit, double> closestHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(tpcTrack, crtHits, event);
       pfp_crt_hit_dca = closestHit.second;
       if(useSecTrack){
@@ -589,13 +614,13 @@ namespace sbnd {
         pfp_sec_crt_hit_dca = closestHit.second;
       }
 
-      // CRT track cut
+      // CRT track cut - get the average distance of closest approach and angle between tracks for the nearest CRT track
       std::pair<crt::CRTTrack, double> closestTrackDca = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
       pfp_crt_track_dca = closestTrackDca.second;
       std::pair<crt::CRTTrack, double> closestTrackAngle = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
       pfp_crt_track_angle = closestTrackAngle.second;
 
-      // Stopping cut
+      // Stopping cut - get the chi2 ratio of the start and end of the track
       pfp_stop_ratio_start = fCosId.StoppingAlg().StoppingChiSq(tpcTrack.Vertex(), calos);
       pfp_stop_ratio_end = fCosId.StoppingAlg().StoppingChiSq(tpcTrack.End(), calos);
       if(useSecTrack){
@@ -604,7 +629,7 @@ namespace sbnd {
         pfp_sec_stop_ratio_end = fCosId.StoppingAlg().StoppingChiSq(secTrack.End(), secCalos);
       }
 
-      // Fiducial cut
+      // Fiducial cut - Get the fiducial volume the start and end points are contained in
       pfp_fiducial_dist_start = fTpcGeo.MinDistToWall(tpcTrack.Vertex());
       pfp_fiducial_dist_end = fTpcGeo.MinDistToWall(tpcTrack.End());
       if(useSecTrack){
@@ -612,7 +637,7 @@ namespace sbnd {
         pfp_sec_fiducial_dist_end = fTpcGeo.MinDistToWall(secTrack.End());
       }
 
-      // APA cut
+      // APA cut - get the minimum distance to the APA at all PDS times
       std::pair<double, double> ApaMin = fCosId.ApaAlg().MinApaDistance(tpcTrack, hits, fakeTpc0Flashes, fakeTpc1Flashes);
       pfp_apa_min_dist = ApaMin.first;
       if(useSecTrack){
@@ -621,6 +646,7 @@ namespace sbnd {
         pfp_sec_apa_min_dist = ApaMin.first;
       }
 
+      // Fill the PFParticle tree
       fPfpTree->Fill();
 
     }
@@ -641,11 +667,13 @@ namespace sbnd {
 
       std::vector<art::Ptr<anab::Calorimetry>> calos = findManyCalo.at(tpcTrack.ID());
 
+      // Determine the type of the track
       if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()) track_type = "NuMu";
       if(std::find(nuParticleIds.begin(), nuParticleIds.end(), trueId) != nuParticleIds.end()) track_type = "Nu";
       if(std::find(crParticleIds.begin(), crParticleIds.end(), trueId) != crParticleIds.end()) track_type = "Cr";
       if(std::find(dirtParticleIds.begin(), dirtParticleIds.end(), trueId) != dirtParticleIds.end()) track_type = "Dirt";
 
+      // Check if it belongs to a neutrino tagged PFP
       if(isPfpNu.find(tpcTrack.ID()) != isPfpNu.end()){
         if(isPfpNu[tpcTrack.ID()]) track_pfp_nu = true;
       }
@@ -655,15 +683,19 @@ namespace sbnd {
         track_pdg = particles[trueId].PdgCode();
         track_momentum = particles[trueId].P();
         track_time = particles[trueId].T();
+        // Does the true particle match any CRT hits or tracks?
         if(numHitMap.find(trueId) != numHitMap.end()){
           if(numHitMap[trueId] > 0) track_crt_hit_true_match = true;
         }
         if(numTrackMap.find(trueId) != numTrackMap.end()){
           if(numTrackMap[trueId] > 0) track_crt_track_true_match = true;
         }
+        // Does particle stop in the TPC?
         geo::Point_t end {particles[trueId].EndX(), particles[trueId].EndY(), particles[trueId].EndZ()};
         if(fTpcGeo.InFiducial(end, 0.)) track_stops = true;
+        // Does the true particle cross the APA?
         track_apa_cross = fTpcGeo.CrossesApa(particles[trueId]);
+        // Distance from the APA of the reco track at the true time
         track_apa_dist = fCosId.ApaAlg().ApaDistance(tpcTrack, track_time/1e3, hits); 
       }
 
@@ -671,31 +703,32 @@ namespace sbnd {
       track_theta = tpcTrack.Theta();
       track_phi = tpcTrack.Phi();
 
-      // CRT hit cut
+      // CRT hit cut - get the distance of closest approach for the nearest CRT hit
       std::pair<crt::CRTHit, double> closestHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(tpcTrack, crtHits, event);
       track_crt_hit_dca = closestHit.second;
 
-      // CRT track cut
+      // CRT track cut - get the average distance of closest approach and angle between tracks for the nearest CRT track
       std::pair<crt::CRTTrack, double> closestTrackDca = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
       track_crt_track_dca = closestTrackDca.second;
       std::pair<crt::CRTTrack, double> closestTrackAngle = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
       track_crt_track_angle = closestTrackAngle.second;
 
-      // Stopping cut
+      // Stopping cut - get the chi2 ratio of the start and end of the track
       track_stop_ratio_start = fCosId.StoppingAlg().StoppingChiSq(tpcTrack.Vertex(), calos);
       track_stop_ratio_end = fCosId.StoppingAlg().StoppingChiSq(tpcTrack.End(), calos);
 
-      // Fiducial cut
+      // Fiducial cut - Get the fiducial volume the start and end points are contained in
       track_fiducial_dist_start = fTpcGeo.MinDistToWall(tpcTrack.Vertex());
       track_fiducial_dist_end = fTpcGeo.MinDistToWall(tpcTrack.End());
 
-      // Geometry cut
+      // Geometry cut - get the TPC the track was detected in
       track_tpc = fTpcGeo.DetectedInTPC(hits);
 
-      // APA cut
+      // APA cut - get the minimum distance to the APA at all PDS times
       std::pair<double, double> ApaMin = fCosId.ApaAlg().MinApaDistance(tpcTrack, hits, fakeTpc0Flashes, fakeTpc1Flashes);
       track_apa_min_dist = ApaMin.first;
 
+      // Fill the Track tree
       fTrackTree->Fill();
     }
     

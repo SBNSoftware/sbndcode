@@ -48,6 +48,7 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
+    // Remove any tracks in different TPC to beam activity
     bool GeometryCosmicId(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, bool tpc0Flash, bool tpc1Flash);
 
   private:

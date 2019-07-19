@@ -81,13 +81,16 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
+    // Get the minimum distance from track to APA for different times
     std::pair<double, double> MinApaDistance(recob::Track track, std::vector<double> t0List, int tpc);
 
     // Get time by matching tracks which cross the APA
     double T0FromApaCross(recob::Track track, std::vector<double> t0List, int tpc);
 
+    // Get the distance from track to APA at fixed time
     double ApaDistance(recob::Track track, double t0, std::vector<art::Ptr<recob::Hit>> hits);
 
+    // Work out what TPC track is in and get the minimum distance from track to APA for different times
     std::pair<double, double> MinApaDistance(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
 
     // Tag tracks with times outside the beam

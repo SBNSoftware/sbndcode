@@ -6,6 +6,7 @@
 // PandoraT0CosmicIdAlg.h
 //
 // Functions for pandora t0 cosmic tagger
+// Pandora removed these particles anyway
 // T Brooks (tbrooks@fnal.gov), November 2018
 ///////////////////////////////////////////////
 

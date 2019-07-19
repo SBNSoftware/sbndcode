@@ -29,6 +29,7 @@ void PandoraT0CosmicIdAlg::reconfigure(const Config& config){
   return;
 }
 
+// Finds any t0s associated with track by pandora, tags if outside beam
 bool PandoraT0CosmicIdAlg::PandoraT0CosmicId(recob::Track track, const art::Event& event){
 
   // Get the pfps and associations
@@ -58,6 +59,7 @@ bool PandoraT0CosmicIdAlg::PandoraT0CosmicId(recob::Track track, const art::Even
 
 }
 
+// Finds any t0s associated with pfparticle by pandora, tags if outside beam
 bool PandoraT0CosmicIdAlg::PandoraT0CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event){
 
   // Get pfp associations to t0s

@@ -62,8 +62,10 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
+    // Check if point in fiducial volume used by this algorithm
     bool InFiducial(geo::Point_t point);
 
+    // Check both start and end points of track are in fiducial volume
     bool FiducialVolumeCosmicId(recob::Track track);
 
   private:
