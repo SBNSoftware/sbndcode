@@ -22,6 +22,10 @@ sbnd_crtsim: {
   TDelayRMSExpShift: 75.6183
   TDelayRMSExpScale: 79.3543
 
+  // Clock speed of the CRT system [MHz] (1 ns = 1 tick @ 1000 MHz)
+  // (was 16 MHz for files before v08_25_00)
+  ClockSpeedCRT: 1000.
+
   // Propagation delay [ns/cm]
   PropDelay: 0.0061
   fPropDelayError: 0.007
@@ -43,11 +47,11 @@ sbnd_crtsim: {
   QRMS: 80.0 #15.0
   QThreshold: 60.0 #100
 
-  // Coincidence window for two fibers on a strip [ns]
-  StripCoincidenceWindow: 30.0
+  // Coincidence window for two fibers on a strip [ticks = ns]
+  StripCoincidenceWindow: 100.0 #30.0
 
-  // Coincidence for hits in a tagger [ticks]
-  TaggerPlaneCoincidenceWindow: 5
+  // Coincidence for hits in a tagger [ticks = ns]
+  TaggerPlaneCoincidenceWindow: 150.0 #5
 
   // Effective absorption length (for transverse response) [cm]
   AbsLenEff: 8.5
