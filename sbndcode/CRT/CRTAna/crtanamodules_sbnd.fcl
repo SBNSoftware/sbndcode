@@ -2,6 +2,7 @@
 #include "crteventdisplay_sbnd.fcl"
 #include "crttrackmatchingalg_sbnd.fcl"
 #include "crtt0matchingalg_sbnd.fcl"
+#include "crtsimmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -15,8 +16,9 @@ sbnd_crtdetsimana:
       SimModuleLabel:       "largeant"    # Simulation producer module label
       CRTSimLabel:          "crt"         # CRT producer module label
       Verbose:              false         # Print extra information about what's going on
-      QPed:                 0.
-      QSlope:               40.
+      QPed:                 @local::sbnd_crtsim.QPed
+      QSlope:               @local::sbnd_crtsim.QSlope
+      ClockSpeedCRT:        @local::sbnd_crtsim.ClockSpeedCRT
       CrtBackTrack:         @local::standard_crtbacktracker
 }
 

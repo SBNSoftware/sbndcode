@@ -44,7 +44,7 @@ private:
    * @return Trigger clock ticks at this true hit time
    */
   uint32_t getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
-                                detinfo::ElecClock& clock,
+                                /*detinfo::ElecClock& clock,*/
                                 float t0, float npeMean, float r);
 
   double fGlobalT0Offset;  //!< Time delay fit: Gaussian normalization
@@ -58,6 +58,7 @@ private:
   double fTDelayRMSExpNorm;  //!< Time delay RMS fit: Exponential normalization
   double fTDelayRMSExpShift;  //!< Time delay RMS fit: Exponential x shift
   double fTDelayRMSExpScale;  //!< Time delay RMS fit: Exponential scale
+  double fClockSpeedCRT; //!< Clock speed for the CRT system [MHz]
   double fNpeScaleNorm;  //!< Npe vs. distance: 1/r^2 scale
   double fNpeScaleShift;  //!< Npe vs. distance: 1/r^2 x shift
   double fQ0;  //!< Average energy deposited for mips, for charge scaling [GeV]

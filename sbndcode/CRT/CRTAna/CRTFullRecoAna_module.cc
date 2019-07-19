@@ -22,8 +22,6 @@
 // LArSoft includes
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
@@ -177,10 +175,6 @@ namespace sbnd {
     TH1D* hPurityTheta[2][2];
     TH1D* hPurityPhi[2][2];
 
-    // Other variables shared between different methods.
-    detinfo::DetectorClocks const* fDetectorClocks;
-    detinfo::DetectorProperties const* fDetectorProperties;
-    
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
 
@@ -204,9 +198,6 @@ namespace sbnd {
     , crtTrackAlg           (config().CRTTrackAlg())
     , fCrtBackTrack         (config().CrtBackTrack())
   {
-    // Get a pointer to the fGeometryServiceetry service provider
-    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
   }
 
   void CRTFullRecoAna::beginJob()
