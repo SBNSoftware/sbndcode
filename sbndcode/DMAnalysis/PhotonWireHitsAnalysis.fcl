@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+photon_wire_analysis:
+{
+  module_type: "PhotonWireHitsAnalysis"
+  # custom parameters
+  TruthLabel: "largeant"
+  HitLabel: "gaushit"
+}
+
+END_PROLOG
+

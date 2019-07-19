@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+test_wire_analysis:
+{
+  module_type: "WireHitsAnalysis"
+  # custom parameters
+  TruthLabel: "largeant"
+  HitLabel: "gaushit"
+}
+
+END_PROLOG
+
