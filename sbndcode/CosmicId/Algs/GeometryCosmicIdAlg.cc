@@ -24,6 +24,7 @@ void GeometryCosmicIdAlg::reconfigure(const Config& config){
   return;
 }
 
+// Remove any tracks in different TPC to beam activity
 bool GeometryCosmicIdAlg::GeometryCosmicId(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, bool tpc0Flash, bool tpc1Flash){
 
   // Remove any tracks that are detected in one TPC and reconstructed in another
@@ -32,12 +33,15 @@ bool GeometryCosmicIdAlg::GeometryCosmicId(recob::Track track, std::vector<art::
   double endX = track.End().X();
 
   // Check if track is stitched
-  // If it isn't check the start/end points are in same TPC
+  if(tpc == -1) return false;
+
+  // Check the start/end points are in same TPC (track shifted into other TPC because time outside of beam)
   if(tpc == 0 && (startX>0 || endX>0)) return true;
   else if(tpc == 1 && (startX<0 || endX<0)) return true;
 
-  if(tpc0Flash && !tpc1Flash && tpc != 0) return true;
-  if(tpc1Flash && !tpc0Flash && tpc != 1) return true;
+  // Check if track was detected in TPC where there was no beam activity
+  if(tpc0Flash && !tpc1Flash && tpc == 1) return true;
+  if(tpc1Flash && !tpc0Flash && tpc == 0) return true;
   
   return false;
   

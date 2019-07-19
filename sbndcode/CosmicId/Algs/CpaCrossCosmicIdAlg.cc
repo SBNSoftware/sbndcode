@@ -40,6 +40,7 @@ void CpaCrossCosmicIdAlg::reconfigure(const Config& config){
   return;
 }
 
+// Calculate the time by stitching tracks across the CPA
 std::pair<double, bool> CpaCrossCosmicIdAlg::T0FromCpaStitching(recob::Track t1, std::vector<recob::Track> tracks){
   
   std::vector<std::pair<double, std::pair<double, bool>>> matchCandidates;
@@ -111,6 +112,7 @@ std::pair<double, bool> CpaCrossCosmicIdAlg::T0FromCpaStitching(recob::Track t1,
   return returnVal;
 }
 
+// Tag tracks as cosmics from CPA stitching t0
 bool CpaCrossCosmicIdAlg::CpaCrossCosmicId(recob::Track track, std::vector<recob::Track> tracks, art::FindManyP<recob::Hit> hitAssoc){
 
   // Sort tracks by tpc

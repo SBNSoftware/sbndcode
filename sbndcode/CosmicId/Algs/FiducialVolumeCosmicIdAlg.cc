@@ -31,12 +31,14 @@ void FiducialVolumeCosmicIdAlg::reconfigure(const Config& config){
   return;
 }
 
+// Check if point in fiducial volume used by this algorithm
 bool FiducialVolumeCosmicIdAlg::InFiducial(geo::Point_t point){
 
   return fTpcGeo.InFiducial(point, fMinX, fMinY, fMinZ, fMaxX, fMaxY, fMaxZ);
 
 }
 
+// Check both start and end points of track are in fiducial volume
 bool FiducialVolumeCosmicIdAlg::FiducialVolumeCosmicId(recob::Track track){
   
   bool startInFiducial = InFiducial(track.Vertex());

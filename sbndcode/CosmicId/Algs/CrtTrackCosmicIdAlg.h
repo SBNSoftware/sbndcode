@@ -77,7 +77,7 @@ namespace sbnd{
     // Tags track as cosmic if it matches a CRTTrack
     bool CrtTrackCosmicId(recob::Track track, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
 
-    // Getter
+    // Getter for matching algorithm
     CRTTrackMatchAlg TrackAlg() const {return trackMatchAlg;}
 
   private:

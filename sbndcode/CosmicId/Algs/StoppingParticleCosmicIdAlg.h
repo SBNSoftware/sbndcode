@@ -87,12 +87,16 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
+    // Calculate the chi2 ratio of pol0 and exp fit to dE/dx vs residual range
     double StoppingChiSq(geo::Point_t end, std::vector<art::Ptr<anab::Calorimetry>> calos);
 
+    // Determine if the track end looks like it stops
     bool StoppingEnd(geo::Point_t end, std::vector<art::Ptr<anab::Calorimetry>> calos);
 
+    // Determine if a track looks like a stopping cosmic
     bool StoppingParticleCosmicId(recob::Track track, std::vector<art::Ptr<anab::Calorimetry>> calos);
 
+    // Determine if two tracks look like a stopping cosmic if they are merged
     bool StoppingParticleCosmicId(recob::Track track, recob::Track track2, std::vector<art::Ptr<anab::Calorimetry>> calos, std::vector<art::Ptr<anab::Calorimetry>> calos2);
 
   private:

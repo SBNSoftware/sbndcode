@@ -6,8 +6,8 @@ BEGIN_PROLOG
 # Cut limits in time around where beam is on.
 sbnd_beamtime:
 {
-    BeamTimeMin: -0.5 # Minimum time to cut for t0 tagged tracks [us]
-    BeamTimeMax: 2.5 # Maximum time to cut for t0 tagged tracks [us]
+    BeamTimeMin: -0.4 # Minimum time to cut for t0 tagged tracks [us]
+    BeamTimeMax: 2.0 # Maximum time to cut for t0 tagged tracks [us]
 }
 
 # Fiducial volumes used for removing particles which enter and exit

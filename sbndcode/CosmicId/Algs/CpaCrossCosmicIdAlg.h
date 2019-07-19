@@ -6,6 +6,8 @@
 // CpaCrossCosmicIdAlg.h
 //
 // Functions for CPA stitching cosmic tagger
+// Only useful if you forgot to run track stitching
+// in your tracking
 // T Brooks (tbrooks@fnal.gov), November 2018
 ///////////////////////////////////////////////
 

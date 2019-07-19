@@ -4,18 +4,20 @@ namespace sbnd{
 
 // =============================== UTILITY FUNCTIONS ==============================
 
+  // Create fake PDS optical flashes from true particle energy deposits
   std::pair<std::vector<double>, std::vector<double>> CosmicIdUtils::FakeTpcFlashes(std::vector<simb::MCParticle> particles){
     //
     TPCGeoAlg fTpcGeo;
-    detinfo::DetectorProperties const* fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-    detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
+    //detinfo::DetectorProperties const* fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
+    //detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
 
     // Create fake flashes in each tpc
     std::vector<double> fakeTpc0Flashes;
     std::vector<double> fakeTpc1Flashes;
 
-    double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
+    // FIXME probably shouldn't be here
+    //double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
+    //double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
 
     // Loop over all true particles
     for (auto const particle: particles){
@@ -25,7 +27,7 @@ namespace sbnd{
       double time = particle.T() * 1e-3;
 
       //Check if time is in reconstructible window
-      if(time < -driftTimeMuS || time > readoutWindowMuS) continue; 
+      //if(time < -driftTimeMuS || time > readoutWindowMuS) continue; 
       //Check if particle is visible, electron, muon, proton, pion, kaon, photon
       if(!(pdg==13||pdg==11||pdg==22||pdg==2212||pdg==211||pdg==321||pdg==111)) continue;
 
@@ -73,6 +75,7 @@ namespace sbnd{
     return std::make_pair(fakeTpc0Flashes, fakeTpc1Flashes);
   }
 
+  // Determine if there is a PDS flash in time with the neutrino beam
   bool CosmicIdUtils::BeamFlash(std::vector<double> flashes, double beamTimeMin, double beamTimeMax){
     //
     bool beamFlash = false;
