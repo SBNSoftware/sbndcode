@@ -28,7 +28,6 @@
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -78,6 +77,11 @@ namespace sbnd{
 
       fhicl::Atom<art::InputTag> TPCTrackLabel {
         Name("TPCTrackLabel"),
+        Comment("")
+      };
+
+      fhicl::Atom<bool> MinimizeAngle {
+        Name("MinimizeAngle"),
         Comment("")
       };
 
@@ -135,13 +139,13 @@ namespace sbnd{
 
     geo::GeometryCore const* fGeometryService;
     detinfo::DetectorProperties const* fDetectorProperties;
-    detinfo::DetectorClocks const* fDetectorClocks;
 
     TPCGeoAlg fTpcGeo;
     CRTBackTracker fCrtBackTrack;
 
     double fMaxAngleDiff;
     double fMaxDistance;
+    bool fMinimizeAngle;
 
     art::InputTag fTPCTrackLabel;
 
