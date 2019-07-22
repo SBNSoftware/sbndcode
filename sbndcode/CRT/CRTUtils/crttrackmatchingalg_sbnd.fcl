@@ -5,6 +5,15 @@ standard_crttrackmatchingalg:
     MaxAngleDiff:        0.4               # max difference between CRT and TPC angles
     MaxDistance:         70.                # max distance between CRT and TPC start/end positions
     TPCTrackLabel:       "pandoraTrack"
+    MinimizeAngle:       true
+}
+
+sbnd_crttrackmatchingalg_crID:
+{
+    MaxAngleDiff:        0.4               # max difference between CRT and TPC angles
+    MaxDistance:         70.                # max distance between CRT and TPC start/end positions
+    TPCTrackLabel:       "pandoraTrack"
+    MinimizeAngle:       true
 }
 
 END_PROLOG

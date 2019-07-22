@@ -12,9 +12,9 @@ standard_crteventdisplay:
     TPCTrackLabel:    "pandoraTrack"
     ClockSpeedCRT:    @local::sbnd_crtsim.ClockSpeedCRT
 
-    DrawTaggers:          true   
+    DrawTaggers:          false   
     DrawModules:          false
-    DrawTpc:              false
+    DrawTpc:              true
     DrawCrtData:          false
     DrawCrtHits:          false
     DrawCrtTracks:        false
