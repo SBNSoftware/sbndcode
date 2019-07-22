@@ -179,8 +179,6 @@ namespace sbnd {
     double track_momentum;
     double track_theta;
     double track_phi;
-    bool track_total_cut;
-    bool track_crt_hit_cut;
     bool track_crt_hit_true_match;
     double track_crt_hit_dca;
     bool track_crt_track_true_match;
