@@ -1,7 +1,7 @@
 // SBNDChannelNoiseService.cxx
-//Andrew Scarff
+// Andrew Scarff
 // July 2019
-//Based upon SPhaseChannelNoiseService.cxx developed by Jingbo Wang for ProtoDUNE.
+// Based upon SPhaseChannelNoiseService.cxx developed by Jingbo Wang for ProtoDUNE.
 
 #include "sbndcode/DetectorSim/Services/SBNDChannelNoiseService.h"
 #include <sstream>
@@ -58,10 +58,13 @@ SBNDChannelNoiseService(fhicl::ParameterSet const& pset)
   fGausSigmaZ    = pset.get<std::vector<float>>("GausSigmaZ");
   
   fEnableMicroBooNoise = pset.get<bool>("EnableMicroBooNoise");
-  fENOB              = pset.get<double>("EffectiveNBits");
-  fWirelengthZ       = pset.get<double>("WireLengthZ");
-  fWirelengthU       = pset.get<double>("WireLengthU");
-  fWirelengthV       = pset.get<double>("WireLengthV");
+  fENOB                = pset.get<double>("EffectiveNBits");
+  fIncludeJumpers      = pset.get<bool>("IncludeJumpers");
+  fJumperCapacitance   = pset.get<double>("JumperCapacitance");
+  fUFirstJumper        = pset.get<double>("UFirstJumper");
+  fULastJumper         = pset.get<double>("ULastJumper");
+  fVFirstJumper        = pset.get<double>("VFirstJumper");
+  fVLastJumper         = pset.get<double>("VLastJumper");
   fNoiseFunctionParameters   = pset.get<std::vector<float>>("NoiseFunctionParameters");
   
   fEnableCoherentNoise = pset.get<bool>("EnableCoherentNoise");
@@ -137,7 +140,7 @@ int SBNDChannelNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) const
   unsigned int cohNoisechan = -999;
   unsigned int groupNum = -999;
   if ( fEnableCoherentNoise ) {
-  	groupNum = getGroupNumberFromOfflineChannel(chan);
+    groupNum = getGroupNumberFromOfflineChannel(chan);
     cohNoisechan = getCohNoiseChanFromGroup(groupNum);
     if ( cohNoisechan == fCohNoiseArrayPoints ) cohNoisechan = fCohNoiseArrayPoints-1;
     fCohNoiseChanHist->Fill(cohNoisechan);
@@ -145,9 +148,18 @@ int SBNDChannelNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) const
 
   art::ServiceHandle<geo::Geometry> geo;
   std::vector<geo::WireID> wireIDs = geo->ChannelToWire(chan);
+  unsigned int wireID = wireIDs.front().Wire;
+  unsigned int planeID = wireIDs.front().Plane;
+
   geo::WireGeo const& wire = geo->Wire(wireIDs.front());
-  double wirelength = wire.Length();
- 
+  double wirelength = wire.Length(); //wirelength in cm.
+  
+  if(fIncludeJumpers){
+    if( (planeID==0 && wireID >= fUFirstJumper && wireID <= fULastJumper) || (planeID==1 && wireID >= fVFirstJumper && wireID <= fVLastJumper) ){ //Add jumper term only for appropriate wires on U and V planes.
+      double jumperLength = (fJumperCapacitance/16.75)*100; //Using wire value of 16.75 pF/m to convert jumper capacitance to equivalent wire length. x100 to convert to cm.
+      wirelength = wirelength + jumperLength;
+    }
+  }
   ///This part below has been moved from the generateMicroBooNoise section as it needs to be done differently for SBND due to different wirelengths.
 
   ////////////////////////////// MicroBooNE noise model/////////////////////////////////
@@ -237,8 +249,15 @@ int SBNDChannelNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) const
   }
   // end of moved section.
 
+  //delete _wld_f;
+  //delete _poisson;
+  //delete _pfn_f1;
+  _wld_f->Delete();
+  _poisson->Delete();
+  _pfn_f1->Delete();
   
-  //art::ServiceHandle<geo::Geometry> geo; //now initialised further up. Remove this if all works ok.
+
+
   const geo::View_t view = geo->View(chan);
   for ( unsigned int itck=0; itck<sigs.size(); ++itck ) {
     double tnoise = 0;
@@ -312,17 +331,20 @@ ostream& SBNDChannelNoiseService::print(ostream& out, string prefix) const {
   out << " ]" << endl;
   
   out << prefix << "EnableMicroBooNoise: " << fEnableMicroBooNoise  << endl;
-  out << prefix << "    EffectiveNBits: " << fENOB  << endl;
-  out << prefix << "       WireLengthU: " << fWirelengthU  << endl;
-  out << prefix << "       WireLengthV: " << fWirelengthV  << endl;
-  out << prefix << "       WireLengthZ: " << fWirelengthZ  << endl;
+  out << prefix << "     EffectiveNBits: " << fENOB  << endl;
+  out << prefix << "  JumperCapacitance: " << fJumperCapacitance  << endl;
+  out << prefix << "       UFirstJumper: " << fUFirstJumper  << endl;
+  out << prefix << "        ULastJumper: " << fULastJumper  << endl;
+  out << prefix << "       VFirstJumper: " << fVFirstJumper  << endl;
+  out << prefix << "        VLastJumper: " << fVLastJumper  << endl;
   
-  out << prefix << "EnableCoherentNoise: " << fEnableCoherentNoise   << endl;
-  out << prefix << "ExpNoiseArrayPoints: " << fExpNoiseArrayPoints << endl;
-  out << prefix << "CohNoiseArrayPoints: " << fCohNoiseArrayPoints << endl;
   out << prefix << "MicroBoo model parameters: [ ";  
   for(int i=0; i<(int)fNoiseFunctionParameters.size(); i++) { out <<  fNoiseFunctionParameters.at(i) << " ";}
   out << " ]" << endl;
+    
+  out << prefix << "EnableCoherentNoise: " << fEnableCoherentNoise   << endl;
+  out << prefix << "ExpNoiseArrayPoints: " << fExpNoiseArrayPoints << endl;
+  out << prefix << "CohNoiseArrayPoints: " << fCohNoiseArrayPoints << endl;
   
   out << prefix << "     CohGausNorm: [ ";  
   for(int i=0; i<(int)fCohGausNorm.size(); i++) { out <<  fCohGausNorm.at(i) << " ";}
@@ -339,7 +361,7 @@ ostream& SBNDChannelNoiseService::print(ostream& out, string prefix) const {
 }
 
 //**********************************************************************
-
+/* //MicroBooNE noise calculated above now wirelengths are no longer from fcl.
 void SBNDChannelNoiseService::
 generateMicroBooNoise(float wirelength, float ENOB, 
               AdcSignalVector& noise, TH1* aNoiseHist) const {
@@ -426,7 +448,7 @@ generateMicroBooNoise(float wirelength, float ENOB,
     aNoiseHist->Fill(noise[itck]);
   }
 }
-
+*/
 //**********************************************************************
 
 void SBNDChannelNoiseService::
@@ -636,6 +658,7 @@ unsigned int SBNDChannelNoiseService::getCohNoiseChanFromGroup(unsigned int cohg
 
 void SBNDChannelNoiseService::generateNoise() { 
   
+  /* // MicroBooNE noise calculated above now wirelengths are not from fcl.
   if(fEnableMicroBooNoise) {
     fMicroBooNoiseZ.resize(fNoiseArrayPoints);
     fMicroBooNoiseU.resize(fNoiseArrayPoints);
@@ -646,6 +669,7 @@ void SBNDChannelNoiseService::generateNoise() {
       generateMicroBooNoise(fWirelengthV, fENOB, fMicroBooNoiseV[i], fMicroBooNoiseHistV);
     } 
   }
+  */
   
   if(fEnableGaussianNoise) {
     fGausNoiseU.resize(fNoiseArrayPoints);

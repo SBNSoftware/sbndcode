@@ -99,9 +99,12 @@ private:
   // Inherent MicroBoone noise parameters
   bool         fEnableMicroBooNoise;  ///< enable MicroBooNE noise model
   float        fENOB;                 ///< Effective number of bits
-  float        fWirelengthZ;
-  float        fWirelengthU;
-  float        fWirelengthV;
+  bool         fIncludeJumpers;       ///< Include jumper term
+  float        fJumperCapacitance;    ///< Capacitance of jumper cables in pF. Defaults to 0 if not included.
+  float        fUFirstJumper;         ///< Wire number of first wire on U layer to include a jumper cable. Defaults to 0 if not included.
+  float        fULastJumper;          ///< Wire number of last wire on U layer to include a jumper cable. Defaults to 0 if not included.
+  float        fVFirstJumper;         ///< Wire number of first wire on V layer to include a jumper cable. Defaults to 0 if not included.
+  float        fVLastJumper;          ///< Wire number of last wire on V layer to include a jumper cable. Defaults to 0 if not included.
   std::vector<float>  fNoiseFunctionParameters;  ///< Parameters in the MicroBooNE noise model
   
   // Coherent Noise parameters
