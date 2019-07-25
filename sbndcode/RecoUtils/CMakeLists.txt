@@ -38,7 +38,7 @@ install_source()
 #art_make( LIBRARY_NAME RecoUtils
 #	  LIB_LIBRARIES larcorealg_Geometry
 #	  	        larcore_Geometry_Geometry_service
-#		        larsim_Simulation nutools_ParticleNavigation lardataobj_Simulation
+#		        larsim_Simulation nug4_ParticleNavigation lardataobj_Simulation
 # 	  	        larsim_MCCheater_BackTrackerService_service
 #	  	        lardata_Utilities
 #larevt_Filters
