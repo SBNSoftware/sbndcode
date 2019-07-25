@@ -145,9 +145,27 @@ bool TPCGeoAlg::InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buf
   return true;
 }
 
+// Minimum distance to a TPC wall
+double TPCGeoAlg::MinDistToWall(geo::Point_t point){
+
+  std::vector<double> dists;
+  
+  dists.push_back(std::abs(point.X() - fMinX));
+  dists.push_back(std::abs(point.X() - fMaxX));
+  dists.push_back(std::abs(point.Y() - fMinY));
+  dists.push_back(std::abs(point.Y() - fMaxY));
+  dists.push_back(std::abs(point.Z() - fMinZ));
+  dists.push_back(std::abs(point.Z() - fMaxZ));
+
+  std::sort(dists.begin(), dists.end());
+
+  return dists[0];
+
+}
+
 // ----------------------------------------------------------------------------------
 // Determine if a true particle is ever inside the TPC volume
-bool TPCGeoAlg::InVolume(simb::MCParticle particle){
+bool TPCGeoAlg::InVolume(const simb::MCParticle& particle){
   for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
     double x = particle.Vx(i); 
     double y = particle.Vy(i);
@@ -161,7 +179,7 @@ bool TPCGeoAlg::InVolume(simb::MCParticle particle){
 
 // ----------------------------------------------------------------------------------
 // Determine if a true particle is contained inside the TPC volume
-bool TPCGeoAlg::IsContained(simb::MCParticle particle){
+bool TPCGeoAlg::IsContained(const simb::MCParticle& particle){
   for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
     double x = particle.Vx(i); 
     double y = particle.Vy(i);
@@ -175,7 +193,7 @@ bool TPCGeoAlg::IsContained(simb::MCParticle particle){
 
 // ----------------------------------------------------------------------------------
 // Determine if a true particle enters the TPC volume
-bool TPCGeoAlg::EntersVolume(simb::MCParticle particle){
+bool TPCGeoAlg::EntersVolume(const simb::MCParticle& particle){
   bool enters = false;
   bool startOutside = false;
   bool endOutside = false;
@@ -195,7 +213,7 @@ bool TPCGeoAlg::EntersVolume(simb::MCParticle particle){
 
 // ----------------------------------------------------------------------------------
 // Determine if a true particle crosses the TPC volume
-bool TPCGeoAlg::CrossesVolume(simb::MCParticle particle){
+bool TPCGeoAlg::CrossesVolume(const simb::MCParticle& particle){
   bool enters = false;
   bool startOutside = false;
   bool endOutside = false;
@@ -212,5 +230,67 @@ bool TPCGeoAlg::CrossesVolume(simb::MCParticle particle){
   if(startOutside && enters && endOutside) return true;
   return false;
 }
+
+// ----------------------------------------------------------------------------------
+// Determine if a true particle crosses either APA
+bool TPCGeoAlg::CrossesApa(const simb::MCParticle& particle){
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints()-1; i++){
+    double x = particle.Vx(i); 
+    double y = particle.Vy(i);
+    double z = particle.Vz(i);
+    double x1 = particle.Vx(i+1); 
+    double y1 = particle.Vy(i+1);
+    double z1 = particle.Vz(i+1);
+    if(y >= fMinY && z >= fMinZ && y <= fMaxY && z <= fMaxZ
+       && y1 >= fMinY && z1 >= fMinZ && y1 <= fMaxY && z1 <= fMaxZ){
+      if(x <= fMinX && x1 >= fMinX) return true;
+      if(x >= fMinX && x1 <= fMinX) return true;
+      if(x <= fMaxX && x1 >= fMaxX) return true;
+      if(x >= fMaxX && x1 <= fMaxX) return true;
+    }
+  }
+  return false;
+}
+
+std::pair<TVector3, TVector3> TPCGeoAlg::CrossingPoints(const simb::MCParticle& particle){
+  bool first = true;
+  TVector3 start (-99999, -99999, -99999);
+  TVector3 end (-99999, -99999, -99999);
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
+    double x = particle.Vx(i); 
+    double y = particle.Vy(i);
+    double z = particle.Vz(i);
+    if(x > fMinX && y > fMinY && z > fMinZ && x < fMaxX && y < fMaxY && z < fMaxZ){
+      if(first){
+        first = false;
+        start.SetXYZ(x, y, z);
+      }
+      end.SetXYZ(x, y, z);
+    }
+  }
+  return std::make_pair(start, end);
+}
+
+double TPCGeoAlg::TpcLength(const simb::MCParticle& particle){
+  bool first = true;
+  double length = 0;
+  TVector3 point, disp;
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
+    double x = particle.Vx(i); 
+    double y = particle.Vy(i);
+    double z = particle.Vz(i);
+    if(x > fMinX && y > fMinY && z > fMinZ && x < fMaxX && y < fMaxY && z < fMaxZ){
+      point.SetXYZ(x, y, z);
+      if(!first){
+        disp -= point;
+        length += disp.Mag();
+      }
+      first = false;
+      disp = point;
+    }
+  }
+  return length;
+}
+
 
 }
