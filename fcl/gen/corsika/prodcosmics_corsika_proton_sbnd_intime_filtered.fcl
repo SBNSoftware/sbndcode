@@ -1,0 +1,140 @@
+#include "simulationservices_sbnd.fcl"
+#include "largeantmodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "opticaldetectormodules.fcl"
+#include "photpropservices_sbnd.fcl"
+#include "emptyevent_sbnd.fcl"
+#include "corsika_sbnd.fcl"
+
+process_name: CosmicsCorsikaCMCGenAndG4InTime
+
+#Start each new event with an empty event.
+source:
+{
+  module_type: EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:   10          # Number of events to create
+  firstRun:    1           # Run number to use for this file
+  firstEvent:  1           # number of first event in the file
+}
+
+services:
+{
+
+  TFileService:         { fileName: "prodcosmics_corsika_sbnd_%p-%tc_hists.root" }
+                        @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
+                        @table::sbnd_random_services  # from simulationservices_sbnd.fcl
+                        @table::sbnd_services  # from simulationservices_sbnd.fcl
+                       @table::sbnd_g4_services
+  PhotonVisibilityService: @local::sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc  # from sam_sbnd.fcl
+
+} # services
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+ producers:
+ {
+   rns:       { module_type: "RandomNumberSaver" }
+
+   generator: @local::sbnd_corsika_p
+   larg4intime: @local::sbnd_largeant
+ }
+ 
+ filters:       {
+ 
+    GenInTimeSorter:{
+            KeepOnlyMuons: false
+            MaxT: 5000
+            MinKE: 1e-1
+            MinT: -12100
+            SortParticles: true
+            module_type: "FilterGenInTime"
+   }
+
+   timefilter: { module_type: "FilterSimPhotonTime"
+                          SimPhotonsCollectionLabel: larg4intime
+                          TimeWindows: [ [2900,4900] ]
+                          MinPhotonEnergy: -1
+                          MinTotalEnergy: 9.7e-5 #10 photons...
+			  UseReflectedPhotons: true
+               }
+
+}
+
+ #define the producer and filter modules for this path, order matters, 
+ #filters reject all following items.  see lines starting physics.producers below 
+ 
+ simulate: [ rns, generator, GenInTimeSorter, larg4intime, timefilter ] 
+
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [ out1 ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [simulate] 
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [stream1]  
+}
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "prodcosmics_corsika_proton_sbnd_%tc_g4_intime.root"
+   dataTier:    "gen"
+   compressionLevel: 1
+   SelectEvents: [ simulate ]
+   # drop the G4 output to be re-generared later
+   outputCommands: [
+     "keep *",
+     "drop *_larg4intime_*_CosmicsCorsikaCMCGenAndG4InTime"
+   ]
+ }
+}
+
+physics.producers.generator.SampleTime:       5.32e-3   # 0.2 ms (G4 rise time) + 1.28 ms (1 full drift window) + 3.84 ms (readout) @ -70 kv, 114 cm/ms
+physics.producers.generator.TimeOffset:      -2.76e-3   # 3.84 ms readout should start at -1.28 ms to match data
+physics.producers.generator.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
+
+physics.producers.larg4intime.InputLabels: [ "GenInTimeSorter:intime" ]
+
+# only keep MCParticles that cross the cryostat;
+# this is relevant in extensive cosmic ray generators (like Corsika)
+physics.producers.larg4intime.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"]
+
+# enable optical physics in LArG4
+services.LArG4Parameters.EnabledPhysics: [ "Em",
+                                                "FastOptical",
+                                                "SynchrotronAndGN",
+                                                "Ion",
+                                                "Hadron",
+                                                "Decay",
+                                                "HadronElastic",
+                                                "Stopping",
+                                                "NeutronTrackingCut" ]
+
+# enable this custom physics list
+services.LArG4Parameters.UseCustomPhysics: true
+
+services.LArPropertiesService.ScintByParticleType:false
+services.LArG4Parameters.UseLitePhotons: false
+
+services.DetectorPropertiesService.NumberTimeSamples:  7500 #microseconds
+services.DetectorPropertiesService.ReadOutWindowSize: 7500
+services.DetectorClocksService.G4RefTime: -2.75e3
+services.DetectorClocksService.TriggerOffsetTPC:  -1.25e3
+services.DetectorClocksService.DefaultTrigTime:   2750.
+services.DetectorClocksService.DefaultBeamTime:   2750.
+
+
