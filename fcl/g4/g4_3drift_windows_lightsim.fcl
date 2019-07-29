@@ -8,9 +8,3 @@ services.DetectorClocksService.TriggerOffsetTPC:  -1.25e3
 services.DetectorClocksService.DefaultTrigTime:   2750.
 services.DetectorClocksService.DefaultBeamTime:   2750.
 
-services.message.destinations: {
-  debug: {
-    type: "cout"
-    threshold: "DEBUG"
-  }
-}
