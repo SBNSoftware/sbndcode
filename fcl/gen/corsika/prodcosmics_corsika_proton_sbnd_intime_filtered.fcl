@@ -8,6 +8,9 @@
 
 process_name: CosmicsCorsikaCMCGenAndG4InTime
 
+# Ported from uBooNE gen-in-time fhicl for use by SBND
+# by Gray Putnam <grayputnam@uchicago.edu>
+
 #Start each new event with an empty event.
 source:
 {
@@ -21,11 +24,11 @@ source:
 services:
 {
 
-  TFileService:         { fileName: "prodcosmics_corsika_sbnd_%p-%tc_hists.root" }
-                        @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
-                        @table::sbnd_random_services  # from simulationservices_sbnd.fcl
-                        @table::sbnd_services  # from simulationservices_sbnd.fcl
-                       @table::sbnd_g4_services
+  TFileService: { fileName: "prodcosmics_corsika_sbnd_%p-%tc_hists.root" }
+  @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
+  @table::sbnd_random_services  # from simulationservices_sbnd.fcl
+  @table::sbnd_services  # from simulationservices_sbnd.fcl
+  @table::sbnd_g4_services
   PhotonVisibilityService: @local::sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice
   FileCatalogMetadata:  @local::sbnd_file_catalog_mc  # from sam_sbnd.fcl
 
@@ -40,29 +43,37 @@ physics:
  producers:
  {
    rns:       { module_type: "RandomNumberSaver" }
-
+   # use proton mode -- uBooNE sees much better match w/ data
    generator: @local::sbnd_corsika_p
    larg4intime: @local::sbnd_largeant
  }
  
- filters:       {
- 
-    GenInTimeSorter:{
-            KeepOnlyMuons: false
-            MaxT: 5000
-            MinKE: 1e-1
-            MinT: -12100
-            SortParticles: true
-            module_type: "FilterGenInTime"
-   }
+ filters:
+ {
+    GenInTimeSorter: {
+      KeepOnlyMuons: false
+      MinKE: 1e-1 # some energy threshold to produce a PE
+      MaxT: 1900 # [ns] add a little buffer on the far end of the photon time window
+      # About 1 in 30e6 particles will produce a flash 15us after entering the cryostat
+      # so this gives us a good buffer and is still computationally feasible
+      MinT: -15202 # [ns]
+      SortParticles: true
+      module_type: "FilterGenInTime"
+    }
 
-   timefilter: { module_type: "FilterSimPhotonTime"
-                          SimPhotonsCollectionLabel: larg4intime
-                          TimeWindows: [ [2900,4900] ]
-                          MinPhotonEnergy: -1
-                          MinTotalEnergy: 9.7e-5 #10 photons...
-			  UseReflectedPhotons: true
-               }
+   timefilter: { 
+      module_type: "FilterSimPhotonTime"
+      SimPhotonsCollectionLabel: larg4intime
+      # Currently in overlay generation, events are generated
+      # uniformly in a window [0, 1596ns] to approximate a beam spill.
+      # Add a little width here to up that width to 2000ns
+      TimeWindows: [ [-202, 1798] ] # ns
+      MinPhotonEnergy: -1
+      # 10 PE -- in the case of reflected photons, this may be more than 10 photons
+      MinTotalEnergy: 9.7e-5 
+      # SBND has foils
+      UseReflectedPhotons: true
+    }
 
 }
 
@@ -130,6 +141,7 @@ services.LArG4Parameters.UseCustomPhysics: true
 services.LArPropertiesService.ScintByParticleType:false
 services.LArG4Parameters.UseLitePhotons: false
 
+# Make sure the timing information is consistent with downstream fhicl -- 3 readout windows of simulation
 services.DetectorPropertiesService.NumberTimeSamples:  7500 #microseconds
 services.DetectorPropertiesService.ReadOutWindowSize: 7500
 services.DetectorClocksService.G4RefTime: -2.75e3
