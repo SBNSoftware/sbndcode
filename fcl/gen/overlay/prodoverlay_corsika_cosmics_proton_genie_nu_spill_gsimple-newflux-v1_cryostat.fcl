@@ -1,0 +1,25 @@
+#include "prodgenie_bnb_nu_cosmic_sbnd.fcl"
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     FluxType:       "simple_flux"
+     FluxCopyMethod: "IFDH"
+     FluxSearchPaths: "/pnfs/sbn/persistent/users/gputnam/flux/sbnd/zarko_new_June2019"
+     FluxFiles: [ "converted_beammc_sbnd_v1*.root" ]
+     EventsPerSpill: 0
+     TopVolume: "volCryostat"
+}
+
+# Overwrite default random time offset time.
+# From SBN docdb 13831, neutrinos arrive in the beam 
+# in a series of 84 bunches, 19ns apart, 1ns in width.
+# Each bunch has a gaussian distribution of neutrinos arriving over 1ns.
+# For now, approximate this with a uniform distribution over the full
+# beam spill (84 * 19ns = 1596ns)
+physics.producers.generator.RandomTimeOffset: 1596.
+
+# Use proton mode for cosmics -- uBooNE sees better match with data
+physics.producers.corsika: @local::sbnd_corsika_p
+
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: production, ANATREE: anatree_prodoverlay_corsika_genie.fcl 
