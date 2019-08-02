@@ -1,0 +1,5 @@
+#include "prodgenie_nu_singleinteraction_cryostat_gsimple-configd-v1.fcl"
+
+physics.producers.generator: @local::sbnd_genie_simple_bucket_struct
+
+physics.producers.generator.FiducialCut: "mbox: -210,-210,-10,210,210,510" #Extend the box to include 20cm around the TPC active region
