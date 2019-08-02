@@ -169,11 +169,32 @@ sbnd_flux_numi_dirt: {
 sbnd_genie: {
   @table::standard_genie
   @table::sbnd_flux_bnb_nu
-  BeamName:           "booster"
+  #BeamName:           "booster"
 # GlobalTimeOffset:   1.28e6                  #sbnd reads out 1.6ms before the spill
   GlobalTimeOffset:   0                  #Brailsford 2017/10/09 Simulation currently only reads out one drift frame so having a 1.6ms offset (one drift frame) means almost all events get placed outside the readout window.  We COULD make the readout window 2 or 3 drift frames long but we also have a disk space problem (we don't have any free).  The solution is to remove the offset and keep one frame readout
+  RandomTimeOffset:   1.6e3
   EventGeneratorList:      "Default+CCMEC+NCMEC"
 } # sbnd_genie
+
+sbnd_genie_bucket_struct: {##Added by A. C. Ezeribe for using the BnB timing structure. 
+  @table::standard_genie
+  @table::sbnd_flux_bnb_nu
+  #BeamName:           "booster"
+  GlobalTimeOffset:   0
+  RandomTimeOffset:   1.6e3
+  EventGeneratorList:      "Default+CCMEC+NCMEC"
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.32059"
+}
+
+sbnd_genie_bunch_rotated: { ##Producer by A. C. Ezeribe for using BnB beam in the bunch rotated configuration.
+  @table::standard_genie
+  @table::sbnd_flux_bnb_nu
+  #BeamName:           "booster"
+  GlobalTimeOffset:   0
+  RandomTimeOffset:   1.6e3
+  EventGeneratorList:      "Default+CCMEC+NCMEC"
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.4841"
+}
 
 sbnd_genie_hist: {
   @table::sbnd_genie
@@ -182,7 +203,6 @@ sbnd_genie_hist: {
   BeamDirection: [0., 0., 1.]    
   BeamRadius:    4.              
 }
-
 
 #
 # Basic configuration (BnB beam)
@@ -202,6 +222,19 @@ sbnd_genie_simple_dirt: {
   POTPerSpill: 5e12
 }
 
+sbnd_genie_simple_bucket_struct: {##Producer by A. C. Ezeribe for using BnB timing structure.
+  @table::sbnd_genie_bucket_struct
+  @table::sbnd_flux_bnb_nu
+  EventsPerSpill: 0
+  POTPerSpill: 5e12
+}
+
+sbnd_genie_simple_bunch_rotated: {##Producer by A. C. Ezeribe for using BnB beam in the bunch rotated configuration.
+  @table::sbnd_genie_bunch_rotated
+  @table::sbnd_flux_bnb_nu
+  EventsPerSpill: 0
+  POTPerSpill: 5e12
+}
 
 sbnd_genie_simple_numi: {
   @table::standard_genie
