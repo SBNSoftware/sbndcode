@@ -178,6 +178,44 @@ sbnd_flux_numi_dirt: {
 
 
 ################################################################################
+### Bucket structure configuration
+###
+#
+# These are FCL tables that setup arranging the neutrino interactions into BNB buckets.
+# Use them in its configuration as:
+#     
+#     physics: {
+#       producers: {
+#         generator: {
+#           module_type: GenieGen
+#           # ...
+#           @table: bnb_flux_nu_bucket
+#         }
+#       }
+#     }
+#     
+# or, if needed to override an existing configuration, with the less
+# straightforward:
+#     
+#     physics.producers.generator: {
+#       @table::physics.producers.generator
+#       @table: bnb_flux_nu_bucket
+#     }
+#     
+#
+# Booster Neutrino Beam, bucket 
+#
+sbnd_flux_bnb_nu_bucket: {
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.32059"
+}
+
+# Booster Neutrino Beam, rotated bucket 
+#
+sbnd_flux_bnb_nu_bucket_rotated: {
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.4841"
+}
+
+################################################################################
 ### GENIE module configurations
 ### 
 ### Include them like:
@@ -201,6 +239,7 @@ sbnd_flux_numi_dirt: {
 sbnd_genie: {
   @table::standard_genie
   @table::sbnd_flux_bnb_nu
+  @table::sbnd_flux_bnb_nu_bucket
   BeamName:           "booster"
 # GlobalTimeOffset:   1.28e6                  #sbnd reads out 1.6ms before the spill
   GlobalTimeOffset:   0                  #Brailsford 2017/10/09 Simulation currently only reads out one drift frame so having a 1.6ms offset (one drift frame) means almost all events get placed outside the readout window.  We COULD make the readout window 2 or 3 drift frames long but we also have a disk space problem (we don't have any free).  The solution is to remove the offset and keep one frame readout
