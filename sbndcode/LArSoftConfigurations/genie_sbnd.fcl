@@ -147,14 +147,14 @@ sbnd_flux_bnb_nu_Gv1_test1: {
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
 #
-sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Dv1
-sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Dv1_test1
+sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Fv1
+sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Fv1_test1
 
 #
 # Booster Neutrino Beam, interaction from dirt
 #
-sbnd_flux_bnb_dirt: @local::sbnd_flux_bnb_nu_Ev1
-sbnd_flux_bnb_dirt_test1: @local::sbnd_flux_bnb_nu_Ev1_test1
+sbnd_flux_bnb_dirt: @local::sbnd_flux_bnb_nu_Gv1
+sbnd_flux_bnb_dirt_test1: @local::sbnd_flux_bnb_nu_Gv1_test1
 
 #
 # NuMI Beam (placeholder)
