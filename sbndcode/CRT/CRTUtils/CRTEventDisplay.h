@@ -24,7 +24,7 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+//#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -78,6 +78,9 @@ namespace sbnd{
       };
       fhicl::Atom<art::InputTag> TPCTrackLabel {
         Name("TPCTrackLabel")
+      };
+      fhicl::Atom<double> ClockSpeedCRT {
+        Name("ClockSpeedCRT")
       };
 
       fhicl::Atom<bool> DrawTaggers {
@@ -200,6 +203,8 @@ namespace sbnd{
     art::InputTag fCRTHitLabel;
     art::InputTag fCRTTrackLabel;
     art::InputTag fTPCTrackLabel;
+
+    double fClockSpeedCRT;
 
     bool fDrawTaggers;
     bool fDrawModules;

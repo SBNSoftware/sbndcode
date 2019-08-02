@@ -91,6 +91,11 @@ namespace sbnd {
         Name("QSlope"),
       };
 
+      fhicl::Atom<double> ClockSpeedCRT {
+        Name("ClockSpeedCRT"),
+        Comment("Clock speed of the CRT system [MHz]")
+      };
+
       fhicl::Table<CRTBackTracker::Config> CrtBackTrack {
         Name("CrtBackTrack"),
       };
@@ -119,6 +124,7 @@ namespace sbnd {
     bool          fVerbose;             ///< print information about what's going on
     double        fQPed;
     double        fQSlope;
+    double        fClockSpeedCRT;
     
     // Histograms
     // ADCs of crt data
@@ -149,7 +155,7 @@ namespace sbnd {
 
     // Other variables shared between different methods.
     detinfo::DetectorClocks const* fDetectorClocks;
-    detinfo::ElecClock fTrigClock;
+    //detinfo::ElecClock fTrigClock;
     geo::GeometryCore const* fGeometryService;
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
@@ -165,11 +171,12 @@ namespace sbnd {
     , fVerbose              (config().Verbose())
     , fQPed                 (config().QPed())
     , fQSlope               (config().QSlope())
+    , fClockSpeedCRT        (config().ClockSpeedCRT())
     , fCrtBackTrack         (config().CrtBackTrack())
   {
     // Get a pointer to the fGeometryServiceetry service provider
     fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-    fTrigClock = fDetectorClocks->TriggerClock();
+    //fTrigClock = fDetectorClocks->TriggerClock();
     fGeometryService = lar::providerFrom<geo::Geometry>();
   }
 
@@ -312,8 +319,9 @@ namespace sbnd {
       hADC[tagger]->Fill(crtDataList[i]->ADC());
       hNpe[tagger]->Fill(npe);
 
-      fTrigClock.SetTime(crtDataList[i]->T0());
-      double time = fTrigClock.Time(); // [us]
+      //fTrigClock.SetTime(crtDataList[i]->T0());
+      //double time = fTrigClock.Time(); // [us]
+      double time = (double)(int)crtDataList[i]->T0()/fClockSpeedCRT; // [tick -> us]
       hTime[tagger]->Fill(time);
     }
 
