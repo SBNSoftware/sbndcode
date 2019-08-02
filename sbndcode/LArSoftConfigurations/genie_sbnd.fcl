@@ -118,12 +118,12 @@ sbnd_flux_bnb_nu_Fv1: {
   FluxType:       "simple_flux"
   FluxCopyMethod: "IFDH"
   FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configF-v1/april07/neutrinoMode"
-  FluxFiles: [ "converted_beammc_sbnd_dirt*.root" ]
+  FluxFiles: [ "converted_beammc_sbnd*.root" ]
 }
 
 sbnd_flux_bnb_nu_Fv1_test1: {
   @table::sbnd_flux_bnb_nu_Fv1
-  FluxFiles: [ "converted_beammc_sbnd_dirt_2018.root" ]
+  FluxFiles: [ "converted_beammc_sbnd_v1_0993.root" ]
 }
 
 #
@@ -133,12 +133,12 @@ sbnd_flux_bnb_nu_Gv1: {
   FluxType:       "simple_flux"
   FluxCopyMethod: "IGDH"
   FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configG-v1/april07/neutrinoMode"
-  FluxFiles: [ "converted_beammc_sbnd_dirt*.root" ]
+  FluxFiles: [ "converted_beammc_sbnd_dirt_v1*.root" ]
 }
 
 sbnd_flux_bnb_nu_Gv1_test1: {
   @table::sbnd_flux_bnb_nu_Gv1
-  FluxFiles: [ "converted_beammc_sbnd_dirt_2018.root" ]
+  FluxFiles: [ "converted_beammc_sbnd_dirt_v1_0004.root" ]
 }
 
 
