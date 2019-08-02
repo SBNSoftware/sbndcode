@@ -8,7 +8,7 @@ CRTHitRecoAlg::CRTHitRecoAlg(const Config& config){
   
   fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
   fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fTrigClock = fDetectorClocks->TriggerClock();
+  //fTrigClock = fDetectorClocks->TriggerClock();
 
 }
 
@@ -17,7 +17,7 @@ CRTHitRecoAlg::CRTHitRecoAlg(){
 
   fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
   fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fTrigClock = fDetectorClocks->TriggerClock();
+  //fTrigClock = fDetectorClocks->TriggerClock();
 
 }
 
@@ -34,6 +34,7 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   fQSlope = config.QSlope();
   fNpeScaleShift = config.NpeScaleShift();
   fTimeCoincidenceLimit = config.TimeCoincidenceLimit();
+  fClockSpeedCRT = config.ClockSpeedCRT();
 
   return;
 }
@@ -48,8 +49,9 @@ std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg:
   for (size_t i = 0; i < crtList.size(); i+=2){
 
     // Get the time
-    fTrigClock.SetTime(crtList[i]->T0());
-    double t1 = fTrigClock.Time(); // [us]
+    //fTrigClock.SetTime(crtList[i]->T0());
+    //double t1 = fTrigClock.Time(); // [us]
+    double t1 = (double)(int)crtList[i]->T0()/fClockSpeedCRT; // [tick -> us]
     if(fUseReadoutWindow){
       if(!(t1 >= -driftTimeMuS && t1 <= readoutWindowMuS)) continue;
     }
@@ -68,8 +70,9 @@ std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg:
 CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2, size_t ind){
 
   // Get the time, channel, center and width
-  fTrigClock.SetTime(sipm1->T0());
-  double t1 = fTrigClock.Time(); // [us]
+  //fTrigClock.SetTime(sipm1->T0());
+  //double t1 = fTrigClock.Time(); // [us]
+  double t1 = (double)(int)sipm1->T0()/fClockSpeedCRT; // [tick -> us]
 
   // Get strip info from the geometry service
   uint32_t channel = sipm1->Channel();
@@ -77,8 +80,9 @@ CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<crt::CRTData> sipm1, art::Ptr<cr
   std::pair<std::string,unsigned> tagger = ChannelToTagger(channel);
 
   // Get the time of hit on the second SiPM
-  fTrigClock.SetTime(sipm2->T0());
-  double t2 = fTrigClock.Time(); // [us]
+  //fTrigClock.SetTime(sipm2->T0());
+  //double t2 = fTrigClock.Time(); // [us]
+  double t2 = (double)(int)sipm2->T0()/fClockSpeedCRT; // [tick -> us]
 
   // Calculate the number of photoelectrons at each SiPM
   double npe1 = ((double)sipm1->ADC() - fQPed)/fQSlope;
