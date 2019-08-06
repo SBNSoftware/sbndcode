@@ -6,7 +6,7 @@
 #include "prodsingle_sbnd_proj.fcl"
 
 physics.producers.generator.PadOutVectors: true
-physics.producers.generator.PDG: [22, 211]      # Electron, Pi+
+physics.producers.generator.PDG: [22, 211]      # Photon, Pi+
 physics.producers.generator.PDist: 2                # Histogram momentum dist.
 physics.producers.generator.HistogramFile: "ParticleGunHists/particlegun_bnb_hists.root"
 physics.producers.generator.PHist: [ "hPHist_electrons", "hPHist_pi" ]
