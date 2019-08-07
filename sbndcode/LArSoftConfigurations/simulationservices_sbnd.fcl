@@ -1,7 +1,7 @@
 #
 # File:    simulationservices_sbnd.fcl
 # Purpose: collection of standard simulation service settings for SBND
-# Version: 1.1
+# Version: 1.2
 # 
 # Provides:
 # 
@@ -9,7 +9,6 @@
 # - sbnd_detsim_services: services needed by readout simulation
 # - sbnd_simulation_services: bundle of services including Geant4, optical
 #   and electronics simulation (also includes the core ones)
-# - sbnd_opsimulation_services: currently the same as sbnd_simulation_services
 # 
 # Use as:
 #     
@@ -22,7 +21,11 @@
 # 20160601 (petrillo@fnal.gov) [v1.1]
 #   content moved from services_sbnd.fcl
 #
-#
+# 20190807 (dbrailsf@fnal.gov) [v1.2]
+#   PhotonVisibilityService included in g4 servces table
+#   OpDetResponseInterface included in detsim services table
+#   Disabled sbnd_opsimulation_services table 
+#   Enabled 'FastOptical' in the custom physics list (in largeantparameters)
 
 #include "services_sbnd.fcl"
 #include "simulationservices.fcl"
@@ -33,6 +36,7 @@
 #include "backtrackerservice.fcl"
 #include "spacecharge.fcl"
 #include "noiseservices_sbnd.fcl"
+#include "photpropservices_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -40,7 +44,7 @@ sbnd_largeantparameters:   @local::standard_largeantparameters # from simulation
 sbnd_largeantparameters.ElectronClusterSize: 20.0
 #Brailsford 27/10/09: Enable the custom physics list and disable its neutron killer 
 sbnd_largeantparameters.UseCustomPhysics: true
-sbnd_largeantparameters.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
+sbnd_largeantparameters.EnabledPhysics: [ "Em", "FastOptical", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
 sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
 
@@ -53,6 +57,7 @@ sbnd_g4_services:
   LArG4Parameters:           @local::sbnd_largeantparameters 
   LArVoxelCalculator:        @local::sbnd_larvoxelcalculator 
   MagneticField:             @local::no_mag_larsoft
+  PhotonVisibilityService:   @local::sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice
 } # sbnd_g4_services
 
 
@@ -65,6 +70,7 @@ sbnd_detsim_services:
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND:  @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
   NoiseModel:		     @local::sbnd_thermalnoiseserviceintime
+  OpDetResponseInterface:    @local::sbnd_opdetresponse
 } # sbnd_detsim_services
 
   
@@ -75,18 +81,18 @@ sbnd_simulation_services:
                              @table::sbnd_random_services
                              @table::sbnd_g4_services
                              @table::sbnd_detsim_services
-  SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  SignalShapingServiceSBND:  @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
   SpaceCharge:               @local::sbnd_spacecharge
 }
 
 
-sbnd_opsimulation_services:
-{
-                            @table::sbnd_simulation_services
-  OpDetResponseInterface:   @local::sbnd_opdetresponse
-#  PhotonVisibilityService:  @local::sbnd_photonvisibilityservice
-#  OpDigiProperties:         @local::sbnd_opdigiproperties 
-}
+#sbnd_opsimulation_services:
+#{
+#                            @table::sbnd_simulation_services
+#  OpDetResponseInterface:   @local::sbnd_opdetresponse
+##  PhotonVisibilityService:  @local::sbnd_photonvisibilityservice
+##  OpDigiProperties:         @local::sbnd_opdigiproperties 
+#}
 
 
 # Define sbnd_optical_simulation_services
