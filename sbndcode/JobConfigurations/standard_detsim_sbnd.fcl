@@ -34,7 +34,6 @@
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
-##include "protoDUNE_detsim_data_driven_noise.fcl"
 
 #
 # modules
