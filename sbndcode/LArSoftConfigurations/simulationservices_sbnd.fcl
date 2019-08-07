@@ -1,7 +1,7 @@
 #
 # File:    simulationservices_sbnd.fcl
 # Purpose: collection of standard simulation service settings for SBND
-# Version: 1.2
+# Version: 1.3
 # 
 # Provides:
 # 
@@ -26,6 +26,8 @@
 #   OpDetResponseInterface included in detsim services table
 #   Disabled sbnd_opsimulation_services table 
 #   Enabled 'FastOptical' in the custom physics list (in largeantparameters)
+# 20190807 (dbrailsf@fnal.gov) [v1.3]
+#   Added an optional largeantparameters config which does not run the optical sim
 
 #include "services_sbnd.fcl"
 #include "simulationservices.fcl"
@@ -46,7 +48,13 @@ sbnd_largeantparameters.ElectronClusterSize: 20.0
 sbnd_largeantparameters.UseCustomPhysics: true
 sbnd_largeantparameters.EnabledPhysics: [ "Em", "FastOptical", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
 sbnd_largeantparameters.UseLitePhotons: true
+
+#Define a largeantparameters which doesn't use the optical simulation
+sbnd_largeantparameters_noopticalsim: @local::sbnd_largeantparameters
+sbnd_largeantparameters_noopticalsim.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] 
+
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
+
 sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
 
 
