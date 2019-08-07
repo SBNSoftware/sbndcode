@@ -20,4 +20,7 @@ services.LArPropertiesService.ReflectiveSurfaceDiffuseFractions: [ [ 0, 0, 0, 0,
                                                      [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
                                                      [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ]
 
+# Loading the TPB spectra information
+services.LArPropertiesService.LoadExtraMatProperties: true
+
 END_PROLOG
