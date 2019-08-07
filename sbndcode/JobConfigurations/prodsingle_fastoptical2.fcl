@@ -20,7 +20,8 @@ services:
   Timing:       {}
   RandomNumberGenerator: {} #ART native random number generator
   FileCatalogMetadata:  @local::sbnd_file_catalog_mc
-  user:         @local::sbnd_opsimulation_services
+#user:         @local::sbnd_opsimulation_services
+  user:         @local::sbnd_simulation_services
 }
 
 
