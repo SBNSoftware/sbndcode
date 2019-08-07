@@ -1,0 +1,80 @@
+BEGIN_PROLOG
+
+sbnd_nonoiseservice: {
+  service_provider: SBNDNoNoiseService
+}
+
+sbnd_thermalnoiseserviceintime: {
+  service_provider: SBNDThermalNoiseServiceInTime
+  NoiseArrayPoints: 1000
+  LogLevel:         0       
+
+}
+
+sbnd_thermalnoiseserviceinfreq: {
+  service_provider: SBNDThermalNoiseServiceInFreq
+  NoiseArrayPoints: 1000
+  LogLevel:         0       
+  NoiseWidth:       62.4         # Exponential Noise width (kHz).
+  NoiseRand:        0.1          # Frac of randomness of noise freq-spec.
+  LowCutoff:        7.5          # Low frequency filter cutoff (kHz).
+}
+
+sbnd_noiseservicefromhist: {
+  service_provider: SBNDNoiseServiceFromHist
+  NoiseArrayPoints: 1000
+  LogLevel:         0       
+  NoiseWidth:       62.4         # Exponential Noise width (kHz).
+  NoiseRand:        0.1          # Frac of randomness of noise freq-spec.
+  LowCutoff:        7.5          # Low frequency filter cutoff (kHz).
+  NoiseFileFname:   "uboone_noise_v0.1.root"
+  NoiseHistoName:   "NoiseFreq"    
+}
+
+
+# tuned with ProtoDUNE-SP run4696 data
+sbnd_uboonedatadrivennoiseservice: {
+  service_provider: SBNDuBooNEDataDrivenNoiseService
+  NoiseArrayPoints: 1000
+  LogLevel:         0       
+  
+  EnableWhiteNoise: false
+  WhiteNoiseU:   1.6
+  WhiteNoiseV:   1.6
+  WhiteNoiseZ:   1.6
+  
+  EnableGaussianNoise: false
+  GausNormU: [ 30, -3, 15 ]
+  GausMeanU: [ 630, 640, 730 ]
+  GausSigmaU: [ 0.5, 0.5, 0.5 ]
+  GausNormV: [ 30, 40, 15 ]
+  GausMeanV: [ 130, 330, 430 ]
+  GausSigmaV: [ 0.5, 2.0, 0.5 ]
+  GausNormZ: [ 3 ]
+  GausMeanZ: [ 34 ]
+  GausSigmaZ: [ 5 ]
+  
+  EnableMicroBooNoise: true
+  EffectiveNBits: 10.6
+  IncludeJumpers: false
+  JumperCapacitance: 5
+  # Numbers below from UK APA tension measurement spreadsheets.
+  UFirstJumper:	     420 
+  ULastJumper:	     1568
+  VFirstJumper:	     417
+  VLastJumper:	     1565
+  # NoiseFunctionParameters: [ 3.01209e+00, 1.19921e+08, 3.80152e+03, 6.30041e+02, 1.07059e+02, 1.29703e+00, 1.36047e+00, 1.38162e+00, 6.00000e+03] #ProtoDUNE params from Jingbo W.
+  NoiseFunctionParameters:  [ 1.19777e+01, 1.59491e+05, 4.93692e+03, 1.03438e+03, 2.33306e+02, 1.36605e+00, 4.08741e+00, 6.18786e-01, 9596] #uBooNE params from Jingbo W.
+
+  EnableCoherentNoise: true
+  CohNoiseArrayPoints: 1000
+  NChannelsPerCoherentGroup: 128
+  CohGausNorm: [ 6.88535e+00, 5.21692e-01, 2.00001e+00, 2.03630e+00, 2.00003e+00 ]
+  CohGausMean: [ 3.55622e+01, 6.63823e-02, 1.16200e+02, 1.73900e+02, 2.89800e+02 ]
+  CohGausSigma: [ 1.75992e+01, 3.16607e+02, 3.68024e-01 , 3.26335e-01, 5.14720e-02 ]
+  CohExpNorm:    3.67206e+00
+  CohExpWidth:   3.39581e+00 
+  CohExpOffset: 2.32098e-01
+}
+
+END_PROLOG

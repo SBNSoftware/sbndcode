@@ -11,6 +11,8 @@
 #include <vector>
 #include <iostream>
 #include "sbndcode/DetectorSim/Services/AdcTypes.h"
+#include "art/Framework/Core/EDProducer.h"
+#include "fhiclcpp/ParameterSet.h"
 
 class ChannelNoiseService {
 
@@ -24,8 +26,16 @@ public:
   // Noise is added for all entries in the input vector.
   virtual int addNoise(Channel chan, AdcSignalVector& sigs) const =0;
 
+  virtual void generateNoise(){
+    return;
+  }
+
   // Print parameters.
   virtual std::ostream& print(std::ostream& out =std::cout, std::string prefix ="") const =0;
+  
+  virtual void InitialiseProducerDeps(art::EDProducer * EDProdPointer, fhicl::ParameterSet const& pset){
+    return; 
+  } 
 
 };
 

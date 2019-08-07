@@ -1,0 +1,10 @@
+#
+# File:    standard_detsim_nonoise_sbnd.fcl
+# Purpose: Runs standard detsim with no noise added to the wires.
+# Author:  Andrew Scarff (a.scarff@sheffield.ac.uk)
+# Date:    7th August 2019
+
+
+#include "standard_detsim_sbnd.fcl"
+
+services.NoiseModel: @local::sbnd_nonoiseservice
