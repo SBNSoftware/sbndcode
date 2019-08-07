@@ -45,6 +45,7 @@ sbnd_largeantparameters.ElectronClusterSize: 20.0
 #Brailsford 27/10/09: Enable the custom physics list and disable its neutron killer 
 sbnd_largeantparameters.UseCustomPhysics: true
 sbnd_largeantparameters.EnabledPhysics: [ "Em", "FastOptical", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
+sbnd_largeantparameters.UseLitePhotons: true
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
 sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
 
