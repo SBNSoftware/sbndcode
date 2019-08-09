@@ -11,6 +11,7 @@
 // sbndcode includes
 #include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // Framework includes
 #include "art/Framework/Core/EDProducer.h"
@@ -87,23 +88,22 @@ namespace sbnd {
     // Params got from fcl file.......
     art::InputTag fTpcTrackModuleLabel; ///< name of track producer
     art::InputTag fCrtTrackModuleLabel; ///< name of crt producer
-    double        fMaxAngleDiff;        ///< max difference between CRT and TPC angles
-    double        fMaxDistance;         ///< max distance between CRT and TPC start/end positions
 
     CRTTrackMatchAlg trackAlg;
+    TPCGeoAlg fTpcGeo;
 
   }; // class CRTTrackMatching
 
 
   CRTTrackMatching::CRTTrackMatching(fhicl::ParameterSet const & p)
-  : EDProducer(p), trackAlg()
+  : EDProducer(p), trackAlg(p.get<fhicl::ParameterSet>("CrtTrackAlg"))
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 
     // Call appropriate produces<>() functions here.
     produces< std::vector<anab::T0> >();
     produces< art::Assns<recob::Track , anab::T0> >();
-    produces< art::Assns<recob::Track , crt::CRTTrack> >();
+    //produces< art::Assns<recob::Track , crt::CRTTrack> >();
     
     reconfigure(p);
 
@@ -115,8 +115,6 @@ namespace sbnd {
 
     fTpcTrackModuleLabel = (p.get<art::InputTag> ("TpcTrackModuleLabel"));
     fCrtTrackModuleLabel = (p.get<art::InputTag> ("CrtTrackModuleLabel")); 
-    fMaxAngleDiff        = (p.get<double>        ("MaxAngleDiff"));
-    fMaxDistance         = (p.get<double>        ("MaxDistance"));
 
   } // CRTTrackMatching::reconfigure()
 
@@ -135,7 +133,7 @@ namespace sbnd {
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
-    std::unique_ptr< art::Assns<recob::Track, crt::CRTTrack> > Crtassn( new art::Assns<recob::Track, crt::CRTTrack>);
+    //std::unique_ptr< art::Assns<recob::Track, crt::CRTTrack> > Crtassn( new art::Assns<recob::Track, crt::CRTTrack>);
 
     // Get TPC tracks
     art::Handle< std::vector<recob::Track> > tpcTrackListHandle;
@@ -144,7 +142,7 @@ namespace sbnd {
       art::fill_ptr_vector(tpcTrackList, tpcTrackListHandle);   
 
     // Get track to hit associations
-    art::FindManyP<recob::Hit> findManyHits(tpcTrackListHandle, event, fTpcTrackModuleLabel);
+    //art::FindManyP<recob::Hit> findManyHits(tpcTrackListHandle, event, fTpcTrackModuleLabel);
 
     // Get CRT tracks
     art::Handle< std::vector<crt::CRTTrack> > crtTrackListHandle;
@@ -152,103 +150,37 @@ namespace sbnd {
     if (event.getByLabel(fCrtTrackModuleLabel, crtTrackListHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackListHandle);
 
+    std::vector<crt::CRTTrack> crtTracks;
+    for(auto const& crtTrack : crtTrackList){
+      crtTracks.push_back(*crtTrack);
+    }
+
     // Validity check
     if (tpcTrackListHandle.isValid() && crtTrackListHandle.isValid() ){
 
       mf::LogInfo("CRTTrackMatching")
         <<"Number of TPC tracks = "<<tpcTrackList.size()<<"\n"
         <<"Number of CRT tracks = "<<crtTrackList.size();
-
-      //TODO Account for crt track errors
-      int crtIndex = 0;
-      std::vector<RecoCRTTrack> recoCrtTracks;
-
-      // Transform CRT tracks to expected TPC reconstructed tracks
-      for (size_t crt_i = 1; crt_i < crtTrackList.size(); crt_i++){
-        crt::CRTTrack crtTrack = *crtTrackList[crt_i];
-
-        //Check that crt track crosses tpc volume, if not skip it
-        if(!trackAlg.CrossesTPC(crtTrack)){ crtIndex++; continue; }
- 
-        std::vector<RecoCRTTrack> tempTracks = trackAlg.CrtToRecoTrack(crtTrack, crtIndex);
-        recoCrtTracks.insert(recoCrtTracks.end(), tempTracks.begin(), tempTracks.end());
- 
-        crtIndex++;
-      }
- 
-      std::map<int, art::Ptr<recob::Track>> tpcTrackMap;
       for (size_t tpc_i = 0; tpc_i < tpcTrackList.size(); tpc_i++){
-        int trackID = tpcTrackList[tpc_i]->ID();
-        tpcTrackMap[trackID] = tpcTrackList[tpc_i];
-      }
+
+        //std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrackList[tpc_i]->ID());
+        //int tpc = fTpcGeo.DetectedInTPC(hits);
+
+        int matchedID = trackAlg.GetMatchedCRTTrackId(*tpcTrackList[tpc_i], crtTracks, event);
         
-      // Loop over the reco crt tracks
-      for (auto const& recoCrtTrack : recoCrtTracks){
-
-        std::vector<std::pair<int, double>> crtTpcMatchCandidates;
-        // Loop over the TPC tracks
-        for (size_t tpc_i = 0; tpc_i < tpcTrackList.size(); tpc_i++){
-          recob::Track tpcTrack = *tpcTrackList[tpc_i];
-
-          int trackID = tpcTrack.ID();
-          // If the tpcTrack has been stitched across the CPA it already has an associated t0
-          std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-          int tpc = hits[0]->WireID().TPC;
- 
-          // Get the length, angle and start and end position of the TPC track
-          TVector3 tpcStart = tpcTrack.Vertex<TVector3>();
-          TVector3 tpcEnd = tpcTrack.End<TVector3>();
-          double tpcTheta = (tpcStart - tpcEnd).Theta();
-          double tpcPhi = (tpcStart - tpcEnd).Phi();
- 
-          // Get the length, angle and start and end position of the TPC track
-          TVector3 crtStart = recoCrtTrack.start;
-          TVector3 crtEnd = recoCrtTrack.end;
-          double crtTheta = (crtStart - crtEnd).Theta();
-          double crtPhi = (crtStart - crtEnd).Phi();
- 
-          // Find the difference with the CRT track
-          double dDist1 = (crtStart-tpcStart).Mag();
-          double dDist2 = (crtEnd-tpcEnd).Mag();
-          if(std::max((crtStart-tpcStart).Mag(), (crtEnd-tpcEnd).Mag()) > 
-             std::max((crtStart-tpcEnd).Mag(), (crtEnd-tpcStart).Mag())){
-            crtTheta = (crtEnd - crtStart).Theta();
-            crtPhi = (crtEnd - crtStart).Phi();
-            dDist1 = (crtEnd-tpcStart).Mag();
-            dDist2 = (crtStart-tpcEnd).Mag();
-          }
-          double dTheta = atan2(sin(tpcTheta - crtTheta), cos(tpcTheta - crtTheta));
-          double dPhi = atan2(sin(tpcPhi - crtPhi), cos(tpcPhi - crtPhi));
- 
-          // Do the actual matching
-          if(std::abs(dTheta) < fMaxAngleDiff && std::abs(dPhi) < fMaxAngleDiff && 
-             tpc == recoCrtTrack.tpc && (dDist1<fMaxDistance||dDist2<fMaxDistance)){
-            crtTpcMatchCandidates.push_back(std::make_pair(trackID, std::abs(dTheta)));
-          }
-             
+        if(matchedID != -99999){
+          double crtTime = ((double)(int)crtTracks.at(matchedID).ts1_ns); // [ns]
+          T0col->push_back(anab::T0(crtTime, 0, tpcTrackList[tpc_i]->ID(), (*T0col).size(), 0.)); 
+          util::CreateAssn(*this, event, *T0col, tpcTrackList[tpc_i], *Trackassn);
+          //util::CreateAssn(*this, event, crtTrackList[matchedID], tpcTrackList[tpc_i], *Crtassn);
         }
-        // Choose the track which matches the closest
-        int matchedTrackID = -99999;
-        if(crtTpcMatchCandidates.size() > 0){
-          std::sort(crtTpcMatchCandidates.begin(), crtTpcMatchCandidates.end(), [](auto& left, auto& right){
-                    return left.second < right.second;});
-          matchedTrackID = crtTpcMatchCandidates[0].first;
-          mf::LogInfo("CRTTrackMatching")
-            <<"Matched time "<<recoCrtTrack.trueTime<<" ticks to track "<<matchedTrackID;
-        }
-        if(matchedTrackID != -99999){
-          T0col->push_back(anab::T0(recoCrtTrack.trueTime*1e3, 0, matchedTrackID, (*T0col).size(), crtTpcMatchCandidates[0].second)); 
-          util::CreateAssn(*this, event, *T0col, tpcTrackMap[matchedTrackID], *Trackassn);
-          util::CreateAssn(*this, event, crtTrackList[recoCrtTrack.crtID], tpcTrackMap[matchedTrackID], *Crtassn);
-        }
- 
       }
 
     } // Validity check
    
     event.put(std::move(T0col));
     event.put(std::move(Trackassn));
-    event.put(std::move(Crtassn));
+    //event.put(std::move(Crtassn));
     
   } // CRTTrackMatching::produce()
 

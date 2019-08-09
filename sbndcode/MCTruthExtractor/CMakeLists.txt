@@ -11,7 +11,7 @@
 #                        Filters
 #                        RawData
 #                        SignalShapingServiceT1034_service
-#                        nutools_NuReweight_art
+#                        nugen_NuReweight_art
 #                        nusimdata_SimulationBase
 #                        ${ART_FRAMEWORK_CORE}
 #                        ${ART_FRAMEWORK_PRINCIPAL}
@@ -44,11 +44,11 @@ art_make(
             ${ART_ROOT_IO_TFILESERVICE_SERVICE}
             ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
             larcorealg_Geometry
-            larsim_Simulation nutools_ParticleNavigation lardataobj_Simulation
+            larsim_Simulation nug4_ParticleNavigation lardataobj_Simulation
             lardata_Utilities
             larevt_Filters
             lardataobj_RawData
-            nutools_NuReweight_art
+            nugen_NuReweight_art
             nusimdata_SimulationBase
             ${ART_FRAMEWORK_CORE}
             ${ART_FRAMEWORK_PRINCIPAL}

@@ -1,0 +1,28 @@
+#include "cosmicidalg_sbnd.fcl"
+#include "cosmicidmodules_sbnd.fcl"
+#include "mcsfitter_sbnd.fcl"
+#include "crtbacktracker_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_cosmicidtree: 
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/CosmicId/Ana/CosmicIdTree"
+
+  # The input parameters
+  SimModuleLabel:      "largeant"        # Simulation producer module label
+  CRTHitLabel:         "crthit"           # CRT producer module label
+  CRTTrackLabel:       "crttrack"           # CRT producer module label
+  TPCTrackLabel:       "pandoraTrack" # TPC track producer module label
+  CaloModuleLabel:     "pandoraCalo"
+  PandoraLabel:        "pandora"
+  Verbose:             false             # Print extra information about what's going on
+  BeamTimeLimits:      @local::sbnd_beamtime
+  CrtBackTrack:        @local::standard_crtbacktracker
+  CosIdAlg:            @local::standard_cosmicidalg
+  #fitter:              @local::sbnd_mcsfitter
+}
+
+END_PROLOG

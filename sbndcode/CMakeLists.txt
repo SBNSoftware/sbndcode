@@ -13,7 +13,8 @@ add_subdirectory(SBNDPandora)
 add_subdirectory(SimulationFilters)
 add_subdirectory(AnalysisTree)
 add_subdirectory(RecoUtils)
-add_subdirectory(TrackCount)
+add_subdirectory(OpDetSim)
+add_subdirectory(CosmicId)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)

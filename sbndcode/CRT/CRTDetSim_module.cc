@@ -10,7 +10,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-#include "nutools/RandomUtils/NuRandomService.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
 #include "canvas/Persistency/Common/Ptr.h"
 #include "art/Persistency/Common/PtrMaker.h"
 
@@ -56,6 +56,7 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fTDelayRMSExpNorm = p.get<double>("TDelayRMSExpNorm");
   fTDelayRMSExpShift = p.get<double>("TDelayRMSExpShift");
   fTDelayRMSExpScale = p.get<double>("TDelayRMSExpScale");
+  fClockSpeedCRT = p.get<double>("ClockSpeedCRT");
   fPropDelay = p.get<double>("PropDelay");
   fPropDelayError = p.get<double>("fPropDelayError");
   fTResInterpolator = p.get<double>("TResInterpolator");
@@ -71,6 +72,7 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fTaggerPlaneCoincidenceWindow = p.get<double>("TaggerPlaneCoincidenceWindow");
   fAbsLenEff = p.get<double>("AbsLenEff");
   fSipmTimeResponse = p.get<double>("SipmTimeResponse");
+  fAdcSaturation = p.get<short>("AdcSaturation");
 }
 
 
@@ -87,7 +89,7 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
 
 
 uint32_t CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
-                                         detinfo::ElecClock& clock,
+                                         /*detinfo::ElecClock& clock,*/
                                          float t0, float npeMean, float r) {
   // Hit timing, with smearing and NPE dependence
   double tDelayMean =
@@ -112,15 +114,17 @@ uint32_t CRTDetSim::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
   double t = t0 + tProp + tDelay;
 
   // Get clock ticks
-  clock.SetTime(t / 1e3);  // SetTime takes microseconds
+  // FIXME no clock available for CRTs, have to do it by hand
+  //clock.SetTime(t / 1e3);  // SetTime takes microseconds
+  int time = (t / 1e3) * fClockSpeedCRT;
 
   mf::LogInfo("CRT")
     << "CRT TIMING: t0=" << t0
     << ", tDelayMean=" << tDelayMean << ", tDelayRMS=" << tDelayRMS
     << ", tDelay=" << tDelay << ", tDelay(interp)="
-    << tDelay << ", tProp=" << tProp << ", t=" << t << ", ticks=" << clock.Ticks() << "\n";
+    << tDelay << ", tProp=" << tProp << ", t=" << t << /*", ticks=" << clock.Ticks() <<*/ "\n";
 
-  return clock.Ticks();
+  return time;//clock.Ticks();
 }
 
 
@@ -138,8 +142,8 @@ void CRTDetSim::produce(art::Event & e) {
   // Services: Geometry, DetectorClocks, RandomNumberGenerator
   art::ServiceHandle<geo::Geometry> geoService;
 
-  art::ServiceHandle<detinfo::DetectorClocksService> detClocks;
-  detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();
+  /*art::ServiceHandle<detinfo::DetectorClocksService> detClocks;
+  detinfo::ElecClock trigClock = detClocks->provider()->TriggerClock();*/
 
   // Handle for (truth) AuxDetSimChannels
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
@@ -197,8 +201,6 @@ void CRTDetSim::produce(art::Event & e) {
 
       sim::AuxDetIDE ide = ides[ide_i];
 
-      int trackID = ide.trackID;
-
       // Finally, what is the distance from the hit (centroid of the entry
       // and exit points) to the readout end?
       double x = (ide.entryX + ide.exitX) / 2;
@@ -209,12 +211,11 @@ void CRTDetSim::produce(art::Event & e) {
       double tTrue = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       double tTrueLast = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       double eDep = ide.energyDeposited;
-      double maxEdep = eDep;
 
       std::vector<sim::AuxDetIDE> trueIdes;
       trueIdes.push_back(ide);
 
-      //ADD UP HITS AT THE SAME TIME - 2NS DIFF IS A GUESS -VERY APPROXIMATE
+      //ADD UP HITS AT THE SAME TIME - FIXME 2NS DIFF IS A GUESS -VERY APPROXIMATE
       if(ide_i < ides.size() - 1){
         while(ide_i < ides.size() - 1 && std::abs(tTrueLast-((ides[ide_i+1].entryT + ides[ide_i+1].exitT) / 2 + fGlobalT0Offset)) < fSipmTimeResponse){
           ide_i++;
@@ -228,15 +229,6 @@ void CRTDetSim::produce(art::Event & e) {
           nides++;
 
           trueIdes.push_back(ides[ide_i]);
-
-          if(ides[ide_i].energyDeposited > maxEdep && ides[ide_i].trackID > 0){
-            trackID = ides[ide_i].trackID;
-            maxEdep = ides[ide_i].energyDeposited;
-          }
-          if(trackID < 0 && (ides[ide_i].energyDeposited > maxEdep || ides[ide_i].trackID > 0)){
-            trackID = ides[ide_i].trackID;
-            maxEdep = ides[ide_i].energyDeposited;
-          }
         }
       }
 
@@ -280,19 +272,21 @@ void CRTDetSim::produce(art::Event & e) {
       // Time relative to trigger, accounting for propagation delay and 'walk'
       // for the fixed-threshold discriminator
       uint32_t t0 =
-        getChannelTriggerTicks(&fEngine, trigClock, tTrue, npe0, distToReadout);
+        getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe0, distToReadout);
       uint32_t t1 =
-        getChannelTriggerTicks(&fEngine, trigClock, tTrue, npe1, distToReadout);
+        getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe1, distToReadout);
 
       // Time relative to PPS: Random for now! (FIXME)
       uint32_t ppsTicks =
-        CLHEP::RandFlat::shootInt(&fEngine, trigClock.Frequency() * 1e6);
+        CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fClockSpeedCRT * 1e6);
 
       // SiPM and ADC response: Npe to ADC counts
       short q0 =
         CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe0, fQRMS * sqrt(npe0));
+      if(q0 > fAdcSaturation) q0 = fAdcSaturation;
       short q1 =
         CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
+      if(q1 > fAdcSaturation) q1 = fAdcSaturation;
 
       // Adjacent channels on a strip are numbered sequentially.
       //
@@ -310,9 +304,9 @@ void CRTDetSim::produce(art::Event & e) {
           util::absDiff(t0, t1) < fStripCoincidenceWindow) {
         Tagger& tagger = taggers[nodeTagger->GetName()];
         tagger.planesHit.push_back({planeID, t0});
-        tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0, trackID));
+        tagger.data.push_back(sbnd::crt::CRTData(channel0ID, t0, ppsTicks, q0));
         tagger.ides.push_back(trueIdes);
-        tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1, trackID));
+        tagger.data.push_back(sbnd::crt::CRTData(channel1ID, t1, ppsTicks, q1));
         tagger.ides.push_back(trueIdes);
       }
 
@@ -369,7 +363,7 @@ void CRTDetSim::produce(art::Event & e) {
     }
 
     if (trigger || trg.first.find("TaggerBot") != std::string::npos) {
-      // Write out all hits on a tagger when there is any coincidence
+      // Write out all hits on a tagger when there is any coincidence FIXME this reads out everything!
       //for (auto d : trg.second.data) {
       for (size_t d_i = 0; d_i < trg.second.data.size(); d_i++) {
         triggeredCRTHits->push_back(trg.second.data[d_i]);
