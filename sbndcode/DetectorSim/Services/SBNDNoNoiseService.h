@@ -2,19 +2,10 @@
 // Andrew Scarff (University of Sheffield)
 // July 2019
 
-// Based upon SPhaseChannelNoiseService.h created by Jingbo Wang (UC Davis) for ProtoDUNE.9
+// Based upon SPhaseChannelNoiseService.h created by Jingbo Wang (UC Davis) for ProtoDUNE.
 
-// Implementation of a general TPC channel noise model with:
-// (1) white noise
-// (2) Inherent Gaussian noise in frequency
-// (3) MicroBooNE noise in frequency
-// (4) Coherent noise (exponential + Gaussian) in frequency 
-//     (Note a: phase at each frequency bin is randamized at the moment. Will be updated soon
-//      Note b: Currently, consecutive offline channels (configurable) are grouped together and 
-//              the same coherent noise waveform is assigned to channels within the same group. )
-//
-// The default parameters are obtained from the ProtoDUNE-SP data (run 4096)
-// fcl file: sbndcode/DetectorSim/Services/SBND_detsim_data_driven_noise.fcl
+// This file is to be used if you don't want any noise added to the channels.
+// fcl file: sbndcode/DetectorSim/Services/noiseservices_sbnd.fcl
 //
 
 #ifndef SBNDNoNoiseService_H
