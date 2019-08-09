@@ -42,9 +42,6 @@ SBNDThermalNoiseServiceInTime(fhicl::ParameterSet const& pset): fRandomSeed(0), 
 
   fShapingTimeOrder = { {0.5, 0 }, {1.0, 1}, {2.0, 2}, {3.0, 3} };
 
-
-
-
   if ( fRandomSeed == 0 ) haveSeed = false;
   pset.get_if_present<int>("LogLevel", fLogLevel);
   int seed = fRandomSeed;
@@ -109,7 +106,6 @@ int SBNDThermalNoiseServiceInTime::addNoise(Channel chan, AdcSignalVector& sigs)
       << "\033[00m"
       << std::endl;
   }
-
 
   CLHEP::RandGaussQ rGauss(*fNoiseEngine, 0.0, noise_factor);
     

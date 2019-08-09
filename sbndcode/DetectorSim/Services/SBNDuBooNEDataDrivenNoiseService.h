@@ -2,7 +2,7 @@
 // Andrew Scarff (University of Sheffield)
 // July 2019
 
-// Based upon SPhaseChannelNoiseService.h created by Jingbo Wang (UC Davis) for ProtoDUNE.9
+// Based upon SPhaseChannelNoiseService.h created by Jingbo Wang (UC Davis) for ProtoDUNE.
 
 // Implementation of a general TPC channel noise model with:
 // (1) white noise
@@ -14,7 +14,7 @@
 //              the same coherent noise waveform is assigned to channels within the same group. )
 //
 // The default parameters are obtained from the ProtoDUNE-SP data (run 4096)
-// fcl file: sbndcode/DetectorSim/Services/noiseservice)sbnd.fcl
+// fcl file: sbndcode/DetectorSim/Services/noiseservices_sbnd.fcl
 //
 
 #ifndef SBNDuBooNEDataDrivenNoiseService_H

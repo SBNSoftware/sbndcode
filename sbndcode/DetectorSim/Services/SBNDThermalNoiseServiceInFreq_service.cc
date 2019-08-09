@@ -140,6 +140,8 @@ int SBNDThermalNoiseServiceInFreq::addNoise(Channel chan, AdcSignalVector& sigs)
   for (size_t i = 0; i < fNTicks / 2 + 1; ++i) {
     // exponential noise spectrum
     flat.fireArray(2, rnd, 0, 1);
+    std::cout << "rnd[0]: " << rnd[0] << std::endl;
+    std::cout << "rnd[1]: " << rnd[1] << std::endl;
 
     pval = noise_factor * exp(-(double)i * binWidth / fNoiseWidth);
     // low frequency cutoff
@@ -179,12 +181,12 @@ int SBNDThermalNoiseServiceInFreq::addNoise(Channel chan, AdcSignalVector& sigs)
   noiseFrequency.clear();
 
   // multiply each noise value by fNTicks as the InvFFT
-  // divides each bin by fNTicks assuming that a forward FFT
+   // divides each bin by fNTicks assuming that a forward FFT
   // has already been done.
   for (unsigned int i = 0; i < sigs.size(); ++i) {
     sigs.at(i) *= 1.*fNTicks;
   }
-
+  
   return 0;
 }
 

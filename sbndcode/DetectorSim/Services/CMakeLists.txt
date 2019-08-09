@@ -30,7 +30,7 @@ simple_plugin(SBNDThermalNoiseServiceInFreq   "service"
  		${ROOT_BASIC_LIB_LIST}                                                                                                                   
 )      
 
-simple_plugin(SBNDDataDrivenNoiseService   "service"                                                           
+simple_plugin(SBNDuBooNEDataDrivenNoiseService   "service"                                                           
                 
 		larcorealg_Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
