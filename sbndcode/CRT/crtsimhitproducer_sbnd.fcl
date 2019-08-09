@@ -1,11 +1,15 @@
+#include "crtsimmodules_sbnd.fcl"
+
 BEGIN_PROLOG
 
 standard_crtsimhitalg:
 {
+    QPed:                 0.0 #63.6  # Pedestal offset [ADC]
+    QSlope:               40.0 #131.9 # Pedestal slope [ADC/photon]
+    NpeScaleShift:        -1085.0  # Model parameter for correcting distance down strip
+    UseReadoutWindow:     false  # Only reconstruct hits within central readout window
     TimeCoincidenceLimit: 0.08  # Minimum time between two overlapping hit crt strips [us]
-    QPed:                 63.6  # Pedestal offset [ADC]
-    QSlope:               131.9 # Pedestal slope [ADC/photon]
-    UseReadoutWindow:     true  # Only reconstruct hits within readout window
+    ClockSpeedCRT:        @local::sbnd_crtsim.ClockSpeedCRT
 }
 
 

@@ -5,6 +5,7 @@ include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 add_subdirectory(CRTProducts)
 add_subdirectory(CRTTools)
 add_subdirectory(CRTUtils)
+add_subdirectory(CRTAna)
 
 art_make( 
     EXCLUDE
@@ -14,9 +15,6 @@ art_make(
         CRTSimHitProducer_module.cc
         CRTTzeroProducer_module.cc
         CRTTrackProducer_module.cc
-        CRTRecoAna_module.cc
-        CRTHitRecoAna_module.cc
-        CRTTrackRecoAna_module.cc
     LIBRARY_NAME
         sbndcode_CRTData
     LIB_LIBRARIES
@@ -78,7 +76,7 @@ simple_plugin( CRTDetSim module
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nutools_RandomUtils_NuRandomService_service
+        nurandom_RandomUtils_NuRandomService_service
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
         ${MF_MESSAGELOGGER}
@@ -94,6 +92,7 @@ simple_plugin( CRTSimHitProducer module
         sbndcode_CRTData
         sbndcode_CRTProducts
         sbndcode_CRTUtils
+        sbndcode_GeoWrappers
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
@@ -101,7 +100,7 @@ simple_plugin( CRTSimHitProducer module
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nutools_RandomUtils_NuRandomService_service
+        nurandom_RandomUtils_NuRandomService_service
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
 	${ART_ROOT_IO_TFILESERVICE_SERVICE}
@@ -117,6 +116,7 @@ simple_plugin(CRTTrackProducer module
         sbndcode_CRTData
         sbndcode_CRTProducts
         sbndcode_CRTUtils
+        sbndcode_GeoWrappers
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
@@ -124,7 +124,7 @@ simple_plugin(CRTTrackProducer module
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nutools_RandomUtils_NuRandomService_service
+        nurandom_RandomUtils_NuRandomService_service
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
 	${ART_ROOT_IO_TFILESERVICE_SERVICE}
@@ -147,7 +147,7 @@ simple_plugin(CRTTzeroProducer module
         canvas
         cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nutools_RandomUtils_NuRandomService_service
+        nurandom_RandomUtils_NuRandomService_service
         ${ART_FRAMEWORK_SERVICES_REGISTRY}
         ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
 	${ART_ROOT_IO_TFILESERVICE_SERVICE}
@@ -157,146 +157,6 @@ simple_plugin(CRTTzeroProducer module
         ${CLHEP}
         ${CETLIB}
 )
-
-simple_plugin(CRTRecoAna module
-        larcorealg_Geometry
-        sbndcode_CRT
-        sbndcode_CRTData
-        sbndcode_CRTProducts
-        sbndcode_RecoUtils
-        sbndcode_CRTUtils
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-	${ART_PERSISTENCY_PROVENANCE}
-        canvas
-        cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nutools_RandomUtils_NuRandomService_service
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-        ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
-        ${ROOT_BASIC_LIB_LIST}
-        ${CLHEP}
-        ${CETLIB}
-        larcore_Geometry_Geometry_service
-        larsim_Simulation lardataobj_Simulation
-        larsim_MCCheater_BackTrackerService_service
-        larsim_MCCheater_ParticleInventoryService_service
-        lardata_Utilities
-        larevt_Filters
-        lardataobj_RawData
-        lardataobj_RecoBase
-        lardataobj_AnalysisBase
-        lardata_RecoObjects
-        larpandora_LArPandoraInterface
-        nusimdata_SimulationBase
-        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-        art_Persistency_Common canvas
-        art_Persistency_Provenance canvas
-        art_Utilities canvas
-        ${FHICLCPP}
-        ${ROOT_GEOM}
-        ${ROOT_XMLIO}
-        ${ROOT_GDML}
-        ${ROOT_SPECTRUM}
-)
-
-simple_plugin(CRTHitRecoAna module
-        larcorealg_Geometry
-        sbndcode_CRT
-        sbndcode_CRTData
-        sbndcode_CRTProducts
-        sbndcode_RecoUtils
-        sbndcode_CRTUtils
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-        canvas
-        cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nutools_RandomUtils_NuRandomService_service
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-        ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
-        ${ROOT_BASIC_LIB_LIST}
-        ${CLHEP}
-        ${CETLIB}
-
-        larcore_Geometry_Geometry_service
-        larsim_Simulation lardataobj_Simulation
-        larsim_MCCheater_BackTrackerService_service
-        larsim_MCCheater_ParticleInventoryService_service
-        lardata_Utilities
-        larevt_Filters
-        lardataobj_RawData
-        lardataobj_RecoBase
-        lardataobj_AnalysisBase
-        lardata_RecoObjects
-        larpandora_LArPandoraInterface
-        nusimdata_SimulationBase
-        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-        art_Persistency_Common canvas
-        art_Persistency_Provenance canvas
-        art_Utilities canvas
-        ${FHICLCPP}
-        ${ROOT_GEOM}
-        ${ROOT_XMLIO}
-        ${ROOT_GDML}
-        ${ROOT_SPECTRUM}
-)
-
-simple_plugin(CRTTrackRecoAna module
-        larcorealg_Geometry
-        sbndcode_CRT
-        sbndcode_CRTData
-        sbndcode_CRTProducts
-        sbndcode_RecoUtils
-        sbndcode_CRTUtils
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-        canvas
-        cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nutools_RandomUtils_NuRandomService_service
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-        ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
-        ${ROOT_BASIC_LIB_LIST}
-        ${CLHEP}
-        ${CETLIB}
-
-        larcore_Geometry_Geometry_service
-        larsim_Simulation lardataobj_Simulation
-        larsim_MCCheater_BackTrackerService_service
-        larsim_MCCheater_ParticleInventoryService_service
-        lardata_Utilities
-        larevt_Filters
-        lardataobj_RawData
-        lardataobj_RecoBase
-        lardataobj_AnalysisBase
-        lardata_RecoObjects
-        larpandora_LArPandoraInterface
-        nusimdata_SimulationBase
-        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-        art_Persistency_Common canvas
-        art_Persistency_Provenance canvas
-        art_Utilities canvas
-        ${FHICLCPP}
-        ${ROOT_GEOM}
-        ${ROOT_XMLIO}
-        ${ROOT_GDML}
-        ${ROOT_SPECTRUM}
-)
-
-
 
 install_headers()
 install_fhicl()

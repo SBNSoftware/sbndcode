@@ -6,24 +6,18 @@ CRTHitRecoAlg::CRTHitRecoAlg(const Config& config){
 
   this->reconfigure(config);
   
-  fGeometryService = lar::providerFrom<geo::Geometry>();
   fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
   fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fTrigClock = fDetectorClocks->TriggerClock();
-  fAuxDetGeo = &(*fAuxDetGeoService);
-  fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
+  //fTrigClock = fDetectorClocks->TriggerClock();
 
 }
 
 
 CRTHitRecoAlg::CRTHitRecoAlg(){
 
-  fGeometryService = lar::providerFrom<geo::Geometry>();
   fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
   fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fTrigClock = fDetectorClocks->TriggerClock();
-  fAuxDetGeo = &(*fAuxDetGeoService);
-  fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
+  //fTrigClock = fDetectorClocks->TriggerClock();
 
 }
 
@@ -38,7 +32,9 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   fUseReadoutWindow = config.UseReadoutWindow(); 
   fQPed = config.QPed();
   fQSlope = config.QSlope();
+  fNpeScaleShift = config.NpeScaleShift();
   fTimeCoincidenceLimit = config.TimeCoincidenceLimit();
+  fClockSpeedCRT = config.ClockSpeedCRT();
 
   return;
 }
@@ -46,15 +42,16 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
 std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg::CreateTaggerStrips(std::vector<art::Ptr<crt::CRTData>> crtList){
 
   double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-  double driftTimeMuS = (2.*fGeometryService->DetHalfWidth()+3.)/fDetectorProperties->DriftVelocity(); // [us]
+  double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
 
   std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips;
 
   for (size_t i = 0; i < crtList.size(); i+=2){
 
     // Get the time
-    fTrigClock.SetTime(crtList[i]->T0());
-    double t1 = fTrigClock.Time(); // [us]
+    //fTrigClock.SetTime(crtList[i]->T0());
+    //double t1 = fTrigClock.Time(); // [us]
+    double t1 = (double)(int)crtList[i]->T0()/fClockSpeedCRT; // [tick -> us]
     if(fUseReadoutWindow){
       if(!(t1 >= -driftTimeMuS && t1 <= readoutWindowMuS)) continue;
     }
@@ -73,23 +70,39 @@ std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg:
 CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2, size_t ind){
 
   // Get the time, channel, center and width
-  fTrigClock.SetTime(sipm1->T0());
-  double t1 = fTrigClock.Time(); // [us]
+  //fTrigClock.SetTime(sipm1->T0());
+  //double t1 = fTrigClock.Time(); // [us]
+  double t1 = (double)(int)sipm1->T0()/fClockSpeedCRT; // [tick -> us]
 
   // Get strip info from the geometry service
   uint32_t channel = sipm1->Channel();
-  int strip = (channel >> 1) & 15;
-  int module = (channel >> 5);
-  std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
-  TVector3 center = fAuxDetGeoCore->AuxDetChannelToPosition(2*strip, name);
-  const geo::AuxDetSensitiveGeo stripGeo = fAuxDetGeoCore->ChannelToAuxDetSensitive(name, 2*strip);
-  double width = 2*stripGeo.HalfWidth1();
 
   std::pair<std::string,unsigned> tagger = ChannelToTagger(channel);
 
   // Get the time of hit on the second SiPM
-  fTrigClock.SetTime(sipm2->T0());
-  double t2 = fTrigClock.Time(); // [us]
+  //fTrigClock.SetTime(sipm2->T0());
+  //double t2 = fTrigClock.Time(); // [us]
+  double t2 = (double)(int)sipm2->T0()/fClockSpeedCRT; // [tick -> us]
+
+  // Calculate the number of photoelectrons at each SiPM
+  double npe1 = ((double)sipm1->ADC() - fQPed)/fQSlope;
+  double npe2 = ((double)sipm2->ADC() - fQPed)/fQSlope;
+
+  // Calculate the distance between the SiPMs
+  std::pair<double, double> sipmDist = DistanceBetweenSipms(sipm1, sipm2);
+
+  double time = (t1 + t2)/2.;
+
+  CRTStrip stripHit = {time, channel, sipmDist.first, sipmDist.second, npe1+npe2, tagger, ind};
+  return stripHit;
+
+}
+
+std::pair<double, double> CRTHitRecoAlg::DistanceBetweenSipms(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2){
+  
+  uint32_t channel = sipm1->Channel();
+  std::string stripName = fCrtGeo.ChannelToStripName(channel);
+  double width = fCrtGeo.GetStrip(stripName).width;
 
   // Calculate the number of photoelectrons at each SiPM
   double npe1 = ((double)sipm1->ADC() - fQPed)/fQSlope;
@@ -101,10 +114,8 @@ CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<crt::CRTData> sipm1, art::Ptr<cr
   // Calculate the error
   double normx = x + 0.344677*x - 1.92045;
   double ex = 1.92380e+00+1.47186e-02*normx-5.29446e-03*normx*normx;
-  double time = (t1 + t2)/2.;
 
-  CRTStrip stripHit = {time, channel, x, ex, npe1+npe2, tagger, ind};
-  return stripHit;
+  return std::make_pair(x, ex);
 
 }
 
@@ -167,7 +178,8 @@ std::vector<std::pair<crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::CreateCRTHi
 
             // Average the time
             double time = (t0_1 + t0_2)/2;
-            double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
+            //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
+            double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
 
             // Create a CRT hit
             crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
@@ -243,31 +255,8 @@ std::vector<std::pair<crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::CreateCRTHi
 // Function to calculate the strip position limits in real space from channel
 std::vector<double> CRTHitRecoAlg::ChannelToLimits(CRTStrip stripHit){
 
-  // Get strip geometry from the channel ID
-  int strip = (stripHit.channel >> 1) & 15;
-  int module = (stripHit.channel >> 5);
-  std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
-  const geo::AuxDetSensitiveGeo stripGeo = fAuxDetGeoCore->ChannelToAuxDetSensitive(name, 2*strip);
-
-  double halfWidth = stripGeo.HalfWidth1();
-  double halfHeight = stripGeo.HalfHeight();
-  double halfLength = stripGeo.HalfLength();
-
-  // Get the maximum strip limits in world coordinates
-  double l1[3] = {-halfWidth+stripHit.x+stripHit.ex, halfHeight, halfLength};
-  double w1[3] = {0,0,0};
-  stripGeo.LocalToWorld(l1, w1);
-
-  // Get the minimum strip limits in world coordinates
-  double l2[3] = {-halfWidth+stripHit.x-stripHit.ex, -halfHeight, -halfLength};
-  double w2[3] = {0,0,0};
-  stripGeo.LocalToWorld(l2, w2);
-
-  // Use this to get the limits in the two variable directions
-  std::vector<double> limits = {std::min(w1[0],w2[0]), std::max(w1[0],w2[0]), 
-                                std::min(w1[1],w2[1]), std::max(w1[1],w2[1]), 
-                                std::min(w1[2],w2[2]), std::max(w1[2],w2[2])};
-  return limits;
+  std::string stripName = fCrtGeo.ChannelToStripName(stripHit.channel);
+  return fCrtGeo.StripLimitsWithChargeSharing(stripName, stripHit.x, stripHit.ex);
 
 } // CRTHitRecoAlg::ChannelToLimits()
 
@@ -297,39 +286,10 @@ std::vector<double> CRTHitRecoAlg::CrtOverlap(std::vector<double> strip1, std::v
 // Function to return the CRT tagger name and module position from the channel ID
 std::pair<std::string,unsigned> CRTHitRecoAlg::ChannelToTagger(uint32_t channel){
 
-  // Get the strip geometry from the channel ID
-  int strip = (channel >> 1) & 15;
-  int module = (channel >> 5);
-  std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
-  TVector3 center = fAuxDetGeoCore->AuxDetChannelToPosition(2*strip, name);
-  const geo::AuxDetSensitiveGeo stripGeo = fAuxDetGeoCore->ChannelToAuxDetSensitive(name, 2*strip);
-
-  // Get the full volume path string
-  std::set<std::string> volNames = {stripGeo.TotalVolume()->GetName()};
-  std::vector<std::vector<TGeoNode const*> > paths = fGeometryService->FindAllVolumePaths(volNames);
-  std::string path = "";
-  for (size_t inode=0; inode<paths.at(0).size(); inode++) {
-    path += paths.at(0).at(inode)->GetName();
-    if (inode < paths.at(0).size() - 1) {
-      path += "/";
-    }
-  }
-
-  // Retrive the geometry manager from the path
-  TGeoManager* manager = fGeometryService->ROOTGeoManager();
-  manager->cd(path.c_str());
-
-  // Get the parent module and tagger
-  TGeoNode* nodeModule = manager->GetMother(2);
-  TGeoNode* nodeTagger = manager->GetMother(3);
-
-  // Module position in parent (tagger) frame
-  double origin[3] = {0, 0, 0};
-  double modulePosMother[3];
-  nodeModule->LocalToMaster(origin, modulePosMother);
-  unsigned planeID = (modulePosMother[2] > 0);
-  // Get the name of the tagger
-  std::string tagName = nodeTagger->GetName();
+  std::string stripName = fCrtGeo.ChannelToStripName(channel);
+  size_t planeID = fCrtGeo.GetModule(fCrtGeo.GetStrip(stripName).module).planeID;
+  std::string tagName = fCrtGeo.GetModule(fCrtGeo.GetStrip(stripName).module).tagger;
+  
   std::pair<std::string, unsigned> output = std::make_pair(tagName, planeID);
 
   return output;
@@ -340,90 +300,8 @@ std::pair<std::string,unsigned> CRTHitRecoAlg::ChannelToTagger(uint32_t channel)
 // Function to check if a CRT strip overlaps with a perpendicular module
 bool CRTHitRecoAlg::CheckModuleOverlap(uint32_t channel){
 
-  // FIXME: Would be better to check overlap of all individual strips rather than modules
-  bool hasOverlap = false;
-
-  // Get the strip geometry from the channel ID
-  int strip = (channel >> 1) & 15;
-  int module = (channel >> 5);
-  std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
-  const geo::AuxDetSensitiveGeo stripGeo = fAuxDetGeoCore->ChannelToAuxDetSensitive(name, 2*strip);
-
-  // Get the parent module and tagger from the the geometry manager
-  std::set<std::string> volNames = {stripGeo.TotalVolume()->GetName()};
-  std::vector<std::vector<TGeoNode const*> > paths = fGeometryService->FindAllVolumePaths(volNames);
-  std::string path = "";
-  for (size_t inode=0; inode<paths.at(0).size(); inode++) {
-    path += paths.at(0).at(inode)->GetName();
-    if (inode < paths.at(0).size() - 1) {
-      path += "/";
-    }
-  }
-  TGeoManager* manager = fGeometryService->ROOTGeoManager();
-  manager->cd(path.c_str());
-  TGeoNode* nodeModule = manager->GetMother(2);
-  TGeoNode* nodeTagger = manager->GetMother(3);
-  std::string modName = nodeModule->GetName();
-
-  // Get the limits of the module in the tagger frame
-  double height = fGeometryService->AuxDet(module).HalfHeight();
-  double width = fGeometryService->AuxDet(module).HalfWidth1();
-  double length = fGeometryService->AuxDet(module).Length()/2.;
-  double pos1[3] = {width, height, length};
-  double tagp1[3];
-  nodeModule->LocalToMaster(pos1, tagp1);
-  double pos2[3] = {-width, -height, -length};
-  double tagp2[3];
-  nodeModule->LocalToMaster(pos2, tagp2);
-  std::vector<double> limits = {std::min(tagp1[0], tagp2[0]),
-                                std::max(tagp1[0], tagp2[0]),
-                                std::min(tagp1[1], tagp2[1]),
-                                std::max(tagp1[1], tagp2[1]),
-                                std::min(tagp1[2], tagp2[2]),
-                                std::max(tagp1[2], tagp2[2])};
-
-  // Get which layer the module is in the tagger
-  double origin[3] = {0, 0, 0};
-  double modulePosMother[3];
-  nodeModule->LocalToMaster(origin, modulePosMother);
-
-  unsigned planeID = (modulePosMother[2] > 0);
-
-  // Get the number of daughters from the tagger
-  int nDaughters = nodeTagger->GetNdaughters();
-
-  // Loop over the daughters
-  for(int mod_i = 0; mod_i < nDaughters; mod_i++){
-    // Check the name not the same as the current module
-    TGeoNode* nodeDaughter = nodeTagger->GetDaughter(mod_i);
-    std::string d_name = nodeDaughter->GetName();
-    // Remove last two characters from name to match the AuxDet name
-    if(d_name == modName) continue;
-
-    // Get the limits of the module in the tagger frame
-    double d_tagp1[3];
-    nodeDaughter->LocalToMaster(pos1, d_tagp1);
-    double d_tagp2[3];
-    nodeDaughter->LocalToMaster(pos2, d_tagp2);
-    std::vector<double> d_limits = {std::min(d_tagp1[0], d_tagp2[0]),
-                                    std::max(d_tagp1[0], d_tagp2[0]),
-                                    std::min(d_tagp1[1], d_tagp2[1]),
-                                    std::max(d_tagp1[1], d_tagp2[1]),
-                                    std::min(d_tagp1[2], d_tagp2[2]),
-                                    std::max(d_tagp1[2], d_tagp2[2])};
-
-    // Get which layer the module is in the tagger
-    double d_modulePosMother[3];
-    nodeDaughter->LocalToMaster(origin, d_modulePosMother);
-    unsigned d_planeID = (d_modulePosMother[2] > 0);
-
-    // Check the overlap of the two modules
-    std::vector<double> overlap = CrtOverlap(limits, d_limits);
-    // If there is an overlap set to true and the modules are in different layers
-    if(overlap[0]!=-99999 && d_planeID!=planeID) hasOverlap = true;
-  }
-
-  return hasOverlap;
+  std::string stripName = fCrtGeo.ChannelToStripName(channel);
+  return fCrtGeo.StripHasOverlap(stripName);
 
 } // CRTHitRecoAlg::CheckModuleOverlap
 
@@ -455,5 +333,26 @@ sbnd::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::m
   return crtHit;
 
 } // CRTHitRecoAlg::FillCrtHit()
+
+
+// Function to correct number of photoelectrons by distance down strip
+double CRTHitRecoAlg::CorrectNpe(CRTStrip strip1, CRTStrip strip2, TVector3 position){
+  geo::Point_t pos {position.X(), position.Y(), position.Z()};
+
+  // Get the strip name from the channel ID
+  std::string name1 = fCrtGeo.ChannelToStripName(strip1.channel);
+  std::string name2 = fCrtGeo.ChannelToStripName(strip2.channel);
+
+  // Get the distance from the CRT hit to the sipm end
+  double stripDist1 = fCrtGeo.DistanceDownStrip(pos, name1);
+  double stripDist2 = fCrtGeo.DistanceDownStrip(pos, name2);
+
+  // Correct the measured pe
+  double pesCorr1 = strip1.pes * pow(stripDist1 - fNpeScaleShift, 2) / pow(fNpeScaleShift, 2);
+  double pesCorr2 = strip2.pes * pow(stripDist2 - fNpeScaleShift, 2) / pow(fNpeScaleShift, 2);
+
+  // Add the two strips together
+  return pesCorr1 + pesCorr2;
+}
 
 }

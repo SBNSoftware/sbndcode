@@ -1,0 +1,19 @@
+BEGIN_PROLOG
+
+standard_crtt0matchingalg:
+{
+    DistanceLimit:       60.                # Maximum distance between projected crossing point and CRT hit
+    MinTrackLength:      0.                # Minimum track length to perform T0 matching on
+    TrackDirectionFrac:  0.5                # Minimum track length to perform T0 matching on
+    TPCTrackLabel:       "pandoraTrack"
+}
+
+sbnd_crtt0matchingalg_crID:
+{
+    DistanceLimit:       35.                # Maximum distance between projected crossing point and CRT hit
+    MinTrackLength:      0.                # Minimum track length to perform T0 matching on
+    TrackDirectionFrac:  0.5                # Minimum track length to perform T0 matching on
+    TPCTrackLabel:       "pandoraTrack"
+}
+
+END_PROLOG
