@@ -47,7 +47,7 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
   NO_UNDEFINED
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
 )
-add_definitions(-DGENIE_PRE_R3)
+##add_definitions(-DGENIE_PRE_R3)
 
 cet_report_compiler_flags()
 
