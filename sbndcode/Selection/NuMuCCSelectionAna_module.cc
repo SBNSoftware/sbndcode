@@ -1,0 +1,555 @@
+////////////////////////////////////////////////////////////////////////
+// Class:       NuMuCCSelectionAna
+// Module Type: analyzer
+// File:        NuMuCCSelectionAna_module.cc
+//
+// Tom Brooks (tbrooks@fnal.gov)
+////////////////////////////////////////////////////////////////////////
+
+// sbndcode includes
+#include "sbndcode/RecoUtils/RecoUtils.h"
+#include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
+#include "sbndcode/CosmicId/Algs/CosmicIdAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+
+// LArSoft includes
+#include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "nusimdata/SimulationBase/MCParticle.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
+#include "larsim/MCCheater/BackTrackerService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
+#include "lardataobj/RecoBase/MCSFitResult.h"
+#include "larreco/RecoAlg/TrajectoryMCSFitter.h"
+#include "larreco/RecoAlg/TrackMomentumCalculator.h"
+
+// Framework includes
+#include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Principal/Event.h"
+#include "art/Framework/Principal/Handle.h"
+#include "art_root_io/TFileService.h"
+#include "canvas/Persistency/Common/FindManyP.h"
+#include "fhiclcpp/ParameterSet.h"
+#include "fhiclcpp/types/Table.h"
+#include "fhiclcpp/types/Atom.h"
+
+#include "Pandora/PdgTable.h"
+
+// ROOT includes. Note: To look up the properties of the ROOT classes,
+// use the ROOT web site; e.g.,
+// <https://root.cern.ch/doc/master/annotated.html>
+#include "TVector3.h"
+#include "TH1.h"
+
+// C++ includes
+#include <map>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+namespace sbnd {
+
+  class NuMuCCSelectionAna : public art::EDAnalyzer {
+  public:
+
+    struct BeamTime {
+      using Name = fhicl::Name;
+      using Comment = fhicl::Comment;
+
+      fhicl::Atom<double> BeamTimeMin {
+        Name("BeamTimeMin"),
+        Comment("")
+      };
+
+      fhicl::Atom<double> BeamTimeMax {
+        Name("BeamTimeMax"),
+        Comment("")
+      };
+
+    };
+
+    // Describes configuration parameters of the module
+    struct Config {
+      using Name = fhicl::Name;
+      using Comment = fhicl::Comment;
+ 
+      // One Atom for each parameter
+      fhicl::Atom<art::InputTag> SimModuleLabel {
+        Name("SimModuleLabel"),
+        Comment("tag of detector simulation data product")
+      };
+
+      fhicl::Atom<art::InputTag> TpcTrackModuleLabel {
+        Name("TpcTrackModuleLabel"),
+        Comment("tag of TPC track producer data product")
+      };
+
+      fhicl::Atom<art::InputTag> PandoraLabel {
+        Name("PandoraLabel"),
+        Comment("tag of pandora data product")
+      };
+
+      fhicl::Atom<bool> Verbose {
+        Name("Verbose"),
+        Comment("Print information about what's going on")
+      };
+
+      fhicl::Table<CosmicIdAlg::Config> CosIdAlg {
+        Name("CosIdAlg"),
+      };
+
+      fhicl::Table<trkf::TrajectoryMCSFitter::Config> fitter {
+        Name("fitter"),
+      };
+
+      fhicl::Table<BeamTime> BeamTimeLimits {
+        Name("BeamTimeLimits"),
+        Comment("")
+      };
+
+    }; // Inputs
+
+    using Parameters = art::EDAnalyzer::Table<Config>;
+ 
+    // Constructor: configures module
+    explicit NuMuCCSelectionAna(Parameters const& config);
+ 
+    // Called once, at start of the job
+    virtual void beginJob() override;
+ 
+    // Called once per event
+    virtual void analyze(const art::Event& event) override;
+
+    // Called once, at end of the job
+    virtual void endJob() override;
+
+    typedef art::Handle< std::vector<recob::PFParticle> > PFParticleHandle;
+    typedef std::map< size_t, art::Ptr<recob::PFParticle> > PFParticleIdMap;
+    typedef std::vector< art::Ptr<recob::PFParticle> > PFParticleVector;
+    typedef std::vector< art::Ptr<recob::Track> > TrackVector;
+
+  private:
+
+    // fcl file parameters
+    art::InputTag fSimModuleLabel;      ///< name of detsim producer
+    art::InputTag fTpcTrackModuleLabel; ///< name of TPC track producer
+    art::InputTag fPandoraLabel;
+    bool          fVerbose;             ///< print information about what's going on
+    double        fBeamTimeMin;
+    double        fBeamTimeMax;
+
+    CosmicIdAlg cosIdAlg;
+    TPCGeoAlg fTpcGeo;
+    // Momentum fitters
+    trkf::TrajectoryMCSFitter     fMcsFitter; 
+    trkf::TrackMomentumCalculator fRangeFitter;
+    
+    // histograms
+    std::vector<std::string> trueCategories{"NuMu","Dirt","Cr","Other", "OtherNu"};
+    size_t nTC = trueCategories.size();
+    std::vector<std::string> recoCategories{"NuMu","Dirt","Cr","Other","OtherNu"};
+    size_t nRC = recoCategories.size();
+    std::vector<std::string> stage{"True","Pandora","CosmicID","Selection"};
+    size_t nStg = stage.size();
+
+    std::vector<std::string> nuSelected{"","Selected"};
+    size_t nSel = nuSelected.size();
+
+    TH1D *hMuMom[2][4];
+    TH1D *hMuLength[2][4];
+    TH1D *hMuTheta[2][4];
+    TH1D *hMuPhi[2][4];
+    TH1D *hNuE[2][4];
+
+    TH1D *hTrueMom[5][3];
+    TH1D *hTrueLength[5][3];
+    TH1D *hTrueTheta[5][3];
+    TH1D *hTruePhi[5][3];
+
+    TH1D *hRecoMom[5][3];
+    TH1D *hRecoLength[5][3];
+    TH1D *hRecoTheta[5][3];
+    TH1D *hRecoPhi[5][3];
+
+    // performance counters
+
+    void GetPFParticleIdMap(const PFParticleHandle &pfParticleHandle, PFParticleIdMap &pfParticleMap);
+
+  }; // class NuMuCCSelectionAna
+
+
+  // Constructor
+  NuMuCCSelectionAna::NuMuCCSelectionAna(Parameters const& config)
+    : EDAnalyzer(config)
+    , fSimModuleLabel       (config().SimModuleLabel())
+    , fTpcTrackModuleLabel  (config().TpcTrackModuleLabel())
+    , fPandoraLabel         (config().PandoraLabel())
+    , fVerbose              (config().Verbose())
+    , fBeamTimeMin          (config().BeamTimeLimits().BeamTimeMin())
+    , fBeamTimeMax          (config().BeamTimeLimits().BeamTimeMax())
+    , cosIdAlg              (config().CosIdAlg())
+    , fMcsFitter            (config().fitter)
+  {
+
+  } // NuMuCCSelectionAna()
+
+
+  void NuMuCCSelectionAna::beginJob()
+  {
+    // Access tfileservice to handle creating and writing histograms
+    art::ServiceHandle<art::TFileService> tfs;
+
+    for(size_t i = 0; i < nTC; i++){
+      for(size_t j = 1; j < nStg; j++){
+        TString hMom_name     = Form("hTrueMom%s_%s", trueCategories[i].c_str(), stage[j].c_str());
+        hTrueMom[i][j-1]        = tfs->make<TH1D>(hMom_name,    "", 20, 0,    2);
+        TString hLength_name  = Form("hTrueLength%s_%s", trueCategories[i].c_str(), stage[j].c_str());
+        hTrueLength[i][j-1]     = tfs->make<TH1D>(hLength_name, "", 20, 0,    500);
+        TString hTheta_name   = Form("hTrueTheta%s_%s", trueCategories[i].c_str(), stage[j].c_str());
+        hTrueTheta[i][j-1]      = tfs->make<TH1D>(hTheta_name,  "", 20, 0,    3.2);
+        TString hPhi_name     = Form("hTruePhi%s_%s", trueCategories[i].c_str(), stage[j].c_str());
+        hTruePhi[i][j-1]        = tfs->make<TH1D>(hPhi_name,    "", 20, -3.2, 3.2);
+      }
+    }
+
+    for(size_t i = 0; i < nRC; i++){
+      for(size_t j = 1; j < nStg; j++){
+        TString hMom_name     = Form("hRecoMom%s_%s", recoCategories[i].c_str(), stage[j].c_str());
+        hRecoMom[i][j-1]        = tfs->make<TH1D>(hMom_name,    "", 20, 0,    2);
+        TString hLength_name  = Form("hRecoLength%s_%s", recoCategories[i].c_str(), stage[j].c_str());
+        hRecoLength[i][j-1]     = tfs->make<TH1D>(hLength_name, "", 20, 0,    500);
+        TString hTheta_name   = Form("hRecoTheta%s_%s", recoCategories[i].c_str(), stage[j].c_str());
+        hRecoTheta[i][j-1]      = tfs->make<TH1D>(hTheta_name,  "", 20, 0,    3.2);
+        TString hPhi_name     = Form("hRecoPhi%s_%s", recoCategories[i].c_str(), stage[j].c_str());
+        hRecoPhi[i][j-1]        = tfs->make<TH1D>(hPhi_name,    "", 20, -3.2, 3.2);
+      }
+    }
+
+    for(size_t i = 0; i < nSel; i++){
+      for(size_t j = 0; j < nStg; j++){
+        TString hMom_name     = Form("hMuMom%s_%s", nuSelected[i].c_str(), stage[j].c_str());
+        hMuMom[i][j]          = tfs->make<TH1D>(hMom_name,    "", 20, 0,    2);
+        TString hLength_name  = Form("hMuLength%s_%s", nuSelected[i].c_str(), stage[j].c_str());
+        hMuLength[i][j]       = tfs->make<TH1D>(hLength_name, "", 20, 0,    500);
+        TString hTheta_name   = Form("hMuTheta%s_%s", nuSelected[i].c_str(), stage[j].c_str());
+        hMuTheta[i][j]        = tfs->make<TH1D>(hTheta_name,  "", 20, 0,    3.2);
+        TString hPhi_name     = Form("hMuPhi%s_%s", nuSelected[i].c_str(), stage[j].c_str());
+        hMuPhi[i][j]          = tfs->make<TH1D>(hPhi_name,    "", 20, -3.2, 3.2);
+        TString hNuE_name     = Form("hNuE%s_%s", nuSelected[i].c_str(), stage[j].c_str());
+        hNuE[i][j]            = tfs->make<TH1D>(hNuE_name,    "", 20, 0,    2);      
+      }
+    }
+
+
+    // Initial output
+    if(fVerbose) std::cout<<"----------------- Cosmic ID Ana Module -------------------"<<std::endl;
+
+  }// NuMuCCSelectionAna::beginJob()
+
+
+  void NuMuCCSelectionAna::analyze(const art::Event& event)
+  {
+
+    // Fetch basic event info
+    if(fVerbose){
+      std::cout<<"============================================"<<std::endl
+               <<"Run = "<<event.run()<<", SubRun = "<<event.subRun()<<", Event = "<<event.id().event()<<std::endl
+               <<"============================================"<<std::endl;
+    }
+
+    //----------------------------------------------------------------------------------------------------------
+    //                                          GETTING PRODUCTS
+    //----------------------------------------------------------------------------------------------------------
+
+    // Get truth info and matching
+    art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
+    // Retrieve all the truth info in the events
+    auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
+
+    // Get PFParticles from pandora
+    PFParticleHandle pfParticleHandle;
+    event.getByLabel(fPandoraLabel, pfParticleHandle);
+    if( !pfParticleHandle.isValid() ){
+      if(fVerbose) std::cout<<"Failed to find the PFParticles."<<std::endl;
+      return;
+    }
+    PFParticleIdMap pfParticleMap;
+    this->GetPFParticleIdMap(pfParticleHandle, pfParticleMap);
+    // Get PFParticle to track associations
+    art::FindManyP< recob::Track > pfPartToTrackAssoc(pfParticleHandle, event, fTpcTrackModuleLabel);
+    
+    // Get track to hit and colorimetry associations
+    auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTpcTrackModuleLabel);
+    art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTpcTrackModuleLabel);
+
+    //----------------------------------------------------------------------------------------------------------
+    //                                          TRUTH MATCHING
+    //----------------------------------------------------------------------------------------------------------
+
+    // Record all true particles and sort by type
+    std::map<int, simb::MCParticle> particles;
+    std::vector<simb::MCParticle> parts;
+    std::vector<int> nuParticleIds;
+    std::vector<int> lepParticleIds;
+    std::map<int, double> lepNuEMap;
+    std::vector<int> dirtParticleIds;
+    std::vector<int> crParticleIds;
+
+    // Loop over all true particles
+    for (auto const& particle: (*particleHandle)){
+      // Store particle
+      int partId = particle.TrackId();
+      particles[partId] = particle;
+      parts.push_back(particle);
+      // Get MCTruth
+      art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(partId);
+      int pdg = std::abs(particle.PdgCode());
+
+      // If origin is a neutrino
+      if(truth->Origin() == simb::kBeamNeutrino){
+
+        geo::Point_t vtx;
+        vtx.SetX(truth->GetNeutrino().Nu().Vx()); vtx.SetY(truth->GetNeutrino().Nu().Vy()); vtx.SetZ(truth->GetNeutrino().Nu().Vz());
+        double nuE = truth->GetNeutrino().Nu().E();
+        // If neutrino vertex is not inside the TPC then call it a dirt particle
+        if(!fTpcGeo.InFiducial(vtx, 0, 0)){ 
+          dirtParticleIds.push_back(partId);
+        }
+        // If it's a primary muon
+        else if(pdg==13 && particle.Mother()==0){ 
+          lepParticleIds.push_back(partId);
+
+          TVector3 start(particle.Vx(), particle.Vy(), particle.Vz());
+          TVector3 end(particle.EndX(), particle.EndY(), particle.EndZ());
+          double trueMomentum = particle.P();
+          double trueLength = fTpcGeo.TpcLength(particle);
+          double trueTheta = (end-start).Theta();
+          double truePhi = (end-start).Phi();
+
+          std::pair<TVector3, TVector3> se = fTpcGeo.CrossingPoints(particle);
+          geo::Point_t trueStart {se.first.X(), se.first.Y(), se.first.Z()};
+          geo::Point_t trueEnd {se.second.X(), se.second.Y(), se.second.Z()};
+          bool trueExits = fTpcGeo.InFiducial(trueEnd, 5., 5.);
+          bool trueVtxContained = fTpcGeo.InFiducial(trueStart, 15., 15., 15., 15., 15., 80.);
+          bool trueSelected = false;
+          if(trueExits && trueVtxContained && trueLength > 100.) trueSelected = true;
+          if(!trueExits && trueVtxContained && trueLength > 50.) trueSelected = true;
+          if(trueSelected) {
+            hMuMom[1][0]->Fill(trueMomentum);
+            hMuLength[1][0]->Fill(trueLength);
+            hMuTheta[1][0]->Fill(trueTheta);
+            hMuPhi[1][0]->Fill(truePhi);
+            hNuE[1][0]->Fill(nuE);
+          }
+          hMuMom[0][0]->Fill(trueMomentum);
+          hMuLength[0][0]->Fill(trueLength);
+          hMuTheta[0][0]->Fill(trueTheta);
+          hMuPhi[0][0]->Fill(truePhi);
+          hNuE[0][0]->Fill(nuE);
+
+          lepNuEMap[partId] = nuE;
+        }
+        // Other nu particles
+        else{
+          nuParticleIds.push_back(partId);
+        }
+
+        
+      }
+
+      // If origin is a cosmic ray
+      else if(truth->Origin() == simb::kCosmicRay){
+        crParticleIds.push_back(partId);
+      }
+    }
+
+    //----------------------------------------------------------------------------------------------------------
+    //                                      FAKE PDS RECONSTRUCTION
+    //----------------------------------------------------------------------------------------------------------
+
+    // Create fake flashes in each tpc
+    std::pair<std::vector<double>, std::vector<double>> fakeFlashes = CosmicIdUtils::FakeTpcFlashes(parts);
+    std::vector<double> fakeTpc0Flashes = fakeFlashes.first;
+    std::vector<double> fakeTpc1Flashes = fakeFlashes.second;
+    bool tpc0BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc0Flashes, fBeamTimeMin, fBeamTimeMax);
+    bool tpc1BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc1Flashes, fBeamTimeMin, fBeamTimeMax);
+
+    // If there are no flashes in time with the beam then ignore the event
+    if(!tpc0BeamFlash && !tpc1BeamFlash) return;
+
+    //----------------------------------------------------------------------------------------------------------
+    //                                          COSMIC ID - CALCULATING CUTS
+    //----------------------------------------------------------------------------------------------------------
+
+    //Loop over the pfparticle map
+    for (PFParticleIdMap::const_iterator it = pfParticleMap.begin(); it != pfParticleMap.end(); ++it){
+
+      const art::Ptr<recob::PFParticle> pParticle(it->second);
+      // Only look for primary particles
+      if (!pParticle->IsPrimary()) continue;
+      // Check if this particle is identified as the neutrino
+      const int pdg(pParticle->PdgCode());
+      const bool isNeutrino(std::abs(pdg) == pandora::NU_E || std::abs(pdg) == pandora::NU_MU || std::abs(pdg) == pandora::NU_TAU);
+      //Find neutrino pfparticle
+      if(!isNeutrino) continue;
+
+      int pfpType = 3;
+      std::vector<recob::Track> nuTracks;
+
+      // Loop over daughters of pfparticle
+      for (const size_t daughterId : pParticle->Daughters()){
+
+        // Get tracks associated with daughter
+        art::Ptr<recob::PFParticle> pDaughter = pfParticleMap.at(daughterId);
+        const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pDaughter.key()));
+        if(associatedTracks.size() != 1) continue;
+
+        // Get the first associated track
+        recob::Track tpcTrack = *associatedTracks.front();
+        nuTracks.push_back(tpcTrack);
+
+        // Truth match muon tracks and pfps
+        std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+        if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()){ 
+          pfpType = 0;
+        }
+        else if(std::find(nuParticleIds.begin(), nuParticleIds.end(), trueId) != nuParticleIds.end()){ 
+          if(pfpType != 0) pfpType = 4;
+        }
+        else if(std::find(dirtParticleIds.begin(), dirtParticleIds.end(), trueId) != dirtParticleIds.end()){ 
+          if(pfpType != 0 && pfpType != 4) pfpType = 1;
+        }
+        else if(std::find(crParticleIds.begin(), crParticleIds.end(), trueId) != crParticleIds.end()){
+          if(pfpType != 0 && pfpType != 4 && pfpType != 1) pfpType = 2;
+        }
+        
+      }
+
+      if(nuTracks.size() == 0) continue;
+
+      std::sort(nuTracks.begin(), nuTracks.end(), [](auto& left, auto& right){
+                return left.Length() > right.Length();});
+
+      recob::Track nuTrack = nuTracks[0];
+
+      std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(nuTrack.ID());
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+
+      int lepId = trueId;
+      for(auto const& trk : nuTracks){
+        std::vector<art::Ptr<recob::Hit>> trkHits = findManyHits.at(trk.ID());
+        int trkId = RecoUtils::TrueParticleIDFromTotalRecoHits(trkHits, false);
+        if(lepNuEMap.find(trkId) != lepNuEMap.end()) lepId = trkId;
+      }
+      
+      double recoMomentum = 0.;
+      bool exits = fTpcGeo.InFiducial(nuTrack.End(), 5., 5.);
+      double recoLength = nuTrack.Length();
+      double recoTheta = nuTrack.Theta();
+      double recoPhi = nuTrack.Phi();
+      bool selected = false;
+      bool vertexContained = fTpcGeo.InFiducial(nuTrack.Start(), 15., 15., 15., 15., 15., 80.);
+
+      // Apply selection criteria
+      if(exits){
+        recob::MCSFitResult mcsResult = fMcsFitter.fitMcs(nuTrack);
+        recoMomentum = mcsResult.bestMomentum();
+        if(vertexContained && recoLength > 100.) selected = true;
+      }
+      else{
+        recoMomentum = fRangeFitter.GetTrackMomentum(recoLength, 13);
+        if(vertexContained && recoLength > 50.) selected = true;
+      }
+
+      // Does pfp look like a cosmic?
+      bool isCosmic = cosIdAlg.CosmicId(*pParticle, pfParticleMap, event, fakeTpc0Flashes, fakeTpc1Flashes);
+
+      for(size_t j = 0; j < nStg; j++){
+        bool plot = false;
+        if(j == 0) plot = true;
+        if(j == 1 && !isCosmic) plot = true;
+        if(j == 2 && !isCosmic && selected) plot = true;
+        if(!plot) continue;
+        // Reconstructed quantities of the longest track in the PFP
+        hRecoMom[pfpType][j]->Fill(recoMomentum);
+        hRecoLength[pfpType][j]->Fill(recoLength);
+        hRecoTheta[pfpType][j]->Fill(recoTheta);
+        hRecoPhi[pfpType][j]->Fill(recoPhi);
+
+        // True quantities of the longest track in the PFP
+        if(particles.find(trueId) != particles.end()){
+          TVector3 start(particles[trueId].Vx(), particles[trueId].Vy(), particles[trueId].Vz());
+          TVector3 end(particles[trueId].EndX(), particles[trueId].EndY(), particles[trueId].EndZ());
+          double trueMomentum = particles[trueId].P();
+          double trueLength = fTpcGeo.TpcLength(particles[trueId]);
+          double trueTheta = (end-start).Theta();
+          double truePhi = (end-start).Phi();
+
+          hTrueMom[pfpType][j]->Fill(trueMomentum);
+          hTrueLength[pfpType][j]->Fill(trueLength);
+          hTrueTheta[pfpType][j]->Fill(trueTheta);
+          hTruePhi[pfpType][j]->Fill(truePhi);
+        }
+
+        if(lepNuEMap.find(lepId) != lepNuEMap.end()){
+          std::pair<TVector3, TVector3> se = fTpcGeo.CrossingPoints(particles[lepId]);
+          TVector3 start(particles[lepId].Vx(), particles[lepId].Vy(), particles[lepId].Vz());
+          TVector3 end(particles[lepId].EndX(), particles[lepId].EndY(), particles[lepId].EndZ());
+          double trueMomentum = particles[lepId].P();
+          double trueLength = fTpcGeo.TpcLength(particles[lepId]);
+          double trueTheta = (end-start).Theta();
+          double truePhi = (end-start).Phi();
+          geo::Point_t trueStart {se.first.X(), se.first.Y(), se.first.Z()};
+          geo::Point_t trueEnd {se.second.X(), se.second.Y(), se.second.Z()};
+          bool trueExits = fTpcGeo.InFiducial(trueEnd, 5., 5.);
+          bool trueVtxContained = fTpcGeo.InFiducial(trueStart, 15., 15., 15., 15., 15., 80.);
+          bool trueSelected = false;
+          if(trueExits && trueVtxContained && trueLength > 100.) trueSelected = true;
+          if(!trueExits && trueVtxContained && trueLength > 50.) trueSelected = true;
+
+          double nuE = lepNuEMap[lepId];
+          hMuMom[0][j+1]->Fill(trueMomentum);
+          hMuLength[0][j+1]->Fill(trueLength);
+          hMuTheta[0][j+1]->Fill(trueTheta);
+          hMuPhi[0][j+1]->Fill(truePhi);
+          hNuE[0][j+1]->Fill(nuE);
+
+          if(!trueSelected) continue;
+          hMuMom[1][j+1]->Fill(trueMomentum);
+          hMuLength[1][j+1]->Fill(trueLength);
+          hMuTheta[1][j+1]->Fill(trueTheta);
+          hMuPhi[1][j+1]->Fill(truePhi);
+          hNuE[1][j+1]->Fill(nuE);
+        }
+        
+      }
+
+      if(lepNuEMap.find(lepId) != lepNuEMap.end()) lepNuEMap.erase(lepId); //FIXME hacky fix to avoid double counting
+
+    }  
+    
+  } // NuMuCCSelectionAna::analyze()
+
+
+  void NuMuCCSelectionAna::endJob(){
+
+  } // NuMuCCSelectionAna::endJob()
+
+  void NuMuCCSelectionAna::GetPFParticleIdMap(const PFParticleHandle &pfParticleHandle, PFParticleIdMap &pfParticleMap){
+      for (unsigned int i = 0; i < pfParticleHandle->size(); ++i){
+          const art::Ptr<recob::PFParticle> pParticle(pfParticleHandle, i);
+          if (!pfParticleMap.insert(PFParticleIdMap::value_type(pParticle->Self(), pParticle)).second){
+              std::cout << "  Unable to get PFParticle ID map, the input PFParticle collection has repeat IDs!" <<"\n";
+          }
+      }
+  }
+
+  //------------------------------------------------------------------------------------------------------------------------------------------
+
+  DEFINE_ART_MODULE(NuMuCCSelectionAna)
+} // namespace sbnd
+
