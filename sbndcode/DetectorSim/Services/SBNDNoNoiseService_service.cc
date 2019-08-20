@@ -4,7 +4,6 @@
 // Based upon SPhaseChannelNoiseService.cxx developed by Jingbo Wang for ProtoDUNE.
 
 #include "sbndcode/DetectorSim/Services/SBNDNoNoiseService.h"
-#include <sstream>
 
 using std::cout;
 using std::ostream;

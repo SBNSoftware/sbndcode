@@ -8,7 +8,7 @@ simple_plugin(SBNDThermalNoiseServiceInTime   "service"
 		sbndcode_Utilities_SignalShapingServiceSBND_service
 		${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
 		${ART_ROOT_IO_TFILESERVICE_SERVICE}
-		nutools_RandomUtils_NuRandomService_service
+		nurandom_RandomUtils_NuRandomService_service
 		${ART_FRAMEWORK_CORE}
 		art_Utilities canvas
 		cetlib cetlib_except
@@ -22,7 +22,7 @@ simple_plugin(SBNDThermalNoiseServiceInFreq   "service"
 		sbndcode_Utilities_SignalShapingServiceSBND_service
 		${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
 		${ART_ROOT_IO_TFILESERVICE_SERVICE}
-		nutools_RandomUtils_NuRandomService_service
+		nurandom_RandomUtils_NuRandomService_service
 		${ART_FRAMEWORK_CORE}
 		art_Utilities canvas
 		cetlib cetlib_except
@@ -36,7 +36,7 @@ simple_plugin(SBNDuBooNEDataDrivenNoiseService   "service"
 		sbndcode_Utilities_SignalShapingServiceSBND_service
 		${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
 		${ART_ROOT_IO_TFILESERVICE_SERVICE}
-		nutools_RandomUtils_NuRandomService_service
+		nurandom_RandomUtils_NuRandomService_service
 		${ART_FRAMEWORK_CORE}
 		art_Utilities canvas
 		cetlib cetlib_except
