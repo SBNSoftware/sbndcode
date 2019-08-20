@@ -50,7 +50,7 @@ simple_plugin(NoiseTest "module"
                            lardataobj_RawData
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                            sbndcode_Utilities_SignalShapingServiceSBND_service
-                           nutools_RandomUtils_NuRandomService_service
+                           nurandom_RandomUtils_NuRandomService_service
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
                            ${ART_ROOT_IO_TFILESERVICE_SERVICE}

@@ -12,14 +12,30 @@
 #define SBNDThermalNoiseServiceInFreq_H
 
 #include "sbndcode/DetectorSim/Services/ChannelNoiseService.h"
-#include <vector>
-#include <iostream>
+
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGaussQ.h"
 #include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandomEngine.h"
-#include "nutools/RandomUtils/NuRandomService.h"
+
 #include "fhiclcpp/ParameterSet.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art_root_io/TFileService.h"
+#include "lardata/Utilities/LArFFT.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "larcore/Geometry/Geometry.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
+#include "sbndcode/Utilities/SignalShapingServiceSBND.h"
+
+#include "TH1F.h"
+#include "TRandom3.h"
+#include "TF1.h"
+#include "TMath.h"
+
+#include <sstream>
+#include <vector>
+#include <iostream>
+
 
 class TH1;
 namespace CLHEP {

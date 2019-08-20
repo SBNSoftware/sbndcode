@@ -4,21 +4,6 @@
 // Based upon SPhaseChannelNoiseService.cxx developed by Jingbo Wang for ProtoDUNE.
 
 #include "sbndcode/DetectorSim/Services/SBNDThermalNoiseServiceInTime.h"
-#include <sstream>
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/Utilities/LArFFT.h"
-#include "larcore/Geometry/Geometry.h"
-#include "nutools/RandomUtils/NuRandomService.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "sbndcode/Utilities/SignalShapingServiceSBND.h"
-#include "art_root_io/TFileService.h"
-#include "CLHEP/Random/JamesRandom.h"
-#include "CLHEP/Random/RandomEngine.h"
-#include "CLHEP/Random/RandGaussQ.h"
-#include "TH1F.h"
-#include "TRandom3.h"
-#include "TF1.h"
-#include "TMath.h"
 
 using std::cout;
 using std::ostream;

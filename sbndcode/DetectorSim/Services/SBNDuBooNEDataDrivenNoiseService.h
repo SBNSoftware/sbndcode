@@ -21,8 +21,25 @@
 #define SBNDuBooNEDataDrivenNoiseService_H
 
 #include "sbndcode/DetectorSim/Services/ChannelNoiseService.h"
+
+#include "art_root_io/TFileService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/Utilities/LArFFT.h"
+#include "larcore/Geometry/Geometry.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
+
+#include "CLHEP/Random/JamesRandom.h"
+#include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RandGauss.h"
+
+#include "TH1F.h"
+#include "TRandom3.h"
+#include "TF1.h"
+#include "TMath.h"
+
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 class TH1;
 namespace CLHEP {

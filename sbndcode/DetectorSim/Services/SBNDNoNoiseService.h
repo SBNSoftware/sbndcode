@@ -12,8 +12,10 @@
 #define SBNDNoNoiseService_H
 
 #include "sbndcode/DetectorSim/Services/ChannelNoiseService.h"
+
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 class TH1;
 namespace CLHEP {
