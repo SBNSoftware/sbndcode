@@ -83,7 +83,7 @@ physics:
   }
 
   #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, generator, largeant] 
+  simulate:  [ rns, generator, largeant, daq] 
 
   #define the output stream, there could be more than one if using filters 
   stream1:   [ out1 ]
