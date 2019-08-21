@@ -56,10 +56,10 @@ public:
   ~SBNDThermalNoiseServiceInFreq();
 
   // Add noise to a signal array.
-  int addNoise(Channel chan, AdcSignalVector& sigs) const;
+  int addNoise(Channel chan, AdcSignalVector& sigs) const override;
 
   // Print the configuration.
-  std::ostream& print(std::ostream& out =std::cout, std::string prefix ="") const;
+  std::ostream& print(std::ostream& out =std::cout, std::string prefix ="") const override;
 
 private:
  
