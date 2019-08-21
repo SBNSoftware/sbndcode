@@ -112,7 +112,7 @@ sbnd_flux_bnb_nu_Ev1_test1: {
 }
 
 #
-# Booster Neutrino Beam, neutrino mode, dirt, configuration F (v1)
+# Booster Neutrino Beam, neutrino mode, configuration F (v1)
 #
 sbnd_flux_bnb_nu_Fv1: {
   FluxType:       "simple_flux"
@@ -131,7 +131,7 @@ sbnd_flux_bnb_nu_Fv1_test1: {
 #
 sbnd_flux_bnb_nu_Gv1: {
   FluxType:       "simple_flux"
-  FluxCopyMethod: "IGDH"
+  FluxCopyMethod: "IFDH"
   FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configG-v1/april07/neutrinoMode"
   FluxFiles: [ "converted_beammc_sbnd_dirt_v1*.root" ]
 }
@@ -140,8 +140,6 @@ sbnd_flux_bnb_nu_Gv1_test1: {
   @table::sbnd_flux_bnb_nu_Gv1
   FluxFiles: [ "converted_beammc_sbnd_dirt_v1_0004.root" ]
 }
-
-
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
@@ -243,7 +241,7 @@ sbnd_genie: {
   BeamName:           "booster"
 # GlobalTimeOffset:   1.28e6                  #sbnd reads out 1.6ms before the spill
   GlobalTimeOffset:   0                  #Brailsford 2017/10/09 Simulation currently only reads out one drift frame so having a 1.6ms offset (one drift frame) means almost all events get placed outside the readout window.  We COULD make the readout window 2 or 3 drift frames long but we also have a disk space problem (we don't have any free).  The solution is to remove the offset and keep one frame readout
-  EventGeneratorList:      "Default+CCMEC+NCMEC"
+#  EventGeneratorList:     "Default+CCMEC+NCMEC" # This is only required for generating partial samples
 } # sbnd_genie
 
 sbnd_genie_hist: {
