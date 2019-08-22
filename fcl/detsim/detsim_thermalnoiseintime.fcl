@@ -1,0 +1,10 @@
+#
+# File:    standard_detsim_thermalnoiseintime_sbnd.fcl
+# Purpose: Runs standard detsim but uses the thermal noise model calculated in time. The settings for this are set in noiseservices_sbnd.fcl. This is the default method and is called by standard detsim.
+# Author:  Andrew Scarff (a.scarff@sheffield.ac.uk)
+# Date:    7th August 2019
+
+
+#include "standard_detsim_sbnd.fcl"
+
+services.NoiseModel: @local::sbnd_thermalnoiseserviceintime

@@ -32,6 +32,7 @@
 #include "magfield_larsoft.fcl"
 #include "backtrackerservice.fcl"
 #include "spacecharge.fcl"
+#include "noiseservices_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -62,7 +63,8 @@ sbnd_detsim_services:
                              @table::sbnd_services
                              @table::sbnd_random_services
   LArFFT:                    @local::sbnd_larfft
-  SignalShapingServiceSBND: @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  SignalShapingServiceSBND:  @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
+  NoiseModel:		     @local::sbnd_thermalnoiseserviceintime
 } # sbnd_detsim_services
 
   
