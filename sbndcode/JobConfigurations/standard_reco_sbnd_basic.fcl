@@ -123,6 +123,8 @@ physics:
     
   ### shower-finder producers
   emshower:            @local::sbnd_emshower
+  tracs:               @local::sbnd_tracs
+
 
   ### vertex-finder producers
 
@@ -158,7 +160,7 @@ physics:
    #      , trackkalmanhitcalo,
          , pmatrackcalo
          , pmatrackpid
-         , emshower 
+         , emshower, tracs
          , crthit
    #      , crttzero
          , crttrack
