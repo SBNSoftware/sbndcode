@@ -45,6 +45,8 @@
 #include "crtsimhitproducer_sbnd.fcl"
 ##include "crttzeroproducer_sbnd.fcl"
 #include "crttrackproducer_sbnd.fcl"
+#include "crtt0matchingalg_sbnd.fcl"
+#include "crttrackmatchingalg_sbnd.fcl"
 
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
 #include "backtrackerservice.fcl" 
@@ -136,6 +138,8 @@ physics:
   crthit:              @local::standard_crtsimhitproducer
   #crttzero:            @local::standard_crttzeroproducer
   crttrack:            @local::standard_crttrackproducer
+  crthitt0:            @local::sbnd_crthitt0producer
+  crttrackt0:          @local::sbnd_crttrackt0producer
 
  }
 
@@ -164,6 +168,8 @@ physics:
          , crthit
    #      , crttzero
          , crttrack
+         , crthitt0
+         , crttrackt0
  ]
 
  #define the output stream, there could be more than one if using filters 
