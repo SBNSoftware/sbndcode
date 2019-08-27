@@ -243,7 +243,12 @@ sbnd_genie: {
   BeamName:           "booster"
 # GlobalTimeOffset:   1.28e6                  #sbnd reads out 1.6ms before the spill
   GlobalTimeOffset:   0                  #Brailsford 2017/10/09 Simulation currently only reads out one drift frame so having a 1.6ms offset (one drift frame) means almost all events get placed outside the readout window.  We COULD make the readout window 2 or 3 drift frames long but we also have a disk space problem (we don't have any free).  The solution is to remove the offset and keep one frame readout
-  #EventGeneratorList:      "Default+CCMEC+NCMEC" # This should only be used for generated partial samples
+
+  ### NEW FOR GENIE V3
+  # EventGeneratorList:      "Default+CCMEC+NCMEC" 
+  # This should only be used for generating partial samples, the default generation setup produces all LArTPC interactions
+  ### NEW FOR GENIE V3
+  #
 } # sbnd_genie
 
 sbnd_genie_hist: {
