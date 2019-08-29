@@ -237,6 +237,7 @@ namespace sbnd {
     std::map<int, std::vector<std::string>> crtTaggerMap;
     std::vector<crt::CRTHit> crtHits;
     int hit_i = 0;
+    // FIXME hack for when CRT hits only generated in beam window
     double minHitTime = 99999;
     double maxHitTime = -99999;
 

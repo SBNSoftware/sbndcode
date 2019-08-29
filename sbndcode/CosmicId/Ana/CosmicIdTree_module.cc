@@ -356,12 +356,12 @@ namespace sbnd {
     std::map<int, int> numHitMap;
     int hit_i = 0;
     for(auto const& hit : (crtHitList)){
+      int hitTrueID = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
+      hit_i++;
       // Don't try to match CRT hits in time with the beam
       double hitTime = hit->ts1_ns * 1e-3;
       if(hitTime > fBeamTimeMin && hitTime < fBeamTimeMax) continue;
       crtHits.push_back(*hit);
-      int hitTrueID = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
-      hit_i++;
       numHitMap[hitTrueID]++;
     }
 
@@ -376,12 +376,12 @@ namespace sbnd {
     std::map<int, int> numTrackMap;
     int track_i = 0;
     for(auto const& track : (crtTrackList)){
+      int trackTrueID = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
+      track_i++;
       // Don't try to match CRT tracks in time with the beam
       double trackTime = track->ts1_ns * 1e-3;
       if(trackTime > fBeamTimeMin && trackTime < fBeamTimeMax) continue;
       crtTracks.push_back(*track);
-      int trackTrueID = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
-      track_i++;
       numTrackMap[trackTrueID]++;
     }
 

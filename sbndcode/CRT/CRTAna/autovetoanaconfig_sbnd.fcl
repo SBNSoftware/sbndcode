@@ -1,0 +1,25 @@
+#include "cosmicidmodules_sbnd.fcl"
+#include "crtbacktracker_sbnd.fcl"
+#include "crttrackmatchingalg_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_autovetoana: 
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/CRT/CRTAna/AutoVetoAna"
+
+  # The input parameters
+  GenModuleLabel:      "generator"        # Simulation producer module label
+  CosModuleLabel:      "corsika"        # Simulation producer module label
+  G4ModuleLabel:       "largeant"        # Simulation producer module label
+  CRTHitLabel:         "crthit"           # CRT producer module label
+  CRTTrackLabel:       "crttrack"           # CRT producer module label
+  Verbose:             false             # Print extra information about what's going on
+  BeamTimeLimits:      @local::sbnd_beamtime
+  CrtBackTrack:        @local::standard_crtbacktracker
+  CrtTrackMatch:       @local::standard_crttrackmatchingalg
+}
+
+END_PROLOG
