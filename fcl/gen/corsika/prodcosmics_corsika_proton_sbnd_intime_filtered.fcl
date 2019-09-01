@@ -44,7 +44,7 @@ physics:
  {
    rns:       { module_type: "RandomNumberSaver" }
    # use proton mode -- uBooNE sees much better match w/ data
-   generator: @local::sbnd_corsika_p
+   cosmgen: @local::sbnd_corsika_p
    larg4intime: @local::sbnd_largeant
  }
  
@@ -80,7 +80,7 @@ physics:
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below 
  
- simulate: [ rns, generator, GenInTimeSorter, larg4intime, timefilter ] 
+ simulate: [ rns, cosmgen, GenInTimeSorter, larg4intime, timefilter ] 
 
  #define the output stream, there could be more than one if using filters 
  stream1:  [ out1 ]
@@ -102,7 +102,7 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   fileName:    "prodcosmics_corsika_proton_sbnd_%tc_g4_intime.root"
+   fileName:    "prodcosmics_corsika_proton_sbnd_%tc_intime.root"
    dataTier:    "gen"
    compressionLevel: 1
    SelectEvents: [ simulate ]
@@ -120,9 +120,9 @@ services.AuxDetGeometry.GDML: "sbnd_v01_03.gdml"
 # Loading the TPB spectra information
 services.LArPropertiesService.LoadExtraMatProperties: true
 
-physics.producers.generator.SampleTime:       5.32e-3   # 0.2 ms (G4 rise time) + 1.28 ms (1 full drift window) + 3.84 ms (readout) @ -70 kv, 114 cm/ms
-physics.producers.generator.TimeOffset:      -2.76e-3   # 3.84 ms readout should start at -1.28 ms to match data
-physics.producers.generator.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
+physics.producers.cosmgen.SampleTime:       5.2e-3   # 0.2 ms (G4 rise time) + 1.25 ms (1 full drift window) + 3.75 ms (readout) @ -70 kv, 114 cm/ms
+physics.producers.cosmgen.TimeOffset:      -2.7e-3   # 3.75 ms readout should start at -1.25 ms to match data
+physics.producers.cosmgen.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
 
 physics.producers.larg4intime.InputLabels: [ "GenInTimeSorter:intime" ]
 
@@ -147,12 +147,6 @@ services.LArG4Parameters.UseCustomPhysics: true
 services.LArPropertiesService.ScintByParticleType:false
 services.LArG4Parameters.UseLitePhotons: false
 
-# Make sure the timing information is consistent with downstream fhicl -- 3 readout windows of simulation
-services.DetectorPropertiesService.NumberTimeSamples:  7500 #microseconds
-services.DetectorPropertiesService.ReadOutWindowSize: 7500
-services.DetectorClocksService.G4RefTime: -2.75e3
-services.DetectorClocksService.TriggerOffsetTPC:  -1.25e3
-services.DetectorClocksService.DefaultTrigTime:   2750.
-services.DetectorClocksService.DefaultBeamTime:   2750.
-
+# setup services parameters for 3 drift windows
+#include "3drift_services_sbnd.fcl"
 
