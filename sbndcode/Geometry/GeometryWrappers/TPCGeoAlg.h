@@ -26,6 +26,7 @@
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/Track.h"
 
 // c++
 #include <vector>
@@ -54,6 +55,8 @@ namespace sbnd{
     bool InFiducial(geo::Point_t point, double fiducial, double fiducialTop);
     bool InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
                     double maxXCut, double maxYCut, double maxZCut);
+    bool InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
+                    double maxXCut, double maxYCut, double maxZCut, double cpaCut);
     
     // Is point inside given TPC
     bool InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buffer=0.);
@@ -66,6 +69,9 @@ namespace sbnd{
     std::pair<double, double> XLimitsFromHits(std::vector<art::Ptr<recob::Hit>> hits);
 
     double MinDistToWall(geo::Point_t point);
+
+    double LengthInFiducial(recob::Track track, double minXCut, double minYCut, double minZCut, 
+                    double maxXCut, double maxYCut, double maxZCut);
 
     // Determine if a true particle is ever inside the TPC volume
     bool InVolume(const simb::MCParticle& particle);

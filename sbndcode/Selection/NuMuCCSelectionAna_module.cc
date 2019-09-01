@@ -447,7 +447,7 @@ namespace sbnd {
       }
       
       double recoMomentum = 0.;
-      bool exits = fTpcGeo.InFiducial(nuTrack.End(), 5., 5.);
+      bool exits = !fTpcGeo.InFiducial(nuTrack.End(), 5., 5.);
       double recoLength = nuTrack.Length();
       double recoTheta = nuTrack.Theta();
       double recoPhi = nuTrack.Phi();

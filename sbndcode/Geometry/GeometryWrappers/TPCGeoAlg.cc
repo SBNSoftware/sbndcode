@@ -79,9 +79,16 @@ bool TPCGeoAlg::InFiducial(geo::Point_t point, double fiducial, double fiducialT
 
 bool TPCGeoAlg::InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
                            double maxXCut, double maxYCut, double maxZCut){
+  return InFiducial(point, minXCut, minYCut, minZCut, maxXCut, maxYCut, maxZCut, 0);
+}
+
+bool TPCGeoAlg::InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
+                           double maxXCut, double maxYCut, double maxZCut, double cpaCut){
   
   double xmin = fMinX + minXCut;
+  double xmax_cpa = 0 - cpaCut;
   double xmax = fMaxX - maxXCut;
+  double xmin_cpa = 0 + cpaCut;
   double ymin = fMinY + minYCut;
   double ymax = fMaxY - maxYCut;
   double zmin = fMinZ + minZCut;
@@ -90,7 +97,8 @@ bool TPCGeoAlg::InFiducial(geo::Point_t point, double minXCut, double minYCut, d
   double x = point.X();
   double y = point.Y();
   double z = point.Z();
-  if(x>xmin && x<xmax && y>ymin && y<ymax && z>zmin && z<zmax) return true;
+  if(x>xmin && x<xmax_cpa && y>ymin && y<ymax && z>zmin && z<zmax) return true;
+  if(x>xmin_cpa && x<xmax && y>ymin && y<ymax && z>zmin && z<zmax) return true;
 
   return false;
 }
@@ -161,6 +169,37 @@ double TPCGeoAlg::MinDistToWall(geo::Point_t point){
 
   return dists[0];
 
+}
+
+// Length of track in fiducial volume
+double TPCGeoAlg::LengthInFiducial(recob::Track track, double minXCut, double minYCut, double minZCut, 
+                    double maxXCut, double maxYCut, double maxZCut){
+  // Get the points where the track enters and exits the FV
+  size_t enter_p = 0;
+  size_t exit_p = 0;
+  size_t npts = track.NumberTrajectoryPoints();
+  // Skip if track has no trajectory
+  if(npts == 0) return 0;
+
+  // Check if it starts inside
+  bool inside = InFiducial(track.LocationAtPoint(0), minXCut, minYCut, minZCut, maxXCut, maxYCut, maxZCut);
+  for(size_t i = 0; i < npts; i++){
+    // Skip invalid track points
+    if(!track.HasValidPoint(i)) continue;
+    bool inFV = InFiducial(track.LocationAtPoint(i), minXCut, minYCut, minZCut, maxXCut, maxYCut, maxZCut);
+    // If trajectory was outside FV and goes in record entry point
+    if(!inside && inFV){
+      enter_p = i;
+      inside = true;
+    }
+    // If trajectory was inside FV and goes out record exit point
+    else if(inside && !inFV){
+      exit_p = i;
+      break;
+    }
+  }
+  // Return the length
+  return track.Length(enter_p) - track.Length(exit_p);
 }
 
 // ----------------------------------------------------------------------------------
