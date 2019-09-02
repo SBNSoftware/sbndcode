@@ -16,4 +16,12 @@ sbnd_crttrackmatchingalg_crID:
     MinimizeAngle:       true
 }
 
+sbnd_crttrackt0producer:
+{
+    module_type:         "sbndcode/CRT/CRTTools/CRTTrackMatching"
+    CrtTrackModuleLabel: "crttrack"         # name of track producer
+    TpcTrackModuleLabel: "pandoraTrack"  # name of crt producer
+    CrtTrackAlg:         @local::standard_crttrackmatchingalg
+}
+
 END_PROLOG

@@ -1,7 +1,7 @@
 #include "calorimetry.fcl"
 #include "showerfindermodules.fcl"
-#include "showeralgorithms.fcl"                                                                     
-#include "calorimetry_sbnd.fcl"    
+#include "showeralgorithms.fcl"
+#include "calorimetry_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -18,9 +18,31 @@ sbnd_showerenergyalg.VIntercept:  -2.13307
 sbnd_showerenergyalg.ZGradient:   0.00153631
 sbnd_showerenergyalg.ZIntercept:  5.19711
 
-sbnd_emshower.EMShowerAlg: @local::sbnd_emshoweralg
-sbnd_emshower.EMShowerAlg.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
-sbnd_emshower.EMShowerAlg.ShowerEnergyAlg: @local::sbnd_showerenergyalg
+sbnd_emshower.EMshowerAlg:                 @local::sbnd_emshoweralg
+sbnd_emshower.EMshowerAlg.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
+sbnd_emshower.EMshowerAlg.showerEnergyAlg: @local::sbnd_showerenergyalg
 
+sbnd_tracs:  @local::standard_tracs_shower
+
+sbnd_showerstartpositionfinder: @local::showerstartposition
+sbnd_showerdirectionfinder:     @local::showerpcadirection
+sbnd_showerenergyfinder:        @local::showerlinearenergy
+sbnd_shower3dtrackhitfinder:    @local::shower3Dtrackhitfinder
+sbnd_showerpmatrackfinder:      @local::showerpmatrackfinder
+sbnd_showerdedxfinder:          @local::showerstandardcalodedx
+
+sbnd_showerstartpositioncheater: @local::showerstartpositioncheater
+sbnd_showerdirectioncheater:     @local::showerdirectioncheater
+sbnd_showertrackfindercheater:   @local::showertrackfindercheater
+
+sbnd_showerdedxfinder.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
+
+sbnd_tracs.showerFinderTools: [
+  @local::sbnd_showerstartpositionfinder,
+  @local::sbnd_showerdirectionfinder,
+  @local::sbnd_showerenergyfinder,
+  @local::sbnd_shower3dtrackhitfinder,
+  @local::sbnd_showerdedxfinder
+]
 
 END_PROLOG
