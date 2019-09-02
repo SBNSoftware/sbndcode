@@ -13,12 +13,17 @@
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
 // LArSoft includes
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "larcore/Geometry/Geometry.h"
+#include "larcorealg/Geometry/GeometryCore.h"
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -143,9 +148,14 @@ namespace sbnd {
     double fBeamTimeMax;
 
     TPCGeoAlg fTpcGeo;
+    CRTGeoAlg fCrtGeo;
 
     CRTBackTracker fCrtBackTrack;
     CRTTrackMatchAlg fCrtTrackMatch;
+
+    detinfo::DetectorClocks const* fDetectorClocks;
+    detinfo::DetectorProperties const* fDetectorProperties;
+    geo::GeometryCore const* fGeometryService;
 
     // Tree
     TTree *fMCTruthTree;
@@ -156,6 +166,7 @@ namespace sbnd {
     double vtx_x;
     double vtx_y;
     double vtx_z;
+    int num_crt_strips;
     int num_crt_hits;
     int n_top_high;
     int n_top_low;
@@ -169,13 +180,16 @@ namespace sbnd {
     bool hit_cut;
     bool track_cut;
     bool through_cut;
+    bool in_crt;
+    bool in_tag;
+    bool in_cryo;
     bool in_tpc;
-    double track_x1;
-    double track_y1;
-    double track_z1;
-    double track_x2;
-    double track_y2;
-    double track_z2;
+    bool in_fv;
+    bool stops_in_crt;
+    bool stops_in_tag;
+    bool stops_in_cryo;
+    bool stops_in_tpc;
+    bool stops_in_fv;
     int run;
     int subrun;
     int evt;
@@ -243,6 +257,7 @@ namespace sbnd {
     fMCTruthTree->Branch("vtx_x", &vtx_x, "vtx_x/D");
     fMCTruthTree->Branch("vtx_y", &vtx_y, "vtx_y/D");
     fMCTruthTree->Branch("vtx_z", &vtx_z, "vtx_z/D");
+    fMCTruthTree->Branch("num_crt_strips", &num_crt_strips, "num_crt_strips/I");
     fMCTruthTree->Branch("num_crt_hits", &num_crt_hits, "num_crt_hits/I");
     fMCTruthTree->Branch("n_top_high", &n_top_high, "n_top_high/I");
     fMCTruthTree->Branch("n_top_low", &n_top_low, "n_top_low/I");
@@ -256,13 +271,16 @@ namespace sbnd {
     fMCTruthTree->Branch("hit_cut", &hit_cut, "hit_cut/O");
     fMCTruthTree->Branch("track_cut", &track_cut, "track_cut/O");
     fMCTruthTree->Branch("through_cut", &through_cut, "through_cut/O");
+    fMCTruthTree->Branch("in_crt", &in_crt, "in_crt/O");
+    fMCTruthTree->Branch("in_tag", &in_tag, "in_tag/O");
+    fMCTruthTree->Branch("in_cryo", &in_cryo, "in_cryo/O");
     fMCTruthTree->Branch("in_tpc", &in_tpc, "in_tpc/O");
-    fMCTruthTree->Branch("track_x1", &track_x1, "track_x1/D");
-    fMCTruthTree->Branch("track_y1", &track_y1, "track_y1/D");
-    fMCTruthTree->Branch("track_z1", &track_z1, "track_z1/D");
-    fMCTruthTree->Branch("track_x2", &track_x2, "track_x2/D");
-    fMCTruthTree->Branch("track_y2", &track_y2, "track_y2/D");
-    fMCTruthTree->Branch("track_z2", &track_z2, "track_z2/D");
+    fMCTruthTree->Branch("in_fv", &in_fv, "in_fv/O");
+    fMCTruthTree->Branch("stops_in_crt", &stops_in_crt, "stops_in_crt/O");
+    fMCTruthTree->Branch("stops_in_tag", &stops_in_tag, "stops_in_tag/O");
+    fMCTruthTree->Branch("stops_in_cryo", &stops_in_cryo, "stops_in_cryo/O");
+    fMCTruthTree->Branch("stops_in_tpc", &stops_in_tpc, "stops_in_tpc/O");
+    fMCTruthTree->Branch("stops_in_fv", &stops_in_fv, "stops_in_fv/O");
     fMCTruthTree->Branch("run", &run, "run/I");
     fMCTruthTree->Branch("subrun", &subrun, "subrun/I");
     fMCTruthTree->Branch("evt", &evt, "evt/I");
@@ -295,6 +313,10 @@ namespace sbnd {
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- Cosmic ID Tree Module -------------------"<<std::endl;
+
+    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
+    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
+    fGeometryService = lar::providerFrom<geo::Geometry>();
 
   } // AutoVetoAna::beginJob()
 
@@ -357,16 +379,12 @@ namespace sbnd {
     std::vector<std::pair<int, crt::CRTHit>> crtHitsBeam;
     int hit_i = 0;
     // FIXME hack for when CRT hits only generated in beam window
-    double minHitTime = 99999;
-    double maxHitTime = -99999;
     for(auto const& hit : (crtHitList)){
       int hitTrueID = fCrtBackTrack.TrueIdFromHitId(event, hit_i);
       hit_i++;
       crtHits.push_back(std::make_pair(hitTrueID, *hit));
       // If hit's in time with beam record hit and true particle
       double hitTime = hit->ts1_ns * 1e-3;
-      if(hitTime < minHitTime) minHitTime = hitTime;
-      if(hitTime > maxHitTime) maxHitTime = hitTime;
       if(hitTime > fBeamTimeMin && hitTime < fBeamTimeMax && hit->tagger.find("FaceBack")){
         crtHitsBeam.push_back(std::make_pair(hitTrueID, *hit));
       }
@@ -406,6 +424,10 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
+
+    double minTime = -1275; //-fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity();
+    double maxTime = 2500; //fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize());
+    const geo::CryostatGeo& cryostat = fGeometryService->Cryostat(0);
 
     // Loop over MCTruth objects
     for (size_t i = 0; i < mctruthList.size(); i++){
@@ -451,7 +473,7 @@ namespace sbnd {
           time = mctruth->GetParticle(0).T()*1e-3;
         }
       }
-      if(time < minHitTime || time > maxHitTime) continue;
+      if(time < minTime || time > maxTime) continue;
       // Get cuts
       hit_cut = hit_veto;
       track_cut = track_veto;
@@ -461,6 +483,7 @@ namespace sbnd {
       for(size_t j = 0; j < parts.size(); j++){
         int id = parts[j]->TrackId();
         // Get number of CRT hits/tracks
+        num_crt_strips = (fCrtGeo.CrossesStrips(*parts[j])).size();
         for(auto const& hit : crtHits){
           if(hit.first == id){ 
             num_crt_hits++;
@@ -478,12 +501,6 @@ namespace sbnd {
             num_crt_tracks++;
             if(track.second.complete){ 
               num_crt_through++;
-              track_x1 = track.second.x1_pos;
-              track_y1 = track.second.y1_pos;
-              track_z1 = track.second.z1_pos;
-              track_x2 = track.second.x2_pos;
-              track_y2 = track.second.y2_pos;
-              track_z2 = track.second.z2_pos;
             }
           }
         }
@@ -498,7 +515,7 @@ namespace sbnd {
 
       if(type.find("Nu") != std::string::npos){ 
         nu_in_av = true;
-        if(std::abs(vtx_x) < 183.5 && std::abs(vtx_y) < 185 && vtx_z > 30 && vtx_z < 450) nu_in_fv = true;
+        if(std::abs(vtx_x) < 183.5 && std::abs(vtx_y) < 185 && vtx_z > 15 && vtx_z < 420) nu_in_fv = true;
       }
       if(type == "Dirt" && in_tpc) dirt_in_av = true;
     }
@@ -520,13 +537,14 @@ namespace sbnd {
         // Check if it has any particles
         energy = particles[j]->E();
         time = particles[j]->T()*1e-3;
-        if(time < minHitTime || time > maxHitTime) continue;
+        if(time < minTime || time > maxTime) continue;
         // Get cuts
         hit_cut = hit_veto;
         track_cut = track_veto;
         through_cut = through_veto;
         int id = particles[j]->TrackId();
         // Get number of CRT hits/tracks
+        num_crt_strips = (fCrtGeo.CrossesStrips(*particles[j])).size();
         for(auto const& hit : crtHits){
           if(hit.first == id){ 
             num_crt_hits++;
@@ -545,7 +563,31 @@ namespace sbnd {
             if(track.second.complete) num_crt_through++;
           }
         }
+        // Check if particle enters CRT enclosed volume
+        if(fCrtGeo.EntersVolume(*particles[j])) in_crt = true;
+        // Check if particle crosses a tagger
+        for(size_t t_i = 0; t_i < fCrtGeo.NumTaggers(); t_i++){
+          if(fCrtGeo.ValidCrossingPoint(fCrtGeo.GetTagger(t_i).name, *particles[j])) in_tag = true;
+        }
+        // Check if particle enters cryostat volume
+        for(size_t tr_i = 0; tr_i < particles[j]->NumberTrajectoryPoints(); tr_i++){
+          geo::Point_t pos {particles[j]->Vx(tr_i), particles[j]->Vy(tr_i), particles[j]->Vz(tr_i)};
+          if(cryostat.ContainsPosition(pos)) in_cryo = true;
+          // Check if particle enters fiducial volume
+          if(fTpcGeo.InFiducial(pos, 16.5, 15, 15, 16.5, 15, 80)) in_fv = true;
+        }
+        // Check if particle enters TPC volume
         if(fTpcGeo.EntersVolume(*particles[j])) in_tpc = true;
+        // Get end point of particle
+        geo::Point_t end{particles[j]->EndX(), particles[j]->EndY(), particles[j]->EndZ()};
+        // Check if particle stops in CRT enclosed volume
+        if(fCrtGeo.IsInsideCRT(end)) stops_in_crt = true;
+        // Check if particle stops in cryostat volume
+        if(cryostat.ContainsPosition(end)) stops_in_cryo = true;
+        // Check if particle stops in TPC volume
+        if(fTpcGeo.InFiducial(end, 0)) stops_in_tpc = true;
+        // Check if particle stops in fiducial volume
+        if(fTpcGeo.InFiducial(end, 16.5, 15, 15, 16.5, 15, 80)) stops_in_fv = true;
         fMCTruthTree->Fill();
 
         if(in_tpc) cosmic_in_av = true;
@@ -599,6 +641,7 @@ namespace sbnd {
     vtx_x = -99999;
     vtx_y = -99999;
     vtx_z = -99999;
+    num_crt_strips = 0;
     num_crt_hits = 0;
     n_top_high = 0;
     n_top_low = 0;
@@ -612,13 +655,16 @@ namespace sbnd {
     hit_cut = false;
     track_cut = false;
     through_cut = false;
+    in_crt = false;
+    in_tag = false;
+    in_cryo = false;
     in_tpc = false;
-    track_x1 = -99999;
-    track_y1 = -99999;
-    track_z1 = -99999;
-    track_x2 = -99999;
-    track_y2 = -99999;
-    track_z2 = -99999;
+    in_fv = false;
+    stops_in_crt = false;
+    stops_in_tag = false;
+    stops_in_cryo = false;
+    stops_in_tpc = false;
+    stops_in_fv = false;
     run = -99999;
     subrun = -99999;
     evt = -99999;
