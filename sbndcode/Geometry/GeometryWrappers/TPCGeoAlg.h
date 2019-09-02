@@ -65,6 +65,8 @@ namespace sbnd{
     // Work out the drift limits for a collection of hits
     std::pair<double, double> XLimitsFromHits(std::vector<art::Ptr<recob::Hit>> hits);
 
+    double MinDistToWall(geo::Point_t point);
+
     // Determine if a true particle is ever inside the TPC volume
     bool InVolume(const simb::MCParticle& particle);
     // Determine if a true particle is contained inside the TPC volume
@@ -73,6 +75,9 @@ namespace sbnd{
     bool EntersVolume(const simb::MCParticle& particle);
     // Determine if a true particle crosses the TPC volume
     bool CrossesVolume(const simb::MCParticle& particle);
+
+    // Determine if a true particle crosses either APA
+    bool CrossesApa(const simb::MCParticle& particle);
 
     std::pair<TVector3, TVector3> CrossingPoints(const simb::MCParticle& particle);
     double TpcLength(const simb::MCParticle& particle);

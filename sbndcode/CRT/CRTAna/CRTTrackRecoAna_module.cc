@@ -144,6 +144,15 @@ namespace sbnd {
     std::map<std::string, TH1D*> hEffPhiTotal;
     std::map<std::string, TH1D*> hEffPhiReco;
 
+    TH1D* hTime;
+    TH1D* hTime2;
+    TH1D* hX1;
+    TH1D* hX2;
+    TH1D* hY1;
+    TH1D* hY2;
+    TH1D* hZ1;
+    TH1D* hZ2;
+
     // Other variables shared between different methods.
     CRTGeoAlg fCrtGeo;
 
@@ -186,6 +195,14 @@ namespace sbnd {
       hEffPhiTotal[tagger]   = tfs->make<TH1D>(Form("EffPhiTotal_%s", tagger.c_str()),   "", 20, -3.2, 3.2);
       hEffPhiReco[tagger]    = tfs->make<TH1D>(Form("EffPhiReco_%s", tagger.c_str()),    "", 20, -3.2, 3.2);
     }
+    hTime = tfs->make<TH1D>("Time", "", 100, -2000, 4000);
+    hTime2 = tfs->make<TH1D>("Time2", "", 100, -2000, 4000);
+    hX1 = tfs->make<TH1D>("X1", "", 100, -1000, 1000);
+    hX2 = tfs->make<TH1D>("X2", "", 100, -1000, 1000);
+    hY1 = tfs->make<TH1D>("Y1", "", 100, -1000, 1000);
+    hY2 = tfs->make<TH1D>("Y2", "", 100, -1000, 1000);
+    hZ1 = tfs->make<TH1D>("Z1", "", 100, -1000, 1000);
+    hZ2 = tfs->make<TH1D>("Z2", "", 100, -1000, 1000);
 
     // Initial output
     std::cout<<"----------------- CRT Track Reco Ana Module -------------------"<<std::endl;
@@ -305,6 +322,14 @@ namespace sbnd {
     int track_i = 0;
     for(auto const& track : (*crtTrackHandle)){
 
+      hTime->Fill((double)(int)track.ts1_ns*1e-3);
+      hX1->Fill(track.x1_pos);
+      hX2->Fill(track.x2_pos);
+      hY1->Fill(track.y1_pos);
+      hY2->Fill(track.y2_pos);
+      hZ1->Fill(track.z1_pos);
+      hZ2->Fill(track.z2_pos);
+
       std::vector<art::Ptr<crt::CRTHit>> hits = findManyHits.at(track_i);
 
       int trueId = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
@@ -353,7 +378,7 @@ namespace sbnd {
     if(fPlot){
       //evd.SetDrawCrtData(true);
       //evd.SetDrawCrtHits(true);
-      evd.SetDrawCrtTracks(true);
+      //evd.SetDrawCrtTracks(true);
       evd.SetDrawTrueTracks(true);
       if(fVeryVerbose) evd.SetPrint(true);
       if(fPlotTrackID != -99999) evd.SetTrueId(fPlotTrackID);

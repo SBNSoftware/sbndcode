@@ -15,6 +15,7 @@ add_subdirectory(AnalysisTree)
 add_subdirectory(RecoUtils)
 add_subdirectory(OpDetSim)
 add_subdirectory(XSecTree)
+add_subdirectory(CosmicId)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
