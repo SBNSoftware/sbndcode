@@ -6,6 +6,7 @@ add_subdirectory(CRTProducts)
 add_subdirectory(CRTTools)
 add_subdirectory(CRTUtils)
 add_subdirectory(CRTAna)
+add_subdirectory(Examples)
 
 art_make( 
     EXCLUDE
