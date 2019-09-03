@@ -131,7 +131,7 @@ sbnd_flux_bnb_nu_Fv1_test1: {
 #
 sbnd_flux_bnb_nu_Gv1: {
   FluxType:       "simple_flux"
-  FluxCopyMethod: "IGDH"
+  FluxCopyMethod: "IFDH"
   FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configG-v1/april07/neutrinoMode"
   FluxFiles: [ "converted_beammc_sbnd_dirt_v1*.root" ]
 }
