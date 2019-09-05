@@ -1,8 +1,5 @@
 #include "standard_detsim_sbnd.fcl"
 
-# setup CRT and PMT timing
-physics.producers.crt.GlobalT0Offset: -2.7e3
-
 # setup services parameters for 3 drift windows
 #include "3drift_services_sbnd.fcl"
 
