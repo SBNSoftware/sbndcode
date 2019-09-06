@@ -27,9 +27,6 @@ opDetSBNDTriggerAlg::opDetSBNDTriggerAlg(const Config &config, const detinfo::De
 {
   // setup the masked channels
   fConfig.MaskedChannels(fMaskedChannels);
-
-  std::array<double, 2> trigger_window = TriggerEnableWindow();  
-
 }
 
 void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline) {
@@ -86,7 +83,6 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
       above_threshold = true;
     }
     else if (above_threshold && val < threshold) {
-      raw::TimeStamp_t this_trigger_time = Tick2Timestamp(waveform.TimeStamp(), i);
       above_threshold = false;
     }
   }
