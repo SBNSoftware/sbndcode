@@ -228,7 +228,7 @@ namespace opdet{
 	  ch = litesimphotons.OpChannel;
 	  t_min=1e15;
           raw::OpDetWaveform adcVec;
-          raw::ADC_Count_t baseline;
+          raw::ADC_Count_t baseline = 0;
 	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch, "pmt") )){ //All PMT channels
 	//    std::cout << ch << " : PMT channel " <<std::endl;
 	    pmtDigitizer->ConstructWaveformLite(ch, litesimphotons, waveforms, map.pdName(ch), auxmap, t_min);
@@ -296,7 +296,7 @@ namespace opdet{
 	  ch = simphotons.OpChannel();
 	  t_min=1e15;
           raw::OpDetWaveform adcVec;
-          raw::ADC_Count_t baseline;
+          raw::ADC_Count_t baseline = 0;
 	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch,"pmt"))){ //all PMTs
 //	    std::cout << "PMT channels " <<std::endl;
 	    pmtDigitizer->ConstructWaveform(ch, simphotons, waveforms, map.pdName(ch), auxmap, t_min);
