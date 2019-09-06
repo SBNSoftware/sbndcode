@@ -1,7 +1,8 @@
 #include "opDetSBNDTriggerAlg.h"
 
-// Local static functions
 namespace opdet {
+
+// Local static functions
 // Adds a value to a vector of trigger locations, while keeping the vector sorted
 void AddTriggerLocation(std::vector<raw::TimeStamp_t> &triggers, raw::TimeStamp_t trigger) {
   typedef std::vector<raw::TimeStamp_t> TimeStamps;
@@ -23,25 +24,69 @@ opDetSBNDTriggerAlg::opDetSBNDTriggerAlg(const Config &config, const detinfo::De
   fConfig(config),
   fDetectorClocks(detector_clocks),
   fDetectorProperties(detector_properties)
-{}
+{
+  // setup the masked channels
+  fConfig.MaskedChannels(fMaskedChannels);
+
+  std::array<double, 2> trigger_window = TriggerEnableWindow();  
+
+}
 
 void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline) {
   std::vector<raw::TimeStamp_t> this_trigger_locations;
   const std::vector<raw::ADC_Count_t> &adcs = waveform; // upcast to get adcs
   raw::Channel_t channel = waveform.ChannelNumber();
+  if (channel > (unsigned)fOpDetMap.size()) return;
+
+  // get the threshold -- first check if channel is Arapuca or PMT
+  bool is_arapuca = false;
+  std::string opdet_type = fOpDetMap.pdName(channel);
+  if (opdet_type == "bar" ||
+      opdet_type == "xarapucaprime" ||
+      opdet_type == "xarapuca" ||
+      opdet_type == "arapucaT1" ||
+      opdet_type == "arapucaT2") {
+    is_arapuca = true;
+  }
+  int threshold = is_arapuca ? fConfig.TriggerThresholdADCArapuca() : fConfig.TriggerThresholdADCPMT(); 
+
+  // find the start and end points of the trigger window in this waveform
+  std::array<double, 2> trigger_window = TriggerEnableWindow();
+  raw::TimeStamp_t start = Tick2Timestamp(waveform.TimeStamp(), 0);
+
+  if (start > trigger_window[1]) return;
+  size_t start_i = start > trigger_window[0] ? 0 : (size_t)((trigger_window[0] - start) / OpticalPeriod());
+
+  // fix rounding on division if necessary
+  if (!IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), start_i))) {
+    start_i += 1;
+  }
+  assert(IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), start_i)));
+
+  // if start is past end of waveform, we can return
+  if (start_i >= adcs.size()) return;
+
+  raw::TimeStamp_t end = Tick2Timestamp(waveform.TimeStamp(), adcs.size() - 1);
+  // get the end time
+  size_t end_i = end > trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / OpticalPeriod());
+  // fix rounding error...
+  if (IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), end_i+1)) && end_i+1 < adcs.size()) {
+    end_i += 1;
+  }
+  assert(end_i+1 == adcs.size() || !IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), end_i+1)));
+
   bool above_threshold = false;
   // find all ADC counts above threshold
-  for (size_t i = 0; i < adcs.size(); i++) {
-    raw::ADC_Count_t val = fConfig.PulsePolarity() * (adcs[i] - baseline);
-    if (!above_threshold && val > fConfig.TriggerThresholdADC()) {
+  for (size_t i = start_i; i <= end_i; i++) {
+    raw::ADC_Count_t val = fConfig.PulsePolarity() * (adcs.at(i) - baseline);
+    if (!above_threshold && val > threshold) {
       // new trigger! -- get the time
       raw::TimeStamp_t this_trigger_time = Tick2Timestamp(waveform.TimeStamp(), i);
-      if (IsTriggerEnabled(this_trigger_time)) {
-        AddTriggerLocation(this_trigger_locations, this_trigger_time);
-      }
+      AddTriggerLocation(this_trigger_locations, this_trigger_time);
       above_threshold = true;
     }
-    else if (above_threshold && val < fConfig.TriggerThresholdADC()) {
+    else if (above_threshold && val < threshold) {
+      raw::TimeStamp_t this_trigger_time = Tick2Timestamp(waveform.TimeStamp(), i);
       above_threshold = false;
     }
   }
@@ -63,9 +108,8 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
 }
 
 bool opDetSBNDTriggerAlg::IsChannelMasked(raw::Channel_t channel) const {
-  std::vector<unsigned> masked = fConfig.MaskedChannels();
   // mask by channel number
-  bool in_masked_list = std::find(masked.begin(), masked.end(), channel) != masked.end();
+  bool in_masked_list = std::find(fMaskedChannels.begin(), fMaskedChannels.end(), channel) != fMaskedChannels.end();
   if (in_masked_list) return true;
 
   // mask by optical detector type
@@ -150,8 +194,17 @@ std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow() const {
   double start, end;
   // Enable triggers over the range of the TPC readout
   if (fConfig.TriggerEnableWindowIsTPCReadoutWindow()) {
-    start = fDetectorClocks->TriggerTime() + fDetectorClocks->TriggerOffsetTPC();
-    end = fDetectorProperties->ReadOutWindowSize() * fDetectorClocks->TPCClock().TickPeriod();
+    // NOTE: assumes trigger is at t=0 in G4 time
+    //
+    // So currently the photon timing comes from G4 and this configuration relies
+    // on the TPC clock. However -- for some reason I don't understand there is 
+    // no way to convert a TPC time to a G4 time in the DetectorClock interface....
+    //
+    // Every reasonable configuration I have seen has setup the trigger time 
+    // to be at t=0. If some configuration breaks this invariant, I am sorry, I 
+    // did my best.
+    start = fDetectorClocks->TriggerOffsetTPC(); 
+    end = start + fDetectorProperties->ReadOutWindowSize() * fDetectorClocks->TPCClock().TickPeriod();
   }
   else {
     start = fConfig.TriggerEnableWindowStart();
@@ -162,30 +215,25 @@ std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow() const {
 }
 
 bool opDetSBNDTriggerAlg::IsTriggerEnabled(raw::TimeStamp_t trigger_time) const {
-  // disable triggers during the beam trigger window
-  if (fConfig.BeamTriggerEnable()) {
-    if (trigger_time > fConfig.BeamTriggerTime() &&
-        trigger_time < fConfig.BeamTriggerTime() + fConfig.BeamTriggerHoldoff()) {
-      return false; 
-    }
-  }
+  // otherwise check the start and end
+  std::array<double, 2> trigger_range = TriggerEnableWindow();
 
-  // Enable triggers over the range of the TPC readout
-  if (fConfig.TriggerEnableWindowIsTPCReadoutWindow()) {
-    raw::TimeStamp_t trigger_window_start = fDetectorClocks->TriggerTime() + fDetectorClocks->TriggerOffsetTPC();
-    raw::TimeStamp_t trigger_window_length = fDetectorProperties->ReadOutWindowSize() * fDetectorClocks->TPCClock().TickPeriod();
-    return trigger_time > trigger_window_start &&
-           trigger_time < trigger_window_start + trigger_window_length;
-  }
-  // Enable triggers for custom time
-  else {
-    return trigger_time > fConfig.TriggerEnableWindowStart() &&
-           trigger_time < fConfig.TriggerEnableWindowStart() + fConfig.TriggerEnableWindowLength();
-  }
+  return trigger_time >= trigger_range[0] &&
+         trigger_time <= trigger_range[1];
+}
+
+double opDetSBNDTriggerAlg::OpticalPeriod() const {
+  //TODO: FIX!!!!
+  // Currently, the OpticalClock frequency is wrong in SBND configuration
+  // This is currently worked-around in the rest of the OpDet simulation by multiplying the clock
+  // frequency by a hard-coded factor. However, this should really be fixed in the configuration.
+  //
+  // For now though, multiply by the same factor to be consistent.
+  return fDetectorClocks->OpticalClock().TickPeriod() * 64. / 500.;
 }
 
 raw::TimeStamp_t opDetSBNDTriggerAlg::Tick2Timestamp(raw::TimeStamp_t waveform_start, size_t waveform_index) const {
-  return waveform_start + waveform_index * fDetectorClocks->OpticalClock().TickPeriod();
+  return waveform_start * fConfig.OpDetWaveformTimeConversion() + waveform_index * OpticalPeriod();
 }
 
 const std::vector<raw::TimeStamp_t> &opDetSBNDTriggerAlg::GetTriggerTimes(raw::Channel_t channel) const {
@@ -226,14 +274,17 @@ double opDetSBNDTriggerAlg::ReadoutWindowPostTriggerBeam(raw::Channel_t channel)
 
 std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const raw::OpDetWaveform &waveform) const {
   std::vector<raw::OpDetWaveform> ret;
-  const std::vector<raw::TimeStamp_t> &trigger_times = GetTriggerTimes(waveform.ChannelNumber());
+  raw::Channel_t channel = waveform.ChannelNumber();
+  if (channel > (unsigned)fOpDetMap.size()) return {};
 
-  double readout_window_pre_trigger = ReadoutWindowPreTrigger(waveform.ChannelNumber());
-  double readout_window_post_trigger = ReadoutWindowPostTrigger(waveform.ChannelNumber());
+  const std::vector<raw::TimeStamp_t> &trigger_times = GetTriggerTimes(channel);
 
-  double beam_readout_window_pre_trigger = ReadoutWindowPreTriggerBeam(waveform.ChannelNumber());
-  double beam_readout_window_post_trigger = ReadoutWindowPostTriggerBeam(waveform.ChannelNumber());
-  double beam_readout_start_time = fConfig.BeamTriggerTime() - beam_readout_window_post_trigger;
+  double readout_window_pre_trigger = ReadoutWindowPreTrigger(channel);
+  double readout_window_post_trigger = ReadoutWindowPostTrigger(channel);
+
+  double beam_readout_window_pre_trigger = ReadoutWindowPreTriggerBeam(channel);
+  double beam_readout_window_post_trigger = ReadoutWindowPostTriggerBeam(channel);
+  double beam_trigger_time = fConfig.BeamTriggerTime();
 
   const std::vector<raw::ADC_Count_t> &adcs = waveform; // upcast to get adcs
   unsigned trigger_i = 0;
@@ -243,7 +294,7 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const
     double time = Tick2Timestamp(waveform.TimeStamp(), i);
 
     // first, scroll to the next readout window that ends after this time
-    while (trigger_i < trigger_times.size() && time > trigger_times[i] + readout_window_post_trigger) {
+    while (trigger_i < trigger_times.size() && time >= trigger_times[trigger_i] + readout_window_post_trigger) {
       trigger_i += 1;
     } 
     // see if we are reading out
@@ -253,15 +304,15 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const
     bool is_triggering = false;
     // check next trigger
     if (has_next_trigger) {
-      if (time > trigger_times[trigger_i] - readout_window_pre_trigger &&
+      if (time >= trigger_times[trigger_i] - readout_window_pre_trigger &&
           time < trigger_times[trigger_i] + readout_window_post_trigger) {
             is_triggering = true;
       }
     }
     // otherwise check beam trigger
     if (!is_triggering && has_beam_trigger) {
-      if (time > beam_readout_start_time - beam_readout_window_pre_trigger &&
-          time < beam_readout_start_time + beam_readout_window_post_trigger) {
+      if (time >= beam_trigger_time - beam_readout_window_pre_trigger &&
+          time < beam_trigger_time + beam_readout_window_post_trigger) {
         is_triggering = true;
       }
     }
@@ -275,7 +326,7 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const
     }
     // New Trigger! make a new OpDetWaveform
     else if (is_triggering && !was_triggering) {
-      this_waveform = raw::OpDetWaveform(time, waveform.ChannelNumber()); 
+      this_waveform = raw::OpDetWaveform(time, channel); 
       this_waveform.push_back(adcs[i]);
     }
     was_triggering = is_triggering;

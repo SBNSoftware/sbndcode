@@ -11,6 +11,7 @@
 
 #include "fhiclcpp/types/Atom.h"
 #include "fhiclcpp/types/Sequence.h"
+#include "fhiclcpp/types/OptionalSequence.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include <memory>
@@ -45,21 +46,31 @@ namespace opdet{
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
 
+      fhicl::Atom<double> OpDetWaveformTimeConversion {
+        Name("OpDetWaveformTimeConversion"),
+        Comment("Scale factor to convert times in OpDetWavefrom to microseconds."),
+        1.
+      };
+
       fhicl::Atom<int> PulsePolarity {
         Name("PulsePolarity"),
         Comment("Whether pulses go down (-1) or up (1)."),
         -1
       };
 
-      fhicl::Atom<int> TriggerThresholdADC {
-        Name("TriggerThresholdADC"),
-        Comment("Threshold for channel to issue trigger -- same across all channels. [ADC]")
+      fhicl::Atom<int> TriggerThresholdADCArapuca {
+        Name("TriggerThresholdADCArapuca"),
+        Comment("Threshold for channel to issue trigger across all arapuca channels. [ADC]")
       };
 
-      fhicl::Sequence<unsigned> MaskedChannels {
+      fhicl::Atom<int> TriggerThresholdADCPMT {
+        Name("TriggerThresholdADCPMT"),
+        Comment("Threshold for channel to issue trigger across all pmt channels. [ADC]")
+      };
+
+      fhicl::OptionalSequence<unsigned> MaskedChannels {
         Name("MaskedChannels"),
-        Comment("Channels which are ignored for issuing triggers."),
-        //{}
+        Comment("Channels which are ignored for issuing triggers.")
       };
      
       fhicl::Atom<bool> MaskLightBars {
@@ -112,13 +123,13 @@ namespace opdet{
 
       fhicl::Atom<double> TriggerHoldoff {
         Name("TriggerHoldoff"),
-        Comment("When collecting global triggers, sets an amount of time where one trigger will not be issued following the previous one. [ns]"),
+        Comment("When collecting global triggers, sets an amount of time where one trigger will not be issued following the previous one. [us]"),
         0.
       };
 
       fhicl::Atom<double> TriggerCountWindow {
         Name("TriggerCountWindow"),
-        Comment("Size of window to count triggers arriving from different readout channels. [ns]"),
+        Comment("Size of window to count triggers arriving from different readout channels. [us]"),
         0.
       };
 
@@ -136,13 +147,13 @@ namespace opdet{
 
       fhicl::Atom<double> BeamTriggerTime {
         Name("BeamTriggerTime"),
-        Comment("Time at which the beam trigger will be issued. [ns]"),
+        Comment("Time at which the beam trigger will be issued. [us]"),
         0.
       };
 
       fhicl::Atom<double> BeamTriggerHoldoff {
         Name("BeamTriggerHoldoff"),
-        Comment("Time to ignore other triggers after the beam trigger time. [ns]"),
+        Comment("Time to ignore other triggers after the beam trigger time. [us]"),
         0.
       };
 
@@ -154,37 +165,37 @@ namespace opdet{
 
       fhicl::Atom<double> TriggerEnableWindowStart {
         Name("TriggerEnableWindowStart"),
-        Comment("Start of the window of time for which triggers are enabled. Ignored if TriggerEnableWindowIsTPCReadoutWindow is true. [ns]"),
+        Comment("Start of the window of time for which triggers are enabled. Ignored if TriggerEnableWindowIsTPCReadoutWindow is true. [us]"),
         0.
       };
 
       fhicl::Atom<double> TriggerEnableWindowLength {
         Name("TriggerEnableWindowLength"),
-        Comment("Length of time for which trigger are enabled. Ignored if TriggerEnableWindowIsTPCReadoutWindow is true. [ns]"),
+        Comment("Length of time for which trigger are enabled. Ignored if TriggerEnableWindowIsTPCReadoutWindow is true. [us]"),
         0.
       };
 
       fhicl::Atom<double> ReadoutWindowPreTrigger {
         Name("ReadoutWindowPreTrigger"),
-        Comment("Size of readout window prior to a non-beam trigger. [ns]"),
+        Comment("Size of readout window prior to a non-beam trigger. [us]"),
         0.
       };
 
       fhicl::Atom<double> ReadoutWindowPostTrigger {
         Name("ReadoutWindowPostTrigger"),
-        Comment("Size of readout window post a non-beam trigger. [ns]"),
+        Comment("Size of readout window post a non-beam trigger. [us]"),
         0.
       };
 
       fhicl::Atom<double> ReadoutWindowPreTriggerBeam {
         Name("ReadoutWindowPreTriggerBeam"),
-        Comment("Size of readout window pre a beam trigger. [ns]"),
+        Comment("Size of readout window pre a beam trigger. [us]"),
         0.
       };
 
       fhicl::Atom<double> ReadoutWindowPostTriggerBeam {
         Name("ReadoutWindowPostTriggerBeam"),
-        Comment("Size of readout window post a beam trigger. [ns]"),
+        Comment("Size of readout window post a beam trigger. [us]"),
         0.
       };
     };
@@ -197,7 +208,7 @@ namespace opdet{
     {}
 
     //Default destructor 
-    ~opDetSBNDTriggerAlg();
+    ~opDetSBNDTriggerAlg() {}
                                                                                                  
     // Add in a waveform to define trigger locations
     void FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline);
@@ -222,6 +233,7 @@ namespace opdet{
     double ReadoutWindowPostTrigger(raw::Channel_t channel) const;
     double ReadoutWindowPreTriggerBeam(raw::Channel_t channel) const;
     double ReadoutWindowPostTriggerBeam(raw::Channel_t channel) const;
+    double OpticalPeriod() const;
 
     // fhicl config
     Config fConfig; 
@@ -236,6 +248,8 @@ namespace opdet{
     // keeping track of triggers
     std::map<raw::Channel_t, std::vector<raw::TimeStamp_t>> fTriggerLocationsPerChannel;
     std::vector<raw::TimeStamp_t> fTriggerLocations;
+
+    std::vector<unsigned> fMaskedChannels;
 
   };//class opDetSBNDTriggerAlg
 
