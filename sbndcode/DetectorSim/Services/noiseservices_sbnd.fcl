@@ -64,7 +64,8 @@ sbnd_uboonedatadrivennoiseservice: {
   VFirstJumper:	     417
   VLastJumper:	     1565
   # NoiseFunctionParameters: [ 3.01209e+00, 1.19921e+08, 3.80152e+03, 6.30041e+02, 1.07059e+02, 1.29703e+00, 1.36047e+00, 1.38162e+00, 6.00000e+03] #ProtoDUNE params from Jingbo W.
-  NoiseFunctionParameters:  [ 1.19777e+01, 1.59491e+05, 4.93692e+03, 1.03438e+03, 2.33306e+02, 1.36605e+00, 4.08741e+00, 6.18786e-01, 9596] #uBooNE params from Jingbo W.
+  # NoiseFunctionParameters:  [ 1.19777e+01, 1.59491e+05, 4.93692e+03, 1.03438e+03, 2.33306e+02, 1.36605e+00, 4.08741e+00, 6.18786e-01, 9596] #uBooNE params from Jingbo W.
+  NoiseFunctionParameters:  [ 1.19777e+01, 1.95e+05, 4.93692e+03, 1.03438e+03, 2.33306e+02, 1.36605e+00, 4.08741e+00, 3.5e-01, 9596] #SBND params to match electronics tests.
 
   EnableCoherentNoise: false
   CohNoiseArrayPoints: 1000
