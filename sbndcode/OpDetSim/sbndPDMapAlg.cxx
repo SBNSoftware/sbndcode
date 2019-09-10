@@ -266,19 +266,19 @@ namespace opdet{
   sbndPDMapAlg::~sbndPDMapAlg()
   { }
 
-  bool sbndPDMapAlg::pdType(int ch, std::string pdname)
+  bool sbndPDMapAlg::pdType(int ch, std::string pdname) const
   {
-    if(PDmap[ch]==pdname) return true;
+    if(PDmap.at(ch)==pdname) return true;
     return false;
   }
 
-  std::string sbndPDMapAlg::pdName(int ch)
+  std::string sbndPDMapAlg::pdName(int ch) const
   {
-    if(ch<(int)PDmap.size()) return PDmap[ch];
+    if(ch<(int)PDmap.size()) return PDmap.at(ch);
     return "There is no such channel";
   }
 
-  int sbndPDMapAlg::size()
+  int sbndPDMapAlg::size() const
   {
     return (int)PDmap.size();
   }
