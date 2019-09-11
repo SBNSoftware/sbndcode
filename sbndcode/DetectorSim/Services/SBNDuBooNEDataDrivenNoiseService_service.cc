@@ -140,13 +140,17 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
 
   geo::WireGeo const& wire = geo->Wire(wireIDs.front());
   double wirelength = wire.Length(); //wirelength in cm.
-  
+
   if(fIncludeJumpers){
     if( (planeID==0 && wireID >= fUFirstJumper && wireID <= fULastJumper) || (planeID==1 && wireID >= fVFirstJumper && wireID <= fVLastJumper) ){ //Add jumper term only for appropriate wires on U and V planes.
       double jumperLength = (fJumperCapacitance/16.75)*100; //Using wire value of 16.75 pF/m to convert jumper capacitance to equivalent wire length. x100 to convert to cm.
       wirelength = wirelength + jumperLength;
     }
   }
+  //include for 0 wirelength tests.
+  //wirelength = 0;
+
+
   ///This part below has been moved from the generateMicroBooNoise section as it needs to be done differently for SBND due to different wirelengths.
 
   ////////////////////////////// MicroBooNE noise model/////////////////////////////////

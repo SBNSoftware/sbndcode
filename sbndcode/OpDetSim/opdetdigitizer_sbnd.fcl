@@ -1,6 +1,7 @@
 #include "detsimmodules.fcl"
 #include "digi_arapuca_sbnd.fcl"
 #include "digi_pmt_sbnd.fcl"
+#include "optriggeralg_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -13,6 +14,7 @@ sbnd_opdetdigitizer:
 
  @table::sbnd_digipmt_alg
  @table::sbnd_digiarapuca_alg
+ @table::sbnd_optrigger_alg
 
   ##This is the readout window size for each "trigger" on the electronics
  #ReadoutWindowSize:         2000    #ticks (if 2ns each --> 4us)
