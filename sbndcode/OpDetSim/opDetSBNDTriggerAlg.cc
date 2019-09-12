@@ -35,6 +35,9 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   raw::Channel_t channel = waveform.ChannelNumber();
   if (channel > (unsigned)fOpDetMap.size()) return;
 
+  // initialize the channel in the map no matter what
+  fTriggerLocationsPerChannel[channel] = std::vector<raw::TimeStamp_t>();
+
   // get the threshold -- first check if channel is Arapuca or PMT
   bool is_arapuca = false;
   std::string opdet_type = fOpDetMap.pdName(channel);
@@ -65,7 +68,8 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
 
   raw::TimeStamp_t end = Tick2Timestamp(waveform.TimeStamp(), adcs.size() - 1);
   // get the end time
-  size_t end_i = end > trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / OpticalPeriod());
+  // size_t end_i = end > trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / OpticalPeriod());
+  size_t end_i = end < trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / OpticalPeriod());
   // fix rounding error...
   if (IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), end_i+1)) && end_i+1 < adcs.size()) {
     end_i += 1;
