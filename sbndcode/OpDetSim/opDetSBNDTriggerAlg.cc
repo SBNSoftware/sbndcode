@@ -213,7 +213,7 @@ std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow() const {
     end = fConfig.TriggerEnableWindowStart() + fConfig.TriggerEnableWindowLength();
   }
 
-  return {start, end};
+  return {{start, end}};
 }
 
 bool opDetSBNDTriggerAlg::IsTriggerEnabled(raw::TimeStamp_t trigger_time) const {
@@ -333,7 +333,7 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const
     }
     was_triggering = is_triggering;
   }
-  return std::move(ret);
+  return ret;
 }
 
 } // namespace opdet
