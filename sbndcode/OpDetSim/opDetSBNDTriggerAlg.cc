@@ -36,7 +36,9 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   if (channel > (unsigned)fOpDetMap.size()) return;
 
   // initialize the channel in the map no matter what
-  fTriggerLocationsPerChannel[channel] = std::vector<raw::TimeStamp_t>();
+  if (fTriggerLocationsPerChannel.count(channel) == 0) {
+    fTriggerLocationsPerChannel[channel] = std::vector<raw::TimeStamp_t>();
+  }
 
   // get the threshold -- first check if channel is Arapuca or PMT
   bool is_arapuca = false;
