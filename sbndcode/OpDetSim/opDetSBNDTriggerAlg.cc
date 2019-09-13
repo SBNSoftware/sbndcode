@@ -331,6 +331,11 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const
       this_waveform = raw::OpDetWaveform(time, channel); 
       this_waveform.push_back(adcs[i]);
     }
+    // last adc -- save the waveform
+    if (is_triggering && i+1 == adcs.size()) {
+      ret.push_back(std::move(this_waveform));
+    }
+ 
     was_triggering = is_triggering;
   }
   return ret;
