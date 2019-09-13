@@ -272,7 +272,7 @@ namespace opdet{
       if(output[i])h->SetBinContent(i,output[i]);
     }
 
- }
+  }
 
   void opHitFinderSBND::TV1D_denoise(float* input, float*& output, const int width, const float lambda) {
 	if (width>0) {				/*to avoid invalid memory access to input[0]*/
