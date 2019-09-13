@@ -137,12 +137,13 @@ namespace opdet{
     size_t timebin=0;
     double FWHM=1, Area=1, phelec, fasttotal=3./4., rms=0, amplitude=0, time=0;
     unsigned short frame=1;
+    int histogram_number = 0;
 
     for(auto const& wvf : (*wvfHandle)){
 	fChNumber = wvf.ChannelNumber();
 	std::cout << "Photon channel: " << fChNumber << std::endl;
 	histname.str(std::string());
-        histname << "event_" << fEvNumber <<"_opchannel_" << fChNumber;
+        histname << "event_" << fEvNumber <<"_opchannel_" << fChNumber << "_histo_" << histogram_number;
 	wvfHist = new TH1D(histname.str().c_str(), "Histogram", wvf.size(),0, double(wvf.size()));
 	for(unsigned int i=0;i<wvf.size();i++){
 	  wvfHist->SetBinContent(i,wvf[i]);
@@ -169,7 +170,7 @@ namespace opdet{
 	  recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);//including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
           pulseVecPtr->emplace_back(opHit);
         }
-
+        histogram_number += 1;
 	delete wvfHist;
     }
     e.put(std::move(pulseVecPtr));
