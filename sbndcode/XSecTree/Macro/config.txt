@@ -1,0 +1,138 @@
+//------------------------------------------------------------------------
+//             Configuration file for PhysicsBookPlots.C
+//------------------------------------------------------------------------
+// You should only have to modify this file.
+// Input parameters go to the right of ":".
+// Any number of spaces is fine, but please don't use tabs.
+// Some inputs accept multiple parameters separated by ","'s.
+// Send bugs/suggestions to tom.brooks@sheffield.ac.uk
+// Authors: Tom Brooks, Rhiannon Jones, Ed Tyley, Natalie Wright
+//------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------
+//                           File configuration
+//------------------------------------------------------------------------
+// Name of input file
+InputFile: xsectree.root
+
+// Path to interaction and metadata trees
+TreePath: XSecTree/interaction
+MetaDataPath: XSecTree/metadata
+
+// Name of output file (.root for modifiable canvas)
+OutputFile: test/test_output.png
+
+//------------------------------------------------------------------------
+//          Select neutrino interaction (commas for multiple)
+//------------------------------------------------------------------------
+// Muon ([-]14) or electron ([-]12) neutrino
+NuPdg: 14
+
+// Charged current (1), neutral current (0), not selected (-1, reco only)
+IsCC: 1
+
+// Require lepton to be contained
+ContainedLepton: true, false
+
+// Require secondary particles to be contained
+ContainedParticles: true, false
+
+// Apply a fiducial volume cut to the neutrino vertex (-1 for AV)
+// Cuts +ve values from face: min x, min y, min z, max x, max y, max z
+Fiducial: -1
+
+// FSI (true) or true interaction (false)
+PlotByFsi: true
+
+//- Determine FSI (ignored if plotting by interaction)
+//- Number of protons (-1 for all)
+NumProtons: -1
+
+//- Number of charged pions
+NumPiPM: -1
+
+//- Number of neutral pions
+NumPi0: -1
+
+//- Choose true interaction (ignored if plotting by fsi)
+//- QE (0), RES (1), DIS (2), COH (3), MEC (10)
+InteractionType: -1
+
+//------------------------------------------------------------------------
+//                          Choose what to plot
+//------------------------------------------------------------------------
+// Choose what stage to plot
+//- true (selection and kinematic variables all in truth)
+//- smeareff (Applies efficiency and smears plotting variables only)
+//- reco (Efficiency + smearing + PID + selection) TODO: only for numuCC
+Stage: true
+
+// Variable to plot in TODO: allow for any number of variables
+// Bools
+//- lep_contained (containment of primary lepton)
+//- particles_contained (containment of secondary particles)
+//- cc (charged or neutral current)
+// Integers
+//- nu_pdg (neutrino PDG code)
+//- int_type (interaction type, see above)
+//- n_pr (number of protons)
+//- n_pipm (number of charged pions)
+//- n_pi0 (number of neutral pions)
+// Doubles
+//- nu_energy (neutrino energy) [GeV]
+//- lep_mom (lepton momentum) [GeV]
+//- lep_theta (lepton angle wrt beam) [rad]
+//- pr1_mom (leading proton momentum) [GeV]
+//- pr1_theta (leading proton angle wrt beam) [rad]
+//- lep_pr1_angle (lepton angle wrt leading proton) [rad]
+//- pipm1_mom (leading charged pion momentum) [GeV]
+//- pipm1_theta (leading charged pion angle wrt beam) [rad]
+//- lep_pipm1_angle (angle between lepton and charged pion) [rad]
+//- delta_pt (transverse kinematic variable) [GeV]
+//- delta_alphat (transverse kinematic variable) [rad]
+//- delta_phit (transverse kinematic variable) [rad]
+
+PlotVariable: lep_mom
+
+// Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
+PotScale: -1
+
+//------------------------------------------------------------------------
+//                           Choose how to plot
+//------------------------------------------------------------------------
+// Produce a stacked histogram (true)
+PlotStacked: false
+
+// Stack in true FSI (true) or true interaction (false)
+StackInFsi: false
+
+// Minimum bin (-1 for min tree value)
+MinValue: -1
+
+// Maximum bin (-1 for max tree value)
+MaxValue: -1
+
+// Number of bins (-1 for automatic)
+NumBins: -1
+
+// Maximum percentage error per bin (0->1, -1 for none) (merges bins)
+MaxError: -1
+
+//------------------------------------------------------------------------
+//                         Choose plot options
+//------------------------------------------------------------------------
+// Show selection information (true)
+ShowInfo: true
+
+// Show percentage statistical error (true)
+ShowStatError: false
+
+// Produce efficiency and purity plots (true)
+PlotEffPur: false
+
+// Produce response matrix (true) TODO
+PlotResponse: false
+
+// Unfold into a cross section measurement (true) TODO
+Unfold: false
