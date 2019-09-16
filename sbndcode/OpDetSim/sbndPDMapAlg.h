@@ -31,9 +31,9 @@ namespace opdet {
             
  // void setup() {}
 
-  bool pdType(int ch, std::string pdname);
-  std::string pdName(int ch);
-  int size();
+  bool pdType(int ch, std::string pdname) const;
+  std::string pdName(int ch) const;
+  int size() const;
         
   private:	 
   std::map<int, std::string> PDmap;
