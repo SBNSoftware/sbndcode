@@ -95,6 +95,11 @@ namespace sbnd {
         Comment("Minimum length of longest particle if exiting [cm]")
       };
 
+      fhicl::Atom<double> ElectronThreshold {
+        Name("ElectronThreshold"),
+        Comment("Momentum threshold for reconstructing electronss [GeV]")
+      };
+
       fhicl::Atom<double> MuonThreshold {
         Name("MuonThreshold"),
         Comment("Momentum threshold for reconstructing muons [GeV]")
@@ -120,9 +125,14 @@ namespace sbnd {
         Comment("Momentum threshold for reconstructing protons [GeV]")
       };
 
+      fhicl::Atom<double> ElectronEff {
+        Name("ElectronEff"),
+        Comment("Efficiency for reconstructing electrons [%]")
+      };
+
       fhicl::Atom<double> MuonEff {
         Name("MuonEff"),
-        Comment("Efficiency for reconstructing muon [%]")
+        Comment("Efficiency for reconstructing muons [%]")
       };
 
       fhicl::Atom<double> Pi0Eff {
@@ -183,6 +193,9 @@ namespace sbnd {
     // Apply reconstruction efficiencies to true particles
     std::vector<const simb::MCParticle*> RecoParticles(std::vector<const simb::MCParticle*> particles);
 
+    // Smear momentum for electrons from TRACS performance
+    double SmearElectronMomentum(double momentum);
+
     // Smear momentum for exiting particles using MCS based method
     double SmearMcsMomentum(double momentum);
 
@@ -211,12 +224,14 @@ namespace sbnd {
     double fMinContainedLength;
     double fMinExitingLength;
 
+    double fElectronThreshold;
     double fMuonThreshold;
     double fPi0Threshold;
     double fPhotonThreshold;
     double fPionThreshold;
     double fProtonThreshold;
 
+    double fElectronEff;
     double fMuonEff;
     double fPi0Eff;
     double fPhotonEff;
@@ -239,6 +254,11 @@ namespace sbnd {
     TTree *fXSecTree;
     TTree *fMetaDataTree;
 
+    // XSec tree true neutrino vertex
+    double vtx_x;
+    double vtx_y;
+    double vtx_z;
+
     // XSec true tree parameters
     bool true_particles_contained;
     bool true_lep_contained;
@@ -260,6 +280,28 @@ namespace sbnd {
     double true_delta_pt;
     double true_delta_alphat;
     double true_delta_phit;
+
+    // XSec smearing + efficiency tree parameters
+    bool smeareff_particles_contained;
+    bool smeareff_lep_contained;
+    int smeareff_cc;
+    int smeareff_nu_pdg;
+    int smeareff_int_type;
+    unsigned int smeareff_n_pipm;
+    unsigned int smeareff_n_pi0;
+    unsigned int smeareff_n_pr;
+    double smeareff_nu_energy;
+    double smeareff_lep_mom;
+    double smeareff_lep_theta;
+    double smeareff_pr1_mom;
+    double smeareff_pr1_theta;
+    double smeareff_lep_pr1_angle;
+    double smeareff_pipm1_mom;
+    double smeareff_pipm1_theta;
+    double smeareff_lep_pipm1_angle;
+    double smeareff_delta_pt;
+    double smeareff_delta_alphat;
+    double smeareff_delta_phit;
 
     // XSec reco tree parameters
     bool reco_particles_contained;
@@ -323,6 +365,12 @@ namespace sbnd {
     // Define histograms
     fXSecTree = tfs->make<TTree>("interaction", "xsec tree");
 
+    // True neutrino vertex
+    fXSecTree->Branch("vtx_x", &vtx_x, "vtx_x/D");
+    fXSecTree->Branch("vtx_y", &vtx_y, "vtx_y/D");
+    fXSecTree->Branch("vtx_z", &vtx_z, "vtx_z/D");
+
+    // True selection and kinematic variables
     fXSecTree->Branch("true_particles_contained", &true_particles_contained, "true_particles_contained/O");
     fXSecTree->Branch("true_lep_contained", &true_lep_contained, "true_lep_contained/O");
     fXSecTree->Branch("true_cc", &true_cc, "true_cc/I");
@@ -344,6 +392,29 @@ namespace sbnd {
     fXSecTree->Branch("true_delta_alphat", &true_delta_alphat, "true_delta_alphat/D");
     fXSecTree->Branch("true_delta_phit", &true_delta_phit, "true_delta_phit/D");
 
+    // Smeared and efficiency applied kinematic variables
+    fXSecTree->Branch("smeareff_particles_contained", &smeareff_particles_contained, "smeareff_particles_contained/O");
+    fXSecTree->Branch("smeareff_lep_contained", &smeareff_lep_contained, "smeareff_lep_contained/O");
+    fXSecTree->Branch("smeareff_cc", &smeareff_cc, "smeareff_cc/I");
+    fXSecTree->Branch("smeareff_nu_pdg", &smeareff_nu_pdg, "smeareff_nu_pdg/I");
+    fXSecTree->Branch("smeareff_int_type", &smeareff_int_type, "smeareff_int_type/I");
+    fXSecTree->Branch("smeareff_n_pipm", &smeareff_n_pipm, "smeareff_n_pipm/i");
+    fXSecTree->Branch("smeareff_n_pi0", &smeareff_n_pi0, "smeareff_n_pi0/i");
+    fXSecTree->Branch("smeareff_n_pr", &smeareff_n_pr, "smeareff_n_pr/i");
+    fXSecTree->Branch("smeareff_nu_energy", &smeareff_nu_energy, "smeareff_nu_energy/D");
+    fXSecTree->Branch("smeareff_lep_mom", &smeareff_lep_mom, "smeareff_lep_mom/D");
+    fXSecTree->Branch("smeareff_lep_theta", &smeareff_lep_theta, "smeareff_lep_theta/D");
+    fXSecTree->Branch("smeareff_pr1_mom", &smeareff_pr1_mom, "smeareff_pr1_mom/D");
+    fXSecTree->Branch("smeareff_pr1_theta", &smeareff_pr1_theta, "smeareff_pr1_theta/D");
+    fXSecTree->Branch("smeareff_lep_pr1_angle", &smeareff_lep_pr1_angle, "smeareff_lep_pr1_angle/D");
+    fXSecTree->Branch("smeareff_pipm1_mom", &smeareff_pipm1_mom, "smeareff_pipm1_mom/D");
+    fXSecTree->Branch("smeareff_pipm1_theta", &smeareff_pipm1_theta, "smeareff_pipm1_theta/D");
+    fXSecTree->Branch("smeareff_lep_pipm1_angle", &smeareff_lep_pipm1_angle, "smeareff_lep_pipm1_angle/D");
+    fXSecTree->Branch("smeareff_delta_pt", &smeareff_delta_pt, "smeareff_delta_pt/D");
+    fXSecTree->Branch("smeareff_delta_alphat", &smeareff_delta_alphat, "smeareff_delta_alphat/D");
+    fXSecTree->Branch("smeareff_delta_phit", &smeareff_delta_phit, "smeareff_delta_phit/D");
+
+    // Reco selection and kinematic variables
     fXSecTree->Branch("reco_particles_contained", &reco_particles_contained, "reco_particles_contained/O");
     fXSecTree->Branch("reco_lep_contained", &reco_lep_contained, "reco_lep_contained/O");
     fXSecTree->Branch("reco_cc", &reco_cc, "reco_cc/I");
@@ -427,6 +498,10 @@ namespace sbnd {
       if(fVerbose) std::cout<<"->Vertex: ("<<vertex.X()<<", "<<vertex.Y()<<", "<<vertex.Z()<<")\n";
       if(!fTPCGeo.InFiducial(vertex, 0.)) continue;
 
+      vtx_x = vertex.X();
+      vtx_y = vertex.Y();
+      vtx_z = vertex.Z();
+
       //---------------------- FILLING ALL THE TRUE INTERACTION PARAMETERS ------------------------------------
 
       // Fill all the neutrino parameters
@@ -445,7 +520,7 @@ namespace sbnd {
       for(size_t j = 0; j < particles.size(); j++){
         int pdg = std::abs(particles[j]->PdgCode());
         // Only consider the primary muon
-        if(!(pdg == 13)) continue;
+        if(!(pdg == 13 || pdg == 11)) continue;
         lep_j = j;
         true_lep_mom = particles[j]->P();
         TVector3 start = particles[j]->Position().Vect();
@@ -466,13 +541,17 @@ namespace sbnd {
         TVector3 end = particles[j]->EndPosition().Vect();
 
         // Count particle numbers
-        if(pdg == 111) true_n_pi0++;
+        if(pdg == 111){ 
+          true_n_pi0++;
+          if(!fTPCGeo.IsContained(*particles[j])) true_particles_contained = false;
+        }
         if(pdg == 211){ 
           true_n_pipm++;
+          if(!fTPCGeo.IsContained(*particles[j])) true_particles_contained = false;
+
           if(particles[j]->P() < true_pipm1_mom) continue;
           true_pipm1_mom = particles[j]->P();
           true_pipm1_theta = (end - start).Theta();
-          if(!fTPCGeo.IsContained(*particles[j])) true_particles_contained = false;
 
           // Calculate things relative to the lepton if there is one
           if(lep_j == -1) continue;
@@ -481,11 +560,11 @@ namespace sbnd {
         }
         if(pdg == 2212){ 
           true_n_pr++;
+          if(!fTPCGeo.IsContained(*particles[j])) true_particles_contained = false;
 
           if(particles[j]->P() < true_pr1_mom) continue;
           true_pr1_mom = particles[j]->P();
           true_pr1_theta = (end - start).Theta();
-          if(!fTPCGeo.IsContained(*particles[j])) true_particles_contained = false;
 
           // Calculate things relative to the lepton if there is one
           if(lep_j == -1) continue;
@@ -501,14 +580,103 @@ namespace sbnd {
 
       }
 
-      //---------------------------- CC INCLUSIVE SELECTION --------------------------------------
-
-      // TODO Make a better neutrino energy calculator
-      reco_nu_energy = VisibleEnergy(particles);
-
+      //----------------------------- EFFICIENCY + SMEARING --------------------------------------
       // Apply reconstruction efficiencies to the true particles
       std::vector<const simb::MCParticle*> reco_particles = RecoParticles(parts);
       if(fVerbose) std::cout<<"Number of reconstructed particles = "<<reco_particles.size()<<"\n";
+      
+      // Smearing won't change these
+      smeareff_cc                  = true_cc;
+      smeareff_nu_pdg              = true_nu_pdg;
+      smeareff_int_type            = true_int_type;
+
+      // TODO Make a better neutrino energy calculator
+      smeareff_nu_energy = VisibleEnergy(reco_particles);
+
+      // Get the lepton kinematics if CC
+      for(size_t j = 0; j < reco_particles.size(); j++){
+        int pdg = std::abs(reco_particles[j]->PdgCode());
+        
+
+        // Get the lepton kinematics - electrons
+        if(pdg == 11 || pdg == 13){
+          std::pair<TVector3, TVector3> cross_points = fTPCGeo.CrossingPoints(*reco_particles[j]);
+          TVector3 start = cross_points.first;
+          TVector3 end = cross_points.second;
+          double contained_length = fTPCGeo.TpcLength(*reco_particles[j]);
+
+          lep_j = j;
+          smeareff_lep_theta = (end - start).Theta();
+          smeareff_lep_contained = fTPCGeo.IsContained(*reco_particles[j]);
+          if(pdg == 11) smeareff_lep_mom = SmearElectronMomentum(reco_particles[j]->P());
+          else if(smeareff_lep_contained) smeareff_lep_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
+          else smeareff_lep_mom = SmearMcsMomentum(reco_particles[j]->P());
+        }
+
+      }
+
+      // Loop over all the reconstructed particles and smear kinematic variables
+      for(size_t j = 0; j < reco_particles.size(); j++){
+        if ((int)j == lep_j) continue;
+
+        int pdg = std::abs(reco_particles[j]->PdgCode());
+        std::pair<TVector3, TVector3> cross_points = fTPCGeo.CrossingPoints(*reco_particles[j]);
+        TVector3 start = cross_points.first;
+        TVector3 end = cross_points.second;
+        double contained_length = fTPCGeo.TpcLength(*reco_particles[j]);
+
+        // Count particle numbers and smear - pi0
+        if(pdg == 111){
+          smeareff_n_pi0++;
+          if(!fTPCGeo.IsContained(*reco_particles[j])) smeareff_particles_contained = false;
+        }
+
+        // Count particle numbers and smear - pions
+        if(pdg == 211){ 
+          smeareff_n_pipm++;
+          if(!fTPCGeo.IsContained(*reco_particles[j])) smeareff_particles_contained = false;
+          double pipm1_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
+
+          if(pipm1_mom < smeareff_pipm1_mom) continue;
+          smeareff_pipm1_mom = pipm1_mom;
+          smeareff_pipm1_theta = (end - start).Theta();
+
+          // Calculate things relative to the lepton if there is one
+          if(lep_j == -1) continue;
+          TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles[lep_j]).second;
+          smeareff_lep_pipm1_angle = lep_end.Angle(end);
+        }
+
+        // Count particle numbers and smear - protons
+        if(pdg == 2212){ 
+          smeareff_n_pr++;
+          if(!fTPCGeo.IsContained(*reco_particles[j])) smeareff_particles_contained = false;
+          double pr1_mom = fRangeFitter.GetTrackMomentum(contained_length, 2212);
+
+          if(pr1_mom < smeareff_pr1_mom) continue;
+          smeareff_pr1_mom = pr1_mom;
+          smeareff_pr1_theta = (end - start).Theta();
+
+          // Calculate things relative to the lepton if there is one
+          if(lep_j == -1) continue;
+          TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles[lep_j]).second;
+          smeareff_lep_pr1_angle = lep_end.Angle(end);
+
+          // Transverse variables
+          TVector3 scaled_lep_mom = reco_particles[lep_j]->Momentum().Vect()*(smeareff_lep_mom/reco_particles[lep_j]->P());
+          TVector3 scaled_pr_mom = reco_particles[j]->Momentum().Vect()*(pr1_mom/reco_particles[j]->P());
+          TVector3 delta_pt = DeltaPT(scaled_lep_mom, scaled_pr_mom);
+          smeareff_delta_pt = delta_pt.Mag();
+          smeareff_delta_alphat = delta_pt.Theta()*TMath::RadToDeg();
+          smeareff_delta_phit = delta_pt.Phi()*TMath::RadToDeg();
+        }
+
+      }
+
+      //---------------------------- CC INCLUSIVE SELECTION --------------------------------------
+
+      // Same as smeared neutrino energy
+      reco_nu_energy = smeareff_nu_energy;
 
       bool cc_selected = IsCCInc(vertex, reco_particles); 
 
@@ -529,11 +697,15 @@ namespace sbnd {
         int pdg = std::abs(reco_particles[j]->PdgCode());
 
         double contained_length = fTPCGeo.TpcLength(*reco_particles[j]);
-        TVector3 start = reco_particles[j]->Position().Vect();
-        TVector3 end = reco_particles[j]->EndPosition().Vect();
+        std::pair<TVector3, TVector3> cross_points = fTPCGeo.CrossingPoints(*reco_particles[j]);
+        TVector3 start = cross_points.first;
+        TVector3 end = cross_points.second;
 
         // Apply PID estimation and count reco particles
-        if(pdg == 111) reco_n_pi0++;
+        if(pdg == 111){ 
+          reco_n_pi0++;
+          if(!fTPCGeo.IsContained(*reco_particles[j])) reco_particles_contained = false;
+        }
 
         // Treat muons and pions as the same
         if(pdg == 13 || pdg == 211){
@@ -554,7 +726,7 @@ namespace sbnd {
 
             // Angle between leading pion and lepton candidate
             if(longest_j == -1) continue;
-            TVector3 lep_end = reco_particles[longest_j]->EndPosition().Vect();
+            TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles[longest_j]).second;
             reco_lep_pipm1_angle = lep_end.Angle(end);
           }
 
@@ -570,11 +742,13 @@ namespace sbnd {
 
             // Angle between leading proton and lepton candidate
             if(longest_j == -1) continue;
-            TVector3 lep_end = reco_particles[longest_j]->EndPosition().Vect();
+            TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles[longest_j]).second;
             reco_lep_pr1_angle = lep_end.Angle(end);
 
             // Transverse variables
-            TVector3 delta_pt = DeltaPT(reco_particles[longest_j]->Momentum().Vect(), reco_particles[j]->Momentum().Vect());
+            TVector3 scaled_lep_mom = reco_particles[longest_j]->Momentum().Vect()*(reco_lep_mom/reco_particles[longest_j]->P());
+            TVector3 scaled_pr_mom = reco_particles[j]->Momentum().Vect()*(pr1_mom/reco_particles[j]->P());
+            TVector3 delta_pt = DeltaPT(scaled_lep_mom, scaled_pr_mom);
             reco_delta_pt = delta_pt.Mag();
             reco_delta_alphat = delta_pt.Theta()*TMath::RadToDeg();
             reco_delta_phit = delta_pt.Phi()*TMath::RadToDeg();
@@ -598,11 +772,13 @@ namespace sbnd {
 
             // Angle between leading proton and lepton candidate
             if(longest_j == -1) continue;
-            TVector3 lep_end = reco_particles[longest_j]->EndPosition().Vect();
+            TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles[longest_j]).second;
             reco_lep_pr1_angle = lep_end.Angle(end);
 
             // Transverse variables
-            TVector3 delta_pt = DeltaPT(reco_particles[longest_j]->Momentum().Vect(), reco_particles[j]->Momentum().Vect());
+            TVector3 scaled_lep_mom = reco_particles[longest_j]->Momentum().Vect()*(reco_lep_mom/reco_particles[longest_j]->P());
+            TVector3 scaled_pr_mom = reco_particles[j]->Momentum().Vect()*(pr1_mom/reco_particles[j]->P());
+            TVector3 delta_pt = DeltaPT(scaled_lep_mom, scaled_pr_mom);
             reco_delta_pt = delta_pt.Mag();
             reco_delta_alphat = delta_pt.Theta()*TMath::RadToDeg();
             reco_delta_phit = delta_pt.Phi()*TMath::RadToDeg();
@@ -620,7 +796,7 @@ namespace sbnd {
 
             // Angle between leading pion and lepton candidate
             if(longest_j == -1) continue;
-            TVector3 lep_end = reco_particles[longest_j]->EndPosition().Vect();
+            TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles[longest_j]).second;
             reco_lep_pipm1_angle = lep_end.Angle(end);
           }
         }
@@ -687,6 +863,10 @@ namespace sbnd {
 
     lep_j = -1;
     longest_j = -1;
+
+    vtx_x = -99999;
+    vtx_y = -99999;
+    vtx_z = -99999;
     
     true_particles_contained = true;
     true_lep_contained       = false;
@@ -708,6 +888,27 @@ namespace sbnd {
     true_delta_pt            = -99999;
     true_delta_alphat        = -99999;
     true_delta_phit          = -99999;
+
+    smeareff_particles_contained = true;
+    smeareff_lep_contained       = false;
+    smeareff_cc                  = -1;
+    smeareff_nu_pdg              = -99999;
+    smeareff_int_type            = -99999;
+    smeareff_n_pipm              = 0;
+    smeareff_n_pi0               = 0;
+    smeareff_n_pr                = 0;
+    smeareff_nu_energy           = -99999;
+    smeareff_lep_mom             = -99999;
+    smeareff_lep_theta           = -99999;
+    smeareff_pr1_mom             = -99999;
+    smeareff_pr1_theta           = -99999;
+    smeareff_lep_pr1_angle       = -99999;
+    smeareff_pipm1_mom           = -99999;
+    smeareff_pipm1_theta         = -99999;
+    smeareff_lep_pipm1_angle     = -99999;
+    smeareff_delta_pt            = -99999;
+    smeareff_delta_alphat        = -99999;
+    smeareff_delta_phit          = -99999;
 
     reco_particles_contained = true;
     reco_lep_contained       = false;
@@ -745,9 +946,9 @@ namespace sbnd {
       // Only want primary particles
       if(particles[j]->Mother() != 0) continue;
 
-      // Only consider muons, pi0, charged pi and protons TODO for now...
+      // Only consider electrons, muons, pi0, charged pi and protons TODO for now...
       int pdg = std::abs(particles[j]->PdgCode());
-      if(!(pdg == 13 || pdg == 111 || pdg == 211 || pdg == 2212)) continue;
+      if(!(pdg == 11 || pdg == 13 || pdg == 111 || pdg == 211 || pdg == 2212)) continue;
       interesting.push_back(particles[j]);
     }
 
@@ -768,13 +969,14 @@ namespace sbnd {
       if(particles[j]->Mother() != 0) continue;
 
       int pdg = std::abs(particles[j]->PdgCode());
-      if(!(pdg == 13 || pdg == 111 || pdg == 211 || pdg == 2212)) continue;
+      if(!(pdg == 11 || pdg == 13 || pdg == 111 || pdg == 211 || pdg == 2212)) continue;
 
       // Apply efficiency cut (energy thresholds + flat efficiency)
       double rand_eff = fRandom->Rndm();
+      if(pdg == 11 && (particles[j]->P() < fElectronThreshold || rand_eff > fElectronEff)) continue;
       if(pdg == 13 && (particles[j]->P() < fMuonThreshold || rand_eff > fMuonEff)) continue;
       // Consider the secondary photons when reconstructing pi0
-      if(pdg == 111){// && (particles[j]->P() < fPi0Threshold || rand_eff > fPi0Eff)) continue;
+      if(pdg == 111){
         int n_photons = 0;
         // Get the pi0 daughters
         std::vector<int> d_trk_ids;
@@ -806,6 +1008,18 @@ namespace sbnd {
 
   } // XSecTree::RecoParticles()
 
+  // Smear electron momentum based on TRACS performance
+  double XSecTree::SmearElectronMomentum(double momentum){
+    //For contained muons use range based bias and resolution
+    //Values from Fig 5 of https://arxiv.org/pdf/1703.06187.pdf
+    double bias = -0.15;
+    double resolution = 0.33;
+    double momentum_smear = fRandom->Gaus(momentum, resolution*momentum)+bias*momentum;
+    if(momentum_smear<0){momentum_smear = 0;}
+
+    return momentum_smear;
+
+  } // XSecTree::SmearElectronMomentum()
 
   // Smear momentum for exiting particles using MCS based method
   double XSecTree::SmearMcsMomentum(double momentum){
@@ -933,8 +1147,9 @@ namespace sbnd {
       // Check if particle is contained
       reco_lep_contained = fTPCGeo.IsContained(*reco_particles[j]);
 
-      TVector3 start = reco_particles[j]->Position().Vect();
-      TVector3 end = reco_particles[j]->EndPosition().Vect();
+      std::pair<TVector3, TVector3> cross_points = fTPCGeo.CrossingPoints(*reco_particles[j]);
+      TVector3 start = cross_points.first;
+      TVector3 end = cross_points.second;
       reco_lep_theta = (end - start).Theta();
 
       // Smear momentum based on whether particle is contained or not

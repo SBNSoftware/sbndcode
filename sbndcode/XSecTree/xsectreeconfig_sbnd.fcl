@@ -18,12 +18,14 @@ sbnd_xsectree:
       MinContainedLength: 50.  # Min length of longest particle if contained [cm]
       MinExitingLength:   100. # Min length of longest particle if exiting [cm]
 
+      ElectronThreshold:   0.2 # Momentum threshold for reconstructing muons [GeV]
       MuonThreshold:   0.05 # Momentum threshold for reconstructing muons [GeV]
       Pi0Threshold:    0.08 # Momentum threshold for reconstructing pi0s [GeV]
       PhotonThreshold: 0.04 # Momentum threshold for reconstructing photons [GeV]
       PionThreshold:   0.05 # Momentum threshold for reconstructing pions [GeV]
       ProtonThreshold: 0.2  # Momentum threshold for reconstructing protons [GeV]
 
+      ElectronEff: 0.8 # Efficiency for reconstructing muons [%]
       MuonEff:   0.95 # Efficiency for reconstructing muons [%]
       Pi0Eff:    0.7  # Efficiency for reconstructing pi0s [%]
       PhotonEff: 0.8  # Efficiency for reconstructing photons [%]
