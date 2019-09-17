@@ -4,7 +4,7 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "cosmicidalg.fcl"
+#include "cosmicidalg_sbnd.fcl"
 #include "cosmicidmodules_sbnd.fcl"
 #include "mcsfitter_sbnd.fcl"
 
