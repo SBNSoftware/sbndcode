@@ -110,7 +110,7 @@ namespace opdet{
     fPulsePolarityArapuca = p.get< int   >("PulsePolarityArapuca");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency())*0.5/64; //in GHz. This number is wrong! Therefore the hard coded value
+    fSampling = (timeService->OpticalClock().Frequency())*500/64; //in MHz. This number is wrong! Therefore the hard coded value
 
   // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -158,7 +158,8 @@ namespace opdet{
         wvfHist2->Add(wvfHist);
         int i=1;
         while(findPeak(wvfHist,timebin,Area,rms,amplitude,map.pdName(fChNumber))){
-          time = (double)timebin/fSampling;
+          time = wvf.TimeStamp() + (double)timebin/fSampling;
+
 	  if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
 	    phelec=Area/fArea1pePMT;
         //    std::cout << 0 << " " << time << " " << Area << " " << phelec << std::endl;
