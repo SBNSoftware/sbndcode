@@ -16,4 +16,12 @@ sbnd_crtt0matchingalg_crID:
     TPCTrackLabel:       "pandoraTrack"
 }
 
+sbnd_crthitt0producer:
+{
+    module_type:         "sbndcode/CRT/CRTTools/CRTT0Matching"
+    CrtHitModuleLabel:   "crthit"           # name of crt hit producer
+    TpcTrackModuleLabel: "pandoraTrack"     # name of tpc track producer
+    T0Alg:                @local::standard_crtt0matchingalg
+}
+
 END_PROLOG
