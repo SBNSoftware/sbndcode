@@ -51,6 +51,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
     is_arapuca = true;
   }
   int threshold = is_arapuca ? fConfig.TriggerThresholdADCArapuca() : fConfig.TriggerThresholdADCPMT(); 
+  int polarity = is_arapuca ? fConfig.PulsePolarityArapuca() : fConfig.PulsePolarityPMT(); 
 
   // find the start and end points of the trigger window in this waveform
   std::array<double, 2> trigger_window = TriggerEnableWindow();
@@ -81,7 +82,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   bool above_threshold = false;
   // find all ADC counts above threshold
   for (size_t i = start_i; i <= end_i; i++) {
-    raw::ADC_Count_t val = fConfig.PulsePolarity() * (adcs.at(i) - baseline);
+    raw::ADC_Count_t val = polarity * (adcs.at(i) - baseline);
     if (!above_threshold && val > threshold) {
       // new trigger! -- get the time
       raw::TimeStamp_t this_trigger_time = Tick2Timestamp(waveform.TimeStamp(), i);

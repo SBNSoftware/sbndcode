@@ -52,10 +52,16 @@ namespace opdet{
         1.
       };
 
-      fhicl::Atom<int> PulsePolarity {
-        Name("PulsePolarity"),
+      fhicl::Atom<int> PulsePolarityPMT {
+        Name("PulsePolarityPMT"),
         Comment("Whether pulses go down (-1) or up (1)."),
         -1
+      };
+
+      fhicl::Atom<int> PulsePolarityArapuca {
+        Name("PulsePolarityArapuca"),
+        Comment("Whether pulses go down (-1) or up (1)."),
+        1
       };
 
       fhicl::Atom<int> TriggerThresholdADCArapuca {
