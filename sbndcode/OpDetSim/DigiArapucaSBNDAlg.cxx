@@ -12,7 +12,7 @@ namespace opdet{
 //DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(fhicl::ParameterSet const& p) 
 DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config) 
   : fParams(config)
-  , fSampling(fParams.timeService->OpticalClock().Frequency()*500/64) //This is number is wrong!!! Therefore, the hard coded value!!!
+  , fSampling(fParams.timeService->OpticalClock().Frequency()) 
   , fArapucaEffT1(fParams.ArapucaEffT1 / fParams.larProp->ScintPreScale())
   , fArapucaEffT2(fParams.ArapucaEffT2 / fParams.larProp->ScintPreScale())
   , fArapucaEffx(fParams.ArapucaEffx / fParams.larProp->ScintPreScale())
