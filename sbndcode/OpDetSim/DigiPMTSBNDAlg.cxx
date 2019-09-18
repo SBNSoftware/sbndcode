@@ -12,7 +12,7 @@ namespace opdet{
 
   DigiPMTSBNDAlg::DigiPMTSBNDAlg(ConfigurationParameters_t const& config) 
   : fParams(config)
-  , fSampling(fParams.timeService->OpticalClock().Frequency()*500/64) //This is number is wrong!!! Therefore, the hard coded value!!!
+  , fSampling(fParams.timeService->OpticalClock().Frequency()) //This is number is wrong!!! Therefore, the hard coded value!!!
   , fQEDirect(fParams.QEDirect / fParams.larProp->ScintPreScale())
   , fQERefl(fParams.QERefl / fParams.larProp->ScintPreScale())
   {

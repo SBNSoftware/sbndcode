@@ -110,7 +110,7 @@ namespace opdet{
     fPulsePolarityArapuca = p.get< int   >("PulsePolarityArapuca");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency())*500/64; //in MHz. This number is wrong! Therefore the hard coded value
+    fSampling = (timeService->OpticalClock().Frequency());
 
   // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
