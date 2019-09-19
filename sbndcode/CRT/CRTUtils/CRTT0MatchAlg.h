@@ -114,6 +114,7 @@ namespace sbnd{
 
     std::pair<TVector3, TVector3> TrackDirectionAverage(recob::Track track, double frac);
 
+    std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::pair<double, double> t0MinMax, std::vector<sbnd::crt::CRTHit> crtHits, int driftDirection);
     std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event);
     std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits);
 
