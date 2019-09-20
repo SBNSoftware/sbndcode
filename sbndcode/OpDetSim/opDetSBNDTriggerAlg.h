@@ -252,6 +252,7 @@ namespace opdet{
     opdet::sbndPDMapAlg fOpDetMap; 
 
     // keeping track of triggers
+    std::map<raw::Channel_t, std::vector<std::array<raw::TimeStamp_t, 2>>> fTriggerRangesPerChannel;
     std::map<raw::Channel_t, std::vector<raw::TimeStamp_t>> fTriggerLocationsPerChannel;
     std::vector<raw::TimeStamp_t> fTriggerLocations;
 
