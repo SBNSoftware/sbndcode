@@ -114,9 +114,11 @@ outputs:
  }
 }
 
+# FOR NOW: do not override default SBND geometry
 # SBND geometry with PMTs + Bars + ARAPUCAS + Foils
-services.Geometry.GDML: "sbnd_v01_03.gdml"
-services.AuxDetGeometry.GDML: "sbnd_v01_03.gdml"
+# services.Geometry.GDML: "sbnd_v01_03.gdml"
+# services.AuxDetGeometry.GDML: "sbnd_v01_03.gdml"
+
 # Loading the TPB spectra information
 services.LArPropertiesService.LoadExtraMatProperties: true
 
