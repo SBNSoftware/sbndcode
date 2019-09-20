@@ -75,11 +75,11 @@ physics:
     rns:       { module_type: "RandomNumberSaver" }
     daq:       @local::sbnd_simwire
     crt:       @local::sbnd_crtsim
-    opdaq:     @local::sbnd_opdetdigitizer
+    # opdaq:     @local::sbnd_opdetdigitizer
   }
 
   #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, daq, crt, opdaq ]
+  simulate:  [ rns, daq, crt]
 
   #define the output stream, there could be more than one if using filters 
   stream1:   [ out1 ]
@@ -100,8 +100,3 @@ outputs:
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
   }
 }
-
-# TEMP: MOVE THIS INTO THE PMT FHICL LATER
-physics.producers.opdaq.ArapucaReadoutWindow: 1.25e6
-physics.producers.opdaq.PMTReadoutWindow: 1.25e6
-
