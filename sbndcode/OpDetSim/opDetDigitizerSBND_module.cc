@@ -306,7 +306,7 @@ namespace opdet{
 	    std::cout << "Digitization not implemented for paddles. " <<std::endl;*/
 	  if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected) ){//getting only arapuca channels with appropriate type of light
 //	    std::cout << "Arapuca channels " <<std::endl;
-	    arapucaDigitizer->ConstructWaveform(ch, simphotons, waveforms, map.pdName(ch),start_time);
+	    arapucaDigitizer->ConstructWaveform(ch, simphotons, waveforms, map.pdName(ch),start_time, n_samples);
             adcVec = raw::OpDetWaveform(start_time, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
             baseline = (int)arapucaDigitizer->Baseline();
           }
