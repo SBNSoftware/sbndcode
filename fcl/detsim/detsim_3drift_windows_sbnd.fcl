@@ -1,8 +1,8 @@
 #include "standard_detsim_sbnd.fcl"
 
 # set the readout window to be the full G4 timing window
-physics.producers.opdaq.ArapucaReadoutWindow: 5.2e6
-physics.producers.opdaq.PMTReadoutWindow: 5.2e6
+# physics.producers.opdaq.ArapucaReadoutWindow: 5.2e6
+# physics.producers.opdaq.PMTReadoutWindow: 5.2e6
 
 # setup services parameters for 3 drift windows
 #include "3drift_services_sbnd.fcl"
