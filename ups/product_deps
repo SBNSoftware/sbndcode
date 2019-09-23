@@ -2,7 +2,7 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent sbndcode v08_26_00
+parent sbndcode v08_31_00
 defaultqual e17
 
 # These optional lines define the installed directories where headers,
@@ -35,24 +35,27 @@ fwdir   product_dir scripts
 # Add the dependent product and version
 
 product          version
-larsoft          v08_26_00
-genie_xsec       v2_12_10
+larsoft          v08_31_00
+genie_xsec       v3_00_04a
 sbnd_data        v01_02_00 - optional
-sbndutil         v08_26_00 - optional
+sbndutil         v08_31_00 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-cetbuildtools    v7_12_01  -   only_for_build
+cetbuildtools    v7_13_02  -   only_for_build
 
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
 qualifier     genie_xsec               larsoft       sbndutil        sbnd_data  notes
-e17:debug     DefaultPlusMECWithNC     e17:debug     e17:debug       -nq-
-e17:prof      DefaultPlusMECWithNC     e17:prof      e17:prof        -nq-
-c2:debug      DefaultPlusMECWithNC     c2:debug      c2:debug        -nq-
-c2:prof       DefaultPlusMECWithNC     c2:prof       c2:prof         -nq-
-e15:debug     DefaultPlusMECWithNC     e15:debug     e15:debug       -nq-
-e15:prof      DefaultPlusMECWithNC     e15:prof      e15:prof        -nq-
+e17:py3:debug G1810a0211a:k250:e1000   e17:py3:debug e17:py3:debug   -nq-
+e17:py3:prof  G1810a0211a:k250:e1000   e17:py3:prof  e17:py3:prof    -nq-
+c2:py3:debug  G1810a0211a:k250:e1000   c2:py3:debug  c2:py3:debug    -nq-
+c2:py3:prof   G1810a0211a:k250:e1000   c2:py3:prof   c2:py3:prof     -nq-
+e17:debug     G1810a0211a:k250:e1000   e17:debug     e17:debug       -nq-
+e17:prof      G1810a0211a:k250:e1000   e17:prof      e17:prof        -nq-
+c2:debug      G1810a0211a:k250:e1000   c2:debug      c2:debug        -nq-
+c2:prof       G1810a0211a:k250:e1000   c2:prof       c2:prof         -nq-
+end_qualifier_list
 
 # table fragment to set FW_SEARCH_PATH needed to find XML files:
 table_fragment_begin

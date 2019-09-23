@@ -1,0 +1,8 @@
+#
+# File:    standard_detsim_noisefromhist_sbnd.fcl
+# Purpose: Runs standard detsim with the noise being taken from a histogram. Hist is defined in noiseservices_sbnd.fcl.
+# Author:  Andrew Scarff (a.scarff@sheffield.ac.uk)
+
+#include "standard_detsim_sbnd.fcl"
+
+services.NoiseModel: @local::sbnd_noiseservicefromhist
