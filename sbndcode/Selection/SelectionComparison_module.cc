@@ -599,7 +599,7 @@ namespace sbnd {
     double longest_first = 0;
     double longest_second = 0;
     for(size_t i = 0; i < tracks.size(); i++){
-      if(!fTpcGeo.InFiducial(tracks[i].End(), 5.)){ //TODO containment def 
+      if(!fTpcGeo.InFiducial(tracks[i].End(), 0.)){ //TODO containment def 
         n_escape++;
         double length = fTpcGeo.LengthInFiducial(tracks[i], 10, 20, 10, 10, 20, 10);
         if(length > longest_escape){ 
@@ -621,7 +621,7 @@ namespace sbnd {
     if(n_escape == 1){
       // If track longer than 100 cm then ID as muon
       // If more than 1 escaping track > 100 cm then choose longest
-      if(longest_escape > 50){
+      if(longest_escape > 100){
         has_candidate = true;
         candidate = tracks[longest_i];
       }

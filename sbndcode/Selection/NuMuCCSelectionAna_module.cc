@@ -14,6 +14,7 @@
 
 // LArSoft includes
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/OpHit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
@@ -174,6 +175,9 @@ namespace sbnd {
     TH1D *hRecoTheta[5][3];
     TH1D *hRecoPhi[5][3];
 
+    TH1D *hFakeOpTimes;
+    TH1D *hOpTimes;
+
     // performance counters
 
     void GetPFParticleIdMap(const PFParticleHandle &pfParticleHandle, PFParticleIdMap &pfParticleMap);
@@ -243,7 +247,8 @@ namespace sbnd {
       }
     }
 
-
+    hFakeOpTimes = tfs->make<TH1D>("hFakeOpTimes", "", 100, -3000, 8000);
+    hOpTimes = tfs->make<TH1D>("hOpTimes", "", 100, -3000, 8000);
     // Initial output
     if(fVerbose) std::cout<<"----------------- Cosmic ID Ana Module -------------------"<<std::endl;
 
@@ -285,6 +290,9 @@ namespace sbnd {
     auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTpcTrackModuleLabel);
     art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTpcTrackModuleLabel);
 
+    // Get optical hits
+    auto opHitHandle = event.getValidHandle<std::vector<recob::OpHit>>("ophit2");
+
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
@@ -297,6 +305,20 @@ namespace sbnd {
     std::map<int, double> lepNuEMap;
     std::vector<int> dirtParticleIds;
     std::vector<int> crParticleIds;
+
+    // Apply neutrino vertex cut
+    bool vtx_in_AV = false;
+    for (auto const& particle: (*particleHandle)){
+      int partId = particle.TrackId();
+      art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(partId);
+      if(truth->Origin() == simb::kBeamNeutrino){
+        geo::Point_t vtx;
+        vtx.SetX(truth->GetNeutrino().Nu().Vx()); vtx.SetY(truth->GetNeutrino().Nu().Vy()); vtx.SetZ(truth->GetNeutrino().Nu().Vz());
+        // If neutrino vertex is not inside the TPC then call it a dirt particle
+        if(fTpcGeo.InFiducial(vtx, 0, 0)) vtx_in_AV = true;
+      }
+    }
+    if(vtx_in_AV){}
 
     // Loop over all true particles
     for (auto const& particle: (*particleHandle)){
@@ -376,6 +398,17 @@ namespace sbnd {
     std::vector<double> fakeTpc1Flashes = fakeFlashes.second;
     bool tpc0BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc0Flashes, fBeamTimeMin, fBeamTimeMax);
     bool tpc1BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc1Flashes, fBeamTimeMin, fBeamTimeMax);
+
+    for(auto const& flash : fakeTpc0Flashes){
+      hFakeOpTimes->Fill(flash);
+    }
+    for(auto const& flash : fakeTpc1Flashes){
+      hFakeOpTimes->Fill(flash);
+    }
+
+    for(auto const& ophit : (*opHitHandle)){
+      hOpTimes->Fill(ophit.PeakTime());
+    }
 
     // If there are no flashes in time with the beam then ignore the event
     if(!tpc0BeamFlash && !tpc1BeamFlash) return;
@@ -531,6 +564,8 @@ namespace sbnd {
       if(lepNuEMap.find(lepId) != lepNuEMap.end()) lepNuEMap.erase(lepId); //FIXME hacky fix to avoid double counting
 
     }  
+
+    //}
     
   } // NuMuCCSelectionAna::analyze()
 
