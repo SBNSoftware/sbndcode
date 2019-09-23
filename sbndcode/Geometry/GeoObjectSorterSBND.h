@@ -8,6 +8,8 @@
 #ifndef GEO_GEOOBJECTSORTERSBND_H
 #define GEO_GEOOBJECTSORTERSBND_H
 
+// Framework libraries
+#include "fhiclcpp/fwd.h"
 
 // LArSoft libraries
 #include "larcorealg/Geometry/GeoObjectSorter.h"
