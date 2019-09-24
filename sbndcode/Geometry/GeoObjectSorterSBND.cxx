@@ -15,6 +15,7 @@
 #include "larcorealg/Geometry/AuxDetGeo.h"
 
 // framework libraries
+#include "fhiclcpp/ParameterSet.h"
 #include "cetlib_except/exception.h"
 
 // framework libraries
@@ -268,4 +269,3 @@ void geo::GeoObjectSorterSBND::SortAuxDets
 void geo::GeoObjectSorterSBND::SortAuxDetSensitive
   (std::vector<geo::AuxDetSensitiveGeo*>& adsgeo) const
   {}
-
