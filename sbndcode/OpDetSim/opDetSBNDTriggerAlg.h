@@ -46,12 +46,6 @@ namespace opdet{
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
 
-      fhicl::Atom<double> OpDetWaveformTimeConversion {
-        Name("OpDetWaveformTimeConversion"),
-        Comment("Scale factor to convert times in OpDetWavefrom to microseconds."),
-        1.
-      };
-
       fhicl::Atom<int> PulsePolarityPMT {
         Name("PulsePolarityPMT"),
         Comment("Whether pulses go down (-1) or up (1)."),
@@ -215,6 +209,9 @@ namespace opdet{
 
     //Default destructor 
     ~opDetSBNDTriggerAlg() {}
+
+    // Clear out at the end of an event
+    void ClearTriggerLocations();
                                                                                                  
     // Add in a waveform to define trigger locations
     void FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline);

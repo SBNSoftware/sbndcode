@@ -61,8 +61,8 @@ namespace opdet{
     //Default destructor 
     ~DigiPMTSBNDAlg();
                                                                                                  
-    void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double start_time, unsigned n_sample);
-    void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int,sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample);
+    void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double start_time, unsigned n_sample);
+    void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample);
 
     double Baseline() { return fParams.PMTBaseline; } 
 

@@ -49,19 +49,19 @@ namespace opdet{
   DigiPMTSBNDAlg::~DigiPMTSBNDAlg()
   { }
 
-  void DigiPMTSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double start_time, unsigned n_sample) {
+  void DigiPMTSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double start_time, unsigned n_sample) {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
     CreatePDWaveform(simphotons, start_time, waves, ch, pdtype, auxmap);
-    waveforms[ch].resize(n_sample);
-    waveforms[ch] = std::vector<short unsigned int> (waves.begin(), waves.end());
+    waveform.resize(n_sample);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
-  void DigiPMTSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample){	
+  void DigiPMTSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample){	
 
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
     CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype, auxmap);
-    waveforms[ch].resize(n_sample);
-    waveforms[ch] = std::vector<short unsigned int> (waves.begin(), waves.end());
+    waveform.resize(n_sample);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
 

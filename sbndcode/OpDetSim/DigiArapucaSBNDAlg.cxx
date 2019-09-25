@@ -56,29 +56,29 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg()
   { }
 
-  void DigiArapucaSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdName, double start_time, unsigned n_samples){	
+  void DigiArapucaSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples){	
 
     std::vector<double> waves(std::vector<double>(n_samples,fParams.Baseline));
     CreatePDWaveform(simphotons, start_time, waves, pdName);
-    waveforms[ch].resize(n_samples);
-    waveforms[ch] = std::vector<short unsigned int> (waves.begin(), waves.end());
+    waveform.resize(n_samples);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
-  void DigiArapucaSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdName, double start_time, unsigned n_samples){	
+  void DigiArapucaSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples){	
 
     std::vector<double> waves(std::vector<double>(n_samples,fParams.Baseline));
     std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
     CreatePDWaveformLite(photonMap, start_time, waves, pdName);
-    waveforms[ch].resize(n_samples);
-    waveforms[ch] = std::vector<short unsigned int> (waves.begin(), waves.end());
+    waveform.resize(n_samples);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
   void DigiArapucaSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave, int nphotons){//adding single pulse
     size_t min=0, max=0;
 
-    if(time_bin<fNsamples){
+    if(time_bin<wave.size()){
 	min=time_bin;
-	max=time_bin+pulsesize < fNsamples ? time_bin+pulsesize : fNsamples;
+	max=time_bin+pulsesize < wave.size() ? time_bin+pulsesize : wave.size();
 	for(size_t i = min; i<= max; i++){
 		wave[i]+= (wsp[i-min])*(double)nphotons;	
 	}		
@@ -169,7 +169,7 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   }
 
   void DigiArapucaSBNDAlg::CreateSaturation(std::vector<double>& wave){ //Implementing saturation effects
-    for(size_t k=0; k<fNsamples; k++){
+    for(size_t k=0; k<wave.size(); k++){
 	if(wave[k]>(fParams.Baseline+fParams.Saturation*fParams.ADC*fParams.MeanAmplitude))
 	  wave[k]=fParams.Baseline+fParams.Saturation*fParams.ADC*fParams.MeanAmplitude;	  
     }
