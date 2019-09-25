@@ -50,7 +50,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_ranges;
   const std::vector<raw::ADC_Count_t> &adcs = waveform; // upcast to get adcs
   raw::Channel_t channel = waveform.ChannelNumber();
-  if (channel > (unsigned)fOpDetMap.size()) return;
+  // if (channel > (unsigned)fOpDetMap.size()) return;
 
   // initialize the channel in the map no matter what
   if (fTriggerRangesPerChannel.count(channel) == 0) {
@@ -147,6 +147,12 @@ bool opDetSBNDTriggerAlg::IsChannelMasked(raw::Channel_t channel) const {
   if (opdet_type == "arapucaT2" && fConfig.MaskArapucaT2s()) return true;
   
   return false;
+}
+
+void opDetSBNDTriggerAlg::ClearTriggerLocations() {
+  fTriggerLocationsPerChannel.clear();
+  fTriggerRangesPerChannel.clear();
+  fTriggerLocations.clear();
 }
 
 void opDetSBNDTriggerAlg::MergeTriggerLocations() {
@@ -252,7 +258,7 @@ double opDetSBNDTriggerAlg::OpticalPeriod() const {
 }
 
 raw::TimeStamp_t opDetSBNDTriggerAlg::Tick2Timestamp(raw::TimeStamp_t waveform_start, size_t waveform_index) const {
-  return waveform_start * fConfig.OpDetWaveformTimeConversion() + waveform_index * OpticalPeriod();
+  return waveform_start + waveform_index * OpticalPeriod();
 }
 
 const std::vector<raw::TimeStamp_t> &opDetSBNDTriggerAlg::GetTriggerTimes(raw::Channel_t channel) const {
@@ -294,7 +300,7 @@ double opDetSBNDTriggerAlg::ReadoutWindowPostTriggerBeam(raw::Channel_t channel)
 std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const raw::OpDetWaveform &waveform) const {
   std::vector<raw::OpDetWaveform> ret;
   raw::Channel_t channel = waveform.ChannelNumber();
-  if (channel > (unsigned)fOpDetMap.size()) return {};
+  // if (channel > (unsigned)fOpDetMap.size()) return {};
 
   const std::vector<raw::TimeStamp_t> &trigger_times = GetTriggerTimes(channel);
 

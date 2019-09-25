@@ -93,6 +93,12 @@ namespace opdet{
             Name("UseLitePhotons"),
             Comment("Whether SimPhotonsLite or SimPhotons will be used")
         };
+
+        fhicl::Atom<bool> ApplyTriggers {
+            Name("ApplyTriggers"),
+            Comment("Whether to apply trigger algorithm to waveforms"),
+            true
+        };
         
         fhicl::TableFragment<opdet::DigiPMTSBNDAlgMaker::Config> pmtAlgoConfig;
         fhicl::TableFragment<opdet::DigiArapucaSBNDAlgMaker::Config> araAlgoConfig;
@@ -117,6 +123,7 @@ namespace opdet{
     opdet::sbndPDMapAlg map; //map for photon detector types
     unsigned int nChannels = map.size();
     unsigned int fNsamples; //Samples per waveform
+    std::vector<raw::OpDetWaveform> fWaveforms; // holder for un-triggered waveforms
 
   private:
 
@@ -127,15 +134,14 @@ namespace opdet{
     double fWaveformSize;  //waveform time interval (ns)
 
     int fUseLitePhotons; //1 for using SimLitePhotons and 0 for SimPhotons (more complete)
+    bool fApplyTriggers;
     std::unordered_map< raw::Channel_t,std::vector<double> > fFullWaveforms;  
 
 
     void CreateDirectPhotonMap(std::map<int,sim::SimPhotons>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles);
     void CreateDirectPhotonMapLite(std::map<int,sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles);
 
-    void MakeWaveforms(const art::Event &e, opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer, 
-         std::vector< raw::OpDetWaveform > *pulseVecPtr,
-         bool make_triggers, bool apply_triggers, bool save_waveforms);
+    void MakeWaveforms(const art::Event &e, opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer);
 
 //arapuca and PMT digitization algorithms
     opdet::DigiPMTSBNDAlgMaker makePMTDigi;
@@ -150,6 +156,7 @@ namespace opdet{
   , fInputModuleName(config().InputModuleName())
   , fWaveformSize(config().WaveformSize())
   , fUseLitePhotons(config().UseLitePhotons())
+  , fApplyTriggers(config().ApplyTriggers())
   , makePMTDigi(config().pmtAlgoConfig())
   , makeArapucaDigi(config().araAlgoConfig())
   , fTriggerAlg(config().trigAlgoConfig(), lar::providerFrom<detinfo::DetectorClocksService>(), lar::providerFrom<detinfo::DetectorPropertiesService>())
@@ -170,6 +177,9 @@ namespace opdet{
   // Implementation of required member function here.
     std::cout <<"Event: " << e.id().event() << std::endl;
 
+    // setup the waveforms
+    fWaveforms = std::vector<raw::OpDetWaveform> (nChannels);
+
     // prepare the algorithm
     //     
     auto arapucaDigitizer = makeArapucaDigi(
@@ -182,32 +192,65 @@ namespace opdet{
     *(lar::providerFrom<detinfo::DetectorClocksService>())
     );
 
-    // first run the digitizer to make triggers
-    MakeWaveforms(e, pmtDigitizer.get(), arapucaDigitizer.get(), pulseVecPtr.get(), true, false, false);
+    // Run the digitizer over the full readout window
+    MakeWaveforms(e, pmtDigitizer.get(), arapucaDigitizer.get());
 
-    // combine the triggers
-    fTriggerAlg.MergeTriggerLocations();
+    
+    if (fApplyTriggers) {
+      // find the trigger locations for the waveforms
+      for (const raw::OpDetWaveform &waveform: fWaveforms) {
+        raw::Channel_t ch = waveform.ChannelNumber();
+        // skip light channels which don't correspond to readout channels
+        if (ch == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
+          continue;
+        }
+        raw::ADC_Count_t baseline = (map.pdType(ch, "barepmt") || map.pdType(ch, "pmt")) ? 
+          pmtDigitizer->Baseline() : arapucaDigitizer->Baseline();
+        fTriggerAlg.FindTriggerLocations(waveform, baseline);
+      }
 
-    // run the digitizer again -- apply the triggers and save the waveforms
-    MakeWaveforms(e, pmtDigitizer.get(), arapucaDigitizer.get(), pulseVecPtr.get(), false, true, true); 
+      // combine the triggers
+      fTriggerAlg.MergeTriggerLocations();
 
-    // put the waveforms in the event
-    e.put(std::move(pulseVecPtr));
+      // apply the triggers and save the output
+      for (const raw::OpDetWaveform &waveform: fWaveforms) {
+        if (waveform.ChannelNumber() == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
+          continue;
+        }
+        std::vector<raw::OpDetWaveform> waveforms = fTriggerAlg.ApplyTriggerLocations(waveform);
+        // move these waveforms into the pulseVecPtr
+        pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
+        std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
+      }
+      // put the waveforms in the event
+      e.put(std::move(pulseVecPtr));
+      // clear out the triggers
+      fTriggerAlg.ClearTriggerLocations();
+    }
+    else {
+      // put the full waveforms in the event
+      for (const raw::OpDetWaveform &waveform: fWaveforms) {
+        if (waveform.ChannelNumber() == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
+          continue;
+        }
+        pulseVecPtr->push_back(waveform);
+      }
+      e.put(std::move(pulseVecPtr));
+    }
+
+    // clear out the full waveforms
+    fWaveforms.clear();
 
   }//produce end
 
-  void opDetDigitizerSBND::MakeWaveforms(const art::Event &e, opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer, 
-    std::vector< raw::OpDetWaveform > *pulseVecPtr,
-    bool make_triggers, bool apply_triggers, bool save_waveforms) 
+  void opDetDigitizerSBND::MakeWaveforms(const art::Event &e, opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer)
   {
-    std::array<double, 2> enable_window = fTriggerAlg.TriggerEnableWindow();
+    std::array<double, 2> enable_window = fTriggerAlg.TriggerEnableWindow(); // us
     double start_time = enable_window[0];
-    unsigned n_samples = ( enable_window[1] - enable_window[0]) * 1000. /*us -> ns*/ * fSampling /* MHz */;
+    unsigned n_samples = ( enable_window[1] - enable_window[0]) * 1000. /*us -> ns*/ * fSampling /* GHz */;
     int ch, channel;
     if(fUseLitePhotons==1){//using SimPhotonsLite
 
-      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
- 
       std::map<int,sim::SimPhotonsLite> auxmap;   // to temporarily store channel and combine PMT (direct and converted) time profiles
  
      //Get *ALL* SimPhotonsCollectionLite from Event
@@ -226,22 +269,19 @@ namespace opdet{
         std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
 
         for (auto const& litesimphotons : (*opdetHandle)){
+          std::vector<short unsigned int> waveform;
 	  ch = litesimphotons.OpChannel;
-          raw::OpDetWaveform adcVec;
-          raw::ADC_Count_t baseline = 0;
 	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch, "pmt") )){ //All PMT channels
 	//    std::cout << ch << " : PMT channel " <<std::endl;
-	    pmtDigitizer->ConstructWaveformLite(ch, litesimphotons, waveforms, map.pdName(ch), auxmap, start_time, n_samples);
-	    adcVec = raw::OpDetWaveform(start_time, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)pmtDigitizer->Baseline();
+	    pmtDigitizer->ConstructWaveformLite(ch, litesimphotons, waveform, map.pdName(ch), auxmap, start_time*1000 /*ns for digitizer*/, n_samples);
+	    fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
 	  }
 /*	  if(map.pdType(ch, "bar")) //Paddles
 	    std::cout << ch << " : Digitization not implemented for paddles. " <<std::endl;*/
 	  else if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected) ){//getting only arapuca channels with appropriate type of light
 //	    std::cout << "Arapuca channels " <<std::endl;
-	    arapucaDigitizer->ConstructWaveformLite(ch, litesimphotons, waveforms, map.pdName(ch),start_time, n_samples);
-            adcVec = raw::OpDetWaveform(start_time, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)arapucaDigitizer->Baseline();
+	    arapucaDigitizer->ConstructWaveformLite(ch, litesimphotons, waveform, map.pdName(ch),start_time*1000 /*ns for digitizer*/, n_samples);
+            fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
           }
 	  else if((map.pdType(ch,"xarapucaprime") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
 	//    std::cout << "X-Arapuca channels " <<std::endl;
@@ -251,33 +291,12 @@ namespace opdet{
               if(channel==ch) auxLite =(litesimphotons);
               if(channel==(ch+2)) auxLite+=(litesimphotons);
  	    }
-	    arapucaDigitizer->ConstructWaveformLite(ch, auxLite, waveforms, map.pdName(ch),start_time, n_samples);
-            adcVec = raw::OpDetWaveform(start_time, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)arapucaDigitizer->Baseline();
-          }
-          // make triggers if configured to
-          if (make_triggers) {
-            fTriggerAlg.FindTriggerLocations(adcVec, baseline);
-          }
-          // saving waveform
-          if (save_waveforms) {
-            if (apply_triggers) {
-              std::vector<raw::OpDetWaveform> waveforms = fTriggerAlg.ApplyTriggerLocations(adcVec);
-              // move these waveforms into the pulseVecPtr
-              pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
-              std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
-            }
-            else {
-              pulseVecPtr->emplace_back(std::move(adcVec));
-            }
+	    arapucaDigitizer->ConstructWaveformLite(ch, auxLite, waveform, map.pdName(ch),start_time*1000 /*ns for digitizer*/, n_samples);
+            fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
           }
         }
       }  //end loop on simphoton lite collections
     }else{ //for SimPhotons
-
-      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
-//      std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
-
       std::map<int,sim::SimPhotons> auxmap;   // to temporarily store channel and direct light distribution
       //Get *ALL* SimPhotonsCollection from Event
       std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles;
@@ -293,22 +312,19 @@ namespace opdet{
         std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
 
         for (auto const& simphotons : (*opdetHandle)){
+          std::vector<short unsigned int> waveform;
 	  ch = simphotons.OpChannel();
-          raw::OpDetWaveform adcVec;
-          raw::ADC_Count_t baseline = 0;
 	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch,"pmt"))){ //all PMTs
 //	    std::cout << "PMT channels " <<std::endl;
-	    pmtDigitizer->ConstructWaveform(ch, simphotons, waveforms, map.pdName(ch), auxmap, start_time, n_samples);
-            adcVec = raw::OpDetWaveform(start_time, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)pmtDigitizer->Baseline();
+	    pmtDigitizer->ConstructWaveform(ch, simphotons, waveform, map.pdName(ch), auxmap, start_time*1000 /*ns for digitizer*/, n_samples);
+            fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
           }
 /*	  if(map.pdType(ch, "bar")) //Paddles
 	    std::cout << "Digitization not implemented for paddles. " <<std::endl;*/
 	  if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected) ){//getting only arapuca channels with appropriate type of light
 //	    std::cout << "Arapuca channels " <<std::endl;
-	    arapucaDigitizer->ConstructWaveform(ch, simphotons, waveforms, map.pdName(ch),start_time, n_samples);
-            adcVec = raw::OpDetWaveform(start_time, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)arapucaDigitizer->Baseline();
+	    arapucaDigitizer->ConstructWaveform(ch, simphotons, waveform, map.pdName(ch),start_time*1000 /*ns for digitizer*/, n_samples);
+            fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
           }
 	  if((map.pdType(ch,"xarapucaprime") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
 //	    std::cout << "X-Arapuca channels " <<std::endl;
@@ -318,25 +334,8 @@ namespace opdet{
               if(channel==ch) auxPhotons =(simphotons);
               if(channel==(ch+2)) auxPhotons+=(simphotons);
  	    }
-	    arapucaDigitizer->ConstructWaveform(ch, auxPhotons, waveforms, map.pdName(ch),start_time, n_samples);
-            adcVec = raw::OpDetWaveform(start_time, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)arapucaDigitizer->Baseline();
-          }
-          // make triggers if configured to
-          if (make_triggers) {
-            fTriggerAlg.FindTriggerLocations(adcVec, baseline);
-          }
-          // saving waveform
-          if (save_waveforms) {
-            if (apply_triggers) {
-              std::vector<raw::OpDetWaveform> waveforms = fTriggerAlg.ApplyTriggerLocations(adcVec);
-              // move these waveforms into the pulseVecPtr
-              pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
-              std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
-            }
-            else {
-              pulseVecPtr->emplace_back(std::move(adcVec));
-            }
+	    arapucaDigitizer->ConstructWaveform(ch, auxPhotons, waveform, map.pdName(ch),start_time*1000 /*ns for digitizer*/, n_samples);
+            fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
           }
         }//optical channel loop
       }//type of light loop
