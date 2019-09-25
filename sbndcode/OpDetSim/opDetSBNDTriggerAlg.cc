@@ -248,13 +248,7 @@ bool opDetSBNDTriggerAlg::IsTriggerEnabled(raw::TimeStamp_t trigger_time) const 
 }
 
 double opDetSBNDTriggerAlg::OpticalPeriod() const {
-  //TODO: FIX!!!!
-  // Currently, the OpticalClock frequency is wrong in SBND configuration
-  // This is currently worked-around in the rest of the OpDet simulation by multiplying the clock
-  // frequency by a hard-coded factor. However, this should really be fixed in the configuration.
-  //
-  // For now though, multiply by the same factor to be consistent.
-  return fDetectorClocks->OpticalClock().TickPeriod() * 64. / 500.;
+  return fDetectorClocks->OpticalClock().TickPeriod();
 }
 
 raw::TimeStamp_t opDetSBNDTriggerAlg::Tick2Timestamp(raw::TimeStamp_t waveform_start, size_t waveform_index) const {
