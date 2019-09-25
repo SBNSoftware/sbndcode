@@ -1,0 +1,10 @@
+#
+# File:    detsim_uboonedatadrivennoise.fcl
+# Purpose: Runs standard detsim but uses the MicroBooNE data driven model for the noise. The settings for this are set in noiseservices_sbnd.fcl.
+# Author:  Andrew Scarff (a.scarff@sheffield.ac.uk)
+# Date:    7th August 2019
+
+
+#include "standard_detsim_sbnd.fcl"
+
+services.NoiseModel: @local::sbnd_uboonedatadrivennoiseservice
