@@ -21,6 +21,11 @@ physics.producers.generator: {
 # beam spill (84 * 19ns = 1596ns)
 physics.producers.generator.RandomTimeOffset: 1596.
 
+# Only allow gneration inside this box
+#
+# Extends out 20cm past the edge of the TPC active volume in each direction
+physics.producers.generator.FiducialCut: "mbox: -210,-210,-10,210,210,510" 
+
 # Use proton mode for cosmics -- uBooNE sees better match with data
 physics.producers.cosmgen: @local::sbnd_corsika_p
 
