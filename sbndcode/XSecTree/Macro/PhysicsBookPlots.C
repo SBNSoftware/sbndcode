@@ -211,6 +211,8 @@ std::vector<std::string> ToVector(std::string values, std::string delim = ","){
     return_values.push_back(value);
     values.erase(0, pos + delim.length());
   }
+  values.erase(std::remove(values.begin(), values.end(), '['), values.end());
+  values.erase(std::remove(values.begin(), values.end(), ']'), values.end());
   return_values.push_back(values);
 
 
