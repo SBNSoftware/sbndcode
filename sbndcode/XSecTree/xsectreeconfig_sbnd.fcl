@@ -10,7 +10,7 @@ sbnd_xsectree:
       # The input parameters
       GenModuleLabel:       "generator"
       G4ModuleLabel:        "largeant"    # Simulation producer module label
-      Verbose:              false         # Print extra information about what's going on
+      Verbose:              true         # Print extra information about what's going on
 
       WallCut: 15. # Fiducial cut from all walls but back [cm] 
       BackCut: 85. # Fiducial cut from back wall [cm]
