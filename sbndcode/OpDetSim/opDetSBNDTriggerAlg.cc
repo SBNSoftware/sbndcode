@@ -160,6 +160,7 @@ void opDetSBNDTriggerAlg::MergeTriggerLocations() {
   // we don't need to do anything here
   if (fConfig.SelfTriggerPerChannel()) {
     for (const auto &trigger_ranges: fTriggerRangesPerChannel) {
+      fTriggerLocationsPerChannel[trigger_ranges.first] = std::vector<raw::TimeStamp_t>();
       for (const std::array<raw::TimeStamp_t, 2> &range: trigger_ranges.second) {
         fTriggerLocationsPerChannel[trigger_ranges.first].push_back(range[0]);
       }
