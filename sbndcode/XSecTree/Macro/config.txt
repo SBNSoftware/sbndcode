@@ -14,7 +14,7 @@
 //                           File configuration
 //------------------------------------------------------------------------
 // Name of input file
-InputFile: xsectree.root
+InputFile: xsectree_nue.root
 
 // Path to interaction and metadata trees
 TreePath: XSecTree/interaction
@@ -27,7 +27,7 @@ OutputFile: test/test_output.png
 //          Select neutrino interaction (commas for multiple)
 //------------------------------------------------------------------------
 // Muon ([-]14) or electron ([-]12) neutrino
-NuPdg: 14, -14
+NuPdg: 12, -12
 
 // Charged current (1), neutral current (0), not selected (-1, reco only)
 IsCC: 1

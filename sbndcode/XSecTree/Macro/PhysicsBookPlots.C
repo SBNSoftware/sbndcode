@@ -76,9 +76,13 @@ bool fUnfold; //TODO
 // Set by functions
 double fPot;
 double fPotScaleFac = 1;
-double fFlux = 1;
-double fTargets = 1;
-std::vector<int> fCols = {46, 33, 38, 42, 40, 30, 49};
+double fFiducialMass;
+double fFlux;
+double fTargets;
+// Constants
+// Integrated flux for each neutrino species
+std::map<int, double> fNuFlux = {{14, 7.91}, {-14, 0.5475}, {12, 0.04696}, {-12, 0.004732}};
+const std::vector<int> fCols = {46, 33, 38, 42, 40, 30, 49};
 
 // Structure for holding interaction information
 class Interaction
@@ -580,8 +584,8 @@ std::vector<Interaction> ReadData(){
  
 }
 
-// Get the POT from the metadata
-void GetPOT(){
+// Get the POT, flux and target number from the metadata
+void GetMetaData(){
 
   // Open the root tree file
   TFile data_file(fInputFile);
@@ -601,7 +605,22 @@ void GetPOT(){
     fPotScaleFac = fPotScale/fPot;
   }
 
-  fFlux = 7.91e-6 * fPot * fPotScaleFac / 10000; // [cm^-2]
+  double flux_factor = 0;
+  for(auto const& pdg : fNuPdg){
+    if(fNuFlux.find(pdg) == fNuFlux.end()){
+      std::cout<<"Unknown neutrino PDG code!\n";
+      exit(1);
+    }
+    flux_factor += fNuFlux[pdg];
+  }
+  fFlux = flux_factor * 1e-6 * fPot * fPotScaleFac / (10000*0.05); // [cm^-2]
+
+  double volume = 400*400*500; // [cm^3]
+  if(std::find(fFiducial.begin(), fFiducial.end(), -1) == fFiducial.end() && fFiducial.size() == 6){
+    volume = (400-fFiducial[0]-fFiducial[3])*(400-fFiducial[1]-fFiducial[4])*(500-fFiducial[2]-fFiducial[5]); // [cm^3]
+  }
+  double fFiducialMass = 1.3973*volume/1e6; //[tons]
+  fTargets = 6.022e23 * fFiducialMass * 1e3 * 40/ (0.03995); // [/nucleon]
 
 }
 
@@ -1014,14 +1033,8 @@ Titles GetTitles(){
   pot_string.replace(pot_string.find("+"), 1, "");
 
   // Fiducial mass
-  double volume = 400*400*500; // [cm^3]
-  if(std::find(fFiducial.begin(), fFiducial.end(), -1) == fFiducial.end() && fFiducial.size() == 6){
-    volume = (400-fFiducial[0]-fFiducial[3])*(400-fFiducial[1]-fFiducial[4])*(500-fFiducial[2]-fFiducial[5]); // [cm^3]
-  }
-  double fiducial_mass = 1.3973*volume/1e6; //[tons]
-  fTargets = 6.022e23 * fiducial_mass * 1e3 / (0.03995 * 39.95); // [/nucleon]
   std::stringstream mass_stream;
-  mass_stream << std::setprecision(3) << "Fid Mass = " << fiducial_mass << " t";
+  mass_stream << std::setprecision(3) << "Fid Mass = " << fFiducialMass << " t";
   std::string mass_string = mass_stream.str();
 
   Titles titles(hist_titles, names, units, data_type, part_cont, lep_cont, is_cc, n_pr, 
@@ -1078,13 +1091,13 @@ void DrawInfo(Titles titles, double width, double height, double size){
 // Get the Y axis title when plotting cross sections
 TString GetXSecTitle(Titles titles, int i, int j = -1, int k = -1){
 
-  TString xsec_title = "d#sigma/d"+titles.names[i]+" [#frac{cm^{2}}{"+titles.units[i]+" n}]";
+  TString xsec_title = "d#sigma/d"+titles.names[i]+" [10^{-38}#frac{cm^{2}}{"+titles.units[i]+" n}]";
 
   if(j != -1){
-    xsec_title = "d^{2}#sigma/d"+titles.names[i]+"d"+titles.names[j]+" [#frac{cm^{2}}{"+titles.units[i]+" "+titles.units[j]+" n}]";
+    xsec_title = "d^{2}#sigma/d"+titles.names[i]+"d"+titles.names[j]+" [10^{-38}#frac{cm^{2}}{"+titles.units[i]+" "+titles.units[j]+" n}]";
 
     if(k != -1){
-      xsec_title = "d^{3}#sigma/d"+titles.names[i]+"d"+titles.names[j]+"d"+titles.names[k]+" [#frac{cm^{2}}{"+titles.units[i]+" "+titles.units[j]+" "+titles.units[k]+" n}]";
+      xsec_title = "d^{3}#sigma/d"+titles.names[i]+"d"+titles.names[j]+"d"+titles.names[k]+" [10^{-38}#frac{cm^{2}}{"+titles.units[i]+" "+titles.units[j]+" "+titles.units[k]+" n}]";
     }
 
   }
@@ -1389,8 +1402,7 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
       double width = 1;
       if(j != -1) width = width * (bin_edges[j][bin_j+1] - bin_edges[j][bin_j]);
       if(k != -1) width = width * (bin_edges[k][bin_k+1] - bin_edges[k][bin_k]);
-      //double xsec_scale = 3.78e9/(width * fFlux * fTargets);
-      double xsec_scale = 1/(width * fFlux * fTargets);
+      double xsec_scale = 1e38/(width * fFlux * fTargets);
       hist->Scale(xsec_scale, "width");
     }
     // Else if max error used divide each bin by width
@@ -1438,7 +1450,7 @@ TH1D* GetTotalHist(std::vector<std::vector<double>> data, TString name, std::vec
     double width = 1;
     if(j != -1) width = width * (bin_edges[j][bin_j+1] - bin_edges[j][bin_j]);
     if(k != -1) width = width * (bin_edges[k][bin_k+1] - bin_edges[k][bin_k]);
-    double xsec_scale = 1/(width * fFlux * fTargets);
+    double xsec_scale = 1e38/(width * fFlux * fTargets);
     total_hist->Scale(xsec_scale, "width");
   }
   // Else if max error used divide each bin by width
@@ -1447,6 +1459,7 @@ TH1D* GetTotalHist(std::vector<std::vector<double>> data, TString name, std::vec
   }
   return total_hist;
 }
+
 
 // Get the percentage statistical error per bin
 TH1D* GetErrorBand(TH1D* total_hist, TString name, std::vector<std::vector<double>> bin_edges, int i){
@@ -1580,7 +1593,7 @@ void PhysicsBookPlots(){
   std::cout<<"Reading the config file...\n";
   std::string input_file = "config.txt";
   Configure(input_file);
-  GetPOT();
+  GetMetaData();
   std::cout<<"...Finished.\n";
 
   // Get from configuration
@@ -1644,6 +1657,7 @@ void PhysicsBookPlots(){
 
     // Get the statistical errors per bin
     TH1D* total_hist = GetTotalHist(total_data, name_1D, bin_edges, d_i);
+    std::cout<<"Total cross section = "<<total_data.size()*fPotScaleFac*1e38/(fFlux*fTargets)<<" 10^{-38}\n";
     TH1D* error_band = GetErrorBand(total_hist, name_1D, bin_edges, d_i);
     // Create a total 1D stacked histogram for each of the variables
     std::pair<THStack*, TLegend*> stack = StackHist1D(stack_data, name_1D, title_1D, bin_edges, d_i);
