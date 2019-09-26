@@ -95,6 +95,9 @@ Stage: true
 
 PlotVariable: lep_mom, cos_lep_theta
 
+// Save the plots for each variable
+ShowPlots: true, false
+
 // Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
 PotScale: 6.6e20
 

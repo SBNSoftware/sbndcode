@@ -54,6 +54,7 @@ std::vector<int> fInteractionType;
 // Plotting variable configurations
 TString fStage;
 std::vector<TString> fPlotVariables;
+std::vector<bool> fShowPlots;
 double fPotScale;
 // Plotting option configurations
 bool fPlotStacked;
@@ -287,6 +288,7 @@ void Configure(const std::string config_filename) {
     // Plotting variable configurations
     if(key.find("Stage") != std::string::npos)        fStage = TString(value);
     if(key.find("PlotVariable") != std::string::npos) fPlotVariables = ToTStrings(value);
+    if(key.find("ShowPlots") != std::string::npos)    fShowPlots = ToBools(value);
     if(key.find("PotScale") != std::string::npos)     fPotScale = stod(value);
     // Plotting option configurations
     if(key.find("PlotStacked") != std::string::npos) fPlotStacked = (value=="true");
@@ -619,7 +621,7 @@ void GetMetaData(){
   if(std::find(fFiducial.begin(), fFiducial.end(), -1) == fFiducial.end() && fFiducial.size() == 6){
     volume = (400-fFiducial[0]-fFiducial[3])*(400-fFiducial[1]-fFiducial[4])*(500-fFiducial[2]-fFiducial[5]); // [cm^3]
   }
-  double fFiducialMass = 1.3973*volume/1e6; //[tons]
+  fFiducialMass = 1.3973*volume/1e6; //[tons]
   fTargets = 6.022e23 * fFiducialMass * 1e3 * 40/ (0.03995); // [/nucleon]
 
 }
@@ -1135,6 +1137,7 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   hstack->Draw("HIST");
   if(fShowErrorBars){
     total_hist->SetLineWidth(2);
+    total_hist->SetMarkerStyle(1);
     total_hist->Draw("E1 X0 SAME");
   }
 
@@ -1237,6 +1240,7 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
 
   if(fShowErrorBars){
     total_hist->SetLineWidth(2);
+    total_hist->SetMarkerStyle(1);
     total_hist->Draw("E1 X0 SAME");
   }
 
@@ -1648,6 +1652,10 @@ void PhysicsBookPlots(){
   // Loop over the number of variables - this is how many sets of 1D hists we will have
   std::cout<<"Making the plots...\n";
   for(size_t d_i = 0; d_i < fPlotVariables.size(); d_i++){
+
+    // Don't do anything if we don't want to see the plots for this variable
+    if(!fShowPlots[d_i]) continue;
+
     double edges_array[bin_edges[d_i].size()];
     std::copy(bin_edges[d_i].begin(), bin_edges[d_i].end(), edges_array);
 
@@ -1657,7 +1665,7 @@ void PhysicsBookPlots(){
 
     // Get the statistical errors per bin
     TH1D* total_hist = GetTotalHist(total_data, name_1D, bin_edges, d_i);
-    std::cout<<"Total cross section = "<<total_data.size()*fPotScaleFac*1e38/(fFlux*fTargets)<<" 10^{-38}\n";
+    //std::cout<<"Total cross section = "<<total_data.size()*fPotScaleFac*1e38/(fFlux*fTargets)<<" 10^{-38}\n";
     TH1D* error_band = GetErrorBand(total_hist, name_1D, bin_edges, d_i);
     // Create a total 1D stacked histogram for each of the variables
     std::pair<THStack*, TLegend*> stack = StackHist1D(stack_data, name_1D, title_1D, bin_edges, d_i);
