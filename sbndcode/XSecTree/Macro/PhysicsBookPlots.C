@@ -58,7 +58,7 @@ std::vector<bool> fShowPlots;
 double fPotScale;
 // Plotting option configurations
 bool fPlotStacked;
-bool fStackInFsi;
+TString fStackBy;
 std::vector<double> fMinValue;
 std::vector<double> fMaxValue;
 std::vector<int> fNumBins;
@@ -94,15 +94,17 @@ class Interaction
   bool true_selected;
   std::string fsi;
   std::string int_type;
+  std::string nu_type;
   std::vector<double> variables;
   std::vector<double> true_variables;
 
-  Interaction(bool s, bool ts, std::string f, std::string i, std::vector<double> v, std::vector<double> tv)
+  Interaction(bool s, bool ts, std::string f, std::string i, std::string n, std::vector<double> v, std::vector<double> tv)
   {
     selected = s;
     true_selected = ts;
     fsi = f;
     int_type = i;
+    nu_type = n;
     variables = v;
     true_variables = tv;
   }
@@ -294,7 +296,7 @@ void Configure(const std::string config_filename) {
     if(key.find("PotScale") != std::string::npos)     fPotScale = stod(value);
     // Plotting option configurations
     if(key.find("PlotStacked") != std::string::npos) fPlotStacked = (value=="true");
-    if(key.find("StackInFsi") != std::string::npos)  fStackInFsi = (value=="true");
+    if(key.find("StackBy") != std::string::npos)     fStackBy = TString(value);
     if(key.find("MinValue") != std::string::npos)    fMinValue = ToDoubles(value);
     if(key.find("MaxValue") != std::string::npos)    fMaxValue = ToDoubles(value);
     if(key.find("NumBins") != std::string::npos)     fNumBins = ToInts(value);
@@ -327,6 +329,10 @@ void Configure(const std::string config_filename) {
   if(fPlotVariables.size() < 1){
     std::cout<<"Need something to plot in.\n";
     exit(1);
+  }
+  if(!(fStackBy=="fsi" || fStackBy=="int" || fStackBy=="nu")){
+    std::cout<<"Unknown stack by parameter, not stacking.\n";
+    fPlotStacked = false;
   }
 
 }
@@ -568,12 +574,22 @@ std::vector<Interaction> ReadData(){
     else if(*true_int_type == 3) int_string = "COH";
     else if(*true_int_type == 10) int_string = "MEC";
 
+    std::string nu_string = "other";
+    if(*true_nu_pdg == -12 && *true_cc) nu_string = "#bar{#nu}_{e} CC";
+    if(*true_nu_pdg == -12 && !*true_cc) nu_string = "#bar{#nu}_{e} NC";
+    if(*true_nu_pdg == -14 && *true_cc) nu_string = "#bar{#nu}_{#mu} CC";
+    if(*true_nu_pdg == -14 && !*true_cc) nu_string = "#bar{#nu}_{#mu} NC";
+    if(*true_nu_pdg == 12 && *true_cc) nu_string = "#nu_{e} CC";
+    if(*true_nu_pdg == 12 && !*true_cc) nu_string = "#nu_{e} NC";
+    if(*true_nu_pdg == 14 && *true_cc) nu_string = "#nu_{#mu} CC";
+    if(*true_nu_pdg == 14 && !*true_cc) nu_string = "#nu_{#mu} NC";
+
     // Check that the event matches the selection
     if(!selected && !true_selected) continue;
     // Check that all variables are filled FIXME is this right?
     if(std::find(true_variables.begin(), true_variables.end(), -99999) != true_variables.end()) continue;
     
-    Interaction interaction(selected, true_selected, fsi_string, int_string, variables, true_variables);
+    Interaction interaction(selected, true_selected, fsi_string, int_string, nu_string, variables, true_variables);
     interactions.push_back(interaction);
     
   }
@@ -1619,11 +1635,14 @@ void PhysicsBookPlots(){
     if(!fPlotStacked){
       stack_data["all"].push_back(in.variables);
     }
-    else if(fStackInFsi){
+    else if(fStackBy == "fsi"){
       stack_data[in.fsi].push_back(in.variables);
     }
-    else{
+    else if(fStackBy == "int"){
       stack_data[in.int_type].push_back(in.variables);
+    }
+    else if(fStackBy == "nu"){
+      stack_data[in.nu_type].push_back(in.variables);
     }
   }
   std::cout<<"...Finished.\n";
