@@ -27,7 +27,7 @@ OutputFile: test/test_output.png
 //          Select neutrino interaction (commas for multiple)
 //------------------------------------------------------------------------
 // Muon ([-]14) or electron ([-]12) neutrino
-NuPdg: 14
+NuPdg: 14, -14
 
 // Charged current (1), neutral current (0), not selected (-1, reco only)
 IsCC: 1
@@ -40,7 +40,7 @@ ContainedParticles: true, false
 
 // Apply a fiducial volume cut to the neutrino vertex (-1 for AV)
 // Cuts +ve values from face: min x, min y, min z, max x, max y, max z
-Fiducial: -1
+Fiducial: 15, 15, 15, 15, 15, 80
 
 // FSI (true) or true interaction (false)
 PlotByFsi: true
@@ -68,7 +68,7 @@ InteractionType: -1
 //- reco (Efficiency + smearing + PID + selection) TODO: only for numuCC
 Stage: true
 
-// Variable to plot in TODO: allow for any number of variables
+// Variable to plot in
 // Bools
 //- lep_contained (containment of primary lepton)
 //- particles_contained (containment of secondary particles)
@@ -79,7 +79,7 @@ Stage: true
 //- n_pr (number of protons)
 //- n_pipm (number of charged pions)
 //- n_pi0 (number of neutral pions)
-// Doubles
+// Doubles - can add cos_ to the front of angular variables
 //- nu_energy (neutrino energy) [GeV]
 //- lep_mom (lepton momentum) [GeV]
 //- lep_theta (lepton angle wrt beam) [rad]
@@ -93,10 +93,10 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: lep_mom
+PlotVariable: lep_mom, cos_lep_theta
 
 // Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
-PotScale: -1
+PotScale: 6.6e20
 
 //------------------------------------------------------------------------
 //                           Choose how to plot
@@ -108,16 +108,25 @@ PlotStacked: false
 StackInFsi: false
 
 // Minimum bin (-1 for min tree value)
-MinValue: -1
+MinValue: -1, -1
 
 // Maximum bin (-1 for max tree value)
-MaxValue: -1
+MaxValue: -1, -1
 
 // Number of bins (-1 for automatic)
-NumBins: -1
+NumBins: -1, -1
+
+// Bin edges (separate edges with , and plot variables in [] brackets)
+BinEdges: [0, 0.4, 0.5, 0.75, 1.25, 2.5], [-1, -0.5, 0, 0.27, 0.45, 0.62, 0.76, 0.86, 0.94, 1]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
 MaxError: -1
+
+// Plot cross-section (true) or rate (false)
+PlotXSec: true
+
+// Plot filled histograms (true)
+PlotFilled: true
 
 //------------------------------------------------------------------------
 //                         Choose plot options
@@ -126,7 +135,10 @@ MaxError: -1
 ShowInfo: true
 
 // Show percentage statistical error (true)
-ShowStatError: false
+ShowStatError: true
+
+// Show error bars on histograms (true)
+ShowErrorBars: true
 
 // Produce efficiency and purity plots (true)
 PlotEffPur: false

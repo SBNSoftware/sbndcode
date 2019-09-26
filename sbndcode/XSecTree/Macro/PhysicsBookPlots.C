@@ -61,10 +61,14 @@ bool fStackInFsi;
 std::vector<double> fMinValue;
 std::vector<double> fMaxValue;
 std::vector<int> fNumBins;
+std::vector<std::vector<double>> fBinEdges;
 double fMaxError;
+bool fPlotXSec;
+bool fPlotFilled;
 // Optional extras
 bool fShowInfo;
 bool fShowStatError;
+bool fShowErrorBars;
 bool fPlotEffPur;
 bool fPlotResponse; //TODO
 bool fUnfold; //TODO
@@ -72,6 +76,8 @@ bool fUnfold; //TODO
 // Set by functions
 double fPot;
 double fPotScaleFac = 1;
+double fFlux = 1;
+double fTargets = 1;
 std::vector<int> fCols = {46, 33, 38, 42, 40, 30, 49};
 
 // Structure for holding interaction information
@@ -102,8 +108,9 @@ class Titles
 {
   public:
 
-  std::vector<TString> units;
   std::vector<TString> hist_titles;
+  std::vector<TString> names;
+  std::vector<TString> units;
   TString data_type;
   TString part_cont;
   TString lep_cont;
@@ -115,10 +122,11 @@ class Titles
   TString pot;
   TString mass;
 
-  Titles(std::vector<TString> ht, std::vector<TString> u, TString dt, TString pc, TString lc, 
+  Titles(std::vector<TString> ht, std::vector<TString> n, std::vector<TString> u, TString dt, TString pc, TString lc, 
         TString ic, TString npr, TString npi, TString npi0, TString it, TString p, TString m)
   {
     hist_titles = ht;
+    names = n;
     units = u;
     data_type = dt;
     part_cont = pc;
@@ -145,6 +153,7 @@ void SetStyle(){
   TGaxis::SetMaxDigits(3);
   gStyle->SetOptStat(0);
   gStyle->SetPalette(55);
+  gStyle->SetMarkerStyle(8);
   // Widths
   gStyle->SetFrameFillColor(0);
   gStyle->SetFrameBorderMode(0);
@@ -169,6 +178,7 @@ void SetStyle(){
   gStyle->SetLabelSize(font_size, "x");
   gStyle->SetLabelSize(font_size, "y");
   gStyle->SetLabelSize(font_size, "z");
+  gStyle->SetMarkerSize(0.6);
   // Offsets
   gStyle->SetLabelOffset(label_offset, "x");
   gStyle->SetLabelOffset(label_offset, "y");
@@ -180,18 +190,24 @@ void SetStyle(){
 }
 
 // Convert comma separated string to vector of strings
-std::vector<std::string> ToVector(std::string values){
+std::vector<std::string> ToVector(std::string values, std::string delim = ","){
+
   // Expects comma separated string
-  std::string delim = ",";
   size_t pos = 0;
   std::vector<string> return_values;
 
   while ((pos = values.find(delim)) != std::string::npos) {
     std::string value = values.substr(0, pos);
+
+    // Get rid of any []
+    value.erase(std::remove(value.begin(), value.end(), '['), value.end());
+    value.erase(std::remove(value.begin(), value.end(), ']'), value.end());
+
     return_values.push_back(value);
     values.erase(0, pos + delim.length());
   }
   return_values.push_back(values);
+
 
   return return_values;
 }
@@ -274,24 +290,33 @@ void Configure(const std::string config_filename) {
     if(key.find("MinValue") != std::string::npos)    fMinValue = ToDoubles(value);
     if(key.find("MaxValue") != std::string::npos)    fMaxValue = ToDoubles(value);
     if(key.find("NumBins") != std::string::npos)     fNumBins = ToInts(value);
+    if(key.find("BinEdges") != std::string::npos){
+      for(auto const& val : ToVector(value, "],[")) fBinEdges.push_back(ToDoubles(val));
+    }
     if(key.find("MaxError") != std::string::npos)    fMaxError = stod(value);
+    if(key.find("PlotXSec") != std::string::npos)    fPlotXSec = (value=="true");
+    if(key.find("PlotFilled") != std::string::npos)  fPlotFilled = (value=="true");
     // Optional extras
     if(key.find("ShowInfo") != std::string::npos)      fShowInfo = (value=="true");
     if(key.find("ShowStatError") != std::string::npos) fShowStatError = (value=="true");
+    if(key.find("ShowErrorBars") != std::string::npos) fShowErrorBars = (value=="true");
     if(key.find("PlotEffPur") != std::string::npos)    fPlotEffPur = (value=="true");
     if(key.find("PlotResponse") != std::string::npos)  fPlotResponse = (value=="true");
     if(key.find("Unfold") != std::string::npos)        fUnfold = (value=="true");
   }
 
-  if(fPlotVariables.size()!=fMinValue.size()||fPlotVariables.size()!=fMaxValue.size()||fPlotVariables.size()!=fNumBins.size()){
+  if(fPlotVariables.size() != fMinValue.size()
+     || fPlotVariables.size() != fMaxValue.size()
+     || fPlotVariables.size() != fNumBins.size()
+     || fPlotVariables.size() != fBinEdges.size()){
     std::cout<<"Must have same number of binning parameters as plotting variables!\n";
     exit(1);
   }
-  if(fPlotVariables.size()>3){
+  if(fPlotVariables.size() > 3){
     std::cout<<"Sorry, ROOT doesn't do >3D histograms...\n";
     exit(1);
   }
-  if(fPlotVariables.size()<1){
+  if(fPlotVariables.size() < 1){
     std::cout<<"Need something to plot in.\n";
     exit(1);
   }
@@ -424,87 +449,98 @@ std::vector<Interaction> ReadData(){
 
     std::vector<double> variables;
     std::vector<double> true_variables;
-    for(auto const& plot_var : fPlotVariables){
-      if (plot_var =="lep_contained"){ 
+    int index = 0;
+    for(auto const& var : fPlotVariables){
+      bool apply_cos = false;
+      TString plot_var = var;
+      if(var(0, 4) == "cos_"){ 
+        apply_cos = true;
+        plot_var = var(4, plot_var.Length());
+      }
+
+      if (plot_var == "lep_contained"){ 
         variables.push_back((double)(*lep_contained));
         true_variables.push_back((double)(*true_lep_contained));
       }
-      if (plot_var =="particles_contained"){ 
+      if (plot_var == "particles_contained"){ 
         variables.push_back((double)(*particles_contained));
         true_variables.push_back((double)(*true_particles_contained));
       }
-      if (plot_var =="cc"){ 
+      if (plot_var == "cc"){ 
         variables.push_back((double)(*cc));
         true_variables.push_back((double)(*true_cc));
       }
-      if (plot_var =="nu_pdg"){ 
+      if (plot_var == "nu_pdg"){ 
         variables.push_back((double)(*nu_pdg));
         true_variables.push_back((double)(*true_nu_pdg));
       }
-      if (plot_var =="int_type"){ 
+      if (plot_var == "int_type"){ 
         variables.push_back((double)(*int_type));
         true_variables.push_back((double)(*true_int_type));
       }
-      if (plot_var =="n_pr"){ 
+      if (plot_var == "n_pr"){ 
         variables.push_back((double)(*n_pr));
         true_variables.push_back((double)(*true_n_pr));
       }
-      if (plot_var =="n_pipm"){ 
+      if (plot_var == "n_pipm"){ 
         variables.push_back((double)(*n_pipm));
         true_variables.push_back((double)(*true_n_pipm));
       }
-      if (plot_var =="n_pi0"){ 
+      if (plot_var == "n_pi0"){ 
         variables.push_back((double)(*n_pi0));
         true_variables.push_back((double)(*true_n_pi0));
       }
-      if (plot_var =="nu_energy"){ 
+      if (plot_var == "nu_energy"){ 
         variables.push_back(*nu_energy);
         true_variables.push_back(*true_nu_energy);
       }
-      if (plot_var =="lep_mom"){ 
+      if (plot_var == "lep_mom"){ 
         variables.push_back(*lep_mom);
         true_variables.push_back(*true_lep_mom);
       }
-      if (plot_var =="lep_theta"){ 
+      if (plot_var == "lep_theta"){ 
         variables.push_back(*lep_theta);
         true_variables.push_back(*true_lep_theta);
       }
-      if (plot_var =="pr1_mom"){ 
+      if (plot_var == "pr1_mom"){ 
         variables.push_back(*pr1_mom);
         true_variables.push_back(*true_pr1_mom);
       }
-      if (plot_var =="pr1_theta"){ 
+      if (plot_var == "pr1_theta"){ 
         variables.push_back(*pr1_theta);
         true_variables.push_back(*true_pr1_theta);
       }
-      if (plot_var =="lep_pr1_angle"){ 
+      if (plot_var == "lep_pr1_angle"){ 
         variables.push_back(*lep_pr1_angle);
         true_variables.push_back(*true_lep_pr1_angle);
       }
-      if (plot_var =="pipm1_mom"){ 
+      if (plot_var == "pipm1_mom"){ 
         variables.push_back(*pipm1_mom);
         true_variables.push_back(*true_pipm1_mom);
       }
-      if (plot_var =="pipm1_theta"){ 
+      if (plot_var == "pipm1_theta"){ 
         variables.push_back(*pipm1_theta);
         true_variables.push_back(*true_pipm1_theta);
       }
-      if (plot_var =="lep_pipm1_angle"){ 
+      if (plot_var == "lep_pipm1_angle"){ 
         variables.push_back(*lep_pipm1_angle);
         true_variables.push_back(*true_lep_pipm1_angle);
       }
-      if (plot_var =="delta_pt"){ 
+      if (plot_var == "delta_pt"){ 
         variables.push_back(*delta_pt);
         true_variables.push_back(*true_delta_pt);
       }
-      if (plot_var =="delta_alphat"){ 
+      if (plot_var == "delta_alphat"){ 
         variables.push_back(*delta_alphat);
         true_variables.push_back(*true_delta_alphat);
       }
-      if (plot_var =="delta_phit"){ 
+      if (plot_var == "delta_phit"){ 
         variables.push_back(*delta_phit);
         true_variables.push_back(*true_delta_phit);
       }
+
+      if(apply_cos) variables[index] = cos(variables[index]);
+      index++;
     }
 
     // FSI: 0pi0p, 0pi1p, 0pi2+p, 1pi, 2+pi, 1+pi0
@@ -564,6 +600,8 @@ void GetPOT(){
   if(fPotScale > 0){
     fPotScaleFac = fPotScale/fPot;
   }
+
+  fFlux = 7.91e-6 * fPot * fPotScaleFac / 10000; // [cm^-2]
 
 }
 
@@ -692,15 +730,24 @@ std::vector<std::vector<double>> GetBinning(std::vector<std::vector<double>> dat
   
   std::vector<std::vector<double>> all_bin_edges;
   for(size_t i = 0; i < fPlotVariables.size(); i++){
-    TH1D *temp_hist = new TH1D("temp_hist", "", hist_bins[i], hist_min[i], hist_max[i]);
-    std::vector<double> bin_edges;
-    for(size_t j = 0; j < temp_hist->GetNbinsX(); j++){
-      bin_edges.push_back(temp_hist->GetBinLowEdge(j+1));
+    // If bin edges are set by the user
+    if(fBinEdges[i].size() > 1){
+      all_bin_edges.push_back(fBinEdges[i]);
     }
-    delete temp_hist;
-    bin_edges.push_back(hist_max[i]);
-    all_bin_edges.push_back(bin_edges);
+    else{
+      TH1D *temp_hist = new TH1D("temp_hist", "", hist_bins[i], hist_min[i], hist_max[i]);
+      std::vector<double> bin_edges;
+      for(size_t j = 0; j < temp_hist->GetNbinsX(); j++){
+        bin_edges.push_back(temp_hist->GetBinLowEdge(j+1));
+      }
+      delete temp_hist;
+      bin_edges.push_back(hist_max[i]);
+      all_bin_edges.push_back(bin_edges);
+    }
   }
+
+  // See if bin edges set by user
+  //
 
   // If a maximum bin error is set
   if(fMaxError > 0){
@@ -730,93 +777,130 @@ std::vector<std::vector<double>> GetBinning(std::vector<std::vector<double>> dat
 Titles GetTitles(){
   
   // Set the units and histogram titles based on plotting variable
+  std::vector<TString> names;
   std::vector<TString> units;
   std::vector<TString> hist_titles;
-  for(auto const& plot_var : fPlotVariables){
+  int index = 0;
+  for(auto const& var : fPlotVariables){
+    bool apply_cos = false;
+    TString plot_var = var;
+    if(var(0, 4) == "cos_"){ 
+      apply_cos = true;
+      plot_var = var(4, plot_var.Length());
+    }
+
     if (plot_var == "nu_energy"){
-      units.push_back("E_{#nu} (GeV)");
-      hist_titles.push_back("Neutrino Energy");
+      names.push_back("E_{#nu}");
+      units.push_back("GeV");
+      hist_titles.push_back("neutrino energy");
     } 
     else if (plot_var == "lep_mom"){
-      units.push_back("P_{lep} (GeV/c)");
-      hist_titles.push_back("Lepton Momentum");
+      names.push_back("P_{lep}");
+      units.push_back("GeV");
+      hist_titles.push_back("lepton momentum");
     }
     else if (plot_var == "pr1_mom"){
-      units.push_back("P_{p} (GeV/c)");
-      hist_titles.push_back("Leading Proton Momentum");
+      names.push_back("P_{p}");
+      units.push_back("GeV");
+      hist_titles.push_back("leading proton momentum");
     }
     else if (plot_var == "pipm1_mom"){
-      units.push_back("P_{#pi} (GeV/c)");
-      hist_titles.push_back("Leading #pi^{#pm} Momentum");  
+      names.push_back("P_{#pi}");
+      units.push_back("GeV");
+      hist_titles.push_back("leading #pi^{#pm} momentum");  
     }
     else if (plot_var == "lep_theta"){
-      units.push_back("#theta_{lep} (Rad)");
-      hist_titles.push_back("Lepton #theta");
+      names.push_back("#theta_{lep}");
+      units.push_back("rad");
+      hist_titles.push_back("lepton #theta");
     }
     else if (plot_var == "pr1_theta"){
-      units.push_back("#theta_{p} (Rad)");
-      hist_titles.push_back("Leading Proton #theta");
+      names.push_back("#theta_{p}");
+      units.push_back("rad");
+      hist_titles.push_back("leading proton #theta");
     }
     else if (plot_var == "pipm1_theta"){
-      units.push_back("#theta_{#pi} (Rad)");
-      hist_titles.push_back("Leading #pi^{#pm} #theta");
+      names.push_back("#theta_{#pi}");
+      units.push_back("rad");
+      hist_titles.push_back("leading #pi^{#pm} #theta");
     }
     else if (plot_var == "lep_pr1_angle"){
-      units.push_back("#theta_{lep,p} (Rad)");
-      hist_titles.push_back("Angle Between Lepton and Proton");
+      names.push_back("#theta_{lep,p}");
+      units.push_back("rad");
+      hist_titles.push_back("angle between lepton and proton");
     }
     else if (plot_var == "lep_pipm1_angle"){
-      units.push_back("#theta_{lep,#pi} (Rad)");
-      hist_titles.push_back("Angle Between Lepton and #pi^{#pm}");
+      names.push_back("#theta_{lep,#pi}");
+      units.push_back("rad");
+      hist_titles.push_back("angle between lepton and #pi^{#pm}");
     }
     else if (plot_var == "nu_pdg"){
-      units.push_back("PDG Code");
-      hist_titles.push_back("Neutrino PDG");
+      names.push_back("PDG code");
+      units.push_back("");
+      hist_titles.push_back("neutrino PDG");
     }
     else if (plot_var == "lep_contained"){
-      units.push_back("Lepton Contained? (1/0)");
-      hist_titles.push_back("Lepton Containment");
+      names.push_back("lepton contained?");
+      units.push_back("");
+      hist_titles.push_back("lepton containment");
     }
     else if (plot_var == "particles_contained"){
-      units.push_back("Particles Contained? (1/0)");
-      hist_titles.push_back("Secondary Particle Containment");
+      names.push_back("particles contained?");
+      units.push_back("");
+      hist_titles.push_back("secondary particle containment");
     }
     else if (plot_var == "cc"){
-      units.push_back("Is CC? (1/0)");
-      hist_titles.push_back("Charged or Neutral Current");
+      names.push_back("Is CC?");
+      units.push_back("");
+      hist_titles.push_back("charged or neutral current");
     }
     else if (plot_var == "int_type"){
-      units.push_back("Interaction Code");
+      names.push_back("interaction code");
+      units.push_back("");
       hist_titles.push_back("QE(0) RES(1) DIS(2) COH(3) MEC(10)");
     }
     else if (plot_var == "n_pr"){
-      units.push_back("N_{p}");
-      hist_titles.push_back("Number of Protons");
+      names.push_back("N_{p}");
+      units.push_back("");
+      hist_titles.push_back("number of protons");
     }
     else if (plot_var == "n_pipm"){
-      units.push_back("N_{#pi}");
-      hist_titles.push_back("Number of #pi^{#pm}");
+      names.push_back("N_{#pi}");
+      units.push_back("");
+      hist_titles.push_back("number of #pi^{#pm}");
     }
     else if (plot_var == "n_pi0"){
-      units.push_back("N_{#pi^{0}}");
-      hist_titles.push_back("Number of #pi^{0}");
+      names.push_back("N_{#pi^{0}}");
+      units.push_back("");
+      hist_titles.push_back("number of #pi^{0}");
     }
     else if (plot_var == "delta_pt"){
-      units.push_back("#delta p_{T} (GeV)");
-      hist_titles.push_back("Transverse Variable: #delta p_{T}");
+      names.push_back("#delta p_{T}");
+      units.push_back("GeV");
+      hist_titles.push_back("#delta p_{T}");
     }
     else if (plot_var == "delta_alphat"){
-      units.push_back("#delta #alpha_{T} (degrees)");
-      hist_titles.push_back("Transverse Variable: #delta #alpha_{T}");
+      names.push_back("#delta #alpha_{T}");
+      units.push_back("deg");
+      hist_titles.push_back("#delta #alpha_{T}");
     }
     else if (plot_var == "delta_phit"){
-      units.push_back("#delta #phi_{T} (degrees)");
-      hist_titles.push_back("Transverse Variable: #delta #phi_{T}");
+      names.push_back("#delta #phi_{T}");
+      units.push_back("deg");
+      hist_titles.push_back("#delta #phi_{T}");
     }
     else{
       std::cout<<"Invalid plotting variable!\n";
       exit(1);
     }
+
+    // TODO remove units
+    if(apply_cos){
+      names[index] = "cos"+ names[index];
+      units[index] = "";
+      hist_titles[index] = "cos "+hist_titles[index];
+    }
+    index++;
   }
 
   // True or reco
@@ -884,7 +968,7 @@ Titles GetTitles(){
     for(auto const& num : fNumProtons)
       n_pr += std::to_string(num) + " ";
   }
-  n_pr += "Protons(s)";
+  n_pr += "Proton(s)";
 
   // Number of charged pions
   TString n_pipm;
@@ -927,6 +1011,7 @@ Titles GetTitles(){
   pot_stream << std::setprecision(3) << "POT = " << pot << "}";
   std::string pot_string = pot_stream.str();
   pot_string.replace(pot_string.find("e"), 1, "#times10^{");
+  pot_string.replace(pot_string.find("+"), 1, "");
 
   // Fiducial mass
   double volume = 400*400*500; // [cm^3]
@@ -934,11 +1019,12 @@ Titles GetTitles(){
     volume = (400-fFiducial[0]-fFiducial[3])*(400-fFiducial[1]-fFiducial[4])*(500-fFiducial[2]-fFiducial[5]); // [cm^3]
   }
   double fiducial_mass = 1.3973*volume/1e6; //[tons]
+  fTargets = 6.022e23 * fiducial_mass * 1e3 / (0.03995 * 39.95); // [/nucleon]
   std::stringstream mass_stream;
   mass_stream << std::setprecision(3) << "Fid Mass = " << fiducial_mass << " t";
   std::string mass_string = mass_stream.str();
 
-  Titles titles(hist_titles, units, data_type, part_cont, lep_cont, is_cc, n_pr, 
+  Titles titles(hist_titles, names, units, data_type, part_cont, lep_cont, is_cc, n_pr, 
                 n_pipm, n_pi0, int_type, TString(pot_string), TString(mass_string));
 
   return(titles);
@@ -989,8 +1075,24 @@ void DrawInfo(Titles titles, double width, double height, double size){
 
 }
 
+// Get the Y axis title when plotting cross sections
+TString GetXSecTitle(Titles titles, int i, int j = -1, int k = -1){
+
+  TString xsec_title = "d#sigma/d"+titles.names[i]+" [#frac{cm^{2}}{"+titles.units[i]+" n}]";
+
+  if(j != -1){
+    xsec_title = "d^{2}#sigma/d"+titles.names[i]+"d"+titles.names[j]+" [#frac{cm^{2}}{"+titles.units[i]+" "+titles.units[j]+" n}]";
+
+    if(k != -1){
+      xsec_title = "d^{3}#sigma/d"+titles.names[i]+"d"+titles.names[j]+"d"+titles.names[k]+" [#frac{cm^{2}}{"+titles.units[i]+" "+titles.units[j]+" "+titles.units[k]+" n}]";
+    }
+
+  }
+  return TString(xsec_title);
+}
+
 // Plot a 1D stacked hist with statistical errors on the bottom
-void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Titles titles, size_t i){
+void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Titles titles, TH1D* total_hist, size_t i, size_t j = -1, size_t k = -1){
 
   // Create the canvas
   TString name = hstack->GetName();
@@ -1018,14 +1120,22 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
 
   // Draw the stacked histogram and legend
   hstack->Draw("HIST");
+  if(fShowErrorBars){
+    total_hist->SetLineWidth(2);
+    total_hist->Draw("E1 X0 SAME");
+  }
+
   if(fPlotStacked){
     legend->SetNColumns(legend->GetNRows());
     legend->SetFillStyle(0);
     legend->Draw();
   }
   // Set the titles
-  if(fMaxError > 0){
-    hstack->GetYaxis()->SetTitle("Events (/Bin width)");
+  if(fPlotXSec){
+    hstack->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+  }
+  else if(fMaxError > 0){
+    hstack->GetYaxis()->SetTitle("Events (/bin width)");
   }
   else{
     hstack->GetYaxis()->SetTitle("Events");
@@ -1035,9 +1145,22 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   hstack->GetXaxis()->SetTitleOffset(1.8);
   hstack->GetXaxis()->SetTickLength(0.04);
   // Y axis config
-  hstack->GetYaxis()->SetTitleSize(1.1*hstack->GetYaxis()->GetTitleSize());
-  hstack->GetYaxis()->SetNdivisions(110);
   hstack->GetYaxis()->SetTitleOffset(0.8);
+  double title_size = 1.1*hstack->GetYaxis()->GetTitleSize();
+  if(fPlotXSec && fPlotVariables.size()==1){ 
+    title_size = 1.0*hstack->GetYaxis()->GetTitleSize();
+    hstack->GetYaxis()->SetTitleOffset(0.9);
+  }
+  if(fPlotXSec && fPlotVariables.size()==2){ 
+    title_size = 0.8*hstack->GetYaxis()->GetTitleSize();
+    hstack->GetYaxis()->SetTitleOffset(1.0);
+  }
+  if(fPlotXSec && fPlotVariables.size()==3){ 
+    title_size = 0.6*hstack->GetYaxis()->GetTitleSize();
+    hstack->GetYaxis()->SetTitleOffset(1.1);
+  }
+  hstack->GetYaxis()->SetTitleSize(title_size);
+  hstack->GetYaxis()->SetNdivisions(110);
   hstack->GetYaxis()->SetTickLength(0.015);
   canvas->Modified();
 
@@ -1057,7 +1180,7 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   error_bands->SetFillColor(38);
   error_bands->SetLineColor(38);
   error_bands->GetYaxis()->SetTitle("#sigma_{stat} (%)");
-  error_bands->GetXaxis()->SetTitle(titles.units[i]);
+  error_bands->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
 
   double size_ratio = upper_pad->GetAbsHNDC()/lower_pad->GetAbsHNDC();
   // x axis config
@@ -1075,7 +1198,7 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   error_bands->SetTitleOffset(0.3, "y");
 
   // Draw the error bars
-  if(error_bands->GetNbinsX()==1) error_bands->Draw("B");
+  if(error_bands->GetNbinsX() < 40) error_bands->Draw("B");
   else error_bands->Draw("C");
   
   TString output_file = fOutputFile;
@@ -1084,7 +1207,7 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
 }
 
 // Plot a 1D stacked hist
-void Plot1D(THStack* hstack, TLegend* legend, Titles titles, size_t i){
+void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, size_t i, size_t j = -1, size_t k = -1){
 
   // Create the canvas
   TString name = hstack->GetName();
@@ -1098,6 +1221,12 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, size_t i){
 
   // Draw the stacked histogram and legend
   hstack->Draw("HIST");
+
+  if(fShowErrorBars){
+    total_hist->SetLineWidth(2);
+    total_hist->Draw("E1 X0 SAME");
+  }
+
   if(fPlotStacked){
     legend->SetNColumns(legend->GetNRows());
     legend->SetFillStyle(0);
@@ -1110,22 +1239,40 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, size_t i){
     canvas->Modified();
   }
   // Set the titles
-  if(fMaxError > 0){
+  if(fPlotXSec){
+    hstack->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+  }
+  else if(fMaxError > 0){
     hstack->GetYaxis()->SetTitle("Events (/Bin width)");
   }
   else{
     hstack->GetYaxis()->SetTitle("Events");
   }
-  hstack->GetXaxis()->SetTitle(titles.units[i]);
+  hstack->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
   // X axis config
   hstack->GetXaxis()->SetTitleOffset(1.);
-  hstack->GetXaxis()->SetTickLength(0.04);
+  hstack->GetXaxis()->SetTickLength(0.02);
   hstack->GetXaxis()->SetTitleSize(1.1*hstack->GetXaxis()->GetTitleSize());
   // Y axis config
   hstack->GetYaxis()->SetTitleOffset(0.95);
   hstack->GetYaxis()->SetTickLength(0.015);
-  hstack->GetYaxis()->SetTitleSize(1.1*hstack->GetYaxis()->GetTitleSize());
+  double title_size = 1.1*hstack->GetYaxis()->GetTitleSize();
+  if(fPlotXSec && fPlotVariables.size()==1){ 
+    title_size = 1.0*hstack->GetYaxis()->GetTitleSize();
+    hstack->GetYaxis()->SetTitleOffset(1.05);
+  }
+  if(fPlotXSec && fPlotVariables.size()==2){ 
+    title_size = 0.8*hstack->GetYaxis()->GetTitleSize();
+    hstack->GetYaxis()->SetTitleOffset(1.15);
+  }
+  if(fPlotXSec && fPlotVariables.size()==3){ 
+    title_size = 0.6*hstack->GetYaxis()->GetTitleSize();
+    hstack->GetYaxis()->SetTitleOffset(1.25);
+  }
+    
+  hstack->GetYaxis()->SetTitleSize(title_size);
   hstack->GetYaxis()->SetNdivisions(110);
+  if(fPlotXSec && fPlotVariables.size()==1)
   canvas->Modified();
 
   // Text position and content
@@ -1138,6 +1285,8 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, size_t i){
   output_file.ReplaceAll(".","_"+name+".");
   canvas->SaveAs(output_file);
 }
+
+
 
 // Draw efficiency/purity as function of some variable
 void PlotEfficiency(TH1D* select, TH1D* total, TString name, TString xaxis, TString yaxis){
@@ -1218,7 +1367,7 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
 
   int index = 0;
   for(auto const& dat: data){
-    TH1D* hist = new TH1D(name+dat.first.c_str(), "", bin_edges[i].size()-1, edges_array);
+    TH1D* hist = new TH1D(name+dat.first.c_str(), title, bin_edges[i].size()-1, edges_array);
     for(size_t n = 0; n < dat.second.size(); n++){
       if(j==-1 && k == -1){
         hist->Fill(dat.second[n][i]);
@@ -1235,13 +1384,25 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
       }
     }
     hist->Scale(fPotScaleFac);
-    // If max error used divide each bin by width
-    if (fMaxError > 0){
-      for (int n = 1; n <= hist->GetNbinsX(); n++)
-        hist->SetBinContent(n, hist->GetBinContent(n)/hist->GetBinWidth(n));
+    // If plotting cross section convert from rate
+    if(fPlotXSec){
+      double width = 1;
+      if(j != -1) width = width * (bin_edges[j][bin_j+1] - bin_edges[j][bin_j]);
+      if(k != -1) width = width * (bin_edges[k][bin_k+1] - bin_edges[k][bin_k]);
+      //double xsec_scale = 3.78e9/(width * fFlux * fTargets);
+      double xsec_scale = 1/(width * fFlux * fTargets);
+      hist->Scale(xsec_scale, "width");
+    }
+    // Else if max error used divide each bin by width
+    else if (fMaxError > 0 || fBinEdges[i].size()>1){
+      hist->Scale(1, "width");
     }
     hist->SetFillColor(fCols[index]);
     hist->SetLineColor(fCols[index]);
+    if(!fPlotFilled){
+      hist->SetFillColor(0);
+      hist->SetLineWidth(3);
+    }
     hstack->Add(hist);
     legend->AddEntry(hist, dat.first.c_str(), "lf");
     index++;
@@ -1250,13 +1411,12 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
   return std::make_pair(hstack, legend);
 }
 
-// Get the percentage statistical error per bin
-TH1D* GetErrorBand(std::vector<std::vector<double>> data, TString name, std::vector<std::vector<double>> bin_edges, int i, int j = -1, int bin_j = -1, int k = -1, int bin_k = -1){
-
+// Get the total (unstacked) histogram
+TH1D* GetTotalHist(std::vector<std::vector<double>> data, TString name, std::vector<std::vector<double>> bin_edges, int i, int j = -1, int bin_j = -1, int k = -1, int bin_k = -1){
+    
   double edges_array[bin_edges[i].size()];
   std::copy(bin_edges[i].begin(), bin_edges[i].end(), edges_array);
-  TH1D *error_band = new TH1D("error_band"+name, "", bin_edges[i].size()-1, edges_array);
-  TH1D *total_hist = new TH1D("total"+name, "", bin_edges[i].size()-1, edges_array);
+  TH1D *total_hist = new TH1D("total"+name, "hist", bin_edges[i].size()-1, edges_array);
 
   for (int n = 0; n < data.size(); n++){
     if(j == -1 && k == -1){
@@ -1273,6 +1433,28 @@ TH1D* GetErrorBand(std::vector<std::vector<double>> data, TString name, std::vec
   for(size_t n = 0; n <= total_hist->GetNbinsX(); n++){
     total_hist->SetBinContent(n, total_hist->GetBinContent(n)*fPotScaleFac);
   }
+  // If plotting cross section convert from rate
+  if(fPlotXSec){
+    double width = 1;
+    if(j != -1) width = width * (bin_edges[j][bin_j+1] - bin_edges[j][bin_j]);
+    if(k != -1) width = width * (bin_edges[k][bin_k+1] - bin_edges[k][bin_k]);
+    double xsec_scale = 1/(width * fFlux * fTargets);
+    total_hist->Scale(xsec_scale, "width");
+  }
+  // Else if max error used divide each bin by width
+  else if (fMaxError > 0 || fBinEdges[i].size()>1){
+    total_hist->Scale(1, "width");
+  }
+  return total_hist;
+}
+
+// Get the percentage statistical error per bin
+TH1D* GetErrorBand(TH1D* total_hist, TString name, std::vector<std::vector<double>> bin_edges, int i){
+
+  double edges_array[bin_edges[i].size()];
+  std::copy(bin_edges[i].begin(), bin_edges[i].end(), edges_array);
+  TH1D *error_band = new TH1D("error_band"+name, "", bin_edges[i].size()-1, edges_array);
+
   // Set the bin errors on seperate plot
   for (int n = 1; n <= total_hist->GetNbinsX(); n++){
    error_band->SetBinContent(n, 0);
@@ -1380,9 +1562,9 @@ void PlotEffPur(std::vector<Interaction> interactions, TString name, Titles titl
   }
 
   // Efficiency: selected/total in true
-  PlotEfficiency(eff_numerator, eff_denom, name, "True "+titles.units[i], "Efficiency");
+  PlotEfficiency(eff_numerator, eff_denom, name, titles.names[i]+"^{true} ["+titles.units[i]+"]", "Efficiency");
   // Purity: correct selected/total selected
-  PlotEfficiency(pur_numerator, pur_denom, name, "Reco "+titles.units[i], "Purity");
+  PlotEfficiency(pur_numerator, pur_denom, name, titles.names[i]+"^{reco} ["+titles.units[i]+"]", "Purity");
 
   if(eff_numerator) delete eff_numerator; 
   if(eff_denom) delete eff_denom;
@@ -1461,14 +1643,14 @@ void PhysicsBookPlots(){
     TString title_1D = titles.hist_titles[d_i];
 
     // Get the statistical errors per bin
-    TH1D* error_band = GetErrorBand(total_data, name_1D, bin_edges, d_i);
-
+    TH1D* total_hist = GetTotalHist(total_data, name_1D, bin_edges, d_i);
+    TH1D* error_band = GetErrorBand(total_hist, name_1D, bin_edges, d_i);
     // Create a total 1D stacked histogram for each of the variables
     std::pair<THStack*, TLegend*> stack = StackHist1D(stack_data, name_1D, title_1D, bin_edges, d_i);
 
     // Draw the plots
-    if(fShowStatError) Plot1DWithErrors(stack.first, stack.second, error_band, titles, d_i);
-    else Plot1D(stack.first, stack.second, titles, d_i);
+    if(fShowStatError) Plot1DWithErrors(stack.first, stack.second, error_band, titles, total_hist, d_i);
+    else Plot1D(stack.first, stack.second, titles, total_hist, d_i);
 
     // Plot efficiency and purity if option selected and reconstruction selected
     if(fPlotEffPur && fStage == "reco"){
@@ -1488,7 +1670,7 @@ void PhysicsBookPlots(){
       for (int n = 0; n < total_data.size(); n++){
         hist_2D->Fill(total_data[n][d_i], total_data[n][d_j]);
       }
-      Plot2D(hist_2D, fPlotVariables[d_i]+"_"+fPlotVariables[d_j], titles.units[d_i], titles.units[d_j]);
+      Plot2D(hist_2D, fPlotVariables[d_i]+"_"+fPlotVariables[d_j], titles.names[d_i]+" ["+titles.units[d_i]+"]", titles.names[d_j]+" ["+titles.units[d_j]+"]");
 
       // Loop over the bins for variable 2
       for(size_t bin_j = 0; bin_j < bin_edges[d_j].size()-1; bin_j++){
@@ -1509,15 +1691,16 @@ void PhysicsBookPlots(){
                            +": ["+ Form("%.2f", bin_edges_copy[d_j][bin_j]) +", "+ Form("%.2f", bin_edges_copy[d_j][bin_j+1]) +"]";
 
         // Get the statistical errors per bin
-        TH1D *error_band_2D = GetErrorBand(total_data, name_2D, bin_edges_copy, d_i, d_j, bin_j);
+        TH1D *total_hist_2D = GetTotalHist(total_data, name_2D, bin_edges_copy, d_i, d_j, bin_j);
+        TH1D *error_band_2D = GetErrorBand(total_hist_2D, name_2D, bin_edges_copy, d_i);
         if(error_band_2D->Integral(0, error_band_2D->GetNbinsX()) == 0) continue;
 
         // Create a 1D stacked histogram for each of the bins
         std::pair<THStack*, TLegend*> stack_2D = StackHist1D(stack_data, name_2D, title_2D, bin_edges_copy, d_i, d_j, bin_j);
 
         // Draw the plots
-        if(fShowStatError) Plot1DWithErrors(stack_2D.first, stack_2D.second, error_band_2D, titles, d_i);
-        else Plot1D(stack_2D.first, stack_2D.second, titles, d_i);
+        if(fShowStatError) Plot1DWithErrors(stack_2D.first, stack_2D.second, error_band_2D, titles, total_hist_2D, d_i, d_j);
+        else Plot1D(stack_2D.first, stack_2D.second, titles, total_hist_2D, d_i, d_j);
 
         // Plot efficiency and purity if option selected and reconstruction selected
         if(fPlotEffPur && fStage == "reco"){
@@ -1560,7 +1743,8 @@ void PhysicsBookPlots(){
                                +": ["+ Form("%.2f", bin_edges_copy[d_k][bin_k]) +", "+ Form("%.2f", bin_edges_copy[d_k][bin_k+1]) +"]";
 
             // Get the statistical errors per bin
-            TH1D *error_band_3D = GetErrorBand(total_data, name_3D, bin_edges_copy, d_i, d_j, bin_j, d_k, bin_k);
+            TH1D *total_hist_3D = GetTotalHist(total_data, name_3D, bin_edges_copy, d_i, d_j, bin_j, d_k, bin_k);
+            TH1D *error_band_3D = GetErrorBand(total_hist_3D, name_3D, bin_edges_copy, d_i);
             // Don't draw empty histograms
             if(error_band_3D->Integral(0, error_band_3D->GetNbinsX()) == 0) continue;
 
@@ -1568,8 +1752,8 @@ void PhysicsBookPlots(){
             std::pair<THStack*, TLegend*> stack_3D = StackHist1D(stack_data, name_3D, title_3D, bin_edges_copy, d_i, d_j, bin_j, d_k, bin_k);
 
             // Draw the plots
-            if(fShowStatError) Plot1DWithErrors(stack_3D.first, stack_3D.second, error_band_3D, titles, d_i);
-            else Plot1D(stack_3D.first, stack_3D.second, titles, d_i);
+            if(fShowStatError) Plot1DWithErrors(stack_3D.first, stack_3D.second, error_band_3D, titles, total_hist_3D, d_i, d_j, d_k);
+            else Plot1D(stack_3D.first, stack_3D.second, titles, total_hist_3D, d_i, d_j, d_k);
 
             // Plot efficiency and purity if option selected and reconstruction selected
             if(fPlotEffPur && fStage == "reco"){
