@@ -30,7 +30,7 @@ OutputFile: test/test_output.png
 NuPdg: 12, -12
 
 // Charged current (1), neutral current (0), not selected (-1, reco only)
-IsCC: 1
+IsCC: 1, 0
 
 // Require lepton to be contained
 ContainedLepton: true, false
@@ -93,10 +93,10 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: lep_mom, cos_lep_theta
+PlotVariable: nu_energy
 
 // Save the plots for each variable
-ShowPlots: true, false
+ShowPlots: true
 
 // Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
 PotScale: 6.6e20
@@ -105,28 +105,28 @@ PotScale: 6.6e20
 //                           Choose how to plot
 //------------------------------------------------------------------------
 // Produce a stacked histogram (true)
-PlotStacked: false
+PlotStacked: true
 
-// Stack in true FSI (true) or true interaction (false)
-StackInFsi: false
+// Stack in true FSI (fsi), true interaction (int), or neutrino type (nu)
+StackBy: nu
 
 // Minimum bin (-1 for min tree value)
-MinValue: -1, -1
+MinValue: 0
 
 // Maximum bin (-1 for max tree value)
-MaxValue: -1, -1
+MaxValue: 5
 
 // Number of bins (-1 for automatic)
-NumBins: -1, -1
+NumBins: -1
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-BinEdges: [0, 0.4, 0.5, 0.75, 1.25, 2.5], [-1, -0.5, 0, 0.27, 0.45, 0.62, 0.76, 0.86, 0.94, 1]
+BinEdges: [-1]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
 MaxError: -1
 
 // Plot cross-section (true) or rate (false)
-PlotXSec: true
+PlotXSec: false
 
 // Plot filled histograms (true)
 PlotFilled: true
@@ -138,10 +138,10 @@ PlotFilled: true
 ShowInfo: true
 
 // Show percentage statistical error (true)
-ShowStatError: true
+ShowStatError: false
 
 // Show error bars on histograms (true)
-ShowErrorBars: true
+ShowErrorBars: false
 
 // Produce efficiency and purity plots (true)
 PlotEffPur: false
