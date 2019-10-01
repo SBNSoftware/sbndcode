@@ -210,7 +210,7 @@ void opDetSBNDTriggerAlg::MergeTriggerLocations() {
   for (const TriggerPrimitive &primitive: all_trigger_locations) {
     AddTriggerPrimitiveFinish(primitives, primitive);
     while (primitives.back().finish < primitive.start) {
-      // remvoe the final element
+      // remove the final element
       primitives.resize(primitives.size() - 1);
     }
 
@@ -219,6 +219,7 @@ void opDetSBNDTriggerAlg::MergeTriggerLocations() {
       raw::TimeStamp_t this_trigger_time = primitive.start;
       fTriggerLocations.push_back(this_trigger_time);
     }
+    was_triggering = is_triggering;
   }
 }
 
