@@ -1,14 +1,8 @@
-#
 # services
-#
-
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 
-#
 # modules
-#
-
 #include "detsimmodules_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 

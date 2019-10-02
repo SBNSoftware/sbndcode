@@ -1,0 +1,42 @@
+# services
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+# modules
+#include "analysistreemodule.fcl"
+#include "rootoutput_sbnd.fcl"
+
+
+process_name: AnaTree
+
+services:
+{
+  @table::sbnd_services
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  TFileService: 
+  {
+    fileName: "anatree_output.root" 
+  }
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  @local::standard_backtrackerservice
+}
+
+source: {
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {  
+    analysistree: @local::sbnd_analysistree 
+  }
+ 
+  ana:  [ analysistree ]
+ 
+  end_paths:     [ ana ] 
+  
+}
+
+physics.analyzers.analysistree.SaveCryInfo: false
