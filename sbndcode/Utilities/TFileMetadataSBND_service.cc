@@ -129,9 +129,6 @@ void util::TFileMetadataSBND::postBeginJob()
   if ((it=mdmap.find("art.run_type"))!=mdmap.end()) frunType = it->second;
   else frunType = "\" \"";         	     	
 
-  for (it = mdmap.begin(); it != mdmap.end(); it++){
-    std::cout<<it->first <<"  " << it->second << std::endl;
-  }
 }
 
 
