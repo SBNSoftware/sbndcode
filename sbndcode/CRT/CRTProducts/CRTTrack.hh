@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef CRTTrack_hh_
-#define CRTTrack_hh_
+#ifndef CRTTrack_SBND_hh_
+#define CRTTrack_SBND_hh_
 #include <cstdint>
 
 #include <vector>
