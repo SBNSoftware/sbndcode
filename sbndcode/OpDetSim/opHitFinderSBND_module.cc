@@ -110,7 +110,7 @@ namespace opdet{
     fPulsePolarityArapuca = p.get< int   >("PulsePolarityArapuca");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency());
+    fSampling = (timeService->OpticalClock().Frequency()) / 1000. // MHz -> GHz;
 
   // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
