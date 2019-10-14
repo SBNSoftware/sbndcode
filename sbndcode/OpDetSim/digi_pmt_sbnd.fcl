@@ -4,8 +4,6 @@ BEGIN_PROLOG
 
 sbnd_digipmt_alg:
 {
- PMTPreTrigger:         200.0      #ns
- PMTReadoutWindow:      2000.0     #ns
  PMTRiseTime:           3.8        #ns
  PMTFallTime:           13.7       #ns
  PMTMeanAmplitude:	     0.9        #in pC

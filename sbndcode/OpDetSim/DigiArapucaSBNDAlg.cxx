@@ -12,7 +12,7 @@ namespace opdet{
 //DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(fhicl::ParameterSet const& p) 
 DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config) 
   : fParams(config)
-  , fSampling(fParams.timeService->OpticalClock().Frequency()*500/64) //This is number is wrong!!! Therefore, the hard coded value!!!
+  , fSampling(fParams.timeService->OpticalClock().Frequency()) 
   , fArapucaEffT1(fParams.ArapucaEffT1 / fParams.larProp->ScintPreScale())
   , fArapucaEffT2(fParams.ArapucaEffT2 / fParams.larProp->ScintPreScale())
   , fArapucaEffx(fParams.ArapucaEffx / fParams.larProp->ScintPreScale())
@@ -43,7 +43,6 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     for(size_t i=1; i<=20; i++)TimeArapucaX->SetBinContent(i,x3[i-1]);
 
     fSampling=fSampling/1000; //in GHz to cancel with ns
-    fNsamples = (int)((fParams.PreTrigger+fParams.ReadoutWindow)*fSampling);
     pulsesize=fParams.PulseLength*fSampling;
     wsp.resize(pulsesize);
 
@@ -57,31 +56,29 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg()
   { }
 
-  void DigiArapucaSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdName, double& t_min){	
+  void DigiArapucaSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples){	
 
-    std::vector<double> waves(std::vector<double>(fNsamples,fParams.Baseline));
-    t_min=FindMinimumTime(simphotons);
-    CreatePDWaveform(simphotons, t_min, waves, pdName);
-    waveforms[ch].resize(fNsamples);
-    waveforms[ch] = std::vector<short unsigned int> (waves.begin(), waves.end());
+    std::vector<double> waves(std::vector<double>(n_samples,fParams.Baseline));
+    CreatePDWaveform(simphotons, start_time, waves, pdName);
+    waveform.resize(n_samples);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
-  void DigiArapucaSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdName, double& t_min){	
+  void DigiArapucaSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples){	
 
-    std::vector<double> waves(std::vector<double>(fNsamples,fParams.Baseline));
+    std::vector<double> waves(std::vector<double>(n_samples,fParams.Baseline));
     std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
-    t_min=FindMinimumTimeLite(photonMap);
-    CreatePDWaveformLite(photonMap, t_min, waves, pdName);
-    waveforms[ch].resize(fNsamples);
-    waveforms[ch] = std::vector<short unsigned int> (waves.begin(), waves.end());
+    CreatePDWaveformLite(photonMap, start_time, waves, pdName);
+    waveform.resize(n_samples);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
   void DigiArapucaSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave, int nphotons){//adding single pulse
     size_t min=0, max=0;
 
-    if(time_bin<fNsamples){
+    if(time_bin<wave.size()){
 	min=time_bin;
-	max=time_bin+pulsesize < fNsamples ? time_bin+pulsesize : fNsamples;
+	max=time_bin+pulsesize < wave.size() ? time_bin+pulsesize : wave.size();
 	for(size_t i = min; i<= max; i++){
 		wave[i]+= (wsp[i-min])*(double)nphotons;	
 	}		
@@ -134,7 +131,7 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
 	  if((gRandom->Uniform(1.0))<fArapucaEffT1){ //Sample a random subset according to Arapuca's efficiency
 	    tphoton=simphotons[i].Time;
 	    tphoton+=(TimeArapucaT1->GetRandom());
-	    tphoton+=(fParams.PreTrigger-t_min);
+            tphoton-=t_min;
  	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
@@ -146,7 +143,7 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
  	  if((gRandom->Uniform(1.0))<fArapucaEffT2){ //Sample a random subset according to Arapuca's efficiency.
 	    tphoton=simphotons[i].Time;
   	    tphoton+=(TimeArapucaT2->GetRandom());
-	    tphoton+=(fParams.PreTrigger-t_min);
+            tphoton-=t_min;
  	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
@@ -158,7 +155,7 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
  	  if((gRandom->Uniform(1.0))<fArapucaEffx){ 
 	    tphoton=simphotons[i].Time;
  	    tphoton+=(TimeArapucaX->GetRandom());
-	    tphoton+=(fParams.PreTrigger-t_min);
+            tphoton-=t_min;
  	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
@@ -172,7 +169,7 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   }
 
   void DigiArapucaSBNDAlg::CreateSaturation(std::vector<double>& wave){ //Implementing saturation effects
-    for(size_t k=0; k<fNsamples; k++){
+    for(size_t k=0; k<wave.size(); k++){
 	if(wave[k]>(fParams.Baseline+fParams.Saturation*fParams.ADC*fParams.MeanAmplitude))
 	  wave[k]=fParams.Baseline+fParams.Saturation*fParams.ADC*fParams.MeanAmplitude;	  
     }
@@ -185,21 +182,21 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
       for(int i=0; i<mapMember.second; i++){
          if(pdtype=="arapucaT1" && (gRandom->Uniform(1.0))<fArapucaEffT1){
   	    tphoton=(TimeArapucaT1->GetRandom());
- 	    tphoton+=mapMember.first+fParams.PreTrigger-t_min;
+ 	    tphoton+=mapMember.first-t_min;
  	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
          }
          if(pdtype=="arapucaT2" && (gRandom->Uniform(1.0))<fArapucaEffT2){
   	    tphoton=(TimeArapucaT2->GetRandom());
- 	    tphoton+=mapMember.first+fParams.PreTrigger-t_min;
+ 	    tphoton+=mapMember.first-t_min;
  	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
          }
 	if(pdtype=="xarapucaprime" && (gRandom->Uniform(1.0))<fArapucaEffx){
 	   tphoton=(TimeArapucaX->GetRandom());
-	   tphoton+=mapMember.first+fParams.PreTrigger-t_min;
+	   tphoton+=mapMember.first-t_min;
  	   if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
 	   else nCT=1;
 	   AddSPE(tphoton*fSampling,wave,nCT);
@@ -226,10 +223,8 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   (Config const& config)
   {
     // settings
-    fBaseConfig.ReadoutWindow     = config.readoutWindow();
     fBaseConfig.ADC               = config.voltageToADC();
     fBaseConfig.Baseline          = config.baseline();
-    fBaseConfig.PreTrigger        = config.preTrigger();
     fBaseConfig.Saturation        = config.saturation();
     fBaseConfig.ArapucaEffT1      = config.arapucaEffT1();
     fBaseConfig.ArapucaEffT2      = config.arapucaEffT2();
