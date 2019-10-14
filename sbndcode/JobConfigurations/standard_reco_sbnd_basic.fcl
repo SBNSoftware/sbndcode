@@ -89,8 +89,9 @@ physics:
   rns:                 { module_type: RandomNumberSaver }
 
   ### flash finders
- # opflash:             @local::sbnd_opflash
-
+  # opflash:             @local::sbnd_opflash
+ 
+  # ophit:		@local::sbnd_hit_finder 
   ### calwire producers
   caldata:             @local::sbnd_calwire
 
@@ -146,7 +147,8 @@ physics:
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
  reco: [ rns
-   #     , opflash
+	# , ophit
+        # , opflash
          , caldata 
          , gaushit
          , fasthit

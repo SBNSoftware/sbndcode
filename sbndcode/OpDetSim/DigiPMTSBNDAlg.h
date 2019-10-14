@@ -66,6 +66,8 @@ namespace opdet{
     void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double& t_min);
     void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int,sim::SimPhotonsLite> auxmap, double& t_min);
 
+    double Baseline() { return fParams.PMTBaseline; } 
+
     private:
 
     ConfigurationParameters_t fParams;

@@ -64,6 +64,8 @@ namespace opdet{
     DigiArapucaSBNDAlg(ConfigurationParameters_t const& config);
     //Default destructor
     ~DigiArapucaSBNDAlg();
+
+    double Baseline() { return fParams.Baseline; } 
             
     void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdName, double& t_min);
     void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdName, double& t_min);
