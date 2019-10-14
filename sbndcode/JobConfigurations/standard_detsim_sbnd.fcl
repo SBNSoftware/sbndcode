@@ -98,3 +98,8 @@ outputs:
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
   }
 }
+
+# TEMP: MOVE THIS INTO THE PMT FHICL LATER
+physics.producers.opdaq.ArapucaReadoutWindow: 1.25e6
+physics.producers.opdaq.PMTReadoutWindow: 1.25e6
+
