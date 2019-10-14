@@ -128,10 +128,6 @@ physics.producers.cosmgen.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +
 
 physics.producers.larg4intime.InputLabels: [ "GenInTimeSorter:intime" ]
 
-# only keep MCParticles that cross the cryostat;
-# this is relevant in extensive cosmic ray generators (like Corsika)
-physics.producers.larg4intime.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"]
-
 # enable optical physics in LArG4
 services.LArG4Parameters.EnabledPhysics: [ "Em",
                                                 "FastOptical",
