@@ -141,7 +141,6 @@ namespace opdet{
 
     for(auto const& wvf : (*wvfHandle)){
 	fChNumber = wvf.ChannelNumber();
-	std::cout << "Photon channel: " << fChNumber << std::endl;
 	histname.str(std::string());
         histname << "event_" << fEvNumber <<"_opchannel_" << fChNumber << "_histo_" << histogram_number;
 	wvfHist = new TH1D(histname.str().c_str(), "Histogram", wvf.size(),0, double(wvf.size()));
