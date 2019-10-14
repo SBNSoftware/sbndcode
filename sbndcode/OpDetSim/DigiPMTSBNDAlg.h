@@ -48,8 +48,6 @@ namespace opdet{
       double PMTMeanAmplitude; //mean amplitude for single pe in pC
       double PMTBaselineRMS; //Pedestal RMS in ADC counts
       double PMTDarkNoiseRate; //in Hz
-      double PMTReadoutWindow; //waveform time interval (ns)
-      double PMTPreTrigger; //in ns
       double PMTSaturation; //in number of p.e.
       double QEDirect; //PMT quantum efficiency for direct (VUV) light
       double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
@@ -63,8 +61,8 @@ namespace opdet{
     //Default destructor 
     ~DigiPMTSBNDAlg();
                                                                                                  
-    void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double& t_min);
-    void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int,sim::SimPhotonsLite> auxmap, double& t_min);
+    void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double start_time, unsigned n_sample);
+    void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample);
 
     double Baseline() { return fParams.PMTBaseline; } 
 
@@ -75,10 +73,8 @@ namespace opdet{
     double fSampling;       //wave sampling frequency (GHz)
     double fQEDirect;
     double fQERefl;
-    unsigned int fNsamples; //Samples per waveform
     double sigma1;
     double sigma2;
-    double tadd; //to add pre trigger considering there is electron transit time
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
     double Pulse1PE(double time) ;
@@ -104,16 +100,6 @@ namespace opdet{
     struct Config {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
-
-      fhicl::Atom<double> pmtreadoutWindow {
-        Name("PMTReadoutWindow"),
-        Comment("Waveform time interval (ns)")
-      };
-
-      fhicl::Atom<double> pmtpreTrigger {
-        Name("PMTPreTrigger"),
-        Comment("Pre trigger window in ns")
-      };
 
       fhicl::Atom<double> transitTime {
         Name("TransitTime"),
