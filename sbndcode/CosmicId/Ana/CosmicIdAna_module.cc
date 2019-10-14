@@ -447,7 +447,7 @@ namespace sbnd {
       recob::Track nuTrack = nuTracks[0];
       // Calculate the reconstructed variables
       double recoMuMomentum = 0.;
-      bool exits = fTpcGeo.InFiducial(nuTrack.End(), 5., 5.);
+      bool exits = !fTpcGeo.InFiducial(nuTrack.End(), 5., 5.);
       double length = nuTrack.Length();
       double theta = nuTrack.Theta();
       double phi = nuTrack.Phi();
