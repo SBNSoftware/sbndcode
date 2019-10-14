@@ -1,4 +1,4 @@
-#include "standard_g4_sbnd.fcl"
+#include "standard_reco_sbnd_basic.fcl"
 
 # setup services parameters for 3 drift windows
 #include "3drift_services_sbnd.fcl"
