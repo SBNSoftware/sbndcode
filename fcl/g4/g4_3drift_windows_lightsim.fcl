@@ -1,4 +1,4 @@
-#include "standard_g4_sbnd.fcl"
+#include "g4_semi_analytic_light.fcl"
 
 # keep delta rays
 services.LArG4Parameters.KeepEMShowerDaughters: true
