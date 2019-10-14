@@ -104,7 +104,7 @@ namespace opdet{
     for(size_t i=0; i<simphotons.size(); i++){//simphotons is here reflected light. To be added for all PMTs
       if((gRandom->Uniform(1.0))<fQERefl){ 
         if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        AddSPE((ttsTime+simphotons[i].Time-t_min)*fSampling,wave);
+        AddSPE((fParams.TransitTime+ttsTime+simphotons[i].Time-t_min)*fSampling,wave);
       }
     }
     if(pdtype=="pmt"){ //To add direct light for TPB coated PMTs
@@ -116,7 +116,7 @@ namespace opdet{
         if((gRandom->Uniform(1.0))<fQEDirect){ 
           if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
-          AddSPE((ttsTime+auxphotons[j].Time+ttpb-t_min)*fSampling,wave);
+          AddSPE((fParams.TransitTime+ttsTime+auxphotons[j].Time+ttpb-t_min)*fSampling,wave);
         }
       }
     }
@@ -133,7 +133,7 @@ namespace opdet{
       for(int i=0; i<mapMember.second; i++){
    	 if((gRandom->Uniform(1.0))<(fQERefl)){
            if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
- 	   AddSPE((ttsTime+mapMember.first-t_min)*fSampling,wave); }
+ 	   AddSPE((fParams.TransitTime+ttsTime+mapMember.first-t_min)*fSampling,wave); }
       }
     }
     if(pdtype=="pmt"){ //To add direct light for TPB coated PMTs
@@ -147,7 +147,7 @@ namespace opdet{
    	  if((gRandom->Uniform(1.0))<(fQEDirect)){
            if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
            ttpb = timeTPB->GetRandom(); //for including TPB emission time
-           AddSPE((ttsTime+mapMember2.first+ttpb-t_min)*fSampling,wave);
+           AddSPE((fParams.TransitTime+ttsTime+mapMember2.first+ttpb-t_min)*fSampling,wave);
           }
         }
       }
