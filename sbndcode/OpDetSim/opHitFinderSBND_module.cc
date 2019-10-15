@@ -70,7 +70,7 @@ namespace opdet{
   // Declare member data here.
     std::string fInputModuleName;
   //  art::ServiceHandle<cheat::PhotonBackTracker> pbt;
-    double fSampling; //in GHz
+    double fSampling; //in MHz
     double fBaselineSample; //in ticks
     double fUseDenoising; 
     double fPulsePolarityPMT; 
@@ -110,7 +110,7 @@ namespace opdet{
     fPulsePolarityArapuca = p.get< int   >("PulsePolarityArapuca");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency()) / 1000.; // MHz -> GHz;
+    fSampling = (timeService->OpticalClock().Frequency()); // MHz
 
   // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -141,7 +141,6 @@ namespace opdet{
 
     for(auto const& wvf : (*wvfHandle)){
 	fChNumber = wvf.ChannelNumber();
-	std::cout << "Photon channel: " << fChNumber << std::endl;
 	histname.str(std::string());
         histname << "event_" << fEvNumber <<"_opchannel_" << fChNumber << "_histo_" << histogram_number;
 	wvfHist = new TH1D(histname.str().c_str(), "Histogram", wvf.size(),0, double(wvf.size()));
