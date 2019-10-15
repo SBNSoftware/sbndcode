@@ -9,6 +9,7 @@ art_make(
                            lardataobj_RawData
          #                  lardataobj_RecoBase
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+                           larpandora_LArPandoraInterface
                            sbndcode_Utilities_SignalShapingServiceSBND_service
                            nurandom_RandomUtils_NuRandomService_service
 #			   ${ART_FRAMEWORK_CORE}
