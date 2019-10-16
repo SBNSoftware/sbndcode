@@ -110,7 +110,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
     }
     else if (above_threshold && (val < threshold || i+1 == end_i)) {
       raw::TimeStamp_t trigger_finish = Tick2Timestamp(waveform.TimeStamp(), i); 
-      AddTriggerLocation(this_trigger_locations, {trigger_start, trigger_finish});
+      AddTriggerLocation(this_trigger_locations, {{trigger_start, trigger_finish}});
       above_threshold = false;
     }
   }
