@@ -25,6 +25,10 @@
 #include "lardataobj/RecoBase/MCSFitResult.h"
 #include "larreco/RecoAlg/TrajectoryMCSFitter.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
+#include "larcore/Geometry/Geometry.h"
+#include "larcorealg/Geometry/GeometryCore.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -123,7 +127,7 @@ namespace sbnd {
     virtual void endJob() override;
 
     // Reset variables in each loop
-    void ResetMuonVars();
+    void ResetParticleVars();
 
     typedef art::Handle< std::vector<recob::PFParticle> > PFParticleHandle;
     typedef std::map< size_t, art::Ptr<recob::PFParticle> > PFParticleIdMap;
@@ -148,13 +152,21 @@ namespace sbnd {
     // Momentum fitters
     trkf::TrajectoryMCSFitter     fMcsFitter; 
     trkf::TrackMomentumCalculator fRangeFitter;
+
+    geo::GeometryCore const* fGeometryService;
+    detinfo::DetectorClocks const* fDetectorClocks;
+    detinfo::DetectorProperties const* fDetectorProperties;
+    double readoutWindow;
+    double driftTime;
     
     // Tree (One entry per primary muon)
-    TTree *fMuonTree;
+    TTree *fParticleTree;
 
     //Muon tree parameters
     bool is_cosmic;         // True origin of PFP is cosmic
     bool is_nu;             // True origin of PFP is nu in AV
+    int nu_pdg;
+    int pdg;
     double time;
     double vtx_x;
     double vtx_y;
@@ -199,6 +211,9 @@ namespace sbnd {
 
     void CollectTracksAndShowers(const PFParticleVector &particles, const PFParticleHandle &pfParticleHandle, const art::Event &evt, TrackVector &tracks, ShowerVector &showers);
 
+    std::pair<double, double> XLimitsTPC(const simb::MCParticle& particle);
+    
+
   }; // class NuMuRecoTree
 
 
@@ -221,50 +236,59 @@ namespace sbnd {
 
   void NuMuRecoTree::beginJob()
   {
+
+    fGeometryService = lar::providerFrom<geo::Geometry>();
+    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
+    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
+    readoutWindow  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
+    driftTime = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); // [us]
+
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
 
-    fMuonTree = tfs->make<TTree>("muons", "muons");
+    fParticleTree = tfs->make<TTree>("particles", "particles");
 
-    fMuonTree->Branch("is_cosmic",       &is_cosmic,       "is_cosmic/O");
-    fMuonTree->Branch("is_nu",           &is_nu,           "is_nu/O");
-    fMuonTree->Branch("time",       &time,       "time/D");
-    fMuonTree->Branch("vtx_x",       &vtx_x,       "vtx_x/D");
-    fMuonTree->Branch("vtx_y",       &vtx_y,       "vtx_y/D");
-    fMuonTree->Branch("vtx_z",       &vtx_z,       "vtx_z/D");
-    fMuonTree->Branch("end_x",       &end_x,       "end_x/D");
-    fMuonTree->Branch("end_y",       &end_y,       "end_y/D");
-    fMuonTree->Branch("end_z",       &end_z,       "end_z/D");
-    fMuonTree->Branch("length",       &length,       "length/D");
-    fMuonTree->Branch("contained_length",       &contained_length,       "contained_length/D");
-    fMuonTree->Branch("momentum",       &momentum,       "momentum/D");
-    fMuonTree->Branch("theta",       &theta,       "theta/D");
-    fMuonTree->Branch("phi",       &phi,       "phi/D");
-    fMuonTree->Branch("e_dep",       &e_dep,       "e_dep/D");
-    fMuonTree->Branch("n_hits",       &n_hits,       "n_hits/I");
-    fMuonTree->Branch("hit_area",       &hit_area,       "hit_area/D");
-    fMuonTree->Branch("n_cr_tracks",       &n_cr_tracks,       "n_cr_tracks/I");
-    fMuonTree->Branch("n_nu_showers",       &n_nu_showers,       "n_nu_showers/I");
-    fMuonTree->Branch("n_nu_tracks",       &n_nu_tracks,       "n_nu_tracks/I");
-    fMuonTree->Branch("track_vtx_x",       &track_vtx_x,       "track_vtx_x/D");
-    fMuonTree->Branch("track_vtx_y",       &track_vtx_y,       "track_vtx_y/D");
-    fMuonTree->Branch("track_vtx_z",       &track_vtx_z,       "track_vtx_z/D");
-    fMuonTree->Branch("track_end_x",       &track_end_x,       "track_end_x/D");
-    fMuonTree->Branch("track_end_y",       &track_end_y,       "track_end_y/D");
-    fMuonTree->Branch("track_end_z",       &track_end_z,       "track_end_z/D");
-    fMuonTree->Branch("track_length",         &track_length,       "track_length/D");
-    fMuonTree->Branch("track_range_momentum", &track_range_momentum,       "track_range_momentum/D");
-    fMuonTree->Branch("track_mcs_momentum",   &track_mcs_momentum,       "track_mcs_momentum/D");
-    fMuonTree->Branch("track_theta",       &track_theta,       "track_theta/D");
-    fMuonTree->Branch("track_phi",       &track_phi,       "track_phi/D");
-    fMuonTree->Branch("track_e_dep",       &track_e_dep,       "track_e_dep/D");
-    fMuonTree->Branch("track_n_hits",       &track_n_hits,       "track_n_hits/I");
-    fMuonTree->Branch("track_n_hits_true",       &track_n_hits_true,       "track_n_hits_true/I");
-    fMuonTree->Branch("track_hit_area",       &track_hit_area,       "track_hit_area/D");
-    fMuonTree->Branch("track_hit_area_true",       &track_hit_area_true,       "track_hit_area_true/D");
-    fMuonTree->Branch("track_mu_chi2",       &track_mu_chi2,       "track_mu_chi2/D");
-    fMuonTree->Branch("track_pi_chi2",       &track_pi_chi2,       "track_pi_chi2/D");
-    fMuonTree->Branch("track_p_chi2",       &track_p_chi2,       "track_p_chi2/D");
+    fParticleTree->Branch("is_cosmic",       &is_cosmic,       "is_cosmic/O");
+    fParticleTree->Branch("is_nu",           &is_nu,           "is_nu/O");
+    fParticleTree->Branch("nu_pdg",           &nu_pdg,           "nu_pdg/I");
+    fParticleTree->Branch("pdg",           &pdg,           "pdg/I");
+    fParticleTree->Branch("time",       &time,       "time/D");
+    fParticleTree->Branch("vtx_x",       &vtx_x,       "vtx_x/D");
+    fParticleTree->Branch("vtx_y",       &vtx_y,       "vtx_y/D");
+    fParticleTree->Branch("vtx_z",       &vtx_z,       "vtx_z/D");
+    fParticleTree->Branch("end_x",       &end_x,       "end_x/D");
+    fParticleTree->Branch("end_y",       &end_y,       "end_y/D");
+    fParticleTree->Branch("end_z",       &end_z,       "end_z/D");
+    fParticleTree->Branch("length",       &length,       "length/D");
+    fParticleTree->Branch("contained_length",       &contained_length,       "contained_length/D");
+    fParticleTree->Branch("momentum",       &momentum,       "momentum/D");
+    fParticleTree->Branch("theta",       &theta,       "theta/D");
+    fParticleTree->Branch("phi",       &phi,       "phi/D");
+    fParticleTree->Branch("e_dep",       &e_dep,       "e_dep/D");
+    fParticleTree->Branch("n_hits",       &n_hits,       "n_hits/I");
+    fParticleTree->Branch("hit_area",       &hit_area,       "hit_area/D");
+    fParticleTree->Branch("n_cr_tracks",       &n_cr_tracks,       "n_cr_tracks/I");
+    fParticleTree->Branch("n_nu_showers",       &n_nu_showers,       "n_nu_showers/I");
+    fParticleTree->Branch("n_nu_tracks",       &n_nu_tracks,       "n_nu_tracks/I");
+    fParticleTree->Branch("track_vtx_x",       &track_vtx_x,       "track_vtx_x/D");
+    fParticleTree->Branch("track_vtx_y",       &track_vtx_y,       "track_vtx_y/D");
+    fParticleTree->Branch("track_vtx_z",       &track_vtx_z,       "track_vtx_z/D");
+    fParticleTree->Branch("track_end_x",       &track_end_x,       "track_end_x/D");
+    fParticleTree->Branch("track_end_y",       &track_end_y,       "track_end_y/D");
+    fParticleTree->Branch("track_end_z",       &track_end_z,       "track_end_z/D");
+    fParticleTree->Branch("track_length",         &track_length,       "track_length/D");
+    fParticleTree->Branch("track_range_momentum", &track_range_momentum,       "track_range_momentum/D");
+    fParticleTree->Branch("track_mcs_momentum",   &track_mcs_momentum,       "track_mcs_momentum/D");
+    fParticleTree->Branch("track_theta",       &track_theta,       "track_theta/D");
+    fParticleTree->Branch("track_phi",       &track_phi,       "track_phi/D");
+    fParticleTree->Branch("track_e_dep",       &track_e_dep,       "track_e_dep/D");
+    fParticleTree->Branch("track_n_hits",       &track_n_hits,       "track_n_hits/I");
+    fParticleTree->Branch("track_n_hits_true",       &track_n_hits_true,       "track_n_hits_true/I");
+    fParticleTree->Branch("track_hit_area",       &track_hit_area,       "track_hit_area/D");
+    fParticleTree->Branch("track_hit_area_true",       &track_hit_area_true,       "track_hit_area_true/D");
+    fParticleTree->Branch("track_mu_chi2",       &track_mu_chi2,       "track_mu_chi2/D");
+    fParticleTree->Branch("track_pi_chi2",       &track_pi_chi2,       "track_pi_chi2/D");
+    fParticleTree->Branch("track_p_chi2",       &track_p_chi2,       "track_p_chi2/D");
    
 
     // Initial output
@@ -373,18 +397,36 @@ namespace sbnd {
 
     // Put them in a map for easier access
     for (auto const& particle: (*particleHandle)){
-      // Store muon if primary and stable and inside TPC
-      if(std::abs(particle.PdgCode()) != 13) continue;
+      // Only interested in track-like muons, pions and protons
+      pdg = particle.PdgCode();
+      if(!(std::abs(pdg) == 13||std::abs(pdg) == 211||std::abs(pdg) == 2212)) continue;
+      // Only want primary particles
       if(particle.Mother() != 0) continue;
+      // Only want stable particles (post fsi)
       if(particle.StatusCode() != 1) continue;
+      // Only want particles that are inside the TPC
       if(!fTpcGeo.InVolume(particle)) continue;
+      // Check that it crosses in the reconstructable window
+      double time = particle.T() * 1e-3; //[us]
+      if (time <= -driftTime || time >= readoutWindow) continue;
+      // Get the minimum and maximum |x| position in the TPC
+      std::pair<double, double> xLimits = XLimitsTPC(particle);
+      // Calculate the expected time of arrival of those points
+      double minTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.second)/fDetectorProperties->DriftVelocity(); 
+      double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/fDetectorProperties->DriftVelocity(); 
+      // If both times are below or above the readout window time then skip
+      if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime < readoutWindow)) continue;
 
-      ResetMuonVars();
+      ResetParticleVars();
+      pdg = particle.PdgCode();
 
       // True variables
       int id = particle.TrackId();
       art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(id);
-      if(truth->Origin() == simb::kBeamNeutrino) is_nu = true;
+      if(truth->Origin() == simb::kBeamNeutrino){ 
+        is_nu = true;
+        nu_pdg = truth->GetNeutrino().Nu().PdgCode();
+      }
       if(truth->Origin() == simb::kCosmicRay) is_cosmic = true;
 
       time = particle.T();
@@ -441,7 +483,7 @@ namespace sbnd {
 
       // Track variables
       if(n_nu_tracks < 1){ 
-        fMuonTree->Fill();
+        fParticleTree->Fill();
         continue;
       }
 
@@ -454,8 +496,8 @@ namespace sbnd {
       track_end_z = track.End().Z();
 
       track_length = track.Length();
-      track_range_momentum = fRangeFitter.GetTrackMomentum(track_length, 13);
-      track_mcs_momentum = fMcsFitter.fitMcs(track).bestMomentum();
+      track_range_momentum = fRangeFitter.GetTrackMomentum(track_length, pdg);
+      track_mcs_momentum = fMcsFitter.fitMcs(track, pdg).bestMomentum();
       track_theta = track.Theta();
       track_phi = track.Phi();
        
@@ -486,7 +528,7 @@ namespace sbnd {
         track_p_chi2 = pids[i]->Chi2Proton();
       }
 
-      fMuonTree->Fill();
+      fParticleTree->Fill();
     }
     
   } // NuMuRecoTree::analyze()
@@ -572,9 +614,11 @@ namespace sbnd {
   }
 
   // Reset the tree variables
-  void NuMuRecoTree::ResetMuonVars(){
+  void NuMuRecoTree::ResetParticleVars(){
     is_cosmic = false;
     is_nu = false;
+    nu_pdg = -99999;
+    pdg = -99999;
     time = -99999;
     vtx_x = -99999;
     vtx_y = -99999;
@@ -615,7 +659,28 @@ namespace sbnd {
     
   }
     
-  
+  std::pair<double, double> NuMuRecoTree::XLimitsTPC(const simb::MCParticle& particle){
+    double xmin = -2.0 * fGeometryService->DetHalfWidth();
+    double xmax = 2.0 * fGeometryService->DetHalfWidth();
+    double ymin = -fGeometryService->DetHalfHeight();
+    double ymax = fGeometryService->DetHalfHeight();
+    double zmin = 0.;
+    double zmax = fGeometryService->DetLength();
+
+    double minimum = 99999;
+    double maximum = -99999;
+
+    int nTrajPoints = particle.NumberTrajectoryPoints();
+    for (int traj_i = 0; traj_i < nTrajPoints; traj_i++){
+      TVector3 trajPoint(particle.Vx(traj_i), particle.Vy(traj_i), particle.Vz(traj_i));
+      // Check if point is within reconstructable volume
+      if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax && trajPoint[2] >= zmin && trajPoint[2] <= zmax){
+        if(std::abs(trajPoint[0]) < minimum) minimum = std::abs(trajPoint[0]);
+        if(std::abs(trajPoint[0]) > maximum) maximum = std::abs(trajPoint[0]);
+      }
+    }
+    return std::make_pair(minimum, maximum);                                                                                                                  
+  }
   //------------------------------------------------------------------------------------------------------------------------------------------
 
   DEFINE_ART_MODULE(NuMuRecoTree)
