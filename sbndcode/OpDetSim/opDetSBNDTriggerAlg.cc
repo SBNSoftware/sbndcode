@@ -2,22 +2,39 @@
 
 namespace opdet {
 
+struct TriggerPrimitive {
+  raw::TimeStamp_t start;
+  raw::TimeStamp_t finish;
+  raw::Channel_t channel;
+
+};
+
 // Local static functions
 // Adds a value to a vector of trigger locations, while keeping the vector sorted
-void AddTriggerLocation(std::vector<raw::TimeStamp_t> &triggers, raw::TimeStamp_t trigger) {
-  typedef std::vector<raw::TimeStamp_t> TimeStamps;
+void AddTriggerLocation(std::vector<std::array<raw::TimeStamp_t, 2>> &triggers, std::array<raw::TimeStamp_t,2> range) {
+  typedef std::vector<std::array<raw::TimeStamp_t,2>> TimeStamps;
 
-  TimeStamps::iterator insert = std::lower_bound(triggers.begin(), triggers.end(), trigger);
+  TimeStamps::iterator insert = std::lower_bound(triggers.begin(), triggers.end(), range,
+    [](const auto &lhs, const auto &rhs) { return lhs[0] < rhs[0]; });
+  triggers.insert(insert, range);
+}
+
+void AddTriggerPrimitive(std::vector<TriggerPrimitive> &triggers, TriggerPrimitive trigger) {
+  typedef std::vector<TriggerPrimitive> TimeStamps;
+
+  TimeStamps::iterator insert = std::lower_bound(triggers.begin(), triggers.end(), trigger,
+    [](auto const &lhs, auto const &rhs) { return lhs.start < rhs.start; });
+
   triggers.insert(insert, trigger);
 }
-void AddTriggerLocationAndChannel(std::vector<std::pair<raw::Channel_t, raw::TimeStamp_t>> &triggers, raw::TimeStamp_t trigger, raw::Channel_t channel) {
-  typedef std::vector<std::pair<raw::Channel_t, raw::TimeStamp_t>> TimeStamps;
 
-  std::pair<raw::Channel_t, raw::TimeStamp_t> trigger_pair {trigger, channel};
+void AddTriggerPrimitiveFinish(std::vector<TriggerPrimitive> &triggers, TriggerPrimitive trigger) {
+  typedef std::vector<TriggerPrimitive> TimeStamps;
+  
+  TimeStamps::iterator insert = std::upper_bound(triggers.begin(), triggers.end(), trigger,
+    [](auto const &lhs, auto const &rhs) { return lhs.finish < rhs.finish; });
 
-  TimeStamps::iterator insert = std::lower_bound(triggers.begin(), triggers.end(), trigger_pair, 
-    [](auto const &lhs, auto const &rhs) { return lhs.first < rhs.first; });
-  triggers.insert(insert, trigger_pair);
+  triggers.insert(insert, trigger);
 }
 
 opDetSBNDTriggerAlg::opDetSBNDTriggerAlg(const Config &config, const detinfo::DetectorClocks *detector_clocks, const detinfo::DetectorProperties *detector_properties):
@@ -30,14 +47,14 @@ opDetSBNDTriggerAlg::opDetSBNDTriggerAlg(const Config &config, const detinfo::De
 }
 
 void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline) {
-  std::vector<raw::TimeStamp_t> this_trigger_locations;
+  std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_ranges;
   const std::vector<raw::ADC_Count_t> &adcs = waveform; // upcast to get adcs
   raw::Channel_t channel = waveform.ChannelNumber();
-  if (channel > (unsigned)fOpDetMap.size()) return;
+  // if (channel > (unsigned)fOpDetMap.size()) return;
 
   // initialize the channel in the map no matter what
-  if (fTriggerLocationsPerChannel.count(channel) == 0) {
-    fTriggerLocationsPerChannel[channel] = std::vector<raw::TimeStamp_t>();
+  if (fTriggerRangesPerChannel.count(channel) == 0) {
+    fTriggerRangesPerChannel[channel] = std::vector<std::array<raw::TimeStamp_t,2>>();
   }
 
   // get the threshold -- first check if channel is Arapuca or PMT
@@ -51,6 +68,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
     is_arapuca = true;
   }
   int threshold = is_arapuca ? fConfig.TriggerThresholdADCArapuca() : fConfig.TriggerThresholdADCPMT(); 
+  int polarity = is_arapuca ? fConfig.PulsePolarityArapuca() : fConfig.PulsePolarityPMT(); 
 
   // find the start and end points of the trigger window in this waveform
   std::array<double, 2> trigger_window = TriggerEnableWindow();
@@ -78,17 +96,21 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   }
   assert(end_i+1 == adcs.size() || !IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), end_i+1)));
 
+  std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_locations; 
   bool above_threshold = false;
+  raw::TimeStamp_t trigger_start;
   // find all ADC counts above threshold
   for (size_t i = start_i; i <= end_i; i++) {
-    raw::ADC_Count_t val = fConfig.PulsePolarity() * (adcs.at(i) - baseline);
+    raw::ADC_Count_t val = polarity * (adcs.at(i) - baseline);
     if (!above_threshold && val > threshold) {
       // new trigger! -- get the time
-      raw::TimeStamp_t this_trigger_time = Tick2Timestamp(waveform.TimeStamp(), i);
-      AddTriggerLocation(this_trigger_locations, this_trigger_time);
+      // raw::TimeStamp_t this_trigger_time 
+      trigger_start = Tick2Timestamp(waveform.TimeStamp(), i);
       above_threshold = true;
     }
-    else if (above_threshold && val < threshold) {
+    else if (above_threshold && (val < threshold || i+1 == end_i)) {
+      raw::TimeStamp_t trigger_finish = Tick2Timestamp(waveform.TimeStamp(), i); 
+      AddTriggerLocation(this_trigger_locations, {{trigger_start, trigger_finish}});
       above_threshold = false;
     }
   }
@@ -97,13 +119,13 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   //
   // Small speed optimization: if this is the first time we are setting the 
   // trigger times for the channel, just move the vector we already built
-  if (fTriggerLocationsPerChannel[channel].size() == 0) {
-    fTriggerLocationsPerChannel[channel] = std::move(this_trigger_locations);
+  if (fTriggerRangesPerChannel[channel].size() == 0) {
+    fTriggerRangesPerChannel[channel] = std::move(this_trigger_locations);
   }
   // Otherwise, merge them in and keep things sorted in time
   else {
-    for (raw::TimeStamp_t trigger: this_trigger_locations) {
-      AddTriggerLocation(fTriggerLocationsPerChannel[channel], trigger);
+    for (const std::array<raw::TimeStamp_t, 2> &trigger_range: this_trigger_ranges) {
+      AddTriggerLocation(fTriggerRangesPerChannel[channel], trigger_range);
     }
   }
 
@@ -127,10 +149,24 @@ bool opDetSBNDTriggerAlg::IsChannelMasked(raw::Channel_t channel) const {
   return false;
 }
 
+void opDetSBNDTriggerAlg::ClearTriggerLocations() {
+  fTriggerLocationsPerChannel.clear();
+  fTriggerRangesPerChannel.clear();
+  fTriggerLocations.clear();
+}
+
 void opDetSBNDTriggerAlg::MergeTriggerLocations() {
   // If each channel is self triggered, there is no "master" set of triggers, and 
   // we don't need to do anything here
-  if (fConfig.SelfTriggerPerChannel()) return;
+  if (fConfig.SelfTriggerPerChannel()) {
+    for (const auto &trigger_ranges: fTriggerRangesPerChannel) {
+      fTriggerLocationsPerChannel[trigger_ranges.first] = std::vector<raw::TimeStamp_t>();
+      for (const std::array<raw::TimeStamp_t, 2> &range: trigger_ranges.second) {
+        fTriggerLocationsPerChannel[trigger_ranges.first].push_back(range[0]);
+      }
+    }
+    return;
+  }
 
   // Otherwise we need to merge in the triggers from each channel into 
   // a master set to be issued to each channel
@@ -141,14 +177,18 @@ void opDetSBNDTriggerAlg::MergeTriggerLocations() {
   // to be changed later.
 
   // First re-sort the trigger times to be a sorted global list of (channel, time) values
-  std::vector<std::pair<raw::Channel_t, raw::TimeStamp_t>> all_trigger_locations;
-  for (const auto &trigger_locations_pair: fTriggerLocationsPerChannel) {
+  std::vector<TriggerPrimitive> all_trigger_locations;
+  for (const auto &trigger_locations_pair: fTriggerRangesPerChannel) {
     raw::Channel_t this_channel = trigger_locations_pair.first;
     // check if this channel contributes to the trigger
     if (!IsChannelMasked(this_channel)) {
       // then add in the locations
-      for (raw::TimeStamp_t trigger_time: trigger_locations_pair.second) {
-        AddTriggerLocationAndChannel(all_trigger_locations, trigger_time, this_channel);
+      for (std::array<raw::TimeStamp_t,2> trigger_range: trigger_locations_pair.second) {
+        TriggerPrimitive trigger;
+        trigger.start = trigger_range[0];
+        trigger.finish = trigger_range[1];
+        trigger.channel = this_channel;
+        AddTriggerPrimitive(all_trigger_locations, trigger);
       }
     }
   }
@@ -158,37 +198,28 @@ void opDetSBNDTriggerAlg::MergeTriggerLocations() {
   // What is the merging algorithm? This will probably come from the PTB.
   // For now just require some number of channels in some time window.
   // Also allow for a trigger holdoff to be set after one trigger is issued.
-  bool has_triggered = false;
-  double last_trigger_time;
+  //
+  // Also here is where one might start to simulate a different clock speed
+  // for the trigger, and for simulating drifts between channels and/or 
+  // between channel and trigger. However, for now we assume that the 
+  // trigger and readout have the same clock and that they are perfectly
+  // synched.
+  bool was_triggering = false;
 
-  bool is_triggering = false; 
-  double this_trigger_time;
-  unsigned this_trigger_count = 0;
+  std::vector<TriggerPrimitive> primitives;
+  for (const TriggerPrimitive &primitive: all_trigger_locations) {
+    AddTriggerPrimitiveFinish(primitives, primitive);
+    while (primitives.back().finish < primitive.start) {
+      // remove the final element
+      primitives.resize(primitives.size() - 1);
+    }
 
-  for (auto const &trigger_pair: all_trigger_locations) {
-    raw::TimeStamp_t time = trigger_pair.second;
-    if (has_triggered && last_trigger_time + fConfig.TriggerHoldoff() > time) continue;
-    if (is_triggering) {
-      if (time < this_trigger_time + fConfig.TriggerCountWindow()) {
-        this_trigger_count += 1;
-      }
-      else {
-        is_triggering = false;
-        this_trigger_count = 0;
-      }
-    } 
-    else {
-      is_triggering = true;
-      this_trigger_count = 1;
-      this_trigger_time = time;
+    bool is_triggering = primitives.size() >= fConfig.TriggerChannelCount();
+    if (is_triggering && !was_triggering) {
+      raw::TimeStamp_t this_trigger_time = primitive.start;
+      fTriggerLocations.push_back(this_trigger_time);
     }
-    if (is_triggering && this_trigger_count == fConfig.TriggerChannelCount()) {
-      fTriggerLocations.push_back(this_trigger_time);     
-      has_triggered = true;
-      last_trigger_time = this_trigger_time;
-      is_triggering = false;
-      this_trigger_count = 0;
-    }
+    was_triggering = is_triggering;
   }
 }
 
@@ -225,17 +256,11 @@ bool opDetSBNDTriggerAlg::IsTriggerEnabled(raw::TimeStamp_t trigger_time) const 
 }
 
 double opDetSBNDTriggerAlg::OpticalPeriod() const {
-  //TODO: FIX!!!!
-  // Currently, the OpticalClock frequency is wrong in SBND configuration
-  // This is currently worked-around in the rest of the OpDet simulation by multiplying the clock
-  // frequency by a hard-coded factor. However, this should really be fixed in the configuration.
-  //
-  // For now though, multiply by the same factor to be consistent.
-  return fDetectorClocks->OpticalClock().TickPeriod() * 64. / 500.;
+  return fDetectorClocks->OpticalClock().TickPeriod();
 }
 
 raw::TimeStamp_t opDetSBNDTriggerAlg::Tick2Timestamp(raw::TimeStamp_t waveform_start, size_t waveform_index) const {
-  return waveform_start * fConfig.OpDetWaveformTimeConversion() + waveform_index * OpticalPeriod();
+  return waveform_start + waveform_index * OpticalPeriod();
 }
 
 const std::vector<raw::TimeStamp_t> &opDetSBNDTriggerAlg::GetTriggerTimes(raw::Channel_t channel) const {
@@ -277,7 +302,7 @@ double opDetSBNDTriggerAlg::ReadoutWindowPostTriggerBeam(raw::Channel_t channel)
 std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const raw::OpDetWaveform &waveform) const {
   std::vector<raw::OpDetWaveform> ret;
   raw::Channel_t channel = waveform.ChannelNumber();
-  if (channel > (unsigned)fOpDetMap.size()) return {};
+  // if (channel > (unsigned)fOpDetMap.size()) return {};
 
   const std::vector<raw::TimeStamp_t> &trigger_times = GetTriggerTimes(channel);
 
@@ -331,6 +356,11 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const
       this_waveform = raw::OpDetWaveform(time, channel); 
       this_waveform.push_back(adcs[i]);
     }
+    // last adc -- save the waveform
+    if (is_triggering && i+1 == adcs.size()) {
+      ret.push_back(std::move(this_waveform));
+    }
+ 
     was_triggering = is_triggering;
   }
   return ret;
