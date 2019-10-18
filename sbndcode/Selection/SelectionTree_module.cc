@@ -205,6 +205,7 @@ namespace sbnd {
     std::map<std::string, double> reco_mom;    // Selected muon reco momentum
     std::map<std::string, double> reco_theta;  // Selected muon reco theta
     std::map<std::string, double> reco_phi;    // Selected muon reco phi
+    std::map<std::string, double> reco_nu_e;   // Reconstructed neutrino energy assuming nu_mu CC
 
     // Tree (one entry per numu CC)
     TTree *fNuMuTree;
@@ -297,6 +298,7 @@ namespace sbnd {
       fPfpTree->Branch((sel+"_reco_mom").c_str(),   &reco_mom[sel],   (sel+"_reco_mom/D").c_str());
       fPfpTree->Branch((sel+"_reco_theta").c_str(), &reco_theta[sel], (sel+"_reco_theta/D").c_str());
       fPfpTree->Branch((sel+"_reco_phi").c_str(),   &reco_phi[sel],   (sel+"_reco_phi/D").c_str());
+      fPfpTree->Branch((sel+"_reco_nu_e").c_str(),  &reco_nu_e[sel],  (sel+"_reco_nu_e/D").c_str());
     }
 
     fNuMuTree = tfs->make<TTree>("numu", "numu");
@@ -596,6 +598,7 @@ namespace sbnd {
       reco_mom[sel] = -99999;
       reco_theta[sel] = -99999;
       reco_phi[sel] = -99999;
+      reco_nu_e[sel] = -99999;
     }
   }
 
