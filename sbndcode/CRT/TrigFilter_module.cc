@@ -4,21 +4,20 @@
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Principal/Event.h" 
 #include "sbndcode/CRT/CRTProducts/CRTData.hh"
-#include "art/Framework/Services/Optional/TFileService.h"
+#include "art_root_io/TFileService.h"
 #include "TH1.h"
 #include <bitset>
 
 namespace filt{
 
- class TrigFilter : public art::EDFilter {
+  class TrigFilter  : public art::EDFilter {
    public:
-     explicit TrigFilter(fhicl::ParameterSet const& pset);
+    explicit TrigFilter(fhicl::ParameterSet const& pset);
     virtual ~TrigFilter() { }
     virtual bool filter(art::Event& e);
     void    reconfigure(fhicl::ParameterSet const& pset);
 
   private:
-
 
    art::ServiceHandle<art::TFileService> tfs;
 
@@ -33,6 +32,8 @@ namespace filt{
    std::vector<int>    fmodlistDBotR;       
    bool fstripmatch;
    int fstripshift;
+    art::ServiceHandle<art::TFileService> tfs;
+
    int fedgecut;
    float    fTimeCoinc;
    float    fADCthresh;
@@ -44,9 +45,8 @@ namespace filt{
                     
   };
 
-   TrigFilter::TrigFilter(fhicl::ParameterSet const& pset)
+  TrigFilter::TrigFilter(fhicl::ParameterSet const& pset): EDFilter(pset) 
   {
-
 
     // Create histograms
     hits = tfs->make<TH1F>("hits","hits",14,39.5,63.5);
