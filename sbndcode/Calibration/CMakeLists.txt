@@ -1,5 +1,7 @@
+add_subdirectory(tools)
 
 art_make(MODULE_LIBRARIES
+			larcore_Geometry_Geometry_service
                         lardata_Utilities
 			lardata_ArtDataHelper
                         lardataobj_RawData
@@ -23,6 +25,7 @@ art_make(MODULE_LIBRARIES
                         ${ROOT_BASIC_LIB_LIST}
 
 TOOL_LIBRARIES
+			larcore_Geometry_Geometry_service
 			lardata_Utilities
                         lardata_ArtDataHelper
                         lardataobj_RawData

@@ -2,6 +2,7 @@
 
 BEGIN_PROLOG
 
+
 #This is just a temporary home for this while testing machinery.
 sbnd_standardroifinder:
 {
@@ -43,6 +44,7 @@ sbnd_calwire:
  BaseVarCut:         25.  # Variance cut for selecting baseline points
  FFTSize:     3000      # re-initialize FFT service to this size
 }
+
 
 sbnd_calwire.ROITool: @local::sbnd_standardroifinder
 
