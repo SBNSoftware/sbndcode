@@ -103,8 +103,9 @@ Repeat parts 1-3 of the main task with an electron and a proton.
 ----------------------------------------------------------------------
 -- PART 2: Run a neutrino + cosmics event up to the detsim stage.
 
-Copy the generation level file from /path/to/nu_cosmics_gen.root into 
-your work directory.
+Copy the generation level file from 
+/pc2013-data1/larsoft_workshop_2019/nu_cosmics_gen.root into your work 
+directory.
 
 Run the g4 and detsim fcl files on it.
 
