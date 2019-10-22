@@ -1,3 +1,5 @@
 #include "standard_reco_sbnd_basic.fcl"
 
-pandora:            @local::sbnd_pandoraCheat
+physics.producers.pandora.ConfigFile:        "PandoraSettings_Cheat.xml"
+physics.producers.pandora.EnableMCParticles: true
+
