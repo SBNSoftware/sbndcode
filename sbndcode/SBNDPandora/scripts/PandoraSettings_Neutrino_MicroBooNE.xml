@@ -325,9 +325,9 @@
     <TrackPfoListName>TrackParticles3D</TrackPfoListName>
     <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
     <UseThreeDInformation>true</UseThreeDInformation>
-    <SvmFileName>PandoraSvm_v03_11_00.xml</SvmFileName>
+    <SvmFileName>PandoraMVAs/PandoraSvm_v03_11_00_MicroBooNE.xml</SvmFileName>
     <SvmName>PfoCharacterisation</SvmName>
-    <SvmFileNameNoChargeInfo>PandoraSvm_v03_11_00.xml</SvmFileNameNoChargeInfo>
+    <SvmFileNameNoChargeInfo>PandoraMVAs/PandoraSvm_v03_11_00_MicroBooNE.xml</SvmFileNameNoChargeInfo>
     <SvmNameNoChargeInfo>PfoCharacterisationNoChargeInfo</SvmNameNoChargeInfo>
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>

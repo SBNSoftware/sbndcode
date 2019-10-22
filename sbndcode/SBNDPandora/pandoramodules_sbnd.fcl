@@ -2,22 +2,22 @@ BEGIN_PROLOG
 
 sbnd_basicpandora:
 {
-module_type:                                                    "StandardPandora"
-                                                                  GeantModuleLabel:                                               "largeant"
-                                                                  HitFinderModuleLabel:                                           "linecluster"
-                                                                  EnableMCParticles:                                              false
-                                                                  EnableProduction:                                               true
-                                                                  EnableLineGaps:                                                 true
-                                                                  UseGlobalCoordinates:                                           true
-                                                                  UseHitWidths:                                                   false
-                                                                  ShouldRunAllHitsCosmicReco:                                     false
-                                                                  ShouldRunStitching:                                             false
-                                                                  ShouldRunCosmicHitRemoval:                                      false
-                                                                  ShouldRunSlicing:                                               false
-                                                                  ShouldRunNeutrinoRecoOption:                                    false
-                                                                  ShouldRunCosmicRecoOption:                                      false
-                                                                  ShouldPerformSliceId:                                           false
-                                                                  PrintOverallRecoStatus:                                         false
+    module_type:                                                    "StandardPandora"
+    GeantModuleLabel:                                               "largeant"
+    HitFinderModuleLabel:                                           "linecluster"
+    EnableMCParticles:                                              false
+    EnableProduction:                                               true
+    EnableLineGaps:                                                 true
+    UseGlobalCoordinates:                                           true
+    UseHitWidths:                                                   false
+    ShouldRunAllHitsCosmicReco:                                     false
+    ShouldRunStitching:                                             false
+    ShouldRunCosmicHitRemoval:                                      false
+    ShouldRunSlicing:                                               false
+    ShouldRunNeutrinoRecoOption:                                    false
+    ShouldRunCosmicRecoOption:                                      false
+    ShouldPerformSliceId:                                           false
+    PrintOverallRecoStatus:                                         false
 }
 
 sbnd_pandora:                                                       @local::sbnd_basicpandora
@@ -30,10 +30,6 @@ sbnd_pandora.ShouldRunNeutrinoRecoOption:                           true
 sbnd_pandora.ShouldRunCosmicRecoOption:                             true
 sbnd_pandora.ShouldPerformSliceId:                                  true
 
-sbnd_pandoraCheating:                                               @local::sbnd_basicpandora
-sbnd_pandoraCheating.ConfigFile:                                    "PandoraSettings_Cheat.xml"
-sbnd_pandoraCheating.EnableMCParticles:                             true
-
 sbnd_pandorawriter:                                                 @local::sbnd_basicpandora
 sbnd_pandorawriter.ConfigFile:                                      "PandoraSettings_Write.xml"
 sbnd_pandorawriter.EnableMCParticles:                               true
@@ -41,12 +37,12 @@ sbnd_pandorawriter.EnableProduction:                                false
 
 sbnd_pandoraTrackCreation:
 {
-module_type:                                                    "LArPandoraTrackCreation"
+    module_type:                                                    "LArPandoraTrackCreation"
 }
 
 sbnd_pandoraShowerCreation:
 {
-module_type:                                                    "LArPandoraShowerCreation"
+    module_type:                                                    "LArPandoraShowerCreation"
 }
 
 END_PROLOG

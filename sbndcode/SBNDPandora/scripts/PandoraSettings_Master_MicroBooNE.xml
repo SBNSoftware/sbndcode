@@ -1,11 +1,10 @@
 <pandora>
   <!-- GLOBAL SETTINGS -->
-  <IsMonitoringEnabled>true</IsMonitoringEnabled>
+  <IsMonitoringEnabled>false</IsMonitoringEnabled>
   <ShouldDisplayAlgorithmInfo>false</ShouldDisplayAlgorithmInfo>
   <SingleHitTypeClusteringMode>true</SingleHitTypeClusteringMode>
 
   <!-- ALGORITHM SETTINGS -->
-  <algorithm type = "LArEventReading"/>
   <algorithm type = "LArPreProcessing">
     <OutputCaloHitListNameU>CaloHitListU</OutputCaloHitListNameU>
     <OutputCaloHitListNameV>CaloHitListV</OutputCaloHitListNameV>
@@ -31,7 +30,7 @@
     </CosmicRayTaggingTools>
     <SliceIdTools>
       <tool type = "LArNeutrinoId">
-        <SvmFileName>PandoraSvm_v03_11_00.xml</SvmFileName>
+        <SvmFileName>PandoraMVAs/PandoraSvm_v03_11_00_MicroBooNE.xml</SvmFileName>
         <SvmName>NeutrinoId</SvmName>
       </tool>
     </SliceIdTools>
@@ -42,18 +41,6 @@
     <RecreatedClusterListName>RecreatedClusters</RecreatedClusterListName>
     <RecreatedVertexListName>RecreatedVertices</RecreatedVertexListName>
     <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
-  </algorithm>
-
-  <algorithm type = "LArNeutrinoEventValidation">
-    <CaloHitListName>CaloHitList2D</CaloHitListName>
-    <MCParticleListName>Input</MCParticleListName>
-    <PfoListName>RecreatedPfos</PfoListName>
-    <UseTrueNeutrinosOnly>false</UseTrueNeutrinosOnly>
-    <PrintAllToScreen>false</PrintAllToScreen>
-    <PrintMatchingToScreen>true</PrintMatchingToScreen>
-    <WriteToTree>false</WriteToTree>
-    <OutputTree>Validation</OutputTree>
-    <OutputFile>Validation.root</OutputFile>
   </algorithm>
 
   <algorithm type = "LArVisualMonitoring">
