@@ -92,7 +92,7 @@
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
     <OutputVertexListName>NeutrinoVertices3D</OutputVertexListName>
     <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
-    <MvaFileName>PandoraSvm_v03_11_00_MicroBooNE.xml</MvaFileName>
+    <MvaFileName>PandoraMVAs/PandoraSvm_v03_11_00_MicroBooNE.xml</MvaFileName>
     <RegionMvaName>VertexSelectionRegion</RegionMvaName>
     <VertexMvaName>VertexSelectionVertex</VertexMvaName>
     <FeatureTools>
