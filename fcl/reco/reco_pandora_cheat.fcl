@@ -1,0 +1,3 @@
+#include "standard_reco_sbnd_basic.fcl"
+
+pandora:            @local::sbnd_pandoraCheat
