@@ -17,8 +17,6 @@
 #include "canvas/Persistency/Common/Ptr.h" 
 #include "canvas/Persistency/Common/PtrVector.h" 
 #include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "art_root_io/TFileService.h" 
-#include "art_root_io/TFileDirectory.h" 
 #include "messagefacility/MessageLogger/MessageLogger.h" 
 
 // LArSoft
