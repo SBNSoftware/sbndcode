@@ -70,7 +70,7 @@ namespace opdet{
   // Declare member data here.
     std::string fInputModuleName;
   //  art::ServiceHandle<cheat::PhotonBackTracker> pbt;
-    double fSampling; //in GHz
+    double fSampling; //in MHz
     double fBaselineSample; //in ticks
     double fUseDenoising; 
     double fPulsePolarityPMT; 
@@ -110,7 +110,7 @@ namespace opdet{
     fPulsePolarityArapuca = p.get< int   >("PulsePolarityArapuca");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency()) / 1000.; // MHz -> GHz;
+    fSampling = (timeService->OpticalClock().Frequency()); // MHz
 
   // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();

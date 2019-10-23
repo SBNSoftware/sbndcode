@@ -1,0 +1,223 @@
+<!-- Pandora settings xml file -->
+
+<pandora>
+  <!-- GLOBAL SETTINGS -->
+  <IsMonitoringEnabled>false</IsMonitoringEnabled>
+  <ShouldDisplayAlgorithmInfo>false</ShouldDisplayAlgorithmInfo>
+  <SingleHitTypeClusteringMode>true</SingleHitTypeClusteringMode>
+
+  <!-- Cosmic-ray muon reconstruction -->
+  <algorithm type = "LArPreProcessing">
+    <OnlyAvailableCaloHits>true</OnlyAvailableCaloHits>
+    <OutputCaloHitListNameW>CRCaloHitListW</OutputCaloHitListNameW>
+    <OutputCaloHitListNameU>CRCaloHitListU</OutputCaloHitListNameU>
+    <OutputCaloHitListNameV>CRCaloHitListV</OutputCaloHitListNameV>
+    <FilteredCaloHitListName>CRCaloHitList2D</FilteredCaloHitListName>
+    <CurrentCaloHitListReplacement>CRCaloHitList2D</CurrentCaloHitListReplacement>
+  </algorithm>
+
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CRCaloHitListW CRCaloHitListU CRCaloHitListV</CaloHitListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
+
+  <!-- 2D cosmic-ray muon reconstruction, U View -->
+  <algorithm type = "LArClusteringParent">
+    <algorithm type = "LArCheatingClusterCreation" description = "ClusterFormation">
+      <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+      <MCParticleListName>Input</MCParticleListName>
+    </algorithm>
+    <InputCaloHitListName>CRCaloHitListU</InputCaloHitListName>
+    <ClusterListName>CRClustersU </ClusterListName>
+    <ReplaceCurrentCaloHitList>false</ReplaceCurrentCaloHitList>
+    <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+  </algorithm>
+
+  <!-- 2D cosmic-ray muon reconstruction, V View -->
+  <algorithm type = "LArClusteringParent">
+    <algorithm type = "LArCheatingClusterCreation" description = "ClusterFormation">
+      <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+      <MCParticleListName>Input</MCParticleListName>
+    </algorithm>
+    <InputCaloHitListName>CRCaloHitListV</InputCaloHitListName>
+    <ClusterListName>CRClustersV</ClusterListName>
+    <ReplaceCurrentCaloHitList>false</ReplaceCurrentCaloHitList>
+    <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+  </algorithm>
+
+  <!-- 2D cosmic-ray muon reconstruction, W View -->
+  <algorithm type = "LArClusteringParent">
+    <algorithm type = "LArCheatingClusterCreation" description = "ClusterFormation">
+      <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+      <MCParticleListName>Input</MCParticleListName>
+    </algorithm>
+    <InputCaloHitListName>CRCaloHitListW</InputCaloHitListName>
+    <ClusterListName>CRClustersW</ClusterListName>
+    <ReplaceCurrentCaloHitList>false</ReplaceCurrentCaloHitList>
+    <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+  </algorithm>
+
+  <!-- 3D cosmic-ray muon reconstruction -->
+  <algorithm type = "LArCheatingPfoCreation">
+    <InputClusterListNames>CRClustersU CRClustersV CRClustersW</InputClusterListNames>
+    <OutputPfoListName>CRParticles3D</OutputPfoListName>
+    <OutputVertexListName>CRVertices3D</OutputVertexListName>
+    <MCParticleListName>Input</MCParticleListName>
+    <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+  </algorithm>
+
+  <!-- 3D cosmic-ray muon identification, and removal of any other interactions -->
+  <algorithm type = "LArCheatingCosmicRayIdentification">
+    <InputPfoListName>CRParticles3D</InputPfoListName>
+    <OutputPfoListName>CRParentParticles3D</OutputPfoListName>
+  </algorithm>
+  <algorithm type = "LArListPruning">
+    <WarnIfObjectsUnavailable>false</WarnIfObjectsUnavailable>
+    <PfoListNames>CRParticles3D</PfoListNames>
+    <ClusterListNames>CRClustersU CRClustersV CRClustersW</ClusterListNames>
+  </algorithm>
+
+  <!-- 3D cosmic-ray muon hit creation -->
+  <algorithm type = "LArThreeDHitCreation">
+    <InputPfoListName>CRParentParticles3D</InputPfoListName>
+    <OutputCaloHitListName>CRCaloHitList3D</OutputCaloHitListName>
+    <OutputClusterListName>CRClusters3D</OutputClusterListName>
+    <HitCreationTools>
+      <tool type = "LArClearTransverseTrackHits"><MinViews>3</MinViews></tool>
+      <tool type = "LArClearLongitudinalTrackHits"><MinViews>3</MinViews></tool>
+      <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>3</MinViews></tool>
+      <tool type = "LArMultiValuedTransverseTrackHits"><MinViews>3</MinViews></tool>
+      <tool type = "LArClearTransverseTrackHits"><MinViews>2</MinViews></tool>
+      <tool type = "LArClearLongitudinalTrackHits"><MinViews>2</MinViews></tool>
+      <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>2</MinViews></tool>
+      <tool type = "LArThreeViewShowerHits"/>
+      <tool type = "LArTwoViewShowerHits"/>
+      <tool type = "LArDeltaRayShowerHits"/>
+    </HitCreationTools>
+  </algorithm>
+
+
+  <!-- Neutrino-induced event reconstruction -->
+  <algorithm type = "LArPreProcessing">
+    <OnlyAvailableCaloHits>true</OnlyAvailableCaloHits>
+    <OutputCaloHitListNameW>NCaloHitListW</OutputCaloHitListNameW>
+    <OutputCaloHitListNameU>NCaloHitListU</OutputCaloHitListNameU>
+    <OutputCaloHitListNameV>NCaloHitListV</OutputCaloHitListNameV>
+    <FilteredCaloHitListName>NCaloHitList2D</FilteredCaloHitListName>
+    <CurrentCaloHitListReplacement>NCaloHitList2D</CurrentCaloHitListReplacement>
+  </algorithm>
+
+
+  <algorithm type = "LArClusteringParent">
+    <algorithm type = "LArCheatingClusterCreation" description = "ClusterFormation">
+      <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+      <MCParticleListName>Input</MCParticleListName>
+    </algorithm>
+    <InputCaloHitListName>NCaloHitListU</InputCaloHitListName>
+    <ClusterListName>NClustersU</ClusterListName>
+    <ReplaceCurrentCaloHitList>false</ReplaceCurrentCaloHitList>
+    <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+  </algorithm>
+
+  <!-- 2D neutrino-induced event reconstruction, V View -->
+  <algorithm type = "LArClusteringParent">
+    <algorithm type = "LArCheatingClusterCreation" description = "ClusterFormation">
+      <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+      <MCParticleListName>Input</MCParticleListName>
+    </algorithm>
+    <InputCaloHitListName>NCaloHitListV</InputCaloHitListName>
+    <ClusterListName>NClustersV</ClusterListName>
+    <ReplaceCurrentCaloHitList>false</ReplaceCurrentCaloHitList>
+    <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+  </algorithm>
+
+  <!-- 2D neutrino-induced event reconstruction, W View -->
+  <algorithm type = "LArClusteringParent">
+    <algorithm type = "LArCheatingClusterCreation" description = "ClusterFormation">
+      <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+      <MCParticleListName>Input</MCParticleListName>
+    </algorithm>
+    <InputCaloHitListName>NCaloHitListW</InputCaloHitListName>
+    <ClusterListName>NClustersW</ClusterListName>
+    <ReplaceCurrentCaloHitList>false</ReplaceCurrentCaloHitList>
+    <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+  </algorithm>
+
+  <!-- 3D neutrino vertex reconstruction -->
+  <algorithm type = "LArCheatingVertexCreation">
+    <OutputVertexListName>NVertices</OutputVertexListName>
+    <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
+    <VertexXCorrection>0.495694</VertexXCorrection>
+  </algorithm>
+
+  <!-- 3D neutrino-induced event reconstruction -->
+  <algorithm type = "LArCheatingPfoCreation">
+    <InputClusterListNames>NClustersU NClustersV NClustersW</InputClusterListNames>
+    <OutputPfoListName>NParticles3D</OutputPfoListName>
+    <AddVertices>false</AddVertices>
+    <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+    <MCParticleListName>Input</MCParticleListName>
+  </algorithm>
+
+  <!-- 3D neutrino-induced hit creation -->
+  <algorithm type = "LArThreeDHitCreation">
+    <InputPfoListName>NParticles3D</InputPfoListName>
+    <OutputCaloHitListName>NCaloHitList3D</OutputCaloHitListName>
+    <OutputClusterListName>NClusters3D</OutputClusterListName>
+    <HitCreationTools>
+      <tool type = "LArClearTransverseTrackHits"><MinViews>3</MinViews></tool>
+      <tool type = "LArClearLongitudinalTrackHits"><MinViews>3</MinViews></tool>
+      <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>3</MinViews></tool>
+      <tool type = "LArMultiValuedTransverseTrackHits"><MinViews>3</MinViews></tool>
+      <tool type = "LArClearTransverseTrackHits"><MinViews>2</MinViews></tool>
+      <tool type = "LArClearLongitudinalTrackHits"><MinViews>2</MinViews></tool>
+      <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>2</MinViews></tool>
+      <tool type = "LArThreeViewShowerHits"/>
+      <tool type = "LArTwoViewShowerHits"/>
+      <tool type = "LArDeltaRayShowerHits"/>
+    </HitCreationTools>
+  </algorithm>
+
+  <!-- 3D neutrino event hierarchy -->
+  <algorithm type = "LArCheatingNeutrinoCreation">
+    <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+    <MCParticleListName>Input</MCParticleListName>
+    <NeutrinoPfoListName>NParentParticles3D</NeutrinoPfoListName>
+    <VertexListName>NVertices</VertexListName>
+    <DaughterPfoListNames>NParticles3D</DaughterPfoListNames>
+  </algorithm>
+  <algorithm type = "LArCheatingNeutrinoDaughterVertices">
+    <CollapseToPrimaryMCParticles>true</CollapseToPrimaryMCParticles>
+    <MCParticleListName>Input</MCParticleListName>
+    <NeutrinoPfoListName>NParentParticles3D</NeutrinoPfoListName>
+    <OutputVertexListName>NDaughterVertices3D</OutputVertexListName>
+  </algorithm>
+
+  <!-- For extraction in client application -->
+  <algorithm type = "LArListMerging">
+    <SourcePfoListNames>CRParentParticles3D NParentParticles3D</SourcePfoListNames>
+    <TargetPfoListNames>OutputParticles3D OutputParticles3D</TargetPfoListNames>
+  </algorithm>
+  <algorithm type = "LArListChanging">
+    <PfoListName>OutputParticles3D</PfoListName>
+  </algorithm>
+
+  <algorithm type = "LArEventValidation">
+    <CaloHitListName>CRCaloHitList2D</CaloHitListName>
+    <MCParticleListName>Input</MCParticleListName>
+    <PfoListName>OutputParticles3D</PfoListName>
+    <UseTrueNeutrinosOnly>false</UseTrueNeutrinosOnly>
+    <PrintAllToScreen>false</PrintAllToScreen>
+    <PrintMatchingToScreen>true</PrintMatchingToScreen>
+    <WriteToTree>false</WriteToTree>
+    <OutputTree>Validation</OutputTree>
+    <OutputFile>Validation.root</OutputFile>
+  </algorithm>
+
+  <algorithm type = "LArVisualMonitoring">
+    <PfoListNames>OutputParticles3D</PfoListNames>
+  </algorithm>
+  <algorithm type = "LArVisualMonitoring">
+    <ClusterListNames>CRClusters3D NClusters3D</ClusterListNames>
+  </algorithm>
+</pandora>

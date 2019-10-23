@@ -1,0 +1,55 @@
+#
+# File:    opticalproperties_sbnd.fcl
+# Purpose: Collection of optical properties.
+#
+#
+
+
+BEGIN_PROLOG
+
+#
+# Optical properties for LArProperties
+#
+# Use as:
+#    
+#     service.LArPropertiesService: {
+#         ...
+#         @table::sbnd_opticalproperties
+#         ...
+#     }
+#
+#
+sbnd_opticalproperties: {
+    
+    ScintByParticleType: false
+
+    ScintPreScale:  0.03   # QE x TPB_FW x TPB_Absorption (15% x 50% x 45%)
+                           # MUST match between g4 and detsim
+
+    EnableCerenkovLight: false # Cerenkov light OFF by default
+
+    LoadExtraMatProperties: true
+
+    TpbTimeConstant: 2.5
+
+    #setting the optical properties of the materials in the geometry:
+    ReflectiveSurfaceEnergies:         [ 1.77, 2.0675, 2.481, 2.819, 2.953, 3.1807, 3.54, 4.135, 4.962, 5.39, 7., 15. ]
+    ReflectiveSurfaceNames:            [ "STEEL_STAINLESS_Fe7Cr2Ni", "Copper_Beryllium_alloy25", "G10", "vm2000", "ALUMINUM_Al" ]
+    ReflectiveSurfaceReflectances:     [ [ 0.66, 0.64, 0.62, 0.60, 0.59, 0.57, 0.53, 0.47, 0.39, 0.36, 0.27, 0.25 ],
+    				         [ 0.902, 0.841, 0.464, 0.379, 0.345, 0.299, 0.287, 0.264, 0.337, 0.3, 0.0, 0.0 ],
+                                         [ 0.393, 0.405, 0.404, 0.352, 0.323, 0.243, 0.127, 0.065, 0.068, 0.068, 0.0, 0.0 ],
+                                         [ 0.93, 0.93, 0.93, 0.93, 0.93, 0.93, 0.1, 0.1, 0.7, 0.3, 0.0, 0.0 ],
+                                         [ 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.47, 0.39, 0.36, 0.27, 0.25 ] ]
+
+     #the information below is used for the "simple boundary simulation". You might want to change them if using the simple version
+     #of the boundary simulation
+     ReflectiveSurfaceDiffuseFractions: [ [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                          [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                          [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                          [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                          [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ]
+    
+} # sbnd_opticalproperties
+
+END_PROLOG
+ 
