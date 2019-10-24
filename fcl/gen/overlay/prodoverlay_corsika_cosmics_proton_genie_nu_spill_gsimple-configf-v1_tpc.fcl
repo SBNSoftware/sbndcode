@@ -1,0 +1,4 @@
+#include "prodoverlay_corsika_cosmics_proton_genie_nu_spill_gsimple-configf-v1_cryostat.fcl
+
+physics.producers.generator.FiducialCut: "mbox: -210,-210,-10,210,210,510" #Extend the box to include 20cm around the TPC active region
+
