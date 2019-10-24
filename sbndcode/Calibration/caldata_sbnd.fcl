@@ -43,10 +43,10 @@ sbnd_calwire:
  DoBaselineSub:       true			  
  BaseVarCut:         25.  # Variance cut for selecting baseline points
  FFTSize:     3000      # re-initialize FFT service to this size
+ ROITool: @local::sbnd_standardroifinder #Setting the ROI finding tool
 }
 
 
-sbnd_calwire.ROITool: @local::sbnd_standardroifinder
 
 
 sbnd_calwireana: @local::standard_calwireana
