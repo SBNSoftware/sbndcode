@@ -1,4 +1,4 @@
-#include "analysis_tools_icarus.fcl"
+#include "analysis_tools_sbnd.fcl"
 #include "services_sbnd.fcl"
 
 services:
@@ -9,7 +9,7 @@ services:
 
 }
 
-icarus_HitEfficiencyAnalysis:
+sbnd_HitEfficiencyAnalysis:
 {
   module_type:                    HitEfficiencyAna
   HitEfficiencyHistogramToolList: [ @local::TrackHitEfficiencyAnalysisTool ]
@@ -21,7 +21,7 @@ physics:
   filters:  {}
   analyzers:{
 
-    analysistree: @local::icarus_HitEfficiencyAnalysis
+    analysistree: @local::sbnd_HitEfficiencyAnalysis
 
   } # analyzers
 
