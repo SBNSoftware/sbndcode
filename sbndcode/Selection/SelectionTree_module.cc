@@ -11,6 +11,7 @@
 #include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
 #include "sbndcode/CosmicId/Algs/CosmicIdAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbndcode/CosmicId/Algs/StoppingParticleCosmicIdAlg.h"
 
 // LArSoft includes
 #include "lardataobj/RecoBase/Hit.h"
@@ -99,6 +100,11 @@ namespace sbnd {
         Comment("tag of PID producer data product")
       };
 
+      fhicl::Atom<art::InputTag> CaloModuleLabel {
+        Name("CaloModuleLabel"),
+        Comment("tag of calorimetry producer data product")
+      };
+
       fhicl::Atom<art::InputTag> PandoraLabel {
         Name("PandoraLabel"),
         Comment("tag of pandora data product")
@@ -120,6 +126,10 @@ namespace sbnd {
       fhicl::Table<BeamTime> BeamTimeLimits {
         Name("BeamTimeLimits"),
         Comment("")
+      };
+
+      fhicl::Table<StoppingParticleCosmicIdAlg::Config> SPTagAlg {
+        Name("SPTagAlg"),
       };
 
     }; // Inputs
@@ -147,6 +157,8 @@ namespace sbnd {
     // Apply Rhiannon's selection
     std::pair<bool, recob::Track> RhiSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid);
 
+    std::pair<bool, recob::Track> TomSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo);
+
     void FillSelectionTree(std::string selection, std::pair<bool, recob::Track> selected, int trueId, std::map<int, simb::MCParticle> particles);
 
     typedef art::Handle< std::vector<recob::PFParticle> > PFParticleHandle;
@@ -159,6 +171,7 @@ namespace sbnd {
     art::InputTag fGenModuleLabel;      ///< name of detsim producer
     art::InputTag fTpcTrackModuleLabel; ///< name of TPC track producer
     art::InputTag fPidModuleLabel; ///< name of TPC track producer
+    art::InputTag fCaloModuleLabel; ///< name of TPC track producer
     art::InputTag fPandoraLabel;
     bool          fVerbose;             ///< print information about what's going on
     double        fBeamTimeMin;
@@ -169,8 +182,9 @@ namespace sbnd {
     // Momentum fitters
     trkf::TrajectoryMCSFitter     fMcsFitter; 
     trkf::TrackMomentumCalculator fRangeFitter;
+    StoppingParticleCosmicIdAlg  fStopTagger;
 
-    std::vector<std::string> selections {"prop", "rhi"};
+    std::vector<std::string> selections {"prop", "rhi", "tom"};
     
     // Tree (One entry per reconstructed pfp)
     TTree *fPfpTree;
@@ -233,12 +247,14 @@ namespace sbnd {
     , fGenModuleLabel       (config().GenModuleLabel())
     , fTpcTrackModuleLabel  (config().TpcTrackModuleLabel())
     , fPidModuleLabel       (config().PidModuleLabel())
+    , fCaloModuleLabel      (config().CaloModuleLabel())
     , fPandoraLabel         (config().PandoraLabel())
     , fVerbose              (config().Verbose())
     , fBeamTimeMin          (config().BeamTimeLimits().BeamTimeMin())
     , fBeamTimeMax          (config().BeamTimeLimits().BeamTimeMax())
     , cosIdAlg              (config().CosIdAlg())
     , fMcsFitter            (config().fitter)
+    , fStopTagger           (config().SPTagAlg())
   {
 
   } // SelectionTree()
@@ -368,6 +384,7 @@ namespace sbnd {
     auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTpcTrackModuleLabel);
     art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTpcTrackModuleLabel);
     art::FindMany<anab::ParticleID> findManyPid(tpcTrackHandle, event, fPidModuleLabel);
+    art::FindManyP<anab::Calorimetry> findManyCalo(tpcTrackHandle, event, fCaloModuleLabel);
 
     //----------------------------------------------------------------------------------------------------------
     //                                      FILLING THE TRUTH TREE
@@ -540,6 +557,12 @@ namespace sbnd {
         }
         if(sel == "rhi"){
           std::pair<bool, recob::Track> sel_track = RhiSelection(nuTracks, findManyPid);
+          std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
+          int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+          FillSelectionTree(sel, sel_track, trueId, particles);
+        } 
+        if(sel == "tom"){
+          std::pair<bool, recob::Track> sel_track = TomSelection(nuTracks, findManyPid, findManyCalo);
           std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
           int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
           FillSelectionTree(sel, sel_track, trueId, particles);
@@ -737,6 +760,91 @@ namespace sbnd {
     if(vertex_contained && has_candidate) is_selected = true;
 
     return std::make_pair(is_selected, candidate);
+  }
+
+  // Apply my selection
+  std::pair<bool, recob::Track> SelectionTree::TomSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo){
+
+    bool is_selected = false;
+    bool has_candidate = false;
+    recob::Track candidate = tracks[0];
+
+    // Loop over tracks and count how many escape
+    int n_escape = 0;
+    double longest_escape = 0;
+    std::vector<recob::Track> long_tracks;
+    for(size_t i = 0; i < tracks.size(); i++){
+      bool escapes = false;
+      if(!fTpcGeo.InFiducial(tracks[i].End(), 5.)){ //TODO containment def 
+        n_escape++;
+        escapes = true;
+        double length = tracks[i].Length();
+        if(length > longest_escape){ 
+          longest_escape = length;
+        }
+      }
+
+      // Get rid of any protons using chi2
+      std::vector<const anab::ParticleID*> pids = fmpid.at(tracks[i].ID());
+      bool is_proton = false;
+      for(size_t i = 0; i < pids.size(); i++){
+        // Only use the collection plane
+        if(pids[i]->PlaneID().Plane != 2) continue;
+        // If minimum chi2 is proton then ignore
+        if(pids[i]->Chi2Proton() < pids[i]->Chi2Muon() && pids[i]->Chi2Proton() < pids[i]->Chi2Pion()){ 
+          is_proton = true;
+          continue;
+        }
+      }
+      if(is_proton) continue;
+
+      // Get rid of any contained particles which don't stop (most muons do) FIXME i think
+      std::vector<art::Ptr<anab::Calorimetry>> calos = fmcalo.at(tracks[i].ID());
+      bool stops = fStopTagger.StoppingEnd(tracks[i].End(), calos);
+      if(!escapes && !stops) continue;
+
+      long_tracks.push_back(tracks[i]);
+    }
+
+    std::sort(long_tracks.begin(), long_tracks.end(), [](auto& left, auto& right){
+              return left.Length() > right.Length();});
+
+    // Case 1: 1 escaping track
+    if(n_escape == 1 && long_tracks.size() > 0){
+      // If track longer than 100 cm then ID as muon
+      // If more than 1 escaping track > 100 cm then choose longest
+      if(longest_escape == long_tracks[0].Length() && longest_escape > 50){
+        has_candidate = true;
+        candidate = long_tracks[0];
+      }
+    }
+
+    // Case 2: 0 escaping tracks
+    else if(n_escape == 0 && long_tracks.size() > 0){
+      for(auto const& track : long_tracks){
+        if(has_candidate) continue;
+        // Check chi2_mu < 50
+        std::vector<const anab::ParticleID*> pids = fmpid.at(track.ID());
+        for(size_t i = 0; i < pids.size(); i++){
+          // Only use the collection plane
+          if(pids[i]->PlaneID().Plane != 2) continue;
+          // Run proton chi^2 to cut out stopping protons
+          if(pids[i]->Chi2Muon() < 50){ 
+            has_candidate = true;
+            candidate = track;
+            continue;
+          }
+        }
+      }
+    }
+
+    // Check vertex (start of muon candidate) in FV
+    // Fiducial definitions 8.25 cm from X (inc CPA), 15 cm from Y and front, 85 cm from back
+    bool vertex_contained = fTpcGeo.InFiducial(candidate.Start(), 10., 10., 10., 10., 10., 10., 8.25);
+    if(vertex_contained && has_candidate) is_selected = true;
+
+    return std::make_pair(is_selected, candidate);
+
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
