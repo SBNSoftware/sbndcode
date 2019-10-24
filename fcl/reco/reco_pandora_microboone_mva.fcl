@@ -1,0 +1,3 @@
+#include "standard_reco_sbnd_basic.fcl"
+
+physics.producers.pandora.ConfigFile: "PandoraSettings_Master_MicroBooNE.xml"

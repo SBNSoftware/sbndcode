@@ -13,8 +13,6 @@ sbnd_digiarapuca_alg:
  ArapucaDarkNoiseRate:      10.0    #in Hz
  CrossTalk:          0.2     #20% probability
  ArapucaBaseline:           1500    #ADC counts
- ArapucaPreTrigger:         200.0   #ns
- ArapucaReadoutWindow:      12000.0 #ns
  ArapucaPulseLength:        4000.0  #ns
  ArapucaPeakTime:           260.0   #ns
  ArapucaMeanAmplitude:      0.12    #mV 

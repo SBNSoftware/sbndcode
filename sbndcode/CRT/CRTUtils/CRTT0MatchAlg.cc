@@ -2,12 +2,13 @@
 
 namespace sbnd{
 
-CRTT0MatchAlg::CRTT0MatchAlg(const Config& config){
+CRTT0MatchAlg::CRTT0MatchAlg(const Config& config) : CRTT0MatchAlg(config, lar::providerFrom<geo::Geometry>(), lar::providerFrom<detinfo::DetectorPropertiesService>()) {}
+
+CRTT0MatchAlg::CRTT0MatchAlg(const Config& config, geo::GeometryCore const *GeometryService, detinfo::DetectorProperties const* DetectorProperties){
 
   this->reconfigure(config);
-  
-  fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-
+  fDetectorProperties = DetectorProperties;
+  fGeometryService = GeometryService;
 }
 
 
@@ -111,26 +112,23 @@ std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track 
 } // CRTT0MatchAlg::TrackDirectionAverage()
 
 
-std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
-
-  // Get the drift direction from the TPC
+std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event) {
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-  int driftDirection = fTpcGeo.DriftDirectionFromHits(hits);
-  std::pair<double, double> xLimits = fTpcGeo.XLimitsFromHits(hits);
+  return ClosestCRTHit(tpcTrack, hits, crtHits);
+}
+
+std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::pair<double, double> t0MinMax, std::vector<sbnd::crt::CRTHit> crtHits, int driftDirection) {
+  auto start = tpcTrack.Vertex<TVector3>();
+  auto end = tpcTrack.End<TVector3>();
 
   // Calculate direction as an average over directions
   std::pair<TVector3, TVector3> startEndDir = TrackDirectionAverage(tpcTrack, fTrackDirectionFrac);
   TVector3 startDir = startEndDir.first;
   TVector3 endDir = startEndDir.second;
 
-  auto start = tpcTrack.Vertex<TVector3>();
-  auto end = tpcTrack.End<TVector3>();
-
   // ====================== Matching Algorithm ========================== //
-  // Get the allowed t0 range
-  std::pair<double, double> t0MinMax = TrackT0Range(start.X(), end.X(), driftDirection, xLimits);
   std::vector<std::pair<crt::CRTHit, double>> t0Candidates;
 
   // Loop over all the CRT hits
@@ -165,14 +163,33 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrac
   crt::CRTHit hit;
   return std::make_pair(hit, -99999);
 
+
 }
 
+std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits) {
+  auto start = tpcTrack.Vertex<TVector3>();
+  auto end = tpcTrack.End<TVector3>();
+  // Get the drift direction from the TPC
+  int driftDirection = TPCGeoUtil::DriftDirectionFromHits(fGeometryService, hits);
+  std::pair<double, double> xLimits = TPCGeoUtil::XLimitsFromHits(fGeometryService, hits);
+  // Get the allowed t0 range
+  std::pair<double, double> t0MinMax = TrackT0Range(start.X(), end.X(), driftDirection, xLimits);
+
+  return ClosestCRTHit(tpcTrack, t0MinMax, crtHits, driftDirection);
+}
 
 double CRTT0MatchAlg::T0FromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
+  auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+  art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
+  std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+  return T0FromCRTHits(tpcTrack, hits, crtHits);
+}
+
+double CRTT0MatchAlg::T0FromCRTHits(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits) {
 
   if (tpcTrack.Length() < fMinTrackLength) return -99999; 
 
-  std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(tpcTrack, crtHits, event);
+  std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(tpcTrack, hits, crtHits);
   if(closestHit.second == -99999) return -99999;
 
   double crtTime = ((double)(int)closestHit.first.ts1_ns) * 1e-3;
