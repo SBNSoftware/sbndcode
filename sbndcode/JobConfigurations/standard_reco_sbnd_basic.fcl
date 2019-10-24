@@ -35,6 +35,7 @@
 #include "showerfindermodules_sbnd.fcl"
 #include "databaseutil_sbnd.fcl"
 ##include "opticaldetectormodules_sbnd.fcl"
+#include "ophitfinder_sbnd.fcl"
 #include "vertexfindermodules.fcl"
 #include "pandoramodules_sbnd.fcl"
 ##include "triggeralgo_service.fcl"
@@ -91,7 +92,7 @@ physics:
   ### flash finders
   # opflash:             @local::sbnd_opflash
  
-  # ophit:		@local::sbnd_hit_finder 
+  ophit:		@local::sbnd_hit_finder 
   ### calwire producers
   caldata:             @local::sbnd_calwire
 
@@ -147,7 +148,7 @@ physics:
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
  reco: [ rns
-	# , ophit
+	 , ophit
         # , opflash
          , caldata 
          , gaushit
