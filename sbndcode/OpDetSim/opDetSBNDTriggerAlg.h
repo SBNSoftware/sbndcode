@@ -46,16 +46,16 @@ namespace opdet{
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
 
-      fhicl::Atom<double> OpDetWaveformTimeConversion {
-        Name("OpDetWaveformTimeConversion"),
-        Comment("Scale factor to convert times in OpDetWavefrom to microseconds."),
-        1.
-      };
-
-      fhicl::Atom<int> PulsePolarity {
-        Name("PulsePolarity"),
+      fhicl::Atom<int> PulsePolarityPMT {
+        Name("PulsePolarityPMT"),
         Comment("Whether pulses go down (-1) or up (1)."),
         -1
+      };
+
+      fhicl::Atom<int> PulsePolarityArapuca {
+        Name("PulsePolarityArapuca"),
+        Comment("Whether pulses go down (-1) or up (1)."),
+        1
       };
 
       fhicl::Atom<int> TriggerThresholdADCArapuca {
@@ -209,6 +209,9 @@ namespace opdet{
 
     //Default destructor 
     ~opDetSBNDTriggerAlg() {}
+
+    // Clear out at the end of an event
+    void ClearTriggerLocations();
                                                                                                  
     // Add in a waveform to define trigger locations
     void FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline);
@@ -246,6 +249,7 @@ namespace opdet{
     opdet::sbndPDMapAlg fOpDetMap; 
 
     // keeping track of triggers
+    std::map<raw::Channel_t, std::vector<std::array<raw::TimeStamp_t, 2>>> fTriggerRangesPerChannel;
     std::map<raw::Channel_t, std::vector<raw::TimeStamp_t>> fTriggerLocationsPerChannel;
     std::vector<raw::TimeStamp_t> fTriggerLocations;
 

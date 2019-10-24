@@ -2,10 +2,10 @@ BEGIN_PROLOG
 
 sbnd_optrigger_alg:
 {
-  OpDetWaveformTimeConversion: 1e-3 # convert ns -> us
-  PulsePolarity: -1
-  TriggerThresholdADCPMT: 10
-  TriggerThresholdADCArapuca: 18
+  PulsePolarityPMT: -1
+  PulsePolarityArapuca: 1
+  TriggerThresholdADCPMT: 9
+  TriggerThresholdADCArapuca: 17
   BeamTriggerEnable: true
   BeamTriggerTime: 0.
   TriggerEnableWindowIsTPCReadoutWindow: true

@@ -70,7 +70,7 @@ namespace opdet{
   // Declare member data here.
     std::string fInputModuleName;
   //  art::ServiceHandle<cheat::PhotonBackTracker> pbt;
-    double fSampling; //in GHz
+    double fSampling; //in MHz
     double fBaselineSample; //in ticks
     double fUseDenoising; 
     double fPulsePolarityPMT; 
@@ -110,7 +110,7 @@ namespace opdet{
     fPulsePolarityArapuca = p.get< int   >("PulsePolarityArapuca");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency())*0.5/64; //in GHz. This number is wrong! Therefore the hard coded value
+    fSampling = (timeService->OpticalClock().Frequency()); // MHz
 
   // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -141,7 +141,6 @@ namespace opdet{
 
     for(auto const& wvf : (*wvfHandle)){
 	fChNumber = wvf.ChannelNumber();
-	std::cout << "Photon channel: " << fChNumber << std::endl;
 	histname.str(std::string());
         histname << "event_" << fEvNumber <<"_opchannel_" << fChNumber << "_histo_" << histogram_number;
 	wvfHist = new TH1D(histname.str().c_str(), "Histogram", wvf.size(),0, double(wvf.size()));
@@ -158,7 +157,8 @@ namespace opdet{
         wvfHist2->Add(wvfHist);
         int i=1;
         while(findPeak(wvfHist,timebin,Area,rms,amplitude,map.pdName(fChNumber))){
-          time = (double)timebin/fSampling;
+          time = wvf.TimeStamp() + (double)timebin/fSampling;
+
 	  if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
 	    phelec=Area/fArea1pePMT;
         //    std::cout << 0 << " " << time << " " << Area << " " << phelec << std::endl;

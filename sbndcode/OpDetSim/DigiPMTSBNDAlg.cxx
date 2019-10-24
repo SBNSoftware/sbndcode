@@ -12,7 +12,7 @@ namespace opdet{
 
   DigiPMTSBNDAlg::DigiPMTSBNDAlg(ConfigurationParameters_t const& config) 
   : fParams(config)
-  , fSampling(fParams.timeService->OpticalClock().Frequency()*500/64) //This is number is wrong!!! Therefore, the hard coded value!!!
+  , fSampling(fParams.timeService->OpticalClock().Frequency()) //This is number is wrong!!! Therefore, the hard coded value!!!
   , fQEDirect(fParams.QEDirect / fParams.larProp->ScintPreScale())
   , fQERefl(fParams.QERefl / fParams.larProp->ScintPreScale())
   {
@@ -23,7 +23,6 @@ namespace opdet{
 	std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.QERefl << " or " << fParams.QEDirect << " seems to be too large! Final QE must be equal or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
 
     fSampling=fSampling/1000.0; //in GHz, to cancel with ns
-    fNsamples = (int)((fParams.PMTPreTrigger+fParams.PMTReadoutWindow)*fSampling);
   
 //Random number engine initialization
     int seed = time(NULL);
@@ -39,10 +38,6 @@ namespace opdet{
     sigma1 = fParams.PMTRiseTime/(std::sqrt(2.0) * (std::sqrt(-std::log(0.1)) - std::sqrt(-std::log(0.9))));
     sigma2 = fParams.PMTFallTime/(std::sqrt(2.0) * (std::sqrt(-std::log(0.1)) - std::sqrt(-std::log(0.9))));
 
-    double ttop = fParams.PMTRiseTime/(1.0- (std::sqrt(std::log(0.9)/std::log(0.1)))); //time it takes to go from 10% of MaxAmplitude to MaxAmplitude. This is included so the signal starts after the pre trigger
-    if(fParams.PMTPreTrigger<(fParams.TransitTime-ttop)) tadd=(fParams.TransitTime-ttop-fParams.PMTPreTrigger);
-    else tadd=(fParams.PMTPreTrigger-fParams.TransitTime+ttop);
-
     pulsesize=(int)((6*sigma2+fParams.TransitTime)*fSampling);
     wsp.resize(pulsesize);
 
@@ -54,21 +49,19 @@ namespace opdet{
   DigiPMTSBNDAlg::~DigiPMTSBNDAlg()
   { }
 
-  void DigiPMTSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double& t_min){
-    std::vector<double> waves(std::vector<double>(fNsamples,fParams.PMTBaseline));
-    t_min=FindMinimumTime(simphotons, ch, pdtype, auxmap);
-    CreatePDWaveform(simphotons, t_min, waves, ch, pdtype, auxmap);
-    waveforms[ch].resize(fNsamples);
-    waveforms[ch] = std::vector<short unsigned int> (waves.begin(), waves.end());
+  void DigiPMTSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double start_time, unsigned n_sample) {
+    std::vector<double> waves(n_sample, fParams.PMTBaseline);
+    CreatePDWaveform(simphotons, start_time, waves, ch, pdtype, auxmap);
+    waveform.resize(n_sample);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
-  void DigiPMTSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<std::vector<short unsigned int>>& waveforms, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap, double& t_min){	
+  void DigiPMTSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample){	
 
-    std::vector<double> waves(std::vector<double>(fNsamples,fParams.PMTBaseline));
-    t_min=FindMinimumTimeLite(litesimphotons, ch, pdtype, auxmap);
-    CreatePDWaveformLite(litesimphotons, t_min, waves, ch, pdtype, auxmap);
-    waveforms[ch].resize(fNsamples);
-    waveforms[ch] = std::vector<short unsigned int> (waves.begin(), waves.end());
+    std::vector<double> waves(n_sample, fParams.PMTBaseline);
+    CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype, auxmap);
+    waveform.resize(n_sample);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
 
@@ -95,9 +88,9 @@ namespace opdet{
     size_t min=0;
     size_t max=0;
 
-    if(time_bin<fNsamples){
+    if(time_bin<wave.size()){
 	min=time_bin;
-	max=time_bin+pulsesize < fNsamples ? time_bin+pulsesize : fNsamples;
+	max=time_bin+pulsesize < wave.size() ? time_bin+pulsesize : wave.size();
 	for(size_t i = min; i<= max; i++){
 	  wave[i]+= wsp[i-min];	
 	}	
@@ -111,7 +104,7 @@ namespace opdet{
     for(size_t i=0; i<simphotons.size(); i++){//simphotons is here reflected light. To be added for all PMTs
       if((gRandom->Uniform(1.0))<fQERefl){ 
         if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        AddSPE((tadd+ttsTime+simphotons[i].Time-t_min)*fSampling,wave);
+        AddSPE((fParams.TransitTime+ttsTime+simphotons[i].Time-t_min)*fSampling,wave);
       }
     }
     if(pdtype=="pmt"){ //To add direct light for TPB coated PMTs
@@ -123,7 +116,7 @@ namespace opdet{
         if((gRandom->Uniform(1.0))<fQEDirect){ 
           if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
-          AddSPE((tadd+ttsTime+auxphotons[j].Time+ttpb-t_min)*fSampling,wave);
+          AddSPE((fParams.TransitTime+ttsTime+auxphotons[j].Time+ttpb-t_min)*fSampling,wave);
         }
       }
     }
@@ -140,7 +133,7 @@ namespace opdet{
       for(int i=0; i<mapMember.second; i++){
    	 if((gRandom->Uniform(1.0))<(fQERefl)){
            if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
- 	   AddSPE((tadd+ttsTime+mapMember.first-t_min)*fSampling,wave); }
+ 	   AddSPE((fParams.TransitTime+ttsTime+mapMember.first-t_min)*fSampling,wave); }
       }
     }
     if(pdtype=="pmt"){ //To add direct light for TPB coated PMTs
@@ -154,7 +147,7 @@ namespace opdet{
    	  if((gRandom->Uniform(1.0))<(fQEDirect)){
            if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
            ttpb = timeTPB->GetRandom(); //for including TPB emission time
-           AddSPE((tadd+ttsTime+mapMember2.first+ttpb-t_min)*fSampling,wave);
+           AddSPE((fParams.TransitTime+ttsTime+mapMember2.first+ttpb-t_min)*fSampling,wave);
           }
         }
       }
@@ -168,7 +161,7 @@ namespace opdet{
 
   void DigiPMTSBNDAlg::CreateSaturation(std::vector<double>& wave){ //Implementing saturation effects
 
-    for(size_t k=0; k<fNsamples; k++){ 
+    for(size_t k=0; k<wave.size(); k++){ 
 	if(wave[k]<(fParams.PMTBaseline+fParams.PMTSaturation*fParams.PMTChargeToADC*fParams.PMTMeanAmplitude))
 	  wave[k]=fParams.PMTBaseline+fParams.PMTSaturation*fParams.PMTChargeToADC*fParams.PMTMeanAmplitude;	  
     }
@@ -247,10 +240,8 @@ namespace opdet{
   (Config const& config)
   {
     // settings
-    fBaseConfig.PMTReadoutWindow         = config.pmtreadoutWindow();
     fBaseConfig.PMTChargeToADC           = config.pmtchargeToADC();
     fBaseConfig.PMTBaseline              = config.pmtbaseline();
-    fBaseConfig.PMTPreTrigger            = config.pmtpreTrigger();
     fBaseConfig.PMTSaturation            = config.pmtsaturation();
     fBaseConfig.QEDirect                 = config.qEDirect();
     fBaseConfig.QERefl                   = config.qERefl();
