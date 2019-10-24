@@ -452,31 +452,31 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
     art::Handle< std::vector<int>> badChannelHandle;
     event.getByLabel(fBadChannelProducerLabel, badChannelHandle);
 
-    std::cout<<"Pre TPC loop (L455ish)"<<std::endl;
+    //    std::cout<<"Pre TPC loop (L455ish)"<<std::endl;
 
     // Now start a loop over the individual TPCs to build out the structures for RawDigits and Wires
     for(size_t tpcID = 0; tpcID < fRawDigitProducerLabelVec.size(); tpcID++)
     {
-        std::cout<<"starting TPC loop"<<std::endl;
+      //std::cout<<"starting TPC loop"<<std::endl;
         art::Handle< std::vector<raw::RawDigit> > rawDigitHandle;
         event.getByLabel(fRawDigitProducerLabelVec[tpcID], rawDigitHandle);
 
-	std::cout << "rawDigitHandle: " << rawDigitHandle << std::endl;
+	//std::cout << "rawDigitHandle: " << rawDigitHandle << std::endl;
 	art::Handle< std::vector<recob::Wire> > wireHandle;;
         event.getByLabel(fWireProducerLabelVec[tpcID], wireHandle);
 
-	std::cout << "wireHandle" << wireHandle << std::endl;
+	//std::cout << "wireHandle" << wireHandle << std::endl;
 
         if (!rawDigitHandle.isValid() || !wireHandle.isValid()) 
 	{
-	  std::cout<<"Inside TPC loop if statement (L470ish)"<<std::endl;
+	  //	  std::cout<<"Inside TPC loop if statement (L470ish)"<<std::endl;
 	  return;
         }
         for(const auto& wire : *wireHandle) channelToWireMap[wire.Channel()] = &wire;
         
         for(const auto& rawDigit : *rawDigitHandle) chanToRawDigitMap[rawDigit.Channel()] = &rawDigit;
     }
-    std::cout<<"Post TPC loop (L470ish)"<<std::endl;
+    //    std::cout<<"Post TPC loop (L470ish)"<<std::endl;
 
     // Now we create a data structure to relate hits to their channel ID
     using ChanToHitVecMap = std::unordered_map<raw::ChannelID_t,std::vector<const recob::Hit*>>;
@@ -508,11 +508,11 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
     std::vector<int> nSimulatedWiresVec = {0,0,0};
     
     unsigned int lastwire=-1;
-    std::cout<<"Just before eternal loop of loops (L502)"<<std::endl;
+    //std::cout<<"Just before eternal loop of loops (L502)"<<std::endl;
     
     for(const auto& partToChanInfo : partToChanToTDCToIDEMap)
     {
-      std::cout<<"Starting eternal loop of loops"<<std::endl;
+      //std::cout<<"Starting eternal loop of loops"<<std::endl;
       TrackIDToMCParticleMap::const_iterator trackIDToMCPartItr = trackIDToMCParticleMap.find(partToChanInfo.first);
         
         if (trackIDToMCPartItr == trackIDToMCParticleMap.end()) continue;
@@ -735,7 +735,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
                         // Find a match?
                         if (bestHit)
                         {
-  			    std::cout << "found a bestHit (L720)" << std::endl;
+			  //			    std::cout << "found a bestHit (L720)" << std::endl;
 			    nElectronsTotalBest = 0.;
                             hitPeakTimeBest     = bestHit->PeakTime();
                             hitIntegralBest     = bestHit->Integral();
