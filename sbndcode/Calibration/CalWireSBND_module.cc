@@ -26,8 +26,11 @@
 #include "messagefacility/MessageLogger/MessageLogger.h" 
 #include "cetlib_except/exception.h"
 #include "cetlib/search_path.h"
+#include "art/Utilities/make_tool.h"
+#include "lardata/ArtDataHelper/WireCreator.h"
 
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
+#include "sbndcode/Calibration/IROIFinder.h"
 #include "larcore/Geometry/Geometry.h"
 //#include "Filters/ChannelFilter.h"
 
@@ -50,7 +53,7 @@ namespace caldata {
 
   public:
     
-    typedef lar::sparse_vector<float> RegionsOfInterest_t;
+    //typedef lar::sparse_vector<float> RegionsOfInterest_t;
 
     // create calibrated signals on wires. this class runs 
     // an fft to remove the electronics shaping.     
@@ -61,7 +64,16 @@ namespace caldata {
     void beginJob(); 
     void endJob();                 
     void reconfigure(fhicl::ParameterSet const& p);
- 
+
+    std::unique_ptr<sbnd_tool::IROIFinder> fROITool;
+
+    // Define the waveform container
+    using Waveform        = std::vector<float>;
+    
+    // Define the ROI and its container
+    using CandidateROI    = std::pair<size_t, size_t>;
+    using CandidateROIVec = std::vector<CandidateROI>;
+
   private:
     
   //  int          fDataSize;          ///< size of raw data on one wire
@@ -90,6 +102,8 @@ namespace caldata {
   {
     fSpillName="";
     this->reconfigure(pset);
+
+    fROITool = art::make_tool<sbnd_tool::IROIFinder>(pset.get<fhicl::ParameterSet>("ROITool"));
 
     //--Hec if(fSpillName.size()<1) produces< std::vector<recob::Wire> >();
     //--Hec else produces< std::vector<recob::Wire> >(fSpillName);
@@ -243,11 +257,26 @@ namespace caldata {
       if(fDoBaselineSub) SubtractBaseline(holder);
 
       // Make a single ROI that spans the entire data size
-      RegionsOfInterest_t sparse_holder;
-      sparse_holder.add_range(0,holder.begin(),holder.end());
-      auto view = geom->View(digitVec->Channel());
-      wirecol->emplace_back(sparse_holder,digitVec->Channel(),view);
-    
+      //RegionsOfInterest_t sparse_holder;
+      //sparse_holder.add_range(0,holder.begin(),holder.end());
+      CandidateROIVec candROIVec;
+      fROITool->FindROIs( holder, channel, candROIVec);//calculates ROI and returns it to roiVec.
+      //auto view = geom->View(channel);
+      recob::Wire::RegionsOfInterest_t roiVec;
+
+      //looping over roiVec to make a RegionOfInterest_t object.
+      for(auto const& CandidateROI: candROIVec){
+	size_t roiStart = CandidateROI.first;
+	size_t roiStop = CandidateROI.second;
+	std::vector<float> roiHolder;
+	for(size_t i_holder=roiStart; i_holder<=roiStop; i_holder++){
+	  roiHolder.push_back(holder[i_holder]);
+	}
+	roiVec.add_range(roiStart, std::move(roiHolder));
+      }
+      wirecol->push_back(recob::WireCreator(std::move(roiVec),*digitVec).move());
+
+
       // add an association between the last object in wirecol--Hec
       // (that we just inserted) and digitVec
       if (!util::CreateAssn(*this, evt, *wirecol, digitVec, *WireDigitAssn, fSpillName)) {
