@@ -73,9 +73,7 @@ private:
   unsigned int fNPFParticles;
   unsigned int fNPrimaries;
   unsigned int fNPrimaryDaughters;
-  float fDaughterLongestLength;
 
-  std::vector<int>                  *fDaughterTrackIDs;
   std::vector<bool>                 *fDaughterLongestTrack;
   std::vector<float>                *fDaughterTrackLengths;
   std::vector< std::vector<float> > *fDaughterTrackdEdx;
@@ -90,7 +88,7 @@ private:
   size_t                                     GetNeutrinoID(const std::vector< art::Ptr<recob::PFParticle> > &pfps, unsigned int &nPrimaries) const;
   std::vector< art::Ptr<recob::PFParticle> > GetNeutrinoDaughters(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const size_t &neutrinoID) const;
   std::vector< art::Ptr<recob::Track> >      GetNeutrinoDaughterTracks(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc) const;
-  int                                        GetLongestTrackID(const std::vector< art::Ptr<recob::Track> > &trks, float &length) const;
+  int                                        GetLongestTrackID(const std::vector< art::Ptr<recob::Track> > &trks) const;
 
 };
 
@@ -103,8 +101,6 @@ sbnd::AnalyseEvents::AnalyseEvents(fhicl::ParameterSet const& p)
     fNPFParticles(99999),
     fNPrimaries(99999),
     fNPrimaryDaughters(99999),
-    fDaughterLongestLength(-99999.),
-    fDaughterTrackIDs(nullptr),
     fDaughterLongestTrack(nullptr),
     fDaughterTrackLengths(nullptr),
     fDaughterTrackdEdx(nullptr),
@@ -131,7 +127,6 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
   fNPrimaryDaughters    = 0;
  
   // Make sure the vector is empty at the beginning of the event
-  fDaughterTrackIDs->clear();
   fDaughterLongestTrack->clear();
   fDaughterTrackLengths->clear();
   fDaughterTrackdEdx->clear();
@@ -196,7 +191,7 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
   }
  
   // Get the ID of the longest track in the event so we can add the flag to our tree
-  int longestID = this->GetLongestTrackID(neutrinoDaughterTracks, fDaughterLongestLength);
+  int longestID = this->GetLongestTrackID(neutrinoDaughterTracks);
   if(longestID == -1){
     std::cerr << " Error: Invalid longest track ID, there must not be a valid track to analyse. Skipping. " << std::endl;
     return;
@@ -204,7 +199,6 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
 
   for(const art::Ptr<recob::Track> &trk : neutrinoDaughterTracks){
     // Fill the TTree variable
-    fDaughterTrackIDs->push_back(trk->ID());
     fDaughterTrackLengths->push_back(trk->Length());
 
     // Fill the longest track boolean
@@ -254,13 +248,10 @@ void sbnd::AnalyseEvents::beginJob()
   fTree->Branch("nPFParticles",&fNPFParticles,"nPFParticles/i");
   fTree->Branch("nPrimaries",&fNPrimaries,"nPrimaries/i");
   fTree->Branch("nPrimaryDaughters",&fNPrimaryDaughters,"nPrimaryDaughters/i");
-  fTree->Branch("longestTrackLength",&fDaughterLongestLength,"longestTrackLength/F");
-  fTree->Branch("daughterTrackIDs",&fDaughterTrackIDs);
   fTree->Branch("daughterTrackLengths",&fDaughterTrackLengths);
   fTree->Branch("daughterLongestTrack",&fDaughterLongestTrack);
   fTree->Branch("daughterTrackdEdx",&fDaughterTrackdEdx);
   fTree->Branch("daughterTrackResidualRange",&fDaughterTrackResidualRange);
-
 }
 
 void sbnd::AnalyseEvents::endJob()
@@ -322,7 +313,7 @@ std::vector< art::Ptr<recob::Track> > sbnd::AnalyseEvents::GetNeutrinoDaughterTr
   return daughterTracks;
 }
 
-int sbnd::AnalyseEvents::GetLongestTrackID(const std::vector< art::Ptr<recob::Track> > &trks, float &length) const{
+int sbnd::AnalyseEvents::GetLongestTrackID(const std::vector< art::Ptr<recob::Track> > &trks) const{
   // Initialise longest track variable
   float longest   = -99999.;
   int   longestID = -1;
@@ -334,7 +325,6 @@ int sbnd::AnalyseEvents::GetLongestTrackID(const std::vector< art::Ptr<recob::Tr
       longestID = trk->ID();
     }
   }
-  length = longest;
   return longestID;
 }
 
