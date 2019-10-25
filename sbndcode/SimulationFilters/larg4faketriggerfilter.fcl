@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+sbnd_larg4faketriggerfilter:
+{
+  module_type:     "LArG4FakeTriggerFilter" 
+
+  BeamTimeMin:     0.         # Minimum time of beam window [us]
+  BeamTimeMax:     1.6        # Maximum time of beam window [us]
+  EnergyDeposit:   10         # Minimum energy deposit in TPC for trigger [MeV]
+  LArG4ModuleName: "largeant" # Name of Geant4 producer module
+}
+
+END_PROLOG

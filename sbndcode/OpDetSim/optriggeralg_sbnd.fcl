@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+sbnd_optrigger_alg:
+{
+  PulsePolarityPMT: -1
+  PulsePolarityArapuca: 1
+  TriggerThresholdADCPMT: 9
+  TriggerThresholdADCArapuca: 17
+  BeamTriggerEnable: true
+  BeamTriggerTime: 0.
+  TriggerEnableWindowIsTPCReadoutWindow: true
+  ReadoutWindowPreTrigger: 1
+  ReadoutWindowPostTrigger: 3
+  ReadoutWindowPreTriggerBeam: 1
+  ReadoutWindowPostTriggerBeam: 23
+}
+END_PROLOG
