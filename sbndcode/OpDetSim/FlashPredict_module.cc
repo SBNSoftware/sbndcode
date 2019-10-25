@@ -41,6 +41,7 @@
 #include "OpT0FinderTypes.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 #include "TTree.h"
+#include "TH1.h"
 #include <memory>
 
 class FlashPredict;
@@ -87,6 +88,9 @@ private:
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
   TTree* _flashmatch_acpt_tree;
   TTree* _flashmatch_nuslice_tree;
+  TH1F *ophittime;
+  // = new TH1F("ophittime","ophittime",100,0.,2.0); // in us
+
   std::vector<float> _pe_reco_v, _pe_hypo_v;
   float _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
   float _nuvtx_x, _nuvtx_y, _nuvtx_z, _nuvtx_q;
@@ -117,6 +121,8 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 20);   // ~40000/1600
   //  m_flashMatchManager.Configure(p.get<flashana::Config_t>("FlashPredictConfig"));
   art::ServiceHandle<art::TFileService> tfs;
+
+  ophittime = tfs->make<TH1F>("ophittime","ophittime",1100,-0.2,2.0); // in us
 
   // Tree to store ACPT track flash-matching information
   // _flashmatch_acpt_tree = tfs->make<TTree>("ACPTFMtree","ACPT FlashPredict tree");
@@ -314,8 +320,7 @@ void FlashPredict::produce(art::Event& e)
       _nuvtx_x=xave/norm;
       _nuvtx_y=yave/norm;
       _nuvtx_z=zave/norm;
-      // std::cout << "neutrino center " << _nuvtx_x <<  "  " << _nuvtx_y << "    " << _nuvtx_z << std::endl;
-
+      //   std::cout << "neutrino center " << _nuvtx_x <<  "  " << _nuvtx_y << "    " << _nuvtx_z << std::endl;
 
       // store PMT photon counts in the tree as well
       double PMTxyz[3];
@@ -324,12 +329,28 @@ void FlashPredict::produce(art::Event& e)
       double sum_By=0; double sum_Bz=0;
       double sum_D=0; double sum=0;
       double sum_Cy=0;double sum_Cz=0;
+      ophittime->Reset();
       for(size_t j = 0; j < OpHitCollection.size(); j++){
         recob::OpHit oph = OpHitCollection[j];
-        // for(auto const& oph : *ophit_h) {
-        // if ( map.pdType(oph.OpChannel(),"pmt")|| map.pdType(oph.OpChannel(),"barepmt")) {
         if ( map.pdType(oph.OpChannel(),"pmt")) {
           if ( (oph.PeakTime()>fBeamWindowStart) && (oph.PeakTime()< fBeamWindowEnd) ) {
+            geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
+            if ((it==0 && PMTxyz[0]<0) || (it==1 && PMTxyz[0]>0) ){
+	    ophittime->Fill(oph.PeakTime(),100*oph.PE());
+              // Add up the position, weighting with PEs
+	    }
+	  }
+	}
+      }
+      auto ibin =  ophittime->GetMaximumBin();
+      float flashtime = ibin*0.002;  // in us
+      float lowedge = flashtime-0.01;
+      float highedge = flashtime+0.09;
+      //      std::cout << "lowedge " << lowedge << " highedge " << highedge << std::endl;
+      for(size_t j = 0; j < OpHitCollection.size(); j++){
+        recob::OpHit oph = OpHitCollection[j];
+        if ( map.pdType(oph.OpChannel(),"pmt")) {
+          if ( (oph.PeakTime()>lowedge) && (oph.PeakTime()< highedge) ) {
             geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
             // std::cout << oph.OpChannel() << "   " << oph.PeakTime() << "   " << oph.PE()
             //  <<  " PMT pos:   " << PMTxyz[0] <<"    " << PMTxyz[1] <<"    " << PMTxyz[2] << std::endl;
@@ -353,6 +374,7 @@ void FlashPredict::produce(art::Event& e)
       }
 
       if (pnorm>0) {
+	_flashtime=flashtime;
         _flash_pe=pnorm;
         // _flash_y=sumy/pnorm;
         // _flash_z=sumz/pnorm;
