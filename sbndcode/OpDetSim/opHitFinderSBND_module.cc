@@ -38,6 +38,7 @@
 //#include "larsim/MCCheater/PhotonBackTracker.h"
 
 #include <memory>
+#include <algorithm>
 #include "TMath.h"
 #include "TH1D.h"
 #include "TRandom3.h"
@@ -82,16 +83,15 @@ namespace opdet{
     int fThresholdArapuca; //in ADC
     int fEvNumber;
     int fChNumber;
+    std::vector<short unsigned int> fwaveform;
     //int fSize;
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
-    TH1D* wvfHist;          //processed waveform histogram 
-    //TH1D* wvfHistPrint;          //processed waveform histogram 
-    void subtractBaseline(TH1D* hist, std::string pdtype, double& rms);
-    bool findPeak(TH1D* h, size_t& time, double& Area, double rms, double& amplitude, std::string type);
-    void denoise(TH1D* h);
+    void subtractBaseline(std::vector<short unsigned int>& waveform, std::string pdtype, double& rms);
+    bool findPeak(std::vector<short unsigned int>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
+    void denoise(std::vector<short unsigned int>& waveform);
     void TV1D_denoise(float* input, float*& output, const int width, const float lambda);
-    std::stringstream histname;
+//    std::stringstream histname;
   };
 
   opHitFinderSBND::opHitFinderSBND(fhicl::ParameterSet const & p)
@@ -125,8 +125,8 @@ namespace opdet{
     std::unique_ptr< std::vector< recob::OpHit > > pulseVecPtr(std::make_unique< std::vector< recob::OpHit > > ());  
 
     art::ServiceHandle<art::TFileService> tfs;
-    histname.str(std::string());
-    histname << "event_" << fEvNumber;
+ //   histname.str(std::string());
+   // histname << "event_" << fEvNumber;
     art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
     e.getByLabel(fInputModuleName, wvfHandle);
 
@@ -135,33 +135,28 @@ namespace opdet{
     }
 
     size_t timebin=0;
-    double FWHM=1, Area=1, phelec, fasttotal=3./4., rms=0, amplitude=0, time=0;
+    double FWHM=1, Area=0, phelec, fasttotal=3./4., rms=0, amplitude=0, time=0;
     unsigned short frame=1;
-    int histogram_number = 0;
+//    int histogram_number = 0;
 
     for(auto const& wvf : (*wvfHandle)){
 	fChNumber = wvf.ChannelNumber();
-	histname.str(std::string());
-        histname << "event_" << fEvNumber <<"_opchannel_" << fChNumber << "_histo_" << histogram_number;
-	wvfHist = new TH1D(histname.str().c_str(), "Histogram", wvf.size(),0, double(wvf.size()));
+        fwaveform.resize(wvf.size());
 	for(unsigned int i=0;i<wvf.size();i++){
-	  wvfHist->SetBinContent(i,wvf[i]);
+	  fwaveform[i]=wvf[i];
 	}
-	subtractBaseline(wvfHist, map.pdName(fChNumber), rms);
+	subtractBaseline(fwaveform, map.pdName(fChNumber), rms);
 	if((map.pdName(fChNumber)=="pmt") || (map.pdName(fChNumber)== "barepmt")){
 	}else{
-	  if(fUseDenoising==1) denoise(wvfHist);    
+	  if(fUseDenoising==1) denoise(fwaveform);    
 	}
-	//Create a new histogram
-	TH1D *wvfHist2 = tfs->make< TH1D >(histname.str().c_str(), "Hist", wvf.size(), 0, double(wvf.size()));
-        wvfHist2->Add(wvfHist);
         int i=1;
-        while(findPeak(wvfHist,timebin,Area,rms,amplitude,map.pdName(fChNumber))){
+        while(findPeak(fwaveform,timebin,Area,rms,amplitude,map.pdName(fChNumber))){
           time = wvf.TimeStamp() + (double)timebin/fSampling;
 
 	  if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
 	    phelec=Area/fArea1pePMT;
-        //    std::cout << 0 << " " << time << " " << Area << " " << phelec << std::endl;
+         //   std::cout << 0 << " " << time << " " << Area << " " << phelec << std::endl;
 	  }else{
 	    phelec=Area/fArea1peSiPM;
           //  std::cout << 1 << " " << time << " " << Area << " " << phelec << std::endl;
@@ -170,21 +165,21 @@ namespace opdet{
 	  recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);//including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
           pulseVecPtr->emplace_back(opHit);
         }
-        histogram_number += 1;
-	delete wvfHist;
+   //     histogram_number += 1;
+	fwaveform.clear();
     }
     e.put(std::move(pulseVecPtr));
   }
 
   DEFINE_ART_MODULE(opHitFinderSBND)
 
-  void opHitFinderSBND::subtractBaseline(TH1D* h, std::string pdtype, double& rms){
+  void opHitFinderSBND::subtractBaseline(std::vector<short unsigned int>& waveform, std::string pdtype, double& rms){
     double baseline = 0.0; 
     rms=0.0;
     int cnt = 0;
     for(int i=0; i<fBaselineSample; i++){
-	baseline+=h->GetBinContent(i);
-	rms+=pow((h->GetBinContent(i)),2.0);
+	baseline+=waveform[i];
+	rms+=pow(waveform[i],2.0);
         cnt++;
     }
     baseline=baseline/cnt;
@@ -192,19 +187,20 @@ namespace opdet{
     rms=rms/sqrt(cnt-1);
 
     if(pdtype=="pmt" || pdtype == "barepmt"){
-        for(int i=0; i<h->GetNbinsX(); i++)h->SetBinContent(i, (fPulsePolarityPMT*(h->GetBinContent(i)-baseline)));
+        for(unsigned int i=0; i<waveform.size(); i++) waveform[i]=fPulsePolarityPMT*(waveform[i]-baseline);
     }else{
-        for(int i=0; i<h->GetNbinsX(); i++)h->SetBinContent(i, (fPulsePolarityArapuca*(h->GetBinContent(i)-baseline)));
+        for(unsigned int i=0; i<waveform.size(); i++) waveform[i]=fPulsePolarityArapuca*(waveform[i]-baseline);
     }
   }
 
-  bool opHitFinderSBND::findPeak(TH1D* h, size_t& time, double& Area, double rms, double& amplitude, std::string type){
+  bool opHitFinderSBND::findPeak(std::vector<short unsigned int>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type){
 
-    //Gets info from highest peak and suppress it in histogram
-    double aux = h->GetMaximum();
+    //Gets info from highest peak and suppress it 
+    double aux = *max_element(waveform.begin(), waveform.end());
     double max;
-    size_t time_end, bin, binmax = h->GetMaximumBin();
+    size_t time_end, bin, binmax = distance(waveform.begin(),max_element(waveform.begin(), waveform.end()));
     int threshold;
+    Area=0;
 
     if(type=="pmt" || type == "barepmt"){
       threshold=fThresholdPMT;
@@ -220,35 +216,36 @@ namespace opdet{
 
     while(aux>=rms){
         bin++;	
-        aux = h->GetBinContent(bin);
+        aux = waveform[bin];
     }
     time_end=bin-1; //looking for the length of the peak
 
     aux=max;
     while(aux>=rms){
         bin--;
-        aux = h->GetBinContent(bin);
+        aux = waveform[bin];
     }
     time = bin+1; //for rise time
 
-    Area=(h->Integral(time,time_end))/fSampling;
+    for(unsigned int j=time; j<=time_end; j++) Area+=waveform[j];
+    Area=Area/fSampling;
 
     bin = time;
-    aux = h->GetBinContent(time);  
+    aux = waveform[time];  
 
    while(aux>=rms){
-        h->SetBinContent(bin,0.0);
+        waveform[bin]=0.0;
         bin++;
-        aux = h->GetBinContent(bin);
+        aux = waveform[bin];
     }
     //std::cout << time << " " << time_end << " " << (time_end - time);
     time=binmax; //returning the peak time
     return true;		
   }
 
-  void opHitFinderSBND::denoise(TH1D* h){
+  void opHitFinderSBND::denoise(std::vector<short unsigned int>& waveform){
 
-    int wavelength = (int)h->GetNbinsX();
+    int wavelength = waveform.size();
     float lambda = 10.0;
     float* input;
     float* output;
@@ -259,7 +256,7 @@ namespace opdet{
     output = (float*)malloc(sizeof(*output)*wavelength);
 
     for(int i=0; i<wavelength; i++){
-      input[i] = h->GetBinContent(i);
+      input[i] = waveform[i];
       output[i] = input[i];
     }
 
@@ -270,7 +267,7 @@ namespace opdet{
     //std::cout <<"denoise denoise" << std::endl;
 
     for(int i=0; i<wavelength; i++){
-      if(output[i])h->SetBinContent(i,output[i]);
+      if(output[i]) waveform[i]=output[i];
     }
 
  }
