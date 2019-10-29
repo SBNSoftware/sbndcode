@@ -116,9 +116,9 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fSpacePointProducer = p.get<std::string>("SpacePointProducer", "pandora" );
   fBeamWindowStart = p.get<float>("BeamWindowStart", 0.0);
   fBeamWindowEnd   = p.get<float>("BeamWindowEnd", 4000.0);  // in ns
-  fMaxTotalPE      = p.get<float>("MaxTotalPE", 5000.0);
+  fMaxTotalPE      = p.get<float>("MaxTotalPE", 500000000.0);
   fChargeToNPhotonsShower   = p.get<float>("ChargeToNPhotonsShower", 1.0);  // ~40000/1600
-  fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 20);   // ~40000/1600
+  fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 1.0);   // ~40000/1600
   //  m_flashMatchManager.Configure(p.get<flashana::Config_t>("FlashPredictConfig"));
   art::ServiceHandle<art::TFileService> tfs;
 
@@ -295,15 +295,14 @@ void FlashPredict::produce(art::Event& e)
       flashana::QCluster_t this_cl = lightCluster[it];
       flashana::QPoint_t qp = this_cl[i];
       //      std::cout << i << " " << qp.x << " " << qp.y << " " << qp.z << " " << qp.q << std::endl;
-      // norm+=0.001*qp.q;
-      // xave+=0.001*qp.q*qp.x;
-      // yave+=0.001*qp.q*qp.y;
-      // zave+=0.001*qp.q*qp.z;
-      // norm+=0.001*qp.q;
-      xave+=0.001*qp.q*qp.q*qp.x;
-      yave+=0.001*qp.q*qp.q*qp.y;
-      zave+=0.001*qp.q*qp.q*qp.z;
-      norm+=0.001*qp.q*qp.q;
+      xave+=0.001*qp.q*qp.x;
+      yave+=0.001*qp.q*qp.y;
+      zave+=0.001*qp.q*qp.z;
+      norm+=0.001*qp.q;
+      // xave+=0.001*qp.q*qp.q*qp.x;
+      // yave+=0.001*qp.q*qp.q*qp.y;
+      // zave+=0.001*qp.q*qp.q*qp.z;
+      // norm+=0.001*qp.q*qp.q;
       _nuvtx_q+=qp.q;
       // calculate number of photons for this space point
 
@@ -337,16 +336,15 @@ void FlashPredict::produce(art::Event& e)
             geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
             if ((it==0 && PMTxyz[0]<0) || (it==1 && PMTxyz[0]>0) ){
 	    ophittime->Fill(oph.PeakTime(),100*oph.PE());
-              // Add up the position, weighting with PEs
 	    }
 	  }
 	}
       }
       auto ibin =  ophittime->GetMaximumBin();
-      float flashtime = ibin*0.002;  // in us
+      float flashtime = (ibin*0.002)-0.2;  // in us
       float lowedge = flashtime-0.01;
       float highedge = flashtime+0.09;
-      //      std::cout << "lowedge " << lowedge << " highedge " << highedge << std::endl;
+      //     std::cout << "lowedge " << lowedge << " highedge " << highedge << std::endl;
       for(size_t j = 0; j < OpHitCollection.size(); j++){
         recob::OpHit oph = OpHitCollection[j];
         if ( map.pdType(oph.OpChannel(),"pmt")) {
