@@ -41,6 +41,8 @@
 #include "OpT0FinderTypes.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 #include "TTree.h"
+#include "TFile.h"
+#include "TGraph.h"
 #include "TH1.h"
 #include <memory>
 
@@ -67,7 +69,7 @@ private:
   //  ::flashana::FlashMatchManager m_flashMatchManager; ///< The flash match manager
   // art::InputTag fFlashProducer;
   // art::InputTag fT0Producer; // producer for ACPT in-time anab::T0 <-> recob::Track assocaition
-  std::string fPandoraProducer, fSpacePointProducer, fOpHitProducer;
+  std::string fPandoraProducer, fSpacePointProducer, fOpHitProducer, fInputFilename;
   float fBeamWindowEnd, fBeamWindowStart;
   float fMaxTotalPE;
   float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
@@ -86,21 +88,27 @@ private:
   void AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,
                     const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h,
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
+
+  // root stuff
   TTree* _flashmatch_acpt_tree;
   TTree* _flashmatch_nuslice_tree;
   TH1F *ophittime;
-  // = new TH1F("ophittime","ophittime",100,0.,2.0); // in us
-
+						
+  // Tree variables
   std::vector<float> _pe_reco_v, _pe_hypo_v;
   float _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
   float _nuvtx_x, _nuvtx_y, _nuvtx_z, _nuvtx_q;
   float _flash_x,_flash_y,_flash_z,_flash_pe;
-  float _flash_r;
+  float _flash_r, _score;
   int _evt, _run, _sub;
   float _flashtime;
   float _flashpe;
   // PFP map
   std::map<unsigned int, unsigned int> _pfpmap;
+
+  std::vector<float> dysp,dzsp,rrsp,dymean,dzmean,rrmean;
+  int rr_nbins,dy_nbins,dz_nbins;
+
 };
 
 FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
@@ -119,7 +127,8 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fMaxTotalPE      = p.get<float>("MaxTotalPE", 500000000.0);
   fChargeToNPhotonsShower   = p.get<float>("ChargeToNPhotonsShower", 1.0);  // ~40000/1600
   fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 1.0);   // ~40000/1600
-  //  m_flashMatchManager.Configure(p.get<flashana::Config_t>("FlashPredictConfig"));
+  fInputFilename = p.get<std::string>("InputFileName","fmplots.root");  // root file with histograms for match score calc
+
   art::ServiceHandle<art::TFileService> tfs;
 
   ophittime = tfs->make<TH1F>("ophittime","ophittime",1100,-0.2,2.0); // in us
@@ -154,8 +163,72 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   _flashmatch_nuslice_tree->Branch("nuvtx_x",&_nuvtx_x,"nuvtx_x/F");
   _flashmatch_nuslice_tree->Branch("nuvtx_y",&_nuvtx_y,"nuvtx_y/F");
   _flashmatch_nuslice_tree->Branch("nuvtx_z",&_nuvtx_z,"nuvtx_z/F");
+  _flashmatch_nuslice_tree->Branch("score",&_score,"score/F");
+
+  //read histograms and fill vectors for match score calculation
+  std::string fname;
+  cet::search_path sp("FW_SEARCH_PATH");
+  sp.find_file(fInputFilename, fname);
+  //  std::unique_ptr<TFile> infile(new TFile(fname.c_str(), "READ"));
+  TFile *infile = new TFile(fname.c_str(), "READ");
+  if(!infile->IsOpen())
+    {
+      throw cet::exception("FlashPredictSBND") << "Could not find the light-charge match root file '" << fname << "'!\n";
+    }
+  //
+  TH1 *temphisto = (TH1*)infile->Get("rrp");
+  rr_nbins = temphisto->GetNbinsX();
+  if (rr_nbins<=0) {
+    std::cout << " problem with input histos for rr " << rr_nbins << " bins " << std::endl;
+    rr_nbins=1;
+    rrmean.push_back(0);
+    rrsp.push_back(0.001);
+  }
+  else {
+  for (int ib=0;ib<rr_nbins;++ib) {
+    rrmean.push_back(temphisto->GetBinContent(ib));
+    rrsp.push_back(temphisto->GetBinError(ib));
+  }
+  }
+  //
+  temphisto = (TH1*)infile->Get("dyp");
+  dy_nbins = temphisto->GetNbinsX();
+  if (dy_nbins<=0) {
+    std::cout << " problem with input histos for dy " << dy_nbins << " bins " << std::endl;
+    dy_nbins=1;
+    dymean.push_back(0);
+    dysp.push_back(0.001);
+  }
+  else {
+  for (int ib=0;ib<dy_nbins;++ib) {
+    dymean.push_back(0.0);
+    // not enough stats to believe mean values different than 0
+    //    dymean.push_back(temphisto->GetBinContent(ib));
+    dysp.push_back(temphisto->GetBinError(ib));
+  }
+  }
+  //
+  temphisto = (TH1*)infile->Get("dzp");
+  dz_nbins = temphisto->GetNbinsX();
+  if (dz_nbins<=0) {
+    std::cout << " problem with input histos for dz " << dz_nbins << " bins " << std::endl;
+    dz_nbins=1;
+    dzmean.push_back(0);
+    dzsp.push_back(0.001);
+  }
+  else {
+  for (int ib=0;ib<dz_nbins;++ib) {
+    dzmean.push_back(0.0);
+    // not enough stats to believe mean values different than 0
+    //    dzmean.push_back(temphisto->GetBinContent(ib));
+    dzsp.push_back(temphisto->GetBinError(ib));
+  }
+  }
+  //
+  infile->Close();
 
   // Call appropriate produces<>() functions here.
+
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 } // FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
 
@@ -304,14 +377,6 @@ void FlashPredict::produce(art::Event& e)
       // zave+=0.001*qp.q*qp.q*qp.z;
       // norm+=0.001*qp.q*qp.q;
       _nuvtx_q+=qp.q;
-      // calculate number of photons for this space point
-
-      // float npe =   fChargeToNPhotonsTrack*qp;
-
-      // add loop here over PMTs, calculate number of photons from this space point that land on this PMT,
-      // using ray tracing
-
-      // add to running sum for each PMT
 
     }
 
@@ -384,6 +449,18 @@ void FlashPredict::produce(art::Event& e)
         // std::cout << "      " << _nuvtx_x << " " << _flash_r << std::endl;
       }
       else { _flash_pe=0; _flash_y=0; _flash_z=0;}
+
+      //      calculate match score here, put association on the event
+      float slice = (200.0-abs(_nuvtx_x));
+      _score = 0;
+      int isl = int(slice/dy_nbins);
+      _score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];
+      isl = int(slice/dz_nbins);
+      _score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];
+      isl = int(slice/rr_nbins);
+      _score+=abs(_flash_r-rrmean[isl])/rrsp[isl];
+
+      // fill tree
       _flashmatch_nuslice_tree->Fill();
 
     } // if tpc charge>0
@@ -496,6 +573,10 @@ void FlashPredict::AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,  con
 void FlashPredict::beginJob()
 {
   // Implementation of optional member function here.
+
+
+
+
 }
 
 void FlashPredict::endJob()
