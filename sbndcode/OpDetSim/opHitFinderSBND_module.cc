@@ -118,58 +118,63 @@ namespace opdet{
 
   void opHitFinderSBND::produce(art::Event & e)
   {
-  // Implementation of required member function here.
+    // Implementation of required member function here.
     fEvNumber = e.id().event();
     std::cout << "Event #" << fEvNumber << std::endl;
 
-    std::unique_ptr< std::vector< recob::OpHit > > pulseVecPtr(std::make_unique< std::vector< recob::OpHit > > ());  
+    std::unique_ptr< std::vector< recob::OpHit > > pulseVecPtr(std::make_unique< std::vector< recob::OpHit > > ());
+    fwaveform.reserve(20000); // TODO: no hardcoded value
 
     art::ServiceHandle<art::TFileService> tfs;
- //   histname.str(std::string());
-   // histname << "event_" << fEvNumber;
+    //   histname.str(std::string());
+    // histname << "event_" << fEvNumber;
     art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
     e.getByLabel(fInputModuleName, wvfHandle);
 
     if(!wvfHandle.isValid()){
-  	std::cout <<Form("Did not find any waveform") << std::endl;
+      std::cout <<Form("Did not find any waveform") << std::endl;
     }
 
     size_t timebin=0;
     double FWHM=1, Area=0, phelec, fasttotal=3./4., rms=0, amplitude=0, time=0;
     unsigned short frame=1;
 //    int histogram_number = 0;
-
     for(auto const& wvf : (*wvfHandle)){
-	fChNumber = wvf.ChannelNumber();
-        fwaveform.resize(wvf.size());
-	for(unsigned int i=0;i<wvf.size();i++){
-	  fwaveform[i]=wvf[i];
-	}
-	subtractBaseline(fwaveform, map.pdName(fChNumber), rms);
-	if((map.pdName(fChNumber)=="pmt") || (map.pdName(fChNumber)== "barepmt")){
-	}else{
-	  if(fUseDenoising==1) denoise(fwaveform);    
-	}
-        int i=1;
-        while(findPeak(fwaveform,timebin,Area,rms,amplitude,map.pdName(fChNumber))){
-          time = wvf.TimeStamp() + (double)timebin/fSampling;
+      if (wvf.size() == 0 ) {
+        std::cout << "Empty waveform, continue." << std::endl;
+        continue;
+      }
 
-	  if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
-	    phelec=Area/fArea1pePMT;
-         //   std::cout << 0 << " " << time << " " << Area << " " << phelec << std::endl;
-	  }else{
-	    phelec=Area/fArea1peSiPM;
+      fChNumber = wvf.ChannelNumber();
+      fwaveform.resize(wvf.size());
+      for(unsigned int i=0;i<wvf.size();i++){
+        fwaveform[i]=wvf[i];
+      }
+      subtractBaseline(fwaveform, map.pdName(fChNumber), rms);
+      if((map.pdName(fChNumber)=="pmt") || (map.pdName(fChNumber)== "barepmt")){
+      }else{
+        if(fUseDenoising==1) denoise(fwaveform);
+      }
+      int i=1;
+      while(findPeak(fwaveform,timebin,Area,rms,amplitude,map.pdName(fChNumber))){
+        time = wvf.TimeStamp() + (double)timebin/fSampling;
+
+        if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
+          phelec=Area/fArea1pePMT;
+          //   std::cout << 0 << " " << time << " " << Area << " " << phelec << std::endl;
+        }else{
+          phelec=Area/fArea1peSiPM;
           //  std::cout << 1 << " " << time << " " << Area << " " << phelec << std::endl;
-	  }
-          i++;
-	  recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);//including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
-          pulseVecPtr->emplace_back(opHit);
         }
-   //     histogram_number += 1;
-	fwaveform.clear();
-    }
+        i++;
+        recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);//including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
+        pulseVecPtr->emplace_back(opHit);
+      }
+      //     histogram_number += 1;
+      // fwaveform.clear();
+    } // for(auto const& wvf : (*wvfHandle)){
     e.put(std::move(pulseVecPtr));
-  }
+  } // void opHitFinderSBND::produce(art::Event & e)
 
   DEFINE_ART_MODULE(opHitFinderSBND)
 
