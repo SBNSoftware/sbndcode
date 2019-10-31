@@ -83,13 +83,13 @@ namespace opdet{
     int fThresholdArapuca; //in ADC
     int fEvNumber;
     int fChNumber;
-    std::vector<short unsigned int> fwaveform;
+    std::vector<double> fwaveform;
     //int fSize;
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
-    void subtractBaseline(std::vector<short unsigned int>& waveform, std::string pdtype, double& rms);
-    bool findPeak(std::vector<short unsigned int>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
-    void denoise(std::vector<short unsigned int>& waveform);
+    void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
+    bool findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
+    void denoise(std::vector<double>& waveform);
     void TV1D_denoise(float* input, float*& output, const int width, const float lambda);
 //    std::stringstream histname;
   };
@@ -170,6 +170,7 @@ namespace opdet{
         recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);//including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
         pulseVecPtr->emplace_back(opHit);
       }
+      } // while findPeak()
       //     histogram_number += 1;
       // fwaveform.clear();
     } // for(auto const& wvf : (*wvfHandle)){
@@ -178,9 +179,9 @@ namespace opdet{
 
   DEFINE_ART_MODULE(opHitFinderSBND)
 
-  void opHitFinderSBND::subtractBaseline(std::vector<short unsigned int>& waveform, std::string pdtype, double& rms){
-    double baseline = 0.0; 
-    rms=0.0;
+  void opHitFinderSBND::subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms){
+    double baseline = 0.0;
+    rms = 0.0;
     int cnt = 0;
     for(int i=0; i<fBaselineSample; i++){
 	baseline+=waveform[i];
@@ -198,7 +199,7 @@ namespace opdet{
     }
   }
 
-  bool opHitFinderSBND::findPeak(std::vector<short unsigned int>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type){
+  bool opHitFinderSBND::findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type){
 
     //Gets info from highest peak and suppress it 
     double aux = *max_element(waveform.begin(), waveform.end());
@@ -248,7 +249,7 @@ namespace opdet{
     return true;		
   }
 
-  void opHitFinderSBND::denoise(std::vector<short unsigned int>& waveform){
+  void opHitFinderSBND::denoise(std::vector<double>& waveform){
 
     int wavelength = waveform.size();
     float lambda = 10.0;
