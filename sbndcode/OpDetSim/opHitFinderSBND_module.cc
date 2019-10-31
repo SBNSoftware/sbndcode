@@ -169,7 +169,6 @@ namespace opdet{
         i++;
         recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);//including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
         pulseVecPtr->emplace_back(opHit);
-      }
       } // while findPeak()
       //     histogram_number += 1;
       // fwaveform.clear();
