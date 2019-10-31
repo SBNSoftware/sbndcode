@@ -453,12 +453,16 @@ void FlashPredict::produce(art::Event& e)
       //      calculate match score here, put association on the event
       float slice = (200.0-abs(_nuvtx_x));
       _score = 0;
-      int isl = int(slice/dy_nbins);
+      //      std::cout << "slice " << slice <<  " x pos " << _nuvtx_x << std::endl;
+      int isl = int(dy_nbins*(slice/200.0));
       _score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];
-      isl = int(slice/dz_nbins);
+      //      std::cout << "bin " << isl <<  " " << dymean[isl] << " " << dysp[isl] << " score " << _score << std::endl;
+      isl = int(dz_nbins*(slice/200.0));
       _score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];
-      isl = int(slice/rr_nbins);
+      //      std::cout << "bin " << isl <<  " " << dzmean[isl] << " " << dzsp[isl] << " score " << _score << std::endl;
+      isl = int(rr_nbins*(slice/200.0));
       _score+=abs(_flash_r-rrmean[isl])/rrsp[isl];
+      //      std::cout << "bin " << isl <<  " " << rrmean[isl] << " " << rrsp[isl] << " score " << _score << std::endl;
 
       // fill tree
       _flashmatch_nuslice_tree->Fill();
