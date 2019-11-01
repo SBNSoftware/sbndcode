@@ -91,7 +91,6 @@ namespace opdet{
     bool findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
     void denoise(std::vector<double>& waveform);
     void TV1D_denoise(float* input, float*& output, const int width, const float lambda);
-//    std::stringstream histname;
   };
 
   opHitFinderSBND::opHitFinderSBND(fhicl::ParameterSet const & p)
@@ -126,8 +125,6 @@ namespace opdet{
     fwaveform.reserve(20000); // TODO: no hardcoded value
 
     art::ServiceHandle<art::TFileService> tfs;
-    //   histname.str(std::string());
-    // histname << "event_" << fEvNumber;
     art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
     e.getByLabel(fInputModuleName, wvfHandle);
 
@@ -138,7 +135,6 @@ namespace opdet{
     size_t timebin=0;
     double FWHM=1, Area=0, phelec, fasttotal=3./4., rms=0, amplitude=0, time=0;
     unsigned short frame=1;
-//    int histogram_number = 0;
     for(auto const& wvf : (*wvfHandle)){
       if (wvf.size() == 0 ) {
         std::cout << "Empty waveform, continue." << std::endl;
@@ -161,7 +157,7 @@ namespace opdet{
 
         if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
           phelec=Area/fArea1pePMT;
-          //   std::cout << 0 << " " << time << " " << Area << " " << phelec << std::endl;
+     //        std::cout << 0 << " " << fChNumber << " " << time << " " << Area << " " << phelec << std::endl;
         }else{
           phelec=Area/fArea1peSiPM;
           //  std::cout << 1 << " " << time << " " << Area << " " << phelec << std::endl;
@@ -170,8 +166,6 @@ namespace opdet{
         recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);//including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
         pulseVecPtr->emplace_back(opHit);
       } // while findPeak()
-      //     histogram_number += 1;
-      // fwaveform.clear();
     } // for(auto const& wvf : (*wvfHandle)){
     e.put(std::move(pulseVecPtr));
   } // void opHitFinderSBND::produce(art::Event & e)
