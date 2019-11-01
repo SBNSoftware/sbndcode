@@ -107,7 +107,7 @@ void wvfAna::analyze(art::Event const & e)
 	std::cout << Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
   }
 
-  std::cout << "Number of photon channel: " <<waveHandle->size() << std::endl;
+  std::cout << "Number of waveforms: " <<waveHandle->size() << std::endl;
 
   int hist_id = 0;
   for(auto const& wvf : (*waveHandle)){
@@ -118,8 +118,8 @@ void wvfAna::analyze(art::Event const & e)
              << "_" << hist_id;
 
     fStartTime = wvf.TimeStamp()/1000.0; //in us
-    fEndTime = double(wvf.size())/fSampling + fStartTime;
-    fEndTime = fEndTime/1000; //in us
+    fEndTime = double(wvf.size())/fSampling/1000 + fStartTime;
+//    fEndTime = fEndTime/1000; //in us
 
     //Create a new histogram
     TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);",fStartTime), wvf.size(), fStartTime, fEndTime);
