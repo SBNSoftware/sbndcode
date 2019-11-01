@@ -111,7 +111,7 @@ namespace filt{
         double minTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.second)/fDetectorProperties->DriftVelocity(); 
         double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/fDetectorProperties->DriftVelocity(); 
         // If both times are below or above the readout window time then skip
-        if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime < readoutWindow)) continue;
+        if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
       }
       if (fUseTPC && !EntersTPC(particle)) continue;
       if (fUseTopHighCRTs){
