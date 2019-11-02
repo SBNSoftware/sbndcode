@@ -34,10 +34,12 @@
 #include "lardataobj/RecoBase/OpHit.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/AnalysisBase/T0.h"
-//#include "ubreco/LLSelectionTool/OpT0Finder/Base/OpT0FinderFMWKInterface.h"
-//#include "ubreco/LLSelectionTool/OpT0Finder/Base/OpT0FinderTypes.h"
-//#include "ubreco/LLSelectionTool/OpT0Finder/Base/FlashMatchManager.h"
+#include "lardata/Utilities/AssociationUtil.h"
 #include "larcore/Geometry/Geometry.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/Assns.h"
+#include "canvas/Persistency/Provenance/ProductID.h"
+#include "art/Persistency/Common/PtrMaker.h"
 #include "OpT0FinderTypes.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 #include "TTree.h"
@@ -73,6 +75,7 @@ private:
   float fBeamWindowEnd, fBeamWindowStart;
   float fMaxTotalPE;
   float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
+  bool fMakeTree,fSelectNeutrino;
   std::vector<float> fPMTChannelCorrection;
   // geometry service
   const uint nMaxTPCs = 4;
@@ -128,27 +131,14 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fChargeToNPhotonsShower   = p.get<float>("ChargeToNPhotonsShower", 1.0);  // ~40000/1600
   fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 1.0);   // ~40000/1600
   fInputFilename = p.get<std::string>("InputFileName","fmplots.root");  // root file with histograms for match score calc
+  fMakeTree = p.get<bool>("MakeTree",false);  
+  fSelectNeutrino = p.get<bool>("SelectNeutrino",true);  
 
   art::ServiceHandle<art::TFileService> tfs;
 
   ophittime = tfs->make<TH1F>("ophittime","ophittime",1100,-0.2,2.0); // in us
 
-  // Tree to store ACPT track flash-matching information
-  // _flashmatch_acpt_tree = tfs->make<TTree>("ACPTFMtree","ACPT FlashPredict tree");
-  // _flashmatch_acpt_tree->Branch("evt",&_evt,"evt/I");
-  // _flashmatch_acpt_tree->Branch("run",&_run,"run/I");
-  // _flashmatch_acpt_tree->Branch("sub",&_sub,"sub/I");
-  // _flashmatch_acpt_tree->Branch("flashtime",&_flashtime,"flashtime/F");
-  // _flashmatch_acpt_tree->Branch("flashpe"  ,&_flashpe  ,"flashpe/F"  );
-  // _flashmatch_acpt_tree->Branch("pe_reco_v","std::vector<float>",&_pe_reco_v);
-  // _flashmatch_acpt_tree->Branch("pe_hypo_v","std::vector<float>",&_pe_hypo_v);
-  // _flashmatch_acpt_tree->Branch("trk_beg_x",&_trk_vtx_x,"trk_beg_x/F");
-  // _flashmatch_acpt_tree->Branch("trk_beg_y",&_trk_vtx_y,"trk_beg_y/F");
-  // _flashmatch_acpt_tree->Branch("trk_beg_z",&_trk_vtx_z,"trk_beg_z/F");
-  // _flashmatch_acpt_tree->Branch("trk_end_x",&_trk_end_x,"trk_end_x/F");
-  // _flashmatch_acpt_tree->Branch("trk_end_y",&_trk_end_y,"trk_end_y/F");
-  // _flashmatch_acpt_tree->Branch("trk_end_z",&_trk_end_z,"trk_end_z/F");
-  // Tree to store neutrino flash-matching information
+  if (fMakeTree) {
   _flashmatch_nuslice_tree = tfs->make<TTree>("nuslicetree","nu FlashPredict tree");
   _flashmatch_nuslice_tree->Branch("evt",&_evt,"evt/I");
   _flashmatch_nuslice_tree->Branch("run",&_run,"run/I");
@@ -164,6 +154,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   _flashmatch_nuslice_tree->Branch("nuvtx_y",&_nuvtx_y,"nuvtx_y/F");
   _flashmatch_nuslice_tree->Branch("nuvtx_z",&_nuvtx_z,"nuvtx_z/F");
   _flashmatch_nuslice_tree->Branch("score",&_score,"score/F");
+  }
 
   //read histograms and fill vectors for match score calculation
   std::string fname;
@@ -232,11 +223,12 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 } // FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
 
-void FlashPredict::produce(art::Event& e)
+void FlashPredict::produce(art::Event & e)
 {
 
   std::unique_ptr< std::vector<anab::T0> > T0_v(new std::vector<anab::T0>);
   std::unique_ptr< art::Assns <recob::PFParticle, anab::T0> > pfp_t0_assn_v( new art::Assns<recob::PFParticle, anab::T0>  );
+
 
   opdet::sbndPDMapAlg map;
 
@@ -271,13 +263,6 @@ void FlashPredict::produce(art::Event& e)
   // grab vertices associated with PFParticles
   // art::FindManyP<recob::Vertex> pfp_vertex_assn_v(pfp_h, e, fPandoraProducer);
 
-  // grab tracks in the event
-  //  auto const& trk_h = e.getValidHandle<std::vector<recob::Track> >(fPandoraProducer);
-
-  // grab anab::T0 for ACPT in-time associated to Tracks
-  //  art::FindManyP<anab::T0> trk_t0_assn_v(trk_h, e, fT0Producer);
-
-
   // grab associated metadata
   art::FindManyP< larpandoraobj::PFParticleMetadata > pfPartToMetadataAssoc(pfp_h, e, fPandoraProducer);
   auto const& spacepoint_h = e.getValidHandle<std::vector<recob::SpacePoint> >(fSpacePointProducer);
@@ -306,20 +291,27 @@ void FlashPredict::produce(art::Event& e)
 
   flashana::QCluster_t lightCluster[4];
 
+  // get flash time
+  ophittime->Reset();
+  for(size_t j = 0; j < OpHitCollection.size(); j++){
+    recob::OpHit oph = OpHitCollection[j];
+    if ( map.pdType(oph.OpChannel(),"pmt")) {
+      if ( (oph.PeakTime()>fBeamWindowStart) && (oph.PeakTime()< fBeamWindowEnd) ) {
+	ophittime->Fill(oph.PeakTime(),100*oph.PE());
+      }
+    }
+  }
+  auto ibin =  ophittime->GetMaximumBin();
+  float flashtime = (ibin*0.002)-0.2;  // in us
+  float lowedge = flashtime-0.01;
+  float highedge = flashtime+0.09;
+  
+
+  // Loop over pandora pfp particles, select primary particles identified as neutrinos
   for (unsigned int p=0; p < pfp_h->size(); p++){
     auto const& pfp = pfp_h->at(p);
-    // FindManyP<recob::Vertex> pfp_vertex_assn_v(pfp_h, e, fPandoraProducer);
-    // grab tracks in the event
-    // auto const& trk_h = e.getValidHandle<std::vector<recob::Track> >(fPandoraProducer);
-    // grab anab::T0 for ACPT in-time associated to Tracks
-    //    art::FindManyP<anab::T0> trk_t0_assn_v(trk_h, e, fT0Producer);
-
-    //    ::flashana::Flash_t beamflashcopy = beamflash;
-    //    m_flashMatchManager.Reset();
-
-    //    flashana::QCluster_t lightCluster[nMaxTPCs];
-
     if (pfp.IsPrimary() == false) continue;
+    if (fSelectNeutrino && (pfp.PdgCode()!=12) && (pfp.PdgCode()!=14) ) continue; 
 
     const art::Ptr<recob::PFParticle> pfp_ptr(pfp_h, p);
     // now build vectors of PFParticles, space-points, and hits for this slice
@@ -358,122 +350,106 @@ void FlashPredict::produce(art::Event& e)
         } // for all hits associated to this spacepoint
       } // for all spacepoints
     } // for all pfp pointers
-  } // over all PFparticles
 
   // std::cout << "check " << lightCluster.size() << std::endl;
-  for (size_t it=0;it<nTPCs;++it) {
-    double xave=0.0; double yave=0.0; double zave=0.0; double norm=0.0;
-    _nuvtx_q=0;
-    for (size_t i=0;i<lightCluster[it].size();++i) {
-      flashana::QCluster_t this_cl = lightCluster[it];
-      flashana::QPoint_t qp = this_cl[i];
-      //      std::cout << i << " " << qp.x << " " << qp.y << " " << qp.z << " " << qp.q << std::endl;
-      xave+=0.001*qp.q*qp.x;
-      yave+=0.001*qp.q*qp.y;
-      zave+=0.001*qp.q*qp.z;
-      norm+=0.001*qp.q;
-      // xave+=0.001*qp.q*qp.q*qp.x;
-      // yave+=0.001*qp.q*qp.q*qp.y;
-      // zave+=0.001*qp.q*qp.q*qp.z;
-      // norm+=0.001*qp.q*qp.q;
-      _nuvtx_q+=qp.q;
-
-    }
-
-    if (norm>0) {
-      _nuvtx_x=xave/norm;
-      _nuvtx_y=yave/norm;
-      _nuvtx_z=zave/norm;
-      //   std::cout << "neutrino center " << _nuvtx_x <<  "  " << _nuvtx_y << "    " << _nuvtx_z << std::endl;
-
-      // store PMT photon counts in the tree as well
-      double PMTxyz[3];
-      double sumy=0; double sumz=0; double pnorm=0;
-      double sum_Ay=0; double sum_Az=0;
-      double sum_By=0; double sum_Bz=0;
-      double sum_D=0; double sum=0;
-      double sum_Cy=0;double sum_Cz=0;
-      ophittime->Reset();
-      for(size_t j = 0; j < OpHitCollection.size(); j++){
-        recob::OpHit oph = OpHitCollection[j];
-        if ( map.pdType(oph.OpChannel(),"pmt")) {
-          if ( (oph.PeakTime()>fBeamWindowStart) && (oph.PeakTime()< fBeamWindowEnd) ) {
-            geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-            if ((it==0 && PMTxyz[0]<0) || (it==1 && PMTxyz[0]>0) ){
-	    ophittime->Fill(oph.PeakTime(),100*oph.PE());
+    float mscore[2] ={0}; float charge[2]={0};
+    for (size_t it=0;it<nTPCs;++it) {
+      double xave=0.0; double yave=0.0; double zave=0.0; double norm=0.0;
+      _nuvtx_q=0;
+      for (size_t i=0;i<lightCluster[it].size();++i) {
+	flashana::QCluster_t this_cl = lightCluster[it];
+	flashana::QPoint_t qp = this_cl[i];
+	xave+=0.001*qp.q*qp.x;
+	yave+=0.001*qp.q*qp.y;
+	zave+=0.001*qp.q*qp.z;
+	norm+=0.001*qp.q;
+	_nuvtx_q+=qp.q;
+      }
+      if (norm>0) {
+	_nuvtx_x=xave/norm;
+	_nuvtx_y=yave/norm;
+	_nuvtx_z=zave/norm;
+	charge[it]=_nuvtx_q;
+	// store PMT photon counts in the tree as well
+	double PMTxyz[3];
+	double sumy=0; double sumz=0; double pnorm=0;
+	double sum_Ay=0; double sum_Az=0;
+	double sum_By=0; double sum_Bz=0;
+	double sum_D=0;  double sum=0;
+	double sum_Cy=0;double sum_Cz=0;
+	for(size_t j = 0; j < OpHitCollection.size(); j++){
+	  recob::OpHit oph = OpHitCollection[j];
+	  if ( map.pdType(oph.OpChannel(),"pmt")) {
+	    if ( (oph.PeakTime()>lowedge) && (oph.PeakTime()< highedge) ) {
+	      geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
+	      // std::cout << oph.OpChannel() << "   " << oph.PeakTime() << "   " << oph.PE()
+	      //  <<  " PMT pos:   " << PMTxyz[0] <<"    " << PMTxyz[1] <<"    " << PMTxyz[2] << std::endl;
+	      if ((it==0 && PMTxyz[0]<0) || (it==1 && PMTxyz[0]>0) ){
+		// Add up the position, weighting with PEs
+		_flash_x=PMTxyz[0];
+		pnorm+=oph.PE();
+		sum+=1.0;
+		sumy    += oph.PE()*PMTxyz[1];
+		sumz    += oph.PE()*PMTxyz[2];
+		sum_By  += PMTxyz[1];
+		sum_Bz  += PMTxyz[2];
+		sum_Ay  += oph.PE()*PMTxyz[1]*oph.PE()*PMTxyz[1];
+		sum_Az  += oph.PE()*PMTxyz[2]*oph.PE()*PMTxyz[2];
+		sum_D   +=oph.PE()*oph.PE();
+		sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
+		sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
+	      }
 	    }
 	  }
 	}
-      }
-      auto ibin =  ophittime->GetMaximumBin();
-      float flashtime = (ibin*0.002)-0.2;  // in us
-      float lowedge = flashtime-0.01;
-      float highedge = flashtime+0.09;
-      //     std::cout << "lowedge " << lowedge << " highedge " << highedge << std::endl;
-      for(size_t j = 0; j < OpHitCollection.size(); j++){
-        recob::OpHit oph = OpHitCollection[j];
-        if ( map.pdType(oph.OpChannel(),"pmt")) {
-          if ( (oph.PeakTime()>lowedge) && (oph.PeakTime()< highedge) ) {
-            geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-            // std::cout << oph.OpChannel() << "   " << oph.PeakTime() << "   " << oph.PE()
-            //  <<  " PMT pos:   " << PMTxyz[0] <<"    " << PMTxyz[1] <<"    " << PMTxyz[2] << std::endl;
-            if ((it==0 && PMTxyz[0]<0) || (it==1 && PMTxyz[0]>0) ){
-              // Add up the position, weighting with PEs
-              _flash_x=PMTxyz[0];
-              pnorm+=oph.PE();
-              sum+=1.0;
-              sumy    += oph.PE()*PMTxyz[1];
-              sumz    += oph.PE()*PMTxyz[2];
-              sum_By  += PMTxyz[1];
-              sum_Bz  += PMTxyz[2];
-              sum_Ay  += oph.PE()*PMTxyz[1]*oph.PE()*PMTxyz[1];
-              sum_Az  += oph.PE()*PMTxyz[2]*oph.PE()*PMTxyz[2];
-              sum_D   +=oph.PE()*oph.PE();
-              sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
-              sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
-            }
-          }
-        }
-      }
+	
+	if (pnorm>0) {
+	  _flashtime=flashtime;
+	  _flash_pe=pnorm;
+	  _flash_y=sum_Cy/sum_D;
+	  _flash_z=sum_Cz/sum_D;
+	  sum_By=_flash_y;        sum_Bz=_flash_z;
+	  _flash_r=sqrt((sum_Ay-2.0*sum_By*sum_Cy+sum_By*sum_By*sum_D+sum_Az-2.0*sum_Bz*sum_Cz+sum_Bz*sum_Bz*sum_D)/sum_D);
+	}
+	else { _flash_pe=0; _flash_y=0; _flash_z=0;}
+	
+	//      calculate match score here, put association on the event
+	float slice = (200.0-abs(_nuvtx_x));
+	_score = 0;
+	//      std::cout << "slice " << slice <<  " x pos " << _nuvtx_x << std::endl;
+	int isl = int(dy_nbins*(slice/200.0));
+	_score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];
+	//      std::cout << "bin " << isl <<  " " << dymean[isl] << " " << dysp[isl] << " score " << _score << std::endl;
+	isl = int(dz_nbins*(slice/200.0));
+	_score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];
+	//      std::cout << "bin " << isl <<  " " << dzmean[isl] << " " << dzsp[isl] << " score " << _score << std::endl;
+	isl = int(rr_nbins*(slice/200.0));
+	_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];
+	//      std::cout << "bin " << isl <<  " " << rrmean[isl] << " " << rrsp[isl] << " score " << _score << std::endl;
+	mscore[it]=_score;
+	if (fMakeTree) _flashmatch_nuslice_tree->Fill();
+	
+      } // if tpc charge>0
+    }  // end loop over TPCs
+    // fill tree
+    
+    // top line just to get code to compile
+    double this_score=charge[0]*mscore[0]+charge[1]*mscore[1];
+    this_score=mscore[0]+mscore[1];
+    if (mscore[0]>0 && mscore[1]>0) this_score*=0.5;
+    // create t0 and pfp-t0 association here
 
-      if (pnorm>0) {
-	_flashtime=flashtime;
-        _flash_pe=pnorm;
-        // _flash_y=sumy/pnorm;
-        // _flash_z=sumz/pnorm;
-        _flash_y=sum_Cy/sum_D;
-        _flash_z=sum_Cz/sum_D;
-        sum_By=_flash_y;        sum_Bz=_flash_z;
-        _flash_r=sqrt((sum_Ay-2.0*sum_By*sum_Cy+sum_By*sum_By*sum_D+sum_Az-2.0*sum_Bz*sum_Cz+sum_Bz*sum_Bz*sum_D)/sum_D);
-        // std::cout << "flash center " << _flash_y << " " << _flash_z << std::endl;
-        // std::cout << "      " << _nuvtx_x << " " << _flash_r << std::endl;
-      }
-      else { _flash_pe=0; _flash_y=0; _flash_z=0;}
+    T0_v->push_back(anab::T0( flashtime, 0, p, 0, this_score));
+    // util::CreateAssn(*this, e, *T0_v, pfp_h[p], *pfp_t0_assn_v);
+    //    util::CreateAssn(*this, e, *T0_v, pfp, *pfp_t0_assn_v);
 
-      //      calculate match score here, put association on the event
-      float slice = (200.0-abs(_nuvtx_x));
-      _score = 0;
-      //      std::cout << "slice " << slice <<  " x pos " << _nuvtx_x << std::endl;
-      int isl = int(dy_nbins*(slice/200.0));
-      _score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];
-      //      std::cout << "bin " << isl <<  " " << dymean[isl] << " " << dysp[isl] << " score " << _score << std::endl;
-      isl = int(dz_nbins*(slice/200.0));
-      _score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];
-      //      std::cout << "bin " << isl <<  " " << dzmean[isl] << " " << dzsp[isl] << " score " << _score << std::endl;
-      isl = int(rr_nbins*(slice/200.0));
-      _score+=abs(_flash_r-rrmean[isl])/rrsp[isl];
-      //      std::cout << "bin " << isl <<  " " << rrmean[isl] << " " << rrsp[isl] << " score " << _score << std::endl;
-
-      // fill tree
-      _flashmatch_nuslice_tree->Fill();
-
-    } // if tpc charge>0
-  }  // end loop over TPCs
-
+  } // over all PFparticles
 
 
   e.put(std::move(T0_v));
   e.put(std::move(pfp_t0_assn_v));
+
+
 
 }// end of producer module
 
