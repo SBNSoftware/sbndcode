@@ -33,6 +33,7 @@ art_make(
                            lardata_Utilities
                            lardataobj_RawData
                            lardataobj_RecoBase
+                           lardataobj_AnalysisBase
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                            sbndcode_Utilities_SignalShapingServiceSBND_service
                            nurandom_RandomUtils_NuRandomService_service
