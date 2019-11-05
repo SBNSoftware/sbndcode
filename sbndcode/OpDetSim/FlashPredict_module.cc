@@ -37,7 +37,9 @@
 #include "lardata/Utilities/AssociationUtil.h"
 #include "larcore/Geometry/Geometry.h"
 #include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
 #include "canvas/Persistency/Common/Assns.h"
+#include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Persistency/Provenance/ProductID.h"
 #include "art/Persistency/Common/PtrMaker.h"
 #include "OpT0FinderTypes.h"
@@ -440,8 +442,9 @@ void FlashPredict::produce(art::Event & e)
     // create t0 and pfp-t0 association here
 
     T0_v->push_back(anab::T0( flashtime, 0, p, 0, this_score));
-    // util::CreateAssn(*this, e, *T0_v, pfp_h[p], *pfp_t0_assn_v);
+    //    util::CreateAssn(*this, e, *T0_v, pfp_h[p], *pfp_t0_assn_v);
     //    util::CreateAssn(*this, e, *T0_v, pfp, *pfp_t0_assn_v);
+    util::CreateAssn(*this, e, *T0_v, pfp_ptr, *pfp_t0_assn_v);
 
   } // over all PFparticles
 
