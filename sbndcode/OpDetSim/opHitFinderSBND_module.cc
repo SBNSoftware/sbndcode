@@ -110,6 +110,7 @@ namespace opdet{
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
     fSampling = (timeService->OpticalClock().Frequency()); // MHz
+//    fSampling = (timeService->OpticalClock().Frequency())/1000.0; // GHz
 
   // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -153,11 +154,11 @@ namespace opdet{
       }
       int i=1;
       while(findPeak(fwaveform,timebin,Area,rms,amplitude,map.pdName(fChNumber))){
-        time = wvf.TimeStamp() + (double)timebin/fSampling;
+        time = wvf.TimeStamp() + (double)timebin/fSampling;//in us
 
         if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
           phelec=Area/fArea1pePMT;
-     //        std::cout << 0 << " " << fChNumber << " " << time << " " << Area << " " << phelec << std::endl;
+        //  std::cout << 0 << " " << fChNumber << " " << time << " " << Area << " " << phelec << std::endl;
         }else{
           phelec=Area/fArea1peSiPM;
           //  std::cout << 1 << " " << time << " " << Area << " " << phelec << std::endl;

@@ -24,6 +24,14 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "canvas/Utilities/Exception.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "larcore/Geometry/Geometry.h"
+
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/LArPropertiesService.h"
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
 #include "lardataobj/Simulation/sim.h"
@@ -78,18 +86,14 @@ wvfAna::wvfAna(fhicl::ParameterSet const & p)
  // More initializers here.
 {
   fInputModuleName = p.get< std::string >("InputModule" );
-  fSampling = p.get< double >("Sampling" );
+
+  auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
+  fSampling = (timeService->OpticalClock().Frequency()); // MHz
 
 }
 
 void wvfAna::beginJob(){
 
-//  art::ServiceHandle<art::TFileService> tfs;
-//  fWaveformTree = tfs->make<TTree>("WaveformTree", "event by event info");
-//  fWaveformTree->Branch("event",&fEvNumber,"fEvNumber/I");
-//  fWaveformTree->Branch("ch",&fChNumber,"fChNumber/I");
-//  fWaveformTree->Branch("waveform",&fAmp,"fAmp/D");
-//  fWaveformTree->Branch("time",&fTime,"fTime/D");
 }
 
 void wvfAna::analyze(art::Event const & e)
@@ -99,7 +103,7 @@ void wvfAna::analyze(art::Event const & e)
 
   art::ServiceHandle<art::TFileService> tfs;
   fEvNumber = e.id().event();
-  
+
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
   e.getByLabel(fInputModuleName, waveHandle);
 
@@ -117,9 +121,8 @@ void wvfAna::analyze(art::Event const & e)
              << "_opchannel_" << fChNumber
              << "_" << hist_id;
 
-    fStartTime = wvf.TimeStamp()/1000.0; //in us
-    fEndTime = double(wvf.size())/fSampling/1000 + fStartTime;
-//    fEndTime = fEndTime/1000; //in us
+    fStartTime = wvf.TimeStamp(); //in us
+    fEndTime = double(wvf.size())/fSampling + fStartTime; //in us
 
     //Create a new histogram
     TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);",fStartTime), wvf.size(), fStartTime, fEndTime);
