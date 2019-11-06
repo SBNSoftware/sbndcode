@@ -1,0 +1,19 @@
+# Author: Gray Putnam <grayputnam@uchicago.edu>
+# Include this file at the bottom of any fhicl file handling MC with 3 drift windows.
+# It will modify all services parameters necessary.
+
+services.DetectorPropertiesService.NumberTimeSamples:  7500 # 3 drift windows
+services.DetectorPropertiesService.ReadOutWindowSize: 7500
+
+# run g4 for the 0.2ms rise time + one full drift window + 1st readout window before neutrino arrives
+# (one drift window = 1.25ms)
+services.DetectorClocksService.G4RefTime: -2.7e3 # [us]
+
+# TPC readout starts one readout window before the neutrino arrives (which we set to t0)
+services.DetectorClocksService.TriggerOffsetTPC: -1.25e3 # [us]
+
+# set neutrino arrival time
+services.DetectorClocksService.DefaultTrigTime: 2.7e3 # [us]
+services.DetectorClocksService.DefaultBeamTime: 2.7e3 # [us]
+
+
