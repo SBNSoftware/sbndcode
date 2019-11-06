@@ -194,7 +194,6 @@ namespace opdet{
 
     // Run the digitizer over the full readout window
     MakeWaveforms(e, pmtDigitizer.get(), arapucaDigitizer.get());
-
     
     if (fApplyTriggers) {
       // find the trigger locations for the waveforms
@@ -266,7 +265,7 @@ namespace opdet{
       //this now tells you if light collection is reflected
         bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       
-        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
+	//        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
 
         for (auto const& litesimphotons : (*opdetHandle)){
           std::vector<short unsigned int> waveform;
@@ -298,6 +297,7 @@ namespace opdet{
       }  //end loop on simphoton lite collections
     }else{ //for SimPhotons
       std::map<int,sim::SimPhotons> auxmap;   // to temporarily store channel and direct light distribution
+
       //Get *ALL* SimPhotonsCollection from Event
       std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles;
       e.getManyByType(photon_handles);
@@ -309,7 +309,7 @@ namespace opdet{
       for (auto opdetHandle: photon_handles) {
         bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
 
-        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
+	//        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
 
         for (auto const& simphotons : (*opdetHandle)){
           std::vector<short unsigned int> waveform;
