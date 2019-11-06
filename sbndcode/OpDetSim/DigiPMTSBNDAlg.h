@@ -51,6 +51,7 @@ namespace opdet{
       double PMTSaturation; //in number of p.e.
       double QEDirect; //PMT quantum efficiency for direct (VUV) light
       double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
+      int SinglePEmodel; //Model for single pe response =0 for ideal, =1 for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       detinfo::DetectorClocks const* timeService = nullptr; //< DetectorClocks service provider.
@@ -73,6 +74,7 @@ namespace opdet{
     double fSampling;       //wave sampling frequency (GHz)
     double fQEDirect;
     double fQERefl;
+    int fSinglePEmodel;
     double sigma1;
     double sigma2;
 
@@ -159,6 +161,11 @@ namespace opdet{
        fhicl::Atom<double> qERefl {
           Name("QERefl"),
           Comment("PMT quantum efficiency for reflected (TPB emitted)light")
+       };
+
+       fhicl::Atom<int> singlePEmodel {
+          Name("SinglePEmodel"),
+          Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
        };
 
     };    //struct Config
