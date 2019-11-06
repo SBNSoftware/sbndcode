@@ -1,0 +1,8 @@
+#include "prodcorsika_cosmics_cmc_frontbackcrt_mu_filter.fcl"
+
+# overwrite CMC generator to instead use "proton" -- has a more accurate
+# cosmic rate
+physics.producers.generator: @local::sbnd_corsika_p
+
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: michel_electron, G4: g4_michel_electron_filter.fcl
