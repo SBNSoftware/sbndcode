@@ -1,0 +1,20 @@
+
+BEGIN_PROLOG
+
+TrackHitEfficiencyAnalysisTool:
+{
+  tool_type:               "TrackHitEfficiencyAnalysis"
+  ## RawDigitLabelVec:        ["rawdigitfilter"]
+  RawDigitLabelVec:	   ["daq"]
+  ## WireModuleLabelVec:      ["decon1droi"]
+  WireModuleLabelVec:	   ["caldata"]
+  HitModuleLabelVec:       ["gaushit"]
+  MCParticleLabel:         "largeant"
+  SimChannelLabel:         "largeant"
+  LocalDirName:            "EfficHists"
+  OffsetVec:               [0,0,0]
+  SigmaVec:                [1.,1.,1.]
+  MinAllowedChannelStatus: 1
+}
+
+END_PROLOG

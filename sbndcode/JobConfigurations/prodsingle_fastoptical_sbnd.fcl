@@ -16,7 +16,8 @@ services:
   TFileService: { fileName: "single_hist_sbnd.root" }
   Timing:       {}
   RandomNumberGenerator: {} #ART native random number generator
-  user:         @local::sbnd_opsimulation_services	
+#user:         @local::sbnd_opsimulation_services	
+  user:         @local::sbnd_simulation_services
 }
 services.user.PhotonVisibilityService: @local::sbnd_photonvisibilityservice 
 services.user.OpDigiProperties:        @local::sbnd_opdigiproperties			
