@@ -74,7 +74,7 @@ namespace opdet{
     double fSampling;       //wave sampling frequency (GHz)
     double fQEDirect;
     double fQERefl;
-    int fSinglePEmodel;
+    //int fSinglePEmodel;
     double sigma1;
     double sigma2;
 
