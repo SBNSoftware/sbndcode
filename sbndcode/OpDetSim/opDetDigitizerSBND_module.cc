@@ -256,7 +256,8 @@ namespace opdet{
       std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles;
       e.getManyByType(photon_handles);
       if (photon_handles.size() == 0)
-        throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotonsLite retrieved and you requested them.";
+        mf::LogError("OpDetDigitizer") << "sim::SimPhotonsLite not found -> No Optical Detector Simulation!\n";
+        //throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotonsLite retrieved and you requested them.";
       
       CreateDirectPhotonMapLite(auxmap, photon_handles);
 
@@ -302,7 +303,8 @@ namespace opdet{
       std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles;
       e.getManyByType(photon_handles);
       if (photon_handles.size() == 0)
-	throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotons retrieved and you requested them.";
+        mf::LogError("OpDetDigitizer") << "sim::SimPhotons not found -> No Optical Detector Simulation!\n";
+	      //throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotons retrieved and you requested them.";
       
       CreateDirectPhotonMap(auxmap, photon_handles);
  
