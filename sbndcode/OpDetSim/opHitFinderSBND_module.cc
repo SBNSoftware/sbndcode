@@ -129,7 +129,9 @@ namespace opdet{
     //   histname.str(std::string());
     // histname << "event_" << fEvNumber;
     art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
-    e.getByLabel(fInputModuleName, wvfHandle);
+    std::vector<art::Ptr<raw::OpDetWaveform>> wvfList;
+    if(e.getByLabel(fInputModuleName, wvfHandle))
+      art::fill_ptr_vector(wvfList, wvfHandle);
 
     if(!wvfHandle.isValid()){
       std::cout <<Form("Did not find any waveform") << std::endl;
@@ -139,7 +141,8 @@ namespace opdet{
     double FWHM=1, Area=0, phelec, fasttotal=3./4., rms=0, amplitude=0, time=0;
     unsigned short frame=1;
 //    int histogram_number = 0;
-    for(auto const& wvf : (*wvfHandle)){
+    for(auto const& wvf_P : wvfList){
+      auto const& wvf = *wvf_P;
       if (wvf.size() == 0 ) {
         std::cout << "Empty waveform, continue." << std::endl;
         continue;
