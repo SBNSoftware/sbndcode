@@ -194,7 +194,6 @@ namespace opdet{
 
     // Run the digitizer over the full readout window
     MakeWaveforms(e, pmtDigitizer.get(), arapucaDigitizer.get());
-
     
     if (fApplyTriggers) {
       // find the trigger locations for the waveforms
@@ -257,7 +256,8 @@ namespace opdet{
       std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles;
       e.getManyByType(photon_handles);
       if (photon_handles.size() == 0)
-        throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotonsLite retrieved and you requested them.";
+        mf::LogError("OpDetDigitizer") << "sim::SimPhotonsLite not found -> No Optical Detector Simulation!\n";
+        //throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotonsLite retrieved and you requested them.";
       
       CreateDirectPhotonMapLite(auxmap, photon_handles);
 
@@ -266,7 +266,7 @@ namespace opdet{
       //this now tells you if light collection is reflected
         bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       
-        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
+	//        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
 
         for (auto const& litesimphotons : (*opdetHandle)){
           std::vector<short unsigned int> waveform;
@@ -298,18 +298,20 @@ namespace opdet{
       }  //end loop on simphoton lite collections
     }else{ //for SimPhotons
       std::map<int,sim::SimPhotons> auxmap;   // to temporarily store channel and direct light distribution
+
       //Get *ALL* SimPhotonsCollection from Event
       std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles;
       e.getManyByType(photon_handles);
       if (photon_handles.size() == 0)
-	throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotons retrieved and you requested them.";
+        mf::LogError("OpDetDigitizer") << "sim::SimPhotons not found -> No Optical Detector Simulation!\n";
+	      //throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotons retrieved and you requested them.";
       
       CreateDirectPhotonMap(auxmap, photon_handles);
  
       for (auto opdetHandle: photon_handles) {
         bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
 
-        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
+	//        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
 
         for (auto const& simphotons : (*opdetHandle)){
           std::vector<short unsigned int> waveform;
