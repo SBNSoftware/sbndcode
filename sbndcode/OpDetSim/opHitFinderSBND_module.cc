@@ -84,14 +84,15 @@ namespace opdet{
     int fEvNumber;
     int fChNumber;
     std::vector<double> fwaveform;
+    std::vector<double> outwvform;
     //int fSize;
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
 
     void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
     bool findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
-    void denoise(std::vector<double>& waveform);
-    void TV1D_denoise(float* input, float*& output, const int width, const float lambda);
+    void denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
+    void TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
     //std::stringstream histname;
   };
 
@@ -124,7 +125,8 @@ namespace opdet{
     std::cout << "Event #" << fEvNumber << std::endl;
 
     std::unique_ptr< std::vector< recob::OpHit > > pulseVecPtr(std::make_unique< std::vector< recob::OpHit > > ());
-    fwaveform.reserve(20000); // TODO: no hardcoded value
+    fwaveform.reserve(30000); // TODO: no hardcoded value
+    outwvform.reserve(30000); // TODO: no hardcoded value
 
     art::ServiceHandle<art::TFileService> tfs;
     //   histname.str(std::string());
@@ -158,7 +160,7 @@ namespace opdet{
       subtractBaseline(fwaveform, map.pdName(fChNumber), rms);
       if((map.pdName(fChNumber)=="pmt") || (map.pdName(fChNumber)== "barepmt")){
       }else{
-        if(fUseDenoising==1) denoise(fwaveform);
+        if(fUseDenoising==1) denoise(fwaveform, outwvform);
       }
 
       int i=1;
@@ -183,6 +185,7 @@ namespace opdet{
 
     e.put(std::move(pulseVecPtr));
     std::vector<double>().swap(fwaveform); // clear and release the memory of fwaveform
+    std::vector<double>().swap(outwvform); // clear and release the memory of outwvform
   } // void opHitFinderSBND::produce(art::Event & e)
 
   DEFINE_ART_MODULE(opHitFinderSBND)
@@ -263,78 +266,63 @@ namespace opdet{
     return true;		
   }
 
-  void opHitFinderSBND::denoise(std::vector<double>& waveform){
+  void opHitFinderSBND::denoise(std::vector<double>& waveform, std::vector<double>& outwaveform){
 
     int wavelength = waveform.size();
-    float lambda = 10.0;
-    float* input;
-    float* output;
+    outwaveform = waveform;  // copy
 
-    //std::cout <<"denoise wavl:" << wavelength << std::endl;
-
-    input = (float*)malloc(sizeof(*input)*wavelength);
-    output = (float*)malloc(sizeof(*output)*wavelength);
+    TV1D_denoise(waveform, outwaveform);
 
     for(int i=0; i<wavelength; i++){
-      input[i] = waveform[i];
-      output[i] = input[i];
+      if(outwaveform[i]) waveform[i]=outwaveform[i];
     }
+  } // void opHitFinderSBND::denoise()
 
-    //std::cout <<"denoise full array" << std::endl;
-
-    TV1D_denoise(input, output, (const int)wavelength, (const float)lambda);
-
-    //std::cout <<"denoise denoise" << std::endl;
-
-    for(int i=0; i<wavelength; i++){
-      if(output[i]) waveform[i]=output[i];
+  void opHitFinderSBND::TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform) {
+    int width = waveform.size();
+    float lambda = 10.0; // TODO: no hardcoded values
+    if (width>0) { // to avoid invalid memory access to waveform[0]
+      int k=0, k0=0; // k: current sample location, k0: beginning of current segment
+      float umin=lambda, umax=-lambda; // u is the dual variable
+      float vmin=waveform[0]-lambda, vmax=waveform[0]+lambda; // bounds for the segment's value
+      int kplus=0, kminus=0; // last positions where umax=-lambda, umin=lambda, respectively
+      const float twolambda=2.0*lambda; // auxiliary variable
+      const float minlambda=-lambda; // auxiliary variable
+      for (;;) { // simple loop, the exit test is inside
+        while (k==width-1) { // we use the right boundary condition
+          if (umin<0.0) { // vmin is too high -> negative jump necessary
+            do outwaveform[k0++]=vmin; while (k0<=kminus);
+            umax=(vmin=waveform[kminus=k=k0])+(umin=lambda)-vmax;
+          } else if (umax>0.0) { // vmax is too low -> positive jump necessary
+            do outwaveform[k0++]=vmax; while (k0<=kplus);
+            umin=(vmax=waveform[kplus=k=k0])+(umax=minlambda)-vmin;
+          } else {
+            vmin+=umin/(k-k0+1);
+            do outwaveform[k0++]=vmin; while(k0<=k);
+            return;
+          }
+        }
+        if ((umin+=waveform[k+1]-vmin)<minlambda) { // negative jump necessary
+          do outwaveform[k0++]=vmin; while (k0<=kminus);
+          vmax=(vmin=waveform[kplus=kminus=k=k0])+twolambda;
+          umin=lambda; umax=minlambda;
+        } else if ((umax+=waveform[k+1]-vmax)>lambda) { // positive jump necessary
+          do outwaveform[k0++]=vmax; while (k0<=kplus);
+          vmin=(vmax=waveform[kplus=kminus=k=k0])-twolambda;
+          umin=lambda; umax=minlambda;
+        } else { //no jump necessary, we continue
+          k++;
+          if (umin>=lambda) { // update of vmin
+            vmin+=(umin-lambda)/((kminus=k)-k0+1);
+            umin=lambda;
+          }
+          if (umax<=minlambda) { // update of vmax
+            vmax+=(umax+lambda)/((kplus=k)-k0+1);
+            umax=minlambda;
+          }
+        }
+      }
     }
+  } // void opHitFinderSBND::TV1D_denoise()
 
- }
-
-  void opHitFinderSBND::TV1D_denoise(float* input, float*& output, const int width, const float lambda) {
-	if (width>0) {				/*to avoid invalid memory access to input[0]*/
-		int k=0, k0=0;			/*k: current sample location, k0: beginning of current segment*/
-		float umin=lambda, umax=-lambda;	/*u is the dual variable*/
-		float vmin=input[0]-lambda, vmax=input[0]+lambda;	/*bounds for the segment's value*/
-		int kplus=0, kminus=0; 	/*last positions where umax=-lambda, umin=lambda, respectively*/
-		const float twolambda=2.0*lambda;	/*auxiliary variable*/
-		const float minlambda=-lambda;		/*auxiliary variable*/
-		for (;;) {				/*simple loop, the exit test is inside*/
-			while (k==width-1) {	/*we use the right boundary condition*/
-				if (umin<0.0) {			/*vmin is too high -> negative jump necessary*/
-					do output[k0++]=vmin; while (k0<=kminus);
-					umax=(vmin=input[kminus=k=k0])+(umin=lambda)-vmax;
-				} else if (umax>0.0) {	/*vmax is too low -> positive jump necessary*/
-					do output[k0++]=vmax; while (k0<=kplus);
-					umin=(vmax=input[kplus=k=k0])+(umax=minlambda)-vmin;
-				} else {
-					vmin+=umin/(k-k0+1); 
-					do output[k0++]=vmin; while(k0<=k); 
-					return;
-				}
-			}
-			if ((umin+=input[k+1]-vmin)<minlambda) {		/*negative jump necessary*/
-				do output[k0++]=vmin; while (k0<=kminus);
-				vmax=(vmin=input[kplus=kminus=k=k0])+twolambda;
-				umin=lambda; umax=minlambda;
-			} else if ((umax+=input[k+1]-vmax)>lambda) {	/*positive jump necessary*/
-				do output[k0++]=vmax; while (k0<=kplus);
-				vmin=(vmax=input[kplus=kminus=k=k0])-twolambda;
-				umin=lambda; umax=minlambda;
-			} else { 	/*no jump necessary, we continue*/
-				k++;
-				if (umin>=lambda) {		/*update of vmin*/
-					vmin+=(umin-lambda)/((kminus=k)-k0+1);
-					umin=lambda;
-				} 
-				if (umax<=minlambda) {	/*update of vmax*/
-					vmax+=(umax+lambda)/((kplus=k)-k0+1);
-					umax=minlambda;
-				} 	
-			}
-		}
-	}
-  }
-
-}
+} // namespace opdet
