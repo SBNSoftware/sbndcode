@@ -229,8 +229,9 @@ namespace opdet{
 
     if(aux<threshold) return false;
 
-    while(aux>=rms){
+    while(aux >= threshold){
         bin++;	
+        if(bin > waveform.size()-1) break;
         aux = waveform[bin];
     }
     time_end = bin-1; //looking for the length of the peak
@@ -239,6 +240,7 @@ namespace opdet{
     bin = binmax;
     while(aux >= threshold){
         bin--;
+        if(bin < 0) break;
         aux = waveform[bin];
     }
     time = bin+1; //for rise time
@@ -246,12 +248,13 @@ namespace opdet{
     for(unsigned int j=time; j<=time_end; j++) Area += waveform[j];
     Area = Area/fSampling;
 
-    bin = time - 1;
+    bin = time;
     aux = waveform[time];  
 
     while(aux >= threshold){
         waveform[bin] = 0.0;
         bin++;
+        if(bin > waveform.size()-1) break;
         aux = waveform[bin];
     }
     //std::cout << time << " " << time_end << " " << (time_end - time);
