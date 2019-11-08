@@ -182,6 +182,7 @@ namespace opdet{
     } // for(auto const& wvf : (*wvfHandle)){
 
     e.put(std::move(pulseVecPtr));
+    std::vector<double>().swap(fwaveform); // clear and release the memory of fwaveform
   } // void opHitFinderSBND::produce(art::Event & e)
 
   DEFINE_ART_MODULE(opHitFinderSBND)
