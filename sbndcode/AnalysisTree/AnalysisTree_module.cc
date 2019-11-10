@@ -2147,18 +2147,19 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         //std::map<art::Ptr<simb::MCTruth>,double> mctruthemap;
       static bool isfirsttime = true;
       if (isfirsttime){
-	for (size_t i = 0; i<hitlist.size(); i++){
-	  //if (hitlist[i]->View() == geo::kV){//collection view
-	  std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToEveTrackIDEs(hitlist[i]);
-	  for (size_t e = 0; e<eveIDs.size(); e++){
-	    art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
-	    //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
-	    if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
-	  }
-	    //}
-	}
-	isfirsttime = false;
-	if (fSaveCaloCosmics) isCosmics = false; //override to save calo info
+	      for (size_t i = 0; i<hitlist.size(); i++){
+	        //if (hitlist[i]->View() == geo::kV){//collection view
+          // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem to correspond to the g4 track FIXME may need further investigation
+	        std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(hitlist[i]);
+	        for (size_t e = 0; e<eveIDs.size(); e++){
+	          art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
+	          //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
+	          if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
+	        }
+	        //}
+	      }
+	      isfirsttime = false;
+	      if (fSaveCaloCosmics) isCosmics = false; //override to save calo info
       }
 
 //        double maxenergy = -1;
