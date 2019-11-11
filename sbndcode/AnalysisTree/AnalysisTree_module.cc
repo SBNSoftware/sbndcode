@@ -3023,9 +3023,15 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
           TVector3 mcstart, mcend;
           double plen = length(*pPart, mcstart, mcend);
+	  std::cout << "plen=" << plen << std::endl;
+
 
           bool isActive = plen != 0;
-          if (plen) active++;
+	  std::cout << "isActive=" << isActive << std::endl;
+          if (plen) {
+	    active++;
+	    std::cout << "active=" << active << std::endl;
+	  }
 
           if (iPart < fData->GetMaxGEANTparticles()) {
 	   if (pPart->E()>fG4minE||isPrimary){
@@ -3140,7 +3146,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
             << fData->GetMaxGEANTparticles() << " will be stored in tree";
         }     
       } // for particles
-            
+      
       fData->geant_list_size_in_tpcAV = active;
       fData->no_primaries = primary;
       fData->geant_list_size = geant_particle;
@@ -3308,12 +3314,12 @@ double sbnd::AnalysisTree::length(const simb::MCParticle& part, TVector3& start,
 
   // Get active volume boundary.
   //double xmin = 0.;
-  double xmin = -2.0 * geom->DetHalfWidth();
-  double xmax = 2.0 * geom->DetHalfWidth();
-  double ymin = -geom->DetHalfHeight();
-  double ymax = geom->DetHalfHeight();
-  double zmin = 0.;
-  double zmax = geom->DetLength();
+  double xmin = -2.0 * geom->DetHalfWidth() - 1e-8;
+  double xmax = 2.0 * geom->DetHalfWidth() + 1e-8;
+  double ymin = -geom->DetHalfHeight() -1e-8;
+  double ymax = geom->DetHalfHeight() + 1e-8;
+  double zmin = 0. -1e-8;
+  double zmax = geom->DetLength() + 1e-8;
   //double vDrift = 160*pow(10,-6);
 
   //std::cout << "DET DIMENSIONS:   xmin = " << xmin << "  xmax = " << xmax << "  ymin = " << ymin << "  ymax = " << ymax << "  zmin = " << zmin << "  zmax = " << zmax << std::endl;
