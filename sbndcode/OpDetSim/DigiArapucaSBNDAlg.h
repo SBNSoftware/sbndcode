@@ -70,8 +70,8 @@ namespace opdet{
     //Default destructor
     ~DigiArapucaSBNDAlg();
 
-    double Baseline() { return fParams.Baseline; } 
-            
+    double Baseline() { return fParams.Baseline; }
+
     void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples);
     void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples);
    // explicit DigiArapucaSBND(fhicl::ParameterSet const & p);
@@ -87,23 +87,23 @@ namespace opdet{
     int pulsesize;
     double fArapucaEffT1;
     double fArapucaEffT2;
-    double fArapucaEffx; 
+    double fArapucaEffx;
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
- 
+
     TH1D* TimeArapucaT1; //histogram for getting the photon time distribution inside the arapuca T1 box (considering the optical window)
     TH1D* TimeArapucaT2; //histogram for getting the photon time distribution inside the arapuca T2 box (considering the optical window)
     TH1D* TimeArapucaX; //histogram for getting the photon time distribution inside the X-arapuca box (considering the optical window)
-  
+
     std::vector<double> wsp; //single photon pulse vector
     std::unordered_map< raw::Channel_t,std::vector<double> > fFullWaveforms;
-    
+
     void AddSPE(size_t time_bin, std::vector<double>& wave, int nphotons); // add single pulse to auxiliary waveform
     double Pulse1PE(double time) const;
     void AddLineNoise(std::vector<double>& wave);
     void AddDarkNoise(std::vector<double>& wave);
     double FindMinimumTime(sim::SimPhotons const& simphotons);
-    double FindMinimumTimeLite(std::map< int, int > const& photonMap);  
+    double FindMinimumTimeLite(std::map< int, int > const& photonMap);
     void CreatePDWaveform(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave, std::string pdtype);
     void CreatePDWaveformLite(std::map< int, int > const& photonMap, double t_min, std::vector<double>& wave, std::string pdtype); 
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
@@ -195,7 +195,7 @@ namespace opdet{
         detinfo::DetectorClocks const& detClocks,
         CLHEP::HepRandomEngine* engine
         ) const;
-       
+
     private:
       /// Part of the configuration learned from configuration files.
     DigiArapucaSBNDAlg::ConfigurationParameters_t fBaseConfig;
