@@ -11,6 +11,12 @@
 
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
+#include "CLHEP/Random/RandomEngine.h"
+#include "CLHEP/Random/JamesRandom.h"
+#include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandExponential.h"
 
 #include <memory>
 #include <vector>
@@ -29,7 +35,7 @@
 
 #include "TMath.h"
 #include "TH1D.h"
-#include "TRandom3.h"
+//#include "TRandom3.h"
 #include "TF1.h"
 
 namespace opdet{
@@ -56,6 +62,7 @@ namespace opdet{
 
     detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
     detinfo::DetectorClocks const* timeService = nullptr; ///< DetectorClocks service provider.
+    CLHEP::HepRandomEngine* engine = nullptr;
     };// ConfigurationParameters_t
 
     //Default constructor
@@ -81,6 +88,8 @@ namespace opdet{
     double fArapucaEffT1;
     double fArapucaEffT2;
     double fArapucaEffx; 
+
+    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
  
     TH1D* TimeArapucaT1; //histogram for getting the photon time distribution inside the arapuca T1 box (considering the optical window)
     TH1D* TimeArapucaT2; //histogram for getting the photon time distribution inside the arapuca T2 box (considering the optical window)
@@ -183,7 +192,8 @@ namespace opdet{
 
     std::unique_ptr<DigiArapucaSBNDAlg> operator()(
         detinfo::LArProperties const& larProp,
-        detinfo::DetectorClocks const& detClocks
+        detinfo::DetectorClocks const& detClocks,
+        CLHEP::HepRandomEngine* engine
         ) const;
        
     private:

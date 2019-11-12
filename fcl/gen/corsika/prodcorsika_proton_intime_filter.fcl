@@ -1,0 +1,11 @@
+#include "filtersgenintime_sbnd.fcl"
+#include "prodcorsika_cosmics_proton.fcl"
+
+process_name: CosmicsCorsikaCMCGenAndG4InTime
+
+# Ported from uBooNE gen-in-time fhicl for use by SBND
+# by Gray Putnam <grayputnam@uchicago.edu>
+
+physics.filters.filter: @local::sbnd_filtergenintime
+physics.simulate: [ generator, filter, rns ]
+outputs.out1.SelectEvents: [ "simulate" ]
