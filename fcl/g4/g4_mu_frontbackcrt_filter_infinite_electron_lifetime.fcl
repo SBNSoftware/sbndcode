@@ -1,0 +1,4 @@
+#include "g4_mu_frontbackcrt_filter.fcl"
+
+services.DetectorPropertiesService.Electronlifetime:  1.0e6 #microseconds (setting to a second is good enough, probably)
+

@@ -246,7 +246,7 @@ standard_stitchpmtframes:
 
 sbnd_simphotoncounter: @local::standard_simphotoncounter
 sbnd_opdigi:           @local::standard_opdigi
-sbnd_tracktimeassoc:   @local::standard_tracktimeassoc
+# sbnd_tracktimeassoc:   @local::standard_tracktimeassoc
 sbnd_opflash:          @local::standard_opflash
 sbnd_opflashtruth:     @local::standard_opflashtruth
 

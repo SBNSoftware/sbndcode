@@ -25,8 +25,10 @@ sbnd_digipmt_alg:
 # CreateBeamGateTriggers:    true    #Option to create unbiased readout around beam spill
 # BeamGateTriggerRepPeriod:  2.0     #Repetition Period (us) for BeamGateTriggers
 # BeamGateTriggerNReps:      10      #Number of beamgate trigger reps to produce
- QEDirect:                  0.07    #PMT quantum efficiency for direct (VUV) light
- QERefl:                    0.15    #PMT quantum efficiency for reflected (TPB converted) light
+
+ QEDirect:                  0.03    #PMT quantum efficiency for direct (VUV) light
+ QERefl:                    0.03    #PMT quantum efficiency for reflected (TPB converted) light
+ SinglePEmodel:             0       # set =0 for ideal PMT response, set =1 for test bench measured response
 }
 
 END_PROLOG

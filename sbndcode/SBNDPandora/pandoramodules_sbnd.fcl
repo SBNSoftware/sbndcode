@@ -21,7 +21,7 @@ sbnd_basicpandora:
 }
 
 sbnd_pandora:                                                       @local::sbnd_basicpandora
-sbnd_pandora.ConfigFile:                                            "PandoraSettings_Master_Standard.xml"
+sbnd_pandora.ConfigFile:                                            "PandoraSettings_Master_SBND.xml"
 sbnd_pandora.ShouldRunAllHitsCosmicReco:                            true
 sbnd_pandora.ShouldRunStitching:                                    true
 sbnd_pandora.ShouldRunCosmicHitRemoval:                             true
