@@ -69,7 +69,6 @@ namespace filt{
     fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
     readoutWindow  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize(); // [us]
     driftTime = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); // [us]
   }
 
@@ -99,8 +98,11 @@ namespace filt{
         const art::Ptr<simb::MCTruth> mc_truth(mclists[i],j);
         for (int part = 0; part < mc_truth->NParticles(); part++){
           const simb::MCParticle particle = mc_truth->GetParticle(part);
+
           if (!IsInterestingParticle(particle)) continue;
+
           double time = particle.T() * 1e-3; //[us]
+
           if (fUseReadoutWindow){
             if (time < -driftTime || time > readoutWindow) continue;
             // Get the minimum and maximum |x| position in the TPC
@@ -111,39 +113,40 @@ namespace filt{
             // If both times are below or above the readout window time then skip
             if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
           }
+
           if (fUseTopHighCRTs){
-            bool OK = UsesCRTAuxDets(particle,fTopHighCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fTopHighCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"TopHighCRTs: " << OK << std::endl;
           }
           if (fUseTopLowCRTs){
-            bool OK = UsesCRTAuxDets(particle,fTopLowCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fTopLowCRTAuxDetIDs);
             if (!OK) continue;
 
             //std::cout<<"TopLowCRTs: " << OK << std::endl;
           }
           if (fUseBottomCRTs){
-            bool OK = UsesCRTAuxDets(particle,fBottomCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fBottomCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"BottomCRTs: " << OK << std::endl;
           }
           if (fUseFrontCRTs){
-            bool OK = UsesCRTAuxDets(particle,fFrontCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fFrontCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"FrontCRTs: " << OK << std::endl;
           }
           if (fUseBackCRTs){
-            bool OK = UsesCRTAuxDets(particle,fBackCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fBackCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"BackCRTs: " << OK << std::endl;
           }
           if (fUseLeftCRTs){
-            bool OK = UsesCRTAuxDets(particle,fLeftCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fLeftCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"LeftCRTs: " << OK << std::endl;
           }
           if (fUseRightCRTs){
-            bool OK = UsesCRTAuxDets(particle,fRightCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fRightCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"RightCRTs: " << OK << std::endl;
           }
