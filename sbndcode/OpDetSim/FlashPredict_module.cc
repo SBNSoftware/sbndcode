@@ -80,7 +80,7 @@ private:
   bool fMakeTree,fSelectNeutrino;
   std::vector<float> fPMTChannelCorrection;
   // geometry service
-  const uint nMaxTPCs = 4;
+  //const uint nMaxTPCs = 4;
 
 
   ::flashana::Flash_t GetFlashPESpectrum(const recob::OpFlash& opflash);
@@ -95,13 +95,13 @@ private:
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
 
   // root stuff
-  TTree* _flashmatch_acpt_tree;
+  //TTree* _flashmatch_acpt_tree;
   TTree* _flashmatch_nuslice_tree;
   TH1F *ophittime;
 						
   // Tree variables
   std::vector<float> _pe_reco_v, _pe_hypo_v;
-  float _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
+  //float _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
   float _nuvtx_x, _nuvtx_y, _nuvtx_z, _nuvtx_q;
   float _flash_x,_flash_y,_flash_z,_flash_pe;
   float _flash_r, _score;
