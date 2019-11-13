@@ -80,6 +80,7 @@ find_ups_product( cetbuildtools v3_10_00 )
 find_ups_product( postgresql v9_1_5 )
 find_ups_product( hep_concurrency )
 find_ups_product( pandora )
+find_ups_product( eigen )
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)

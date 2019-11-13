@@ -16,7 +16,12 @@ namespace opdet{
   , fQEDirect(fParams.QEDirect / fParams.larProp->ScintPreScale())
   , fQERefl(fParams.QERefl / fParams.larProp->ScintPreScale())
     //  , fSinglePEmodel(fParams.SinglePEmodel)
+  , fEngine(fParams.engine)
   {
+
+    //art::ServiceHandle<rndm::NuRandomService> seedSvc;
+    //fEngine = new CLHEP::HepJamesRandom;
+    //seedSvc->registerEngine(rndm::NuRandomService::CLHEPengineSeeder(fEngine), "DigiPMTSBNDAlg");
 
     std::cout << "PMT corrected efficiencies = " << fQEDirect << " " << fQERefl << std::endl;
 
@@ -26,8 +31,8 @@ namespace opdet{
     fSampling=fSampling/1000.0; //in GHz, to cancel with ns
   
 //Random number engine initialization
-    int seed = time(NULL);
-    gRandom = new TRandom3(seed);
+    //int seed = time(NULL);
+    //gRandom = new TRandom3(seed);
 
     timeTPB = new TH1D("Time TPB", "", 1000, 0.0, 1000.0);//histogram that stores the emission time of photons converted by TPB
 
@@ -87,7 +92,8 @@ namespace opdet{
     double tts,sigma;
 
     sigma = fwhm/(2.0*sqrt(2.0*log(2.0)));
-    tts = gRandom->Gaus(0,sigma);	
+    //tts = gRandom->Gaus(0,sigma);	
+    tts = CLHEP::RandGauss::shoot(fEngine, 0, sigma);
 
     return tts;
   } 
@@ -101,7 +107,7 @@ namespace opdet{
     if(time_bin<wave.size()){
 	min=time_bin;
 	max=time_bin+pulsesize < wave.size() ? time_bin+pulsesize : wave.size();
-	for(size_t i = min; i<= max; i++){
+	for(size_t i = min; i< max; i++){
 	  wave[i]+= wsp[i-min];	
 	}	
     }
@@ -112,7 +118,8 @@ namespace opdet{
 
     double ttsTime=0;
     for(size_t i=0; i<simphotons.size(); i++){//simphotons is here reflected light. To be added for all PMTs
-      if((gRandom->Uniform(1.0))<fQERefl){ 
+      //if((gRandom->Uniform(1.0))<fQERefl){ 
+      if(CLHEP::RandFlat::shoot(fEngine, 1.0)<fQERefl){ 
         if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         AddSPE((fParams.TransitTime+ttsTime+simphotons[i].Time-t_min)*fSampling,wave);
       }
@@ -123,7 +130,8 @@ namespace opdet{
       for (auto& mapMember: auxmap){
  	 if(mapMember.first==ch) auxphotons=mapMember.second;}
       for(size_t j=0; j<auxphotons.size(); j++){//auxphotons is direct light
-        if((gRandom->Uniform(1.0))<fQEDirect){ 
+        //if((gRandom->Uniform(1.0))<fQEDirect){ 
+        if(CLHEP::RandFlat::shoot(fEngine, 1.0)<fQEDirect){ 
           if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
           AddSPE((fParams.TransitTime+ttsTime+auxphotons[j].Time+ttpb-t_min)*fSampling,wave);
@@ -141,7 +149,8 @@ namespace opdet{
     std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
     for (auto const& mapMember: photonMap){ //including reflected light for all PMT channels
       for(int i=0; i<mapMember.second; i++){
-   	 if((gRandom->Uniform(1.0))<(fQERefl)){
+   	 //if((gRandom->Uniform(1.0))<(fQERefl)){
+   	 if(CLHEP::RandFlat::shoot(fEngine, 1.0)<(fQERefl)){
            if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
  	   AddSPE((fParams.TransitTime+ttsTime+mapMember.first-t_min)*fSampling,wave); }
       }
@@ -154,7 +163,8 @@ namespace opdet{
       std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
       for (auto& mapMember2: auxphotonMap){ 
         for(int i=0; i<mapMember2.second; i++){
-   	  if((gRandom->Uniform(1.0))<(fQEDirect)){
+   	  //if((gRandom->Uniform(1.0))<(fQEDirect)){
+   	  if(CLHEP::RandFlat::shoot(fEngine, 1.0)<(fQEDirect)){
            if(fParams.TTS>0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
            ttpb = timeTPB->GetRandom(); //for including TPB emission time
            AddSPE((fParams.TransitTime+ttsTime+mapMember2.first+ttpb-t_min)*fSampling,wave);
@@ -182,7 +192,8 @@ namespace opdet{
     double noise = 0.0;
 
     for(size_t i = 0; i<wave.size(); i++){
-	noise = gRandom->Gaus(0,fParams.PMTBaselineRMS); //gaussian noise
+	//noise = gRandom->Gaus(0,fParams.PMTBaselineRMS); //gaussian noise
+	noise = CLHEP::RandGauss::shoot(fEngine, 0, fParams.PMTBaselineRMS); //gaussian noise
 	wave[i] += noise;
     }
   }
@@ -192,12 +203,14 @@ namespace opdet{
     size_t timeBin=0;
 
     // Multiply by 10^9 since fParams.DarkNoiseRate is in Hz (conversion from s to ns)
-    double darkNoiseTime = static_cast< double >(gRandom->Exp((1.0/fParams.PMTDarkNoiseRate)*1000000000.0));
+    //double darkNoiseTime = static_cast< double >(gRandom->Exp((1.0/fParams.PMTDarkNoiseRate)*1000000000.0));
+    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, (1.0/fParams.PMTDarkNoiseRate)*1000000000.0);
     while (darkNoiseTime < wave.size()){
       timeBin = (darkNoiseTime);
       AddSPE(timeBin,wave);
       // Find next time to add dark noise
-      darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.PMTDarkNoiseRate)*1000000000.0));
+      //darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.PMTDarkNoiseRate)*1000000000.0));
+      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, (1.0/fParams.PMTDarkNoiseRate)*1000000000.0);
     }
   }
   
@@ -268,7 +281,8 @@ namespace opdet{
   std::unique_ptr<DigiPMTSBNDAlg>
   DigiPMTSBNDAlgMaker::operator()(
     detinfo::LArProperties const& larProp,
-    detinfo::DetectorClocks const& detClocks
+    detinfo::DetectorClocks const& detClocks,
+    CLHEP::HepRandomEngine* engine
     ) const
   {
     // set the configuration 
@@ -277,6 +291,7 @@ namespace opdet{
     // set up parameters
     params.larProp = &larProp;
     params.timeService = &detClocks;
+    params.engine = engine;
                   
     return std::make_unique<DigiPMTSBNDAlg>(params);
   } // DigiPMTSBNDAlgMaker::create()
