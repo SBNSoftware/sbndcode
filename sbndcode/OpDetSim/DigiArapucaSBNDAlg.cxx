@@ -85,7 +85,7 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     if(time_bin<wave.size()){
 	min=time_bin;
 	max=time_bin+pulsesize < wave.size() ? time_bin+pulsesize : wave.size();
-	for(size_t i = min; i<= max; i++){
+	for(size_t i = min; i< max; i++){
 		wave[i]+= (wsp[i-min])*(double)nphotons;	
 	}		
     }
