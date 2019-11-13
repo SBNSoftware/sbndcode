@@ -51,7 +51,7 @@ physics.producers.daq     : @erase
 # specify the data tier for the ROOT output file
 outputs.out1.dataTier:    "generated" 
 
-services.Geometry.GDML: "sbnd_v01_05_base.gdml"
+#services.Geometry.GDML: "sbnd_v01_05_base.gdml"
 #services.Geometry.GDML: "/sbnd/app/users/mguzzo/geometry/v01_05/sbnd_v01_05_base.gdml"
 #services.Geometry.ROOT: "/sbnd/app/users/mguzzo/geometry/v01_05/sbnd_v01_05_base.gdml"
-services.Geometry.ROOT: "sbnd_v01_05_base.gdml"
+#services.Geometry.ROOT: "sbnd_v01_05_base.gdml"
