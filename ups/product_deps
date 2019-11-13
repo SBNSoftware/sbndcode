@@ -35,14 +35,14 @@ fwdir   product_dir scripts
 # Add the dependent product and version
 
 product          version
-larsoft          v08_35_01
+larsoft          v08_36_00
 genie_xsec       v3_00_04a
 sbnd_data        v01_02_00 - optional
 sbndutil         v08_35_01 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-cetbuildtools    v7_13_02  -   only_for_build
+cetbuildtools    v7_14_00  -   only_for_build
 
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
