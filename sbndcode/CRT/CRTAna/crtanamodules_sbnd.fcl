@@ -52,9 +52,9 @@ sbnd_crttrackrecoana:
       CRTHitLabel:          "crthit"       # CRT producer module label
       CRTTrackLabel:        "crttrack"       # CRT producer module label
       Verbose:              false        # Print extra information about what's going on
-      VeryVerbose:          true        # Print detailed information about every muon
-      Plot:                 true        # Draw truth and reco tracks in event
-      PlotTrackID:          257         # ID of true track to plot
+      VeryVerbose:          false        # Print detailed information about every muon
+      Plot:                 false        # Draw truth and reco tracks in event
+      PlotTrackID:          -99999         # ID of true track to plot
       Evd:                  @local::standard_crteventdisplay
       CrtBackTrack:         @local::standard_crtbacktracker
 }

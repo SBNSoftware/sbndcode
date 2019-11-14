@@ -9,13 +9,14 @@
 #include "mcsfitter_sbnd.fcl"
 #include "cosmicidtreeconfig_sbnd.fcl"
 #include "cosmicidanamodules_sbnd.fcl"
+#include "crtanamodules_sbnd.fcl"
 
-process_name: SelectionTree
+process_name: AllTrees
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "selectiontrees.root" }
+  TFileService:           { fileName: "alltrees.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -68,6 +69,12 @@ physics:
       Verbose:             false          # Print extra information about what's going on
       fitter:              @local::sbnd_mcsfitter
     }
+    CRTDetSimAna: @local::sbnd_crtdetsimana
+    CRTHitRecoAna: @local::sbnd_crthitrecoana
+    CRTTrackRecoAna: @local::sbnd_crttrackrecoana
+    CRTT0MatchingAna: @local::sbnd_crtt0matchingana 
+    CRTTrackMatchingAna: @local::sbnd_crttrackmatchingana 
+    CRTFullRecoAna: @local::sbnd_crtfullrecoana
     CosmicIdAna: @local::sbnd_cosmicidana
     CosmicIdTree: @local::sbnd_cosmicidtree
     SelectionTree: 
@@ -92,7 +99,18 @@ physics:
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  analysis: [ NuMuRecoTree, CosmicIdAna, CosmicIdTree, SelectionTree ]
+  analysis: [ 
+              NuMuRecoTree
+              , CRTDetSimAna 
+              , CRTHitRecoAna
+              , CRTTrackRecoAna
+              , CRTT0MatchingAna
+              , CRTTrackMatchingAna
+              , CRTFullRecoAna
+              , CosmicIdAna
+              , CosmicIdTree
+              , SelectionTree 
+            ]
 
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.

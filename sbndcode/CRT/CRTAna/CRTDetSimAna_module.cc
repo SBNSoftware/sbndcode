@@ -202,10 +202,10 @@ namespace sbnd {
       hEffLengthTotal[tagger]    = tfs->make<TH1D>(Form("EffLengthTotal_%s", tagger.c_str()),    "", 20, 0, 10);
       hEffLengthReco[tagger]     = tfs->make<TH1D>(Form("EffLengthReco_%s", tagger.c_str()),     "", 20, 0, 10);
 
-      hStripDistADC[tagger] = tfs->make<TH2D>(Form("StripDistADC_%s", tagger.c_str()), "", 20, 0, 450,  20, 0, 10000);
-      hSipmDistADC[tagger]  = tfs->make<TH2D>(Form("SipmDistADC_%s", tagger.c_str()),  "", 20, 0, 11.2, 20, 0, 10000);
-      hStripDistNpe[tagger] = tfs->make<TH2D>(Form("StripDistNpe_%s", tagger.c_str()), "", 20, 0, 450,  20, 0, 300);
-      hSipmDistNpe[tagger]  = tfs->make<TH2D>(Form("SipmDistNpe_%s", tagger.c_str()),  "", 20, 0, 11.2, 20, 0, 300);
+      hStripDistADC[tagger] = tfs->make<TH2D>(Form("StripDistADC_%s", tagger.c_str()), "", 20, 0, 450,  20, 0, 5000);
+      hSipmDistADC[tagger]  = tfs->make<TH2D>(Form("SipmDistADC_%s", tagger.c_str()),  "", 20, 0, 11.2, 20, 0, 5000);
+      hStripDistNpe[tagger] = tfs->make<TH2D>(Form("StripDistNpe_%s", tagger.c_str()), "", 20, 0, 450,  20, 0, 110);
+      hSipmDistNpe[tagger]  = tfs->make<TH2D>(Form("SipmDistNpe_%s", tagger.c_str()),  "", 20, 0, 11.2, 20, 0, 110);
       hSipmDistNpeRatio[tagger]  = tfs->make<TH2D>(Form("SipmDistNpeRatio_%s", tagger.c_str()),  "", 20, 0, 11.2, 20, 0, 10);
     }
     
