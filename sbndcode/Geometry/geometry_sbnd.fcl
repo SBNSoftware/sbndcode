@@ -57,8 +57,8 @@ BEGIN_PROLOG
 #
 sbnd_geo_source: {
   Name:  "sbndv1"
-  GDML:  "sbnd_v01_05.gdml"
-  ROOT:  "sbnd_v01_05.gdml"
+  GDML:  "sbnd_v01_04.gdml"
+  ROOT:  "sbnd_v01_04.gdml"
 } # sbnd_geo_source
 
 #
