@@ -3,11 +3,13 @@
 namespace sbnd{
 
 // Constructor - get values from the auxdet geometry service
-CRTGeoAlg::CRTGeoAlg(){
+CRTGeoAlg::CRTGeoAlg(): 
+  CRTGeoAlg::CRTGeoAlg(lar::providerFrom<geo::Geometry>(), ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
+{}
 
-  fGeometryService = lar::providerFrom<geo::Geometry>();
-  fAuxDetGeo = &(*fAuxDetGeoService);
-  fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
+CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore const *auxdet_geometry) {
+  fGeometryService = geometry;
+  fAuxDetGeoCore = auxdet_geometry;
 
   // Keep track of which objects we've recorded
   std::vector<std::string> usedTaggers;
@@ -228,7 +230,7 @@ CRTGeoAlg::~CRTGeoAlg(){
 
 // ----------------------------------------------------------------------------------
 // Return the volume enclosed by the whole CRT system
-std::vector<double> CRTGeoAlg::CRTLimits(){
+std::vector<double> CRTGeoAlg::CRTLimits() const {
   std::vector<double> limits;
 
   std::vector<double> minXs;
