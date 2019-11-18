@@ -14,14 +14,14 @@
 //                           File configuration
 //------------------------------------------------------------------------
 // Name of input file
-InputFile: xsectree_nue.root
+InputFile: /pnfs/sbnd/persistent/users/tbrooks/physics_book/xsectree_nue.root
 
 // Path to interaction and metadata trees
 TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: test/test_output.png
+OutputFile: test/nue/test_output.png
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -96,7 +96,7 @@ Stage: true
 PlotVariable: lep_mom, cos_lep_theta
 
 // Save the plots for each variable
-ShowPlots: true, false
+ShowPlots: true, true
 
 // Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
 PotScale: 6.6e20
@@ -135,7 +135,7 @@ PlotFilled: true
 //                         Choose plot options
 //------------------------------------------------------------------------
 // Show selection information (true)
-ShowInfo: true
+ShowInfo: false
 
 // Show percentage statistical error (true)
 ShowStatError: true
