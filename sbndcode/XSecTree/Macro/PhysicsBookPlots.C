@@ -1179,19 +1179,19 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   hstack->GetXaxis()->SetTitleOffset(1.8);
   hstack->GetXaxis()->SetTickLength(0.04);
   // Y axis config
-  hstack->GetYaxis()->SetTitleOffset(0.8);
+  hstack->GetYaxis()->SetTitleOffset(0.9);
   double title_size = 1.1*hstack->GetYaxis()->GetTitleSize();
   if(fPlotXSec && fPlotVariables.size()==1){ 
     title_size = 1.0*hstack->GetYaxis()->GetTitleSize();
-    hstack->GetYaxis()->SetTitleOffset(0.9);
+    hstack->GetYaxis()->SetTitleOffset(1);
   }
   if(fPlotXSec && fPlotVariables.size()==2){ 
     title_size = 0.8*hstack->GetYaxis()->GetTitleSize();
-    hstack->GetYaxis()->SetTitleOffset(1.0);
+    hstack->GetYaxis()->SetTitleOffset(1.1);
   }
   if(fPlotXSec && fPlotVariables.size()==3){ 
     title_size = 0.6*hstack->GetYaxis()->GetTitleSize();
-    hstack->GetYaxis()->SetTitleOffset(1.1);
+    hstack->GetYaxis()->SetTitleOffset(1.2);
   }
   hstack->GetYaxis()->SetTitleSize(title_size);
   hstack->GetYaxis()->SetNdivisions(110);
@@ -1229,7 +1229,7 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   error_bands->GetYaxis()->CenterTitle();
   error_bands->GetYaxis()->SetTickLength(0.015);
   error_bands->SetNdivisions(105, "y");
-  error_bands->SetTitleOffset(0.3, "y");
+  error_bands->SetTitleOffset(0.35, "y");
 
   // Draw the error bars
   if(error_bands->GetNbinsX() < 40) error_bands->Draw("B");
@@ -1289,20 +1289,20 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
   hstack->GetXaxis()->SetTickLength(0.02);
   hstack->GetXaxis()->SetTitleSize(1.1*hstack->GetXaxis()->GetTitleSize());
   // Y axis config
-  hstack->GetYaxis()->SetTitleOffset(0.95);
+  hstack->GetYaxis()->SetTitleOffset(1.05);
   hstack->GetYaxis()->SetTickLength(0.015);
   double title_size = 1.1*hstack->GetYaxis()->GetTitleSize();
   if(fPlotXSec && fPlotVariables.size()==1){ 
     title_size = 1.0*hstack->GetYaxis()->GetTitleSize();
-    hstack->GetYaxis()->SetTitleOffset(1.05);
+    hstack->GetYaxis()->SetTitleOffset(1.15);
   }
   if(fPlotXSec && fPlotVariables.size()==2){ 
     title_size = 0.8*hstack->GetYaxis()->GetTitleSize();
-    hstack->GetYaxis()->SetTitleOffset(1.15);
+    hstack->GetYaxis()->SetTitleOffset(1.25);
   }
   if(fPlotXSec && fPlotVariables.size()==3){ 
     title_size = 0.6*hstack->GetYaxis()->GetTitleSize();
-    hstack->GetYaxis()->SetTitleOffset(1.25);
+    hstack->GetYaxis()->SetTitleOffset(1.35);
   }
     
   hstack->GetYaxis()->SetTitleSize(title_size);
@@ -1343,7 +1343,7 @@ void PlotEfficiency(TH1D* select, TH1D* total, TString name, TString xaxis, TStr
   graph->GetXaxis()->SetTickLength(0.04);
   graph->GetXaxis()->SetTitleSize(1.1*graph->GetXaxis()->GetTitleSize());
   // Y axis config
-  graph->GetYaxis()->SetTitleOffset(0.95);
+  graph->GetYaxis()->SetTitleOffset(.95);
   graph->GetYaxis()->SetTickLength(0.015);
   graph->GetYaxis()->SetTitleSize(1.1*graph->GetYaxis()->GetTitleSize());
   graph->GetYaxis()->SetNdivisions(108);
