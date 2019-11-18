@@ -81,8 +81,9 @@ namespace sbnd{
 
       fhicl::Atom<int> TSMode {
         Name("TSMode"),
-        Comment("")
-      };
+        Comment(""),
+        1 /* Value for SBND */
+      }; 
 
       fhicl::Atom<double> TimeCorrection {
         Name("TimeCorrection"),
