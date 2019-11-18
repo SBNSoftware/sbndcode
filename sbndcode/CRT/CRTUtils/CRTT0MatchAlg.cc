@@ -29,7 +29,8 @@ void CRTT0MatchAlg::reconfigure(const Config& config){
   fMinTrackLength = config.MinTrackLength();
   fTrackDirectionFrac = config.TrackDirectionFrac();
   fDistanceLimit = config.DistanceLimit();
-
+  fTSMode = config.TSMode();
+  fTimeCorrection = config.TimeCorrection();
   fTPCTrackLabel = config.TPCTrackLabel();
 
   return;
@@ -141,7 +142,13 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrac
   // Loop over all the CRT hits
   for(auto &crtHit : crtHits){
     // Check if hit is within the allowed t0 range
-    double crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3;
+    double crtTime = -99999.;
+    if (fTSMode == 1) {
+      crtTime = ((double)(int)crtHit.ts1_ns) * 1e-3 + fTimeCorrection;
+    }
+    else {
+      crtTime = ((double)(int)crtHit.ts0_ns) * 1e-3 + fTimeCorrection;
+    }
     // If track is stitched then try all hits
     if (!((crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.) 
             || t0MinMax.first == t0MinMax.second)) continue;
@@ -186,7 +193,13 @@ double CRTT0MatchAlg::T0FromCRTHits(recob::Track tpcTrack, std::vector<art::Ptr<
   std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(tpcTrack, hits, crtHits);
   if(closestHit.second == -99999) return -99999;
 
-  double crtTime = ((double)(int)closestHit.first.ts1_ns) * 1e-3;
+  double crtTime;
+  if (fTSMode == 1) {
+    crtTime = ((double)(int)closestHit.first.ts1_ns) * 1e-3 + fTimeCorrection;
+  }
+  else {
+    crtTime = ((double)(int)closestHit.first.ts0_ns) * 1e-3 + fTimeCorrection;
+  }
   if(closestHit.second < fDistanceLimit) return crtTime;
 
   return -99999;
