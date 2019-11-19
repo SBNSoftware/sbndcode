@@ -50,6 +50,7 @@
 #include "TH1.h"
 #include <memory>
 
+#include <iostream>
 class FlashPredict;
 class FlashPredict : public art::EDProducer {
 
@@ -75,13 +76,14 @@ private:
   // art::InputTag fT0Producer; // producer for ACPT in-time anab::T0 <-> recob::Track assocaition
   std::string fPandoraProducer, fSpacePointProducer, fOpHitProducer, fInputFilename;
   float fBeamWindowEnd, fBeamWindowStart;
+  float fLightWindowEnd, fLightWindowStart;
   float fMaxTotalPE;
   float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
+  int fDetector; // ==0 for SBND, =1 ICARUS
   bool fMakeTree,fSelectNeutrino;
   std::vector<float> fPMTChannelCorrection;
   // geometry service
   //const uint nMaxTPCs = 4;
-
 
   ::flashana::Flash_t GetFlashPESpectrum(const recob::OpFlash& opflash);
   void CollectDownstreamPFParticles(const lar_pandora::PFParticleMap &pfParticleMap,
@@ -113,7 +115,7 @@ private:
 
   std::vector<float> dysp,dzsp,rrsp,dymean,dzmean,rrmean;
   int rr_nbins,dy_nbins,dz_nbins;
-
+  
 };
 
 FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
@@ -135,7 +137,9 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fInputFilename = p.get<std::string>("InputFileName","fmplots.root");  // root file with histograms for match score calc
   fMakeTree = p.get<bool>("MakeTree",false);  
   fSelectNeutrino = p.get<bool>("SelectNeutrino",true);  
-
+  fLightWindowStart = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
+  fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
+  fDetector = p.get<int>("Detector",0); // ==0 for SBND, ==1 for ICARUS
   art::ServiceHandle<art::TFileService> tfs;
 
   ophittime = tfs->make<TH1F>("ophittime","ophittime",1100,-0.2,2.0); // in us
@@ -297,16 +301,21 @@ void FlashPredict::produce(art::Event & e)
   ophittime->Reset();
   for(size_t j = 0; j < OpHitCollection.size(); j++){
     recob::OpHit oph = OpHitCollection[j];
-    if ( map.pdType(oph.OpChannel(),"pmt")) {
+    if ( (fDetector==0) && map.pdType(oph.OpChannel(),"pmt")) {
       if ( (oph.PeakTime()>fBeamWindowStart) && (oph.PeakTime()< fBeamWindowEnd) ) {
 	ophittime->Fill(oph.PeakTime(),100*oph.PE());
+      }
+    }
+    else if (fDetector == 1) {
+      if ( (oph.PeakTime()>fBeamWindowStart) && (oph.PeakTime()< fBeamWindowEnd) ) {
+        ophittime->Fill(oph.PeakTime(),100*oph.PE());
       }
     }
   }
   auto ibin =  ophittime->GetMaximumBin();
   float flashtime = (ibin*0.002)-0.2;  // in us
-  float lowedge = flashtime-0.01;
-  float highedge = flashtime+0.09;
+  float lowedge = flashtime-fLightWindowStart;
+  float highedge = flashtime+fLightWindowEnd;
   
 
   // Loop over pandora pfp particles, select primary particles identified as neutrinos
@@ -347,6 +356,7 @@ void FlashPredict::produce(art::Event & e)
           const auto &position(SP->XYZ());
           const auto charge(hit->Integral());
           const auto tpcindex = (hit->WireID()).TPC;
+          // const auto cryoindex = (hit->WireID()).Cryostat;
           // std::cout << " tpc index" << tpcindex << " x pos of sp " << position[0] << std::endl;
           lightCluster[tpcindex].emplace_back(position[0], position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
         } // for all hits associated to this spacepoint
@@ -381,7 +391,7 @@ void FlashPredict::produce(art::Event & e)
 	double sum_Cy=0;double sum_Cz=0;
 	for(size_t j = 0; j < OpHitCollection.size(); j++){
 	  recob::OpHit oph = OpHitCollection[j];
-	  if ( map.pdType(oph.OpChannel(),"pmt")) {
+          if ( (fDetector==0) && map.pdType(oph.OpChannel(),"pmt")) {
 	    if ( (oph.PeakTime()>lowedge) && (oph.PeakTime()< highedge) ) {
 	      geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
 	      // std::cout << oph.OpChannel() << "   " << oph.PeakTime() << "   " << oph.PE()
@@ -403,7 +413,27 @@ void FlashPredict::produce(art::Event & e)
 	      }
 	    }
 	  }
-	}
+          else if (fDetector == 1) {
+          if ( (oph.PeakTime()>lowedge) && (oph.PeakTime()< highedge) ) {
+            geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
+            if ((it==0 && PMTxyz[0]<0) || (it==1 && PMTxyz[0]>0) ){ 
+              // Add up the position, weighting with PEs
+              _flash_x=PMTxyz[0];
+              pnorm+=oph.PE();
+              sum+=1.0;
+              sumy    += oph.PE()*PMTxyz[1];
+              sumz    += oph.PE()*PMTxyz[2];
+              sum_By  += PMTxyz[1];
+              sum_Bz  += PMTxyz[2];
+              sum_Ay  += oph.PE()*PMTxyz[1]*oph.PE()*PMTxyz[1];
+              sum_Az  += oph.PE()*PMTxyz[2]*oph.PE()*PMTxyz[2];
+              sum_D   +=oph.PE()*oph.PE();
+              sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
+              sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
+            }
+          }
+        }
+      }
 	
 	if (pnorm>0) {
 	  _flashtime=flashtime;
