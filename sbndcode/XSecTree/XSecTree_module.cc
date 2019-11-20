@@ -241,6 +241,9 @@ namespace sbnd {
     double fPionPidEff;
     double fProtonPidEff;
 
+    // List of reco formats
+    const std::vector<std::string> fRecoFormats;
+
     TPCGeoAlg fTPCGeo;
     trkf::TrackMomentumCalculator fRangeFitter;
 
@@ -260,70 +263,26 @@ namespace sbnd {
     double vtx_z;
 
     // XSec true tree parameters
-    bool true_particles_contained;
-    bool true_lep_contained;
-    int true_cc;
-    int true_nu_pdg;
-    int true_int_type;
-    unsigned int true_n_pipm;
-    unsigned int true_n_pi0;
-    unsigned int true_n_pr;
-    double true_nu_energy;
-    double true_lep_mom;
-    double true_lep_theta;
-    double true_pr1_mom;
-    double true_pr1_theta;
-    double true_lep_pr1_angle;
-    double true_pipm1_mom;
-    double true_pipm1_theta;
-    double true_lep_pipm1_angle;
-    double true_delta_pt;
-    double true_delta_alphat;
-    double true_delta_phit;
-
-    // XSec smearing + efficiency tree parameters
-    bool smeareff_particles_contained;
-    bool smeareff_lep_contained;
-    int smeareff_cc;
-    int smeareff_nu_pdg;
-    int smeareff_int_type;
-    unsigned int smeareff_n_pipm;
-    unsigned int smeareff_n_pi0;
-    unsigned int smeareff_n_pr;
-    double smeareff_nu_energy;
-    double smeareff_lep_mom;
-    double smeareff_lep_theta;
-    double smeareff_pr1_mom;
-    double smeareff_pr1_theta;
-    double smeareff_lep_pr1_angle;
-    double smeareff_pipm1_mom;
-    double smeareff_pipm1_theta;
-    double smeareff_lep_pipm1_angle;
-    double smeareff_delta_pt;
-    double smeareff_delta_alphat;
-    double smeareff_delta_phit;
-
-    // XSec reco tree parameters
-    bool reco_particles_contained;
-    bool reco_lep_contained;
-    int reco_cc;
-    int reco_nu_pdg;
-    int reco_int_type;
-    unsigned int reco_n_pipm;
-    unsigned int reco_n_pi0;
-    unsigned int reco_n_pr;
-    double reco_nu_energy;
-    double reco_lep_mom;
-    double reco_lep_theta;
-    double reco_pr1_mom;
-    double reco_pr1_theta;
-    double reco_lep_pr1_angle;
-    double reco_pipm1_mom;
-    double reco_pipm1_theta;
-    double reco_lep_pipm1_angle;
-    double reco_delta_pt;
-    double reco_delta_alphat;
-    double reco_delta_phit;
+    std::map<std::string, bool> particles_contained;
+    std::map<std::string, bool> lep_contained;
+    std::map<std::string, bool> cc;
+    std::map<std::string, int> nu_pdg;
+    std::map<std::string, int> int_type;
+    std::map<std::string, unsigned int> n_pipm;
+    std::map<std::string, unsigned int> n_pi0;
+    std::map<std::string, unsigned int> n_pr;
+    std::map<std::string, double> nu_energy;
+    std::map<std::string, double> lep_mom;
+    std::map<std::string, double> lep_theta;
+    std::map<std::string, double> pr1_mom;
+    std::map<std::string, double> pr1_theta;
+    std::map<std::string, double> lep_pr1_angle;
+    std::map<std::string, double> pipm1_mom;
+    std::map<std::string, double> pipm1_theta;
+    std::map<std::string, double> lep_pipm1_angle;
+    std::map<std::string, double> delta_pt;
+    std::map<std::string, double> delta_alphat;
+    std::map<std::string, double> delta_phit;
 
     // MetaData tree parameters
     double pot;
@@ -353,6 +312,7 @@ namespace sbnd {
     , fProtonEff            (config().ProtonEff())
     , fPionPidEff           (config().PionPidEff())
     , fProtonPidEff         (config().ProtonPidEff())
+    , fRecoFormats          ({"true","eff","smeareff","reco"})
   {
 
   }
@@ -370,71 +330,27 @@ namespace sbnd {
     fXSecTree->Branch("vtx_y", &vtx_y, "vtx_y/D");
     fXSecTree->Branch("vtx_z", &vtx_z, "vtx_z/D");
 
-    // True selection and kinematic variables
-    fXSecTree->Branch("true_particles_contained", &true_particles_contained, "true_particles_contained/O");
-    fXSecTree->Branch("true_lep_contained", &true_lep_contained, "true_lep_contained/O");
-    fXSecTree->Branch("true_cc", &true_cc, "true_cc/I");
-    fXSecTree->Branch("true_nu_pdg", &true_nu_pdg, "true_nu_pdg/I");
-    fXSecTree->Branch("true_int_type", &true_int_type, "true_int_type/I");
-    fXSecTree->Branch("true_n_pipm", &true_n_pipm, "true_n_pipm/i");
-    fXSecTree->Branch("true_n_pi0", &true_n_pi0, "true_n_pi0/i");
-    fXSecTree->Branch("true_n_pr", &true_n_pr, "true_n_pr/i");
-    fXSecTree->Branch("true_nu_energy", &true_nu_energy, "true_nu_energy/D");
-    fXSecTree->Branch("true_lep_mom", &true_lep_mom, "true_lep_mom/D");
-    fXSecTree->Branch("true_lep_theta", &true_lep_theta, "true_lep_theta/D");
-    fXSecTree->Branch("true_pr1_mom", &true_pr1_mom, "true_pr1_mom/D");
-    fXSecTree->Branch("true_pr1_theta", &true_pr1_theta, "true_pr1_theta/D");
-    fXSecTree->Branch("true_lep_pr1_angle", &true_lep_pr1_angle, "true_lep_pr1_angle/D");
-    fXSecTree->Branch("true_pipm1_mom", &true_pipm1_mom, "true_pipm1_mom/D");
-    fXSecTree->Branch("true_pipm1_theta", &true_pipm1_theta, "true_pipm1_theta/D");
-    fXSecTree->Branch("true_lep_pipm1_angle", &true_lep_pipm1_angle, "true_lep_pipm1_angle/D");
-    fXSecTree->Branch("true_delta_pt", &true_delta_pt, "true_delta_pt/D");
-    fXSecTree->Branch("true_delta_alphat", &true_delta_alphat, "true_delta_alphat/D");
-    fXSecTree->Branch("true_delta_phit", &true_delta_phit, "true_delta_phit/D");
-
-    // Smeared and efficiency applied kinematic variables
-    fXSecTree->Branch("smeareff_particles_contained", &smeareff_particles_contained, "smeareff_particles_contained/O");
-    fXSecTree->Branch("smeareff_lep_contained", &smeareff_lep_contained, "smeareff_lep_contained/O");
-    fXSecTree->Branch("smeareff_cc", &smeareff_cc, "smeareff_cc/I");
-    fXSecTree->Branch("smeareff_nu_pdg", &smeareff_nu_pdg, "smeareff_nu_pdg/I");
-    fXSecTree->Branch("smeareff_int_type", &smeareff_int_type, "smeareff_int_type/I");
-    fXSecTree->Branch("smeareff_n_pipm", &smeareff_n_pipm, "smeareff_n_pipm/i");
-    fXSecTree->Branch("smeareff_n_pi0", &smeareff_n_pi0, "smeareff_n_pi0/i");
-    fXSecTree->Branch("smeareff_n_pr", &smeareff_n_pr, "smeareff_n_pr/i");
-    fXSecTree->Branch("smeareff_nu_energy", &smeareff_nu_energy, "smeareff_nu_energy/D");
-    fXSecTree->Branch("smeareff_lep_mom", &smeareff_lep_mom, "smeareff_lep_mom/D");
-    fXSecTree->Branch("smeareff_lep_theta", &smeareff_lep_theta, "smeareff_lep_theta/D");
-    fXSecTree->Branch("smeareff_pr1_mom", &smeareff_pr1_mom, "smeareff_pr1_mom/D");
-    fXSecTree->Branch("smeareff_pr1_theta", &smeareff_pr1_theta, "smeareff_pr1_theta/D");
-    fXSecTree->Branch("smeareff_lep_pr1_angle", &smeareff_lep_pr1_angle, "smeareff_lep_pr1_angle/D");
-    fXSecTree->Branch("smeareff_pipm1_mom", &smeareff_pipm1_mom, "smeareff_pipm1_mom/D");
-    fXSecTree->Branch("smeareff_pipm1_theta", &smeareff_pipm1_theta, "smeareff_pipm1_theta/D");
-    fXSecTree->Branch("smeareff_lep_pipm1_angle", &smeareff_lep_pipm1_angle, "smeareff_lep_pipm1_angle/D");
-    fXSecTree->Branch("smeareff_delta_pt", &smeareff_delta_pt, "smeareff_delta_pt/D");
-    fXSecTree->Branch("smeareff_delta_alphat", &smeareff_delta_alphat, "smeareff_delta_alphat/D");
-    fXSecTree->Branch("smeareff_delta_phit", &smeareff_delta_phit, "smeareff_delta_phit/D");
-
-    // Reco selection and kinematic variables
-    fXSecTree->Branch("reco_particles_contained", &reco_particles_contained, "reco_particles_contained/O");
-    fXSecTree->Branch("reco_lep_contained", &reco_lep_contained, "reco_lep_contained/O");
-    fXSecTree->Branch("reco_cc", &reco_cc, "reco_cc/I");
-    fXSecTree->Branch("reco_nu_pdg", &reco_nu_pdg, "reco_nu_pdg/I");
-    fXSecTree->Branch("reco_int_type", &reco_int_type, "reco_int_type/I");
-    fXSecTree->Branch("reco_n_pipm", &reco_n_pipm, "reco_n_pipm/i");
-    fXSecTree->Branch("reco_n_pi0", &reco_n_pi0, "reco_n_pi0/i");
-    fXSecTree->Branch("reco_n_pr", &reco_n_pr, "reco_n_pr/i");
-    fXSecTree->Branch("reco_nu_energy", &reco_nu_energy, "reco_nu_energy/D");
-    fXSecTree->Branch("reco_lep_mom", &reco_lep_mom, "reco_lep_mom/D");
-    fXSecTree->Branch("reco_lep_theta", &reco_lep_theta, "reco_lep_theta/D");
-    fXSecTree->Branch("reco_pr1_mom", &reco_pr1_mom, "reco_pr1_mom/D");
-    fXSecTree->Branch("reco_pr1_theta", &reco_pr1_theta, "reco_pr1_theta/D");
-    fXSecTree->Branch("reco_lep_pr1_angle", &reco_lep_pr1_angle, "reco_lep_pr1_angle/D");
-    fXSecTree->Branch("reco_pipm1_mom", &reco_pipm1_mom, "reco_pipm1_mom/D");
-    fXSecTree->Branch("reco_pipm1_theta", &reco_pipm1_theta, "reco_pipm1_theta/D");
-    fXSecTree->Branch("reco_lep_pipm1_angle", &reco_lep_pipm1_angle, "reco_lep_pipm1_angle/D");
-    fXSecTree->Branch("reco_delta_pt", &reco_delta_pt, "reco_delta_pt/D");
-    fXSecTree->Branch("reco_delta_alphat", &reco_delta_alphat, "reco_delta_alphat/D");
-    fXSecTree->Branch("reco_delta_phit", &reco_delta_phit, "reco_delta_phit/D");
+    // Selection and kinematic variables
+    fXSecTree->Branch("particles_contained", &particles_contained);
+    fXSecTree->Branch("lep_contained", &lep_contained);
+    fXSecTree->Branch("cc", &cc);
+    fXSecTree->Branch("nu_pdg", &nu_pdg);
+    fXSecTree->Branch("int_type", &int_type);
+    fXSecTree->Branch("n_pipm", &n_pipm);
+    fXSecTree->Branch("n_pi0", &n_pi0);
+    fXSecTree->Branch("n_pr", &n_pr);
+    fXSecTree->Branch("nu_energy", &nu_energy);
+    fXSecTree->Branch("lep_mom", &lep_mom);
+    fXSecTree->Branch("lep_theta", &lep_theta);
+    fXSecTree->Branch("pr1_mom", &pr1_mom);
+    fXSecTree->Branch("pr1_theta", &pr1_theta);
+    fXSecTree->Branch("lep_pr1_angle", &lep_pr1_angle);
+    fXSecTree->Branch("pipm1_mom", &pipm1_mom);
+    fXSecTree->Branch("pipm1_theta", &pipm1_theta);
+    fXSecTree->Branch("lep_pipm1_angle", &lep_pipm1_angle);
+    fXSecTree->Branch("delta_pt", &delta_pt);
+    fXSecTree->Branch("delta_alphat", &delta_alphat);
+    fXSecTree->Branch("delta_phit", &delta_phit);
 
     fMetaDataTree = tfs->make<TTree>("metadata", "xsec tree");
     fMetaDataTree->Branch("pot", &pot, "pot/D");
@@ -505,30 +421,30 @@ namespace sbnd {
       //---------------------- FILLING ALL THE TRUE INTERACTION PARAMETERS ------------------------------------
 
       // Fill all the neutrino parameters
-      if(mctruth->GetNeutrino().CCNC() == simb::kCC) true_cc = 1;
-      else true_cc = 0;
-      true_nu_pdg = mctruth->GetNeutrino().Nu().PdgCode();
-      true_int_type = mctruth->GetNeutrino().Mode();
-      true_nu_energy = mctruth->GetNeutrino().Nu().E();
+      if(mctruth->GetNeutrino().CCNC() == simb::kCC) cc["true"] = 1;
+      else cc["true"]   = 0;
+      nu_pdg["true"]    = mctruth->GetNeutrino().Nu().PdgCode();
+      int_type["true"]  = mctruth->GetNeutrino().Mode();
+      nu_energy["true"] = mctruth->GetNeutrino().Nu().E();
 
       // Get all the particles propagated by geant 4
-      std::vector<const simb::MCParticle*> parts = pi_serv->MCTruthToParticles_Ps(mctruth);
+      std::vector<const simb::MCParticle*> parts     = pi_serv->MCTruthToParticles_Ps(mctruth);
       // Get only the interesting ones
       std::vector<const simb::MCParticle*> particles = InterestingParticles(parts);
 
-      if(fVerbose) std::cout<<particles.size()<<" interesting particles\n";
+      if(fVerbose) std::cout<<particles.size() << " interesting particles\n";
 
       // Lepton stuff
       for(size_t j = 0; j < particles.size(); j++){
         int pdg = std::abs(particles.at(j)->PdgCode());
         // Only consider the primary muon
         if(!(pdg == 13 || pdg == 11)) continue;
-        lep_j = j;
-        true_lep_mom = particles.at(j)->P();
-        TVector3 start = particles.at(j)->Position().Vect();
-        TVector3 end = particles.at(j)->EndPosition().Vect();
-        true_lep_theta = (end - start).Theta();
-        true_lep_contained = fTPCGeo.IsContained(*particles.at(j));
+        lep_j                 = j;
+        TVector3 start        = particles.at(j)->Position().Vect();
+        TVector3 end          = particles.at(j)->EndPosition().Vect();
+        lep_mom["true"]       = particles.at(j)->P();
+        lep_theta["true"]     = (end - start).Theta();
+        lep_contained["true"] = fTPCGeo.IsContained(*particles.at(j));
       }
 
       // Secondary particle stuff
@@ -537,47 +453,46 @@ namespace sbnd {
         if((int)j == lep_j) continue;
 
         // Only consider pi0, charged pi and protons
-        int pdg = std::abs(particles.at(j)->PdgCode());
-
+        int pdg        = std::abs(particles.at(j)->PdgCode());
         TVector3 start = particles.at(j)->Position().Vect();
-        TVector3 end = particles.at(j)->EndPosition().Vect();
+        TVector3 end   = particles.at(j)->EndPosition().Vect();
 
         // Count particle numbers
         if(pdg == 111){ 
-          true_n_pi0++;
-          if(!fTPCGeo.IsContained(*particles.at(j))) true_particles_contained = false;
+          n_pi0["true"]++;
+          if(!fTPCGeo.IsContained(*particles.at(j))) particles_contained["true"] = false;
         }
         if(pdg == 211){ 
-          true_n_pipm++;
-          if(!fTPCGeo.IsContained(*particles.at(j))) true_particles_contained = false;
+          n_pipm["true"]++;
+          if(!fTPCGeo.IsContained(*particles.at(j))) particles_contained["true"] = false;
 
-          if(particles.at(j)->P() < true_pipm1_mom) continue;
-          true_pipm1_mom = particles.at(j)->P();
-          true_pipm1_theta = (end - start).Theta();
+          if(particles.at(j)->P() < pipm1_mom["true"]) continue;
+          pipm1_mom["true"]   = particles.at(j)->P();
+          pipm1_theta["true"] = (end - start).Theta();
 
           // Calculate things relative to the lepton if there is one
           if(lep_j == -1) continue;
-          TVector3 lep_end = particles.at(lep_j)->EndPosition().Vect();
-          true_lep_pipm1_angle = lep_end.Angle(end);
+          TVector3 lep_end        = particles.at(lep_j)->EndPosition().Vect();
+          lep_pipm1_angle["true"] = lep_end.Angle(end);
         }
         if(pdg == 2212){ 
-          true_n_pr++;
-          if(!fTPCGeo.IsContained(*particles.at(j))) true_particles_contained = false;
+          n_pr["true"]++;
+          if(!fTPCGeo.IsContained(*particles.at(j))) particles_contained["true"] = false;
 
-          if(particles.at(j)->P() < true_pr1_mom) continue;
-          true_pr1_mom = particles.at(j)->P();
-          true_pr1_theta = (end - start).Theta();
+          if(particles.at(j)->P() < pr1_mom["true"]) continue;
+          pr1_mom["true"]   = particles.at(j)->P();
+          pr1_theta["true"] = (end - start).Theta();
 
           // Calculate things relative to the lepton if there is one
           if(lep_j == -1) continue;
-          TVector3 lep_end = particles.at(lep_j)->EndPosition().Vect();
-          true_lep_pr1_angle = lep_end.Angle(end);
+          TVector3 lep_end      = particles.at(lep_j)->EndPosition().Vect();
+          lep_pr1_angle["true"] = lep_end.Angle(end);
 
           // Transverse variables
-          TVector3 delta_pt = DeltaPT(particles.at(lep_j)->Momentum().Vect(), particles.at(j)->Momentum().Vect());
-          true_delta_pt = delta_pt.Mag();
-          true_delta_alphat = delta_pt.Theta()*TMath::RadToDeg();
-          true_delta_phit = delta_pt.Phi()*TMath::RadToDeg();
+          TVector3 true_delta_pt = DeltaPT(particles.at(lep_j)->Momentum().Vect(), particles.at(j)->Momentum().Vect());
+          delta_pt["true"]       = true_delta_pt.Mag();
+          delta_alphat["true"]   = true_delta_pt.Theta()*TMath::RadToDeg();
+          delta_phit["true"]     = true_delta_pt.Phi()*TMath::RadToDeg();
         }
 
       }
@@ -587,14 +502,31 @@ namespace sbnd {
       std::vector<const simb::MCParticle*> reco_particles = RecoParticles(parts);
       if(fVerbose) std::cout<<"Number of reconstructed particles = "<<reco_particles.size()<<"\n";
       
-      // Smearing won't change these
-      smeareff_cc                  = true_cc;
-      smeareff_nu_pdg              = true_nu_pdg;
-      smeareff_int_type            = true_int_type;
+      // Smearing won't change these, access from truth
+      if(mctruth->GetNeutrino().CCNC() == simb::kCC){
+        cc["eff"]      = 1;
+        cc["smeareff"] = 1;
+      }
+      else {
+        cc["eff"]        = 0;
+        cc["smeareff"]   = 0;
+      }
+      
+      // Particle selection efficiency only
+      nu_pdg["eff"]    = mctruth->GetNeutrino().Nu().PdgCode();
+      int_type["eff"]  = mctruth->GetNeutrino().Mode();
+      nu_energy["eff"] = mctruth->GetNeutrino().Nu().E();
+      
+      // Smearing + efficiency 
+      nu_pdg["smeareff"]    = mctruth->GetNeutrino().Nu().PdgCode();
+      int_type["smeareff"]  = mctruth->GetNeutrino().Mode();
 
       // TODO Make a better neutrino energy calculator
-      smeareff_nu_energy = VisibleEnergy(reco_particles);
-      if(fVerbose) std::cout<<"Smeared energy = "<<smeareff_nu_energy<<"\n";
+      nu_energy["smeareff"] = VisibleEnergy(reco_particles);
+      if(fVerbose){
+        std::cout<<"True energy    = "<< nu_energy["eff"] <<"\n";
+        std::cout<<"Smeared energy = "<< nu_energy["smeareff"] <<"\n";
+      }
 
       // Reset the lepton index
       lep_j = -1;
@@ -605,18 +537,31 @@ namespace sbnd {
         // Get the lepton kinematics - electrons
         if(pdg == 11 || pdg == 13){
           std::pair<TVector3, TVector3> cross_points = fTPCGeo.CrossingPoints(*reco_particles.at(j));
-          TVector3 start = cross_points.first;
-          TVector3 end = cross_points.second;
-          double contained_length = fTPCGeo.TpcLength(*reco_particles.at(j));
+          TVector3 start                             = cross_points.first;
+          TVector3 end                               = cross_points.second;
+          double contained_length                    = fTPCGeo.TpcLength(*reco_particles.at(j));
 
-          lep_j = j;
-          smeareff_lep_theta = (end - start).Theta();
-          smeareff_lep_contained = fTPCGeo.IsContained(*reco_particles.at(j));
-          if(pdg == 11) smeareff_lep_mom = SmearElectronMomentum(reco_particles.at(j)->P());
-          else if(smeareff_lep_contained) smeareff_lep_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
-          else smeareff_lep_mom = SmearMcsMomentum(reco_particles.at(j)->P());
+          lep_j                             = j;
+          lep_theta["eff"]                  = (end - start).Theta();
+          lep_contained["eff"]              = fTPCGeo.IsContained(*reco_particles.at(j));
+          lep_theta["smeareff"]             = (end - start).Theta();
+          lep_contained["smeareff"]         = fTPCGeo.IsContained(*reco_particles.at(j));
+
+
+          if(pdg == 11){
+            // When not smearing, just take true momentum
+            lep_mom["eff"]      = reco_particles.at(j)->P();
+            lep_mom["smeareff"] = SmearElectronMomentum(reco_particles.at(j)->P());
+          }
+          else if(lep_contained["smeareff"])
+            lep_mom["smeareff"] = fRangeFitter.GetTrackMomentum(contained_length, 13);
+          else 
+            lep_mom["smeareff"] = SmearMcsMomentum(reco_particles.at(j)->P());
+          
+          // When not smearing, just take true momentum
+          if(pdg == 13)
+            lep_mom["eff"] = reco_particles.at(j)->P();
         }
-
       }
       if(fVerbose) std::cout<<"Smeared the lepton kinematics\n";
 
@@ -624,74 +569,121 @@ namespace sbnd {
       for(size_t j = 0; j < reco_particles.size(); j++){
         if ((int)j == lep_j) continue;
 
-        int pdg = std::abs(reco_particles.at(j)->PdgCode());
+        int pdg                                    = std::abs(reco_particles.at(j)->PdgCode());
         std::pair<TVector3, TVector3> cross_points = fTPCGeo.CrossingPoints(*reco_particles.at(j));
-        TVector3 start = cross_points.first;
-        TVector3 end = cross_points.second;
-        double contained_length = fTPCGeo.TpcLength(*reco_particles.at(j));
+        TVector3 start                             = cross_points.first;
+        TVector3 end                               = cross_points.second;
+        double contained_length                    = fTPCGeo.TpcLength(*reco_particles.at(j));
 
         // Count particle numbers and smear - pi0
         if(pdg == 111){
-          smeareff_n_pi0++;
-          if(!fTPCGeo.IsContained(*reco_particles.at(j))) smeareff_particles_contained = false;
+          n_pi0["eff"]++;
+          n_pi0["smeareff"]++;
+          if(!fTPCGeo.IsContained(*reco_particles.at(j))){
+            particles_contained["eff"]      = false;
+            particles_contained["smeareff"] = false;
+          }
         }
 
         // Count particle numbers and smear - pions
         if(pdg == 211){ 
-          smeareff_n_pipm++;
-          if(!fTPCGeo.IsContained(*reco_particles.at(j))) smeareff_particles_contained = false;
-          double pipm1_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
+          n_pipm["eff"]++;
+          n_pipm["smeareff"]++;
 
-          if(pipm1_mom < smeareff_pipm1_mom) continue;
-          smeareff_pipm1_mom = pipm1_mom;
-          smeareff_pipm1_theta = (end - start).Theta();
+          if(!fTPCGeo.IsContained(*reco_particles.at(j))){
+            particles_contained["eff"]      = false;
+            particles_contained["smeareff"] = false;
+          }
 
-          // Calculate things relative to the lepton if there is one
-          if(lep_j == -1) continue;
-          TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles.at(lep_j)).second;
-          smeareff_lep_pipm1_angle = lep_end.Angle(end);
+          double smear_pipm1_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
+          double true_pipm1_mom  = reco_particles.at(j)->P();
+
+          if(true_pipm1_mom >= pipm1_mom["eff"]){
+            pipm1_mom["eff"]   = true_pipm1_mom;
+            pipm1_theta["eff"] = (end - start).Theta();
+            
+            // Calculate things relative to the lepton if there is one
+            if(lep_j == -1) continue;
+            TVector3 lep_end       = fTPCGeo.CrossingPoints(*reco_particles.at(lep_j)).second;
+            lep_pipm1_angle["eff"] = lep_end.Angle(end);
+          }
+
+          if(smear_pipm1_mom >= pipm1_mom["smeareff"]){
+            pipm1_mom["smeareff"]   = smear_pipm1_mom;
+            pipm1_theta["smeareff"] = (end - start).Theta();
+            
+            // Calculate things relative to the lepton if there is one
+            if(lep_j == -1) continue;
+            TVector3 lep_end            = fTPCGeo.CrossingPoints(*reco_particles.at(lep_j)).second;
+            lep_pipm1_angle["smeareff"] = lep_end.Angle(end);
+          }
         }
 
         // Count particle numbers and smear - protons
         if(pdg == 2212){ 
-          smeareff_n_pr++;
-          if(!fTPCGeo.IsContained(*reco_particles.at(j))) smeareff_particles_contained = false;
-          double pr1_mom = fRangeFitter.GetTrackMomentum(contained_length, 2212);
+          n_pr["eff"]++;
+          n_pr["smeareff"]++;
 
-          if(pr1_mom < smeareff_pr1_mom) continue;
-          smeareff_pr1_mom = pr1_mom;
-          smeareff_pr1_theta = (end - start).Theta();
+          if(!fTPCGeo.IsContained(*reco_particles.at(j))){
+            particles_contained["eff"]      = false;
+            particles_contained["smeareff"] = false;
+          }
 
-          // Calculate things relative to the lepton if there is one
-          if(lep_j == -1) continue;
-          TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles.at(lep_j)).second;
-          smeareff_lep_pr1_angle = lep_end.Angle(end);
+          double smear_pr1_mom = fRangeFitter.GetTrackMomentum(contained_length, 2212);
+          double true_pr1_mom  = reco_particles.at(j)->P();
 
-          // Transverse variables
-          TVector3 scaled_lep_mom = reco_particles.at(lep_j)->Momentum().Vect()*(smeareff_lep_mom/reco_particles.at(lep_j)->P());
-          TVector3 scaled_pr_mom = reco_particles.at(j)->Momentum().Vect()*(pr1_mom/reco_particles.at(j)->P());
-          TVector3 delta_pt = DeltaPT(scaled_lep_mom, scaled_pr_mom);
-          smeareff_delta_pt = delta_pt.Mag();
-          smeareff_delta_alphat = delta_pt.Theta()*TMath::RadToDeg();
-          smeareff_delta_phit = delta_pt.Phi()*TMath::RadToDeg();
+          if(true_pr1_mom >= pr1_mom["eff"]){
+            pr1_mom["eff"]   = true_pr1_mom;
+            pr1_theta["eff"] = (end - start).Theta();
+
+            // Calculate things relative to the lepton if there is one
+            if(lep_j == -1) continue;
+            TVector3 lep_end     = fTPCGeo.CrossingPoints(*reco_particles.at(lep_j)).second;
+            lep_pr1_angle["eff"] = lep_end.Angle(end);
+            
+            // Transverse variables
+            TVector3 scaled_lep_mom = reco_particles.at(lep_j)->Momentum().Vect()*(lep_mom["eff"]/reco_particles.at(lep_j)->P());
+            TVector3 scaled_pr_mom  = reco_particles.at(j)->Momentum().Vect()*(true_pr1_mom/reco_particles.at(j)->P());
+            TVector3 reco_delta_pt  = DeltaPT(scaled_lep_mom, scaled_pr_mom);
+            delta_pt["eff"]     = reco_delta_pt.Mag();
+            delta_alphat["eff"] = reco_delta_pt.Theta()*TMath::RadToDeg();
+            delta_phit["eff"]   = reco_delta_pt.Phi()*TMath::RadToDeg();
+          }
+          
+          if(smear_pr1_mom >= pr1_mom["smeareff"]){
+            pr1_mom["smeareff"]   = smear_pr1_mom;
+            pr1_theta["smeareff"] = (end - start).Theta();
+            
+            // Calculate things relative to the lepton if there is one
+            if(lep_j == -1) continue;
+            TVector3 lep_end          = fTPCGeo.CrossingPoints(*reco_particles.at(lep_j)).second;
+            lep_pr1_angle["smeareff"] = lep_end.Angle(end);
+            
+            // Transverse variables
+            TVector3 scaled_lep_mom = reco_particles.at(lep_j)->Momentum().Vect()*(lep_mom["smeareff"]/reco_particles.at(lep_j)->P());
+            TVector3 scaled_pr_mom  = reco_particles.at(j)->Momentum().Vect()*(smear_pr1_mom/reco_particles.at(j)->P());
+            TVector3 reco_delta_pt  = DeltaPT(scaled_lep_mom, scaled_pr_mom);
+            delta_pt["smeareff"]     = reco_delta_pt.Mag();
+            delta_alphat["smeareff"] = reco_delta_pt.Theta()*TMath::RadToDeg();
+            delta_phit["smeareff"]   = reco_delta_pt.Phi()*TMath::RadToDeg();
+          }
         }
-
       }
 
       //---------------------------- CC INCLUSIVE SELECTION --------------------------------------
 
       // Same as smeared neutrino energy
-      reco_nu_energy = smeareff_nu_energy;
+      nu_energy["reco"] = VisibleEnergy(reco_particles);
 
       bool cc_selected = IsCCInc(vertex, reco_particles); 
 
       if(cc_selected){ 
         if(fVerbose) std::cout<<"Selected as CC\n";
-        reco_cc = 1;
-        reco_nu_pdg = 14;
+        cc["reco"]     = 1;
+        nu_pdg["reco"] = 14;
       }
       else{ 
-        reco_cc = -1;
+        cc["reco"] = -1;
       }
 
       //------------------------------------ RECO FSI ------------------------------------------
@@ -700,159 +692,139 @@ namespace sbnd {
         // Don't look at the particle selected as the muon
         if(longest_j == (int)j) continue;
 
-        int pdg = std::abs(reco_particles.at(j)->PdgCode());
-
-        double contained_length = fTPCGeo.TpcLength(*reco_particles.at(j));
+        int pdg                                    = std::abs(reco_particles.at(j)->PdgCode());
+        double contained_length                    = fTPCGeo.TpcLength(*reco_particles.at(j));
         std::pair<TVector3, TVector3> cross_points = fTPCGeo.CrossingPoints(*reco_particles.at(j));
-        TVector3 start = cross_points.first;
-        TVector3 end = cross_points.second;
+        TVector3 start                             = cross_points.first;
+        TVector3 end                               = cross_points.second;
 
         // Apply PID estimation and count reco particles
         if(pdg == 111){ 
-          reco_n_pi0++;
-          if(!fTPCGeo.IsContained(*reco_particles.at(j))) reco_particles_contained = false;
+          n_pi0["reco"]++;
+          if(!fTPCGeo.IsContained(*reco_particles.at(j))) particles_contained["reco"] = false;
         }
 
         // Treat muons and pions as the same
         if(pdg == 13 || pdg == 211){
           // Check that particle is contained
-          if(!fTPCGeo.IsContained(*reco_particles.at(j))) reco_particles_contained = false;
+          if(!fTPCGeo.IsContained(*reco_particles.at(j))) particles_contained["reco"] = false;
 
           double rand_pid = fRandom->Rndm();
           // ID as pion, calculate leading pion variables
           if(rand_pid < fPionPidEff){ 
-            reco_n_pipm++;
+            n_pipm["reco"]++;
 
             // Leading pion momentum and angle
-            double pipm1_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
-            if(pipm1_mom < reco_pipm1_mom) continue;
+            double reco_pipm1_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
+            if(reco_pipm1_mom < pipm1_mom["reco"]) continue;
             // FIXME no idea how to estimate pion momentum
-            reco_pipm1_mom = pipm1_mom;
-            reco_pipm1_theta = (end - start).Theta();
+            pipm1_mom["reco"]   = reco_pipm1_mom;
+            pipm1_theta["reco"] = (end - start).Theta();
 
             // Angle between leading pion and lepton candidate
             if(longest_j == -1) continue;
             TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles.at(longest_j)).second;
-            reco_lep_pipm1_angle = lep_end.Angle(end);
+            lep_pipm1_angle["reco"] = lep_end.Angle(end);
           }
 
           // ID as proton, calculate leading proton variables
           else{
-            reco_n_pr++;
+            n_pr["reco"]++;
 
             // Leading proton momentum and angle
-            double pr1_mom = fRangeFitter.GetTrackMomentum(contained_length, 2212);
-            if(pr1_mom < reco_pr1_mom) continue;
-            reco_pr1_mom = pr1_mom;
-            reco_pr1_theta = (end - start).Theta();
+            double reco_pr1_mom = fRangeFitter.GetTrackMomentum(contained_length, 2212);
+            if(reco_pr1_mom < pr1_mom["reco"]) continue;
+            pr1_mom["reco"]   = reco_pr1_mom;
+            pr1_theta["reco"] = (end - start).Theta();
 
             // Angle between leading proton and lepton candidate
             if(longest_j == -1) continue;
-            TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles.at(longest_j)).second;
-            reco_lep_pr1_angle = lep_end.Angle(end);
+            TVector3 lep_end      = fTPCGeo.CrossingPoints(*reco_particles.at(longest_j)).second;
+            lep_pr1_angle["reco"] = lep_end.Angle(end);
 
             // Transverse variables
-            TVector3 scaled_lep_mom = reco_particles.at(longest_j)->Momentum().Vect()*(reco_lep_mom/reco_particles.at(longest_j)->P());
-            TVector3 scaled_pr_mom = reco_particles.at(j)->Momentum().Vect()*(pr1_mom/reco_particles.at(j)->P());
-            TVector3 delta_pt = DeltaPT(scaled_lep_mom, scaled_pr_mom);
-            reco_delta_pt = delta_pt.Mag();
-            reco_delta_alphat = delta_pt.Theta()*TMath::RadToDeg();
-            reco_delta_phit = delta_pt.Phi()*TMath::RadToDeg();
+            TVector3 scaled_lep_mom = reco_particles.at(longest_j)->Momentum().Vect()*(lep_mom["reco"]/reco_particles.at(longest_j)->P());
+            TVector3 scaled_pr_mom  = reco_particles.at(j)->Momentum().Vect()*(reco_pr1_mom/reco_particles.at(j)->P());
+            TVector3 reco_delta_pt  = DeltaPT(scaled_lep_mom, scaled_pr_mom);
+            delta_pt["reco"]     = reco_delta_pt.Mag();
+            delta_alphat["reco"] = reco_delta_pt.Theta()*TMath::RadToDeg();
+            delta_phit["reco"]   = reco_delta_pt.Phi()*TMath::RadToDeg();
           }
         }
 
         if(pdg == 2212){
           // Check that particle is contained
-          if(!fTPCGeo.IsContained(*reco_particles.at(j))) reco_particles_contained = false;
+          if(!fTPCGeo.IsContained(*reco_particles.at(j))) particles_contained["reco"] = false;
 
           double rand_pid = fRandom->Rndm();
           // ID as proton, calculate leading proton variables
           if(rand_pid < fProtonPidEff){ 
-            reco_n_pr++;
+            n_pr["reco"]++;
 
             // Leading proton momentum and angle
-            double pr1_mom = fRangeFitter.GetTrackMomentum(contained_length, 2212);
-            if(pr1_mom < reco_pr1_mom) continue;
-            reco_pr1_mom = pr1_mom;
-            reco_pr1_theta = (end - start).Theta();
+            double reco_pr1_mom = fRangeFitter.GetTrackMomentum(contained_length, 2212);
+            if(reco_pr1_mom < pr1_mom["reco"]) continue;
+            pr1_mom["reco"]   = reco_pr1_mom;
+            pr1_theta["reco"] = (end - start).Theta();
 
             // Angle between leading proton and lepton candidate
             if(longest_j == -1) continue;
-            TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles.at(longest_j)).second;
-            reco_lep_pr1_angle = lep_end.Angle(end);
+            TVector3 lep_end      = fTPCGeo.CrossingPoints(*reco_particles.at(longest_j)).second;
+            lep_pr1_angle["reco"] = lep_end.Angle(end);
 
             // Transverse variables
-            TVector3 scaled_lep_mom = reco_particles.at(longest_j)->Momentum().Vect()*(reco_lep_mom/reco_particles.at(longest_j)->P());
-            TVector3 scaled_pr_mom = reco_particles.at(j)->Momentum().Vect()*(pr1_mom/reco_particles.at(j)->P());
-            TVector3 delta_pt = DeltaPT(scaled_lep_mom, scaled_pr_mom);
-            reco_delta_pt = delta_pt.Mag();
-            reco_delta_alphat = delta_pt.Theta()*TMath::RadToDeg();
-            reco_delta_phit = delta_pt.Phi()*TMath::RadToDeg();
+            TVector3 scaled_lep_mom = reco_particles.at(longest_j)->Momentum().Vect()*(lep_mom["reco"]/reco_particles.at(longest_j)->P());
+            TVector3 scaled_pr_mom  = reco_particles.at(j)->Momentum().Vect()*(reco_pr1_mom/reco_particles.at(j)->P());
+            TVector3 reco_delta_pt  = DeltaPT(scaled_lep_mom, scaled_pr_mom);
+            delta_pt["reco"]     = reco_delta_pt.Mag();
+            delta_alphat["reco"] = reco_delta_pt.Theta()*TMath::RadToDeg();
+            delta_phit["reco"]   = reco_delta_pt.Phi()*TMath::RadToDeg();
           }
 
           // ID as pion, calculate leading pion variables
           else{ 
-            reco_n_pipm++;
+            n_pipm["reco"]++;
 
             // Leading pion momentum and angle
-            double pipm1_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
-            if(pipm1_mom < reco_pipm1_mom) continue;
-            reco_pipm1_mom = pipm1_mom;
-            reco_pipm1_theta = (end - start).Theta();
+            double reco_pipm1_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
+            if(reco_pipm1_mom < pipm1_mom["reco"]) continue;
+            pipm1_mom["reco"]   = reco_pipm1_mom;
+            pipm1_theta["reco"] = (end - start).Theta();
 
             // Angle between leading pion and lepton candidate
             if(longest_j == -1) continue;
-            TVector3 lep_end = fTPCGeo.CrossingPoints(*reco_particles.at(longest_j)).second;
-            reco_lep_pipm1_angle = lep_end.Angle(end);
+            TVector3 lep_end        = fTPCGeo.CrossingPoints(*reco_particles.at(longest_j)).second;
+            lep_pipm1_angle["reco"] = lep_end.Angle(end);
           }
         }
-          
       }
-
       
-      if(fVerbose) std::cout<<"->true_cc:                  "<<true_cc<<"\n"
-                            <<"->true_nu_pdg:              "<<true_nu_pdg<<"\n"
-                            <<"->true_nu_energy:           "<<true_nu_energy<<"\n"
-                            <<"->true_int_type:            "<<true_int_type<<"\n"
-                            <<"->true_lep_contained:       "<<true_lep_contained<<"\n"
-                            <<"-->true_lep_mom:            "<<true_lep_mom<<"\n"
-                            <<"-->true_lep_theta:          "<<true_lep_theta<<"\n"
-                            <<"->true_particles_contained: "<<true_particles_contained<<"\n"
-                            <<"->true_n_pi0:               "<<true_n_pi0<<"\n"
-                            <<"->true_n_pipm:              "<<true_n_pipm<<"\n"
-                            <<"-->true_pipm1_mom:          "<<true_pipm1_mom<<"\n"
-                            <<"-->true_pipm1_theta:        "<<true_pipm1_theta<<"\n"
-                            <<"-->true_lep_pipm1_angle:    "<<true_lep_pipm1_angle<<"\n"
-                            <<"->true_n_pr:                "<<true_n_pr<<"\n"
-                            <<"-->true_pr1_mom:            "<<true_pr1_mom<<"\n"
-                            <<"-->true_pr1_theta:          "<<true_pr1_theta<<"\n"
-                            <<"-->true_lep_pr1_angle:      "<<true_lep_pr1_angle<<"\n"
-                            <<"-->true_delta_pt:           "<<true_delta_pt<<"\n"
-                            <<"-->true_delta_alphat:       "<<true_delta_alphat<<"\n"
-                            <<"-->true_delta_phit:         "<<true_delta_phit<<"\n"
-                            <<"\n"
-                            <<"->reco_cc:                  "<<reco_cc<<"\n"
-                            <<"->reco_nu_pdg:              "<<reco_nu_pdg<<"\n"
-                            <<"->reco_nu_energy:           "<<reco_nu_energy<<"\n"
-                            <<"->reco_int_type:            "<<reco_int_type<<"\n"
-                            <<"->reco_lep_contained:       "<<reco_lep_contained<<"\n"
-                            <<"-->reco_lep_mom:            "<<reco_lep_mom<<"\n"
-                            <<"-->reco_lep_theta:          "<<reco_lep_theta<<"\n"
-                            <<"->reco_particles_contained: "<<reco_particles_contained<<"\n"
-                            <<"->reco_n_pi0:               "<<reco_n_pi0<<"\n"
-                            <<"->reco_n_pipm:              "<<reco_n_pipm<<"\n"
-                            <<"-->reco_pipm1_mom:          "<<reco_pipm1_mom<<"\n"
-                            <<"-->reco_pipm1_theta:        "<<reco_pipm1_theta<<"\n"
-                            <<"-->reco_lep_pipm1_angle:    "<<reco_lep_pipm1_angle<<"\n"
-                            <<"->reco_n_pr:                "<<reco_n_pr<<"\n"
-                            <<"-->reco_pr1_mom:            "<<reco_pr1_mom<<"\n"
-                            <<"-->reco_pr1_theta:          "<<reco_pr1_theta<<"\n"
-                            <<"-->reco_lep_pr1_angle:      "<<reco_lep_pr1_angle<<"\n"
-                            <<"-->reco_delta_pt:           "<<reco_delta_pt<<"\n"
-                            <<"-->reco_delta_alphat:       "<<reco_delta_alphat<<"\n"
-                            <<"-->reco_delta_phit:         "<<reco_delta_phit<<"\n";
+      if(fVerbose){
 
-
+        // Loop over list of reco types and print everything
+        for(unsigned int r = 0; r < fRecoFormats.size(); ++r)
+          std::cout<<"-> "<<fRecoFormats[r]<<" cc:                   "<<cc[fRecoFormats[r]]<<"\n"
+                   <<"-> "<<fRecoFormats[r]<<" nu_pdg:               "<<nu_pdg[fRecoFormats[r]]<<"\n"
+                   <<"-> "<<fRecoFormats[r]<<" nu_energy:            "<<nu_energy[fRecoFormats[r]]<<"\n"
+                   <<"-> "<<fRecoFormats[r]<<" int_type:             "<<int_type[fRecoFormats[r]]<<"\n"
+                   <<"-> "<<fRecoFormats[r]<<" lep_contained:        "<<lep_contained[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" lep_mom:             "<<lep_mom[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" lep_theta:           "<<lep_theta[fRecoFormats[r]]<<"\n"
+                   <<"->  "<<fRecoFormats[r]<<" particles_contained: "<<particles_contained[fRecoFormats[r]]<<"\n"
+                   <<"-> "<<fRecoFormats[r]<<" n_pi0:                "<<n_pi0[fRecoFormats[r]]<<"\n"
+                   <<"-> "<<fRecoFormats[r]<<" n_pipm:               "<<n_pipm[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" pipm1_mom:           "<<pipm1_mom[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" pipm1_theta:         "<<pipm1_theta[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" lep_pipm1_angle:     "<<lep_pipm1_angle[fRecoFormats[r]]<<"\n"
+                   <<"-> "<<fRecoFormats[r]<<" n_pr:                 "<<n_pr[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" pr1_mom:             "<<pr1_mom[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" pr1_theta:           "<<pr1_theta[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" lep_pr1_angle:       "<<lep_pr1_angle[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" delta_pt:            "<<delta_pt[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" delta_alphat:        "<<delta_alphat[fRecoFormats[r]]<<"\n"
+                   <<"--> "<<fRecoFormats[r]<<" delta_phit:          "<<delta_phit[fRecoFormats[r]]<<"\n"
+                   <<"\n";
+      }
       fXSecTree->Fill();
     }
 
@@ -874,69 +846,29 @@ namespace sbnd {
     vtx_y = -99999;
     vtx_z = -99999;
     
-    true_particles_contained = true;
-    true_lep_contained       = false;
-    true_cc                  = -1;
-    true_nu_pdg              = -99999;
-    true_int_type            = -99999;
-    true_n_pipm              = 0;
-    true_n_pi0               = 0;
-    true_n_pr                = 0;
-    true_nu_energy           = -99999;
-    true_lep_mom             = -99999;
-    true_lep_theta           = -99999;
-    true_pr1_mom             = -99999;
-    true_pr1_theta           = -99999;
-    true_lep_pr1_angle       = -99999;
-    true_pipm1_mom           = -99999;
-    true_pipm1_theta         = -99999;
-    true_lep_pipm1_angle     = -99999;
-    true_delta_pt            = -99999;
-    true_delta_alphat        = -99999;
-    true_delta_phit          = -99999;
-
-    smeareff_particles_contained = true;
-    smeareff_lep_contained       = false;
-    smeareff_cc                  = -1;
-    smeareff_nu_pdg              = -99999;
-    smeareff_int_type            = -99999;
-    smeareff_n_pipm              = 0;
-    smeareff_n_pi0               = 0;
-    smeareff_n_pr                = 0;
-    smeareff_nu_energy           = -99999;
-    smeareff_lep_mom             = -99999;
-    smeareff_lep_theta           = -99999;
-    smeareff_pr1_mom             = -99999;
-    smeareff_pr1_theta           = -99999;
-    smeareff_lep_pr1_angle       = -99999;
-    smeareff_pipm1_mom           = -99999;
-    smeareff_pipm1_theta         = -99999;
-    smeareff_lep_pipm1_angle     = -99999;
-    smeareff_delta_pt            = -99999;
-    smeareff_delta_alphat        = -99999;
-    smeareff_delta_phit          = -99999;
-
-    reco_particles_contained = true;
-    reco_lep_contained       = false;
-    reco_cc                  = -1;
-    reco_nu_pdg              = -99999;
-    reco_int_type            = -99999;
-    reco_n_pipm              = 0;
-    reco_n_pi0               = 0;
-    reco_n_pr                = 0;
-    reco_nu_energy           = -99999;
-    reco_lep_mom             = -99999;
-    reco_lep_theta           = -99999;
-    reco_pr1_mom             = -99999;
-    reco_pr1_theta           = -99999;
-    reco_lep_pr1_angle       = -99999;
-    reco_pipm1_mom           = -99999;
-    reco_pipm1_theta         = -99999;
-    reco_lep_pipm1_angle     = -99999;
-    reco_delta_pt            = -99999;
-    reco_delta_alphat        = -99999;
-    reco_delta_phit          = -99999;
-
+    // Loop over reco formats and reset every variable in the tree
+    for(unsigned int i = 0; i < fRecoFormats.size(); ++i){
+      particles_contained[fRecoFormats[i]] = true;
+      lep_contained[fRecoFormats[i]]       = false;
+      cc[fRecoFormats[i]]                  = -1;
+      nu_pdg[fRecoFormats[i]]              = -99999;
+      int_type[fRecoFormats[i]]            = -99999;
+      n_pipm[fRecoFormats[i]]              = 0;
+      n_pi0[fRecoFormats[i]]               = 0;
+      n_pr[fRecoFormats[i]]                = 0;
+      nu_energy[fRecoFormats[i]]           = -99999;
+      lep_mom[fRecoFormats[i]]             = -99999;
+      lep_theta[fRecoFormats[i]]           = -99999;
+      pr1_mom[fRecoFormats[i]]             = -99999;
+      pr1_theta[fRecoFormats[i]]           = -99999;
+      lep_pr1_angle[fRecoFormats[i]]       = -99999;
+      pipm1_mom[fRecoFormats[i]]           = -99999;
+      pipm1_theta[fRecoFormats[i]]         = -99999;
+      lep_pipm1_angle[fRecoFormats[i]]     = -99999;
+      delta_pt[fRecoFormats[i]]            = -99999;
+      delta_alphat[fRecoFormats[i]]        = -99999;
+      delta_phit[fRecoFormats[i]]          = -99999;
+    }
   } // XSecTree::ResetVars
 
   
@@ -1147,30 +1079,32 @@ namespace sbnd {
       double contained_length = fTPCGeo.TpcLength(*reco_particles.at(j));
       if(contained_length < max_contained_length) continue;
       max_contained_length = contained_length;
-      max_pdg = pdg;
-      longest_j = j;
+      max_pdg              = pdg;
+      longest_j            = j;
 
       // Check if particle is contained
-      reco_lep_contained = fTPCGeo.IsContained(*reco_particles.at(j));
+      lep_contained["reco"] = fTPCGeo.IsContained(*reco_particles.at(j));
 
       std::pair<TVector3, TVector3> cross_points = fTPCGeo.CrossingPoints(*reco_particles.at(j));
-      TVector3 start = cross_points.first;
-      TVector3 end = cross_points.second;
-      reco_lep_theta = (end - start).Theta();
+      TVector3 start                             = cross_points.first;
+      TVector3 end                               = cross_points.second;
+      lep_theta["reco"]                          = (end - start).Theta();
 
       // Smear momentum based on whether particle is contained or not
-      if(reco_lep_contained) reco_lep_mom = fRangeFitter.GetTrackMomentum(contained_length, 13);
-      else reco_lep_mom = SmearMcsMomentum(reco_particles.at(j)->P());
+      if(lep_contained["reco"]) 
+        lep_mom["reco"] = fRangeFitter.GetTrackMomentum(contained_length, 13);
+      else 
+        lep_mom["reco"] = SmearMcsMomentum(reco_particles.at(j)->P());
     }
 
     if(fVerbose) std::cout<<"max contained length = "<<max_contained_length<<" pdg = "<<max_pdg<<"\n";
 
     // Check length of particle
-    if(reco_lep_contained && max_contained_length < fMinContainedLength){ 
+    if(lep_contained["reco"] && max_contained_length < fMinContainedLength){ 
       cc_selected = false;
       if(fVerbose) std::cout<<"contained length too short\n";
     }
-    if(!reco_lep_contained && max_contained_length < fMinExitingLength){ 
+    if(!lep_contained["reco"] && max_contained_length < fMinExitingLength){ 
       cc_selected = false;
       if(fVerbose) std::cout<<"exiting length too short\n";
     }
