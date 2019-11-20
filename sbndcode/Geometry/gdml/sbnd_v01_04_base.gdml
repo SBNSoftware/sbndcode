@@ -19,10 +19,20 @@
 	version 1.1 developed by Gustavo.Valdiviesso@unifal-mg.edu.br, Andrzej andrzej.szelc@manchester.ac.uk, Andy Mastbaum mastbaum@uchicago.edu, ...
 	version 1.2 developed by Gustavo.Valdiviesso@unifal-mg.edu.br, Andrzej andrzej.szelc@manchester.ac.uk, Andy, Marina mrguzzo@ifi.unicamp.br, Diego diego.garciagamez@manchester.ac.uk
         version 1.3 developed by Gustavo.Valdiviesso@unifal-mg.edu.br, Marina mrguzzo@ifi.unicamp.br, Diego dgarciag@ugr.es
+        version 1.4 developed by marina.reggianiguzzo@postgrad.manchester.ac.uk, dgarciag@ugr.es
          
 	technote at doc-db [XXX]
 
 	Version History (latest on top)
+
+        v1.4
+                + Added unit="mm" to the definition of the position for CRT, because of a change in the default length unit in ROOT from mm to cm
+                + Added 0.00045mm in the position of two APAs to fix overlaps
+                - Removed the bars
+                + Added X-ARAPUCAs
+                + Added Field Cage made of stainless steel strips (x 67) of
+                             4.6x1.1 cm2 section, and separated (their centres) 6 cm
+                             (1.4 cm gap between strips) 
         
         v1.3
                 + NEW PMT model (windows like semi-spheres like in ICARUS geo)
