@@ -19,10 +19,10 @@ sbnd_digiarapuca_alg:
  ArapucaRiseTime:           9.0     #ns
  ArapucaFallTime:	     476.0   #ns
  ArapucaSaturation:         300     #in number of p.e. to see saturation effects in the signal
-# Sampling:           0.5     #Give the desired value in GHz or use -1 for extracting from DetectorClocksService->OpticalClock().Frequency
- ArapucaEffT1:       0.02    #Arapuca T1 efficiency
- ArapucaEffT2:       0.027   #Arapuca T2 efficiency 
- ArapucaEffx:        0.02    #Arapuca T2 efficiency 
+ ArapucaEffT1:       0.014   #Arapuca T1 efficiency (taking into account 70% mesh transparency 0.02*0.7)
+ ArapucaEffT2:       0.0189  #Arapuca T2 efficiency (taking into account 70% mesh transparency 0.027*0.7)
+ ArapucaEffxT1:      0.021   #X-Arapuca T1 efficiency (taking into account 70% mesh transparency 0.03*0.7)
+ ArapucaEffxT2:      0.0014  #X-Arapuca T2 efficiency (taking into account 70% mesh transparency 0.02*0.7)
 }
 
 END_PROLOG
