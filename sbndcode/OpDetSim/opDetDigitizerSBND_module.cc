@@ -175,8 +175,6 @@ namespace opdet{
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
     fSampling = (timeService->OpticalClock().Frequency())/1000.0; //in GHz
   
-    std::cout << "Sampling = " << fSampling << " GHz." << std::endl;
-
     // Set random number gen seed from the NuRandomService
     art::ServiceHandle<rndm::NuRandomService> seedSvc;
     fEngine = new CLHEP::HepJamesRandom;
@@ -291,19 +289,24 @@ namespace opdet{
           std::vector<short unsigned int> waveform;
 	  ch = litesimphotons.OpChannel;
 	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch, "pmt") )){ //All PMT channels
-	//    std::cout << ch << " : PMT channel " <<std::endl;
 	    pmtDigitizer->ConstructWaveformLite(ch, litesimphotons, waveform, map.pdName(ch), auxmap, start_time*1000 /*ns for digitizer*/, n_samples);
 	    fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
 	  }
-/*	  if(map.pdType(ch, "bar")) //Paddles
-	    std::cout << ch << " : Digitization not implemented for paddles. " <<std::endl;*/
 	  else if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected) ){//getting only arapuca channels with appropriate type of light
-//	    std::cout << "Arapuca channels " <<std::endl;
 	    arapucaDigitizer->ConstructWaveformLite(ch, litesimphotons, waveform, map.pdName(ch),start_time*1000 /*ns for digitizer*/, n_samples);
             fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
           }
-	  else if((map.pdType(ch,"xarapucaprime") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
-	//    std::cout << "X-Arapuca channels " <<std::endl;
+	  else if((map.pdType(ch,"xarapucaT1") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
+            sim::SimPhotonsLite auxLite;
+            for (auto const& litesimphotons : (*opdetHandle)){
+              channel = litesimphotons.OpChannel;
+              if(channel==ch) auxLite =(litesimphotons);
+              if(channel==(ch+2)) auxLite+=(litesimphotons);
+ 	    }
+	    arapucaDigitizer->ConstructWaveformLite(ch, auxLite, waveform, map.pdName(ch),start_time*1000 /*ns for digitizer*/, n_samples);
+            fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
+          }
+	  else if((map.pdType(ch,"xarapucaT2") && Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
             sim::SimPhotonsLite auxLite;
             for (auto const& litesimphotons : (*opdetHandle)){
               channel = litesimphotons.OpChannel;
@@ -336,19 +339,24 @@ namespace opdet{
           std::vector<short unsigned int> waveform;
 	  ch = simphotons.OpChannel();
 	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch,"pmt"))){ //all PMTs
-//	    std::cout << "PMT channels " <<std::endl;
 	    pmtDigitizer->ConstructWaveform(ch, simphotons, waveform, map.pdName(ch), auxmap, start_time*1000 /*ns for digitizer*/, n_samples);
             fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
           }
-/*	  if(map.pdType(ch, "bar")) //Paddles
-	    std::cout << "Digitization not implemented for paddles. " <<std::endl;*/
 	  if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected) ){//getting only arapuca channels with appropriate type of light
-//	    std::cout << "Arapuca channels " <<std::endl;
 	    arapucaDigitizer->ConstructWaveform(ch, simphotons, waveform, map.pdName(ch),start_time*1000 /*ns for digitizer*/, n_samples);
             fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
           }
-	  if((map.pdType(ch,"xarapucaprime") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
-//	    std::cout << "X-Arapuca channels " <<std::endl;
+	  if((map.pdType(ch,"xarapucaT1") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
+            sim::SimPhotons auxPhotons;
+            for (auto const& simphotons : (*opdetHandle)){
+              channel= simphotons.OpChannel();
+              if(channel==ch) auxPhotons =(simphotons);
+              if(channel==(ch+2)) auxPhotons+=(simphotons);
+ 	    }
+	    arapucaDigitizer->ConstructWaveform(ch, auxPhotons, waveform, map.pdName(ch),start_time*1000 /*ns for digitizer*/, n_samples);
+            fWaveforms.at(ch) = raw::OpDetWaveform(start_time, (unsigned int)ch, waveform);//including pre trigger window and transit time
+          }
+	  if((map.pdType(ch,"xarapucaT2") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
             sim::SimPhotons auxPhotons;
             for (auto const& simphotons : (*opdetHandle)){
               channel= simphotons.OpChannel();

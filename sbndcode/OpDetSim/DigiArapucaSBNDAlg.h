@@ -58,7 +58,8 @@ namespace opdet{
     double Saturation;     //Saturation in number of p.e.
     double ArapucaEffT1;   //Arapuca type 1 efficiency (optical window + cavity)
     double ArapucaEffT2;   //Arapuca type 2 efficiency (optical window + cavity)
-    double ArapucaEffx;    //X-Arapuca efficiency (optical window + cavity)
+    double ArapucaEffxT1;    //X-Arapuca T1 efficiency (optical window + cavity)
+    double ArapucaEffxT2;    //X-Arapuca T2 efficiency (optical window + cavity)
 
     detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
     detinfo::DetectorClocks const* timeService = nullptr; ///< DetectorClocks service provider.
@@ -87,7 +88,8 @@ namespace opdet{
     int pulsesize;
     double fArapucaEffT1;
     double fArapucaEffT2;
-    double fArapucaEffx; 
+    double fArapucaEffxT1; 
+    double fArapucaEffxT2; 
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
  
@@ -181,9 +183,14 @@ namespace opdet{
           Comment("Arapuca type 2 efficiency (optical window + cavity)")
        };
 
-       fhicl::Atom<double> arapucaEffx {
-          Name("ArapucaEffx"),
-          Comment("X-Arapuca efficiency (optical window + cavity)")
+       fhicl::Atom<double> arapucaEffxT1 {
+          Name("ArapucaEffxT1"),
+          Comment("X-Arapuca efficiency T1 (optical window + cavity)")
+       };
+
+       fhicl::Atom<double> arapucaEffxT2 {
+          Name("ArapucaEffxT2"),
+          Comment("X-Arapuca efficiency T2 (optical window + cavity)")
        };
 
     };    //struct Config

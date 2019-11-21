@@ -15,7 +15,8 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   , fSampling(fParams.timeService->OpticalClock().Frequency()) 
   , fArapucaEffT1(fParams.ArapucaEffT1 / fParams.larProp->ScintPreScale())
   , fArapucaEffT2(fParams.ArapucaEffT2 / fParams.larProp->ScintPreScale())
-  , fArapucaEffx(fParams.ArapucaEffx / fParams.larProp->ScintPreScale())
+  , fArapucaEffxT1(fParams.ArapucaEffxT1 / fParams.larProp->ScintPreScale())
+  , fArapucaEffxT2(fParams.ArapucaEffxT2 / fParams.larProp->ScintPreScale())
   , fEngine(fParams.engine)
   {
 
@@ -23,11 +24,11 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     //fEngine = new CLHEP::HepJamesRandom;
     //seedSvc->registerEngine(rndm::NuRandomService::CLHEPengineSeeder(fEngine), "DigiArapucaSBNDAlg");
 
-    std::cout << "arapucas corrected efficiencies = " << fArapucaEffT1 << ", " << fArapucaEffT2 << " and " << fArapucaEffx << std::endl;
+//    std::cout << "arapucas corrected efficiencies = " << fArapucaEffT1 << ", " << fArapucaEffT2 << " and " << fArapucaEffx << std::endl;
    // std::cout << "optical clock = " << fSampling << std::endl;
 
-    if(fArapucaEffT1>1.0001 || fArapucaEffT2>1.0001 || fArapucaEffx>1.0001)
-	std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.ArapucaEffT1 << " or " << fParams.ArapucaEffT2 << " or " << fParams.ArapucaEffx << " seems to be too large! Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
+    if(fArapucaEffT1>1.0001 || fArapucaEffT2>1.0001 || fArapucaEffxT1>1.0001 || fArapucaEffxT2>1.0001)
+	std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.ArapucaEffT1 << " or " << fParams.ArapucaEffT2 << " or " << fParams.ArapucaEffxT1 << " or " << fParams.ArapucaEffxT2 << " seems to be too large! Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
 
     TimeArapucaT1 = new TH1D("Time Profile T1", "", 150, 0.0, 150.0);//histogram that stores the arrival time of photons at SiPM (t=0 is the time is reaches the outside of the optical window) for arapuca T1
 
@@ -164,12 +165,26 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
 	  }
 	}
     }
-    if(pdtype=="xarapucaprime"){   
+    if(pdtype=="xarapucaT1"){   
 	for(size_t i=0; i<simphotons.size(); i++){
  	  //if((gRandom->Uniform(1.0))<fArapucaEffx){ 
- 	  if((CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffx){ 
+ 	  if((CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffxT1){ 
 	    tphoton=simphotons[i].Time;
  	    tphoton+=(TimeArapucaX->GetRandom());
+            tphoton-=t_min;
+ 	    //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
+	    else nCT=1;
+	    AddSPE(tphoton*fSampling,wave,nCT);
+	  }
+	}
+    }
+    if(pdtype=="xarapucaT2"){   
+	for(size_t i=0; i<simphotons.size(); i++){
+ 	  //if((gRandom->Uniform(1.0))<fArapucaEffx){ 
+ 	  if((CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffxT2){ 
+	    tphoton=simphotons[i].Time;
+ 	    tphoton+=(CLHEP::RandExponential::shoot(fEngine,8.5));//decay time of EJ280 in ns
             tphoton-=t_min;
  	    //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
  	    if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
@@ -215,8 +230,16 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
 	    AddSPE(tphoton*fSampling,wave,nCT);
          }
 	//if(pdtype=="xarapucaprime" && (gRandom->Uniform(1.0))<fArapucaEffx){
-	if(pdtype=="xarapucaprime" && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffx){
+	if(pdtype=="xarapucaT1" && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffxT1){
 	   tphoton=(TimeArapucaX->GetRandom());
+	   tphoton+=mapMember.first-t_min;
+ 	   //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	   if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
+	   else nCT=1;
+	   AddSPE(tphoton*fSampling,wave,nCT);
+	}
+	if(pdtype=="xarapucaT2" && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffxT2){
+ 	   tphoton=(CLHEP::RandExponential::shoot(fEngine,8.5));//decay time of EJ280 in ns
 	   tphoton+=mapMember.first-t_min;
  	   //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
  	   if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
@@ -250,7 +273,8 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     fBaseConfig.Saturation        = config.saturation();
     fBaseConfig.ArapucaEffT1      = config.arapucaEffT1();
     fBaseConfig.ArapucaEffT2      = config.arapucaEffT2();
-    fBaseConfig.ArapucaEffx       = config.arapucaEffx();
+    fBaseConfig.ArapucaEffxT1     = config.arapucaEffxT1();
+    fBaseConfig.ArapucaEffxT2     = config.arapucaEffxT2();
     fBaseConfig.RiseTime          = config.riseTime();
     fBaseConfig.FallTime          = config.fallTime();
     fBaseConfig.MeanAmplitude     = config.meanAmplitude();
