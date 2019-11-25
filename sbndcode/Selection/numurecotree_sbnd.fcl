@@ -4,7 +4,7 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "mcsfitter_sbnd.fcl"
+#include "selectionconfig_sbnd.fcl
 
 process_name: NuMuRecoTree
 
@@ -47,23 +47,7 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    NuMuRecoTree: 
-    {
-      # The "module_type" tells us which module to run. The name here
-      # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/Selection/NuMuRecoTree"
-
-      # The input parameters
-      SimModuleLabel:      "largeant"     # Simulation producer module label
-      TrackModuleLabel: "pandoraTrack" # TPC track producer module label
-      HitModuleLabel: "gaushit" # TPC track producer module label
-      ShowerModuleLabel: "pandoraShower" # TPC track producer module label
-      PidModuleLabel:      "pandoraPid"   # Particle ID producer module label
-      CaloModuleLabel:      "pandoraCalo"   # Particle ID producer module label
-      PandoraLabel:        "pandora"
-      Verbose:             false          # Print extra information about what's going on
-      fitter:              @local::sbnd_mcsfitter
-    }
+    NuMuRecoTree: @local::sbnd_numurecotree
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.

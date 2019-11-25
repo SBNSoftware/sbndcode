@@ -84,6 +84,11 @@ bool TPCGeoAlg::InFiducial(geo::Point_t point, double minXCut, double minYCut, d
 
 bool TPCGeoAlg::InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
                            double maxXCut, double maxYCut, double maxZCut, double cpaCut){
+  return InFiducial(point, minXCut, minYCut, minZCut, maxXCut, maxYCut, maxZCut, cpaCut, 0);
+}
+
+bool TPCGeoAlg::InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
+                           double maxXCut, double maxYCut, double maxZCut, double cpaCut, double apaCut){
   
   double xmin = fMinX + minXCut;
   double xmax_cpa = 0 - cpaCut;
@@ -92,13 +97,17 @@ bool TPCGeoAlg::InFiducial(geo::Point_t point, double minXCut, double minYCut, d
   double ymin = fMinY + minYCut;
   double ymax = fMaxY - maxYCut;
   double zmin = fMinZ + minZCut;
+  double zmax_apa = (fMinZ+fMaxZ)/2 - apaCut;
   double zmax = fMaxZ - maxZCut;
+  double zmin_apa = (fMinZ+fMaxZ)/2 + apaCut;
 
   double x = point.X();
   double y = point.Y();
   double z = point.Z();
-  if(x>xmin && x<xmax_cpa && y>ymin && y<ymax && z>zmin && z<zmax) return true;
-  if(x>xmin_cpa && x<xmax && y>ymin && y<ymax && z>zmin && z<zmax) return true;
+  if(x>=xmin && x<=xmax_cpa && y>=ymin && y<=ymax && z>=zmin && z<=zmax_apa) return true;
+  if(x>=xmin && x<=xmax_cpa && y>=ymin && y<=ymax && z>=zmin_apa && z<=zmax) return true;
+  if(x>=xmin_cpa && x<=xmax && y>=ymin && y<=ymax && z>=zmin && z<=zmax_apa) return true;
+  if(x>=xmin_cpa && x<=xmax && y>=ymin && y<=ymax && z>=zmin_apa && z<=zmax) return true;
 
   return false;
 }

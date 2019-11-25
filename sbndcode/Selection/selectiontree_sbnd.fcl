@@ -4,10 +4,7 @@
 #include "messages_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "cosmicidalg_sbnd.fcl"
-#include "cosmicidmodules_sbnd.fcl"
-#include "mcsfitter_sbnd.fcl"
-#include "cosmicidmodules_sbnd.fcl"
+#include "selectionconfig_sbnd.fcl"
 
 process_name: SelectionTree
 
@@ -50,25 +47,7 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    SelectionTree: 
-    {
-      # The "module_type" tells us which module to run. The name here
-      # must match the name supplied to DEFINE_ART_MODULE
-      module_type:     "sbndcode/Selection/SelectionTree"
-
-      # The input parameters
-      SimModuleLabel:      "largeant"        # Simulation producer module label
-      GenModuleLabel:      "generator"        # Generator producer module label
-      TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
-      PidModuleLabel:      "pandoraPid" # TPC track producer module label
-      CaloModuleLabel:      "pandoraCalo"   # Particle ID producer module label
-      PandoraLabel:        "pandora"
-      Verbose:             false             # Print extra information about what's going on
-      BeamTimeLimits:      @local::sbnd_beamtime
-      CosIdAlg:            @local::standard_cosmicidalg
-      fitter:              @local::sbnd_mcsfitter
-      SPTagAlg:            @local::sbnd_stoppingparticlecosmicidalg
-    }
+    SelectionTree: @local::sbnd_selectiontree 
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.

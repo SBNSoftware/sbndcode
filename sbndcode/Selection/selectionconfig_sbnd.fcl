@@ -1,0 +1,46 @@
+#include "cosmicidalg_sbnd.fcl"
+#include "cosmicidmodules_sbnd.fcl"
+#include "mcsfitter_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_numurecotree:
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/Selection/NuMuRecoTree"
+
+  # The input parameters
+  SimModuleLabel:      "largeant"     # Simulation producer module label
+  TrackModuleLabel:    "pandoraTrack" # TPC track producer module label
+  HitModuleLabel:      "gaushit" # TPC track producer module label
+  ShowerModuleLabel:   "pandoraShower" # TPC track producer module label
+  PidModuleLabel:      "pandoraPid"   # Particle ID producer module label
+  CaloModuleLabel:     "pandoraCalo"   # Particle ID producer module label
+  PandoraLabel:        "pandora"
+  Verbose:             false          # Print extra information about what's going on
+  fitter:              @local::sbnd_mcsfitter
+  SPTagAlg:            @local::sbnd_stoppingparticlecosmicidalg
+}
+
+sbnd_selectiontree: 
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/Selection/SelectionTree"
+
+  # The input parameters
+  SimModuleLabel:      "largeant"        # Simulation producer module label
+  GenModuleLabel:      "generator"        # Generator producer module label
+  TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
+  PidModuleLabel:      "pandoraPid" # TPC track producer module label
+  CaloModuleLabel:      "pandoraCalo"   # Particle ID producer module label
+  PandoraLabel:        "pandora"
+  Verbose:             false             # Print extra information about what's going on
+  BeamTimeLimits:      @local::sbnd_beamtime
+  CosIdAlg:            @local::standard_cosmicidalg
+  fitter:              @local::sbnd_mcsfitter
+  SPTagAlg:            @local::sbnd_stoppingparticlecosmicidalg
+}
+
+END_PROLOG

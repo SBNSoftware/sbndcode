@@ -9,6 +9,7 @@
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbndcode/CosmicId/Algs/StoppingParticleCosmicIdAlg.h"
 
 // LArSoft includes
 #include "lardataobj/RecoBase/Hit.h"
@@ -110,6 +111,10 @@ namespace sbnd {
         Name("fitter"),
       };
 
+      fhicl::Table<StoppingParticleCosmicIdAlg::Config> SPTagAlg {
+        Name("SPTagAlg"),
+      };
+
     }; // Inputs
 
     using Parameters = art::EDAnalyzer::Table<Config>;
@@ -152,6 +157,7 @@ namespace sbnd {
     // Momentum fitters
     trkf::TrajectoryMCSFitter     fMcsFitter; 
     trkf::TrackMomentumCalculator fRangeFitter;
+    StoppingParticleCosmicIdAlg  fStopTagger;
 
     geo::GeometryCore const* fGeometryService;
     detinfo::DetectorClocks const* fDetectorClocks;
@@ -164,7 +170,8 @@ namespace sbnd {
 
     //Muon tree parameters
     bool is_cosmic;         // True origin of PFP is cosmic
-    bool is_nu;             // True origin of PFP is nu in AV
+    bool is_nu;             // True origin of PFP is nu
+    bool is_cc;             // True origin of PFP is CC nu
     int nu_pdg;
     int pdg;
     double time;
@@ -179,6 +186,15 @@ namespace sbnd {
     double momentum;
     double theta;
     double phi;
+    std::string end_process;
+    std::string fin_process;
+    double vtx_x_tpc;
+    double vtx_y_tpc;
+    double vtx_z_tpc;
+    double end_x_tpc;
+    double end_y_tpc;
+    double end_z_tpc;
+    double stopping_chi2;
     double e_dep;
     int n_hits;
     double hit_area;
@@ -194,6 +210,10 @@ namespace sbnd {
     double track_length;
     double track_range_momentum;
     double track_mcs_momentum;
+    double mu_range_momentum;
+    double mu_mcs_momentum;
+    double track_dca;
+    double track_ave_angle;
     double track_theta;
     double track_phi;
     double track_e_dep;
@@ -212,7 +232,10 @@ namespace sbnd {
     void CollectTracksAndShowers(const PFParticleVector &particles, const PFParticleHandle &pfParticleHandle, const art::Event &evt, TrackVector &tracks, ShowerVector &showers);
 
     std::pair<double, double> XLimitsTPC(const simb::MCParticle& particle);
-    
+
+    std::string FinalProcess(int id, const std::map<int, simb::MCParticle>& particleMap) const;
+
+    double AverageDCA(const recob::Track& track);
 
   }; // class NuMuRecoTree
 
@@ -229,6 +252,7 @@ namespace sbnd {
     , fPandoraLabel         (config().PandoraLabel())
     , fVerbose              (config().Verbose())
     , fMcsFitter            (config().fitter)
+    , fStopTagger           (config().SPTagAlg())
   {
 
   } // NuMuRecoTree()
@@ -248,47 +272,61 @@ namespace sbnd {
 
     fParticleTree = tfs->make<TTree>("particles", "particles");
 
-    fParticleTree->Branch("is_cosmic",       &is_cosmic,       "is_cosmic/O");
-    fParticleTree->Branch("is_nu",           &is_nu,           "is_nu/O");
-    fParticleTree->Branch("nu_pdg",           &nu_pdg,           "nu_pdg/I");
-    fParticleTree->Branch("pdg",           &pdg,           "pdg/I");
-    fParticleTree->Branch("time",       &time,       "time/D");
-    fParticleTree->Branch("vtx_x",       &vtx_x,       "vtx_x/D");
-    fParticleTree->Branch("vtx_y",       &vtx_y,       "vtx_y/D");
-    fParticleTree->Branch("vtx_z",       &vtx_z,       "vtx_z/D");
-    fParticleTree->Branch("end_x",       &end_x,       "end_x/D");
-    fParticleTree->Branch("end_y",       &end_y,       "end_y/D");
-    fParticleTree->Branch("end_z",       &end_z,       "end_z/D");
-    fParticleTree->Branch("length",       &length,       "length/D");
-    fParticleTree->Branch("contained_length",       &contained_length,       "contained_length/D");
-    fParticleTree->Branch("momentum",       &momentum,       "momentum/D");
-    fParticleTree->Branch("theta",       &theta,       "theta/D");
-    fParticleTree->Branch("phi",       &phi,       "phi/D");
-    fParticleTree->Branch("e_dep",       &e_dep,       "e_dep/D");
-    fParticleTree->Branch("n_hits",       &n_hits,       "n_hits/I");
-    fParticleTree->Branch("hit_area",       &hit_area,       "hit_area/D");
-    fParticleTree->Branch("n_cr_tracks",       &n_cr_tracks,       "n_cr_tracks/I");
-    fParticleTree->Branch("n_nu_showers",       &n_nu_showers,       "n_nu_showers/I");
-    fParticleTree->Branch("n_nu_tracks",       &n_nu_tracks,       "n_nu_tracks/I");
-    fParticleTree->Branch("track_vtx_x",       &track_vtx_x,       "track_vtx_x/D");
-    fParticleTree->Branch("track_vtx_y",       &track_vtx_y,       "track_vtx_y/D");
-    fParticleTree->Branch("track_vtx_z",       &track_vtx_z,       "track_vtx_z/D");
-    fParticleTree->Branch("track_end_x",       &track_end_x,       "track_end_x/D");
-    fParticleTree->Branch("track_end_y",       &track_end_y,       "track_end_y/D");
-    fParticleTree->Branch("track_end_z",       &track_end_z,       "track_end_z/D");
-    fParticleTree->Branch("track_length",         &track_length,       "track_length/D");
-    fParticleTree->Branch("track_range_momentum", &track_range_momentum,       "track_range_momentum/D");
-    fParticleTree->Branch("track_mcs_momentum",   &track_mcs_momentum,       "track_mcs_momentum/D");
-    fParticleTree->Branch("track_theta",       &track_theta,       "track_theta/D");
-    fParticleTree->Branch("track_phi",       &track_phi,       "track_phi/D");
-    fParticleTree->Branch("track_e_dep",       &track_e_dep,       "track_e_dep/D");
-    fParticleTree->Branch("track_n_hits",       &track_n_hits,       "track_n_hits/I");
-    fParticleTree->Branch("track_n_hits_true",       &track_n_hits_true,       "track_n_hits_true/I");
-    fParticleTree->Branch("track_hit_area",       &track_hit_area,       "track_hit_area/D");
-    fParticleTree->Branch("track_hit_area_true",       &track_hit_area_true,       "track_hit_area_true/D");
-    fParticleTree->Branch("track_mu_chi2",       &track_mu_chi2,       "track_mu_chi2/D");
-    fParticleTree->Branch("track_pi_chi2",       &track_pi_chi2,       "track_pi_chi2/D");
-    fParticleTree->Branch("track_p_chi2",       &track_p_chi2,       "track_p_chi2/D");
+    fParticleTree->Branch("is_cosmic",        &is_cosmic);
+    fParticleTree->Branch("is_nu",            &is_nu);
+    fParticleTree->Branch("is_cc",            &is_cc);
+    fParticleTree->Branch("nu_pdg",           &nu_pdg);
+    fParticleTree->Branch("pdg",              &pdg);
+    fParticleTree->Branch("time",             &time);
+    fParticleTree->Branch("vtx_x",            &vtx_x);
+    fParticleTree->Branch("vtx_y",            &vtx_y);
+    fParticleTree->Branch("vtx_z",            &vtx_z);
+    fParticleTree->Branch("end_x",            &end_x);
+    fParticleTree->Branch("end_y",            &end_y);
+    fParticleTree->Branch("end_z",            &end_z);
+    fParticleTree->Branch("length",           &length);
+    fParticleTree->Branch("contained_length", &contained_length);
+    fParticleTree->Branch("momentum",         &momentum);
+    fParticleTree->Branch("theta",            &theta);
+    fParticleTree->Branch("phi",              &phi);
+    fParticleTree->Branch("end_process",      &end_process);
+    fParticleTree->Branch("fin_process",      &fin_process);
+    fParticleTree->Branch("vtx_x_tpc",        &vtx_x_tpc);
+    fParticleTree->Branch("vtx_y_tpc",        &vtx_y_tpc);
+    fParticleTree->Branch("vtx_z_tpc",        &vtx_z_tpc);
+    fParticleTree->Branch("end_x_tpc",        &end_x_tpc);
+    fParticleTree->Branch("end_y_tpc",        &end_y_tpc);
+    fParticleTree->Branch("end_z_tpc",        &end_z_tpc);
+    fParticleTree->Branch("stopping_chi2",    &stopping_chi2);
+    fParticleTree->Branch("e_dep",            &e_dep);
+    fParticleTree->Branch("n_hits",           &n_hits);
+    fParticleTree->Branch("hit_area",         &hit_area);
+    fParticleTree->Branch("n_cr_tracks",      &n_cr_tracks);
+    fParticleTree->Branch("n_nu_showers",     &n_nu_showers);
+    fParticleTree->Branch("n_nu_tracks",      &n_nu_tracks);
+    fParticleTree->Branch("track_vtx_x",      &track_vtx_x);
+    fParticleTree->Branch("track_vtx_y",      &track_vtx_y);
+    fParticleTree->Branch("track_vtx_z",      &track_vtx_z);
+    fParticleTree->Branch("track_end_x",      &track_end_x);
+    fParticleTree->Branch("track_end_y",      &track_end_y);
+    fParticleTree->Branch("track_end_z",      &track_end_z);
+    fParticleTree->Branch("track_length",         &track_length);
+    fParticleTree->Branch("track_range_momentum", &track_range_momentum);
+    fParticleTree->Branch("track_mcs_momentum",   &track_mcs_momentum);
+    fParticleTree->Branch("mu_range_momentum", &mu_range_momentum);
+    fParticleTree->Branch("mu_mcs_momentum",   &mu_mcs_momentum);
+    fParticleTree->Branch("track_dca",        &track_dca);
+    fParticleTree->Branch("track_ave_angle",  &track_ave_angle);
+    fParticleTree->Branch("track_theta",      &track_theta);
+    fParticleTree->Branch("track_phi",        &track_phi);
+    fParticleTree->Branch("track_e_dep",      &track_e_dep);
+    fParticleTree->Branch("track_n_hits",     &track_n_hits);
+    fParticleTree->Branch("track_n_hits_true",&track_n_hits_true);
+    fParticleTree->Branch("track_hit_area",   &track_hit_area);
+    fParticleTree->Branch("track_hit_area_true",  &track_hit_area_true);
+    fParticleTree->Branch("track_mu_chi2",    &track_mu_chi2);
+    fParticleTree->Branch("track_pi_chi2",    &track_pi_chi2);
+    fParticleTree->Branch("track_p_chi2",     &track_p_chi2);
    
 
     // Initial output
@@ -352,7 +390,7 @@ namespace sbnd {
     // Get track to PID associations
     art::FindMany<anab::ParticleID> findManyPid(trackHandle, event, fPidModuleLabel);
     // Get track to calorimetry associations
-    art::FindMany<anab::Calorimetry> findManyCalo(trackHandle, event, fCaloModuleLabel);
+    art::FindManyP<anab::Calorimetry> findManyCalo(trackHandle, event, fCaloModuleLabel);
 
     // Get shower handle
     auto showerHandle = event.getValidHandle<std::vector<recob::Shower>>(fShowerModuleLabel);
@@ -395,7 +433,7 @@ namespace sbnd {
       match_hits[id].push_back(hit);
     }
 
-    // Put them in a map for easier access
+    std::map<int, simb::MCParticle> particles;
     for (auto const& particle: (*particleHandle)){
       // Only interested in track-like muons, pions and protons
       pdg = particle.PdgCode();
@@ -416,6 +454,13 @@ namespace sbnd {
       double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/fDetectorProperties->DriftVelocity(); 
       // If both times are below or above the readout window time then skip
       if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime < readoutWindow)) continue;
+      int id = particle.TrackId();
+      particles[id] = particle;
+    }
+
+    // Put them in a map for easier access
+    for (auto const& part: particles){
+      simb::MCParticle particle = part.second;
 
       ResetParticleVars();
       pdg = particle.PdgCode();
@@ -426,6 +471,7 @@ namespace sbnd {
       if(truth->Origin() == simb::kBeamNeutrino){ 
         is_nu = true;
         nu_pdg = truth->GetNeutrino().Nu().PdgCode();
+        if(truth->GetNeutrino().CCNC() == simb::kCC) is_cc = true;
       }
       if(truth->Origin() == simb::kCosmicRay) is_cosmic = true;
 
@@ -445,6 +491,17 @@ namespace sbnd {
       std::pair<TVector3, TVector3> se = fTpcGeo.CrossingPoints(particle);
       theta = (se.second-se.first).Theta();
       phi = (se.second-se.first).Phi();
+
+      end_process = particle.EndProcess();
+      fin_process = FinalProcess(id, particles);
+
+      vtx_x_tpc = se.first.X();
+      vtx_y_tpc = se.first.Y();
+      vtx_z_tpc = se.first.Z();
+
+      end_x_tpc = se.second.X();
+      end_y_tpc = se.second.Y();
+      end_z_tpc = se.second.Z();
 
       e_dep = 0;
       for(size_t i = 0; i < particle.NumberTrajectoryPoints() - 1; i++){
@@ -498,14 +555,34 @@ namespace sbnd {
       track_length = track.Length();
       track_range_momentum = fRangeFitter.GetTrackMomentum(track_length, pdg);
       track_mcs_momentum = fMcsFitter.fitMcs(track, pdg).bestMomentum();
+      mu_range_momentum = fRangeFitter.GetTrackMomentum(track_length, 13);
+      mu_mcs_momentum = fMcsFitter.fitMcs(track, 13).bestMomentum();
+      track_dca = AverageDCA(track); 
+      std::vector<float> angles = fMcsFitter.fitMcs(track, 13).scatterAngles();
+      track_ave_angle = std::accumulate(angles.begin(), angles.end(), 0)/angles.size();
       track_theta = track.Theta();
       track_phi = track.Phi();
        
-      std::vector<const anab::Calorimetry*> calos = findManyCalo.at(track.ID());
-      for(size_t i = 0; i < calos.size(); i++){
-        if(calos[i]->PlaneID().Plane != 2) continue;
-        track_e_dep = calos[i]->KineticEnergy();
+      std::vector<art::Ptr<anab::Calorimetry>> calos = findManyCalo.at(track.ID());
+      // Loop over planes (Y->V->U) and choose the next plane's calorimetry if there are 1.5x more points (collection plane more reliable)
+      if(calos.size()==0) continue;
+      size_t nhits = 0;
+      art::Ptr<anab::Calorimetry> calo = calos[0];
+      size_t best_plane = 0;
+      for( size_t i = calos.size(); i > 0; i--){
+        if(calos[i-1]->dEdx().size() > nhits*1.5){
+          nhits = calos[i-1]->dEdx().size();
+          calo = calos[i-1];
+          best_plane = i-1;
+        }
       }
+
+      stopping_chi2 = fStopTagger.StoppingChiSq(track.End(), calos);
+
+      //for(size_t i = 0; i < calos.size(); i++){
+        //if(calos[i]->PlaneID().Plane != 2) continue;
+        track_e_dep = calo->KineticEnergy();
+      //}
 
       HitVector hits = findManyHits.at(track.ID());
       track_n_hits = hits.size();
@@ -522,7 +599,7 @@ namespace sbnd {
 
       std::vector<const anab::ParticleID*> pids = findManyPid.at(track.ID());
       for(size_t i = 0; i < pids.size(); i++){
-        if(pids[i]->PlaneID().Plane != 2) continue;
+        if(pids[i]->PlaneID().Plane != best_plane) continue;
         track_mu_chi2 = pids[i]->Chi2Muon();
         track_pi_chi2 = pids[i]->Chi2Pion();
         track_p_chi2 = pids[i]->Chi2Proton();
@@ -617,6 +694,7 @@ namespace sbnd {
   void NuMuRecoTree::ResetParticleVars(){
     is_cosmic = false;
     is_nu = false;
+    is_cc = false;
     nu_pdg = -99999;
     pdg = -99999;
     time = -99999;
@@ -631,6 +709,8 @@ namespace sbnd {
     momentum = -99999;
     theta = -99999;
     phi = -99999;
+    end_process = "unknown";
+    fin_process = "unknown";
     e_dep = -99999;
     n_hits = 0;
     hit_area = -99999;
@@ -646,6 +726,10 @@ namespace sbnd {
     track_length = -99999;
     track_range_momentum = -99999;
     track_mcs_momentum = -99999;
+    mu_range_momentum = -99999;
+    mu_mcs_momentum = -99999;
+    track_dca = -99999;
+    track_ave_angle = -99999;
     track_theta = -99999;
     track_phi = -99999;
     track_e_dep = -99999;
@@ -682,6 +766,48 @@ namespace sbnd {
     return std::make_pair(minimum, maximum);                                                                                                                  
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
+
+  // Follow processes down to final particle of same type
+  std::string NuMuRecoTree::FinalProcess(int id, const std::map<int, simb::MCParticle>& particles) const{
+    int parent_pdg = particles.at(id).PdgCode();
+    std::string process = particles.at(id).EndProcess();
+    int n_daughters = particles.at(id).NumberDaughters();
+    double max_p = -99999;
+    int max_id = -99999;
+
+    // Find daughter particle with same PDG and highest momentum
+    for(int i = 0; i < n_daughters; i++){
+      int daughter_id = particles.at(id).Daughter(i);
+      if(particles.find(daughter_id) == particles.end()) continue;
+      simb::MCParticle daughter = particles.at(daughter_id);
+      int daughter_pdg = daughter.PdgCode();
+      if(daughter_pdg != parent_pdg) continue;
+      if(daughter.P() < max_p) continue;
+      max_p = daughter.P();
+      max_id = daughter_id;
+      process = daughter.EndProcess();
+    }
+
+    if(max_id != -99999) return FinalProcess(max_id, particles);
+    return process;
+  }
+    
+  double NuMuRecoTree::AverageDCA(const recob::Track& track){
+
+    TVector3 start = track.Vertex<TVector3>();
+    TVector3 end = track.End<TVector3>();
+    double denominator = (end - start).Mag();
+    size_t npts = track.NumberTrajectoryPoints();
+    double aveDCA = 0;
+    int usedPts = 0;
+    for(size_t i = 0; i < npts; i++){
+      TVector3 point = track.LocationAtPoint<TVector3>(i);
+      if(!track.HasValidPoint(i)) continue;
+      aveDCA += (point - start).Cross(point - end).Mag()/denominator;
+      usedPts++;
+    }
+    return aveDCA/usedPts;
+  }
 
   DEFINE_ART_MODULE(NuMuRecoTree)
 } // namespace sbnd

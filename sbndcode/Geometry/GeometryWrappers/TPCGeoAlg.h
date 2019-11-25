@@ -57,6 +57,8 @@ namespace sbnd{
                     double maxXCut, double maxYCut, double maxZCut);
     bool InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
                     double maxXCut, double maxYCut, double maxZCut, double cpaCut);
+    bool InFiducial(geo::Point_t point, double minXCut, double minYCut, double minZCut, 
+                    double maxXCut, double maxYCut, double maxZCut, double cpaCut, double apaCut);
     
     // Is point inside given TPC
     bool InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buffer=0.);

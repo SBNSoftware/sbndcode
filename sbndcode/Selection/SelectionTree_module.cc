@@ -199,6 +199,7 @@ namespace sbnd {
     double vtx_x;
     double vtx_y;
     double vtx_z;
+    double time;
     bool cosmic_id;         // ID'd as a cosmic
     int n_tracks;           // Number of reconstructed tracks
     double nu_energy;       // Energy of true neutrino
@@ -220,6 +221,9 @@ namespace sbnd {
     std::map<std::string, double> reco_theta;  // Selected muon reco theta
     std::map<std::string, double> reco_phi;    // Selected muon reco phi
     std::map<std::string, double> reco_nu_e;   // Reconstructed neutrino energy assuming nu_mu CC
+    std::map<std::string, double> reco_vtx_x;  // Reconstructed neutrino vertex X
+    std::map<std::string, double> reco_vtx_y;  // Reconstructed neutrino vertex Y
+    std::map<std::string, double> reco_vtx_z;  // Reconstructed neutrino vertex Z
 
     // Tree (one entry per numu CC)
     TTree *fNuMuTree;
@@ -263,58 +267,48 @@ namespace sbnd {
   void SelectionTree::beginJob()
   {
 
-    // Maps need initializing
-    for(auto const& sel : selections){
-      selected[sel] = false;
-      true_pdg[sel] = -99999;
-      true_cont[sel] = false;
-      true_length[sel] = -99999;
-      true_mom[sel] = -99999;
-      true_theta[sel] = -99999;
-      true_phi[sel] = -99999;
-      reco_cont[sel] = false;
-      reco_length[sel] = -99999;
-      reco_mom[sel] = -99999;
-      reco_theta[sel] = -99999;
-      reco_phi[sel] = -99999;
-    }
+    ResetPfpVars();
 
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
 
     fPfpTree = tfs->make<TTree>("pfps", "pfps");
 
-    fPfpTree->Branch("is_cosmic",       &is_cosmic,       "is_cosmic/O");
-    fPfpTree->Branch("is_dirt",         &is_dirt,         "is_dirt/O");
-    fPfpTree->Branch("is_nu",           &is_nu,           "is_nu/O");
-    fPfpTree->Branch("nu_pdg",          &nu_pdg,          "nu_pdg/I");
-    fPfpTree->Branch("is_cc",           &is_cc,           "is_cc/O");
-    fPfpTree->Branch("nu_int",          &nu_int,          "nu_int/I");
-    fPfpTree->Branch("vtx_x",           &vtx_x,           "vtx_x/D");
-    fPfpTree->Branch("vtx_y",           &vtx_y,           "vtx_y/D");
-    fPfpTree->Branch("vtx_z",           &vtx_z,           "vtx_z/D");
-    fPfpTree->Branch("cosmic_id",       &cosmic_id,       "cosmic_id/O");
-    fPfpTree->Branch("n_tracks",        &n_tracks,        "n_tracks/I");
-    fPfpTree->Branch("nu_energy",       &nu_energy,       "nu_energy/D");
-    fPfpTree->Branch("mu_cont",         &mu_cont,         "mu_cont/O");
-    fPfpTree->Branch("mu_length",       &mu_length,       "mu_length/D");
-    fPfpTree->Branch("mu_mom",          &mu_mom,          "mu_mom/D");
-    fPfpTree->Branch("mu_theta",        &mu_theta,        "mu_theta/D");
-    fPfpTree->Branch("mu_phi",          &mu_phi,          "mu_phi/D");
+    fPfpTree->Branch("is_cosmic", &is_cosmic);
+    fPfpTree->Branch("is_dirt",   &is_dirt);
+    fPfpTree->Branch("is_nu",     &is_nu);
+    fPfpTree->Branch("nu_pdg",    &nu_pdg);
+    fPfpTree->Branch("is_cc",     &is_cc);
+    fPfpTree->Branch("nu_int",    &nu_int);
+    fPfpTree->Branch("vtx_x",     &vtx_x);
+    fPfpTree->Branch("vtx_y",     &vtx_y);
+    fPfpTree->Branch("vtx_z",     &vtx_z);
+    fPfpTree->Branch("time",      &time);
+    fPfpTree->Branch("cosmic_id", &cosmic_id);
+    fPfpTree->Branch("n_tracks",  &n_tracks);
+    fPfpTree->Branch("nu_energy", &nu_energy);
+    fPfpTree->Branch("mu_cont",   &mu_cont);
+    fPfpTree->Branch("mu_length", &mu_length);
+    fPfpTree->Branch("mu_mom",    &mu_mom);
+    fPfpTree->Branch("mu_theta",  &mu_theta);
+    fPfpTree->Branch("mu_phi",    &mu_phi);
     for(auto const& sel : selections){
-      fPfpTree->Branch((sel+"_selected").c_str(),   &selected[sel],   (sel+"_selected/O").c_str());
-      fPfpTree->Branch((sel+"_true_pdg").c_str(),   &true_pdg[sel],   (sel+"_true_pdg/I").c_str());
-      fPfpTree->Branch((sel+"_true_cont").c_str(),  &true_cont[sel],  (sel+"_true_cont/O").c_str());
-      fPfpTree->Branch((sel+"_true_length").c_str(),&true_length[sel],(sel+"_true_length/D").c_str());
-      fPfpTree->Branch((sel+"_true_mom").c_str(),   &true_mom[sel],   (sel+"_true_mom/D").c_str());
-      fPfpTree->Branch((sel+"_true_theta").c_str(), &true_theta[sel], (sel+"_true_theta/D").c_str());
-      fPfpTree->Branch((sel+"_true_phi").c_str(),   &true_phi[sel],   (sel+"_true_phi/D").c_str());
-      fPfpTree->Branch((sel+"_reco_cont").c_str(),  &reco_cont[sel],  (sel+"_reco_cont/O").c_str());
-      fPfpTree->Branch((sel+"_reco_length").c_str(),&reco_length[sel],(sel+"_reco_length/D").c_str());
-      fPfpTree->Branch((sel+"_reco_mom").c_str(),   &reco_mom[sel],   (sel+"_reco_mom/D").c_str());
-      fPfpTree->Branch((sel+"_reco_theta").c_str(), &reco_theta[sel], (sel+"_reco_theta/D").c_str());
-      fPfpTree->Branch((sel+"_reco_phi").c_str(),   &reco_phi[sel],   (sel+"_reco_phi/D").c_str());
-      fPfpTree->Branch((sel+"_reco_nu_e").c_str(),  &reco_nu_e[sel],  (sel+"_reco_nu_e/D").c_str());
+      fPfpTree->Branch((sel+"_selected").c_str(),   &selected[sel]);
+      fPfpTree->Branch((sel+"_true_pdg").c_str(),   &true_pdg[sel]);
+      fPfpTree->Branch((sel+"_true_cont").c_str(),  &true_cont[sel]);
+      fPfpTree->Branch((sel+"_true_length").c_str(),&true_length[sel]);
+      fPfpTree->Branch((sel+"_true_mom").c_str(),   &true_mom[sel]);
+      fPfpTree->Branch((sel+"_true_theta").c_str(), &true_theta[sel]);
+      fPfpTree->Branch((sel+"_true_phi").c_str(),   &true_phi[sel]);
+      fPfpTree->Branch((sel+"_reco_cont").c_str(),  &reco_cont[sel]);
+      fPfpTree->Branch((sel+"_reco_length").c_str(),&reco_length[sel]);
+      fPfpTree->Branch((sel+"_reco_mom").c_str(),   &reco_mom[sel]);
+      fPfpTree->Branch((sel+"_reco_theta").c_str(), &reco_theta[sel]);
+      fPfpTree->Branch((sel+"_reco_phi").c_str(),   &reco_phi[sel]);
+      fPfpTree->Branch((sel+"_reco_nu_e").c_str(),  &reco_nu_e[sel]);
+      fPfpTree->Branch((sel+"_reco_vtx_x").c_str(), &reco_vtx_x[sel]);
+      fPfpTree->Branch((sel+"_reco_vtx_y").c_str(), &reco_vtx_y[sel]);
+      fPfpTree->Branch((sel+"_reco_vtx_z").c_str(), &reco_vtx_z[sel]);
     }
 
     fNuMuTree = tfs->make<TTree>("numu", "numu");
@@ -600,6 +594,7 @@ namespace sbnd {
     vtx_x = -99999;
     vtx_y = -99999;
     vtx_z = -99999;
+    time = -99999;
     cosmic_id = false;
     n_tracks = 0;
     nu_energy = -99999;
@@ -622,6 +617,9 @@ namespace sbnd {
       reco_theta[sel] = -99999;
       reco_phi[sel] = -99999;
       reco_nu_e[sel] = -99999;
+      reco_vtx_x[sel] = -99999;
+      reco_vtx_y[sel] = -99999;
+      reco_vtx_z[sel] = -99999;
     }
   }
 
@@ -774,13 +772,33 @@ namespace sbnd {
     double longest_escape = 0;
     std::vector<recob::Track> long_tracks;
     for(size_t i = 0; i < tracks.size(); i++){
-      bool escapes = false;
-      if(!fTpcGeo.InFiducial(tracks[i].End(), 5.)){ //TODO containment def 
+      //bool escapes = false;
+      if(!fTpcGeo.InFiducial(tracks[i].End(), 1.5)){
         n_escape++;
-        escapes = true;
+        //escapes = true;
         double length = tracks[i].Length();
         if(length > longest_escape){ 
           longest_escape = length;
+        }
+      }
+
+      // Select if longer than 150 cm
+      if(tracks[i].Length() > 150.){
+        long_tracks.push_back(tracks[i]);
+        continue;
+      }
+
+      // Loop over planes (Y->V->U) and choose the next plane's calorimetry if there are 1.5x more points (collection plane more reliable)
+      std::vector<art::Ptr<anab::Calorimetry>> calos = fmcalo.at(tracks[i].ID());
+      if(calos.size()==0) continue;
+      size_t nhits = 0;
+      art::Ptr<anab::Calorimetry> calo = calos[0];
+      size_t best_plane = 0;
+      for( size_t i = calos.size(); i > 0; i--){
+        if(calos[i-1]->dEdx().size() > nhits*1.5){
+          nhits = calos[i-1]->dEdx().size();
+          calo = calos[i-1];
+          best_plane = i-1;
         }
       }
 
@@ -789,7 +807,7 @@ namespace sbnd {
       bool is_proton = false;
       for(size_t i = 0; i < pids.size(); i++){
         // Only use the collection plane
-        if(pids[i]->PlaneID().Plane != 2) continue;
+        if(pids[i]->PlaneID().Plane != best_plane) continue;
         // If minimum chi2 is proton then ignore
         if(pids[i]->Chi2Proton() < pids[i]->Chi2Muon() && pids[i]->Chi2Proton() < pids[i]->Chi2Pion()){ 
           is_proton = true;
@@ -799,9 +817,11 @@ namespace sbnd {
       if(is_proton) continue;
 
       // Get rid of any contained particles which don't stop (most muons do) FIXME i think
-      std::vector<art::Ptr<anab::Calorimetry>> calos = fmcalo.at(tracks[i].ID());
-      bool stops = fStopTagger.StoppingEnd(tracks[i].End(), calos);
-      if(!escapes && !stops) continue;
+      //bool stops = fStopTagger.StoppingEnd(tracks[i].End(), calos);
+      //if(!escapes && !stops) continue;
+
+      // Reject any tracks shorter than 15 cm
+      if(tracks[i].Length() < 15) continue;
 
       long_tracks.push_back(tracks[i]);
     }
@@ -829,7 +849,7 @@ namespace sbnd {
           // Only use the collection plane
           if(pids[i]->PlaneID().Plane != 2) continue;
           // Run proton chi^2 to cut out stopping protons
-          if(pids[i]->Chi2Muon() < 50){ 
+          if((pids[i]->Chi2Muon() < 50 && track.Length() > 40)||track.Length() > 150){ //FIXME temp length cut
             has_candidate = true;
             candidate = track;
             continue;
@@ -840,7 +860,7 @@ namespace sbnd {
 
     // Check vertex (start of muon candidate) in FV
     // Fiducial definitions 8.25 cm from X (inc CPA), 15 cm from Y and front, 85 cm from back
-    bool vertex_contained = fTpcGeo.InFiducial(candidate.Start(), 10., 10., 10., 10., 10., 10., 8.25);
+    bool vertex_contained = fTpcGeo.InFiducial(candidate.Start(), 10., 10., 15., 10., 20., 50., 5., 2.5);
     if(vertex_contained && has_candidate) is_selected = true;
 
     return std::make_pair(is_selected, candidate);
@@ -866,6 +886,9 @@ namespace sbnd {
     }
     reco_theta[selection] = sel_track.second.Theta();
     reco_phi[selection] = sel_track.second.Phi();
+    reco_vtx_x[selection] = sel_track.second.Start().X();
+    reco_vtx_y[selection] = sel_track.second.Start().Y();
+    reco_vtx_z[selection] = sel_track.second.Start().Z();
 
     // Get the true kinematic variables
     if(particles.find(trueId) != particles.end()){
