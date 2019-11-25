@@ -244,7 +244,7 @@ namespace opdet{
     bin = binmax;
     while(aux >= threshold){
         bin--;
-        if(bin < 0) break;
+        if((int)bin < 0) break;
         aux = waveform[bin];
     }
     time = bin+1; //for rise time

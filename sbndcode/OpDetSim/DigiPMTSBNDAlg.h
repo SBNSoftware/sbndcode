@@ -11,6 +11,12 @@
 
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
+#include "CLHEP/Random/RandomEngine.h"
+#include "CLHEP/Random/JamesRandom.h"
+#include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandExponential.h"
 
 #include <memory>
 #include <vector>
@@ -28,7 +34,7 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "TMath.h"
-#include "TRandom3.h"
+//#include "TRandom3.h"
 #include "TF1.h"
 #include "TH1D.h"
 
@@ -55,6 +61,7 @@ namespace opdet{
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       detinfo::DetectorClocks const* timeService = nullptr; //< DetectorClocks service provider.
+      CLHEP::HepRandomEngine* engine = nullptr;
     };// ConfigurationParameters_t
 
     //Default constructor
@@ -77,6 +84,8 @@ namespace opdet{
     //int fSinglePEmodel;
     double sigma1;
     double sigma2;
+    
+    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
     double Pulse1PE(double time) ;
@@ -174,7 +183,8 @@ namespace opdet{
 
     std::unique_ptr<DigiPMTSBNDAlg> operator()(
         detinfo::LArProperties const& larProp,
-        detinfo::DetectorClocks const& detClocks
+        detinfo::DetectorClocks const& detClocks,
+        CLHEP::HepRandomEngine* engine
         ) const;
        
     private:
