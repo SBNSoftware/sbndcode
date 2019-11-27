@@ -63,6 +63,8 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   if (opdet_type == "bar" ||
       opdet_type == "xarapucaprime" ||
       opdet_type == "xarapuca" ||
+      opdet_type == "xarapucaT1" ||
+      opdet_type == "xarapucaT2" ||
       opdet_type == "arapucaT1" ||
       opdet_type == "arapucaT2") {
     is_arapuca = true;
@@ -143,6 +145,8 @@ bool opDetSBNDTriggerAlg::IsChannelMasked(raw::Channel_t channel) const {
   if (opdet_type == "barepmt" && fConfig.MaskBarePMTs()) return true;
   if (opdet_type == "xarapucaprime" && fConfig.MaskXArapucaPrimes()) return true;
   if (opdet_type == "xarapuca" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "xarapucaT1" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "xarapucaT2" && fConfig.MaskXArapucas()) return true;
   if (opdet_type == "arapucaT1" && fConfig.MaskArapucaT1s()) return true;
   if (opdet_type == "arapucaT2" && fConfig.MaskArapucaT2s()) return true;
   
