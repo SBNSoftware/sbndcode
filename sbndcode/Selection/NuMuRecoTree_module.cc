@@ -133,6 +133,7 @@ namespace sbnd {
 
     // Reset variables in each loop
     void ResetParticleVars();
+    void ResetNuVars();
 
     typedef art::Handle< std::vector<recob::PFParticle> > PFParticleHandle;
     typedef std::map< size_t, art::Ptr<recob::PFParticle> > PFParticleIdMap;
@@ -224,6 +225,26 @@ namespace sbnd {
     double track_mu_chi2;
     double track_pi_chi2;
     double track_p_chi2;
+    double track_flat_chi2;
+
+    // Tree (One entry per reconstructed numuCC)
+    TTree *fNuMuTree;
+    double nu_vtx_x;
+    double nu_vtx_y;
+    double nu_vtx_z;
+    double true_nu_energy;
+    double true_had_energy;
+    double true_mu_momentum;
+    int nu_n_tracks;
+    int nu_n_showers;
+    bool mu_contained;
+    bool tracks_contained;
+    double reco_mu_momentum;
+    double reco_track_energy;
+    double reco_track_hit_area;
+    double reco_shower_hit_area;
+    double reco_track_hit_energy;
+    double reco_shower_hit_energy;
 
     void GetPFParticleIdMap(const PFParticleHandle &pfParticleHandle, PFParticleIdMap &pfParticleMap);
     
@@ -236,6 +257,8 @@ namespace sbnd {
     std::string FinalProcess(int id, const std::map<int, simb::MCParticle>& particleMap) const;
 
     double AverageDCA(const recob::Track& track);
+
+    double HitEnergy(art::Ptr<recob::Hit> hit);
 
   }; // class NuMuRecoTree
 
@@ -327,7 +350,26 @@ namespace sbnd {
     fParticleTree->Branch("track_mu_chi2",    &track_mu_chi2);
     fParticleTree->Branch("track_pi_chi2",    &track_pi_chi2);
     fParticleTree->Branch("track_p_chi2",     &track_p_chi2);
+    fParticleTree->Branch("track_flat_chi2",     &track_flat_chi2);
    
+    fNuMuTree = tfs->make<TTree>("numu", "numu");
+
+    fNuMuTree->Branch("nu_vtx_x",          &nu_vtx_x);
+    fNuMuTree->Branch("nu_vtx_y",          &nu_vtx_y);
+    fNuMuTree->Branch("nu_vtx_z",          &nu_vtx_z);
+    fNuMuTree->Branch("true_nu_energy",    &true_nu_energy);
+    fNuMuTree->Branch("true_mu_momentum",  &true_mu_momentum);
+    fNuMuTree->Branch("true_had_energy",   &true_had_energy);
+    fNuMuTree->Branch("nu_n_tracks",       &nu_n_tracks);
+    fNuMuTree->Branch("nu_n_showers",      &nu_n_showers);
+    fNuMuTree->Branch("mu_contained",      &mu_contained);
+    fNuMuTree->Branch("tracks_contained",  &tracks_contained);
+    fNuMuTree->Branch("reco_mu_momentum",  &reco_mu_momentum);
+    fNuMuTree->Branch("reco_track_energy", &reco_track_energy);
+    fNuMuTree->Branch("reco_track_hit_area", &reco_track_hit_area);
+    fNuMuTree->Branch("reco_shower_hit_area", &reco_shower_hit_area);
+    fNuMuTree->Branch("reco_track_hit_energy", &reco_track_hit_energy);
+    fNuMuTree->Branch("reco_shower_hit_energy", &reco_shower_hit_energy);
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- Cosmic ID Ana Module -------------------"<<std::endl;
@@ -381,6 +423,7 @@ namespace sbnd {
 
     // Get PFParticle to track associations
     art::FindManyP< recob::Track > pfPartToTrackAssoc(pfParticleHandle, event, fTrackModuleLabel);
+    art::FindManyP< recob::Shower > pfPartToShowerAssoc(pfParticleHandle, event, fShowerModuleLabel);
     
     // Get track handle
     auto trackHandle = event.getValidHandle<std::vector<recob::Track>>(fTrackModuleLabel);
@@ -432,6 +475,7 @@ namespace sbnd {
       int id = RecoUtils::TrueParticleID(hit, false);
       match_hits[id].push_back(hit);
     }
+
 
     std::map<int, simb::MCParticle> particles;
     for (auto const& particle: (*particleHandle)){
@@ -579,10 +623,7 @@ namespace sbnd {
 
       stopping_chi2 = fStopTagger.StoppingChiSq(track.End(), calos);
 
-      //for(size_t i = 0; i < calos.size(); i++){
-        //if(calos[i]->PlaneID().Plane != 2) continue;
-        track_e_dep = calo->KineticEnergy();
-      //}
+      track_e_dep = calo->KineticEnergy();
 
       HitVector hits = findManyHits.at(track.ID());
       track_n_hits = hits.size();
@@ -598,14 +639,163 @@ namespace sbnd {
       }
 
       std::vector<const anab::ParticleID*> pids = findManyPid.at(track.ID());
+      std::vector<double> flat_chi2 = fStopTagger.FlatChi2(calos);
       for(size_t i = 0; i < pids.size(); i++){
         if(pids[i]->PlaneID().Plane != best_plane) continue;
         track_mu_chi2 = pids[i]->Chi2Muon();
         track_pi_chi2 = pids[i]->Chi2Pion();
         track_p_chi2 = pids[i]->Chi2Proton();
+        if(i < flat_chi2.size()) track_flat_chi2 = flat_chi2[i];
       }
 
       fParticleTree->Fill();
+    }
+
+    //----------------------------------------------------------------------------------------------------------
+    //                                        NEUTRINO ENERGY RECO
+    //----------------------------------------------------------------------------------------------------------
+
+    // PFParticle truth matching
+    std::map<int, PFParticleVector> match_pfps;
+    for (PFParticleIdMap::const_iterator it = pfParticleMap.begin(); it != pfParticleMap.end(); ++it){
+      const art::Ptr<recob::PFParticle> pParticle(it->second);
+      // Check if this particle is identified as the neutrino
+      if (!pParticle->IsPrimary()) continue;
+      const int pdg(pParticle->PdgCode());
+      const bool isNeutrino(std::abs(pdg) == pandora::NU_E || 
+                            std::abs(pdg) == pandora::NU_MU || 
+                            std::abs(pdg) == pandora::NU_TAU);
+      if(!isNeutrino) continue;
+
+      for (const size_t daughterId : pParticle->Daughters()){
+
+        art::Ptr<recob::PFParticle> pDaughter = pfParticleMap.at(daughterId);
+        const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pDaughter.key()));
+        if(associatedTracks.size() != 1) continue;
+
+        // Get the first associated track
+        recob::Track tpcTrack = *associatedTracks.front();
+        HitVector hits = findManyHits.at(tpcTrack.ID());
+        int id = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+        match_pfps[id].push_back(pDaughter);
+      }
+    }
+
+    // Loop over all the particles
+    for (auto const& part: particles){
+      simb::MCParticle particle = part.second;
+      // Find any primary muons
+      pdg = particle.PdgCode();
+      if(std::abs(pdg) != 13) continue;
+      // Get the MCTruth associations
+      int id = particle.TrackId();
+      art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(id);
+      // Check the truth is a beam neutrino
+      if(truth->Origin() != simb::kBeamNeutrino) continue;
+      // Check that it's a numuCC interaction
+      if(std::abs(truth->GetNeutrino().Nu().PdgCode()) != 14) continue;
+      if(truth->GetNeutrino().CCNC() != simb::kCC) continue;
+      // Check vertex in AV
+      geo::Point_t vtx {particle.Vx(), particle.Vy(), particle.Vz()};
+      if(!fTpcGeo.InFiducial(vtx, 0)) continue;
+
+      ResetNuVars();
+      // Save true information
+      nu_vtx_x = vtx.X();
+      nu_vtx_y = vtx.Y();
+      nu_vtx_z = vtx.Z();
+      true_nu_energy = truth->GetNeutrino().Nu().E();
+      true_mu_momentum = particle.P();
+      true_had_energy = true_nu_energy - std::sqrt(std::pow(true_mu_momentum, 2) + std::pow(0.10566, 2));
+
+      // Loop over associated PFParticles
+      if(match_pfps.find(id) == match_pfps.end()) continue;
+      double longest = -99999;
+      recob::Track mu_track;
+      size_t parent_id = -99999;
+      size_t mu_id = -99999;
+      for(size_t i = 0; i < match_pfps[id].size(); i++){
+        // Get associated track
+        const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(match_pfps[id][i].key()));
+        if(associatedTracks.size() != 1) continue;
+        recob::Track track = *associatedTracks.front();
+        // If track is longest then get the parent PFParticle ID
+        if(track.Length() > longest){
+          longest = track.Length();
+          mu_track = track;
+          parent_id = match_pfps[id][i]->Parent();
+          mu_id = match_pfps[id][i]->Self();
+        }
+      }
+      if(longest == -99999) continue;
+
+      // For the daughter associated with the primary muon save reco kinematics
+      mu_contained = fTpcGeo.InFiducial(mu_track.End(), 1.5);
+      if(mu_contained) reco_mu_momentum = fRangeFitter.GetTrackMomentum(mu_track.Length(), 13);
+      else reco_mu_momentum = fMcsFitter.fitMcs(mu_track, 13).bestMomentum();
+
+      reco_track_energy = 0;
+      reco_track_hit_area = 0;
+      reco_shower_hit_area = 0;
+      reco_track_hit_energy = 0;
+      reco_shower_hit_energy = 0;
+
+      // Get all of the daughters in the PFParticle slice
+      if(pfParticleMap.find(parent_id) == pfParticleMap.end()) continue;
+      art::Ptr<recob::PFParticle> pParent = pfParticleMap.at(parent_id);
+      for (const size_t daughter_id : pParent->Daughters()){
+        if (daughter_id == mu_id) continue;
+
+        // Get all associated tracks and showers for each daughter
+        if(pfParticleMap.find(daughter_id) == pfParticleMap.end()) continue;
+        art::Ptr<recob::PFParticle> pDaughter = pfParticleMap.at(daughter_id);
+        const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pDaughter.key()));
+        const std::vector< art::Ptr<recob::Shower> > associatedShowers(pfPartToShowerAssoc.at(pDaughter.key()));
+
+        // Add up all of the deposited energy
+        for(size_t i = 0; i < associatedTracks.size(); i++){
+          nu_n_tracks++;
+          // Check if tracks exit
+          if(!fTpcGeo.InFiducial(associatedTracks[i]->End(), 1.5)) tracks_contained = false;
+
+          // Loop over planes (Y->V->U) and choose the next plane's calorimetry if there are 1.5x more points (collection plane more reliable)
+          std::vector<art::Ptr<anab::Calorimetry>> calos = findManyCalo.at(associatedTracks[i]->ID());
+          if(calos.size()==0) continue;
+          size_t nhits = 0;
+          size_t best_plane = 0;
+          for( size_t j = calos.size(); j > 0; j--){
+            if(calos[j-1]->dEdx().size() > nhits*1.5){
+              nhits = calos[j-1]->dEdx().size();
+              best_plane = j-1;
+            }
+          }
+          // Get the track kinetic energy returned by the calorimetry module
+          if(calos[best_plane]->KineticEnergy() > 0) reco_track_energy += calos[best_plane]->KineticEnergy()/1e3; //[GeV]
+
+          // Get the area and energy of hits associated with the tracks
+          HitVector hits = findManyHits.at(associatedTracks[i]->ID());
+          for(size_t j = 0; j < hits.size(); j++){
+            if(hits[j]->WireID().Plane == best_plane){ 
+              reco_track_hit_area += hits[j]->Integral();
+              reco_track_hit_energy += HitEnergy(hits[j]);
+            }
+          }
+        }
+
+        for(size_t i = 0; i < associatedShowers.size(); i++){
+          nu_n_showers++;
+          HitVector hits = findManyHitsShower.at(associatedShowers[i]->ID());
+          for(size_t j = 0; j < hits.size(); j++){
+            // Assume collection plane is best for showers
+            if(hits[j]->WireID().Plane == 2){ 
+              reco_shower_hit_area += hits[j]->Integral();
+              reco_shower_hit_energy += HitEnergy(hits[j]);
+            }
+          }
+        }
+      }
+      // Save if secondary particles contained
+      fNuMuTree->Fill();
     }
     
   } // NuMuRecoTree::analyze()
@@ -740,7 +930,28 @@ namespace sbnd {
     track_mu_chi2 = -99999;
     track_pi_chi2 = -99999;
     track_p_chi2 = -99999;
+    track_flat_chi2 = -99999;
     
+  }
+
+  // Reset the tree variables
+  void NuMuRecoTree::ResetNuVars(){
+    nu_vtx_x = -99999;
+    nu_vtx_y = -99999;
+    nu_vtx_z = -99999;
+    true_nu_energy = -99999;
+    true_mu_momentum = -99999;
+    true_had_energy = -99999;
+    nu_n_tracks = 0;
+    nu_n_showers = 0;
+    mu_contained = true;
+    tracks_contained = true;
+    reco_mu_momentum = -99999;
+    reco_track_energy = -99999;
+    reco_track_hit_area = -99999;
+    reco_shower_hit_area = -99999;
+    reco_track_hit_energy = -99999;
+    reco_shower_hit_energy = -99999;
   }
     
   std::pair<double, double> NuMuRecoTree::XLimitsTPC(const simb::MCParticle& particle){
@@ -807,6 +1018,20 @@ namespace sbnd {
       usedPts++;
     }
     return aveDCA/usedPts;
+  }
+
+  double NuMuRecoTree::HitEnergy(art::Ptr<recob::Hit> hit){
+
+    double ADCtoEl = 0.02354; //FIXME from calorimetry_sbnd.fcl
+    double time = hit->PeakTime();
+    double timetick = fDetectorProperties->SamplingRate()*1e-3;
+    double presamplings = fDetectorProperties->TriggerOffset();
+    time -= presamplings;
+    time = time*timetick;
+    double tau = fDetectorProperties->ElectronLifetime();
+    double correction = std::exp(time/tau);
+    return fDetectorProperties->ModBoxCorrection((hit->Integral()/ADCtoEl)*correction)/1e3; //[GeV]
+    
   }
 
   DEFINE_ART_MODULE(NuMuRecoTree)

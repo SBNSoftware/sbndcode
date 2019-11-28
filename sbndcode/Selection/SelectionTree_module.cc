@@ -16,6 +16,7 @@
 // LArSoft includes
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
@@ -27,6 +28,7 @@
 #include "lardataobj/RecoBase/MCSFitResult.h"
 #include "larreco/RecoAlg/TrajectoryMCSFitter.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -95,6 +97,11 @@ namespace sbnd {
         Comment("tag of TPC track producer data product")
       };
 
+      fhicl::Atom<art::InputTag> ShowerModuleLabel {
+        Name("ShowerModuleLabel"),
+        Comment("tag of shower producer data product")
+      };
+
       fhicl::Atom<art::InputTag> PidModuleLabel {
         Name("PidModuleLabel"),
         Comment("tag of PID producer data product")
@@ -153,13 +160,18 @@ namespace sbnd {
     void ResetNuMuVars();
 
     // Apply the proposal selection
-    std::pair<bool, recob::Track> ProposalSelection(std::vector<recob::Track> tracks);
+    std::pair<std::pair<bool, bool>, recob::Track> ProposalSelection(std::vector<recob::Track> tracks);
     // Apply Rhiannon's selection
-    std::pair<bool, recob::Track> RhiSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid);
+    std::pair<std::pair<bool, bool>, recob::Track> RhiSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid);
 
-    std::pair<bool, recob::Track> TomSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo);
+    std::pair<std::pair<bool, bool>, recob::Track> TomSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo);
 
-    void FillSelectionTree(std::string selection, std::pair<bool, recob::Track> selected, int trueId, std::map<int, simb::MCParticle> particles);
+    void FillSelectionTree(std::string selection, std::pair<std::pair<bool, bool>, recob::Track> selected, int trueId, std::map<int, simb::MCParticle> particles);
+
+    double AverageDCA(const recob::Track& track);
+
+    double HitEnergy(art::Ptr<recob::Hit> hit);
+    double NeutrinoEnergy(std::map<int, double> track_energies, double shower_energy, int id);
 
     typedef art::Handle< std::vector<recob::PFParticle> > PFParticleHandle;
     typedef std::map< size_t, art::Ptr<recob::PFParticle> > PFParticleIdMap;
@@ -170,6 +182,7 @@ namespace sbnd {
     art::InputTag fSimModuleLabel;      ///< name of detsim producer
     art::InputTag fGenModuleLabel;      ///< name of detsim producer
     art::InputTag fTpcTrackModuleLabel; ///< name of TPC track producer
+    art::InputTag fShowerModuleLabel; ///< name of TPC track producer
     art::InputTag fPidModuleLabel; ///< name of TPC track producer
     art::InputTag fCaloModuleLabel; ///< name of TPC track producer
     art::InputTag fPandoraLabel;
@@ -183,6 +196,7 @@ namespace sbnd {
     trkf::TrajectoryMCSFitter     fMcsFitter; 
     trkf::TrackMomentumCalculator fRangeFitter;
     StoppingParticleCosmicIdAlg  fStopTagger;
+    detinfo::DetectorProperties const* fDetectorProperties;
 
     std::vector<std::string> selections {"prop", "rhi", "tom"};
     
@@ -209,6 +223,7 @@ namespace sbnd {
     double mu_theta;        // True theta of muon if true numuCC
     double mu_phi;          // True phi of muon if true numuCC
     std::map<std::string, bool> selected;      // Selected as numuCC?
+    std::map<std::string, bool> in_fv;         // In fiducial volume of selection
     std::map<std::string, int> true_pdg;       // PDG of particle prop_true as muon
     std::map<std::string, bool> true_cont;     // Is selected true particle contained 
     std::map<std::string, double> true_length; // True contained length of selected particle
@@ -250,6 +265,7 @@ namespace sbnd {
     , fSimModuleLabel       (config().SimModuleLabel())
     , fGenModuleLabel       (config().GenModuleLabel())
     , fTpcTrackModuleLabel  (config().TpcTrackModuleLabel())
+    , fShowerModuleLabel    (config().ShowerModuleLabel())
     , fPidModuleLabel       (config().PidModuleLabel())
     , fCaloModuleLabel      (config().CaloModuleLabel())
     , fPandoraLabel         (config().PandoraLabel())
@@ -267,6 +283,8 @@ namespace sbnd {
   void SelectionTree::beginJob()
   {
 
+    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
+    
     ResetPfpVars();
 
     // Access tfileservice to handle creating and writing histograms
@@ -294,6 +312,7 @@ namespace sbnd {
     fPfpTree->Branch("mu_phi",    &mu_phi);
     for(auto const& sel : selections){
       fPfpTree->Branch((sel+"_selected").c_str(),   &selected[sel]);
+      fPfpTree->Branch((sel+"_in_fv").c_str(),      &in_fv[sel]);
       fPfpTree->Branch((sel+"_true_pdg").c_str(),   &true_pdg[sel]);
       fPfpTree->Branch((sel+"_true_cont").c_str(),  &true_cont[sel]);
       fPfpTree->Branch((sel+"_true_length").c_str(),&true_length[sel]);
@@ -380,6 +399,13 @@ namespace sbnd {
     art::FindMany<anab::ParticleID> findManyPid(tpcTrackHandle, event, fPidModuleLabel);
     art::FindManyP<anab::Calorimetry> findManyCalo(tpcTrackHandle, event, fCaloModuleLabel);
 
+    // Get shower handle
+    auto showerHandle = event.getValidHandle<std::vector<recob::Shower>>(fShowerModuleLabel);
+    // Get PFParticle to shower associations
+    art::FindManyP< recob::Shower > pfPartToShowerAssoc(pfParticleHandle, event, fShowerModuleLabel);
+    // Get shower to hit associations
+    art::FindManyP<recob::Hit> findManyHitsShower(showerHandle, event, fShowerModuleLabel);
+
     //----------------------------------------------------------------------------------------------------------
     //                                      FILLING THE TRUTH TREE
     //----------------------------------------------------------------------------------------------------------
@@ -464,6 +490,8 @@ namespace sbnd {
       ResetPfpVars();
 
       std::vector<recob::Track> nuTracks;
+      std::map<int, double> track_energies;
+      double shower_energy = 0;
 
       // Loop over daughters of pfparticle and do some truth matching
       // Assign labels based on the particle constributing the most hits
@@ -473,6 +501,32 @@ namespace sbnd {
         // Get tracks associated with daughter
         art::Ptr<recob::PFParticle> pDaughter = pfParticleMap.at(daughterId);
         const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pDaughter.key()));
+        const std::vector< art::Ptr<recob::Shower> > associatedShowers(pfPartToShowerAssoc.at(pDaughter.key()));
+
+        // Add up track and shower energy
+        for(size_t i = 0; i < associatedTracks.size(); i++){
+          std::vector<art::Ptr<anab::Calorimetry>> calos = findManyCalo.at(associatedTracks[i]->ID());
+          if(calos.size()==0) continue;
+          size_t nhits = 0;
+          size_t best_plane = 0;
+          for( size_t j = calos.size(); j > 0; j--){
+            if(calos[j-1]->dEdx().size() > nhits*1.5){
+              nhits = calos[j-1]->dEdx().size();
+              best_plane = j-1;
+            }
+          }
+          track_energies[associatedTracks[i]->ID()] = calos[best_plane]->KineticEnergy()/1e3;
+        }
+        for(size_t i = 0; i < associatedShowers.size(); i++){
+          std::vector<art::Ptr<recob::Hit>> hits = findManyHitsShower.at(associatedShowers[i]->ID());
+          for(size_t j = 0; j < hits.size(); j++){
+            // Assume collection plane is best for showers
+            if(hits[j]->WireID().Plane == 2){ 
+              shower_energy += HitEnergy(hits[j]);
+            }
+          }
+        }
+
         if(associatedTracks.size() != 1) continue; //TODO check how often this occurs
 
         // Get the first associated track
@@ -544,22 +598,25 @@ namespace sbnd {
       // -------------------------------------- APPLY SELECTIONS ---------------------------------------
       for(auto const& sel : selections){
         if(sel == "prop"){
-          std::pair<bool, recob::Track> sel_track = ProposalSelection(nuTracks);
+          std::pair<std::pair<bool, bool>, recob::Track> sel_track = ProposalSelection(nuTracks);
           std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
           int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
           FillSelectionTree(sel, sel_track, trueId, particles);
+          reco_nu_e[sel] = NeutrinoEnergy(track_energies, shower_energy, sel_track.second.ID());
         }
         if(sel == "rhi"){
-          std::pair<bool, recob::Track> sel_track = RhiSelection(nuTracks, findManyPid);
+          std::pair<std::pair<bool, bool>, recob::Track> sel_track = RhiSelection(nuTracks, findManyPid);
           std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
           int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
           FillSelectionTree(sel, sel_track, trueId, particles);
+          reco_nu_e[sel] = NeutrinoEnergy(track_energies, shower_energy, sel_track.second.ID());
         } 
         if(sel == "tom"){
-          std::pair<bool, recob::Track> sel_track = TomSelection(nuTracks, findManyPid, findManyCalo);
+          std::pair<std::pair<bool, bool>, recob::Track> sel_track = TomSelection(nuTracks, findManyPid, findManyCalo);
           std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
           int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
           FillSelectionTree(sel, sel_track, trueId, particles);
+          reco_nu_e[sel] = NeutrinoEnergy(track_energies, shower_energy, sel_track.second.ID());
         } 
       }
 
@@ -635,7 +692,7 @@ namespace sbnd {
   }
 
   // Apply the proposal selection
-  std::pair<bool, recob::Track> SelectionTree::ProposalSelection(std::vector<recob::Track> tracks){
+  std::pair<std::pair<bool, bool>, recob::Track> SelectionTree::ProposalSelection(std::vector<recob::Track> tracks){
 
     bool is_selected = false;
 
@@ -646,24 +703,24 @@ namespace sbnd {
     double length = track.Length();
 
     // Check if the track is contained
-    bool track_contained = fTpcGeo.InFiducial(track.End(), 5.);
+    bool track_contained = fTpcGeo.InFiducial(track.End(), 1.5);
 
     // Apply a fiducial volume cut to the vertex (start of track) TODO CPA cut
-    bool vertex_contained = fTpcGeo.InFiducial(track.Start(), 16.5, 15., 15., 16.5, 15., 80.);
+    bool in_fiducial = fTpcGeo.InFiducial(track.Start(), 16.5, 15., 15., 16.5, 15., 80.);
 
     // Apply selection criteria
     if(track_contained){
-      if(vertex_contained && length > 50.) is_selected = true;
+      if(length > 50.) is_selected = true;
     }
     else{
-      if(vertex_contained && length > 100.) is_selected = true;
+      if(length > 100.) is_selected = true;
     }
 
-    return std::make_pair(is_selected, track);
+    return std::make_pair(std::make_pair(is_selected, in_fiducial), track);
   }
 
   // Apply rhiannon's selection
-  std::pair<bool, recob::Track> SelectionTree::RhiSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid){
+  std::pair<std::pair<bool, bool>, recob::Track> SelectionTree::RhiSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid){
 
     bool is_selected = false;
     bool has_candidate = false;
@@ -676,7 +733,7 @@ namespace sbnd {
     double longest_first = 0;
     double longest_second = 0;
     for(size_t i = 0; i < tracks.size(); i++){
-      if(!fTpcGeo.InFiducial(tracks[i].End(), 2.)){ //TODO containment def 
+      if(!fTpcGeo.InFiducial(tracks[i].End(), 1.5)){ //TODO containment def 
         n_escape++;
         //double length = fTpcGeo.LengthInFiducial(tracks[i], 10, 20, 10, 10, 20, 10);
         double length = tracks[i].Length();
@@ -754,36 +811,38 @@ namespace sbnd {
 
     // Check vertex (start of muon candidate) in FV
     // Fiducial definitions 8.25 cm from X (inc CPA), 15 cm from Y and front, 85 cm from back
-    bool vertex_contained = fTpcGeo.InFiducial(candidate.Start(), 8.25, 15., 15., 8.25, 15., 85., 8.25);
-    if(vertex_contained && has_candidate) is_selected = true;
+    bool in_fiducial = fTpcGeo.InFiducial(candidate.Start(), 8.25, 15., 15., 8.25, 15., 85., 8.25);
+    if(has_candidate) is_selected = true;
 
-    return std::make_pair(is_selected, candidate);
+    return std::make_pair(std::make_pair(is_selected, in_fiducial), candidate);
   }
 
   // Apply my selection
-  std::pair<bool, recob::Track> SelectionTree::TomSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo){
+  std::pair<std::pair<bool, bool>, recob::Track> SelectionTree::TomSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo){
 
     bool is_selected = false;
     bool has_candidate = false;
     recob::Track candidate = tracks[0];
 
     // Loop over tracks and count how many escape
+    // For contained tracks apply PID cuts to only retain muon-like tracks
     int n_escape = 0;
     double longest_escape = 0;
     std::vector<recob::Track> long_tracks;
     for(size_t i = 0; i < tracks.size(); i++){
-      //bool escapes = false;
+      // Find longest escaping track and don't apply track cuts if escaping
       if(!fTpcGeo.InFiducial(tracks[i].End(), 1.5)){
         n_escape++;
-        //escapes = true;
         double length = tracks[i].Length();
         if(length > longest_escape){ 
           longest_escape = length;
         }
+        long_tracks.push_back(tracks[i]);
+        continue;
       }
 
       // Select if longer than 150 cm
-      if(tracks[i].Length() > 150.){
+      if(tracks[i].Length() > 100.){
         long_tracks.push_back(tracks[i]);
         continue;
       }
@@ -816,12 +875,24 @@ namespace sbnd {
       }
       if(is_proton) continue;
 
-      // Get rid of any contained particles which don't stop (most muons do) FIXME i think
-      //bool stops = fStopTagger.StoppingEnd(tracks[i].End(), calos);
-      //if(!escapes && !stops) continue;
+      // Get rid of tracks which don't scatter like muons
+      std::vector<float> angles = fMcsFitter.fitMcs(tracks[i], 13).scatterAngles();
+      double ave_angle = std::accumulate(angles.begin(), angles.end(), 0)/angles.size();
+      if(AverageDCA(tracks[i]) < 0.2 || ave_angle < 30) continue;
 
-      // Reject any tracks shorter than 15 cm
-      if(tracks[i].Length() < 15) continue;
+      // Get rid of any contained particles which don't stop (most muons do)
+      double stop_chi2 = fStopTagger.StoppingChiSq(tracks[i].End(), calos);
+      if(stop_chi2 < 1.2) continue;
+
+      // Reject any tracks shorter than 25 cm
+      if(tracks[i].Length() < 25) continue;
+
+      // Check momentum reconstruction quality
+      double range_mom = fRangeFitter.GetTrackMomentum(tracks[i].Length(), 13);
+      double mcs_mom = fMcsFitter.fitMcs(tracks[i], 13).bestMomentum();
+      double mom_diff = (mcs_mom - range_mom)/range_mom;
+      double mom_diff_limit = 0.5 + std::exp(-(tracks[i].Length()-15.)/10.);
+      if(mom_diff > mom_diff_limit) continue;
 
       long_tracks.push_back(tracks[i]);
     }
@@ -831,50 +902,39 @@ namespace sbnd {
 
     // Case 1: 1 escaping track
     if(n_escape == 1 && long_tracks.size() > 0){
-      // If track longer than 100 cm then ID as muon
-      // If more than 1 escaping track > 100 cm then choose longest
+      // If escaping track is longest and length > 50 cm then ID as muon
       if(longest_escape == long_tracks[0].Length() && longest_escape > 50){
         has_candidate = true;
         candidate = long_tracks[0];
       }
     }
 
-    // Case 2: 0 escaping tracks
+    // Case 2: All tracks contained
     else if(n_escape == 0 && long_tracks.size() > 0){
-      for(auto const& track : long_tracks){
-        if(has_candidate) continue;
-        // Check chi2_mu < 50
-        std::vector<const anab::ParticleID*> pids = fmpid.at(track.ID());
-        for(size_t i = 0; i < pids.size(); i++){
-          // Only use the collection plane
-          if(pids[i]->PlaneID().Plane != 2) continue;
-          // Run proton chi^2 to cut out stopping protons
-          if((pids[i]->Chi2Muon() < 50 && track.Length() > 40)||track.Length() > 150){ //FIXME temp length cut
-            has_candidate = true;
-            candidate = track;
-            continue;
-          }
-        }
-      }
+      // Select the longest track
+      has_candidate = true;
+      candidate = long_tracks[0];
     }
 
     // Check vertex (start of muon candidate) in FV
-    // Fiducial definitions 8.25 cm from X (inc CPA), 15 cm from Y and front, 85 cm from back
-    bool vertex_contained = fTpcGeo.InFiducial(candidate.Start(), 10., 10., 15., 10., 20., 50., 5., 2.5);
-    if(vertex_contained && has_candidate) is_selected = true;
+    // Fiducial definition 50 cm from back, 10 cm from left, right and bottom, 15 cm from front, 20 cm from top 
+    // 5 cm either side of CPA, 2.5 cm either side of APA gap
+    bool in_fiducial = fTpcGeo.InFiducial(candidate.Start(), 10., 10., 15., 10., 20., 50., 5., 2.5);
+    if(has_candidate) is_selected = true;
 
-    return std::make_pair(is_selected, candidate);
+    return std::make_pair(std::make_pair(is_selected, in_fiducial), candidate);
 
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
     
-  void SelectionTree::FillSelectionTree(std::string selection, std::pair<bool, recob::Track> sel_track, int trueId, std::map<int, simb::MCParticle> particles){
+  void SelectionTree::FillSelectionTree(std::string selection, std::pair<std::pair<bool, bool>, recob::Track> sel_track, int trueId, std::map<int, simb::MCParticle> particles){
 
-    selected[selection] = sel_track.first;
+    selected[selection] = sel_track.first.first;
+    in_fv[selection] = sel_track.first.second;
 
     // Calculate kinematic variables for prop_sel_track prop_track
-    reco_cont[selection] = fTpcGeo.InFiducial(sel_track.second.End(), 5.);
+    reco_cont[selection] = fTpcGeo.InFiducial(sel_track.second.End(), 1.5);
     reco_length[selection] = sel_track.second.Length();
     reco_mom[selection] = 0.;
     if(reco_cont[selection]){
@@ -902,6 +962,46 @@ namespace sbnd {
       true_pdg[selection] = particles[trueId].PdgCode();
     }
 
+  }
+
+ double SelectionTree::AverageDCA(const recob::Track& track){
+
+    TVector3 start = track.Vertex<TVector3>();
+    TVector3 end = track.End<TVector3>();
+    double denominator = (end - start).Mag();
+    size_t npts = track.NumberTrajectoryPoints();
+    double aveDCA = 0;
+    int usedPts = 0;
+    for(size_t i = 0; i < npts; i++){
+      TVector3 point = track.LocationAtPoint<TVector3>(i);
+      if(!track.HasValidPoint(i)) continue;
+      aveDCA += (point - start).Cross(point - end).Mag()/denominator;
+      usedPts++;
+    }   
+    return aveDCA/usedPts;
+  } 
+
+  double SelectionTree::HitEnergy(art::Ptr<recob::Hit> hit){
+
+    double ADCtoEl = 0.02354; //FIXME from calorimetry_sbnd.fcl
+    double time = hit->PeakTime();
+    double timetick = fDetectorProperties->SamplingRate()*1e-3;
+    double presamplings = fDetectorProperties->TriggerOffset();
+    time -= presamplings;
+    time = time*timetick;
+    double tau = fDetectorProperties->ElectronLifetime();
+    double correction = std::exp(time/tau);
+    return fDetectorProperties->ModBoxCorrection((hit->Integral()/ADCtoEl)*correction)/1e3; //[GeV]
+    
+  }
+
+  double SelectionTree::NeutrinoEnergy(std::map<int, double> track_energies, double shower_energy, int id){
+    double nu_e = 0;
+    if(shower_energy>0 && shower_energy<5) nu_e = shower_energy;
+    for(auto const& kv : track_energies){
+      if(kv.first != id && kv.second>0 && kv.second<5) nu_e += kv.second;
+    }
+    return nu_e;
   }
 
   DEFINE_ART_MODULE(SelectionTree)

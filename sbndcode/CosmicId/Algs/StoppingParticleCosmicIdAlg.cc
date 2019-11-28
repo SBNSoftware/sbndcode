@@ -168,4 +168,26 @@ bool StoppingParticleCosmicIdAlg::StoppingParticleCosmicId(recob::Track track, r
 }
 
 
+// Calculate chi2 for particles which do not stop
+std::vector<double> StoppingParticleCosmicIdAlg::FlatChi2(std::vector<art::Ptr<anab::Calorimetry>> calos){
+  std::vector<double> chi2_vec;
+  for(size_t i = 0; i < calos.size(); i++){
+    std::vector<float> trkdedx = calos[i]->dEdx();
+    std::vector<float> trkres = calos[i]->ResidualRange();
+    double chi2 = 0;
+    int npt = 0;
+    for(size_t j = 0; j < trkdedx.size(); j++){
+      if(j==0 || j==trkdedx.size()-1) continue;
+      if(trkdedx[j] > 1000) continue;
+      double errdedx = 0.04231+0.0001783*trkdedx[j]*trkdedx[j];
+      errdedx *= trkdedx[j];
+      chi2 += std::pow((trkdedx[i]-1.8)/std::sqrt(std::pow(0.5,2)+std::pow(errdedx,2)),2);
+      npt++;
+    }
+    chi2_vec.push_back(chi2/npt);
+  }
+  return chi2_vec;
+}
+
+
 }

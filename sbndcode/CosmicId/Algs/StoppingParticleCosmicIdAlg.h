@@ -99,6 +99,9 @@ namespace sbnd{
     // Determine if two tracks look like a stopping cosmic if they are merged
     bool StoppingParticleCosmicId(recob::Track track, recob::Track track2, std::vector<art::Ptr<anab::Calorimetry>> calos, std::vector<art::Ptr<anab::Calorimetry>> calos2);
 
+    // Calculate chi2 for particles which do not stop
+    std::vector<double> FlatChi2(std::vector<art::Ptr<anab::Calorimetry>> calos);
+
   private:
 
     double fMinX;

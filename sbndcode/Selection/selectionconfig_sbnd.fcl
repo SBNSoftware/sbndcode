@@ -33,6 +33,7 @@ sbnd_selectiontree:
   SimModuleLabel:      "largeant"        # Simulation producer module label
   GenModuleLabel:      "generator"        # Generator producer module label
   TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
+  ShowerModuleLabel:   "pandoraShower" # TPC track producer module label
   PidModuleLabel:      "pandoraPid" # TPC track producer module label
   CaloModuleLabel:      "pandoraCalo"   # Particle ID producer module label
   PandoraLabel:        "pandora"
