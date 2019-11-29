@@ -213,6 +213,9 @@ namespace sbnd {
     double vtx_x;
     double vtx_y;
     double vtx_z;
+    double p_x;
+    double p_y;
+    double p_z;
     double time;
     bool cosmic_id;         // ID'd as a cosmic
     int n_tracks;           // Number of reconstructed tracks
@@ -247,6 +250,9 @@ namespace sbnd {
     double nu_vtx_x;
     double nu_vtx_y;
     double nu_vtx_z;
+    double nu_p_x;
+    double nu_p_y;
+    double nu_p_z;
     double nu_nu_energy;
     double nu_mu_length;
     double nu_mu_mom;
@@ -301,6 +307,9 @@ namespace sbnd {
     fPfpTree->Branch("vtx_x",     &vtx_x);
     fPfpTree->Branch("vtx_y",     &vtx_y);
     fPfpTree->Branch("vtx_z",     &vtx_z);
+    fPfpTree->Branch("p_x",       &p_x);
+    fPfpTree->Branch("p_y",       &p_y);
+    fPfpTree->Branch("p_z",       &p_z);
     fPfpTree->Branch("time",      &time);
     fPfpTree->Branch("cosmic_id", &cosmic_id);
     fPfpTree->Branch("n_tracks",  &n_tracks);
@@ -332,15 +341,18 @@ namespace sbnd {
 
     fNuMuTree = tfs->make<TTree>("numu", "numu");
 
-    fNuMuTree->Branch("nu_vtx_x", &nu_vtx_x, "nu_vtx_x/D");
-    fNuMuTree->Branch("nu_vtx_y", &nu_vtx_y, "nu_vtx_y/D");
-    fNuMuTree->Branch("nu_vtx_z", &nu_vtx_z, "nu_vtx_z/D");
-    fNuMuTree->Branch("nu_nu_energy", &nu_nu_energy, "nu_nu_energy/D");
-    fNuMuTree->Branch("nu_mu_length", &nu_mu_length, "nu_mu_length/D");
-    fNuMuTree->Branch("nu_mu_mom", &nu_mu_mom, "nu_mu_mom/D");
-    fNuMuTree->Branch("nu_mu_theta", &nu_mu_theta, "nu_mu_theta/D");
-    fNuMuTree->Branch("nu_mu_phi", &nu_mu_phi, "nu_mu_phi/D");
-    fNuMuTree->Branch("nu_mu_cont", &nu_mu_cont, "nu_mu_cont/O");
+    fNuMuTree->Branch("nu_vtx_x", &nu_vtx_x);
+    fNuMuTree->Branch("nu_vtx_y", &nu_vtx_y);
+    fNuMuTree->Branch("nu_vtx_z", &nu_vtx_z);
+    fNuMuTree->Branch("nu_p_x",   &nu_p_x);
+    fNuMuTree->Branch("nu_p_y",   &nu_p_y);
+    fNuMuTree->Branch("nu_p_z",   &nu_p_z);
+    fNuMuTree->Branch("nu_nu_energy", &nu_nu_energy);
+    fNuMuTree->Branch("nu_mu_length", &nu_mu_length);
+    fNuMuTree->Branch("nu_mu_mom", &nu_mu_mom);
+    fNuMuTree->Branch("nu_mu_theta", &nu_mu_theta);
+    fNuMuTree->Branch("nu_mu_phi", &nu_mu_phi);
+    fNuMuTree->Branch("nu_mu_cont", &nu_mu_cont);
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- Cosmic ID Ana Module -------------------"<<std::endl;
@@ -433,6 +445,9 @@ namespace sbnd {
       nu_vtx_x = vtx.X();
       nu_vtx_y = vtx.Y();
       nu_vtx_z = vtx.Z();
+      nu_p_x = truth->GetNeutrino().Nu().Px();
+      nu_p_y = truth->GetNeutrino().Nu().Py();
+      nu_p_z = truth->GetNeutrino().Nu().Pz();
       nu_nu_energy = truth->GetNeutrino().Nu().E();
 
       // Get the primary muon
@@ -565,6 +580,9 @@ namespace sbnd {
         vtx_x = vtx.X();
         vtx_y = vtx.Y();
         vtx_z = vtx.Z();
+        p_x = truth->GetNeutrino().Nu().Px();
+        p_y = truth->GetNeutrino().Nu().Py();
+        p_z = truth->GetNeutrino().Nu().Pz();
         if(!fTpcGeo.InFiducial(vtx, 0, 0)) is_dirt = true;
         else is_nu = true;
 
@@ -651,6 +669,9 @@ namespace sbnd {
     vtx_x = -99999;
     vtx_y = -99999;
     vtx_z = -99999;
+    p_x = -99999;
+    p_y = -99999;
+    p_z = -99999;
     time = -99999;
     cosmic_id = false;
     n_tracks = 0;
@@ -684,6 +705,9 @@ namespace sbnd {
     nu_vtx_x = -99999;
     nu_vtx_y = -99999;
     nu_vtx_z = -99999;
+    nu_p_x = -99999;
+    nu_p_y = -99999;
+    nu_p_z = -99999;
     nu_nu_energy = -99999;
     nu_mu_mom = -99999;
     nu_mu_theta = -99999;
