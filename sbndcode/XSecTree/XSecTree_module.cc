@@ -258,9 +258,7 @@ namespace sbnd {
     TTree *fMetaDataTree;
 
     // XSec tree true neutrino vertex
-    double vtx_x;
-    double vtx_y;
-    double vtx_z;
+    double vtx_x, vtx_y, vtx_z;
 
     // XSec true tree parameters
     std::map<std::string, bool> particles_contained;
@@ -322,35 +320,36 @@ namespace sbnd {
   {
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
+    
     // Define histograms
     fXSecTree = tfs->make<TTree>("interaction", "xsec tree");
 
-    // True neutrino vertex
-    fXSecTree->Branch("vtx_x", &vtx_x, "vtx_x/D");
-    fXSecTree->Branch("vtx_y", &vtx_y, "vtx_y/D");
-    fXSecTree->Branch("vtx_z", &vtx_z, "vtx_z/D");
-
     // Selection and kinematic variables
-    fXSecTree->Branch("particles_contained", &particles_contained);
-    fXSecTree->Branch("lep_contained", &lep_contained);
-    fXSecTree->Branch("cc", &cc);
-    fXSecTree->Branch("nu_pdg", &nu_pdg);
-    fXSecTree->Branch("int_type", &int_type);
-    fXSecTree->Branch("n_pipm", &n_pipm);
-    fXSecTree->Branch("n_pi0", &n_pi0);
-    fXSecTree->Branch("n_pr", &n_pr);
-    fXSecTree->Branch("nu_energy", &nu_energy);
-    fXSecTree->Branch("lep_mom", &lep_mom);
-    fXSecTree->Branch("lep_theta", &lep_theta);
-    fXSecTree->Branch("pr1_mom", &pr1_mom);
-    fXSecTree->Branch("pr1_theta", &pr1_theta);
-    fXSecTree->Branch("lep_pr1_angle", &lep_pr1_angle);
-    fXSecTree->Branch("pipm1_mom", &pipm1_mom);
-    fXSecTree->Branch("pipm1_theta", &pipm1_theta);
-    fXSecTree->Branch("lep_pipm1_angle", &lep_pipm1_angle);
-    fXSecTree->Branch("delta_pt", &delta_pt);
-    fXSecTree->Branch("delta_alphat", &delta_alphat);
-    fXSecTree->Branch("delta_phit", &delta_phit);
+    fXSecTree->Branch("vtx_x", &vtx_x);
+    fXSecTree->Branch("vtx_y", &vtx_y);
+    fXSecTree->Branch("vtx_z", &vtx_z);
+    for(unsigned int i = 0; i < fRecoFormats.size(); ++i){
+      fXSecTree->Branch((fRecoFormats[i]+"_particles_contained").c_str(), &particles_contained[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_lep_contained").c_str(), &lep_contained[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_cc").c_str(), &cc[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_nu_pdg").c_str(), &nu_pdg[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_int_type").c_str(), &int_type[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_n_pipm").c_str(), &n_pipm[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_n_pi0").c_str(), &n_pi0[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_n_pr").c_str(), &n_pr[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_nu_energy").c_str(), &nu_energy[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_lep_mom").c_str(), &lep_mom[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_lep_theta").c_str(), &lep_theta[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_pr1_mom").c_str(), &pr1_mom[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_pr1_theta").c_str(), &pr1_theta[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_lep_pr1_angle").c_str(), &lep_pr1_angle[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_pipm1_mom").c_str(), &pipm1_mom[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_pipm1_theta").c_str(), &pipm1_theta[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_lep_pipm1_angle").c_str(), &lep_pipm1_angle[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_delta_pt").c_str(), &delta_pt[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_delta_alphat").c_str(), &delta_alphat[fRecoFormats[i]]);
+      fXSecTree->Branch((fRecoFormats[i]+"_delta_phit").c_str(), &delta_phit[fRecoFormats[i]]);
+    }
 
     fMetaDataTree = tfs->make<TTree>("metadata", "xsec tree");
     fMetaDataTree->Branch("pot", &pot, "pot/D");
@@ -842,9 +841,9 @@ namespace sbnd {
     lep_j = -1;
     longest_j = -1;
 
-    vtx_x = -99999;
-    vtx_y = -99999;
-    vtx_z = -99999;
+    vtx_x = -99999.;
+    vtx_y = -99999.;
+    vtx_z = -99999.;
     
     // Loop over reco formats and reset every variable in the tree
     for(unsigned int i = 0; i < fRecoFormats.size(); ++i){
