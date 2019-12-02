@@ -11,6 +11,12 @@
 
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
+#include "CLHEP/Random/RandomEngine.h"
+#include "CLHEP/Random/JamesRandom.h"
+#include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandExponential.h"
 
 #include <memory>
 #include <vector>
@@ -28,7 +34,7 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "TMath.h"
-#include "TRandom3.h"
+//#include "TRandom3.h"
 #include "TF1.h"
 #include "TH1D.h"
 
@@ -51,9 +57,11 @@ namespace opdet{
       double PMTSaturation; //in number of p.e.
       double QEDirect; //PMT quantum efficiency for direct (VUV) light
       double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
+      int SinglePEmodel; //Model for single pe response =0 for ideal, =1 for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       detinfo::DetectorClocks const* timeService = nullptr; //< DetectorClocks service provider.
+      CLHEP::HepRandomEngine* engine = nullptr;
     };// ConfigurationParameters_t
 
     //Default constructor
@@ -73,8 +81,11 @@ namespace opdet{
     double fSampling;       //wave sampling frequency (GHz)
     double fQEDirect;
     double fQERefl;
+    //int fSinglePEmodel;
     double sigma1;
     double sigma2;
+    
+    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
     double Pulse1PE(double time) ;
@@ -161,13 +172,19 @@ namespace opdet{
           Comment("PMT quantum efficiency for reflected (TPB emitted)light")
        };
 
+       fhicl::Atom<int> singlePEmodel {
+          Name("SinglePEmodel"),
+          Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
+       };
+
     };    //struct Config
 
     DigiPMTSBNDAlgMaker(Config const& config); //Constructor
 
     std::unique_ptr<DigiPMTSBNDAlg> operator()(
         detinfo::LArProperties const& larProp,
-        detinfo::DetectorClocks const& detClocks
+        detinfo::DetectorClocks const& detClocks,
+        CLHEP::HepRandomEngine* engine
         ) const;
        
     private:

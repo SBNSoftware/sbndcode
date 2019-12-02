@@ -63,6 +63,8 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   if (opdet_type == "bar" ||
       opdet_type == "xarapucaprime" ||
       opdet_type == "xarapuca" ||
+      opdet_type == "xarapucaT1" ||
+      opdet_type == "xarapucaT2" ||
       opdet_type == "arapucaT1" ||
       opdet_type == "arapucaT2") {
     is_arapuca = true;
@@ -110,7 +112,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
     }
     else if (above_threshold && (val < threshold || i+1 == end_i)) {
       raw::TimeStamp_t trigger_finish = Tick2Timestamp(waveform.TimeStamp(), i); 
-      AddTriggerLocation(this_trigger_locations, {trigger_start, trigger_finish});
+      AddTriggerLocation(this_trigger_locations, {{trigger_start, trigger_finish}});
       above_threshold = false;
     }
   }
@@ -143,6 +145,8 @@ bool opDetSBNDTriggerAlg::IsChannelMasked(raw::Channel_t channel) const {
   if (opdet_type == "barepmt" && fConfig.MaskBarePMTs()) return true;
   if (opdet_type == "xarapucaprime" && fConfig.MaskXArapucaPrimes()) return true;
   if (opdet_type == "xarapuca" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "xarapucaT1" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "xarapucaT2" && fConfig.MaskXArapucas()) return true;
   if (opdet_type == "arapucaT1" && fConfig.MaskArapucaT1s()) return true;
   if (opdet_type == "arapucaT2" && fConfig.MaskArapucaT2s()) return true;
   
@@ -236,8 +240,8 @@ std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow() const {
     // Every reasonable configuration I have seen has setup the trigger time 
     // to be at t=0. If some configuration breaks this invariant, I am sorry, I 
     // did my best.
-    start = fDetectorClocks->TriggerOffsetTPC(); 
-    end = start + fDetectorProperties->ReadOutWindowSize() * fDetectorClocks->TPCClock().TickPeriod();
+    start = fDetectorClocks->TriggerOffsetTPC() - 1 /* Give 1us of wiggle room*/; 
+    end = start + fDetectorProperties->ReadOutWindowSize() * fDetectorClocks->TPCClock().TickPeriod() + 1 /* take back the wiggle room */;
   }
   else {
     start = fConfig.TriggerEnableWindowStart();

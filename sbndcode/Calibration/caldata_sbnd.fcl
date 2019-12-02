@@ -1,6 +1,8 @@
 #include "caldata.fcl"
+#include "roitools_sbnd.fcl"
 
 BEGIN_PROLOG
+
 
 sbnd_calroi:
 {
@@ -27,7 +29,9 @@ sbnd_calwire:
  DoBaselineSub:       true			  
  BaseVarCut:         25.  # Variance cut for selecting baseline points
  FFTSize:     3000      # re-initialize FFT service to this size
+ ROITool: @local::sbnd_standardroifinder #Setting the ROI finding tool
 }
+
 
 
 
