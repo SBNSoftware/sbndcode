@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+sbnd_timefilterssimphotontime: { 
+   module_type: "FilterSimPhotonTime"
+   SimPhotonsCollectionLabel: largeant
+   # Currently in overlay generation, events are generated
+   # uniformly in a window [0, 1596ns] to approximate a beam spill.
+   # Add a little width here to up that width to 2000ns
+   TimeWindows: [ [-202, 1798] ] # ns
+   MinPhotonEnergy: -1
+   # 10 PE -- in the case of reflected photons, this may be more than 10 photons
+   MinTotalEnergy: 9.7e-5 
+   # SBND has foils
+   UseReflectedPhotons: true
+}
+
+END_PROLOG

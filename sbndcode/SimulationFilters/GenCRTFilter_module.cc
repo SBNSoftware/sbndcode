@@ -55,6 +55,8 @@ namespace filt{
       bool UsesCRTAuxDets(const simb::MCParticle &particle, const std::vector<unsigned int> &crt_auxdet_vector);
       bool UsesCRTAuxDet(const simb::MCParticle &particle, geo::AuxDetGeo const& crt);
       bool RayIntersectsBox(TVector3 ray_origin, TVector3 ray_direction, TVector3 box_min_extent, TVector3 box_max_extent);
+      std::pair<double, double> XLimitsTPC(const simb::MCParticle &particle);
+      std::pair<TVector3, TVector3> CubeIntersection(TVector3 min, TVector3 max, TVector3 start, TVector3 end);
   };
 
 
@@ -67,7 +69,6 @@ namespace filt{
     fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
     readoutWindow  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    readoutWindow  = (double)fDetectorProperties->ReadOutWindowSize(); // [us]
     driftTime = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); // [us]
   }
 
@@ -97,44 +98,55 @@ namespace filt{
         const art::Ptr<simb::MCTruth> mc_truth(mclists[i],j);
         for (int part = 0; part < mc_truth->NParticles(); part++){
           const simb::MCParticle particle = mc_truth->GetParticle(part);
+
           if (!IsInterestingParticle(particle)) continue;
+
           double time = particle.T() * 1e-3; //[us]
+
           if (fUseReadoutWindow){
             if (time < -driftTime || time > readoutWindow) continue;
+            // Get the minimum and maximum |x| position in the TPC
+            std::pair<double, double> xLimits = XLimitsTPC(particle);
+            // Calculate the expected time of arrival of those points
+            double minTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.second)/fDetectorProperties->DriftVelocity();
+            double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/fDetectorProperties->DriftVelocity();
+            // If both times are below or above the readout window time then skip
+            if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
           }
+
           if (fUseTopHighCRTs){
-            bool OK = UsesCRTAuxDets(particle,fTopHighCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fTopHighCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"TopHighCRTs: " << OK << std::endl;
           }
           if (fUseTopLowCRTs){
-            bool OK = UsesCRTAuxDets(particle,fTopLowCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fTopLowCRTAuxDetIDs);
             if (!OK) continue;
 
             //std::cout<<"TopLowCRTs: " << OK << std::endl;
           }
           if (fUseBottomCRTs){
-            bool OK = UsesCRTAuxDets(particle,fBottomCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fBottomCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"BottomCRTs: " << OK << std::endl;
           }
           if (fUseFrontCRTs){
-            bool OK = UsesCRTAuxDets(particle,fFrontCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fFrontCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"FrontCRTs: " << OK << std::endl;
           }
           if (fUseBackCRTs){
-            bool OK = UsesCRTAuxDets(particle,fBackCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fBackCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"BackCRTs: " << OK << std::endl;
           }
           if (fUseLeftCRTs){
-            bool OK = UsesCRTAuxDets(particle,fLeftCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fLeftCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"LeftCRTs: " << OK << std::endl;
           }
           if (fUseRightCRTs){
-            bool OK = UsesCRTAuxDets(particle,fRightCRTAuxDetIDs);
+            bool OK = UsesCRTAuxDets(particle, fRightCRTAuxDetIDs);
             if (!OK) continue;
             //std::cout<<"RightCRTs: " << OK << std::endl;
           }
@@ -311,6 +323,109 @@ namespace filt{
     return true;
   }
 
+  std::pair<double, double> GenFilter::XLimitsTPC(const simb::MCParticle &particle){
+
+    TVector3 start (particle.Position().X(), particle.Position().Y(), particle.Position().Z());
+    TVector3 direction (particle.Momentum().X()/particle.Momentum().Vect().Mag(),
+                        particle.Momentum().Y()/particle.Momentum().Vect().Mag(),
+                        particle.Momentum().Z()/particle.Momentum().Vect().Mag());
+    TVector3 end = start + direction;
+
+    double minimum = 99999;
+    double maximum = -99999;
+    for(size_t c = 0; c < fGeometryService->Ncryostats(); c++){
+      const geo::CryostatGeo& cryostat = fGeometryService->Cryostat(c);
+      for(size_t t = 0; t < cryostat.NTPC(); t++){
+        const geo::TPCGeo& tpcGeo = cryostat.TPC(t);
+        // Find the intersection between the track and the TPC
+        TVector3 min (tpcGeo.MinX(), tpcGeo.MinY(), tpcGeo.MinZ());
+        TVector3 max (tpcGeo.MaxX(), tpcGeo.MaxY(), tpcGeo.MaxZ());
+    
+        std::pair<TVector3, TVector3> intersection = CubeIntersection(min, max, start, end);
+        double x1 = std::abs(intersection.first.X());
+        double x2 = std::abs(intersection.second.X());
+        if(x1 != -99999 && x1 > maximum) maximum = x1;
+        if(x1 != -99999 && x1 < minimum) minimum = x1;
+        if(x2 != -99999 && x2 > maximum) maximum = x2;
+        if(x2 != -99999 && x2 < minimum) minimum = x2;
+      }
+    }
+
+    return std::make_pair(minimum, maximum);
+  }
+
+  std::pair<TVector3, TVector3> GenFilter::CubeIntersection(TVector3 min, TVector3 max, TVector3 start, TVector3 end){
+
+    TVector3 dir = (end - start);
+    TVector3 invDir (1./dir.X(), 1./dir.Y(), 1/dir.Z());
+ 
+    double tmin, tmax, tymin, tymax, tzmin, tzmax;
+ 
+    TVector3 enter (-99999, -99999, -99999);
+    TVector3 exit (-99999, -99999, -99999);
+ 
+    // Find the intersections with the X plane
+    if(invDir.X() >= 0){
+      tmin = (min.X() - start.X()) * invDir.X();
+      tmax = (max.X() - start.X()) * invDir.X();
+    }
+    else{
+      tmin = (max.X() - start.X()) * invDir.X();
+      tmax = (min.X() - start.X()) * invDir.X();
+    }
+ 
+    // Find the intersections with the Y plane
+    if(invDir.Y() >= 0){
+      tymin = (min.Y() - start.Y()) * invDir.Y();
+      tymax = (max.Y() - start.Y()) * invDir.Y();
+    }
+    else{
+      tymin = (max.Y() - start.Y()) * invDir.Y();
+      tymax = (min.Y() - start.Y()) * invDir.Y();
+    }
+ 
+    // Check that it actually intersects
+    if((tmin > tymax) || (tymin > tmax)) return std::make_pair(enter, exit);
+ 
+    // Max of the min points is the actual intersection
+    if(tymin > tmin) tmin = tymin;
+ 
+    // Min of the max points is the actual intersection
+    if(tymax < tmax) tmax = tymax;
+ 
+    // Find the intersection with the Z plane
+    if(invDir.Z() >= 0){
+      tzmin = (min.Z() - start.Z()) * invDir.Z();
+      tzmax = (max.Z() - start.Z()) * invDir.Z();
+    }
+    else{
+      tzmin = (max.Z() - start.Z()) * invDir.Z();
+      tzmax = (min.Z() - start.Z()) * invDir.Z();
+    }
+ 
+    // Check for intersection
+    if((tmin > tzmax) || (tzmin > tmax)) return std::make_pair(enter, exit);
+ 
+    // Find final intersection points
+    if(tzmin > tmin) tmin = tzmin;
+ 
+    // Find final intersection points
+    if(tzmax < tmax) tmax = tzmax;
+ 
+    // Calculate the actual crossing points
+    double xmin = start.X() + tmin * dir.X();
+    double xmax = start.X() + tmax * dir.X();
+    double ymin = start.Y() + tmin * dir.Y();
+    double ymax = start.Y() + tmax * dir.Y();
+    double zmin = start.Z() + tmin * dir.Z();
+    double zmax = start.Z() + tmax * dir.Z();
+ 
+    // Return pair of entry and exit points
+    enter.SetXYZ(xmin, ymin, zmin);
+    exit.SetXYZ(xmax, ymax, zmax);
+    return std::make_pair(enter, exit);
+
+  }
 
   DEFINE_ART_MODULE(GenFilter)
 

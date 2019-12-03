@@ -58,6 +58,7 @@ namespace filt{
       void LoadCRTAuxDetIDs();
       bool UsesCRTAuxDets(const art::Ptr<simb::MCParticle> particle, const std::vector<unsigned int> &crt_auxdet_vector);
       bool EntersTPC(const art::Ptr<simb::MCParticle> particle);
+      std::pair<double, double> XLimitsTPC(const art::Ptr<simb::MCParticle> particle);
   };
 
 
@@ -103,7 +104,14 @@ namespace filt{
       //particle->Momentum().Vect().Print();
       double time = particle->T() * 1e-3; //[us]
       if (fUseReadoutWindow){
-        if (time < -driftTime || time > readoutWindow) continue;
+        if (time <= -driftTime || time >= readoutWindow) continue;
+        // Get the minimum and maximum |x| position in the TPC
+        std::pair<double, double> xLimits = XLimitsTPC(particle);
+        // Calculate the expected time of arrival of those points
+        double minTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.second)/fDetectorProperties->DriftVelocity(); 
+        double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/fDetectorProperties->DriftVelocity(); 
+        // If both times are below or above the readout window time then skip
+        if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
       }
       if (fUseTPC && !EntersTPC(particle)) continue;
       if (fUseTopHighCRTs){
@@ -297,6 +305,29 @@ namespace filt{
       }
     }
     return enters;
+  }
+
+  std::pair<double, double> LArG4CRTFilter::XLimitsTPC(const art::Ptr<simb::MCParticle> particle){
+    double xmin = -2.0 * fGeometryService->DetHalfWidth();
+    double xmax = 2.0 * fGeometryService->DetHalfWidth();
+    double ymin = -fGeometryService->DetHalfHeight();
+    double ymax = fGeometryService->DetHalfHeight();
+    double zmin = 0.;
+    double zmax = fGeometryService->DetLength();
+
+    double minimum = 99999;
+    double maximum = -99999;
+
+    int nTrajPoints = particle->NumberTrajectoryPoints();
+    for (int traj_i = 0; traj_i < nTrajPoints; traj_i++){
+      TVector3 trajPoint(particle->Vx(traj_i), particle->Vy(traj_i), particle->Vz(traj_i));
+      // Check if point is within reconstructable volume
+      if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax && trajPoint[2] >= zmin && trajPoint[2] <= zmax){
+        if(std::abs(trajPoint[0]) < minimum) minimum = std::abs(trajPoint[0]);
+        if(std::abs(trajPoint[0]) > maximum) maximum = std::abs(trajPoint[0]);
+      }
+    }
+    return std::make_pair(minimum, maximum);
   }
 
 

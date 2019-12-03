@@ -1,0 +1,4 @@
+#include "g4_simphotontime_filter.fcl"
+
+#Include 3drift services
+#include "3drift_services_sbnd.fcl"

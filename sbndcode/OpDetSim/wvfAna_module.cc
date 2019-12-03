@@ -109,21 +109,24 @@ void wvfAna::analyze(art::Event const & e)
 
   std::cout << "Number of photon channel: " <<waveHandle->size() << std::endl;
 
+  int hist_id = 0;
   for(auto const& wvf : (*waveHandle)){
-	fChNumber = wvf.ChannelNumber();
-	histname.str(std::string());
-	histname << "event_" << fEvNumber 
-      		 << "_opchannel_" <<fChNumber;
-	
-	fStartTime = wvf.TimeStamp()/1000.0; //in us
-	fEndTime = double(wvf.size())/fSampling + fStartTime;
-	fEndTime = fEndTime/1000; //in us
+    fChNumber = wvf.ChannelNumber();
+    histname.str(std::string());
+    histname << "event_" << fEvNumber
+             << "_opchannel_" << fChNumber
+             << "_" << hist_id;
 
-	//Create a new histogram
-	TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);",fStartTime), wvf.size(), fStartTime, fEndTime);
- 	for(unsigned int i=0; i<wvf.size();i++){
-	  wvfHist->SetBinContent(i+1,(double)wvf[i]);
-	}	
+    fStartTime = wvf.TimeStamp()/1000.0; //in us
+    fEndTime = double(wvf.size())/fSampling + fStartTime;
+    fEndTime = fEndTime/1000; //in us
+
+    //Create a new histogram
+    TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);",fStartTime), wvf.size(), fStartTime, fEndTime);
+    for(unsigned int i=0; i<wvf.size();i++){
+      wvfHist->SetBinContent(i+1,(double)wvf[i]);
+    }
+    hist_id++;
   }
 }
 
