@@ -24,7 +24,7 @@ sbnd_emshower.EMshowerAlg.showerEnergyAlg: @local::sbnd_showerenergyalg
 
 sbnd_tracs:  @local::standard_tracs_shower
 
-sbnd_showerstartpositionfinder: @local::showerstartposition
+sbnd_showerstartpositionfinder: @local::showerpfpvertexstartposition
 sbnd_showerdirectionfinder:     @local::showerpcadirection
 sbnd_showerenergyfinder:        @local::showerlinearenergy
 sbnd_shower3dtrackhitfinder:    @local::shower3Dtrackhitfinder

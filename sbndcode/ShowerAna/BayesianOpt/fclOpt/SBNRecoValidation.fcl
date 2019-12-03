@@ -1,0 +1,475 @@
+#include "caldata_sbnd.fcl"
+#include "hitfindermodules_sbnd.fcl"
+#include "cluster_sbnd.fcl"
+#include "trackfindermodules_sbnd.fcl"
+#include "calorimetry_sbnd.fcl"
+#include "showerfindermodules_sbnd.fcl"
+#include "databaseutil_sbnd.fcl"
+#include "vertexfindermodules.fcl"
+#include "pandoramodules_sbnd.fcl"
+#include "particleid_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "showertools.fcl"
+
+#include "simulationservices_sbnd.fcl"                                                  
+#include "services_sbnd.fcl"                
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl" 
+#include "sam_sbnd.fcl"
+#include "showerfindermodules.fcl"  
+#include "pandoramodules_sbnd.fcl"
+
+#Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+# include for shower validation
+##include "showerfindermodules.fcl"
+#include "simulationservices_sbnd.fcl"
+
+#include "showerfilters.fcl"
+
+ShowerStartPositionFinder:     @local::showerstartposition
+ShowerDirectionFinder:         @local::showerpcadirection
+ShowerEnergyFinder:            @local::showerlinearenergy
+ShowerdEdxFinder:              @local::showerstandardcalodedx
+ShowerTrackDirectionFinder:    @local::showertrackdirection
+ShowerTrackTrajectoryPointDirection: @local::showertracktrajectorypointdirection
+ShowerSmartTrackTrajectoryPointDirection: @local::showersmarttracktrajectorypointdirection
+Shower2DLinearRegressionTrackHitFinder:@local::shower2Dlinearregressiontrackhitfinder 
+ShowerPMATrackfinder: @local::showerpmatrackfinder
+ShowerPandoraSlidingFitTrackFinder: @local::showerpandoraslidingfittrackfinder
+Shower3DTrackHitFinder: @local::shower3Dtrackhitfinder
+ShowerTrackTrajToSpacePoint: @local::showertracktrajtospacepoint
+ShowerTrackHitDirection: @local::showertrackhitdirection
+ShowerTrackSpacePointDirection: @local::showertrackspacepointdirection 
+ShowerSlidingStandardCalodEdx: @local::showerslidingstandardcalodedx
+ShowerStartPositionCheater: @local::showerstartpositioncheater
+ShowerDirectionCheater: @local::showerdirectioncheater
+ShowerTrackFinderCheater: @local::showertrackfindercheater
+ShowerResidualTrackHitFinder: @local::showerresidualtrackhitfinder
+ShowerPCAPropergationStartPosition: @local::showerpcapropergationstartposition
+
+ShowerResidualTrackHitFinder.MaxResidualDiff:    1
+ShowerResidualTrackHitFinder.UseShowerDirection: true
+ShowerResidualTrackHitFinder.ForwardHitsOnly: false
+ShowerResidualTrackHitFinder.ChargeWeighted: false
+ShowerResidualTrackHitFinder.BaseTools.EnableEventDisplay: false
+ShowerResidualTrackHitFinder.BaseTools.TRACSAlg.PFParticleModuleLabel: "pandoratune"
+ShowerResidualTrackHitFinder.StartFitSize:3.0
+ShowerResidualTrackHitFinder.NMissPoints: 1
+
+ShowerdEdxFinder.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
+ShowerSlidingStandardCalodEdx.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
+
+ShowerSlidingStandardCalodEdx.dEdxTrackLength:3
+ShowerSlidingStandardCalodEdx.MinAngleToWire: 0.1745
+ShowerSlidingStandardCalodEdx.CutStartPosition: true
+ShowerSlidingStandardCalodEdx.MinDistCutOff: 1.6
+ShowerSlidingStandardCalodEdx.GradCut: 0.3
+ShowerSlidingStandardCalodEdx.BaseTools.EnableEventDisplay: false
+ShowerSlidingStandardCalodEdx.BaseTools.TRACSAlg.PFParticleModuleLabel: "pandoratune"
+
+standard_tracs_showerhitremov: @local::standard_tracs_shower
+standard_tracs_showerhitremov.ShowerFinderTools:[@local::ShowerStartPositionFinder
+                                               ,@local::ShowerDirectionFinder
+                                               ,@local::ShowerEnergyFinder
+                                               ,@local::Shower3DTrackHitFinder
+                                               ,@local::ShowerPandoraSlidingFitTrackFinder
+                                               ,@local::ShowerTrackTrajToSpacePoint
+                                               ,@local::ShowerdEdxFinder
+                                               ]
+
+standard_tracs_shower_stan: @local::standard_tracs_shower
+standard_tracs_shower_stan.ShowerFinderTools: [ @local::ShowerStartPositionFinder
+                                              ,@local::ShowerDirectionFinder
+                                              ,@local::ShowerEnergyFinder
+                                              ,@local::Shower3DTrackHitFinder
+                                              ,@local::ShowerPandoraSlidingFitTrackFinder
+                                              ,@local::ShowerSlidingStandardCalodEdx
+                                              ]
+standard_tracs_shower_stan.Verbose: true
+
+standard_tracs_showerhitremovcheat: @local::standard_tracs_shower
+standard_tracs_showerhitremovcheat.ShowerFinderTools:[@local::ShowerStartPositionCheater
+                                               ,@local::ShowerDirectionCheater
+                                               ,@local::ShowerEnergyFinder
+                                               ,@local::ShowerTrackFinderCheater
+                                               ,@local::ShowerPandoraSlidingFitTrackFinder
+                                               ,@local::ShowerTrackTrajToSpacePoint
+                                               ,@local::ShowerdEdxFinder
+                                               ]
+
+standard_tracs_shower_stancheat: @local::standard_tracs_shower
+standard_tracs_shower_stancheat.ShowerFinderTools: [ @local::ShowerStartPositionCheater
+                                              ,@local::ShowerDirectionCheater
+                                              ,@local::ShowerEnergyFinder
+                                              ,@local::ShowerTrackFinderCheater
+                                              ,@local::ShowerPandoraSlidingFitTrackFinder
+                                              ,@local::ShowerdEdxFinder
+                                              ]
+
+
+
+process_name: Reco2
+
+services:
+{
+  TFileService: { fileName: "showervalidationGraphs.root" }
+  @table::sbnd_services
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  @local::standard_backtrackerservice
+
+  #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018
+  BackTrackerService:  @local::standard_backtrackerservice
+  ParticleInventoryService: @local::standard_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1        # Number of events to create                                   
+}
+
+
+physics:
+{
+
+ filters:
+ {
+  PhotonFilter:   @local::photonfilter
+  ElectronFilter: @local::electronfilter
+}
+
+ producers:
+ {
+
+  ### pandora
+  SBNShowerNew:                @local::standard_tracs_shower_stan
+  SBNShowerBigger:             @local::standard_tracs_shower_stan
+  SBNShowerStandard:           @local::standard_tracs_shower_stan  
+  SBNShowerNodEdx:             @local::standard_tracs_shower_stan 
+
+  SBNShowerDir:             @local::standard_tracs_shower_stan
+  SBNShowerRM:              @local::standard_tracs_showerhitremov
+  SBNShowerRMSlidingMean:   @local::standard_tracs_showerhitremov
+  SBNShowerSlidingMean:     @local::standard_tracs_shower_stan
+  SBNShowerRMSlidingMedian: @local::standard_tracs_showerhitremov
+  SBNShowerSlidingMedian:   @local::standard_tracs_shower_stan
+  SBNShowerSlidingMedianCutOne:   @local::standard_tracs_shower_stan
+  SBNShowerSlidingMedianCutTwo:   @local::standard_tracs_shower_stan
+  SBNShowerSlidingMedianCutThree: @local::standard_tracs_shower_stan
+  SBNShowerSlidingMedianCutSix:   @local::standard_tracs_shower_stan
+  SBNShoweruncut:                 @local::standard_tracs_shower_stan
+
+  SBNShowercheat:                @local::standard_tracs_shower_stancheat
+  SBNShowerDircheat:             @local::standard_tracs_shower_stancheat
+  SBNShowerRMcheat:              @local::standard_tracs_showerhitremovcheat
+  SBNShowerRMSlidingMeancheat:   @local::standard_tracs_showerhitremovcheat
+  SBNShowerSlidingMeancheat:     @local::standard_tracs_shower_stancheat
+  SBNShowerRMSlidingMediancheat: @local::standard_tracs_showerhitremovcheat
+  SBNShowerSlidingMediancheat:   @local::standard_tracs_shower_stancheat
+  SBNShowerSlidingMedianCutOnecheat:   @local::standard_tracs_shower_stancheat
+  SBNShowerSlidingMedianCutTwocheat:   @local::standard_tracs_shower_stancheat
+  SBNShowerSlidingMedianCutThreecheat:   @local::standard_tracs_shower_stancheat
+  SBNShowerSlidingMedianCutSixcheat:   @local::standard_tracs_shower_stancheat
+  SBNShoweruncutcheat:               @local::standard_tracs_shower_stancheat
+
+  SBNShowerNewNoLim:  @local::standard_tracs_shower_stan
+  SBNShowerRealStandard:  @local::standard_tracs_shower_stan
+
+  }	
+
+ fpath: [
+        PhotonFilter
+        ]
+ 
+ 
+ reco: [
+#        PhotonFilter
+        ,SBNShowerNew
+#        ,SBNShowerBigger
+        ,SBNShowerStandard
+        ,SBNShowerNodEdx
+         ,SBNShowerNewNoLim
+         ,SBNShowerRealStandard
+#        ,SBNShowerDir
+#        ,SBNShowerRM
+#        ,SBNShowerRMSlidingMean
+        #,SBNShowerSlidingMean
+#        ,SBNShowerRMSlidingMedian
+#        ,SBNShowerSlidingMedian
+        #  ,SBNShowerSlidingMedianCutOne
+   #       ,SBNShowerSlidingMedianCutTwo
+        #  ,SBNShowerSlidingMedianCutThree
+        #  ,SBNShowerSlidingMedianCutSix
+        #  ,SBNShowercheat
+        #  ,SBNShowerDircheat
+        # ,SBNShowerRMcheat
+        # ,SBNShowerRMSlidingMeancheat
+        # ,SBNShowerSlidingMeancheat
+        # ,SBNShowerRMSlidingMediancheat
+        # ,SBNShowerSlidingMediancheat
+        #  ,SBNShowerSlidingMedianCutOnecheat
+        #  ,SBNShowerSlidingMedianCutTwocheat
+        #  ,SBNShowerSlidingMedianCutThreecheat
+        #  ,SBNShowerSlidingMedianCutSixcheat
+    #    ,SBNShoweruncut
+#        ,SBNShoweruncutcheat
+]
+
+  analyzers:     
+ {
+  ana: @local::standard_showervalidation
+ }
+
+
+  trigger_paths: [reco]
+  a1: [ ana ]
+  end_paths: [ a1 ]
+
+}
+
+
+physics.analyzers.ana.PFParticleLabel:               "pandora"
+physics.analyzers.ana.ShowerModuleLabels:           ["SBNShowerNew"
+                                                     ,"SBNShowerNewNoLim"
+                                                     # ,"SBNShowerBigger"
+                                                      ,"SBNShowerStandard"
+                                                      ,"SBNShowerNodEdx"
+                                                      ,"SBNShowertune"
+                                                      ,"SBNShowerRealStandard"
+                                                     # ,"SBNShowerDir"
+                                                     # ,"SBNShowerRM"
+                                                     # ,"SBNShowerRMSlidingMean"
+                                                     # ,"SBNShowerSlidingMean"
+                                                     # ,"SBNShowerRMSlidingMedian"
+                                                     # ,  "SBNShowerSlidingMedian"
+                                                     # ,"SBNShowerSlidingMedianCutOne"
+                                                     # ,"SBNShowerSlidingMedianCutTwo"
+                                                     #  ,"SBNShowerSlidingMedianCutThree"
+                                                     # ,"SBNShowerSlidingMedianCutSix"
+                                                     # ,"SBNShowercheat"
+                                                     # ,"SBNShowerDircheat"
+                                                     # ,"SBNShowerRMcheat"
+                                                     # ,"SBNShowerRMSlidingMeancheat"
+                                                     # ,"SBNShowerSlidingMeancheat"
+                                                     # ,"SBNShowerRMSlidingMediancheat"
+                                                     # ,  "SBNShowerSlidingMediancheat"
+                                                     # ,"SBNShowerSlidingMedianCutOnecheat"
+                                                     # ,"SBNShowerSlidingMedianCutTwocheat"
+                                                     #  ,"SBNShowerSlidingMedianCutThreecheat"
+                                                     # ,"SBNShowerSlidingMedianCutSixcheat"
+                                                     # ,"SBNShoweruncut"
+                                                     # ,"SBNShoweruncutcheat"
+                                                     ]
+
+Physics.analyzers.ana.UseBiggestShower:               false
+physics.analyzers.ana.RemoveNonContainedParticles:    false
+physics.analyzers.ana.PFPValidation:                  true
+physics.analyzers.ana.PFParticleLabel:                "pandoratune" 
+physics.analyzers.ana.Verbose:                        2
+physics.analyzers.ana.MaxSimEnergy:                   1500
+physics.analyzers.ana.DrawCanvases:                   false
+physics.analyzers.ana.FillOnlyClosestShower:          false
+physics.analyzers.ana.MinHitSize:                     0
+physics.analyzers.ana.SimEnergyCut:                   0.06 #in GeV!!!
+physics.analyzers.ana.DensityCut:                     2
+physics.analyzers.ana.MinRecoEnergy:                  100 #in MeV
+
+
+physics.producers.SBNShowerNew.AllowPartialShowers: false
+physics.producers.SBNShowerNew.PFParticleModuleLabel: "pandoratune"  
+physics.producers.SBNShowerNew.Verbose: true
+physics.producers.SBNShowerNew.ShowerFinderTools: [ 
+                                                    @local::ShowerStartPositionFinder
+                                                   ,@local::ShowerDirectionFinder
+                                                   ,@local::ShowerEnergyFinder
+                                                   ,@local::ShowerResidualTrackHitFinder
+                                                   ,@local::ShowerPandoraSlidingFitTrackFinder
+                                               #    ,@local::ShowerSmartTrackTrajectoryPointDirection
+                                                   ,@local::ShowerSlidingStandardCalodEdx
+                                                   
+                                                  ]
+physics.producers.SBNShowerNew.ShowerFinderTools[0].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNew.ShowerFinderTools[1].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNew.ShowerFinderTools[2].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNew.ShowerFinderTools[3].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNew.ShowerFinderTools[4].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNew.ShowerFinderTools[5].PFParticleModuleLabel: "pandoratune"
+
+
+physics.producers.SBNShowerNewNoLim.AllowPartialShowers: false
+physics.producers.SBNShowerNewNoLim.PFParticleModuleLabel: "pandoratune"  
+physics.producers.SBNShowerNewNoLim.Verbose: true
+physics.producers.SBNShowerNewNoLim.ShowerFinderTools: [ 
+                                                    @local::ShowerStartPositionFinder
+                                                   ,@local::ShowerDirectionFinder
+                                                   ,@local::ShowerEnergyFinder
+                                                   ,@local::ShowerResidualTrackHitFinder
+                                                   ,@local::ShowerPandoraSlidingFitTrackFinder
+                                                #   ,@local::ShowerSmartTrackTrajectoryPointDirection
+                                                   ,@local::ShowerSlidingStandardCalodEdx
+                                                   
+                                                  ]
+physics.producers.SBNShowerNewNoLim.ShowerFinderTools[0].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNewNoLim.ShowerFinderTools[1].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNewNoLim.ShowerFinderTools[2].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNewNoLim.ShowerFinderTools[3].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNewNoLim.ShowerFinderTools[4].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNewNoLim.ShowerFinderTools[5].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNewNoLim.ShowerFinderTools[5].dEdxTrackLength:999
+
+physics.producers.SBNShowerBigger.AllowPartialShowers: false
+physics.producers.SBNShowerBigger.Verbose: true
+physics.producers.SBNShowerBigger.PFParticleModuleLabel: "pandoratune"  
+physics.producers.SBNShowerBigger.ShowerFinderTools: [ 
+                                                    @local::ShowerStartPositionFinder
+                                                   ,@local::ShowerDirectionFinder
+                                                   ,@local::ShowerEnergyFinder
+                                                   ,@local::ShowerResidualTrackHitFinder
+                                                   ,@local::ShowerPandoraSlidingFitTrackFinder
+                                                   ,@local::ShowerSlidingStandardCalodEdx
+                                                   
+                                                  ]
+physics.producers.SBNShowerBigger.ShowerFinderTools[0].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerBigger.ShowerFinderTools[1].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerBigger.ShowerFinderTools[2].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerBigger.ShowerFinderTools[3].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerBigger.ShowerFinderTools[4].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerBigger.ShowerFinderTools[5].PFParticleModuleLabel: "pandoratune"
+
+physics.producers.SBNShowerBigger.ShowerFinderTools[3].MaxResidualDiff:    0.9
+
+physics.producers.SBNShowerStandard.PFParticleModuleLabel: "pandoratune"  
+physics.producers.SBNShowerStandard.ShowerFinderTools: [ 
+                                                  @local::ShowerStartPositionFinder
+                                                   ,@local::ShowerDirectionFinder
+                                                   ,@local::ShowerEnergyFinder
+                                                   ,@local::Shower3DTrackHitFinder
+                                                   ,@local::ShowerPandoraSlidingFitTrackFinder
+                                                   ,@local::ShowerSlidingStandardCalodEdx
+                                                   
+                                                  ]
+physics.producers.SBNShowerStandard.ShowerFinderTools[0].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerStandard.ShowerFinderTools[1].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerStandard.ShowerFinderTools[2].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerStandard.ShowerFinderTools[3].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerStandard.ShowerFinderTools[4].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerStandard.ShowerFinderTools[5].PFParticleModuleLabel: "pandoratune"
+
+
+physics.producers.SBNShowerNodEdx.PFParticleModuleLabel: "pandoratune"  
+physics.producers.SBNShowerNodEdx.ShowerFinderTools: [ 
+                                                  @local::ShowerStartPositionFinder
+                                                   ,@local::ShowerDirectionFinder
+                                                   ,@local::ShowerEnergyFinder
+                                                   ,@local::Shower3DTrackHitFinder
+                                                   ,@local::ShowerPandoraSlidingFitTrackFinder
+                                                   ,@local::ShowerSlidingStandardCalodEdx
+                                                   
+                                                  ]
+physics.producers.SBNShowerNodEdx.ShowerFinderTools[0].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNodEdx.ShowerFinderTools[1].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNodEdx.ShowerFinderTools[2].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNodEdx.ShowerFinderTools[3].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNodEdx.ShowerFinderTools[4].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNodEdx.ShowerFinderTools[5].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerNodEdx.ShowerFinderTools[5].GradCut: 100000
+
+physics.producers.SBNShowerRealStandard.PFParticleModuleLabel: "pandoratune"  
+physics.producers.SBNShowerRealStandard.ShowerFinderTools[0].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerRealStandard.ShowerFinderTools[1].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerRealStandard.ShowerFinderTools[2].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerRealStandard.ShowerFinderTools[3].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerRealStandard.ShowerFinderTools[4].PFParticleModuleLabel: "pandoratune"
+physics.producers.SBNShowerRealStandard.ShowerFinderTools[5].PFParticleModuleLabel: "pandoratune"
+
+
+
+physics.producers.SBNShowerDir.ShowerFinderTools: [@local::ShowerStartPositionFinder
+                                                    ,@local::ShowerDirectionFinder
+                                                     ,@local::ShowerEnergyFinder
+                                                     ,@local::ShowerResidualTrackHitFinder
+                                                     ,@local::ShowerPandoraSlidingFitTrackFinder
+                                                     ,@local::ShowerSmartTrackTrajectoryPointDirection
+                                                     ,@local::ShowerdEdxFinder
+                                                  ]
+
+physics.producers.SBNShowercheat.ShowerFinderTools: [ 
+                                                  @local::ShowerStartPositionCheater
+                                                  ,@local::ShowerDirectionCheater
+                                                  ,@local::ShowerEnergyFinder
+                                                  ,@local::ShowerTrackFinderCheater
+                                                  ,@local::ShowerPMATrackfinder
+                                                  ,@local::ShowerdEdxFinder
+                                                  ]
+
+physics.producers.SBNShowerDircheat.ShowerFinderTools: [@local::ShowerStartPositionCheater
+                                                    ,@local::ShowerDirectionCheater
+                                                     ,@local::ShowerEnergyFinder
+                                                     ,@local::ShowerTrackFinderCheater
+                                                     ,@local::ShowerPandoraSlidingFitTrackFinder
+                                                     ,@local::ShowerSmartTrackTrajectoryPointDirection
+                                                     ,@local::ShowerdEdxFinder
+                                                  ]
+
+physics.producers.SBNShoweruncut.ShowerFinderTools[6]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShoweruncut.ShowerFinderTools[6].MinDistCutOff: 0
+physics.producers.SBNShoweruncut.ShowerFinderTools[6].MinAngleToWire: 0
+physics.producers.SBNShoweruncut.ShowerFinderTools[6].ShapingTime: 99
+physics.producers.SBNShoweruncut.ShowerFinderTools[6].MaxDist: 999
+
+physics.producers.SBNShoweruncutcheat.ShowerFinderTools[6]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShoweruncutcheat.ShowerFinderTools[6].MinDistCutOff: 0
+physics.producers.SBNShoweruncutcheat.ShowerFinderTools[6].MinAngleToWire: 0
+physics.producers.SBNShoweruncutcheat.ShowerFinderTools[6].ShapingTime: 999
+physics.producers.SBNShoweruncutcheat.ShowerFinderTools[6].MaxDist: 999
+
+
+physics.producers.SBNShowerRMSlidingMean.Verbose: true
+physics.producers.SBNShowerRMSlidingMean.ShowerFinderTools[6]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMean.ShowerFinderTools[5]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerRMSlidingMedian.ShowerFinderTools[6]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMedian.ShowerFinderTools[5]: @local::ShowerSlidingStandardCalodEdx
+
+physics.producers.SBNShowerRMSlidingMean.ShowerFinderTools[6].UseMedian: false
+physics.producers.SBNShowerSlidingMean.ShowerFinderTools[5].UseMedian: false
+
+physics.producers.SBNShowerSlidingMedianCutOne.ShowerFinderTools[5]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMedianCutTwo.ShowerFinderTools[5]:  @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMedianCutThree.ShowerFinderTools[5]:  @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMedianCutSix.ShowerFinderTools[5]:  @local::ShowerSlidingStandardCalodEdx
+
+physics.producers.SBNShowerSlidingMedianCutOne.ShowerFinderTools[5].MinDistCutOff: 0
+physics.producers.SBNShowerSlidingMedianCutTwo.ShowerFinderTools[5].MinDistCutOff: 1
+physics.producers.SBNShowerSlidingMedianCutThree.ShowerFinderTools[5].MinDistCutOff: 2
+physics.producers.SBNShowerSlidingMedianCutSix.ShowerFinderTools[5].MinDistCutOff: 6
+
+physics.producers.SBNShowerSlidingMedianCutSix.ShowerFinderTools[5].dEdxTrackLength:3
+
+
+physics.producers.SBNShowerRMSlidingMeancheat.Verbose: true
+physics.producers.SBNShowerRMSlidingMeancheat.ShowerFinderTools[6]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMeancheat.ShowerFinderTools[5]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerRMSlidingMediancheat.ShowerFinderTools[6]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMediancheat.ShowerFinderTools[5]: @local::ShowerSlidingStandardCalodEdx
+
+physics.producers.SBNShowerRMSlidingMeancheat.ShowerFinderTools[6].UseMedian: false
+physics.producers.SBNShowerSlidingMeancheat.ShowerFinderTools[5].UseMedian: false
+
+physics.producers.SBNShowerSlidingMedianCutOnecheat.ShowerFinderTools[5]: @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMedianCutTwocheat.ShowerFinderTools[5]:  @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMedianCutThreecheat.ShowerFinderTools[5]:  @local::ShowerSlidingStandardCalodEdx
+physics.producers.SBNShowerSlidingMedianCutSixcheat.ShowerFinderTools[5]:  @local::ShowerSlidingStandardCalodEdx
+
+physics.producers.SBNShowerSlidingMedianCutOnecheat.ShowerFinderTools[5].MinDistCutOff: 0
+physics.producers.SBNShowerSlidingMedianCutTwocheat.ShowerFinderTools[5].MinDistCutOff: 1
+physics.producers.SBNShowerSlidingMedianCutThreecheat.ShowerFinderTools[5].MinDistCutOff: 2
+physics.producers.SBNShowerSlidingMedianCutSixcheat.ShowerFinderTools[5].MinDistCutOff: 6
+
+physics.producers.SBNShowerSlidingMedianCutSixcheat.ShowerFinderTools[5].dEdxTrackLength:3
+
+
+physics.producers.SBNShowerSlidingMediancheat.Verbose: true

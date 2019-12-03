@@ -1,0 +1,11 @@
+photonfilter: 
+{
+    module_type:         "sbndcode/ShowerAna/photonfilter"
+    GenieGenModuleLabel: "generator"
+}
+
+electronfilter: 
+{
+    module_type:         "sbndcode/ShowerAna/electronfilter"
+    GenieGenModuleLabel: "generator"
+}
