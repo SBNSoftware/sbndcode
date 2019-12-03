@@ -1,0 +1,17 @@
+# Ported from uBooNE gen-in-time fhicl for use by SBND
+# by Gray Putnam <grayputnam@uchicago.edu>
+
+BEGIN_PROLOG
+
+sbnd_filtergenintime: {
+  KeepOnlyMuons: false
+  MinKE: 1e-1 # some energy threshold to produce a PE
+  MaxT: 1900 # [ns] add a little buffer on the far end of the photon time window
+  # About 1 in 30e6 particles will produce a flash 15us after entering the cryostat
+  # so this gives us a good buffer and is still computationally feasible
+  MinT: -15202 # [ns]
+  SortParticles: true
+  module_type: "FilterGenInTime"
+}
+
+END_PROLOG
