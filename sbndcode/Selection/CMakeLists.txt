@@ -38,6 +38,7 @@ art_make(
                            sbndcode_CRTUtils
                            sbndcode_CRT
                            sbndcode_CRTProducts
+                           sbndcode_OpDetSim
                            larreco_RecoAlg
         )
 

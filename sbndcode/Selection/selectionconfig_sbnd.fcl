@@ -23,6 +23,18 @@ sbnd_numurecotree:
   SPTagAlg:            @local::sbnd_stoppingparticlecosmicidalg
 }
 
+sbnd_pdstree:
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/Selection/PdsTree"
+
+  # The input parameters
+  SimModuleLabel:      "largeant"     # Simulation producer module label
+  PdsModuleLabel:      "ophit"        # Simulation producer module label
+  Verbose:             false          # Print extra information about what's going on
+}
+
 sbnd_selectiontree: 
 {
   # The "module_type" tells us which module to run. The name here
