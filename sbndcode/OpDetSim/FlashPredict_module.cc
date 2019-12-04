@@ -50,7 +50,9 @@
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH1.h"
+
 #include <memory>
+#include <string>
 
 class FlashPredict;
 class FlashPredict : public art::EDProducer {
@@ -80,7 +82,7 @@ private:
   float fLightWindowEnd, fLightWindowStart;
   float fMinFlashPE;
   float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
-  int fDetector; // ==0 for SBND, =1 ICARUS
+  std::string fDetector; // SBND or ICARUS
   int fCryostat;  // =0 or =1 to match ICARUS reco chain selection
   bool fMakeTree,fSelectNeutrino, fUseCalo;
   std::vector<float> fPMTChannelCorrection;
@@ -99,7 +101,7 @@ private:
   void AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,
                     const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h,
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
-  bool SelectPMTPlane(float pmt_x, int icryo,int itpc,int detector);
+  bool SelectPMTPlane(float pmt_x, int icryo,int itpc, std::string detector);
 
   // root stuff
   TTree* _flashmatch_acpt_tree;
@@ -146,7 +148,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fSelectNeutrino = p.get<bool>("SelectNeutrino",true);  
   fLightWindowStart = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
   fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
-  fDetector = p.get<int>("Detector",0); // ==0 for SBND, ==1 for ICARUS
+  fDetector = p.get<std::string>("Detector", "SBND");
   fCryostat = p.get<int>("Cryostat",0); //set =0 ot =1 for ICARUS to match reco chain selection
   
 
@@ -236,7 +238,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   }
   }
   //
-  if (fDetector==0) {
+  if (fDetector == "SBND" ) {
     temphisto = (TH1*)infile->Get("pep1");
     pe_nbins = temphisto->GetNbinsX();
     if (pe_nbins<=0) {
@@ -292,7 +294,7 @@ void FlashPredict::produce(art::Event & e)
   uint nTPCs(geometry->NTPC());
   if (nTPCs>2) nTPCs=2;
   geo::CryostatGeo geo_cryo = geometry->Cryostat(0);
-  if (fDetector==1 && fCryostat==1) geo_cryo = geometry->Cryostat(1);
+  if (fDetector == "ICARUS" && fCryostat==1) geo_cryo = geometry->Cryostat(1);
 
 
   // grab PFParticles in event
@@ -334,7 +336,7 @@ void FlashPredict::produce(art::Event & e)
     recob::OpHit oph = OpHitCollection[j];
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-    if ( fDetector==0 && !map.pdType(oph.OpChannel(),"pmt")) continue; // use only uncoated PMTs for SBND for flashtime
+    if ( fDetector == "SBND" && !map.pdType(oph.OpChannel(),"pmt")) continue; // use only uncoated PMTs for SBND for flashtime
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     if ( (oph.PeakTime()<fBeamWindowStart) || (oph.PeakTime()> fBeamWindowEnd) ) continue;
 
@@ -464,7 +466,7 @@ void FlashPredict::produce(art::Event & e)
 	  // only use optical hits around the flash time
 	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) ) continue;
 	  // only use PMTs for SBND
-	  if ( (fDetector) || ( fDetector==0 && map.pdType(oph.OpChannel(),"pmt"))) {
+          if ( (fDetector == "ICARUS") || ( fDetector == "SBND" && map.pdType(oph.OpChannel(),"pmt"))) {
 	    // Add up the position, weighting with PEs
 	    _flash_x=PMTxyz[0];
 	    pnorm+=oph.PE();
@@ -479,7 +481,7 @@ void FlashPredict::produce(art::Event & e)
 	    sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
 	    sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
 	  }
-	  else if ( fDetector==0 && map.pdType(oph.OpChannel(),"barepmt")) {
+          else if ( fDetector == "SBND" && map.pdType(oph.OpChannel(),"barepmt")) {
 	    unpe_tot+=oph.PE();
 	  } 
 	}
@@ -498,27 +500,23 @@ void FlashPredict::produce(art::Event & e)
 	
 	//      calculate match score here, put association on the event
 	float slice=_nuvtx_x;
-	float drift_distance=200.0;
-	if (fDetector==1) drift_distance=150.0;
+        float drift_distance = 200.0; // TODO: no hardcoded values
+        if (fDetector == "ICARUS") {drift_distance=150.0;} // TODO: no hardcoded values
 	_score = 0; int icount =0;
 	int isl = int(dy_nbins*(slice/drift_distance));
-	if (dysp[isl]>0) 
-	_score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];
+        if (dysp[isl]>0) {_score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
 	icount++;
 	isl = int(dz_nbins*(slice/drift_distance));
-	if (dzsp[isl]>0) 
-	_score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];
+        if (dzsp[isl]>0) {_score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
 	icount++;
 	isl = int(rr_nbins*(slice/drift_distance));
-	if (rrsp[isl]>0) 
-	_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];
+        if (rrsp[isl]>0) {_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];}
 	icount++;
-	if (fDetector==0) { // pe metric for sbnd only
+        if (fDetector == "SBND") { // pe metric for sbnd only
 	  isl = int(pe_nbins*(slice/drift_distance));	  
 	  float myratio = 100.0*_flash_unpe;
-	  if (_flash_pe>0) myratio/=_flash_pe;
-	  if (pesp[isl]>0) 
-	  _score+=abs(myratio-pemean[isl])/pesp[isl];
+          if (_flash_pe>0) {myratio/=_flash_pe;}
+          if (pesp[isl]>0) {_score+=abs(myratio-pemean[isl])/pesp[isl];}
 	  icount++;
 	}
 	//	_score/=icount;
@@ -651,11 +649,11 @@ void FlashPredict::AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,  con
 } // void FlashPredict::AddDaughters
 
 
-bool FlashPredict::SelectPMTPlane(float pmt_x, int icryo, int itpc, int detector)
+bool FlashPredict::SelectPMTPlane(float pmt_x, int icryo, int itpc, std::string detector)
 {
   bool keepme=false;
   // check whether this optical detector views the light inside this tpc.
-  if (detector==1) { // icarus
+  if (detector == "ICARUS") {
     if (icryo==0) {
       if (itpc==0 && pmt_x <-300 ) keepme=1; 
       else if (itpc==1 && pmt_x>-100) keepme=1;
@@ -665,7 +663,7 @@ bool FlashPredict::SelectPMTPlane(float pmt_x, int icryo, int itpc, int detector
       else if (itpc==1 && pmt_x>300) keepme=1;
     }    
   }
-  else { // sbnd
+  else if (detector == "SBND") {
     if ((itpc==0 && pmt_x<0) || (itpc==1 && pmt_x>0) ) keepme=true;    
   }
 
