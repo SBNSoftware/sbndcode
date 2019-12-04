@@ -150,7 +150,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
   fDetector = p.get<std::string>("Detector", "SBND");
   fCryostat = p.get<int>("Cryostat",0); //set =0 ot =1 for ICARUS to match reco chain selection
-  
+
+  if (fDetector == "SBND" && fCryostat==1){
+    throw cet::exception("FlashPredictSBND") << "SBND has only one cryostat. \n"
+                                             << "Check Detector and Cryostat parameter." << std::endl;
+  }
 
   art::ServiceHandle<art::TFileService> tfs;
 
@@ -460,13 +464,16 @@ void FlashPredict::produce(art::Event & e)
 	double sum_Cy=0;double sum_Cz=0;
 	for(size_t j = 0; j < OpHitCollection.size(); j++){
 	  recob::OpHit oph = OpHitCollection[j];
+          std::string op_type;
+          if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
+          if (fDetector == "ICARUS") op_type = "pmt";
 	  geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
 	  // check cryostat and tpc 
 	  if (!SelectPMTPlane(PMTxyz[0],fCryostat,it,fDetector)) continue;
 	  // only use optical hits around the flash time
 	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) ) continue;
 	  // only use PMTs for SBND
-          if ( (fDetector == "ICARUS") || ( fDetector == "SBND" && map.pdType(oph.OpChannel(),"pmt"))) {
+          if ( (fDetector == "ICARUS") || ( fDetector == "SBND" && op_type == "pmt")) {
 	    // Add up the position, weighting with PEs
 	    _flash_x=PMTxyz[0];
 	    pnorm+=oph.PE();
@@ -481,9 +488,19 @@ void FlashPredict::produce(art::Event & e)
 	    sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
 	    sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
 	  }
-          else if ( fDetector == "SBND" && map.pdType(oph.OpChannel(),"barepmt")) {
-	    unpe_tot+=oph.PE();
-	  } 
+          else if ( fDetector == "SBND" && op_type == "barepmt") {
+            unpe_tot+=oph.PE();
+          }
+          else if ( fDetector == "SBND" && (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
+            //TODO: Use ARAPUCA
+            // arape_tot+=oph.PE();
+            continue;
+          }
+          else if ( fDetector == "SBND" && (op_type == "xarapucaT1" || op_type == "xarapucaT2") ) {
+            //TODO: Use XARAPUCA
+            // xarape_tot+=oph.PE();
+            continue;
+          }
 	}
 	
 	if (pnorm>0) {
@@ -648,19 +665,20 @@ void FlashPredict::AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,  con
   return;
 } // void FlashPredict::AddDaughters
 
-
+// TODO: rename and refactor this function to make it more clear what it does
+// TODO: no hardcoding
 bool FlashPredict::SelectPMTPlane(float pmt_x, int icryo, int itpc, std::string detector)
 {
   bool keepme=false;
   // check whether this optical detector views the light inside this tpc.
   if (detector == "ICARUS") {
     if (icryo==0) {
-      if (itpc==0 && pmt_x <-300 ) keepme=1; 
-      else if (itpc==1 && pmt_x>-100) keepme=1;
+      if (itpc==0 && pmt_x <-300 ) keepme=true;
+      else if (itpc==1 && pmt_x>-100) keepme=true;
     }
     else {
-      if (itpc==0 && pmt_x <100 ) keepme=1; 
-      else if (itpc==1 && pmt_x>300) keepme=1;
+      if (itpc==0 && pmt_x <100 ) keepme=true;
+      else if (itpc==1 && pmt_x>300) keepme=true;
     }    
   }
   else if (detector == "SBND") {
