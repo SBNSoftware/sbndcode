@@ -15,14 +15,20 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   , fSampling(fParams.timeService->OpticalClock().Frequency()) 
   , fArapucaEffT1(fParams.ArapucaEffT1 / fParams.larProp->ScintPreScale())
   , fArapucaEffT2(fParams.ArapucaEffT2 / fParams.larProp->ScintPreScale())
-  , fArapucaEffx(fParams.ArapucaEffx / fParams.larProp->ScintPreScale())
+  , fArapucaEffxT1(fParams.ArapucaEffxT1 / fParams.larProp->ScintPreScale())
+  , fArapucaEffxT2(fParams.ArapucaEffxT2 / fParams.larProp->ScintPreScale())
+  , fEngine(fParams.engine)
   {
 
-    std::cout << "arapucas corrected efficiencies = " << fArapucaEffT1 << ", " << fArapucaEffT2 << " and " << fArapucaEffx << std::endl;
+    //art::ServiceHandle<rndm::NuRandomService> seedSvc;
+    //fEngine = new CLHEP::HepJamesRandom;
+    //seedSvc->registerEngine(rndm::NuRandomService::CLHEPengineSeeder(fEngine), "DigiArapucaSBNDAlg");
+
+//    std::cout << "arapucas corrected efficiencies = " << fArapucaEffT1 << ", " << fArapucaEffT2 << " and " << fArapucaEffx << std::endl;
    // std::cout << "optical clock = " << fSampling << std::endl;
 
-    if(fArapucaEffT1>1.0001 || fArapucaEffT2>1.0001 || fArapucaEffx>1.0001)
-	std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.ArapucaEffT1 << " or " << fParams.ArapucaEffT2 << " or " << fParams.ArapucaEffx << " seems to be too large! Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
+    if(fArapucaEffT1>1.0001 || fArapucaEffT2>1.0001 || fArapucaEffxT1>1.0001 || fArapucaEffxT2>1.0001)
+	std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.ArapucaEffT1 << " or " << fParams.ArapucaEffT2 << " or " << fParams.ArapucaEffxT1 << " or " << fParams.ArapucaEffxT2 << " seems to be too large! Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
 
     TimeArapucaT1 = new TH1D("Time Profile T1", "", 150, 0.0, 150.0);//histogram that stores the arrival time of photons at SiPM (t=0 is the time is reaches the outside of the optical window) for arapuca T1
 
@@ -49,12 +55,13 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     for(int i=0; i<pulsesize; i++)
 	wsp[i]=(Pulse1PE(static_cast< double >(i)/fSampling));
 //Random number engine initialization
-    int seed = time(NULL);
-    gRandom = new TRandom3(seed);
+    //int seed = time(NULL);
+    //gRandom = new TRandom3(seed);
   }
 
   DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg()
-  { }
+  { 
+  }
 
   void DigiArapucaSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples){	
 
@@ -79,7 +86,7 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     if(time_bin<wave.size()){
 	min=time_bin;
 	max=time_bin+pulsesize < wave.size() ? time_bin+pulsesize : wave.size();
-	for(size_t i = min; i<= max; i++){
+	for(size_t i = min; i< max; i++){
 		wave[i]+= (wsp[i-min])*(double)nphotons;	
 	}		
     }
@@ -95,7 +102,8 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   {
     double noise;
     for(size_t i = 0; i < wave.size(); i++){
-        noise= gRandom->Gaus(0, fParams.BaselineRMS); //gaussian baseline noise  
+        //noise= gRandom->Gaus(0, fParams.BaselineRMS); //gaussian baseline noise  
+        noise = CLHEP::RandGauss::shoot(fEngine, 0, fParams.BaselineRMS); //gaussian baseline noise  
         wave[i] += noise; 
     }
   }
@@ -104,14 +112,17 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   {
     int nCT;
     // Multiply by 10^9 since fDarkNoiseRate is in Hz (conversion from s to ns)
-    double darkNoiseTime = static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
+    //double darkNoiseTime = static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
+    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, (1.0/fParams.DarkNoiseRate)*1000000000.0);
     while (darkNoiseTime < wave.size()){
 	size_t timeBin = (darkNoiseTime);
-	  if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+	  //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+	  if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
 	  else nCT=1;
 	  AddSPE(timeBin,wave,nCT);
         // Find next time to add dark noise
-        darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
+        //darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
+        darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, (1.0/fParams.DarkNoiseRate)*1000000000.0);
     }
   }
 
@@ -128,11 +139,13 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     double tphoton=0;
     if(pdtype=="arapucaT1"){
 	for(size_t i=0; i<simphotons.size(); i++){
-	  if((gRandom->Uniform(1.0))<fArapucaEffT1){ //Sample a random subset according to Arapuca's efficiency
+	  //if((gRandom->Uniform(1.0))<fArapucaEffT1){ //Sample a random subset according to Arapuca's efficiency
+	  if((CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffT1){ //Sample a random subset according to Arapuca's efficiency
 	    tphoton=simphotons[i].Time;
 	    tphoton+=(TimeArapucaT1->GetRandom());
             tphoton-=t_min;
- 	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
 	  }
@@ -140,23 +153,41 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     }
     if(pdtype=="arapucaT2"){   
 	for(size_t i=0; i<simphotons.size(); i++){
- 	  if((gRandom->Uniform(1.0))<fArapucaEffT2){ //Sample a random subset according to Arapuca's efficiency.
+ 	  //if((gRandom->Uniform(1.0))<fArapucaEffT2){ //Sample a random subset according to Arapuca's efficiency.
+ 	  if((CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffT2){ //Sample a random subset according to Arapuca's efficiency.
 	    tphoton=simphotons[i].Time;
   	    tphoton+=(TimeArapucaT2->GetRandom());
             tphoton-=t_min;
- 	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
 	  }
 	}
     }
-    if(pdtype=="xarapucaprime"){   
+    if(pdtype=="xarapucaT1"){   
 	for(size_t i=0; i<simphotons.size(); i++){
- 	  if((gRandom->Uniform(1.0))<fArapucaEffx){ 
+ 	  //if((gRandom->Uniform(1.0))<fArapucaEffx){ 
+ 	  if((CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffxT1){ 
 	    tphoton=simphotons[i].Time;
  	    tphoton+=(TimeArapucaX->GetRandom());
             tphoton-=t_min;
- 	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
+	    else nCT=1;
+	    AddSPE(tphoton*fSampling,wave,nCT);
+	  }
+	}
+    }
+    if(pdtype=="xarapucaT2"){   
+	for(size_t i=0; i<simphotons.size(); i++){
+ 	  //if((gRandom->Uniform(1.0))<fArapucaEffx){ 
+ 	  if((CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffxT2){ 
+	    tphoton=simphotons[i].Time;
+ 	    tphoton+=(CLHEP::RandExponential::shoot(fEngine,8.5));//decay time of EJ280 in ns
+            tphoton-=t_min;
+ 	    //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
 	  }
@@ -180,24 +211,38 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     int nCT=1;
     for (auto const& mapMember: photonMap){
       for(int i=0; i<mapMember.second; i++){
-         if(pdtype=="arapucaT1" && (gRandom->Uniform(1.0))<fArapucaEffT1){
+         //if(pdtype=="arapucaT1" && (gRandom->Uniform(1.0))<fArapucaEffT1){
+         if(pdtype=="arapucaT1" && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffT1){
   	    tphoton=(TimeArapucaT1->GetRandom());
  	    tphoton+=mapMember.first-t_min;
- 	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
          }
-         if(pdtype=="arapucaT2" && (gRandom->Uniform(1.0))<fArapucaEffT2){
+         //if(pdtype=="arapucaT2" && (gRandom->Uniform(1.0))<fArapucaEffT2){
+         if(pdtype=="arapucaT2" && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffT2){
   	    tphoton=(TimeArapucaT2->GetRandom());
  	    tphoton+=mapMember.first-t_min;
- 	    if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	    if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
 	    else nCT=1;
 	    AddSPE(tphoton*fSampling,wave,nCT);
          }
-	if(pdtype=="xarapucaprime" && (gRandom->Uniform(1.0))<fArapucaEffx){
+	//if(pdtype=="xarapucaprime" && (gRandom->Uniform(1.0))<fArapucaEffx){
+	if(pdtype=="xarapucaT1" && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffxT1){
 	   tphoton=(TimeArapucaX->GetRandom());
 	   tphoton+=mapMember.first-t_min;
- 	   if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	   //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	   if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
+	   else nCT=1;
+	   AddSPE(tphoton*fSampling,wave,nCT);
+	}
+	if(pdtype=="xarapucaT2" && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fArapucaEffxT2){
+ 	   tphoton=(CLHEP::RandExponential::shoot(fEngine,8.5));//decay time of EJ280 in ns
+	   tphoton+=mapMember.first-t_min;
+ 	   //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+ 	   if(fParams.CrossTalk>0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0))<fParams.CrossTalk) nCT=2;
 	   else nCT=1;
 	   AddSPE(tphoton*fSampling,wave,nCT);
 	}
@@ -228,7 +273,8 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     fBaseConfig.Saturation        = config.saturation();
     fBaseConfig.ArapucaEffT1      = config.arapucaEffT1();
     fBaseConfig.ArapucaEffT2      = config.arapucaEffT2();
-    fBaseConfig.ArapucaEffx       = config.arapucaEffx();
+    fBaseConfig.ArapucaEffxT1     = config.arapucaEffxT1();
+    fBaseConfig.ArapucaEffxT2     = config.arapucaEffxT2();
     fBaseConfig.RiseTime          = config.riseTime();
     fBaseConfig.FallTime          = config.fallTime();
     fBaseConfig.MeanAmplitude     = config.meanAmplitude();
@@ -243,7 +289,8 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
   std::unique_ptr<DigiArapucaSBNDAlg>
   DigiArapucaSBNDAlgMaker::operator()(
     detinfo::LArProperties const& larProp,
-    detinfo::DetectorClocks const& detClocks
+    detinfo::DetectorClocks const& detClocks,
+    CLHEP::HepRandomEngine* engine
     ) const
   {
     // set the configuration 
@@ -252,6 +299,7 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     // set up parameters
     params.larProp = &larProp;
     params.timeService = &detClocks;
+    params.engine = engine;
  
     return std::make_unique<DigiArapucaSBNDAlg>(params);
   } // DigiArapucaSBNDAlgMaker::create()
