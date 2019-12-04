@@ -142,6 +142,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 1.0);   // ~40000/1600
   fInputFilename = p.get<std::string>("InputFileName","fmplots.root");  // root file with histograms for match score calc
   fMakeTree = p.get<bool>("MakeTree",false);  
+  fUseCalo = p.get<bool>("UseCalo",false);  
   fSelectNeutrino = p.get<bool>("SelectNeutrino",true);  
   fLightWindowStart = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
   fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
@@ -193,9 +194,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     rrsp.push_back(0.001);
   }
   else {
-  for (int ib=0;ib<rr_nbins;++ib) {
+  for (int ib=1;ib<=rr_nbins;++ib) {
     rrmean.push_back(temphisto->GetBinContent(ib));
-    rrsp.push_back(temphisto->GetBinError(ib));
+    float tt = temphisto->GetBinError(ib);
+    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in rr" << std::endl;}
+    rrsp.push_back(tt);
   }
   }
   //
@@ -208,11 +211,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     dysp.push_back(0.001);
   }
   else {
-  for (int ib=0;ib<dy_nbins;++ib) {
-    dymean.push_back(0.0);
-    // not enough stats to believe mean values different than 0
-    //    dymean.push_back(temphisto->GetBinContent(ib));
-    dysp.push_back(temphisto->GetBinError(ib));
+  for (int ib=1;ib<=dy_nbins;++ib) {
+    dymean.push_back(temphisto->GetBinContent(ib));
+    float tt = temphisto->GetBinError(ib);
+    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in dy" << std::endl;}
+    dysp.push_back(tt);
   }
   }
   //
@@ -225,11 +228,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     dzsp.push_back(0.001);
   }
   else {
-  for (int ib=0;ib<dz_nbins;++ib) {
-    dzmean.push_back(0.0);
-    // not enough stats to believe mean values different than 0
-    //    dzmean.push_back(temphisto->GetBinContent(ib));
-    dzsp.push_back(temphisto->GetBinError(ib));
+  for (int ib=1;ib<=dz_nbins;++ib) {
+    dzmean.push_back(temphisto->GetBinContent(ib));
+    float tt = temphisto->GetBinError(ib);
+    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in dz" << std::endl;}
+    dzsp.push_back(tt);
   }
   }
   //
@@ -243,17 +246,18 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
       pesp.push_back(0.001);
     }
     else {
-      for (int ib=0;ib<pe_nbins;++ib) {
-	pemean.push_back(0.0);
-	// not enough stats to believe mean values different than 0
-	//    dzmean.push_back(temphisto->GetBinContent(ib));
-	pesp.push_back(temphisto->GetBinError(ib));
+      for (int ib=1;ib<=pe_nbins;++ib) {
+	pemean.push_back(temphisto->GetBinContent(ib));
+	float tt = temphisto->GetBinError(ib);
+	if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in pe" << std::endl;}
+	pesp.push_back(tt);
       }
     }
-  }else {
-      pe_nbins=1;
-      pemean.push_back(0);
-      pesp.push_back(0.001);
+  }
+  else {
+    pe_nbins=1;
+    pemean.push_back(0);
+    pesp.push_back(0.001);
   }
   //
   infile->Close();
@@ -278,6 +282,9 @@ void FlashPredict::produce(art::Event & e)
   _run = e.run();
   _flashtime = -9999.;
   _flashpe   = -9999.;
+  _flash_unpe   = -9999.;
+  _flash_r   = -9999.;
+  _score = -9999.;
 
   // std::cout << "event no " << _evt << std::endl;
 
@@ -292,16 +299,19 @@ void FlashPredict::produce(art::Event & e)
   auto const& pfp_h = e.getValidHandle<std::vector<recob::PFParticle> >(fPandoraProducer);
 
   // grab spacepoints associated with PFParticles
-  art::FindManyP<recob::SpacePoint> pfp_spacepoint_assn_v(pfp_h, e, fPandoraProducer);
-  
-  // grab tracks associated with PFParticles
-  art::FindManyP<recob::Track> pfp_track_assn_v(pfp_h, e, fPandoraProducer);
+  art::FindManyP<recob::SpacePoint> pfp_spacepoint_assn_v(pfp_h, e, fPandoraProducer);  
 
-
-  // grab associated metadata
-  art::FindManyP< larpandoraobj::PFParticleMetadata > pfPartToMetadataAssoc(pfp_h, e, fPandoraProducer);
   auto const& spacepoint_h = e.getValidHandle<std::vector<recob::SpacePoint> >(fSpacePointProducer);
   art::FindManyP<recob::Hit> spacepoint_hit_assn_v(spacepoint_h, e, fSpacePointProducer);
+
+  // grab tracks associated with PFParticles
+  // auto const& track_h = e.getValidHandle<std::vector<recob::Track> >(fTrackProducer);
+  // art::FindManyP<recob::Track> pfp_track_assn_v(track_h, e, fTrackProducer);
+
+  // grab calorimetry info for tracks
+  // auto const& calo_h = e.getValidHandle<std::vector<anab::Calorimetry> >(fCaloProducer);
+  // art::FindManyP<anab::Calorimetry>  track_calo_assn_v(calo_h, e, fCaloProducer);
+
 
   // load OpHits previously created
   art::Handle<std::vector<recob::OpHit> > ophit_h;
@@ -358,16 +368,6 @@ void FlashPredict::produce(art::Event & e)
       recob::PFParticle pfp = *pfp_ptr_v.at(i);
       pfp_v.push_back(pfp);
 
-  //     if (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
-  //     	// ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));      
-  // // grab calo objects associated with tracks
-
-  // 	const std::vector< art::Ptr<anab::Calorimetry> > this_calo_ptr_v = spacepoint_hit_assn_v.at( spkey );
-  // 	art::FindManyP<anab::Calorimetry> track_calo_assn_v(pfp_h, e, fCaloProducer);
-  // 	const std::vector< art::Ptr<anab::Calorimetry> > this_calo_ptr_v = spacepoint_hit_assn_v.at( spkey );
-  //     }
-  //     	else { // for showers do this
-  //     	}
 	auto const& spacepoint_ptr_v = pfp_spacepoint_assn_v.at(key);
 	std::vector< art::Ptr<recob::Hit> > hit_ptr_v;
 	for (size_t sp=0; sp < spacepoint_ptr_v.size(); sp++) {
@@ -389,9 +389,36 @@ void FlashPredict::produce(art::Event & e)
 	  geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);	  
 	  // xpos is the distance from the wire planes.
 	  float xpos = fabs(position[0]-Wxyz[0]); 
+	  /*
+	  float mult = 3./7.;
+	  if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
+	    // ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));      
+	    // grab tracks associated with pfp particle
+	    auto const& track_ptr_v = pfp_track_assn_v.at(key);
+	    for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
+	      auto mytrack = track_ptr_v[tr];
+	      auto const& trackkey = mytrack.key();
+	      // grab calo objects associated with tracks
+	      const std::vector< art::Ptr<anab::Calorimetry> > calo_ptr_v = track_calo_assn_v.at( trackkey );
+	      for (size_t ca=0;  ca <  calo_ptr_v.size(); ca++) {
+		auto mycalo = calo_ptr_v.at( ca );
+		int npts = mycalo->dEdx().size();
+		for (int ip=0;ip<npts;++ip) {
+		  Point_t pxyz=mycalo->fXYZ[ip];
+		  float ds = mycalo->fTrkPitch[ip];
+		  float dQ = mycalo->fdQdx[ip];
+		  float dE = mycalo->fdQdx[ip];
+		  float alpha = dQ/dE;
+		  float pe_exp = (1.0-alpha)/alpha;
+		  mult=pe_exp;
+		}
+	      }
+	    }
+	  }
+	  */	    
 	  lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
-	} // for all hits associated to this spacepoint
-      } // for all spacepoints
+	  } // for all hits associated to this spacepoint
+	} // for all spacepoints
     } // for all pfp pointers
     
     int icountPE=0;
@@ -468,17 +495,22 @@ void FlashPredict::produce(art::Event & e)
 	if (fDetector==1) drift_distance=150.0;
 	_score = 0; int icount =0;
 	int isl = int(dy_nbins*(slice/drift_distance));
+	if (dysp[isl]>0) 
 	_score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];
 	icount++;
 	isl = int(dz_nbins*(slice/drift_distance));
+	if (dzsp[isl]>0) 
 	_score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];
 	icount++;
 	isl = int(rr_nbins*(slice/drift_distance));
+	if (rrsp[isl]>0) 
 	_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];
 	icount++;
 	if (fDetector==0) { // pe metric for sbnd only
-	  isl = int(pe_nbins*(slice/drift_distance));
-	  float myratio = 100*_flash_unpe/_flash_pe;
+	  isl = int(pe_nbins*(slice/drift_distance));	  
+	  float myratio = 100.0*_flash_unpe;
+	  if (_flash_pe>0) myratio/=_flash_pe;
+	  if (pesp[isl]>0) 
 	  _score+=abs(myratio-pemean[isl])/pesp[isl];
 	  icount++;
 	}
