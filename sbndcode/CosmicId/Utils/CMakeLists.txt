@@ -31,6 +31,7 @@ art_make(    LIBRARY_NAME sbndcode_CosmicIdUtils
                            sbndcode_CRT
                            sbndcode_CRTProducts
                            sbndcode_CRTUtils
+                           sbndcode_OpDetSim
         )
 
 install_headers()

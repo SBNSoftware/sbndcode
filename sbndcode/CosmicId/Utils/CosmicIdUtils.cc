@@ -4,20 +4,66 @@ namespace sbnd{
 
 // =============================== UTILITY FUNCTIONS ==============================
 
+  std::vector<double> CosmicIdUtils::FlashTimes(std::vector<double> optimes){
+    std::vector<double> opflashes;
+
+    // Sort PMT times by time
+    std::sort(optimes.begin(), optimes.end());
+
+    for(size_t i = 0; i < optimes.size(); i++){
+      // Flash reconstruction
+      double start_time = optimes[i];
+      size_t nhits = 0;
+      std::vector<double> times {start_time};
+      while( (i+nhits)<(optimes.size()-1) && (optimes[i+nhits]-start_time) < 6){
+        nhits++;
+        times.push_back(optimes[i+nhits]);
+      }
+      if(nhits > 100){
+        opflashes.push_back((std::accumulate(times.begin(), times.end(), 0.)/times.size())-2.5);
+        i = i + nhits;
+      }
+    }
+
+    return opflashes;
+  }
+
+  // Create real PDS optical flashes
+  std::pair<std::vector<double>, std::vector<double>> CosmicIdUtils::OpFlashes(art::ValidHandle<std::vector<recob::OpHit>> pdsHandle){
+
+    opdet::sbndPDMapAlg fChannelMap; //map for photon detector types
+
+    // Optical flash reconstruction for numuCC
+    std::vector<double> optimes_tpc0;
+    std::vector<double> optimes_tpc1;
+    for(auto const& ophit : (*pdsHandle)){
+      // Only look at PMTs
+      std::string od = fChannelMap.pdName(ophit.OpChannel());
+      if( od != "pmt" ) continue;
+      // Work out what TPC detector is in odd = TPC1, even = TPC0
+      if(ophit.OpChannel() % 2 == 0){ 
+        optimes_tpc1.push_back(ophit.PeakTime());
+      }
+      else{ 
+        optimes_tpc0.push_back(ophit.PeakTime());
+      }
+    }
+
+    std::vector<double> opflashes_tpc0 = FlashTimes(optimes_tpc0);
+
+    std::vector<double> opflashes_tpc1 = FlashTimes(optimes_tpc1);
+
+    return std::make_pair(opflashes_tpc0, opflashes_tpc1);
+  }
+  
   // Create fake PDS optical flashes from true particle energy deposits
   std::pair<std::vector<double>, std::vector<double>> CosmicIdUtils::FakeTpcFlashes(std::vector<simb::MCParticle> particles){
     //
     TPCGeoAlg fTpcGeo;
-    //detinfo::DetectorProperties const* fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-    //detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
 
     // Create fake flashes in each tpc
     std::vector<double> fakeTpc0Flashes;
     std::vector<double> fakeTpc1Flashes;
-
-    // FIXME probably shouldn't be here
-    //double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    //double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
 
     // Loop over all true particles
     for (auto const particle: particles){
@@ -27,8 +73,6 @@ namespace sbnd{
       double time = particle.T() * 1e-3;
 
       //Check if time is in reconstructible window
-      //if(time < -driftTimeMuS || time > readoutWindowMuS) continue; 
-      //Check if particle is visible, electron, muon, proton, pion, kaon, photon
       if(!(pdg==13||pdg==11||pdg==22||pdg==2212||pdg==211||pdg==321||pdg==111)) continue;
 
       //Loop over the trajectory
@@ -73,6 +117,37 @@ namespace sbnd{
     }
 
     return std::make_pair(fakeTpc0Flashes, fakeTpc1Flashes);
+  }
+
+  // Determine if there is a PDS flash in time with the neutrino beam
+  std::pair<bool, bool> CosmicIdUtils::BeamFlash(art::ValidHandle<std::vector<recob::OpHit>> pdsHandle, double beamTimeMin, double beamTimeMax){
+
+    opdet::sbndPDMapAlg fChannelMap; //map for photon detector types
+
+    int n_hits_tpc0 = 0;
+    int n_hits_tpc1 = 0;
+    for(auto const& ophit : (*pdsHandle)){
+      // Only look at PMTs
+      std::string od = fChannelMap.pdName(ophit.OpChannel());
+      if( od != "pmt" ) continue;
+      // Work out what TPC detector is in odd = TPC1, even = TPC0
+      if(ophit.OpChannel() % 2 == 0){ 
+        // Beam activity
+        if(ophit.PeakTime() >= beamTimeMin && ophit.PeakTime() <= beamTimeMax+2.5) n_hits_tpc1++;
+      }
+      else{ 
+        // Beam activity
+        if(ophit.PeakTime() >= beamTimeMin && ophit.PeakTime() <= beamTimeMax+2.5) n_hits_tpc0++;
+      }
+    }
+
+    bool tpc0Flash = false;
+    if(n_hits_tpc0 > 100) tpc0Flash = true;
+
+    bool tpc1Flash = false;
+    if(n_hits_tpc1 > 100) tpc1Flash = true;
+
+    return std::make_pair(tpc0Flash, tpc1Flash);
   }
 
   // Determine if there is a PDS flash in time with the neutrino beam

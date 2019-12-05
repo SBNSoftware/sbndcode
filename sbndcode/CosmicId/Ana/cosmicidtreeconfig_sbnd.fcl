@@ -18,6 +18,7 @@ sbnd_cosmicidtree:
   TPCTrackLabel:       "pandoraTrack" # TPC track producer module label
   CaloModuleLabel:     "pandoraCalo"
   PandoraLabel:        "pandora"
+  PdsModuleLabel:      "ophit"
   Verbose:             false             # Print extra information about what's going on
   BeamTimeLimits:      @local::sbnd_beamtime
   CrtBackTrack:        @local::standard_crtbacktracker

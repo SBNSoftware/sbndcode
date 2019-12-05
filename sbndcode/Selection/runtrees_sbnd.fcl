@@ -67,14 +67,14 @@ physics:
   analysis: [ 
               NuMuRecoTree
               , PdsTree
-             # , CRTDetSimAna 
-             # , CRTHitRecoAna
-             # , CRTTrackRecoAna
-             # , CRTT0MatchingAna
-             # , CRTTrackMatchingAna
-             # , CRTFullRecoAna
-             # , CosmicIdAna
-             # , CosmicIdTree
+              , CRTDetSimAna 
+              , CRTHitRecoAna
+              , CRTTrackRecoAna
+              , CRTT0MatchingAna
+              , CRTTrackMatchingAna
+              , CRTFullRecoAna
+              , CosmicIdAna
+              , CosmicIdTree
               , SelectionTree 
             ]
 

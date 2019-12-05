@@ -26,6 +26,7 @@ void CosmicIdAlg::reconfigure(const Config& config){
   fCrtHitModuleLabel   = config.CrtHitModuleLabel();
   fCrtTrackModuleLabel = config.CrtTrackModuleLabel();
   fCaloModuleLabel     = config.CaloModuleLabel();
+  fPdsModuleLabel      = config.PdsModuleLabel();
 
   fApplyFiducialCut  = config.ApplyFiducialCut();
   fApplyStoppingCut  = config.ApplyStoppingCut();
@@ -93,7 +94,26 @@ void CosmicIdAlg::ResetCuts(){
 }
 
 // Run cuts to decide if track looks like a cosmic
+bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event){
+
+  auto pdsHandle = event.getValidHandle<std::vector<recob::OpHit>>(fPdsModuleLabel);
+  std::pair<std::vector<double>, std::vector<double>> opflashes = CosmicIdUtils::OpFlashes(pdsHandle);
+  std::pair<bool, bool> tpcFlash = CosmicIdUtils::BeamFlash(pdsHandle, fBeamTimeMin, fBeamTimeMax);
+  return CosmicId(track, event, opflashes, tpcFlash);
+
+}
+
+// Run cuts to decide if track looks like a cosmic
 bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1){
+
+  bool tpc0Flash = CosmicIdUtils::BeamFlash(t0Tpc0, fBeamTimeMin, fBeamTimeMax);
+  bool tpc1Flash = CosmicIdUtils::BeamFlash(t0Tpc1, fBeamTimeMin, fBeamTimeMax);
+  return CosmicId(track, event, std::make_pair(t0Tpc0, t0Tpc1), std::make_pair(tpc0Flash, tpc1Flash));
+
+}
+
+// Run cuts to decide if track looks like a cosmic
+bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::pair<std::vector<double>, std::vector<double>> opflashes, std::pair<bool,bool> tpcFlash){
 
   // Get associations between tracks and hit collections
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTpcTrackModuleLabel);
@@ -120,9 +140,7 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
 
   // Tag cosmics in other TPC to beam activity
   if(fApplyGeometryCut){
-    bool tpc0Flash = CosmicIdUtils::BeamFlash(t0Tpc0, fBeamTimeMin, fBeamTimeMax);
-    bool tpc1Flash = CosmicIdUtils::BeamFlash(t0Tpc1, fBeamTimeMin, fBeamTimeMax);
-    if(geoTag.GeometryCosmicId(track, hits, tpc0Flash, tpc1Flash)) return true;
+    if(geoTag.GeometryCosmicId(track, hits, tpcFlash.first, tpcFlash.second)) return true;
   }
 
   // Tag cosmics which cross the CPA
@@ -137,7 +155,7 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
 
   // Tag cosmics which cross the APA
   if(fApplyApaCrossCut){
-    if(acTag.ApaCrossCosmicId(track, hits, t0Tpc0, t0Tpc1)) return true;
+    if(acTag.ApaCrossCosmicId(track, hits, opflashes.first, opflashes.second)) return true;
   }
 
   // Tag cosmics which match CRT tracks
@@ -161,7 +179,26 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
 }
 
 // Run cuts to decide if PFParticle looks like a cosmic
+bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event){
+
+  auto pdsHandle = event.getValidHandle<std::vector<recob::OpHit>>(fPdsModuleLabel);
+  std::pair<std::vector<double>, std::vector<double>> opflashes = CosmicIdUtils::OpFlashes(pdsHandle);
+  std::pair<bool, bool> tpcFlash = CosmicIdUtils::BeamFlash(pdsHandle, fBeamTimeMin, fBeamTimeMax);
+  return CosmicId(pfparticle, pfParticleMap, event, opflashes, tpcFlash);
+
+}
+
+// Run cuts to decide if PFParticle looks like a cosmic
 bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1){
+
+  bool tpc0Flash = CosmicIdUtils::BeamFlash(t0Tpc0, fBeamTimeMin, fBeamTimeMax);
+  bool tpc1Flash = CosmicIdUtils::BeamFlash(t0Tpc1, fBeamTimeMin, fBeamTimeMax);
+  return CosmicId(pfparticle, pfParticleMap, event, std::make_pair(t0Tpc0, t0Tpc1), std::make_pair(tpc0Flash, tpc1Flash));
+
+}
+
+// Run cuts to decide if PFParticle looks like a cosmic
+bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::pair<std::vector<double>, std::vector<double>> opflashes, std::pair<bool, bool> tpcFlash){
 
   // Get associations between pfparticles and tracks
   art::Handle< std::vector<recob::PFParticle> > pfParticleHandle;
@@ -211,9 +248,7 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
 
   // Tag cosmics in other TPC to beam activity
   if(fApplyGeometryCut){
-    bool tpc0Flash = CosmicIdUtils::BeamFlash(t0Tpc0, fBeamTimeMin, fBeamTimeMax);
-    bool tpc1Flash = CosmicIdUtils::BeamFlash(t0Tpc1, fBeamTimeMin, fBeamTimeMax);
-    if(geoTag.GeometryCosmicId(track, hits, tpc0Flash, tpc1Flash)) return true;
+    if(geoTag.GeometryCosmicId(track, hits, tpcFlash.first, tpcFlash.second)) return true;
   }
 
   // Tag cosmics which match CRT tracks
@@ -283,10 +318,10 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
       // Check if either track crosses APA
       if(fApplyApaCrossCut){
         // Apply apa crossing cut to the longest track
-        if(acTag.ApaCrossCosmicId(track, hits, t0Tpc0, t0Tpc1)) return true;
+        if(acTag.ApaCrossCosmicId(track, hits, opflashes.first, opflashes.second)) return true;
         // Also apply to secondary track FIXME need to check primary track doesn't go out of bounds
         std::vector<art::Ptr<recob::Hit>> hits2 = findManyHits.at(track2.ID());
-        if(acTag.ApaCrossCosmicId(track2, hits2, t0Tpc0, t0Tpc1)) return true;
+        if(acTag.ApaCrossCosmicId(track2, hits2, opflashes.first, opflashes.second)) return true;
       }
 
       // Check if either track matches CRT hit
@@ -312,7 +347,7 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
 
     // Tag cosmics which cross the APA
     if(fApplyApaCrossCut){
-      if(acTag.ApaCrossCosmicId(track, hits, t0Tpc0, t0Tpc1)) return true;
+      if(acTag.ApaCrossCosmicId(track, hits, opflashes.first, opflashes.second)) return true;
     }
 
     // Tag cosmics which match CRT hits

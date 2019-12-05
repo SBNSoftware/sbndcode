@@ -472,7 +472,7 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                      FAKE PDS RECONSTRUCTION
     //----------------------------------------------------------------------------------------------------------
-
+/*
     // Create fake flashes in each tpc
     std::pair<std::vector<double>, std::vector<double>> fakeFlashes = CosmicIdUtils::FakeTpcFlashes(parts);
     std::vector<double> fakeTpc0Flashes = fakeFlashes.first;
@@ -482,7 +482,7 @@ namespace sbnd {
 
     // If there are no flashes in time with the beam then ignore the event
     if(!tpc0BeamFlash && !tpc1BeamFlash) return;
-
+*/
     //----------------------------------------------------------------------------------------------------------
     //                                     FILLING THE SELECTION TREE
     //----------------------------------------------------------------------------------------------------------
@@ -611,7 +611,8 @@ namespace sbnd {
       if(n_tracks == 0) continue;
 
       // Does pfp look like a cosmic?
-      cosmic_id = cosIdAlg.CosmicId(*pParticle, pfParticleMap, event, fakeTpc0Flashes, fakeTpc1Flashes);
+      //cosmic_id = cosIdAlg.CosmicId(*pParticle, pfParticleMap, event, fakeTpc0Flashes, fakeTpc1Flashes);
+      cosmic_id = cosIdAlg.CosmicId(*pParticle, pfParticleMap, event);
 
       // -------------------------------------- APPLY SELECTIONS ---------------------------------------
       for(auto const& sel : selections){

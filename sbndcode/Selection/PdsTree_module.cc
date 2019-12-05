@@ -10,6 +10,7 @@
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
 
 // LArSoft includes
 #include "lardataobj/RecoBase/OpHit.h"
@@ -56,9 +57,14 @@ namespace sbnd {
       using Comment = fhicl::Comment;
  
       // One Atom for each parameter
+      fhicl::Atom<art::InputTag> GenModuleLabel {
+        Name("GenModuleLabel"),
+        Comment("tag of generator data product")
+      };
+
       fhicl::Atom<art::InputTag> SimModuleLabel {
         Name("SimModuleLabel"),
-        Comment("tag of detector simulation data product")
+        Comment("tag of g4 data product")
       };
 
       fhicl::Atom<art::InputTag> PdsModuleLabel {
@@ -87,14 +93,18 @@ namespace sbnd {
     // Called once, at end of the job
     virtual void endJob() override;
 
+    std::vector<double> OpFlashes(std::vector<double> optimes);
+
     // Reset variables in each loop
     void ResetVars();
+    void ResetEventVars();
 
   private:
 
     // fcl file parameters
-    art::InputTag fSimModuleLabel;      ///< name of detsim producer
-    art::InputTag fPdsModuleLabel; ///< name of PDS track producer
+    art::InputTag fGenModuleLabel;      ///< name of generator producer
+    art::InputTag fSimModuleLabel;      ///< name of g4 producer
+    art::InputTag fPdsModuleLabel;      ///< name of PDS producer
     bool          fVerbose;             ///< print information about what's going on
 
     TPCGeoAlg fTpcGeo;
@@ -104,7 +114,7 @@ namespace sbnd {
     geo::GeometryCore const* fGeometryService;
     detinfo::DetectorProperties const* fDetectorProperties;
 
-    std::vector<std::string> opdets {"pmt", "barepmt"};
+    std::vector<std::string> opdets {"pmt", "barepmt", "xarapucaT1", "xarapucaT2", "arapucaT1", "arapucaT2"};
     
     // Tree (One entry per primary muon)
     TTree *fParticleTree;
@@ -136,6 +146,8 @@ namespace sbnd {
     double end_z_tpc;
     double e_dep_tpc0;
     double e_dep_tpc1;
+    double closest_flash_tpc0;
+    double closest_flash_tpc1;
 
     std::map<std::string, int> n_ophits_tpc0;
     std::map<std::string, int> n_ophits_tpc1;
@@ -147,7 +159,20 @@ namespace sbnd {
     std::map<std::string, double> ophit_amp_tpc1;
     std::map<std::string, double> ave_time_diff;
     std::map<std::string, double> time_std_dev;
+    std::map<std::string, double> ave_time_diff_pe;
 
+    TTree *fEventTree;
+
+    bool nu_tpc0;
+    bool nu_tpc1;
+    double beam_edep_tpc0;
+    double beam_edep_tpc1;
+    int n_beam_hits_tpc0;
+    int n_beam_hits_tpc1;
+    int n_flashes_tpc0;
+    int n_flashes_tpc1;
+    int n_fake_flashes_tpc0;
+    int n_fake_flashes_tpc1;
 
   }; // class PdsTree
 
@@ -155,6 +180,7 @@ namespace sbnd {
   // Constructor
   PdsTree::PdsTree(Parameters const& config)
     : EDAnalyzer(config)
+    , fGenModuleLabel       (config().GenModuleLabel())
     , fSimModuleLabel       (config().SimModuleLabel())
     , fPdsModuleLabel       (config().PdsModuleLabel())
     , fVerbose              (config().Verbose())
@@ -200,6 +226,8 @@ namespace sbnd {
     fParticleTree->Branch("end_z_tpc",        &end_z_tpc);
     fParticleTree->Branch("e_dep_tpc0",       &e_dep_tpc0);
     fParticleTree->Branch("e_dep_tpc1",       &e_dep_tpc1);
+    fParticleTree->Branch("closest_flash_tpc0",       &closest_flash_tpc0);
+    fParticleTree->Branch("closest_flash_tpc1",       &closest_flash_tpc1);
     for(auto const& opdet : opdets){
       fParticleTree->Branch((opdet+"_n_ophits_tpc0").c_str(),    &n_ophits_tpc0[opdet]);
       fParticleTree->Branch((opdet+"_n_ophits_tpc1").c_str(),    &n_ophits_tpc1[opdet]);
@@ -211,7 +239,21 @@ namespace sbnd {
       fParticleTree->Branch((opdet+"_ophit_amp_tpc1").c_str(),   &ophit_amp_tpc1[opdet]);
       fParticleTree->Branch((opdet+"_ave_time_diff").c_str(),    &ave_time_diff[opdet]);
       fParticleTree->Branch((opdet+"_time_std_dev").c_str(),     &time_std_dev[opdet]);
+      fParticleTree->Branch((opdet+"_ave_time_diff_pe").c_str(), &ave_time_diff_pe[opdet]);
     }
+
+    fEventTree = tfs->make<TTree>("events", "events");
+
+    fEventTree->Branch("nu_tpc0",          &nu_tpc0);
+    fEventTree->Branch("nu_tpc1",          &nu_tpc1);
+    fEventTree->Branch("beam_edep_tpc0",   &beam_edep_tpc0);
+    fEventTree->Branch("beam_edep_tpc1",   &beam_edep_tpc1);
+    fEventTree->Branch("n_beam_hits_tpc0", &n_beam_hits_tpc0);
+    fEventTree->Branch("n_beam_hits_tpc1", &n_beam_hits_tpc1);
+    fEventTree->Branch("n_flashes_tpc0",        &n_flashes_tpc0);
+    fEventTree->Branch("n_flashes_tpc1",        &n_flashes_tpc1);
+    fEventTree->Branch("n_fake_flashes_tpc0",   &n_fake_flashes_tpc0);
+    fEventTree->Branch("n_fake_flashes_tpc1",   &n_fake_flashes_tpc1);
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- PDS Ana Module -------------------"<<std::endl;
@@ -238,6 +280,10 @@ namespace sbnd {
     // Retrieve all the truth info in the events
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
+    art::Handle<std::vector<simb::MCTruth>> genHandle;
+    std::vector<art::Ptr<simb::MCTruth>> mctruthList;
+    if(event.getByLabel(fGenModuleLabel, genHandle)) art::fill_ptr_vector(mctruthList, genHandle);
+
     // Get PDS handle
     auto pdsHandle = event.getValidHandle<std::vector<recob::OpHit>>(fPdsModuleLabel);
 
@@ -245,9 +291,41 @@ namespace sbnd {
     //                                        MUON PDS RECO ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
+    ResetEventVars();
+
+    // Optical flash reconstruction for numuCC
+    std::vector<double> optimes_tpc0;
+    std::vector<double> optimes_tpc1;
+    for(auto const& ophit : (*pdsHandle)){
+      // Only look at PMTs
+      std::string od = fChannelMap.pdName(ophit.OpChannel());
+      if( od != "pmt" ) continue;
+      // Work out what TPC detector is in odd = TPC1, even = TPC0
+      if(ophit.OpChannel() % 2 == 0){ 
+        optimes_tpc1.push_back(ophit.PeakTime());
+        // Beam activity
+        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 6.6) n_beam_hits_tpc1++;
+      }
+      else{ 
+        optimes_tpc0.push_back(ophit.PeakTime());
+        // Beam activity
+        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 6.6) n_beam_hits_tpc0++;
+      }
+    }
+
+    std::vector<double> opflashes_tpc0 = OpFlashes(optimes_tpc0);
+    n_flashes_tpc0 = opflashes_tpc0.size();
+
+    std::vector<double> opflashes_tpc1 = OpFlashes(optimes_tpc1);
+    n_flashes_tpc1 = opflashes_tpc1.size();
 
     std::map<int, simb::MCParticle> particles;
+    std::vector<simb::MCParticle> parts;
     for (auto const& particle: (*particleHandle)){
+      double ptime = particle.T()/1e3;
+      // PDS only simulated in this window
+      if(ptime < -1250 || ptime > 2500) continue;
+      parts.push_back(particle);
       // Only interested in muons
       if(!(std::abs(particle.PdgCode()) == 13)) continue;
       // Only want primary particles
@@ -256,12 +334,13 @@ namespace sbnd {
       if(particle.StatusCode() != 1) continue;
       // Only want particles that are inside the TPC
       if(!fTpcGeo.InVolume(particle)) continue;
-      double ptime = particle.T()/1e3;
-      // PDS only simulated in this window
-      if(ptime < -1250 || ptime > 2500) continue;
       int id = particle.TrackId();
       particles[id] = particle;
     }
+
+    std::pair<std::vector<double>, std::vector<double>> fake_flashes = CosmicIdUtils::FakeTpcFlashes(parts);
+    n_fake_flashes_tpc0 = fake_flashes.first.size();
+    n_fake_flashes_tpc1 = fake_flashes.second.size();
 
     // Put them in a map for easier access
     for (auto const& part: particles){
@@ -311,21 +390,40 @@ namespace sbnd {
       for(size_t i = 0; i < particle.NumberTrajectoryPoints() - 1; i++){
         geo::Point_t pos {particle.Vx(i), particle.Vy(i), particle.Vz(i)};
         if(fTpcGeo.InFiducial(pos, 0)){ 
-          if(pos.X() <= 0) e_dep_tpc0 += particle.E(i) - particle.E(i+1);
-          else e_dep_tpc1 += particle.E(i) - particle.E(i+1);
+          if(pos.X() <= 0){ 
+            e_dep_tpc0 += particle.E(i) - particle.E(i+1);
+            if(time >=0 && time <= 1600) beam_edep_tpc0 += particle.E(i) - particle.E(i+1);
+          }
+          else{ 
+            e_dep_tpc1 += particle.E(i) - particle.E(i+1);
+            if(time >=0 && time <= 1600) beam_edep_tpc1 += particle.E(i) - particle.E(i+1);
+          }
         }
       }
 
+      // Find the closest optical flash to the true time
+      for(auto const& flash : opflashes_tpc0){
+        if(std::abs(flash - (time/1e3)) < std::abs(closest_flash_tpc0))
+          closest_flash_tpc0 = flash - (time/1e3);
+      }
+      for(auto const& flash : opflashes_tpc1){
+        if(std::abs(flash - (time/1e3)) < std::abs(closest_flash_tpc1))
+          closest_flash_tpc1 = flash - (time/1e3);
+      }
+
       std::map<std::string, int> nhits;
+      std::map<std::string, double> npe;
       std::map<std::string, std::vector<double>> optimes;
       for(auto const& ophit : (*pdsHandle)){
         // Only look at PMTs
         std::string od = fChannelMap.pdName(ophit.OpChannel());
-        if(fChannelMap.pdName(ophit.OpChannel()) != "pmt" && fChannelMap.pdName(ophit.OpChannel()) != "barepmt") continue;
+        if( std::find(opdets.begin(), opdets.end(), od) == opdets.end()) continue;
         if(ophit.PeakTime() < (time/1e3 - 10) || ophit.PeakTime() > (time/1e3 + 10)) continue;
         ave_time_diff[od] += ophit.PeakTime() - time/1e3;
+        ave_time_diff_pe[od] += (ophit.PeakTime() - time/1e3)*ophit.PE();
         optimes[od].push_back(ophit.PeakTime());
         nhits[od]++;
+        npe[od] += ophit.PE();
         // Only look at hits within 1 us of the true time, PeakTime() in [us]
         if(ophit.PeakTime() < (time/1e3) || ophit.PeakTime() > (time/1e3 + 5)) continue;
         // Work out what TPC detector is in odd = TPC1, even = TPC0
@@ -345,16 +443,38 @@ namespace sbnd {
       for(auto const& kv : nhits){
         // The mean time difference
         ave_time_diff[kv.first] /= nhits[kv.first];
+        ave_time_diff_pe[kv.first] /= npe[kv.first];
         double time_mean = std::accumulate(optimes[kv.first].begin(), optimes[kv.first].end(), 0.)/optimes[kv.first].size();
         double std_dev = 0.;
         for(auto const& t : optimes[kv.first]){
           std_dev += std::pow(t - time_mean, 2.);
         }
-        time_std_dev[kv.first] = std_dev/(optimes.size()-1);
+        time_std_dev[kv.first] = std_dev/(optimes[kv.first].size()-1);
       }
 
       fParticleTree->Fill();
     }
+
+    // Determine if there are neutrinos in the AV
+    for (size_t i = 0; i < mctruthList.size(); i++){
+
+      // Get the pointer to the MCTruth object
+      art::Ptr<simb::MCTruth> truth = mctruthList.at(i);
+
+      if(truth->Origin() != simb::kBeamNeutrino) continue;
+
+      // Get truth info if numuCC in AV
+      geo::Point_t vtx {truth->GetNeutrino().Nu().Vx(), 
+                        truth->GetNeutrino().Nu().Vy(), 
+                        truth->GetNeutrino().Nu().Vz()};
+      if(!fTpcGeo.InFiducial(vtx, 0.)) continue;
+
+      if(vtx.X() < 0) nu_tpc0 = true;
+      if(vtx.X() > 0) nu_tpc1 = true;
+
+    }
+
+    fEventTree->Fill();
 
   } // PdsTree::analyze()
 
@@ -385,6 +505,8 @@ namespace sbnd {
     phi = -99999;
     e_dep_tpc0 = 0;
     e_dep_tpc1 = 0;
+    closest_flash_tpc0 = -99999;
+    closest_flash_tpc1 = -99999;
     for(auto const& opdet : opdets){
       n_ophits_tpc0[opdet] = 0;
       n_ophits_tpc1[opdet] = 0;
@@ -396,8 +518,46 @@ namespace sbnd {
       ophit_amp_tpc1[opdet] = 0;
       ave_time_diff[opdet] = 0;
       time_std_dev[opdet] = 0;
+      ave_time_diff_pe[opdet] = 0;
     }
     
+  }
+
+  void PdsTree::ResetEventVars(){
+    nu_tpc0 = false;
+    nu_tpc1 = false;
+    beam_edep_tpc0 = 0;
+    beam_edep_tpc1 = 0;
+    n_beam_hits_tpc0 = 0;
+    n_beam_hits_tpc1 = 0;
+    n_flashes_tpc0 = 0;
+    n_flashes_tpc1 = 0;
+    n_fake_flashes_tpc0 = 0;
+    n_fake_flashes_tpc1 = 0;
+  }
+
+  std::vector<double> PdsTree::OpFlashes(std::vector<double> optimes){
+    std::vector<double> opflashes;
+
+    // Sort PMT times by time
+    std::sort(optimes.begin(), optimes.end());
+
+    for(size_t i = 0; i < optimes.size(); i++){
+      // Flash reconstruction
+      double start_time = optimes[i];
+      size_t nhits = 0;
+      std::vector<double> times {start_time};
+      while( (i+nhits)<(optimes.size()-1) && (optimes[i+nhits]-start_time) < 6){
+        nhits++;
+        times.push_back(optimes[i+nhits]);
+      }
+      if(nhits > 100){
+        opflashes.push_back((std::accumulate(times.begin(), times.end(), 0.)/times.size())-2.5);
+        i = i + nhits;
+      }
+    }
+
+    return opflashes;
   }
 
   DEFINE_ART_MODULE(PdsTree)

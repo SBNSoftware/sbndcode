@@ -9,6 +9,7 @@ standard_cosmicidalg:
     CrtHitModuleLabel:   "crthit"
     CrtTrackModuleLabel: "crttrack"
     CaloModuleLabel:     "pandoraCalo"
+    PdsModuleLabel:      "ophit"
 
     ApplyFiducialCut:  true
     ApplyStoppingCut:  true

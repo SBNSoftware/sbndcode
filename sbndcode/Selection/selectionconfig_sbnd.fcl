@@ -30,6 +30,7 @@ sbnd_pdstree:
   module_type:     "sbndcode/Selection/PdsTree"
 
   # The input parameters
+  GenModuleLabel:      "generator"        # Generator producer module label
   SimModuleLabel:      "largeant"     # Simulation producer module label
   PdsModuleLabel:      "ophit"        # Simulation producer module label
   Verbose:             false          # Print extra information about what's going on

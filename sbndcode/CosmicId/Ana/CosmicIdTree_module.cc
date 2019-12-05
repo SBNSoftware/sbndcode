@@ -19,6 +19,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/OpHit.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "larsim/MCCheater/BackTrackerService.h"
@@ -103,6 +104,11 @@ namespace sbnd {
         Comment("tag of pandora data product")
       };
 
+      fhicl::Atom<art::InputTag> PdsModuleLabel {
+        Name("PdsModuleLabel"),
+        Comment("tag of tpc PDS data product")
+      };
+
       fhicl::Atom<bool> Verbose {
         Name("Verbose"),
         Comment("Print information about what's going on")
@@ -155,6 +161,7 @@ namespace sbnd {
     art::InputTag fTPCTrackLabel; ///< name of CRT producer
     art::InputTag fCaloModuleLabel; ///< name of CRT producer
     art::InputTag fPandoraLabel;
+    art::InputTag fPdsModuleLabel; ///< name of CRT producer
     bool          fVerbose;             ///< print information about what's going on
     double fBeamTimeMin;
     double fBeamTimeMax;
@@ -240,6 +247,7 @@ namespace sbnd {
     , fTPCTrackLabel       (config().TPCTrackLabel())
     , fCaloModuleLabel     (config().CaloModuleLabel())
     , fPandoraLabel        (config().PandoraLabel())
+    , fPdsModuleLabel      (config().PdsModuleLabel())
     , fVerbose             (config().Verbose())
     , fBeamTimeMin         (config().BeamTimeLimits().BeamTimeMin())
     , fBeamTimeMax         (config().BeamTimeLimits().BeamTimeMax())
@@ -402,6 +410,9 @@ namespace sbnd {
     // Get PFParticle to track associations
     art::FindManyP< recob::Track > pfPartToTrackAssoc(pfParticleHandle, event, fTPCTrackLabel);
 
+    // Get handle to PDS reconstruction
+    auto pdsHandle = event.getValidHandle<std::vector<recob::OpHit>>(fPdsModuleLabel);
+
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
@@ -469,7 +480,7 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                      FAKE PDS RECONSTRUCTION
     //----------------------------------------------------------------------------------------------------------
-
+/*
     // Create fake flashes in each tpc
     std::pair<std::vector<double>, std::vector<double>> fakeFlashes = CosmicIdUtils::FakeTpcFlashes(parts);
     std::vector<double> fakeTpc0Flashes = fakeFlashes.first;
@@ -479,6 +490,22 @@ namespace sbnd {
 
     // If there are no flashes in time with the beam then ignore the event
     if(!tpc0BeamFlash && !tpc1BeamFlash) return;
+*/
+    //----------------------------------------------------------------------------------------------------------
+    //                                      REAL PDS RECONSTRUCTION
+    //----------------------------------------------------------------------------------------------------------
+
+    // Create fake flashes in each tpc
+    std::pair<std::vector<double>, std::vector<double>> opflashes = CosmicIdUtils::OpFlashes(pdsHandle);
+    std::vector<double> fakeTpc0Flashes = opflashes.first;
+    std::vector<double> fakeTpc1Flashes = opflashes.second;
+    std::pair<bool, bool> tpcFlash = CosmicIdUtils::BeamFlash(pdsHandle, fBeamTimeMin, fBeamTimeMax);
+    bool tpc0BeamFlash = tpcFlash.first;
+    bool tpc1BeamFlash = tpcFlash.second;
+
+    // If there are no flashes in time with the beam then ignore the event
+    if(!tpc0BeamFlash && !tpc1BeamFlash) return;
+
 
     //----------------------------------------------------------------------------------------------------------
     //                                FILLING THE PFPARTICLE TREE

@@ -33,6 +33,7 @@
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "lardataobj/RecoBase/OpHit.h"
 
 // c++
 #include <vector>
@@ -87,6 +88,11 @@ namespace sbnd{
       fhicl::Atom<art::InputTag> PandoraLabel {
         Name("PandoraLabel"),
         Comment("tag of pandora data product")
+      };
+
+      fhicl::Atom<art::InputTag> PdsModuleLabel {
+        Name("PdsModuleLabel"),
+        Comment("tag of PDS data product")
       };
 
       fhicl::Atom<bool> ApplyFiducialCut {
@@ -202,10 +208,14 @@ namespace sbnd{
     void ResetCuts();
 
     // Run cuts to decide if track looks like a cosmic
+    bool CosmicId(recob::Track track, const art::Event& event, std::pair<std::vector<double>, std::vector<double>> opflashes, std::pair<bool, bool> tpcFlash);
     bool CosmicId(recob::Track track, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
+    bool CosmicId(recob::Track track, const art::Event& event);
 
     // Run cuts to decide if PFParticle looks like a cosmic
+    bool CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::pair<std::vector<double>, std::vector<double>> opflashes, std::pair<bool, bool> tpcFlash);
     bool CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
+    bool CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event);
 
     // Getters for the underlying algorithms
     StoppingParticleCosmicIdAlg StoppingAlg() const {return spTag;}
@@ -223,6 +233,7 @@ namespace sbnd{
     art::InputTag fCrtHitModuleLabel;
     art::InputTag fCrtTrackModuleLabel;
     art::InputTag fCaloModuleLabel;
+    art::InputTag fPdsModuleLabel;
 
     bool fApplyFiducialCut;
     bool fApplyStoppingCut;
