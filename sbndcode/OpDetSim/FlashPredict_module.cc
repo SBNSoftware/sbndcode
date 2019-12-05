@@ -341,6 +341,13 @@ void FlashPredict::produce(art::Event & e)
     ophittime->Fill(oph.PeakTime(),100*oph.PE());
 
   }
+
+  if (ophittime->GetEntries()<=0) {
+    e.put(std::move(T0_v));
+    e.put(std::move(pfp_t0_assn_v));
+    return;
+  }    
+
   auto ibin =  ophittime->GetMaximumBin();
   float flashtime = (ibin*0.002)+fBeamWindowStart;  // in us
   float lowedge = flashtime+fLightWindowStart;
