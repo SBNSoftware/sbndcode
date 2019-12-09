@@ -380,7 +380,36 @@ void FlashPredict::produce(art::Event & e)
       auto key = pfp_ptr_v.at(i).key();
       recob::PFParticle pfp = *pfp_ptr_v.at(i);
       pfp_v.push_back(pfp);
-
+      /*      
+      if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
+	// grab tracks associated with pfp particle
+	auto const& track_ptr_v = pfp_track_assn_v.at(key);
+	for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
+	  auto mytrack = track_ptr_v[tr];
+	  auto const& trackkey = mytrack.key();
+	  // grab calo objects associated with tracks
+	  const std::vector< art::Ptr<anab::Calorimetry> > calo_ptr_v = track_calo_assn_v.at( trackkey );
+	  for (size_t ca=0;  ca <  calo_ptr_v.size(); ca++) {
+	    auto mycalo = calo_ptr_v.at( ca );
+	    int npts = mycalo->dEdx().size();
+	    for (int ip=0;ip<npts;++ip) {
+	      Point_t pxyz=mycalo->fXYZ[ip];
+	      float ds = mycalo->fTrkPitch[ip];
+	      float dQdx = mycalo->fdQdx[ip];
+	      float dEdx = mycalo->fdEdx[ip];
+	      float alpha = dQdx/dEdx;
+	      float charge = (1-alpha)*dEdx*ds;
+	      // hardcode for now for SBND	      
+	      float xpos = 0.0;
+	      if (pxyz[0]<0) xpos = fabs(pxyz[0]+200.0);
+	      else xpos = fabs(200.0-pxyz[0]);
+	      lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge);
+	    }
+	  }
+	}
+      }
+      else { // this is a shower
+      */
 	auto const& spacepoint_ptr_v = pfp_spacepoint_assn_v.at(key);
 	std::vector< art::Ptr<recob::Hit> > hit_ptr_v;
 	for (size_t sp=0; sp < spacepoint_ptr_v.size(); sp++) {
@@ -400,36 +429,10 @@ void FlashPredict::produce(art::Event & e)
 	    geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);	  
 	    // xpos is the distance from the wire planes.
 	    float xpos = fabs(position[0]-Wxyz[0]); 
-	    /*
-	      float mult = 3./7.;
-	      if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
-	      // ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));      
-	      // grab tracks associated with pfp particle
-	      auto const& track_ptr_v = pfp_track_assn_v.at(key);
-	      for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
-	      auto mytrack = track_ptr_v[tr];
-	      auto const& trackkey = mytrack.key();
-	      // grab calo objects associated with tracks
-	      const std::vector< art::Ptr<anab::Calorimetry> > calo_ptr_v = track_calo_assn_v.at( trackkey );
-	      for (size_t ca=0;  ca <  calo_ptr_v.size(); ca++) {
-		auto mycalo = calo_ptr_v.at( ca );
-		int npts = mycalo->dEdx().size();
-		for (int ip=0;ip<npts;++ip) {
-		  Point_t pxyz=mycalo->fXYZ[ip];
-		  float ds = mycalo->fTrkPitch[ip];
-		  float dQ = mycalo->fdQdx[ip];
-		  float dE = mycalo->fdQdx[ip];
-		  float alpha = dQ/dE;
-		  float pe_exp = (1.0-alpha)/alpha;
-		  mult=pe_exp;
-		}
-	      }
-	    }
-	  }
-	  */	    
-	  lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
+	    lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
 	  } // for all hits associated to this spacepoint
 	} // for all spacepoints
+	//      }  // if track or shower
     } // for all pfp pointers
     
     int icountPE=0;
@@ -509,7 +512,7 @@ void FlashPredict::produce(art::Event & e)
 	  sum_By=_flash_y;        sum_Bz=_flash_z;
 	  _flash_r=sqrt((sum_Ay-2.0*sum_By*sum_Cy+sum_By*sum_By*sum_D+sum_Az-2.0*sum_Bz*sum_Cz+sum_Bz*sum_Bz*sum_D)/sum_D);
 	  _flash_unpe=unpe_tot;
-	  icountPE  +=1000.0*(int)_flash_pe;)
+	  icountPE  +=(int)(1000.0*_flash_pe);
 	}
 	else { _flash_pe=0; _flash_y=0; _flash_z=0; _flash_unpe=0;}
 	
