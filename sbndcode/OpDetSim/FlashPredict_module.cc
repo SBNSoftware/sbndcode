@@ -390,25 +390,23 @@ void FlashPredict::produce(art::Event & e)
 	  for (size_t h=0; h < this_hit_ptr_v.size(); h++) {
 	    auto hit = this_hit_ptr_v.at( h );
 	    // Only use hits from the collection plane
-	    //	  if ((hit->WireID()).Plane != 2)
-	  //	    continue;
-	  geo::WireID wid = hit->WireID();
-	  if (geometry->SignalType(wid) != geo::kCollection) continue;
-	  // Add the charged point to the vector
-	  const auto &position(SP->XYZ());
-	  const auto charge(hit->Integral());
-	  const auto tpcindex = wid.TPC;
-	  double Wxyz[3];
-	  geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);	  
-	  // xpos is the distance from the wire planes.
-	  float xpos = fabs(position[0]-Wxyz[0]); 
-	  /*
-	  float mult = 3./7.;
-	  if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
-	    // ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));      
-	    // grab tracks associated with pfp particle
-	    auto const& track_ptr_v = pfp_track_assn_v.at(key);
-	    for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
+	    geo::WireID wid = hit->WireID();
+	    if (geometry->SignalType(wid) != geo::kCollection) continue;
+	    // Add the charged point to the vector
+	    const auto &position(SP->XYZ());
+	    const auto charge(hit->Integral());
+	    const auto tpcindex = wid.TPC;
+	    double Wxyz[3];
+	    geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);	  
+	    // xpos is the distance from the wire planes.
+	    float xpos = fabs(position[0]-Wxyz[0]); 
+	    /*
+	      float mult = 3./7.;
+	      if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
+	      // ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));      
+	      // grab tracks associated with pfp particle
+	      auto const& track_ptr_v = pfp_track_assn_v.at(key);
+	      for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
 	      auto mytrack = track_ptr_v[tr];
 	      auto const& trackkey = mytrack.key();
 	      // grab calo objects associated with tracks
@@ -511,7 +509,7 @@ void FlashPredict::produce(art::Event & e)
 	  sum_By=_flash_y;        sum_Bz=_flash_z;
 	  _flash_r=sqrt((sum_Ay-2.0*sum_By*sum_Cy+sum_By*sum_By*sum_D+sum_Az-2.0*sum_Bz*sum_Cz+sum_Bz*sum_Bz*sum_D)/sum_D);
 	  _flash_unpe=unpe_tot;
-	  icountPE  +=(int)_flash_pe;
+	  icountPE  +=1000.0*(int)_flash_pe;)
 	}
 	else { _flash_pe=0; _flash_y=0; _flash_z=0; _flash_unpe=0;}
 	
