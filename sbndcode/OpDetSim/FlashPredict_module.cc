@@ -101,7 +101,7 @@ private:
   void AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,
                     const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h,
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
-  bool SelectPMTPlane(float pmt_x, int icryo,int itpc, std::string detector);
+  bool isPDInCryoTPC(float pd_x, int icryo,int itpc, std::string detector);
 
   // root stuff
   TTree* _flashmatch_acpt_tree;
@@ -469,8 +469,8 @@ void FlashPredict::produce(art::Event & e)
           if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
           if (fDetector == "ICARUS") op_type = "pmt";
 	  geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-	  // check cryostat and tpc 
-	  if (!SelectPMTPlane(PMTxyz[0],fCryostat,it,fDetector)) continue;
+          // check cryostat and tpc
+          if (!isPDInCryoTPC(PMTxyz[0], fCryostat, it, fDetector)) continue;
 	  // only use optical hits around the flash time
 	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) ) continue;
 	  // only use PMTs for SBND
@@ -666,27 +666,36 @@ void FlashPredict::AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,  con
   return;
 } // void FlashPredict::AddDaughters
 
-// TODO: rename and refactor this function to make it more clear what it does
 // TODO: no hardcoding
-bool FlashPredict::SelectPMTPlane(float pmt_x, int icryo, int itpc, std::string detector)
+// TODO: collapse with the next
+bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string detector)
 {
-  bool keepme=false;
   // check whether this optical detector views the light inside this tpc.
+  std::ostringstream lostPDMessage;
+  lostPDMessage << "\nThere's an " << detector << "photo detector that belongs nowhere. \n"
+                 << "icryo: " << icryo << "\n"
+                 << "itpc: "  << itpc << "\n"
+                 << "pd_x: " << pd_x << std::endl;
+
   if (detector == "ICARUS") {
-    if (icryo==0) {
-      if (itpc==0 && pmt_x <-300 ) keepme=true;
-      else if (itpc==1 && pmt_x>-100) keepme=true;
+    if (icryo == 0) {
+      if (itpc == 0 && -400 < pd_x && pd_x < -300 ) return true;
+      else if (itpc == 1 && -100 < pd_x && pd_x < 0) return true;
+      // else {std::cout << lostPDMessage.str(); return false;}
     }
-    else {
-      if (itpc==0 && pmt_x <100 ) keepme=true;
-      else if (itpc==1 && pmt_x>300) keepme=true;
-    }    
+    else if (icryo == 1) {
+      if (itpc == 0 && 0 < pd_x && pd_x < 100) return true;
+      else if (itpc == 1 && 300 < pd_x && pd_x < 400) return true;
+      // else {std::cout << lostPDMessage.str(); return false;}
+    }
   }
   else if (detector == "SBND") {
-    if ((itpc==0 && pmt_x<0) || (itpc==1 && pmt_x>0) ) keepme=true;    
+    if ((itpc == 0 && pd_x < 0) || (itpc == 1 && pd_x > 0) ) return true;
+    else {std::cout << lostPDMessage.str(); return false;}
   }
+  return false;
+}
 
-  return keepme;
 
 }
 
