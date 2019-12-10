@@ -52,8 +52,6 @@
 #include "opDetSBNDTriggerAlg.h"
 #include "opDetDigitizerWorker.h"
 
-#include <chrono>
-
 namespace opdet{
 
  /*
@@ -184,6 +182,7 @@ namespace opdet{
     if (fNThreads == 0) { // autodetect failed
       fNThreads = 1;
     }
+    std::cout << "Digitizing on n threads: " << fNThreads << std::endl;
 
     wConfig.nThreads = fNThreads;
 
@@ -240,7 +239,6 @@ namespace opdet{
     // setup the waveforms
     fWaveforms = std::vector<raw::OpDetWaveform> (nChannels);
 
-    auto t1 = std::chrono::high_resolution_clock::now();
     if (fUseLitePhotons==1){//using SimPhotonsLite
      fPhotonLiteHandles.clear();
      //Get *ALL* SimPhotonsCollectionLite from Event
@@ -260,13 +258,7 @@ namespace opdet{
     opdet::StartopDetDigitizerWorkers(fNThreads, fSemStart);
     opdet::WaitopDetDigitizerWorkers(fNThreads, fSemFinish);
 
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::cout << "MakeWaveforms() took "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count()
-              << " milliseconds\n";
-    
     if (fApplyTriggers) {
-      t1 = std::chrono::high_resolution_clock::now();
       // find the trigger locations for the waveforms
       for (const raw::OpDetWaveform &waveform: fWaveforms) {
         raw::Channel_t ch = waveform.ChannelNumber();
@@ -281,12 +273,6 @@ namespace opdet{
 
       // combine the triggers
       fTriggerAlg.MergeTriggerLocations();
-      t2 = std::chrono::high_resolution_clock::now();
-      std::cout << "Find/MergeTriggerLocations() took "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count()
-              << " milliseconds\n";
-
-      t1 = std::chrono::high_resolution_clock::now();
       // Start the workers!
       // Apply the trigger locations
       opdet::StartopDetDigitizerWorkers(fNThreads, fSemStart);
@@ -297,7 +283,6 @@ namespace opdet{
         pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
         std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
       }
-      std::cout << "N waveforms: " << pulseVecPtr->size() << std::endl;
       // clean up the vector
       for (unsigned i = 0; i < fTriggeredWaveforms.size(); i++) {
         fTriggeredWaveforms[i] = std::vector<raw::OpDetWaveform>();
@@ -308,10 +293,6 @@ namespace opdet{
       // clear out the triggers
       fTriggerAlg.ClearTriggerLocations();
 
-    t2 = std::chrono::high_resolution_clock::now();
-    std::cout << "ApplyTriggerLocations() took "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count()
-              << " milliseconds\n";
     }
     else {
       // put the full waveforms in the event

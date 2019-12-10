@@ -18,40 +18,31 @@ void opdet::opDetDigitizerWorkerThread(const opdet::opDetDigitizerWorker &worker
     bool ApplyTriggerLocations,
     bool *finished) {
   
-  std::cout << "Started!\n";
   bool do_apply_trigger_locations = false;
   while (1) {
     sem_start.decrement();
-    std::cout << "Awake!\n";
-    std::cout << "Is finished: " << *finished << std::endl;
 
     if (*finished) break;
 
     if (do_apply_trigger_locations) {
-      std::cout << "Applying triggers!\n";
       worker.ApplyTriggerLocations();
       do_apply_trigger_locations = false;
     }
     else {
-      std::cout << "Digitizing!\n";
       worker.Start();
       do_apply_trigger_locations = ApplyTriggerLocations;
     }
 
-    std::cout << "Done working!\n";
     sem_finish.increment();
   }
-  std::cout << "Exiting!\n";
   
 }
 
 void opdet::StartopDetDigitizerWorkers(unsigned n_workers, opdet::opDetDigitizerWorker::Semaphore &sem_start) {
-  std::cout << "Starting: " << n_workers << std::endl;
   sem_start.increment(n_workers);
 }
 
 void opdet::WaitopDetDigitizerWorkers(unsigned n_workers, opdet::opDetDigitizerWorker::Semaphore &sem_finish) {
-  std::cout << "Waiting: " << n_workers << std::endl;
   sem_finish.decrement(n_workers);
 }
 
@@ -93,6 +84,7 @@ void opdet::opDetDigitizerWorker::Start() const {
     fEngine
   );
   MakeWaveforms(pmtDigitizer.get(), arapucaDigitizer.get());
+
 }
 
 opdet::opDetDigitizerWorker::~opDetDigitizerWorker() {
@@ -117,7 +109,6 @@ void opdet::opDetDigitizerWorker::ApplyTriggerLocations() const {
     
     std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*fTriggeredWaveforms));
   }
-  std::cout << "N waveforms: " << fTriggeredWaveforms->size() << std::endl;
 }
 
 void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const {
@@ -130,7 +121,6 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
 
     unsigned start = StartChannelToProcess(fConfig.map.size());
     unsigned n = NChannelsToProcess(fConfig.map.size());
-    std::cout << "Working channels: " << start << " to: " << (start+n) << std::endl;
     for (const art::Handle<std::vector<sim::SimPhotonsLite>> &opdetHandle: photon_handles) {
       //this now tells you if light collection is reflected
       bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
