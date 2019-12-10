@@ -297,7 +297,10 @@ void FlashPredict::produce(art::Event & e)
 
   const art::ServiceHandle<geo::Geometry> geometry;
   uint nTPCs(geometry->NTPC());
-  if (nTPCs>2) nTPCs=2;
+  if (nTPCs>2) {
+    std::cout << "nTPC can't be larger than 2, resizing." << std::endl;
+    nTPCs = 2;
+  }
   geo::CryostatGeo geo_cryo = geometry->Cryostat(0);
   if (fDetector == "ICARUS" && fCryostat==1) geo_cryo = geometry->Cryostat(1);
 
@@ -413,6 +416,10 @@ void FlashPredict::produce(art::Event & e)
       */
 	auto const& spacepoint_ptr_v = pfp_spacepoint_assn_v.at(key);
 	std::vector< art::Ptr<recob::Hit> > hit_ptr_v;
+        // TODO: refactor this loop over spacepoints so that it's not
+        // necessary to query the wire position every time.
+        // There's just two different X wire positions on any given
+        // cryostat for the collection wires.
 	for (size_t sp=0; sp < spacepoint_ptr_v.size(); sp++) {
 	  auto SP = spacepoint_ptr_v[sp];
 	  auto const& spkey = SP.key();
@@ -441,23 +448,23 @@ void FlashPredict::produce(art::Event & e)
     int icountPE=0;
     float mscore[2] ={0}; 
     float charge[2]={0};
-    for (size_t it=0;it<nTPCs;++it) {
+    for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       double xave=0.0; double yave=0.0; double zave=0.0; double norm=0.0;
-      _nuvtx_q=0;
-      for (size_t i=0;i<lightCluster[it].size();++i) {
-	flashana::QCluster_t this_cl = lightCluster[it];
-	flashana::QPoint_t qp = this_cl[i];
-	xave+=0.001*qp.q*qp.x;
-	yave+=0.001*qp.q*qp.y;
-	zave+=0.001*qp.q*qp.z;
-	norm+=0.001*qp.q;
-	_nuvtx_q+=qp.q;
+      _nuvtx_q = 0;
+      for (size_t i=0; i<lightCluster[itpc].size(); ++i) {
+        flashana::QCluster_t this_cl = lightCluster[itpc];
+        flashana::QPoint_t qp = this_cl[i];
+        xave += 0.001*qp.q*qp.x;
+        yave += 0.001*qp.q*qp.y;
+        zave += 0.001*qp.q*qp.z;
+        norm += 0.001*qp.q;
+        _nuvtx_q += qp.q;
       }
       if (norm>0) {
 	_nuvtx_x=xave/norm;
 	_nuvtx_y=yave/norm;
 	_nuvtx_z=zave/norm;
-	charge[it]=_nuvtx_q;
+        charge[itpc] = _nuvtx_q;
 	// store PMT photon counts in the tree as well
 	double PMTxyz[3];
 	double unpe_tot=0;
@@ -466,6 +473,8 @@ void FlashPredict::produce(art::Event & e)
 	double sum_By=0; double sum_Bz=0;
 	double sum_D=0;  double sum=0;
 	double sum_Cy=0;double sum_Cz=0;
+        // TODO: change this next loop, such that it only loops
+        // through channels in the current fCryostat
 	for(size_t j = 0; j < OpHitCollection.size(); j++){
 	  recob::OpHit oph = OpHitCollection[j];
           std::string op_type;
@@ -473,7 +482,7 @@ void FlashPredict::produce(art::Event & e)
           if (fDetector == "ICARUS") op_type = "pmt";
 	  geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
           // check cryostat and tpc
-          if (!isPDInCryoTPC(PMTxyz[0], fCryostat, it, fDetector)) continue;
+          if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
 	  // only use optical hits around the flash time
 	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) ) continue;
 	  // only use PMTs for SBND
@@ -541,7 +550,7 @@ void FlashPredict::produce(art::Event & e)
 	  icount++;
 	}
 	//	_score/=icount;
-	mscore[it]=_score;
+        mscore[itpc] = _score;
 	// fill tree
 	if (fMakeTree) _flashmatch_nuslice_tree->Fill();
 	
@@ -549,10 +558,10 @@ void FlashPredict::produce(art::Event & e)
     }  // end loop over TPCs
     
     double this_score=0.0; int icount=0; double totc=0;
-    for (size_t it=0;it<nTPCs;++it) {
-      this_score+=mscore[it];
-      totc+=charge[it];
-      if (mscore[it]>0) icount++;
+    for (size_t itpc=0; itpc<nTPCs; ++itpc) {
+      this_score += mscore[itpc];
+      totc += charge[itpc];
+      if (mscore[itpc] > 0) icount++;
     }
     if (icount>0) this_score/=(icount*1.0);
 
