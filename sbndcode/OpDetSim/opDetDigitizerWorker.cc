@@ -103,6 +103,8 @@ void opdet::opDetDigitizerWorker::ApplyTriggerLocations() const {
   unsigned start = StartChannelToProcess(fConfig.map.size());
   unsigned n = NChannelsToProcess(fConfig.map.size());
 
+  fTriggeredWaveforms->clear();
+
   // apply the triggers and save the output
   for (const raw::OpDetWaveform &waveform: *fWaveforms) {
     if (waveform.ChannelNumber() == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
@@ -111,8 +113,11 @@ void opdet::opDetDigitizerWorker::ApplyTriggerLocations() const {
     // only work on the perscribed channels
     if (waveform.ChannelNumber() < start || waveform.ChannelNumber() >= start + n) continue;
 
-    *fTriggeredWaveforms = fTriggerAlg.ApplyTriggerLocations(waveform);
+    std::vector<raw::OpDetWaveform> waveforms = fTriggerAlg.ApplyTriggerLocations(waveform);
+    
+    std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*fTriggeredWaveforms));
   }
+  std::cout << "N waveforms: " << fTriggeredWaveforms->size() << std::endl;
 }
 
 void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const {

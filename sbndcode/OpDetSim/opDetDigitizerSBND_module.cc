@@ -297,6 +297,7 @@ namespace opdet{
         pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
         std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
       }
+      std::cout << "N waveforms: " << pulseVecPtr->size() << std::endl;
       // clean up the vector
       for (unsigned i = 0; i < fTriggeredWaveforms.size(); i++) {
         fTriggeredWaveforms[i] = std::vector<raw::OpDetWaveform>();
