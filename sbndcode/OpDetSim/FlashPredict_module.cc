@@ -102,6 +102,7 @@ private:
                     const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h,
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
   bool isPDInCryoTPC(float pd_x, int icryo,int itpc, std::string detector);
+  bool isChargeInCryoTPC(float qp_x, int icryo,int itpc, std::string detector);
 
   // root stuff
   TTree* _flashmatch_acpt_tree;
@@ -423,12 +424,14 @@ void FlashPredict::produce(art::Event & e)
 	    if (geometry->SignalType(wid) != geo::kCollection) continue;
 	    // Add the charged point to the vector
 	    const auto &position(SP->XYZ());
+            const auto tpcindex = wid.TPC;
+            // throw the charge coming from another TPC
+            if (!isChargeInCryoTPC(position[0], fCryostat, tpcindex, fDetector)) continue;
 	    const auto charge(hit->Integral());
-	    const auto tpcindex = wid.TPC;
 	    double Wxyz[3];
-	    geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);	  
-	    // xpos is the distance from the wire planes.
-	    float xpos = fabs(position[0]-Wxyz[0]); 
+	    geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);
+            // xpos is the distance from the wire planes.
+	    float xpos = fabs(position[0]-Wxyz[0]);
 	    lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
 	  } // for all hits associated to this spacepoint
 	} // for all spacepoints
@@ -696,7 +699,34 @@ bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string de
   return false;
 }
 
+// TODO: no hardcoding
+// TODO: collapse with the previous
+// TODO: figure out what to do with the charge that falls into the crevices 
+bool FlashPredict::isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector)
+{
+  std::ostringstream lostChargeMessage;
+  lostChargeMessage << "\nThere's " << detector << " charge that belongs nowhere. \n"
+                 << "icryo: " << icryo << "\n"
+                 << "itpc: "  << itpc << "\n"
+                 << "qp_x: " << qp_x << std::endl;
 
+  if (detector == "ICARUS") {
+    if (icryo == 0) {
+      if (itpc == 0 && -368.49 <= qp_x && qp_x <= -220.29 ) return true;
+      else if (itpc == 1 && -220.14 <= qp_x && qp_x <= -71.94) return true;
+      // else {std::cout << lostChargeMessage.str(); return false;}
+    }
+    else if (icryo == 1) {
+      if (itpc == 0 && 71.94 <= qp_x && qp_x <= 220.14) return true;
+      else if (itpc == 1 && 220.29 <= qp_x && qp_x <= 368.49) return true;
+      // else {std::cout << lostChargeMessage.str(); return false;}
+    }
+  }
+  else if (detector == "SBND") {
+    if ((itpc == 0 && qp_x < 0) || (itpc == 1 && qp_x > 0) ) return true;
+    else {std::cout << lostChargeMessage.str(); return false;}
+  }
+  return false;
 }
 
 void FlashPredict::beginJob()
