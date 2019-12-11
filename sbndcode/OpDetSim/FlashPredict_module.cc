@@ -81,6 +81,7 @@ private:
   float fBeamWindowEnd, fBeamWindowStart;
   float fLightWindowEnd, fLightWindowStart;
   float fMinFlashPE;
+  float fPEscale;
   float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
   std::string fDetector; // SBND or ICARUS
   int fCryostat;  // =0 or =1 to match ICARUS reco chain selection
@@ -151,6 +152,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
   fDetector = p.get<std::string>("Detector", "SBND");
   fCryostat = p.get<int>("Cryostat",0); //set =0 ot =1 for ICARUS to match reco chain selection
+  fPEscale = p.get<float>("PEscale",1.0);
 
   if (fDetector == "SBND" && fCryostat==1){
     throw cet::exception("FlashPredictSBND") << "SBND has only one cryostat. \n"
@@ -348,11 +350,11 @@ void FlashPredict::produce(art::Event & e)
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     if ( (oph.PeakTime()<fBeamWindowStart) || (oph.PeakTime()> fBeamWindowEnd) ) continue;
 
-    ophittime->Fill(oph.PeakTime(),100*oph.PE());
-
+    //    ophittime->Fill(oph.PeakTime(),100,0*oph.PE());
+    ophittime->Fill(oph.PeakTime(),fPEscale*oph.PE());
   }
 
-  if (ophittime->GetEntries()<=0) {
+  if (ophittime->GetEntries()<=0 || ophittime->Integral() < fMinFlashPE) {
     e.put(std::move(T0_v));
     e.put(std::move(pfp_t0_assn_v));
     return;
@@ -524,7 +526,7 @@ void FlashPredict::produce(art::Event & e)
 	  sum_By=_flash_y;        sum_Bz=_flash_z;
 	  _flash_r=sqrt((sum_Ay-2.0*sum_By*sum_Cy+sum_By*sum_By*sum_D+sum_Az-2.0*sum_Bz*sum_Cz+sum_Bz*sum_Bz*sum_D)/sum_D);
 	  _flash_unpe=unpe_tot;
-	  icountPE  +=(int)(1000.0*_flash_pe);
+	  icountPE  +=(int)(fPEscale*_flash_pe);
 	}
 	else { _flash_pe=0; _flash_y=0; _flash_z=0; _flash_unpe=0;}
 	
@@ -733,7 +735,8 @@ bool FlashPredict::isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::strin
   }
   else if (detector == "SBND") {
     if ((itpc == 0 && qp_x < 0) || (itpc == 1 && qp_x > 0) ) return true;
-    else {std::cout << lostChargeMessage.str(); return false;}
+    else {return false;}
+    //    else {std::cout << lostChargeMessage.str(); return false;}
   }
   return false;
 }
