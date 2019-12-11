@@ -15,7 +15,7 @@ sbnd_hit_finder:
 # Sampling:           0.5      #Give the desired value in GHz or use -1 for extracting from DetectorClocksService->OpticalClock().Frequency
  PulsePolarityPMT:   -1        #use -1 for inverse polarity
  PulsePolarityArapuca: 1       #use -1 for inverse polarity
- UseDenoising:        1        #if you want a denoising algorithm to use with arapucas choose 1
+ UseDenoising:        0        #if you want a denoising algorithm to use with arapucas choose 1
 }
 
 END_PROLOG

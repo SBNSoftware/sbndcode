@@ -50,7 +50,9 @@
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH1.h"
+
 #include <memory>
+#include <string>
 
 class FlashPredict;
 class FlashPredict : public art::EDProducer {
@@ -80,7 +82,7 @@ private:
   float fLightWindowEnd, fLightWindowStart;
   float fMinFlashPE;
   float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
-  int fDetector; // ==0 for SBND, =1 ICARUS
+  std::string fDetector; // SBND or ICARUS
   int fCryostat;  // =0 or =1 to match ICARUS reco chain selection
   bool fMakeTree,fSelectNeutrino, fUseCalo;
   std::vector<float> fPMTChannelCorrection;
@@ -99,7 +101,8 @@ private:
   void AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,
                     const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h,
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
-  bool SelectPMTPlane(float pmt_x, int icryo,int itpc,int detector);
+  bool isPDInCryoTPC(float pd_x, int icryo,int itpc, std::string detector);
+  bool isChargeInCryoTPC(float qp_x, int icryo,int itpc, std::string detector);
 
   // root stuff
   TTree* _flashmatch_acpt_tree;
@@ -142,12 +145,17 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 1.0);   // ~40000/1600
   fInputFilename = p.get<std::string>("InputFileName","fmplots.root");  // root file with histograms for match score calc
   fMakeTree = p.get<bool>("MakeTree",false);  
+  fUseCalo = p.get<bool>("UseCalo",false);  
   fSelectNeutrino = p.get<bool>("SelectNeutrino",true);  
   fLightWindowStart = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
   fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
-  fDetector = p.get<int>("Detector",0); // ==0 for SBND, ==1 for ICARUS
+  fDetector = p.get<std::string>("Detector", "SBND");
   fCryostat = p.get<int>("Cryostat",0); //set =0 ot =1 for ICARUS to match reco chain selection
-  
+
+  if (fDetector == "SBND" && fCryostat==1){
+    throw cet::exception("FlashPredictSBND") << "SBND has only one cryostat. \n"
+                                             << "Check Detector and Cryostat parameter." << std::endl;
+  }
 
   art::ServiceHandle<art::TFileService> tfs;
 
@@ -193,9 +201,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     rrsp.push_back(0.001);
   }
   else {
-  for (int ib=0;ib<rr_nbins;++ib) {
+  for (int ib=1;ib<=rr_nbins;++ib) {
     rrmean.push_back(temphisto->GetBinContent(ib));
-    rrsp.push_back(temphisto->GetBinError(ib));
+    float tt = temphisto->GetBinError(ib);
+    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in rr" << std::endl;}
+    rrsp.push_back(tt);
   }
   }
   //
@@ -208,11 +218,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     dysp.push_back(0.001);
   }
   else {
-  for (int ib=0;ib<dy_nbins;++ib) {
-    dymean.push_back(0.0);
-    // not enough stats to believe mean values different than 0
-    //    dymean.push_back(temphisto->GetBinContent(ib));
-    dysp.push_back(temphisto->GetBinError(ib));
+  for (int ib=1;ib<=dy_nbins;++ib) {
+    dymean.push_back(temphisto->GetBinContent(ib));
+    float tt = temphisto->GetBinError(ib);
+    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in dy" << std::endl;}
+    dysp.push_back(tt);
   }
   }
   //
@@ -225,15 +235,15 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     dzsp.push_back(0.001);
   }
   else {
-  for (int ib=0;ib<dz_nbins;++ib) {
-    dzmean.push_back(0.0);
-    // not enough stats to believe mean values different than 0
-    //    dzmean.push_back(temphisto->GetBinContent(ib));
-    dzsp.push_back(temphisto->GetBinError(ib));
+  for (int ib=1;ib<=dz_nbins;++ib) {
+    dzmean.push_back(temphisto->GetBinContent(ib));
+    float tt = temphisto->GetBinError(ib);
+    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in dz" << std::endl;}
+    dzsp.push_back(tt);
   }
   }
   //
-  if (fDetector==0) {
+  if (fDetector == "SBND" ) {
     temphisto = (TH1*)infile->Get("pep1");
     pe_nbins = temphisto->GetNbinsX();
     if (pe_nbins<=0) {
@@ -243,17 +253,18 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
       pesp.push_back(0.001);
     }
     else {
-      for (int ib=0;ib<pe_nbins;++ib) {
-	pemean.push_back(0.0);
-	// not enough stats to believe mean values different than 0
-	//    dzmean.push_back(temphisto->GetBinContent(ib));
-	pesp.push_back(temphisto->GetBinError(ib));
+      for (int ib=1;ib<=pe_nbins;++ib) {
+	pemean.push_back(temphisto->GetBinContent(ib));
+	float tt = temphisto->GetBinError(ib);
+	if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in pe" << std::endl;}
+	pesp.push_back(tt);
       }
     }
-  }else {
-      pe_nbins=1;
-      pemean.push_back(0);
-      pesp.push_back(0.001);
+  }
+  else {
+    pe_nbins=1;
+    pemean.push_back(0);
+    pesp.push_back(0.001);
   }
   //
   infile->Close();
@@ -278,30 +289,39 @@ void FlashPredict::produce(art::Event & e)
   _run = e.run();
   _flashtime = -9999.;
   _flashpe   = -9999.;
+  _flash_unpe   = -9999.;
+  _flash_r   = -9999.;
+  _score = -9999.;
 
   // std::cout << "event no " << _evt << std::endl;
 
   const art::ServiceHandle<geo::Geometry> geometry;
   uint nTPCs(geometry->NTPC());
-  if (nTPCs>2) nTPCs=2;
+  if (nTPCs>2) {
+    std::cout << "nTPC can't be larger than 2, resizing." << std::endl;
+    nTPCs = 2;
+  }
   geo::CryostatGeo geo_cryo = geometry->Cryostat(0);
-  if (fDetector==1 && fCryostat==1) geo_cryo = geometry->Cryostat(1);
+  if (fDetector == "ICARUS" && fCryostat==1) geo_cryo = geometry->Cryostat(1);
 
 
   // grab PFParticles in event
   auto const& pfp_h = e.getValidHandle<std::vector<recob::PFParticle> >(fPandoraProducer);
 
   // grab spacepoints associated with PFParticles
-  art::FindManyP<recob::SpacePoint> pfp_spacepoint_assn_v(pfp_h, e, fPandoraProducer);
-  
-  // grab tracks associated with PFParticles
-  art::FindManyP<recob::Track> pfp_track_assn_v(pfp_h, e, fPandoraProducer);
+  art::FindManyP<recob::SpacePoint> pfp_spacepoint_assn_v(pfp_h, e, fPandoraProducer);  
 
-
-  // grab associated metadata
-  art::FindManyP< larpandoraobj::PFParticleMetadata > pfPartToMetadataAssoc(pfp_h, e, fPandoraProducer);
   auto const& spacepoint_h = e.getValidHandle<std::vector<recob::SpacePoint> >(fSpacePointProducer);
   art::FindManyP<recob::Hit> spacepoint_hit_assn_v(spacepoint_h, e, fSpacePointProducer);
+
+  // grab tracks associated with PFParticles
+  // auto const& track_h = e.getValidHandle<std::vector<recob::Track> >(fTrackProducer);
+  // art::FindManyP<recob::Track> pfp_track_assn_v(track_h, e, fTrackProducer);
+
+  // grab calorimetry info for tracks
+  // auto const& calo_h = e.getValidHandle<std::vector<anab::Calorimetry> >(fCaloProducer);
+  // art::FindManyP<anab::Calorimetry>  track_calo_assn_v(calo_h, e, fCaloProducer);
+
 
   // load OpHits previously created
   art::Handle<std::vector<recob::OpHit> > ophit_h;
@@ -324,13 +344,20 @@ void FlashPredict::produce(art::Event & e)
     recob::OpHit oph = OpHitCollection[j];
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-    if ( fDetector==0 && !map.pdType(oph.OpChannel(),"pmt")) continue; // use only uncoated PMTs for SBND for flashtime
+    if ( fDetector == "SBND" && !map.pdType(oph.OpChannel(),"pmt")) continue; // use only uncoated PMTs for SBND for flashtime
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     if ( (oph.PeakTime()<fBeamWindowStart) || (oph.PeakTime()> fBeamWindowEnd) ) continue;
 
     ophittime->Fill(oph.PeakTime(),100*oph.PE());
 
   }
+
+  if (ophittime->GetEntries()<=0) {
+    e.put(std::move(T0_v));
+    e.put(std::move(pfp_t0_assn_v));
+    return;
+  }    
+
   auto ibin =  ophittime->GetMaximumBin();
   float flashtime = (ibin*0.002)+fBeamWindowStart;  // in us
   float lowedge = flashtime+fLightWindowStart;
@@ -357,19 +384,42 @@ void FlashPredict::produce(art::Event & e)
       auto key = pfp_ptr_v.at(i).key();
       recob::PFParticle pfp = *pfp_ptr_v.at(i);
       pfp_v.push_back(pfp);
-
-  //     if (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
-  //     	// ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));      
-  // // grab calo objects associated with tracks
-
-  // 	const std::vector< art::Ptr<anab::Calorimetry> > this_calo_ptr_v = spacepoint_hit_assn_v.at( spkey );
-  // 	art::FindManyP<anab::Calorimetry> track_calo_assn_v(pfp_h, e, fCaloProducer);
-  // 	const std::vector< art::Ptr<anab::Calorimetry> > this_calo_ptr_v = spacepoint_hit_assn_v.at( spkey );
-  //     }
-  //     	else { // for showers do this
-  //     	}
+      /*      
+      if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
+	// grab tracks associated with pfp particle
+	auto const& track_ptr_v = pfp_track_assn_v.at(key);
+	for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
+	  auto mytrack = track_ptr_v[tr];
+	  auto const& trackkey = mytrack.key();
+	  // grab calo objects associated with tracks
+	  const std::vector< art::Ptr<anab::Calorimetry> > calo_ptr_v = track_calo_assn_v.at( trackkey );
+	  for (size_t ca=0;  ca <  calo_ptr_v.size(); ca++) {
+	    auto mycalo = calo_ptr_v.at( ca );
+	    int npts = mycalo->dEdx().size();
+	    for (int ip=0;ip<npts;++ip) {
+	      Point_t pxyz=mycalo->fXYZ[ip];
+	      float ds = mycalo->fTrkPitch[ip];
+	      float dQdx = mycalo->fdQdx[ip];
+	      float dEdx = mycalo->fdEdx[ip];
+	      float alpha = dQdx/dEdx;
+	      float charge = (1-alpha)*dEdx*ds;
+	      // hardcode for now for SBND	      
+	      float xpos = 0.0;
+	      if (pxyz[0]<0) xpos = fabs(pxyz[0]+200.0);
+	      else xpos = fabs(200.0-pxyz[0]);
+	      lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge);
+	    }
+	  }
+	}
+      }
+      else { // this is a shower
+      */
 	auto const& spacepoint_ptr_v = pfp_spacepoint_assn_v.at(key);
 	std::vector< art::Ptr<recob::Hit> > hit_ptr_v;
+        // TODO: refactor this loop over spacepoints so that it's not
+        // necessary to query the wire position every time.
+        // There's just two different X wire positions on any given
+        // cryostat for the collection wires.
 	for (size_t sp=0; sp < spacepoint_ptr_v.size(); sp++) {
 	  auto SP = spacepoint_ptr_v[sp];
 	  auto const& spkey = SP.key();
@@ -377,43 +427,44 @@ void FlashPredict::produce(art::Event & e)
 	  for (size_t h=0; h < this_hit_ptr_v.size(); h++) {
 	    auto hit = this_hit_ptr_v.at( h );
 	    // Only use hits from the collection plane
-	    //	  if ((hit->WireID()).Plane != 2)
-	  //	    continue;
-	  geo::WireID wid = hit->WireID();
-	  if (geometry->SignalType(wid) != geo::kCollection) continue;
-	  // Add the charged point to the vector
-	  const auto &position(SP->XYZ());
-	  const auto charge(hit->Integral());
-	  const auto tpcindex = wid.TPC;
-	  double Wxyz[3];
-	  geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);	  
-	  // xpos is the distance from the wire planes.
-	  float xpos = fabs(position[0]-Wxyz[0]); 
-	  lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
-	} // for all hits associated to this spacepoint
-      } // for all spacepoints
+	    geo::WireID wid = hit->WireID();
+	    if (geometry->SignalType(wid) != geo::kCollection) continue;
+	    // Add the charged point to the vector
+	    const auto &position(SP->XYZ());
+            const auto tpcindex = wid.TPC;
+            // throw the charge coming from another TPC
+            if (!isChargeInCryoTPC(position[0], fCryostat, tpcindex, fDetector)) continue;
+	    const auto charge(hit->Integral());
+	    double Wxyz[3];
+	    geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);
+            // xpos is the distance from the wire planes.
+	    float xpos = fabs(position[0]-Wxyz[0]);
+	    lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
+	  } // for all hits associated to this spacepoint
+	} // for all spacepoints
+	//      }  // if track or shower
     } // for all pfp pointers
     
     int icountPE=0;
     float mscore[2] ={0}; 
     float charge[2]={0};
-    for (size_t it=0;it<nTPCs;++it) {
+    for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       double xave=0.0; double yave=0.0; double zave=0.0; double norm=0.0;
-      _nuvtx_q=0;
-      for (size_t i=0;i<lightCluster[it].size();++i) {
-	flashana::QCluster_t this_cl = lightCluster[it];
-	flashana::QPoint_t qp = this_cl[i];
-	xave+=0.001*qp.q*qp.x;
-	yave+=0.001*qp.q*qp.y;
-	zave+=0.001*qp.q*qp.z;
-	norm+=0.001*qp.q;
-	_nuvtx_q+=qp.q;
+      _nuvtx_q = 0;
+      for (size_t i=0; i<lightCluster[itpc].size(); ++i) {
+        flashana::QCluster_t this_cl = lightCluster[itpc];
+        flashana::QPoint_t qp = this_cl[i];
+        xave += 0.001*qp.q*qp.x;
+        yave += 0.001*qp.q*qp.y;
+        zave += 0.001*qp.q*qp.z;
+        norm += 0.001*qp.q;
+        _nuvtx_q += qp.q;
       }
       if (norm>0) {
 	_nuvtx_x=xave/norm;
 	_nuvtx_y=yave/norm;
 	_nuvtx_z=zave/norm;
-	charge[it]=_nuvtx_q;
+        charge[itpc] = _nuvtx_q;
 	// store PMT photon counts in the tree as well
 	double PMTxyz[3];
 	double unpe_tot=0;
@@ -422,15 +473,20 @@ void FlashPredict::produce(art::Event & e)
 	double sum_By=0; double sum_Bz=0;
 	double sum_D=0;  double sum=0;
 	double sum_Cy=0;double sum_Cz=0;
+        // TODO: change this next loop, such that it only loops
+        // through channels in the current fCryostat
 	for(size_t j = 0; j < OpHitCollection.size(); j++){
 	  recob::OpHit oph = OpHitCollection[j];
+          std::string op_type;
+          if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
+          if (fDetector == "ICARUS") op_type = "pmt";
 	  geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-	  // check cryostat and tpc 
-	  if (!SelectPMTPlane(PMTxyz[0],fCryostat,it,fDetector)) continue;
+          // check cryostat and tpc
+          if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
 	  // only use optical hits around the flash time
 	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) ) continue;
 	  // only use PMTs for SBND
-	  if ( (fDetector) || ( fDetector==0 && map.pdType(oph.OpChannel(),"pmt"))) {
+          if ( (fDetector == "ICARUS") || ( fDetector == "SBND" && op_type == "pmt")) {
 	    // Add up the position, weighting with PEs
 	    _flash_x=PMTxyz[0];
 	    pnorm+=oph.PE();
@@ -445,9 +501,19 @@ void FlashPredict::produce(art::Event & e)
 	    sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
 	    sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
 	  }
-	  else if ( fDetector==0 && map.pdType(oph.OpChannel(),"barepmt")) {
-	    unpe_tot+=oph.PE();
-	  } 
+          else if ( fDetector == "SBND" && op_type == "barepmt") {
+            unpe_tot+=oph.PE();
+          }
+          else if ( fDetector == "SBND" && (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
+            //TODO: Use ARAPUCA
+            // arape_tot+=oph.PE();
+            continue;
+          }
+          else if ( fDetector == "SBND" && (op_type == "xarapucaT1" || op_type == "xarapucaT2") ) {
+            //TODO: Use XARAPUCA
+            // xarape_tot+=oph.PE();
+            continue;
+          }
 	}
 	
 	if (pnorm>0) {
@@ -458,32 +524,33 @@ void FlashPredict::produce(art::Event & e)
 	  sum_By=_flash_y;        sum_Bz=_flash_z;
 	  _flash_r=sqrt((sum_Ay-2.0*sum_By*sum_Cy+sum_By*sum_By*sum_D+sum_Az-2.0*sum_Bz*sum_Cz+sum_Bz*sum_Bz*sum_D)/sum_D);
 	  _flash_unpe=unpe_tot;
-	  icountPE  +=(int)_flash_pe;
+	  icountPE  +=(int)(1000.0*_flash_pe);
 	}
 	else { _flash_pe=0; _flash_y=0; _flash_z=0; _flash_unpe=0;}
 	
 	//      calculate match score here, put association on the event
 	float slice=_nuvtx_x;
-	float drift_distance=200.0;
-	if (fDetector==1) drift_distance=150.0;
+        float drift_distance = 200.0; // TODO: no hardcoded values
+        if (fDetector == "ICARUS") {drift_distance=150.0;} // TODO: no hardcoded values
 	_score = 0; int icount =0;
 	int isl = int(dy_nbins*(slice/drift_distance));
-	_score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];
+        if (dysp[isl]>0) {_score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
 	icount++;
 	isl = int(dz_nbins*(slice/drift_distance));
-	_score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];
+        if (dzsp[isl]>0) {_score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
 	icount++;
 	isl = int(rr_nbins*(slice/drift_distance));
-	_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];
+        if (rrsp[isl]>0) {_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];}
 	icount++;
-	if (fDetector==0) { // pe metric for sbnd only
-	  isl = int(pe_nbins*(slice/drift_distance));
-	  float myratio = 100*_flash_unpe/_flash_pe;
-	  _score+=abs(myratio-pemean[isl])/pesp[isl];
+        if (fDetector == "SBND") { // pe metric for sbnd only
+	  isl = int(pe_nbins*(slice/drift_distance));	  
+	  float myratio = 100.0*_flash_unpe;
+          if (_flash_pe>0) {myratio/=_flash_pe;}
+          if (pesp[isl]>0) {_score+=abs(myratio-pemean[isl])/pesp[isl];}
 	  icount++;
 	}
 	//	_score/=icount;
-	mscore[it]=_score;
+        mscore[itpc] = _score;
 	// fill tree
 	if (fMakeTree) _flashmatch_nuslice_tree->Fill();
 	
@@ -491,10 +558,10 @@ void FlashPredict::produce(art::Event & e)
     }  // end loop over TPCs
     
     double this_score=0.0; int icount=0; double totc=0;
-    for (size_t it=0;it<nTPCs;++it) {
-      this_score+=mscore[it];
-      totc+=charge[it];
-      if (mscore[it]>0) icount++;
+    for (size_t itpc=0; itpc<nTPCs; ++itpc) {
+      this_score += mscore[itpc];
+      totc += charge[itpc];
+      if (mscore[itpc] > 0) icount++;
     }
     if (icount>0) this_score/=(icount*1.0);
 
@@ -611,27 +678,64 @@ void FlashPredict::AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,  con
   return;
 } // void FlashPredict::AddDaughters
 
-
-bool FlashPredict::SelectPMTPlane(float pmt_x, int icryo, int itpc, int detector)
+// TODO: no hardcoding
+// TODO: collapse with the next
+bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string detector)
 {
-  bool keepme=false;
   // check whether this optical detector views the light inside this tpc.
-  if (detector==1) { // icarus
-    if (icryo==0) {
-      if (itpc==0 && pmt_x <-300 ) keepme=1; 
-      else if (itpc==1 && pmt_x>-100) keepme=1;
+  std::ostringstream lostPDMessage;
+  lostPDMessage << "\nThere's an " << detector << "photo detector that belongs nowhere. \n"
+                 << "icryo: " << icryo << "\n"
+                 << "itpc: "  << itpc << "\n"
+                 << "pd_x: " << pd_x << std::endl;
+
+  if (detector == "ICARUS") {
+    if (icryo == 0) {
+      if (itpc == 0 && -400 < pd_x && pd_x < -300 ) return true;
+      else if (itpc == 1 && -100 < pd_x && pd_x < 0) return true;
+      // else {std::cout << lostPDMessage.str(); return false;}
     }
-    else {
-      if (itpc==0 && pmt_x <100 ) keepme=1; 
-      else if (itpc==1 && pmt_x>300) keepme=1;
-    }    
+    else if (icryo == 1) {
+      if (itpc == 0 && 0 < pd_x && pd_x < 100) return true;
+      else if (itpc == 1 && 300 < pd_x && pd_x < 400) return true;
+      // else {std::cout << lostPDMessage.str(); return false;}
+    }
   }
-  else { // sbnd
-    if ((itpc==0 && pmt_x<0) || (itpc==1 && pmt_x>0) ) keepme=true;    
+  else if (detector == "SBND") {
+    if ((itpc == 0 && pd_x < 0) || (itpc == 1 && pd_x > 0) ) return true;
+    else {std::cout << lostPDMessage.str(); return false;}
   }
+  return false;
+}
 
-  return keepme;
+// TODO: no hardcoding
+// TODO: collapse with the previous
+// TODO: figure out what to do with the charge that falls into the crevices 
+bool FlashPredict::isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector)
+{
+  std::ostringstream lostChargeMessage;
+  lostChargeMessage << "\nThere's " << detector << " charge that belongs nowhere. \n"
+                 << "icryo: " << icryo << "\n"
+                 << "itpc: "  << itpc << "\n"
+                 << "qp_x: " << qp_x << std::endl;
 
+  if (detector == "ICARUS") {
+    if (icryo == 0) {
+      if (itpc == 0 && -368.49 <= qp_x && qp_x <= -220.29 ) return true;
+      else if (itpc == 1 && -220.14 <= qp_x && qp_x <= -71.94) return true;
+      // else {std::cout << lostChargeMessage.str(); return false;}
+    }
+    else if (icryo == 1) {
+      if (itpc == 0 && 71.94 <= qp_x && qp_x <= 220.14) return true;
+      else if (itpc == 1 && 220.29 <= qp_x && qp_x <= 368.49) return true;
+      // else {std::cout << lostChargeMessage.str(); return false;}
+    }
+  }
+  else if (detector == "SBND") {
+    if ((itpc == 0 && qp_x < 0) || (itpc == 1 && qp_x > 0) ) return true;
+    else {std::cout << lostChargeMessage.str(); return false;}
+  }
+  return false;
 }
 
 void FlashPredict::beginJob()
