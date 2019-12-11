@@ -702,7 +702,7 @@ bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string de
     }
   }
   else if (detector == "SBND") {
-    if ((itpc == 0 && pd_x < 0) || (itpc == 1 && pd_x > 0) ) return true;
+    if ((itpc == 0 && -213. < pd_x && pd_x < 0) || (itpc == 1 && 0 < pd_x && pd_x < 213) ) return true;
     else {std::cout << lostPDMessage.str(); return false;}
   }
   return false;
