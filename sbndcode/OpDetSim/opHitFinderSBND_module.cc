@@ -309,9 +309,11 @@ namespace opdet{
       while (try_ <= retries) {
         if (TV1D_denoise(waveform, outwaveform, lambda)) break;
         try_++;
-        std::cout << "try_:\t" << try_ << "\n";
+        mf::LogInfo("opHitFinder") << try_ << "/" << retries
+                                   << " Coming out of TV1D_denoise() unsuccessfully, "
+                                   << "using lambda: " << lambda;
         lambda += 0.1*lambda;
-        if (try_ == retries) std::cout << "Warning couldn't denoise!" << std::endl;
+        if (try_ == retries) mf::LogWarning("opHitFinder") <<  "Couldn't denoise!";
       }
     }
 
