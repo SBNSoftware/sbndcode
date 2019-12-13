@@ -535,23 +535,23 @@ void FlashPredict::produce(art::Event & e)
         if (fDetector == "ICARUS") {drift_distance=150.0;} // TODO: no hardcoded values
 	_score = 0; int icount =0;
 	int isl = int(dy_nbins*(slice/drift_distance));
-        if (dysp[isl]>0) {_score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
+        if (dysp[isl] > 0 && _flash_y > 0) {_score += abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
 	icount++;
 	isl = int(dz_nbins*(slice/drift_distance));
-        if (dzsp[isl]>0) {_score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
+        if (dzsp[isl] > 0 && _flash_z > 0 ) {_score += abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
 	icount++;
 	isl = int(rr_nbins*(slice/drift_distance));
-        if (rrsp[isl]>0) {_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];}
+        if (rrsp[isl] > 0 && _flash_r > 0) {_score += abs(_flash_r-rrmean[isl])/rrsp[isl];}
 	icount++;
         if (0) {  // this piece is broken?
 	  //        if (fDetector == "SBND") { // pe metric for sbnd only
 	  isl = int(pe_nbins*(slice/drift_distance));	  
 	  float myratio = 100.0*_flash_unpe;
-          if (_flash_pe>0.01 && pesp[isl]>0) {
-	    myratio/=_flash_pe;
-	    _score+=abs(myratio-pemean[isl])/pesp[isl];
-	    icount++;
-	  }
+          if (pesp[isl] > 0 && _flash_pe > 0) {
+            myratio /= _flash_pe;
+            _score += abs(myratio-pemean[isl])/pesp[isl];
+            icount++;
+          }
 	}
 	//	_score/=icount;
         mscore[itpc] = _score;
