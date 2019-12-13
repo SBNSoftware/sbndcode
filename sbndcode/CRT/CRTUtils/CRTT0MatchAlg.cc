@@ -43,7 +43,7 @@ std::pair<double, double> CRTT0MatchAlg::TrackT0Range(double startX, double endX
   // If track is stitched return zeros
   if(driftDirection == 0) return std::make_pair(0, 0);
 
-  std::pair<double, double> result;
+  //std::pair<double, double> result; // unused
   double Vd = driftDirection * fDetectorProperties->DriftVelocity();
 
   // Shift the most postive end to the most positive limit
