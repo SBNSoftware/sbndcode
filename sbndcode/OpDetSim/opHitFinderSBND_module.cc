@@ -92,7 +92,7 @@ namespace opdet{
     void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
     bool findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
     void denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
-    void TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
+    bool TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform, const double lambda);
     //std::stringstream histname;
   };
 
@@ -303,8 +303,17 @@ namespace opdet{
 
     int wavelength = waveform.size();
     outwaveform = waveform;  // copy
-
-    if (wavelength > 0) TV1D_denoise(waveform, outwaveform);
+    double lambda = 10.0;
+    const uint retries = 5; uint try_ = 0;
+    if (wavelength > 0){
+      while (try_ <= retries) {
+        if (TV1D_denoise(waveform, outwaveform, lambda)) break;
+        try_++;
+        std::cout << "try_:\t" << try_ << "\n";
+        lambda += 0.1*lambda;
+        if (try_ == retries) std::cout << "Warning couldn't denoise!" << std::endl;
+      }
+    }
 
     for(int i=0; i<wavelength; i++){
       if(outwaveform[i]) waveform[i]=outwaveform[i];
@@ -312,10 +321,9 @@ namespace opdet{
   } // void opHitFinderSBND::denoise()
 
   // TODO: this function is not robust, check if the expected input is given and put exceptions
-  void opHitFinderSBND::TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform)
+  bool opHitFinderSBND::TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform, const double lambda)
   {
     int width = waveform.size();
-    const double lambda = 10.0; // TODO: no hardcoded values
     int k = 0, k0 = 0; // k: current sample location, k0: beginning of current segment
     double umin = lambda, umax = -lambda; // u is the dual variable
     double vmin = waveform[0] - lambda, vmax = waveform[0] + lambda; // bounds for the segment's value
@@ -335,21 +343,24 @@ namespace opdet{
         else {
           vmin += umin / (k - k0 + 1);
           do outwaveform[k0++] = vmin; while(k0 <= k);
-          return;
+          return true;
         }
       } // while (k == width - 1)
       if ((umin += waveform[k + 1] - vmin) < minlambda) { // negative jump necessary
+        if (k0 > width) return false;
         do outwaveform[k0++] = vmin; while (k0 <= kminus);
         vmax = (vmin = waveform[kplus = kminus = k = k0]) + twolambda;
         umin = lambda; umax = minlambda;
       }
       else if ((umax += waveform[k + 1] - vmax) > lambda) { // positive jump necessary
+        if (k0 > width) return false;
         do outwaveform[k0++] = vmax; while (k0 <= kplus);
         vmin = (vmax = waveform[kplus = kminus = k = k0]) - twolambda;
         umin = lambda; umax = minlambda;
       }
       else {   //no jump necessary, we continue
         k++;
+        if (k > width) return false;
         if (umin >= lambda) { // update of vmin
           vmin += (umin - lambda) / ((kminus = k) - k0 + 1);
           umin = lambda;
