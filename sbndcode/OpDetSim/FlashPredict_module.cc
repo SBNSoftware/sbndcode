@@ -479,16 +479,15 @@ void FlashPredict::produce(art::Event & e)
         // through channels in the current fCryostat
 	for(size_t j = 0; j < OpHitCollection.size(); j++){
 	  recob::OpHit oph = OpHitCollection[j];
-          std::string op_type;
+          std::string op_type = "pmt";
           if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
-          if (fDetector == "ICARUS") op_type = "pmt";
 	  geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
           // check cryostat and tpc
           if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
 	  // only use optical hits around the flash time
 	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) ) continue;
 	  // only use PMTs for SBND
-          if ( (fDetector == "ICARUS") || ( fDetector == "SBND" && op_type == "pmt")) {
+          if (op_type == "pmt") {
 	    // Add up the position, weighting with PEs
 	    _flash_x=PMTxyz[0];
 	    pnorm+=oph.PE();
@@ -503,15 +502,15 @@ void FlashPredict::produce(art::Event & e)
 	    sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
 	    sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
 	  }
-          else if ( fDetector == "SBND" && op_type == "barepmt") {
+          else if ( op_type == "barepmt") {
             unpe_tot+=oph.PE();
           }
-          else if ( fDetector == "SBND" && (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
+          else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
             //TODO: Use ARAPUCA
             // arape_tot+=oph.PE();
             continue;
           }
-          else if ( fDetector == "SBND" && (op_type == "xarapucaT1" || op_type == "xarapucaT2") ) {
+          else if ( op_type == "xarapucaT1" || op_type == "xarapucaT2")  {
             //TODO: Use XARAPUCA
             // xarape_tot+=oph.PE();
             continue;
@@ -544,12 +543,15 @@ void FlashPredict::produce(art::Event & e)
 	isl = int(rr_nbins*(slice/drift_distance));
         if (rrsp[isl]>0) {_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];}
 	icount++;
-        if (fDetector == "SBND") { // pe metric for sbnd only
+        if (0) {  // this piece is broken?
+	  //        if (fDetector == "SBND") { // pe metric for sbnd only
 	  isl = int(pe_nbins*(slice/drift_distance));	  
 	  float myratio = 100.0*_flash_unpe;
-          if (_flash_pe>0) {myratio/=_flash_pe;}
-          if (pesp[isl]>0) {_score+=abs(myratio-pemean[isl])/pesp[isl];}
-	  icount++;
+          if (_flash_pe>0.01 && pesp[isl]>0) {
+	    myratio/=_flash_pe;
+	    _score+=abs(myratio-pemean[isl])/pesp[isl];
+	    icount++;
+	  }
 	}
 	//	_score/=icount;
         mscore[itpc] = _score;
