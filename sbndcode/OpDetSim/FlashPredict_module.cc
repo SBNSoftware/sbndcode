@@ -85,7 +85,7 @@ private:
   float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
   std::string fDetector; // SBND or ICARUS
   int fCryostat;  // =0 or =1 to match ICARUS reco chain selection
-  bool fMakeTree,fSelectNeutrino, fUseCalo;
+  bool fMakeTree, fSelectNeutrino, fUseUncoatedPMT, fUseCalo;
   std::vector<float> fPMTChannelCorrection;
   // geometry service
   const uint nMaxTPCs = 4;
@@ -148,6 +148,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fMakeTree = p.get<bool>("MakeTree",false);  
   fUseCalo = p.get<bool>("UseCalo",false);  
   fSelectNeutrino = p.get<bool>("SelectNeutrino",true);  
+  fUseUncoatedPMT = p.get<bool>("UseUncoatedPMT",false);
   fLightWindowStart = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
   fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
   fDetector = p.get<std::string>("Detector", "SBND");
@@ -543,8 +544,7 @@ void FlashPredict::produce(art::Event & e)
 	isl = int(rr_nbins*(slice/drift_distance));
         if (rrsp[isl] > 0 && _flash_r > 0) {_score += abs(_flash_r-rrmean[isl])/rrsp[isl];}
 	icount++;
-        if (0) {  // this piece is broken?
-	  //        if (fDetector == "SBND") { // pe metric for sbnd only
+        if (fDetector == "SBND" && fUseUncoatedPMT) {
 	  isl = int(pe_nbins*(slice/drift_distance));	  
 	  float myratio = 100.0*_flash_unpe;
           if (pesp[isl] > 0 && _flash_pe > 0) {
