@@ -536,10 +536,10 @@ void FlashPredict::produce(art::Event & e)
         if (fDetector == "ICARUS") {drift_distance=150.0;} // TODO: no hardcoded values
 	_score = 0; int icount =0;
 	int isl = int(dy_nbins*(slice/drift_distance));
-        if (dysp[isl] > 0 && _flash_y > 0) {_score += abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
+        if (dysp[isl] > 0) {_score += abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
 	icount++;
 	isl = int(dz_nbins*(slice/drift_distance));
-        if (dzsp[isl] > 0 && _flash_z > 0 ) {_score += abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
+        if (dzsp[isl] > 0) {_score += abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
 	icount++;
 	isl = int(rr_nbins*(slice/drift_distance));
         if (rrsp[isl] > 0 && _flash_r > 0) {_score += abs(_flash_r-rrmean[isl])/rrsp[isl];}
