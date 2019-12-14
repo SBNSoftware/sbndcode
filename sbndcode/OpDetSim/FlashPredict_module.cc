@@ -85,7 +85,7 @@ private:
   float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
   std::string fDetector; // SBND or ICARUS
   int fCryostat;  // =0 or =1 to match ICARUS reco chain selection
-  bool fMakeTree,fSelectNeutrino, fUseCalo;
+  bool fMakeTree, fSelectNeutrino, fUseUncoatedPMT, fUseCalo;
   std::vector<float> fPMTChannelCorrection;
   // geometry service
   const uint nMaxTPCs = 4;
@@ -148,6 +148,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fMakeTree = p.get<bool>("MakeTree",false);  
   fUseCalo = p.get<bool>("UseCalo",false);  
   fSelectNeutrino = p.get<bool>("SelectNeutrino",true);  
+  fUseUncoatedPMT = p.get<bool>("UseUncoatedPMT",false);
   fLightWindowStart = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
   fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
   fDetector = p.get<std::string>("Detector", "SBND");
@@ -479,16 +480,15 @@ void FlashPredict::produce(art::Event & e)
         // through channels in the current fCryostat
 	for(size_t j = 0; j < OpHitCollection.size(); j++){
 	  recob::OpHit oph = OpHitCollection[j];
-          std::string op_type;
+          std::string op_type = "pmt";
           if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
-          if (fDetector == "ICARUS") op_type = "pmt";
 	  geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
           // check cryostat and tpc
           if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
 	  // only use optical hits around the flash time
 	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) ) continue;
 	  // only use PMTs for SBND
-          if ( (fDetector == "ICARUS") || ( fDetector == "SBND" && op_type == "pmt")) {
+          if (op_type == "pmt") {
 	    // Add up the position, weighting with PEs
 	    _flash_x=PMTxyz[0];
 	    pnorm+=oph.PE();
@@ -503,15 +503,15 @@ void FlashPredict::produce(art::Event & e)
 	    sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
 	    sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
 	  }
-          else if ( fDetector == "SBND" && op_type == "barepmt") {
+          else if ( op_type == "barepmt") {
             unpe_tot+=oph.PE();
           }
-          else if ( fDetector == "SBND" && (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
+          else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
             //TODO: Use ARAPUCA
             // arape_tot+=oph.PE();
             continue;
           }
-          else if ( fDetector == "SBND" && (op_type == "xarapucaT1" || op_type == "xarapucaT2") ) {
+          else if ( op_type == "xarapucaT1" || op_type == "xarapucaT2")  {
             //TODO: Use XARAPUCA
             // xarape_tot+=oph.PE();
             continue;
@@ -536,20 +536,22 @@ void FlashPredict::produce(art::Event & e)
         if (fDetector == "ICARUS") {drift_distance=150.0;} // TODO: no hardcoded values
 	_score = 0; int icount =0;
 	int isl = int(dy_nbins*(slice/drift_distance));
-        if (dysp[isl]>0) {_score+=abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
+        if (dysp[isl] > 0) {_score += abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
 	icount++;
 	isl = int(dz_nbins*(slice/drift_distance));
-        if (dzsp[isl]>0) {_score+=abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
+        if (dzsp[isl] > 0) {_score += abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
 	icount++;
 	isl = int(rr_nbins*(slice/drift_distance));
-        if (rrsp[isl]>0) {_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];}
+        if (rrsp[isl] > 0 && _flash_r > 0) {_score += abs(_flash_r-rrmean[isl])/rrsp[isl];}
 	icount++;
-        if (fDetector == "SBND") { // pe metric for sbnd only
+        if (fDetector == "SBND" && fUseUncoatedPMT) {
 	  isl = int(pe_nbins*(slice/drift_distance));	  
 	  float myratio = 100.0*_flash_unpe;
-          if (_flash_pe>0) {myratio/=_flash_pe;}
-          if (pesp[isl]>0) {_score+=abs(myratio-pemean[isl])/pesp[isl];}
-	  icount++;
+          if (pesp[isl] > 0 && _flash_pe > 0) {
+            myratio /= _flash_pe;
+            _score += abs(myratio-pemean[isl])/pesp[isl];
+            icount++;
+          }
 	}
 	//	_score/=icount;
         mscore[itpc] = _score;
@@ -704,8 +706,9 @@ bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string de
     }
   }
   else if (detector == "SBND") {
-    if ((itpc == 1 && -213. < pd_x && pd_x < 0) || (itpc == 0 && 0 < pd_x && pd_x < 213) ) return true;
-    // else {std::cout << lostPDMessage.str(); return false;}
+    if ((itpc == 0 && -213. < pd_x && pd_x < 0) || (itpc == 1 && 0 < pd_x && pd_x < 213) ) return true;
+    //    else {std::cout << lostPDMessage.str(); return false;}
+    else { return false;}
   }
   return false;
 }
