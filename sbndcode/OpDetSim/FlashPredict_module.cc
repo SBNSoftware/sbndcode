@@ -163,6 +163,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
 
   int nbins = 500*(fBeamWindowEnd-fBeamWindowStart);
   ophittime = tfs->make<TH1F>("ophittime","ophittime",nbins,fBeamWindowStart,fBeamWindowEnd); // in us
+  ophittime->SetOption("HIST");
 
   if (fMakeTree) {
   _flashmatch_nuslice_tree = tfs->make<TTree>("nuslicetree","nu FlashPredict tree");
@@ -348,10 +349,12 @@ void FlashPredict::produce(art::Event & e)
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
     if ( fDetector == "SBND" && !map.pdType(oph.OpChannel(),"pmt")) continue; // use only uncoated PMTs for SBND for flashtime
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
+    //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
     if ( (oph.PeakTime()<fBeamWindowStart) || (oph.PeakTime()> fBeamWindowEnd) ) continue;
 
-    //    ophittime->Fill(oph.PeakTime(),100,0*oph.PE());
-    ophittime->Fill(oph.PeakTime(),fPEscale*oph.PE());
+       ophittime->Fill(oph.PeakTime(),fPEscale*oph.PE());
+    // float thisPE = fPEscale*oph.PE();
+    // if (thisPE>1) ophittime->Fill(oph.PeakTime(),thisPE);
   }
 
   if (ophittime->GetEntries()<=0 || ophittime->Integral() < fMinFlashPE) {
@@ -364,7 +367,7 @@ void FlashPredict::produce(art::Event & e)
   float flashtime = (ibin*0.002)+fBeamWindowStart;  // in us
   float lowedge = flashtime+fLightWindowStart;
   float highedge = flashtime+fLightWindowEnd;
-  
+    std::cout << "light window " << lowedge << " " << highedge << std::endl;
 
   // Loop over pandora pfp particles
   for (unsigned int p=0; p < pfp_h->size(); p++){
@@ -485,7 +488,7 @@ void FlashPredict::produce(art::Event & e)
           // check cryostat and tpc
           if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
 	  // only use optical hits around the flash time
-	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) ) continue;
+	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) || oph.PE()<=0 ) continue;
 	  // only use PMTs for SBND
           if (op_type == "pmt") {
 	    // Add up the position, weighting with PEs
@@ -519,15 +522,15 @@ void FlashPredict::produce(art::Event & e)
 	
 	if (pnorm>0) {
 	  _flashtime=flashtime;
-	  _flash_pe=pnorm;
+	  _flash_pe=pnorm*fPEscale;
 	  _flash_y=sum_Cy/sum_D;
 	  _flash_z=sum_Cz/sum_D;
 	  sum_By=_flash_y;        sum_Bz=_flash_z;
 	  _flash_r=sqrt((sum_Ay-2.0*sum_By*sum_Cy+sum_By*sum_By*sum_D+sum_Az-2.0*sum_Bz*sum_Cz+sum_Bz*sum_Bz*sum_D)/sum_D);
-	  _flash_unpe=unpe_tot;
-	  icountPE  +=(int)(fPEscale*_flash_pe);
+	  _flash_unpe=unpe_tot*fPEscale;
+	  icountPE  +=(int)(_flash_pe);
 	}
-	else { _flash_pe=0; _flash_y=0; _flash_z=0; _flash_unpe=0;}
+	else { _flash_pe=0; _flash_y=0; _flash_z=0; _flash_unpe=0; _flash_r=0;}
 	
 	//      calculate match score here, put association on the event
 	float slice=_nuvtx_x;
@@ -543,21 +546,22 @@ void FlashPredict::produce(art::Event & e)
 	isl = int(rr_nbins*(slice/drift_distance));
         if (rrsp[isl]>0) {_score+=abs(_flash_r-rrmean[isl])/rrsp[isl];}
 	icount++;
-        if (0) {  // this piece is broken?
-	  //        if (fDetector == "SBND") { // pe metric for sbnd only
+	if (0) {  // this piece is broken?
+	  //if (fDetector == "SBND") { // pe metric for sbnd only
 	  isl = int(pe_nbins*(slice/drift_distance));	  
 	  float myratio = 100.0*_flash_unpe;
-          if (_flash_pe>0.01 && pesp[isl]>0) {
+          if (_flash_pe>1 && pesp[isl]>0) {
 	    myratio/=_flash_pe;
 	    _score+=abs(myratio-pemean[isl])/pesp[isl];
 	    icount++;
 	  }
 	}
 	//	_score/=icount;
-        mscore[itpc] = _score;
-	// fill tree
-	if (fMakeTree) _flashmatch_nuslice_tree->Fill();
-	
+	if (_flash_pe>0 ) {
+	  mscore[itpc] = _score;
+	  // fill tree
+	  if (fMakeTree) _flashmatch_nuslice_tree->Fill();
+	}
       } // if tpc charge>0
     }  // end loop over TPCs
     
@@ -567,14 +571,15 @@ void FlashPredict::produce(art::Event & e)
       totc += charge[itpc];
       if (mscore[itpc] > 0) icount++;
     }
-    if (icount>0) this_score/=(icount*1.0);
-
-    // create t0 and pfp-t0 association here
-    T0_v->push_back(anab::T0( flashtime, icountPE, p, 0, this_score));
-    //    util::CreateAssn(*this, e, *T0_v, pfp_h[p], *pfp_t0_assn_v);
-    //    util::CreateAssn(*this, e, *T0_v, pfp, *pfp_t0_assn_v);
-    util::CreateAssn(*this, e, *T0_v, pfp_ptr, *pfp_t0_assn_v);
-
+    if (icount>0) { 
+      this_score/=(icount*1.0);
+      
+      // create t0 and pfp-t0 association here
+      T0_v->push_back(anab::T0( flashtime, icountPE, p, 0, this_score));
+      //    util::CreateAssn(*this, e, *T0_v, pfp_h[p], *pfp_t0_assn_v);
+      //    util::CreateAssn(*this, e, *T0_v, pfp, *pfp_t0_assn_v);
+      util::CreateAssn(*this, e, *T0_v, pfp_ptr, *pfp_t0_assn_v);
+    }
   } // over all PFparticles
 
 
