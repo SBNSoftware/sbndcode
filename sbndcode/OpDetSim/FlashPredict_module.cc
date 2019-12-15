@@ -109,6 +109,7 @@ private:
   TTree* _flashmatch_acpt_tree;
   TTree* _flashmatch_nuslice_tree;
   TH1F *ophittime;
+  TH1F *ophittime2;
 						
   // Tree variables
   std::vector<float> _pe_reco_v, _pe_hypo_v;
@@ -165,6 +166,8 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   int nbins = 500*(fBeamWindowEnd-fBeamWindowStart);
   ophittime = tfs->make<TH1F>("ophittime","ophittime",nbins,fBeamWindowStart,fBeamWindowEnd); // in us
   ophittime->SetOption("HIST");
+  ophittime2 = tfs->make<TH1F>("ophittime2","ophittime2",5*nbins,-5.0,+10.0); // in us
+  ophittime2->SetOption("HIST");
 
   if (fMakeTree) {
   _flashmatch_nuslice_tree = tfs->make<TTree>("nuslicetree","nu FlashPredict tree");
@@ -344,11 +347,14 @@ void FlashPredict::produce(art::Event & e)
 
   // get flash time
   ophittime->Reset();
+  ophittime2->Reset();
   for(size_t j = 0; j < OpHitCollection.size(); j++){
     recob::OpHit oph = OpHitCollection[j];
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-    if ( fDetector == "SBND" && !map.pdType(oph.OpChannel(),"pmt")) continue; // use only uncoated PMTs for SBND for flashtime
+    if ( fDetector == "SBND" && map.pdType(oph.OpChannel(),"barepmt")) 
+       ophittime2->Fill(oph.PeakTime(),fPEscale*oph.PE());
+    if ( fDetector == "SBND" && !map.pdType(oph.OpChannel(),"pmt")) continue; // use only coated PMTs for SBND for flashtime
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
     if ( (oph.PeakTime()<fBeamWindowStart) || (oph.PeakTime()> fBeamWindowEnd) ) continue;
@@ -490,7 +496,7 @@ void FlashPredict::produce(art::Event & e)
           if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
 	  // only use optical hits around the flash time
 	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) || oph.PE()<=0 ) continue;
-	  // only use PMTs for SBND
+	  // only use PMTs for SBND	
           if (op_type == "pmt") {
 	    // Add up the position, weighting with PEs
 	    _flash_x=PMTxyz[0];
