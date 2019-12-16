@@ -13,12 +13,12 @@ source:
 physics: {
   analyzers: {
     pmtana: {
-      module_type: PMTAna
+      module_type: OnlinePMTAna
       waveform_tag: newopdaq
     }
   }
 
-  simulate: [pmtana]
-  end_paths: []
+  analysis: [pmtana]
+  end_paths: [analysis]
 }
-
+process_name: OnlinePMTAna

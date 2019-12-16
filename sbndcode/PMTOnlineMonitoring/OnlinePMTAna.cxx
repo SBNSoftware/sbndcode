@@ -1,20 +1,20 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       PMTAna
+// Class:       OnlinePMTAna
 // Plugin Type: analyzer (art v3_03_01)
-// File:        PMTAna.cxx
+// File:        OnlinePMTAna.cxx
 //
 // Generated at Sun Dec 15 20:17:27 2019 by Gray Putnam using cetskelgen
 // from cetlib version v3_08_00.
 ////////////////////////////////////////////////////////////////////////
 
-#include "PMTAna.h"
+#include "OnlinePMTAna.h"
 
 #include "art/Framework/Principal/Handle.h"
 #include "art_root_io/TFileService.h"
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 
-sbnom::PMTAna::PMTAna(fhicl::ParameterSet const& p)
+sbnom::OnlinePMTAna::OnlinePMTAna(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}  // ,
   // More initializers here.
 {
@@ -36,7 +36,7 @@ sbnom::PMTAna::PMTAna(fhicl::ParameterSet const& p)
   fOutput->Branch("n_waveforms", &fNWaveforms);
 }
 
-void sbnom::PMTAna::analyze(art::Event const& e)
+void sbnom::OnlinePMTAna::analyze(art::Event const& e)
 {
   // Get the handle of OpDetWaveforms
   const art::ValidHandle<std::vector<raw::OpDetWaveform>> waveform_handle = e.getValidHandle<std::vector<raw::OpDetWaveform>>(fWaveformTag);

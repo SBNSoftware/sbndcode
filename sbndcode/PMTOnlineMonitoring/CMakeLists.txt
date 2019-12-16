@@ -1,7 +1,7 @@
-# make a shared library from PMTAna.cxx
-cet_make_library( LIBRARY_NAME SBNOM_PMTAna
+# make a shared library from OnlinePMTAna.cxx
+cet_make_library( LIBRARY_NAME SBNOM_OnlinePMTAna
   SOURCE  
-    PMTAna.cxx
+    OnlinePMTAna.cxx
   LIBRARIES
     ${LARDATAOBJ}
     lardataobj_RawData
@@ -21,9 +21,9 @@ cet_make_library( LIBRARY_NAME SBNOM_PMTAna
     art_Persistency_Common
 )
 
-# make a module from PMTAna_module.cc
-simple_plugin( PMTAna module
-  SBNOM_PMTAna
+# make a module from OnlinePMTAna_module.cc
+simple_plugin( OnlinePMTAna module
+  SBNOM_OnlinePMTAna
   ${LARDATAOBJ}
   lardataobj_RawData
   ${ART_UTILITIES}
