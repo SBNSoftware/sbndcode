@@ -1,0 +1,24 @@
+# output
+services: {
+  TFileService: { fileName: "pmtana.root" }
+}
+
+# input
+source:
+{
+  module_type:     RootInput
+}
+
+# run configuration
+physics: {
+  analyzers: {
+    pmtana: {
+      module_type: PMTAna
+      waveform_tag: newopdaq
+    }
+  }
+
+  simulate: [pmtana]
+  end_paths: []
+}
+
