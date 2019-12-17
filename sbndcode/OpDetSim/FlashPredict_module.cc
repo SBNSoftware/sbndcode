@@ -382,7 +382,10 @@ void FlashPredict::produce(art::Event & e)
   for (unsigned int p=0; p < pfp_h->size(); p++){
     auto const& pfp = pfp_h->at(p);
     if (pfp.IsPrimary() == false) continue;
-    if ( fSelectNeutrino && (abs(pfp.PdgCode())!=12) && (abs(pfp.PdgCode())!=14) )  continue; 
+    if ( fSelectNeutrino &&
+         (abs(pfp.PdgCode())!=12) &&
+         (abs(pfp.PdgCode())!=14) &&
+         (abs(pfp.PdgCode())!=16))  continue; 
 
     lightCluster[0].clear();
     lightCluster[1].clear();
