@@ -86,6 +86,7 @@ private:
   std::string fDetector; // SBND or ICARUS
   int fCryostat;  // =0 or =1 to match ICARUS reco chain selection
   bool fMakeTree, fSelectNeutrino, fUseUncoatedPMT, fUseCalo;
+  float fTermThreshold;
   std::vector<float> fPMTChannelCorrection;
   // geometry service
   const uint nMaxTPCs = 4;
@@ -155,6 +156,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fDetector = p.get<std::string>("Detector", "SBND");
   fCryostat = p.get<int>("Cryostat",0); //set =0 ot =1 for ICARUS to match reco chain selection
   fPEscale = p.get<float>("PEscale",1.0);
+  fTermThreshold = p.get<float>("ThresholdTerm", 30.);
 
   if (fDetector == "SBND" && fCryostat==1){
     throw cet::exception("FlashPredictSBND") << "SBND has only one cryostat. \n"
@@ -544,35 +546,65 @@ void FlashPredict::produce(art::Event & e)
 	}
 	else { _flash_pe=0; _flash_y=0; _flash_z=0; _flash_unpe=0; _flash_r=0;}
 	
-	//      calculate match score here, put association on the event
-	float slice=_nuvtx_x;
+        // calculate match score here, put association on the event
+        float slice = _nuvtx_x;
         float drift_distance = 200.0; // TODO: no hardcoded values
         if (fDetector == "ICARUS") {drift_distance=150.0;} // TODO: no hardcoded values
-	_score = 0; int icount =0;
-	int isl = int(dy_nbins*(slice/drift_distance));
-        if (dysp[isl] > 0) {_score += abs(_flash_y-_nuvtx_y-dymean[isl])/dysp[isl];}
-	icount++;
-	isl = int(dz_nbins*(slice/drift_distance));
-        if (dzsp[isl] > 0) {_score += abs(_flash_z-_nuvtx_z-dzmean[isl])/dzsp[isl];}
-	icount++;
-	isl = int(rr_nbins*(slice/drift_distance));
-        if (rrsp[isl] > 0 && _flash_r > 0) {_score += abs(_flash_r-rrmean[isl])/rrsp[isl];}
-	icount++;
+        _score = 0; int icount = 0;
+        double term;
+        std::ostringstream thresholdMessage;
+        thresholdMessage << std::left << std::setw(12) << std::setfill(' ');
+        thresholdMessage << "pfp.PdgCode:\t" << pfp.PdgCode() << "\n"
+                         << "_evt:      \t" << _evt << "\n"
+                         << "itpc:      \t" << itpc << "\n"
+                         << "_flash_z:  \t" << std::setw(8) <<  _flash_z  << ",\t"
+                         << "_nuvtx_z:  \t" << std::setw(8) << _nuvtx_z   << "\n"
+                         << "_flash_y:  \t" << std::setw(8) << _flash_y   << ",\t"
+                         << "_nuvtx_y:  \t" << std::setw(8) << _nuvtx_y   << "\n"
+                         << "_flash_x:  \t" << std::setw(8) << _flash_x   << ",\t"
+                         << "_nuvtx_x:  \t" << std::setw(8) << _nuvtx_x   << "\n"
+                         << "_flash_pe: \t" << std::setw(8) << _flash_pe  << ",\t"
+                         << "_nuvtx_q:  \t" << std::setw(8) << _nuvtx_q   << "\n"
+                         << "_flash_r:  \t" << std::setw(8) << _flash_r   << "\n"
+                         << "_flashtime:\t" << std::setw(8) << _flashtime << "\n" << std::endl;
+        int isl = int(dy_nbins*(slice/drift_distance));
+        if (dysp[isl] > 0) {
+          term = std::abs(std::abs(_flash_y-_nuvtx_y)-dymean[isl])/dysp[isl];
+          if (term > fTermThreshold) std::cout << "\nBig term Y:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
+          _score += term;
+        }
+        icount++;
+        isl = int(dz_nbins*(slice/drift_distance));
+        if (dzsp[isl] > 0) {
+          term = std::abs(std::abs(_flash_z-_nuvtx_z)-dzmean[isl])/dzsp[isl];
+          if (term > fTermThreshold) std::cout << "\nBig term Z:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
+          _score += term;
+        }
+        icount++;
+        isl = int(rr_nbins*(slice/drift_distance));
+        if (rrsp[isl] > 0 && _flash_r > 0) {
+          term = std::abs(_flash_r-rrmean[isl])/rrsp[isl];
+          if (term > fTermThreshold) std::cout << "\nBig term R:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
+          _score += term;
+        }
+        icount++;
         if (fDetector == "SBND" && fUseUncoatedPMT) {
-	  isl = int(pe_nbins*(slice/drift_distance));	  
-	  float myratio = 100.0*_flash_unpe;
+          isl = int(pe_nbins*(slice/drift_distance));
+          float myratio = 100.0*_flash_unpe;
           if (pesp[isl] > 0 && _flash_pe > 0) {
             myratio /= _flash_pe;
-            _score += abs(myratio-pemean[isl])/pesp[isl];
+            term = std::abs(myratio-pemean[isl])/pesp[isl];
+            if (term > fTermThreshold) std::cout << "\nBig term RATIO:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
+            _score += term;
             icount++;
           }
-	}
-	//	_score/=icount;
-	if (_flash_pe>0 ) {
-	  mscore[itpc] = _score;
-	  // fill tree
-	  if (fMakeTree) _flashmatch_nuslice_tree->Fill();
-	}
+        }
+        //      _score/=icount;
+        if (_flash_pe>0 ) {
+          mscore[itpc] = _score;
+          // fill tree
+          if (fMakeTree) _flashmatch_nuslice_tree->Fill();
+        }
       } // if tpc charge>0
     }  // end loop over TPCs
     
