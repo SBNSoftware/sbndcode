@@ -22,6 +22,7 @@ icarus_flash_match_0: {
   LightWindowEnd: 0.09 # us, wrt flash time
   PEscale: 1.0
   MinFlashPE: 0.
+  ThresholdTerm: 15.
 }
 
 icarus_flash_match_1: @local::icarus_flash_match_0
