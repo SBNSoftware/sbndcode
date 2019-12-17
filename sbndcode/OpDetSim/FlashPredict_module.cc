@@ -160,6 +160,10 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     throw cet::exception("FlashPredictSBND") << "SBND has only one cryostat. \n"
                                              << "Check Detector and Cryostat parameter." << std::endl;
   }
+  else if (fDetector == "ICARUS" && fCryostat>1){
+    throw cet::exception("FlashPredictICARUS") << "ICARUS has only two cryostats. \n"
+                                               << "Check Detector and Cryostat parameter." << std::endl;
+  }
 
   art::ServiceHandle<art::TFileService> tfs;
 
@@ -308,9 +312,7 @@ void FlashPredict::produce(art::Event & e)
     std::cout << "nTPC can't be larger than 2, resizing." << std::endl;
     nTPCs = 2;
   }
-  geo::CryostatGeo geo_cryo = geometry->Cryostat(0);
-  if (fDetector == "ICARUS" && fCryostat==1) geo_cryo = geometry->Cryostat(1);
-
+  geo::CryostatGeo geo_cryo = geometry->Cryostat(fCryostat);
 
   // grab PFParticles in event
   auto const& pfp_h = e.getValidHandle<std::vector<recob::PFParticle> >(fPandoraProducer);
