@@ -89,9 +89,8 @@ private:
   float fTermThreshold;
   std::vector<float> fPMTChannelCorrection;
   // geometry service
-  const uint nMaxTPCs = 4;
-  flashana::QCluster_t lightCluster[4];
-
+  static const size_t nMaxTPCs = 2; // ICARUS has 4 TPCs, however they need to be run independently
+  std::array<flashana::QCluster_t, nMaxTPCs> qClusterInTPC;
 
   ::flashana::Flash_t GetFlashPESpectrum(const recob::OpFlash& opflash);
   void CollectDownstreamPFParticles(const lar_pandora::PFParticleMap &pfParticleMap,
@@ -319,7 +318,7 @@ void FlashPredict::produce(art::Event & e)
   _score        = -9999.;
 
   const art::ServiceHandle<geo::Geometry> geometry;
-  uint nTPCs(geometry->NTPC());
+  size_t nTPCs(geometry->NTPC());
   if (nTPCs > 2) {
     std::cout << "nTPC can't be larger than 2, resizing." << std::endl;
     nTPCs = 2;
@@ -399,8 +398,7 @@ void FlashPredict::produce(art::Event & e)
          (abs(pfp.PdgCode()) != 14) &&
          (abs(pfp.PdgCode()) != 16)) continue;
 
-    lightCluster[0].clear();
-    lightCluster[1].clear();
+    for (size_t t=0; t<nMaxTPCs; t++) qClusterInTPC[t].clear();
 
     const art::Ptr<recob::PFParticle> pfp_ptr(pfp_h, p);
     std::vector<recob::PFParticle> pfp_v;
@@ -437,7 +435,7 @@ void FlashPredict::produce(art::Event & e)
         float xpos = 0.0;
         if (pxyz[0]<0) xpos = fabs(pxyz[0]+200.0);
         else xpos = fabs(200.0-pxyz[0]);
-        lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge);
+        qClusterInTPC[tpcindex].emplace_back(xpos, position[1], position[2], charge);
       }
       }
       }
@@ -470,20 +468,23 @@ void FlashPredict::produce(art::Event & e)
           geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);
           // xpos is the distance from the wire planes.
           float xpos = fabs(position[0] - Wxyz[0]);
-          lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
+          qClusterInTPC[tpcindex].emplace_back(xpos, position[1], position[2],
+                                               charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)
+                                                         ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
         } // for all hits associated to this spacepoint
       } // for all spacepoints
       //      }  // if track or shower
     } // for all pfp pointers
 
     int icountPE = 0;
-    float mscore[2] = {0};
-    float charge[2] = {0};
+    float mscore[nMaxTPCs] = {0};
+    float charge[nMaxTPCs] = {0};
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       double xave = 0.0; double yave = 0.0; double zave = 0.0; double norm = 0.0;
       _nuvtx_q = 0;
-      for (size_t i=0; i<lightCluster[itpc].size(); ++i) {
-        flashana::QCluster_t this_cl = lightCluster[itpc];
+      // TODO: use accumulators instead of this for loop
+      for (size_t i=0; i<qClusterInTPC[itpc].size(); ++i) {
+        flashana::QCluster_t this_cl = qClusterInTPC[itpc];
         flashana::QPoint_t qp = this_cl[i];
         xave += 0.001 * qp.q * qp.x;
         yave += 0.001 * qp.q * qp.y;
