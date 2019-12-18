@@ -103,20 +103,20 @@ private:
   void AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,
                     const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h,
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
-  bool isPDInCryoTPC(float pd_x, int icryo,int itpc, std::string detector);
-  bool isChargeInCryoTPC(float qp_x, int icryo,int itpc, std::string detector);
+  bool isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string detector);
+  bool isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector);
 
   // root stuff
   TTree* _flashmatch_acpt_tree;
   TTree* _flashmatch_nuslice_tree;
   TH1F *ophittime;
   TH1F *ophittime2;
-						
+
   // Tree variables
   std::vector<float> _pe_reco_v, _pe_hypo_v;
   float _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
   float _nuvtx_x, _nuvtx_y, _nuvtx_z, _nuvtx_q;
-  float _flash_x,_flash_y,_flash_z,_flash_pe,_flash_unpe;
+  float _flash_x, _flash_y, _flash_z, _flash_pe, _flash_unpe;
   float _flash_r, _score;
   int _evt, _run, _sub;
   float _flashtime;
@@ -124,8 +124,8 @@ private:
   // PFP map
   std::map<unsigned int, unsigned int> _pfpmap;
 
-  std::vector<float> dysp,dzsp,rrsp,pesp,dymean,dzmean,rrmean,pemean;
-  int rr_nbins,dy_nbins,dz_nbins,pe_nbins;
+  std::vector<float> dysp, dzsp, rrsp, pesp, dymean, dzmean, rrmean, pemean;
+  int rr_nbins, dy_nbins, dz_nbins, pe_nbins;
 
 };
 
@@ -135,63 +135,63 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
 {
   produces< std::vector< anab::T0 > >();
   produces< art::Assns <recob::PFParticle, anab::T0> >();
-  // fFlashProducer      = p.get<art::InputTag>("FlashProducer" );
-  fOpHitProducer      = p.get<std::string>("OpHitProducer","ophit");
-  fPandoraProducer    = p.get<std::string>("PandoraProducer" ,"pandora"  );
-  fTrackProducer         = p.get<std::string>("TrackProducer","pandoraTrack"      );
-  fCaloProducer         = p.get<std::string>("CaloProducer","pandoraCalo"      );
-  fSpacePointProducer = p.get<std::string>("SpacePointProducer", "pandora" );
-  fBeamWindowStart = p.get<float>("BeamWindowStart", 0.0);
-  fBeamWindowEnd   = p.get<float>("BeamWindowEnd", 4000.0);  // in ns
-  fMinFlashPE      = p.get<float>("MinFlashPE", 0.0);
+  // fFlashProducer         = p.get<art::InputTag>("FlashProducer");
+  fOpHitProducer            = p.get<std::string>("OpHitProducer", "ophit");
+  fPandoraProducer          = p.get<std::string>("PandoraProducer", "pandora");
+  fTrackProducer            = p.get<std::string>("TrackProducer", "pandoraTrack");
+  fCaloProducer             = p.get<std::string>("CaloProducer", "pandoraCalo");
+  fSpacePointProducer       = p.get<std::string>("SpacePointProducer", "pandora");
+  fBeamWindowStart          = p.get<float>("BeamWindowStart", 0.0);
+  fBeamWindowEnd            = p.get<float>("BeamWindowEnd", 4000.0);  // in ns
+  fMinFlashPE               = p.get<float>("MinFlashPE", 0.0);
   fChargeToNPhotonsShower   = p.get<float>("ChargeToNPhotonsShower", 1.0);  // ~40000/1600
   fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 1.0);   // ~40000/1600
-  fInputFilename = p.get<std::string>("InputFileName","fmplots.root");  // root file with histograms for match score calc
-  fMakeTree = p.get<bool>("MakeTree",false);  
-  fUseCalo = p.get<bool>("UseCalo",false);  
-  fSelectNeutrino = p.get<bool>("SelectNeutrino",true);  
-  fUseUncoatedPMT = p.get<bool>("UseUncoatedPMT",false);
-  fLightWindowStart = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
-  fLightWindowEnd   = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
-  fDetector = p.get<std::string>("Detector", "SBND");
-  fCryostat = p.get<int>("Cryostat",0); //set =0 ot =1 for ICARUS to match reco chain selection
-  fPEscale = p.get<float>("PEscale",1.0);
-  fTermThreshold = p.get<float>("ThresholdTerm", 30.);
+  fInputFilename            = p.get<std::string>("InputFileName", "fmplots.root"); // root file with score metrics
+  fMakeTree                 = p.get<bool>("MakeTree", false);
+  fUseCalo                  = p.get<bool>("UseCalo", false);
+  fSelectNeutrino           = p.get<bool>("SelectNeutrino", true);
+  fUseUncoatedPMT           = p.get<bool>("UseUncoatedPMT", false);
+  fLightWindowStart         = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
+  fLightWindowEnd           = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
+  fDetector                 = p.get<std::string>("Detector", "SBND");
+  fCryostat                 = p.get<int>("Cryostat", 0); //set =0 ot =1 for ICARUS to match reco chain selection
+  fPEscale                  = p.get<float>("PEscale", 1.0);
+  fTermThreshold            = p.get<float>("ThresholdTerm", 30.);
 
-  if (fDetector == "SBND" && fCryostat==1){
+  if (fDetector == "SBND" && fCryostat == 1) {
     throw cet::exception("FlashPredictSBND") << "SBND has only one cryostat. \n"
                                              << "Check Detector and Cryostat parameter." << std::endl;
   }
-  else if (fDetector == "ICARUS" && fCryostat>1){
+  else if (fDetector == "ICARUS" && fCryostat > 1) {
     throw cet::exception("FlashPredictICARUS") << "ICARUS has only two cryostats. \n"
                                                << "Check Detector and Cryostat parameter." << std::endl;
   }
 
   art::ServiceHandle<art::TFileService> tfs;
 
-  int nbins = 500*(fBeamWindowEnd-fBeamWindowStart);
-  ophittime = tfs->make<TH1F>("ophittime","ophittime",nbins,fBeamWindowStart,fBeamWindowEnd); // in us
+  int nbins = 500 * (fBeamWindowEnd - fBeamWindowStart);
+  ophittime = tfs->make<TH1F>("ophittime", "ophittime", nbins, fBeamWindowStart, fBeamWindowEnd); // in us
   ophittime->SetOption("HIST");
-  ophittime2 = tfs->make<TH1F>("ophittime2","ophittime2",5*nbins,-5.0,+10.0); // in us
+  ophittime2 = tfs->make<TH1F>("ophittime2", "ophittime2", 5 * nbins, -5.0, +10.0); // in us
   ophittime2->SetOption("HIST");
 
   if (fMakeTree) {
-  _flashmatch_nuslice_tree = tfs->make<TTree>("nuslicetree","nu FlashPredict tree");
-  _flashmatch_nuslice_tree->Branch("evt",&_evt,"evt/I");
-  _flashmatch_nuslice_tree->Branch("run",&_run,"run/I");
-  _flashmatch_nuslice_tree->Branch("sub",&_sub,"sub/I");
-  _flashmatch_nuslice_tree->Branch("flashtime",&_flashtime,"flashtime/F");
-  _flashmatch_nuslice_tree->Branch("flashpe"  ,&_flash_pe  ,"flashpe/F");
-  _flashmatch_nuslice_tree->Branch("flash_x"  ,&_flash_x  ,"flash_x/F");
-  _flashmatch_nuslice_tree->Branch("flash_y"  ,&_flash_y  ,"flash_y/F");
-  _flashmatch_nuslice_tree->Branch("flash_z"  ,&_flash_z  ,"flash_z/F");
-  _flashmatch_nuslice_tree->Branch("flash_r"  ,&_flash_r  ,"flash_r/F");
-  _flashmatch_nuslice_tree->Branch("flash_unpe"  ,&_flash_unpe  ,"flash_unpe/F");
-  _flashmatch_nuslice_tree->Branch("nuvtx_q",&_nuvtx_q,"nuvtx_q/F");
-  _flashmatch_nuslice_tree->Branch("nuvtx_x",&_nuvtx_x,"nuvtx_x/F");
-  _flashmatch_nuslice_tree->Branch("nuvtx_y",&_nuvtx_y,"nuvtx_y/F");
-  _flashmatch_nuslice_tree->Branch("nuvtx_z",&_nuvtx_z,"nuvtx_z/F");
-  _flashmatch_nuslice_tree->Branch("score",&_score,"score/F");
+    _flashmatch_nuslice_tree = tfs->make<TTree>("nuslicetree", "nu FlashPredict tree");
+    _flashmatch_nuslice_tree->Branch("evt", &_evt, "evt/I");
+    _flashmatch_nuslice_tree->Branch("run", &_run, "run/I");
+    _flashmatch_nuslice_tree->Branch("sub", &_sub, "sub/I");
+    _flashmatch_nuslice_tree->Branch("flashtime", &_flashtime, "flashtime/F");
+    _flashmatch_nuslice_tree->Branch("flashpe", &_flash_pe, "flashpe/F");
+    _flashmatch_nuslice_tree->Branch("flash_x", &_flash_x, "flash_x/F");
+    _flashmatch_nuslice_tree->Branch("flash_y", &_flash_y, "flash_y/F");
+    _flashmatch_nuslice_tree->Branch("flash_z", &_flash_z, "flash_z/F");
+    _flashmatch_nuslice_tree->Branch("flash_r", &_flash_r, "flash_r/F");
+    _flashmatch_nuslice_tree->Branch("flash_unpe", &_flash_unpe, "flash_unpe/F");
+    _flashmatch_nuslice_tree->Branch("nuvtx_q", &_nuvtx_q, "nuvtx_q/F");
+    _flashmatch_nuslice_tree->Branch("nuvtx_x", &_nuvtx_x, "nuvtx_x/F");
+    _flashmatch_nuslice_tree->Branch("nuvtx_y", &_nuvtx_y, "nuvtx_y/F");
+    _flashmatch_nuslice_tree->Branch("nuvtx_z", &_nuvtx_z, "nuvtx_z/F");
+    _flashmatch_nuslice_tree->Branch("score", &_score, "score/F");
   }
 
   //read histograms and fill vectors for match score calculation
@@ -200,82 +200,94 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   sp.find_file(fInputFilename, fname);
   //  std::unique_ptr<TFile> infile(new TFile(fname.c_str(), "READ"));
   TFile *infile = new TFile(fname.c_str(), "READ");
-  if(!infile->IsOpen())
-    {
-      throw cet::exception("FlashPredictSBND") << "Could not find the light-charge match root file '" << fname << "'!\n";
-    }
+  if(!infile->IsOpen()) {
+    throw cet::exception("FlashPredictSBND") << "Could not find the light-charge match root file '"
+                                             << fname << "'!\n";
+  }
   //
   TH1 *temphisto = (TH1*)infile->Get("rrp1");
   rr_nbins = temphisto->GetNbinsX();
-  if (rr_nbins<=0) {
+  if (rr_nbins <= 0) {
     std::cout << " problem with input histos for rr " << rr_nbins << " bins " << std::endl;
-    rr_nbins=1;
+    rr_nbins = 1;
     rrmean.push_back(0);
     rrsp.push_back(0.001);
   }
   else {
-  for (int ib=1;ib<=rr_nbins;++ib) {
-    rrmean.push_back(temphisto->GetBinContent(ib));
-    float tt = temphisto->GetBinError(ib);
-    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in rr" << std::endl;}
-    rrsp.push_back(tt);
-  }
+    for (int ib = 1; ib <= rr_nbins; ++ib) {
+      rrmean.push_back(temphisto->GetBinContent(ib));
+      float tt = temphisto->GetBinError(ib);
+      if (tt <= 0) {
+        tt = 100.;
+        std::cout << "zero value for bin spread in rr" << std::endl;
+      }
+      rrsp.push_back(tt);
+    }
   }
   //
   temphisto = (TH1*)infile->Get("dyp1");
   dy_nbins = temphisto->GetNbinsX();
-  if (dy_nbins<=0) {
+  if (dy_nbins <= 0) {
     std::cout << " problem with input histos for dy " << dy_nbins << " bins " << std::endl;
-    dy_nbins=1;
+    dy_nbins = 1;
     dymean.push_back(0);
     dysp.push_back(0.001);
   }
   else {
-  for (int ib=1;ib<=dy_nbins;++ib) {
-    dymean.push_back(temphisto->GetBinContent(ib));
-    float tt = temphisto->GetBinError(ib);
-    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in dy" << std::endl;}
-    dysp.push_back(tt);
-  }
+    for (int ib = 1; ib <= dy_nbins; ++ib) {
+      dymean.push_back(temphisto->GetBinContent(ib));
+      float tt = temphisto->GetBinError(ib);
+      if (tt <= 0) {
+        tt = 100.;
+        std::cout << "zero value for bin spread in dy" << std::endl;
+      }
+      dysp.push_back(tt);
+    }
   }
   //
   temphisto = (TH1*)infile->Get("dzp1");
   dz_nbins = temphisto->GetNbinsX();
-  if (dz_nbins<=0) {
+  if (dz_nbins <= 0) {
     std::cout << " problem with input histos for dz " << dz_nbins << " bins " << std::endl;
-    dz_nbins=1;
+    dz_nbins = 1;
     dzmean.push_back(0);
     dzsp.push_back(0.001);
   }
   else {
-  for (int ib=1;ib<=dz_nbins;++ib) {
-    dzmean.push_back(temphisto->GetBinContent(ib));
-    float tt = temphisto->GetBinError(ib);
-    if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in dz" << std::endl;}
-    dzsp.push_back(tt);
-  }
+    for (int ib = 1; ib <= dz_nbins; ++ib) {
+      dzmean.push_back(temphisto->GetBinContent(ib));
+      float tt = temphisto->GetBinError(ib);
+      if (tt <= 0) {
+        tt = 100.;
+        std::cout << "zero value for bin spread in dz" << std::endl;
+      }
+      dzsp.push_back(tt);
+    }
   }
   //
   if (fDetector == "SBND" ) {
     temphisto = (TH1*)infile->Get("pep1");
     pe_nbins = temphisto->GetNbinsX();
-    if (pe_nbins<=0) {
+    if (pe_nbins <= 0) {
       std::cout << " problem with input histos for pe " << pe_nbins << " bins " << std::endl;
-      pe_nbins=1;
+      pe_nbins = 1;
       pemean.push_back(0);
       pesp.push_back(0.001);
     }
     else {
-      for (int ib=1;ib<=pe_nbins;++ib) {
-	pemean.push_back(temphisto->GetBinContent(ib));
-	float tt = temphisto->GetBinError(ib);
-	if (tt<=0) { tt=100.; std::cout << "zero value for bin spread in pe" << std::endl;}
-	pesp.push_back(tt);
+      for (int ib = 1; ib <= pe_nbins; ++ib) {
+        pemean.push_back(temphisto->GetBinContent(ib));
+        float tt = temphisto->GetBinError(ib);
+        if (tt <= 0) {
+          tt = 100.;
+          std::cout << "zero value for bin spread in pe" << std::endl;
+        }
+        pesp.push_back(tt);
       }
     }
   }
-  else {
-    pe_nbins=1;
+  else if (fDetector == "ICARUS" ) {
+    pe_nbins = 1;
     pemean.push_back(0);
     pesp.push_back(0.001);
   }
@@ -293,24 +305,22 @@ void FlashPredict::produce(art::Event & e)
   std::unique_ptr< std::vector<anab::T0> > T0_v(new std::vector<anab::T0>);
   std::unique_ptr< art::Assns <recob::PFParticle, anab::T0> > pfp_t0_assn_v( new art::Assns<recob::PFParticle, anab::T0>  );
 
-  // SBND map for light detector type labels (pmt, uncoatedpmt, arapuca)
+  // SBND map for light detector type labels (pmt, barepmt, arapuca, xarapuca)
   opdet::sbndPDMapAlg map;
 
   // reset TTree variables
   _evt = e.event();
   _sub = e.subRun();
   _run = e.run();
-  _flashtime = -9999.;
-  _flashpe   = -9999.;
+  _flashtime    = -9999.;
+  _flashpe      = -9999.;
   _flash_unpe   = -9999.;
-  _flash_r   = -9999.;
-  _score = -9999.;
-
-  // std::cout << "event no " << _evt << std::endl;
+  _flash_r      = -9999.;
+  _score        = -9999.;
 
   const art::ServiceHandle<geo::Geometry> geometry;
   uint nTPCs(geometry->NTPC());
-  if (nTPCs>2) {
+  if (nTPCs > 2) {
     std::cout << "nTPC can't be larger than 2, resizing." << std::endl;
     nTPCs = 2;
   }
@@ -320,7 +330,7 @@ void FlashPredict::produce(art::Event & e)
   auto const& pfp_h = e.getValidHandle<std::vector<recob::PFParticle> >(fPandoraProducer);
 
   // grab spacepoints associated with PFParticles
-  art::FindManyP<recob::SpacePoint> pfp_spacepoint_assn_v(pfp_h, e, fPandoraProducer);  
+  art::FindManyP<recob::SpacePoint> pfp_spacepoint_assn_v(pfp_h, e, fPandoraProducer);
 
   auto const& spacepoint_h = e.getValidHandle<std::vector<recob::SpacePoint> >(fSpacePointProducer);
   art::FindManyP<recob::Hit> spacepoint_hit_assn_v(spacepoint_h, e, fSpacePointProducer);
@@ -336,10 +346,10 @@ void FlashPredict::produce(art::Event & e)
 
   // load OpHits previously created
   art::Handle<std::vector<recob::OpHit> > ophit_h;
-  e.getByLabel(fOpHitProducer,ophit_h);
-  if(!ophit_h.isValid()){
-    mf::LogWarning("FlashPredict")
-      <<"No optical hits from producer module "<<fOpHitProducer;
+  e.getByLabel(fOpHitProducer, ophit_h);
+  if(!ophit_h.isValid()) {
+    mf::LogWarning("FlashPredict") << "No optical hits from producer module "
+                                   << fOpHitProducer;
     e.put(std::move(T0_v));
     e.put(std::move(pfp_t0_assn_v));
     return;
@@ -347,180 +357,186 @@ void FlashPredict::produce(art::Event & e)
   std::vector<recob::OpHit> const& OpHitCollection(*ophit_h);
 
   _pfpmap.clear();
-  for (unsigned int p=0; p < pfp_h->size(); p++)    _pfpmap[pfp_h->at(p).Self()] = p;
+  for (unsigned int p=0; p<pfp_h->size(); p++) _pfpmap[pfp_h->at(p).Self()] = p;
 
   // get flash time
   ophittime->Reset();
   ophittime2->Reset();
-  for(size_t j = 0; j < OpHitCollection.size(); j++){
+  for(size_t j=0; j<OpHitCollection.size(); j++) {
     recob::OpHit oph = OpHitCollection[j];
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-    if ( fDetector == "SBND" && map.pdType(oph.OpChannel(),"barepmt")) 
-       ophittime2->Fill(oph.PeakTime(),fPEscale*oph.PE());
-    if ( fDetector == "SBND" && !map.pdType(oph.OpChannel(),"pmt")) continue; // use only coated PMTs for SBND for flashtime
+    if (fDetector == "SBND" && map.pdType(oph.OpChannel(), "barepmt"))
+      ophittime2->Fill(oph.PeakTime(), fPEscale * oph.PE());
+    if (fDetector == "SBND" && !map.pdType(oph.OpChannel(), "pmt")) continue; // use only coated PMTs for SBND for flashtime
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
-    if ( (oph.PeakTime()<fBeamWindowStart) || (oph.PeakTime()> fBeamWindowEnd) ) continue;
+    if ((oph.PeakTime() < fBeamWindowStart) || (oph.PeakTime() > fBeamWindowEnd)) continue;
 
-       ophittime->Fill(oph.PeakTime(),fPEscale*oph.PE());
+    ophittime->Fill(oph.PeakTime(), fPEscale * oph.PE());
     // float thisPE = fPEscale*oph.PE();
     // if (thisPE>1) ophittime->Fill(oph.PeakTime(),thisPE);
   }
 
-  if (ophittime->GetEntries()<=0 || ophittime->Integral() < fMinFlashPE) {
+  if (ophittime->GetEntries() <= 0 || ophittime->Integral() < fMinFlashPE) {
     e.put(std::move(T0_v));
     e.put(std::move(pfp_t0_assn_v));
     return;
-  }    
+  }
 
   auto ibin =  ophittime->GetMaximumBin();
-  float flashtime = (ibin*0.002)+fBeamWindowStart;  // in us
-  float lowedge = flashtime+fLightWindowStart;
-  float highedge = flashtime+fLightWindowEnd;
-    std::cout << "light window " << lowedge << " " << highedge << std::endl;
+  float flashtime = (ibin * 0.002) + fBeamWindowStart; // in us
+  float lowedge = flashtime + fLightWindowStart;
+  float highedge = flashtime + fLightWindowEnd;
+  std::cout << "light window " << lowedge << " " << highedge << std::endl;
 
   // Loop over pandora pfp particles
-  for (unsigned int p=0; p < pfp_h->size(); p++){
+  for (unsigned int p=0; p<pfp_h->size(); p++) {
     auto const& pfp = pfp_h->at(p);
     if (pfp.IsPrimary() == false) continue;
     if ( fSelectNeutrino &&
-         (abs(pfp.PdgCode())!=12) &&
-         (abs(pfp.PdgCode())!=14) &&
-         (abs(pfp.PdgCode())!=16))  continue; 
+         (abs(pfp.PdgCode()) != 12) &&
+         (abs(pfp.PdgCode()) != 14) &&
+         (abs(pfp.PdgCode()) != 16)) continue;
 
     lightCluster[0].clear();
     lightCluster[1].clear();
 
     const art::Ptr<recob::PFParticle> pfp_ptr(pfp_h, p);
     std::vector<recob::PFParticle> pfp_v;
-    std::vector<art::Ptr<recob::PFParticle> > pfp_ptr_v;    
+    std::vector<art::Ptr<recob::PFParticle> > pfp_ptr_v;
     AddDaughters(pfp_ptr, pfp_h, pfp_ptr_v);
 
-    //  loop over mothers and daughters, fill lightcluster for each tpc    
-    for (size_t i=0; i < pfp_ptr_v.size(); i++) {
+    //  loop over mothers and daughters, fill lightcluster for each tpc
+    for (size_t i=0; i<pfp_ptr_v.size(); i++) {
       const art::Ptr<recob::PFParticle> pfp_ptr(pfp_h, p);
       auto key = pfp_ptr_v.at(i).key();
       recob::PFParticle pfp = *pfp_ptr_v.at(i);
       pfp_v.push_back(pfp);
-      /*      
+
+      /*
       if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
-	// grab tracks associated with pfp particle
-	auto const& track_ptr_v = pfp_track_assn_v.at(key);
-	for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
-	  auto mytrack = track_ptr_v[tr];
-	  auto const& trackkey = mytrack.key();
-	  // grab calo objects associated with tracks
-	  const std::vector< art::Ptr<anab::Calorimetry> > calo_ptr_v = track_calo_assn_v.at( trackkey );
-	  for (size_t ca=0;  ca <  calo_ptr_v.size(); ca++) {
-	    auto mycalo = calo_ptr_v.at( ca );
-	    int npts = mycalo->dEdx().size();
-	    for (int ip=0;ip<npts;++ip) {
-	      Point_t pxyz=mycalo->fXYZ[ip];
-	      float ds = mycalo->fTrkPitch[ip];
-	      float dQdx = mycalo->fdQdx[ip];
-	      float dEdx = mycalo->fdEdx[ip];
-	      float alpha = dQdx/dEdx;
-	      float charge = (1-alpha)*dEdx*ds;
-	      // hardcode for now for SBND	      
-	      float xpos = 0.0;
-	      if (pxyz[0]<0) xpos = fabs(pxyz[0]+200.0);
-	      else xpos = fabs(200.0-pxyz[0]);
-	      lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge);
-	    }
-	  }
-	}
+      // grab tracks associated with pfp particle
+      auto const& track_ptr_v = pfp_track_assn_v.at(key);
+      for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
+      auto mytrack = track_ptr_v[tr];
+      auto const& trackkey = mytrack.key();
+      // grab calo objects associated with tracks
+      const std::vector< art::Ptr<anab::Calorimetry> > calo_ptr_v = track_calo_assn_v.at( trackkey );
+      for (size_t ca=0;  ca <  calo_ptr_v.size(); ca++) {
+      auto mycalo = calo_ptr_v.at( ca );
+      int npts = mycalo->dEdx().size();
+      for (int ip=0;ip<npts;++ip) {
+        Point_t pxyz=mycalo->fXYZ[ip];
+        float ds = mycalo->fTrkPitch[ip];
+        float dQdx = mycalo->fdQdx[ip];
+        float dEdx = mycalo->fdEdx[ip];
+        float alpha = dQdx/dEdx;
+        float charge = (1-alpha)*dEdx*ds;
+        // hardcode for now for SBND
+        float xpos = 0.0;
+        if (pxyz[0]<0) xpos = fabs(pxyz[0]+200.0);
+        else xpos = fabs(200.0-pxyz[0]);
+        lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge);
+      }
+      }
+      }
       }
       else { // this is a shower
       */
-	auto const& spacepoint_ptr_v = pfp_spacepoint_assn_v.at(key);
-	std::vector< art::Ptr<recob::Hit> > hit_ptr_v;
-        // TODO: refactor this loop over spacepoints so that it's not
-        // necessary to query the wire position every time.
-        // There's just two different X wire positions on any given
-        // cryostat for the collection wires.
-	for (size_t sp=0; sp < spacepoint_ptr_v.size(); sp++) {
-	  auto SP = spacepoint_ptr_v[sp];
-	  auto const& spkey = SP.key();
-	  const std::vector< art::Ptr<recob::Hit> > this_hit_ptr_v = spacepoint_hit_assn_v.at( spkey );
-	  for (size_t h=0; h < this_hit_ptr_v.size(); h++) {
-	    auto hit = this_hit_ptr_v.at( h );
-	    // Only use hits from the collection plane
-	    geo::WireID wid = hit->WireID();
-	    if (geometry->SignalType(wid) != geo::kCollection) continue;
-	    // Add the charged point to the vector
-	    const auto &position(SP->XYZ());
-            const auto tpcindex = wid.TPC;
-            // throw the charge coming from another TPC
-            if (!isChargeInCryoTPC(position[0], fCryostat, tpcindex, fDetector)) continue;
-	    const auto charge(hit->Integral());
-	    double Wxyz[3];
-	    geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);
-            // xpos is the distance from the wire planes.
-	    float xpos = fabs(position[0]-Wxyz[0]);
-	    lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
-	  } // for all hits associated to this spacepoint
-	} // for all spacepoints
-	//      }  // if track or shower
+
+      auto const& spacepoint_ptr_v = pfp_spacepoint_assn_v.at(key);
+      std::vector< art::Ptr<recob::Hit> > hit_ptr_v;
+      // TODO: refactor this loop over spacepoints so that it's not
+      // necessary to query the wire position every time.
+      // There's just two different X wire positions on any given
+      // cryostat for the collection wires.
+      for (size_t sp=0; sp<spacepoint_ptr_v.size(); sp++) {
+        auto SP = spacepoint_ptr_v[sp];
+        auto const& spkey = SP.key();
+        const std::vector< art::Ptr<recob::Hit> > this_hit_ptr_v = spacepoint_hit_assn_v.at( spkey );
+        for (size_t h=0; h<this_hit_ptr_v.size(); h++) {
+          auto hit = this_hit_ptr_v.at( h );
+          // Only use hits from the collection plane
+          geo::WireID wid = hit->WireID();
+          if (geometry->SignalType(wid) != geo::kCollection) continue;
+          // Add the charged point to the vector
+          const auto &position(SP->XYZ());
+          const auto tpcindex = wid.TPC;
+          // throw the charge coming from another TPC
+          if (!isChargeInCryoTPC(position[0], fCryostat, tpcindex, fDetector)) continue;
+          const auto charge(hit->Integral());
+          double Wxyz[3];
+          geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);
+          // xpos is the distance from the wire planes.
+          float xpos = fabs(position[0] - Wxyz[0]);
+          lightCluster[tpcindex].emplace_back(xpos, position[1], position[2], charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr) ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
+        } // for all hits associated to this spacepoint
+      } // for all spacepoints
+      //      }  // if track or shower
     } // for all pfp pointers
-    
-    int icountPE=0;
-    float mscore[2] ={0}; 
-    float charge[2]={0};
+
+    int icountPE = 0;
+    float mscore[2] = {0};
+    float charge[2] = {0};
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
-      double xave=0.0; double yave=0.0; double zave=0.0; double norm=0.0;
+      double xave = 0.0; double yave = 0.0; double zave = 0.0; double norm = 0.0;
       _nuvtx_q = 0;
       for (size_t i=0; i<lightCluster[itpc].size(); ++i) {
         flashana::QCluster_t this_cl = lightCluster[itpc];
         flashana::QPoint_t qp = this_cl[i];
-        xave += 0.001*qp.q*qp.x;
-        yave += 0.001*qp.q*qp.y;
-        zave += 0.001*qp.q*qp.z;
-        norm += 0.001*qp.q;
+        xave += 0.001 * qp.q * qp.x;
+        yave += 0.001 * qp.q * qp.y;
+        zave += 0.001 * qp.q * qp.z;
+        norm += 0.001 * qp.q;
         _nuvtx_q += qp.q;
       }
-      if (norm>0) {
-	_nuvtx_x=xave/norm;
-	_nuvtx_y=yave/norm;
-	_nuvtx_z=zave/norm;
+      if (norm > 0) {
+        _nuvtx_x = xave / norm;
+        _nuvtx_y = yave / norm;
+        _nuvtx_z = zave / norm;
         charge[itpc] = _nuvtx_q;
-	// store PMT photon counts in the tree as well
-	double PMTxyz[3];
-	double unpe_tot=0;
-	double sumy=0; double sumz=0; double pnorm=0;
-	double sum_Ay=0; double sum_Az=0;
-	double sum_By=0; double sum_Bz=0;
-	double sum_D=0;  double sum=0;
-	double sum_Cy=0;double sum_Cz=0;
+        // store PMT photon counts in the tree as well
+        double PMTxyz[3];
+        double unpe_tot = 0;
+        double pnorm = 0;
+        double sum =    0;
+        double sumy =   0; double sumz =   0;
+        double sum_Ay = 0; double sum_Az = 0;
+        double sum_By = 0; double sum_Bz = 0;
+        double sum_Cy = 0; double sum_Cz = 0;
+        double sum_D =  0;
         // TODO: change this next loop, such that it only loops
         // through channels in the current fCryostat
-	for(size_t j = 0; j < OpHitCollection.size(); j++){
-	  recob::OpHit oph = OpHitCollection[j];
+        for(size_t j=0; j<OpHitCollection.size(); j++) {
+          recob::OpHit oph = OpHitCollection[j];
           std::string op_type = "pmt";
           if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
-	  geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
+          geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
           // check cryostat and tpc
           if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
-	  // only use optical hits around the flash time
-	  if ( (oph.PeakTime()<lowedge) || (oph.PeakTime()>highedge) || oph.PE()<=0 ) continue;
-	  // only use PMTs for SBND	
+          // only use optical hits around the flash time
+          if ( (oph.PeakTime() < lowedge) ||
+               (oph.PeakTime() > highedge) ||
+               oph.PE() <= 0 ) continue;
+          // only use PMTs for SBND
           if (op_type == "pmt") {
-	    // Add up the position, weighting with PEs
-	    _flash_x=PMTxyz[0];
-	    pnorm+=oph.PE();
-	    sum+=1.0;
-	    sumy    += oph.PE()*PMTxyz[1];
-	    sumz    += oph.PE()*PMTxyz[2];
-	    sum_By  += PMTxyz[1];
-	    sum_Bz  += PMTxyz[2];
-	    sum_Ay  += oph.PE()*PMTxyz[1]*oph.PE()*PMTxyz[1];
-	    sum_Az  += oph.PE()*PMTxyz[2]*oph.PE()*PMTxyz[2];
-	    sum_D   +=oph.PE()*oph.PE();
-	    sum_Cy  +=oph.PE()*oph.PE()*PMTxyz[1];
-	    sum_Cz  +=oph.PE()*oph.PE()*PMTxyz[2];
-	  }
+            // Add up the position, weighting with PEs
+            _flash_x = PMTxyz[0];
+            pnorm += oph.PE();
+            sum += 1.0;
+            sumy    += oph.PE() * PMTxyz[1];
+            sumz    += oph.PE() * PMTxyz[2];
+            sum_By  += PMTxyz[1];
+            sum_Bz  += PMTxyz[2];
+            sum_Ay  += oph.PE() * PMTxyz[1] * oph.PE() * PMTxyz[1];
+            sum_Az  += oph.PE() * PMTxyz[2] * oph.PE() * PMTxyz[2];
+            sum_D   += oph.PE() * oph.PE();
+            sum_Cy  += oph.PE() * oph.PE() * PMTxyz[1];
+            sum_Cz  += oph.PE() * oph.PE() * PMTxyz[2];
+          }
           else if ( op_type == "barepmt") {
-            unpe_tot+=oph.PE();
+            unpe_tot += oph.PE();
           }
           else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
             //TODO: Use ARAPUCA
@@ -532,24 +548,33 @@ void FlashPredict::produce(art::Event & e)
             // xarape_tot+=oph.PE();
             continue;
           }
-	}
-	
-	if (pnorm>0) {
-	  _flashtime=flashtime;
-	  _flash_pe=pnorm*fPEscale;
-	  _flash_y=sum_Cy/sum_D;
-	  _flash_z=sum_Cz/sum_D;
-	  sum_By=_flash_y;        sum_Bz=_flash_z;
-	  _flash_r=sqrt((sum_Ay-2.0*sum_By*sum_Cy+sum_By*sum_By*sum_D+sum_Az-2.0*sum_Bz*sum_Cz+sum_Bz*sum_Bz*sum_D)/sum_D);
-	  _flash_unpe=unpe_tot*fPEscale;
-	  icountPE  +=(int)(_flash_pe);
-	}
-	else { _flash_pe=0; _flash_y=0; _flash_z=0; _flash_unpe=0; _flash_r=0;}
-	
+        }
+
+        if (pnorm > 0) {
+          _flashtime = flashtime;
+          _flash_pe = pnorm * fPEscale;
+          _flash_y = sum_Cy / sum_D;
+          _flash_z = sum_Cz / sum_D;
+          sum_By = _flash_y;
+          sum_Bz = _flash_z;
+          _flash_r = sqrt((sum_Ay - 2.0 * sum_By * sum_Cy + sum_By * sum_By * sum_D + sum_Az - 2.0 * sum_Bz * sum_Cz + sum_Bz * sum_Bz * sum_D) / sum_D);
+          _flash_unpe = unpe_tot * fPEscale;
+          icountPE  += (int)(_flash_pe);
+        }
+        else {
+          _flash_pe = 0;
+          _flash_y = 0;
+          _flash_z = 0;
+          _flash_unpe = 0;
+          _flash_r = 0;
+        }
+
         // calculate match score here, put association on the event
         float slice = _nuvtx_x;
         float drift_distance = 200.0; // TODO: no hardcoded values
-        if (fDetector == "ICARUS") {drift_distance=150.0;} // TODO: no hardcoded values
+        if (fDetector == "ICARUS") {
+          drift_distance = 150.0; // TODO: no hardcoded values
+        }
         _score = 0; int icount = 0;
         double term;
         std::ostringstream thresholdMessage;
@@ -567,56 +592,56 @@ void FlashPredict::produce(art::Event & e)
                          << "_nuvtx_q:  \t" << std::setw(8) << _nuvtx_q   << "\n"
                          << "_flash_r:  \t" << std::setw(8) << _flash_r   << "\n"
                          << "_flashtime:\t" << std::setw(8) << _flashtime << "\n" << std::endl;
-        int isl = int(dy_nbins*(slice/drift_distance));
+        int isl = int(dy_nbins * (slice / drift_distance));
         if (dysp[isl] > 0) {
-          term = std::abs(std::abs(_flash_y-_nuvtx_y)-dymean[isl])/dysp[isl];
+          term = std::abs(std::abs(_flash_y - _nuvtx_y) - dymean[isl]) / dysp[isl];
           if (term > fTermThreshold) std::cout << "\nBig term Y:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
           _score += term;
         }
         icount++;
-        isl = int(dz_nbins*(slice/drift_distance));
+        isl = int(dz_nbins * (slice / drift_distance));
         if (dzsp[isl] > 0) {
-          term = std::abs(std::abs(_flash_z-_nuvtx_z)-dzmean[isl])/dzsp[isl];
+          term = std::abs(std::abs(_flash_z - _nuvtx_z) - dzmean[isl]) / dzsp[isl];
           if (term > fTermThreshold) std::cout << "\nBig term Z:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
           _score += term;
         }
         icount++;
-        isl = int(rr_nbins*(slice/drift_distance));
+        isl = int(rr_nbins * (slice / drift_distance));
         if (rrsp[isl] > 0 && _flash_r > 0) {
-          term = std::abs(_flash_r-rrmean[isl])/rrsp[isl];
+          term = std::abs(_flash_r - rrmean[isl]) / rrsp[isl];
           if (term > fTermThreshold) std::cout << "\nBig term R:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
           _score += term;
         }
         icount++;
         if (fDetector == "SBND" && fUseUncoatedPMT) {
-          isl = int(pe_nbins*(slice/drift_distance));
-          float myratio = 100.0*_flash_unpe;
+          isl = int(pe_nbins * (slice / drift_distance));
+          float myratio = 100.0 * _flash_unpe;
           if (pesp[isl] > 0 && _flash_pe > 0) {
             myratio /= _flash_pe;
-            term = std::abs(myratio-pemean[isl])/pesp[isl];
+            term = std::abs(myratio - pemean[isl]) / pesp[isl];
             if (term > fTermThreshold) std::cout << "\nBig term RATIO:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
             _score += term;
             icount++;
           }
         }
         //      _score/=icount;
-        if (_flash_pe>0 ) {
+        if (_flash_pe > 0 ) {
           mscore[itpc] = _score;
           // fill tree
           if (fMakeTree) _flashmatch_nuslice_tree->Fill();
         }
       } // if tpc charge>0
     }  // end loop over TPCs
-    
-    double this_score=0.0; int icount=0; double totc=0;
+
+    double this_score = 0.0; int icount = 0; double totc = 0;
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       this_score += mscore[itpc];
       totc += charge[itpc];
       if (mscore[itpc] > 0) icount++;
     }
-    if (icount>0) { 
-      this_score/=(icount*1.0);
-      
+    if (icount > 0) {
+      this_score /= (icount * 1.0);
+
       // create t0 and pfp-t0 association here
       T0_v->push_back(anab::T0( flashtime, icountPE, p, 0, this_score));
       //    util::CreateAssn(*this, e, *T0_v, pfp_h[p], *pfp_t0_assn_v);
@@ -644,8 +669,7 @@ void FlashPredict::produce(art::Event & e)
   std::vector<float> PEspectrum;
   PEspectrum.resize(nOpDets);
   // apply gain to OpDets
-  for (uint OpChannel = 0; OpChannel < nOpDets; ++OpChannel)
-  {
+  for (uint OpChannel=0; OpChannel<nOpDets; ++OpChannel) {
     uint opdet = geometry->OpDetFromOpChannel(OpChannel);
     PEspectrum[opdet] = opflash.PEs().at(OpChannel);
   }
@@ -656,15 +680,14 @@ void FlashPredict::produce(art::Event & e)
   flash.x_err = flash.y_err = flash.z_err = 0;
   float totalPE = 0.;
   float sumy = 0., sumz = 0., sumy2 = 0., sumz2 = 0.;
-  for (unsigned int opdet = 0; opdet < PEspectrum.size(); opdet++)
-  {
+  for (unsigned int opdet=0; opdet<PEspectrum.size(); opdet++) {
     double PMTxyz[3];
     geometry->OpDetGeoFromOpDet(opdet).GetCenter(PMTxyz);
     // Add up the position, weighting with PEs
-    sumy += PEspectrum[opdet] * PMTxyz[1];
-    sumy2 += PEspectrum[opdet] * PMTxyz[1] * PMTxyz[1];
-    sumz += PEspectrum[opdet] * PMTxyz[2];
-    sumz2 += PEspectrum[opdet] * PMTxyz[2] * PMTxyz[2];
+    sumy    += PEspectrum[opdet] * PMTxyz[1];
+    sumy2   += PEspectrum[opdet] * PMTxyz[1] * PMTxyz[1];
+    sumz    += PEspectrum[opdet] * PMTxyz[2];
+    sumz2   += PEspectrum[opdet] * PMTxyz[2] * PMTxyz[2];
     totalPE += PEspectrum[opdet];
   }
 
@@ -679,8 +702,7 @@ void FlashPredict::produce(art::Event & e)
   flash.pe_v.resize(nOpDets);
   flash.pe_err_v.resize(nOpDets);
   // Fill the flash with the PE spectrum
-  for (unsigned int i = 0; i < nOpDets; ++i)
-  {
+  for (unsigned int i=0; i<nOpDets; ++i) {
     const auto PE(PEspectrum.at(i));
     flash.pe_v.at(i) = PE;
     flash.pe_err_v.at(i) = std::sqrt(PE);
@@ -692,36 +714,45 @@ void FlashPredict::produce(art::Event & e)
 }// ::flashana::Flash_t FlashPredict::GetFlashPESpectrum
 
 
-void FlashPredict::CollectDownstreamPFParticles(const lar_pandora::PFParticleMap &pfParticleMap,
-                                                const art::Ptr<recob::PFParticle> &particle,
-                                                lar_pandora::PFParticleVector &downstreamPFParticles) const
+void FlashPredict::CollectDownstreamPFParticles(
+  const lar_pandora::PFParticleMap &pfParticleMap,
+  const art::Ptr<recob::PFParticle> &particle,
+  lar_pandora::PFParticleVector &downstreamPFParticles) const
 {
-  if (std::find(downstreamPFParticles.begin(), downstreamPFParticles.end(), particle) == downstreamPFParticles.end())
+  if (std::find(downstreamPFParticles.begin(), downstreamPFParticles.end(), particle) == downstreamPFParticles.end()){
     downstreamPFParticles.push_back(particle);
-  for (const auto &daughterId : particle->Daughters())
-  {
+  }
+  for (const auto &daughterId : particle->Daughters()) {
     const auto iter(pfParticleMap.find(daughterId));
-    if (iter == pfParticleMap.end())
+    if (iter == pfParticleMap.end()){
       throw cet::exception("FlashNeutrinoId") << "Scrambled PFParticle IDs" << std::endl;
+    }
     this->CollectDownstreamPFParticles(pfParticleMap, iter->second, downstreamPFParticles);
   }
 } // void FlashPredict::CollectDownstreamPFParticles
 
-void FlashPredict::CollectDownstreamPFParticles(const lar_pandora::PFParticleMap &pfParticleMap,
-                                                const lar_pandora::PFParticleVector &parentPFParticles,
-                                                lar_pandora::PFParticleVector &downstreamPFParticles) const
+
+void FlashPredict::CollectDownstreamPFParticles(
+  const lar_pandora::PFParticleMap &pfParticleMap,
+  const lar_pandora::PFParticleVector &parentPFParticles,
+  lar_pandora::PFParticleVector &downstreamPFParticles) const
 {
-  for (const auto &particle : parentPFParticles)
+  for (const auto &particle : parentPFParticles){
     this->CollectDownstreamPFParticles(pfParticleMap, particle, downstreamPFParticles);
+  }
 } // void FlashPredict::CollectDownstreamPFParticles
 
-void FlashPredict::AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,  const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h, std::vector<art::Ptr<recob::PFParticle> > &pfp_v) {
-  
+
+void FlashPredict::AddDaughters(
+  const art::Ptr<recob::PFParticle>& pfp_ptr,
+  const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h,
+  std::vector<art::Ptr<recob::PFParticle> > &pfp_v)
+{
   auto daughters = pfp_ptr->Daughters();
   pfp_v.push_back(pfp_ptr);
   for(auto const& daughterid : daughters) {
     if (_pfpmap.find(daughterid) == _pfpmap.end()) {
-      std::cout << "Did not find DAUGHTERID in map! error"<< std::endl;
+      std::cout << "Did not find DAUGHTERID in map! error" << std::endl;
       continue;
     }
     const art::Ptr<recob::PFParticle> pfp_ptr(pfp_h, _pfpmap.at(daughterid) );
@@ -730,6 +761,7 @@ void FlashPredict::AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,  con
   return;
 } // void FlashPredict::AddDaughters
 
+
 // TODO: no hardcoding
 // TODO: collapse with the next
 bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string detector)
@@ -737,9 +769,9 @@ bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string de
   // check whether this optical detector views the light inside this tpc.
   std::ostringstream lostPDMessage;
   lostPDMessage << "\nThere's an " << detector << "photo detector that belongs nowhere. \n"
-                 << "icryo: " << icryo << "\n"
-                 << "itpc: "  << itpc << "\n"
-                 << "pd_x: " << pd_x << std::endl;
+                << "icryo: " << icryo << "\n"
+                << "itpc:  " << itpc <<  "\n"
+                << "pd_x:  " << pd_x <<  std::endl;
 
   if (detector == "ICARUS") {
     if (icryo == 0) {
@@ -756,21 +788,23 @@ bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string de
   else if (detector == "SBND") {
     if ((itpc == 0 && -213. < pd_x && pd_x < 0) || (itpc == 1 && 0 < pd_x && pd_x < 213) ) return true;
     //    else {std::cout << lostPDMessage.str(); return false;}
-    else { return false;}
+    else {
+      return false;
+    }
   }
   return false;
 }
 
 // TODO: no hardcoding
 // TODO: collapse with the previous
-// TODO: figure out what to do with the charge that falls into the crevices 
+// TODO: figure out what to do with the charge that falls into the crevices
 bool FlashPredict::isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector)
 {
   std::ostringstream lostChargeMessage;
   lostChargeMessage << "\nThere's " << detector << " charge that belongs nowhere. \n"
-                 << "icryo: " << icryo << "\n"
-                 << "itpc: "  << itpc << "\n"
-                 << "qp_x: " << qp_x << std::endl;
+                    << "icryo: " << icryo << "\n"
+                    << "itpc: "  << itpc << "\n"
+                    << "qp_x: " << qp_x << std::endl;
 
   if (detector == "ICARUS") {
     if (icryo == 0) {
@@ -786,7 +820,9 @@ bool FlashPredict::isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::strin
   }
   else if (detector == "SBND") {
     if ((itpc == 0 && qp_x < 0) || (itpc == 1 && qp_x > 0) ) return true;
-    else {return false;}
+    else {
+      return false;
+    }
     //    else {std::cout << lostChargeMessage.str(); return false;}
   }
   return false;
