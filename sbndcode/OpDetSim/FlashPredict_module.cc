@@ -322,7 +322,7 @@ void FlashPredict::produce(art::Event & e)
   _score        = -9999.;
 
   size_t nTPCs(geometry->NTPC());
-  if (nTPCs > 2) {
+  if (nTPCs > nMaxTPCs) {
     std::cout << "nTPC can't be larger than 2, resizing." << std::endl;
     nTPCs = 2;
   }
@@ -360,13 +360,11 @@ void FlashPredict::produce(art::Event & e)
   std::vector<recob::OpHit> OpHitSubset(OpHitCollection.size());
 
   // copy ophits that are inside the time window and with PEs
-  float windowStart = fBeamWindowStart;
-  float windowEnd = fBeamWindowEnd;
   auto it = std::copy_if(OpHitCollection.begin(), OpHitCollection.end(), OpHitSubset.begin(),
-                                   [windowStart, windowEnd](const recob::OpHit& oph)-> bool
-                                     { return ((oph.PeakTime() > windowStart) &&
-                                               (oph.PeakTime() < windowEnd)   &&
-                                               (oph.PE() > 0)); });
+                         [this](const recob::OpHit& oph)-> bool
+                           { return ((oph.PeakTime() > fBeamWindowStart) &&
+                                     (oph.PeakTime() < fBeamWindowEnd)   &&
+                                     (oph.PE() > 0)); });
   OpHitSubset.resize(std::distance(OpHitSubset.begin(), it));
   // TODO: release OpHitCollection memory now
 
@@ -403,11 +401,9 @@ void FlashPredict::produce(art::Event & e)
   std::cout << "light window " << lowedge << " " << highedge << std::endl;
 
   // only use optical hits around the flash time
-  windowStart = lowedge;
-  windowEnd = highedge;
   OpHitSubset.erase(std::remove_if(OpHitSubset.begin(), OpHitSubset.end(),
-                                   [windowStart, windowEnd](const recob::OpHit& oph)-> bool
-                                     { return ((oph.PeakTime() < windowStart) || (oph.PeakTime() > windowEnd)); }),
+                                   [lowedge, highedge](const recob::OpHit& oph)-> bool
+                                     { return ((oph.PeakTime() < lowedge) || (oph.PeakTime() > highedge)); }),
                     OpHitSubset.end());
 
   // check if the TPC has OpHits
@@ -435,7 +431,7 @@ void FlashPredict::produce(art::Event & e)
     std::vector<art::Ptr<recob::PFParticle> > pfp_ptr_v;
     AddDaughters(pfp_ptr, pfp_h, pfp_ptr_v);
 
-    //  loop over mothers and daughters, fill lightcluster for each tpc
+    //  loop over all mothers and daughters, fill qCluster
     for (size_t i=0; i<pfp_ptr_v.size(); i++) {
       const art::Ptr<recob::PFParticle> pfp_ptr(pfp_h, p);
       auto key = pfp_ptr_v.at(i).key();
@@ -507,8 +503,8 @@ void FlashPredict::produce(art::Event & e)
     } // for all pfp pointers
 
     int icountPE = 0;
-    float mscore[nMaxTPCs] = {0};
-    float charge[nMaxTPCs] = {0};
+    float mscore[nMaxTPCs] = {0.};
+    float charge[nMaxTPCs] = {0.};
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       if (!lightInTPC[itpc]) continue;
       double xave = 0.0; double yave = 0.0; double zave = 0.0; double norm = 0.0;
@@ -550,8 +546,8 @@ void FlashPredict::produce(art::Event & e)
           if (op_type == "pmt") {
             // Add up the position, weighting with PEs
             _flash_x = PMTxyz[0];
-            pnorm += oph.PE();
-            sum += 1.0;
+            sum     += 1.0;
+            pnorm   += oph.PE();
             sumy    += oph.PE() * PMTxyz[1];
             sumz    += oph.PE() * PMTxyz[2];
             sum_By  += PMTxyz[1];
