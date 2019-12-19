@@ -519,7 +519,10 @@ void FlashPredict::produce(art::Event & e)
         norm += 0.001 * qp.q;
         _nuvtx_q += qp.q;
       }
-      if (norm > 0) {
+      if (norm <= 0) {
+        // mf::LogWarning("FlashPredict") << "No charge in the TPC, continue.";
+        continue;
+      }
         _nuvtx_x = xave / norm;
         _nuvtx_y = yave / norm;
         _nuvtx_z = zave / norm;
@@ -656,7 +659,6 @@ void FlashPredict::produce(art::Event & e)
           // fill tree
           if (fMakeTree) _flashmatch_nuslice_tree->Fill();
         }
-      } // if tpc charge>0
     }  // end loop over TPCs
 
     double this_score = 0.0; int icount = 0; double totc = 0;
