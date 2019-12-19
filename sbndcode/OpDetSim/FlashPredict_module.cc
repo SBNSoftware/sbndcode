@@ -53,6 +53,7 @@
 
 #include <memory>
 #include <string>
+#include <algorithm>
 
 class FlashPredict;
 class FlashPredict : public art::EDProducer {
@@ -354,6 +355,18 @@ void FlashPredict::produce(art::Event & e)
     return;
   }
   std::vector<recob::OpHit> const& OpHitCollection(*ophit_h);
+  std::vector<recob::OpHit> OpHitSubset(OpHitCollection.size());
+
+  // copy ophits that are inside the time window and with PEs
+  float windowStart = fBeamWindowStart;
+  float windowEnd = fBeamWindowEnd;
+  auto it = std::copy_if(OpHitCollection.begin(), OpHitCollection.end(), OpHitSubset.begin(),
+                                   [windowStart, windowEnd](const recob::OpHit& oph)-> bool
+                                     { return ((oph.PeakTime() > windowStart) &&
+                                               (oph.PeakTime() < windowEnd)   &&
+                                               (oph.PE() > 0)); });
+  OpHitSubset.resize(std::distance(OpHitSubset.begin(), it));
+  // TODO: release OpHitCollection memory now
 
   _pfpmap.clear();
   for (unsigned int p=0; p<pfp_h->size(); p++) _pfpmap[pfp_h->at(p).Self()] = p;
@@ -361,8 +374,7 @@ void FlashPredict::produce(art::Event & e)
   // get flash time
   ophittime->Reset();
   ophittime2->Reset();
-  for(size_t j=0; j<OpHitCollection.size(); j++) {
-    recob::OpHit oph = OpHitCollection[j];
+  for(auto const& oph : OpHitSubset) {
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
     if (fDetector == "SBND" && map.pdType(oph.OpChannel(), "barepmt"))
@@ -370,7 +382,6 @@ void FlashPredict::produce(art::Event & e)
     if (fDetector == "SBND" && !map.pdType(oph.OpChannel(), "pmt")) continue; // use only coated PMTs for SBND for flashtime
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
-    if ((oph.PeakTime() < fBeamWindowStart) || (oph.PeakTime() > fBeamWindowEnd)) continue;
 
     ophittime->Fill(oph.PeakTime(), fPEscale * oph.PE());
     // float thisPE = fPEscale*oph.PE();
@@ -388,6 +399,14 @@ void FlashPredict::produce(art::Event & e)
   float lowedge = flashtime + fLightWindowStart;
   float highedge = flashtime + fLightWindowEnd;
   std::cout << "light window " << lowedge << " " << highedge << std::endl;
+
+  // only use optical hits around the flash time
+  windowStart = lowedge;
+  windowEnd = highedge;
+  OpHitSubset.erase(std::remove_if(OpHitSubset.begin(), OpHitSubset.end(),
+                                   [windowStart, windowEnd](const recob::OpHit& oph)-> bool
+                                     { return ((oph.PeakTime() < windowStart) || (oph.PeakTime() > windowEnd)); }),
+                    OpHitSubset.end());
 
   // Loop over pandora pfp particles
   for (unsigned int p=0; p<pfp_h->size(); p++) {
@@ -509,17 +528,12 @@ void FlashPredict::produce(art::Event & e)
         double sum_D =  0;
         // TODO: change this next loop, such that it only loops
         // through channels in the current fCryostat
-        for(size_t j=0; j<OpHitCollection.size(); j++) {
-          recob::OpHit oph = OpHitCollection[j];
+        for(auto const& oph : OpHitSubset) {
           std::string op_type = "pmt";
           if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
           geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
           // check cryostat and tpc
           if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
-          // only use optical hits around the flash time
-          if ( (oph.PeakTime() < lowedge) ||
-               (oph.PeakTime() > highedge) ||
-               oph.PE() <= 0 ) continue;
           // only use PMTs for SBND
           if (op_type == "pmt") {
             // Add up the position, weighting with PEs
