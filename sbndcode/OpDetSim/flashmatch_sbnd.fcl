@@ -1,0 +1,25 @@
+
+BEGIN_PROLOG
+
+sbnd_flash_match: {
+  module_type: FlashPredict
+  Detector: "SBND"
+  Cryostat: 0
+  OpHitProducer: "ophit"
+  BeamWindowStart: -0.2 # us
+  BeamWindowEnd: 2.0 # us
+  ChargeToNPhotonsShower: 1.0
+  ChargeToNPhotonsTrack: 1.0
+  InputFileName: "fm_metrics_sbnd.root"
+  MakeTree: true
+  SelectNeutrino: true
+  UseUncoatedPMT: false
+  UseCalo: false
+  LightWindowStart: -0.01 # us, wrt flash time
+  LightWindowEnd: 0.09 # us, wrt flash time
+  PEscale: 1.0
+  MinFlashPE: 0.
+  ThresholdTerm: 30.
+}
+
+END_PROLOG
