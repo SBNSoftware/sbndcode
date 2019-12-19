@@ -93,6 +93,7 @@ private:
   static const size_t nMaxTPCs = 2; // ICARUS has 4 TPCs, however they need to be run independently
   std::array<flashana::QCluster_t, nMaxTPCs> qClusterInTPC;
 
+  void computeFlashMetrics(size_t idtpc, std::vector<recob::OpHit> const& OpHitSubset);
   ::flashana::Flash_t GetFlashPESpectrum(const recob::OpFlash& opflash);
   void CollectDownstreamPFParticles(const lar_pandora::PFParticleMap &pfParticleMap,
                                     const art::Ptr<recob::PFParticle> &particle,
@@ -107,7 +108,10 @@ private:
   bool isPDInCryoTPC(int pdChannel, int icryo, size_t itpc, std::string detector);
   bool isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector);
 
+  int icountPE = 0;
   const art::ServiceHandle<geo::Geometry> geometry;
+// SBND map for light detector type labels (pmt, barepmt, arapuca, xarapuca)
+  opdet::sbndPDMapAlg pdMap;
 
   // root stuff
   TTree* _flashmatch_acpt_tree;
@@ -308,9 +312,6 @@ void FlashPredict::produce(art::Event & e)
   std::unique_ptr< std::vector<anab::T0> > T0_v(new std::vector<anab::T0>);
   std::unique_ptr< art::Assns <recob::PFParticle, anab::T0> > pfp_t0_assn_v( new art::Assns<recob::PFParticle, anab::T0>  );
 
-  // SBND map for light detector type labels (pmt, barepmt, arapuca, xarapuca)
-  opdet::sbndPDMapAlg map;
-
   // reset TTree variables
   _evt = e.event();
   _sub = e.subRun();
@@ -377,9 +378,9 @@ void FlashPredict::produce(art::Event & e)
   for(auto const& oph : OpHitSubset) {
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-    if (fDetector == "SBND" && map.pdType(oph.OpChannel(), "barepmt"))
+    if (fDetector == "SBND" && pdMap.pdType(oph.OpChannel(), "barepmt"))
       ophittime2->Fill(oph.PeakTime(), fPEscale * oph.PE());
-    if (fDetector == "SBND" && !map.pdType(oph.OpChannel(), "pmt")) continue; // use only coated PMTs for SBND for flashtime
+    if (fDetector == "SBND" && !pdMap.pdType(oph.OpChannel(), "pmt")) continue; // use only coated PMTs for SBND for flashtime
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
 
@@ -395,10 +396,10 @@ void FlashPredict::produce(art::Event & e)
   }
 
   auto ibin =  ophittime->GetMaximumBin();
-  float flashtime = (ibin * 0.002) + fBeamWindowStart; // in us
-  float lowedge = flashtime + fLightWindowStart;
-  float highedge = flashtime + fLightWindowEnd;
-  std::cout << "light window " << lowedge << " " << highedge << std::endl;
+  _flashtime = (ibin * 0.002) + fBeamWindowStart; // in us
+  float lowedge = _flashtime + fLightWindowStart;
+  float highedge = _flashtime + fLightWindowEnd;
+  mf::LogDebug("FlashPredict") << "light window " << lowedge << " " << highedge << std::endl;
 
   // only use optical hits around the flash time
   OpHitSubset.erase(std::remove_if(OpHitSubset.begin(), OpHitSubset.end(),
@@ -502,7 +503,6 @@ void FlashPredict::produce(art::Event & e)
       //      }  // if track or shower
     } // for all pfp pointers
 
-    int icountPE = 0;
     float mscore[nMaxTPCs] = {0.};
     // float charge[nMaxTPCs] = {0.}; // TODO: Use this
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
@@ -527,76 +527,8 @@ void FlashPredict::produce(art::Event & e)
       _nuvtx_y = yave / norm;
       _nuvtx_z = zave / norm;
       // charge[itpc] = _nuvtx_q; //TODO: Use this
-      // store PMT photon counts in the tree as well
-      double PMTxyz[3];
-      double unpe_tot = 0;
-      double pnorm = 0;
-      double sum =    0;
-      double sumy =   0; double sumz =   0;
-      double sum_Ay = 0; double sum_Az = 0;
-      double sum_By = 0; double sum_Bz = 0;
-      double sum_Cy = 0; double sum_Cz = 0;
-      double sum_D =  0;
-      // TODO: change this next loop, such that it only loops
-      // through channels in the current fCryostat
-      for(auto const& oph : OpHitSubset) {
-        std::string op_type = "pmt";
-        if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
-        geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-        // check cryostat and tpc
-        if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
-        // only use PMTs for SBND
-        if (op_type == "pmt") {
-          // Add up the position, weighting with PEs
-          _flash_x = PMTxyz[0];
-          sum     += 1.0;
-          pnorm   += oph.PE();
-          sumy    += oph.PE() * PMTxyz[1];
-          sumz    += oph.PE() * PMTxyz[2];
-          sum_By  += PMTxyz[1];
-          sum_Bz  += PMTxyz[2];
-          sum_Ay  += oph.PE() * PMTxyz[1] * oph.PE() * PMTxyz[1];
-          sum_Az  += oph.PE() * PMTxyz[2] * oph.PE() * PMTxyz[2];
-          sum_D   += oph.PE() * oph.PE();
-          sum_Cy  += oph.PE() * oph.PE() * PMTxyz[1];
-          sum_Cz  += oph.PE() * oph.PE() * PMTxyz[2];
-        }
-        else if ( op_type == "barepmt") {
-          unpe_tot += oph.PE();
-        }
-        else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
-          //TODO: Use ARAPUCA
-          // arape_tot+=oph.PE();
-          continue;
-        }
-        else if ( op_type == "xarapucaT1" || op_type == "xarapucaT2")  {
-          //TODO: Use XARAPUCA
-          // xarape_tot+=oph.PE();
-          continue;
-        }
-      }
 
-      if (pnorm > 0) {
-        _flashtime = flashtime;
-        _flash_pe = pnorm * fPEscale;
-        _flash_y = sum_Cy / sum_D;
-        _flash_z = sum_Cz / sum_D;
-        sum_By = _flash_y;
-        sum_Bz = _flash_z;
-        _flash_r = sqrt((sum_Ay - 2.0 * sum_By * sum_Cy + sum_By * sum_By * sum_D + sum_Az - 2.0 * sum_Bz * sum_Cz + sum_Bz * sum_Bz * sum_D) / sum_D);
-        _flash_unpe = unpe_tot * fPEscale;
-        icountPE  += (int)(_flash_pe);
-      }
-      else {
-        mf::LogWarning("FlashPredict") << "Really odd that I landed here, this shouldn't had happen.\n"
-                                       << "pnorm:\t" << pnorm << "\n"
-                                       << "OpHitSubset.size():\t" << OpHitSubset.size() << "\n";
-        _flash_pe = 0;
-        _flash_y = 0;
-        _flash_z = 0;
-        _flash_unpe = 0;
-        _flash_r = 0;
-      }
+      computeFlashMetrics(itpc, OpHitSubset);
 
       // calculate match score here, put association on the event
       float slice = _nuvtx_x;
@@ -671,7 +603,7 @@ void FlashPredict::produce(art::Event & e)
       this_score /= (icount * 1.0);
 
       // create t0 and pfp-t0 association here
-      T0_v->push_back(anab::T0( flashtime, icountPE, p, 0, this_score));
+      T0_v->push_back(anab::T0(_flashtime, icountPE, p, 0, this_score));
       //    util::CreateAssn(*this, e, *T0_v, pfp_h[p], *pfp_t0_assn_v);
       //    util::CreateAssn(*this, e, *T0_v, pfp, *pfp_t0_assn_v);
       util::CreateAssn(*this, e, *T0_v, pfp_ptr, *pfp_t0_assn_v);
@@ -685,6 +617,83 @@ void FlashPredict::produce(art::Event & e)
 
 
 }// end of producer module
+
+void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> const& OpHitSubset)
+{
+  // store PMT photon counts in the tree as well
+  double PMTxyz[3];
+  double unpe_tot = 0;
+  double pnorm = 0;
+  double sum =    0;
+  double sumy =   0; double sumz =   0;
+  double sum_Ay = 0; double sum_Az = 0;
+  double sum_By = 0; double sum_Bz = 0;
+  double sum_Cy = 0; double sum_Cz = 0;
+  double sum_D =  0;
+  // TODO: change this next loop, such that it only loops
+  // through channels in the current fCryostat
+  for(auto const& oph : OpHitSubset) {
+    std::string op_type = "pmt";
+    if (fDetector == "SBND") op_type = pdMap.pdName(oph.OpChannel());
+    geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
+    // check cryostat and tpc
+    if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
+    // only use PMTs for SBND
+    if (op_type == "pmt") {
+      // Add up the position, weighting with PEs
+      _flash_x = PMTxyz[0];
+      sum     += 1.0;
+      pnorm   += oph.PE();
+      sumy    += oph.PE() * PMTxyz[1];
+      sumz    += oph.PE() * PMTxyz[2];
+      sum_By  += PMTxyz[1];
+      sum_Bz  += PMTxyz[2];
+      sum_Ay  += oph.PE() * PMTxyz[1] * oph.PE() * PMTxyz[1];
+      sum_Az  += oph.PE() * PMTxyz[2] * oph.PE() * PMTxyz[2];
+      sum_D   += oph.PE() * oph.PE();
+      sum_Cy  += oph.PE() * oph.PE() * PMTxyz[1];
+      sum_Cz  += oph.PE() * oph.PE() * PMTxyz[2];
+    }
+    else if ( op_type == "barepmt") {
+      unpe_tot += oph.PE();
+    }
+    else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
+      //TODO: Use ARAPUCA
+      // arape_tot+=oph.PE();
+      continue;
+    }
+    else if ( op_type == "xarapucaT1" || op_type == "xarapucaT2")  {
+      //TODO: Use XARAPUCA
+      // xarape_tot+=oph.PE();
+      continue;
+    }
+  }
+
+  if (pnorm > 0) {
+    _flash_pe = pnorm * fPEscale;
+    _flash_y = sum_Cy / sum_D;
+    _flash_z = sum_Cz / sum_D;
+    sum_By = _flash_y;
+    sum_Bz = _flash_z;
+    _flash_r = sqrt((sum_Ay - 2.0 * sum_By * sum_Cy + sum_By * sum_By * sum_D + sum_Az - 2.0 * sum_Bz * sum_Cz + sum_Bz * sum_Bz * sum_D) / sum_D);
+    _flash_unpe = unpe_tot * fPEscale;
+    icountPE  += (int)(_flash_pe);
+  //   std::cout << "itpc:\t" << itpc << "\n";
+  //   std::cout << "_flash_pe:\t" << _flash_pe << "\n";
+  //   std::cout << "_flash_y:\t" << _flash_y << "\n";
+  //   std::cout << "_flash_z:\t" << _flash_z << "\n";
+  }
+  else {
+    mf::LogWarning("FlashPredict") << "Really odd that I landed here, this shouldn't had happen.\n"
+                                   << "pnorm:\t" << pnorm << "\n"
+                                   << "OpHitSubset.size():\t" << OpHitSubset.size() << "\n";
+    _flash_pe = 0;
+    _flash_y = 0;
+    _flash_z = 0;
+    _flash_unpe = 0;
+    _flash_r = 0;
+  }
+}
 
 ::flashana::Flash_t FlashPredict::GetFlashPESpectrum(const recob::OpFlash& opflash)
 {
