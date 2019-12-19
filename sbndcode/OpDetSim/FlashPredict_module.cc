@@ -439,18 +439,18 @@ void FlashPredict::produce(art::Event & e)
       pfp_v.push_back(pfp);
 
       /*
-      if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
-      // grab tracks associated with pfp particle
-      auto const& track_ptr_v = pfp_track_assn_v.at(key);
-      for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
-      auto mytrack = track_ptr_v[tr];
-      auto const& trackkey = mytrack.key();
-      // grab calo objects associated with tracks
-      const std::vector< art::Ptr<anab::Calorimetry> > calo_ptr_v = track_calo_assn_v.at( trackkey );
-      for (size_t ca=0;  ca <  calo_ptr_v.size(); ca++) {
-      auto mycalo = calo_ptr_v.at( ca );
-      int npts = mycalo->dEdx().size();
-      for (int ip=0;ip<npts;++ip) {
+        if ( fUseCalo && lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)) {
+        // grab tracks associated with pfp particle
+        auto const& track_ptr_v = pfp_track_assn_v.at(key);
+        for (size_t tr=0; tr < track_ptr_v.size(); tr++) {
+        auto mytrack = track_ptr_v[tr];
+        auto const& trackkey = mytrack.key();
+        // grab calo objects associated with tracks
+        const std::vector< art::Ptr<anab::Calorimetry> > calo_ptr_v = track_calo_assn_v.at( trackkey );
+        for (size_t ca=0;  ca <  calo_ptr_v.size(); ca++) {
+        auto mycalo = calo_ptr_v.at( ca );
+        int npts = mycalo->dEdx().size();
+        for (int ip=0;ip<npts;++ip) {
         Point_t pxyz=mycalo->fXYZ[ip];
         float ds = mycalo->fTrkPitch[ip];
         float dQdx = mycalo->fdQdx[ip];
@@ -462,11 +462,11 @@ void FlashPredict::produce(art::Event & e)
         if (pxyz[0]<0) xpos = fabs(pxyz[0]+200.0);
         else xpos = fabs(200.0-pxyz[0]);
         qClusterInTPC[tpcindex].emplace_back(xpos, position[1], position[2], charge);
-      }
-      }
-      }
-      }
-      else { // this is a shower
+        }
+        }
+        }
+        }
+        else { // this is a shower
       */
 
       auto const& spacepoint_ptr_v = pfp_spacepoint_assn_v.at(key);
@@ -523,142 +523,142 @@ void FlashPredict::produce(art::Event & e)
         // mf::LogWarning("FlashPredict") << "No charge in the TPC, continue.";
         continue;
       }
-        _nuvtx_x = xave / norm;
-        _nuvtx_y = yave / norm;
-        _nuvtx_z = zave / norm;
-        charge[itpc] = _nuvtx_q;
-        // store PMT photon counts in the tree as well
-        double PMTxyz[3];
-        double unpe_tot = 0;
-        double pnorm = 0;
-        double sum =    0;
-        double sumy =   0; double sumz =   0;
-        double sum_Ay = 0; double sum_Az = 0;
-        double sum_By = 0; double sum_Bz = 0;
-        double sum_Cy = 0; double sum_Cz = 0;
-        double sum_D =  0;
-        // TODO: change this next loop, such that it only loops
-        // through channels in the current fCryostat
-        for(auto const& oph : OpHitSubset) {
-          std::string op_type = "pmt";
-          if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
-          geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-          // check cryostat and tpc
-          if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
-          // only use PMTs for SBND
-          if (op_type == "pmt") {
-            // Add up the position, weighting with PEs
-            _flash_x = PMTxyz[0];
-            sum     += 1.0;
-            pnorm   += oph.PE();
-            sumy    += oph.PE() * PMTxyz[1];
-            sumz    += oph.PE() * PMTxyz[2];
-            sum_By  += PMTxyz[1];
-            sum_Bz  += PMTxyz[2];
-            sum_Ay  += oph.PE() * PMTxyz[1] * oph.PE() * PMTxyz[1];
-            sum_Az  += oph.PE() * PMTxyz[2] * oph.PE() * PMTxyz[2];
-            sum_D   += oph.PE() * oph.PE();
-            sum_Cy  += oph.PE() * oph.PE() * PMTxyz[1];
-            sum_Cz  += oph.PE() * oph.PE() * PMTxyz[2];
-          }
-          else if ( op_type == "barepmt") {
-            unpe_tot += oph.PE();
-          }
-          else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
-            //TODO: Use ARAPUCA
-            // arape_tot+=oph.PE();
-            continue;
-          }
-          else if ( op_type == "xarapucaT1" || op_type == "xarapucaT2")  {
-            //TODO: Use XARAPUCA
-            // xarape_tot+=oph.PE();
-            continue;
-          }
+      _nuvtx_x = xave / norm;
+      _nuvtx_y = yave / norm;
+      _nuvtx_z = zave / norm;
+      charge[itpc] = _nuvtx_q;
+      // store PMT photon counts in the tree as well
+      double PMTxyz[3];
+      double unpe_tot = 0;
+      double pnorm = 0;
+      double sum =    0;
+      double sumy =   0; double sumz =   0;
+      double sum_Ay = 0; double sum_Az = 0;
+      double sum_By = 0; double sum_Bz = 0;
+      double sum_Cy = 0; double sum_Cz = 0;
+      double sum_D =  0;
+      // TODO: change this next loop, such that it only loops
+      // through channels in the current fCryostat
+      for(auto const& oph : OpHitSubset) {
+        std::string op_type = "pmt";
+        if (fDetector == "SBND") op_type = map.pdName(oph.OpChannel());
+        geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
+        // check cryostat and tpc
+        if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
+        // only use PMTs for SBND
+        if (op_type == "pmt") {
+          // Add up the position, weighting with PEs
+          _flash_x = PMTxyz[0];
+          sum     += 1.0;
+          pnorm   += oph.PE();
+          sumy    += oph.PE() * PMTxyz[1];
+          sumz    += oph.PE() * PMTxyz[2];
+          sum_By  += PMTxyz[1];
+          sum_Bz  += PMTxyz[2];
+          sum_Ay  += oph.PE() * PMTxyz[1] * oph.PE() * PMTxyz[1];
+          sum_Az  += oph.PE() * PMTxyz[2] * oph.PE() * PMTxyz[2];
+          sum_D   += oph.PE() * oph.PE();
+          sum_Cy  += oph.PE() * oph.PE() * PMTxyz[1];
+          sum_Cz  += oph.PE() * oph.PE() * PMTxyz[2];
         }
+        else if ( op_type == "barepmt") {
+          unpe_tot += oph.PE();
+        }
+        else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
+          //TODO: Use ARAPUCA
+          // arape_tot+=oph.PE();
+          continue;
+        }
+        else if ( op_type == "xarapucaT1" || op_type == "xarapucaT2")  {
+          //TODO: Use XARAPUCA
+          // xarape_tot+=oph.PE();
+          continue;
+        }
+      }
 
-        if (pnorm > 0) {
-          _flashtime = flashtime;
-          _flash_pe = pnorm * fPEscale;
-          _flash_y = sum_Cy / sum_D;
-          _flash_z = sum_Cz / sum_D;
-          sum_By = _flash_y;
-          sum_Bz = _flash_z;
-          _flash_r = sqrt((sum_Ay - 2.0 * sum_By * sum_Cy + sum_By * sum_By * sum_D + sum_Az - 2.0 * sum_Bz * sum_Cz + sum_Bz * sum_Bz * sum_D) / sum_D);
-          _flash_unpe = unpe_tot * fPEscale;
-          icountPE  += (int)(_flash_pe);
-        }
-        else {
-          mf::LogWarning("FlashPredict") << "Really odd that I landed here, this shouldn't had happen.\n"
-                                         << "pnorm:\t" << pnorm << "\n"
-                                         << "OpHitSubset.size():\t" << OpHitSubset.size() << "\n";
-          _flash_pe = 0;
-          _flash_y = 0;
-          _flash_z = 0;
-          _flash_unpe = 0;
-          _flash_r = 0;
-        }
+      if (pnorm > 0) {
+        _flashtime = flashtime;
+        _flash_pe = pnorm * fPEscale;
+        _flash_y = sum_Cy / sum_D;
+        _flash_z = sum_Cz / sum_D;
+        sum_By = _flash_y;
+        sum_Bz = _flash_z;
+        _flash_r = sqrt((sum_Ay - 2.0 * sum_By * sum_Cy + sum_By * sum_By * sum_D + sum_Az - 2.0 * sum_Bz * sum_Cz + sum_Bz * sum_Bz * sum_D) / sum_D);
+        _flash_unpe = unpe_tot * fPEscale;
+        icountPE  += (int)(_flash_pe);
+      }
+      else {
+        mf::LogWarning("FlashPredict") << "Really odd that I landed here, this shouldn't had happen.\n"
+                                       << "pnorm:\t" << pnorm << "\n"
+                                       << "OpHitSubset.size():\t" << OpHitSubset.size() << "\n";
+        _flash_pe = 0;
+        _flash_y = 0;
+        _flash_z = 0;
+        _flash_unpe = 0;
+        _flash_r = 0;
+      }
 
-        // calculate match score here, put association on the event
-        float slice = _nuvtx_x;
-        float drift_distance = 200.0; // TODO: no hardcoded values
-        if (fDetector == "ICARUS") {
-          drift_distance = 150.0; // TODO: no hardcoded values
-        }
-        _score = 0; int icount = 0;
-        double term;
-        std::ostringstream thresholdMessage;
-        thresholdMessage << std::left << std::setw(12) << std::setfill(' ');
-        thresholdMessage << "pfp.PdgCode:\t" << pfp.PdgCode() << "\n"
-                         << "_evt:      \t" << _evt << "\n"
-                         << "itpc:      \t" << itpc << "\n"
-                         << "_flash_z:  \t" << std::setw(8) <<  _flash_z  << ",\t"
-                         << "_nuvtx_z:  \t" << std::setw(8) << _nuvtx_z   << "\n"
-                         << "_flash_y:  \t" << std::setw(8) << _flash_y   << ",\t"
-                         << "_nuvtx_y:  \t" << std::setw(8) << _nuvtx_y   << "\n"
-                         << "_flash_x:  \t" << std::setw(8) << _flash_x   << ",\t"
-                         << "_nuvtx_x:  \t" << std::setw(8) << _nuvtx_x   << "\n"
-                         << "_flash_pe: \t" << std::setw(8) << _flash_pe  << ",\t"
-                         << "_nuvtx_q:  \t" << std::setw(8) << _nuvtx_q   << "\n"
-                         << "_flash_r:  \t" << std::setw(8) << _flash_r   << "\n"
-                         << "_flashtime:\t" << std::setw(8) << _flashtime << "\n" << std::endl;
-        int isl = int(dy_nbins * (slice / drift_distance));
-        if (dysp[isl] > 0) {
-          term = std::abs(std::abs(_flash_y - _nuvtx_y) - dymean[isl]) / dysp[isl];
-          if (term > fTermThreshold) std::cout << "\nBig term Y:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
+      // calculate match score here, put association on the event
+      float slice = _nuvtx_x;
+      float drift_distance = 200.0; // TODO: no hardcoded values
+      if (fDetector == "ICARUS") {
+        drift_distance = 150.0; // TODO: no hardcoded values
+      }
+      _score = 0; int icount = 0;
+      double term;
+      std::ostringstream thresholdMessage;
+      thresholdMessage << std::left << std::setw(12) << std::setfill(' ');
+      thresholdMessage << "pfp.PdgCode:\t" << pfp.PdgCode() << "\n"
+                       << "_evt:      \t" << _evt << "\n"
+                       << "itpc:      \t" << itpc << "\n"
+                       << "_flash_z:  \t" << std::setw(8) <<  _flash_z  << ",\t"
+                       << "_nuvtx_z:  \t" << std::setw(8) << _nuvtx_z   << "\n"
+                       << "_flash_y:  \t" << std::setw(8) << _flash_y   << ",\t"
+                       << "_nuvtx_y:  \t" << std::setw(8) << _nuvtx_y   << "\n"
+                       << "_flash_x:  \t" << std::setw(8) << _flash_x   << ",\t"
+                       << "_nuvtx_x:  \t" << std::setw(8) << _nuvtx_x   << "\n"
+                       << "_flash_pe: \t" << std::setw(8) << _flash_pe  << ",\t"
+                       << "_nuvtx_q:  \t" << std::setw(8) << _nuvtx_q   << "\n"
+                       << "_flash_r:  \t" << std::setw(8) << _flash_r   << "\n"
+                       << "_flashtime:\t" << std::setw(8) << _flashtime << "\n" << std::endl;
+      int isl = int(dy_nbins * (slice / drift_distance));
+      if (dysp[isl] > 0) {
+        term = std::abs(std::abs(_flash_y - _nuvtx_y) - dymean[isl]) / dysp[isl];
+        if (term > fTermThreshold) std::cout << "\nBig term Y:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
+        _score += term;
+      }
+      icount++;
+      isl = int(dz_nbins * (slice / drift_distance));
+      if (dzsp[isl] > 0) {
+        term = std::abs(std::abs(_flash_z - _nuvtx_z) - dzmean[isl]) / dzsp[isl];
+        if (term > fTermThreshold) std::cout << "\nBig term Z:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
+        _score += term;
+      }
+      icount++;
+      isl = int(rr_nbins * (slice / drift_distance));
+      if (rrsp[isl] > 0 && _flash_r > 0) {
+        term = std::abs(_flash_r - rrmean[isl]) / rrsp[isl];
+        if (term > fTermThreshold) std::cout << "\nBig term R:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
+        _score += term;
+      }
+      icount++;
+      if (fDetector == "SBND" && fUseUncoatedPMT) {
+        isl = int(pe_nbins * (slice / drift_distance));
+        float myratio = 100.0 * _flash_unpe;
+        if (pesp[isl] > 0 && _flash_pe > 0) {
+          myratio /= _flash_pe;
+          term = std::abs(myratio - pemean[isl]) / pesp[isl];
+          if (term > fTermThreshold) std::cout << "\nBig term RATIO:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
           _score += term;
+          icount++;
         }
-        icount++;
-        isl = int(dz_nbins * (slice / drift_distance));
-        if (dzsp[isl] > 0) {
-          term = std::abs(std::abs(_flash_z - _nuvtx_z) - dzmean[isl]) / dzsp[isl];
-          if (term > fTermThreshold) std::cout << "\nBig term Z:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
-          _score += term;
-        }
-        icount++;
-        isl = int(rr_nbins * (slice / drift_distance));
-        if (rrsp[isl] > 0 && _flash_r > 0) {
-          term = std::abs(_flash_r - rrmean[isl]) / rrsp[isl];
-          if (term > fTermThreshold) std::cout << "\nBig term R:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
-          _score += term;
-        }
-        icount++;
-        if (fDetector == "SBND" && fUseUncoatedPMT) {
-          isl = int(pe_nbins * (slice / drift_distance));
-          float myratio = 100.0 * _flash_unpe;
-          if (pesp[isl] > 0 && _flash_pe > 0) {
-            myratio /= _flash_pe;
-            term = std::abs(myratio - pemean[isl]) / pesp[isl];
-            if (term > fTermThreshold) std::cout << "\nBig term RATIO:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
-            _score += term;
-            icount++;
-          }
-        }
-        //      _score/=icount;
-        if (_flash_pe > 0 ) {
-          mscore[itpc] = _score;
-          // fill tree
-          if (fMakeTree) _flashmatch_nuslice_tree->Fill();
-        }
+      }
+      //      _score/=icount;
+      if (_flash_pe > 0 ) {
+        mscore[itpc] = _score;
+        // fill tree
+        if (fMakeTree) _flashmatch_nuslice_tree->Fill();
+      }
     }  // end loop over TPCs
 
     double this_score = 0.0; int icount = 0; double totc = 0;
