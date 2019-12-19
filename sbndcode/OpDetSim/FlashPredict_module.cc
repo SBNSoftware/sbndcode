@@ -504,7 +504,7 @@ void FlashPredict::produce(art::Event & e)
 
     int icountPE = 0;
     float mscore[nMaxTPCs] = {0.};
-    float charge[nMaxTPCs] = {0.};
+    // float charge[nMaxTPCs] = {0.}; // TODO: Use this
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       if (!lightInTPC[itpc]) continue;
       double xave = 0.0; double yave = 0.0; double zave = 0.0; double norm = 0.0;
@@ -526,7 +526,7 @@ void FlashPredict::produce(art::Event & e)
       _nuvtx_x = xave / norm;
       _nuvtx_y = yave / norm;
       _nuvtx_z = zave / norm;
-      charge[itpc] = _nuvtx_q;
+      // charge[itpc] = _nuvtx_q; //TODO: Use this
       // store PMT photon counts in the tree as well
       double PMTxyz[3];
       double unpe_tot = 0;
@@ -661,10 +661,10 @@ void FlashPredict::produce(art::Event & e)
       }
     }  // end loop over TPCs
 
-    double this_score = 0.0; int icount = 0; double totc = 0;
+    double this_score = 0.0; int icount = 0; // double totc = 0; //TODO: Use this
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       this_score += mscore[itpc];
-      totc += charge[itpc];
+      // totc += charge[itpc];
       if (mscore[itpc] > 0) icount++;
     }
     if (icount > 0) {
