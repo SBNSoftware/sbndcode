@@ -103,8 +103,10 @@ private:
   void AddDaughters(const art::Ptr<recob::PFParticle>& pfp_ptr,
                     const art::ValidHandle<std::vector<recob::PFParticle> >& pfp_h,
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
-  bool isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string detector);
+  bool isPDInCryoTPC(double pd_x, int icryo, size_t itpc, std::string detector);
+  bool isPDInCryoTPC(int pdChannel, int icryo, size_t itpc, std::string detector);
   bool isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector);
+  const art::ServiceHandle<geo::Geometry> geometry;
 
   // root stuff
   TTree* _flashmatch_acpt_tree;
@@ -318,7 +320,6 @@ void FlashPredict::produce(art::Event & e)
   _flash_r      = -9999.;
   _score        = -9999.;
 
-  const art::ServiceHandle<geo::Geometry> geometry;
   size_t nTPCs(geometry->NTPC());
   if (nTPCs > 2) {
     std::cout << "nTPC can't be larger than 2, resizing." << std::endl;
@@ -779,7 +780,7 @@ void FlashPredict::AddDaughters(
 
 // TODO: no hardcoding
 // TODO: collapse with the next
-bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string detector)
+bool FlashPredict::isPDInCryoTPC(double pd_x, int icryo, size_t itpc, std::string detector)
 {
   // check whether this optical detector views the light inside this tpc.
   std::ostringstream lostPDMessage;
@@ -808,6 +809,15 @@ bool FlashPredict::isPDInCryoTPC(float pd_x, int icryo, int itpc, std::string de
     }
   }
   return false;
+}
+
+bool FlashPredict::isPDInCryoTPC(int pdChannel, int icryo, size_t itpc, std::string detector)
+{
+  // check whether this optical detector views the light inside this tpc.
+  double dummy[3];
+  geometry->OpDetGeoFromOpChannel(pdChannel).GetCenter(dummy);
+  float pd_x = dummy[0];
+  return isPDInCryoTPC(pd_x, icryo, itpc, detector);
 }
 
 // TODO: no hardcoding
