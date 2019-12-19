@@ -106,6 +106,7 @@ private:
   bool isPDInCryoTPC(double pd_x, int icryo, size_t itpc, std::string detector);
   bool isPDInCryoTPC(int pdChannel, int icryo, size_t itpc, std::string detector);
   bool isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector);
+
   const art::ServiceHandle<geo::Geometry> geometry;
 
   // root stuff
@@ -409,6 +410,15 @@ void FlashPredict::produce(art::Event & e)
                                      { return ((oph.PeakTime() < windowStart) || (oph.PeakTime() > windowEnd)); }),
                     OpHitSubset.end());
 
+  // check if the TPC has OpHits
+  bool lightInTPC[nMaxTPCs] = {false};
+  for (size_t t=0; t<nMaxTPCs; t++){
+    auto it = std::find_if (OpHitSubset.begin(), OpHitSubset.end(),
+                            [t, this](const recob::OpHit& oph)-> bool
+                              { return isPDInCryoTPC(oph.OpChannel(), fCryostat, t, fDetector); });
+    lightInTPC[t] = (it != OpHitSubset.end());
+  }
+
   // Loop over pandora pfp particles
   for (unsigned int p=0; p<pfp_h->size(); p++) {
     auto const& pfp = pfp_h->at(p);
@@ -500,6 +510,7 @@ void FlashPredict::produce(art::Event & e)
     float mscore[nMaxTPCs] = {0};
     float charge[nMaxTPCs] = {0};
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
+      if (!lightInTPC[itpc]) continue;
       double xave = 0.0; double yave = 0.0; double zave = 0.0; double norm = 0.0;
       _nuvtx_q = 0;
       // TODO: use accumulators instead of this for loop
@@ -578,6 +589,9 @@ void FlashPredict::produce(art::Event & e)
           icountPE  += (int)(_flash_pe);
         }
         else {
+          mf::LogWarning("FlashPredict") << "Really odd that I landed here, this shouldn't had happen.\n"
+                                         << "pnorm:\t" << pnorm << "\n"
+                                         << "OpHitSubset.size():\t" << OpHitSubset.size() << "\n";
           _flash_pe = 0;
           _flash_y = 0;
           _flash_z = 0;
