@@ -21,3 +21,12 @@ physics.producers.generator: {
   Seed: 63213
   
 }
+
+# Override CORSIKA flux file path to be able to access them without a proxy
+physics.producers.corsika.ShowerInputFiles:[
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/p_showers_*.db",
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/He_showers_*.db",
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/N_showers_*.db",
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/Mg_showers_*.db",
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/Fe_showers_*.db"
+]
