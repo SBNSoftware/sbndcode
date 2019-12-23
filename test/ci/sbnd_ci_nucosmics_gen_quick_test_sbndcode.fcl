@@ -20,6 +20,9 @@ physics.producers.generator: {
   # ... and be as strict as possible with random seeds: GENIE is wild!
   Seed: 63213
   
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configF-v1/april07/neutrinoMode"
+
 }
 
 # Override CORSIKA flux file path to be able to access them without a proxy
