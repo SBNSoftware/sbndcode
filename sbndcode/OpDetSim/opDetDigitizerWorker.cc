@@ -168,9 +168,9 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
 
     const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
     CreateDirectPhotonMap(auxmap, photon_handles);
-    unsigned start = StartChannelToProcess(photon_handles.size());
-    unsigned n = NChannelsToProcess(photon_handles.size());
 
+    unsigned start = StartChannelToProcess(fConfig.map.size());
+    unsigned n = NChannelsToProcess(fConfig.map.size());
     for (const art::Handle<std::vector<sim::SimPhotons>> &opdetHandle: photon_handles) {
       bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
 
