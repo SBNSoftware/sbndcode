@@ -39,6 +39,7 @@
 
 #include <memory>
 #include <algorithm>
+#include <vector>
 #include "TMath.h"
 #include "TH1D.h"
 #include "TRandom3.h"
@@ -88,11 +89,10 @@ namespace opdet{
     //int fSize;
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
-
     void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
     bool findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
     void denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
-    void TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
+    bool TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform, const double lambda);
     //std::stringstream histname;
   };
 
@@ -113,6 +113,7 @@ namespace opdet{
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
     fSampling = (timeService->OpticalClock().Frequency()); // MHz
+//    fSampling = (timeService->OpticalClock().Frequency())/1000.0; // GHz
 
     // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -129,8 +130,6 @@ namespace opdet{
     outwvform.reserve(30000); // TODO: no hardcoded value
 
     art::ServiceHandle<art::TFileService> tfs;
-    //   histname.str(std::string());
-    // histname << "event_" << fEvNumber;
     art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
     std::vector<art::Ptr<raw::OpDetWaveform>> wvfList;
     if(e.getByLabel(fInputModuleName, wvfHandle))
@@ -158,9 +157,21 @@ namespace opdet{
       }
 
       subtractBaseline(fwaveform, map.pdName(fChNumber), rms);
-      if((map.pdName(fChNumber)=="pmt") || (map.pdName(fChNumber)== "barepmt")){
-      }else{
-        if(fUseDenoising==1) denoise(fwaveform, outwvform);
+
+      if(fUseDenoising == 1){
+        if((map.pdName(fChNumber)=="pmt") || (map.pdName(fChNumber)== "barepmt")){
+        }
+        else if((map.pdName(fChNumber)=="arapucaT1") || (map.pdName(fChNumber)== "arapucaT2")){
+          denoise(fwaveform, outwvform);
+        }
+        else if((map.pdName(fChNumber)=="xarapucaT1") || (map.pdName(fChNumber)== "xarapucaT2")){
+          denoise(fwaveform, outwvform);
+        }
+        else {
+          std::cout << "Unexpected OpChannel: " << map.pdName(fChNumber)
+                    << ", continue." << std::endl;
+          std::terminate();
+        }
       }
 
       int i=1;
@@ -169,11 +180,19 @@ namespace opdet{
 
         if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
           phelec=Area/fArea1pePMT;
-          //   std::cout << 0 << " " << time << " " << Area << " " << phelec << std::endl;
-        }else{
-          phelec=Area/fArea1peSiPM;
-          //  std::cout << 1 << " " << time << " " << Area << " " << phelec << std::endl;
         }
+        else if((map.pdName(fChNumber)=="arapucaT1") || (map.pdName(fChNumber)== "arapucaT2")){
+          phelec=Area/fArea1peSiPM;
+        }
+        else if((map.pdName(fChNumber)=="xarapucaT1") || (map.pdName(fChNumber)== "xarapucaT2")){
+          phelec=Area/fArea1peSiPM;
+        }
+        else {
+          std::cout << "Unexpected OpChannel: " << map.pdName(fChNumber)
+                    << ", continue." << std::endl;
+          continue;
+        }
+
         i++;
         //including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
         recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);
@@ -195,8 +214,8 @@ namespace opdet{
     rms = 0.0;
     int cnt = 0;
     for(int i=0; i<fBaselineSample; i++){
-	    baseline += waveform[i];
-	    rms += pow(waveform[i],2.0);
+      baseline += waveform[i];
+      rms += pow(waveform[i],2.0);
       cnt++;
     }
 
@@ -207,8 +226,15 @@ namespace opdet{
     if(pdtype=="pmt" || pdtype == "barepmt"){
       for(unsigned int i=0; i<waveform.size(); i++) waveform[i]=fPulsePolarityPMT*(waveform[i]-baseline);
     }
-    else{
+    else if((map.pdName(fChNumber)=="arapucaT1") || (map.pdName(fChNumber)== "arapucaT2")){
       for(unsigned int i=0; i<waveform.size(); i++) waveform[i]=fPulsePolarityArapuca*(waveform[i]-baseline);
+    }
+    else if((map.pdName(fChNumber)=="xarapucaT1") || (map.pdName(fChNumber)== "xarapucaT2")){
+      for(unsigned int i=0; i<waveform.size(); i++) waveform[i]=fPulsePolarityArapuca*(waveform[i]-baseline);
+    }
+    else {
+      std::cout << "Unexpected OpChannel: " << map.pdName(fChNumber) << std::endl;
+      return;
     }
   }
 
@@ -223,8 +249,16 @@ namespace opdet{
 
     if(type=="pmt" || type == "barepmt"){
       threshold=fThresholdPMT;
-    }else{
+    }
+    else if((map.pdName(fChNumber)=="arapucaT1") || (map.pdName(fChNumber)== "arapucaT2")){
       threshold=fThresholdArapuca;
+    }
+    else if((map.pdName(fChNumber)=="xarapucaT1") || (map.pdName(fChNumber)== "xarapucaT2")){
+      threshold=fThresholdArapuca;
+    }
+    else {
+      std::cout << "Unexpected OpChannel: " << map.pdName(fChNumber) << std::endl;
+      return false;
     }
 
     bin = binmax;
@@ -248,7 +282,6 @@ namespace opdet{
         aux = waveform[bin];
     }
     time = bin+1; //for rise time
-
     for(unsigned int j=time; j<=time_end; j++) Area += waveform[j];
     Area = Area/fSampling;
 
@@ -270,59 +303,76 @@ namespace opdet{
 
     int wavelength = waveform.size();
     outwaveform = waveform;  // copy
-
-    TV1D_denoise(waveform, outwaveform);
+    double lambda = 10.0;
+    const uint retries = 5; uint try_ = 0;
+    if (wavelength > 0){
+      while (try_ <= retries) {
+        if (TV1D_denoise(waveform, outwaveform, lambda)) break;
+        try_++;
+        mf::LogInfo("opHitFinder") << try_ << "/" << retries
+                                   << " Coming out of TV1D_denoise() unsuccessfully, "
+                                   << "using lambda: " << lambda;
+        lambda += 0.1*lambda;
+        if (try_ == retries) mf::LogWarning("opHitFinder") <<  "Couldn't denoise!";
+      }
+    }
 
     for(int i=0; i<wavelength; i++){
       if(outwaveform[i]) waveform[i]=outwaveform[i];
     }
   } // void opHitFinderSBND::denoise()
 
-  void opHitFinderSBND::TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform) {
+  // TODO: this function is not robust, check if the expected input is given and put exceptions
+  bool opHitFinderSBND::TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform, const double lambda)
+  {
     int width = waveform.size();
-    float lambda = 10.0; // TODO: no hardcoded values
-    if (width>0) { // to avoid invalid memory access to waveform[0]
-      int k=0, k0=0; // k: current sample location, k0: beginning of current segment
-      float umin=lambda, umax=-lambda; // u is the dual variable
-      float vmin=waveform[0]-lambda, vmax=waveform[0]+lambda; // bounds for the segment's value
-      int kplus=0, kminus=0; // last positions where umax=-lambda, umin=lambda, respectively
-      const float twolambda=2.0*lambda; // auxiliary variable
-      const float minlambda=-lambda; // auxiliary variable
-      for (;;) { // simple loop, the exit test is inside
-        while (k==width-1) { // we use the right boundary condition
-          if (umin<0.0) { // vmin is too high -> negative jump necessary
-            do outwaveform[k0++]=vmin; while (k0<=kminus);
-            umax=(vmin=waveform[kminus=k=k0])+(umin=lambda)-vmax;
-          } else if (umax>0.0) { // vmax is too low -> positive jump necessary
-            do outwaveform[k0++]=vmax; while (k0<=kplus);
-            umin=(vmax=waveform[kplus=k=k0])+(umax=minlambda)-vmin;
-          } else {
-            vmin+=umin/(k-k0+1);
-            do outwaveform[k0++]=vmin; while(k0<=k);
-            return;
-          }
+    int k = 0, k0 = 0; // k: current sample location, k0: beginning of current segment
+    double umin = lambda, umax = -lambda; // u is the dual variable
+    double vmin = waveform[0] - lambda, vmax = waveform[0] + lambda; // bounds for the segment's value
+    int kplus = 0, kminus = 0; // last positions where umax=-lambda, umin=lambda, respectively
+    const double twolambda = 2.0 * lambda; // auxiliary variable
+    const double minlambda = -lambda; // auxiliary variable
+    for (;;) { // simple loop, the exit test is inside
+      while (k == width - 1) { // we use the right boundary condition
+        if (umin < 0.0) { // vmin is too high -> negative jump necessary
+          do outwaveform[k0++] = vmin; while (k0 <= kminus);
+          umax = (vmin = waveform[kminus = k = k0]) + (umin = lambda) - vmax;
         }
-        if ((umin+=waveform[k+1]-vmin)<minlambda) { // negative jump necessary
-          do outwaveform[k0++]=vmin; while (k0<=kminus);
-          vmax=(vmin=waveform[kplus=kminus=k=k0])+twolambda;
-          umin=lambda; umax=minlambda;
-        } else if ((umax+=waveform[k+1]-vmax)>lambda) { // positive jump necessary
-          do outwaveform[k0++]=vmax; while (k0<=kplus);
-          vmin=(vmax=waveform[kplus=kminus=k=k0])-twolambda;
-          umin=lambda; umax=minlambda;
-        } else { //no jump necessary, we continue
-          k++;
-          if (umin>=lambda) { // update of vmin
-            vmin+=(umin-lambda)/((kminus=k)-k0+1);
-            umin=lambda;
-          }
-          if (umax<=minlambda) { // update of vmax
-            vmax+=(umax+lambda)/((kplus=k)-k0+1);
-            umax=minlambda;
-          }
+        else if (umax > 0.0) { // vmax is too low -> positive jump necessary
+          do outwaveform[k0++] = vmax; while (k0 <= kplus);
+          umin = (vmax = waveform[kplus = k = k0]) + (umax = minlambda) - vmin;
+        }
+        else {
+          vmin += umin / (k - k0 + 1);
+          do outwaveform[k0++] = vmin; while(k0 <= k);
+          return true;
+        }
+      } // while (k == width - 1)
+      if ((umin += waveform[k + 1] - vmin) < minlambda) { // negative jump necessary
+        if (k0 > width) return false;
+        do outwaveform[k0++] = vmin; while (k0 <= kminus);
+        vmax = (vmin = waveform[kplus = kminus = k = k0]) + twolambda;
+        umin = lambda; umax = minlambda;
+      }
+      else if ((umax += waveform[k + 1] - vmax) > lambda) { // positive jump necessary
+        if (k0 > width) return false;
+        do outwaveform[k0++] = vmax; while (k0 <= kplus);
+        vmin = (vmax = waveform[kplus = kminus = k = k0]) - twolambda;
+        umin = lambda; umax = minlambda;
+      }
+      else {   //no jump necessary, we continue
+        k++;
+        if (k > width) return false;
+        if (umin >= lambda) { // update of vmin
+          vmin += (umin - lambda) / ((kminus = k) - k0 + 1);
+          umin = lambda;
+        }
+        if (umax <= minlambda) { // update of vmax
+          vmax += (umax + lambda) / ((kplus = k) - k0 + 1);
+          umax = minlambda;
         }
       }
-    }
+    } // for (;;)
   } // void opHitFinderSBND::TV1D_denoise()
 
 } // namespace opdet
