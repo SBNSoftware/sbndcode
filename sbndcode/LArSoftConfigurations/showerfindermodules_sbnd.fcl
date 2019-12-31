@@ -24,12 +24,29 @@ sbnd_emshower.EMshowerAlg.showerEnergyAlg: @local::sbnd_showerenergyalg
 
 sbnd_tracs:  @local::standard_tracs_shower
 
-sbnd_showerstartpositionfinder: @local::showerstartposition
-sbnd_showerdirectionfinder:     @local::showerpcadirection
-sbnd_showerenergyfinder:        @local::showerlinearenergy
-sbnd_shower3dtrackhitfinder:    @local::shower3Dtrackhitfinder
-sbnd_showerpmatrackfinder:      @local::showerpmatrackfinder
-sbnd_showerdedxfinder:          @local::showerstandardcalodedx
+sbnd_showerstartpositionfinder:     @local::showerpfpvertexstartposition
+sbnd_showerdirectionfinder:         @local::showerpcadirection
+sbnd_showerenergyfinder:            @local::showerlinearenergy
+sbnd_shower3dtrackhitfinder:        @local::shower3Dtrackhitfinder
+sbnd_showerpmatrackfinder:          @local::showerpmatrackfinder
+sbnd_showerdedxfinder:              @local::showerstandardcalodedx
+sbnd_showerresidualtrackhitfinder:  @local::showerresidualtrackhitfinder
+sbnd_showerslidingstandardcalodedx: @local::showerslidingstandardcalodedx
+
+sbnd_showerresidualtrackhitfinder.MaxResidualDiff: 0.446
+sbnd_showerresidualtrackhitfinder.StartFitSize: 17
+sbnd_showerresidualtrackhitfinder.NMissPoints: 9
+sbnd_showerresidualtrackhitfinder.TrackMaxAdjacentSPDistance: 4.776
+sbnd_showerresidualtrackhitfinder.MaxAverageResidual: 0.38695
+sbnd_showerresidualtrackhitfinder.UseShowerDirection: false
+sbnd_showerresidualtrackhitfinder.ForwardHitsOnly: true
+
+sbnd_showerslidingstandardcalodedx.dEdxTrackLength: 3.1619
+sbnd_showerslidingstandardcalodedx.MinAngleToWire: 0.1745
+sbnd_showerslidingstandardcalodedx.MaxDist: 2.7277
+sbnd_showerslidingstandardcalodedx.CutStartPosition: true
+
+
 
 sbnd_showerstartpositioncheater: @local::showerstartpositioncheater
 sbnd_showerdirectioncheater:     @local::showerdirectioncheater
@@ -41,7 +58,7 @@ sbnd_tracs.showerFinderTools: [
   @local::sbnd_showerstartpositionfinder,
   @local::sbnd_showerdirectionfinder,
   @local::sbnd_showerenergyfinder,
-  @local::sbnd_shower3dtrackhitfinder,
+  @local::sbnd_showerresidualtrackhitfinder,
   @local::sbnd_showerdedxfinder
 ]
 
