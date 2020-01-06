@@ -42,7 +42,7 @@ namespace opdet{
 
   class DigiPMTSBNDAlg{
 
-    public:
+  public:
 
     struct ConfigurationParameters_t {
       double TransitTime; //ns
@@ -66,15 +66,15 @@ namespace opdet{
 
     //Default constructor
     DigiPMTSBNDAlg(ConfigurationParameters_t const& config);
-    //Default destructor 
+    //Default destructor
     ~DigiPMTSBNDAlg();
-                                                                                                 
+
     void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double start_time, unsigned n_sample);
     void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample);
 
-    double Baseline() { return fParams.PMTBaseline; } 
+    double Baseline() { return fParams.PMTBaseline; }
 
-    private:
+  private:
 
     ConfigurationParameters_t fParams;
     // Declare member data here.
@@ -84,7 +84,7 @@ namespace opdet{
     //int fSinglePEmodel;
     double sigma1;
     double sigma2;
-    
+
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
@@ -94,20 +94,20 @@ namespace opdet{
     std::vector<double> wsp; //single photon pulse vector
     int pulsesize; //size of 1PE waveform
     TH1D* timeTPB; //histogram for getting the TPB emission time for coated PMTs
-    std::unordered_map< raw::Channel_t,std::vector<double> > fFullWaveforms;  
+    std::unordered_map< raw::Channel_t,std::vector<double> > fFullWaveforms;
 
-    void CreatePDWaveform(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave, int ch, std::string pdtype, std::map<int,sim::SimPhotons> auxmap); 
+    void CreatePDWaveform(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave, int ch, std::string pdtype, std::map<int,sim::SimPhotons> auxmap);
     void CreatePDWaveformLite(sim::SimPhotonsLite const& litesimphotons, double t_min, std::vector<double>& wave, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
     void AddLineNoise(std::vector<double>& wave); //add noise to baseline
     void AddDarkNoise(std::vector<double>& wave); //add dark noise
     double FindMinimumTime(sim::SimPhotons const&, int ch, std::string pdtype, std::map<int,sim::SimPhotons> auxmap);
-    double FindMinimumTimeLite(sim::SimPhotonsLite const& litesimphotons, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap);  
+    double FindMinimumTimeLite(sim::SimPhotonsLite const& litesimphotons, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap);
   };//class DigiPMTSBNDAlg
 
   class DigiPMTSBNDAlgMaker{
 
-    public:
+  public:
     struct Config {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
@@ -132,63 +132,63 @@ namespace opdet{
         Comment("Single pe: Pulse rise time constant (exponential), from 0.1 to 0.9 of maximum amplitude")
       };
 
-       fhicl::Atom<double> pmtfallTime {
-          Name("PMTFallTime"),
-          Comment("Single pe: Pulse decay time constant (exponential), from 0.1 to 0.9 of maximum amplitude")
-       };
+      fhicl::Atom<double> pmtfallTime {
+        Name("PMTFallTime"),
+        Comment("Single pe: Pulse decay time constant (exponential), from 0.1 to 0.9 of maximum amplitude")
+      };
 
-       fhicl::Atom<double> pmtchargeToADC {
-          Name("PMTChargeToADC"),
-          Comment("Charge to ADC convertion factor")
-       };
+      fhicl::Atom<double> pmtchargeToADC {
+        Name("PMTChargeToADC"),
+        Comment("Charge to ADC convertion factor")
+      };
 
-       fhicl::Atom<double> pmtbaseline {
-          Name("PMTBaseline"),
-          Comment("Waveform baseline in ADC")
-       };
+      fhicl::Atom<double> pmtbaseline {
+        Name("PMTBaseline"),
+        Comment("Waveform baseline in ADC")
+      };
 
-       fhicl::Atom<double> pmtbaselineRMS {
-          Name("PMTBaselineRMS"),
-          Comment("RMS of the electronics noise fluctuations in ADC counts")
-       };
+      fhicl::Atom<double> pmtbaselineRMS {
+        Name("PMTBaselineRMS"),
+        Comment("RMS of the electronics noise fluctuations in ADC counts")
+      };
 
-       fhicl::Atom<double> pmtdarkNoiseRate {
-          Name("PMTDarkNoiseRate"),
-          Comment("Dark noise rate in Hz")
-       };
-   
-       fhicl::Atom<double> pmtsaturation {
-          Name("PMTSaturation"),
-          Comment("Saturation in number of p.e.")
-       };
+      fhicl::Atom<double> pmtdarkNoiseRate {
+        Name("PMTDarkNoiseRate"),
+        Comment("Dark noise rate in Hz")
+      };
 
-       fhicl::Atom<double> qEDirect {
-          Name("QEDirect"),
-          Comment("PMT quantum efficiency for direct (VUV) light")
-       };
+      fhicl::Atom<double> pmtsaturation {
+        Name("PMTSaturation"),
+        Comment("Saturation in number of p.e.")
+      };
 
-       fhicl::Atom<double> qERefl {
-          Name("QERefl"),
-          Comment("PMT quantum efficiency for reflected (TPB emitted)light")
-       };
+      fhicl::Atom<double> qEDirect {
+        Name("QEDirect"),
+        Comment("PMT quantum efficiency for direct (VUV) light")
+      };
 
-       fhicl::Atom<int> singlePEmodel {
-          Name("SinglePEmodel"),
-          Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
-       };
+      fhicl::Atom<double> qERefl {
+        Name("QERefl"),
+        Comment("PMT quantum efficiency for reflected (TPB emitted)light")
+      };
+
+      fhicl::Atom<int> singlePEmodel {
+        Name("SinglePEmodel"),
+        Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
+      };
 
     };    //struct Config
 
     DigiPMTSBNDAlgMaker(Config const& config); //Constructor
 
     std::unique_ptr<DigiPMTSBNDAlg> operator()(
-        detinfo::LArProperties const& larProp,
-        detinfo::DetectorClocks const& detClocks,
-        CLHEP::HepRandomEngine* engine
-        ) const;
-       
-    private:
-      // Part of the configuration learned from configuration files.
+      detinfo::LArProperties const& larProp,
+      detinfo::DetectorClocks const& detClocks,
+      CLHEP::HepRandomEngine* engine
+      ) const;
+
+  private:
+    // Part of the configuration learned from configuration files.
     DigiPMTSBNDAlg::ConfigurationParameters_t fBaseConfig;
   }; //class DigiPMTSBNDAlgMaker
 
