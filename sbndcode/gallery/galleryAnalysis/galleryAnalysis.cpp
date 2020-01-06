@@ -2,7 +2,7 @@
  * @file    galleryAnalysis.cpp
  * @brief   Template analysis program based on gallery.
  * @author  Gianluca Petrillo (petrillo@fnal.gov)
- * @date    October 19, 2017
+ * @date    October 21, 2017
  * 
  * The script is an adaptation of the official gallery demo script demo.cc at
  * https://github.com/marcpaterno/gallery-demo .
@@ -18,6 +18,8 @@
 
 // our additional code
 #include "TrackAnalysis.h"
+#include "HitAnalysisAlg.h"
+#include "MCAssociations.h"
 
 // SBND code
 #include "sbndcode/gallery/helpers/expandInputFiles.h"
@@ -37,7 +39,7 @@
 // - Geometry
 #include "larcorealg/Geometry/StandaloneGeometrySetup.h"
 #include "larcorealg/Geometry/GeometryCore.h"
-#include "larcorealg/Geometry/ChannelMapStandardAlg.h"
+#include "sbndcode/Geometry/ChannelMapIcarusAlg.h"
 // - configuration
 #include "larcorealg/Geometry/StandaloneBasicSetup.h"
 
@@ -70,110 +72,117 @@
  * @param inputFiles vector of path of file names
  * @return an integer as exit code (0 means success)
  */
-int galleryAnalysis
-  (std::string const& configFile, std::vector<std::string> const& inputFiles)
+int galleryAnalysis(std::string const& configFile, std::vector<std::string> const& inputFiles)
 {
+    /*
+     * the "test" environment configuration
+     */
+    // read FHiCL configuration from a configuration file:
+    fhicl::ParameterSet config = lar::standalone::ParseConfiguration(configFile);
   
-  /*
-   * the "test" environment configuration
-   */
-  // read FHiCL configuration from a configuration file:
-  fhicl::ParameterSet config = lar::standalone::ParseConfiguration(configFile);
+    // set up message facility (always picked from "services.message")
+    lar::standalone::SetupMessageFacility(config, "galleryAnalysis");
   
-  // set up message facility (always picked from "services.message")
-  lar::standalone::SetupMessageFacility(config, "galleryAnalysis");
+    // configuration from the "analysis" table of the FHiCL configuration file:
+    auto const& analysisConfig = config.get<fhicl::ParameterSet>("analysis");
   
-  // configuration from the "analysis" table of the FHiCL configuration file:
-  auto const& analysisConfig = config.get<fhicl::ParameterSet>("analysis");
+    // ***************************************************************************
+    // ***  SERVICE PROVIDER SETUP BEGIN  ****************************************
+    // ***************************************************************************
+    //
+    // Uncomment the things you need
+    // (and make sure the corresponding headers are also uncommented)
+    //
   
+    // geometry setup (it's special)
+    auto geom = lar::standalone::SetupGeometry<geo::ChannelMapIcarusAlg>(config.get<fhicl::ParameterSet>("services.Geometry"));
   
-  // ***************************************************************************
-  // ***  SERVICE PROVIDER SETUP BEGIN  ****************************************
-  // ***************************************************************************
-  // 
-  // Uncomment the things you need
-  // (and make sure the corresponding headers are also uncommented)
-  //
+    // LArProperties setup
+    auto larp = testing::setupProvider<detinfo::LArPropertiesStandard>(config.get<fhicl::ParameterSet>("services.LArPropertiesService"));
   
-  // geometry setup (it's special)
-  auto geom = lar::standalone::SetupGeometry<geo::ChannelMapStandardAlg>
-    (config.get<fhicl::ParameterSet>("services.Geometry"));
+    // DetectorClocks setup
+    auto detclk = testing::setupProvider<detinfo::DetectorClocksStandard>(config.get<fhicl::ParameterSet>("services.DetectorClocksService"));
   
-  // LArProperties setup
-  auto larp = testing::setupProvider<detinfo::LArPropertiesStandard>
-    (config.get<fhicl::ParameterSet>("services.LArPropertiesService"));
+    // DetectorProperties setup
+    auto detp = testing::setupProvider<detinfo::DetectorPropertiesStandard>(config.get<fhicl::ParameterSet>("services.DetectorPropertiesService"), detinfo::DetectorPropertiesStandard::providers_type{geom.get(),static_cast<detinfo::LArProperties const*>(larp.get()), // TODO type cast is required until issue #18001 is solved
+        static_cast<detinfo::DetectorClocks const*>(detclk.get())});
   
-  // DetectorClocks setup
-  auto detclk = testing::setupProvider<detinfo::DetectorClocksStandard>
-    (config.get<fhicl::ParameterSet>("services.DetectorClocksService"));
+    // ***************************************************************************
+    // ***  SERVICE PROVIDER SETUP END    ****************************************
+    // ***************************************************************************
   
-  // DetectorProperties setup
-  auto detp = testing::setupProvider<detinfo::DetectorPropertiesStandard>(
-    config.get<fhicl::ParameterSet>("services.DetectorPropertiesService"),
-    detinfo::DetectorPropertiesStandard::providers_type{
-      geom.get(),
-      larp.get(),
-      detclk.get()
+    /*
+     * the preparation of input file list
+     */
+    std::vector<std::string> const allInputFiles = expandInputFiles(inputFiles);
+  
+    /*
+     * other parameters
+     */
+    art::InputTag trackTag = analysisConfig.get<art::InputTag>("tracks");
+    art::InputTag hitsTag  = analysisConfig.get<art::InputTag>("hits");
+  
+    /*
+     * preparation of histogram output file
+     */
+    std::unique_ptr<TFile> pHistFile;
+    if (analysisConfig.has_key("histogramFile"))
+    {
+        std::string fileName = analysisConfig.get<std::string>("histogramFile");
+        std::cout << "Creating output file: '" << fileName << "'" << std::endl;
+        pHistFile = std::make_unique<TFile>(fileName.c_str(), "RECREATE");
     }
-    );
   
-  // ***************************************************************************
-  // ***  SERVICE PROVIDER SETUP END    ****************************************
-  // ***************************************************************************
+    /*
+     * preparation of the algorithm class
+     */
+    TrackAnalysis trackAnalysis(analysisConfig.get<fhicl::ParameterSet>("trackAnalysis"));
   
-  /*
-   * the preparation of input file list
-   */
-  std::vector<std::string> const allInputFiles = expandInputFiles(inputFiles);
-  
-  /*
-   * other parameters
-   */
-  auto trackTag = analysisConfig.get<art::InputTag>("tracks");
-  
-  /*
-   * preparation of histogram output file
-   */
-  std::unique_ptr<TFile> pHistFile;
-  if (analysisConfig.has_key("histogramFile")) {
-    std::string fileName = analysisConfig.get<std::string>("histogramFile");
-    std::cout << "Creating output file: '" << fileName << "'" << std::endl;
-    pHistFile = std::make_unique<TFile>(fileName.c_str(), "RECREATE");
-  }
-  
-  /*
-   * preparation of the algorithm class
-   */
-  TrackAnalysis trackAnalysis
-    (analysisConfig.get<fhicl::ParameterSet>("trackAnalysis"));
-  trackAnalysis.setup(*geom, pHistFile.get());
-  trackAnalysis.prepare();
-  
-  /*
-   * the event loop
-   */
-  for (gallery::Event event(allInputFiles); !event.atEnd(); event.next()) {
+    trackAnalysis.setup(*geom, pHistFile.get());
+    trackAnalysis.prepare();
     
-    // *************************************************************************
-    // ***  SINGLE EVENT PROCESSING BEGIN  *************************************
-    // *************************************************************************
+    HitAnalysis::HitAnalysisAlg hitAnalysisAlg(analysisConfig.get<fhicl::ParameterSet>("hitAnalysisAlg"));
     
-    mf::LogVerbatim("galleryAnalysis")
-      << "This is event " << event.fileEntry() << "-" << event.eventEntry();
+    hitAnalysisAlg.setup(*geom, *detp, pHistFile.get());
     
-    trackAnalysis.processTracks
-      (*(event.getValidHandle<std::vector<recob::Track>>(trackTag)));
+    MCAssociations mcAssociations(analysisConfig.get<fhicl::ParameterSet>("mcAssociations"));
     
-    // *************************************************************************
-    // ***  SINGLE EVENT PROCESSING END    *************************************
-    // *************************************************************************
+    mcAssociations.setup(*geom, *detp, pHistFile.get());
+    mcAssociations.prepare();
     
-  } // for
+    int numEvents(0);
   
-  trackAnalysis.finish();
+    /*
+     * the event loop
+     */
+    for (gallery::Event event(allInputFiles); !event.atEnd(); event.next())
+    {
+        // *************************************************************************
+        // ***  SINGLE EVENT PROCESSING BEGIN  *************************************
+        // *************************************************************************
+    
+        mf::LogVerbatim("galleryAnalysis") << "This is event " << event.fileEntry() << "-" << event.eventEntry();
+    
+        trackAnalysis.processTracks(*(event.getValidHandle<std::vector<recob::Track>>(trackTag)));
+        
+        hitAnalysisAlg.fillHistograms(*(event.getValidHandle<std::vector<recob::Hit>>(hitsTag)));
+        
+        mcAssociations.doTrackHitMCAssociations(event);
+
+        numEvents++;
+    
+        // *************************************************************************
+        // ***  SINGLE EVENT PROCESSING END    *************************************
+        // *************************************************************************
+    
+    } // for
   
-  return 0;
+    trackAnalysis.finish();
+    mcAssociations.finish();
+    
+    hitAnalysisAlg.endJob(numEvents);
   
+    return 0;
 } // galleryAnalysis()
 
 
