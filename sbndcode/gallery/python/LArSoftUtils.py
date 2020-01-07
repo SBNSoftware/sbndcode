@@ -376,7 +376,7 @@ class ServiceManagerClass(ServiceManagerInterface):
     except KeyError:
       loader = SimpleServiceLoader(serviceKey, interfaceClass=interfaceClass)
     
-    print "Loading service provider: '{}'".format(serviceKey)
+    print("Loading service provider: '{}'".format(serviceKey))
     return loader(self)
     
   # get()
