@@ -112,7 +112,7 @@ accessed:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.python}
 geom = ServiceManager('Geometry')
-for plane in geom.IteratePlanes(): print plane.PlaneInfo()
+for plane in geom.IteratePlanes(): print (plane.PlaneInfo())
 
 detClocks = ServiceManager('DetectorClocks')
 detClocks.debugReport()

@@ -84,7 +84,7 @@ class SourceCentral:
   # findLibrary()
   
   def findHeader(self, relPath, extraPaths = []):
-    for path in reversed(self.includePaths + map(os.path.expandvars, extraPaths)):
+    for path in reversed(self.includePaths + list(map(os.path.expandvars, extraPaths))):
       candidate = os.path.join(path, relPath)
       if os.path.exists(candidate): return candidate
     else: return None
