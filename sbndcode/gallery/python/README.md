@@ -142,12 +142,12 @@ Supported service providers include: `Geometry`, `DetectorClocks`,
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.python}
     from SBNDservices import ServiceManager
     ServiceManager.setConfiguration \
-      ('services_sbnd_simulation.fcl', 'icarus_simulation_services')
+      ('services_sbnd_simulation.fcl', 'sbnd_simulation_services')
     detClocks = ServiceManager('DetectorClocks')
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     uses one of the most complete standard service configuration tables of
-    SBND, `icarus_simulation_services`, from `services_sbnd_simulation.fcl`
+    SBND, `sbnd_simulation_services`, from `services_sbnd_simulation.fcl`
     configuration file. That file is found in the usual way via
     `FHICL_FILE_PATH`, which should have been set already during the environment 
     setup.
@@ -315,7 +315,7 @@ utilities for source code management:
       access to service and module configuration. Example:
       
       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.python}
-      config = galleryUtils.ConfigurationClass('standard_g4_icarus.fcl')
+      config = galleryUtils.ConfigurationClass('standard_g4_sbnd.fcl')
       LArG4Parameters = config.service('LArG4Parameters')
       LArG4 = config.producer('largeant')
       Output = config.paramsFor('outputs.out1')
@@ -372,7 +372,7 @@ utilities for source code management:
           SourceCode.loadHeaderFromUPS('lardataalg/DetectorInfo/LArPropertiesStandard.h')
           SourceCode.loadLibrary('lardataalg_DetectorInfo')
           
-          ServiceRegistry = ServiceRegistryClass('standard_g4_icarus.fcl')
+          ServiceRegistry = ServiceRegistryClass('standard_g4_sbnd.fcl')
           larProp = ServiceRegistry.create \
             ('LArPropertiesService', ROOT.detinfo.LArPropertiesStandard)
           print larProp.RadiationLength()
@@ -382,7 +382,7 @@ utilities for source code management:
           
           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.python}
           from SBNDservices import ServiceManager
-          ServiceManager.setConfiguration('standard_g4_icarus.fcl')
+          ServiceManager.setConfiguration('standard_g4_sbnd.fcl')
           larProp = ServiceManager('LArProperties')
           print larProp.RadiationLength()
           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -550,10 +550,10 @@ ROOT, LArSoft, SBND code, Python... While it has been proven that this _can_
 work, the setup of a working environment might be non-trivial.
 The following recipes has proven to work on SBND SLF6 GPVM servers:
 
-* use a binary distribution, setting it up with `setup icaruscode ...`
+* use a binary distribution, setting it up with `setup sbndcode ...`
 * use a MRB area with all of the following:
-    * `icaruscode` checked out in the source directory, or explicitly set up;
-      e.g. `( cd "$SOURCE_DIR" && mrb gitCheckout icaruscode ; )`
+    * `sbndcode` checked out in the source directory, or explicitly set up;
+      e.g. `( cd "$SOURCE_DIR" && mrb gitCheckout sbndcode ; )`
     * all checked out code properly compiled _and installed_: `mrb install -j4`
     * all local "products" set up: `mrbslp`
 
