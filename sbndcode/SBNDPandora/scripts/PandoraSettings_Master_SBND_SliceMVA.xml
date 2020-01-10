@@ -30,13 +30,13 @@
     </CosmicRayTaggingTools>
     <SliceIdTools>
       <tool type = "LArBdtNeutrinoId">
-        <MvaFileName>PandoraMVAs/PandoraBdt_v08_33_00_SBND.xml</MvaFileName>
+        <MvaFileName>PandoraBdt_SBND_Slice_Test.xml</MvaFileName>
         <MvaName>NeutrinoId</MvaName>
         <MinimumNeutrinoProbability>0</MinimumNeutrinoProbability>
         <MaximumNeutrinos>999</MaximumNeutrinos>
       </tool>
     </SliceIdTools>
-    <InputHitListName>CaloHitList2D</InputHitListName>
+    <InputHitListName>Input</InputHitListName>
     <RecreatedPfoListName>RecreatedPfos</RecreatedPfoListName>
     <RecreatedClusterListName>RecreatedClusters</RecreatedClusterListName>
     <RecreatedVertexListName>RecreatedVertices</RecreatedVertexListName>
