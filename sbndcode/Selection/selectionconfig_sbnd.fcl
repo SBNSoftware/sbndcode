@@ -36,6 +36,18 @@ sbnd_pdstree:
   Verbose:             false          # Print extra information about what's going on
 }
 
+sbnd_cosmictree:
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/Selection/CosmicTree"
+
+  # The input parameters
+  GenModuleLabel:      "corsika"        # Generator producer module label
+  SimModuleLabel:      "largeant"     # Simulation producer module label
+  Verbose:             false          # Print extra information about what's going on
+}
+
 sbnd_selectiontree: 
 {
   # The "module_type" tells us which module to run. The name here

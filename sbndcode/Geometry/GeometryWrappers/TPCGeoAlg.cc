@@ -300,6 +300,25 @@ bool TPCGeoAlg::CrossesApa(const simb::MCParticle& particle){
   return false;
 }
 
+// ----------------------------------------------------------------------------------
+// Determine if a true particle crosses CPA
+bool TPCGeoAlg::CrossesCpa(const simb::MCParticle& particle){
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints()-1; i++){
+    double x = particle.Vx(i); 
+    double y = particle.Vy(i);
+    double z = particle.Vz(i);
+    double x1 = particle.Vx(i+1); 
+    double y1 = particle.Vy(i+1);
+    double z1 = particle.Vz(i+1);
+    if(y >= fMinY && z >= fMinZ && y <= fMaxY && z <= fMaxZ
+       && y1 >= fMinY && z1 >= fMinZ && y1 <= fMaxY && z1 <= fMaxZ){
+      if(x <= 0 && x1 >= 0) return true;
+      if(x >= 0 && x1 <= 0) return true;
+    }
+  }
+  return false;
+}
+
 std::pair<TVector3, TVector3> TPCGeoAlg::CrossingPoints(const simb::MCParticle& particle){
   bool first = true;
   TVector3 start (-99999, -99999, -99999);

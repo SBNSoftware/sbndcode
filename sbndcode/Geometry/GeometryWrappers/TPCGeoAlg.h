@@ -83,6 +83,8 @@ namespace sbnd{
     bool CrossesVolume(const simb::MCParticle& particle);
     // Determine if a true particle crosses either APA
     bool CrossesApa(const simb::MCParticle& particle);
+    // Determine if a true particle crosses CPA
+    bool CrossesCpa(const simb::MCParticle& particle);
 
     std::pair<TVector3, TVector3> CrossingPoints(const simb::MCParticle& particle);
     double TpcLength(const simb::MCParticle& particle);

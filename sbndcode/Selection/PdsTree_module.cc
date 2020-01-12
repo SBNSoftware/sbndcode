@@ -114,7 +114,7 @@ namespace sbnd {
     geo::GeometryCore const* fGeometryService;
     detinfo::DetectorProperties const* fDetectorProperties;
 
-    std::vector<std::string> opdets {"pmt", "barepmt", "xarapucaT1", "xarapucaT2", "arapucaT1", "arapucaT2"};
+    std::vector<std::string> opdets {"pmt", "barepmt"};
     
     // Tree (One entry per primary muon)
     TTree *fParticleTree;
@@ -167,12 +167,14 @@ namespace sbnd {
     bool nu_tpc1;
     double beam_edep_tpc0;
     double beam_edep_tpc1;
-    int n_beam_hits_tpc0;
-    int n_beam_hits_tpc1;
     int n_flashes_tpc0;
     int n_flashes_tpc1;
     int n_fake_flashes_tpc0;
     int n_fake_flashes_tpc1;
+    std::map<std::string, int> n_beam_hits_tpc0;
+    std::map<std::string, int> n_beam_hits_tpc1;
+    std::map<std::string, double> n_beam_pe_tpc0;
+    std::map<std::string, double> n_beam_pe_tpc1;
 
   }; // class PdsTree
 
@@ -248,12 +250,16 @@ namespace sbnd {
     fEventTree->Branch("nu_tpc1",          &nu_tpc1);
     fEventTree->Branch("beam_edep_tpc0",   &beam_edep_tpc0);
     fEventTree->Branch("beam_edep_tpc1",   &beam_edep_tpc1);
-    fEventTree->Branch("n_beam_hits_tpc0", &n_beam_hits_tpc0);
-    fEventTree->Branch("n_beam_hits_tpc1", &n_beam_hits_tpc1);
     fEventTree->Branch("n_flashes_tpc0",        &n_flashes_tpc0);
     fEventTree->Branch("n_flashes_tpc1",        &n_flashes_tpc1);
     fEventTree->Branch("n_fake_flashes_tpc0",   &n_fake_flashes_tpc0);
     fEventTree->Branch("n_fake_flashes_tpc1",   &n_fake_flashes_tpc1);
+    for(auto const& opdet : opdets){
+      fEventTree->Branch((opdet+"_n_beam_hits_tpc0").c_str(),    &n_beam_hits_tpc0[opdet]);
+      fEventTree->Branch((opdet+"_n_beam_hits_tpc1").c_str(),    &n_beam_hits_tpc1[opdet]);
+      fEventTree->Branch((opdet+"_n_beam_pe_tpc0").c_str(),    &n_beam_pe_tpc0[opdet]);
+      fEventTree->Branch((opdet+"_n_beam_pe_tpc1").c_str(),    &n_beam_pe_tpc1[opdet]);
+    }
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- PDS Ana Module -------------------"<<std::endl;
@@ -299,17 +305,23 @@ namespace sbnd {
     for(auto const& ophit : (*pdsHandle)){
       // Only look at PMTs
       std::string od = fChannelMap.pdName(ophit.OpChannel());
-      if( od != "pmt" ) continue;
+      if( std::find(opdets.begin(), opdets.end(), od) == opdets.end()) continue;
       // Work out what TPC detector is in odd = TPC1, even = TPC0
       if(ophit.OpChannel() % 2 == 0){ 
         optimes_tpc1.push_back(ophit.PeakTime());
         // Beam activity
-        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 6.6) n_beam_hits_tpc1++;
+        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 1.7){ 
+          n_beam_hits_tpc1[od]++;
+          n_beam_pe_tpc0[od] += ophit.PE();
+        }
       }
       else{ 
         optimes_tpc0.push_back(ophit.PeakTime());
         // Beam activity
-        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 6.6) n_beam_hits_tpc0++;
+        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 1.7){ 
+          n_beam_hits_tpc0[od]++;
+          n_beam_pe_tpc0[od] += ophit.PE();
+        }
       }
     }
 
@@ -534,6 +546,12 @@ namespace sbnd {
     n_flashes_tpc1 = 0;
     n_fake_flashes_tpc0 = 0;
     n_fake_flashes_tpc1 = 0;
+    for(auto const& opdet : opdets){
+      n_beam_hits_tpc0[opdet] = 0;
+      n_beam_hits_tpc1[opdet] = 0;
+      n_beam_pe_tpc0[opdet] = 0;
+      n_beam_pe_tpc1[opdet] = 0;
+    }
   }
 
   std::vector<double> PdsTree::OpFlashes(std::vector<double> optimes){
