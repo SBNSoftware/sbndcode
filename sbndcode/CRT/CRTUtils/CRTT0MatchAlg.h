@@ -79,6 +79,18 @@ namespace sbnd{
         Comment("")
       };
 
+      fhicl::Atom<int> TSMode {
+        Name("TSMode"),
+        Comment(""),
+        1 /* Value for SBND */
+      }; 
+
+      fhicl::Atom<double> TimeCorrection {
+        Name("TimeCorrection"),
+        Comment(""),
+        0.
+      };
+
       fhicl::Atom<double> DistanceLimit {
         Name("DistanceLimit"),
         Comment("")
@@ -129,6 +141,8 @@ namespace sbnd{
     double fMinTrackLength;
     double fTrackDirectionFrac;
     double fDistanceLimit;
+    int fTSMode;
+    double fTimeCorrection;
 
     art::InputTag fTPCTrackLabel;
 
