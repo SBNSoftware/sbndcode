@@ -33,6 +33,8 @@ sbnd_pdstree:
   GenModuleLabel:      "generator"        # Generator producer module label
   SimModuleLabel:      "largeant"     # Simulation producer module label
   PdsModuleLabel:      "ophit"        # Simulation producer module label
+  PandoraModuleLabel:  "pandora"        # Simulation producer module label
+  SpModuleLabel:        "pandora"        # Simulation producer module label
   Verbose:             false          # Print extra information about what's going on
 }
 
