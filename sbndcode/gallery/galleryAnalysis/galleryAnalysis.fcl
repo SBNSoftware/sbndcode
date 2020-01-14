@@ -22,5 +22,17 @@ analysis: {
   trackAnalysis: {
     MinLength: 3.0 # cm
   }
+
+  hitAnalysisAlg:{
+    LocalDirName: "hitHists"
+  }
+
+  mcAssociations:{
+    HitProducerLabel:          "linecluster"
+    MCTruthProducerLabel:      "largeant"
+    MCTrackAssnsProducerLabel: "mcassociations"
+    TrackProducerLabel:        "pmAlgTracker"
+    LocalDirName:              "mcassociations"
+  }
   
 }
