@@ -12,6 +12,9 @@ art_make(
                            larreco_RecoAlg
                            lardata_RecoObjects  
                            larpandora_LArPandoraInterface
+                           sbndcode_CRTUtils
+                           sbndcode_CRT
+                           sbndcode_CRTProducts
                            nusimdata_SimulationBase
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
