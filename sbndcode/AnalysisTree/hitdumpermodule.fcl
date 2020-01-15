@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+hitdumper:
+{
+    module_type:              "HitDumper"
+    HitsModuleLabel:          "fasthit"
+    CRTHitModuleLabel:          "crthit"
+    CRTStripModuleLabel:          "crt"
+    CRTTrackModuleLabel:          "crttrack"
+    keepCRThits: true
+    keepCRTstrips: false
+    makeCRTtracks: true
+    readCRTtracks: true
+
+}
+
+END_PROLOG
