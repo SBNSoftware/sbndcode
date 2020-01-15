@@ -192,7 +192,7 @@ namespace sbnd {
       hTrueSipmDist[tagger] = tfs->make<TH1D>(Form("TrueSipmDist_%s", tagger.c_str()), "", 40, -2,    13);
       hHitTime[tagger]      = tfs->make<TH1D>(Form("HitTime_%s", tagger.c_str()),      "", 40, -2000, 3000);
       hNpe[tagger]          = tfs->make<TH1D>(Form("Npe_%s", tagger.c_str()),          "", 60, 0,     600);
-      hAngle[tagger]        = tfs->make<TH1D>(Form("Angle_%s", tagger.c_str()),        "", 40, 0,     1.6);
+      hAngle[tagger]        = tfs->make<TH1D>(Form("Angle_%s", tagger.c_str()),        "", 40, 0,     180);
 
       hEffWidthTotal[tagger]   = tfs->make<TH1D>(Form("EffWidthTotal_%s", tagger.c_str()),  "",  20, 0, 11.2);
       hEffWidthReco[tagger]    = tfs->make<TH1D>(Form("EffWidthReco_%s", tagger.c_str()),   "",  20, 0, 11.2);
@@ -200,7 +200,7 @@ namespace sbnd {
       hEffLengthReco[tagger]   = tfs->make<TH1D>(Form("EffLengthReco_%s", tagger.c_str()),  "",  20, 0,  450);
 
       hTrueRecoSipmDist[tagger] = tfs->make<TH2D>(Form("TrueRecoSipmDist_%s", tagger.c_str()), "", 30, -2, 13,   30, -2, 13);
-      hNpeAngle[tagger]         = tfs->make<TH2D>(Form("NpeAngle_%s", tagger.c_str()),         "", 30, 0,  1.6,  30, 0,  600);
+      hNpeAngle[tagger]         = tfs->make<TH2D>(Form("NpeAngle_%s", tagger.c_str()),         "", 30, 0,  180,  30, 0,  600);
       hNpeSipmDist[tagger]      = tfs->make<TH2D>(Form("NpeSipmDist_%s", tagger.c_str()),      "", 30, 0,  11.2, 30, 0,  600);
       hNpeStripDist[tagger]     = tfs->make<TH2D>(Form("NpeStripDist_%s", tagger.c_str()),     "", 30, 0,  450,  30, 0,  600);
     }
@@ -325,8 +325,8 @@ namespace sbnd {
       double angle = TMath::Pi()/2. - fCrtGeo.AngleToTagger(tagger, particles[trueId]);
       if(angle > fMinAngleNpePlot && tagger != "volTaggerBot_0") hNpeAngleCut->Fill(hit.peshit);
       hNpe[tagger]->Fill(hit.peshit);
-      hAngle[tagger]->Fill(angle);
-      hNpeAngle[tagger]->Fill(angle, hit.peshit);
+      hAngle[tagger]->Fill(angle*180./TMath::Pi());
+      hNpeAngle[tagger]->Fill(angle*180./TMath::Pi(), hit.peshit);
 
       // Calculate the true distance from the channel
       for(auto const& stripName : stripNames){

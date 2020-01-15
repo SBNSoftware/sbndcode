@@ -219,9 +219,9 @@ namespace sbnd {
           TString momName = Form("MuMom%s_%s_%s", stage[si].c_str(), category[ci].c_str(), level[li].c_str());
           hEffMom[si][ci][li] = tfs->make<TH1D>(momName, "", 20, 0, 10);
           TString thetaName = Form("MuTheta%s_%s_%s", stage[si].c_str(), category[ci].c_str(), level[li].c_str());
-          hEffTheta[si][ci][li] = tfs->make<TH1D>(thetaName, "", 20, 0, 3.2);
+          hEffTheta[si][ci][li] = tfs->make<TH1D>(thetaName, "", 20, 0, 180);
           TString phiName = Form("MuPhi%s_%s_%s", stage[si].c_str(), category[ci].c_str(), level[li].c_str());
-          hEffPhi[si][ci][li] = tfs->make<TH1D>(phiName, "", 20, -3.2, 3.2);
+          hEffPhi[si][ci][li] = tfs->make<TH1D>(phiName, "", 20, -180, 180);
         }
       }
     }
@@ -232,9 +232,9 @@ namespace sbnd {
       TString phiDiffName = Form("TrackPhiDiff%s", trackType[ti].c_str());
       hTrackPhiDiff[ti] = tfs->make<TH1D>(phiDiffName, "", 50, -0.2, 0.2);
       TString thetaName = Form("TrackTheta%s", trackType[ti].c_str());
-      hTrackTheta[ti] = tfs->make<TH2D>(thetaName, "", 20, 0, 3.2, 20, 0, 3.2);
+      hTrackTheta[ti] = tfs->make<TH2D>(thetaName, "", 20, 0, 180, 20, 0, 180);
       TString phiName = Form("TrackPhi%s", trackType[ti].c_str());
-      hTrackPhi[ti] = tfs->make<TH2D>(phiName, "", 20, -3.2, 0, 20, -3.2, 0);
+      hTrackPhi[ti] = tfs->make<TH2D>(phiName, "", 20, -180, 0, 20, -180, 0);
     }
 
     for(size_t ti = 0; ti < t0Type.size(); ti++){
@@ -242,9 +242,9 @@ namespace sbnd {
         TString momName = Form("PurityMom%s_%s", t0Type[ti].c_str(), purity[pi].c_str());
         hPurityMom[ti][pi] = tfs->make<TH1D>(momName, "", 20, 0, 10);
         TString thetaName = Form("PurityTheta%s_%s", t0Type[ti].c_str(), purity[pi].c_str());
-        hPurityTheta[ti][pi] = tfs->make<TH1D>(thetaName, "", 20, 0, 3.2);
+        hPurityTheta[ti][pi] = tfs->make<TH1D>(thetaName, "", 20, 0, 180);
         TString phiName = Form("PurityPhi%s_%s", t0Type[ti].c_str(), purity[pi].c_str());
-        hPurityPhi[ti][pi] = tfs->make<TH1D>(phiName, "", 20, -3.2, 3.2);
+        hPurityPhi[ti][pi] = tfs->make<TH1D>(phiName, "", 20, -180, 180);
       }
     }
 
@@ -476,19 +476,19 @@ namespace sbnd {
         if(complete){
           hTrackThetaDiff[0]->Fill(minThetaDiff);
           hTrackPhiDiff[0]->Fill(minPhiDiff);
-          hTrackTheta[0]->Fill(trueTheta, minTheta);
-          hTrackPhi[0]->Fill(truePhi, minPhi);
+          hTrackTheta[0]->Fill(trueTheta*180./TMath::Pi(), minTheta*180./TMath::Pi());
+          hTrackPhi[0]->Fill(truePhi*180./TMath::Pi(), minPhi*180./TMath::Pi());
         }
         else{
           hTrackThetaDiff[1]->Fill(minThetaDiff);
           hTrackPhiDiff[1]->Fill(minPhiDiff);
-          hTrackTheta[1]->Fill(trueTheta, minTheta);
-          hTrackPhi[1]->Fill(truePhi, minPhi);
+          hTrackTheta[1]->Fill(trueTheta*180./TMath::Pi(), minTheta*180./TMath::Pi());
+          hTrackPhi[1]->Fill(truePhi*180./TMath::Pi(), minPhi*180./TMath::Pi());
         }
         hTrackThetaDiff[2]->Fill(minThetaDiff);
         hTrackPhiDiff[2]->Fill(minPhiDiff);
-        hTrackTheta[2]->Fill(trueTheta, minTheta);
-        hTrackPhi[2]->Fill(truePhi, minPhi);
+        hTrackTheta[2]->Fill(trueTheta*180./TMath::Pi(), minTheta*180./TMath::Pi());
+        hTrackPhi[2]->Fill(truePhi*180./TMath::Pi(), minPhi*180./TMath::Pi());
       }
       
       //--------------------------------------- CRT HIT T0 PERFORMANCE -------------------------------------------
@@ -503,13 +503,13 @@ namespace sbnd {
       }
       if(bestHitT0Diff != 99999){
         hPurityMom[0][0]->Fill(momentum);
-        hPurityTheta[0][0]->Fill(theta);
-        hPurityPhi[0][0]->Fill(phi);
+        hPurityTheta[0][0]->Fill(theta*180./TMath::Pi());
+        hPurityPhi[0][0]->Fill(phi*180./TMath::Pi());
       }
       if(bestHitT0Diff < 2){
         hPurityMom[0][1]->Fill(momentum);
-        hPurityTheta[0][1]->Fill(theta);
-        hPurityPhi[0][1]->Fill(phi);
+        hPurityTheta[0][1]->Fill(theta*180./TMath::Pi());
+        hPurityPhi[0][1]->Fill(phi*180./TMath::Pi());
       }
      
       //------------------------------------- CRT TRACK T0 PERFORMANCE -------------------------------------------
@@ -523,13 +523,13 @@ namespace sbnd {
       }
       if(bestTrackT0Diff != 99999){
         hPurityMom[1][0]->Fill(momentum);
-        hPurityTheta[1][0]->Fill(theta);
-        hPurityPhi[1][0]->Fill(phi);
+        hPurityTheta[1][0]->Fill(theta*180./TMath::Pi());
+        hPurityPhi[1][0]->Fill(phi*180./TMath::Pi());
       }
       if(bestTrackT0Diff < 2){
         hPurityMom[1][1]->Fill(momentum);
-        hPurityTheta[1][1]->Fill(theta);
-        hPurityPhi[1][1]->Fill(phi);
+        hPurityTheta[1][1]->Fill(theta*180./TMath::Pi());
+        hPurityPhi[1][1]->Fill(phi*180./TMath::Pi());
       }
 
       // --------------------------------- EFFICIENCIES FOR EVERYTHING -------------------------------------------
@@ -596,13 +596,13 @@ namespace sbnd {
         for(size_t ci = 0; ci < category.size(); ci++){
           if(!matchCategories[si][ci]) continue;
           hEffMom[si][ci][0]->Fill(momentum);
-          hEffTheta[si][ci][0]->Fill(theta);
-          hEffPhi[si][ci][0]->Fill(phi);
+          hEffTheta[si][ci][0]->Fill(theta*180./TMath::Pi());
+          hEffPhi[si][ci][0]->Fill(phi*180./TMath::Pi());
 
           if(!matches[si]) continue;
           hEffMom[si][ci][1]->Fill(momentum);
-          hEffTheta[si][ci][1]->Fill(theta);
-          hEffPhi[si][ci][1]->Fill(phi);
+          hEffTheta[si][ci][1]->Fill(theta*180./TMath::Pi());
+          hEffPhi[si][ci][1]->Fill(phi*180./TMath::Pi());
         }
       }
     }

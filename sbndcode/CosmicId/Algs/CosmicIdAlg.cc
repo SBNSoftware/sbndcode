@@ -36,6 +36,7 @@ void CosmicIdAlg::reconfigure(const Config& config){
   fApplyCrtTrackCut  = config.ApplyCrtTrackCut();
   fApplyCrtHitCut    = config.ApplyCrtHitCut();
   fApplyPandoraT0Cut = config.ApplyPandoraT0Cut();
+  fApplyFlashCut     = config.ApplyFlashCut();
 
   fOriginalSettings.push_back(fApplyFiducialCut);
   fOriginalSettings.push_back(fApplyStoppingCut);
@@ -45,6 +46,7 @@ void CosmicIdAlg::reconfigure(const Config& config){
   fOriginalSettings.push_back(fApplyCrtTrackCut);
   fOriginalSettings.push_back(fApplyCrtHitCut);
   fOriginalSettings.push_back(fApplyPandoraT0Cut);
+  fOriginalSettings.push_back(fApplyFlashCut);
 
   fUseTrackAngleVeto    = config.UseTrackAngleVeto();
   fMinSecondTrackLength = config.MinSecondTrackLength();
@@ -58,6 +60,7 @@ void CosmicIdAlg::reconfigure(const Config& config){
   chTag = config.CHTagAlg();
   ctTag = config.CTTagAlg();
   ptTag = config.PTTagAlg();
+  fFlashAlg = config.FlashAlg();
 
   fBeamTimeMin = config.BeamTimeLimits().BeamTimeMin();
   fBeamTimeMax = config.BeamTimeLimits().BeamTimeMax();
@@ -66,7 +69,7 @@ void CosmicIdAlg::reconfigure(const Config& config){
 }
 
 // Change which cuts are run
-void CosmicIdAlg::SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT, bool CH, bool PT){
+void CosmicIdAlg::SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT, bool CH, bool PT, bool FM){
 
   fApplyFiducialCut = FV;
   fApplyStoppingCut = SP;
@@ -76,6 +79,7 @@ void CosmicIdAlg::SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT,
   fApplyCrtTrackCut = CT;
   fApplyCrtHitCut = CH;
   fApplyPandoraT0Cut = PT;
+  fApplyFlashCut = FM;
 
 }
 
@@ -90,6 +94,7 @@ void CosmicIdAlg::ResetCuts(){
   fApplyCrtTrackCut = fOriginalSettings[5];
   fApplyCrtHitCut = fOriginalSettings[6];
   fApplyPandoraT0Cut = fOriginalSettings[7];
+  fApplyFlashCut = fOriginalSettings[8];
 
 }
 
@@ -97,8 +102,10 @@ void CosmicIdAlg::ResetCuts(){
 bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event){
 
   auto pdsHandle = event.getValidHandle<std::vector<recob::OpHit>>(fPdsModuleLabel);
-  std::pair<std::vector<double>, std::vector<double>> opflashes = CosmicIdUtils::OpFlashes(pdsHandle);
-  std::pair<bool, bool> tpcFlash = CosmicIdUtils::BeamFlash(pdsHandle, fBeamTimeMin, fBeamTimeMax);
+  //std::pair<std::vector<double>, std::vector<double>> opflashes = CosmicIdUtils::OpFlashes(pdsHandle);
+  std::pair<std::vector<double>, std::vector<double>> opflashes = fFlashAlg.OpFlashes(pdsHandle);
+  //std::pair<bool, bool> tpcFlash = CosmicIdUtils::BeamFlash(pdsHandle, fBeamTimeMin, fBeamTimeMax);
+  std::pair<bool, bool> tpcFlash = fFlashAlg.BeamFlash(pdsHandle);
   return CosmicId(track, event, opflashes, tpcFlash);
 
 }
@@ -182,8 +189,10 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::pai
 bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event){
 
   auto pdsHandle = event.getValidHandle<std::vector<recob::OpHit>>(fPdsModuleLabel);
-  std::pair<std::vector<double>, std::vector<double>> opflashes = CosmicIdUtils::OpFlashes(pdsHandle);
-  std::pair<bool, bool> tpcFlash = CosmicIdUtils::BeamFlash(pdsHandle, fBeamTimeMin, fBeamTimeMax);
+  //std::pair<std::vector<double>, std::vector<double>> opflashes = CosmicIdUtils::OpFlashes(pdsHandle);
+  std::pair<std::vector<double>, std::vector<double>> opflashes = fFlashAlg.OpFlashes(pdsHandle);
+  //std::pair<bool, bool> tpcFlash = CosmicIdUtils::BeamFlash(pdsHandle, fBeamTimeMin, fBeamTimeMax);
+  std::pair<bool, bool> tpcFlash = fFlashAlg.BeamFlash(pdsHandle);
   return CosmicId(pfparticle, pfParticleMap, event, opflashes, tpcFlash);
 
 }
@@ -221,8 +230,13 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
 
     recob::Track track = *associatedTracks.front();
     nuTracks.push_back(track);
-    
-    
+      
+  }
+
+  // Apply the flash matching cut
+  if(fApplyFlashCut){
+    auto pdsHandle = event.getValidHandle<std::vector<recob::OpHit>>(fPdsModuleLabel);
+    if(!fFlashAlg.FlashMatch(pfparticle, pfParticleMap, event, pdsHandle)) return true;
   }
 
   // Tag cosmics from pandora T0 associations

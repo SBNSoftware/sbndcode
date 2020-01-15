@@ -36,6 +36,7 @@ sbnd_pdstree:
   PandoraModuleLabel:  "pandora"        # Simulation producer module label
   SpModuleLabel:        "pandora"        # Simulation producer module label
   Verbose:             false          # Print extra information about what's going on
+  FlashAlg:            @local::sbnd_flashmatchalg
 }
 
 sbnd_cosmictree:

@@ -190,10 +190,10 @@ namespace sbnd {
 
       hEffMomTotal[tagger]   = tfs->make<TH1D>(Form("EffMomTotal_%s", tagger.c_str()),   "", 20, 0,    10);
       hEffMomReco[tagger]    = tfs->make<TH1D>(Form("EffMomReco_%s", tagger.c_str()),    "", 20, 0,    10);
-      hEffThetaTotal[tagger] = tfs->make<TH1D>(Form("EffThetaTotal_%s", tagger.c_str()), "", 20, 0,    3.2);
-      hEffThetaReco[tagger]  = tfs->make<TH1D>(Form("EffThetaReco_%s", tagger.c_str()),  "", 20, 0,    3.2);
-      hEffPhiTotal[tagger]   = tfs->make<TH1D>(Form("EffPhiTotal_%s", tagger.c_str()),   "", 20, -3.2, 3.2);
-      hEffPhiReco[tagger]    = tfs->make<TH1D>(Form("EffPhiReco_%s", tagger.c_str()),    "", 20, -3.2, 3.2);
+      hEffThetaTotal[tagger] = tfs->make<TH1D>(Form("EffThetaTotal_%s", tagger.c_str()), "", 20, 0,    180);
+      hEffThetaReco[tagger]  = tfs->make<TH1D>(Form("EffThetaReco_%s", tagger.c_str()),  "", 20, 0,    180);
+      hEffPhiTotal[tagger]   = tfs->make<TH1D>(Form("EffPhiTotal_%s", tagger.c_str()),   "", 20, -180, 180);
+      hEffPhiReco[tagger]    = tfs->make<TH1D>(Form("EffPhiReco_%s", tagger.c_str()),    "", 20, -180, 180);
     }
     hTime = tfs->make<TH1D>("Time", "", 100, -2000, 4000);
     hTime2 = tfs->make<TH1D>("Time2", "", 100, -2000, 4000);
@@ -294,8 +294,8 @@ namespace sbnd {
       double momentum = particle.P();
       TVector3 start (particle.Vx(), particle.Vy(), particle.Vz());
       TVector3 end (particle.EndX(), particle.EndY(), particle.EndZ());
-      double theta = (end-start).Theta();
-      double phi = (end-start).Phi();
+      double theta = (end-start).Theta()*180./TMath::Pi();
+      double phi = (end-start).Phi()*180./TMath::Pi();
       for(auto const& tagger : hitTaggers){
         hEffMomTotal[tagger]->Fill(momentum);
         hEffThetaTotal[tagger]->Fill(theta);

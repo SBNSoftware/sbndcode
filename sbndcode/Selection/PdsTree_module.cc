@@ -12,6 +12,7 @@
 #include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 #include "sbndcode/OpDetSim/OpT0FinderTypes.h"
 #include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
+#include "sbndcode/CosmicId/Algs/FlashMatchAlg.h"
 
 // LArSoft includes
 #include "lardataobj/RecoBase/OpHit.h"
@@ -94,6 +95,10 @@ namespace sbnd {
         Comment("Print information about what's going on")
       };
 
+      fhicl::Table<FlashMatchAlg::Config> FlashAlg {
+        Name("FlashAlg"),
+      };
+
     }; // Inputs
 
     using Parameters = art::EDAnalyzer::Table<Config>;
@@ -109,10 +114,6 @@ namespace sbnd {
 
     // Called once, at end of the job
     virtual void endJob() override;
-
-    std::vector<double> OpFlashes(std::vector<recob::OpHit> optimes);
-    std::vector<double> OpVariables(std::vector<recob::OpHit> ophits, int tpc, double start_t, double end_t);
-    double FlashScore(double x, double y, double z, std::vector<double> variables);
 
     // Reset variables in each loop
     void ResetVars();
@@ -132,19 +133,8 @@ namespace sbnd {
     art::InputTag fSpModuleLabel;  ///< name of Pandora producer
     bool          fVerbose;             ///< print information about what's going on
 
-    std::string fInputFilename;
-    float fBeamWindowEnd, fBeamWindowStart;
-    float fLightWindowEnd, fLightWindowStart;
-    float fMinFlashPE;
-    float fPEscale;
-    float fTermThreshold;
-
-    std::map<unsigned int, unsigned int> _pfpmap;
-
-    std::vector<float> dysp, dzsp, rrsp, pesp, dymean, dzmean, rrmean, pemean;
-    int rr_nbins, dy_nbins, dz_nbins, pe_nbins;
-
     TPCGeoAlg fTpcGeo;
+    FlashMatchAlg fFlashAlg;
 
     opdet::sbndPDMapAlg fChannelMap; //map for photon detector types
 
@@ -238,89 +228,8 @@ namespace sbnd {
     , fPandoraModuleLabel   (config().PandoraModuleLabel())
     , fSpModuleLabel        (config().SpModuleLabel())
     , fVerbose              (config().Verbose())
+    , fFlashAlg             (config().FlashAlg())
   {
-
-    fBeamWindowStart =  -0.2;
-    fBeamWindowEnd   =  2.0;  // in ns
-    fInputFilename = "/sbnd/data/fm_metrics_sbnd.root";
-    fLightWindowEnd = 0.09;
-    fLightWindowStart = -0.01;
-    fMinFlashPE = 0.;
-    fPEscale = 100.;
-    fTermThreshold = 30.;
-
-    //read histograms and fill vectors for match score calculation
-    std::string fname;
-    cet::search_path sp("FW_SEARCH_PATH");
-    sp.find_file(fInputFilename, fname);
-
-    TFile *infile = new TFile(fInputFilename.c_str(), "READ");
-
-    TH1 *temphisto = (TH1*)infile->Get("rrp1");
-    rr_nbins = temphisto->GetNbinsX();
-    if (rr_nbins<=0) {
-      rr_nbins=1;
-      rrmean.push_back(0);
-      rrsp.push_back(0.001);
-    }
-    else {
-      for (int ib = 1; ib <= rr_nbins; ++ib) {
-        rrmean.push_back(temphisto->GetBinContent(ib));
-        float tt = temphisto->GetBinError(ib);
-        if(tt<=0) tt = 100.;
-        rrsp.push_back(tt);
-      }
-    }
-
-    temphisto = (TH1*)infile->Get("dyp1");
-    dy_nbins = temphisto->GetNbinsX();
-    if (dy_nbins<=0) {
-      dy_nbins=1;
-      dymean.push_back(0);
-      dysp.push_back(0.001);
-    }
-    else {
-      for (int ib = 1;ib <= dy_nbins; ++ib) {
-        dymean.push_back(temphisto->GetBinContent(ib));
-        float tt = temphisto->GetBinError(ib);
-        if(tt<=0) tt = 100.;
-        dysp.push_back(tt);
-      }
-    }
-    
-    temphisto = (TH1*)infile->Get("dzp1");
-    dz_nbins = temphisto->GetNbinsX();
-    if (dz_nbins<=0) {
-      dz_nbins=1;
-      dzmean.push_back(0);
-      dzsp.push_back(0.001);
-    }
-    else {
-      for (int ib = 1; ib <= dz_nbins; ++ib) {
-        dzmean.push_back(temphisto->GetBinContent(ib));
-        float tt = temphisto->GetBinError(ib);
-        if(tt<=0) tt = 100.;
-        dzsp.push_back(tt);
-      }
-    }
-
-    temphisto = (TH1*)infile->Get("pep1");
-    pe_nbins = temphisto->GetNbinsX();
-    if (pe_nbins<=0) {
-      pe_nbins=1;
-      pemean.push_back(0);
-      pesp.push_back(0.001);
-    }
-    else {
-      for (int ib=1; ib <= pe_nbins; ++ib) {
-        pemean.push_back(temphisto->GetBinContent(ib));
-        float tt = temphisto->GetBinError(ib);
-        if(tt<=0) tt = 100.;
-        pesp.push_back(tt);
-      }
-    }
-    
-    infile->Close();
 
   } // PdsTree()
 
@@ -447,7 +356,6 @@ namespace sbnd {
     this->GetPFParticleIdMap(pfParticleHandle, pfParticleMap);
     
     art::FindManyP<recob::SpacePoint> pfp_spacepoint_assn_v(pfParticleHandle, event, fPandoraModuleLabel);
-    art::FindManyP<recob::Track> pfp_track_assn_v(pfParticleHandle, event, fPandoraModuleLabel);
 
     // grab associated metadata
     auto const& spacepoint_h = event.getValidHandle<std::vector<recob::SpacePoint> >(fSpModuleLabel);
@@ -461,7 +369,6 @@ namespace sbnd {
       if(ptime < -1250 || ptime > 2500) continue;
       parts.push_back(particle);
       // Only interested in muons
-      //if(!(std::abs(particle.PdgCode()) == 13)) continue;
       // Only want primary particles
       if(particle.Mother() != 0) continue;
       // Only want stable particles (post fsi)
@@ -477,95 +384,19 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
 
     // get flash time
-    int nbins = 500 * (fBeamWindowEnd - fBeamWindowStart);
-    TH1F *ophittime = new TH1F("ophittime", "ophittime", nbins, fBeamWindowStart, fBeamWindowEnd); // in us
     std::vector<recob::OpHit> ophs;
     for(auto const& oph : (*pdsHandle)){
-      ophs.push_back(oph);
-      if ( fChannelMap.pdType(oph.OpChannel(),"pmt")) {
-        if ( (oph.PeakTime()>fBeamWindowStart) && (oph.PeakTime()< fBeamWindowEnd) ) {
-	        ophittime->Fill(oph.PeakTime(), fPEscale*oph.PE());
-        }
+      if ( fChannelMap.pdType(oph.OpChannel(),"pmt") || fChannelMap.pdType(oph.OpChannel(),"barepmt") ) {
+        ophs.push_back(oph);
       }
     }
-    auto ibin =  ophittime->GetMaximumBin();
-    float flashtime = (ibin*0.002) + fBeamWindowStart;  // in us
-    float lowedge = flashtime + fLightWindowStart;
-    float highedge = flashtime + fLightWindowEnd;
 
-/*
-    std::vector<double> flash_x {0, 0};
-    std::vector<double> flash_y {0, 0};
-    std::vector<double> flash_z {0, 0};
-    std::vector<double> flash_r {-99999, -99999};
-    std::vector<double> flash_pe {0, 0};
-*/
+    std::pair<double, double> beam_flash = fFlashAlg.BiggestBeamFlash(ophs);
+
     std::vector<std::vector<double>> opvars;
 
     for (size_t it=0; it<fGeometryService->NTPC(); ++it) {
-      opvars.push_back(OpVariables(ophs, it, lowedge, highedge));
-      /*
-      double PMTxyz[3];
-	    double sum_Ay=0; double sum_Az=0;
-	    double sum_Cy=0; double sum_Cz=0;
-	    double sum_D=0;
-      double unpe_tot = 0;
-      double pe_tot = 0;
-	    for(auto const& oph : (*pdsHandle)){
-	      if ( !((oph.PeakTime()>lowedge) && (oph.PeakTime()< highedge)) ) continue;
-	      fGeometryService->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-	      if ((it==0 && PMTxyz[0]>0) || (it==1 && PMTxyz[0]<0) ) continue;
-
-	      if ( fChannelMap.pdType(oph.OpChannel(),"pmt")){
-	 	      // Add up the position, weighting with PEs
-          pe_tot  += oph.PE();
-          flash_y[it] += oph.PE() * PMTxyz[1];
-          flash_z[it] += oph.PE() * PMTxyz[2];
-	 	      sum_Ay  += pow(oph.PE(),2.) * pow(PMTxyz[1],2.);
-	 	      sum_Az  += pow(oph.PE(),2.) * pow(PMTxyz[2],2.);
-	 	      sum_D   += pow(oph.PE(),2.);
-	 	      sum_Cy  += pow(oph.PE(),2.) * PMTxyz[1];
-	 	      sum_Cz  += pow(oph.PE(),2.) * PMTxyz[2];
-        }
-	      else if ( fChannelMap.pdType(oph.OpChannel(),"barepmt")){
-          unpe_tot += oph.PE();
-          flash_y[it] += oph.PE() * PMTxyz[1];
-          flash_z[it] += oph.PE() * PMTxyz[2];
-        }
-	    }
-	 
-      if(pe_tot <= 0) continue;
-	    flash_y[it] /= (pe_tot + unpe_tot);
-	    flash_z[it] /= (pe_tot + unpe_tot);
-	    flash_r[it] = sqrt((sum_Ay - pow(sum_Cy,2.)/sum_D + sum_Az - pow(sum_Cz,2.)/sum_D)/sum_D);
-      flash_pe[it] = 100. * unpe_tot / pe_tot;
-
-      std::vector<double> allowed_x_pe;
-      for(int i = 0; i < pe_nbins; i++){
-        if(flash_pe[it] >= pemean[i]-pesp[i] && flash_pe[it] <= pemean[i]+pesp[i]) allowed_x_pe.push_back(200. - i*200./nbins);
-        if(i == 0 && flash_pe[it] < pemean[i]-pesp[i]) allowed_x_pe.push_back(0.);
-        if(i == pe_nbins-1 && flash_pe[it] > pemean[i]+pesp[i]) allowed_x_pe.push_back(200.);
-      }
-      std::sort(allowed_x_pe.begin(), allowed_x_pe.end());
-
-      std::vector<double> allowed_x_rr;
-      for(int i = 0; i < rr_nbins; i++){
-        if(flash_r[it] >= rrmean[i]-rrsp[i] && flash_r[it] <= rrmean[i]+rrsp[i]) allowed_x_rr.push_back(200. - i*200./nbins);
-        if(i == 0 && flash_r[it] < rrmean[i]-rrsp[i]) allowed_x_rr.push_back(0.);
-        if(i == rr_nbins-1 && flash_r[it] > rrmean[i]+rrsp[i]) allowed_x_rr.push_back(200.);
-      }
-      std::sort(allowed_x_rr.begin(), allowed_x_rr.end());
-
-      if(allowed_x_pe.size()==0 || allowed_x_rr.size() ==0){ 
-        std::cout<<"No valid X!\n";
-        flash_x[it] = 100.;
-      }
-      else{
-        double min_x = std::min(allowed_x_pe[0], allowed_x_rr[0]);
-        double max_x = std::max(allowed_x_pe.back(), allowed_x_rr.back());
-        flash_x[it] = (max_x + min_x)/2.;
-      }
-      */
+      opvars.push_back(fFlashAlg.OpVariables(ophs, it, beam_flash.first, beam_flash.second));
     }
   
     double min_score = 99999;
@@ -640,29 +471,13 @@ namespace sbnd {
       nuvtx_x /= norm;
       nuvtx_y /= norm;
       nuvtx_z /= norm;
-/*	
-	    //      calculate match score here, put association on the event
-	    float slice = 200. - abs(nuvtx_x);
-      float drift_distance = 200.;
-	    int y_bin = int(dy_nbins * (slice / drift_distance));
-	    int z_bin = int(dz_nbins * (slice / drift_distance));
-	    int r_bin = int(rr_nbins * (slice / drift_distance));
-	    //int pe_bin = int(pe_nbins * (slice / drift_distance));
-  
-      double score = 0;
-      if(dysp[y_bin] > 0) score += abs(abs(opvars[pfp_tpc][0] - nuvtx_y) - dymean[y_bin])/dysp[y_bin];
-      if(dzsp[z_bin] > 0) score += abs(abs(opvars[pfp_tpc][1] - nuvtx_z) - dzmean[z_bin])/dzsp[z_bin];
-      if(rrsp[r_bin] > 0) score += abs(opvars[pfp_tpc][2] - rrmean[r_bin])/rrsp[r_bin];
-      //if(pesp[pe_bin] > 0) score += abs(flash_pe[pfp_tpc] - pemean[pe_bin])/pesp[pe_bin];
 
-      pfp_score = score;*/
-      pfp_score = FlashScore(nuvtx_x, nuvtx_y, nuvtx_z, opvars[pfp_tpc]);
-/*
-      pfp_dy = abs(abs(flash_y[pfp_tpc] - nuvtx_y)-dymean[y_bin])/dysp[y_bin];
-      pfp_dz = abs(abs(flash_z[pfp_tpc] - nuvtx_z)-dzmean[z_bin])/dzsp[z_bin];
-      pfp_rr = abs(flash_r[pfp_tpc] - rrmean[r_bin])/rrsp[r_bin];
-      pfp_pe = abs(flash_pe[pfp_tpc] - pemean[pe_bin])/pesp[pe_bin];
-*/
+      pfp_score = fFlashAlg.FlashScore(nuvtx_x, nuvtx_y, nuvtx_z, opvars[pfp_tpc]);
+      pfp_dy = fFlashAlg.DyScore(nuvtx_x, nuvtx_y, opvars[pfp_tpc]);
+      pfp_dz = fFlashAlg.DzScore(nuvtx_x, nuvtx_z, opvars[pfp_tpc]);
+      pfp_rr = fFlashAlg.RrScore(nuvtx_x, opvars[pfp_tpc]);
+      pfp_pe = fFlashAlg.PeScore(nuvtx_x, opvars[pfp_tpc]);
+
       if(pfp_score < min_score){
         min_score = pfp_score;
         if(pfp_is_nu) score_nu = true;
@@ -706,10 +521,10 @@ namespace sbnd {
       }
     }
 
-    std::vector<double> opflashes_tpc0 = OpFlashes(ophits_tpc0);
+    std::vector<double> opflashes_tpc0 = fFlashAlg.OpFlashes(ophits_tpc0);
     n_flashes_tpc0 = opflashes_tpc0.size();
 
-    std::vector<double> opflashes_tpc1 = OpFlashes(ophits_tpc1);
+    std::vector<double> opflashes_tpc1 = fFlashAlg.OpFlashes(ophits_tpc1);
     n_flashes_tpc1 = opflashes_tpc1.size();
 
     std::pair<std::vector<double>, std::vector<double>> fake_flashes = CosmicIdUtils::FakeTpcFlashes(parts);
@@ -926,108 +741,6 @@ namespace sbnd {
     pfp_dz = -99999;
     pfp_rr = -99999;
     pfp_pe = -99999;
-  }
-
-  std::vector<double> PdsTree::OpFlashes(std::vector<recob::OpHit> optimes){
-    std::vector<double> opflashes;
-
-    // get flash time
-    int nbins = 500 * (2500 - -1250);
-    TH1F *ophittimes = new TH1F("ophittime", "ophittime", nbins, -1250, 2500); // in us
-    for(size_t i = 0; i < optimes.size(); i++){
-      if ( fChannelMap.pdType(optimes[i].OpChannel(), "pmt")) {
-	      ophittimes->Fill(optimes[i].PeakTime(), optimes[i].PE());
-      }
-    }
-    for(int i = 0; i < ophittimes->GetNbinsX(); i++){
-      if(ophittimes->GetBinContent(i) > 0.2){
-        opflashes.push_back(((double)i*0.002) - 1250 - 0.2);
-        while(ophittimes->GetBinContent(i) > 0.2) i++;
-      }
-    }
-
-    delete ophittimes;
-    return opflashes;
-  }
-
-  std::vector<double> PdsTree::OpVariables(std::vector<recob::OpHit> ophits, int tpc, double start_t, double end_t){
-
-    std::vector<double> variables {0, 0, -99999, -99999};
-
-    double PMTxyz[3];
-	  double sum_Ay=0; 
-    double sum_Az=0;
-	  double sum_Cy=0; 
-    double sum_Cz=0;
-	  double sum_D=0;
-    double unpe_tot = 0;
-    double pe_tot = 0;
-
-	  for(auto const& oph : ophits){
-
-      // Time window of flash
-	    if ( !((oph.PeakTime() > start_t) && (oph.PeakTime() < end_t)) ) continue;
-
-      // Check if in correct TPC
-	    fGeometryService->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-	    if ((tpc==0 && PMTxyz[0]>0) || (tpc==1 && PMTxyz[0]<0) ) continue;
-
-      // For TPB coated PMTs
-	    if ( fChannelMap.pdType(oph.OpChannel(),"pmt")){
-	 	    // Add up the position, weighting with PEs
-        pe_tot  += oph.PE();
-        variables[0] += oph.PE() * PMTxyz[1];
-        variables[1] += oph.PE() * PMTxyz[2];
-	 	    sum_Ay  += pow(oph.PE(),2.) * pow(PMTxyz[1],2.);
-	 	    sum_Az  += pow(oph.PE(),2.) * pow(PMTxyz[2],2.);
-	 	    sum_D   += pow(oph.PE(),2.);
-	 	    sum_Cy  += pow(oph.PE(),2.) * PMTxyz[1];
-	 	    sum_Cz  += pow(oph.PE(),2.) * PMTxyz[2];
-      }
-      // For uncoated PMTs
-	    else if ( fChannelMap.pdType(oph.OpChannel(),"barepmt")){
-        unpe_tot += oph.PE();
-        variables[0] += oph.PE() * PMTxyz[1];
-        variables[1] += oph.PE() * PMTxyz[2];
-      }
-	  }
-	 
-    // If no hits return null vector
-    if(pe_tot <= 0) return variables;
-
-    // Calculate charge weighted center
-	  variables[0] /= (pe_tot + unpe_tot);
-	  variables[1] /= (pe_tot + unpe_tot);
-    // Calculate PE spread
-	  variables[2] = sqrt((sum_Ay - pow(sum_Cy,2.)/sum_D + sum_Az - pow(sum_Cz,2.)/sum_D)/sum_D);
-    // Calculate PE ratio
-    variables[3] = 100. * unpe_tot / pe_tot;
-
-    return variables;
-  }
-
-  double PdsTree::FlashScore(double x, double y, double z, std::vector<double> variables){
-
-    //      calculate match score here, put association on the event
-	  float slice = 200. - abs(x);
-    float drift_distance = 200.;
-	  int y_bin = int(dy_nbins * (slice / drift_distance));
-	  int z_bin = int(dz_nbins * (slice / drift_distance));
-	  int r_bin = int(rr_nbins * (slice / drift_distance));
-	  int pe_bin = int(pe_nbins * (slice / drift_distance));
-  
-    double score = 0;
-    if(dysp[y_bin] > 0) score += abs(abs(variables[0] - y) - dymean[y_bin])/dysp[y_bin];
-    if(dzsp[z_bin] > 0) score += abs(abs(variables[1] - z) - dzmean[z_bin])/dzsp[z_bin];
-    if(rrsp[r_bin] > 0) score += abs(variables[2] - rrmean[r_bin])/rrsp[r_bin];
-
-    pfp_dy = abs(abs(variables[0] - y)-dymean[y_bin])/dysp[y_bin];
-    pfp_dz = abs(abs(variables[1] - z)-dzmean[z_bin])/dzsp[z_bin];
-    pfp_rr = abs(variables[2] - rrmean[r_bin])/rrsp[r_bin];
-    pfp_pe = abs(variables[3] - pemean[pe_bin])/pesp[pe_bin];
-
-	  return score;
-
   }
 
   void PdsTree::GetPFParticleIdMap(const PFParticleHandle &pfParticleHandle, PFParticleIdMap &pfParticleMap){

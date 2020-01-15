@@ -82,5 +82,22 @@ sbnd_pandorat0cosmicidalg:
     BeamTimeLimits:      @local::sbnd_beamtime
 }
 
+sbnd_flashmatchalg:
+{
+    SpacePointLabel: "pandora"
+    PandoraLabel: "pandora"
+    InputFile: "/sbnd/data/fm_metrics_sbnd.root"
+    BeamFlashMin: -0.2 #[us]
+    BeamFlashMax: 2.0 #[us]
+    LightWindowMin: -0.01 #[us]
+    LightWindowMax: 0.09 #[us]
+    EventMin: -1250. #[us]
+    EventMax: 2500. #[us]
+    TimeResolution: 0.002 #[us]
+    FlashThreshold: 0.1 #[PE]
+    FlashTimeCorrection: -0.2 #[us]
+    FlashMatchCut: 20.
+}
+
 
 END_PROLOG

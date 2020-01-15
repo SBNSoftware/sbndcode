@@ -19,6 +19,7 @@ standard_cosmicidalg:
     ApplyCrtTrackCut:  true
     ApplyCrtHitCut:    true
     ApplyPandoraT0Cut: false
+    ApplyFlashCut:     true
 
     UseTrackAngleVeto:    true
     MinSecondTrackLength: 5.
@@ -32,6 +33,7 @@ standard_cosmicidalg:
     CHTagAlg: @local::sbnd_crthitcosmicidalg
     CTTagAlg: @local::sbnd_crttrackcosmicidalg
     PTTagAlg: @local::sbnd_pandorat0cosmicidalg
+    FlashAlg: @local::sbnd_flashmatchalg
 
     BeamTimeLimits: @local::sbnd_beamtime
 }
