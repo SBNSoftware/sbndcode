@@ -52,7 +52,7 @@ std::vector<int> fNumPiPM;
 std::vector<int> fNumPi0;
 std::vector<int> fInteractionType;
 // Plotting variable configurations
-TString fStage;
+std::vector<TString> fStage;
 std::vector<TString> fPlotVariables;
 std::vector<bool> fShowPlots;
 double fPotScale;
@@ -68,6 +68,7 @@ bool fPlotXSec;
 bool fPlotFilled;
 // Optional extras
 bool fShowInfo;
+bool fSaveAllInOne;
 bool fShowStatError;
 bool fShowErrorBars;
 bool fPlotEffPur;
@@ -83,7 +84,9 @@ double fTargets;
 // Constants
 // Integrated flux for each neutrino species
 std::map<int, double> fNuFlux = {{14, 7.91}, {-14, 0.5475}, {12, 0.04696}, {-12, 0.004732}};
-const std::vector<int> fCols = {46, 33, 38, 42, 40, 30, 49};
+const std::vector<int> fCols = {46, 38, 40, 30, 49, 33, 42};
+const std::vector<int> fLineStyle = {1, 2, 7, 9, 1, 2, 7, 9, 1, 2, 7, 9};
+const std::vector<int> fFillStyle = {3001, 1001, 3315, 3004, 3351, 3001, 3315, 3004, 3351, 3001, 3315, 3004, 3351};
 
 // Structure for holding interaction information
 class Interaction
@@ -92,16 +95,18 @@ class Interaction
 
   bool selected;
   bool true_selected;
+  TString stage;
   std::string fsi;
   std::string int_type;
   std::string nu_type;
   std::vector<double> variables;
   std::vector<double> true_variables;
 
-  Interaction(bool s, bool ts, std::string f, std::string i, std::string n, std::vector<double> v, std::vector<double> tv)
+  Interaction(bool s, bool ts, TString st, std::string f, std::string i, std::string n, std::vector<double> v, std::vector<double> tv)
   {
     selected = s;
     true_selected = ts;
+    stage = st;
     fsi = f;
     int_type = i;
     nu_type = n;
@@ -118,7 +123,7 @@ class Titles
   std::vector<TString> hist_titles;
   std::vector<TString> names;
   std::vector<TString> units;
-  TString data_type;
+  std::vector<TString> data_type;
   TString part_cont;
   TString lep_cont;
   TString is_cc;
@@ -129,7 +134,7 @@ class Titles
   TString pot;
   TString mass;
 
-  Titles(std::vector<TString> ht, std::vector<TString> n, std::vector<TString> u, TString dt, TString pc, TString lc, 
+  Titles(std::vector<TString> ht, std::vector<TString> n, std::vector<TString> u, std::vector<TString> dt, TString pc, TString lc, 
         TString ic, TString npr, TString npi, TString npi0, TString it, TString p, TString m)
   {
     hist_titles = ht;
@@ -152,9 +157,9 @@ class Titles
 // Set some global style configurations here
 void SetStyle(){
 
-  Int_t font = 62;
-  Double_t font_size = 0.06;
-  Double_t line_width = 3.;
+  Int_t font = 132;
+  Double_t font_size = 0.05;
+  Double_t line_width = 2.;
   Double_t label_offset = 0.01;
 
   TGaxis::SetMaxDigits(3);
@@ -179,9 +184,9 @@ void SetStyle(){
   gStyle->SetLegendFont(font);
   // Sizes
   gStyle->SetTitleSize(1.3*font_size, "title");
-  gStyle->SetTitleSize(font_size, "x");
-  gStyle->SetTitleSize(font_size, "y");
-  gStyle->SetTitleSize(font_size, "z");
+  gStyle->SetTitleSize(1.2*font_size, "x");
+  gStyle->SetTitleSize(1.2*font_size, "y");
+  gStyle->SetTitleSize(1.2*font_size, "z");
   gStyle->SetLabelSize(font_size, "x");
   gStyle->SetLabelSize(font_size, "y");
   gStyle->SetLabelSize(font_size, "z");
@@ -290,8 +295,9 @@ void Configure(const std::string config_filename) {
     if(key.find("NumPi0") != std::string::npos)             fNumPi0 = ToInts(value);
     if(key.find("InteractionType") != std::string::npos)    fInteractionType = ToInts(value);
     // Plotting variable configurations
-    if(key.find("Stage") != std::string::npos)        fStage = TString(value);
+    if(key.find("Stage") != std::string::npos)        fStage = ToTStrings(value);
     if(key.find("PlotVariable") != std::string::npos) fPlotVariables = ToTStrings(value);
+    if(key.find("SaveAllInOne") != std::string::npos)  fSaveAllInOne = (value=="true");
     if(key.find("ShowPlots") != std::string::npos)    fShowPlots = ToBools(value);
     if(key.find("PotScale") != std::string::npos)     fPotScale = stod(value);
     // Plotting option configurations
@@ -374,7 +380,7 @@ bool IsSelected(int nu_pdg, int cc, bool lep_contained, bool particles_contained
 }
 
 // Read in true variables
-std::vector<Interaction> ReadData(){
+std::map< TString, std::vector<Interaction> > ReadData(){
 
   // Open the root tree
   TFile data_file(fInputFile);
@@ -382,226 +388,229 @@ std::vector<Interaction> ReadData(){
     std::cout<<"Could not read input file!\n";
     exit(1);
   }
+  
+  // Map of a vector to fill for each reco type
+  std::map< TString, std::vector<Interaction> > interactions;
 
-  TString prefix = fStage+"_";
+  for(const TString &s : fStage){
+    //Read in TTree
+    TTreeReader tree_reader(fTreePath, &data_file);
 
-  //Read in TTree
-  TTreeReader tree_reader(fTreePath, &data_file);
+    // True vertex
+    TTreeReaderValue<double>       vtx_x(tree_reader, "vtx_x");
+    TTreeReaderValue<double>       vtx_y(tree_reader, "vtx_y");
+    TTreeReaderValue<double>       vtx_z(tree_reader, "vtx_z");
 
-  // True vertex
-  TTreeReaderValue<double>       vtx_x(tree_reader, "vtx_x");
-  TTreeReaderValue<double>       vtx_y(tree_reader, "vtx_y");
-  TTreeReaderValue<double>       vtx_z(tree_reader, "vtx_z");
+    // True quantities for stacked hists
+    TTreeReaderValue<bool>         true_lep_contained(tree_reader, "true_lep_contained");
+    TTreeReaderValue<bool>         true_particles_contained(tree_reader, "true_particles_contained");
+    TTreeReaderValue<int>          true_cc(tree_reader, "true_cc");
+    TTreeReaderValue<int>          true_nu_pdg(tree_reader, "true_nu_pdg");
+    TTreeReaderValue<int>          true_int_type(tree_reader, "true_int_type");
+    TTreeReaderValue<unsigned int> true_n_pipm(tree_reader, "true_n_pipm");
+    TTreeReaderValue<unsigned int> true_n_pi0(tree_reader, "true_n_pi0");
+    TTreeReaderValue<unsigned int> true_n_pr(tree_reader, "true_n_pr");
 
-  // True quantities for stacked hists
-  TTreeReaderValue<bool>         true_lep_contained(tree_reader, "true_lep_contained");
-  TTreeReaderValue<bool>         true_particles_contained(tree_reader, "true_particles_contained");
-  TTreeReaderValue<int>          true_cc(tree_reader, "true_cc");
-  TTreeReaderValue<int>          true_nu_pdg(tree_reader, "true_nu_pdg");
-  TTreeReaderValue<int>          true_int_type(tree_reader, "true_int_type");
-  TTreeReaderValue<unsigned int> true_n_pipm(tree_reader, "true_n_pipm");
-  TTreeReaderValue<unsigned int> true_n_pi0(tree_reader, "true_n_pi0");
-  TTreeReaderValue<unsigned int> true_n_pr(tree_reader, "true_n_pr");
+    // Need true values for efficiency/purity/response
+    TTreeReaderValue<double>       true_nu_energy(tree_reader, "true_nu_energy");
+    TTreeReaderValue<double>       true_lep_mom(tree_reader, "true_lep_mom");
+    TTreeReaderValue<double>       true_lep_theta(tree_reader, "true_lep_theta");
+    TTreeReaderValue<double>       true_pr1_mom(tree_reader, "true_pr1_mom");
+    TTreeReaderValue<double>       true_pr1_theta(tree_reader, "true_pr1_theta");
+    TTreeReaderValue<double>       true_lep_pr1_angle(tree_reader, "true_lep_pr1_angle");
+    TTreeReaderValue<double>       true_pipm1_mom(tree_reader, "true_pipm1_mom");
+    TTreeReaderValue<double>       true_pipm1_theta(tree_reader, "true_pipm1_theta");
+    TTreeReaderValue<double>       true_lep_pipm1_angle(tree_reader, "true_lep_pipm1_angle");
+    TTreeReaderValue<double>       true_delta_pt(tree_reader, "true_delta_pt");
+    TTreeReaderValue<double>       true_delta_alphat(tree_reader, "true_delta_alphat");
+    TTreeReaderValue<double>       true_delta_phit(tree_reader, "true_delta_phit");
 
-  // Need true values for efficiency/purity/response
-  TTreeReaderValue<double>       true_nu_energy(tree_reader, "true_nu_energy");
-  TTreeReaderValue<double>       true_lep_mom(tree_reader, "true_lep_mom");
-  TTreeReaderValue<double>       true_lep_theta(tree_reader, "true_lep_theta");
-  TTreeReaderValue<double>       true_pr1_mom(tree_reader, "true_pr1_mom");
-  TTreeReaderValue<double>       true_pr1_theta(tree_reader, "true_pr1_theta");
-  TTreeReaderValue<double>       true_lep_pr1_angle(tree_reader, "true_lep_pr1_angle");
-  TTreeReaderValue<double>       true_pipm1_mom(tree_reader, "true_pipm1_mom");
-  TTreeReaderValue<double>       true_pipm1_theta(tree_reader, "true_pipm1_theta");
-  TTreeReaderValue<double>       true_lep_pipm1_angle(tree_reader, "true_lep_pipm1_angle");
-  TTreeReaderValue<double>       true_delta_pt(tree_reader, "true_delta_pt");
-  TTreeReaderValue<double>       true_delta_alphat(tree_reader, "true_delta_alphat");
-  TTreeReaderValue<double>       true_delta_phit(tree_reader, "true_delta_phit");
+    TString prefix = s+"_";
 
-  //Associate TTree values with variables
-  TTreeReaderValue<bool>         lep_contained(tree_reader, prefix+"lep_contained");
-  TTreeReaderValue<bool>         particles_contained(tree_reader, prefix+"particles_contained");
-  TTreeReaderValue<int>          cc(tree_reader, prefix+"cc");
-  TTreeReaderValue<int>          nu_pdg(tree_reader, prefix+"nu_pdg");
-  TTreeReaderValue<int>          int_type(tree_reader, prefix+"int_type");
-  TTreeReaderValue<unsigned int> n_pipm(tree_reader, prefix+"n_pipm");
-  TTreeReaderValue<unsigned int> n_pi0(tree_reader, prefix+"n_pi0");
-  TTreeReaderValue<unsigned int> n_pr(tree_reader, prefix+"n_pr");
+    TTreeReaderValue<bool>         lep_contained(tree_reader, prefix+"lep_contained");
+    TTreeReaderValue<bool>         particles_contained(tree_reader, prefix+"particles_contained");
+    TTreeReaderValue<int>          cc(tree_reader, prefix+"cc");
+    TTreeReaderValue<int>          nu_pdg(tree_reader, prefix+"nu_pdg");
+    TTreeReaderValue<int>          int_type(tree_reader, prefix+"int_type");
+    TTreeReaderValue<unsigned int> n_pipm(tree_reader, prefix+"n_pipm");
+    TTreeReaderValue<unsigned int> n_pi0(tree_reader, prefix+"n_pi0");
+    TTreeReaderValue<unsigned int> n_pr(tree_reader, prefix+"n_pr");
 
-  TTreeReaderValue<double>       nu_energy(tree_reader, prefix+"nu_energy");
-  TTreeReaderValue<double>       lep_mom(tree_reader, prefix+"lep_mom");
-  TTreeReaderValue<double>       lep_theta(tree_reader, prefix+"lep_theta");
-  TTreeReaderValue<double>       pr1_mom(tree_reader, prefix+"pr1_mom");
-  TTreeReaderValue<double>       pr1_theta(tree_reader, prefix+"pr1_theta");
-  TTreeReaderValue<double>       lep_pr1_angle(tree_reader, prefix+"lep_pr1_angle");
-  TTreeReaderValue<double>       pipm1_mom(tree_reader, prefix+"pipm1_mom");
-  TTreeReaderValue<double>       pipm1_theta(tree_reader, prefix+"pipm1_theta");
-  TTreeReaderValue<double>       lep_pipm1_angle(tree_reader, prefix+"lep_pipm1_angle");
-  TTreeReaderValue<double>       delta_pt(tree_reader, prefix+"delta_pt");
-  TTreeReaderValue<double>       delta_alphat(tree_reader, prefix+"delta_alphat");
-  TTreeReaderValue<double>       delta_phit(tree_reader, prefix+"delta_phit");
+    TTreeReaderValue<double>       nu_energy(tree_reader, prefix+"nu_energy");
+    TTreeReaderValue<double>       lep_mom(tree_reader, prefix+"lep_mom");
+    TTreeReaderValue<double>       lep_theta(tree_reader, prefix+"lep_theta");
+    TTreeReaderValue<double>       pr1_mom(tree_reader, prefix+"pr1_mom");
+    TTreeReaderValue<double>       pr1_theta(tree_reader, prefix+"pr1_theta");
+    TTreeReaderValue<double>       lep_pr1_angle(tree_reader, prefix+"lep_pr1_angle");
+    TTreeReaderValue<double>       pipm1_mom(tree_reader, prefix+"pipm1_mom");
+    TTreeReaderValue<double>       pipm1_theta(tree_reader, prefix+"pipm1_theta");
+    TTreeReaderValue<double>       lep_pipm1_angle(tree_reader, prefix+"lep_pipm1_angle");
+    TTreeReaderValue<double>       delta_pt(tree_reader, prefix+"delta_pt");
+    TTreeReaderValue<double>       delta_alphat(tree_reader, prefix+"delta_alphat");
+    TTreeReaderValue<double>       delta_phit(tree_reader, prefix+"delta_phit");
 
-  // Vector to fill
-  std::vector<Interaction> interactions;
- 
-  // Loop over all the interactions
-  while (tree_reader.Next()) {
-   
-    bool selected = IsSelected(*nu_pdg, *cc, *lep_contained, *particles_contained, 
-                               *n_pr, *n_pipm, *n_pi0, *int_type);
-    bool true_selected = IsSelected(*true_nu_pdg, *true_cc, *true_lep_contained, 
-                                    *true_particles_contained, *true_n_pr, *true_n_pipm, *true_n_pi0, *true_int_type);
 
-    // Check true vertex inside fiducial volume
-    if(std::find(fFiducial.begin(), fFiducial.end(), -1) == fFiducial.end() && fFiducial.size() == 6){
-      if(*vtx_x < -200+fFiducial[0] || *vtx_x > 200-fFiducial[3] ||
-         *vtx_y < -200+fFiducial[1] || *vtx_x > 200-fFiducial[4] ||
-         *vtx_z < 0+fFiducial[2] || *vtx_x > 500-fFiducial[5]){ 
-        selected = false;
-        true_selected = false;
+    // Loop over all the interactions
+    while (tree_reader.Next()) {
+
+      bool selected = IsSelected(*nu_pdg, *cc, *lep_contained, *particles_contained, 
+                                 *n_pr, *n_pipm, *n_pi0, *int_type);
+      bool true_selected = IsSelected(*true_nu_pdg, *true_cc, *true_lep_contained, 
+                                      *true_particles_contained, *true_n_pr, *true_n_pipm, *true_n_pi0, *true_int_type);
+
+      // Check true vertex inside fiducial volume
+      if(std::find(fFiducial.begin(), fFiducial.end(), -1) == fFiducial.end() && fFiducial.size() == 6){
+        if(*vtx_x < -200+fFiducial[0] || *vtx_x > 200-fFiducial[3] ||
+            *vtx_y < -200+fFiducial[1] || *vtx_x > 200-fFiducial[4] ||
+            *vtx_z < 0+fFiducial[2] || *vtx_x > 500-fFiducial[5]){ 
+          selected      = false;
+          true_selected = false;
+        }
+
+        std::vector<double> variables;
+        std::vector<double> true_variables;
+        int index = 0;
+        for(auto const& var : fPlotVariables){
+          bool apply_cos = false;
+          TString plot_var = var;
+          if(var(0, 4) == "cos_"){ 
+            apply_cos = true;
+            plot_var = var(4, plot_var.Length());
+          }
+
+          if (plot_var == "lep_contained"){ 
+            variables.push_back(double(*lep_contained));
+            true_variables.push_back((double)(*true_lep_contained));
+          }
+          if (plot_var == "particles_contained"){ 
+            variables.push_back(double(*particles_contained));
+            true_variables.push_back((double)(*true_particles_contained));
+          }
+          if (plot_var == "cc"){ 
+            variables.push_back(double(*cc));
+            true_variables.push_back((double)(*true_cc));
+          }
+          if (plot_var == "nu_pdg"){ 
+            variables.push_back(double(*nu_pdg));
+            true_variables.push_back((double)(*true_nu_pdg));
+          }
+          if (plot_var == "int_type"){ 
+            variables.push_back(double(*int_type));
+            true_variables.push_back((double)(*true_int_type));
+          }
+          if (plot_var == "n_pr"){ 
+            variables.push_back(double(*n_pr));
+            true_variables.push_back((double)(*true_n_pr));
+          }
+          if (plot_var == "n_pipm"){ 
+            variables.push_back(double(*n_pipm));
+            true_variables.push_back((double)(*true_n_pipm));
+          }
+          if (plot_var == "n_pi0"){ 
+            variables.push_back(double(*n_pi0));
+            true_variables.push_back((double)(*true_n_pi0));
+          }
+          if (plot_var == "nu_energy"){ 
+            variables.push_back(double(*nu_energy));
+            true_variables.push_back(*true_nu_energy);
+          }
+          if (plot_var == "lep_mom"){ 
+            variables.push_back(double(*lep_mom));
+            true_variables.push_back(*true_lep_mom);
+          }
+          if (plot_var == "lep_theta"){ 
+            variables.push_back(double(*lep_theta));
+            true_variables.push_back(*true_lep_theta);
+          }
+          if (plot_var == "pr1_mom"){ 
+            variables.push_back(double(*pr1_mom));
+            true_variables.push_back(*true_pr1_mom);
+          }
+          if (plot_var == "pr1_theta"){ 
+            variables.push_back(double(*pr1_theta));
+            true_variables.push_back(*true_pr1_theta);
+          }
+          if (plot_var == "lep_pr1_angle"){ 
+            variables.push_back(double(*lep_pr1_angle));
+            true_variables.push_back(*true_lep_pr1_angle);
+          }
+          if (plot_var == "pipm1_mom"){ 
+            variables.push_back(double(*pipm1_mom));
+            true_variables.push_back(*true_pipm1_mom);
+          }
+          if (plot_var == "pipm1_theta"){ 
+            variables.push_back(double(*pipm1_theta));
+            true_variables.push_back(*true_pipm1_theta);
+          }
+          if (plot_var == "lep_pipm1_angle"){ 
+            variables.push_back(double(*lep_pipm1_angle));
+            true_variables.push_back(*true_lep_pipm1_angle);
+          }
+          if (plot_var == "delta_pt"){ 
+            variables.push_back(double(*delta_pt));
+            true_variables.push_back(*true_delta_pt);
+          }
+          if (plot_var == "delta_alphat"){ 
+            variables.push_back(double(*delta_alphat));
+            true_variables.push_back(*true_delta_alphat);
+          }
+          if (plot_var == "delta_phit"){ 
+            variables.push_back(double(*delta_phit));
+            true_variables.push_back(*true_delta_phit);
+          }
+
+          if(apply_cos) {
+            variables[index] = cos(double(variables[index]));
+          }
+          index++;
+        }
+
+        // FSI: 0pi0p, 0pi1p, 0pi2+p, 1pi, 2+pi, 1+pi0
+        std::string fsi_string = "other";
+        if(*true_n_pi0 >= 1) fsi_string = "#geq1#pi^{0}";
+        else if(*true_n_pipm == 1) fsi_string = "1#pi^{#pm}";
+        else if(*true_n_pipm >= 2) fsi_string = "#geq2#pi^{#pm}";
+        else if(*true_n_pr == 0) fsi_string = "0#pi0p";
+        else if(*true_n_pr == 1) fsi_string = "0#pi1p";
+        else if(*true_n_pr >= 2) fsi_string = "0#pi#geq2p";
+
+        // Int: QE, RES, COH, DIS, MEC
+        std::string int_string = "other";
+        if(*true_int_type == 0) int_string = "QE";
+        else if(*true_int_type == 1) int_string = "RES";
+        else if(*true_int_type == 2) int_string = "DIS";
+        else if(*true_int_type == 3) int_string = "COH";
+        else if(*true_int_type == 10) int_string = "MEC";
+
+        std::string nu_string = "other";
+        if(*true_nu_pdg == -12 && *true_cc) nu_string = "#bar{#nu}_{e} CC";
+        if(*true_nu_pdg == -12 && !*true_cc) nu_string = "#bar{#nu}_{e} NC";
+        if(*true_nu_pdg == -14 && *true_cc) nu_string = "#bar{#nu}_{#mu} CC";
+        if(*true_nu_pdg == -14 && !*true_cc) nu_string = "#bar{#nu}_{#mu} NC";
+        if(*true_nu_pdg == 12 && *true_cc) nu_string = "#nu_{e} CC";
+        if(*true_nu_pdg == 12 && !*true_cc) nu_string = "#nu_{e} NC";
+        if(*true_nu_pdg == 14 && *true_cc) nu_string = "#nu_{#mu} CC";
+        if(*true_nu_pdg == 14 && !*true_cc) nu_string = "#nu_{#mu} NC";
+
+        // Check that all variables are filled FIXME is this right?
+        if(std::find(true_variables.begin(), true_variables.end(), -99999) != true_variables.end()) continue;
+
+        // Check that the event matches the selection
+        if(!selected && !true_selected)
+          continue;
+
+        Interaction interaction(selected, true_selected, s, fsi_string, int_string, nu_string, variables, true_variables);
+        interactions[s].push_back(interaction);
       }
     }
-
-    std::vector<double> variables;
-    std::vector<double> true_variables;
-    int index = 0;
-    for(auto const& var : fPlotVariables){
-      bool apply_cos = false;
-      TString plot_var = var;
-      if(var(0, 4) == "cos_"){ 
-        apply_cos = true;
-        plot_var = var(4, plot_var.Length());
-      }
-
-      if (plot_var == "lep_contained"){ 
-        variables.push_back((double)(*lep_contained));
-        true_variables.push_back((double)(*true_lep_contained));
-      }
-      if (plot_var == "particles_contained"){ 
-        variables.push_back((double)(*particles_contained));
-        true_variables.push_back((double)(*true_particles_contained));
-      }
-      if (plot_var == "cc"){ 
-        variables.push_back((double)(*cc));
-        true_variables.push_back((double)(*true_cc));
-      }
-      if (plot_var == "nu_pdg"){ 
-        variables.push_back((double)(*nu_pdg));
-        true_variables.push_back((double)(*true_nu_pdg));
-      }
-      if (plot_var == "int_type"){ 
-        variables.push_back((double)(*int_type));
-        true_variables.push_back((double)(*true_int_type));
-      }
-      if (plot_var == "n_pr"){ 
-        variables.push_back((double)(*n_pr));
-        true_variables.push_back((double)(*true_n_pr));
-      }
-      if (plot_var == "n_pipm"){ 
-        variables.push_back((double)(*n_pipm));
-        true_variables.push_back((double)(*true_n_pipm));
-      }
-      if (plot_var == "n_pi0"){ 
-        variables.push_back((double)(*n_pi0));
-        true_variables.push_back((double)(*true_n_pi0));
-      }
-      if (plot_var == "nu_energy"){ 
-        variables.push_back(*nu_energy);
-        true_variables.push_back(*true_nu_energy);
-      }
-      if (plot_var == "lep_mom"){ 
-        variables.push_back(*lep_mom);
-        true_variables.push_back(*true_lep_mom);
-      }
-      if (plot_var == "lep_theta"){ 
-        variables.push_back(*lep_theta);
-        true_variables.push_back(*true_lep_theta);
-      }
-      if (plot_var == "pr1_mom"){ 
-        variables.push_back(*pr1_mom);
-        true_variables.push_back(*true_pr1_mom);
-      }
-      if (plot_var == "pr1_theta"){ 
-        variables.push_back(*pr1_theta);
-        true_variables.push_back(*true_pr1_theta);
-      }
-      if (plot_var == "lep_pr1_angle"){ 
-        variables.push_back(*lep_pr1_angle);
-        true_variables.push_back(*true_lep_pr1_angle);
-      }
-      if (plot_var == "pipm1_mom"){ 
-        variables.push_back(*pipm1_mom);
-        true_variables.push_back(*true_pipm1_mom);
-      }
-      if (plot_var == "pipm1_theta"){ 
-        variables.push_back(*pipm1_theta);
-        true_variables.push_back(*true_pipm1_theta);
-      }
-      if (plot_var == "lep_pipm1_angle"){ 
-        variables.push_back(*lep_pipm1_angle);
-        true_variables.push_back(*true_lep_pipm1_angle);
-      }
-      if (plot_var == "delta_pt"){ 
-        variables.push_back(*delta_pt);
-        true_variables.push_back(*true_delta_pt);
-      }
-      if (plot_var == "delta_alphat"){ 
-        variables.push_back(*delta_alphat);
-        true_variables.push_back(*true_delta_alphat);
-      }
-      if (plot_var == "delta_phit"){ 
-        variables.push_back(*delta_phit);
-        true_variables.push_back(*true_delta_phit);
-      }
-
-      if(apply_cos) variables[index] = cos(variables[index]);
-      index++;
+  }
+  for(const TString &s : fStage){
+    if (interactions[s].size() == 0){
+      std::cout << "No events match your input parameters for stage " << s << ". Check the configuration options match the input sample" << std::endl;
+      throw std::exception();
     }
-
-    // FSI: 0pi0p, 0pi1p, 0pi2+p, 1pi, 2+pi, 1+pi0
-    std::string fsi_string = "other";
-    if(*true_n_pi0 >= 1) fsi_string = "#geq1#pi^{0}";
-    else if(*true_n_pipm == 1) fsi_string = "1#pi^{#pm}";
-    else if(*true_n_pipm >= 2) fsi_string = "#geq2#pi^{#pm}";
-    else if(*true_n_pr == 0) fsi_string = "0#pi0p";
-    else if(*true_n_pr == 1) fsi_string = "0#pi1p";
-    else if(*true_n_pr >= 2) fsi_string = "0#pi#geq2p";
-
-    // Int: QE, RES, COH, DIS, MEC
-    std::string int_string = "other";
-    if(*true_int_type == 0) int_string = "QE";
-    else if(*true_int_type == 1) int_string = "RES";
-    else if(*true_int_type == 2) int_string = "DIS";
-    else if(*true_int_type == 3) int_string = "COH";
-    else if(*true_int_type == 10) int_string = "MEC";
-
-    std::string nu_string = "other";
-    if(*true_nu_pdg == -12 && *true_cc) nu_string = "#bar{#nu}_{e} CC";
-    if(*true_nu_pdg == -12 && !*true_cc) nu_string = "#bar{#nu}_{e} NC";
-    if(*true_nu_pdg == -14 && *true_cc) nu_string = "#bar{#nu}_{#mu} CC";
-    if(*true_nu_pdg == -14 && !*true_cc) nu_string = "#bar{#nu}_{#mu} NC";
-    if(*true_nu_pdg == 12 && *true_cc) nu_string = "#nu_{e} CC";
-    if(*true_nu_pdg == 12 && !*true_cc) nu_string = "#nu_{e} NC";
-    if(*true_nu_pdg == 14 && *true_cc) nu_string = "#nu_{#mu} CC";
-    if(*true_nu_pdg == 14 && !*true_cc) nu_string = "#nu_{#mu} NC";
-
-    // Check that the event matches the selection
-    if(!selected && !true_selected) continue;
-    // Check that all variables are filled FIXME is this right?
-    if(std::find(true_variables.begin(), true_variables.end(), -99999) != true_variables.end()) continue;
-    
-    Interaction interaction(selected, true_selected, fsi_string, int_string, nu_string, variables, true_variables);
-    interactions.push_back(interaction);
-    
   }
-
-  // Throw exception if nothing to plot
-  if (interactions.size() == 0){
-    std::cout << "No events match your input parameters." << std::endl;
-    throw std::exception();
-  }
-
   return interactions;
- 
 }
 
 // Get the POT, flux and target number from the metadata
@@ -943,16 +952,20 @@ Titles GetTitles(){
   }
 
   // True or reco
-  TString data_type;
-  if (fStage == "reco")
-    data_type = "Reconstructed";
-  else if (fStage == "true")
-    data_type = "Truth";
-  else if (fStage == "smeareff")
-    data_type = "Smearing + Efficiency";
-  else{
-    std::cout<<"Unrecognised stage!\n";
-    exit(1);
+  std::vector<TString> data_type;
+  for(const TString &s : fStage){
+    if (s == "reco")
+      data_type.push_back("Reconstructed");
+    else if (s == "true")
+      data_type.push_back("Truth");
+    else if (s == "eff")
+      data_type.push_back("Efficiency only");
+    else if (s == "smeareff")
+      data_type.push_back("Smearing + Efficiency");
+    else{
+      std::cout<<"Unrecognised stage!\n";
+      exit(1);
+    }
   }
 
   // Particle containment
@@ -1067,9 +1080,13 @@ Titles GetTitles(){
 // Draw additional information on to hist
 void DrawInfo(Titles titles, double width, double height, double size){
 
+  std::vector<TLatex*> data_type;
+  for(const TString &type : titles.data_type){
+    TLatex *temp_data_type = new TLatex(width, .85*height, type);
+    data_type.push_back(temp_data_type);
+  }
   TLatex *POT        = new TLatex(width, .97*height, titles.pot);
   TLatex *mass       = new TLatex(width, .91*height, titles.mass);
-  TLatex *data_type  = new TLatex(width, .85*height, titles.data_type);
   TLatex *is_cc      = new TLatex(width, .79*height, titles.is_cc);
   TLatex *part_cont  = new TLatex(width, .72*height, titles.part_cont);
   TLatex *lep_cont   = new TLatex(width, .66*height, titles.lep_cont);
@@ -1081,7 +1098,8 @@ void DrawInfo(Titles titles, double width, double height, double size){
   // Set the text size
   POT->SetTextSize(size);
   mass->SetTextSize(size);
-  data_type->SetTextSize(size);
+  for(unsigned int i = 0; i < data_type.size(); ++i) 
+    data_type[i]->SetTextSize(size);
   part_cont->SetTextSize(size);
   lep_cont->SetTextSize(size);
   is_cc->SetTextSize(size);
@@ -1093,7 +1111,8 @@ void DrawInfo(Titles titles, double width, double height, double size){
   // Draw the info text
   POT->Draw("same");
   mass->Draw("same");
-  data_type->Draw("same");
+  for(unsigned int i = 0; i < data_type.size(); ++i) 
+    data_type[i]->Draw("same");
   part_cont->Draw("same");
   lep_cont->Draw("same");
   is_cc->Draw("same");
@@ -1129,7 +1148,7 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
 
   // Create the canvas
   TString name = hstack->GetName();
-  TCanvas *canvas = new TCanvas("canvas"+name,"canvas");
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas");
 
   // Split the pad for histogram and error plot
   double pad_split = .3;
@@ -1214,7 +1233,10 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   error_bands->SetFillColor(38);
   error_bands->SetLineColor(38);
   error_bands->GetYaxis()->SetTitle("#sigma_{stat} (%)");
-  error_bands->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+  if(titles.units[i].IsNull())
+    error_bands->GetXaxis()->SetTitle(titles.names[i]);
+  else
+    error_bands->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
 
   double size_ratio = upper_pad->GetAbsHNDC()/lower_pad->GetAbsHNDC();
   // x axis config
@@ -1233,11 +1255,16 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
 
   // Draw the error bars
   if(error_bands->GetNbinsX() < 40) error_bands->Draw("B");
-  else error_bands->Draw("C");
+  else error_bands->Draw();
   
   TString output_file = fOutputFile;
   output_file.ReplaceAll(".","_"+name+".");
   canvas->SaveAs(output_file);
+  if(fSaveAllInOne){
+    TFile f(fOutputFile, "UPDATE");
+    canvas->Write();
+    f.Close();
+  }
 }
 
 // Plot a 1D stacked hist
@@ -1245,7 +1272,7 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
 
   // Create the canvas
   TString name = hstack->GetName();
-  TCanvas *canvas = new TCanvas("canvas"+name,"canvas");
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas");
 
   // Split the pad for histogram and error plot
   canvas->SetTopMargin(0.15);
@@ -1283,7 +1310,11 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
   else{
     hstack->GetYaxis()->SetTitle("Events");
   }
-  hstack->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+  if(titles.units[i].IsNull())
+    hstack->GetXaxis()->SetTitle(titles.names[i]);
+  else
+    hstack->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+
   // X axis config
   hstack->GetXaxis()->SetTitleOffset(1.);
   hstack->GetXaxis()->SetTickLength(0.02);
@@ -1308,7 +1339,7 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
   hstack->GetYaxis()->SetTitleSize(title_size);
   hstack->GetYaxis()->SetNdivisions(110);
   if(fPlotXSec && fPlotVariables.size()==1)
-  canvas->Modified();
+    canvas->Modified();
 
   // Text position and content
   double width = 0.65*(hstack->GetXaxis()->GetXmax()-hstack->GetXaxis()->GetXmin())+hstack->GetXaxis()->GetXmin();
@@ -1319,12 +1350,348 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
   TString output_file = fOutputFile;
   output_file.ReplaceAll(".","_"+name+".");
   canvas->SaveAs(output_file);
+  if(fSaveAllInOne){
+    TFile f(fOutputFile, "UPDATE");
+    canvas->Write();
+    if(fPlotStacked){
+      hstack->Write("stack_"+name);
+      legend->Write("legend_"+name);
+    }
+    total_hist->Write("total_"+name);
+    f.Close();
+  }
 }
 
+// Plot an overlay of multiple 1D histograms
+void PlotOverlay1D(std::map<TString, TH1D*> histograms, Titles titles, TString title, size_t i, size_t j = -1, size_t k = -1){
 
+  std::map<TString, TH1D*>::iterator it;
+  TString var = histograms.begin()->second->GetName();
+  // Create the canvas
+  TString canv_name = "canvas_overlay_"+histograms.begin()->first+"_"+var+"_"+std::to_string(i);
+  if(j > -1){
+    canv_name = "canvas_overlay_"+histograms.begin()->first+"_"+var+"_"+std::to_string(i)+"_"+std::to_string(j);
+    if(k > -1)
+      canv_name = "canvas_overlay_"+histograms.begin()->first+"_"+var+"_"+std::to_string(i)+"_"+std::to_string(j)+"_"+std::to_string(k);
+  }
+  TCanvas *canvas = new TCanvas(canv_name);
+  TLegend *legend = new TLegend(0.58,0.68,0.88,0.88);
+  
+  // Split the pad for histogram and error plot
+  canvas->SetTopMargin(0.08);
+  canvas->SetBottomMargin(0.15);
+  canvas->SetLeftMargin(0.15);
+  canvas->SetRightMargin(0.04);
+
+  unsigned int index = 0;
+  double max_y = -1.;
+  for(it = histograms.begin(); it != histograms.end(); ++it){
+    TString stage    = it->first; 
+    TH1D *total_hist = it->second;
+    total_hist->SetTitle(title);
+
+    TString name = total_hist->GetName();
+
+    // Draw the stacked histogram and legend
+    if(it == histograms.begin())
+      total_hist->Draw("HIST");
+    else
+      total_hist->Draw("HIST same");
+
+    total_hist->SetTitle(title);
+    total_hist->SetLineColor(fCols[index]);
+    total_hist->SetLineStyle(fLineStyle[index]);
+    if(fPlotFilled){
+      total_hist->SetFillColor(fCols[index]);
+      total_hist->SetFillStyle(fFillStyle[index]);
+      total_hist->SetLineStyle(1);
+    }
+    else{
+      total_hist->SetLineWidth(2.);
+    }
+
+    // Set the titles
+    if(fPlotXSec){
+      total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+    }
+    else if(fMaxError > 0){
+      total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
+    }
+    else{
+      total_hist->GetYaxis()->SetTitle("Events");
+    }
+    if(titles.units[i].IsNull())
+      total_hist->GetXaxis()->SetTitle(titles.names[i]);
+    else
+      total_hist->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+
+    // X axis config
+    total_hist->GetXaxis()->SetTitleOffset(0.9);
+    total_hist->GetXaxis()->SetTickLength(0.02);
+    total_hist->GetXaxis()->SetTitleSize(1.1*total_hist->GetXaxis()->GetTitleSize());
+    // Y axis config
+    if(total_hist->GetMaximum() > max_y){
+      max_y = total_hist->GetMaximum();
+      total_hist->GetYaxis()->SetRangeUser(0., 1.1*max_y);
+    }
+    total_hist->GetYaxis()->SetMaxDigits(3.);
+    total_hist->GetYaxis()->SetTitleOffset(1.05);
+    total_hist->GetYaxis()->SetTickLength(0.015);
+    double title_size = 1.1*total_hist->GetYaxis()->GetTitleSize();
+    if(fPlotXSec && fPlotVariables.size()==1){ 
+      title_size = 1.0*total_hist->GetYaxis()->GetTitleSize();
+      total_hist->GetYaxis()->SetTitleOffset(1.15);
+    }
+    if(fPlotXSec && fPlotVariables.size()==2){ 
+      title_size = 1.0*total_hist->GetYaxis()->GetTitleSize();
+      total_hist->GetYaxis()->SetTitleOffset(1.25);
+    }
+    if(fPlotXSec && fPlotVariables.size()==3){ 
+      title_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+      total_hist->GetYaxis()->SetTitleOffset(1.35);
+    }
+
+    total_hist->GetYaxis()->SetTitleSize(title_size);
+    total_hist->GetYaxis()->SetNdivisions(110);
+    if(fPlotXSec && fPlotVariables.size()==1)
+      canvas->Modified();
+
+    // Text position and content
+    double width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+    double height = total_hist->GetMaximum();
+    double upper_text_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+    if(fShowInfo) DrawInfo(titles, width, height, upper_text_size);
+
+    if(fShowErrorBars){
+      total_hist->SetLineWidth(2);
+      total_hist->SetMarkerStyle(1);
+      total_hist->Draw("E1 X0 SAME");
+    }
+    legend->AddEntry(total_hist, titles.names[i]+" "+stage, "lf");
+
+    if(fSaveAllInOne){
+      TFile f(fOutputFile, "UPDATE");
+      total_hist->Write("total_"+name);
+      f.Close();
+    }
+    index++;
+  }
+  legend->Draw("same");
+  TString output_file = fOutputFile;
+  output_file.ReplaceAll(".","_"+var+".");
+  canvas->SaveAs(output_file);
+  if(fSaveAllInOne){
+    TFile f(fOutputFile, "UPDATE");
+    canvas->Write();
+    f.Close();
+  }
+}
+
+// Plot a 1D stacked hist with statistical errors on the bottom
+void PlotOverlay1DWithErrors(std::map<TString, TH1D*> histograms, map<TString, TH1D*> errors, Titles titles, TString title, size_t i, size_t j = -1, size_t k = -1){
+
+  std::map<TString, TH1D*>::iterator it;
+  TString var = histograms.begin()->second->GetName();
+  // Create the canvas
+  TString canv_name = "canvas_errorbar_overlay_"+histograms.begin()->first+"_"+var+"_"+std::to_string(i);
+  if(j > -1){
+    canv_name = "canvas_errorbar_overlay_"+histograms.begin()->first+"_"+var+"_"+std::to_string(i)+"_"+std::to_string(j);
+    if(k > -1)
+      canv_name = "canvas_errorbar_overlay_"+histograms.begin()->first+"_"+var+"_"+std::to_string(i)+"_"+std::to_string(j)+"_"+std::to_string(k);
+  }
+  TCanvas *canvas = new TCanvas(canv_name);
+  TLegend *legend = new TLegend(0.24, 0.01, 0.94, 0.07);
+
+  // Split the pad for histogram and error plot
+  double pad_split = .3;
+  TPad *upper_pad = new TPad("upper_pad", "" , 0., pad_split, 1.0, 1.0);
+  upper_pad->SetTopMargin(0.12);
+  upper_pad->SetBottomMargin(0.075);
+  upper_pad->SetLeftMargin(0.12);
+  upper_pad->SetRightMargin(0.05);
+
+  TPad *lower_pad = new TPad("lower_pad", "", 0., 0., 1., pad_split);
+  lower_pad->SetTopMargin(0.01);
+  lower_pad->SetBottomMargin(0.34);
+  lower_pad->SetLeftMargin(0.12);
+  lower_pad->SetRightMargin(0.05);
+
+  upper_pad->Draw();
+  lower_pad->Draw();
+
+  // Fill the upper pad with histogram, info and legend
+  upper_pad->cd();
+
+  unsigned int index = 0;
+  double max_y = -1.;
+  for(it = histograms.begin(); it != histograms.end(); ++it){
+    TString stage    = it->first; 
+    TH1D *total_hist = it->second;
+
+    TString name = total_hist->GetName();
+
+    // Draw the stacked histogram and legend
+    if(it == histograms.begin())
+      total_hist->Draw("HIST");
+    else
+      total_hist->Draw("HIST same");
+
+    total_hist->SetTitle(title);
+    total_hist->SetLineColor(fCols[index]);
+    total_hist->SetLineStyle(fLineStyle[index]);
+    if(fPlotFilled){
+      total_hist->SetFillColor(fCols[index]);
+      total_hist->SetFillStyle(fFillStyle[index]);
+      total_hist->SetLineStyle(1);
+    }
+    else{
+      total_hist->SetLineWidth(2.);
+    }
+
+    // Set the titles
+    if(fPlotXSec){
+      total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+    }
+    else if(fMaxError > 0){
+      total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
+    }
+    else{
+      total_hist->GetYaxis()->SetTitle("Events");
+    }
+    if(titles.units[i].IsNull())
+      total_hist->GetXaxis()->SetTitle(titles.names[i]);
+    else
+      total_hist->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+
+    double title_size = 1.1*total_hist->GetYaxis()->GetTitleSize();
+
+    // X axis config
+    total_hist->GetXaxis()->SetTitleOffset(1.8);
+    total_hist->GetXaxis()->SetLabelOffset(0.1);
+    total_hist->GetXaxis()->SetTickLength(0.04);
+    total_hist->GetXaxis()->SetTitleSize(title_size);
+
+    if(fPlotXSec && fPlotVariables.size()==1){ 
+      title_size = 1.0*total_hist->GetYaxis()->GetTitleSize();
+      total_hist->GetYaxis()->SetTitleOffset(1.15);
+    }
+    if(fPlotXSec && fPlotVariables.size()==2){ 
+      title_size = 1.0*total_hist->GetYaxis()->GetTitleSize();
+      total_hist->GetYaxis()->SetTitleOffset(1.25);
+    }
+    if(fPlotXSec && fPlotVariables.size()==3){ 
+      title_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+      total_hist->GetYaxis()->SetTitleOffset(1.35);
+    }
+
+    // Y axis config
+    if(total_hist->GetMaximum() > max_y){
+      max_y = total_hist->GetMaximum();
+      total_hist->GetYaxis()->SetRangeUser(0., 1.1*max_y);
+    }
+    total_hist->GetYaxis()->SetMaxDigits(3.);
+    total_hist->GetYaxis()->SetTitleOffset(0.9);
+    total_hist->GetYaxis()->SetTitleSize(title_size);
+    total_hist->GetYaxis()->SetNdivisions(110);
+    total_hist->GetYaxis()->SetTickLength(0.015);
+    if(fPlotXSec && fPlotVariables.size()==1)
+      canvas->Modified();
+
+    // Text position and content
+    double width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+    double height = total_hist->GetMaximum();
+    double upper_text_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+    if(fShowInfo) DrawInfo(titles, width, height, upper_text_size);
+    
+    legend->AddEntry(total_hist, titles.names[i]+" "+stage, "lf");
+
+    if(fSaveAllInOne){
+      TFile f(fOutputFile, "UPDATE");
+      total_hist->Write("total_"+name);
+      f.Close();
+    }
+    index++;
+  }
+  legend->SetNColumns(legend->GetNRows());
+  legend->SetFillStyle(0);
+  legend->Draw("same");
+ 
+  // Fill the lower pad with percentage error per bin
+  lower_pad->cd();
+  lower_pad->SetTickx();
+  lower_pad->SetTicky();
+ 
+  index = 0;
+  std::map<TString, TH1D*>::iterator ite;
+  double max_y_err = -1.;
+  for(ite = errors.begin(); ite != errors.end(); ++ite){
+    TString stage     = ite->first; 
+    TH1D *error_bands = ite->second;
+
+    error_bands->SetLineColor(fCols[index]);
+    error_bands->SetLineStyle(fLineStyle[index]);
+    if(fPlotFilled){
+      error_bands->SetFillColor(fCols[index]);
+      error_bands->SetFillStyle(fFillStyle[index]);
+      error_bands->SetLineStyle(1);
+    }
+    else{
+      error_bands->SetFillStyle(0);
+      error_bands->SetLineWidth(2.);
+    }
+    // Set axis titles
+    error_bands->GetYaxis()->SetTitle("#sigma_{stat} (%)");
+    if(titles.units[i].IsNull())
+      error_bands->GetXaxis()->SetTitle(titles.names[i]);
+    else
+      error_bands->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+
+    double size_ratio = upper_pad->GetAbsHNDC()/lower_pad->GetAbsHNDC();
+    // x axis config
+    //error_bands->GetXaxis()->SetTitleSize(1.1*size_ratio*error_bands->GetXaxis()->GetTitleSize());
+    //error_bands->GetXaxis()->SetLabelSize(size_ratio*error_bands->GetXaxis()->GetLabelSize());
+    error_bands->GetXaxis()->SetTitleSize(1.1*size_ratio*histograms.begin()->second->GetXaxis()->GetTitleSize());
+    error_bands->GetXaxis()->SetLabelSize(size_ratio*histograms.begin()->second->GetXaxis()->GetLabelSize());
+    error_bands->GetXaxis()->SetLabelOffset(0.04);
+    error_bands->GetXaxis()->SetTickLength(size_ratio*0.04);
+    error_bands->SetTitleOffset(1.0, "x");
+    // y axis config
+    if(error_bands->GetMaximum() > max_y_err){
+      max_y_err = error_bands->GetMaximum();
+      error_bands->GetYaxis()->SetRangeUser(0., 1.1*max_y_err);
+    }
+    error_bands->GetYaxis()->SetTitleSize(1.1*size_ratio*histograms.begin()->second->GetXaxis()->GetTitleSize());
+    error_bands->GetYaxis()->SetLabelSize(size_ratio*histograms.begin()->second->GetXaxis()->GetLabelSize());
+    //error_bands->GetYaxis()->SetTitleSize(1.1*size_ratio*error_bands->GetYaxis()->GetTitleSize());
+    //error_bands->GetYaxis()->SetLabelSize(size_ratio*error_bands->GetYaxis()->GetLabelSize());
+    error_bands->GetYaxis()->CenterTitle();
+    error_bands->GetYaxis()->SetTickLength(0.015);
+    error_bands->SetNdivisions(105, "y");
+    error_bands->SetTitleOffset(0.32, "y");
+
+    // Draw the error bars
+    if(ite == errors.begin()){
+      if(error_bands->GetNbinsX() < 40) error_bands->Draw();
+      else error_bands->Draw();
+    }
+    else{
+      if(error_bands->GetNbinsX() < 40) error_bands->Draw("same");
+      else error_bands->Draw("same");
+    }
+    index++;
+  }
+  TString output_file = fOutputFile;
+  output_file.ReplaceAll(".","_"+var+".");
+  canvas->SaveAs(output_file);
+  if(fSaveAllInOne){
+    TFile f(fOutputFile, "UPDATE");
+    canvas->Write();
+    f.Close();
+  }
+}
 
 // Draw efficiency/purity as function of some variable
-void PlotEfficiency(TH1D* select, TH1D* total, TString name, TString xaxis, TString yaxis){
+void PlotEfficiency(std::map<TString, TH1D*> select, std::map<TString, TH1D*> total, TString name, TString xaxis, TString yaxis){
 
   TCanvas *canvas = new TCanvas(name+yaxis, "");
   canvas->SetTopMargin(0.1);
@@ -1332,40 +1699,69 @@ void PlotEfficiency(TH1D* select, TH1D* total, TString name, TString xaxis, TStr
   canvas->SetLeftMargin(0.14);
   canvas->SetRightMargin(0.04);
 
-  TGraphAsymmErrors *graph = new TGraphAsymmErrors();
-
-  graph->SetMarkerColor(46);
-  graph->SetLineColor(46);
-  graph->GetXaxis()->SetTitle(xaxis);
-  graph->GetYaxis()->SetTitle(yaxis);
-  // X axis config
-  graph->GetXaxis()->SetTitleOffset(1.1);
-  graph->GetXaxis()->SetTickLength(0.04);
-  graph->GetXaxis()->SetTitleSize(1.1*graph->GetXaxis()->GetTitleSize());
-  // Y axis config
-  graph->GetYaxis()->SetTitleOffset(.95);
-  graph->GetYaxis()->SetTickLength(0.015);
-  graph->GetYaxis()->SetTitleSize(1.1*graph->GetYaxis()->GetTitleSize());
-  graph->GetYaxis()->SetNdivisions(108);
-
-  graph->BayesDivide(select, total);
-  graph->Draw("ap");
-  graph->GetYaxis()->SetRangeUser(0, 1); 
-  canvas->Modified();
-
   TString output_file = fOutputFile;
   output_file.ReplaceAll(".","_"+yaxis+".");
   output_file.ReplaceAll(".","_"+name+".");
-  canvas->SaveAs(output_file);
 
+  // If there are multiple stages, draw a legend
+  bool multiple_stages = false;
+  TLegend *l = new TLegend(0.68,0.18,0.88,0.38);
+  if(select.size() > 1)
+    multiple_stages = true;
+
+  std::map<TString, TH1D*>::const_iterator it;
+  unsigned int index = 0;
+  for(it = select.begin(); it != select.end(); it++){
+    TString st = it->first;
+    TGraphAsymmErrors *graph = new TGraphAsymmErrors();
+
+    graph->SetMarkerColor(46);
+    graph->SetLineColor(46);
+    graph->SetLineStyle(fLineStyle[index]);
+    graph->GetXaxis()->SetTitle(xaxis);
+    graph->GetYaxis()->SetTitle(yaxis);
+    // X axis config
+    graph->GetXaxis()->SetTitleOffset(1.1);
+    graph->GetXaxis()->SetTickLength(0.04);
+    graph->GetXaxis()->SetTitleSize(1.1*graph->GetXaxis()->GetTitleSize());
+    // Y axis config
+    graph->GetYaxis()->SetTitleOffset(.95);
+    graph->GetYaxis()->SetTickLength(0.015);
+    graph->GetYaxis()->SetTitleSize(1.1*graph->GetYaxis()->GetTitleSize());
+    graph->GetYaxis()->SetNdivisions(108);
+
+    graph->BayesDivide(select[st], total[st]);
+    if(multiple_stages){
+      l->AddEntry(graph, st, "l");
+    }
+    if(it == select.begin())
+      graph->Draw("ap");
+    else
+      graph->Draw("ap same");
+    graph->GetYaxis()->SetRangeUser(0, 1); 
+    canvas->Modified();
+  
+    if(fSaveAllInOne){
+      TFile f(fOutputFile, "UPDATE");
+      output_file.ReplaceAll(".","_"+st+".");
+      graph->Write(name+"_"+st);
+      canvas->Write();
+      f.Close();
+    }
+    index++;
+  }
+  if(multiple_stages)
+    l->Draw("same");
+
+  canvas->SaveAs(output_file);
 }
 
 // Plot a 2D histogram
 void Plot2D(TH2D* hist, TString name, TString xaxis, TString yaxis){
 
   TCanvas *canvas = new TCanvas(name, "", 900, 600);
-  canvas->SetFrameLineWidth(4.);
-  canvas->SetLineWidth(4.);
+  canvas->SetFrameLineWidth(3.);
+  canvas->SetLineWidth(3.);
   canvas->SetTickx();
   canvas->SetTicky();
   canvas->SetBottomMargin(0.16);
@@ -1379,17 +1775,27 @@ void Plot2D(TH2D* hist, TString name, TString xaxis, TString yaxis){
   hist->GetXaxis()->SetTickLength(0.04);
   hist->GetXaxis()->SetTitleSize(1.1*hist->GetXaxis()->GetTitleSize());
   hist->GetXaxis()->SetNdivisions(108);
+  hist->GetXaxis()->SetMaxDigits(3.);
   // Y axis config
   hist->GetYaxis()->SetTitleOffset(0.95);
   hist->GetYaxis()->SetTickLength(0.015);
   hist->GetYaxis()->SetTitleSize(1.1*hist->GetYaxis()->GetTitleSize());
   hist->GetYaxis()->SetNdivisions(108);
+  hist->GetYaxis()->SetMaxDigits(3.);
+  // Z axis config
+  hist->GetZaxis()->SetMaxDigits(3.);
 
   hist->Draw("colz");
 
   TString output_file = fOutputFile;
   output_file.ReplaceAll(".","_"+name+".");
   canvas->SaveAs(output_file);
+  if(fSaveAllInOne){
+    TFile f(fOutputFile, "UPDATE");
+    hist->Write(name);
+    canvas->Draw();
+    f.Close();
+  }
 }
 
 // Create stacked histogram and legend from data
@@ -1432,10 +1838,12 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
       hist->Scale(1, "width");
     }
     hist->SetFillColor(fCols[index]);
+    hist->SetFillStyle(fFillStyle[index]);
     hist->SetLineColor(fCols[index]);
     if(!fPlotFilled){
       hist->SetFillColor(0);
-      hist->SetLineWidth(3);
+      hist->SetLineWidth(2);
+      hist->SetLineStyle(fLineStyle[index]);
     }
     hstack->Add(hist);
     legend->AddEntry(hist, dat.first.c_str(), "lf");
@@ -1450,7 +1858,7 @@ TH1D* GetTotalHist(std::vector<std::vector<double>> data, TString name, std::vec
     
   double edges_array[bin_edges[i].size()];
   std::copy(bin_edges[i].begin(), bin_edges[i].end(), edges_array);
-  TH1D *total_hist = new TH1D("total"+name, "hist", bin_edges[i].size()-1, edges_array);
+  TH1D *total_hist = new TH1D("total_"+name, "hist", bin_edges[i].size()-1, edges_array);
 
   for (int n = 0; n < data.size(); n++){
     if(j == -1 && k == -1){
@@ -1530,90 +1938,119 @@ std::vector<double> ChangeBinning2D(std::vector<std::vector<double>> data, std::
 }
 
 // Make the efficiency and purity plots for up to 3 variables
-void PlotEffPur(std::vector<Interaction> interactions, TString name, Titles titles, std::vector<std::vector<double>> bin_edges, int i, int j = -1, int bin_j = -1, int k = -1, int bin_k = -1){
+void PlotEffPur(std::map< TString, std::vector<Interaction> > interactions, TString name, Titles titles, std::vector<std::vector<double>> bin_edges, int i, int j = -1, int bin_j = -1, int k = -1, int bin_k = -1){
 
   double edges_array[bin_edges[i].size()];
   std::copy(bin_edges[i].begin(), bin_edges[i].end(), edges_array);
 
-  TH1D *eff_numerator = new TH1D("eff_numerator", "", bin_edges[i].size()-1, edges_array);
-  TH1D *eff_denom = new TH1D("eff_denom", "", bin_edges[i].size()-1, edges_array);
-  TH1D *pur_numerator = new TH1D("pur_numerator", "", bin_edges[i].size()-1, edges_array);
-  TH1D *pur_denom = new TH1D("pur_denom", "", bin_edges[i].size()-1, edges_array);
+  std::map<TString, TH1D*> eff_numerator, eff_denom, pur_numerator, pur_denom;
 
-  for (auto const& in : interactions){
-    // Denominator of efficiency plot is all interactions that are selected in truth
-    if(in.true_selected){ 
-      if(j == -1 && k == -1){ 
-        eff_denom->Fill(in.true_variables[i]);
-      }
-      else if(in.true_variables[j] >= bin_edges[j][bin_j] && in.true_variables[j] < bin_edges[j][bin_j+1]){
-        if(k == -1){
-          eff_denom->Fill(in.true_variables[i]);
+  for(const TString &s : fStage){
+    if(s != "reco" && s != "smeareff") continue;
+    
+    TH1D *h_eff_numerator = new TH1D("eff_numerator", "", bin_edges[i].size()-1, edges_array);
+    TH1D *h_eff_denom = new TH1D("eff_denom", "", bin_edges[i].size()-1, edges_array);
+    TH1D *h_pur_numerator = new TH1D("pur_numerator", "", bin_edges[i].size()-1, edges_array);
+    TH1D *h_pur_denom = new TH1D("pur_denom", "", bin_edges[i].size()-1, edges_array);
+
+    for (auto const& in : interactions[s]){
+      // Denominator of efficiency plot is all interactions that are selected in truth
+      if(in.true_selected){ 
+        if(j == -1 && k == -1){ 
+          h_eff_denom->Fill(in.true_variables[i]);
         }
-        else if(in.true_variables[k] >= bin_edges[k][bin_k] && in.true_variables[k] < bin_edges[k][bin_k+1]){
-          eff_denom->Fill(in.true_variables[i]);
-        }
-      }
-    }
-    // Denominator of purity plot is all interaction that are selected after reconstruction
-    if(in.selected){ 
-      if(j == -1 && k == -1){ 
-        pur_denom->Fill(in.variables[i]);
-      }
-      else if(in.variables[j] >= bin_edges[j][bin_j] && in.variables[j] < bin_edges[j][bin_j+1]){
-        if(k == -1){
-          pur_denom->Fill(in.variables[i]);
-        }
-        else if(in.variables[k] >= bin_edges[k][bin_k] && in.variables[k] < bin_edges[k][bin_k+1]){
-          pur_denom->Fill(in.variables[i]);
-        }
-      }
-    }
-    // Numerator of efficiency and purity plots is all interactions that are selected in both truth and reco
-    if(in.selected && in.true_selected){ 
-      if(j == -1 && k == -1){
-        eff_numerator->Fill(in.true_variables[i]);
-        pur_numerator->Fill(in.variables[i]);
-      }
-      else{
-        if(in.true_variables[j] >= bin_edges[j][bin_j] && in.true_variables[j] < bin_edges[j][bin_j+1]){
+        else if(in.true_variables[j] >= bin_edges[j][bin_j] && in.true_variables[j] < bin_edges[j][bin_j+1]){
           if(k == -1){
-            eff_numerator->Fill(in.true_variables[i]);
+            h_eff_denom->Fill(in.true_variables[i]);
           }
           else if(in.true_variables[k] >= bin_edges[k][bin_k] && in.true_variables[k] < bin_edges[k][bin_k+1]){
-            eff_numerator->Fill(in.true_variables[i]);
+            h_eff_denom->Fill(in.true_variables[i]);
           }
         }
-        if(in.variables[j] >= bin_edges[j][bin_j] && in.variables[j] < bin_edges[j][bin_j+1]){
+      }
+      // Denominator of purity plot is all interaction that are selected after reconstruction
+      if(in.selected){ 
+        if(j == -1 && k == -1){ 
+          h_pur_denom->Fill(in.variables[i]);
+        }
+        else if(in.variables[j] >= bin_edges[j][bin_j] && in.variables[j] < bin_edges[j][bin_j+1]){
           if(k == -1){
-            pur_numerator->Fill(in.variables[i]);
+            h_pur_denom->Fill(in.variables[i]);
           }
           else if(in.variables[k] >= bin_edges[k][bin_k] && in.variables[k] < bin_edges[k][bin_k+1]){
-            pur_numerator->Fill(in.variables[i]);
+            h_pur_denom->Fill(in.variables[i]);
+          }
+        }
+      }
+      // Numerator of efficiency and purity plots is all interactions that are selected in both truth and reco
+      if(in.selected && in.true_selected){ 
+        if(j == -1 && k == -1){
+          h_eff_numerator->Fill(in.true_variables[i]);
+          h_pur_numerator->Fill(in.variables[i]);
+        }
+        else{
+          if(in.true_variables[j] >= bin_edges[j][bin_j] && in.true_variables[j] < bin_edges[j][bin_j+1]){
+            if(k == -1){
+              h_eff_numerator->Fill(in.true_variables[i]);
+            }
+            else if(in.true_variables[k] >= bin_edges[k][bin_k] && in.true_variables[k] < bin_edges[k][bin_k+1]){
+              h_eff_numerator->Fill(in.true_variables[i]);
+            }
+          }
+          if(in.variables[j] >= bin_edges[j][bin_j] && in.variables[j] < bin_edges[j][bin_j+1]){
+            if(k == -1){
+              h_pur_numerator->Fill(in.variables[i]);
+            }
+            else if(in.variables[k] >= bin_edges[k][bin_k] && in.variables[k] < bin_edges[k][bin_k+1]){
+              h_pur_numerator->Fill(in.variables[i]);
+            }
           }
         }
       }
     }
+    eff_numerator[s] = h_eff_numerator;
+    eff_denom[s] = h_eff_denom;
+    pur_numerator[s] = h_pur_numerator;
+    pur_denom[s] = h_pur_denom;
+  }
+  
+  if(titles.units[i].IsNull()){
+    // Efficiency: selected/total in true
+    PlotEfficiency(eff_numerator, eff_denom, name, titles.names[i]+"^{true}", "Efficiency");
+    // Purity: correct selected/total selected
+    PlotEfficiency(pur_numerator, pur_denom, name, titles.names[i]+"^{reco}", "Purity");
+  }
+  else{
+    // Efficiency: selected/total in true
+    PlotEfficiency(eff_numerator, eff_denom, name, titles.names[i]+"^{true} ["+titles.units[i]+"]", "Efficiency");
+    // Purity: correct selected/total selected
+    PlotEfficiency(pur_numerator, pur_denom, name, titles.names[i]+"^{reco} ["+titles.units[i]+"]", "Purity");
   }
 
-  // Efficiency: selected/total in true
-  PlotEfficiency(eff_numerator, eff_denom, name, titles.names[i]+"^{true} ["+titles.units[i]+"]", "Efficiency");
-  // Purity: correct selected/total selected
-  PlotEfficiency(pur_numerator, pur_denom, name, titles.names[i]+"^{reco} ["+titles.units[i]+"]", "Purity");
-
-  if(eff_numerator) delete eff_numerator; 
-  if(eff_denom) delete eff_denom;
-  if(pur_numerator) delete pur_numerator;
-  if(pur_denom) delete pur_denom;
-
+  for(const TString &s : fStage){
+    if(eff_numerator[s]) delete eff_numerator[s]; 
+    if(eff_denom[s]) delete eff_denom[s];
+    if(pur_numerator[s]) delete pur_numerator[s];
+    if(pur_denom[s]) delete pur_denom[s];
+  }
 }
 
 // Main
-void PhysicsBookPlots(){
+void PhysicsBookPlots(std::string config = "config.txt"){
+
+  std::cout<<"Reading the config file...\n";
+  std::cout << "    " << config << std::endl;
+  std::string input_file;
+  
+  // If no configuration was passed as an argument, set the default filename
+  if(config.empty()){
+    std::cout << " No configuration file given, using default name: config.txt" << std::endl;
+    input_file = "config.txt";
+  }
+  else
+    input_file = config;
 
   // Get the configuration file
-  std::cout<<"Reading the config file...\n";
-  std::string input_file = "config.txt";
   Configure(input_file);
   GetMetaData();
   std::cout<<"...Finished.\n";
@@ -1626,30 +2063,33 @@ void PhysicsBookPlots(){
 
   // Get the plotting variable
   std::cout<<"Reading from the tree...\n";
-  std::vector<Interaction> interactions = ReadData();
-  std::map<std::string, std::vector<std::vector<double>>> stack_data;
-  std::vector<std::vector<double>> total_data;
-  for(auto const& in : interactions){
-    if(!in.selected) continue;
-    total_data.push_back(in.variables);
-    if(!fPlotStacked){
-      stack_data["all"].push_back(in.variables);
-    }
-    else if(fStackBy == "fsi"){
-      stack_data[in.fsi].push_back(in.variables);
-    }
-    else if(fStackBy == "int"){
-      stack_data[in.int_type].push_back(in.variables);
-    }
-    else if(fStackBy == "nu"){
-      stack_data[in.nu_type].push_back(in.variables);
+  std::map< TString, std::vector<Interaction> > interactions = ReadData();
+  std::map< TString, std::map<std::string, std::vector<std::vector<double> > > > stack_data;
+  std::map< TString, std::vector<std::vector<double> > > total_data;
+  for(const TString &s : fStage){
+    for(auto const& in : interactions[s]){
+      if(!in.selected) continue;
+      total_data[s].push_back(in.variables);
+      if(!fPlotStacked){
+        stack_data[s]["all"].push_back(in.variables);
+      }
+      else if(fStackBy == "fsi"){
+        stack_data[s][in.fsi].push_back(in.variables);
+      }
+      else if(fStackBy == "int"){
+        stack_data[s][in.int_type].push_back(in.variables);
+      }
+      else if(fStackBy == "nu"){
+        stack_data[s][in.nu_type].push_back(in.variables);
+      }
     }
   }
   std::cout<<"...Finished.\n";
 
   // Get the binning
   std::cout<<"Getting the correct binning...\n";
-  std::vector<std::vector<double>> bin_edges = GetBinning(total_data);
+  // The binning is the same for all reco types, only access once
+  std::vector<std::vector<double>> bin_edges = GetBinning(total_data[fStage[0]]);
   std::cout<<"...Finished.\n";
 
   // Calculate how many 1D histograms the choice of variables and binning would produce
@@ -1670,6 +2110,13 @@ void PhysicsBookPlots(){
   }
   if(response=="n") exit(1);
 
+  // If the user has chosen to save all plots in one file then open the output file
+  if(fSaveAllInOne){
+    std::cout << "Defining empty output file for writing..." << std::endl;
+    TFile f(fOutputFile, "RECREATE");
+    f.Close();
+  }
+
   // Loop over the number of variables - this is how many sets of 1D hists we will have
   std::cout<<"Making the plots...\n";
   for(size_t d_i = 0; d_i < fPlotVariables.size(); d_i++){
@@ -1685,18 +2132,29 @@ void PhysicsBookPlots(){
     TString title_1D = titles.hist_titles[d_i];
 
     // Get the statistical errors per bin
-    TH1D* total_hist = GetTotalHist(total_data, name_1D, bin_edges, d_i);
-    //std::cout<<"Total cross section = "<<total_data.size()*fPotScaleFac*1e38/(fFlux*fTargets)<<" 10^{-38}\n";
-    TH1D* error_band = GetErrorBand(total_hist, name_1D, bin_edges, d_i);
-    // Create a total 1D stacked histogram for each of the variables
-    std::pair<THStack*, TLegend*> stack = StackHist1D(stack_data, name_1D, title_1D, bin_edges, d_i);
+    std::map<TString, TH1D*> total_hist, error_band;
+    for(const TString &s : fStage){
+      TString name_1D_s = name_1D+"_"+s;
+      TString title_1D_s = title_1D+" "+s;
+      total_hist[s] = GetTotalHist(total_data[s], name_1D_s, bin_edges, d_i);
+      error_band[s] = GetErrorBand(total_hist[s], name_1D_s, bin_edges, d_i);
+      
+      // Create a total 1D stacked histogram for each of the variables
+      std::pair<THStack*, TLegend*> stack = StackHist1D(stack_data[s], name_1D_s, title_1D_s, bin_edges, d_i);
 
-    // Draw the plots
-    if(fShowStatError) Plot1DWithErrors(stack.first, stack.second, error_band, titles, total_hist, d_i);
-    else Plot1D(stack.first, stack.second, titles, total_hist, d_i);
-
+      // Draw the plots
+      if(fShowStatError)
+        Plot1DWithErrors(stack.first, stack.second, error_band[s], titles, total_hist[s], d_i);
+      else
+        Plot1D(stack.first, stack.second, titles, total_hist[s], d_i);
+    }
+    if(fStage.size() > 1){
+      PlotOverlay1D(total_hist, titles, title_1D, d_i);
+      if(fShowStatError)
+        PlotOverlay1DWithErrors(total_hist, error_band, titles, title_1D, d_i);
+    }
     // Plot efficiency and purity if option selected and reconstruction selected
-    if(fPlotEffPur && fStage == "reco"){
+    if(fPlotEffPur){
       PlotEffPur(interactions, name_1D, titles, bin_edges, d_i);
     }
 
@@ -1708,13 +2166,28 @@ void PhysicsBookPlots(){
       double edges_array2[bin_edges[d_j].size()];
       std::copy(bin_edges[d_j].begin(), bin_edges[d_j].end(), edges_array2);
 
-      // Create a total 2D histogram for each combination of variables
-      TH2D* hist_2D = new TH2D(name_1D+fPlotVariables[d_j], "", bin_edges[d_i].size()-1, edges_array, bin_edges[d_j].size()-1, edges_array2);
-      for (int n = 0; n < total_data.size(); n++){
-        hist_2D->Fill(total_data[n][d_i], total_data[n][d_j]);
-      }
-      Plot2D(hist_2D, fPlotVariables[d_i]+"_"+fPlotVariables[d_j], titles.names[d_i]+" ["+titles.units[d_i]+"]", titles.names[d_j]+" ["+titles.units[d_j]+"]");
+      for(const TString &s : fStage){
+        TString name_1D_s = name_1D+"_"+s;
+        TString title_1D_s = title_1D+" "+s;
 
+        // Create a total 2D histogram for each combination of variables
+        TH2D* hist_2D = new TH2D(name_1D_s+fPlotVariables[d_j], "", bin_edges[d_i].size()-1, edges_array, bin_edges[d_j].size()-1, edges_array2);
+        for (int n = 0; n < total_data[s].size(); n++){
+          hist_2D->Fill(total_data[s][n][d_i], total_data[s][n][d_j]);
+        }
+        TString plot_label_var1, plot_label_var2;
+        if(titles.units[d_i].IsNull())
+          plot_label_var1 = titles.names[d_i];
+        else
+          plot_label_var1 = titles.names[d_i]+" ["+titles.units[d_i]+"]";
+        if(titles.units[d_j].IsNull())
+          plot_label_var2 = titles.names[d_j];
+        else
+          plot_label_var2 = titles.names[d_j]+" ["+titles.units[d_j]+"]";
+
+        Plot2D(hist_2D, fPlotVariables[d_i]+"_"+fPlotVariables[d_j]+"_"+s, plot_label_var1, plot_label_var2);
+
+      }
       // Loop over the bins for variable 2
       for(size_t bin_j = 0; bin_j < bin_edges[d_j].size()-1; bin_j++){
         // Only make these plots for 2 variables
@@ -1723,34 +2196,50 @@ void PhysicsBookPlots(){
         // Rebin so every bin below maximum error if set
         std::vector<std::vector<double>> bin_edges_copy = bin_edges;
         if(fMaxError>0){
-          std::vector<double> bin_edges_new = ChangeBinning2D(total_data, bin_edges, d_i, d_j, bin_j);
+          std::vector<double> bin_edges_new = ChangeBinning2D(total_data.begin()->second, bin_edges, d_i, d_j, bin_j);
           bin_edges_copy[d_i] = bin_edges_new;
         }
 
         // Get the file name and title of the histogram
         TString name_2D = fPlotVariables[d_i] +"_"
-                          + fPlotVariables[d_j] +"_"+ Form("%.1f", bin_edges_copy[d_j][bin_j]) +"_"+ Form("%.1f", bin_edges_copy[d_j][bin_j+1]);
+          + fPlotVariables[d_j] +"_"+ Form("%.1f", bin_edges_copy[d_j][bin_j]) +"_"+ Form("%.1f", bin_edges_copy[d_j][bin_j+1]);
         TString title_2D = titles.hist_titles[d_j] 
-                           +": ["+ Form("%.2f", bin_edges_copy[d_j][bin_j]) +", "+ Form("%.2f", bin_edges_copy[d_j][bin_j+1]) +"]";
+          +": ["+ Form("%.2f", bin_edges_copy[d_j][bin_j]) +", "+ Form("%.2f", bin_edges_copy[d_j][bin_j+1]) +"]";
 
-        // Get the statistical errors per bin
-        TH1D *total_hist_2D = GetTotalHist(total_data, name_2D, bin_edges_copy, d_i, d_j, bin_j);
-        TH1D *error_band_2D = GetErrorBand(total_hist_2D, name_2D, bin_edges_copy, d_i);
-        if(error_band_2D->Integral(0, error_band_2D->GetNbinsX()) == 0) continue;
+        std::map< TString, TH1D*> total_hist_2D, error_band_2D;
+        for(const TString &s : fStage){
+          TString name_2D_s = name_2D+"_"+s;
+          TString title_2D_s = title_2D+" "+s;
 
-        // Create a 1D stacked histogram for each of the bins
-        std::pair<THStack*, TLegend*> stack_2D = StackHist1D(stack_data, name_2D, title_2D, bin_edges_copy, d_i, d_j, bin_j);
+          // Get the statistical errors per bin
+          total_hist_2D[s] = GetTotalHist(total_data[s], name_2D_s, bin_edges_copy, d_i, d_j, bin_j);
+          error_band_2D[s] = GetErrorBand(total_hist_2D[s],  name_2D_s, bin_edges_copy, d_i);
+          if(error_band_2D[s]->Integral(0, error_band_2D[s]->GetNbinsX()) == 0) continue;
 
-        // Draw the plots
-        if(fShowStatError) Plot1DWithErrors(stack_2D.first, stack_2D.second, error_band_2D, titles, total_hist_2D, d_i, d_j);
-        else Plot1D(stack_2D.first, stack_2D.second, titles, total_hist_2D, d_i, d_j);
+          // Create a 1D stacked histogram for each of the bins
+          std::pair<THStack*, TLegend*> stack_2D = StackHist1D(stack_data[s], name_2D_s, title_2D_s, bin_edges_copy, d_i, d_j, bin_j);
 
+          // Draw the plots
+          if(fShowStatError) Plot1DWithErrors(stack_2D.first, stack_2D.second, error_band_2D[s], titles, total_hist_2D[s], d_i, d_j);
+          else Plot1D(stack_2D.first, stack_2D.second, titles, total_hist_2D[s], d_i, d_j);
+        }
+        if(fStage.size() > 1){
+          PlotOverlay1D(total_hist_2D, titles, title_2D, d_i, d_j);
+          if(fShowStatError)
+            PlotOverlay1DWithErrors(total_hist_2D, error_band_2D, titles, title_2D, d_i, d_j);
+        }
         // Plot efficiency and purity if option selected and reconstruction selected
-        if(fPlotEffPur && fStage == "reco"){
+        if(fPlotEffPur){
           PlotEffPur(interactions, name_2D, titles, bin_edges_copy, d_i, d_j, bin_j);
         }
       }
-
+    }
+      /*
+       *
+       *          ONLY DEAL WITH 1 & 2 DIMENSIONAL HISTOGRAMS FOR THE TIME BEING
+       *
+       *
+       *
       // Loop over the other variables - this is how many sets of 3D hists we will have
       for(size_t d_k = 0; d_k < fPlotVariables.size(); d_k++){
         if(d_k == d_i || d_k <= d_j) continue;
@@ -1799,42 +2288,13 @@ void PhysicsBookPlots(){
             else Plot1D(stack_3D.first, stack_3D.second, titles, total_hist_3D, d_i, d_j, d_k);
 
             // Plot efficiency and purity if option selected and reconstruction selected
-            if(fPlotEffPur && fStage == "reco"){
+            if(fPlotEffPur){
               PlotEffPur(interactions, name_3D, titles, bin_edges_copy, d_i, d_j, bin_j, d_k, bin_k);
             }
           }
         }
       }
-
-    }
+    }*/
   }
   std::cout<<"...Finished.\n";
-
-/*
-  if(fPlotResponse){
-    // Nj = number of events generated in bin j
-    // Nij = number of events observed in bin i, generated in bin j
-    // N0j = number of events not observed, generated in bin j
-    // Response matrix: Aij = Nij/Nj
-    // FIXME I don't think this is how you do it... units need to be bins (all same size)
-    TH2D *response = new TH2D("response", "", bin_edges.size()-1, edges_array, bin_edges.size()-1, edges_array);
-    TH1D *Nj = new TH1D("Nj", "", bin_edges.size()-1, edges_array);
-    for(auto const& in : interactions){
-      if(!in.true_selected) continue;
-      Nj->Fill(in.true_variables[0]);
-      if(in.selected) response->Fill(in.true_variables[0], in.variables[0]);
-      else response->Fill(in.true_variables[0], -99999);
-    }
-    for(size_t i = 0; i <= response->GetNbinsX(); i++){
-      for(size_t j = 1; j <= response->GetNbinsY(); j++){
-        if(Nj->GetBinContent(j) != 0)
-          response->SetBinContent(i, j, response->GetBinContent(i, j)/Nj->GetBinContent(j));
-        else
-          response->SetBinContent(i, j, 0);
-      }
-    }
-    Plot2D(response, "Response", "True "+titles.units[0], "Reco "+titles.units[0]);
-  }
-  */
-
 }

@@ -14,14 +14,16 @@
 //                           File configuration
 //------------------------------------------------------------------------
 // Name of input file
-InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/xsectree_output.root 
+//InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/xsectree_output.root
+//InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/Macro/files/mcp2-small-xsectree.root
+InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/Macro/files/mcp2-xsectree.root
 
 // Path to interaction and metadata trees
 TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: test/cm_dec_2019/test_output.root
+OutputFile: test/cm_dec_2019/inclusive_lep_mom_5_bins_cos_theta/test_output.png
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -30,16 +32,16 @@ OutputFile: test/cm_dec_2019/test_output.root
 NuPdg: 14, -14
 
 // Charged current (1), neutral current (0), not selected (-1, reco only)
-IsCC: 1, 0
+IsCC: 1, 1
 
 // Require lepton to be contained
-ContainedLepton: true, false
+ContainedLepton: false, false
 
 // Require secondary particles to be contained
-ContainedParticles: true, false
+ContainedParticles: true, true
 
 // Apply a fiducial volume cut to the neutrino vertex (-1 for AV)
-// Cuts +ve values from face: min x, min y, min z, max x, max y, max z
+// Cuts +ve values from face: min x, min y, min z, max x, max y, max z [cm]
 Fiducial: 15, 15, 15, 15, 15, 80
 
 // FSI (true) or true interaction (false)
@@ -62,12 +64,13 @@ InteractionType: -1
 //------------------------------------------------------------------------
 //                          Choose what to plot
 //------------------------------------------------------------------------
-// Choose what stage to plot
+// Choose what stages to plot
 //- true (selection and kinematic variables all in truth)
 //- eff (Applies efficiency to true particle type)
 //- smeareff (Applies efficiency and smears plotting variables only)
 //- reco (Efficiency + smearing + PID + selection) TODO: only for numuCC
-Stage: true
+// Multiple stages will plot as overlays
+Stage: smeareff
 
 // Variable to plot in
 // Bools
@@ -94,14 +97,17 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: nu_energy
+PlotVariable: lep_mom, cos_lep_theta
 
 // Save the plots for each variable
-ShowPlots: true
-//ShowPlots: true,true
+ShowPlots: true, true
+
+// Save all historams in a single output file (true), or just in separate files (false)
+SaveAllInOne: true
 
 // Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
 PotScale: 6.6e20
+//PotScale: -1
 
 //------------------------------------------------------------------------
 //                           Choose how to plot
@@ -109,20 +115,20 @@ PotScale: 6.6e20
 // Produce a stacked histogram (true)
 PlotStacked: true
 
-// Stack in true FSI (fsi), true interaction (int), or neutrino type (nu)
-StackBy: nu
+// Stack in true FSI (fsi), true interaction (int), neutrino type (nu)
+StackBy: fsi
 
 // Minimum bin (-1 for min tree value)
-MinValue: 0
+MinValue: 0., -1.1
 
 // Maximum bin (-1 for max tree value)
-MaxValue: 5
+MaxValue: 3., 1.
 
 // Number of bins (-1 for automatic)
-NumBins: -1
+NumBins: 5,100
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-BinEdges: [-1]
+//BinEdges: [-1],[-1]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
 MaxError: 0.05
@@ -140,13 +146,13 @@ PlotFilled: true
 ShowInfo: false
 
 // Show percentage statistical error (true)
-ShowStatError: false
+ShowStatError: true
 
 // Show error bars on histograms (true)
 ShowErrorBars: false
 
 // Produce efficiency and purity plots (true)
-PlotEffPur: false
+PlotEffPur: true
 
 // Produce response matrix (true) TODO
 PlotResponse: false

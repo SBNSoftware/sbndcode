@@ -11,7 +11,7 @@ process_name: XSecTree
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "xsectree.root" }
+  TFileService:           { fileName: "xsectree_output.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
