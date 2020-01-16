@@ -263,7 +263,7 @@ namespace sbnd {
     // XSec true tree parameters
     std::map<std::string, bool> particles_contained;
     std::map<std::string, bool> lep_contained;
-    std::map<std::string, bool> cc;
+    std::map<std::string, int> cc;
     std::map<std::string, int> nu_pdg;
     std::map<std::string, int> int_type;
     std::map<std::string, unsigned int> n_pipm;
@@ -841,9 +841,9 @@ namespace sbnd {
     lep_j = -1;
     longest_j = -1;
 
-    vtx_x = -99999.;
-    vtx_y = -99999.;
-    vtx_z = -99999.;
+    vtx_x = -99999;
+    vtx_y = -99999;
+    vtx_z = -99999;
     
     // Loop over reco formats and reset every variable in the tree
     for(unsigned int i = 0; i < fRecoFormats.size(); ++i){
