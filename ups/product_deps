@@ -47,20 +47,20 @@ cetbuildtools    v7_14_00  -   only_for_build
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
 qualifier     genie_xsec               larsoft       sbndutil        sbnd_data  notes
-e19:py3:debug G1810a0211a:k250:e1000   e19:py3:debug e19:py3:debug   -nq-
-e19:py3:prof  G1810a0211a:k250:e1000   e19:py3:prof  e19:py3:prof    -nq-
+e19:py2:debug G1810a0211a:k250:e1000   e19:py2:debug e19:py2:debug   -nq-
+e19:py2:prof  G1810a0211a:k250:e1000   e19:py2:prof  e19:py2:prof    -nq-
 e19:debug     G1810a0211a:k250:e1000   e19:debug     e19:debug       -nq-
 e19:prof      G1810a0211a:k250:e1000   e19:prof      e19:prof        -nq-
-e17:py3:debug G1810a0211a:k250:e1000   e17:py3:debug e17:py3:debug   -nq-
-e17:py3:prof  G1810a0211a:k250:e1000   e17:py3:prof  e17:py3:prof    -nq-
+e17:py2:debug G1810a0211a:k250:e1000   e17:py2:debug e17:py2:debug   -nq-
+e17:py2:prof  G1810a0211a:k250:e1000   e17:py2:prof  e17:py2:prof    -nq-
 e17:debug     G1810a0211a:k250:e1000   e17:debug     e17:debug       -nq-
 e17:prof      G1810a0211a:k250:e1000   e17:prof      e17:prof        -nq-
-c7:py3:debug  G1810a0211a:k250:e1000   c7:py3:debug  c7:py3:debug    -nq-
-c7:py3:prof   G1810a0211a:k250:e1000   c7:py3:prof   c7:py3:prof     -nq-
+c7:py2:debug  G1810a0211a:k250:e1000   c7:py2:debug  c7:py2:debug    -nq-
+c7:py2:prof   G1810a0211a:k250:e1000   c7:py2:prof   c7:py2:prof     -nq-
 c7:debug      G1810a0211a:k250:e1000   c7:debug      c7:debug        -nq-
 c7:prof       G1810a0211a:k250:e1000   c7:prof       c7:prof         -nq-
-c2:py3:debug  G1810a0211a:k250:e1000   c2:py3:debug  c2:py3:debug    -nq-
-c2:py3:prof   G1810a0211a:k250:e1000   c2:py3:prof   c2:py3:prof     -nq-
+c2:py2:debug  G1810a0211a:k250:e1000   c2:py2:debug  c2:py2:debug    -nq-
+c2:py2:prof   G1810a0211a:k250:e1000   c2:py2:prof   c2:py2:prof     -nq-
 c2:debug      G1810a0211a:k250:e1000   c2:debug      c2:debug        -nq-
 c2:prof       G1810a0211a:k250:e1000   c2:prof       c2:prof         -nq-
 end_qualifier_list
