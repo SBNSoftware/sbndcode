@@ -29,9 +29,9 @@
       <tool type = "LArCosmicRayTagging"/>
     </CosmicRayTaggingTools>
     <SliceIdTools>
-      <tool type = "LArNeutrinoId">
-        <SvmFileName>PandoraMVAs/PandoraSvm_v03_11_00_MicroBooNE.xml</SvmFileName>
-        <SvmName>NeutrinoId</SvmName>
+      <tool type = "LArSvmNeutrinoId">
+        <MvaFileName>PandoraMVAs/PandoraSvm_v03_11_00_MicroBooNE.xml</MvaFileName>
+        <MvaName>NeutrinoId</MvaName>
       </tool>
     </SliceIdTools>
     <InputHitListName>Input</InputHitListName>
