@@ -29,9 +29,14 @@
       <tool type = "LArCosmicRayTagging"/>
     </CosmicRayTaggingTools>
     <SliceIdTools>
-      <tool type = "LArSimpleNeutrinoId"/>
+      <tool type = "LArBdtNeutrinoId">
+        <MvaFileName>PandoraMVAs/PandoraBdt_v08_33_00_SBND.xml</MvaFileName>
+        <MvaName>NeutrinoId</MvaName>
+        <MinimumNeutrinoProbability>0</MinimumNeutrinoProbability>
+        <MaximumNeutrinos>999</MaximumNeutrinos>
+      </tool>
     </SliceIdTools>
-    <InputHitListName>Input</InputHitListName>
+    <InputHitListName>CaloHitList2D</InputHitListName>
     <RecreatedPfoListName>RecreatedPfos</RecreatedPfoListName>
     <RecreatedClusterListName>RecreatedClusters</RecreatedClusterListName>
     <RecreatedVertexListName>RecreatedVertices</RecreatedVertexListName>
