@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+standard_hepmcfilegen:
+{
+  module_type:   "HepMCFileGen"
+
+  # FileSearchPaths: "/sbnd/app/users/mdeltutt/nuwro/nuwro_workdir/eventsout_hepmc/"
+  FileSearchPaths: "/pnfs/sbnd/persistent/users/mdeltutt/nuwro_events_18.02.1_bnb_nu_fluxconfigf_geomv01_04_detonly/eventsout_hepmc/"
+  FilePatterns:    ["eventsout.root_*.hepmc"]
+  EventsPerPOT:    1 # Currently not implemented
+
+  FluxCopyMethod:  "DIRECT"
+}
+
+END_PROLOG 
