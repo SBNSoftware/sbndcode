@@ -180,8 +180,7 @@ namespace HitEfficiencyAna
     
     // Make a pass through all hits to make contrasting plots
     std::cout << "-- Run: " << fRun << ", SubRun: " << fSubRun << ", Event: " << fEvent << " -------" << std::endl;
-    std::cout << "HELLO!" << std::endl;
-
+    
     for(auto& hitHistTool : fHitHistogramToolVec) hitHistTool->fillHistograms(event);
     
     fTree->Fill();

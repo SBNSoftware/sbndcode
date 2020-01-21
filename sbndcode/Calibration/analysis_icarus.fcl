@@ -1,12 +1,15 @@
-#include "analysis_tools_icarus.fcl"
+#include "analysis_tools_sbnd.fcl"
 #include "services_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
 
 services:
 {
   TFileService: { fileName: "TFile-HitEfficiency.root" }
   FileCatalogMetadata:  @local::sbnd_file_catalog_mc
                         @table::sbnd_services              # from services_sbnd.fcl
-
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService: @local::standard_backtrackerservice
 }
 
 icarus_HitEfficiencyAnalysis:

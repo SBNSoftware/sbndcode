@@ -67,16 +67,16 @@ namespace caldata {
 
     std::unique_ptr<sbnd_tool::IROIFinder> fROITool;
 
-    // Define the waveform container
+  //   // Define the waveform container
     using Waveform        = std::vector<float>;
     
-    // Define the ROI and its container
+  //   // Define the ROI and its container
     using CandidateROI    = std::pair<size_t, size_t>;
     using CandidateROIVec = std::vector<CandidateROI>;
 
-  private:
+  // private:
     
-  //  int          fDataSize;          ///< size of raw data on one wire
+  // //  int          fDataSize;          ///< size of raw data on one wire
     int          fPostsample;        ///< number of postsample bins
     int          fBaseSampleBins;        ///< number of postsample bins
     bool         fDoBaselineSub;     ///< baseline subtraction

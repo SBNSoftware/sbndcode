@@ -9,8 +9,8 @@ sbnd_standardroifinder:
     tool_type:    "ROIFinderStandardSBND"
     Plane:        0
     NumBinsHalf:  3
-    Threshold:    [3,3,3] # abs(threshold) for finding a Region Of Interest. #ICARUS default was [3,3,3].
-    NumSigma:     [3,3,3] #ICARUS default was [3,3,3].
+    Threshold:    [0,0,0] # abs(threshold) for finding a Region Of Interest. #ICARUS default was [3,3,3].
+    NumSigma:     [0,0,0] #ICARUS default was [3,3,3].
 
     uPlaneROIPad: [ 50, 50 ] # number of bins to pad both ends of the ROIs
     vPlaneROIPad: [ 50, 50 ] # number of bins to pad both ends of the ROIs
