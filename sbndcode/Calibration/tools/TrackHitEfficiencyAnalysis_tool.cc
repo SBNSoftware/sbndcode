@@ -21,6 +21,8 @@
 #include "lardataobj/Simulation/SimChannel.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 
+#include "larsim/MCCheater/BackTrackerService.h"
+
 // Eigen
 #include <Eigen/Dense>
 
@@ -152,7 +154,14 @@ private:
  //std::vector<TH1F*>          fNRejectedHitVec;
     std::vector<TH1F*>          fHitEfficiencyVec;
     
- std::vector<TH1F*>          fNFakeHitVec;
+    std::vector<TH1F*>          fNFakeHitVec;
+
+    std::vector<TProfile*>      fPurityPHVec;
+  
+  std::vector<TH1F*> fNoiseHitAmp;
+  std::vector<TH1F*> fActualHitAmp;
+  //  std::vector<TH1F*> fHitEnergy;
+  TH1F* fHitEnergy;
 
     // TTree variables
     mutable TTree*             fTree;
@@ -191,6 +200,8 @@ private:
     const geo::GeometryCore*           fGeometry;             ///< pointer to Geometry service
     const detinfo::DetectorProperties* fDetectorProperties;   ///< Detector properties service
     const detinfo::DetectorClocks*     fClockService;         ///< Detector clocks service
+    art::ServiceHandle<cheat::BackTrackerService> backtracker;
+
 };
     
 //----------------------------------------------------------------------------
@@ -278,6 +289,15 @@ void TrackHitEfficiencyAnalysis::initializeHists(art::ServiceHandle<art::TFileSe
     fHitEfficXZVec.resize(fGeometry->Nplanes());
     fHitEfficRMSVec.resize(fGeometry->Nplanes());
 
+    fPurityPHVec.resize(fGeometry->Nplanes());
+ 
+    fNoiseHitAmp.resize(fGeometry->Nplanes());
+    fActualHitAmp.resize(fGeometry->Nplanes());
+    //    fHitEnergy.resize(fGeometry->Nplanes());
+
+    fHitEnergy   = dir.make<TH1F>("totalhitenergy", "Total Energy In Hits/ Total Energy Deposited",50,    0.,  1.);
+
+
     for(size_t plane = 0; plane < fGeometry->Nplanes(); plane++)
     {
         fTotalElectronsHistVec.at(plane) = dir.make<TH1F>(("TotalElecs"  + std::to_string(plane)).c_str(), ";Total # electrons",     250,    0.,  100000.);
@@ -299,6 +319,12 @@ void TrackHitEfficiencyAnalysis::initializeHists(art::ServiceHandle<art::TFileSe
         fSimDivHitChgVec.at(plane)       = dir.make<TH1F>(("SimDivHit"   + std::to_string(plane)).c_str(), ";# e / SummedADC",       200,    0.,  200.);
         fSimDivHitChg1Vec.at(plane)      = dir.make<TH1F>(("SimDivHit1"  + std::to_string(plane)).c_str(), ";# e / Integral",        200,    0.,  200.);
 
+	
+	//	fHitEnergy   = dir.make<TH1F>(("totalhitenergy"  + std::to_string(plane)).c_str(), "Total Energy In Hits/ Total Energy Deposited",50,    0.,  1.);
+	fNoiseHitAmp.at(plane)      = dir.make<TH1F>(("NoiseHitPeakAmp"  + std::to_string(plane)).c_str(), ";# ADC",        200,    0.,  200.);
+	fActualHitAmp.at(plane)      = dir.make<TH1F>(("ActualHitPeakAmp"+ std::to_string(plane)).c_str(), ";# ADC",        200,    0.,  200.);
+
+
         fHitVsSimChgVec.at(plane)        = dir.make<TH2F>(("HitVSimQ"  + std::to_string(plane)).c_str(), "# e vs Hit SumADC;SumADC;# e",     50, 0.,   1000., 50, 0., 100000.);
         fHitVsSimIntVec.at(plane)        = dir.make<TH2F>(("HitVSimI"  + std::to_string(plane)).c_str(), "# e vs Hit Integral;Integral;# e", 50, 0.,   1000., 50, 0., 100000.);
         fToteVHitEIntVec.at(plane)       = dir.make<TH2F>(("ToteVHite" + std::to_string(plane)).c_str(), "Tot e vs Hit e;Total #e;Hit #e",   50, 0., 100000., 50, 0., 100000.);
@@ -313,6 +339,9 @@ void TrackHitEfficiencyAnalysis::initializeHists(art::ServiceHandle<art::TFileSe
         fCosXZvRMSVec.at(plane)          = dir.make<TProfile>  (("CosXZVRMS"   + std::to_string(plane)).c_str(), "CosXZ v. RMS;Cos(XZ);Ticks",       50, -1.,      1., 0., 100.);
         fHitENEvXZVec.at(plane)          = dir.make<TProfile2D>(("HitENEvXZ"   + std::to_string(plane)).c_str(), "XZ v # e;cos(thetaXZ);#electrons", 50, -1.,      1.,
                                                                 50, 0., 100000., 0., 1.);
+    
+	fPurityPHVec.at(plane)         = dir.make<TProfile>  (("PurityPH"  + std::to_string(plane)).c_str(), "# hits;Max # e-;Purity",  50,  0.,  100., 0., 1.2);
+        
     }
     
     return;
@@ -395,6 +424,7 @@ void TrackHitEfficiencyAnalysis::clear() const
 void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
 {
     std::cout << " filling histos " << std::endl;
+    std::cout << "pick up my changes plz" << std::endl;
     // Basic assumption is that the producer label vecs for RawDigits and Wire data are
     // all the same length and in the same order. Here we just check for length
     if (fRawDigitProducerLabelVec.size() != fWireProducerLabelVec.size()) return;
@@ -427,11 +457,16 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
     PartToChanToTDCToIDEMap partToChanToTDCToIDEMap;
     
     // Build out the above data structure
+    float TotalEnergy = 0;
     for(const auto& simChannel : *simChannelHandle)
     {
+      if(fGeometry->ChannelToWire(simChannel.Channel()).at(0).Plane != 0){continue;}
+
         for(const auto& tdcide : simChannel.TDCIDEMap())
         {
-            for(const auto& ide : tdcide.second) partToChanToTDCToIDEMap[ide.trackID][simChannel.Channel()][tdcide.first] = ide;
+	  for(const auto& ide : tdcide.second){ partToChanToTDCToIDEMap[fabs(ide.trackID)][simChannel.Channel()][tdcide.first] = ide;
+	  TotalEnergy += ide.energy; 
+	  }
         }
     }
     
@@ -484,6 +519,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
     ChanToHitVecMap channelToHitVec;
     
     // And now fill it
+    float  TotalHitEnergy = 0;
     for(const auto& hitLabel : fHitProducerLabelVec)
     {
         art::Handle< std::vector<recob::Hit> > hitHandle;
@@ -491,6 +527,42 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
 
         for(const auto& hit : *hitHandle) channelToHitVec[hit.Channel()].push_back(&hit);
     }
+
+    for(auto const& channelhits: channelToHitVec){
+      for(auto const& hit: channelhits.second){
+
+	//    	float hitHeight = hit->PeakAmplitude();
+	if(hit->WireID().Plane != 0){continue;}
+    
+    	// Purity calculation
+    	std::vector<sim::TrackIDE> trackIDs = backtracker->HitToTrackIDEs(*hit);
+	
+	for(auto const& ide: trackIDs){
+	  TotalHitEnergy += ide.energy;
+	}
+
+	//    	float purityone=0;
+    	// if(trackIDs.size() > 0) purityone=1;
+    	// //	fPurityPHVec[hit->WireID().Plane]->Fill(hitHeight,   purityone,  1.);
+      
+
+    	// //Get the sim channel
+    	// if(trackIDs.size() == 0){ 
+    	//   try{
+    	//     art::Ptr< sim::SimChannel > SimChannel = backtracker->FindSimChannel(hit->Channel());
+    	//     std::cout << "this hit has a sim channel: " <<  SimChannel->Channel();
+    	//   }
+    	//   catch(cet::exception const& e){
+    	//       mf::LogWarning("BackTracker") << "caught exception \n"
+    	// 				    << e;
+    	//   }
+    	// }
+      }
+      
+    }
+
+    fHitEnergy->Fill(TotalHitEnergy/TotalEnergy);   
+    return;
     
     // It is useful to create a mapping between trackID and MCParticle
     using TrackIDToMCParticleMap = std::unordered_map<int, const simb::MCParticle*>;
@@ -521,7 +593,10 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
         std::string processName  = trackIDToMCPartItr->second->Process();
 
         // Looking for primary muons (e.g. CR Tracks)
-        if (fabs(trackPDGCode) != 13 || processName != "primary") continue;
+	//if (fabs(trackPDGCode) != 13 || processName != "primary") continue;
+
+        // Looking for electrons
+		if (fabs(trackPDGCode) != 11 || processName != "primary") continue;
 
         // Recover particle position and angle information
         Eigen::Vector3f partStartPos(trackIDToMCPartItr->second->Vx(),trackIDToMCPartItr->second->Vy(),trackIDToMCPartItr->second->Vz());
@@ -630,7 +705,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
             float cosThetaXZ = projPairDirVec[0];
     
             totalElectrons = std::min(totalElectrons, float(99900.));
-        
+	    
             fTotalElectronsHistVec[plane]->Fill(totalElectrons, 1.);
             fMaxElectronsHistVec[plane]->Fill(maxElectrons, 1.);
         
@@ -662,6 +737,8 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
             unsigned short hitStopTickBest(0);
             unsigned short hitStartTickBest(0);
         
+	    float purity(0.);
+
             // Start by recovering the Wire associated to this channel
             ChanToWireMap::const_iterator wireItr = channelToWireMap.find(chanToTDCToIDEMap.first);
             
@@ -688,16 +765,16 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
                     wireRangePtr = &range;
                     break;
                 }
-                
+	    
                 // Check that we have found the wire range
                 // Note that if we have not matched an ROI then we can't have a hit either so skip search for that...
-                if (wireRangePtr)
+		if (wireRangePtr)
                 {
                     const recob::Hit* rejectedHit = 0;
                     const recob::Hit* bestHit     = 0;
                     
                     nMatchedWires++;
-                    
+		
                     // The next mission is to recover the hits associated to this Wire
                     // The easiest way to do this is to simply look up all the hits on this channel and then match
                     ChanToHitVecMap::iterator hitIter = channelToHitVec.find(chanToTDCToIDEMap.first);
@@ -708,9 +785,26 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
                         // In the event of more than one hit associated to the sim channel range, keep only
                         // the best match (assuming the nearby hits are "extra")
                         // Note that assumption breaks down for long pulse trains but worry about that later
-                        for(const auto& hit : hitIter->second)
+		      for(const auto& hit : hitIter->second)
                         {
-                            unsigned short hitStartTick = hit->PeakTime() - fSigmaVec[plane] * hit->RMS();
+
+                            float hitHeight = hit->PeakAmplitude();
+
+			    // // Purity calculation
+			    std::vector<sim::TrackIDE> trackIDs = backtracker->HitToTrackIDEs(*hit);
+			    purity=0;
+			    if(trackIDs.size() > 0) purity=1;
+			    fPurityPHVec[plane]->Fill(hitHeight,   purity,  1.);
+
+			    if(purity ==0 &&  hitIter->second.size() > 1){
+			      fNoiseHitAmp[plane]->Fill(hitHeight);
+			    }
+			    else if (hitIter->second.size() > 1) {
+			      fActualHitAmp[plane]->Fill(hitHeight);
+			    }
+		      
+
+			    unsigned short hitStartTick = hit->PeakTime() - fSigmaVec[plane] * hit->RMS();
                             unsigned short hitStopTick  = hit->PeakTime() + fSigmaVec[plane] * hit->RMS();
                     
                             // If hit is out of range then skip, it is not related to this particle
@@ -721,7 +815,6 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
                                 continue;
                             }
                     
-                            float hitHeight = hit->PeakAmplitude();
                     
                             // Use the hit with the largest pulse height as the "best"
                             if (hitHeight < hitPeakAmpBest) continue;
@@ -730,8 +823,8 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
                             bestHit          = hit;
                             hitStartTickBest = hitStartTick;
                             hitStopTickBest  = hitStopTick;
-                        }
-                    
+			}
+		      			
                         // Find a match?
                         if (bestHit)
                         {
@@ -798,7 +891,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
                     }
                 }
             }
-
+	
             fWireEfficVec.at(plane)->Fill(totalElectrons, std::min(nMatchedWires,1), 1.);
             fWireEfficPHVec.at(plane)->Fill(maxElectrons, std::min(nMatchedWires,1), 1.);
             
@@ -813,7 +906,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
             fHitEfficRMSVec[plane]->Fill(snippetLen,    matchHit,   1.);
             
             fHitENEvXZVec[plane]->Fill(cosThetaXZ, totalElectrons, matchHit);
-            
+           
             // Store tuple variables
             fTPCVec.push_back(wids[0].TPC);
             fCryoVec.push_back(wids[0].Cryostat);

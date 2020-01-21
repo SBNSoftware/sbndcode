@@ -17,7 +17,6 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindManyP.h"
-
 //LArSoft Includes 
 #include "larcore/Geometry/Geometry.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
@@ -35,6 +34,7 @@
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "larcoreobj/SummaryData/POTSummary.h"  
 #include "nusimdata/SimulationBase/MCFlux.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 //C++ Includes
 #include <vector>
@@ -42,6 +42,8 @@
 
 //Root Includes
 #include "TSystem.h"
+#include "TGraph.h"
+#include "TF1.h"
 
 namespace ana {
   class RecoEfficencyFinder;
@@ -65,11 +67,36 @@ public:
   void beginSubRun(const art::SubRun& sr) override;
   void endJob() override;
   bool containedInAV(const TVector3 &v);
+  bool containedInFV(const TVector3 &v);
+
   bool isFromNuVertex(const art::Ptr<simb::MCTruth>& mc, const simb::MCParticle* &particle, float distance=5.) const;
   bool isFromNuVertex(const art::Ptr<simb::MCTruth>& mc, TVector3& position, float distance=5.) const;
   bool isShowerContainedish(const std::vector<int>& shower, std::map<int,float>& Track_Energy_map,std::map<int, const simb::MCParticle*>& trueParticles);
   bool isPrimaryHadron(const int& track, art::Ptr<simb::MCTruth>& mc_truth, std::map<int,const simb::MCParticle*>& trueParticles,int neutrino_iter,std::map<int,float>& Track_Energy_map);
+  void OrderShowerHits(std::vector<art::Ptr<recob::SpacePoint> >& sps, const TVector3& ShowerStartPosition, const TVector3& ShowerDirection);
+  void OrderPerpendiuclarShowerHits(std::vector<art::Ptr<recob::SpacePoint> >& sps, const TVector3& ShowerStartPosition, const TVector3& ShowerDirection);
 
+  double  TotalCharge(const std::vector<art::Ptr<recob::SpacePoint> >&sps, art::FindManyP<recob::Hit> const& fmh);
+
+  double SpacePointCharge(art::Ptr<recob::SpacePoint> const& sp,
+			  art::FindManyP<recob::Hit> const& fmh) const;
+
+  double SpacePointTime(art::Ptr<recob::SpacePoint> const& sp,
+			art::FindManyP<recob::Hit> const& fmh) const;
+    
+
+  double SpacePointProjection(const art::Ptr<recob::SpacePoint>&sp,
+			      TVector3 const& vertex, 
+			      TVector3 const& direction) const; 
+
+  double ShowerPerpendicularDensityGradient(std::vector<art::Ptr<recob::SpacePoint> >& sps, const TVector3& ShowerStartPosition, const TVector3& ShowerDirection, double ShowerPerpendicularLength, art::FindManyP<recob::Hit> const& fmh);
+
+  double ShowerDensityGradient(std::vector<art::Ptr<recob::SpacePoint> >& sps, const TVector3& ShowerStartPosition, const TVector3& ShowerDirection, double ShowerLength, art::FindManyP<recob::Hit> const& fmh);
+
+  TVector3 SpacePointPosition(art::Ptr<recob::SpacePoint> const& sp) const;
+
+  double SignalOscillationWeight(int& initpdg, int& finpdg, float& lOverE) const;
+  
 private:
 
   //Module Labels
@@ -82,9 +109,18 @@ private:
 
   //Fcl parameters 
   float fMinRecoEnergyCut;
+  float fNSegments;
   std::vector<geo::BoxBoundedGeo> fActiveVolume; //!< List of active volumes
+  std::vector<geo::BoxBoundedGeo> fFiducalVolume;
+  double fdmsq;
+  double fsinsq2thmumu;
+  double fsinsq2thmue;
+
+  double fOscDimensFactor = 1.26693281; // Dimensional factor (GeV/eV^2/km) appearing in netrino oscillation formula;
+
 
   //services
+  detinfo::DetectorProperties const* fDetProp;
   art::ServiceHandle<cheat::ParticleInventoryService> particleInventory;
   art::ServiceHandle<art::TFileService> tfs;
 
@@ -100,6 +136,9 @@ private:
   std::vector<float> nu_E_branch;
   std::vector<float> nu_E_numtrue_branch;
   std::vector<float> nu_distance_branch;
+  std::vector<float> nu_osc_prob_branch;
+  std::vector<float> nu_pdg_branch;
+  std::vector<float> in_FV_branch;
   std::vector<std::vector<float> > truepionE_branch;
   std::vector<std::vector<float> > trueprotonE_branch;
   std::vector<std::vector<float> > truekaonE_branch;
@@ -109,6 +148,20 @@ private:
   std::vector<std::vector<float> > true_energy_branch;
   std::vector<std::vector<float> > shower_coversion_gap_branch;
   std::vector<std::vector<float> > shower_residual_dist_branch;
+  std::vector<std::vector<float> > shower_len_branch;
+  std::vector<std::vector<float> > shower_length_branch;
+  std::vector<std::vector<float> > shower_density_branch;
+  std::vector<std::vector<float> > shower_length_perp_branch;
+  std::vector<std::vector<float> > shower_density_perp_branch;
+  std::vector<std::vector<float> > shower_density_3D_branch;
+  std::vector<std::vector<float> > shower_density_grad_perp_branch;
+  std::vector<std::vector<float> > shower_density_grad_branch;
+  std::vector<std::vector<float> > shower_density_ratio_branch;
+  std::vector<std::vector<float> > shower_density_grad_ratio_branch;
+  std::vector<std::vector<float> > shower_density_grad_perp_sq_branch;
+  std::vector<std::vector<float> > shower_density_grad_sq_branch;
+  std::vector<std::vector<float> > shower_density_grad_ratio_sq_branch;
+
   std::vector<std::vector<float> > shower_dEdx_branch;
   std::vector<std::vector<float> > track_lengths_branch;
 
@@ -116,7 +169,7 @@ private:
   std::vector<std::vector<float> > track_trueE_branch;
   std::vector<std::vector<float> > track_pdg_branch; 
   std::vector<std::vector<float> > track_resE_branch;
-
+  
   float trueShower_num_branch;
   float numtrueVtx_branch;
 
@@ -126,8 +179,17 @@ private:
   TTree* Tree;
   TTree* POTTree;
 
+  TGraph* SegmentDensityPerpGraph;
+  TGraph* SegmentDensityGraph;
+
+
   int num_v_recoed;
 
+  std::vector<double> SegmentDensityPerpFinal;
+  std::vector<double> SegmentDensityFinal;
+  std::vector<double> SegmentDensityFinalN;
+  std::vector<double> SegmentDensityPerpFinalN;
+  double Nfinal;
 
 };
 
@@ -141,8 +203,18 @@ ana::RecoEfficencyFinder::RecoEfficencyFinder(fhicl::ParameterSet const & pset)
   fCalorimetryModuleLabel(pset.get<art::InputTag>("CalorimetryModuleLabel")),
   fTrackModuleLabel      (pset.get<art::InputTag>("TrackModuleLabel")),
   fLArGeantModuleLabel   (pset.get<art::InputTag>("LArGeantModuleLabel")),
-  fMinRecoEnergyCut      (pset.get<float>        ("MinRecoEnergyCut"))
+  fMinRecoEnergyCut      (pset.get<float>        ("MinRecoEnergyCut")),
+  fNSegments             (pset.get<float>        ("NSegments")),
+  fdmsq                  (pset.get<float>        ("dmsq")),
+  fsinsq2thmumu          (pset.get<float>        ("sinsq2thmumu")),   
+  fsinsq2thmue           (pset.get<float>        ("sinsq2thmue")),
+  fDetProp(lar::providerFrom<detinfo::DetectorPropertiesService>())
 {
+
+  SegmentDensityPerpFinal.resize(fNSegments,0);
+  SegmentDensityFinal.resize(fNSegments,0);
+  SegmentDensityFinalN.resize(fNSegments,0);
+  SegmentDensityPerpFinalN.resize(fNSegments,0);
 
   // setup active volume bounding boxes
   std::vector<fhicl::ParameterSet> AVs =				\
@@ -157,6 +229,18 @@ ana::RecoEfficencyFinder::RecoEfficencyFinder(fhicl::ParameterSet const & pset)
     fActiveVolume.emplace_back(xmin, xmax, ymin, ymax, zmin, zmax);
   }
 
+  std::vector<fhicl::ParameterSet> FVs =				\
+    pset.get<std::vector<fhicl::ParameterSet> >("FiducalVolume");
+  for (auto const& FV : FVs) {
+    double xmin = FV.get<double>("xmin");
+    double ymin = FV.get<double>("ymin");
+    double zmin = FV.get<double>("zmin");
+    double xmax = FV.get<double>("xmax");
+    double ymax = FV.get<double>("ymax");
+    double zmax = FV.get<double>("zmax");
+    fFiducalVolume.emplace_back(xmin, xmax, ymin, ymax, zmin, zmax);
+  }
+
 
 
 }
@@ -166,21 +250,23 @@ void ana::RecoEfficencyFinder::beginSubRun(const art::SubRun& sr)
   art::Handle< sumdata::POTSummary > potListHandle;
 
   if(sr.getByLabel(fGenieGenModuleLabel,potListHandle))
-    POT=potListHandle->totpot;
-  else
-    POT=0.;
-
+    POT = potListHandle->totpot;
+  
   POTTree->Fill();
-
 }
+
 
 
 void ana::RecoEfficencyFinder::beginJob() {
 
   POTTree = tfs->make<TTree>("RecoEffPOTTree", "Tree Holding POT information");
+  POTTree->Branch("POT",&POT,32000,0);
       
   Tree = tfs->make<TTree>("RecoEffMetricTree", "Tree Holding all metric information");
   gInterpreter->GenerateDictionary("vector<vector<float> >","vector");
+
+  SegmentDensityPerpGraph = tfs->makeAndRegister<TGraph>("SegmentDensityPerpGraph","SegmentDensityPerpGraph");
+  SegmentDensityGraph = tfs->makeAndRegister<TGraph>("SegmentDensityGraph","SegmentDensityGraph");
 
   //Initalise the branches
   Tree->Branch("number_of_showers_per_neutrino","std::vector<float>", &number_of_showers_per_neutrino, 32000, 0);
@@ -200,6 +286,20 @@ void ana::RecoEfficencyFinder::beginJob() {
   Tree->Branch("vertex_reco","std::vector<float>",&vertex_reco_branch,32000,0);
   Tree->Branch("shower_coversion_gap","std::vector<std::vector<float>>",&shower_coversion_gap_branch,32000,0);
   Tree->Branch("shower_residual_dist","std::vector<std::vector<float>>",&shower_residual_dist_branch,32000,0);
+  Tree->Branch("shower_len","std::vector<std::vector<float>>",&shower_len_branch,32000,0);
+  Tree->Branch("shower_length","std::vector<std::vector<float>>",&shower_length_branch,32000,0);
+  Tree->Branch("shower_density","std::vector<std::vector<float>>",&shower_density_branch,32000,0);
+  Tree->Branch("shower_length_perp","std::vector<std::vector<float>>",&shower_length_perp_branch,32000,0);
+  Tree->Branch("shower_density_perp","std::vector<std::vector<float>>",&shower_density_perp_branch,32000,0);
+  Tree->Branch("shower_density_3D","std::vector<std::vector<float>>",&shower_density_3D_branch,32000,0);
+  Tree->Branch("shower_density_grad_perp","std::vector<std::vector<float>>",&shower_density_grad_perp_branch,32000,0);
+  Tree->Branch("shower_density_grad","std::vector<std::vector<float>>",&shower_density_grad_branch,32000,0);
+  Tree->Branch("shower_density_ratio","std::vector<std::vector<float>>",&shower_density_ratio_branch,32000,0);
+  Tree->Branch("shower_density_grad_ratio","std::vector<std::vector<float>>",&shower_density_grad_ratio_branch,32000,0);
+  Tree->Branch("shower_density_grad_ratio_sq","std::vector<std::vector<float>>",&shower_density_grad_ratio_sq_branch,32000,0);
+  Tree->Branch("shower_density_grad_perp_sq","std::vector<std::vector<float>>",&shower_density_grad_perp_sq_branch,32000,0);
+  Tree->Branch("shower_density_grad_sq","std::vector<std::vector<float>>",&shower_density_grad_sq_branch,32000,0);
+
   Tree->Branch("shower_dEdx","std::vector<std::vector<float>>",&shower_dEdx_branch,32000,0);
 
   Tree->Branch("track_lengths","std::vector<std::vector<float>>",&track_lengths_branch,32000,0);
@@ -207,7 +307,6 @@ void ana::RecoEfficencyFinder::beginJob() {
   Tree->Branch("track_trueE","std::vector<std::vector<float>>",&track_trueE_branch,32000,0);
   Tree->Branch("track_pdg","std::vector<std::vector<float>>",&track_pdg_branch,32000,0);
   Tree->Branch("track_resE","std::vector<std::vector<float>>",&track_resE_branch,32000,0);
-
   Tree->Branch("nu_reco_energy","std::vector<float>",&nu_reco_energy_branch,32000,0);
   Tree->Branch("nu_truth_energy","std::vector<float>",&nu_truth_energy_branch,32000,0);
   Tree->Branch("nu_interaction_type","std::vector<float>",&nu_interaction_type_branch,32000,0);
@@ -216,8 +315,11 @@ void ana::RecoEfficencyFinder::beginJob() {
   Tree->Branch("nu_E_numtrue","std::vector<float>",&nu_E_numtrue_branch,32000,0);
   
   Tree->Branch("nu_distance","std::vector<float>",&nu_distance_branch,32000,0);
+  Tree->Branch("in_FV","std::vector<float>", &in_FV_branch, 32000,0);
+  Tree->Branch("nu_osc_prob","std::vector<float>",&nu_osc_prob_branch,32000,0);
+  Tree->Branch("nu_pdg","std::vector<float>",&nu_pdg_branch,32000,0);
 
-    num_v_recoed = 0;
+  num_v_recoed = 0;
 
  }
 
@@ -280,6 +382,27 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
     return;
   }
 
+  //Association between Showers and 2d Hits
+  art::FindManyP<recob::SpacePoint> fmsp(showerListHandle, evt, fShowerModuleLabel);
+  if(!fmsp.isValid()){
+    throw cet::exception("RecoEfficencyFinder") << "Spacepoint-Recob::Shower association is somehow not valid. Stopping";
+    return;
+  }
+
+  //Get the spacepoints handle and the hit assoication
+  art::Handle<std::vector<recob::SpacePoint> > spHandle;
+  if (!evt.getByLabel(fPFParticleLabel, spHandle)){
+    throw cet::exception("RecoEfficencyFinder") << "Could not configure the spacepoint handle. Something is configured incorrectly. Stopping";
+    return;
+  }
+  art::FindManyP<recob::Hit> fmsph(spHandle, evt, fPFParticleLabel);
+  if(!fmsph.isValid()){
+    throw cet::exception("RecoEfficencyFinder") << "Spacepoint and hit association not valid. Stopping.";
+    return;
+  }
+  
+
+
   //Assn between Tracks and pfparticles
   art::FindManyP<recob::Track> fmt(pfpHandle, evt, fTrackModuleLabel);
   if(!fmt.isValid()){
@@ -321,7 +444,7 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
 
 
   //Get the true showers. This is a map of the mother id with the down stream mothers 
-  std::map<int,std::vector<int> > trueShowerCandidates = ShowerUtils::FindTrueShowerIDs(trueParticles);
+  std::map<int,std::vector<int> > trueShowerCandidates = ShowerUtils::GetShowerMothersCandidates(trueParticles);
   std::map<int,float> MCTrack_Energy_map = RecoUtils::TrueEnergyDepositedFromMCTracks(simchannels);
 
   std::map<int,std::vector<int> > trueShowers;
@@ -341,7 +464,7 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
       if(!isShowerContainedish(trueShowerCandidate.second,MCTrack_Energy_map,trueParticles)){continue;}
 
       //Make sure we are not a silly photon below 10 MeV 
-      if(MCTrack_Energy_map[trueShowerCandidate.first]  < 10){continue;}
+      if(trueParticles[trueShowerCandidate.first]->E()*1000 < 10){continue;}
 
       trueShowers[trueShowerCandidate.first] = trueShowerCandidate.second;
     }
@@ -392,11 +515,29 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
   vertex_reco_branch.resize(neutrinos.size(),-999);
   nu_reco_energy_branch.resize(neutrinos.size(),-999);
   nu_distance_branch.resize(neutrinos.size(),-999);
+  nu_pdg_branch.resize(neutrinos.size(),-999);
+  nu_osc_prob_branch.resize(neutrinos.size(),-999);
+  in_FV_branch.resize(neutrinos.size(),-999);
+  
   shower_energy_branch.resize(neutrinos.size());
   truth_pid_branch.resize(neutrinos.size()); 
   true_energy_branch.resize(neutrinos.size()); 
   shower_coversion_gap_branch.resize(neutrinos.size());
   shower_residual_dist_branch.resize(neutrinos.size());
+  shower_len_branch.resize(neutrinos.size());
+  shower_length_branch.resize(neutrinos.size());
+  shower_density_branch.resize(neutrinos.size());
+  shower_length_perp_branch.resize(neutrinos.size());
+  shower_density_perp_branch.resize(neutrinos.size());
+  shower_density_3D_branch.resize(neutrinos.size());
+  shower_density_grad_perp_branch.resize(neutrinos.size());
+  shower_density_grad_branch.resize(neutrinos.size());
+  shower_density_ratio_branch.resize(neutrinos.size());
+  shower_density_grad_ratio_branch.resize(neutrinos.size());
+  shower_density_grad_perp_sq_branch.resize(neutrinos.size());
+  shower_density_grad_sq_branch.resize(neutrinos.size());
+  shower_density_grad_ratio_sq_branch.resize(neutrinos.size());
+
   shower_dEdx_branch.resize(neutrinos.size());
   track_lengths_branch.resize(neutrinos.size());   
   nu_truth_energy_branch.resize(neutrinos.size()); 
@@ -428,8 +569,8 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
       std::vector<art::Ptr<recob::Shower> > shower = fmsh.at(pfp_map[daughter].key());
 
       //Did we succeed at characterising the shower particle?
-      if(shower.size() == 0){continue;}
-	
+      if(shower.size() == 0){std::cout << "no reco shower" << std::endl; continue;}
+      
 
       //If we have two then our charactisation did a silly.
       if(shower.size() != 1){
@@ -477,15 +618,63 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
 	}
       }
 
+      double ShowerLength  = shower->Length();
+
+      //      if(max_shower_energy > fMinRecoEnergyCut){
+      shower_energy_branch.at(neutrino_iter).push_back(max_shower_energy);
+      shower_length_branch.at(neutrino_iter).push_back(ShowerLength);
+      shower_density_branch.at(neutrino_iter).push_back(max_shower_energy/ShowerLength);
+	//     }
+
+      const TVector3 ShowerStart     = shower->ShowerStart();
+      const TVector3 ShowerDirection = shower->Direction();
+
+      //Get the hits
+      std::vector<art::Ptr<recob::SpacePoint> > showerhits = fmsp.at(shower.key());
+
+      //Workout the perpendicular length. Order hits based on the start position and direction
+      OrderPerpendiuclarShowerHits(showerhits,ShowerStart,ShowerDirection);
+      int length_iter = 0.9*showerhits.size();
+      TVector3 EndPosition = SpacePointPosition(showerhits[length_iter]);
+      TVector3 RelativeEndPos = EndPosition - ShowerStart;
+      double ShowerPerpendicularLength = 2*(RelativeEndPos - (RelativeEndPos.Dot(ShowerDirection))*ShowerDirection).Mag();
       
-      if(max_shower_energy > fMinRecoEnergyCut){
-  	shower_energy_branch.at(neutrino_iter).push_back(max_shower_energy);
-      }
+      //Workout Perpendicular density
+      double ShowerPerpendicularDensity = max_shower_energy/ShowerPerpendicularLength;
+
+      //Workout 3D density.			
+      double Shower3DDensity= max_shower_energy/(ShowerPerpendicularLength*ShowerPerpendicularLength*ShowerLength);
+
+      std::cout << "ShowerPerpendicularLength: " << ShowerPerpendicularLength << " ShowerPerpendicularDensity: " << ShowerPerpendicularDensity << " Shower3DDensity: " << Shower3DDensity << std::endl;
+
+      //Workout density gradients
+      double showerperpendiculardensitygradient = ShowerPerpendicularDensityGradient(showerhits,ShowerStart,ShowerDirection,ShowerPerpendicularLength,fmsph);
+
+      OrderShowerHits(showerhits,ShowerStart,ShowerDirection);
+      double showerdensitygradient = ShowerDensityGradient(showerhits,ShowerStart,ShowerDirection,ShowerLength,fmsph);
+	
+      std::cout << "ShowerPerpendicularDensityGradient: " << showerperpendiculardensitygradient << " ShowerDensityGradient: " << showerdensitygradient << std::endl;
+
+      shower_length_perp_branch.at(neutrino_iter).push_back(ShowerPerpendicularLength);
+      shower_density_perp_branch.at(neutrino_iter).push_back(ShowerPerpendicularDensity);
+      shower_density_3D_branch.at(neutrino_iter).push_back(Shower3DDensity);
+      shower_density_grad_perp_branch.at(neutrino_iter).push_back(showerperpendiculardensitygradient);
+      shower_density_grad_branch.at(neutrino_iter).push_back(showerdensitygradient);
+      shower_density_ratio_branch.at(neutrino_iter).push_back(ShowerLength/ShowerPerpendicularLength);
+      shower_density_grad_ratio_branch.at(neutrino_iter).push_back(showerdensitygradient/showerperpendiculardensitygradient);
+
+      shower_density_grad_perp_sq_branch.at(neutrino_iter).push_back(showerdensitygradient*showerdensitygradient);
+      shower_density_grad_sq_branch.at(neutrino_iter).push_back(showerperpendiculardensitygradient*showerperpendiculardensitygradient);
+      shower_density_grad_ratio_sq_branch.at(neutrino_iter).push_back(showerdensitygradient/showerperpendiculardensitygradient*showerdensitygradient/showerperpendiculardensitygradient);
+
     }
 
     //Add the number of showers to the true.
     number_of_showers_per_neutrino.at(neutrino_iter) = neutrino_showers.size();
     
+    //Neutrino Pdg 
+    nu_pdg_branch.at(neutrino_iter) = neutrino->PdgCode();
+
     //How well do we reconstruct the vertex. 
 
     //Define the vertex as being correct if within 5cm 
@@ -500,6 +689,14 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
     vertex[0]->XYZ(vtx_xyz);
      
     TVector3 vertex_position = {vtx_xyz[0],vtx_xyz[1],vtx_xyz[2]};
+
+    //Ask if the vertex was in the FV
+    if(containedInFV(vertex_position)){
+      in_FV_branch.at(neutrino_iter) = 1;
+    }
+    else{
+      in_FV_branch.at(neutrino_iter) = 0;
+    }
 
     //Find the corresponding vertex. Hopefully there is just one event but pileup is ~few% 
     bool isReconstructed = false;
@@ -521,8 +718,16 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
       }
     }
     --mc_truth_iter;
-
-    nu_distance_branch.at(neutrino_iter) = mcflux->at(mc_truth_iter).fdk2gen + mcflux->at(mc_truth_iter).fgen2vtx;
+    
+    //Calculate the oscillation probability for the event
+    int initnu =  mcflux->at(mc_truth.key()).fntype;
+    int finnu  =  mc_truth->GetNeutrino().Nu().PdgCode();
+    float nudistance = mcflux->at(mc_truth_iter).fdk2gen + mcflux->at(mc_truth_iter).fgen2vtx;
+    float loverE = nudistance/mc_truth->GetNeutrino().Nu().E();
+    double osc_prob = SignalOscillationWeight(initnu,finnu,loverE);
+    
+    nu_osc_prob_branch.at(neutrino_iter) = osc_prob;
+    nu_distance_branch.at(neutrino_iter) = nudistance;
     nu_interaction_type_branch.at(neutrino_iter) = mc_truth->GetNeutrino().InteractionType();
     nu_mode_branch.at(neutrino_iter)             = mc_truth->GetNeutrino().Mode();
     nu_E_branch.at(neutrino_iter)                = mc_truth->GetNeutrino().Nu().E();
@@ -568,7 +773,6 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
       // }
       Vertex_KE += daughter_calo[2]->KineticEnergy(); 
     }
-
     vertex_recoKE_branch.at(neutrino_iter) = Vertex_KE;
   
     //Get the conversion gap 
@@ -592,16 +796,16 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
     //Calculate the residual of the closest shower
     for(auto const& neutrino_shower: neutrino_showers){
       TVector3 ShowerStart     = neutrino_shower->ShowerStart();//cm 
-      TVector3 conversion_vec  = ShowerStart - vertex_position;
+      TVector3 conversion_vec  = (ShowerStart - vertex_position);
       
-      TVector3 min_conversion_vec = neutrino_showers[min_convgap_key]->ShowerStart() - vertex_position;
+      TVector3 min_conversion_vec = (neutrino_showers[min_convgap_key]->ShowerStart() - vertex_position).Unit();
 
       double len  = conversion_vec.Dot(min_conversion_vec);
       double perp = (conversion_vec - len*min_conversion_vec).Mag();
-      std::cout << "len: " << len << " perp: " << perp << std::endl;
+      shower_len_branch.at(neutrino_iter).push_back(len);
       shower_residual_dist_branch.at(neutrino_iter).push_back(perp);
     }
-
+  
     //Get the total reco energy.
     float Nu_reco_Energy = 0;
     float max_s_energy = -999;
@@ -676,7 +880,7 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
 	//  	auto const  max_shower_energy = *max_element(std::begin(ShowerEnergyPlanes), std::end(ShowerEnergyPlanes));
 	float max_shower_energy = ShowerEnergyPlanes[0];
 	if(ShowerBest_Plane != -999){
-	  if((int) ShowerEnergyPlanes.size() < ShowerBest_Plane+1){
+	  if((int) ShowerEnergyPlanes.size() > ShowerBest_Plane+1){
 	    max_shower_energy = ShowerEnergyPlanes[ShowerBest_Plane];
 	  }
 	}
@@ -692,7 +896,6 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
   	}
       }
     }
-
     Nu_reco_Energy += max_s_energy;
     nu_reco_energy_branch.at(neutrino_iter) = Nu_reco_Energy;
 
@@ -714,6 +917,14 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
   track_lengths_branch.clear();
   shower_coversion_gap_branch.clear();
   shower_residual_dist_branch.clear();
+  shower_length_perp_branch.clear();
+  shower_density_perp_branch.clear();
+  shower_density_3D_branch.clear();
+  shower_density_grad_perp_branch.clear();
+  shower_density_grad_branch.clear();
+  shower_density_ratio_branch.clear();
+  shower_density_grad_ratio_branch.clear();
+  shower_len_branch.clear();
   shower_dEdx_branch.clear();
   nu_reco_energy_branch.clear();
   nu_truth_energy_branch.clear();
@@ -730,9 +941,33 @@ void ana::RecoEfficencyFinder::analyze(art::Event const & evt){
   trueprotonE_branch.clear();
   truekaonE_branch.clear();
   track_resE_branch.clear();
+  shower_length_branch.clear();
+  shower_density_branch.clear();
+  in_FV_branch.clear();
+  shower_density_grad_perp_sq_branch.clear();
+  shower_density_grad_sq_branch.clear();
+  shower_density_grad_ratio_sq_branch.clear();
+  nu_osc_prob_branch.clear();
+  nu_pdg_branch.clear();
 }
 
 void ana::RecoEfficencyFinder::endJob(){
+
+  int i=0;
+  for(auto& segment: SegmentDensityPerpFinal){
+    segment = segment/SegmentDensityPerpFinalN[i];
+    std::cout << " i: " << i << " segment: " << segment << std::endl;
+    SegmentDensityPerpGraph->SetPoint(SegmentDensityPerpGraph->GetN(),i,segment);
+    ++i;
+  }
+
+  i=0;
+  for(auto& segment: SegmentDensityFinal){
+    segment =  segment/SegmentDensityFinalN[i];
+    std::cout << " i: " << i << " segment: " << segment << std::endl;
+    SegmentDensityGraph->SetPoint(SegmentDensityGraph->GetN(),i,segment);
+    ++i;
+  }
 
   std::cout << "num_v_recoed: " << num_v_recoed << std::endl;
 }
@@ -757,6 +992,15 @@ bool ana::RecoEfficencyFinder::containedInAV(const TVector3 &v) {
   }
   return false;
 }
+
+//Check if the point is in the Active volume.
+bool ana::RecoEfficencyFinder::containedInFV(const TVector3 &v) {
+  for (auto const& FV: fFiducalVolume) {
+    if (FV.ContainsPosition(v)) return true;
+  }
+  return false;
+}
+
 
 bool ana::RecoEfficencyFinder::isShowerContainedish(const std::vector<int>& shower, std::map<int,float>& Track_Energy_map, std::map<int, const simb::MCParticle*>& trueParticles){
 
@@ -805,7 +1049,367 @@ bool ana::RecoEfficencyFinder::isPrimaryHadron(const int& track, art::Ptr<simb::
   return true;
 }
 
+//Orders hits from the distance away from the shower stem.
+void ana::RecoEfficencyFinder::OrderPerpendiuclarShowerHits(std::vector<art::Ptr<recob::SpacePoint> >& sps, const TVector3& ShowerStartPosition, const TVector3& ShowerDirection){
+  
+  std::map<double,art::Ptr<recob::SpacePoint> > OrderedSpacePoints;
 
+  //Loop over the spacepoints and get the pojected distance from the vertex.
+  for(auto const& sp: sps){
+
+    // Get the projection of the space point along the direction
+    double len = SpacePointProjection(sp, ShowerStartPosition, ShowerDirection);
+
+    //Get the length to the projection
+    TVector3 perp = (SpacePointPosition(sp)-ShowerStartPosition) - len*ShowerDirection;
+    double  len_perp = perp.Mag();
+    
+
+    //Add to the list
+    OrderedSpacePoints[len_perp] = sp;
+  }
+
+  //Return an ordered list.
+  sps.clear();
+  for(auto const& sp: OrderedSpacePoints){
+    sps.push_back(sp.second);
+  }
+  return;
+}
+
+void ana::RecoEfficencyFinder::OrderShowerHits(std::vector<art::Ptr<recob::SpacePoint> >& sps, const TVector3& ShowerStartPosition, const TVector3& ShowerDirection){
+  
+  std::map<double,art::Ptr<recob::SpacePoint> > OrderedSpacePoints;
+
+  //Loop over the spacepoints and get the pojected distance from the vertex.
+  for(auto const& sp: sps){
+
+    // Get the projection of the space point along the direction
+    double len = SpacePointProjection(sp, ShowerStartPosition, ShowerDirection);
+
+    //Add to the list
+    OrderedSpacePoints[len] = sp;
+  }
+
+  //Return an ordered list.
+  sps.clear();
+  for(auto const& sp: OrderedSpacePoints){
+    sps.push_back(sp.second);
+  }
+  return;
+}
+
+
+double ana::RecoEfficencyFinder::ShowerPerpendicularDensityGradient(std::vector<art::Ptr<recob::SpacePoint> >& sps, const TVector3& ShowerStartPosition, const TVector3& ShowerDirection, double ShowerPerpendicularLength, art::FindManyP<recob::Hit> const& fmh){
+
+  std::cout << "On perpendiular density" << std::endl;
+
+  std::map<int, std::vector<art::Ptr<recob::SpacePoint> > > len_segment_map;
+  double segmentsize = ShowerPerpendicularLength/fNSegments;
+
+  //Split the the spacepoints into segments.
+  for(auto const& sp: sps){
+    
+    //Get the position of the spacepoint
+    TVector3 pos = SpacePointPosition(sp) - ShowerStartPosition;
+    
+    //Get the the projected length
+    double len = pos.Dot(ShowerDirection);
+    
+    //Get the length to the projection
+    TVector3 perp = pos - len*ShowerDirection;
+    double  len_perp = perp.Mag();
+    
+    //Get where the sp should be place.
+    int sg_len = round(len_perp/segmentsize);
+
+    len_segment_map[sg_len].push_back(sp);
+  }
+
+  double PreviousLength = -9999;
+
+  //Loop over the segment and calculate the desnity
+  float sumx=0;
+  float sumy=0;
+  float sumx2=0;
+  float sumy2=0;
+  float sumxy=0;
+  float n=0;
+  //Calculate the density gradent.
+  for(auto& segment: len_segment_map){
+    
+    if(segment.second.size() < 5){continue;}
+
+    //Reorder the Segements
+    OrderShowerHits(segment.second,ShowerStartPosition,ShowerDirection);
+
+    //Calculate the length 
+    int length_iter         = 0.9*segment.second.size();
+    TVector3 EndPosition    = SpacePointPosition(segment.second[length_iter]);
+    TVector3 StartPosition  = SpacePointPosition(segment.second[0]); 
+
+    double StartPoistionLength = (StartPosition - ShowerStartPosition).Dot(ShowerDirection);
+    double EndPoisitionLength  = (EndPosition - ShowerStartPosition).Dot(ShowerDirection);
+
+    double SegmentLength      = TMath::Abs(EndPoisitionLength-StartPoistionLength);
+
+    if(SegmentLength == 0){continue;}
+
+    //Force the length of the segment to be equal or larger than the last one
+    if(SegmentLength < PreviousLength){SegmentLength = PreviousLength;}
+
+    //Calculate the charge in the segement
+    double SegmentCharge = TotalCharge(segment.second,fmh);
+
+    double SegmentEnergy =  SegmentCharge*0.00153631;
+    
+    //Calculate the density 
+    double SegmentDensity = -99999;
+
+    if(segment.first == 0){
+      SegmentDensity = (SegmentEnergy/(SegmentLength*segmentsize/2*segmentsize/2));
+    }
+    else{
+      SegmentDensity = (SegmentEnergy/(SegmentLength*segmentsize*segmentsize));
+    }
+
+    std::cout << "SegmentDensityPerpFinal.size(): " << SegmentDensityPerpFinal.size() << " segment.first: " << segment.first << std::endl;
+    if(segment.first > -1 && segment.first < fNSegments){
+      SegmentDensityPerpFinal.at(segment.first) += SegmentDensity;
+      ++SegmentDensityPerpFinalN.at(segment.first);
+    }
+
+
+    double LengthToSegment = segment.first * segmentsize;
+
+    std::cout << "Charge: " << SegmentCharge << " Length: " << SegmentLength << " Size: " << segmentsize << " numhits: " << segment.second.size() << " Density: " << SegmentDensity << std::endl;
+
+    //Calculate the gradient using regression
+    sumx  += LengthToSegment;
+    sumy  += SegmentDensity;
+    sumx2 += LengthToSegment * LengthToSegment;
+    sumy2 += SegmentDensity*SegmentDensity;
+    sumxy += LengthToSegment * SegmentDensity;
+    ++n;
+    
+    PreviousLength = SegmentLength;
+  }
+
+  if((sumx2 - sumx*sumx) == 0){return 0;}
+  
+  double Densitygradient = (sumxy - sumx*sumy/n)/(sumx2 - sumx*sumx/n);
+  return Densitygradient;
+}
+
+double ana::RecoEfficencyFinder::ShowerDensityGradient(std::vector<art::Ptr<recob::SpacePoint> >& sps, const TVector3& ShowerStartPosition, const TVector3& ShowerDirection, double ShowerLength, art::FindManyP<recob::Hit> const& fmh){
+
+  std::cout << "on gradient" << std::endl;
+
+  std::map<int, std::vector<art::Ptr<recob::SpacePoint> > > len_segment_map;
+  double segmentsize = ShowerLength/fNSegments;
+
+  //Split the the spacepoints into segments.
+  for(auto const& sp: sps){
+    
+    //Get the position of the spacepoint
+    TVector3 pos = SpacePointPosition(sp) - ShowerStartPosition;
+    
+    //Get the the projected length
+    double len = pos.Dot(ShowerDirection);
+    
+    //Get the length to the projection
+    TVector3 perp = pos - len*ShowerDirection;
+    
+    //Get where the sp should be place.
+    int sg_len = round(len/segmentsize);
+    len_segment_map[sg_len].push_back(sp);
+  }
+
+  double PreviousSegmentPendicularLength = -99999;
+
+  //Loop over the segment and calculate the desnity
+  // float sumx=0;
+  // float sumy=0;
+  // float sumx2=0;
+  // float sumy2=0;
+  // float sumxy=0;
+  // float n=0;
+
+  TGraph* graph = new TGraph();
+
+  //Calculate the density gradent.
+  for(auto& segment: len_segment_map){
+
+    //Reorder the Segements
+    OrderPerpendiuclarShowerHits(segment.second,ShowerStartPosition,ShowerDirection);
+
+    if(segment.second.size() < 5){continue;}
+
+    //Calculate the length 
+    int length_iter = 0.9*segment.second.size();
+    TVector3 EndPosition    = SpacePointPosition(segment.second[length_iter]);
+    double len = (ShowerStartPosition - EndPosition).Dot(ShowerDirection);
+
+    //Get the length to the projection                                                            
+    TVector3 perp = (ShowerStartPosition - EndPosition) - len*ShowerDirection;
+    double  SegmentPendicularLength = 2*perp.Mag();
+
+    if(SegmentPendicularLength == 0){continue;}
+
+    if(SegmentPendicularLength < PreviousSegmentPendicularLength){SegmentPendicularLength = PreviousSegmentPendicularLength;} 
+
+    //Calculate the charge in the segement
+    double SegmentCharge = TotalCharge(segment.second,fmh);
+
+    //Calculate the Energy.
+    double SegmentEnergy =  SegmentCharge*0.00153631;
+
+    //Calculate the density 
+    double SegmentDensity = -99999;
+
+    if(segment.first == 0){
+      SegmentDensity = (SegmentEnergy/(SegmentPendicularLength*SegmentPendicularLength*segmentsize/2));
+    }
+    else{
+      SegmentDensity = (SegmentEnergy/(SegmentPendicularLength*SegmentPendicularLength*segmentsize));
+    }
+
+    std::cout << "SegmentDensityFinal.size(): " << SegmentDensityFinal.size() << " segment.first: " << segment.first << std::endl;
+    if(segment.first > -1 && segment.first < fNSegments){
+      SegmentDensityFinal.at(segment.first) += SegmentDensity;
+      ++SegmentDensityFinalN.at(segment.first);
+    }
+
+    double LengthToSegment = segment.first * segmentsize;
+
+    std::cout << "Charge: " << SegmentCharge << " LengthToSegment: " << LengthToSegment << " Perp Length: " << SegmentPendicularLength << " segment.first: " << segment.first << " Size: " << segmentsize << " numhits: " << segment.second.size() << " SegmentDensity: " << SegmentDensity <<  std::endl;
+
+    graph->SetPoint(graph->GetN(),LengthToSegment,SegmentDensity);
+
+    //Calculate the gradient using regression
+    // sumx  += LengthToSegment;
+    // sumy  += SegmentDensity;
+    // sumx2 += LengthToSegment  * LengthToSegment;
+    // sumy2 += SegmentDensity * SegmentDensity;
+    // sumxy += SegmentDensity * LengthToSegment;
+    // ++n;
+    // std::cout << "sumxy: " << sumxy << " sumx*sumy: " << sumx*sumy << "  (sumxy - sumx*sumy): " <<  (sumxy - sumx*sumy) << std::endl;
+    // std::cout << "sumx2: " << sumx2 << " sumx*sumx: " << sumx*sumx << " (sumx2 - sumx*sumx): " << (sumx2 - sumx*sumx) << std::endl; 
+
+    PreviousSegmentPendicularLength = SegmentPendicularLength;
+  }
+
+  if(graph->GetN() == 0){return 0;}
+
+  TF1 *fit = new TF1("fit", "[0] + [1]/x^2");
+  graph->Fit(fit);
+
+  std::cout << "grad: " << fit->GetParameter(1) << std::endl;
+  ++Nfinal;
+  return fit->GetParameter(1);
+
+  // if((sumx2 - sumx*sumx) == 0){return 0;}
+
+  // ++Nfinal;
+  
+  // double Densitygradient = (sumxy - sumx*sumy/n)/(sumx2 - sumx*sumx/n);
+  // return Densitygradient;
+
+}
+
+
+double ana::RecoEfficencyFinder::TotalCharge(const std::vector<art::Ptr<recob::SpacePoint> >&sps, art::FindManyP<recob::Hit> const& fmh){
+  
+  double TotalCharge = 0;
+  for(auto const& sp: sps){
+    double Charge =  SpacePointCharge(sp,fmh);
+    double Time   =  SpacePointTime(sp,fmh);
+    Charge *= TMath::Exp((fDetProp->SamplingRate() * Time ) / (fDetProp->ElectronLifetime()*1e3));
+    TotalCharge += Charge;
+  }
+  return TotalCharge; 
+}
+
+double ana::RecoEfficencyFinder::SpacePointCharge(art::Ptr<recob::SpacePoint> const& sp,
+						  art::FindManyP<recob::Hit> const& fmh) const {
+  
+  double Charge = 0;
+  
+  //Average over the charge even though there is only one
+  std::vector<art::Ptr<recob::Hit> > hits = fmh.at(sp.key());
+  for(auto const& hit: hits){
+    Charge += hit->Integral();
+  }
+  
+  Charge /= (float) hits.size();
+  
+  return Charge;
+}
+
+//Return the spacepoint time.
+double ana::RecoEfficencyFinder::SpacePointTime(art::Ptr<recob::SpacePoint> const& sp,
+						art::FindManyP<recob::Hit> const& fmh) const {
+  
+  double Time = 0;
+
+  //Avergae over the hits
+  std::vector<art::Ptr<recob::Hit> > hits = fmh.at(sp.key());
+  for(auto const& hit: hits){
+    Time += hit->PeakTime();
+  }
+
+  Time /= (float) hits.size();
+  return Time;
+}
+
+
+double ana::RecoEfficencyFinder::SpacePointProjection(const art::Ptr<recob::SpacePoint>&sp,
+					      TVector3 const& vertex, 
+					      TVector3 const& direction) const {
+
+  // Get the position of the spacepoint
+  TVector3 pos = SpacePointPosition(sp) - vertex;
+
+  // Get the the projected length
+  double projLen = pos.Dot(direction);
+
+  return projLen;
+}
+
+TVector3 ana::RecoEfficencyFinder::SpacePointPosition(art::Ptr<recob::SpacePoint> const& sp) const {
+
+  const Double32_t* sp_xyz = sp->XYZ();
+  TVector3 sp_postiion = {sp_xyz[0], sp_xyz[1], sp_xyz[2]};
+  return sp_postiion;
+}
+
+//Assumes dm_21=dm_12=dm_13...=0 
+double ana::RecoEfficencyFinder::SignalOscillationWeight(int& initpdg, int& finpdg, float& lOverE) const {
+
+  //Madness We do not oscillate intrinsic nues :O 
+  if(TMath::Abs(initpdg) == 12){
+    if(initpdg == finpdg){ 
+      return 1;
+    }
+    return 0;
+  }
+
+  //Calculate the OscProbability 
+  double sindm = std::sin(fOscDimensFactor * lOverE/1000 * fdmsq);
+  double sinsqdm = sindm * sindm;
+  
+  double OscProb = 1; 
+
+  if(TMath::Abs(initpdg) == 14){
+    if(TMath::Abs(finpdg) == 14){
+      OscProb = 1-fsinsq2thmumu * sinsqdm;
+    }
+    else{
+      OscProb = fsinsq2thmue * sinsqdm;
+    }
+  }
+  return OscProb;
+}
 
 
 DEFINE_ART_MODULE(ana::RecoEfficencyFinder)

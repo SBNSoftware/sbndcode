@@ -8,8 +8,8 @@ art_make( TOOL_LIBRARIES lardataobj_RecoBase
                          lardata_Utilities
                          nusimdata_SimulationBase
                          larsim_Simulation
-                         nusimdata_SimulationBase
-                         nuevdb_EventDisplayBase
+                         larsim_MCCheater_BackTrackerService_service
+			 nusimdata_SimulationBase
                          ${ART_FRAMEWORK_CORE}
                          ${ART_FRAMEWORK_PRINCIPAL}
                          ${ART_FRAMEWORK_SERVICES_REGISTRY}
@@ -31,6 +31,7 @@ art_make( TOOL_LIBRARIES lardataobj_RecoBase
                          ${CLHEP}
                          ${ROOT_BASIC_LIB_LIST}
                          ${ROOT_MINUIT}
+			 
         )
 
 install_headers()
