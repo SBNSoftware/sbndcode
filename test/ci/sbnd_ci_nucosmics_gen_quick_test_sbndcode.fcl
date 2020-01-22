@@ -20,4 +20,16 @@ physics.producers.generator: {
   # ... and be as strict as possible with random seeds: GENIE is wild!
   Seed: 63213
   
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configF-v1/april07/neutrinoMode"
+
 }
+
+# Override CORSIKA flux file path to be able to access them without a proxy
+physics.producers.corsika.ShowerInputFiles:[
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/p_showers_*.db",
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/He_showers_*.db",
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/N_showers_*.db",
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/Mg_showers_*.db",
+            "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/CORSIKA/standard/Fe_showers_*.db"
+]
