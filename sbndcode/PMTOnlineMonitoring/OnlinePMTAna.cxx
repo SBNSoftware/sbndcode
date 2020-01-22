@@ -7,6 +7,8 @@
 // from cetlib version v3_08_00.
 ////////////////////////////////////////////////////////////////////////
 
+#include <sstream>
+
 #include "OnlinePMTAna.h"
 
 #include "art/Framework/Principal/Handle.h"
@@ -21,7 +23,7 @@ sbnom::OnlinePMTAna::OnlinePMTAna(fhicl::ParameterSet const& p)
 
   // access fhicl config -- get the name of the "tag" of the input
   // PMT waveform data
-  fWaveformTag = p.get<std::string>("waveform_tag", "opdaq"); 
+  fWaveformTag = p.get<std::string>("waveform_tag", "opdaq");
 
   // Get a handle to the "File Service"
   // This is a way of accessing a regular ROOT file
@@ -45,7 +47,9 @@ void sbnom::OnlinePMTAna::analyze(art::Event const& e)
 
   // print out stuff
   for (const raw::OpDetWaveform &wvf: waveforms) {
-    std::cout << "Waveform at channel: " << wvf.ChannelNumber() << " at time: " << wvf.TimeStamp() << " with size: " << wvf.size() << std::endl;;
+    std::cout << "Waveform at channel: " << wvf.ChannelNumber() << " at time: " << wvf.TimeStamp() << " with size: " << wvf.size() << std::endl;
+    std:: ss << "pmt_adc_ch" << wvf.ChannelNumber() << "_t" << wvf.TimeStamp();
+    fOutput->Branch(ss.str(), svf.Waveform())
   }
 
   // save stuff into a (regular) root file
@@ -55,4 +59,5 @@ void sbnom::OnlinePMTAna::analyze(art::Event const& e)
   fNWaveforms = waveforms.size();
   fOutput->Fill();
 }
+
 
