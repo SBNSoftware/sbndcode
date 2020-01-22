@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       SelectionTree
+// Class:       NumuccTree
 // Module Type: analyzer
-// File:        SelectionTree_module.cc
+// File:        NumuccTree_module.cc
 //
 // Tom Brooks (tbrooks@fnal.gov)
 ////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@
 
 namespace sbnd {
 
-  class SelectionTree : public art::EDAnalyzer {
+  class NumuccTree : public art::EDAnalyzer {
   public:
 
     struct BeamTime {
@@ -145,7 +145,7 @@ namespace sbnd {
     using Parameters = art::EDAnalyzer::Table<Config>;
  
     // Constructor: configures module
-    explicit SelectionTree(Parameters const& config);
+    explicit NumuccTree(Parameters const& config);
  
     // Called once, at start of the job
     virtual void beginJob() override;
@@ -164,14 +164,9 @@ namespace sbnd {
     void ResetCosPfpVars();
     void ResetNuMuVars();
 
-    // Apply the proposal selection
-    std::pair<std::pair<bool, bool>, recob::Track> ProposalSelection(std::vector<recob::Track> tracks);
-    // Apply Rhiannon's selection
-    std::pair<std::pair<bool, bool>, recob::Track> RhiSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid);
+    std::pair<std::pair<bool, bool>, recob::Track> TomNumucc(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo);
 
-    std::pair<std::pair<bool, bool>, recob::Track> TomSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo);
-
-    void FillSelectionTree(std::string selection, std::pair<std::pair<bool, bool>, recob::Track> selected, int trueId, std::map<int, simb::MCParticle> particles);
+    void FillNumuccTree(std::string selection, std::pair<std::pair<bool, bool>, recob::Track> selected, int trueId, std::map<int, simb::MCParticle> particles);
 
     double AverageDCA(const recob::Track& track);
 
@@ -203,8 +198,6 @@ namespace sbnd {
     StoppingParticleCosmicIdAlg  fStopTagger;
     detinfo::DetectorProperties const* fDetectorProperties;
 
-    std::vector<std::string> selections {"prop", "rhi", "tom"};
-    
     // Tree (One entry per reconstructed pfp)
     TTree *fPfpTree;
 
@@ -215,38 +208,44 @@ namespace sbnd {
     int nu_pdg;             // Pdg of neutrino if not cosmic
     bool is_cc;             // Is interaction CC if not cosmic
     int nu_int;             // Interaction type of neutrino if not cosmic
-    double vtx_x;
+    double vtx_x;           // True neutrino vertex
     double vtx_y;
     double vtx_z;
-    double p_x;
+    double p_x;             // True neutrino momentum
     double p_y;
     double p_z;
-    double time;
-    bool cosmic_id;         // ID'd as a cosmic
-    int n_tracks;           // Number of reconstructed tracks
-    double nu_energy;       // Energy of true neutrino
+    double energy;          // True energy of neutrino
     bool mu_cont;           // Is true muon contained
     double mu_length;       // True contained length of muon if true numuCC
     double mu_mom;          // True momentum of muon if true numuCC
     double mu_theta;        // True theta of muon if true numuCC
     double mu_phi;          // True phi of muon if true numuCC
-    std::map<std::string, bool> selected;      // Selected as numuCC?
-    std::map<std::string, bool> in_fv;         // In fiducial volume of selection
-    std::map<std::string, int> true_pdg;       // PDG of particle prop_true as muon
-    std::map<std::string, bool> true_cont;     // Is selected true particle contained 
-    std::map<std::string, double> true_length; // True contained length of selected particle
-    std::map<std::string, double> true_mom;    // True momentum of selected particle
-    std::map<std::string, double> true_theta;  // True theta of selected particle
-    std::map<std::string, double> true_phi;    // True phi of selected particle
-    std::map<std::string, bool> reco_cont;     // Is reconstructed track contained
-    std::map<std::string, double> reco_length; // Selected muon reco length
-    std::map<std::string, double> reco_mom;    // Selected muon reco momentum
-    std::map<std::string, double> reco_theta;  // Selected muon reco theta
-    std::map<std::string, double> reco_phi;    // Selected muon reco phi
-    std::map<std::string, double> reco_nu_e;   // Reconstructed neutrino energy assuming nu_mu CC
-    std::map<std::string, double> reco_vtx_x;  // Reconstructed neutrino vertex X
-    std::map<std::string, double> reco_vtx_y;  // Reconstructed neutrino vertex Y
-    std::map<std::string, double> reco_vtx_z;  // Reconstructed neutrino vertex Z
+    double time;            // True time of interaction
+    bool pandora_cosmic     // ID'd as unambiguous cosmic by pandora
+    bool cosmic_id;         // ID'd as a cosmic
+    int n_tracks;           // Number of reconstructed tracks in pfp
+    bool longest_cont;      // Is longest track contained
+    double longest_length;  // Reco contained length of longest track
+    double longest_mom;     // Reco momentum of longest track
+    double longest_theta;   // Reco theta of longest track
+    double longest_phi;     // Reco phi of longest track
+    bool selected;          // Selected as numuCC?
+    bool in_fv;             // In fiducial volume of selection
+    int true_pdg;           // PDG of particle prop_true as muon
+    bool true_cont;         // Is selected true particle contained 
+    double true_length;     // True contained length of selected particle
+    double true_mom;        // True momentum of selected particle
+    double true_theta;      // True theta of selected particle
+    double true_phi;        // True phi of selected particle
+    bool reco_cont;         // Is reconstructed track contained
+    double reco_length;     // Selected muon reco length
+    double reco_mom;        // Selected muon reco momentum
+    double reco_theta;      // Selected muon reco theta
+    double reco_phi;        // Selected muon reco phi
+    double reco_nu_e;       // Reconstructed neutrino energy assuming nu_mu CC
+    double reco_vtx_x;      // Reconstructed neutrino vertex X
+    double reco_vtx_y;      // Reconstructed neutrino vertex Y
+    double reco_vtx_z;      // Reconstructed neutrino vertex Z
 
     // Tree (one entry per numu CC)
     TTree *fNuMuTree;
@@ -265,31 +264,16 @@ namespace sbnd {
     double nu_mu_phi;
     bool nu_mu_cont;
 
-    TTree *fCosPfpTree;
-    bool cos_is_cosmic;         // True origin of PFP is cosmic
-    bool cos_is_dirt;           // True origin of PFP is dirt interaction
-    bool cos_is_nu;             // True origin of PFP is nu in AV
-    int cos_nu_pdg;             // Pdg of neutrino if not cosmic
-    bool cos_is_cc;             // Is interaction CC if not cosmic
-    double cos_vtx_x;
-    double cos_vtx_y;
-    double cos_vtx_z;
-    bool cos_cont;
-    double cos_mom;
-    double cos_length;
-    double cos_theta;
-    double cos_phi;
-
     TTree *fPotTree;
     double pot;
 
     void GetPFParticleIdMap(const PFParticleHandle &pfParticleHandle, PFParticleIdMap &pfParticleMap);
 
-  }; // class SelectionTree
+  }; // class NumuccTree
 
 
   // Constructor
-  SelectionTree::SelectionTree(Parameters const& config)
+  NumuccTree::NumuccTree(Parameters const& config)
     : EDAnalyzer(config)
     , fSimModuleLabel       (config().SimModuleLabel())
     , fGenModuleLabel       (config().GenModuleLabel())
@@ -306,10 +290,10 @@ namespace sbnd {
     , fStopTagger           (config().SPTagAlg())
   {
 
-  } // SelectionTree()
+  } // NumuccTree()
 
 
-  void SelectionTree::beginJob()
+  void NumuccTree::beginJob()
   {
 
     fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
@@ -377,44 +361,28 @@ namespace sbnd {
     fNuMuTree->Branch("nu_mu_phi", &nu_mu_phi);
     fNuMuTree->Branch("nu_mu_cont", &nu_mu_cont);
 
-    fCosPfpTree = tfs->make<TTree>("cospfps", "cospfps");
-    fCosPfpTree->Branch("cos_is_cosmic", &cos_is_cosmic);
-    fCosPfpTree->Branch("cos_is_dirt",   &cos_is_dirt);
-    fCosPfpTree->Branch("cos_is_nu",     &cos_is_nu);
-    fCosPfpTree->Branch("cos_nu_pdg",    &cos_nu_pdg);
-    fCosPfpTree->Branch("cos_is_cc",     &cos_is_cc);
-    fCosPfpTree->Branch("cos_vtx_x",     &cos_vtx_x);
-    fCosPfpTree->Branch("cos_vtx_y",     &cos_vtx_y);
-    fCosPfpTree->Branch("cos_vtx_z",     &cos_vtx_z);
-    fCosPfpTree->Branch("cos_cont",  &cos_cont);
-    fCosPfpTree->Branch("cos_mom",  &cos_mom);
-    fCosPfpTree->Branch("cos_length",  &cos_length);
-    fCosPfpTree->Branch("cos_theta",  &cos_theta);
-    fCosPfpTree->Branch("cos_phi",  &cos_phi);
-
     fPotTree = tfs->make<TTree>("pots", "pots");
     fPotTree->Branch("pot",  &pot);
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- Cosmic ID Ana Module -------------------"<<std::endl;
 
-  }// SelectionTree::beginJob()
+  }// NumuccTree::beginJob()
 
   // Called for every sub run
-  void SelectionTree::beginSubRun(const art::SubRun& subrun){
+  void NumuccTree::beginSubRun(const art::SubRun& subrun){
 
     art::Handle< sumdata::POTSummary > potHandle;
-    if(subrun.getByLabel(fGenModuleLabel, potHandle)){
-      const sumdata::POTSummary& potSum = (*potHandle);
-      pot = potSum.totpot;
-    }
+    subrun.getByLabel(fGenModuleLabel, potHandle);
+    const sumdata::POTSummary& potSum = (*potHandle);
+    pot = potSum.totpot;
 
     fPotTree->Fill();
 
     return;
   }
 
-  void SelectionTree::analyze(const art::Event& event)
+  void NumuccTree::analyze(const art::Event& event)
   {
 
     // Fetch basic event info
@@ -427,25 +395,6 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                          GETTING PRODUCTS
     //----------------------------------------------------------------------------------------------------------
-
-    // Get truth info and matching
-    art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
-    // Retrieve all the truth info in the events
-    auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
-    // Put them in a map for easier access
-    std::map<int, simb::MCParticle> particles;
-    std::vector<simb::MCParticle> parts;
-    for (auto const& particle: (*particleHandle)){
-      // Store particle
-      int partId = particle.TrackId();
-      particles[partId] = particle;
-      parts.push_back(particle);
-    }
-
-    art::Handle<std::vector<simb::MCTruth>> genHandle;
-    std::vector<art::Ptr<simb::MCTruth>> mctruthList;
-    if(event.getByLabel(fGenModuleLabel, genHandle)) art::fill_ptr_vector(mctruthList, genHandle);
-
 
     // Get PFParticles from pandora
     PFParticleHandle pfParticleHandle;
@@ -472,73 +421,9 @@ namespace sbnd {
     // Get shower to hit associations
     art::FindManyP<recob::Hit> findManyHitsShower(showerHandle, event, fShowerModuleLabel);
 
+    
     //----------------------------------------------------------------------------------------------------------
-    //                                      FILLING THE TRUTH TREE
-    //----------------------------------------------------------------------------------------------------------
-
-    for (size_t i = 0; i < mctruthList.size(); i++){
-
-      // Get the pointer to the MCTruth object
-      art::Ptr<simb::MCTruth> truth = mctruthList.at(i);
-
-      if(truth->Origin() != simb::kBeamNeutrino) continue;
-
-      // Push back all unique neutrino energies
-      bool numucc = false;
-      if(truth->GetNeutrino().CCNC() == simb::kCC && std::abs(truth->GetNeutrino().Nu().PdgCode()) == 14) numucc = true;
-
-      // Get truth info if numuCC in AV
-      if(!numucc) continue;
-      geo::Point_t vtx {truth->GetNeutrino().Nu().Vx(), 
-                        truth->GetNeutrino().Nu().Vy(), 
-                        truth->GetNeutrino().Nu().Vz()};
-      if(!fTpcGeo.InFiducial(vtx, 0.)) continue;
-
-      ResetNuMuVars();
-
-      nu_vtx_x = vtx.X();
-      nu_vtx_y = vtx.Y();
-      nu_vtx_z = vtx.Z();
-      nu_p_x = truth->GetNeutrino().Nu().Px();
-      nu_p_y = truth->GetNeutrino().Nu().Py();
-      nu_p_z = truth->GetNeutrino().Nu().Pz();
-      nu_nu_energy = truth->GetNeutrino().Nu().E();
-
-      // Get the primary muon
-      std::vector<const simb::MCParticle*> parts = pi_serv->MCTruthToParticles_Ps(truth);
-      for(auto const& part : parts){
-        if(std::abs(part->PdgCode()) != 13) continue;
-        if(part->Mother() != 0) continue;
-        if(part->StatusCode() != 1) continue;
-
-        nu_mu_length = fTpcGeo.TpcLength(*part);
-        nu_mu_mom = part->P();
-        TVector3 start(part->Vx(), part->Vy(), part->Vz());
-        TVector3 end(part->EndX(), part->EndY(), part->EndZ());
-        nu_mu_theta = (end-start).Theta();
-        nu_mu_phi = (end-start).Phi();
-        nu_mu_cont = fTpcGeo.IsContained(*part);
-      }
-
-      fNuMuTree->Fill();
-    }
-
-    //----------------------------------------------------------------------------------------------------------
-    //                                      FAKE PDS RECONSTRUCTION
-    //----------------------------------------------------------------------------------------------------------
-/*
-    // Create fake flashes in each tpc
-    std::pair<std::vector<double>, std::vector<double>> fakeFlashes = CosmicIdUtils::FakeTpcFlashes(parts);
-    std::vector<double> fakeTpc0Flashes = fakeFlashes.first;
-    std::vector<double> fakeTpc1Flashes = fakeFlashes.second;
-    bool tpc0BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc0Flashes, fBeamTimeMin, fBeamTimeMax);
-    bool tpc1BeamFlash = CosmicIdUtils::BeamFlash(fakeTpc1Flashes, fBeamTimeMin, fBeamTimeMax);
-
-    // If there are no flashes in time with the beam then ignore the event
-    if(!tpc0BeamFlash && !tpc1BeamFlash) return;
-*/
-    //----------------------------------------------------------------------------------------------------------
-    //                                     FILLING THE SELECTION TREE
+    //                                     NUMUCC SELECTION
     //----------------------------------------------------------------------------------------------------------
 
     //Loop over the pfparticle map
@@ -559,12 +444,22 @@ namespace sbnd {
       ResetPfpVars();
 
       std::vector<recob::Track> nuTracks;
+      std::vector<art::Ptr<recob::Hit>> all_hits;
       std::map<int, double> track_energies;
       double shower_energy = 0;
 
+      const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pParticle.key()));
+      if(associatedTracks.size() == 1){ 
+        recob::Track tpcTrack = *associatedTracks.front();
+        nuTracks.push_back(tpcTrack);
+
+        // Truth match the pfps using all hits associated to all tracks associated to neutrino pfp
+        std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+        all_hits.insert(all_hits.end(), hits.begin(), hits.end());
+      }
+
       // Loop over daughters of pfparticle and do some truth matching
       // Assign labels based on the particle constributing the most hits
-      std::vector<art::Ptr<recob::Hit>> all_hits;
       for (const size_t daughterId : pParticle->Daughters()){
 
         // Get tracks associated with daughter
@@ -657,114 +552,35 @@ namespace sbnd {
         }
 
       }
-      //else if(truth->Origin() == simb::kCosmicRay) is_cosmic = true;
-      else is_cosmic = true;
+      else if(truth->Origin() == simb::kCosmicRay) is_cosmic = true;
 
       n_tracks = nuTracks.size();
 
-      // Skip any PFPs without any tracks in them // TODO check how many numuCC this misses
+      // Skip any PFPs without any tracks in them
       if(n_tracks == 0) continue;
 
       // Does pfp look like a cosmic?
-      //cosmic_id = cosIdAlg.CosmicId(*pParticle, pfParticleMap, event, fakeTpc0Flashes, fakeTpc1Flashes);
       cosmic_id = cosIdAlg.CosmicId(*pParticle, pfParticleMap, event);
 
       // -------------------------------------- APPLY SELECTIONS ---------------------------------------
-      for(auto const& sel : selections){
-        if(sel == "prop"){
-          std::pair<std::pair<bool, bool>, recob::Track> sel_track = ProposalSelection(nuTracks);
-          std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
-          int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
-          FillSelectionTree(sel, sel_track, trueId, particles);
-          reco_nu_e[sel] = NeutrinoEnergy(track_energies, shower_energy, sel_track.second.ID());
-        }
-        if(sel == "rhi"){
-          std::pair<std::pair<bool, bool>, recob::Track> sel_track = RhiSelection(nuTracks, findManyPid);
-          std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
-          int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
-          FillSelectionTree(sel, sel_track, trueId, particles);
-          reco_nu_e[sel] = NeutrinoEnergy(track_energies, shower_energy, sel_track.second.ID());
-        } 
-        if(sel == "tom"){
-          std::pair<std::pair<bool, bool>, recob::Track> sel_track = TomSelection(nuTracks, findManyPid, findManyCalo);
-          std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
-          int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
-          FillSelectionTree(sel, sel_track, trueId, particles);
-          reco_nu_e[sel] = NeutrinoEnergy(track_energies, shower_energy, sel_track.second.ID());
-        } 
-      }
+      std::pair<std::pair<bool, bool>, recob::Track> sel_track = TomNumucc(nuTracks, findManyPid, findManyCalo);
+      std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(sel_track.second.ID());
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      FillNumuccTree(sel, sel_track, trueId, particles);
+      reco_nu_e[sel] = NeutrinoEnergy(track_energies, shower_energy, sel_track.second.ID());
 
       fPfpTree->Fill();
 
     }  
 
-    // Fill small tree of tracks identified as cosmics
-    for (PFParticleIdMap::const_iterator it = pfParticleMap.begin(); it != pfParticleMap.end(); ++it){
-
-      const art::Ptr<recob::PFParticle> pParticle(it->second);
-      // Only look for primary particles
-      if (!pParticle->IsPrimary()) continue;
-      // Check if this particle is identified as the neutrino
-      const int pdg(pParticle->PdgCode());
-      const bool isNeutrino(std::abs(pdg) == pandora::NU_E || 
-                            std::abs(pdg) == pandora::NU_MU || 
-                            std::abs(pdg) == pandora::NU_TAU);
-      //Find neutrino pfparticle
-      if(isNeutrino) continue;
-
-      ResetCosPfpVars();
-
-      const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pParticle.key()));
-      if(associatedTracks.size() != 1) continue; //TODO check how often this occurs
-
-      // Get the first associated track
-      recob::Track tpcTrack = *associatedTracks.front();
-      cos_cont = fTpcGeo.InFiducial(tpcTrack.End(), 1.5);
-      cos_length = tpcTrack.Length();
-      cos_mom = 0.;
-      if(cos_cont){
-        cos_mom = fRangeFitter.GetTrackMomentum(cos_length, 13);
-      }
-      else{
-        recob::MCSFitResult mcsResult = fMcsFitter.fitMcs(tpcTrack);
-        cos_mom = mcsResult.bestMomentum();
-      }
-      cos_theta = tpcTrack.Theta();
-      cos_phi = tpcTrack.Phi();
-
-      // Truth match the pfps using all hits associated to all tracks associated to neutrino pfp
-      std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
-      // Skip if no corresponding true particle
-      if(particles.find(trueId) == particles.end()) continue;
-      // Get the origin of the particle
-      art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(trueId);
-      if(truth->Origin() == simb::kBeamNeutrino){
-        // Save neutrino interaction info
-        cos_nu_pdg = truth->GetNeutrino().Nu().PdgCode();
-        if(truth->GetNeutrino().CCNC() == simb::kCC) cos_is_cc = true;
-
-        // If neutrino vertex is not inside the TPC then call it a dirt particle
-        geo::Point_t vtx {truth->GetNeutrino().Nu().Vx(), 
-                          truth->GetNeutrino().Nu().Vy(), 
-                          truth->GetNeutrino().Nu().Vz()};
-        if(!fTpcGeo.InFiducial(vtx, 0, 0)) cos_is_dirt = true;
-        else cos_is_nu = true;
-      }
-      //else if(truth->Origin() == simb::kCosmicRay) cos_is_cosmic = true;
-      else cos_is_cosmic = true;
-
-      fCosPfpTree->Fill();
-    }
-    
-  } // SelectionTree::analyze()
+  } // NumuccTree::analyze()
 
 
-  void SelectionTree::endJob(){
+  void NumuccTree::endJob(){
 
-  } // SelectionTree::endJob()
+  } // NumuccTree::endJob()
 
-  void SelectionTree::GetPFParticleIdMap(const PFParticleHandle &pfParticleHandle, PFParticleIdMap &pfParticleMap){
+  void NumuccTree::GetPFParticleIdMap(const PFParticleHandle &pfParticleHandle, PFParticleIdMap &pfParticleMap){
       for (unsigned int i = 0; i < pfParticleHandle->size(); ++i){
           const art::Ptr<recob::PFParticle> pParticle(pfParticleHandle, i);
           if (!pfParticleMap.insert(PFParticleIdMap::value_type(pParticle->Self(), pParticle)).second){
@@ -774,7 +590,7 @@ namespace sbnd {
   }
 
   // Reset the tree variables
-  void SelectionTree::ResetPfpVars(){
+  void NumuccTree::ResetPfpVars(){
     is_cosmic = false;
     is_dirt = false;
     is_nu = false;
@@ -816,7 +632,7 @@ namespace sbnd {
     }
   }
 
-  void SelectionTree::ResetNuMuVars(){
+  void NumuccTree::ResetNuMuVars(){
     nu_vtx_x = -99999;
     nu_vtx_y = -99999;
     nu_vtx_z = -99999;
@@ -830,151 +646,8 @@ namespace sbnd {
     nu_mu_cont = false;
   }
 
-
-  void SelectionTree::ResetCosPfpVars(){
-    cos_is_cosmic = false;
-    cos_is_dirt = false;
-    cos_is_nu = false;
-    cos_nu_pdg = -99999;
-    cos_is_cc = false;
-    cos_vtx_x = -99999;
-    cos_vtx_y = -99999;
-    cos_vtx_z = -99999;
-    cos_cont = false;
-    cos_mom = -99999;
-    cos_length = -99999;
-    cos_theta = -99999;
-    cos_phi = -99999;
-  }
-
-  // Apply the proposal selection
-  std::pair<std::pair<bool, bool>, recob::Track> SelectionTree::ProposalSelection(std::vector<recob::Track> tracks){
-
-    bool is_selected = false;
-
-    // Get the longest track and ID as muon
-    std::sort(tracks.begin(), tracks.end(), [](auto& left, auto& right){
-              return left.Length() > right.Length();});
-    recob::Track track = tracks[0];
-    double length = track.Length();
-
-    // Check if the track is contained
-    bool track_contained = fTpcGeo.InFiducial(track.End(), 1.5);
-
-    // Apply a fiducial volume cut to the vertex (start of track) TODO CPA cut
-    bool in_fiducial = fTpcGeo.InFiducial(track.Start(), 16.5, 15., 15., 16.5, 15., 80.);
-
-    // Apply selection criteria
-    if(track_contained){
-      if(length > 50.) is_selected = true;
-    }
-    else{
-      if(length > 100.) is_selected = true;
-    }
-
-    return std::make_pair(std::make_pair(is_selected, in_fiducial), track);
-  }
-
-  // Apply rhiannon's selection
-  std::pair<std::pair<bool, bool>, recob::Track> SelectionTree::RhiSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid){
-
-    bool is_selected = false;
-    bool has_candidate = false;
-    recob::Track candidate = tracks[0];
-
-    // Loop over tracks and count how many escape
-    int n_escape = 0;
-    double longest_escape = 0;
-    int longest_i = -99999;
-    double longest_first = 0;
-    double longest_second = 0;
-    for(size_t i = 0; i < tracks.size(); i++){
-      if(!fTpcGeo.InFiducial(tracks[i].End(), 1.5)){ //TODO containment def 
-        n_escape++;
-        //double length = fTpcGeo.LengthInFiducial(tracks[i], 10, 20, 10, 10, 20, 10);
-        double length = tracks[i].Length();
-        if(length > longest_escape){ 
-          longest_escape = length;
-          longest_i = i;
-        }
-      }
-
-      if(tracks[i].Length() > longest_first){
-        longest_second = longest_first;
-        longest_first = tracks[i].Length();
-      }
-      else if(tracks[i].Length() > longest_second){
-        longest_second = tracks[i].Length();
-      }
-    }
-
-    // Case 1: 1 escaping track
-    if(n_escape == 1){
-      // If track longer than 100 cm then ID as muon
-      // If more than 1 escaping track > 100 cm then choose longest
-      if(longest_escape > 100){
-        has_candidate = true;
-        candidate = tracks[longest_i];
-      }
-      // Else don't select ? TODO what if long contained track but short exiting one
-    }
-
-    // Case 2: everything else
-    else if(n_escape == 0){
-      std::vector<std::pair<recob::Track, double>> candidates;
-      for(auto const& track : tracks){
-        std::vector<const anab::ParticleID*> pids = fmpid.at(track.ID());
-        bool is_proton = false;
-        double muon_chi = 99999;
-        for(size_t i = 0; i < pids.size(); i++){
-          // Only use the collection plane
-          if(pids[i]->PlaneID().Plane != 2) continue;
-          // Run proton chi^2 to cut out stopping protons
-          if(pids[i]->Chi2Proton() < 80){ 
-            is_proton = true;
-            continue;
-          }
-          // Muon candidates = longest by 1.5x and any with low muon chi^2
-          muon_chi = pids[i]->Chi2Muon();
-        }
-        if(!is_proton && (muon_chi<16 || track.Length() >= 1.5*longest_second)) 
-          candidates.push_back(std::make_pair(track, muon_chi));
-      }
-      // 0 candidates = don't select
-      // 1 candidate = select as muon
-      if(candidates.size() == 1){
-        has_candidate = true;
-        candidate = candidates[0].first;
-      }
-      // >1 candidate = Select longest if it was a candidate or track with lowest muon chi^2
-      else if(candidates.size() > 1){
-        // Sort by length
-        std::sort(candidates.begin(), candidates.end(), [](auto& left, auto& right){
-              return left.first.Length() > right.first.Length();});
-        if(candidates[0].first.Length() >= 1.5*longest_second){
-          has_candidate = true;
-          candidate = candidates[0].first;
-        }
-        else{
-          // Sort by muon chi2
-          std::sort(candidates.begin(), candidates.end(), [](auto& left, auto& right){
-                return left.second < right.second;});
-          has_candidate = true;
-          candidate = candidates[0].first;
-        }
-      }
-    }
-
-    // Check vertex (start of muon candidate) in FV
-    // Fiducial definitions 8.25 cm from X (inc CPA), 15 cm from Y and front, 85 cm from back
-    bool in_fiducial = fTpcGeo.InFiducial(candidate.Start(), 8.25, 15., 15., 8.25, 15., 85., 8.25);
-    if(has_candidate) is_selected = true;
-
-    return std::make_pair(std::make_pair(is_selected, in_fiducial), candidate);
-  }
-
   // Apply my selection
-  std::pair<std::pair<bool, bool>, recob::Track> SelectionTree::TomSelection(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo){
+  std::pair<std::pair<bool, bool>, recob::Track> NumuccTree::TomNumucc(std::vector<recob::Track> tracks, art::FindMany<anab::ParticleID> fmpid, art::FindManyP<anab::Calorimetry> fmcalo){
 
     bool is_selected = false;
     bool has_candidate = false;
@@ -1084,7 +757,7 @@ namespace sbnd {
 
   //------------------------------------------------------------------------------------------------------------------------------------------
     
-  void SelectionTree::FillSelectionTree(std::string selection, std::pair<std::pair<bool, bool>, recob::Track> sel_track, int trueId, std::map<int, simb::MCParticle> particles){
+  void NumuccTree::FillNumuccTree(std::string selection, std::pair<std::pair<bool, bool>, recob::Track> sel_track, int trueId, std::map<int, simb::MCParticle> particles){
 
     selected[selection] = sel_track.first.first;
     in_fv[selection] = sel_track.first.second;
@@ -1120,7 +793,7 @@ namespace sbnd {
 
   }
 
- double SelectionTree::AverageDCA(const recob::Track& track){
+ double NumuccTree::AverageDCA(const recob::Track& track){
 
     TVector3 start = track.Vertex<TVector3>();
     TVector3 end = track.End<TVector3>();
@@ -1137,7 +810,7 @@ namespace sbnd {
     return aveDCA/usedPts;
   } 
 
-  double SelectionTree::HitEnergy(art::Ptr<recob::Hit> hit){
+  double NumuccTree::HitEnergy(art::Ptr<recob::Hit> hit){
 
     double ADCtoEl = 0.02354; //FIXME from calorimetry_sbnd.fcl
     double time = hit->PeakTime();
@@ -1151,7 +824,7 @@ namespace sbnd {
     
   }
 
-  double SelectionTree::NeutrinoEnergy(std::map<int, double> track_energies, double shower_energy, int id){
+  double NumuccTree::NeutrinoEnergy(std::map<int, double> track_energies, double shower_energy, int id){
     double nu_e = 0;
     if(shower_energy>0 && shower_energy<5) nu_e = shower_energy;
     for(auto const& kv : track_energies){
@@ -1160,6 +833,6 @@ namespace sbnd {
     return nu_e;
   }
 
-  DEFINE_ART_MODULE(SelectionTree)
+  DEFINE_ART_MODULE(NumuccTree)
 } // namespace sbnd
 

@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+sbnd_larg4dirtfilter:
+{
+  module_type:     "LArG4DirtFilter" 
+
+  LArG4ModuleName: "largeant" # Name of Geant4 producer module
+  EnergyDeposit:   20         # Minimum energy deposit in TPC for trigger [MeV]
+  RemoveTpcOnly:   true       # Remove events with only neutrinos with vertex in TPC
+  TpcBuffer:       10         # Buffer around TPC to remove events within [cm]
+}
+
+END_PROLOG

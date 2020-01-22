@@ -33,6 +33,7 @@ standard_cosmicidalg:
     CHTagAlg: @local::sbnd_crthitcosmicidalg
     CTTagAlg: @local::sbnd_crttrackcosmicidalg
     PTTagAlg: @local::sbnd_pandorat0cosmicidalg
+    GeoTagAlg: @local::sbnd_geometrycosmicidalg
     FlashAlg: @local::sbnd_flashmatchalg
 
     BeamTimeLimits: @local::sbnd_beamtime

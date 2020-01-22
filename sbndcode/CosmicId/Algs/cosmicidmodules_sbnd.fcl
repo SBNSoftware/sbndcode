@@ -6,8 +6,8 @@ BEGIN_PROLOG
 # Cut limits in time around where beam is on.
 sbnd_beamtime:
 {
-    BeamTimeMin: -0.4 # Minimum time to cut for t0 tagged tracks [us]
-    BeamTimeMax: 2.0 # Maximum time to cut for t0 tagged tracks [us]
+    BeamTimeMin: 0 #-0.4 Minimum time to cut for t0 tagged tracks [us]
+    BeamTimeMax: 1.6 #2.0 Maximum time to cut for t0 tagged tracks [us]
 }
 
 # Fiducial volumes used for removing particles which enter and exit
@@ -24,12 +24,12 @@ sbnd_fiducialvolume:
 # Containment volumes used for determining if a track exits
 sbnd_containmentvolume:
 {
-    MinX: 5. # Distance from smallest X face [cm]
-    MinY: 5.
-    MinZ: 5.
-    MaxX: 5.
-    MaxY: 5.
-    MaxZ: 5.
+    MinX: 1.5 # Distance from smallest X face [cm]
+    MinY: 1.5
+    MinZ: 1.5
+    MaxX: 1.5
+    MaxY: 1.5
+    MaxZ: 1.5
 }
 
 sbnd_apacrosscosmicidalg:
@@ -37,6 +37,11 @@ sbnd_apacrosscosmicidalg:
     DistanceLimit:  1.1 #2.# Max distance between track end and APA for successful match[cm]
     MaxApaDistance: 5. #10. # Distance from Apa to not try to shift track [cm]
     BeamTimeLimits: @local::sbnd_beamtime
+}
+
+sbnd_geometrycosmicidalg:
+{
+    PeLimit:  0.2 #2.# Max distance between track end and APA for successful match[cm]
 }
 
 sbnd_cpacrosscosmicidalg:
@@ -53,7 +58,7 @@ sbnd_crthitcosmicidalg:
     T0Alg:              @local::standard_crtt0matchingalg
     BeamTimeLimits:     @local::sbnd_beamtime
 }
-sbnd_crthitcosmicidalg.T0Alg.DistanceLimit: 35. #35.
+sbnd_crthitcosmicidalg.T0Alg.DistanceLimit: 20. #35.
 
 sbnd_crttrackcosmicidalg:
 {
@@ -86,7 +91,7 @@ sbnd_flashmatchalg:
 {
     SpacePointLabel: "pandora"
     PandoraLabel: "pandora"
-    InputFile: "/sbnd/data/fm_metrics_sbnd.root"
+    InputFile: "FlashMatch/fm_metrics_sbnd.root"
     BeamFlashMin: -0.2 #[us]
     BeamFlashMax: 2.0 #[us]
     LightWindowMin: -0.01 #[us]

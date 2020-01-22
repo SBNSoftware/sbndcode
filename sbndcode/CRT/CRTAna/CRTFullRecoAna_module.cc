@@ -232,9 +232,9 @@ namespace sbnd {
       TString phiDiffName = Form("TrackPhiDiff%s", trackType[ti].c_str());
       hTrackPhiDiff[ti] = tfs->make<TH1D>(phiDiffName, "", 50, -0.2, 0.2);
       TString thetaName = Form("TrackTheta%s", trackType[ti].c_str());
-      hTrackTheta[ti] = tfs->make<TH2D>(thetaName, "", 20, 0, 180, 20, 0, 180);
+      hTrackTheta[ti] = tfs->make<TH2D>(thetaName, "", 40, 0, 180, 40, 0, 180);
       TString phiName = Form("TrackPhi%s", trackType[ti].c_str());
-      hTrackPhi[ti] = tfs->make<TH2D>(phiName, "", 20, -180, 0, 20, -180, 0);
+      hTrackPhi[ti] = tfs->make<TH2D>(phiName, "", 40, -180, 0, 40, -180, 0);
     }
 
     for(size_t ti = 0; ti < t0Type.size(); ti++){

@@ -140,6 +140,7 @@ namespace sbnd {
     TTree *fEventTree;
 
     int evt;
+    bool trigger;
 
   }; // class CosmicTree
 
@@ -196,6 +197,7 @@ namespace sbnd {
 
     fEventTree = tfs->make<TTree>("events", "events");
     fEventTree->Branch("evt",  &evt);
+    fEventTree->Branch("trigger",  &trigger);
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- PDS Ana Module -------------------"<<std::endl;
@@ -214,7 +216,7 @@ namespace sbnd {
     }
 
     evt = event.id().event();
-    fEventTree->Fill();
+    trigger = false;
 
     //----------------------------------------------------------------------------------------------------------
     //                                          GETTING PRODUCTS
@@ -233,28 +235,38 @@ namespace sbnd {
     //                                        COSMIC MUON ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
-    for (auto const& particle: (*particleHandle)){
-      // Only interested in muons
-      if(!(std::abs(particle.PdgCode()) == 13)) continue;
-      // Only want primary particles
-      if(particle.Mother() != 0) continue;
-      // Only want stable particles (post fsi)
-      if(particle.StatusCode() != 1) continue;
-      // Only want particles that are inside the TPC
-      if(!fTpcGeo.InVolume(particle)) continue;
+    double edep_tpc = 0;
+    //std::cout<<(*particleHandle).size()<<"\n";
 
+    for (auto const& particle: (*particleHandle)){
       ResetVars();
 
       int id = particle.TrackId();
       art::Ptr<simb::MCTruth> truth = pi_serv->TrackIdToMCTruth_P(id);
-      if(truth->Origin() != simb::kCosmicRay) continue;
+      if(truth->Origin() == simb::kBeamNeutrino) continue;
+      //std::cout<<"Is a cosmic\n";
 
-      pdg = particle.PdgCode();
+      // Only want stable particles (post fsi)
+      if(particle.StatusCode() != 1) continue;
+      pdg = std::abs(particle.PdgCode());
+      if(!(pdg == 11 || pdg == 13 || pdg == 211 || pdg == 2212 || pdg == 321)) continue;
+
+      double this_edep = fTpcGeo.EDep(particle);
+      if(this_edep == 0) continue;
+      time = particle.T(); //[ns]
+      if(time >= 0 && time <= 1600){ 
+        edep_tpc += this_edep;
+      }
+
+      // Only interested in muons
+      if(!(std::abs(particle.PdgCode()) == 13)) continue;
+      // Only want primary particles
+      //if(particle.Mother() != 0) continue;
+      // Only want particles that are inside the TPC
+      if(!fTpcGeo.InVolume(particle)) continue;
 
       cross_apa = fTpcGeo.CrossesApa(particle);
       cross_cpa = fTpcGeo.CrossesCpa(particle);
-
-      time = particle.T(); //[ns]
 
       vtx_x = particle.Vx();
       vtx_y = particle.Vy();
@@ -298,6 +310,9 @@ namespace sbnd {
       fParticleTree->Fill();
     }
 
+    if(edep_tpc > 0.02) trigger = true;
+    fEventTree->Fill();
+
   } // CosmicTree::analyze()
 
 
@@ -335,6 +350,10 @@ namespace sbnd {
     theta = -99999;
     phi = -99999;
     
+  }
+
+  void CosmicTree::ResetEventVars(){
+    trigger = false;
   }
 
   DEFINE_ART_MODULE(CosmicTree)

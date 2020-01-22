@@ -189,6 +189,10 @@ namespace sbnd{
         Name("PTTagAlg"),
       };
 
+      fhicl::Table<GeometryCosmicIdAlg::Config> GeoTagAlg {
+        Name("GeoTagAlg"),
+      };
+
       fhicl::Table<FlashMatchAlg::Config> FlashAlg {
         Name("FlashAlg"),
       };
@@ -232,6 +236,7 @@ namespace sbnd{
     CrtHitCosmicIdAlg CrtHitAlg() const {return chTag;}
     CrtTrackCosmicIdAlg CrtTrackAlg() const {return ctTag;}
     ApaCrossCosmicIdAlg ApaAlg() const {return acTag;}
+    FlashMatchAlg FlashAlg() const {return fFlashAlg;}
 
   private:
 

@@ -380,7 +380,7 @@ namespace sbnd {
     }
 
     //----------------------------------------------------------------------------------------------------------
-    //                                        FLASH RECONSTRUCTION
+    //                                        OPTICAL RECONSTRUCTION
     //----------------------------------------------------------------------------------------------------------
 
     // get flash time
@@ -398,7 +398,45 @@ namespace sbnd {
     for (size_t it=0; it<fGeometryService->NTPC(); ++it) {
       opvars.push_back(fFlashAlg.OpVariables(ophs, it, beam_flash.first, beam_flash.second));
     }
+
+    // Optical flash reconstruction for numuCC
+    std::vector<recob::OpHit> ophits_tpc0;
+    std::vector<recob::OpHit> ophits_tpc1;
+    for(auto const& ophit : (*pdsHandle)){
+      // Only look at PMTs
+      std::string od = fChannelMap.pdName(ophit.OpChannel());
+      if( od != "pmt" ) continue;
+      // Work out what TPC detector is in odd = TPC1, even = TPC0
+      double PMTxyz[3];
+	    fGeometryService->OpDetGeoFromOpChannel(ophit.OpChannel()).GetCenter(PMTxyz);
+      if(PMTxyz[0] > 0){ 
+        ophits_tpc1.push_back(ophit);
+        // Beam activity
+        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 1.7){ 
+          n_beam_hits_tpc1[od]++;
+          n_beam_pe_tpc1[od] += ophit.PE();
+        }
+      }
+      else{ 
+        ophits_tpc0.push_back(ophit);
+        // Beam activity
+        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 1.7){ 
+          n_beam_hits_tpc0[od]++;
+          n_beam_pe_tpc0[od] += ophit.PE();
+        }
+      }
+    }
+
+    std::vector<double> opflashes_tpc0 = fFlashAlg.OpFlashes(ophits_tpc0);
+    n_flashes_tpc0 = opflashes_tpc0.size();
+
+    std::vector<double> opflashes_tpc1 = fFlashAlg.OpFlashes(ophits_tpc1);
+    n_flashes_tpc1 = opflashes_tpc1.size();
   
+    //----------------------------------------------------------------------------------------------------------
+    //                                      PFP FLASH MATCHING ANALYSIS
+    //----------------------------------------------------------------------------------------------------------
+
     double min_score = 99999;
     // Loop over pandora pfp particles, select primary particles identified as neutrinos
     for (PFParticleIdMap::const_iterator it = pfParticleMap.begin(); it != pfParticleMap.end(); ++it){
@@ -491,41 +529,6 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                        MUON PDS RECO ANALYSIS
     //----------------------------------------------------------------------------------------------------------
-
-
-    // Optical flash reconstruction for numuCC
-    std::vector<recob::OpHit> ophits_tpc0;
-    std::vector<recob::OpHit> ophits_tpc1;
-    for(auto const& ophit : (*pdsHandle)){
-      // Only look at PMTs
-      std::string od = fChannelMap.pdName(ophit.OpChannel());
-      if( od != "pmt" ) continue;
-      // Work out what TPC detector is in odd = TPC1, even = TPC0
-      double PMTxyz[3];
-	    fGeometryService->OpDetGeoFromOpChannel(ophit.OpChannel()).GetCenter(PMTxyz);
-      if(PMTxyz[0] > 0){ 
-        ophits_tpc1.push_back(ophit);
-        // Beam activity
-        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 1.7){ 
-          n_beam_hits_tpc1[od]++;
-          n_beam_pe_tpc1[od] += ophit.PE();
-        }
-      }
-      else{ 
-        ophits_tpc0.push_back(ophit);
-        // Beam activity
-        if(ophit.PeakTime() >= 0 && ophit.PeakTime() <= 1.7){ 
-          n_beam_hits_tpc0[od]++;
-          n_beam_pe_tpc0[od] += ophit.PE();
-        }
-      }
-    }
-
-    std::vector<double> opflashes_tpc0 = fFlashAlg.OpFlashes(ophits_tpc0);
-    n_flashes_tpc0 = opflashes_tpc0.size();
-
-    std::vector<double> opflashes_tpc1 = fFlashAlg.OpFlashes(ophits_tpc1);
-    n_flashes_tpc1 = opflashes_tpc1.size();
 
     std::pair<std::vector<double>, std::vector<double>> fake_flashes = CosmicIdUtils::FakeTpcFlashes(parts);
     n_fake_flashes_tpc0 = fake_flashes.first.size();

@@ -46,7 +46,19 @@ sbnd_cosmictree:
   module_type:     "sbndcode/Selection/CosmicTree"
 
   # The input parameters
-  GenModuleLabel:      "corsika"        # Generator producer module label
+  GenModuleLabel:      "generator"        # Generator producer module label
+  SimModuleLabel:      "largeant"     # Simulation producer module label
+  Verbose:             false          # Print extra information about what's going on
+}
+
+sbnd_dirttree:
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/Selection/DirtTree"
+
+  # The input parameters
+  GenModuleLabel:      "generator"        # Generator producer module label
   SimModuleLabel:      "largeant"     # Simulation producer module label
   Verbose:             false          # Print extra information about what's going on
 }
@@ -60,10 +72,10 @@ sbnd_selectiontree:
   # The input parameters
   SimModuleLabel:      "largeant"        # Simulation producer module label
   GenModuleLabel:      "generator"        # Generator producer module label
-  TpcTrackModuleLabel: "pandoraTrack" # TPC track producer module label
-  ShowerModuleLabel:   "pandoraShower" # TPC track producer module label
-  PidModuleLabel:      "pandoraPid" # TPC track producer module label
-  CaloModuleLabel:      "pandoraCalo"   # Particle ID producer module label
+  TpcTrackModuleLabel: "pandoraTrack"   # TPC track producer module label
+  ShowerModuleLabel:   "pandoraShower"  # TPC track producer module label
+  PidModuleLabel:      "pandoraPid"     # TPC track producer module label
+  CaloModuleLabel:     "pandoraCalo"    # Particle ID producer module label
   PandoraLabel:        "pandora"
   Verbose:             false             # Print extra information about what's going on
   BeamTimeLimits:      @local::sbnd_beamtime

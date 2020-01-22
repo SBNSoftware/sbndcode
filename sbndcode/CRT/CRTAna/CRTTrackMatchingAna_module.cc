@@ -179,21 +179,21 @@ namespace sbnd {
     // Access tfileservice to handle creating and writing histograms
     art::ServiceHandle<art::TFileService> tfs;
     
-    hAngle         = tfs->make<TH1D>("Angle",         "", 50, 0, 2);
-    hMatchAngle    = tfs->make<TH1D>("MatchAngle",    "", 50, 0, 2);
-    hNoMatchAngle  = tfs->make<TH1D>("NoMatchAngle",  "", 50, 0, 2);
+    hAngle         = tfs->make<TH1D>("Angle",         "", 50, 0, 115);
+    hMatchAngle    = tfs->make<TH1D>("MatchAngle",    "", 50, 0, 115);
+    hNoMatchAngle  = tfs->make<TH1D>("NoMatchAngle",  "", 50, 0, 115);
 
-    hDCA        = tfs->make<TH1D>("DCA",        "", 50, 0, 150);
-    hMatchDCA   = tfs->make<TH1D>("MatchDCA",   "", 50, 0, 150);
-    hNoMatchDCA = tfs->make<TH1D>("NoMatchDCA", "", 50, 0, 150);
+    hDCA        = tfs->make<TH1D>("DCA",        "", 50, 0, 300);
+    hMatchDCA   = tfs->make<TH1D>("MatchDCA",   "", 50, 0, 300);
+    hNoMatchDCA = tfs->make<TH1D>("NoMatchDCA", "", 50, 0, 300);
 
-    hMatchAngleDCA   = tfs->make<TH2D>("MatchAngleDCA",   "", 20, 0, 2, 20, 0, 150);
-    hNoMatchAngleDCA = tfs->make<TH2D>("NoMatchAngleDCA", "", 20, 0, 2, 20, 0, 150);
+    hMatchAngleDCA   = tfs->make<TH2D>("MatchAngleDCA",   "", 20, 0, 115, 20, 0, 300);
+    hNoMatchAngleDCA = tfs->make<TH2D>("NoMatchAngleDCA", "", 20, 0, 115, 20, 0, 300);
 
-    hEffAngleTotal    = tfs->make<TH1D>("EffAngleTotal",    "", 20, 0, 1);
-    hEffAngleReco     = tfs->make<TH1D>("EffAngleReco",     "", 20, 0, 1);
-    hPurityAngleTotal = tfs->make<TH1D>("PurityAngleTotal", "", 20, 0, 1);
-    hPurityAngleReco  = tfs->make<TH1D>("PurityAngleReco",  "", 20, 0, 1);
+    hEffAngleTotal    = tfs->make<TH1D>("EffAngleTotal",    "", 20, 0, 60);
+    hEffAngleReco     = tfs->make<TH1D>("EffAngleReco",     "", 20, 0, 60);
+    hPurityAngleTotal = tfs->make<TH1D>("PurityAngleTotal", "", 20, 0, 60);
+    hPurityAngleReco  = tfs->make<TH1D>("PurityAngleReco",  "", 20, 0, 60);
 
     hEffDCATotal    = tfs->make<TH1D>("EffDCATotal",    "", 20, 0, 100);
     hEffDCAReco     = tfs->make<TH1D>("EffDCAReco",     "", 20, 0, 100);
@@ -290,42 +290,42 @@ namespace sbnd {
       // Find the closest track by angle
       std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
       if(closestAngle.second != -99999){ 
-        hAngle->Fill(closestAngle.second);
+        hAngle->Fill(closestAngle.second*180./TMath::Pi());
       }
       // Is crt track matched to that tpc track
       if(closestAngle.second != -99999){
         int crtTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closestAngle.first);
         if(crtTrueID == trackTrueID && crtTrueID != -99999){
-          hMatchAngle->Fill(closestAngle.second);
+          hMatchAngle->Fill(closestAngle.second*180./TMath::Pi());
         }
         else{
-          hNoMatchAngle->Fill(closestAngle.second);
+          hNoMatchAngle->Fill(closestAngle.second*180./TMath::Pi());
         }
       }
 
       int nbinsAngle = hEffAngleTotal->GetNbinsX();
       for(int i = 0; i < nbinsAngle; i++){
-        double angleCut = hEffAngleTotal->GetBinCenter(i);
+        double angleCut = hEffAngleTotal->GetBinCenter(i)*TMath::Pi()/180.;
 
         // Fill total efficiency histogram with each cut if track matches any hits
         if(crtTrackMap.find(trackTrueID) != crtTrackMap.end()){
-          hEffAngleTotal->Fill(angleCut);
+          hEffAngleTotal->Fill(angleCut*180./TMath::Pi());
 
           // If closest hit is below limit and track matches any hits then fill efficiency
           if(closestAngle.second < angleCut && closestAngle.second != -99999){
-            hEffAngleReco->Fill(angleCut);
+            hEffAngleReco->Fill(angleCut*180./TMath::Pi());
           }
         }
 
         // Fill total purity histogram with each cut if closest hit is below limit
         if(closestAngle.second < angleCut && closestAngle.second != -99999){
-          hPurityAngleTotal->Fill(angleCut);
+          hPurityAngleTotal->Fill(angleCut*180./TMath::Pi());
 
           // If closest hit is below limit and matched time is correct then fill purity
           double trackTime = closestAngle.first.ts1_ns * 1e-3;
           if(particles.find(trackTrueID) != particles.end()){
             if(std::abs(trackTime - trueTime) < 2.){
-              hPurityAngleReco->Fill(angleCut);
+              hPurityAngleReco->Fill(angleCut*180./TMath::Pi());
             }
           }
         }
@@ -387,10 +387,10 @@ namespace sbnd {
         double angle = trackAlg.AngleBetweenTracks(tpcTrack, possTrack);
         double DCA = trackAlg.AveDCABetweenTracks(tpcTrack, possTrack, event);
         if(crtTrueID == trackTrueID && crtTrueID != -99999){
-          hMatchAngleDCA->Fill(angle, DCA);
+          hMatchAngleDCA->Fill(angle*180./TMath::Pi(), DCA);
         }
         else{
-          hNoMatchAngleDCA->Fill(angle, DCA);
+          hNoMatchAngleDCA->Fill(angle*180./TMath::Pi(), DCA);
         }
       }
 

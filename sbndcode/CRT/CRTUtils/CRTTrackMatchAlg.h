@@ -137,7 +137,7 @@ namespace sbnd{
     // Find the closest matching crt track by average DCA between tracks within angle and DCA limits
     std::pair<crt::CRTTrack, double> ClosestCRTTrackByDCA(recob::Track tpcTrack, 
                                                           std::vector<crt::CRTTrack> crtTracks, 
-							  const art::Event& event,
+							                                            const art::Event& event,
                                                           double minAngle = 0.); 
     std::pair<crt::CRTTrack, double> ClosestCRTTrackByDCA(recob::Track tpcTrack, 
                                                           std::vector<art::Ptr<recob::Hit>> hits, 

@@ -9,12 +9,12 @@
 #include "crtanamodules_sbnd.fcl"
 #include "selectionconfig_sbnd.fcl"
 
-process_name: AllTrees
+process_name: DirtTrees
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "alltrees.root" }
+  TFileService:           { fileName: "dirttrees.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -51,7 +51,6 @@ physics:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
     NuMuRecoTree: @local::sbnd_numurecotree 
-    DirtTree: @local::sbnd_dirttree
     PdsTree: @local::sbnd_pdstree 
     CRTDetSimAna: @local::sbnd_crtdetsimana
     CRTHitRecoAna: @local::sbnd_crthitrecoana
@@ -68,7 +67,6 @@ physics:
   # Schedule job step(s) for execution by defining the analysis module for this job.
   analysis: [ 
               NuMuRecoTree
-              , DirtTree
               , PdsTree
               , CRTDetSimAna 
               , CRTHitRecoAna

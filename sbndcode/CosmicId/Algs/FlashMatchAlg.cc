@@ -39,7 +39,10 @@ void FlashMatchAlg::reconfigure(const Config& config){
   fFlashTimeCorrection = config.FlashTimeCorrection();
   fFlashMatchCut = config.FlashMatchCut();
 
-  TFile *infile = new TFile(fInputFile.c_str(), "READ");
+  std::string fname;
+  cet::search_path sp("FW_SEARCH_PATH");
+  sp.find_file(fInputFile, fname);
+  TFile *infile = new TFile(fname.c_str(), "READ");
 
   TH1 *temphisto = (TH1*)infile->Get("rrp1");
   rr_nbins = temphisto->GetNbinsX();
@@ -191,8 +194,6 @@ std::pair<std::vector<double>, std::vector<double>> FlashMatchAlg::OpFlashes(art
 // Determine if there is a PDS flash in time with the neutrino beam per TPC
 std::pair<bool, bool> FlashMatchAlg::BeamFlash(art::ValidHandle<std::vector<recob::OpHit>> pdsHandle){
 
-  opdet::sbndPDMapAlg fChannelMap; //map for photon detector types
-
   std::vector<recob::OpHit> ophits_tpc0;
   std::vector<recob::OpHit> ophits_tpc1;
   for(auto const& ophit : (*pdsHandle)){
@@ -215,6 +216,24 @@ std::pair<bool, bool> FlashMatchAlg::BeamFlash(art::ValidHandle<std::vector<reco
   return std::make_pair(tpc0Flash, tpc1Flash);
 }
 
+// Return the number of reconstructed PE in time with beam in TPC
+std::pair<double, double> FlashMatchAlg::BeamPE(art::ValidHandle<std::vector<recob::OpHit>> pdsHandle){
+
+  double npe_tpc0 = 0;
+  double npe_tpc1 = 0;
+  for(auto const& ophit : (*pdsHandle)){
+    if ( !fChannelMap.pdType(ophit.OpChannel(),"pmt")) continue;
+    // Work out what TPC detector is in
+    double PMTxyz[3];
+	  fGeometryService->OpDetGeoFromOpChannel(ophit.OpChannel()).GetCenter(PMTxyz);
+    if(ophit.PeakTime() < fBeamFlashMin || ophit.PeakTime() > fBeamFlashMax) continue;
+    if(PMTxyz[0] > 0) npe_tpc1 += ophit.PE();
+    else npe_tpc0 += ophit.PE();
+  }
+
+  return std::make_pair(npe_tpc0, npe_tpc1);
+
+}
 
 // Calculate the flash matching variables for optical hits in TPC and time window
 std::vector<double> FlashMatchAlg::OpVariables(std::vector<recob::OpHit> ophits, int tpc, double start_t, double end_t){
@@ -349,7 +368,9 @@ double FlashMatchAlg::FlashScore(double x, double y, double z, std::vector<doubl
 }
 
 
-bool FlashMatchAlg::FlashMatch(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, art::ValidHandle<std::vector<recob::OpHit>> pdsHandle){
+
+// Return flash score for a PFParticle
+double FlashMatchAlg::FlashScore(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, art::ValidHandle<std::vector<recob::OpHit>> pdsHandle){
 
   // Associations
   art::Handle< std::vector<recob::PFParticle> > pfParticleHandle;
@@ -410,20 +431,30 @@ bool FlashMatchAlg::FlashMatch(recob::PFParticle pfparticle, std::map< size_t, a
   } // for all pfp pointers
 
   // No charge deposition in PFP, very strange, remove
-  if(norm <= 0) return false;
+  if(norm <= 0) return 99999;
   // PFP in two TPCs, should have t0 tag already, keep
-  if(pfp_tpc <= -1) return true;
-  // No flash in TPC
-  if(opvars[pfp_tpc][2] == -99999) return false;
+  if(pfp_tpc <= -1) return 0;
+  // No flash in TPC, remove
+  if(opvars[pfp_tpc][2] == -99999) return 99999;
 
   nuvtx_x /= norm;
   nuvtx_y /= norm;
   nuvtx_z /= norm;
+
+  return FlashScore(nuvtx_x, nuvtx_y, nuvtx_z, opvars[pfp_tpc], 2., 2., 4., 0.);
 
   if(FlashScore(nuvtx_x, nuvtx_y, nuvtx_z, opvars[pfp_tpc], 2., 2., 4., 0.) > fFlashMatchCut) return false;
   return true;
   
 }
 
+
+// Determine if PFParticle matches a beam flash
+bool FlashMatchAlg::FlashMatch(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, art::ValidHandle<std::vector<recob::OpHit>> pdsHandle){
+
+  if(FlashScore(pfparticle, pfParticleMap, event, pdsHandle) > fFlashMatchCut) return false;
+  return true;
+
+}
 
 }

@@ -13,10 +13,23 @@ TPCGeoAlg::TPCGeoAlg(){
   fMaxZ = -99999;
   fCpaWidth = 0;
 
+  fCryoMinX = 99999;
+  fCryoMinY = 99999;
+  fCryoMinZ = 99999;
+  fCryoMaxX = -99999;
+  fCryoMaxY = -99999;
+  fCryoMaxZ = -99999;
+
   fGeometryService = lar::providerFrom<geo::Geometry>();
 
   for(size_t cryo_i = 0; cryo_i < fGeometryService->Ncryostats(); cryo_i++){
     const geo::CryostatGeo& cryostat = fGeometryService->Cryostat(cryo_i);
+    if (cryostat.MinX() < fCryoMinX) fCryoMinX = cryostat.MinX();
+    if (cryostat.MaxX() > fCryoMaxX) fCryoMaxX = cryostat.MaxX();
+    if (cryostat.MinY() < fCryoMinY) fCryoMinY = cryostat.MinY();
+    if (cryostat.MaxY() > fCryoMaxY) fCryoMaxY = cryostat.MaxY();
+    if (cryostat.MinZ() < fCryoMinZ) fCryoMinZ = cryostat.MinZ();
+    if (cryostat.MaxZ() > fCryoMaxZ) fCryoMaxZ = cryostat.MaxZ();
 
     for (size_t tpc_i = 0; tpc_i < cryostat.NTPC(); tpc_i++)
     {
@@ -159,6 +172,14 @@ bool TPCGeoAlg::InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buf
   if(point.X() < (tpc.MinX()-buffer) || point.X() > (tpc.MaxX()+buffer)
       || point.Y() < (tpc.MinY()-buffer) || point.Y() > (tpc.MaxY()+buffer)
       || point.Z() < (tpc.MinZ()-buffer) || point.Z() > (tpc.MaxZ()+buffer)) return false;
+  return true;
+}
+
+// Is point inside given TPC
+bool TPCGeoAlg::InCryo(geo::Point_t point){
+  if(point.X() < fCryoMinX || point.X() > fCryoMaxX
+      || point.Y() < fCryoMinY || point.Y() > fCryoMaxY
+      || point.Z() < fCryoMinZ || point.Z() > fCryoMaxZ) return false;
   return true;
 }
 
@@ -357,6 +378,20 @@ double TPCGeoAlg::TpcLength(const simb::MCParticle& particle){
     }
   }
   return length;
+}
+
+
+double TPCGeoAlg::EDep(const simb::MCParticle& particle){
+  double edep = 0;
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints(); i++){
+    double x = particle.Vx(i); 
+    double y = particle.Vy(i);
+    double z = particle.Vz(i);
+    if(i > 0 && x > fMinX && y > fMinY && z > fMinZ && x < fMaxX && y < fMaxY && z < fMaxZ){
+      edep += particle.E(i-1) - particle.E(i);
+    }
+  }
+  return edep;
 }
 
 

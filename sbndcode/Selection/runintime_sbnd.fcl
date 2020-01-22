@@ -9,12 +9,12 @@
 #include "crtanamodules_sbnd.fcl"
 #include "selectionconfig_sbnd.fcl"
 
-process_name: AllTrees
+process_name: IntimeTrees
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "alltrees.root" }
+  TFileService:           { fileName: "intimetrees.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
 
@@ -50,35 +50,13 @@ physics:
   analyzers:
   {
     # This name defines a job step below, and will appear as a directory  in the output histogram file. 
-    NuMuRecoTree: @local::sbnd_numurecotree 
-    DirtTree: @local::sbnd_dirttree
-    PdsTree: @local::sbnd_pdstree 
-    CRTDetSimAna: @local::sbnd_crtdetsimana
-    CRTHitRecoAna: @local::sbnd_crthitrecoana
-    CRTTrackRecoAna: @local::sbnd_crttrackrecoana
-    CRTT0MatchingAna: @local::sbnd_crtt0matchingana 
-    CRTTrackMatchingAna: @local::sbnd_crttrackmatchingana 
-    CRTFullRecoAna: @local::sbnd_crtfullrecoana
-    CosmicIdAna: @local::sbnd_cosmicidana
-    CosmicIdTree: @local::sbnd_cosmicidtree
     SelectionTree: @local::sbnd_selectiontree
     CosmicTree: @local::sbnd_cosmictree
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
   analysis: [ 
-              NuMuRecoTree
-              , DirtTree
-              , PdsTree
-              , CRTDetSimAna 
-              , CRTHitRecoAna
-              , CRTTrackRecoAna
-              , CRTT0MatchingAna
-              , CRTTrackMatchingAna
-              , CRTFullRecoAna
-              , CosmicIdAna
-              , CosmicIdTree
-              , SelectionTree 
+              SelectionTree 
               , CosmicTree
             ]
 
@@ -87,3 +65,6 @@ physics:
   end_paths: [ analysis ]
 
 }
+
+physics.analyzers.SelectionTree.GenModuleLabel: "cosmgen"
+physics.analyzers.CosmicTree.GenModuleLabel: "cosmgen"

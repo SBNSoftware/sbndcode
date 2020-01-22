@@ -85,6 +85,9 @@ namespace sbnd{
     // Determine if there is a PDS flash per TPC in time with the neutrino beam
     std::pair<bool, bool> BeamFlash(art::ValidHandle<std::vector<recob::OpHit>> pdsHandle);
 
+    // Return the number of reconstructed PE in time with beam in TPC
+    std::pair<double, double> BeamPE(art::ValidHandle<std::vector<recob::OpHit>> pdsHandle);
+
     // Calculate the flash matching variables for optical hits in TPC and time window
     std::vector<double> OpVariables(std::vector<recob::OpHit> ophits, int tpc, double start_t, double end_t);
 
@@ -95,6 +98,10 @@ namespace sbnd{
     double PeScore(double x, std::vector<double> variables);
     double FlashScore(double x, double y, double z, std::vector<double> variables, double w1=1, double w2=1, double w3=1, double w4=0);
 
+    // Return flash score for a PFParticle
+    double FlashScore(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, art::ValidHandle<std::vector<recob::OpHit>> pdsHandle);
+
+    // Determine if PFParticle matches a beam flash
     bool FlashMatch(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, art::ValidHandle<std::vector<recob::OpHit>> pdsHandle);
 
   private:

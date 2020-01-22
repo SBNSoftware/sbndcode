@@ -35,6 +35,11 @@ namespace sbnd{
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
 
+      fhicl::Atom<double> PeLimit {
+        Name("PeLimit"),
+        Comment("")
+      };
+
     };
 
     GeometryCosmicIdAlg(const Config& config);
@@ -50,9 +55,12 @@ namespace sbnd{
 
     // Remove any tracks in different TPC to beam activity
     bool GeometryCosmicId(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, bool tpc0Flash, bool tpc1Flash);
+    
+    bool GeometryCosmicId(recob::Track track, std::vector<art::Ptr<recob::Hit>> hits, double tpc0_pe, double tpc1_pe);
 
   private:
 
+    double fPeLimit;
     TPCGeoAlg fTpcGeo;
 
   };

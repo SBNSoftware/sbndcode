@@ -6,6 +6,7 @@ art_make(
             lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
             nusimdata_SimulationBase
             sbndcode_RecoUtils
+            sbndcode_GeoWrappers
             ${ART_FRAMEWORK_CORE}
             ${ART_FRAMEWORK_PRINCIPAL}
             ${ART_FRAMEWORK_SERVICES_REGISTRY}

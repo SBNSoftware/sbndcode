@@ -1,0 +1,9 @@
+#include "larg4dirtfilter.fcl"
+#include "standard_g4_sbnd.fcl"
+
+
+physics.simulate: [ rns, largeant, filter ]
+
+physics.filters.filter: @local::sbnd_larg4dirtfilter
+
+outputs.out1.SelectEvents: [ "simulate" ]

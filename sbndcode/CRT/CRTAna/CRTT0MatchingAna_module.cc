@@ -169,9 +169,9 @@ namespace sbnd {
       if(i < fCrtGeo.NumTaggers()){
         tagger = fCrtGeo.GetTagger(i).name;
       }
-      hDCA[tagger]        = tfs->make<TH1D>(Form("DCA_%s", tagger.c_str()),        "", 50, 0, 100);
-      hMatchDCA[tagger]   = tfs->make<TH1D>(Form("MatchDCA_%s", tagger.c_str()),   "", 50, 0, 100);
-      hNoMatchDCA[tagger] = tfs->make<TH1D>(Form("NoMatchDCA_%s", tagger.c_str()), "", 50, 0, 100);
+      hDCA[tagger]        = tfs->make<TH1D>(Form("DCA_%s", tagger.c_str()),        "", 40, 0, 200);
+      hMatchDCA[tagger]   = tfs->make<TH1D>(Form("MatchDCA_%s", tagger.c_str()),   "", 40, 0, 200);
+      hNoMatchDCA[tagger] = tfs->make<TH1D>(Form("NoMatchDCA_%s", tagger.c_str()), "", 40, 0, 200);
       
       hEffDCATotal[tagger] = tfs->make<TH1D>(Form("EffDCATotal_%s", tagger.c_str()), "", 20, 0, 80);
       hEffDCAReco[tagger]  = tfs->make<TH1D>(Form("EffDCAReco_%s", tagger.c_str()),  "", 20, 0, 80);
