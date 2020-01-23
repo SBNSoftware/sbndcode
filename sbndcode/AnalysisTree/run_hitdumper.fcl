@@ -20,8 +20,9 @@
 #include "showerfindermodules.fcl"
 #include "databaseutil_sbnd.fcl"
 #include "vertexfindermodules.fcl"
-#include "hitdumper.fcl"
-#include "trig_filter.fcl"
+#include "hitdumpermodule.fcl"
+##include "trig_filter.fcl"
+##include "filters_sbnd.fcl"
 
 
 process_name: Reco2
@@ -29,7 +30,7 @@ process_name: Reco2
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:              { fileName: "/sbnd/data/users/mstancar/OnlinePurity/hit_tree_all.root" }
+  TFileService:              { fileName: "hitdumper_tree.root" }
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
@@ -53,13 +54,13 @@ source:
 #entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
 outputs:
 {
- out1:
- {
-   module_type: RootOutput
-   fileName:   "my_reco_parallel.root"
-   dataTier:    "reconstructed"
-   compressionLevel: 1
-      SelectEvents: ["reco2"]
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "my_reco_parallel.root"
+    dataTier:    "reconstructed"
+    compressionLevel: 1
+    SelectEvents: ["reco2"]
  }
 }
 
@@ -69,7 +70,7 @@ outputs:
 physics:
 {
  filters:{
-    myfilter:  @local::standard_crt_trig_filter
+    # myfilter:  @local::standard_crt_trig_filter
  }
 
 
