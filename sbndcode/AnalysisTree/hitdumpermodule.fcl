@@ -4,13 +4,15 @@ hitdumper:
 {
     module_type:              "HitDumper"
     HitsModuleLabel:          "fasthit"
-    CRTHitModuleLabel:          "crthit"
-    CRTStripModuleLabel:          "crt"
-    CRTTrackModuleLabel:          "crttrack"
-    keepCRThits: true
-    keepCRTstrips: false
-    makeCRTtracks: true
-    readCRTtracks: true
+    CRTHitModuleLabel:        "crthit"
+    CRTStripModuleLabel:      "crt"
+    CRTTrackModuleLabel:      "crttrack"
+    keepCRThits:              true
+    keepCRTstrips:            false
+    makeCRTtracks:            true
+    readCRTtracks:            true
+
+    KeepTaggerTypes:          [1, 2]
 
 }
 
