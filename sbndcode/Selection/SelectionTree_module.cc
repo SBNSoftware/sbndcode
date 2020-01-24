@@ -255,6 +255,7 @@ namespace sbnd {
     double nu_vtx_x;
     double nu_vtx_y;
     double nu_vtx_z;
+    int nu_nu_pdg;
     double nu_p_x;
     double nu_p_y;
     double nu_p_z;
@@ -367,6 +368,7 @@ namespace sbnd {
     fNuMuTree->Branch("nu_vtx_x", &nu_vtx_x);
     fNuMuTree->Branch("nu_vtx_y", &nu_vtx_y);
     fNuMuTree->Branch("nu_vtx_z", &nu_vtx_z);
+    fNuMuTree->Branch("nu_nu_pdg", &nu_nu_pdg);
     fNuMuTree->Branch("nu_p_x",   &nu_p_x);
     fNuMuTree->Branch("nu_p_y",   &nu_p_y);
     fNuMuTree->Branch("nu_p_z",   &nu_p_z);
@@ -499,6 +501,7 @@ namespace sbnd {
       nu_vtx_x = vtx.X();
       nu_vtx_y = vtx.Y();
       nu_vtx_z = vtx.Z();
+      nu_nu_pdg = truth->GetNeutrino().Nu().PdgCode();
       nu_p_x = truth->GetNeutrino().Nu().Px();
       nu_p_y = truth->GetNeutrino().Nu().Py();
       nu_p_z = truth->GetNeutrino().Nu().Pz();
