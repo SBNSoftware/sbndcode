@@ -202,7 +202,7 @@
     <PfoListName>OutputParticles3D</PfoListName>
   </algorithm>
 
-  <algorithm type = "LArEventValidation">
+  <algorithm type = "LArNeutrinoEventValidation">
     <CaloHitListName>CRCaloHitList2D</CaloHitListName>
     <MCParticleListName>Input</MCParticleListName>
     <PfoListName>OutputParticles3D</PfoListName>

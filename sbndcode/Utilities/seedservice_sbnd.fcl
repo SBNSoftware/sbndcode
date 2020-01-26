@@ -13,6 +13,11 @@
 #   first version; not many choices here
 # 20160601 (petrillo@fnal.gov) [v1.1]
 #   changed to per-event seed policy
+
+# 20200121 (pgreen@fnal.gov)
+#  Reverted to "random" policy. The "perEvent" policy was not being used correctly in any later
+#  jobs - official production included - resulting in numerous bugs. This needs to be revisited 
+#  at a later stage as a "perEvent" policy, if implemented properly, would be preferable.  
 #
 
 #include "seedservice.fcl"
@@ -25,6 +30,6 @@ BEGIN_PROLOG
 #     timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
 # 
 
-sbnd_seedservice: @local::per_event_NuRandomService # from seedservice.fcl
+sbnd_seedservice: @local::random_NuRandomService # from seedservice.fcl
 
 END_PROLOG
