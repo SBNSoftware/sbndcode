@@ -70,6 +70,7 @@ table_fragment_begin
     # currently, XML pandora files are installed in 'scripts':
     pathPrepend(FW_SEARCH_PATH, ${SBNDCODE_DIR}/scripts)
     pathPrepend(FW_SEARCH_PATH, /cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash)
+    pathPrepend(PYTHONPATH, ${UPS_PROD_DIR}/python)
 table_fragment_end
 
 
