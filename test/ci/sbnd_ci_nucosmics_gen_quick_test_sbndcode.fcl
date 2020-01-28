@@ -8,6 +8,9 @@ services.message: @local::sbnd_message_services_prod_debug
 source: @erase
 
 
+services.NuRandomService.policy: "preDefinedSeed"
+services.NuRandomService.baseSeed: 1234
+
 # Override flux file configuration to use exactly one of them
 physics.producers.generator: {
   
