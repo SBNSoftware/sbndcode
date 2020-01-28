@@ -1,1 +1,4 @@
 #include "standard_reco_sbnd_basic.fcl"
+
+services.NuRandomService.policy: "preDefinedSeed"
+services.NuRandomService.baseSeed: 1234

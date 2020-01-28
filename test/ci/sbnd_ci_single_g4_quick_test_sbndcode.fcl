@@ -1,1 +1,4 @@
 #include "standard_g4_sbnd.fcl"
+
+services.NuRandomService.policy: "preDefinedSeed"
+services.NuRandomService.baseSeed: 1234

@@ -1,2 +1,5 @@
 #include "standard_detsim_sbnd.fcl"
 
+services.NuRandomService.policy: "preDefinedSeed"
+services.NuRandomService.baseSeed: 1234
+
