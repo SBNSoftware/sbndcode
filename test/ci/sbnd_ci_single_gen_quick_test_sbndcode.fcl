@@ -4,8 +4,7 @@
 # non-interactive output settings, but keep them verbose
 services.message: @local::sbnd_message_services_prod_debug
 
-services.NuRandomService.policy: "preDefinedSeed"
-services.NuRandomService.baseSeed: 1234
+services.NuRandomService.policy: "perEvent"
 
 # the test uses an input file (empty events with set timestamp)
 source: @erase
