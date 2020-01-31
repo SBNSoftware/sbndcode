@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+overburdenana:
+{
+  module_type:   "OverburdenAna"
+  Dummy:         "dummy"
+}
+
+END_PROLOG
