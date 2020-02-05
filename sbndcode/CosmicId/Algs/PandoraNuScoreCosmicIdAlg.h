@@ -76,6 +76,9 @@ namespace sbnd{
 
       recob::PFParticle GetPFPNeutrino(recob::PFParticle pfp, const std::vector<recob::PFParticle>& pfpVec);
 
+      float GetPandoraNuScore(recob::PFParticle pfparticle,
+          art::FindManyP<larpandoraobj::PFParticleMetadata> PFPMetaDataAssoc);
+
     private:
 
       art::InputTag fPandoraLabel;

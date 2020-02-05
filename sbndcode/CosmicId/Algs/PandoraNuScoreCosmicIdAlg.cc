@@ -47,31 +47,20 @@ namespace sbnd{
 
       recob::PFParticle PFPNeutrino = GetPFPNeutrino(pfp, (*pfParticleHandle));
 
-      const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata> > pfpMetaVec = PFPMetaDataAssoc.at(PFPNeutrino.Self());
-      if (pfpMetaVec.size() !=1){
-        std::cout<<"Cannot get PFPMetadata"<<std::endl;
-        return false;
-      }
-
-      art::Ptr<larpandoraobj::PFParticleMetadata> pfpMeta = pfpMetaVec.front();
-
-      larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
-      auto propertiesMapIter = propertiesMap.find("NuScore");
-      if (propertiesMapIter == propertiesMap.end())
-        return false;
-      float pfpNuScore = propertiesMapIter->second;
-
+      float pfpNuScore = GetPandoraNuScore(PFPNeutrino, PFPMetaDataAssoc);
       if (pfpNuScore < fNuScoreCut){
         return true;
+      } else {
+        return false;
       }
-
     }
     return false;
 
   }
 
   // Finds any t0s associated with pfparticle by pandora, tags if outside beam
-  bool PandoraNuScoreCosmicIdAlg::PandoraNuScoreCosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event){
+  bool PandoraNuScoreCosmicIdAlg::PandoraNuScoreCosmicId(recob::PFParticle pfparticle,
+      std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event){
 
     // Get pfp associations to t0s
     art::Handle< std::vector<recob::PFParticle> > pfParticleHandle;
@@ -81,19 +70,7 @@ namespace sbnd{
 
     recob::PFParticle PFPNeutrino = GetPFPNeutrino(pfparticle, pfParticleMap);
 
-    const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata> > pfpMetaVec = PFPMetaDataAssoc.at(PFPNeutrino.Self());
-    if (pfpMetaVec.size() !=1){
-      std::cout<<"Cannot get PFPMetadata"<<std::endl;
-      return false;
-    }
-
-    art::Ptr<larpandoraobj::PFParticleMetadata> pfpMeta = pfpMetaVec.front();
-
-    larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
-    auto propertiesMapIter = propertiesMap.find("NuScore");
-    if (propertiesMapIter == propertiesMap.end())
-      return false;
-    float pfpNuScore = propertiesMapIter->second;
+    float pfpNuScore = GetPandoraNuScore(PFPNeutrino, PFPMetaDataAssoc);
 
     if (pfpNuScore < fNuScoreCut){
       return true;
@@ -107,27 +84,49 @@ namespace sbnd{
     if ((pfparticle.PdgCode()==12) ||(pfparticle.PdgCode()==14)){
       return pfparticle;
     } else {
-      art::Ptr<recob::PFParticle> parentPFP = pfParticleMap.at(pfparticle.Parent());
+      art::Ptr<recob::PFParticle> parentPFP= pfParticleMap.at(pfparticle.Parent());
       return GetPFPNeutrino(*parentPFP, pfParticleMap);
     }
   }
 
-  recob::PFParticle PandoraNuScoreCosmicIdAlg::GetPFPNeutrino(recob::PFParticle pfparticle, const std::vector<recob::PFParticle>& pfpVec){
+  recob::PFParticle PandoraNuScoreCosmicIdAlg::GetPFPNeutrino(recob::PFParticle pfparticle,
+      const std::vector<recob::PFParticle>& pfpVec){
 
     if ((pfparticle.PdgCode()==12) ||(pfparticle.PdgCode()==14)){
       return pfparticle;
     } else {
       size_t parentID = pfparticle.Parent();
-      recob::PFParticle parentPFP;
-      for (auto const& pfpIter: pfpVec){
-        if (pfpIter.Self() == parentID){
-          parentPFP = pfpIter;
-          break;
-        }
+      auto parentPFPIter = std::find_if(pfpVec.begin(), pfpVec.end(),
+          [&](const auto& pfp){return pfp.Self()==parentID;});
+
+      if (parentPFPIter==pfpVec.end()){
+        return pfparticle;
+      } else {
+        return GetPFPNeutrino(*parentPFPIter, pfpVec);
       }
-      return GetPFPNeutrino(parentPFP, pfpVec);
     }
   }
 
+  float PandoraNuScoreCosmicIdAlg::GetPandoraNuScore(recob::PFParticle pfparticle,
+      art::FindManyP<larpandoraobj::PFParticleMetadata> PFPMetaDataAssoc){
+
+    const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata> > pfpMetaVec =
+      PFPMetaDataAssoc.at(pfparticle.Self());
+
+    if (pfpMetaVec.size() !=1){
+      std::cout<<"Cannot get PFPMetadata"<<std::endl;
+      return 1.f;
+    }
+
+    art::Ptr<larpandoraobj::PFParticleMetadata> pfpMeta = pfpMetaVec.front();
+
+    larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
+    auto propertiesMapIter = propertiesMap.find("NuScore");
+    if (propertiesMapIter == propertiesMap.end()){
+      return 1.f;
+    }
+
+    return propertiesMapIter->second;
+  }
 
 }
