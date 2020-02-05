@@ -193,6 +193,7 @@ namespace sbnd {
     bool track_apa_cross;
     double track_apa_dist;
     double track_apa_min_dist;
+    double track_pandora_nu_score;
 
     // PFParticle tree parameters
     std::string pfp_type;
@@ -227,6 +228,7 @@ namespace sbnd {
     double pfp_apa_dist;
     double pfp_apa_min_dist;
     double pfp_sec_apa_min_dist;
+    double pfp_pandora_nu_score;
 
   }; // class CosmicIdTree
 
@@ -282,6 +284,7 @@ namespace sbnd {
     fTrackTree->Branch("track_apa_cross",            &track_apa_cross, "track_apa_cross/O");
     fTrackTree->Branch("track_apa_dist",             &track_apa_dist, "track_apa_dist/D");
     fTrackTree->Branch("track_apa_min_dist",         &track_apa_min_dist, "track_apa_min_dist/D");
+    fTrackTree->Branch("track_pandora_nu_score",     &track_pandora_nu_score, "track_pandora_nu_score/D");
 
     // PFParticle tree
     fPfpTree = tfs->make<TTree>("pfps", "pfps");
@@ -318,6 +321,7 @@ namespace sbnd {
     fPfpTree->Branch("pfp_apa_dist",             &pfp_apa_dist, "pfp_apa_dist/D");
     fPfpTree->Branch("pfp_apa_min_dist",         &pfp_apa_min_dist, "pfp_apa_min_dist/D");
     fPfpTree->Branch("pfp_sec_apa_min_dist",     &pfp_sec_apa_min_dist, "pfp_sec_apa_min_dist/D");
+    fPfpTree->Branch("pfp_pandora_nu_score",     &pfp_pandora_nu_score, "pfp_pandora_nu_score/D");
 
     // Initial output
     if(fVerbose) std::cout<<"----------------- Cosmic ID Tree Module -------------------"<<std::endl;
@@ -401,6 +405,8 @@ namespace sbnd {
     this->GetPFParticleIdMap(pfParticleHandle, pfParticleMap);
     // Get PFParticle to track associations
     art::FindManyP< recob::Track > pfPartToTrackAssoc(pfParticleHandle, event, fTPCTrackLabel);
+    art::FindManyP<larpandoraobj::PFParticleMetadata> findManyPFPMetadata(pfParticleHandle,
+        event, fPandoraLabel);
 
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
@@ -644,6 +650,9 @@ namespace sbnd {
         pfp_sec_apa_min_dist = ApaMin.first;
       }
 
+      // Get the PFParticle Nu Score for the PFP Neutrino
+      pfp_pandora_nu_score = fCosId.PandoraNuScoreAlg().GetPandoraNuScore(*pParticle, findManyPFPMetadata);
+
       // Fill the PFParticle tree
       fPfpTree->Fill();
 
@@ -726,6 +735,20 @@ namespace sbnd {
       std::pair<double, double> ApaMin = fCosId.ApaAlg().MinApaDistance(tpcTrack, hits, fakeTpc0Flashes, fakeTpc1Flashes);
       track_apa_min_dist = ApaMin.first;
 
+      // The PFP Nu Score only exists for PFP Neutrinos
+      if (track_pfp_nu){
+        for(auto const pfp : (*pfParticleHandle)){
+          // Get the associated track if there is one
+          const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pfp.Self()));
+          if(associatedTracks.size() != 1) continue;
+          recob::Track trk = *associatedTracks.front();
+          if(trk.ID() != tpcTrack.ID()) continue;
+
+          recob::PFParticle PFPNeutrino = fCosId.PandoraNuScoreAlg().GetPFPNeutrino(pfp, (*pfParticleHandle));
+          track_pandora_nu_score = fCosId.PandoraNuScoreAlg().GetPandoraNuScore(pfp, findManyPFPMetadata);
+          break;
+        }
+      }
       // Fill the Track tree
       fTrackTree->Fill();
     }

@@ -222,6 +222,7 @@ namespace sbnd{
     CrtHitCosmicIdAlg CrtHitAlg() const {return chTag;}
     CrtTrackCosmicIdAlg CrtTrackAlg() const {return ctTag;}
     ApaCrossCosmicIdAlg ApaAlg() const {return acTag;}
+    PandoraNuScoreCosmicIdAlg PandoraNuScoreAlg() const {return pnTag;}
 
   private:
 
