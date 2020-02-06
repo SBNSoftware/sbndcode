@@ -23,3 +23,5 @@ add_subdirectory(gallery)
 add_subdirectory(SpaceChargeServices)
 add_subdirectory(SpaceCharge)
 add_subdirectory(SpaceChargeTest)
+
+add_subdirectory(FlashMatch)
