@@ -31,6 +31,8 @@
 #include <sstream>
 #include <fstream>
 #include <thread>
+#include <cstdlib>
+#include <stdexcept>
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
@@ -107,8 +109,10 @@ namespace opdet{
 
         fhicl::Atom<unsigned> NThreads {
             Name("NThreads"),
-            Comment("Number of threads to split waveform process into. Default is 0 (autodetect number of cores)"),
-            0
+            Comment("Number of threads to split waveform process into. Defaults to 1.\
+                     Set 0 to autodetect. Autodection will first check $SBNDCODE_OPDETSIM_NTHREADS for number of threads. \
+                     If this is not set, then NThreads is set to the number of hardware cores on the host machine."),
+            1
         };
         
         fhicl::TableFragment<opdet::DigiPMTSBNDAlgMaker::Config> pmtAlgoConfig;
@@ -176,13 +180,31 @@ namespace opdet{
     opDetDigitizerWorker::Config wConfig( config().pmtAlgoConfig(), config().araAlgoConfig());
 
     fNThreads = config().NThreads();
-    if (fNThreads == 0) { // autodetect
+    if (fNThreads == 0) { // autodetect -- first check env var
+      const char *env = std::getenv("SBNDCODE_OPDETSIM_NTHREADS");
+      // try to parse into positive integer
+      if (env != NULL) {
+        try {
+          int n_threads = std::stoi(env);
+          if (n_threads <= 0) {
+            throw std::invalid_argument("Expect positive integer");
+          }
+          fNThreads = n_threads;
+        }
+        catch (...) {
+          mf::LogError("OpDetDigitizer") << "Unable to parse number of threads in environment variable (SBNDCODE_OPDETSIM_NTHREADS): (" << env << "). Setting Number opdet threads to 1." << std::endl; 
+          fNThreads = 1;
+        }
+      }
+    }
+
+    if (fNThreads == 0) { // autodetect -- now try to get number of cpu's
       fNThreads = std::thread::hardware_concurrency();
     }
     if (fNThreads == 0) { // autodetect failed
       fNThreads = 1;
     }
-    std::cout << "Digitizing on n threads: " << fNThreads << std::endl;
+    mf::LogInfo("OpDetDigitizer") << "Digitizing on n threads: " << fNThreads << std::endl;
 
     wConfig.nThreads = fNThreads;
 
