@@ -44,5 +44,7 @@ art_make(
 install_headers()
 install_fhicl()
 install_source()
-
+# install_scripts()
 cet_enable_asserts()
+
+add_subdirectory(template_generators)
