@@ -29,7 +29,7 @@ namespace geo {
   void CRTChannelMapAlg::Initialize(AuxDetGeometryData_t& geodata) {
     Uninitialize();
 
-    std::vector<geo::AuxDetGeo*>& adgeo = geodata.auxDets;
+    std::vector<geo::AuxDetGeo>& adgeo = geodata.auxDets;
 
     // Sort the AuxDetGeo objects and map them to names of the detectors
     //fSorter.SortAuxDets(adgeo);
@@ -51,9 +51,9 @@ namespace geo {
     fADGeoToChannelAndSV.clear();
 
     for (size_t a=0; a<adgeo.size(); a++){
-      std::string volName(adgeo[a]->TotalVolume()->GetName());
+      std::string volName(adgeo[a].TotalVolume()->GetName());
 
-      size_t nsv = adgeo[a]->NSensitiveVolume();
+      size_t nsv = adgeo[a].NSensitiveVolume();
       if (nsv != 16) {
         throw cet::exception("CRTChannelMap")
         << "Wrong number of sensitive volumes for CRT volume "
@@ -80,7 +80,7 @@ namespace geo {
   //----------------------------------------------------------------------------
   uint32_t CRTChannelMapAlg::PositionToAuxDetChannel(
       double const worldLoc[3],
-      std::vector<geo::AuxDetGeo*> const& auxDets,
+      std::vector<geo::AuxDetGeo> const& auxDets,
       size_t& ad,
       size_t& sv) const {
 
@@ -95,7 +95,7 @@ namespace geo {
     double svOrigin[3] = {0, 0, 0};
     double localOrigin[3] = {0, 0, 0};
 
-    auxDets[ad]->SensitiveVolume(sv).LocalToWorld(localOrigin, svOrigin);
+    auxDets[ad].SensitiveVolume(sv).LocalToWorld(localOrigin, svOrigin);
 
     // Check to see which AuxDet this position corresponds to
     auto gnItr = fADGeoToName.find(ad);
@@ -127,7 +127,7 @@ namespace geo {
   const TVector3 CRTChannelMapAlg::AuxDetChannelToPosition(
       uint32_t const& channel,
       std::string const& auxDetName,
-      std::vector<geo::AuxDetGeo*> const& auxDets) const {
+      std::vector<geo::AuxDetGeo> const& auxDets) const {
     double x = 0;
     double y = 0;
     double z = 0;
@@ -159,8 +159,8 @@ namespace geo {
     for (auto csv : csvItr->second) {
       if (csv.first == channel) {
         // Get the center of the sensitive volume for this channel
-        auxDets[ad]->SensitiveVolume(csv.second).LocalToWorld(localOrigin,
-                                                              svOrigin);
+        auxDets[ad].SensitiveVolume(csv.second).LocalToWorld(localOrigin,
+                                                             svOrigin);
 
         x = svOrigin[0];
         y = svOrigin[1];
@@ -174,4 +174,3 @@ namespace geo {
   }
 
 }  // namespace geo
-
