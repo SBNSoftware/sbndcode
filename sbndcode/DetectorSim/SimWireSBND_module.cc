@@ -94,6 +94,8 @@ private:
   unsigned int           fNTimeSamples;     ///< number of ADC readout samples in all readout frames (per event)
   float                  fCollectionPed;    ///< ADC value of baseline for collection plane
   float                  fInductionPed;     ///< ADC value of baseline for induction plane
+  float                  fCollectionSat;    ///< ADC value of pre-amp saturation for collection plane
+  float                  fInductionSat;     ///< ADC value of pre-amp saturation for induction plane
   float                  fBaselineRMS;      ///< ADC value of baseline RMS within each channel
   TH1D*                  fNoiseDist;        ///< distribution of noise counts
   bool fGetNoiseFromHisto;                  ///< if True -> Noise from Histogram of Freq. spectrum
@@ -154,8 +156,10 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   fGetNoiseFromHisto = p.get< bool                >("GetNoiseFromHisto");
   fGenNoiseInTime    = p.get< bool                >("GenNoiseInTime");
   fGenNoise          = p.get< bool                >("GenNoise");
-  fCollectionPed     = p.get< float               >("CollectionPed");
-  fInductionPed      = p.get< float               >("InductionPed");
+  fCollectionPed     = p.get< float               >("CollectionPed",690.);
+  fInductionPed      = p.get< float               >("InductionPed",2100.);
+  fCollectionSat     = p.get< float               >("CollectionSat",2922.);
+  fInductionSat      = p.get< float               >("InductionSat",1247.);
   fBaselineRMS       = p.get< float               >("BaselineRMS");
 
   fTrigModName       = p.get< std::string         >("TrigModName");
@@ -353,17 +357,26 @@ void SimWireSBND::produce(art::Event& evt)
 
     //Pedestal determination
     float ped_mean = fCollectionPed;
+    float preamp_sat=fCollectionSat;
     geo::SigType_t sigtype = geo->SignalType(chan);
-    if (sigtype == geo::kInduction)
+    if (sigtype == geo::kInduction) {
       ped_mean = fInductionPed;
-    else if (sigtype == geo::kCollection)
+      preamp_sat = fInductionSat;
+    }
+    else if (sigtype == geo::kCollection) {    
       ped_mean = fCollectionPed;
+      preamp_sat=fCollectionSat;
+    }
     //slight variation on ped on order of RMS of baseline variation
     CLHEP::RandGaussQ rGaussPed(fPedestalEngine, 0.0, fBaselineRMS);
     ped_mean += rGaussPed.fire();
 
     for (unsigned int i = 0; i < fNTimeSamples; ++i) {
-      float adcval = noisetmp.at(i) + chargeWork.at(i) + ped_mean;
+
+      float chargecontrib = chargeWork.at(i);
+      if (chargecontrib>preamp_sat) chargecontrib=preamp_sat;
+
+      float adcval = noisetmp.at(i) + chargecontrib + ped_mean;
 
       //Add Noise to NoiseDist Histogram
       if (i % 100 == 0)
