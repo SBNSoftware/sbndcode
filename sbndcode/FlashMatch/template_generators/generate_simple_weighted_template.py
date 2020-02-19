@@ -183,24 +183,24 @@ def generator(input_file, rootfile, gtrees, gbranches):
         pe_hist.Fill(slice, uncoated_coated_ratio)
         pe_prof.Fill(slice, uncoated_coated_ratio)
 
-        # fill histograms for match score calculation from profile histograms
-        for ib in list(range(0, profile_bins)):
-            dy_h1.SetBinContent(ib, dy_prof.GetBinContent(ib))
-            dy_h1.SetBinError(ib, dy_prof.GetBinError(ib))
-            y_means[int(ib/2)] = 0. # TODO: compute!
-            y_spreads[int(ib/2)] = dy_prof.GetBinError(ib)
-            dz_h1.SetBinContent(ib, dz_prof.GetBinContent(ib))
-            dz_h1.SetBinError(ib, dz_prof.GetBinError(ib))
-            z_means[int(ib/2)] = 0. # TODO: compute!
-            z_spreads[int(ib/2)] = dz_prof.GetBinError(ib)
-            rr_h1.SetBinContent(ib, rr_prof.GetBinContent(ib))
-            rr_h1.SetBinError(ib, rr_prof.GetBinError(ib))
-            rr_means[int(ib/2)] = rr_prof.GetBinContent(ib)
-            rr_spreads[int(ib/2)] = rr_prof.GetBinError(ib)
-            pe_h1.SetBinContent(ib, pe_prof.GetBinContent(ib))
-            pe_h1.SetBinError(ib, pe_prof.GetBinError(ib))
-            pe_means[int(ib/2)] = pe_prof.GetBinContent(ib)
-            pe_spreads[int(ib/2)] = pe_prof.GetBinError(ib)
+    # fill histograms for match score calculation from profile histograms
+    for ib in list(range(0, profile_bins)):
+        dy_h1.SetBinContent(ib, dy_prof.GetBinContent(ib))
+        dy_h1.SetBinError(ib, dy_prof.GetBinError(ib))
+        dy_means[int(ib/2)] = dy_prof.GetBinContent(ib)
+        dy_spreads[int(ib/2)] = dy_prof.GetBinError(ib)
+        dz_h1.SetBinContent(ib, dz_prof.GetBinContent(ib))
+        dz_h1.SetBinError(ib, dz_prof.GetBinError(ib))
+        dz_means[int(ib/2)] = dz_prof.GetBinContent(ib)
+        dz_spreads[int(ib/2)] = dz_prof.GetBinError(ib)
+        rr_h1.SetBinContent(ib, rr_prof.GetBinContent(ib))
+        rr_h1.SetBinError(ib, rr_prof.GetBinError(ib))
+        rr_means[int(ib/2)] = rr_prof.GetBinContent(ib)
+        rr_spreads[int(ib/2)] = rr_prof.GetBinError(ib)
+        pe_h1.SetBinContent(ib, pe_prof.GetBinContent(ib))
+        pe_h1.SetBinError(ib, pe_prof.GetBinError(ib))
+        pe_means[int(ib/2)] = pe_prof.GetBinContent(ib)
+        pe_spreads[int(ib/2)] = pe_prof.GetBinError(ib)
 
     for e in nuslice_tree:
         slice = e.nuvtx_x
