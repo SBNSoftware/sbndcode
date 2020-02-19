@@ -214,6 +214,15 @@ def generator(input_file, rootfile, gtrees, gbranches):
         if dy_spreads[isl] <= 1e-8:
             print(f"isl {isl}. dy_spreads[isl]{dy_spreads[isl]} ")
             dy_spreads[isl] = 1.
+        if dz_spreads[isl] <= 1e-8:
+            print(f"isl {isl}. dz_spreads[isl]{dz_spreads[isl]} ")
+            dz_spreads[isl] = 1.
+        if rr_spreads[isl] <= 1e-8:
+            print(f"isl {isl}. rr_spreads[isl]{rr_spreads[isl]} ")
+            rr_spreads[isl] = 1.
+        if pe_spreads[isl] <= 1e-8:
+            print(f"isl {isl}. pe_spreads[isl]{pe_spreads[isl]} ")
+            pe_spreads[isl] = 1.
         score += abs(abs(e.flash_y-e.nuvtx_y)- dy_means[isl])/dy_spreads[isl]
         score += abs(abs(e.flash_z-e.nuvtx_z)- dz_means[isl])/dz_spreads[isl]
         score += abs(e.flash_r-rr_means[isl])/rr_spreads[isl]
