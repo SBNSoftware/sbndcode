@@ -78,8 +78,8 @@ def generator(input_file, rootfile, gtrees, gbranches):
     profile_bins = 40
     profile_option = 's' # errors are the standard deviation
 
-    y_spreads = [None] * n_bins
-    y_means = [None] * n_bins
+    dy_spreads = [None] * n_bins
+    dy_means = [None] * n_bins
     y_bins =  100
     y_low = -200. # TODO: un hardcode
     y_up = 200. # TODO: un hardcode
@@ -88,7 +88,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                y_bins, y_low, y_up)
     dy_hist.GetXaxis().SetTitle("distance from anode (cm)");
     dy_hist.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
-    dy_prof = TProfile("dy_prof","Profile of y_spreads in #Delta y",
+    dy_prof = TProfile("dy_prof","Profile of dy_spreads in #Delta y",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
                        y_low, y_up, profile_option);
     dy_prof.GetXaxis().SetTitle("distance from anode (cm)");
@@ -98,8 +98,8 @@ def generator(input_file, rootfile, gtrees, gbranches):
     dy_h1.GetXaxis().SetTitle("distance from anode (cm)");
     dy_h1.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
 
-    z_spreads = [None] * n_bins
-    z_means = [None] * n_bins
+    dz_spreads = [None] * n_bins
+    dz_means = [None] * n_bins
     z_bins =  100
     z_low = -200. # TODO: un hardcode
     z_up = 200. # TODO: un hardcode
@@ -108,7 +108,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                z_bins, z_low, z_up)
     dz_hist.GetXaxis().SetTitle("distance from anode (cm)");
     dz_hist.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
-    dz_prof = TProfile("dz_prof","Profile of z_spreads in #Delta z",
+    dz_prof = TProfile("dz_prof","Profile of dz_spreads in #Delta z",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
                        z_low, z_up, profile_option);
     dz_prof.GetXaxis().SetTitle("distance from anode (cm)");
@@ -128,7 +128,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                rr_bins, rr_low, rr_up)
     rr_hist.GetXaxis().SetTitle("distance from anode (cm)");
     rr_hist.GetYaxis().SetTitle("RMS flash (cm)");
-    rr_prof = TProfile("rr_prof","Profile of y_spreads in #Delta y", # TODO: title
+    rr_prof = TProfile("rr_prof","Profile of dy_spreads in #Delta y", # TODO: title
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
                        rr_low, rr_up, profile_option);
     rr_prof.GetXaxis().SetTitle("distance from anode (cm)");
@@ -148,7 +148,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                pe_bins, pe_low, pe_up)
     pe_hist.GetXaxis().SetTitle("distance from anode (cm)");
     pe_hist.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
-    pe_prof = TProfile("pe_prof","Profile of z_spreads in #Delta z",
+    pe_prof = TProfile("pe_prof","Profile of dz_spreads in #Delta z",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
                        pe_low, pe_up, profile_option);
     pe_prof.GetXaxis().SetTitle("distance from anode (cm)");
@@ -163,7 +163,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
     score_hist_up = 50.
     match_score_scatter = TH2F("match_score_scatter", "Scatter plot of match scores",
                                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
-                               score_hist_bins, score_hist_low, score_hist_up)
+                               score_hist_bins, score_hist_low, score_hist_up*(3./5.))
     match_score_scatter.GetXaxis().SetTitle("distance from anode (cm)")
     match_score_scatter.GetYaxis().SetTitle("match score (arbitrary)");
     match_score_hist = TH1F("match_score", "Match Score",
@@ -211,11 +211,11 @@ def generator(input_file, rootfile, gtrees, gbranches):
         # if (isl<0) isl=0;
 
         score = 0.
-        if y_spreads[isl] <= 1e-8:
-            print(f"isl {isl}. y_spreads[isl]{y_spreads[isl]} ")
-            y_spreads[isl] = 1.
-        score += abs(abs(e.flash_y-e.nuvtx_y)- y_means[isl])/y_spreads[isl]
-        score += abs(abs(e.flash_z-e.nuvtx_z)- z_means[isl])/z_spreads[isl]
+        if dy_spreads[isl] <= 1e-8:
+            print(f"isl {isl}. dy_spreads[isl]{dy_spreads[isl]} ")
+            dy_spreads[isl] = 1.
+        score += abs(abs(e.flash_y-e.nuvtx_y)- dy_means[isl])/dy_spreads[isl]
+        score += abs(abs(e.flash_z-e.nuvtx_z)- dz_means[isl])/dz_spreads[isl]
         score += abs(e.flash_r-rr_means[isl])/rr_spreads[isl]
         # score += abs(uncoated_coated_ratio-pe_means[isl])/pe_spreads[isl]
         match_score_scatter.Fill(slice, score)
@@ -245,7 +245,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     canv.Update();
     dy_hist.Draw();
-    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',y_means), array('f',xerrs), array('f',y_spreads))
+    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',dy_means), array('f',xerrs), array('f',dy_spreads))
     crosses.SetLineColor(9)
     crosses.SetLineWidth(3)
     crosses.Draw("Psame")
@@ -253,7 +253,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     canv.Update();
     dz_hist.Draw();
-    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',z_means), array('f',xerrs), array('f',z_spreads))
+    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',dz_means), array('f',xerrs), array('f',dz_spreads))
     crosses.SetLineColor(9)
     crosses.SetLineWidth(3)
     crosses.Draw("Psame")
