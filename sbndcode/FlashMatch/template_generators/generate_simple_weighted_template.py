@@ -192,28 +192,94 @@ def generator(input_file, rootfile, gtrees, gbranches):
     nuslice_tree = dir.Get("nuslicetree")#, nuslice_tree)
     # nuslice_tree.Print()
     n_bins = 20
-
-    y_spreads = [None] * n_bins
-    y_means = [None] * n_bins
-
     xvals = list(range(5, 205, 10)) # TODO: un hardcode
     xerrs = [5] * len(xvals)
-
     dist_to_anode_bins =  100
     dist_to_anode_low = 0. # TODO: un hardcode
     dist_to_anode_up = 200. # TODO: un hardcode
+    profile_bins = 40
+    profile_option = 's' # errors are the standard deviation
 
+    y_spreads = [None] * n_bins
+    y_means = [None] * n_bins
     y_bins =  100
     y_low = -200. # TODO: un hardcode
     y_up = 200. # TODO: un hardcode
-
     dy_hist = TH2F("dy_hist", "#Delta y ",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
                y_bins, y_low, y_up)
     dy_hist.GetXaxis().SetTitle("distance from anode (cm)");
     dy_hist.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
+    dy_prof = TProfile("dy_prof","Profile of y_spreads in #Delta y",
+                       profile_bins, dist_to_anode_low, dist_to_anode_up,
+                       y_low, y_up, profile_option);
+    dy_prof.GetXaxis().SetTitle("distance from anode (cm)");
+    dy_prof.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
+    dy_h1 = TH1F("dy_h1", "",
+                 profile_bins, dist_to_anode_low, dist_to_anode_up);
+    dy_h1.GetXaxis().SetTitle("distance from anode (cm)");
+    dy_h1.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
 
-    # TODO: the rest of TH2Fs
+    z_spreads = [None] * n_bins
+    z_means = [None] * n_bins
+    z_bins =  100
+    z_low = -200. # TODO: un hardcode
+    z_up = 200. # TODO: un hardcode
+    dz_hist = TH2F("dz_hist", "#Delta z ",
+               dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
+               z_bins, z_low, z_up)
+    dz_hist.GetXaxis().SetTitle("distance from anode (cm)");
+    dz_hist.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
+    dz_prof = TProfile("dz_prof","Profile of z_spreads in #Delta z",
+                       profile_bins, dist_to_anode_low, dist_to_anode_up,
+                       z_low, z_up, profile_option);
+    dz_prof.GetXaxis().SetTitle("distance from anode (cm)");
+    dz_prof.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
+    dz_h1 = TH1F("dz_h1", "",
+                 profile_bins, dist_to_anode_low, dist_to_anode_up);
+    dz_h1.GetXaxis().SetTitle("distance from anode (cm)");
+    dz_h1.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
+
+    rr_spreads = [None] * n_bins
+    rr_means = [None] * n_bins
+    rr_bins =  100
+    rr_low = 0. # TODO: un hardcode
+    rr_up = 200. # TODO: un hardcode
+    rr_hist = TH2F("rr_hist", "RMS Flash",
+               dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
+               rr_bins, rr_low, rr_up)
+    rr_hist.GetXaxis().SetTitle("distance from anode (cm)");
+    rr_hist.GetYaxis().SetTitle("RMS flash (cm)");
+    rr_prof = TProfile("rr_prof","Profile of y_spreads in #Delta y", # TODO: title
+                       profile_bins, dist_to_anode_low, dist_to_anode_up,
+                       rr_low, rr_up, profile_option);
+    rr_prof.GetXaxis().SetTitle("distance from anode (cm)");
+    rr_prof.GetYaxis().SetTitle("y_flash - y_TPC (cm)"); # TODO: title
+    rr_h1 = TH1F("rr_h1", "",
+                 profile_bins, dist_to_anode_low, dist_to_anode_up);
+    rr_h1.GetXaxis().SetTitle("distance from anode (cm)");
+    rr_h1.GetYaxis().SetTitle("y_flash - y_TPC (cm)"); # TODO: title
+
+    pe_spreads = [None] * n_bins
+    pe_means = [None] * n_bins
+    pe_bins =  100
+    pe_low = 0. # TODO: un hardcode
+    pe_up = 50. # TODO: un hardcode
+    pe_hist = TH2F("pe_hist", "#Delta z ",
+               dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
+               pe_bins, pe_low, pe_up)
+    pe_hist.GetXaxis().SetTitle("distance from anode (cm)");
+    pe_hist.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
+    pe_prof = TProfile("pe_prof","Profile of z_spreads in #Delta z",
+                       profile_bins, dist_to_anode_low, dist_to_anode_up,
+                       pe_low, pe_up, profile_option);
+    pe_prof.GetXaxis().SetTitle("distance from anode (cm)");
+    pe_prof.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
+    pe_h1 = TH1F("pe_h1", "",
+                 profile_bins, dist_to_anode_low, dist_to_anode_up);
+    pe_h1.GetXaxis().SetTitle("distance from anode (cm)");
+    pe_h1.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
+
     score_hist_bins = 100
     score_hist_low = 0.
     score_hist_up = 50.
@@ -226,20 +292,6 @@ def generator(input_file, rootfile, gtrees, gbranches):
                             score_hist_bins, score_hist_low, score_hist_up)
     match_score_hist.GetXaxis().SetTitle("match score (arbitrary)")
 
-    profile_bins = 40
-    profile_option = 's' # errors are the standard deviation
-    dy_prof = TProfile("dy_prof","Profile of y_spreads in #Delta y",
-                       profile_bins, dist_to_anode_low, dist_to_anode_up,
-                       y_low, y_up, profile_option);
-    dy_prof.GetXaxis().SetTitle("distance from anode (cm)");
-    dy_prof.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
-
-    # TODO: the rest of TProfiles
-
-    dy_h1 = TH1F("dy_h1", "",
-                 profile_bins, dist_to_anode_low, dist_to_anode_up);
-    dy_h1.GetXaxis().SetTitle("distance from anode (cm)");
-    dy_h1.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
 
     # exit(0)
     # counter = 1
@@ -247,20 +299,39 @@ def generator(input_file, rootfile, gtrees, gbranches):
         # print("Going in nuslice_tree for", counter)
         # counter += 1
         slice = e.nuvtx_x
+        uncoated_coated_ratio = 100.*e.flash_unpe/e.flashpe
 
         dy_hist.Fill(slice, e.flash_y - e.nuvtx_y)
         dy_prof.Fill(slice, e.flash_y - e.nuvtx_y)
+        dz_hist.Fill(slice, e.flash_z - e.nuvtx_z)
+        dz_prof.Fill(slice, e.flash_z - e.nuvtx_z)
+        rr_hist.Fill(slice, e.flash_r)
+        rr_prof.Fill(slice, e.flash_r)
+        pe_hist.Fill(slice, uncoated_coated_ratio)
+        pe_prof.Fill(slice, uncoated_coated_ratio)
 
         # fill histograms for match score calculation from profile histograms
         for ib in list(range(0, profile_bins)):
             dy_h1.SetBinContent(ib, dy_prof.GetBinContent(ib))
             dy_h1.SetBinError(ib, dy_prof.GetBinError(ib))
-            y_means[int(ib/2)] = 0.
+            y_means[int(ib/2)] = 0. # TODO: compute!
             y_spreads[int(ib/2)] = dy_prof.GetBinError(ib)
-            #TODO: fill rest of d*_h1 hists
+            dz_h1.SetBinContent(ib, dz_prof.GetBinContent(ib))
+            dz_h1.SetBinError(ib, dz_prof.GetBinError(ib))
+            z_means[int(ib/2)] = 0. # TODO: compute!
+            z_spreads[int(ib/2)] = dz_prof.GetBinError(ib)
+            rr_h1.SetBinContent(ib, rr_prof.GetBinContent(ib))
+            rr_h1.SetBinError(ib, rr_prof.GetBinError(ib))
+            rr_means[int(ib/2)] = rr_prof.GetBinContent(ib)
+            rr_spreads[int(ib/2)] = rr_prof.GetBinError(ib)
+            pe_h1.SetBinContent(ib, pe_prof.GetBinContent(ib))
+            pe_h1.SetBinError(ib, pe_prof.GetBinError(ib))
+            pe_means[int(ib/2)] = pe_prof.GetBinContent(ib)
+            pe_spreads[int(ib/2)] = pe_prof.GetBinError(ib)
 
     for e in nuslice_tree:
         slice = e.nuvtx_x
+        uncoated_coated_ratio = 100.*e.flash_unpe/e.flashpe
         # calculate match score
         isl = int(slice/10.)
         # if (isl>) isl=19;
@@ -271,24 +342,34 @@ def generator(input_file, rootfile, gtrees, gbranches):
             print(f"isl {isl}. y_spreads[isl]{y_spreads[isl]} ")
             y_spreads[isl] = 1.
         score += abs(abs(e.flash_y-e.nuvtx_y)- y_means[isl])/y_spreads[isl]
-        # score += abs(abs(e.flash_z-e.nuvtx_z)-dzmean[isl])/dzsp[isl]
-        # score += abs(flash_r-rrmean[isl])/rrsp[isl]
-        # score += abs(myratio-pemean[isl])/pesp[isl]
+        score += abs(abs(e.flash_z-e.nuvtx_z)- z_means[isl])/z_spreads[isl]
+        score += abs(e.flash_r-rr_means[isl])/rr_spreads[isl]
+        # score += abs(uncoated_coated_ratio-pe_means[isl])/pe_spreads[isl]
+        match_score_scatter.Fill(slice, score)
         match_score_hist.Fill(score)
 
     hfile = ROOT.gROOT.FindObject('fm_metrics_sbnd.root')
     if hfile:
         hfile.Close()
     hfile = TFile('fm_metrics_sbnd.root', 'RECREATE', 'Simple flash matching metrics for SBND')
-    match_score_scatter.Write();
-    match_score_hist.Write();
     dy_hist.Write();
     dy_prof.Write();
     dy_h1.Write();
-
+    dz_hist.Write();
+    dz_prof.Write();
+    dz_h1.Write();
+    rr_hist.Write();
+    rr_prof.Write();
+    rr_h1.Write();
+    pe_hist.Write();
+    pe_prof.Write();
+    pe_h1.Write();
+    match_score_scatter.Write();
+    match_score_hist.Write();
     hfile.Close();
 
     canv = TCanvas("canv");
+
     canv.Update();
     dy_hist.Draw();
     crosses = TGraphErrors(n_bins, array('f',xvals), array('f',y_means), array('f',xerrs), array('f',y_spreads))
@@ -296,15 +377,38 @@ def generator(input_file, rootfile, gtrees, gbranches):
     crosses.SetLineWidth(3)
     crosses.Draw("Psame")
     canv.Print("dy.pdf")
-    canv.Update()
 
+    canv.Update();
+    dz_hist.Draw();
+    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',z_means), array('f',xerrs), array('f',z_spreads))
+    crosses.SetLineColor(9)
+    crosses.SetLineWidth(3)
+    crosses.Draw("Psame")
+    canv.Print("dz.pdf")
+
+    canv.Update();
+    rr_hist.Draw();
+    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',rr_means), array('f',xerrs), array('f',rr_spreads))
+    crosses.SetLineColor(9)
+    crosses.SetLineWidth(3)
+    crosses.Draw("Psame")
+    canv.Print("rr.pdf")
+
+    canv.Update();
+    pe_hist.Draw();
+    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',pe_means), array('f',xerrs), array('f',pe_spreads))
+    crosses.SetLineColor(9)
+    crosses.SetLineWidth(3)
+    crosses.Draw("Psame")
+    canv.Print("pe.pdf")
+
+    canv.Update()
     match_score_scatter.Draw()
     canv.Print("match_score_scatter.pdf")
-    canv.Update()
 
+    canv.Update()
     match_score_hist.Draw()
     canv.Print("match_score.pdf")
-    canv.Update()
 
 
 
