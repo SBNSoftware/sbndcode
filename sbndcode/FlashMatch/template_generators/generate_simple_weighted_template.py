@@ -66,129 +66,7 @@ def help():
 
 
 def generator(input_file, rootfile, gtrees, gbranches):
-    # level = 2
-    # trees = {}
-    # events = None
-    # keys = rootfile.GetListOfKeys()
-    # for key in keys:
-    #     objname = key.GetName()
-    #     print(objname)
-    #     if objname not in trees:
-    #         obj = rootfile.Get(objname)
-    #         print("obj:{}".format(obj))
-    #         if obj and obj.InheritsFrom('TTree'):
-    #             trees[objname] = obj
-    #             print("trees:{}".format(trees))
-
-    #             if objname == 'Events':
-    #                 events = obj
-
-    # doprint = True
-    # # Print summary of trees.
-    # if doprint:
-    #     print('\nTrees:\n')
-    # for key in sorted(trees.keys()):
-    #     tree = trees[key]
-    #     nentry = tree.GetEntriesFast()
-    #     if doprint:
-    #         print('%s has %d entries.' % (key, nentry))
-
-    #     # Remember information about trees.
-
-    #     if key in gtrees:
-    #         gtrees[key] = gtrees[key] + nentry
-    #     else:
-    #         gtrees[key] = nentry
-
-    # # Print summary of branches in Events tree.
-
-    # if doprint:
-    #     print('\nBranches of Events tree:\n')
-
-    # # If level is zero, we are done (don't analyze branches).
-
-    # # if level == 0:
-    # #     return
-
-    # if events:
-
-    #     if doprint:
-    #         print('   Total bytes  Zipped bytes   Comp.  Branch name')
-    #         print('   -----------  ------------   -----  -----------')
-
-    #     branches = events.GetListOfBranches()
-    #     ntotall = 0
-    #     nzipall = 0
-
-    #     # Loop over branche of Events tree.
-
-    #     for branch in sorted(branches):
-    #         branch_class = branch.GetClass().GetName()
-
-    #         # Only look at data products (class art::Wrapper<T>).
-
-    #         if branch_class[0: 13] == 'art::Wrapper<':
-
-    #             # Loop over subbranches.
-
-    #             subbranches = branch.GetListOfBranches()
-    #             for subbranch in sorted(subbranches):
-    #                 name = subbranch.GetName()
-
-    #                 # Only look at '.obj' subbranch (wrapped object).
-
-    #                 if name[-4:] == '.obj':
-    #                     ntot = subbranch.GetTotBytes("*")
-    #                     nzip = subbranch.GetZipBytes("*")
-    #                     ntotall = ntotall + ntot
-    #                     nzipall = nzipall + nzip
-    #                     if doprint:
-    #                         if nzip != 0:
-    #                             comp = float(ntot) / float(nzip)
-    #                         else:
-    #                             comp = 0.
-    #                         print('%14d%14d%8.2f  %s' % (ntot, nzip, comp, name))
-
-    #                     # Remember information about branches.
-                        
-    #                     if name in gbranches:
-    #                         gbranches[name][0] = gbranches[name][0] + ntot
-    #                         gbranches[name][1] = gbranches[name][1] + nzip
-    #                     else:
-    #                         gbranches[name] = [ntot, nzip]
-
-    #                     # Loop over subsubbranches (attributes of wrapped object).
-                        
-    #                     if level > 1:
-    #                         subsubbranches = subbranch.GetListOfBranches()
-    #                         for subsubbranch in sorted(subsubbranches):
-    #                             name = subsubbranch.GetName()
-    #                             ntot = subsubbranch.GetTotBytes("*")
-    #                             nzip = subsubbranch.GetZipBytes("*")
-    #                             if doprint:
-    #                                 if nzip != 0:
-    #                                     comp = float(ntot) / float(nzip)
-    #                                 else:
-    #                                     comp = 0.
-    #                                 print('%14d%14d%8.2f  %s' % (ntot, nzip, comp,
-    #                                                              subsubbranch.GetName()))
-
-    #                             # Remember information about branches.
-                        
-    #                             if name in gbranches:
-    #                                 gbranches[name][0] = gbranches[name][0] + ntot
-    #                                 gbranches[name][1] = gbranches[name][1] + nzip
-    #                             else:
-    #                                 gbranches[name] = [ntot, nzip]
-
-    # # Do summary of all branches.
-
-
-    
     dir = rootfile.Get(input_file+":/fmatch")
-    # print("dir: "+str(type(dir)))
-    # print(dir)
-    # TTree nuslice_tree  = None
     nuslice_tree = dir.Get("nuslicetree")#, nuslice_tree)
     # nuslice_tree.Print()
     n_bins = 20
@@ -292,12 +170,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                             score_hist_bins, score_hist_low, score_hist_up)
     match_score_hist.GetXaxis().SetTitle("match score (arbitrary)")
 
-
-    # exit(0)
-    # counter = 1
     for e in nuslice_tree:
-        # print("Going in nuslice_tree for", counter)
-        # counter += 1
         slice = e.nuvtx_x
         uncoated_coated_ratio = 100.*e.flash_unpe/e.flashpe
 
@@ -411,7 +284,6 @@ def generator(input_file, rootfile, gtrees, gbranches):
     canv.Print("match_score.pdf")
 
 
-
 # Main program.
 def main(argv):
 
@@ -424,33 +296,14 @@ def main(argv):
     args = argv[1:]
     while len(args) > 0:
         if args[0] == '-h' or args[0] == '--help':
-
             help()
             return 0
-
-        # elif args[0] == '--level' and len(args) > 1:
-        #     # Analyze level.
-        #     level = int(args[1])
-        #     del args[0:2]
-
-        # elif args[0] == '--nfile' and len(args) > 1:
-        #     # Number of files.
-        #     nfilemax = int(args[1])
-        #     del args[0:2]
-
-        # elif args[0] == '--all':
-            # All files flag.
-            # all = 1
-            # del args[0]
-
         elif args[0][0] == '-':
-
             # Unknown option.
             print('Unknown option %s' % args[0])
             return 1
 
         elif args[0][0] == '@':
-
             # Read in file list to input files.
             filelistname = args[0][1:]
             if larbatch_posix.exists(filelistname):
@@ -488,8 +341,6 @@ def main(argv):
             print('Failed to open %s' % input_file)
             return 1
 
-        # Analyze this file.
-        # analyze(root, level, gtrees, gbranches, all)
         generator(input_file, rootfile, gtrees, gbranches)
 
     print('\n%d files analyzed.' % nfile)
