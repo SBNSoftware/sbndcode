@@ -190,10 +190,11 @@ def generator(input_file, rootfile, gtrees, gbranches):
     # print(dir)
     # TTree nuslice_tree  = None
     nuslice_tree = dir.Get("nuslicetree")#, nuslice_tree)
-    nuslice_tree.Print()
+    # nuslice_tree.Print()
     n_bins = 20
-    spreads = [None] * n_bins
-    means = [None] * n_bins
+
+    y_spreads = [None] * n_bins
+    y_means = [None] * n_bins
 
     xvals = list(range(5, 205, 10)) # TODO: un hardcode
     xerrs = [5] * len(xvals)
@@ -227,7 +228,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     profile_bins = 40
     profile_option = 's' # errors are the standard deviation
-    dy_prof = TProfile("dy_prof","Profile of spreads in #Delta y",
+    dy_prof = TProfile("dy_prof","Profile of y_spreads in #Delta y",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
                        y_low, y_up, profile_option);
     dy_prof.GetXaxis().SetTitle("distance from anode (cm)");
@@ -254,20 +255,22 @@ def generator(input_file, rootfile, gtrees, gbranches):
         for ib in list(range(0, profile_bins)):
             dy_h1.SetBinContent(ib, dy_prof.GetBinContent(ib))
             dy_h1.SetBinError(ib, dy_prof.GetBinError(ib))
-            means[int(ib/2)] = 0.
-            spreads[int(ib/2)] = dy_prof.GetBinError(ib)
+            y_means[int(ib/2)] = 0.
+            y_spreads[int(ib/2)] = dy_prof.GetBinError(ib)
             #TODO: fill rest of d*_h1 hists
 
+    for e in nuslice_tree:
+        slice = e.nuvtx_x
         # calculate match score
-        isl = int(slice/10)
+        isl = int(slice/10.)
         # if (isl>) isl=19;
         # if (isl<0) isl=0;
 
         score = 0.
-        if spreads[isl] <= 1e-8:
-            # print(f"isl {isl}. spreads[isl]{spreads[isl]} ")
-            spreads[isl] = 1.
-        score += abs(abs(e.flash_y-e.nuvtx_y)- means[isl])/spreads[isl]
+        if y_spreads[isl] <= 1e-8:
+            print(f"isl {isl}. y_spreads[isl]{y_spreads[isl]} ")
+            y_spreads[isl] = 1.
+        score += abs(abs(e.flash_y-e.nuvtx_y)- y_means[isl])/y_spreads[isl]
         # score += abs(abs(e.flash_z-e.nuvtx_z)-dzmean[isl])/dzsp[isl]
         # score += abs(flash_r-rrmean[isl])/rrsp[isl]
         # score += abs(myratio-pemean[isl])/pesp[isl]
@@ -288,7 +291,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
     canv = TCanvas("canv");
     canv.Update();
     dy_hist.Draw();
-    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',means), array('f',xerrs), array('f',spreads))
+    crosses = TGraphErrors(n_bins, array('f',xvals), array('f',y_means), array('f',xerrs), array('f',y_spreads))
     crosses.SetLineColor(9)
     crosses.SetLineWidth(3)
     crosses.Draw("Psame")
