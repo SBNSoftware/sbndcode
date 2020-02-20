@@ -27,6 +27,7 @@
 ######################################################################
 
 import sys, os, string
+import numpy as np
 from time import sleep
 from array import array
 # import project_utilities
@@ -70,28 +71,30 @@ def generator(input_file, rootfile, gtrees, gbranches):
     dir = rootfile.Get(input_file+":/fmatch")
     nuslice_tree = dir.Get("nuslicetree")#, nuslice_tree)
     # nuslice_tree.Print()
-    n_bins = 20
-    xvals = list(range(5, 205, 10)) # TODO: un hardcode
-    xerrs = [5] * len(xvals)
-    dist_to_anode_bins =  100
+
+    # TODO: un-hardcode this whole block
+    n_bins = 40
+    xvals = np.arange(2.5, 200, 5) # TODO: un hardcode
+    xerrs = np.array([2.5] * len(xvals))
+    dist_to_anode_bins =  n_bins
     dist_to_anode_low = 0. # TODO: un hardcode
     dist_to_anode_up = 200. # TODO: un hardcode
-    profile_bins = 40
+    profile_bins = n_bins
     profile_option = 's' # errors are the standard deviation
 
     dy_spreads = [None] * n_bins
     dy_means = [None] * n_bins
-    y_bins =  100
-    y_low = -200. # TODO: un hardcode
-    y_up = 200. # TODO: un hardcode
-    dy_hist = TH2F("dy_hist", "#Delta y ",
+    dy_bins =  100
+    dy_low = -200. # TODO: un hardcode
+    dy_up = 200. # TODO: un hardcode
+    dy_hist = TH2F("dy_hist", "#Delta y",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
-               y_bins, y_low, y_up)
+               dy_bins, dy_low, dy_up)
     dy_hist.GetXaxis().SetTitle("distance from anode (cm)");
     dy_hist.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
     dy_prof = TProfile("dy_prof","Profile of dy_spreads in #Delta y",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
-                       y_low, y_up, profile_option);
+                       dy_low*2, dy_up*2, profile_option);
     dy_prof.GetXaxis().SetTitle("distance from anode (cm)");
     dy_prof.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
     dy_h1 = TH1F("dy_h1", "",
@@ -101,17 +104,17 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     dz_spreads = [None] * n_bins
     dz_means = [None] * n_bins
-    z_bins =  100
-    z_low = -200. # TODO: un hardcode
-    z_up = 200. # TODO: un hardcode
-    dz_hist = TH2F("dz_hist", "#Delta z ",
+    dz_bins =  100
+    dz_low = -200. # TODO: un hardcode
+    dz_up = 200. # TODO: un hardcode
+    dz_hist = TH2F("dz_hist", "#Delta z",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
-               z_bins, z_low, z_up)
+               dz_bins, dz_low, dz_up)
     dz_hist.GetXaxis().SetTitle("distance from anode (cm)");
     dz_hist.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
     dz_prof = TProfile("dz_prof","Profile of dz_spreads in #Delta z",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
-                       z_low, z_up, profile_option);
+                       dz_low*2.5, dz_up*2.5, profile_option);
     dz_prof.GetXaxis().SetTitle("distance from anode (cm)");
     dz_prof.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
     dz_h1 = TH1F("dz_h1", "",
@@ -141,7 +144,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     pe_spreads = [None] * n_bins
     pe_means = [None] * n_bins
-    pe_bins =  100
+    pe_bins =  50
     pe_low = 0. # TODO: un hardcode
     pe_up = 50. # TODO: un hardcode
     pe_hist = TH2F("pe_hist", "#Delta z ",
@@ -186,28 +189,28 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     # fill histograms for match score calculation from profile histograms
     for ib in list(range(0, profile_bins)):
-        dy_h1.SetBinContent(ib, dy_prof.GetBinContent(ib))
-        dy_h1.SetBinError(ib, dy_prof.GetBinError(ib))
-        dy_means[int(ib/2)] = dy_prof.GetBinContent(ib)
-        dy_spreads[int(ib/2)] = dy_prof.GetBinError(ib)
-        dz_h1.SetBinContent(ib, dz_prof.GetBinContent(ib))
-        dz_h1.SetBinError(ib, dz_prof.GetBinError(ib))
-        dz_means[int(ib/2)] = dz_prof.GetBinContent(ib)
-        dz_spreads[int(ib/2)] = dz_prof.GetBinError(ib)
-        rr_h1.SetBinContent(ib, rr_prof.GetBinContent(ib))
-        rr_h1.SetBinError(ib, rr_prof.GetBinError(ib))
-        rr_means[int(ib/2)] = rr_prof.GetBinContent(ib)
-        rr_spreads[int(ib/2)] = rr_prof.GetBinError(ib)
-        pe_h1.SetBinContent(ib, pe_prof.GetBinContent(ib))
-        pe_h1.SetBinError(ib, pe_prof.GetBinError(ib))
-        pe_means[int(ib/2)] = pe_prof.GetBinContent(ib)
-        pe_spreads[int(ib/2)] = pe_prof.GetBinError(ib)
+        dy_h1.SetBinContent(ib, dy_prof.GetBinContent(ib+1))
+        dy_h1.SetBinError(ib, dy_prof.GetBinError(ib+1))
+        dy_means[int(ib)] = dy_prof.GetBinContent(ib+1)
+        dy_spreads[int(ib)] = dy_prof.GetBinError(ib+1)
+        dz_h1.SetBinContent(ib, dz_prof.GetBinContent(ib+1))
+        dz_h1.SetBinError(ib, dz_prof.GetBinError(ib+1))
+        dz_means[int(ib)] = dz_prof.GetBinContent(ib+1)
+        dz_spreads[int(ib)] = dz_prof.GetBinError(ib+1)
+        rr_h1.SetBinContent(ib, rr_prof.GetBinContent(ib+1))
+        rr_h1.SetBinError(ib, rr_prof.GetBinError(ib+1))
+        rr_means[int(ib)] = rr_prof.GetBinContent(ib+1)
+        rr_spreads[int(ib)] = rr_prof.GetBinError(ib+1)
+        pe_h1.SetBinContent(ib, pe_prof.GetBinContent(ib+1))
+        pe_h1.SetBinError(ib, pe_prof.GetBinError(ib+1))
+        pe_means[int(ib)] = pe_prof.GetBinContent(ib+1)
+        pe_spreads[int(ib)] = pe_prof.GetBinError(ib+1)
 
     for e in nuslice_tree:
         slice = e.nuvtx_x
         uncoated_coated_ratio = 100.*e.flash_unpe/e.flashpe
         # calculate match score
-        isl = int(slice/10.)
+        isl = int(slice/5.) # TODO: un-hardcode
         # if (isl>) isl=19;
         # if (isl<0) isl=0;
         score = 0.
