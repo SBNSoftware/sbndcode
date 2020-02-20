@@ -72,16 +72,16 @@ private:
   // art::InputTag fFlashProducer;
   // art::InputTag fT0Producer; // producer for ACPT in-time anab::T0 <-> recob::Track assocaition
   std::string fPandoraProducer, fSpacePointProducer, fOpHitProducer, fInputFilename, fCaloProducer, fTrackProducer;
-  float fBeamWindowEnd, fBeamWindowStart;
-  float fLightWindowEnd, fLightWindowStart;
-  float fMinFlashPE;
-  float fPEscale;
-  float fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
+  double fBeamWindowEnd, fBeamWindowStart;
+  double fLightWindowEnd, fLightWindowStart;
+  double fMinFlashPE;
+  double fPEscale;
+  double fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
   std::string fDetector; // SBND or ICARUS
   int fCryostat;  // =0 or =1 to match ICARUS reco chain selection
   bool fMakeTree, fSelectNeutrino, fUseUncoatedPMT, fUseCalo;
-  float fTermThreshold;
-  std::vector<float> fPMTChannelCorrection;
+  double fTermThreshold;
+  std::vector<double> fPMTChannelCorrection;
   // geometry service
   static const size_t nMaxTPCs = 2; // ICARUS has 4 TPCs, however they need to be run independently
   std::array<flashana::QCluster_t, nMaxTPCs> qClusterInTPC;
@@ -99,7 +99,7 @@ private:
                     std::vector<art::Ptr<recob::PFParticle> > &pfp_v);
   bool isPDInCryoTPC(double pd_x, int icryo, size_t itpc, std::string detector);
   bool isPDInCryoTPC(int pdChannel, int icryo, size_t itpc, std::string detector);
-  bool isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector);
+  bool isChargeInCryoTPC(double qp_x, int icryo, int itpc, std::string detector);
 
   int icountPE = 0;
   const art::ServiceHandle<geo::Geometry> geometry;
@@ -109,22 +109,24 @@ private:
   // root stuff
   TTree* _flashmatch_acpt_tree;
   TTree* _flashmatch_nuslice_tree;
-  TH1F *ophittime;
-  TH1F *ophittime2;
+  TH1D *ophittime;
+  TH1D *ophittime2;
 
   // Tree variables
-  std::vector<float> _pe_reco_v, _pe_hypo_v;
-  float _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
-  float _nuvtx_x, _nuvtx_y, _nuvtx_z, _nuvtx_q;
-  float _flash_x, _flash_y, _flash_z, _flash_pe, _flash_unpe;
-  float _flash_r, _score;
+  std::vector<double> _pe_reco_v, _pe_hypo_v;
+  // double _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
+  double _nuvtx_x, _nuvtx_y, _nuvtx_z, _nuvtx_q;
+  double _flash_x, _flash_y, _flash_z, _flash_pe;
+  double _flash_r,  _flash_unpe;
+  double _score;
   int _evt, _run, _sub;
-  float _flashtime;
-  float _flashpe;
+  double _flashtime;
+  double _flashpe;
   // PFP map
   std::map<unsigned int, unsigned int> _pfpmap;
 
-  std::vector<float> dysp, dzsp, rrsp, pesp, dymean, dzmean, rrmean, pemean;
+  std::vector<double> dymean, dzmean, rrmean, pemean;
+  std::vector<double> dysp, dzsp, rrsp, pesp;
   int rr_nbins, dy_nbins, dz_nbins, pe_nbins;
 
 };
