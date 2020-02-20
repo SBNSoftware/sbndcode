@@ -23,22 +23,22 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fTrackProducer            = p.get<std::string>("TrackProducer", "pandoraTrack");
   fCaloProducer             = p.get<std::string>("CaloProducer", "pandoraCalo");
   fSpacePointProducer       = p.get<std::string>("SpacePointProducer", "pandora");
-  fBeamWindowStart          = p.get<float>("BeamWindowStart", 0.0);
-  fBeamWindowEnd            = p.get<float>("BeamWindowEnd", 4000.0);  // in ns
-  fMinFlashPE               = p.get<float>("MinFlashPE", 0.0);
-  fChargeToNPhotonsShower   = p.get<float>("ChargeToNPhotonsShower", 1.0);  // ~40000/1600
-  fChargeToNPhotonsTrack    = p.get<float>("ChargeToNPhotonsTrack", 1.0);   // ~40000/1600
   fInputFilename            = p.get<std::string>("InputFileName", "fmplots.root"); // root file with score metrics
+  fBeamWindowStart          = p.get<double>("BeamWindowStart", 0.0);
+  fBeamWindowEnd            = p.get<double>("BeamWindowEnd", 4000.0);  // in ns
+  fMinFlashPE               = p.get<double>("MinFlashPE", 0.0);
+  fChargeToNPhotonsShower   = p.get<double>("ChargeToNPhotonsShower", 1.0);  // ~40000/1600
+  fChargeToNPhotonsTrack    = p.get<double>("ChargeToNPhotonsTrack", 1.0);   // ~40000/1600
   fMakeTree                 = p.get<bool>("MakeTree", false);
   fUseCalo                  = p.get<bool>("UseCalo", false);
   fSelectNeutrino           = p.get<bool>("SelectNeutrino", true);
   fUseUncoatedPMT           = p.get<bool>("UseUncoatedPMT", false);
-  fLightWindowStart         = p.get<float>("LightWindowStart", -0.010);  // in us w.r.t. flash time
-  fLightWindowEnd           = p.get<float>("LightWindowEnd", 0.090);  // in us w.r.t flash time
+  fLightWindowStart         = p.get<double>("LightWindowStart", -0.010);  // in us w.r.t. flash time
+  fLightWindowEnd           = p.get<double>("LightWindowEnd", 0.090);  // in us w.r.t flash time
   fDetector                 = p.get<std::string>("Detector", "SBND");
   fCryostat                 = p.get<int>("Cryostat", 0); //set =0 ot =1 for ICARUS to match reco chain selection
-  fPEscale                  = p.get<float>("PEscale", 1.0);
-  fTermThreshold            = p.get<float>("ThresholdTerm", 30.);
+  fPEscale                  = p.get<double>("PEscale", 1.0);
+  fTermThreshold            = p.get<double>("ThresholdTerm", 30.);
 
   if (fDetector == "SBND" && fCryostat == 1) {
     throw cet::exception("FlashPredictSBND") << "SBND has only one cryostat. \n"
@@ -52,9 +52,9 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   art::ServiceHandle<art::TFileService> tfs;
 
   int nbins = 500 * (fBeamWindowEnd - fBeamWindowStart);
-  ophittime = tfs->make<TH1F>("ophittime", "ophittime", nbins, fBeamWindowStart, fBeamWindowEnd); // in us
+  ophittime = tfs->make<TH1D>("ophittime", "ophittime", nbins, fBeamWindowStart, fBeamWindowEnd); // in us
   ophittime->SetOption("HIST");
-  ophittime2 = tfs->make<TH1F>("ophittime2", "ophittime2", 5 * nbins, -5.0, +10.0); // in us
+  ophittime2 = tfs->make<TH1D>("ophittime2", "ophittime2", 5 * nbins, -5.0, +10.0); // in us
   ophittime2->SetOption("HIST");
 
   if (fMakeTree) {
@@ -98,7 +98,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   else {
     for (int ib = 1; ib <= rr_nbins; ++ib) {
       rrmean.push_back(temphisto->GetBinContent(ib));
-      float tt = temphisto->GetBinError(ib);
+      double tt = temphisto->GetBinError(ib);
       if (tt <= 0) {
         tt = 100.;
         std::cout << "zero value for bin spread in rr" << std::endl;
@@ -118,7 +118,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   else {
     for (int ib = 1; ib <= dy_nbins; ++ib) {
       dymean.push_back(temphisto->GetBinContent(ib));
-      float tt = temphisto->GetBinError(ib);
+      double tt = temphisto->GetBinError(ib);
       if (tt <= 0) {
         tt = 100.;
         std::cout << "zero value for bin spread in dy" << std::endl;
@@ -138,7 +138,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   else {
     for (int ib = 1; ib <= dz_nbins; ++ib) {
       dzmean.push_back(temphisto->GetBinContent(ib));
-      float tt = temphisto->GetBinError(ib);
+      double tt = temphisto->GetBinError(ib);
       if (tt <= 0) {
         tt = 100.;
         std::cout << "zero value for bin spread in dz" << std::endl;
@@ -159,7 +159,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     else {
       for (int ib = 1; ib <= pe_nbins; ++ib) {
         pemean.push_back(temphisto->GetBinContent(ib));
-        float tt = temphisto->GetBinError(ib);
+        double tt = temphisto->GetBinError(ib);
         if (tt <= 0) {
           tt = 100.;
           std::cout << "zero value for bin spread in pe" << std::endl;
@@ -260,7 +260,7 @@ void FlashPredict::produce(art::Event & e)
     //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
 
     ophittime->Fill(oph.PeakTime(), fPEscale * oph.PE());
-    // float thisPE = fPEscale*oph.PE();
+    // double thisPE = fPEscale*oph.PE();
     // if (thisPE>1) ophittime->Fill(oph.PeakTime(),thisPE);
   }
 
@@ -272,8 +272,8 @@ void FlashPredict::produce(art::Event & e)
 
   auto ibin =  ophittime->GetMaximumBin();
   _flashtime = (ibin * 0.002) + fBeamWindowStart; // in us
-  float lowedge = _flashtime + fLightWindowStart;
-  float highedge = _flashtime + fLightWindowEnd;
+  double lowedge = _flashtime + fLightWindowStart;
+  double highedge = _flashtime + fLightWindowEnd;
   mf::LogDebug("FlashPredict") << "light window " << lowedge << " " << highedge << std::endl;
 
   // only use optical hits around the flash time
@@ -328,13 +328,13 @@ void FlashPredict::produce(art::Event & e)
         int npts = mycalo->dEdx().size();
         for (int ip=0;ip<npts;++ip) {
         Point_t pxyz=mycalo->fXYZ[ip];
-        float ds = mycalo->fTrkPitch[ip];
-        float dQdx = mycalo->fdQdx[ip];
-        float dEdx = mycalo->fdEdx[ip];
-        float alpha = dQdx/dEdx;
-        float charge = (1-alpha)*dEdx*ds;
+        double ds = mycalo->fTrkPitch[ip];
+        double dQdx = mycalo->fdQdx[ip];
+        double dEdx = mycalo->fdEdx[ip];
+        double alpha = dQdx/dEdx;
+        double charge = (1-alpha)*dEdx*ds;
         // hardcode for now for SBND
-        float xpos = 0.0;
+        double xpos = 0.0;
         if (pxyz[0]<0) xpos = fabs(pxyz[0]+200.0);
         else xpos = fabs(200.0-pxyz[0]);
         qClusterInTPC[tpcindex].emplace_back(xpos, position[1], position[2], charge);
@@ -369,7 +369,7 @@ void FlashPredict::produce(art::Event & e)
           double Wxyz[3];
           geometry->WireIDToWireGeo(wid).GetCenter(Wxyz);
           // xpos is the distance from the wire planes.
-          float xpos = fabs(position[0] - Wxyz[0]);
+          double xpos = std::abs(position[0] - Wxyz[0]);
           qClusterInTPC[tpcindex].emplace_back(xpos, position[1], position[2],
                                                charge * (lar_pandora::LArPandoraHelper::IsTrack(pfp_ptr)
                                                          ? fChargeToNPhotonsTrack : fChargeToNPhotonsShower));
@@ -378,8 +378,8 @@ void FlashPredict::produce(art::Event & e)
       //      }  // if track or shower
     } // for all pfp pointers
 
-    float mscore[nMaxTPCs] = {0.};
-    // float charge[nMaxTPCs] = {0.}; // TODO: Use this
+    double mscore[nMaxTPCs] = {0.};
+    // double charge[nMaxTPCs] = {0.}; // TODO: Use this
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       if (!lightInTPC[itpc]) continue;
       double xave = 0.0; double yave = 0.0; double zave = 0.0; double norm = 0.0;
@@ -406,8 +406,8 @@ void FlashPredict::produce(art::Event & e)
       computeFlashMetrics(itpc, OpHitSubset);
 
       // calculate match score here, put association on the event
-      float slice = _nuvtx_x;
-      float drift_distance = 200.0; // TODO: no hardcoded values
+      double slice = _nuvtx_x;
+      double drift_distance = 200.0; // TODO: no hardcoded values
       if (fDetector == "ICARUS") {
         drift_distance = 150.0; // TODO: no hardcoded values
       }
@@ -451,7 +451,7 @@ void FlashPredict::produce(art::Event & e)
       icount++;
       if (fDetector == "SBND" && fUseUncoatedPMT) {
         isl = int(pe_nbins * (slice / drift_distance));
-        float myratio = 100.0 * _flash_unpe;
+        double myratio = 100.0 * _flash_unpe;
         if (pesp[isl] > 0 && _flash_pe > 0) {
           myratio /= _flash_pe;
           term = std::abs(myratio - pemean[isl]) / pesp[isl];
@@ -578,7 +578,7 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
   // geometry service
   const art::ServiceHandle<geo::Geometry> geometry;
   uint nOpDets(geometry->NOpDets());
-  std::vector<float> PEspectrum;
+  std::vector<double> PEspectrum;
   PEspectrum.resize(nOpDets);
   // apply gain to OpDets
   for (uint OpChannel=0; OpChannel<nOpDets; ++OpChannel) {
@@ -590,8 +590,8 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
   // Reset variables
   flash.x = flash.y = flash.z = 0;
   flash.x_err = flash.y_err = flash.z_err = 0;
-  float totalPE = 0.;
-  float sumy = 0., sumz = 0., sumy2 = 0., sumz2 = 0.;
+  double totalPE = 0.;
+  double sumy = 0., sumz = 0., sumy2 = 0., sumz2 = 0.;
   for (unsigned int opdet=0; opdet<PEspectrum.size(); opdet++) {
     double PMTxyz[3];
     geometry->OpDetGeoFromOpDet(opdet).GetCenter(PMTxyz);
@@ -712,14 +712,14 @@ bool FlashPredict::isPDInCryoTPC(int pdChannel, int icryo, size_t itpc, std::str
   // check whether this optical detector views the light inside this tpc.
   double dummy[3];
   geometry->OpDetGeoFromOpChannel(pdChannel).GetCenter(dummy);
-  float pd_x = dummy[0];
+  double pd_x = dummy[0];
   return isPDInCryoTPC(pd_x, icryo, itpc, detector);
 }
 
 // TODO: no hardcoding
 // TODO: collapse with the previous
 // TODO: figure out what to do with the charge that falls into the crevices
-bool FlashPredict::isChargeInCryoTPC(float qp_x, int icryo, int itpc, std::string detector)
+bool FlashPredict::isChargeInCryoTPC(double qp_x, int icryo, int itpc, std::string detector)
 {
   std::ostringstream lostChargeMessage;
   lostChargeMessage << "\nThere's " << detector << " charge that belongs nowhere. \n"

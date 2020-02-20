@@ -42,7 +42,7 @@ sys.argv = myargv[0:1]
 if 'TERM' in os.environ:
     del os.environ['TERM']
 import ROOT
-from ROOT import TH1F, TH2F, TProfile, TFile
+from ROOT import TH1D, TH2D, TProfile, TFile
 from ROOT import TStyle, TCanvas, TGraph, TGraphErrors
 ROOT.gErrorIgnoreLevel = ROOT.kError
 sys.argv = myargv
@@ -87,7 +87,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
     dy_bins =  100
     dy_low = -200. # TODO: un hardcode
     dy_up = 200. # TODO: un hardcode
-    dy_hist = TH2F("dy_hist", "#Delta y",
+    dy_hist = TH2D("dy_hist", "#Delta y",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
                dy_bins, dy_low, dy_up)
     dy_hist.GetXaxis().SetTitle("distance from anode (cm)");
@@ -97,7 +97,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                        dy_low*2, dy_up*2, profile_option);
     dy_prof.GetXaxis().SetTitle("distance from anode (cm)");
     dy_prof.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
-    dy_h1 = TH1F("dy_h1", "",
+    dy_h1 = TH1D("dy_h1", "",
                  profile_bins, dist_to_anode_low, dist_to_anode_up);
     dy_h1.GetXaxis().SetTitle("distance from anode (cm)");
     dy_h1.GetYaxis().SetTitle("y_flash - y_TPC (cm)");
@@ -107,7 +107,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
     dz_bins =  100
     dz_low = -200. # TODO: un hardcode
     dz_up = 200. # TODO: un hardcode
-    dz_hist = TH2F("dz_hist", "#Delta z",
+    dz_hist = TH2D("dz_hist", "#Delta z",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
                dz_bins, dz_low, dz_up)
     dz_hist.GetXaxis().SetTitle("distance from anode (cm)");
@@ -117,7 +117,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                        dz_low*2.5, dz_up*2.5, profile_option);
     dz_prof.GetXaxis().SetTitle("distance from anode (cm)");
     dz_prof.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
-    dz_h1 = TH1F("dz_h1", "",
+    dz_h1 = TH1D("dz_h1", "",
                  profile_bins, dist_to_anode_low, dist_to_anode_up);
     dz_h1.GetXaxis().SetTitle("distance from anode (cm)");
     dz_h1.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
@@ -127,7 +127,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
     rr_bins =  100
     rr_low = 0. # TODO: un hardcode
     rr_up = 200. # TODO: un hardcode
-    rr_hist = TH2F("rr_hist", "PE Spread",
+    rr_hist = TH2D("rr_hist", "PE Spread",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
                rr_bins, rr_low, rr_up)
     rr_hist.GetXaxis().SetTitle("distance from anode (cm)");
@@ -137,7 +137,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                        rr_low, rr_up, profile_option);
     rr_prof.GetXaxis().SetTitle("distance from anode (cm)");
     rr_prof.GetYaxis().SetTitle("RMS flash (cm)");
-    rr_h1 = TH1F("rr_h1", "",
+    rr_h1 = TH1D("rr_h1", "",
                  profile_bins, dist_to_anode_low, dist_to_anode_up);
     rr_h1.GetXaxis().SetTitle("distance from anode (cm)");
     rr_h1.GetYaxis().SetTitle("RMS flash (cm)");
@@ -147,7 +147,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
     pe_bins =  50
     pe_low = 0. # TODO: un hardcode
     pe_up = 50. # TODO: un hardcode
-    pe_hist = TH2F("pe_hist", "Uncoated/Coated Ratio",
+    pe_hist = TH2D("pe_hist", "Uncoated/Coated Ratio",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
                pe_bins, pe_low, pe_up)
     pe_hist.GetXaxis().SetTitle("distance from anode (cm)");
@@ -157,7 +157,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
                        pe_low, pe_up, profile_option);
     pe_prof.GetXaxis().SetTitle("distance from anode (cm)");
     pe_prof.GetYaxis().SetTitle("ratio_{uncoated/coated}");
-    pe_h1 = TH1F("pe_h1", "",
+    pe_h1 = TH1D("pe_h1", "",
                  profile_bins, dist_to_anode_low, dist_to_anode_up);
     pe_h1.GetXaxis().SetTitle("distance from anode (cm)");
     pe_h1.GetYaxis().SetTitle("ratio_{uncoated/coated}");
@@ -165,12 +165,12 @@ def generator(input_file, rootfile, gtrees, gbranches):
     score_hist_bins = 100
     score_hist_low = 0.
     score_hist_up = 50.
-    match_score_scatter = TH2F("match_score_scatter", "Scatter plot of match scores",
+    match_score_scatter = TH2D("match_score_scatter", "Scatter plot of match scores",
                                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
                                score_hist_bins, score_hist_low, score_hist_up*(3./5.))
     match_score_scatter.GetXaxis().SetTitle("distance from anode (cm)")
     match_score_scatter.GetYaxis().SetTitle("match score (arbitrary)");
-    match_score_hist = TH1F("match_score", "Match Score",
+    match_score_hist = TH1D("match_score", "Match Score",
                             score_hist_bins, score_hist_low, score_hist_up)
     match_score_hist.GetXaxis().SetTitle("match score (arbitrary)")
 
