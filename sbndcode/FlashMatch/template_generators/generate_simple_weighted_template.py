@@ -27,6 +27,7 @@
 ######################################################################
 
 import sys, os, string
+from time import sleep
 from array import array
 # import project_utilities
 import larbatch_posix
@@ -209,27 +210,25 @@ def generator(input_file, rootfile, gtrees, gbranches):
         isl = int(slice/10.)
         # if (isl>) isl=19;
         # if (isl<0) isl=0;
-
         score = 0.
         if dy_spreads[isl] <= 1e-8:
-            print(f"isl {isl}. dy_spreads[isl]{dy_spreads[isl]} ")
-            dy_spreads[isl] = 1.
+            print(f"Warning zero.\n slice: {slice}. isl {isl}. dy_spreads[isl]{dy_spreads[isl]} ")
+            dy_spreads[isl] = dy_spreads[isl+1]
         if dz_spreads[isl] <= 1e-8:
-            print(f"isl {isl}. dz_spreads[isl]{dz_spreads[isl]} ")
-            dz_spreads[isl] = 1.
+            print(f"Warning zero.\n slice: {slice}. isl {isl}. dz_spreads[isl]{dz_spreads[isl]} ")
+            dz_spreads[isl] = dz_spreads[isl+1]
         if rr_spreads[isl] <= 1e-8:
-            print(f"isl {isl}. rr_spreads[isl]{rr_spreads[isl]} ")
-            rr_spreads[isl] = 1.
+            print(f"Warning zero.\n slice: {slice}. isl {isl}. rr_spreads[isl]{rr_spreads[isl]} ")
+            rr_spreads[isl] = rr_spreads[isl+1]
         if pe_spreads[isl] <= 1e-8:
-            print(f"isl {isl}. pe_spreads[isl]{pe_spreads[isl]} ")
-            pe_spreads[isl] = 1.
+            print(f"Warning zero.\n slice: {slice}. isl {isl}. pe_spreads[isl]{pe_spreads[isl]} ")
+            pe_spreads[isl] = pe_spreads[isl+1]
         score += abs(abs(e.flash_y-e.nuvtx_y)- dy_means[isl])/dy_spreads[isl]
         score += abs(abs(e.flash_z-e.nuvtx_z)- dz_means[isl])/dz_spreads[isl]
         score += abs(e.flash_r-rr_means[isl])/rr_spreads[isl]
         # score += abs(uncoated_coated_ratio-pe_means[isl])/pe_spreads[isl]
         match_score_scatter.Fill(slice, score)
         match_score_hist.Fill(score)
-
     hfile = ROOT.gROOT.FindObject('fm_metrics_sbnd.root')
     if hfile:
         hfile.Close()
@@ -252,46 +251,46 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     canv = TCanvas("canv");
 
-    canv.Update();
     dy_hist.Draw();
     crosses = TGraphErrors(n_bins, array('f',xvals), array('f',dy_means), array('f',xerrs), array('f',dy_spreads))
     crosses.SetLineColor(9)
     crosses.SetLineWidth(3)
     crosses.Draw("Psame")
     canv.Print("dy.pdf")
-
     canv.Update();
+
     dz_hist.Draw();
     crosses = TGraphErrors(n_bins, array('f',xvals), array('f',dz_means), array('f',xerrs), array('f',dz_spreads))
     crosses.SetLineColor(9)
     crosses.SetLineWidth(3)
     crosses.Draw("Psame")
     canv.Print("dz.pdf")
-
     canv.Update();
+
     rr_hist.Draw();
     crosses = TGraphErrors(n_bins, array('f',xvals), array('f',rr_means), array('f',xerrs), array('f',rr_spreads))
     crosses.SetLineColor(9)
     crosses.SetLineWidth(3)
     crosses.Draw("Psame")
     canv.Print("rr.pdf")
-
     canv.Update();
+
     pe_hist.Draw();
     crosses = TGraphErrors(n_bins, array('f',xvals), array('f',pe_means), array('f',xerrs), array('f',pe_spreads))
     crosses.SetLineColor(9)
     crosses.SetLineWidth(3)
     crosses.Draw("Psame")
     canv.Print("pe.pdf")
-
     canv.Update()
+
     match_score_scatter.Draw()
     canv.Print("match_score_scatter.pdf")
-
     canv.Update()
+
     match_score_hist.Draw()
     canv.Print("match_score.pdf")
-
+    canv.Update()
+    sleep(20)
 
 # Main program.
 def main(argv):
