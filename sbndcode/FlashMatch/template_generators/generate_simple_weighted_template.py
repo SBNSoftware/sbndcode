@@ -127,40 +127,40 @@ def generator(input_file, rootfile, gtrees, gbranches):
     rr_bins =  100
     rr_low = 0. # TODO: un hardcode
     rr_up = 200. # TODO: un hardcode
-    rr_hist = TH2F("rr_hist", "RMS Flash",
+    rr_hist = TH2F("rr_hist", "PE Spread",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
                rr_bins, rr_low, rr_up)
     rr_hist.GetXaxis().SetTitle("distance from anode (cm)");
     rr_hist.GetYaxis().SetTitle("RMS flash (cm)");
-    rr_prof = TProfile("rr_prof","Profile of dy_spreads in #Delta y", # TODO: title
+    rr_prof = TProfile("rr_prof","Profile of PE Spread",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
                        rr_low, rr_up, profile_option);
     rr_prof.GetXaxis().SetTitle("distance from anode (cm)");
-    rr_prof.GetYaxis().SetTitle("y_flash - y_TPC (cm)"); # TODO: title
+    rr_prof.GetYaxis().SetTitle("RMS flash (cm)");
     rr_h1 = TH1F("rr_h1", "",
                  profile_bins, dist_to_anode_low, dist_to_anode_up);
     rr_h1.GetXaxis().SetTitle("distance from anode (cm)");
-    rr_h1.GetYaxis().SetTitle("y_flash - y_TPC (cm)"); # TODO: title
+    rr_h1.GetYaxis().SetTitle("RMS flash (cm)");
 
     pe_spreads = [None] * n_bins
     pe_means = [None] * n_bins
     pe_bins =  50
     pe_low = 0. # TODO: un hardcode
     pe_up = 50. # TODO: un hardcode
-    pe_hist = TH2F("pe_hist", "#Delta z ",
+    pe_hist = TH2F("pe_hist", "Uncoated/Coated Ratio",
                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
                pe_bins, pe_low, pe_up)
     pe_hist.GetXaxis().SetTitle("distance from anode (cm)");
-    pe_hist.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
-    pe_prof = TProfile("pe_prof","Profile of dz_spreads in #Delta z",
+    pe_hist.GetYaxis().SetTitle("ratio_{uncoated/coated}");
+    pe_prof = TProfile("pe_prof","Profile of Uncoated/Coated Ratio",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
                        pe_low, pe_up, profile_option);
     pe_prof.GetXaxis().SetTitle("distance from anode (cm)");
-    pe_prof.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
+    pe_prof.GetYaxis().SetTitle("ratio_{uncoated/coated}");
     pe_h1 = TH1F("pe_h1", "",
                  profile_bins, dist_to_anode_low, dist_to_anode_up);
     pe_h1.GetXaxis().SetTitle("distance from anode (cm)");
-    pe_h1.GetYaxis().SetTitle("z_flash - z_TPC (cm)");
+    pe_h1.GetYaxis().SetTitle("ratio_{uncoated/coated}");
 
     score_hist_bins = 100
     score_hist_low = 0.
