@@ -176,13 +176,13 @@ def generator(input_file, rootfile, gtrees, gbranches):
     match_score_hist.GetXaxis().SetTitle("match score (arbitrary)")
 
     for e in nuslice_tree:
-        slice = e.nuvtx_x
+        slice = e.charge_x
         uncoated_coated_ratio = 100.*e.flash_unpe/e.flashpe
 
-        dy_hist.Fill(slice, e.flash_y - e.nuvtx_y)
-        dy_prof.Fill(slice, e.flash_y - e.nuvtx_y)
-        dz_hist.Fill(slice, e.flash_z - e.nuvtx_z)
-        dz_prof.Fill(slice, e.flash_z - e.nuvtx_z)
+        dy_hist.Fill(slice, e.flash_y - e.charge_y)
+        dy_prof.Fill(slice, e.flash_y - e.charge_y)
+        dz_hist.Fill(slice, e.flash_z - e.charge_z)
+        dz_prof.Fill(slice, e.flash_z - e.charge_z)
         rr_hist.Fill(slice, e.flash_r)
         rr_prof.Fill(slice, e.flash_r)
         pe_hist.Fill(slice, uncoated_coated_ratio)
@@ -208,7 +208,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
         pe_spreads[int(ib)] = pe_prof.GetBinError(ib+1)
 
     for e in nuslice_tree:
-        slice = e.nuvtx_x
+        slice = e.charge_x
         uncoated_coated_ratio = 100.*e.flash_unpe/e.flashpe
         # calculate match score
         isl = int(slice/5.)  # TODO: un-hardcode
@@ -231,8 +231,8 @@ def generator(input_file, rootfile, gtrees, gbranches):
             print("Warning zero spread.\n",
                   f"slice: {slice}. isl: {isl}. pe_spreads[isl]: {pe_spreads[isl]} ")
             pe_spreads[isl] = pe_spreads[isl+1]
-        score += abs(abs(e.flash_y-e.nuvtx_y) - dy_means[isl])/dy_spreads[isl]
-        score += abs(abs(e.flash_z-e.nuvtx_z) - dz_means[isl])/dz_spreads[isl]
+        score += abs(abs(e.flash_y-e.charge_y) - dy_means[isl])/dy_spreads[isl]
+        score += abs(abs(e.flash_z-e.charge_z) - dz_means[isl])/dz_spreads[isl]
         score += abs(e.flash_r-rr_means[isl])/rr_spreads[isl]
         # score += abs(uncoated_coated_ratio-pe_means[isl])/pe_spreads[isl]
         match_score_scatter.Fill(slice, score)
