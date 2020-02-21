@@ -23,7 +23,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fTrackProducer            = p.get<std::string>("TrackProducer", "pandoraTrack");
   fCaloProducer             = p.get<std::string>("CaloProducer", "pandoraCalo");
   fSpacePointProducer       = p.get<std::string>("SpacePointProducer", "pandora");
-  fInputFilename            = p.get<std::string>("InputFileName", "fmplots.root"); // root file with score metrics
+  fInputFilename            = p.get<std::string>("InputFileName", "fm_metrics_sbnd.root"); // root file with score metrics
   fBeamWindowStart          = p.get<double>("BeamWindowStart", 0.0);
   fBeamWindowEnd            = p.get<double>("BeamWindowEnd", 4000.0);  // in ns
   fMinFlashPE               = p.get<double>("MinFlashPE", 0.0);
@@ -69,14 +69,14 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     _flashmatch_nuslice_tree->Branch("flash_z", &_flash_z, "flash_z/F");
     _flashmatch_nuslice_tree->Branch("flash_r", &_flash_r, "flash_r/F");
     _flashmatch_nuslice_tree->Branch("flash_unpe", &_flash_unpe, "flash_unpe/F");
-    _flashmatch_nuslice_tree->Branch("nuvtx_q", &_nuvtx_q, "nuvtx_q/F");
-    _flashmatch_nuslice_tree->Branch("nuvtx_x", &_nuvtx_x, "nuvtx_x/F");
-    _flashmatch_nuslice_tree->Branch("nuvtx_y", &_nuvtx_y, "nuvtx_y/F");
-    _flashmatch_nuslice_tree->Branch("nuvtx_z", &_nuvtx_z, "nuvtx_z/F");
+    _flashmatch_nuslice_tree->Branch("charge_q", &_charge_q, "charge_q/F");
+    _flashmatch_nuslice_tree->Branch("charge_x", &_charge_x, "charge_x/F");
+    _flashmatch_nuslice_tree->Branch("charge_y", &_charge_y, "charge_y/F");
+    _flashmatch_nuslice_tree->Branch("charge_z", &_charge_z, "charge_z/F");
     _flashmatch_nuslice_tree->Branch("score", &_score, "score/F");
   }
 
-  //read histograms and fill vectors for match score calculation
+  // read histograms and fill vectors for match score calculation
   std::string fname;
   cet::search_path sp("FW_SEARCH_PATH");
   sp.find_file(fInputFilename, fname);
@@ -87,91 +87,91 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
                                              << fname << "'!\n";
   }
   //
-  TH1 *temphisto = (TH1*)infile->Get("rrp1");
-  rr_nbins = temphisto->GetNbinsX();
-  if (rr_nbins <= 0) {
-    std::cout << " problem with input histos for rr " << rr_nbins << " bins " << std::endl;
-    rr_nbins = 1;
-    rrmean.push_back(0);
-    rrsp.push_back(0.001);
+  TH1 *temphisto = (TH1*)infile->Get("dy_h1");
+  dy_bins = temphisto->GetNbinsX();
+  if (dy_bins <= 0) {
+    std::cout << " problem with input histos for dy " << dy_bins << " bins " << std::endl;
+    dy_bins = 1;
+    dy_means.push_back(0);
+    dy_spreads.push_back(0.001);
   }
   else {
-    for (int ib = 1; ib <= rr_nbins; ++ib) {
-      rrmean.push_back(temphisto->GetBinContent(ib));
-      double tt = temphisto->GetBinError(ib);
-      if (tt <= 0) {
-        tt = 100.;
-        std::cout << "zero value for bin spread in rr" << std::endl;
-      }
-      rrsp.push_back(tt);
-    }
-  }
-  //
-  temphisto = (TH1*)infile->Get("dyp1");
-  dy_nbins = temphisto->GetNbinsX();
-  if (dy_nbins <= 0) {
-    std::cout << " problem with input histos for dy " << dy_nbins << " bins " << std::endl;
-    dy_nbins = 1;
-    dymean.push_back(0);
-    dysp.push_back(0.001);
-  }
-  else {
-    for (int ib = 1; ib <= dy_nbins; ++ib) {
-      dymean.push_back(temphisto->GetBinContent(ib));
+    for (int ib = 1; ib <= dy_bins; ++ib) {
+      dy_means.push_back(temphisto->GetBinContent(ib));
       double tt = temphisto->GetBinError(ib);
       if (tt <= 0) {
         tt = 100.;
         std::cout << "zero value for bin spread in dy" << std::endl;
       }
-      dysp.push_back(tt);
+      dy_spreads.push_back(tt);
     }
   }
   //
-  temphisto = (TH1*)infile->Get("dzp1");
-  dz_nbins = temphisto->GetNbinsX();
-  if (dz_nbins <= 0) {
-    std::cout << " problem with input histos for dz " << dz_nbins << " bins " << std::endl;
-    dz_nbins = 1;
-    dzmean.push_back(0);
-    dzsp.push_back(0.001);
+  temphisto = (TH1*)infile->Get("dz_h1");
+  dz_bins = temphisto->GetNbinsX();
+  if (dz_bins <= 0) {
+    std::cout << " problem with input histos for dz " << dz_bins << " bins " << std::endl;
+    dz_bins = 1;
+    dz_means.push_back(0);
+    dz_spreads.push_back(0.001);
   }
   else {
-    for (int ib = 1; ib <= dz_nbins; ++ib) {
-      dzmean.push_back(temphisto->GetBinContent(ib));
+    for (int ib = 1; ib <= dz_bins; ++ib) {
+      dz_means.push_back(temphisto->GetBinContent(ib));
       double tt = temphisto->GetBinError(ib);
       if (tt <= 0) {
         tt = 100.;
         std::cout << "zero value for bin spread in dz" << std::endl;
       }
-      dzsp.push_back(tt);
+      dz_spreads.push_back(tt);
+    }
+  }
+  //
+  temphisto = (TH1*)infile->Get("rr_h1");
+  rr_bins = temphisto->GetNbinsX();
+  if (rr_bins <= 0) {
+    std::cout << " problem with input histos for rr " << rr_bins << " bins " << std::endl;
+    rr_bins = 1;
+    rr_means.push_back(0);
+    rr_spreads.push_back(0.001);
+  }
+  else {
+    for (int ib = 1; ib <= rr_bins; ++ib) {
+      rr_means.push_back(temphisto->GetBinContent(ib));
+      double tt = temphisto->GetBinError(ib);
+      if (tt <= 0) {
+        tt = 100.;
+        std::cout << "zero value for bin spread in rr" << std::endl;
+      }
+      rr_spreads.push_back(tt);
     }
   }
   //
   if (fDetector == "SBND" ) {
-    temphisto = (TH1*)infile->Get("pep1");
-    pe_nbins = temphisto->GetNbinsX();
-    if (pe_nbins <= 0) {
-      std::cout << " problem with input histos for pe " << pe_nbins << " bins " << std::endl;
-      pe_nbins = 1;
-      pemean.push_back(0);
-      pesp.push_back(0.001);
+    temphisto = (TH1*)infile->Get("pe_h1");
+    pe_bins = temphisto->GetNbinsX();
+    if (pe_bins <= 0) {
+      std::cout << " problem with input histos for pe " << pe_bins << " bins " << std::endl;
+      pe_bins = 1;
+      pe_means.push_back(0);
+      pe_spreads.push_back(0.001);
     }
     else {
-      for (int ib = 1; ib <= pe_nbins; ++ib) {
-        pemean.push_back(temphisto->GetBinContent(ib));
+      for (int ib = 1; ib <= pe_bins; ++ib) {
+        pe_means.push_back(temphisto->GetBinContent(ib));
         double tt = temphisto->GetBinError(ib);
         if (tt <= 0) {
           tt = 100.;
           std::cout << "zero value for bin spread in pe" << std::endl;
         }
-        pesp.push_back(tt);
+        pe_spreads.push_back(tt);
       }
     }
   }
   else if (fDetector == "ICARUS" ) {
-    pe_nbins = 1;
-    pemean.push_back(0);
-    pesp.push_back(0.001);
+    pe_bins = 1;
+    pe_means.push_back(0);
+    pe_spreads.push_back(0.001);
   }
   //
   infile->Close();
@@ -383,7 +383,7 @@ void FlashPredict::produce(art::Event & e)
     for (size_t itpc=0; itpc<nTPCs; ++itpc) {
       if (!lightInTPC[itpc]) continue;
       double xave = 0.0; double yave = 0.0; double zave = 0.0; double norm = 0.0;
-      _nuvtx_q = 0;
+      _charge_q = 0;
       // TODO: use accumulators instead of this for loop
       for (size_t i=0; i<qClusterInTPC[itpc].size(); ++i) {
         flashana::QCluster_t this_cl = qClusterInTPC[itpc];
@@ -392,21 +392,21 @@ void FlashPredict::produce(art::Event & e)
         yave += 0.001 * qp.q * qp.y;
         zave += 0.001 * qp.q * qp.z;
         norm += 0.001 * qp.q;
-        _nuvtx_q += qp.q;
+        _charge_q += qp.q;
       }
       if (norm <= 0) {
         // mf::LogWarning("FlashPredict") << "No charge in the TPC, continue.";
         continue;
       }
-      _nuvtx_x = xave / norm;
-      _nuvtx_y = yave / norm;
-      _nuvtx_z = zave / norm;
-      // charge[itpc] = _nuvtx_q; //TODO: Use this
+      _charge_x = xave / norm;
+      _charge_y = yave / norm;
+      _charge_z = zave / norm;
+      // charge[itpc] = _charge_q; //TODO: Use this
 
       computeFlashMetrics(itpc, OpHitSubset);
 
       // calculate match score here, put association on the event
-      double slice = _nuvtx_x;
+      double slice = _charge_x;
       double drift_distance = 200.0; // TODO: no hardcoded values
       if (fDetector == "ICARUS") {
         drift_distance = 150.0; // TODO: no hardcoded values
@@ -416,45 +416,45 @@ void FlashPredict::produce(art::Event & e)
       std::ostringstream thresholdMessage;
       thresholdMessage << std::left << std::setw(12) << std::setfill(' ');
       thresholdMessage << "pfp.PdgCode:\t" << pfp.PdgCode() << "\n"
-                       << "_evt:      \t" << _evt << "\n"
-                       << "itpc:      \t" << itpc << "\n"
-                       << "_flash_z:  \t" << std::setw(8) <<  _flash_z  << ",\t"
-                       << "_nuvtx_z:  \t" << std::setw(8) << _nuvtx_z   << "\n"
-                       << "_flash_y:  \t" << std::setw(8) << _flash_y   << ",\t"
-                       << "_nuvtx_y:  \t" << std::setw(8) << _nuvtx_y   << "\n"
-                       << "_flash_x:  \t" << std::setw(8) << _flash_x   << ",\t"
-                       << "_nuvtx_x:  \t" << std::setw(8) << _nuvtx_x   << "\n"
-                       << "_flash_pe: \t" << std::setw(8) << _flash_pe  << ",\t"
-                       << "_nuvtx_q:  \t" << std::setw(8) << _nuvtx_q   << "\n"
-                       << "_flash_r:  \t" << std::setw(8) << _flash_r   << "\n"
-                       << "_flashtime:\t" << std::setw(8) << _flashtime << "\n" << std::endl;
-      int isl = int(dy_nbins * (slice / drift_distance));
-      if (dysp[isl] > 0) {
-        term = std::abs(std::abs(_flash_y - _nuvtx_y) - dymean[isl]) / dysp[isl];
+                       << "_evt:       \t" << _evt << "\n"
+                       << "itpc:       \t" << itpc << "\n"
+                       << "_flash_y:   \t" << std::setw(8) << _flash_y   << ",\t"
+                       << "_charge_y:  \t" << std::setw(8) << _charge_y  << "\n"
+                       << "_flash_z:   \t" << std::setw(8) << _flash_z   << ",\t"
+                       << "_charge_z:  \t" << std::setw(8) << _charge_z  << "\n"
+                       << "_flash_x:   \t" << std::setw(8) << _flash_x   << ",\t"
+                       << "_charge_x:  \t" << std::setw(8) << _charge_x  << "\n"
+                       << "_flash_pe:  \t" << std::setw(8) << _flash_pe  << ",\t"
+                       << "_charge_q:  \t" << std::setw(8) << _charge_q  << "\n"
+                       << "_flash_r:   \t" << std::setw(8) << _flash_r   << "\n"
+                       << "_flashtime: \t" << std::setw(8) << _flashtime << "\n" << std::endl;
+      int isl = int(dy_bins * (slice / drift_distance));
+      if (dy_spreads[isl] > 0) {
+        term = std::abs(std::abs(_flash_y - _charge_y) - dy_means[isl]) / dy_spreads[isl];
         if (term > fTermThreshold) std::cout << "\nBig term Y:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
         _score += term;
       }
       icount++;
-      isl = int(dz_nbins * (slice / drift_distance));
-      if (dzsp[isl] > 0) {
-        term = std::abs(std::abs(_flash_z - _nuvtx_z) - dzmean[isl]) / dzsp[isl];
+      isl = int(dz_bins * (slice / drift_distance));
+      if (dz_spreads[isl] > 0) {
+        term = std::abs(std::abs(_flash_z - _charge_z) - dz_means[isl]) / dz_spreads[isl];
         if (term > fTermThreshold) std::cout << "\nBig term Z:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
         _score += term;
       }
       icount++;
-      isl = int(rr_nbins * (slice / drift_distance));
-      if (rrsp[isl] > 0 && _flash_r > 0) {
-        term = std::abs(_flash_r - rrmean[isl]) / rrsp[isl];
+      isl = int(rr_bins * (slice / drift_distance));
+      if (rr_spreads[isl] > 0 && _flash_r > 0) {
+        term = std::abs(_flash_r - rr_means[isl]) / rr_spreads[isl];
         if (term > fTermThreshold) std::cout << "\nBig term R:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
         _score += term;
       }
       icount++;
       if (fDetector == "SBND" && fUseUncoatedPMT) {
-        isl = int(pe_nbins * (slice / drift_distance));
+        isl = int(pe_bins * (slice / drift_distance));
         double myratio = 100.0 * _flash_unpe;
-        if (pesp[isl] > 0 && _flash_pe > 0) {
+        if (pe_spreads[isl] > 0 && _flash_pe > 0) {
           myratio /= _flash_pe;
-          term = std::abs(myratio - pemean[isl]) / pesp[isl];
+          term = std::abs(myratio - pe_means[isl]) / pe_spreads[isl];
           if (term > fTermThreshold) std::cout << "\nBig term RATIO:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
           _score += term;
           icount++;

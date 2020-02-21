@@ -115,7 +115,7 @@ private:
   // Tree variables
   std::vector<double> _pe_reco_v, _pe_hypo_v;
   // double _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
-  double _nuvtx_x, _nuvtx_y, _nuvtx_z, _nuvtx_q;
+  double _charge_x, _charge_y, _charge_z, _charge_q;
   double _flash_x, _flash_y, _flash_z, _flash_pe;
   double _flash_r,  _flash_unpe;
   double _score;
@@ -125,9 +125,9 @@ private:
   // PFP map
   std::map<unsigned int, unsigned int> _pfpmap;
 
-  std::vector<double> dymean, dzmean, rrmean, pemean;
-  std::vector<double> dysp, dzsp, rrsp, pesp;
-  int rr_nbins, dy_nbins, dz_nbins, pe_nbins;
+  std::vector<double> dy_means, dz_means, rr_means, pe_means;
+  std::vector<double> dy_spreads, dz_spreads, rr_spreads, pe_spreads;
+  int dy_bins, dz_bins, rr_bins, pe_bins;
 
 };
 
