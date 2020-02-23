@@ -65,3 +65,10 @@ outputs:
    compressionLevel: 1
  }
 }
+
+# Geometry with overburden
+services.Geometry.GDML: "sbnd_v01_04_ob.gdml"
+services.Geometry.ROOT: "sbnd_v01_04_ob.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v01_04_ob.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v01_04_ob.gdml"
+

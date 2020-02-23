@@ -3,10 +3,14 @@
 # overwrite CMC generator to instead use "proton" -- has a more accurate
 # cosmic rate
 physics.producers.generator: @local::sbnd_corsika_p
+physics.producers.generator.SampleTime: 4.2e-3
+physics.producers.generator.TimeOffset: -1.5e-3
 
 # Geometry with overburden
 services.Geometry.GDML: "sbnd_v01_04_ob.gdml"
 services.Geometry.ROOT: "sbnd_v01_04_ob.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v01_04_ob.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v01_04_ob.gdml"
 
 # services.LArG4Parameters.ParticleKineticEnergyCut: 1e-5
 
