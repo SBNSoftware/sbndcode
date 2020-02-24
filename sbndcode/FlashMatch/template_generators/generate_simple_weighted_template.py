@@ -177,7 +177,7 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     for e in nuslice_tree:
         slice = e.charge_x
-        uncoated_coated_ratio = 100.*e.flash_unpe/e.flashpe
+        uncoated_coated_ratio = 100.*e.flash_unpe/e.flash_pe
 
         dy_hist.Fill(slice, e.flash_y - e.charge_y)
         dy_prof.Fill(slice, e.flash_y - e.charge_y)
@@ -209,25 +209,25 @@ def generator(input_file, rootfile, gtrees, gbranches):
 
     for e in nuslice_tree:
         slice = e.charge_x
-        uncoated_coated_ratio = 100.*e.flash_unpe/e.flashpe
+        uncoated_coated_ratio = 100.*e.flash_unpe/e.flash_pe
         # calculate match score
         isl = int(slice/5.)  # TODO: un-hardcode
         # if (isl>) isl=19;
         # if (isl<0) isl=0;
         score = 0.
-        if dy_spreads[isl] <= 1e-8:
+        if dy_spreads[isl] <= 1.e-8:
             print("Warning zero spread.\n",
                   f"slice: {slice}. isl: {isl}. dy_spreads[isl]: {dy_spreads[isl]} ")
             dy_spreads[isl] = dy_spreads[isl+1]
-        if dz_spreads[isl] <= 1e-8:
+        if dz_spreads[isl] <= 1.e-8:
             print("Warning zero spread.\n",
                   f"slice: {slice}. isl: {isl}. dz_spreads[isl]: {dz_spreads[isl]} ")
             dz_spreads[isl] = dz_spreads[isl+1]
-        if rr_spreads[isl] <= 1e-8:
+        if rr_spreads[isl] <= 1.e-8:
             print("Warning zero spread.\n",
                   f"slice: {slice}. isl: {isl}. rr_spreads[isl]: {rr_spreads[isl]} ")
             rr_spreads[isl] = rr_spreads[isl+1]
-        if pe_spreads[isl] <= 1e-8:
+        if pe_spreads[isl] <= 1.e-8:
             print("Warning zero spread.\n",
                   f"slice: {slice}. isl: {isl}. pe_spreads[isl]: {pe_spreads[isl]} ")
             pe_spreads[isl] = pe_spreads[isl+1]

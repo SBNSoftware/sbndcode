@@ -11,6 +11,7 @@ sbnd_flash_match: {
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
   InputFileName: "fm_metrics_sbnd.root"
+  NoAvailableMetrics: false
   MakeTree: true
   SelectNeutrino: true
   UseUncoatedPMT: false

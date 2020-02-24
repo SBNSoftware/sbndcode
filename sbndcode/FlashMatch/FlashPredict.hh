@@ -79,7 +79,7 @@ private:
   double fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
   std::string fDetector; // SBND or ICARUS
   int fCryostat;  // =0 or =1 to match ICARUS reco chain selection
-  bool fMakeTree, fSelectNeutrino, fUseUncoatedPMT, fUseCalo;
+  bool fNoAvailableMetrics, fMakeTree, fSelectNeutrino, fUseUncoatedPMT, fUseCalo;
   double fTermThreshold;
   std::vector<double> fPMTChannelCorrection;
   // geometry service
@@ -115,19 +115,18 @@ private:
   // Tree variables
   std::vector<double> _pe_reco_v, _pe_hypo_v;
   // double _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
-  double _charge_x, _charge_y, _charge_z, _charge_q;
-  double _flash_x, _flash_y, _flash_z, _flash_pe;
-  double _flash_r,  _flash_unpe;
-  double _score;
-  int _evt, _run, _sub;
-  double _flashtime;
-  double _flashpe;
+  Double_t _charge_x, _charge_y, _charge_z, _charge_q;
+  Double_t _flash_x, _flash_y, _flash_z, _flash_r, _flash_pe, _flash_unpe;
+  // TODO: why not charge_time?
+  Double_t _flash_time;
+  Double_t _score;
+  Int_t _evt, _run, _sub;
   // PFP map
   std::map<unsigned int, unsigned int> _pfpmap;
 
   std::vector<double> dy_means, dz_means, rr_means, pe_means;
   std::vector<double> dy_spreads, dz_spreads, rr_spreads, pe_spreads;
-  int dy_bins, dz_bins, rr_bins, pe_bins;
+  int n_bins;
 
 };
 
