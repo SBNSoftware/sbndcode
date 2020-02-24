@@ -19,5 +19,26 @@ sbnd_simple_flashmatch:{
   PEscale: 1.0
   MinFlashPE: 0.
   ThresholdTerm: 30.
-}
 
+  # binning and geometry
+  score_hist_bins: 100
+  score_hist_low: 0.
+  score_hist_up: 50.
+
+  n_bins: 40
+  tpc_width: 200.
+
+  dy_bins: 100
+  dy_low: -200.
+  dy_up: 200.
+  dz_bins: 100
+  dz_low: -200.
+  dz_up: 200.
+  rr_bins: 100
+  rr_low: 0.
+  rr_up: 200.
+  pe_bins: 50
+  pe_low: 0.
+  pe_up: 50.
+
+}
