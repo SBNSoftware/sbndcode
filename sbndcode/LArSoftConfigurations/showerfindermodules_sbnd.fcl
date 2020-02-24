@@ -18,9 +18,9 @@ sbnd_showerenergyalg.VIntercept:  -2.13307
 sbnd_showerenergyalg.ZGradient:   0.00153631
 sbnd_showerenergyalg.ZIntercept:  5.19711
 
-sbnd_emshower.EMshowerAlg:                 @local::sbnd_emshoweralg
-sbnd_emshower.EMshowerAlg.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
-sbnd_emshower.EMshowerAlg.showerEnergyAlg: @local::sbnd_showerenergyalg
+sbnd_emshower.EMShowerAlg:                 @local::sbnd_emshoweralg
+sbnd_emshower.EMShowerAlg.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
+sbnd_emshower.EMShowerAlg.ShowerEnergyAlg: @local::sbnd_showerenergyalg
 
 sbnd_tracs:  @local::standard_tracs_shower
 
@@ -54,7 +54,7 @@ sbnd_showertrackfindercheater:   @local::showertrackfindercheater
 
 sbnd_showerdedxfinder.CalorimetryAlg:  @local::sbnd_calorimetryalgmc
 
-sbnd_tracs.showerFinderTools: [
+sbnd_tracs.ShowerFinderTools: [
   @local::sbnd_showerstartpositionfinder,
   @local::sbnd_showerdirectionfinder,
   @local::sbnd_showerenergyfinder,

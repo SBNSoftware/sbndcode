@@ -1,0 +1,6 @@
+#include "standard_reco_sbnd_basic.fcl"
+
+physics.producers.gaushit.CalDataModuleLabel: "caldata"
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0.RoiThreshold: 17
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1.RoiThreshold: 17
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane2.RoiThreshold: 17
