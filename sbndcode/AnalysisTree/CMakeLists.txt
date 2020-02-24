@@ -32,6 +32,7 @@ art_make(
                            ${ROOT_GDML}
                            ${ROOT_BASIC_LIB_LIST}
                            sbndcode_RecoUtils
+                           sbndcode_OpDetSim
         )
 
 # install_headers()
