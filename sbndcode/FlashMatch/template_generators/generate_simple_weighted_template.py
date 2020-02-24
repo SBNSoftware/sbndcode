@@ -80,29 +80,29 @@ def generator(input_file, rootfile, pset):
     nuslice_tree = dir.Get("nuslicetree")  # , nuslice_tree)
     # nuslice_tree.Print()
 
-    # TODO: un-hardcode this whole block
-    n_bins = 40
-    xvals = np.arange(2.5, 200, 5)  # TODO: un hardcode
-    xerrs = np.array([2.5] * len(xvals))
+    n_bins = pset.n_bins
+    tpc_width = pset.tpc_width
+    bin_width = tpc_width/n_bins
+    half_bin_width = bin_width/2.
+
+    xvals = np.arange(half_bin_width, tpc_width, bin_width)
+    xerrs = np.array([half_bin_width] * len(xvals))
     dist_to_anode_bins = n_bins
-    dist_to_anode_low = 0.  # TODO: un hardcode
-    dist_to_anode_up = 200.  # TODO: un hardcode
+    dist_to_anode_low = 0.
+    dist_to_anode_up = tpc_width
     profile_bins = n_bins
     profile_option = 's'  # errors are the standard deviation
 
     dy_spreads = [None] * n_bins
     dy_means = [None] * n_bins
-    dy_bins = 100
-    dy_low = -200.  # TODO: un hardcode
-    dy_up = 200.  # TODO: un hardcode
     dy_hist = TH2D("dy_hist", "#Delta y",
                    dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
-                   dy_bins, dy_low, dy_up)
+                   pset.dy_bins, pset.dy_low, pset.dy_up)
     dy_hist.GetXaxis().SetTitle("distance from anode (cm)")
     dy_hist.GetYaxis().SetTitle("y_flash - y_TPC (cm)")
     dy_prof = TProfile("dy_prof", "Profile of dy_spreads in #Delta y",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
-                       dy_low*2, dy_up*2, profile_option)
+                       pset.dy_low*2, pset.dy_up*2, profile_option)
     dy_prof.GetXaxis().SetTitle("distance from anode (cm)")
     dy_prof.GetYaxis().SetTitle("y_flash - y_TPC (cm)")
     dy_h1 = TH1D("dy_h1", "",
@@ -112,17 +112,14 @@ def generator(input_file, rootfile, pset):
 
     dz_spreads = [None] * n_bins
     dz_means = [None] * n_bins
-    dz_bins = 100
-    dz_low = -200.  # TODO: un hardcode
-    dz_up = 200.  # TODO: un hardcode
     dz_hist = TH2D("dz_hist", "#Delta z",
                    dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
-                   dz_bins, dz_low, dz_up)
+                   pset.dz_bins, pset.dz_low, pset.dz_up)
     dz_hist.GetXaxis().SetTitle("distance from anode (cm)")
     dz_hist.GetYaxis().SetTitle("z_flash - z_TPC (cm)")
     dz_prof = TProfile("dz_prof", "Profile of dz_spreads in #Delta z",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
-                       dz_low*2.5, dz_up*2.5, profile_option)
+                       pset.dz_low*2.5, pset.dz_up*2.5, profile_option)
     dz_prof.GetXaxis().SetTitle("distance from anode (cm)")
     dz_prof.GetYaxis().SetTitle("z_flash - z_TPC (cm)")
     dz_h1 = TH1D("dz_h1", "",
@@ -132,17 +129,14 @@ def generator(input_file, rootfile, pset):
 
     rr_spreads = [None] * n_bins
     rr_means = [None] * n_bins
-    rr_bins = 100
-    rr_low = 0.  # TODO: un hardcode
-    rr_up = 200.  # TODO: un hardcode
     rr_hist = TH2D("rr_hist", "PE Spread",
                    dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
-                   rr_bins, rr_low, rr_up)
+                   pset.rr_bins, pset.rr_low, pset.rr_up)
     rr_hist.GetXaxis().SetTitle("distance from anode (cm)")
     rr_hist.GetYaxis().SetTitle("RMS flash (cm)")
     rr_prof = TProfile("rr_prof", "Profile of PE Spread",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
-                       rr_low, rr_up, profile_option)
+                       pset.rr_low, pset.rr_up, profile_option)
     rr_prof.GetXaxis().SetTitle("distance from anode (cm)")
     rr_prof.GetYaxis().SetTitle("RMS flash (cm)")
     rr_h1 = TH1D("rr_h1", "",
@@ -152,17 +146,14 @@ def generator(input_file, rootfile, pset):
 
     pe_spreads = [None] * n_bins
     pe_means = [None] * n_bins
-    pe_bins = 50
-    pe_low = 0.  # TODO: un hardcode
-    pe_up = 50.  # TODO: un hardcode
     pe_hist = TH2D("pe_hist", "Uncoated/Coated Ratio",
                    dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
-                   pe_bins, pe_low, pe_up)
+                   pset.pe_bins, pset.pe_low, pset.pe_up)
     pe_hist.GetXaxis().SetTitle("distance from anode (cm)")
     pe_hist.GetYaxis().SetTitle("ratio_{uncoated/coated}")
     pe_prof = TProfile("pe_prof", "Profile of Uncoated/Coated Ratio",
                        profile_bins, dist_to_anode_low, dist_to_anode_up,
-                       pe_low, pe_up, profile_option)
+                       pset.pe_low, pset.pe_up, profile_option)
     pe_prof.GetXaxis().SetTitle("distance from anode (cm)")
     pe_prof.GetYaxis().SetTitle("ratio_{uncoated/coated}")
     pe_h1 = TH1D("pe_h1", "",
@@ -170,21 +161,18 @@ def generator(input_file, rootfile, pset):
     pe_h1.GetXaxis().SetTitle("distance from anode (cm)")
     pe_h1.GetYaxis().SetTitle("ratio_{uncoated/coated}")
 
-    score_hist_bins = 100
-    score_hist_low = 0.
-    score_hist_up = 50.
     match_score_scatter = TH2D("match_score_scatter", "Scatter plot of match scores",
                                dist_to_anode_bins, dist_to_anode_low, dist_to_anode_up,
-                               score_hist_bins, score_hist_low, score_hist_up*(3./5.))
+                               pset.score_hist_bins, pset.score_hist_low, pset.score_hist_up*(3./5.))
     match_score_scatter.GetXaxis().SetTitle("distance from anode (cm)")
     match_score_scatter.GetYaxis().SetTitle("match score (arbitrary)")
     match_score_hist = TH1D("match_score", "Match Score",
-                            score_hist_bins, score_hist_low, score_hist_up)
+                            pset.score_hist_bins, pset.score_hist_low, pset.score_hist_up)
     match_score_hist.GetXaxis().SetTitle("match score (arbitrary)")
 
     for e in nuslice_tree:
         slice = e.charge_x
-        uncoated_coated_ratio = 100.*e.flash_unpe/e.flash_pe
+        uncoated_coated_ratio = 100.*e.flash_unpe/e.flash_pe # percentage
 
         dy_hist.Fill(slice, e.flash_y - e.charge_y)
         dy_prof.Fill(slice, e.flash_y - e.charge_y)
@@ -216,11 +204,9 @@ def generator(input_file, rootfile, pset):
 
     for e in nuslice_tree:
         slice = e.charge_x
-        uncoated_coated_ratio = 100.*e.flash_unpe/e.flash_pe
+        uncoated_coated_ratio = 100.*e.flash_unpe/e.flash_pe # percentage
         # calculate match score
-        isl = int(slice/5.)  # TODO: un-hardcode
-        # if (isl>) isl=19;
-        # if (isl<0) isl=0;
+        isl = int(slice/bin_width)
         score = 0.
         if dy_spreads[isl] <= 1.e-8:
             print("Warning zero spread.\n",
