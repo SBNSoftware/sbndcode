@@ -62,6 +62,9 @@ const int kMaxCHits      = 1000;  ///< maximum number of CRT hits
 const int kMaxMCpart     = 10;    ///< maximum number of MC particle
 const int kMaxNCtrks     = 10;
 
+const int MAX_INT = std::numeric_limits<int>::max();
+const long int TIME_CORRECTION = (long int) std::numeric_limits<int>::max() * 2;
+
 enum CRTPos {
   kNotDefined = -1,   ///< Not defined
   kBot = 0,           ///< Bot
@@ -156,7 +159,7 @@ private:
   double _chit_y[kMaxCHits];           ///< CRT hit y
   double _chit_z[kMaxCHits];           ///< CRT hit z
   double _chit_time[kMaxCHits];        ///< CRT hit time
-  double _chit_adc[kMaxCHits];         ///< CRT hit adc
+  // double _chit_adc[kMaxCHits];         ///< CRT hit adc
   int _chit_plane[kMaxCHits];          ///< CRT hit plane
 
   int _ncts;                           ///< Number of CRT tracks
@@ -340,9 +343,9 @@ void Hitdumper::analyze(const art::Event& evt)
     if (ip != kNotDefined && keep_tagger) {
 
       uint32_t ttime = striplist[i]->T0();
-      float ctime = ttime * 0.001; // convert form ns to us
+      float ctime = (int)ttime * 0.001; // convert form ns to us
       // recover simulation bug where neg times are sotred as unsigned integers
-      if (ttime > 2147483648) ctime = 0.001 * (ttime - 4294967296);
+      // if (ttime > MAX_INT) ctime = 0.001 * (ttime - MAX_INT * 2);
       if (ctime < 1600. && ctime > -1400.) {
         uint32_t adc1 = striplist[i]->ADC();
         uint32_t adc2 = striplist[i+1]->ADC();
@@ -548,7 +551,9 @@ void Hitdumper::analyze(const art::Event& evt)
       else if (chitlist[i]->tagger=="volTaggerBot_0")       ip = kBot;
              
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
-      if (chitlist[i]->ts1_ns > 2147483648) _chit_time[i] = 0.001 * (chitlist[i]->ts1_ns - 4294967296);
+      if (chitlist[i]->ts1_ns > MAX_INT) {
+        _chit_time[i] = 0.001 * (chitlist[i]->ts1_ns - TIME_CORRECTION);
+      }
 
       _chit_x[i]=chitlist[i]->x_pos;
       _chit_y[i]=chitlist[i]->y_pos;
@@ -571,7 +576,9 @@ void Hitdumper::analyze(const art::Event& evt)
       for (int i = 0; i < _ncts; ++i){
         _ct_pes[i] = ctrklist[i]->peshit;
         _ct_time[i] = ctrklist[i]->ts1_ns*0.001;
-        if (ctrklist[i]->ts1_ns > 2147483648) _ct_time[i] = 0.001 * (ctrklist[i]->ts1_ns - 4294967296);
+        if (ctrklist[i]->ts1_ns > MAX_INT) {
+          _ct_time[i] = 0.001 * (ctrklist[i]->ts1_ns - TIME_CORRECTION);
+        }
         _ct_x1[i] = ctrklist[i]->x1_pos;
         _ct_y1[i] = ctrklist[i]->y1_pos;
         _ct_z1[i] = ctrklist[i]->z1_pos;
