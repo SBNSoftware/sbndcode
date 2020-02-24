@@ -38,6 +38,13 @@ from ROOT import TH1D, TH2D, TProfile, TFile
 import ROOT
 # import project_utilities
 import larbatch_posix
+import fhicl
+
+
+class dotDict(dict):
+    def __getattr__(self,val):
+        return self[val]
+
 
 # Globally turn off root warnings.
 # Don't let root see our command line options.
@@ -68,7 +75,7 @@ def help():
                 print()
 
 
-def generator(input_file, rootfile, gtrees, gbranches):
+def generator(input_file, rootfile, pset):
     dir = rootfile.Get(input_file+":/fmatch")
     nuslice_tree = dir.Get("nuslicetree")  # , nuslice_tree)
     # nuslice_tree.Print()
@@ -345,11 +352,7 @@ def main(argv):
             del args[0]
 
     # Loop over input files.
-
-    gtrees = {}
-    gbranches = {}
     nfile = 0
-
     for input_file in input_files:
 
         if nfilemax > 0 and nfile >= nfilemax:
@@ -366,7 +369,9 @@ def main(argv):
             print('Failed to open %s' % input_file)
             return 1
 
-        generator(input_file, rootfile, gtrees, gbranches)
+        fcl_params = fhicl.make_pset('flashmatch_sbnd.fcl')
+        pset = dotDict(fcl_params['sbnd_simple_flashmatch'])
+        generator(input_file, rootfile, pset)
 
     print('\n%d files analyzed.' % nfile)
 

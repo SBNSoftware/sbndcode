@@ -1,7 +1,5 @@
 
-BEGIN_PROLOG
-
-sbnd_flash_match: {
+sbnd_simple_flashmatch:{
   module_type: FlashPredict
   Detector: "SBND"
   Cryostat: 0
@@ -23,4 +21,3 @@ sbnd_flash_match: {
   ThresholdTerm: 30.
 }
 
-END_PROLOG
