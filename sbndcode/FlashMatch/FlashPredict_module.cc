@@ -62,18 +62,19 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     _flashmatch_nuslice_tree->Branch("evt", &_evt, "evt/I");
     _flashmatch_nuslice_tree->Branch("run", &_run, "run/I");
     _flashmatch_nuslice_tree->Branch("sub", &_sub, "sub/I");
-    _flashmatch_nuslice_tree->Branch("flashtime", &_flashtime, "flashtime/F");
-    _flashmatch_nuslice_tree->Branch("flashpe", &_flash_pe, "flashpe/F");
-    _flashmatch_nuslice_tree->Branch("flash_x", &_flash_x, "flash_x/F");
-    _flashmatch_nuslice_tree->Branch("flash_y", &_flash_y, "flash_y/F");
-    _flashmatch_nuslice_tree->Branch("flash_z", &_flash_z, "flash_z/F");
-    _flashmatch_nuslice_tree->Branch("flash_r", &_flash_r, "flash_r/F");
-    _flashmatch_nuslice_tree->Branch("flash_unpe", &_flash_unpe, "flash_unpe/F");
-    _flashmatch_nuslice_tree->Branch("charge_q", &_charge_q, "charge_q/F");
-    _flashmatch_nuslice_tree->Branch("charge_x", &_charge_x, "charge_x/F");
-    _flashmatch_nuslice_tree->Branch("charge_y", &_charge_y, "charge_y/F");
-    _flashmatch_nuslice_tree->Branch("charge_z", &_charge_z, "charge_z/F");
-    _flashmatch_nuslice_tree->Branch("score", &_score, "score/F");
+    _flashmatch_nuslice_tree->Branch("flashtime", &_flashtime, "flashtime/D");
+    _flashmatch_nuslice_tree->Branch("flash_x", &_flash_x, "flash_x/D");
+    _flashmatch_nuslice_tree->Branch("flash_y", &_flash_y, "flash_y/D");
+    _flashmatch_nuslice_tree->Branch("flash_z", &_flash_z, "flash_z/D");
+    _flashmatch_nuslice_tree->Branch("flash_r", &_flash_r, "flash_r/D");
+    _flashmatch_nuslice_tree->Branch("flashpe", &_flashpe, "flashpe/D");
+    _flashmatch_nuslice_tree->Branch("flash_unpe", &_flash_unpe, "flash_unpe/D");
+    // TODO: add charge_time?
+    _flashmatch_nuslice_tree->Branch("charge_x", &_charge_x, "charge_x/D");
+    _flashmatch_nuslice_tree->Branch("charge_y", &_charge_y, "charge_y/D");
+    _flashmatch_nuslice_tree->Branch("charge_z", &_charge_z, "charge_z/D");
+    _flashmatch_nuslice_tree->Branch("charge_q", &_charge_q, "charge_q/D");
+    _flashmatch_nuslice_tree->Branch("score", &_score, "score/D");
   }
 
   // read histograms and fill vectors for match score calculation
