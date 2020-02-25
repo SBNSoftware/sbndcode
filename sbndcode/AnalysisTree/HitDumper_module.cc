@@ -59,7 +59,6 @@ const int kMaxHits       = 30000; ///< maximum number of hits
 //const int kMaxAuxDets = 100;
 //const unsigned short kMaxTkIDs = 100;
 const int kMaxCHits      = 1000;  ///< maximum number of CRT hits
-const int kMaxMCpart     = 10;    ///< maximum number of MC particle
 const int kMaxNCtrks     = 10;
 
 const int MAX_INT = std::numeric_limits<int>::max();
