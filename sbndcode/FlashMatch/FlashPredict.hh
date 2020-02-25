@@ -75,6 +75,7 @@ private:
   double fBeamWindowEnd, fBeamWindowStart;
   double fLightWindowEnd, fLightWindowStart;
   double fMinFlashPE;
+  double fDriftDistance;
   double fPEscale;
   double fChargeToNPhotonsShower, fChargeToNPhotonsTrack;
   std::string fDetector; // SBND or ICARUS

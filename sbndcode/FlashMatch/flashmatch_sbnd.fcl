@@ -26,7 +26,7 @@ sbnd_simple_flashmatch:{
   score_hist_up: 50.
 
   n_bins: 40
-  tpc_width: 200.
+  DriftDistance: 200.
 
   dy_bins: 100
   dy_low: -200.
