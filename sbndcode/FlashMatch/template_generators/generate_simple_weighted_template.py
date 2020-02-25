@@ -5,24 +5,19 @@
 #
 # Purpose: Create templates
 #
-# Created: 14-Dec-2020  Iker Loïc de Icaza Astiz (icaza@fnal.gov)
+# Created: February-2020  Iker Loïc de Icaza Astiz (icaza@fnal.gov)
 #
 # Usage:
 #
-# stat.py <options> [@filelist] [file1 file2 ...]
+# generate_simple_weighted_template.py file
 #
 # Options:
 #
 # [-h|--help] - Print help message.
-# --level n   - Branch level (default 1).  Use --level 1 to see top
-#               branches only.  Use --level 2 to also see subbranches.
-# --nfile n   - Number of files to analyze (default all).
-# --all       - Print analysis of each file (default is only summary).
 #
 # Arguments:
 #
-# @filelist       - File list containing one input file per line.
-# file1 file2 ... - Input files.
+# file  ... - Input file.
 #
 ######################################################################
 
@@ -307,9 +302,7 @@ def main(argv):
 
     # Parse arguments.
     input_files = []
-    # level = 1
     nfilemax = 1
-    # all = 0
 
     args = argv[1:]
     while len(args) > 0:

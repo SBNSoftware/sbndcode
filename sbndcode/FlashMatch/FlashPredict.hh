@@ -104,25 +104,23 @@ private:
 
   int icountPE = 0;
   const art::ServiceHandle<geo::Geometry> geometry;
-// SBND map for light detector type labels (pmt, barepmt, arapuca, xarapuca)
+  // SBND map for light detector type labels (pmt, barepmt, arapuca, xarapuca)
   opdet::sbndPDMapAlg pdMap;
 
   // root stuff
-  TTree* _flashmatch_acpt_tree;
   TTree* _flashmatch_nuslice_tree;
   TH1D *ophittime;
   TH1D *ophittime2;
 
   // Tree variables
   std::vector<double> _pe_reco_v, _pe_hypo_v;
-  // double _trk_vtx_x, _trk_vtx_y, _trk_vtx_z, _trk_end_x, _trk_end_y, _trk_end_z;
   Double_t _charge_x, _charge_y, _charge_z, _charge_q;
   Double_t _flash_x, _flash_y, _flash_z, _flash_r, _flash_pe, _flash_unpe;
   // TODO: why not charge_time?
   Double_t _flash_time;
   Double_t _score;
   Int_t _evt, _run, _sub;
-  // PFP map
+
   std::map<unsigned int, unsigned int> _pfpmap;
 
   std::vector<double> dy_means, dz_means, rr_means, pe_means;
