@@ -55,24 +55,24 @@ if 'TERM' in os.environ:
 ROOT.gErrorIgnoreLevel = ROOT.kError
 sys.argv = myargv
 
-# Print help
-def help():
+# # Print help
+# def help():
 
-    filename = sys.argv[0]
-    file = open(filename)
+#     filename = sys.argv[0]
+#     file = open(filename)
 
-    doprint = False
+#     doprint = False
 
-    for line in file.readlines():
-        if line[2:9] == 'stat.py':
-            doprint = True
-        elif line[0:6] == '######' and doprint:
-            doprint = False
-        if doprint:
-            if len(line) > 2:
-                print(line[2:], end=' ')
-            else:
-                print()
+#     for line in file.readlines():
+#         if line[2:9] == 'stat.py':
+#             doprint = True
+#         elif line[0:6] == '######' and doprint:
+#             doprint = False
+#         if doprint:
+#             if len(line) > 2:
+#                 print(line[2:], end=' ')
+#             else:
+#                 print()
 
 
 def generator(input_file, rootfile, pset):
@@ -314,7 +314,10 @@ def main(argv):
     args = argv[1:]
     while len(args) > 0:
         if args[0] == '-h' or args[0] == '--help':
-            help()
+            # help()
+            print("To run do:\n"/
+                  "generate_simple_weighted_template.py file.root\n"/
+                  "where file.root has a fmatch/nuslicetree")
             return 0
         elif args[0][0] == '-':
             # Unknown option.
