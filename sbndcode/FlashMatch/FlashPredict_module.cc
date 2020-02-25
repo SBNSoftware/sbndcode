@@ -104,8 +104,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
       dy_means.push_back(temphisto->GetBinContent(ib));
       double tt = temphisto->GetBinError(ib);
       if (tt <= 0) {
-        tt = 100.;
         std::cout << "zero value for bin spread in dy" << std::endl;
+        std::cout << "ib:\t" << ib << "\n";
+        std::cout << "temphisto->GetBinContent(ib):\t" << temphisto->GetBinContent(ib) << "\n";
+        std::cout << "temphisto->GetBinError(ib):\t" << temphisto->GetBinError(ib) << "\n";
+        tt = 100.;
       }
       dy_spreads.push_back(tt);
     }
@@ -124,8 +127,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
       dz_means.push_back(temphisto->GetBinContent(ib));
       double tt = temphisto->GetBinError(ib);
       if (tt <= 0) {
-        tt = 100.;
         std::cout << "zero value for bin spread in dz" << std::endl;
+        std::cout << "ib:\t" << ib << "\n";
+        std::cout << "temphisto->GetBinContent(ib):\t" << temphisto->GetBinContent(ib) << "\n";
+        std::cout << "temphisto->GetBinError(ib):\t" << temphisto->GetBinError(ib) << "\n";
+        tt = 100.;
       }
       dz_spreads.push_back(tt);
     }
@@ -144,8 +150,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
       rr_means.push_back(temphisto->GetBinContent(ib));
       double tt = temphisto->GetBinError(ib);
       if (tt <= 0) {
-        tt = 100.;
         std::cout << "zero value for bin spread in rr" << std::endl;
+        std::cout << "ib:\t" << ib << "\n";
+        std::cout << "temphisto->GetBinContent(ib):\t" << temphisto->GetBinContent(ib) << "\n";
+        std::cout << "temphisto->GetBinError(ib):\t" << temphisto->GetBinError(ib) << "\n";
+        tt = 100.;
       }
       rr_spreads.push_back(tt);
     }
@@ -165,8 +174,11 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
         pe_means.push_back(temphisto->GetBinContent(ib));
         double tt = temphisto->GetBinError(ib);
         if (tt <= 0) {
-          tt = 100.;
           std::cout << "zero value for bin spread in pe" << std::endl;
+          std::cout << "ib:\t" << ib << "\n";
+          std::cout << "temphisto->GetBinContent(ib):\t" << temphisto->GetBinContent(ib) << "\n";
+          std::cout << "temphisto->GetBinError(ib):\t" << temphisto->GetBinError(ib) << "\n";
+          tt = 100.;
         }
         pe_spreads.push_back(tt);
       }

@@ -180,22 +180,23 @@ def generator(input_file, rootfile, pset):
 
     # fill histograms for match score calculation from profile histograms
     for ib in list(range(0, profile_bins)):
-        dy_h1.SetBinContent(ib, dy_prof.GetBinContent(ib+1))
-        dy_h1.SetBinError(ib, dy_prof.GetBinError(ib+1))
-        dy_means[int(ib)] = dy_prof.GetBinContent(ib+1)
-        dy_spreads[int(ib)] = dy_prof.GetBinError(ib+1)
-        dz_h1.SetBinContent(ib, dz_prof.GetBinContent(ib+1))
-        dz_h1.SetBinError(ib, dz_prof.GetBinError(ib+1))
-        dz_means[int(ib)] = dz_prof.GetBinContent(ib+1)
-        dz_spreads[int(ib)] = dz_prof.GetBinError(ib+1)
-        rr_h1.SetBinContent(ib, rr_prof.GetBinContent(ib+1))
-        rr_h1.SetBinError(ib, rr_prof.GetBinError(ib+1))
-        rr_means[int(ib)] = rr_prof.GetBinContent(ib+1)
-        rr_spreads[int(ib)] = rr_prof.GetBinError(ib+1)
-        pe_h1.SetBinContent(ib, pe_prof.GetBinContent(ib+1))
-        pe_h1.SetBinError(ib, pe_prof.GetBinError(ib+1))
-        pe_means[int(ib)] = pe_prof.GetBinContent(ib+1)
-        pe_spreads[int(ib)] = pe_prof.GetBinError(ib+1)
+        ibp = ib + 1
+        dy_h1.SetBinContent(ibp, dy_prof.GetBinContent(ibp))
+        dy_h1.SetBinError(ibp, dy_prof.GetBinError(ibp))
+        dy_means[int(ib)] = dy_prof.GetBinContent(ibp)
+        dy_spreads[int(ib)] = dy_prof.GetBinError(ibp)
+        dz_h1.SetBinContent(ibp, dz_prof.GetBinContent(ibp))
+        dz_h1.SetBinError(ibp, dz_prof.GetBinError(ibp))
+        dz_means[int(ib)] = dz_prof.GetBinContent(ibp)
+        dz_spreads[int(ib)] = dz_prof.GetBinError(ibp)
+        rr_h1.SetBinContent(ibp, rr_prof.GetBinContent(ibp))
+        rr_h1.SetBinError(ibp, rr_prof.GetBinError(ibp))
+        rr_means[int(ib)] = rr_prof.GetBinContent(ibp)
+        rr_spreads[int(ib)] = rr_prof.GetBinError(ibp)
+        pe_h1.SetBinContent(ibp, pe_prof.GetBinContent(ibp))
+        pe_h1.SetBinError(ibp, pe_prof.GetBinError(ibp))
+        pe_means[int(ib)] = pe_prof.GetBinContent(ibp)
+        pe_spreads[int(ib)] = pe_prof.GetBinError(ibp)
 
     for e in nuslice_tree:
         slice = e.charge_x
