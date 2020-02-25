@@ -1,12 +1,10 @@
 ///////////////////////////////////////////////////////////////////////
 // Class:       FlashPredict
-// Plugin Type: producer (art v3_01_02)
+// Plugin Type: producer (art v3_04_00)
 // File:        FlashPredict_module.cc
 //
-// Generated at Mon May 20 07:11:36 2019 by David Caratelli using cetskelgen
-// from cetlib version v3_05_01.
+// Created: February-2020  Iker Loïc de Icaza Astiz (icaza@fnal.gov)
 //
-// Ported from MicroBooNE to SBND on 2019 Sept 19
 ////////////////////////////////////////////////////////////////////////
 #include "sbndcode/FlashMatch/FlashPredict.hh"
 
@@ -79,13 +77,14 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
     _flashmatch_nuslice_tree->Branch("score", &_score, "score/D");
   }
 
+  // TODO: Set a better way to run with no metrics
+
   // TODO: fill histos with less repetition and range for loops
   // read histograms and fill vectors for match score calculation
   std::string fname;
   cet::search_path sp("FW_SEARCH_PATH");
   sp.find_file(fInputFilename, fname);
-  //  std::unique_ptr<TFile> infile(new TFile(fname.c_str(), "READ"));
-  std::cout << "Opening file with metrics: " << fname << std::endl;
+  mf::LogInfo("FlashPredict") << "Opening file with metrics: " << fname;
   TFile *infile = new TFile(fname.c_str(), "READ");
   if(!infile->IsOpen()) {
     throw cet::exception("FlashPredictSBND") << "Could not find the light-charge match root file '"
@@ -204,7 +203,7 @@ void FlashPredict::produce(art::Event & e)
 
   size_t nTPCs(geometry->NTPC());
   if (nTPCs > nMaxTPCs) {
-    std::cout << "nTPC can't be larger than 2, resizing." << std::endl;
+    mf::LogWarning("FlashPredict") << "nTPC can't be larger than 2, resizing.";
     nTPCs = 2;
   }
   geo::CryostatGeo geo_cryo = geometry->Cryostat(fCryostat);
@@ -417,6 +416,8 @@ void FlashPredict::produce(art::Event & e)
       std::ostringstream thresholdMessage;
       thresholdMessage << std::left << std::setw(12) << std::setfill(' ');
       thresholdMessage << "pfp.PdgCode:\t" << pfp.PdgCode() << "\n"
+                       << "_run:       \t" << _run << "\n"
+                       << "_sub:       \t" << _sub << "\n"
                        << "_evt:       \t" << _evt << "\n"
                        << "itpc:       \t" << itpc << "\n"
                        << "_flash_y:   \t" << std::setw(8) << _flash_y   << ",\t"
@@ -485,11 +486,8 @@ void FlashPredict::produce(art::Event & e)
     }
   } // over all PFparticles
 
-
   e.put(std::move(T0_v));
   e.put(std::move(pfp_t0_assn_v));
-
-
 
 }// end of producer module
 
@@ -553,22 +551,23 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
     _flash_r = sqrt((sum_Ay - 2.0 * sum_By * sum_Cy + sum_By * sum_By * sum_D + sum_Az - 2.0 * sum_Bz * sum_Cz + sum_Bz * sum_Bz * sum_D) / sum_D);
     _flash_unpe = unpe_tot * fPEscale;
     icountPE  += (int)(_flash_pe);
-  //   std::cout << "itpc:\t" << itpc << "\n";
-  //   std::cout << "_flash_pe:\t" << _flash_pe << "\n";
-  //   std::cout << "_flash_y:\t" << _flash_y << "\n";
-  //   std::cout << "_flash_z:\t" << _flash_z << "\n";
+    //   std::cout << "itpc:\t" << itpc << "\n";
+    //   std::cout << "_flash_pe:\t" << _flash_pe << "\n";
+    //   std::cout << "_flash_y:\t" << _flash_y << "\n";
+    //   std::cout << "_flash_z:\t" << _flash_z << "\n";
   }
   else {
     mf::LogWarning("FlashPredict") << "Really odd that I landed here, this shouldn't had happen.\n"
                                    << "pnorm:\t" << pnorm << "\n"
                                    << "OpHitSubset.size():\t" << OpHitSubset.size() << "\n";
-    _flash_pe = 0;
     _flash_y = 0;
     _flash_z = 0;
-    _flash_unpe = 0;
     _flash_r = 0;
+    _flash_pe = 0;
+    _flash_unpe = 0;
   }
 }
+
 
 ::flashana::Flash_t FlashPredict::GetFlashPESpectrum(const recob::OpFlash& opflash)
 {
