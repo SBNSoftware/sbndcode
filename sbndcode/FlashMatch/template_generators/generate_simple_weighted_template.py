@@ -81,15 +81,15 @@ def generator(input_file, rootfile, pset):
     # nuslice_tree.Print()
 
     n_bins = pset.n_bins
-    tpc_width = pset.tpc_width
-    bin_width = tpc_width/n_bins
+    drift_distance = pset.DriftDistance
+    bin_width = drift_distance/n_bins
     half_bin_width = bin_width/2.
 
-    xvals = np.arange(half_bin_width, tpc_width, bin_width)
+    xvals = np.arange(half_bin_width, drift_distance, bin_width)
     xerrs = np.array([half_bin_width] * len(xvals))
     dist_to_anode_bins = n_bins
     dist_to_anode_low = 0.
-    dist_to_anode_up = tpc_width
+    dist_to_anode_up = drift_distance
     profile_bins = n_bins
     profile_option = 's'  # errors are the standard deviation
 

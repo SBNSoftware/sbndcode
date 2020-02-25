@@ -37,6 +37,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fLightWindowStart         = p.get<double>("LightWindowStart", -0.010);  // in us w.r.t. flash time
   fLightWindowEnd           = p.get<double>("LightWindowEnd", 0.090);  // in us w.r.t flash time
   fDetector                 = p.get<std::string>("Detector", "SBND");
+  fDriftDistance            = p.get<double>("DriftDistance", 200.);
   fCryostat                 = p.get<int>("Cryostat", 0); //set =0 ot =1 for ICARUS to match reco chain selection
   fPEscale                  = p.get<double>("PEscale", 1.0);
   fTermThreshold            = p.get<double>("ThresholdTerm", 30.);
@@ -411,10 +412,6 @@ void FlashPredict::produce(art::Event & e)
 
       // calculate match score here, put association on the event
       double slice = _charge_x;
-      double drift_distance = 200.0; // TODO: no hardcoded values
-      if (fDetector == "ICARUS") {
-        drift_distance = 150.0; // TODO: no hardcoded values
-      }
       _score = 0.; int icount = 0;
       double term;
       std::ostringstream thresholdMessage;
@@ -432,21 +429,21 @@ void FlashPredict::produce(art::Event & e)
                        << "_charge_q:  \t" << std::setw(8) << _charge_q  << "\n"
                        << "_flash_r:   \t" << std::setw(8) << _flash_r   << "\n"
                        << "_flash_time: \t" << std::setw(8) << _flash_time << "\n" << std::endl;
-      int isl = int(n_bins * (slice / drift_distance));
+      int isl = int(n_bins * (slice / fDriftDistance));
       if (dy_spreads[isl] > 0) {
         term = std::abs(std::abs(_flash_y - _charge_y) - dy_means[isl]) / dy_spreads[isl];
         if (term > fTermThreshold) std::cout << "\nBig term Y:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
         _score += term;
       }
       icount++;
-      isl = int(n_bins * (slice / drift_distance));
+      isl = int(n_bins * (slice / fDriftDistance));
       if (dz_spreads[isl] > 0) {
         term = std::abs(std::abs(_flash_z - _charge_z) - dz_means[isl]) / dz_spreads[isl];
         if (term > fTermThreshold) std::cout << "\nBig term Z:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
         _score += term;
       }
       icount++;
-      isl = int(n_bins * (slice / drift_distance));
+      isl = int(n_bins * (slice / fDriftDistance));
       if (rr_spreads[isl] > 0 && _flash_r > 0) {
         term = std::abs(_flash_r - rr_means[isl]) / rr_spreads[isl];
         if (term > fTermThreshold) std::cout << "\nBig term R:\t" << term << ",\tisl:\t" << isl << "\n" << thresholdMessage.str();
@@ -454,7 +451,7 @@ void FlashPredict::produce(art::Event & e)
       }
       icount++;
       if (fDetector == "SBND" && fUseUncoatedPMT) {
-        isl = int(n_bins * (slice / drift_distance));
+        isl = int(n_bins * (slice / fDriftDistance));
         double myratio = 100.0 * _flash_unpe;
         if (pe_spreads[isl] > 0 && _flash_pe > 0) {
           myratio /= _flash_pe;
