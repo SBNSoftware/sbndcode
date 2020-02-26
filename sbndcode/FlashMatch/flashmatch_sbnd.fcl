@@ -8,7 +8,7 @@ sbnd_simple_flashmatch:{
   BeamWindowEnd: 2.0 # us
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
-  InputFileName: "fm_metrics_sbnd.root"
+  InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
   MakeTree: true
   SelectNeutrino: true
