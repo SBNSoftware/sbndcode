@@ -30,6 +30,7 @@ art_make(
 
   MODULE_LIBRARIES
                            sbndcode_OpDetSim
+			   pthread
                            larcore_Geometry_Geometry_service
                            lardataobj_Simulation
                            lardata_Utilities
