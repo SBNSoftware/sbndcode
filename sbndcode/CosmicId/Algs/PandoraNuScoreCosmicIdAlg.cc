@@ -115,7 +115,7 @@ namespace sbnd{
 
     if (pfpMetaVec.size() !=1){
       std::cout<<"Cannot get PFPMetadata"<<std::endl;
-      return 1.f;
+      return 99999;
     }
 
     art::Ptr<larpandoraobj::PFParticleMetadata> pfpMeta = pfpMetaVec.front();
@@ -123,7 +123,9 @@ namespace sbnd{
     larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
     auto propertiesMapIter = propertiesMap.find("NuScore");
     if (propertiesMapIter == propertiesMap.end()){
-      return 1.f;
+      std::cout<<"Cannot get PFP Nu Score in Metadata"<<std::endl;
+      std::cout<<"PFP pdg: "<<pfparticle.PdgCode()<<std::endl;
+      return 99999;
     }
 
     return propertiesMapIter->second;
