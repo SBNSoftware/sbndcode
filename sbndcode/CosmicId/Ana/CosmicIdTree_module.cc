@@ -745,7 +745,7 @@ namespace sbnd {
           if(trk.ID() != tpcTrack.ID()) continue;
 
           recob::PFParticle PFPNeutrino = fCosId.PandoraNuScoreAlg().GetPFPNeutrino(pfp, (*pfParticleHandle));
-          track_pandora_nu_score = fCosId.PandoraNuScoreAlg().GetPandoraNuScore(pfp, findManyPFPMetadata);
+          track_pandora_nu_score = fCosId.PandoraNuScoreAlg().GetPandoraNuScore(PFPNeutrino, findManyPFPMetadata);
           break;
         }
       }
@@ -793,6 +793,7 @@ namespace sbnd {
     track_apa_cross = false;
     track_apa_dist = -99999;
     track_apa_min_dist = -99999;
+    track_pandora_nu_score = -99999;
   }
 
   void CosmicIdTree::ResetPfpVars(){
@@ -827,6 +828,7 @@ namespace sbnd {
     pfp_apa_dist = -99999;
     pfp_apa_min_dist = -99999;
     pfp_sec_apa_min_dist = -99999;
+    pfp_pandora_nu_score = -99999;
   }
   
   DEFINE_ART_MODULE(CosmicIdTree)
