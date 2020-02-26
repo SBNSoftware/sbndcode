@@ -21,7 +21,7 @@ FlashPredict::FlashPredict(fhicl::ParameterSet const& p)
   fTrackProducer            = p.get<std::string>("TrackProducer", "pandoraTrack");
   fCaloProducer             = p.get<std::string>("CaloProducer", "pandoraCalo");
   fSpacePointProducer       = p.get<std::string>("SpacePointProducer", "pandora");
-  fInputFilename            = p.get<std::string>("InputFileName", "fm_metrics_sbnd.root"); // root file with score metrics
+  fInputFilename            = p.get<std::string>("InputFileName", "FlashMatch/fm_metrics_sbnd.root"); // root file with score metrics
   fBeamWindowStart          = p.get<double>("BeamWindowStart", 0.0);
   fBeamWindowEnd            = p.get<double>("BeamWindowEnd", 4000.0);  // in ns
   fMinFlashPE               = p.get<double>("MinFlashPE", 0.0);
