@@ -17,32 +17,26 @@
 #include "larcore/Geometry/AuxDetExptGeoHelperInterface.h"
 #include "larcorealg/Geometry/AuxDetChannelMapAlg.h"
 #include "sbndcode/CRT/CRTChannelMapAlg.h"
-#include <memory>
 
 namespace sbnd {
 
   class CRTGeometryHelper : public geo::AuxDetExptGeoHelperInterface {
   public:
 
-    CRTGeometryHelper(fhicl::ParameterSet const & pset,
-                      art::ActivityRegistry &);
+    explicit CRTGeometryHelper(fhicl::ParameterSet const & pset);
 
   private:
 
-    virtual void doConfigureAuxDetChannelMapAlg(
-        fhicl::ParameterSet const& sortingParameters,
-        geo::AuxDetGeometryCore* geom) override;
-
-    virtual AuxDetChannelMapAlgPtr_t doGetAuxDetChannelMapAlg() const override;
+    AuxDetChannelMapAlgPtr_t
+    doConfigureAuxDetChannelMapAlg(fhicl::ParameterSet const& sortingParameters) const override;
 
     fhicl::ParameterSet fPset; ///< Copy of configuration parameter set
-    std::shared_ptr<geo::CRTChannelMapAlg> fChannelMap; ///< Channel map
-
   };
 
 }  // namespace sbnd
 
-DECLARE_ART_SERVICE_INTERFACE_IMPL(sbnd::CRTGeometryHelper, geo::AuxDetExptGeoHelperInterface, LEGACY)
+DECLARE_ART_SERVICE_INTERFACE_IMPL(sbnd::CRTGeometryHelper,
+                                   geo::AuxDetExptGeoHelperInterface,
+                                   SHARED)
 
 #endif  // SBND_CRTExptGeoHelperInterface_h
-
