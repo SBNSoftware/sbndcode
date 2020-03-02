@@ -3,7 +3,7 @@
 namespace sbnd{
 
 // Constructor - get values from the auxdet geometry service
-CRTGeoAlg::CRTGeoAlg(): 
+CRTGeoAlg::CRTGeoAlg():
   CRTGeoAlg::CRTGeoAlg(lar::providerFrom<geo::Geometry>(), ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
 {}
 
@@ -17,18 +17,18 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
   std::vector<std::string> usedStrips;
 
   // Get the auxdets (strip arrays for some reason)
-  const std::vector<geo::AuxDetGeo*> auxDets = fAuxDetGeoCore->AuxDetGeoVec();
+  const std::vector<geo::AuxDetGeo>& auxDets = fAuxDetGeoCore->AuxDetGeoVec();
 
   int ad_i = 0;
   // Loop over them
-  for(auto const auxDet : auxDets){
+  for(auto const& auxDet : auxDets){
 
     int sv_i = 0;
     // Loop over the strips in the arrays
-    for(size_t i = 0; i < auxDet->NSensitiveVolume(); i++){
+    for(size_t i = 0; i < auxDet.NSensitiveVolume(); i++){
 
       // Get the geometry object for the strip
-      geo::AuxDetSensitiveGeo const& auxDetSensitive = auxDet->SensitiveVolume(i);
+      geo::AuxDetSensitiveGeo const& auxDetSensitive = auxDet.SensitiveVolume(i);
       std::set<std::string> volNames = {auxDetSensitive.TotalVolume()->GetName()};
       std::vector<std::vector<TGeoNode const*>> paths = fGeometryService->FindAllVolumePaths(volNames);
 
@@ -94,18 +94,18 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
 
         // Technically the auxdet is the strip array but this is basically the same as the module
         // Get the limits in local coordinates
-        double halfWidth = auxDet->HalfWidth1();
-        double halfHeight = auxDet->HalfHeight();
-        double halfLength = auxDet->Length()/2;
+        double halfWidth = auxDet.HalfWidth1();
+        double halfHeight = auxDet.HalfHeight();
+        double halfLength = auxDet.Length()/2;
 
         // Transform to world coordinates
         double limits[3] = {halfWidth, halfHeight, halfLength};
         double limitsWorld[3];
-        auxDet->LocalToWorld(limits, limitsWorld);
+        auxDet.LocalToWorld(limits, limitsWorld);
 
         double limits2[3] = {-halfWidth, -halfHeight, -halfLength};
         double limitsWorld2[3];
-        auxDet->LocalToWorld(limits2, limitsWorld2);
+        auxDet.LocalToWorld(limits2, limitsWorld2);
 
         // Determine which plane the module is in in the tagger (XY configuration)
         double origin[3] = {0, 0, 0};
@@ -125,7 +125,7 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         module.maxY = std::max(limitsWorld[1], limitsWorld2[1]);
         module.minZ = std::min(limitsWorld[2], limitsWorld2[2]);
         module.maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
-        module.normal = auxDet->GetNormalVector();
+        module.normal = auxDet.GetNormalVector();
         module.null = false;
         module.planeID = planeID;
         module.top = top;
@@ -172,7 +172,7 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         uint32_t channel1 = 32 * ad_i + 2 * sv_i + 1;
         // Sipm0 is on the left in local coords
         double sipm0X = -halfWidth;
-        double sipm1X = halfWidth; 
+        double sipm1X = halfWidth;
         // In local coordinates the Y position is at half height (top if top) (bottom if not)
         double sipmY = halfHeight;
         if(!fModules[moduleName].top) sipmY = - halfHeight;
@@ -458,9 +458,9 @@ std::string CRTGeoAlg::ChannelToStripName(size_t channel) const{
 std::vector<double> CRTGeoAlg::StripLimitsWithChargeSharing(std::string stripName, double x, double ex){
   int module = fModules.at(fStrips.at(stripName).module).auxDetID;
   std::string moduleName = fGeometryService->AuxDet(module).TotalVolume()->GetName();
-  auto const& sensitiveGeo = fAuxDetGeoCore->ChannelToAuxDetSensitive(moduleName, 
+  auto const& sensitiveGeo = fAuxDetGeoCore->ChannelToAuxDetSensitive(moduleName,
                                                                       2*fStrips.at(stripName).sensitiveVolumeID);
-  
+
   double halfWidth = sensitiveGeo.HalfWidth1();
   double halfHeight = sensitiveGeo.HalfHeight();
   double halfLength = sensitiveGeo.HalfLength();
@@ -476,8 +476,8 @@ std::vector<double> CRTGeoAlg::StripLimitsWithChargeSharing(std::string stripNam
   sensitiveGeo.LocalToWorld(l2, w2);
 
   // Use this to get the limits in the two variable directions
-  std::vector<double> limits = {std::min(w1[0],w2[0]), std::max(w1[0],w2[0]), 
-                                std::min(w1[1],w2[1]), std::max(w1[1],w2[1]), 
+  std::vector<double> limits = {std::min(w1[0],w2[0]), std::max(w1[0],w2[0]),
+                                std::min(w1[1],w2[1]), std::max(w1[1],w2[1]),
                                 std::min(w1[2],w2[2]), std::max(w1[2],w2[2])};
   return limits;
 }
@@ -492,7 +492,7 @@ geo::Point_t CRTGeoAlg::ChannelToSipmPosition(size_t channel) const{
   }
   geo::Point_t null {-99999, -99999, -99999};
   return null;
-} 
+}
 
 // Get the sipm channels on a strip
 std::pair<int, int> CRTGeoAlg::GetStripSipmChannels(std::string stripName) const{
@@ -558,7 +558,7 @@ bool CRTGeoAlg::IsInsideCRT(TVector3 point){
 
 bool CRTGeoAlg::IsInsideCRT(geo::Point_t point){
   std::vector<double> limits = CRTLimits();
-  if(point.X() > limits[0] && point.Y() > limits[1] && point.Z() > limits[2] 
+  if(point.X() > limits[0] && point.Y() > limits[1] && point.Z() > limits[2]
      && point.X() < limits[3] && point.Y() < limits[4] && point.Z() < limits[5]){
     return true;
   }
