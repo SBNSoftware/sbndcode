@@ -9,12 +9,12 @@
 #
 # Usage:
 #
-# generate_simple_weighted_template.py file
+# generate_simple_weighted_template.py (--sbnd | --icarus) file
 #
 # Options:
 #
 # [-h|--help] - Print help message.
-#
+# (--sbnd or --icarus) to select for which experiment generate metrics
 # Arguments:
 #
 # file  ... - Input file.
@@ -24,6 +24,7 @@
 import sys
 import os
 import string
+import argparse
 import numpy as np
 from time import sleep
 from array import array
@@ -71,11 +72,7 @@ sys.argv = myargv
 #                 print()
 
 
-def generator(input_file, rootfile, pset):
-    dir = rootfile.Get(input_file+":/fmatch")
-    nuslice_tree = dir.Get("nuslicetree")  # , nuslice_tree)
-    # nuslice_tree.Print()
-
+def generator(nuslice_tree, rootfile, pset):
     detector = pset.Detector.lower()
     n_bins = pset.n_bins
     drift_distance = pset.DriftDistance
@@ -311,65 +308,55 @@ def generator(input_file, rootfile, pset):
     sleep(20)
 
 # Main program.
-def main(argv):
+def main():
 
     # Parse arguments.
-    input_files = []
-    nfilemax = 1
+    parser = argparse.ArgumentParser(prog='generate_simple_weighted_template.py')
+    parser.add_argument('file')
+    # parser.add_argument('--help', '-h',
+    #                     action='store_true',
+    #                     help='help flag' )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--sbnd', action='store_true', help='Generate metrics for SBND')
+    group.add_argument('--icarus', action='store_true', help='Generate metrics for ICARUS')
+    args = parser.parse_args()
 
-    args = argv[1:]
-    while len(args) > 0:
-        if args[0] == '-h' or args[0] == '--help':
-            # help()
-            print("To run do:\n"/
-                  "generate_simple_weighted_template.py file.root\n"/
-                  "where file.root has a fmatch/nuslicetree")
-            return 0
-        elif args[0][0] == '-':
-            # Unknown option.
-            print('Unknown option %s' % args[0])
-            return 1
+    # if args.help:
+    #     print("To run do:\n"/
+    #           "generate_simple_weighted_template.py file.root\n"/
+    #           "where file.root has a fmatch/nuslicetree")
+    #     return(0)
+    if args.sbnd :
+        print("Generate metrics for SBND")
+    elif args.icarus :
+        print("Generate metrics for ICARUS")
 
-        elif args[0][0] == '@':
-            # Read in file list to input files.
-            filelistname = args[0][1:]
-            if larbatch_posix.exists(filelistname):
-                for filename in larbatch_posix.readlines(filelistname):
-                    input_files.append(string.strip(filename))
-            else:
-                print('File list %s does not exist.' % filelistname)
-                return 1
-            del args[0]
-        else:
+    if not larbatch_posix.exists(args.file):
+        print('Input file %s does not exist.' % args.file)
+        return 1
 
-            # Add single file to input files.
-            input_files.append(args[0])
-            del args[0]
+    print('\nOpening %s' % args.file)
+    rootfile = TFile.Open(args.file)
+    if not rootfile.IsOpen() or rootfile.IsZombie():
+        print('Failed to open %s' % args.file)
+        return 1
 
-    # Loop over input files.
-    nfile = 0
-    for input_file in input_files:
-
-        if nfilemax > 0 and nfile >= nfilemax:
-            break
-        nfile = nfile + 1
-
-        if not larbatch_posix.exists(input_file):
-            print('Input file %s does not exist.' % input_file)
-            return 1
-
-        print('\nOpening %s' % input_file)
-        rootfile = TFile.Open(input_file)
-        if not rootfile.IsOpen() or rootfile.IsZombie():
-            print('Failed to open %s' % input_file)
-            return 1
-
+    if args.sbnd:
         fcl_params = fhicl.make_pset('flashmatch_sbnd.fcl')
         pset = dotDict(fcl_params['sbnd_simple_flashmatch'])
-        generator(input_file, rootfile, pset)
+        dir = rootfile.Get(args.file+":/fmatch")
+        nuslice_tree = dir.Get("nuslicetree")  # , nuslice_tree)
+        # nuslice_tree.Print()
+    elif args.icarus:
+        fcl_params = fhicl.make_pset('flashmatch_icarus.fcl')
+        # TODO: add option to use cryo 0 and cryo 1
+        pset = dotDict(fcl_params['icarus_simple_flashmatch_0'])
+        dir = rootfile.Get(args.file+":/fmatchCryo0")
+        nuslice_tree = dir.Get("nuslicetree")  # , nuslice_tree)
+        # nuslice_tree.Print()
 
-    print('\n%d files analyzed.' % nfile)
+    generator(nuslice_tree, rootfile, pset)
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    sys.exit(main())
