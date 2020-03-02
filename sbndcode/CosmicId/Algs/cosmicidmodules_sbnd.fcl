@@ -82,5 +82,11 @@ sbnd_pandorat0cosmicidalg:
     BeamTimeLimits:      @local::sbnd_beamtime
 }
 
+sbnd_pandoranuscorecosmicidalg:
+{
+    PandoraLabel:        "pandora"
+    TpcTrackModuleLabel: "pandoraTrack"
+    NuScoreCut:          0.4
+}
 
 END_PROLOG
