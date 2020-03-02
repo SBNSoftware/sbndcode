@@ -10,14 +10,15 @@ standard_cosmicidalg:
     CrtTrackModuleLabel: "crttrack"
     CaloModuleLabel:     "pandoraCalo"
 
-    ApplyFiducialCut:  true
-    ApplyStoppingCut:  true
-    ApplyGeometryCut:  true
-    ApplyCpaCrossCut:  false
-    ApplyApaCrossCut:  true
-    ApplyCrtTrackCut:  true
-    ApplyCrtHitCut:    true
-    ApplyPandoraT0Cut: false
+    ApplyFiducialCut:       true
+    ApplyStoppingCut:       true
+    ApplyGeometryCut:       true
+    ApplyCpaCrossCut:       false
+    ApplyApaCrossCut:       true
+    ApplyCrtTrackCut:       true
+    ApplyCrtHitCut:         true
+    ApplyPandoraT0Cut:      false
+    ApplyPandoraNuScoreCut: true
 
     UseTrackAngleVeto:    true
     MinSecondTrackLength: 5.
@@ -31,6 +32,7 @@ standard_cosmicidalg:
     CHTagAlg: @local::sbnd_crthitcosmicidalg
     CTTagAlg: @local::sbnd_crttrackcosmicidalg
     PTTagAlg: @local::sbnd_pandorat0cosmicidalg
+    PNTagAlg: @local::sbnd_pandoranuscorecosmicidalg
 
     BeamTimeLimits: @local::sbnd_beamtime
 }
