@@ -2,4 +2,3 @@
 
 physics.producers.generator.EventsPerSpill: 1
 physics.producers.generator.POTPerSpill: 0 #This cannot be non-zero when EventsPerSPill != 0
-}
