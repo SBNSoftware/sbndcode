@@ -1,9 +1,4 @@
-#include "prodgenie_sbnd.fcl"
+#include "prodgenie_nu_spill_cryostat_gsimple-configf-v1.fcl"
 
-physics.producers.generator: {
-     @table::physics.producers.generator
-     @table::sbnd_flux_bnb_nu_Fv1
-     EventsPerSpill: 1
-     POTPerSpill: 0 #This cannot be non-zero when EventsPerSPill != 0
-     TopVolume: "volCryostat"
-}
+physics.producers.generator.EventsPerSpill: 1
+physics.producers.generator.POTPerSpill: 0 #This cannot be non-zero when EventsPerSPill != 0
