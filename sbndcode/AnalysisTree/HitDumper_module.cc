@@ -612,7 +612,7 @@ void Hitdumper::analyze(const art::Event& evt)
   }
   int counter = 0;
   for (int i = 0; i < _nophits; ++i) {
-    if (!_pd_map.pdType(ophitlist.at(i)->OpChannel(), "pmt")) continue;
+    if (!_pd_map.isPDType(ophitlist.at(i)->OpChannel(), "pmt")) continue;
     _ophit_opch[counter] = ophitlist.at(i)->OpChannel();
     _ophit_opdet[counter] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
     _ophit_peakT[counter] = ophitlist.at(i)->PeakTime();

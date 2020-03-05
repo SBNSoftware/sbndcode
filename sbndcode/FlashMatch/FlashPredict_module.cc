@@ -269,9 +269,9 @@ void FlashPredict::produce(art::Event & e)
   for(auto const& oph : OpHitSubset) {
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-    if (fDetector == "SBND" && pdMap.pdType(oph.OpChannel(), "barepmt"))
+    if (fDetector == "SBND" && pdMap.isPDType(oph.OpChannel(), "barepmt"))
       ophittime2->Fill(oph.PeakTime(), fPEscale * oph.PE());
-    if (fDetector == "SBND" && !pdMap.pdType(oph.OpChannel(), "pmt")) continue; // use only coated PMTs for SBND for flash_time
+    if (fDetector == "SBND" && !pdMap.isPDType(oph.OpChannel(), "pmt")) continue; // use only coated PMTs for SBND for flash_time
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
 
@@ -519,7 +519,7 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
   // through channels in the current fCryostat
   for(auto const& oph : OpHitSubset) {
     std::string op_type = "pmt";
-    if (fDetector == "SBND") op_type = pdMap.pdName(oph.OpChannel());
+    if (fDetector == "SBND") op_type = pdMap.pdType(oph.OpChannel());
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
     // check cryostat and tpc
     if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
