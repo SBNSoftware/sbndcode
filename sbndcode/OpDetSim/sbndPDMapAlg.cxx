@@ -1,7 +1,5 @@
 #include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 
-#ifndef SBNDPDMAPALG_CXX
-#define SBNDPDMAPALG_CXX
 
 //------------------------------------------------------------------------------
 //--- opdet::sbndPDMapAlg implementation
@@ -538,5 +536,3 @@ namespace opdet {
     return (int)PDmap.size();
   }
 }
-
-#endif
