@@ -36,9 +36,9 @@ namespace opdet {
 
     // void setup() {}
 
-    bool pdType(int ch, std::string pdname) const;
-    std::string pdName(int ch) const;
-    int size() const;
+    bool isPDType(size_t ch, std::string pdname) const;
+    std::string pdType(size_t ch) const;
+    size_t size() const;
 
   private:
     nlohmann::json PDmap;

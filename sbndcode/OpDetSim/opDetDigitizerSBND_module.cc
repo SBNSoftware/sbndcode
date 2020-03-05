@@ -288,7 +288,7 @@ namespace opdet {
         if (ch == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
           continue;
         }
-        raw::ADC_Count_t baseline = (map.pdType(ch, "barepmt") || map.pdType(ch, "pmt")) ?
+        raw::ADC_Count_t baseline = (map.isPDType(ch, "barepmt") || map.isPDType(ch, "pmt")) ?
                                     fPMTBaseline : fArapucaBaseline;
         fTriggerAlg.FindTriggerLocations(waveform, baseline);
       }
