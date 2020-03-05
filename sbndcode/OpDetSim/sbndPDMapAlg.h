@@ -12,8 +12,13 @@
 // LArSoft libraries
 
 // framework libraries
-#include <string>
+#include <fstream>
 #include <map>
+#include <string>
+
+#include "art_root_io/TFileService.h"
+
+#include "json.hpp"
 
 namespace opdet {
 
@@ -36,7 +41,7 @@ namespace opdet {
     int size() const;
 
   private:
-    std::map<int, std::string> PDmap;
+    nlohmann::json PDmap;
 
   }; // class sbndPDMapAlg
 
