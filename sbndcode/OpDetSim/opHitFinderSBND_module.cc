@@ -45,9 +45,9 @@
 #include "TRandom3.h"
 #include "TF1.h"
 
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h" 
+#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 
-namespace opdet{
+namespace opdet {
 
   class opHitFinderSBND;
 
@@ -74,9 +74,9 @@ namespace opdet{
     //  art::ServiceHandle<cheat::PhotonBackTracker> pbt;
     double fSampling; //in MHz
     double fBaselineSample; //in ticks
-    double fUseDenoising; 
-    double fPulsePolarityPMT; 
-    double fPulsePolarityArapuca; 
+    double fUseDenoising;
+    double fPulsePolarityPMT;
+    double fPulsePolarityArapuca;
     double fSaturation; //in number of p.e.
     double fArea1pePMT; //area of 1 pe in ADC*ns for PMTs
     double fArea1peSiPM; //area of 1 pe in ADC*ns for Arapucas
@@ -97,8 +97,8 @@ namespace opdet{
   };
 
   opHitFinderSBND::opHitFinderSBND(fhicl::ParameterSet const & p)
-   : EDProducer{p}
-  // Initialize member data here.
+    : EDProducer{p}
+      // Initialize member data here.
   {
     fInputModuleName = p.get< std::string >("InputModule" );
     fBaselineSample  = p.get< int    >("BaselineSample"); //in ticks
@@ -107,13 +107,13 @@ namespace opdet{
     fArea1peSiPM     = p.get< double >("Area1peSiPM"  ); //in ADC*ns for SiPMs
     fThresholdPMT    = p.get< double >("ThresholdPMT" ); //in ADC
     fThresholdArapuca = p.get< double >("ThresholdArapuca"); //in ADC
-    fUseDenoising     = p.get< int   >("UseDenoising"); 
+    fUseDenoising     = p.get< int   >("UseDenoising");
     fPulsePolarityPMT = p.get< int   >("PulsePolarityPMT");
     fPulsePolarityArapuca = p.get< int   >("PulsePolarityArapuca");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
     fSampling = (timeService->OpticalClock().Frequency()); // MHz
-//    fSampling = (timeService->OpticalClock().Frequency())/1000.0; // GHz
+    //    fSampling = (timeService->OpticalClock().Frequency())/1000.0; // GHz
 
     // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -135,15 +135,15 @@ namespace opdet{
     if(e.getByLabel(fInputModuleName, wvfHandle))
       art::fill_ptr_vector(wvfList, wvfHandle);
 
-    if(!wvfHandle.isValid()){
-      std::cout <<Form("Did not find any waveform") << std::endl;
+    if(!wvfHandle.isValid()) {
+      std::cout << Form("Did not find any waveform") << std::endl;
     }
 
-    size_t timebin=0;
-    double FWHM=1, Area=0, phelec, fasttotal=3./4., rms=0, amplitude=0, time=0;
-    unsigned short frame=1;
+    size_t timebin = 0;
+    double FWHM = 1, Area = 0, phelec, fasttotal = 3. / 4., rms = 0, amplitude = 0, time = 0;
+    unsigned short frame = 1;
     //int histogram_number = 0;
-    for(auto const& wvf_P : wvfList){
+    for(auto const& wvf_P : wvfList) {
       auto const& wvf = *wvf_P;
       if (wvf.size() == 0 ) {
         std::cout << "Empty waveform, continue." << std::endl;
@@ -152,19 +152,19 @@ namespace opdet{
 
       fChNumber = wvf.ChannelNumber();
       fwaveform.resize(wvf.size());
-      for(unsigned int i=0;i<wvf.size();i++){
-        fwaveform[i]=wvf[i];
+      for(unsigned int i = 0; i < wvf.size(); i++) {
+        fwaveform[i] = wvf[i];
       }
 
       subtractBaseline(fwaveform, map.pdName(fChNumber), rms);
 
-      if(fUseDenoising == 1){
-        if((map.pdName(fChNumber)=="pmt") || (map.pdName(fChNumber)== "barepmt")){
+      if(fUseDenoising == 1) {
+        if((map.pdName(fChNumber) == "pmt") || (map.pdName(fChNumber) == "barepmt")) {
         }
-        else if((map.pdName(fChNumber)=="arapucaT1") || (map.pdName(fChNumber)== "arapucaT2")){
+        else if((map.pdName(fChNumber) == "arapucaT1") || (map.pdName(fChNumber) == "arapucaT2")) {
           denoise(fwaveform, outwvform);
         }
-        else if((map.pdName(fChNumber)=="xarapucaT1") || (map.pdName(fChNumber)== "xarapucaT2")){
+        else if((map.pdName(fChNumber) == "xarapucaT1") || (map.pdName(fChNumber) == "xarapucaT2")) {
           denoise(fwaveform, outwvform);
         }
         else {
@@ -174,18 +174,18 @@ namespace opdet{
         }
       }
 
-      int i=1;
-      while(findPeak(fwaveform, timebin, Area, rms, amplitude, map.pdName(fChNumber))){
-        time = wvf.TimeStamp() + (double)timebin/fSampling;
+      int i = 1;
+      while(findPeak(fwaveform, timebin, Area, rms, amplitude, map.pdName(fChNumber))) {
+        time = wvf.TimeStamp() + (double)timebin / fSampling;
 
-        if(map.pdName(fChNumber)=="pmt" || map.pdName(fChNumber) == "barepmt"){
-          phelec=Area/fArea1pePMT;
+        if(map.pdName(fChNumber) == "pmt" || map.pdName(fChNumber) == "barepmt") {
+          phelec = Area / fArea1pePMT;
         }
-        else if((map.pdName(fChNumber)=="arapucaT1") || (map.pdName(fChNumber)== "arapucaT2")){
-          phelec=Area/fArea1peSiPM;
+        else if((map.pdName(fChNumber) == "arapucaT1") || (map.pdName(fChNumber) == "arapucaT2")) {
+          phelec = Area / fArea1peSiPM;
         }
-        else if((map.pdName(fChNumber)=="xarapucaT1") || (map.pdName(fChNumber)== "xarapucaT2")){
-          phelec=Area/fArea1peSiPM;
+        else if((map.pdName(fChNumber) == "xarapucaT1") || (map.pdName(fChNumber) == "xarapucaT2")) {
+          phelec = Area / fArea1peSiPM;
         }
         else {
           std::cout << "Unexpected OpChannel: " << map.pdName(fChNumber)
@@ -209,28 +209,29 @@ namespace opdet{
 
   DEFINE_ART_MODULE(opHitFinderSBND)
 
-  void opHitFinderSBND::subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms){
+  void opHitFinderSBND::subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms)
+  {
     double baseline = 0.0;
     rms = 0.0;
     int cnt = 0;
-    for(int i=0; i<fBaselineSample; i++){
+    for(int i = 0; i < fBaselineSample; i++) {
       baseline += waveform[i];
-      rms += pow(waveform[i],2.0);
+      rms += pow(waveform[i], 2.0);
       cnt++;
     }
 
-    baseline = baseline/cnt;
-    rms = sqrt(rms/cnt-baseline*baseline);
-    rms = rms/sqrt(cnt-1);
+    baseline = baseline / cnt;
+    rms = sqrt(rms / cnt - baseline * baseline);
+    rms = rms / sqrt(cnt - 1);
 
-    if(pdtype=="pmt" || pdtype == "barepmt"){
-      for(unsigned int i=0; i<waveform.size(); i++) waveform[i]=fPulsePolarityPMT*(waveform[i]-baseline);
+    if(pdtype == "pmt" || pdtype == "barepmt") {
+      for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityPMT * (waveform[i] - baseline);
     }
-    else if((map.pdName(fChNumber)=="arapucaT1") || (map.pdName(fChNumber)== "arapucaT2")){
-      for(unsigned int i=0; i<waveform.size(); i++) waveform[i]=fPulsePolarityArapuca*(waveform[i]-baseline);
+    else if((map.pdName(fChNumber) == "arapucaT1") || (map.pdName(fChNumber) == "arapucaT2")) {
+      for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
     }
-    else if((map.pdName(fChNumber)=="xarapucaT1") || (map.pdName(fChNumber)== "xarapucaT2")){
-      for(unsigned int i=0; i<waveform.size(); i++) waveform[i]=fPulsePolarityArapuca*(waveform[i]-baseline);
+    else if((map.pdName(fChNumber) == "xarapucaT1") || (map.pdName(fChNumber) == "xarapucaT2")) {
+      for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
     }
     else {
       std::cout << "Unexpected OpChannel: " << map.pdName(fChNumber) << std::endl;
@@ -238,23 +239,24 @@ namespace opdet{
     }
   }
 
-  bool opHitFinderSBND::findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type){
+  bool opHitFinderSBND::findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type)
+  {
 
-    //Gets info from highest peak and suppress it 
+    //Gets info from highest peak and suppress it
     double aux = *max_element(waveform.begin(), waveform.end());
     double max;
-    size_t time_end, bin, binmax = distance(waveform.begin(),max_element(waveform.begin(), waveform.end()));
+    size_t time_end, bin, binmax = distance(waveform.begin(), max_element(waveform.begin(), waveform.end()));
     int threshold;
-    Area=0;
+    Area = 0;
 
-    if(type=="pmt" || type == "barepmt"){
-      threshold=fThresholdPMT;
+    if(type == "pmt" || type == "barepmt") {
+      threshold = fThresholdPMT;
     }
-    else if((map.pdName(fChNumber)=="arapucaT1") || (map.pdName(fChNumber)== "arapucaT2")){
-      threshold=fThresholdArapuca;
+    else if((map.pdName(fChNumber) == "arapucaT1") || (map.pdName(fChNumber) == "arapucaT2")) {
+      threshold = fThresholdArapuca;
     }
-    else if((map.pdName(fChNumber)=="xarapucaT1") || (map.pdName(fChNumber)== "xarapucaT2")){
-      threshold=fThresholdArapuca;
+    else if((map.pdName(fChNumber) == "xarapucaT1") || (map.pdName(fChNumber) == "xarapucaT2")) {
+      threshold = fThresholdArapuca;
     }
     else {
       std::cout << "Unexpected OpChannel: " << map.pdName(fChNumber) << std::endl;
@@ -265,60 +267,61 @@ namespace opdet{
     amplitude = aux;
     max = aux;
 
-    if(aux<threshold) return false;
+    if(aux < threshold) return false;
 
-    while(aux >= threshold){
-        bin++;	
-        if(bin > waveform.size()-1) break;
-        aux = waveform[bin];
+    while(aux >= threshold) {
+      bin++;
+      if(bin > waveform.size() - 1) break;
+      aux = waveform[bin];
     }
-    time_end = bin-1; //looking for the length of the peak
+    time_end = bin - 1; //looking for the length of the peak
 
     aux = max;
     bin = binmax;
-    while(aux >= threshold){
-        bin--;
-        if((int)bin < 0) break;
-        aux = waveform[bin];
+    while(aux >= threshold) {
+      bin--;
+      if((int)bin < 0) break;
+      aux = waveform[bin];
     }
-    time = bin+1; //for rise time
-    for(unsigned int j=time; j<=time_end; j++) Area += waveform[j];
-    Area = Area/fSampling;
+    time = bin + 1; //for rise time
+    for(unsigned int j = time; j <= time_end; j++) Area += waveform[j];
+    Area = Area / fSampling;
 
     bin = time;
-    aux = waveform[time];  
+    aux = waveform[time];
 
-    while(aux >= threshold){
-        waveform[bin] = 0.0;
-        bin++;
-        if(bin > waveform.size()-1) break;
-        aux = waveform[bin];
+    while(aux >= threshold) {
+      waveform[bin] = 0.0;
+      bin++;
+      if(bin > waveform.size() - 1) break;
+      aux = waveform[bin];
     }
     //std::cout << time << " " << time_end << " " << (time_end - time);
-    time=binmax; //returning the peak time
-    return true;		
+    time = binmax; //returning the peak time
+    return true;
   }
 
-  void opHitFinderSBND::denoise(std::vector<double>& waveform, std::vector<double>& outwaveform){
+  void opHitFinderSBND::denoise(std::vector<double>& waveform, std::vector<double>& outwaveform)
+  {
 
     int wavelength = waveform.size();
     outwaveform = waveform;  // copy
     double lambda = 10.0;
     const uint retries = 5; uint try_ = 0;
-    if (wavelength > 0){
+    if (wavelength > 0) {
       while (try_ <= retries) {
         if (TV1D_denoise(waveform, outwaveform, lambda)) break;
         try_++;
         mf::LogInfo("opHitFinder") << try_ << "/" << retries
                                    << " Coming out of TV1D_denoise() unsuccessfully, "
                                    << "using lambda: " << lambda;
-        lambda += 0.1*lambda;
+        lambda += 0.1 * lambda;
         if (try_ == retries) mf::LogWarning("opHitFinder") <<  "Couldn't denoise!";
       }
     }
 
-    for(int i=0; i<wavelength; i++){
-      if(outwaveform[i]) waveform[i]=outwaveform[i];
+    for(int i = 0; i < wavelength; i++) {
+      if(outwaveform[i]) waveform[i] = outwaveform[i];
     }
   } // void opHitFinderSBND::denoise()
 
