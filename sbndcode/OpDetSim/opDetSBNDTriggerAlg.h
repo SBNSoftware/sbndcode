@@ -36,11 +36,11 @@
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 
-namespace opdet{
+namespace opdet {
 
-  class opDetSBNDTriggerAlg{
+  class opDetSBNDTriggerAlg {
 
-    public:
+  public:
 
     struct Config {
       using Name = fhicl::Name;
@@ -72,7 +72,7 @@ namespace opdet{
         Name("MaskedChannels"),
         Comment("Channels which are ignored for issuing triggers.")
       };
-     
+
       fhicl::Atom<bool> MaskLightBars {
         Name("MaskLightBars"),
         Comment("Whether to mask all light bar readout channels from issuing triggers."),
@@ -96,7 +96,7 @@ namespace opdet{
         Comment("Whether to mask all Arapuca Prime readout channels from issuing triggers."),
         false
       };
- 
+
       fhicl::Atom<bool> MaskXArapucas {
         Name("MaskXArapucas"),
         Comment("Whether to mask all X-Arapuca readout channels from issuing triggers."),
@@ -207,12 +207,12 @@ namespace opdet{
       opDetSBNDTriggerAlg(fhicl::Table<Config>(pset, {})(), detector_clocks, detector_properties)
     {}
 
-    //Default destructor 
+    //Default destructor
     ~opDetSBNDTriggerAlg() {}
 
     // Clear out at the end of an event
     void ClearTriggerLocations();
-                                                                                                 
+
     // Add in a waveform to define trigger locations
     void FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline);
 
@@ -225,7 +225,7 @@ namespace opdet{
     // Returns the time range over which triggers are enabled over a range [start, end]
     std::array<double, 2> TriggerEnableWindow() const;
 
-    private:
+  private:
 
     // internal functions
     bool IsChannelMasked(raw::Channel_t channel) const;
@@ -239,14 +239,14 @@ namespace opdet{
     double OpticalPeriod() const;
 
     // fhicl config
-    Config fConfig; 
+    Config fConfig;
 
     // pointers to services
-    detinfo::DetectorClocks const *fDetectorClocks;  
+    detinfo::DetectorClocks const *fDetectorClocks;
     detinfo::DetectorProperties const *fDetectorProperties;
 
     // OpDet channel map
-    opdet::sbndPDMapAlg fOpDetMap; 
+    opdet::sbndPDMapAlg fOpDetMap;
 
     // keeping track of triggers
     std::map<raw::Channel_t, std::vector<std::array<raw::TimeStamp_t, 2>>> fTriggerRangesPerChannel;
