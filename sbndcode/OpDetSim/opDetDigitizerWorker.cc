@@ -1,6 +1,6 @@
 #include <map>
 
-#include "opDetDigitizerWorker.h"
+#include "sbndcode/OpDetSim/opDetDigitizerWorker.h"
 
 opdet::opDetDigitizerWorker::Config::Config(const opdet::DigiPMTSBNDAlgMaker::Config &pmt_config, const opdet::DigiArapucaSBNDAlgMaker::Config &arapuca_config):
   makePMTDigi(pmt_config),

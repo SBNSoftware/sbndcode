@@ -6,8 +6,8 @@
 //// Based on OpDetDigitizerDUNE_module.cc
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef DIGIPMTSBNDALG_H
-#define DIGIPMTSBNDALG_H
+#ifndef SBND_OPDETSIM_DIGIPMTSBNDALG_H
+#define SBND_OPDETSIM_DIGIPMTSBNDALG_H
 
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -194,4 +194,4 @@ namespace opdet{
 
 } //namespace
 
-#endif //DIGIPMTSBNDALG
+#endif //SBND_OPDETSIM_DIGIPMTSBNDALG

@@ -1,14 +1,14 @@
-#ifndef OPDETDIGITIZERWORKER_SBND_HH_
-#define OPDETDIGITIZERWORKER_SBND_HH_
+#ifndef SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
+#define SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
 
 #include <vector>
 #include <mutex>
 #include <condition_variable>
 
-#include "sbndPDMapAlg.h"
-#include "DigiArapucaSBNDAlg.h"
-#include "DigiPMTSBNDAlg.h"
-#include "opDetSBNDTriggerAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.h"
+#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.h"
+#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.h"
 
 namespace opdet {
 
@@ -82,4 +82,4 @@ void opDetDigitizerWorkerThread(const opDetDigitizerWorker &worker, opDetDigitiz
 
 } // end namespace opdet
 
-#endif
+#endif //SBND_OPDETSIM_OPDETDIGITIZERWORKER_H

@@ -1,5 +1,5 @@
-#ifndef OPT0FINDER_OPT0FINDERTYPES_H
-#define OPT0FINDER_OPT0FINDERTYPES_H
+#ifndef SBND_OPDETSIM_OPT0FINDERTYPES_H
+#define SBND_OPDETSIM_OPT0FINDERTYPES_H
 
 #include <vector>
 #include <numeric>
@@ -179,4 +179,4 @@ namespace flashana {
     ///< Prefix of message
   }
 }
-#endif
+#endif //SBND_OPDETSIM_OPT0FINDERTYPES_H

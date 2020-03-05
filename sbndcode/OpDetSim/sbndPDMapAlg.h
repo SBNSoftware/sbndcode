@@ -6,8 +6,8 @@
 // 
 ////////////////////////////////////////////////////////////////////////
 
-#ifndef SBNDPDMAPALG_H
-#define SBNDPDMAPALG_H
+#ifndef SBND_OPDETSIM_SBNDPDMAPALG_H
+#define SBND_OPDETSIM_SBNDPDMAPALG_H
 
 // LArSoft libraries
     
@@ -42,4 +42,4 @@ namespace opdet {
              
 } // namespace 
     
-#endif // SBNDPDMAPALG_H
+#endif // SBND_OPDETSIM_SBNDPDMAPALG_H
