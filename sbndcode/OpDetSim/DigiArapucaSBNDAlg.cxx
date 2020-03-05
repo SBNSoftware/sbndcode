@@ -1,7 +1,7 @@
-#include "DigiArapucaSBNDAlg.h" 
+#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.h" 
 
-#ifndef DIGIARAPUCASBNDALG_CXX
-#define DIGIARAPUCASBNDALG_CXX
+#ifndef SBND_OPDETSIM_DIGIARAPUCASBNDALG_CXX
+#define SBND_OPDETSIM_DIGIARAPUCASBNDALG_CXX
  
 //------------------------------------------------------------------------------
 //--- opdet::simarapucasbndAlg implementation
@@ -306,4 +306,4 @@ DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
 
 }
 
-#endif
+#endif //SBND_OPDETSIM_DIGIARAPUCASBNDALG_CXX

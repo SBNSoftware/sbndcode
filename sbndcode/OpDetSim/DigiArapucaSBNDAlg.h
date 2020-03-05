@@ -6,8 +6,8 @@
 // Based on OpDetDigitizerDUNE_module.cc and SimPMTSBND_module.cc
 ////////////////////////////////////////////////////////////////////////
 
-#ifndef DIGIARAPUCASBNDALG_H
-#define DIGIARAPUCASBNDALG_H
+#ifndef SBND_OPDETSIM_DIGIARAPUCASBNDALG_H
+#define SBND_OPDETSIM_DIGIARAPUCASBNDALG_H
 
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -210,4 +210,4 @@ namespace opdet{
 
 } //namespace
 
-#endif //DIGIARAPUCASBNDALG
+#endif //SBND_OPDETSIM_DIGIARAPUCASBNDALG

@@ -1,4 +1,4 @@
-#include "DigiPMTSBNDAlg.h"
+#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.h"
 
 #ifndef DIGIPMTSBNDALG_CXX
 #define DIGIPMTSBNDALG_CXX

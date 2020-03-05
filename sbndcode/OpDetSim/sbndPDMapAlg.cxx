@@ -1,4 +1,4 @@
-#include "sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 
 #ifndef SBNDPDMAPALG_CXX
 #define SBNDPDMAPALG_CXX
@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------
 
 namespace opdet{
-    
+
     sbndPDMapAlg::sbndPDMapAlg()
     {
         // Inserting data in std::map
@@ -516,25 +516,23 @@ namespace opdet{
         PDmap[501] = "xarapucaT1";
         PDmap[502] = "xarapuca";
         PDmap[503] = "xarapuca";
-        
-        
     }
-    
+
     sbndPDMapAlg::~sbndPDMapAlg()
     { }
-    
+
     bool sbndPDMapAlg::pdType(int ch, std::string pdname) const
     {
         if(PDmap.at(ch)==pdname) return true;
         return false;
     }
-    
+
     std::string sbndPDMapAlg::pdName(int ch) const
     {
         if(ch<(int)PDmap.size()) return PDmap.at(ch);
         return "There is no such channel";
     }
-    
+
     int sbndPDMapAlg::size() const
     {
         return (int)PDmap.size();

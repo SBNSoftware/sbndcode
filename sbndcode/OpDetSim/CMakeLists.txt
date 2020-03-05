@@ -19,7 +19,7 @@ art_make(
 #                           ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
                            canvas
-			   cetlib_except
+                           cetlib_except
                            ${MF_MESSAGELOGGER}
                            ${MF_UTILITIES}
                            ${FHICLCPP}
@@ -30,7 +30,7 @@ art_make(
 
   MODULE_LIBRARIES
                            sbndcode_OpDetSim
-			   pthread
+                           pthread
                            larcore_Geometry_Geometry_service
                            lardataobj_Simulation
                            lardata_Utilities
@@ -40,7 +40,7 @@ art_make(
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                            sbndcode_Utilities_SignalShapingServiceSBND_service
                            nurandom_RandomUtils_NuRandomService_service
-			   ${ART_FRAMEWORK_CORE}
+                           ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
                            ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
