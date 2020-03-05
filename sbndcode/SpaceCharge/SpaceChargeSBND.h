@@ -12,6 +12,7 @@
 #include <vector>
 #include <TGraph.h>
 #include <TF1.h>
+#include <TH3.h>
 #include <TFile.h>
 
 namespace spacecharge
@@ -36,7 +37,7 @@ namespace spacecharge
 	 
 	geo::Vector_t GetPosOffsets(geo::Point_t const& point) const override;
 	geo::Vector_t GetEfieldOffsets(geo::Point_t const& point) const override;
-	geo::Vector_t GetCalPosOffsets(geo::Point_t const& point, int const& TPCid = 1) const override { return {0.,0.,0.}; }
+	geo::Vector_t GetCalPosOffsets(geo::Point_t const& point, int const& TPCid = 1) const override;
 	geo::Vector_t GetCalEfieldOffsets(geo::Point_t const& point, int const& TPCid = 1) const override { return {0.,0.,0.}; }
 
     private:
@@ -51,7 +52,7 @@ namespace spacecharge
 	bool fEnableSimSpatialSCE;
 	bool fEnableSimEfieldSCE;
 	bool fEnableCalSpatialSCE;
-    bool fEnableCalEfieldSCE;
+	bool fEnableCalEfieldSCE;
 	bool fEnableCorrSCE;
 
 	std::string fRepresentationType;
@@ -65,6 +66,9 @@ namespace spacecharge
 	double TransformY(double yVal) const;
 	double TransformZ(double zVal) const;
 	bool IsInsideBoundaries(double xVal, double yVal, double zVal) const;
+
+	//to store Voxelized_TH3 histograms
+	std::vector<TH3F*> SCEhistograms = std::vector<TH3F*>(9);
 
 	TGraph *gSpatialGraphX[99][99];
 	TF1 *intermediateSpatialFitFunctionX[99];
