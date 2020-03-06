@@ -9,9 +9,7 @@
 #ifndef SBND_OPDETSIM_SBNDPDMAPALG_H
 #define SBND_OPDETSIM_SBNDPDMAPALG_H
 
-// LArSoft libraries
-
-// framework libraries
+#include <algorithm>
 #include <fstream>
 #include <map>
 #include <string>
@@ -30,6 +28,10 @@ namespace opdet {
     //Default destructor
     ~sbndPDMapAlg();
 
+    nlohmann::json getCollectionWithProperty(std::string property, std::string property_value);
+    nlohmann::json getCollectionWithProperty(std::string property, int property_value);
+    // template<typename T> nlohmann::json getCollectionWithProperty(std::string property, T property_value);
+
     // struct Config {};
 
     //  sbndPDMapAlg(Config const&) {}
@@ -42,6 +44,7 @@ namespace opdet {
 
   private:
     nlohmann::json PDmap;
+    nlohmann::json subSetPDmap;
 
   }; // class sbndPDMapAlg
 
