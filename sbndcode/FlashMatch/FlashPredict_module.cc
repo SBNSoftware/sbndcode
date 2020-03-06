@@ -269,9 +269,9 @@ void FlashPredict::produce(art::Event & e)
   for(auto const& oph : OpHitSubset) {
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-    if (fDetector == "SBND" && pdMap.isPDType(oph.OpChannel(), "barepmt"))
+    if (fDetector == "SBND" && pdMap.isPDType(oph.OpChannel(), "uncoatedpmt"))
       ophittime2->Fill(oph.PeakTime(), fPEscale * oph.PE());
-    if (fDetector == "SBND" && !pdMap.isPDType(oph.OpChannel(), "pmt")) continue; // use only coated PMTs for SBND for flash_time
+    if (fDetector == "SBND" && !pdMap.isPDType(oph.OpChannel(), "coatedpmt")) continue; // use only coated PMTs for SBND for flash_time
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
 
@@ -518,13 +518,13 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
   // TODO: change this next loop, such that it only loops
   // through channels in the current fCryostat
   for(auto const& oph : OpHitSubset) {
-    std::string op_type = "pmt";
+    std::string op_type = "pmt"; // the label ICARUS has
     if (fDetector == "SBND") op_type = pdMap.pdType(oph.OpChannel());
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
     // check cryostat and tpc
     if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
     // only use PMTs for SBND
-    if (op_type == "pmt") {
+    if (op_type == "coatedpmt" || op_type == "pmt") {
       // Add up the position, weighting with PEs
       _flash_x = PMTxyz[0];
       sum     += 1.0;
@@ -539,7 +539,7 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
       sum_Cy  += oph.PE() * oph.PE() * PMTxyz[1];
       sum_Cz  += oph.PE() * oph.PE() * PMTxyz[2];
     }
-    else if ( op_type == "barepmt") {
+    else if ( op_type == "uncoatedpmt") {
       unpe_tot += oph.PE();
     }
     else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {

@@ -160,7 +160,7 @@ namespace opdet {
       subtractBaseline(fwaveform, map.pdType(fChNumber), rms);
 
       if(fUseDenoising == 1) {
-        if((map.pdType(fChNumber) == "pmt") || (map.pdType(fChNumber) == "barepmt")) {
+        if((map.pdType(fChNumber) == "coatedpmt") || (map.pdType(fChNumber) == "uncoatedpmt")) {
         }
         else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {
           denoise(fwaveform, outwvform);
@@ -179,7 +179,7 @@ namespace opdet {
       while(findPeak(fwaveform, timebin, Area, rms, amplitude, map.pdType(fChNumber))) {
         time = wvf.TimeStamp() + (double)timebin / fSampling;
 
-        if(map.pdType(fChNumber) == "pmt" || map.pdType(fChNumber) == "barepmt") {
+        if(map.pdType(fChNumber) == "coatedpmt" || map.pdType(fChNumber) == "uncoatedpmt") {
           phelec = Area / fArea1pePMT;
         }
         else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {
@@ -225,7 +225,7 @@ namespace opdet {
     rms = sqrt(rms / cnt - baseline * baseline);
     rms = rms / sqrt(cnt - 1);
 
-    if(pdtype == "pmt" || pdtype == "barepmt") {
+    if(pdtype == "coatedpmt" || pdtype == "uncoatedpmt") {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityPMT * (waveform[i] - baseline);
     }
     else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {
@@ -250,7 +250,7 @@ namespace opdet {
     int threshold;
     Area = 0;
 
-    if(type == "pmt" || type == "barepmt") {
+    if(type == "coatedpmt" || type == "uncoatedpmt") {
       threshold = fThresholdPMT;
     }
     else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {

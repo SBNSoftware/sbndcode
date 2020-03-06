@@ -151,10 +151,10 @@ namespace opdet {
 
     // mask by optical detector type
     std::string opdet_type = fOpDetMap.pdType(channel);
-    if (opdet_type == "bar" && fConfig.MaskLightBars() /* RIP */) return true;
-    if (opdet_type == "pmt" && fConfig.MaskPMTs()) return true;
-    if (opdet_type == "barepmt" && fConfig.MaskBarePMTs()) return true;
-    if (opdet_type == "xarapucaprime" && fConfig.MaskXArapucaPrimes()) return true;
+    // if (opdet_type == "bar" && fConfig.MaskLightBars() /* RIP */) return true;
+    if (opdet_type == "coatedpmt" && fConfig.MaskPMTs()) return true;
+    if (opdet_type == "uncoatedpmt" && fConfig.MaskBarePMTs()) return true;
+    // if (opdet_type == "xarapucaprime" && fConfig.MaskXArapucaPrimes()) return true;
     if (opdet_type == "xarapuca" && fConfig.MaskXArapucas()) return true;
     if (opdet_type == "xarapucaT1" && fConfig.MaskXArapucas()) return true;
     if (opdet_type == "xarapucaT2" && fConfig.MaskXArapucas()) return true;

@@ -104,8 +104,7 @@ private:
 
   int icountPE = 0;
   const art::ServiceHandle<geo::Geometry> geometry;
-  // SBND map for light detector type labels (pmt, barepmt, arapuca, xarapuca)
-  opdet::sbndPDMapAlg pdMap;
+  opdet::sbndPDMapAlg pdMap; // SBND opdets map
 
   // root stuff
   TTree* _flashmatch_nuslice_tree;
