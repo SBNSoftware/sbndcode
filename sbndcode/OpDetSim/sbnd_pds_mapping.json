@@ -1,0 +1,4034 @@
+[
+  {
+    "channel": 0,
+    "pd_type": "xarapucaT1",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 1,
+    "pd_type": "xarapucaT1",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 2,
+    "pd_type": "xarapuca",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 3,
+    "pd_type": "xarapuca",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 4,
+    "pd_type": "xarapucaT1",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 5,
+    "pd_type": "xarapucaT1",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 6,
+    "pd_type": "xarapuca",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 7,
+    "pd_type": "xarapuca",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 8,
+    "pd_type": "xarapucaT1",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 9,
+    "pd_type": "xarapucaT1",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 10,
+    "pd_type": "xarapuca",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 11,
+    "pd_type": "xarapuca",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 12,
+    "pd_type": "coatedpmt",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 13,
+    "pd_type": "coatedpmt",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 14,
+    "pd_type": "coatedpmt",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 15,
+    "pd_type": "coatedpmt",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 16,
+    "pd_type": "coatedpmt",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 17,
+    "pd_type": "coatedpmt",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 18,
+    "pd_type": "coatedpmt",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 19,
+    "pd_type": "coatedpmt",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 20,
+    "pd_type": "coatedpmt",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 21,
+    "pd_type": "coatedpmt",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 22,
+    "pd_type": "coatedpmt",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 23,
+    "pd_type": "coatedpmt",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 24,
+    "pd_type": "xarapucaT2",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 25,
+    "pd_type": "xarapucaT2",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 26,
+    "pd_type": "xarapuca",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 27,
+    "pd_type": "xarapuca",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 28,
+    "pd_type": "xarapucaT2",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 29,
+    "pd_type": "xarapucaT2",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 30,
+    "pd_type": "xarapuca",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 31,
+    "pd_type": "xarapuca",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 32,
+    "pd_type": "xarapucaT2",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 33,
+    "pd_type": "xarapucaT2",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 34,
+    "pd_type": "xarapuca",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 35,
+    "pd_type": "xarapuca",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 36,
+    "pd_type": "xarapucaT1",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 37,
+    "pd_type": "xarapucaT1",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 38,
+    "pd_type": "xarapuca",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 39,
+    "pd_type": "xarapuca",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 40,
+    "pd_type": "xarapucaT1",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 41,
+    "pd_type": "xarapucaT1",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 42,
+    "pd_type": "xarapuca",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 43,
+    "pd_type": "xarapuca",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 44,
+    "pd_type": "xarapucaT1",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 45,
+    "pd_type": "xarapucaT1",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 46,
+    "pd_type": "xarapuca",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 47,
+    "pd_type": "xarapuca",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 48,
+    "pd_type": "xarapucaT1",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 49,
+    "pd_type": "xarapucaT1",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 50,
+    "pd_type": "xarapuca",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 51,
+    "pd_type": "xarapuca",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 52,
+    "pd_type": "xarapucaT1",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 53,
+    "pd_type": "xarapucaT1",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 54,
+    "pd_type": "xarapuca",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 55,
+    "pd_type": "xarapuca",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 56,
+    "pd_type": "xarapucaT1",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 57,
+    "pd_type": "xarapucaT1",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 58,
+    "pd_type": "xarapuca",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 59,
+    "pd_type": "xarapuca",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 60,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 61,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 62,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 63,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 64,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 65,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 66,
+    "pd_type": "xarapucaT2",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 67,
+    "pd_type": "xarapucaT2",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 68,
+    "pd_type": "xarapuca",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 69,
+    "pd_type": "xarapuca",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 70,
+    "pd_type": "xarapucaT2",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 71,
+    "pd_type": "xarapucaT2",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 72,
+    "pd_type": "xarapuca",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 73,
+    "pd_type": "xarapuca",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 74,
+    "pd_type": "xarapucaT2",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 75,
+    "pd_type": "xarapucaT2",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 76,
+    "pd_type": "xarapuca",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 77,
+    "pd_type": "xarapuca",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 78,
+    "pd_type": "xarapucaT2",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 79,
+    "pd_type": "xarapucaT2",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 80,
+    "pd_type": "xarapuca",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 81,
+    "pd_type": "xarapuca",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 82,
+    "pd_type": "xarapucaT2",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 83,
+    "pd_type": "xarapucaT2",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 84,
+    "pd_type": "xarapuca",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 85,
+    "pd_type": "xarapuca",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 86,
+    "pd_type": "xarapucaT2",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 87,
+    "pd_type": "xarapucaT2",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 88,
+    "pd_type": "xarapuca",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 89,
+    "pd_type": "xarapuca",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 90,
+    "pd_type": "xarapucaT1",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 91,
+    "pd_type": "xarapucaT1",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 92,
+    "pd_type": "xarapuca",
+    "pds_box": 1,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 93,
+    "pd_type": "xarapuca",
+    "pds_box": -1,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 94,
+    "pd_type": "xarapucaT1",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 95,
+    "pd_type": "xarapucaT1",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 96,
+    "pd_type": "xarapuca",
+    "pds_box": 2,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 97,
+    "pd_type": "xarapuca",
+    "pds_box": -2,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 98,
+    "pd_type": "xarapucaT1",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 99,
+    "pd_type": "xarapucaT1",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 100,
+    "pd_type": "xarapuca",
+    "pds_box": 3,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 101,
+    "pd_type": "xarapuca",
+    "pds_box": -3,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 102,
+    "pd_type": "coatedpmt",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 103,
+    "pd_type": "coatedpmt",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 104,
+    "pd_type": "coatedpmt",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 105,
+    "pd_type": "coatedpmt",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 106,
+    "pd_type": "coatedpmt",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 107,
+    "pd_type": "coatedpmt",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 108,
+    "pd_type": "coatedpmt",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 109,
+    "pd_type": "coatedpmt",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 110,
+    "pd_type": "coatedpmt",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 111,
+    "pd_type": "coatedpmt",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 112,
+    "pd_type": "coatedpmt",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 113,
+    "pd_type": "coatedpmt",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 114,
+    "pd_type": "xarapucaT2",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 115,
+    "pd_type": "xarapucaT2",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 116,
+    "pd_type": "xarapuca",
+    "pds_box": 1,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 117,
+    "pd_type": "xarapuca",
+    "pds_box": -1,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 118,
+    "pd_type": "xarapucaT2",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 119,
+    "pd_type": "xarapucaT2",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 120,
+    "pd_type": "xarapuca",
+    "pds_box": 2,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 121,
+    "pd_type": "xarapuca",
+    "pds_box": -2,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 122,
+    "pd_type": "xarapucaT2",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 123,
+    "pd_type": "xarapucaT2",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 124,
+    "pd_type": "xarapuca",
+    "pds_box": 3,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 125,
+    "pd_type": "xarapuca",
+    "pds_box": -3,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 126,
+    "pd_type": "xarapucaT1",
+    "pds_box": 4,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 127,
+    "pd_type": "xarapucaT1",
+    "pds_box": -4,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 128,
+    "pd_type": "xarapuca",
+    "pds_box": 4,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 129,
+    "pd_type": "xarapuca",
+    "pds_box": -4,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 130,
+    "pd_type": "xarapucaT1",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 131,
+    "pd_type": "xarapucaT1",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 132,
+    "pd_type": "xarapuca",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 133,
+    "pd_type": "xarapuca",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 134,
+    "pd_type": "xarapucaT1",
+    "pds_box": 6,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 135,
+    "pd_type": "xarapucaT1",
+    "pds_box": -6,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 136,
+    "pd_type": "xarapuca",
+    "pds_box": 6,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 137,
+    "pd_type": "xarapuca",
+    "pds_box": -6,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 138,
+    "pd_type": "coatedpmt",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 139,
+    "pd_type": "coatedpmt",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 140,
+    "pd_type": "coatedpmt",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 141,
+    "pd_type": "coatedpmt",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 142,
+    "pd_type": "coatedpmt",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 143,
+    "pd_type": "coatedpmt",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 144,
+    "pd_type": "coatedpmt",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 145,
+    "pd_type": "coatedpmt",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 146,
+    "pd_type": "coatedpmt",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 147,
+    "pd_type": "coatedpmt",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 148,
+    "pd_type": "coatedpmt",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 149,
+    "pd_type": "coatedpmt",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 150,
+    "pd_type": "xarapucaT2",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 151,
+    "pd_type": "xarapucaT2",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 152,
+    "pd_type": "xarapuca",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 153,
+    "pd_type": "xarapuca",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 154,
+    "pd_type": "xarapucaT2",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 155,
+    "pd_type": "xarapucaT2",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 156,
+    "pd_type": "xarapuca",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 157,
+    "pd_type": "xarapuca",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 158,
+    "pd_type": "xarapucaT2",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 159,
+    "pd_type": "xarapucaT2",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 160,
+    "pd_type": "xarapuca",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 161,
+    "pd_type": "xarapuca",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 162,
+    "pd_type": "xarapucaT1",
+    "pds_box": 4,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 163,
+    "pd_type": "xarapucaT1",
+    "pds_box": -4,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 164,
+    "pd_type": "xarapuca",
+    "pds_box": 4,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 165,
+    "pd_type": "xarapuca",
+    "pds_box": -4,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 166,
+    "pd_type": "xarapucaT1",
+    "pds_box": 4,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 167,
+    "pd_type": "xarapucaT1",
+    "pds_box": -4,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 168,
+    "pd_type": "xarapuca",
+    "pds_box": 4,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 169,
+    "pd_type": "xarapuca",
+    "pds_box": -4,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 170,
+    "pd_type": "xarapucaT1",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 171,
+    "pd_type": "xarapucaT1",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 172,
+    "pd_type": "xarapuca",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 173,
+    "pd_type": "xarapuca",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 174,
+    "pd_type": "xarapucaT1",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 175,
+    "pd_type": "xarapucaT1",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 176,
+    "pd_type": "xarapuca",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 177,
+    "pd_type": "xarapuca",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 178,
+    "pd_type": "xarapucaT1",
+    "pds_box": 6,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 179,
+    "pd_type": "xarapucaT1",
+    "pds_box": -6,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 180,
+    "pd_type": "xarapuca",
+    "pds_box": 6,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 181,
+    "pd_type": "xarapuca",
+    "pds_box": -6,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 182,
+    "pd_type": "xarapucaT1",
+    "pds_box": 6,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 183,
+    "pd_type": "xarapucaT1",
+    "pds_box": -6,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 184,
+    "pd_type": "xarapuca",
+    "pds_box": 6,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 185,
+    "pd_type": "xarapuca",
+    "pds_box": -6,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 186,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 4,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 187,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -4,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 188,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 189,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 190,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 6,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 191,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -6,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 192,
+    "pd_type": "xarapucaT2",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 193,
+    "pd_type": "xarapucaT2",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 194,
+    "pd_type": "xarapuca",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 195,
+    "pd_type": "xarapuca",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 196,
+    "pd_type": "xarapucaT2",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 197,
+    "pd_type": "xarapucaT2",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 198,
+    "pd_type": "xarapuca",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 199,
+    "pd_type": "xarapuca",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 200,
+    "pd_type": "xarapucaT2",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 201,
+    "pd_type": "xarapucaT2",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 202,
+    "pd_type": "xarapuca",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 203,
+    "pd_type": "xarapuca",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 204,
+    "pd_type": "xarapucaT2",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 205,
+    "pd_type": "xarapucaT2",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 206,
+    "pd_type": "xarapuca",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 207,
+    "pd_type": "xarapuca",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 208,
+    "pd_type": "xarapucaT2",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 209,
+    "pd_type": "xarapucaT2",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 210,
+    "pd_type": "xarapuca",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 211,
+    "pd_type": "xarapuca",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 212,
+    "pd_type": "xarapucaT2",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 213,
+    "pd_type": "xarapucaT2",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 214,
+    "pd_type": "xarapuca",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 215,
+    "pd_type": "xarapuca",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 216,
+    "pd_type": "xarapucaT2",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 217,
+    "pd_type": "xarapucaT2",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 218,
+    "pd_type": "xarapuca",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 219,
+    "pd_type": "xarapuca",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 220,
+    "pd_type": "xarapucaT1",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 221,
+    "pd_type": "xarapucaT1",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 222,
+    "pd_type": "xarapuca",
+    "pds_box": 5,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 223,
+    "pd_type": "xarapuca",
+    "pds_box": -5,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 224,
+    "pd_type": "xarapucaT2",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 225,
+    "pd_type": "xarapucaT2",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 226,
+    "pd_type": "xarapuca",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 227,
+    "pd_type": "xarapuca",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 228,
+    "pd_type": "coatedpmt",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 229,
+    "pd_type": "coatedpmt",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 230,
+    "pd_type": "coatedpmt",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 231,
+    "pd_type": "coatedpmt",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 232,
+    "pd_type": "coatedpmt",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 233,
+    "pd_type": "coatedpmt",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 234,
+    "pd_type": "coatedpmt",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 235,
+    "pd_type": "coatedpmt",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 236,
+    "pd_type": "coatedpmt",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 237,
+    "pd_type": "coatedpmt",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 238,
+    "pd_type": "coatedpmt",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 239,
+    "pd_type": "coatedpmt",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 240,
+    "pd_type": "arapucaT1",
+    "pds_box": 4,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 241,
+    "pd_type": "arapucaT1",
+    "pds_box": -4,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 242,
+    "pd_type": "arapucaT2",
+    "pds_box": 4,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 243,
+    "pd_type": "arapucaT2",
+    "pds_box": -4,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 244,
+    "pd_type": "xarapucaT2",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 245,
+    "pd_type": "xarapucaT2",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 246,
+    "pd_type": "xarapuca",
+    "pds_box": 5,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 247,
+    "pd_type": "xarapuca",
+    "pds_box": -5,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 248,
+    "pd_type": "arapucaT1",
+    "pds_box": 6,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 249,
+    "pd_type": "arapucaT1",
+    "pds_box": -6,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 250,
+    "pd_type": "arapucaT2",
+    "pds_box": 6,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 251,
+    "pd_type": "arapucaT2",
+    "pds_box": -6,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 252,
+    "pd_type": "arapucaT1",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 253,
+    "pd_type": "arapucaT1",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 254,
+    "pd_type": "arapucaT2",
+    "pds_box": 7,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 255,
+    "pd_type": "arapucaT2",
+    "pds_box": -7,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 256,
+    "pd_type": "xarapucaT2",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 257,
+    "pd_type": "xarapucaT2",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 258,
+    "pd_type": "xarapuca",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 259,
+    "pd_type": "xarapuca",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 260,
+    "pd_type": "arapucaT1",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 261,
+    "pd_type": "arapucaT1",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 262,
+    "pd_type": "arapucaT2",
+    "pds_box": 9,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 263,
+    "pd_type": "arapucaT2",
+    "pds_box": -9,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 264,
+    "pd_type": "coatedpmt",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 265,
+    "pd_type": "coatedpmt",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 266,
+    "pd_type": "coatedpmt",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 267,
+    "pd_type": "coatedpmt",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 268,
+    "pd_type": "coatedpmt",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 269,
+    "pd_type": "coatedpmt",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 270,
+    "pd_type": "coatedpmt",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 271,
+    "pd_type": "coatedpmt",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 272,
+    "pd_type": "coatedpmt",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 273,
+    "pd_type": "coatedpmt",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 274,
+    "pd_type": "coatedpmt",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 275,
+    "pd_type": "coatedpmt",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 276,
+    "pd_type": "xarapucaT2",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 277,
+    "pd_type": "xarapucaT2",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 278,
+    "pd_type": "xarapuca",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 279,
+    "pd_type": "xarapuca",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 280,
+    "pd_type": "xarapucaT1",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 281,
+    "pd_type": "xarapucaT1",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 282,
+    "pd_type": "xarapuca",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 283,
+    "pd_type": "xarapuca",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 284,
+    "pd_type": "xarapucaT2",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 285,
+    "pd_type": "xarapucaT2",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 286,
+    "pd_type": "xarapuca",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 287,
+    "pd_type": "xarapuca",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 288,
+    "pd_type": "xarapucaT2",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 289,
+    "pd_type": "xarapucaT2",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 290,
+    "pd_type": "xarapuca",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 291,
+    "pd_type": "xarapuca",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 292,
+    "pd_type": "xarapucaT2",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 293,
+    "pd_type": "xarapucaT2",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 294,
+    "pd_type": "xarapuca",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 295,
+    "pd_type": "xarapuca",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 296,
+    "pd_type": "xarapucaT2",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 297,
+    "pd_type": "xarapucaT2",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 298,
+    "pd_type": "xarapuca",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 299,
+    "pd_type": "xarapuca",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 300,
+    "pd_type": "xarapucaT2",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 301,
+    "pd_type": "xarapucaT2",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 302,
+    "pd_type": "xarapuca",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 303,
+    "pd_type": "xarapuca",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 304,
+    "pd_type": "xarapucaT2",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 305,
+    "pd_type": "xarapucaT2",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 306,
+    "pd_type": "xarapuca",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 307,
+    "pd_type": "xarapuca",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 308,
+    "pd_type": "xarapucaT2",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 309,
+    "pd_type": "xarapucaT2",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 310,
+    "pd_type": "xarapuca",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 311,
+    "pd_type": "xarapuca",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 312,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 7,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 313,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -7,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 314,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 315,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 316,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 9,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 317,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -9,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 318,
+    "pd_type": "xarapucaT1",
+    "pds_box": 7,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 319,
+    "pd_type": "xarapucaT1",
+    "pds_box": -7,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 320,
+    "pd_type": "xarapuca",
+    "pds_box": 7,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 321,
+    "pd_type": "xarapuca",
+    "pds_box": -7,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 322,
+    "pd_type": "xarapucaT1",
+    "pds_box": 7,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 323,
+    "pd_type": "xarapucaT1",
+    "pds_box": -7,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 324,
+    "pd_type": "xarapuca",
+    "pds_box": 7,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 325,
+    "pd_type": "xarapuca",
+    "pds_box": -7,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 326,
+    "pd_type": "xarapucaT1",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 327,
+    "pd_type": "xarapucaT1",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 328,
+    "pd_type": "xarapuca",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 329,
+    "pd_type": "xarapuca",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 330,
+    "pd_type": "xarapucaT1",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 331,
+    "pd_type": "xarapucaT1",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 332,
+    "pd_type": "xarapuca",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 333,
+    "pd_type": "xarapuca",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 334,
+    "pd_type": "xarapucaT1",
+    "pds_box": 9,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 335,
+    "pd_type": "xarapucaT1",
+    "pds_box": -9,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 336,
+    "pd_type": "xarapuca",
+    "pds_box": 9,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 337,
+    "pd_type": "xarapuca",
+    "pds_box": -9,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 338,
+    "pd_type": "xarapucaT1",
+    "pds_box": 9,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 339,
+    "pd_type": "xarapucaT1",
+    "pds_box": -9,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 340,
+    "pd_type": "xarapuca",
+    "pds_box": 9,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 341,
+    "pd_type": "xarapuca",
+    "pds_box": -9,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 342,
+    "pd_type": "xarapucaT2",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 343,
+    "pd_type": "xarapucaT2",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 344,
+    "pd_type": "xarapuca",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 345,
+    "pd_type": "xarapuca",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 346,
+    "pd_type": "xarapucaT2",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 347,
+    "pd_type": "xarapucaT2",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 348,
+    "pd_type": "xarapuca",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 349,
+    "pd_type": "xarapuca",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 350,
+    "pd_type": "xarapucaT2",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 351,
+    "pd_type": "xarapucaT2",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 352,
+    "pd_type": "xarapuca",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 353,
+    "pd_type": "xarapuca",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 354,
+    "pd_type": "coatedpmt",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 355,
+    "pd_type": "coatedpmt",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 356,
+    "pd_type": "coatedpmt",
+    "pds_box": 7,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 357,
+    "pd_type": "coatedpmt",
+    "pds_box": -7,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 358,
+    "pd_type": "coatedpmt",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 359,
+    "pd_type": "coatedpmt",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 360,
+    "pd_type": "coatedpmt",
+    "pds_box": 8,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 361,
+    "pd_type": "coatedpmt",
+    "pds_box": -8,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 362,
+    "pd_type": "coatedpmt",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 363,
+    "pd_type": "coatedpmt",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 364,
+    "pd_type": "coatedpmt",
+    "pds_box": 9,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 365,
+    "pd_type": "coatedpmt",
+    "pds_box": -9,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 366,
+    "pd_type": "xarapucaT1",
+    "pds_box": 7,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 367,
+    "pd_type": "xarapucaT1",
+    "pds_box": -7,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 368,
+    "pd_type": "xarapuca",
+    "pds_box": 7,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 369,
+    "pd_type": "xarapuca",
+    "pds_box": -7,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 370,
+    "pd_type": "xarapucaT1",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 371,
+    "pd_type": "xarapucaT1",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 372,
+    "pd_type": "xarapuca",
+    "pds_box": 8,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 373,
+    "pd_type": "xarapuca",
+    "pds_box": -8,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 374,
+    "pd_type": "xarapucaT1",
+    "pds_box": 9,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 375,
+    "pd_type": "xarapucaT1",
+    "pds_box": -9,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 376,
+    "pd_type": "xarapuca",
+    "pds_box": 9,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 377,
+    "pd_type": "xarapuca",
+    "pds_box": -9,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 378,
+    "pd_type": "xarapucaT2",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 379,
+    "pd_type": "xarapucaT2",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 380,
+    "pd_type": "xarapuca",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 381,
+    "pd_type": "xarapuca",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 382,
+    "pd_type": "xarapucaT2",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 383,
+    "pd_type": "xarapucaT2",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 384,
+    "pd_type": "xarapuca",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 385,
+    "pd_type": "xarapuca",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 386,
+    "pd_type": "xarapucaT2",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 387,
+    "pd_type": "xarapucaT2",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 388,
+    "pd_type": "xarapuca",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 389,
+    "pd_type": "xarapuca",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 390,
+    "pd_type": "coatedpmt",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 391,
+    "pd_type": "coatedpmt",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 392,
+    "pd_type": "coatedpmt",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 393,
+    "pd_type": "coatedpmt",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 394,
+    "pd_type": "coatedpmt",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 395,
+    "pd_type": "coatedpmt",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 396,
+    "pd_type": "coatedpmt",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 397,
+    "pd_type": "coatedpmt",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 398,
+    "pd_type": "coatedpmt",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 399,
+    "pd_type": "coatedpmt",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 400,
+    "pd_type": "coatedpmt",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 401,
+    "pd_type": "coatedpmt",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 402,
+    "pd_type": "xarapucaT1",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 403,
+    "pd_type": "xarapucaT1",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 404,
+    "pd_type": "xarapuca",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 405,
+    "pd_type": "xarapuca",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 406,
+    "pd_type": "xarapucaT1",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 407,
+    "pd_type": "xarapucaT1",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 408,
+    "pd_type": "xarapuca",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 409,
+    "pd_type": "xarapuca",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 410,
+    "pd_type": "xarapucaT1",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 411,
+    "pd_type": "xarapucaT1",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 412,
+    "pd_type": "xarapuca",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 413,
+    "pd_type": "xarapuca",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 414,
+    "pd_type": "xarapucaT2",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 415,
+    "pd_type": "xarapucaT2",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 416,
+    "pd_type": "xarapuca",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 417,
+    "pd_type": "xarapuca",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 418,
+    "pd_type": "xarapucaT2",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 419,
+    "pd_type": "xarapucaT2",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 420,
+    "pd_type": "xarapuca",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 421,
+    "pd_type": "xarapuca",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 422,
+    "pd_type": "xarapucaT2",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 423,
+    "pd_type": "xarapucaT2",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 424,
+    "pd_type": "xarapuca",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 425,
+    "pd_type": "xarapuca",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 426,
+    "pd_type": "xarapucaT2",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 427,
+    "pd_type": "xarapucaT2",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 428,
+    "pd_type": "xarapuca",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 429,
+    "pd_type": "xarapuca",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 430,
+    "pd_type": "xarapucaT2",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 431,
+    "pd_type": "xarapucaT2",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 432,
+    "pd_type": "xarapuca",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 433,
+    "pd_type": "xarapuca",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 434,
+    "pd_type": "xarapucaT2",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 435,
+    "pd_type": "xarapucaT2",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 436,
+    "pd_type": "xarapuca",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 437,
+    "pd_type": "xarapuca",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 438,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 439,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 440,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 441,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 442,
+    "pd_type": "uncoatedpmt",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 443,
+    "pd_type": "uncoatedpmt",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 444,
+    "pd_type": "xarapucaT1",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 445,
+    "pd_type": "xarapucaT1",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 446,
+    "pd_type": "xarapuca",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 447,
+    "pd_type": "xarapuca",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 448,
+    "pd_type": "xarapucaT1",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 449,
+    "pd_type": "xarapucaT1",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 450,
+    "pd_type": "xarapuca",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 451,
+    "pd_type": "xarapuca",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 452,
+    "pd_type": "xarapucaT1",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 453,
+    "pd_type": "xarapucaT1",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 454,
+    "pd_type": "xarapuca",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 455,
+    "pd_type": "xarapuca",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 456,
+    "pd_type": "xarapucaT1",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 457,
+    "pd_type": "xarapucaT1",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 458,
+    "pd_type": "xarapuca",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 459,
+    "pd_type": "xarapuca",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 460,
+    "pd_type": "xarapucaT1",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 461,
+    "pd_type": "xarapucaT1",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 462,
+    "pd_type": "xarapuca",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 463,
+    "pd_type": "xarapuca",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 464,
+    "pd_type": "xarapucaT1",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 465,
+    "pd_type": "xarapucaT1",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 466,
+    "pd_type": "xarapuca",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 467,
+    "pd_type": "xarapuca",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 468,
+    "pd_type": "xarapucaT2",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 469,
+    "pd_type": "xarapucaT2",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 470,
+    "pd_type": "xarapuca",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 471,
+    "pd_type": "xarapuca",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 472,
+    "pd_type": "xarapucaT2",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 473,
+    "pd_type": "xarapucaT2",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 474,
+    "pd_type": "xarapuca",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 475,
+    "pd_type": "xarapuca",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 476,
+    "pd_type": "xarapucaT2",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 477,
+    "pd_type": "xarapucaT2",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 478,
+    "pd_type": "xarapuca",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 479,
+    "pd_type": "xarapuca",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 480,
+    "pd_type": "coatedpmt",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 481,
+    "pd_type": "coatedpmt",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 482,
+    "pd_type": "coatedpmt",
+    "pds_box": 10,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 483,
+    "pd_type": "coatedpmt",
+    "pds_box": -10,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 484,
+    "pd_type": "coatedpmt",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 485,
+    "pd_type": "coatedpmt",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 486,
+    "pd_type": "coatedpmt",
+    "pds_box": 11,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 487,
+    "pd_type": "coatedpmt",
+    "pds_box": -11,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 488,
+    "pd_type": "coatedpmt",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 489,
+    "pd_type": "coatedpmt",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 490,
+    "pd_type": "coatedpmt",
+    "pds_box": 12,
+    "sensible_to": "VUV",
+    "tpc": 0,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 491,
+    "pd_type": "coatedpmt",
+    "pds_box": -12,
+    "sensible_to": "VUV",
+    "tpc": 1,
+    "xarapuca_pos": null
+  },
+  {
+    "channel": 492,
+    "pd_type": "xarapucaT1",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 493,
+    "pd_type": "xarapucaT1",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 494,
+    "pd_type": "xarapuca",
+    "pds_box": 10,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 495,
+    "pd_type": "xarapuca",
+    "pds_box": -10,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 496,
+    "pd_type": "xarapucaT1",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 497,
+    "pd_type": "xarapucaT1",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 498,
+    "pd_type": "xarapuca",
+    "pds_box": 11,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 499,
+    "pd_type": "xarapuca",
+    "pds_box": -11,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 500,
+    "pd_type": "xarapucaT1",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 501,
+    "pd_type": "xarapucaT1",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "top"
+  },
+  {
+    "channel": 502,
+    "pd_type": "xarapuca",
+    "pds_box": 12,
+    "sensible_to": "VIS",
+    "tpc": 0,
+    "xarapuca_pos": "bottom"
+  },
+  {
+    "channel": 503,
+    "pd_type": "xarapuca",
+    "pds_box": -12,
+    "sensible_to": "VIS",
+    "tpc": 1,
+    "xarapuca_pos": "bottom"
+  }
+]

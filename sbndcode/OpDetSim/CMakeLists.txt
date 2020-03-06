@@ -52,6 +52,8 @@ art_make(
 install_headers()
 install_fhicl()
 install_source()
+# install sbnd_pds_mapping.json with mapping of the photon detectors
+install_fw(LIST sbnd_pds_mapping.json)
 
 # simple_plugin(SimPMTSBND "module"
 #                            larcore_Geometry_Geometry_service
