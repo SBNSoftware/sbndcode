@@ -8,7 +8,7 @@ wvf_ana:
   module_type: 	"wvfAna"
   InputModule: "opdaq"
   ClusterModuleLabel: "linecluster"
-  OpDetsToPlot: ["pmt", "barepmt",
+  OpDetsToPlot: ["coatedpmt", "uncoatedpmt",
                  "xarapuca", "xarapucaT1", "xarapucaT2",
                  "arapucaT1", "arapucaT2"]
 }
