@@ -145,7 +145,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         // only work on the perscribed channels
         if (ch < start || ch >= start + n) continue;
 
-        if((Reflected) && (fConfig.map.isPDType(ch, "barepmt") || fConfig.map.isPDType(ch, "pmt") )) { //All PMT channels
+        if((Reflected) && (fConfig.map.isPDType(ch, "uncoatedpmt") || fConfig.map.isPDType(ch, "coatedpmt") )) { //All PMT channels
           pmtDigitizer->ConstructWaveformLite(ch, litesimphotons, waveform, fConfig.map.pdType(ch), auxmap, fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/, fConfig.Nsamples);
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0], (unsigned int)ch, waveform);//including pre trigger window and transit time
         }
@@ -194,7 +194,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         // only work on the perscribed channels
         if (ch < start || ch >= start + n) continue;
 
-        if((Reflected) && (fConfig.map.isPDType(ch, "barepmt") || fConfig.map.isPDType(ch, "pmt"))) { //all PMTs
+        if((Reflected) && (fConfig.map.isPDType(ch, "uncoatedpmt") || fConfig.map.isPDType(ch, "coatedpmt"))) { //all PMTs
           pmtDigitizer->ConstructWaveform(ch, simphotons, waveform, fConfig.map.pdType(ch), auxmap, fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/, fConfig.Nsamples);
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0], (unsigned int)ch, waveform);//including pre trigger window and transit time
         }
@@ -239,7 +239,7 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(std::map<int, sim::S
 
     for (auto const& litesimphotons : (*pmtHandle)) {
       ch = litesimphotons.OpChannel;
-      if(fConfig.map.isPDType(ch, "pmt") && !Reflected)
+      if(fConfig.map.isPDType(ch, "coatedpmt") && !Reflected)
         auxmap.insert(std::make_pair(ch, litesimphotons));
     }
   }
@@ -257,7 +257,7 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMap(std::map<int, sim::SimPh
     bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
     for (auto const& simphotons : (*pmtHandle)) {
       ch = simphotons.OpChannel();
-      if(fConfig.map.isPDType(ch, "pmt") && !Reflected)
+      if(fConfig.map.isPDType(ch, "coatedpmt") && !Reflected)
         auxmap.insert(std::make_pair(ch, simphotons));
     }
   }

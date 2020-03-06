@@ -97,7 +97,7 @@
   },
   {
     "channel": 12,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 1,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -105,7 +105,7 @@
   },
   {
     "channel": 13,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -1,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -113,7 +113,7 @@
   },
   {
     "channel": 14,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 1,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -121,7 +121,7 @@
   },
   {
     "channel": 15,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -1,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -129,7 +129,7 @@
   },
   {
     "channel": 16,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 2,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -137,7 +137,7 @@
   },
   {
     "channel": 17,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -2,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -145,7 +145,7 @@
   },
   {
     "channel": 18,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 2,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -153,7 +153,7 @@
   },
   {
     "channel": 19,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -2,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -161,7 +161,7 @@
   },
   {
     "channel": 20,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 3,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -169,7 +169,7 @@
   },
   {
     "channel": 21,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -3,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -177,7 +177,7 @@
   },
   {
     "channel": 22,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 3,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -185,7 +185,7 @@
   },
   {
     "channel": 23,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -3,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -481,7 +481,7 @@
   },
   {
     "channel": 60,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 1,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -489,7 +489,7 @@
   },
   {
     "channel": 61,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -1,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -497,7 +497,7 @@
   },
   {
     "channel": 62,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 2,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -505,7 +505,7 @@
   },
   {
     "channel": 63,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -2,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -513,7 +513,7 @@
   },
   {
     "channel": 64,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 3,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -521,7 +521,7 @@
   },
   {
     "channel": 65,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -3,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -817,7 +817,7 @@
   },
   {
     "channel": 102,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 1,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -825,7 +825,7 @@
   },
   {
     "channel": 103,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -1,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -833,7 +833,7 @@
   },
   {
     "channel": 104,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 1,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -841,7 +841,7 @@
   },
   {
     "channel": 105,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -1,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -849,7 +849,7 @@
   },
   {
     "channel": 106,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 2,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -857,7 +857,7 @@
   },
   {
     "channel": 107,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -2,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -865,7 +865,7 @@
   },
   {
     "channel": 108,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 2,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -873,7 +873,7 @@
   },
   {
     "channel": 109,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -2,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -881,7 +881,7 @@
   },
   {
     "channel": 110,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 3,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -889,7 +889,7 @@
   },
   {
     "channel": 111,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -3,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -897,7 +897,7 @@
   },
   {
     "channel": 112,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 3,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -905,7 +905,7 @@
   },
   {
     "channel": 113,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -3,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1105,7 +1105,7 @@
   },
   {
     "channel": 138,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 4,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1113,7 +1113,7 @@
   },
   {
     "channel": 139,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -4,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1121,7 +1121,7 @@
   },
   {
     "channel": 140,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 4,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1129,7 +1129,7 @@
   },
   {
     "channel": 141,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -4,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1137,7 +1137,7 @@
   },
   {
     "channel": 142,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 5,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1145,7 +1145,7 @@
   },
   {
     "channel": 143,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -5,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1153,7 +1153,7 @@
   },
   {
     "channel": 144,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 5,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1161,7 +1161,7 @@
   },
   {
     "channel": 145,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -5,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1169,7 +1169,7 @@
   },
   {
     "channel": 146,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 6,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1177,7 +1177,7 @@
   },
   {
     "channel": 147,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -6,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1185,7 +1185,7 @@
   },
   {
     "channel": 148,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 6,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1193,7 +1193,7 @@
   },
   {
     "channel": 149,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -6,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1489,7 +1489,7 @@
   },
   {
     "channel": 186,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 4,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -1497,7 +1497,7 @@
   },
   {
     "channel": 187,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -4,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -1505,7 +1505,7 @@
   },
   {
     "channel": 188,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 5,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -1513,7 +1513,7 @@
   },
   {
     "channel": 189,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -5,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -1521,7 +1521,7 @@
   },
   {
     "channel": 190,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 6,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -1529,7 +1529,7 @@
   },
   {
     "channel": 191,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -6,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -1825,7 +1825,7 @@
   },
   {
     "channel": 228,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 4,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1833,7 +1833,7 @@
   },
   {
     "channel": 229,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -4,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1841,7 +1841,7 @@
   },
   {
     "channel": 230,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 4,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1849,7 +1849,7 @@
   },
   {
     "channel": 231,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -4,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1857,7 +1857,7 @@
   },
   {
     "channel": 232,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 5,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1865,7 +1865,7 @@
   },
   {
     "channel": 233,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -5,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1873,7 +1873,7 @@
   },
   {
     "channel": 234,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 5,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1881,7 +1881,7 @@
   },
   {
     "channel": 235,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -5,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1889,7 +1889,7 @@
   },
   {
     "channel": 236,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 6,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1897,7 +1897,7 @@
   },
   {
     "channel": 237,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -6,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -1905,7 +1905,7 @@
   },
   {
     "channel": 238,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 6,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -1913,7 +1913,7 @@
   },
   {
     "channel": 239,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -6,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2113,7 +2113,7 @@
   },
   {
     "channel": 264,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 7,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2121,7 +2121,7 @@
   },
   {
     "channel": 265,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -7,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2129,7 +2129,7 @@
   },
   {
     "channel": 266,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 7,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2137,7 +2137,7 @@
   },
   {
     "channel": 267,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -7,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2145,7 +2145,7 @@
   },
   {
     "channel": 268,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 8,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2153,7 +2153,7 @@
   },
   {
     "channel": 269,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -8,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2161,7 +2161,7 @@
   },
   {
     "channel": 270,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 8,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2169,7 +2169,7 @@
   },
   {
     "channel": 271,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -8,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2177,7 +2177,7 @@
   },
   {
     "channel": 272,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 9,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2185,7 +2185,7 @@
   },
   {
     "channel": 273,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -9,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2193,7 +2193,7 @@
   },
   {
     "channel": 274,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 9,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2201,7 +2201,7 @@
   },
   {
     "channel": 275,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -9,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2497,7 +2497,7 @@
   },
   {
     "channel": 312,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 7,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -2505,7 +2505,7 @@
   },
   {
     "channel": 313,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -7,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -2513,7 +2513,7 @@
   },
   {
     "channel": 314,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 8,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -2521,7 +2521,7 @@
   },
   {
     "channel": 315,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -8,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -2529,7 +2529,7 @@
   },
   {
     "channel": 316,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 9,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -2537,7 +2537,7 @@
   },
   {
     "channel": 317,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -9,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -2833,7 +2833,7 @@
   },
   {
     "channel": 354,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 7,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2841,7 +2841,7 @@
   },
   {
     "channel": 355,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -7,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2849,7 +2849,7 @@
   },
   {
     "channel": 356,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 7,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2857,7 +2857,7 @@
   },
   {
     "channel": 357,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -7,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2865,7 +2865,7 @@
   },
   {
     "channel": 358,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 8,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2873,7 +2873,7 @@
   },
   {
     "channel": 359,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -8,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2881,7 +2881,7 @@
   },
   {
     "channel": 360,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 8,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2889,7 +2889,7 @@
   },
   {
     "channel": 361,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -8,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2897,7 +2897,7 @@
   },
   {
     "channel": 362,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 9,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2905,7 +2905,7 @@
   },
   {
     "channel": 363,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -9,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -2913,7 +2913,7 @@
   },
   {
     "channel": 364,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 9,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -2921,7 +2921,7 @@
   },
   {
     "channel": 365,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -9,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3121,7 +3121,7 @@
   },
   {
     "channel": 390,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 10,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3129,7 +3129,7 @@
   },
   {
     "channel": 391,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -10,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3137,7 +3137,7 @@
   },
   {
     "channel": 392,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 10,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3145,7 +3145,7 @@
   },
   {
     "channel": 393,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -10,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3153,7 +3153,7 @@
   },
   {
     "channel": 394,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 11,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3161,7 +3161,7 @@
   },
   {
     "channel": 395,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -11,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3169,7 +3169,7 @@
   },
   {
     "channel": 396,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 11,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3177,7 +3177,7 @@
   },
   {
     "channel": 397,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -11,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3185,7 +3185,7 @@
   },
   {
     "channel": 398,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 12,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3193,7 +3193,7 @@
   },
   {
     "channel": 399,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -12,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3201,7 +3201,7 @@
   },
   {
     "channel": 400,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 12,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3209,7 +3209,7 @@
   },
   {
     "channel": 401,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -12,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3505,7 +3505,7 @@
   },
   {
     "channel": 438,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 10,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -3513,7 +3513,7 @@
   },
   {
     "channel": 439,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -10,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -3521,7 +3521,7 @@
   },
   {
     "channel": 440,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 11,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -3529,7 +3529,7 @@
   },
   {
     "channel": 441,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -11,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -3537,7 +3537,7 @@
   },
   {
     "channel": 442,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": 12,
     "sensible_to": "VIS",
     "tpc": 0,
@@ -3545,7 +3545,7 @@
   },
   {
     "channel": 443,
-    "pd_type": "barepmt",
+    "pd_type": "uncoatedpmt",
     "pds_box": -12,
     "sensible_to": "VIS",
     "tpc": 1,
@@ -3841,7 +3841,7 @@
   },
   {
     "channel": 480,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 10,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3849,7 +3849,7 @@
   },
   {
     "channel": 481,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -10,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3857,7 +3857,7 @@
   },
   {
     "channel": 482,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 10,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3865,7 +3865,7 @@
   },
   {
     "channel": 483,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -10,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3873,7 +3873,7 @@
   },
   {
     "channel": 484,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 11,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3881,7 +3881,7 @@
   },
   {
     "channel": 485,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -11,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3889,7 +3889,7 @@
   },
   {
     "channel": 486,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 11,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3897,7 +3897,7 @@
   },
   {
     "channel": 487,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -11,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3905,7 +3905,7 @@
   },
   {
     "channel": 488,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 12,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3913,7 +3913,7 @@
   },
   {
     "channel": 489,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -12,
     "sensible_to": "VUV",
     "tpc": 1,
@@ -3921,7 +3921,7 @@
   },
   {
     "channel": 490,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": 12,
     "sensible_to": "VUV",
     "tpc": 0,
@@ -3929,7 +3929,7 @@
   },
   {
     "channel": 491,
-    "pd_type": "pmt",
+    "pd_type": "coatedpmt",
     "pds_box": -12,
     "sensible_to": "VUV",
     "tpc": 1,
