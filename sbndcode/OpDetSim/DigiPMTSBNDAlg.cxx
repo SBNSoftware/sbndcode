@@ -41,7 +41,7 @@ namespace opdet {
     for(int i = 1; i <= 1000; i++)timeTPB->SetBinContent(i, x[i - 1]);
 
     //shape of single pulse
-    if (fParams.SinglePEmodel == 1  ) {
+    if (fParams.SinglePEmodel) {
 
       std::cout << " using testbench pe response " << std::endl;
       pulsesize = 450;
