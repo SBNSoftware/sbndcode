@@ -8,6 +8,7 @@
 // Authors: L. Paulucci and F. Marinho
 ////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
 #include <vector>
 #include <cmath>
 #include <memory>
@@ -42,6 +43,8 @@
 #include "TFile.h"
 #include "TTree.h"
 
+#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+
 namespace opdet {
 
   class wvfAna;
@@ -65,6 +68,7 @@ namespace opdet {
     void beginJob() override;
     void endJob() override;
 
+    opdet::sbndPDMapAlg pdMap; //map for photon detector types
   private:
 
     size_t fEvNumber;
@@ -76,7 +80,9 @@ namespace opdet {
 
     // Declare member data here.
     std::string fInputModuleName;
+    std::vector<std::string> fOpDetsToPlot;
     std::stringstream histname;
+    std::string opdetName;
   };
 
 
@@ -86,6 +92,7 @@ namespace opdet {
     // More initializers here.
   {
     fInputModuleName = p.get< std::string >("InputModule" );
+    fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
     fSampling = (timeService->OpticalClock().Frequency()); // MHz
@@ -114,12 +121,16 @@ namespace opdet {
 
     std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
 
+    std::cout << "fOpDetsToPlot[0]:\t" << fOpDetsToPlot[0] << "\n";
     int hist_id = 0;
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
+      opdetName = pdMap.pdName(fChNumber);
+      if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetName) == fOpDetsToPlot.end()) {continue;}
       histname.str(std::string());
       histname << "event_" << fEvNumber
                << "_opchannel_" << fChNumber
+               << "_" << opdetName
                << "_" << hist_id;
 
       fStartTime = wvf.TimeStamp(); //in us
