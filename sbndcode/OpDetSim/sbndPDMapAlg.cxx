@@ -63,4 +63,10 @@ namespace opdet {
   {
     return PDmap.size();
   }
+
+  auto sbndPDMapAlg::getChannelEntry(size_t ch) const
+  {
+    return PDmap.at(ch);
+  }
+
 }

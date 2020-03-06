@@ -41,6 +41,7 @@ namespace opdet {
     bool isPDType(size_t ch, std::string pdname) const;
     std::string pdType(size_t ch) const;
     size_t size() const;
+    auto getChannelEntry(size_t ch) const;
 
   private:
     nlohmann::json PDmap;
