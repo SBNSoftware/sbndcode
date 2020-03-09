@@ -82,7 +82,7 @@ namespace opdet {
     std::string fInputModuleName;
     std::vector<std::string> fOpDetsToPlot;
     std::stringstream histname;
-    std::string opdetName;
+    std::string opdetType;
   };
 
 
@@ -125,12 +125,12 @@ namespace opdet {
     int hist_id = 0;
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
-      opdetName = pdMap.pdName(fChNumber);
-      if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetName) == fOpDetsToPlot.end()) {continue;}
+      opdetType = pdMap.pdType(fChNumber);
+      if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
       histname.str(std::string());
       histname << "event_" << fEvNumber
                << "_opchannel_" << fChNumber
-               << "_" << opdetName
+               << "_" << opdetType
                << "_" << hist_id;
 
       fStartTime = wvf.TimeStamp(); //in us
