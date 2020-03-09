@@ -74,12 +74,12 @@ namespace opdet {
     //  art::ServiceHandle<cheat::PhotonBackTracker> pbt;
     double fSampling; //in MHz
     double fBaselineSample; //in ticks
-    double fUseDenoising;
     double fPulsePolarityPMT;
     double fPulsePolarityArapuca;
     double fSaturation; //in number of p.e.
     double fArea1pePMT; //area of 1 pe in ADC*ns for PMTs
     double fArea1peSiPM; //area of 1 pe in ADC*ns for Arapucas
+    bool fUseDenoising;
     int fThresholdPMT; //in ADC
     int fThresholdArapuca; //in ADC
     int fEvNumber;
@@ -107,10 +107,10 @@ namespace opdet {
     fArea1pePMT      = p.get< double >("Area1pePMT"   ); //in ADC*ns for PMTs
     fArea1peSiPM     = p.get< double >("Area1peSiPM"  ); //in ADC*ns for SiPMs
     fThresholdPMT    = p.get< double >("ThresholdPMT" ); //in ADC
-    fThresholdArapuca = p.get< double >("ThresholdArapuca"); //in ADC
-    fUseDenoising     = p.get< int   >("UseDenoising");
+    fThresholdArapuca = p.get< double>("ThresholdArapuca"); //in ADC
     fPulsePolarityPMT = p.get< int   >("PulsePolarityPMT");
-    fPulsePolarityArapuca = p.get< int   >("PulsePolarityArapuca");
+    fPulsePolarityArapuca = p.get<int>("PulsePolarityArapuca");
+    fUseDenoising     = p.get< bool  >("UseDenoising");
 
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
     fSampling = (timeService->OpticalClock().Frequency()); // MHz
@@ -159,7 +159,7 @@ namespace opdet {
 
       subtractBaseline(fwaveform, map.pdType(fChNumber), rms);
 
-      if(fUseDenoising == 1) {
+      if(fUseDenoising) {
         if((map.pdType(fChNumber) == "coatedpmt") || (map.pdType(fChNumber) == "uncoatedpmt")) {
         }
         else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {
