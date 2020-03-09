@@ -34,7 +34,6 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "TMath.h"
-//#include "TRandom3.h"
 #include "TF1.h"
 #include "TH1D.h"
 
@@ -58,6 +57,8 @@ namespace opdet {
       double QEDirect; //PMT quantum efficiency for direct (VUV) light
       double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
       int SinglePEmodel; //Model for single pe response =0 for ideal, =1 for test bench meas
+      std::string TPBFile; //File containing timing emission structure for TPB
+      std::string TestBenchPEFile; //File containing single PE profile from data
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       detinfo::DetectorClocks const* timeService = nullptr; //< DetectorClocks service provider.
@@ -87,6 +88,9 @@ namespace opdet {
     //int fSinglePEmodel;
     double sigma1;
     double sigma2;
+    std::string fTPBFile;
+    std::string fTestBenchPEFile;
+    std::vector<double> xvec; //auxiliar vector for creating histograms
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
@@ -106,6 +110,7 @@ namespace opdet {
     void AddDarkNoise(std::vector<double>& wave); //add dark noise
     double FindMinimumTime(sim::SimPhotons const&, int ch, std::string pdtype, std::map<int, sim::SimPhotons> auxmap);
     double FindMinimumTimeLite(sim::SimPhotonsLite const& litesimphotons, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap);
+    std::vector<double> AssignVector(std::string filename);
   };//class DigiPMTSBNDAlg
 
   class DigiPMTSBNDAlgMaker {
@@ -179,6 +184,16 @@ namespace opdet {
         Name("SinglePEmodel"),
         Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
       };
+
+       fhicl::Atom<std::string> tpbFile {
+          Name("TPBFile"),
+          Comment("File containing timing emission distribution for TPB")
+       };
+
+       fhicl::Atom<std::string> testbenchpeFile {
+          Name("TestBenchPEFile"),
+          Comment("File containing single pe pulse from data")
+       };
 
     };    //struct Config
 
