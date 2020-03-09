@@ -84,6 +84,7 @@ namespace opdet {
     int fThresholdArapuca; //in ADC
     int fEvNumber;
     int fChNumber;
+    std::string opdetType;
     std::vector<double> fwaveform;
     std::vector<double> outwvform;
     //int fSize;
@@ -98,7 +99,6 @@ namespace opdet {
     //std::stringstream histname;
   };
 
-  // TODO: lot's of calls to map.pdType(), store the variable! ~icaza
   opHitFinderSBND::opHitFinderSBND(fhicl::ParameterSet const & p)
     : EDProducer{p}
       // Initialize member data here.
@@ -154,44 +154,45 @@ namespace opdet {
       }
 
       fChNumber = wvf.ChannelNumber();
+      opdetType = map.pdType(fChNumber);
       fwaveform.resize(wvf.size());
       for(unsigned int i = 0; i < wvf.size(); i++) {
         fwaveform[i] = wvf[i];
       }
 
-      subtractBaseline(fwaveform, map.pdType(fChNumber), rms);
+      subtractBaseline(fwaveform, opdetType, rms);
 
       if(fUseDenoising) {
-        if((map.pdType(fChNumber) == "coatedpmt") || (map.pdType(fChNumber) == "uncoatedpmt")) {
+        if((opdetType == "coatedpmt") || (opdetType == "uncoatedpmt")) {
         }
-        else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {
+        else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
           denoise(fwaveform, outwvform);
         }
-        else if((map.pdType(fChNumber) == "xarapucaT1") || (map.pdType(fChNumber) == "xarapucaT2")) {
+        else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
           denoise(fwaveform, outwvform);
         }
         else {
-          std::cout << "Unexpected OpChannel: " << map.pdType(fChNumber)
+          std::cout << "Unexpected OpChannel: " << opdetType
                     << ", continue." << std::endl;
           std::terminate();
         }
       }
 
       int i = 1;
-      while(findPeak(fwaveform, timebin, Area, rms, amplitude, map.pdType(fChNumber))) {
+      while(findPeak(fwaveform, timebin, Area, rms, amplitude, opdetType)) {
         time = wvf.TimeStamp() + (double)timebin / fSampling;
 
-        if(map.pdType(fChNumber) == "coatedpmt" || map.pdType(fChNumber) == "uncoatedpmt") {
+        if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
           phelec = Area / fArea1pePMT;
         }
-        else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {
+        else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
           phelec = Area / fArea1peSiPM;
         }
-        else if((map.pdType(fChNumber) == "xarapucaT1") || (map.pdType(fChNumber) == "xarapucaT2")) {
+        else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
           phelec = Area / fArea1peSiPM;
         }
         else {
-          std::cout << "Unexpected OpChannel: " << map.pdType(fChNumber)
+          std::cout << "Unexpected OpChannel: " << opdetType
                     << ", continue." << std::endl;
           continue;
         }
@@ -230,14 +231,14 @@ namespace opdet {
     if(pdtype == "coatedpmt" || pdtype == "uncoatedpmt") {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityPMT * (waveform[i] - baseline);
     }
-    else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {
+    else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
     }
-    else if((map.pdType(fChNumber) == "xarapucaT1") || (map.pdType(fChNumber) == "xarapucaT2")) {
+    else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
     }
     else {
-      std::cout << "Unexpected OpChannel: " << map.pdType(fChNumber) << std::endl;
+      std::cout << "Unexpected OpChannel: " << opdetType << std::endl;
       return;
     }
   }
@@ -255,14 +256,14 @@ namespace opdet {
     if(type == "coatedpmt" || type == "uncoatedpmt") {
       threshold = fThresholdPMT;
     }
-    else if((map.pdType(fChNumber) == "arapucaT1") || (map.pdType(fChNumber) == "arapucaT2")) {
+    else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
       threshold = fThresholdArapuca;
     }
-    else if((map.pdType(fChNumber) == "xarapucaT1") || (map.pdType(fChNumber) == "xarapucaT2")) {
+    else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
       threshold = fThresholdArapuca;
     }
     else {
-      std::cout << "Unexpected OpChannel: " << map.pdType(fChNumber) << std::endl;
+      std::cout << "Unexpected OpChannel: " << opdetType << std::endl;
       return false;
     }
 
