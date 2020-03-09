@@ -35,7 +35,6 @@
 
 #include "TMath.h"
 #include "TH1D.h"
-//#include "TRandom3.h"
 #include "TF1.h"
 
 namespace opdet {
@@ -60,6 +59,9 @@ namespace opdet {
       double ArapucaEffT2;   //Arapuca type 2 efficiency (optical window + cavity)
       double ArapucaEffxT1;    //X-Arapuca T1 efficiency (optical window + cavity)
       double ArapucaEffxT2;    //X-Arapuca T2 efficiency (optical window + cavity)
+      std::string ArapucaT1File; //File containing timing structure for arapuca T1
+      std::string ArapucaT2File; //File containing timing structure for arapuca T2
+      std::string ArapucaXT1File; //File containing timing structure for x-arapuca T1
 
       detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
       detinfo::DetectorClocks const* timeService = nullptr; ///< DetectorClocks service provider.
@@ -93,6 +95,10 @@ namespace opdet {
     double fArapucaEffT2;
     double fArapucaEffxT1;
     double fArapucaEffxT2;
+    std::string fArapucaT1File;
+    std::string fArapucaT2File;
+    std::string fArapucaXT1File;
+    std::vector<double> xvec; //auxiliar vector for creating histograms
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
@@ -112,6 +118,7 @@ namespace opdet {
     void CreatePDWaveform(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave, std::string pdtype);
     void CreatePDWaveformLite(std::map< int, int > const& photonMap, double t_min, std::vector<double>& wave, std::string pdtype);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
+    std::vector<double> AssignVector(std::string filename);
   };//class DigiArapucaSBNDAlg
 
   class DigiArapucaSBNDAlgMaker {
@@ -195,6 +202,21 @@ namespace opdet {
         Name("ArapucaEffxT2"),
         Comment("X-Arapuca efficiency T2 (optical window + cavity)")
       };
+
+       fhicl::Atom<std::string> arapucaT1File {
+          Name("ArapucaT1File"),
+          Comment("File containing timing distribution for Arapuca T1 (optical window + cavity)")
+       };
+
+       fhicl::Atom<std::string> arapucaT2File {
+          Name("ArapucaT2File"),
+          Comment("File containing timing distribution for Arapuca T2 (optical window + cavity)")
+       };
+
+       fhicl::Atom<std::string> arapucaXT1File {
+          Name("ArapucaXT1File"),
+          Comment("File containing timing distribution for X-Arapuca T1 (optical window)")
+       };
 
     };    //struct Config
 
