@@ -1,5 +1,5 @@
-#ifndef OPT0FINDER_OPT0FINDERCONSTANTS_H
-#define OPT0FINDER_OPT0FINDERCONSTANTS_H
+#ifndef SBND_OPDETSIM_OPT0FINDERCONSTANTS_H
+#define SBND_OPDETSIM_OPT0FINDERCONSTANTS_H
 
 #include <utility>
 #include <climits>
@@ -19,4 +19,4 @@ namespace flashana {
 
 }
 
-#endif
+#endif //SBND_OPDETSIM_OPT0FINDERCONSTANTS_H
