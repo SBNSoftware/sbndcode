@@ -42,7 +42,7 @@
 #include "TFile.h"
 #include "TTree.h"
 
-namespace opdet{
+namespace opdet {
 
   class wvfAna;
 
@@ -92,7 +92,8 @@ namespace opdet{
 
   }
 
-  void wvfAna::beginJob(){
+  void wvfAna::beginJob()
+  {
 
   }
 
@@ -107,14 +108,14 @@ namespace opdet{
     art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
     e.getByLabel(fInputModuleName, waveHandle);
 
-    if(!waveHandle.isValid()){
+    if(!waveHandle.isValid()) {
       std::cout << Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
     }
 
-    std::cout << "Number of waveforms: " <<waveHandle->size() << std::endl;
+    std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
 
     int hist_id = 0;
-    for(auto const& wvf : (*waveHandle)){
+    for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
       histname.str(std::string());
       histname << "event_" << fEvNumber
@@ -122,18 +123,19 @@ namespace opdet{
                << "_" << hist_id;
 
       fStartTime = wvf.TimeStamp(); //in us
-      fEndTime = double(wvf.size())/fSampling + fStartTime; //in us
+      fEndTime = double(wvf.size()) / fSampling + fStartTime; //in us
 
       //Create a new histogram
-      TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);",fStartTime), wvf.size(), fStartTime, fEndTime);
-      for(unsigned int i=0; i<wvf.size();i++){
-        wvfHist->SetBinContent(i+1,(double)wvf[i]);
+      TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), fStartTime, fEndTime);
+      for(unsigned int i = 0; i < wvf.size(); i++) {
+        wvfHist->SetBinContent(i + 1, (double)wvf[i]);
       }
       hist_id++;
     }
   }
 
-  void wvfAna::endJob(){
+  void wvfAna::endJob()
+  {
   }
 
   DEFINE_ART_MODULE(opdet::wvfAna)
