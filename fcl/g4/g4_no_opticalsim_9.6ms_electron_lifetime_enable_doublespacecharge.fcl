@@ -1,4 +1,6 @@
-#include "standard_g4_sbnd.fcl"
+#include "g4_no_opticalsim.fcl"
+
+services.DetectorPropertiesService.Electronlifetime:  9.6e3 #microseconds
 
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE: true
