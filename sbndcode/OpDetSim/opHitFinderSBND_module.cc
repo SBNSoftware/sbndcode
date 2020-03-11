@@ -85,6 +85,7 @@ namespace opdet {
     int fEvNumber;
     int fChNumber;
     std::string opdetType;
+    int threshold;
     std::vector<double> fwaveform;
     std::vector<double> outwvform;
     //int fSize;
@@ -92,7 +93,8 @@ namespace opdet {
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
     void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
     bool findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin,
-                             double& Area, double& amplitude, std::string opdetType);
+                             double& Area, double& amplitude,
+                             const int& threshold, const std::string& opdetType);
     void denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
     bool TV1D_denoise(std::vector<double>& waveform,
                       std::vector<double>& outwaveform,
@@ -158,6 +160,20 @@ namespace opdet {
 
       fChNumber = wvf.ChannelNumber();
       opdetType = map.pdType(fChNumber);
+      if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
+        threshold = fThresholdPMT;
+      }
+      else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
+        threshold = fThresholdArapuca;
+      }
+      else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
+        threshold = fThresholdArapuca;
+      }
+      else {
+        std::cout << "Unexpected OpChannel: " << opdetType << std::endl;
+        continue;
+      }
+
       fwaveform.resize(wvf.size());
       for(unsigned int i = 0; i < wvf.size(); i++) {
         fwaveform[i] = wvf[i];
@@ -182,7 +198,7 @@ namespace opdet {
       }
 
       // TODO: pass rms to this function once that's sorted. ~icaza
-      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, opdetType)){
+      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, threshold, opdetType)){
         time = wvf.TimeStamp() + (double)timebin / fSampling;
 
         if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
@@ -250,23 +266,9 @@ namespace opdet {
   // TODO: pass rms to this function once that's sorted. ~icaza
   bool opHitFinderSBND::findAndSuppressPeak(std::vector<double>& waveform,
                                             size_t& timebin, double& Area,
-                                            double& amplitude, std::string opdetType)
+                                            double& amplitude, const int& threshold,
+                                            const std::string& opdetType)
   {
-    int threshold;
-    // TODO: take this if/else block to the constructor of the waveform
-    if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
-      threshold = fThresholdPMT;
-    }
-    else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
-      threshold = fThresholdArapuca;
-    }
-    else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
-      threshold = fThresholdArapuca;
-    }
-    else {
-      std::cout << "Unexpected OpChannel: " << opdetType << std::endl;
-      return false;
-    }
 
     std::vector<double>::iterator max_element_it = std::max_element(waveform.begin(), waveform.end());
     amplitude = *max_element_it;
