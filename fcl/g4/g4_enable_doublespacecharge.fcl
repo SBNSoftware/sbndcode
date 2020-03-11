@@ -3,4 +3,4 @@
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE: true
 
-services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_voxelTH3.root"
+services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_DoubleCharge_voxelTH3.root"
