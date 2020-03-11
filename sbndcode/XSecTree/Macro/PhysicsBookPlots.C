@@ -1186,33 +1186,42 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   // Set the titles
   if(fPlotXSec){
     hstack->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+    total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
   }
   else if(fMaxError > 0){
     hstack->GetYaxis()->SetTitle("Events (/bin width)");
+    total_hist->GetYaxis()->SetTitle("Events (/bin width)");
   }
   else{
     hstack->GetYaxis()->SetTitle("Events");
+    total_hist->GetYaxis()->SetTitle("Events");
   }
   // X axis config
   hstack->GetXaxis()->SetLabelOffset(0.1);
   hstack->GetXaxis()->SetTitleOffset(1.8);
   hstack->GetXaxis()->SetTickLength(0.04);
+  
   // Y axis config
   hstack->GetYaxis()->SetTitleOffset(0.9);
   double title_size = 1.1*hstack->GetYaxis()->GetTitleSize();
+  total_hist->GetYaxis()->SetTitleOffset(0.9);
   if(fPlotXSec && fPlotVariables.size()==1){ 
     title_size = 1.0*hstack->GetYaxis()->GetTitleSize();
     hstack->GetYaxis()->SetTitleOffset(1);
+    total_hist->GetYaxis()->SetTitleOffset(1.2);
   }
   if(fPlotXSec && fPlotVariables.size()==2){ 
     title_size = 0.8*hstack->GetYaxis()->GetTitleSize();
     hstack->GetYaxis()->SetTitleOffset(1.1);
+    total_hist->GetYaxis()->SetTitleOffset(1.1);
   }
   if(fPlotXSec && fPlotVariables.size()==3){ 
     title_size = 0.6*hstack->GetYaxis()->GetTitleSize();
     hstack->GetYaxis()->SetTitleOffset(1.2);
+    total_hist->GetYaxis()->SetTitleOffset(1.2);
   }
   hstack->GetYaxis()->SetTitleSize(title_size);
+  total_hist->GetYaxis()->SetTitleSize(title_size*0.8);
   hstack->GetYaxis()->SetNdivisions(110);
   hstack->GetYaxis()->SetTickLength(0.015);
   canvas->Modified();
@@ -1233,10 +1242,14 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   error_bands->SetFillColor(38);
   error_bands->SetLineColor(38);
   error_bands->GetYaxis()->SetTitle("#sigma_{stat} (%)");
-  if(titles.units[i].IsNull())
+  if(titles.units[i].IsNull()){
     error_bands->GetXaxis()->SetTitle(titles.names[i]);
-  else
+    total_hist->GetXaxis()->SetTitle(titles.names[i]);
+  }
+  else{
     error_bands->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+    total_hist->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+  }
 
   double size_ratio = upper_pad->GetAbsHNDC()/lower_pad->GetAbsHNDC();
   // x axis config
@@ -1262,6 +1275,11 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   canvas->SaveAs(output_file);
   if(fSaveAllInOne){
     TFile f(fOutputFile, "UPDATE");
+    if(fPlotStacked){
+      hstack->Write("stack_"+name);
+      legend->Write("legend_"+name);
+    }
+    total_hist->Write("total_"+name);
     canvas->Write();
     f.Close();
   }
@@ -1303,17 +1321,24 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
   // Set the titles
   if(fPlotXSec){
     hstack->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+    total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
   }
   else if(fMaxError > 0){
     hstack->GetYaxis()->SetTitle("Events (/Bin width)");
+    total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
   }
   else{
     hstack->GetYaxis()->SetTitle("Events");
+    total_hist->GetYaxis()->SetTitle("Events");
   }
-  if(titles.units[i].IsNull())
+  if(titles.units[i].IsNull()){
     hstack->GetXaxis()->SetTitle(titles.names[i]);
-  else
+    total_hist->GetXaxis()->SetTitle(titles.names[i]);
+  }
+  else{
     hstack->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+    total_hist->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+  }
 
   // X axis config
   hstack->GetXaxis()->SetTitleOffset(1.);
@@ -1832,6 +1857,7 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
       if(k != -1) width = width * (bin_edges[k][bin_k+1] - bin_edges[k][bin_k]);
       double xsec_scale = 1e38/(width * fFlux * fTargets);
       hist->Scale(xsec_scale, "width");
+
     }
     // Else if max error used divide each bin by width
     else if (fMaxError > 0 || fBinEdges[i].size()>1){
