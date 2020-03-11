@@ -4,7 +4,7 @@
 // File:        opHitFinderSBND_module.cc
 //
 // This module produces an OpHit object for light analysis
-// Created by L. Paulucci and F. Marinho
+// Created by L. Paulucci, F. Marinho, and I.L. de Icaza
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
@@ -91,9 +91,12 @@ namespace opdet {
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
     void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
-    bool findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin, double& Area, double& amplitude, std::string opdetType);
+    bool findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin,
+                             double& Area, double& amplitude, std::string opdetType);
     void denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
-    bool TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform, const double lambda);
+    bool TV1D_denoise(std::vector<double>& waveform,
+                      std::vector<double>& outwaveform,
+                      const double lambda);
     void TV1D_denoise_v2(std::vector<double>& input, std::vector<double>& output,
                          unsigned int width, const double lambda);
     //std::stringstream histname;
@@ -178,9 +181,8 @@ namespace opdet {
         }
       }
 
-      int i = 1;
       // TODO: pass rms to this function once that's sorted. ~icaza
-      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, opdetType){
+      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, opdetType)){
         time = wvf.TimeStamp() + (double)timebin / fSampling;
 
         if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
@@ -198,13 +200,10 @@ namespace opdet {
           continue;
         }
 
-        i++;
         //including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
         recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);
         pulseVecPtr->emplace_back(opHit);
       } // while findAndSuppressPeak()
-      //     histogram_number += 1;
-      // fwaveform.clear();
     } // for(auto const& wvf : (*wvfHandle)){
     e.put(std::move(pulseVecPtr));
     std::vector<double>().swap(fwaveform); // clear and release the memory of fwaveform
@@ -213,13 +212,15 @@ namespace opdet {
 
   DEFINE_ART_MODULE(opHitFinderSBND)
 
-  void opHitFinderSBND::subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms)
+  void opHitFinderSBND::subtractBaseline(std::vector<double>& waveform,
+                                         std::string pdtype, double& rms)
   {
     double baseline = 0.0;
     rms = 0.0;
     int cnt = 0;
     // TODO: this is broken it assumes that the beginning of the
-    // waveform is only noise, which is not always the case
+    // waveform is only noise, which is not always the case. ~icaza.
+    // TODO: use std::accumulate instead of this loop. ~icaza.
     for(int i = 0; i < fBaselineSample; i++) {
       baseline += waveform[i];
       rms += std::pow(waveform[i], 2);
@@ -247,7 +248,9 @@ namespace opdet {
 
 
   // TODO: pass rms to this function once that's sorted. ~icaza
-  bool opHitFinderSBND::findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin, double& Area, double& amplitude, std::string opdetType)
+  bool opHitFinderSBND::findAndSuppressPeak(std::vector<double>& waveform,
+                                            size_t& timebin, double& Area,
+                                            double& amplitude, std::string opdetType)
   {
     int threshold;
     // TODO: take this if/else block to the constructor of the waveform
@@ -314,13 +317,17 @@ namespace opdet {
     }
     // if (wavelength > 0) TV1D_denoise_v2(waveform, outwaveform, wavelength, lambda);
 
+    // TODO: fairly certain this for is completely redundant,
+    // and if not a std::move or swap would be better. ~icaza
     for(int i = 0; i < wavelength; i++) {
       if(outwaveform[i]) waveform[i] = outwaveform[i];
     }
   } // void opHitFinderSBND::denoise()
 
   // TODO: this function is not robust, check if the expected input is given and put exceptions
-  bool opHitFinderSBND::TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform, const double lambda)
+  bool opHitFinderSBND::TV1D_denoise(std::vector<double>& waveform,
+                                     std::vector<double>& outwaveform,
+                                     const double lambda)
   {
     int width = waveform.size();
     int k = 0, k0 = 0; // k: current sample location, k0: beginning of current segment
