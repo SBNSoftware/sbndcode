@@ -121,7 +121,10 @@ namespace opdet {
 
     std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
 
-    std::cout << "fOpDetsToPlot[0]:\t" << fOpDetsToPlot[0] << "\n";
+    std::cout << "fOpDetsToPlot:\t";
+    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
+    std::cout << std::endl;
+    
     int hist_id = 0;
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
