@@ -92,6 +92,7 @@ namespace opdet {
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
     void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
     bool findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
+    bool findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin, double& Area, double& amplitude, std::string opdetType);
     void denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
     bool TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform, const double lambda);
     void TV1D_denoise_v2(std::vector<double>& input, std::vector<double>& output,
@@ -304,6 +305,54 @@ namespace opdet {
     time = binmax; //returning the peak time
     return true;
   }
+
+
+  bool opHitFinderSBND::findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin, double& Area, double& amplitude, std::string opdetType)
+  {
+    int threshold;
+    // TODO: take this if/else block to the constructor of the waveform
+    if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
+      threshold = fThresholdPMT;
+    }
+    else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
+      threshold = fThresholdArapuca;
+    }
+    else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
+      threshold = fThresholdArapuca;
+    }
+    else {
+      std::cout << "Unexpected OpChannel: " << opdetType << std::endl;
+      return false;
+    }
+
+    std::vector<double>::iterator max_element_it = std::max_element(waveform.begin(), waveform.end());
+    amplitude = *max_element_it;
+    if(amplitude < threshold) return false; // stop if there's no more peaks
+    timebin = std::distance(waveform.begin(), max_element_it);
+
+    // it_e contains the iterator to the last element in the peak
+    // where waveform is above threshold
+    auto it_e = std::find_if(max_element_it,
+                            waveform.end(),
+                            [threshold](const double& x)->bool
+                              {return x < threshold;} );
+    // it_s contains the iterator to the first element in the peak
+    // where waveform is above threshold
+    auto it_s = std::find_if(std::make_reverse_iterator(max_element_it),
+                            std::make_reverse_iterator(waveform.begin()),
+                            [threshold](const double& x)->bool
+                              {return x < threshold;} ).base();
+
+    // integrate the area below the peak
+    Area = std::accumulate(it_s, it_e, 0.0);
+    Area = Area/fSampling;
+
+    // TODO: try to just remove this
+    // TODO: better even, return iterator to last position
+    std::fill(it_s, it_e, 0.0); // zeroes out that peak
+    return true;
+  } // bool opHitFinderSBND::findAndSuppressPeak()
+
 
   void opHitFinderSBND::denoise(std::vector<double>& waveform, std::vector<double>& outwaveform)
   {
