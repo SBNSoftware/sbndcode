@@ -91,7 +91,6 @@ namespace opdet {
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
     void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
-    bool findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type);
     bool findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin, double& Area, double& amplitude, std::string opdetType);
     void denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
     bool TV1D_denoise(std::vector<double>& waveform, std::vector<double>& outwaveform, const double lambda);
@@ -144,7 +143,7 @@ namespace opdet {
     }
 
     size_t timebin = 0;
-    double FWHM = 1, Area = 0, phelec, fasttotal = 3. / 4., rms = 0, amplitude = 0, time = 0;
+    double FWHM = 1, Area = 0, phelec, fasttotal = 3./4., rms = 0, amplitude = 0, time = 0;
     unsigned short frame = 1;
     //int histogram_number = 0;
     for(auto const& wvf_P : wvfList) {
@@ -180,7 +179,8 @@ namespace opdet {
       }
 
       int i = 1;
-      while(findPeak(fwaveform, timebin, Area, rms, amplitude, opdetType)) {
+      // TODO: pass rms to this function once that's sorted. ~icaza
+      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, opdetType){
         time = wvf.TimeStamp() + (double)timebin / fSampling;
 
         if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
@@ -202,11 +202,10 @@ namespace opdet {
         //including hit info: OpChannel, PeakTime, PeakTimeAbs, Frame, Width, Area, PeakHeight, PE, FastToTotal
         recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);
         pulseVecPtr->emplace_back(opHit);
-      } // while findPeak()
+      } // while findAndSuppressPeak()
       //     histogram_number += 1;
       // fwaveform.clear();
     } // for(auto const& wvf : (*wvfHandle)){
-
     e.put(std::move(pulseVecPtr));
     std::vector<double>().swap(fwaveform); // clear and release the memory of fwaveform
     std::vector<double>().swap(outwvform); // clear and release the memory of outwvform
@@ -219,9 +218,11 @@ namespace opdet {
     double baseline = 0.0;
     rms = 0.0;
     int cnt = 0;
+    // TODO: this is broken it assumes that the beginning of the
+    // waveform is only noise, which is not always the case
     for(int i = 0; i < fBaselineSample; i++) {
       baseline += waveform[i];
-      rms += pow(waveform[i], 2.0);
+      rms += std::pow(waveform[i], 2);
       cnt++;
     }
 
@@ -244,69 +245,8 @@ namespace opdet {
     }
   }
 
-  bool opHitFinderSBND::findPeak(std::vector<double>& waveform, size_t& time, double& Area, double rms, double& amplitude, std::string type)
-  {
 
-    //Gets info from highest peak and suppress it
-    double aux = *max_element(waveform.begin(), waveform.end());
-    double max;
-    size_t time_end, bin, binmax = distance(waveform.begin(), max_element(waveform.begin(), waveform.end()));
-    int threshold;
-    Area = 0;
-
-    if(type == "coatedpmt" || type == "uncoatedpmt") {
-      threshold = fThresholdPMT;
-    }
-    else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
-      threshold = fThresholdArapuca;
-    }
-    else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
-      threshold = fThresholdArapuca;
-    }
-    else {
-      std::cout << "Unexpected OpChannel: " << opdetType << std::endl;
-      return false;
-    }
-
-    bin = binmax;
-    amplitude = aux;
-    max = aux;
-
-    if(aux < threshold) return false;
-
-    while(aux >= threshold) {
-      bin++;
-      if(bin > waveform.size() - 1) break;
-      aux = waveform[bin];
-    }
-    time_end = bin - 1; //looking for the length of the peak
-
-    aux = max;
-    bin = binmax;
-    while(aux >= threshold) {
-      bin--;
-      if((int)bin < 0) break;
-      aux = waveform[bin];
-    }
-    time = bin + 1; //for rise time
-    for(unsigned int j = time; j <= time_end; j++) Area += waveform[j];
-    Area = Area / fSampling;
-
-    bin = time;
-    aux = waveform[time];
-
-    while(aux >= threshold) {
-      waveform[bin] = 0.0;
-      bin++;
-      if(bin > waveform.size() - 1) break;
-      aux = waveform[bin];
-    }
-    //std::cout << time << " " << time_end << " " << (time_end - time);
-    time = binmax; //returning the peak time
-    return true;
-  }
-
-
+  // TODO: pass rms to this function once that's sorted. ~icaza
   bool opHitFinderSBND::findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin, double& Area, double& amplitude, std::string opdetType)
   {
     int threshold;
