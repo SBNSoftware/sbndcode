@@ -23,7 +23,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: test/jan-2020-overlays/lep_mom_slices/lep_mom_slices.root
+OutputFile: test/jan-2020-overlays/lep_mom_inclusive/lep_mom_inclusive.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -52,10 +52,10 @@ PlotByFsi: true
 NumProtons: -1
 
 //- Number of charged pions
-NumPiPM: -1
+NumPiPM: 0
 
 //- Number of neutral pions
-NumPi0: -1
+NumPi0: 0
 
 //- Choose true interaction (ignored if plotting by fsi)
 //- QE (0), RES (1), DIS (2), COH (3), MEC (10)
@@ -97,17 +97,16 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: lep_mom, cos_lep_theta
+PlotVariable: lep_mom
 
 // Save the plots for each variable
-ShowPlots: true, true
+ShowPlots: true
 
 // Save all historams in a single output file (true), or just in separate files (false)
 SaveAllInOne: true
 
 // Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
 PotScale: 6.6e20
-//PotScale: -1
 
 //------------------------------------------------------------------------
 //                           Choose how to plot
@@ -119,19 +118,19 @@ PlotStacked: false
 StackBy: fsi
 
 // Minimum bin (-1 for min tree value)
-MinValue: 0., -1.1
+MinValue: 0.
 
 // Maximum bin (-1 for max tree value)
-MaxValue: 3., 1.
+MaxValue: 3.
 
 // Number of bins (-1 for automatic)
-NumBins: 5,9
+NumBins: 100
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-//BinEdges: [0.,0.4,0.5,0.75,1.25,2.5],[-1.,-0.5,0.0,0.27,0.45,0.62,0.760.86,0.94,1.0]
+//BinEdges: [-1]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
-MaxError: -1
+MaxError: 0.02
 
 // Plot cross-section (true) or rate (false)
 PlotXSec: true
