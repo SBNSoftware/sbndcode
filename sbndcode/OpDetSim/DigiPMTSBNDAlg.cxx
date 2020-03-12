@@ -41,7 +41,7 @@ namespace opdet {
     for(size_t i=1; i<=xvec.size(); i++)timeTPB->SetBinContent(i,xvec[i-1]);
 
     //shape of single pulse
-    if (fParams.SinglePEmodel == 1  ) {
+    if (fParams.SinglePEmodel) {
 
       std::cout << " using testbench pe response " << std::endl;
       wsp=AssignVector(fParams.TestBenchPEFile);
