@@ -55,6 +55,10 @@ install_source()
 # install sbnd_pds_mapping.json with mapping of the photon detectors
 install_fw(LIST sbnd_pds_mapping.json)
 
+# # install .dat files with test bench data
+# file(GLOB dat_files *.dat)
+# install_fw(LIST ${dat_files})
+
 # simple_plugin(SimPMTSBND "module"
 #                            larcore_Geometry_Geometry_service
 #                            lardataobj_Simulation
