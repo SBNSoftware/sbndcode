@@ -34,8 +34,8 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "TMath.h"
-//#include "TRandom3.h"
 #include "TF1.h"
+#include "TFile.h"
 #include "TH1D.h"
 
 namespace opdet {
@@ -57,8 +57,7 @@ namespace opdet {
       double PMTSaturation; //in number of p.e.
       double QEDirect; //PMT quantum efficiency for direct (VUV) light
       double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
-      // std::string TPBFile; //File containing timing emission structure for TPB
-      // std::string TestBenchPEFile; //File containing single PE profile from data
+      std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
       bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
@@ -182,6 +181,10 @@ namespace opdet {
         Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
       };
 
+      fhicl::Atom<std::string> pmtDataFile {
+        Name("PMTDataFile"),
+        Comment("File containing timing emission distribution for TPB and single pe pulse from data")
+      };
     };    //struct Config
 
     DigiPMTSBNDAlgMaker(Config const& config); //Constructor

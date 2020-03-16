@@ -34,9 +34,9 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "TMath.h"
-#include "TH1D.h"
-//#include "TRandom3.h"
 #include "TF1.h"
+#include "TFile.h"
+#include "TH1D.h"
 
 namespace opdet {
 
@@ -60,6 +60,7 @@ namespace opdet {
       double ArapucaEffT2;   //Arapuca type 2 efficiency (optical window + cavity)
       double ArapucaEffxT1;    //X-Arapuca T1 efficiency (optical window + cavity)
       double ArapucaEffxT2;    //X-Arapuca T2 efficiency (optical window + cavity)
+      std::string ArapucaDataFile; //File containing timing structure for arapucas
 
       detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
       detinfo::DetectorClocks const* timeService = nullptr; ///< DetectorClocks service provider.
@@ -196,6 +197,10 @@ namespace opdet {
         Comment("X-Arapuca efficiency T2 (optical window + cavity)")
       };
 
+      fhicl::Atom<std::string> arapucaDataFile {
+        Name("ArapucaDataFile"),
+        Comment("File containing timing distribution for Arapuca T1 (optical window + cavity), Arapuca T2 (optical window + cavity), X-Arapuca T1 (optical window)")
+      };
     };    //struct Config
 
     DigiArapucaSBNDAlgMaker(Config const& config); //Constructor

@@ -30,23 +30,13 @@ namespace opdet {
     if(fArapucaEffT1 > 1.0001 || fArapucaEffT2 > 1.0001 || fArapucaEffxT1 > 1.0001 || fArapucaEffxT2 > 1.0001)
       std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.ArapucaEffT1 << " or " << fParams.ArapucaEffT2 << " or " << fParams.ArapucaEffxT1 << " or " << fParams.ArapucaEffxT2 << " seems to be too large! Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
 
-    TimeArapucaT1 = new TH1D("Time Profile T1", "", 150, 0.0, 150.0);//histogram that stores the arrival time of photons at SiPM (t=0 is the time is reaches the outside of the optical window) for arapuca T1
-
-    double x[150] = {374, 1455, 2002, 2230, 2336, 2296, 2087, 2006, 1831, 1716, 1623, 1553, 1437, 1327, 1348, 1260, 1237, 1234, 1164, 1122, 1070, 1092, 993, 1002, 892, 969, 951, 907, 909, 961, 863, 857, 915, 900, 853, 842, 790, 780, 779, 808, 781, 749, 723, 737, 723, 755, 732, 680, 724, 631, 656, 693, 669, 632, 636, 643, 632, 640, 608, 615, 597, 633, 602, 545, 591, 595, 551, 574, 567, 507, 545, 535, 552, 519, 537, 563, 523, 461, 550, 510, 514, 469, 517, 493, 466, 460, 488, 446, 474, 516, 451, 451, 457, 465, 450, 456, 493, 441, 441, 475, 433, 419, 435, 405, 392, 410, 430, 404, 392, 407, 435, 411, 383, 422, 394, 397, 413, 366, 389, 376, 366, 372, 375, 345, 370, 368, 370, 390, 351, 382, 373, 380, 377, 339, 372, 371, 351, 360, 338, 365, 309, 187, 95, 41, 19, 7, 2, 3, 0, 0};
-
-    for(size_t i = 1; i <= 150; i++)TimeArapucaT1->SetBinContent(i, x[i - 1]);
-
-    TimeArapucaT2 = new TH1D("Time Profile T1", "", 90, 0.0, 90.0);//histogram that stores the arrival time of photons at SiPM (t=0 is the time is reaches the outside of the optical window) for arapuca T2
-
-    double x2[90] = {5051, 8791, 9054, 8777, 8045, 7009, 6304, 5637, 4828, 4320, 3821, 3333, 2968, 2629, 2364, 2060, 1786, 1624, 1368, 1174, 1115, 935, 820, 725, 627, 535, 500, 453, 386, 355, 315, 279, 221, 196, 198, 181, 120, 115, 128, 109, 79, 67, 77, 59, 48, 39, 40, 37, 32, 39, 22, 25, 18, 20, 14, 19, 8, 9, 6, 11, 13, 4, 11, 4, 4, 5, 3, 2, 4, 4, 5, 2, 6, 0, 0, 2, 1, 0, 0, 0, 1, 2, 1, 0, 0, 1, 0, 1, 0, 0};
-
-    for(size_t i = 1; i <= 90; i++)TimeArapucaT2->SetBinContent(i, x2[i - 1]);
-
-    TimeArapucaX = new TH1D("Time Profile X-Arapuca", "", 20, 0.0, 20.0);//histogram that stores the arrival time of photons at SiPM (t=0 is the time is reaches the outside of the optical window) for X-arapuca
-
-    double x3[20] = {0.0639064, 0.205121, 0.225523, 0.184618, 0.121112, 0.0859086, 0.049705, 0.0268027, 0.0171017, 0.010401, 0.00410041, 0.00290029, 0.00190019, 0.00050005, 0.00010001, 0, 0.00020002, 0.00010001, 0, 0};
-
-    for(size_t i = 1; i <= 20; i++)TimeArapucaX->SetBinContent(i, x3[i - 1]);
+    std::string fname;
+    cet::search_path sp("FW_SEARCH_PATH");
+    sp.find_file(fParams.ArapucaDataFile, fname);
+    TFile* file = TFile::Open(fname.c_str());
+    file->GetObject("TimeArapucaT1", TimeArapucaT1);
+    file->GetObject("TimeArapucaT2", TimeArapucaT2);
+    file->GetObject("TimeArapucaX", TimeArapucaX);
 
     fSampling = fSampling / 1000; //in GHz to cancel with ns
     pulsesize = fParams.PulseLength * fSampling;
@@ -291,6 +281,7 @@ namespace opdet {
     fBaseConfig.CrossTalk         = config.crossTalk();
     fBaseConfig.PulseLength       = config.pulseLength();
     fBaseConfig.PeakTime          = config.peakTime();
+    fBaseConfig.ArapucaDataFile   = config.arapucaDataFile();
 
   }
 
