@@ -73,10 +73,10 @@ namespace opdet {
     if (opdet_type == "bar" ||
         opdet_type == "xarapucaprime" ||
         opdet_type == "xarapuca" ||
-        opdet_type == "xarapucaT1" ||
-        opdet_type == "xarapucaT2" ||
-        opdet_type == "arapucaT1" ||
-        opdet_type == "arapucaT2") {
+        opdet_type == "xarapuca_vuv" ||
+        opdet_type == "xarapuca_vis" ||
+        opdet_type == "arapuca_vuv" ||
+        opdet_type == "arapuca_vis") {
       is_arapuca = true;
     }
     int threshold = is_arapuca ? fConfig.TriggerThresholdADCArapuca() : fConfig.TriggerThresholdADCPMT();
@@ -152,14 +152,14 @@ namespace opdet {
     // mask by optical detector type
     std::string opdet_type = fOpDetMap.pdType(channel);
     // if (opdet_type == "bar" && fConfig.MaskLightBars() /* RIP */) return true;
-    if (opdet_type == "coatedpmt" && fConfig.MaskPMTs()) return true;
-    if (opdet_type == "uncoatedpmt" && fConfig.MaskBarePMTs()) return true;
+    if (opdet_type == "pmt_coated" && fConfig.MaskPMTs()) return true;
+    if (opdet_type == "pmt_uncoated" && fConfig.MaskBarePMTs()) return true;
     // if (opdet_type == "xarapucaprime" && fConfig.MaskXArapucaPrimes()) return true;
     if (opdet_type == "xarapuca" && fConfig.MaskXArapucas()) return true;
-    if (opdet_type == "xarapucaT1" && fConfig.MaskXArapucas()) return true;
-    if (opdet_type == "xarapucaT2" && fConfig.MaskXArapucas()) return true;
-    if (opdet_type == "arapucaT1" && fConfig.MaskArapucaT1s()) return true;
-    if (opdet_type == "arapucaT2" && fConfig.MaskArapucaT2s()) return true;
+    if (opdet_type == "xarapuca_vuv" && fConfig.MaskXArapucas()) return true;
+    if (opdet_type == "xarapuca_vis" && fConfig.MaskXArapucas()) return true;
+    if (opdet_type == "arapuca_vuv" && fConfig.MaskArapucaT1s()) return true;
+    if (opdet_type == "arapuca_vis" && fConfig.MaskArapucaT2s()) return true;
 
     return false;
   }

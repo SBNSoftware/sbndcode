@@ -269,9 +269,9 @@ void FlashPredict::produce(art::Event & e)
   for(auto const& oph : OpHitSubset) {
     double PMTxyz[3];
     geometry->OpDetGeoFromOpChannel(oph.OpChannel()).GetCenter(PMTxyz);
-    if (fDetector == "SBND" && pdMap.isPDType(oph.OpChannel(), "uncoatedpmt"))
+    if (fDetector == "SBND" && pdMap.isPDType(oph.OpChannel(), "pmt_uncoated"))
       ophittime2->Fill(oph.PeakTime(), fPEscale * oph.PE());
-    if (fDetector == "SBND" && !pdMap.isPDType(oph.OpChannel(), "coatedpmt")) continue; // use only coated PMTs for SBND for flash_time
+    if (fDetector == "SBND" && !pdMap.isPDType(oph.OpChannel(), "pmt_coated")) continue; // use only coated PMTs for SBND for flash_time
     if (!geo_cryo.ContainsPosition(PMTxyz)) continue;   // use only PMTs in the specified cryostat for ICARUS
     //    std::cout << "op hit " << j << " channel " << oph.OpChannel() << " time " << oph.PeakTime() << " pe " << fPEscale*oph.PE() << std::endl;
 
@@ -524,7 +524,7 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
     // check cryostat and tpc
     if (!isPDInCryoTPC(PMTxyz[0], fCryostat, itpc, fDetector)) continue;
     // only use PMTs for SBND
-    if (op_type == "coatedpmt" || op_type == "pmt") {
+    if (op_type == "pmt_coated" || op_type == "pmt") {
       // Add up the position, weighting with PEs
       _flash_x = PMTxyz[0];
       sum     += 1.0;
@@ -539,15 +539,15 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
       sum_Cy  += oph.PE() * oph.PE() * PMTxyz[1];
       sum_Cz  += oph.PE() * oph.PE() * PMTxyz[2];
     }
-    else if ( op_type == "uncoatedpmt") {
+    else if ( op_type == "pmt_uncoated") {
       unpe_tot += oph.PE();
     }
-    else if ( (op_type == "arapucaT1" || op_type == "arapucaT2") ) {
+    else if ( (op_type == "arapuca_vuv" || op_type == "arapuca_vis") ) {
       //TODO: Use ARAPUCA
       // arape_tot+=oph.PE();
       continue;
     }
-    else if ( op_type == "xarapucaT1" || op_type == "xarapucaT2")  {
+    else if ( op_type == "xarapuca_vuv" || op_type == "xarapuca_vis")  {
       //TODO: Use XARAPUCA
       // xarape_tot+=oph.PE();
       continue;
