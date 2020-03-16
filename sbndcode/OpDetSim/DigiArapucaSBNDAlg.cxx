@@ -142,7 +142,7 @@ namespace opdet {
   {
     int nCT = 1;
     double tphoton = 0;
-    if(pdtype == "arapucaT1") {
+    if(pdtype == "arapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         //if((gRandom->Uniform(1.0))<fArapucaEffT1){ //Sample a random subset according to Arapuca's efficiency
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT1) { //Sample a random subset according to Arapuca's efficiency
@@ -156,7 +156,7 @@ namespace opdet {
         }
       }
     }
-    if(pdtype == "arapucaT2") {
+    if(pdtype == "arapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         //if((gRandom->Uniform(1.0))<fArapucaEffT2){ //Sample a random subset according to Arapuca's efficiency.
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT2) { //Sample a random subset according to Arapuca's efficiency.
@@ -170,7 +170,7 @@ namespace opdet {
         }
       }
     }
-    if(pdtype == "xarapucaT1") {
+    if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         //if((gRandom->Uniform(1.0))<fArapucaEffx){
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT1) {
@@ -184,7 +184,7 @@ namespace opdet {
         }
       }
     }
-    if(pdtype == "xarapucaT2") {
+    if(pdtype == "xarapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         //if((gRandom->Uniform(1.0))<fArapucaEffx){
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT2) {
@@ -218,8 +218,8 @@ namespace opdet {
     int nCT = 1;
     for (auto const& mapMember : photonMap) {
       for(int i = 0; i < mapMember.second; i++) {
-        //if(pdtype=="arapucaT1" && (gRandom->Uniform(1.0))<fArapucaEffT1){
-        if(pdtype == "arapucaT1" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT1) {
+        //if(pdtype=="arapuca_vuv" && (gRandom->Uniform(1.0))<fArapucaEffT1){
+        if(pdtype == "arapuca_vuv" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT1) {
           tphoton = (TimeArapucaT1->GetRandom());
           tphoton += mapMember.first - t_min;
           //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
@@ -227,8 +227,8 @@ namespace opdet {
           else nCT = 1;
           AddSPE(tphoton * fSampling, wave, nCT);
         }
-        //if(pdtype=="arapucaT2" && (gRandom->Uniform(1.0))<fArapucaEffT2){
-        if(pdtype == "arapucaT2" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT2) {
+        //if(pdtype=="arapuca_vis" && (gRandom->Uniform(1.0))<fArapucaEffT2){
+        if(pdtype == "arapuca_vis" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT2) {
           tphoton = (TimeArapucaT2->GetRandom());
           tphoton += mapMember.first - t_min;
           //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
@@ -237,7 +237,7 @@ namespace opdet {
           AddSPE(tphoton * fSampling, wave, nCT);
         }
         //if(pdtype=="xarapucaprime" && (gRandom->Uniform(1.0))<fArapucaEffx){
-        if(pdtype == "xarapucaT1" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT1) {
+        if(pdtype == "xarapuca_vuv" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT1) {
           tphoton = (TimeArapucaX->GetRandom());
           tphoton += mapMember.first - t_min;
           //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
@@ -245,7 +245,7 @@ namespace opdet {
           else nCT = 1;
           AddSPE(tphoton * fSampling, wave, nCT);
         }
-        if(pdtype == "xarapucaT2" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT2) {
+        if(pdtype == "xarapuca_vis" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT2) {
           tphoton = (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
           tphoton += mapMember.first - t_min;
           //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;

@@ -129,7 +129,7 @@ namespace opdet {
         AddSPE((fParams.TransitTime + ttsTime + simphotons[i].Time - t_min)*fSampling, wave);
       }
     }
-    if(pdtype == "coatedpmt") { //To add direct light for TPB coated PMTs
+    if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
       sim::SimPhotons auxphotons;
       double ttpb = 0;
       for (auto& mapMember : auxmap) {
@@ -163,7 +163,7 @@ namespace opdet {
         }
       }
     }
-    if(pdtype == "coatedpmt") { //To add direct light for TPB coated PMTs
+    if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
       double ttpb;
       sim::SimPhotonsLite auxphotons;
       for (auto& mapMember : auxmap) //auxphotons is direct light
@@ -228,7 +228,7 @@ namespace opdet {
   {
     double t_min = 1e15;
 
-    if(pdtype == "uncoatedpmt") { //TPB non-coated PMTs
+    if(pdtype == "pmt_uncoated") { //TPB non-coated PMTs
       for(size_t i = 0; i < simphotons.size(); i++) {
         if(simphotons[i].Time < t_min) t_min = simphotons[i].Time;
       }
@@ -249,7 +249,7 @@ namespace opdet {
   double DigiPMTSBNDAlg::FindMinimumTimeLite(sim::SimPhotonsLite const& litesimphotons, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite>auxmap)
   {
 
-    if(pdtype == "uncoatedpmt") { //TPB non-coated PMTs
+    if(pdtype == "pmt_uncoated") { //TPB non-coated PMTs
       std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
       for (auto const& mapMember : photonMap) {
         if(mapMember.second != 0) return (double)mapMember.first;
