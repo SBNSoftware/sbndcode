@@ -10,7 +10,7 @@
 //
 // As of version v08_45_00 the PDS Map has:
 // channel: 0 to 503
-// pd_type: coatedpmt, uncoatedpmt, xarapuca, xarapucaT1, xarapucaT2, arapucaT1, arapucaT2
+// pd_type: pmt_coated, pmt_uncoated, xarapuca, xarapuca_vuv, xarapuca_vis, arapuca_vuv, arapuca_vis
 // pds_box: -12, to 12; skipping 0
 // sensible_to: VUV or VIS
 // tpc: 0, 1

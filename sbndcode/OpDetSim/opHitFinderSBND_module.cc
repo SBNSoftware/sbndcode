@@ -160,13 +160,13 @@ namespace opdet {
 
       fChNumber = wvf.ChannelNumber();
       opdetType = map.pdType(fChNumber);
-      if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
+      if(opdetType == "pmt_coated" || opdetType == "pmt_uncoated") {
         threshold = fThresholdPMT;
       }
-      else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
+      else if((opdetType == "arapuca_vuv") || (opdetType == "arapuca_vis")) {
         threshold = fThresholdArapuca;
       }
-      else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
+      else if((opdetType == "xarapuca_vuv") || (opdetType == "xarapuca_vis")) {
         threshold = fThresholdArapuca;
       }
       else {
@@ -182,12 +182,12 @@ namespace opdet {
       subtractBaseline(fwaveform, opdetType, rms);
 
       if(fUseDenoising) {
-        if((opdetType == "coatedpmt") || (opdetType == "uncoatedpmt")) {
+        if((opdetType == "pmt_coated") || (opdetType == "pmt_uncoated")) {
         }
-        else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
+        else if((opdetType == "arapuca_vuv") || (opdetType == "arapuca_vis")) {
           denoise(fwaveform, outwvform);
         }
-        else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
+        else if((opdetType == "xarapuca_vuv") || (opdetType == "xarapuca_vis")) {
           denoise(fwaveform, outwvform);
         }
         else {
@@ -201,13 +201,13 @@ namespace opdet {
       while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, threshold, opdetType)){
         time = wvf.TimeStamp() + (double)timebin / fSampling;
 
-        if(opdetType == "coatedpmt" || opdetType == "uncoatedpmt") {
+        if(opdetType == "pmt_coated" || opdetType == "pmt_uncoated") {
           phelec = Area / fArea1pePMT;
         }
-        else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
+        else if((opdetType == "arapuca_vuv") || (opdetType == "arapuca_vis")) {
           phelec = Area / fArea1peSiPM;
         }
-        else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
+        else if((opdetType == "xarapuca_vuv") || (opdetType == "xarapuca_vis")) {
           phelec = Area / fArea1peSiPM;
         }
         else {
@@ -247,13 +247,13 @@ namespace opdet {
     rms = sqrt(rms / cnt - baseline * baseline);
     rms = rms / sqrt(cnt - 1);
 
-    if(pdtype == "coatedpmt" || pdtype == "uncoatedpmt") {
+    if(pdtype == "pmt_coated" || pdtype == "pmt_uncoated") {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityPMT * (waveform[i] - baseline);
     }
-    else if((opdetType == "arapucaT1") || (opdetType == "arapucaT2")) {
+    else if((opdetType == "arapuca_vuv") || (opdetType == "arapuca_vis")) {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
     }
-    else if((opdetType == "xarapucaT1") || (opdetType == "xarapucaT2")) {
+    else if((opdetType == "xarapuca_vuv") || (opdetType == "xarapuca_vis")) {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
     }
     else {
