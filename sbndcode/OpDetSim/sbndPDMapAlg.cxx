@@ -41,6 +41,16 @@ namespace opdet {
     return PDmap.at(ch);
   }
 
+  // template<>
+  nlohmann::json sbndPDMapAlg::getCollectionWithProperty(std::string property)
+  {
+    nlohmann::json subSetPDmap;
+    std::copy_if (PDmap.begin(), PDmap.end(), std::back_inserter(subSetPDmap),
+                  [property](const nlohmann::json e)->bool
+                    {return e[property];} );
+    return subSetPDmap;
+  }
+
   // Look in the header for the implementation:
   // template<typename T>
   // nlohmann::json sbndPDMapAlg::getCollectionWithProperty(std::string property, T property_value)
