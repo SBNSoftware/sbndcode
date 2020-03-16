@@ -65,7 +65,14 @@ namespace opdet {
   DigiPMTSBNDAlg::~DigiPMTSBNDAlg()
   { }
 
-  void DigiPMTSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int, sim::SimPhotons> auxmap, double start_time, unsigned n_sample)
+  void DigiPMTSBNDAlg::ConstructWaveform(
+    int ch,
+    sim::SimPhotons const& simphotons,
+    std::vector<short unsigned int>& waveform,
+    std::string pdtype,
+    std::map<int, sim::SimPhotons>& auxmap,
+    double start_time,
+    unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
     CreatePDWaveform(simphotons, start_time, waves, ch, pdtype, auxmap);
@@ -73,7 +80,14 @@ namespace opdet {
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
-  void DigiPMTSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample)
+  void DigiPMTSBNDAlg::ConstructWaveformLite(
+    int ch,
+    sim::SimPhotonsLite const& litesimphotons,
+    std::vector<short unsigned int>& waveform,
+    std::string pdtype,
+    std::map<int, sim::SimPhotonsLite>& auxmap,
+    double start_time,
+    unsigned n_sample)
   {
 
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
@@ -119,7 +133,13 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::CreatePDWaveform(sim::SimPhotons const& simphotons, double t_min, std::vector<double>& wave, int ch, std::string pdtype, std::map<int, sim::SimPhotons> auxmap)
+  void DigiPMTSBNDAlg::CreatePDWaveform(
+    sim::SimPhotons const& simphotons,
+    double t_min,
+    std::vector<double>& wave,
+    int ch,
+    std::string pdtype,
+    std::map<int, sim::SimPhotons>& auxmap)
   {
 
     double ttsTime = 0;
@@ -133,6 +153,7 @@ namespace opdet {
     if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
       sim::SimPhotons auxphotons;
       double ttpb = 0;
+      // TODO: no need to loop only to overwrite member. ~icaza
       for (auto& mapMember : auxmap) {
         if(mapMember.first == ch) auxphotons = mapMember.second;
       }
@@ -150,7 +171,13 @@ namespace opdet {
     CreateSaturation(wave);
   }
 
-  void DigiPMTSBNDAlg::CreatePDWaveformLite(sim::SimPhotonsLite const& litesimphotons, double t_min, std::vector<double>& wave, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap)
+  void DigiPMTSBNDAlg::CreatePDWaveformLite(
+    sim::SimPhotonsLite const& litesimphotons,
+    double t_min,
+    std::vector<double>& wave,
+    int ch,
+    std::string pdtype,
+    std::map<int, sim::SimPhotonsLite>& auxmap)
   {
 
     double ttsTime = 0;
@@ -167,6 +194,7 @@ namespace opdet {
     if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
       double ttpb;
       sim::SimPhotonsLite auxphotons;
+      // TODO: no need to loop only to overwrite member. ~icaza
       for (auto& mapMember : auxmap) //auxphotons is direct light
         if(mapMember.first == ch) auxphotons = mapMember.second;
       std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
@@ -225,7 +253,11 @@ namespace opdet {
     }
   }
 
-  double DigiPMTSBNDAlg::FindMinimumTime(sim::SimPhotons const& simphotons, int ch, std::string pdtype, std::map<int, sim::SimPhotons> auxmap)
+  double DigiPMTSBNDAlg::FindMinimumTime(
+    sim::SimPhotons const& simphotons,
+    int ch,
+    std::string pdtype,
+    std::map<int, sim::SimPhotons>& auxmap)
   {
     double t_min = 1e15;
 
@@ -236,6 +268,7 @@ namespace opdet {
     }
     else {//for coated PMTs
       sim::SimPhotons auxphotons;
+      // TODO: no need to loop only to overwrite member. ~icaza
       for (auto& mapMember : auxmap) {
         if(mapMember.first == ch) auxphotons = mapMember.second;
       }
@@ -247,7 +280,11 @@ namespace opdet {
     return t_min;
   }
 
-  double DigiPMTSBNDAlg::FindMinimumTimeLite(sim::SimPhotonsLite const& litesimphotons, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite>auxmap)
+  double DigiPMTSBNDAlg::FindMinimumTimeLite(
+    sim::SimPhotonsLite const& litesimphotons,
+    int ch,
+    std::string pdtype,
+    std::map<int, sim::SimPhotonsLite>& auxmap)
   {
 
     if(pdtype == "pmt_uncoated") { //TPB non-coated PMTs
@@ -258,6 +295,7 @@ namespace opdet {
     }
     else {
       sim::SimPhotonsLite auxphotons;
+      // TODO: no need to loop only to overwrite member. ~icaza
       for (auto& mapMember : auxmap) {
         if(mapMember.first == ch) auxphotons = mapMember.second;
       }
