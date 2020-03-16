@@ -10,7 +10,7 @@
 //
 // As of version v08_45_00 the PDS Map has:
 // channel: 0 to 503
-// pd_type: coatedpmt, uncoatedpmt, xarapuca, xarapucaT1, xarapucaT2, arapucaT1, arapucaT2
+// pd_type: pmt_coated, pmt_uncoated, xarapuca, xarapuca_vuv, xarapuca_vis, arapuca_vuv, arapuca_vis
 // pds_box: -12, to 12; skipping 0
 // sensible_to: VUV or VIS
 // tpc: 0, 1
@@ -39,9 +39,7 @@ namespace opdet {
     //Default destructor
     ~sbndPDMapAlg();
 
-    nlohmann::json getCollectionWithProperty(std::string property, std::string property_value);
-    nlohmann::json getCollectionWithProperty(std::string property, int property_value);
-    // template<typename T> nlohmann::json getCollectionWithProperty(std::string property, T property_value);
+    template<typename T> nlohmann::json getCollectionWithProperty(std::string property, T property_value);
 
     // struct Config {};
 
@@ -56,9 +54,18 @@ namespace opdet {
 
   private:
     nlohmann::json PDmap;
-    nlohmann::json subSetPDmap;
 
   }; // class sbndPDMapAlg
+
+  template<typename T>
+  nlohmann::json sbndPDMapAlg::getCollectionWithProperty(std::string property, T property_value)
+  {
+    nlohmann::json subSetPDmap;
+    std::copy_if (PDmap.begin(), PDmap.end(), std::back_inserter(subSetPDmap),
+                  [property, property_value](const nlohmann::json e)->bool
+                    {return e[property] == property_value;} );
+    return subSetPDmap;
+  }
 
 } // namespace
 
