@@ -153,10 +153,8 @@ namespace opdet {
     if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
       sim::SimPhotons auxphotons;
       double ttpb = 0;
-      // TODO: no need to loop only to overwrite member. ~icaza
-      for (auto& mapMember : auxmap) {
-        if(mapMember.first == ch) auxphotons = mapMember.second;
-      }
+      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
+      { auxphotons = it->second;}
       for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
         //if((gRandom->Uniform(1.0))<fQEDirect){
         if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
@@ -194,9 +192,8 @@ namespace opdet {
     if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
       double ttpb;
       sim::SimPhotonsLite auxphotons;
-      // TODO: no need to loop only to overwrite member. ~icaza
-      for (auto& mapMember : auxmap) //auxphotons is direct light
-        if(mapMember.first == ch) auxphotons = mapMember.second;
+      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
+      { auxphotons = it->second;}
       std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
       for (auto& mapMember2 : auxphotonMap) {
         for(int i = 0; i < mapMember2.second; i++) {
@@ -268,10 +265,8 @@ namespace opdet {
     }
     else {//for coated PMTs
       sim::SimPhotons auxphotons;
-      // TODO: no need to loop only to overwrite member. ~icaza
-      for (auto& mapMember : auxmap) {
-        if(mapMember.first == ch) auxphotons = mapMember.second;
-      }
+      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
+      { auxphotons = it->second;}
       auxphotons += (simphotons);
       for(size_t i = 0; i < auxphotons.size(); i++) {
         if(auxphotons[i].Time < t_min) t_min = auxphotons[i].Time;
@@ -295,10 +290,8 @@ namespace opdet {
     }
     else {
       sim::SimPhotonsLite auxphotons;
-      // TODO: no need to loop only to overwrite member. ~icaza
-      for (auto& mapMember : auxmap) {
-        if(mapMember.first == ch) auxphotons = mapMember.second;
-      }
+      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
+      { auxphotons = it->second;}
       auxphotons += (litesimphotons);
       std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
       for (auto & mapMember : auxphotonMap) {
