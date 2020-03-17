@@ -75,7 +75,7 @@ namespace opdet {
       sim::SimPhotons const& simphotons,
       std::vector<short unsigned int>& waveform,
       std::string pdtype,
-      std::map<int, sim::SimPhotons>& auxmap,
+      std::unordered_map<int, sim::SimPhotons>& auxmap,
       double start_time,
       unsigned n_sample);
     void ConstructWaveformLite(
@@ -83,7 +83,7 @@ namespace opdet {
       sim::SimPhotonsLite const& litesimphotons,
       std::vector<short unsigned int>& waveform,
       std::string pdtype,
-      std::map<int, sim::SimPhotonsLite>& auxmap,
+      std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
       double start_time,
       unsigned n_sample);
 
@@ -120,14 +120,14 @@ namespace opdet {
       std::vector<double>& wave,
       int ch,
       std::string pdtype,
-      std::map<int, sim::SimPhotons>& auxmap);
+      std::unordered_map<int, sim::SimPhotons>& auxmap);
     void CreatePDWaveformLite(
       sim::SimPhotonsLite const& litesimphotons,
       double t_min,
       std::vector<double>& wave,
       int ch,
       std::string pdtype,
-      std::map<int, sim::SimPhotonsLite>& auxmap);
+      std::unordered_map<int, sim::SimPhotonsLite>& auxmap);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
     void AddLineNoise(std::vector<double>& wave); //add noise to baseline
     void AddDarkNoise(std::vector<double>& wave); //add dark noise
@@ -135,11 +135,12 @@ namespace opdet {
       sim::SimPhotons const&,
       int ch,
       std::string pdtype,
-      std::map<int,
-      sim::SimPhotons>& auxmap);
+      std::unordered_map<int, sim::SimPhotons>& auxmap);
     double FindMinimumTimeLite(
       sim::SimPhotonsLite const& litesimphotons,
-      int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite>& auxmap);
+      int ch,
+      std::string pdtype,
+      std::unordered_map<int, sim::SimPhotonsLite>& auxmap);
   };//class DigiPMTSBNDAlg
 
   class DigiPMTSBNDAlgMaker {

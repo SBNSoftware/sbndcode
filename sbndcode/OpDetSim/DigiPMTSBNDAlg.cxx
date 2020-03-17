@@ -70,7 +70,7 @@ namespace opdet {
     sim::SimPhotons const& simphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
-    std::map<int, sim::SimPhotons>& auxmap,
+    std::unordered_map<int, sim::SimPhotons>& auxmap,
     double start_time,
     unsigned n_sample)
   {
@@ -85,7 +85,7 @@ namespace opdet {
     sim::SimPhotonsLite const& litesimphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
-    std::map<int, sim::SimPhotonsLite>& auxmap,
+    std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
     double start_time,
     unsigned n_sample)
   {
@@ -139,7 +139,7 @@ namespace opdet {
     std::vector<double>& wave,
     int ch,
     std::string pdtype,
-    std::map<int, sim::SimPhotons>& auxmap)
+    std::unordered_map<int, sim::SimPhotons>& auxmap)
   {
 
     double ttsTime = 0;
@@ -175,7 +175,7 @@ namespace opdet {
     std::vector<double>& wave,
     int ch,
     std::string pdtype,
-    std::map<int, sim::SimPhotonsLite>& auxmap)
+    std::unordered_map<int, sim::SimPhotonsLite>& auxmap)
   {
 
     double ttsTime = 0;
@@ -254,7 +254,7 @@ namespace opdet {
     sim::SimPhotons const& simphotons,
     int ch,
     std::string pdtype,
-    std::map<int, sim::SimPhotons>& auxmap)
+    std::unordered_map<int, sim::SimPhotons>& auxmap)
   {
     double t_min = 1e15;
 
@@ -279,7 +279,7 @@ namespace opdet {
     sim::SimPhotonsLite const& litesimphotons,
     int ch,
     std::string pdtype,
-    std::map<int, sim::SimPhotonsLite>& auxmap)
+    std::unordered_map<int, sim::SimPhotonsLite>& auxmap)
   {
 
     if(pdtype == "pmt_uncoated") { //TPB non-coated PMTs

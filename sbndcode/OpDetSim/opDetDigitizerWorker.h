@@ -1,6 +1,8 @@
 #ifndef SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
 #define SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
 
+#include <map>
+#include <unordered_map>
 #include <vector>
 #include <mutex>
 #include <condition_variable>
@@ -73,9 +75,15 @@ namespace opdet {
   private:
     unsigned NChannelsToProcess(unsigned n) const;
     unsigned StartChannelToProcess(unsigned n) const;
-    void CreateDirectPhotonMapLite(std::map<int, sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles) const;
-    void CreateDirectPhotonMap(std::map<int, sim::SimPhotons>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles) const;
-    void MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const;
+    void CreateDirectPhotonMapLite(
+      std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
+      std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles) const;
+    void CreateDirectPhotonMap(
+      std::unordered_map<int, sim::SimPhotons>& auxmap,
+      std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles) const;
+    void MakeWaveforms(
+      opdet::DigiPMTSBNDAlg *pmtDigitizer,
+      opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const;
 
     Config fConfig;
     unsigned fThreadNo;

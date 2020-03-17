@@ -1,4 +1,3 @@
-#include <map>
 // TODO: plenty of refactoring potential in here! ~icaza
 // TODO: map.isPDType and map.pdType are called a bunch of times, maybe it could be saved into a variable?
 
@@ -129,7 +128,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
   if(fConfig.UseLitePhotons == 1) { //using SimPhotonsLite
     const std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> &photon_handles = *fPhotonLiteHandles;
 
-    std::map<int, sim::SimPhotonsLite> auxmap;  // to temporarily store channel and combine PMT (direct and converted) time profiles
+    std::unordered_map<int, sim::SimPhotonsLite> auxmap;  // to temporarily store channel and combine PMT (direct and converted) time profiles
     CreateDirectPhotonMapLite(auxmap, photon_handles);
 
     unsigned start = StartChannelToProcess(fConfig.map.size());
@@ -177,7 +176,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     }  //end loop on simphoton lite collections
   }
   else { //for SimPhotons
-    std::map<int, sim::SimPhotons> auxmap;  // to temporarily store channel and direct light distribution
+    std::unordered_map<int, sim::SimPhotons> auxmap;  // to temporarily store channel and direct light distribution
 
     const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
     CreateDirectPhotonMap(auxmap, photon_handles);
@@ -226,7 +225,9 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     }//type of light loop
   }//simphotons end
 }
-void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(std::map<int, sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles) const
+void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(
+  std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
+  std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles) const
 {
   int ch;
   // Loop over direct/reflected photons
@@ -245,7 +246,9 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(std::map<int, sim::S
   }
 }
 
-void opdet::opDetDigitizerWorker::CreateDirectPhotonMap(std::map<int, sim::SimPhotons>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles) const
+void opdet::opDetDigitizerWorker::CreateDirectPhotonMap(
+  std::unordered_map<int, sim::SimPhotons>& auxmap,
+  std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles) const
 {
   int ch;
   // Loop over direct/reflected photons
