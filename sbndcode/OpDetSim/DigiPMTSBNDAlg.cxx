@@ -225,14 +225,11 @@ namespace opdet {
 
   void DigiPMTSBNDAlg::AddLineNoise(std::vector<double>& wave)
   {
-
-    double noise = 0.0;
-    // TODO: use std::algorithm
-    for(size_t i = 0; i < wave.size(); i++) {
-      //noise = gRandom->Gaus(0,fParams.PMTBaselineRMS); //gaussian noise
-      noise = CLHEP::RandGauss::shoot(fEngine, 0, fParams.PMTBaselineRMS); //gaussian noise
-      wave[i] += noise;
-    }
+    // TODO: change it to use:
+    // CLHEP::RandGaussQ::shootArray(HepRandomEngine * anotherEngine, const int size, double * vect, double mean = 0.0, double stdDev = 1.0)	
+    std::transform(wave.begin(), wave.end(), wave.begin(),
+                   [this](double w) -> double {
+                     return w + CLHEP::RandGauss::shoot(fEngine, 0, fParams.PMTBaselineRMS) ; });
   }
 
   void DigiPMTSBNDAlg::AddDarkNoise(std::vector< double >& wave)
