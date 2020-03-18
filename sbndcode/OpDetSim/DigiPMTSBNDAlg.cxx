@@ -224,7 +224,7 @@ namespace opdet {
   {
 
     double noise = 0.0;
-
+    // TODO: use std::algorithm
     for(size_t i = 0; i < wave.size(); i++) {
       //noise = gRandom->Gaus(0,fParams.PMTBaselineRMS); //gaussian noise
       noise = CLHEP::RandGauss::shoot(fEngine, 0, fParams.PMTBaselineRMS); //gaussian noise
@@ -256,19 +256,24 @@ namespace opdet {
   {
     double t_min = 1e15;
 
-    if(pdtype == "pmt_uncoated") { //TPB non-coated PMTs
+    if(pdtype == "pmt_uncoated") {
+      // TODO: use std::algorithm
       for(size_t i = 0; i < simphotons.size(); i++) {
         if(simphotons[i].Time < t_min) t_min = simphotons[i].Time;
       }
     }
-    else {//for coated PMTs
+    else if(pdtype == "pmt_coated") {
       sim::SimPhotons auxphotons;
       if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
       { auxphotons = it->second;}
       auxphotons += (simphotons);
+      // TODO: use std::algorithm
       for(size_t i = 0; i < auxphotons.size(); i++) {
         if(auxphotons[i].Time < t_min) t_min = auxphotons[i].Time;
       }
+    }
+    else {
+      throw cet::exception("DigiPMTSBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
     }
     return t_min;
   }
@@ -280,13 +285,13 @@ namespace opdet {
     std::unordered_map<int, sim::SimPhotonsLite>& auxmap)
   {
 
-    if(pdtype == "pmt_uncoated") { //TPB non-coated PMTs
+    if(pdtype == "pmt_uncoated") {
       std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
       for (auto const& mapMember : photonMap) {
         if(mapMember.second != 0) return (double)mapMember.first;
       }
     }
-    else {
+    else if(pdtype == "pmt_coated") {
       sim::SimPhotonsLite auxphotons;
       if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
       { auxphotons = it->second;}
@@ -295,6 +300,9 @@ namespace opdet {
       for (auto & mapMember : auxphotonMap) {
         if(mapMember.second != 0) return (double)mapMember.first;
       }
+    }
+    else {
+      throw cet::exception("DigiPMTSBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
     }
     return 1e5;
   }
