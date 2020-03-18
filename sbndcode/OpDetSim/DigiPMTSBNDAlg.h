@@ -19,6 +19,7 @@
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include <cmath>

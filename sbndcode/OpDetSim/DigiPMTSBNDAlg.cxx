@@ -118,17 +118,12 @@ namespace opdet {
 
   void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave)
   {
-
-    size_t min = 0;
-    size_t max = 0;
-
-    if(time_bin < wave.size()) {
-      min = time_bin;
-      max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
-      for(size_t i = min; i < max; i++) {
-        wave[i] += wsp[i - min];
-      }
-    }
+    size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
+    auto min_it = std::next(wave.begin(), time_bin);
+    auto max_it = std::next(wave.begin(), max);
+    std::transform(min_it, max_it,
+                   wsp.begin(), min_it,
+                   std::plus<double>( ));
   }
 
 
@@ -146,7 +141,8 @@ namespace opdet {
       //if((gRandom->Uniform(1.0))<fQERefl){
       if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        AddSPE((fParams.TransitTime + ttsTime + simphotons[i].Time - t_min)*fSampling, wave);
+        size_t time_bin = (fParams.TransitTime + ttsTime + simphotons[i].Time - t_min)*fSampling;
+        if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
       }
     }
     if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
@@ -159,7 +155,8 @@ namespace opdet {
         if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
-          AddSPE((fParams.TransitTime + ttsTime + auxphotons[j].Time + ttpb - t_min)*fSampling, wave);
+          size_t time_bin = (fParams.TransitTime + ttsTime + auxphotons[j].Time + ttpb - t_min)*fSampling;
+          if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
         }
       }
     }
@@ -186,7 +183,8 @@ namespace opdet {
       int accepted_photons = CLHEP::RandPoisson::shoot(fEngine, mean_photons);
       for(int i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        AddSPE((fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min)*fSampling, wave);
+        size_t time_bin = (fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min)*fSampling;
+        if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
       }
     }
 
@@ -204,7 +202,8 @@ namespace opdet {
             // TODO: this uses root random machine!
             // use RandGeneral
             ttpb = timeTPB->GetRandom(); //for including TPB emission time
-            AddSPE((fParams.TransitTime + ttsTime + mapMember2.first + ttpb - t_min)*fSampling, wave);
+            size_t time_bin = (fParams.TransitTime + ttsTime + directPhotons.first + ttpb - t_min)*fSampling;
+            if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
           }
         }
       }
@@ -245,7 +244,7 @@ namespace opdet {
     double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.PMTDarkNoiseRate) * 1000000000.0);
     while (darkNoiseTime < wave.size()) {
       timeBin = (darkNoiseTime);
-      AddSPE(timeBin, wave);
+      if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       // Find next time to add dark noise
       //darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.PMTDarkNoiseRate)*1000000000.0));
       darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.PMTDarkNoiseRate) * 1000000000.0);
