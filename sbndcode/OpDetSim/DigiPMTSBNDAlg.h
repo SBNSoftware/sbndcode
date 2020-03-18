@@ -103,6 +103,9 @@ namespace opdet {
     double sigma1;
     double sigma2;
 
+    const double transitTimeSpread_frac = 2.0 * std::sqrt(2.0 * std::log(2.0));
+    double saturation;
+
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform

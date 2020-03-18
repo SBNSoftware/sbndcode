@@ -60,6 +60,8 @@ namespace opdet {
         wsp[i] = (Pulse1PE(static_cast< double >(i) / fSampling));
       }
     }
+
+    saturation = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
   } // end constructor
 
   DigiPMTSBNDAlg::~DigiPMTSBNDAlg()
@@ -106,13 +108,10 @@ namespace opdet {
 
   double DigiPMTSBNDAlg::Transittimespread(double fwhm)
   {
-
     double tts, sigma;
-
-    sigma = fwhm / (2.0 * sqrt(2.0 * log(2.0)));
+    sigma = fwhm / transitTimeSpread_frac;
     //tts = gRandom->Gaus(0,sigma);
     tts = CLHEP::RandGauss::shoot(fEngine, 0, sigma);
-
     return tts;
   }
 
@@ -215,10 +214,9 @@ namespace opdet {
 
   void DigiPMTSBNDAlg::CreateSaturation(std::vector<double>& wave)  //Implementing saturation effects
   {
-
+    // TODO: use std::algorithm
     for(size_t k = 0; k < wave.size(); k++) {
-      if(wave[k] < (fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude))
-        wave[k] = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
+      if(wave[k] < saturation) wave[k] = saturation;
     }
   }
 
