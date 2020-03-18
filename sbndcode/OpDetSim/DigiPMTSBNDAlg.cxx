@@ -179,34 +179,33 @@ namespace opdet {
 
     double ttsTime = 0;
     std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
-    for (auto const& mapMember : photonMap) { //including reflected light for all PMT channels
+    for (auto const& reflectedPhotons : photonMap) { //including reflected light for all PMT channels
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias
-      double mean_photons = mapMember.second*fQEDirect;
+      double mean_photons = reflectedPhotons.second*fQEDirect;
       int accepted_photons = CLHEP::RandPoisson::shoot(fEngine, mean_photons);
       for(int i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        AddSPE((fParams.TransitTime + ttsTime + mapMember.first - t_min)*fSampling, wave);
+        AddSPE((fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min)*fSampling, wave);
       }
     }
 
-    if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
-      double ttpb;
-      sim::SimPhotonsLite auxphotons;
-      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
-      { auxphotons = it->second;}
-      std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
-      for (auto& mapMember2 : auxphotonMap) {
-        // TODO: check that this new approach of not using the last
-        // (1-accepted_photons) doesn't introduce some bias
-        double mean_photons = mapMember2.second*fQEDirect;
-        int accepted_photons = CLHEP::RandPoisson::shoot(fEngine, mean_photons);
-        for(int i = 0; i < accepted_photons; i++) {
-          if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-          // TODO: this uses root random machine!
-          // use RandGeneral
-          ttpb = timeTPB->GetRandom(); //for including TPB emission time
-          AddSPE((fParams.TransitTime + ttsTime + mapMember2.first + ttpb - t_min)*fSampling, wave);
+    // To add direct light for TPB coated PMTs
+    if(pdtype == "pmt_coated") {
+      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) ){
+        double ttpb;
+        for (auto& directPhotons : (it->second).DetectedPhotons) {
+          // TODO: check that this new approach of not using the last
+          // (1-accepted_photons) doesn't introduce some bias
+          double mean_photons = directPhotons.second*fQEDirect;
+          int accepted_photons = CLHEP::RandPoisson::shoot(fEngine, mean_photons);
+          for(int i = 0; i < accepted_photons; i++) {
+            if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
+            // TODO: this uses root random machine!
+            // use RandGeneral
+            ttpb = timeTPB->GetRandom(); //for including TPB emission time
+            AddSPE((fParams.TransitTime + ttsTime + mapMember2.first + ttpb - t_min)*fSampling, wave);
+          }
         }
       }
     }
