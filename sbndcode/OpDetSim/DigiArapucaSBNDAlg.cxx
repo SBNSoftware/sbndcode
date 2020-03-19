@@ -240,11 +240,10 @@ namespace opdet {
   }
 
 
-  void DigiArapucaSBNDAlg::CreateSaturation(std::vector<double>& wave)  //Implementing saturation effects
+  void DigiArapucaSBNDAlg::CreateSaturation(std::vector<double>& wave)
   {
-    for(size_t k = 0; k < wave.size(); k++) {
-      if(wave[k] > saturation) wave[k] = saturation;
-    }
+    std::replace_if(wave.begin(), wave.end(),
+                    [&](auto w){return w > saturation;}, saturation);
   }
 
 
