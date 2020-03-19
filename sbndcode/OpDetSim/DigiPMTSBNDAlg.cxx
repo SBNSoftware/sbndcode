@@ -1,8 +1,5 @@
 #include "sbndcode/OpDetSim/DigiPMTSBNDAlg.h"
 
-#ifndef DIGIPMTSBNDALG_CXX
-#define DIGIPMTSBNDALG_CXX
-
 //------------------------------------------------------------------------------
 //--- opdet::simpmtsbndAlg implementation
 //------------------------------------------------------------------------------
@@ -26,13 +23,13 @@ namespace opdet {
     std::cout << "PMT corrected efficiencies = " << fQEDirect << " " << fQERefl << std::endl;
 
     if(fQERefl > 1.0001 || fQEDirect > 1.0001)
-      std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.QERefl << " or " << fParams.QEDirect << " seems to be too large! Final QE must be equal or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
+      std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.QERefl
+                << " or " << fParams.QEDirect << " seems to be too large!\n"
+                <<"Final QE must be equal or smaller than the scintillation pre scale applied at simulation time.\n"
+                << "Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale()
+                << std::endl;
 
     fSampling = fSampling / 1000.0; //in GHz, to cancel with ns
-
-    //Random number engine initialization
-    //int seed = time(NULL);
-    //gRandom = new TRandom3(seed);
 
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
@@ -62,8 +59,9 @@ namespace opdet {
     saturation = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
   } // end constructor
 
-  DigiPMTSBNDAlg::~DigiPMTSBNDAlg()
-  { }
+
+  DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){ }
+
 
   void DigiPMTSBNDAlg::ConstructWaveform(
     int ch,
@@ -76,9 +74,9 @@ namespace opdet {
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
     CreatePDWaveform(simphotons, start_time, waves, ch, pdtype, auxmap);
-    waveform.resize(n_sample);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
+
 
   void DigiPMTSBNDAlg::ConstructWaveformLite(
     int ch,
@@ -89,10 +87,8 @@ namespace opdet {
     double start_time,
     unsigned n_sample)
   {
-
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
     CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype, auxmap);
-    waveform.resize(n_sample);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -144,7 +140,6 @@ namespace opdet {
 
     double ttsTime = 0;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
-      //if((gRandom->Uniform(1.0))<fQERefl){
       if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         size_t time_bin = (fParams.TransitTime + ttsTime + simphotons[i].Time - t_min)*fSampling;
@@ -157,9 +152,10 @@ namespace opdet {
       if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
       { auxphotons = it->second;}
       for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
-        //if((gRandom->Uniform(1.0))<fQEDirect){
         if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
+          // TODO: this uses root random machine!
+          // use RandGeneral instead. ~icaza
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
           size_t time_bin = (fParams.TransitTime + ttsTime + auxphotons[j].Time + ttpb - t_min)*fSampling;
           if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
@@ -171,6 +167,7 @@ namespace opdet {
     CreateSaturation(wave);
   }
 
+
   void DigiPMTSBNDAlg::CreatePDWaveformLite(
     sim::SimPhotonsLite const& litesimphotons,
     double t_min,
@@ -181,10 +178,11 @@ namespace opdet {
   {
 
     double ttsTime = 0;
-    std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
-    for (auto const& reflectedPhotons : photonMap) { //including reflected light for all PMT channels
+    // reflected light to be added to all PMTs
+    std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
+    for (auto const& reflectedPhotons : photonMap) {
       // TODO: check that this new approach of not using the last
-      // (1-accepted_photons) doesn't introduce some bias
+      // (1-accepted_photons) doesn't introduce some bias. ~icaza
       double mean_photons = reflectedPhotons.second*fQEDirect;
       int accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
       for(int i = 0; i < accepted_photons; i++) {
@@ -194,19 +192,19 @@ namespace opdet {
       }
     }
 
-    // To add direct light for TPB coated PMTs
+    // direct light for TPB coated PMTs
     if(pdtype == "pmt_coated") {
       if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) ){
         double ttpb;
         for (auto& directPhotons : (it->second).DetectedPhotons) {
           // TODO: check that this new approach of not using the last
-          // (1-accepted_photons) doesn't introduce some bias
+          // (1-accepted_photons) doesn't introduce some bias. ~icaza
           double mean_photons = directPhotons.second*fQEDirect;
           int accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
           for(int i = 0; i < accepted_photons; i++) {
             if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
             // TODO: this uses root random machine!
-            // use RandGeneral
+            // use RandGeneral. ~icaza
             ttpb = timeTPB->GetRandom(); //for including TPB emission time
             size_t time_bin = (fParams.TransitTime + ttsTime + directPhotons.first + ttpb - t_min)*fSampling;
             if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
@@ -231,7 +229,8 @@ namespace opdet {
   void DigiPMTSBNDAlg::AddLineNoise(std::vector<double>& wave)
   {
     // TODO: change it to use:
-    // CLHEP::RandGaussQ::shootArray(HepRandomEngine * anotherEngine, const int size, double * vect, double mean = 0.0, double stdDev = 1.0)	
+    // CLHEP::RandGaussQ::shootArray(HepRandomEngine * anotherEngine, const int size, double * vect, double mean = 0.0, double stdDev = 1.0)
+    //  ~icaza
     std::transform(wave.begin(), wave.end(), wave.begin(),
                    [this](double w) -> double {
                      return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.PMTBaselineRMS) ; });
@@ -263,7 +262,7 @@ namespace opdet {
     double t_min = 1e15;
 
     if(pdtype == "pmt_uncoated") {
-      // TODO: use std::algorithm
+      // TODO: use std::algorithm.  ~icaza
       for(size_t i = 0; i < simphotons.size(); i++) {
         if(simphotons[i].Time < t_min) t_min = simphotons[i].Time;
       }
@@ -273,7 +272,7 @@ namespace opdet {
       if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
       {auxphotons = it->second;}
       auxphotons += (simphotons);
-      // TODO: use std::algorithm
+      // TODO: use std::algorithm.  ~icaza
       for(size_t i = 0; i < auxphotons.size(); i++) {
         if(auxphotons[i].Time < t_min) t_min = auxphotons[i].Time;
       }
@@ -305,7 +304,8 @@ namespace opdet {
       sim::SimPhotonsLite auxphotons;
       if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
       {auxphotons = it->second;}
-      // TODO: this might be buggy: potentially adding to a uninitialized object
+      // TODO: this might be buggy:
+      // potentially adding to a uninitialized object.  ~icaza
       auxphotons += (litesimphotons);
       std::map<int, int> const& auxphotonMap = auxphotons.DetectedPhotons;
       auto min = std::find_if(
@@ -363,5 +363,3 @@ namespace opdet {
   } // DigiPMTSBNDAlgMaker::create()
 
 }
-
-#endif

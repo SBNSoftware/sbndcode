@@ -239,6 +239,6 @@ namespace opdet {
     DigiPMTSBNDAlg::ConfigurationParameters_t fBaseConfig;
   }; //class DigiPMTSBNDAlgMaker
 
-} //namespace
+} // namespace opdet
 
 #endif //SBND_OPDETSIM_DIGIPMTSBNDALG
