@@ -49,22 +49,32 @@ namespace opdet {
     //gRandom = new TRandom3(seed);
   }
 
-  DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg()
-  {
-  }
+  DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {}
 
-  void DigiArapucaSBNDAlg::ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples)
-  {
 
+  void DigiArapucaSBNDAlg::ConstructWaveform(
+    int ch,
+    sim::SimPhotons const& simphotons,
+    std::vector<short unsigned int>& waveform,
+    std::string pdName,
+    double start_time,
+    unsigned n_samples)
+  {
     std::vector<double> waves(std::vector<double>(n_samples, fParams.Baseline));
     CreatePDWaveform(simphotons, start_time, waves, pdName);
     waveform.resize(n_samples);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
-  void DigiArapucaSBNDAlg::ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdName, double start_time, unsigned n_samples)
+  
+  void DigiArapucaSBNDAlg::ConstructWaveformLite(
+    int ch,
+    sim::SimPhotonsLite const& litesimphotons,
+    std::vector<short unsigned int>& waveform,
+    std::string pdName,
+    double start_time,
+    unsigned n_samples)
   {
-
     std::vector<double> waves(std::vector<double>(n_samples, fParams.Baseline));
     std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
     CreatePDWaveformLite(photonMap, start_time, waves, pdName);
@@ -72,63 +82,12 @@ namespace opdet {
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
-  void DigiArapucaSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave, int nphotons) //adding single pulse
-  {
-    size_t min = 0, max = 0;
 
-    if(time_bin < wave.size()) {
-      min = time_bin;
-      max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
-      for(size_t i = min; i < max; i++) {
-        wave[i] += (wsp[i - min]) * (double)nphotons;
-      }
-    }
-  }
-
-  double DigiArapucaSBNDAlg::Pulse1PE(double time) const//single pulse waveform
-  {
-    if (time < fParams.PeakTime) return (fParams.ADC * fParams.MeanAmplitude * std::exp((time - fParams.PeakTime) / fParams.RiseTime));
-    else return (fParams.ADC * fParams.MeanAmplitude * std::exp(-(time - fParams.PeakTime) / fParams.FallTime));
-  }
-
-  void DigiArapucaSBNDAlg::AddLineNoise(std::vector< double >& wave)
-  {
-    double noise;
-    for(size_t i = 0; i < wave.size(); i++) {
-      //noise= gRandom->Gaus(0, fParams.BaselineRMS); //gaussian baseline noise
-      noise = CLHEP::RandGauss::shoot(fEngine, 0, fParams.BaselineRMS); //gaussian baseline noise
-      wave[i] += noise;
-    }
-  }
-
-  void DigiArapucaSBNDAlg::AddDarkNoise(std::vector< double >& wave)
-  {
-    int nCT;
-    // Multiply by 10^9 since fDarkNoiseRate is in Hz (conversion from s to ns)
-    //double darkNoiseTime = static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
-    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.DarkNoiseRate) * 1000000000.0);
-    while (darkNoiseTime < wave.size()) {
-      size_t timeBin = (darkNoiseTime);
-      //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
-      if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-      else nCT = 1;
-      AddSPE(timeBin, wave, nCT);
-      // Find next time to add dark noise
-      //darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
-      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.DarkNoiseRate) * 1000000000.0);
-    }
-  }
-
-  double DigiArapucaSBNDAlg::FindMinimumTime(sim::SimPhotons const& simphotons)
-  {
-    double t_min = 1e15;
-    for(size_t i = 0; i < simphotons.size(); i++) {
-      if(simphotons[i].Time < t_min) t_min = simphotons[i].Time;
-    }
-    return t_min;
-  }
-
-  void DigiArapucaSBNDAlg::CreatePDWaveform(sim::SimPhotons const& simphotons, double t_min, std::vector<double>& wave, std::string pdtype)
+  void DigiArapucaSBNDAlg::CreatePDWaveform(
+    sim::SimPhotons const& simphotons,
+    double t_min,
+    std::vector<double>& wave,
+    std::string pdtype)
   {
     int nCT = 1;
     double tphoton = 0;
@@ -194,15 +153,12 @@ namespace opdet {
     CreateSaturation(wave);
   }
 
-  void DigiArapucaSBNDAlg::CreateSaturation(std::vector<double>& wave)  //Implementing saturation effects
-  {
-    for(size_t k = 0; k < wave.size(); k++) {
-      if(wave[k] > (fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude))
-        wave[k] = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
-    }
-  }
 
-  void DigiArapucaSBNDAlg::CreatePDWaveformLite(std::map< int, int > const& photonMap, double t_min, std::vector<double>& wave, std::string pdtype)
+  void DigiArapucaSBNDAlg::CreatePDWaveformLite(
+    std::map<int, int> const& photonMap,
+    double t_min,
+    std::vector<double>& wave,
+    std::string pdtype)
   {
     double tphoton = 0;
     int nCT = 1;
@@ -250,6 +206,78 @@ namespace opdet {
     CreateSaturation(wave);
   }
 
+
+  double DigiArapucaSBNDAlg::Pulse1PE(double time) const//single pulse waveform
+  {
+    if (time < fParams.PeakTime) return (fParams.ADC * fParams.MeanAmplitude * std::exp((time - fParams.PeakTime) / fParams.RiseTime));
+    else return (fParams.ADC * fParams.MeanAmplitude * std::exp(-(time - fParams.PeakTime) / fParams.FallTime));
+  }
+
+
+  void DigiArapucaSBNDAlg::AddSPE(
+    size_t time_bin,
+    std::vector<double>& wave,
+    int nphotons) //adding single pulse
+  {
+    size_t min = 0, max = 0;
+
+    if(time_bin < wave.size()) {
+      min = time_bin;
+      max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
+      for(size_t i = min; i < max; i++) {
+        wave[i] += (wsp[i - min]) * (double)nphotons;
+      }
+    }
+  }
+
+
+  void DigiArapucaSBNDAlg::CreateSaturation(std::vector<double>& wave)  //Implementing saturation effects
+  {
+    for(size_t k = 0; k < wave.size(); k++) {
+      if(wave[k] > (fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude))
+        wave[k] = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
+    }
+  }
+
+
+  void DigiArapucaSBNDAlg::AddLineNoise(std::vector< double >& wave)
+  {
+    double noise;
+    for(size_t i = 0; i < wave.size(); i++) {
+      //noise= gRandom->Gaus(0, fParams.BaselineRMS); //gaussian baseline noise
+      noise = CLHEP::RandGauss::shoot(fEngine, 0, fParams.BaselineRMS); //gaussian baseline noise
+      wave[i] += noise;
+    }
+  }
+
+  void DigiArapucaSBNDAlg::AddDarkNoise(std::vector< double >& wave)
+  {
+    int nCT;
+    // Multiply by 10^9 since fDarkNoiseRate is in Hz (conversion from s to ns)
+    //double darkNoiseTime = static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
+    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.DarkNoiseRate) * 1000000000.0);
+    while (darkNoiseTime < wave.size()) {
+      size_t timeBin = (darkNoiseTime);
+      //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+      if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+      else nCT = 1;
+      AddSPE(timeBin, wave, nCT);
+      // Find next time to add dark noise
+      //darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
+      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.DarkNoiseRate) * 1000000000.0);
+    }
+  }
+
+  double DigiArapucaSBNDAlg::FindMinimumTime(sim::SimPhotons const& simphotons)
+  {
+    double t_min = 1e15;
+    for(size_t i = 0; i < simphotons.size(); i++) {
+      if(simphotons[i].Time < t_min) t_min = simphotons[i].Time;
+    }
+    return t_min;
+  }
+
+
   double DigiArapucaSBNDAlg::FindMinimumTimeLite(std::map< int, int > const& photonMap)
   {
     for (auto const& mapMember : photonMap) {
@@ -285,12 +313,11 @@ namespace opdet {
 
   }
 
-  std::unique_ptr<DigiArapucaSBNDAlg>
-  DigiArapucaSBNDAlgMaker::operator()(
+  std::unique_ptr<DigiArapucaSBNDAlg> DigiArapucaSBNDAlgMaker::operator()(
     detinfo::LArProperties const& larProp,
     detinfo::DetectorClocks const& detClocks,
     CLHEP::HepRandomEngine* engine
-  ) const
+    ) const
   {
     // set the configuration
     auto params = fBaseConfig;
