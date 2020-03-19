@@ -254,6 +254,8 @@ namespace opdet {
     }
   }
 
+
+  // TODO: this function is not being used anywhere! ~icaza
   double DigiPMTSBNDAlg::FindMinimumTime(
     sim::SimPhotons const& simphotons,
     int ch,
@@ -271,7 +273,7 @@ namespace opdet {
     else if(pdtype == "pmt_coated") {
       sim::SimPhotons auxphotons;
       if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
-      { auxphotons = it->second;}
+      {auxphotons = it->second;}
       auxphotons += (simphotons);
       // TODO: use std::algorithm
       for(size_t i = 0; i < auxphotons.size(); i++) {
@@ -284,6 +286,8 @@ namespace opdet {
     return t_min;
   }
 
+
+  // TODO: this function is not being used anywhere! ~icaza
   double DigiPMTSBNDAlg::FindMinimumTimeLite(
     sim::SimPhotonsLite const& litesimphotons,
     int ch,
@@ -292,20 +296,25 @@ namespace opdet {
   {
 
     if(pdtype == "pmt_uncoated") {
-      std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
-      for (auto const& mapMember : photonMap) {
-        if(mapMember.second != 0) return (double)mapMember.first;
-      }
+      std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
+      auto min = std::find_if(
+        photonMap.begin(),
+        photonMap.end(),
+        [](const auto& pm) {return pm.second != 0; });
+      if(min != photonMap.end()) return double(min->first);
     }
     else if(pdtype == "pmt_coated") {
       sim::SimPhotonsLite auxphotons;
       if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
-      { auxphotons = it->second;}
+      {auxphotons = it->second;}
+      // TODO: this might be buggy: potentially adding to a uninitialized object
       auxphotons += (litesimphotons);
-      std::map< int, int > const& auxphotonMap = auxphotons.DetectedPhotons;
-      for (auto & mapMember : auxphotonMap) {
-        if(mapMember.second != 0) return (double)mapMember.first;
-      }
+      std::map<int, int> const& auxphotonMap = auxphotons.DetectedPhotons;
+      auto min = std::find_if(
+        auxphotonMap.begin(),
+        auxphotonMap.end(),
+        [](const auto& pm) {return pm.second != 0; });
+      if(min != auxphotonMap.end()) return double(min->first);
     }
     else {
       throw cet::exception("DigiPMTSBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
