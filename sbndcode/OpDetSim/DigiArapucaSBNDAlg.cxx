@@ -254,7 +254,7 @@ namespace opdet {
     // CLHEP::RandGaussQ::shootArray(HepRandomEngine * anotherEngine, const int size, double * vect, double mean = 0.0, double stdDev = 1.0)
     std::transform(wave.begin(), wave.end(), wave.begin(),
                    [this](double w) -> double {
-                     return w + CLHEP::RandGauss::shoot(fEngine, 0, fParams.BaselineRMS) ; });
+                     return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.BaselineRMS) ; });
   }
 
   void DigiArapucaSBNDAlg::AddDarkNoise(std::vector< double >& wave)
