@@ -93,42 +93,6 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::Pulse1PE(std::vector<double>& wsp)//single pulse waveform
-  {
-    double time;
-    double constT1 = fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
-    double constT21 = 2.0 * sigma1 * sigma1;
-    double constT22 = 2.0 * sigma2 * sigma2;
-    for(size_t i = 0; i<wsp.size(); i++) {
-      time = static_cast<double>(i) / fSampling;
-      if (time < fParams.TransitTime)
-        wsp[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT21);
-      else
-        wsp[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT22);
-    }
-  }
-
-
-  double DigiPMTSBNDAlg::Transittimespread(double fwhm)
-  {
-    double tts, sigma;
-    sigma = fwhm / transitTimeSpread_frac;
-    tts = CLHEP::RandGaussQ::shoot(fEngine, 0, sigma);
-    return tts;
-  }
-
-
-  void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave)
-  {
-    size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
-    auto min_it = std::next(wave.begin(), time_bin);
-    auto max_it = std::next(wave.begin(), max);
-    std::transform(min_it, max_it,
-                   wsp.begin(), min_it,
-                   std::plus<double>( ));
-  }
-
-
   void DigiPMTSBNDAlg::CreatePDWaveform(
     sim::SimPhotons const& simphotons,
     double t_min,
@@ -137,7 +101,6 @@ namespace opdet {
     std::string pdtype,
     std::unordered_map<int, sim::SimPhotons>& auxmap)
   {
-
     double ttsTime = 0;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
       if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
@@ -176,7 +139,6 @@ namespace opdet {
     std::string pdtype,
     std::unordered_map<int, sim::SimPhotonsLite>& auxmap)
   {
-
     double ttsTime = 0;
     // reflected light to be added to all PMTs
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
@@ -216,6 +178,42 @@ namespace opdet {
     if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
+  }
+
+
+  void DigiPMTSBNDAlg::Pulse1PE(std::vector<double>& wsp)//single pulse waveform
+  {
+    double time;
+    double constT1 = fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
+    double constT21 = 2.0 * sigma1 * sigma1;
+    double constT22 = 2.0 * sigma2 * sigma2;
+    for(size_t i = 0; i<wsp.size(); i++) {
+      time = static_cast<double>(i) / fSampling;
+      if (time < fParams.TransitTime)
+        wsp[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT21);
+      else
+        wsp[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT22);
+    }
+  }
+
+
+  double DigiPMTSBNDAlg::Transittimespread(double fwhm)
+  {
+    double tts, sigma;
+    sigma = fwhm / transitTimeSpread_frac;
+    tts = CLHEP::RandGaussQ::shoot(fEngine, 0, sigma);
+    return tts;
+  }
+
+
+  void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave)
+  {
+    size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
+    auto min_it = std::next(wave.begin(), time_bin);
+    auto max_it = std::next(wave.begin(), max);
+    std::transform(min_it, max_it,
+                   wsp.begin(), min_it,
+                   std::plus<double>( ));
   }
 
 
