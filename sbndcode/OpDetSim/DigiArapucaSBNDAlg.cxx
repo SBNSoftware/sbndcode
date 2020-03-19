@@ -92,61 +92,55 @@ namespace opdet {
     double tphoton = 0;
     if(pdtype == "arapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        //if((gRandom->Uniform(1.0))<fArapucaEffT1){ //Sample a random subset according to Arapuca's efficiency
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT1) { //Sample a random subset according to Arapuca's efficiency
           tphoton = simphotons[i].Time;
           tphoton += (TimeArapucaT1->GetRandom());
           tphoton -= t_min;
-          //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           AddSPE(tphoton * fSampling, wave, nCT);
         }
       }
     }
-    if(pdtype == "arapuca_vis") {
+    else if(pdtype == "arapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        //if((gRandom->Uniform(1.0))<fArapucaEffT2){ //Sample a random subset according to Arapuca's efficiency.
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT2) { //Sample a random subset according to Arapuca's efficiency.
           tphoton = simphotons[i].Time;
           tphoton += (TimeArapucaT2->GetRandom());
           tphoton -= t_min;
-          //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           AddSPE(tphoton * fSampling, wave, nCT);
         }
       }
     }
-    if(pdtype == "xarapuca_vuv") {
+    else if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        //if((gRandom->Uniform(1.0))<fArapucaEffx){
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT1) {
           tphoton = simphotons[i].Time;
           tphoton += (TimeArapucaX->GetRandom());
           tphoton -= t_min;
-          //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           AddSPE(tphoton * fSampling, wave, nCT);
         }
       }
     }
-    if(pdtype == "xarapuca_vis") {
+    else if(pdtype == "xarapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        //if((gRandom->Uniform(1.0))<fArapucaEffx){
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT2) {
           tphoton = simphotons[i].Time;
           tphoton += (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
           tphoton -= t_min;
-          //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           AddSPE(tphoton * fSampling, wave, nCT);
         }
       }
     }
-
+    else{
+      throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
+    }
     if(fParams.BaselineRMS > 0.0) AddLineNoise(wave);
     if(fParams.DarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
@@ -163,40 +157,45 @@ namespace opdet {
     int nCT = 1;
     for (auto const& mapMember : photonMap) {
       for(int i = 0; i < mapMember.second; i++) {
-        //if(pdtype=="arapuca_vuv" && (gRandom->Uniform(1.0))<fArapucaEffT1){
-        if(pdtype == "arapuca_vuv" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT1) {
-          tphoton = (TimeArapucaT1->GetRandom());
-          tphoton += mapMember.first - t_min;
-          //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-          else nCT = 1;
-          AddSPE(tphoton * fSampling, wave, nCT);
+        double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
+        if(pdtype == "arapuca_vuv"){
+          if(randFlat < fArapucaEffT1) {
+            tphoton = (TimeArapucaT1->GetRandom());
+            tphoton += mapMember.first - t_min;
+            if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+            else nCT = 1;
+            AddSPE(tphoton * fSampling, wave, nCT);
+          }
         }
-        //if(pdtype=="arapuca_vis" && (gRandom->Uniform(1.0))<fArapucaEffT2){
-        if(pdtype == "arapuca_vis" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT2) {
-          tphoton = (TimeArapucaT2->GetRandom());
-          tphoton += mapMember.first - t_min;
-          //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-          else nCT = 1;
-          AddSPE(tphoton * fSampling, wave, nCT);
+        else if(pdtype == "arapuca_vis"){
+          if(randFlat < fArapucaEffT2) {
+            tphoton = (TimeArapucaT2->GetRandom());
+            tphoton += mapMember.first - t_min;
+            if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+            else nCT = 1;
+            AddSPE(tphoton * fSampling, wave, nCT);
+          }
         }
-        //if(pdtype=="xarapucaprime" && (gRandom->Uniform(1.0))<fArapucaEffx){
-        if(pdtype == "xarapuca_vuv" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT1) {
-          tphoton = (TimeArapucaX->GetRandom());
-          tphoton += mapMember.first - t_min;
-          //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-          else nCT = 1;
-          AddSPE(tphoton * fSampling, wave, nCT);
+        else if(pdtype == "xarapuca_vuv"){
+          if(randFlat < fArapucaEffxT1) {
+            tphoton = (TimeArapucaX->GetRandom());
+            tphoton += mapMember.first - t_min;
+            if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+            else nCT = 1;
+            AddSPE(tphoton * fSampling, wave, nCT);
+          }
         }
-        if(pdtype == "xarapuca_vis" && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT2) {
-          tphoton = (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
-          tphoton += mapMember.first - t_min;
-          //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-          else nCT = 1;
-          AddSPE(tphoton * fSampling, wave, nCT);
+        else if(pdtype == "xarapuca_vis"){
+          if( randFlat < fArapucaEffxT2) {
+            tphoton = (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
+            tphoton += mapMember.first - t_min;
+            if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+            else nCT = 1;
+            AddSPE(tphoton * fSampling, wave, nCT);
+          }
+        }
+        else{
+          throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
         }
       }
     }
