@@ -95,6 +95,8 @@ namespace opdet {
     double fArapucaEffxT1;
     double fArapucaEffxT2;
 
+    double saturation;
+    
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
     TH1D* TimeArapucaT1; //histogram for getting the photon time distribution inside the arapuca T1 box (considering the optical window)

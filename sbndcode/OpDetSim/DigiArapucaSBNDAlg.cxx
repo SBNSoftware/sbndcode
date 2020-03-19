@@ -44,10 +44,9 @@ namespace opdet {
 
     for(int i = 0; i < pulsesize; i++)
       wsp[i] = (Pulse1PE(static_cast< double >(i) / fSampling));
-    //Random number engine initialization
-    //int seed = time(NULL);
-    //gRandom = new TRandom3(seed);
-  }
+
+    saturation = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
+  } // end constructor
 
   DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {}
 
@@ -66,7 +65,7 @@ namespace opdet {
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
-  
+
   void DigiArapucaSBNDAlg::ConstructWaveformLite(
     int ch,
     sim::SimPhotonsLite const& litesimphotons,
@@ -234,8 +233,7 @@ namespace opdet {
   void DigiArapucaSBNDAlg::CreateSaturation(std::vector<double>& wave)  //Implementing saturation effects
   {
     for(size_t k = 0; k < wave.size(); k++) {
-      if(wave[k] > (fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude))
-        wave[k] = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
+      if(wave[k] > saturation) wave[k] = saturation;
     }
   }
 
