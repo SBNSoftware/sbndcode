@@ -212,4 +212,32 @@ double CRTT0MatchAlg::T0FromCRTHits(recob::Track tpcTrack, std::vector<art::Ptr<
 
 }
 
+std::pair<double, double> CRTT0MatchAlg::T0AndDCAFromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
+  auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+  art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
+  std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+  return T0AndDCAFromCRTHits(tpcTrack, hits, crtHits);
+}
+
+std::pair<double, double> CRTT0MatchAlg::T0AndDCAFromCRTHits(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits) {
+
+  std::pair<double, double> null = std::make_pair(-99999, -99999);
+  if (tpcTrack.Length() < fMinTrackLength) return null; 
+
+  std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(tpcTrack, hits, crtHits);
+  if(closestHit.second == -99999) return null;
+
+  double crtTime;
+  if (fTSMode == 1) {
+    crtTime = ((double)(int)closestHit.first.ts1_ns) * 1e-3 + fTimeCorrection;
+  }
+  else {
+    crtTime = ((double)(int)closestHit.first.ts0_ns) * 1e-3 + fTimeCorrection;
+  }
+  if(closestHit.second < fDistanceLimit) return std::make_pair(crtTime, closestHit.second);
+
+  return null;
+
+}
+
 }
