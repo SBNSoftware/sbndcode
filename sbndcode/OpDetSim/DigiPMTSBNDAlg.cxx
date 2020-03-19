@@ -221,12 +221,10 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::CreateSaturation(std::vector<double>& wave)  //Implementing saturation effects
+  void DigiPMTSBNDAlg::CreateSaturation(std::vector<double>& wave)
   {
-    // TODO: use std::algorithm
-    for(size_t k = 0; k < wave.size(); k++) {
-      if(wave[k] < saturation) wave[k] = saturation;
-    }
+    std::replace_if(wave.begin(), wave.end(),
+                    [&](auto w){return w < saturation;}, saturation);
   }
 
   void DigiPMTSBNDAlg::AddLineNoise(std::vector<double>& wave)
