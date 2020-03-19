@@ -111,7 +111,7 @@ namespace opdet {
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
-    double Pulse1PE(double time) ;
+    void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
     std::vector<double> wsp; //single photon pulse vector

@@ -56,9 +56,7 @@ namespace opdet {
 
       pulsesize = (int)((6 * sigma2 + fParams.TransitTime) * fSampling);
       wsp.resize(pulsesize);
-      for(int i = 0; i < pulsesize; i++) {
-        wsp[i] = (Pulse1PE(static_cast< double >(i) / fSampling));
-      }
+      Pulse1PE(wsp);
     }
 
     saturation = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
@@ -99,10 +97,19 @@ namespace opdet {
   }
 
 
-  double DigiPMTSBNDAlg::Pulse1PE(double time)//single pulse waveform
+  void DigiPMTSBNDAlg::Pulse1PE(std::vector<double>& wsp)//single pulse waveform
   {
-    if (time < fParams.TransitTime) return (fParams.PMTChargeToADC * fParams.PMTMeanAmplitude * std::exp(-1.0 * pow(time - fParams.TransitTime, 2.0) / (2.0 * pow(sigma1, 2.0))));
-    else return (fParams.PMTChargeToADC * fParams.PMTMeanAmplitude * std::exp(-1.0 * pow(time - fParams.TransitTime, 2.0) / (2.0 * pow(sigma2, 2.0))));
+    double time;
+    double constT1 = fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
+    double constT21 = 2.0 * sigma1 * sigma1;
+    double constT22 = 2.0 * sigma2 * sigma2;
+    for(size_t i = 0; i<wsp.size(); i++) {
+      time = static_cast<double>(i) / fSampling;
+      if (time < fParams.TransitTime)
+        wsp[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT21);
+      else
+        wsp[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT22);
+    }
   }
 
 
