@@ -42,9 +42,7 @@ namespace opdet {
     pulsesize = fParams.PulseLength * fSampling;
     wsp.resize(pulsesize);
 
-    for(int i = 0; i < pulsesize; i++)
-      wsp[i] = (Pulse1PE(static_cast< double >(i) / fSampling));
-
+    Pulse1PE(wsp);
     saturation = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
   } // end constructor
 
@@ -213,10 +211,17 @@ namespace opdet {
   }
 
 
-  double DigiArapucaSBNDAlg::Pulse1PE(double time) const//single pulse waveform
+  void DigiArapucaSBNDAlg::Pulse1PE(std::vector<double>& wsp)//single pulse waveform
   {
-    if (time < fParams.PeakTime) return (fParams.ADC * fParams.MeanAmplitude * std::exp((time - fParams.PeakTime) / fParams.RiseTime));
-    else return (fParams.ADC * fParams.MeanAmplitude * std::exp(-(time - fParams.PeakTime) / fParams.FallTime));
+    double time;
+    double constT1 = fParams.ADC * fParams.MeanAmplitude;
+    for(size_t i = 0; i<wsp.size(); i++) {
+      time = static_cast<double>(i) / fSampling;
+      if (time < fParams.PeakTime)
+        wsp[i] = constT1 * std::exp((time - fParams.PeakTime) / fParams.RiseTime);
+      else
+        wsp[i] = constT1 * std::exp(-(time - fParams.PeakTime) / fParams.FallTime);
+    }
   }
 
 

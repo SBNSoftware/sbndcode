@@ -123,7 +123,7 @@ namespace opdet {
                               std::vector<double>& wave,
                               std::string pdtype);
     void AddSPE(size_t time_bin, std::vector<double>& wave, int nphotons); // add single pulse to auxiliary waveform
-    double Pulse1PE(double time) const;
+    void Pulse1PE(std::vector<double>& wave);
     void AddLineNoise(std::vector<double>& wave);
     void AddDarkNoise(std::vector<double>& wave);
     double FindMinimumTime(sim::SimPhotons const& simphotons);
