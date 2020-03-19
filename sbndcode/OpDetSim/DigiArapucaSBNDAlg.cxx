@@ -256,21 +256,20 @@ namespace opdet {
                      return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.BaselineRMS) ; });
   }
 
-  void DigiArapucaSBNDAlg::AddDarkNoise(std::vector< double >& wave)
+  void DigiArapucaSBNDAlg::AddDarkNoise(std::vector<double>& wave)
   {
     int nCT;
+    size_t timeBin;
     // Multiply by 10^9 since fDarkNoiseRate is in Hz (conversion from s to ns)
-    //double darkNoiseTime = static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
-    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.DarkNoiseRate) * 1000000000.0);
-    while (darkNoiseTime < wave.size()) {
-      size_t timeBin = (darkNoiseTime);
-      //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
+    double mean = 1000000000.0 / fParams.DarkNoiseRate;
+    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
+    while(darkNoiseTime < wave.size()) {
+      timeBin = size_t(darkNoiseTime);
       if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
       else nCT = 1;
       if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
       // Find next time to add dark noise
-      //darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
-      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.DarkNoiseRate) * 1000000000.0);
+      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, mean);
     }
   }
 
