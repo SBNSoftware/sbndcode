@@ -227,6 +227,7 @@ namespace opdet {
                     [&](auto w){return w < saturation;}, saturation);
   }
 
+
   void DigiPMTSBNDAlg::AddLineNoise(std::vector<double>& wave)
   {
     // TODO: change it to use:
@@ -236,19 +237,18 @@ namespace opdet {
                      return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.PMTBaselineRMS) ; });
   }
 
-  void DigiPMTSBNDAlg::AddDarkNoise(std::vector< double >& wave)
-  {
-    size_t timeBin = 0;
 
+  void DigiPMTSBNDAlg::AddDarkNoise(std::vector<double>& wave)
+  {
+    size_t timeBin;
     // Multiply by 10^9 since fParams.DarkNoiseRate is in Hz (conversion from s to ns)
-    //double darkNoiseTime = static_cast< double >(gRandom->Exp((1.0/fParams.PMTDarkNoiseRate)*1000000000.0));
-    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.PMTDarkNoiseRate) * 1000000000.0);
-    while (darkNoiseTime < wave.size()) {
-      timeBin = (darkNoiseTime);
+    double mean =  1000000000.0 / fParams.PMTDarkNoiseRate;
+    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
+    while(darkNoiseTime < wave.size()) {
+      timeBin = size_t(darkNoiseTime);
       if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       // Find next time to add dark noise
-      //darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.PMTDarkNoiseRate)*1000000000.0));
-      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.PMTDarkNoiseRate) * 1000000000.0);
+      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, mean);
     }
   }
 
