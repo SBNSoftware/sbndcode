@@ -98,7 +98,8 @@ namespace opdet {
           tphoton -= t_min;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          AddSPE(tphoton * fSampling, wave, nCT);
+          double timeBin = tphoton * fSampling;
+          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
         }
       }
     }
@@ -110,7 +111,8 @@ namespace opdet {
           tphoton -= t_min;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          AddSPE(tphoton * fSampling, wave, nCT);
+          double timeBin = tphoton * fSampling;
+          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
         }
       }
     }
@@ -122,7 +124,8 @@ namespace opdet {
           tphoton -= t_min;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          AddSPE(tphoton * fSampling, wave, nCT);
+          double timeBin = tphoton * fSampling;
+          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
         }
       }
     }
@@ -134,7 +137,8 @@ namespace opdet {
           tphoton -= t_min;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          AddSPE(tphoton * fSampling, wave, nCT);
+          double timeBin = tphoton * fSampling;
+          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
         }
       }
     }
@@ -164,7 +168,8 @@ namespace opdet {
             tphoton += mapMember.first - t_min;
             if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
             else nCT = 1;
-            AddSPE(tphoton * fSampling, wave, nCT);
+            double timeBin = tphoton * fSampling;
+            if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
           }
         }
         else if(pdtype == "arapuca_vis"){
@@ -173,7 +178,8 @@ namespace opdet {
             tphoton += mapMember.first - t_min;
             if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
             else nCT = 1;
-            AddSPE(tphoton * fSampling, wave, nCT);
+            double timeBin = tphoton * fSampling;
+            if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
           }
         }
         else if(pdtype == "xarapuca_vuv"){
@@ -182,7 +188,8 @@ namespace opdet {
             tphoton += mapMember.first - t_min;
             if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
             else nCT = 1;
-            AddSPE(tphoton * fSampling, wave, nCT);
+            double timeBin = tphoton * fSampling;
+            if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
           }
         }
         else if(pdtype == "xarapuca_vis"){
@@ -191,7 +198,8 @@ namespace opdet {
             tphoton += mapMember.first - t_min;
             if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
             else nCT = 1;
-            AddSPE(tphoton * fSampling, wave, nCT);
+            double timeBin = tphoton * fSampling;
+            if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
           }
         }
         else{
@@ -217,15 +225,13 @@ namespace opdet {
     std::vector<double>& wave,
     int nphotons) //adding single pulse
   {
-    size_t min = 0, max = 0;
-
-    if(time_bin < wave.size()) {
-      min = time_bin;
-      max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
-      for(size_t i = min; i < max; i++) {
-        wave[i] += (wsp[i - min]) * (double)nphotons;
-      }
-    }
+    size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
+    auto min_it = std::next(wave.begin(), time_bin);
+    auto max_it = std::next(wave.begin(), max);
+    std::transform(min_it, max_it,
+                   wsp.begin(), min_it,
+                   [nphotons](double w, double ws) -> double {
+                     return w + ws*nphotons  ; });
   }
 
 
@@ -258,7 +264,7 @@ namespace opdet {
       //if(fParams.CrossTalk>0.0 && (gRandom->Uniform(1.0))<fParams.CrossTalk) nCT=2;
       if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
       else nCT = 1;
-      AddSPE(timeBin, wave, nCT);
+      if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
       // Find next time to add dark noise
       //darkNoiseTime += static_cast< double >(gRandom->Exp((1.0/fParams.DarkNoiseRate)*1000000000.0));
       darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, (1.0 / fParams.DarkNoiseRate) * 1000000000.0);
