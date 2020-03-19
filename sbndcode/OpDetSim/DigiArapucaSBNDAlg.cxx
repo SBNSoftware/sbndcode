@@ -55,12 +55,12 @@ namespace opdet {
     int ch,
     sim::SimPhotons const& simphotons,
     std::vector<short unsigned int>& waveform,
-    std::string pdName,
+    std::string pdtype,
     double start_time,
     unsigned n_samples)
   {
     std::vector<double> waves(std::vector<double>(n_samples, fParams.Baseline));
-    CreatePDWaveform(simphotons, start_time, waves, pdName);
+    CreatePDWaveform(simphotons, start_time, waves, pdtype);
     waveform.resize(n_samples);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
@@ -70,13 +70,13 @@ namespace opdet {
     int ch,
     sim::SimPhotonsLite const& litesimphotons,
     std::vector<short unsigned int>& waveform,
-    std::string pdName,
+    std::string pdtype,
     double start_time,
     unsigned n_samples)
   {
     std::vector<double> waves(std::vector<double>(n_samples, fParams.Baseline));
     std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
-    CreatePDWaveformLite(photonMap, start_time, waves, pdName);
+    CreatePDWaveformLite(photonMap, start_time, waves, pdtype);
     waveform.resize(n_samples);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
@@ -276,7 +276,7 @@ namespace opdet {
   }
 
 
-  double DigiArapucaSBNDAlg::FindMinimumTimeLite(std::map< int, int > const& photonMap)
+  double DigiArapucaSBNDAlg::FindMinimumTimeLite(std::map<int, int> const& photonMap)
   {
     for (auto const& mapMember : photonMap) {
       if(mapMember.second != 0) return (double)mapMember.first;
