@@ -15,7 +15,7 @@
 #include "CLHEP/Random/RandomEngine.h"
 #include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
-#include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandGaussQ.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
 

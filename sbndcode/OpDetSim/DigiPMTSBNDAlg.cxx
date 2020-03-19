@@ -117,8 +117,7 @@ namespace opdet {
   {
     double tts, sigma;
     sigma = fwhm / transitTimeSpread_frac;
-    //tts = gRandom->Gaus(0,sigma);
-    tts = CLHEP::RandGauss::shoot(fEngine, 0, sigma);
+    tts = CLHEP::RandGaussQ::shoot(fEngine, 0, sigma);
     return tts;
   }
 
@@ -187,7 +186,7 @@ namespace opdet {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias
       double mean_photons = reflectedPhotons.second*fQEDirect;
-      int accepted_photons = CLHEP::RandPoisson::shoot(fEngine, mean_photons);
+      int accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
       for(int i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         size_t time_bin = (fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min)*fSampling;
@@ -203,7 +202,7 @@ namespace opdet {
           // TODO: check that this new approach of not using the last
           // (1-accepted_photons) doesn't introduce some bias
           double mean_photons = directPhotons.second*fQEDirect;
-          int accepted_photons = CLHEP::RandPoisson::shoot(fEngine, mean_photons);
+          int accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
           for(int i = 0; i < accepted_photons; i++) {
             if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
             // TODO: this uses root random machine!
@@ -236,7 +235,7 @@ namespace opdet {
     // CLHEP::RandGaussQ::shootArray(HepRandomEngine * anotherEngine, const int size, double * vect, double mean = 0.0, double stdDev = 1.0)	
     std::transform(wave.begin(), wave.end(), wave.begin(),
                    [this](double w) -> double {
-                     return w + CLHEP::RandGauss::shoot(fEngine, 0, fParams.PMTBaselineRMS) ; });
+                     return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.PMTBaselineRMS) ; });
   }
 
   void DigiPMTSBNDAlg::AddDarkNoise(std::vector< double >& wave)
