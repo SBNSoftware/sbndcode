@@ -245,12 +245,11 @@ namespace opdet {
 
   void DigiArapucaSBNDAlg::AddLineNoise(std::vector< double >& wave)
   {
-    double noise;
-    for(size_t i = 0; i < wave.size(); i++) {
-      //noise= gRandom->Gaus(0, fParams.BaselineRMS); //gaussian baseline noise
-      noise = CLHEP::RandGauss::shoot(fEngine, 0, fParams.BaselineRMS); //gaussian baseline noise
-      wave[i] += noise;
-    }
+    // TODO: change it to use:
+    // CLHEP::RandGaussQ::shootArray(HepRandomEngine * anotherEngine, const int size, double * vect, double mean = 0.0, double stdDev = 1.0)
+    std::transform(wave.begin(), wave.end(), wave.begin(),
+                   [this](double w) -> double {
+                     return w + CLHEP::RandGauss::shoot(fEngine, 0, fParams.BaselineRMS) ; });
   }
 
   void DigiArapucaSBNDAlg::AddDarkNoise(std::vector< double >& wave)
