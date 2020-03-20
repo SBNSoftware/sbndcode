@@ -28,7 +28,7 @@ namespace opdet {
       unsigned nThreads;
 
       art::InputTag InputModuleName;
-      int UseLitePhotons; //1 for using SimLitePhotons and 0 for SimPhotons (more complete)
+      bool UseSimPhotonsLite; // SimPhotons have more information that SimPhotonsLite
 
       std::array<double, 2> EnableWindow;
       double Sampling;       //wave sampling frequency (GHz)
@@ -75,12 +75,12 @@ namespace opdet {
   private:
     unsigned NChannelsToProcess(unsigned n) const;
     unsigned StartChannelToProcess(unsigned n) const;
-    void CreateDirectPhotonMapLite(
-      std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
-      std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles) const;
     void CreateDirectPhotonMap(
       std::unordered_map<int, sim::SimPhotons>& auxmap,
-      std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles) const;
+      std::vector<art::Handle<std::vector<sim::SimPhotons>>> photon_handles) const;
+    void CreateDirectPhotonMapLite(
+      std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
+      std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> photon_handles) const;
     void MakeWaveforms(
       opdet::DigiPMTSBNDAlg *pmtDigitizer,
       opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const;
@@ -98,7 +98,10 @@ namespace opdet {
 
   void StartopDetDigitizerWorkers(unsigned n_workers, opDetDigitizerWorker::Semaphore &sem_start);
   void WaitopDetDigitizerWorkers(unsigned n_workers, opDetDigitizerWorker::Semaphore &sem_finish);
-  void opDetDigitizerWorkerThread(const opDetDigitizerWorker &worker, opDetDigitizerWorker::Semaphore &sem_start, opDetDigitizerWorker::Semaphore &sem_finish, bool ApplyTriggerLocations, bool *finished);
+  void opDetDigitizerWorkerThread(const opDetDigitizerWorker &worker,
+                                  opDetDigitizerWorker::Semaphore &sem_start,
+                                  opDetDigitizerWorker::Semaphore &sem_finish,
+                                  bool ApplyTriggerLocations, bool *finished);
 
 } // end namespace opdet
 
