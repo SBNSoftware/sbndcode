@@ -125,6 +125,7 @@ namespace sbnd{
     double DistOfClosestApproach(TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int driftDirection, double t0);
 
     std::pair<TVector3, TVector3> TrackDirectionAverage(recob::Track track, double frac);
+    std::pair<TVector3, TVector3> TrackDirectionAverageFromPoints(recob::Track track, double frac);
 
     // Return the closest CRT hit to a TPC track and the DCA
     std::pair<crt::CRTHit, double> ClosestCRTHit(recob::Track tpcTrack, std::pair<double, double> t0MinMax, std::vector<sbnd::crt::CRTHit> crtHits, int driftDirection);

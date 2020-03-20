@@ -113,6 +113,27 @@ std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track 
 } // CRTT0MatchAlg::TrackDirectionAverage()
 
 
+std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverageFromPoints(recob::Track track, double frac){
+
+  // Calculate direction as an average over directions
+  size_t nTrackPoints = track.NumberTrajectoryPoints();
+  recob::TrackTrajectory trajectory  = track.Trajectory();
+  std::vector<TVector3> validPoints;
+  for(size_t i = 0; i < nTrackPoints; i++){
+    if(trajectory.FlagsAtPoint(i) != recob::TrajectoryPointFlags::InvalidHitIndex) continue;
+    validPoints.push_back(track.LocationAtPoint<TVector3>(i));
+  }
+
+  size_t nValidPoints = validPoints.size();
+  int endPoint = (int)floor(nValidPoints*frac);
+  TVector3 startDir = validPoints.at(0) - validPoints.at(endPoint-1);
+  TVector3 endDir = validPoints.at(nValidPoints - 1) - validPoints.at(nValidPoints - (endPoint));
+
+  return std::make_pair(startDir.Unit(), endDir.Unit());
+
+} // CRTT0MatchAlg::TrackDirectionAverageFromPoints()
+
+
 std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event) {
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
