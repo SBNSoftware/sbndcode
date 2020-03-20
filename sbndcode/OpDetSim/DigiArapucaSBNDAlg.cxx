@@ -9,7 +9,6 @@
 
 namespace opdet {
 
-  //DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(fhicl::ParameterSet const& p)
   DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     : fParams(config)
     , fSampling(fParams.timeService->OpticalClock().Frequency())
@@ -20,15 +19,14 @@ namespace opdet {
     , fEngine(fParams.engine)
   {
 
-    //art::ServiceHandle<rndm::NuRandomService> seedSvc;
-    //fEngine = new CLHEP::HepJamesRandom;
-    //seedSvc->registerEngine(rndm::NuRandomService::CLHEPengineSeeder(fEngine), "DigiArapucaSBNDAlg");
-
-    //    std::cout << "arapucas corrected efficiencies = " << fArapucaEffT1 << ", " << fArapucaEffT2 << " and " << fArapucaEffx << std::endl;
-    // std::cout << "optical clock = " << fSampling << std::endl;
-
-    if(fArapucaEffT1 > 1.0001 || fArapucaEffT2 > 1.0001 || fArapucaEffxT1 > 1.0001 || fArapucaEffxT2 > 1.0001)
-      std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.ArapucaEffT1 << " or " << fParams.ArapucaEffT2 << " or " << fParams.ArapucaEffxT1 << " or " << fParams.ArapucaEffxT2 << " seems to be too large! Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time. Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
+    if(fArapucaEffT1 > 1.0001 || fArapucaEffT2 > 1.0001 ||
+       fArapucaEffxT1 > 1.0001 || fArapucaEffxT2 > 1.0001)
+      std::cout << "WARNING: Quantum efficiency set in fhicl file "
+                << fParams.ArapucaEffT1 << " or " << fParams.ArapucaEffT2 << " or "
+                << fParams.ArapucaEffxT1 << " or " << fParams.ArapucaEffxT2
+                << " seems to be too large!\n"
+                << "Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time.\n"
+                << "Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
 
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
@@ -59,7 +57,6 @@ namespace opdet {
   {
     std::vector<double> waves(std::vector<double>(n_samples, fParams.Baseline));
     CreatePDWaveform(simphotons, start_time, waves, pdtype);
-    waveform.resize(n_samples);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -75,7 +72,6 @@ namespace opdet {
     std::vector<double> waves(std::vector<double>(n_samples, fParams.Baseline));
     std::map< int, int > const& photonMap = litesimphotons.DetectedPhotons;
     CreatePDWaveformLite(photonMap, start_time, waves, pdtype);
-    waveform.resize(n_samples);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -256,6 +252,7 @@ namespace opdet {
                      return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.BaselineRMS) ; });
   }
 
+
   void DigiArapucaSBNDAlg::AddDarkNoise(std::vector<double>& wave)
   {
     int nCT;
@@ -272,6 +269,7 @@ namespace opdet {
       darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, mean);
     }
   }
+
 
   double DigiArapucaSBNDAlg::FindMinimumTime(sim::SimPhotons const& simphotons)
   {
