@@ -245,8 +245,19 @@ namespace opdet {
 
   void DigiArapucaSBNDAlg::AddLineNoise(std::vector< double >& wave)
   {
-    // TODO: change it to use:
-    // CLHEP::RandGaussQ::shootArray(HepRandomEngine * anotherEngine, const int size, double * vect, double mean = 0.0, double stdDev = 1.0)
+    // TODO: after running the profiler I can see that this is where
+    // most cycles are being used.  Potentially some improvement could
+    // be achieved with the below code but the array dynamic allocation
+    // is not helping. The function would need to have it passed.
+    // ~icaza
+    //
+    // double *array = new double[wave.size()]();
+    // CLHEP::RandGaussQ::shootArray(fEngine, wave.size(), array, 0, fParams.BaselineRMS);
+    // for(size_t i = 0; i<wave.size(); i++) {
+    //   wave[i] += array[i];
+    // }
+    // delete array;
+    //
     std::transform(wave.begin(), wave.end(), wave.begin(),
                    [this](double w) -> double {
                      return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.BaselineRMS) ; });
