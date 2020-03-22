@@ -57,10 +57,10 @@ namespace opdet {
       double DarkNoiseRate;  //in Hz
       double CrossTalk;      //probability for producing a signal of 2 PE in response to 1 photon
       double Saturation;     //Saturation in number of p.e.
-      double ArapucaEffT1;   //Arapuca type 1 efficiency (optical window + cavity)
-      double ArapucaEffT2;   //Arapuca type 2 efficiency (optical window + cavity)
-      double ArapucaEffxT1;    //X-Arapuca T1 efficiency (optical window + cavity)
-      double ArapucaEffxT2;    //X-Arapuca T2 efficiency (optical window + cavity)
+      double ArapucaVUVEff;   //ArapucaVUV efficiency (optical window + cavity)
+      double ArapucaVISEff;   //ArapucaVIS efficiency (optical window + cavity)
+      double XArapucaVUVEff;    //XArapucaVUV efficiency (optical window + cavity)
+      double XArapucaVISEff;    //XArapucaVIS efficiency (optical window + cavity)
       double DecayTXArapucaVIS;// Decay time of EJ280 in ns
       std::string ArapucaDataFile; //File containing timing structure for arapucas
 
@@ -99,18 +99,18 @@ namespace opdet {
 
     double fSampling;        //wave sampling frequency (GHz)
     int pulsesize;
-    double fArapucaEffT1;
-    double fArapucaEffT2;
-    double fArapucaEffxT1;
-    double fArapucaEffxT2;
+    double fArapucaVUVEff;
+    double fArapucaVISEff;
+    double fXArapucaVUVEff;
+    double fXArapucaVISEff;
 
     double saturation;
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
-    TH1D* TimeArapucaT1; //histogram for getting the photon time distribution inside the arapuca T1 box (considering the optical window)
-    TH1D* TimeArapucaT2; //histogram for getting the photon time distribution inside the arapuca T2 box (considering the optical window)
-    TH1D* TimeArapucaX; //histogram for getting the photon time distribution inside the X-arapuca box (considering the optical window)
+    TH1D* TimeArapucaVUV; //histogram for getting the photon time distribution inside the Arapuca VUV box (considering the optical window)
+    TH1D* TimeArapucaVIS; //histogram for getting the photon time distribution inside the Arapuca VIS box (considering the optical window)
+    TH1D* TimeXArapucaVUV; //histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
 
     std::vector<double> wsp; //single photon pulse vector
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
@@ -205,24 +205,24 @@ namespace opdet {
         Comment("Saturation in number of p.e.")
       };
 
-      fhicl::Atom<double> arapucaEffT1 {
-        Name("ArapucaEffT1"),
-        Comment("Arapuca type 1 efficiency (optical window + cavity)")
+      fhicl::Atom<double> arapucaVUVEff {
+        Name("ArapucaVUVEff"),
+        Comment("Arapuca VUV efficiency (optical window + cavity)")
       };
 
-      fhicl::Atom<double> arapucaEffT2 {
-        Name("ArapucaEffT2"),
-        Comment("Arapuca type 2 efficiency (optical window + cavity)")
+      fhicl::Atom<double> arapucaVISEff {
+        Name("ArapucaVISEff"),
+        Comment("Arapuca VIS efficiency (optical window + cavity)")
       };
 
-      fhicl::Atom<double> arapucaEffxT1 {
-        Name("ArapucaEffxT1"),
-        Comment("X-Arapuca efficiency T1 (optical window + cavity)")
+      fhicl::Atom<double> xArapucaVUVEff {
+        Name("XArapucaVUVEff"),
+        Comment("XArapuca VUV efficiency (optical window + cavity)")
       };
 
-      fhicl::Atom<double> arapucaEffxT2 {
-        Name("ArapucaEffxT2"),
-        Comment("X-Arapuca efficiency T2 (optical window + cavity)")
+      fhicl::Atom<double> xArapucaVISEff {
+        Name("XArapucaVISEff"),
+        Comment("XArapuca VIS efficiency (optical window + cavity)")
       };
 
       fhicl::Atom<double> decayTXArapucaVIS {
@@ -232,7 +232,7 @@ namespace opdet {
 
       fhicl::Atom<std::string> arapucaDataFile {
         Name("ArapucaDataFile"),
-        Comment("File containing timing distribution for Arapuca T1 (optical window + cavity), Arapuca T2 (optical window + cavity), X-Arapuca T1 (optical window)")
+        Comment("File containing timing distribution for ArapucaVUV (optical window + cavity), ArapucaVIS (optical window + cavity), XArapuca VUV (optical window)")
       };
     };    //struct Config
 

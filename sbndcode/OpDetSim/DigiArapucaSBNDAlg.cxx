@@ -12,18 +12,18 @@ namespace opdet {
   DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     : fParams(config)
     , fSampling(fParams.timeService->OpticalClock().Frequency())
-    , fArapucaEffT1(fParams.ArapucaEffT1 / fParams.larProp->ScintPreScale())
-    , fArapucaEffT2(fParams.ArapucaEffT2 / fParams.larProp->ScintPreScale())
-    , fArapucaEffxT1(fParams.ArapucaEffxT1 / fParams.larProp->ScintPreScale())
-    , fArapucaEffxT2(fParams.ArapucaEffxT2 / fParams.larProp->ScintPreScale())
+    , fArapucaVUVEff(fParams.ArapucaVUVEff / fParams.larProp->ScintPreScale())
+    , fArapucaVISEff(fParams.ArapucaVISEff / fParams.larProp->ScintPreScale())
+    , fXArapucaVUVEff(fParams.XArapucaVUVEff / fParams.larProp->ScintPreScale())
+    , fXArapucaVISEff(fParams.XArapucaVISEff / fParams.larProp->ScintPreScale())
     , fEngine(fParams.engine)
   {
 
-    if(fArapucaEffT1 > 1.0001 || fArapucaEffT2 > 1.0001 ||
-       fArapucaEffxT1 > 1.0001 || fArapucaEffxT2 > 1.0001)
+    if(fArapucaVUVEff > 1.0001 || fArapucaVISEff > 1.0001 ||
+       fXArapucaVUVEff > 1.0001 || fXArapucaVISEff > 1.0001)
       std::cout << "WARNING: Quantum efficiency set in fhicl file "
-                << fParams.ArapucaEffT1 << " or " << fParams.ArapucaEffT2 << " or "
-                << fParams.ArapucaEffxT1 << " or " << fParams.ArapucaEffxT2
+                << fParams.ArapucaVUVEff << " or " << fParams.ArapucaVISEff << " or "
+                << fParams.XArapucaVUVEff << " or " << fParams.XArapucaVISEff
                 << " seems to be too large!\n"
                 << "Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time.\n"
                 << "Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
@@ -32,9 +32,9 @@ namespace opdet {
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.ArapucaDataFile, fname);
     TFile* file = TFile::Open(fname.c_str());
-    file->GetObject("TimeArapucaT1", TimeArapucaT1);
-    file->GetObject("TimeArapucaT2", TimeArapucaT2);
-    file->GetObject("TimeArapucaX", TimeArapucaX);
+    file->GetObject("TimeArapucaVUV", TimeArapucaVUV);
+    file->GetObject("TimeArapucaVIS", TimeArapucaVIS);
+    file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV);
 
     fSampling = fSampling / 1000; //in GHz to cancel with ns
     pulsesize = fParams.PulseLength * fSampling;
@@ -86,9 +86,9 @@ namespace opdet {
     double tphoton = 0;
     if(pdtype == "arapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT1) { //Sample a random subset according to Arapuca's efficiency
+        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVUVEff) { //Sample a random subset according to Arapuca's efficiency
           tphoton = simphotons[i].Time;
-          tphoton += (TimeArapucaT1->GetRandom());
+          tphoton += (TimeArapucaVUV->GetRandom());
           tphoton -= t_min;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
@@ -99,9 +99,9 @@ namespace opdet {
     }
     else if(pdtype == "arapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffT2) { //Sample a random subset according to Arapuca's efficiency.
+        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVISEff) { //Sample a random subset according to Arapuca's efficiency.
           tphoton = simphotons[i].Time;
-          tphoton += (TimeArapucaT2->GetRandom());
+          tphoton += (TimeArapucaVIS->GetRandom());
           tphoton -= t_min;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
@@ -112,9 +112,9 @@ namespace opdet {
     }
     else if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT1) {
+        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVUVEff) {
           tphoton = simphotons[i].Time;
-          tphoton += (TimeArapucaX->GetRandom());
+          tphoton += (TimeXArapucaVUV->GetRandom());
           tphoton -= t_min;
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
@@ -125,7 +125,7 @@ namespace opdet {
     }
     else if(pdtype == "xarapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaEffxT2) {
+        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVISEff) {
           tphoton = simphotons[i].Time;
           tphoton += (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
           tphoton -= t_min;
@@ -158,19 +158,19 @@ namespace opdet {
     // creating the waveforms for xarapuca_vis is different than the rest
     // so there's an overload for that which lacks the timeHisto
     if(pdtype == "arapuca_vuv"){
-      effT = fArapucaEffT1;
-      timeHisto = &TimeArapucaT1;
+      effT = fArapucaVUVEff;
+      timeHisto = &TimeArapucaVUV;
     }
     else if(pdtype == "arapuca_vis"){
-      effT = fArapucaEffT2;
-      timeHisto = &TimeArapucaT2;
+      effT = fArapucaVISEff;
+      timeHisto = &TimeArapucaVIS;
     }
     else if(pdtype == "xarapuca_vuv"){
-      effT = fArapucaEffxT1;
-      timeHisto = &TimeArapucaX;
+      effT = fXArapucaVUVEff;
+      timeHisto = &TimeXArapucaVUV;
     }
     else if(pdtype == "xarapuca_vis"){
-      effT = fArapucaEffxT2;
+      effT = fXArapucaVISEff;
       timeHisto = nullptr;
     }
     else{
@@ -346,10 +346,10 @@ namespace opdet {
     fBaseConfig.ADC               = config.voltageToADC();
     fBaseConfig.Baseline          = config.baseline();
     fBaseConfig.Saturation        = config.saturation();
-    fBaseConfig.ArapucaEffT1      = config.arapucaEffT1();
-    fBaseConfig.ArapucaEffT2      = config.arapucaEffT2();
-    fBaseConfig.ArapucaEffxT1     = config.arapucaEffxT1();
-    fBaseConfig.ArapucaEffxT2     = config.arapucaEffxT2();
+    fBaseConfig.ArapucaVUVEff     = config.arapucaVUVEff();
+    fBaseConfig.ArapucaVISEff     = config.arapucaVISEff();
+    fBaseConfig.XArapucaVUVEff    = config.xArapucaVUVEff();
+    fBaseConfig.XArapucaVISEff    = config.xArapucaVISEff();
     fBaseConfig.RiseTime          = config.riseTime();
     fBaseConfig.FallTime          = config.fallTime();
     fBaseConfig.MeanAmplitude     = config.meanAmplitude();
