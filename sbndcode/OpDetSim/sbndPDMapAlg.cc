@@ -1,4 +1,4 @@
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 
 //------------------------------------------------------------------------------

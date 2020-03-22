@@ -1,14 +1,23 @@
-#ifndef SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
-#define SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
+////////////////////////////////////////////////////////////////////////
+// Class:       opDetDigitizerWorker
+//
+// This module handles the calls to the digitization functions
+// Created by G. Putnam and I.L. de Icaza
+////////////////////////////////////////////////////////////////////////
 
+#ifndef SBND_OPDETSIM_OPDETDIGITIZERWORKER_HH
+#define SBND_OPDETSIM_OPDETDIGITIZERWORKER_HH
+
+#include <unordered_map>
 #include <vector>
 #include <mutex>
 #include <condition_variable>
+// #include <memory>
 
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
-#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.h"
-#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.h"
-#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.hh"
+#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.hh"
+#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.hh"
 
 namespace opdet {
 
@@ -20,13 +29,13 @@ namespace opdet {
       opdet::DigiPMTSBNDAlgMaker makePMTDigi;
       opdet::DigiArapucaSBNDAlgMaker makeArapucaDigi;
 
-      opdet::sbndPDMapAlg map;  //map for photon detector types
-      unsigned int nChannels = map.size();
+      opdet::sbndPDMapAlg pdsMap;  //map for photon detector types
+      unsigned int nChannels = pdsMap.size();
 
       unsigned nThreads;
 
       art::InputTag InputModuleName;
-      int UseLitePhotons; //1 for using SimLitePhotons and 0 for SimPhotons (more complete)
+      bool UseSimPhotonsLite; // SimPhotons have more information that SimPhotonsLite
 
       std::array<double, 2> EnableWindow;
       double Sampling;       //wave sampling frequency (GHz)
@@ -73,9 +82,15 @@ namespace opdet {
   private:
     unsigned NChannelsToProcess(unsigned n) const;
     unsigned StartChannelToProcess(unsigned n) const;
-    void CreateDirectPhotonMapLite(std::map<int, sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles) const;
-    void CreateDirectPhotonMap(std::map<int, sim::SimPhotons>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles) const;
-    void MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const;
+    void CreateDirectPhotonMap(
+      std::unordered_map<int, sim::SimPhotons>& auxmap,
+      std::vector<art::Handle<std::vector<sim::SimPhotons>>> photon_handles) const;
+    void CreateDirectPhotonMapLite(
+      std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
+      std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> photon_handles) const;
+    void MakeWaveforms(
+      opdet::DigiPMTSBNDAlg *pmtDigitizer,
+      opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const;
 
     Config fConfig;
     unsigned fThreadNo;
@@ -90,8 +105,11 @@ namespace opdet {
 
   void StartopDetDigitizerWorkers(unsigned n_workers, opDetDigitizerWorker::Semaphore &sem_start);
   void WaitopDetDigitizerWorkers(unsigned n_workers, opDetDigitizerWorker::Semaphore &sem_finish);
-  void opDetDigitizerWorkerThread(const opDetDigitizerWorker &worker, opDetDigitizerWorker::Semaphore &sem_start, opDetDigitizerWorker::Semaphore &sem_finish, bool ApplyTriggerLocations, bool *finished);
+  void opDetDigitizerWorkerThread(const opDetDigitizerWorker &worker,
+                                  opDetDigitizerWorker::Semaphore &sem_start,
+                                  opDetDigitizerWorker::Semaphore &sem_finish,
+                                  bool ApplyTriggerLocations, bool *finished);
 
 } // end namespace opdet
 
-#endif //SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
+#endif // SBND_OPDETSIM_OPDETDIGITIZERWORKER_HH

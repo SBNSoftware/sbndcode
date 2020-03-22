@@ -45,7 +45,7 @@
 #include "TRandom3.h"
 #include "TF1.h"
 
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 namespace opdet {
 

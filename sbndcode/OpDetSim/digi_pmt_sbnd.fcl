@@ -28,9 +28,8 @@ sbnd_digipmt_alg:
 
   QEDirect:                  0.03    #PMT quantum efficiency for direct (VUV) light
   QERefl:                    0.03    #PMT quantum efficiency for reflected (TPB converted) light
-  # TPBFile:                   "tpb.dat"           #file for TPB emission spectrum
-  # TestBenchPEFile:           "testbench_pe.dat"  #file for test bench single pe
   SinglePEmodel:             false   # false for ideal PMT response, true for test bench measured response
+  PMTDataFile:               "OpDetSim/digi_pmt_sbnd.root"
 }
 
 END_PROLOG

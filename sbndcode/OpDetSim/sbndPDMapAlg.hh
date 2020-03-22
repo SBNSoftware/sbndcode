@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// File:        sbndPDMapAlg.h
+// File:        sbndPDMapAlg.hh
 // Authors: Laura Paulucci, Franciole Marinho, and Iker de Icaza
 //
 // Updates: 2020-03, v08_45_00. Iker de Icaza icaza@fnal.gov
@@ -17,8 +17,8 @@
 // xarapuca_pos: top, bottom, null
 ////////////////////////////////////////////////////////////////////////
 
-#ifndef SBND_OPDETSIM_SBNDPDMAPALG_H
-#define SBND_OPDETSIM_SBNDPDMAPALG_H
+#ifndef SBND_OPDETSIM_SBNDPDMAPALG_HH
+#define SBND_OPDETSIM_SBNDPDMAPALG_HH
 
 #include <algorithm>
 #include <fstream>
@@ -70,4 +70,4 @@ namespace opdet {
 
 } // namespace
 
-#endif // SBND_OPDETSIM_SBNDPDMAPALG_H
+#endif // SBND_OPDETSIM_SBNDPDMAPALG_HH
