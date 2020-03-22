@@ -136,8 +136,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
   if(fConfig.UseSimPhotonsLite) {
     const std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> &photon_handles = *fPhotonLiteHandles;
     // to temporarily store channel and combine PMT (direct and converted) time profiles
-    std::unordered_map<int, sim::SimPhotonsLite> auxmap;
-    CreateDirectPhotonMapLite(auxmap, photon_handles);
+    std::unordered_map<int, sim::SimPhotonsLite> directPhotonsOnPMTS;
+    CreateDirectPhotonMapLite(directPhotonsOnPMTS, photon_handles);
 
     unsigned start = StartChannelToProcess(fConfig.nChannels);
     unsigned n = NChannelsToProcess(fConfig.nChannels);
@@ -155,9 +155,9 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           pmtDigitizer->ConstructWaveformLite(ch,
                                               litesimphotons,
                                               waveform,
-                                              auxmap,
                                               fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                               pdtype,
+                                              directPhotonsOnPMTS,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -225,9 +225,9 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
   }
   else { // for SimPhotons
     // to temporarily store channel and direct light distribution
-    std::unordered_map<int, sim::SimPhotons> auxmap;
+    std::unordered_map<int, sim::SimPhotons> directPhotonsOnPMTS;
     const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
-    CreateDirectPhotonMap(auxmap, photon_handles);
+    CreateDirectPhotonMap(directPhotonsOnPMTS, photon_handles);
 
     unsigned start = StartChannelToProcess(fConfig.nChannels);
     unsigned n = NChannelsToProcess(fConfig.nChannels);
@@ -244,9 +244,9 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           pmtDigitizer->ConstructWaveform(ch,
                                           simphotons,
                                           waveform,
-                                          auxmap,
                                           pdtype,
                                           fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
+                                          directPhotonsOnPMTS,
                                           fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -316,7 +316,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
 
 
 void opdet::opDetDigitizerWorker::CreateDirectPhotonMap(
-  std::unordered_map<int, sim::SimPhotons>& auxmap,
+  std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS,
   std::vector<art::Handle<std::vector<sim::SimPhotons>>> photon_handles) const
 {
   int ch;
@@ -329,15 +329,15 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMap(
     bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
     for (auto const& simphotons : (*pmtHandle)) {
       ch = simphotons.OpChannel();
-        auxmap.insert(std::make_pair(ch, simphotons));
       if(fConfig.pdsMap.isPDType(ch, "pmt_coated") && !Reflected)
+        directPhotonsOnPMTS.insert(std::make_pair(ch, simphotons));
     }
   }
 }
 
 
 void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(
-  std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
+  std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS,
   std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> photon_handles) const
 {
   int ch;
@@ -350,8 +350,8 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(
     bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
     for (auto const& litesimphotons : (*pmtHandle)) {
       ch = litesimphotons.OpChannel;
-        auxmap.insert(std::make_pair(ch, litesimphotons));
       if(fConfig.pdsMap.isPDType(ch, "pmt_coated"))
+        directPhotonsOnPMTS.insert(std::make_pair(ch, litesimphotons));
     }
   }
 }
