@@ -2,7 +2,7 @@
 // File:       DigiArapucaSBNDAlg.h
 //
 // This algorithm is used for the electronic response of arapucas
-// Created by L. Paulucci and F. Marinho
+// Created by L. Paulucci, F. Marinho and I.L. de Icaza
 // Based on OpDetDigitizerDUNE_module.cc and SimPMTSBND_module.cc
 ////////////////////////////////////////////////////////////////////////
 

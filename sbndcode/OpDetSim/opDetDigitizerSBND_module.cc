@@ -3,8 +3,8 @@
 // Module Type: producer
 // File:        opDetDigitizerSBND_module.cc
 //
-// Generated at Fri Apr  5 09:21:15 2019 by Laura Paulucci Marinho using artmod
-// from cetpkgsupport v1_14_01.
+// This module produces digitized waveforms of the optical detectors
+// Created by L. Paulucci, F. Marinho, and I.L. de Icaza
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"

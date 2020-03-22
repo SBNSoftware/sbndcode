@@ -1,3 +1,10 @@
+////////////////////////////////////////////////////////////////////////
+// Class:       opDetDigitizerWorker
+//
+// This module handles the calls to the digitization functions
+// Created by G. Putnam and I.L. de Icaza
+////////////////////////////////////////////////////////////////////////
+
 #ifndef SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
 #define SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
 

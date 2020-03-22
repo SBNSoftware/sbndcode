@@ -2,7 +2,7 @@
 //// File:        DigiPMTSBNDAlg.h
 ////
 //// This algorithm is used for the electronic response of PMTs
-//// Created by L. Paulucci and F. Marinho
+//// Created by L. Paulucci, F. Marinho, and I.L. de Icaza
 //// Based on OpDetDigitizerDUNE_module.cc
 //////////////////////////////////////////////////////////////////////////
 
