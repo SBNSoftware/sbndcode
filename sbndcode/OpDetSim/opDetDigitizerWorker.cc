@@ -138,6 +138,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     // to temporarily store channel and combine PMT (direct and converted) time profiles
     std::unordered_map<int, sim::SimPhotonsLite> directPhotonsOnPMTS;
     CreateDirectPhotonMapLite(directPhotonsOnPMTS, photon_handles);
+    double startTime = fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/;
 
     unsigned start = StartChannelToProcess(fConfig.nChannels);
     unsigned n = NChannelsToProcess(fConfig.nChannels);
@@ -155,9 +156,9 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           pmtDigitizer->ConstructWaveformLite(ch,
                                               litesimphotons,
                                               waveform,
-                                              fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                               pdtype,
                                               directPhotonsOnPMTS,
+                                              startTime,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -170,8 +171,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           arapucaDigitizer->ConstructWaveformLite(ch,
                                                   litesimphotons,
                                                   waveform,
-                                                  fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                                   pdtype,
+                                                  startTime,
                                                   fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -191,8 +192,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           arapucaDigitizer->ConstructWaveformLite(ch,
                                                   auxLite,
                                                   waveform,
-                                                  fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                                   pdtype,
+                                                  startTime,
                                                   fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -212,8 +213,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           arapucaDigitizer->ConstructWaveformLite(ch,
                                                   auxLite,
                                                   waveform,
-                                                  fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                                   pdtype,
+                                                  startTime,
                                                   fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -228,6 +229,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     std::unordered_map<int, sim::SimPhotons> directPhotonsOnPMTS;
     const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
     CreateDirectPhotonMap(directPhotonsOnPMTS, photon_handles);
+    double startTime = fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/;
 
     unsigned start = StartChannelToProcess(fConfig.nChannels);
     unsigned n = NChannelsToProcess(fConfig.nChannels);
@@ -245,8 +247,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                           simphotons,
                                           waveform,
                                           pdtype,
-                                          fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                           directPhotonsOnPMTS,
+                                          startTime,
                                           fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -260,7 +262,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                               simphotons,
                                               waveform,
                                               pdtype,
-                                              fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
+                                              startTime,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -281,7 +283,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                               auxPhotons,
                                               waveform,
                                               pdtype,
-                                              fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
+                                              startTime,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -302,7 +304,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                               auxPhotons,
                                               waveform,
                                               pdtype,
-                                              fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
+                                              startTime,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
