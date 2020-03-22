@@ -122,6 +122,17 @@ namespace opdet {
                               double t_min,
                               std::vector<double>& wave,
                               std::string pdtype);
+    void SinglePDWaveformCreatorLite(double randFlat,
+                                     double effT,
+                                     TH1D** timeHisto,
+                                     std::vector<double>& wave,
+                                     std::pair<int, int> const& photonMember, // TODO: better name
+                                     double const& t_min);
+    void SinglePDWaveformCreatorLite(double randFlat,
+                                     double effT,
+                                     std::vector<double>& wave,
+                                     std::pair<int, int> const& photonMember, // TODO: better name
+                                     double const& t_min);
     void AddSPE(size_t time_bin, std::vector<double>& wave, int nphotons); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
     void AddLineNoise(std::vector<double>& wave);
