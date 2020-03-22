@@ -39,6 +39,7 @@ namespace opdet {
     //Default destructor
     ~sbndPDMapAlg();
 
+    nlohmann::json getCollectionWithProperty(std::string property);
     template<typename T> nlohmann::json getCollectionWithProperty(std::string property, T property_value);
 
     // struct Config {};
