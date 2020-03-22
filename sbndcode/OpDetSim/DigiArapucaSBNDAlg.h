@@ -61,6 +61,7 @@ namespace opdet {
       double ArapucaEffT2;   //Arapuca type 2 efficiency (optical window + cavity)
       double ArapucaEffxT1;    //X-Arapuca T1 efficiency (optical window + cavity)
       double ArapucaEffxT2;    //X-Arapuca T2 efficiency (optical window + cavity)
+      double DecayTXArapucaVIS;// Decay time of EJ280 in ns
       std::string ArapucaDataFile; //File containing timing structure for arapucas
 
       detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
@@ -222,6 +223,11 @@ namespace opdet {
       fhicl::Atom<double> arapucaEffxT2 {
         Name("ArapucaEffxT2"),
         Comment("X-Arapuca efficiency T2 (optical window + cavity)")
+      };
+
+      fhicl::Atom<double> decayTXArapucaVIS {
+        Name("DecayTXArapucaVIS"),
+        Comment("X-Arapuca VIS decay time of EJ280 in ns")
       };
 
       fhicl::Atom<std::string> arapucaDataFile {

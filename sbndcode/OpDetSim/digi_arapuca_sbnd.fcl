@@ -23,6 +23,7 @@ sbnd_digiarapuca_alg:
   ArapucaEffT2:       0.0189  #Arapuca T2 efficiency (taking into account 70% mesh transparency 0.027*0.7)
   ArapucaEffxT1:      0.021   #X-Arapuca T1 efficiency (taking into account 70% mesh transparency 0.03*0.7)
   ArapucaEffxT2:      0.0014  #X-Arapuca T2 efficiency (taking into account 70% mesh transparency 0.02*0.7)
+  DecayTXArapuca_VIS:        8.5     # decay time of EJ280 in ns
   ArapucaDataFile:    "OpDetSim/digi_arapuca_sbnd.root"
 }
 

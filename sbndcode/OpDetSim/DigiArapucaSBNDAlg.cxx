@@ -224,7 +224,6 @@ namespace opdet {
   void DigiArapucaSBNDAlg::SinglePDWaveformCreatorLite(
     double randFlat,
     double effT,
-    // TH1D** timeHisto,
     std::vector<double>& wave,
     std::pair<int, int> const& photonMember, // TODO: better name
     double const& t_min
@@ -233,7 +232,7 @@ namespace opdet {
     if(randFlat < effT) {
       double tphoton;
       int nCT;
-      tphoton = (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
+      tphoton = (CLHEP::RandExponential::shoot(fEngine, fParams.DecayTXArapucaVIS));
       tphoton += photonMember.first - t_min;
       if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
       else nCT = 1;
@@ -359,6 +358,7 @@ namespace opdet {
     fBaseConfig.CrossTalk         = config.crossTalk();
     fBaseConfig.PulseLength       = config.pulseLength();
     fBaseConfig.PeakTime          = config.peakTime();
+    fBaseConfig.DecayTXArapucaVIS = config.decayTXArapucaVIS();
     fBaseConfig.ArapucaDataFile   = config.arapucaDataFile();
 
   }
