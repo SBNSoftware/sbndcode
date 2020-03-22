@@ -182,8 +182,14 @@ namespace opdet {
     double const& t_min
     )
   {
+    // TODO: check that this new approach of not using the last
+    // (1-accepted_photons) doesn't introduce some bias
+    double meanPhotons;
+    int acceptedPhotons;
     for (auto const& photonMember : photonMap) {
-      for(int i = 0; i < photonMember.second; i++) {
+      meanPhotons = photonMember.second*effT;
+      acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
+      for(int i = 0; i < acceptedPhotons; i++) {
         double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
         if(randFlat < effT) {
           double tphoton;
@@ -208,8 +214,14 @@ namespace opdet {
     double const& t_min
     )
   {
+    double meanPhotons;
+    int acceptedPhotons;
     for (auto const& photonMember : photonMap) {
-      for(int i = 0; i < photonMember.second; i++) {
+      // TODO: check that this new approach of not using the last
+      // (1-accepted_photons) doesn't introduce some bias
+      meanPhotons = photonMember.second*effT;
+      acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
+      for(int i = 0; i < acceptedPhotons; i++) {
         double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
         if(randFlat < effT) {
           double tphoton;
