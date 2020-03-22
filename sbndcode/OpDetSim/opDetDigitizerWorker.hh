@@ -5,8 +5,8 @@
 // Created by G. Putnam and I.L. de Icaza
 ////////////////////////////////////////////////////////////////////////
 
-#ifndef SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
-#define SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
+#ifndef SBND_OPDETSIM_OPDETDIGITIZERWORKER_HH
+#define SBND_OPDETSIM_OPDETDIGITIZERWORKER_HH
 
 #include <unordered_map>
 #include <vector>
@@ -14,10 +14,10 @@
 #include <condition_variable>
 // #include <memory>
 
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
-#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.h"
-#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.h"
-#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.hh"
+#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.hh"
+#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.hh"
 
 namespace opdet {
 
@@ -112,4 +112,4 @@ namespace opdet {
 
 } // end namespace opdet
 
-#endif //SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
+#endif // SBND_OPDETSIM_OPDETDIGITIZERWORKER_HH

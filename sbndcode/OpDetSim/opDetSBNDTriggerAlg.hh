@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////
-//// File:        opDetSBNDTriggerAlg.h
+//// File:        opDetSBNDTriggerAlg.hh
 ////
 //// This algorithm emulates the behavior of the SBND trigger going
 //// to the photon detection system. Created by Gray Putnam
 //// <grayputnam@uchicago.edu>
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef SBND_OPDETSIM_OPDETSBNDTRIGGERALG_H
-#define SBND_OPDETSIM_OPDETSBNDTRIGGERALG_H
+#ifndef SBND_OPDETSIM_OPDETSBNDTRIGGERALG_HH
+#define SBND_OPDETSIM_OPDETSBNDTRIGGERALG_HH
 
 #include "fhiclcpp/types/Atom.h"
 #include "fhiclcpp/types/Sequence.h"
@@ -34,7 +34,7 @@
 #include "TF1.h"
 #include "TH1D.h"
 
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 namespace opdet {
 
@@ -260,4 +260,4 @@ namespace opdet {
 
 } //namespace
 
-#endif //SBND_OPDETSIM_OPDETSBNDTRIGGERALG
+#endif // SBND_OPDETSIM_OPDETSBNDTRIGGERALG_HH

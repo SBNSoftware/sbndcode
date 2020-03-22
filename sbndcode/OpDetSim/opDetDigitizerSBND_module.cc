@@ -48,11 +48,11 @@
 #include "TRandom3.h"
 #include "TF1.h"
 
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
-#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.h"
-#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.h"
-#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.h"
-#include "sbndcode/OpDetSim/opDetDigitizerWorker.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.hh"
+#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.hh"
+#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.hh"
+#include "sbndcode/OpDetSim/opDetDigitizerWorker.hh"
 
 namespace opdet {
 

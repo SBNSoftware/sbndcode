@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////
-// File:       DigiArapucaSBNDAlg.h
+// File:       DigiArapucaSBNDAlg.hh
 //
 // This algorithm is used for the electronic response of arapucas
 // Created by L. Paulucci, F. Marinho and I.L. de Icaza
 // Based on OpDetDigitizerDUNE_module.cc and SimPMTSBND_module.cc
 ////////////////////////////////////////////////////////////////////////
 
-#ifndef SBND_OPDETSIM_DIGIARAPUCASBNDALG_H
-#define SBND_OPDETSIM_DIGIARAPUCASBNDALG_H
+#ifndef SBND_OPDETSIM_DIGIARAPUCASBNDALG_HH
+#define SBND_OPDETSIM_DIGIARAPUCASBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -250,4 +250,4 @@ namespace opdet {
 
 } //namespace
 
-#endif //SBND_OPDETSIM_DIGIARAPUCASBNDALG
+#endif // SBND_OPDETSIM_DIGIARAPUCASBNDALG_HH

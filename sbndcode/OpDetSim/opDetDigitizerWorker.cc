@@ -1,6 +1,6 @@
 // TODO: plenty of refactoring potential in here! ~icaza
 
-#include "sbndcode/OpDetSim/opDetDigitizerWorker.h"
+#include "sbndcode/OpDetSim/opDetDigitizerWorker.hh"
 
 opdet::opDetDigitizerWorker::Config::Config(const opdet::DigiPMTSBNDAlgMaker::Config &pmt_config,
                                             const opdet::DigiArapucaSBNDAlgMaker::Config &arapuca_config):

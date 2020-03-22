@@ -1,4 +1,4 @@
-#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.h"
+#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.hh"
 
 //------------------------------------------------------------------------------
 //--- opdet::simpmtsbndAlg implementation

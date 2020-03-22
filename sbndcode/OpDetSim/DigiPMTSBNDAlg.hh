@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////
-//// File:        DigiPMTSBNDAlg.h
+//// File:        DigiPMTSBNDAlg.hh
 ////
 //// This algorithm is used for the electronic response of PMTs
 //// Created by L. Paulucci, F. Marinho, and I.L. de Icaza
 //// Based on OpDetDigitizerDUNE_module.cc
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef SBND_OPDETSIM_DIGIPMTSBNDALG_H
-#define SBND_OPDETSIM_DIGIPMTSBNDALG_H
+#ifndef SBND_OPDETSIM_DIGIPMTSBNDALG_HH
+#define SBND_OPDETSIM_DIGIPMTSBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -241,4 +241,4 @@ namespace opdet {
 
 } // namespace opdet
 
-#endif //SBND_OPDETSIM_DIGIPMTSBNDALG
+#endif //SBND_OPDETSIM_DIGIPMTSBNDALG_HH

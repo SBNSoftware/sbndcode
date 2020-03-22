@@ -1,7 +1,4 @@
-#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.h"
-
-#ifndef SBND_OPDETSIM_DIGIARAPUCASBNDALG_CXX
-#define SBND_OPDETSIM_DIGIARAPUCASBNDALG_CXX
+#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.hh"
 
 //------------------------------------------------------------------------------
 //--- opdet::simarapucasbndAlg implementation
@@ -376,5 +373,3 @@ namespace opdet {
   } // DigiArapucaSBNDAlgMaker::create()
 
 }
-
-#endif //SBND_OPDETSIM_DIGIARAPUCASBNDALG_CXX
