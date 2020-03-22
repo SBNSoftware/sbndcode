@@ -22,8 +22,8 @@ namespace opdet {
       opdet::DigiPMTSBNDAlgMaker makePMTDigi;
       opdet::DigiArapucaSBNDAlgMaker makeArapucaDigi;
 
-      opdet::sbndPDMapAlg map;  //map for photon detector types
-      unsigned int nChannels = map.size();
+      opdet::sbndPDMapAlg pdsMap;  //map for photon detector types
+      unsigned int nChannels = pdsMap.size();
 
       unsigned nThreads;
 

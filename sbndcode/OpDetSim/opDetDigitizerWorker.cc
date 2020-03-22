@@ -1,5 +1,4 @@
 // TODO: plenty of refactoring potential in here! ~icaza
-// TODO: map.isPDType and map.pdType are called a bunch of times, maybe it could be saved into a variable?
 
 #include "sbndcode/OpDetSim/opDetDigitizerWorker.h"
 
@@ -110,8 +109,8 @@ opdet::opDetDigitizerWorker::~opDetDigitizerWorker()
 
 void opdet::opDetDigitizerWorker::ApplyTriggerLocations() const
 {
-  unsigned start = StartChannelToProcess(fConfig.map.size());
-  unsigned n = NChannelsToProcess(fConfig.map.size());
+  unsigned start = StartChannelToProcess(fConfig.nChannels);
+  unsigned n = NChannelsToProcess(fConfig.nChannels);
 
   fTriggeredWaveforms->clear();
 
@@ -133,30 +132,32 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                                 opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const
 {
   unsigned ch, channel;
+  std::string pdtype;
   if(fConfig.UseSimPhotonsLite) {
     const std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> &photon_handles = *fPhotonLiteHandles;
     // to temporarily store channel and combine PMT (direct and converted) time profiles
     std::unordered_map<int, sim::SimPhotonsLite> auxmap;
     CreateDirectPhotonMapLite(auxmap, photon_handles);
 
-    unsigned start = StartChannelToProcess(fConfig.map.size());
-    unsigned n = NChannelsToProcess(fConfig.map.size());
+    unsigned start = StartChannelToProcess(fConfig.nChannels);
+    unsigned n = NChannelsToProcess(fConfig.nChannels);
     for (const art::Handle<std::vector<sim::SimPhotonsLite>> &opdetHandle : photon_handles) {
       // this now tells you if light collection is reflected
       bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       for (auto const& litesimphotons : (*opdetHandle)) {
         std::vector<short unsigned int> waveform;
         ch = litesimphotons.OpChannel;
-        // only work on the perscribed channels
+        pdtype = fConfig.pdsMap.pdType(ch);
+        // only work on the prescribed channels
         if (ch < start || ch >= start + n) continue;
         if((Reflected) &&
-           (fConfig.map.isPDType(ch, "pmt_uncoated") || fConfig.map.isPDType(ch, "pmt_coated") )) { //All PMT channels
+           ( (pdtype == "pmt_uncoated") || (pdtype == "pmt_coated")) ) { //All PMT channels
           pmtDigitizer->ConstructWaveformLite(ch,
                                               litesimphotons,
                                               waveform,
-                                              fConfig.map.pdType(ch),
                                               auxmap,
                                               fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
+                                              pdtype,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -164,13 +165,13 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                                   waveform);
         }
         // getting only arapuca channels with appropriate type of light
-        else if((fConfig.map.isPDType(ch, "arapuca_vuv") && !Reflected) ||
-                (fConfig.map.isPDType(ch, "arapuca_vis") && Reflected) ) {
+        else if((pdtype == "arapuca_vuv" && !Reflected) ||
+                (pdtype == "arapuca_vis" && Reflected) ) {
           arapucaDigitizer->ConstructWaveformLite(ch,
                                                   litesimphotons,
                                                   waveform,
-                                                  fConfig.map.pdType(ch),
                                                   fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
+                                                  pdtype,
                                                   fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -180,7 +181,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         // getting only xarapuca channels with appropriate type of light
         // (this separation is needed because xarapucas are set as
         // two different optical channels but are actually only one readout channel)
-        else if((fConfig.map.isPDType(ch, "xarapuca_vuv") && !Reflected)) {
+        else if((pdtype == "xarapuca_vuv" && !Reflected)) {
           sim::SimPhotonsLite auxLite;
           for (auto const& litesimphotons : (*opdetHandle)) {
             channel = litesimphotons.OpChannel;
@@ -190,8 +191,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           arapucaDigitizer->ConstructWaveformLite(ch,
                                                   auxLite,
                                                   waveform,
-                                                  fConfig.map.pdType(ch),
                                                   fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
+                                                  pdtype,
                                                   fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -201,7 +202,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         // getting only xarapuca channels with appropriate type of light
         // (this separation is needed because xarapucas are set as
         // two different optical channels but are actually only one readout channel)
-        else if((fConfig.map.isPDType(ch, "xarapuca_vis") && Reflected)) {
+        else if(pdtype == "xarapuca_vis" && Reflected) {
           sim::SimPhotonsLite auxLite;
           for (auto const& litesimphotons : (*opdetHandle)) {
             channel = litesimphotons.OpChannel;
@@ -211,8 +212,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           arapucaDigitizer->ConstructWaveformLite(ch,
                                                   auxLite,
                                                   waveform,
-                                                  fConfig.map.pdType(ch),
                                                   fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
+                                                  pdtype,
                                                   fConfig.Nsamples);
           // including pre trigger window and transit time
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
@@ -228,22 +229,23 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
     CreateDirectPhotonMap(auxmap, photon_handles);
 
-    unsigned start = StartChannelToProcess(fConfig.map.size());
-    unsigned n = NChannelsToProcess(fConfig.map.size());
+    unsigned start = StartChannelToProcess(fConfig.nChannels);
+    unsigned n = NChannelsToProcess(fConfig.nChannels);
     for (const art::Handle<std::vector<sim::SimPhotons>> &opdetHandle : photon_handles) {
       bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       for (auto const& simphotons : (*opdetHandle)) {
         std::vector<short unsigned int> waveform;
         ch = simphotons.OpChannel();
-        // only work on the perscribed channels
+        pdtype = fConfig.pdsMap.pdType(ch);
+        // only work on the prescribed channels
         if (ch < start || ch >= start + n) continue;
         // all PMTs
-        if((Reflected) && (fConfig.map.isPDType(ch, "pmt_uncoated") || fConfig.map.isPDType(ch, "pmt_coated"))) {
+        if((Reflected) && (pdtype == "pmt_uncoated" || pdtype == "pmt_coated")) {
           pmtDigitizer->ConstructWaveform(ch,
                                           simphotons,
                                           waveform,
-                                          fConfig.map.pdType(ch),
                                           auxmap,
+                                          pdtype,
                                           fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                           fConfig.Nsamples);
           // including pre trigger window and transit time
@@ -252,12 +254,12 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                                   waveform);
         }
         // getting only arapuca channels with appropriate type of light
-        if((fConfig.map.isPDType(ch, "arapuca_vuv") && !Reflected) ||
-           (fConfig.map.isPDType(ch, "arapuca_vis") && Reflected) ) {
+        if((pdtype == "arapuca_vuv" && !Reflected) ||
+           (pdtype == "arapuca_vis" && Reflected)) {
           arapucaDigitizer->ConstructWaveform(ch,
                                               simphotons,
                                               waveform,
-                                              fConfig.map.pdType(ch),
+                                              pdtype,
                                               fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
@@ -268,7 +270,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         // getting only xarapuca channels with appropriate type of light
         // (this separation is needed because xarapucas are set as
         // two different optical channels but are actually only one readout channel)
-        if((fConfig.map.isPDType(ch, "xarapuca_vuv") && !Reflected)) {
+        if(pdtype == "xarapuca_vuv" && !Reflected) {
           sim::SimPhotons auxPhotons;
           for (auto const& simphotons : (*opdetHandle)) {
             channel = simphotons.OpChannel();
@@ -278,7 +280,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           arapucaDigitizer->ConstructWaveform(ch,
                                               auxPhotons,
                                               waveform,
-                                              fConfig.map.pdType(ch),
+                                              pdtype,
                                               fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
@@ -289,7 +291,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         // getting only xarapuca channels with appropriate type of light
         // (this separation is needed because xarapucas are set as
         // two different optical channels but are actually only one readout channel)
-        if((fConfig.map.isPDType(ch, "xarapuca_vis") && !Reflected)) {
+        if(pdtype == "xarapuca_vis" && Reflected) {
           sim::SimPhotons auxPhotons;
           for (auto const& simphotons : (*opdetHandle)) {
             channel = simphotons.OpChannel();
@@ -299,7 +301,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           arapucaDigitizer->ConstructWaveform(ch,
                                               auxPhotons,
                                               waveform,
-                                              fConfig.map.pdType(ch),
+                                              pdtype,
                                               fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/,
                                               fConfig.Nsamples);
           // including pre trigger window and transit time
@@ -327,8 +329,8 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMap(
     bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
     for (auto const& simphotons : (*pmtHandle)) {
       ch = simphotons.OpChannel();
-      if(fConfig.map.isPDType(ch, "pmt_coated") && !Reflected)
         auxmap.insert(std::make_pair(ch, simphotons));
+      if(fConfig.pdsMap.isPDType(ch, "pmt_coated") && !Reflected)
     }
   }
 }
@@ -348,8 +350,8 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(
     bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
     for (auto const& litesimphotons : (*pmtHandle)) {
       ch = litesimphotons.OpChannel;
-      if(fConfig.map.isPDType(ch, "pmt_coated") && !Reflected)
         auxmap.insert(std::make_pair(ch, litesimphotons));
+      if(fConfig.pdsMap.isPDType(ch, "pmt_coated"))
     }
   }
 }
