@@ -151,46 +151,22 @@ namespace opdet {
     std::vector<double>& wave,
     std::string pdtype)
   {
-
-    // double width = 1.0;
-    double effT;
-    TH1D** timeHisto = nullptr;
-    // creating the waveforms for xarapuca_vis is different than the rest
-    // so there's an overload for that which lacks the timeHisto
     if(pdtype == "xarapuca_vuv"){
-      effT = fXArapucaVUVEff;
-      timeHisto = &TimeXArapucaVUV;
+      SinglePDWaveformCreatorLite(fXArapucaVUVEff, &TimeXArapucaVUV, wave, photonMap, t_min);
     }
     else if(pdtype == "xarapuca_vis"){
-      effT = fXArapucaVISEff;
-      timeHisto = nullptr;
+      // creating the waveforms for xarapuca_vis is different than the rest
+      // so there's an overload for that which lacks the timeHisto
+      SinglePDWaveformCreatorLite(fXArapucaVISEff, wave, photonMap, t_min);
     }
     else if(pdtype == "arapuca_vuv"){
-      effT = fArapucaVUVEff;
-      timeHisto = &TimeArapucaVUV;
+      SinglePDWaveformCreatorLite(fArapucaVUVEff, &TimeArapucaVUV, wave, photonMap, t_min);
     }
     else if(pdtype == "arapuca_vis"){
-      effT = fArapucaVISEff;
-      timeHisto = &TimeArapucaVIS;
+      SinglePDWaveformCreatorLite(fArapucaVISEff, &TimeArapucaVIS, wave, photonMap, t_min);
     }
     else{
       throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
-    }
-    if(pdtype == "xarapuca_vuv" || pdtype == "arapuca_vuv" || pdtype == "arapuca_vis"){
-      for (auto const& mapMember : photonMap) {
-        for(int i = 0; i < mapMember.second; i++) {
-          double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
-          SinglePDWaveformCreatorLite(randFlat, effT, timeHisto, wave, mapMember, t_min);
-        }
-      }
-    }
-    else if(pdtype == "xarapuca_vis"){
-      for (auto const& mapMember : photonMap) {
-        for(int i = 0; i < mapMember.second; i++) {
-          double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
-          SinglePDWaveformCreatorLite(randFlat, effT, wave, mapMember, t_min);
-        }
-      }
     }
     if(fParams.BaselineRMS > 0.0) AddLineNoise(wave);
     if(fParams.DarkNoiseRate > 0.0) AddDarkNoise(wave);
@@ -199,48 +175,55 @@ namespace opdet {
 
 
   void DigiArapucaSBNDAlg::SinglePDWaveformCreatorLite(
-    double randFlat,
     double effT,
     TH1D** timeHisto,
     std::vector<double>& wave,
-    std::pair<int, int> const& photonMember, // TODO: better name
+    std::map<int, int> const& photonMap,
     double const& t_min
     )
   {
-    if(randFlat < effT) {
-      double tphoton;
-      int nCT;
-      tphoton = (*timeHisto)->GetRandom();
-      tphoton += photonMember.first - t_min;
-      if(fParams.CrossTalk > 0.0 &&
-         (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-      else nCT = 1;
-      double timeBin = tphoton * fSampling;
-      if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+    for (auto const& photonMember : photonMap) {
+      for(int i = 0; i < photonMember.second; i++) {
+        double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
+        if(randFlat < effT) {
+          double tphoton;
+          int nCT;
+          tphoton = (*timeHisto)->GetRandom();
+          tphoton += photonMember.first - t_min;
+          if(fParams.CrossTalk > 0.0 &&
+             (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+          else nCT = 1;
+          double timeBin = tphoton * fSampling;
+          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+        }
+      }
     }
   }
 
 
   void DigiArapucaSBNDAlg::SinglePDWaveformCreatorLite(
-    double randFlat,
     double effT,
     std::vector<double>& wave,
-    std::pair<int, int> const& photonMember, // TODO: better name
+    std::map<int, int> const& photonMap,
     double const& t_min
     )
   {
-    if(randFlat < effT) {
-      double tphoton;
-      int nCT;
-      tphoton = (CLHEP::RandExponential::shoot(fEngine, fParams.DecayTXArapucaVIS));
-      tphoton += photonMember.first - t_min;
-      if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-      else nCT = 1;
-      double timeBin = tphoton * fSampling;
-      if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+    for (auto const& photonMember : photonMap) {
+      for(int i = 0; i < photonMember.second; i++) {
+        double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
+        if(randFlat < effT) {
+          double tphoton;
+          int nCT;
+          tphoton = (CLHEP::RandExponential::shoot(fEngine, fParams.DecayTXArapucaVIS));
+          tphoton += photonMember.first - t_min;
+          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+          else nCT = 1;
+          double timeBin = tphoton * fSampling;
+          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+        }
+      }
     }
   }
-
 
   void DigiArapucaSBNDAlg::Pulse1PE(std::vector<double>& wsp)//single pulse waveform
   {
