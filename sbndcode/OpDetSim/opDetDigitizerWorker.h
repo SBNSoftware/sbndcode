@@ -1,11 +1,11 @@
 #ifndef SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
 #define SBND_OPDETSIM_OPDETDIGITIZERWORKER_H
 
-#include <map>
 #include <unordered_map>
 #include <vector>
 #include <mutex>
 #include <condition_variable>
+// #include <memory>
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.h"
 #include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.h"

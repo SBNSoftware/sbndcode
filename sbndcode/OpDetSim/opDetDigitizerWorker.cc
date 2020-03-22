@@ -135,6 +135,14 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
   std::string pdtype;
   if(fConfig.UseSimPhotonsLite) {
     const std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> &photon_handles = *fPhotonLiteHandles;
+
+    // TODO: Instead of looping and evaluating if/else through all the photon_handles
+    // we should get smaller containers with only the relevant handles for each case
+    // ~icaza
+    // std::vector<art::Handle<std::vector<sim::SimPhotonsLite>> const*> ptr_photon_handles(photon_handles.size());
+    // std::transform(photon_handles.begin(), photon_handles.end(), ptr_photon_handles.begin(),
+    //                [](auto& p) {return std::addressof(p);});
+
     // to temporarily store channel and combine PMT (direct and converted) time profiles
     std::unordered_map<int, sim::SimPhotonsLite> directPhotonsOnPMTS;
     CreateDirectPhotonMapLite(directPhotonsOnPMTS, photon_handles);
