@@ -173,20 +173,6 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                                   (unsigned int)ch,
                                                   waveform);
         }
-        // getting only arapuca channels with appropriate type of light
-        else if((pdtype == "arapuca_vuv" && !Reflected) ||
-                (pdtype == "arapuca_vis" && Reflected) ) {
-          arapucaDigitizer->ConstructWaveformLite(ch,
-                                                  litesimphotons,
-                                                  waveform,
-                                                  pdtype,
-                                                  startTime,
-                                                  fConfig.Nsamples);
-          // including pre trigger window and transit time
-          fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
-                                                  (unsigned int)ch,
-                                                  waveform);
-        }
         // getting only xarapuca channels with appropriate type of light
         // (this separation is needed because xarapucas are set as
         // two different optical channels but are actually only one readout channel)
@@ -220,6 +206,20 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           }
           arapucaDigitizer->ConstructWaveformLite(ch,
                                                   auxLite,
+                                                  waveform,
+                                                  pdtype,
+                                                  startTime,
+                                                  fConfig.Nsamples);
+          // including pre trigger window and transit time
+          fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
+                                                  (unsigned int)ch,
+                                                  waveform);
+        }
+        // getting only arapuca channels with appropriate type of light
+        else if((pdtype == "arapuca_vuv" && !Reflected) ||
+                (pdtype == "arapuca_vis" && Reflected) ) {
+          arapucaDigitizer->ConstructWaveformLite(ch,
+                                                  litesimphotons,
                                                   waveform,
                                                   pdtype,
                                                   startTime,
@@ -357,7 +357,7 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(
     if (!pmtHandle.isValid()) continue;
     if (pmtHandle.provenance()->moduleLabel() != fConfig.InputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
     // this now tells you if light collection is reflected
-    bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
+    if (pmtHandle.provenance()->productInstanceName() == "Reflected") continue;
     for (auto const& litesimphotons : (*pmtHandle)) {
       ch = litesimphotons.OpChannel;
       if(fConfig.pdsMap.isPDType(ch, "pmt_coated"))

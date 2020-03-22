@@ -157,15 +157,7 @@ namespace opdet {
     TH1D** timeHisto = nullptr;
     // creating the waveforms for xarapuca_vis is different than the rest
     // so there's an overload for that which lacks the timeHisto
-    if(pdtype == "arapuca_vuv"){
-      effT = fArapucaVUVEff;
-      timeHisto = &TimeArapucaVUV;
-    }
-    else if(pdtype == "arapuca_vis"){
-      effT = fArapucaVISEff;
-      timeHisto = &TimeArapucaVIS;
-    }
-    else if(pdtype == "xarapuca_vuv"){
+    if(pdtype == "xarapuca_vuv"){
       effT = fXArapucaVUVEff;
       timeHisto = &TimeXArapucaVUV;
     }
@@ -173,10 +165,18 @@ namespace opdet {
       effT = fXArapucaVISEff;
       timeHisto = nullptr;
     }
+    else if(pdtype == "arapuca_vuv"){
+      effT = fArapucaVUVEff;
+      timeHisto = &TimeArapucaVUV;
+    }
+    else if(pdtype == "arapuca_vis"){
+      effT = fArapucaVISEff;
+      timeHisto = &TimeArapucaVIS;
+    }
     else{
       throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
     }
-    if(pdtype == "arapuca_vuv" || pdtype == "arapuca_vis" ||  pdtype == "xarapuca_vuv"){
+    if(pdtype == "xarapuca_vuv" || pdtype == "arapuca_vuv" || pdtype == "arapuca_vis"){
       for (auto const& mapMember : photonMap) {
         for(int i = 0; i < mapMember.second; i++) {
           double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
