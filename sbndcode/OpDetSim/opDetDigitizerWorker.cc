@@ -155,6 +155,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
       bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       for (auto const& litesimphotons : (*opdetHandle)) {
         std::vector<short unsigned int> waveform;
+        waveform.reserve(fConfig.Nsamples);
         ch = litesimphotons.OpChannel;
         pdtype = fConfig.pdsMap.pdType(ch);
         // only work on the prescribed channels

@@ -52,7 +52,7 @@ namespace opdet {
     double start_time,
     unsigned n_samples)
   {
-    std::vector<double> waves(std::vector<double>(n_samples, fParams.Baseline));
+    std::vector<double> waves(n_samples, fParams.Baseline);
     CreatePDWaveform(simphotons, start_time, waves, pdtype);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
@@ -66,7 +66,7 @@ namespace opdet {
     double start_time,
     unsigned n_samples)
   {
-    std::vector<double> waves(std::vector<double>(n_samples, fParams.Baseline));
+    std::vector<double> waves(n_samples, fParams.Baseline);
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
     CreatePDWaveformLite(photonMap, start_time, waves, pdtype);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
