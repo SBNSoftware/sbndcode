@@ -253,6 +253,7 @@ namespace opdet {
     std::vector<double>& wave,
     int nphotons) //adding single pulse
   {
+    if(time_bin > wave.size()) return;
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
@@ -299,7 +300,7 @@ namespace opdet {
     double mean = 1000000000.0 / fParams.DarkNoiseRate;
     double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
     while(darkNoiseTime < wave.size()) {
-      timeBin = size_t(darkNoiseTime);
+      timeBin = size_t(darkNoiseTime);  // TODO: is this cast safe? ~icaza
       if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
       else nCT = 1;
       if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);

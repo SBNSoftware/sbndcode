@@ -208,6 +208,7 @@ namespace opdet {
 
   void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave)
   {
+    if(time_bin > wave.size()) return;
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
@@ -252,7 +253,7 @@ namespace opdet {
     double mean =  1000000000.0 / fParams.PMTDarkNoiseRate;
     double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
     while(darkNoiseTime < wave.size()) {
-      timeBin = size_t(darkNoiseTime);
+      timeBin = size_t(darkNoiseTime); // TODO: is this cast safe? ~icaza
       if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       // Find next time to add dark noise
       darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, mean);
