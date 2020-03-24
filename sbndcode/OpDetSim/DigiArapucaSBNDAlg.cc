@@ -183,22 +183,19 @@ namespace opdet {
     // (1-accepted_photons) doesn't introduce some bias
     double meanPhotons;
     int acceptedPhotons;
+    double tphoton;
+    int nCT;
     for (auto const& photonMember : photonMap) {
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
       for(int i = 0; i < acceptedPhotons; i++) {
-        double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
-        if(randFlat < effT) {
-          double tphoton;
-          int nCT;
-          tphoton = (*timeHisto)->GetRandom();
-          tphoton += photonMember.first - t_min;
-          if(fParams.CrossTalk > 0.0 &&
-             (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-          else nCT = 1;
-          double timeBin = tphoton * fSampling;
-          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
-        }
+        tphoton = (*timeHisto)->GetRandom();
+        tphoton += photonMember.first - t_min;
+        if(fParams.CrossTalk > 0.0 &&
+           (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+        else nCT = 1;
+        double timeBin = tphoton * fSampling;
+        if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
       }
     }
   }
@@ -213,23 +210,20 @@ namespace opdet {
   {
     double meanPhotons;
     int acceptedPhotons;
+    double tphoton;
+    int nCT;
     for (auto const& photonMember : photonMap) {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
       for(int i = 0; i < acceptedPhotons; i++) {
-        double randFlat = CLHEP::RandFlat::shoot(fEngine, 1.0);
-        if(randFlat < effT) {
-          double tphoton;
-          int nCT;
-          tphoton = (CLHEP::RandExponential::shoot(fEngine, fParams.DecayTXArapucaVIS));
-          tphoton += photonMember.first - t_min;
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-          else nCT = 1;
-          double timeBin = tphoton * fSampling;
-          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
-        }
+        tphoton = (CLHEP::RandExponential::shoot(fEngine, fParams.DecayTXArapucaVIS));
+        tphoton += photonMember.first - t_min;
+        if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+        else nCT = 1;
+        double timeBin = tphoton * fSampling;
+        if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
       }
     }
   }
