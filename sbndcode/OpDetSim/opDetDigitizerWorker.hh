@@ -83,10 +83,10 @@ namespace opdet {
     unsigned NChannelsToProcess(unsigned n) const;
     unsigned StartChannelToProcess(unsigned n) const;
     void CreateDirectPhotonMap(
-      std::unordered_map<int, sim::SimPhotons>& auxmap,
+      std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS,
       std::vector<art::Handle<std::vector<sim::SimPhotons>>> photon_handles) const;
     void CreateDirectPhotonMapLite(
-      std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
+      std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS,
       std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> photon_handles) const;
     void MakeWaveforms(
       opdet::DigiPMTSBNDAlg *pmtDigitizer,

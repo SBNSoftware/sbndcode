@@ -68,12 +68,12 @@ namespace opdet {
     sim::SimPhotons const& simphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
-    std::unordered_map<int, sim::SimPhotons>& auxmap,
+    std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS,
     double start_time,
     unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
-    CreatePDWaveform(simphotons, start_time, waves, ch, pdtype, auxmap);
+    CreatePDWaveform(simphotons, start_time, waves, ch, pdtype, directPhotonsOnPMTS);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -83,12 +83,12 @@ namespace opdet {
     sim::SimPhotonsLite const& litesimphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
-    std::unordered_map<int, sim::SimPhotonsLite>& auxmap,
+    std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS,
     double start_time,
     unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
-    CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype, auxmap);
+    CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype, directPhotonsOnPMTS);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -99,7 +99,7 @@ namespace opdet {
     std::vector<double>& wave,
     int ch,
     std::string pdtype,
-    std::unordered_map<int, sim::SimPhotons>& auxmap)
+    std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS)
   {
     double ttsTime = 0;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
@@ -112,7 +112,7 @@ namespace opdet {
     if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
       sim::SimPhotons auxphotons;
       double ttpb = 0;
-      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
+      if ( auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) )
       { auxphotons = it->second;}
       for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
         if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
@@ -137,7 +137,7 @@ namespace opdet {
     std::vector<double>& wave,
     int ch,
     std::string pdtype,
-    std::unordered_map<int, sim::SimPhotonsLite>& auxmap)
+    std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS)
   {
     double ttsTime = 0;
     // reflected light to be added to all PMTs
@@ -156,7 +156,7 @@ namespace opdet {
 
     // direct light for TPB coated PMTs
     if(pdtype == "pmt_coated") {
-      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) ){
+      if ( auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) ){
         double ttpb;
         for (auto& directPhotons : (it->second).DetectedPhotons) {
           // TODO: check that this new approach of not using the last
@@ -266,7 +266,7 @@ namespace opdet {
     sim::SimPhotons const& simphotons,
     int ch,
     std::string pdtype,
-    std::unordered_map<int, sim::SimPhotons>& auxmap)
+    std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS)
   {
     double t_min = 1e15;
 
@@ -278,7 +278,7 @@ namespace opdet {
     }
     else if(pdtype == "pmt_coated") {
       sim::SimPhotons auxphotons;
-      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
+      if ( auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) )
       {auxphotons = it->second;}
       auxphotons += (simphotons);
       // TODO: use std::algorithm.  ~icaza
@@ -298,7 +298,7 @@ namespace opdet {
     sim::SimPhotonsLite const& litesimphotons,
     int ch,
     std::string pdtype,
-    std::unordered_map<int, sim::SimPhotonsLite>& auxmap)
+    std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS)
   {
 
     if(pdtype == "pmt_uncoated") {
@@ -311,7 +311,7 @@ namespace opdet {
     }
     else if(pdtype == "pmt_coated") {
       sim::SimPhotonsLite auxphotons;
-      if ( auto it{ auxmap.find(ch) }; it != std::end(auxmap) )
+      if ( auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) )
       {auxphotons = it->second;}
       // TODO: this might be buggy:
       // potentially adding to a uninitialized object.  ~icaza
