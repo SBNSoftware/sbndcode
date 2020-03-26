@@ -102,26 +102,32 @@ namespace opdet {
     std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS)
   {
     double ttsTime = 0;
+    double tphoton;
+    size_t timeBin;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
       if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
-        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        size_t time_bin = (fParams.TransitTime + ttsTime + simphotons[i].Time - t_min)*fSampling;
-        if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
+        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
+        tphoton = fParams.TransitTime + ttsTime + simphotons[i].Time - t_min;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+        timeBin = std::floor(tphoton*fSampling);
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
     if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
       sim::SimPhotons auxphotons;
       double ttpb = 0;
-      if ( auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) )
-      { auxphotons = it->second;}
+      if(auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) )
+      {auxphotons = it->second;}
       for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
         if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
           // TODO: this uses root random machine!
           // use RandGeneral instead. ~icaza
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
-          size_t time_bin = (fParams.TransitTime + ttsTime + auxphotons[j].Time + ttpb - t_min)*fSampling;
-          if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
+          tphoton = fParams.TransitTime + ttsTime + auxphotons[j].Time - t_min + ttpb;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+          timeBin = std::floor(tphoton*fSampling);
+          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
         }
       }
     }
@@ -139,18 +145,24 @@ namespace opdet {
     std::string pdtype,
     std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS)
   {
+    double mean_photons;
+    size_t accepted_photons;
     double ttsTime = 0;
+    double tphoton;
+    size_t timeBin;
     // reflected light to be added to all PMTs
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
     for (auto const& reflectedPhotons : photonMap) {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias. ~icaza
-      double mean_photons = reflectedPhotons.second*fQEDirect;
-      int accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
-      for(int i = 0; i < accepted_photons; i++) {
-        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        size_t time_bin = (fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min)*fSampling;
-        if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
+      mean_photons = reflectedPhotons.second*fQEDirect;
+      accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
+      for(size_t i = 0; i < accepted_photons; i++) {
+        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
+        tphoton = fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+        timeBin = std::floor(tphoton*fSampling);
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
 
@@ -161,15 +173,17 @@ namespace opdet {
         for (auto& directPhotons : (it->second).DetectedPhotons) {
           // TODO: check that this new approach of not using the last
           // (1-accepted_photons) doesn't introduce some bias. ~icaza
-          double mean_photons = directPhotons.second*fQEDirect;
-          int accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
-          for(int i = 0; i < accepted_photons; i++) {
+          mean_photons = directPhotons.second*fQEDirect;
+          accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
+          for(size_t i = 0; i < accepted_photons; i++) {
             if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
             // TODO: this uses root random machine!
             // use RandGeneral. ~icaza
             ttpb = timeTPB->GetRandom(); //for including TPB emission time
-            size_t time_bin = (fParams.TransitTime + ttsTime + directPhotons.first + ttpb - t_min)*fSampling;
-            if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
+            tphoton = fParams.TransitTime + ttsTime + directPhotons.first - t_min + ttpb;
+            if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+            timeBin = std::floor(tphoton*fSampling);
+            if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
           }
         }
       }
@@ -208,7 +222,6 @@ namespace opdet {
 
   void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave)
   {
-    if(time_bin > wave.size()) return;
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
@@ -253,7 +266,7 @@ namespace opdet {
     double mean =  1000000000.0 / fParams.PMTDarkNoiseRate;
     double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
     while(darkNoiseTime < wave.size()) {
-      timeBin = size_t(darkNoiseTime); // TODO: is this cast safe? ~icaza
+      timeBin = std::round(darkNoiseTime);
       if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       // Find next time to add dark noise
       darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, mean);

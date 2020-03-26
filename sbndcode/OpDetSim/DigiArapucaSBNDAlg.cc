@@ -80,16 +80,17 @@ namespace opdet {
     std::string pdtype)
   {
     int nCT = 1;
-    double tphoton = 0;
+    double tphoton;
+    size_t timeBin;
     if(pdtype == "arapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVUVEff) { //Sample a random subset according to Arapuca's efficiency
-          tphoton = simphotons[i].Time;
-          tphoton += (TimeArapucaVUV->GetRandom());
-          tphoton -= t_min;
+          tphoton = (TimeArapucaVUV->GetRandom());
+          tphoton += simphotons[i].Time - t_min;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          double timeBin = tphoton * fSampling;
+          timeBin = std::floor(tphoton * fSampling);
           if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
         }
       }
@@ -97,12 +98,12 @@ namespace opdet {
     else if(pdtype == "arapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVISEff) { //Sample a random subset according to Arapuca's efficiency.
-          tphoton = simphotons[i].Time;
-          tphoton += (TimeArapucaVIS->GetRandom());
-          tphoton -= t_min;
+          tphoton = (TimeArapucaVIS->GetRandom());
+          tphoton += simphotons[i].Time - t_min;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          double timeBin = tphoton * fSampling;
+          timeBin = std::floor(tphoton * fSampling);
           if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
         }
       }
@@ -110,12 +111,12 @@ namespace opdet {
     else if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVUVEff) {
-          tphoton = simphotons[i].Time;
-          tphoton += (TimeXArapucaVUV->GetRandom());
-          tphoton -= t_min;
+          tphoton = (TimeXArapucaVUV->GetRandom());
+          tphoton += simphotons[i].Time - t_min;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          double timeBin = tphoton * fSampling;
+          timeBin = std::floor(tphoton * fSampling);
           if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
         }
       }
@@ -123,12 +124,12 @@ namespace opdet {
     else if(pdtype == "xarapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVISEff) {
-          tphoton = simphotons[i].Time;
-          tphoton += (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
-          tphoton -= t_min;
+          tphoton = (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
+          tphoton += simphotons[i].Time - t_min;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          double timeBin = tphoton * fSampling;
+          timeBin = std::floor(tphoton * fSampling);
           if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
         }
       }
@@ -182,19 +183,23 @@ namespace opdet {
     // TODO: check that this new approach of not using the last
     // (1-accepted_photons) doesn't introduce some bias
     double meanPhotons;
-    int acceptedPhotons;
+    size_t acceptedPhotons;
     double tphoton;
     int nCT;
+    size_t timeBin;
     for (auto const& photonMember : photonMap) {
+      // TODO: check that this new approach of not using the last
+      // (1-accepted_photons) doesn't introduce some bias
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
-      for(int i = 0; i < acceptedPhotons; i++) {
+      for(size_t i = 0; i < acceptedPhotons; i++) {
         tphoton = (*timeHisto)->GetRandom();
         tphoton += photonMember.first - t_min;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 &&
            (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
-        double timeBin = tphoton * fSampling;
+        timeBin = std::floor(tphoton * fSampling);
         if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
       }
     }
@@ -209,20 +214,22 @@ namespace opdet {
     )
   {
     double meanPhotons;
-    int acceptedPhotons;
+    size_t acceptedPhotons;
     double tphoton;
     int nCT;
+    size_t timeBin;
     for (auto const& photonMember : photonMap) {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
-      for(int i = 0; i < acceptedPhotons; i++) {
+      for(size_t i = 0; i < acceptedPhotons; i++) {
         tphoton = (CLHEP::RandExponential::shoot(fEngine, fParams.DecayTXArapucaVIS));
         tphoton += photonMember.first - t_min;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
-        double timeBin = tphoton * fSampling;
+        timeBin = std::floor(tphoton * fSampling);
         if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
       }
     }
@@ -247,7 +254,7 @@ namespace opdet {
     std::vector<double>& wave,
     int nphotons) //adding single pulse
   {
-    if(time_bin > wave.size()) return;
+    // if(time_bin > wave.size()) return;
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
@@ -294,7 +301,7 @@ namespace opdet {
     double mean = 1000000000.0 / fParams.DarkNoiseRate;
     double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
     while(darkNoiseTime < wave.size()) {
-      timeBin = size_t(darkNoiseTime);  // TODO: is this cast safe? ~icaza
+      timeBin = std::round(darkNoiseTime);
       if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
       else nCT = 1;
       if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
