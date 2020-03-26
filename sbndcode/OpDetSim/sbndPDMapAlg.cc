@@ -1,4 +1,4 @@
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 
 //------------------------------------------------------------------------------
@@ -39,6 +39,16 @@ namespace opdet {
   auto sbndPDMapAlg::getChannelEntry(size_t ch) const
   {
     return PDmap.at(ch);
+  }
+
+  // template<>
+  nlohmann::json sbndPDMapAlg::getCollectionWithProperty(std::string property)
+  {
+    nlohmann::json subSetPDmap;
+    std::copy_if (PDmap.begin(), PDmap.end(), std::back_inserter(subSetPDmap),
+                  [property](const nlohmann::json e)->bool
+                    {return e[property];} );
+    return subSetPDmap;
   }
 
   // Look in the header for the implementation:

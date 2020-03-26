@@ -113,6 +113,27 @@ std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track 
 } // CRTT0MatchAlg::TrackDirectionAverage()
 
 
+std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverageFromPoints(recob::Track track, double frac){
+
+  // Calculate direction as an average over directions
+  size_t nTrackPoints = track.NumberTrajectoryPoints();
+  recob::TrackTrajectory trajectory  = track.Trajectory();
+  std::vector<TVector3> validPoints;
+  for(size_t i = 0; i < nTrackPoints; i++){
+    if(trajectory.FlagsAtPoint(i) != recob::TrajectoryPointFlags::InvalidHitIndex) continue;
+    validPoints.push_back(track.LocationAtPoint<TVector3>(i));
+  }
+
+  size_t nValidPoints = validPoints.size();
+  int endPoint = (int)floor(nValidPoints*frac);
+  TVector3 startDir = validPoints.at(0) - validPoints.at(endPoint-1);
+  TVector3 endDir = validPoints.at(nValidPoints - 1) - validPoints.at(nValidPoints - (endPoint));
+
+  return std::make_pair(startDir.Unit(), endDir.Unit());
+
+} // CRTT0MatchAlg::TrackDirectionAverageFromPoints()
+
+
 std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event) {
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
@@ -209,6 +230,34 @@ double CRTT0MatchAlg::T0FromCRTHits(recob::Track tpcTrack, std::vector<art::Ptr<
   if(closestHit.second < fDistanceLimit) return crtTime;
 
   return -99999;
+
+}
+
+std::pair<double, double> CRTT0MatchAlg::T0AndDCAFromCRTHits(recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
+  auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+  art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
+  std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
+  return T0AndDCAFromCRTHits(tpcTrack, hits, crtHits);
+}
+
+std::pair<double, double> CRTT0MatchAlg::T0AndDCAFromCRTHits(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits) {
+
+  std::pair<double, double> null = std::make_pair(-99999, -99999);
+  if (tpcTrack.Length() < fMinTrackLength) return null; 
+
+  std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(tpcTrack, hits, crtHits);
+  if(closestHit.second == -99999) return null;
+
+  double crtTime;
+  if (fTSMode == 1) {
+    crtTime = ((double)(int)closestHit.first.ts1_ns) * 1e-3 + fTimeCorrection;
+  }
+  else {
+    crtTime = ((double)(int)closestHit.first.ts0_ns) * 1e-3 + fTimeCorrection;
+  }
+  if(closestHit.second < fDistanceLimit) return std::make_pair(crtTime, closestHit.second);
+
+  return null;
 
 }
 
