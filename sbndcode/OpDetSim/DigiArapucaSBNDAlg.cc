@@ -80,16 +80,14 @@ namespace opdet {
     std::string pdtype)
   {
     int nCT = 1;
-    double tphoton = 0;
-    double timeOffset;
+    double tphoton;
     size_t timeBin;
     if(pdtype == "arapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        timeOffset = simphotons[i].Time - t_min;
-        if(timeOffset < 0.) continue;// simphotons arriving before the acquisition window shouldn't be digitized 
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVUVEff) { //Sample a random subset according to Arapuca's efficiency
           tphoton = (TimeArapucaVUV->GetRandom());
-          tphoton += timeOffset;
+          tphoton += simphotons[i].Time - t_min;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           timeBin = std::floor(tphoton * fSampling);
@@ -99,11 +97,10 @@ namespace opdet {
     }
     else if(pdtype == "arapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        timeOffset = simphotons[i].Time - t_min;
-        if(timeOffset < 0.) continue;// simphotons arriving before the acquisition window shouldn't be digitized 
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVISEff) { //Sample a random subset according to Arapuca's efficiency.
           tphoton = (TimeArapucaVIS->GetRandom());
-          tphoton += timeOffset;
+          tphoton += simphotons[i].Time - t_min;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           timeBin = std::floor(tphoton * fSampling);
@@ -113,11 +110,10 @@ namespace opdet {
     }
     else if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        timeOffset = simphotons[i].Time - t_min;
-        if(timeOffset < 0.) continue;// simphotons arriving before the acquisition window shouldn't be digitized 
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVUVEff) {
           tphoton = (TimeXArapucaVUV->GetRandom());
-          tphoton += timeOffset;
+          tphoton += simphotons[i].Time - t_min;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           timeBin = std::floor(tphoton * fSampling);
@@ -127,11 +123,10 @@ namespace opdet {
     }
     else if(pdtype == "xarapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        timeOffset = simphotons[i].Time - t_min;
-        if(timeOffset < 0.) continue;// simphotons arriving before the acquisition window shouldn't be digitized 
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVISEff) {
           tphoton = (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
-          tphoton += timeOffset;
+          tphoton += simphotons[i].Time - t_min;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           timeBin = std::floor(tphoton * fSampling);
@@ -191,19 +186,16 @@ namespace opdet {
     size_t acceptedPhotons;
     double tphoton;
     int nCT;
-    double timeOffset;
     size_t timeBin;
     for (auto const& photonMember : photonMap) {
-      // simphotons arriving before the acquisition window shouldn't be digitized 
-      timeOffset = photonMember.first - t_min;
-      if (timeOffset < 0.) continue;
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
       for(size_t i = 0; i < acceptedPhotons; i++) {
         tphoton = (*timeHisto)->GetRandom();
-        tphoton += timeOffset;
+        tphoton += photonMember.first - t_min;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 &&
            (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
@@ -225,19 +217,16 @@ namespace opdet {
     size_t acceptedPhotons;
     double tphoton;
     int nCT;
-    double timeOffset;
     size_t timeBin;
     for (auto const& photonMember : photonMap) {
-      // simphotons arriving before the acquisition window shouldn't be digitized 
-      timeOffset = photonMember.first - t_min;
-      if (timeOffset < 0.) continue;
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
       for(size_t i = 0; i < acceptedPhotons; i++) {
         tphoton = (CLHEP::RandExponential::shoot(fEngine, fParams.DecayTXArapucaVIS));
-        tphoton += timeOffset;
+        tphoton += photonMember.first - t_min;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
         timeBin = std::floor(tphoton * fSampling);

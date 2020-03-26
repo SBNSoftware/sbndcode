@@ -102,14 +102,15 @@ namespace opdet {
     std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS)
   {
     double ttsTime = 0;
-    double timeOffset;
+    double tphoton;
+    size_t timeBin;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
-      timeOffset = simphotons[i].Time - t_min;
-      if(timeOffset < 0.) continue; // simphotons arriving before the digitization trigger window
       if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
-        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        size_t time_bin = std::floor((fParams.TransitTime + ttsTime + timeOffset)*fSampling);
-        if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
+        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
+        tphoton = fParams.TransitTime + ttsTime + simphotons[i].Time - t_min;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+        timeBin = std::floor(tphoton*fSampling);
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
     if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
@@ -118,15 +119,15 @@ namespace opdet {
       if(auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) )
       {auxphotons = it->second;}
       for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
-        timeOffset = auxphotons[j].Time - t_min;
-        if(timeOffset < 0.) continue; // simphotons arriving before the digitization trigger window
         if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
           // TODO: this uses root random machine!
           // use RandGeneral instead. ~icaza
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
-          size_t time_bin = std::floor((fParams.TransitTime + ttsTime + timeOffset + ttpb)*fSampling);
-          if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
+          tphoton = fParams.TransitTime + ttsTime + auxphotons[j].Time - t_min + ttpb;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+          timeBin = std::floor(tphoton*fSampling);
+          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
         }
       }
     }
@@ -147,20 +148,21 @@ namespace opdet {
     double mean_photons;
     size_t accepted_photons;
     double ttsTime = 0;
-    double timeOffset;
+    double tphoton;
+    size_t timeBin;
     // reflected light to be added to all PMTs
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
     for (auto const& reflectedPhotons : photonMap) {
-      timeOffset = reflectedPhotons.first - t_min;
-      if(timeOffset < 0.) continue; // simphotons arriving before the digitization trigger window
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias. ~icaza
       mean_photons = reflectedPhotons.second*fQEDirect;
       accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
-        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-        size_t time_bin = std::floor((fParams.TransitTime + ttsTime + timeOffset)*fSampling);
-        if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
+        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
+        tphoton = fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+        timeBin = std::floor(tphoton*fSampling);
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
 
@@ -169,8 +171,6 @@ namespace opdet {
       if ( auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) ){
         double ttpb;
         for (auto& directPhotons : (it->second).DetectedPhotons) {
-          timeOffset = directPhotons.first - t_min;
-          if (timeOffset < 0.) continue; // simphotons arriving before the digitization trigger window
           // TODO: check that this new approach of not using the last
           // (1-accepted_photons) doesn't introduce some bias. ~icaza
           mean_photons = directPhotons.second*fQEDirect;
@@ -180,8 +180,10 @@ namespace opdet {
             // TODO: this uses root random machine!
             // use RandGeneral. ~icaza
             ttpb = timeTPB->GetRandom(); //for including TPB emission time
-            size_t time_bin = std::floor((fParams.TransitTime + ttsTime + timeOffset + ttpb)*fSampling);
-            if(time_bin < wave.size()) {AddSPE(time_bin, wave);}
+            tphoton = fParams.TransitTime + ttsTime + directPhotons.first - t_min + ttpb;
+            if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+            timeBin = std::floor(tphoton*fSampling);
+            if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
           }
         }
       }
