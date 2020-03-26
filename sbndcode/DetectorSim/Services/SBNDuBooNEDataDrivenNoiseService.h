@@ -168,6 +168,12 @@ private:
   TH1* fCohNoiseHist;      ///< distribution of noise counts
   TH1* fCohNoiseChanHist;  ///< distribution of accessed noise samples
 
+  TF1* _wld_f;
+  double wldparams[2];
+
+  TF1* _poisson;
+  double poissonParams[1];
+
   CLHEP::HepRandomEngine* m_pran;
 
 };

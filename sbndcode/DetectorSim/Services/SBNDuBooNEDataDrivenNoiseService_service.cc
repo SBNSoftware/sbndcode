@@ -90,8 +90,21 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
     seedSvc->registerEngine(NuRandomService::CLHEPengineSeeder(m_pran), rname);
   }
   if ( fLogLevel > 0 ) cout << myname << "  Registered seed: " << m_pran->getSeed() << endl;
-  //generateNoise(); //This has been replaced by the same dunction in SimWireSBND. This is so the noise arrays are recalculated for each event.
+  //generateNoise(); //This has been replaced by the same function in SimWireSBND. This is so the noise arrays are recalculated for each event.
   if ( fLogLevel > 1 ) print() << endl;
+
+  // Wirelength dependance function
+  _wld_f = new TF1("_wld_f", "[0] + [1]*x", 0.0, 1000);
+  wldparams[0] = 0.395;
+  wldparams[1] = 0.001304;
+  
+  _wld_f->SetParameters(wldparams);
+ 
+  // Custom poisson  
+  _poisson = new TF1("_poisson", "[0]**(x) * exp(-[0]) / ROOT::Math::tgamma(x+1.)", 0, 30);
+  poissonParams[0] = 3.30762;
+  _poisson->SetParameters(poissonParams); 
+
 }
 
 //**********************************************************************
@@ -173,28 +186,12 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
   double rnd[3] = {0.};
 
   std::vector<double> noisevector(ntick,0.0);
-  //AdcSignalVectorVector noisevector;
-  double params[1] = {0.};
   double fitpar[9] = {0.};
-  double wldparams[2] = {0.};
   
-  // wire length dependence function 
-  TF1* _wld_f = new TF1("_wld_f", "[0] + [1]*x", 0.0, 1000);
-  // custom poisson  
-  TF1* _poisson = new TF1("_poisson", "[0]**(x) * exp(-[0]) / ROOT::Math::tgamma(x+1.)", 0, 30);
   // gain function in kHz
   TF1* _pfn_f1 = new TF1("_pfn_f1", "([0]*1/(x/1000*[8]/2) + ([1]*exp(-0.5*(((x/1000*[8]/2)-[2])/[3])**2)*exp(-0.5*pow(x/1000*[8]/(2*[4]),[5])))*[6]) + [7]", 0.0, 0.5*ntick*binWidth);
   // set data-driven parameters
-  // poisson mean
-  params[0] = 3.30762;
-
-  _poisson->SetParameters(params);
-
-  //wire length dependence parameters
-  wldparams[0] = 0.395;
-  wldparams[1] = 0.001304;
-
-  _wld_f->SetParameters(wldparams);
+ 
   double wldValue = _wld_f->Eval(wirelength);
 
   fitpar[0] = fNoiseFunctionParameters.at(0);
@@ -209,12 +206,12 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
 
   _pfn_f1->SetParameters(fitpar);
   _pfn_f1->SetNpx(1000);
-  	
+
   for ( unsigned int i=0; i<ntick/2+1; ++i ) {
     //MicroBooNE noise model
     double pfnf1val = _pfn_f1->Eval((i+0.5)*binWidth);
     // define FFT parameters
-    double randomizer = _poisson->GetRandom()/params[0];
+    double randomizer = _poisson->GetRandom()/poissonParams[0];
     pval = pfnf1val * randomizer;
     // random phase angle
     flat.fireArray(2, rnd, 0, 1);
@@ -222,6 +219,8 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
     TComplex tc(pval*cos(phase),pval*sin(phase));
     noiseFrequency[i] += tc;
   }
+
+
   // Obtain time spectrum from frequency spectrum.
   std::vector<double> tmpnoise(noisevector.size());
   pfft->DoInvFFT(noiseFrequency, tmpnoise);
@@ -231,8 +230,6 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
   }
   // end of moved section.
 
-  _wld_f->Delete();
-  _poisson->Delete();
   _pfn_f1->Delete();
   
 
