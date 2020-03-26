@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////
-//// File:        DigiPMTSBNDAlg.h
+//// File:        DigiPMTSBNDAlg.hh
 ////
 //// This algorithm is used for the electronic response of PMTs
-//// Created by L. Paulucci and F. Marinho
+//// Created by L. Paulucci, F. Marinho, and I.L. de Icaza
 //// Based on OpDetDigitizerDUNE_module.cc
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef DIGIPMTSBNDALG_H
-#define DIGIPMTSBNDALG_H
+#ifndef SBND_OPDETSIM_DIGIPMTSBNDALG_HH
+#define SBND_OPDETSIM_DIGIPMTSBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -15,9 +15,11 @@
 #include "CLHEP/Random/RandomEngine.h"
 #include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
-#include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include <cmath>
@@ -34,13 +36,13 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "TMath.h"
-//#include "TRandom3.h"
 #include "TF1.h"
+#include "TFile.h"
 #include "TH1D.h"
 
-namespace opdet{
+namespace opdet {
 
-  class DigiPMTSBNDAlg{
+  class DigiPMTSBNDAlg {
 
   public:
 
@@ -57,7 +59,8 @@ namespace opdet{
       double PMTSaturation; //in number of p.e.
       double QEDirect; //PMT quantum efficiency for direct (VUV) light
       double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
-      int SinglePEmodel; //Model for single pe response =0 for ideal, =1 for test bench meas
+      std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
+      bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       detinfo::DetectorClocks const* timeService = nullptr; //< DetectorClocks service provider.
@@ -69,10 +72,27 @@ namespace opdet{
     //Default destructor
     ~DigiPMTSBNDAlg();
 
-    void ConstructWaveform(int ch, sim::SimPhotons const& simphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotons> auxmap, double start_time, unsigned n_sample);
-    void ConstructWaveformLite(int ch, sim::SimPhotonsLite const& litesimphotons, std::vector<short unsigned int>& waveform, std::string pdtype, std::map<int,sim::SimPhotonsLite> auxmap, double start_time, unsigned n_sample);
+    void ConstructWaveform(
+      int ch,
+      sim::SimPhotons const& simphotons,
+      std::vector<short unsigned int>& waveform,
+      std::string pdtype,
+      std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS,
+      double start_time,
+      unsigned n_sample);
+    void ConstructWaveformLite(
+      int ch,
+      sim::SimPhotonsLite const& litesimphotons,
+      std::vector<short unsigned int>& waveform,
+      std::string pdtype,
+      std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS,
+      double start_time,
+      unsigned n_sample);
 
-    double Baseline() { return fParams.PMTBaseline; }
+    double Baseline()
+    {
+      return fParams.PMTBaseline;
+    }
 
   private:
 
@@ -85,27 +105,50 @@ namespace opdet{
     double sigma1;
     double sigma2;
 
+    const double transitTimeSpread_frac = 2.0 * std::sqrt(2.0 * std::log(2.0));
+    double saturation;
+
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
-    double Pulse1PE(double time) ;
+    void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
     std::vector<double> wsp; //single photon pulse vector
     int pulsesize; //size of 1PE waveform
     TH1D* timeTPB; //histogram for getting the TPB emission time for coated PMTs
-    std::unordered_map< raw::Channel_t,std::vector<double> > fFullWaveforms;
+    std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
-    void CreatePDWaveform(sim::SimPhotons const& SimPhotons, double t_min, std::vector<double>& wave, int ch, std::string pdtype, std::map<int,sim::SimPhotons> auxmap);
-    void CreatePDWaveformLite(sim::SimPhotonsLite const& litesimphotons, double t_min, std::vector<double>& wave, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap);
+    void CreatePDWaveform(
+      sim::SimPhotons const& SimPhotons,
+      double t_min,
+      std::vector<double>& wave,
+      int ch,
+      std::string pdtype,
+      std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS);
+    void CreatePDWaveformLite(
+      sim::SimPhotonsLite const& litesimphotons,
+      double t_min,
+      std::vector<double>& wave,
+      int ch,
+      std::string pdtype,
+      std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
     void AddLineNoise(std::vector<double>& wave); //add noise to baseline
     void AddDarkNoise(std::vector<double>& wave); //add dark noise
-    double FindMinimumTime(sim::SimPhotons const&, int ch, std::string pdtype, std::map<int,sim::SimPhotons> auxmap);
-    double FindMinimumTimeLite(sim::SimPhotonsLite const& litesimphotons, int ch, std::string pdtype, std::map<int, sim::SimPhotonsLite> auxmap);
+    double FindMinimumTime(
+      sim::SimPhotons const&,
+      int ch,
+      std::string pdtype,
+      std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS);
+    double FindMinimumTimeLite(
+      sim::SimPhotonsLite const& litesimphotons,
+      int ch,
+      std::string pdtype,
+      std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS);
   };//class DigiPMTSBNDAlg
 
-  class DigiPMTSBNDAlgMaker{
+  class DigiPMTSBNDAlgMaker {
 
   public:
     struct Config {
@@ -172,11 +215,15 @@ namespace opdet{
         Comment("PMT quantum efficiency for reflected (TPB emitted)light")
       };
 
-      fhicl::Atom<int> singlePEmodel {
+      fhicl::Atom<bool> singlePEmodel {
         Name("SinglePEmodel"),
         Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
       };
 
+      fhicl::Atom<std::string> pmtDataFile {
+        Name("PMTDataFile"),
+        Comment("File containing timing emission distribution for TPB and single pe pulse from data")
+      };
     };    //struct Config
 
     DigiPMTSBNDAlgMaker(Config const& config); //Constructor
@@ -185,13 +232,13 @@ namespace opdet{
       detinfo::LArProperties const& larProp,
       detinfo::DetectorClocks const& detClocks,
       CLHEP::HepRandomEngine* engine
-      ) const;
+    ) const;
 
   private:
     // Part of the configuration learned from configuration files.
     DigiPMTSBNDAlg::ConfigurationParameters_t fBaseConfig;
   }; //class DigiPMTSBNDAlgMaker
 
-} //namespace
+} // namespace opdet
 
-#endif //DIGIPMTSBNDALG
+#endif //SBND_OPDETSIM_DIGIPMTSBNDALG_HH

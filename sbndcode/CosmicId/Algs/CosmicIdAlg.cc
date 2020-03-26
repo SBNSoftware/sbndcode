@@ -27,14 +27,15 @@ void CosmicIdAlg::reconfigure(const Config& config){
   fCrtTrackModuleLabel = config.CrtTrackModuleLabel();
   fCaloModuleLabel     = config.CaloModuleLabel();
 
-  fApplyFiducialCut  = config.ApplyFiducialCut();
-  fApplyStoppingCut  = config.ApplyStoppingCut();
-  fApplyGeometryCut  = config.ApplyGeometryCut();
-  fApplyCpaCrossCut  = config.ApplyCpaCrossCut();
-  fApplyApaCrossCut  = config.ApplyApaCrossCut();
-  fApplyCrtTrackCut  = config.ApplyCrtTrackCut();
-  fApplyCrtHitCut    = config.ApplyCrtHitCut();
-  fApplyPandoraT0Cut = config.ApplyPandoraT0Cut();
+  fApplyFiducialCut       = config.ApplyFiducialCut();
+  fApplyStoppingCut       = config.ApplyStoppingCut();
+  fApplyGeometryCut       = config.ApplyGeometryCut();
+  fApplyCpaCrossCut       = config.ApplyCpaCrossCut();
+  fApplyApaCrossCut       = config.ApplyApaCrossCut();
+  fApplyCrtTrackCut       = config.ApplyCrtTrackCut();
+  fApplyCrtHitCut         = config.ApplyCrtHitCut();
+  fApplyPandoraT0Cut      = config.ApplyPandoraT0Cut();
+  fApplyPandoraNuScoreCut = config.ApplyPandoraNuScoreCut();
 
   fOriginalSettings.push_back(fApplyFiducialCut);
   fOriginalSettings.push_back(fApplyStoppingCut);
@@ -44,6 +45,7 @@ void CosmicIdAlg::reconfigure(const Config& config){
   fOriginalSettings.push_back(fApplyCrtTrackCut);
   fOriginalSettings.push_back(fApplyCrtHitCut);
   fOriginalSettings.push_back(fApplyPandoraT0Cut);
+  fOriginalSettings.push_back(fApplyPandoraNuScoreCut);
 
   fUseTrackAngleVeto    = config.UseTrackAngleVeto();
   fMinSecondTrackLength = config.MinSecondTrackLength();
@@ -57,6 +59,7 @@ void CosmicIdAlg::reconfigure(const Config& config){
   chTag = config.CHTagAlg();
   ctTag = config.CTTagAlg();
   ptTag = config.PTTagAlg();
+  pnTag = config.PNTagAlg();
 
   fBeamTimeMin = config.BeamTimeLimits().BeamTimeMin();
   fBeamTimeMax = config.BeamTimeLimits().BeamTimeMax();
@@ -65,7 +68,7 @@ void CosmicIdAlg::reconfigure(const Config& config){
 }
 
 // Change which cuts are run
-void CosmicIdAlg::SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT, bool CH, bool PT){
+void CosmicIdAlg::SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT, bool CH, bool PT, bool PN){
 
   fApplyFiducialCut = FV;
   fApplyStoppingCut = SP;
@@ -75,6 +78,7 @@ void CosmicIdAlg::SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT,
   fApplyCrtTrackCut = CT;
   fApplyCrtHitCut = CH;
   fApplyPandoraT0Cut = PT;
+  fApplyPandoraNuScoreCut = PN;
 
 }
 
@@ -89,6 +93,7 @@ void CosmicIdAlg::ResetCuts(){
   fApplyCrtTrackCut = fOriginalSettings[5];
   fApplyCrtHitCut = fOriginalSettings[6];
   fApplyPandoraT0Cut = fOriginalSettings[7];
+  fApplyPandoraNuScoreCut = fOriginalSettings[8];
 
 }
 
@@ -101,6 +106,11 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(track.ID());
   // Get associations between track and calorimetry collections
   art::FindManyP<anab::Calorimetry> findManyCalo(tpcTrackHandle, event, fCaloModuleLabel);
+
+  // Tag cosmics from pandora T0 associations
+  if(fApplyPandoraNuScoreCut){
+    if(pnTag.PandoraNuScoreCosmicId(track, event)) return true;
+  }    
 
   // Tag cosmics from pandora T0 associations
   if(fApplyPandoraT0Cut){
@@ -187,6 +197,11 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
     
     
   }
+  
+  // Tag cosmics from pandora MVA score
+  if(fApplyPandoraNuScoreCut){
+    if(pnTag.PandoraNuScoreCosmicId(pfparticle, pfParticleMap, event)) return true;
+  }    
 
   // Tag cosmics from pandora T0 associations
   if(fApplyPandoraT0Cut){

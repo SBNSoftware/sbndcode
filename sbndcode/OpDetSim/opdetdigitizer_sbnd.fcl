@@ -7,26 +7,26 @@ BEGIN_PROLOG
 
 sbnd_opdetdigitizer:
 {
- module_type:        "opDetDigitizerSBND"
- InputModule:        "largeant"
- WaveformSize:      	    2000.0  #ns (dummy value, resized according to readout of each PD)
- UseLitePhotons:            1       #1 = use SimPhotonsLite; 0 = use SimPhotons
+  module_type:        "opDetDigitizerSBND"
+  InputModule:        "largeant"
+  WaveformSize:      	    2000.0    #ns (dummy value, resized according to readout of each PD)
+  UseSimPhotonsLite:            true  # false for SimPhotons
 
- @table::sbnd_digipmt_alg
- @table::sbnd_digiarapuca_alg
- @table::sbnd_optrigger_alg
+  @table::sbnd_digipmt_alg
+  @table::sbnd_digiarapuca_alg
+  @table::sbnd_optrigger_alg
 
   ##This is the readout window size for each "trigger" on the electronics
- #ReadoutWindowSize:         2000    #ticks (if 2ns each --> 4us)
- #PreTrigFraction:           0.25    # fraction of readout window size that should come before the "trigger" on the electronics
+  #ReadoutWindowSize:         2000    #ticks (if 2ns each --> 4us)
+  #PreTrigFraction:           0.25    # fraction of readout window size that should come before the "trigger" on the electronics
   ##NOTE this is assumed to be positive-going and ABOVE BASELINE! Pulse polarity is corrected before determining trigger.
- #ThresholdADC:              10      #Threshold for self-triggered readout (ADC counts)
- #PulsePolarity:             -1      #Pulse polarity (1 = positive, -1 = negative)
- #TriggerOffsetPMT:          -1150   #Time (us) relative to trigger that readout begins
- #ReadoutEnablePeriod:       3450    #Time (us) for which pmt readout is enabled
- #CreateBeamGateTriggers:    true    #Option to create unbiased readout around beam spill
- #BeamGateTriggerRepPeriod:  2.0     #Repetition Period (us) for BeamGateTriggers
- #BeamGateTriggerNReps:      10      #Number of beamgate trigger reps to produce
+  #ThresholdADC:              10      #Threshold for self-triggered readout (ADC counts)
+  #PulsePolarity:             -1      #Pulse polarity (1 = positive, -1 = negative)
+  #TriggerOffsetPMT:          -1150   #Time (us) relative to trigger that readout begins
+  #ReadoutEnablePeriod:       3450    #Time (us) for which pmt readout is enabled
+  #CreateBeamGateTriggers:    true    #Option to create unbiased readout around beam spill
+  #BeamGateTriggerRepPeriod:  2.0     #Repetition Period (us) for BeamGateTriggers
+  #BeamGateTriggerNReps:      10      #Number of beamgate trigger reps to produce
 }
 
 END_PROLOG

@@ -17,6 +17,7 @@
 #include "sbndcode/CosmicId/Algs/CrtHitCosmicIdAlg.h"
 #include "sbndcode/CosmicId/Algs/CrtTrackCosmicIdAlg.h"
 #include "sbndcode/CosmicId/Algs/PandoraT0CosmicIdAlg.h"
+#include "sbndcode/CosmicId/Algs/PandoraNuScoreCosmicIdAlg.h"
 #include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
 
 // framework
@@ -129,6 +130,11 @@ namespace sbnd{
         Comment("")
       };
 
+      fhicl::Atom<bool> ApplyPandoraNuScoreCut {
+        Name("ApplyPandoraNuScoreCut"),
+        Comment("")
+      };
+
       fhicl::Atom<bool> UseTrackAngleVeto {
         Name("UseTrackAngleVeto"),
         Comment("")
@@ -177,6 +183,10 @@ namespace sbnd{
         Name("PTTagAlg"),
       };
 
+      fhicl::Table<PandoraNuScoreCosmicIdAlg::Config> PNTagAlg {
+        Name("PNTagAlg"),
+      };
+
       fhicl::Table<BeamTime> BeamTimeLimits {
         Name("BeamTimeLimits"),
         Comment("")
@@ -196,7 +206,7 @@ namespace sbnd{
     void reconfigure(const Config& config);
 
     // Change which cuts are run
-    void SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT, bool CH, bool PT);
+    void SetCuts(bool FV, bool SP, bool Geo, bool CC, bool AC, bool CT, bool CH, bool PT, bool PN);
 
     // Reset which cuts are run from fhicl parameters
     void ResetCuts();
@@ -212,6 +222,7 @@ namespace sbnd{
     CrtHitCosmicIdAlg CrtHitAlg() const {return chTag;}
     CrtTrackCosmicIdAlg CrtTrackAlg() const {return ctTag;}
     ApaCrossCosmicIdAlg ApaAlg() const {return acTag;}
+    PandoraNuScoreCosmicIdAlg PandoraNuScoreAlg() const {return pnTag;}
 
   private:
 
@@ -232,6 +243,7 @@ namespace sbnd{
     bool fApplyCrtTrackCut;
     bool fApplyCrtHitCut;
     bool fApplyPandoraT0Cut;
+    bool fApplyPandoraNuScoreCut;
 
     std::vector<bool> fOriginalSettings;
 
@@ -248,6 +260,7 @@ namespace sbnd{
     CrtHitCosmicIdAlg            chTag;
     CrtTrackCosmicIdAlg          ctTag;
     PandoraT0CosmicIdAlg         ptTag;
+    PandoraNuScoreCosmicIdAlg    pnTag;
 
   };
 
