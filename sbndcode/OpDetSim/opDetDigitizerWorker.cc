@@ -1,5 +1,6 @@
 // TODO: plenty of refactoring potential in here! ~icaza
 
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "sbndcode/OpDetSim/opDetDigitizerWorker.hh"
 
 opdet::opDetDigitizerWorker::Config::Config(const opdet::DigiPMTSBNDAlgMaker::Config &pmt_config,
