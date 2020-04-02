@@ -66,7 +66,7 @@ namespace opdet {
       std::string ArapucaDataFile; //File containing timing structure for arapucas
 
       detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
-      detinfo::DetectorClocks const* timeService = nullptr; ///< DetectorClocks service provider.
+      double frequency; ///< Optical-clock frequency
       CLHEP::HepRandomEngine* engine = nullptr;
     };// ConfigurationParameters_t
 
@@ -239,7 +239,7 @@ namespace opdet {
 
     std::unique_ptr<DigiArapucaSBNDAlg> operator()(
       detinfo::LArProperties const& larProp,
-      detinfo::DetectorClocks const& detClocks,
+      detinfo::DetectorClocksData const& clockData,
       CLHEP::HepRandomEngine* engine
     ) const;
 

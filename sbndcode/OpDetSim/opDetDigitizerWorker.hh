@@ -18,6 +18,9 @@
 #include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.hh"
 #include "sbndcode/OpDetSim/DigiPMTSBNDAlg.hh"
 #include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.hh"
+namespace detinfo {
+  class DetectorClocksData;
+}
 
 namespace opdet {
 
@@ -76,8 +79,8 @@ namespace opdet {
       fTriggeredWaveforms = Waveforms;
     }
 
-    void Start() const;
-    void ApplyTriggerLocations() const;
+    void Start(detinfo::DetectorClocksData const& clockData) const;
+    void ApplyTriggerLocations(detinfo::DetectorClocksData const& clockData) const;
 
   private:
     unsigned NChannelsToProcess(unsigned n) const;
@@ -106,6 +109,7 @@ namespace opdet {
   void StartopDetDigitizerWorkers(unsigned n_workers, opDetDigitizerWorker::Semaphore &sem_start);
   void WaitopDetDigitizerWorkers(unsigned n_workers, opDetDigitizerWorker::Semaphore &sem_finish);
   void opDetDigitizerWorkerThread(const opDetDigitizerWorker &worker,
+                                  detinfo::DetectorClocksData const& clockData,
                                   opDetDigitizerWorker::Semaphore &sem_start,
                                   opDetDigitizerWorker::Semaphore &sem_finish,
                                   bool ApplyTriggerLocations, bool *finished);

@@ -60,9 +60,9 @@ public:
   ~SBNDuBooNEDataDrivenNoiseService();
 
   // Add noise to a signal array.
-  int addNoise(Channel chan, AdcSignalVector& sigs) const override;
+  int addNoise(detinfo::DetectorClocksData const& clockData, Channel chan, AdcSignalVector& sigs) const override;
 
-  void generateNoise() override;
+  void generateNoise(detinfo::DetectorClocksData const& clockData) override;
  
   // Print the configuration.
   std::ostream& print(std::ostream& out =std::cout, std::string prefix ="") const override;
@@ -77,10 +77,12 @@ private:
   // The size of the vector is obtained from the FFT service.
   void generateMicroBooNoise(float wirelength, float ENOB, 
                      AdcSignalVector& noise, TH1* aNoiseHist) const;
-  void generateGaussianNoise(AdcSignalVector& noise, std::vector<float> gausNorm, 
+  void generateGaussianNoise(detinfo::DetectorClocksData const& clockData,
+                             AdcSignalVector& noise, std::vector<float> gausNorm,
 	                    std::vector<float> gausMean, std::vector<float> gausSigma,
 	                    TH1* aNoiseHist) const;
-  void generateCoherentNoise(AdcSignalVector& noise, std::vector<float> gausNorm, 
+  void generateCoherentNoise(detinfo::DetectorClocksData const& clockData,
+                             AdcSignalVector& noise, std::vector<float> gausNorm,
 	                    std::vector<float> gausMean, std::vector<float> gausSigma,
 	                    float cohExpNorm, float cohExpWidth, float cohExpOffset, 
 	                    TH1* aNoiseHist) const;

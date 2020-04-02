@@ -45,7 +45,6 @@
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RawData/ExternalTrigger.h"
 #include "larcoreobj/SimpleTypesAndConstants/PhysicalConstants.h"
 
@@ -155,6 +154,8 @@ namespace sbnd {
       crtTracks.push_back(*crtTrack);
     }
 
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
+
     // Validity check
     if (tpcTrackListHandle.isValid() && crtTrackListHandle.isValid() ){
 
@@ -163,7 +164,8 @@ namespace sbnd {
         <<"Number of CRT tracks = "<<crtTrackList.size();
       for (size_t tpc_i = 0; tpc_i < tpcTrackList.size(); tpc_i++){
 
-        std::pair<int,double> matchedResult = trackAlg.GetMatchedCRTTrackIdAndScore(*tpcTrackList[tpc_i], crtTracks, event);
+        std::pair<int,double> matchedResult = trackAlg.GetMatchedCRTTrackIdAndScore(detProp,
+                                                                                    *tpcTrackList[tpc_i], crtTracks, event);
         int matchedID = matchedResult.first;
         double matchedScore = matchedResult.second;
         

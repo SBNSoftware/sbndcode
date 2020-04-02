@@ -8,7 +8,7 @@ namespace opdet {
 
   DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     : fParams(config)
-    , fSampling(fParams.timeService->OpticalClock().Frequency())
+    , fSampling(fParams.frequency)
     , fArapucaVUVEff(fParams.ArapucaVUVEff / fParams.larProp->ScintPreScale())
     , fArapucaVISEff(fParams.ArapucaVISEff / fParams.larProp->ScintPreScale())
     , fXArapucaVUVEff(fParams.XArapucaVUVEff / fParams.larProp->ScintPreScale())
@@ -359,7 +359,7 @@ namespace opdet {
 
   std::unique_ptr<DigiArapucaSBNDAlg> DigiArapucaSBNDAlgMaker::operator()(
     detinfo::LArProperties const& larProp,
-    detinfo::DetectorClocks const& detClocks,
+    detinfo::DetectorClocksData const& clockData,
     CLHEP::HepRandomEngine* engine
     ) const
   {
@@ -368,7 +368,7 @@ namespace opdet {
 
     // set up parameters
     params.larProp = &larProp;
-    params.timeService = &detClocks;
+    params.frequency = clockData.OpticalClock().Frequency();
     params.engine = engine;
 
     return std::make_unique<DigiArapucaSBNDAlg>(params);

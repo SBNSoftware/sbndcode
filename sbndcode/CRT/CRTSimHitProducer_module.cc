@@ -145,9 +145,11 @@ namespace sbnd {
     if (event.getByLabel(fCrtModuleLabel, crtListHandle))
       art::fill_ptr_vector(crtList, crtListHandle);
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
     // Fill a vector of pairs of time and width direction for each CRT plane
     // The y crossing point of z planes and z crossing point of y planes would be constant
-    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips = hitAlg.CreateTaggerStrips(crtList);
+    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips = hitAlg.CreateTaggerStrips(clockData, detProp, crtList);
 
     mf::LogInfo("CRTSimHitProducer")
       <<"Number of SiPM hits = "<<crtList.size();

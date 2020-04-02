@@ -101,8 +101,6 @@ private:
   //be made a fcl parameter but not likely to ever change
   static constexpr float adcsaturation{4095};
 
-  ::detinfo::ElecClock fClock; ///< TPC electronics clock
-
   CLHEP::HepRandomEngine& fNoiseEngine;
   CLHEP::HepRandomEngine& fPedestalEngine;
 }; // class SimWireT1053
@@ -169,8 +167,8 @@ void SimWireT1053::reconfigure(fhicl::ParameterSet const& p)
   }
 
   //detector properties information
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fNTimeSamples  = detprop->NumberTimeSamples();
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+  fNTimeSamples  = detProp.NumberTimeSamples();
 }
 
 //-------------------------------------------------
@@ -197,8 +195,7 @@ void SimWireT1053::beginJob()
 //-------------------------------------------------
 void SimWireT1053::produce(art::Event& evt)
 {
-
-  auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
 
   // get the geometry to be able to figure out signal types and chan -> plane mappings
   art::ServiceHandle<geo::Geometry> geo;
@@ -247,7 +244,7 @@ void SimWireT1053::produce(art::Event& evt)
       // loop over the tdcs and grab the number of electrons for each
       for (int t = 0; t < (int)(chargeWork.size()); ++t) {
 
-        int tdc = ts->TPCTick2TDC(t);
+        int tdc = clockData.TPCTick2TDC(t);
 
         // continue if tdc < 0
         if ( tdc < 0 ) continue;

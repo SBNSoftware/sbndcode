@@ -18,6 +18,7 @@
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
@@ -261,11 +262,14 @@ namespace sbnd {
     //                                DISTANCE OF CLOSEST APPROACH ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
+
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       if(particles.find(trackTrueID) == particles.end()) continue;
       // Only consider primary muons
       if(!(std::abs(particles[trackTrueID].PdgCode()) == 13 && particles[trackTrueID].Mother() == 0)) continue;
@@ -275,7 +279,7 @@ namespace sbnd {
       if(trueTime < minHitTime || trueTime > maxHitTime) continue;
 
       // Calculate t0 from CRT Hit matching
-      std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(tpcTrack, crtHits, event);
+      std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
       if(closest.second != -99999){ 
         hDCA[closest.first.tagger]->Fill(closest.second);
         hDCA["All"]->Fill(closest.second);
@@ -382,5 +386,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTT0MatchingAna)
 } // namespace sbnd
-
-

@@ -8,8 +8,6 @@ namespace sbnd{
   std::pair<std::vector<double>, std::vector<double>> CosmicIdUtils::FakeTpcFlashes(std::vector<simb::MCParticle> particles){
     //
     TPCGeoAlg fTpcGeo;
-    //detinfo::DetectorProperties const* fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>(); 
-    //detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>(); 
 
     // Create fake flashes in each tpc
     std::vector<double> fakeTpc0Flashes;

@@ -4,6 +4,7 @@
 // Based upon SPhaseChannelNoiseService.cxx developed by Jingbo Wang for ProtoDUNE.
 
 #include "sbndcode/DetectorSim/Services/SBNDuBooNEDataDrivenNoiseService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 using std::cout;
 using std::ostream;
@@ -125,7 +126,8 @@ SBNDuBooNEDataDrivenNoiseService::~SBNDuBooNEDataDrivenNoiseService() {
 
 //**********************************************************************
 
-int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) const {
+int SBNDuBooNEDataDrivenNoiseService::addNoise(detinfo::DetectorClocksData const& clockData,
+                                               Channel chan, AdcSignalVector& sigs) const {
   CLHEP::RandFlat flat(*m_pran);
   CLHEP::RandGauss gaus(*m_pran);
   	
@@ -170,8 +172,7 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
   // vars
 
   // Fetch sampling rate.
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  float sampleRate = detprop->SamplingRate();
+  float sampleRate = sampling_rate(clockData);
   // Fetch FFT service and # ticks.
   art::ServiceHandle<util::LArFFT> pfft;
   unsigned int ntick = pfft->FFTSize(); //waveform_size
@@ -336,7 +337,8 @@ ostream& SBNDuBooNEDataDrivenNoiseService::print(ostream& out, string prefix) co
 //**********************************************************************
 
 void SBNDuBooNEDataDrivenNoiseService::
-generateGaussianNoise(AdcSignalVector& noise, std::vector<float> gausNorm, 
+generateGaussianNoise(detinfo::DetectorClocksData const& clockData,
+                      AdcSignalVector& noise, std::vector<float> gausNorm,
 	                    std::vector<float> gausMean, std::vector<float> gausSigma,
 	                    TH1* aNoiseHist) const {
   const string myname = "SBNDuBooNEDataDrivenNoiseService::generateGaussianNoise: ";
@@ -365,8 +367,7 @@ generateGaussianNoise(AdcSignalVector& noise, std::vector<float> gausNorm,
   }
   
   // Fetch sampling rate.
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  float sampleRate = detprop->SamplingRate();
+  float sampleRate = sampling_rate(clockData);
   // Fetch FFT service and # ticks.
   art::ServiceHandle<util::LArFFT> pfft;
   unsigned int ntick = pfft->FFTSize();
@@ -410,7 +411,8 @@ generateGaussianNoise(AdcSignalVector& noise, std::vector<float> gausNorm,
 ////**********************************************************************
 
 void SBNDuBooNEDataDrivenNoiseService::
-generateCoherentNoise(AdcSignalVector& noise, std::vector<float> gausNorm, 
+generateCoherentNoise(detinfo::DetectorClocksData const& clockData,
+                      AdcSignalVector& noise, std::vector<float> gausNorm,
 	                    std::vector<float> gausMean, std::vector<float> gausSigma,
 	                    float cohExpNorm, float cohExpWidth, float cohExpOffset, 
 	                    TH1* aNoiseHist) const {
@@ -449,8 +451,7 @@ generateCoherentNoise(AdcSignalVector& noise, std::vector<float> gausNorm,
   params[0] = 4; // hard-coded for now. To be updated with data
   _poisson->SetParameters(params);
   // Fetch sampling rate.
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  float sampleRate = detprop->SamplingRate();
+  float sampleRate = sampling_rate(clockData);
   // Fetch FFT service and # ticks.
   art::ServiceHandle<util::LArFFT> pfft;
   unsigned int ntick = pfft->FFTSize();
@@ -535,16 +536,16 @@ unsigned int SBNDuBooNEDataDrivenNoiseService::getCohNoiseChanFromGroup(unsigned
 
 //**********************************************************************
 
-void SBNDuBooNEDataDrivenNoiseService::generateNoise(){ 
+void SBNDuBooNEDataDrivenNoiseService::generateNoise(detinfo::DetectorClocksData const& clockData){
     
   if(fEnableGaussianNoise) {
     fGausNoiseU.resize(fNoiseArrayPoints);
     fGausNoiseV.resize(fNoiseArrayPoints);
     fGausNoiseZ.resize(fNoiseArrayPoints);
     for ( unsigned int i=0; i<fNoiseArrayPoints; ++i ) {
-      generateGaussianNoise(fGausNoiseU[i], fGausNormU, fGausMeanU, fGausSigmaU, fGausNoiseHistU);
-      generateGaussianNoise(fGausNoiseV[i], fGausNormV, fGausMeanV, fGausSigmaV, fGausNoiseHistV);
-      generateGaussianNoise(fGausNoiseZ[i], fGausNormZ, fGausMeanZ, fGausSigmaZ, fGausNoiseHistZ);
+      generateGaussianNoise(clockData, fGausNoiseU[i], fGausNormU, fGausMeanU, fGausSigmaU, fGausNoiseHistU);
+      generateGaussianNoise(clockData, fGausNoiseV[i], fGausNormV, fGausMeanV, fGausSigmaV, fGausNoiseHistV);
+      generateGaussianNoise(clockData, fGausNoiseZ[i], fGausNormZ, fGausMeanZ, fGausSigmaZ, fGausNoiseHistZ);
     }
   }
   
@@ -552,7 +553,8 @@ void SBNDuBooNEDataDrivenNoiseService::generateNoise(){
   	makeCoherentGroupsByOfflineChannel(fNChannelsPerCoherentGroup);
     fCohNoise.resize(fCohNoiseArrayPoints);
     for ( unsigned int i=0; i<fCohNoiseArrayPoints; ++i ) {
-      generateCoherentNoise(fCohNoise[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
+      generateCoherentNoise(clockData,
+                            fCohNoise[i], fCohGausNorm, fCohGausMean, fCohGausSigma,
                             fCohExpNorm, fCohExpWidth, fCohExpOffset, 
                             fCohNoiseHist);
     }

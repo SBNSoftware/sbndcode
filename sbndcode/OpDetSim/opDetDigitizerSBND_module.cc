@@ -35,7 +35,7 @@
 #include <stdexcept>
 
 #include "lardataobj/RawData/OpDetWaveform.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/Simulation/sim.h"
 #include "lardataobj/Simulation/SimChannel.h"
@@ -172,10 +172,8 @@ namespace opdet {
     , fUseSimPhotonsLite(config().UseSimPhotonsLite())
     , fPMTBaseline(config().pmtAlgoConfig().pmtbaseline())
     , fArapucaBaseline(config().araAlgoConfig().baseline())
-    , fTriggerAlg(config().trigAlgoConfig(), lar::providerFrom<detinfo::DetectorClocksService>(), lar::providerFrom<detinfo::DetectorPropertiesService>())
+    , fTriggerAlg(config().trigAlgoConfig())
   {
-    auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-
     opDetDigitizerWorker::Config wConfig( config().pmtAlgoConfig(), config().araAlgoConfig());
 
     fNThreads = config().NThreads();
@@ -212,8 +210,10 @@ namespace opdet {
     wConfig.UseSimPhotonsLite = config().UseSimPhotonsLite();
     wConfig.InputModuleName = config().InputModuleName();
 
-    wConfig.Sampling = (timeService->OpticalClock().Frequency()) / 1000.0; //in GHz
-    wConfig.EnableWindow = fTriggerAlg.TriggerEnableWindow(); // us
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
+    wConfig.Sampling = (clockData.OpticalClock().Frequency()) / 1000.0; //in GHz
+    wConfig.EnableWindow = fTriggerAlg.TriggerEnableWindow(clockData, detProp); // us
     wConfig.Nsamples = (wConfig.EnableWindow[1] - wConfig.EnableWindow[0]) * 1000. /*us -> ns*/ * wConfig.Sampling /* GHz */;
 
     fFinished = false;
@@ -237,8 +237,12 @@ namespace opdet {
 
       // start worker thread
       fWorkerThreads.emplace_back(opdet::opDetDigitizerWorkerThread,
-                                  std::cref(fWorkers[i]), std::ref(fSemStart), std::ref(fSemFinish),
-                                  fApplyTriggers, &fFinished);
+                                  std::cref(fWorkers[i]),
+                                  std::cref(clockData),
+                                  std::ref(fSemStart),
+                                  std::ref(fSemFinish),
+                                  fApplyTriggers,
+                                  &fFinished);
     }
 
     // Call appropriate produces<>() functions here.
@@ -264,6 +268,9 @@ namespace opdet {
 
     // setup the waveforms
     fWaveforms = std::vector<raw::OpDetWaveform> (nChannels);
+
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e, clockData);
 
     if (fUseSimPhotonsLite) {
       fPhotonLiteHandles.clear();
@@ -294,7 +301,7 @@ namespace opdet {
         }
         raw::ADC_Count_t baseline = (map.isPDType(ch, "pmt_uncoated") || map.isPDType(ch, "pmt_coated")) ?
                                     fPMTBaseline : fArapucaBaseline;
-        fTriggerAlg.FindTriggerLocations(waveform, baseline);
+        fTriggerAlg.FindTriggerLocations(clockData, detProp, waveform, baseline);
       }
 
       // combine the triggers
