@@ -163,14 +163,13 @@ namespace sbnd {
         <<"Number of CRT tracks = "<<crtTrackList.size();
       for (size_t tpc_i = 0; tpc_i < tpcTrackList.size(); tpc_i++){
 
-        //std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrackList[tpc_i]->ID());
-        //int tpc = fTpcGeo.DetectedInTPC(hits);
-
-        int matchedID = trackAlg.GetMatchedCRTTrackId(*tpcTrackList[tpc_i], crtTracks, event);
+        std::pair<int,double> matchedResult = trackAlg.GetMatchedCRTTrackIdAndScore(*tpcTrackList[tpc_i], crtTracks, event);
+        int matchedID = matchedResult.first;
+        double matchedScore = matchedResult.second;
         
         if(matchedID != -99999){
           double crtTime = ((double)(int)crtTracks.at(matchedID).ts1_ns); // [ns]
-          T0col->push_back(anab::T0(crtTime, 0, tpcTrackList[tpc_i]->ID(), (*T0col).size(), 0.)); 
+          T0col->push_back(anab::T0(crtTime, 0, tpcTrackList[tpc_i]->ID(), (*T0col).size(), matchedScore)); 
           util::CreateAssn(*this, event, *T0col, tpcTrackList[tpc_i], *Trackassn);
           //util::CreateAssn(*this, event, crtTrackList[matchedID], tpcTrackList[tpc_i], *Crtassn);
         }

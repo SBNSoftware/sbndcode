@@ -562,7 +562,7 @@ void FlashPredict::computeFlashMetrics(size_t itpc, std::vector<recob::OpHit> co
     sum_Bz = _flash_z;
     _flash_r = sqrt((sum_Ay - 2.0 * sum_By * sum_Cy + sum_By * sum_By * sum_D + sum_Az - 2.0 * sum_Bz * sum_Cz + sum_Bz * sum_Bz * sum_D) / sum_D);
     _flash_unpe = unpe_tot * fPEscale;
-    icountPE  += (int)(_flash_pe);
+    icountPE = std::round(_flash_pe);
     //   std::cout << "itpc:\t" << itpc << "\n";
     //   std::cout << "_flash_pe:\t" << _flash_pe << "\n";
     //   std::cout << "_flash_y:\t" << _flash_y << "\n";
