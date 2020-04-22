@@ -1372,6 +1372,12 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
   if(fShowInfo) DrawInfo(titles, width, height, upper_text_size);
 
   TString output_file = fOutputFile;
+  name.ReplaceAll(".","p");
+  name.ReplaceAll("-","m");
+  TString canv_name = canvas->GetName();
+  canv_name.ReplaceAll(".","p");
+  canv_name.ReplaceAll("-","m");
+  canvas->SetName(canv_name);
   output_file.ReplaceAll(".","_"+name+".");
   canvas->SaveAs(output_file);
   if(fSaveAllInOne){
@@ -1381,9 +1387,8 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
       hstack->Write("stack_"+name);
       legend->Write("legend_"+name);
     }
-    else if(!fPlotStacked){
+    if(!fPlotStacked)
       hstack->Write("total_"+name);
-    }
     f.Close();
   }
 }
