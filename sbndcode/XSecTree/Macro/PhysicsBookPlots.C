@@ -1351,7 +1351,7 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
   else{
     hstack->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
   }
-
+  
   if(fPlotXSec && fPlotVariables.size()==1){ 
     title_size = 1.0*hstack->GetYaxis()->GetTitleSize();
     hstack->GetYaxis()->SetTitleOffset(1.15);
@@ -1898,10 +1898,8 @@ TH1D* GetTotalHist(std::vector<std::vector<double>> data, TString name, std::vec
     }
   }
   // Include scale factor bin by bin as ->Scale() won't change errors
-  double integral = 0.;
   for(size_t n = 0; n <= total_hist->GetNbinsX(); n++){
     total_hist->SetBinContent(n, total_hist->GetBinContent(n)*fPotScaleFac);
-    integral += total_hist->GetBinContent(n)*fPotScaleFac;
   }
 
   // If plotting cross section convert from rate

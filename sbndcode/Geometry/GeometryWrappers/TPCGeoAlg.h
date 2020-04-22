@@ -73,6 +73,7 @@ namespace sbnd{
     bool EntersVolume(const simb::MCParticle& particle);
     // Determine if a true particle crosses the TPC volume
     bool CrossesVolume(const simb::MCParticle& particle);
+
     // Determine if a true particle crosses either APA
     bool CrossesApa(const simb::MCParticle& particle);
 
