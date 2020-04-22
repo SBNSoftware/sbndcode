@@ -35,10 +35,10 @@ fwdir   product_dir scripts
 # Add the dependent product and version
 
 product          version
-larsoft          v08_45_00
+larsoft          v08_44_00
 genie_xsec       v3_00_04a
 sbnd_data        v01_02_00 - optional
-sbndutil         v08_45_00 - optional
+sbndutil         v08_44_00_1_MCP2_1 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers

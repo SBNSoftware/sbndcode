@@ -7,6 +7,8 @@
 // Some inputs accept multiple parameters separated by ","'s.
 // Send bugs/suggestions to tom.brooks@sheffield.ac.uk
 // Authors: Tom Brooks, Rhiannon Jones, Ed Tyley, Natalie Wright
+//
+// NOTE: '//' Is NOT a comment, the code WILL read it.
 //------------------------------------------------------------------------
 
 
@@ -14,16 +16,14 @@
 //                           File configuration
 //------------------------------------------------------------------------
 // Name of input file
-//InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/xsectree_output.root
-//InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/Macro/files/mcp2-small-xsectree.root
-InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/Macro/files/mcp2-xsectree.root
+InputFile: /sbnd/app/users/rsjones/LArSoft_v08_44_00_1_MCP2_1/LArSoft-v08_44_00_1_MCP2_1/srcs/sbndcode/sbndcode/XSecTree/files/xsec_tree_mcp2-1.root
 
 // Path to interaction and metadata trees
 TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: test/jan-2020-overlays/lep_mom_slices/lep_mom_slices.root
+OutputFile: test/april-2020/debugging/cos-theta_lep-mom_slices/cos-theta_lep-mom_slices.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -107,7 +107,6 @@ SaveAllInOne: true
 
 // Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
 PotScale: 6.6e20
-//PotScale: -1
 
 //------------------------------------------------------------------------
 //                           Choose how to plot
@@ -125,13 +124,16 @@ MinValue: 0., -1.1
 MaxValue: 3., 1.
 
 // Number of bins (-1 for automatic)
-NumBins: 5,9
+NumBins: 6,9
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-//BinEdges: [0.,0.4,0.5,0.75,1.25,2.5],[-1.,-0.5,0.0,0.27,0.45,0.62,0.760.86,0.94,1.0]
+BinEdges: [0.0,0.2,0.3,0.45,0.78,1.29,2.5],[-1.,-0.5,0.0,0.27,0.45,0.62,0.76,0.86,0.94,1.0]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
 MaxError: -1
+
+// Scale the histograms by bin width (true) or not (false)
+ScaleWidth: true
 
 // Plot cross-section (true) or rate (false)
 PlotXSec: true

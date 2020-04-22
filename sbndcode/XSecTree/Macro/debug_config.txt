@@ -7,6 +7,8 @@
 // Some inputs accept multiple parameters separated by ","'s.
 // Send bugs/suggestions to tom.brooks@sheffield.ac.uk
 // Authors: Tom Brooks, Rhiannon Jones, Ed Tyley, Natalie Wright
+//
+// NOTE: '//' Is NOT a comment, the code WILL read it.
 //------------------------------------------------------------------------
 
 
@@ -14,15 +16,14 @@
 //                           File configuration
 //------------------------------------------------------------------------
 // Name of input file
-//InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/Macro/files/mcp2-xsectree.root
-InputFile: /sbnd/app/users/rsjones/LArSoft_v08_44_00_1_MCP2_1/LArSoft-v08_44_00_1_MCP2_1/srcs/sbndcode/sbndcode/XSecTree/files/xsectree_output.root
+InputFile: /sbnd/app/users/rsjones/LArSoft_v08_44_00_1_MCP2_1/LArSoft-v08_44_00_1_MCP2_1/srcs/sbndcode/sbndcode/XSecTree/files/xsec_tree_mcp2-1.root
 
 // Path to interaction and metadata trees
 TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: test/small_mcp2-1.root
+OutputFile: test/april-2020/debugging/lep-mom/lep-mom.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -96,7 +97,7 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: nu_energy
+PlotVariable: lep_mom
 
 // Save the plots for each variable
 ShowPlots: true
@@ -123,16 +124,19 @@ MinValue: 0.
 MaxValue: 3.
 
 // Number of bins (-1 for automatic)
-NumBins: 100
+NumBins: 6
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-//BinEdges: [-1]
+BinEdges: [0.0,0.2,0.3,0.45,0.78,1.29,2.5]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
-MaxError: 0.02
+MaxError: -1
+
+// Scale the histograms by bin width (true) or not (false)
+ScaleWidth: true
 
 // Plot cross-section (true) or rate (false)
-PlotXSec: false
+PlotXSec: true
 
 // Plot filled histograms (true)
 PlotFilled: true
@@ -144,7 +148,7 @@ PlotFilled: true
 ShowInfo: false
 
 // Show percentage statistical error (true)
-ShowStatError: true
+ShowStatError: false
 
 // Show error bars on histograms (true)
 ShowErrorBars: false
