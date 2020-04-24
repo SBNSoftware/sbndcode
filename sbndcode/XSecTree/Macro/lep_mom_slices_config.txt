@@ -42,7 +42,7 @@ ContainedParticles: true, true
 
 // Apply a fiducial volume cut to the neutrino vertex (-1 for AV)
 // Cuts +ve values from face: min x, min y, min z, max x, max y, max z [cm]
-Fiducial: 15, 15, 15, 15, 15, 80
+Fiducial: 0,0,0,0,0,0
 
 // FSI (true) or true interaction (false)
 PlotByFsi: true
@@ -133,7 +133,7 @@ BinEdges: [0.0,0.2,0.3,0.45,0.78,1.29,2.5],[-1.,-0.5,0.0,0.27,0.45,0.62,0.76,0.8
 MaxError: -1
 
 // Scale the histograms by bin width (true) or not (false)
-ScaleWidth: true
+ScaleWidth: false
 
 // Plot cross-section (true) or rate (false)
 PlotXSec: true

@@ -29,20 +29,19 @@ OutputFile: test/april-2020/debugging/lep-mom/lep-mom.root
 //          Select neutrino interaction (commas for multiple)
 //------------------------------------------------------------------------
 // Muon ([-]14) or electron ([-]12) neutrino
-NuPdg: 14, -14
+NuPdg: 14,-14
 
 // Charged current (1), neutral current (0), not selected (-1, reco only)
-IsCC: 1, 1
+IsCC: 1,1
 
-// Require lepton to be contained
+// Require lepton to be contained, this is not considered in the 'true' case
 ContainedLepton: false, false
 
-// Require secondary particles to be contained
+// Require secondary particles to be contained, this is not considered in the 'true' case
 ContainedParticles: true, true
 
-// Apply a fiducial volume cut to the neutrino vertex (-1 for AV)
 // Cuts +ve values from face: min x, min y, min z, max x, max y, max z [cm]
-Fiducial: 15, 15, 15, 15, 15, 80
+Fiducial: 0,0,0,0,0,0
 
 // FSI (true) or true interaction (false)
 PlotByFsi: true
@@ -124,16 +123,16 @@ MinValue: 0.
 MaxValue: 3.
 
 // Number of bins (-1 for automatic)
-NumBins: 6
+NumBins: -1
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-BinEdges: [0.0,0.2,0.3,0.45,0.78,1.29,2.5]
+BinEdges: 0
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
 MaxError: -1
 
 // Scale the histograms by bin width (true) or not (false)
-ScaleWidth: true
+ScaleWidth: false
 
 // Plot cross-section (true) or rate (false)
 PlotXSec: true

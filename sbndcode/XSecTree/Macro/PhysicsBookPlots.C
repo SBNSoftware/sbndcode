@@ -80,11 +80,12 @@ bool fUnfold; //TODO
 double fPot;
 double fPotScaleFac = 1;
 double fFiducialMass;
+double fXSecScale;
 double fFlux;
 double fTargets;
 // Constants
 // Integrated flux for each neutrino species
-std::map<int, double> fNuFlux = {{14, 7.91}, {-14, 0.5475}, {12, 0.04696}, {-12, 0.004732}};
+std::map<int, double> fNuFlux = {{14, 7.96}, {-14, 0.5475}, {12, 0.04696}, {-12, 0.004732}};
 const std::vector<int> fCols = {46, 38, 40, 30, 49, 33, 42};
 const std::vector<int> fLineStyle = {1, 2, 7, 9, 1, 2, 7, 9, 1, 2, 7, 9};
 const std::vector<int> fFillStyle = {3001, 1001, 3315, 3004, 3351, 3001, 3315, 3004, 3351, 3001, 3315, 3004, 3351};
@@ -346,17 +347,19 @@ void Configure(const std::string config_filename) {
 }
 
 // Check if an interaction matches the selection criteria
-bool IsSelected(int nu_pdg, int cc, bool lep_contained, bool particles_contained, int n_pr, int n_pipm, int n_pi0, int int_type){
+bool IsSelected(int nu_pdg, int cc, bool lep_contained, bool particles_contained, int n_pr, int n_pipm, int n_pi0, int int_type, bool full_truth){
   bool selected = true;
 
   if (std::find(fNuPdg.begin(), fNuPdg.end(), nu_pdg) == fNuPdg.end())
     selected = false;
   if (std::find(fIsCC.begin(), fIsCC.end(), cc) == fIsCC.end())
     selected = false;
-  if (std::find(fContainedLepton.begin(), fContainedLepton.end(), lep_contained) == fContainedLepton.end())
-    selected = false;
-  if (std::find(fContainedParticles.begin(), fContainedParticles.end(), particles_contained) == fContainedParticles.end())
-    selected = false;
+  if(!full_truth){
+    if (std::find(fContainedLepton.begin(), fContainedLepton.end(), lep_contained) == fContainedLepton.end())
+      selected = false;
+    if (std::find(fContainedParticles.begin(), fContainedParticles.end(), particles_contained) == fContainedParticles.end())
+      selected = false;
+  }
   if (fPlotByFsi){
     if (std::find(fNumProtons.begin(), fNumProtons.end(), -1) == fNumProtons.end()){
       if (std::find(fNumProtons.begin(), fNumProtons.end(), n_pr) == fNumProtons.end())
@@ -428,6 +431,7 @@ std::map< TString, std::vector<Interaction> > ReadData(){
     TTreeReaderValue<double>       true_delta_phit(tree_reader, "true_delta_phit");
 
     TString prefix = s+"_";
+    bool full_truth = prefix.Contains("true");
 
     TTreeReaderValue<bool>         lep_contained(tree_reader, prefix+"lep_contained");
     TTreeReaderValue<bool>         particles_contained(tree_reader, prefix+"particles_contained");
@@ -451,14 +455,13 @@ std::map< TString, std::vector<Interaction> > ReadData(){
     TTreeReaderValue<double>       delta_alphat(tree_reader, prefix+"delta_alphat");
     TTreeReaderValue<double>       delta_phit(tree_reader, prefix+"delta_phit");
 
-
     // Loop over all the interactions
     while (tree_reader.Next()) {
 
       bool selected = IsSelected(*nu_pdg, *cc, *lep_contained, *particles_contained, 
-                                 *n_pr, *n_pipm, *n_pi0, *int_type);
+                                 *n_pr, *n_pipm, *n_pi0, *int_type, full_truth);
       bool true_selected = IsSelected(*true_nu_pdg, *true_cc, *true_lep_contained, 
-                                      *true_particles_contained, *true_n_pr, *true_n_pipm, *true_n_pi0, *true_int_type);
+                                      *true_particles_contained, *true_n_pr, *true_n_pipm, *true_n_pi0, *true_int_type, full_truth);
 
       // Check true vertex inside fiducial volume
       if(std::find(fFiducial.begin(), fFiducial.end(), -1) == fFiducial.end() && fFiducial.size() == 6){
@@ -637,6 +640,7 @@ void GetMetaData(){
   }
 
   double flux_factor = 0;
+
   for(auto const& pdg : fNuPdg){
     if(fNuFlux.find(pdg) == fNuFlux.end()){
       std::cout<<"Unknown neutrino PDG code!\n";
@@ -644,6 +648,7 @@ void GetMetaData(){
     }
     flux_factor += fNuFlux[pdg];
   }
+  flux_factor = 7.96;
   fFlux = flux_factor * 1e-6 * fPotScale / (10000*0.05); // [cm^-2]
 
   double volume = 400*400*500; // [cm^3]
@@ -651,7 +656,8 @@ void GetMetaData(){
     volume = (400-fFiducial[0]-fFiducial[3])*(400-fFiducial[1]-fFiducial[4])*(500-fFiducial[2]-fFiducial[5]); // [cm^3]
   }
   fFiducialMass = 1.3973*volume/1e6; //[tons]
-  fTargets = 6.022e23 * fFiducialMass * 1e3 * 40/ (0.03995); // [/nucleon]
+  fTargets      = 6.022e23 * fFiducialMass * 1e3 * 40/ (0.03995); // [/nucleon]
+  fXSecScale    = (1e38)/(fFlux * fTargets);
 
 }
 
@@ -1144,6 +1150,147 @@ TString GetXSecTitle(Titles titles, int i, int j = -1, int k = -1){
   return TString(xsec_title);
 }
 
+// Plot a 1D hist with statistical errors on the bottom
+void Plot1DHistWithErrors(TH1D* error_bands, Titles titles, TH1D* total_hist, size_t i, size_t j = -1, size_t k = -1){
+
+  // Create the canvas
+  TString name = total_hist->GetName();
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",600,1000);
+
+  // Split the pad for histogram and error plot
+  double pad_split = .3;
+  TPad *upper_pad = new TPad("upper_pad", "" , 0., pad_split, 1.0, 1.0);
+  upper_pad->SetTopMargin(0.12);
+  upper_pad->SetBottomMargin(0.075);
+  upper_pad->SetLeftMargin(0.14);
+  upper_pad->SetRightMargin(0.05);
+
+  TPad *lower_pad = new TPad("lower_pad", "", 0., 0., 1., pad_split);
+  lower_pad->SetTopMargin(0.01);
+  lower_pad->SetBottomMargin(0.32);
+  lower_pad->SetLeftMargin(0.14);
+  lower_pad->SetRightMargin(0.05);
+
+  upper_pad->Draw();
+  lower_pad->Draw();
+
+  // Fill the upper pad with histogram, info and legend
+  upper_pad->cd();
+
+  // Draw the stacked histogram and legend
+  total_hist->Draw("HIST");
+  if(fShowErrorBars){
+    TH1D *total_clone = static_cast<TH1D*>(total_hist->Clone("total_clone"));
+    total_clone->SetLineWidth(2);
+    total_clone->SetMarkerStyle(1);
+    total_clone->Draw("E1 X0 SAME");
+  }
+
+  total_hist->SetFillColor(fCols[0]);
+  total_hist->SetFillStyle(fFillStyle[0]);
+  total_hist->SetLineColor(fCols[0]);
+  if(!fPlotFilled){
+    total_hist->SetFillColor(0);
+    total_hist->SetLineWidth(2);
+    total_hist->SetLineStyle(fLineStyle[0]);
+  }
+  
+  // Set the titles
+  if(fPlotXSec){
+    total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+  }
+  else if(fMaxError > 0){
+    total_hist->GetYaxis()->SetTitle("Events (/bin width)");
+  }
+  else{
+    total_hist->GetYaxis()->SetTitle("Events");
+  }
+  // X axis config
+  total_hist->GetXaxis()->SetLabelOffset(0.1);
+  total_hist->GetXaxis()->SetTitleOffset(1.8);
+  total_hist->GetXaxis()->SetTickLength(0.04);
+  
+  // Y axis config
+  total_hist->GetYaxis()->SetTitleOffset(1.2);
+  double title_size = 1.1*total_hist->GetYaxis()->GetTitleSize();
+  if(fPlotXSec && fPlotVariables.size()==1){ 
+    title_size = 1.0*total_hist->GetYaxis()->GetTitleSize();
+    total_hist->GetYaxis()->SetTitleOffset(1.2);
+  }
+  if(fPlotXSec && fPlotVariables.size()==2){ 
+    title_size = 0.8*total_hist->GetYaxis()->GetTitleSize();
+    total_hist->GetYaxis()->SetTitleOffset(1.3);
+  }
+  if(fPlotXSec && fPlotVariables.size()==3){ 
+    title_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+    total_hist->GetYaxis()->SetTitleOffset(1.4);
+  }
+  total_hist->GetYaxis()->SetTitleSize(title_size);
+  total_hist->GetYaxis()->SetNdivisions(110);
+  total_hist->GetYaxis()->SetTickLength(0.015);
+  canvas->Modified();
+
+  // Info text
+  // Text position and content
+  double width = 0.7*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+  double height = total_hist->GetMaximum();
+  double upper_text_size = 0.7*total_hist->GetYaxis()->GetTitleSize();
+  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size);
+ 
+  // Fill the lower pad with percentage error per bin
+  lower_pad->cd();
+  lower_pad->SetTickx();
+  lower_pad->SetTicky();
+ 
+  // Set axis titles
+  error_bands->SetFillColor(38);
+  error_bands->SetLineColor(38);
+  error_bands->GetYaxis()->SetTitle("#sigma_{stat} (%)");
+  if(titles.units[i].IsNull()){
+    error_bands->GetXaxis()->SetTitle(titles.names[i]);
+    total_hist->GetXaxis()->SetTitle(titles.names[i]);
+  }
+  else{
+    error_bands->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+    total_hist->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+  }
+
+  double size_ratio = upper_pad->GetAbsHNDC()/lower_pad->GetAbsHNDC();
+  // x axis config
+  error_bands->GetXaxis()->SetTitleSize(0.8*size_ratio*error_bands->GetXaxis()->GetTitleSize());
+  error_bands->GetXaxis()->SetLabelSize(size_ratio*error_bands->GetXaxis()->GetLabelSize());
+  error_bands->GetXaxis()->SetLabelOffset(0.04);
+  error_bands->GetXaxis()->SetTickLength(size_ratio*0.04);
+  error_bands->SetTitleOffset(1.2, "x");
+  // y axis config
+  error_bands->GetYaxis()->SetTitleSize(0.8*size_ratio*error_bands->GetYaxis()->GetTitleSize());
+  error_bands->GetYaxis()->SetLabelSize(size_ratio*error_bands->GetYaxis()->GetLabelSize());
+  error_bands->GetYaxis()->CenterTitle();
+  error_bands->GetYaxis()->SetTickLength(0.015);
+  error_bands->SetNdivisions(105, "y");
+  error_bands->SetTitleOffset(0.5, "y");
+
+  // Draw the error bars
+  if(error_bands->GetNbinsX() < 40) error_bands->Draw("B");
+  else error_bands->Draw();
+  
+  TString output_file = fOutputFile;
+  name.ReplaceAll(".","p");
+  name.ReplaceAll("-","m");
+  TString canv_name = canvas->GetName();
+  canv_name.ReplaceAll(".","p");
+  canv_name.ReplaceAll("-","m");
+  canvas->SetName(canv_name);
+  output_file.ReplaceAll(".","_"+name+".");
+  canvas->SaveAs(output_file);
+  if(fSaveAllInOne){
+    TFile f(fOutputFile, "UPDATE");
+    total_hist->Write(name);
+    canvas->Write();
+    f.Close();
+  }
+}
+
 // Plot a 1D stacked hist with statistical errors on the bottom
 void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Titles titles, TH1D* total_hist, size_t i, size_t j = -1, size_t k = -1){
 
@@ -1188,7 +1335,7 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   if(fPlotXSec){
     hstack->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
   }
-  else if(fMaxError > 0 || fScaleWidth){
+  else if(fMaxError > 0){
     hstack->GetYaxis()->SetTitle("Events (/bin width)");
   }
   else{
@@ -1286,6 +1433,106 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
 }
 
 // Plot a 1D hist
+void Plot1DHist(Titles titles, TH1D* total_hist, size_t i, size_t j = -1, size_t k = -1){
+
+  // Create the canvas
+  TString name = total_hist->GetName();
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",600,600);
+
+  // Split the pad for histogram and error plot
+  canvas->SetTopMargin(0.1);
+  canvas->SetBottomMargin(0.12);
+  canvas->SetLeftMargin(0.13);
+  canvas->SetRightMargin(0.04);
+
+  // Draw the stacked histogram and legend
+  total_hist->Draw("HIST");
+
+  total_hist->SetFillColor(fCols[0]);
+  total_hist->SetFillStyle(fFillStyle[0]);
+  total_hist->SetLineColor(fCols[0]);
+  if(!fPlotFilled){
+    total_hist->SetFillColor(0);
+    total_hist->SetLineWidth(2);
+    total_hist->SetLineStyle(fLineStyle[0]);
+  }
+  
+  double title_size = 1.;
+
+  // X axis config
+  total_hist->GetXaxis()->SetTitleOffset(1.2);
+  total_hist->GetXaxis()->SetTickLength(0.02);
+  total_hist->GetXaxis()->SetTitleSize(0.7*total_hist->GetXaxis()->GetTitleSize());
+  total_hist->GetXaxis()->SetLabelSize(0.8*total_hist->GetXaxis()->GetLabelSize());
+  // Y axis config
+  total_hist->GetYaxis()->SetTitleOffset(1.8);
+  total_hist->GetYaxis()->SetTickLength(0.015);
+
+  total_hist->GetYaxis()->SetTitleSize(0.7*total_hist->GetYaxis()->GetTitleSize());
+  total_hist->GetYaxis()->SetLabelSize(0.8*total_hist->GetYaxis()->GetLabelSize());
+  total_hist->GetYaxis()->SetNdivisions(110);
+
+  if(fShowErrorBars){
+    TH1D* total_clone = static_cast<TH1D*>(total_hist->Clone("total_clone"));
+    total_clone->SetLineWidth(2);
+    total_clone->SetMarkerStyle(1);
+    total_clone->Draw("E1 X0 SAME");
+  }
+
+  // Set the titles
+  if(fPlotXSec){
+    total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+  }
+  else if(fMaxError > 0){
+    total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
+  }
+  else{
+    total_hist->GetYaxis()->SetTitle("Events");
+  }
+  if(titles.units[i].IsNull()){
+    total_hist->GetXaxis()->SetTitle(titles.names[i]);
+  }
+  else{
+    total_hist->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+  }
+  
+  if(fPlotXSec && fPlotVariables.size()==1){ 
+    title_size = 1.0*total_hist->GetYaxis()->GetTitleSize();
+    total_hist->GetYaxis()->SetTitleOffset(1.15);
+  }
+  if(fPlotXSec && fPlotVariables.size()==2){ 
+    title_size = 0.8*total_hist->GetYaxis()->GetTitleSize();
+    total_hist->GetYaxis()->SetTitleOffset(1.25);
+  }
+  if(fPlotXSec && fPlotVariables.size()==3){ 
+    title_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+    total_hist->GetYaxis()->SetTitleOffset(1.35);
+  }
+
+  // Text position and content
+  double width           = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+  double height          = total_hist->GetMaximum();
+  double upper_text_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size);
+
+  TString output_file = fOutputFile;
+  name.ReplaceAll(".","p");
+  name.ReplaceAll("-","m");
+  TString canv_name = canvas->GetName();
+  canv_name.ReplaceAll(".","p");
+  canv_name.ReplaceAll("-","m");
+  canvas->SetName(canv_name);
+  output_file.ReplaceAll(".","_"+name+".");
+  canvas->SaveAs(output_file);
+  if(fSaveAllInOne){
+    TFile f(fOutputFile, "UPDATE");
+    canvas->Write();
+    total_hist->Write(name);
+    f.Close();
+  }
+}
+
+// Plot a 1D stack
 void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, size_t i, size_t j = -1, size_t k = -1){
 
   // Create the canvas
@@ -1339,7 +1586,7 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, s
   if(fPlotXSec){
     hstack->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
   }
-  else if(fMaxError > 0 || fScaleWidth){
+  else if(fMaxError > 0){
     hstack->GetYaxis()->SetTitle("Events (/Bin width)");
   }
   else{
@@ -1445,7 +1692,7 @@ void PlotOverlay1D(std::map<TString, TH1D*> histograms, Titles titles, TString t
     if(fPlotXSec){
       total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
     }
-    else if(fMaxError > 0 || fScaleWidth){
+    else if(fMaxError > 0){
       total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
     }
     else{
@@ -1583,7 +1830,7 @@ void PlotOverlay1DWithErrors(std::map<TString, TH1D*> histograms, map<TString, T
     if(fPlotXSec){
       total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
     }
-    else if(fMaxError > 0 || fScaleWidth){
+    else if(fMaxError > 0){
       total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
     }
     else{
@@ -1865,7 +2112,7 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
       hist->Scale(xsec_scale, "width");
     }
     // Else if max error used divide each bin by width
-    else if (fMaxError > 0 || fBinEdges[i].size()>1 || fScaleWidth){
+    else if (fMaxError > 0 || fBinEdges[i].size()>1){
       hist->Scale(1, "width");
     }
     hist->SetFillColor(fCols[index]);
@@ -1903,25 +2150,31 @@ TH1D* GetTotalHist(std::vector<std::vector<double>> data, TString name, std::vec
     }
   }
   // Include scale factor bin by bin as ->Scale() won't change errors
-  for(size_t n = 0; n <= total_hist->GetNbinsX(); n++){
-    total_hist->SetBinContent(n, total_hist->GetBinContent(n)*fPotScaleFac);
-  }
+  total_hist->Scale(fPotScaleFac);
 
+  total_hist->SetFillColor(fCols[0]);
+  total_hist->SetFillStyle(fFillStyle[0]);
+  total_hist->SetLineColor(fCols[0]);
+  if(!fPlotFilled){
+    total_hist->SetFillColor(0);
+    total_hist->SetLineWidth(2);
+    total_hist->SetLineStyle(fLineStyle[0]);
+  }
+  
   // If plotting cross section convert from rate
   if(fPlotXSec){
-    double width = 1;
+    double width = 1.;
     if(j != -1) width = width * (bin_edges[j][bin_j+1] - bin_edges[j][bin_j]);
-    if(k != -1) width = width * (bin_edges[k][bin_k+1] - bin_edges[k][bin_k]);
-    double xsec_scale = 1e38/(width * fFlux * fTargets);
+    // if(k != -1) width = width * (bin_edges[k][bin_k+1] - bin_edges[k][bin_k]);
+    double xsec_scale = (1e38)/(width * fFlux * fTargets);
     total_hist->Scale(xsec_scale,"width");
   }
   // Else if max error used divide each bin by width
-  else if (fMaxError > 0 || fBinEdges[i].size()>1 || fScaleWidth){
+  else if (fMaxError > 0 || fBinEdges[i].size()>1){
     total_hist->Scale(1, "width");
   }
   return total_hist;
 }
-
 
 // Get the percentage statistical error per bin
 TH1D* GetErrorBand(TH1D* total_hist, TString name, std::vector<std::vector<double>> bin_edges, int i){
@@ -2175,10 +2428,18 @@ void PhysicsBookPlots(std::string config = "config.txt"){
       std::pair<THStack*, TLegend*> stack = StackHist1D(stack_data.at(s), name_1D_s, title_1D_s, bin_edges, d_i);
 
       // Draw the plots
-      if(fShowStatError)
-        Plot1DWithErrors(stack.first, stack.second, error_band.at(s), titles, total_hist.at(s), d_i);
-      else
-        Plot1D(stack.first, stack.second, titles, total_hist.at(s), d_i);
+      if(fShowStatError){
+        if(fPlotStacked)
+          Plot1DWithErrors(stack.first, stack.second, error_band.at(s), titles, total_hist.at(s), d_i);
+        else
+          Plot1DHistWithErrors(error_band.at(s), titles, total_hist.at(s), d_i);
+      }
+      else{
+        if(fPlotStacked)
+          Plot1D(stack.first, stack.second, titles, total_hist.at(s), d_i);
+        else
+          Plot1DHist(titles, total_hist.at(s), d_i);
+      }
     }
     if(fStage.size() > 1){
       PlotOverlay1D(total_hist, titles, title_1D, d_i);
@@ -2216,9 +2477,42 @@ void PhysicsBookPlots(std::string config = "config.txt"){
         else
           plot_label_var2 = titles.names[d_j]+" ["+titles.units[d_j]+"]";
 
+        hist_2D->Scale(fXSecScale,"width");
         Plot2D(hist_2D, fPlotVariables[d_i]+"_"+fPlotVariables[d_j]+"_"+s, plot_label_var1, plot_label_var2);
 
+        for(int bin_j = 0; bin_j < bin_edges[d_j].size()-1; bin_j++){
+          // Rebin so every bin below maximum error if set
+          std::vector<std::vector<double>> bin_edges_copy = bin_edges;
+          if(fMaxError>0){
+            std::vector<double> bin_edges_new = ChangeBinning2D(total_data.begin()->second, bin_edges, d_i, d_j, bin_j);
+            bin_edges_copy[d_i] = bin_edges_new;
+          }
+          // Get the file name and title of the histogram
+          TString name_2D = fPlotVariables[d_i] +"_"
+            + fPlotVariables[d_j] +"_"+ Form("%.1f", bin_edges_copy[d_j][bin_j]) +"_"+ Form("%.1f", bin_edges_copy[d_j][bin_j+1]);
+          TString title_2D = titles.hist_titles[d_j] 
+            +": ["+ Form("%.2f", bin_edges_copy[d_j][bin_j]) +", "+ Form("%.2f", bin_edges_copy[d_j][bin_j+1]) +"]";
+
+          std::map< TString, TH1D*> total_hist_2D, error_band_2D;
+          for(const TString &s : fStage){
+            TString name_2D_s = name_2D+"_"+s;
+            TString title_2D_s = title_2D+" "+s;
+            // Only make these plots for 2 variables
+            if(fPlotVariables.size() != 2) continue;
+            total_hist_2D[s] = hist_2D->ProjectionX(name_2D_s,bin_j,bin_j+1);
+            total_hist_2D[s]->SetTitle(title_2D_s);
+            error_band_2D[s] = GetErrorBand(total_hist_2D[s],  name_2D_s, bin_edges_copy, d_j);
+          }
+          // Draw the plots
+          if(fShowStatError){
+            Plot1DHistWithErrors(error_band_2D.at(s), titles, total_hist_2D.at(s), d_j);
+          }
+          else{
+            Plot1DHist(titles, total_hist_2D.at(s), d_j);
+          }
+        }
       }
+      /*
       // Loop over the bins for variable 2
       for(size_t bin_j = 0; bin_j < bin_edges[d_j].size()-1; bin_j++){
         // Only make these plots for 2 variables
@@ -2251,8 +2545,18 @@ void PhysicsBookPlots(std::string config = "config.txt"){
           std::pair<THStack*, TLegend*> stack_2D = StackHist1D(stack_data[s], name_2D_s, title_2D_s, bin_edges_copy, d_i, d_j, bin_j);
 
           // Draw the plots
-          if(fShowStatError) Plot1DWithErrors(stack_2D.first, stack_2D.second, error_band_2D[s], titles, total_hist_2D[s], d_i, d_j);
-          else Plot1D(stack_2D.first, stack_2D.second, titles, total_hist_2D[s], d_i, d_j);
+          if(fShowStatError){
+            if(fPlotStacked)
+              Plot1DWithErrors(stack_2D.first, stack_2D.second, error_band_2D.at(s), titles, total_hist_2D.at(s), d_i);
+            else
+              Plot1DHistWithErrors(error_band_2D.at(s), titles, total_hist_2D.at(s), d_i);
+          }
+          else{
+            if(fPlotStacked)
+              Plot1D(stack_2D.first, stack_2D.second, titles, total_hist_2D.at(s), d_i);
+            else
+              Plot1DHist(titles, total_hist_2D.at(s), d_i);
+          }
         }
         if(fStage.size() > 1){
           PlotOverlay1D(total_hist_2D, titles, title_2D, d_i, d_j);
@@ -2263,7 +2567,7 @@ void PhysicsBookPlots(std::string config = "config.txt"){
         if(fPlotEffPur){
           PlotEffPur(interactions, name_2D, titles, bin_edges_copy, d_i, d_j, bin_j);
         }
-      }
+      }*/
     }
   }
   std::cout<<"...Finished.\n";
