@@ -2841,8 +2841,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     }//end loop over track module labels
   }// end (fSaveTrackInfo) 
   
-  trkf::TrackMomentumCalculator trkm;  
-  std::cout<<"\t"<<trkm.GetTrackMomentum(200,2212)<<"\t"<<trkm.GetTrackMomentum(-10, 13)<<"\t"<<trkm.GetTrackMomentum(300,-19)<<"\n";
 
   //mc truth information
   if (isMC){
