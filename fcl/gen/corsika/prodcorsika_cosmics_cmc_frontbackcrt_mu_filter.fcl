@@ -4,7 +4,7 @@
 physics.producers.generator: @local::sbnd_corsika_cmc
 physics.filters.filter: @local::sbnd_gencrtfilter
 
-physics.simulate: [ generator, filter ]
+physics.simulate: [ generator, filter, rns ]
 
 physics.filters.filter.UseTopHighCRTs: false
 physics.filters.filter.UseTopLowCRTs: false

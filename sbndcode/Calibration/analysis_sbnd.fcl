@@ -1,0 +1,34 @@
+#include "analysis_tools_sbnd.fcl"
+#include "services_sbnd.fcl"
+
+services:
+{
+  TFileService: { fileName: "TFile-HitEfficiency.root" }
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc
+                        @table::sbnd_services              # from services_sbnd.fcl
+
+}
+
+sbnd_HitEfficiencyAnalysis:
+{
+  module_type:                    HitEfficiencyAna
+  HitEfficiencyHistogramToolList: [ @local::TrackHitEfficiencyAnalysisTool ]
+}
+
+physics:
+{
+  producers:{}
+  filters:  {}
+  analyzers:{
+
+    analysistree: @local::sbnd_HitEfficiencyAnalysis
+
+  } # analyzers
+
+  ana:  [ analysistree ]
+
+  trigger_paths: []
+  end_paths:     [ ana ]
+
+} # physics
+

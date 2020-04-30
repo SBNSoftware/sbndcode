@@ -41,7 +41,7 @@ extern "C" {
 #include "lardataobj/RawData/raw.h"
 #include "lardataobj/RawData/TriggerData.h"
 // #include "lardata/DetectorInfoServices/LArPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "sbndcode/Utilities/SignalShapingServiceT1053.h"
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/Simulation/sim.h"
@@ -198,12 +198,7 @@ void SimWireT1053::beginJob()
 void SimWireT1053::produce(art::Event& evt)
 {
 
-  // auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
-  art::ServiceHandle<detinfo::DetectorClocksServiceStandard> tss;
-  // In case trigger simulation is run in the same job...
-  //FIXME: you should never call preProcessEvent
-  tss->preProcessEvent(evt, art::ScheduleContext::invalid());
-  auto const* ts = tss->provider();
+  auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
 
   // get the geometry to be able to figure out signal types and chan -> plane mappings
   art::ServiceHandle<geo::Geometry> geo;

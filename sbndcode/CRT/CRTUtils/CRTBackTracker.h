@@ -16,8 +16,6 @@
 #include "art/Framework/Principal/Handle.h" 
 #include "canvas/Persistency/Common/Ptr.h" 
 #include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "art_root_io/TFileService.h"
-#include "art_root_io/TFileDirectory.h"
 #include "messagefacility/MessageLogger/MessageLogger.h" 
 #include "canvas/Persistency/Common/FindManyP.h"
 
@@ -53,6 +51,9 @@ namespace sbnd{
       };
       fhicl::Atom<art::InputTag> CRTTrackLabel {
         Name("CRTTrackLabel")
+      };
+      fhicl::Atom<bool> RollupUnsavedIds {
+        Name("RollupUnsavedIds")
       };
 
     };
@@ -109,6 +110,8 @@ namespace sbnd{
     art::InputTag fCRTDataLabel;
     art::InputTag fCRTHitLabel;
     art::InputTag fCRTTrackLabel;
+
+    bool fRollupUnsavedIds;
 
     std::map<int, std::map<int, double>> fDataTrueIds;
     std::map<int, std::map<int, double>> fHitTrueIds;

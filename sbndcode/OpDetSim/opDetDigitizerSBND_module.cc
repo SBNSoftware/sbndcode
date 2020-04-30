@@ -3,8 +3,8 @@
 // Module Type: producer
 // File:        opDetDigitizerSBND_module.cc
 //
-// Generated at Fri Apr  5 09:21:15 2019 by Laura Paulucci Marinho using artmod
-// from cetpkgsupport v1_14_01.
+// This module produces digitized waveforms of the optical detectors
+// Created by L. Paulucci, F. Marinho, and I.L. de Icaza
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
@@ -18,6 +18,9 @@
 #include "fhiclcpp/types/TableFragment.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "nurandom/RandomUtils/NuRandomService.h"
+#include "CLHEP/Random/JamesRandom.h"
+
 #include <memory>
 #include <vector>
 #include <cmath>
@@ -27,6 +30,9 @@
 #include <set>
 #include <sstream>
 #include <fstream>
+#include <thread>
+#include <cstdlib>
+#include <stdexcept>
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
@@ -42,61 +48,75 @@
 #include "TRandom3.h"
 #include "TF1.h"
 
-#include "sbndPDMapAlg.h" 
-#include "DigiArapucaSBNDAlg.h" 
-#include "DigiPMTSBNDAlg.h" 
-#include "opDetSBNDTriggerAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.hh"
+#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.hh"
+#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.hh"
+#include "sbndcode/OpDetSim/opDetDigitizerWorker.hh"
 
-namespace opdet{
+namespace opdet {
 
- /*
- * This module simulates the digitization of SBND photon detectors response.
- * 
- * The module is has an interface to the simulation algorithms for PMTs and arapucas,
- * opdet::DigiPMTSBNDAlg e opdet::DigiArapucaSBNDAlg.
- * 
- * Input
- * ======
- * The module utilizes as input a collection of `sim::SimPhotons` or `sim::SimPhotonsLite`, each
- * containing the photons propagated to a single optical detector channel.
- * 
- * Output
- * =======
- * A collection of optical detector waveforms (`std::vector<raw::OpDetWaveform>`) is produced.
- * 
- * Requirements
- * =============
- * This module currently requires LArSoft services:
- * * `DetectorClocksService` for timing conversions and settings
- * * `LArPropertiesService` for the scintillation yield(s)
- * 
- */
+  /*
+  * This module simulates the digitization of SBND photon detectors response.
+  *
+  * The module has an interface to the simulation algorithms for PMTs and Arapucas,
+  * opdet::DigiPMTSBNDAlg e opdet::DigiArapucaSBNDAlg.
+  *
+  * Input
+  * ======
+  * The module utilizes as input a collection of `sim::SimPhotons` or `sim::SimPhotonsLite`, each
+  * containing the photons propagated to a single optical detector channel.
+  *
+  * Output
+  * =======
+  * A collection of optical detector waveforms (`std::vector<raw::OpDetWaveform>`) is produced.
+  *
+  * Requirements
+  * =============
+  * This module currently requires LArSoft services:
+  * * `DetectorClocksService` for timing conversions and settings
+  * * `LArPropertiesService` for the scintillation yield(s)
+  *
+  */
 
   class opDetDigitizerSBND;
 
   class opDetDigitizerSBND : public art::EDProducer {
   public:
-   struct Config
-    {
-        using Comment = fhicl::Comment;
-        using Name = fhicl::Name;
-        
-        fhicl::Atom<art::InputTag> InputModuleName {
-            Name("InputModule"),
-            Comment("Simulated photons to be digitized")
-        };
-        fhicl::Atom<double> WaveformSize {
-            Name("WaveformSize"),
-            Comment("Value to initialize the waveform vector in ns. It is resized in the algorithms according to readout window of PDs")
-        };
-        fhicl::Atom<int> UseLitePhotons {
-            Name("UseLitePhotons"),
-            Comment("Whether SimPhotonsLite or SimPhotons will be used")
-        };
-        
-        fhicl::TableFragment<opdet::DigiPMTSBNDAlgMaker::Config> pmtAlgoConfig;
-        fhicl::TableFragment<opdet::DigiArapucaSBNDAlgMaker::Config> araAlgoConfig;
-        fhicl::TableFragment<opdet::opDetSBNDTriggerAlg::Config> trigAlgoConfig;
+    struct Config {
+      using Comment = fhicl::Comment;
+      using Name = fhicl::Name;
+
+      fhicl::Atom<art::InputTag> InputModuleName {
+        Name("InputModule"),
+        Comment("Simulated photons to be digitized")
+      };
+      fhicl::Atom<double> WaveformSize {
+        Name("WaveformSize"),
+        Comment("Value to initialize the waveform vector in ns. It is resized in the algorithms according to readout window of PDs")
+      };
+      fhicl::Atom<bool> UseSimPhotonsLite {
+        Name("UseSimPhotonsLite"),
+        Comment("Whether SimPhotonsLite or SimPhotons will be used")
+      };
+
+      fhicl::Atom<bool> ApplyTriggers {
+        Name("ApplyTriggers"),
+        Comment("Whether to apply trigger algorithm to waveforms"),
+        true
+      };
+
+      fhicl::Atom<unsigned> NThreads {
+        Name("NThreads"),
+        Comment("Number of threads to split waveform process into. Defaults to 1.\
+                     Set 0 to autodetect. Autodection will first check $SBNDCODE_OPDETSIM_NTHREADS for number of threads. \
+                     If this is not set, then NThreads is set to the number of hardware cores on the host machine."),
+        1
+      };
+
+      fhicl::TableFragment<opdet::DigiPMTSBNDAlgMaker::Config> pmtAlgoConfig;
+      fhicl::TableFragment<opdet::DigiArapucaSBNDAlgMaker::Config> araAlgoConfig;
+      fhicl::TableFragment<opdet::opDetSBNDTriggerAlg::Config> trigAlgoConfig;
     }; // struct Config
 
     using Parameters = art::EDProducer::Table<Config>;
@@ -104,6 +124,8 @@ namespace opdet{
     explicit opDetDigitizerSBND(Parameters const& config);
     // The destructor generated by the compiler is fine for classes
     // without bare pointers or other resource use.
+    // Add a destructor to deal with random number generator pointer
+    ~opDetDigitizerSBND();
 
     // Plugins should not be copied or assigned.
     opDetDigitizerSBND(opDetDigitizerSBND const &) = delete;
@@ -116,272 +138,204 @@ namespace opdet{
 
     opdet::sbndPDMapAlg map; //map for photon detector types
     unsigned int nChannels = map.size();
-    unsigned int fNsamples; //Samples per waveform
+    std::vector<raw::OpDetWaveform> fWaveforms; // holder for un-triggered waveforms
 
   private:
+    bool fApplyTriggers;
+    std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
-  // Declare member data here.
-    art::InputTag fInputModuleName;
+    bool fUseSimPhotonsLite;
+    unsigned fPMTBaseline;
+    unsigned fArapucaBaseline;
+    unsigned fNThreads;
+    // digitizer workers
+    std::vector<opdet::opDetDigitizerWorker> fWorkers;
+    std::vector<std::vector<raw::OpDetWaveform>> fTriggeredWaveforms;
+    std::vector<std::thread> fWorkerThreads;
 
-    double fSampling;       //wave sampling frequency (GHz)
-    double fWaveformSize;  //waveform time interval (ns)
+    // product containers
+    std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> fPhotonLiteHandles;
+    std::vector<art::Handle<std::vector<sim::SimPhotons>>> fPhotonHandles;
 
-    int fUseLitePhotons; //1 for using SimLitePhotons and 0 for SimPhotons (more complete)
-    std::unordered_map< raw::Channel_t,std::vector<double> > fFullWaveforms;  
-
-
-    void CreateDirectPhotonMap(std::map<int,sim::SimPhotons>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles);
-    void CreateDirectPhotonMapLite(std::map<int,sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles);
-
-    void MakeWaveforms(const art::Event &e, opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer, 
-         std::vector< raw::OpDetWaveform > *pulseVecPtr,
-         bool make_triggers, bool apply_triggers, bool save_waveforms);
-
-//arapuca and PMT digitization algorithms
-    opdet::DigiPMTSBNDAlgMaker makePMTDigi;
-    opdet::DigiArapucaSBNDAlgMaker makeArapucaDigi;
+    // sync stuff
+    opdet::opDetDigitizerWorker::Semaphore fSemStart;
+    opdet::opDetDigitizerWorker::Semaphore fSemFinish;
+    bool fFinished;
 
     // trigger algorithm
     opdet::opDetSBNDTriggerAlg fTriggerAlg;
   };
 
   opDetDigitizerSBND::opDetDigitizerSBND(Parameters const& config)
-  : EDProducer{config}
-  , fInputModuleName(config().InputModuleName())
-  , fWaveformSize(config().WaveformSize())
-  , fUseLitePhotons(config().UseLitePhotons())
-  , makePMTDigi(config().pmtAlgoConfig())
-  , makeArapucaDigi(config().araAlgoConfig())
-  , fTriggerAlg(config().trigAlgoConfig(), lar::providerFrom<detinfo::DetectorClocksService>(), lar::providerFrom<detinfo::DetectorPropertiesService>())
+    : EDProducer{config}
+    , fApplyTriggers(config().ApplyTriggers())
+    , fUseSimPhotonsLite(config().UseSimPhotonsLite())
+    , fPMTBaseline(config().pmtAlgoConfig().pmtbaseline())
+    , fArapucaBaseline(config().araAlgoConfig().baseline())
+    , fTriggerAlg(config().trigAlgoConfig(), lar::providerFrom<detinfo::DetectorClocksService>(), lar::providerFrom<detinfo::DetectorPropertiesService>())
   {
-  // Call appropriate produces<>() functions here.
-    produces< std::vector< raw::OpDetWaveform > >();
-
     auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency())*500/64/1000.0; //in GHz
-  
-    std::cout << "Sampling = " << fSampling << " GHz." << std::endl;
-  
-    fNsamples = (int)(fWaveformSize*fSampling);
+
+    opDetDigitizerWorker::Config wConfig( config().pmtAlgoConfig(), config().araAlgoConfig());
+
+    fNThreads = config().NThreads();
+    if (fNThreads == 0) { // autodetect -- first check env var
+      const char *env = std::getenv("SBNDCODE_OPDETSIM_NTHREADS");
+      // try to parse into positive integer
+      if (env != NULL) {
+        try {
+          int n_threads = std::stoi(env);
+          if (n_threads <= 0) {
+            throw std::invalid_argument("Expect positive integer");
+          }
+          fNThreads = n_threads;
+        }
+        catch (...) {
+          mf::LogError("OpDetDigitizer") << "Unable to parse number of threads "
+                                         << "in environment variable (SBNDCODE_OPDETSIM_NTHREADS): (" << env << ").\n"
+                                         << "Setting Number opdet threads to 1." << std::endl;
+          fNThreads = 1;
+        }
+      }
+    }
+
+    if (fNThreads == 0) { // autodetect -- now try to get number of cpu's
+      fNThreads = std::thread::hardware_concurrency();
+    }
+    if (fNThreads == 0) { // autodetect failed
+      fNThreads = 1;
+    }
+    mf::LogInfo("OpDetDigitizer") << "Digitizing on n threads: " << fNThreads << std::endl;
+
+    wConfig.nThreads = fNThreads;
+
+    wConfig.UseSimPhotonsLite = config().UseSimPhotonsLite();
+    wConfig.InputModuleName = config().InputModuleName();
+
+    wConfig.Sampling = (timeService->OpticalClock().Frequency()) / 1000.0; //in GHz
+    wConfig.EnableWindow = fTriggerAlg.TriggerEnableWindow(); // us
+    wConfig.Nsamples = (wConfig.EnableWindow[1] - wConfig.EnableWindow[0]) * 1000. /*us -> ns*/ * wConfig.Sampling /* GHz */;
+
+    fFinished = false;
+
+    fWorkers.reserve(fNThreads);
+    fTriggeredWaveforms.reserve(fNThreads);
+    for (unsigned i = 0; i < fNThreads; i++) {
+      // Set random number gen seed from the NuRandomService
+      art::ServiceHandle<rndm::NuRandomService> seedSvc;
+      CLHEP::HepJamesRandom *engine = new CLHEP::HepJamesRandom;
+      seedSvc->registerEngine(rndm::NuRandomService::CLHEPengineSeeder(engine), "opDetDigitizerSBND" + std::to_string(i));
+
+      fTriggeredWaveforms.emplace_back();
+
+      // setup worker
+      fWorkers.emplace_back(i, wConfig, engine, fTriggerAlg);
+      fWorkers[i].SetPhotonLiteHandles(&fPhotonLiteHandles);
+      fWorkers[i].SetPhotonHandles(&fPhotonHandles);
+      fWorkers[i].SetWaveformHandle(&fWaveforms);
+      fWorkers[i].SetTriggeredWaveformHandle(&fTriggeredWaveforms[i]);
+
+      // start worker thread
+      fWorkerThreads.emplace_back(opdet::opDetDigitizerWorkerThread,
+                                  std::cref(fWorkers[i]), std::ref(fSemStart), std::ref(fSemFinish),
+                                  fApplyTriggers, &fFinished);
+    }
+
+    // Call appropriate produces<>() functions here.
+    produces< std::vector< raw::OpDetWaveform > >();
+  }
+
+  opDetDigitizerSBND::~opDetDigitizerSBND()
+  {
+    // cleanup all of the workers
+    fFinished = true;
+    opdet::StartopDetDigitizerWorkers(fNThreads, fSemStart);
+
+    // join the threads
+    for (std::thread &thread : fWorkerThreads) thread.join();
+
   }
 
   void opDetDigitizerSBND::produce(art::Event & e)
   {
     std::unique_ptr< std::vector< raw::OpDetWaveform > > pulseVecPtr(std::make_unique< std::vector< raw::OpDetWaveform > > ());
-  // Implementation of required member function here.
-    std::cout <<"Event: " << e.id().event() << std::endl;
+    // Implementation of required member function here.
+    std::cout << "Event: " << e.id().event() << std::endl;
 
-    // prepare the algorithm
-    //     
-    auto arapucaDigitizer = makeArapucaDigi(
-    *(lar::providerFrom<detinfo::LArPropertiesService>()),
-    *(lar::providerFrom<detinfo::DetectorClocksService>())
-    );
+    // setup the waveforms
+    fWaveforms = std::vector<raw::OpDetWaveform> (nChannels);
 
-    auto pmtDigitizer = makePMTDigi(
-    *(lar::providerFrom<detinfo::LArPropertiesService>()),
-    *(lar::providerFrom<detinfo::DetectorClocksService>())
-    );
+    if (fUseSimPhotonsLite) {
+      fPhotonLiteHandles.clear();
+      //Get *ALL* SimPhotonsCollectionLite from Event
+      e.getManyByType(fPhotonLiteHandles);
+      if (fPhotonLiteHandles.size() == 0)
+        mf::LogError("OpDetDigitizer") << "sim::SimPhotonsLite not found -> No Optical Detector Simulation!\n";
+    }
+    else {
+      fPhotonHandles.clear();
+      //Get *ALL* SimPhotonsCollection from Event
+      e.getManyByType(fPhotonHandles);
+      if (fPhotonHandles.size() == 0)
+        mf::LogError("OpDetDigitizer") << "sim::SimPhotons not found -> No Optical Detector Simulation!\n";
+    }
+    // Start the workers!
+    // Run the digitizer over the full readout window
+    opdet::StartopDetDigitizerWorkers(fNThreads, fSemStart);
+    opdet::WaitopDetDigitizerWorkers(fNThreads, fSemFinish);
 
-    // first run the digitizer to make triggers
-    MakeWaveforms(e, pmtDigitizer.get(), arapucaDigitizer.get(), pulseVecPtr.get(), true, false, false);
+    if (fApplyTriggers) {
+      // find the trigger locations for the waveforms
+      for (const raw::OpDetWaveform &waveform : fWaveforms) {
+        raw::Channel_t ch = waveform.ChannelNumber();
+        // skip light channels which don't correspond to readout channels
+        if (ch == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
+          continue;
+        }
+        raw::ADC_Count_t baseline = (map.isPDType(ch, "pmt_uncoated") || map.isPDType(ch, "pmt_coated")) ?
+                                    fPMTBaseline : fArapucaBaseline;
+        fTriggerAlg.FindTriggerLocations(waveform, baseline);
+      }
 
-    // combine the triggers
-    fTriggerAlg.MergeTriggerLocations();
+      // combine the triggers
+      fTriggerAlg.MergeTriggerLocations();
+      // Start the workers!
+      // Apply the trigger locations
+      opdet::StartopDetDigitizerWorkers(fNThreads, fSemStart);
+      opdet::WaitopDetDigitizerWorkers(fNThreads, fSemFinish);
 
-    // run the digitizer again -- apply the triggers and save the waveforms
-    MakeWaveforms(e, pmtDigitizer.get(), arapucaDigitizer.get(), pulseVecPtr.get(), false, true, true); 
+      for (std::vector<raw::OpDetWaveform> &waveforms : fTriggeredWaveforms) {
+        // move these waveforms into the pulseVecPtr
+        pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
+        std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
+      }
+      // clean up the vector
+      for (unsigned i = 0; i < fTriggeredWaveforms.size(); i++) {
+        fTriggeredWaveforms[i] = std::vector<raw::OpDetWaveform>();
+      }
 
-    // put the waveforms in the event
-    e.put(std::move(pulseVecPtr));
+      // put the waveforms in the event
+      e.put(std::move(pulseVecPtr));
+      // clear out the triggers
+      fTriggerAlg.ClearTriggerLocations();
+
+    }
+    else {
+      // put the full waveforms in the event
+      for (const raw::OpDetWaveform &waveform : fWaveforms) {
+        if (waveform.ChannelNumber() == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
+          continue;
+        }
+        pulseVecPtr->push_back(waveform);
+      }
+      e.put(std::move(pulseVecPtr));
+    }
+
+    // clear out the full waveforms
+    fWaveforms.clear();
 
   }//produce end
 
-  void opDetDigitizerSBND::MakeWaveforms(const art::Event &e, opdet::DigiPMTSBNDAlg *pmtDigitizer, opdet::DigiArapucaSBNDAlg *arapucaDigitizer, 
-    std::vector< raw::OpDetWaveform > *pulseVecPtr,
-    bool make_triggers, bool apply_triggers, bool save_waveforms) 
-  {
-    int ch, channel;
-    double t_min;
-    if(fUseLitePhotons==1){//using SimPhotonsLite
-
-      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
- 
-      std::map<int,sim::SimPhotonsLite> auxmap;   // to temporarily store channel and combine PMT (direct and converted) time profiles
- 
-     //Get *ALL* SimPhotonsCollectionLite from Event
-      std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles;
-      e.getManyByType(photon_handles);
-      if (photon_handles.size() == 0)
-        throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotonsLite retrieved and you requested them.";
-      
-      CreateDirectPhotonMapLite(auxmap, photon_handles);
-
-      for (auto opdetHandle: photon_handles) {
- 
-      //this now tells you if light collection is reflected
-        bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
-      
-        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
-
-        for (auto const& litesimphotons : (*opdetHandle)){
-	  ch = litesimphotons.OpChannel;
-	  t_min=1e15;
-          raw::OpDetWaveform adcVec;
-          raw::ADC_Count_t baseline = 0;
-	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch, "pmt") )){ //All PMT channels
-	//    std::cout << ch << " : PMT channel " <<std::endl;
-	    pmtDigitizer->ConstructWaveformLite(ch, litesimphotons, waveforms, map.pdName(ch), auxmap, t_min);
-	    adcVec = raw::OpDetWaveform(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)pmtDigitizer->Baseline();
-	  }
-/*	  if(map.pdType(ch, "bar")) //Paddles
-	    std::cout << ch << " : Digitization not implemented for paddles. " <<std::endl;*/
-	  else if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected) ){//getting only arapuca channels with appropriate type of light
-//	    std::cout << "Arapuca channels " <<std::endl;
-	    arapucaDigitizer->ConstructWaveformLite(ch, litesimphotons, waveforms, map.pdName(ch),t_min);
-            adcVec = raw::OpDetWaveform(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)arapucaDigitizer->Baseline();
-          }
-	  else if((map.pdType(ch,"xarapucaprime") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
-	//    std::cout << "X-Arapuca channels " <<std::endl;
-            sim::SimPhotonsLite auxLite;
-            for (auto const& litesimphotons : (*opdetHandle)){
-              channel = litesimphotons.OpChannel;
-              if(channel==ch) auxLite =(litesimphotons);
-              if(channel==(ch+2)) auxLite+=(litesimphotons);
- 	    }
-	    arapucaDigitizer->ConstructWaveformLite(ch, auxLite, waveforms, map.pdName(ch),t_min);
-            adcVec = raw::OpDetWaveform(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)arapucaDigitizer->Baseline();
-          }
-          // make triggers if configured to
-          if (make_triggers) {
-            fTriggerAlg.FindTriggerLocations(adcVec, baseline);
-          }
-          // saving waveform
-          if (save_waveforms) {
-            if (apply_triggers) {
-              std::vector<raw::OpDetWaveform> waveforms = fTriggerAlg.ApplyTriggerLocations(adcVec);
-              // move these waveforms into the pulseVecPtr
-              pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
-              std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
-            }
-            else {
-              pulseVecPtr->emplace_back(std::move(adcVec));
-            }
-          }
-        }
-      }  //end loop on simphoton lite collections
-    }else{ //for SimPhotons
-
-      std::vector<std::vector<short unsigned int>> waveforms(nChannels,std::vector<short unsigned int> (fNsamples,0));
-//      std::vector<std::vector<double>> waves(nChannels,std::vector<double>(fNsamples,fBaseline));
-
-      std::map<int,sim::SimPhotons> auxmap;   // to temporarily store channel and direct light distribution
-      //Get *ALL* SimPhotonsCollection from Event
-      std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles;
-      e.getManyByType(photon_handles);
-      if (photon_handles.size() == 0)
-	throw art::Exception(art::errors::ProductNotFound)<<"sim SimPhotons retrieved and you requested them.";
-      
-      CreateDirectPhotonMap(auxmap, photon_handles);
- 
-      for (auto opdetHandle: photon_handles) {
-        bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
-
-        std::cout << "Number of photon channels: " << opdetHandle->size() << std::endl;
-
-        for (auto const& simphotons : (*opdetHandle)){
-	  ch = simphotons.OpChannel();
-	  t_min=1e15;
-          raw::OpDetWaveform adcVec;
-          raw::ADC_Count_t baseline = 0;
-	  if((Reflected) && (map.pdType(ch, "barepmt") || map.pdType(ch,"pmt"))){ //all PMTs
-//	    std::cout << "PMT channels " <<std::endl;
-	    pmtDigitizer->ConstructWaveform(ch, simphotons, waveforms, map.pdName(ch), auxmap, t_min);
-            adcVec = raw::OpDetWaveform(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)pmtDigitizer->Baseline();
-          }
-/*	  if(map.pdType(ch, "bar")) //Paddles
-	    std::cout << "Digitization not implemented for paddles. " <<std::endl;*/
-	  if((map.pdType(ch, "arapucaT1") && !Reflected) || (map.pdType(ch, "arapucaT2") && Reflected) ){//getting only arapuca channels with appropriate type of light
-//	    std::cout << "Arapuca channels " <<std::endl;
-	    arapucaDigitizer->ConstructWaveform(ch, simphotons, waveforms, map.pdName(ch),t_min);
-            adcVec = raw::OpDetWaveform(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)arapucaDigitizer->Baseline();
-          }
-	  if((map.pdType(ch,"xarapucaprime") && !Reflected)){//getting only xarapuca channels with appropriate type of light (this separation is needed because xarapucas are set as two different optical channels but are actually only one readout channel)
-//	    std::cout << "X-Arapuca channels " <<std::endl;
-            sim::SimPhotons auxPhotons;
-            for (auto const& simphotons : (*opdetHandle)){
-              channel= simphotons.OpChannel();
-              if(channel==ch) auxPhotons =(simphotons);
-              if(channel==(ch+2)) auxPhotons+=(simphotons);
- 	    }
-	    arapucaDigitizer->ConstructWaveform(ch, auxPhotons, waveforms, map.pdName(ch),t_min);
-            adcVec = raw::OpDetWaveform(t_min, (unsigned int)ch, waveforms[ch]);//including pre trigger window and transit time
-            baseline = (int)arapucaDigitizer->Baseline();
-          }
-          // make triggers if configured to
-          if (make_triggers) {
-            fTriggerAlg.FindTriggerLocations(adcVec, baseline);
-          }
-          // saving waveform
-          if (save_waveforms) {
-            if (apply_triggers) {
-              std::vector<raw::OpDetWaveform> waveforms = fTriggerAlg.ApplyTriggerLocations(adcVec);
-              // move these waveforms into the pulseVecPtr
-              pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
-              std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
-            }
-            else {
-              pulseVecPtr->emplace_back(std::move(adcVec));
-            }
-          }
-        }//optical channel loop
-      }//type of light loop
-    }//simphotons end
-  }
-
   DEFINE_ART_MODULE(opdet::opDetDigitizerSBND)
-
-  void opDetDigitizerSBND::CreateDirectPhotonMap(std::map<int,sim::SimPhotons>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotons > > > photon_handles)
-  {
-    int ch;
-    // Loop over direct/reflected photons
-    for (auto pmtHandle: photon_handles) {
-       // Do some checking before we proceed
-        if (!pmtHandle.isValid()) continue;  
-        if (pmtHandle.provenance()->moduleLabel() != fInputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
-      //this now tells you if light collection is reflected
-      bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
-      
-      for (auto const& simphotons : (*pmtHandle)){
-	  ch = simphotons.OpChannel();
-	  if(map.pdType(ch, "pmt") && !Reflected)
-            auxmap.insert(std::make_pair(ch,simphotons));
-      }
-    }
-  }
-
-  void opDetDigitizerSBND::CreateDirectPhotonMapLite(std::map<int,sim::SimPhotonsLite>& auxmap, std::vector< art::Handle< std::vector< sim::SimPhotonsLite > > > photon_handles)
-  {
-    int ch;
-    // Loop over direct/reflected photons
-    for (auto pmtHandle: photon_handles) {
-       // Do some checking before we proceed
-        if (!pmtHandle.isValid()) continue;  
-        if (pmtHandle.provenance()->moduleLabel() != fInputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
-      //this now tells you if light collection is reflected
-      bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
-      
-      for (auto const& litesimphotons : (*pmtHandle)){
-	  ch = litesimphotons.OpChannel;
-	  if(map.pdType(ch, "pmt") && !Reflected)
-            auxmap.insert(std::make_pair(ch,litesimphotons));
-      }
-    }
-  }
 
 }//closing namespace

@@ -1,2 +1,4 @@
 #include "standard_detsim_sbnd.fcl"
 
+services.NuRandomService.policy: "perEvent"
+

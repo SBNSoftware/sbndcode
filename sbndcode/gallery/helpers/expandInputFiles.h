@@ -13,22 +13,16 @@
 #define EXPANDINPUTFILES_H
 
 // C/C++ libraries
-#if __cplusplus >= 201703L // C++17
+// <filesystem> is present from GCC 8 and CLANG 6, and as experimental from GCC 6;
+// but linking to these is still a mess, so until we get word from the compiler
+// that <filesystem> is available, we just don't use any (not even experimental)
+#if __cpp_lib_filesystem
 # define HAS_STD_FILESYSTEM 1
-# undef HAS_STD_FILESYSTEM // FIXME: <filesystem> not found for e17 builds
-# if __clang__
-#   if (__clang_major__ < 6) // as of Clang 5.0, there is no <filesystem> there
-#     undef HAS_STD_FILESYSTEM
-#   endif // __clang__
-# endif // __clang__
+# include <filesystem> // std::filesystem::path
 #else
-# undef HAS_STD_FILESYSTEM
+# define HAS_STD_FILESYSTEM 0
 #endif
 
-#if HAS_STD_FILESYSTEM
-// GCC 6.3 understands std::experimental::filesystem, ROOT Cling does not
-# include <filesystem> // std::filesystem::path
-#endif
 #include <fstream>
 #include <cctype> // std::isspace()
 #include <vector>

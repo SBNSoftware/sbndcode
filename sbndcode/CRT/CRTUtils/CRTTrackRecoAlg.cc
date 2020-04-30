@@ -38,7 +38,7 @@ std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTrackRecoAlg::CreateCRTTzeros
 {
 
   std::vector<std::vector<art::Ptr<crt::CRTHit>>> crtTzeroVect;
-  int iflag[2000] = {};
+  std::vector<int> iflag(hits.size(), 0);
 
   // Sort CRTHits by time
   std::sort(hits.begin(), hits.end(), [](auto& left, auto& right)->bool{

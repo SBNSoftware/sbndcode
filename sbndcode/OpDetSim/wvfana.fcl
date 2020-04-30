@@ -1,4 +1,5 @@
 //#include "trackfinderalgorithms.fcl"
+#include "detsimmodules.fcl"
 
 BEGIN_PROLOG
 
@@ -7,8 +8,9 @@ wvf_ana:
   module_type: 	"wvfAna"
   InputModule: "opdaq"
   ClusterModuleLabel: "linecluster"
-  Sampling:           0.5 
-  MinSize:	      10
+  OpDetsToPlot: ["pmt_coated", "pmt_uncoated",
+                 "xarapuca", "xarapuca_vuv", "xarapuca_vis",
+                 "arapuca_vuv", "arapuca_vis"]
 }
 
 END_PROLOG

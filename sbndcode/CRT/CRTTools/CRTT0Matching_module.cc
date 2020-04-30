@@ -155,11 +155,11 @@ namespace sbnd {
       for(size_t track_i = 0; track_i < trackList.size(); track_i++) {
 
         // Get the closest matched time
-        double matchedTime = t0Alg.T0FromCRTHits(*trackList[track_i], crtHits, event);
-        if(matchedTime != -99999){
+        std::pair<double, double> matchedTime = t0Alg.T0AndDCAFromCRTHits(*trackList[track_i], crtHits, event);
+        if(matchedTime.first != -99999){
           mf::LogInfo("CRTT0Matching")
-            <<"Matched time = "<<matchedTime<<" [us] to track "<<trackList[track_i]->ID();
-          T0col->push_back(anab::T0(matchedTime * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), 0.));
+            <<"Matched time = "<<matchedTime.first<<" [us] to track "<<trackList[track_i]->ID()<<" with DCA = "<<matchedTime.second;
+          T0col->push_back(anab::T0(matchedTime.first * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), matchedTime.second));
           util::CreateAssn(*this, event, *T0col, trackList[track_i], *Trackassn);
         }
 

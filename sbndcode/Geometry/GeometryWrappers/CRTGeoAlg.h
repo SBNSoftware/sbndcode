@@ -17,8 +17,6 @@
 #include "canvas/Persistency/Common/Ptr.h" 
 #include "canvas/Persistency/Common/PtrVector.h" 
 #include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "art_root_io/TFileService.h" 
-#include "art_root_io/TFileDirectory.h" 
 #include "messagefacility/MessageLogger/MessageLogger.h" 
 
 // LArSoft
@@ -100,12 +98,13 @@ namespace sbnd{
   class CRTGeoAlg {
   public:
 
+    CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore const *auxdet_geometry);
     CRTGeoAlg();
 
     ~CRTGeoAlg();
 
     // Return the volume enclosed by the whole CRT system
-    std::vector<double> CRTLimits();
+    std::vector<double> CRTLimits() const;
 
     // Get the number of taggers in the geometry
     size_t NumTaggers() const;
@@ -225,8 +224,6 @@ namespace sbnd{
     std::map<int, CRTSipmGeo> fSipms;
 
     geo::GeometryCore const* fGeometryService;
-    art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
-    const geo::AuxDetGeometry* fAuxDetGeo;
     const geo::AuxDetGeometryCore* fAuxDetGeoCore;
 
   };
