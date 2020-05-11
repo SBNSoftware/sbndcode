@@ -1,6 +1,11 @@
 #ifndef SBND_FLASHMATCH_FLASHPREDICT_HH
 #define SBND_FLASHMATCH_FLASHPREDICT_HH
 
+// save diagnostic state
+#pragma GCC diagnostic push
+
+// turn off the specific warning. Can also use "-Wall"
+#pragma GCC diagnostic ignored "-Wconversion"
 
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -37,12 +42,18 @@
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Persistency/Provenance/ProductID.h"
 #include "art/Persistency/Common/PtrMaker.h"
-#include "sbndcode/OpDetSim/OpT0FinderTypes.h"
-#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+
 #include "TTree.h"
 #include "TFile.h"
-#include "TGraph.h"
+// #include "TGraph.h"
 #include "TH1.h"
+
+#include "sbndcode/OpDetSim/OpT0FinderTypes.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+
+// turn the warnings back on
+#pragma GCC diagnostic pop
+
 
 #include <memory>
 #include <string>
@@ -120,7 +131,7 @@ private:
   Double_t _score;
   Int_t _evt, _run, _sub;
 
-  std::map<unsigned int, unsigned int> _pfpmap;
+  std::map<size_t, size_t> _pfpmap;
 
   std::vector<double> dy_means, dz_means, rr_means, pe_means;
   std::vector<double> dy_spreads, dz_spreads, rr_spreads, pe_spreads;
