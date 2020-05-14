@@ -75,9 +75,8 @@ namespace caldata {
 
   private:
     
-    bool          fDoBaselineSub;     ///< subtract baseline (i.e., restore DC component post-deconvolution)
-    std::string   fBaselineSubMethod; ///< subtraction method ("histo" or "interpolate")
-    int           fPostSampleBins;    ///< number of postsample bins
+    bool          fDoBaselineSub;     ///< subtract baseline to restore DC component post-deconvolution
+    bool          fDoAdvBaselineSub;  ///< use interpolation-based baseline subtraction
     int           fBaseSampleBins;    ///< bin grouping size in "interpolate"  method
     float         fBaseVarCut;        ///< baseline variance cut used in "interpolate" method
    
@@ -87,9 +86,8 @@ namespace caldata {
                               ///< it is set by the DigitModuleLabel
                               ///< ex.:  "daq:preSpill" for prespill data
     
-    TH1F*         hADC;               
-    
     void          SubtractBaseline(std::vector<float>& holder);
+    void          SubtractBaselineAdv(std::vector<float>& holder);
     
 
   protected: 
@@ -107,10 +105,6 @@ namespace caldata {
     
     fROITool = art::make_tool<sbnd_tool::IROIFinder>(pset.get<fhicl::ParameterSet>("ROITool"));
 
-    // initialize histogram that will be used in the baseline subtraction
-    // (supply more than enough bins to cover range of ADCs)
-    if( fBaselineSubMethod == "histo" ) hADC = new TH1F("ADC","ADC",3000+1,-1500,1500);
-
     //--Hec if(fSpillName.size()<1) produces< std::vector<recob::Wire> >();
     //--Hec else produces< std::vector<recob::Wire> >(fSpillName);
     produces< std::vector<recob::Wire> >(fSpillName);
@@ -126,11 +120,10 @@ namespace caldata {
   void CalWireSBND::reconfigure(fhicl::ParameterSet const& p)
   {
     fDigitModuleLabel = p.get< std::string >("DigitModuleLabel", "daq");
-    fPostSampleBins   = p.get< int >        ("PostSampleBins");
+    fDoBaselineSub    = p.get< bool >       ("DoBaselineSub");
+    fDoAdvBaselineSub = p.get< bool >       ("DoAdvBaselineSub");
     fBaseSampleBins   = p.get< int >        ("BaseSampleBins");
     fBaseVarCut       = p.get< int >        ("BaseVarCut");
-    fDoBaselineSub    = p.get< bool >       ("DoBaselineSub");
-    fBaselineSubMethod= p.get< std::string >("BaselineSubMethod","histo");
     
     fSpillName="";
     
@@ -252,20 +245,11 @@ namespace caldata {
       
       holder.resize(dataSize,1e-5);
 
-
-      // Quick way to restore the DC component to signal removed by the deconvolution
-      // by taking the mean of ADCs at the end of the readout, but it is vulnerable 
-      // to error if there is a pulse on the wire in this region.
-      if(fPostSampleBins) {
-        float average=0.0;
-        for(bin=0; bin < (unsigned short)fPostSampleBins; ++bin) 
-          average += holder[holder.size()-1+bin];
-        average = average / (float)fPostSampleBins;
-        for(bin = 0; bin < holder.size(); ++bin) holder[bin]-=average;
-      } 
-
-      // More advanced baseline subtraction to restore DC component.
+      // restore DC component through baseline subtraction
       if( fDoBaselineSub ) SubtractBaseline(holder);
+      // more advanced, interpolation-based subtraction alg 
+      // that uses the BaseSampleBins and BaseVarCut params
+      if( fDoAdvBaselineSub ) SubtractBaselineAdv(holder);
 
       // Make a single ROI that spans the entire data size
       //RegionsOfInterest_t sparse_holder;
@@ -311,45 +295,44 @@ namespace caldata {
    // delete chanFilt;
     return;
   }
-  
+ 
   
   void CalWireSBND::SubtractBaseline(std::vector<float>& holder)
   {
-    // This function performs one of two baseline subtraction methods,
-    // which can be specified in the fhicl.
-    
-    
-    if (fBaselineSubMethod == "histo" ) {
-      // Robust baseline calculation, requiring no tunable parameters,
-      // that effectively ignores outlier samples from large pulses.
-      //   (1) fill a histogram with every sample's ADC,
-      //   (2) find most frequently-occuring ADC (bin with most entries),
-      //   (3) calculate the mean along the entire waveform using
-      //       only samples with ADC values close to this.
-      hADC->Reset();
-      for(unsigned int bin = 0; bin < holder.size(); bin++) hADC->Fill(holder[bin]);
-      int bin_max   = hADC->GetMaximumBin();
-      float x_max   = hADC->GetXaxis()->GetBinCenter(bin_max);
-      // make sure this isn't either the first or last bin
-      if ( (bin_max > 0) & (bin_max < hADC->GetNbinsX())) {
-        float rms   = hADC->GetRMS();
-        float ped   = x_max;
-        float sum   = 0;
-        int ncount  = 0;
-        for(unsigned int bin = 0; bin < holder.size(); bin++){
-          if ( fabs(holder[bin]-ped) < rms ){
-           sum += holder[bin];
-           ncount++;
-          }
+    // Robust baseline calculation that effectively ignores outlier 
+    // samples from large pulses:
+    //   (1) fill a histogram with every sample's value,
+    //   (2) find mode (bin with most entries),
+    //   (3) calculate the mean along the entire waveform using
+    //       only samples with values close to this mode.
+    unsigned int bin(0);  
+    float min = 0, max = 0;
+    for(bin = 0; bin < holder.size(); bin++){
+      if (holder[bin] > max) max = holder[bin];
+      if (holder[bin] < min) min = holder[bin];
+    }
+    int nbin = max - min;
+    if (nbin > 0) {
+      TH1F h("h","h",nbin,min,max);
+      for(bin = 0; bin < holder.size(); bin++) h.Fill(holder[bin]);
+      float x_max = h.GetXaxis()->GetBinCenter(h.GetMaximumBin());
+      float ped   = x_max;
+      float sum   = 0;
+      int ncount  = 0;
+      for(bin = 0; bin < holder.size(); bin++){
+        if( fabs(holder[bin]-x_max) < 2. ) {
+          sum += holder[bin];
+          ncount++; 
         }
-        ped = sum/ncount;
-        for(unsigned int bin = 0; bin < holder.size(); bin++) holder[bin] -= ped;
       }
-      else { std::cout<<"!!! Most frequent ADC value on wire is "<<x_max<<"... something isn't right!\n";}
-    
-    
-    } else if( fBaselineSubMethod == "interpolate" ) {
-      // subtract baseline using linear interpolation between regions defined
+      if (ncount) ped = sum/ncount;
+      for(bin = 0; bin < holder.size(); bin++) holder[bin] -= ped;
+    }
+  }
+ 
+  void CalWireSBND::SubtractBaselineAdv(std::vector<float>& holder)
+  {
+      // Subtract baseline using linear interpolation between regions defined
       // by the datasize and fBaseSampleBins
 
       // number of points to characterize the baseline
@@ -463,8 +446,6 @@ namespace caldata {
         holder[bin] -= base[region] + (bin - bof) * slp;
       }
     }
-
-
-  } // SubtractBaseline
+  
 
 } // end namespace caldata
