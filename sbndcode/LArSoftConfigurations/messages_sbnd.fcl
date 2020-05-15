@@ -98,6 +98,7 @@ message_stdout_warning_sbnd: {
   categories:{
     default:  {}
     GeometryBadInputPoint: { limit: 5 timespan: 1000}
+    BackTracker: { limit: 5 timespan: 1000}
   }
 } # message_stdout_warning_sbnd
 
