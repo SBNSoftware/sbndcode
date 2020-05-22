@@ -23,13 +23,12 @@ sbnd_calwire:
 {
  module_type:        "CalWireSBND"
  DigitModuleLabel:   "daq"
- PostsampleBins:       0
- BaseSampleBins:      50  # set > 0 for baseline subtraction. Value should be
-                          # modulo the data size (3200 for uB)
- DoBaselineSub:       true			  
- BaseVarCut:         25.  # Variance cut for selecting baseline points
- FFTSize:     3000      # re-initialize FFT service to this size
- ROITool: @local::sbnd_standardroifinder #Setting the ROI finding tool
+ FFTSize:             3000  # re-initialize FFT service to this size
+ DoBaselineSub:       true  # Baseline subtr. to restore DC component post-deconvolution
+ DoAdvBaselineSub:    false # More advanced baseline subtr. using params below
+ BaseSampleBins:      50    # Value should be modulo the data size (3200 for uB)
+ BaseVarCut:          25.   # Variance cut for selecting baseline points
+ ROITool:             @local::sbnd_standardroifinder #Setting the ROI finding tool
 }
 
 
