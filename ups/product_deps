@@ -35,7 +35,7 @@ fwdir   product_dir scripts
 # Add the dependent product and version
 
 product          version
-larsoft          v08_52_00
+larsoft          v09_00_00_rc0
 genie_xsec       v3_00_04a
 sbnd_data        v01_02_00 - optional
 sbndutil         v08_52_00 - optional
@@ -79,4 +79,3 @@ table_fragment_end
 ### Local Variables:
 ### tab-width: 8
 ### End:
-
