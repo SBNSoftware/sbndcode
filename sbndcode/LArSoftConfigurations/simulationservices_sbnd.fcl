@@ -28,6 +28,9 @@
 #   Enabled 'FastOptical' in the custom physics list (in largeantparameters)
 # 20190807 (dbrailsf@fnal.gov) [v1.3]
 #   Added an optional largeantparameters config which does not run the optical sim
+# 20200616 (ascarff@fnal.gov) [v1.4]
+#   Change diffusion constants to match ProtoDUNE data
+
 
 #include "services_sbnd.fcl"
 #include "simulationservices.fcl"
@@ -52,6 +55,13 @@ sbnd_largeantparameters.UseLitePhotons: true
 #Define a largeantparameters which doesn't use the optical simulation
 sbnd_largeantparameters_noopticalsim: @local::sbnd_largeantparameters
 sbnd_largeantparameters_noopticalsim.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ]
+
+# ascarff 16Jun2020: Change the diffusion constants to match ProtoDUNE results
+sbnd_largeantparameters.LongitudinalDiffusion: 4.0e-9 #in cm^2/ns (was 6.2e-9)
+sbnd_largeantparameters.TransverseDiffusion: 8.8e-9 #in cm^2/ns (was 16.3e-9)
+sbnd_largeantparameters_noopticalsim.LongitudinalDiffusion: 4.0e-9 #in cm^2/ns (was 6.2e-9)
+sbnd_largeantparameters_noopticalsim.TransverseDiffusion: 8.8e-9 #in cm^2/ns (was 16.3e-9)
+
 
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
 
@@ -78,7 +88,7 @@ sbnd_detsim_services:
                              @table::sbnd_random_services
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND:  @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
-  NoiseModel:        @local::sbnd_thermalnoiseserviceintime
+  NoiseModel:                @local::sbnd_uboonedatadrivennoiseservice
   OpDetResponseInterface:    @local::sbnd_opdetresponse
 } # sbnd_detsim_services
 
