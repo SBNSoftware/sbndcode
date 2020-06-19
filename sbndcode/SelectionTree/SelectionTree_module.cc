@@ -29,8 +29,10 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "art/Framework/Services/Optional/TFileService.h"
+#include "art_root_io/TFileService.h"
+#include "art_root_io/TFileDirectory.h"
 
+#include "nusimdata/SimulationBase/MCFlux.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/GTruth.h"
 #include "nusimdata/SimulationBase/MCNeutrino.h"
@@ -263,7 +265,7 @@ private:
   // Truth
   int t_nu_pdgcode, t_interaction, t_scatter;
   int t_particles, t_protons, t_neutrons, t_muons, t_charged_pions, t_kaons, t_neutral_pions, t_photons, t_electrons;
-  double t_inv_mass, t_nu_lepton_angle, t_vertex_energy, t_bjorkenx, t_inelasticity, t_qsqr, t_transverse_momentum;
+  double t_inv_mass, t_nu_lepton_angle, t_vertex_energy, t_bjorkenx, t_inelasticity, t_qsqr, t_transverse_momentum, t_baseline;
   double t_vertex[3], t_momentum[3];
   bool t_iscc;
   unsigned int t_neutrino_candidates;
@@ -355,12 +357,17 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
   e.getByLabel(m_generator_label, mct_handle);
   int mct_size = mct_handle->size();
 
+  // Get the MCFlux handle
+  art::Handle< std::vector< simb::MCFlux > > mcf_handle;
+  e.getByLabel(m_generator_label, mcf_handle);
+
   /*
   // Get the Corsika MCTruth handle
   art::Handle< std::vector< simb::MCTruth > > cor_handle;
   e.getByLabel(m_corsika_label, cor_handle);
   //int cor_size = cor_handle->size();
  */
+
   // Get the Track handle
   art::Handle< std::vector< recob::Track > > trk_handle;
   e.getByLabel(m_reco_track_label, trk_handle);
@@ -406,6 +413,7 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
     }
   } 
   if(mct_handle.isValid() &&
+     mcf_handle.isValid() && 
      shw_handle.isValid() && 
      pfp_handle.isValid() && pfp_size && 
      trk_handle.isValid() ) {
@@ -533,7 +541,8 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
       std::vector< art::Ptr<simb::MCParticle> > mcp_assn    = fmcp.at(best_mct);
   //    std::vector< art::Ptr<simb::MCParticle> > mcpcor_assn = fmcpcor.at(0);
       std::vector< art::Ptr<simb::GTruth> > mcgt_assn       = fmgt.at(best_mct);
-      simb::MCNeutrino nu = mct->GetNeutrino();
+      const simb::MCNeutrino nu = mct->GetNeutrino();
+      art::Ptr< simb::MCFlux > flux(mcf_handle, best_mct);
 
       // Get vertex association
       art::FindManyP< recob::Vertex  > fvtx( pfp_handle, e, m_pandora_label );
@@ -814,6 +823,7 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
       t_iscc                = nu.CCNC() == simb::curr_type_::kCC;
       t_interaction         = mcgt_assn[0]->fGint;
       t_scatter             = mcgt_assn[0]->fGscatter;
+      t_baseline            = flux->fdk2gen + flux->fgen2vtx;
       t_vertex[0]           = nu.Nu().Vx();
       t_vertex[1]           = nu.Nu().Vy();
       t_vertex[2]           = nu.Nu().Vz();
@@ -928,6 +938,7 @@ void sbnd::SelectionTree::beginJob()
   event_tree->Branch("t_neutrino_candidates",      &t_neutrino_candidates, "t_neutrino_candidates/i");
   event_tree->Branch("t_interaction",              &t_interaction,         "t_interaction/I");
   event_tree->Branch("t_scatter",                  &t_scatter,             "t_scatter/I");
+  event_tree->Branch("t_baseline",                 &t_baseline,            "t_baseline/D");
   event_tree->Branch("t_vertex",                   &t_vertex,              "t_vertex[3]/D");
   event_tree->Branch("t_momentum",                 &t_momentum,            "t_momentum[3]/D");
   event_tree->Branch("t_particles",                &t_particles,           "t_particles/I");
