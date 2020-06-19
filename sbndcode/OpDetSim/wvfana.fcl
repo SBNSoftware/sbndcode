@@ -5,7 +5,7 @@ BEGIN_PROLOG
 
 wvf_ana:
 {
-  module_type: 	"wvfAna"
+  module_type: "wvfAna"
   InputModule: "opdaq"
   ClusterModuleLabel: "linecluster"
   OpDetsToPlot: ["pmt_coated", "pmt_uncoated",
