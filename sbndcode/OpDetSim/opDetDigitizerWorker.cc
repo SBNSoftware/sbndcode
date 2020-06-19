@@ -132,8 +132,6 @@ void opdet::opDetDigitizerWorker::ApplyTriggerLocations() const
 void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigitizer,
                                                 opdet::DigiArapucaSBNDAlg *arapucaDigitizer) const
 {
-  unsigned ch, channel;
-  std::string pdtype;
   if(fConfig.UseSimPhotonsLite) {
     const std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> &photon_handles = *fPhotonLiteHandles;
 
@@ -147,18 +145,18 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     // to temporarily store channel and combine PMT (direct and converted) time profiles
     std::unordered_map<int, sim::SimPhotonsLite> directPhotonsOnPMTS;
     CreateDirectPhotonMapLite(directPhotonsOnPMTS, photon_handles);
-    double startTime = fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/;
+    const double startTime = fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/;
 
-    unsigned start = StartChannelToProcess(fConfig.nChannels);
-    unsigned n = NChannelsToProcess(fConfig.nChannels);
+    const unsigned start = StartChannelToProcess(fConfig.nChannels);
+    const unsigned n = NChannelsToProcess(fConfig.nChannels);
     for (const art::Handle<std::vector<sim::SimPhotonsLite>> &opdetHandle : photon_handles) {
       // this now tells you if light collection is reflected
-      bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
+      const bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       for (auto const& litesimphotons : (*opdetHandle)) {
         std::vector<short unsigned int> waveform;
         waveform.reserve(fConfig.Nsamples);
-        ch = litesimphotons.OpChannel;
-        pdtype = fConfig.pdsMap.pdType(ch);
+        const unsigned ch = litesimphotons.OpChannel;
+        const std::string pdtype = fConfig.pdsMap.pdType(ch);
         // only work on the prescribed channels
         if (ch < start || ch >= start + n) continue;
 
@@ -212,16 +210,16 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     std::unordered_map<int, sim::SimPhotons> directPhotonsOnPMTS;
     const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
     CreateDirectPhotonMap(directPhotonsOnPMTS, photon_handles);
-    double startTime = fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/;
+    const double startTime = fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/;
 
-    unsigned start = StartChannelToProcess(fConfig.nChannels);
-    unsigned n = NChannelsToProcess(fConfig.nChannels);
+    const unsigned start = StartChannelToProcess(fConfig.nChannels);
+    const unsigned n = NChannelsToProcess(fConfig.nChannels);
     for (const art::Handle<std::vector<sim::SimPhotons>> &opdetHandle : photon_handles) {
-      bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
+      const bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       for (auto const& simphotons : (*opdetHandle)) {
         std::vector<short unsigned int> waveform;
-        ch = simphotons.OpChannel();
-        pdtype = fConfig.pdsMap.pdType(ch);
+        const unsigned ch = simphotons.OpChannel();
+        const std::string pdtype = fConfig.pdsMap.pdType(ch);
         // only work on the prescribed channels
         if (ch < start || ch >= start + n) continue;
         // all PMTs
@@ -276,16 +274,15 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMap(
   std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS,
   std::vector<art::Handle<std::vector<sim::SimPhotons>>> photon_handles) const
 {
-  int ch;
   // Loop over direct/reflected photons
   for (auto pmtHandle : photon_handles) {
     // Do some checking before we proceed
     if (!pmtHandle.isValid()) continue;
     if (pmtHandle.provenance()->moduleLabel() != fConfig.InputModuleName) continue;   //not the most efficient way of doing this, but preserves the logic of the module. Andrzej
     // this now tells you if light collection is reflected
-    bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
+    const bool Reflected = (pmtHandle.provenance()->productInstanceName() == "Reflected");
     for (auto const& simphotons : (*pmtHandle)) {
-      ch = simphotons.OpChannel();
+      const unsigned ch = simphotons.OpChannel();
       if(fConfig.pdsMap.isPDType(ch, "pmt_coated") && !Reflected)
         directPhotonsOnPMTS.insert(std::make_pair(ch, simphotons));
     }
@@ -297,7 +294,6 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(
   std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS,
   std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> photon_handles) const
 {
-  int ch;
   // Loop over direct/reflected photons
   for (auto pmtHandle : photon_handles) {
     // Do some checking before we proceed
@@ -306,7 +302,7 @@ void opdet::opDetDigitizerWorker::CreateDirectPhotonMapLite(
     // this now tells you if light collection is reflected
     if (pmtHandle.provenance()->productInstanceName() == "Reflected") continue;
     for (auto const& litesimphotons : (*pmtHandle)) {
-      ch = litesimphotons.OpChannel;
+      const unsigned ch = litesimphotons.OpChannel;
       if(fConfig.pdsMap.isPDType(ch, "pmt_coated"))
         directPhotonsOnPMTS.insert(std::make_pair(ch, litesimphotons));
     }
