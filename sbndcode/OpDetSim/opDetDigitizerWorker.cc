@@ -161,6 +161,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         pdtype = fConfig.pdsMap.pdType(ch);
         // only work on the prescribed channels
         if (ch < start || ch >= start + n) continue;
+
         if((Reflected) &&
            ( (pdtype == "pmt_uncoated") || (pdtype == "pmt_coated")) ) { //All PMT channels
           pmtDigitizer->ConstructWaveformLite(ch,
@@ -176,38 +177,10 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                                   waveform);
         }
         // getting only xarapuca channels with appropriate type of light
-        // (this separation is needed because xarapucas are set as
-        // two different optical channels but are actually only one readout channel)
-        else if((pdtype == "xarapuca_vuv" && !Reflected)) {
-          sim::SimPhotonsLite auxLite;
-          for (auto const& litesimphotons : (*opdetHandle)) {
-            channel = litesimphotons.OpChannel;
-            if(channel == ch) auxLite = (litesimphotons);
-            if(channel == (ch + 2)) auxLite += (litesimphotons);
-          }
+        else if((pdtype == "xarapuca_vuv" && !Reflected) ||
+                (pdtype == "xarapuca_vis" && Reflected) ) {
           arapucaDigitizer->ConstructWaveformLite(ch,
-                                                  auxLite,
-                                                  waveform,
-                                                  pdtype,
-                                                  startTime,
-                                                  fConfig.Nsamples);
-          // including pre trigger window and transit time
-          fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
-                                                  (unsigned int)ch,
-                                                  waveform);
-        }
-        // getting only xarapuca channels with appropriate type of light
-        // (this separation is needed because xarapucas are set as
-        // two different optical channels but are actually only one readout channel)
-        else if(pdtype == "xarapuca_vis" && Reflected) {
-          sim::SimPhotonsLite auxLite;
-          for (auto const& litesimphotons : (*opdetHandle)) {
-            channel = litesimphotons.OpChannel;
-            if(channel == ch) auxLite = (litesimphotons);
-            if(channel == (ch + 2)) auxLite += (litesimphotons);
-          }
-          arapucaDigitizer->ConstructWaveformLite(ch,
-                                                  auxLite,
+                                                  litesimphotons,
                                                   waveform,
                                                   pdtype,
                                                   startTime,
@@ -279,39 +252,11 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                                   (unsigned int)ch,
                                                   waveform);
         }
-        // getting only xarapuca channels with appropriate type of light
-        // (this separation is needed because xarapucas are set as
-        // two different optical channels but are actually only one readout channel)
-        if(pdtype == "xarapuca_vuv" && !Reflected) {
-          sim::SimPhotons auxPhotons;
-          for (auto const& simphotons : (*opdetHandle)) {
-            channel = simphotons.OpChannel();
-            if(channel == ch) auxPhotons = (simphotons);
-            if(channel == (ch + 2)) auxPhotons += (simphotons);
-          }
+        // getting only arapuca channels with appropriate type of light
+        if((pdtype == "xarapuca_vuv" && !Reflected) ||
+           (pdtype == "xarapuca_vis" && Reflected)) {
           arapucaDigitizer->ConstructWaveform(ch,
-                                              auxPhotons,
-                                              waveform,
-                                              pdtype,
-                                              startTime,
-                                              fConfig.Nsamples);
-          // including pre trigger window and transit time
-          fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
-                                                  (unsigned int)ch,
-                                                  waveform);
-        }
-        // getting only xarapuca channels with appropriate type of light
-        // (this separation is needed because xarapucas are set as
-        // two different optical channels but are actually only one readout channel)
-        if(pdtype == "xarapuca_vis" && Reflected) {
-          sim::SimPhotons auxPhotons;
-          for (auto const& simphotons : (*opdetHandle)) {
-            channel = simphotons.OpChannel();
-            if(channel == ch) auxPhotons = (simphotons);
-            if(channel == (ch + 2)) auxPhotons += (simphotons);
-          }
-          arapucaDigitizer->ConstructWaveform(ch,
-                                              auxPhotons,
+                                              simphotons,
                                               waveform,
                                               pdtype,
                                               startTime,
