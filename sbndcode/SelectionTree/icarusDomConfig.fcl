@@ -4,31 +4,26 @@ selectionTree:
 { 
   module_type:                "SelectionTree"
 
-  inputs: {
-    DetectorLengthX: 728.98
-    DetectorLengthY: 316.82
-    DetectorLengthZ: 1789.9
-    CoordinateOffsetX: 364.49
-    CoordinateOffsetY: 173.41
-    CoordinateOffsetZ: 909.95
-    SelectedBorderXmin1: 0.
-    SelectedBorderXmin2: 0.
-    SelectedBorderXmax1: 0.
-    SelectedBorderXmax2: 0.
-    SelectedBorderY: 0.
-    SelectedBorderZmin: 0.
-    SelectedBorderZmax: 0.
-
+  geom: {
+    MinX: [-364.49,67.94]
+    MinY: [-173.41,-173.41]
+    MinZ: [-909.950652,-909.950652]
+    MaxX: [-67.94,364.49]
+    MaxY: [143.41,143.41]
+    MaxZ: [879.950652,879.950652]
+  }
+  labels: {
     TruthLabel:                "generator"
     CorsikaLabel:              "corsika"
     G4Label:                   "largeant"
     PandoraLabel:              "pandoraUboonetune"
     RecoTrackLabel:            "pandoraTrackUboonetune"
     RecoShowerLabel:           "tracsUboonetuneRetune"
-    RecoTrackCalorimetryLabel: "TrackRecoCaloUboonetune"
+    RecoTrackCalorimetryLabel: "TrackRedoCaloUboonetune"
     RecoTrackParticleIDLabel:  "TrackRedoPidUboonetune"
     HitLabel:                  "gaushit"
     SubRunLabel:               "generator"
+    DetectorName:              "icarus"
   }
   fitter: {                                                                   
     pIdHypothesis: 13                                                         

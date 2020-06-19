@@ -16,13 +16,14 @@ selectionTree:
     TruthLabel:                "generator"
     CorsikaLabel:              "corsika"
     G4Label:                   "largeant"
-    PandoraLabel:              "pandora"
-    RecoTrackLabel:            "pandoraTrack"
-    RecoShowerLabel:           "emshower"
-    RecoTrackCalorimetryLabel: "pandoraCalo"
-    RecoTrackParticleIDLabel:  "pandoraPid"
+    PandoraLabel:              "pandoraUboonetune"
+    RecoTrackLabel:            "pandoraTrackUboonetune"
+    RecoShowerLabel:           "tracsUboonetuneRetune"
+    RecoTrackCalorimetryLabel: "TrackRedoCaloUboonetune"
+    RecoTrackParticleIDLabel:  "TrackRedoPidUboonetune"
     HitLabel:                  "gaushit"
     SubRunLabel:               "generator"
+    DetectorName:              "sbnd"
   }
   fitter: {                                                                   
     pIdHypothesis: 13                                                         

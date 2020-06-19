@@ -1,5 +1,5 @@
 #include "icarusDomConfig.fcl"
-#include "services_icarus_simulation.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
 

@@ -5,24 +5,25 @@ selectionTree:
   module_type:                "SelectionTree"
 
   geom: {
-    MinX: [-199.15]
-    MinY: [-200.]
-    MinZ: [0.]
-    MaxX: [199.15]
-    MaxY: [200.]
-    MaxZ: [500.]
+    MinX: [-1.55]
+    MinY: [-115.53]
+    MinZ: [0.1]
+    MaxX: [254.8]
+    MaxY: [117.47]
+    MaxZ: [1036.9]
   }
   labels: {
     TruthLabel:                "generator"
     CorsikaLabel:              "corsika"
     G4Label:                   "largeant"
-    PandoraLabel:              "pandora"
-    RecoTrackLabel:            "pandoraTrack"
-    RecoShowerLabel:           "emshower"
-    RecoTrackCalorimetryLabel: "pandoraCalo"
-    RecoTrackParticleIDLabel:  "pandoraPid"
+    PandoraLabel:              "pandoraUboonetune"
+    RecoTrackLabel:            "pandoraTrackUboonetune"
+    RecoShowerLabel:           "tracsUboonetuneRetune"
+    RecoTrackCalorimetryLabel: "TrackRedoCaloUboonetune"
+    RecoTrackParticleIDLabel:  "TrackRedoPidUboonetune"
     HitLabel:                  "gaushit"
     SubRunLabel:               "generator"
+    DetectorName:              "uboone"
   }
   fitter: {                                                                   
     pIdHypothesis: 13                                                         

@@ -1,4 +1,4 @@
-#include "selectionTree.fcl"
+#include "sbndDomConfig.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"

@@ -59,6 +59,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/Sequence.h"
 
 #include <sstream>
 #include <cmath>
@@ -86,62 +87,39 @@ class sbnd::SelectionTree : public art::EDAnalyzer {
 
 public:
  
-  struct Inputs {
+  struct Geom {
     using Name    = fhicl::Name;
     using Comment = fhicl::Comment;
 
-    fhicl::Atom<float> detectorLengthX{
-      Name("DetectorLengthX"),
-      Comment("Detetector length in the x direction")
+    fhicl::Sequence<float> minX{
+      Name("MinX"),
+      Comment("Vector of minimum x values for n TPCs (n = number of tpcs)")
     };
-    fhicl::Atom<float> detectorLengthY{
-      Name("DetectorLengthY"),
-      Comment("Detetector length in the y direction")
+    fhicl::Sequence<float> minY{
+      Name("MinY"),
+      Comment("Vector of minimum y values for n TPCs (n = number of tpcs)")
     };
-    fhicl::Atom<float> detectorLengthZ{
-      Name("DetectorLengthZ"),
-      Comment("Detetector length in the z direction")
+    fhicl::Sequence<float> minZ{
+      Name("MinZ"),
+      Comment("Vector of minimum z values for n TPCs (n = number of tpcs)")
     };
-    fhicl::Atom<float> coordinateOffsetX{
-      Name("CoordinateOffsetX"),
-      Comment("Shift in the x direction of the origin")
+    fhicl::Sequence<float> maxX{
+      Name("MaxX"),
+      Comment("Vector of maximum x values for n TPCs (n = number of tpcs)")
     };
-    fhicl::Atom<float> coordinateOffsetY{
-      Name("CoordinateOffsetY"),
-      Comment("Shift in the y direction of the origin")
+    fhicl::Sequence<float> maxY{
+      Name("MaxY"),
+      Comment("Vector of maximum y values for n TPCs (n = number of tpcs)")
     };
-    fhicl::Atom<float> coordinateOffsetZ{
-      Name("CoordinateOffsetZ"),
-      Comment("Shift in the z direction of the origin")
+    fhicl::Sequence<float> maxZ{
+      Name("MaxZ"),
+      Comment("Vector of maximum z values for n TPCs (n = number of tpcs)")
     };
-    fhicl::Atom<float> selectedBorderXmin1{
-      Name("SelectedBorderXmin1"),
-      Comment("Shift in the x direction of the origin from the edge of the first TPC")
-    };
-    fhicl::Atom<float> selectedBorderXmin2{
-      Name("SelectedBorderXmin2"),
-      Comment("Shift in the x direction of the origin from the centre of the 2nd TPC")
-    };
-    fhicl::Atom<float> selectedBorderXmax1{
-      Name("SelectedBorderXmax1"),
-      Comment("Shift in the x direction of the origin from centre of the 1st TPC")
-    };
-    fhicl::Atom<float> selectedBorderXmax2{
-      Name("SelectedBorderXmax2"),
-      Comment("Shift in the x direction of the origin from edge of the 2nd TPC")
-    };
-    fhicl::Atom<float> selectedBorderY{
-      Name("SelectedBorderY"),
-      Comment("Shift in the y direction of the origin")
-    };
-    fhicl::Atom<float> selectedBorderZmin{
-      Name("SelectedBorderZmin"),
-      Comment("Shift in the z direction of the origin from the nearest face to the neutrino target")
-    };
-    fhicl::Atom<float> selectedBorderZmax{
-      Name("SelectedBorderZmax"),
-      Comment("Shift in the z direction of the origin from the farthest face to the neutrino target")
-    };
+  };
+  struct Labels {
+    using Name    = fhicl::Name;
+    using Comment = fhicl::Comment;
+
     fhicl::Atom<art::InputTag> generator_label{
       Name("TruthLabel"),
       Comment("Generator label")
@@ -182,13 +160,20 @@ public:
       Name("SubRunLabel"),
       Comment("SubRun label")
     };
+    fhicl::Atom<std::string> detector_name{
+      Name("DetectorName"),
+      Comment("Detector name")
+    };
   };
   struct Config {
     using Name    = fhicl::Name;
     using Comment = fhicl::Comment;
   
-    fhicl::Table<SelectionTree::Inputs> inputs {
-      Name("inputs"), 
+    fhicl::Table<SelectionTree::Geom> geom {
+      Name("geom"), 
+    };
+    fhicl::Table<SelectionTree::Labels> labels {
+      Name("labels"), 
     };
     fhicl::Table<trkf::TrajectoryMCSFitter::Config> fitter {
       Name("fitter"),
@@ -220,19 +205,12 @@ private:
 
   // Declare member data here.
   // Geometry 
-  float m_detectorLengthX;
-  float m_detectorLengthY;
-  float m_detectorLengthZ;
-  float m_coordinateOffsetX;
-  float m_coordinateOffsetY;
-  float m_coordinateOffsetZ;
-  float m_selectedBorderXmin1;
-  float m_selectedBorderXmin2;
-  float m_selectedBorderXmax1;
-  float m_selectedBorderXmax2;
-  float m_selectedBorderY;
-  float m_selectedBorderZmin;
-  float m_selectedBorderZmax;
+  std::vector<float> m_minX;
+  std::vector<float> m_minY;
+  std::vector<float> m_minZ;
+  std::vector<float> m_maxX;
+  std::vector<float> m_maxY;
+  std::vector<float> m_maxZ;
 
   // Handle labels 
   art::InputTag m_generator_label;
@@ -245,6 +223,7 @@ private:
   art::InputTag m_reco_track_particleid_label;
   art::InputTag m_hit_label;
   art::InputTag m_subrun_label;
+  std::string   m_detector_name;
   
   // Momentum fitters
   trkf::TrajectoryMCSFitter m_mcs_fitter;
@@ -298,37 +277,43 @@ private:
 
   // subrun info
   double subrun_pot;
+  int det_enum;
 };
 
 // Constructor
 sbnd::SelectionTree::SelectionTree(Parameters const & config)
   :
   EDAnalyzer(config),
-  m_detectorLengthX(config().inputs().detectorLengthX()),
-  m_detectorLengthY(config().inputs().detectorLengthY()),
-  m_detectorLengthZ(config().inputs().detectorLengthZ()),
-  m_coordinateOffsetX(config().inputs().coordinateOffsetX()),
-  m_coordinateOffsetY(config().inputs().coordinateOffsetY()),
-  m_coordinateOffsetZ(config().inputs().coordinateOffsetZ()),
-  m_selectedBorderXmin1(config().inputs().selectedBorderXmin1()),
-  m_selectedBorderXmin2(config().inputs().selectedBorderXmin2()),
-  m_selectedBorderXmax1(config().inputs().selectedBorderXmax1()),
-  m_selectedBorderXmax2(config().inputs().selectedBorderXmax2()),
-  m_selectedBorderY(config().inputs().selectedBorderY()),
-  m_selectedBorderZmin(config().inputs().selectedBorderZmin()),
-  m_selectedBorderZmax(config().inputs().selectedBorderZmax()),
-  m_generator_label(config().inputs().generator_label()),
-  m_corsika_label(config().inputs().corsika_label()),
-  m_geant_label(config().inputs().geant_label()),
-  m_pandora_label(config().inputs().pandora_label()),
-  m_reco_track_label(config().inputs().reco_track_label()),
-  m_reco_shower_label(config().inputs().reco_shower_label()),
-  m_reco_track_calorimetry_label(config().inputs().reco_track_calorimetry_label()),
-  m_reco_track_particleid_label(config().inputs().reco_track_particleid_label()),
-  m_hit_label(config().inputs().hit_label()),
-  m_subrun_label(config().inputs().subrun_label()),
+  m_minX(config().geom().minX()),
+  m_minY(config().geom().minY()),
+  m_minZ(config().geom().minZ()),
+  m_maxX(config().geom().maxX()),
+  m_maxY(config().geom().maxY()),
+  m_maxZ(config().geom().maxZ()),
+  m_generator_label(config().labels().generator_label()),
+  m_corsika_label(config().labels().corsika_label()),
+  m_geant_label(config().labels().geant_label()),
+  m_pandora_label(config().labels().pandora_label()),
+  m_reco_track_label(config().labels().reco_track_label()),
+  m_reco_shower_label(config().labels().reco_shower_label()),
+  m_reco_track_calorimetry_label(config().labels().reco_track_calorimetry_label()),
+  m_reco_track_particleid_label(config().labels().reco_track_particleid_label()),
+  m_hit_label(config().labels().hit_label()),
+  m_subrun_label(config().labels().subrun_label()),
+  m_detector_name(config().labels().detector_name()),
   m_mcs_fitter(config().fitter)
 {
+  det_enum = -1;
+  if(m_detector_name == "sbnd")
+    det_enum = 0;
+  if(m_detector_name == "uboone")
+    det_enum = 1;
+  if(m_detector_name == "icarus")
+    det_enum = 2;
+  if(det_enum == -1){
+    std::cout << " WARNING: Detector name either not specified or invalid so writing '-1'." << std::endl;
+    std::cout << " Got " << m_detector_name << " from the configuration" << std::endl;
+  }
 }
 
 void sbnd::SelectionTree::analyze(art::Event const & e)
@@ -339,7 +324,6 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
 
   // Add one to the event counter
   event_id++;
-
   // Get current time stamp
   time_now = std::time(nullptr);
   
@@ -557,14 +541,18 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
       float reco_vertex_y = r_vertex[1];
       float reco_vertex_z = r_vertex[2];
 
-      // Make sure reconstructed vertex is within the TPC fiducial volume
-      if (   (reco_vertex_x > (m_detectorLengthX - m_coordinateOffsetX - m_selectedBorderXmax2)) // Largest x-edge
-          || ((reco_vertex_x > -m_selectedBorderXmax1) && (reco_vertex_x < m_selectedBorderXmin2)) // Central zone
-          || (reco_vertex_x < (-m_coordinateOffsetX + m_selectedBorderXmin1)) // Smallest x-edge
-          || (reco_vertex_y > (m_detectorLengthY - m_coordinateOffsetY - m_selectedBorderY)) 
-          || (reco_vertex_y < (-m_coordinateOffsetY + m_selectedBorderY)) 
-          || (reco_vertex_z > (m_detectorLengthZ - m_coordinateOffsetZ - m_selectedBorderZmax)) 
-          || (reco_vertex_z < (-m_coordinateOffsetZ + m_selectedBorderZmin))) return;
+      // Make sure reconstructed vertex is within the TPC configuration-defined volume
+      assert(m_minX.size() == m_minY.size());
+      bool vertex_contained = false;
+      for(unsigned int g = 0; g < m_minX.size(); ++g){
+        if(reco_vertex_x >= m_minX[g] && reco_vertex_x <= m_maxX[g] &&
+           reco_vertex_y >= m_minY[g] && reco_vertex_y <= m_maxY[g] &&
+           reco_vertex_z >= m_minZ[g] && reco_vertex_z <= m_maxZ[g]){
+          vertex_contained = true;
+          break;
+        }
+      }
+      if(!vertex_contained) return;
 
       // Get track associations with PFParticles from Pandora
       art::FindManyP< recob::Track   > fmtrk( pfp_handle, e, m_reco_track_label );
@@ -611,21 +599,24 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
             // The border for contained tracks should be the edge of the active volume,
             // since this is where we can measure energy up to
             // Find out if one end of a track escapes (if so, MCS)
-            bool does_vtx_escape =                                                                   
-              (     (track_vtx_x > (m_detectorLengthX - m_coordinateOffsetX))                                     
-                    || (track_vtx_x < (-m_coordinateOffsetX))                                                    
-                    || (track_vtx_y > (m_detectorLengthY - m_coordinateOffsetY))                                     
-                    || (track_vtx_y < (-m_coordinateOffsetY))     
-                    || (track_vtx_z > (m_detectorLengthZ - m_coordinateOffsetZ))                                     
-                    || (track_vtx_z < (-m_coordinateOffsetZ)));                                                  
-
-            bool does_end_escape =                                                                   
-              (     (track_end_x > (m_detectorLengthX - m_coordinateOffsetX))                                     
-                    || (track_end_x < (-m_coordinateOffsetX))                                                    
-                    || (track_end_y > (m_detectorLengthY - m_coordinateOffsetY))                                     
-                    || (track_end_y < (-m_coordinateOffsetY))                                                    
-                    || (track_end_z > (m_detectorLengthZ - m_coordinateOffsetZ))                                     
-                    || (track_end_z < (-m_coordinateOffsetZ)));                                                  
+            bool does_vtx_escape = true;
+            for(unsigned int g = 0; g < m_minX.size(); ++g){
+              if(track_vtx_x >= m_minX[g] && track_vtx_x <= m_maxX[g] &&
+                 track_vtx_y >= m_minY[g] && track_vtx_y <= m_maxY[g] &&
+                 track_vtx_z >= m_minZ[g] && track_vtx_z <= m_maxZ[g]){
+                does_vtx_escape = false;
+                break;
+              }
+            }
+            bool does_end_escape = true;
+            for(unsigned int g = 0; g < m_minX.size(); ++g){
+              if(track_end_x >= m_minX[g] && track_end_x <= m_maxX[g] &&
+                 track_end_y >= m_minY[g] && track_end_y <= m_maxY[g] &&
+                 track_end_z >= m_minZ[g] && track_end_z <= m_maxZ[g]){
+                does_end_escape = false;
+                break;
+              }
+            }
 
             bool one_end_escapes = true;                                                             
             if(does_vtx_escape && does_end_escape)   one_end_escapes = false;                        
@@ -963,6 +954,7 @@ void sbnd::SelectionTree::beginJob()
 
   // subrun tree branches
   subrun_tree->Branch("subrun_pot",                &subrun_pot,            "subrun_pot/D");
+  subrun_tree->Branch("detector_enum",             &det_enum,              "detector_enum/I");
 
   // MCParticle tree branches
   // Variables associated with mcparticle_tree
@@ -1041,13 +1033,14 @@ void sbnd::SelectionTree::endJob()
   // Print the tree, write the file, close
   // This relative path is needed for grid jobs
   TFile file("output_file.root", "RECREATE");
-  //TFile file("/pnfs/sbnd/persistent/users/rsjones/test_analysis/output_file.root", "RECREATE");
+  
   event_tree->Write();
   subrun_tree->Write();
   mcparticle_tree->Write();
   recotrack_tree->Write();
   recoshower_tree->Write();
   mcsstudy_tree->Write();
+  
   file.Write();
   file.Close();
 

@@ -1,4 +1,4 @@
-#include "icarusDomConfig.fcl"
+#include "ubooneDomConfig.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
