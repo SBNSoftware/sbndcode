@@ -1,0 +1,48 @@
+BEGIN_PROLOG
+
+selectionTree:
+{ 
+  module_type:                "SelectionTree"
+
+  inputs: {
+    DetectorLengthX: 728.98
+    DetectorLengthY: 316.82
+    DetectorLengthZ: 1789.9
+    CoordinateOffsetX: 364.49
+    CoordinateOffsetY: 173.41
+    CoordinateOffsetZ: 909.95
+    SelectedBorderXmin1: 0.
+    SelectedBorderXmin2: 0.
+    SelectedBorderXmax1: 0.
+    SelectedBorderXmax2: 0.
+    SelectedBorderY: 0.
+    SelectedBorderZmin: 0.
+    SelectedBorderZmax: 0.
+
+    TruthLabel:                "generator"
+    CorsikaLabel:              "corsika"
+    G4Label:                   "largeant"
+    PandoraLabel:              "pandoraUboonetune"
+    RecoTrackLabel:            "pandoraTrackUboonetune"
+    RecoShowerLabel:           "tracsUboonetuneRetune"
+    RecoTrackCalorimetryLabel: "TrackRecoCaloUboonetune"
+    RecoTrackParticleIDLabel:  "TrackRedoPidUboonetune"
+    HitLabel:                  "gaushit"
+    SubRunLabel:               "generator"
+  }
+  fitter: {                                                                   
+    pIdHypothesis: 13                                                         
+    minNumSegments: 3                                                         
+    segmentLength: 14.0                                                       
+    minHitsPerSegment: 2                                                      
+    nElossSteps: 10                                                           
+    eLossMode: 0                                                              
+    pMin: 0.01                                                                
+    pMax: 7.50                                                                
+    pStep: 0.01                                                               
+    angResol: 3.0                                                             
+  }             
+}
+
+END_PROLOG
+

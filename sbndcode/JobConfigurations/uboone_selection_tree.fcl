@@ -1,0 +1,47 @@
+#include "icarusDomConfig.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+process_name: SelectionTree      #The process name must NOT contain any underscores
+
+source: 
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+services: {
+  @table::sbnd_simulation_services
+  BackTrackerService:  @local::standard_backtrackerservice
+  ParticleInventoryService: @local::standard_particleinventoryservice
+}
+#  scheduler:               { defaultExceptions: false }    # Make all uncaught exceptions fatal.
+#  TFileService: { fileName: "MyFilter.root" }
+#  Timing:       {}
+#  SimpleMemoryCheck:     { ignoreTotal: 1 }     #default is one
+#  RandomNumberGenerator: {}                     #ART native random number generator
+#  message:      @local::standard_info
+#  user: {}
+#}
+
+physics: {
+
+  producers: {
+     # ParameterSets for zero or more producer modules
+  }
+  analyzers: {
+     # ParameterSets for zero or more analyzer modules
+    selectionTree: @local::selectionTree
+  }
+
+  filters: {
+     # ParameterSets for zero or more filter modules
+  }
+
+  path0:  [ selectionTree ]
+
+  end_paths:    [ path0 ]
+
+}
+
