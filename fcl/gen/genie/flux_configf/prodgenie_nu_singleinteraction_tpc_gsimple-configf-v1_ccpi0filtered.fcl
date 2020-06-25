@@ -1,0 +1,8 @@
+#include "filters_sbnd.fcl"
+#include "prodgenie_nu_singleinteraction_tpc_gsimple-configf-v1.fcl"
+
+physics.simulate: [ rns, generator, filter ]
+
+physics.filters.filter: @local::sbnd_finalstateparticlefilter
+physics.filters.filter.PDG: [13, 111]
+outputs.out1.SelectEvents: [ "simulate" ]

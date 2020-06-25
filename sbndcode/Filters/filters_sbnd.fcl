@@ -1,3 +1,11 @@
+BEGIN_PROLOG
+
+sbnd_finalstateparticlefilter:
+{
+  module_type:           "FinalStateParticleFilter"
+  GenieModuleLabel:      "generator"
+  PDG:                   [13, 2212]                   
+}
 
 sbnd_nuefilter:
 { 
@@ -28,4 +36,4 @@ standard_crt_trig_filter:
 	  
 }
 
-
+END_PROLOG
