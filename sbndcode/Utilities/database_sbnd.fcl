@@ -22,8 +22,8 @@ sbnd_detpedestalservice: {
 
 # Ditto: we set the pedestals to reflect the current simulation settings from
 # detsimmodules_sbnd.fcl
-sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultCollMean: 400
-sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultIndMean: 2048
+sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultCollMean: 650
+sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultIndMean: 2000
 
 # ##############################################################################
 
