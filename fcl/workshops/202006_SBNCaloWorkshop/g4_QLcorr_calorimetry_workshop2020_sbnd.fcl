@@ -8,3 +8,4 @@ services.DetectorPropertiesService.Electronlifetime:  10.0e3 #microseconds
 
 services.LArG4Parameters.IonAndScintCalculator: "Correlated"
 services.LArPropertiesService.ScintByParticleType: true
+services.LArPropertiesService.ScintPreScale: 1.0
