@@ -211,8 +211,11 @@ geo::Vector_t spacecharge::SpaceChargeSBND::GetPosOffsets(geo::Point_t const& po
       else if(yy>199.999){yy=199.999;}
       if(zz<0.001){zz=0.001;}
       else if(zz>499.999){zz=499.999;}
+      //larsim requires negative sign in TPC 0
+      int corr = 1;
+      if (xx < 0) { corr = -1; }
       double offset_x=0., offset_y=0., offset_z=0.;
-      offset_x = SCEhistograms.at(0)->Interpolate(xx,yy,zz);
+      offset_x = corr*SCEhistograms.at(0)->Interpolate(xx,yy,zz);
       offset_y = SCEhistograms.at(1)->Interpolate(xx,yy,zz);
       offset_z = SCEhistograms.at(2)->Interpolate(xx,yy,zz);
       thePosOffsets = {offset_x, offset_y, offset_z};
@@ -250,8 +253,11 @@ geo::Vector_t spacecharge::SpaceChargeSBND::GetCalPosOffsets(geo::Point_t const&
     //correct for charge drifted across cathode
     if ((TPCid == 0) and (xx > -2.5)) { xx = -2.5; }
     if ((TPCid == 1) and (xx < 2.5)) { xx = 2.5; }
+    //add negative sign for TPC 0 for consistency
+    int corr = 1;
+    if (TPCid == 0) { corr = -1; }
     double offset_x=0., offset_y=0., offset_z=0.;
-    offset_x = SCEhistograms.at(3)->Interpolate(xx,yy,zz);
+    offset_x = corr*SCEhistograms.at(3)->Interpolate(xx,yy,zz);
     offset_y = SCEhistograms.at(4)->Interpolate(xx,yy,zz);
     offset_z = SCEhistograms.at(5)->Interpolate(xx,yy,zz);
     theCalPosOffsets = {offset_x, offset_y, offset_z};
