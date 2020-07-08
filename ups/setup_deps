@@ -59,21 +59,26 @@ set_ msg5='ERROR: setup of required products has failed'
 
 echo ----------- check this block for errors -----------------------
 set_ setup_fail="false"
-set_ cetb=` grep only_for_build $CETPKG_SOURCE/ups/product_deps | grep cetbuildtools | awk '{ print $2 }' `
-set_ cetv=` grep only_for_build $CETPKG_SOURCE/ups/product_deps | grep cetbuildtools | awk '{ print $3 }' `
+set_ exit_now="false"
+set_ cetb=` grep -e '^[ \t]*cetbuildtools' $CETPKG_SOURCE/ups/product_deps | grep  only_for_build| awk '{ print $1 }' `
+set_ cetv=` grep -e '^[ \t]*cetbuildtools' $CETPKG_SOURCE/ups/product_deps | grep  only_for_build| awk '{ print $2 }' `
 #echo Found $cetb $cetv
 setup -B $cetb $cetv
 test "$?" = 0 || set_ setup_fail="true"
-setenv UPS_OVERRIDE -B
 # now get the rest of the products
 set_ cmd="$CETBUILDTOOLS_DIR/bin/set_dev_products $CETPKG_SOURCE $CETPKG_BUILD $*"
 #echo Ready to run $cmd
 source `$cmd`
+test "$?" = 0 || set_ setup_fail="true"
 #echo "$cmd returned $setup_fail"
 test "$setup_fail" = "true" && echo "$msg5"
-test "$setup_fail" = "true" && return 1
-test -e "diag_report" && cat diag_report
+test "$setup_fail" = "true" && set_ exit_now="true"
+test -e "$CETPKG_BUILD/diag_report" && cat $CETPKG_BUILD/diag_report
 echo ----------------------------------------------------------------
+
+test "${exit_now}" = "true" && test "$ss" = csh && unalias tnotnull nullout set_ vecho_ return
+test "${exit_now}" = "true" && unset ss db me thisdir msg1 msg2 msg3 msg4 msg5 setup_fail set_ setenv unsetenv_ tnotnull nullout vecho_
+test "${exit_now}" = "true" && return 1
 
 # final sanity check and report
 source $CETBUILDTOOLS_DIR/bin/set_dep_check_report
