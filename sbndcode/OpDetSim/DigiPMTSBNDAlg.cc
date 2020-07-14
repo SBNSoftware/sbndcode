@@ -110,7 +110,7 @@ namespace opdet {
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
       if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
-        tphoton = fParams.TransitTime + ttsTime + simphotons[i].Time - t_min;
+        tphoton = ttsTime + simphotons[i].Time - t_min + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
@@ -127,7 +127,7 @@ namespace opdet {
           // TODO: this uses root random machine!
           // use RandGeneral instead. ~icaza
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
-          tphoton = fParams.TransitTime + ttsTime + auxphotons[j].Time - t_min + ttpb;
+          tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           timeBin = std::floor(tphoton*fSampling);
           if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
@@ -162,7 +162,7 @@ namespace opdet {
       accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
-        tphoton = fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min;
+        tphoton = ttsTime + reflectedPhotons.first - t_min + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
@@ -183,7 +183,7 @@ namespace opdet {
             // TODO: this uses root random machine!
             // use RandGeneral. ~icaza
             ttpb = timeTPB->GetRandom(); //for including TPB emission time
-            tphoton = fParams.TransitTime + ttsTime + directPhotons.first - t_min + ttpb;
+            tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
             if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
             timeBin = std::floor(tphoton*fSampling);
             if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
@@ -366,6 +366,7 @@ namespace opdet {
     fBaseConfig.PMTBaselineRMS           = config.pmtbaselineRMS();
     fBaseConfig.TransitTime              = config.transitTime();
     fBaseConfig.TTS                      = config.tts();
+    fBaseConfig.CableTime                = config.cableTime();
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
   }
 
