@@ -18,12 +18,15 @@ namespace opdet {
 
     if(fArapucaVUVEff > 1.0001 || fArapucaVISEff > 1.0001 ||
        fXArapucaVUVEff > 1.0001 || fXArapucaVISEff > 1.0001)
-      std::cout << "WARNING: Quantum efficiency set in fhicl file "
-                << fParams.ArapucaVUVEff << " or " << fParams.ArapucaVISEff << " or "
-                << fParams.XArapucaVUVEff << " or " << fParams.XArapucaVISEff
-                << " seems to be too large!\n"
-                << "Final QE must be equal to or smaller than the scintillation pre scale applied at simulation time.\n"
-                << "Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale() << std::endl;
+      mf::LogWarning("DigiArapucaSBNDAlg")
+        << "Quantum efficiency set in fhicl file "
+        << fParams.ArapucaVUVEff << " or " << fParams.ArapucaVISEff << " or "
+        << fParams.XArapucaVUVEff << " or " << fParams.XArapucaVISEff
+        << " seems to be too large!\n"
+        << "Final QE must be equal to or smaller than the scintillation "
+        << "pre scale applied at simulation time.\n"
+        << "Please check this number (ScintPreScale): "
+        << fParams.larProp->ScintPreScale();
 
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
