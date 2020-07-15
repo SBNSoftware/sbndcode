@@ -10,7 +10,7 @@
 ///////////////////////////////////////////////
 
 // sbndcode
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
 
 // framework

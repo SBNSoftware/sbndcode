@@ -8,8 +8,8 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/CosmicId/Utils/CosmicIdUtils.h"
 #include "sbndcode/CosmicId/Algs/CosmicIdAlg.h"

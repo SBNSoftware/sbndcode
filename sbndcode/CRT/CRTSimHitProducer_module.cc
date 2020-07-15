@@ -10,8 +10,8 @@
 /////////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 
 // Framework includes

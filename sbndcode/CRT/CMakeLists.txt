@@ -68,7 +68,7 @@ simple_plugin( CRTDetSim module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbndcode_CRTProducts
+        sbnobj_Common_CRT
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
@@ -90,7 +90,7 @@ simple_plugin( CRTSimHitProducer module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbndcode_CRTProducts
+        sbnobj_Common_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
         ${ART_FRAMEWORK_CORE}
@@ -114,7 +114,7 @@ simple_plugin(CRTTrackProducer module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbndcode_CRTProducts
+        sbnobj_Common_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
         ${ART_FRAMEWORK_CORE}
@@ -139,7 +139,7 @@ simple_plugin(CRTTzeroProducer module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbndcode_CRTProducts
+        sbnobj_Common_CRT
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
