@@ -22,10 +22,10 @@ namespace sbnd{
 namespace CRTCommonUtils{
   
   // Simple distance of closest approach between infinite track and centre of hit
-  double SimpleDCA(crt::CRTHit hit, TVector3 start, TVector3 direction);
+  double SimpleDCA(sbn::crt::CRTHit hit, TVector3 start, TVector3 direction);
 
   // Minimum distance from infinite track to CRT hit assuming that hit is a 2D square
-  double DistToCrtHit(crt::CRTHit hit, TVector3 start, TVector3 end);
+  double DistToCrtHit(sbn::crt::CRTHit hit, TVector3 start, TVector3 end);
 
   // Distance between infinite line (2) and segment (1)
   // http://geomalgorithms.com/a07-_distance.html

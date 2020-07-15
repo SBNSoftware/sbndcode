@@ -56,7 +56,7 @@ std::pair<double, double> CRTT0MatchAlg::TrackT0Range(detinfo::DetectorPropertie
 
 
 double CRTT0MatchAlg::DistOfClosestApproach(detinfo::DetectorPropertiesData const& detProp,
-                                            TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int driftDirection, double t0){
+                                            TVector3 trackPos, TVector3 trackDir, sbn::crt::CRTHit crtHit, int driftDirection, double t0){
 
   //double minDist = 99999;
 
@@ -127,7 +127,7 @@ std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverageFromPoints(rec
 
 
 std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
-                                                            recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event) {
+                                                            recob::Track tpcTrack, std::vector<sbn::crt::CRTHit> crtHits, const art::Event& event) {
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -135,7 +135,7 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::DetectorPro
 }
 
 std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
-                                                            recob::Track tpcTrack, std::pair<double, double> t0MinMax, std::vector<sbnd::crt::CRTHit> crtHits, int driftDirection) {
+                                                            recob::Track tpcTrack, std::pair<double, double> t0MinMax, std::vector<sbn::crt::CRTHit> crtHits, int driftDirection) {
   auto start = tpcTrack.Vertex<TVector3>();
   auto end = tpcTrack.End<TVector3>();
 
@@ -145,7 +145,7 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::DetectorPro
   TVector3 endDir = startEndDir.second;
 
   // ====================== Matching Algorithm ========================== //
-  std::vector<std::pair<crt::CRTHit, double>> t0Candidates;
+  std::vector<std::pair<sbn::crt::CRTHit, double>> t0Candidates;
 
   // Loop over all the CRT hits
   for(auto &crtHit : crtHits){
@@ -182,14 +182,14 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::DetectorPro
   if(t0Candidates.size() > 0){
     return t0Candidates[0];
   }
-  crt::CRTHit hit;
+  sbn::crt::CRTHit hit;
   return std::make_pair(hit, -99999);
 
 
 }
 
 std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
-                                                            recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits) {
+                                                            recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTHit> crtHits) {
   auto start = tpcTrack.Vertex<TVector3>();
   auto end = tpcTrack.End<TVector3>();
   // Get the drift direction from the TPC
@@ -202,7 +202,7 @@ std::pair<crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::DetectorPro
 }
 
 double CRTT0MatchAlg::T0FromCRTHits(detinfo::DetectorPropertiesData const& detProp,
-                                    recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
+                                    recob::Track tpcTrack, std::vector<sbn::crt::CRTHit> crtHits, const art::Event& event){
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -210,11 +210,11 @@ double CRTT0MatchAlg::T0FromCRTHits(detinfo::DetectorPropertiesData const& detPr
 }
 
 double CRTT0MatchAlg::T0FromCRTHits(detinfo::DetectorPropertiesData const& detProp,
-                                    recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits) {
+                                    recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTHit> crtHits) {
 
   if (tpcTrack.Length() < fMinTrackLength) return -99999; 
 
-  std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(detProp, tpcTrack, hits, crtHits);
+  std::pair<sbn::crt::CRTHit, double> closestHit = ClosestCRTHit(detProp, tpcTrack, hits, crtHits);
   if(closestHit.second == -99999) return -99999;
 
   double crtTime;
@@ -231,7 +231,7 @@ double CRTT0MatchAlg::T0FromCRTHits(detinfo::DetectorPropertiesData const& detPr
 }
 
 std::pair<double, double> CRTT0MatchAlg::T0AndDCAFromCRTHits(detinfo::DetectorPropertiesData const& detProp,
-                                                             recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event){
+                                                             recob::Track tpcTrack, std::vector<sbn::crt::CRTHit> crtHits, const art::Event& event){
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -239,12 +239,12 @@ std::pair<double, double> CRTT0MatchAlg::T0AndDCAFromCRTHits(detinfo::DetectorPr
 }
 
 std::pair<double, double> CRTT0MatchAlg::T0AndDCAFromCRTHits(detinfo::DetectorPropertiesData const& detProp,
-                                                             recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits) {
+                                                             recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTHit> crtHits) {
 
   std::pair<double, double> null = std::make_pair(-99999, -99999);
   if (tpcTrack.Length() < fMinTrackLength) return null; 
 
-  std::pair<crt::CRTHit, double> closestHit = ClosestCRTHit(detProp, tpcTrack, hits, crtHits);
+  std::pair<sbn::crt::CRTHit, double> closestHit = ClosestCRTHit(detProp, tpcTrack, hits, crtHits);
   if(closestHit.second == -99999) return null;
 
   double crtTime;

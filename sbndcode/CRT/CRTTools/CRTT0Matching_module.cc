@@ -129,12 +129,12 @@ namespace sbnd {
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
 
     // Retrieve CRT hit list
-    art::Handle<std::vector<crt::CRTHit>> crtListHandle;
-    std::vector<art::Ptr<crt::CRTHit>> crtList;
+    art::Handle<std::vector<sbn::crt::CRTHit>> crtListHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit>> crtList;
     if(event.getByLabel(fCrtHitModuleLabel, crtListHandle))
       art::fill_ptr_vector(crtList, crtListHandle);
 
-    std::vector<crt::CRTHit> crtHits;
+    std::vector<sbn::crt::CRTHit> crtHits;
     for (auto const& crtHit : crtList){
       crtHits.push_back(*crtHit);
     }

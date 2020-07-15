@@ -76,7 +76,7 @@ namespace sbnd{
 
     // Returns true if matched to CRTHit outside beam time
     bool CrtHitCosmicId(detinfo::DetectorPropertiesData const& detProp,
-                        recob::Track track, std::vector<crt::CRTHit> crtHits, const art::Event& event);
+                        recob::Track track, std::vector<sbn::crt::CRTHit> crtHits, const art::Event& event);
 
     // Getter for matching algorithm
     CRTT0MatchAlg T0Alg() const {return t0Alg;}

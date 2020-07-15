@@ -205,13 +205,13 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT hits from the event
-    art::Handle< std::vector<crt::CRTHit>> crtHitHandle;
-    std::vector<art::Ptr<crt::CRTHit> > crtHitList;
+    art::Handle< std::vector<sbn::crt::CRTHit>> crtHitHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit> > crtHitList;
     if (event.getByLabel(fCRTHitLabel, crtHitHandle))
       art::fill_ptr_vector(crtHitList, crtHitHandle);
 
     fCrtBackTrack.Initialize(event);
-    std::vector<crt::CRTHit> crtHits;
+    std::vector<sbn::crt::CRTHit> crtHits;
     std::map<int, int> numHitMap;
     int hit_i = 0;
     for(auto const& hit : (crtHitList)){
@@ -303,7 +303,7 @@ namespace sbnd {
       if(type == "none") continue;
 
       // Calculate t0 from CRT Hit matching
-      std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
 
       if(closest.second != -99999){
         int hitTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closest.first);
@@ -404,7 +404,7 @@ namespace sbnd {
       }
 
       // Calculate t0 from CRT Hit matching
-      std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
 
       if(closest.second != -99999){
         int hitTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closest.first);

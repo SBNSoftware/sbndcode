@@ -348,8 +348,8 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT hits from the event
-    art::Handle< std::vector<crt::CRTHit>> crtHitHandle;
-    std::vector<art::Ptr<crt::CRTHit> > crtHitList;
+    art::Handle< std::vector<sbn::crt::CRTHit>> crtHitHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit> > crtHitList;
     if (event.getByLabel(fCRTHitLabel, crtHitHandle))
       art::fill_ptr_vector(crtHitList, crtHitHandle);
 
@@ -357,7 +357,7 @@ namespace sbnd {
     fCrtBackTrack.Initialize(event);
 
     // Loop over the CRT hits and match them to true particles
-    std::vector<crt::CRTHit> crtHits;
+    std::vector<sbn::crt::CRTHit> crtHits;
     std::map<int, int> numHitMap;
     int hit_i = 0;
     for(auto const& hit : (crtHitList)){
@@ -371,13 +371,13 @@ namespace sbnd {
     }
 
     // Get CRT tracks from the event
-    art::Handle< std::vector<crt::CRTTrack>> crtTrackHandle;
-    std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
+    art::Handle< std::vector<sbn::crt::CRTTrack>> crtTrackHandle;
+    std::vector<art::Ptr<sbn::crt::CRTTrack> > crtTrackList;
     if (event.getByLabel(fCRTTrackLabel, crtTrackHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackHandle);
 
     // Loop over the CRT tracks and match them to true particles
-    std::vector<crt::CRTTrack> crtTracks;
+    std::vector<sbn::crt::CRTTrack> crtTracks;
     std::map<int, int> numTrackMap;
     int track_i = 0;
     for(auto const& track : (crtTrackList)){
@@ -615,17 +615,17 @@ namespace sbnd {
       }
 
       // CRT hit cut - get the distance of closest approach for the nearest CRT hit
-      std::pair<crt::CRTHit, double> closestHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(detProp, tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closestHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(detProp, tpcTrack, crtHits, event);
       pfp_crt_hit_dca = closestHit.second;
       if(useSecTrack){
-        std::pair<crt::CRTHit, double> closestSecHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(detProp, secTrack, crtHits, event);
+        std::pair<sbn::crt::CRTHit, double> closestSecHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(detProp, secTrack, crtHits, event);
         pfp_sec_crt_hit_dca = closestHit.second;
       }
 
       // CRT track cut - get the average distance of closest approach and angle between tracks for the nearest CRT track
-      std::pair<crt::CRTTrack, double> closestTrackDca = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestTrackDca = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
       pfp_crt_track_dca = closestTrackDca.second;
-      std::pair<crt::CRTTrack, double> closestTrackAngle = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestTrackAngle = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
       pfp_crt_track_angle = closestTrackAngle.second;
 
       // Stopping cut - get the chi2 ratio of the start and end of the track
@@ -715,13 +715,13 @@ namespace sbnd {
       track_phi = tpcTrack.Phi();
 
       // CRT hit cut - get the distance of closest approach for the nearest CRT hit
-      std::pair<crt::CRTHit, double> closestHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(detProp, tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closestHit = fCosId.CrtHitAlg().T0Alg().ClosestCRTHit(detProp, tpcTrack, crtHits, event);
       track_crt_hit_dca = closestHit.second;
 
       // CRT track cut - get the average distance of closest approach and angle between tracks for the nearest CRT track
-      std::pair<crt::CRTTrack, double> closestTrackDca = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestTrackDca = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
       track_crt_track_dca = closestTrackDca.second;
-      std::pair<crt::CRTTrack, double> closestTrackAngle = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestTrackAngle = fCosId.CrtTrackAlg().TrackAlg().ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
       track_crt_track_angle = closestTrackAngle.second;
 
       // Stopping cut - get the chi2 ratio of the start and end of the track

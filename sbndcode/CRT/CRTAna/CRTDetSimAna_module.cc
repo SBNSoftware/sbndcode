@@ -231,8 +231,8 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT data from the event
-    art::Handle< std::vector<crt::CRTData>> crtDataHandle;
-    std::vector<art::Ptr<crt::CRTData> > crtDataList;
+    art::Handle< std::vector<sbnd::crt::CRTData>> crtDataHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTData> > crtDataList;
     if (event.getByLabel(fCRTSimLabel, crtDataHandle))
       art::fill_ptr_vector(crtDataList, crtDataHandle);
 
@@ -260,7 +260,7 @@ namespace sbnd {
     //                                        CRT DATA ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
-    std::map<int, std::vector<crt::CRTData>> crtData;
+    std::map<int, std::vector<sbnd::crt::CRTData>> crtData;
     for(size_t i  = 0; i < crtDataList.size(); i++){
 
       // Truth matching

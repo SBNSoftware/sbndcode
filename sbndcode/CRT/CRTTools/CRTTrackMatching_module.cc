@@ -102,7 +102,7 @@ namespace sbnd {
     // Call appropriate produces<>() functions here.
     produces< std::vector<anab::T0> >();
     produces< art::Assns<recob::Track , anab::T0> >();
-    //produces< art::Assns<recob::Track , crt::CRTTrack> >();
+    //produces< art::Assns<recob::Track , sbn::crt::CRTTrack> >();
     
     reconfigure(p);
 
@@ -132,7 +132,7 @@ namespace sbnd {
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
-    //std::unique_ptr< art::Assns<recob::Track, crt::CRTTrack> > Crtassn( new art::Assns<recob::Track, crt::CRTTrack>);
+    //std::unique_ptr< art::Assns<recob::Track, sbn::crt::CRTTrack> > Crtassn( new art::Assns<recob::Track, sbn::crt::CRTTrack>);
 
     // Get TPC tracks
     art::Handle< std::vector<recob::Track> > tpcTrackListHandle;
@@ -144,12 +144,12 @@ namespace sbnd {
     //art::FindManyP<recob::Hit> findManyHits(tpcTrackListHandle, event, fTpcTrackModuleLabel);
 
     // Get CRT tracks
-    art::Handle< std::vector<crt::CRTTrack> > crtTrackListHandle;
-    std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
+    art::Handle< std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
+    std::vector<art::Ptr<sbn::crt::CRTTrack> > crtTrackList;
     if (event.getByLabel(fCrtTrackModuleLabel, crtTrackListHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackListHandle);
 
-    std::vector<crt::CRTTrack> crtTracks;
+    std::vector<sbn::crt::CRTTrack> crtTracks;
     for(auto const& crtTrack : crtTrackList){
       crtTracks.push_back(*crtTrack);
     }

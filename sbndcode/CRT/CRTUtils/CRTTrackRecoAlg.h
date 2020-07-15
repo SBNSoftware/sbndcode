@@ -91,22 +91,22 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
-    std::vector<std::vector<art::Ptr<crt::CRTHit>>> CreateCRTTzeros(std::vector<art::Ptr<crt::CRTHit>>);
+    std::vector<std::vector<art::Ptr<sbn::crt::CRTHit>>> CreateCRTTzeros(std::vector<art::Ptr<sbn::crt::CRTHit>>);
 
     // Function to make creating CRTTracks easier
-    crt::CRTTrack FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2, bool complete);
-    crt::CRTTrack FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2, size_t nhits);
+    sbn::crt::CRTTrack FillCrtTrack(sbn::crt::CRTHit hit1, sbn::crt::CRTHit hit2, bool complete);
+    sbn::crt::CRTTrack FillCrtTrack(sbn::crt::CRTHit hit1, sbn::crt::CRTHit hit2, size_t nhits);
 
     // Function to average hits within a certain distance of each other
-    std::vector<std::pair<crt::CRTHit, std::vector<int>>> AverageHits(std::vector<art::Ptr<crt::CRTHit>> hits, std::map<art::Ptr<crt::CRTHit>, int> hitIds);
-    std::vector<crt::CRTHit> AverageHits(std::vector<art::Ptr<crt::CRTHit>> hits);
+    std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> AverageHits(std::vector<art::Ptr<sbn::crt::CRTHit>> hits, std::map<art::Ptr<sbn::crt::CRTHit>, int> hitIds);
+    std::vector<sbn::crt::CRTHit> AverageHits(std::vector<art::Ptr<sbn::crt::CRTHit>> hits);
 
     // Take a list of hits and find average parameters
-    crt::CRTHit DoAverage(std::vector<art::Ptr<crt::CRTHit>> hits);
+    sbn::crt::CRTHit DoAverage(std::vector<art::Ptr<sbn::crt::CRTHit>> hits);
 
     // Create CRTTracks from list of hits
-    std::vector<std::pair<crt::CRTTrack, std::vector<int>>> CreateTracks(std::vector<std::pair<crt::CRTHit, std::vector<int>>> hits);
-    std::vector<crt::CRTTrack> CreateTracks(std::vector<crt::CRTHit> hits);
+    std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CreateTracks(std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> hits);
+    std::vector<sbn::crt::CRTTrack> CreateTracks(std::vector<sbn::crt::CRTHit> hits);
 
 
   private:

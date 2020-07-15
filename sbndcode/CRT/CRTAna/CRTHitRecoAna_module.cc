@@ -228,17 +228,17 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get all the CRT hits
-    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
+    auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
 
     // Get hit to data associations
-    art::FindManyP<crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
+    art::FindManyP<sbnd::crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
 
     fCrtBackTrack.Initialize(event);
     
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
-    std::map<int, std::vector<crt::CRTHit>> crtHits;
+    std::map<int, std::vector<sbn::crt::CRTHit>> crtHits;
     double minHitTime = 99999;
     double maxHitTime = -99999;
     int ht_i = 0;
@@ -306,7 +306,7 @@ namespace sbnd {
       geo::Point_t hitPos {hit.x_pos, hit.y_pos, hit.z_pos};
 
       // Get the data associated with the hit
-      std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(hit_i);
+      std::vector<art::Ptr<sbnd::crt::CRTData>> data = findManyData.at(hit_i);
 
       // Get all the strips from the crt hit
       std::vector<std::string> stripNames;

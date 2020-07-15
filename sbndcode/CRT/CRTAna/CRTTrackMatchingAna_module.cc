@@ -116,7 +116,7 @@ namespace sbnd {
     virtual void endJob() override;
 
     // Calculate the distance from the track crossing point to CRT overlap coordinates
-    double DistToCrtHit(TVector3 trackPos, crt::CRTHit crtHit);
+    double DistToCrtHit(TVector3 trackPos, sbn::crt::CRTHit crtHit);
 
   private:
 
@@ -225,8 +225,8 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT hits from the event
-    art::Handle< std::vector<crt::CRTTrack>> crtTrackHandle;
-    std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
+    art::Handle< std::vector<sbn::crt::CRTTrack>> crtTrackHandle;
+    std::vector<art::Ptr<sbn::crt::CRTTrack> > crtTrackList;
     if (event.getByLabel(fCRTTrackLabel, crtTrackHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackHandle);
 
@@ -250,8 +250,8 @@ namespace sbnd {
       
     }
 
-    std::vector<crt::CRTTrack> crtTracks;
-    std::map<int, std::vector<crt::CRTTrack>> crtTrackMap;
+    std::vector<sbn::crt::CRTTrack> crtTracks;
+    std::map<int, std::vector<sbn::crt::CRTTrack>> crtTrackMap;
     int track_i = 0;
     double minTrackTime = 99999;
     double maxTrackTime = -99999;
@@ -292,7 +292,7 @@ namespace sbnd {
       //                                        SINGLE ANGLE CUT ANALYSIS
       //----------------------------------------------------------------------------------------------------------
       // Find the closest track by angle
-      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp,tpcTrack, crtTracks, event);
       if(closestAngle.second != -99999){ 
         hAngle->Fill(closestAngle.second);
       }
@@ -339,7 +339,7 @@ namespace sbnd {
       //                                        SINGLE DCA CUT ANALYSIS
       //----------------------------------------------------------------------------------------------------------
       // Find the closest track by average distance of closest approach
-      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp,tpcTrack, crtTracks, event);
       if(closestDCA.second != -99999){
         hDCA->Fill(closestDCA.second);
       }
@@ -385,7 +385,7 @@ namespace sbnd {
       //----------------------------------------------------------------------------------------------------------
       //                                    JOINT DCA AND ANGLE CUT ANALYSIS
       //----------------------------------------------------------------------------------------------------------
-      std::vector<crt::CRTTrack> possTracks = trackAlg.AllPossibleCRTTracks(detProp, tpcTrack, crtTracks, event);
+      std::vector<sbn::crt::CRTTrack> possTracks = trackAlg.AllPossibleCRTTracks(detProp,tpcTrack, crtTracks, event);
       for(auto const& possTrack : possTracks){
         int crtTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, possTrack);
         double angle = trackAlg.AngleBetweenTracks(tpcTrack, possTrack);

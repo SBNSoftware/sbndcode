@@ -208,13 +208,13 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT hits from the event
-    art::Handle< std::vector<crt::CRTTrack>> crtTrackHandle;
-    std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
+    art::Handle< std::vector<sbn::crt::CRTTrack>> crtTrackHandle;
+    std::vector<art::Ptr<sbn::crt::CRTTrack> > crtTrackList;
     if (event.getByLabel(fCRTTrackLabel, crtTrackHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackHandle);
 
     fCrtBackTrack.Initialize(event);
-    std::vector<crt::CRTTrack> crtTracks;
+    std::vector<sbn::crt::CRTTrack> crtTracks;
     std::map<int, int> numCrtTrackMap;
     int track_i = 0;
     for(auto const& track : (crtTrackList)){
@@ -313,8 +313,8 @@ namespace sbnd {
       }
 
       // Calculate t0 from CRT track matching
-      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
-      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
 
       if(closestAngle.second != -99999){
         int crtTrackTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closestAngle.first);
@@ -419,8 +419,8 @@ namespace sbnd {
         hNumTrueMatches[type]->Fill(0);
       }
 
-      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
-      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
+      std::pair<sbn::crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
 
       if(closestAngle.second != -99999){
         int crtTrackTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closestAngle.first);

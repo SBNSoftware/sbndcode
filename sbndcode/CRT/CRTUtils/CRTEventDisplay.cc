@@ -184,7 +184,8 @@ void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
 
     if(fPrint) std::cout<<"\nCRT data in event:\n";
 
-    auto crtDataHandle = event.getValidHandle<std::vector<crt::CRTData>>(fCRTDataLabel);
+    auto crtDataHandle = event.getValidHandle<std::vector<sbnd::crt::CRTData>>(fCRTDataLabel);
+    //detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
     //detinfo::ElecClock fTrigClock = fDetectorClocks->TriggerClock();
     for(auto const& data : (*crtDataHandle)){
 
@@ -217,7 +218,7 @@ void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
 
     if(fPrint) std::cout<<"\nCRT hits in event:\n";
 
-    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
+    auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
     for(auto const& hit : (*crtHitHandle)){
 
       // Skip if outside specified time window if time window used
@@ -246,7 +247,7 @@ void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
 
     if(fPrint) std::cout<<"\nCRT tracks in event:\n";
 
-    auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCRTTrackLabel);
+    auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
     for(auto const& track : (*crtTrackHandle)){
 
       // Skip if outside specified time window if time window used
