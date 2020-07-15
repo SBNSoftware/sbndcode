@@ -68,6 +68,7 @@ simple_plugin( CRTDetSim module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
+        sbnobj_SBND_CRT
         sbnobj_Common_CRT
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
