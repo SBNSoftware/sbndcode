@@ -6,11 +6,12 @@ sbnd_digipmt_alg:
 {
   PMTRiseTime:           3.8        #ns
   PMTFallTime:           13.7       #ns
-  PMTMeanAmplitude:	     0.9        #in pC
-  PMTBaselineRMS:	     1.0        #in ADC
+  PMTMeanAmplitude:      0.9        #in pC
+  PMTBaselineRMS:        1.0        #in ADC
   PMTDarkNoiseRate:      1000.0     #in Hz
-  TransitTime:        55.1       #ns
-  TTS:                2.4        #Transit Time Spread in ns
+  TransitTime:           55.1       #ns
+  TTS:                   2.4        #Transit Time Spread in ns
+  CableTime:             135        #time delay of the 30 m long readout cable in ns
   PMTChargeToADC:        -11.1927   #charge to adc factor
   PMTSaturation:         300        #in number of p.e. to see saturation effects in the signal
   PMTBaseline:           8000.0     #in ADC

@@ -20,14 +20,17 @@ namespace opdet {
     //fEngine = new CLHEP::HepJamesRandom;
     //seedSvc->registerEngine(rndm::NuRandomService::CLHEPengineSeeder(fEngine), "DigiPMTSBNDAlg");
 
-    std::cout << "PMT corrected efficiencies = " << fQEDirect << " " << fQERefl << std::endl;
+    mf::LogInfo("DigiPMTSBNDAlg") << "PMT corrected efficiencies = "
+                                  << fQEDirect << " " << fQERefl;
 
     if(fQERefl > 1.0001 || fQEDirect > 1.0001)
-      std::cout << "WARNING: Quantum efficiency set in fhicl file " << fParams.QERefl
-                << " or " << fParams.QEDirect << " seems to be too large!\n"
-                <<"Final QE must be equal or smaller than the scintillation pre scale applied at simulation time.\n"
-                << "Please check this number (ScintPreScale): " << fParams.larProp->ScintPreScale()
-                << std::endl;
+      mf::LogWarning("DigiPMTSBNDAlg")
+        << "Quantum efficiency set in fhicl file " << fParams.QERefl
+        << " or " << fParams.QEDirect << " seems to be too large!\n"
+        << "Final QE must be equal or smaller than the scintillation "
+        << "pre scale applied at simulation time.\n"
+        << "Please check this number (ScintPreScale): "
+        << fParams.larProp->ScintPreScale();
 
     fSampling = fSampling / 1000.0; //in GHz, to cancel with ns
 
@@ -39,14 +42,14 @@ namespace opdet {
 
     //shape of single pulse
     if (fParams.SinglePEmodel) {
-      std::cout << " using testbench pe response " << std::endl;
+      mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
       std::vector<double> *wsp_pointer;
       file->GetObject("wsp", wsp_pointer);
       wsp = *wsp_pointer;
       pulsesize = wsp.size();
     }
     else {
-      std::cout << " using ideal pe response " << std::endl;
+      mf::LogDebug("DigiPMTSBNDAlg") << " using ideal pe response";
       //shape of single pulse
       sigma1 = fParams.PMTRiseTime / (std::sqrt(2.0) * (std::sqrt(-std::log(0.1)) - std::sqrt(-std::log(0.9))));
       sigma2 = fParams.PMTFallTime / (std::sqrt(2.0) * (std::sqrt(-std::log(0.1)) - std::sqrt(-std::log(0.9))));
@@ -107,7 +110,7 @@ namespace opdet {
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
       if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
-        tphoton = fParams.TransitTime + ttsTime + simphotons[i].Time - t_min;
+        tphoton = ttsTime + simphotons[i].Time - t_min + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
@@ -124,7 +127,7 @@ namespace opdet {
           // TODO: this uses root random machine!
           // use RandGeneral instead. ~icaza
           ttpb = timeTPB->GetRandom(); //for including TPB emission time
-          tphoton = fParams.TransitTime + ttsTime + auxphotons[j].Time - t_min + ttpb;
+          tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           timeBin = std::floor(tphoton*fSampling);
           if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
@@ -159,7 +162,7 @@ namespace opdet {
       accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
-        tphoton = fParams.TransitTime + ttsTime + reflectedPhotons.first - t_min;
+        tphoton = ttsTime + reflectedPhotons.first - t_min + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
@@ -180,7 +183,7 @@ namespace opdet {
             // TODO: this uses root random machine!
             // use RandGeneral. ~icaza
             ttpb = timeTPB->GetRandom(); //for including TPB emission time
-            tphoton = fParams.TransitTime + ttsTime + directPhotons.first - t_min + ttpb;
+            tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
             if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
             timeBin = std::floor(tphoton*fSampling);
             if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
@@ -363,6 +366,7 @@ namespace opdet {
     fBaseConfig.PMTBaselineRMS           = config.pmtbaselineRMS();
     fBaseConfig.TransitTime              = config.transitTime();
     fBaseConfig.TTS                      = config.tts();
+    fBaseConfig.CableTime                = config.cableTime();
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
   }
 
