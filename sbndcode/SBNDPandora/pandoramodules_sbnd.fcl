@@ -48,8 +48,8 @@ sbnd_pandoraShowerCreation:
 }
 
 sbnd_legacy_pandoraModularShowerCreation:      @local::legacy_pandoraModularShowerCreation
-sbnd_pandoraModularShowerCreation:             @local::standard_pandoraModularShowerCreation
-sbnd_sliding_pandoraModularShowerCreation:     @local::standard_pandoraModularShowerCreation
+sbnd_basic_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
+sbnd_3dTraj_pandoraModularShowerCreation:      @local::standard_pandoraModularShowerCreation
 sbnd_incremental_pandoraModularShowerCreation: @local::standard_pandoraModularShowerCreation
 
 sbnd_showerlinearenergy:       @local::showerlinearenergy
@@ -63,7 +63,7 @@ sbnd_showernumelectronsenergy.CalorimetryAlg: @local::sbnd_calorimetryalgmc
 sbnd_showerunidirectiondedx.CalorimetryAlg:   @local::sbnd_calorimetryalgmc
 sbnd_showertrajpointdedx.CalorimetryAlg:      @local::sbnd_calorimetryalgmc
 
-sbnd_pandoraModularShowerCreation.ShowerFinderTools: [
+sbnd_basic_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::showerpfpvertexstartposition,
   @local::showerpcadirection,
   @local::showerpcaeigenvaluelength,
@@ -72,7 +72,7 @@ sbnd_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::sbnd_showerunidirectiondedx,
 ]
 
-sbnd_sliding_pandoraModularShowerCreation.ShowerFinderTools: [
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::showerpfpvertexstartposition,
   @local::showerpcadirection,
   @local::showerlengthpercentile,
@@ -96,9 +96,9 @@ sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::showerdirectiontopologydecision
 ]
 
-sbnd_sliding_pandoraModularShowerCreation.ShowerFinderTools[7].ShowerDirectionOutputLabel: "TrajDirection"
-sbnd_sliding_pandoraModularShowerCreation.ShowerFinderTools[8].FirstDirectionInputLabel: "TrajDirection"
-sbnd_sliding_pandoraModularShowerCreation.ShowerFinderTools[8].SecondDirectionInputLabel: "ShowerDirection"
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools[7].ShowerDirectionOutputLabel: "TrajDirection"
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools[8].FirstDirectionInputLabel: "TrajDirection"
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools[8].SecondDirectionInputLabel: "ShowerDirection"
 
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[7].ShowerDirectionOutputLabel: "TrajDirection"
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[8].FirstDirectionInputLabel: "TrajDirection"
