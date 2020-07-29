@@ -289,8 +289,11 @@ namespace opdet {
                               {return x < threshold;} ).base();
 
     // integrate the area below the peak
+    // note that fSampling is in MHz and
+    // we convert it to GHz here so as to
+    // have an area in ADC*ns.
     Area = std::accumulate(it_s, it_e, 0.0);
-    Area = Area/fSampling;
+    Area = Area / (fSampling / 1000.);
 
     // TODO: try to just remove this
     // TODO: better even, return iterator to last position
