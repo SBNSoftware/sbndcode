@@ -1,3 +1,4 @@
+#include "calorimetry_sbnd.fcl"
 #include "pandorashowermodules.fcl"
 
 BEGIN_PROLOG
@@ -69,7 +70,7 @@ sbnd_basic_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::showerpcaeigenvaluelength,
   @local::sbnd_showernumelectronsenergy,
   @local::shower3dcylindertrackhitfinder,
-  @local::sbnd_showerunidirectiondedx,
+  @local::sbnd_showerunidirectiondedx
 ]
 
 sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools: [
