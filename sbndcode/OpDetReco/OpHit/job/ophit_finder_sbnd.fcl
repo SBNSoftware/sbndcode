@@ -1,0 +1,27 @@
+#include "ophitconfig_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_ophit_finder:
+{
+  module_type:    "SBNDOpHitFinder"
+  GenModule:      "generator"
+  InputModule:    "opdaq"
+  InputLabels:    [""]
+  ChannelMasks:   []                  # Will ignore channels in this list
+  PD:             ["pmt_coated", "pmt_uncoated"]  # Will only use PDS in this list
+  HitThreshold:   0.2   # PE
+  AreaToPE:       true  # Use area to calculate number of PEs
+  SPEArea:        317.1 # If AreaToPE is true, this number is
+                        # used as single PE area (in ADC counts)
+                        # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
+                        # for the ideal response
+                        # and is 317.1 ADC = 634.2 ADCxns x 0.5ns^-1
+                        # for the test bench response,
+                        # where 0.5 is the sampling rate
+  reco_man:       @local::standard_preco_manager
+  HitAlgoPset:    @local::sbnd_opreco_hit_slidingwindow
+  PedAlgoPset:    @local::sbnd_opreco_pedestal_rmsslider
+}
+
+END_PROLOG
