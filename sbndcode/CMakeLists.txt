@@ -14,6 +14,7 @@ add_subdirectory(SimulationFilters)
 add_subdirectory(AnalysisTree)
 add_subdirectory(RecoUtils)
 add_subdirectory(OpDetSim)
+add_subdirectory(OpDetReco)
 add_subdirectory(CosmicId)
 
 # subdirectory for gallery stuff
