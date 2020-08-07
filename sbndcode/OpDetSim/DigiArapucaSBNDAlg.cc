@@ -32,9 +32,25 @@ namespace opdet {
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.ArapucaDataFile, fname);
     TFile* file = TFile::Open(fname.c_str());
-    file->GetObject("TimeArapucaVUV", TimeArapucaVUV);
-    file->GetObject("TimeArapucaVIS", TimeArapucaVIS);
-    file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV);
+
+    const size_t vuv_bins = 150;
+    std::array<double, vuv_bins>* TimeArapucaVUV_arr;
+    file->GetObject("TimeArapucaVUV", TimeArapucaVUV_arr);
+    TimeArapucaVUV= new CLHEP::RandGeneral(fEngine,
+                                           *reinterpret_cast<double (*)[vuv_bins]>(TimeArapucaVUV_arr->data()),
+                                           vuv_bins);
+    const size_t vis_bins = 90;
+    std::array<double, vis_bins>* TimeArapucaVIS_arr;
+    file->GetObject("TimeArapucaVIS", TimeArapucaVIS_arr);
+    TimeArapucaVIS= new CLHEP::RandGeneral(fEngine,
+                                           *reinterpret_cast<double (*)[vis_bins]>(TimeArapucaVIS_arr->data()),
+                                           vis_bins);
+    const size_t xvuv_bins = 20;
+    std::array<double, xvuv_bins>* TimeXArapucaVUV_arr;
+    file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV_arr);
+    TimeXArapucaVUV= new CLHEP::RandGeneral(fEngine,
+                                            *reinterpret_cast<double (*)[xvuv_bins]>(TimeXArapucaVUV_arr->data()),
+                                            xvuv_bins);
 
     fSampling = fSampling / 1000; //in GHz to cancel with ns
     pulsesize = fParams.PulseLength * fSampling;
@@ -88,7 +104,7 @@ namespace opdet {
     if(pdtype == "arapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVUVEff) { //Sample a random subset according to Arapuca's efficiency
-          tphoton = (TimeArapucaVUV->GetRandom());
+          tphoton = (TimeArapucaVUV->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -101,7 +117,7 @@ namespace opdet {
     else if(pdtype == "arapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVISEff) { //Sample a random subset according to Arapuca's efficiency.
-          tphoton = (TimeArapucaVIS->GetRandom());
+          tphoton = (TimeArapucaVIS->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -114,7 +130,7 @@ namespace opdet {
     else if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVUVEff) {
-          tphoton = (TimeXArapucaVUV->GetRandom());
+          tphoton = (TimeXArapucaVUV->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -177,7 +193,7 @@ namespace opdet {
 
   void DigiArapucaSBNDAlg::SinglePDWaveformCreatorLite(
     double effT,
-    TH1D** timeHisto,
+    CLHEP::RandGeneral** timeHisto,
     std::vector<double>& wave,
     std::map<int, int> const& photonMap,
     double const& t_min
@@ -196,7 +212,7 @@ namespace opdet {
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
       for(size_t i = 0; i < acceptedPhotons; i++) {
-        tphoton = (*timeHisto)->GetRandom();
+        tphoton = (*timeHisto)->fire();
         tphoton += photonMember.first - t_min;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 &&

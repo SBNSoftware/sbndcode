@@ -16,10 +16,6 @@ namespace opdet {
     , fEngine(fParams.engine)
   {
 
-    //art::ServiceHandle<rndm::NuRandomService> seedSvc;
-    //fEngine = new CLHEP::HepJamesRandom;
-    //seedSvc->registerEngine(rndm::NuRandomService::CLHEPengineSeeder(fEngine), "DigiPMTSBNDAlg");
-
     mf::LogInfo("DigiPMTSBNDAlg") << "PMT corrected efficiencies = "
                                   << fQEDirect << " " << fQERefl;
 
@@ -38,7 +34,14 @@ namespace opdet {
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.PMTDataFile, fname);
     TFile* file = TFile::Open(fname.c_str());
-    file->GetObject("timeTPB", timeTPB);
+
+    // TPB emission time histogram for pmt_coated histogram
+    const size_t timeTPBBins = 1000;
+    std::array<double, timeTPBBins>* timeTPB_arr;
+    file->GetObject("timeTPB", timeTPB_arr);
+    timeTPB = new CLHEP::RandGeneral(fEngine,
+                                     *reinterpret_cast<double (*)[timeTPBBins]>(timeTPB_arr->data()),
+                                     timeTPBBins);
 
     //shape of single pulse
     if (fParams.SinglePEmodel) {
@@ -124,9 +127,7 @@ namespace opdet {
       for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
         if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-          // TODO: this uses root random machine!
-          // use RandGeneral instead. ~icaza
-          ttpb = timeTPB->GetRandom(); //for including TPB emission time
+          ttpb = timeTPB->fire(); //for including TPB emission time
           tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           timeBin = std::floor(tphoton*fSampling);
@@ -180,9 +181,7 @@ namespace opdet {
           accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
           for(size_t i = 0; i < accepted_photons; i++) {
             if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-            // TODO: this uses root random machine!
-            // use RandGeneral. ~icaza
-            ttpb = timeTPB->GetRandom(); //for including TPB emission time
+            ttpb = timeTPB->fire(); //for including TPB emission time
             tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
             if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
             timeBin = std::floor(tphoton*fSampling);
@@ -375,7 +374,7 @@ namespace opdet {
     detinfo::LArProperties const& larProp,
     detinfo::DetectorClocks const& detClocks,
     CLHEP::HepRandomEngine* engine
-  ) const
+    ) const
   {
     // set the configuration
     auto params = fBaseConfig;

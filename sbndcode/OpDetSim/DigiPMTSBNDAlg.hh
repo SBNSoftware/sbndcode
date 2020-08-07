@@ -16,6 +16,7 @@
 #include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/RandGeneral.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
 
@@ -35,10 +36,7 @@
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
-#include "TMath.h"
-#include "TF1.h"
 #include "TFile.h"
-#include "TH1D.h"
 
 namespace opdet {
 
@@ -91,9 +89,9 @@ namespace opdet {
       unsigned n_sample);
 
     double Baseline()
-    {
-      return fParams.PMTBaseline;
-    }
+      {
+        return fParams.PMTBaseline;
+      }
 
   private:
 
@@ -117,7 +115,7 @@ namespace opdet {
 
     std::vector<double> wsp; //single photon pulse vector
     int pulsesize; //size of 1PE waveform
-    TH1D* timeTPB; //histogram for getting the TPB emission time for coated PMTs
+    CLHEP::RandGeneral* timeTPB; //histogram for getting the TPB emission time for coated PMTs
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
     void CreatePDWaveform(
@@ -238,7 +236,7 @@ namespace opdet {
       detinfo::LArProperties const& larProp,
       detinfo::DetectorClocks const& detClocks,
       CLHEP::HepRandomEngine* engine
-    ) const;
+      ) const;
 
   private:
     // Part of the configuration learned from configuration files.

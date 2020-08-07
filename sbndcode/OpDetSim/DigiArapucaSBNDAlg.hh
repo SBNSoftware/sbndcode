@@ -16,6 +16,7 @@
 #include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/RandGeneral.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
 
@@ -35,10 +36,7 @@
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
-#include "TMath.h"
-#include "TF1.h"
 #include "TFile.h"
-#include "TH1D.h"
 
 namespace opdet {
 
@@ -76,9 +74,9 @@ namespace opdet {
     ~DigiArapucaSBNDAlg();
 
     double Baseline()
-    {
-      return fParams.Baseline;
-    }
+      {
+        return fParams.Baseline;
+      }
 
     void ConstructWaveform(int ch,
                            sim::SimPhotons const& simphotons,
@@ -109,9 +107,9 @@ namespace opdet {
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
-    TH1D* TimeArapucaVUV; //histogram for getting the photon time distribution inside the Arapuca VUV box (considering the optical window)
-    TH1D* TimeArapucaVIS; //histogram for getting the photon time distribution inside the Arapuca VIS box (considering the optical window)
-    TH1D* TimeXArapucaVUV; //histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
+    CLHEP::RandGeneral* TimeArapucaVUV; //histogram for getting the photon time distribution inside the Arapuca VUV box (considering the optical window)
+    CLHEP::RandGeneral* TimeArapucaVIS; //histogram for getting the photon time distribution inside the Arapuca VIS box (considering the optical window)
+    CLHEP::RandGeneral* TimeXArapucaVUV; //histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
 
     std::vector<double> wsp; //single photon pulse vector
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
@@ -125,7 +123,7 @@ namespace opdet {
                               std::vector<double>& wave,
                               std::string pdtype);
     void SinglePDWaveformCreatorLite(double effT,
-                                     TH1D** timeHisto,
+                                     CLHEP::RandGeneral** timeHisto,
                                      std::vector<double>& wave,
                                      std::map<int, int> const& photonMap,
                                      double const& t_min);
@@ -241,7 +239,7 @@ namespace opdet {
       detinfo::LArProperties const& larProp,
       detinfo::DetectorClocks const& detClocks,
       CLHEP::HepRandomEngine* engine
-    ) const;
+      ) const;
 
   private:
     /// Part of the configuration learned from configuration files.
