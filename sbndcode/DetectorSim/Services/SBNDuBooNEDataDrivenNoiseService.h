@@ -30,7 +30,8 @@
 
 #include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
-#include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/RandPoissonQ.h"
 
 #include "TH1F.h"
 #include "TRandom3.h"
@@ -128,7 +129,7 @@ private:
   
   // Coherent Noise parameters
   bool         fEnableCoherentNoise;
-  unsigned int fNChannelsPerCoherentGroup;
+  std::vector<unsigned int> fNChannelsPerCoherentGroup;
   unsigned int fExpNoiseArrayPoints;  ///< number of points in randomly generated noise array
   unsigned int fCohNoiseArrayPoints;  ///< number of points in randomly generated noise array
   float        fCohExpNorm;           ///< noise scale factor for the exponential component component in coherent noise
@@ -150,8 +151,10 @@ private:
   AdcSignalVectorVector fMicroBooNoiseV;
   
   // Coherent Noise array.
-  AdcSignalVectorVector fCohNoise;  ///< noise on each channel for each time for all planes
-  
+  AdcSignalVectorVector fCohNoiseZ;  ///< noise on each channel for each time for all planes  
+  AdcSignalVectorVector fCohNoiseU;  ///< noise on each channel for each time for all planes
+  AdcSignalVectorVector fCohNoiseV;  ///< noise on each channel for each time for all planes
+
 
   // Histograms.
   

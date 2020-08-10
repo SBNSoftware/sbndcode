@@ -13,6 +13,10 @@ using std::ostringstream;
 using rndm::NuRandomService;
 using CLHEP::HepJamesRandom;
 
+namespace{
+  constexpr double kPoissonMean = 3.30762;
+}
+
 //**********************************************************************
 
 SBNDuBooNEDataDrivenNoiseService::
@@ -62,7 +66,7 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
   fCohGausNorm         = pset.get<std::vector<float>>("CohGausNorm");
   fCohGausMean         = pset.get<std::vector<float>>("CohGausMean");
   fCohGausSigma        = pset.get<std::vector<float>>("CohGausSigma");
-  fNChannelsPerCoherentGroup      = pset.get<unsigned int>("NChannelsPerCoherentGroup");
+  fNChannelsPerCoherentGroup      = pset.get<std::vector<unsigned int>>("NChannelsPerCoherentGroup");
   
   if ( fRandomSeed == 0 ) haveSeed = false;
   pset.get_if_present<int>("LogLevel", fLogLevel);
@@ -99,12 +103,6 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
   wldparams[1] = 0.001304;
   
   _wld_f->SetParameters(wldparams);
- 
-  // Custom poisson  
-  _poisson = new TF1("_poisson", "[0]**(x) * exp(-[0]) / ROOT::Math::tgamma(x+1.)", 0, 30);
-  poissonParams[0] = 3.30762;
-  _poisson->SetParameters(poissonParams); 
-
 }
 
 //**********************************************************************
@@ -125,10 +123,15 @@ SBNDuBooNEDataDrivenNoiseService::~SBNDuBooNEDataDrivenNoiseService() {
 
 //**********************************************************************
 
+
+
+//**********************************************************************
+
 int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) const {
   CLHEP::RandFlat flat(*m_pran);
-  CLHEP::RandGauss gaus(*m_pran);
-  	
+  CLHEP::RandGaussQ gaus(*m_pran);
+  CLHEP::RandPoissonQ poisson(*m_pran, kPoissonMean);
+
   unsigned int microbooNoiseChan = flat.fire()*fNoiseArrayPoints;
   if ( microbooNoiseChan == fNoiseArrayPoints ) --microbooNoiseChan;
   fMicroBooNoiseChanHist->Fill(microbooNoiseChan);
@@ -211,7 +214,7 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
     //MicroBooNE noise model
     double pfnf1val = _pfn_f1->Eval((i+0.5)*binWidth);
     // define FFT parameters
-    double randomizer = _poisson->GetRandom()/poissonParams[0];
+    double randomizer = poisson.fire()/kPoissonMean;
     pval = pfnf1val * randomizer;
     // random phase angle
     flat.fireArray(2, rnd, 0, 1);
@@ -241,19 +244,19 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
       if(fEnableWhiteNoise)    tnoise += fWhiteNoiseU*gaus.fire();
       if(fEnableMicroBooNoise) tnoise += noisevector[itck];
       if(fEnableGaussianNoise) tnoise += fGausNoiseU[gausNoiseChan][itck];
-      if(fEnableCoherentNoise) tnoise += fCohNoise[cohNoisechan][itck];
+      if(fEnableCoherentNoise) tnoise += fCohNoiseU[cohNoisechan][itck];
     } 
     else if ( view==geo::kV ) {
       if(fEnableWhiteNoise)    tnoise += fWhiteNoiseV*gaus.fire();
       if(fEnableMicroBooNoise) tnoise += noisevector[itck];
       if(fEnableGaussianNoise) tnoise += fGausNoiseV[gausNoiseChan][itck];
-      if(fEnableCoherentNoise) tnoise += fCohNoise[cohNoisechan][itck];
+      if(fEnableCoherentNoise) tnoise += fCohNoiseV[cohNoisechan][itck];
     } 
     else {
       if(fEnableWhiteNoise)    tnoise += fWhiteNoiseZ*gaus.fire();
       if(fEnableMicroBooNoise) tnoise += noisevector[itck];
       if(fEnableGaussianNoise) tnoise += fGausNoiseZ[gausNoiseChan][itck];
-      if(fEnableCoherentNoise) tnoise += fCohNoise[cohNoisechan][itck];
+      if(fEnableCoherentNoise) tnoise += fCohNoiseZ[cohNoisechan][itck];
     }      
     sigs[itck] += tnoise;
   }
@@ -549,10 +552,29 @@ void SBNDuBooNEDataDrivenNoiseService::generateNoise(){
   }
   
   if(fEnableCoherentNoise) {
-  	makeCoherentGroupsByOfflineChannel(fNChannelsPerCoherentGroup);
-    fCohNoise.resize(fCohNoiseArrayPoints);
+    // U plane
+    makeCoherentGroupsByOfflineChannel(fNChannelsPerCoherentGroup[0]);
+    fCohNoiseU.resize(fCohNoiseArrayPoints); 
     for ( unsigned int i=0; i<fCohNoiseArrayPoints; ++i ) {
-      generateCoherentNoise(fCohNoise[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
+      generateCoherentNoise(fCohNoiseU[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
+                            fCohExpNorm, fCohExpWidth, fCohExpOffset, 
+                            fCohNoiseHist);
+    }
+    
+    // V plane
+    makeCoherentGroupsByOfflineChannel(fNChannelsPerCoherentGroup[1]);
+    fCohNoiseV.resize(fCohNoiseArrayPoints);
+    for ( unsigned int i=0; i<fCohNoiseArrayPoints; ++i ) {
+      generateCoherentNoise(fCohNoiseV[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
+                            fCohExpNorm, fCohExpWidth, fCohExpOffset, 
+                            fCohNoiseHist);
+    }
+
+    // Z plane
+    makeCoherentGroupsByOfflineChannel(fNChannelsPerCoherentGroup[2]);
+    fCohNoiseZ.resize(fCohNoiseArrayPoints);
+    for ( unsigned int i=0; i<fCohNoiseArrayPoints; ++i ) {
+      generateCoherentNoise(fCohNoiseZ[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
                             fCohExpNorm, fCohExpWidth, fCohExpOffset, 
                             fCohNoiseHist);
     }
