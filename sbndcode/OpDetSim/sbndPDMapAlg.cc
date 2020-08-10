@@ -31,6 +31,15 @@ namespace opdet {
     return "There is no such channel";
   }
 
+  std::vector<int> sbndPDMapAlg::getChannelsOfType(std::string pdname) const
+  {
+    std::vector<int> out_ch_v;
+    for (size_t ch = 0; ch < PDmap.size(); ch++) {
+      if (PDmap.at(ch)["pd_type"] == pdname) out_ch_v.push_back(ch);
+    }
+    return out_ch_v;
+  }
+
   size_t sbndPDMapAlg::size() const
   {
     return PDmap.size();

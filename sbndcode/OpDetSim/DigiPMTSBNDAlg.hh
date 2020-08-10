@@ -49,6 +49,7 @@ namespace opdet {
     struct ConfigurationParameters_t {
       double TransitTime; //ns
       double TTS; //ns
+      double CableTime; //ns
       double PMTChargeToADC; //voltage to ADC conversion scale
       double PMTBaseline; //waveform baseline in ADC
       double PMTFallTime; //pulse decaying time constant (exponential) in ns
@@ -163,6 +164,11 @@ namespace opdet {
       fhicl::Atom<double> tts {
         Name("TTS"),
         Comment("Single pe: Transit time spread in ns")
+      };
+
+      fhicl::Atom<double> cableTime {
+        Name("CableTime"),
+        Comment("Time delay of the 30 m long readout cable in ns")
       };
 
       fhicl::Atom<double> pmtmeanAmplitude {

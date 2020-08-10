@@ -131,7 +131,7 @@ namespace opdet {
   {
     // Implementation of required member function here.
     fEvNumber = e.id().event();
-    std::cout << "Event #" << fEvNumber << std::endl;
+    mf::LogInfo("opHitFinder") << "Event #" << fEvNumber;
 
     std::unique_ptr< std::vector< recob::OpHit > > pulseVecPtr(std::make_unique< std::vector< recob::OpHit > > ());
     fwaveform.reserve(30000); // TODO: no hardcoded value
@@ -144,7 +144,7 @@ namespace opdet {
       art::fill_ptr_vector(wvfList, wvfHandle);
 
     if(!wvfHandle.isValid()) {
-      std::cout << Form("Did not find any waveform") << std::endl;
+      mf::LogWarning("opHitFinder") << Form("Did not find any waveform");
     }
 
     size_t timebin = 0;
@@ -154,7 +154,7 @@ namespace opdet {
     for(auto const& wvf_P : wvfList) {
       auto const& wvf = *wvf_P;
       if (wvf.size() == 0 ) {
-        std::cout << "Empty waveform, continue." << std::endl;
+        mf::LogInfo("opHitFinder") << "Empty waveform, continue.";
         continue;
       }
 
@@ -170,7 +170,7 @@ namespace opdet {
         threshold = fThresholdArapuca;
       }
       else {
-        std::cout << "Unexpected OpChannel: " << opdetType << std::endl;
+        mf::LogWarning("opHitFinder") << "Unexpected OpChannel: " << opdetType;
         continue;
       }
 
@@ -191,7 +191,7 @@ namespace opdet {
           denoise(fwaveform, outwvform);
         }
         else {
-          std::cout << "Unexpected OpChannel: " << opdetType
+          mf::LogInfo("opHitFinder") << "Unexpected OpChannel: " << opdetType
                     << ", continue." << std::endl;
           std::terminate();
         }
@@ -211,8 +211,8 @@ namespace opdet {
           phelec = Area / fArea1peSiPM;
         }
         else {
-          std::cout << "Unexpected OpChannel: " << opdetType
-                    << ", continue." << std::endl;
+          mf::LogWarning("opHitFinder")  << "Unexpected OpChannel: " << opdetType
+                                         << ", continue.";
           continue;
         }
 
@@ -257,7 +257,7 @@ namespace opdet {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
     }
     else {
-      std::cout << "Unexpected OpChannel: " << opdetType << std::endl;
+      mf::LogWarning("opHitFinder") << "Unexpected OpChannel: " << opdetType;
       return;
     }
   }
@@ -289,8 +289,11 @@ namespace opdet {
                               {return x < threshold;} ).base();
 
     // integrate the area below the peak
+    // note that fSampling is in MHz and
+    // we convert it to GHz here so as to
+    // have an area in ADC*ns.
     Area = std::accumulate(it_s, it_e, 0.0);
-    Area = Area/fSampling;
+    Area = Area / (fSampling / 1000.);
 
     // TODO: try to just remove this
     // TODO: better even, return iterator to last position
