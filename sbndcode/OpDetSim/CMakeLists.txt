@@ -1,5 +1,3 @@
-add_subdirectory(FlashFinder)
-
 cet_enable_asserts()
 
 art_make(
@@ -79,7 +77,7 @@ install_fw(LIST sbnd_pds_mapping.json)
 #                            ${CLHEP}
 #                            ${ROOT_BASIC_LIB_LIST}
 # )
-# 
+#
 # simple_plugin(SimArapucaSBND "module"
 #                            larcore_Geometry_Geometry_service
 #                            lardataobj_Simulation

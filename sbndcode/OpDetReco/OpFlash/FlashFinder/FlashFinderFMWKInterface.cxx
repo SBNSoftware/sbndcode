@@ -62,6 +62,47 @@ namespace lightana {
       return geo->Cryostat(cryostat).NOpDet();
   }
 
+  std::vector<size_t> ListOpChannelsByTPC(int tpc) {
+    std::vector<size_t> res;
+    ::art::ServiceHandle<geo::Geometry> geo;
+    if(tpc<0) {
+      for(size_t opch=0; opch<geo->MaxOpChannel(); ++opch) {
+        if(geo->IsValidOpChannel(opch)) continue;
+        res.push_back(opch);
+      }
+    }else{
+      // auto const& bbox = geo->TPC(tpc).BoundingBox();
+      for(size_t opch=0; opch<geo->MaxOpChannel(); ++opch) {
+        if(!geo->IsValidOpChannel(opch)) continue;
+        auto const& pt = geo->OpDetGeoFromOpChannel(opch).GetCenter();
+        // std::cout << "pt: " << pt.X() << ", " << pt.Y() << ", " << pt.Z() << std::endl;
+        // if(!bbox.ContainsPosition(pt)) continue;
+        if(pt.X() < 0 && tpc == 0) {   
+          res.push_back(opch);
+        }
+        if(pt.X() > 0 && tpc == 1) {   
+          res.push_back(opch);
+        }
+      }
+    }
+    return res;
+  }
+
+  std::vector<int> PDNamesToList(std::vector<std::string> pd_names) {
+
+    std::vector<int> out_ch_v;
+
+    opdet::sbndPDMapAlg pds_map;
+
+    for (auto name : pd_names) {
+      auto ch_v = pds_map.getChannelsOfType(name);
+      out_ch_v.insert(out_ch_v.end(), ch_v.begin(), ch_v.end());
+    }
+
+    return out_ch_v;
+
+  }
+
   size_t OpDetFromOpChannel(size_t opch) {
     ::art::ServiceHandle<geo::Geometry> geo;
     return geo->OpDetFromOpChannel(opch);
