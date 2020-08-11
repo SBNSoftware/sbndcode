@@ -33,24 +33,21 @@ namespace opdet {
     sp.find_file(fParams.ArapucaDataFile, fname);
     TFile* file = TFile::Open(fname.c_str());
 
-    const size_t vuv_bins = 150;
-    std::array<double, vuv_bins>* TimeArapucaVUV_arr;
-    file->GetObject("TimeArapucaVUV", TimeArapucaVUV_arr);
+    std::vector<double>* TimeArapucaVUV_p;
+    file->GetObject("TimeArapucaVUV", TimeArapucaVUV_p);
     TimeArapucaVUV= new CLHEP::RandGeneral(fEngine,
-                                           *reinterpret_cast<double (*)[vuv_bins]>(TimeArapucaVUV_arr->data()),
-                                           vuv_bins);
-    const size_t vis_bins = 90;
-    std::array<double, vis_bins>* TimeArapucaVIS_arr;
-    file->GetObject("TimeArapucaVIS", TimeArapucaVIS_arr);
+                                           TimeArapucaVUV_p->data(),
+                                           TimeArapucaVUV_p->size());
+    std::vector<double>* TimeArapucaVIS_p;
+    file->GetObject("TimeArapucaVIS", TimeArapucaVIS_p);
     TimeArapucaVIS= new CLHEP::RandGeneral(fEngine,
-                                           *reinterpret_cast<double (*)[vis_bins]>(TimeArapucaVIS_arr->data()),
-                                           vis_bins);
-    const size_t xvuv_bins = 20;
-    std::array<double, xvuv_bins>* TimeXArapucaVUV_arr;
-    file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV_arr);
+                                           TimeArapucaVIS_p->data(),
+                                           TimeArapucaVIS_p->size());
+    std::vector<double>* TimeXArapucaVUV_p;
+    file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV_p);
     TimeXArapucaVUV= new CLHEP::RandGeneral(fEngine,
-                                            *reinterpret_cast<double (*)[xvuv_bins]>(TimeXArapucaVUV_arr->data()),
-                                            xvuv_bins);
+                                            TimeXArapucaVUV_p->data(),
+                                            TimeXArapucaVUV_p->size());
 
     fSampling = fSampling / 1000; //in GHz to cancel with ns
     pulsesize = fParams.PulseLength * fSampling;

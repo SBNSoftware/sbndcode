@@ -36,12 +36,11 @@ namespace opdet {
     TFile* file = TFile::Open(fname.c_str());
 
     // TPB emission time histogram for pmt_coated histogram
-    const size_t timeTPBBins = 1000;
-    std::array<double, timeTPBBins>* timeTPB_arr;
-    file->GetObject("timeTPB", timeTPB_arr);
+    std::vector<double>* timeTPB_p;
+    file->GetObject("timeTPB", timeTPB_p);
     timeTPB = new CLHEP::RandGeneral(fEngine,
-                                     *reinterpret_cast<double (*)[timeTPBBins]>(timeTPB_arr->data()),
-                                     timeTPBBins);
+                                     timeTPB_p->data(),
+                                     timeTPB_p->size());
 
     //shape of single pulse
     if (fParams.SinglePEmodel) {
