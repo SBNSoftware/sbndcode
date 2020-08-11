@@ -1,0 +1,24 @@
+BEGIN_PROLOG
+
+sbnd_mc_flash:
+{
+  module_type:              "SBNDMCFlash"
+  MCTruthProduct:           "generator"
+  TriggerProduct:           "triggersim"
+  SimPhotProduct:           "largeant"
+  SimPhotProductInstance:   "Reflected"
+  PD:                       ["pmt", "barepmt"]
+  TPC:                      -1
+  QEDirect:                 0.03    #PMT quantum efficiency for direct (VUV) light
+  QERefl:                   0.03    #PMT quantum efficiency for reflected (TPB converted) light
+  DebugMode:                true
+}
+
+SBNDMCFlashTPC0: @local::sbnd_mc_flash
+SBNDMCFlashTPC0.TPC: 0
+
+SBNDMCFlashTPC1: @local::sbnd_mc_flash
+SBNDMCFlashTPC1.TPC: 1
+
+
+END_PROLOG

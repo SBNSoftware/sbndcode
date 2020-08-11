@@ -1,0 +1,28 @@
+BEGIN_PROLOG
+
+SimpleFlashStandard:
+{
+  PEThreshold:       20
+  MinPECoinc:        6
+  MinMultCoinc:      3
+  IntegralTime:      8.
+  PreSample:         0.1
+  VetoSize:          8.
+  TimeResolution:    0.01
+  HitVetoRangeStart: []
+  HitVetoRangeEnd:   []
+  OpChannelRange:    [0,359]
+  TPC:               0
+  #PD:                ["pmt_coated", "pmt_uncoated", "xarapuca", "xarapuca_vuv", "xarapuca_vis"]
+  PD:                ["pmt_coated"]
+  DebugMode:         false
+}
+
+SimpleFlashTPC0: @local::SimpleFlashStandard
+SimpleFlashTPC0.TPC: 0
+
+SimpleFlashTPC1: @local::SimpleFlashStandard
+SimpleFlashTPC1.TPC: 1
+
+END_PROLOG
+
