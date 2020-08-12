@@ -4,7 +4,7 @@
 //#include "FhiclLite/ConfigManager.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "larcore/Geometry/Geometry.h"
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include <stdlib.h>
 
 namespace lightana {
@@ -15,7 +15,7 @@ namespace lightana {
   std::vector<size_t> ListOpChannels(int cryostat=-1);
 
   std::vector<size_t> ListOpChannelsByTPC(int tpc=-1);
-  
+
   std::vector<size_t> ListOpDets(int cryostat=-1);
 
   size_t NOpDets(int cryostat=-1);

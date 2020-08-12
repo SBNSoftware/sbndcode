@@ -7,10 +7,12 @@ sbnd_mc_flash:
   TriggerProduct:           "triggersim"
   SimPhotProduct:           "largeant"
   SimPhotProductInstance:   "Reflected"
-  PD:                       ["pmt", "barepmt"]
+  PD:                       ["pmt_coated", "pmt_uncoated"]
   TPC:                      -1
   QEDirect:                 0.03    #PMT quantum efficiency for direct (VUV) light
   QERefl:                   0.03    #PMT quantum efficiency for reflected (TPB converted) light
+  WindowLength:             8 # integration window in microseconds
+  PreWindow:                0.1 # prewindow in microseconds
   DebugMode:                true
 }
 
