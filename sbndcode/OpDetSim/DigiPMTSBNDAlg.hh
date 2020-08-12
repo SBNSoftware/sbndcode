@@ -12,8 +12,6 @@
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
-#include "CLHEP/Random/RandomEngine.h"
-#include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGaussQ.h"
 #include "CLHEP/Random/RandGeneral.h"
