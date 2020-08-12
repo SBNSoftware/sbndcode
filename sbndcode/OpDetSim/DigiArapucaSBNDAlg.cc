@@ -35,17 +35,17 @@ namespace opdet {
 
     std::vector<double>* TimeArapucaVUV_p;
     file->GetObject("TimeArapucaVUV", TimeArapucaVUV_p);
-    TimeArapucaVUV= new CLHEP::RandGeneral(fEngine,
+    TimeArapucaVUV= new CLHEP::RandGeneral(*fEngine,
                                            TimeArapucaVUV_p->data(),
                                            TimeArapucaVUV_p->size());
     std::vector<double>* TimeArapucaVIS_p;
     file->GetObject("TimeArapucaVIS", TimeArapucaVIS_p);
-    TimeArapucaVIS= new CLHEP::RandGeneral(fEngine,
+    TimeArapucaVIS= new CLHEP::RandGeneral(*fEngine,
                                            TimeArapucaVIS_p->data(),
                                            TimeArapucaVIS_p->size());
     std::vector<double>* TimeXArapucaVUV_p;
     file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV_p);
-    TimeXArapucaVUV= new CLHEP::RandGeneral(fEngine,
+    TimeXArapucaVUV= new CLHEP::RandGeneral(*fEngine,
                                             TimeXArapucaVUV_p->data(),
                                             TimeXArapucaVUV_p->size());
 
@@ -57,7 +57,11 @@ namespace opdet {
     saturation = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
   } // end constructor
 
-  DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {}
+  DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {
+    delete TimeArapucaVUV;
+    delete TimeArapucaVIS;
+    delete TimeXArapucaVUV;
+  }
 
 
   void DigiArapucaSBNDAlg::ConstructWaveform(

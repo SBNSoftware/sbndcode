@@ -38,7 +38,7 @@ namespace opdet {
     // TPB emission time histogram for pmt_coated histogram
     std::vector<double>* timeTPB_p;
     file->GetObject("timeTPB", timeTPB_p);
-    timeTPB = new CLHEP::RandGeneral(fEngine,
+    timeTPB = new CLHEP::RandGeneral(*fEngine,
                                      timeTPB_p->data(),
                                      timeTPB_p->size());
 
@@ -65,7 +65,9 @@ namespace opdet {
   } // end constructor
 
 
-  DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){ }
+  DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){
+    delete timeTPB;
+  }
 
 
   void DigiPMTSBNDAlg::ConstructWaveform(
