@@ -13,7 +13,7 @@ sbnd_mc_flash:
   QERefl:                   0.03    #PMT quantum efficiency for reflected (TPB converted) light
   WindowLength:             8 # integration window in microseconds
   PreWindow:                0.1 # prewindow in microseconds
-  DebugMode:                true
+  DebugMode:                false
 }
 
 SBNDMCFlashTPC0: @local::sbnd_mc_flash

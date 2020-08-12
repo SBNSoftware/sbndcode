@@ -310,7 +310,7 @@ void SBNDMCFlash::produce(art::Event& e)
           if(pt.X() < 0 && _tpc == 1) continue;
           if(pt.X() > 0 && _tpc == 0) continue;
 
-          pmt_v[0][opch] += 1;
+          pmt_v[0][opch] += pair.second;
           _pe_total++;
 
           // for (int i = 0; i < pair.second; i++) {
@@ -339,7 +339,7 @@ void SBNDMCFlash::produce(art::Event& e)
   std::cout << "[NeutrinoMCFlash] MC Flash Time: "  << flash.Time() << std::endl;
   std::cout << "[NeutrinoMCFlash] MC Flash PE:   "  << flash.TotalPE() << std::endl;
   // for (size_t i = 0; i < pmt_v[0].size(); i++) {
-    // std::cout << "ch " << i << " => " << pmt_v[0][i] << std::endl;
+  //   std::cout << "ch " << i << " => " << pmt_v[0][i] << std::endl;
   // }
 
   opflashes->emplace_back(std::move(flash));
