@@ -30,12 +30,12 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderFMWKInterface.h"
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 #include "TVector3.h"
 #include "TTree.h"
 #include "TH1D.h"
-#include "TRandom3.h"
+// #include "TRandom3.h"
 
 #include <memory>
 
@@ -68,11 +68,12 @@ private:
   std::vector<std::string> _pd_to_use;
   int _tpc;
   float _qe_direct, _qe_refl;
+  float _window_length, _pre_window;
   bool _debug;
 
   opdet::sbndPDMapAlg _pds_map;
 
-  TRandom3 _random;
+  // TRandom3 _random;
 
   int _run, _subrun, _event;
   int _pe_total = 0;
@@ -97,13 +98,15 @@ SBNDMCFlash::SBNDMCFlash(fhicl::ParameterSet const& p)
 
   _mctruth_label = p.get<std::string>("MCTruthProduct", "generator");
   _trigger_label = p.get<std::string>("TriggerProduct", "triggersim");
-  _simphot_label = p.get<std::string>("SimPhotProduct", "largeant");  
-  _simphot_insta = p.get<std::string>("SimPhotProductInstance", "");  
-  _pd_to_use     = p.get<std::vector<std::string>>("PD", _pd_to_use);  
+  _simphot_label = p.get<std::string>("SimPhotProduct", "largeant");
+  _simphot_insta = p.get<std::string>("SimPhotProductInstance", "");
+  _pd_to_use     = p.get<std::vector<std::string>>("PD", _pd_to_use);
   _tpc           = p.get<int>("TPC", -1);
   _qe_direct     = p.get<float>("QEDirect", 0.03);
   _qe_refl       = p.get<float>("QERefl", 0.03);
-  _debug         = p.get<bool>       ("DebugMode",      false);  
+  _window_length = p.get<float>("WindowLength", 8); // us
+  _pre_window    = p.get<float>("PreWindow", 0.1); // us
+  _debug         = p.get<bool>("DebugMode",      false);
 
   art::ServiceHandle<art::TFileService> fs;
   _tree1 = fs->make<TTree>("tree","");
@@ -124,7 +127,7 @@ SBNDMCFlash::SBNDMCFlash(fhicl::ParameterSet const& p)
 void SBNDMCFlash::produce(art::Event& e)
 {
 
-  ::art::ServiceHandle<geo::Geometry> geo; 
+  ::art::ServiceHandle<geo::Geometry> geo;
   auto const *time_service = lar::providerFrom< detinfo::DetectorClocksService >();
   auto const *lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
 
@@ -140,7 +143,7 @@ void SBNDMCFlash::produce(art::Event& e)
 
   if (e.isRealData()) {
     e.put(std::move(opflashes));
-    return; 
+    return;
   }
 
   // art::Handle<std::vector<raw::Trigger> > evt_trigger_h;
@@ -223,7 +226,7 @@ void SBNDMCFlash::produce(art::Event& e)
     if (evt_mctruth.Origin() != 1 ) continue;
     if (_debug) std::cout << "We have " << evt_mctruth.NParticles() << " particles." << std::endl;
     for (int p = 0; p < evt_mctruth.NParticles(); p++) {
-   
+
       simb::MCParticle const& par = evt_mctruth.GetParticle(p);
       //if (par.PdgCode() != 14) continue;
       if (_debug){
@@ -232,7 +235,7 @@ void SBNDMCFlash::produce(art::Event& e)
         std::cout << "new    converted: " << ts->G4ToElecTime(par.T()) - trig_time << std::endl;
         std::cout << std::endl;
       }
-      if (std::abs(par.PdgCode()) == 14 || std::abs(par.PdgCode() == 12)) 
+      if (std::abs(par.PdgCode()) == 14 || std::abs(par.PdgCode() == 12))
         nuTime = par.T();//ts->G4ToElecTime(par.T()) - trig_time;
     }
   }
@@ -240,10 +243,10 @@ void SBNDMCFlash::produce(art::Event& e)
   if (nuTime == -1.e9) {
     std::cout << "[NeutrinoMCFlash] No neutrino found." << std::endl;
     e.put(std::move(opflashes));
-    return; 
+    return;
   }
 
-  std::cout << "[NeutrinoMCFlash] Neutrino G4 interaction time: "  << nuTime << std::endl; 
+  std::cout << "[NeutrinoMCFlash] Neutrino G4 interaction time: "  << nuTime << std::endl;
 
   std::vector<std::vector<double> > pmt_v(1,std::vector<double>(geo->NOpDets(),0));
   _pe_total = _pe_cherenkov = _pe_scintillation = 0;
@@ -252,16 +255,9 @@ void SBNDMCFlash::produce(art::Event& e)
   _scintillation_time_v.clear();
   _scintillation_pmt_v.clear();
 
-  // wConfig.Sampling = (timeService->OpticalClock().Frequency())/1000.0; //in GHz
-  // wConfig.EnableWindow = fTriggerAlg.TriggerEnableWindow(); // us *1000 /*ns for digitizer*/
-  // for us EnableWindow[0] =  start = fDetectorClocks->TriggerOffsetTPC() - 1 /* Give 1us of wiggle room*/; 
-  // TransitTime:        55.1       #ns
-  // t0 = fConfig.EnableWindow[0]*1000 /*ns for digitizer*/
-  // time = (fParams.TransitTime+ttsTime+mapMember.first-t_min)*fSampling
-
-  float sampling = time_service->OpticalClock().Frequency() / 1000.0; // GHz
-  float start_window = time_service->TriggerOffsetTPC() -1; // us
-  float transit_time = 55.1; // us
+  // float sampling = time_service->OpticalClock().Frequency() / 1000.0; // GHz
+  float start_window = time_service->TriggerOffsetTPC(); // us
+  if (_debug) std::cout << "start_window " << start_window << std::endl;
 
 
   // auto const& Photons = *(evt_simphot_h);
@@ -275,81 +271,54 @@ void SBNDMCFlash::produce(art::Event& e)
   //     std::cout << "\t [" << pair.first << "] " << pair.second << std::endl;
   //   }
   // }
+  std::cout << "We have " << evt_simphot_hs.size() << " SimPhoton collections" << std::endl;
+
+  float nuTime_elec = ts->G4ToElecTime(nuTime) - trig_time;
 
   for (const art::Handle<std::vector<sim::SimPhotonsLite>> &evt_simphot_h: evt_simphot_hs) {
 
     bool reflected = (evt_simphot_h.provenance()->productInstanceName() == "Reflected");
 
-    float qe = _qe_direct;
-    if (reflected) qe = _qe_refl;
+    // float qe = _qe_direct;
+    // if (reflected) qe = _qe_refl;
 
-    for(sim::SimPhotonsLite const& photons: *(evt_simphot_h)) {  
+    for(sim::SimPhotonsLite const& photons: *(evt_simphot_h)) {
 
-      int opch = photons.OpChannel;  
+      int opch = photons.OpChannel;
 
-      // if (_debug) std::cout << "Opdet " << geo->OpDetFromOpChannel(opch) << " (opch " << opch << "), reflected = " << (reflected ? "yes" : "no")<< std::endl;  
 
-      for(auto const& pair: photons.DetectedPhotons) {  
+      for(auto const& pair: photons.DetectedPhotons) {
 
-        float photon_time = (pair.first + transit_time - start_window) / sampling;  
+        float photon_time = pair.first - start_window;
 
         float photon_time_elec = ts->G4ToElecTime(photon_time) - trig_time;
-        float nuTime_elec = ts->G4ToElecTime(nuTime) - trig_time;
+
+        if (_debug && !reflected) {
+          std::cout << "Photon time: " << photon_time_elec
+                    << " - Neutrino time: " << nuTime_elec << std::endl;
+        }
 
 
-        
-        // if (_debug) std::cout << " photon_time_elec " << photon_time_elec << " nuTime_elec " << nuTime_elec << std::endl;  
-        // if (_debug) std::cout << " photon_time " << photon_time << " nuTime " << nuTime << std::endl;  
-  
-
-        if (photon_time_elec > nuTime_elec + 8 ) continue;
-        if (photon_time_elec > nuTime_elec - 0.1){ 
-        //if (oneph.Time > -1946030 + 10000) continue;
-        //if (oneph.Time > -1946030 - 10000) {
-        //if(ts->G4ToElecTime(oneph.Time) - trig_time > -1930) continue;
-        //if(ts->G4ToElecTime(oneph.Time) - trig_time > -1960) {
-          //if (_debug) std::cout << " photon time " << oneph.Time << std::endl;  
+        if (photon_time_elec > nuTime_elec + _window_length) continue;
+        if (photon_time_elec > nuTime_elec - _pre_window){
 
           auto iter = std::find(opch_to_use.begin(), opch_to_use.end(), opch);
-          if (iter == opch_to_use.end()) continue;  
-
+          if (iter == opch_to_use.end()) continue;
 
           auto const& pt = geo->OpDetGeoFromOpChannel(opch).GetCenter();
-         
+
           if(pt.X() < 0 && _tpc == 1) continue;
-          if(pt.X() > 0 && _tpc == 0) continue;  
+          if(pt.X() > 0 && _tpc == 0) continue;
 
-          // if (_debug) std::cout << " phxoton_time_elec " << photon_time_elec << " nuTime_elec " << nuTime_elec << ", pair.second " << pair.second << std::endl;  
-          // if (_debug && pair.second > 1) std::cout << " PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP pair.second is  " << pair.second << std::endl;  
-          
-          
-          for (int i = 0; i < pair.second; i++) {
-            float r = _random.Uniform(1.);
-            if(r < qe) { 
-              // std::cout << "--> accepted, r = " << r << ", qe = " << qe << std::endl;
-              pmt_v[0][opch] += 1;  
-              _pe_total ++;
-            }
-          }
-          // if (oneph.SetInSD) {
-          //   // Need to apply quantum efficiency for Cherenkov photons
-          //   double qe = 1;
-          //   double wl = 1.2398e3/(oneph.Energy * 1.e6);
-          //   std::cout << "Energy: " << oneph.Energy * 1.e6 << ", Wavelength: " << wl << std::endl;
-          //   if (wl < 300) qe = 0.0093; // MicroBooNE quantum efficiencies
-          //   else qe = 0.09; // MicroBooNE quantum efficiencies  
+          pmt_v[0][opch] += 1;
+          _pe_total++;
 
-          //   if(random.Uniform(1.) < qe) {
-          //     _pe_cherenkov ++;
-          //     _cherenkov_time_v.push_back(oneph.Time);
-          //     _cherenkov_pmt_v.push_back(opdet);
+          // for (int i = 0; i < pair.second; i++) {
+          //   float r = _random.Uniform(1.);
+          //   if(r < qe) {
+          //     pmt_v[0][opch] += 1;
+          //     _pe_total ++;
           //   }
-            
-          // }
-          // else {
-          //   _pe_scintillation ++;
-          //   _scintillation_time_v.push_back(oneph.Time);
-          //   _scintillation_pmt_v.push_back(opdet);
           // }
         }
       }
@@ -359,27 +328,19 @@ void SBNDMCFlash::produce(art::Event& e)
   double Ycenter, Zcenter, Ywidth, Zwidth;
   GetFlashLocation(pmt_v[0], Ycenter, Zcenter, Ywidth, Zwidth);
 
-  recob::OpFlash flash(nuTime,                                     // time w.r.t. trigger
+  recob::OpFlash flash(nuTime_elec,                                // time w.r.t. trigger
                        0,                                          // time width
-                       nuTime,                                     // flash time in elec clock
+                       nuTime_elec,                                // flash time in elec clock
                        0.,                                         // frame (?)
                        pmt_v[0],                                   // pe per pmt
                        0, 0, 1,                                    // this are just default values
                        Ycenter, Ywidth, Zcenter, Zwidth);          // flash location
 
-  // recob::OpFlash flash(ts->G4ToElecTime(nuTime) - trig_time,       // time w.r.t. trigger
-  //                      0,                                          // time width
-  //                      ts->G4ToElecTime(nuTime),                   // flash time in elec clock
-  //                      0.,                                         // frame (?)
-  //                      pmt_v[0],                                   // pe per pmt
-  //                      0, 0, 1,                                    // this are just default values
-  //                      Ycenter, Ywidth, Zcenter, Zwidth);          // flash location
-
   std::cout << "[NeutrinoMCFlash] MC Flash Time: "  << flash.Time() << std::endl;
   std::cout << "[NeutrinoMCFlash] MC Flash PE:   "  << flash.TotalPE() << std::endl;
-  for (size_t i = 0; i < pmt_v[0].size(); i++) {
+  // for (size_t i = 0; i < pmt_v[0].size(); i++) {
     // std::cout << "ch " << i << " => " << pmt_v[0][i] << std::endl;
-  }
+  // }
 
   opflashes->emplace_back(std::move(flash));
 
