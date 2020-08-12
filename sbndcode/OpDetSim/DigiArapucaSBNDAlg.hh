@@ -105,9 +105,9 @@ namespace opdet {
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
 
-    CLHEP::RandGeneral* TimeArapucaVUV; //histogram for getting the photon time distribution inside the Arapuca VUV box (considering the optical window)
-    CLHEP::RandGeneral* TimeArapucaVIS; //histogram for getting the photon time distribution inside the Arapuca VIS box (considering the optical window)
-    CLHEP::RandGeneral* TimeXArapucaVUV; //histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
+    CLHEP::RandGeneral* fTimeArapucaVUV; //histogram for getting the photon time distribution inside the Arapuca VUV box (considering the optical window)
+    CLHEP::RandGeneral* fTimeArapucaVIS; //histogram for getting the photon time distribution inside the Arapuca VIS box (considering the optical window)
+    CLHEP::RandGeneral* fTimeXArapucaVUV; //histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
 
     std::vector<double> wsp; //single photon pulse vector
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;

@@ -35,17 +35,17 @@ namespace opdet {
 
     std::vector<double>* TimeArapucaVUV_p;
     file->GetObject("TimeArapucaVUV", TimeArapucaVUV_p);
-    TimeArapucaVUV= new CLHEP::RandGeneral(*fEngine,
+    fTimeArapucaVUV= new CLHEP::RandGeneral(*fEngine,
                                            TimeArapucaVUV_p->data(),
                                            TimeArapucaVUV_p->size());
     std::vector<double>* TimeArapucaVIS_p;
     file->GetObject("TimeArapucaVIS", TimeArapucaVIS_p);
-    TimeArapucaVIS= new CLHEP::RandGeneral(*fEngine,
+    fTimeArapucaVIS= new CLHEP::RandGeneral(*fEngine,
                                            TimeArapucaVIS_p->data(),
                                            TimeArapucaVIS_p->size());
     std::vector<double>* TimeXArapucaVUV_p;
     file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV_p);
-    TimeXArapucaVUV= new CLHEP::RandGeneral(*fEngine,
+    fTimeXArapucaVUV= new CLHEP::RandGeneral(*fEngine,
                                             TimeXArapucaVUV_p->data(),
                                             TimeXArapucaVUV_p->size());
 
@@ -58,9 +58,9 @@ namespace opdet {
   } // end constructor
 
   DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {
-    delete TimeArapucaVUV;
-    delete TimeArapucaVIS;
-    delete TimeXArapucaVUV;
+    delete fTimeArapucaVUV;
+    delete fTimeArapucaVIS;
+    delete fTimeXArapucaVUV;
   }
 
 
@@ -105,7 +105,7 @@ namespace opdet {
     if(pdtype == "arapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVUVEff) { //Sample a random subset according to Arapuca's efficiency
-          tphoton = (TimeArapucaVUV->fire());
+          tphoton = (fTimeArapucaVUV->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -118,7 +118,7 @@ namespace opdet {
     else if(pdtype == "arapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVISEff) { //Sample a random subset according to Arapuca's efficiency.
-          tphoton = (TimeArapucaVIS->fire());
+          tphoton = (fTimeArapucaVIS->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -131,7 +131,7 @@ namespace opdet {
     else if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVUVEff) {
-          tphoton = (TimeXArapucaVUV->fire());
+          tphoton = (fTimeXArapucaVUV->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -170,7 +170,7 @@ namespace opdet {
     std::string pdtype)
   {
     if(pdtype == "xarapuca_vuv"){
-      SinglePDWaveformCreatorLite(fXArapucaVUVEff, &TimeXArapucaVUV, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fXArapucaVUVEff, &fTimeXArapucaVUV, wave, photonMap, t_min);
     }
     else if(pdtype == "xarapuca_vis"){
       // creating the waveforms for xarapuca_vis is different than the rest
@@ -178,10 +178,10 @@ namespace opdet {
       SinglePDWaveformCreatorLite(fXArapucaVISEff, wave, photonMap, t_min);
     }
     else if(pdtype == "arapuca_vuv"){
-      SinglePDWaveformCreatorLite(fArapucaVUVEff, &TimeArapucaVUV, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fArapucaVUVEff, &fTimeArapucaVUV, wave, photonMap, t_min);
     }
     else if(pdtype == "arapuca_vis"){
-      SinglePDWaveformCreatorLite(fArapucaVISEff, &TimeArapucaVIS, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fArapucaVISEff, &fTimeArapucaVIS, wave, photonMap, t_min);
     }
     else{
       throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;

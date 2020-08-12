@@ -38,17 +38,17 @@ namespace opdet {
     // TPB emission time histogram for pmt_coated histogram
     std::vector<double>* timeTPB_p;
     file->GetObject("timeTPB", timeTPB_p);
-    timeTPB = new CLHEP::RandGeneral(*fEngine,
+    fTimeTPB = new CLHEP::RandGeneral(*fEngine,
                                      timeTPB_p->data(),
                                      timeTPB_p->size());
 
     //shape of single pulse
     if (fParams.SinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
-      std::vector<double> *wsp_pointer;
-      file->GetObject("wsp", wsp_pointer);
-      wsp = *wsp_pointer;
-      pulsesize = wsp.size();
+      std::vector<double> *SinglePEWave_pointer;
+      file->GetObject("SinglePEWave", SinglePEWave_pointer);
+      fSinglePEWave = *SinglePEWave_pointer;
+      pulsesize = fSinglePEWave.size();
     }
     else {
       mf::LogDebug("DigiPMTSBNDAlg") << " using ideal pe response";
@@ -57,8 +57,8 @@ namespace opdet {
       sigma2 = fParams.PMTFallTime / (std::sqrt(2.0) * (std::sqrt(-std::log(0.1)) - std::sqrt(-std::log(0.9))));
 
       pulsesize = (int)((6 * sigma2 + fParams.TransitTime) * fSampling);
-      wsp.resize(pulsesize);
-      Pulse1PE(wsp);
+      fSinglePEWave.resize(pulsesize);
+      Pulse1PE(fSinglePEWave);
     }
 
     saturation = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
@@ -66,7 +66,7 @@ namespace opdet {
 
 
   DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){
-    delete timeTPB;
+    delete fTimeTPB;
   }
 
 
@@ -128,7 +128,7 @@ namespace opdet {
       for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
         if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-          ttpb = timeTPB->fire(); //for including TPB emission time
+          ttpb = fTimeTPB->fire(); //for including TPB emission time
           tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           timeBin = std::floor(tphoton*fSampling);
@@ -182,7 +182,7 @@ namespace opdet {
           accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
           for(size_t i = 0; i < accepted_photons; i++) {
             if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-            ttpb = timeTPB->fire(); //for including TPB emission time
+            ttpb = fTimeTPB->fire(); //for including TPB emission time
             tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
             if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
             timeBin = std::floor(tphoton*fSampling);
@@ -198,18 +198,18 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::Pulse1PE(std::vector<double>& wsp)//single pulse waveform
+  void DigiPMTSBNDAlg::Pulse1PE(std::vector<double>& fSinglePEWave)//single pulse waveform
   {
     double time;
     double constT1 = fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
     double constT21 = 2.0 * sigma1 * sigma1;
     double constT22 = 2.0 * sigma2 * sigma2;
-    for(size_t i = 0; i<wsp.size(); i++) {
+    for(size_t i = 0; i<fSinglePEWave.size(); i++) {
       time = static_cast<double>(i) / fSampling;
       if (time < fParams.TransitTime)
-        wsp[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT21);
+        fSinglePEWave[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT21);
       else
-        wsp[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT22);
+        fSinglePEWave[i] = constT1 * std::exp(-1.0 * std::pow(time - fParams.TransitTime, 2) / constT22);
     }
   }
 
@@ -229,7 +229,7 @@ namespace opdet {
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
     std::transform(min_it, max_it,
-                   wsp.begin(), min_it,
+                   fSinglePEWave.begin(), min_it,
                    std::plus<double>( ));
   }
 
