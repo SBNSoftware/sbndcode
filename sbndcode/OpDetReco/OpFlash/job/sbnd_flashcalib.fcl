@@ -1,7 +1,7 @@
 BEGIN_PROLOG
 
 NoCalib: {
-  SPEAreaGain: 317.1 # Sum of ADC in SPE x 0.5 (sampling rate)
+  SPEAreaGain: 66.33 # Sum of ADC in SPE x 0.5 (sampling rate)
 }
 
 END_PROLOG
