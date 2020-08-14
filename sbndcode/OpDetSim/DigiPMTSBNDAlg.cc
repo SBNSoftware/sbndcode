@@ -38,9 +38,8 @@ namespace opdet {
     // TPB emission time histogram for pmt_coated histogram
     std::vector<double>* timeTPB_p;
     file->GetObject("timeTPB", timeTPB_p);
-    fTimeTPB = new CLHEP::RandGeneral(*fEngine,
-                                     timeTPB_p->data(),
-                                     timeTPB_p->size());
+    fTimeTPB = std::make_unique<CLHEP::RandGeneral>
+      (*fEngine, timeTPB_p->data(), timeTPB_p->size());
 
     //shape of single pulse
     if (fParams.SinglePEmodel) {
@@ -65,9 +64,7 @@ namespace opdet {
   } // end constructor
 
 
-  DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){
-    delete fTimeTPB;
-  }
+  DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){}
 
 
   void DigiPMTSBNDAlg::ConstructWaveform(

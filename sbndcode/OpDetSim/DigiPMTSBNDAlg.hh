@@ -111,9 +111,9 @@ namespace opdet {
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
-    std::vector<double> fSinglePEWave; //single photon pulse vector
+    std::vector<double> fSinglePEWave; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
-    CLHEP::RandGeneral* fTimeTPB; //histogram for getting the TPB emission time for coated PMTs
+    std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for coated PMTs
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
     void CreatePDWaveform(

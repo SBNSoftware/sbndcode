@@ -35,19 +35,16 @@ namespace opdet {
 
     std::vector<double>* TimeArapucaVUV_p;
     file->GetObject("TimeArapucaVUV", TimeArapucaVUV_p);
-    fTimeArapucaVUV= new CLHEP::RandGeneral(*fEngine,
-                                           TimeArapucaVUV_p->data(),
-                                           TimeArapucaVUV_p->size());
+    fTimeArapucaVUV = std::make_unique<CLHEP::RandGeneral>
+      (*fEngine, TimeArapucaVUV_p->data(), TimeArapucaVUV_p->size());
     std::vector<double>* TimeArapucaVIS_p;
     file->GetObject("TimeArapucaVIS", TimeArapucaVIS_p);
-    fTimeArapucaVIS= new CLHEP::RandGeneral(*fEngine,
-                                           TimeArapucaVIS_p->data(),
-                                           TimeArapucaVIS_p->size());
+    fTimeArapucaVIS = std::make_unique<CLHEP::RandGeneral>
+      (*fEngine, TimeArapucaVIS_p->data(), TimeArapucaVIS_p->size());
     std::vector<double>* TimeXArapucaVUV_p;
     file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV_p);
-    fTimeXArapucaVUV= new CLHEP::RandGeneral(*fEngine,
-                                            TimeXArapucaVUV_p->data(),
-                                            TimeXArapucaVUV_p->size());
+    fTimeXArapucaVUV = std::make_unique<CLHEP::RandGeneral>
+      (*fEngine, TimeXArapucaVUV_p->data(), TimeXArapucaVUV_p->size());
 
     fSampling = fSampling / 1000; //in GHz to cancel with ns
     pulsesize = fParams.PulseLength * fSampling;
@@ -57,11 +54,7 @@ namespace opdet {
     saturation = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
   } // end constructor
 
-  DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {
-    delete fTimeArapucaVUV;
-    delete fTimeArapucaVIS;
-    delete fTimeXArapucaVUV;
-  }
+  DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {}
 
 
   void DigiArapucaSBNDAlg::ConstructWaveform(
@@ -170,7 +163,7 @@ namespace opdet {
     std::string pdtype)
   {
     if(pdtype == "xarapuca_vuv"){
-      SinglePDWaveformCreatorLite(fXArapucaVUVEff, &fTimeXArapucaVUV, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fXArapucaVUVEff, fTimeXArapucaVUV, wave, photonMap, t_min);
     }
     else if(pdtype == "xarapuca_vis"){
       // creating the waveforms for xarapuca_vis is different than the rest
@@ -178,10 +171,10 @@ namespace opdet {
       SinglePDWaveformCreatorLite(fXArapucaVISEff, wave, photonMap, t_min);
     }
     else if(pdtype == "arapuca_vuv"){
-      SinglePDWaveformCreatorLite(fArapucaVUVEff, &fTimeArapucaVUV, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fArapucaVUVEff, fTimeArapucaVUV, wave, photonMap, t_min);
     }
     else if(pdtype == "arapuca_vis"){
-      SinglePDWaveformCreatorLite(fArapucaVISEff, &fTimeArapucaVIS, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fArapucaVISEff, fTimeArapucaVIS, wave, photonMap, t_min);
     }
     else{
       throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
@@ -194,7 +187,7 @@ namespace opdet {
 
   void DigiArapucaSBNDAlg::SinglePDWaveformCreatorLite(
     double effT,
-    CLHEP::RandGeneral** timeHisto,
+    std::unique_ptr<CLHEP::RandGeneral>& timeHisto,
     std::vector<double>& wave,
     std::map<int, int> const& photonMap,
     double const& t_min
@@ -213,7 +206,7 @@ namespace opdet {
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
       for(size_t i = 0; i < acceptedPhotons; i++) {
-        tphoton = (*timeHisto)->fire();
+        tphoton = timeHisto->fire();
         tphoton += photonMember.first - t_min;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 &&
