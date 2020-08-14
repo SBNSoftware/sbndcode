@@ -27,10 +27,13 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
   fMicroBooNoiseHistZ(nullptr), fMicroBooNoiseHistU(nullptr), fMicroBooNoiseHistV(nullptr),
   fMicroBooNoiseChanHist(nullptr),
   fCohNoiseHist(nullptr), fCohNoiseChanHist(nullptr),
-  m_pran(nullptr) {
-  const string myname = "SBNDuBooNEDataDrivenNoiseService::ctor: ";
+  haveSeed(pset.get_if_present<int>("RandomSeed", fRandomSeed)),
+  m_pran(ConstructRandomEngine(haveSeed)),
+  fTRandom3(new TRandom3(m_pran->getSeed()))
+{
+
   fNoiseArrayPoints  = pset.get<unsigned int>("NoiseArrayPoints");
-  bool haveSeed      = pset.get_if_present<int>("RandomSeed", fRandomSeed);
+  //bool haveSeed      = pset.get_if_present<int>("RandomSeed", fRandomSeed);
   
   fEnableWhiteNoise  = pset.get<bool>("EnableWhiteNoise");
   fWhiteNoiseZ       = pset.get<double>("WhiteNoiseZ");
@@ -68,9 +71,8 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
   fCohGausSigma        = pset.get<std::vector<float>>("CohGausSigma");
   fNChannelsPerCoherentGroup      = pset.get<std::vector<unsigned int>>("NChannelsPerCoherentGroup");
   
-  if ( fRandomSeed == 0 ) haveSeed = false;
+  //  if ( fRandomSeed == 0 ) haveSeed = false;
   pset.get_if_present<int>("LogLevel", fLogLevel);
-  int seed = fRandomSeed;
   art::ServiceHandle<art::TFileService> tfs;
   fMicroBooNoiseHistZ = tfs->make<TH1F>("MicroBoo znoise", ";Z Noise [ADC counts];", 1000,   -10., 10.);
   fMicroBooNoiseHistU = tfs->make<TH1F>("MicroBoo unoise", ";U Noise [ADC counts];", 1000,   -10., 10.);
@@ -82,27 +84,21 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
   fGausNoiseChanHist = tfs->make<TH1F>("Gaussian NoiseChan", ";Gaussian Noise channel;", fNoiseArrayPoints, 0, fNoiseArrayPoints);
   fCohNoiseHist = tfs->make<TH1F>("Cohnoise", ";Coherent Noise [ADC counts];", 1000,   -10., 10.);                           
   fCohNoiseChanHist = tfs->make<TH1F>("CohNoiseChan", ";CohNoise channel;", fCohNoiseArrayPoints, 0, fCohNoiseArrayPoints);// III = for each instance of this class.
-  string rname = "SBNDuBooNEDataDrivenNoiseService";
-  if ( haveSeed ) {
-    if ( fLogLevel > 0 ) cout << myname << "WARNING: Using hardwired seed." << endl;
-    m_pran = new HepJamesRandom(seed);
-  } else {
-    if ( fLogLevel > 0 ) cout << myname << "Using NuRandomService." << endl;
-    art::ServiceHandle<NuRandomService> seedSvc;
-    m_pran = new HepJamesRandom;
-    if ( fLogLevel > 0 ) cout << myname << "    Initial seed: " << m_pran->getSeed() << endl;
-    seedSvc->registerEngine(NuRandomService::CLHEPengineSeeder(m_pran), rname);
-  }
-  if ( fLogLevel > 0 ) cout << myname << "  Registered seed: " << m_pran->getSeed() << endl;
+  
   //generateNoise(); //This has been replaced by the same function in SimWireSBND. This is so the noise arrays are recalculated for each event.
-  if ( fLogLevel > 1 ) print() << endl;
 
   // Wirelength dependance function
   _wld_f = new TF1("_wld_f", "[0] + [1]*x", 0.0, 1000);
   wldparams[0] = 0.395;
   wldparams[1] = 0.001304;
-  
   _wld_f->SetParameters(wldparams);
+
+  _poisson = new TF1("_poisson", "[0]**(x) * exp(-[0]) / ROOT::Math::tgamma(x+1.)", 0, 30);
+  // poissonParams[0] = 3.30762;
+  _poisson->SetParameter(0, kPoissonMean); 
+
+  if ( fLogLevel > 1 ) print() << endl;
+
 }
 
 //**********************************************************************
@@ -123,14 +119,40 @@ SBNDuBooNEDataDrivenNoiseService::~SBNDuBooNEDataDrivenNoiseService() {
 
 //**********************************************************************
 
+CLHEP::HepRandomEngine* SBNDuBooNEDataDrivenNoiseService::ConstructRandomEngine(const bool haveSeed) {
+  string myname = "SBNDuBooNEDataDrivenNoiseService::ctor: ";
+  string rname = "SBNDuBooNEDataDrivenNoiseService";
+  
+  if ( haveSeed ) {
+    if ( fLogLevel > 0 ) cout << myname << "WARNING: Using hardwired seed." << endl;
+    m_pran = new HepJamesRandom(fRandomSeed);
+  } else {
+    if ( fLogLevel > 0 ) cout << myname << "Using NuRandomService." << endl;
+    art::ServiceHandle<NuRandomService> seedSvc;
+    m_pran = new HepJamesRandom;
+    if ( fLogLevel > 0 ) cout << myname << "    Initial seed: " << m_pran->getSeed() << endl;
+    seedSvc->registerEngine(NuRandomService::CLHEPengineSeeder(m_pran), rname);
+  }
+  if ( fLogLevel > 0 ) cout << myname << "  Registered seed: " << m_pran->getSeed() << endl;
+  
+  return m_pran;
+}
 
-
+double SBNDuBooNEDataDrivenNoiseService::GetRandomTF1(TF1* func) const{
+  TRandom* gRandomTemp = gRandom;
+  gRandom = fTRandom3;
+  std::cout << "\n gRandom Print: \n" << std::endl;
+  gRandom->Print();
+  double randomVal(func->GetRandom());
+  gRandom = gRandomTemp;
+  return randomVal;
+}
+  
 //**********************************************************************
 
 int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) const {
   CLHEP::RandFlat flat(*m_pran);
   CLHEP::RandGaussQ gaus(*m_pran);
-  CLHEP::RandPoissonQ poisson(*m_pran, kPoissonMean);
 
   unsigned int microbooNoiseChan = flat.fire()*fNoiseArrayPoints;
   if ( microbooNoiseChan == fNoiseArrayPoints ) --microbooNoiseChan;
@@ -214,7 +236,9 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
     //MicroBooNE noise model
     double pfnf1val = _pfn_f1->Eval((i+0.5)*binWidth);
     // define FFT parameters
-    double randomizer = poisson.fire()/kPoissonMean;
+    double randPoisson = GetRandomTF1(_poisson);
+    //double randPoisson = _poisson->GetRandom();
+    double randomizer = randPoisson/kPoissonMean;
     pval = pfnf1val * randomizer;
     // random phase angle
     flat.fireArray(2, rnd, 0, 1);

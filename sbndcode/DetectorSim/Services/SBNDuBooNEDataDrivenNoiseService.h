@@ -31,7 +31,6 @@
 #include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGaussQ.h"
-#include "CLHEP/Random/RandPoissonQ.h"
 
 #include "TH1F.h"
 #include "TRandom3.h"
@@ -175,9 +174,15 @@ private:
   double wldparams[2];
 
   TF1* _poisson;
-  double poissonParams[1];
 
+
+  // Randomisation.
+  bool haveSeed;
   CLHEP::HepRandomEngine* m_pran;
+  CLHEP::HepRandomEngine* ConstructRandomEngine(const bool haveSeed);
+  double GetRandomTF1(TF1* func) const;
+  TRandom3* fTRandom3;
+
 
 };
 
