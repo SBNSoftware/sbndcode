@@ -12,10 +12,9 @@
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
-#include "CLHEP/Random/RandomEngine.h"
-#include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/RandGeneral.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
 
@@ -35,10 +34,7 @@
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
-#include "TMath.h"
-#include "TF1.h"
 #include "TFile.h"
-#include "TH1D.h"
 
 namespace opdet {
 
@@ -49,6 +45,7 @@ namespace opdet {
     struct ConfigurationParameters_t {
       double TransitTime; //ns
       double TTS; //ns
+      double CableTime; //ns
       double PMTChargeToADC; //voltage to ADC conversion scale
       double PMTBaseline; //waveform baseline in ADC
       double PMTFallTime; //pulse decaying time constant (exponential) in ns
@@ -90,9 +87,9 @@ namespace opdet {
       unsigned n_sample);
 
     double Baseline()
-    {
-      return fParams.PMTBaseline;
-    }
+      {
+        return fParams.PMTBaseline;
+      }
 
   private:
 
@@ -114,9 +111,9 @@ namespace opdet {
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
-    std::vector<double> wsp; //single photon pulse vector
+    std::vector<double> fSinglePEWave; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
-    TH1D* timeTPB; //histogram for getting the TPB emission time for coated PMTs
+    std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for coated PMTs
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
     void CreatePDWaveform(
@@ -163,6 +160,11 @@ namespace opdet {
       fhicl::Atom<double> tts {
         Name("TTS"),
         Comment("Single pe: Transit time spread in ns")
+      };
+
+      fhicl::Atom<double> cableTime {
+        Name("CableTime"),
+        Comment("Time delay of the 30 m long readout cable in ns")
       };
 
       fhicl::Atom<double> pmtmeanAmplitude {
@@ -232,7 +234,7 @@ namespace opdet {
       detinfo::LArProperties const& larProp,
       detinfo::DetectorClocksData const& clockData,
       CLHEP::HepRandomEngine* engine
-    ) const;
+      ) const;
 
   private:
     // Part of the configuration learned from configuration files.

@@ -67,7 +67,7 @@ sbnd_uboonedatadrivennoiseservice: {
   # NoiseFunctionParameters:  [ 1.19777e+01, 1.59491e+05, 4.93692e+03, 1.03438e+03, 2.33306e+02, 1.36605e+00, 4.08741e+00, 6.18786e-01, 9596] #uBooNE params from Jingbo W.
   # NoiseFunctionParameters:  [ 1.19777e+01, 1.95e+05, 4.93692e+03, 1.03438e+03, 2.33306e+02, 1.36605e+00, 4.08741e+00, 3.5e-01, 9596] #SBND params to match electronics tests.
   NoiseFunctionParameters:  [ 1.19777e+01, 1.7e+05, 4.93692e+03, 1.03438e+03, 2.33306e+02, 1.36605e+00, 4.08741e+00, 3.5e-03, 9596] #SBND params to match electronics tests after calibration correction.
-
+  
   EnableCoherentNoise: false
   CohNoiseArrayPoints: 1000
   NChannelsPerCoherentGroup: 128

@@ -2,16 +2,16 @@
 # File:    simulationservices_sbnd.fcl
 # Purpose: collection of standard simulation service settings for SBND
 # Version: 1.3
-# 
+#
 # Provides:
-# 
+#
 # - sbnd_g4_services: services needed by LArG4
 # - sbnd_detsim_services: services needed by readout simulation
 # - sbnd_simulation_services: bundle of services including Geant4, optical
 #   and electronics simulation (also includes the core ones)
-# 
+#
 # Use as:
-#     
+#
 #     services: {
 #       @table::sbnd_simulation_services
 #       # ...
@@ -24,10 +24,13 @@
 # 20190807 (dbrailsf@fnal.gov) [v1.2]
 #   PhotonVisibilityService included in g4 servces table
 #   OpDetResponseInterface included in detsim services table
-#   Disabled sbnd_opsimulation_services table 
+#   Disabled sbnd_opsimulation_services table
 #   Enabled 'FastOptical' in the custom physics list (in largeantparameters)
 # 20190807 (dbrailsf@fnal.gov) [v1.3]
 #   Added an optional largeantparameters config which does not run the optical sim
+# 20200616 (ascarff@fnal.gov) [v1.4]
+#   Change diffusion constants to match ProtoDUNE data
+
 
 #include "services_sbnd.fcl"
 #include "simulationservices.fcl"
@@ -44,16 +47,21 @@ BEGIN_PROLOG
 
 sbnd_largeantparameters:   @local::standard_largeantparameters # from simulationservices.fcl
 sbnd_largeantparameters.ElectronClusterSize: 20.0
-#Brailsford 27/10/09: Enable the custom physics list and disable its neutron killer 
+#Brailsford 27/10/09: Enable the custom physics list and disable its neutron killer
 sbnd_largeantparameters.UseCustomPhysics: true
 sbnd_largeantparameters.EnabledPhysics: [ "Em", "FastOptical", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
-#Brailsford 24/11/09: Permanently keep the shower children
-sbnd_largeantparameters.KeepEMShowerDaughters: true
 sbnd_largeantparameters.UseLitePhotons: true
 
 #Define a largeantparameters which doesn't use the optical simulation
 sbnd_largeantparameters_noopticalsim: @local::sbnd_largeantparameters
-sbnd_largeantparameters_noopticalsim.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] 
+sbnd_largeantparameters_noopticalsim.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ]
+
+# ascarff 16Jun2020: Change the diffusion constants to match ProtoDUNE results
+sbnd_largeantparameters.LongitudinalDiffusion: 4.0e-9 #in cm^2/ns (was 6.2e-9)
+sbnd_largeantparameters.TransverseDiffusion: 8.8e-9 #in cm^2/ns (was 16.3e-9)
+sbnd_largeantparameters_noopticalsim.LongitudinalDiffusion: 4.0e-9 #in cm^2/ns (was 6.2e-9)
+sbnd_largeantparameters_noopticalsim.TransverseDiffusion: 8.8e-9 #in cm^2/ns (was 16.3e-9)
+
 
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
 
@@ -65,14 +73,14 @@ sbnd_g4_services:
 {
                              @table::sbnd_services
                              @table::sbnd_random_services
-  LArG4Parameters:           @local::sbnd_largeantparameters 
-  LArVoxelCalculator:        @local::sbnd_larvoxelcalculator 
+  LArG4Parameters:           @local::sbnd_largeantparameters
+  LArVoxelCalculator:        @local::sbnd_larvoxelcalculator
   MagneticField:             @local::no_mag_larsoft
   PhotonVisibilityService:   @local::sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice
 } # sbnd_g4_services
 
 
-  
+
 # Define sbnd_detsim_services
 sbnd_detsim_services:
 {
@@ -80,11 +88,11 @@ sbnd_detsim_services:
                              @table::sbnd_random_services
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND:  @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
-  NoiseModel:		     @local::sbnd_thermalnoiseserviceintime
+  NoiseModel:                @local::sbnd_uboonedatadrivennoiseservice
   OpDetResponseInterface:    @local::sbnd_opdetresponse
 } # sbnd_detsim_services
 
-  
+
 # Define sbnd_simulation_services
 sbnd_simulation_services:
 {
@@ -102,7 +110,7 @@ sbnd_simulation_services:
 #                            @table::sbnd_simulation_services
 #  OpDetResponseInterface:   @local::sbnd_opdetresponse
 ##  PhotonVisibilityService:  @local::sbnd_photonvisibilityservice
-##  OpDigiProperties:         @local::sbnd_opdigiproperties 
+##  OpDigiProperties:         @local::sbnd_opdigiproperties
 #}
 
 

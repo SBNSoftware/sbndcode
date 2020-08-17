@@ -264,7 +264,7 @@ namespace opdet {
   {
     std::unique_ptr< std::vector< raw::OpDetWaveform > > pulseVecPtr(std::make_unique< std::vector< raw::OpDetWaveform > > ());
     // Implementation of required member function here.
-    std::cout << "Event: " << e.id().event() << std::endl;
+    mf::LogInfo("opDetDigitizer") << "Event: " << e.id().event() << std::endl;
 
     // setup the waveforms
     fWaveforms = std::vector<raw::OpDetWaveform> (nChannels);
