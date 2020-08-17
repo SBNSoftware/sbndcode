@@ -33,7 +33,6 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
 {
 
   fNoiseArrayPoints  = pset.get<unsigned int>("NoiseArrayPoints");
-  //bool haveSeed      = pset.get_if_present<int>("RandomSeed", fRandomSeed);
   
   fEnableWhiteNoise  = pset.get<bool>("EnableWhiteNoise");
   fWhiteNoiseZ       = pset.get<double>("WhiteNoiseZ");
@@ -94,10 +93,11 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
   _wld_f->SetParameters(wldparams);
 
   _poisson = new TF1("_poisson", "[0]**(x) * exp(-[0]) / ROOT::Math::tgamma(x+1.)", 0, 30);
-  // poissonParams[0] = 3.30762;
   _poisson->SetParameter(0, kPoissonMean); 
 
   if ( fLogLevel > 1 ) print() << endl;
+
+  std::cout << "haveSeed: " << haveSeed << std::endl;
 
 }
 
@@ -122,8 +122,11 @@ SBNDuBooNEDataDrivenNoiseService::~SBNDuBooNEDataDrivenNoiseService() {
 CLHEP::HepRandomEngine* SBNDuBooNEDataDrivenNoiseService::ConstructRandomEngine(const bool haveSeed) {
   string myname = "SBNDuBooNEDataDrivenNoiseService::ctor: ";
   string rname = "SBNDuBooNEDataDrivenNoiseService";
-  
-  if ( haveSeed ) {
+
+  std::cout << "2) haveSeed: " << haveSeed << std::endl;
+
+
+  if ( haveSeed!=0 ) {
     if ( fLogLevel > 0 ) cout << myname << "WARNING: Using hardwired seed." << endl;
     m_pran = new HepJamesRandom(fRandomSeed);
   } else {
@@ -134,6 +137,8 @@ CLHEP::HepRandomEngine* SBNDuBooNEDataDrivenNoiseService::ConstructRandomEngine(
     seedSvc->registerEngine(NuRandomService::CLHEPengineSeeder(m_pran), rname);
   }
   if ( fLogLevel > 0 ) cout << myname << "  Registered seed: " << m_pran->getSeed() << endl;
+
+  std::cout << "HELLOOOOOOO!!!!!!!" << std::endl;
   
   return m_pran;
 }
@@ -141,8 +146,6 @@ CLHEP::HepRandomEngine* SBNDuBooNEDataDrivenNoiseService::ConstructRandomEngine(
 double SBNDuBooNEDataDrivenNoiseService::GetRandomTF1(TF1* func) const{
   TRandom* gRandomTemp = gRandom;
   gRandom = fTRandom3;
-  std::cout << "\n gRandom Print: \n" << std::endl;
-  gRandom->Print();
   double randomVal(func->GetRandom());
   gRandom = gRandomTemp;
   return randomVal;
