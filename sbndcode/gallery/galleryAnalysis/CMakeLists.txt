@@ -81,7 +81,7 @@ set(GALLERY_LIBS MF_MessageLogger fhiclcpp canvas cetlib_except cetlib gallery)
 set(ROOT_CORELIBS Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread)
 set(LARSOFTOBJ_LIBS nusimdata_SimulationBase larcoreobj_SummaryData lardataobj_RawData lardataobj_OpticalDetectorData lardataobj_RecoBase lardataobj_AnalysisBase lardataobj_MCBase lardataobj_Simulation)
 
-set(SBNDGEOMETRY_LIBS larcorealg_Geometry sbnd_Geometry)
+set(SBNDGEOMETRY_LIBS larcorealg_Geometry sbndcode_Geometry)
 set(SBNDDETINFO_LIBS lardataalg_DetectorInfo)
 
 ################################################################################
