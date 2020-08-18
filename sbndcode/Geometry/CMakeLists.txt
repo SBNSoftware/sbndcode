@@ -1,5 +1,4 @@
 art_make(
-          LIBRARY_NAME sbnd_Geometry
           LIB_LIBRARIES larcorealg_Geometry
                         ${MF_MESSAGELOGGER}
                         cetlib
@@ -8,11 +7,10 @@ art_make(
                         ${ROOT_BASIC_LIB_LIST}
                         ${ROOT_GEOM}
           SERVICE_LIBRARIES
-                        sbnd_Geometry
+                        sbndcode_Geometry
                         larcorealg_Geometry
                         art_Framework_Services_Registry
                         canvas
-                        
                         ${FHICLCPP}
                         cetlib_except
                         ${ROOT_CORE}
