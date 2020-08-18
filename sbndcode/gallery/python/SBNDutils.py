@@ -27,7 +27,7 @@ def loadSBNDgeometry(config = None, registry = None):
   SourceCode = LArSoftUtils.SourceCode # alias
   
   SourceCode.loadHeaderFromUPS('sbndcode/Geometry/ChannelMapSBNDAlg.h')
-  SourceCode.loadLibrary('sbnd_Geometry')
+  SourceCode.loadLibrary('sbndcode_Geometry')
   return LArSoftUtils.loadGeometry \
     (config=config, registry=registry, mapping=ROOT.geo.ChannelMapSBNDAlg)
 # loadSBNDgeometry()
