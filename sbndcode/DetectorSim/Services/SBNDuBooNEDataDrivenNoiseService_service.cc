@@ -21,7 +21,7 @@ namespace{
 
 SBNDuBooNEDataDrivenNoiseService::
 SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
-: fRandomSeed(0), fLogLevel(1),
+  : fRandomSeed(0), fLogLevel(pset.get<int>("LogLevel")),
   fGausNoiseHistZ(nullptr), fGausNoiseHistU(nullptr), fGausNoiseHistV(nullptr),
   fGausNoiseChanHist(nullptr),
   fMicroBooNoiseHistZ(nullptr), fMicroBooNoiseHistU(nullptr), fMicroBooNoiseHistV(nullptr),
@@ -70,8 +70,6 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
   fCohGausSigma        = pset.get<std::vector<float>>("CohGausSigma");
   fNChannelsPerCoherentGroup      = pset.get<std::vector<unsigned int>>("NChannelsPerCoherentGroup");
   
-  //  if ( fRandomSeed == 0 ) haveSeed = false;
-  pset.get_if_present<int>("LogLevel", fLogLevel);
   art::ServiceHandle<art::TFileService> tfs;
   fMicroBooNoiseHistZ = tfs->make<TH1F>("MicroBoo znoise", ";Z Noise [ADC counts];", 1000,   -10., 10.);
   fMicroBooNoiseHistU = tfs->make<TH1F>("MicroBoo unoise", ";U Noise [ADC counts];", 1000,   -10., 10.);
@@ -97,8 +95,6 @@ SBNDuBooNEDataDrivenNoiseService(fhicl::ParameterSet const& pset)
 
   if ( fLogLevel > 1 ) print() << endl;
 
-  std::cout << "haveSeed: " << haveSeed << std::endl;
-
 }
 
 //**********************************************************************
@@ -123,10 +119,7 @@ CLHEP::HepRandomEngine* SBNDuBooNEDataDrivenNoiseService::ConstructRandomEngine(
   string myname = "SBNDuBooNEDataDrivenNoiseService::ctor: ";
   string rname = "SBNDuBooNEDataDrivenNoiseService";
 
-  std::cout << "2) haveSeed: " << haveSeed << std::endl;
-
-
-  if ( haveSeed!=0 ) {
+  if ( haveSeed ) {
     if ( fLogLevel > 0 ) cout << myname << "WARNING: Using hardwired seed." << endl;
     m_pran = new HepJamesRandom(fRandomSeed);
   } else {
@@ -137,8 +130,6 @@ CLHEP::HepRandomEngine* SBNDuBooNEDataDrivenNoiseService::ConstructRandomEngine(
     seedSvc->registerEngine(NuRandomService::CLHEPengineSeeder(m_pran), rname);
   }
   if ( fLogLevel > 0 ) cout << myname << "  Registered seed: " << m_pran->getSeed() << endl;
-
-  std::cout << "HELLOOOOOOO!!!!!!!" << std::endl;
   
   return m_pran;
 }
@@ -240,7 +231,6 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& si
     double pfnf1val = _pfn_f1->Eval((i+0.5)*binWidth);
     // define FFT parameters
     double randPoisson = GetRandomTF1(_poisson);
-    //double randPoisson = _poisson->GetRandom();
     double randomizer = randPoisson/kPoissonMean;
     pval = pfnf1val * randomizer;
     // random phase angle
