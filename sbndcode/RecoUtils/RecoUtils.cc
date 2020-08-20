@@ -1,10 +1,11 @@
 #include "RecoUtils.h"
 
 
-int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit> hit, bool rollup_unsaved_ids) {
+int RecoUtils::TrueParticleID(detinfo::DetectorClocksData const& clockData,
+                              const art::Ptr<recob::Hit> hit, bool rollup_unsaved_ids) {
   std::map<int,double> id_to_energy_map;
   art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-  std::vector<sim::TrackIDE> track_ides = bt_serv->HitToTrackIDEs(hit);
+  std::vector<sim::TrackIDE> track_ides = bt_serv->HitToTrackIDEs(clockData, hit);
   for (unsigned int idIt = 0; idIt < track_ides.size(); ++idIt) {
     int id = track_ides.at(idIt).trackID;
     if (rollup_unsaved_ids) id = std::abs(id);
@@ -26,12 +27,12 @@ int RecoUtils::TrueParticleID(const art::Ptr<recob::Hit> hit, bool rollup_unsave
 
 
 
-int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
+int RecoUtils::TrueParticleIDFromTotalTrueEnergy(detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
   art::ServiceHandle<cheat::BackTrackerService> bt_serv;
   std::map<int,double> trackIDToEDepMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
     art::Ptr<recob::Hit> hit = *hitIt;
-    std::vector<sim::TrackIDE> trackIDs = bt_serv->HitToTrackIDEs(hit);
+    std::vector<sim::TrackIDE> trackIDs = bt_serv->HitToTrackIDEs(clockData, hit);
     for (unsigned int idIt = 0; idIt < trackIDs.size(); ++idIt) {
       int id = trackIDs[idIt].trackID;
       if (rollup_unsaved_ids) id = std::abs(id);
@@ -56,12 +57,12 @@ int RecoUtils::TrueParticleIDFromTotalTrueEnergy(const std::vector<art::Ptr<reco
 
 
 
-int RecoUtils::TrueParticleIDFromTotalRecoCharge(const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
+int RecoUtils::TrueParticleIDFromTotalRecoCharge(detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
   // Make a map of the tracks which are associated with this object and the charge each contributes
   std::map<int,double> trackMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
     art::Ptr<recob::Hit> hit = *hitIt;
-    int trackID = TrueParticleID(hit, rollup_unsaved_ids);
+    int trackID = TrueParticleID(clockData, hit, rollup_unsaved_ids);
     trackMap[trackID] += hit->Integral();
   }
 
@@ -79,12 +80,12 @@ int RecoUtils::TrueParticleIDFromTotalRecoCharge(const std::vector<art::Ptr<reco
 
 
 
-int RecoUtils::TrueParticleIDFromTotalRecoHits(const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
+int RecoUtils::TrueParticleIDFromTotalRecoHits(detinfo::DetectorClocksData const& clockData,const std::vector<art::Ptr<recob::Hit> >& hits, bool rollup_unsaved_ids) {
   // Make a map of the tracks which are associated with this object and the number of hits they are the primary contributor to
   std::map<int,int> trackMap;
   for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
     art::Ptr<recob::Hit> hit = *hitIt;
-    int trackID = TrueParticleID(hit, rollup_unsaved_ids);
+    int trackID = TrueParticleID(clockData, hit, rollup_unsaved_ids);
     trackMap[trackID]++;
   }
 
@@ -104,7 +105,7 @@ int RecoUtils::TrueParticleIDFromTotalRecoHits(const std::vector<art::Ptr<recob:
   }
   if (NHighestCounts > 1){
     std::cout<<"RecoUtils::TrueParticleIDFromTotalRecoHits - There are " << NHighestCounts << " particles which tie for highest number of contributing hits (" << highestCount<<" hits).  Using RecoUtils::TrueParticleIDFromTotalTrueEnergy instead."<<std::endl;
-    objectTrack = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits,rollup_unsaved_ids);
+    objectTrack = RecoUtils::TrueParticleIDFromTotalTrueEnergy(clockData, hits,rollup_unsaved_ids);
   }
   return objectTrack;
 }
@@ -181,6 +182,3 @@ double RecoUtils::CalculateTrackLength(const art::Ptr<recob::Track> track){
   }
   return length;
 }
-
-
-

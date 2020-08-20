@@ -26,8 +26,11 @@
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
+namespace detinfo {
+  class DetectorClocksData;
+  class DetectorPropertiesData;
+}
 
 #include "TMath.h"
 #include "TRandom3.h"
@@ -201,35 +204,38 @@ namespace opdet {
     };
 
     // construct with config or with fhicl
-    opDetSBNDTriggerAlg(const Config &config, const detinfo::DetectorClocks *detector_clocks, const detinfo::DetectorProperties *detector_properties);
+    opDetSBNDTriggerAlg(const Config &config);
 
-    opDetSBNDTriggerAlg(const fhicl::ParameterSet &pset,  const detinfo::DetectorClocks *detector_clocks, const detinfo::DetectorProperties *detector_properties) :
-      opDetSBNDTriggerAlg(fhicl::Table<Config>(pset, {})(), detector_clocks, detector_properties)
+    opDetSBNDTriggerAlg(const fhicl::ParameterSet &pset) :
+      opDetSBNDTriggerAlg(fhicl::Table<Config>(pset, {})())
     {}
-
-    //Default destructor
-    ~opDetSBNDTriggerAlg() {}
 
     // Clear out at the end of an event
     void ClearTriggerLocations();
 
     // Add in a waveform to define trigger locations
-    void FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline);
+    void FindTriggerLocations(detinfo::DetectorClocksData const& clockData,
+                              detinfo::DetectorPropertiesData const& detProp,
+                              const raw::OpDetWaveform &waveform,
+                              raw::ADC_Count_t baseline);
 
     // Merge all of the triggers together
     void MergeTriggerLocations();
 
     // Apply trigger locations to an input OpDetWaveform
-    std::vector<raw::OpDetWaveform> ApplyTriggerLocations(const raw::OpDetWaveform &waveform) const;
+    std::vector<raw::OpDetWaveform> ApplyTriggerLocations(detinfo::DetectorClocksData const& clockData, const raw::OpDetWaveform &waveform) const;
 
     // Returns the time range over which triggers are enabled over a range [start, end]
-    std::array<double, 2> TriggerEnableWindow() const;
+    std::array<double, 2> TriggerEnableWindow(detinfo::DetectorClocksData const& clockData,
+                                              detinfo::DetectorPropertiesData const& detProp) const;
 
   private:
 
     // internal functions
     bool IsChannelMasked(raw::Channel_t channel) const;
-    bool IsTriggerEnabled(raw::TimeStamp_t trigger_time) const;
+    bool IsTriggerEnabled(detinfo::DetectorClocksData const& clockData,
+                          detinfo::DetectorPropertiesData const& detProp,
+                          raw::TimeStamp_t trigger_time) const;
     raw::TimeStamp_t Tick2Timestamp(raw::TimeStamp_t waveform_start, size_t waveform_index) const;
     const std::vector<raw::TimeStamp_t> &GetTriggerTimes(raw::Channel_t channel) const;
     double ReadoutWindowPreTrigger(raw::Channel_t channel) const;
@@ -240,10 +246,6 @@ namespace opdet {
 
     // fhicl config
     Config fConfig;
-
-    // pointers to services
-    detinfo::DetectorClocks const *fDetectorClocks;
-    detinfo::DetectorProperties const *fDetectorProperties;
 
     // OpDet channel map
     opdet::sbndPDMapAlg fOpDetMap;

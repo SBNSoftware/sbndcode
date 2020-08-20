@@ -151,11 +151,12 @@ namespace sbnd {
    
     if (trackListHandle.isValid() && crtListHandle.isValid() ){
       
+      auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
       // Loop over all the reconstructed tracks 
       for(size_t track_i = 0; track_i < trackList.size(); track_i++) {
 
         // Get the closest matched time
-        std::pair<double, double> matchedTime = t0Alg.T0AndDCAFromCRTHits(*trackList[track_i], crtHits, event);
+        std::pair<double, double> matchedTime = t0Alg.T0AndDCAFromCRTHits(detProp, *trackList[track_i], crtHits, event);
         if(matchedTime.first != -99999){
           mf::LogInfo("CRTT0Matching")
             <<"Matched time = "<<matchedTime.first<<" [us] to track "<<trackList[track_i]->ID()<<" with DCA = "<<matchedTime.second;

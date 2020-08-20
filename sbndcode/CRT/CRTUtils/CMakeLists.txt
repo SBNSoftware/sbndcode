@@ -9,6 +9,7 @@ art_make(    LIBRARY_NAME sbndcode_CRTUtils
                            lardataobj_RawData
                            lardataobj_RecoBase
                            lardata_RecoObjects  
+                           lardataalg_DetectorInfo
                            larpandora_LArPandoraInterface
                            nusimdata_SimulationBase
                            cetlib cetlib_except

@@ -19,6 +19,7 @@
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
@@ -270,11 +271,14 @@ namespace sbnd {
     //                            ANGLE AND DISTANCE OF CLOSEST APPROACH ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
+
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
 
       if(particles.find(trackTrueID) == particles.end()) continue;
       // Only consider primary muons
@@ -288,7 +292,7 @@ namespace sbnd {
       //                                        SINGLE ANGLE CUT ANALYSIS
       //----------------------------------------------------------------------------------------------------------
       // Find the closest track by angle
-      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
+      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
       if(closestAngle.second != -99999){ 
         hAngle->Fill(closestAngle.second);
       }
@@ -335,7 +339,7 @@ namespace sbnd {
       //                                        SINGLE DCA CUT ANALYSIS
       //----------------------------------------------------------------------------------------------------------
       // Find the closest track by average distance of closest approach
-      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
+      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
       if(closestDCA.second != -99999){
         hDCA->Fill(closestDCA.second);
       }
@@ -381,11 +385,11 @@ namespace sbnd {
       //----------------------------------------------------------------------------------------------------------
       //                                    JOINT DCA AND ANGLE CUT ANALYSIS
       //----------------------------------------------------------------------------------------------------------
-      std::vector<crt::CRTTrack> possTracks = trackAlg.AllPossibleCRTTracks(tpcTrack, crtTracks, event);
+      std::vector<crt::CRTTrack> possTracks = trackAlg.AllPossibleCRTTracks(detProp, tpcTrack, crtTracks, event);
       for(auto const& possTrack : possTracks){
         int crtTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, possTrack);
         double angle = trackAlg.AngleBetweenTracks(tpcTrack, possTrack);
-        double DCA = trackAlg.AveDCABetweenTracks(tpcTrack, possTrack, event);
+        double DCA = trackAlg.AveDCABetweenTracks(detProp, tpcTrack, possTrack, event);
         if(crtTrueID == trackTrueID && crtTrueID != -99999){
           hMatchAngleDCA->Fill(angle, DCA);
         }
@@ -417,5 +421,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTTrackMatchingAna)
 } // namespace sbnd
-
-

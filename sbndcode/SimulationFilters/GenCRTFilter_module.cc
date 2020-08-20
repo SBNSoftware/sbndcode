@@ -45,8 +45,6 @@ namespace filt{
       bool fUseReadoutWindow;
 
       geo::GeometryCore const* fGeometryService;
-      detinfo::DetectorClocks const* fDetectorClocks;
-      detinfo::DetectorProperties const* fDetectorProperties;
       double readoutWindow;
       double driftTime;
 
@@ -66,10 +64,10 @@ namespace filt{
     this->reconfigure(pset);
     
     fGeometryService = lar::providerFrom<geo::Geometry>();
-    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    readoutWindow  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-    driftTime = (2.*fGeometryService->DetHalfWidth())/fDetectorProperties->DriftVelocity(); // [us]
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
+    readoutWindow  = clockData.TPCTick2Time((double)detProp.ReadOutWindowSize()); // [us]
+    driftTime = (2.*fGeometryService->DetHalfWidth())/detProp.DriftVelocity(); // [us]
   }
 
 
@@ -92,6 +90,9 @@ namespace filt{
   bool GenFilter::filter(art::Event & e){
     std::vector< art::Handle< std::vector<simb::MCTruth> > > mclists;
     e.getManyByType(mclists);
+
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
+
     for (unsigned int i = 0; i < mclists.size() ; i++){
       for (unsigned int j = 0; j < mclists[i]->size(); j++){
         //Should have the truth record for the event now
@@ -108,8 +109,8 @@ namespace filt{
             // Get the minimum and maximum |x| position in the TPC
             std::pair<double, double> xLimits = XLimitsTPC(particle);
             // Calculate the expected time of arrival of those points
-            double minTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.second)/fDetectorProperties->DriftVelocity();
-            double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/fDetectorProperties->DriftVelocity();
+            double minTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.second)/detProp.DriftVelocity();
+            double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/detProp.DriftVelocity();
             // If both times are below or above the readout window time then skip
             if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
           }

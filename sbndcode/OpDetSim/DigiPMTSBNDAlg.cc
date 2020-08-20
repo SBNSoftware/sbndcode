@@ -9,7 +9,7 @@ namespace opdet {
 
   DigiPMTSBNDAlg::DigiPMTSBNDAlg(ConfigurationParameters_t const& config)
     : fParams(config)
-    , fSampling(fParams.timeService->OpticalClock().Frequency())
+    , fSampling(fParams.frequency)
     , fQEDirect(fParams.QEDirect / fParams.larProp->ScintPreScale())
     , fQERefl(fParams.QERefl / fParams.larProp->ScintPreScale())
       //  , fSinglePEmodel(fParams.SinglePEmodel)
@@ -370,7 +370,7 @@ namespace opdet {
   std::unique_ptr<DigiPMTSBNDAlg>
   DigiPMTSBNDAlgMaker::operator()(
     detinfo::LArProperties const& larProp,
-    detinfo::DetectorClocks const& detClocks,
+    detinfo::DetectorClocksData const& clockData,
     CLHEP::HepRandomEngine* engine
     ) const
   {
@@ -379,7 +379,7 @@ namespace opdet {
 
     // set up parameters
     params.larProp = &larProp;
-    params.timeService = &detClocks;
+    params.frequency = clockData.OpticalClock().Frequency();
     params.engine = engine;
 
     return std::make_unique<DigiPMTSBNDAlg>(params);

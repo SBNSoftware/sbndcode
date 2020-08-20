@@ -30,10 +30,13 @@
 #define SIGNALSHAPINGSERVICELARIAT_H
 
 #include <vector>
+
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Services/Registry/ActivityRegistry.h"
 #include "art/Framework/Services/Registry/ServiceMacros.h"
 #include "lardata/Utilities/SignalShaping.h"
+namespace detinfo { class DetectorClocksData; }
+
 #include "TF1.h"
 #include "TH1D.h"
 
@@ -65,15 +68,18 @@ namespace util {
 
     const util::SignalShaping& SignalShaping(unsigned int channel) const;
 
-    int FieldResponseTOffset(unsigned int const channel) const;
+    int FieldResponseTOffset(detinfo::DetectorClocksData const& clockData,
+                             unsigned int const channel) const;
 
     // Do convolution calcution (for simulation).
 
-    template <class T> void Convolute(unsigned int channel, std::vector<T>& func) const;
+    template <class T> void Convolute(detinfo::DetectorClocksData const& clockData,
+                                      unsigned int channel, std::vector<T>& func) const;
 
     // Do deconvolution calcution (for reconstruction).
 
-    template <class T> void Deconvolute(unsigned int channel, std::vector<T>& func) const;
+    template <class T> void Deconvolute(detinfo::DetectorClocksData const& clockData,
+                                        unsigned int channel, std::vector<T>& func) const;
 
     double GetDeconNorm(){return fDeconNorm;};
 
@@ -163,12 +169,13 @@ namespace util {
 }
 //----------------------------------------------------------------------
 // Do convolution.
-template <class T> inline void util::SignalShapingServiceSBND::Convolute(unsigned int channel, std::vector<T>& func) const
+template <class T> inline void util::SignalShapingServiceSBND::Convolute(detinfo::DetectorClocksData const& clockData,
+                                                                         unsigned int channel, std::vector<T>& func) const
 {
   SignalShaping(channel).Convolute(func);
 
   //negative number;
-  int time_offset = FieldResponseTOffset(channel);
+  int time_offset = FieldResponseTOffset(clockData, channel);
   
   std::vector<T> temp;
   if (time_offset <= 0) {
@@ -185,12 +192,13 @@ template <class T> inline void util::SignalShapingServiceSBND::Convolute(unsigne
 
 //----------------------------------------------------------------------
 // Do deconvolution.
-template <class T> inline void util::SignalShapingServiceSBND::Deconvolute(unsigned int channel, std::vector<T>& func) const
+template <class T> inline void util::SignalShapingServiceSBND::Deconvolute(detinfo::DetectorClocksData const& clockData,
+                                                                           unsigned int channel, std::vector<T>& func) const
 {
   SignalShaping(channel).Deconvolute(func);
   
   //negative number;
-  int time_offset = FieldResponseTOffset(channel);
+  int time_offset = FieldResponseTOffset(clockData, channel);
   
   std::vector<T> temp;
   if (time_offset <= 0) {

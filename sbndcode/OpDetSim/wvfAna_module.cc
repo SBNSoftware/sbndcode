@@ -94,8 +94,8 @@ namespace opdet {
     fInputModuleName = p.get< std::string >("InputModule" );
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
 
-    auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency()); // MHz
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    fSampling = clockData.OpticalClock().Frequency(); // MHz
 
   }
 

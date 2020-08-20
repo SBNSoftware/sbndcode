@@ -105,7 +105,6 @@ int galleryAnalysis(std::string const& configFile, std::vector<std::string> cons
   
     // DetectorProperties setup
     auto detp = testing::setupProvider<detinfo::DetectorPropertiesStandard>(config.get<fhicl::ParameterSet>("services.DetectorPropertiesService"), detinfo::DetectorPropertiesStandard::providers_type{geom.get(),static_cast<detinfo::LArProperties const*>(larp.get()), // TODO type cast is required until issue #18001 is solved
-        static_cast<detinfo::DetectorClocks const*>(detclk.get())});
   
     // ***************************************************************************
     // ***  SERVICE PROVIDER SETUP END    ****************************************
