@@ -12,6 +12,7 @@
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
@@ -252,11 +253,13 @@ namespace sbnd {
     //                                    STOPPING CHI2 ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+
     for(auto const& tpcTrack : (*tpcTrackHandle)){
 
       // Match to the true particle
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       std::string type = "none";
       if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()) type = "NuMuTrack";
       if(std::find(nuParticleIds.begin(), nuParticleIds.end(), trueId) != nuParticleIds.end()) type = "NuTrack";
@@ -307,7 +310,6 @@ namespace sbnd {
 
     }
 
-
     //Loop over the pfparticle map
     for (PFParticleIdMap::const_iterator it = pfParticleMap.begin(); it != pfParticleMap.end(); ++it){
 
@@ -337,7 +339,7 @@ namespace sbnd {
 
         // Truth match muon tracks and pfps
         std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
         if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()){ 
           type = "NuMuPfp";
         }
@@ -359,7 +361,7 @@ namespace sbnd {
 
       recob::Track tpcTrack = nuTracks[0];
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
 
       std::vector<art::Ptr<anab::Calorimetry>> calos = findManyCalo.at(tpcTrack.ID());
       if(calos.size()==0) continue;
@@ -424,4 +426,3 @@ namespace sbnd {
 
   DEFINE_ART_MODULE(StoppingCosmicIdAna)
 } // namespace sbnd
-

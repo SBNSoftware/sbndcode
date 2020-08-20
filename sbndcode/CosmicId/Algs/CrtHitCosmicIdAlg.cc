@@ -30,10 +30,11 @@ void CrtHitCosmicIdAlg::reconfigure(const Config& config){
 
 
 // Returns true if matched to CRTHit outside beam time
-bool CrtHitCosmicIdAlg::CrtHitCosmicId(recob::Track track, std::vector<crt::CRTHit> crtHits, const art::Event& event){
+bool CrtHitCosmicIdAlg::CrtHitCosmicId(detinfo::DetectorPropertiesData const& detProp,
+                                       recob::Track track, std::vector<crt::CRTHit> crtHits, const art::Event& event){
 
   // Get the closest matched time from CRT hits
-  double crtHitTime = t0Alg.T0FromCRTHits(track, crtHits, event);
+  double crtHitTime = t0Alg.T0FromCRTHits(detProp, track, crtHits, event);
 
   // If time is valid and outside the beam time then tag as a cosmic
   if(crtHitTime != -99999 && (crtHitTime < fBeamTimeMin || crtHitTime > fBeamTimeMax)) return true;

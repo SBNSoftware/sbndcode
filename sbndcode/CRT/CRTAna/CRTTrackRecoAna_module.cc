@@ -18,6 +18,7 @@
 
 // LArSoft includes
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 
 // Framework includes
@@ -382,7 +383,8 @@ namespace sbnd {
       evd.SetDrawTrueTracks(true);
       if(fVeryVerbose) evd.SetPrint(true);
       if(fPlotTrackID != -99999) evd.SetTrueId(fPlotTrackID);
-      evd.Draw(event);
+      auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+      evd.Draw(clockData, event);
     }
 
 
@@ -400,5 +402,3 @@ namespace sbnd {
 namespace {
 
 } // local namespace
-
-

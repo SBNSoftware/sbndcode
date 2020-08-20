@@ -22,7 +22,7 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-//#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+namespace detinfo { class DetectorClocksData; }
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -187,7 +187,7 @@ namespace sbnd{
 
     void DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour);
 
-    void Draw(const art::Event& event);
+    void Draw(detinfo::DetectorClocksData const& clockData, const art::Event& event);
 
   private:
 

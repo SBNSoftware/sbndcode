@@ -13,6 +13,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h" //FIXME Why is this needed to compile?!
 
 // LArSoft includes
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/AnalysisBase/T0.h"
@@ -168,13 +169,15 @@ namespace sbnd {
     //                                        GETTING THE T0 TAGS
     //----------------------------------------------------------------------------------------------------------
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
 
       // Get the true particle
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       if(particles.find(trackTrueID) == particles.end()) continue;
 
       // Only consider primary muons
@@ -233,5 +236,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(GettingT0Tags)
 } // namespace sbnd
-
-

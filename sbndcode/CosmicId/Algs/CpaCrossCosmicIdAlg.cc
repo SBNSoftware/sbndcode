@@ -1,19 +1,17 @@
 #include "CpaCrossCosmicIdAlg.h"
 
+#include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
+
 namespace sbnd{
 
 CpaCrossCosmicIdAlg::CpaCrossCosmicIdAlg(const Config& config){
 
   this->reconfigure(config);
 
-  fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-
 }
 
 
 CpaCrossCosmicIdAlg::CpaCrossCosmicIdAlg(){
-
-  fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
 
 }
 
@@ -41,7 +39,8 @@ void CpaCrossCosmicIdAlg::reconfigure(const Config& config){
 }
 
 // Calculate the time by stitching tracks across the CPA
-std::pair<double, bool> CpaCrossCosmicIdAlg::T0FromCpaStitching(recob::Track t1, std::vector<recob::Track> tracks){
+  std::pair<double, bool> CpaCrossCosmicIdAlg::T0FromCpaStitching(detinfo::DetectorPropertiesData const& detProp,
+                                                                  recob::Track t1, std::vector<recob::Track> tracks){
   
   std::vector<std::pair<double, std::pair<double, bool>>> matchCandidates;
   double matchedTime = -99999;
@@ -105,7 +104,7 @@ std::pair<double, bool> CpaCrossCosmicIdAlg::T0FromCpaStitching(recob::Track t1,
     std::sort(matchCandidates.begin(), matchCandidates.end(), [](auto& left, auto& right){
               return left.first < right.first;});
     double shiftX = matchCandidates[0].second.first;
-    matchedTime = -((shiftX - fTpcGeo.CpaWidth())/fDetectorProperties->DriftVelocity()); //subtract CPA width
+    matchedTime = -((shiftX - fTpcGeo.CpaWidth())/detProp.DriftVelocity()); //subtract CPA width
     returnVal = std::make_pair(matchedTime, matchCandidates[0].second.second);
   }
 
@@ -113,7 +112,8 @@ std::pair<double, bool> CpaCrossCosmicIdAlg::T0FromCpaStitching(recob::Track t1,
 }
 
 // Tag tracks as cosmics from CPA stitching t0
-bool CpaCrossCosmicIdAlg::CpaCrossCosmicId(recob::Track track, std::vector<recob::Track> tracks, art::FindManyP<recob::Hit> hitAssoc){
+bool CpaCrossCosmicIdAlg::CpaCrossCosmicId(detinfo::DetectorPropertiesData const& detProp,
+                                           recob::Track track, std::vector<recob::Track> tracks, art::FindManyP<recob::Hit> hitAssoc){
 
   // Sort tracks by tpc
   std::vector<recob::Track> tpcTracksTPC0;
@@ -136,12 +136,12 @@ bool CpaCrossCosmicIdAlg::CpaCrossCosmicId(recob::Track track, std::vector<recob
   bool stitchExit = false;
   // Try to match tracks from CPA crossers
   if(tpc == 0){
-    std::pair<double, bool> stitchResults = T0FromCpaStitching(track, tpcTracksTPC1);
+    std::pair<double, bool> stitchResults = T0FromCpaStitching(detProp, track, tpcTracksTPC1);
     stitchTime = stitchResults.first;
     stitchExit = stitchResults.second;
   }
   else if(tpc == 1){
-    std::pair<double, bool> stitchResults = T0FromCpaStitching(track, tpcTracksTPC0);
+    std::pair<double, bool> stitchResults = T0FromCpaStitching(detProp, track, tpcTracksTPC0);
     stitchTime = stitchResults.first;
     stitchExit = stitchResults.second;
   }

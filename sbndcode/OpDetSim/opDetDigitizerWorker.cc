@@ -19,6 +19,7 @@ opdet::opDetDigitizerWorker::opDetDigitizerWorker(unsigned no,
 {}
 
 void opdet::opDetDigitizerWorkerThread(const opdet::opDetDigitizerWorker &worker,
+                                       detinfo::DetectorClocksData const& clockData,
                                        opdet::opDetDigitizerWorker::Semaphore &sem_start,
                                        opdet::opDetDigitizerWorker::Semaphore &sem_finish,
                                        bool ApplyTriggerLocations,
@@ -32,11 +33,11 @@ void opdet::opDetDigitizerWorkerThread(const opdet::opDetDigitizerWorker &worker
     if (*finished) break;
 
     if (do_apply_trigger_locations) {
-      worker.ApplyTriggerLocations();
+      worker.ApplyTriggerLocations(clockData);
       do_apply_trigger_locations = false;
     }
     else {
-      worker.Start();
+      worker.Start(clockData);
       do_apply_trigger_locations = ApplyTriggerLocations;
     }
 
@@ -86,17 +87,17 @@ unsigned opdet::opDetDigitizerWorker::StartChannelToProcess(unsigned n) const
   return n_per_job * fThreadNo + leftover;
 }
 
-void opdet::opDetDigitizerWorker::Start() const
+void opdet::opDetDigitizerWorker::Start(detinfo::DetectorClocksData const& clockData) const
 {
   auto arapucaDigitizer = fConfig.makeArapucaDigi(
                             *(lar::providerFrom<detinfo::LArPropertiesService>()),
-                            *(lar::providerFrom<detinfo::DetectorClocksService>()),
+                            clockData,
                             fEngine
                           );
 
   auto pmtDigitizer = fConfig.makePMTDigi(
                         *(lar::providerFrom<detinfo::LArPropertiesService>()),
-                        *(lar::providerFrom<detinfo::DetectorClocksService>()),
+                        clockData,
                         fEngine
                       );
   MakeWaveforms(pmtDigitizer.get(), arapucaDigitizer.get());
@@ -108,7 +109,7 @@ opdet::opDetDigitizerWorker::~opDetDigitizerWorker()
   delete fEngine;
 }
 
-void opdet::opDetDigitizerWorker::ApplyTriggerLocations() const
+void opdet::opDetDigitizerWorker::ApplyTriggerLocations(detinfo::DetectorClocksData const& clockData) const
 {
   unsigned start = StartChannelToProcess(fConfig.nChannels);
   unsigned n = NChannelsToProcess(fConfig.nChannels);
@@ -123,7 +124,7 @@ void opdet::opDetDigitizerWorker::ApplyTriggerLocations() const
     // only work on the prescribed channels
     if (waveform.ChannelNumber() < start || waveform.ChannelNumber() >= start + n) continue;
 
-    std::vector<raw::OpDetWaveform> waveforms = fTriggerAlg.ApplyTriggerLocations(waveform);
+    std::vector<raw::OpDetWaveform> waveforms = fTriggerAlg.ApplyTriggerLocations(clockData, waveform);
 
     std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*fTriggeredWaveforms));
   }

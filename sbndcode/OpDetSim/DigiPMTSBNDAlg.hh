@@ -60,7 +60,7 @@ namespace opdet {
       bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
-      detinfo::DetectorClocks const* timeService = nullptr; //< DetectorClocks service provider.
+      double frequency;       //wave sampling frequency (GHz)
       CLHEP::HepRandomEngine* engine = nullptr;
     };// ConfigurationParameters_t
 
@@ -232,7 +232,7 @@ namespace opdet {
 
     std::unique_ptr<DigiPMTSBNDAlg> operator()(
       detinfo::LArProperties const& larProp,
-      detinfo::DetectorClocks const& detClocks,
+      detinfo::DetectorClocksData const& clockData,
       CLHEP::HepRandomEngine* engine
       ) const;
 
