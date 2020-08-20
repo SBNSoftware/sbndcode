@@ -1,8 +1,6 @@
 cet_enable_asserts()
 
 art_make(
-   BASENAME_ONLY
-   LIBRARY_NAME   sbndcode_OpDetReco_OpHit
    LIB_LIBRARIES
          larana_OpticalDetector_OpHitFinder
          larcore_Geometry_Geometry_service
