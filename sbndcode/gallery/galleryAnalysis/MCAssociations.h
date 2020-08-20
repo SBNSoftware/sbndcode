@@ -13,7 +13,7 @@
 // LArSoft libraries
 #include "gallery/Event.h"
 #include "larcorealg/Geometry/GeometryCore.h"
-#include "lardataalg/DetectorInfo/DetectorProperties.h"
+#include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "lardataobj/RecoBase/Track.h"
 
@@ -47,7 +47,7 @@ public:
     MCAssociations(fhicl::ParameterSet const& config);
   
     void setup(const geo::GeometryCore&,
-               const detinfo::DetectorProperties&,
+               const detinfo::DetectorPropertiesData&,
                TDirectory*);
   
     void prepare();
@@ -69,7 +69,8 @@ private:
     std::string              fLocalDirName;
     
     geo::GeometryCore const*           fGeometry           = nullptr;
-    const detinfo::DetectorProperties* fDetectorProperties = nullptr;   ///< Detector properties service
+    /// Detector properties data pointer cannot point to a temporary object!
+    const detinfo::DetectorPropertiesData* fDetectorProperties = nullptr;
     TDirectory*                        fDir                = nullptr;
     
     std::unique_ptr<TH1>      fNTracks;
