@@ -145,7 +145,7 @@ double SBNDuBooNEDataDrivenNoiseService::GetRandomTF1(TF1* func) const{
   
 //**********************************************************************
 
-int SBNDuBooNEDataDrivenNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) const {
+int SBNDuBooNEDataDrivenNoiseService::addNoise(detinfo::DetectorClocksData const& clockData, Channel chan, AdcSignalVector& sigs) const {
   CLHEP::RandFlat flat(*m_pran);
   CLHEP::RandGaussQ gaus(*m_pran);
 
@@ -429,8 +429,7 @@ generateGaussianNoise(detinfo::DetectorClocksData const& clockData,
 }
 ////**********************************************************************
 
-void SBNDuBooNEDataDrivenNoiseService::
-generateCoherentNoise(detinfo::DetectorClocksData const& clockData,
+void SBNDuBooNEDataDrivenNoiseService::generateCoherentNoise(detinfo::DetectorClocksData const& clockData,
                       AdcSignalVector& noise, std::vector<float> gausNorm,
 	                    std::vector<float> gausMean, std::vector<float> gausSigma,
 	                    float cohExpNorm, float cohExpWidth, float cohExpOffset, 
@@ -573,7 +572,7 @@ void SBNDuBooNEDataDrivenNoiseService::generateNoise(detinfo::DetectorClocksData
     makeCoherentGroupsByOfflineChannel(fNChannelsPerCoherentGroup[0]);
     fCohNoiseU.resize(fCohNoiseArrayPoints); 
     for ( unsigned int i=0; i<fCohNoiseArrayPoints; ++i ) {
-      generateCoherentNoise(fCohNoiseU[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
+      generateCoherentNoise(clockData, fCohNoiseU[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
                             fCohExpNorm, fCohExpWidth, fCohExpOffset, 
                             fCohNoiseHist);
     }
@@ -582,7 +581,7 @@ void SBNDuBooNEDataDrivenNoiseService::generateNoise(detinfo::DetectorClocksData
     makeCoherentGroupsByOfflineChannel(fNChannelsPerCoherentGroup[1]);
     fCohNoiseV.resize(fCohNoiseArrayPoints);
     for ( unsigned int i=0; i<fCohNoiseArrayPoints; ++i ) {
-      generateCoherentNoise(fCohNoiseV[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
+      generateCoherentNoise(clockData, fCohNoiseV[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
                             fCohExpNorm, fCohExpWidth, fCohExpOffset, 
                             fCohNoiseHist);
     }
@@ -592,7 +591,7 @@ void SBNDuBooNEDataDrivenNoiseService::generateNoise(detinfo::DetectorClocksData
     fCohNoiseZ.resize(fCohNoiseArrayPoints);
     for ( unsigned int i=0; i<fCohNoiseArrayPoints; ++i ) {
 
-      generateCoherentNoise(fCohNoiseZ[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
+      generateCoherentNoise(clockData, fCohNoiseZ[i], fCohGausNorm, fCohGausMean, fCohGausSigma, 
                             fCohExpNorm, fCohExpWidth, fCohExpOffset, 
                             fCohNoiseHist);
     }
