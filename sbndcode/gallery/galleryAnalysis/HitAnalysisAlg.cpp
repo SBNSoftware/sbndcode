@@ -1,4 +1,3 @@
-
 #include "HitAnalysisAlg.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
@@ -45,12 +44,10 @@ void HitAnalysisAlg::reconfigure(fhicl::ParameterSet const & pset)
 //----------------------------------------------------------------------------
 /// Begin job method.
 void HitAnalysisAlg::setup(const geo::GeometryCore&           geometry,
-                           const detinfo::DetectorProperties& detectorProperties,
                            TDirectory*                        rootDirectory)
 {
     // Get geometry and detector properties
     fGeometry           = &geometry;
-    fDetectorProperties = &detectorProperties;
     fRootDirectory      = rootDirectory->mkdir(fLocalDirName.c_str());
 
     // Make a directory for these histograms
