@@ -116,7 +116,7 @@ namespace opdet{
                          (trigger_time + lflash.time) / 1600., lflash.channel_pe,
                          0, 0, 1, // this are just default values
                          Ycenter, Ywidth, Zcenter, Zwidth);
-      std::cout << "PE in opch 490: " << lflash.channel_pe[490] << std::endl;
+      // std::cout << "PE in opch 360: " << lflash.channel_pe[360] << std::endl;
       // if (lflash.time > 0 && lflash.time < 10) std::cout << "PE in opch 491: " << lflash.channel_pe[491] << std::endl;
       // if (lflash.time > 0 && lflash.time < 10) std::cout << "Total PE: " << flash.TotalPE() << std::endl;
       opflashes->emplace_back(std::move(flash));

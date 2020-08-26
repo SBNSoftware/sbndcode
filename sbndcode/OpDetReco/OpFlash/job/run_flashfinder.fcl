@@ -54,7 +54,7 @@ physics:
 {
   producers:
   {
-    # opdaq:        @local::sbnd_opdetdigitizer
+    opdaq:        @local::sbnd_opdetdigitizer
     ophit:        @local::sbnd_ophit_finder
     opflashtpc0:  @local::SBNDSimpleFlashTPC0
     opflashtpc1:  @local::SBNDSimpleFlashTPC1
@@ -72,11 +72,11 @@ physics:
   #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
   reco: [
-    # opdaq,
+    opdaq,
     ophit,
     opflashtpc0,
     opflashtpc1,
-    # mcflashtpc0,
+    mcflashtpc0,
     mcflashtpc1
   ]
 
@@ -93,4 +93,15 @@ physics:
   # ie analyzers and output streams.  these all run simultaneously
   end_paths: [ana, stream1]
 }
+
+## Uncomment these if you switch to test bench response
+# physics.producers.opdaq.SinglePEmodel: true
+# physics.producers.opdaq.PMTChargeToADC: -51.9
+# physics.producers.ophit.SPEArea: 317.1
+# physics.producers.ophit.PedAlgoPset.SampleSize: 10
+# physics.producers.ophit.PedAlgoPset.Threshold: 15
+# physics.producers.ophit.HitAlgoPset.ADCThreshold: 35
+# physics.producers.opflashtpc0.PECalib.SPEAreaGain: 317.1
+# physics.producers.opflashtpc1.PECalib.SPEAreaGain: 317.1
+
 

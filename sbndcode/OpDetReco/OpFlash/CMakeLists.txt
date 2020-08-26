@@ -1,13 +1,11 @@
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
-art_make( 
-    BASENAME_ONLY
-    LIBRARY_NAME   sbndcode_OpDetReco_OpFlash
-	LIB_LIBRARIES
+art_make(
+    LIB_LIBRARIES
         sbnd_Geometry
         sbndcode_OpDetSim
         larcore_Geometry_Geometry_service
         lardataobj_RecoBase
-        larsim_Simulation 
+        larsim_Simulation
         lardataobj_Simulation
         nusimdata_SimulationBase
         ${LARDATA_LIB}
@@ -38,7 +36,7 @@ art_make(
         sbnd_Geometry
         larcore_Geometry_Geometry_service
         lardataobj_RecoBase
-        larsim_Simulation 
+        larsim_Simulation
         lardataobj_Simulation
         nusimdata_SimulationBase
         ${LARDATA_LIB}
