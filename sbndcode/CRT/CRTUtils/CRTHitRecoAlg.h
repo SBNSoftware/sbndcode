@@ -24,7 +24,10 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+namespace detinfo {
+  class DetectorClocksData;
+  class DetectorPropertiesData;
+}
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -116,7 +119,9 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
-    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CreateTaggerStrips(std::vector<art::Ptr<crt::CRTData>> data);
+    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CreateTaggerStrips(detinfo::DetectorClocksData const& clockData,
+                                                                                         detinfo::DetectorPropertiesData const& detProp,
+                                                                                         std::vector<art::Ptr<crt::CRTData>> data);
 
     CRTStrip CreateCRTStrip(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2, size_t ind);
 
@@ -146,10 +151,6 @@ namespace sbnd{
 
   private:
 
-    detinfo::DetectorClocks const* fDetectorClocks;
-    detinfo::DetectorProperties const* fDetectorProperties;
-    //detinfo::ElecClock fTrigClock;
-    
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
 

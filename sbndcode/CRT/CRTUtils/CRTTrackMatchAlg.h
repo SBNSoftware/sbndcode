@@ -92,12 +92,12 @@ namespace sbnd{
     };
 
     CRTTrackMatchAlg(const Config& config);
-    CRTTrackMatchAlg(const Config& config, geo::GeometryCore const* GeometryService,  detinfo::DetectorProperties const* DetectorProperties);
+    CRTTrackMatchAlg(const Config& config, geo::GeometryCore const* GeometryService);
 
     CRTTrackMatchAlg(const fhicl::ParameterSet& pset) :
       CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})()) {}
-    CRTTrackMatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const* GeometryService,  detinfo::DetectorProperties const* DetectorProperties) :
-      CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService, DetectorProperties) {}
+    CRTTrackMatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const* GeometryService) :
+      CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService) {}
 
     CRTTrackMatchAlg();
 
@@ -114,49 +114,63 @@ namespace sbnd{
     // Function to calculate if a CRTTrack crosses the TPC volume
     bool CrossesAPA(crt::CRTTrack track);
 
-    double T0FromCRTTracks(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
-    double T0FromCRTTracks(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<crt::CRTTrack> crtTracks);
+    double T0FromCRTTracks(detinfo::DetectorPropertiesData const& detProp,
+                           recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
+    double T0FromCRTTracks(detinfo::DetectorPropertiesData const& detProp,
+                           recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<crt::CRTTrack> crtTracks);
 
     // Find the closest valid matching CRT track ID
-    int GetMatchedCRTTrackId(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
-    int GetMatchedCRTTrackId(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<crt::CRTTrack> crtTracks);
+    int GetMatchedCRTTrackId(detinfo::DetectorPropertiesData const& detProp,
+                             recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
+    int GetMatchedCRTTrackId(detinfo::DetectorPropertiesData const& detProp,
+                             recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<crt::CRTTrack> crtTracks);
 
     // Find the closest valid matching CRT track ID and return the minimised matching metric
-    std::pair<int,double> GetMatchedCRTTrackIdAndScore(recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
-    std::pair<int,double> GetMatchedCRTTrackIdAndScore(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<crt::CRTTrack> crtTracks);
+    std::pair<int,double> GetMatchedCRTTrackIdAndScore(detinfo::DetectorPropertiesData const& detProp,
+                                                       recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
+    std::pair<int,double> GetMatchedCRTTrackIdAndScore(detinfo::DetectorPropertiesData const& detProp,
+                                                       recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<crt::CRTTrack> crtTracks);
 
     // Get all CRT tracks that cross the right TPC within an allowed time
-    std::vector<crt::CRTTrack> AllPossibleCRTTracks(recob::Track tpcTrack, 
+    std::vector<crt::CRTTrack> AllPossibleCRTTracks(detinfo::DetectorPropertiesData const& detProp,
+                                                    recob::Track tpcTrack,
                                                     std::vector<crt::CRTTrack> crtTracks, 
                                                     const art::Event& event); 
 
-    std::vector<crt::CRTTrack> AllPossibleCRTTracks(recob::Track tpcTrack, 
+    std::vector<crt::CRTTrack> AllPossibleCRTTracks(detinfo::DetectorPropertiesData const& detProp,
+                                                    recob::Track tpcTrack,
                                                     std::vector<art::Ptr<recob::Hit>> hits,
                                                     std::vector<crt::CRTTrack> crtTracks);
 
     // Find the closest matching crt track by angle between tracks within angle and DCA limits
-    std::pair<crt::CRTTrack, double> ClosestCRTTrackByAngle(recob::Track tpcTrack, 
+    std::pair<crt::CRTTrack, double> ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const& detProp,
+                                                            recob::Track tpcTrack,
                                                             std::vector<crt::CRTTrack> crtTracks, 
                                                             const art::Event& event,
                                                             double minDCA = 0.); 
-    std::pair<crt::CRTTrack, double> ClosestCRTTrackByAngle(recob::Track tpcTrack, 
+    std::pair<crt::CRTTrack, double> ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const& detProp,
+                                                            recob::Track tpcTrack,
                                                             std::vector<art::Ptr<recob::Hit>> hits, 
                                                             std::vector<crt::CRTTrack> crtTracks, 
                                                             double minDCA = 0.); 
     // Find the closest matching crt track by average DCA between tracks within angle and DCA limits
-    std::pair<crt::CRTTrack, double> ClosestCRTTrackByDCA(recob::Track tpcTrack, 
+    std::pair<crt::CRTTrack, double> ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const& detProp,
+                                                          recob::Track tpcTrack,
                                                           std::vector<crt::CRTTrack> crtTracks, 
 							                                            const art::Event& event,
                                                           double minAngle = 0.); 
-    std::pair<crt::CRTTrack, double> ClosestCRTTrackByDCA(recob::Track tpcTrack, 
+    std::pair<crt::CRTTrack, double> ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const& detProp,
+                                                          recob::Track tpcTrack,
                                                           std::vector<art::Ptr<recob::Hit>> hits, 
                                                           std::vector<crt::CRTTrack> crtTracks, 
                                                           double minAngle = 0.); 
     // Find the closest matching crt track by average DCA between tracks within angle and DCA limits
-    std::pair<crt::CRTTrack, double> ClosestCRTTrackByScore(recob::Track tpcTrack, 
+    std::pair<crt::CRTTrack, double> ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const& detProp,
+                                                            recob::Track tpcTrack,
                                                           std::vector<crt::CRTTrack> crtTracks, 
 							                                            const art::Event& event); 
-    std::pair<crt::CRTTrack, double> ClosestCRTTrackByScore(recob::Track tpcTrack, 
+    std::pair<crt::CRTTrack, double> ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const& detProp,
+                                                            recob::Track tpcTrack,
                                                           std::vector<art::Ptr<recob::Hit>> hits, 
                                                           std::vector<crt::CRTTrack> crtTracks);
 
@@ -165,13 +179,14 @@ namespace sbnd{
 
     // Calculate the average DCA between tracks
     double AveDCABetweenTracks(recob::Track tpcTrack, crt::CRTTrack crtTrack, double shift);
-    double AveDCABetweenTracks(recob::Track tpcTrack, crt::CRTTrack crtTrack, const art::Event& event);
-    double AveDCABetweenTracks(recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, crt::CRTTrack crtTrack);
+    double AveDCABetweenTracks(detinfo::DetectorPropertiesData const& detProp,
+                               recob::Track tpcTrack, crt::CRTTrack crtTrack, const art::Event& event);
+    double AveDCABetweenTracks(detinfo::DetectorPropertiesData const& detProp,
+                               recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, crt::CRTTrack crtTrack);
 
   private:
 
     geo::GeometryCore const* fGeometryService;
-    detinfo::DetectorProperties const* fDetectorProperties;
 
     CRTBackTracker fCrtBackTrack;
 

@@ -70,7 +70,7 @@ sbnd_uboonedatadrivennoiseservice: {
   
   EnableCoherentNoise: false
   CohNoiseArrayPoints: 1000
-  NChannelsPerCoherentGroup: 128
+  NChannelsPerCoherentGroup: [ 40, 40, 48 ]
   CohGausNorm: [ 6.88535e+00, 5.21692e-01, 2.00001e+00, 2.03630e+00, 2.00003e+00 ]
   CohGausMean: [ 3.55622e+01, 6.63823e-02, 1.16200e+02, 1.73900e+02, 2.89800e+02 ]
   CohGausSigma: [ 1.75992e+01, 3.16607e+02, 3.68024e-01 , 3.26335e-01, 5.14720e-02 ]

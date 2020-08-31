@@ -20,6 +20,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 
 // LArSoft includes
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "larcore/Geometry/Geometry.h"
@@ -380,21 +381,24 @@ namespace sbnd {
 
     //------------------------------------------- CRT T0 MATCHING ----------------------------------------------
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
+
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated true particle
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int partID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int partID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       if(truthMatching.find(partID) == truthMatching.end()) continue;
       truthMatching[partID].hasTpcTrack = true;
 
       // Calculate t0 from CRT Hit matching
       //int tpc = fTpcGeo.DetectedInTPC(hits);
-      double hitT0 = crtT0Alg.T0FromCRTHits(tpcTrack, crtHits, event);
+      double hitT0 = crtT0Alg.T0FromCRTHits(detProp, tpcTrack, crtHits, event);
       if(hitT0 != -99999) truthMatching[partID].hitT0s.push_back(hitT0);
 
       // Calculate t0 from CRT Track matching
-      double trackT0 = crtTrackAlg.T0FromCRTTracks(tpcTrack, crtTracks, event);
+      double trackT0 = crtTrackAlg.T0FromCRTTracks(detProp, tpcTrack, crtTracks, event);
       if(trackT0 != -99999) truthMatching[partID].trackT0s.push_back(trackT0);
 
     }
@@ -616,5 +620,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTFullRecoAna)
 } // namespace sbnd
-
-

@@ -1,5 +1,7 @@
 #include "CosmicIdAlg.h"
 
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+
 namespace sbnd{
 
 CosmicIdAlg::CosmicIdAlg(const Config& config){
@@ -107,6 +109,8 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
   // Get associations between track and calorimetry collections
   art::FindManyP<anab::Calorimetry> findManyCalo(tpcTrackHandle, event, fCaloModuleLabel);
 
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
+
   // Tag cosmics from pandora T0 associations
   if(fApplyPandoraNuScoreCut){
     if(pnTag.PandoraNuScoreCosmicId(track, event)) return true;
@@ -142,12 +146,12 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
       tracks.push_back(tpcTrack);
     }
 
-    if(ccTag.CpaCrossCosmicId(track, tracks, findManyHits)) return true;
+    if(ccTag.CpaCrossCosmicId(detProp, track, tracks, findManyHits)) return true;
   }
 
   // Tag cosmics which cross the APA
   if(fApplyApaCrossCut){
-    if(acTag.ApaCrossCosmicId(track, hits, t0Tpc0, t0Tpc1)) return true;
+    if(acTag.ApaCrossCosmicId(detProp, track, hits, t0Tpc0, t0Tpc1)) return true;
   }
 
   // Tag cosmics which match CRT tracks
@@ -155,7 +159,7 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
     auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCrtTrackModuleLabel);
     std::vector<crt::CRTTrack> crtTracks = (*crtTrackHandle);
 
-    if(ctTag.CrtTrackCosmicId(track, crtTracks, event)) return true;
+    if(ctTag.CrtTrackCosmicId(detProp, track, crtTracks, event)) return true;
   }
 
   // Tag cosmics which match CRT hits
@@ -163,7 +167,7 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
     auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCrtHitModuleLabel);
     std::vector<crt::CRTHit> crtHits = (*crtHitHandle);
 
-    if(chTag.CrtHitCosmicId(track, crtHits, event)) return true;
+    if(chTag.CrtHitCosmicId(detProp, track, crtHits, event)) return true;
   }
 
   return false;
@@ -171,7 +175,8 @@ bool CosmicIdAlg::CosmicId(recob::Track track, const art::Event& event, std::vec
 }
 
 // Run cuts to decide if PFParticle looks like a cosmic
-bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1){
+bool CosmicIdAlg::CosmicId(detinfo::DetectorPropertiesData const& detProp,
+                           recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1){
 
   // Get associations between pfparticles and tracks
   art::Handle< std::vector<recob::PFParticle> > pfParticleHandle;
@@ -236,7 +241,7 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
     auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCrtTrackModuleLabel);
     std::vector<crt::CRTTrack> crtTracks = (*crtTrackHandle);
 
-    if(ctTag.CrtTrackCosmicId(track, crtTracks, event)) return true;
+    if(ctTag.CrtTrackCosmicId(detProp, track, crtTracks, event)) return true;
   }
 
   // Tag cosmics which cross the CPA
@@ -246,7 +251,7 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
       tracks.push_back(tpcTrack);
     }
 
-    if(ccTag.CpaCrossCosmicId(track, tracks, findManyHits)) return true;
+    if(ccTag.CpaCrossCosmicId(detProp, track, tracks, findManyHits)) return true;
   }
 
   // Find second longest particle if trying to merge tracks
@@ -298,10 +303,10 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
       // Check if either track crosses APA
       if(fApplyApaCrossCut){
         // Apply apa crossing cut to the longest track
-        if(acTag.ApaCrossCosmicId(track, hits, t0Tpc0, t0Tpc1)) return true;
+        if(acTag.ApaCrossCosmicId(detProp, track, hits, t0Tpc0, t0Tpc1)) return true;
         // Also apply to secondary track FIXME need to check primary track doesn't go out of bounds
         std::vector<art::Ptr<recob::Hit>> hits2 = findManyHits.at(track2.ID());
-        if(acTag.ApaCrossCosmicId(track2, hits2, t0Tpc0, t0Tpc1)) return true;
+        if(acTag.ApaCrossCosmicId(detProp, track2, hits2, t0Tpc0, t0Tpc1)) return true;
       }
 
       // Check if either track matches CRT hit
@@ -309,8 +314,8 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
         // Apply crt hit match cut to both tracks
         auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCrtHitModuleLabel);
         std::vector<crt::CRTHit> crtHits = (*crtHitHandle);
-        if(chTag.CrtHitCosmicId(track, crtHits, event)) return true;
-        if(chTag.CrtHitCosmicId(track2, crtHits, event)) return true;
+        if(chTag.CrtHitCosmicId(detProp, track, crtHits, event)) return true;
+        if(chTag.CrtHitCosmicId(detProp, track2, crtHits, event)) return true;
       }
     }
     // Don't apply other cuts if angle between tracks is consistent with neutrino interaction
@@ -327,7 +332,7 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
 
     // Tag cosmics which cross the APA
     if(fApplyApaCrossCut){
-      if(acTag.ApaCrossCosmicId(track, hits, t0Tpc0, t0Tpc1)) return true;
+      if(acTag.ApaCrossCosmicId(detProp, track, hits, t0Tpc0, t0Tpc1)) return true;
     }
 
     // Tag cosmics which match CRT hits
@@ -335,7 +340,7 @@ bool CosmicIdAlg::CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::
       auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCrtHitModuleLabel);
       std::vector<crt::CRTHit> crtHits = (*crtHitHandle);
 
-      if(chTag.CrtHitCosmicId(track, crtHits, event)) return true;
+      if(chTag.CrtHitCosmicId(detProp, track, crtHits, event)) return true;
     }
   }
 

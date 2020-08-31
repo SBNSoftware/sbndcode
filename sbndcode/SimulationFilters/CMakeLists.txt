@@ -1,9 +1,9 @@
-
 art_make(
           MODULE_LIBRARIES
             larcore_Geometry_Geometry_service
             larcorealg_Geometry
             lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+            lardataalg_DetectorInfo
             nusimdata_SimulationBase
             sbndcode_RecoUtils
             ${ART_FRAMEWORK_CORE}
@@ -52,4 +52,3 @@ art_make(
 #install_headers()
 install_fhicl()
 install_source()
-

@@ -8,7 +8,7 @@ namespace opdet {
 
   DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     : fParams(config)
-    , fSampling(fParams.timeService->OpticalClock().Frequency())
+    , fSampling(fParams.frequency)
     , fArapucaVUVEff(fParams.ArapucaVUVEff / fParams.larProp->ScintPreScale())
     , fArapucaVISEff(fParams.ArapucaVISEff / fParams.larProp->ScintPreScale())
     , fXArapucaVUVEff(fParams.XArapucaVUVEff / fParams.larProp->ScintPreScale())
@@ -32,9 +32,19 @@ namespace opdet {
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.ArapucaDataFile, fname);
     TFile* file = TFile::Open(fname.c_str());
-    file->GetObject("TimeArapucaVUV", TimeArapucaVUV);
-    file->GetObject("TimeArapucaVIS", TimeArapucaVIS);
-    file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV);
+
+    std::vector<double>* TimeArapucaVUV_p;
+    file->GetObject("TimeArapucaVUV", TimeArapucaVUV_p);
+    fTimeArapucaVUV = std::make_unique<CLHEP::RandGeneral>
+      (*fEngine, TimeArapucaVUV_p->data(), TimeArapucaVUV_p->size());
+    std::vector<double>* TimeArapucaVIS_p;
+    file->GetObject("TimeArapucaVIS", TimeArapucaVIS_p);
+    fTimeArapucaVIS = std::make_unique<CLHEP::RandGeneral>
+      (*fEngine, TimeArapucaVIS_p->data(), TimeArapucaVIS_p->size());
+    std::vector<double>* TimeXArapucaVUV_p;
+    file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV_p);
+    fTimeXArapucaVUV = std::make_unique<CLHEP::RandGeneral>
+      (*fEngine, TimeXArapucaVUV_p->data(), TimeXArapucaVUV_p->size());
 
     fSampling = fSampling / 1000; //in GHz to cancel with ns
     pulsesize = fParams.PulseLength * fSampling;
@@ -88,7 +98,7 @@ namespace opdet {
     if(pdtype == "arapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVUVEff) { //Sample a random subset according to Arapuca's efficiency
-          tphoton = (TimeArapucaVUV->GetRandom());
+          tphoton = (fTimeArapucaVUV->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -101,7 +111,7 @@ namespace opdet {
     else if(pdtype == "arapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVISEff) { //Sample a random subset according to Arapuca's efficiency.
-          tphoton = (TimeArapucaVIS->GetRandom());
+          tphoton = (fTimeArapucaVIS->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -114,7 +124,7 @@ namespace opdet {
     else if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVUVEff) {
-          tphoton = (TimeXArapucaVUV->GetRandom());
+          tphoton = (fTimeXArapucaVUV->fire());
           tphoton += simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
@@ -153,7 +163,7 @@ namespace opdet {
     std::string pdtype)
   {
     if(pdtype == "xarapuca_vuv"){
-      SinglePDWaveformCreatorLite(fXArapucaVUVEff, &TimeXArapucaVUV, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fXArapucaVUVEff, fTimeXArapucaVUV, wave, photonMap, t_min);
     }
     else if(pdtype == "xarapuca_vis"){
       // creating the waveforms for xarapuca_vis is different than the rest
@@ -161,10 +171,10 @@ namespace opdet {
       SinglePDWaveformCreatorLite(fXArapucaVISEff, wave, photonMap, t_min);
     }
     else if(pdtype == "arapuca_vuv"){
-      SinglePDWaveformCreatorLite(fArapucaVUVEff, &TimeArapucaVUV, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fArapucaVUVEff, fTimeArapucaVUV, wave, photonMap, t_min);
     }
     else if(pdtype == "arapuca_vis"){
-      SinglePDWaveformCreatorLite(fArapucaVISEff, &TimeArapucaVIS, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fArapucaVISEff, fTimeArapucaVIS, wave, photonMap, t_min);
     }
     else{
       throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
@@ -177,7 +187,7 @@ namespace opdet {
 
   void DigiArapucaSBNDAlg::SinglePDWaveformCreatorLite(
     double effT,
-    TH1D** timeHisto,
+    std::unique_ptr<CLHEP::RandGeneral>& timeHisto,
     std::vector<double>& wave,
     std::map<int, int> const& photonMap,
     double const& t_min
@@ -196,7 +206,7 @@ namespace opdet {
       meanPhotons = photonMember.second*effT;
       acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
       for(size_t i = 0; i < acceptedPhotons; i++) {
-        tphoton = (*timeHisto)->GetRandom();
+        tphoton = timeHisto->fire();
         tphoton += photonMember.first - t_min;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 &&
@@ -362,7 +372,7 @@ namespace opdet {
 
   std::unique_ptr<DigiArapucaSBNDAlg> DigiArapucaSBNDAlgMaker::operator()(
     detinfo::LArProperties const& larProp,
-    detinfo::DetectorClocks const& detClocks,
+    detinfo::DetectorClocksData const& clockData,
     CLHEP::HepRandomEngine* engine
     ) const
   {
@@ -371,7 +381,7 @@ namespace opdet {
 
     // set up parameters
     params.larProp = &larProp;
-    params.timeService = &detClocks;
+    params.frequency = clockData.OpticalClock().Frequency();
     params.engine = engine;
 
     return std::make_unique<DigiArapucaSBNDAlg>(params);

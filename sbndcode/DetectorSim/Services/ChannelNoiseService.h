@@ -13,6 +13,7 @@
 #include "sbndcode/DetectorSim/Services/AdcTypes.h"
 #include "art/Framework/Core/EDProducer.h"
 #include "fhiclcpp/ParameterSet.h"
+namespace detinfo { class DetectorClocksData; }
 
 class ChannelNoiseService {
 
@@ -24,9 +25,9 @@ public:
 
   // Add noise to a signal vector sigs appropriate for channel chan.
   // Noise is added for all entries in the input vector.
-  virtual int addNoise(Channel chan, AdcSignalVector& sigs) const =0;
+  virtual int addNoise(detinfo::DetectorClocksData const&, Channel chan, AdcSignalVector& sigs) const =0;
 
-  virtual void generateNoise(){
+  virtual void generateNoise(detinfo::DetectorClocksData const&){
     return;
   }
 
@@ -45,4 +46,3 @@ DECLARE_ART_SERVICE_INTERFACE(ChannelNoiseService, LEGACY)
 #endif
 
 #endif
-

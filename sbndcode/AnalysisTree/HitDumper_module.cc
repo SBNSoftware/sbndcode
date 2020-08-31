@@ -203,8 +203,6 @@ private:
   sbnd::CRTHitRecoAlg hitAlg;
 
   geo::GeometryCore const* fGeometryService;
-  // detinfo::DetectorClocks const* fDetectorClocks;
-  // detinfo::DetectorProperties const* fDetectorProperties;
   // detinfo::ElecClock fTrigClock;
   art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
   const geo::AuxDetGeometry* fAuxDetGeo;

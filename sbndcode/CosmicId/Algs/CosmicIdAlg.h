@@ -215,7 +215,8 @@ namespace sbnd{
     bool CosmicId(recob::Track track, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
 
     // Run cuts to decide if PFParticle looks like a cosmic
-    bool CosmicId(recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
+    bool CosmicId(detinfo::DetectorPropertiesData const& detProp,
+                  recob::PFParticle pfparticle, std::map< size_t, art::Ptr<recob::PFParticle> > pfParticleMap, const art::Event& event, std::vector<double> t0Tpc0, std::vector<double> t0Tpc1);
 
     // Getters for the underlying algorithms
     StoppingParticleCosmicIdAlg StoppingAlg() const {return spTag;}

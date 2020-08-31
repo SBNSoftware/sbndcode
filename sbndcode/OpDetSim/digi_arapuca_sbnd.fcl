@@ -24,7 +24,7 @@ sbnd_digiarapuca_alg:
   XArapucaVUVEff:            0.021   #XArapuca VUV efficiency (taking into account 70% mesh transparency 0.03*0.7)
   XArapucaVISEff:            0.0014  #XArapuca VIS efficiency (taking into account 70% mesh transparency 0.02*0.7)
   DecayTXArapucaVIS:         8.5     # decay time of EJ280 in ns
-  ArapucaDataFile:    "OpDetSim/digi_arapuca_sbnd.root"
+  ArapucaDataFile:           "OpDetSim/digi_arapuca_sbnd.root" # located in sbnd_data
 }
 
 END_PROLOG

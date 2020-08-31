@@ -21,6 +21,7 @@
 #include "larcore/Geometry/Geometry.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
+namespace detinfo { class DetectorClocksData; }
 
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGaussQ.h"
@@ -55,7 +56,8 @@ public:
   ~SBNDThermalNoiseServiceInTime();
 
   // Add noise to a signal array.
-  int addNoise(Channel chan, AdcSignalVector& sigs) const override;
+  int addNoise(detinfo::DetectorClocksData const& clockData,
+               Channel chan, AdcSignalVector& sigs) const override;
 
   // Print the configuration.
   std::ostream& print(std::ostream& out =std::cout, std::string prefix ="") const override;

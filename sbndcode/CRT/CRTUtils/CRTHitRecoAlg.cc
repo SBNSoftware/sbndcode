@@ -1,24 +1,16 @@
 #include "CRTHitRecoAlg.h"
 
+#include "lardataalg/DetectorInfo/DetectorClocksData.h"
+
 namespace sbnd{
 
 CRTHitRecoAlg::CRTHitRecoAlg(const Config& config){
 
   this->reconfigure(config);
-  
-  fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-  fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  //fTrigClock = fDetectorClocks->TriggerClock();
-
 }
 
 
 CRTHitRecoAlg::CRTHitRecoAlg(){
-
-  fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-  fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  //fTrigClock = fDetectorClocks->TriggerClock();
-
 }
 
 
@@ -39,10 +31,12 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   return;
 }
 
-std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg::CreateTaggerStrips(std::vector<art::Ptr<crt::CRTData>> crtList){
+std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg::CreateTaggerStrips(detinfo::DetectorClocksData const& clockData,
+                                                                                                    detinfo::DetectorPropertiesData const& detProp,
+                                                                                                    std::vector<art::Ptr<crt::CRTData>> crtList){
 
-  double readoutWindowMuS  = fDetectorClocks->TPCTick2Time((double)fDetectorProperties->ReadOutWindowSize()); // [us]
-  double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
+  double readoutWindowMuS  = clockData.TPCTick2Time((double)detProp.ReadOutWindowSize()); // [us]
+  double driftTimeMuS = fTpcGeo.MaxX()/detProp.DriftVelocity(); // [us]
 
   std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips;
 
