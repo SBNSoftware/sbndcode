@@ -12,7 +12,7 @@ sbnd_ophit_finder:
   PD:             ["pmt_coated", "pmt_uncoated"]  # Will only use PDS in this list
   HitThreshold:   0.2   # PE
   AreaToPE:       true  # Use area to calculate number of PEs
-  SPEArea:        317.1 # If AreaToPE is true, this number is
+  SPEArea:        66.33 # If AreaToPE is true, this number is
                         # used as single PE area (in ADC counts)
                         # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
                         # for the ideal response

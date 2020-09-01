@@ -19,10 +19,4 @@ SBNDSimpleFlashTPC0.AlgoConfig: @local::SimpleFlashTPC0
 SBNDSimpleFlashTPC1: @local::SBNDSimpleFlash
 SBNDSimpleFlashTPC1.AlgoConfig: @local::SimpleFlashTPC1
 
-SBNDSimpleFlashTPC2: @local::SBNDSimpleFlash
-SBNDSimpleFlashTPC2.AlgoConfig: @local::SimpleFlashTPC2
-
-SBNDSimpleFlashTPC3: @local::SBNDSimpleFlash
-SBNDSimpleFlashTPC3.AlgoConfig: @local::SimpleFlashTPC3
-
 END_PROLOG
