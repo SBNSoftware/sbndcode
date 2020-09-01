@@ -1,9 +1,11 @@
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 art_make(
     LIB_LIBRARIES
-        sbnd_Geometry
+        sbndcode_Geometry
         sbndcode_OpDetSim
+        larcorealg_Geometry
         larcore_Geometry_Geometry_service
+        lardata_Utilities
         lardataobj_RecoBase
         larsim_Simulation
         lardataobj_Simulation
@@ -33,8 +35,10 @@ art_make(
     MODULE_LIBRARIES
         sbndcode_OpDetReco_OpFlash_FlashFinder
         sbndcode_OpDetSim
-        sbnd_Geometry
+        sbndcode_Geometry
+        larcorealg_Geometry
         larcore_Geometry_Geometry_service
+        lardata_Utilities
         lardataobj_RecoBase
         larsim_Simulation
         lardataobj_Simulation

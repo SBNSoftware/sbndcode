@@ -23,10 +23,10 @@
 #include "lardataobj/RawData/TriggerData.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/RecoBase/OpFlash.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+// #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderFMWKInterface.h"
@@ -58,8 +58,6 @@ public:
   void produce(art::Event& e) override;
 
 private:
-
-  detinfo::DetectorProperties const* _det_prop;
 
   std::string _mctruth_label;
   std::string _trigger_label;
@@ -94,8 +92,6 @@ SBNDMCFlash::SBNDMCFlash(fhicl::ParameterSet const& p)
   : EDProducer{p}  // ,
   // More initializers here.
 {
-  _det_prop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-
   _mctruth_label = p.get<std::string>("MCTruthProduct", "generator");
   _trigger_label = p.get<std::string>("TriggerProduct", "triggersim");
   _simphot_label = p.get<std::string>("SimPhotProduct", "largeant");
@@ -128,8 +124,9 @@ void SBNDMCFlash::produce(art::Event& e)
 {
 
   ::art::ServiceHandle<geo::Geometry> geo;
-  auto const *time_service = lar::providerFrom< detinfo::DetectorClocksService >();
   auto const *lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
+  auto const clock_data = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
+  auto const det_prop = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e, clock_data);
 
   _qe_direct = _qe_direct / lar_prop->ScintPreScale();
   _qe_refl   = _qe_refl / lar_prop->ScintPreScale();
@@ -209,12 +206,11 @@ void SBNDMCFlash::produce(art::Event& e)
 
   // auto const & evt_trigger = (*evt_trigger_h)[0];
   // auto const trig_time = evt_trigger.TriggerTime();
-  auto const trig_time = _det_prop->TriggerOffset();
-  auto const * ts = lar::providerFrom<detinfo::DetectorClocksService>();
+  auto const trig_time = clock_data.TriggerOffsetTPC();
 
   if (_debug) std::cout << "trig_time: " << trig_time << std::endl;
-  if (_debug) std::cout << "ts->G4ToElecTime(0): " << ts->G4ToElecTime(0) << std::endl;
-  if (_debug) std::cout << "ts->G4ToElecTime(1000): " << ts->G4ToElecTime(1000) << std::endl;
+  if (_debug) std::cout << "G4ToElecTime(0): " << clock_data.G4ToElecTime(0) << std::endl;
+  if (_debug) std::cout << "G4ToElecTime(1000): " << clock_data.G4ToElecTime(1000) << std::endl;
   if (_debug) std::cout << "Number of OpDets: " << geo->NOpDets() << std::endl;
 
   double nuTime = -1.e9;
@@ -232,11 +228,11 @@ void SBNDMCFlash::produce(art::Event& e)
       if (_debug){
         std::cout << "Particle pdg: " << par.PdgCode() << std::endl;
         std::cout << "new Particle time: " << par.T() << std::endl;
-        std::cout << "new    converted: " << ts->G4ToElecTime(par.T()) - trig_time << std::endl;
+        std::cout << "new    converted: " << clock_data.G4ToElecTime(par.T()) - trig_time << std::endl;
         std::cout << std::endl;
       }
       if (std::abs(par.PdgCode()) == 14 || std::abs(par.PdgCode() == 12))
-        nuTime = par.T();//ts->G4ToElecTime(par.T()) - trig_time;
+        nuTime = par.T();//clock_data.G4ToElecTime(par.T()) - trig_time;
     }
   }
 
@@ -256,7 +252,7 @@ void SBNDMCFlash::produce(art::Event& e)
   _scintillation_pmt_v.clear();
 
   // float sampling = time_service->OpticalClock().Frequency() / 1000.0; // GHz
-  float start_window = time_service->TriggerOffsetTPC(); // us
+  float start_window = clock_data.TriggerOffsetTPC(); // us
   if (_debug) std::cout << "start_window " << start_window << std::endl;
 
 
@@ -273,7 +269,7 @@ void SBNDMCFlash::produce(art::Event& e)
   // }
   std::cout << "We have " << evt_simphot_hs.size() << " SimPhoton collections" << std::endl;
 
-  float nuTime_elec = ts->G4ToElecTime(nuTime) - trig_time;
+  float nuTime_elec = clock_data.G4ToElecTime(nuTime) - trig_time;
 
   for (const art::Handle<std::vector<sim::SimPhotonsLite>> &evt_simphot_h: evt_simphot_hs) {
 
@@ -291,7 +287,7 @@ void SBNDMCFlash::produce(art::Event& e)
 
         float photon_time = pair.first - start_window;
 
-        float photon_time_elec = ts->G4ToElecTime(photon_time) - trig_time;
+        float photon_time_elec = clock_data.G4ToElecTime(photon_time) - trig_time;
 
         if (_debug && !reflected) {
           std::cout << "Photon time: " << photon_time_elec
