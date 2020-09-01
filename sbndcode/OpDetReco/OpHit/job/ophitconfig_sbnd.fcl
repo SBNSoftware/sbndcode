@@ -47,7 +47,7 @@ sbnd_opreco_hit_slidingwindow: @local::standard_algo_slidingwindow
 sbnd_opreco_hit_slidingwindow.PositivePolarity:    false
 sbnd_opreco_hit_slidingwindow.NumPreSample:        5
 sbnd_opreco_hit_slidingwindow.NumPostSample:       10
-sbnd_opreco_hit_slidingwindow.ADCThreshold:        35 #7 # ADC threshold (absolute) above pedestal mean to fire a pulse
+sbnd_opreco_hit_slidingwindow.ADCThreshold:        7 # ADC threshold (absolute) above pedestal mean to fire a pulse
 sbnd_opreco_hit_slidingwindow.NSigmaThreshold:     3 # ADC threshold (N*pedestal sigma) above pedestal mean to fire a pulse
 sbnd_opreco_hit_slidingwindow.TailADCThreshold:    2 # ADC threshold (absolute) below which next pulse is allowed to fire
 sbnd_opreco_hit_slidingwindow.TailNSigmaThreshold: 2 # ADC threshold (N*pedestal sigma) below which next pulse is allowed to fire
