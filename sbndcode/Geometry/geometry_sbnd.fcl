@@ -1,7 +1,7 @@
 #
 # File:    geometry_sbnd.fcl
 # Purpose: configuration of SBND geometry services
-# Version: 1.2
+# Version: 1.5
 # 
 # Offsers:
 # * single service configuration:
@@ -58,8 +58,8 @@ BEGIN_PROLOG
 #
 sbnd_geo_source: {
   Name:  "sbndv1"
-  GDML:  "sbnd_v01_04.gdml"
-  ROOT:  "sbnd_v01_04.gdml"
+  GDML:  "sbnd_v01_05.gdml"
+  ROOT:  "sbnd_v01_05.gdml"
 } # sbnd_geo_source
 
 #
