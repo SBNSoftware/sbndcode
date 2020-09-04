@@ -124,7 +124,7 @@ namespace opdet {
     std::cout << "fOpDetsToPlot:\t";
     for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
     std::cout << std::endl;
-    
+
     int hist_id = 0;
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();

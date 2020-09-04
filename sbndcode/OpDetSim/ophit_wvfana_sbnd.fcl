@@ -41,7 +41,7 @@
 #include "rootoutput_sbnd.fcl"
 
 
-process_name: ophitfinding_wvfana
+process_name: ophitfindingwvfana
 
 services:
 {
