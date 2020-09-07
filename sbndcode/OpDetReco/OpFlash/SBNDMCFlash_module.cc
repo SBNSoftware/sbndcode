@@ -231,8 +231,9 @@ void SBNDMCFlash::produce(art::Event& e)
         std::cout << "new    converted: " << clock_data.G4ToElecTime(par.T()) - trig_time << std::endl;
         std::cout << std::endl;
       }
-      if (std::abs(par.PdgCode()) == 14 || std::abs(par.PdgCode() == 12))
-        nuTime = par.T();//clock_data.G4ToElecTime(par.T()) - trig_time;
+      if (std::abs(par.PdgCode()) == 14 || std::abs(par.PdgCode()) == 12) {
+        nuTime = par.T();
+      }
     }
   }
 
