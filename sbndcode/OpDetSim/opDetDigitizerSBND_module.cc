@@ -238,7 +238,7 @@ namespace opdet {
       // start worker thread
       fWorkerThreads.emplace_back(opdet::opDetDigitizerWorkerThread,
                                   std::cref(fWorkers[i]),
-                                  std::cref(clockData),
+                                  clockData,
                                   std::ref(fSemStart),
                                   std::ref(fSemFinish),
                                   fApplyTriggers,
