@@ -44,9 +44,9 @@ namespace opdet {
     //shape of single pulse
     if (fParams.SinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
-      std::vector<double> *SinglePEWave_pointer;
-      file->GetObject("SinglePEWave", SinglePEWave_pointer);
-      fSinglePEWave = *SinglePEWave_pointer;
+      std::vector<double>* SinglePEVec_p;
+      file->GetObject("SinglePEVec", SinglePEVec_p);
+      fSinglePEWave = *SinglePEVec_p;
       pulsesize = fSinglePEWave.size();
     }
     else {
