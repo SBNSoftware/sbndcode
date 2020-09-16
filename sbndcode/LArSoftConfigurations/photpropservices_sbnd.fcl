@@ -33,8 +33,8 @@ sbnd_library_vuv_prop_timing_photonvisibilityservice:
    # Flag to enable time parameterizations
    IncludePropTime: true
 
-   # Generic VUV timing parameterization
-   @table::common_vuv_timing_parameterization
+   # SBND VUV timing parameterization
+   @table::sbnd_vuv_timing_parameterization
 
 }
 
@@ -53,7 +53,6 @@ sbnd_library_vuv_vis_prop_timing_photonvisibilityservice:
    
    # SBND-specific VIS parameterization
    @table::sbnd_vis_timing_parameterization
-
 }
 
 sbnd_Nhits_vuv_prop_timing_photonvisibilityservice:
@@ -62,8 +61,10 @@ sbnd_Nhits_vuv_prop_timing_photonvisibilityservice:
    IncludePropTime: true
    UseNhitsModel: true
    DoNotLoadLibrary: true
-   # Generic VUV timing parameterization
-   @table::common_vuv_timing_parameterization
+   
+   # SBND-specific VUV timing parameterization
+   @table::sbnd_vuv_timing_parameterization
+   
    # Semi-analytic VUV Nhits parameters
    GH_PARS: @local::GH_RS60cm_SBND
    # For border correction
@@ -81,8 +82,8 @@ sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice:
    StoreReflected: true
    DoNotLoadLibrary: true
    
-   # Generic VUV timing parameterization
-   @table::common_vuv_timing_parameterization
+   # SBND-specific VUV timing parameterization
+   @table::sbnd_vuv_timing_parameterization
    
    # SBND-specific VIS timings parameterization
    @table::sbnd_vis_timing_parameterization
