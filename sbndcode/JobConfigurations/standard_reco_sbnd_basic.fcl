@@ -114,7 +114,8 @@ physics:
   ### pandora
   pandora:             @local::sbnd_pandora
   pandoraTrack:        @local::sbnd_pandoraTrackCreation
-  pandoraShower:       @local::sbnd_pandoraShowerCreation
+  pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
+  pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
   pandoraCalo:         @local::sbnd_calomc                                        
   pandoraPid:          @local::sbnd_chi2pid  
 
@@ -127,7 +128,6 @@ physics:
     
   ### shower-finder producers
   emshower:            @local::sbnd_emshower
-  tracs:               @local::sbnd_tracs
 
 
   ### vertex-finder producers
@@ -160,14 +160,14 @@ physics:
    #      , cccluster
    #      , spacepts,
    #       , blurredcluster 
-          , pandora, pandoraTrack, pandoraShower
+          , pandora, pandoraTrack, pandoraShower, pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
          , pmatrackcalo
          , pmatrackpid
-         , emshower, tracs
+         , emshower
          , crthit
    #      , crttzero
          , crttrack
@@ -225,6 +225,7 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
+physics.producers.pandoraShowerLegacy.PFParticleLabel:           "pandora"
 
 ### Added for Rhiannon's analysis work                                            
 physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"   

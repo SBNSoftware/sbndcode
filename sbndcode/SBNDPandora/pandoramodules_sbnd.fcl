@@ -1,3 +1,6 @@
+#include "calorimetry_sbnd.fcl"
+#include "pandorashowermodules.fcl"
+
 BEGIN_PROLOG
 
 sbnd_basicpandora:
@@ -44,5 +47,62 @@ sbnd_pandoraShowerCreation:
 {
     module_type:                                                    "LArPandoraShowerCreation"
 }
+
+sbnd_legacy_pandoraModularShowerCreation:      @local::legacy_pandoraModularShowerCreation
+sbnd_basic_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
+sbnd_3dTraj_pandoraModularShowerCreation:      @local::standard_pandoraModularShowerCreation
+sbnd_incremental_pandoraModularShowerCreation: @local::standard_pandoraModularShowerCreation
+
+sbnd_showerlinearenergy:       @local::showerlinearenergy
+sbnd_showerunidirectiondedx:   @local::showerunidirectiondedx
+sbnd_showertrajpointdedx:      @local::showertrajpointdedx
+sbnd_showernumelectronsenergy: @local::showernumelectronsenergy
+
+sbnd_showerlinearenergy.Gradients: [0.00155644, 0.00173915, 0.00153631]
+sbnd_showerlinearenergy.Intercepts: [5.92931, -2.13307, 5.19711]
+sbnd_showernumelectronsenergy.CalorimetryAlg: @local::sbnd_calorimetryalgmc
+sbnd_showerunidirectiondedx.CalorimetryAlg:   @local::sbnd_calorimetryalgmc
+sbnd_showertrajpointdedx.CalorimetryAlg:      @local::sbnd_calorimetryalgmc
+
+sbnd_basic_pandoraModularShowerCreation.ShowerFinderTools: [
+  @local::showerpfpvertexstartposition,
+  @local::showerpcadirection,
+  @local::showerpcaeigenvaluelength,
+  @local::sbnd_showernumelectronsenergy,
+  @local::shower3dcylindertrackhitfinder,
+  @local::sbnd_showerunidirectiondedx
+]
+
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools: [
+  @local::showerpfpvertexstartposition,
+  @local::showerpcadirection,
+  @local::showerlengthpercentile,
+  @local::sbnd_showernumelectronsenergy,
+  @local::shower3dcylindertrackhitfinder,
+  @local::showerpandoraslidingfittrackfinder,
+  @local::sbnd_showertrajpointdedx,
+  @local::showertracktrajpointdirection,
+  @local::showerdirectiontopologydecision
+]
+
+sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools: [
+  @local::showerpfpvertexstartposition,
+  @local::showerpcadirection,
+  @local::showerlengthpercentile,
+  @local::sbnd_showernumelectronsenergy,
+  @local::showerincrementaltrackhitfinder,
+  @local::showerpandoraslidingfittrackfinder,
+  @local::sbnd_showertrajpointdedx,
+  @local::showertracktrajpointdirection,
+  @local::showerdirectiontopologydecision
+]
+
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools[7].ShowerDirectionOutputLabel: "TrajDirection"
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools[8].FirstDirectionInputLabel: "TrajDirection"
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools[8].SecondDirectionInputLabel: "ShowerDirection"
+
+sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[7].ShowerDirectionOutputLabel: "TrajDirection"
+sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[8].FirstDirectionInputLabel: "TrajDirection"
+sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[8].SecondDirectionInputLabel: "ShowerDirection"
 
 END_PROLOG
