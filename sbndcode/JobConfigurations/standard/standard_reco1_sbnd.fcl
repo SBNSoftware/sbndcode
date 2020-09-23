@@ -1,0 +1,15 @@
+# File:    standard_reco1_sbnd.fcl
+# Purpose: The standard reconstruction workflow for 'reco1', which includes up to hit reconstruction
+# Version: 1.0
+#
+# Changes:
+# 20200923 (d.brailsford@lancster.ac.uk) [v1.0]
+#   Initial definition
+#
+# job configuration
+
+#include "reco_sbnd.fcl"
+
+process_name: Reco1
+
+physics.trigger_paths: [ reco1 ]
