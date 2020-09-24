@@ -54,12 +54,13 @@ physics:
 {
   producers:
   {
-    opdaq:        @local::sbnd_opdetdigitizer
-    ophit:        @local::sbnd_ophit_finder
-    opflashtpc0:  @local::SBNDSimpleFlashTPC0
-    opflashtpc1:  @local::SBNDSimpleFlashTPC1
-    mcflashtpc0:  @local::SBNDMCFlashTPC0
-    mcflashtpc1:  @local::SBNDMCFlashTPC1
+    opdaq:         @local::sbnd_opdetdigitizer
+    ophitpmt:      @local::sbnd_ophit_finder_pmt
+    ophitarapuca:  @local::sbnd_ophit_finder_arapuca
+    opflashtpc0:   @local::SBNDSimpleFlashTPC0
+    opflashtpc1:   @local::SBNDSimpleFlashTPC1
+    mcflashtpc0:   @local::SBNDMCFlashTPC0
+    mcflashtpc1:   @local::SBNDMCFlashTPC1
 
   }
 
@@ -73,14 +74,15 @@ physics:
   #filters reject all following items.  see lines starting physics.producers below
   reco: [
     opdaq,
-    ophit,
+    ophitpmt,
+    ophitarapuca,
     opflashtpc0,
     opflashtpc1,
     mcflashtpc0,
     mcflashtpc1
   ]
 
-  ana:[flashana]
+  ana: [flashana]
 
   # define the output stream, there could be more than one if using filters
   stream1: [out1]

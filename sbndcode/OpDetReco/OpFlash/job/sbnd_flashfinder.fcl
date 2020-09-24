@@ -8,7 +8,7 @@ SBNDSimpleFlash:
   module_type     : "SBNDFlashFinder"
   FlashFinderAlgo : "SimpleFlashAlgo"
   AlgoConfig      : @local::SimpleFlashStandard
-  OpHitProducer   : "ophit"
+  OpHitProducers  : ["ophitpmt","ophitarapuca"]
   OpFlashProducer : "opflash"
   PECalib         : @local::NoCalib
 }
