@@ -29,6 +29,8 @@
 #include "databaseutil_sbnd.fcl"
 ##include "opticaldetectormodules_sbnd.fcl"
 #include "ophitfinder_sbnd.fcl"
+#include "ophit_finder_sbnd.fcl"
+#include "sbnd_flashfinder.fcl"
 #include "vertexfindermodules.fcl"
 #include "pandoramodules_sbnd.fcl"
 ##include "triggeralgo_service.fcl"
@@ -82,10 +84,16 @@ physics:
   ### random number saver
   rns:                 { module_type: RandomNumberSaver }
 
+  ### optical hit finders
+  # ophit:               @local::sbnd_hit_finder
+  ophitpmt:            @local::sbnd_ophit_finder_pmt
+  ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+
   ### flash finders
   # opflash:             @local::sbnd_opflash
- 
-  ophit:		@local::sbnd_hit_finder 
+  opflashtpc0:         @local::SBNDSimpleFlashTPC0
+  opflashtpc1:         @local::SBNDSimpleFlashTPC1
+
   ### calwire producers
   caldata:             @local::sbnd_calwire
 
@@ -141,9 +149,11 @@ physics:
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
  reco1: [ rns
-        	 , ophit
-        # , opflash
-         , caldata 
+         , ophitpmt
+         , ophitarapuca
+         , opflashtpc0
+         , opflashtpc1
+         , caldata
          , gaushit
          , fasthit
          , linecluster
