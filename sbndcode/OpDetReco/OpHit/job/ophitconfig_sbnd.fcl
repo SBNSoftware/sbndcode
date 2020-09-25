@@ -23,7 +23,7 @@ sbnd_opreco_pedestal_rmsslider.SampleSize:        20
 sbnd_opreco_pedestal_rmsslider.Threshold:         1.7
 sbnd_opreco_pedestal_rmsslider.Verbose:           false
 sbnd_opreco_pedestal_rmsslider.NWaveformsToFile:  10
-sbnd_opreco_pedestal_rmsslider.MaxSigma:          1.5
+sbnd_opreco_pedestal_rmsslider.MaxSigma:          1.7
 sbnd_opreco_pedestal_rmsslider.PedRangeMax:       8004
 sbnd_opreco_pedestal_rmsslider.PedRangeMin:       7994
 sbnd_opreco_pedestal_rmsslider.NumPreSample:      10

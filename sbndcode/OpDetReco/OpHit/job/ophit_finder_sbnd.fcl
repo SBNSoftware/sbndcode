@@ -14,14 +14,37 @@ sbnd_ophit_finder:
   AreaToPE:       true  # Use area to calculate number of PEs
   SPEArea:        66.33 # If AreaToPE is true, this number is
                         # used as single PE area (in ADC counts)
-                        # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
-                        # for the ideal response
-                        # and is 317.1 ADC = 634.2 ADCxns x 0.5ns^-1
-                        # for the test bench response,
-                        # where 0.5 is the sampling rate
   reco_man:       @local::standard_preco_manager
   HitAlgoPset:    @local::sbnd_opreco_hit_slidingwindow
   PedAlgoPset:    @local::sbnd_opreco_pedestal_rmsslider
 }
+
+#
+# OpHit for PMT - Configuration
+#
+sbnd_ophit_finder_pmt: @local::sbnd_ophit_finder
+sbnd_ophit_finder_pmt.PD: ["pmt_coated", "pmt_uncoated"]
+sbnd_ophit_finder_pmt.SPEArea: 66.33 # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
+                                     # for the ideal response
+                                     # and is 317.1 ADC = 634.2 ADCxns x 0.5ns^-1
+                                     # for the test bench response,
+                                     # where 0.5 is the sampling rate
+sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMax:  8004
+sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMin:  7994
+sbnd_ophit_finder_pmt.PedAlgoPset.Threshold:    1.7
+sbnd_ophit_finder_pmt.PedAlgoPset.MaxSigma:     1.7
+sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 7
+
+#
+# OpHit for Arapuca - Configuration
+#
+sbnd_ophit_finder_arapuca: @local::sbnd_ophit_finder
+sbnd_ophit_finder_arapuca.PD: ["xarapuca_vis", "xarapuca_vuv", "arapuca_vis", "arapuca_vuv"]
+sbnd_ophit_finder_arapuca.SPEArea: 8541. # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
+sbnd_ophit_finder_arapuca.PedAlgoPset.PedRangeMax:  1520
+sbnd_ophit_finder_arapuca.PedAlgoPset.PedRangeMin:  1480
+sbnd_ophit_finder_arapuca.PedAlgoPset.Threshold:    5
+sbnd_ophit_finder_arapuca.PedAlgoPset.MaxSigma:     5
+sbnd_ophit_finder_arapuca.HitAlgoPset.ADCThreshold: 20
 
 END_PROLOG

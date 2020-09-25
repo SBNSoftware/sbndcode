@@ -49,8 +49,7 @@ namespace opdet{
 
     ::lightana::FlashFinderManager _mgr;
     ::lightana::PECalib _pecalib;
-    // std::string _flash_producer;
-    std::string _hit_producer;
+    std::vector<std::string> _hit_producers;
 
     void GetFlashLocation(std::vector<double>, double&, double&, double&, double&);
 
@@ -60,8 +59,7 @@ namespace opdet{
   : EDProducer{p}
   // Initialize member data here.
   {
-    _hit_producer   = p.get<std::string>("OpHitProducer");
-    // _flash_producer = p.get<std::string>("OpFlashProducer");
+    _hit_producers = p.get<std::vector<std::string>>("OpHitProducers");
 
     auto const flash_algo  = p.get<std::string>("FlashFinderAlgo");
     auto const flash_pset = p.get<lightana::Config_t>("AlgoConfig");
@@ -82,27 +80,36 @@ namespace opdet{
     std::unique_ptr< art::Assns <recob::OpHit, recob::OpFlash> > flash2hit_assn_v
       (new art::Assns<recob::OpHit, recob::OpFlash>);
 
-    // load OpHits previously created
-    art::Handle<std::vector<recob::OpHit> > ophit_h;
-    e.getByLabel(_hit_producer,ophit_h);
-
-    // make sure hits look good
-    if(!ophit_h.isValid()) {
-      std::cerr << "\033[93m[ERROR]\033[00m ... could not locate OpHit!" << std::endl;
-      throw std::exception();
-    }
+    std::vector<art::Ptr<recob::OpHit>> ophit_v;
 
     ::lightana::LiteOpHitArray_t ophits;
     double trigger_time=1.1e20;
-    for(auto const& oph : *ophit_h) {
-      // if (oph.OpChannel() == 491 && oph.PeakTime()>0 && oph.PeakTime()<10) std::cout << "ophit for ch 491 with PE " << oph.PE() << ", area " << oph.Area() << std::endl;
-      ::lightana::LiteOpHit_t loph;
-      if(trigger_time > 1.e20) trigger_time = oph.PeakTimeAbs() - oph.PeakTime();
-      loph.peak_time = oph.PeakTime();
 
-      size_t opdet = ::lightana::OpDetFromOpChannel(oph.OpChannel());
-      loph.pe = _pecalib.Calibrate(opdet,oph.Area());
-      loph.channel = oph.OpChannel();
+    for (auto producer : _hit_producers) {
+
+      // load OpHits previously created
+      art::Handle<std::vector<recob::OpHit> > ophit_h;
+      e.getByLabel(producer, ophit_h);
+
+      // make sure hits look good
+      if(!ophit_h.isValid()) {
+        std::cerr << "\033[93m[ERROR]\033[00m ... could not locate OpHit!" << std::endl;
+        throw std::exception();
+      }
+
+      std::vector<art::Ptr<recob::OpHit>> temp_v;
+      art::fill_ptr_vector(temp_v, ophit_h);
+      ophit_v.insert(ophit_v.end(), temp_v.begin(), temp_v.end());
+    }
+
+    for(auto const oph : ophit_v) {
+      ::lightana::LiteOpHit_t loph;
+      if(trigger_time > 1.e20) trigger_time = oph->PeakTimeAbs() - oph->PeakTime();
+      loph.peak_time = oph->PeakTime();
+
+      size_t opdet = ::lightana::OpDetFromOpChannel(oph->OpChannel());
+      loph.pe = _pecalib.Calibrate(opdet,oph->Area());
+      loph.channel = oph->OpChannel();
       ophits.emplace_back(std::move(loph));
     }
 
@@ -116,14 +123,11 @@ namespace opdet{
                          (trigger_time + lflash.time) / 1600., lflash.channel_pe,
                          0, 0, 1, // this are just default values
                          Ycenter, Ywidth, Zcenter, Zwidth);
-      // std::cout << "PE in opch 360: " << lflash.channel_pe[360] << std::endl;
-      // if (lflash.time > 0 && lflash.time < 10) std::cout << "PE in opch 491: " << lflash.channel_pe[491] << std::endl;
-      // if (lflash.time > 0 && lflash.time < 10) std::cout << "Total PE: " << flash.TotalPE() << std::endl;
       opflashes->emplace_back(std::move(flash));
 
 
       for(auto const& hitidx : lflash.asshit_idx) {
-        const art::Ptr<recob::OpHit> hit_ptr(ophit_h, hitidx);
+        const art::Ptr<recob::OpHit> hit_ptr(ophit_v.at(hitidx));
         util::CreateAssn(*this, e, *opflashes, hit_ptr, *flash2hit_assn_v);
       }
     }
