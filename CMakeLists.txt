@@ -96,8 +96,6 @@ add_subdirectory(sbndcode)
 add_subdirectory(test)
 # ups - table and config files
 add_subdirectory(ups)
-# fcl - contains job level fcl files (useful for the MCC)
-add_subdirectory(fcl)
 # subdirectory for scripts
 add_subdirectory(bin)
 
