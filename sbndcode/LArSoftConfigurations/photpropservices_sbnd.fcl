@@ -18,9 +18,9 @@ sbnd_Library_photonvisibilityservice:
  ZMin: -143.1
  ZMax: 559.6
  NX: 104
- NY: 109
- NZ: 141
- LibraryFile: "OpLib_SBN_ND_v0.root"
+ NY: 108
+ NZ: 140
+ LibraryFile: "OpLibSBND_v1.5.root"
   
 }
 
