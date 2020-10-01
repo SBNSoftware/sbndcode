@@ -22,6 +22,7 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
 #include "lardata/Utilities/LArFFT.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
@@ -56,7 +57,8 @@ public:
   ~SBNDThermalNoiseServiceInFreq();
 
   // Add noise to a signal array.
-  int addNoise(Channel chan, AdcSignalVector& sigs) const override;
+  int addNoise(detinfo::DetectorClocksData const& clockData,
+               Channel chan, AdcSignalVector& sigs) const override;
 
   // Print the configuration.
   std::ostream& print(std::ostream& out =std::cout, std::string prefix ="") const override;

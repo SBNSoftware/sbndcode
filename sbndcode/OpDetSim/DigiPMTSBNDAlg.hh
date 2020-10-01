@@ -12,10 +12,9 @@
 #include "fhiclcpp/types/Atom.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
-#include "CLHEP/Random/RandomEngine.h"
-#include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/RandGeneral.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
 
@@ -35,10 +34,7 @@
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
-#include "TMath.h"
-#include "TF1.h"
 #include "TFile.h"
-#include "TH1D.h"
 
 namespace opdet {
 
@@ -64,7 +60,7 @@ namespace opdet {
       bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
-      detinfo::DetectorClocks const* timeService = nullptr; //< DetectorClocks service provider.
+      double frequency;       //wave sampling frequency (GHz)
       CLHEP::HepRandomEngine* engine = nullptr;
     };// ConfigurationParameters_t
 
@@ -91,9 +87,9 @@ namespace opdet {
       unsigned n_sample);
 
     double Baseline()
-    {
-      return fParams.PMTBaseline;
-    }
+      {
+        return fParams.PMTBaseline;
+      }
 
   private:
 
@@ -115,9 +111,9 @@ namespace opdet {
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
-    std::vector<double> wsp; //single photon pulse vector
+    std::vector<double> fSinglePEWave; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
-    TH1D* timeTPB; //histogram for getting the TPB emission time for coated PMTs
+    std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for coated PMTs
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
     void CreatePDWaveform(
@@ -236,9 +232,9 @@ namespace opdet {
 
     std::unique_ptr<DigiPMTSBNDAlg> operator()(
       detinfo::LArProperties const& larProp,
-      detinfo::DetectorClocks const& detClocks,
+      detinfo::DetectorClocksData const& clockData,
       CLHEP::HepRandomEngine* engine
-    ) const;
+      ) const;
 
   private:
     // Part of the configuration learned from configuration files.

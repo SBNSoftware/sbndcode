@@ -123,6 +123,7 @@
 #include "lardataobj/AnalysisBase/CosmicTag.h"
 #include "lardataobj/AnalysisBase/FlashMatch.h"
 #include "lardataobj/RecoBase/MCSFitResult.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
 #include "larreco/RecoAlg/TrajectoryMCSFitter.h"
 #include "lardataobj/RecoBase/MCSFitResult.h"
@@ -794,7 +795,8 @@ namespace sbnd {
 
   private:
 
-    void   HitsPurity(std::vector< art::Ptr<recob::Hit> > const& hits, Int_t& trackid, Float_t& purity, double& maxe);
+    void   HitsPurity(detinfo::DetectorClocksData const& clockData,
+                      std::vector< art::Ptr<recob::Hit> > const& hits, Int_t& trackid, Float_t& purity, double& maxe);
     double length(const recob::Track& track);
     double length(const simb::MCParticle& part, TVector3& start, TVector3& end);
     double bdist(const recob::Track::Point_t& pos);
@@ -2131,6 +2133,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   
   int nGeniePrimaries = 0, nGEANTparticles = 0, nMCNeutrinos = 0;
   
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
+
   art::Ptr<simb::MCTruth> mctruth;
   //Brailsford 2017/10/16
   //Fix for issue 17917
@@ -2150,7 +2154,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 	      for (size_t i = 0; i<hitlist.size(); i++){
 	        //if (hitlist[i]->View() == geo::kV){//collection view
           // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem to correspond to the g4 track FIXME may need further investigation
-	        std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(hitlist[i]);
+                std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(clockData, hitlist[i]);
 	        for (size_t e = 0; e<eveIDs.size(); e++){
 	          art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
 	          //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
@@ -2796,11 +2800,11 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           }
           
           for (size_t ipl = 0; ipl < 3; ++ipl){
-            TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(hits[ipl]);
-            TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(hits[ipl]);
-            TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(clockData, hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(clockData, hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits[ipl]);
             double maxe = 0;
-            HitsPurity(hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
+            HitsPurity(clockData, hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
           //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
             if (TrackerData.trkidtruth[iTrk][ipl]>0){
               const art::Ptr<simb::MCTruth> mc = pi_serv->TrackIdToMCTruth_P(TrackerData.trkidtruth[iTrk][ipl]);
@@ -3242,7 +3246,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   }
 } // sbnd::AnalysisTree::analyze()
 
-void sbnd::AnalysisTree::HitsPurity(std::vector< art::Ptr<recob::Hit> > const& hits, Int_t& trackid, Float_t& purity, double& maxe){
+void sbnd::AnalysisTree::HitsPurity(detinfo::DetectorClocksData const& clockData,
+                                    std::vector< art::Ptr<recob::Hit> > const& hits, Int_t& trackid, Float_t& purity, double& maxe){
 
   trackid = -1;
   purity = -1;
@@ -3255,7 +3260,7 @@ void sbnd::AnalysisTree::HitsPurity(std::vector< art::Ptr<recob::Hit> > const& h
 
     art::Ptr<recob::Hit> hit = hits[h];
     std::vector<sim::IDE> ides;
-    std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToEveTrackIDEs(hit);
+    std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToEveTrackIDEs(clockData, hit);
 
     for(size_t e = 0; e < eveIDs.size(); ++e){
       //std::cout<<h<<" "<<e<<" "<<eveIDs[e].trackID<<" "<<eveIDs[e].energy<<" "<<eveIDs[e].energyFrac<<std::endl;
@@ -3369,4 +3374,3 @@ namespace sbnd{
 }
 
 #endif
-

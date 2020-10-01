@@ -3,6 +3,7 @@
 
 #include "SimpleFlashAlgo.h"
 #include <set>
+#include <algorithm>
 
 namespace lightana{
     
@@ -46,15 +47,26 @@ namespace lightana{
             }
             _flash_veto_range_m.emplace(range_end_v[i],range_start_v[i]);
         }
+
+        // Check what PD to use
+        std::vector<std::string> pd_to_use;
+        pd_to_use = p.get<std::vector<std::string>>("PD", pd_to_use);
+        std::vector<int> opch_to_use = PDNamesToList(pd_to_use);
         
         _index_to_opch_v.clear();
         _index_to_opch_v =  p.get<std::vector<int> >("OpChannel",_index_to_opch_v);
         if(_index_to_opch_v.empty()) {
-            int cryostat = p.get<int>("Cryostat",-1);
-            if(cryostat>=0) {
-                auto const opch_v = ListOpChannels(cryostat);
+            int tpc = p.get<int>("TPC",-1);
+            if(tpc>=0) {
+                auto const opch_v = ListOpChannelsByTPC(tpc);
                 _index_to_opch_v.reserve(opch_v.size());
-                for(auto const& v : opch_v) _index_to_opch_v.push_back(v);
+                for(auto const& v : opch_v) {
+                    auto iter = std::find(opch_to_use.begin(), opch_to_use.end(), v);
+                    if (iter != opch_to_use.end()) {
+                        _index_to_opch_v.push_back(v);
+                        // std::cout << "Going to use ch " << v << std::endl;
+                    }
+                }
             }else{
                 auto opch_range = p.get<std::vector<int> >("OpChannelRange");
                 if(opch_range.size()!=2) {
@@ -67,8 +79,12 @@ namespace lightana{
                     throw std::exception();
                 }
                 _index_to_opch_v.reserve(opch_range[1]-opch_range[0]+1);
-                for(int i=opch_range[0]; i<=opch_range[1]; ++i)
-                    _index_to_opch_v.push_back(i);
+                for(int i=opch_range[0]; i<=opch_range[1]; ++i) {
+                    auto iter = std::find(opch_to_use.begin(), opch_to_use.end(), i);
+                    if (iter != opch_to_use.end()) {
+                        _index_to_opch_v.push_back(i);
+                    }
+                }
             }
         }
         size_t valid_id=0;
@@ -88,6 +104,7 @@ namespace lightana{
             std::cerr << "Length of OpChannel array parameter is 0..." << std::endl;
             throw std::exception();
         }
+        std::cout << "Number of opch used to construct flashes: " << _index_to_opch_v.size() << std::endl;
         /*
         if(_pe_baseline_v.size() != duplicate.size()) {
           std::cout << "PEBaseline array length (" << _pe_baseline_v.size()
@@ -152,6 +169,7 @@ namespace lightana{
                 continue;
             }
             size_t index = (size_t)((oph.peak_time - min_time) / _time_res);
+            // std::cout << "Ophit from ch " << oph.channel << " at time " << oph.peak_time << " with PE " << oph.pe << ", index " << index << std::endl;
             _pesum_v[index] += oph.pe;
             mult_v[index] += 1;
             pespec_v[index][_opch_to_index_v[oph.channel]] += oph.pe;
@@ -161,7 +179,9 @@ namespace lightana{
         // Order by pe (above threshold)
         std::map<double,size_t> pesum_idx_map;
         for(size_t idx=0; idx<nbins_pesum_v; ++idx) {
+            // std::cout <<  "    _pesum_v at " << idx << " is " << _pesum_v[idx] << ", _min_pe_coinc is " << _min_pe_coinc << std::endl;
             if(_pesum_v[idx] < _min_pe_coinc   ) continue;
+            // std::cout <<  "    mult_v at " << idx << " is " << mult_v[idx] << ", _min_mult_coinc is " << _min_mult_coinc << std::endl;
             if(mult_v[idx]  < _min_mult_coinc ) continue;
             pesum_idx_map[1./(_pesum_v[idx])] = idx;
         }

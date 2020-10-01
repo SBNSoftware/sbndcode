@@ -15,6 +15,7 @@
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
@@ -289,12 +290,14 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                DISTANCE OF CLOSEST APPROACH ANALYSIS
     //----------------------------------------------------------------------------------------------------------
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
 
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       std::string type = "none";
       if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trackTrueID) != lepParticleIds.end()) type = "NuMuTrack";
       if(std::find(nuParticleIds.begin(), nuParticleIds.end(), trackTrueID) != nuParticleIds.end()) type = "NuTrack";
@@ -310,8 +313,8 @@ namespace sbnd {
       }
 
       // Calculate t0 from CRT track matching
-      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
-      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
+      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
+      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
 
       if(closestAngle.second != -99999){
         int crtTrackTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closestAngle.first);
@@ -350,7 +353,7 @@ namespace sbnd {
       }
 
       hLengthTotal[type]->Fill(tpcTrack.Length());
-      if(ctTag.CrtTrackCosmicId(tpcTrack, crtTracks, event)){
+      if(ctTag.CrtTrackCosmicId(detProp, tpcTrack, crtTracks, event)){
         hLengthTag[type]->Fill(tpcTrack.Length());
       }
     }
@@ -385,7 +388,7 @@ namespace sbnd {
 
         // Truth match muon tracks and pfps
         std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
         if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()){ 
           type = "NuMuPfp";
         }
@@ -407,7 +410,7 @@ namespace sbnd {
 
       recob::Track tpcTrack = nuTracks[0];
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
 
       if(numCrtTrackMap.find(trackTrueID) != numCrtTrackMap.end()){
         hNumTrueMatches[type]->Fill(numCrtTrackMap[trackTrueID]);
@@ -416,8 +419,8 @@ namespace sbnd {
         hNumTrueMatches[type]->Fill(0);
       }
 
-      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(tpcTrack, crtTracks, event);
-      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(tpcTrack, crtTracks, event);
+      std::pair<crt::CRTTrack, double> closestAngle = trackAlg.ClosestCRTTrackByAngle(detProp, tpcTrack, crtTracks, event);
+      std::pair<crt::CRTTrack, double> closestDCA = trackAlg.ClosestCRTTrackByDCA(detProp, tpcTrack, crtTracks, event);
 
       if(closestAngle.second != -99999){
         int crtTrackTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closestAngle.first);
@@ -456,7 +459,7 @@ namespace sbnd {
       }
 
       hLengthTotal[type]->Fill(tpcTrack.Length());
-      if(ctTag.CrtTrackCosmicId(tpcTrack, crtTracks, event)){
+      if(ctTag.CrtTrackCosmicId(detProp, tpcTrack, crtTracks, event)){
         hLengthTag[type]->Fill(tpcTrack.Length());
       }
     }
@@ -483,5 +486,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTTrackCosmicIdAna)
 } // namespace sbnd
-
-

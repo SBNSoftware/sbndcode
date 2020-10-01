@@ -71,6 +71,7 @@ find_ups_product( larevt )
 find_ups_product( larcore v1_00_00 )
 find_ups_product( larcoreobj v1_00_00 )
 find_ups_product( larreco )
+find_ups_product( larana v1_00_00 )
 find_ups_product( nutools v1_00_00 )
 find_ups_product( nug4 )
 find_ups_product( nugen )
@@ -95,8 +96,6 @@ add_subdirectory(sbndcode)
 add_subdirectory(test)
 # ups - table and config files
 add_subdirectory(ups)
-# fcl - contains job level fcl files (useful for the MCC)
-add_subdirectory(fcl)
 # subdirectory for scripts
 add_subdirectory(bin)
 

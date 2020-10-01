@@ -1,18 +1,11 @@
 #
-# File:    standard_reco_sbnd_basic.fcl
-# Purpose: run basic reconstruction with SBND detector
-# Version: 1.3
+# File:    reco_sbnd.fcl
+# Purpose: Defines a reconstruction configuration file for SBND.  The official workflows should derive from this
+# Version: 1.0
 #
 # Changes:
-# 20160621 (petrillo@fnal.gov) [v1.1]
-#   updated with sbndcode services
-# 20160929 (petrillo@fnal.gov) [v1.2]
-#   replace tracker from TrackKalman3D to PMTrackMaker
-#
-# 20161223 (petrillo@fnal.gov) [v1.3]
-#   - adopted shared root output configuration
-#
-
+# 20200923 (d.brailsford@lancster.ac.uk) [v1.0]
+#   Initial definition
 #
 # service configuration
 #
@@ -36,6 +29,8 @@
 #include "databaseutil_sbnd.fcl"
 ##include "opticaldetectormodules_sbnd.fcl"
 #include "ophitfinder_sbnd.fcl"
+#include "ophit_finder_sbnd.fcl"
+#include "sbnd_flashfinder.fcl"
 #include "vertexfindermodules.fcl"
 #include "pandoramodules_sbnd.fcl"
 ##include "triggeralgo_service.fcl"
@@ -50,7 +45,7 @@
 #include "crttrackmatchingalg_sbnd.fcl"
 
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
-#include "backtrackerservice.fcl" 
+##include "backtrackerservice.fcl" 
 #include "particleinventoryservice.fcl"
 
 process_name: Reco
@@ -67,8 +62,8 @@ services:
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
 
   #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018 
-  BackTrackerService:  @local::standard_backtrackerservice 
-  ParticleInventoryService: @local::standard_particleinventoryservice
+#BackTrackerService:  @local::standard_backtrackerservice 
+#ParticleInventoryService: @local::standard_particleinventoryservice
 }
 
 #source is now a root file
@@ -89,10 +84,16 @@ physics:
   ### random number saver
   rns:                 { module_type: RandomNumberSaver }
 
+  ### optical hit finders
+  # ophit:               @local::sbnd_hit_finder
+  ophitpmt:            @local::sbnd_ophit_finder_pmt
+  ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+
   ### flash finders
   # opflash:             @local::sbnd_opflash
- 
-  ophit:		@local::sbnd_hit_finder 
+  opflashtpc0:         @local::SBNDSimpleFlashTPC0
+  opflashtpc1:         @local::SBNDSimpleFlashTPC1
+
   ### calwire producers
   caldata:             @local::sbnd_calwire
 
@@ -114,7 +115,8 @@ physics:
   ### pandora
   pandora:             @local::sbnd_pandora
   pandoraTrack:        @local::sbnd_pandoraTrackCreation
-  pandoraShower:       @local::sbnd_pandoraShowerCreation
+  pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
+  pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
   pandoraCalo:         @local::sbnd_calomc                                        
   pandoraPid:          @local::sbnd_chi2pid  
 
@@ -127,7 +129,6 @@ physics:
     
   ### shower-finder producers
   emshower:            @local::sbnd_emshower
-  tracs:               @local::sbnd_tracs
 
 
   ### vertex-finder producers
@@ -147,27 +148,33 @@ physics:
 
  #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
- reco: [ rns
-	 , ophit
-        # , opflash
-         , caldata 
+ reco1: [ rns
+         , ophitpmt
+         , ophitarapuca
+         , opflashtpc0
+         , opflashtpc1
+         , caldata
          , gaushit
          , fasthit
+         , linecluster
    #      , rffhit
    #      , corner
    #      , fuzzycluster
-         , linecluster
+ ]
+
+ reco2: [ rns
+#         , linecluster
    #      , cccluster
    #      , spacepts,
    #       , blurredcluster 
-          , pandora, pandoraTrack, pandoraShower
+          , pandora, pandoraTrack, pandoraShower, pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
    #      , trackkalmanhitcalo,
          , pmatrackcalo
          , pmatrackpid
-         , emshower, tracs
+         , emshower
          , crthit
    #      , crttzero
          , crttrack
@@ -179,8 +186,7 @@ physics:
  stream1:  [ out1 ]
 
  #trigger_paths is a keyword and contains the paths that modify the art::event, 
- #ie filters and producers
- trigger_paths: [reco] 
+ #trigger_paths is defined outside of the physics scope (below) as we want to merge sequences together
 
  #end_paths is a keyword and contains the paths that do not modify the art::Event, 
  #ie analyzers and output streams.  these all run simultaneously
@@ -198,6 +204,13 @@ outputs:
    dataTier:    "reconstructed"
  }
 }
+
+
+#Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
+physics.fullreco: [ @sequence::physics.reco1,
+                    @sequence::physics.reco2 ]
+physics.trigger_paths: [ fullreco ]                   
+
 
 
 ### Here, we overwrite ALL module labels with the ones defined above.
@@ -225,6 +238,7 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
+physics.producers.pandoraShowerLegacy.PFParticleLabel:           "pandora"
 
 ### Added for Rhiannon's analysis work                                            
 physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"   

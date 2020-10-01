@@ -154,8 +154,6 @@ namespace sbnd {
     std::map<std::string, TH2D*> hSipmDistNpeRatio;
 
     // Other variables shared between different methods.
-    detinfo::DetectorClocks const* fDetectorClocks;
-    //detinfo::ElecClock fTrigClock;
     geo::GeometryCore const* fGeometryService;
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
@@ -175,8 +173,6 @@ namespace sbnd {
     , fCrtBackTrack         (config().CrtBackTrack())
   {
     // Get a pointer to the fGeometryServiceetry service provider
-    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-    //fTrigClock = fDetectorClocks->TriggerClock();
     fGeometryService = lar::providerFrom<geo::Geometry>();
   }
 
@@ -390,5 +386,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTDetSimAna)
 } // namespace sbnd
-
-

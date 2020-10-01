@@ -22,9 +22,9 @@
 
 #include <memory>
 #include <string>
-#include "FlashFinderManager.h"
-#include "FlashFinderFMWKInterface.h"
-#include "PECalib.h"
+#include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderManager.h"
+#include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderFMWKInterface.h"
+#include "sbndcode/OpDetReco/OpFlash/FlashFinder/PECalib.h"
 
 namespace opdet{
 
@@ -47,11 +47,9 @@ namespace opdet{
 
   private:
 
-    // Declare member data here.
     ::lightana::FlashFinderManager _mgr;
     ::lightana::PECalib _pecalib;
-    std::string _flash_producer;
-    std::string _hit_producer;
+    std::vector<std::string> _hit_producers;
 
     void GetFlashLocation(std::vector<double>, double&, double&, double&, double&);
 
@@ -61,9 +59,8 @@ namespace opdet{
   : EDProducer{p}
   // Initialize member data here.
   {
-    _hit_producer   = p.get<std::string>("OpHitProducer");
-    _flash_producer = p.get<std::string>("OpFlashProducer");
-  
+    _hit_producers = p.get<std::vector<std::string>>("OpHitProducers");
+
     auto const flash_algo  = p.get<std::string>("FlashFinderAlgo");
     auto const flash_pset = p.get<lightana::Config_t>("AlgoConfig");
     auto algo_ptr = ::lightana::FlashAlgoFactory::get().create(flash_algo,flash_algo);
@@ -80,30 +77,42 @@ namespace opdet{
 
     // produce OpFlash data-product to be filled within module
     std::unique_ptr< std::vector<recob::OpFlash> > opflashes(new std::vector<recob::OpFlash>);
-    std::unique_ptr< art::Assns <recob::OpHit, recob::OpFlash> > flash2hit_assn_v  ( new art::Assns<recob::OpHit, recob::OpFlash> );
-    // load OpHits previously created
-    art::Handle<std::vector<recob::OpHit> > ophit_h;
-    e.getByLabel(_hit_producer,ophit_h);
+    std::unique_ptr< art::Assns <recob::OpHit, recob::OpFlash> > flash2hit_assn_v
+      (new art::Assns<recob::OpHit, recob::OpFlash>);
 
-    // make sure hits look good
-    if(!ophit_h.isValid()) {
-      std::cerr<<"\033[93m[ERROR]\033[00m ... could not locate OpHit!"<<std::endl;
-      throw std::exception();
-    }
+    std::vector<art::Ptr<recob::OpHit>> ophit_v;
 
     ::lightana::LiteOpHitArray_t ophits;
     double trigger_time=1.1e20;
-    for(auto const& oph : *ophit_h) {
-      ::lightana::LiteOpHit_t loph;
-      if(trigger_time > 1.e20) trigger_time = oph.PeakTimeAbs() - oph.PeakTime();
-      loph.peak_time = oph.PeakTime();
 
-      size_t opdet = ::lightana::OpDetFromOpChannel(oph.OpChannel());
-      loph.pe = _pecalib.Calibrate(opdet,oph.Area());
-      loph.channel = oph.OpChannel();
+    for (auto producer : _hit_producers) {
+
+      // load OpHits previously created
+      art::Handle<std::vector<recob::OpHit> > ophit_h;
+      e.getByLabel(producer, ophit_h);
+
+      // make sure hits look good
+      if(!ophit_h.isValid()) {
+        std::cerr << "\033[93m[ERROR]\033[00m ... could not locate OpHit!" << std::endl;
+        throw std::exception();
+      }
+
+      std::vector<art::Ptr<recob::OpHit>> temp_v;
+      art::fill_ptr_vector(temp_v, ophit_h);
+      ophit_v.insert(ophit_v.end(), temp_v.begin(), temp_v.end());
+    }
+
+    for(auto const oph : ophit_v) {
+      ::lightana::LiteOpHit_t loph;
+      if(trigger_time > 1.e20) trigger_time = oph->PeakTimeAbs() - oph->PeakTime();
+      loph.peak_time = oph->PeakTime();
+
+      size_t opdet = ::lightana::OpDetFromOpChannel(oph->OpChannel());
+      loph.pe = _pecalib.Calibrate(opdet,oph->Area());
+      loph.channel = oph->OpChannel();
       ophits.emplace_back(std::move(loph));
     }
-  
+
     auto const flash_v = _mgr.RecoFlash(ophits);
 
     for(const auto& lflash :  flash_v) {
@@ -116,17 +125,22 @@ namespace opdet{
                          Ycenter, Ywidth, Zcenter, Zwidth);
       opflashes->emplace_back(std::move(flash));
 
+
       for(auto const& hitidx : lflash.asshit_idx) {
-        const art::Ptr<recob::OpHit> hit_ptr(ophit_h, hitidx);
+        const art::Ptr<recob::OpHit> hit_ptr(ophit_v.at(hitidx));
         util::CreateAssn(*this, e, *opflashes, hit_ptr, *flash2hit_assn_v);
       }
     }
-  
+
     e.put(std::move(opflashes));
     e.put(std::move(flash2hit_assn_v));
   }
 
-  void SBNDFlashFinder::GetFlashLocation(std::vector<double> pePerOpChannel, double& Ycenter, double& Zcenter, double& Ywidth, double& Zwidth)
+  void SBNDFlashFinder::GetFlashLocation(std::vector<double> pePerOpChannel,
+                                         double& Ycenter,
+                                         double& Zcenter,
+                                         double& Ywidth,
+                                         double& Zwidth)
   {
 
     // Reset variables
@@ -136,7 +150,7 @@ namespace opdet{
     double sumy = 0., sumz = 0., sumy2 = 0., sumz2 = 0.;
     for (unsigned int opch = 0; opch < pePerOpChannel.size(); opch++) {
       if (opch > 31 && opch < 100){  //TO ADAPT FOR SBND USING THE MAP
-        //  std::cout << "Ignoring channel " << opch << " as it's not a real channel" << std::endl;            
+        //  std::cout << "Ignoring channel " << opch << " as it's not a real channel" << std::endl;
         continue;
       }
       // Get physical detector location for this opChannel
@@ -152,12 +166,12 @@ namespace opdet{
 
     Ycenter = sumy/totalPE;
     Zcenter = sumz/totalPE;
-  
+
     // This is just sqrt(<x^2> - <x>^2)
-    if ( (sumy2*totalPE - sumy*sumy) > 0. ) 
+    if ( (sumy2*totalPE - sumy*sumy) > 0. )
       Ywidth = std::sqrt(sumy2*totalPE - sumy*sumy)/totalPE;
-         
-    if ( (sumz2*totalPE - sumz*sumz) > 0. ) 
+
+    if ( (sumz2*totalPE - sumz*sumz) > 0. )
       Zwidth = std::sqrt(sumz2*totalPE - sumz*sumz)/totalPE;
   }
 
