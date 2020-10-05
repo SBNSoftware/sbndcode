@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+validateTracks:
+{
+	module_type: "ValidateTracks"
+}
+
+END_PROLOG
