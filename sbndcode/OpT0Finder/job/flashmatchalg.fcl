@@ -1,0 +1,92 @@
+
+BEGIN_PROLOG
+
+flashmatch_config : {
+#
+# Manager configuration
+#
+FlashMatchManager: {
+  Verbosity: 3
+  AllowReuseFlash: false
+  StoreFullResult: false
+  FlashFilterAlgo: ""
+  TPCFilterAlgo:   "NPtFilter"
+  ProhibitAlgo:    "TimeCompatMatch"
+  HypothesisAlgo:  "PhotonLibHypothesis"
+  MatchAlgo:       "QLLMatch"
+  CustomAlgo:      ["LightPath"]#,"MCQCluster"]
+}
+
+#
+# Algorithms
+#
+QLLMatch: {
+  RecordHistory: false
+  NormalizeHypothesis: false
+  QLLMode: 1 # 0 for Chi2, 1 for LLHD
+  PEPenaltyThreshold: [6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]
+  PEPenaltyValue: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
+  #PEPenaltyThreshold: [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
+  #PEPenaltyValue: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
+  XPenaltyThreshold: 30
+  ZPenaltyThreshold: 30
+  OnePMTScoreThreshold:  0.00001
+  OnePMTXDiffThreshold:  35.
+  OnePMTPESumThreshold:  500
+  OnePMTPEFracThreshold: 0.3
+}
+
+QWeightPoint: {
+    XStepSize: 5
+    ZDiffMax:  50.0
+}
+
+CommonAmps: {
+    ScoreThreshold: 0.8
+    QFracThreshold: 0.5
+    XStepSize:      5.0
+}
+
+TimeCompatMatch: {
+    FrameDriftTime: 2300.4
+    TimeBuffer: 100
+}
+
+MaxNPEWindow: {
+    TimeUpperBound:  8.0
+    TimeLowerBound: -0.1
+    NPEThreshold:   10.0
+}
+
+NPtFilter: {
+    MinNumPoint: 1
+}
+
+PhotonLibHypothesis:
+{
+  GlobalQE: 0.0093
+  CCVCorrection: [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]
+#  CCVCorrection: [0.75776119,  0.6860564,   0.77878209,  0.68963465,  0.67734361,  0.77924275,  0.85434933,  0.71434847,  0.72942828,  0.70329534,  0.79572861,  0.81375612,  0.78800597,  0.7642742,   0.83516926,  0.77965834,  0.8001,      0.70233983,  0.79135871,  0.78970366,  0.7791012,   0.82845161,  0.82377655,  0.73136901,  0.7850973,   1.24859956,  0.81230634,  1.01884567,  0.82285172,  1.00262746,  0.85031364,  0.7569778] # MuCS ACPT Run 182 w/ old phot lib
+
+}
+
+ChargeAnalytical:
+{}
+
+MCQCluster: {
+    UseMCdEdX:    false
+    UseXShift:    true
+    OpROStart:    -2400000
+    OpROEnd:      2400000
+    Extension:    10
+    DefaultTriggerTime: 4046.5312
+}
+
+LightPath: {
+    SegmentSize: 0.5
+    LightYield:  40000
+    MIPdEdx:     2.07
+}
+
+}
+END_PROLOG

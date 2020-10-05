@@ -1,0 +1,29 @@
+#include "flashmatchalg.fcl"
+
+BEGIN_PROLOG
+
+sbnd_opt0_finder:
+{
+  module_type:     "SBNDOpT0Finder"
+  OpFlashProducer: "opflashtpc0"
+  SliceProducer:   "pandora"
+
+  FlashVetoTimeStart: 0
+  FlashVetoTimeEnd:   2
+
+  FlashMatchConfig: @local::flashmatch_config
+
+  ChargeToNPhotonsTrack:    34   #  (1 / 0.0201293) e-/ADC*time_ticks  x
+                                 #  x  23.6e-6 MeV/e-  x
+                                 #  x  29,000 gamma/MeV  =
+                                 #  =  34 (not including recombination)
+                                 #  0.0201293 is the calibration constant for
+                                 #  collection plane derived in docdb 19505
+  ChargeToNPhotonsShower:   34   #  Not tuned! higher mainly beacause we need
+                                 #  to account for missing charge contributions
+
+  # ChargeToNPhotonsTrack:    164. # 240 e-/ADC x 23.6/1e6 MeV/e- x 29,000 gamma/MeV = 164. (not including recombination)
+  # ChargeToNPhotonsShower:   164. # Not tuned! higher mainly beacause we need to account for missing charge contributions
+}
+
+END_PROLOG
