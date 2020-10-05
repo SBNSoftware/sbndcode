@@ -126,7 +126,7 @@ int CRTTrackMatchAlg::GetMatchedCRTTrackId(detinfo::DetectorPropertiesData const
 }
 
 std::pair<int,double> CRTTrackMatchAlg::GetMatchedCRTTrackIdAndScore(detinfo::DetectorPropertiesData const& detProp,
-                                                                     recob::Track tpcTrack, std::vector<crt::CRTTrack> crtTracks, const art::Event& event){
+                                                                     recob::Track tpcTrack, std::vector<sbn::crt::CRTTrack> crtTracks, const art::Event& event){
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -173,8 +173,8 @@ std::vector<sbn::crt::CRTTrack> CRTTrackMatchAlg::AllPossibleCRTTracks(detinfo::
 
 
 // Get all CRT tracks that cross the right TPC within an allowed time
-std::vector<crt::CRTTrack> CRTTrackMatchAlg::AllPossibleCRTTracks(detinfo::DetectorPropertiesData const& detProp,
-                                                                  recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTTrack> crtTracks) {
+  std::vector<sbn::crt::CRTTrack> CRTTrackMatchAlg::AllPossibleCRTTracks(detinfo::DetectorPropertiesData const& detProp,
+									 recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTTrack> crtTracks) {
 
    std::vector<sbn::crt::CRTTrack> trackCandidates;
 
@@ -214,8 +214,8 @@ std::vector<crt::CRTTrack> CRTTrackMatchAlg::AllPossibleCRTTracks(detinfo::Detec
   return trackCandidates;
 }
 
-std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const& detProp,
-                                                                          recob::Track tpcTrack, std::vector<sbn::crt::CRTTrack> crtTracks, const art::Event& event, double minDCA){
+std::pair<sbn::crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const& detProp,
+									       recob::Track tpcTrack, std::vector<sbn::crt::CRTTrack> crtTracks, const art::Event& event, double minDCA){
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -223,8 +223,8 @@ std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinf
 }
 
 // Find the closest matching crt track by angle between tracks within angle and DCA limits
-std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const& detProp,
-                                                                          recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTTrack> crtTracks, double minDCA){
+std::pair<sbn::crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const& detProp,
+									       recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTTrack> crtTracks, double minDCA){
 
   // Get the drift direction (0 for stitched tracks)
   int driftDirection = TPCGeoUtil::DriftDirectionFromHits(fGeometryService, hits);
@@ -256,8 +256,8 @@ std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinf
   return std::make_pair(track, -99999);
 }
 
-std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const& detProp,
-                                                                        recob::Track tpcTrack, std::vector<sbn::crt::CRTTrack> crtTracks, const art::Event& event, double minAngle) {
+std::pair<sbn::crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const& detProp,
+									     recob::Track tpcTrack, std::vector<sbn::crt::CRTTrack> crtTracks, const art::Event& event, double minAngle) {
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -265,7 +265,7 @@ std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo:
 }
 
 // Find the closest matching crt track by average DCA between tracks within angle and DCA limits
-std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const& detProp,
+std::pair<sbn::crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const& detProp,
                                                                         recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTTrack> crtTracks,  double minAngle){
 
   // Get the drift direction (0 for stitched tracks)
@@ -301,8 +301,8 @@ std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo:
 }
 
 
-std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const& detProp,
-                                                                          recob::Track tpcTrack, std::vector<sbn::crt::CRTTrack> crtTracks, const art::Event& event) {
+std::pair<sbn::crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const& detProp,
+									       recob::Track tpcTrack, std::vector<sbn::crt::CRTTrack> crtTracks, const art::Event& event) {
   auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
   art::FindManyP<recob::Hit> findManyHits(tpcTrackHandle, event, fTPCTrackLabel);
   std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
@@ -310,7 +310,7 @@ std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByScore(detinf
 }
 
 // Find the closest matching crt track by average DCA between tracks within angle and DCA limits
-std::pair<crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const& detProp,
+std::pair<sbn::crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const& detProp,
                                                                           recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTTrack> crtTracks){
 
   // Get the drift direction (0 for stitched tracks)

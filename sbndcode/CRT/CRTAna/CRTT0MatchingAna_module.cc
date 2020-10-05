@@ -9,6 +9,7 @@
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTHit_Legacy.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
@@ -279,7 +280,7 @@ namespace sbnd {
       if(trueTime < minHitTime || trueTime > maxHitTime) continue;
 
       // Calculate t0 from CRT Hit matching
-      std::pair<sbnd::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
       if(closest.second != -99999){ 
         hDCA[closest.first.tagger]->Fill(closest.second);
         hDCA["All"]->Fill(closest.second);
