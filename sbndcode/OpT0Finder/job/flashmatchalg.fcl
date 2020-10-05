@@ -1,6 +1,9 @@
 
 BEGIN_PROLOG
 
+flash_match_tpc : 0
+flash_match_cryo : 0
+
 flashmatch_config : {
 #
 # Manager configuration
@@ -24,8 +27,10 @@ QLLMatch: {
   RecordHistory: false
   NormalizeHypothesis: false
   QLLMode: 1 # 0 for Chi2, 1 for LLHD
-  PEPenaltyThreshold: [6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]
-  PEPenaltyValue: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
+  PEPenaltyThreshold: []
+  PEPenaltyValue: []
+  #PEPenaltyThreshold: [6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]
+  #PEPenaltyValue: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
   #PEPenaltyThreshold: [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
   #PEPenaltyValue: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
   XPenaltyThreshold: 30
@@ -34,6 +39,8 @@ QLLMatch: {
   OnePMTXDiffThreshold:  35.
   OnePMTPESumThreshold:  500
   OnePMTPEFracThreshold: 0.3
+  TPCNumber: @local::flash_match_tpc
+  CryoNumber: @local::flash_match_cryo
 }
 
 QWeightPoint: {
@@ -64,7 +71,8 @@ NPtFilter: {
 
 PhotonLibHypothesis:
 {
-  GlobalQE: 0.0093
+  GlobalQE: 0.03
+  GlobalQERefl: 0.03
   CCVCorrection: []
   # CCVCorrection: [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]
 }

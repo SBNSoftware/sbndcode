@@ -38,6 +38,9 @@ namespace flashmatch {
     _onepmt_pesum_threshold = pset.get<double>("OnePMTPESumThreshold");
     _onepmt_pefrac_threshold = pset.get<double>("OnePMTPEFracThreshold");
 
+    _tpc = pset.get<double>("TPCNumber", -1);
+    _cryo = pset.get<double>("CryoNumber", -1);
+
     _xpos_v.resize(DetectorSpecs::GetME().NOpDets(),0.);
     _ypos_v.resize(DetectorSpecs::GetME().NOpDets(),0.);
     _zpos_v.resize(DetectorSpecs::GetME().NOpDets(),0.);
@@ -47,9 +50,17 @@ namespace flashmatch {
       _ypos_v[ch] = pmt_pos[1];
       _zpos_v[ch] = pmt_pos[2];
     }
-    auto const& bbox = DetectorSpecs::GetME().ActiveVolume();
-    _vol_xmax = bbox.Max()[0];
-    _vol_xmin = bbox.Min()[0];
+    if(_tpc == -1 || _cryo == -1) {
+      auto const& bbox = DetectorSpecs::GetME().ActiveVolume();
+      _vol_xmax = bbox.Max()[0];
+      _vol_xmin = bbox.Min()[0];
+    } else {
+      auto const& bbox = DetectorSpecs::GetME().ActiveVolume(_tpc, _cryo);
+      _vol_xmax = bbox.Max()[0];
+      _vol_xmin = bbox.Min()[0];
+      std::cout << "--------------------------------------------------------- _vol_xmax " << _vol_xmax << ", _vol_xmin " << _vol_xmin << std::endl;
+    }
+
   }
 
   FlashMatch_t QLLMatch::Match(const QCluster_t &pt_v, const Flash_t &flash) {

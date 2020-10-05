@@ -161,6 +161,9 @@ namespace flashmatch {
     double _vol_xmax, _vol_xmin;
     std::vector<double> _xpos_v, _ypos_v, _zpos_v;
 
+    int _tpc; ///< The TPC number to use
+    int _cryo; ///< The Cryostat number to use
+
   };
 
   /**

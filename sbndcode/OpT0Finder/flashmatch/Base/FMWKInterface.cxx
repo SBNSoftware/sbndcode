@@ -49,6 +49,16 @@ namespace flashmatch{
 
   }
 
+  const geoalgo::AABox& DetectorSpecs::ActiveVolume(int tpc, int cryo) const {
+    auto iter = _bbox_map.find(std::pair<int,int>(tpc, cryo));
+    if (iter == _bbox_map.end()) {
+      FLASH_CRITICAL() << "Boundary box map doesn't contain cryo " << cryo
+                       << " or tpc " << tpc << "!" << std::endl;
+      throw OpT0FinderException();
+    }
+    return iter->second;
+  }
+
   float DetectorSpecs::GetVisibility(double x, double y, double z, unsigned int opch) const
   { return phot::PhotonVisibilityService::GetME().GetVisibility(x,y,z,opch); }
 
@@ -74,6 +84,25 @@ namespace flashmatch{
       _pmt_v.push_back(pmt);
     }
 
+    for (size_t cryo = 0; cryo < geo->Ncryostats(); cryo++) {
+      for (size_t tpc = 0; tpc < geo->NTPC(cryo); tpc++) {
+        const geo::TPCGeo tpc_geo = geo->TPC(tpc, cryo);
+        double x_min = tpc_geo.GetCenter().X() - tpc_geo.HalfWidth();
+        double x_max = tpc_geo.GetCenter().X() + tpc_geo.HalfWidth();
+
+        double y_min = tpc_geo.GetCenter().Y() - tpc_geo.HalfHeight();
+        double y_max = tpc_geo.GetCenter().Y() + tpc_geo.HalfHeight();
+
+        double z_min = tpc_geo.GetCenter().Z() - tpc_geo.HalfLength();
+        double z_max = tpc_geo.GetCenter().Z() + tpc_geo.HalfLength();
+
+        std::cout << "cryo " << cryo << ", tpc " << tpc << " - x_min " << x_min << ", x_max " << x_max << std::endl;
+        auto pair = std::pair<int,int>(tpc, cryo);
+        _bbox_map[pair] = geoalgo::AABox(x_min, y_min, z_min, x_max, y_max, z_max);
+        // _bbox = geoalgo::AABox(x_min, y_min, z_min, x_max, y_max, z_max);
+      }
+    }
+
     // art::ServiceHandle<phot::PhotonVisibilityService const> pvs;
   }
 
@@ -94,6 +123,17 @@ namespace flashmatch{
     // return pvs.GetVisibility(xyz, opch, true);
     return -1;
   }
+
+  const geoalgo::AABox& DetectorSpecs::ActiveVolume(int tpc, int cryo) const {
+    auto iter = _bbox_map.find(std::pair<int,int>(tpc, cryo));
+    if (iter == _bbox_map.end()) {
+      FLASH_CRITICAL() << "Boundary box map doesn't contain cryo " << cryo
+                       << " or tpc " << tpc << "!" << std::endl;
+      throw OpT0FinderException();
+    }
+    return iter->second;
+  }
+
 }
 #endif
 

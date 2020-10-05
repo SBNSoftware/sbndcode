@@ -15,6 +15,8 @@ namespace flashmatch {
 }
 #else
 #include "sbndcode/OpT0Finder/flashmatch/GeoAlgo/GeoAABox.h"
+#include "OpT0FinderException.h"
+#include "OpT0FinderLogger.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "larsim/PhotonPropagation/PhotonVisibilityService.h"
 #include "larcore/Geometry/Geometry.h"
@@ -45,6 +47,9 @@ namespace flashmatch {
     /// Detector active volume
     inline const geoalgo::AABox& ActiveVolume() const { return _bbox; }
 
+    /// Detector active volume given cryo and tpc
+    const geoalgo::AABox& ActiveVolume(int tpc, int cryo=0) const;
+
     /// # of PMTs
     inline size_t NOpDets() const { return _pmt_v.size(); }
 
@@ -69,6 +74,7 @@ namespace flashmatch {
     static DetectorSpecs* _me;
     std::vector<geoalgo::Point_t> _pmt_v;
     geoalgo::AABox _bbox;
+    std::map<std::pair<int, int>, geoalgo::AABox> _bbox_map; ///< A bbox map (cryo,tpc) -> bbox
     double _drift_velocity;
     #if USING_LARSOFT == 0
     sim::PhotonVoxelDef _voxel_def;
