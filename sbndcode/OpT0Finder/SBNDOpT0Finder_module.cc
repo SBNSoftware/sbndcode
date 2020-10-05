@@ -43,34 +43,6 @@
 
 class SBNDOpT0Finder;
 
-// namespace flashmatch {
-//   class Deposition
-//     {
-//     public:
-//       /**
-//              *  @brief  Default constructor
-//              *
-//              *  @param  x the x-component of the charge position
-//              *  @param  y the z-component of the charge position
-//              *  @param  z the z-component of the charge position
-//              *  @param  charge the charge deposited
-//              *  @param  n_photons the estimated numer of photons produced
-//              */
-//       Deposition(const float x,
-//                  const float y,
-//                  const float z,
-//                  const float charge,
-//                  const float n_photons) {
-//         _x = x; _y = y; _z = z; _charge = charge; _n_photons = n_photons;
-//       }
-//       float _x;         ///< The x-component of the charge position
-//       float _y;         ///< The z-component of the charge position
-//       float _z;         ///< The z-component of the charge position
-//       float _charge;    ///< The charge deposited
-//       float _n_photons; ///< The estimated numer of photons produced
-//     };
-// }
-
 
 class SBNDOpT0Finder : public art::EDProducer {
 public:
@@ -135,7 +107,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
   _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsShower");
 
-  // _mgr.Configure(p.get<flashmatch::Config_t>("FlashMatchConfig"));
+  _mgr.Configure(p.get<flashmatch::Config_t>("FlashMatchConfig"));
 
   art::ServiceHandle<art::TFileService> fs;
   _tree1 = fs->make<TTree>("flashmatchtree","");
@@ -163,9 +135,9 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
 void SBNDOpT0Finder::produce(art::Event& e)
 {
-  // _mgr.Reset();
-  // _result.clear();
-  // _mgr.PrintConfig();
+  _mgr.Reset();
+  _result.clear();
+  _mgr.PrintConfig();
 
   _run    = e.id().run();
   _subrun = e.id().subRun();
