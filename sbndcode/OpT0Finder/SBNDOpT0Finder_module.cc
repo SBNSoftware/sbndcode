@@ -65,28 +65,31 @@ private:
   float GetNPhotons(const float charge, const art::Ptr<recob::PFParticle> &pfp);
 
   ::flashmatch::FlashMatchManager _mgr; ///< The flash matching manager
-  std::vector<flashmatch::FlashMatch_t> _result; ///< Matching result will be stored here
+  std::vector<flashmatch::FlashMatch_t> _result_v; ///< Matching result will be stored here
 
-  std::string _opflash_producer;
-  std::string _slice_producer;
+  std::string _opflash_producer; ///< The OpFlash producer (to be set)
+  std::string _slice_producer; ///< The Slice producer (to be set)
 
-  double _flash_trange_start;          ///<
-  double _flash_trange_end;            ///<
+  double _flash_trange_start; ///< The time start from where to include flashes (to be set)
+  double _flash_trange_end; ///< The time stop from where to stop including flashes (to be set)
 
-  float _charge_to_n_photons_track;
-  float _charge_to_n_photons_shower;
+  float _charge_to_n_photons_track; ///< The conversion factor betweeen hit integral and photons (to be set)
+  float _charge_to_n_photons_shower; ///< The conversion factor betweeen hit integral and photons (to be set)
 
   TTree* _tree1;
-  int _run, _subrun, _event, _matchid, _flashid;
-  std::vector<double>               _score, _t0;
-  std::vector<double>               _qll_xmin, _tpc_xmin;
-  std::vector<double>              _beam_flash_spec;
-  std::vector<std::vector<double>> _hypo_flash_spec;
-  std::vector<double>              _numc_flash_spec;
-  int _fv, _ccnc, _nupdg;
-  std::vector<double>    _xfixed_hypo_spec;
-  double _xfixed_chi2, _xfixed_ll;
+  int _run, _subrun, _event;
+  int _matchid, _flashid, _tpcid;
+  double _t0, _score;
+  double _tpc_xmin, _qll_xmin;
+  double _hypo_pe, _flash_pe;
+  std::vector<double> _flash_spec;
+  std::vector<double> _hypo_spec;
+  // std::vector<double>              _beam_flash_spec;
+  // std::vector<std::vector<double>> _hypo_flash_spec;
+  // std::vector<double>              _numc_flash_spec;
+  // int _fv, _ccnc, _nupdg;
 
+  TTree* _tree2;
   std::vector<float> _dep_x, _dep_y, _dep_z, _dep_charge, _dep_n_photons;
   std::vector<int> _dep_slice;
 };
@@ -109,34 +112,41 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   _mgr.Configure(p.get<flashmatch::Config_t>("FlashMatchConfig"));
 
+  _flash_spec.resize(geo->NOpDets(), 0.);
+  _hypo_spec.resize(geo->NOpDets(), 0.);
+
   art::ServiceHandle<art::TFileService> fs;
-  _tree1 = fs->make<TTree>("flashmatchtree","");
+
+  _tree1 = fs->make<TTree>("slice_deposition_tree","");
   _tree1->Branch("run",             &_run,                             "run/I");
   _tree1->Branch("subrun",          &_subrun,                          "subrun/I");
   _tree1->Branch("event",           &_event,                           "event/I");
-  // _tree1->Branch("beam_flash_spec", "std::vector<double>",             &_beam_flash_spec);
-  // _tree1->Branch("hypo_flash_spec", "std::vector<std::vector<double>>",&_hypo_flash_spec);
-  // _tree1->Branch("numc_flash_spec", "std::vector<double>",             &_numc_flash_spec);
-  // _tree1->Branch("score",           "std::vector<double>",             &_score);
-  // _tree1->Branch("t0",              "std::vector<double>",             &_t0);
-  // _tree1->Branch("qll_xmin",        "std::vector<double>",             &_qll_xmin);
-  // _tree1->Branch("tpc_xmin",        "std::vector<double>",             &_tpc_xmin);
-  // _tree1->Branch("xfixed_hypo_spec","std::vector<double>",             &_xfixed_hypo_spec);
-  // _tree1->Branch("fv",              &_fv,                              "fv/I");
-  // _tree1->Branch("ccnc",            &_ccnc,                            "ccnc/I");
-  // _tree1->Branch("nupdg",           &_nupdg,                           "nupdg/I");
   _tree1->Branch("dep_slice", "std::vector<int>", &_dep_slice);
   _tree1->Branch("dep_x", "std::vector<float>", &_dep_x);
   _tree1->Branch("dep_y", "std::vector<float>", &_dep_y);
   _tree1->Branch("dep_z", "std::vector<float>", &_dep_z);
   _tree1->Branch("dep_charge", "std::vector<float>", &_dep_charge);
   _tree1->Branch("dep_n_photons", "std::vector<float>", &_dep_n_photons);
+
+  _tree2 = fs->make<TTree>("flash_match_tree","");
+  _tree2->Branch("run",             &_run,                             "run/I");
+  _tree2->Branch("subrun",          &_subrun,                          "subrun/I");
+  _tree2->Branch("event",           &_event,                           "event/I");
+  _tree2->Branch("matchid",         &_matchid,                         "matchid/I");
+  _tree2->Branch("tpcid",           &_tpcid,                           "tpcid/I");
+  _tree2->Branch("flashid",         &_flashid,                         "flashid/I");
+  _tree2->Branch("tpc_xmin",        &_tpc_xmin,                        "tpc_xmin/D");
+  _tree2->Branch("qll_xmin",        &_qll_xmin,                        "qll_xmin/D");
+  _tree2->Branch("t0",              &_t0,                              "t0/D");
+  _tree2->Branch("score",           &_score,                           "score/D");
+  _tree2->Branch("hypo_pe",         &_hypo_pe,                         "hypo_pe/D");
+  _tree2->Branch("flash_pe",        &_flash_pe,                        "flash_pe/D");
 }
 
 void SBNDOpT0Finder::produce(art::Event& e)
 {
   _mgr.Reset();
-  _result.clear();
+  _result_v.clear();
   _mgr.PrintConfig();
 
   _run    = e.id().run();
@@ -196,14 +206,51 @@ void SBNDOpT0Finder::produce(art::Event& e)
   // TODO, Only pick one flash for now
   ::flashmatch::Flash_t f = beam_flashes[0];
 
-  _beam_flash_spec.resize(f.pe_v.size());
-  _beam_flash_spec = f.pe_v;
-
   // Emplace flash to Flash Matching Manager
-  // _mgr.Emplace(std::move(f));
+  _mgr.Emplace(std::move(f));
 
   // Get all the ligh clusters
   auto light_cluster_v = GetLighClusters(e);
+
+  for (auto lc : light_cluster_v) {
+    _mgr.Emplace(std::move(lc));
+  }
+
+  _result_v = _mgr.Match();
+
+  for(_matchid=0; _matchid < (int)(_result_v.size()); ++_matchid) {
+
+    auto const& match = _result_v[_matchid];
+
+    _tpcid    = match.tpc_id;
+    _flashid  = match.flash_id;
+    _score    = match.score;
+    _qll_xmin = match.tpc_point.x;
+
+    std::cout << "Matched _tpcid " << _tpcid << " with _flashid " << _flashid << " - score " << _score << std::endl;
+
+    _tpc_xmin = 1.e4;
+    for(auto const& pt : _mgr.QClusterArray()[_tpcid]) {
+      if(pt.x < _tpc_xmin) _tpc_xmin = pt.x;
+    }
+
+    auto const& flash = _mgr.FlashArray()[_flashid];
+    _t0 = flash.time;
+
+    if(_hypo_spec.size() != match.hypothesis.size()) {
+      std::cout << "Hypothesis size mismatch!" << std::endl;
+      throw std::exception();
+    }
+    for(size_t pmt=0; pmt<_hypo_spec.size(); ++pmt) _hypo_spec[pmt]  = match.hypothesis[pmt];
+    for(size_t pmt=0; pmt<_hypo_spec.size(); ++pmt) _flash_spec[pmt] = flash.pe_v[pmt];
+
+    _flash_pe = 0.;
+    _hypo_pe  = 0.;
+    for(auto const& v : _hypo_spec) _hypo_pe += v;
+    for(auto const& v : _flash_spec) _flash_pe += v;
+    std::cout << "End." << std::endl;
+    _tree2->Fill();
+  }
 }
 
 std::vector<flashmatch::QCluster_t> SBNDOpT0Finder::GetLighClusters(art::Event& e) {
