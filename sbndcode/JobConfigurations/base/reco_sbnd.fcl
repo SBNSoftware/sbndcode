@@ -123,6 +123,7 @@ physics:
   pandoraPid:          @local::sbnd_chi2pid  
 
   pandoraSCECalo:      @local::sbnd_gnewcalomc
+  pandoraSCEPid:       @local::sbnd_chi2pid
 
   ### SCE-aware pandora:
   pandoraSCE: @local::scecorrection
@@ -259,6 +260,8 @@ physics.producers.pandoraSCECalo.TrackModuleLabel:               "pandoraSCETrac
 physics.producers.pandoraSCECalo.FieldDistortion:                true
 physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
 physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
+physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"   
+physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"    
 
 #physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"
