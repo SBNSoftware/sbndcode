@@ -25,7 +25,7 @@ namespace flashmatch {
     omp_set_num_threads(NUM_THREADS);
     #endif
     _global_qe = pset.get<double>("GlobalQE");
-    _global_qe_relf = pset.get<double>("GlobalQERefl", 0);
+    _global_qe_refl = pset.get<double>("GlobalQERefl", 0);
 
     _qe_v.clear();
     _qe_v = pset.get<std::vector<double> >("CCVCorrection",_qe_v);
@@ -66,7 +66,7 @@ namespace flashmatch {
         flash.pe_v[ipmt] += q;
 
         // Reflected light
-        q *= vis->GetVisibility(xyz, ipmt, true) * _global_qe / _qe_v[ipmt];
+        q *= vis->GetVisibility(xyz, ipmt, true) * _global_qe_refl / _qe_v[ipmt];
         flash.pe_v[ipmt] += q;
         // std::cout << "PMT : " << ipmt << " [x,y,z] -> [q] : [" << pt.x << ", " << pt.y << ", " << pt.z << "] -> [" << q << std::endl;
       }
