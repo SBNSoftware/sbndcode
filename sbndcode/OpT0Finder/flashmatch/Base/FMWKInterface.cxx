@@ -12,7 +12,7 @@ namespace flashmatch{
 #include "flashmatch/Base/FMWKTools/PSetUtils.h"
 #include "flashmatch/Base/FMWKTools/PhotonVisibilityService.h"
 namespace flashmatch{
-  
+
   DetectorSpecs::DetectorSpecs(std::string filename) {
 
     assert(!filename.empty());
@@ -59,11 +59,20 @@ namespace flashmatch{
 #else
 namespace flashmatch{
   DetectorSpecs::DetectorSpecs(std::string filename){
+    ::art::ServiceHandle<geo::Geometry> const geo;
     _drift_velocity = 1; // TODO
     _pmt_v.clear(); // TODO
 
-    // art::ServiceHandle<geo::Geometry> const geo;
-    // geo->NOpDets();
+    _pmt_v.reserve(geo->NOpDets());
+
+    for (size_t opdet = 0; opdet < geo->NOpDets(); opdet++) {
+
+      std::vector<double> pos(3, 0.);
+      geo->OpDetGeoFromOpDet(opdet).GetCenter(&pos[0]);
+
+      geoalgo::Point_t pmt(pos);
+      _pmt_v.push_back(pmt);
+    }
 
     // art::ServiceHandle<phot::PhotonVisibilityService const> pvs;
   }
