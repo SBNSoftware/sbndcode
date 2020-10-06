@@ -56,16 +56,18 @@ sbnd_3dTraj_pandoraModularShowerCreation:      @local::standard_pandoraModularSh
 sbnd_incremental_pandoraModularShowerCreation: @local::standard_pandoraModularShowerCreation
 
 # Create SBND specific versions of tools which require SBND calorimetry numbers
-sbnd_showerlinearenergy:       @local::showerlinearenergy
-sbnd_showerunidirectiondedx:   @local::showerunidirectiondedx
-sbnd_showertrajpointdedx:      @local::showertrajpointdedx
-sbnd_showernumelectronsenergy: @local::showernumelectronsenergy
+sbnd_showerlinearenergy:          @local::showerlinearenergy
+sbnd_showerunidirectiondedx:      @local::showerunidirectiondedx
+sbnd_showertrajpointdedx:         @local::showertrajpointdedx
+sbnd_showernumelectronsenergy:    @local::showernumelectronsenergy
+sbnd_showerbayesiantrucatingdedx: @local::showerbayesiantrucatingdedx
 
 sbnd_showerlinearenergy.Gradients: [0.00155644, 0.00173915, 0.00153631]
 sbnd_showerlinearenergy.Intercepts: [5.92931, -2.13307, 5.19711]
 sbnd_showernumelectronsenergy.CalorimetryAlg: @local::sbnd_calorimetryalgmc
 sbnd_showerunidirectiondedx.CalorimetryAlg:   @local::sbnd_calorimetryalgmc
 sbnd_showertrajpointdedx.CalorimetryAlg:      @local::sbnd_calorimetryalgmc
+sbnd_showerbayesiantrucatingdedx.PriorFname: "PandoraMVAs/ShowerBayesdEdxPriors.root"
 
 sbnd_basic_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::showerpfpvertexstartposition,
