@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+validatetracks_sbnd:
+{
+	module_type: "ValidateTracks" # name of the module, without 'module'
+
+	PFParticleLabel:	"pandora"
+	RecoTrackLabel: 	"pandoraTrackGaus"
+}
+
+END_PROLOG

@@ -1,0 +1,26 @@
+#include "ValidateTracks.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: ValidateTracks # The process name must NOT contain underscores
+
+source:
+{
+	module_type: RootInput # Telling art we want a ROOT input
+	maxEvents: -1
+}
+
+services:
+{
+	@table::sbnd_simulation_services
+	TFileService: { fileName: "validationOutput.root"}
+}
+
+physics:
+{
+	analyzers:
+	{
+		ana: @local::validatetracks_sbnd #name given in the configuration fcl
+	}
+	path0: 		[ ana ]
+	end_paths: 	[ path0 ]
+}
