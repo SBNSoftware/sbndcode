@@ -19,9 +19,15 @@
 
 // Additional framework includes
 #include "art_root_io/TFileService.h"
+#include "lardataobj/RecoBase/PFParticle.h"
 
 // ROOT includes
 #include <TTree.h>
+
+// Other includes
+#include <string>
+#include <vector>
+
 
 namespace testValidation {
   class ValidateTracks;
@@ -55,6 +61,10 @@ private:
 
   // Variable to fill the output tree with
   unsigned int fEventID;
+  unsigned int fNPFParticles;
+  unsigned int fNPrimaries;
+  int fNDaughthers;
+  std::string fPFParticleLabel;
 
 };
 
@@ -64,6 +74,7 @@ testValidation::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   // More initializers here.
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
+	fPFParticleLabel = p.get<std::string>("PFParticleLabel");
 }
 
 void testValidation::ValidateTracks::analyze(art::Event const& e)
@@ -71,6 +82,35 @@ void testValidation::ValidateTracks::analyze(art::Event const& e)
   // Implementation of required member function here.
   // Define out event ID variable
   fEventID = e.id().event();
+
+  // Initialize the counters for this event
+  fNPFParticles = 0;
+  fNPrimaries 	= 0;
+  fNDaughthers = 0;
+
+  // Accessing the PFParticles from Pandora
+  art::Handle< std::vector<recob::PFParticle> > pfparticleHandle;
+  std::vector< art::Ptr<recob::PFParticle> > pfparticleVect;
+
+  if(e.getByLabel(fPFParticleLabel, pfparticleHandle)) // Make sure the handle is valid
+  	art::fill_ptr_vector(pfparticleVect, pfparticleHandle); // Fill the vector with the art::Ptr PFParticles
+
+  if(!pfparticleVect.size()) return; // Skip event if there are no reconstructed particles
+  fNPFParticles = pfparticleVect.size();
+
+  size_t neutrinoID = 99999; // Initiate neutrino ID to be non-physical for checks
+
+  // Find the neutrino ID
+  for(const art::Ptr<recob::PFParticle> &pfp : pfparticleVect){
+  	// Check that we are looking at a primary particle and that it has a neutrino pdg code
+  	// Move on to the next pfparticle in the list if we arent
+  	if(! (pfp->IsPrimary() && (std::abs(pfp->PdgCode()) == 14 || std::abs(pfp->PdgCode()) == 12))) continue;
+  	neutrinoID = pfp->Self();
+  	fNDaughthers = pfp->NumDaughters();
+  	fNPrimaries++;
+  }
+
+  if(neutrinoID == 99999) return; // Skip the event if no neutrino was found
 
   // Fill the output tree with all the relevant variables
   fTree->Fill();
@@ -85,6 +125,9 @@ void testValidation::ValidateTracks::beginJob()
 
   //Add branches to out tree
   fTree->Branch("eventID", &fEventID, "eventID/i");
+  fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles/i");
+  fTree->Branch("nPrimaries", &fNPrimaries, "nPrimaries/i");
+  fTree->Branch("nDaughters", &fNDaughthers, "nDaughters/i");
 }
 
 void testValidation::ValidateTracks::endJob()

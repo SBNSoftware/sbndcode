@@ -3,6 +3,8 @@ BEGIN_PROLOG
 validateTracks:
 {
 	module_type: "ValidateTracks"
+
+	PFParticleLabel: "pandora"
 }
 
 END_PROLOG

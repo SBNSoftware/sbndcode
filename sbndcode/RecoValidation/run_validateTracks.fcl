@@ -12,7 +12,7 @@ source:
 services:
 {
 	@table::sbnd_simulation_services
-	TFileServices: { fileName: "validationOutput.root"}
+	TFileService: { fileName: "validationOutput.root"}
 }
 
 physics:
