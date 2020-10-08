@@ -16,4 +16,8 @@ sbnd_calodata.CaloAlg:      @local::sbnd_calorimetryalgdata
 sbnd_calomc:                @local::standard_calomc
 sbnd_calomc.CaloAlg:        @local::sbnd_calorimetryalgmc
 
+sbnd_gnewcalomc:            @local::standard_gnocchicalo
+sbnd_gnewcalomc.SpacePointModuleLabel: @erase
+sbnd_gnewcalomc.CaloAlg:    @local::sbnd_calorimetryalgmc
+
 END_PROLOG
