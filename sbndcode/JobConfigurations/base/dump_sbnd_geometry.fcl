@@ -1,0 +1,65 @@
+#
+# File:     dump_sbnd_geometry.fcl
+# Purpouse: Job dumping SBND current geomerty into `SBND_geometry.txt` file.
+# Author:   Gianluca Petrillo (petrillo@slac.stanford.edu)
+# Date:     October 6, 2020
+# Version:  1.0
+#
+# This job uses the "default" SBND geometry, as configured in the
+# `sbnd_geometry_services` configuration table.
+#
+# Service dependencies:
+#  * Geometry service
+#  * message facility
+#
+
+#include "geometry_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+
+process_name: GeometryDump
+
+
+services: {
+  # use a specific configuration which dumps the geometry on a file.
+  message: {
+    destinations: {
+      GeometryLog: {
+        type: file
+        
+        filename:  "SBND-geometry.txt"
+        threshold:  INFO
+        categories: {
+          DumpGeometry: { limit: -1 }
+          default: { limit: 0 }
+        }
+      }
+      CriticalLog: {
+        type: cerr
+        threshold:  SYSTEM
+      }
+    #  LogDebugFile: @local::message_debugfile_sbnd
+    } # destinations
+  } # message
+
+  @table::sbnd_geometry_services
+  
+} # services
+
+
+physics: {
+  analyzers: {
+    geometrydump: {
+      module_type: DumpGeometry
+      
+      # message facility category for the output (default: "DumpGeometry")
+      outputCategory: "DumpGeometry"
+    }
+  } # analyzers
+
+  dumpers: [ geometrydump ]
+  
+  end_paths: [ dumpers ]
+  
+} # physics
+
