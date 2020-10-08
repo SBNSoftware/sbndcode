@@ -5,7 +5,7 @@ validatetracks_sbnd:
 	module_type: "ValidateTracks" # name of the module, without 'module'
 
 	PFParticleLabel:	"pandora"
-	RecoTrackLabel: 	"pandoraTrack"
+	TrackLabel: 	"pandoraTrack"
 }
 
 END_PROLOG

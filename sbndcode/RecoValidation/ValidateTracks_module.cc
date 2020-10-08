@@ -70,23 +70,44 @@ private:
   unsigned int fEventID;
   unsigned int fNPFParticles;
   unsigned int fNPrimaries;
-  int fNDaughthers;
+  unsigned int fNDaughthers;
 
-  std::vector<float> *fDaughtherTrackLengths;
+  unsigned int fParticleID;
+  unsigned int fParticlePDG;
+
+  std::vector<float> *fLengths;
+  std::vector<float> *fVPoints;
+  std::vector<float> *fCosTheta;
+  std::vector<float> *fPhi;
+  std::vector<float> *fStartX;
+  std::vector<float> *fStartY;
+  std::vector<float> *fStartZ;
+  std::vector<float> *fEndX;
+  std::vector<float> *fEndY;
+  std::vector<float> *fEndZ;
 
   std::string fPFParticleLabel;
-  std::string fRecoTrackLabel;
+  std::string fTrackLabel;
 
 };
 
 
 sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
-  fDaughtherTrackLengths(nullptr) // All vectors must be initialized in the class constructer
+  fLengths(nullptr), // All vectors must be initialized in the class constructer
+  fVPoints(nullptr),
+  fCosTheta(nullptr),
+  fPhi(nullptr),
+  fStartX(nullptr),
+  fStartY(nullptr),
+  fStartZ(nullptr),
+  fEndX(nullptr),
+  fEndY(nullptr),
+  fEndZ(nullptr)
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 	fPFParticleLabel = p.get<std::string>("PFParticleLabel");
-  fRecoTrackLabel = p.get<std::string>("RecoTrackLabel");
+  fTrackLabel = p.get<std::string>("TrackLabel");
 }
 
 void sbnd::ValidateTracks::analyze(art::Event const& evt)
@@ -100,61 +121,74 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fNPrimaries   = 0;
   fNDaughthers  = 0;
 
+  fParticleID   = 99999;
+  fParticlePDG  = 99999;
+
   // Make sure the vector is empty at the beginning of the event
-  fDaughtherTrackLengths->clear();
+  fLengths  ->clear();
+  fVPoints  ->clear();
+  fCosTheta ->clear();
+  fPhi      ->clear();
+  fStartX   ->clear();
+  fStartY   ->clear();
+  fStartZ   ->clear();
+  fEndX     ->clear();
+  fEndY     ->clear();
+  fEndZ     ->clear();
 
   // Accessing the PFParticles from Pandora
-  art::Handle< std::vector<recob::PFParticle> > pfparticleHandle;
-  std::vector< art::Ptr<recob::PFParticle> > pfparticleVect;
-  if(evt.getByLabel(fPFParticleLabel, pfparticleHandle)) // Make sure the handle is valid
-  	art::fill_ptr_vector(pfparticleVect, pfparticleHandle); // Fill the vector with the art::Ptr PFParticles
+  art::Handle< std::vector<recob::PFParticle> > pfpHandle;
+  std::vector< art::Ptr<recob::PFParticle> > pfps;
+  if(evt.getByLabel(fPFParticleLabel, pfpHandle)) // Make sure the handle is valid
+  	art::fill_ptr_vector(pfps, pfpHandle); // Fill the vector with the art::Ptr PFParticles
 
   // Access the Tracks from pandoraTrack
   art::Handle< std::vector<recob::Track> > trackHandle;
-  std::vector< art::Ptr<recob::Track> > trackVect;
-  if(evt.getByLabel(fRecoTrackLabel, trackHandle)) // Make sure the handle is valid
-    art::fill_ptr_vector(trackVect, trackHandle); // Fill the vector with art::Ptr Tracks
+  std::vector< art::Ptr<recob::Track> > tracks;
+  if(evt.getByLabel(fTrackLabel, trackHandle)) // Make sure the handle is valid
+    art::fill_ptr_vector(tracks, trackHandle); // Fill the vector with art::Ptr Tracks
 
-  if(!pfparticleVect.size()){
+  if(!pfps.size()){
       std::cerr << "Error: No PFParticle found in this event." << std::endl;
       return; // Skip event if there are no reconstructed particles
     }
 
-  fNPFParticles = pfparticleVect.size();
+  fNPFParticles = pfps.size();
 
   // Get the vector or vectors of tracks for each PFParticle
   // The vector size of associated tracks to a single PFParticle should be 0 or 1: why?
-  art::FindManyP<recob::Track> trackAssn(pfparticleVect, evt, fRecoTrackLabel);
-
-
-  size_t neutrinoID = 99999; // Initiate neutrino ID to be non-physical for checks
+  art::FindManyP<recob::Track> trackAssn(pfps, evt, fTrackLabel);
 
   // Find the neutrino ID
-  for(const art::Ptr<recob::PFParticle> &pfp : pfparticleVect){
-  	// Check that we are looking at a primary particle and that it has a neutrino pdg code
-  	// Move on to the next pfparticle in the list if we arent
-  	if(! (pfp->IsPrimary() && (std::abs(pfp->PdgCode()) == 14 || std::abs(pfp->PdgCode()) == 12))) continue;
-  	neutrinoID   = pfp->Self();
-  	fNDaughthers = pfp->NumDaughters();
-  	fNPrimaries++;
+  for(const art::Ptr<recob::PFParticle> &pfp : pfps){
 
-    // Check if this pfp particle is a daughter of the neutrino
-    if(pfp->Parent() != neutrinoID){
-      std::cout << "This PFParticle is not daughter of the neutrino" << std::endl;
-      continue;
-    }
+  	fParticleID  = pfp->Self();
+    fParticlePDG = pfp->PdgCode();
+    fNDaughthers = pfp->NumDaughters();
+  	if(pfp->IsPrimary()) fNPrimaries++;
 
     // Check if there is an associated track to this particle
-    std::vector< art::Ptr<recob::Track> > pfpTracks = trackAssn.at(pfp.key());
-    if(!pfpTracks.empty()){
-      std::cout << "PFParticle has track!" << std::endl;
-      for(const art::Ptr<recob::Track> &trk : pfpTracks){
-        fDaughtherTrackLengths->push_back(trk->Length());
+    std::vector< art::Ptr<recob::Track> > this_tracks = trackAssn.at(pfp.key());
+    if(!this_tracks.empty()){
+      std::cout << "PFParticle has a track!" << std::endl;
+      for(const art::Ptr<recob::Track> &track : this_tracks){
+
+        fLengths->push_back(track->Length());
+        fVPoints->push_back(track->CountValidPoints());        
+        fCosTheta->push_back(track->StartDirection().Z() / sqrt(track->StartDirection().Mag2()));
+        fPhi->push_back(track->StartDirection().Phi());
+
+        fStartX->push_back(track->Start().X());
+        fStartY->push_back(track->Start().Y());
+        fStartZ->push_back(track->Start().Z());
+
+        fEndX->push_back(track->End().X());
+        fEndY->push_back(track->End().Y());
+        fEndZ->push_back(track->End().Z());
+
       }
     } // nTracks > 0
   } // pfparticleVect
-
-  if(neutrinoID == 99999) return; // Skip the event if no neutrino was found
 
   // Fill the output tree with all the relevant variables
   fTree->Fill();
@@ -168,12 +202,24 @@ void sbnd::ValidateTracks::beginJob()
   fTree = tfs->make<TTree>("tree", "Analysis Output Tree");
 
   //Add branches to out tree
-  fTree->Branch("eventID", &fEventID, "eventID/i");
-  fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles/i");
-  fTree->Branch("nPrimaries", &fNPrimaries, "nPrimaries/i");
-  fTree->Branch("nDaughters", &fNDaughthers, "nDaughters/i");
+  fTree->Branch("eventID",      &fEventID,      "eventID");
+  fTree->Branch("particleID",   &fParticleID,   "particleID");
+  fTree->Branch("particlePDG",  &fParticlePDG,  "particlePDG");
+  fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles");
+  fTree->Branch("nPrimaries",   &fNPrimaries,   "nPrimaries");
+  fTree->Branch("nDaughters",   &fNDaughthers,  "nDaughters");
 
-  fTree->Branch("daughterTrackLengths", &fDaughtherTrackLengths);
+  fTree->Branch("Lengths",      &fLengths);
+  fTree->Branch("ValidPoints",  &fVPoints);
+  fTree->Branch("CosTheta",     &fCosTheta);
+  fTree->Branch("Phi",          &fPhi);
+  fTree->Branch("StartX",       &fStartX);
+  fTree->Branch("StartY",       &fStartY);
+  fTree->Branch("StartZ",       &fStartZ);
+  fTree->Branch("EndX",         &fEndX);
+  fTree->Branch("EndY",         &fEndY);
+  fTree->Branch("EndZ",         &fEndZ);
+
 }
 
 void sbnd::ValidateTracks::endJob()
