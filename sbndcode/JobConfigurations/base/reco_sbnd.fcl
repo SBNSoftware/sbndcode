@@ -44,8 +44,8 @@
 #include "crtt0matchingalg_sbnd.fcl"
 #include "crttrackmatchingalg_sbnd.fcl"
 
-#Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
-##include "backtrackerservice.fcl" 
+#Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018
+##include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
 #include "scecorrections.fcl"
 
@@ -63,8 +63,8 @@ services:
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
 
-  #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018 
-#BackTrackerService:  @local::standard_backtrackerservice 
+  #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018
+#BackTrackerService:  @local::standard_backtrackerservice
 #ParticleInventoryService: @local::standard_particleinventoryservice
 }
 
@@ -105,7 +105,7 @@ physics:
 #  rffhit:              @local::sbnd_rffhitfinder
 
   ### corner-finder
-  #corner:              @local::standard_cornerfinder    
+  #corner:              @local::standard_cornerfinder
 
   ### cluster-finder producers
   #fuzzycluster:        @local::sbnd_fuzzycluster
@@ -118,25 +118,27 @@ physics:
   pandora:             @local::sbnd_pandora
   pandoraTrack:        @local::sbnd_pandoraTrackCreation
   pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
+  pandoraShowerSBN:    @local::sbnd_3dTraj_pandoraModularShowerCreation
   pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
-  pandoraCalo:         @local::sbnd_calomc                                        
-  pandoraPid:          @local::sbnd_chi2pid  
+  pandoraCalo:         @local::sbnd_calomc
+  pandoraPid:          @local::sbnd_chi2pid
 
   pandoraSCECalo:      @local::sbnd_gnewcalomc
   pandoraSCEPid:       @local::sbnd_chi2pid
 
   ### SCE-aware pandora:
-  pandoraSCE: @local::scecorrection
-  pandoraSCETrack:  @local::sbnd_pandoraTrackCreation
-  pandoraSCEShower: @local::sbnd_incremental_pandoraModularShowerCreation
+  pandoraSCE:          @local::scecorrection
+  pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
+  pandoraSCEShowerSBN: @local::sbnd_3dTraj_pandoraModularShowerCreation
+  pandoraSCEShower:    @local::sbnd_incremental_pandoraModularShowerCreation
 
   ### track-finder producers
   #trackkalmanhit:      @local::sbnd_track3Dkalmanhit
   #spacepointfinder:    @local::sbnd_spacepoint_finder
   #trackkalsps:         @local::sbnd_kalman
-  
+
   pmalgtrackmaker:     @local::sbnd_pmalgtrackmaker
-    
+
   ### shower-finder producers
   emshower:            @local::sbnd_emshower
 
@@ -156,7 +158,7 @@ physics:
 
  }
 
- #define the producer and filter modules for this path, order matters, 
+ #define the producer and filter modules for this path, order matters,
  #filters reject all following items.  see lines starting physics.producers below
  reco1: [ rns
          , ophitpmt
@@ -176,7 +178,7 @@ physics:
 #         , linecluster
    #      , cccluster
    #      , spacepts,
-   #       , blurredcluster 
+   #       , blurredcluster
           , pandora, pandoraTrack, pandoraShower, pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
@@ -192,15 +194,15 @@ physics:
          , crttrackt0
  ]
 
- #define the output stream, there could be more than one if using filters 
+ #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
 
- #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #trigger_paths is a keyword and contains the paths that modify the art::event,
  #trigger_paths is defined outside of the physics scope (below) as we want to merge sequences together
 
- #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #end_paths is a keyword and contains the paths that do not modify the art::Event,
  #ie analyzers and output streams.  these all run simultaneously
- end_paths:     [stream1]  
+ end_paths:     [stream1]
 }
 
 #block to define where the output goes.  if you defined a filter in the physics
@@ -219,7 +221,7 @@ outputs:
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
                     @sequence::physics.reco2 ]
-physics.trigger_paths: [ fullreco ]                   
+physics.trigger_paths: [ fullreco ]
 
 
 
@@ -250,22 +252,22 @@ physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
 physics.producers.pandoraShowerLegacy.PFParticleLabel:           "pandora"
 
-### Added for Rhiannon's analysis work                                            
-physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"   
-physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"        
-physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"   
-physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"    
+### Added for Rhiannon's analysis work
+physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
+physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"
+physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
+physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
 
 physics.producers.pandoraSCECalo.TrackModuleLabel:               "pandoraSCETrack"
 physics.producers.pandoraSCECalo.FieldDistortion:                true
 physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
 physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
-physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"   
-physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"    
+physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
+physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
-#physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
-#physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"
-#physics.producers.trackkalmanhit.ClusterModuleLabel:		"cccluster"
+#physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
+#physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
+#physics.producers.trackkalmanhit.ClusterModuleLabel:   "cccluster"
 
 physics.producers.pmalgtrackmaker.HitModuleLabel:               "linecluster"
 physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "linecluster"
@@ -302,6 +304,12 @@ physics.producers.pandoraSCE.CorrectNoT0Tag: true
 # point track/shower creation to the SCE pandora
 physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
 physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
+physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 
-
+physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCECorrectPitch:      true
+physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCECorrectEField:     true
+physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCEInputCorrected:    true
+physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCECorrectPitch:   true
+physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCECorrectEField:  true
+physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCEInputCorrected: true
 
