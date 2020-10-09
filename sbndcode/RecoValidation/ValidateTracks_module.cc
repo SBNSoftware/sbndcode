@@ -68,12 +68,13 @@ private:
 
   // Variable to fill the output tree with
   unsigned int fEventID;
+  
   unsigned int fNPFParticles;
   unsigned int fNPrimaries;
-  unsigned int fNDaughthers;
 
-  unsigned int fParticleID;
-  unsigned int fParticlePDG;
+  std::vector<int> *fNDaughthers;
+  std::vector<int> *fParticleID;
+  std::vector<int> *fParticlePDG;
 
   std::vector<float> *fLengths;
   std::vector<float> *fVPoints;
@@ -86,15 +87,20 @@ private:
   std::vector<float> *fEndY;
   std::vector<float> *fEndZ;
 
+  // Module labels
   std::string fPFParticleLabel;
   std::string fTrackLabel;
 
+  // Additional member functions
 };
 
 
 sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
-  fLengths(nullptr), // All vectors must be initialized in the class constructer
+  // All vectors must be initialized in the class constructer
+  fParticleID(nullptr),
+  fParticlePDG(nullptr),
+  fLengths(nullptr),
   fVPoints(nullptr),
   fCosTheta(nullptr),
   fPhi(nullptr),
@@ -119,12 +125,12 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Initialize the counters for this event
   fNPFParticles = 0;
   fNPrimaries   = 0;
-  fNDaughthers  = 0;
-
-  fParticleID   = 99999;
-  fParticlePDG  = 99999;
 
   // Make sure the vector is empty at the beginning of the event
+  fNDaughthers ->clear();
+  fParticleID  ->clear();
+  fParticlePDG ->clear();
+
   fLengths  ->clear();
   fVPoints  ->clear();
   fCosTheta ->clear();
@@ -152,7 +158,6 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       std::cerr << "Error: No PFParticle found in this event." << std::endl;
       return; // Skip event if there are no reconstructed particles
     }
-
   fNPFParticles = pfps.size();
 
   // Get the vector or vectors of tracks for each PFParticle
@@ -162,14 +167,16 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Find the neutrino ID
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
 
-  	fParticleID  = pfp->Self();
-    fParticlePDG = pfp->PdgCode();
-    fNDaughthers = pfp->NumDaughters();
-  	if(pfp->IsPrimary()) fNPrimaries++;
+  	fParticleID->push_back(pfp->Self());
+    fParticlePDG->push_back(pfp->PdgCode());
+    fNDaughthers->push_back(pfp->NumDaughters());
+
+    if(pfp->IsPrimary()) fNPrimaries++;
 
     // Check if there is an associated track to this particle
     std::vector< art::Ptr<recob::Track> > this_tracks = trackAssn.at(pfp.key());
     if(!this_tracks.empty()){
+      assert(this_tracks.size()==1);
       std::cout << "PFParticle has a track!" << std::endl;
       for(const art::Ptr<recob::Track> &track : this_tracks){
 
@@ -203,11 +210,12 @@ void sbnd::ValidateTracks::beginJob()
 
   //Add branches to out tree
   fTree->Branch("eventID",      &fEventID,      "eventID");
-  fTree->Branch("particleID",   &fParticleID,   "particleID");
-  fTree->Branch("particlePDG",  &fParticlePDG,  "particlePDG");
   fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles");
   fTree->Branch("nPrimaries",   &fNPrimaries,   "nPrimaries");
-  fTree->Branch("nDaughters",   &fNDaughthers,  "nDaughters");
+
+  fTree->Branch("nDaughters",   &fNDaughthers);
+  fTree->Branch("particleID",   &fParticleID);
+  fTree->Branch("particlePDG",  &fParticlePDG);
 
   fTree->Branch("Lengths",      &fLengths);
   fTree->Branch("ValidPoints",  &fVPoints);
@@ -226,6 +234,5 @@ void sbnd::ValidateTracks::endJob()
 {
   // Implementation of optional member function here.
 }
-
 
 DEFINE_ART_MODULE(sbnd::ValidateTracks)
