@@ -1,4 +1,6 @@
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "art/Utilities/ToolMacros.h"
+#include "art/Utilities/make_tool.h"
 
 
 //------------------------------------------------------------------------------
@@ -7,7 +9,7 @@
 
 namespace opdet {
 
-  sbndPDMapAlg::sbndPDMapAlg()
+  sbndPDMapAlg::sbndPDMapAlg(const fhicl::ParameterSet&)
   {
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
@@ -64,4 +66,5 @@ namespace opdet {
   // template<typename T>
   // nlohmann::json sbndPDMapAlg::getCollectionWithProperty(std::string property, T property_value)
 
+DEFINE_ART_CLASS_TOOL(sbndPDMapAlg)
 }

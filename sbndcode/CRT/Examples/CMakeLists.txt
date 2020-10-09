@@ -33,7 +33,7 @@ art_make(
                            ${ROOT_ROOFITCORE} 
                            sbndcode_RecoUtils
                            sbndcode_CRT
-                           sbndcode_CRTProducts
+                           sbnobj_Common_CRT
                            sbndcode_CRTUtils
                            sbndcode_GeoWrappers
         )

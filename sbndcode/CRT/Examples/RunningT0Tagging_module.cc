@@ -10,8 +10,8 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
 
@@ -169,15 +169,15 @@ namespace sbnd {
     }
 
     // Get CRT hits from the event
-    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
-    std::vector<crt::CRTHit> crtHits;
+    auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
+    std::vector<sbn::crt::CRTHit> crtHits;
     for(auto const& hit : (*crtHitHandle)){
       crtHits.push_back(hit);
     }
 
     // Get CRT tracks from the event
-    auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCRTTrackLabel);
-    std::vector<crt::CRTTrack> crtTracks;
+    auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
+    std::vector<sbn::crt::CRTTrack> crtTracks;
     for(auto const& track : (*crtTrackHandle)){
       crtTracks.push_back(track);
     }
