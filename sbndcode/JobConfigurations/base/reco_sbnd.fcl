@@ -47,6 +47,8 @@
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
 ##include "backtrackerservice.fcl" 
 #include "particleinventoryservice.fcl"
+#include "scecorrections.fcl"
+
 
 process_name: Reco
 
@@ -119,6 +121,14 @@ physics:
   pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
   pandoraCalo:         @local::sbnd_calomc                                        
   pandoraPid:          @local::sbnd_chi2pid  
+
+  pandoraSCECalo:      @local::sbnd_gnewcalomc
+  pandoraSCEPid:       @local::sbnd_chi2pid
+
+  ### SCE-aware pandora:
+  pandoraSCE: @local::scecorrection
+  pandoraSCETrack:  @local::sbnd_pandoraTrackCreation
+  pandoraSCEShower: @local::sbnd_incremental_pandoraModularShowerCreation
 
   ### track-finder producers
   #trackkalmanhit:      @local::sbnd_track3Dkalmanhit
@@ -245,7 +255,13 @@ physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
 physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"        
 physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"   
 physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"    
-                                                                                   
+
+physics.producers.pandoraSCECalo.TrackModuleLabel:               "pandoraSCETrack"
+physics.producers.pandoraSCECalo.FieldDistortion:                true
+physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
+physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
+physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"   
+physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"    
 
 #physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"
@@ -277,3 +293,15 @@ physics.producers.emshower.ClusterModuleLabel:                  "pandora"
 physics.producers.emshower.HitsModuleLabel:                     "linecluster"
 physics.producers.emshower.PFParticleModuleLabel:                "pandora"
 physics.producers.emshower.TrackModuleLabel:                    "pmalgtrackmaker"
+
+# Configure the SCE corrections
+# For now: always assume t = 0
+physics.producers.pandoraSCE.T0Labels: []
+physics.producers.pandoraSCE.T0LabelsCorrectT0: []
+physics.producers.pandoraSCE.CorrectNoT0Tag: true
+# point track/shower creation to the SCE pandora
+physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
+physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
+
+
+

@@ -1,0 +1,24 @@
+# File:    standard_reco2_sce_sbnd.fcl
+# Purpose: The standard reconstruction workflow for 'reco2', starts at 2D clustering and includes all high level reconstruction (+ SCE reco)
+# Version: 1.0
+#
+# Changes:
+# 20200923 (grayputnam@uchicago.edu) [v1.0]
+#   Initial definition
+#
+# job configuration
+
+#include "reco_sbnd.fcl"
+
+process_name: Reco2
+
+physics.reco2_sce: [@sequence::physics.reco2, 
+            pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCECalo, pandoraSCEPid]
+
+physics.trigger_paths: [ reco2_sce ]
+
+# turn on space charge service
+services.SpaceCharge.EnableCalSpatialSCE: true
+services.SpaceCharge.EnableSimSpatialSCE: true
+services.SpaceCharge.EnableSimEfieldSCE: true
+services.SpaceCharge.EnableCalEfieldSCE: true
