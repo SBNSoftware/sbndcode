@@ -27,17 +27,21 @@ sbnd_opt0_finder:
 
   # ChargeToNPhotonsTrack:    164. # 240 e-/ADC x 23.6/1e6 MeV/e- x 29,000 gamma/MeV = 164. (not including recombination)
   # ChargeToNPhotonsShower:   164. # Not tuned! higher mainly beacause we need to account for missing charge contributions
+
+  PDSMapTool: {
+    tool_type: "sbndPDMapAlg"
+  }
 }
 
 # Configuration to run the flash matching in one flash to many slices configuration
 # The flash is selected by taking the beam flash between 0 and 2 us
 sbnd_opt0_finder_one_to_many: @local::sbnd_opt0_finder
 sbnd_opt0_finder_one_to_many.FlashVetoTimeStart: 0
-sbnd_opt0_finder_one_to_many.FlashVetoTimeStart: 2
+sbnd_opt0_finder_one_to_many.FlashVetoTimeEnd: 2
 
 # Configuration to run the flash matching in many flashes to many slices configuration
 sbnd_opt0_finder_many_to_many: @local::sbnd_opt0_finder
 sbnd_opt0_finder_many_to_many.FlashVetoTimeStart: -1e9
-sbnd_opt0_finder_many_to_many.FlashVetoTimeStart: +1e9
+sbnd_opt0_finder_many_to_many.FlashVetoTimeEnd: +1e9
 
 END_PROLOG

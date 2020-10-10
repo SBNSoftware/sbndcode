@@ -13,6 +13,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
+// #include "art/Utilities/make_tool.h"
 #include "art_root_io/TFileService.h"
 #include "canvas/Utilities/InputTag.h"
 #include "canvas/Persistency/Common/Assns.h"
@@ -94,6 +95,7 @@ private:
   unsigned int _tpc; ///< Which TPC to use
 
   opdet::sbndPDMapAlg _pds_map; ///< map for photon detector types
+  // std::unique_ptr<opdet::sbndPDMapAlg> _pds_map;
 
   std::vector<flashmatch::QCluster_t> _light_cluster_v; ///< Vector that contains all the TPC objects
   std::map<int, art::Ptr<recob::Slice>> _clusterid_to_slice; /// Will contain map tpc object id -> Slice
@@ -126,6 +128,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   produces<art::Assns<recob::Slice, anab::T0>>();
   produces<art::Assns<recob::OpFlash, anab::T0>>();
 
+  // _pds_map = art::make_tool<opdet::sbndPDMapAlg>(p.get<fhicl::ParameterSet>("PDSMapTool"));
   ::art::ServiceHandle<geo::Geometry> geo;
 
   _opflash_producer = p.get<std::string>("OpFlashProducer");
@@ -218,8 +221,8 @@ void SBNDOpT0Finder::produce(art::Event& e)
 
     auto const& flash = *flash_v[n]; //(*flash_h)[n];
 
-    mf::LogWarning("SBNDOpT0Finder") << "Flash time from " << _opflash_producer << ": " << flash.Time() << std::endl;
-    std::cout << "[SBNDOpT0Finder] Flash time from " << _opflash_producer << ": " << flash.Time() << std::endl;
+    // mf::LogWarning("SBNDOpT0Finder") << "Flash time from " << _opflash_producer << ": " << flash.Time() << std::endl;
+    std::cout << "[SBNDOpT0Finder] Flash time from " << _opflash_producer << ": " << flash.Time() << ", PE " << flash.TotalPE() << std::endl;
     if(flash.Time() < _flash_trange_start || _flash_trange_end < flash.Time()) {
       continue;
     }
@@ -299,6 +302,7 @@ void SBNDOpT0Finder::produce(art::Event& e)
 
   // Emplace flashes to Flash Matching Manager
   for (auto f : all_flashes) {
+    std::cout << "pe of flash " << f.TotalPE() << std::endl;
     _mgr.Emplace(std::move(f));
   }
 
@@ -487,11 +491,14 @@ std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names
 
   std::vector<int> out_ch_v;
 
+  std::cout << "----------------Getting list of channels with name " << pd_names[0] << std::endl;
+
   for (auto name : pd_names) {
-    auto ch_v = _pds_map.getChannelsOfType(name);
+    auto ch_v = _pds_map->getChannelsOfType(name);
     out_ch_v.insert(out_ch_v.end(), ch_v.begin(), ch_v.end());
   }
 
+  for (auto ch : out_ch_v) std::cout << "-> " << ch << std::endl;
   return out_ch_v;
 
 }
