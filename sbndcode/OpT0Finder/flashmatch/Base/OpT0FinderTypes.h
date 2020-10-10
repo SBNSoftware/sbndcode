@@ -111,6 +111,10 @@ namespace flashmatch {
     inline double min_x() const
     { double x=flashmatch::kINVALID_DOUBLE; for(auto const& pt : (*this)) x = std::min(x,pt.x); return x; }
 
+    /// maximum x
+    inline double max_x() const
+    { double x=flashmatch::kINVALID_DOUBLE; for(auto const& pt : (*this)) x = std::max(x,pt.x); return x; }
+
     inline QCluster_t& operator+=(const double shift)
     { for(auto& pt : (*this)) pt.x += shift; return (*this); }
 

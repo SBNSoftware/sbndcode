@@ -70,8 +70,11 @@ namespace flashmatch{
 namespace flashmatch{
   DetectorSpecs::DetectorSpecs(std::string filename){
     ::art::ServiceHandle<geo::Geometry> const geo;
-    _drift_velocity = 1; // TODO
-    _pmt_v.clear(); // TODO
+    auto const clock_data = ::art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    auto const det_prop = ::art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clock_data);
+
+    _drift_velocity = det_prop.DriftVelocity();
+    _pmt_v.clear();
 
     _pmt_v.reserve(geo->NOpDets());
 
@@ -83,6 +86,10 @@ namespace flashmatch{
       geoalgo::Point_t pmt(pos);
       _pmt_v.push_back(pmt);
     }
+
+    double global_x_min = 1e9, global_x_max = -1e9;
+    double global_y_min = 1e9, global_y_max = -1e9;
+    double global_z_min = 1e9, global_z_max = -1e9;
 
     for (size_t cryo = 0; cryo < geo->Ncryostats(); cryo++) {
       for (size_t tpc = 0; tpc < geo->NTPC(cryo); tpc++) {
@@ -96,11 +103,21 @@ namespace flashmatch{
         double z_min = tpc_geo.GetCenter().Z() - tpc_geo.HalfLength();
         double z_max = tpc_geo.GetCenter().Z() + tpc_geo.HalfLength();
 
+        if (x_min < global_x_min) global_x_min = x_min;
+        if (x_max > global_x_max) global_x_max = x_max;
+        if (y_min < global_y_min) global_y_min = y_min;
+        if (y_max > global_y_max) global_y_max = y_max;
+        if (z_min < global_z_min) global_z_min = z_min;
+        if (z_max > global_z_max) global_z_max = z_max;
+
         std::cout << "cryo " << cryo << ", tpc " << tpc << " - x_min " << x_min << ", x_max " << x_max << std::endl;
         auto pair = std::pair<int,int>(tpc, cryo);
         _bbox_map[pair] = geoalgo::AABox(x_min, y_min, z_min, x_max, y_max, z_max);
-        // _bbox = geoalgo::AABox(x_min, y_min, z_min, x_max, y_max, z_max);
       }
+
+      _bbox = geoalgo::AABox(global_x_min, global_y_min, global_z_min,
+                             global_x_max, global_y_max, global_z_max);
+      std::cout << "GLOBAL x_min " << global_x_min << ", x_max " << global_x_max << std::endl;
     }
 
     // art::ServiceHandle<phot::PhotonVisibilityService const> pvs;

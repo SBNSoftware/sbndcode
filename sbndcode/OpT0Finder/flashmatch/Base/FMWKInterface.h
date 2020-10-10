@@ -20,6 +20,8 @@ namespace flashmatch {
 #include "fhiclcpp/ParameterSet.h"
 #include "larsim/PhotonPropagation/PhotonVisibilityService.h"
 #include "larcore/Geometry/Geometry.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 namespace flashmatch{
   /// Configuration object
   using Config_t = fhicl::ParameterSet;

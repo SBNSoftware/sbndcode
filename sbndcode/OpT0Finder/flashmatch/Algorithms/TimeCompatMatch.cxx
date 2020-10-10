@@ -3,6 +3,9 @@
 
 #include "TimeCompatMatch.h"
 
+#ifndef USING_LARSOFT
+#define USING_LARSOFT 1
+#endif
 
 namespace flashmatch {
 
@@ -19,8 +22,10 @@ namespace flashmatch {
 
   bool TimeCompatMatch::MatchCompatible(const QCluster_t& clus, const Flash_t& flash)
   {
-
-    if(clus.empty()) return false; 
+    if(clus.empty()) {
+      FLASH_INFO() << "QCluster_t is empty." << std::endl;
+      return false;
+    }
 
     // get time of flash
     auto flash_time = flash.time;
@@ -34,17 +39,28 @@ namespace flashmatch {
       if (pt.x < clus_x_min) { clus_x_min = pt.x; }
     }
 
+    FLASH_INFO() << "Cluster x min: " << clus_x_min << ", x max: " << clus_x_max << std::endl;
+
     // Earliest flash time => assume clus_x_max is @ detector X-max boundary
+    #if USING_LARSOFT == 1
     double xmax = DetectorSpecs::GetME().ActiveVolume().Max()[0];
     double clus_t_min = (clus_x_max - xmax) / DetectorSpecs::GetME().DriftVelocity();
     double clus_t_max = clus_x_min / DetectorSpecs::GetME().DriftVelocity();
+    #else
+    double xmax = DetectorSpecs::GetME().ActiveVolume().Max()[0];
+    double clus_t_min = (clus_x_max - xmax) / DetectorSpecs::GetME().DriftVelocity();
+    double clus_t_max = clus_x_min / DetectorSpecs::GetME().DriftVelocity();
+    #endif
+    FLASH_INFO() << "Cluster xmax: " << xmax << ", clus_t_min: " << clus_t_min
+                                             << ", clus_t_max: " << clus_t_max
+                                             << ", flash_time: " << flash_time << std::endl;
 
     /*
     std::cout<< "Inspecting TPC object @ " << clus.time << std::endl;
     std::cout<< "xmin = " << clus_x_min << " ... xmax = " << clus_x_max << std::endl;
     std::cout<< "tmin = " << clus_t_min << " ... tmax = " << clus_t_max << std::endl;
     std::cout<< "Flash time @ " << flash_time << std::endl;
-    */    
+    */
     return ((clus_t_min - _time_buffer) < flash_time && flash_time < (clus_t_max + _time_buffer));
 
   }

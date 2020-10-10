@@ -40,6 +40,12 @@ namespace flashmatch {
     /// Method to simply fill provided reference of flashmatch::Flash_t
     virtual void FillEstimate(const QCluster_t&, Flash_t&) const = 0;
 
+    void SetChannelMask(std::vector<int> ch_mask) { _channel_mask = ch_mask; }
+
+  protected:
+
+    std::vector<int> _channel_mask;
+
   };
 }
 #endif

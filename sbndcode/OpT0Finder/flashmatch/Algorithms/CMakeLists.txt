@@ -6,6 +6,7 @@ art_make(
     LIB_LIBRARIES
         larsim_PhotonPropagation
         larsim_PhotonPropagation_PhotonVisibilityService_service
+        larsim_LegacyLArG4
         sbndcode_OpT0Finder_flashmatch_GeoAlgo
         sbndcode_OpT0Finder_flashmatch_Base
         ${ART_FRAMEWORK_CORE}

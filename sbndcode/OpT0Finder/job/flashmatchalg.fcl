@@ -9,12 +9,12 @@ flashmatch_config : {
 # Manager configuration
 #
 FlashMatchManager: {
-  Verbosity: 3
-  AllowReuseFlash: false
+  Verbosity: 0 #3
+  AllowReuseFlash: true
   StoreFullResult: false
   FlashFilterAlgo: ""
   TPCFilterAlgo:   "NPtFilter"
-  ProhibitAlgo:    "TimeCompatMatch"
+  ProhibitAlgo:    "" #TimeCompatMatch"
   HypothesisAlgo:  "PhotonLibHypothesis"
   MatchAlgo:       "QLLMatch"
   CustomAlgo:      ["LightPath"]#,"MCQCluster"]
@@ -57,6 +57,7 @@ CommonAmps: {
 TimeCompatMatch: {
     FrameDriftTime: 2300.4
     TimeBuffer: 100
+    Verbosity: 0 #3
 }
 
 MaxNPEWindow: {
@@ -73,6 +74,9 @@ PhotonLibHypothesis:
 {
   GlobalQE: 0.03
   GlobalQERefl: 0.03
+  UseSemiAnalytical: true
+  UncoatedPMTList: [36, 37, 38, 39, 40, 41, 114, 115, 116, 117, 118, 119, 200, 201, 202, 203, 204, 205, 278, 279, 280, 281, 282, 283] # This should be provided by the geometry service, eventually
+  ChannelMask: []
   CCVCorrection: []
   # CCVCorrection: [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]
 }

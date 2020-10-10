@@ -93,6 +93,9 @@ namespace flashmatch {
     const std::vector<std::vector<flashmatch::FlashMatch_t> > FullResultFlashTPC() const
     { return _res_flash_tpc_v; }
 
+    /// Sets the op channels to be used for matching
+    void SetChannelMask(std::vector<int>);
+
   private:
 
     void AddCustomAlgo(BaseAlgorithm* alg);

@@ -174,7 +174,9 @@ namespace flashmatch {
     // Estimate position
     FlashMatch_t res;
     res.num_steps = _num_steps;
-    if (std::isnan(_qll)) return res;
+    if (std::isnan(_qll) || std::isinf(_qll)) {
+      return res;
+    }
 
     res.tpc_point.x = res.tpc_point.y = res.tpc_point.z = 0;
 
@@ -271,6 +273,8 @@ namespace flashmatch {
   double QLLMatch::QLL(const Flash_t &hypothesis,
 		       const Flash_t &measurement) {
 
+    // std::cout << "[QLLMatch] _mode " << _mode << std::endl;
+
     double nvalid_pmt = 0;
 
     double PEtot_Hyp = 0;
@@ -313,29 +317,30 @@ namespace flashmatch {
 
       if(_mode == kLLHD) {
 
-	double arg = TMath::Poisson(O,H);
-	if(arg > 0. && !std::isnan(arg) && !std::isinf(arg)) {
-	  _current_llhd -= std::log10(arg);
-	  nvalid_pmt += 1;
-	  if(_converged) FLASH_INFO() <<"PMT "<<pmt_index<<" O/H " << O << " / " << H << " LHD "<<arg << " -LLHD " << -1 * std::log10(arg) << std::endl;
-	}
-      }else if (_mode == kSimpleLLHD) {
+        double arg = TMath::Poisson(O,H);
+        // std::cout << "[QLLMatch] pmt_index " << pmt_index << " - O: " << O << ", H: " << H << ", arg: " << arg << std::endl;
+        if(arg > 0. && !std::isnan(arg) && !std::isinf(arg)) {
+          _current_llhd -= std::log10(arg);
+          nvalid_pmt += 1;
+          if(_converged) FLASH_INFO() <<"PMT "<<pmt_index<<" O/H " << O << " / " << H << " LHD "<<arg << " -LLHD " << -1 * std::log10(arg) << std::endl;
+        }
+      } else if (_mode == kSimpleLLHD) {
 
-	double arg = (H - O * std::log(H));
-	_current_llhd += arg;
-	if(_converged) FLASH_INFO() <<"PMT "<<pmt_index<<" O/H " << O << " / " << H << " ... -LLHD " << arg << std::endl;
-	//nvalid_pmt += 1;
+        double arg = (H - O * std::log(H));
+        _current_llhd += arg;
+        if(_converged) FLASH_INFO() <<"PMT "<<pmt_index<<" O/H " << O << " / " << H << " ... -LLHD " << arg << std::endl;
+        //nvalid_pmt += 1;
 
       } else if (_mode == kChi2) {
 
-	Error = O;
-	if( Error < 1.0 ) Error = 1.0;
-	_current_chi2 += std::pow((O - H), 2) / (Error);
-	nvalid_pmt += 1;
+      Error = O;
+      if( Error < 1.0 ) Error = 1.0;
+      _current_chi2 += std::pow((O - H), 2) / (Error);
+      nvalid_pmt += 1;
 
       } else {
-	FLASH_ERROR() << "Unexpected mode" << std::endl;
-	throw OpT0FinderException();
+        FLASH_ERROR() << "Unexpected mode" << std::endl;
+        throw OpT0FinderException();
       }
 
     }
@@ -431,7 +436,7 @@ namespace flashmatch {
       // Assume this is the right flash... then
       reco_x = _raw_xmin_pt.x - pmt.time * DetectorSpecs::GetME().DriftVelocity();
       if(reco_x < _vol_xmin || (reco_x + _raw_xmax_pt.x - _raw_xmin_pt.x) > _vol_xmax)
-	return kINVALID_DOUBLE;
+      return kINVALID_DOUBLE;
     }
     double reco_x_err = ((_vol_xmax - _vol_xmin) - (_raw_xmax_pt.x - _raw_xmin_pt.x)) / 2.;
     double xmin = _vol_xmin;

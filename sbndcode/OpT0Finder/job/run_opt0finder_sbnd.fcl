@@ -49,7 +49,8 @@ physics:
 {
   producers:
   {
-    opt0finder:    @local::sbnd_opt0_finder
+    # opt0finder:    @local::sbnd_opt0_finder
+    opt0finder:    @local::sbnd_opt0_finder_one_to_many
   }
 
   analyzers:

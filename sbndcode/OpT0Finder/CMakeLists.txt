@@ -1,4 +1,17 @@
 # include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
+
+# Turning off WERROR only for this package, because it needs to
+# call OpFlastScintillation which has an unused variable.
+# Once the semi-analytic photon propogation will be moved
+# to its own service, and we won't need to call OpFlastScintillation
+# in larsim, we will be able to remobe this. -- Marco Del Tutto, Oct 2020
+cet_set_compiler_flags(DIAGS CAUTIOUS
+  # WERROR
+  NO_UNDEFINED
+  EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
+)
+include_directories($ENV{GEANT4_FQ_DIR}/include)
+
 art_make(
     LIB_LIBRARIES
         sbndcode_OpT0Finder_flashmatch_Base
@@ -10,6 +23,8 @@ art_make(
         lardata_Utilities
         lardataobj_RecoBase
         larsim_Simulation
+        # larsim_LegacyLArG4
+        lardataobj_AnalysisBase
         lardataobj_Simulation
         nusimdata_SimulationBase
         ${LARDATA_LIB}
@@ -43,8 +58,10 @@ art_make(
         larcorealg_Geometry
         larcore_Geometry_Geometry_service
         lardata_Utilities
+        lardataobj_AnalysisBase
         lardataobj_RecoBase
         larsim_Simulation
+        # larsim_LegacyLArG4
         lardataobj_Simulation
         larpandora_LArPandoraInterface
         nusimdata_SimulationBase

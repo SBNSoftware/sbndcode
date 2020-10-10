@@ -265,7 +265,7 @@ namespace flashmatch {
     for (size_t tpc_index = 0; tpc_index < tpc_index_v.size(); ++tpc_index) {
       // Loop over flash list
       for (auto const& flash_index : flash_index_v) {
-        FLASH_INFO() << "Flash index " << flash_index << std::endl;
+        FLASH_INFO() << "TPC index " << tpc_index << ", Flash index " << flash_index << std::endl;
         auto const& tpc   = _tpc_object_v[tpc_index_v[tpc_index]]; // Retrieve TPC object
         auto const& flash = _flash_v[flash_index];    // Retrieve flash
 
@@ -275,8 +275,10 @@ namespace flashmatch {
         // run the match-prohibit algo first
         if (_alg_match_prohibit) {
           bool compat = _alg_match_prohibit->MatchCompatible( tpc, flash);
-          if (compat == false)
+          if (compat == false) {
+            FLASH_INFO() << "Match not compatible. " << std::endl;
             continue;
+          }
         }
         auto start = high_resolution_clock::now();
         auto res = _alg_flash_match->Match( tpc, flash ); // Run matching
@@ -293,15 +295,15 @@ namespace flashmatch {
         res.duration = duration.count();
 
 
-	if(_store_full) {
-	  _res_tpc_flash_v[res.tpc_id][res.flash_id] = res;
-	  _res_flash_tpc_v[res.flash_id][res.tpc_id] = res;
-	}
+        if(_store_full) {
+          _res_tpc_flash_v[res.tpc_id][res.flash_id] = res;
+          _res_flash_tpc_v[res.flash_id][res.tpc_id] = res;
+        }
         // For ordering purpose, take an inverse of the score for sorting
         score_map.emplace( 1. / res.score, res);
 
         FLASH_DEBUG() << "Candidate Match: "
-		      << " TPC=" << tpc_index << " @ " << tpc.time
+		      << " TPC=" << tpc_index << " (" << tpc.min_x() << " min x)" << " @ " << tpc.time
 		      << " with Flash=" << flash_index << " @ " << flash.time
 		      << " ... Score=" << res.score
 		      << " ... PE=" << flash.TotalPE()
@@ -374,6 +376,16 @@ namespace flashmatch {
       std::cout << "\t" << name_ptr.first << std::endl;
     std::cout << "---- END FLASH MATCH MANAGER PRINTING CONFIG ----" << std::endl;
   }
+
+  void FlashMatchManager::SetChannelMask(std::vector<int> ch_mask) {
+
+    if (!_alg_flash_hypothesis) {
+      throw OpT0FinderException("Flash hypothesis algorithm is required to set channel mask!");
+    }
+
+    _alg_flash_hypothesis->SetChannelMask(ch_mask);
+  }
+
 }
 
 #endif
