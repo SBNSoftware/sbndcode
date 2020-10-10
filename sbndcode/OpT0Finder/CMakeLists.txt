@@ -5,19 +5,19 @@
 # Once the semi-analytic photon propogation will be moved
 # to its own service, and we won't need to call OpFlastScintillation
 # in larsim, we will be able to remobe this. -- Marco Del Tutto, Oct 2020
-cet_set_compiler_flags(DIAGS CAUTIOUS
-  # WERROR
-  NO_UNDEFINED
-  EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
-)
-include_directories($ENV{GEANT4_FQ_DIR}/include)
+# cet_set_compiler_flags(DIAGS CAUTIOUS
+#   # WERROR
+#   NO_UNDEFINED
+#   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
+# )
+# include_directories($ENV{GEANT4_FQ_DIR}/include)
 
 art_make(
     LIB_LIBRARIES
-        sbndcode_OpT0Finder_flashmatch_Base
-        sbndcode_OpT0Finder_flashmatch_Algorithms
-        sbndcode_Geometry
-        sbndcode_OpDetSim
+        sbncode_OpT0Finder_flashmatch_Base
+        sbncode_OpT0Finder_flashmatch_Algorithms
+        sbncode_Geometry
+        sbncode_OpDetSim
         larcorealg_Geometry
         larcore_Geometry_Geometry_service
         lardata_Utilities
@@ -50,11 +50,11 @@ art_make(
         ${ROOT_GDML}
         ${ROOT_BASIC_LIB_LIST}
     MODULE_LIBRARIES
-        sbndcode_OpT0Finder_flashmatch_Base
-        sbndcode_OpT0Finder_flashmatch_Algorithms
-        sbndcode_OpDetReco_OpFlash_FlashFinder
-        sbndcode_OpDetSim
-        sbndcode_Geometry
+        sbncode_OpT0Finder_flashmatch_Base
+        sbncode_OpT0Finder_flashmatch_Algorithms
+        sbncode_OpDetReco_OpFlash_FlashFinder
+        sbncode_OpDetSim
+        sbncode_Geometry
         larcorealg_Geometry
         larcore_Geometry_Geometry_service
         lardata_Utilities

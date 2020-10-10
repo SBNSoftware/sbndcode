@@ -36,11 +36,11 @@
 
 #include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 
-#include "sbndcode/OpT0Finder/flashmatch/Base/OpT0FinderTypes.h"
-#include "sbndcode/OpT0Finder/flashmatch/Base/FlashMatchManager.h"
-#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbncode/OpT0Finder/flashmatch/Base/OpT0FinderTypes.h"
+#include "sbncode/OpT0Finder/flashmatch/Base/FlashMatchManager.h"
+#include "sbncode/OpDetSim/sbndPDMapAlg.hh"
 
-#include "sbndcode/OpT0Finder/flashmatch/Algorithms/PhotonLibHypothesis.h"
+#include "sbncode/OpT0Finder/flashmatch/Algorithms/PhotonLibHypothesis.h"
 
 #include "TFile.h"
 #include "TTree.h"
