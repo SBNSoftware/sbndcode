@@ -33,15 +33,43 @@ sbnd_opt0_finder:
   }
 }
 
+#
 # Configuration to run the flash matching in one flash to many slices configuration
 # The flash is selected by taking the beam flash between 0 and 2 us
+#
 sbnd_opt0_finder_one_to_many: @local::sbnd_opt0_finder
 sbnd_opt0_finder_one_to_many.FlashVetoTimeStart: 0
 sbnd_opt0_finder_one_to_many.FlashVetoTimeEnd: 2
 
+# ... for TPC 0
+sbnd_opt0_finder_one_to_many_tpc0: @local::sbnd_opt0_finder_one_to_many
+sbnd_opt0_finder_one_to_many_tpc0.TPC: 0
+sbnd_opt0_finder_one_to_many_tpc0.OpFlashProducer: "opflashtpc0"
+sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
+
+# ... for TPC 1
+sbnd_opt0_finder_one_to_many_tpc1: @local::sbnd_opt0_finder_one_to_many
+sbnd_opt0_finder_one_to_many_tpc1.TPC: 1
+sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: "opflashtpc1"
+sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
+
+#
 # Configuration to run the flash matching in many flashes to many slices configuration
+#
 sbnd_opt0_finder_many_to_many: @local::sbnd_opt0_finder
 sbnd_opt0_finder_many_to_many.FlashVetoTimeStart: -1e9
 sbnd_opt0_finder_many_to_many.FlashVetoTimeEnd: +1e9
+
+# ... for TPC 0
+sbnd_opt0_finder_many_to_many_tpc0: @local::sbnd_opt0_finder_many_to_many
+sbnd_opt0_finder_many_to_many_tpc0.TPC: 0
+sbnd_opt0_finder_many_to_many_tpc0.OpFlashProducer: "opflashtpc0"
+sbnd_opt0_finder_many_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
+
+# ... for TPC 1
+sbnd_opt0_finder_many_to_many_tpc1: @local::sbnd_opt0_finder_many_to_many
+sbnd_opt0_finder_many_to_many_tpc1.TPC: 1
+sbnd_opt0_finder_many_to_many_tpc1.OpFlashProducer: "opflashtpc1"
+sbnd_opt0_finder_many_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
 
 END_PROLOG
