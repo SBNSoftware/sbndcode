@@ -30,7 +30,7 @@ art_make(    LIBRARY_NAME sbndcode_CosmicIdAlgs
                            ${Boost_SYSTEM_LIBRARY}
                            sbndcode_CRT
                            sbndcode_CRTUtils
-                           sbndcode_CRTProducts
+                           sbnobj_Common_CRT
                            sbndcode_CosmicIdUtils
         )
 

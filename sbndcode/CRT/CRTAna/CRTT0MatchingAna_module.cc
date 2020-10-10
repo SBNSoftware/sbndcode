@@ -8,7 +8,8 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTHit_Legacy.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
@@ -111,7 +112,7 @@ namespace sbnd {
     virtual void endJob() override;
 
     // Calculate the distance from the track crossing point to CRT overlap coordinates
-    double DistToCrtHit(TVector3 trackPos, crt::CRTHit crtHit);
+    double DistToCrtHit(TVector3 trackPos, sbn::crt::CRTHit crtHit);
 
   private:
 
@@ -210,8 +211,8 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT hits from the event
-    art::Handle< std::vector<crt::CRTHit>> crtHitHandle;
-    std::vector<art::Ptr<crt::CRTHit> > crtHitList;
+    art::Handle< std::vector<sbn::crt::CRTHit>> crtHitHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit> > crtHitList;
     if (event.getByLabel(fCRTHitLabel, crtHitHandle))
       art::fill_ptr_vector(crtHitList, crtHitHandle);
 
@@ -236,7 +237,7 @@ namespace sbnd {
     }
 
     std::map<int, std::vector<std::string>> crtTaggerMap;
-    std::vector<crt::CRTHit> crtHits;
+    std::vector<sbn::crt::CRTHit> crtHits;
     int hit_i = 0;
     double minHitTime = 99999;
     double maxHitTime = -99999;
@@ -279,7 +280,7 @@ namespace sbnd {
       if(trueTime < minHitTime || trueTime > maxHitTime) continue;
 
       // Calculate t0 from CRT Hit matching
-      std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
       if(closest.second != -99999){ 
         hDCA[closest.first.tagger]->Fill(closest.second);
         hDCA["All"]->Fill(closest.second);
