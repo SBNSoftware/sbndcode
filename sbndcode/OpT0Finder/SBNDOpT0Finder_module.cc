@@ -38,9 +38,9 @@
 
 #include "sbncode/OpT0Finder/flashmatch/Base/OpT0FinderTypes.h"
 #include "sbncode/OpT0Finder/flashmatch/Base/FlashMatchManager.h"
-#include "sbncode/OpDetSim/sbndPDMapAlg.hh"
-
 #include "sbncode/OpT0Finder/flashmatch/Algorithms/PhotonLibHypothesis.h"
+
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 #include "TFile.h"
 #include "TTree.h"

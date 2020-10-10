@@ -10,14 +10,14 @@
 #   NO_UNDEFINED
 #   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
 # )
-# include_directories($ENV{GEANT4_FQ_DIR}/include)
+include_directories($ENV{GEANT4_FQ_DIR}/include)
 
 art_make(
     LIB_LIBRARIES
         sbncode_OpT0Finder_flashmatch_Base
         sbncode_OpT0Finder_flashmatch_Algorithms
-        sbncode_Geometry
-        sbncode_OpDetSim
+        sbnbcode_Geometry
+        sbnbcode_OpDetSim
         larcorealg_Geometry
         larcore_Geometry_Geometry_service
         lardata_Utilities
@@ -52,9 +52,9 @@ art_make(
     MODULE_LIBRARIES
         sbncode_OpT0Finder_flashmatch_Base
         sbncode_OpT0Finder_flashmatch_Algorithms
-        sbncode_OpDetReco_OpFlash_FlashFinder
-        sbncode_OpDetSim
-        sbncode_Geometry
+        # sbndcode_OpDetReco_OpFlash_FlashFinder
+        sbndcode_OpDetSim
+        sbndcode_Geometry
         larcorealg_Geometry
         larcore_Geometry_Geometry_service
         lardata_Utilities
@@ -93,4 +93,3 @@ install_fhicl()
 install_source()
 
 add_subdirectory(job)
-add_subdirectory(flashmatch)
