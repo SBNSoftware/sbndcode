@@ -143,7 +143,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tpc = p.get<unsigned int>("TPC");
 
   _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
-  _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsShower");
+  _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
 
   _mgr.Configure(p.get<flashmatch::Config_t>("FlashMatchConfig"));
 
@@ -491,14 +491,11 @@ std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names
 
   std::vector<int> out_ch_v;
 
-  std::cout << "----------------Getting list of channels with name " << pd_names[0] << std::endl;
-
   for (auto name : pd_names) {
     auto ch_v = _pds_map.getChannelsOfType(name);
     out_ch_v.insert(out_ch_v.end(), ch_v.begin(), ch_v.end());
   }
 
-  for (auto ch : out_ch_v) std::cout << "-> " << ch << std::endl;
   return out_ch_v;
 
 }
