@@ -29,6 +29,7 @@
 #include "sbndcode/OpT0Finder/flashmatch/Base/FMWKInterface.h"
 #include "sbndcode/OpT0Finder/flashmatch/Base/BaseFlashFilter.h"
 #include "sbndcode/OpT0Finder/flashmatch/Base/FlashHypothesisFactory.h"
+#include "larsim/LegacyLArG4/OpFastScintillation.hh"
 #endif
 
 #include <iostream>
@@ -52,6 +53,13 @@ namespace flashmatch {
 
     void FillEstimate(const QCluster_t&, Flash_t&) const;
 
+  private:
+    /// Fills the estimate using the semi analytical approach (SBND)
+    void FillEstimateSemiAnalytical(const QCluster_t&, Flash_t &) const;
+
+    /// Fills the estimate using the photon library (ICARUS, SBND)
+    void FillEstimateLibrary(const QCluster_t&, Flash_t &) const;
+
   protected:
 
     void _Configure_(const Config_t &pset);
@@ -60,6 +68,9 @@ namespace flashmatch {
     double _global_qe_refl;        ///< Global QE for reflected light
     double _sigma_qe;              ///< Sigma for Gaussian centered on Global QE
     std::vector<double> _qe_v;     ///< PMT-wise relative QE
+    bool _use_semi_analytical;     ///< If the semi-analytical approach should be used
+    std::vector<int> _uncoated_pmt_list; ///< A list of opdet sensitive to visible (reflected) light
+    larg4::OpFastScintillation* _opfast_scintillation; ///< For SBND semi-analytical
   };
 
   /**

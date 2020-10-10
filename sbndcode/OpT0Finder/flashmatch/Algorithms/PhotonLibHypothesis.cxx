@@ -16,7 +16,8 @@ namespace flashmatch {
   static PhotonLibHypothesisFactory __global_PhotonLibHypothesisFactory__;
 
   PhotonLibHypothesis::PhotonLibHypothesis(const std::string name)
-    : BaseFlashHypothesis(name)
+    : BaseFlashHypothesis(name),
+    _opfast_scintillation(new larg4::OpFastScintillation())
   {}
 
   void PhotonLibHypothesis::_Configure_(const Config_t &pset)
@@ -26,6 +27,8 @@ namespace flashmatch {
     #endif
     _global_qe = pset.get<double>("GlobalQE");
     _global_qe_refl = pset.get<double>("GlobalQERefl", 0);
+    _use_semi_analytical = pset.get<bool>("UseSemiAnalytical", 0);
+    _uncoated_pmt_list = pset.get<std::vector<int>>("UncoatedPMTList"); // FIXME This should be provided by the geometry service, eventually
 
     _qe_v.clear();
     _qe_v = pset.get<std::vector<double> >("CCVCorrection",_qe_v);
@@ -35,21 +38,133 @@ namespace flashmatch {
                        << " != number of opdet (" << DetectorSpecs::GetME().NOpDets() << ")!" << std::endl;
       throw OpT0FinderException();
     }
+
+    // By default, add all opdets to the channel mask
+    // Note that this may be overridden by the manager
+    // via the SetChannelMask() method.
+    _channel_mask.clear();
+    _channel_mask.reserve(DetectorSpecs::GetME().NOpDets());
+    for (size_t i = 0; i < DetectorSpecs::GetME().NOpDets(); i++) {
+      _channel_mask[i] = i;
+    }
   }
+
+
+  #if USING_LARSOFT == 1
 
   void PhotonLibHypothesis::FillEstimate(const QCluster_t& trk, Flash_t &flash) const
   {
 
-    #if USING_LARSOFT == 1
+    for ( auto& v : flash.pe_v ) v = 0;
 
-    art::ServiceHandle<phot::PhotonVisibilityService const> vis;
+    if (_use_semi_analytical) {
+      FillEstimateSemiAnalytical(trk, flash);
+    } else {
+      FillEstimateLibrary(trk, flash);
+    }
+  }
+
+
+  void PhotonLibHypothesis::FillEstimateSemiAnalytical(const QCluster_t& trk, Flash_t &flash) const
+  {
+
+    // static double xyz[3] = {0.};
+
+
+    // size_t n_pmt = DetectorSpecs::GetME().NOpDets();
+
+    for ( size_t ipt = 0; ipt < trk.size(); ++ipt) {
+
+      // std::cout << "ipt " << ipt << std::endl;
+      auto const& pt = trk[ipt];
+
+      double q = pt.q;
+
+      // xyz[0] = pt.x;
+      // xyz[1] = pt.y;
+      // xyz[2] = pt.z;
+
+      // std::map<size_t, int> temp;
+      // geo::Point_t const temp_xyz = {-100, 100, 200};
+      // _opfast_scintillation->detectedReflecHits(temp, 50000, temp_xyz);
+      // std::cout << "*** PhotonLibHypothesis Number of reflected photons to ch 118: " << temp[118] << std::endl;
+      // std::map<size_t, int> temp_2;
+      // _opfast_scintillation->detectedDirectHits(temp_2, 50000, temp_xyz);
+      // std::cout << "*** PhotonLibHypothesis Number of direct photons to ch 118: " << temp_2[118] << std::endl;
+
+      geo::Point_t const xyz = {pt.x, pt.y, pt.z};
+
+      std::map<size_t, int> direct_photons;
+      _opfast_scintillation->detectedDirectHits(direct_photons, q, xyz);
+
+      std::map<size_t, int> reflected_photons;
+      _opfast_scintillation->detectedReflecHits(reflected_photons, q, xyz);
+
+      //
+      // Direct light
+      //
+      for (auto it = direct_photons.begin(); it != direct_photons.end(); ++it) {
+
+        const size_t op_det = it->first;
+        const int n_photons = it->second;
+
+        q = n_photons * _global_qe / _qe_v[op_det];
+
+        // Coated PMTs don't see direct photons
+        if (std::find(_uncoated_pmt_list.begin(), _uncoated_pmt_list.end(), op_det) != _uncoated_pmt_list.end()) {
+          q = 0;
+        }
+
+        // std::cout << "OpDet: " << op_det << " [x,y,z] -> [q] : [" << pt.x << ", " << pt.y << ", " << pt.z << "] -> [" << q << std::endl;
+
+        if (std::find(_channel_mask.begin(), _channel_mask.end(), op_det) != _channel_mask.end()) {
+          flash.pe_v[op_det] += q;
+        } else {
+          flash.pe_v[op_det] = 0;
+        }
+
+        if (flash.pe_v[op_det] > 480000000) {
+          std::cout << "---> op_det " << op_det << " x, y, z: " << pt.x << ", " << pt.y << ", " << pt.z << std::endl;
+        }
+
+      }
+
+      //
+      // Reflected light
+      //
+      for (auto it = reflected_photons.begin(); it != reflected_photons.end(); ++it) {
+
+        const size_t op_det = it->first;
+        const int n_photons = it->second;
+
+        q = n_photons * _global_qe_refl / _qe_v[op_det];
+
+        if (std::find(_channel_mask.begin(), _channel_mask.end(), op_det) != _channel_mask.end()) {
+          flash.pe_v[op_det] += q;
+        } else {
+          flash.pe_v[op_det] = 0;
+        }
+
+      }
+
+    }
+  }
+
+
+
+  void PhotonLibHypothesis::FillEstimateLibrary(const QCluster_t& trk, Flash_t &flash) const
+  {
+
     static double xyz[3] = {0.};
 
     size_t n_pmt = DetectorSpecs::GetME().NOpDets();
 
-    for ( auto& v : flash.pe_v ) v = 0;
-
+    art::ServiceHandle<phot::PhotonVisibilityService const> vis;
     for ( size_t ipmt = 0; ipmt < n_pmt; ++ipmt) {
+
+      if (std::find(_channel_mask.begin(), _channel_mask.end(), ipmt) == _channel_mask.end()) {
+        continue;
+      }
 
       for ( size_t ipt = 0; ipt < trk.size(); ++ipt) {
         auto const& pt = trk[ipt];
@@ -64,17 +179,29 @@ namespace flashmatch {
         // Direct light
         q *= vis->GetVisibility(xyz, ipmt) * _global_qe / _qe_v[ipmt];
         flash.pe_v[ipmt] += q;
+        // std::cout << "direct -- ipmt: " << ipmt << " - xyx: " << " - visibility: " << vis->GetVisibility(xyz, ipmt) << " - q: " << q << std::endl;
+        // std::cout << "PMT : " << ipmt << " [x,y,z] -> [q] : [" << pt.x << ", " << pt.y << ", " << pt.z << "] -> [" << q << std::endl;
 
         // Reflected light
         q *= vis->GetVisibility(xyz, ipmt, true) * _global_qe_refl / _qe_v[ipmt];
         flash.pe_v[ipmt] += q;
-        // std::cout << "PMT : " << ipmt << " [x,y,z] -> [q] : [" << pt.x << ", " << pt.y << ", " << pt.z << "] -> [" << q << std::endl;
+        // std::cout << "reflected -- ipmt: " << ipmt << " - xyx: " << " - visibility: " << vis->GetVisibility(xyz, ipmt, true) << " - q: " << q << std::endl;
       }
     }
     return;
+  }
 
 
-    #else
+  #else
+
+  void PhotonLibHypothesis::FillEstimate(const QCluster_t& trk, Flash_t &flash) const
+  {
+
+    static double xyz[3] = {0.};
+
+    size_t n_pmt = DetectorSpecs::GetME().NOpDets();
+
+    for ( auto& v : flash.pe_v ) v = 0;
 
 
     size_t n_pmt = DetectorSpecs::GetME().NOpDets();//n_pmt returns 0 now, needs to be fixed
@@ -126,8 +253,16 @@ namespace flashmatch {
     }
     return;
 
-    #endif
 
   }
+
+  void PhotonLibHypothesis::FillEstimateSemiAnalytical(const QCluster_t& trk, Flash_t &flash) const
+  {}
+
+  void PhotonLibHypothesis::FillEstimateLibrary(const QCluster_t& trk, Flash_t &flash) const
+  {}
+
+  #endif
+
 }
 #endif
