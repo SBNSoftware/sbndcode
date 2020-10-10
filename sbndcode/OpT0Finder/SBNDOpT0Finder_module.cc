@@ -494,7 +494,7 @@ std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names
   std::cout << "----------------Getting list of channels with name " << pd_names[0] << std::endl;
 
   for (auto name : pd_names) {
-    auto ch_v = _pds_map->getChannelsOfType(name);
+    auto ch_v = _pds_map.getChannelsOfType(name);
     out_ch_v.insert(out_ch_v.end(), ch_v.begin(), ch_v.end());
   }
 
