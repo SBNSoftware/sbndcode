@@ -214,7 +214,7 @@ namespace opdet {
     for (auto const& reflectedPhotons : photonMap) {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias. ~icaza
-      mean_photons = reflectedPhotons.second*fQEDirect;
+      mean_photons = reflectedPhotons.second*fQERefl;
       accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
