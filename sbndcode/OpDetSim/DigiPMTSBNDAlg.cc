@@ -72,12 +72,24 @@ namespace opdet {
     sim::SimPhotons const& simphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
-    std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS,
     double start_time,
     unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
-    CreatePDWaveform(simphotons, start_time, waves, ch, pdtype, directPhotonsOnPMTS);
+    CreatePDWaveform(simphotons, start_time, waves, ch, pdtype);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
+  }
+
+  void DigiPMTSBNDAlg::ConstructWaveformCoatedPMT(
+    int ch,
+    std::vector<short unsigned int>& waveform,
+    std::unordered_map<int, sim::SimPhotons>& DirectPhotonsMap,
+    std::unordered_map<int, sim::SimPhotons>& ReflectedPhotonsMap,
+    double start_time,
+    unsigned n_sample)
+  {
+    std::vector<double> waves(n_sample, fParams.PMTBaseline);
+    CreatePDWaveformCoatedPMT(ch, start_time, waves, DirectPhotonsMap, ReflectedPhotonsMap);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -87,12 +99,24 @@ namespace opdet {
     sim::SimPhotonsLite const& litesimphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
-    std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS,
     double start_time,
     unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
-    CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype, directPhotonsOnPMTS);
+    CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype);
+    waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
+  }
+
+  void DigiPMTSBNDAlg::ConstructWaveformLiteCoatedPMT(
+    int ch,
+    std::vector<short unsigned int>& waveform,
+    std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
+    std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap,
+    double start_time,
+    unsigned n_sample)
+  {
+    std::vector<double> waves(n_sample, fParams.PMTBaseline);
+    CreatePDWaveformLiteCoatedPMT(ch, start_time, waves, DirectPhotonsMap, ReflectedPhotonsMap);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -102,37 +126,70 @@ namespace opdet {
     double t_min,
     std::vector<double>& wave,
     int ch,
-    std::string pdtype,
-    std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS)
+    std::string pdtype)
   {
     double ttsTime = 0;
     double tphoton;
     size_t timeBin;
+    double ttpb=0;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
       if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
-        tphoton = ttsTime + simphotons[i].Time - t_min + fParams.CableTime;
+        ttpb = fTimeTPB->fire(); //for including TPB emission time
+        tphoton = ttsTime + simphotons[i].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
-    if(pdtype == "pmt_coated") { //To add direct light for TPB coated PMTs
-      sim::SimPhotons auxphotons;
-      double ttpb = 0;
-      if(auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) )
-      {auxphotons = it->second;}
-      for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
-        if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
-          if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-          ttpb = fTimeTPB->fire(); //for including TPB emission time
-          tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
-          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          timeBin = std::floor(tphoton*fSampling);
-          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
-        }
+
+    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
+    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
+    CreateSaturation(wave);
+  }
+
+  void DigiPMTSBNDAlg::CreatePDWaveformCoatedPMT(
+    int ch,
+    double t_min,
+    std::vector<double>& wave,
+    std::unordered_map<int, sim::SimPhotons>& DirectPhotonsMap,
+    std::unordered_map<int, sim::SimPhotons>& ReflectedPhotonsMap)
+  {
+
+    double ttsTime = 0;
+    double tphoton;
+    size_t timeBin;
+    double ttpb=0;
+    sim::SimPhotons auxphotons;
+
+    //direct light
+    if(auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) )
+    {auxphotons = it->second;}
+    for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
+      if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
+        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
+        ttpb = fTimeTPB->fire(); //for including TPB emission time
+        tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+        timeBin = std::floor(tphoton*fSampling);
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
+    // reflected light
+    if(auto it{ ReflectedPhotonsMap.find(ch) }; it != std::end(ReflectedPhotonsMap) )
+    {auxphotons = it->second;}
+    for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is now reflected light
+      if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
+        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
+        ttpb = fTimeTPB->fire(); //for including TPB emission time
+        tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
+        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+        timeBin = std::floor(tphoton*fSampling);
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+      }
+    }
+
+    //Adding noise and saturation
     if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
@@ -144,14 +201,14 @@ namespace opdet {
     double t_min,
     std::vector<double>& wave,
     int ch,
-    std::string pdtype,
-    std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS)
+    std::string pdtype)
   {
     double mean_photons;
     size_t accepted_photons;
     double ttsTime = 0;
     double tphoton;
     size_t timeBin;
+    double ttpb=0;
     // reflected light to be added to all PMTs
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
     for (auto const& reflectedPhotons : photonMap) {
@@ -161,31 +218,11 @@ namespace opdet {
       accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
-        tphoton = ttsTime + reflectedPhotons.first - t_min + fParams.CableTime;
+        ttpb = fTimeTPB->fire(); //for including TPB emission time
+        tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
-      }
-    }
-
-    // direct light for TPB coated PMTs
-    if(pdtype == "pmt_coated") {
-      if ( auto it{ directPhotonsOnPMTS.find(ch) }; it != std::end(directPhotonsOnPMTS) ){
-        double ttpb;
-        for (auto& directPhotons : (it->second).DetectedPhotons) {
-          // TODO: check that this new approach of not using the last
-          // (1-accepted_photons) doesn't introduce some bias. ~icaza
-          mean_photons = directPhotons.second*fQEDirect;
-          accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
-          for(size_t i = 0; i < accepted_photons; i++) {
-            if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-            ttpb = fTimeTPB->fire(); //for including TPB emission time
-            tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
-            if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-            timeBin = std::floor(tphoton*fSampling);
-            if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
-          }
-        }
       }
     }
 
@@ -193,6 +230,64 @@ namespace opdet {
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
   }
+
+  void DigiPMTSBNDAlg::CreatePDWaveformLiteCoatedPMT(
+    int ch,
+    double t_min,
+    std::vector<double>& wave,
+    std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
+    std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap)
+  {
+    double mean_photons;
+    size_t accepted_photons;
+    double ttsTime = 0;
+    double tphoton;
+    size_t timeBin;
+    double ttpb;
+
+    // direct light
+    if ( auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) ){
+      for (auto& directPhotons : (it->second).DetectedPhotons) {
+        // TODO: check that this new approach of not using the last
+        // (1-accepted_photons) doesn't introduce some bias. ~icaza
+        mean_photons = directPhotons.second*fQEDirect;
+        accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
+        for(size_t i = 0; i < accepted_photons; i++) {
+          if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
+          ttpb = fTimeTPB->fire(); //for including TPB emission time
+          tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+          timeBin = std::floor(tphoton*fSampling);
+          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+        }
+      }
+    }
+
+    // reflected light
+    if ( auto it{ ReflectedPhotonsMap.find(ch) }; it != std::end(ReflectedPhotonsMap) ){
+      for (auto& reflectedPhotons : (it->second).DetectedPhotons) {
+        // TODO: check that this new approach of not using the last
+        // (1-accepted_photons) doesn't introduce some bias. ~icaza
+        mean_photons = reflectedPhotons.second*fQERefl;
+        accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
+        for(size_t i = 0; i < accepted_photons; i++) {
+          if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
+          ttpb = fTimeTPB->fire(); //for including TPB emission time
+          tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
+          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+          timeBin = std::floor(tphoton*fSampling);
+          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+        }
+      }
+    }
+
+    //Adding noise and saturation
+    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
+    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
+    CreateSaturation(wave);
+  }
+
+
 
 
   void DigiPMTSBNDAlg::Pulse1PE(std::vector<double>& fSinglePEWave)//single pulse waveform
