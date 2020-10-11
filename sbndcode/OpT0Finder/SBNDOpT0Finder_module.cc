@@ -302,7 +302,6 @@ void SBNDOpT0Finder::produce(art::Event& e)
 
   // Emplace flashes to Flash Matching Manager
   for (auto f : all_flashes) {
-    std::cout << "pe of flash " << f.TotalPE() << std::endl;
     _mgr.Emplace(std::move(f));
   }
 
