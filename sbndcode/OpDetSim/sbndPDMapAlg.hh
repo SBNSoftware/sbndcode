@@ -40,7 +40,7 @@ namespace opdet {
   public:
     //Default constructor
     explicit sbndPDMapAlg(const fhicl::ParameterSet& pset);
-    sbndPDMapAlg() { sbndPDMapAlg(fhicl::ParameterSet()); }
+    sbndPDMapAlg() : sbndPDMapAlg(fhicl::ParameterSet()) {}
     //Default destructor
     ~sbndPDMapAlg();
 
