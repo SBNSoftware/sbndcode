@@ -49,9 +49,9 @@ physics:
 {
   producers:
   {
-    # opt0finder:    @local::sbnd_opt0_finder
-    opt0findertpc0:    @local::sbnd_opt0_finder_one_to_many_tpc0
-    opt0findertpc1:    @local::sbnd_opt0_finder_one_to_many_tpc1
+    opt0finder:    @local::sbnd_opt0_finder_one_to_many
+    # opt0findertpc0:    @local::sbnd_opt0_finder_one_to_many_tpc0
+    # opt0findertpc1:    @local::sbnd_opt0_finder_one_to_many_tpc1
   }
 
   analyzers:
@@ -63,8 +63,9 @@ physics:
   #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
   reco: [
-    opt0findertpc0
-    , opt0findertpc1
+    opt0finder
+    # , opt0findertpc0
+    # , opt0findertpc1
   ]
 
   ana: []

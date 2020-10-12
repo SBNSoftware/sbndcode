@@ -5,7 +5,9 @@ BEGIN_PROLOG
 sbnd_opt0_finder:
 {
   module_type:     "SBNDOpT0Finder"
-  OpFlashProducer: "opflashtpc0"
+  # OpFlashProducer: "opflashtpc0"
+  OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
+  TPCs: [0, 1]
   SliceProducer:   "pandora"
 
   FlashVetoTimeStart: -1e9

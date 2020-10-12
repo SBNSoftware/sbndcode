@@ -69,8 +69,15 @@ public:
 
 private:
 
-  /// Constructs all the LightClusters (TPC Objects)
-  bool ConstructLightClusters(art::Event& e);
+  /// Performs the matching in a specified tpc
+  void DoMatch(art::Event& e,
+               int tpc,
+               std::unique_ptr<std::vector<anab::T0>> & t0_v,
+               std::unique_ptr< art::Assns<recob::Slice, anab::T0>> & slice_t0_assn_v,
+               std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> & flash_t0_assn_v);
+
+  /// Constructs all the LightClusters (TPC Objects) in a specified TPC
+  bool ConstructLightClusters(art::Event& e, unsigned int tpc);
 
   /// Returns the number of photons given charge and PFParticle
   float GetNPhotons(const float charge, const art::Ptr<recob::PFParticle> &pfp);
@@ -78,10 +85,15 @@ private:
   /// Convert from a list of PDS names to a list of op channels
   std::vector<int> PDNamesToList(std::vector<std::string>);
 
+  /// Returns a list of uncoated PMTs that are a subset of those in ch_to_use
+  std::vector<int> GetUncoatedPTMList(std::vector<int> ch_to_use);
+
   ::flashmatch::FlashMatchManager _mgr; ///< The flash matching manager
   std::vector<flashmatch::FlashMatch_t> _result_v; ///< Matching result will be stored here
 
   std::string _opflash_producer; ///< The OpFlash producer (to be set)
+  std::vector<std::string> _opflash_producer_v; ///< The OpFlash producers (to be set)
+  std::vector<unsigned int> _tpc_v; ///< TPC number per OpFlash producer (to be set)
   std::string _slice_producer; ///< The Slice producer (to be set)
 
   double _flash_trange_start; ///< The time start from where to include flashes (to be set)
@@ -91,8 +103,8 @@ private:
   float _charge_to_n_photons_shower; ///< The conversion factor betweeen hit integral and photons (to be set)
 
   std::vector<std::string> _photo_detectors; ///< The photodetector to use (to be set)
-  std::vector<int> _opch_to_use; ///< List of of opch (will be infered from _photo_detectors)
-  unsigned int _tpc; ///< Which TPC to use
+  std::vector<int> _opch_to_use; ///< List of opch to use (will be infered from _photo_detectors)
+  std::vector<int> _uncoated_pmts; ///< List of uncoated opch to use (will be infered from _opch_to_use)
 
   opdet::sbndPDMapAlg _pds_map; ///< map for photon detector types
   // std::unique_ptr<opdet::sbndPDMapAlg> _pds_map;
@@ -103,6 +115,7 @@ private:
 
   TTree* _tree1;
   int _run, _subrun, _event;
+  int _tpc;
   int _matchid, _flashid, _tpcid;
   double _t0, _score;
   double _tpc_xmin, _qll_xmin;
@@ -131,7 +144,9 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   // _pds_map = art::make_tool<opdet::sbndPDMapAlg>(p.get<fhicl::ParameterSet>("PDSMapTool"));
   ::art::ServiceHandle<geo::Geometry> geo;
 
-  _opflash_producer = p.get<std::string>("OpFlashProducer");
+  // _opflash_producer = p.get<std::string>("OpFlashProducer");
+  _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
+  _tpc_v = p.get<std::vector<unsigned int>>("TPCs");
   _slice_producer = p.get<std::string>("SliceProducer");
 
   _flash_trange_start = p.get<double>("FlashVetoTimeStart", 0);
@@ -139,13 +154,24 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   _photo_detectors = p.get<std::vector<std::string>>("PhotoDetectors");
   _opch_to_use = this->PDNamesToList(_photo_detectors);
+  _uncoated_pmts = this->GetUncoatedPTMList(_opch_to_use);
 
-  _tpc = p.get<unsigned int>("TPC");
+  // _tpc = p.get<unsigned int>("TPC");
 
   _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
   _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
 
+  if (_tpc_v.size() != _opflash_producer_v.size()) {
+    throw cet::exception("SBNDOpT0Finder")
+      << "TPC vector and OpFlash producer vector don't have the same size, check your fcl params.";
+  }
+
   _mgr.Configure(p.get<flashmatch::Config_t>("FlashMatchConfig"));
+
+  _mgr.SetChannelMask(_opch_to_use);
+
+  _mgr.SetUncoatedPMTs(_uncoated_pmts);
+
 
   _flash_spec.resize(geo->NOpDets(), 0.);
   _hypo_spec.resize(geo->NOpDets(), 0.);
@@ -167,6 +193,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tree2->Branch("run",             &_run,                             "run/I");
   _tree2->Branch("subrun",          &_subrun,                          "subrun/I");
   _tree2->Branch("event",           &_event,                           "event/I");
+  _tree2->Branch("tpc",             &_tpc,                             "tpc/I");
   _tree2->Branch("matchid",         &_matchid,                         "matchid/I");
   _tree2->Branch("tpcid",           &_tpcid,                           "tpcid/I");
   _tree2->Branch("flashid",         &_flashid,                         "flashid/I");
@@ -186,20 +213,51 @@ void SBNDOpT0Finder::produce(art::Event& e)
   std::unique_ptr< art::Assns<recob::Slice, anab::T0>> slice_t0_assn_v (new art::Assns<recob::Slice, anab::T0>);
   std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> flash_t0_assn_v (new art::Assns<recob::OpFlash, anab::T0>);
 
-  _mgr.Reset();
-  _result_v.clear();
   _mgr.PrintConfig();
 
   // std::vector<int> ch_mask;
   // for (size_t i = 0; i < 100; i++) ch_mask.push_back(i);
-  _mgr.SetChannelMask(_opch_to_use);
 
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  = e.id().event();
 
+  for (auto tpc : _tpc_v) {
+
+    mf::LogInfo("SBNDOpT0Finder") << "Performing matching in TPC " << tpc << std::endl;
+
+    // Reset the manager and the result vector
+    _mgr.Reset();
+    _result_v.clear();
+    _tpc = tpc;
+
+    // Tell the manager what TPC and cryostat we are going to be doing
+    // the matching in. For SBND, the cryostat is always zero.
+    _mgr.SetTPCCryo(tpc, 0);
+
+    // Perform the matching in the specified TPC
+    DoMatch(e, tpc, t0_v, slice_t0_assn_v, flash_t0_assn_v);
+
+  }
+
+  // Finally, place the anab::T0 vector and the associations in the Event
+  e.put(std::move(t0_v));
+  e.put(std::move(slice_t0_assn_v));
+  e.put(std::move(flash_t0_assn_v));
+
+  return;
+}
+
+void SBNDOpT0Finder::DoMatch(art::Event& e,
+                             int tpc,
+                             std::unique_ptr<std::vector<anab::T0>> & t0_v,
+                             std::unique_ptr< art::Assns<recob::Slice, anab::T0>> & slice_t0_assn_v,
+                             std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> & flash_t0_assn_v) {
+
+  _flashid_to_opflash.clear();
+
   ::art::Handle<std::vector<recob::OpFlash>> flash_h;
-  e.getByLabel(_opflash_producer, flash_h);
+  e.getByLabel(_opflash_producer_v[tpc], flash_h);
   if(!flash_h.isValid() || flash_h->empty()) {
     mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes." << std::endl;
     e.put(std::move(t0_v));
@@ -271,7 +329,7 @@ void SBNDOpT0Finder::produce(art::Event& e)
 
   // Get all the ligh clusters
   // auto light_cluster_v = GetLighClusters(e);
-  if (!ConstructLightClusters(e)) {
+  if (!ConstructLightClusters(e, tpc)) {
     mf::LogInfo("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
     e.put(std::move(t0_v));
     e.put(std::move(slice_t0_assn_v));
@@ -357,13 +415,9 @@ void SBNDOpT0Finder::produce(art::Event& e)
     util::CreateAssn(*this, e, *t0_v, _flashid_to_opflash[_flashid], *flash_t0_assn_v);
   }
 
-  // Finally, place the anab::T0 vector and the associations in the Event
-  e.put(std::move(t0_v));
-  e.put(std::move(slice_t0_assn_v));
-  e.put(std::move(flash_t0_assn_v));
 }
 
-bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e) {
+bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
   // One slice is one QCluster_t.
   // Start from a slice, get all the PFParticles, from there get all the Spacepoints, from
   // there get all the hits on the collection plane.
@@ -441,7 +495,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e) {
           }
 
           // Only use hits (and so spacepoints) that are in the specified TPC
-          if (hit->WireID().TPC != _tpc) {
+          if (hit->WireID().TPC != tpc) {
             continue;
           }
 
@@ -498,6 +552,19 @@ std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names
   return out_ch_v;
 
 }
+
+std::vector<int> SBNDOpT0Finder::GetUncoatedPTMList(std::vector<int> ch_to_use) {
+  std::vector<int> out_v;
+
+  for (auto ch : ch_to_use) {
+    if (_pds_map.isPDType(ch, "pmt_uncoated")) {
+      out_v.push_back(ch);
+    }
+  }
+
+  return out_v;
+}
+
 
 
 DEFINE_ART_MODULE(SBNDOpT0Finder)
