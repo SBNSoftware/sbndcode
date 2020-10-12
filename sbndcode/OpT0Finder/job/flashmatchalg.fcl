@@ -1,9 +1,6 @@
 
 BEGIN_PROLOG
 
-flash_match_tpc : 0
-flash_match_cryo : 0
-
 flashmatch_config : {
 #
 # Manager configuration
@@ -39,8 +36,6 @@ QLLMatch: {
   OnePMTXDiffThreshold:  35.
   OnePMTPESumThreshold:  500
   OnePMTPEFracThreshold: 0.3
-  TPCNumber: @local::flash_match_tpc
-  CryoNumber: @local::flash_match_cryo
 }
 
 QWeightPoint: {
@@ -75,7 +70,6 @@ PhotonLibHypothesis:
   GlobalQE: 0.03
   GlobalQERefl: 0.03
   UseSemiAnalytical: true
-  UncoatedPMTList: [36, 37, 38, 39, 40, 41, 114, 115, 116, 117, 118, 119, 200, 201, 202, 203, 204, 205, 278, 279, 280, 281, 282, 283] # This should be provided by the geometry service, eventually
   ChannelMask: []
   CCVCorrection: []
   # CCVCorrection: [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]
