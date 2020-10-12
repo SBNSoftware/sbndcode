@@ -13,7 +13,6 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
-// #include "art/Utilities/make_tool.h"
 #include "art_root_io/TFileService.h"
 #include "canvas/Utilities/InputTag.h"
 #include "canvas/Persistency/Common/Assns.h"
@@ -110,6 +109,7 @@ private:
   // std::unique_ptr<opdet::sbndPDMapAlg> _pds_map;
 
   std::vector<flashmatch::QCluster_t> _light_cluster_v; ///< Vector that contains all the TPC objects
+
   std::map<int, art::Ptr<recob::Slice>> _clusterid_to_slice; /// Will contain map tpc object id -> Slice
   std::map<int, art::Ptr<recob::OpFlash>> _flashid_to_opflash; /// Will contain map flash id -> OpFlash
 
@@ -122,10 +122,6 @@ private:
   double _hypo_pe, _flash_pe;
   std::vector<double> _flash_spec;
   std::vector<double> _hypo_spec;
-  // std::vector<double>              _beam_flash_spec;
-  // std::vector<std::vector<double>> _hypo_flash_spec;
-  // std::vector<double>              _numc_flash_spec;
-  // int _fv, _ccnc, _nupdg;
 
   TTree* _tree2;
   std::vector<float> _dep_x, _dep_y, _dep_z, _dep_charge, _dep_n_photons;
@@ -134,17 +130,14 @@ private:
 
 
 SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
-  : EDProducer{p}  // ,
-  // More initializers here.
+  : EDProducer{p}
 {
   produces<std::vector<anab::T0>>();
   produces<art::Assns<recob::Slice, anab::T0>>();
   produces<art::Assns<recob::OpFlash, anab::T0>>();
 
-  // _pds_map = art::make_tool<opdet::sbndPDMapAlg>(p.get<fhicl::ParameterSet>("PDSMapTool"));
   ::art::ServiceHandle<geo::Geometry> geo;
 
-  // _opflash_producer = p.get<std::string>("OpFlashProducer");
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _tpc_v = p.get<std::vector<unsigned int>>("TPCs");
   _slice_producer = p.get<std::string>("SliceProducer");
@@ -155,8 +148,6 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _photo_detectors = p.get<std::vector<std::string>>("PhotoDetectors");
   _opch_to_use = this->PDNamesToList(_photo_detectors);
   _uncoated_pmts = this->GetUncoatedPTMList(_opch_to_use);
-
-  // _tpc = p.get<unsigned int>("TPC");
 
   _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
   _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
@@ -215,13 +206,11 @@ void SBNDOpT0Finder::produce(art::Event& e)
 
   _mgr.PrintConfig();
 
-  // std::vector<int> ch_mask;
-  // for (size_t i = 0; i < 100; i++) ch_mask.push_back(i);
-
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  = e.id().event();
 
+  // Loop over the specified TPCs
   for (auto tpc : _tpc_v) {
 
     mf::LogInfo("SBNDOpT0Finder") << "Performing matching in TPC " << tpc << std::endl;
@@ -255,6 +244,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
                              std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> & flash_t0_assn_v) {
 
   _flashid_to_opflash.clear();
+  _clusterid_to_slice.clear();
 
   ::art::Handle<std::vector<recob::OpFlash>> flash_h;
   e.getByLabel(_opflash_producer_v[tpc], flash_h);
@@ -277,10 +267,10 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
   for (size_t n = 0; n < flash_v.size(); n++) {
 
-    auto const& flash = *flash_v[n]; //(*flash_h)[n];
+    auto const& flash = *flash_v[n];
 
-    // mf::LogWarning("SBNDOpT0Finder") << "Flash time from " << _opflash_producer << ": " << flash.Time() << std::endl;
-    std::cout << "[SBNDOpT0Finder] Flash time from " << _opflash_producer << ": " << flash.Time() << ", PE " << flash.TotalPE() << std::endl;
+    mf::LogDebug("SBNDOpT0Finder") << "Flash time from " << _opflash_producer << ": " << flash.Time() << std::endl;
+
     if(flash.Time() < _flash_trange_start || _flash_trange_end < flash.Time()) {
       continue;
     }
@@ -324,9 +314,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     return;
   }
 
-  // TODO, Only pick one flash for now
-  // ::flashmatch::Flash_t f = all_flashes[0];
-
   // Get all the ligh clusters
   // auto light_cluster_v = GetLighClusters(e);
   if (!ConstructLightClusters(e, tpc)) {
@@ -345,18 +332,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     e.put(std::move(flash_t0_assn_v));
     return;
   }
-
-  // DEBUG
-  // ::flashmatch::Flash_t hypo_flash;
-  // hypo_flash.pe_v.resize(geo->NOpDets());
-  // ((flashmatch::PhotonLibHypothesis*)(_mgr.GetAlgo(::flashmatch::kFlashHypothesis)))->FillEstimate(_light_cluster_v.at(0), hypo_flash);
-  // std::cout << "[SBNDOpT0Finder] a." << std::endl;
-  // for(size_t pmt=0; pmt<_hypo_spec.size(); ++pmt) _hypo_spec[pmt]  = hypo_flash.pe_v[pmt];
-  // std::cout << "[SBNDOpT0Finder] b." << std::endl;
-  // for(size_t pmt=0; pmt<_hypo_spec.size(); ++pmt) _flash_spec[pmt] = all_flashes[0].pe_v[pmt];
-  // _tree2->Fill();
-  // return;
-  // DEBUG
 
   // Emplace flashes to Flash Matching Manager
   for (auto f : all_flashes) {
@@ -381,22 +356,29 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     _score    = match.score;
     _qll_xmin = match.tpc_point.x;
 
-    std::cout << "Matched _tpcid " << _tpcid << " with _flashid " << _flashid << " - score " << _score << " - _qll_xmin " << _qll_xmin << std::endl;
+    mf::LogInfo("SBNDOpT0Finder") << "Matched TPC object " << _tpcid
+                                  << " with flash number " << _flashid
+                                  << " -> score: " << _score
+                                  << ", qll xmin: " << _qll_xmin << std::endl;
 
+    // Get the minimum x position of the TPC Object
     _tpc_xmin = 1.e4;
     for(auto const& pt : _mgr.QClusterArray()[_tpcid]) {
       if(pt.x < _tpc_xmin) _tpc_xmin = pt.x;
     }
 
+    // Get the matched flash time, the t0
     auto const& flash = _mgr.FlashArray()[_flashid];
     _t0 = flash.time;
 
+    // Save the reconstructed flash and hypothesis flash PE spectrum
     if(_hypo_spec.size() != match.hypothesis.size()) {
       throw cet::exception("SBNDOpT0Finder") << "Hypothesis size mismatch!";
     }
     for(size_t pmt=0; pmt<_hypo_spec.size(); ++pmt) _hypo_spec[pmt]  = match.hypothesis[pmt];
     for(size_t pmt=0; pmt<_hypo_spec.size(); ++pmt) _flash_spec[pmt] = flash.pe_v[pmt];
 
+    // Also save the total number of photoelectrons
     _flash_pe = 0.;
     _hypo_pe  = 0.;
     for(auto const& v : _hypo_spec) _hypo_pe += v;
@@ -404,11 +386,12 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
     _tree2->Fill();
 
+    // Construct the anab::T0 dataproduc to put in the Event
     auto t0 = anab::T0(_t0,        // "Time": The recontructed flash time, or t0
                        _flash_pe,  // "TriggerType": placing the reconstructed total PE instead
                        _tpcid,     // "TriggerBits": placing the tpc id instead
                        _flashid,   // "ID": placing the flash id instead
-                       _score);    // "TriggerConfidence": Matrching score
+                       _score);    // "TriggerConfidence": Matching score
 
     t0_v->push_back(t0);
     util::CreateAssn(*this, e, *t0_v, _clusterid_to_slice[_tpcid], *slice_t0_assn_v);
@@ -419,10 +402,10 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
 bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
   // One slice is one QCluster_t.
-  // Start from a slice, get all the PFParticles, from there get all the Spacepoints, from
+  // Start from a slice, get all the PFParticles, from there get all the spacepoints, from
   // there get all the hits on the collection plane.
   // Use the charge on the collection plane to estimate the light, and the 3D spacepoint
-  // position to for the 3D location.
+  // position for the 3D location.
 
   _light_cluster_v.clear();
 
@@ -526,6 +509,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
       continue;
     }
 
+    // Save the light cluster, and remember the correspondance from index to slice
     _clusterid_to_slice[_light_cluster_v.size()] = slice_v.at(n_slice);
     _light_cluster_v.emplace_back(light_cluster);
 
