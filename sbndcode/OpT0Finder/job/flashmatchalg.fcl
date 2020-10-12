@@ -6,15 +6,15 @@ flashmatch_config : {
 # Manager configuration
 #
 FlashMatchManager: {
-  Verbosity: 0 #3
+  Verbosity: 0 # 3
   AllowReuseFlash: true
   StoreFullResult: false
   FlashFilterAlgo: ""
   TPCFilterAlgo:   "NPtFilter"
-  ProhibitAlgo:    "" #TimeCompatMatch"
+  ProhibitAlgo:    "" # "TimeCompatMatch"
   HypothesisAlgo:  "PhotonLibHypothesis"
   MatchAlgo:       "QLLMatch"
-  CustomAlgo:      ["LightPath"]#,"MCQCluster"]
+  CustomAlgo:      ["LightPath"] #,"MCQCluster"] # Keep lightpath, though it's not used now
 }
 
 #
@@ -26,10 +26,6 @@ QLLMatch: {
   QLLMode: 1 # 0 for Chi2, 1 for LLHD
   PEPenaltyThreshold: []
   PEPenaltyValue: []
-  #PEPenaltyThreshold: [6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]
-  #PEPenaltyValue: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
-  #PEPenaltyThreshold: [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
-  #PEPenaltyValue: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
   XPenaltyThreshold: 30
   ZPenaltyThreshold: 30
   OnePMTScoreThreshold:  0.00001
@@ -72,7 +68,6 @@ PhotonLibHypothesis:
   UseSemiAnalytical: true
   ChannelMask: []
   CCVCorrection: []
-  # CCVCorrection: [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]
 }
 
 ChargeAnalytical:
