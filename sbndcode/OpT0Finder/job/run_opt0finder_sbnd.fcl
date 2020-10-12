@@ -4,6 +4,7 @@
 #include "sam_sbnd.fcl"
 
 #include "opt0finder_sbnd.fcl"
+#include "opt0finderana_sbnd.fcl"
 
 process_name: FlashFinder
 
@@ -50,13 +51,11 @@ physics:
   producers:
   {
     opt0finder:    @local::sbnd_opt0_finder_one_to_many
-    # opt0findertpc0:    @local::sbnd_opt0_finder_one_to_many_tpc0
-    # opt0findertpc1:    @local::sbnd_opt0_finder_one_to_many_tpc1
   }
 
   analyzers:
   {
-    # flashana:     @local::sbnd_flashana
+    opt0finderana:     @local::sbnd_opt0_finder_ana
   }
 
 
@@ -64,11 +63,11 @@ physics:
   #filters reject all following items.  see lines starting physics.producers below
   reco: [
     opt0finder
-    # , opt0findertpc0
-    # , opt0findertpc1
   ]
 
-  ana: []
+  ana: [
+    opt0finderana
+  ]
 
   # define the output stream, there could be more than one if using filters
   stream1: [out1]
