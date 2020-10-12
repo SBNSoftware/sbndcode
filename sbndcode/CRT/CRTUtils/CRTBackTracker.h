@@ -26,9 +26,9 @@
 
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 
 // c++
 #include <vector>
@@ -73,35 +73,35 @@ namespace sbnd{
     void Initialize(const art::Event& event);
 
     // Check that two CRT data products are the same
-    bool DataCompare(const crt::CRTData& data1, const crt::CRTData& data2);
+    bool DataCompare(const sbnd::crt::CRTData& data1, const sbnd::crt::CRTData& data2);
 
     // Check that two CRT hits are the same
-    bool HitCompare(const crt::CRTHit& hit1, const crt::CRTHit& hit2);
+    bool HitCompare(const sbn::crt::CRTHit& hit1, const sbn::crt::CRTHit& hit2);
 
     // Check that two CRT tracks are the same
-    bool TrackCompare(const crt::CRTTrack& track1, const crt::CRTTrack& track2);
+    bool TrackCompare(const sbn::crt::CRTTrack& track1, const sbn::crt::CRTTrack& track2);
 
     // Get all the true particle IDs that contributed to the CRT data product
-    std::vector<int> AllTrueIds(const art::Event& event, const crt::CRTData& data);
+    std::vector<int> AllTrueIds(const art::Event& event, const sbnd::crt::CRTData& data);
 
     // Get all the true particle IDs that contributed to the CRT hit
-    std::vector<int> AllTrueIds(const art::Event& event, const crt::CRTHit& hit);
+    std::vector<int> AllTrueIds(const art::Event& event, const sbn::crt::CRTHit& hit);
 
     // Get all the true particle IDs that contributed to the CRT track
-    std::vector<int> AllTrueIds(const art::Event& event, const crt::CRTTrack& track);
+    std::vector<int> AllTrueIds(const art::Event& event, const sbn::crt::CRTTrack& track);
 
     // Get the true particle ID that contributed the most energy to the CRT data product
-    int TrueIdFromTotalEnergy(const art::Event& event, const crt::CRTData& data);
+    int TrueIdFromTotalEnergy(const art::Event& event, const sbnd::crt::CRTData& data);
     // Faster function - needs Initialize() to be called first
     int TrueIdFromDataId(const art::Event& event, int data_i);
 
     // Get the true particle ID that contributed the most energy to the CRT hit
-    int TrueIdFromTotalEnergy(const art::Event& event, const crt::CRTHit& hit);
+    int TrueIdFromTotalEnergy(const art::Event& event, const sbn::crt::CRTHit& hit);
     // Faster function - needs Initialize() to be called first
     int TrueIdFromHitId(const art::Event& event, int hit_i);
 
     // Get the true particle ID that contributed the most energy to the CRT track
-    int TrueIdFromTotalEnergy(const art::Event& event, const crt::CRTTrack& track);
+    int TrueIdFromTotalEnergy(const art::Event& event, const sbn::crt::CRTTrack& track);
     // Faster function - needs Initialize() to be called first
     int TrueIdFromTrackId(const art::Event& event, int track_i);
 

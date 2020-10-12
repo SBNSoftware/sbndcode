@@ -3,7 +3,7 @@
 #include "art/Framework/Core/EDFilter.h" 
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Principal/Event.h" 
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
 #include "art_root_io/TFileService.h"
 #include "TH1.h"
 #include <bitset>
