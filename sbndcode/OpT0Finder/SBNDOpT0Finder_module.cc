@@ -90,7 +90,6 @@ private:
   ::flashmatch::FlashMatchManager _mgr; ///< The flash matching manager
   std::vector<flashmatch::FlashMatch_t> _result_v; ///< Matching result will be stored here
 
-  std::string _opflash_producer; ///< The OpFlash producer (to be set)
   std::vector<std::string> _opflash_producer_v; ///< The OpFlash producers (to be set)
   std::vector<unsigned int> _tpc_v; ///< TPC number per OpFlash producer (to be set)
   std::string _slice_producer; ///< The Slice producer (to be set)
@@ -269,7 +268,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
     auto const& flash = *flash_v[n];
 
-    mf::LogDebug("SBNDOpT0Finder") << "Flash time from " << _opflash_producer << ": " << flash.Time() << std::endl;
+    mf::LogDebug("SBNDOpT0Finder") << "Flash time from " << _opflash_producer_v[tpc] << ": " << flash.Time() << std::endl;
 
     if(flash.Time() < _flash_trange_start || _flash_trange_end < flash.Time()) {
       continue;
