@@ -306,10 +306,12 @@ physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
 physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 
+physics.producers.pandoraShowerSBN.ShowerFinderTools[7].MinAngleToWire:       0.26
 physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCECorrectPitch:      true
 physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCECorrectEField:     true
 physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCEInputCorrected:    true
 physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCECorrectPitch:   true
 physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCECorrectEField:  true
 physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCEInputCorrected: true
+physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].MinAngleToWire:    0.26
 
