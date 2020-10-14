@@ -44,9 +44,6 @@
 #include "crtt0matchingalg_sbnd.fcl"
 #include "crttrackmatchingalg_sbnd.fcl"
 
-#Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018
-##include "backtrackerservice.fcl"
-#include "particleinventoryservice.fcl"
 #include "scecorrections.fcl"
 
 
@@ -62,10 +59,6 @@ services:
                              @table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
-
-  #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018
-#BackTrackerService:  @local::standard_backtrackerservice
-#ParticleInventoryService: @local::standard_particleinventoryservice
 }
 
 #source is now a root file
@@ -118,8 +111,8 @@ physics:
   pandora:             @local::sbnd_pandora
   pandoraTrack:        @local::sbnd_pandoraTrackCreation
   pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
-  pandoraShowerSBN:    @local::sbnd_3dTraj_pandoraModularShowerCreation
   pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
+  pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
   pandoraCalo:         @local::sbnd_calomc
   pandoraPid:          @local::sbnd_chi2pid
 
@@ -129,8 +122,8 @@ physics:
   ### SCE-aware pandora:
   pandoraSCE:          @local::scecorrection
   pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
-  pandoraSCEShowerSBN: @local::sbnd_3dTraj_pandoraModularShowerCreation
-  pandoraSCEShower:    @local::sbnd_incremental_pandoraModularShowerCreation
+  pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
+  pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
 
   ### track-finder producers
   #trackkalmanhit:      @local::sbnd_track3Dkalmanhit
@@ -305,13 +298,3 @@ physics.producers.pandoraSCE.CorrectNoT0Tag: true
 physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
 physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
-
-physics.producers.pandoraShowerSBN.ShowerFinderTools[7].MinAngleToWire:       0.26
-physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCECorrectPitch:      true
-physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCECorrectEField:     true
-physics.producers.pandoraSCEShower.ShowerFinderTools[7].SCEInputCorrected:    true
-physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCECorrectPitch:   true
-physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCECorrectEField:  true
-physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].SCEInputCorrected: true
-physics.producers.pandoraSCEShowerSBN.ShowerFinderTools[7].MinAngleToWire:    0.26
-
