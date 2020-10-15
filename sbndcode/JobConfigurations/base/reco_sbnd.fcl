@@ -11,6 +11,7 @@
 #
 
 #include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 #include "larfft_sbnd.fcl"
@@ -44,6 +45,8 @@
 #include "crtt0matchingalg_sbnd.fcl"
 #include "crttrackmatchingalg_sbnd.fcl"
 
+#include "opt0finder_sbnd.fcl"
+
 #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
 ##include "backtrackerservice.fcl" 
 #include "particleinventoryservice.fcl"
@@ -60,6 +63,7 @@ services:
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
                              @table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
+                             @table::sbnd_g4_services           # from simulationservices_sbnd.fcl; required by opt0finder
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
 
@@ -154,6 +158,8 @@ physics:
   crthitt0:            @local::sbnd_crthitt0producer
   crttrackt0:          @local::sbnd_crttrackt0producer
 
+  ### flash-matching
+  opt0finder: @local::sbnd_opt0_finder_one_to_many
  }
 
  #define the producer and filter modules for this path, order matters, 
@@ -192,6 +198,11 @@ physics:
          , crttrackt0
  ]
 
+ # The flashmatching will eventually be part of reco2, but for now
+ # we are keeping it separate here so we can easily remove if from the
+ # standard_reco2_sbnd.fcl files.
+ flashmatch: [ opt0finder ]
+
  #define the output stream, there could be more than one if using filters 
  stream1:  [ out1 ]
 
@@ -218,8 +229,12 @@ outputs:
 
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
-                    @sequence::physics.reco2 ]
-physics.trigger_paths: [ fullreco ]                   
+                    @sequence::physics.reco2,
+                    @sequence::physics.flashmatch ]
+physics.fullreco_noflashmatch: [ @sequence::physics.reco1,
+                                 @sequence::physics.reco2]
+
+physics.trigger_paths: [ fullreco ]
 
 
 
