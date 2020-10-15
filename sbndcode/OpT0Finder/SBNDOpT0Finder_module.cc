@@ -203,7 +203,7 @@ void SBNDOpT0Finder::produce(art::Event& e)
   std::unique_ptr< art::Assns<recob::Slice, anab::T0>> slice_t0_assn_v (new art::Assns<recob::Slice, anab::T0>);
   std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> flash_t0_assn_v (new art::Assns<recob::OpFlash, anab::T0>);
 
-  _mgr.PrintConfig();
+  // _mgr.PrintConfig();
 
   _run    = e.id().run();
   _subrun = e.id().subRun();
