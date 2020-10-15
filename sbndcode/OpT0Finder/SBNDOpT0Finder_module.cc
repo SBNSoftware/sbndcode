@@ -245,13 +245,10 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   _flashid_to_opflash.clear();
   _clusterid_to_slice.clear();
 
-  ::art::Handle<std::vector<recob::OpFlash>> flash_h;
-  e.getByLabel(_opflash_producer_v[tpc], flash_h);
+  auto const & flash_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[tpc]);
   if(!flash_h.isValid() || flash_h->empty()) {
-    mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes." << std::endl;
-    e.put(std::move(t0_v));
-    e.put(std::move(slice_t0_assn_v));
-    e.put(std::move(flash_t0_assn_v));
+    mf::LogWarning("SBNDOpT0Finder") << "Don't have good flashes from producer "
+                                     << _opflash_producer_v[tpc] << std::endl;
     return;
   }
 
@@ -306,29 +303,20 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
   // Don't waste time if there are no flashes
   if (n_flashes == 0) {
-    mf::LogInfo("SBNDOpT0Finder") << "Zero good flashes in this event." << std::endl;
-    e.put(std::move(t0_v));
-    e.put(std::move(slice_t0_assn_v));
-    e.put(std::move(flash_t0_assn_v));
+    mf::LogWarning("SBNDOpT0Finder") << "Zero good flashes in this event." << std::endl;
     return;
   }
 
   // Get all the ligh clusters
   // auto light_cluster_v = GetLighClusters(e);
   if (!ConstructLightClusters(e, tpc)) {
-    mf::LogInfo("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
-    e.put(std::move(t0_v));
-    e.put(std::move(slice_t0_assn_v));
-    e.put(std::move(flash_t0_assn_v));
+    mf::LogWarning("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
     return;
   }
 
   // Don't waste time if there are no clusters
   if (!_light_cluster_v.size()) {
-    mf::LogInfo("SBNDOpT0Finder") << "No slices to work with." << std::endl;
-    e.put(std::move(t0_v));
-    e.put(std::move(slice_t0_assn_v));
-    e.put(std::move(flash_t0_assn_v));
+    mf::LogWarning("SBNDOpT0Finder") << "No slices to work with." << std::endl;
     return;
   }
 
