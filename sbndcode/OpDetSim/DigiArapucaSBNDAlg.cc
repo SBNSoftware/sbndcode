@@ -31,7 +31,7 @@ namespace opdet {
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.ArapucaDataFile, fname);
-    TFile* file = TFile::Open(fname.c_str());
+    TFile* file = TFile::Open(fname.c_str(), "READ");
 
     std::vector<double>* TimeArapucaVUV_p;
     file->GetObject("TimeArapucaVUV", TimeArapucaVUV_p);
@@ -52,6 +52,7 @@ namespace opdet {
 
     Pulse1PE(wsp);
     saturation = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
+    file->Close();
   } // end constructor
 
   DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {}
