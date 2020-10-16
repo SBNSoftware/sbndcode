@@ -25,8 +25,21 @@
 
 // Additional framework includes
 #include "art_root_io/TFileService.h"
+
+#include "larcoreobj/SummaryData/POTSummary.h"
+
 #include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/Shower.h"
+#include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Vertex.h"
+
+#include "larsim/Utils/TruthMatchUtils.h"
+
+#include "nusimdata/SimulationBase/MCFlux.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
+#include "nusimdata/SimulationBase/MCNeutrino.h"
+#include "nusimdata/SimulationBase/GTruth.h"
 
 // ROOT includes
 #include <TTree.h>
@@ -70,16 +83,19 @@ private:
   unsigned int fEventID;
   
   unsigned int fNPFParticles;
-  unsigned int fNPrimaries;
 
   std::vector<int> *fNDaughthers;
   std::vector<int> *fParticleID;
   std::vector<int> *fParticlePDG;
 
+  std::vector<bool> *fIsPrimary;
+
   std::vector<float> *fLengths;
   std::vector<float> *fVPoints;
   std::vector<float> *fCosTheta;
-  std::vector<float> *fPhi;
+  std::vector<float> *fStartDirPhi;
+  std::vector<float> *fStartDirZ;
+  std::vector<float> *fStartDirMag;
   std::vector<float> *fStartX;
   std::vector<float> *fStartY;
   std::vector<float> *fStartZ;
@@ -98,12 +114,17 @@ private:
 sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
   // All vectors must be initialized in the class constructer
+  fNDaughthers(nullptr),
   fParticleID(nullptr),
   fParticlePDG(nullptr),
+
+  fIsPrimary(nullptr),
+
   fLengths(nullptr),
   fVPoints(nullptr),
-  fCosTheta(nullptr),
-  fPhi(nullptr),
+  fStartDirPhi(nullptr),
+  fStartDirZ(nullptr),
+  fStartDirMag(nullptr),
   fStartX(nullptr),
   fStartY(nullptr),
   fStartZ(nullptr),
@@ -112,7 +133,7 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fEndZ(nullptr)
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
-	fPFParticleLabel = p.get<std::string>("PFParticleLabel");
+  fPFParticleLabel = p.get<std::string>("PFParticleLabel");
   fTrackLabel = p.get<std::string>("TrackLabel");
 }
 
@@ -121,43 +142,51 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Implementation of required member function here.
   // Define out event ID variable
   fEventID = evt.id().event();
-
+  std::cout << "event id:" << std::endl;
+  
   // Initialize the counters for this event
   fNPFParticles = 0;
-  fNPrimaries   = 0;
-
+  
   // Make sure the vector is empty at the beginning of the event
-  fNDaughthers ->clear();
-  fParticleID  ->clear();
-  fParticlePDG ->clear();
+  fNDaughthers  ->clear();
+  fParticleID  	->clear();
+  fParticlePDG 	->clear();
 
-  fLengths  ->clear();
-  fVPoints  ->clear();
-  fCosTheta ->clear();
-  fPhi      ->clear();
-  fStartX   ->clear();
-  fStartY   ->clear();
-  fStartZ   ->clear();
-  fEndX     ->clear();
-  fEndY     ->clear();
-  fEndZ     ->clear();
+  fIsPrimary 	->clear();
+
+  fLengths  	->clear();
+  fVPoints  	->clear();
+  fCosTheta 	->clear();
+  fStartDirPhi 	->clear();
+  fStartDirZ    ->clear();
+  fStartDirMag 	->clear();
+  fStartX   	->clear();
+  fStartY   	->clear();
+  fStartZ   	->clear();
+  fEndX     	->clear();
+  fEndY     	->clear();
+  fEndZ     	->clear();
 
   // Accessing the PFParticles from Pandora
   art::Handle< std::vector<recob::PFParticle> > pfpHandle;
   std::vector< art::Ptr<recob::PFParticle> > pfps;
-  if(evt.getByLabel(fPFParticleLabel, pfpHandle)) // Make sure the handle is valid
-  	art::fill_ptr_vector(pfps, pfpHandle); // Fill the vector with the art::Ptr PFParticles
+  if(evt.getByLabel(fPFParticleLabel, pfpHandle)){ // Make sure the handle is valid
+    art::fill_ptr_vector(pfps, pfpHandle); // Fill the vector with the art::Ptr PFParticles
+  }
 
   // Access the Tracks from pandoraTrack
   art::Handle< std::vector<recob::Track> > trackHandle;
   std::vector< art::Ptr<recob::Track> > tracks;
-  if(evt.getByLabel(fTrackLabel, trackHandle)) // Make sure the handle is valid
+  if(evt.getByLabel(fTrackLabel, trackHandle)){ // Make sure the handle is valid
     art::fill_ptr_vector(tracks, trackHandle); // Fill the vector with art::Ptr Tracks
+  }
 
   if(!pfps.size()){
-      std::cerr << "Error: No PFParticle found in this event." << std::endl;
-      return; // Skip event if there are no reconstructed particles
-    }
+    std::cerr << "Error: No PFParticle found in this event." << std::endl;
+    return; // Skip event if there are no reconstructed particles
+  }
+
+  std::cout << "pfps.size():" << pfps.size() << std::endl;
   fNPFParticles = pfps.size();
 
   // Get the vector or vectors of tracks for each PFParticle
@@ -167,23 +196,31 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Find the neutrino ID
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
 
-  	fParticleID->push_back(pfp->Self());
+    fParticleID->push_back(pfp->Self());
     fParticlePDG->push_back(pfp->PdgCode());
     fNDaughthers->push_back(pfp->NumDaughters());
 
-    if(pfp->IsPrimary()) fNPrimaries++;
+    if(pfp->IsPrimary()){
+    	fIsPrimary->push_back(true);
+    }
+    else{
+    	fIsPrimary->push_back(false);
+    }
 
     // Check if there is an associated track to this particle
     std::vector< art::Ptr<recob::Track> > this_tracks = trackAssn.at(pfp.key());
     if(!this_tracks.empty()){
       assert(this_tracks.size()==1);
       std::cout << "PFParticle has a track!" << std::endl;
+
       for(const art::Ptr<recob::Track> &track : this_tracks){
 
         fLengths->push_back(track->Length());
         fVPoints->push_back(track->CountValidPoints());        
-        fCosTheta->push_back(track->StartDirection().Z() / sqrt(track->StartDirection().Mag2()));
-        fPhi->push_back(track->StartDirection().Phi());
+
+        fStartDirPhi->push_back(track->StartDirection().Phi());
+        fStartDirMag->push_back(track->StartDirection().Mag2());
+        fStartDirZ->push_back(track->StartDirection().Z());
 
         fStartX->push_back(track->Start().X());
         fStartY->push_back(track->Start().Y());
@@ -195,7 +232,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
 
       }
     } // nTracks > 0
-  } // pfparticleVect
+  } // pfps vector
 
   // Fill the output tree with all the relevant variables
   fTree->Fill();
@@ -209,18 +246,19 @@ void sbnd::ValidateTracks::beginJob()
   fTree = tfs->make<TTree>("tree", "Analysis Output Tree");
 
   //Add branches to out tree
-  fTree->Branch("eventID",      &fEventID,      "eventID");
-  fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles");
-  fTree->Branch("nPrimaries",   &fNPrimaries,   "nPrimaries");
+  fTree->Branch("eventID",      &fEventID, "eventID/i");
+  fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles/i");
 
+  fTree->Branch("isPrimary",   	&fIsPrimary);
   fTree->Branch("nDaughters",   &fNDaughthers);
   fTree->Branch("particleID",   &fParticleID);
   fTree->Branch("particlePDG",  &fParticlePDG);
 
   fTree->Branch("Lengths",      &fLengths);
   fTree->Branch("ValidPoints",  &fVPoints);
-  fTree->Branch("CosTheta",     &fCosTheta);
-  fTree->Branch("Phi",          &fPhi);
+  fTree->Branch("StartDirPhi", 	&fStartDirPhi);
+  fTree->Branch("StartDirZ",    &fStartDirZ);
+  fTree->Branch("StartDirMag",  &fStartDirMag);
   fTree->Branch("StartX",       &fStartX);
   fTree->Branch("StartY",       &fStartY);
   fTree->Branch("StartZ",       &fStartZ);
