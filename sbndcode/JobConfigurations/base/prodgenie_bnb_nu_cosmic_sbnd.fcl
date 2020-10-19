@@ -30,5 +30,6 @@ outputs.out1.fileName: "prodgenie_bnb_nu_cosmic_sbnd_%p-%tc.root"
 
 physics.producers.generator: @local::sbnd_genie_simple
 physics.producers.generator.GlobalTimeOffset: 0.
-physics.producers.generator.RandomTimeOffset: 1280.
+physics.producers.generator.RandomTimeOffset: 1596.
+physics.producers.generator.SpillTimeConfig: ""
 physics.producers.generator.TopVolume: "volCryostat"
