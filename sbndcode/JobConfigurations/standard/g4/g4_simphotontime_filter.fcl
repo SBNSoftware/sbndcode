@@ -11,8 +11,6 @@ physics.producers.largeant: {
 
 physics.simulate: [ rns, larg4outtime, largeant, mcreco ]
 
-physics.outputs.out1: {
-   outputCommands: [ "keep *_*_*_*",
+outputs.out1.outputCommands: [ "keep *_*_*_*",
                      "drop *_larg4intime_*_*",
                      "drop *_larg4outtime_*_*"]
-}
