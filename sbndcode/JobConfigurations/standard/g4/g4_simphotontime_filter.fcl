@@ -1,7 +1,18 @@
-#include "filterssimphotontime_sbnd.fcl"
 #include "standard_g4_sbnd.fcl"
 
-physics.filters.filter: @local::sbnd_timefilterssimphotontime
-physics.simulate: [ rns, largeant, filter, mcreco ]
+physics.producers.larg4outtime: @local::physics.producers.largeant
+physics.producers.larg4outtime.InputLabels: [ "GenInTimeSorter:outtime" ]
 
-outputs.out1.SelectEvents: [ "simulate" ]
+physics.producers.largeant: {
+  module_type: "MergeSimSources"
+  InputSourcesLabels: [ "larg4intime","larg4outtime"]
+  TrackIDOffsets: [ 10000000,20000000 ]
+}
+
+physics.simulate: [ rns, larg4outtime, largeant, mcreco ]
+
+physics.outputs.out1: {
+   outputCommands: [ "keep *_*_*_*",
+                     "drop *_larg4intime_*_*",
+                     "drop *_larg4outtime_*_*"]
+}

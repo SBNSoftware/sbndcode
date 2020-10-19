@@ -1,11 +1,29 @@
 #include "filtersgenintime_sbnd.fcl"
-#include "prodcorsika_cosmics_proton.fcl"
+#include "filterssimphotonlitetime_sbnd.fcl"
+#include "largeantmodules_sbnd.fcl"
 
-process_name: CosmicsCorsikaCMCGenAndG4InTime
+#include "prodcorsika_cosmics_proton.fcl"
 
 # Ported from uBooNE gen-in-time fhicl for use by SBND
 # by Gray Putnam <grayputnam@uchicago.edu>
 
-physics.filters.filter: @local::sbnd_filtergenintime
-physics.simulate: [ generator, filter, rns ]
+services: {
+  @table::services
+  @table::sbnd_g4_services
+}
+
+physics.producers.larg4intime: @local::sbnd_largeant
+physics.filters.GenInTimeSorter: @local::sbnd_filtergenintime
+physics.filters.timefilter: @local::sbnd_timefilterssimphotonlitetime 
+physics.filters.timefilter.Debug: true
+
+physics.simulate: [ generator, GenInTimeSorter, larg4intime, timefilter, rns ]
 outputs.out1.SelectEvents: [ "simulate" ]
+
+physics.producers.larg4intime.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"] 
+physics.producers.larg4intime.InputLabels: [ "GenInTimeSorter:intime" ]
+
+process_name: CosmicsCorsikaCMCGenAndG4InTime
+
+#include "3drift_services_sbnd.fcl"
+#include "enable_spacecharge_services_sbnd.fcl"
