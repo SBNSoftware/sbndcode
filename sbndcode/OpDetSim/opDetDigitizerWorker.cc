@@ -168,9 +168,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
             ReflectedPhotonsMap.insert(std::make_pair(ch, litesimphotons));
           else
             DirectPhotonsMap.insert(std::make_pair(ch, litesimphotons));
-          
+
           coatedpmts_todigitize.insert(ch);
-          //std::cout<<"  Storing PMT info  ChID="<<ch<<"  PDtype="<<pdtype<<"  Reflected?="<<Reflected<<std::endl;
         }
         else if( (Reflected) && (pdtype == "pmt_uncoated") ) { //Uncoated PMT channels
           pmtDigitizer->ConstructWaveformLite(ch,
@@ -183,7 +182,6 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-      	  //std::cout<<"  Making Waveforms UncoatedPMTs  ChID="<<ch<<"  PDtype="<<pdtype<<"  Reflected?="<<Reflected<<std::endl;
       	}
         // getting only xarapuca channels with appropriate type of light
         else if((pdtype == "xarapuca_vuv" && !Reflected) ||
@@ -198,7 +196,6 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-      	  //std::cout<<"  Making Waveforms XARAPUCA  ChID="<<ch<<"  PDtype="<<pdtype<<"  Reflected?="<<Reflected<<std::endl;
         }
         // getting only arapuca channels with appropriate type of light
         else if((pdtype == "arapuca_vuv" && !Reflected) ||
@@ -213,14 +210,12 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-      	  //std::cout<<"  Making Waveforms ARAPUCA  ChID="<<ch<<"  PDtype="<<pdtype<<"  Reflected?="<<Reflected<<std::endl;
       	}
       }
     }  //end loop on simphoton lite collections
 
     //Constructing Waveforms for hybrid OpChannels (coated pmts)
     for(auto ch : coatedpmts_todigitize){
-      //std::cout<<"BUILDING COATED PMTs WAVEFORMS  Ch"<<ch<<std::endl;
       std::vector<short unsigned int> waveform;
       waveform.reserve(fConfig.Nsamples);
       pmtDigitizer->ConstructWaveformLiteCoatedPMT(ch, waveform, DirectPhotonsMap, ReflectedPhotonsMap, startTime, fConfig.Nsamples);
@@ -256,7 +251,6 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
             DirectPhotonsMap.insert(std::make_pair(ch, simphotons));
 
           coatedpmts_todigitize.insert(ch);
-          //std::cout<<"  Storing PMT info  ChID="<<ch<<"  PDtype="<<pdtype<<"  Reflected?="<<Reflected<<std::endl;
         }
         // uncoated PMTs
         else if(Reflected && pdtype == "pmt_uncoated") {
@@ -270,7 +264,6 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-          //std::cout<<"  Making Waveforms UncoatedPMTs  ChID="<<ch<<"  PDtype="<<pdtype<<"  Reflected?="<<Reflected<<std::endl;
         }
         // getting only arapuca channels with appropriate type of light
         if((pdtype == "arapuca_vuv" && !Reflected) ||
@@ -285,7 +278,6 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-          //std::cout<<"  Making Waveforms ARAPUCA  ChID="<<ch<<"  PDtype="<<pdtype<<"  Reflected?="<<Reflected<<std::endl;
         }
         // getting only arapuca channels with appropriate type of light
         if((pdtype == "xarapuca_vuv" && !Reflected) ||
@@ -300,13 +292,11 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-          //std::cout<<"  Making Waveforms XARAPUCA  ChID="<<ch<<"  PDtype="<<pdtype<<"  Reflected?="<<Reflected<<std::endl;
         }
       }//optical channel loop
     }//type of light loop
     //Constructing Waveforms for hybrid OpChannels (coated pmts)
     for(auto ch : coatedpmts_todigitize){
-      //std::cout<<"BUILDING COATED PMTs WAVEFORMS  Ch"<<ch<<std::endl;
       std::vector<short unsigned int> waveform;
       waveform.reserve(fConfig.Nsamples);
       pmtDigitizer->ConstructWaveformCoatedPMT(ch, waveform, DirectPhotonsMap, ReflectedPhotonsMap, startTime, fConfig.Nsamples);

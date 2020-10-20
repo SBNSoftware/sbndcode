@@ -107,6 +107,7 @@ namespace opdet {
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
+
   void DigiPMTSBNDAlg::ConstructWaveformLiteCoatedPMT(
     int ch,
     std::vector<short unsigned int>& waveform,
@@ -147,6 +148,7 @@ namespace opdet {
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
   }
+
 
   void DigiPMTSBNDAlg::CreatePDWaveformCoatedPMT(
     int ch,
@@ -231,6 +233,7 @@ namespace opdet {
     CreateSaturation(wave);
   }
 
+
   void DigiPMTSBNDAlg::CreatePDWaveformLiteCoatedPMT(
     int ch,
     double t_min,
@@ -286,8 +289,6 @@ namespace opdet {
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
   }
-
-
 
 
   void DigiPMTSBNDAlg::Pulse1PE(std::vector<double>& fSinglePEWave)//single pulse waveform
