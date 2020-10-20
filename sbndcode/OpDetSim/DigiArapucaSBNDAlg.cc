@@ -60,6 +60,7 @@ namespace opdet {
 
     Pulse1PE(wsp);
     saturation = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
+    file->Close();
   } // end constructor
 
   DigiArapucaSBNDAlg::~DigiArapucaSBNDAlg() {}

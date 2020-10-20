@@ -13,8 +13,8 @@
 # ======================================================================
 
 
-# use cmake 2.8 or later
-cmake_minimum_required (VERSION 2.8)
+# use cmake 3.12 or later
+cmake_minimum_required (VERSION 3.12)
 
 project(sbndcode)
 
@@ -62,6 +62,8 @@ message(STATUS "${PROJECT_NAME} repository tag: ${GIT_REPOSITORY_TAG}")
 install_source(LIST RepositoryTag)
 
 # these are minimum required versions, not the actual product versions
+find_ups_product( sbncode )
+find_ups_product( sbnobj )
 find_ups_product( larpandora v1_00_00 )
 find_ups_product( larsim v1_00_00 )
 find_ups_product( lardata v1_00_00 )

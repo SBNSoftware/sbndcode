@@ -61,6 +61,7 @@ namespace opdet {
     }
 
     saturation = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
+    file->Close();
   } // end constructor
 
 

@@ -14,7 +14,7 @@ art_make(
                            larpandora_LArPandoraInterface
                            sbndcode_CRTUtils
                            sbndcode_CRT
-                           sbndcode_CRTProducts
+                           sbnobj_Common_CRT
                            nusimdata_SimulationBase
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}

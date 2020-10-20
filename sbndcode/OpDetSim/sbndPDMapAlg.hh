@@ -20,6 +20,10 @@
 #ifndef SBND_OPDETSIM_SBNDPDMAPALG_HH
 #define SBND_OPDETSIM_SBNDPDMAPALG_HH
 
+#include "sbncode/OpDet/PDMapAlg.h"
+//#include "art/Utilities/ToolMacros.h"
+//#include "art/Utilities/make_tool.h"
+
 #include <algorithm>
 #include <fstream>
 #include <map>
@@ -31,11 +35,12 @@
 
 namespace opdet {
 
-  class sbndPDMapAlg {
+  class sbndPDMapAlg : PDMapAlg{
 
   public:
     //Default constructor
-    sbndPDMapAlg();
+    explicit sbndPDMapAlg(const fhicl::ParameterSet& pset);
+    sbndPDMapAlg() : sbndPDMapAlg(fhicl::ParameterSet()) {}
     //Default destructor
     ~sbndPDMapAlg();
 
@@ -49,7 +54,7 @@ namespace opdet {
     // void setup() {}
 
     bool isPDType(size_t ch, std::string pdname) const;
-    std::string pdType(size_t ch) const;
+    std::string pdType(size_t ch) const override;
     std::vector<int> getChannelsOfType(std::string pdname) const;
     size_t size() const;
     auto getChannelEntry(size_t ch) const;

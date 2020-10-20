@@ -9,7 +9,8 @@ sbnd_filtergenintime: {
   MaxT: 1900 # [ns] add a little buffer on the far end of the photon time window
   # About 1 in 30e6 particles will produce a flash 15us after entering the cryostat
   # so this gives us a good buffer and is still computationally feasible
-  MinT: -15202 # [ns]
+  # MinT: -15202 # [ns]
+  MinT: -200 # [ns] Change: filter to only allow muons starting at the beam spill (with a small buffer)
   SortParticles: true
   module_type: "FilterGenInTime"
 }
