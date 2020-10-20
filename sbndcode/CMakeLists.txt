@@ -16,6 +16,7 @@ add_subdirectory(RecoUtils)
 add_subdirectory(OpDetSim)
 add_subdirectory(OpDetReco)
 add_subdirectory(CosmicId)
+add_subdirectory(ShowerAna)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
