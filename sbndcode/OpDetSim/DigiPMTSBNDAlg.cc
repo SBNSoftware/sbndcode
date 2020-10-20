@@ -33,7 +33,7 @@ namespace opdet {
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.PMTDataFile, fname);
-    TFile* file = TFile::Open(fname.c_str());
+    TFile* file = TFile::Open(fname.c_str(), "READ");
 
     // TPB emission time histogram for pmt_coated histogram
     std::vector<double>* timeTPB_p;

@@ -31,7 +31,7 @@ namespace opdet {
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.ArapucaDataFile, fname);
-    TFile* file = TFile::Open(fname.c_str());
+    TFile* file = TFile::Open(fname.c_str(), "READ");
     //Note: TPB time now implemented at digitization module for both coated pmts and (x)arapucas
     //OpDetSim/digi_arapuca_sbnd.root updated in sbnd_data (now including the TPB times vector)
 
