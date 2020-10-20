@@ -172,7 +172,7 @@ physics:
    #      , cccluster
    #      , spacepts,
    #       , blurredcluster
-          , pandora, pandoraTrack, pandoraShower, pandoraShowerLegacy
+          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
@@ -243,6 +243,7 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
+physics.producers.pandoraShowerSBN.PFParticleLabel:              "pandora"
 physics.producers.pandoraShowerLegacy.PFParticleLabel:           "pandora"
 
 ### Added for Rhiannon's analysis work
