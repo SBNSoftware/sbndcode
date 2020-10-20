@@ -32,6 +32,14 @@ namespace opdet {
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.ArapucaDataFile, fname);
     TFile* file = TFile::Open(fname.c_str());
+    //Note: TPB time now implemented at digitization module for both coated pmts and (x)arapucas
+    //OpDetSim/digi_arapuca_sbnd.root updated in sbnd_data (now including the TPB times vector)
+
+    // TPB emission time histogram for visible (x)arapucas
+    std::vector<double>* timeTPB_p;
+    file->GetObject("timeTPB", timeTPB_p);
+    fTimeTPB = std::make_unique<CLHEP::RandGeneral>
+      (*fEngine, timeTPB_p->data(), timeTPB_p->size());
 
     std::vector<double>* TimeArapucaVUV_p;
     file->GetObject("TimeArapucaVUV", TimeArapucaVUV_p);
@@ -113,6 +121,7 @@ namespace opdet {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVISEff) { //Sample a random subset according to Arapuca's efficiency.
           tphoton = (fTimeArapucaVIS->fire());
           tphoton += simphotons[i].Time - t_min;
+          tphoton +=fTimeTPB->fire();
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
@@ -139,6 +148,7 @@ namespace opdet {
         if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVISEff) {
           tphoton = (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
           tphoton += simphotons[i].Time - t_min;
+          tphoton +=fTimeTPB->fire();
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
