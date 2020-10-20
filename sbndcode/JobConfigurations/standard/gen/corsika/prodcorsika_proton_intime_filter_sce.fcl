@@ -27,3 +27,4 @@ physics.producers.larg4intime.InputLabels: [ "GenInTimeSorter:intime" ]
 process_name: CosmicsCorsikaCMCGenAndG4InTime
 
 #include "3drift_services_sbnd.fcl"
+#include "enable_spacecharge_services_sbnd.fcl"
