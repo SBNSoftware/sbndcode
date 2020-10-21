@@ -45,6 +45,7 @@
 #include "crttrackmatchingalg_sbnd.fcl"
 
 #include "scecorrections.fcl"
+#include "flashmatch_sbnd.fcl"
 
 
 process_name: Reco
@@ -148,6 +149,8 @@ physics:
   crttrack:            @local::standard_crttrackproducer
   crthitt0:            @local::sbnd_crthitt0producer
   crttrackt0:          @local::sbnd_crttrackt0producer
+  fmatch:              @local::sbnd_simple_flashmatch
+  fmatchSCE:           @local::sbnd_simple_flashmatch
 
  }
 
@@ -185,6 +188,7 @@ physics:
          , crttrack
          , crthitt0
          , crttrackt0
+         , fmatch
  ]
 
  #define the output stream, there could be more than one if using filters
@@ -258,6 +262,11 @@ physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
 physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
+
+physics.producers.fmatchSCE.PandoraProducer: "pandoraSCE"
+physics.producers.fmatchSCE.TrackProducer: "pandoraSCETrack"
+physics.producers.fmatchSCE.CaloProducer: "pandoraSCECalo"
+physics.producers.fmatchSCE.SpacePointProducer: "pandoraSCE"
 
 #physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
