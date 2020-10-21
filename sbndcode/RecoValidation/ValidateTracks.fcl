@@ -4,8 +4,8 @@ validatetracks_sbnd:
 {
 	module_type: "ValidateTracks" # name of the module, without 'module'
 
-	PFParticleLabel:	"pandora"
-	TrackLabel: 	"pandoraTrack"
+	PFParticleLabel:"pandora"
+	TrackLabel:"pandoraTrack"
 }
 
 END_PROLOG
