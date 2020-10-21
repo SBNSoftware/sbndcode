@@ -30,7 +30,10 @@ sbnd_opticalproperties: {
 
     LoadExtraMatProperties: true
 
-    TpbTimeConstant: 2.5
+    # TPB time set to zero in Geant4 beacuse it is unable to simulate the measured-TPB 
+    # time spectrum (Phys. Rev. C, 91,035503). This delay (i.e. the measured 4-exponential)
+    # is currently accounted at digitization level.
+    TpbTimeConstant: 0.0 
 
     #setting the optical properties of the materials in the geometry:
     ReflectiveSurfaceEnergies:         [ 1.77, 2.0675, 2.481, 2.819, 2.953, 3.1807, 3.54, 4.135, 4.962, 5.39, 7., 15. ]
