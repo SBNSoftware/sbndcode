@@ -149,10 +149,6 @@ namespace opdet{
     double totalPE = 0.;
     double sumy = 0., sumz = 0., sumy2 = 0., sumz2 = 0.;
     for (unsigned int opch = 0; opch < pePerOpChannel.size(); opch++) {
-      if (opch > 31 && opch < 100){  //TO ADAPT FOR SBND USING THE MAP
-        //  std::cout << "Ignoring channel " << opch << " as it's not a real channel" << std::endl;
-        continue;
-      }
       // Get physical detector location for this opChannel
       double PMTxyz[3];
       ::lightana::OpDetCenterFromOpChannel(opch, PMTxyz);

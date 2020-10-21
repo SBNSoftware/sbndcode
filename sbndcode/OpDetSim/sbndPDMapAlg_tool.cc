@@ -14,8 +14,9 @@ namespace opdet {
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file("sbnd_pds_mapping.json", fname);
-    std::ifstream i(fname);
+    std::ifstream i(fname, std::ifstream::in);
     i >> PDmap;
+    i.close();
   }
 
   sbndPDMapAlg::~sbndPDMapAlg()
