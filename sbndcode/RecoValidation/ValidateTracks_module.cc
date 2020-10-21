@@ -87,9 +87,7 @@ private:
   std::vector<int> *fNDaughthers;
   std::vector<int> *fParticleID;
   std::vector<int> *fParticlePDG;
-
   std::vector<bool> *fIsPrimary;
-
   std::vector<float> *fLengths;
   std::vector<float> *fVPoints;
   std::vector<float> *fCosTheta;
@@ -119,9 +117,7 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fNDaughthers(nullptr),
   fParticleID(nullptr),
   fParticlePDG(nullptr),
-
   fIsPrimary(nullptr),
-
   fLengths(nullptr),
   fVPoints(nullptr),
   fStartDirPhi(nullptr),
@@ -153,23 +149,21 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   
   // Make sure the vector is empty at the beginning of the event
   fNDaughthers  ->clear();
-  fParticleID  	->clear();
-  fParticlePDG 	->clear();
-
-  fIsPrimary 	->clear();
-
-  fLengths  	->clear();
-  fVPoints  	->clear();
-  fCosTheta 	->clear();
-  fStartDirPhi 	->clear();
+  fParticleID   ->clear();
+  fParticlePDG  ->clear();
+  fIsPrimary    ->clear();
+  fLengths      ->clear();
+  fVPoints      ->clear();
+  fCosTheta     ->clear();
+  fStartDirPhi  ->clear();
   fStartDirZ    ->clear();
-  fStartDirMag 	->clear();
-  fStartX   	->clear();
-  fStartY   	->clear();
-  fStartZ   	->clear();
-  fEndX     	->clear();
-  fEndY     	->clear();
-  fEndZ     	->clear();
+  fStartDirMag  ->clear();
+  fStartX       ->clear();
+  fStartY       ->clear();
+  fStartZ       ->clear();
+  fEndX         ->clear();
+  fEndY         ->clear();
+  fEndZ         ->clear();
 
   // Accessing the PFParticles from Pandora
   art::Handle< std::vector<recob::PFParticle> > pfpHandle;
@@ -252,12 +246,10 @@ void sbnd::ValidateTracks::beginJob()
   //Add branches to out tree
   fTree->Branch("eventID",      &fEventID, "eventID/i");
   fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles/i");
-
   fTree->Branch("isPrimary",   	&fIsPrimary);
   fTree->Branch("nDaughters",   &fNDaughthers);
   fTree->Branch("particleID",   &fParticleID);
   fTree->Branch("particlePDG",  &fParticlePDG);
-
   fTree->Branch("Lengths",      &fLengths);
   fTree->Branch("ValidPoints",  &fVPoints);
   fTree->Branch("StartDirPhi", 	&fStartDirPhi);
