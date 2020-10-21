@@ -106,6 +106,8 @@ private:
   // Module labels
   std::string fPFParticleLabel;
   std::string fTrackLabel;
+  std::string fG4Label;
+  std::string fGenLabel;
 
   // Additional member functions
 };
@@ -135,6 +137,8 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   fPFParticleLabel = p.get<std::string>("PFParticleLabel");
   fTrackLabel = p.get<std::string>("TrackLabel");
+  fG4Label = p.get<std::string>("G4Label");
+  fGenLabel = p.get<std::string>("GenLabel");
 }
 
 void sbnd::ValidateTracks::analyze(art::Event const& evt)

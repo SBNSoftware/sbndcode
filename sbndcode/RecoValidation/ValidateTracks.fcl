@@ -6,6 +6,8 @@ validatetracks_sbnd:
 
 	PFParticleLabel:"pandora"
 	TrackLabel:"pandoraTrack"
+	G4Label:"largeant"
+	GenLabel:"generator"
 }
 
 END_PROLOG
