@@ -37,12 +37,12 @@ fwdir   product_dir scripts
 product          version
 sbncode          v09_07_00
 genie_xsec       v3_00_04a
-sbnd_data        v01_03_00 - optional
+sbnd_data        v01_04_00 - optional
 sbndutil         v09_07_00 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-cetbuildtools    v7_15_01  -   only_for_build
+cetbuildtools    v7_17_01  -   only_for_build
 
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
