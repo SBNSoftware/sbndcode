@@ -175,7 +175,8 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Implementation of required member function here.
   // Define out event ID variable
   fEventID = evt.id().event();
-  std::cout << "event id fill truths:" << fEventID << std::endl;
+  std::cout << "\n====================";
+  std::cout << "Event ID: " << fEventID;
   /*
   // Make sure the vectors are empty and counters set to zero.
   // Truth
@@ -257,11 +258,11 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   }
 
   if(!pfps.size()){
-    std::cerr << "Error: No PFParticle found in this event." << std::endl;
+    std::cerr << "\nSkip event: No PFParticles found.";
     return; // Skip event if there are no reconstructed particles
   }
 
-  std::cout << "pfps.size():" << pfps.size() << std::endl;
+  std::cout << "PFParticles: " << pfps.size();
   fNPFParticles = pfps.size();
 
   // Get the vector or vectors of tracks for each PFParticle
@@ -282,6 +283,41 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     	fIsPrimary->push_back(false);
     }
 
+    // Check if there is an associated track to this particle
+    std::vector<art::Ptr<recob::Track>> tracks = trackAssn.at(pfp.key());
+    if(!tracks.empty()){
+      assert(tracks.size()==1);
+      std::cout << "Found a track!";
+      fLengths->push_back(tracks.at(0)->Length());
+      fVPoints->push_back(tracks.at(0)->CountValidPoints());        
+      fStartDirPhi->push_back(tracks.at(0)->StartDirection().Phi());
+      fStartDirMag->push_back(tracks.at(0)->StartDirection().Mag2());
+      fStartDirZ->push_back(tracks.at(0)->StartDirection().Z());
+      fStartX->push_back(tracks.at(0)->Start().X());
+      fStartY->push_back(tracks.at(0)->Start().Y());
+      fStartZ->push_back(tracks.at(0)->Start().Z());
+      fEndX->push_back(tracks.at(0)->End().X());
+      fEndY->push_back(tracks.at(0)->End().Y());
+      fEndZ->push_back(tracks.at(0)->End().Z());
+    } // if there is a track
+    else{
+      assert(tracks.size()==0);
+      fLengths->emplace_back();
+      fVPoints->emplace_back();        
+      fStartDirPhi->emplace_back();
+      fStartDirMag->emplace_back();
+      fStartDirZ->emplace_back();
+      fStartX->emplace_back();
+      fStartY->emplace_back();
+      fStartZ->emplace_back();
+      fEndX->emplace_back();
+      fEndY->emplace_back();
+      fEndZ->emplace_back();      
+    } // no track
+
+  } // pfps vector
+
+/*
     // Check if there is an associated track to this particle
     std::vector< art::Ptr<recob::Track> > this_tracks = trackAssn.at(pfp.key());
     if(!this_tracks.empty()){
@@ -308,7 +344,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       }
     } // nTracks > 0
   } // pfps vector
-
+*/
   // Fill the output tree with all the relevant variables
   fTree->Fill();
 }
@@ -323,12 +359,12 @@ void sbnd::ValidateTracks::beginJob()
   //Add branches to out tree
   fTree->Branch("eventID",      &fEventID, "eventID/i");
   // Truth
-  fTree->Branch("truePDG", &fTruePDG);
-  fTree->Branch("positionT", &fPositionT);
-  fTree->Branch("momentumE", &fMomentumE);
+  fTree->Branch("truePDG",    &fTruePDG);
+  fTree->Branch("positionT",  &fPositionT);
+  fTree->Branch("momentumE",  &fMomentumE);
   // Reco
   fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles/i");
-  fTree->Branch("isPrimary",   	&fIsPrimary);
+  fTree->Branch("isPrimary",    &fIsPrimary);
   fTree->Branch("nDaughters",   &fNDaughthers);
   fTree->Branch("particleID",   &fParticleID);
   fTree->Branch("particlePDG",  &fParticlePDG);
