@@ -79,18 +79,34 @@ private:
   // Output tree declaration
   TTree *fTree;
 
-  // Variable to fill the output tree with
+  // Variables to fill the output tree with
   unsigned int fEventID;
-  
-  unsigned int fNPFParticles;
 
+  // Truth
+  std::vector<int>    *fTruePDG;
+  std::vector<double> *fPosition;
+  std::vector<double> *fPositionT;
+  std::vector<double> *fEndPosition;
+  std::vector<double> *fEndPositionT;
+  std::vector<double> *fMomentum;
+  std::vector<double> *fMomentumE;
+  std::vector<double> *fMomentumP;
+  std::vector<double> *fMomentumPt;
+  std::vector<double> *fMomentumMass;
+  std::vector<double> *fEndMomentum;
+  std::vector<double> *fEndMomentumE;
+  std::vector<double> *fEndMomentumP;
+  std::vector<double> *fEndMomentumPt;
+  std::vector<double> *fEndMomentumMass;
+
+  // Reco
+  unsigned int fNPFParticles;
   std::vector<int> *fNDaughthers;
   std::vector<int> *fParticleID;
   std::vector<int> *fParticlePDG;
   std::vector<bool> *fIsPrimary;
   std::vector<float> *fLengths;
   std::vector<float> *fVPoints;
-  std::vector<float> *fCosTheta;
   std::vector<float> *fStartDirPhi;
   std::vector<float> *fStartDirZ;
   std::vector<float> *fStartDirMag;
@@ -114,6 +130,23 @@ private:
 sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
   // All vectors must be initialized in the class constructer
+  // True
+  fTruePDG(nullptr),
+  fPosition(nullptr),
+  fPositionT(nullptr),
+  fEndPosition(nullptr),
+  fEndPositionT(nullptr),
+  fMomentum(nullptr),
+  fMomentumE(nullptr),
+  fMomentumP(nullptr),
+  fMomentumPt(nullptr),
+  fMomentumMass(nullptr),
+  fEndMomentum(nullptr),
+  fEndMomentumE(nullptr),
+  fEndMomentumP(nullptr),
+  fEndMomentumPt(nullptr),
+  fEndMomentumMass(nullptr),
+  // Reco
   fNDaughthers(nullptr),
   fParticleID(nullptr),
   fParticlePDG(nullptr),
@@ -142,19 +175,39 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Implementation of required member function here.
   // Define out event ID variable
   fEventID = evt.id().event();
-  std::cout << "event id:" << std::endl;
-  
-  // Initialize the counters for this event
+  std::cout << "event id fill truths:" << fEventID << std::endl;
+  /*
+  // Make sure the vectors are empty and counters set to zero.
+  // Truth
+  fTruePDG->clear();
+  fPosition->clear();
+  fPositionT->clear();
+  fEndPosition->clear();
+  fEndPositionT->clear();
+  fMomentum->clear();
+  fMomentumE->clear();
+  fMomentumP->clear();
+  fMomentumPt->clear();
+  fMomentumMass->clear();
+  fEndMomentum->clear();
+  fEndMomentumE->clear();
+  fEndMomentumP->clear();
+  fEndMomentumPt->clear();
+  fEndMomentumMass->clear();
+ */ 
+  fTruePDG->clear();
+  fPositionT->clear();
+  fMomentumE->clear();
+
+  // Reco
   fNPFParticles = 0;
-  
-  // Make sure the vector is empty at the beginning of the event
+
   fNDaughthers  ->clear();
   fParticleID   ->clear();
   fParticlePDG  ->clear();
   fIsPrimary    ->clear();
   fLengths      ->clear();
   fVPoints      ->clear();
-  fCosTheta     ->clear();
   fStartDirPhi  ->clear();
   fStartDirZ    ->clear();
   fStartDirMag  ->clear();
@@ -165,6 +218,30 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fEndY         ->clear();
   fEndZ         ->clear();
 
+  // =========================================================
+  // Truth stuff
+  // Handles
+  art::Handle<std::vector<simb::MCTruth>> mctruthHandle;
+  art::Handle<std::vector<simb::MCParticle>> mcpartHandle;
+  // Object vectors
+  std::vector<art::Ptr<simb::MCTruth>> mctruths;
+  std::vector<art::Ptr<simb::MCParticle>> mcparts;
+
+  if(evt.getByLabel(fGenLabel, mctruthHandle)){
+    art::fill_ptr_vector(mctruths, mctruthHandle);
+  }
+  if(evt.getByLabel(fG4Label, mcpartHandle)){
+    art::fill_ptr_vector(mcparts, mcpartHandle);
+  }
+
+  for(const art::Ptr<simb::MCParticle> &part : mcparts){
+    fTruePDG->push_back(part->PdgCode());
+    fPositionT->push_back(part->Position().T());
+    fMomentumE->push_back(part->Momentum().E());
+  }
+
+  // =========================================================
+  // Reco
   // Accessing the PFParticles from Pandora
   art::Handle< std::vector<recob::PFParticle> > pfpHandle;
   std::vector< art::Ptr<recob::PFParticle> > pfps;
@@ -245,6 +322,11 @@ void sbnd::ValidateTracks::beginJob()
 
   //Add branches to out tree
   fTree->Branch("eventID",      &fEventID, "eventID/i");
+  // Truth
+  fTree->Branch("truePDG", &fTruePDG);
+  fTree->Branch("positionT", &fPositionT);
+  fTree->Branch("momentumE", &fMomentumE);
+  // Reco
   fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles/i");
   fTree->Branch("isPrimary",   	&fIsPrimary);
   fTree->Branch("nDaughters",   &fNDaughthers);
