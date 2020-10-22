@@ -48,6 +48,7 @@
 #include "opt0finder_sbnd.fcl"
 
 #include "scecorrections.fcl"
+#include "flashmatch_sbnd.fcl"
 
 
 process_name: Reco
@@ -154,7 +155,9 @@ physics:
   crttrackt0:          @local::sbnd_crttrackt0producer
 
   ### flash-matching
-  opt0finder: @local::sbnd_opt0_finder_one_to_many
+  fmatch:              @local::sbnd_simple_flashmatch
+  fmatchSCE:           @local::sbnd_simple_flashmatch
+  opt0finder:          @local::sbnd_opt0_finder_one_to_many
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -178,7 +181,7 @@ physics:
    #      , cccluster
    #      , spacepts,
    #       , blurredcluster
-          , pandora, pandoraTrack, pandoraShower, pandoraShowerLegacy
+          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
@@ -191,12 +194,13 @@ physics:
          , crttrack
          , crthitt0
          , crttrackt0
+         , fmatch
  ]
 
- # The flashmatching will eventually be part of reco2, but for now
+ # The new flashmatching will eventually be part of reco2, but for now
  # we are keeping it separate here so we can easily remove if from the
- # standard_reco2_sbnd.fcl files.
- flashmatch: [ opt0finder ]
+ # reco fcl files.
+ opticalt0: [ opt0finder ]
 
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
@@ -225,7 +229,7 @@ outputs:
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
                     @sequence::physics.reco2,
-                    @sequence::physics.flashmatch ]
+                    opt0finder]
 physics.fullreco_noflashmatch: [ @sequence::physics.reco1,
                                  @sequence::physics.reco2]
 
@@ -258,6 +262,7 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
+physics.producers.pandoraShowerSBN.PFParticleLabel:              "pandora"
 physics.producers.pandoraShowerLegacy.PFParticleLabel:           "pandora"
 
 ### Added for Rhiannon's analysis work
@@ -272,6 +277,11 @@ physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
 physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
+
+physics.producers.fmatchSCE.PandoraProducer: "pandoraSCE"
+physics.producers.fmatchSCE.TrackProducer: "pandoraSCETrack"
+physics.producers.fmatchSCE.CaloProducer: "pandoraSCECalo"
+physics.producers.fmatchSCE.SpacePointProducer: "pandoraSCE"
 
 #physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"

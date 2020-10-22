@@ -108,6 +108,7 @@ namespace opdet {
     std::unique_ptr<CLHEP::RandGeneral> fTimeArapucaVUV; // histogram for getting the photon time distribution inside the Arapuca VUV box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeArapucaVIS; // histogram for getting the photon time distribution inside the Arapuca VIS box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeXArapucaVUV;// histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
+    std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for visible (x)arapucas
 
     std::vector<double> wsp; //single photon pulse vector
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
@@ -229,6 +230,7 @@ namespace opdet {
         Name("ArapucaDataFile"),
         Comment("File containing timing distribution for ArapucaVUV (optical window + cavity), ArapucaVIS (optical window + cavity), XArapuca VUV (optical window)")
       };
+
     };    //struct Config
 
     DigiArapucaSBNDAlgMaker(Config const& config); //Constructor
