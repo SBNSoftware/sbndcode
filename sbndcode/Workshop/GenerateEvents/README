@@ -1,0 +1,130 @@
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+               TUTORIAL 2: GENERATING EVENTS
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+
+----------------------------------------------------------------------
+                       CONTENTS OF DIRECTORY
+----------------------------------------------------------------------
+prodsingle_skeleton.fcl : skeleton fcl file for producing single 
+                          particle gun events
+
+g4_workshop.fcl         : fcl file for running Geant4
+
+detsim_workshop.fcl     : fcl file for running detector simulation
+
+anatree_workshop.fcl    : fcl file for running AnalysisTree analyzer
+                          module
+
+plot_skeleton.cxx       : skeleton ROOT macro for plotting things from
+                          the analysis tree
+
+
+----------------------------------------------------------------------
+                            MAIN TASK
+----------------------------------------------------------------------
+-- PART 1: Find out what single particle configuration parameters are
+           available.
+
+You can either use the findfcl.sh script to work out where singles.fcl
+lives or look at the online documentation for evgen::SingleGen.
+
+It's usually quite easy to find the online documentation for LArSoft
+classes by searching for "larsoft <class name>".
+
+----------------------------------------------------------------------
+-- PART 2: Generate a 1 muon and 1 proton event.
+
+Fill in the prodsingle_skeleton.fcl using the slides for guidance.
+
+Add the parameters you found in part 1 to produce an event with the
+following topology:
+                           Muon            Proton
+Start (x,y,z) [cm] | (-100, 0, 150) | (-100, 0, 150) |
+Momentum [GeV]     |       0.7      |       0.8      |
+theta_xz [degree]  |       -10      |        35      |
+theta_yz [degree]  |        0       |        10      |
+
+Run the event through the g4 and detsim stages.
+
+Note: You should produce this event in your data area, make sure you
+      remember where you put it and what you called it as you will
+      need it later.
+
+You can find the pdg codes here:
+http://pdg.lbl.gov/2007/reviews/montecarlorpp.pdf
+
+----------------------------------------------------------------------
+-- PART 3: View the event with the larsoft event display.
+
+The configuration file is evd_sbnd.fcl, if you're interested you can
+find the setting in LArSoftConfigurations/evdservices_sbnd.fcl.
+
+Try pressing buttons and see how many different ways you can make it
+crash!
+
+----------------------------------------------------------------------
+-- PART 4: Add some small Gaussian variations and produce 100 events.
+
+Use the fcl file you created in part 2 to add some small (~10 deg) 
+Gaussian variations to the angles.
+
+Produce 100 events and run them through the g4 stage.
+
+Make sure you call the output file something different to the file you
+produced in part 2.
+
+----------------------------------------------------------------------
+-- PART 5: Run the AnalysisTree and plot the angle between the muon
+           and the proton.
+
+Run the AnalysisTree with the provided fcl.
+
+You should end up with a root file called anatree_output.root.
+
+It's possible to view the anatree output with a TBrowser:
+bash> root -l
+root> new TBrowser
+
+You could also try opening the root file that art makes to see what
+happens.
+
+Write your own plotting script or fill in the skeleton to produce a
+histogram of the angle between the muon and the proton.
+
+
+----------------------------------------------------------------------
+                          BONUS TASKS
+----------------------------------------------------------------------
+-- PART 1: Repeat main task with an electron instead of a muon.
+
+Repeat parts 1-3 of the main task with an electron and a proton.
+
+----------------------------------------------------------------------
+-- PART 2: Run a neutrino + cosmics event up to the detsim stage.
+
+Copy the generation level file from 
+/pc2013-data1/larsoft_workshop_2019/nu_cosmics_gen.root into your work 
+directory.
+
+Run the g4 and detsim fcl files on it.
+
+----------------------------------------------------------------------
+-- PART 3: Find and identify the neutrino.
+
+Open the detsim output in the event display.
+
+Find the neutino interaction in amongst the cosmic background.
+
+Identify the neutrino flavour (muon or electron neutrino), interaction 
+(CC or NC), and the other final state particles.
+
+----------------------------------------------------------------------
+-- PART 4: Check your answers.
+
+Run the analysis tree on the event.
+
+Write a ROOT macro to give you the true neutrino flavour, interaction,
+and final state particles.

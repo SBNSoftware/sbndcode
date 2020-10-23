@@ -1,0 +1,33 @@
+# File:    prodsingle_skeleton.fcl
+# Instructions: Fill in this fcl file using the slides to generate a 1mu1p event in SBND
+
+# services
+#include ""
+
+# modules
+#include ""
+
+process_name:
+
+# Configure the services used by the modules
+services:
+{
+
+}
+
+# Start each new event with an empty event.
+source:
+{
+
+}
+
+physics:
+{
+
+}
+
+outputs:
+{
+
+}
+
