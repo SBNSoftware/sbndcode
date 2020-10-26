@@ -1,0 +1,10 @@
+
+BEGIN_PROLOG
+
+sbnd_opt0_finder_ana:
+{
+  module_type:     "SBNDOpT0FinderAna"
+  T0Producer:      "opt0finder"
+}
+
+END_PROLOG
