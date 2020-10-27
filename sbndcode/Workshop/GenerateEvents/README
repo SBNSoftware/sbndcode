@@ -47,11 +47,17 @@ Momentum [GeV]     |       0.7      |       0.8      |
 theta_xz [degree]  |       -10      |        35      |
 theta_yz [degree]  |        0       |        10      |
 
-Run the event through the g4 and detsim stages.
+*** WARNING ***: You shouldn't run anything in the srs directory.
+                 The best thing to do is to create a workdir folder:
 
-Note: You should produce this event in your data area, make sure you
-      remember where you put it and what you called it as you will
-      need it later.
+                 mkdir /scratch/home/$USER/workdir
+
+                 and run things in this folder.
+
+Next, run the event through the g4 and detsim stages.
+
+Remember where you put the output file and what you called it as you
+will need it later.
 
 You can find the pdg codes here:
 http://pdg.lbl.gov/2007/reviews/montecarlorpp.pdf
@@ -74,7 +80,7 @@ Gaussian variations to the angles.
 Produce 100 events and run them through the g4 stage.
 
 Make sure you call the output file something different to the file you
-produced in part 2.
+produced in part 2, or run it in a new work directory.
 
 ----------------------------------------------------------------------
 -- PART 5: Run the AnalysisTree and plot the angle between the muon
@@ -103,11 +109,20 @@ histogram of the angle between the muon and the proton.
 Repeat parts 1-3 of the main task with an electron and a proton.
 
 ----------------------------------------------------------------------
--- PART 2: Run a neutrino + cosmics event up to the detsim stage.
+-- PART 2: Generate an electron neutrino event in the SBND active
+volume and simulate this event up to the detsim stage.
 
-Copy the generation level file from 
-/pc2013-data1/larsoft_workshop_2019/nu_cosmics_gen.root into your work 
-directory.
+Use the fcl file:
+
+prodgenie_nu_singleinteraction_cryostat_gsimple-configd-v1.fcl
+
+as a template (hint: this fcl lives in sbndcode).
+
+Modify this fcl file to generate 10 electron neutrinos inside the SBND
+active volume. You will need to update the flux file search path to 
+point to a set of files located on the Manchester machine:
+
+FluxSearchPaths: "/scratch/home/kmistry/flux_files"
 
 Run the g4 and detsim fcl files on it.
 
@@ -116,13 +131,11 @@ Run the g4 and detsim fcl files on it.
 
 Open the detsim output in the event display.
 
-Find the neutino interaction in amongst the cosmic background.
-
-Identify the neutrino flavour (muon or electron neutrino), interaction 
-(CC or NC), and the other final state particles.
+Find the neutino interaction and identify the electron shower and any
+other particles along with it.
 
 ----------------------------------------------------------------------
--- PART 4: Check your answers.
+-- PART 4: Take a deeper look at the interaction.
 
 Run the analysis tree on the event.
 
