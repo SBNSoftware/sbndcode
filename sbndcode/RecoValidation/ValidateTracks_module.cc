@@ -28,6 +28,7 @@
 
 #include "larcoreobj/SummaryData/POTSummary.h"
 
+#include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/Slice.h"
@@ -83,6 +84,7 @@ private:
   unsigned int fEventID;
 
   // Truth
+  // --- tracks
   std::vector<int>    *fTruePDG;
   std::vector<double> *fPosition;
   std::vector<double> *fPositionT;
@@ -100,11 +102,13 @@ private:
   std::vector<double> *fEndMomentumMass;
 
   // Reco
+  // --- pfparticles
   unsigned int fNPFParticles;
   std::vector<int> *fNDaughthers;
   std::vector<int> *fParticleID;
   std::vector<int> *fParticlePDG;
   std::vector<bool> *fIsPrimary;
+  // --- tracks
   std::vector<float> *fLengths;
   std::vector<float> *fVPoints;
   std::vector<float> *fStartDirPhi;
@@ -116,10 +120,21 @@ private:
   std::vector<float> *fEndX;
   std::vector<float> *fEndY;
   std::vector<float> *fEndZ;
+  // --- hits
+  std::vector<raw::TDCtick_t> *fStartTick;
+  std::vector<raw::TDCtick_t> *fEndTick;
+  std::vector<raw::ChannelID_t> *fHitChannel;
+  std::vector<geo::View_t> *fHitView;
+  std::vector<geo::WireID> *fHitWireID;
+  std::vector<int> *fHitPlaneID;
+  std::vector<float> *fHitADC;
+  std::vector<float> *fHitRMS;
+
 
   // Module labels
   std::string fPFParticleLabel;
   std::string fTrackLabel;
+  std::string fHitLabel;
   std::string fG4Label;
   std::string fGenLabel;
 
@@ -161,11 +176,21 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fStartZ(nullptr),
   fEndX(nullptr),
   fEndY(nullptr),
-  fEndZ(nullptr)
+  fEndZ(nullptr),
+  fStartTick(nullptr),
+  fEndTick(nullptr),
+  fHitChannel(nullptr),
+  fHitView(nullptr),
+  fHitWireID(nullptr),
+  fHitPlaneID(nullptr),
+  fHitADC(nullptr),
+  fHitRMS(nullptr)
+
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   fPFParticleLabel = p.get<std::string>("PFParticleLabel");
   fTrackLabel = p.get<std::string>("TrackLabel");
+  fHitLabel = p.get<std::string>("HitLabel");
   fG4Label = p.get<std::string>("G4Label");
   fGenLabel = p.get<std::string>("GenLabel");
 }
@@ -175,7 +200,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Implementation of required member function here.
   // Define out event ID variable
   fEventID = evt.id().event();
-  std::cout << "\n====================";
+  std::cout << "\n\n====================\n";
   std::cout << "Event ID: " << fEventID;
   /*
   // Make sure the vectors are empty and counters set to zero.
@@ -218,7 +243,10 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fEndX         ->clear();
   fEndY         ->clear();
   fEndZ         ->clear();
-
+  fStartTick    ->clear();
+  fEndTick      ->clear();
+  fHitPlaneID   ->clear();
+  fHitADC       ->clear();
   // =========================================================
   // Truth stuff
   // Handles
@@ -243,18 +271,23 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
 
   // =========================================================
   // Reco
-  // Accessing the PFParticles from Pandora
+  // Handles
   art::Handle< std::vector<recob::PFParticle> > pfpHandle;
+  art::Handle< std::vector<recob::Track> > trackHandle;
+  art::Handle< std::vector<recob::Hit> > hitHandle;
+  // Object vectors
   std::vector< art::Ptr<recob::PFParticle> > pfps;
+  std::vector< art::Ptr<recob::Track> > tracks;
+  std::vector< art::Ptr<recob::Hit> > hits;
+
   if(evt.getByLabel(fPFParticleLabel, pfpHandle)){ // Make sure the handle is valid
     art::fill_ptr_vector(pfps, pfpHandle); // Fill the vector with the art::Ptr PFParticles
   }
-
-  // Access the Tracks from pandoraTrack
-  art::Handle< std::vector<recob::Track> > trackHandle;
-  std::vector< art::Ptr<recob::Track> > tracks;
-  if(evt.getByLabel(fTrackLabel, trackHandle)){ // Make sure the handle is valid
-    art::fill_ptr_vector(tracks, trackHandle); // Fill the vector with art::Ptr Tracks
+  if(evt.getByLabel(fTrackLabel, trackHandle)){
+    art::fill_ptr_vector(tracks, trackHandle);
+  }
+  if(evt.getByLabel(fHitLabel, hitHandle)){
+    art::fill_ptr_vector(hits, hitHandle);
   }
 
   if(!pfps.size()){
@@ -262,12 +295,14 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     return; // Skip event if there are no reconstructed particles
   }
 
-  std::cout << "PFParticles: " << pfps.size();
+  std::cout << "\nPFParticles: " << pfps.size() << std::endl;
   fNPFParticles = pfps.size();
 
-  // Get the vector or vectors of tracks for each PFParticle
-  // The vector size of associated tracks to a single PFParticle should be 0 or 1: why?
+  // Get the vector of tracks for each PFParticle via association
+  // The vector size of associated tracks to a single PFParticle
+  // should be 0 or 1 as a PFP will be either a shower or a track
   art::FindManyP<recob::Track> trackAssn(pfps, evt, fTrackLabel);
+  art::FindManyP<recob::Hit> hitAssn(tracks, evt, fTrackLabel);
 
   // Find the neutrino ID
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
@@ -287,7 +322,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     std::vector<art::Ptr<recob::Track>> tracks = trackAssn.at(pfp.key());
     if(!tracks.empty()){
       assert(tracks.size()==1);
-      std::cout << "Found a track!";
+      std::cout << "Found a track!" << std::endl;
       fLengths->push_back(tracks.at(0)->Length());
       fVPoints->push_back(tracks.at(0)->CountValidPoints());        
       fStartDirPhi->push_back(tracks.at(0)->StartDirection().Phi());
@@ -299,7 +334,23 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       fEndX->push_back(tracks.at(0)->End().X());
       fEndY->push_back(tracks.at(0)->End().Y());
       fEndZ->push_back(tracks.at(0)->End().Z());
+
+      // Get the hits associated to the track
+      std::vector<art::Ptr<recob::Hit>> trackhits = hitAssn.at(tracks[0].key());
+      std::cout << "Number of hits in track: " << trackhits.size() << std::endl;
+      for (auto const& hit: trackhits){
+        fStartTick->push_back(hit->StartTick());
+        fEndTick->push_back(hit->EndTick());
+        // fHitChannel->push_back(hit->Channel());
+        // fHitView->push_back(hit->View());
+        // fHitWireId->push_back(hit->WireID());
+        fHitPlaneID->push_back(hit->WireID().Plane);
+        fHitADC->push_back(hit->SummedADC());
+        // fHitRMS->push_back(hit->RMS());
+      } // end of track hits loop
     } // if there is a track
+    // The else doesn't necessarily have to be used.
+    // Leave in case it's useful for other things (?).
     else{
       assert(tracks.size()==0);
       fLengths->emplace_back();
@@ -317,34 +368,6 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
 
   } // pfps vector
 
-/*
-    // Check if there is an associated track to this particle
-    std::vector< art::Ptr<recob::Track> > this_tracks = trackAssn.at(pfp.key());
-    if(!this_tracks.empty()){
-      assert(this_tracks.size()==1);
-      std::cout << "PFParticle has a track!" << std::endl;
-
-      for(const art::Ptr<recob::Track> &track : this_tracks){
-
-        fLengths->push_back(track->Length());
-        fVPoints->push_back(track->CountValidPoints());        
-
-        fStartDirPhi->push_back(track->StartDirection().Phi());
-        fStartDirMag->push_back(track->StartDirection().Mag2());
-        fStartDirZ->push_back(track->StartDirection().Z());
-
-        fStartX->push_back(track->Start().X());
-        fStartY->push_back(track->Start().Y());
-        fStartZ->push_back(track->Start().Z());
-
-        fEndX->push_back(track->End().X());
-        fEndY->push_back(track->End().Y());
-        fEndZ->push_back(track->End().Z());
-
-      }
-    } // nTracks > 0
-  } // pfps vector
-*/
   // Fill the output tree with all the relevant variables
   fTree->Fill();
 }
@@ -379,6 +402,10 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("EndX",         &fEndX);
   fTree->Branch("EndY",         &fEndY);
   fTree->Branch("EndZ",         &fEndZ);
+  fTree->Branch("StartTick",    &fStartTick);
+  fTree->Branch("EndTick",      &fEndTick);
+  fTree->Branch("HitPlaneID",   &fHitPlaneID);
+  fTree->Branch("fHitADC",      &fHitADC);
 
 }
 
