@@ -1,7 +1,7 @@
 #
 # File:    evdservices_sbnd.fcl
 # Purpose: service settings for SBND event display in LArSoft
-# Version: 1.2
+# Version: 1.4
 # 
 # Provides:
 # 
@@ -20,6 +20,10 @@
 #   update for LArSoft 5.12
 # 20160712 (petrillo@fnal.gov) [v1.2]
 #   added simulation services
+# 20200726 (d.brailsford@lancaster.ac.uk) [v1.3]
+#   Swap simulation services for the plain services (the new noise service not being loaded correctly causes the event display to die)
+# 20201028 (icaza@fnal.gov) [v1.4]
+#   Swap simulation services for g4 simulation services, avoiding the noise service issue whilst enabling back the 3D functionalities
 #
 
 #include "simulationservices_sbnd.fcl"
