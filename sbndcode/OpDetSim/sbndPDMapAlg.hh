@@ -8,13 +8,15 @@
 // This class stores the SBND PDS Map and channel's properties;
 // also implements functions to access these.
 //
-// As of version v08_45_00 the PDS Map has:
-// channel: 0 to 503
-// pd_type: pmt_coated, pmt_uncoated, xarapuca, xarapuca_vuv, xarapuca_vis, arapuca_vuv, arapuca_vis
-// pds_box: -12, to 12; skipping 0
-// sensible_to: VUV or VIS
+// As of version v09_08_00 each entry of the PDS Map
+// has the following characteristics:
+//
+// channel: 0 to 303
+// pd_type: pmt_coated, pmt_uncoated, xarapuca_vuv, xarapuca_vis, arapuca_vuv, arapuca_vis
+// pds_box: 0 to 23
+// sensible_to_vis: true or false
+// sensible_to_vuv: true or false
 // tpc: 0, 1
-// xarapuca_pos: top, bottom, null
 ////////////////////////////////////////////////////////////////////////
 
 #ifndef SBND_OPDETSIM_SBNDPDMAPALG_HH
