@@ -20,10 +20,9 @@
 #   update for LArSoft 5.12
 # 20160712 (petrillo@fnal.gov) [v1.2]
 #   added simulation services
-# 20200726 (d.brailsford@lancaster.ac.uk) [v1.3]
-#   Swap simulation services for the plain services (the new noise service not being loaded correctly causes the event display to die)
+#
 
-#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "evdservices_base.fcl"
 #include "calorimetry.fcl"
 
@@ -71,7 +70,7 @@ sbnd_rawdrawingopt.TotalTicks: 3000
 
 sbnd_disp:                                                                       
 {                                                                                  
-                                               @table::sbnd_services
+                                               @table::sbnd_simulation_services
   ColorDrawingOptions:                         @local::sbnd_colordrawingopt
   SimulationDrawingOptions:                    @local::sbnd_simdrawingopt
   RawDrawingOptions:                           @local::sbnd_rawdrawingopt
