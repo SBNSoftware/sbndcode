@@ -69,8 +69,8 @@ sbnd_evdlayoutopt.ChangeWire:               1
 sbnd_rawdrawingopt.TotalTicks: 3000
 
 sbnd_disp:                                                                       
-{                                                                                  
-                                               @table::sbnd_simulation_services
+{
+					       @table::sbnd_g4_services
   ColorDrawingOptions:                         @local::sbnd_colordrawingopt
   SimulationDrawingOptions:                    @local::sbnd_simdrawingopt
   RawDrawingOptions:                           @local::sbnd_rawdrawingopt
@@ -81,8 +81,6 @@ sbnd_disp:
   InfoTransfer:                                @local::sbnd_infotransfer
   EventDisplay:                                @local::sbnd_evd
 }
-
-
 
 
 #######################################
