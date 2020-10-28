@@ -53,7 +53,7 @@ namespace opdet {
 
     // void setup() {}
 
-    bool isPDType(size_t ch, std::string pdname) const;
+    bool isPDType(size_t ch, std::string pdname) const override;
     std::string pdType(size_t ch) const override;
     std::vector<int> getChannelsOfType(std::string pdname) const;
     size_t size() const;
