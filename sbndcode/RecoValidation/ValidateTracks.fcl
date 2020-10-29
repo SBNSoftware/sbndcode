@@ -9,6 +9,8 @@ validatetracks_sbnd:
 	HitLabel:"linecluster"
 	G4Label:"largeant"
 	GenLabel:"generator"
+	CalLabel:"pandoraCalo"
+	PIDLabel:"pandoraPid"
 }
 
 END_PROLOG

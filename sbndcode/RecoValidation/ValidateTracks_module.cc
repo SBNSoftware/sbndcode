@@ -28,6 +28,8 @@
 
 #include "larcoreobj/SummaryData/POTSummary.h"
 
+#include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "lardataobj/AnalysisBase/ParticleID.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Shower.h"
@@ -121,14 +123,34 @@ private:
   std::vector<float> *fEndY;
   std::vector<float> *fEndZ;
   // --- hits
-  std::vector<raw::TDCtick_t> *fStartTick;
-  std::vector<raw::TDCtick_t> *fEndTick;
+  std::vector<unsigned int> *fNHits;
+  // std::vector<raw::TDCtick_t> *fStartTick;
+  // std::vector<raw::TDCtick_t> *fEndTick;
+  // std::vector<raw::ChannelID_t> *fHitChannel;
+  // std::vector<geo::View_t> *fHitView;
+  // std::vector<geo::WireID> *fHitWireID;
+  // std::vector<int> *fHitPlaneID;
+  // std::vector<float> *fHitADC;
+  // std::vector<float> *fHitRMS;
+  std::vector< std::vector<raw::TDCtick_t>> *fStartTick;
+  std::vector< std::vector<raw::TDCtick_t>> *fEndTick;
   std::vector<raw::ChannelID_t> *fHitChannel;
   std::vector<geo::View_t> *fHitView;
   std::vector<geo::WireID> *fHitWireID;
-  std::vector<int> *fHitPlaneID;
-  std::vector<float> *fHitADC;
+  std::vector< std::vector<int>> *fHitPlaneID;
+  std::vector< std::vector<float>> *fHitADC;
   std::vector<float> *fHitRMS;
+  // --- cals should be vector of vector
+  std::vector<std::vector<float>> *fTrackdQdx;
+  std::vector<std::vector<float>> *fTrackdEdx;
+  std::vector<std::vector<float>> *fTrackResidualRange;
+  // --- chi2 should be vector of vector
+  std::vector<double> *fChi2Kaon;
+  std::vector<double> *fChi2Muon;
+  std::vector<double> *fChi2Pion;
+  std::vector<double> *fChi2Proton;
+  std::vector<double> *fChi2NDoF;
+  std::vector<double> *fPIDA;
 
 
   // Module labels
@@ -137,6 +159,8 @@ private:
   std::string fHitLabel;
   std::string fG4Label;
   std::string fGenLabel;
+  std::string fCalLabel;
+  std::string fPIDLabel;
 
   // Additional member functions
 };
@@ -166,6 +190,7 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fParticleID(nullptr),
   fParticlePDG(nullptr),
   fIsPrimary(nullptr),
+  // --- tracks
   fLengths(nullptr),
   fVPoints(nullptr),
   fStartDirPhi(nullptr),
@@ -177,6 +202,8 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fEndX(nullptr),
   fEndY(nullptr),
   fEndZ(nullptr),
+  // --- hits
+  fNHits(nullptr),
   fStartTick(nullptr),
   fEndTick(nullptr),
   fHitChannel(nullptr),
@@ -184,7 +211,18 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fHitWireID(nullptr),
   fHitPlaneID(nullptr),
   fHitADC(nullptr),
-  fHitRMS(nullptr)
+  fHitRMS(nullptr),
+  // --- cals
+  fTrackdQdx(nullptr),
+  fTrackdEdx(nullptr),
+  fTrackResidualRange(nullptr),
+  // --- chi2
+  fChi2Kaon(nullptr),
+  fChi2Muon(nullptr),
+  fChi2Pion(nullptr),
+  fChi2Proton(nullptr),
+  fChi2NDoF(nullptr),
+  fPIDA(nullptr)
 
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
@@ -193,6 +231,8 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fHitLabel = p.get<std::string>("HitLabel");
   fG4Label = p.get<std::string>("G4Label");
   fGenLabel = p.get<std::string>("GenLabel");
+  fCalLabel = p.get<std::string>("CalLabel");
+  fPIDLabel = p.get<std::string>("PIDLabel");
 }
 
 void sbnd::ValidateTracks::analyze(art::Event const& evt)
@@ -243,10 +283,20 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fEndX         ->clear();
   fEndY         ->clear();
   fEndZ         ->clear();
+  fNHits        ->clear();
   fStartTick    ->clear();
   fEndTick      ->clear();
   fHitPlaneID   ->clear();
   fHitADC       ->clear();
+  fTrackdQdx          ->clear();
+  fTrackdEdx          ->clear();
+  fTrackResidualRange ->clear();
+  fChi2Kaon   ->clear();
+  fChi2Muon   ->clear();
+  fChi2Pion   ->clear();
+  fChi2Proton ->clear();
+  fChi2NDoF   ->clear();
+  fPIDA       ->clear();
   // =========================================================
   // Truth stuff
   // Handles
@@ -303,7 +353,8 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // should be 0 or 1 as a PFP will be either a shower or a track
   art::FindManyP<recob::Track> trackAssn(pfps, evt, fTrackLabel);
   art::FindManyP<recob::Hit> hitAssn(tracks, evt, fTrackLabel);
-
+  art::FindManyP<anab::Calorimetry> calAssn(tracks, evt, fCalLabel);
+  art::FindManyP<anab::ParticleID> pidAssn(tracks, evt, fPIDLabel);
   // Find the neutrino ID
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
 
@@ -320,7 +371,24 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
 
     // Check if there is an associated track to this particle
     std::vector<art::Ptr<recob::Track>> tracks = trackAssn.at(pfp.key());
-    if(!tracks.empty()){
+    if(tracks.empty()){
+      continue;
+      /*
+      assert(tracks.size()==0);
+      fLengths->emplace_back();
+      fVPoints->emplace_back();        
+      fStartDirPhi->emplace_back();
+      fStartDirMag->emplace_back();
+      fStartDirZ->emplace_back();
+      fStartX->emplace_back();
+      fStartY->emplace_back();
+      fStartZ->emplace_back();
+      fEndX->emplace_back();
+      fEndY->emplace_back();
+      fEndZ->emplace_back();
+      */
+    }
+    else{
       assert(tracks.size()==1);
       std::cout << "Found a track!" << std::endl;
       fLengths->push_back(tracks.at(0)->Length());
@@ -337,36 +405,64 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
 
       // Get the hits associated to the track
       std::vector<art::Ptr<recob::Hit>> trackhits = hitAssn.at(tracks[0].key());
-      std::cout << "Number of hits in track: " << trackhits.size() << std::endl;
+      fNHits->push_back(trackhits.size());
+      if(trackhits.empty()) continue;
+      std::vector<raw::TDCtick_t> temp_start;
+      std::vector<raw::TDCtick_t> temp_end;
+      std::vector<int> temp_planeid;
+      std::vector<float> temp_adc;
       for (auto const& hit: trackhits){
+        temp_start.push_back(hit->StartTick());
+        temp_end.push_back(hit->EndTick());
+        temp_planeid.push_back(hit->WireID().Plane);
+        temp_adc.push_back(hit->SummedADC());
+      /*
         fStartTick->push_back(hit->StartTick());
         fEndTick->push_back(hit->EndTick());
+        fHitPlaneID->push_back(hit->WireID().Plane);
+        fHitADC->push_back(hit->SummedADC());
         // fHitChannel->push_back(hit->Channel());
         // fHitView->push_back(hit->View());
         // fHitWireId->push_back(hit->WireID());
-        fHitPlaneID->push_back(hit->WireID().Plane);
-        fHitADC->push_back(hit->SummedADC());
         // fHitRMS->push_back(hit->RMS());
-      } // end of track hits loop
-    } // if there is a track
-    // The else doesn't necessarily have to be used.
-    // Leave in case it's useful for other things (?).
-    else{
-      assert(tracks.size()==0);
-      fLengths->emplace_back();
-      fVPoints->emplace_back();        
-      fStartDirPhi->emplace_back();
-      fStartDirMag->emplace_back();
-      fStartDirZ->emplace_back();
-      fStartX->emplace_back();
-      fStartY->emplace_back();
-      fStartZ->emplace_back();
-      fEndX->emplace_back();
-      fEndY->emplace_back();
-      fEndZ->emplace_back();      
-    } // no track
+        */
+      } // hits
+      fStartTick  ->push_back(temp_start);
+      fEndTick    ->push_back(temp_end);
+      fHitPlaneID ->push_back(temp_planeid);
+      fHitADC     ->push_back(temp_adc);  
 
-  } // pfps vector
+      // Get the calorimetry information associated to this track
+      std::vector< art::Ptr<anab::Calorimetry> > trackcals = calAssn.at(tracks[0].key());
+      if(trackcals.empty()) continue;
+      for(auto &cal : trackcals){
+        if(!cal->PlaneID().isValid) continue;
+        // Only look at the collection plane, since this is where the dEdx is acquired
+        int calplaneid = cal->PlaneID().Plane;
+        if(calplaneid!=2) continue;
+        fTrackdQdx->push_back(cal->dQdx());
+        fTrackdEdx->push_back(cal->dEdx());
+        fTrackResidualRange->push_back(cal->ResidualRange());
+      } // calorimetry
+
+      // Get the chi2 information associated to this track
+      std::vector< art::Ptr<anab::ParticleID> > trackpids = pidAssn.at(tracks[0].key());
+      if(trackpids.empty()) continue;
+      for(auto &pid : trackpids){
+        if(pid->PlaneID()){
+          assert(pid->PlaneID().deepestIndex()<3);
+          fChi2Kaon->push_back(pid->Chi2Kaon());
+          fChi2Muon->push_back(pid->Chi2Muon());
+          fChi2Pion->push_back(pid->Chi2Pion());
+          fChi2Proton->push_back(pid->Chi2Proton());
+          fChi2NDoF->push_back(pid->Ndf());
+          fPIDA->push_back(pid->PIDA());
+        }
+
+      }
+
+    } // tracks
+  } // pfps
 
   // Fill the output tree with all the relevant variables
   fTree->Fill();
@@ -402,10 +498,20 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("EndX",         &fEndX);
   fTree->Branch("EndY",         &fEndY);
   fTree->Branch("EndZ",         &fEndZ);
+  fTree->Branch("nHits",        &fNHits);
   fTree->Branch("StartTick",    &fStartTick);
   fTree->Branch("EndTick",      &fEndTick);
   fTree->Branch("HitPlaneID",   &fHitPlaneID);
   fTree->Branch("fHitADC",      &fHitADC);
+  fTree->Branch("fTrackdQdx",           &fTrackdQdx);  
+  fTree->Branch("fTrackdEdx",           &fTrackdEdx);
+  fTree->Branch("fTrackResidualRange",  &fTrackResidualRange);
+  fTree->Branch("fChi2Kaon", &fChi2Kaon);
+  fTree->Branch("fChi2Muon", &fChi2Muon);
+  fTree->Branch("fChi2Pion", &fChi2Pion);
+  fTree->Branch("fChi2Proton", &fChi2Proton);
+  fTree->Branch("fChi2NDoF", &fChi2NDoF);
+  fTree->Branch("fPIDA", &fPIDA);
 
 }
 
