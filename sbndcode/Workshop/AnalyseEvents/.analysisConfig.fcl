@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+analyseEvents:
+{ 
+  module_type:                "AnalyseEvents"
+
+  PFParticleLabel:  "pandora"
+  TrackLabel:       "pandoraTrack"
+  CalorimetryLabel: "pandoraCalo"
+}
+END_PROLOG

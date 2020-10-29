@@ -1,0 +1,28 @@
+#include "analysisConfig.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: AnalyseEvents # The process name must NOT contain any underscores
+
+source: 
+{ 
+  module_type: RootInput # Telling art we want a ROOT input
+               maxEvents:   -1
+}
+services: 
+{
+  TFileService: { fileName: "analysisOutput.root"}
+}
+physics: 
+{
+  analyzers: 
+  {
+    ana: @local::analyseEvents
+  }
+  path0:        [ ana ]
+  end_paths:    [ path0 ]
+}
+
+
+
+
+
