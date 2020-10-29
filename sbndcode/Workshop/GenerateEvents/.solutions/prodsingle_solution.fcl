@@ -81,7 +81,7 @@ physics.producers.generator.PDist:  0             # 0 = flat, 1 = gaussian
 # Vertex position
 physics.producers.generator.X0:      [ -100.0, -100.0 ] # cm
 physics.producers.generator.Y0:      [ 0.0, 0.0 ]       # cm
-physics.producers.generator.Z0:      [ 50.0, 50.0 ]     # cm
+physics.producers.generator.Z0:      [ 150.0, 150.0 ]   # cm
 physics.producers.generator.SigmaX:  [ 0.0, 0.0 ]       # cm
 physics.producers.generator.SigmaY:  [ 0.0, 0.0 ]       # cm
 physics.producers.generator.SigmaZ:  [ 0.0, 0.0 ]       # cm
