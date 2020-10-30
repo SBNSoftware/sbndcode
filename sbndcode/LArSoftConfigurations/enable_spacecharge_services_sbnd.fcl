@@ -1,0 +1,11 @@
+# Author: Gray Putnam <grayputnam@uchicago.edu>
+# Include this file at the bottom of any fhicl file where space-charge is intended
+# to be turned "ON"
+# It will modify all services parameters necessary.
+
+services.SpaceCharge.EnableCalSpatialSCE: true
+services.SpaceCharge.EnableSimSpatialSCE: true
+services.SpaceCharge.EnableSimEfieldSCE: true
+services.SpaceCharge.EnableCalEfieldSCE: true
+
+services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_voxelTH3.root"

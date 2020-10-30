@@ -1,7 +1,7 @@
 #
 # File:    evdservices_sbnd.fcl
 # Purpose: service settings for SBND event display in LArSoft
-# Version: 1.2
+# Version: 1.4
 # 
 # Provides:
 # 
@@ -22,8 +22,11 @@
 #   added simulation services
 # 20200726 (d.brailsford@lancaster.ac.uk) [v1.3]
 #   Swap simulation services for the plain services (the new noise service not being loaded correctly causes the event display to die)
+# 20201028 (icaza@fnal.gov) [v1.4]
+#   Swap simulation services for g4 simulation services, avoiding the noise service issue whilst enabling back the 3D functionalities
+#
 
-#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "evdservices_base.fcl"
 #include "calorimetry.fcl"
 
@@ -70,8 +73,8 @@ sbnd_evdlayoutopt.ChangeWire:               1
 sbnd_rawdrawingopt.TotalTicks: 3000
 
 sbnd_disp:                                                                       
-{                                                                                  
-                                               @table::sbnd_services
+{
+					       @table::sbnd_g4_services
   ColorDrawingOptions:                         @local::sbnd_colordrawingopt
   SimulationDrawingOptions:                    @local::sbnd_simdrawingopt
   RawDrawingOptions:                           @local::sbnd_rawdrawingopt
@@ -82,8 +85,6 @@ sbnd_disp:
   InfoTransfer:                                @local::sbnd_infotransfer
   EventDisplay:                                @local::sbnd_evd
 }
-
-
 
 
 #######################################

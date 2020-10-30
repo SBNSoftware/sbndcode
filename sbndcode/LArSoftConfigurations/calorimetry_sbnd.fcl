@@ -6,7 +6,7 @@ sbnd_calorimetryalgdata:    @local::standard_calorimetryalgdata
 #values below aren't correct
 #sbnd_calorimetryalgdata.CalAreaConstants: [ 0.31e-2 , 0.31e-2 , 0.830e-2 ]
 sbnd_calorimetryalgmc:      @local::standard_calorimetryalgmc
-sbnd_calorimetryalgmc.CalAreaConstants:  [ 0.02354, 0.02130, 0.02354 ]
+sbnd_calorimetryalgmc.CalAreaConstants:  [ 0.0200906, 0.0200016, 0.0201293 ]
 # amplitude constants below are arbitrary and have not yet been tuned
 sbnd_calorimetryalgmc.CalAmpConstants:   	[ 0.588726e-3, 0.588726e-3, 1.18998e-3 ]
 

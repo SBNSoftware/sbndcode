@@ -1,0 +1,16 @@
+BEGIN_PROLOG
+
+sbnd_timefilterssimphotonlitetime: { 
+   module_type: "FilterSimPhotonLiteTime"
+   SimPhotonsLiteCollectionLabel: larg4intime
+   # Currently in overlay generation, events are generated
+   # uniformly in a window [0, 1596ns] to approximate a beam spill.
+   # Add a little width here to up that width to 2000ns
+   TimeWindows: [ [-202, 1798] ] # ns
+   # 10 PE
+   MinTotalPhotons: 10 
+   # Reflected photons are not used in trigger -- we can ignore them
+   UseReflectedPhotons: false
+}
+
+END_PROLOG
