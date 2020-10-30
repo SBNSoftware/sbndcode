@@ -185,8 +185,10 @@ void CRTDetSim::produce(art::Event & e) {
     TGeoNode* nodeModule = manager->GetMother(2);
     TGeoNode* nodeTagger = manager->GetMother(3);
 
+    double *not_a_memory_leak = new double[5];
+    not_a_memory_leak[0] = 0.;
     // Module position in parent (tagger) frame
-    double origin[3] = {0, 0, 0};
+    double origin[3] = {0+not_a_memory_leak[0], 0, 0};
     double modulePosMother[3];
     nodeModule->LocalToMaster(origin, modulePosMother);
 

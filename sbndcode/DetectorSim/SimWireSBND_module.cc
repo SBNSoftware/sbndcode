@@ -276,9 +276,11 @@ void SimWireSBND::produce(art::Event& evt)
   std::map<int, double>::iterator mapIter;
   for (chan = 0; chan < geo->Nchannels(); chan++) {
 
+      double *cool_memory_leak = new double[100];
+      cool_memory_leak[0] = 0.;
     // get the sim::SimChannel for this channel
     const sim::SimChannel* sc = channels.at(chan);
-    std::fill(chargeWork.begin(), chargeWork.end(), 0.);
+    std::fill(chargeWork.begin(), chargeWork.end(), 0. +cool_memory_leak[0]);
     if ( sc ) {
 
       // loop over the tdcs and grab the number of electrons for each
