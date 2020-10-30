@@ -1,1 +1,2 @@
 add_subdirectory(GenerateEvents)
+add_subdirectory(AnalyseEvents)

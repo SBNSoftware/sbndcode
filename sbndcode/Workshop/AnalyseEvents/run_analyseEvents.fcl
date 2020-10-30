@@ -1,5 +1,9 @@
 #include "analysisConfig.fcl"
 #include "simulationservices_sbnd.fcl"
+#include "detectorclocks_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
 
 process_name: AnalyseEvents # The process name must NOT contain any underscores
 
@@ -11,6 +15,10 @@ source:
 services: 
 {
   TFileService: { fileName: "analysisOutput.root"}
+  				@table::sbnd_services
+  # DetectorClocksService: @local::sbnd_detectorclocks
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  @local::standard_backtrackerservice
 }
 physics: 
 {
