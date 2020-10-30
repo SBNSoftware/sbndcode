@@ -1,0 +1,11 @@
+#include "prodgenie_sbnd.fcl"
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_nu_Dv1
+     EventsPerSpill: 1
+     POTPerSpill:0 #This cannot be non-zero when EventsPerSpill != 0
+     TopVolume: "volTPCActive"
+     FluxSearchPaths: "/scratch/home/kmistry/flux_files"
+     GenFlavors:       [12,-12] #pdg codes of flux generator neutrino flavors
+}
