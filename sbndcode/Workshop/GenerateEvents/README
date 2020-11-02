@@ -72,7 +72,8 @@ Try pressing buttons and see how many different ways you can make it
 crash!
 
 ----------------------------------------------------------------------
--- PART 4: Add some small Gaussian variations and produce 100 events.
+-- PART 4: Add some small Gaussian variations and produce 5 more
+   events.
 
 Use the fcl file you created in part 2 to add some small (~10 deg) 
 Gaussian variations to the angles.
@@ -124,7 +125,7 @@ Modify this fcl file to generate 10 electron neutrinos inside the SBND
 active volume. You will need to update the flux file search path to 
 point to a set of files located on the Manchester machine:
 
-FluxSearchPaths: "/scratch/home/kmistry/flux_files"
+FluxSearchPaths: "/larsoft/common/flux_files/"
 
 Run the g4 and detsim fcl files on it.
 
