@@ -1,4 +1,4 @@
-#include "standard_reco_sbnd_basic.fcl"
+#include "standard_reco2_sbnd.fcl"
 
 # rig the output file name to be the one expected by the C.I. configuration
 services.TFileService.fileName: "standard_g4_sbnd_Reco-current_hist.root"
