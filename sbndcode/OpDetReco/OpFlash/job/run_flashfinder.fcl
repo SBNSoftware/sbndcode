@@ -43,7 +43,7 @@ outputs:
     fileName:    "flashfinder-art.root"
     dataTier:    "reconstructed"
     compressionLevel: 1
-    SelectEvents: ["reco"]
+    # SelectEvents: ["reco"]
  }
 }
 
