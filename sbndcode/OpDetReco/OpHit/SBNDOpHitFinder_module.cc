@@ -196,6 +196,10 @@ namespace opdet {
 
     // These is the storage pointer we will put in the event
     std::unique_ptr< std::vector< recob::OpHit > >
+    HitPtrFinal(new std::vector< recob::OpHit >);
+
+    // These is a temporary storage pointer
+    std::unique_ptr< std::vector< recob::OpHit > >
     HitPtr(new std::vector< recob::OpHit >);
 
     std::vector< const sim::BeamGateInfo* > beamGateArray;
@@ -272,10 +276,27 @@ namespace opdet {
                    clockData,
                    calibrator);
       // for (auto h : *HitPtr)
-      //   std::cout << "> ophit time " << h.PeakTime() << ", area " << h.Area() << ", pe " << h.PE() << std::endl;
+      //   std::cout << "> ophit time " << h.PeakTime()
+      //             << ", corrected " << h.PeakTime() - clockData.TriggerTime()
+      //             << ", area " << h.Area()
+      //             << ", pe " << h.PE() << std::endl;
+    }
+
+    // Now correct the time. Unfortunately, there are no setter methods for OpHits,
+    // so we have to make a new OpHit vector.
+    for (auto h : *HitPtr) {
+      (*HitPtrFinal).emplace_back(h.OpChannel(),
+                                  h.PeakTime() + clockData.TriggerTime(),
+                                  h.PeakTimeAbs(),
+                                  h.Frame(),
+                                  h.Width(),
+                                  h.Area(),
+                                  h.Amplitude(),
+                                  h.PE(),
+                                  0.0);
     }
     // Store results into the event
-    evt.put(std::move(HitPtr));
+    evt.put(std::move(HitPtrFinal));
 
   }
 
