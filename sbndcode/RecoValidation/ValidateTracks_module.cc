@@ -28,15 +28,19 @@
 
 #include "larcoreobj/SummaryData/POTSummary.h"
 
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/Slice.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Vertex.h"
 
+//#include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/Utils/TruthMatchUtils.h"
 
 #include "nusimdata/SimulationBase/MCFlux.h"
@@ -84,10 +88,13 @@ private:
 
   // Variables to fill the output tree with
   unsigned int fEventID;
+  bool fMCTruthPDG;
+  bool fIsNC;
+  bool fIsCC;
 
   // Truth
   // --- tracks
-  std::vector<int>    *fTruePDG;
+  std::vector<int>    *fMCPartPDG;
   std::vector<double> *fPosition;
   std::vector<double> *fPositionT;
   std::vector<double> *fEndPosition;
@@ -102,6 +109,8 @@ private:
   std::vector<double> *fEndMomentumP;
   std::vector<double> *fEndMomentumPt;
   std::vector<double> *fEndMomentumMass;
+  std::vector<int> *fTrackId;
+  std::vector<int> *fG4ID;
 
   // Reco
   // --- pfparticles
@@ -170,7 +179,10 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
   // All vectors must be initialized in the class constructer
   // True
-  fTruePDG(nullptr),
+  fMCTruthPDG(nullptr),
+  fIsNC(nullptr),
+  fIsCC(nullptr),
+  fMCPartPDG(nullptr),
   fPosition(nullptr),
   fPositionT(nullptr),
   fEndPosition(nullptr),
@@ -185,6 +197,8 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fEndMomentumP(nullptr),
   fEndMomentumPt(nullptr),
   fEndMomentumMass(nullptr),
+  fTrackId(nullptr),
+  fG4ID(nullptr),
   // Reco
   fNDaughthers(nullptr),
   fParticleID(nullptr),
@@ -241,11 +255,11 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Define out event ID variable
   fEventID = evt.id().event();
   std::cout << "\n\n====================\n";
-  std::cout << "Event ID: " << fEventID;
+  std::cout << "Event ID: " << fEventID << std::endl;
   /*
   // Make sure the vectors are empty and counters set to zero.
   // Truth
-  fTruePDG->clear();
+  fPDG->clear();
   fPosition->clear();
   fPositionT->clear();
   fEndPosition->clear();
@@ -260,10 +274,16 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fEndMomentumP->clear();
   fEndMomentumPt->clear();
   fEndMomentumMass->clear();
- */ 
-  fTruePDG->clear();
+ */
+  fMCTruthPDG = 0;
+  fIsNC = false;
+  fIsCC = false;
+
+  fMCPartPDG->clear();
   fPositionT->clear();
   fMomentumE->clear();
+  fTrackId->clear();
+  fG4ID->clear();
 
   // Reco
   fNPFParticles = 0;
@@ -297,6 +317,11 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fChi2Proton ->clear();
   fChi2NDoF   ->clear();
   fPIDA       ->clear();
+
+  // =========================================================
+  // Services
+  auto const clock_data = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
+
   // =========================================================
   // Truth stuff
   // Handles
@@ -313,10 +338,17 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     art::fill_ptr_vector(mcparts, mcpartHandle);
   }
 
+  std::cout << "mctruths size: " << mctruths.size() << ", mcparts size: " << mcparts.size() << std::endl;
+  const simb::MCNeutrino& nu = mctruths[0]->GetNeutrino();
+  fIsNC = nu.CCNC();
+  fIsCC = !nu.CCNC();
+  fMCTruthPDG = nu.Nu().PdgCode();
+
   for(const art::Ptr<simb::MCParticle> &part : mcparts){
-    fTruePDG->push_back(part->PdgCode());
+    fMCPartPDG->push_back(part->PdgCode());
     fPositionT->push_back(part->Position().T());
     fMomentumE->push_back(part->Momentum().E());
+    fTrackId->push_back(part->TrackId());
   }
 
   // =========================================================
@@ -370,7 +402,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     }
 
     // Check if there is an associated track to this particle
-    std::vector<art::Ptr<recob::Track>> tracks = trackAssn.at(pfp.key());
+    const std::vector<art::Ptr<recob::Track>> tracks = trackAssn.at(pfp.key());
     if(tracks.empty()){
       continue;
       /*
@@ -404,7 +436,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       fEndZ->push_back(tracks.at(0)->End().Z());
 
       // Get the hits associated to the track
-      std::vector<art::Ptr<recob::Hit>> trackhits = hitAssn.at(tracks[0].key());
+      const std::vector<art::Ptr<recob::Hit>> trackhits = hitAssn.at(tracks[0].key());
       fNHits->push_back(trackhits.size());
       if(trackhits.empty()) continue;
       std::vector<raw::TDCtick_t> temp_start;
@@ -431,6 +463,12 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       fEndTick    ->push_back(temp_end);
       fHitPlaneID ->push_back(temp_planeid);
       fHitADC     ->push_back(temp_adc);  
+
+      // Use the hits to get the G4ID
+      auto this_g4id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, true); // rollupUnsavedIDs
+      bool valid_g4id = TruthMatchUtils::Valid(this_g4id);
+      if (!valid_g4id) this_g4id = -5;
+      fG4ID->push_back(this_g4id);
 
       // Get the calorimetry information associated to this track
       std::vector< art::Ptr<anab::Calorimetry> > trackcals = calAssn.at(tracks[0].key());
@@ -478,9 +516,14 @@ void sbnd::ValidateTracks::beginJob()
   //Add branches to out tree
   fTree->Branch("eventID",      &fEventID, "eventID/i");
   // Truth
-  fTree->Branch("truePDG",    &fTruePDG);
-  fTree->Branch("positionT",  &fPositionT);
-  fTree->Branch("momentumE",  &fMomentumE);
+  fTree->Branch("MCTruthPDG", 	&fMCTruthPDG);
+  fTree->Branch("isNC", 		&fIsNC);
+  fTree->Branch("isCC", 		&fIsCC);
+  fTree->Branch("MCPartPDG", 	&fMCPartPDG);
+  fTree->Branch("positionT",  	&fPositionT);
+  fTree->Branch("momentumE",  	&fMomentumE);
+  fTree->Branch("trackId", 		&fTrackId);
+  fTree->Branch("G4ID", 		&fG4ID);
   // Reco
   fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles/i");
   fTree->Branch("isPrimary",    &fIsPrimary);

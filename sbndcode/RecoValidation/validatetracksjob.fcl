@@ -1,5 +1,7 @@
 #include "ValidateTracks.fcl"
 #include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
 
 process_name: ValidateTracks # The process name must NOT contain underscores
 
@@ -13,6 +15,8 @@ services:
 {
 	@table::sbnd_simulation_services
 	TFileService: { fileName: "validationOutput.root"}
+	ParticleInventoryService: @local::standard_particleinventoryservice
+	BackTrackerService:  @local::standard_backtrackerservice
 }
 
 physics:

@@ -1,7 +1,8 @@
 art_make(
           MODULE_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
-                           larsim_Simulation 
+                           larsim_Simulation
+			   larsim_Utils
                            lardataobj_Simulation
                            lardata_Utilities
                            larevt_Filters
