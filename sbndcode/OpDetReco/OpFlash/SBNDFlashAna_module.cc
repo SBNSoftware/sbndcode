@@ -128,10 +128,24 @@ void SBNDFlashAna::analyze(art::Event const& e)
   //   throw std::exception();
   // }
 
+
+  art::Handle<std::vector<recob::OpHit>> ophit_h;
+  e.getByLabel("ophitpmt", ophit_h);
+  if(!ophit_h.isValid()){
+    std::cout << "Invalid producer for recob::OpHit: " << "ophitpmt" << ". Ignoring." << std::endl;
+  }
+  std::vector<art::Ptr<recob::OpHit>> ophit_v;
+  art::fill_ptr_vector(ophit_v, ophit_h);
+  // for (auto oh : ophit_v) {
+  //   std::cout << "ophit time " << oh->PeakTime() << std::endl;
+  // }
+
+
+
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  = e.id().event();
-  
+
   for (size_t l = 0; l < _flash_label_v.size(); l++) {
     art::Handle<std::vector<recob::OpFlash>> flash_h;
     e.getByLabel(_flash_label_v[l], flash_h);
