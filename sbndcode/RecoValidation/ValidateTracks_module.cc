@@ -101,6 +101,12 @@ private:
   std::vector<double> *fPositionT_HandMatch;
   std::vector<double> *fMomentumE_HandMatch;
   std::vector<double> *fTrackId_HandMatch;
+  std::vector<double> *fVx_HandMatch;
+  std::vector<double> *fVy_HandMatch;
+  std::vector<double> *fVz_HandMatch;
+  std::vector<double> *fEndX_HandMatch;
+  std::vector<double> *fEndY_HandMatch;
+  std::vector<double> *fEndZ_HandMatch;
   // Truth matching with particle service
   std::vector<int>    *fMCPartPDG;
   std::vector<double> *fPosition;
@@ -194,6 +200,12 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fPositionT_HandMatch(nullptr),
   fMomentumE_HandMatch(nullptr),
   fTrackId_HandMatch(nullptr),
+  fVx_HandMatch(nullptr),
+  fVy_HandMatch(nullptr),
+  fVz_HandMatch(nullptr),
+  fEndX_HandMatch(nullptr),
+  fEndY_HandMatch(nullptr),
+  fEndZ_HandMatch(nullptr),
   fMCPartPDG(nullptr),
   fPosition(nullptr),
   fPositionT(nullptr),
@@ -295,6 +307,12 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fPositionT_HandMatch->clear();
   fMomentumE_HandMatch->clear();
   fTrackId_HandMatch  ->clear();
+  fVx_HandMatch  ->clear();
+  fVy_HandMatch  ->clear();
+  fVz_HandMatch  ->clear();
+  fEndX_HandMatch  ->clear();
+  fEndY_HandMatch  ->clear();
+  fEndZ_HandMatch  ->clear();
   fMCPartPDG  ->clear();
   fPositionT  ->clear();
   fMomentumE  ->clear();
@@ -503,6 +521,12 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
         fMCPartPDG_HandMatch->push_back(part->PdgCode());
         fPositionT_HandMatch->push_back(part->Position().T());
         fMomentumE_HandMatch->push_back(part->Momentum().E());
+        fVx_HandMatch->push_back(part->Vx());
+        fVy_HandMatch->push_back(part->Vy());
+        fVz_HandMatch->push_back(part->Vz());
+        fEndX_HandMatch->push_back(part->EndY());
+        fEndY_HandMatch->push_back(part->EndY());
+        fEndZ_HandMatch->push_back(part->EndZ());
       }
 
       // Get the calorimetry information associated to this track
@@ -558,6 +582,12 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("positionT_HandMatch",  &fPositionT_HandMatch);
   fTree->Branch("momentumE_HandMatch",  &fMomentumE_HandMatch);
   fTree->Branch("trackId_HandMatch",    &fTrackId_HandMatch);
+  fTree->Branch("vx_HandMatch",    &fVx_HandMatch);
+  fTree->Branch("vy_HandMatch",    &fVy_HandMatch);
+  fTree->Branch("vz_HandMatch",    &fVz_HandMatch);
+  fTree->Branch("endx_HandMatch",    &fEndX_HandMatch);
+  fTree->Branch("endy_HandMatch",    &fEndY_HandMatch);
+  fTree->Branch("endz_HandMatch",    &fEndZ_HandMatch);
   fTree->Branch("MCPartPDG",  &fMCPartPDG);
   fTree->Branch("positionT",  &fPositionT);
   fTree->Branch("momentumE",  &fMomentumE);
