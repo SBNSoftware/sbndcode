@@ -4,7 +4,7 @@ sbnd_simple_flashmatch:{
   module_type: FlashPredict
   Detector: "SBND"
   Cryostat: 0
-  OpHitProducer: "ophit"
+  OpHitProducer: "ophitpmt"
   BeamWindowStart: -0.2 # us
   BeamWindowEnd: 2.0 # us
   ChargeToNPhotonsShower: 1.0
