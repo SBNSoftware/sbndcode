@@ -40,7 +40,8 @@
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Vertex.h"
 
-//#include "larsim/MCCheater/BackTrackerService.h"
+#include "larsim/MCCheater/BackTrackerService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
 #include "larsim/Utils/TruthMatchUtils.h"
 
 #include "nusimdata/SimulationBase/MCFlux.h"
@@ -85,7 +86,8 @@ private:
   // Declare member data here.
   // Output tree declaration
   TTree *fTree;
-
+  // Services
+  art::ServiceHandle<cheat::ParticleInventoryService> particleInventory;
   // Variables to fill the output tree with
   unsigned int fEventID;
   bool fMCTruthPDG;
@@ -94,6 +96,12 @@ private:
 
   // Truth
   // --- tracks
+  // Truth matching by hand. Does not save all the MCParticles
+  std::vector<int>    *fMCPartPDG_HandMatch;
+  std::vector<double> *fPositionT_HandMatch;
+  std::vector<double> *fMomentumE_HandMatch;
+  std::vector<double> *fTrackId_HandMatch;
+  // Truth matching with particle service
   std::vector<int>    *fMCPartPDG;
   std::vector<double> *fPosition;
   std::vector<double> *fPositionT;
@@ -182,6 +190,10 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fMCTruthPDG(nullptr),
   fIsNC(nullptr),
   fIsCC(nullptr),
+  fMCPartPDG_HandMatch(nullptr),
+  fPositionT_HandMatch(nullptr),
+  fMomentumE_HandMatch(nullptr),
+  fTrackId_HandMatch(nullptr),
   fMCPartPDG(nullptr),
   fPosition(nullptr),
   fPositionT(nullptr),
@@ -279,11 +291,15 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fIsNC = false;
   fIsCC = false;
 
-  fMCPartPDG->clear();
-  fPositionT->clear();
-  fMomentumE->clear();
-  fTrackId->clear();
-  fG4ID->clear();
+  fMCPartPDG_HandMatch->clear();
+  fPositionT_HandMatch->clear();
+  fMomentumE_HandMatch->clear();
+  fTrackId_HandMatch  ->clear();
+  fMCPartPDG  ->clear();
+  fPositionT  ->clear();
+  fMomentumE  ->clear();
+  fTrackId    ->clear();
+  fG4ID       ->clear();
 
   // Reco
   fNPFParticles = 0;
@@ -343,12 +359,22 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fIsNC = nu.CCNC();
   fIsCC = !nu.CCNC();
   fMCTruthPDG = nu.Nu().PdgCode();
-
+/*
   for(const art::Ptr<simb::MCParticle> &part : mcparts){
     fMCPartPDG->push_back(part->PdgCode());
     fPositionT->push_back(part->Position().T());
     fMomentumE->push_back(part->Momentum().E());
     fTrackId->push_back(part->TrackId());
+  }
+*/
+  //List the particles in the event
+  const sim::ParticleList& particles = particleInventory->ParticleList();
+  for(const auto& particle: particles) {
+    const simb::MCParticle* this_particle = particle.second;
+    fTrackId->push_back(this_particle->TrackId());
+    fMCPartPDG->push_back(this_particle->PdgCode());
+    fPositionT->push_back(this_particle->Position().T());
+    fMomentumE->push_back(this_particle->Momentum().E());
   }
 
   // =========================================================
@@ -469,6 +495,15 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       bool valid_g4id = TruthMatchUtils::Valid(this_g4id);
       if (!valid_g4id) this_g4id = -5;
       fG4ID->push_back(this_g4id);
+      // For the truth matching, get the MCParticle which trackId is the same as the G4ID
+      for(const art::Ptr<simb::MCParticle> &part : mcparts){
+        auto temp_trackid = part->TrackId();
+        if(temp_trackid!=this_g4id) continue;
+        fTrackId_HandMatch->push_back(part->TrackId());
+        fMCPartPDG_HandMatch->push_back(part->PdgCode());
+        fPositionT_HandMatch->push_back(part->Position().T());
+        fMomentumE_HandMatch->push_back(part->Momentum().E());
+      }
 
       // Get the calorimetry information associated to this track
       std::vector< art::Ptr<anab::Calorimetry> > trackcals = calAssn.at(tracks[0].key());
@@ -519,11 +554,15 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("MCTruthPDG", 	&fMCTruthPDG);
   fTree->Branch("isNC", 		&fIsNC);
   fTree->Branch("isCC", 		&fIsCC);
-  fTree->Branch("MCPartPDG", 	&fMCPartPDG);
-  fTree->Branch("positionT",  	&fPositionT);
-  fTree->Branch("momentumE",  	&fMomentumE);
-  fTree->Branch("trackId", 		&fTrackId);
-  fTree->Branch("G4ID", 		&fG4ID);
+  fTree->Branch("MCPartPDG_HandMatch",  &fMCPartPDG_HandMatch);
+  fTree->Branch("positionT_HandMatch",  &fPositionT_HandMatch);
+  fTree->Branch("momentumE_HandMatch",  &fMomentumE_HandMatch);
+  fTree->Branch("trackId_HandMatch",    &fTrackId_HandMatch);
+  fTree->Branch("MCPartPDG",  &fMCPartPDG);
+  fTree->Branch("positionT",  &fPositionT);
+  fTree->Branch("momentumE",  &fMomentumE);
+  fTree->Branch("trackId",    &fTrackId);
+  fTree->Branch("G4ID",       &fG4ID);
   // Reco
   fTree->Branch("nPFParticles", &fNPFParticles, "nPFParticles/i");
   fTree->Branch("isPrimary",    &fIsPrimary);

@@ -11,10 +11,27 @@ source:
 	maxEvents: -1
 }
 
+
+outputs:
+{
+  myoutput:
+  {
+    module_type: RootOutput
+    fileName:    "trackvalidation_output_test__%#.root"
+    compressionLevel: 1
+    fastCloning: false
+    fileProperties: { 
+      maxSubRuns: 1 
+      maxRuns: 1 
+      maxEvents: 50
+    }
+  }
+}
+
 services:
 {
 	@table::sbnd_simulation_services
-	TFileService: { fileName: "validationOutput.root"}
+	TFileService: { fileName: "sbnd_trackvalidation_output.root"}
 	ParticleInventoryService: @local::standard_particleinventoryservice
 	BackTrackerService:  @local::standard_backtrackerservice
 }
@@ -26,5 +43,6 @@ physics:
 		ana: @local::validatetracks_sbnd #name given in the configuration fcl
 	}
 	path0: 		[ ana ]
+	stream1: 	[ myoutput ]
 	end_paths: 	[ path0 ]
 }
