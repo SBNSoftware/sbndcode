@@ -1,21 +1,9 @@
 art_make(
-          MODULE_LIBRARIES larcorealg_Geometry
-                           larcore_Geometry_Geometry_service
-                           larsim_Simulation
-                           larsim_Utils
-                           larsim_MCCheater_ParticleInventoryService_service
-                           lardataobj_Simulation
-                           lardata_Utilities
-                           larevt_Filters
-                           lardataobj_RawData
+          MODULE_LIBRARIES 
+
                            lardataobj_RecoBase
-                           lardata_RecoObjects
-                           lardataobj_RecoBase
-                           lardataobj_AnalysisBase
-                           larpandora_LArPandoraInterface
-                           larreco_Calorimetry
-                           larreco_RecoAlg
-                           nusimdata_SimulationBase
+
+
                            art_Persistency_Common canvas
                            art_Persistency_Provenance canvas
                            art_Utilities canvas
@@ -33,6 +21,8 @@ art_make(
                            ${MF_UTILITIES}
                            ${FHICLCPP}
                            ${CLHEP}
+
+
                            ${ROOT_GEOM}
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}

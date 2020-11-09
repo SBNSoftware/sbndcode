@@ -23,11 +23,13 @@
 // Additional framework includes
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
 
-
-
+#include "larsim/Utils/TruthMatchUtils.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 // ROOT includes
 #include <TTree.h>
@@ -79,6 +81,7 @@ private:
 
   std::vector<bool>                 *fDaughterLongestTrack;
   std::vector<float>                *fDaughterTrackLengths;
+  std::vector<int>                  *fDaughterTrackTruePDG;
   std::vector< std::vector<float> > *fDaughterTrackdEdx;
   std::vector< std::vector<float> > *fDaughterTrackResidualRange;
 
@@ -106,6 +109,7 @@ sbnd::AnalyseEvents::AnalyseEvents(fhicl::ParameterSet const& p)
     fNPrimaryDaughters(99999),
     fDaughterLongestTrack(nullptr),
     fDaughterTrackLengths(nullptr),
+    fDaughterTrackTruePDG(nullptr),
     fDaughterTrackdEdx(nullptr),
     fDaughterTrackResidualRange(nullptr)
     // Initialising all variables to obviously unphysical values 
@@ -120,6 +124,14 @@ sbnd::AnalyseEvents::AnalyseEvents(fhicl::ParameterSet const& p)
 
 void sbnd::AnalyseEvents::analyze(art::Event const& e)
 {
+
+
+    //services
+  // art::ServiceHandle<geo::Geometry> geom;
+  // art::ServiceHandle<cheat::BackTrackerService> bt_serv;
+  art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
+
+
   // Implementation of required member function here.
   // Define our event ID variable
   fEventID = e.id().event();
@@ -129,11 +141,17 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
   fNPrimaries           = 0;
   fNPrimaryDaughters    = 0;
  
+
+
+
   // Make sure the vector is empty at the beginning of the event
   fDaughterLongestTrack->clear();
   fDaughterTrackLengths->clear();
+  fDaughterTrackTruePDG->clear();
   fDaughterTrackdEdx->clear();
   fDaughterTrackResidualRange->clear();
+
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
 
   // Access the PFParticles from Pandora
   art::Handle< std::vector<recob::PFParticle> > pfparticleHandle;
@@ -147,6 +165,14 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
   if(e.getByLabel(fTrackLabel, trackHandle)) // Make sure the handle is valid
     art::fill_ptr_vector(trackVect, trackHandle); // Fill the vector with art::Ptr Tracks
   
+
+  //   // * hits
+  // art::Handle< std::vector<recob::Hit> > hitListHandle;
+  // std::vector<art::Ptr<recob::Hit> > hitlist;
+  // if (e.getByLabel("gaushit",hitListHandle))
+  //   art::fill_ptr_vector(hitlist, hitListHandle);
+
+
 
   if(pfparticleVect.empty()) {
     std::cerr << " Error: No reconstructed particles found in the event. Skipping. " << std::endl;
@@ -182,10 +208,12 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
 
   // Get the vector of vectors of tracks for each PFParticle & calorimetry for each track
   // The vector size of associated tracks to a single PFParticle should be 0 or 1
-  // The track-calo association vector size should be 0-3, 1 for each of the available planes
   art::FindManyP<recob::Track>      trackAssoc      (pfparticleVect, e, fTrackLabel);
+    // The track-calo association vector size should be 0-3, 1 for each of the available planes
   art::FindManyP<anab::Calorimetry> calorimetryAssoc(trackVect,      e, fCalorimetryLabel);
 
+
+  art::FindManyP<recob::Hit> hitAssoc(trackVect,      e, fTrackLabel);
   // Get the list of associated tracks to the neutrino daughters as a vector of Track from the member function GetNeutrinoDaughterTracks
   std::vector< art::Ptr<recob::Track> > neutrinoDaughterTracks = this->GetNeutrinoDaughterTracks(neutrinoDaughters, trackAssoc);
   if(neutrinoDaughterTracks.empty()) {
@@ -201,10 +229,6 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
   }
 
   for(const art::Ptr<recob::Track> &trk : neutrinoDaughterTracks){
-
-
-
-
     // Fill the TTree variable
     fDaughterTrackLengths->push_back(trk->Length());
 
@@ -214,8 +238,6 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
 
     // Fill the histogram
     fTrackLengthHist->Fill(trk->Length());
-
-
 
     // Get the list of Calorimetry objects for this track
     std::vector< art::Ptr<anab::Calorimetry> > trackCalo = calorimetryAssoc.at(trk.key());
@@ -235,6 +257,18 @@ void sbnd::AnalyseEvents::analyze(art::Event const& e)
       fDaughterTrackdEdx->push_back(cal->dEdx());
       fDaughterTrackResidualRange->push_back(cal->ResidualRange());
     } // Calorimetry
+
+
+    // bool isMC = !e.isRealData();
+         // Get the vector of hits for this track
+    std::vector< art::Ptr<recob::Hit> > trackHits = hitAssoc.at(trk.key());
+    // Use utilitiy to get the ID code of the true particle which has contributed most energy to the track
+    int trkidtruth = TruthMatchUtils::TrueParticleIDFromTotalTrueEnergy(clockData, trackHits, true);
+    // Use Particle Invertory Service to get the mc particle contributing to this ID
+    const simb::MCParticle *particle = pi_serv->TrackIdToParticle_P(trkidtruth);
+    // Save the PDG code of the track
+    fDaughterTrackTruePDG->push_back(particle->PdgCode());
+
   } // Tracks
   // Fill the output TTree with all relevant variables
   fTree->Fill();
@@ -259,6 +293,7 @@ void sbnd::AnalyseEvents::beginJob()
   fTree->Branch("nPrimaryDaughters",&fNPrimaryDaughters,"nPrimaryDaughters/i");
   fTree->Branch("daughterTrackLengths",&fDaughterTrackLengths);
   fTree->Branch("daughterLongestTrack",&fDaughterLongestTrack);
+  fTree->Branch("daughterTrackTruePDG",&fDaughterTrackTruePDG);
   fTree->Branch("daughterTrackdEdx",&fDaughterTrackdEdx);
   fTree->Branch("daughterTrackResidualRange",&fDaughterTrackResidualRange);
 }

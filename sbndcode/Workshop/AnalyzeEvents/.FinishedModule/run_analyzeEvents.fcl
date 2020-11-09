@@ -1,11 +1,9 @@
 #include "analysisConfig.fcl"
 #include "simulationservices_sbnd.fcl"
-#include "detectorclocks_sbnd.fcl"
-#include "backtrackerservice.fcl"
-#include "particleinventoryservice.fcl"
 
 
-process_name: AnalyseEvents # The process name must NOT contain any underscores
+
+process_name: AnalyzeEvents # The process name must NOT contain any underscores
 
 source: 
 { 
@@ -15,8 +13,8 @@ source:
 services: 
 {
   TFileService: { fileName: "analysisOutput.root"}
-  				@table::sbnd_services
-  # DetectorClocksService: @local::sbnd_detectorclocks
+  @table::sbnd_services
+
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService:  @local::standard_backtrackerservice
 }
@@ -24,7 +22,7 @@ physics:
 {
   analyzers: 
   {
-    ana: @local::analyseEvents
+    ana: @local::analyzeEvents  #inserts into workflow, matches name in config fcl
   }
   path0:        [ ana ]
   end_paths:    [ path0 ]

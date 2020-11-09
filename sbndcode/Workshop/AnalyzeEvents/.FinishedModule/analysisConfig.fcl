@@ -1,8 +1,7 @@
 BEGIN_PROLOG
-analyseEvents:
+analyzeEvents:
 { 
-  module_type:                "AnalyseEvents"
-
+  module_type:                "AnalyzeEvents"
   PFParticleLabel:  "pandora"
   TrackLabel:       "pandoraTrack"
   CalorimetryLabel: "pandoraCalo"
