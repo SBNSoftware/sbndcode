@@ -1,4 +1,3 @@
-BEGIN_PROLOG
 
 sbnd_simple_flashmatch:{
   module_type: FlashPredict
@@ -47,4 +46,3 @@ sbnd_simple_flashmatch:{
   pe_up: 50.
 }
 
-END_PROLOG
