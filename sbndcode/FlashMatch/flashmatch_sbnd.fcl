@@ -21,6 +21,10 @@ sbnd_simple_flashmatch:{
   MinFlashPE: 0.
   ThresholdTerm: 30.
 
+  PDMapAlg: {
+    tool_type: sbndPDMapAlg
+  }
+
   # binning and geometry
   score_hist_bins: 100
   score_hist_low: 0.
