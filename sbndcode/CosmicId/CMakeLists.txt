@@ -41,7 +41,7 @@ art_make(
                            sbndcode_CosmicIdAlgs
                            sbndcode_CRTUtils
                            sbndcode_CRT
-                           sbndcode_CRTProducts
+                           sbnobj_Common_CRT
                            larreco_RecoAlg
         )
 

@@ -64,7 +64,8 @@ SBNDThermalNoiseServiceInTime::~SBNDThermalNoiseServiceInTime() {
 
 //**********************************************************************
 
-int SBNDThermalNoiseServiceInTime::addNoise(Channel chan, AdcSignalVector& sigs) const {
+int SBNDThermalNoiseServiceInTime::addNoise(detinfo::DetectorClocksData const&,
+                                            Channel chan, AdcSignalVector& sigs) const {
 
   //Get services.
   art::ServiceHandle<geo::Geometry> geo;

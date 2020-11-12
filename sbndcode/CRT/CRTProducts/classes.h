@@ -1,9 +1,0 @@
-#include "canvas/Persistency/Common/Wrapper.h"
-#include "canvas/Persistency/Common/Assns.h"
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTzero.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
-#include <vector>
-#include <utility>

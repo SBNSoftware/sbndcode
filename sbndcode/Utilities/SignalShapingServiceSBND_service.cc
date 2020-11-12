@@ -1,4 +1,3 @@
-
 ////////////////////////////////////////////////////////////////////////
 /// \file   SignalShapingServiceSBND_service.cc
 /// \author H. Greenlee   (adapted to LArIAT by A. Szelc)
@@ -442,7 +441,8 @@ void util::SignalShapingServiceSBND::SetFieldResponse()
   // Get services.
 
   art::ServiceHandle<geo::Geometry> geo;
-  auto const* detprop = lar::providerFrom<::detinfo::DetectorPropertiesService>();
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
 
   // Get plane pitch.
  
@@ -464,7 +464,7 @@ void util::SignalShapingServiceSBND::SetFieldResponse()
   // set the response for the collection plane first
   // the first entry is 0
 
-  double driftvelocity=detprop->DriftVelocity()/1000.;  
+  double driftvelocity=detProp.DriftVelocity()/1000.;
   double integral = 0.;
   ////////////////////////////////////////////////////
   if(fUseFunctionFieldShape) {
@@ -624,7 +624,7 @@ void util::SignalShapingServiceSBND::SetFieldResponse()
 
     //////////////////////////////////////////////////
     mf::LogInfo("SignalShapingServiceSBND") << " using the old field shape " ;
-    int nbinc = TMath::Nint(fCol3DCorrection*(std::abs(pitch))/(driftvelocity*detprop->SamplingRate())); ///number of bins //KP
+    int nbinc = TMath::Nint(fCol3DCorrection*(std::abs(pitch))/(driftvelocity*sampling_rate(clockData))); ///number of bins //KP
     
     double integral = 0.;
     for(int i = 1; i < nbinc; ++i){
@@ -638,7 +638,7 @@ void util::SignalShapingServiceSBND::SetFieldResponse()
 
     // now the induction plane
     
-    int nbini = TMath::Nint(fInd3DCorrection*(std::abs(pitch))/(driftvelocity*detprop->SamplingRate()));//KP
+    int nbini = TMath::Nint(fInd3DCorrection*(std::abs(pitch))/(driftvelocity*sampling_rate(clockData)));//KP
     for(int i = 0; i < nbini; ++i){
       fIndUFieldResponse[i] = fIndUFieldRespAmp/(1.*nbini);
       fIndUFieldResponse[nbini+i] = -fIndUFieldRespAmp/(1.*nbini);
@@ -662,7 +662,6 @@ void util::SignalShapingServiceSBND::SetElectResponse(double shapingtime, double
   // Get services.
 
   art::ServiceHandle<geo::Geometry> geo;
-  //auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
 
   MF_LOG_DEBUG("SignalShapingSBND") << "Setting SBND electronics response function...";
@@ -737,10 +736,10 @@ void util::SignalShapingServiceSBND::SetFilters()
 {
   // Get services.
 
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
 
-  double ts = detprop->SamplingRate();
+  double ts = sampling_rate(clockData);
   int n = fft->FFTSize() / 2;
 
   // Calculate collection filter.
@@ -807,10 +806,10 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
   //Get services
   art::ServiceHandle<geo::Geometry> geo;
   art::ServiceHandle<util::LArFFT> fft;
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
 
   //Operations permitted only if output of rebinning has a larger bin size
-  if( fInputFieldRespSamplingPeriod > detprop->SamplingRate() )
+  if( fInputFieldRespSamplingPeriod > sampling_rate(clockData) )
     throw cet::exception("SignalShapingServiceSBND") << "\033[93m"
                                      << "Invalid operation: cannot rebin to a more finely binned vector!"    
                                      << "\033[00m" << std::endl;
@@ -818,7 +817,7 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
   int nticks = fft->FFTSize();
   std::vector<double> SamplingTime(nticks,0.);
   for(int itime = 0; itime < nticks; itime++) {
-    SamplingTime[itime] = (1.*itime) * detprop->SamplingRate();
+    SamplingTime[itime] = (1.*itime) * sampling_rate(clockData);
   }
 
   //Sampling
@@ -876,7 +875,8 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
   return;
 }
 
-int util::SignalShapingServiceSBND::FieldResponseTOffset(unsigned int const channel) const
+int util::SignalShapingServiceSBND::FieldResponseTOffset(detinfo::DetectorClocksData const& clockData,
+                                                         unsigned int const channel) const
 {
   art::ServiceHandle<geo::Geometry> geom;
   geo::View_t view = geom->View(channel);
@@ -893,8 +893,7 @@ int util::SignalShapingServiceSBND::FieldResponseTOffset(unsigned int const chan
                                                     << " SignalType\n";
 // std::cout << "TIME OFFSET" << 	time_offset << " " << view << std::endl;
 
-  //auto tpc_clock = art::ServiceHandle<util::TimeService>()->TPCCLOCK();
-  auto tpc_clock = lar::providerFrom<detinfo::DetectorClocksService>()->TPCClock();
+  auto tpc_clock = clockData.TPCClock();
   return tpc_clock.Ticks(time_offset/1.e3);
 }
 

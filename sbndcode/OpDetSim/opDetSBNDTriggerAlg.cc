@@ -1,4 +1,19 @@
-#include "opDetSBNDTriggerAlg.h"
+#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.hh"
+#include "lardataalg/DetectorInfo/DetectorClocksData.h"
+
+namespace {
+  double optical_period(detinfo::DetectorClocksData const& clockData)
+  {
+    return clockData.OpticalClock().TickPeriod();
+  }
+
+  raw::TimeStamp_t tick_to_timestamp(detinfo::DetectorClocksData const& clockData,
+                                     raw::TimeStamp_t waveform_start,
+                                     size_t waveform_index)
+  {
+    return waveform_start + waveform_index * optical_period(clockData);
+  }
+}
 
 namespace opdet {
 
@@ -37,16 +52,16 @@ void AddTriggerPrimitiveFinish(std::vector<TriggerPrimitive> &triggers, TriggerP
   triggers.insert(insert, trigger);
 }
 
-opDetSBNDTriggerAlg::opDetSBNDTriggerAlg(const Config &config, const detinfo::DetectorClocks *detector_clocks, const detinfo::DetectorProperties *detector_properties):
-  fConfig(config),
-  fDetectorClocks(detector_clocks),
-  fDetectorProperties(detector_properties)
+opDetSBNDTriggerAlg::opDetSBNDTriggerAlg(const Config &config):
+  fConfig(config)
 {
   // setup the masked channels
   fConfig.MaskedChannels(fMaskedChannels);
 }
 
-void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline) {
+void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const& clockData,
+                                               detinfo::DetectorPropertiesData const& detProp,
+                                               const raw::OpDetWaveform &waveform, raw::ADC_Count_t baseline) {
   std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_ranges;
   const std::vector<raw::ADC_Count_t> &adcs = waveform; // upcast to get adcs
   raw::Channel_t channel = waveform.ChannelNumber();
@@ -59,7 +74,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
 
   // get the threshold -- first check if channel is Arapuca or PMT
   bool is_arapuca = false;
-  std::string opdet_type = fOpDetMap.pdName(channel);
+  std::string opdet_type = fOpDetMap.pdType(channel);
   if (opdet_type == "bar" ||
       opdet_type == "xarapucaprime" ||
       opdet_type == "xarapuca" ||
@@ -73,30 +88,38 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
   int polarity = is_arapuca ? fConfig.PulsePolarityArapuca() : fConfig.PulsePolarityPMT(); 
 
   // find the start and end points of the trigger window in this waveform
-  std::array<double, 2> trigger_window = TriggerEnableWindow();
-  raw::TimeStamp_t start = Tick2Timestamp(waveform.TimeStamp(), 0);
+  std::array<double, 2> trigger_window = TriggerEnableWindow(clockData, detProp);
+  raw::TimeStamp_t start = tick_to_timestamp(clockData, waveform.TimeStamp(), 0);
 
   if (start > trigger_window[1]) return;
-  size_t start_i = start > trigger_window[0] ? 0 : (size_t)((trigger_window[0] - start) / OpticalPeriod());
+  size_t start_i = start > trigger_window[0] ? 0 : (size_t)((trigger_window[0] - start) / optical_period(clockData));
 
   // fix rounding on division if necessary
-  if (!IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), start_i))) {
+  if (!IsTriggerEnabled(clockData,
+                        detProp,
+                        tick_to_timestamp(clockData, waveform.TimeStamp(), start_i))) {
     start_i += 1;
   }
-  assert(IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), start_i)));
+  assert(IsTriggerEnabled(clockData,
+                          detProp,
+                          tick_to_timestamp(clockData, waveform.TimeStamp(), start_i)));
 
   // if start is past end of waveform, we can return
   if (start_i >= adcs.size()) return;
 
-  raw::TimeStamp_t end = Tick2Timestamp(waveform.TimeStamp(), adcs.size() - 1);
+  raw::TimeStamp_t end = tick_to_timestamp(clockData, waveform.TimeStamp(), adcs.size() - 1);
   // get the end time
-  // size_t end_i = end > trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / OpticalPeriod());
-  size_t end_i = end < trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / OpticalPeriod());
+  // size_t end_i = end > trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / optical_period(clockData));
+  size_t end_i = end < trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / optical_period(clockData));
   // fix rounding error...
-  if (IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), end_i+1)) && end_i+1 < adcs.size()) {
+  if (IsTriggerEnabled(clockData,
+                       detProp,
+                       tick_to_timestamp(clockData, waveform.TimeStamp(), end_i+1)) && end_i+1 < adcs.size()) {
     end_i += 1;
   }
-  assert(end_i+1 == adcs.size() || !IsTriggerEnabled(Tick2Timestamp(waveform.TimeStamp(), end_i+1)));
+  assert(end_i+1 == adcs.size() || !IsTriggerEnabled(clockData,
+                                                     detProp,
+                                                     tick_to_timestamp(clockData, waveform.TimeStamp(), end_i+1)));
 
   std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_locations; 
   bool above_threshold = false;
@@ -107,11 +130,11 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(const raw::OpDetWaveform &wavefor
     if (!above_threshold && val > threshold) {
       // new trigger! -- get the time
       // raw::TimeStamp_t this_trigger_time 
-      trigger_start = Tick2Timestamp(waveform.TimeStamp(), i);
+      trigger_start = tick_to_timestamp(clockData, waveform.TimeStamp(), i);
       above_threshold = true;
     }
     else if (above_threshold && (val < threshold || i+1 == end_i)) {
-      raw::TimeStamp_t trigger_finish = Tick2Timestamp(waveform.TimeStamp(), i); 
+      raw::TimeStamp_t trigger_finish = tick_to_timestamp(clockData, waveform.TimeStamp(), i);
       AddTriggerLocation(this_trigger_locations, {{trigger_start, trigger_finish}});
       above_threshold = false;
     }
@@ -139,7 +162,7 @@ bool opDetSBNDTriggerAlg::IsChannelMasked(raw::Channel_t channel) const {
   if (in_masked_list) return true;
 
   // mask by optical detector type
-  std::string opdet_type = fOpDetMap.pdName(channel); 
+  std::string opdet_type = fOpDetMap.pdType(channel);
   if (opdet_type == "bar" && fConfig.MaskLightBars() /* RIP */) return true;
   if (opdet_type == "pmt" && fConfig.MaskPMTs()) return true;
   if (opdet_type == "barepmt" && fConfig.MaskBarePMTs()) return true;
@@ -227,7 +250,8 @@ void opDetSBNDTriggerAlg::MergeTriggerLocations() {
   }
 }
 
-std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow() const {
+std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow(detinfo::DetectorClocksData const& clockData,
+                                                               detinfo::DetectorPropertiesData const& detProp) const {
   double start, end;
   // Enable triggers over the range of the TPC readout
   if (fConfig.TriggerEnableWindowIsTPCReadoutWindow()) {
@@ -240,8 +264,8 @@ std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow() const {
     // Every reasonable configuration I have seen has setup the trigger time 
     // to be at t=0. If some configuration breaks this invariant, I am sorry, I 
     // did my best.
-    start = fDetectorClocks->TriggerOffsetTPC() - 1 /* Give 1us of wiggle room*/; 
-    end = start + fDetectorProperties->ReadOutWindowSize() * fDetectorClocks->TPCClock().TickPeriod() + 1 /* take back the wiggle room */;
+    start = clockData.TriggerOffsetTPC() - 1 /* Give 1us of wiggle room*/;
+    end = start + detProp.ReadOutWindowSize() * clockData.TPCClock().TickPeriod() + 1 /* take back the wiggle room */;
   }
   else {
     start = fConfig.TriggerEnableWindowStart();
@@ -251,20 +275,14 @@ std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow() const {
   return {{start, end}};
 }
 
-bool opDetSBNDTriggerAlg::IsTriggerEnabled(raw::TimeStamp_t trigger_time) const {
+bool opDetSBNDTriggerAlg::IsTriggerEnabled(detinfo::DetectorClocksData const& clockData,
+                                           detinfo::DetectorPropertiesData const& detProp,
+                                           raw::TimeStamp_t trigger_time) const {
   // otherwise check the start and end
-  std::array<double, 2> trigger_range = TriggerEnableWindow();
+  std::array<double, 2> trigger_range = TriggerEnableWindow(clockData, detProp);
 
   return trigger_time >= trigger_range[0] &&
          trigger_time <= trigger_range[1];
-}
-
-double opDetSBNDTriggerAlg::OpticalPeriod() const {
-  return fDetectorClocks->OpticalClock().TickPeriod();
-}
-
-raw::TimeStamp_t opDetSBNDTriggerAlg::Tick2Timestamp(raw::TimeStamp_t waveform_start, size_t waveform_index) const {
-  return waveform_start + waveform_index * OpticalPeriod();
 }
 
 const std::vector<raw::TimeStamp_t> &opDetSBNDTriggerAlg::GetTriggerTimes(raw::Channel_t channel) const {
@@ -303,7 +321,8 @@ double opDetSBNDTriggerAlg::ReadoutWindowPostTriggerBeam(raw::Channel_t channel)
   return fConfig.ReadoutWindowPostTriggerBeam();
 }
 
-std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const raw::OpDetWaveform &waveform) const {
+std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detinfo::DetectorClocksData const& clockData,
+                                                                           const raw::OpDetWaveform &waveform) const {
   std::vector<raw::OpDetWaveform> ret;
   raw::Channel_t channel = waveform.ChannelNumber();
   // if (channel > (unsigned)fOpDetMap.size()) return {};
@@ -322,7 +341,7 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(const
   raw::OpDetWaveform this_waveform;
   bool was_triggering = false;
   for (size_t i = 0; i < adcs.size(); i++) {
-    double time = Tick2Timestamp(waveform.TimeStamp(), i);
+    double time = tick_to_timestamp(clockData, waveform.TimeStamp(), i);
 
     // first, scroll to the next readout window that ends after this time
     while (trigger_i < trigger_times.size() && time >= trigger_times[trigger_i] + readout_window_post_trigger) {

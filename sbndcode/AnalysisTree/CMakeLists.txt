@@ -12,6 +12,9 @@ art_make(
                            larreco_RecoAlg
                            lardata_RecoObjects  
                            larpandora_LArPandoraInterface
+                           sbndcode_CRTUtils
+                           sbndcode_CRT
+                           sbnobj_Common_CRT
                            nusimdata_SimulationBase
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
@@ -29,6 +32,7 @@ art_make(
                            ${ROOT_GDML}
                            ${ROOT_BASIC_LIB_LIST}
                            sbndcode_RecoUtils
+                           sbndcode_OpDetSim
         )
 
 # install_headers()

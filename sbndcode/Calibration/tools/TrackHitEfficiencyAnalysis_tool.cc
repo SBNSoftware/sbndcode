@@ -1,4 +1,3 @@
-
 #include "sbndcode/Calibration/tools/IHitEfficiencyHistogramTool.h"
 
 #include "fhiclcpp/ParameterSet.h"
@@ -11,7 +10,6 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 #include "larcore/Geometry/Geometry.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
 
@@ -189,8 +187,6 @@ private:
 
     // Useful services, keep copies for now (we can update during begin run periods)
     const geo::GeometryCore*           fGeometry;             ///< pointer to Geometry service
-    const detinfo::DetectorProperties* fDetectorProperties;   ///< Detector properties service
-    const detinfo::DetectorClocks*     fClockService;         ///< Detector clocks service
 };
     
 //----------------------------------------------------------------------------
@@ -203,8 +199,6 @@ private:
 TrackHitEfficiencyAnalysis::TrackHitEfficiencyAnalysis(fhicl::ParameterSet const & pset) : fTree(nullptr)
 {
     fGeometry           = lar::providerFrom<geo::Geometry>();
-    fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    fClockService       = lar::providerFrom<detinfo::DetectorClocksService>();
     
     configure(pset);
     
@@ -501,6 +495,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
       trackIDToMCParticleMap[mcParticle.TrackId()] = &mcParticle;
     
     const lariov::ChannelStatusProvider& chanFilt = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
     
     std::vector<int> nSimChannelHitVec  = {0,0,0};
     std::vector<int> nRecobHitVec       = {0,0,0};
@@ -640,9 +635,9 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
             unsigned short stopTDC  = tdcToIDEMap.rbegin()->first;
 
             // Convert to ticks to get in same units as hits
-            unsigned short startTick = fClockService->TPCTDC2Tick(startTDC)        + fOffsetVec[plane];
-            unsigned short stopTick  = fClockService->TPCTDC2Tick(stopTDC)         + fOffsetVec[plane];
-            unsigned short maxETick  = fClockService->TPCTDC2Tick(maxElectronsTDC) + fOffsetVec[plane];
+            unsigned short startTick = clockData.TPCTDC2Tick(startTDC)        + fOffsetVec[plane];
+            unsigned short stopTick  = clockData.TPCTDC2Tick(stopTDC)         + fOffsetVec[plane];
+            unsigned short maxETick  = clockData.TPCTDC2Tick(maxElectronsTDC) + fOffsetVec[plane];
     
             fSimNumTDCVec[plane]->Fill(stopTick - startTick, 1.);
         
@@ -753,7 +748,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
                             // Get the number of electrons
                             for(unsigned short tick = hitStartTickBest; tick <= hitStopTickBest; tick++)
                             {
-                                unsigned short hitTDC = fClockService->TPCTick2TDC(tick - fOffsetVec[plane]);
+                                unsigned short hitTDC = clockData.TPCTick2TDC(tick - fOffsetVec[plane]);
                     
                                 TDCToIDEMap::iterator ideIterator = tdcToIDEMap.find(hitTDC);
                     

@@ -24,7 +24,9 @@
 // LArSoft
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Hit.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+namespace detinfo {
+  class DetectorPropertiesData;
+}
 
 // c++
 #include <vector>
@@ -107,10 +109,12 @@ namespace sbnd{
     void reconfigure(const Config& config);
 
     // Calculate the time by stitching tracks across the CPA
-    std::pair<double, bool> T0FromCpaStitching(recob::Track t1, std::vector<recob::Track> tracks);
+    std::pair<double, bool> T0FromCpaStitching(detinfo::DetectorPropertiesData const& detProp,
+                                               recob::Track t1, std::vector<recob::Track> tracks);
 
     // Tag tracks as cosmics from CPA stitching t0
-    bool CpaCrossCosmicId(recob::Track track, std::vector<recob::Track> tracks, art::FindManyP<recob::Hit> hitAssoc);
+    bool CpaCrossCosmicId(detinfo::DetectorPropertiesData const& detProp,
+                          recob::Track track, std::vector<recob::Track> tracks, art::FindManyP<recob::Hit> hitAssoc);
 
   private:
 
@@ -126,7 +130,6 @@ namespace sbnd{
     double fBeamTimeMin;
     double fBeamTimeMax;
 
-    detinfo::DetectorProperties const* fDetectorProperties;
     TPCGeoAlg fTpcGeo;
 
   };

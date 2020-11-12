@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
@@ -154,8 +154,6 @@ namespace sbnd {
     std::map<std::string, TH2D*> hSipmDistNpeRatio;
 
     // Other variables shared between different methods.
-    detinfo::DetectorClocks const* fDetectorClocks;
-    //detinfo::ElecClock fTrigClock;
     geo::GeometryCore const* fGeometryService;
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
@@ -175,8 +173,6 @@ namespace sbnd {
     , fCrtBackTrack         (config().CrtBackTrack())
   {
     // Get a pointer to the fGeometryServiceetry service provider
-    fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-    //fTrigClock = fDetectorClocks->TriggerClock();
     fGeometryService = lar::providerFrom<geo::Geometry>();
   }
 
@@ -235,8 +231,8 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT data from the event
-    art::Handle< std::vector<crt::CRTData>> crtDataHandle;
-    std::vector<art::Ptr<crt::CRTData> > crtDataList;
+    art::Handle< std::vector<sbnd::crt::CRTData>> crtDataHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTData> > crtDataList;
     if (event.getByLabel(fCRTSimLabel, crtDataHandle))
       art::fill_ptr_vector(crtDataList, crtDataHandle);
 
@@ -264,7 +260,7 @@ namespace sbnd {
     //                                        CRT DATA ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
-    std::map<int, std::vector<crt::CRTData>> crtData;
+    std::map<int, std::vector<sbnd::crt::CRTData>> crtData;
     for(size_t i  = 0; i < crtDataList.size(); i++){
 
       // Truth matching
@@ -390,5 +386,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTDetSimAna)
 } // namespace sbnd
-
-

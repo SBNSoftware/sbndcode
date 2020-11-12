@@ -18,9 +18,9 @@ sbnd_Library_photonvisibilityservice:
  ZMin: -143.1
  ZMax: 559.6
  NX: 104
- NY: 109
- NZ: 141
- LibraryFile: "OpLib_SBN_ND_v0.root"
+ NY: 108
+ NZ: 140
+ LibraryFile: "OpLibSBND_v1.5.root"
   
 }
 
@@ -33,8 +33,8 @@ sbnd_library_vuv_prop_timing_photonvisibilityservice:
    # Flag to enable time parameterizations
    IncludePropTime: true
 
-   # Generic VUV timing parameterization
-   @table::common_vuv_timing_parameterization
+   # SBND VUV timing parameterization
+   @table::sbnd_vuv_timing_parameterization
 
 }
 
@@ -53,7 +53,6 @@ sbnd_library_vuv_vis_prop_timing_photonvisibilityservice:
    
    # SBND-specific VIS parameterization
    @table::sbnd_vis_timing_parameterization
-
 }
 
 sbnd_Nhits_vuv_prop_timing_photonvisibilityservice:
@@ -62,15 +61,12 @@ sbnd_Nhits_vuv_prop_timing_photonvisibilityservice:
    IncludePropTime: true
    UseNhitsModel: true
    DoNotLoadLibrary: true
-   # Generic VUV timing parameterization
-   @table::common_vuv_timing_parameterization
-   # Semi-analytic VUV Nhits parameters
-   GH_PARS: @local::GH_RS60cm_SBND
-   # For border correction
-   BORDER_correction: @local::BORDER_correction_SBND
-  
-   # PMT radius in cm
-   PMT_radius: 10.16
+   
+   # SBND-specific VUV timing parameterization
+   @table::sbnd_vuv_timing_parameterization
+   
+   # SBND-specific VUV semi-analytic Nhits parameters
+   @table::sbnd_vuv_RS100cm_hits_parameterization
 }
 
 sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice:
@@ -81,29 +77,17 @@ sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice:
    StoreReflected: true
    DoNotLoadLibrary: true
    
-   # Generic VUV timing parameterization
-   @table::common_vuv_timing_parameterization
+   # SBND-specific VUV timing parameterization
+   @table::sbnd_vuv_timing_parameterization
    
    # SBND-specific VIS timings parameterization
    @table::sbnd_vis_timing_parameterization
    
    # SBND-specific VUV semi-analytic Nhits parameters
-   GH_PARS: @local::GH_RS60cm_SBND
-   # For VUV border correction
-   BORDER_correction: @local::BORDER_correction_SBND
+   @table::sbnd_vuv_RS100cm_hits_parameterization
    
    # SBND-specific VIS semi-analytic Nhits parameters
-   VIS_PARS: @local::VIS_SBND
-   
-   # For VIS border correction
-   ApplyVISBorderCorrection: true
-   VIS_BORDER_correction_type: @local::VIS_SBND_BORDER_correction_type
-   VIS_BORDER_distances_x: @local::VIS_SBND_BORDER_distances_x
-   VIS_BORDER_distances_r: @local::VIS_SBND_BORDER_distances_r
-   VIS_BORDER_correction: @local::VIS_SBND_BORDER_correction
-  
-   # PMT radius in cm
-   PMT_radius: 10.16
+   @table::sbnd_vis_RS100cm_hits_parameterization
 }
 
 

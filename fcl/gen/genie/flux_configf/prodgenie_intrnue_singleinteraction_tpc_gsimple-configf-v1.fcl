@@ -1,3 +1,0 @@
-#include "prodgenie_nu_singleinteraction_tpc_gsimple-configf-v1.fcl"
-
-physics.producers.generator.GenFlavors:       [12,-12] #pdg codes of flux generator neutrino flavors

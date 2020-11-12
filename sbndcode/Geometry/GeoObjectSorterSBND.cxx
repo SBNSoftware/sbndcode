@@ -9,6 +9,7 @@
 
 // LArSoft libraries
 #include "larcorealg/Geometry/CryostatGeo.h"
+#include "larcorealg/Geometry/OpDetGeo.h"
 #include "larcorealg/Geometry/TPCGeo.h"
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "larcorealg/Geometry/WireGeo.h"
@@ -24,7 +25,7 @@
 
 //----------------------------------------------------------------------------
 //---  local helper functions
-//---  
+//---
 static const double tol = 1e-4; /// Comparison tolerance, in centimeters
 
 
@@ -34,18 +35,33 @@ inline bool equal(double a, double b)
 
 
 //----------------------------------------------------------------------------
-bool CryostatSorter(geo::CryostatGeo const* c1, geo::CryostatGeo const* c2) {
-  // 
+bool CryostatSorter(geo::CryostatGeo const& c1, geo::CryostatGeo const& c2) {
+  //
   // sort order for cryostats: by x
   // (not that we have that many in SBND...)
   //
-  return (c1->CenterX()) < (c2->CenterX());
-  
+  return (c1.CenterX()) < (c2.CenterX());
+
 } // CryostatSorter()
 
+//----------------------------------------------------------------------------
+static bool OpDetsSorter(geo::OpDetGeo const& t1, geo::OpDetGeo const& t2)
+{
+  double xyz1[3] = {0.}, xyz2[3] = {0.};
+  double local[3] = {0.};
+  t1.LocalToWorld(local, xyz1);
+  t2.LocalToWorld(local, xyz2);
+
+  if(xyz1[2] != xyz2[2])
+    return xyz1[2] < xyz2[2];
+  else if(xyz1[1] != xyz2[1])
+    return xyz1[1] < xyz2[1];
+  else
+    return xyz1[0] < xyz2[0];
+} // OpDetsSorter
 
 //----------------------------------------------------------------------------
-bool TPCSorter(geo::TPCGeo const* t1, geo::TPCGeo const* t2) {
+bool TPCSorter(geo::TPCGeo const& t1, geo::TPCGeo const& t2) {
   //
   // Define sort order for TPCs (in SBND case, by x).
   //
@@ -55,72 +71,72 @@ bool TPCSorter(geo::TPCGeo const* t1, geo::TPCGeo const* t2) {
   // then numbering will go in y then in z direction.
 
   // First sort all TPCs belonging to different "z groups"
-  if (!equal(t1->CenterZ(), t2->CenterZ()))
-    return t1->CenterZ() < t2->CenterZ();
+  if (!equal(t1.CenterZ(), t2.CenterZ()))
+    return t1.CenterZ() < t2.CenterZ();
 
   // Within the same-z groups, sort TPCs belonging to different "y groups"
-  if (!equal(t1->CenterY(), t2->CenterY()))
-    return t1->CenterY() < t2->CenterY();
-  
+  if (!equal(t1.CenterY(), t2.CenterY()))
+    return t1.CenterY() < t2.CenterY();
+
   // Within the same z and y groups, sort TPCs belonging to different
   // "x groups";
   // if the x is also the same, then t1 and t2 are the same TPC and strict
   // ordering requires us to return false.
-  return t1->CenterX() < t2->CenterX();
-  
+  return t1.CenterX() < t2.CenterX();
+
 } // TPCSorter()
 
 
 //----------------------------------------------------------------------------
 // Define sort order for planes in APA configuration
 //   same as standard, but implemented differently
-bool PlaneSorter(geo::PlaneGeo const* p1, geo::PlaneGeo const* p2) {
-  
+bool PlaneSorter(geo::PlaneGeo const& p1, geo::PlaneGeo const& p2) {
+
   /*
    * Sort the wire planes so that the first faces the center of the TPC.
-   * 
+   *
    * This might be moved to geo::TPCGeo, which has all the information to
    * enforce such a policy.
    * In fact, we don't have as many here.
-   * 
+   *
    * We rely on a trick, that assumes the cathode to be located at x = 0,
    * and we sort after |x| of the wire planes.
-   * 
+   *
    */
-  decltype(auto) p1c = p1->GetBoxCenter();
-  decltype(auto) p2c = p2->GetBoxCenter();
-  
+  decltype(auto) p1c = p1.GetBoxCenter();
+  decltype(auto) p2c = p2.GetBoxCenter();
+
   /*
    *   #2  #1  #0                   cathode                   #0  #1  #2
    *   |   |   |                       |                       |   |   |
    *   |   |   |                       |                       |   |   |
    *   |   |   |                       |                       |   |   |
    *   |   |   |                       |                       |   |   |
-   * 
+   *
    */
   return std::abs(p1c.X()) < std::abs(p2c.X());
-  
+
 } // PlaneSorter()
 
 
 //----------------------------------------------------------------------------
-bool WireSorter(geo::WireGeo const* w1, geo::WireGeo const* w2) {
-  
+bool WireSorter(geo::WireGeo const& w1, geo::WireGeo const& w2) {
+
   /*
    * Wire comparison algorithm: compare wire centers:
-   * 
+   *
    * 1. if they have different z, sort by increasing z
    * 2. if they have different y, sort by y:
    *    1. increasing y if thetaZ is larger than 0
    *    2. decreasing y if thetaZ is smaller than 0
    * 3. if they have different x, sort by increasing x
    * 4. otherwise, they are the same wire: return false
-   * 
+   *
    * This is strict weak ordering, as required by std::sort().
    *
    * The definition of "different" is that the difference is
    * larger than the chosen tolerance.
-   * 
+   *
    * The wire plane dimensions are roughly 5 x 4 meters.
    * The angle from z axis is +/- pi/6 for the inclined wires.
    * The same angle for the diagonal of the plane is roughly pi/5.
@@ -136,7 +152,7 @@ bool WireSorter(geo::WireGeo const* w1, geo::WireGeo const* w2) {
    *        |  ,.-'              |       uA |.,    '-.,    '-.,  | ---+----> z
    *     vD |-'                  |          |  '-.,    '-.,    '-|    |
    *        `--------------------'          `------^-------^-----'
-   * 
+   *
    * This cartoon shows two views on the same APA, facing the same drift
    * volume.
    * We ask for wires to be sorted by increasing z coordinate.
@@ -159,26 +175,26 @@ bool WireSorter(geo::WireGeo const* w1, geo::WireGeo const* w2) {
    * angle larger than 0 with z are in planes with the leftmost disposition
    * and need a decreasing y coordinate, while the others need an increasing
    * y coordinate.
-   * 
+   *
    * In the case of a "short" TPC, the role of z and y would be swapped.
-   * 
+   *
    * This is stubbornly pretending there is no discontinuity in the wire plane
    * (that is, it is ignoring the junction half way along z.
    */
-  decltype(auto) c1 = w1->GetCenter(), c2 = w2->GetCenter();
-  
+  decltype(auto) c1 = w1.GetCenter(), c2 = w2.GetCenter();
+
   //
   // we do z first, which easily resolves the vertical wires:
   //
   if (!equal(c1.Z(), c2.Z())) return c1.Z() < c2.Z();
-  
+
   //
   // here, z is the same: sort by y
   //
   if (!equal(c1.Y(), c2.Y())) {
     // need to figure out the angle of the wires (we assume both share the same)
-    decltype(auto) e1 = w1->GetEnd();
-    
+    decltype(auto) e1 = w1.GetEnd();
+
     //
     // We work with end - center (e1 - c1):
     // * if its delta y and delta z have the same sign, thetaZ is positive and
@@ -189,7 +205,7 @@ bool WireSorter(geo::WireGeo const* w1, geo::WireGeo const* w2) {
     if (decreasingY) return c1.Y() > c2.Y(); // decreasing => first upper wires
     else             return c1.Y() < c2.Y(); // increasing => first lower wires
   } // if same y
-  
+
   //
   // also y is the same... go check x
   //
@@ -199,12 +215,12 @@ bool WireSorter(geo::WireGeo const* w1, geo::WireGeo const* w2) {
       << "Wires differ only for x coordinate... this is not SBND any more!\n";
   //  return c1.X() < c2.X();
   }
-  
+
   //
   // same center, same wire; strict ordering requires us to return false
   //
   return false;
-  
+
 } // WireSorter()
 
 
@@ -218,23 +234,30 @@ geo::GeoObjectSorterSBND::GeoObjectSorterSBND(fhicl::ParameterSet const& p)
 
 //----------------------------------------------------------------------------
 void geo::GeoObjectSorterSBND::SortCryostats
-  (std::vector<geo::CryostatGeo*>& cgeo) const
+  (std::vector<geo::CryostatGeo>& cgeo) const
   { std::sort(cgeo.begin(), cgeo.end(), CryostatSorter); }
 
 //----------------------------------------------------------------------------
-void geo::GeoObjectSorterSBND::SortTPCs(std::vector<geo::TPCGeo*>& tgeo) const
+void geo::GeoObjectSorterSBND::SortOpDets
+  (std::vector<geo::OpDetGeo> & opdet) const
+  {
+    std::sort(opdet.begin(), opdet.end(), OpDetsSorter);
+  }
+
+//----------------------------------------------------------------------------
+void geo::GeoObjectSorterSBND::SortTPCs(std::vector<geo::TPCGeo>& tgeo) const
   { std::sort(tgeo.begin(), tgeo.end(), TPCSorter); }
 
 //----------------------------------------------------------------------------
 void geo::GeoObjectSorterSBND::SortPlanes
-  (std::vector<geo::PlaneGeo*>& pgeo, geo::DriftDirection_t const& driftDir)
+  (std::vector<geo::PlaneGeo>& pgeo, geo::DriftDirection_t const driftDir)
   const
 {
   // The drift direction has to be set before this method is called.
   // Using the drift direction would render the trick of the sorter unnecessary.
-  
+
   std::sort(pgeo.begin(), pgeo.end(), PlaneSorter);
-  
+
   /*
   switch (driftDir) {
     case geo::kPosX:
@@ -248,12 +271,12 @@ void geo::GeoObjectSorterSBND::SortPlanes
         << "Drift direction is unknown, can't sort the planes\n";
   } // driftDir
   */
-  
+
 } // geo::GeoObjectSorterSBND::SortPlanes()
 
 //----------------------------------------------------------------------------
 void geo::GeoObjectSorterSBND::SortWires
-  (std::vector<geo::WireGeo*>& wgeo) const
+  (std::vector<geo::WireGeo>& wgeo) const
   { std::sort(wgeo.begin(), wgeo.end(), WireSorter); }
 
 
@@ -261,11 +284,11 @@ void geo::GeoObjectSorterSBND::SortWires
 //----------------------------------------------------------------------------
 
 void geo::GeoObjectSorterSBND::SortAuxDets
-  (std::vector<geo::AuxDetGeo*>& adgeo) const
+  (std::vector<geo::AuxDetGeo>& adgeo) const
 {
 //  std::sort(adgeo.begin(), adgeo.end(), sortAuxDetSBND);
 }
 
 void geo::GeoObjectSorterSBND::SortAuxDetSensitive
-  (std::vector<geo::AuxDetSensitiveGeo*>& adsgeo) const
+  (std::vector<geo::AuxDetSensitiveGeo>& adsgeo) const
   {}

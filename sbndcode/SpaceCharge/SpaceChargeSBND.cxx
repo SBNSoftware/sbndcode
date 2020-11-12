@@ -44,7 +44,42 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                     throw cet::exception("SpaceChargeSBND") << "Could not find the space charge effect file '" << fname << "'!\n";
                 }
 
-            if(fRepresentationType == "Parametric")
+            if(fRepresentationType == "Voxelized_TH3"){
+      	      std::cout << "begin loading voxelized TH3s..." << std::endl;
+
+      	      //Load in histograms
+      	      TH3F* hTrueFwdX = (TH3F*) infile->Get("TrueFwd_Displacement_X");
+      	      TH3F* hTrueFwdY = (TH3F*) infile->Get("TrueFwd_Displacement_Y");
+      	      TH3F* hTrueFwdZ = (TH3F*) infile->Get("TrueFwd_Displacement_Z");
+      	      TH3F* hTrueBkwdX = (TH3F*) infile->Get("TrueBkwd_Displacement_X");
+      	      TH3F* hTrueBkwdY = (TH3F*) infile->Get("TrueBkwd_Displacement_Y");
+      	      TH3F* hTrueBkwdZ = (TH3F*) infile->Get("TrueBkwd_Displacement_Z");
+      	      TH3F* hTrueEFieldX = (TH3F*) infile->Get("True_ElecField_X");
+      	      TH3F* hTrueEFieldY = (TH3F*) infile->Get("True_ElecField_Y");
+      	      TH3F* hTrueEFieldZ = (TH3F*) infile->Get("True_ElecField_Z");
+
+      	      //https://root.cern.ch/doc/master/classTH1.html#a0367fe04ae8709fd4b82795d0a5462c3
+      	      //Set hist directories so they can be referenced elsewhere
+      	      //This needs to be done because they were read in from ext file
+      	      //Note this is not a property of the TH3F, so does't survive copying
+      	      hTrueFwdX->SetDirectory(0);
+      	      hTrueFwdY->SetDirectory(0);
+      	      hTrueFwdZ->SetDirectory(0);
+      	      hTrueBkwdX->SetDirectory(0);
+      	      hTrueBkwdY->SetDirectory(0);
+      	      hTrueBkwdZ->SetDirectory(0);
+      	      hTrueEFieldX->SetDirectory(0);
+      	      hTrueEFieldY->SetDirectory(0);
+      	      hTrueEFieldZ->SetDirectory(0);
+
+      	      //SCEhistograms can be accessed globally in this script
+      	      SCEhistograms = {hTrueFwdX, hTrueFwdY, hTrueFwdZ,
+      			       hTrueBkwdX, hTrueBkwdY, hTrueBkwdZ,
+      			       hTrueEFieldX, hTrueEFieldY, hTrueEFieldZ};
+
+
+      	      std::cout << "...finished loading TH3s" << std::endl;
+      	    }else if(fRepresentationType == "Parametric")
                 {
                     for(int i = 0; i < initialSpatialFitPolN[0] + 1; i++)
                         {
@@ -109,9 +144,9 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                     initialEFieldFitFunctionX =  new TF1("initialEFieldFitFunctionX", Form("pol%i", initialEFieldFitPolN[0]));
                     initialEFieldFitFunctionY =  new TF1("initialEFieldFitFunctionY", Form("pol%i", initialEFieldFitPolN[1]));
                     initialEFieldFitFunctionZ =  new TF1("initialEFieldFitFunctionZ", Form("pol%i", initialEFieldFitPolN[2]));
+                }else{
+                  std::cout << "fRepresentationType not known!!!" << std::endl;
                 }
-
-
             infile->Close();
         }
 
@@ -166,30 +201,74 @@ bool spacecharge::SpaceChargeSBND::EnableCalEfieldSCE() const
 geo::Vector_t spacecharge::SpaceChargeSBND::GetPosOffsets(geo::Point_t const& point) const
 {
     std::vector<double> thePosOffsets;
+    double xx=point.X(), yy=point.Y(), zz=point.Z();
 
-    if(IsInsideBoundaries(point.X(), point.Y(), point.Z()) == false)
-        {
-            thePosOffsets.resize(3, 0.0);
-        }
-    else
-        {
-            if(fRepresentationType == "Parametric")
-                {
-                    thePosOffsets = GetPosOffsetsParametric(point.X(), point.Y(), point.Z());
-                }
-            else
-                {
-                    thePosOffsets.resize(3, 0.0);
-                }
-        }
+    if(fRepresentationType == "Voxelized_TH3"){
+      //handle OOAV by projecting edge cases
+      if(xx<-199.999){xx=-199.999;}
+      else if(xx>199.999){xx=199.999;}
+      if(yy<-199.999){yy=-199.999;}
+      else if(yy>199.999){yy=199.999;}
+      if(zz<0.001){zz=0.001;}
+      else if(zz>499.999){zz=499.999;}
+      //larsim requires negative sign in TPC 0
+      int corr = 1;
+      if (xx < 0) { corr = -1; }
+      double offset_x=0., offset_y=0., offset_z=0.;
+      offset_x = corr*SCEhistograms.at(0)->Interpolate(xx,yy,zz);
+      offset_y = SCEhistograms.at(1)->Interpolate(xx,yy,zz);
+      offset_z = SCEhistograms.at(2)->Interpolate(xx,yy,zz);
+      thePosOffsets = {offset_x, offset_y, offset_z};
 
-    // GetPosOffsetsParametric returns m; the PosOffsets are returned as cm
-    thePosOffsets[0] = 100.0 * thePosOffsets[0];
-    thePosOffsets[1] = 100.0 * thePosOffsets[1];
-    thePosOffsets[2] = 100.0 * thePosOffsets[2];
+    }else if(fRepresentationType == "Parametric"){
+      if(IsInsideBoundaries(point.X(), point.Y(), point.Z()) == false){
+        thePosOffsets.resize(3, 0.0);
+      }else{
+        // GetPosOffsetsParametric returns m; the PosOffsets should be in cm
+        thePosOffsets = GetPosOffsetsParametric(xx, yy, zz);
+        for(int i=0; i<3; i++){thePosOffsets[i]=100.*thePosOffsets[i];}
+      }
+    }
+    else{
+      thePosOffsets.resize(3, 0.0);
+    }
 
     return { thePosOffsets[0], thePosOffsets[1], thePosOffsets[2] };
 }
+
+// Provides backward position offset for analyzers (TH3)
+geo::Vector_t spacecharge::SpaceChargeSBND::GetCalPosOffsets(geo::Point_t const& point, int const& TPCid ) const
+{
+  std::vector<double> theCalPosOffsets;
+  double xx=point.X(), yy=point.Y(), zz=point.Z();
+
+  if(fRepresentationType == "Voxelized_TH3"){
+    //handle OOAV by projecting edge cases
+    if(xx<-199.999){xx=-199.999;}
+    else if(xx>199.999){xx=199.999;}
+    if(yy<-199.999){yy=-199.999;}
+    else if(yy>199.999){yy=199.999;}
+    if(zz<0.001){zz=0.001;}
+    else if(zz>499.999){zz=499.999;}
+    //correct for charge drifted across cathode
+    if ((TPCid == 0) and (xx > -2.5)) { xx = -2.5; }
+    if ((TPCid == 1) and (xx < 2.5)) { xx = 2.5; }
+    double offset_x=0., offset_y=0., offset_z=0.;
+    offset_x = SCEhistograms.at(3)->Interpolate(xx,yy,zz);
+    offset_y = SCEhistograms.at(4)->Interpolate(xx,yy,zz);
+    offset_z = SCEhistograms.at(5)->Interpolate(xx,yy,zz);
+    theCalPosOffsets = {offset_x, offset_y, offset_z};
+    
+  }else if(fRepresentationType == "Parametric"){     
+    //this is not supported for parametric
+    std::cout << "Change Representation Type to Voxelized TH3 if you want to use the backward offset function" << std::endl;
+    theCalPosOffsets.resize(3, 0.0);
+  }
+  
+  return { theCalPosOffsets[0], theCalPosOffsets[1], theCalPosOffsets[2] };
+}
+
+
 
 // Provides position offsets using a parametric representation
 std::vector<double> spacecharge::SpaceChargeSBND::GetPosOffsetsParametric(double xVal, double yVal, double zVal) const
@@ -304,28 +383,39 @@ double spacecharge::SpaceChargeSBND::GetOnePosOffsetParametric(double xValNew, d
 geo::Vector_t spacecharge::SpaceChargeSBND::GetEfieldOffsets(geo::Point_t const& point) const
 {
     std::vector<double> theEfieldOffsets;
+    double xx=point.X(), yy=point.Y(), zz=point.Z();
+    double offset_x=0., offset_y=0., offset_z=0.;
 
-    if(IsInsideBoundaries(point.X(), point.Y(), point.Z()) == false)
-        {
-            theEfieldOffsets.resize(3, 0.0);
-        }
-    else
-        {
-            if(fRepresentationType == "Parametric")
-                {
-                    theEfieldOffsets = GetEfieldOffsetsParametric(point.X(), point.Y(), point.Z());
-                }
-            else
-                {
-                    theEfieldOffsets.resize(3, 0.0);
-                }
-        }
+    if(fRepresentationType == "Voxelized_TH3"){
+      //handle OOAV by projecting edge cases
+      if(xx<-199.999){xx=-199.999;}
+      else if(xx>199.999){xx=199.999;}
+      if(yy<-199.999){yy=-199.999;}
+      else if(yy>199.999){yy=199.999;}
+      if(zz<0.001){zz=0.001;}
+      else if(zz>499.999){zz=499.999;}
+      offset_x = SCEhistograms.at(6)->Interpolate(xx, yy, zz);
+      offset_y = SCEhistograms.at(7)->Interpolate(xx, yy, zz);
+      offset_z = SCEhistograms.at(8)->Interpolate(xx, yy, zz);
 
-    // GetOneEfieldOffsetParametric returns V/m
-    // The E-field offsets are returned as -dEx/|E_nominal|, -dEy/|E_nominal|, and -dEz/|E_nominal| where |E_nominal| is DriftField
-    theEfieldOffsets[0] = -1.0 * theEfieldOffsets[0] / (100.0 * DriftField);
-    theEfieldOffsets[1] = -1.0 * theEfieldOffsets[1] / (100.0 * DriftField);
-    theEfieldOffsets[2] = -1.0 * theEfieldOffsets[2] / (100.0 * DriftField);
+      theEfieldOffsets = {offset_x, offset_y, offset_z};
+      
+    }else if(fRepresentationType == "Parametric"){
+
+      if(IsInsideBoundaries(point.X(), point.Y(), point.Z()) == false){
+	theEfieldOffsets.resize(3, 0.0);
+      }
+      else
+        {
+	  theEfieldOffsets = GetEfieldOffsetsParametric(point.X(), point.Y(), point.Z());
+
+	  // GetOneEfieldOffsetParametric returns V/m
+	  // The E-field offsets are returned as -dEx/|E_nominal|, -dEy/|E_nominal|, and -dEz/|E_nominal| where |E_nominal| is DriftField
+	  theEfieldOffsets[0] = -1.0 * theEfieldOffsets[0] / (100.0 * DriftField);
+	  theEfieldOffsets[1] = -1.0 * theEfieldOffsets[1] / (100.0 * DriftField);
+	  theEfieldOffsets[2] = -1.0 * theEfieldOffsets[2] / (100.0 * DriftField);
+	}
+    }
 
     return { theEfieldOffsets[0], theEfieldOffsets[1], theEfieldOffsets[2] };
 }

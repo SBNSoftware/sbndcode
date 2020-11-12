@@ -40,8 +40,7 @@ extern "C" {
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
 #include "lardataobj/RawData/TriggerData.h"
-// #include "lardata/DetectorInfoServices/LArPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/Simulation/sim.h"
@@ -94,6 +93,8 @@ private:
   unsigned int           fNTimeSamples;     ///< number of ADC readout samples in all readout frames (per event)
   float                  fCollectionPed;    ///< ADC value of baseline for collection plane
   float                  fInductionPed;     ///< ADC value of baseline for induction plane
+  float                  fCollectionSat;    ///< ADC value of pre-amp saturation for collection plane
+  float                  fInductionSat;     ///< ADC value of pre-amp saturation for induction plane
   float                  fBaselineRMS;      ///< ADC value of baseline RMS within each channel
   TH1D*                  fNoiseDist;        ///< distribution of noise counts
   bool fGetNoiseFromHisto;                  ///< if True -> Noise from Histogram of Freq. spectrum
@@ -113,7 +114,6 @@ private:
   //be made a fcl parameter but not likely to ever change
   static constexpr float adcsaturation{4095};
 
-  ::detinfo::ElecClock fClock; ///< TPC electronics clock
   //CLHEP::HepRandomEngine& fNoiseEngine;
   CLHEP::HepRandomEngine& fPedestalEngine;
 
@@ -154,8 +154,10 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   fGetNoiseFromHisto = p.get< bool                >("GetNoiseFromHisto");
   fGenNoiseInTime    = p.get< bool                >("GenNoiseInTime");
   fGenNoise          = p.get< bool                >("GenNoise");
-  fCollectionPed     = p.get< float               >("CollectionPed");
-  fInductionPed      = p.get< float               >("InductionPed");
+  fCollectionPed     = p.get< float               >("CollectionPed",690.);
+  fInductionPed      = p.get< float               >("InductionPed",2100.);
+  fCollectionSat     = p.get< float               >("CollectionSat",2922.);
+  fInductionSat      = p.get< float               >("InductionSat",1247.);
   fBaselineRMS       = p.get< float               >("BaselineRMS");
 
   fTrigModName       = p.get< std::string         >("TrigModName");
@@ -191,8 +193,8 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   }
 
   //detector properties information
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fNTimeSamples  = detprop->NumberTimeSamples();
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+  fNTimeSamples  = detProp.NumberTimeSamples();
 
   noiseserv->InitialiseProducerDeps(this, p);  
 
@@ -230,15 +232,10 @@ void SimWireSBND::endJob()
 
 void SimWireSBND::produce(art::Event& evt)
 {
-  //Generate gaussian and coherent noise if doing uBooNE noise model. For other models it does nothing.
-  noiseserv->generateNoise();
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
 
-  // auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
-  art::ServiceHandle<detinfo::DetectorClocksServiceStandard> tss;
-  // In case trigger simulation is run in the same job...
-  //FIXME: you should never call preProcessEvent
-  tss->preProcessEvent(evt, art::ScheduleContext::invalid());
-  auto const* ts = tss->provider();
+  //Generate gaussian and coherent noise if doing uBooNE noise model. For other models it does nothing.
+  noiseserv->generateNoise(clockData);
 
   // get the geometry to be able to figure out signal types and chan -> plane mappings
   art::ServiceHandle<geo::Geometry> geo;
@@ -287,7 +284,7 @@ void SimWireSBND::produce(art::Event& evt)
       // loop over the tdcs and grab the number of electrons for each
       for (int t = 0; t < (int)(chargeWork.size()); ++t) {
 
-        int tdc = ts->TPCTick2TDC(t);
+        int tdc = clockData.TPCTick2TDC(t);
 
         // continue if tdc < 0
         if ( tdc < 0 ) continue;
@@ -297,7 +294,7 @@ void SimWireSBND::produce(art::Event& evt)
       }
 
       // Convolve charge with appropriate response function
-      sss->Convolute(chan, chargeWork);
+      sss->Convolute(clockData, chan, chargeWork);
 
     }
     std::vector<float> noisetmp(fNTicks, 0.);
@@ -349,21 +346,30 @@ void SimWireSBND::produce(art::Event& evt)
 
 */
     // Add noise to channel.
-    noiseserv->addNoise(chan,noisetmp);
+    noiseserv->addNoise(clockData, chan,noisetmp);
 
     //Pedestal determination
     float ped_mean = fCollectionPed;
+    float preamp_sat=fCollectionSat;
     geo::SigType_t sigtype = geo->SignalType(chan);
-    if (sigtype == geo::kInduction)
+    if (sigtype == geo::kInduction) {
       ped_mean = fInductionPed;
-    else if (sigtype == geo::kCollection)
+      preamp_sat = fInductionSat;
+    }
+    else if (sigtype == geo::kCollection) {    
       ped_mean = fCollectionPed;
+      preamp_sat=fCollectionSat;
+    }
     //slight variation on ped on order of RMS of baseline variation
     CLHEP::RandGaussQ rGaussPed(fPedestalEngine, 0.0, fBaselineRMS);
     ped_mean += rGaussPed.fire();
 
     for (unsigned int i = 0; i < fNTimeSamples; ++i) {
-      float adcval = noisetmp.at(i) + chargeWork.at(i) + ped_mean;
+
+      float chargecontrib = chargeWork.at(i);
+      if (chargecontrib>preamp_sat) chargecontrib=preamp_sat;
+
+      float adcval = noisetmp.at(i) + chargecontrib + ped_mean;
 
       //Add Noise to NoiseDist Histogram
       if (i % 100 == 0)

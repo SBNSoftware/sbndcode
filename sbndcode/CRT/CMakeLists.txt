@@ -2,7 +2,6 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 include_directories( $ENV{NUTOOLS_INC} )
 include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 
-add_subdirectory(CRTProducts)
 add_subdirectory(CRTTools)
 add_subdirectory(CRTUtils)
 add_subdirectory(CRTAna)
@@ -69,7 +68,8 @@ simple_plugin( CRTDetSim module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbndcode_CRTProducts
+        sbnobj_SBND_CRT
+        sbnobj_Common_CRT
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}
@@ -91,7 +91,7 @@ simple_plugin( CRTSimHitProducer module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbndcode_CRTProducts
+        sbnobj_Common_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
         ${ART_FRAMEWORK_CORE}
@@ -115,7 +115,7 @@ simple_plugin(CRTTrackProducer module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbndcode_CRTProducts
+        sbnobj_Common_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
         ${ART_FRAMEWORK_CORE}
@@ -140,7 +140,7 @@ simple_plugin(CRTTzeroProducer module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbndcode_CRTProducts
+        sbnobj_Common_CRT
         ${ART_FRAMEWORK_CORE}
         ${ART_FRAMEWORK_IO_SOURCES}
         ${ART_FRAMEWORK_PRINCIPAL}

@@ -41,7 +41,7 @@ extern "C" {
 #include "lardataobj/RawData/raw.h"
 #include "lardataobj/RawData/TriggerData.h"
 // #include "lardata/DetectorInfoServices/LArPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "sbndcode/Utilities/SignalShapingServiceT1053.h"
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/Simulation/sim.h"
@@ -100,8 +100,6 @@ private:
   //define max ADC value - if one wishes this can
   //be made a fcl parameter but not likely to ever change
   static constexpr float adcsaturation{4095};
-
-  ::detinfo::ElecClock fClock; ///< TPC electronics clock
 
   CLHEP::HepRandomEngine& fNoiseEngine;
   CLHEP::HepRandomEngine& fPedestalEngine;
@@ -169,8 +167,8 @@ void SimWireT1053::reconfigure(fhicl::ParameterSet const& p)
   }
 
   //detector properties information
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fNTimeSamples  = detprop->NumberTimeSamples();
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+  fNTimeSamples  = detProp.NumberTimeSamples();
 }
 
 //-------------------------------------------------
@@ -197,13 +195,7 @@ void SimWireT1053::beginJob()
 //-------------------------------------------------
 void SimWireT1053::produce(art::Event& evt)
 {
-
-  // auto const* ts = lar::providerFrom<detinfo::DetectorClocksService>();
-  art::ServiceHandle<detinfo::DetectorClocksServiceStandard> tss;
-  // In case trigger simulation is run in the same job...
-  //FIXME: you should never call preProcessEvent
-  tss->preProcessEvent(evt, art::ScheduleContext::invalid());
-  auto const* ts = tss->provider();
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
 
   // get the geometry to be able to figure out signal types and chan -> plane mappings
   art::ServiceHandle<geo::Geometry> geo;
@@ -252,7 +244,7 @@ void SimWireT1053::produce(art::Event& evt)
       // loop over the tdcs and grab the number of electrons for each
       for (int t = 0; t < (int)(chargeWork.size()); ++t) {
 
-        int tdc = ts->TPCTick2TDC(t);
+        int tdc = clockData.TPCTick2TDC(t);
 
         // continue if tdc < 0
         if ( tdc < 0 ) continue;

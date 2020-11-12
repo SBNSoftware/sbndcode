@@ -8,13 +8,15 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/CosmicId/Algs/CrtHitCosmicIdAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
 // LArSoft includes
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
@@ -203,13 +205,13 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT hits from the event
-    art::Handle< std::vector<crt::CRTHit>> crtHitHandle;
-    std::vector<art::Ptr<crt::CRTHit> > crtHitList;
+    art::Handle< std::vector<sbn::crt::CRTHit>> crtHitHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit> > crtHitList;
     if (event.getByLabel(fCRTHitLabel, crtHitHandle))
       art::fill_ptr_vector(crtHitList, crtHitHandle);
 
     fCrtBackTrack.Initialize(event);
-    std::vector<crt::CRTHit> crtHits;
+    std::vector<sbn::crt::CRTHit> crtHits;
     std::map<int, int> numHitMap;
     int hit_i = 0;
     for(auto const& hit : (crtHitList)){
@@ -285,12 +287,14 @@ namespace sbnd {
     //----------------------------------------------------------------------------------------------------------
     //                                DISTANCE OF CLOSEST APPROACH ANALYSIS
     //----------------------------------------------------------------------------------------------------------
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
 
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       std::string type = "none";
       if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trackTrueID) != lepParticleIds.end()) type = "NuMuTrack";
       if(std::find(nuParticleIds.begin(), nuParticleIds.end(), trackTrueID) != nuParticleIds.end()) type = "NuTrack";
@@ -299,7 +303,7 @@ namespace sbnd {
       if(type == "none") continue;
 
       // Calculate t0 from CRT Hit matching
-      std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
 
       if(closest.second != -99999){
         int hitTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closest.first);
@@ -334,7 +338,7 @@ namespace sbnd {
       }
 
       hLengthTotal[type]->Fill(tpcTrack.Length());
-      if(chTag.CrtHitCosmicId(tpcTrack, crtHits, event)){
+      if(chTag.CrtHitCosmicId(detProp, tpcTrack, crtHits, event)){
         hLengthTag[type]->Fill(tpcTrack.Length());
       }
     }
@@ -368,7 +372,7 @@ namespace sbnd {
 
         // Truth match muon tracks and pfps
         std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
         if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()){ 
           type = "NuMuPfp";
         }
@@ -390,7 +394,7 @@ namespace sbnd {
 
       recob::Track tpcTrack = nuTracks[0];
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
 
       if(numHitMap.find(trackTrueID) != numHitMap.end()){
         hNumTrueMatches[type]->Fill(numHitMap[trackTrueID]);
@@ -400,7 +404,7 @@ namespace sbnd {
       }
 
       // Calculate t0 from CRT Hit matching
-      std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
 
       if(closest.second != -99999){
         int hitTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closest.first);
@@ -429,7 +433,7 @@ namespace sbnd {
       }
 
       hLengthTotal[type]->Fill(tpcTrack.Length());
-      if(chTag.CrtHitCosmicId(tpcTrack, crtHits, event)){
+      if(chTag.CrtHitCosmicId(detProp, tpcTrack, crtHits, event)){
         hLengthTag[type]->Fill(tpcTrack.Length());
       }
     }
@@ -453,5 +457,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTHitCosmicIdAna)
 } // namespace sbnd
-
-

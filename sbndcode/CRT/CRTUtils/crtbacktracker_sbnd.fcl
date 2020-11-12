@@ -5,6 +5,7 @@ standard_crtbacktracker:
     CRTDataLabel:     "crt"
     CRTHitLabel:      "crthit"
     CRTTrackLabel:    "crttrack"
+    RollupUnsavedIds: true
 }
 
 END_PROLOG

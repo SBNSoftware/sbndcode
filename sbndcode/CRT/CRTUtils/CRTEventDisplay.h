@@ -22,7 +22,7 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-//#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+namespace detinfo { class DetectorClocksData; }
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -30,9 +30,9 @@
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
 
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
@@ -187,7 +187,7 @@ namespace sbnd{
 
     void DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour);
 
-    void Draw(const art::Event& event);
+    void Draw(detinfo::DetectorClocksData const& clockData, const art::Event& event);
 
   private:
 

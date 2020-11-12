@@ -9,7 +9,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
@@ -45,7 +45,6 @@
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RawData/ExternalTrigger.h"
 #include "larcoreobj/SimpleTypesAndConstants/PhysicalConstants.h"
 
@@ -103,7 +102,7 @@ namespace sbnd {
     // Call appropriate produces<>() functions here.
     produces< std::vector<anab::T0> >();
     produces< art::Assns<recob::Track , anab::T0> >();
-    //produces< art::Assns<recob::Track , crt::CRTTrack> >();
+    //produces< art::Assns<recob::Track , sbn::crt::CRTTrack> >();
     
     reconfigure(p);
 
@@ -133,7 +132,7 @@ namespace sbnd {
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
-    //std::unique_ptr< art::Assns<recob::Track, crt::CRTTrack> > Crtassn( new art::Assns<recob::Track, crt::CRTTrack>);
+    //std::unique_ptr< art::Assns<recob::Track, sbn::crt::CRTTrack> > Crtassn( new art::Assns<recob::Track, sbn::crt::CRTTrack>);
 
     // Get TPC tracks
     art::Handle< std::vector<recob::Track> > tpcTrackListHandle;
@@ -145,15 +144,17 @@ namespace sbnd {
     //art::FindManyP<recob::Hit> findManyHits(tpcTrackListHandle, event, fTpcTrackModuleLabel);
 
     // Get CRT tracks
-    art::Handle< std::vector<crt::CRTTrack> > crtTrackListHandle;
-    std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
+    art::Handle< std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
+    std::vector<art::Ptr<sbn::crt::CRTTrack> > crtTrackList;
     if (event.getByLabel(fCrtTrackModuleLabel, crtTrackListHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackListHandle);
 
-    std::vector<crt::CRTTrack> crtTracks;
+    std::vector<sbn::crt::CRTTrack> crtTracks;
     for(auto const& crtTrack : crtTrackList){
       crtTracks.push_back(*crtTrack);
     }
+
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
 
     // Validity check
     if (tpcTrackListHandle.isValid() && crtTrackListHandle.isValid() ){
@@ -163,14 +164,14 @@ namespace sbnd {
         <<"Number of CRT tracks = "<<crtTrackList.size();
       for (size_t tpc_i = 0; tpc_i < tpcTrackList.size(); tpc_i++){
 
-        //std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrackList[tpc_i]->ID());
-        //int tpc = fTpcGeo.DetectedInTPC(hits);
-
-        int matchedID = trackAlg.GetMatchedCRTTrackId(*tpcTrackList[tpc_i], crtTracks, event);
+        std::pair<int,double> matchedResult = trackAlg.GetMatchedCRTTrackIdAndScore(detProp,
+                                                                                    *tpcTrackList[tpc_i], crtTracks, event);
+        int matchedID = matchedResult.first;
+        double matchedScore = matchedResult.second;
         
         if(matchedID != -99999){
           double crtTime = ((double)(int)crtTracks.at(matchedID).ts1_ns); // [ns]
-          T0col->push_back(anab::T0(crtTime, 0, tpcTrackList[tpc_i]->ID(), (*T0col).size(), 0.)); 
+          T0col->push_back(anab::T0(crtTime, 0, tpcTrackList[tpc_i]->ID(), (*T0col).size(), matchedScore)); 
           util::CreateAssn(*this, event, *T0col, tpcTrackList[tpc_i], *Trackassn);
           //util::CreateAssn(*this, event, crtTrackList[matchedID], tpcTrackList[tpc_i], *Crtassn);
         }

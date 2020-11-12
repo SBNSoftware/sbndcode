@@ -19,14 +19,15 @@ sbnd_simwire:
  # the two settings below determine the ADC baseline for collection and induction plane, respectively;
  # here we read the settings from the pedestal service configuration,
  # so that we have only one maintenance point
-# CollectionPed:       @local::sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultCollMean # used to be 400
- CollectionPed:        400
-# InductionPed:        @local::sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultIndMean  # used to be 2048
- InductionPed:         2048
- BaselineRMS:         0.3         #ADC baseline fluctuation within channel        
+ CollectionPed:       @local::sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultCollMean # used to be 400
+ InductionPed:        @local::sbnd_detpedestalservice.DetPedestalRetrievalAlg.DefaultIndMean  # used to be 2048
+#CollectionPed:        650
+#InductionPed:         2000
+ BaselineRMS:         0.0         #ADC baseline fluctuation within channel        
  NoiseFileFname:      "uboone_noise_v0.1.root"
  NoiseHistoName:      "NoiseFreq"    
-
+ CollectionSat: 2922 # in ADC, default is 2922
+ InductionSat: 1247  # in ADC, default is 1247
 }
 #sbnd_simwireana: @local::standard_simwireana
 sbnd_simwireana:

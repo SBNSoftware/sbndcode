@@ -1,9 +1,9 @@
 #
 # File:    genie_sbnd.fcl
 # Purpose: Configuration of GENIE LArSoft module (GENIEGen) for SBND
-# 
+#
 # Description:
-# 
+#
 # Configurations in here are designed to be included in a FHiCL job
 # configuration.
 # This file includes two sections:
@@ -22,7 +22,7 @@ BEGIN_PROLOG
 #
 # These are pre-cooked flux file configurations for `GenieGen`. Use them in its
 # configuration as:
-#     
+#
 #     physics: {
 #       producers: {
 #         generator: {
@@ -32,15 +32,15 @@ BEGIN_PROLOG
 #         }
 #       }
 #     }
-#     
+#
 # or, if needed to override an existing configuration, with the less
 # straightforward:
-#     
+#
 #     physics.producers.generator: {
 #       @table::physics.producers.generator
 #       @table: bnb_flux_nu
 #     }
-#     
+#
 # Simple configurations "_testN" may be provided, which explicitly select the
 # flux files to be picked. This is useful in tests where randomness is
 # deleterious.
@@ -51,8 +51,8 @@ BEGIN_PROLOG
 #
 sbnd_flux_bnb_nu_Bv1: {
   FluxType:       "simple_flux"
-  FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/gsimple/v2_8_6d/configB-v1/april07/neutrinoMode"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/gsimple/v2_8_6d/configB-v1/april07/neutrinoMode"
   FluxFiles: [ "gsimple_configB-v1_5e7POT*.root" ]
 }
 
@@ -71,8 +71,8 @@ sbnd_flux_bnb_nu_Bv1_hist: {
 #
 sbnd_flux_bnb_nu_Cv1: {
   FluxType:       "simple_flux"
-  FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/gsimple/v2_8_6d/configC-v1/april07/neutrinoMode"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/gsimple/v2_8_6d/configC-v1/april07/neutrinoMode"
   FluxFiles: [ "gsimple_configC-v1_april07_baseline*.root" ]
 }
 
@@ -86,8 +86,8 @@ sbnd_flux_bnb_nu_Cv1_test1: {
 #
 sbnd_flux_bnb_nu_Dv1: {
   FluxType:       "simple_flux"
-  FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configD-v1/april07/neutrinoMode"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configD-v1/april07/neutrinoMode"
   FluxFiles: [ "converted_beammc_sbnd*.root" ]
 }
 
@@ -101,8 +101,8 @@ sbnd_flux_bnb_nu_Dv1_test1: {
 #
 sbnd_flux_bnb_nu_Ev1: {
   FluxType:       "simple_flux"
-  FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configE-v1/april07/neutrinoMode"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configE-v1/april07/neutrinoMode"
   FluxFiles: [ "converted_beammc_sbnd_dirt*.root" ]
 }
 
@@ -116,8 +116,8 @@ sbnd_flux_bnb_nu_Ev1_test1: {
 #
 sbnd_flux_bnb_nu_Fv1: {
   FluxType:       "simple_flux"
-  FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configF-v1/april07/neutrinoMode"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configF-v1/april07/neutrinoMode"
   FluxFiles: [ "converted_beammc_sbnd*.root" ]
 }
 
@@ -131,8 +131,8 @@ sbnd_flux_bnb_nu_Fv1_test1: {
 #
 sbnd_flux_bnb_nu_Gv1: {
   FluxType:       "simple_flux"
-  FluxCopyMethod: "IFDH"
-  FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configG-v1/april07/neutrinoMode"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configG-v1/april07/neutrinoMode"
   FluxFiles: [ "converted_beammc_sbnd_dirt_v1*.root" ]
 }
 
@@ -172,8 +172,8 @@ sbnd_flux_numi_dirt: {
   @table::sbnd_flux_numi
   // 20160707 (petrillo@fnal.gov) -  this does not exist yet:
   FluxFiles:      ["numi_gsimple_fluxes_02.27.2014/normal_window_dirt/second_try/*.root",
-   					           "numi_gsimple_fluxes_02.27.2014/length_window_dirt/second_try/*.root",
-					           "numi_gsimple_fluxes_02.27.2014/bottom_window_dirt/second_try/*.root"]
+                       "numi_gsimple_fluxes_02.27.2014/length_window_dirt/second_try/*.root",
+                     "numi_gsimple_fluxes_02.27.2014/bottom_window_dirt/second_try/*.root"]
 }
 
 
@@ -183,7 +183,7 @@ sbnd_flux_numi_dirt: {
 #
 # These are FCL tables that setup arranging the neutrino interactions into BNB buckets.
 # Use them in its configuration as:
-#     
+#
 #     physics: {
 #       producers: {
 #         generator: {
@@ -193,23 +193,23 @@ sbnd_flux_numi_dirt: {
 #         }
 #       }
 #     }
-#     
+#
 # or, if needed to override an existing configuration, with the less
 # straightforward:
-#     
+#
 #     physics.producers.generator: {
 #       @table::physics.producers.generator
 #       @table: fluxbucket_bnb
 #     }
-#     
 #
-# Booster Neutrino Beam, bucket 
+#
+# Booster Neutrino Beam, bucket
 #
 sbnd_fluxbucket_bnb: {
   SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.32059"
 }
 
-# Booster Neutrino Beam, rotated bucket 
+# Booster Neutrino Beam, rotated bucket
 #
 sbnd_fluxbucket_bnb_rotated: {
   SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.4841"
@@ -217,23 +217,23 @@ sbnd_fluxbucket_bnb_rotated: {
 
 ################################################################################
 ### GENIE module configurations
-### 
+###
 ### Include them like:
-###     
+###
 ###     #include "genie_sbnd.fcl"
 ###     physics: {
-###       
+###
 ###       producers: {
-###         
+###
 ###         generator: @local::sbnd_genie_simple
-###         
+###
 ###         # ...
 ###       }
-###       
+###
 ###       # ...
 ###     }
-###     
-### 
+###
+###
 ###
 
 sbnd_genie: {
@@ -249,9 +249,9 @@ sbnd_genie: {
 sbnd_genie_hist: {
   @table::sbnd_genie
   @table::sbnd_flux_bnb_nu_Bv1_hist
-  BeamCenter:    [0., 0., 0.]  
-  BeamDirection: [0., 0., 1.]    
-  BeamRadius:    4.              
+  BeamCenter:    [0., 0., 0.]
+  BeamDirection: [0., 0., 1.]
+  BeamRadius:    4.
 }
 
 

@@ -10,12 +10,13 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
 
 // LArSoft includes
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
@@ -168,15 +169,15 @@ namespace sbnd {
     }
 
     // Get CRT hits from the event
-    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
-    std::vector<crt::CRTHit> crtHits;
+    auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
+    std::vector<sbn::crt::CRTHit> crtHits;
     for(auto const& hit : (*crtHitHandle)){
       crtHits.push_back(hit);
     }
 
     // Get CRT tracks from the event
-    auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCRTTrackLabel);
-    std::vector<crt::CRTTrack> crtTracks;
+    auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
+    std::vector<sbn::crt::CRTTrack> crtTracks;
     for(auto const& track : (*crtTrackHandle)){
       crtTracks.push_back(track);
     }
@@ -191,13 +192,16 @@ namespace sbnd {
     //                                        RUNNING THE T0 TAGGING
     //----------------------------------------------------------------------------------------------------------
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
+
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
 
       // Get the true particle
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       if(particles.find(trackTrueID) == particles.end()) continue;
 
       // Only consider primary muons
@@ -210,7 +214,7 @@ namespace sbnd {
       nTotal++;
 
       // Calculate t0 from CRT hit matching
-      double hitT0 = fCRTHitMatch.T0FromCRTHits(tpcTrack, crtHits, event);
+      double hitT0 = fCRTHitMatch.T0FromCRTHits(detProp, tpcTrack, crtHits, event);
       if(hitT0 == -99999){
         if(fVerbose) std::cout<<"Couldn't match to CRT hit.\n";
       }
@@ -220,7 +224,7 @@ namespace sbnd {
         if(std::abs(trueTime - hitT0) < 2) nCrtHitCorrect++;
       }
       // Calculate t0 from CRT track matching
-      double trackT0 = fCRTTrackMatch.T0FromCRTTracks(tpcTrack, crtTracks, event);
+      double trackT0 = fCRTTrackMatch.T0FromCRTTracks(detProp, tpcTrack, crtTracks, event);
       if(trackT0 == -99999){
         if(fVerbose) std::cout<<"Couldn't match to CRT track.\n";
       }
@@ -253,5 +257,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(RunningT0Tagging)
 } // namespace sbnd
-
-
