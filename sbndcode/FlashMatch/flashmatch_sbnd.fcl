@@ -42,6 +42,6 @@ sbnd_simple_flashmatch:{
   rr_up: 200.
   pe_bins: 50
   pe_low: 0.
-  pe_up: 50.
+  pe_up: 1.2
 }
 
