@@ -1,3 +1,0 @@
-#include "standard_g4_sbnd.fcl"
-services.LArG4Parameters.IonAndScintCalculator:   "Correlated"
-services.LArG4Parameters.ScintByParticleType:     true
