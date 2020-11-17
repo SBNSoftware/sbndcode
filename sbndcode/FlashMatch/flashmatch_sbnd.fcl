@@ -11,7 +11,8 @@ sbnd_simple_flashmatch:{
   NoAvailableMetrics: false
   MakeTree: false
   SelectNeutrino: true
-  UseUncoatedPMT: false
+  UseUncoatedPMT: true
+  VUVToVIS: 4
   UseCalo: false
   LightWindowStart: -0.01 # us, wrt flash time
   LightWindowEnd: 0.09 # us, wrt flash time
@@ -39,7 +40,7 @@ sbnd_simple_flashmatch:{
   dz_up: 200.
   rr_bins: 100
   rr_low: 0.
-  rr_up: 200.
+  rr_up: 200
   pe_bins: 50
   pe_low: 0.
   pe_up: 1.2
