@@ -1,10 +1,7 @@
 include_directories ( $ENV{GENIE_INC}/GENIE )
 
-
-
 art_make(
-          LIBRARY_NAME NuAnaAlg
-          LIB_LIBRARIES 
+            LIB_LIBRARIES
             larcore_Geometry_Geometry_service
             larcorealg_Geometry
             nugen_NuReweight_art
@@ -19,7 +16,7 @@ art_make(
             art_Utilities
             canvas
             ${MF_MESSAGELOGGER}
-            
+
             ${FHICLCPP}
             cetlib cetlib_except
             ${CLHEP}
@@ -28,6 +25,4 @@ art_make(
           )
 
 install_headers()
-# install_fhicl()
-# install_source()
 
