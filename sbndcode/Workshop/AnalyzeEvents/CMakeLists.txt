@@ -1,10 +1,11 @@
 art_make(
           MODULE_LIBRARIES 
+  
+
+
 
                            lardataobj_RecoBase
-
-
-
+                           larpandora_LArPandoraInterface
 
                            art_Persistency_Common canvas
                            art_Persistency_Provenance canvas
