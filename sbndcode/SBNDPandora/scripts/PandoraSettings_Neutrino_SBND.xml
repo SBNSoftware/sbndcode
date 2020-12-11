@@ -345,9 +345,6 @@
       <tool type = "LArThreeDOpeningAngleFeatureTool"/>
     </FeatureToolsNoChargeInfo>
   </algorithm>
-  <algorithm type = "LArNeutrinoProperties">
-    <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
-  </algorithm>
 
   <!-- Recursively Repeat MopUpAlgorithms -->
   <algorithm type = "LArRecursivePfoMopUp">
@@ -399,6 +396,7 @@
       <tool type = "LArThreeDOpeningAngleFeatureTool"/>
     </FeatureToolsNoChargeInfo>
   </algorithm>
+
   <algorithm type = "LArNeutrinoProperties">
     <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
   </algorithm>
