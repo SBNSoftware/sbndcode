@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+sbnd_pfpslicevalidation:
+{
+    module_type: PFPSliceValidation
+    GenieGenModuleLabel:  "generator"
+    PFParticleLabels:     ["pandora"]
+    HitLabel:             "linecluster"
+}
+
+END_PROLOG
