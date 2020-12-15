@@ -58,7 +58,7 @@ public:
 
   // Required functions.
   void analyze(art::Event const &evt) override;
-  void beginJob();
+  void beginJob() override;
 
   // Function to get a map of MCTruth to number of hits from that truth
   std::map<art::Ptr<simb::MCTruth>, int>
