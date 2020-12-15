@@ -11,9 +11,8 @@ services:
   RandomNumberGenerator: {} #ART native random number generator
   user:    {  
         LandedSocket: {}
-        ExptGeoHelperInterface:         @local::sbnd_geometry_helper
-        Geometry:                       @local::sbnd_geo
-        MagneticField:                  @local::no_mag_larsoft
+                       @table::sbnd_geometry_services
+        MagneticField: @local::no_mag_larsoft
         }
 }
 
