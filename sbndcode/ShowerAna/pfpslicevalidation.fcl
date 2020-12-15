@@ -1,0 +1,34 @@
+#include "services_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "showerana.fcl"
+
+process_name: ana
+services:
+{
+  TFileService: { fileName: "pfpSliceValidationHists.root" }
+  @table::sbnd_services
+  FileCatalogMetadata:  @local::sbnd_file_catalog_mc
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  @local::standard_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1        # Number of events to create
+}
+
+physics:
+{
+  analyzers:
+  {
+    pfpslicevalidation: @local::sbnd_pfpslicevalidation
+  }
+
+  ana: [ pfpslicevalidation ]
+  end_paths: [ ana ]
+}

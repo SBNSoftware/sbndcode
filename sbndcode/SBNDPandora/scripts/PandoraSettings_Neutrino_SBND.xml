@@ -345,6 +345,58 @@
       <tool type = "LArThreeDOpeningAngleFeatureTool"/>
     </FeatureToolsNoChargeInfo>
   </algorithm>
+
+  <!-- Recursively Repeat MopUpAlgorithms -->
+  <algorithm type = "LArRecursivePfoMopUp">
+    <PfoListNames>TrackParticles3D ShowerParticles3D</PfoListNames>
+    <MaxIterations>10</MaxIterations>
+    <MopUpAlgorithms>
+      <algorithm type = "LArBoundedClusterMopUp">
+        <PfoListNames>ShowerParticles3D</PfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+      </algorithm>
+      <algorithm type = "LArConeClusterMopUp">
+        <PfoListNames>ShowerParticles3D</PfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+      </algorithm>
+      <algorithm type = "LArNearbyClusterMopUp">
+        <PfoListNames>ShowerParticles3D</PfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+      </algorithm>
+      <algorithm type = "LArSlidingConePfoMopUp">
+        <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</DaughterListNames>
+      </algorithm>
+      <algorithm type = "LArSlidingConeClusterMopUp">
+        <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+      </algorithm>
+    </MopUpAlgorithms>
+  </algorithm>
+
+  <algorithm type = "LArBdtPfoCharacterisation">
+    <TrackPfoListName>TrackParticles3D</TrackPfoListName>
+    <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
+    <UseThreeDInformation>true</UseThreeDInformation>
+    <MvaFileName>PandoraMVAs/PandoraBdt_v08_33_00_SBND.xml</MvaFileName>
+    <MvaName>PfoCharBDT</MvaName>
+    <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_v08_33_00_SBND.xml</MvaFileNameNoChargeInfo>
+    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
+    <FeatureTools>
+      <tool type = "LArThreeDLinearFitFeatureTool"/>
+      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+      <tool type = "LArThreeDPCAFeatureTool"/>
+      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
+      <tool type = "LArThreeDChargeFeatureTool"/>
+    </FeatureTools>
+    <FeatureToolsNoChargeInfo>
+      <tool type = "LArThreeDLinearFitFeatureTool"/>
+      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+      <tool type = "LArThreeDPCAFeatureTool"/>
+      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
+    </FeatureToolsNoChargeInfo>
+  </algorithm>
+
   <algorithm type = "LArNeutrinoProperties">
     <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
   </algorithm>
