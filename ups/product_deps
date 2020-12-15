@@ -30,7 +30,6 @@ gdmldir product_dir
 fcldir  product_dir
 fwdir   product_dir scripts
 
-
 # With "product  version" table below, we now define dependencies
 # Add the dependent product and version
 
