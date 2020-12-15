@@ -17,6 +17,7 @@ add_subdirectory(OpDetSim)
 add_subdirectory(OpDetReco)
 add_subdirectory(OpT0Finder)
 add_subdirectory(CosmicId)
+add_subdirectory(ShowerAna)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
