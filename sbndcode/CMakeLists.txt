@@ -31,3 +31,8 @@ add_subdirectory(SpaceChargeTest)
 add_subdirectory(FlashMatch)
 
 add_subdirectory(Filters)
+
+# My analysis
+
+add_subdirectory(MyAnalysis)
+add_subdirectory(MyCalib)

@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+analyzeEvents: { 
+  module_type: "AnalyzeEvents"
+  PFParticleLabel: "pandora"
+  TrackLabel: "pandoraTrack"
+  CalorimetryLabel: "pandoraCalo"
+  SpacePointLabel: "pmalgtrackmaker"
+}
+END_PROLOG
