@@ -1,0 +1,26 @@
+#include "config_Calibration.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: Calibration
+
+source:
+{
+  module_type: 	RootInput
+  maxEvents: 	-1
+}
+
+services:
+{
+  TFileService: { fileName: "calibrationOutput.root" }
+  @table::sbnd_services
+}
+
+physics:
+{
+  analyzers:
+  {
+    ana: @local::Calibration
+  }
+  path0: 	[ ana ]
+  end_paths: 	[ path0 ]
+}
