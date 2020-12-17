@@ -140,10 +140,10 @@ void sbnd::Calibration::analyze(art::Event const& e)
 
      } // End of hits
 
+  fTree->Fill();
   } //End of spacepoint
 
 
-  fTree->Fill();
 
 }
 
@@ -162,7 +162,6 @@ void sbnd::Calibration::beginJob()
 
   fHitIntegralHist = tfs->make<TH2D>("HitIntegral","Hit Integral in Y-Z view", 200, 0, 500, 200, -200, 200);
 
-  fHitIntegralHist->Draw("colz");
 }
 
 void sbnd::Calibration::endJob()
