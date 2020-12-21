@@ -15,9 +15,10 @@ services.LArG4Parameters.EnabledPhysics: [
          "Stopping"
       ]
 services.LArG4Parameters.ParticleKineticEnergyCut: 1e-6 # 1 MeV
+services.LArG4Parameters.KeepEMShowerDaughters: true
 
 # physics.producers.largeant.KeepParticlesInVolumes: ["volTPC_N", "volTPC_P"]
 
-#physics.producers.largeant.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"] 
+#physics.producers.largeant.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"]
 
 

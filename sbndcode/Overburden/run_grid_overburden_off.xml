@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+
+<!DOCTYPE project [
+<!ENTITY release "v09_09_01">
+<!ENTITY releasetag "e19:prof">
+<!ENTITY my_version "v11">
+<!ENTITY config "configC">
+<!ENTITY name "mdeltutt_test_ob_off">
+<!ENTITY tag "test_ob_off">
+<!ENTITY file_type "data">
+<!ENTITY run_type "physics">
+<!ENTITY PNFSpath "/pnfs/sbnd/resilient/users/mdeltutt/">
+]>
+
+
+<project name="&name;">
+
+  <!-- Group -->
+  <group>sbnd</group>
+
+  <!-- Project size -->
+  <numevents>30000</numevents>
+
+  <!-- Operating System -->
+  <os>SL7</os>
+
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC</resource>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>&releasetag;</qual>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_09_01_ob__&my_version;.tgz</local>
+  </larsoft>
+
+  <!-- Project stages -->
+
+  <stage name="gen">
+    <fcl>prodcorsika_cosmics_proton_sbnd.fcl</fcl>
+    <fcl>standard_g4_sbnd_&config;_ob_off.fcl</fcl>
+    <fcl>run_overburdenana.fcl</fcl>
+    <!-- <inputlist>&PNFSpath;cosmics_corsika_cmc_uboone_intime_v06_26_01.txt</inputlist> -->
+    <defname>&name;_&tag;_gen</defname>
+    <maxfilesperjob>1</maxfilesperjob>
+    <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/ob_off_gen_&config;_&my_version;</outdir>
+    <workdir>&PNFSpath;grid_workdir_sbnd/ob_off</workdir>
+    <numjobs>500</numjobs>
+    <datatier>generated</datatier>
+    <memory>8000</memory>
+    <jobsub>  --expected-lifetime=20h -Q --generate-email-summary </jobsub>
+    <disk>60GB</disk>
+  </stage>
+
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
