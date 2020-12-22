@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+prismanalyzer:
+{
+  module_type:   "PrismAnalyzer"
+  Dummy:         "dummy"
+}
+
+END_PROLOG

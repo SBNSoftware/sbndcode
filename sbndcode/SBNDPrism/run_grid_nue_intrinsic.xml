@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+
+<!DOCTYPE project [
+<!ENTITY release "v09_10_00">
+<!ENTITY releasetag "e19:prof">
+<!ENTITY my_version "v1">
+<!ENTITY name "mdeltutt_prism_nue_intr">
+<!-- <!ENTITY tag "test_ob_on"> -->
+<!ENTITY file_type "data">
+<!ENTITY run_type "physics">
+<!ENTITY PNFSpath "/pnfs/sbnd/resilient/users/mdeltutt/">
+]>
+
+
+<project name="&name;">
+
+  <!-- Group -->
+  <group>sbnd</group>
+
+  <!-- Project size -->
+  <numevents>1000000</numevents>
+
+  <!-- Operating System -->
+  <os>SL7</os>
+
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC</resource>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>&releasetag;</qual>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_10_00_prism__&my_version;.tgz</local>
+  </larsoft>
+
+  <!-- Project stages -->
+
+  <stage name="gen">
+    <fcl>prodgenie_intrnue_spill_tpc_gsimple-configf-v1.fcl</fcl>
+    <fcl>run_prismanalyzer.fcl</fcl>
+    <!-- <defname>&name;_&tag;_gen</defname> -->
+    <maxfilesperjob>1</maxfilesperjob>
+    <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/prism_ana_nue_intr_&my_version;_2</outdir>
+    <workdir>&PNFSpath;grid_workdir_sbnd/ob_on</workdir>
+    <numjobs>100</numjobs>
+    <datatier>generated</datatier>
+    <memory>2000</memory>
+    <jobsub>  --expected-lifetime=2h -Q --generate-email-summary </jobsub>
+    <disk>10GB</disk>
+  </stage>
+
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
