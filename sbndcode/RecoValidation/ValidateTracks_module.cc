@@ -91,9 +91,9 @@ private:
   art::ServiceHandle<cheat::ParticleInventoryService> particleInventory;
   // Variables to fill the output tree with
   unsigned int fEventID;
-  int mctruth_pdg;
-  bool mctruth_isnc;
-  bool mctruth_iscc;
+  std::vector<int> *mctruth_pdg;
+  std::vector<bool> *mctruth_isnc;
+  std::vector<bool> *mctruth_iscc;
 
   // Truth
   // --- tracks
@@ -134,7 +134,14 @@ private:
   std::vector<int>  *pfpart_id;
   std::vector<int>  *pfpart_pdg;
   std::vector<bool> *pfpart_isprimary;
+  // // -- clusters
+  std::vector<int>   *cluster_id;
+  std::vector<int>   *cluster_nhits;
+  std::vector<float> *cluster_width;
+  std::vector<int>   *cluster_plane;
   // --- tracks
+  std::vector<int>   *track_nspoints;
+  std::vector<int>   *track_nclusters;
   std::vector<float> *track_lenght;
   std::vector<float> *track_vpoints;
   std::vector<float> *track_startdirphi;
@@ -146,34 +153,20 @@ private:
   std::vector<float> *track_endx;
   std::vector<float> *track_endy;
   std::vector<float> *track_endz;
-  std::vector<int>  *track_nspoints;
-  std::vector<int>  *track_nclusters;
-  std::vector<int>  *track_nhits;
-  std::vector<int>  *cluster_nhits;
+  std::vector<int>   *track_nhits;
   // --- hits
-  // std::vector<raw::TDCtick_t> *hits_starttick;
-  // std::vector<raw::TDCtick_t> *hits_endtick;
-  // std::vector<raw::ChannelID_t> *hits_channel;
-  // std::vector<geo::View_t> *hits_view;
-  // std::vector<geo::WireID> *hits_wireid;
-  // std::vector<int> *hits_planeid;
-  // std::vector<float> *hits_adc;
-  // std::vector<float> *hits_rms;
-  std::vector< std::vector<raw::TDCtick_t>> *hits_starttick;
-  std::vector< std::vector<raw::TDCtick_t>> *hits_endtick;
-  std::vector<raw::ChannelID_t> *hits_channel;
-  std::vector<geo::View_t> *hits_view;
-  std::vector<geo::WireID> *hits_wireid;
-  std::vector< std::vector<int>> *hits_planeid;
-  std::vector< std::vector<float>> *hits_adc;
+  std::vector< std::vector<raw::TDCtick_t>>   *hits_starttick;
+  std::vector< std::vector<raw::TDCtick_t>>   *hits_endtick;
+  std::vector< std::vector<raw::ChannelID_t>> *hits_channel;
+  std::vector< std::vector<geo::View_t>>      *hits_view;
+  std::vector< std::vector<geo::WireID>>      *hits_wireid;
+  std::vector< std::vector<int>>              *hits_planeid;
+  std::vector< std::vector<float>>            *hits_adc;
   std::vector<float> *hits_rms;
   // --- cals should be vector of vector
   std::vector<std::vector<float>> *track_dqdx;
   std::vector<std::vector<float>> *track_dedx;
   std::vector<std::vector<float>> *track_resrange;
-  // std::vector<float> *track_dqdx;
-  // std::vector<float> *track_dedx;
-  // std::vector<float> *track_resrange;
   // --- chi2 should be vector of vector
   std::vector<double> *track_chi2kaon;
   std::vector<double> *track_chi2muon;
@@ -192,7 +185,6 @@ private:
   std::string fGenLabel;
   std::string fCalLabel;
   std::string fPIDLabel;
-
   bool fVerbose;
   // Additional member functions
 };
@@ -202,9 +194,10 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
   // All vectors must be initialized in the class constructer
   // True
-  // mctruth_pdg(nullptr),
-  // mctruth_isnc(nullptr),
-  // mctruth_iscc(nullptr),
+  mctruth_pdg(nullptr),
+  mctruth_isnc(nullptr),
+  mctruth_iscc(nullptr),
+  // MC Particle
   mcpart_pdg_hm(nullptr),
   mcpart_positiont_hm(nullptr),
   mcpart_momentume_hm(nullptr),
@@ -237,7 +230,14 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   pfpart_id(nullptr),
   pfpart_pdg(nullptr),
   pfpart_isprimary(nullptr),
+  // // --- clusters
+  cluster_id(nullptr),
+  cluster_nhits(nullptr),
+  cluster_width(nullptr),
+  cluster_plane(nullptr),
   // --- tracks
+  track_nspoints(nullptr),
+  track_nclusters(nullptr),
   track_lenght(nullptr),
   track_vpoints(nullptr),
   track_startdirphi(nullptr),
@@ -249,10 +249,7 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   track_endx(nullptr),
   track_endy(nullptr),
   track_endz(nullptr),
-  track_nspoints(nullptr),
-  track_nclusters(nullptr),
   track_nhits(nullptr),
-  cluster_nhits(nullptr),
   // --- hits
   hits_starttick(nullptr),
   hits_endtick(nullptr),
@@ -273,9 +270,8 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   track_chi2proton(nullptr),
   track_chi2ndof(nullptr),
   track_pida(nullptr)
-  // --- clusters
 
-{
+  {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   fPFParticleLabel = p.get<std::string>("PFParticleLabel");
   fSpacePointLabel = p.get<std::string>("SpacePointLabel");
@@ -297,56 +293,40 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   fEventID = evt.id().event();
   std::cout << "\n\n====================\n";
   std::cout << "Event ID: " << fEventID << std::endl;
-  /*
+
   // Make sure the vectors are empty and counters set to zero.
   // Truth
-  fPDG->clear();
-  mcpart_position->clear();
-  mcpart_positiont->clear();
-  mcpart_endposition->clear();
-  mcpart_endpositiont->clear();
-  mcpart_momentum->clear();
-  mcpart_momentume->clear();
-  mcpart_momentump->clear();
-  mcpart_momentumpt->clear();
-  mcpart_momentummass->clear();
-  mcpart_momentum->clear();
-  mcpart_momentume->clear();
-  mcpart_momentump->clear();
-  mcpart_momentumpt->clear();
-  mcpart_momentummass->clear();
- */
-  mctruth_pdg = 0;
-  mctruth_isnc = false;
-  mctruth_iscc = false;
-  std::cout << "set mctruth bools";
-  
-  mcpart_pdg_hm->clear();
-  mcpart_positiont_hm->clear();
-  mcpart_momentume_hm->clear();
-  mcpart_trackid_hm  ->clear();
-  mcpart_vx_hm  ->clear();
-  mcpart_vy_hm  ->clear();
-  mcpart_vz_hm  ->clear();
-  mcpart_endx_hm  ->clear();
-  mcpart_endy_hm  ->clear();
-  mcpart_endz_hm  ->clear();
+  mctruth_pdg->clear();
+  mctruth_isnc->clear();
+  mctruth_iscc->clear();
+  mcpart_pdg_hm       ->clear();
+  mcpart_positiont_hm ->clear();
+  mcpart_momentume_hm ->clear();
+  mcpart_trackid_hm   ->clear();
+  mcpart_vx_hm        ->clear();
+  mcpart_vy_hm        ->clear();
+  mcpart_vz_hm        ->clear();
+  mcpart_endx_hm      ->clear();
+  mcpart_endy_hm      ->clear();
+  mcpart_endz_hm      ->clear();
   mcpart_pdg          ->clear();
   mcpart_positiont    ->clear();
-  mcpart_momentum_e    ->clear();
-  mcpart_momentum_p    ->clear();
-  mcpart_momentum_pt   ->clear();
-  mcpart_momentum_mass ->clear();
+  mcpart_momentum_e   ->clear();
+  mcpart_momentum_p   ->clear();
+  mcpart_momentum_pt  ->clear();
+  mcpart_momentum_mass->clear();
   mcpart_trackid      ->clear();
   mcpart_g4id         ->clear();
-  std::cout << "cleared mcpart";
-
   // Reco
   pfpart_number = 0;
   pfpart_ndaughthers ->clear();
-  pfpart_id   ->clear();
-  pfpart_pdg  ->clear();
+  pfpart_id          ->clear();
+  pfpart_pdg         ->clear();
   pfpart_isprimary   ->clear();
+  cluster_id    ->clear();
+  cluster_nhits ->clear();
+  cluster_width ->clear();
+  cluster_plane ->clear();
 
   track_lenght       ->clear();
   track_vpoints      ->clear();
@@ -363,7 +343,6 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   track_nclusters    ->clear();
   track_nhits        ->clear();
 
-  cluster_nhits  ->clear();
   hits_starttick ->clear();
   hits_endtick   ->clear();
   hits_planeid   ->clear();
@@ -401,18 +380,13 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   }
 
   if(fVerbose){std::cout << "mctruths size: " << mctruths.size() << ", mcparts size: " << mcparts.size() << std::endl;}
-  const simb::MCNeutrino& nu = mctruths[0]->GetNeutrino();
-  mctruth_isnc = nu.CCNC();
-  mctruth_iscc = !nu.CCNC();
-  mctruth_pdg = nu.Nu().PdgCode();
-/*
-  for(const art::Ptr<simb::MCParticle> &part : mcparts){
-    mcpart_pdg->push_back(part->PdgCode());
-    mcpart_positiont->push_back(part->Position().T());
-    mcpart_momentume->push_back(part->Momentum().E());
-    mcpart_trackid->push_back(part->TrackId());
+  //const simb::MCNeutrino& nu = mctruths[0]->GetNeutrino();
+  for(const auto& mctruth: mctruths){
+  	const simb::MCNeutrino nu = mctruth->GetNeutrino();
+  	mctruth_pdg->push_back(nu.Nu().PdgCode());
+  	mctruth_isnc->push_back(nu.CCNC());
+  	mctruth_iscc->push_back(!nu.CCNC());
   }
-*/
   //List the particles in the event
   const sim::ParticleList& particles = particleInventory->ParticleList();
   for(const auto& particle: particles) {
@@ -430,16 +404,16 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Reco
   // Handles
   art::Handle< std::vector<recob::PFParticle> > pfpHandle;
-  art::Handle< std::vector<recob::Track> > trackHandle;
-  art::Handle< std::vector<recob::Cluster> > clusterHandle;
-  art::Handle< std::vector<recob::Hit> > hitHandle;
   art::Handle< std::vector<recob::SpacePoint> > spointHandle;
+  art::Handle< std::vector<recob::Cluster> > clusterHandle;
+  art::Handle< std::vector<recob::Track> > trackHandle;
+  art::Handle< std::vector<recob::Hit> > hitHandle;
   // Object vectors
   std::vector< art::Ptr<recob::PFParticle> > pfps;
-  std::vector< art::Ptr<recob::Track> > tracks;
-  std::vector< art::Ptr<recob::Cluster> > clusters;
-  std::vector< art::Ptr<recob::Hit> > hits;
   std::vector< art::Ptr<recob::SpacePoint> > spoints;
+  std::vector< art::Ptr<recob::Cluster> > clusters;
+  std::vector< art::Ptr<recob::Track> > tracks;
+  std::vector< art::Ptr<recob::Hit> > hits;
 
   if(evt.getByLabel(fPFParticleLabel, pfpHandle)){ // Make sure the handle is valid
   	if (!pfpHandle.isValid()) {
@@ -455,19 +429,19 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     }
     art::fill_ptr_vector(spoints, spointHandle);
   }
-  if(evt.getByLabel(fTrackLabel, trackHandle)){
-  	if (!pfpHandle.isValid()) {
-        if(fVerbose){std::cout << "trackHandle not valid" << std::endl;}
-        return;
-    }
-    art::fill_ptr_vector(tracks, trackHandle);
-  }
   if(evt.getByLabel(fClusterLabel, clusterHandle)){
   	if (!pfpHandle.isValid()) {
         if(fVerbose){std::cout << "clusterHandle not valid" << std::endl;}
         return;
     }
   	art::fill_ptr_vector(clusters, clusterHandle);
+  }
+  if(evt.getByLabel(fTrackLabel, trackHandle)){
+  	if (!pfpHandle.isValid()) {
+        if(fVerbose){std::cout << "trackHandle not valid" << std::endl;}
+        return;
+    }
+    art::fill_ptr_vector(tracks, trackHandle);
   }
   if(evt.getByLabel(fHitLabel, hitHandle)){
   	if (!pfpHandle.isValid()) {
@@ -488,13 +462,13 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Get the vector of tracks for each PFParticle via association
   // The vector size of associated tracks to a single PFParticle
   // should be 0 or 1 as a PFP will be either a shower or a track
-  art::FindManyP<recob::Track> trackAssn(pfps, evt, fTrackLabel);
   art::FindManyP<recob::SpacePoint> spointAssn(pfps, evt, fSpacePointLabel);
-  art::FindManyP<recob::Cluster> clusterAssn(pfps, evt, fPFParticleLabel);
-  art::FindManyP<recob::Hit> hitAssn(tracks, evt, fTrackLabel);
-  art::FindManyP<recob::Hit> hitClusterAssn(clusters, evt, fHitLabel);
+  art::FindManyP<recob::Cluster>    clusterAssn(pfps, evt, fPFParticleLabel);
+  art::FindManyP<recob::Hit>        clusterhitAssn(clusters, evt, fHitLabel);
+  art::FindManyP<recob::Track>      trackAssn(pfps, evt, fTrackLabel);
+  art::FindManyP<recob::Hit>        hitAssn(tracks, evt, fTrackLabel);
   art::FindManyP<anab::Calorimetry> calAssn(tracks, evt, fCalLabel);
-  art::FindManyP<anab::ParticleID> pidAssn(tracks, evt, fPIDLabel);
+  art::FindManyP<anab::ParticleID>  pidAssn(tracks, evt, fPIDLabel);
   // Find the neutrino ID
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
 
@@ -525,12 +499,13 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     const std::vector< art::Ptr< recob::Cluster> > thisclusters = clusterAssn.at(pfp.key());
     if(fVerbose){std::cout << "thisclusters.size(): " << thisclusters.size() << std::endl;}
     for (const auto& cluster: thisclusters){
-    	const std::vector< art::Ptr< recob::Hit> > thishits = hitClusterAssn.at(cluster.key());
-    	if(fVerbose){std::cout << "thishits.size(): " << thishits.size() << std::endl;}
-    	cluster_hits.insert(cluster_hits.end(), thishits.begin(), thishits.end());
-    	cluster_nhits->push_back(thishits.size());
+    	cluster_id->push_back(cluster->ID());
+    	cluster_nhits->push_back(cluster->NHits());
+    	cluster_width->push_back(cluster->Width());
+    	if(cluster->hasPlane()){
+    		cluster_plane->push_back(cluster->Plane().Plane);
+    	}
     }
-    track_nhits->push_back(cluster_hits.size());
     track_nclusters->push_back(thisclusters.size());
 
 
@@ -559,28 +534,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       track_endy->push_back(tracks.at(0)->End().Y());
       track_endz->push_back(tracks.at(0)->End().Z());
 
-      // const std::vector<art::Ptr<recob::SpacePoint>> spoints = spointAssn.at(tracks[0].key());
-      // if(spoints.empty()){
-      // 	track_nspoints->push_back(0);
-      // 	std::cout << "empty space point";
-      // }
-      // else{
-      // 	track_nspoints->push_back(spoints.size());
-      // 	std::cout << "found space point";
-      // }
-
-      // // Get the hits from the track by accessing the clusters
-      // std::vector<art::Ptr<recob::Hit> > cluster_hits;
-      // const std::vector< art::Ptr< recob::Cluster> > thisclusters = clusterAssn.at(tracks[0].key());
-      // for (const auto& cluster: thisclusters){
-      //   const std::vector< art::Ptr< recob::Hit> > thishits = hitAssn.at(cluster.key());
-      //   cluster_hits.insert(cluster_hits.end(), thishits.begin(), thishits.end());
-      //   cluster_nhits->push_back(thishits.size());
-      // }
-      // track_nhits->push_back(cluster_hits.size());
-      // track_nclusters->push_back(thisclusters.size());
-
-      // Get the hits associated to the track directly
+      // Get the hits associated to the track
       const std::vector<art::Ptr<recob::Hit>> trackhits = hitAssn.at(tracks[0].key());
       track_nhits->push_back(trackhits.size());
       if(trackhits.empty()) continue;
@@ -593,21 +547,11 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
         temp_end.push_back(hit->EndTick());
         temp_planeid.push_back(hit->WireID().Plane);
         temp_adc.push_back(hit->SummedADC());
-      /*
-        hits_starttick->push_back(hit->StartTick());
-        hits_endtick->push_back(hit->EndTick());
-        hits_planeid->push_back(hit->WireID().Plane);
-        hits_adc->push_back(hit->SummedADC());
-        // hits_channel->push_back(hit->Channel());
-        // hits_view->push_back(hit->View());
-        // hits_wireid->push_back(hit->WireID());
-        // hits_rms->push_back(hit->RMS());
-        */
       } // hits
-      hits_starttick  ->push_back(temp_start);
-      hits_endtick    ->push_back(temp_end);
-      hits_planeid ->push_back(temp_planeid);
-      hits_adc     ->push_back(temp_adc);  
+      hits_starttick ->push_back(temp_start);
+      hits_endtick   ->push_back(temp_end);
+      hits_planeid   ->push_back(temp_planeid);
+      hits_adc       ->push_back(temp_adc);  
 
       // Use the hits to get the G4ID
       auto this_g4id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, true); // rollupUnsavedIDs
@@ -660,7 +604,6 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
           track_chi2ndof->push_back(pid->Ndf());
           track_pida->push_back(pid->PIDA());
         }
-
       }
 
     } // tracks
@@ -707,6 +650,10 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("pfpart_ndaughthers", &pfpart_ndaughthers);
   fTree->Branch("pfpart_id",          &pfpart_id);
   fTree->Branch("pfpart_pdg",         &pfpart_pdg);
+  fTree->Branch("cluster_id",        &cluster_id);
+  fTree->Branch("cluster_nhits",     &cluster_nhits);
+  fTree->Branch("cluster_width",     &cluster_width);
+  fTree->Branch("cluster_plane",     &cluster_plane);
   fTree->Branch("track_nspoints",    &track_nspoints);
   fTree->Branch("track_nclusters",   &track_nclusters);
   fTree->Branch("track_lenght",      &track_lenght);
@@ -721,7 +668,6 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("track_endy",        &track_endy);
   fTree->Branch("track_endz",        &track_endz);
   fTree->Branch("track_nhits",       &track_nhits);
-  fTree->Branch("cluster_hits",      &cluster_nhits);
   fTree->Branch("hits_starttick",    &hits_starttick);
   fTree->Branch("hits_endtick",      &hits_endtick);
   fTree->Branch("hits_planeid",      &hits_planeid);

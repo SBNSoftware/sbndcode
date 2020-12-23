@@ -14,7 +14,7 @@ validatetracks_sbnd:
 	CalLabel:"pandoraCalo"
 	PIDLabel:"pandoraPid"
 
-	Verbose:false
+	Verbose:true
 }
 
 END_PROLOG
