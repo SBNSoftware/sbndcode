@@ -74,15 +74,30 @@ namespace opdet {
       sim::SimPhotons const& simphotons,
       std::vector<short unsigned int>& waveform,
       std::string pdtype,
-      std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS,
       double start_time,
       unsigned n_sample);
+
+    void ConstructWaveformCoatedPMT(
+      int ch,
+      std::vector<short unsigned int>& waveform,
+      std::unordered_map<int, sim::SimPhotons>& DirectPhotonsMap,
+      std::unordered_map<int, sim::SimPhotons>& ReflectedPhotonsMap,
+      double start_time,
+      unsigned n_sample);
+
     void ConstructWaveformLite(
       int ch,
       sim::SimPhotonsLite const& litesimphotons,
       std::vector<short unsigned int>& waveform,
       std::string pdtype,
-      std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS,
+      double start_time,
+      unsigned n_sample);
+
+    void ConstructWaveformLiteCoatedPMT(
+      int ch,
+      std::vector<short unsigned int>& waveform,
+      std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
+      std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap,
       double start_time,
       unsigned n_sample);
 
@@ -121,15 +136,25 @@ namespace opdet {
       double t_min,
       std::vector<double>& wave,
       int ch,
-      std::string pdtype,
-      std::unordered_map<int, sim::SimPhotons>& directPhotonsOnPMTS);
+      std::string pdtype);
+    void CreatePDWaveformCoatedPMT(
+      int ch,
+      double t_min,
+      std::vector<double>& wave,
+      std::unordered_map<int, sim::SimPhotons>& DirectPhotonsMap,
+      std::unordered_map<int, sim::SimPhotons>& ReflectedPhotonsMap);
     void CreatePDWaveformLite(
       sim::SimPhotonsLite const& litesimphotons,
       double t_min,
       std::vector<double>& wave,
       int ch,
-      std::string pdtype,
-      std::unordered_map<int, sim::SimPhotonsLite>& directPhotonsOnPMTS);
+      std::string pdtype);
+    void CreatePDWaveformLiteCoatedPMT(
+      int ch,
+      double t_min,
+      std::vector<double>& wave,
+      std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
+      std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
     void AddLineNoise(std::vector<double>& wave); //add noise to baseline
     void AddDarkNoise(std::vector<double>& wave); //add dark noise

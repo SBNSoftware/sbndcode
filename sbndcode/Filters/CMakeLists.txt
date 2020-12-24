@@ -14,7 +14,7 @@ art_make(
                            nusimdata_SimulationBase
                            sbndcode_CRT
                            sbndcode_CRTData
-                           sbndcode_CRTProducts
+                           sbnobj_Common_CRT
                            sbndcode_CRTUtils
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_MODULES}

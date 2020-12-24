@@ -1,6 +1,4 @@
-
-#include "NuAnaAlg.h"
-
+#include "sbndcode/MCTruthExtractor/alg/NuAnaAlg.h"
 ////#define CUSTOM_NUTOOLS
 
 namespace sbnd{
@@ -14,7 +12,7 @@ namespace sbnd{
   // }
 
   void NuAnaAlg::configureGeometry(art::ServiceHandle<geo::Geometry> geom){
-  
+
     xlow  = - geom -> DetHalfWidth();
     xhigh = geom -> DetHalfWidth();
     ylow  = - geom -> DetHalfHeight();
@@ -36,7 +34,7 @@ namespace sbnd{
   }
 
 /**
-* 
+*
 * This function configures the reweighting machinery.  I am guess that,
 * due to the overhead in configuring the genie reweighting, it's faster
 * to make one reweight object for each weight needed.
@@ -54,66 +52,66 @@ namespace sbnd{
     //             << " equal to the number of boundaries (range).\n";
     //   exit(-1);
     // }
- 
+
     // don't forget the last vector with all of the weights
     reweightVector.back().resize(reweightingSigmas.front().size());
     for (auto & ptr : reweightVector.back()) ptr = new rwgt::NuReweight;
 
     for (unsigned int i_weight = 0; i_weight < reweightingSigmas.front().size(); ++i_weight)
     {
-      // reweightVector.back().at(i_weight) 
+      // reweightVector.back().at(i_weight)
       //     -> ReweightNCEL(reweightingSigmas[kNCEL][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightQEMA(reweightingSigmas[kQEMA][i_weight]);
-      // reweightVector.back().at(i_weight) 
+      // reweightVector.back().at(i_weight)
       //     -> ReweightQEVec(reweightingSigmas[kQEVec][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightResGanged(reweightingSigmas[kResGanged][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightCCRes(reweightingSigmas[kCCRes][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightNCRes(reweightingSigmas[kNCRes][i_weight]);
-      // reweightVector.back().at(i_weight) 
+      // reweightVector.back().at(i_weight)
           // -> ReweightCoh(reweightingSigmas[kCoh][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightNonResRvp1pi(reweightingSigmas[kNonResRvp1pi][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightNonResRvbarp1pi(reweightingSigmas[kNonResRvbarp1pi][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightNonResRvp2pi(reweightingSigmas[kNonResRvp2pi][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightNonResRvbarp2pi(reweightingSigmas[kNonResRvbarp2pi][i_weight]);
-      // reweightVector.back().at(i_weight) 
+      // reweightVector.back().at(i_weight)
           // -> ReweightResDecay(reweightingSigmas[kResDecay][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightNC(reweightingSigmas[kNC][i_weight]);
-      // reweightVector.back().at(i_weight) 
+      // reweightVector.back().at(i_weight)
           // -> ReweightDIS(reweightingSigmas[kDIS][i_weight]);
-      reweightVector.back().at(i_weight) 
+      reweightVector.back().at(i_weight)
           -> ReweightDISnucl(reweightingSigmas[kDISnucl][i_weight]);
-      // reweightVector.back().at(i_weight) 
+      // reweightVector.back().at(i_weight)
       //     -> ReweightAGKY(reweightingSigmas[kAGKY][i_weight]);
     }
 
 
     // loop over the physical knobs and expand to the correct number of weights
     for (unsigned int i_reweightingKnob = 0;
-         i_reweightingKnob < reweightVector.size()-1; 
-         i_reweightingKnob++) 
+         i_reweightingKnob < reweightVector.size()-1;
+         i_reweightingKnob++)
     {
 
-      // resize this row to accomodate all of the weight points 
+      // resize this row to accomodate all of the weight points
       reweightVector[i_reweightingKnob].resize(
             reweightingSigmas[i_reweightingKnob].size());
 
-      for (unsigned int weight_point = 0; 
-           weight_point < reweightingSigmas[i_reweightingKnob].size(); 
+      for (unsigned int weight_point = 0;
+           weight_point < reweightingSigmas[i_reweightingKnob].size();
            weight_point++){
 
         // Figure out what is the value going in to this reweight
-        // double stepSize = (reweightingSigmas[i_reweightingKnob] 
+        // double stepSize = (reweightingSigmas[i_reweightingKnob]
         //                - rangeLow[i_reweightingKnob])/(nWeights-1);
-        // double reweightingValue = rangeLow[i_reweightingKnob] 
+        // double reweightingValue = rangeLow[i_reweightingKnob]
         //                         + weight_point*stepSize;
 
         reweightVector[i_reweightingKnob][weight_point] = new rwgt::NuReweight;
@@ -217,7 +215,7 @@ namespace sbnd{
 
     TRandom rand;
     rand.SetSeed(RandSeed);
-    
+
     reweightingSigmas.resize(kNReWeights);
     for (unsigned int i = 0; i < reweightingSigmas.size(); ++i)
     {
@@ -275,18 +273,18 @@ namespace sbnd{
            i_reweightingKnob < reweightVector[i_weight].size();
            i_reweightingKnob ++)
       {
-        weights[i_weight][i_reweightingKnob] 
-          = reweightVector[i_weight][i_reweightingKnob] 
+        weights[i_weight][i_reweightingKnob]
+          = reweightVector[i_weight][i_reweightingKnob]
             -> CalcWeight(*mctruth,*gtruth);
       }
     }
-    
+
     return;
   }
 
 
   // get the basic neutrino info:
-  void NuAnaAlg::packNeutrinoInfo(simb::MCNeutrino * neutrino, 
+  void NuAnaAlg::packNeutrinoInfo(simb::MCNeutrino * neutrino,
                                   int& nuchan,
                                   int& inno,
                                   double& enugen,
@@ -306,7 +304,7 @@ namespace sbnd{
     vertex.resize(3);
 
     // 1000 is the offset value used for NUANCE
-    nuchan = (neutrino->InteractionType() - 1000); 
+    nuchan = (neutrino->InteractionType() - 1000);
     inno = neutrino->Nu().PdgCode();
     enugen = neutrino->Nu().E();
     // Is it a CC or NC interaction?
@@ -332,7 +330,7 @@ namespace sbnd{
 
   }
 
-  void NuAnaAlg::packFluxInfo(art::Ptr<simb::MCFlux > flux, 
+  void NuAnaAlg::packFluxInfo(art::Ptr<simb::MCFlux > flux,
                               int& ptype, int& tptype, int& ndecay,
                               std::vector<float>& neutVertexInWindow,
                               std::vector<float>& ParentVertex,
@@ -412,7 +410,7 @@ namespace sbnd{
           art::Handle< std::vector<simb::MCParticle> > & mclistLARG4,
           int PDG) const
   {
-    
+
     for(unsigned int i = 0; i < mclistLARG4 -> size(); i ++){
       art::Ptr<simb::MCParticle> particle(mclistLARG4,i);
       if ( particle -> PdgCode() == PDG){
@@ -430,17 +428,17 @@ namespace sbnd{
   }
 
   // Method to take in a photon and determine where it started converting.
-  // Looks at the photon's energy at each step.  
+  // Looks at the photon's energy at each step.
   void NuAnaAlg::GetPhotonConversionInfo(art::Ptr<simb::MCParticle> photon,
                                       TLorentzVector& ConversionPos,
                                       TLorentzVector& ConversionMom){
-    // Just loop over the photons Trajectory points in momentum space 
+    // Just loop over the photons Trajectory points in momentum space
     // and wait for a change. If it gets through the whole trajectory,
     // the conversion point must be the end of the trajectory.
-    // When it changed, return the trajectory point immediately 
+    // When it changed, return the trajectory point immediately
     // before to get the last point of the photon that's not converted.
-    
-    // Going to be watching for changes in energy, 
+
+    // Going to be watching for changes in energy,
     // so we'd better know the start energy.
     double E = photon->E(0);
     // std::cout << "Starting Energy is " << E << std::endl;
@@ -454,8 +452,8 @@ namespace sbnd{
     //     << photon->Position().Y() << ", "
     //     << photon->Position().Z() << ", "
     //     << photon->Position().T() << ") " << std::endl;
-    //Catch some special cases first. 
-    if (photon->NumberTrajectoryPoints() == 0) return;   
+    //Catch some special cases first.
+    if (photon->NumberTrajectoryPoints() == 0) return;
     if (photon->NumberTrajectoryPoints() == 1){
       ConversionPos = photon->EndPosition();
       ConversionMom = photon->EndMomentum();
@@ -477,12 +475,12 @@ namespace sbnd{
       if (photon->E(i) != E) {
         //then the energy is different.  Must be scattering or something.
         //set the conversion points and bail!
-        ConversionPos = photon->Position(i); 
+        ConversionPos = photon->Position(i);
         ConversionMom = photon->Momentum(i-1); //<- This i OK since i starts at 1.
     //      std::cout << "Conversion Pos is " << ConversionPos << std::endl;
         return;
       }
-    } 
+    }
 
     // If we made it out here, the photon must have ended without changing energy.
     // So send back end position, momentum.
@@ -525,11 +523,11 @@ namespace sbnd{
       miscPhotonConversionPos.reserve(NGamma);
       miscPhotonConversionMom.reserve(NGamma);
 
-      // some counting variables to ensure everything is done correctly 
+      // some counting variables to ensure everything is done correctly
       int nPrimaryLepton(0);  // should be == 1 at the end
       int nPrimaryGamma(0);   // should be == NGamma at the end
       int nPrimaryPi0(0);     // should be == NPi0FinalState
-      
+
       chargedPionPos.resize(NChargedPions);
       chargedPionMom.resize(NChargedPions);
 
@@ -541,7 +539,7 @@ namespace sbnd{
 
 
         if (particle -> Mother() == 0 ){ // then this is a primary
-          // std::cout << "On particle " << particle -> TrackId() 
+          // std::cout << "On particle " << particle -> TrackId()
           //           << " with PDG " << particle -> PdgCode() << std::endl;
 
           // For older files, set the nPrimaryLepton up since it didn't track neutrinos
@@ -589,7 +587,7 @@ namespace sbnd{
             if ( particle -> NumberDaughters() == 2){
               // Get the info:
               TLorentzVector conversionPoint, conversionMom;
-              art::Ptr<simb::MCParticle> daughter0 
+              art::Ptr<simb::MCParticle> daughter0
                   = getParticleByID(mclarg4,particle->Daughter(0));
               GetPhotonConversionInfo(daughter0, conversionPoint,conversionMom);
               // Pack it into the vectors
@@ -606,7 +604,7 @@ namespace sbnd{
               p2PhotonConversionPos.push_back(empty4Vector);
               p2PhotonConversionMom.push_back(empty4Vector);
               pack4Vector(conversionPoint,p2PhotonConversionPos.back());
-              pack4Vector(conversionMom,  p2PhotonConversionMom.back());              
+              pack4Vector(conversionMom,  p2PhotonConversionMom.back());
             }
             else{ // this is the "dalitz" decay
               // Only take the photon, but be sure to find it
@@ -614,7 +612,7 @@ namespace sbnd{
               p2PhotonConversionPos.push_back(empty4Vector);
               p2PhotonConversionMom.push_back(empty4Vector);
               for (int daughter = 0; daughter < 3; daughter ++ ){
-                art::Ptr<simb::MCParticle> daughterParticle 
+                art::Ptr<simb::MCParticle> daughterParticle
                   = getParticleByID(mclarg4,particle->Daughter(daughter));
                 if (daughterParticle->PdgCode() == 22) {
                   GetPhotonConversionInfo(daughterParticle,
@@ -628,7 +626,7 @@ namespace sbnd{
                 }
               }
             }
-            
+
           }
 
           if (abs(particle -> PdgCode()) == 211)  // charged pion
@@ -670,7 +668,7 @@ namespace sbnd{
     }
   } // end of packLarg4Info
 
-  void NuAnaAlg::pack4Vector(const TLorentzVector& input, 
+  void NuAnaAlg::pack4Vector(const TLorentzVector& input,
                              std::vector<float>& output) const{
     if (output.size() != 4) output.resize(4);
     output[0] = input.E();
@@ -679,7 +677,7 @@ namespace sbnd{
     output[3] = input.Z();
     return;
   }
-  void NuAnaAlg::pack3Vector(const TVector3& input, 
+  void NuAnaAlg::pack3Vector(const TVector3& input,
                              std::vector<float>& output) const{
     if (output.size() != 3) output.resize(3);
     output[0] = input.X();
@@ -694,8 +692,8 @@ namespace sbnd{
                             std::vector<std::vector<float>>& eventReweight)
     {
       // This is getting the flux weights from the flux object.
-      // It's a total hack, it's hardcoded, and requires a custom version of 
-      // the nutools software.  
+      // It's a total hack, it's hardcoded, and requires a custom version of
+      // the nutools software.
       eventReweight.clear();
       eventReweight.resize(7);
       for (int i = 0; i < 7; i ++)
@@ -718,21 +716,8 @@ namespace sbnd{
       std::cerr << "You are asking to pack flux weights but the version "
                 << "of nutools you use does not appear to support it.\n";
       return;
-    }   
+    }
 
 #endif
 
 } // end of namespace sbnd
-
-
-
-
-
-
-
-
-
-
-
-
-

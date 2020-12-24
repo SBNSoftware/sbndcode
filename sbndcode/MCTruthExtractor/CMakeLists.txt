@@ -1,44 +1,11 @@
-#
-#art_make_library( LIBRARY_NAME NuAna
-#                  SOURCE NuAna_module
-#                  LIBRARIES
-#                        NuAna
-#                        Geometry
-#                        Geometry_service
-#                        Simulation
-#                        Utilities
-#                        TimeService_service
-#                        Filters
-#                        RawData
-#                        SignalShapingServiceT1034_service
-#                        nugen_NuReweight_art
-#                        nusimdata_SimulationBase
-#                        ${ART_FRAMEWORK_CORE}
-#                        ${ART_FRAMEWORK_PRINCIPAL}
-#                        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-#                        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-#                        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-#                        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-#                        art_Persistency_Common canvas
-#                        art_Persistency_Provenance canvas
-#                        art_Utilities canvas
-#                        ${MF_MESSAGELOGGER}
-#                        
-#                        ${FHICLCPP}
-#                        cetlib cetlib_except
-#                        ${CLHEP}
-#                        ${ROOT_BASIC_LIB_LIST}
-#)
-
-# simple_plugin()
-
 add_subdirectory(alg)
 include_directories ( $ENV{GENIE_INC}/GENIE )
 
 art_make(
-          LIBRARY_NAME Ntuples          
-          MODULE_LIBRARIES 
-            NuAnaAlg
+            LIBRARY_NAME Ntuples
+            MODULE_LIBRARIES
+            sbndcode_MCTruthExtractor_alg
+
             larcore_Geometry_Geometry_service
             # TimeService_service
             ${ART_ROOT_IO_TFILESERVICE_SERVICE}
@@ -59,7 +26,7 @@ art_make(
             art_Utilities
             canvas
             ${MF_MESSAGELOGGER}
-            
+
             ${FHICLCPP}
             cetlib cetlib_except
             ${CLHEP}
@@ -68,5 +35,3 @@ art_make(
 
 install_headers()
 install_fhicl()
-# install_source()
-

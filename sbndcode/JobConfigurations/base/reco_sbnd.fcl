@@ -11,6 +11,7 @@
 #
 
 #include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 #include "larfft_sbnd.fcl"
@@ -44,9 +45,11 @@
 #include "crtt0matchingalg_sbnd.fcl"
 #include "crttrackmatchingalg_sbnd.fcl"
 
-#Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018  
-##include "backtrackerservice.fcl" 
-#include "particleinventoryservice.fcl"
+#include "opt0finder_sbnd.fcl"
+
+#include "scecorrections.fcl"
+#include "flashmatch_sbnd.fcl"
+
 
 process_name: Reco
 
@@ -58,12 +61,9 @@ services:
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
                              @table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
+                             @table::sbnd_g4_services           # from simulationservices_sbnd.fcl; required by opt0finder
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
-
-  #Legacy code in EMSHOWER uses the backtracker to be removed after the SBN Workshop March 2018 
-#BackTrackerService:  @local::standard_backtrackerservice 
-#ParticleInventoryService: @local::standard_particleinventoryservice
 }
 
 #source is now a root file
@@ -103,7 +103,7 @@ physics:
 #  rffhit:              @local::sbnd_rffhitfinder
 
   ### corner-finder
-  #corner:              @local::standard_cornerfinder    
+  #corner:              @local::standard_cornerfinder
 
   ### cluster-finder producers
   #fuzzycluster:        @local::sbnd_fuzzycluster
@@ -117,16 +117,26 @@ physics:
   pandoraTrack:        @local::sbnd_pandoraTrackCreation
   pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
   pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
-  pandoraCalo:         @local::sbnd_calomc                                        
-  pandoraPid:          @local::sbnd_chi2pid  
+  pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
+  pandoraCalo:         @local::sbnd_calomc
+  pandoraPid:          @local::sbnd_chi2pid
+
+  pandoraSCECalo:      @local::sbnd_gnewcalomc
+  pandoraSCEPid:       @local::sbnd_chi2pid
+
+  ### SCE-aware pandora:
+  pandoraSCE:          @local::scecorrection
+  pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
+  pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
+  pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
 
   ### track-finder producers
   #trackkalmanhit:      @local::sbnd_track3Dkalmanhit
   #spacepointfinder:    @local::sbnd_spacepoint_finder
   #trackkalsps:         @local::sbnd_kalman
-  
+
   pmalgtrackmaker:     @local::sbnd_pmalgtrackmaker
-    
+
   ### shower-finder producers
   emshower:            @local::sbnd_emshower
 
@@ -144,9 +154,14 @@ physics:
   crthitt0:            @local::sbnd_crthitt0producer
   crttrackt0:          @local::sbnd_crttrackt0producer
 
+  ### flash-matching
+  fmatch:              @local::sbnd_simple_flashmatch
+  fmatchSCE:           @local::sbnd_simple_flashmatch
+  opt0finder:          @local::sbnd_opt0_finder_one_to_many
+  opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
  }
 
- #define the producer and filter modules for this path, order matters, 
+ #define the producer and filter modules for this path, order matters,
  #filters reject all following items.  see lines starting physics.producers below
  reco1: [ rns
          , ophitpmt
@@ -166,8 +181,8 @@ physics:
 #         , linecluster
    #      , cccluster
    #      , spacepts,
-   #       , blurredcluster 
-          , pandora, pandoraTrack, pandoraShower, pandoraShowerLegacy
+   #       , blurredcluster
+          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
          , pmalgtrackmaker
@@ -180,17 +195,23 @@ physics:
          , crttrack
          , crthitt0
          , crttrackt0
+         , fmatch
  ]
 
- #define the output stream, there could be more than one if using filters 
+ # The new flashmatching will eventually be part of reco2, but for now
+ # we are keeping it separate here so we can easily remove if from the
+ # reco fcl files.
+ opticalt0: [ opt0finder ]
+
+ #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
 
- #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #trigger_paths is a keyword and contains the paths that modify the art::event,
  #trigger_paths is defined outside of the physics scope (below) as we want to merge sequences together
 
- #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #end_paths is a keyword and contains the paths that do not modify the art::Event,
  #ie analyzers and output streams.  these all run simultaneously
- end_paths:     [stream1]  
+ end_paths:     [stream1]
 }
 
 #block to define where the output goes.  if you defined a filter in the physics
@@ -208,8 +229,12 @@ outputs:
 
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
-                    @sequence::physics.reco2 ]
-physics.trigger_paths: [ fullreco ]                   
+                    @sequence::physics.reco2,
+                    opt0finder]
+physics.fullreco_noflashmatch: [ @sequence::physics.reco1,
+                                 @sequence::physics.reco2]
+
+physics.trigger_paths: [ fullreco ]
 
 
 
@@ -238,18 +263,32 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
+physics.producers.pandoraShowerSBN.PFParticleLabel:              "pandora"
 physics.producers.pandoraShowerLegacy.PFParticleLabel:           "pandora"
 
-### Added for Rhiannon's analysis work                                            
-physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"   
-physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"        
-physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"   
-physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"    
-                                                                                   
+### Added for Rhiannon's analysis work
+physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
+physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"
+physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
+physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
 
-#physics.producers.trackkalmanhit.HitModuleLabel:		"gaushit"
-#physics.producers.trackkalmanhit.ClusterModuleLabel:		"fuzzycluster"
-#physics.producers.trackkalmanhit.ClusterModuleLabel:		"cccluster"
+physics.producers.pandoraSCECalo.TrackModuleLabel:               "pandoraSCETrack"
+physics.producers.pandoraSCECalo.FieldDistortion:                true
+physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
+physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
+physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
+physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
+
+physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
+
+physics.producers.fmatchSCE.PandoraProducer: "pandoraSCE"
+physics.producers.fmatchSCE.TrackProducer: "pandoraSCETrack"
+physics.producers.fmatchSCE.CaloProducer: "pandoraSCECalo"
+physics.producers.fmatchSCE.SpacePointProducer: "pandoraSCE"
+
+#physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
+#physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
+#physics.producers.trackkalmanhit.ClusterModuleLabel:   "cccluster"
 
 physics.producers.pmalgtrackmaker.HitModuleLabel:               "linecluster"
 physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "linecluster"
@@ -277,3 +316,13 @@ physics.producers.emshower.ClusterModuleLabel:                  "pandora"
 physics.producers.emshower.HitsModuleLabel:                     "linecluster"
 physics.producers.emshower.PFParticleModuleLabel:                "pandora"
 physics.producers.emshower.TrackModuleLabel:                    "pmalgtrackmaker"
+
+# Configure the SCE corrections
+# For now: always assume t = 0
+physics.producers.pandoraSCE.T0Labels: []
+physics.producers.pandoraSCE.T0LabelsCorrectT0: []
+physics.producers.pandoraSCE.CorrectNoT0Tag: true
+# point track/shower creation to the SCE pandora
+physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
+physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
+physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"

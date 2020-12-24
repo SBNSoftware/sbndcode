@@ -1,3 +1,5 @@
+add_subdirectory(deprecated)
+
 install_fhicl()
 
 FILE(GLOB fcl_files *.fcl)

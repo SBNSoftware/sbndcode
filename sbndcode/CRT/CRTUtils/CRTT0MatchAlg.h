@@ -38,7 +38,7 @@
 #include "fhiclcpp/types/Atom.h"
 #include "cetlib/pow.h" // cet::sum_of_squares()
 
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/CRT/CRTUtils/TPCGeoUtil.h"
@@ -120,30 +120,30 @@ namespace sbnd{
 
     // Calculate the distance of closest approach (DCA) between the end of a track and a crt hit
     double DistOfClosestApproach(detinfo::DetectorPropertiesData const& detProp,
-                                 TVector3 trackPos, TVector3 trackDir, crt::CRTHit crtHit, int driftDirection, double t0);
+                                 TVector3 trackPos, TVector3 trackDir, sbn::crt::CRTHit crtHit, int driftDirection, double t0);
 
     std::pair<TVector3, TVector3> TrackDirectionAverage(recob::Track track, double frac);
     std::pair<TVector3, TVector3> TrackDirectionAverageFromPoints(recob::Track track, double frac);
 
     // Return the closest CRT hit to a TPC track and the DCA
-    std::pair<crt::CRTHit, double> ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
-                                                 recob::Track tpcTrack, std::pair<double, double> t0MinMax, std::vector<sbnd::crt::CRTHit> crtHits, int driftDirection);
-    std::pair<crt::CRTHit, double> ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
-                                                 recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event);
-    std::pair<crt::CRTHit, double> ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
-                                                 recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits);
+    std::pair<sbn::crt::CRTHit, double> ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
+						      recob::Track tpcTrack, std::pair<double, double> t0MinMax, std::vector<sbn::crt::CRTHit> crtHits, int driftDirection);
+    std::pair<sbn::crt::CRTHit, double> ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
+						      recob::Track tpcTrack, std::vector<sbn::crt::CRTHit> crtHits, const art::Event& event);
+    std::pair<sbn::crt::CRTHit, double> ClosestCRTHit(detinfo::DetectorPropertiesData const& detProp,
+						      recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTHit> crtHits);
 
     // Match track to T0 from CRT hits
     double T0FromCRTHits(detinfo::DetectorPropertiesData const& detProp,
-                         recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event);
+                         recob::Track tpcTrack, std::vector<sbn::crt::CRTHit> crtHits, const art::Event& event);
     double T0FromCRTHits(detinfo::DetectorPropertiesData const& detProp,
-                         recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits);
+                         recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTHit> crtHits);
 
     // Match track to T0 from CRT hits, also return the DCA
     std::pair<double, double> T0AndDCAFromCRTHits(detinfo::DetectorPropertiesData const& detProp,
-                                                  recob::Track tpcTrack, std::vector<sbnd::crt::CRTHit> crtHits, const art::Event& event);
+                                                  recob::Track tpcTrack, std::vector<sbn::crt::CRTHit> crtHits, const art::Event& event);
     std::pair<double, double> T0AndDCAFromCRTHits(detinfo::DetectorPropertiesData const& detProp,
-                                                  recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbnd::crt::CRTHit> crtHits);
+                                                  recob::Track tpcTrack, std::vector<art::Ptr<recob::Hit>> hits, std::vector<sbn::crt::CRTHit> crtHits);
 
 
   private:

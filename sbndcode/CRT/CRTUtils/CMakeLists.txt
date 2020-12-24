@@ -30,7 +30,8 @@ art_make(    LIBRARY_NAME sbndcode_CRTUtils
                            ${ROOT_BASIC_LIB_LIST}
                            ${Boost_SYSTEM_LIBRARY}
                            sbndcode_CRT
-                           sbndcode_CRTProducts
+                           sbnobj_Common_CRT
+                           sbnobj_SBND_CRT
                            sbndcode_GeoWrappers
                            sbndcode_RecoUtils
         )
