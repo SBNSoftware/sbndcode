@@ -2,22 +2,25 @@
 sbnd_simple_flashmatch:{
   module_type: FlashPredict
   Cryostat: 0
+  PandoraProducer: "pandora"
+  SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
   BeamWindowStart: -0.2 # us
   BeamWindowEnd: 2.0 # us
-  ChargeToNPhotonsShower: 1.0
-  ChargeToNPhotonsTrack: 1.0
+  LightWindowStart: -0.01 # us, wrt flash time
+  LightWindowEnd: 0.09 # us, wrt flash time
+  SelectNeutrino: true
+  UseUncoatedPMT: true
+  # UseCalo: false
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
   MakeTree: false
-  SelectNeutrino: true
-  UseUncoatedPMT: true
-  VUVToVIS: 4
-  UseCalo: false
-  LightWindowStart: -0.01 # us, wrt flash time
-  LightWindowEnd: 0.09 # us, wrt flash time
-  PEscale: 1.0
   MinFlashPE: 0.
+  PEscale: 1.0
+  ChargeToNPhotonsShower: 1.0
+  ChargeToNPhotonsTrack: 1.0
+  VUVToVIS: 4
+
   ThresholdTerm: 30.
 
   PDMapAlg: {
