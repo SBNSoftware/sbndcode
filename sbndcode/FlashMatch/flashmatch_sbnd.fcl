@@ -5,12 +5,14 @@ sbnd_simple_flashmatch:{
   PandoraProducer: "pandora"
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
+  OpHitARAProducer: "ophitarapuca"
   BeamWindowStart: -0.2 # us
   BeamWindowEnd: 2.0 # us
   LightWindowStart: -0.01 # us, wrt flash time
   LightWindowEnd: 0.09 # us, wrt flash time
   SelectNeutrino: true
   UseUncoatedPMT: true
+  UseARAPUCAS: false
   # UseCalo: false
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
