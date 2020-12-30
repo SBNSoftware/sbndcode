@@ -26,6 +26,7 @@
 // Additional framework includes
 #include "art_root_io/TFileService.h"
 
+#include "larcore/Geometry/Geometry.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
@@ -82,6 +83,9 @@ public:
   void beginJob() override;
   void endJob() override;
 
+  std::map<geo::PlaneID,int> NumberofPlaneHitsFromTrack(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits); // Returns number of hits at each plane
+  int NumberofHitsFromTrack(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits); //Returns the number of hits in the vector that are associated to the MC track.
+
 private:
 
   // Declare member data here.
@@ -89,43 +93,28 @@ private:
   TTree *fTree;
   // Services
   art::ServiceHandle<cheat::ParticleInventoryService> particleInventory;
+  art::ServiceHandle<geo::Geometry> geom;
   // Variables to fill the output tree with
   unsigned int fEventID;
   std::vector<int> *mctruth_pdg;
+  // Truth
   std::vector<bool> *mctruth_isnc;
   std::vector<bool> *mctruth_iscc;
-
-  // Truth
-  // --- tracks
-  // Truth matching by hand. Does not save all the MCParticles
-  std::vector<int>    *mcpart_pdg_hm;
-  std::vector<double> *mcpart_positiont_hm;
-  std::vector<double> *mcpart_momentume_hm;
-  std::vector<double> *mcpart_trackid_hm;
-  std::vector<double> *mcpart_vx_hm;
-  std::vector<double> *mcpart_vy_hm;
-  std::vector<double> *mcpart_vz_hm;
-  std::vector<double> *mcpart_endx_hm;
-  std::vector<double> *mcpart_endy_hm;
-  std::vector<double> *mcpart_endz_hm;
-  // Truth matching with particle service
+  // MCParticles
+  std::vector<double> *mcpart_trackid;
   std::vector<int>    *mcpart_pdg;
-  std::vector<double> *mcpart_position;
-  std::vector<double> *mcpart_positiont;
-  std::vector<double> *mcpart_endposition;
-  std::vector<double> *mcpart_endpositiont;
-  std::vector<double> *mcpart_momentum;
+  std::vector<int>    *mcpart_ntpoints;
+  std::vector<double> *mcpart_position_t;
   std::vector<double> *mcpart_momentum_e;
   std::vector<double> *mcpart_momentum_p;
   std::vector<double> *mcpart_momentum_pt;
   std::vector<double> *mcpart_momentum_mass;
-  std::vector<double> *mcpart_endmomentum;
-  std::vector<double> *mcpart_endmomentum_e;
-  std::vector<double> *mcpart_endmomentum_p;
-  std::vector<double> *mcpart_endmomentum_pt;
-  std::vector<double> *mcpart_endmomentum_mass;
-  std::vector<int>    *mcpart_trackid;
-  std::vector<int>    *mcpart_g4id;
+  std::vector<double> *mcpart_vx;
+  std::vector<double> *mcpart_vy;
+  std::vector<double> *mcpart_vz;
+  std::vector<double> *mcpart_endx;
+  std::vector<double> *mcpart_endy;
+  std::vector<double> *mcpart_endz;
 
   // Reco
   // --- pfparticles
@@ -198,33 +187,20 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   mctruth_isnc(nullptr),
   mctruth_iscc(nullptr),
   // MC Particle
-  mcpart_pdg_hm(nullptr),
-  mcpart_positiont_hm(nullptr),
-  mcpart_momentume_hm(nullptr),
-  mcpart_trackid_hm(nullptr),
-  mcpart_vx_hm(nullptr),
-  mcpart_vy_hm(nullptr),
-  mcpart_vz_hm(nullptr),
-  mcpart_endx_hm(nullptr),
-  mcpart_endy_hm(nullptr),
-  mcpart_endz_hm(nullptr),
+  mcpart_trackid(nullptr),
   mcpart_pdg(nullptr),
-  mcpart_position(nullptr),
-  mcpart_positiont(nullptr),
-  mcpart_endposition(nullptr),
-  mcpart_endpositiont(nullptr),
-  mcpart_momentum(nullptr),
+  mcpart_ntpoints(nullptr),
+  mcpart_position_t(nullptr),
   mcpart_momentum_e(nullptr),
   mcpart_momentum_p(nullptr),
   mcpart_momentum_pt(nullptr),
   mcpart_momentum_mass(nullptr),
-  mcpart_endmomentum(nullptr),
-  mcpart_endmomentum_e(nullptr),
-  mcpart_endmomentum_p(nullptr),
-  mcpart_endmomentum_pt(nullptr),
-  mcpart_endmomentum_mass(nullptr),
-  mcpart_trackid(nullptr),
-  mcpart_g4id(nullptr),
+  mcpart_vx(nullptr),
+  mcpart_vy(nullptr),
+  mcpart_vz(nullptr),
+  mcpart_endx(nullptr),
+  mcpart_endy(nullptr),
+  mcpart_endz(nullptr),
   // Reco
   pfpart_ndaughthers(nullptr),
   pfpart_id(nullptr),
@@ -299,24 +275,21 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   mctruth_pdg->clear();
   mctruth_isnc->clear();
   mctruth_iscc->clear();
-  mcpart_pdg_hm       ->clear();
-  mcpart_positiont_hm ->clear();
-  mcpart_momentume_hm ->clear();
-  mcpart_trackid_hm   ->clear();
-  mcpart_vx_hm        ->clear();
-  mcpart_vy_hm        ->clear();
-  mcpart_vz_hm        ->clear();
-  mcpart_endx_hm      ->clear();
-  mcpart_endy_hm      ->clear();
-  mcpart_endz_hm      ->clear();
-  mcpart_pdg          ->clear();
-  mcpart_positiont    ->clear();
-  mcpart_momentum_e   ->clear();
-  mcpart_momentum_p   ->clear();
-  mcpart_momentum_pt  ->clear();
-  mcpart_momentum_mass->clear();
-  mcpart_trackid      ->clear();
-  mcpart_g4id         ->clear();
+  // Matched MC Particles
+  mcpart_trackid          ->clear();
+  mcpart_pdg              ->clear();
+  mcpart_ntpoints         ->clear();
+  mcpart_position_t       ->clear();
+  mcpart_momentum_e       ->clear();
+  mcpart_momentum_p       ->clear();
+  mcpart_momentum_pt      ->clear();
+  mcpart_momentum_mass    ->clear();
+  mcpart_vx               ->clear();
+  mcpart_vy               ->clear();
+  mcpart_vz               ->clear();
+  mcpart_endx             ->clear();
+  mcpart_endy             ->clear();
+  mcpart_endz             ->clear();
   // Reco
   pfpart_number = 0;
   pfpart_ndaughthers ->clear();
@@ -370,6 +343,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Object vectors
   std::vector<art::Ptr<simb::MCTruth>> mctruths;
   std::vector<art::Ptr<simb::MCParticle>> mcparts;
+
   if(fVerbose){std::cout << "declared mctruth and mcpart hangles and vectors" << std::endl;}
 
   if(evt.getByLabel(fGenLabel, mctruthHandle)){
@@ -387,18 +361,11 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   	mctruth_isnc->push_back(nu.CCNC());
   	mctruth_iscc->push_back(!nu.CCNC());
   }
-  //List the particles in the event
-  const sim::ParticleList& particles = particleInventory->ParticleList();
-  for(const auto& particle: particles) {
-    const simb::MCParticle* this_particle = particle.second;
-    mcpart_trackid->push_back(this_particle->TrackId());
-    mcpart_pdg->push_back(this_particle->PdgCode());
-    mcpart_positiont->push_back(this_particle->Position().T());
-    mcpart_momentum_e->push_back(this_particle->E());
-    mcpart_momentum_p->push_back(this_particle->P());
-    mcpart_momentum_pt->push_back(this_particle->Pt());
-    mcpart_momentum_mass->push_back(this_particle->Mass());
-  }
+  // //List the particles in the event
+  // const sim::ParticleList& particles = particleInventory->ParticleList();
+  // for(const auto& particle: particles) {
+  //   const simb::MCParticle* this_particle = particle.second;
+  // }
 
   // =========================================================
   // Reco
@@ -470,6 +437,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   art::FindManyP<anab::Calorimetry> calAssn(tracks, evt, fCalLabel);
   art::FindManyP<anab::ParticleID>  pidAssn(tracks, evt, fPIDLabel);
   // Find the neutrino ID
+
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
 
     pfpart_id->push_back(pfp->Self());
@@ -554,25 +522,42 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       hits_adc       ->push_back(temp_adc);  
 
       // Use the hits to get the G4ID
-      auto this_g4id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, true); // rollupUnsavedIDs
+      int this_g4id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, true); // rollupUnsavedIDs
       bool valid_g4id = TruthMatchUtils::Valid(this_g4id);
-      if (!valid_g4id) this_g4id = -5;
-      mcpart_g4id->push_back(this_g4id);
-      // For the truth matching, get the MCParticle which trackId is the same as the G4ID
-      for(const art::Ptr<simb::MCParticle> &part : mcparts){
-        auto temp_trackid = part->TrackId();
-        if(temp_trackid!=this_g4id) continue;
-        mcpart_trackid_hm->push_back(part->TrackId());
-        mcpart_pdg_hm->push_back(part->PdgCode());
-        mcpart_positiont_hm->push_back(part->Position().T());
-        mcpart_momentume_hm->push_back(part->Momentum().E());
-        mcpart_vx_hm->push_back(part->Vx());
-        mcpart_vy_hm->push_back(part->Vy());
-        mcpart_vz_hm->push_back(part->Vz());
-        mcpart_endx_hm->push_back(part->EndY());
-        mcpart_endy_hm->push_back(part->EndY());
-        mcpart_endz_hm->push_back(part->EndZ());
+      if (!valid_g4id){
+      	std::cout << "Unable to find MCParticle matched to this track." << std::endl;
+      	continue;
       }
+      // Use particle inventory service to get the mcparticle contributing to this track
+      // For the truth matching, get the MCParticle which trackid is the same as the g4id
+      const simb::MCParticle *particle = particleInventory->TrackIdToParticle_P(this_g4id);
+      mcpart_trackid->push_back(particle->TrackId());
+      mcpart_pdg->push_back(particle->PdgCode());
+      mcpart_ntpoints->push_back(int(particle->NumberTrajectoryPoints()));
+      mcpart_position_t->push_back(particle->Position().T());
+      mcpart_momentum_e->push_back(particle->Momentum().E());
+      mcpart_momentum_p->push_back(particle->P());
+      mcpart_momentum_pt->push_back(particle->Pt());
+      mcpart_momentum_mass->push_back(particle->Mass());
+      mcpart_vx->push_back(particle->Vx());
+      mcpart_vy->push_back(particle->Vy());
+      mcpart_vz->push_back(particle->Vz());
+      mcpart_endx->push_back(particle->EndY());
+      mcpart_endy->push_back(particle->EndY());
+      mcpart_endz->push_back(particle->EndZ());
+
+      int nsharedhits = 1;
+      // Returns the number of hits in the vector that are associated to the MC track.
+      int ntruehits = NumberofHitsFromTrack(particle->TrackId(), clock_data, trackhits);
+      int nrecohits = trackhits.size();
+      float hitcompleteness = -9999.;
+      float hitpurity = -9999.;
+      if(nrecohits!=0)
+      	hitpurity = float(nsharedhits)/float(nrecohits);
+      if(ntruehits!=0)
+      	hitcompleteness = float(nsharedhits)/float(ntruehits);
+      std::cout << "shared hits: " << nsharedhits << ", recohits: " << nrecohits << ", truehits: " << ntruehits << std::endl;
+      std::cout << "hitpurity: " << hitpurity << ", hitcompleteness: " << hitcompleteness << std::endl;
 
       // Get the calorimetry information associated to this track
       std::vector< art::Ptr<anab::Calorimetry> > trackcals = calAssn.at(tracks[0].key());
@@ -626,24 +611,21 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("mctruth_pdg", 	        &mctruth_pdg);
   fTree->Branch("mctruth_isnc",         &mctruth_isnc);
   fTree->Branch("mctruth_iscc",         &mctruth_iscc);
+  // Matched MCParticle
+  fTree->Branch("mcpart_trackid",       &mcpart_trackid);
   fTree->Branch("mcpart_pdg",           &mcpart_pdg);
-  fTree->Branch("mcpart_positiont",     &mcpart_positiont);
+  fTree->Branch("mcpart_ntpoints",      &mcpart_ntpoints);
+  fTree->Branch("mcpart_position_t",    &mcpart_position_t);
   fTree->Branch("mcpart_momentum_e",    &mcpart_momentum_e);
   fTree->Branch("mcpart_momentum_p",    &mcpart_momentum_p);
   fTree->Branch("mcpart_momentum_pt",   &mcpart_momentum_pt);  
   fTree->Branch("mcpart_momentum_mass", &mcpart_momentum_mass);  
-  fTree->Branch("mcpart_trackid",       &mcpart_trackid);
-  fTree->Branch("mcpart_g4id",          &mcpart_g4id);
-  fTree->Branch("mcpart_pdg_hm",       &mcpart_pdg_hm);
-  fTree->Branch("mcpart_positiont_hm", &mcpart_positiont_hm);
-  fTree->Branch("mcpart_momentume_hm", &mcpart_momentume_hm);
-  fTree->Branch("mcpart_trackid_hm",   &mcpart_trackid_hm);
-  fTree->Branch("mcpart_vx_hm",        &mcpart_vx_hm);
-  fTree->Branch("mcpart_vy_hm",        &mcpart_vy_hm);
-  fTree->Branch("mcpart_vz_hm",        &mcpart_vz_hm);
-  fTree->Branch("mcpart_endx_hm",      &mcpart_endx_hm);
-  fTree->Branch("mcpart_endy_hm",      &mcpart_endy_hm);
-  fTree->Branch("mcpart_endz_hm",      &mcpart_endz_hm);
+  fTree->Branch("mcpart_vx",        &mcpart_vx);
+  fTree->Branch("mcpart_vy",        &mcpart_vy);
+  fTree->Branch("mcpart_vz",        &mcpart_vz);
+  fTree->Branch("mcpart_endx",      &mcpart_endx);
+  fTree->Branch("mcpart_endy",      &mcpart_endy);
+  fTree->Branch("mcpart_endz",      &mcpart_endz);
   // Reco
   fTree->Branch("pfpart_number",      &pfpart_number, "nPFParticles/i");
   fTree->Branch("pfpart_isprimary",   &pfpart_isprimary);
@@ -682,6 +664,81 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("track_chi2ndof",    &track_chi2ndof);
   fTree->Branch("track_pida",        &track_pida);
 
+}
+
+
+std::map<geo::PlaneID,int> sbnd::ValidateTracks::NumberofPlaneHitsFromTrack(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits){
+
+  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
+  art::ServiceHandle<geo::Geometry> geom;
+
+  std::map<geo::PlaneID, int> HitNum_plane;
+
+  //Loop over the hits and find the IDE
+  for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
+
+    art::Ptr<recob::Hit> hit = *hitIt;
+    
+    geo::WireID wireid = hit->WireID();
+    geo::PlaneID  PlaneID = wireid.planeID();
+
+    std::vector<sim::TrackIDE> trackIDEs = bt_serv->HitToTrackIDEs(clockData, hit);
+    
+    std::map<int,float> hitEnergies; 
+
+    //Loop over the IDEs associated to the hit and add up energies
+    for(unsigned int idIt = 0; idIt < trackIDEs.size(); ++idIt) {
+      hitEnergies[TMath::Abs(trackIDEs.at(idIt).trackID)] += trackIDEs.at(idIt).energy;
+    }
+
+    //Find which track deposited the most energy. 
+    int   likelytrack = -9999;
+    float MaxEnergy   = -9999;
+    for(std::map<int,float>::iterator track_iter=hitEnergies.begin();track_iter!=hitEnergies.end();++track_iter){
+      if(track_iter->second > MaxEnergy){
+      	MaxEnergy = track_iter->second;
+      	likelytrack = track_iter->first;
+      }
+    }
+    
+    if(likelytrack == TrackID){++HitNum_plane[PlaneID];}
+  }
+  return HitNum_plane;
+}
+
+int sbnd::ValidateTracks::NumberofHitsFromTrack(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits){
+
+  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
+  
+  int HitNum = 0;
+
+  //Loop over the hits and find the IDE
+  for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
+
+    art::Ptr<recob::Hit> hit = *hitIt;
+  
+    std::vector<sim::TrackIDE> trackIDEs = bt_serv->HitToTrackIDEs(clockData, hit);
+    std::map<int,float> hitEnergies; 
+
+    //Loop over the IDEs associated to the hit and add up energies
+    for(unsigned int idIt = 0; idIt < trackIDEs.size(); ++idIt) {
+      hitEnergies[TMath::Abs(trackIDEs.at(idIt).trackID)] += trackIDEs.at(idIt).energy;
+    }
+
+    //Find which track deposited the most energy. 
+    int   likelytrack = -9999;
+    float MaxEnergy   = -9999;
+    for(std::map<int,float>::iterator track_iter=hitEnergies.begin();track_iter!=hitEnergies.end();++track_iter){
+      if(track_iter->second > MaxEnergy){
+      	MaxEnergy = track_iter->second;
+      	likelytrack = track_iter->first;
+      }
+    }
+
+    if(likelytrack == TrackID){++HitNum;}
+   
+  }    
+  return HitNum;
 }
 
 void sbnd::ValidateTracks::endJob()
