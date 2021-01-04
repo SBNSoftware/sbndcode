@@ -35,6 +35,7 @@
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>
+  <algorithm type = "LArHitWidthClusterMerging"/>
 
   <algorithm type = "LArClusteringParent">
     <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
@@ -56,6 +57,7 @@
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>
+  <algorithm type = "LArHitWidthClusterMerging"/>
 
   <algorithm type = "LArClusteringParent">
     <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
@@ -77,6 +79,7 @@
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>
+  <algorithm type = "LArHitWidthClusterMerging"/>
 
   <!-- VertexAlgorithms -->
   <algorithm type = "LArCutClusterCharacterisation">
