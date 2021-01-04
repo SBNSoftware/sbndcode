@@ -24,6 +24,8 @@ void CRTBackTracker::reconfigure(const Config& config){
   fCRTHitLabel = config.CRTHitLabel();
   fCRTTrackLabel = config.CRTTrackLabel();
 
+  fRollupUnsavedIds = config.RollupUnsavedIds();
+
   return;
 
 }
@@ -36,14 +38,14 @@ void CRTBackTracker::Initialize(const art::Event& event){
   fTrackTrueIds.clear();
   
   // Get a handle to the CRT data in the event
-  art::Handle< std::vector<crt::CRTData>> crtDataHandle;
-  std::vector<art::Ptr<crt::CRTData> > crtDataList;
+  art::Handle< std::vector<sbnd::crt::CRTData>> crtDataHandle;
+  std::vector<art::Ptr<sbnd::crt::CRTData> > crtDataList;
   if (event.getByLabel(fCRTDataLabel, crtDataHandle))
     art::fill_ptr_vector(crtDataList, crtDataHandle);
   
   art::FindManyP<sim::AuxDetIDE> findManyIdes(crtDataHandle, event, fCRTDataLabel);
 
-  std::map<art::Ptr<crt::CRTData>, int> dataPtrMap;
+  std::map<art::Ptr<sbnd::crt::CRTData>, int> dataPtrMap;
 
   for(size_t data_i = 0; data_i < crtDataList.size(); data_i++){
 
@@ -52,25 +54,27 @@ void CRTBackTracker::Initialize(const art::Event& event){
     // Get all the true IDs from all the IDEs in the hit
     std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(data_i);
     for(size_t i = 0; i < ides.size(); i++){
-      fDataTrueIds[data_i][ides[i]->trackID] += ides[i]->energyDeposited;
+      int id = ides[i]->trackID;
+      if(fRollupUnsavedIds) id = std::abs(id);
+      fDataTrueIds[data_i][id] += ides[i]->energyDeposited;
     }
 
   }
 
-  art::Handle< std::vector<crt::CRTHit>> crtHitHandle;
-  std::vector<art::Ptr<crt::CRTHit> > crtHitList;
+  art::Handle< std::vector<sbn::crt::CRTHit>> crtHitHandle;
+  std::vector<art::Ptr<sbn::crt::CRTHit> > crtHitList;
   if (event.getByLabel(fCRTHitLabel, crtHitHandle))
     art::fill_ptr_vector(crtHitList, crtHitHandle);
 
-  art::FindManyP<crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
+  art::FindManyP<sbnd::crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
 
-  std::map<art::Ptr<crt::CRTHit>, int> hitPtrMap;
+  std::map<art::Ptr<sbn::crt::CRTHit>, int> hitPtrMap;
 
   for(size_t hit_i = 0; hit_i < crtHitList.size(); hit_i++){
 
     hitPtrMap[crtHitList[hit_i]] = hit_i;
 
-    std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(hit_i);
+    std::vector<art::Ptr<sbnd::crt::CRTData>> data = findManyData.at(hit_i);
     for(size_t data_i = 0; data_i < data.size(); data_i++){
 
       int dataID = dataPtrMap[data[data_i]];
@@ -82,16 +86,16 @@ void CRTBackTracker::Initialize(const art::Event& event){
     }
   }
 
-  art::Handle< std::vector<crt::CRTTrack>> crtTrackHandle;
-  std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
+  art::Handle< std::vector<sbn::crt::CRTTrack>> crtTrackHandle;
+  std::vector<art::Ptr<sbn::crt::CRTTrack> > crtTrackList;
   if (event.getByLabel(fCRTTrackLabel, crtTrackHandle))
     art::fill_ptr_vector(crtTrackList, crtTrackHandle);
 
-  art::FindManyP<crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
+  art::FindManyP<sbn::crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
 
   for(size_t track_i = 0; track_i < crtTrackList.size(); track_i++){
 
-    std::vector<art::Ptr<crt::CRTHit>> hits = findManyHits.at(track_i);
+    std::vector<art::Ptr<sbn::crt::CRTHit>> hits = findManyHits.at(track_i);
     for(size_t hit_i = 0; hit_i < hits.size(); hit_i++){
 
       int hitID = hitPtrMap[hits[hit_i]];
@@ -105,7 +109,7 @@ void CRTBackTracker::Initialize(const art::Event& event){
 }
 
 // Check that two CRT data products are the same
-bool CRTBackTracker::DataCompare(const crt::CRTData& data1, const crt::CRTData& data2){
+bool CRTBackTracker::DataCompare(const sbnd::crt::CRTData& data1, const sbnd::crt::CRTData& data2){
 
   if(data1.Channel() != data2.Channel()) return false;
   if(data1.T0() != data2.T0()) return false;
@@ -117,7 +121,7 @@ bool CRTBackTracker::DataCompare(const crt::CRTData& data1, const crt::CRTData& 
 }
 
 // Check that two CRT hits are the same
-bool CRTBackTracker::HitCompare(const crt::CRTHit& hit1, const crt::CRTHit& hit2){
+bool CRTBackTracker::HitCompare(const sbn::crt::CRTHit& hit1, const sbn::crt::CRTHit& hit2){
 
   if(hit1.ts1_ns != hit2.ts1_ns) return false;
   if(hit1.plane != hit2.plane) return false;
@@ -134,7 +138,7 @@ bool CRTBackTracker::HitCompare(const crt::CRTHit& hit1, const crt::CRTHit& hit2
 }
 
 // Check that two CRT tracks are the same
-bool CRTBackTracker::TrackCompare(const crt::CRTTrack& track1, const crt::CRTTrack& track2){
+bool CRTBackTracker::TrackCompare(const sbn::crt::CRTTrack& track1, const sbn::crt::CRTTrack& track2){
 
   if(track1.ts1_ns != track2.ts1_ns) return false;
 
@@ -159,12 +163,12 @@ bool CRTBackTracker::TrackCompare(const crt::CRTTrack& track1, const crt::CRTTra
 }
 
 // Get all the true particle IDs that contributed to the CRT data product
-std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::CRTData& data){
+std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const sbnd::crt::CRTData& data){
 
   std::vector<int> ids;
 
   // Get a handle to the CRT data in the event
-  auto crtDataHandle = event.getValidHandle<std::vector<crt::CRTData>>(fCRTDataLabel);
+  auto crtDataHandle = event.getValidHandle<std::vector<sbnd::crt::CRTData>>(fCRTDataLabel);
   
   art::FindManyP<sim::AuxDetIDE> findManyIdes(crtDataHandle, event, fCRTDataLabel);
 
@@ -178,7 +182,9 @@ std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::
   // Get all the true IDs from all the IDEs in the hit
   std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(data_i);
   for(size_t i = 0; i < ides.size(); i++){
-    ids.push_back(ides[i]->trackID);
+    int id = ides[i]->trackID;
+    if(fRollupUnsavedIds) id = std::abs(id);
+    ids.push_back(id);
   }
 
   // Remove any repeated IDs
@@ -190,14 +196,14 @@ std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::
 }
 
 // Get all the true particle IDs that contributed to the CRT hit
-std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::CRTHit& hit){
+std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const sbn::crt::CRTHit& hit){
 
   std::vector<int> ids;
 
   // Get a handle to the CRT hits in the event
-  auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
+  auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
   
-  art::FindManyP<crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
+  art::FindManyP<sbnd::crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
 
   // Find which one matches the hit passed to the function
   int hit_i = 0, index = 0;
@@ -207,14 +213,16 @@ std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::
   }
 
   // Get the crt data associated to that hit and the IDEs associate to the data
-  std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(hit_i);
+  std::vector<art::Ptr<sbnd::crt::CRTData>> data = findManyData.at(hit_i);
   art::FindManyP<sim::AuxDetIDE> findManyIdes(data, event, fCRTDataLabel);
 
   // Get all the true IDs from all the IDEs in the hit
   for(size_t i = 0; i < data.size(); i++){
     std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(i);
     for(size_t j = 0; j < ides.size(); j++){
-      ids.push_back(ides[j]->trackID);
+      int id = ides[j]->trackID;
+      if(fRollupUnsavedIds) id = std::abs(id);
+      ids.push_back(id);
     }
   }
 
@@ -227,14 +235,14 @@ std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::
 }
 
 // Get all the true particle IDs that contributed to the CRT track
-std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::CRTTrack& track){
+std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const sbn::crt::CRTTrack& track){
 
   std::vector<int> ids;
 
   // Get a handle to the CRT tracks in the event
-  auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCRTTrackLabel);
+  auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
   
-  art::FindManyP<crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
+  art::FindManyP<sbn::crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
 
   // Find which one matches the track passed to the function
   int track_i = 0, index = 0;
@@ -244,17 +252,19 @@ std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::
   }
 
   // Get the crt hits associated to that hit and the data associate to the hits
-  std::vector<art::Ptr<crt::CRTHit>> hits = findManyHits.at(track_i);
-  art::FindManyP<crt::CRTData> findManyData(hits, event, fCRTHitLabel);
+  std::vector<art::Ptr<sbn::crt::CRTHit>> hits = findManyHits.at(track_i);
+  art::FindManyP<sbnd::crt::CRTData> findManyData(hits, event, fCRTHitLabel);
 
   // Get all the true IDs from all the IDEs in the track
   for(size_t i = 0; i < hits.size(); i++){
-    std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(i);
+    std::vector<art::Ptr<sbnd::crt::CRTData>> data = findManyData.at(i);
     art::FindManyP<sim::AuxDetIDE> findManyIdes(data, event, fCRTDataLabel);
     for(size_t j = 0; j < data.size(); j++){
       std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(j);
       for(size_t k = 0; k < ides.size(); k++){
-        ids.push_back(ides[k]->trackID);
+        int id = ides[k]->trackID;
+        if(fRollupUnsavedIds) id = std::abs(id);
+        ids.push_back(id);
       }
     }
   }
@@ -268,12 +278,12 @@ std::vector<int> CRTBackTracker::AllTrueIds(const art::Event& event, const crt::
 }
 
 // Get the true particle ID that contributed the most energy to the CRT data product
-int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CRTData& data){
+int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const sbnd::crt::CRTData& data){
 
   std::map<int, double> ids;
 
   // Get a handle to the CRT data in the event
-  auto crtDataHandle = event.getValidHandle<std::vector<crt::CRTData>>(fCRTDataLabel);
+  auto crtDataHandle = event.getValidHandle<std::vector<sbnd::crt::CRTData>>(fCRTDataLabel);
   
   art::FindManyP<sim::AuxDetIDE> findManyIdes(crtDataHandle, event, fCRTDataLabel);
 
@@ -287,7 +297,9 @@ int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CR
   // Get all the true IDs from all the IDEs in the hit
   std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(data_i);
   for(size_t i = 0; i < ides.size(); i++){
-    ids[ides[i]->trackID] += ides[i]->energyDeposited;
+    int id = ides[i]->trackID;
+    if(fRollupUnsavedIds) id = std::abs(id);
+    ids[id] += ides[i]->energyDeposited;
   }
 
   // Find the true ID that contributed the most energy
@@ -323,14 +335,14 @@ int CRTBackTracker::TrueIdFromDataId(const art::Event& event, int data_i){
 
 
 // Get the true particle ID that contributed the most energy to the CRT hit
-int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CRTHit& hit){
+int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const sbn::crt::CRTHit& hit){
 
   std::map<int, double> ids;
 
   // Get a handle to the CRT hits in the event
-  auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
+  auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
   
-  art::FindManyP<crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
+  art::FindManyP<sbnd::crt::CRTData> findManyData(crtHitHandle, event, fCRTHitLabel);
 
   // Find which one matches the hit passed to the function
   int hit_i = 0, index = 0;
@@ -340,14 +352,16 @@ int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CR
   }
 
   // Get the crt data associated to that hit and the IDEs associate to the data
-  std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(hit_i);
+  std::vector<art::Ptr<sbnd::crt::CRTData>> data = findManyData.at(hit_i);
   art::FindManyP<sim::AuxDetIDE> findManyIdes(data, event, fCRTDataLabel);
 
   // Get all the true IDs from all the IDEs in the hit
   for(size_t i = 0; i < data.size(); i++){
     std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(i);
     for(size_t j = 0; j < ides.size(); j++){
-      ids[ides[j]->trackID] += ides[j]->energyDeposited;
+      int id = ides[j]->trackID;
+      if(fRollupUnsavedIds) id = std::abs(id);
+      ids[id] += ides[j]->energyDeposited;
     }
   }
 
@@ -383,14 +397,14 @@ int CRTBackTracker::TrueIdFromHitId(const art::Event& event, int hit_i){
 }
 
 // Get the true particle ID that contributed the most energy to the CRT track
-int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CRTTrack& track){
+int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const sbn::crt::CRTTrack& track){
 
   std::map<int, double> ids;
 
   // Get a handle to the CRT tracks in the event
-  auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCRTTrackLabel);
+  auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
   
-  art::FindManyP<crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
+  art::FindManyP<sbn::crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
 
   // Find which one matches the track passed to the function
   int track_i = 0, index = 0;
@@ -400,17 +414,19 @@ int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const crt::CR
   }
 
   // Get the crt hits associated to that hit and the data associate to the hits
-  std::vector<art::Ptr<crt::CRTHit>> hits = findManyHits.at(track_i);
-  art::FindManyP<crt::CRTData> findManyData(hits, event, fCRTHitLabel);
+  std::vector<art::Ptr<sbn::crt::CRTHit>> hits = findManyHits.at(track_i);
+  art::FindManyP<sbnd::crt::CRTData> findManyData(hits, event, fCRTHitLabel);
 
   // Get all the true IDs from all the IDEs in the track
   for(size_t i = 0; i < hits.size(); i++){
-    std::vector<art::Ptr<crt::CRTData>> data = findManyData.at(i);
+    std::vector<art::Ptr<sbnd::crt::CRTData>> data = findManyData.at(i);
     art::FindManyP<sim::AuxDetIDE> findManyIdes(data, event, fCRTDataLabel);
     for(size_t j = 0; j < data.size(); j++){
       std::vector<art::Ptr<sim::AuxDetIDE>> ides = findManyIdes.at(j);
       for(size_t k = 0; k < ides.size(); k++){
-        ids[ides[k]->trackID] += ides[k]->energyDeposited;
+        int id = ides[k]->trackID;
+        if(fRollupUnsavedIds) id = std::abs(id);
+        ids[id] += ides[k]->energyDeposited;
       }
     }
   }

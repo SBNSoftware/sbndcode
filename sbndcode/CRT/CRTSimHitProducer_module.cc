@@ -10,8 +10,8 @@
 /////////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 
 // Framework includes
@@ -108,8 +108,8 @@ namespace sbnd {
   {
 
     // Call appropriate produces<>() functions here.
-    produces< std::vector<crt::CRTHit> >();
-    produces< art::Assns<crt::CRTHit , crt::CRTData> >();
+    produces< std::vector<sbn::crt::CRTHit> >();
+    produces< art::Assns<sbn::crt::CRTHit , sbnd::crt::CRTData> >();
     
     reconfigure(p);
 
@@ -133,30 +133,32 @@ namespace sbnd {
   void CRTSimHitProducer::produce(art::Event & event)
   {
 
-    std::unique_ptr< std::vector<crt::CRTHit> > CRTHitcol( new std::vector<crt::CRTHit>);
-    std::unique_ptr< art::Assns<crt::CRTHit, crt::CRTData> > Hitassn( new art::Assns<crt::CRTHit, crt::CRTData>);
-    art::PtrMaker<crt::CRTHit> makeHitPtr(event);
+    std::unique_ptr< std::vector<sbn::crt::CRTHit> > CRTHitcol( new std::vector<sbn::crt::CRTHit>);
+    std::unique_ptr< art::Assns<sbn::crt::CRTHit, sbnd::crt::CRTData> > Hitassn( new art::Assns<sbn::crt::CRTHit, sbnd::crt::CRTData>);
+    art::PtrMaker<sbn::crt::CRTHit> makeHitPtr(event);
 
     int nHits = 0;
 
     // Retrieve list of CRT hits
-    art::Handle< std::vector<crt::CRTData>> crtListHandle;
-    std::vector<art::Ptr<crt::CRTData> > crtList;
+    art::Handle< std::vector<sbnd::crt::CRTData>> crtListHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTData> > crtList;
     if (event.getByLabel(fCrtModuleLabel, crtListHandle))
       art::fill_ptr_vector(crtList, crtListHandle);
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
     // Fill a vector of pairs of time and width direction for each CRT plane
     // The y crossing point of z planes and z crossing point of y planes would be constant
-    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips = hitAlg.CreateTaggerStrips(crtList);
+    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips = hitAlg.CreateTaggerStrips(clockData, detProp, crtList);
 
     mf::LogInfo("CRTSimHitProducer")
       <<"Number of SiPM hits = "<<crtList.size();
 
-    std::vector<std::pair<crt::CRTHit, std::vector<int>>> crtHitPairs = hitAlg.CreateCRTHits(taggerStrips);
+    std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> crtHitPairs = hitAlg.CreateCRTHits(taggerStrips);
 
     for(auto const& crtHitPair : crtHitPairs){
       CRTHitcol->push_back(crtHitPair.first);
-      art::Ptr<crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
+      art::Ptr<sbn::crt::CRTHit> hitPtr = makeHitPtr(CRTHitcol->size()-1);
       nHits++;
       for(auto const& data_i : crtHitPair.second){
         Hitassn->addSingle(hitPtr, crtList[data_i]);

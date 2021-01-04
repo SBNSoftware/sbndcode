@@ -130,7 +130,8 @@ void CRTEventDisplay::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colo
 
 }
 
-void CRTEventDisplay::Draw(const art::Event& event){
+void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
+                           const art::Event& event){
   // Create a canvas 
   TCanvas *c1 = new TCanvas("c1","",700,700);
 
@@ -183,7 +184,7 @@ void CRTEventDisplay::Draw(const art::Event& event){
 
     if(fPrint) std::cout<<"\nCRT data in event:\n";
 
-    auto crtDataHandle = event.getValidHandle<std::vector<crt::CRTData>>(fCRTDataLabel);
+    auto crtDataHandle = event.getValidHandle<std::vector<sbnd::crt::CRTData>>(fCRTDataLabel);
     //detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
     //detinfo::ElecClock fTrigClock = fDetectorClocks->TriggerClock();
     for(auto const& data : (*crtDataHandle)){
@@ -217,7 +218,7 @@ void CRTEventDisplay::Draw(const art::Event& event){
 
     if(fPrint) std::cout<<"\nCRT hits in event:\n";
 
-    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
+    auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
     for(auto const& hit : (*crtHitHandle)){
 
       // Skip if outside specified time window if time window used
@@ -246,7 +247,7 @@ void CRTEventDisplay::Draw(const art::Event& event){
 
     if(fPrint) std::cout<<"\nCRT tracks in event:\n";
 
-    auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCRTTrackLabel);
+    auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
     for(auto const& track : (*crtTrackHandle)){
 
       // Skip if outside specified time window if time window used
@@ -291,7 +292,7 @@ void CRTEventDisplay::Draw(const art::Event& event){
 
       // Skip if it doesn't match the true ID if true ID is used
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(track.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       if(fUseTrueID && trueId != fTrueID) continue;
       
       size_t npts = track.NumberTrajectoryPoints();

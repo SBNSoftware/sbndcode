@@ -19,10 +19,12 @@ sbnd_digiarapuca_alg:
   ArapucaRiseTime:           9.0     #ns
   ArapucaFallTime:	     476.0   #ns
   ArapucaSaturation:         300     #in number of p.e. to see saturation effects in the signal
-  ArapucaEffT1:       0.014   #Arapuca T1 efficiency (taking into account 70% mesh transparency 0.02*0.7)
-  ArapucaEffT2:       0.0189  #Arapuca T2 efficiency (taking into account 70% mesh transparency 0.027*0.7)
-  ArapucaEffxT1:      0.021   #X-Arapuca T1 efficiency (taking into account 70% mesh transparency 0.03*0.7)
-  ArapucaEffxT2:      0.0014  #X-Arapuca T2 efficiency (taking into account 70% mesh transparency 0.02*0.7)
+  ArapucaVUVEff:             0.014   #Arapuca VUV efficiency (taking into account 70% mesh transparency 0.02*0.7)
+  ArapucaVISEff:             0.0189  #Arapuca VIS efficiency (taking into account 70% mesh transparency 0.027*0.7)
+  XArapucaVUVEff:            0.021   #XArapuca VUV efficiency (taking into account 70% mesh transparency 0.03*0.7)
+  XArapucaVISEff:            0.0014  #XArapuca VIS efficiency (taking into account 70% mesh transparency 0.02*0.7)
+  DecayTXArapucaVIS:         8.5     # decay time of EJ280 in ns
+  ArapucaDataFile:           "OpDetSim/digi_arapuca_sbnd.root" # located in sbnd_data
 }
 
 END_PROLOG

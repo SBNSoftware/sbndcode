@@ -1,3 +1,6 @@
+#include "calorimetry_sbnd.fcl"
+#include "pandorashowermodules.fcl"
+
 BEGIN_PROLOG
 
 sbnd_basicpandora:
@@ -44,5 +47,87 @@ sbnd_pandoraShowerCreation:
 {
     module_type:                                                    "LArPandoraShowerCreation"
 }
+
+# Pandora Shower Configurations
+
+sbnd_legacy_pandoraModularShowerCreation:      @local::legacy_pandoraModularShowerCreation
+sbnd_basic_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
+sbnd_3dTraj_pandoraModularShowerCreation:      @local::standard_pandoraModularShowerCreation
+sbnd_incremental_pandoraModularShowerCreation: @local::standard_pandoraModularShowerCreation
+
+# Create SBND specific versions of tools which require SBND calorimetry numbers
+sbnd_showerlinearenergy:          @local::showerlinearenergy
+sbnd_showerunidirectiondedx:      @local::showerunidirectiondedx
+sbnd_showertrajpointdedx:         @local::showertrajpointdedx
+sbnd_showernumelectronsenergy:    @local::showernumelectronsenergy
+sbnd_showerbayesiantrucatingdedx: @local::showerbayesiantrucatingdedx
+
+sbnd_showerlinearenergy.Gradients: [0.00155644, 0.00173915, 0.00153631]
+sbnd_showerlinearenergy.Intercepts: [5.92931, -2.13307, 5.19711]
+sbnd_showernumelectronsenergy.CalorimetryAlg: @local::sbnd_calorimetryalgmc
+sbnd_showerunidirectiondedx.CalorimetryAlg:   @local::sbnd_calorimetryalgmc
+sbnd_showertrajpointdedx.CalorimetryAlg:      @local::sbnd_calorimetryalgmc
+sbnd_showerbayesiantrucatingdedx.PriorFname: "PandoraMVAs/ShowerBayesdEdxPriors.root"
+
+sbnd_basic_pandoraModularShowerCreation.ShowerFinderTools: [
+  @local::showerpfpvertexstartposition,
+  @local::showerpcadirection,
+  @local::showerpcaeigenvaluelength,
+  @local::sbnd_showernumelectronsenergy,
+  @local::shower3dcylindertrackhitfinder,
+  @local::sbnd_showerunidirectiondedx
+]
+
+sbnd_3dTraj_pandoraModularShowerCreation.ShowerFinderTools: [
+  @local::showerpfpvertexstartposition,
+  @local::showerpcadirection,
+  @local::showerlengthpercentile,
+  @local::sbnd_showernumelectronsenergy,
+  @local::shower3dcylindertrackhitfinder,
+  @local::sbnd_showerunidirectiondedx,
+  @local::showerpandoraslidingfittrackfinder,
+  @local::sbnd_showertrajpointdedx
+]
+
+sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools: [
+  @local::showerpfpvertexstartposition,
+  @local::showerpcadirection,
+  @local::showerlengthpercentile,
+  @local::sbnd_showernumelectronsenergy,
+  @local::sbnd_showerunidirectiondedx,
+  @local::showerincrementaltrackhitfinder,
+  @local::showerpandoraslidingfittrackfinder,
+  @local::sbnd_showertrajpointdedx,
+  @local::showertracktrajpointdirection,
+  @local::showerdirectiontopologydecision
+]
+sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[8].ShowerDirectionOutputLabel: "TrajDirection"
+sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[9].FirstDirectionInputLabel: "TrajDirection"
+sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[9].SecondDirectionInputLabel: "ShowerDirection"
+
+# SCE aware PandoraShower
+sbnd_sce_showertrajpointdedx: @local::sbnd_showertrajpointdedx
+sbnd_sce_showertrajpointdedx.SCECorrectPitch:      true
+sbnd_sce_showertrajpointdedx.SCECorrectEField:     true
+sbnd_sce_showertrajpointdedx.SCEInputCorrected:    true
+
+sbnd_sce_3dTraj_pandoraModularShowerCreation:      @local::sbnd_3dTraj_pandoraModularShowerCreation
+sbnd_sce_incremental_pandoraModularShowerCreation: @local::sbnd_incremental_pandoraModularShowerCreation
+
+sbnd_sce_3dTraj_pandoraModularShowerCreation.ShowerFinderTools[7]:      @local::sbnd_sce_showertrajpointdedx
+sbnd_sce_incremental_pandoraModularShowerCreation.ShowerFinderTools[7]: @local::sbnd_sce_showertrajpointdedx
+
+# SBND config of the sbn common tool set
+sbnd_sbn_showertrajpointdedx:     @local::sbnd_showertrajpointdedx
+sbnd_sce_sbn_showertrajpointdedx: @local::sbnd_sce_showertrajpointdedx
+
+sbnd_sbn_showertrajpointdedx.MinAngleToWire: 0.26
+sbnd_sce_sbn_showertrajpointdedx.MinAngleToWire: 0.26
+
+sbnd_sbn_pandoraModularShowerCreation:      @local::sbnd_3dTraj_pandoraModularShowerCreation
+sbnd_sce_sbn_pandoraModularShowerCreation:  @local::sbnd_3dTraj_pandoraModularShowerCreation
+
+sbnd_sbn_pandoraModularShowerCreation.ShowerFinderTools[7]:      @local::sbnd_sbn_showertrajpointdedx
+sbnd_sce_sbn_pandoraModularShowerCreation.ShowerFinderTools[7]:  @local::sbnd_sce_sbn_showertrajpointdedx
 
 END_PROLOG

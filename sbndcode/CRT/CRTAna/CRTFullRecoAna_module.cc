@@ -11,8 +11,8 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
@@ -20,6 +20,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 
 // LArSoft includes
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "larcore/Geometry/Geometry.h"
@@ -68,8 +69,8 @@ namespace sbnd {
     double trueT0;
     std::map<std::string, geo::Point_t> trueCrosses;
     std::map<std::string, bool> validCrosses;
-    std::map<std::string, std::vector<crt::CRTHit>> crtHits;
-    std::vector<crt::CRTTrack> crtTracks;
+    std::map<std::string, std::vector<sbn::crt::CRTHit>> crtHits;
+    std::vector<sbn::crt::CRTTrack> crtTracks;
     bool hasTpcTrack;
     std::vector<double> hitT0s;
     std::vector<double> trackT0s;
@@ -273,17 +274,17 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT hits from the event
-    art::Handle< std::vector<crt::CRTHit>> crtHitHandle;
-    std::vector<art::Ptr<crt::CRTHit> > crtHitList;
+    art::Handle< std::vector<sbn::crt::CRTHit>> crtHitHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit> > crtHitList;
     if (event.getByLabel(fCRTHitLabel, crtHitHandle))
       art::fill_ptr_vector(crtHitList, crtHitHandle);
 
     // Get CRT tracks from the event
-    art::Handle< std::vector<crt::CRTTrack>> crtTrackHandle;
-    std::vector<art::Ptr<crt::CRTTrack> > crtTrackList;
+    art::Handle< std::vector<sbn::crt::CRTTrack>> crtTrackHandle;
+    std::vector<art::Ptr<sbn::crt::CRTTrack> > crtTrackList;
     if (event.getByLabel(fCRTTrackLabel, crtTrackHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackHandle);
-    art::FindManyP<crt::CRTHit> findManyCrtHits(crtTrackHandle, event, fCRTTrackLabel);
+    art::FindManyP<sbn::crt::CRTHit> findManyCrtHits(crtTrackHandle, event, fCRTTrackLabel);
 
     // Get reconstructed tracks from the event
     auto tpcTrackHandle = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
@@ -344,7 +345,7 @@ namespace sbnd {
     //--------------------------------------------- CRT HIT MATCHING -------------------------------------------
 
     // Loop over CRT hits
-    std::vector<crt::CRTHit> crtHits;
+    std::vector<sbn::crt::CRTHit> crtHits;
     int hit_i = 0;
     for (auto const& crtHit: (*crtHitHandle)){
       crtHits.push_back(crtHit);
@@ -364,7 +365,7 @@ namespace sbnd {
     //------------------------------------------- CRT TRACK MATCHING -------------------------------------------
 
     // Loop over CRT tracks
-    std::vector<crt::CRTTrack> crtTracks;
+    std::vector<sbn::crt::CRTTrack> crtTracks;
     int track_i = 0;
     for (auto const& crtTrack : (*crtTrackHandle)){
       crtTracks.push_back(crtTrack);
@@ -380,21 +381,24 @@ namespace sbnd {
 
     //------------------------------------------- CRT T0 MATCHING ----------------------------------------------
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
+
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated true particle
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int partID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int partID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       if(truthMatching.find(partID) == truthMatching.end()) continue;
       truthMatching[partID].hasTpcTrack = true;
 
       // Calculate t0 from CRT Hit matching
       //int tpc = fTpcGeo.DetectedInTPC(hits);
-      double hitT0 = crtT0Alg.T0FromCRTHits(tpcTrack, crtHits, event);
+      double hitT0 = crtT0Alg.T0FromCRTHits(detProp, tpcTrack, crtHits, event);
       if(hitT0 != -99999) truthMatching[partID].hitT0s.push_back(hitT0);
 
       // Calculate t0 from CRT Track matching
-      double trackT0 = crtTrackAlg.T0FromCRTTracks(tpcTrack, crtTracks, event);
+      double trackT0 = crtTrackAlg.T0FromCRTTracks(detProp, tpcTrack, crtTracks, event);
       if(trackT0 != -99999) truthMatching[partID].trackT0s.push_back(trackT0);
 
     }
@@ -421,7 +425,7 @@ namespace sbnd {
         geo::Point_t trueCP = trueCross.second;
 
         double minDist = 99999;
-        crt::CRTHit closestHit;
+        sbn::crt::CRTHit closestHit;
         // Loop over the associated CRTHits and find the closest
         if(match.crtHits.find(taggerName) == match.crtHits.end()) continue;
         for(auto const& crtHit : match.crtHits[taggerName]){
@@ -616,5 +620,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTFullRecoAna)
 } // namespace sbnd
-
-

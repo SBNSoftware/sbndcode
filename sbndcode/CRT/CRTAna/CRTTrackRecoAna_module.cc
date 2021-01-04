@@ -10,14 +10,15 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTEventDisplay.h"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
 // LArSoft includes
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 
 // Framework includes
@@ -229,18 +230,18 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get all the CRT hits
-    auto crtHitHandle = event.getValidHandle<std::vector<crt::CRTHit>>(fCRTHitLabel);
+    auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
 
     // Get all the CRT tracks
-    auto crtTrackHandle = event.getValidHandle<std::vector<crt::CRTTrack>>(fCRTTrackLabel);
+    auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
 
     // Get hit to data associations
-    art::FindManyP<crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
+    art::FindManyP<sbn::crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
 
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
     //----------------------------------------------------------------------------------------------------------
-    std::map<int, std::vector<crt::CRTTrack>> crtTracks;
+    std::map<int, std::vector<sbn::crt::CRTTrack>> crtTracks;
     int trk_i = 0;
     fCrtBackTrack.Initialize(event);
     for(auto const& track : (*crtTrackHandle)){
@@ -250,7 +251,7 @@ namespace sbnd {
       crtTracks[trueId].push_back(track);
     }
 
-    std::map<int, std::vector<crt::CRTHit>> crtHits;
+    std::map<int, std::vector<sbn::crt::CRTHit>> crtHits;
     double minHitTime = 99999;
     double maxHitTime = -99999;
     int hit_i = 0;
@@ -330,7 +331,7 @@ namespace sbnd {
       hZ1->Fill(track.z1_pos);
       hZ2->Fill(track.z2_pos);
 
-      std::vector<art::Ptr<crt::CRTHit>> hits = findManyHits.at(track_i);
+      std::vector<art::Ptr<sbn::crt::CRTHit>> hits = findManyHits.at(track_i);
 
       int trueId = fCrtBackTrack.TrueIdFromTrackId(event, track_i);
       track_i++;
@@ -359,7 +360,7 @@ namespace sbnd {
       aveDCA = aveDCA/npts;
 
       // Find the taggers and positions of the true crossing points
-      crt::CRTHit startHit, endHit;
+      sbn::crt::CRTHit startHit, endHit;
       for(auto const& hit : hits){
         geo::Point_t trueCross = fCrtGeo.TaggerCrossingPoint(hit->tagger, particles[trueId]);
         if(trueCross.X() == -99999) continue;
@@ -382,7 +383,8 @@ namespace sbnd {
       evd.SetDrawTrueTracks(true);
       if(fVeryVerbose) evd.SetPrint(true);
       if(fPlotTrackID != -99999) evd.SetTrueId(fPlotTrackID);
-      evd.Draw(event);
+      auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+      evd.Draw(clockData, event);
     }
 
 
@@ -400,5 +402,3 @@ namespace sbnd {
 namespace {
 
 } // local namespace
-
-

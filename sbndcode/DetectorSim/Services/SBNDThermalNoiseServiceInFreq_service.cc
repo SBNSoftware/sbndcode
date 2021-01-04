@@ -4,6 +4,7 @@
 // Based upon SPhaseChannelNoiseService.cxx developed by Jingbo Wang for ProtoDUNE.
 
 #include "sbndcode/DetectorSim/Services/SBNDThermalNoiseServiceInFreq.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 using std::cout;
 using std::ostream;
@@ -46,7 +47,8 @@ SBNDThermalNoiseServiceInFreq(fhicl::ParameterSet const& pset)
     seedSvc->registerEngine(NuRandomService::CLHEPengineSeeder(m_pran), rname);
   }
   if ( fLogLevel > 0 ) cout << myname << "  Registered seed: " << m_pran->getSeed() << endl;
-  generateNoise();
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+  generateNoise(clockData);
   if ( fLogLevel > 1 ) print() << endl;
 }
 
@@ -68,7 +70,8 @@ SBNDThermalNoiseServiceInFreq::~SBNDThermalNoiseServiceInFreq() {
 
 //**********************************************************************
 
-int SBNDThermalNoiseServiceInFreq::addNoise(Channel chan, AdcSignalVector& sigs) const {
+int SBNDThermalNoiseServiceInFreq::addNoise(detinfo::DetectorClocksData const&,
+                                            Channel chan, AdcSignalVector& sigs) const {
 
   //Get services.
   art::ServiceHandle<geo::Geometry> geo;

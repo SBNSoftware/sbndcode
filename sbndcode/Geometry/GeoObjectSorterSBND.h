@@ -12,7 +12,9 @@
 #include "fhiclcpp/fwd.h"
 
 // LArSoft libraries
+#include "larcorealg/Geometry/AuxDetGeo.h"
 #include "larcorealg/Geometry/GeoObjectSorter.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 
 // C/C++ standard libraries
 #include <vector>
@@ -27,6 +29,7 @@ namespace geo {
     GeoObjectSorterSBND(fhicl::ParameterSet const& p);
 
     virtual void SortCryostats(std::vector<geo::CryostatGeo> & cgeo)     const override;
+    virtual void SortOpDets   (std::vector<geo::OpDetGeo> & opdet)       const override;
     virtual void SortTPCs     (std::vector<geo::TPCGeo>      & tgeo)     const override;
     virtual void SortPlanes   (std::vector<geo::PlaneGeo>    & pgeo,
                                geo::DriftDirection_t           driftDir) const override;

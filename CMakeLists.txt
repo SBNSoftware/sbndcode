@@ -13,8 +13,8 @@
 # ======================================================================
 
 
-# use cmake 2.8 or later
-cmake_minimum_required (VERSION 2.8)
+# use cmake 3.12 or later
+cmake_minimum_required (VERSION 3.12)
 
 project(sbndcode)
 
@@ -62,6 +62,8 @@ message(STATUS "${PROJECT_NAME} repository tag: ${GIT_REPOSITORY_TAG}")
 install_source(LIST RepositoryTag)
 
 # these are minimum required versions, not the actual product versions
+find_ups_product( sbncode )
+find_ups_product( sbnobj )
 find_ups_product( larpandora v1_00_00 )
 find_ups_product( larsim v1_00_00 )
 find_ups_product( lardata v1_00_00 )
@@ -70,13 +72,15 @@ find_ups_product( lardataalg )
 find_ups_product( larevt )
 find_ups_product( larcore v1_00_00 )
 find_ups_product( larcoreobj v1_00_00 )
+find_ups_product( larreco )
+find_ups_product( larana v1_00_00 )
 find_ups_product( nutools v1_00_00 )
 find_ups_product( nug4 )
 find_ups_product( nugen )
 find_ups_product( nuevdb )
 find_ups_product( nurandom v1_00_00 )
 find_ups_product( art v1_09_00 )
-find_ups_product(art_root_io)
+find_ups_product( art_root_io )
 find_ups_product( cetbuildtools v3_10_00 )
 find_ups_product( postgresql v9_1_5 )
 find_ups_product( hep_concurrency )
@@ -94,8 +98,6 @@ add_subdirectory(sbndcode)
 add_subdirectory(test)
 # ups - table and config files
 add_subdirectory(ups)
-# fcl - contains job level fcl files (useful for the MCC)
-add_subdirectory(fcl)
 # subdirectory for scripts
 add_subdirectory(bin)
 

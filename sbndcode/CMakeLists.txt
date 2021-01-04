@@ -14,7 +14,8 @@ add_subdirectory(SimulationFilters)
 add_subdirectory(AnalysisTree)
 add_subdirectory(RecoUtils)
 add_subdirectory(OpDetSim)
-add_subdirectory(XSecTree)
+add_subdirectory(OpDetReco)
+add_subdirectory(OpT0Finder)
 add_subdirectory(CosmicId)
 add_subdirectory(XSecTree)
 
@@ -27,3 +28,5 @@ add_subdirectory(SpaceCharge)
 add_subdirectory(SpaceChargeTest)
 
 add_subdirectory(FlashMatch)
+
+add_subdirectory(Filters)

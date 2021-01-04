@@ -1,5 +1,5 @@
 #ifndef SBND_NUANA_ALG_H
-#define SBND_NUANA_ALG_H 
+#define SBND_NUANA_ALG_H
 
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
@@ -20,18 +20,18 @@
 
 namespace sbnd{
 
-  enum reweight {kNCEL, kQEMA, kQEVec, kResGanged, kCCRes, kNCRes, 
+  enum reweight {kNCEL, kQEMA, kQEVec, kResGanged, kCCRes, kNCRes,
         kCoh, kNonResRvp1pi, kNonResRvbarp1pi, kNonResRvp2pi,
-        kNonResRvbarp2pi, kResDecay, kNC, kDIS, kDISnucl, 
+        kNonResRvbarp2pi, kResDecay, kNC, kDIS, kDISnucl,
         kAGKY, kNReWeights};
-  
+
   class NuAnaAlg
   {
   public:
 
     NuAnaAlg();
     // ~NuAnaAlg();
-  
+
     void configureGeometry(art::ServiceHandle<geo::Geometry> );
 
     void configureReWeight(const std::vector<reweight> &,
@@ -49,11 +49,11 @@ namespace sbnd{
     unsigned int prepareSigmas(int, unsigned int,
                             std::vector<std::vector<float> > & );
 
-    void parseWeights(const std::vector<std::string> &, 
+    void parseWeights(const std::vector<std::string> &,
                             std::vector<reweight> &);
 
     // get the basic neutrino info:
-    void packNeutrinoInfo(simb::MCNeutrino * neutrino, 
+    void packNeutrinoInfo(simb::MCNeutrino * neutrino,
                             int& nuchan,
                             int& inno,
                             double& enugen,
@@ -66,7 +66,7 @@ namespace sbnd{
                             std::vector<float>& vertex);
 
     // Pack up the flux info:
-    void packFluxInfo(art::Ptr<simb::MCFlux >  flux, 
+    void packFluxInfo(art::Ptr<simb::MCFlux >  flux,
                             int& ptype, int& tptype, int& ndecay,
                             std::vector<float>& neutVertexInWindow,
                             std::vector<float>& ParentVertex,

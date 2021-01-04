@@ -9,8 +9,8 @@ sbnd_opdetdigitizer:
 {
   module_type:        "opDetDigitizerSBND"
   InputModule:        "largeant"
-  WaveformSize:      	    2000.0  #ns (dummy value, resized according to readout of each PD)
-  UseLitePhotons:            1       #1 = use SimPhotonsLite; 0 = use SimPhotons
+  WaveformSize:      	    2000.0    #ns (dummy value, resized according to readout of each PD)
+  UseSimPhotonsLite:            true  # false for SimPhotons
 
   @table::sbnd_digipmt_alg
   @table::sbnd_digiarapuca_alg

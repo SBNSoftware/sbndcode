@@ -2,18 +2,20 @@ BEGIN_PROLOG
 
 standard_crttrackmatchingalg:
 {
-    MaxAngleDiff:        0.4               # max difference between CRT and TPC angles
-    MaxDistance:         70.                # max distance between CRT and TPC start/end positions
+    MaxAngleDiff:        0.4              # max difference between CRT and TPC angles
+    MaxDistance:         70.              # max distance between CRT and TPC start/end positions
+    MaxScore:            131.             # max score = DCA + 4*Angle[deg]
     TPCTrackLabel:       "pandoraTrack"
-    MinimizeAngle:       true
+    SelectionMetric:     "score"          # Metric to choose best match "angle", "dca", or "score" (default)
 }
 
 sbnd_crttrackmatchingalg_crID:
 {
-    MaxAngleDiff:        0.4               # max difference between CRT and TPC angles
-    MaxDistance:         70.                # max distance between CRT and TPC start/end positions
+    MaxAngleDiff:        0.4              # max difference between CRT and TPC angles
+    MaxDistance:         70.              # max distance between CRT and TPC start/end positions
+    MaxScore:            131.
     TPCTrackLabel:       "pandoraTrack"
-    MinimizeAngle:       true
+    SelectionMetric:     "score"          # Metric to choose best match "angle", "dca", or "score" (default)
 }
 
 sbnd_crttrackt0producer:

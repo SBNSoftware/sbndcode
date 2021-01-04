@@ -1,5 +1,4 @@
 #include "services_sbnd.fcl"
-#include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
@@ -9,11 +8,9 @@ process_name: FlashMatch
 
 services:{ 
   TFileService: { fileName: "flashmatch_sbnd.root" }
-  @table::sbnd_detsim_services
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
-  # AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
   AuxDetGeometry: { @table::sbnd_geo_source }
 }
 

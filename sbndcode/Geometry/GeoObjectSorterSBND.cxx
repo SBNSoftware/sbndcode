@@ -9,6 +9,7 @@
 
 // LArSoft libraries
 #include "larcorealg/Geometry/CryostatGeo.h"
+#include "larcorealg/Geometry/OpDetGeo.h"
 #include "larcorealg/Geometry/TPCGeo.h"
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "larcorealg/Geometry/WireGeo.h"
@@ -43,6 +44,21 @@ bool CryostatSorter(geo::CryostatGeo const& c1, geo::CryostatGeo const& c2) {
 
 } // CryostatSorter()
 
+//----------------------------------------------------------------------------
+static bool OpDetsSorter(geo::OpDetGeo const& t1, geo::OpDetGeo const& t2)
+{
+  double xyz1[3] = {0.}, xyz2[3] = {0.};
+  double local[3] = {0.};
+  t1.LocalToWorld(local, xyz1);
+  t2.LocalToWorld(local, xyz2);
+
+  if(xyz1[2] != xyz2[2])
+    return xyz1[2] < xyz2[2];
+  else if(xyz1[1] != xyz2[1])
+    return xyz1[1] < xyz2[1];
+  else
+    return xyz1[0] < xyz2[0];
+} // OpDetsSorter
 
 //----------------------------------------------------------------------------
 bool TPCSorter(geo::TPCGeo const& t1, geo::TPCGeo const& t2) {
@@ -220,6 +236,13 @@ geo::GeoObjectSorterSBND::GeoObjectSorterSBND(fhicl::ParameterSet const& p)
 void geo::GeoObjectSorterSBND::SortCryostats
   (std::vector<geo::CryostatGeo>& cgeo) const
   { std::sort(cgeo.begin(), cgeo.end(), CryostatSorter); }
+
+//----------------------------------------------------------------------------
+void geo::GeoObjectSorterSBND::SortOpDets
+  (std::vector<geo::OpDetGeo> & opdet) const
+  {
+    std::sort(opdet.begin(), opdet.end(), OpDetsSorter);
+  }
 
 //----------------------------------------------------------------------------
 void geo::GeoObjectSorterSBND::SortTPCs(std::vector<geo::TPCGeo>& tgeo) const

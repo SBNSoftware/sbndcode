@@ -8,7 +8,8 @@
 
 // sbndcode includes
 #include "sbndcode/RecoUtils/RecoUtils.h"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTHit_Legacy.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
@@ -18,6 +19,7 @@
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
@@ -110,7 +112,7 @@ namespace sbnd {
     virtual void endJob() override;
 
     // Calculate the distance from the track crossing point to CRT overlap coordinates
-    double DistToCrtHit(TVector3 trackPos, crt::CRTHit crtHit);
+    double DistToCrtHit(TVector3 trackPos, sbn::crt::CRTHit crtHit);
 
   private:
 
@@ -209,8 +211,8 @@ namespace sbnd {
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimModuleLabel);
 
     // Get CRT hits from the event
-    art::Handle< std::vector<crt::CRTHit>> crtHitHandle;
-    std::vector<art::Ptr<crt::CRTHit> > crtHitList;
+    art::Handle< std::vector<sbn::crt::CRTHit>> crtHitHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit> > crtHitList;
     if (event.getByLabel(fCRTHitLabel, crtHitHandle))
       art::fill_ptr_vector(crtHitList, crtHitHandle);
 
@@ -235,7 +237,7 @@ namespace sbnd {
     }
 
     std::map<int, std::vector<std::string>> crtTaggerMap;
-    std::vector<crt::CRTHit> crtHits;
+    std::vector<sbn::crt::CRTHit> crtHits;
     int hit_i = 0;
     double minHitTime = 99999;
     double maxHitTime = -99999;
@@ -261,11 +263,14 @@ namespace sbnd {
     //                                DISTANCE OF CLOSEST APPROACH ANALYSIS
     //----------------------------------------------------------------------------------------------------------
 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(event);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event, clockData);
+
     // Loop over reconstructed tracks
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
       if(particles.find(trackTrueID) == particles.end()) continue;
       // Only consider primary muons
       if(!(std::abs(particles[trackTrueID].PdgCode()) == 13 && particles[trackTrueID].Mother() == 0)) continue;
@@ -275,7 +280,7 @@ namespace sbnd {
       if(trueTime < minHitTime || trueTime > maxHitTime) continue;
 
       // Calculate t0 from CRT Hit matching
-      std::pair<crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(tpcTrack, crtHits, event);
+      std::pair<sbn::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
       if(closest.second != -99999){ 
         hDCA[closest.first.tagger]->Fill(closest.second);
         hDCA["All"]->Fill(closest.second);
@@ -382,5 +387,3 @@ namespace sbnd {
   
   DEFINE_ART_MODULE(CRTT0MatchingAna)
 } // namespace sbnd
-
-

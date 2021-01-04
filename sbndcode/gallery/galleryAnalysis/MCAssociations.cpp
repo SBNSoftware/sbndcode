@@ -33,7 +33,7 @@ MCAssociations::MCAssociations(fhicl::ParameterSet const& config)
   {}
 
 void MCAssociations::setup(const geo::GeometryCore&           geometry,
-                           const detinfo::DetectorProperties& detectorProperties,
+                           const detinfo::DetectorPropertiesData& detectorProperties,
                            TDirectory*                        outDir)
 {
     fGeometry           = &geometry;

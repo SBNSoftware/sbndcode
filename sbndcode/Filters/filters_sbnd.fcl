@@ -1,0 +1,39 @@
+BEGIN_PROLOG
+
+sbnd_finalstateparticlefilter:
+{
+  module_type:           "FinalStateParticleFilter"
+  GenieModuleLabel:      "generator"
+  PDG:                   [13, 2212]                   
+}
+
+sbnd_nuefilter:
+{ 
+ module_type:    NueFilter
+ PdgCode:  12  # 12=nue, 14=numu
+}
+
+
+standard_crt_trig_filter:
+{
+#   module_type:          "sbndcode/CRT/TrigFilter"
+   module_type:          CRTTrigFilter
+   CrtStripModuleLabel:       "crt"
+   RequireStripMatch: true   # match strip numbers within a module (11 cm slice vs 16*11 cm slice)
+   StripTimeCoincidence: 0.20 # us
+   # list of modules in each plane/panel: in pairs i.e. 40 is above 41 in y value at same x value
+   ModuleListUpstreamTopLeft: [40, 42]
+   ModuleListUpstreamBotLeft: [41, 43]
+   ModuleListUpstreamTopRight: [44, 46]
+   ModuleListUpstreamBotRight: [45, 47]
+   ModuleListDownstreamTopLeft: [56, 58]
+   ModuleListDownstreamBotLeft: [57, 59]
+   ModuleListDownstreamTopRight: [60, 62]
+   ModuleListDownstreamBotRight: [61, 63]
+   AllowedStripShift: 4
+   EdgeCutInStrips: 12
+   ADCthresh: 500.0
+	  
+}
+
+END_PROLOG

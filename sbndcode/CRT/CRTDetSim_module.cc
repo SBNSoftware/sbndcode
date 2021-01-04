@@ -32,7 +32,7 @@
 #include "TNtuple.h"
 #include "TGeoManager.h"
 #include "TGeoNode.h"
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbndcode/CRT/CRTDetSim.h"
 
 #include <cmath>

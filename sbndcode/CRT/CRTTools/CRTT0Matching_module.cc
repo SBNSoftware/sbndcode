@@ -10,7 +10,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
 
 // Framework includes
@@ -129,12 +129,12 @@ namespace sbnd {
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
 
     // Retrieve CRT hit list
-    art::Handle<std::vector<crt::CRTHit>> crtListHandle;
-    std::vector<art::Ptr<crt::CRTHit>> crtList;
+    art::Handle<std::vector<sbn::crt::CRTHit>> crtListHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit>> crtList;
     if(event.getByLabel(fCrtHitModuleLabel, crtListHandle))
       art::fill_ptr_vector(crtList, crtListHandle);
 
-    std::vector<crt::CRTHit> crtHits;
+    std::vector<sbn::crt::CRTHit> crtHits;
     for (auto const& crtHit : crtList){
       crtHits.push_back(*crtHit);
     }
@@ -151,15 +151,16 @@ namespace sbnd {
    
     if (trackListHandle.isValid() && crtListHandle.isValid() ){
       
+      auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
       // Loop over all the reconstructed tracks 
       for(size_t track_i = 0; track_i < trackList.size(); track_i++) {
 
         // Get the closest matched time
-        double matchedTime = t0Alg.T0FromCRTHits(*trackList[track_i], crtHits, event);
-        if(matchedTime != -99999){
+        std::pair<double, double> matchedTime = t0Alg.T0AndDCAFromCRTHits(detProp, *trackList[track_i], crtHits, event);
+        if(matchedTime.first != -99999){
           mf::LogInfo("CRTT0Matching")
-            <<"Matched time = "<<matchedTime<<" [us] to track "<<trackList[track_i]->ID();
-          T0col->push_back(anab::T0(matchedTime * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), 0.));
+            <<"Matched time = "<<matchedTime.first<<" [us] to track "<<trackList[track_i]->ID()<<" with DCA = "<<matchedTime.second;
+          T0col->push_back(anab::T0(matchedTime.first * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), matchedTime.second));
           util::CreateAssn(*this, event, *T0col, trackList[track_i], *Trackassn);
         }
 

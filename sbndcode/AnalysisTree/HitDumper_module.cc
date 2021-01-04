@@ -32,11 +32,11 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 // ROOT includes
 #include "TTree.h"
@@ -203,8 +203,6 @@ private:
   sbnd::CRTHitRecoAlg hitAlg;
 
   geo::GeometryCore const* fGeometryService;
-  // detinfo::DetectorClocks const* fDetectorClocks;
-  // detinfo::DetectorProperties const* fDetectorProperties;
   // detinfo::ElecClock fTrigClock;
   art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
   const geo::AuxDetGeometry* fAuxDetGeo;
@@ -307,8 +305,8 @@ void Hitdumper::analyze(const art::Event& evt)
   int _nstr = 0;
   art::Handle<std::vector<sbnd::crt::CRTData> > crtStripListHandle;
   std::vector<art::Ptr<sbnd::crt::CRTData> > striplist;
-  // art::Handle< std::vector<crt::CRTData> > crtStripListHandle;
-  // std::vector< art::Ptr<crt::CRTData> > striplist;
+  // art::Handle< std::vector<sbnd::crt::CRTData> > crtStripListHandle;
+  // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
   if (evt.getByLabel(fCRTStripModuleLabel, crtStripListHandle))  {
     art::fill_ptr_vector(striplist, crtStripListHandle);
     _nstr = striplist.size();
@@ -520,16 +518,16 @@ void Hitdumper::analyze(const art::Event& evt)
   // CRT hits
   //
   if (fkeepCRThits) {
-    art::Handle<std::vector<sbnd::crt::CRTHit> > crtHitListHandle;
-    std::vector<art::Ptr<sbnd::crt::CRTHit> > chitlist;
-    // art::Handle< std::vector<crt::CRTData> > crtStripListHandle;
-    // std::vector< art::Ptr<crt::CRTData> > striplist;
+    art::Handle<std::vector<sbn::crt::CRTHit> > crtHitListHandle;
+    std::vector<art::Ptr<sbn::crt::CRTHit> > chitlist;
+    // art::Handle< std::vector<sbnd::crt::CRTData> > crtStripListHandle;
+    // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
     if (evt.getByLabel(fCRTHitModuleLabel, crtHitListHandle))  {
       art::fill_ptr_vector(chitlist, crtHitListHandle);
       _nchits = hitlist.size();
     }
     else {
-      std::cout << "Failed to get sbnd::crt::CRTHit data product." << std::endl;
+      std::cout << "Failed to get sbn::crt::CRTHit data product." << std::endl;
       _nchits = 0;
     }
 
@@ -566,8 +564,8 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   _ncts = 0;
   if (freadCRTtracks) {
-    art::Handle<std::vector<sbnd::crt::CRTTrack> > crtTrackListHandle;
-    std::vector<art::Ptr<sbnd::crt::CRTTrack> > ctrklist;
+    art::Handle<std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
+    std::vector<art::Ptr<sbn::crt::CRTTrack> > ctrklist;
     if (evt.getByLabel(fCRTTrackModuleLabel, crtTrackListHandle))  {
       art::fill_ptr_vector(ctrklist, crtTrackListHandle);
       _ncts = ctrklist.size();
@@ -586,7 +584,7 @@ void Hitdumper::analyze(const art::Event& evt)
         _ct_z2[i] = ctrklist[i]->z2_pos;
       }
     } else {
-      std::cout << "Failed to get sbnd::crt::CRTTrack data product." << std::endl;
+      std::cout << "Failed to get sbn::crt::CRTTrack data product." << std::endl;
     }
   }
 
@@ -612,8 +610,8 @@ void Hitdumper::analyze(const art::Event& evt)
   }
   int counter = 0;
   for (int i = 0; i < _nophits; ++i) {
-    // TODO: why only coatedpmt? ~icaza
-    if (!_pd_map.isPDType(ophitlist.at(i)->OpChannel(), "coatedpmt")) continue;
+    // TODO: why only pmt_coated? ~icaza
+    if (!_pd_map.isPDType(ophitlist.at(i)->OpChannel(), "pmt_coated")) continue;
     _ophit_opch[counter] = ophitlist.at(i)->OpChannel();
     _ophit_opdet[counter] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
     _ophit_peakT[counter] = ophitlist.at(i)->PeakTime();

@@ -40,11 +40,11 @@
 #include "lardata/Utilities/LArFFT.h"
 #include "lardataobj/Utilities/sparse_vector.h"
 #include "lardata/Utilities/AssociationUtil.h"  //--Hec
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 #include "TComplex.h"
 #include "TFile.h"
-#include "TH2D.h"
-#include "TF1.h"
+#include "TH1F.h"
 
 ///creation of calibrated signals on wires
 namespace caldata {
@@ -76,19 +76,20 @@ namespace caldata {
 
   private:
     
-  //  int          fDataSize;          ///< size of raw data on one wire
-    int          fPostsample;        ///< number of postsample bins
-    int          fBaseSampleBins;        ///< number of postsample bins
-    bool         fDoBaselineSub;     ///< baseline subtraction
-    float        fBaseVarCut;        ///< baseline variance cut
-    std::string  fDigitModuleLabel;  ///< module that made digits
-                                                       ///< constants
+    bool          fDoBaselineSub;     ///< subtract baseline to restore DC component post-deconvolution
+    bool          fDoAdvBaselineSub;  ///< use interpolation-based baseline subtraction
+    int           fBaseSampleBins;    ///< bin grouping size in "interpolate"  method
+    float         fBaseVarCut;        ///< baseline variance cut used in "interpolate" method
+   
+    std::string  fDigitModuleLabel;   ///< module that made digits
+                                                       
     std::string  fSpillName;  ///< nominal spill is an empty string
                               ///< it is set by the DigitModuleLabel
                               ///< ex.:  "daq:preSpill" for prespill data
-
-    //void SubtractBaseline(std::vector<float>& holder, int fBaseSampleBins);
-    void SubtractBaseline(std::vector<float>& holder);
+    
+    void          SubtractBaseline(std::vector<float>& holder);
+    void          SubtractBaselineAdv(std::vector<float>& holder);
+    
 
   protected: 
     
@@ -102,14 +103,14 @@ namespace caldata {
   {
     fSpillName="";
     this->reconfigure(pset);
-
+    
     fROITool = art::make_tool<sbnd_tool::IROIFinder>(pset.get<fhicl::ParameterSet>("ROITool"));
 
     //--Hec if(fSpillName.size()<1) produces< std::vector<recob::Wire> >();
     //--Hec else produces< std::vector<recob::Wire> >(fSpillName);
-  
     produces< std::vector<recob::Wire> >(fSpillName);
     produces<art::Assns<raw::RawDigit, recob::Wire>>(fSpillName);
+    
   }
   //-------------------------------------------------
   CalWireSBND::~CalWireSBND()
@@ -120,10 +121,10 @@ namespace caldata {
   void CalWireSBND::reconfigure(fhicl::ParameterSet const& p)
   {
     fDigitModuleLabel = p.get< std::string >("DigitModuleLabel", "daq");
-    fPostsample       = p.get< int >        ("PostsampleBins");
+    fDoBaselineSub    = p.get< bool >       ("DoBaselineSub");
+    fDoAdvBaselineSub = p.get< bool >       ("DoAdvBaselineSub");
     fBaseSampleBins   = p.get< int >        ("BaseSampleBins");
     fBaseVarCut       = p.get< int >        ("BaseVarCut");
-    fDoBaselineSub    = p.get< bool >        ("DoBaselineSub");
     
     fSpillName="";
     
@@ -179,6 +180,7 @@ namespace caldata {
         
     unsigned int dataSize = digitVec0->Samples(); //size of raw data vectors
 
+
     if( (unsigned int)transformSize < dataSize){
       mf::LogWarning("CalWireSBND")<<"FFT size (" << transformSize << ") "
                                     << "is smaller than the data size (" << dataSize << ") "
@@ -204,6 +206,8 @@ namespace caldata {
     std::vector<short> rawadc(transformSize);  // vector holding uncompressed adc values
     std::vector<TComplex> freqHolder(transformSize+1); // temporary frequency data
     
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
+
     // loop over all wires    
     wirecol->reserve(digitVecHandle->size());
     for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter){ // ++ move
@@ -238,23 +242,17 @@ namespace caldata {
 	}
 
         // Do deconvolution.
-        sss->Deconvolute(channel, holder);
+        sss->Deconvolute(clockData, channel, holder);
 	  for(bin = 0; bin < holder.size(); ++bin) holder[bin]=holder[bin]/DeconNorm;
       } // end if not a bad channel 
       
       holder.resize(dataSize,1e-5);
 
-      //This restores the DC component to signal removed by the deconvolution.
-      if(fPostsample) {
-        float average=0.0;
-        for(bin=0; bin < (unsigned short)fPostsample; ++bin) 
-          average += holder[holder.size()-1+bin];
-        average = average / (float)fPostsample;
-        for(bin = 0; bin < holder.size(); ++bin) holder[bin]-=average;
-      }  
-      // adaptive baseline subtraction
-      //if(fBaseSampleBins) SubtractBaseline(holder, fBaseSampleBins);
-      if(fDoBaselineSub) SubtractBaseline(holder);
+      // restore DC component through baseline subtraction
+      if( fDoBaselineSub ) SubtractBaseline(holder);
+      // more advanced, interpolation-based subtraction alg 
+      // that uses the BaseSampleBins and BaseVarCut params
+      if( fDoAdvBaselineSub ) SubtractBaselineAdv(holder);
 
       // Make a single ROI that spans the entire data size
       //RegionsOfInterest_t sparse_holder;
@@ -300,37 +298,157 @@ namespace caldata {
    // delete chanFilt;
     return;
   }
-
-
+ 
+  
   void CalWireSBND::SubtractBaseline(std::vector<float>& holder)
   {
+    // Robust baseline calculation that effectively ignores outlier 
+    // samples from large pulses:
+    //   (1) fill a histogram with every sample's value,
+    //   (2) find mode (bin with most entries),
+    //   (3) calculate the mean along the entire waveform using
+    //       only samples with values close to this mode.
+    unsigned int bin(0);  
     float min = 0, max = 0;
-    for(unsigned int bin = 0; bin < holder.size(); bin++){
+    for(bin = 0; bin < holder.size(); bin++){
       if (holder[bin] > max) max = holder[bin];
       if (holder[bin] < min) min = holder[bin];
     }
     int nbin = max - min;
-    if (nbin!=0) {
-      TH1F *h1 = new TH1F("h1","h1",nbin,min,max);
-      for(unsigned int bin = 0; bin < holder.size(); bin++){
-	h1->Fill(holder[bin]);
+    if (nbin > 0) {
+      TH1F h("h","h",nbin,min,max);
+      for(bin = 0; bin < holder.size(); bin++) h.Fill(holder[bin]);
+      float x_max = h.GetXaxis()->GetBinCenter(h.GetMaximumBin());
+      float ped   = x_max;
+      float sum   = 0;
+      int ncount  = 0;
+      for(bin = 0; bin < holder.size(); bin++){
+        if( fabs(holder[bin]-x_max) < 2. ) {
+          sum += holder[bin];
+          ncount++; 
+        }
       }
-      float ped = h1->GetMaximum();
-      float ave = 0, ncount = 0;
-      for(unsigned int bin = 0; bin < holder.size(); bin++){
-	if (fabs(holder[bin]-ped) < 2){
-	  ave += holder[bin];
-	  ncount++;
-	}
-      }
-      if (ncount==0) ncount = 1;
-      ave = ave/ncount;
-      for(unsigned int bin = 0; bin < holder.size(); bin++){
-	holder[bin] -= ave;
-      }
-      h1->Delete();
+      if (ncount) ped = sum/ncount;
+      for(bin = 0; bin < holder.size(); bin++) holder[bin] -= ped;
     }
   }
+ 
+  void CalWireSBND::SubtractBaselineAdv(std::vector<float>& holder)
+  {
+      // Subtract baseline using linear interpolation between regions defined
+      // by the datasize and fBaseSampleBins
+
+      // number of points to characterize the baseline
+      unsigned short nBasePts = holder.size() / fBaseSampleBins;
+
+      // the baseline offset vector
+      std::vector<float> base;
+      for(unsigned short ii = 0; ii < nBasePts; ++ii) base.push_back(0.);
+      // find the average value in each region, using values that are
+      // similar
+      float fbins = fBaseSampleBins;
+      unsigned short nfilld = 0;
+      for(unsigned short ii = 0; ii < nBasePts; ++ii) {
+        unsigned short loBin = ii * fBaseSampleBins;
+        unsigned short hiBin = loBin + fBaseSampleBins;
+        float ave = 0.;
+        float sum = 0.;
+        for(unsigned short bin = loBin; bin < hiBin; ++bin) {
+          ave += holder[bin];
+          sum += holder[bin] * holder[bin];
+        } // jj
+        ave = ave / fbins;
+        float var = (sum - fbins * ave * ave) / (fbins - 1.);
+        // Set the baseline for this region if the variance is small
+        if(var < fBaseVarCut) {
+          base[ii] = ave;
+          ++nfilld;
+        }
+      } // ii
+      // fill in any missing points if there aren't too many missing
+      if(nfilld < nBasePts && nfilld > nBasePts / 2) {
+        bool baseOK = true;
+        // check the first region
+        if(base[0] == 0) {
+          unsigned short ii1 = 0;
+          for(unsigned short ii = 1; ii < nBasePts; ++ii) {
+            if(base[ii] != 0) {
+              ii1 = ii;
+              break;
+            }
+          } // ii
+          unsigned short ii2 = 0;
+          for(unsigned short ii = ii1 + 1; ii < nBasePts; ++ii) {
+            if(base[ii] != 0) {
+              ii2 = ii;
+              break;
+            }
+          } // ii
+          // failure
+          if(ii2 > 0) {
+            float slp = (base[ii2] - base[ii1]) / (float)(ii2 - ii1);
+            base[0] = base[ii1] - slp * ii1;
+          } else {
+            baseOK = false;
+          }
+        } // base[0] == 0
+        // check the last region
+        if(baseOK && base[nBasePts] == 0) {
+          unsigned short ii2 = 0;
+          for(unsigned short ii = nBasePts - 1; ii > 0; --ii) {
+            if(base[ii] != 0) {
+              ii2 = ii;
+              break;
+            }
+          } // ii
+          baseOK = false; // assume the worst, hope for better
+          unsigned short ii1 = 0;
+          if (ii2 >= 1) {
+            for(unsigned short ii = ii2 - 1; ii > 0; --ii) {
+              if(base[ii] != 0) {
+                ii1 = ii;
+                baseOK = true;
+                break;
+              } // if base[ii]
+            } // ii
+          } // if ii2
+          if (baseOK) {
+            float slp = (base[ii2] - base[ii1]) / (float)(ii2 - ii1);
+            base[nBasePts] = base[ii2] + slp * (nBasePts - ii2);
+          }
+        } // baseOK && base[nBasePts] == 0
+        // now fill in any intermediate points
+        for(unsigned short ii = 1; ii < nBasePts - 1; ++ii) {
+          if(base[ii] == 0) {
+            // find the next non-zero region
+            for(unsigned short jj = ii + 1; jj < nBasePts; ++jj) {
+              if(base[jj] != 0) {
+                float slp = (base[jj] - base[ii - 1]) / (jj - ii + 1);
+                base[ii] = base[ii - 1] + slp;
+                break;
+              }
+            } // jj
+          } // base[ii] == 0
+        } // ii
+      } // nfilld < nBasePts
+
+      // interpolate and subtract
+      float slp = (base[1] - base[0]) / (float)fBaseSampleBins;
+      // bin offset to the origin (the center of the region)
+      unsigned short bof = fBaseSampleBins / 2;
+      unsigned short lastRegion = 0;
+      for(unsigned short bin = 0; bin < holder.size(); ++bin) {
+        // in a new region?
+        unsigned short region = bin / fBaseSampleBins;
+        if(region > lastRegion) {
+          // update the slope and offset
+          slp = (base[region] - base[lastRegion]) / (float)fBaseSampleBins;
+          bof += fBaseSampleBins;
+          lastRegion = region;
+        }
+        holder[bin] -= base[region] + (bin - bof) * slp;
+      }
+    }
   
-  
+
 } // end namespace caldata

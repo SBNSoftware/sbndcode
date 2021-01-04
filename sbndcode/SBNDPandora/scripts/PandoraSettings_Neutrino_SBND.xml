@@ -79,6 +79,10 @@
   </algorithm>
 
   <!-- VertexAlgorithms -->
+  <algorithm type = "LArCutClusterCharacterisation">
+    <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+    <ZeroMode>true</ZeroMode>
+  </algorithm>
   <algorithm type = "LArCandidateVertexCreation">
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
     <OutputVertexListName>CandidateVertices3D</OutputVertexListName>
@@ -100,6 +104,10 @@
       <tool type = "LArShowerAsymmetryFeature"/>
       <tool type = "LArRPhiFeature"/>
     </FeatureTools>
+  </algorithm>
+  <algorithm type = "LArCutClusterCharacterisation">
+    <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+    <ZeroMode>true</ZeroMode>
   </algorithm>
   <algorithm type = "LArVertexSplitting">
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
@@ -314,6 +322,28 @@
   <algorithm type = "LArNeutrinoDaughterVertices">
     <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
     <OutputVertexListName>DaughterVertices3D</OutputVertexListName>
+  </algorithm>
+  <algorithm type = "LArBdtPfoCharacterisation">
+    <TrackPfoListName>TrackParticles3D</TrackPfoListName>
+    <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
+    <UseThreeDInformation>true</UseThreeDInformation>
+    <MvaFileName>PandoraMVAs/PandoraBdt_v08_33_00_SBND.xml</MvaFileName>
+    <MvaName>PfoCharBDT</MvaName>
+    <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_v08_33_00_SBND.xml</MvaFileNameNoChargeInfo>
+    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
+    <FeatureTools>
+      <tool type = "LArThreeDLinearFitFeatureTool"/>
+      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+      <tool type = "LArThreeDPCAFeatureTool"/>
+      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
+      <tool type = "LArThreeDChargeFeatureTool"/>
+    </FeatureTools>
+    <FeatureToolsNoChargeInfo>
+      <tool type = "LArThreeDLinearFitFeatureTool"/>
+      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+      <tool type = "LArThreeDPCAFeatureTool"/>
+      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
+    </FeatureToolsNoChargeInfo>
   </algorithm>
   <algorithm type = "LArNeutrinoProperties">
     <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>

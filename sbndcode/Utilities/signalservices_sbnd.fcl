@@ -7,8 +7,11 @@ sbnd_signalshapingservice:
 #  If you change this number, the downstream calorimetry module needs a new calibration
 #  DeconNorm: 200
   DeconNorm: 50  
-  ADCTicksPerPCAtLowestASICGainSetting: 13198 #ADC/pC
-  ADCPerPCAtLowestASICGain:  13198 #ADC/pC
+
+  ## If these are changed, NoiseFactVec also needs updating.
+  ADCTicksPerPCAtLowestASICGainSetting: 10696 #ADC/pC
+  ADCPerPCAtLowestASICGain:  10696 #ADC/pC
+
   #ASICGain: Options: (4.7, 7.8, 14, 25). Default: 7.8
   ASICGainInMVPerFC:  [14.0, 14.0, 14.0]     #mV/fC
   ShapeTimeConst:  [2.0, 2.0, 2.0]  
@@ -26,9 +29,10 @@ sbnd_signalshapingservice:
 # thermal noise from microboone public note 1016, used 4m wire length collection
 # and 4*sqrt(2) for induction
 # scaled all shaping times by ADC gain ratio 2.8/2.2 (SBND/uB)
-  NoiseFactVec:         [[ 1.43, 1.095, 0.9668, 0.70 ], [ 1.43, 1.095, 0.9668, 0.70], [ 1.13, 0.84, 0.8158, 0.55 ]]
+#  NoiseFactVec:         [[ 1.43, 1.095, 0.9668, 0.70 ], [ 1.43, 1.095, 0.9668, 0.70], [ 1.13, 0.84, 0.8158, 0.55 ]]
 #
-#
+# New values added by AScarff 2020-03-26. Numbers from MStancari, from tests with 2us only.
+  NoiseFactVec:         [[ 0.823, 0.823, 0.823, 0.823 ], [ 0.823, 0.823, 0.823, 0.823 ], [ 0.651, 0.651, 0.651, 0.651 ]]
 
   #FieldBins:        75 #For UseFunctionFieldShape: true
   FieldBins:       1000
@@ -52,22 +56,32 @@ sbnd_signalshapingservice:
   # cycles/microsecond.  The conversion to frequency bin depends on FFT size
   # samping rate.
 
-  IndUFilter:       "(x>0.0)*gaus(0)*exp(-0.5*pow(x/[3],[4]))"
-  # IndUFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
+## Gaussian filter
+
+   IndUFilter:       "(x>0)*gaus"
+   IndUFilterParams: [1., 0., 0.2]
+   IndVFilter:       "(x>0)*gaus"
+   IndVFilterParams: [1., 0., 0.2]
+   ColFilter:        "(x>0)*gaus"
+   ColFilterParams:  [1., 0., 0.2]
+
+
+## Wiener filter - Not used from June 2020.
+  ##IndUFilter:       "(x>0.0)*gaus(0)*exp(-0.5*pow(x/[3],[4]))"
+  #IndUFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
   #IndUFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
-  IndUFilterParams: [ 1.803396, 1.69, 1.55, 0.19, 3.75 ]
+  ##IndUFilterParams: [ 1.803396, 1.69, 1.55, 0.19, 3.75 ]
 
-  IndVFilter:       "(x>0.0)*gaus(0)*exp(-0.5*pow(x/[3],[4]))"
-  # IndVFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
+  ##IndVFilter:       "(x>0.0)*gaus(0)*exp(-0.5*pow(x/[3],[4]))"
+  #IndVFilterParams: [ .454, 0.0, 0.1875, 0.25, 8.0 ]
   #IndVFilterParams: [ 0.05, 0.0, 0.1875, 0.25, 8.0 ]
-  # IndVFilterParams: [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
-  IndVFilterParams: [ 1.73, 1.69, 1.55, 0.19, 3.75 ]
+  #IndVFilterParams: [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+  ##IndVFilterParams: [ 1.73, 1.69, 1.55, 0.19, 3.75 ]
 
-
-  ColFilter:       "(x>0)*[0]*exp(-0.5*(((x-[1])/[2])^2)^[3])"
-  # ColFilterParams: [ 79258.0, 0.0, 0.1875, 1.5 ]
+  ##ColFilter:       "(x>0)*[0]*exp(-0.5*(((x-[1])/[2])^2)^[3])"
+  #ColFilterParams: [ 79258.0, 0.0, 0.1875, 1.5 ]
   #ColFilterParams: [ 0.0792580, 0.0, 0.1875, 1.5 ]
-  ColFilterParams: [ 1.034516, 0.08, 0.15, 2.17 ]
+  ##ColFilterParams: [ 1.034516, 0.08, 0.15, 2.17 ]
   
   GetFilterFromHisto:   false  
 

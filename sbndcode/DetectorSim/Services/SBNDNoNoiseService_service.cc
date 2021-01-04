@@ -31,7 +31,7 @@ SBNDNoNoiseService::~SBNDNoNoiseService() {
 
 //**********************************************************************
 
-int SBNDNoNoiseService::addNoise(Channel chan, AdcSignalVector& sigs) const {
+int SBNDNoNoiseService::addNoise(detinfo::DetectorClocksData const&, Channel chan, AdcSignalVector& sigs) const {
   return 0;
 }
 

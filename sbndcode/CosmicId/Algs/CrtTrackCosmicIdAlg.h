@@ -10,7 +10,7 @@
 ///////////////////////////////////////////////
 
 // sbndcode
-#include "sbndcode/CRT/CRTProducts/CRTTrack.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
 
 // framework
@@ -75,7 +75,8 @@ namespace sbnd{
     void reconfigure(const Config& config);
 
     // Tags track as cosmic if it matches a CRTTrack
-    bool CrtTrackCosmicId(recob::Track track, std::vector<crt::CRTTrack> crtTracks, const art::Event& event);
+    bool CrtTrackCosmicId(detinfo::DetectorPropertiesData const& detProp,
+                          recob::Track track, std::vector<sbn::crt::CRTTrack> crtTracks, const art::Event& event);
 
     // Getter for matching algorithm
     CRTTrackMatchAlg TrackAlg() const {return trackMatchAlg;}

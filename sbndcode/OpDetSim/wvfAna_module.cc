@@ -8,6 +8,7 @@
 // Authors: L. Paulucci and F. Marinho
 ////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
 #include <vector>
 #include <cmath>
 #include <memory>
@@ -42,6 +43,8 @@
 #include "TFile.h"
 #include "TTree.h"
 
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+
 namespace opdet {
 
   class wvfAna;
@@ -65,6 +68,7 @@ namespace opdet {
     void beginJob() override;
     void endJob() override;
 
+    opdet::sbndPDMapAlg pdMap; //map for photon detector types
   private:
 
     size_t fEvNumber;
@@ -76,7 +80,9 @@ namespace opdet {
 
     // Declare member data here.
     std::string fInputModuleName;
+    std::vector<std::string> fOpDetsToPlot;
     std::stringstream histname;
+    std::string opdetType;
   };
 
 
@@ -86,9 +92,10 @@ namespace opdet {
     // More initializers here.
   {
     fInputModuleName = p.get< std::string >("InputModule" );
+    fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
 
-    auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-    fSampling = (timeService->OpticalClock().Frequency()); // MHz
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    fSampling = clockData.OpticalClock().Frequency(); // MHz
 
   }
 
@@ -114,12 +121,19 @@ namespace opdet {
 
     std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
 
+    std::cout << "fOpDetsToPlot:\t";
+    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
+    std::cout << std::endl;
+
     int hist_id = 0;
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
+      opdetType = pdMap.pdType(fChNumber);
+      if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
       histname.str(std::string());
       histname << "event_" << fEvNumber
                << "_opchannel_" << fChNumber
+               << "_" << opdetType
                << "_" << hist_id;
 
       fStartTime = wvf.TimeStamp(); //in us

@@ -1,4 +1,3 @@
-
 ////////////////////////////////////////////////////////////////////////
 /// \file   SignalShapingServiceT1053_service.cc
 /// \author H. Greenlee   (adapted to LArIAT by A. Szelc)
@@ -11,6 +10,7 @@
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/TPCGeo.h"
 #include "larcorealg/Geometry/PlaneGeo.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/LArFFT.h"
 #include "TFile.h"
@@ -233,7 +233,8 @@ void util::SignalShapingServiceT1053::SetFieldResponse()
   // Get services.
 
   art::ServiceHandle<geo::Geometry> geo;
-  auto const* detprop = lar::providerFrom<::detinfo::DetectorPropertiesService>();
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
 
   // Get plane pitch.
  
@@ -255,7 +256,7 @@ void util::SignalShapingServiceT1053::SetFieldResponse()
   // set the response for the collection plane first
   // the first entry is 0
 
-  double driftvelocity=detprop->DriftVelocity()/1000.;  
+  double driftvelocity=detProp.DriftVelocity()/1000.;
   double integral = 0.;
   ////////////////////////////////////////////////////
   if(fUseFunctionFieldShape) {
@@ -396,7 +397,7 @@ void util::SignalShapingServiceT1053::SetFieldResponse()
 
     //////////////////////////////////////////////////
     mf::LogInfo("SignalShapingServiceT1053") << " using the old field shape " ;
-    int nbinc = TMath::Nint(fCol3DCorrection*(std::abs(pitch))/(driftvelocity*detprop->SamplingRate())); ///number of bins //KP
+    int nbinc = TMath::Nint(fCol3DCorrection*(std::abs(pitch))/(driftvelocity*sampling_rate(clockData))); ///number of bins //KP
     
     double integral = 0.;
     for(int i = 1; i < nbinc; ++i){
@@ -410,7 +411,7 @@ void util::SignalShapingServiceT1053::SetFieldResponse()
 
     // now the induction plane
     
-    int nbini = TMath::Nint(fInd3DCorrection*(std::abs(pitch))/(driftvelocity*detprop->SamplingRate()));//KP
+    int nbini = TMath::Nint(fInd3DCorrection*(std::abs(pitch))/(driftvelocity*sampling_rate(clockData)));//KP
     for(int i = 0; i < nbini; ++i){
       fIndUFieldResponse[i] = fIndUFieldRespAmp/(1.*nbini);
       fIndUFieldResponse[nbini+i] = -fIndUFieldRespAmp/(1.*nbini);
@@ -434,8 +435,8 @@ void util::SignalShapingServiceT1053::SetElectResponse()
   // Get services.
 
   art::ServiceHandle<geo::Geometry> geo;
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
 
   MF_LOG_DEBUG("SignalShapingT1053") << "Setting T1053 electronics response function...";
 
@@ -466,7 +467,7 @@ void util::SignalShapingServiceT1053::SetElectResponse()
   for(int i = 0; i < nticks; ++i){
 
     //convert time to microseconds, to match fElectResponse[i] definition
-    time[i] = (1.*i)*detprop->SamplingRate()*1e-3; 
+    time[i] = (1.*i)*sampling_rate(clockData)*1e-3;
     fElectResponse[i] = 
       4.31054*exp(-2.94809*time[i]/To)*Ao - 2.6202*exp(-2.82833*time[i]/To)*cos(1.19361*time[i]/To)*Ao
       -2.6202*exp(-2.82833*time[i]/To)*cos(1.19361*time[i]/To)*cos(2.38722*time[i]/To)*Ao
@@ -510,10 +511,10 @@ void util::SignalShapingServiceT1053::SetFilters()
 {
   // Get services.
 
-  auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   art::ServiceHandle<util::LArFFT> fft;
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
 
-  double ts = detprop->SamplingRate();
+  double ts = sampling_rate(clockData);
   int n = fft->FFTSize() / 2;
 
   // Calculate collection filter.

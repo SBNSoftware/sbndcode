@@ -11,13 +11,13 @@ sbnd_gaushitfinder:                                                   @local::ga
 sbnd_gaushitfinder.AreaNorms:                                         [ 13.25, 13.25, 26.31 ]  # normalizations that put signal area in 
 				                                                                               # same scale as peak height. 
 sbnd_gaushitfinder.TryNplus1Fits:                                     false                    # whether to try to re-fit poorly modled hits with n+1 gaussians
-sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane0.RoiThreshold: 10.
-sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane1.RoiThreshold: 10.
+sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane0.RoiThreshold: 14.
+sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane1.RoiThreshold: 17.
 sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane2.RoiThreshold: 10.
 
 sbnd_fasthitfinder:                     @local::standard_fasthitfinder
 sbnd_fasthitfinder.DigitModuleLabel:    "daq"
-sbnd_fasthitfinder.MinSigInd:           10.0
+sbnd_fasthitfinder.MinSigInd:           14.0
 sbnd_fasthitfinder.MinSigCol:           10.0
 sbnd_fasthitfinder.IncludeMoreTail:     3.0
 sbnd_fasthitfinder.UncompressWithPed:   false

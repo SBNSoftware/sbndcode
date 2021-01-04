@@ -1,0 +1,136 @@
+#
+# File:    ophit_wvfana_sbnd.fcl
+# Purpose: Simulates optical detectors waveforms
+# Author:  Iker de Icaza (icaza@fnal.gov)
+# Date:    June 11, 2020
+# Version: 1.0
+# 
+# This is a convenience configuration to ease development of optical simulations.
+# It takes a largeant file with light simulation and produces the photon detectors
+# daq response, the ophit finder algorithm and produces the optical detectors waveforms.
+# 
+# Input:
+# - output from LArG4 module (in particular, SimPhotons or SimPhotonsLite)
+# 
+# Output:
+# - daq: Optical Waveforms
+#
+
+
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+##include "signalservices_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "detsimmodules_sbnd.fcl"
+#include "opdetdigitizer_sbnd.fcl"
+#include "ophitfinder_sbnd.fcl"
+#include "wvfana.fcl"
+
+#include "hitfindermodules_sbnd.fcl"
+#include "cluster_sbnd.fcl"
+#include "trackfindermodules_sbnd.fcl"
+#include "calorimetry_sbnd.fcl"
+#include "showerfindermodules.fcl"
+#include "databaseutil_sbnd.fcl"
+#include "vertexfindermodules.fcl"
+
+
+#inlcude "crtsimmodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+
+process_name: ophitfindingwvfana
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService:              { fileName: "test_ophit_wvf_.root" }
+  @table::sbnd_detsim_services
+  RandomNumberGenerator:     {}                                 # required by fuzzyCluster
+  message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+  LArFFT:                    @local::sbnd_larfft
+
+  SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+}
+
+
+#source is now a root file
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1        # Number of events to create
+}
+
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+
+
+physics:
+{
+
+  producers:
+  {
+    # random number saver
+    rns:       { module_type: RandomNumberSaver }
+    opdaq:     @local::sbnd_opdetdigitizer
+    ophit:     @local::sbnd_hit_finder
+  }
+  
+  analyzers:
+  {
+    wvfana: @local::wvf_ana
+  }
+
+  # define the producer and filter modules for this path, order matters,
+  # filters reject all following items.  see lines starting physics.producers below
+  reco: [rns, opdaq,  ophit ]
+
+  ana: [ wvfana]
+
+  # define the output stream, there could be more than one if using filters
+  stream1:  []
+
+  # trigger_paths is a keyword and contains the paths that modify the art::event,
+  # ie filters and producers
+  trigger_paths: [reco]
+
+  # end_paths is a keyword and contains the paths that do not modify the art::Event,
+  # ie analyzers and output streams.  these all run simultaneously
+  end_paths:     [ana, stream1]
+
+}
+
+
+### Some potential overwrites below
+
+#physics.producers.fpred.OpHitProducer: "ophit"
+#physics.producers.fpred.BeamWindowStart: -0.2       # in us
+#physics.producers.fpred.BeamWindowEnd: 2.0   # in us
+#physics.producers.fpred.ChargeToNPhotonsShower: 1.0
+#physics.producers.fpred.ChargeToNPhotonsTrack: 1.0
+
+#physics.producers.ophit.Area1pePMT:  1.3266    #in ADC*ns
+#physics.producers.opdaq.QEDirect: 0.03
+#physics.producers.opdaq.QERefl: 0.03
+#physics.producers.opdaq.SinglePEmodel: true
+#physics.producers.opdaq.PMTChargeToADC: -51.9
+
+#physics.analyzers.wvfana.  OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
+
+
+
+
+

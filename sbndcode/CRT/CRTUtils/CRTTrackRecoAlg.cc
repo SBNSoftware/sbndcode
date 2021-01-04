@@ -34,11 +34,11 @@ void CRTTrackRecoAlg::reconfigure(const Config& config){
 }
 
 
-std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTrackRecoAlg::CreateCRTTzeros(std::vector<art::Ptr<crt::CRTHit>> hits)
+std::vector<std::vector<art::Ptr<sbn::crt::CRTHit>>> CRTTrackRecoAlg::CreateCRTTzeros(std::vector<art::Ptr<sbn::crt::CRTHit>> hits)
 {
 
-  std::vector<std::vector<art::Ptr<crt::CRTHit>>> crtTzeroVect;
-  int iflag[2000] = {};
+  std::vector<std::vector<art::Ptr<sbn::crt::CRTHit>>> crtTzeroVect;
+  std::vector<int> iflag(hits.size(), 0);
 
   // Sort CRTHits by time
   std::sort(hits.begin(), hits.end(), [](auto& left, auto& right)->bool{
@@ -47,7 +47,7 @@ std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTrackRecoAlg::CreateCRTTzeros
   // Loop over crt hits
   for(size_t i = 0; i<hits.size(); i++){
     if(iflag[i] == 0){
-      std::vector<art::Ptr<crt::CRTHit>> crtTzero;
+      std::vector<art::Ptr<sbn::crt::CRTHit>> crtTzero;
       double time_ns_A = hits[i]->ts1_ns;
       iflag[i]=1;
       crtTzero.push_back(hits[i]);
@@ -74,10 +74,10 @@ std::vector<std::vector<art::Ptr<crt::CRTHit>>> CRTTrackRecoAlg::CreateCRTTzeros
 
 
 // Function to make creating CRTTracks easier
-crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2, bool complete)
+sbn::crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(sbn::crt::CRTHit hit1, sbn::crt::CRTHit hit2, bool complete)
 {
 
-  crt::CRTTrack newtr;
+  sbn::crt::CRTTrack newtr;
 
   newtr.ts0_s         = (hit1.ts0_s + hit2.ts0_s)/2.;
   newtr.ts0_s_err     = (uint32_t)((hit1.ts0_s - hit2.ts0_s)/2.);
@@ -117,7 +117,7 @@ crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2, 
 } // CRTTrackRecoAlg::FillCrtTrack()
 
 
-crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2, size_t nhits)
+sbn::crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(sbn::crt::CRTHit hit1, sbn::crt::CRTHit hit2, size_t nhits)
 {
 
   bool complete = true;
@@ -157,12 +157,12 @@ crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(crt::CRTHit hit1, crt::CRTHit hit2, 
 
 
 // Function to average hits within a certain distance of each other
-std::vector<std::pair<crt::CRTHit, std::vector<int>>> CRTTrackRecoAlg::AverageHits(std::vector<art::Ptr<crt::CRTHit>> hits, std::map<art::Ptr<crt::CRTHit>, int> hitIds)
+std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTTrackRecoAlg::AverageHits(std::vector<art::Ptr<sbn::crt::CRTHit>> hits, std::map<art::Ptr<sbn::crt::CRTHit>, int> hitIds)
 {
 
-  std::vector<std::pair<crt::CRTHit, std::vector<int>>> returnHits;
-  std::vector<art::Ptr<crt::CRTHit>> aveHits;
-  std::vector<art::Ptr<crt::CRTHit>> spareHits;
+  std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> returnHits;
+  std::vector<art::Ptr<sbn::crt::CRTHit>> aveHits;
+  std::vector<art::Ptr<sbn::crt::CRTHit>> spareHits;
 
   if (hits.size()>0){
     // loop over size of tx
@@ -186,7 +186,7 @@ std::vector<std::pair<crt::CRTHit, std::vector<int>>> CRTTrackRecoAlg::AverageHi
       }
     }
 
-    crt::CRTHit aveHit = DoAverage(aveHits);
+    sbn::crt::CRTHit aveHit = DoAverage(aveHits);
     std::vector<int> ids;
     for(size_t i = 0; i < aveHits.size(); i++){
       ids.push_back(hitIds[aveHits[i]]);
@@ -194,7 +194,7 @@ std::vector<std::pair<crt::CRTHit, std::vector<int>>> CRTTrackRecoAlg::AverageHi
     returnHits.push_back(std::make_pair(aveHit, ids));
 
     //Do this recursively
-    std::vector<std::pair<crt::CRTHit, std::vector<int>>> moreHits = AverageHits(spareHits, hitIds);
+    std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> moreHits = AverageHits(spareHits, hitIds);
     returnHits.insert(returnHits.end(), moreHits.begin(), moreHits.end());
     return returnHits;
   }
@@ -205,17 +205,17 @@ std::vector<std::pair<crt::CRTHit, std::vector<int>>> CRTTrackRecoAlg::AverageHi
 } // CRTTrackRecoAlg::AverageHits()
 
 
-std::vector<crt::CRTHit> CRTTrackRecoAlg::AverageHits(std::vector<art::Ptr<crt::CRTHit>> hits)
+std::vector<sbn::crt::CRTHit> CRTTrackRecoAlg::AverageHits(std::vector<art::Ptr<sbn::crt::CRTHit>> hits)
 {
 
-  std::map<art::Ptr<crt::CRTHit>, int> dummy;
+  std::map<art::Ptr<sbn::crt::CRTHit>, int> dummy;
   for(size_t i = 0; i < hits.size(); i++){
     dummy[hits[i]] = 0;
   }
 
-  std::vector<std::pair<crt::CRTHit, std::vector<int>>> output = AverageHits(hits, dummy);
+  std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> output = AverageHits(hits, dummy);
 
-  std::vector<crt::CRTHit> returnHits;
+  std::vector<sbn::crt::CRTHit> returnHits;
   for(auto const& out : output){
     returnHits.push_back(out.first);
   }
@@ -227,7 +227,7 @@ std::vector<crt::CRTHit> CRTTrackRecoAlg::AverageHits(std::vector<art::Ptr<crt::
 
   
 // Take a list of hits and find average parameters
-crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<crt::CRTHit>> hits)
+sbn::crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<sbn::crt::CRTHit>> hits)
 {
 
   // Initialize values
@@ -260,7 +260,7 @@ crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<crt::CRTHit>> hits)
   }
 
   // Create a hit
-  crt::CRTHit crtHit = hitAlg.FillCrtHit(hits[0]->feb_id, hits[0]->pesmap, hits[0]->peshit, 
+  sbn::crt::CRTHit crtHit = hitAlg.FillCrtHit(hits[0]->feb_id, hits[0]->pesmap, hits[0]->peshit, 
                                   (ts1_ns/nhits)*1e-3, 0, xpos/nhits, (xmax-xmin)/2,
                                   ypos/nhits, (ymax-ymin)/2., zpos/nhits, (zmax-zmin)/2., tagger);
 
@@ -270,10 +270,10 @@ crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<crt::CRTHit>> hits)
 
 
 // Function to create tracks from tzero hit collections
-std::vector<std::pair<crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::CreateTracks(std::vector<std::pair<crt::CRTHit, std::vector<int>>> hits)
+std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::CreateTracks(std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> hits)
 {
 
-  std::vector<std::pair<crt::CRTTrack, std::vector<int>>> returnTracks;
+  std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> returnTracks;
 
   std::vector<std::vector<size_t>> trackCandidates;
   // Loop over all hits
@@ -321,9 +321,9 @@ std::vector<std::pair<crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::CreateT
 
     // Create track 
     if(candidate.size() < 2) continue;
-    crt::CRTHit ihit = hits[candidate[0]].first;
-    crt::CRTHit jhit = hits[candidate[1]].first;
-    crt::CRTTrack crtTrack = FillCrtTrack(ihit, jhit, candidate.size());
+    sbn::crt::CRTHit ihit = hits[candidate[0]].first;
+    sbn::crt::CRTHit jhit = hits[candidate[1]].first;
+    sbn::crt::CRTTrack crtTrack = FillCrtTrack(ihit, jhit, candidate.size());
 
     std::vector<int> ids;
     //TODO: Add charge matching for ambiguous cases
@@ -342,18 +342,18 @@ std::vector<std::pair<crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::CreateT
 } // CRTTrackRecoAlg::CreateTracks()
 
 
-std::vector<crt::CRTTrack> CRTTrackRecoAlg::CreateTracks(std::vector<crt::CRTHit> hits)
+std::vector<sbn::crt::CRTTrack> CRTTrackRecoAlg::CreateTracks(std::vector<sbn::crt::CRTHit> hits)
 {
 
-  std::vector<std::pair<crt::CRTHit, std::vector<int>>> input;
+  std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> input;
   for(auto const& hit : hits){
     std::vector<int> dummy;
     input.push_back(std::make_pair(hit, dummy));
   }
 
-  std::vector<std::pair<crt::CRTTrack, std::vector<int>>> output = CreateTracks(input);
+  std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> output = CreateTracks(input);
 
-  std::vector<crt::CRTTrack> tracks;
+  std::vector<sbn::crt::CRTTrack> tracks;
   for(auto const& out : output){
     tracks.push_back(out.first);
   }

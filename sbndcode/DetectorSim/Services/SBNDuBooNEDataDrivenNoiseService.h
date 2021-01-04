@@ -30,7 +30,7 @@
 
 #include "CLHEP/Random/JamesRandom.h"
 #include "CLHEP/Random/RandFlat.h"
-#include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandGaussQ.h"
 
 #include "TH1F.h"
 #include "TRandom3.h"
@@ -60,9 +60,9 @@ public:
   ~SBNDuBooNEDataDrivenNoiseService();
 
   // Add noise to a signal array.
-  int addNoise(Channel chan, AdcSignalVector& sigs) const override;
+  int addNoise(detinfo::DetectorClocksData const& clockData, Channel chan, AdcSignalVector& sigs) const override;
 
-  void generateNoise() override;
+  void generateNoise(detinfo::DetectorClocksData const& clockData) override;
  
   // Print the configuration.
   std::ostream& print(std::ostream& out =std::cout, std::string prefix ="") const override;
@@ -77,10 +77,12 @@ private:
   // The size of the vector is obtained from the FFT service.
   void generateMicroBooNoise(float wirelength, float ENOB, 
                      AdcSignalVector& noise, TH1* aNoiseHist) const;
-  void generateGaussianNoise(AdcSignalVector& noise, std::vector<float> gausNorm, 
+  void generateGaussianNoise(detinfo::DetectorClocksData const& clockData,
+                             AdcSignalVector& noise, std::vector<float> gausNorm,
 	                    std::vector<float> gausMean, std::vector<float> gausSigma,
 	                    TH1* aNoiseHist) const;
-  void generateCoherentNoise(AdcSignalVector& noise, std::vector<float> gausNorm, 
+  void generateCoherentNoise(detinfo::DetectorClocksData const& clockData,
+                             AdcSignalVector& noise, std::vector<float> gausNorm,
 	                    std::vector<float> gausMean, std::vector<float> gausSigma,
 	                    float cohExpNorm, float cohExpWidth, float cohExpOffset, 
 	                    TH1* aNoiseHist) const;
@@ -128,7 +130,7 @@ private:
   
   // Coherent Noise parameters
   bool         fEnableCoherentNoise;
-  unsigned int fNChannelsPerCoherentGroup;
+  std::vector<unsigned int> fNChannelsPerCoherentGroup;
   unsigned int fExpNoiseArrayPoints;  ///< number of points in randomly generated noise array
   unsigned int fCohNoiseArrayPoints;  ///< number of points in randomly generated noise array
   float        fCohExpNorm;           ///< noise scale factor for the exponential component component in coherent noise
@@ -150,8 +152,10 @@ private:
   AdcSignalVectorVector fMicroBooNoiseV;
   
   // Coherent Noise array.
-  AdcSignalVectorVector fCohNoise;  ///< noise on each channel for each time for all planes
-  
+  AdcSignalVectorVector fCohNoiseZ;  ///< noise on each channel for each time for all planes  
+  AdcSignalVectorVector fCohNoiseU;  ///< noise on each channel for each time for all planes
+  AdcSignalVectorVector fCohNoiseV;  ///< noise on each channel for each time for all planes
+
 
   // Histograms.
   
@@ -168,7 +172,19 @@ private:
   TH1* fCohNoiseHist;      ///< distribution of noise counts
   TH1* fCohNoiseChanHist;  ///< distribution of accessed noise samples
 
+  TF1* _wld_f;
+  double wldparams[2];
+
+  TF1* _poisson;
+
+
+  // Randomisation.
+  bool haveSeed;
   CLHEP::HepRandomEngine* m_pran;
+  CLHEP::HepRandomEngine* ConstructRandomEngine(const bool haveSeed);
+  double GetRandomTF1(TF1* func) const;
+  TRandom3* fTRandom3;
+
 
 };
 

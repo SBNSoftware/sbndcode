@@ -3,7 +3,7 @@
 namespace sbnd{
 
 // Simple distance of closest approach between infinite track and centre of hit
-double CRTCommonUtils::SimpleDCA(crt::CRTHit hit, TVector3 start, TVector3 direction){
+double CRTCommonUtils::SimpleDCA(sbn::crt::CRTHit hit, TVector3 start, TVector3 direction){
 
   TVector3 pos (hit.x_pos, hit.y_pos, hit.z_pos);
   TVector3 end = start + direction;
@@ -14,7 +14,7 @@ double CRTCommonUtils::SimpleDCA(crt::CRTHit hit, TVector3 start, TVector3 direc
 }
 
 // Minimum distance from infinite track to CRT hit assuming that hit is a 2D square
-double CRTCommonUtils::DistToCrtHit(crt::CRTHit hit, TVector3 start, TVector3 end){
+double CRTCommonUtils::DistToCrtHit(sbn::crt::CRTHit hit, TVector3 start, TVector3 end){
 
   // Check if track goes inside hit
   TVector3 min (hit.x_pos - hit.x_err, hit.y_pos - hit.y_err, hit.z_pos - hit.z_err);

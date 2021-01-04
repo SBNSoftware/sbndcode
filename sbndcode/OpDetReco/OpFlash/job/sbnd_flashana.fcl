@@ -1,0 +1,18 @@
+BEGIN_PROLOG
+
+sbnd_flashana:
+{
+  module_type:      "SBNDFlashAna"
+
+  # FlashProducer:    ["opflashtpc0"]
+  # OpHitProducer:    ["opflashtpc0"]
+  # MCFlashProducer:  ["mcflashtpc0"]
+  # TPC:              [0]
+
+  FlashProducer:    ["opflashtpc0", "opflashtpc1"]
+  OpHitProducer:    ["opflashtpc0", "opflashtpc1"]
+  MCFlashProducer:  ["mcflashtpc0", "mcflashtpc1"]
+  TPC:              [0,             1]
+}
+
+END_PROLOG

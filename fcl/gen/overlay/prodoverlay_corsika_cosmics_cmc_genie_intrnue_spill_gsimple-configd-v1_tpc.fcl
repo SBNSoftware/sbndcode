@@ -1,4 +1,0 @@
-#include "prodoverlay_corsika_cosmics_cmc_genie_nu_spill_gsimple-configd-v1_tpc.fcl"
-
-GenFlavors:       [12,-12]
-

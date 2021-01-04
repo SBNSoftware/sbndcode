@@ -3,8 +3,8 @@
 // Module Type: producer
 // File:        opDetDigitizerSBND_module.cc
 //
-// Generated at Fri Apr  5 09:21:15 2019 by Laura Paulucci Marinho using artmod
-// from cetpkgsupport v1_14_01.
+// This module produces digitized waveforms of the optical detectors
+// Created by L. Paulucci, F. Marinho, and I.L. de Icaza
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
@@ -35,7 +35,7 @@
 #include <stdexcept>
 
 #include "lardataobj/RawData/OpDetWaveform.h"
-#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/Simulation/sim.h"
 #include "lardataobj/Simulation/SimChannel.h"
@@ -48,18 +48,18 @@
 #include "TRandom3.h"
 #include "TF1.h"
 
-#include "sbndcode/OpDetSim/sbndPDMapAlg.h"
-#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.h"
-#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.h"
-#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.h"
-#include "sbndcode/OpDetSim/opDetDigitizerWorker.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbndcode/OpDetSim/DigiArapucaSBNDAlg.hh"
+#include "sbndcode/OpDetSim/DigiPMTSBNDAlg.hh"
+#include "sbndcode/OpDetSim/opDetSBNDTriggerAlg.hh"
+#include "sbndcode/OpDetSim/opDetDigitizerWorker.hh"
 
 namespace opdet {
 
   /*
   * This module simulates the digitization of SBND photon detectors response.
   *
-  * The module is has an interface to the simulation algorithms for PMTs and arapucas,
+  * The module has an interface to the simulation algorithms for PMTs and Arapucas,
   * opdet::DigiPMTSBNDAlg e opdet::DigiArapucaSBNDAlg.
   *
   * Input
@@ -95,8 +95,8 @@ namespace opdet {
         Name("WaveformSize"),
         Comment("Value to initialize the waveform vector in ns. It is resized in the algorithms according to readout window of PDs")
       };
-      fhicl::Atom<int> UseLitePhotons {
-        Name("UseLitePhotons"),
+      fhicl::Atom<bool> UseSimPhotonsLite {
+        Name("UseSimPhotonsLite"),
         Comment("Whether SimPhotonsLite or SimPhotons will be used")
       };
 
@@ -144,7 +144,7 @@ namespace opdet {
     bool fApplyTriggers;
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
-    bool fUseLitePhotons;
+    bool fUseSimPhotonsLite;
     unsigned fPMTBaseline;
     unsigned fArapucaBaseline;
     unsigned fNThreads;
@@ -169,13 +169,11 @@ namespace opdet {
   opDetDigitizerSBND::opDetDigitizerSBND(Parameters const& config)
     : EDProducer{config}
     , fApplyTriggers(config().ApplyTriggers())
-    , fUseLitePhotons(config().UseLitePhotons())
+    , fUseSimPhotonsLite(config().UseSimPhotonsLite())
     , fPMTBaseline(config().pmtAlgoConfig().pmtbaseline())
     , fArapucaBaseline(config().araAlgoConfig().baseline())
-    , fTriggerAlg(config().trigAlgoConfig(), lar::providerFrom<detinfo::DetectorClocksService>(), lar::providerFrom<detinfo::DetectorPropertiesService>())
+    , fTriggerAlg(config().trigAlgoConfig())
   {
-    auto const *timeService = lar::providerFrom< detinfo::DetectorClocksService >();
-
     opDetDigitizerWorker::Config wConfig( config().pmtAlgoConfig(), config().araAlgoConfig());
 
     fNThreads = config().NThreads();
@@ -191,7 +189,9 @@ namespace opdet {
           fNThreads = n_threads;
         }
         catch (...) {
-          mf::LogError("OpDetDigitizer") << "Unable to parse number of threads in environment variable (SBNDCODE_OPDETSIM_NTHREADS): (" << env << "). Setting Number opdet threads to 1." << std::endl;
+          mf::LogError("OpDetDigitizer") << "Unable to parse number of threads "
+                                         << "in environment variable (SBNDCODE_OPDETSIM_NTHREADS): (" << env << ").\n"
+                                         << "Setting Number opdet threads to 1." << std::endl;
           fNThreads = 1;
         }
       }
@@ -207,11 +207,13 @@ namespace opdet {
 
     wConfig.nThreads = fNThreads;
 
-    wConfig.UseLitePhotons = config().UseLitePhotons();
+    wConfig.UseSimPhotonsLite = config().UseSimPhotonsLite();
     wConfig.InputModuleName = config().InputModuleName();
 
-    wConfig.Sampling = (timeService->OpticalClock().Frequency()) / 1000.0; //in GHz
-    wConfig.EnableWindow = fTriggerAlg.TriggerEnableWindow(); // us
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
+    wConfig.Sampling = (clockData.OpticalClock().Frequency()) / 1000.0; //in GHz
+    wConfig.EnableWindow = fTriggerAlg.TriggerEnableWindow(clockData, detProp); // us
     wConfig.Nsamples = (wConfig.EnableWindow[1] - wConfig.EnableWindow[0]) * 1000. /*us -> ns*/ * wConfig.Sampling /* GHz */;
 
     fFinished = false;
@@ -234,7 +236,13 @@ namespace opdet {
       fWorkers[i].SetTriggeredWaveformHandle(&fTriggeredWaveforms[i]);
 
       // start worker thread
-      fWorkerThreads.emplace_back(opdet::opDetDigitizerWorkerThread, std::cref(fWorkers[i]), std::ref(fSemStart), std::ref(fSemFinish), fApplyTriggers, &fFinished);
+      fWorkerThreads.emplace_back(opdet::opDetDigitizerWorkerThread,
+                                  std::cref(fWorkers[i]),
+                                  clockData,
+                                  std::ref(fSemStart),
+                                  std::ref(fSemFinish),
+                                  fApplyTriggers,
+                                  &fFinished);
     }
 
     // Call appropriate produces<>() functions here.
@@ -256,12 +264,15 @@ namespace opdet {
   {
     std::unique_ptr< std::vector< raw::OpDetWaveform > > pulseVecPtr(std::make_unique< std::vector< raw::OpDetWaveform > > ());
     // Implementation of required member function here.
-    std::cout << "Event: " << e.id().event() << std::endl;
+    mf::LogInfo("opDetDigitizer") << "Event: " << e.id().event() << std::endl;
 
     // setup the waveforms
     fWaveforms = std::vector<raw::OpDetWaveform> (nChannels);
 
-    if (fUseLitePhotons == 1) { //using SimPhotonsLite
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
+    auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e, clockData);
+
+    if (fUseSimPhotonsLite) {
       fPhotonLiteHandles.clear();
       //Get *ALL* SimPhotonsCollectionLite from Event
       e.getManyByType(fPhotonLiteHandles);
@@ -288,9 +299,9 @@ namespace opdet {
         if (ch == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
           continue;
         }
-        raw::ADC_Count_t baseline = (map.isPDType(ch, "uncoatedpmt") || map.isPDType(ch, "coatedpmt")) ?
+        raw::ADC_Count_t baseline = (map.isPDType(ch, "pmt_uncoated") || map.isPDType(ch, "pmt_coated")) ?
                                     fPMTBaseline : fArapucaBaseline;
-        fTriggerAlg.FindTriggerLocations(waveform, baseline);
+        fTriggerAlg.FindTriggerLocations(clockData, detProp, waveform, baseline);
       }
 
       // combine the triggers

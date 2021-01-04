@@ -24,7 +24,10 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+namespace detinfo {
+  class DetectorClocksData;
+  class DetectorPropertiesData;
+}
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -33,8 +36,8 @@
 #include "fhiclcpp/types/Atom.h"
 #include "cetlib/pow.h" // cet::sum_of_squares()
 
-#include "sbndcode/CRT/CRTProducts/CRTHit.hh"
-#include "sbndcode/CRT/CRTProducts/CRTData.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
@@ -116,13 +119,15 @@ namespace sbnd{
 
     void reconfigure(const Config& config);
 
-    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CreateTaggerStrips(std::vector<art::Ptr<crt::CRTData>> data);
+    std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CreateTaggerStrips(detinfo::DetectorClocksData const& clockData,
+                                                                                         detinfo::DetectorPropertiesData const& detProp,
+                                                                                         std::vector<art::Ptr<sbnd::crt::CRTData>> data);
 
-    CRTStrip CreateCRTStrip(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2, size_t ind);
+    CRTStrip CreateCRTStrip(art::Ptr<sbnd::crt::CRTData> sipm1, art::Ptr<sbnd::crt::CRTData> sipm2, size_t ind);
 
-    std::pair<double, double> DistanceBetweenSipms(art::Ptr<crt::CRTData> sipm1, art::Ptr<crt::CRTData> sipm2);
+    std::pair<double, double> DistanceBetweenSipms(art::Ptr<sbnd::crt::CRTData> sipm1, art::Ptr<sbnd::crt::CRTData> sipm2);
     
-    std::vector<std::pair<crt::CRTHit, std::vector<int>>> CreateCRTHits(std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips);
+    std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CreateCRTHits(std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> taggerStrips);
 
     // Function to calculate the strip position limits in real space from channel
     std::vector<double> ChannelToLimits(CRTStrip strip);
@@ -137,7 +142,7 @@ namespace sbnd{
     bool CheckModuleOverlap(uint32_t channel);
  
     // Function to make filling a CRTHit a bit faster
-    sbnd::crt::CRTHit FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, 
+    sbn::crt::CRTHit FillCrtHit(std::vector<uint8_t> tfeb_id, std::map<uint8_t, 
                            std::vector<std::pair<int,float>>> tpesmap, float peshit, double time, int plane, 
                            double x, double ex, double y, double ey, double z, double ez, std::string tagger); 
 
@@ -146,10 +151,6 @@ namespace sbnd{
 
   private:
 
-    detinfo::DetectorClocks const* fDetectorClocks;
-    detinfo::DetectorProperties const* fDetectorProperties;
-    //detinfo::ElecClock fTrigClock;
-    
     TPCGeoAlg fTpcGeo;
     CRTGeoAlg fCrtGeo;
 
