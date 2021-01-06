@@ -1,6 +1,5 @@
 #include "RecoUtils.h"
 
-
 int RecoUtils::TrueParticleID(detinfo::DetectorClocksData const& clockData,
                               const art::Ptr<recob::Hit> hit, bool rollup_unsaved_ids) {
   std::map<int,double> id_to_energy_map;

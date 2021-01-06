@@ -83,8 +83,7 @@ public:
   void beginJob() override;
   void endJob() override;
 
-  std::map<geo::PlaneID,int> NumberofPlaneHitsFromTrack(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits); // Returns number of hits at each plane
-  int NumberofHitsFromTrack(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits); //Returns the number of hits in the vector that are associated to the MC track.
+  int NumberOfSharedHits(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits); //Returns the number of hits in the vector that are matched to a MC track.
 
 private:
 
@@ -522,15 +521,15 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       hits_adc       ->push_back(temp_adc);  
 
       // Use the hits to get the G4ID
-      int this_g4id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, true); // rollupUnsavedIDs
-      bool valid_g4id = TruthMatchUtils::Valid(this_g4id);
-      if (!valid_g4id){
+      auto mc_matched_id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, true); // rollupUnsavedIDs
+      bool valid_match = TruthMatchUtils::Valid(mc_matched_id);
+      if (!valid_match){
       	std::cout << "Unable to find MCParticle matched to this track." << std::endl;
       	continue;
       }
       // Use particle inventory service to get the mcparticle contributing to this track
       // For the truth matching, get the MCParticle which trackid is the same as the g4id
-      const simb::MCParticle *particle = particleInventory->TrackIdToParticle_P(this_g4id);
+      const simb::MCParticle *particle = particleInventory->TrackIdToParticle_P(mc_matched_id);
       mcpart_trackid->push_back(particle->TrackId());
       mcpart_pdg->push_back(particle->PdgCode());
       mcpart_ntpoints->push_back(int(particle->NumberTrajectoryPoints()));
@@ -546,9 +545,9 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       mcpart_endy->push_back(particle->EndY());
       mcpart_endz->push_back(particle->EndZ());
 
-      int nsharedhits = 1;
+      int nsharedhits = NumberOfSharedHits(mc_matched_id, clock_data, trackhits);
       // Returns the number of hits in the vector that are associated to the MC track.
-      int ntruehits = NumberofHitsFromTrack(particle->TrackId(), clock_data, trackhits);
+      int ntruehits = nsharedhits;
       int nrecohits = trackhits.size();
       float hitcompleteness = -9999.;
       float hitpurity = -9999.;
@@ -666,80 +665,18 @@ void sbnd::ValidateTracks::beginJob()
 
 }
 
+int sbnd::ValidateTracks::NumberOfSharedHits(int trackID, detinfo::DetectorClocksData const& clock_data, const std::vector<art::Ptr<recob::Hit>> &hits){
 
-std::map<geo::PlaneID,int> sbnd::ValidateTracks::NumberofPlaneHitsFromTrack(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits){
-
-  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-  art::ServiceHandle<geo::Geometry> geom;
-
-  std::map<geo::PlaneID, int> HitNum_plane;
-
-  //Loop over the hits and find the IDE
-  for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
-
-    art::Ptr<recob::Hit> hit = *hitIt;
-    
-    geo::WireID wireid = hit->WireID();
-    geo::PlaneID  PlaneID = wireid.planeID();
-
-    std::vector<sim::TrackIDE> trackIDEs = bt_serv->HitToTrackIDEs(clockData, hit);
-    
-    std::map<int,float> hitEnergies; 
-
-    //Loop over the IDEs associated to the hit and add up energies
-    for(unsigned int idIt = 0; idIt < trackIDEs.size(); ++idIt) {
-      hitEnergies[TMath::Abs(trackIDEs.at(idIt).trackID)] += trackIDEs.at(idIt).energy;
-    }
-
-    //Find which track deposited the most energy. 
-    int   likelytrack = -9999;
-    float MaxEnergy   = -9999;
-    for(std::map<int,float>::iterator track_iter=hitEnergies.begin();track_iter!=hitEnergies.end();++track_iter){
-      if(track_iter->second > MaxEnergy){
-      	MaxEnergy = track_iter->second;
-      	likelytrack = track_iter->first;
-      }
-    }
-    
-    if(likelytrack == TrackID){++HitNum_plane[PlaneID];}
+  int nsharedhits = 0;
+  for(auto hit : hits){
+    auto hit_matched_id = TruthMatchUtils::TrueParticleID(clock_data, hit, true);
+    if(hit_matched_id == trackID)
+      nsharedhits++;
   }
-  return HitNum_plane;
+
+  return nsharedhits;
 }
 
-int sbnd::ValidateTracks::NumberofHitsFromTrack(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits){
-
-  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-  
-  int HitNum = 0;
-
-  //Loop over the hits and find the IDE
-  for (std::vector<art::Ptr<recob::Hit> >::const_iterator hitIt = hits.begin(); hitIt != hits.end(); ++hitIt) {
-
-    art::Ptr<recob::Hit> hit = *hitIt;
-  
-    std::vector<sim::TrackIDE> trackIDEs = bt_serv->HitToTrackIDEs(clockData, hit);
-    std::map<int,float> hitEnergies; 
-
-    //Loop over the IDEs associated to the hit and add up energies
-    for(unsigned int idIt = 0; idIt < trackIDEs.size(); ++idIt) {
-      hitEnergies[TMath::Abs(trackIDEs.at(idIt).trackID)] += trackIDEs.at(idIt).energy;
-    }
-
-    //Find which track deposited the most energy. 
-    int   likelytrack = -9999;
-    float MaxEnergy   = -9999;
-    for(std::map<int,float>::iterator track_iter=hitEnergies.begin();track_iter!=hitEnergies.end();++track_iter){
-      if(track_iter->second > MaxEnergy){
-      	MaxEnergy = track_iter->second;
-      	likelytrack = track_iter->first;
-      }
-    }
-
-    if(likelytrack == TrackID){++HitNum;}
-   
-  }    
-  return HitNum;
-}
 
 void sbnd::ValidateTracks::endJob()
 {
