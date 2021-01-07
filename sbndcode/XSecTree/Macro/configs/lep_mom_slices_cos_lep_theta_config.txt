@@ -14,33 +14,33 @@
 //                           File configuration
 //------------------------------------------------------------------------
 // Name of input file
-InputFile: /sbnd/app/users/rsjones/LArSoft_v08_31_00/LArSoft-v08_31_00/srcs/sbndcode/sbndcode/XSecTree/xsectree_output.root 
+InputFile: /sbnd/data/users/rsjones/PhysicsBook/files/xsec_trees/sbnd/all_models.list
 
 // Path to interaction and metadata trees
 TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: test/cm_dec_2019/test_output.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/lep_mom_slices_cos_lep_theta_inclusive/lep_mom_slices_cos_lep_theta_inclusive.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
 //------------------------------------------------------------------------
 // Muon ([-]14) or electron ([-]12) neutrino
-NuPdg: 14, -14
+NuPdg: 14
 
 // Charged current (1), neutral current (0), not selected (-1, reco only)
-IsCC: 1, 0
+IsCC: 1
 
 // Require lepton to be contained
-ContainedLepton: true, false
+ContainedLepton: false
 
 // Require secondary particles to be contained
-ContainedParticles: true, false
+ContainedParticles: false
 
 // Apply a fiducial volume cut to the neutrino vertex (-1 for AV)
-// Cuts +ve values from face: min x, min y, min z, max x, max y, max z
-Fiducial: 15, 15, 15, 15, 15, 80
+// Cuts +ve values from face: min x, min y, min z, max x, max y, max z [cm]
+Fiducial: 0,0,0,0,0,0 
 
 // FSI (true) or true interaction (false)
 PlotByFsi: true
@@ -62,11 +62,12 @@ InteractionType: -1
 //------------------------------------------------------------------------
 //                          Choose what to plot
 //------------------------------------------------------------------------
-// Choose what stage to plot
+// Choose what stages to plot
 //- true (selection and kinematic variables all in truth)
 //- eff (Applies efficiency to true particle type)
 //- smeareff (Applies efficiency and smears plotting variables only)
 //- reco (Efficiency + smearing + PID + selection) TODO: only for numuCC
+// Multiple stages will plot as overlays - only if a single model file is passed
 Stage: true
 
 // Variable to plot in
@@ -94,13 +95,19 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: nu_energy
+PlotVariable: cos_lep_theta, lep_mom
 
 // Save the plots for each variable
-ShowPlots: true
+ShowPlots: true, true
+
+// Save all historams in a single output file (true), or just in separate files (false)
+SaveAllInOne: true
 
 // Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
 PotScale: 6.6e20
+
+// Whether or not there is a single POT value repeated in the input (true) or the POTs should be summed (false)
+SinglePot: true
 
 //------------------------------------------------------------------------
 //                           Choose how to plot
@@ -108,20 +115,20 @@ PotScale: 6.6e20
 // Produce a stacked histogram (true)
 PlotStacked: true
 
-// Stack in true FSI (fsi), true interaction (int), or neutrino type (nu)
-StackBy: nu
+// Stack in true FSI (fsi), true interaction (int), neutrino type (nu)
+StackBy: fsi
 
 // Minimum bin (-1 for min tree value)
-MinValue: 0
+MinValue: -1,0
 
 // Maximum bin (-1 for max tree value)
-MaxValue: 5
+MaxValue: 1,3
 
 // Number of bins (-1 for automatic)
-NumBins: -1
+NumBins: 50,7
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-BinEdges: [-1]
+BinEdges: [-1],[0.0,0.2,0.3,0.45,0.8,1.25,2.5,3.0]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
 MaxError: 0.05
@@ -143,6 +150,9 @@ ShowStatError: false
 
 // Show error bars on histograms (true)
 ShowErrorBars: false
+
+// Show 2D slices (true) or just 2D histogram (false)
+Show2DSlices: true
 
 // Produce efficiency and purity plots (true)
 PlotEffPur: false

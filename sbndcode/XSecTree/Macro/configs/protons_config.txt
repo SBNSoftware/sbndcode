@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/pions_inclusive/pions_inclusive.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/protons_inclusive/protons_inclusive.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -95,7 +95,7 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: n_pipm
+PlotVariable: n_pr
 
 // Save the plots for each variable
 ShowPlots: true

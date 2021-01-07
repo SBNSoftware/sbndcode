@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/pions_inclusive/pions_inclusive.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/nu_energy_inclusive/nu_energy_inclusive.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -95,7 +95,7 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: n_pipm
+PlotVariable: nu_energy
 
 // Save the plots for each variable
 ShowPlots: true
@@ -116,16 +116,16 @@ SinglePot: true
 PlotStacked: true
 
 // Stack in true FSI (fsi), true interaction (int), neutrino type (nu)
-StackBy: int
+StackBy: fsi
 
 // Minimum bin (-1 for min tree value)
 MinValue: 0
 
 // Maximum bin (-1 for max tree value)
-MaxValue: 5
+MaxValue: 3
 
 // Number of bins (-1 for automatic)
-NumBins: 5
+NumBins: 80
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
 BinEdges: [-1]

@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/pions_inclusive/pions_inclusive.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/lep_mom_cos_lep_theta_inclusive/lep_mom_cos_lep_theta_inclusive.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -95,10 +95,10 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: n_pipm
+PlotVariable: cos_lep_theta, lep_mom
 
 // Save the plots for each variable
-ShowPlots: true
+ShowPlots: true, true
 
 // Save all historams in a single output file (true), or just in separate files (false)
 SaveAllInOne: true
@@ -116,19 +116,19 @@ SinglePot: true
 PlotStacked: true
 
 // Stack in true FSI (fsi), true interaction (int), neutrino type (nu)
-StackBy: int
+StackBy: fsi
 
 // Minimum bin (-1 for min tree value)
-MinValue: 0
+MinValue: -1,0
 
 // Maximum bin (-1 for max tree value)
-MaxValue: 5
+MaxValue: 1,3
 
 // Number of bins (-1 for automatic)
-NumBins: 5
+NumBins: 80,80
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-BinEdges: [-1]
+BinEdges: [-1],[-1]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
 MaxError: -1
@@ -143,7 +143,7 @@ PlotFilled: true
 //                         Choose plot options
 //------------------------------------------------------------------------
 // Show selection information (true)
-ShowInfo: true
+ShowInfo: false
 
 // Show percentage statistical error (true)
 ShowStatError: false
