@@ -136,6 +136,9 @@ MaxError: -1
 // Plot cross-section (true) or rate (false)
 PlotXSec: false
 
+// Plot scaled for area (true) or keep absolute rate (false) [not applicable to XSec]
+PlotAreaNorm: true
+
 // Plot filled histograms (true)
 PlotFilled: true
 

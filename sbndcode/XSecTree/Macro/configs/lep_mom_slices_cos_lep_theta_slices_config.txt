@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/protons_inclusive/protons_inclusive.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/lep_mom_slices_cos_lep_theta_slices_inclusive/lep_mom_slices_cos_lep_theta_slices_inclusive.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -36,7 +36,7 @@ IsCC: 1
 ContainedLepton: false
 
 // Require secondary particles to be contained
-ContainedParticles: false
+ContainedParticles: true
 
 // Apply a fiducial volume cut to the neutrino vertex (-1 for AV)
 // Cuts +ve values from face: min x, min y, min z, max x, max y, max z [cm]
@@ -95,10 +95,10 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: n_pr
+PlotVariable: cos_lep_theta, lep_mom
 
 // Save the plots for each variable
-ShowPlots: true
+ShowPlots: true, true
 
 // Save all historams in a single output file (true), or just in separate files (false)
 SaveAllInOne: true
@@ -116,25 +116,25 @@ SinglePot: true
 PlotStacked: true
 
 // Stack in true FSI (fsi), true interaction (int), neutrino type (nu)
-StackBy: int
+StackBy: fsi
 
 // Minimum bin (-1 for min tree value)
-MinValue: 0
+MinValue: -1,0
 
 // Maximum bin (-1 for max tree value)
-MaxValue: 5
+MaxValue: 1,3
 
 // Number of bins (-1 for automatic)
-NumBins: 5
+NumBins: 9,6
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
-BinEdges: [-1]
+BinEdges: [-1.,-0.5,0.0,0.3,0.45,0.6,0.7,0.8,0.9,1.0],[0.0,0.2,0.3,0.45,0.8,1.25,2.5]
 
 // Maximum percentage error per bin (0->1, -1 for none) (merges bins)
 MaxError: -1
 
 // Plot cross-section (true) or rate (false)
-PlotXSec: false
+PlotXSec: true
 
 // Plot scaled for area (true) or keep absolute rate (false) [not applicable to XSec]
 PlotAreaNorm: true
@@ -146,7 +146,7 @@ PlotFilled: true
 //                         Choose plot options
 //------------------------------------------------------------------------
 // Show selection information (true)
-ShowInfo: true
+ShowInfo: false
 
 // Show percentage statistical error (true)
 ShowStatError: false
@@ -155,7 +155,7 @@ ShowStatError: false
 ShowErrorBars: false
 
 // Show 2D slices (true) or just 2D histogram (false)
-Show2DSlices: false
+Show2DSlices: true
 
 // Produce efficiency and purity plots (true)
 PlotEffPur: false

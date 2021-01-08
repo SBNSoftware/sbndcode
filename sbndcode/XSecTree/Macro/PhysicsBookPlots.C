@@ -74,6 +74,7 @@ std::vector<int> fNumBins;
 std::vector<std::vector<double>> fBinEdges;
 double fMaxError;
 bool fPlotXSec;
+bool fPlotAreaNorm;
 bool fScaleWidth;
 bool fPlotFilled;
 // Optional extras
@@ -335,6 +336,7 @@ void Configure(const std::string config_filename) {
     if(key.find("MaxError") != std::string::npos)    fMaxError = stod(value);
     if(key.find("ScaleWidth") != std::string::npos)  fScaleWidth = (value=="true");
     if(key.find("PlotXSec") != std::string::npos)    fPlotXSec = (value=="true");
+    if(key.find("PlotAreaNorm") != std::string::npos)    fPlotAreaNorm = (value=="true");
     if(key.find("PlotFilled") != std::string::npos)  fPlotFilled = (value=="true");
     // Optional extras
     if(key.find("Show2DSlices") != std::string::npos)  fShow2DSlices = (value=="true");
@@ -1306,6 +1308,9 @@ void Plot1DHistWithErrors(TH1D* error_bands, Titles titles, TH1D* total_hist, in
   // Draw the stacked histogram and legend
   total_hist->SetTitle("");
   total_hist->Draw("HIST");
+  if(fPlotAreaNorm && !fPlotXSec)
+    total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
+
   if(fShowErrorBars){
     TH1D *total_clone = static_cast<TH1D*>(total_hist->Clone("total_clone"));
     total_clone->SetLineWidth(2);
@@ -1328,6 +1333,9 @@ void Plot1DHistWithErrors(TH1D* error_bands, Titles titles, TH1D* total_hist, in
   }
   else if(fMaxError > 0){
     total_hist->GetYaxis()->SetTitle("Events (/bin width)");
+  }
+  else if(fPlotAreaNorm && !fPlotXSec){
+    total_hist->GetYaxis()->SetTitle("Events (Area Normalised)");
   }
   else{
     total_hist->GetYaxis()->SetTitle("Events");
@@ -1607,7 +1615,7 @@ void Plot1DHist(Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1,
 
   // Create the canvas
   TString name = total_hist->GetName();
-  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",600,600);
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",900,900);
 
   // Split the pad for histogram and error plot
   canvas->SetTopMargin(0.05);
@@ -1617,6 +1625,8 @@ void Plot1DHist(Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1,
 
   // Draw the stacked histogram and legend
   total_hist->SetTitle("");
+  if(fPlotAreaNorm && !fPlotXSec)
+    total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
   total_hist->Draw("HIST");
 
   total_hist->SetFillColor(fCols[0]);
@@ -1656,6 +1666,9 @@ void Plot1DHist(Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1,
   }
   else if(fMaxError > 0){
     total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
+  }
+  else if(fPlotAreaNorm && !fPlotXSec){
+    total_hist->GetYaxis()->SetTitle("Events (Area Normalised)");
   }
   else{
     total_hist->GetYaxis()->SetTitle("Events");
@@ -1716,7 +1729,7 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, i
 
   // Create the canvas
   TString name = hstack->GetName();
-  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",600,600);
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",900,900);
 
   // Split the pad for histogram and error plot
   canvas->SetTopMargin(0.07);
@@ -1841,13 +1854,15 @@ void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Tit
   TString var    = histograms.begin()->second.begin()->second->GetName();
   TString stage0 = histograms.begin()->second.begin()->first;
   TString model0 = histograms.begin()->first;
-  TString canv_name = "canvas_overlay_"+std::to_string(i);
+  TString canv_name = "canvas_overlay_"+var+"_"+std::to_string(i);
   if(j > -1){
-    canv_name = "canvas_overlay_"+std::to_string(i)+"_"+std::to_string(j);
+    canv_name += "_"+std::to_string(j);
     if(k > -1)
-      canv_name = "canvas_overlay_"+std::to_string(i)+"_"+std::to_string(j)+"_"+std::to_string(k);
+      canv_name += "_"+std::to_string(k);
   }
-  TCanvas *canvas = new TCanvas(canv_name,"",600,600);
+  TCanvas *canvas = new TCanvas(canv_name,"",900,900);
+  if(j > -1 || k > -1)
+    canvas->SetCanvasSize(800,600);
   TLegend *legend = new TLegend(0.21,0.94,0.97,0.99);
 
   // Split the pad for histogram and error plot
@@ -1862,6 +1877,8 @@ void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Tit
     std::map< TString, TH1D*> stage_hists = it_models->second;
     for(it = stage_hists.begin(); it != stage_hists.end(); ++it){
       TH1D *total_hist = it->second;
+      if(fPlotAreaNorm && !fPlotXSec)
+        total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
       if(total_hist->GetMaximum() > max_y)
         max_y = total_hist->GetMaximum();
     }
@@ -1880,6 +1897,8 @@ void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Tit
       TString stage    = it->first; 
       TH1D *total_hist = it->second;
       total_hist->SetTitle("");
+      if(fPlotAreaNorm && !fPlotXSec)
+        total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
       
       // Text position and content
       if(var.Contains("cos"))
@@ -1909,6 +1928,9 @@ void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Tit
       else if(fMaxError > 0){
         total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
       }
+      else if(fPlotAreaNorm && !fPlotXSec){
+        total_hist->GetYaxis()->SetTitle("Events (Area Normalised)");
+      }
       else{
         total_hist->GetYaxis()->SetTitle("Events");
       }
@@ -1921,18 +1943,23 @@ void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Tit
       total_hist->GetXaxis()->SetTitleOffset(1);
       total_hist->GetXaxis()->SetLabelOffset(0.005);
       total_hist->GetXaxis()->SetTickLength(0.02);
-      total_hist->GetXaxis()->SetTitleSize(0.05);
+      total_hist->GetXaxis()->SetTitleSize(0.045);
       total_hist->GetXaxis()->SetLabelSize(0.035);
       // Y axis config
       total_hist->GetYaxis()->SetRangeUser(0., 1.1*max_y);
       total_hist->GetYaxis()->SetMaxDigits(3.);
-      total_hist->GetYaxis()->SetTitleOffset(1.2);
       total_hist->GetYaxis()->SetTickLength(0.015);
-      total_hist->GetYaxis()->SetTitleSize(0.05);
+      total_hist->GetYaxis()->SetTitleSize(0.045);
       total_hist->GetYaxis()->SetLabelSize(0.035);
       total_hist->GetYaxis()->SetNdivisions(110);
-      if(fPlotXSec && fPlotVariables.size()==1)
-        canvas->Modified();
+      total_hist->GetYaxis()->SetTitleOffset(1.2);
+      if(fPlotXSec)
+      {
+        total_hist->GetYaxis()->SetTitleOffset(1.45);
+        total_hist->GetYaxis()->SetTitleSize(0.04);
+        if(fPlotVariables.size()==1)
+          canvas->Modified();
+      }
 
       if(fShowErrorBars){
         total_hist->SetLineWidth(2);
@@ -1958,8 +1985,16 @@ void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Tit
   if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, -1);
   legend->SetNColumns(legend->GetNRows());
   legend->Draw("same");
+  
+  canv_name.ReplaceAll("-","m");
+  canvas->SetName(canv_name);
+  
   TString output_file = fOutputFile;
   output_file.ReplaceAll(".","_"+var+"_overlay.");
+  output_file.ReplaceAll(".root","");
+  output_file.ReplaceAll(".","p");
+  output_file.ReplaceAll("-","m");
+  output_file.Append(".root");
   canvas->SaveAs(output_file);
   output_file.ReplaceAll(".root",".png");
   canvas->SaveAs(output_file);
@@ -1980,16 +2015,18 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
   std::map<TString, TH1D*>::const_iterator it;
 
   // Create the canvas
-  TString var = histograms.begin()->second.begin()->second->GetName();
+  TString var    = histograms.begin()->second.begin()->second->GetName();
   TString stage0 = histograms.begin()->second.begin()->first;
   TString model0 = histograms.begin()->first;
-  TString canv_name = "canvas_errorbar_overlay_"+std::to_string(i);
+  TString canv_name = "canvas_overlay_"+var+"_"+std::to_string(i);
   if(j > -1){
-    canv_name = "canvas_errorbar_overlay_"+std::to_string(i)+"_"+std::to_string(j);
+    canv_name += "_"+std::to_string(j);
     if(k > -1)
-      canv_name = "canvas_errorbar_overlay_"+std::to_string(i)+"_"+std::to_string(j)+"_"+std::to_string(k);
+      canv_name += "_"+std::to_string(j)+"_"+std::to_string(k);
   }
   TCanvas *canvas = new TCanvas(canv_name,"",600,1000);
+  if(j > -1 || k > -1)
+    canvas->SetCanvasSize(800,1000);
   TLegend *legend = new TLegend(0.14, 0.005, 0.94, 0.066);
 
   // Split the pad for histogram and error plot
@@ -2019,6 +2056,8 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
     std::map< TString, TH1D*> stage_hists = it_models->second;
     for(it = stage_hists.begin(); it != stage_hists.end(); ++it){
       TH1D *total_hist = it->second;
+      if(fPlotAreaNorm && !fPlotXSec)
+        total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
       if(total_hist->GetMaximum() > max_y)
         max_y = total_hist->GetMaximum();
     }
@@ -2035,6 +2074,8 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
     for(it = stage_hists.begin(); it != stage_hists.end(); ++it){
       TString stage    = it->first; 
       TH1D *total_hist = it->second;
+      if(fPlotAreaNorm && !fPlotXSec)
+        total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
 
       TString name = total_hist->GetName();
 
@@ -2057,6 +2098,9 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
       }
       else if(fMaxError > 0){
         total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
+      }
+      else if(fPlotAreaNorm && !fPlotXSec){
+        total_hist->GetYaxis()->SetTitle("Events (Area Normalised)");
       }
       else{
         total_hist->GetYaxis()->SetTitle("Events");
@@ -2094,8 +2138,15 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
       total_hist->GetYaxis()->SetTitleSize(title_size);
       total_hist->GetYaxis()->SetNdivisions(110);
       total_hist->GetYaxis()->SetTickLength(0.015);
-      if(fPlotXSec && fPlotVariables.size()==1)
-        canvas->Modified();
+      total_hist->GetYaxis()->SetTitleOffset(1.1);
+      if(fPlotXSec)
+      {
+        total_hist->GetYaxis()->SetTitleOffset(1.45);
+        total_hist->GetYaxis()->SetTitleSize(0.9*title_size);
+        if(fPlotVariables.size()==1)
+          canvas->Modified();
+      }
+
 
       // Text position and content
       if(var.Contains("cos"))
@@ -2197,8 +2248,14 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
     }
     index++;
   }
+  canv_name.ReplaceAll("-","m");
+  canvas->SetName(canv_name);
   TString output_file = fOutputFile;
   output_file.ReplaceAll(".","_"+var+"_overlay_errors.");
+  output_file.ReplaceAll(".root","");
+  output_file.ReplaceAll(".","p");
+  output_file.ReplaceAll("-","m");
+  output_file.Append(".root");
   canvas->SaveAs(output_file);
   output_file.ReplaceAll(".root",".png");
   canvas->SaveAs(output_file);
@@ -2309,6 +2366,22 @@ void Plot2D(TH2D* hist, TString name, TString xaxis, TString yaxis){
   canvas->SetLeftMargin(0.098);
   canvas->SetRightMargin(0.13);
 
+  // Scale for XSec if needed
+  if(fPlotXSec){
+    for(unsigned int i = 1; i <= hist->GetNbinsX(); ++i){
+      double width_x = hist->GetXaxis()->GetBinWidth(i);
+      for(unsigned int j = 1; j <= hist->GetNbinsY(); ++j){
+        double width_y      = hist->GetYaxis()->GetBinWidth(j);
+        double scale_factor = fXSecScale / static_cast<double>(width_x * width_y);
+        double old_content  = hist->GetBinContent(i,j);
+        double old_error    = hist->GetBinError(i,j);
+        double new_content  = old_content*scale_factor;
+        double new_error    = old_error*scale_factor;
+        hist->SetBinContent(i,j,new_content);
+        hist->SetBinError(i,j,new_error);
+      }
+    }
+  }
   hist->GetXaxis()->SetTitle(xaxis);
   hist->GetYaxis()->SetTitle(yaxis);
   // X axis config
@@ -2355,7 +2428,7 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
   int index = 0;
   for(const std::string &l : fStackList){
     for(auto const& dat: data){
-      if(dat.first != l) continue;
+      if(dat.first != l)  continue;
       TH1D* hist = new TH1D(name+dat.first.c_str(), title, bin_edges[i].size()-1, edges_array);
       for(size_t n = 0; n < dat.second.size(); n++){
         if(j==-1 && k == -1){
@@ -2395,8 +2468,8 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
       }
       hstack->Add(hist);
       legend->AddEntry(hist, dat.first.c_str(), "lf");
-      index++;
     }
+    index++;
   }
   return std::make_pair(hstack, legend);
 }
@@ -2794,8 +2867,6 @@ void PhysicsBookPlots(std::string config = "config.txt"){
           else
             plot_label_var2 = titles.names[d_j]+" ["+titles.units[d_j]+"]";
 
-          hist_2D->Scale(fXSecScale,"width");
-
           Plot2D(hist_2D, fPlotVariables[d_i]+"_"+fPlotVariables[d_j]+"_"+m+"_"+s, plot_label_var1, plot_label_var2);
 
           if(!fShow2DSlices) continue;
@@ -2849,12 +2920,20 @@ void PhysicsBookPlots(std::string config = "config.txt"){
           for(const TString &s : fStage){
             sliced_total_hists[m][s] = slice_bin_total_hists.at(m).at(s).at(bin_j);
             sliced_error_bands[m][s] = slice_bin_error_bands.at(m).at(s).at(bin_j);
+            TString total_hist_slice_name(sliced_total_hists.at(m).at(s)->GetName()); 
+            TString error_band_slice_name(sliced_error_bands.at(m).at(s)->GetName());
+            total_hist_slice_name += ("_"+std::to_string(bin_j));
+            error_band_slice_name += ("_"+std::to_string(bin_j));
+            total_hist_slice_name.ReplaceAll(".","p");
+            error_band_slice_name.ReplaceAll(".","p");
+            sliced_total_hists.at(m).at(s)->SetName(total_hist_slice_name);
+            sliced_error_bands.at(m).at(s)->SetName(error_band_slice_name);
           } // Stage
         } // Model
         if(fShowStatError)
-          PlotOverlay1DWithErrors(sliced_total_hists, sliced_error_bands, titles, "Sliced_overlay", d_i, bin_j);
+          PlotOverlay1DWithErrors(sliced_total_hists, sliced_error_bands, titles, "sliced_overlay", d_i, d_j);
         else
-          PlotOverlay1D(sliced_total_hists, titles, "Sliced_overlay", d_i, bin_j);
+          PlotOverlay1D(sliced_total_hists, titles, "sliced_overlay", d_i, d_j);
       } // Binj
     } // Variable j
   } // Variable i
