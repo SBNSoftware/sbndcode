@@ -7,6 +7,7 @@ validatetracks_sbnd:
 	PFParticleLabel:"pandora"
 	SpacePointLabel:"pandora"
 	ClusterLabel:"linecluster"
+	ShowerLabel:"pandoraShowerSBN"
 	TrackLabel:"pandoraTrack"
 	HitLabel:"linecluster"
 	G4Label:"largeant"

@@ -83,7 +83,11 @@ public:
   void beginJob() override;
   void endJob() override;
 
-  int NumberOfSharedHits(int TrackID, detinfo::DetectorClocksData const& clockData, const std::vector<art::Ptr<recob::Hit> >& hits); //Returns the number of hits in the vector that are matched to a MC track.
+  int NumberOfSharedHits(int TrackID, detinfo::DetectorClocksData const& clockData,
+    const std::vector<art::Ptr<recob::Hit> >& hits); // Returns the number of hits in the vector that are matched to a MC track.
+  int NumberOfTrueHits(detinfo::DetectorClocksData const& clockData,
+    const std::vector<art::Ptr<recob::Hit>>& pHits,
+    const bool rollupUnsavedIDs); // Returns the number of hits in the whole event.
 
 private:
 
@@ -167,6 +171,7 @@ private:
   std::string fPFParticleLabel;
   std::string fSpacePointLabel;
   std::string fClusterLabel;
+  std::string fShowerLabel;
   std::string fTrackLabel;
   std::string fHitLabel;
   std::string fG4Label;
@@ -251,6 +256,7 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   fPFParticleLabel = p.get<std::string>("PFParticleLabel");
   fSpacePointLabel = p.get<std::string>("SpacePointLabel");
   fClusterLabel = p.get<std::string>("ClusterLabel");
+  fShowerLabel = p.get<std::string>("ShowerLabel");
   fTrackLabel = p.get<std::string>("TrackLabel");
   fHitLabel = p.get<std::string>("HitLabel");
   fG4Label = p.get<std::string>("G4Label");
@@ -367,17 +373,19 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // }
 
   // =========================================================
-  // Reco
+  // Reconstruction
   // Handles
   art::Handle< std::vector<recob::PFParticle> > pfpHandle;
   art::Handle< std::vector<recob::SpacePoint> > spointHandle;
   art::Handle< std::vector<recob::Cluster> > clusterHandle;
+  art::Handle< std::vector<recob::Shower> > showerHandle;
   art::Handle< std::vector<recob::Track> > trackHandle;
   art::Handle< std::vector<recob::Hit> > hitHandle;
   // Object vectors
   std::vector< art::Ptr<recob::PFParticle> > pfps;
   std::vector< art::Ptr<recob::SpacePoint> > spoints;
   std::vector< art::Ptr<recob::Cluster> > clusters;
+  std::vector< art::Ptr<recob::Shower> > showers;
   std::vector< art::Ptr<recob::Track> > tracks;
   std::vector< art::Ptr<recob::Hit> > hits;
 
@@ -389,53 +397,80 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     art::fill_ptr_vector(pfps, pfpHandle); // Fill the vector with the art::Ptr PFParticles
   }
   if(evt.getByLabel(fSpacePointLabel, spointHandle)){
-  	if (!pfpHandle.isValid()) {
+  	if (!spointHandle.isValid()) {
         if(fVerbose){std::cout << "spointHandle not valid" << std::endl;}
         return;
     }
     art::fill_ptr_vector(spoints, spointHandle);
   }
   if(evt.getByLabel(fClusterLabel, clusterHandle)){
-  	if (!pfpHandle.isValid()) {
+  	if (!clusterHandle.isValid()) {
         if(fVerbose){std::cout << "clusterHandle not valid" << std::endl;}
         return;
     }
   	art::fill_ptr_vector(clusters, clusterHandle);
   }
+  if(evt.getByLabel(fShowerLabel, showerHandle)){
+  	if (!showerHandle.isValid()) {
+        if(fVerbose){std::cout << "showerHandle not valid" << std::endl;}
+        return;
+    }
+    art::fill_ptr_vector(showers, showerHandle);
+  }
   if(evt.getByLabel(fTrackLabel, trackHandle)){
-  	if (!pfpHandle.isValid()) {
+    if (!trackHandle.isValid()) {
         if(fVerbose){std::cout << "trackHandle not valid" << std::endl;}
         return;
     }
     art::fill_ptr_vector(tracks, trackHandle);
   }
   if(evt.getByLabel(fHitLabel, hitHandle)){
-  	if (!pfpHandle.isValid()) {
+  	if (!hitHandle.isValid()) {
         if(fVerbose){std::cout << "hitHandle not valid" << std::endl;}
         return;
     }
     art::fill_ptr_vector(hits, hitHandle);
   }
 
+  // Get the number of PFParticles and skip event if none
   if(!pfps.size()){
-    if(fVerbose){std::cout << "\nSkip event: No PFParticles found.";}
-    return; // Skip event if there are no reconstructed particles
-  }
-
-  if(fVerbose){std::cout << "\nPFParticles: " << pfps.size() << std::endl;}
+    if(fVerbose){std::cout << "\nNo PFParticles found. Skip event.";}
+    continue;
+  }  
   pfpart_number = pfps.size();
 
-  // Get the vector of tracks for each PFParticle via association
-  // The vector size of associated tracks to a single PFParticle
-  // should be 0 or 1 as a PFP will be either a shower or a track
-  art::FindManyP<recob::SpacePoint> spointAssn(pfps, evt, fSpacePointLabel);
-  art::FindManyP<recob::Cluster>    clusterAssn(pfps, evt, fPFParticleLabel);
-  art::FindManyP<recob::Hit>        clusterhitAssn(clusters, evt, fHitLabel);
-  art::FindManyP<recob::Track>      trackAssn(pfps, evt, fTrackLabel);
-  art::FindManyP<recob::Hit>        hitAssn(tracks, evt, fTrackLabel);
-  art::FindManyP<anab::Calorimetry> calAssn(tracks, evt, fCalLabel);
-  art::FindManyP<anab::ParticleID>  pidAssn(tracks, evt, fPIDLabel);
-  // Find the neutrino ID
+
+  // Associations
+  art::FindManyP<recob::SpacePoint> ass_spoint(pfps,  evt, fSpacePointLabel);
+  art::FindManyP<recob::Cluster>    ass_cluster(pfps, evt, fPFParticleLabel);
+  art::FindManyP<recob::Shower>     ass_shower(pfps,  evt, fShowerLabel);
+  art::FindManyP<recob::Track>      ass_track(pfps,   evt, fTrackLabel);
+  art::FindManyP<recob::Hit>        ass_clusterhit(clusters, evt, fHitLabel);
+  art::FindManyP<recob::Hit>        ass_showerhit(showers,   evt, fShowerLabel);
+  art::FindManyP<recob::Hit>        ass_trackhit(tracks,     evt, fTrackLabel);
+  art::FindManyP<anab::Calorimetry> ass_cal(tracks, evt, fCalLabel);
+  art::FindManyP<anab::ParticleID>  ass_pid(tracks, evt, fPIDLabel);
+
+  // Get the hits from all the PFPs in this event
+  // This will be used latter on for the total number of true in the mc particle
+  std::vector<art::Ptr<recob::Hit>> pfphits;
+  for(const art::Ptr<recob::PFParticle> &pfp : pfps){
+    const std::vector<art::Ptr<recob::Shower>> pfpshowers = ass_shower.at(pfp.key());
+    const std::vector<art::Ptr<recob::Track>> pfptracks = ass_track.at(pfp.key());
+    if(!pfptracks.empty()){
+      assert(pfptracks.size()==1);
+      const std::vector<art::Ptr<recob::Hit>> temphits = ass_trackhit.at(pfptracks[0].key());
+      pfphits.insert(pfphits.end(), temphits.begin(), temphits.end());
+    }
+    if(!pfpshowers.empty()){
+      assert(pfpshowers.size()==1);
+      const std::vector<art::Ptr<recob::Hit>> tempthits = ass_showerhit.at(pfpshowers[0].key());
+      pfphits.insert(pfphits.end(), tempthits.begin(), tempthits.end());
+    }
+    if(pfptracks.empty() && pfpshowers.empty()){
+      std::cout << "\n\nWARNIGN: No shower or track : WARNING\n\n" << std::endl;
+    }
+  }
 
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
 
@@ -451,7 +486,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     }
 
     // Check associated space points
-    const std::vector<art::Ptr<recob::SpacePoint>> spoints = spointAssn.at(pfp.key());
+    const std::vector<art::Ptr<recob::SpacePoint>> spoints = ass_spoint.at(pfp.key());
     if(spoints.empty()){
     	track_nspoints->push_back(0);
     	if(fVerbose){std::cout << "Empty space point" << std::endl;}
@@ -463,7 +498,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
 
     // Get the hits from the track by accessing the clusters
     std::vector<art::Ptr<recob::Hit> > cluster_hits;
-    const std::vector< art::Ptr< recob::Cluster> > thisclusters = clusterAssn.at(pfp.key());
+    const std::vector< art::Ptr< recob::Cluster> > thisclusters = ass_cluster.at(pfp.key());
     if(fVerbose){std::cout << "thisclusters.size(): " << thisclusters.size() << std::endl;}
     for (const auto& cluster: thisclusters){
     	cluster_id->push_back(cluster->ID());
@@ -521,7 +556,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       hits_adc       ->push_back(temp_adc);  
 
       // Use the hits to get the G4ID
-      auto mc_matched_id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, true); // rollupUnsavedIDs
+      auto mc_matched_id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, false); // rollupUnsavedIDs
       bool valid_match = TruthMatchUtils::Valid(mc_matched_id);
       if (!valid_match){
       	std::cout << "Unable to find MCParticle matched to this track." << std::endl;
@@ -547,7 +582,8 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
 
       int nsharedhits = NumberOfSharedHits(mc_matched_id, clock_data, trackhits);
       // Returns the number of hits in the vector that are associated to the MC track.
-      int ntruehits = nsharedhits;
+      // int ntruehits = NumberOfTrueHits(clock_data, trackhits,false);
+      int ntruehits = NumberOfTrueHits(clock_data, pfphits, true);
       int nrecohits = trackhits.size();
       float hitcompleteness = -9999.;
       float hitpurity = -9999.;
@@ -557,7 +593,6 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       	hitcompleteness = float(nsharedhits)/float(ntruehits);
       std::cout << "shared hits: " << nsharedhits << ", recohits: " << nrecohits << ", truehits: " << ntruehits << std::endl;
       std::cout << "hitpurity: " << hitpurity << ", hitcompleteness: " << hitcompleteness << std::endl;
-
       // Get the calorimetry information associated to this track
       std::vector< art::Ptr<anab::Calorimetry> > trackcals = calAssn.at(tracks[0].key());
       if(trackcals.empty()) continue;
@@ -677,6 +712,59 @@ int sbnd::ValidateTracks::NumberOfSharedHits(int trackID, detinfo::DetectorClock
   return nsharedhits;
 }
 
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int sbnd::ValidateTracks::NumberOfTrueHits(detinfo::DetectorClocksData const& clockData,
+                                                 const std::vector<art::Ptr<recob::Hit>>& pHits,
+                                                 const bool rollupUnsavedIDs)
+{
+  std::map<TruthMatchUtils::G4ID, unsigned int> idToHitCountMap;
+  for (const art::Ptr<recob::Hit>& pHit : pHits) {
+    const TruthMatchUtils::G4ID g4ID(TruthMatchUtils::TrueParticleID(clockData, pHit, rollupUnsavedIDs));
+    auto [iterator, inserted] = idToHitCountMap.try_emplace(g4ID, 1);
+    if (!(inserted)) iterator->second++;
+  }
+
+  if (idToHitCountMap.empty()) return -9999;
+
+  std::map<unsigned int, std::vector<TruthMatchUtils::G4ID>> hitCountToIDMap;
+  for (auto const& [g4ID, hitCount] : idToHitCountMap) {
+    auto [iterator, inserted] = hitCountToIDMap.try_emplace(hitCount, std::vector<TruthMatchUtils::G4ID>{g4ID});
+    if (!inserted) iterator->second.emplace_back(g4ID);
+  }
+
+  if (hitCountToIDMap.empty()) {
+    throw art::Exception(art::errors::LogicError)
+      << "TruthMatchUtils::TrueParticleIDFromTotalRecoHits - Did not fill the hit count to g4 ID "
+         "vector map"
+      << "(map size == " << hitCountToIDMap.size() << ")."
+      << "  The G4 ID to hit count map size is " << idToHitCountMap.size()
+      << ".  The hit count to G4 ID vector map should not be empty in this case."
+      << "  Something has gone wrong.";
+  }
+
+  std::map<unsigned int, std::vector<TruthMatchUtils::G4ID>>::const_reverse_iterator lastElementIt(
+    hitCountToIDMap.rbegin());
+  unsigned int nMaxContributingIDs(lastElementIt->second.size());
+
+  if (0 == nMaxContributingIDs) {
+    throw art::Exception(art::errors::LogicError)
+      << "TruthMatchUtils::TrueParticleIDFromTotalRecoHits - Counted a max number of contributing "
+         "hits ("
+      << lastElementIt->first << " hits) but did not find any G4 IDs.  Something has gone wrong.";
+  }
+  else if (1 < nMaxContributingIDs) {
+    mf::LogInfo("TruthMatchUtils::TrueParticleIDFromTotalRecoHits")
+      << "There are " << nMaxContributingIDs
+      << " particles which tie for highest number of contributing hits (" << lastElementIt->first
+      << " hits).  Using TruthMatchUtils::TrueParticleIDFromTotalTrueEnergy instead." << std::endl;
+    return TruthMatchUtils::TrueParticleIDFromTotalTrueEnergy(clockData, pHits, rollupUnsavedIDs);
+  }
+
+  // return lastElementIt->second.front();
+  return lastElementIt->first;
+}
 
 void sbnd::ValidateTracks::endJob()
 {
