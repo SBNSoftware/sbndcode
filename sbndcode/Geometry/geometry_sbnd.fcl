@@ -102,6 +102,7 @@ sbnd_auxdetgeometry_helper:
 sbnd_geometry_services: {
   ExptGeoHelperInterface:         @local::sbnd_geometry_helper
 #  ExptGeoHelperInterface:         @local::standard_geometry_helper
+  GeometryConfigurationWriter:    {}
   Geometry:                       @local::sbnd_geo
   AuxDetExptGeoHelperInterface:   @local::sbnd_auxdetgeometry_helper
   AuxDetGeometry:                 @local::sbnd_auxdetgeo
