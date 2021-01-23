@@ -6,6 +6,9 @@ standard_crtt0matchingalg:
     MinTrackLength:      20.                # Minimum track length to perform T0 matching on
     TrackDirectionFrac:  0.5                # Minimum track length to perform T0 matching on
     TPCTrackLabel:       "pandoraTrack"
+    DirMethod: 1
+   SCEposCorr: true
+   DCAuseBox: false
 }
 
 sbnd_crtt0matchingalg_crID:

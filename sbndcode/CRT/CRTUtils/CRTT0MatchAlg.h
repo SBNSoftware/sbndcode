@@ -30,6 +30,8 @@
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
+#include "larevt/SpaceCharge/SpaceCharge.h"
+#include "larevt/SpaceChargeServices/SpaceChargeService.h"
 
 // Utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -99,16 +101,36 @@ namespace sbnd{
         Comment("")
       };
 
+
+      fhicl::Atom<int> DirMethod {
+	Name("DirMethod"),
+          Comment("1=endpoints, 2=average"),
+          1
+	  };
+
+      fhicl::Atom<bool> SCEposCorr {
+        Name("SCEposCorr"),
+          Comment("true=do correction (default), false=skip correction"),
+          true
+	  };
+
+      fhicl::Atom<bool> DCAuseBox {
+        Name("DCAuseBox"),
+          Comment("false = distance to point (default), true = distance to box edge"),
+          false
+	  };
+
     };
 
+
     CRTT0MatchAlg(const Config& config);
-    CRTT0MatchAlg(const Config& config, geo::GeometryCore const *GeometryService);
+    CRTT0MatchAlg(const Config& config, geo::GeometryCore const *GeometryService, spacecharge::SpaceCharge  const* SCE);
 
     CRTT0MatchAlg(const fhicl::ParameterSet& pset) :
       CRTT0MatchAlg(fhicl::Table<Config>(pset, {})()) {}
 
-    CRTT0MatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const *GeometryService) :
-      CRTT0MatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService) {}
+  CRTT0MatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const *GeometryService, spacecharge::SpaceCharge const* SCE) :
+      CRTT0MatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService, SCE) {}
 
     CRTT0MatchAlg();
 
@@ -123,6 +145,7 @@ namespace sbnd{
                                  TVector3 trackPos, TVector3 trackDir, sbn::crt::CRTHit crtHit, int driftDirection, double t0);
 
     std::pair<TVector3, TVector3> TrackDirectionAverage(recob::Track track, double frac);
+    std::pair<TVector3, TVector3> TrackDirection(detinfo::DetectorPropertiesData const& detProp,recob::Track track, double frac, double CRTtime, int driftDirection);
     std::pair<TVector3, TVector3> TrackDirectionAverageFromPoints(recob::Track track, double frac);
 
     // Return the closest CRT hit to a TPC track and the DCA
@@ -149,12 +172,16 @@ namespace sbnd{
   private:
 
     geo::GeometryCore const* fGeometryService;
+    spacecharge::SpaceCharge  const* fSCE;
 
     double fMinTrackLength;
     double fTrackDirectionFrac;
     double fDistanceLimit;
     int fTSMode;
     double fTimeCorrection;
+    int fDirMethod;
+    bool fSCEposCorr;
+    bool fDCAuseBox;
 
     art::InputTag fTPCTrackLabel;
 

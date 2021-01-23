@@ -2,13 +2,17 @@
 
 namespace sbnd{
 
-CRTT0MatchAlg::CRTT0MatchAlg(const Config& config) : CRTT0MatchAlg(config, lar::providerFrom<geo::Geometry>()) {}
+  CRTT0MatchAlg::CRTT0MatchAlg(const Config& config) : CRTT0MatchAlg(config, lar::providerFrom<geo::Geometry>(), 
+lar::providerFrom<spacecharge::SpaceChargeService>()) {}
 
-CRTT0MatchAlg::CRTT0MatchAlg(const Config& config, geo::GeometryCore const *GeometryService){
+  CRTT0MatchAlg::CRTT0MatchAlg(const Config& config, geo::GeometryCore const *GeometryService,  spacecharge::SpaceCharge const *SCE){
+
 
   this->reconfigure(config);
   fGeometryService = GeometryService;
+  fSCE = SCE;
 }
+
 
 
 CRTT0MatchAlg::CRTT0MatchAlg() = default;
@@ -22,6 +26,9 @@ void CRTT0MatchAlg::reconfigure(const Config& config){
   fTSMode = config.TSMode();
   fTimeCorrection = config.TimeCorrection();
   fTPCTrackLabel = config.TPCTrackLabel();
+  fSCEposCorr = config.SCEposCorr();
+  fDirMethod = config.DirMethod();
+  fDCAuseBox = config.DCAuseBox();
 
   return;
 
@@ -61,19 +68,35 @@ double CRTT0MatchAlg::DistOfClosestApproach(detinfo::DetectorPropertiesData cons
   //double minDist = 99999;
 
   // Convert the t0 into an x shift
-  double shift = t0 * detProp.DriftVelocity();
-  // Apply the shift depending on which TPC the track is in
-  trackPos[0] += driftDirection * shift;
+  double xshift = driftDirection* t0 * detProp.DriftVelocity();
+  trackPos[0] += xshift;
+
+  if (fSCE->EnableCalSpatialSCE() && fSCEposCorr) {
+    geo::Point_t temppt = {trackPos.X(),trackPos.Y(),trackPos.Z()};
+    geo::TPCID tpcid = fGeometryService->PositionToTPCID(temppt);
+    geo::Vector_t  fPosOffsets = fSCE->GetCalPosOffsets(temppt,tpcid.TPC);
+    trackPos[0] += fPosOffsets.X();
+    trackPos[1] += fPosOffsets.Y();
+    trackPos[2] += fPosOffsets.Z();
+  }
 
   TVector3 end = trackPos + trackDir;
 
-  return CRTCommonUtils::DistToCrtHit(crtHit, trackPos, end);
+  // calculate distance of closest approach (DCA)
+  //  default is the distance to the point specified by the CRT hit (Simple DCA)
+  //    useBox is the distance to the closest edge of the rectangle with the CRT hit at the center and the sides defined
+  //   the position uncertainties on the CRT hits.
+  double thisdca;
+
+  if (fDCAuseBox) thisdca =   CRTCommonUtils::DistToCrtHit(crtHit, trackPos, end);
+  else thisdca =  CRTCommonUtils::SimpleDCA(crtHit, trackPos, trackDir);
+  return thisdca;
 
 } // CRTT0MatchAlg::DistToOfClosestApproach()
 
 
-std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track track, double frac){
-
+std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track track, double frac)
+  {
   // Calculate direction as an average over directions
   size_t nTrackPoints = track.NumberTrajectoryPoints();
   recob::TrackTrajectory trajectory  = track.Trajectory();
@@ -104,6 +127,57 @@ std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverage(recob::Track 
 
 } // CRTT0MatchAlg::TrackDirectionAverage()
 
+
+  std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirection(detinfo::DetectorPropertiesData const& detProp,recob::Track track, double frac, double CRTtime, int driftDirection){
+							      
+    size_t nTrackPoints = track.NPoints();
+    int midPt = (int)floor(nTrackPoints*frac);
+    geo::Point_t startP = track.Start();
+    geo::Point_t endP = track.End();
+    geo::Point_t midP = track.LocationAtPoint(midPt);
+
+    double xshift = driftDirection * CRTtime * detProp.DriftVelocity();
+    TVector3  startPoint = {startP.X()+xshift,startP.Y(),startP.Z()};
+    TVector3  endPoint = {endP.X()+xshift,endP.Y(),endP.Z()};
+    TVector3  midPoint = {midP.X()+xshift,midP.Y(),midP.Z()};
+    if (fSCE->EnableCalSpatialSCE() && fSCEposCorr) {
+
+      // Apply the shift depending on which TPC the track is in                                 
+      geo::Point_t fTrackPos = startP;
+      fTrackPos.SetX(startPoint.X());
+      geo::TPCID tpcid = fGeometryService->PositionToTPCID(fTrackPos);                        
+      geo::Vector_t fPosOffsets = fSCE->GetCalPosOffsets(geo::Point_t{fTrackPos.X(),fTrackPos.Y(),fTrackPos.Z()},tpcid.TPC);
+      startPoint.SetX(fTrackPos.X() + fPosOffsets.X());                                       
+      startPoint.SetY(fTrackPos.Y() + fPosOffsets.Y());                                       
+      startPoint.SetZ(fTrackPos.Z() + fPosOffsets.Z());                                       
+      fTrackPos = endP;
+      fTrackPos.SetX(endPoint.X());
+      tpcid = fGeometryService->PositionToTPCID(fTrackPos);
+      //      fPosOffsets = fSCE->GetCalPosOffsets(fTrackPos,tpcid.TPC);
+      fPosOffsets = fSCE->GetCalPosOffsets(geo::Point_t{fTrackPos.X(),fTrackPos.Y(),fTrackPos.Z()},tpcid.TPC);
+      endPoint.SetX(fTrackPos.X() + fPosOffsets.X());
+      endPoint.SetY(fTrackPos.Y() + fPosOffsets.Y());
+      endPoint.SetZ(fTrackPos.Z() + fPosOffsets.Z());
+      fTrackPos = midP;
+      fTrackPos.SetX(midPoint.X());
+      tpcid = fGeometryService->PositionToTPCID(fTrackPos);
+      //fPosOffsets = fSCE->GetCalPosOffsets(fTrackPos,tpcid.TPC);
+      fPosOffsets = fSCE->GetCalPosOffsets(geo::Point_t{fTrackPos.X(),fTrackPos.Y(),fTrackPos.Z()},tpcid.TPC);
+      midPoint.SetX(fTrackPos.X() + fPosOffsets.X());
+      midPoint.SetY(fTrackPos.Y() + fPosOffsets.Y());
+      midPoint.SetZ(fTrackPos.Z() + fPosOffsets.Z());
+    }
+    
+    TVector3 startDir = {midPoint.X()-startPoint.X(),midPoint.Y()-startPoint.Y(),midPoint.Z()-startPoint.Z()};
+    float norm = startDir.Mag();
+    if (norm>0)  startDir *=(1.0/norm);
+    TVector3 endDir = {midPoint.X()-endPoint.X(),midPoint.Y()-endPoint.Y(),midPoint.Z()-endPoint.Z()};    
+    norm = endDir.Mag();
+    if (norm>0)  endDir *=(1.0/norm);
+    
+    return std::make_pair(startDir, endDir);
+    
+  } // CRTT0MatchAlg::TrackDirection()                                                                  
 
 std::pair<TVector3, TVector3> CRTT0MatchAlg::TrackDirectionAverageFromPoints(recob::Track track, double frac){
 
@@ -139,10 +213,6 @@ std::pair<sbn::crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::Detect
   auto start = tpcTrack.Vertex<TVector3>();
   auto end = tpcTrack.End<TVector3>();
 
-  // Calculate direction as an average over directions
-  std::pair<TVector3, TVector3> startEndDir = TrackDirectionAverage(tpcTrack, fTrackDirectionFrac);
-  TVector3 startDir = startEndDir.first;
-  TVector3 endDir = startEndDir.second;
 
   // ====================== Matching Algorithm ========================== //
   std::vector<std::pair<sbn::crt::CRTHit, double>> t0Candidates;
@@ -162,11 +232,26 @@ std::pair<sbn::crt::CRTHit, double> CRTT0MatchAlg::ClosestCRTHit(detinfo::Detect
             || t0MinMax.first == t0MinMax.second)) continue;
     TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
   
+    //Calculate Track direction
+    std::pair<TVector3, TVector3> startEndDir;
+    // dirmethode=2 is original algorithm, dirmethod=1 is simple algorithm for which SCE corrections are possible
+    if (fDirMethod==2)  startEndDir = TrackDirectionAverage(tpcTrack, fTrackDirectionFrac);
+    else startEndDir = TrackDirection(detProp, tpcTrack, fTrackDirectionFrac, crtTime, driftDirection);
+    TVector3 startDir = startEndDir.first;
+    TVector3 endDir = startEndDir.second;
+    
     // Calculate the distance between the crossing point and the CRT hit
     double startDist = DistOfClosestApproach(detProp, start, startDir, crtHit, driftDirection, crtTime);
     double endDist = DistOfClosestApproach(detProp, end, endDir, crtHit, driftDirection, crtTime);
+    
+    double xshift = driftDirection * crtTime * detProp.DriftVelocity();
+    auto thisstart = start; 
+    thisstart.SetX(start.X()+xshift);
+    auto thisend = end; 
+    thisend.SetX(end.X()+xshift);
+
     // If the distance is less than some limit record the time
-    if ((crtPoint-start).Mag() < (crtPoint-end).Mag()){ 
+    if ((crtPoint-thisstart).Mag() < (crtPoint-thisend).Mag()){ 
       t0Candidates.push_back(std::make_pair(crtHit, startDist));
     }
     else{
