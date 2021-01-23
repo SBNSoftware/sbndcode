@@ -12,9 +12,6 @@ CRTT0MatchAlg::CRTT0MatchAlg(const Config& config, geo::GeometryCore const *Geom
   fGeometryService = GeometryService;
   fSCE = SCE;
 }
-  
-  
-  
 CRTT0MatchAlg::CRTT0MatchAlg() = default;
   
 
