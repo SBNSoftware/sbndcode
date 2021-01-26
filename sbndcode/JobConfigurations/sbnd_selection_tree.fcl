@@ -13,6 +13,7 @@ source:
 
 services: {
   @table::sbnd_simulation_services
+  TFileService: { fileName: "selection_tree.root" }
   BackTrackerService:  @local::standard_backtrackerservice
   ParticleInventoryService: @local::standard_particleinventoryservice
 }

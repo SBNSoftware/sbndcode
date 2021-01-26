@@ -1,5 +1,5 @@
 #include "ubooneDomConfig.fcl"
-#include "simulationservices_sbnd.fcl"
+#include "reco_uboone_mcc9_8.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
 
@@ -12,7 +12,8 @@ source:
 }
 
 services: {
-  @table::sbnd_simulation_services
+  @table::microboone_reco_mcc8_services
+  TFileService: { fileName: "selection_tree.root" }
   BackTrackerService:  @local::standard_backtrackerservice
   ParticleInventoryService: @local::standard_particleinventoryservice
 }
@@ -44,4 +45,5 @@ physics: {
   end_paths:    [ path0 ]
 
 }
-
+services.BackTrackerService.BackTracker.G4ModuleLabel: "largeantnew"
+services.ParticleInventoryService.ParticleInventory.G4Label: "largeantnew"

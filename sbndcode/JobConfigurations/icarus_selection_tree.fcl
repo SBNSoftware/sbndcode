@@ -1,5 +1,5 @@
 #include "icarusDomConfig.fcl"
-#include "simulationservices_sbnd.fcl"
+#include "services_icarus_simulation.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
 
@@ -12,7 +12,8 @@ source:
 }
 
 services: {
-  @table::sbnd_simulation_services
+  @table::icarus_simulation_basic_services
+  TFileService: { fileName: "selection_tree.root" }
   BackTrackerService:  @local::standard_backtrackerservice
   ParticleInventoryService: @local::standard_particleinventoryservice
 }
@@ -44,4 +45,3 @@ physics: {
   end_paths:    [ path0 ]
 
 }
-

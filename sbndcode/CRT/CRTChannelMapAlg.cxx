@@ -54,17 +54,19 @@ namespace geo {
       std::string volName(adgeo[a]->TotalVolume()->GetName());
 
       size_t nsv = adgeo[a]->NSensitiveVolume();
+      /*
       if (nsv != 16) {
         throw cet::exception("CRTChannelMap")
         << "Wrong number of sensitive volumes for CRT volume "
         << volName << " (got " << nsv << ", expected 16)" << std::endl;
       }
-
+      */
       fADGeoToName[a] = volName;
       fNameToADGeo[volName] = a;
 
       if (volName.find("CRTStripArray") != std::string::npos) {
-        for (size_t svID=0; svID<16; svID++) {
+      //  for (size_t svID=0; svID<16; svID++) {
+        for (size_t svID=0; svID<nsv; svID++) {
           for (size_t ich=0; ich<2; ich++) {
             size_t chID = 2 * svID + ich;
             fADGeoToChannelAndSV[a].push_back(std::make_pair(chID, svID));

@@ -15,13 +15,13 @@ selectionTree:
   labels: {
     TruthLabel:                "generator"
     CorsikaLabel:              "corsika"
-    G4Label:                   "largeant"
+    G4Label:                   "largeantnew"
     PandoraLabel:              "pandoraUboonetune"
     RecoTrackLabel:            "pandoraTrackUboonetune"
     RecoShowerLabel:           "tracsUboonetuneRetune"
     RecoTrackCalorimetryLabel: "TrackRedoCaloUboonetune"
     RecoTrackParticleIDLabel:  "TrackRedoPidUboonetune"
-    HitLabel:                  "gaushit"
+    HitLabel:                  "linecluster"
     SubRunLabel:               "generator"
     DetectorName:              "uboone"
   }
