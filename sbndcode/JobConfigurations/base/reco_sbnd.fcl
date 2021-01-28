@@ -10,6 +10,7 @@
 # service configuration
 #
 
+#include "mctrutht0matching.fcl"
 #include "services_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
@@ -50,6 +51,8 @@
 #include "scecorrections.fcl"
 #include "flashmatch_sbnd.fcl"
 
+###include "hitparticleassociations.fcl"
+
 
 process_name: Reco
 
@@ -64,6 +67,8 @@ services:
                              @table::sbnd_g4_services           # from simulationservices_sbnd.fcl; required by opt0finder
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  BackTrackerService: @local::sbnd_backtrackerservice
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
 }
 
 #source is now a root file
@@ -101,6 +106,9 @@ physics:
   gaushit:             @local::sbnd_gaushitfinder
   fasthit:             @local::sbnd_fasthitfinder
 #  rffhit:              @local::sbnd_rffhitfinder
+
+  ### Truth-matich for hits
+  gaushitTruthMatch:   @local::standard_mcparticlehitmatching
 
   ### corner-finder
   #corner:              @local::standard_cornerfinder
@@ -172,6 +180,7 @@ physics:
          , gaushit
          , fasthit
          , linecluster
+         , gaushitTruthMatch 
    #      , rffhit
    #      , corner
    #      , fuzzycluster
@@ -326,3 +335,8 @@ physics.producers.pandoraSCE.CorrectNoT0Tag: true
 physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
 physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
+
+#physics.producers.gaushitTruthMatch.HitParticleAssociations:                        @local::DirectHitParticleAssnsTool
+#physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
+#physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
+
