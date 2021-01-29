@@ -7,6 +7,9 @@
 // from cetlib version v3_09_00.
 ////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+#include <map>
+
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
@@ -18,21 +21,15 @@
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
-#include <memory>
-#include <map>
-
-#include "TTree.h"
-// #include "TGeoVolume.h"
-// #include "TGeoMatrix.h" // TGeoCombiTrans
-// #include "TLorentzVector.h"
-// #include "TVector3.h"
-
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "lardataobj/MCBase/MCTrack.h"
 #include "lardataobj/MCBase/MCShower.h"
+#include "larcoreobj/SummaryData/POTSummary.h"
 
 #include "larcorealg/CoreUtils/ParticleFilters.h" // util::PositionInVolumeFilter
 #include "larcore/Geometry/Geometry.h"
+
+#include "TTree.h"
 
 class OverburdenAna;
 
@@ -52,6 +49,7 @@ public:
 
   // Required functions.
   void produce(art::Event& e) override;
+  virtual void beginSubRun(art::SubRun & sr) override;
 
   using Point_t = std::array<double, 3>;
 
@@ -80,6 +78,7 @@ private:
 
   std::unique_ptr<util::PositionInVolumeFilter> _part_filter;
 
+  std::string _mctruth_producer = "generator"; // For storing POT information
   std::string _mcparticle_producer = "largeant";
   std::string _mctrack_producer = "mcreco";
   std::string _mcshower_producer = "mcreco";
@@ -169,8 +168,15 @@ private:
 
   TTree* _pi0_tree; ///< A pi0 TTree, one entry per pi0
 
-  int _pi0_mother_pdg; ///< The pi0 mother pdg
-  float _pi0_mother_e; ///< The pi0 mother energy
+  float _pi0_par_e; ///< The pi0 energy
+  float _pi0_par_start_x; ///< The pi0 start x
+  float _pi0_par_start_y; ///< The pi0 start y
+  float _pi0_par_start_z; ///< The pi0 start z
+  float _pi0_par_end_x; ///< The pi0 end x
+  float _pi0_par_end_y; ///< The pi0 end y
+  float _pi0_par_end_z; ///< The pi0 end z
+  int _pi0_par_mother_pdg; ///< The pi0 mother pdg
+  float _pi0_par_mother_e; ///< The pi0 mother energy
 
   std::vector<int> _pi0_daughters_pdg; ///< All the pi0 daughters (usually two photons) (pdg)
   std::vector<float> _pi0_daughters_e; ///< All the pi0 daughters (usually two photons) (energy)
@@ -198,6 +204,14 @@ private:
   std::vector<float> _pi0_genealogy_end_y; ///< The full pi0 genealogy, from its mother all the way to the ancestor (end y)
   std::vector<float> _pi0_genealogy_end_z; ///< The full pi0 genealogy, from its mother all the way to the ancestor (end z)
 
+
+
+  TTree* _sr_tree; ///< TTree filled per subrun
+  int _sr_run; ///< Subrun Run number
+  int _sr_subrun; ///< Subrun Subrun number
+  double _sr_begintime; ///< Subrun start time
+  double _sr_endtime; ///< Subrun end time
+  double _sr_pot; ///< Subrun POT
 };
 
 
@@ -281,12 +295,19 @@ OverburdenAna::OverburdenAna(fhicl::ParameterSet const& p)
   if (_save_pi0_tree) {
     _pi0_tree = fs->make<TTree>("Pi0Tree","");
 
-    _pi0_tree->Branch("pi0_run", &_run, "run/I");
-    _pi0_tree->Branch("pi0_subrun", &_subrun, "subrun/I");
-    _pi0_tree->Branch("pi0_event", &_event, "event/I");
+    _pi0_tree->Branch("run", &_run, "run/I");
+    _pi0_tree->Branch("subrun", &_subrun, "subrun/I");
+    _pi0_tree->Branch("event", &_event, "event/I");
 
-    _pi0_tree->Branch("pi0_mother_pdg", &_pi0_mother_pdg, "pi0_mother_pdg/I");
-    _pi0_tree->Branch("pi0_mother_e", &_pi0_mother_e, "pi0_mother_e/F");
+    _pi0_tree->Branch("pi0_par_e", &_pi0_par_e, "pi0_par_e/F");
+    _pi0_tree->Branch("pi0_par_start_x", &_pi0_par_start_x, "pi0_par_start_x/F");
+    _pi0_tree->Branch("pi0_par_start_y", &_pi0_par_start_y, "pi0_par_start_y/F");
+    _pi0_tree->Branch("pi0_par_start_z", &_pi0_par_start_z, "pi0_par_start_z/F");
+    _pi0_tree->Branch("pi0_par_end_x", &_pi0_par_end_x, "pi0_par_end_x/F");
+    _pi0_tree->Branch("pi0_par_end_y", &_pi0_par_end_y, "pi0_par_end_y/F");
+    _pi0_tree->Branch("pi0_par_end_z", &_pi0_par_end_z, "pi0_par_end_z/F");
+    _pi0_tree->Branch("pi0_par_mother_pdg", &_pi0_par_mother_pdg, "pi0_par_mother_pdg/I");
+    _pi0_tree->Branch("pi0_par_mother_e", &_pi0_par_mother_e, "pi0_par_mother_e/F");
 
     _pi0_tree->Branch("pi0_event_particles_pdg", "std::vector<int>", &_pi0_event_particles_pdg);
     _pi0_tree->Branch("pi0_event_particles_e", "std::vector<float>", &_pi0_event_particles_e);
@@ -315,6 +336,13 @@ OverburdenAna::OverburdenAna(fhicl::ParameterSet const& p)
     _pi0_tree->Branch("pi0_genealogy_end_z", "std::vector<float>", &_pi0_genealogy_end_z);
 
   }
+
+  _sr_tree = fs->make<TTree>("pottree","");
+  _sr_tree->Branch("run", &_sr_run, "run/I");
+  _sr_tree->Branch("subrun", &_sr_subrun, "subrun/I");
+  _sr_tree->Branch("begintime", &_sr_begintime, "begintime/D");
+  _sr_tree->Branch("endtime", &_sr_endtime, "endtime/D");
+  _sr_tree->Branch("pot", &_sr_pot, "pot/D");
 
   // Iterate over all TPC's to get bounding box that covers volumes of each individual TPC in the detector
   art::ServiceHandle<geo::Geometry const> geo;
@@ -592,14 +620,23 @@ void OverburdenAna::SavePi0ShowerInfo(int pi0_track_id) {
   simb::MCParticle pi0_mcp = iter->second;
   std::cout << "Pi0 MCP, PDG = " << pi0_mcp.PdgCode() << ", E = " << pi0_mcp.E() << ", n daughters " << pi0_mcp.NumberDaughters() << std::endl;
 
+  // Save the information on the pi0 itself
+  _pi0_par_e = pi0_mcp.E();
+  _pi0_par_start_x = pi0_mcp.Vx();
+  _pi0_par_start_y = pi0_mcp.Vy();
+  _pi0_par_start_z = pi0_mcp.Vz();
+  _pi0_par_end_x = pi0_mcp.EndX();
+  _pi0_par_end_y = pi0_mcp.EndY();
+  _pi0_par_end_z = pi0_mcp.EndZ();
+
   // Get the pi0 mother MCParticle
   iter = _trackid_to_mcparticle.find(pi0_mcp.Mother());
   if (iter == _trackid_to_mcparticle.end()) {
     return;
   }
   simb::MCParticle pi0_mother_mcp = iter->second;
-  _pi0_mother_pdg = pi0_mother_mcp.PdgCode();
-  _pi0_mother_e = pi0_mother_mcp.E();
+  _pi0_par_mother_pdg = pi0_mother_mcp.PdgCode();
+  _pi0_par_mother_e = pi0_mother_mcp.E();
   std::cout << "Pi0 MCP Mother, PDG = " << pi0_mother_mcp.PdgCode() << ", E = " << pi0_mother_mcp.E() << std::endl;
 
   // Get the daughters of the pi0 mother
@@ -866,6 +903,28 @@ bool OverburdenAna::InDetector(art::Ptr<simb::MCParticle> mcp) {
     if (InDetector(t.X(i), t.Y(i), t.Z(i))) return true;
   }
   return false;
+}
+
+
+void OverburdenAna::beginSubRun(art::SubRun & sr) {
+
+  _sr_run       = sr.run();
+  _sr_subrun    = sr.subRun();
+  _sr_begintime = sr.beginTime().value();
+  _sr_endtime   = sr.endTime().value();
+
+  art::Handle<sumdata::POTSummary> pot_handle;
+  sr.getByLabel(_mctruth_producer, pot_handle);
+
+  if (pot_handle.isValid()) {
+    _sr_pot = pot_handle->totpot;
+  } else {
+    _sr_pot = 0.;
+  }
+  std::cout << "POT for this subrun: " << _sr_pot << std::endl;
+
+  _sr_tree->Fill();
+
 }
 
 
