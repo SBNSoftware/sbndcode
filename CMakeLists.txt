@@ -13,24 +13,18 @@
 # ======================================================================
 
 
-# use cmake 3.12 or later
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.12...3.18 FATAL_ERROR)
 
-project(sbndcode)
+project(sbndcode LANGUAGES CXX)
 
 message(STATUS "\n")
 message(STATUS "=================================   ${PROJECT_NAME}   =================================")
 message(STATUS "")
 
 # cetbuildtools contains our cmake modules
-SET ( CETBUILDTOOLS_VERSION $ENV{CETBUILDTOOLS_VERSION} )
-IF (NOT CETBUILDTOOLS_VERSION)
-    MESSAGE (FATAL_ERROR "ERROR: setup cetbuildtools to get the cmake modules")
-ENDIF()
+find_package(cetbuildtools REQUIRED)
 
-set(CMAKE_MODULE_PATH $ENV{CANVAS_ROOT_IO_DIR}/Modules
-		      $ENV{CETBUILDTOOLS_DIR}/Modules
-		      ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH $ENV{CANVAS_ROOT_IO_DIR}/Modules)
 
 include(CetCMakeEnv)
 cet_cmake_env()
@@ -81,7 +75,6 @@ find_ups_product( nuevdb )
 find_ups_product( nurandom v1_00_00 )
 find_ups_product( art v1_09_00 )
 find_ups_product( art_root_io )
-find_ups_product( cetbuildtools v3_10_00 )
 find_ups_product( postgresql v9_1_5 )
 find_ups_product( hep_concurrency )
 find_ups_product( pandora )
