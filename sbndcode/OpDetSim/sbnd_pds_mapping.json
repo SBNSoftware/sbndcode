@@ -3,2560 +3,2496 @@
     "channel": 0,
     "pd_type": "xarapuca_vis",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 1,
     "pd_type": "xarapuca_vis",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 2,
     "pd_type": "xarapuca_vis",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 3,
     "pd_type": "xarapuca_vis",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 4,
     "pd_type": "xarapuca_vis",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 5,
     "pd_type": "xarapuca_vis",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 6,
     "pd_type": "pmt_coated",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 7,
     "pd_type": "pmt_coated",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 8,
     "pd_type": "pmt_coated",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 9,
     "pd_type": "pmt_coated",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 10,
     "pd_type": "pmt_coated",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 11,
     "pd_type": "pmt_coated",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 12,
     "pd_type": "pmt_coated",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 13,
     "pd_type": "pmt_coated",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 14,
     "pd_type": "pmt_coated",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 15,
     "pd_type": "pmt_coated",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 16,
     "pd_type": "pmt_coated",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 17,
     "pd_type": "pmt_coated",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 18,
     "pd_type": "xarapuca_vuv",
     "pds_box": 0,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 19,
     "pd_type": "xarapuca_vuv",
     "pds_box": 1,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 20,
     "pd_type": "xarapuca_vuv",
     "pds_box": 2,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 21,
     "pd_type": "xarapuca_vuv",
     "pds_box": 3,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 22,
     "pd_type": "xarapuca_vuv",
     "pds_box": 4,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 23,
     "pd_type": "xarapuca_vuv",
     "pds_box": 5,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 24,
     "pd_type": "xarapuca_vis",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 25,
     "pd_type": "xarapuca_vis",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 26,
     "pd_type": "xarapuca_vis",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 27,
     "pd_type": "xarapuca_vis",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 28,
     "pd_type": "xarapuca_vis",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 29,
     "pd_type": "xarapuca_vis",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 30,
     "pd_type": "xarapuca_vis",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 31,
     "pd_type": "xarapuca_vis",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 32,
     "pd_type": "xarapuca_vis",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 33,
     "pd_type": "xarapuca_vis",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 34,
     "pd_type": "xarapuca_vis",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 35,
     "pd_type": "xarapuca_vis",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 36,
     "pd_type": "pmt_uncoated",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 37,
     "pd_type": "pmt_uncoated",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 38,
     "pd_type": "pmt_uncoated",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 39,
     "pd_type": "pmt_uncoated",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 40,
     "pd_type": "pmt_uncoated",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 41,
     "pd_type": "pmt_uncoated",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 42,
     "pd_type": "xarapuca_vuv",
     "pds_box": 0,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 43,
     "pd_type": "xarapuca_vuv",
     "pds_box": 1,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 44,
     "pd_type": "xarapuca_vuv",
     "pds_box": 0,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 45,
     "pd_type": "xarapuca_vuv",
     "pds_box": 1,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 46,
     "pd_type": "xarapuca_vuv",
     "pds_box": 2,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 47,
     "pd_type": "xarapuca_vuv",
     "pds_box": 3,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 48,
     "pd_type": "xarapuca_vuv",
     "pds_box": 2,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 49,
     "pd_type": "xarapuca_vuv",
     "pds_box": 3,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 50,
     "pd_type": "xarapuca_vuv",
     "pds_box": 4,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 51,
     "pd_type": "xarapuca_vuv",
     "pds_box": 5,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 52,
     "pd_type": "xarapuca_vuv",
     "pds_box": 4,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 53,
     "pd_type": "xarapuca_vuv",
     "pds_box": 5,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 54,
     "pd_type": "xarapuca_vis",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 55,
     "pd_type": "xarapuca_vis",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 56,
     "pd_type": "xarapuca_vis",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 57,
     "pd_type": "xarapuca_vis",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 58,
     "pd_type": "xarapuca_vis",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 59,
     "pd_type": "xarapuca_vis",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 60,
     "pd_type": "pmt_coated",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 61,
     "pd_type": "pmt_coated",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 62,
     "pd_type": "pmt_coated",
     "pds_box": 0,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 63,
     "pd_type": "pmt_coated",
     "pds_box": 1,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 64,
     "pd_type": "pmt_coated",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 65,
     "pd_type": "pmt_coated",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 66,
     "pd_type": "pmt_coated",
     "pds_box": 2,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 67,
     "pd_type": "pmt_coated",
     "pds_box": 3,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 68,
     "pd_type": "pmt_coated",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 69,
     "pd_type": "pmt_coated",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 70,
     "pd_type": "pmt_coated",
     "pds_box": 4,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 71,
     "pd_type": "pmt_coated",
     "pds_box": 5,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 72,
     "pd_type": "xarapuca_vuv",
     "pds_box": 0,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 73,
     "pd_type": "xarapuca_vuv",
     "pds_box": 1,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 74,
     "pd_type": "xarapuca_vuv",
     "pds_box": 2,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 75,
     "pd_type": "xarapuca_vuv",
     "pds_box": 3,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 76,
     "pd_type": "xarapuca_vuv",
     "pds_box": 4,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 77,
     "pd_type": "xarapuca_vuv",
     "pds_box": 5,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 78,
     "pd_type": "xarapuca_vis",
     "pds_box": 6,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 79,
     "pd_type": "xarapuca_vis",
     "pds_box": 7,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 80,
     "pd_type": "xarapuca_vis",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 81,
     "pd_type": "xarapuca_vis",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 82,
     "pd_type": "xarapuca_vis",
     "pds_box": 10,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 83,
     "pd_type": "xarapuca_vis",
     "pds_box": 11,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 84,
     "pd_type": "pmt_coated",
     "pds_box": 6,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 85,
     "pd_type": "pmt_coated",
     "pds_box": 7,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 86,
     "pd_type": "pmt_coated",
     "pds_box": 6,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 87,
     "pd_type": "pmt_coated",
     "pds_box": 7,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 88,
     "pd_type": "pmt_coated",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 89,
     "pd_type": "pmt_coated",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 90,
     "pd_type": "pmt_coated",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 91,
     "pd_type": "pmt_coated",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 92,
     "pd_type": "pmt_coated",
     "pds_box": 10,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 93,
     "pd_type": "pmt_coated",
     "pds_box": 11,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 94,
     "pd_type": "pmt_coated",
     "pds_box": 10,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 95,
     "pd_type": "pmt_coated",
     "pds_box": 11,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 96,
     "pd_type": "xarapuca_vuv",
     "pds_box": 6,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 97,
     "pd_type": "xarapuca_vuv",
     "pds_box": 7,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 98,
     "pd_type": "xarapuca_vuv",
     "pds_box": 8,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 99,
     "pd_type": "xarapuca_vuv",
     "pds_box": 9,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 100,
     "pd_type": "xarapuca_vuv",
     "pds_box": 10,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 101,
     "pd_type": "xarapuca_vuv",
     "pds_box": 11,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 102,
     "pd_type": "xarapuca_vis",
     "pds_box": 6,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 103,
     "pd_type": "xarapuca_vis",
     "pds_box": 7,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 104,
     "pd_type": "xarapuca_vis",
     "pds_box": 6,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 105,
     "pd_type": "xarapuca_vis",
     "pds_box": 7,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 106,
     "pd_type": "xarapuca_vis",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 107,
     "pd_type": "xarapuca_vis",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 108,
     "pd_type": "xarapuca_vis",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 109,
     "pd_type": "xarapuca_vis",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 110,
     "pd_type": "xarapuca_vis",
     "pds_box": 10,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 111,
     "pd_type": "xarapuca_vis",
     "pds_box": 11,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 112,
     "pd_type": "xarapuca_vis",
     "pds_box": 10,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 113,
     "pd_type": "xarapuca_vis",
     "pds_box": 11,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 114,
     "pd_type": "pmt_uncoated",
     "pds_box": 6,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 115,
     "pd_type": "pmt_uncoated",
     "pds_box": 7,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 116,
     "pd_type": "pmt_uncoated",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 117,
     "pd_type": "pmt_uncoated",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 118,
     "pd_type": "pmt_uncoated",
     "pds_box": 10,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 119,
     "pd_type": "pmt_uncoated",
     "pds_box": 11,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 120,
     "pd_type": "xarapuca_vuv",
     "pds_box": 6,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 121,
     "pd_type": "xarapuca_vuv",
     "pds_box": 7,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 122,
     "pd_type": "xarapuca_vuv",
     "pds_box": 6,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 123,
     "pd_type": "xarapuca_vuv",
     "pds_box": 7,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 124,
     "pd_type": "xarapuca_vuv",
     "pds_box": 8,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 125,
     "pd_type": "xarapuca_vuv",
     "pds_box": 9,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 126,
     "pd_type": "xarapuca_vuv",
     "pds_box": 8,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 127,
     "pd_type": "xarapuca_vuv",
     "pds_box": 9,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 128,
     "pd_type": "xarapuca_vuv",
     "pds_box": 10,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 129,
     "pd_type": "xarapuca_vuv",
     "pds_box": 11,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 130,
     "pd_type": "xarapuca_vuv",
     "pds_box": 10,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 131,
     "pd_type": "xarapuca_vuv",
     "pds_box": 11,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 132,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "xarapuca_vis",
     "pds_box": 6,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 133,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "xarapuca_vis",
     "pds_box": 7,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 134,
     "pd_type": "xarapuca_vis",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 135,
     "pd_type": "xarapuca_vis",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 136,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "xarapuca_vis",
     "pds_box": 10,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 137,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "xarapuca_vis",
     "pds_box": 11,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 138,
     "pd_type": "pmt_coated",
     "pds_box": 6,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 139,
     "pd_type": "pmt_coated",
     "pds_box": 7,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 140,
     "pd_type": "pmt_coated",
     "pds_box": 6,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 141,
     "pd_type": "pmt_coated",
     "pds_box": 7,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 142,
     "pd_type": "pmt_coated",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 143,
     "pd_type": "pmt_coated",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 144,
     "pd_type": "pmt_coated",
     "pds_box": 8,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 145,
     "pd_type": "pmt_coated",
     "pds_box": 9,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 146,
     "pd_type": "pmt_coated",
     "pds_box": 10,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 147,
     "pd_type": "pmt_coated",
     "pds_box": 11,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 148,
     "pd_type": "pmt_coated",
     "pds_box": 10,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 149,
     "pd_type": "pmt_coated",
     "pds_box": 11,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 150,
-    "pd_type": "arapuca_vis",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 6,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 151,
-    "pd_type": "arapuca_vis",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 7,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 152,
-    "pd_type": "arapuca_vuv",
-    "pds_box": 6,
-    "sensible_to_vis": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 8,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 153,
-    "pd_type": "arapuca_vuv",
-    "pds_box": 7,
-    "sensible_to_vis": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 9,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 154,
     "pd_type": "xarapuca_vuv",
-    "pds_box": 8,
-    "sensible_to_vis": false,
+    "pds_box": 10,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 155,
     "pd_type": "xarapuca_vuv",
-    "pds_box": 9,
-    "sensible_to_vis": false,
+    "pds_box": 11,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 156,
-    "pd_type": "arapuca_vis",
-    "pds_box": 10,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 12,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 157,
-    "pd_type": "arapuca_vis",
-    "pds_box": 11,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 13,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 158,
-    "pd_type": "arapuca_vuv",
-    "pds_box": 10,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 14,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 159,
-    "pd_type": "arapuca_vuv",
-    "pds_box": 11,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 15,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 160,
-    "pd_type": "arapuca_vis",
-    "pds_box": 12,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 16,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 161,
-    "pd_type": "arapuca_vis",
-    "pds_box": 13,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 17,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 162,
-    "pd_type": "arapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 12,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 163,
-    "pd_type": "arapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 13,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 164,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 14,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 12,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 165,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 15,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 13,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 166,
-    "pd_type": "arapuca_vis",
-    "pds_box": 16,
+    "pd_type": "pmt_coated",
+    "pds_box": 14,
+    "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "sensible_to_vuv": false,
     "tpc": 0
   },
   {
     "channel": 167,
-    "pd_type": "arapuca_vis",
-    "pds_box": 17,
+    "pd_type": "pmt_coated",
+    "pds_box": 15,
+    "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "sensible_to_vuv": false,
     "tpc": 1
   },
   {
     "channel": 168,
-    "pd_type": "arapuca_vuv",
-    "pds_box": 16,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 14,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 169,
-    "pd_type": "arapuca_vuv",
-    "pds_box": 17,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 15,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 170,
     "pd_type": "pmt_coated",
-    "pds_box": 12,
-    "sensible_to_vis": true,
+    "pds_box": 16,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 171,
     "pd_type": "pmt_coated",
-    "pds_box": 13,
-    "sensible_to_vis": true,
+    "pds_box": 17,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 172,
     "pd_type": "pmt_coated",
-    "pds_box": 12,
-    "sensible_to_vis": true,
+    "pds_box": 16,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 173,
     "pd_type": "pmt_coated",
-    "pds_box": 13,
-    "sensible_to_vis": true,
+    "pds_box": 17,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 174,
-    "pd_type": "pmt_coated",
-    "pds_box": 14,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 12,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 175,
-    "pd_type": "pmt_coated",
-    "pds_box": 15,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 13,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 176,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 14,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 177,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 15,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 178,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 16,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 179,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 17,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 180,
-    "pd_type": "pmt_coated",
-    "pds_box": 16,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 12,
+    "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "sensible_to_vuv": true,
     "tpc": 0
   },
   {
     "channel": 181,
-    "pd_type": "pmt_coated",
-    "pds_box": 17,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 13,
+    "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "sensible_to_vuv": true,
     "tpc": 1
   },
   {
     "channel": 182,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "xarapuca_vis",
     "pds_box": 12,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 183,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "xarapuca_vis",
     "pds_box": 13,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 184,
     "pd_type": "xarapuca_vis",
     "pds_box": 14,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 185,
     "pd_type": "xarapuca_vis",
     "pds_box": 15,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 186,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 16,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 14,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 187,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 17,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 15,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 188,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 12,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 16,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 189,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 13,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 17,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 190,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 12,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 16,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 191,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 13,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 17,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 192,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 14,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "pmt_uncoated",
+    "pds_box": 12,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 193,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 15,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "pmt_uncoated",
+    "pds_box": 13,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 194,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_uncoated",
     "pds_box": 14,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 195,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_uncoated",
     "pds_box": 15,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 196,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_uncoated",
     "pds_box": 16,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 197,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_uncoated",
     "pds_box": 17,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 198,
     "pd_type": "xarapuca_vuv",
-    "pds_box": 16,
-    "sensible_to_vis": false,
+    "pds_box": 12,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 199,
     "pd_type": "xarapuca_vuv",
-    "pds_box": 17,
-    "sensible_to_vis": false,
+    "pds_box": 13,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 200,
-    "pd_type": "pmt_uncoated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 12,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 201,
-    "pd_type": "pmt_uncoated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 13,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 202,
-    "pd_type": "pmt_uncoated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 14,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 203,
-    "pd_type": "pmt_uncoated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 15,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 204,
-    "pd_type": "pmt_uncoated",
-    "pds_box": 16,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 14,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 205,
-    "pd_type": "pmt_uncoated",
-    "pds_box": 17,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 15,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 206,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 12,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 16,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 207,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 13,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 17,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 208,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 12,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 16,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 209,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 13,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 17,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 210,
     "pd_type": "xarapuca_vis",
-    "pds_box": 14,
-    "sensible_to_vis": true,
+    "pds_box": 12,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 211,
     "pd_type": "xarapuca_vis",
-    "pds_box": 15,
-    "sensible_to_vis": true,
+    "pds_box": 13,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 212,
     "pd_type": "xarapuca_vis",
     "pds_box": 14,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 213,
     "pd_type": "xarapuca_vis",
     "pds_box": 15,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 214,
     "pd_type": "xarapuca_vis",
     "pds_box": 16,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 215,
     "pd_type": "xarapuca_vis",
     "pds_box": 17,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 216,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 16,
+    "pd_type": "pmt_coated",
+    "pds_box": 12,
+    "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "sensible_to_vuv": false,
     "tpc": 0
   },
   {
     "channel": 217,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 17,
+    "pd_type": "pmt_coated",
+    "pds_box": 13,
+    "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "sensible_to_vuv": false,
     "tpc": 1
   },
   {
     "channel": 218,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 12,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 219,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 13,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 220,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 14,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 221,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 15,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 222,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 16,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 14,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 223,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 17,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 15,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 224,
     "pd_type": "pmt_coated",
-    "pds_box": 12,
-    "sensible_to_vis": true,
+    "pds_box": 16,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 225,
     "pd_type": "pmt_coated",
-    "pds_box": 13,
-    "sensible_to_vis": true,
+    "pds_box": 17,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 226,
     "pd_type": "pmt_coated",
-    "pds_box": 12,
-    "sensible_to_vis": true,
+    "pds_box": 16,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 227,
     "pd_type": "pmt_coated",
-    "pds_box": 13,
-    "sensible_to_vis": true,
+    "pds_box": 17,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 228,
-    "pd_type": "pmt_coated",
-    "pds_box": 14,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 12,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 229,
-    "pd_type": "pmt_coated",
-    "pds_box": 15,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 13,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 230,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 14,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 231,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 15,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 232,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 16,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 233,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 17,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 234,
-    "pd_type": "pmt_coated",
-    "pds_box": 16,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 18,
+    "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "sensible_to_vuv": true,
     "tpc": 0
   },
   {
     "channel": 235,
-    "pd_type": "pmt_coated",
-    "pds_box": 17,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 19,
+    "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "sensible_to_vuv": true,
     "tpc": 1
   },
   {
     "channel": 236,
     "pd_type": "xarapuca_vis",
-    "pds_box": 12,
-    "sensible_to_vis": true,
+    "pds_box": 20,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 237,
     "pd_type": "xarapuca_vis",
-    "pds_box": 13,
-    "sensible_to_vis": true,
+    "pds_box": 21,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 238,
     "pd_type": "xarapuca_vis",
-    "pds_box": 14,
-    "sensible_to_vis": true,
+    "pds_box": 22,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 239,
     "pd_type": "xarapuca_vis",
-    "pds_box": 15,
-    "sensible_to_vis": true,
+    "pds_box": 23,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 240,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 16,
+    "pd_type": "pmt_coated",
+    "pds_box": 18,
+    "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "sensible_to_vuv": false,
     "tpc": 0
   },
   {
     "channel": 241,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 17,
+    "pd_type": "pmt_coated",
+    "pds_box": 19,
+    "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "sensible_to_vuv": false,
     "tpc": 1
   },
   {
     "channel": 242,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 18,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 243,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 19,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 244,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 20,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 245,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 21,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 246,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 22,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 20,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 247,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 23,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 21,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 248,
     "pd_type": "pmt_coated",
-    "pds_box": 18,
-    "sensible_to_vis": true,
+    "pds_box": 22,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 249,
     "pd_type": "pmt_coated",
-    "pds_box": 19,
-    "sensible_to_vis": true,
+    "pds_box": 23,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 250,
     "pd_type": "pmt_coated",
-    "pds_box": 18,
-    "sensible_to_vis": true,
+    "pds_box": 22,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 251,
     "pd_type": "pmt_coated",
-    "pds_box": 19,
-    "sensible_to_vis": true,
+    "pds_box": 23,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 252,
-    "pd_type": "pmt_coated",
-    "pds_box": 20,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 18,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 253,
-    "pd_type": "pmt_coated",
-    "pds_box": 21,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 19,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 254,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 20,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 255,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 21,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 256,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 22,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 257,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 23,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 258,
-    "pd_type": "pmt_coated",
-    "pds_box": 22,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 18,
+    "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "sensible_to_vuv": true,
     "tpc": 0
   },
   {
     "channel": 259,
-    "pd_type": "pmt_coated",
-    "pds_box": 23,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 19,
+    "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "sensible_to_vuv": true,
     "tpc": 1
   },
   {
     "channel": 260,
     "pd_type": "xarapuca_vis",
     "pds_box": 18,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 261,
     "pd_type": "xarapuca_vis",
     "pds_box": 19,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 262,
     "pd_type": "xarapuca_vis",
     "pds_box": 20,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 263,
     "pd_type": "xarapuca_vis",
     "pds_box": 21,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 264,
     "pd_type": "xarapuca_vis",
-    "pds_box": 22,
-    "sensible_to_vis": true,
+    "pds_box": 20,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 265,
     "pd_type": "xarapuca_vis",
-    "pds_box": 23,
-    "sensible_to_vis": true,
+    "pds_box": 21,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 266,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 18,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 22,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 267,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 19,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 23,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 268,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 18,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 22,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 269,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 19,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "xarapuca_vis",
+    "pds_box": 23,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 270,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 20,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "pmt_uncoated",
+    "pds_box": 18,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 271,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 21,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "pd_type": "pmt_uncoated",
+    "pds_box": 19,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 272,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_uncoated",
     "pds_box": 20,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 273,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_uncoated",
     "pds_box": 21,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 274,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_uncoated",
     "pds_box": 22,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 275,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_uncoated",
     "pds_box": 23,
-    "sensible_to_vis": false,
-    "sensible_to_vuv": true,
+    "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 276,
     "pd_type": "xarapuca_vuv",
-    "pds_box": 22,
-    "sensible_to_vis": false,
+    "pds_box": 18,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 277,
     "pd_type": "xarapuca_vuv",
-    "pds_box": 23,
-    "sensible_to_vis": false,
+    "pds_box": 19,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 278,
-    "pd_type": "pmt_uncoated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 18,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 279,
-    "pd_type": "pmt_uncoated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 19,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 280,
-    "pd_type": "pmt_uncoated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 20,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 281,
-    "pd_type": "pmt_uncoated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 21,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 282,
-    "pd_type": "pmt_uncoated",
-    "pds_box": 22,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 20,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 283,
-    "pd_type": "pmt_uncoated",
-    "pds_box": 23,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 21,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 284,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 18,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 22,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 285,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 19,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 23,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 286,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 18,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 22,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 287,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 19,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 23,
+    "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 288,
     "pd_type": "xarapuca_vis",
-    "pds_box": 20,
-    "sensible_to_vis": true,
+    "pds_box": 18,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 289,
     "pd_type": "xarapuca_vis",
-    "pds_box": 21,
-    "sensible_to_vis": true,
+    "pds_box": 19,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 290,
     "pd_type": "xarapuca_vis",
     "pds_box": 20,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 291,
     "pd_type": "xarapuca_vis",
     "pds_box": 21,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 292,
     "pd_type": "xarapuca_vis",
     "pds_box": 22,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 293,
     "pd_type": "xarapuca_vis",
     "pds_box": 23,
-    "sensible_to_vis": true,
     "sensible_to_vuv": false,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 294,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 22,
+    "pd_type": "pmt_coated",
+    "pds_box": 18,
+    "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "sensible_to_vuv": false,
     "tpc": 0
   },
   {
     "channel": 295,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 23,
+    "pd_type": "pmt_coated",
+    "pds_box": 19,
+    "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "sensible_to_vuv": false,
     "tpc": 1
   },
   {
     "channel": 296,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 18,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 297,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 19,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 298,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 20,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 299,
-    "pd_type": "xarapuca_vuv",
+    "pd_type": "pmt_coated",
     "pds_box": 21,
-    "sensible_to_vis": false,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 300,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 22,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 20,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 301,
-    "pd_type": "xarapuca_vuv",
-    "pds_box": 23,
-    "sensible_to_vis": false,
+    "pd_type": "pmt_coated",
+    "pds_box": 21,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 302,
     "pd_type": "pmt_coated",
-    "pds_box": 18,
-    "sensible_to_vis": true,
+    "pds_box": 22,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 303,
     "pd_type": "pmt_coated",
-    "pds_box": 19,
-    "sensible_to_vis": true,
+    "pds_box": 23,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 304,
     "pd_type": "pmt_coated",
-    "pds_box": 18,
-    "sensible_to_vis": true,
+    "pds_box": 22,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 0
   },
   {
     "channel": 305,
     "pd_type": "pmt_coated",
-    "pds_box": 19,
-    "sensible_to_vis": true,
+    "pds_box": 23,
     "sensible_to_vuv": true,
+    "sensible_to_vis": true,
     "tpc": 1
   },
   {
     "channel": 306,
-    "pd_type": "pmt_coated",
-    "pds_box": 20,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 18,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 307,
-    "pd_type": "pmt_coated",
-    "pds_box": 21,
-    "sensible_to_vis": true,
+    "pd_type": "xarapuca_vuv",
+    "pds_box": 19,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 308,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 20,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 309,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 21,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 1
   },
   {
     "channel": 310,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 22,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
+    "sensible_to_vis": false,
     "tpc": 0
   },
   {
     "channel": 311,
-    "pd_type": "pmt_coated",
+    "pd_type": "xarapuca_vuv",
     "pds_box": 23,
-    "sensible_to_vis": true,
     "sensible_to_vuv": true,
-    "tpc": 1
-  },
-  {
-    "channel": 312,
-    "pd_type": "pmt_coated",
-    "pds_box": 22,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": true,
-    "tpc": 0
-  },
-  {
-    "channel": 313,
-    "pd_type": "pmt_coated",
-    "pds_box": 23,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": true,
-    "tpc": 1
-  },
-  {
-    "channel": 314,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 18,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
-    "tpc": 0
-  },
-  {
-    "channel": 315,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 19,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
-    "tpc": 1
-  },
-  {
-    "channel": 316,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 20,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
-    "tpc": 0
-  },
-  {
-    "channel": 317,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 21,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
-    "tpc": 1
-  },
-  {
-    "channel": 318,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 22,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
-    "tpc": 0
-  },
-  {
-    "channel": 319,
-    "pd_type": "xarapuca_vis",
-    "pds_box": 23,
-    "sensible_to_vis": true,
-    "sensible_to_vuv": false,
+    "sensible_to_vis": false,
     "tpc": 1
   }
 ]
