@@ -40,9 +40,6 @@
 		<position name="posStructure"   unit="mm" x="0" y="0" z="2129.5" />
 		<position name="posEquipLid" unit="mm" x="0" y="3664.5" z="0"/>
 		
-		<position name="posShieldingLid" unit="mm" x="0" y="7643.7010000000009" z="0"/>
-		<position name="posShieldingTop" unit="mm" x="0" y="7643.7010000000009" z="1600"/>
-		<position name="posMezzanineLid" unit="mm" x="0" y="6719.9010000000007" z="11686.1"/>
 	</define>
 	<materials>
 		<element name="hydrogen"    formula="H"  Z="1">  	<atom value="1.00794"/>   </element>
@@ -753,6 +750,33 @@
 		<volume name="volBuildingBase">
 			<materialref ref="Concrete"/>
 			<solidref ref="solidBuildingBase"/>
+		</volume>
+	</structure>
+	<solids>
+		<box name="boxShielding" lunit="mm" x="10058.4" y="2844.8000000000002" z="12192"/>
+		<box name="boxShieldingLayer1" lunit="mm" x="10058.4" y="1016" z="12192"/>
+		<box name="boxShieldingLayer2And3" lunit="mm" x="10058.4" y="1828.8" z="12192"/>
+	</solids>
+	<structure>
+		<volume name="volShieldingLayer1">
+			<materialref ref="Concrete"/>
+			<solidref ref="boxShieldingLayer1"/>
+		</volume>
+		<volume name="volShieldingLayer2And3">
+			<materialref ref="Concrete"/>
+			<solidref ref="boxShieldingLayer2And3"/>
+		</volume>
+		<volume name="volShielding">
+			<materialref ref="Concrete"/>
+			<solidref ref="boxShielding"/>
+			<physvol>
+				<volumeref ref="volShieldingLayer1"/>
+				<position name="posShieldingLayer1" unit="mm" x="0" y="-914.40000000000009" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volShieldingLayer2And3"/>
+				<position name="posShieldingLayer2And3" unit="mm" x="0" y="507.99999999999989" z="0"/>
+			</physvol>
 		</volume>
 	</structure>
     <define>
@@ -13276,12 +13300,12 @@
 			<solidref ref="boxDetectorEnclosure"/>
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
-					<position name="poCRT_TopHigh" unit="mm" x="0" y="8664.2000000000007" z="-474.69999999999999"/>
+					<position name="posCRT_TopHigh" unit="mm" x="0" y="9286" z="-474.69999999999999"/>
 					<rotationref ref="rotateN90X"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerTopLow"/>
-					<position name="posCRT_TopLow" unit="mm" x="0" y="6624.1999999999998" z="-474.69999999999999"/>
+					<position name="posCRT_TopLow" unit="mm" x="0" y="6401.2000000000007" z="-474.69999999999999"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
 			<physvol>
@@ -13332,6 +13356,30 @@
 		<box name="boxWorld" lunit="mm" x="1000000" y="1000000" z="1000000"/>
 	</solids>
 	<structure>
+		<volume name="volWorldWithShielding" >
+			<materialref ref="Air"/>
+			<solidref ref="boxWorld"/>
+			<physvol>
+				<volumeref ref="volBuilding"/>
+				<position name="posBuilding"    unit="mm" x="0" y="12086.301000000001" z="2200"/>
+			</physvol>
+            <physvol>
+                <volumeref ref="volUndergrounds"/>
+        		<position name="posUnderground" unit="mm" x="0" y="-2192.3299999999999" z="3434.1999999999998"/>
+            </physvol>
+			<physvol>
+				<volumeref ref="volBuildingBase"/>
+				<position name="posBuildingBase" unit="mm" x="0" y="6345" z="2200" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volShielding"/>
+				<position name="posShielding" unit="mm" x="0" y="7843.6000000000004" z="3434.1999999999998" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volDetEnclosure"/>
+		    	<position name="posEnclosure" unit="mm" x="0" y="0" z="3434.1999999999998" />	
+			</physvol>
+		</volume>
 		<volume name="volWorld" >
 			<materialref ref="Air"/>
 			<solidref ref="boxWorld"/>
@@ -13353,6 +13401,9 @@
 			</physvol>
 		</volume>
 	</structure>
+    <setup name="DefaultWithShielding" version="1.0">
+		<world ref="volWorldWithShielding" />
+	</setup>
 	<setup name="Default" version="1.0">
 		<world ref="volWorld" />
 	</setup>

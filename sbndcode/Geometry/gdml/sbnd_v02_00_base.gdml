@@ -229,8 +229,8 @@
 		<constant name="aCRTModule_H" value="1800.0" />
 		<constant name="theCRT_W"     value="2*aCRTModule_W" />
 
-		<constant name="aCRT_Top1"    value="dimBuildingBaseWidth_mm+mezzanine_Y+dimDetectorHall_Y_mm-(IPE_Beam_W+structure_Y/2.0+structure_W)+system_DY+37.102" />
-		<constant name="aCRT_Top2"  value="theShield_W+theCRT_W" />
+		<!-- <constant name="aCRT_Top1"    value="dimBuildingBaseWidth_mm+mezzanine_Y+dimDetectorHall_Y_mm-(IPE_Beam_W+structure_Y/2.0+structure_W)+system_DY+37.102" /> -->
+		<!-- <constant name="aCRT_Top2"  value="theShield_W+theCRT_W" /> -->
 
 		<constant name="aCRTModule_X_L" value="5*aCRTModule_H/2.0" />
 		<constant name="aCRTModule_X_H" value="aCRTModule_H" />
@@ -239,11 +239,31 @@
 		<constant name="theCRT_X" value="2*aCRTModule_Y_L"/>
 		<constant name="theCRT_Y" value="theCRT_X"/>
 		<constant name="theCRT_Z" value="2*aCRTModule_X_L"/>
-		<constant name="theCRT_T" value="aCRT_Top1+aCRT_Top2" />
+		<!-- <constant name="theCRT_T" value="aCRT_Top1+aCRT_Top2" /> -->
+
+		<!-- The overburden dimensions, thickness is overburden dimension along the Y axis -->
+		<!-- The overburden is made of 3 layers, but we implement layer 2 and 3 as a single box -->
+		<!-- Thickness of layer 1: 3ft-4in = 914.4 + 101.6 mm = 1016 mm -->
+		<!-- Thickness of layer 2 and 3: 3ft = 914.4 mm -->
+		<!-- X dimension 33 ft = 10058.4 mm -->
+		<constant name="shielding_dim_x" value="10058.4" />
+		<constant name="shielding_dim_z" value="dimDetectorHall_Z_mm" />
+		<constant name="shielding_layer1_thickness" value="1016" />
+		<constant name="shielding_layer2_thickness" value="914.4" />
+		<constant name="shielding_layer3_thickness" value="914.4" />
+		<!-- Overburden derived quantities -->
+		<constant name="shielding_layer2and3_thickness" value="shielding_layer2_thickness+shielding_layer3_thickness" />
+		<constant name="shielding_thickness" value="shielding_layer1_thickness+shielding_layer2and3_thickness" />
+
+		<!-- Position of the Overburden (mm) -->
+		<constant name="my_dimSystem_Z_mm" value="1130"/>
+		<constant name="whereShielding_X" value="whereEnclosure_X"/>
+		<constant name="whereShielding_Y" value="5215+my_dimSystem_Z_mm+dimBuildingBaseWidth_mm/2+shielding_thickness/2"/>
+		<constant name="whereShielding_Z" value="whereEnclosure_Z"/>
 
 
 		<constant name="theStructure_T" value="structure_Y/2.0+structure_W+topLid_W"/>
-		<constant name="theEncTower_T"  value="theStructure_T+theCRT_T"/>
+		<!-- <constant name="theEncTower_T"  value="theStructure_T+theCRT_T"/> -->
 
 		<constant name="rWire"  value="0.15*0.5" />
 
@@ -262,9 +282,9 @@
 
 		<position name="posEquipLid" unit="mm" x="0" y="theStructure_T-topLid_W/2.0" z="0"/>
 		
-		<position name="posShieldingLid" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W/2.0" z="0"/>
-		<position name="posShieldingTop" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W/2.0" z="1600"/>
-		<position name="posMezzanineLid" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W+mezzanineFloorSlab_Y/2.0" z="8600+mezzanine_Z/2.0"/>
+		<!-- <position name="posShieldingLid" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W/2.0" z="0"/> -->
+		<!-- <position name="posShieldingTop" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W/2.0" z="1600"/> -->
+		<!-- <position name="posMezzanineLid" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W+mezzanineFloorSlab_Y/2.0" z="8600+mezzanine_Z/2.0"/> -->
 
 
 	</define>
@@ -1175,7 +1195,49 @@
 		</volume>
 	</structure>
     <!-- end of Ground -->
-    
+
+    	<!-- ========================================= -->
+	<!--  Overburden                               -->
+	<!-- ========================================= -->
+	<solids>
+		<box name="boxShielding" lunit="mm" x="shielding_dim_x" y="shielding_thickness" z="shielding_dim_z"/>
+		<box name="boxShieldingLayer1" lunit="mm" x="shielding_dim_x" y="shielding_layer1_thickness" z="shielding_dim_z"/>
+		<box name="boxShieldingLayer2And3" lunit="mm" x="shielding_dim_x" y="shielding_layer2and3_thickness" z="shielding_dim_z"/>
+	</solids>
+
+	<structure>
+		<!-- Overburden Volume - Layer 1 -->
+		<volume name="volShieldingLayer1">
+			<materialref ref="Concrete"/>
+			<solidref ref="boxShieldingLayer1"/>
+		</volume>
+
+		<!-- Overburden Volume - Layer 2 and 3 -->
+		<volume name="volShieldingLayer2And3">
+			<materialref ref="Concrete"/>
+			<solidref ref="boxShieldingLayer2And3"/>
+		</volume>
+
+		<!-- Full Overburden Volume - Layer 1, 2, and 3 -->
+		<volume name="volShielding">
+			<materialref ref="Concrete"/>
+			<solidref ref="boxShielding"/>
+
+			<physvol>
+				<volumeref ref="volShieldingLayer1"/>
+				<position name="posShieldingLayer1" unit="mm" x="0" y="-shielding_thickness/2+shielding_layer1_thickness/2" z="0"/>
+			</physvol>
+
+			<physvol>
+				<volumeref ref="volShieldingLayer2And3"/>
+				<position name="posShieldingLayer2And3" unit="mm" x="0" y="-shielding_thickness/2+shielding_layer1_thickness+shielding_layer2and3_thickness/2" z="0"/>
+			</physvol>
+		</volume>
+	</structure>
+    <!-- end of Overburden -->
+
+
+
     <!--========================================================================-->
     <!--                          Undergrounounds                               -->
     <!--========================================================================-->
@@ -2061,8 +2123,10 @@
                 <variable name="CRT_declaring_modules" value="0"/>
                 <variable name="CRT_placing_modules" value="0"/>
 
-                <constant name="CRT_DY_TopHigh" value="8664.2"/>
-                <constant name="CRT_DY_TopLow" value="6624.2"/>
+                <!-- <constant name="CRT_DY_TopHigh" value="8664.2"/> -->
+                <!-- <constant name="CRT_DY_TopLow" value="6624.2"/> -->
+                <constant name="CRT_DY_TopHigh" value="whereShielding_Y+shielding_thickness/2+aCRTModule_W"/>
+                <constant name="CRT_DY_TopLow" value="whereShielding_Y-shielding_thickness/2-aCRTModule_W"/>
                 <constant name="CRT_DX_Side" value="3830"/>
                 <constant name="CRT_DZ_South" value="4750"/>
                 <constant name="CRT_DY_Bottom" value="3780"/>
@@ -5374,7 +5438,7 @@
 			<!-- Positioning the CRT -->
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
-					<position name="poCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_YCRT_DY_TopHigh" z="whereMembrane_Z"/>
+					<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
 					<rotationref ref="rotateN90X"/>
 			</physvol>
 			<physvol>
@@ -5442,6 +5506,40 @@
 	</solids>
 
 	<structure>
+		<!-- ========== World with Overburden ========== -->
+		<volume name="volWorldWithShielding" >
+			<materialref ref="Air"/>
+			<solidref ref="boxWorld"/>
+
+			<!-- Positioning the Building -->
+			<physvol>
+				<volumeref ref="volBuilding"/>
+				<position name="posBuilding"    unit="mm" x="whereBuild_X" y="whereBuild_Y+dimSystem_Z_mm" z="2200"/>
+			</physvol>
+			<!-- Positioning the Underground -->
+            <physvol>
+                <volumeref ref="volUndergrounds"/>
+        		<position name="posUnderground" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y-3322.33+dimSystem_Z_mm" z="whereEnclosure_Z"/>
+            </physvol>
+			<!-- Positioning the Ground -->
+			<physvol>
+				<volumeref ref="volBuildingBase"/>
+				<position name="posBuildingBase" unit="mm" x="0" y="5215+dimSystem_Z_mm" z="2200" />
+			</physvol>
+			<!-- Positioning the Overburden -->
+			<physvol>
+				<volumeref ref="volShielding"/>
+				<position name="posShielding" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
+			</physvol>
+			<!-- Positioning the Detector Enclosure -->
+			<physvol>
+				<volumeref ref="volDetEnclosure"/>
+		    	<position name="posEnclosure" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />	
+			</physvol>
+
+		</volume>
+
+		<!-- ========== World without Overburden (default) ========== -->
 		<volume name="volWorld" >
 			<materialref ref="Air"/>
 			<solidref ref="boxWorld"/>
@@ -5470,6 +5568,10 @@
 		</volume>
 	</structure>
     <!-- End of World -->
+
+    <setup name="DefaultWithShielding" version="1.0">
+		<world ref="volWorldWithShielding" />
+	</setup>
 
 	<setup name="Default" version="1.0">
 		<world ref="volWorld" />
