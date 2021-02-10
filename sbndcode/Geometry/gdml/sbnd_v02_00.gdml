@@ -39,7 +39,6 @@
 		<position name="posBuildingVoid" unit="mm" x="0" y="-480.00099999999998" z="0"/>
 		<position name="posStructure"   unit="mm" x="0" y="0" z="2129.5" />
 		<position name="posEquipLid" unit="mm" x="0" y="3664.5" z="0"/>
-		
 	</define>
 	<materials>
 		<element name="hydrogen"    formula="H"  Z="1">  	<atom value="1.00794"/>   </element>

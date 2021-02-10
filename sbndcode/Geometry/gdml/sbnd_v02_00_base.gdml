@@ -229,9 +229,6 @@
 		<constant name="aCRTModule_H" value="1800.0" />
 		<constant name="theCRT_W"     value="2*aCRTModule_W" />
 
-		<!-- <constant name="aCRT_Top1"    value="dimBuildingBaseWidth_mm+mezzanine_Y+dimDetectorHall_Y_mm-(IPE_Beam_W+structure_Y/2.0+structure_W)+system_DY+37.102" /> -->
-		<!-- <constant name="aCRT_Top2"  value="theShield_W+theCRT_W" /> -->
-
 		<constant name="aCRTModule_X_L" value="5*aCRTModule_H/2.0" />
 		<constant name="aCRTModule_X_H" value="aCRTModule_H" />
 		<constant name="aCRTModule_Y_L" value="4*aCRTModule_H/2.0" />
@@ -239,7 +236,6 @@
 		<constant name="theCRT_X" value="2*aCRTModule_Y_L"/>
 		<constant name="theCRT_Y" value="theCRT_X"/>
 		<constant name="theCRT_Z" value="2*aCRTModule_X_L"/>
-		<!-- <constant name="theCRT_T" value="aCRT_Top1+aCRT_Top2" /> -->
 
 		<!-- The overburden dimensions, thickness is overburden dimension along the Y axis -->
 		<!-- The overburden is made of 3 layers, but we implement layer 2 and 3 as a single box -->
@@ -263,7 +259,6 @@
 
 
 		<constant name="theStructure_T" value="structure_Y/2.0+structure_W+topLid_W"/>
-		<!-- <constant name="theEncTower_T"  value="theStructure_T+theCRT_T"/> -->
 
 		<constant name="rWire"  value="0.15*0.5" />
 
@@ -281,11 +276,6 @@
 		<constant name="S460L_D" value="3.8321" />
 
 		<position name="posEquipLid" unit="mm" x="0" y="theStructure_T-topLid_W/2.0" z="0"/>
-		
-		<!-- <position name="posShieldingLid" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W/2.0" z="0"/> -->
-		<!-- <position name="posShieldingTop" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W/2.0" z="1600"/> -->
-		<!-- <position name="posMezzanineLid" unit="mm" x="0" y="theCRT_T-theCRT_W-theShield_W+mezzanineFloorSlab_Y/2.0" z="8600+mezzanine_Z/2.0"/> -->
-
 
 	</define>
 
