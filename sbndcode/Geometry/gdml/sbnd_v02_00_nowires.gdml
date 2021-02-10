@@ -13361,23 +13361,23 @@
 			<solidref ref="boxWorld"/>
 			<physvol>
 				<volumeref ref="volBuilding"/>
-				<position name="posBuilding"    unit="mm" x="0" y="12086.301000000001" z="2200"/>
+				<position name="posBuildingWithSh"    unit="mm" x="0" y="12086.301000000001" z="2200"/>
 			</physvol>
             <physvol>
                 <volumeref ref="volUndergrounds"/>
-        		<position name="posUnderground" unit="mm" x="0" y="-2192.3299999999999" z="3434.1999999999998"/>
+        		<position name="posUndergroundWithSh" unit="mm" x="0" y="-2192.3299999999999" z="3434.1999999999998"/>
             </physvol>
 			<physvol>
 				<volumeref ref="volBuildingBase"/>
-				<position name="posBuildingBase" unit="mm" x="0" y="6345" z="2200" />
+				<position name="posBuildingBaseWithSh" unit="mm" x="0" y="6345" z="2200" />
 			</physvol>
 			<physvol>
 				<volumeref ref="volShielding"/>
-				<position name="posShielding" unit="mm" x="0" y="7843.6000000000004" z="3434.1999999999998" />
+				<position name="posShieldingWithSh" unit="mm" x="0" y="7843.6000000000004" z="3434.1999999999998" />
 			</physvol>
 			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-		    	<position name="posEnclosure" unit="mm" x="0" y="0" z="3434.1999999999998" />	
+		    	<position name="posEnclosureWithSh" unit="mm" x="0" y="0" z="3434.1999999999998" />	
 			</physvol>
 		</volume>
 		<volume name="volWorld" >

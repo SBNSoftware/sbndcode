@@ -5514,27 +5514,27 @@
 			<!-- Positioning the Building -->
 			<physvol>
 				<volumeref ref="volBuilding"/>
-				<position name="posBuilding"    unit="mm" x="whereBuild_X" y="whereBuild_Y+dimSystem_Z_mm" z="2200"/>
+				<position name="posBuildingWithSh"    unit="mm" x="whereBuild_X" y="whereBuild_Y+dimSystem_Z_mm" z="2200"/>
 			</physvol>
 			<!-- Positioning the Underground -->
             <physvol>
                 <volumeref ref="volUndergrounds"/>
-        		<position name="posUnderground" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y-3322.33+dimSystem_Z_mm" z="whereEnclosure_Z"/>
+        		<position name="posUndergroundWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y-3322.33+dimSystem_Z_mm" z="whereEnclosure_Z"/>
             </physvol>
 			<!-- Positioning the Ground -->
 			<physvol>
 				<volumeref ref="volBuildingBase"/>
-				<position name="posBuildingBase" unit="mm" x="0" y="5215+dimSystem_Z_mm" z="2200" />
+				<position name="posBuildingBaseWithSh" unit="mm" x="0" y="5215+dimSystem_Z_mm" z="2200" />
 			</physvol>
 			<!-- Positioning the Overburden -->
 			<physvol>
 				<volumeref ref="volShielding"/>
-				<position name="posShielding" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
+				<position name="posShieldingWithSh" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
 			</physvol>
 			<!-- Positioning the Detector Enclosure -->
 			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-		    	<position name="posEnclosure" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />	
+		    	<position name="posEnclosureWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />	
 			</physvol>
 
 		</volume>
