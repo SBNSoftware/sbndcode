@@ -119,6 +119,29 @@ namespace opdet {
       std::cout << Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
     }
 
+    // // example of usage for pdMap.getCollectionWithProperty()
+    // //
+    // // define a container
+    // auto inBoxTwo = pdMap.getCollectionWithProperty("pds_box", 2);
+    // // you can cout the whole json object
+    // std::cout << "inBoxTwo:\t" << inBoxTwo << "\n";
+    // // traverse its components in a loop
+    // for (auto const &e: inBoxTwo) {
+    //   std::cout << e["pd_type"] << " " << e["channel"] << ' ' << "\n";
+    // }
+
+    // // example of usage for pdMap.getCollectionFromCondition()
+    // // define a lambda function with the conditions
+    // auto subsetCondition = [](auto const& e)->bool
+    //   // modify conditions as you want in the curly braces below
+    //   {return e["pd_type"] == "pmt_uncoated" && e["tpc"] == 0;};
+    // // get the container that satisfies the conditions
+    // auto uncoatedsInTPC0 = pdMap.getCollectionFromCondition(subsetCondition);
+    // std::cout << "uncoatedsInTPC0.size():\t" << uncoatedsInTPC0.size() << "\n";
+    // for(auto const& e:uncoatedsInTPC0){
+    //   std::cout << "e:\t" << e << "\n";
+    // }
+
     std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
 
     std::cout << "fOpDetsToPlot:\t";
