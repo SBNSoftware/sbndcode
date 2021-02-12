@@ -100,3 +100,4 @@ outputs:
 # only keep MCParticles that cross the cryostat;
 # this is relevant in extensive cosmic ray generators (like Corsika)
 physics.producers.largeant.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"] 
+physics.producers.largeant.SparsifyTrajectories: "true"
