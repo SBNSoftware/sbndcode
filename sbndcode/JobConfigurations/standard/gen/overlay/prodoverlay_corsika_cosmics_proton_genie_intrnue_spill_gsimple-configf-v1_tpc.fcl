@@ -1,3 +1,3 @@
 #include "prodoverlay_corsika_cosmics_proton_genie_nu_spill_gsimple-configf-v1_tpc.fcl"
 
-physics.producers.generator.GenFlavors:       [12,-12] #pdg codes of flux generator neutrino flavors
+#include "prodgenie_nue.fcl"
