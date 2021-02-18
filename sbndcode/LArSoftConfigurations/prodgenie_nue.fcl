@@ -1,0 +1,4 @@
+# etyley 17/02/2021
+# Include this file at the bottom of your GENIE fcl to produce electron neutrino interactions only
+
+physics.producers.generator.GenFlavors: [12,-12] #pdg codes of flux generator neutrino flavors
