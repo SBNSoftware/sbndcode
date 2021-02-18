@@ -12,7 +12,7 @@ sbnd_simple_flashmatch:{
   LightWindowEnd: 0.09 # us, wrt flash time
   SelectNeutrino: true
   UseUncoatedPMT: true
-  UseARAPUCAS: false
+  UseARAPUCAS: true
   # UseCalo: false
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
