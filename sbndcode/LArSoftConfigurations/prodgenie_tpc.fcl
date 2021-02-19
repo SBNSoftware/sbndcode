@@ -1,0 +1,4 @@
+# etyley 17/02/2021
+# Include this file at the bottom of your GENIE fcl to produce interactions in the TPC volume only
+
+physics.producers.generator.FiducialCut: "mbox: -210,-210,-10,210,210,510" #Extend the box to include 20cm around the TPC active region

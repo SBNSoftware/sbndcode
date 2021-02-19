@@ -1,6 +1,3 @@
-#include "prodgenie_nu_singleinteraction_tpc_gsimple-configf-v1.fcl"
+#include "prodgenie_nu_spill_cryostat_gsimple-configf-v1.fcl"
 
-physics.producers.generator: {
-     @table::physics.producers.generator
-     @table::sbnd_fluxbucket_bnb_rotated
-}
+#include "prodgenie_tpc.fcl"

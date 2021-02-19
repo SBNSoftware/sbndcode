@@ -48,6 +48,7 @@ namespace opdet {
 
     nlohmann::json getCollectionWithProperty(std::string property);
     template<typename T> nlohmann::json getCollectionWithProperty(std::string property, T property_value);
+    template<typename Func> nlohmann::json getCollectionFromCondition(Func condition);
 
     // struct Config {};
 
@@ -71,8 +72,17 @@ namespace opdet {
   {
     nlohmann::json subSetPDmap;
     std::copy_if (PDmap.begin(), PDmap.end(), std::back_inserter(subSetPDmap),
-                  [property, property_value](const nlohmann::json e)->bool
+                  [property, property_value](auto const& e)->bool
                     {return e[property] == property_value;} );
+    return subSetPDmap;
+  }
+
+  template<typename Func>
+  nlohmann::json sbndPDMapAlg::getCollectionFromCondition(Func condition)
+  {
+    nlohmann::json subSetPDmap;
+    std::copy_if (PDmap.begin(), PDmap.end(), std::back_inserter(subSetPDmap),
+                  condition);
     return subSetPDmap;
   }
 

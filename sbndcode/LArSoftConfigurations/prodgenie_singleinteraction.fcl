@@ -1,0 +1,5 @@
+# etyley 17/02/2021
+# Include this file at the bottom of your GENIE fcl to produce a single interaction rather than have a defined POT/spill
+
+physics.producers.generator.EventsPerSpill: 1
+physics.producers.generator.POTPerSpill: 0 #This cannot be non-zero when EventsPerSPill != 0
