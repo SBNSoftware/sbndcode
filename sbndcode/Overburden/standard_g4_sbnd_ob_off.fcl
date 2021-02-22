@@ -1,0 +1,23 @@
+#include "standard_g4_sbnd.fcl"
+
+physics.producers.largeant.KeepParticlesInVolumes: []
+physics.producers.mcreco.MCShowerRecoAlg.MinShowerEnergy: 1 # MeV
+physics.producers.mcreco.MCShowerRecoAlg.MinNumDaughters: 0
+
+services.LArG4Parameters.EnabledPhysics: [
+         "Em",
+         #"FastOptical",
+         "SynchrotronAndGN",
+         "Ion",
+         "Hadron",
+         "Decay",
+         "HadronElastic",
+         "Stopping"
+      ]
+services.LArG4Parameters.ParticleKineticEnergyCut: 1e-6 # 1 MeV
+
+# physics.producers.largeant.KeepParticlesInVolumes: ["volTPC_N", "volTPC_P"]
+
+#physics.producers.largeant.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"] 
+
+
