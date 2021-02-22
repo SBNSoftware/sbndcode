@@ -5,10 +5,10 @@ physics.producers.mcreco.MCShowerRecoAlg.MinShowerEnergy: 1 # MeV
 physics.producers.mcreco.MCShowerRecoAlg.MinNumDaughters: 0
 
 # Geometry with overburden
-services.Geometry.GDML: "sbnd_v01_04_ob.gdml"
-services.Geometry.ROOT: "sbnd_v01_04_ob.gdml"
-services.AuxDetGeometry.GDML: "sbnd_v01_04_ob.gdml"
-services.AuxDetGeometry.ROOT: "sbnd_v01_04_ob.gdml"
+services.Geometry.GDML: "sbnd_v01_05_configB_ob.gdml"
+services.Geometry.ROOT: "sbnd_v01_05_configB_ob.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v01_05_configB_ob.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v01_05_configB_ob.gdml"
 
 services.LArG4Parameters.EnabledPhysics: [
          "Em",
@@ -20,10 +20,8 @@ services.LArG4Parameters.EnabledPhysics: [
          "HadronElastic",
          "Stopping"
       ]
-
 services.LArG4Parameters.ParticleKineticEnergyCut: 1e-6 # 1 MeV
 services.LArG4Parameters.KeepEMShowerDaughters: true
-
 
 # physics.producers.largeant.KeepParticlesInVolumes: ["volTPC_N", "volTPC_P"]
 

@@ -1,0 +1,12 @@
+#include "prodgenie_nu_spill_world_gsimple-configg-v1.fcl"
+
+# physics.producers.generator.TopVolume: "volShieldingLid"
+
+# physics.producers.generator.FiducialCut: "mbox: -210,-210,-10,210,210,510" #Extend the box to include 20cm around the TPC active region
+physics.producers.generator.FiducialCut: "mbox: -530,660,-420,530,960,750" #Extend the box to include 20cm around the TPC active region
+
+# Geometry with overburden
+services.Geometry.GDML: "sbnd_v01_05_configC_ob.gdml"
+services.Geometry.ROOT: "sbnd_v01_05_configC_ob.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v01_05_configC_ob.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v01_05_configC_ob.gdml"
