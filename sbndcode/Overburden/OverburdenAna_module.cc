@@ -21,6 +21,7 @@
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "lardataobj/MCBase/MCTrack.h"
 #include "lardataobj/MCBase/MCShower.h"
@@ -30,6 +31,10 @@
 #include "larcore/Geometry/Geometry.h"
 
 #include "TTree.h"
+
+#include <boost/uuid/uuid.hpp>            // uuid class
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 
 class OverburdenAna;
 
@@ -94,9 +99,24 @@ private:
   double _z_max; //!< z-max of volume box used to determine whether to save track information
   double _z_min; //!< z-min of volume box used to determine whether to save track information
 
+  boost::uuids::uuid _uuid; ///< A unique ID to identify different events in files with same event number
+  std::string _uuid_str; ///< Same as uuid, but converted to string
+
   TTree* _tree;
 
   int _run, _subrun, _event;
+
+  float _nu_e;
+  int _nu_pdg;
+  int _nu_ccnc;
+  int _nu_mode;
+  int _nu_int_type;
+  float _nu_vtx_x;
+  float _nu_vtx_y;
+  float _nu_vtx_z;
+  float _nu_px;
+  float _nu_py;
+  float _nu_pz;
 
   std::vector<float> _mcp_px;
   std::vector<float> _mcp_py;
@@ -177,6 +197,8 @@ private:
   float _pi0_par_end_z; ///< The pi0 end z
   int _pi0_par_mother_pdg; ///< The pi0 mother pdg
   float _pi0_par_mother_e; ///< The pi0 mother energy
+  int _pi0_par_ancestor_trackid; ///< The pi0 primary particle ancestor track id (allows easy pi0 clustering by cosmic interaction)
+  std::string _pi0_par_ancestor_uuid; ///< The pi0 unique ID for the event
 
   std::vector<int> _pi0_daughters_pdg; ///< All the pi0 daughters (usually two photons) (pdg)
   std::vector<float> _pi0_daughters_e; ///< All the pi0 daughters (usually two photons) (energy)
@@ -203,6 +225,7 @@ private:
   std::vector<float> _pi0_genealogy_end_x; ///< The full pi0 genealogy, from its mother all the way to the ancestor (end x)
   std::vector<float> _pi0_genealogy_end_y; ///< The full pi0 genealogy, from its mother all the way to the ancestor (end y)
   std::vector<float> _pi0_genealogy_end_z; ///< The full pi0 genealogy, from its mother all the way to the ancestor (end z)
+  std::vector<float> _pi0_genealogy_trackid; ///< The full pi0 genealogy, from its mother all the way to the ancestor (trackid)
 
 
 
@@ -224,6 +247,18 @@ OverburdenAna::OverburdenAna(fhicl::ParameterSet const& p)
   _tree->Branch("run",     &_run,     "run/I");
   _tree->Branch("subrun",     &_subrun,     "subrun/I");
   _tree->Branch("event",     &_event,     "event/I");
+
+  _tree->Branch("nu_e", &_nu_e, "nu_e/F");
+  _tree->Branch("nu_pdg", &_nu_pdg, "nu_pdg/I");
+  _tree->Branch("nu_ccnc", &_nu_ccnc, "nu_ccnc/I");
+  _tree->Branch("nu_mode", &_nu_mode, "nu_mode/I");
+  _tree->Branch("nu_int_type", &_nu_int_type, "nu_int_type/I");
+  _tree->Branch("nu_vtx_x", &_nu_vtx_x, "nu_vtx_x/F");
+  _tree->Branch("nu_vtx_y", &_nu_vtx_y, "nu_vtx_y/F");
+  _tree->Branch("nu_vtx_z", &_nu_vtx_z, "nu_vtx_z/F");
+  _tree->Branch("nu_px", &_nu_px, "nu_px/F");
+  _tree->Branch("nu_py", &_nu_py, "nu_px/F");
+  _tree->Branch("nu_pz", &_nu_pz, "nu_px/F");
 
   _tree->Branch("mcp_px", "std::vector<float>", &_mcp_px);
   _tree->Branch("mcp_py", "std::vector<float>", &_mcp_py);
@@ -308,6 +343,8 @@ OverburdenAna::OverburdenAna(fhicl::ParameterSet const& p)
     _pi0_tree->Branch("pi0_par_end_z", &_pi0_par_end_z, "pi0_par_end_z/F");
     _pi0_tree->Branch("pi0_par_mother_pdg", &_pi0_par_mother_pdg, "pi0_par_mother_pdg/I");
     _pi0_tree->Branch("pi0_par_mother_e", &_pi0_par_mother_e, "pi0_par_mother_e/F");
+    _pi0_tree->Branch("pi0_par_ancestor_trackid", &_pi0_par_ancestor_trackid, "pi0_par_ancestor_trackid/I");
+    _pi0_tree->Branch("pi0_par_ancestor_uuid", "std::string", &_pi0_par_ancestor_uuid);
 
     _pi0_tree->Branch("pi0_event_particles_pdg", "std::vector<int>", &_pi0_event_particles_pdg);
     _pi0_tree->Branch("pi0_event_particles_e", "std::vector<float>", &_pi0_event_particles_e);
@@ -334,6 +371,7 @@ OverburdenAna::OverburdenAna(fhicl::ParameterSet const& p)
     _pi0_tree->Branch("pi0_genealogy_end_x", "std::vector<float>", &_pi0_genealogy_end_x);
     _pi0_tree->Branch("pi0_genealogy_end_y", "std::vector<float>", &_pi0_genealogy_end_y);
     _pi0_tree->Branch("pi0_genealogy_end_z", "std::vector<float>", &_pi0_genealogy_end_z);
+    _pi0_tree->Branch("pi0_genealogy_trackid", "std::vector<float>", &_pi0_genealogy_trackid);
 
   }
 
@@ -368,6 +406,10 @@ void OverburdenAna::produce(art::Event& e)
   _subrun = e.id().subRun();
   _event =  e.id().event();
 
+  _uuid = boost::uuids::random_generator()();
+  _uuid_str = boost::lexical_cast<std::string>(_uuid) + "-" + _event;
+  std::cout << "Event uuid " << _uuid_str << std::endl;
+
   std::set<std::string> volnameset(_overburden_volumes.begin(), _overburden_volumes.end());
   _part_filter = CreateParticleVolumeFilter(volnameset);
 
@@ -381,6 +423,45 @@ void OverburdenAna::produce(art::Event& e)
   // auto filter = CreateParticleVolumeFilter(set);
   // std::cout << "NEW Is {0, 0, 100} in the volCryostat? " << (filter->mustKeep(Point_t{{0, 0, 100}}) ? "YES" : "NO") << std::endl;
   // std::cout << "NEW Is {0, 800, 100} in the volCryostat? " << (filter->mustKeep(Point_t{{0, 800, 100}}) ? "YES" : "NO") << std::endl;
+
+
+  //
+  // MCTruth
+  //
+  art::Handle<std::vector<simb::MCTruth>> mct_h;
+  e.getByLabel(_mctruth_producer, mct_h);
+  if(mct_h.isValid()){
+
+    std::vector<art::Ptr<simb::MCTruth>> mct_v;
+    art::fill_ptr_vector(mct_v, mct_h);
+
+    //
+    // Loop over the neutrino interactions in this event
+    //
+    for (size_t i = 0; i < mct_v.size(); i++) {
+      // if (mct_v.at(i)->Origin() != simb::kBeamNeutrino) {
+      //   std::cout << "[OverburdenAna] MCTruth from generator does not have neutrino origin?!" << std::endl;
+      // }
+
+      if(!mct_v[i]->NeutrinoSet()) {
+        break;
+      }
+
+      _nu_e = mct_v[i]->GetNeutrino().Nu().E();
+      _nu_pdg = mct_v[i]->GetNeutrino().Nu().PdgCode();
+      _nu_ccnc = mct_v[i]->GetNeutrino().CCNC();
+      _nu_mode = mct_v[i]->GetNeutrino().Mode();
+      _nu_int_type = mct_v[i]->GetNeutrino().InteractionType();
+      _nu_vtx_x = mct_v[i]->GetNeutrino().Nu().Vx();
+      _nu_vtx_y = mct_v[i]->GetNeutrino().Nu().Vy();
+      _nu_vtx_z = mct_v[i]->GetNeutrino().Nu().Vz();
+      _nu_px = mct_v[i]->GetNeutrino().Nu().Px();
+      _nu_py = mct_v[i]->GetNeutrino().Nu().Py();
+      _nu_pz = mct_v[i]->GetNeutrino().Nu().Pz();
+    }
+  } else {
+    std::cout << "MCTruth product " << _mctruth_producer << " not found..." << std::endl;
+  }
 
   //
   // MCParticle
@@ -661,6 +742,7 @@ void OverburdenAna::SavePi0ShowerInfo(int pi0_track_id) {
   _pi0_genealogy_end_x.push_back(pi0_mother_mcp.EndX());
   _pi0_genealogy_end_y.push_back(pi0_mother_mcp.EndY());
   _pi0_genealogy_end_z.push_back(pi0_mother_mcp.EndZ());
+  _pi0_genealogy_trackid.push_back(pi0_mother_mcp.TrackId());
 
 
   // ... then save all the other ancestors
@@ -682,8 +764,12 @@ void OverburdenAna::SavePi0ShowerInfo(int pi0_track_id) {
     _pi0_genealogy_end_x.push_back(mcp.EndX());
     _pi0_genealogy_end_y.push_back(mcp.EndY());
     _pi0_genealogy_end_z.push_back(mcp.EndZ());
-
+    _pi0_genealogy_trackid.push_back(mcp.TrackId());
   }
+
+  _pi0_par_ancestor_trackid = _pi0_genealogy_trackid.back();
+  _pi0_par_ancestor_uuid = _uuid_str + "-" + std::to_string(_pi0_par_ancestor_trackid);
+  std::cout << "Pi0 uuid " << _pi0_par_ancestor_uuid << std::endl;
 
   // Get the dautghers of this pi0
   for (int d = 0; d < pi0_mcp.NumberDaughters(); d++) {
@@ -731,6 +817,7 @@ void OverburdenAna::SavePi0ShowerInfo(int pi0_track_id) {
   _pi0_genealogy_end_x.clear();
   _pi0_genealogy_end_y.clear();
   _pi0_genealogy_end_z.clear();
+  _pi0_genealogy_trackid.clear();
 
 }
 

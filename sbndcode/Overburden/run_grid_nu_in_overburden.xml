@@ -7,8 +7,8 @@
 <!ENTITY releasetag "e19:prof">
 <!ENTITY my_version "v12">
 <!ENTITY config "configC">
-<!ENTITY name "mdeltutt_test_ob_off">
-<!ENTITY tag "test_ob_off">
+<!ENTITY name "mdeltutt_no_in_ob">
+<!ENTITY tag "test_ob_on">
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY n_submission "1">
@@ -22,7 +22,7 @@
   <group>sbnd</group>
 
   <!-- Project size -->
-  <numevents>50000</numevents>
+  <numevents>300000</numevents>
 
   <!-- Operating System -->
   <os>SL7</os>
@@ -40,18 +40,18 @@
   <!-- Project stages -->
 
   <stage name="gen">
-    <fcl>prodcorsika_cosmics_proton_sbnd.fcl</fcl>
-    <fcl>standard_g4_sbnd_&config;_ob_off.fcl</fcl>
+    <fcl>prodgenie_nu_spill_world_gsimple-configg-v1-inoverburden.fcl</fcl>
+    <fcl>standard_g4_sbnd_&config;_ob_on.fcl</fcl>
     <fcl>run_overburdenana.fcl</fcl>
     <!-- <inputlist>&PNFSpath;cosmics_corsika_cmc_uboone_intime_v06_26_01.txt</inputlist> -->
     <defname>&name;_&tag;_gen</defname>
     <maxfilesperjob>1</maxfilesperjob>
-    <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/ob_off_gen_&config;_&my_version;_&n_submission;</outdir>
-    <workdir>&PNFSpath;grid_workdir_sbnd/ob_off</workdir>
-    <numjobs>500</numjobs>
+    <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/nu_in_ob_gen_&config;_&my_version;_&n_submission;</outdir>
+    <workdir>&PNFSpath;grid_workdir_sbnd/nu_in_ob</workdir>
+    <numjobs>150</numjobs>
     <datatier>generated</datatier>
     <memory>8000</memory>
-    <jobsub>  --expected-lifetime=24h -Q --generate-email-summary </jobsub>
+    <jobsub>  --expected-lifetime=20h -Q --generate-email-summary </jobsub>
     <disk>60GB</disk>
   </stage>
 
