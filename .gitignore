@@ -33,6 +33,10 @@ build_*
 *.tar
 *.zip
 
+# Vim swap files #
+##################
+*.swp
+
 # Logs and databases #
 ##################
 *.log
