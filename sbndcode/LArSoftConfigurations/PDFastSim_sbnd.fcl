@@ -1,0 +1,27 @@
+#include "PDFastSimPAR.fcl"
+#include "PDFastSimPVS.fcl"
+
+#include "opticalsimparameterisations_sbnd.fcl"
+
+BEGIN_PROLOG
+
+###########
+# SBND #
+###########
+
+# Semi-analytic model hits & timing parameterization for SBND, Ar scintillation:
+
+# standard configuration
+sbnd_pdfastsim_par:                     @local::standard_pdfastsim_par_ar
+
+# Direct (VUV)
+sbnd_pdfastsim_par.VUVTiming:           @local::sbnd_vuv_timing_parameterization
+sbnd_pdfastsim_par.VUVHits:             @local::sbnd_vuv_RS100cm_hits_parameterization
+
+# Reflected (Visible)
+sbnd_pdfastsim_par.DoReflectedLight: true
+sbnd_pdfastsim_par.VISTiming:        	@local::sbnd_vis_timing_parameterization
+sbnd_pdfastsim_par.VISHits:          	@local::sbnd_vis_RS100cm_hits_parameterization
+
+
+END_PROLOG
