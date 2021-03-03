@@ -4,13 +4,15 @@ BEGIN_PROLOG
 
 sbnd_singlep: @local::standard_singlep
 
+# Particle generated at this time will appear in main drift window at trigger T0.
+physics.producers.generator.T0:     [  1.7e3  ] # us
+
 physics.producers.generator.P0:     [ -1.0 ]  # GeV/c
 physics.producers.generator.SigmaP: [ 0.0 ]  # GeV/c
 physics.producers.generator.PDist:  0
 physics.producers.generator.X0:     [ 150.0 ] # cm
 physics.producers.generator.Y0:     [ 150.0 ] # cm
 physics.producers.generator.Z0:     [  -50.0 ] # cm
-physics.producers.generator.T0:     [   0.0 ] # us
 physics.producers.generator.Theta0XZ:     [  15.0 ] # degrees
 physics.producers.generator.Theta0YZ:     [ -15.0 ] # degrees
 physics.producers.generator.SigmaThetaXZ: [   0.0 ] # degrees
