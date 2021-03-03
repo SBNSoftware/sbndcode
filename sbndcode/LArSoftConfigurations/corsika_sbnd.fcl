@@ -40,18 +40,22 @@
 
 BEGIN_PROLOG
 
+# Common settings related to detector readout
+sbnd_corsika_common: {
+  SampleTime:       3.2e-3  #  0.2 ms (G4 rise time) + 1.3 ms (1 full drift window) + 1.7 ms (readout) @ 500 V/cm, 154.4 cm/ms
+  TimeOffset:      -1.7e-3  # -0.2 ms (G4 rise time) - 1.3 ms (1 full drift window) - 0.2 ms (front porch)
+  BufferBox:        [ -300.0, +300.0, -300.0, +300.0, -300.0, +300.0 ]  # [ cm ]
+  ProjectToHeight:  1800 # height to which particles are projected
+}
+
 #
 # sbnd_corsika_p
 # 
 # Cosmic rays from proton primary.
 #
 sbnd_corsika_p: {
-  
-                    @table::standard_CORSIKAGen_protons  # from CORSIKAGen.fcl
-  SampleTime:       5.32e-3   # 0.2 ms (G4 rise time) + 1.28 ms (1 full drift window) + 3.84 ms (readout) @ -70 kv, 114 cm/ms
-  TimeOffset:      -2.76e-3   # 3.84 ms readout should start at -1.28 ms to match data
-  BufferBox:        [ -300.0, +300.0, -300.0, +300.0, -300.0, +300.0 ]  # [cm]
-  ProjectToHeight:  1800      # height to which particles are projected [cm] 
+		    @table::standard_CORSIKAGen_protons  # from CORSIKAGen.fcl
+		    @table::sbnd_corsika_common
   
   # use the shared copy of CORSIKA database files
   ShowerInputFiles: [
@@ -70,12 +74,8 @@ sbnd_corsika_p: {
 sbnd_corsika_cmc: {
   
                     @table::standard_CORSIKAGen_CMC  # from CORSIKAGen.fcl
-  SampleTime:       5.2e-3   # 0.2 ms (G4 rise time) + 1.25 ms (1 full drift window) + 3.75 ms (readout) @ -70 kv, 114 cm/ms
-  TimeOffset:      -2.7e-3   # 3.75 ms readout should start at -1.25 ms to match data
-
-  BufferBox:        [ -300.0, +300.0, -300.0, +300.0, -300.0, +300.0 ]  # [ cm ]
-  ProjectToHeight:  1800     # height to which particles are projected [ cm ]
-
+		    @table::sbnd_corsika_common
+  
   # use the shared copy of CORSIKA database files
   ShowerInputFiles: [
     "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/p_showers_*.db",
