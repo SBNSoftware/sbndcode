@@ -2375,6 +2375,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   TTimeStamp tts(ts.timeHigh(), ts.timeLow());
   fData->evttime = tts.AsDouble();
 
+  std::cout<<"Processing event "<<fData->event<<"\n";
+
   //copied from MergeDataPaddles.cxx
   art::Handle< raw::BeamInfo > beam;
   if (evt.getByLabel("beam",beam)){
@@ -3043,7 +3045,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
             fData->pdg[iPart]=pPart->PdgCode();
             fData->status[iPart] = pPart->StatusCode();
             fData->Eng[iPart]=pPart->E();
-	          fData->EndE[iPart]=pPart->EndE();
+	    fData->EndE[iPart]=pPart->EndE();
             fData->Mass[iPart]=pPart->Mass();
             fData->Px[iPart]=pPart->Px();
             fData->Py[iPart]=pPart->Py();
