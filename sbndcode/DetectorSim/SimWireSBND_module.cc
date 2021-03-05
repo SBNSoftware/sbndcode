@@ -46,6 +46,8 @@ extern "C" {
 #include "lardataobj/Simulation/sim.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
 
 #include "TMath.h"
 #include "TComplex.h"
@@ -240,6 +242,9 @@ void SimWireSBND::produce(art::Event& evt)
   // get the geometry to be able to figure out signal types and chan -> plane mappings
   art::ServiceHandle<geo::Geometry> geo;
   //unsigned int signalSize = fNTicks;
+  //
+  //Get the channels status
+  lariov::ChannelStatusProvider const& channelStatus(art::ServiceHandle<lariov::ChannelStatusService const>()->GetProvider());
 
   std::vector<const sim::SimChannel*> chanHandle;
   evt.getView(fDriftEModuleLabel, chanHandle);
@@ -275,6 +280,8 @@ void SimWireSBND::produce(art::Event& evt)
   //LOOP OVER ALL CHANNELS
   std::map<int, double>::iterator mapIter;
   for (chan = 0; chan < geo->Nchannels(); chan++) {
+
+    if (channelStatus.IsBad(chan)) continue;
 
     // get the sim::SimChannel for this channel
     const sim::SimChannel* sc = channels.at(chan);
