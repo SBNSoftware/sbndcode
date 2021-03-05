@@ -1,0 +1,18 @@
+# FCL sequences for SBND's bad channels.  
+# This includes non-existent channels that need to be labelled as bad
+
+BEGIN_PROLOG
+
+#Missing collection plane wires in the jumpered region
+sbnd_badchannels_tpc0_plane2_missing_jumpered: [ 4800, 4801, 4802, 4803, 4804, 4805 ]
+sbnd_badchannels_tpc1_plane2_missing_jumpered: [ 10400, 10401, 10402, 10403, 10404, 10405 ]
+
+#Missing wires at the extreme ends of the channel numbers
+sbnd_badchannels_tpc0_plane0_missing_extremities: [ ]
+sbnd_badchannels_tpc0_plane1_missing_extremities: [ ]
+sbnd_badchannels_tpc0_plane2_missing_extremities: [ ]
+sbnd_badchannels_tpc0_plane0_missing_extremities: [ ]
+sbnd_badchannels_tpc0_plane1_missing_extremities: [ ]
+sbnd_badchannels_tpc0_plane2_missing_extremities: [ ]
+
+END_PROLOG
