@@ -3326,31 +3326,31 @@ double sbnd::AnalysisTree::length(const simb::MCParticle& part, TVector3& start,
   // Get number traj points
   int n = part.NumberTrajectoryPoints();
   if( n <= 1 ) return 0.;
-  
+ 
   double  L	= 0.;
   bool	  first	= true; 
 
-  // Loop over points (start with 2nd)
+  // Loop over point (start with 2nd)
   for(int i = 1; i < n; ++i) {
 
     TVector3 p1(part.Vx(i),part.Vy(i),part.Vz(i));
+    TVector3 p0(part.Vx(i-1),part.Vy(i-1),part.Vz(i-1));
     
     if(	  p1.X() >= xmin && p1.X() <= xmax
       &&  p1.Y() >= ymin && p1.Y() <= ymax
       &&  p1.Z() >= zmin && p1.Z() <= zmax ) {
-    
-      TVector3 p0(part.Vx(i-1),part.Vy(i-1),part.Vz(i-1));
       
       if(first)	start = p1; 
       else L += (p1-p0).Mag();
+      
       first = false;
       end   = p1;
     }
+  
   }
 
   return L;
 }
-
 
 namespace sbnd{
 
