@@ -13,12 +13,12 @@ sbnd_channelstatus: {
   BadChannels:   [ 
     @sequence::sbnd_badchannels_tpc0_plane2_missing_jumpered,
     @sequence::sbnd_badchannels_tpc1_plane2_missing_jumpered,
+    @sequence::sbnd_badchannels_tpc0_plane2_missing_combs,
+    @sequence::sbnd_badchannels_tpc1_plane2_missing_combs,
     @sequence::sbnd_badchannels_tpc0_plane0_missing_extremities,
     @sequence::sbnd_badchannels_tpc0_plane1_missing_extremities,
-    @sequence::sbnd_badchannels_tpc0_plane2_missing_extremities,
-    @sequence::sbnd_badchannels_tpc0_plane0_missing_extremities,
-    @sequence::sbnd_badchannels_tpc0_plane1_missing_extremities,
-    @sequence::sbnd_badchannels_tpc0_plane2_missing_extremities
+    @sequence::sbnd_badchannels_tpc1_plane0_missing_extremities,
+    @sequence::sbnd_badchannels_tpc1_plane1_missing_extremities
   ]
   
   # list of bad noisy channels:
