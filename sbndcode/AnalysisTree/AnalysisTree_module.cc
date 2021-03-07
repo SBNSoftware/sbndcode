@@ -2156,9 +2156,14 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem to correspond to the g4 track FIXME may need further investigation
                 std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(clockData, hitlist[i]);
 	        for (size_t e = 0; e<eveIDs.size(); e++){
-	          art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
-	          //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
-	          if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
+		  try {
+		    art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
+		    //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
+		    if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
+		  }
+		  catch(...){
+		    std::cout<<"Exception thrown matching eveTrackId "<<eveIDs[e].trackID<<" to MCTruth\n";
+		  }
 	        }
 	        //}
 	      }
