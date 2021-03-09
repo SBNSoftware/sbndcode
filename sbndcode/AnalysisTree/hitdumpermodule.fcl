@@ -8,6 +8,7 @@ hitdumper:
     CRTHitModuleLabel:        "crthit"
     CRTStripModuleLabel:      "crt"
     CRTTrackModuleLabel:      "crttrack"
+    GenieGenModuleLabel:      "generator"
 
     keepCRThits:              true
     keepCRTstrips:            false
@@ -15,6 +16,8 @@ hitdumper:
     readCRTtracks:            true
 
     readOpHits:               true
+
+    readTruth:		      true
 
     KeepTaggerTypes:          [1, 2] # Front and back only
 }
