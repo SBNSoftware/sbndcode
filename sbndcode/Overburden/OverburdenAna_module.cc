@@ -69,8 +69,8 @@ private:
   /// Check if the point is in the detector
   bool InDetector(const double& x, const double& y, const double& z) const;
 
-  /// Check if an MCP passes through the detector
-  bool InDetector(const art::Ptr<simb::MCParticle>);
+  /// Check if an MCP passes through the detector, sets step to the step index when particle is in detector
+  bool InDetector(const art::Ptr<simb::MCParticle>, int & step);
 
   /// Saves the pi0 info to a separate tree, give the pi0 track id
   void SavePi0ShowerInfo(int pi0_track_id);
@@ -134,6 +134,7 @@ private:
   std::vector<std::string> _mcp_process;
   std::vector<std::string> _mcp_end_process;
   std::vector<bool> _mcp_intpc;
+  std::vector<float> _mcp_intpc_e;
 
   std::vector<float> _mcs_pdg;
   std::vector<std::string> _mcs_process;
@@ -197,6 +198,7 @@ private:
   float _pi0_par_end_z; ///< The pi0 end z
   int _pi0_par_mother_pdg; ///< The pi0 mother pdg
   float _pi0_par_mother_e; ///< The pi0 mother energy
+  float _pi0_par_mother_end_e; ///< The pi0 mother energy at end
   int _pi0_par_ancestor_trackid; ///< The pi0 primary particle ancestor track id (allows easy pi0 clustering by cosmic interaction)
   std::string _pi0_par_ancestor_uuid; ///< The pi0 unique ID for the event
 
@@ -276,6 +278,7 @@ OverburdenAna::OverburdenAna(fhicl::ParameterSet const& p)
   _tree->Branch("mcp_process", "std::vector<std::string>", &_mcp_process);
   _tree->Branch("mcp_end_process", "std::vector<std::string>", &_mcp_end_process);
   _tree->Branch("mcp_intpc", "std::vector<bool>", &_mcp_intpc);
+  _tree->Branch("mcp_intpc_e", "std::vector<float>", &_mcp_intpc_e);
 
   _tree->Branch("mct_pdg", "std::vector<float>", &_mct_pdg);
   _tree->Branch("mct_process", "std::vector<std::string>", &_mct_process);
@@ -343,6 +346,7 @@ OverburdenAna::OverburdenAna(fhicl::ParameterSet const& p)
     _pi0_tree->Branch("pi0_par_end_z", &_pi0_par_end_z, "pi0_par_end_z/F");
     _pi0_tree->Branch("pi0_par_mother_pdg", &_pi0_par_mother_pdg, "pi0_par_mother_pdg/I");
     _pi0_tree->Branch("pi0_par_mother_e", &_pi0_par_mother_e, "pi0_par_mother_e/F");
+    _pi0_tree->Branch("pi0_par_mother_end_e", &_pi0_par_mother_end_e, "pi0_par_mother_end_e/F");
     _pi0_tree->Branch("pi0_par_ancestor_trackid", &_pi0_par_ancestor_trackid, "pi0_par_ancestor_trackid/I");
     _pi0_tree->Branch("pi0_par_ancestor_uuid", "std::string", &_pi0_par_ancestor_uuid);
 
@@ -392,12 +396,12 @@ OverburdenAna::OverburdenAna(fhicl::ParameterSet const& p)
   _z_max = std::max_element(geo->begin_TPC(), geo->end_TPC(), [](auto const &lhs, auto const &rhs){ return lhs.BoundingBox().MaxZ() < rhs.BoundingBox().MaxZ();})->MaxZ();
 
   std::cout << "TPC limits: " << std::endl;
-  std::cout << "\tx_max" << _x_max << std::endl;
-  std::cout << "\tx_min" << _x_min << std::endl;
-  std::cout << "\ty_max" << _y_max << std::endl;
-  std::cout << "\ty_min" << _y_min << std::endl;
-  std::cout << "\tz_max" << _z_max << std::endl;
-  std::cout << "\tz_min" << _z_min << std::endl;
+  std::cout << "\tx_max: " << _x_max << std::endl;
+  std::cout << "\tx_min: " << _x_min << std::endl;
+  std::cout << "\ty_max: " << _y_max << std::endl;
+  std::cout << "\ty_min: " << _y_min << std::endl;
+  std::cout << "\tz_max: " << _z_max << std::endl;
+  std::cout << "\tz_min: " << _z_min << std::endl;
 }
 
 void OverburdenAna::produce(art::Event& e)
@@ -507,7 +511,14 @@ void OverburdenAna::produce(art::Event& e)
       _mcp_process.push_back(mcp->Process());
       _mcp_end_process.push_back(mcp->EndProcess());
 
-      _mcp_intpc.push_back(InDetector(mcp));
+      int step = 0;
+      bool in_det = InDetector(mcp, step);
+      _mcp_intpc.push_back(in_det);
+      if (in_det) {
+        _mcp_intpc_e.push_back(mcp->E(step));
+      } else {
+        _mcp_intpc_e.push_back(-9999.);
+      }
     }
   }
 
@@ -718,6 +729,7 @@ void OverburdenAna::SavePi0ShowerInfo(int pi0_track_id) {
   simb::MCParticle pi0_mother_mcp = iter->second;
   _pi0_par_mother_pdg = pi0_mother_mcp.PdgCode();
   _pi0_par_mother_e = pi0_mother_mcp.E();
+  _pi0_par_mother_end_e = pi0_mother_mcp.EndE();
   std::cout << "Pi0 MCP Mother, PDG = " << pi0_mother_mcp.PdgCode() << ", E = " << pi0_mother_mcp.E() << std::endl;
 
   // Get the daughters of the pi0 mother
@@ -926,6 +938,7 @@ void OverburdenAna::clear_vectors() {
   _mcp_process.clear();
   _mcp_end_process.clear();
   _mcp_intpc.clear();
+  _mcp_intpc_e.clear();
 
   _mcs_pdg.clear();
   _mcs_process.clear();
@@ -984,10 +997,13 @@ bool OverburdenAna::InDetector(const double& x,
             y > _y_max || y < _y_min );
 }
 
-bool OverburdenAna::InDetector(art::Ptr<simb::MCParticle> mcp) {
+bool OverburdenAna::InDetector(art::Ptr<simb::MCParticle> mcp, int & step) {
   auto t = mcp->Trajectory();
   for (size_t i = 0; i < t.size(); i++) {
-    if (InDetector(t.X(i), t.Y(i), t.Z(i))) return true;
+    if (InDetector(t.X(i), t.Y(i), t.Z(i))) {
+      step = i;
+      return true;
+    }
   }
   return false;
 }
