@@ -1,8 +1,0 @@
-BEGIN_PROLOG
-Calibration:
-{
-  module_type:		"Calibration"
-  SpacePointLabel: 	"pandora"
-  HitLabel:		"pandora"
-}
-END_PROLOG
