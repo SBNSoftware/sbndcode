@@ -14,14 +14,14 @@ services: {
 
 physics.producers.larg4intime: @local::sbnd_largeant
 physics.filters.GenInTimeSorter: @local::sbnd_filtergenintime
-physics.filters.timefilter: @local::sbnd_timefilterssimphotonlitetime 
+physics.filters.timefilter: @local::sbnd_timefilterssimphotonlitetime
 
 physics.producers.corsika: @local::physics.producers.generator
 
 physics.simulate: [ corsika, GenInTimeSorter, larg4intime, timefilter, rns ]
 outputs.out1.SelectEvents: [ "simulate" ]
 
-physics.producers.larg4intime.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"] 
+physics.producers.larg4intime.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"]
 physics.producers.larg4intime.InputLabels: [ "GenInTimeSorter:intime" ]
 
 process_name: CosmicsCorsikaCMCGenAndG4InTime
