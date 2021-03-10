@@ -2156,10 +2156,15 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem to correspond to the g4 track FIXME may need further investigation
                 std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(clockData, hitlist[i]);
 	        for (size_t e = 0; e<eveIDs.size(); e++){
-	          art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
-	          //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
-	          if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
-	        }
+	          try {
+		    art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
+		    //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
+		    if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
+		  } 
+		  catch(...){
+		    std::cout<<"Exception thrown matching eveTrackId "<<eveIDs[e].trackID<<" to MCTruth\n";
+		  }
+		}
 	        //}
 	      }
 	      isfirsttime = false;
@@ -3026,15 +3031,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
           TVector3 mcstart, mcend;
           double plen = length(*pPart, mcstart, mcend);
-	  std::cout << "plen=" << plen << std::endl;
-
-
           bool isActive = plen != 0;
-	  std::cout << "isActive=" << isActive << std::endl;
-          if (plen) {
-	    active++;
-	    std::cout << "active=" << active << std::endl;
-	  }
+          if (plen) active++;
 
           if (iPart < fData->GetMaxGEANTparticles()) {
 	   if (pPart->E()>fG4minE||isPrimary){
@@ -3314,56 +3312,41 @@ double sbnd::AnalysisTree::length(const simb::MCParticle& part, TVector3& start,
 {
   // Get geometry.
   art::ServiceHandle<geo::Geometry> geom;
-  // auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
 
   // Get active volume boundary.
-  //double xmin = 0.;
   double xmin = -2.0 * geom->DetHalfWidth() - 1e-8;
   double xmax = 2.0 * geom->DetHalfWidth() + 1e-8;
   double ymin = -geom->DetHalfHeight() -1e-8;
   double ymax = geom->DetHalfHeight() + 1e-8;
   double zmin = 0. -1e-8;
   double zmax = geom->DetLength() + 1e-8;
-  //double vDrift = 160*pow(10,-6);
-
-  //std::cout << "DET DIMENSIONS:   xmin = " << xmin << "  xmax = " << xmax << "  ymin = " << ymin << "  ymax = " << ymax << "  zmin = " << zmin << "  zmax = " << zmax << std::endl;
-
-  double result = 0.;
-  TVector3 disp;
+  
+  // Get number traj points
   int n = part.NumberTrajectoryPoints();
-  bool first = true;
+  if( n <= 1 ) return 0.;
+  
+  double  L	= 0.;
+  bool	  first	= true; 
 
-  for(int i = 0; i < n; ++i) {
-    // check if the particle is inside a TPC
-   double mypos[3] = {part.Vx(i), part.Vy(i), part.Vz(i)};
-   if (mypos[0] >= xmin && mypos[0] <= xmax && mypos[1] >= ymin && mypos[1] <= ymax && mypos[2] >= zmin && mypos[2] <= zmax){
-   //if (mypos[0] >= -300.0 && mypos[0] <= 200.0 && mypos[1] >= ymin && mypos[1] <= ymax && mypos[2] >= zmin && mypos[2] <= zmax){
-     double xGen   = part.Vx(i);
-     //double tGen   = part.T(i);
-     // Doing some manual shifting to account for
-     // an interaction not occuring with the beam dump
-     // we will reconstruct an x distance different from
-     // where the particle actually passed to to the time
-     // being different from in-spill interactions
-     //double newX = xGen+(tGen*vDrift);
-     double newX = xGen;
-     //if (newX < -xmax || newX > (2*xmax)) continue;
-     //if (newX < (2.*xmin) || newX > (2*xmax)) continue;
-     
-     TVector3 pos(newX,part.Vy(i),part.Vz(i));
-     if(first){
-      start = pos;
-     }
-     else {
-      disp -= pos;
-      result += disp.Mag();
-     }
-     first = false;
-     disp = pos;
-     end = pos;
-   }
+  // Loop over points (start with 2nd)
+  for(int i = 1; i < n; ++i) {
+
+    TVector3 p1(part.Vx(i),part.Vy(i),part.Vz(i));
+    
+    if(	  p1.X() >= xmin && p1.X() <= xmax
+      &&  p1.Y() >= ymin && p1.Y() <= ymax
+      &&  p1.Z() >= zmin && p1.Z() <= zmax ) {
+    
+      TVector3 p0(part.Vx(i-1),part.Vy(i-1),part.Vz(i-1));
+      
+      if(first)	start = p1; 
+      else L += (p1-p0).Mag();
+      first = false;
+      end   = p1;
+    }
   }
-  return result;
+
+  return L;
 }
 
 
