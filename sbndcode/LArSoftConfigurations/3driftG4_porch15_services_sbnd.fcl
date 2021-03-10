@@ -1,0 +1,16 @@
+# Save 0.2ms (~15% drift) of readout pre/post main drift window.
+
+services.DetectorPropertiesService.NumberTimeSamples: 3400
+services.DetectorPropertiesService.ReadOutWindowSize: 3400
+
+# TPC readout starts one readout window before the neutrino arrives (which we set to t0)
+services.DetectorClocksService.TriggerOffsetTPC: -0.2e3 # [us]
+
+# Settings assuming G4 was run in the full 3-drift configuration
+# (special case only -- by default, we should be simulating
+# shorter G4 period to match up with a 15% porch)
+services.DetectorClocksService.G4RefTime:      -2.8e3 # [us]
+services.DetectorClocksService.DefaultTrigTime:	2.8e3 # [us]
+services.DetectorClocksService.DefaultBeamTime: 2.8e3 # [us]
+
+
