@@ -58,10 +58,10 @@ private:
   TTree *fTree;
   
   // variables to go in tree
-  unsigned int 			fEventID;
-  geo::Point_t  		fPos;
-  unsigned int 			fHitsCount;
-  float   	 		fHits;
+  unsigned int 				fEventID;
+  std::vector<geo::Point_t> 		*fPos;
+  unsigned int 				fHitsCount;
+  std::vector<float> 	 		fHits;
 
   //Histogram
   TH2D *fHitIntegralHist;
@@ -74,11 +74,6 @@ private:
 
 sbnd::Calibration::Calibration(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  //fTree(nullptr),
-  //fEventID(99999),
-  //fPos(99999),
-  //fHitsCount(99999),
-  //fHits(99999)
   // More initializers here.
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
@@ -93,8 +88,8 @@ void sbnd::Calibration::analyze(art::Event const& e)
   fEventID = e.id().event();
  
   // clear
-  //fPos.clear();
-  //fHits.clear();
+  fPos->clear();
+  fHits.clear();
 
   // initialise counter
   unsigned int nsp = 0;
@@ -113,7 +108,7 @@ void sbnd::Calibration::analyze(art::Event const& e)
   //Loop through space point, then loop through hits at each space point
   for(const art::Ptr<recob::SpacePoint> &sp: spacepointList){
      
-    fPos = sp->position();
+    fPos->push_back(sp->position());
     nsp++;
 
     std::vector< art::Ptr<recob::Hit> > spHits = hitAssoc.at(sp.key());
@@ -132,18 +127,18 @@ void sbnd::Calibration::analyze(art::Event const& e)
      
       std::cout << "Event: " << e.id().event() << ", space point no.: " << nsp;
     
-      fHits = hit->Integral();
+      fHits.push_back(hit->Integral());
    
-      std::cout << ", fHits "  << fHits << "\n";     
+      std::cout << ", fHits "  << hit->Integral()  << "\n";     
 
       fHitIntegralHist->Fill(sp->XYZ()[2], sp->XYZ()[1], hit->Integral());
 
      } // End of hits
 
-  fTree->Fill();
   } //End of spacepoint
 
 
+  fTree->Fill();
 
 }
 
@@ -158,7 +153,7 @@ void sbnd::Calibration::beginJob()
   fTree->Branch("eventID",&fEventID,"eventID/i");
   fTree->Branch("Position",&fPos);
   fTree->Branch("nHits", &fHitsCount,"nHits/i");
-  fTree->Branch("HitIntegral", &fHits, "fHits/f");
+  fTree->Branch("HitIntegral", &fHits);
 
   fHitIntegralHist = tfs->make<TH2D>("HitIntegral","Hit Integral in Y-Z view", 200, 0, 500, 200, -200, 200);
 

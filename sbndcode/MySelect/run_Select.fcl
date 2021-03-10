@@ -1,0 +1,30 @@
+#include "config_Select.fcl"
+#include "simulationservices_sbnd.fcl"
+process_name: Select
+
+source:
+{
+  module_type: 	RootInput
+  maxEvents: 	-1
+}
+
+services:
+{
+  TFileService: { fileName: "2000events_selection_output.root" }
+  @table::sbnd_services
+
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService: @local::standard_backtrackerservice
+}
+
+physics:
+{
+  analyzers:
+  {
+    ana: @local::Select
+  }
+  path0: 	[ ana ]
+  end_paths: 	[ path0 ]
+}
+
+#include "3drift_services_sbnd.fcl"
