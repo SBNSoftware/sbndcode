@@ -17,7 +17,7 @@ physics.trigger_paths: [ reco1 ]
 outputs.out1.outputCommands: [
     "keep *_*_*_*",
     "drop raw::OpDetWaveforms_*_*_*",
-    "drop raw::RawDigits_*_*_*",
+    "drop *raw::RawDigits*_*_*_*",
     "drop sim::SimChannels_*_*_*",
     "drop sim::OpDetBacktrackerRecords_*_*_*",
     "drop *_gaushit_*_*",
