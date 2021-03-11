@@ -17,6 +17,7 @@
 #include "fhiclcpp/types/Atom.h"
 #include "fhiclcpp/types/TableFragment.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "art_root_io/TFileService.h"
 
 #include "nurandom/RandomUtils/NuRandomService.h"
 #include "CLHEP/Random/JamesRandom.h"
@@ -164,6 +165,11 @@ namespace opdet {
 
     // trigger algorithm
     opdet::opDetSBNDTriggerAlg fTriggerAlg;
+
+    // histograms
+    //TH1D* h_ADCvals_PMT;
+    //TH1D* h_ADCvals_ARAPUCA;
+
   };
 
   opDetDigitizerSBND::opDetDigitizerSBND(Parameters const& config)
@@ -175,6 +181,11 @@ namespace opdet {
     , fTriggerAlg(config().trigAlgoConfig())
   {
     opDetDigitizerWorker::Config wConfig( config().pmtAlgoConfig(), config().araAlgoConfig());
+    
+    // make histograms to help in setting detector thresholds
+    //art::ServiceHandle<art::TFileService> tfs;
+    //h_ADCvals_PMT	= tfs->make<TH1D>("ADCvals_PMT",      "PMT Raw Waveforms;(ADC - Baseline);",	400,   -200,200);
+    //h_ADCvals_ARAPUCA	= tfs->make<TH1D>("ADCvals_ARAPUCA", "XARAPUCA Raw Waveforms;(ADC - Baseline);",  400,   -200,200);
 
     fNThreads = config().NThreads();
     if (fNThreads == 0) { // autodetect -- first check env var
@@ -302,6 +313,21 @@ namespace opdet {
         raw::ADC_Count_t baseline = (map.isPDType(ch, "pmt_uncoated") || map.isPDType(ch, "pmt_coated")) ?
                                     fPMTBaseline : fArapucaBaseline;
         fTriggerAlg.FindTriggerLocations(clockData, detProp, waveform, baseline);
+
+    /*
+    // Fill ADC histograms
+    const std::vector<raw::ADC_Count_t> &adcs = waveform;
+    std::string type = map.pdType(ch);
+    bool isPMT	= ( type.find("pmt_") != std::string::npos );
+    bool isARA	= ( type.find("arapuca") != std::string::npos );
+    int  bs     = baseline;
+    for(size_t i=0; i<adcs.size(); i++) {
+      int bs  = baseline;
+      if(isPMT) h_ADCvals_PMT->Fill(adcs.at(i)-bs);
+      if(isARA) h_ADCvals_ARAPUCA->Fill(adcs.at(i)-bs);
+    }
+    */
+
       }
 
       // combine the triggers
