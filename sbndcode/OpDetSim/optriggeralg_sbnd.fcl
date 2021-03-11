@@ -9,9 +9,11 @@ sbnd_optrigger_alg:
   BeamTriggerEnable: true
   BeamTriggerTime: 0.
   TriggerEnableWindowIsTPCReadoutWindow: true
-  ReadoutWindowPreTrigger: 1 #[us]
-  ReadoutWindowPostTrigger: 11 #[us]
-  ReadoutWindowPreTriggerBeam: 1 #[us] (currently not used; using uniform readout length for all triggers)
-  ReadoutWindowPostTriggerBeam: 23 #[us] (currently not used; using uniform readout length for all triggers)
+  ReadoutWindowPreTrigger: 1
+  ReadoutWindowPostTrigger: 23 #previously 3us
+
+  # For now we use same readout size for beam and cosmics
+  ReadoutWindowPreTriggerBeam: 1
+  ReadoutWindowPostTriggerBeam: 23
 }
 END_PROLOG
