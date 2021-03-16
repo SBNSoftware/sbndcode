@@ -2156,15 +2156,15 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem to correspond to the g4 track FIXME may need further investigation
                 std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(clockData, hitlist[i]);
 	        for (size_t e = 0; e<eveIDs.size(); e++){
-		  try {
+	          try {
 		    art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
 		    //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
 		    if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
-		  }
+		  } 
 		  catch(...){
 		    std::cout<<"Exception thrown matching eveTrackId "<<eveIDs[e].trackID<<" to MCTruth\n";
 		  }
-	        }
+		}
 	        //}
 	      }
 	      isfirsttime = false;
@@ -2374,8 +2374,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   art::Timestamp ts = evt.time();
   TTimeStamp tts(ts.timeHigh(), ts.timeLow());
   fData->evttime = tts.AsDouble();
-
-  std::cout<<"Processing event "<<fData->event<<"\n";
 
   //copied from MergeDataPaddles.cxx
   art::Handle< raw::BeamInfo > beam;
@@ -3045,7 +3043,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
             fData->pdg[iPart]=pPart->PdgCode();
             fData->status[iPart] = pPart->StatusCode();
             fData->Eng[iPart]=pPart->E();
-	    fData->EndE[iPart]=pPart->EndE();
+	          fData->EndE[iPart]=pPart->EndE();
             fData->Mass[iPart]=pPart->Mass();
             fData->Px[iPart]=pPart->Px();
             fData->Py[iPart]=pPart->Py();
@@ -3326,31 +3324,31 @@ double sbnd::AnalysisTree::length(const simb::MCParticle& part, TVector3& start,
   // Get number traj points
   int n = part.NumberTrajectoryPoints();
   if( n <= 1 ) return 0.;
- 
+  
   double  L	= 0.;
   bool	  first	= true; 
 
-  // Loop over point (start with 2nd)
+  // Loop over points (start with 2nd)
   for(int i = 1; i < n; ++i) {
 
     TVector3 p1(part.Vx(i),part.Vy(i),part.Vz(i));
-    TVector3 p0(part.Vx(i-1),part.Vy(i-1),part.Vz(i-1));
     
     if(	  p1.X() >= xmin && p1.X() <= xmax
       &&  p1.Y() >= ymin && p1.Y() <= ymax
       &&  p1.Z() >= zmin && p1.Z() <= zmax ) {
+    
+      TVector3 p0(part.Vx(i-1),part.Vy(i-1),part.Vz(i-1));
       
       if(first)	start = p1; 
       else L += (p1-p0).Mag();
-      
       first = false;
       end   = p1;
     }
-  
   }
 
   return L;
 }
+
 
 namespace sbnd{
 
