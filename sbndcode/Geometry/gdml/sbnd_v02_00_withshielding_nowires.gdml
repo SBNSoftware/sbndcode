@@ -3,9 +3,14 @@
                        xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"          
                        xs:noNamespaceSchemaLocation="./RefactoredGDMLSchema/SimpleExtension.xsd">
 <!--
-	========================================================================
-		SBND Geometry (Main File)
-		Contains:
+	======================================================================
+		SBND Geometry (Single file)
+	======================================================================
+		Authors:
+			Marina Reggiani-Guzzo
+			Gustavo Valdiviesso
+		Please consult SBN-doc-20795 technical note.
+		Sub-geometries:
 			Surrondings
 				-Building
 				-Ground
@@ -15,10 +20,22 @@
 				|		-TPC
 				|		-PDS
 				|__	CRT
-	========================================================================
+	======================================================================
+-->
+<!--
+	======================================================================
+		"DEFINE" section
+			Due to constrains from the xml parser, there must be only
+		one of these in the entire file (not really, by it will generate
+		a warning if there's more than one).
+		A few notes on some constants:
+			+ All units of lenght are mm by default. Input values have the 
+		intentended unit appended to their names (e.g. _mm ).
+			+ The constant _eD_ is used to some geometrical constructions.
+			+ The constants _in_ and _ft_ convert inches and feet to mm.
+	======================================================================
 -->
 	<define>
-		<position name="posCenter"/>
 		<rotation name="rotateP90Y" unit="deg" x="0" y="90" z="0"/>
 		<rotation name="rotateN90Y" unit="deg" x="0" y="-90" z="0"/>
 		<rotation name="rotateP90Z" unit="deg" x="0" y="0" z="90"/>
@@ -36,49 +53,80 @@
         <rotation name="rotateP90X180Z" unit="deg" x="90" y="0" z="180"/>
 		
 		
-		<position name="posBuildingVoid" unit="mm" x="0" y="-480.00099999999998" z="0"/>
-		<position name="posStructure"   unit="mm" x="0" y="0" z="2129.5" />
-		<position name="posEquipLid" unit="mm" x="0" y="3664.5" z="0"/>
+		<rotation name="rotBuldingCeilingSlopeP" unit="deg" x="0" y="0" z="1.1574"/>
+		
+		
+			
+		
+		
+		<position name="posAPAVertical_L" 	unit="mm" x="0" y="0" z="-1232.8385000000001" />
+		<position name="posAPAVertical_R" 	unit="mm" x="0" y="0" z="1232.8385000000001" />
+		<position name="posAPAHorizontal_L_0" unit="mm" x="0" y="2025" z="-616.41925000000003" />
+		<position name="posAPAHorizontal_R_0" unit="mm" x="0" y="2025" z="616.41925000000003" />
+		<position name="posAPAHorizontal_L_1" unit="mm" x="0" y="675" z="-616.41925000000003" />
+		<position name="posAPAHorizontal_R_1" unit="mm" x="0" y="675" z="616.41925000000003" />
+		<position name="posAPAHorizontal_L_2" unit="mm" x="0" y="-675" z="-616.41925000000003" />
+		<position name="posAPAHorizontal_R_2" unit="mm" x="0" y="-675" z="616.41925000000003" />
+		<position name="posAPAHorizontal_L_3" unit="mm" x="0" y="-2025" z="-616.41925000000003" />
+		<position name="posAPAHorizontal_R_3" unit="mm" x="0" y="-2025" z="616.41925000000003" />
+		<position name="centerAtBorder" unit="mm" x="0" y="0" z="0" />
+		
+		<rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
+		
+		
+		<position name="posTPC_East" unit="mm" x="-1011" y="0" z="-412.5"/>
+		<position name="posTPC_West" unit="mm" x="1011" y="0" z="-412.5"/>
+		<position name="posYPlane_E" unit="mm" x="-1009.5" y="0" z="0"/>
+		<position name="posVPlane_E" unit="mm" x="-1006.5" y="0" z="0"/>
+		<position name="posUPlane_E" unit="mm" x="-1003.5" y="0" z="0"/>
+		<position name="posYPlane_W" unit="mm" x="1009.5" y="0" z="0"/>
+		<position name="posVPlane_W" unit="mm" x="1006.5" y="0" z="0"/>
+		<position name="posUPlane_W" unit="mm" x="1003.5" y="0" z="0"/>
 	</define>
+<!--
+	======================================================================
+	       "MATERIALS" section
+	======================================================================
+-->
 	<materials>
-		<element name="hydrogen"    formula="H"  Z="1">  	<atom value="1.00794"/>   </element>
-		<element name="carbon"      formula="C"  Z="6">  	<atom value="12.0107"/>   </element>
-		<element name="nitrogen"    formula="N"  Z="7">  	<atom value="14.0067"/>   </element>
-		<element name="oxygen"      formula="O"  Z="8">  	<atom value="15.9994"/>   </element>
-		<element name="sodium"      formula="Na" Z="11"> 	<atom value="22.989769"/> </element>
-		<element name="magnesium"   formula="Mg" Z="12"> 	<atom value="24.305"/>    </element>
-		<element name="aluminum"    formula="Al" Z="13"> 	<atom value="26.981539"/> </element>
-		<element name="silicon"     formula="Si" Z="14"> 	<atom value="28.0855"/>   </element>
-		<element name="phosphorous" formula="P"  Z="15"> 	<atom value="30.974"/>   </element>
-		<element name="sulfur"      formula="S"  Z="16"> 	<atom value="32.06"/>   </element>
-		<element name="argon"       formula="Ar" Z="18"> 	<atom value="39.948"/>    </element>
-		<element name="potassium"   formula="K"  Z="19"> 	<atom value="39.0983"/>   </element>
-		<element name="calcium"     formula="Ca" Z="20"> 	<atom value="40.078"/>    </element>
-		<element name="titanium"    formula="Ti" Z="22"> 	<atom value="47.867"/>    </element>
-		<element name="vanadium"    formula="V"  Z="23"> 	<atom value="50.9415"/>   </element>
-		<element name="chromium"    formula="Cr" Z="24"> 	<atom value="51.9961"/>   </element>
-		<element name="manganese"   formula="Mn" Z="25"> 	<atom value="54.938"/>    </element>
-		<element name="iron"        formula="Fe" Z="26"> 	<atom value="55.845"/>    </element>
-		<element name="nickel"      formula="Ni" Z="28"> 	<atom value="58.6934"/>   </element>
-		<element name="copper"      formula="Cu" Z="29"> 	<atom value="63.546"/>   </element>
-		<element name="bromine"     formula="Br" Z="35"> 	<atom value="79.904"/>    </element>
-		<element name="beryllium"   formula="Be" Z="4">         <atom value="9.0121831"/>  </element>
-		<material Z="1" formula=" " name="Vacuum">
+		<element name="hydrogen"    formula="H"  Z="1">  	<atom value="1.00794"/>		</element>
+		<element name="carbon"      formula="C"  Z="6">  	<atom value="12.0107"/>		</element>
+		<element name="nitrogen"    formula="N"  Z="7">  	<atom value="14.0067"/>		</element>
+		<element name="oxygen"      formula="O"  Z="8">  	<atom value="15.9994"/>		</element>
+		<element name="sodium"      formula="Na" Z="11"> 	<atom value="22.989769"/>	</element>
+		<element name="magnesium"   formula="Mg" Z="12"> 	<atom value="24.305"/>		</element>
+		<element name="aluminum"    formula="Al" Z="13"> 	<atom value="26.981539"/>	</element>
+		<element name="silicon"     formula="Si" Z="14"> 	<atom value="28.0855"/>		</element>
+		<element name="phosphorous" formula="P"  Z="15"> 	<atom value="30.974"/>		</element>
+		<element name="sulfur"      formula="S"  Z="16"> 	<atom value="32.06"/>		</element>
+		<element name="argon"       formula="Ar" Z="18"> 	<atom value="39.948"/>		</element>
+		<element name="potassium"   formula="K"  Z="19"> 	<atom value="39.0983"/>		</element>
+		<element name="calcium"     formula="Ca" Z="20"> 	<atom value="40.078"/>		</element>
+		<element name="titanium"    formula="Ti" Z="22"> 	<atom value="47.867"/>		</element>
+		<element name="vanadium"    formula="V"  Z="23"> 	<atom value="50.9415"/>		</element>
+		<element name="chromium"    formula="Cr" Z="24"> 	<atom value="51.9961"/>		</element>
+		<element name="manganese"   formula="Mn" Z="25"> 	<atom value="54.938"/>		</element>
+		<element name="iron"        formula="Fe" Z="26"> 	<atom value="55.845"/>		</element>
+		<element name="nickel"      formula="Ni" Z="28"> 	<atom value="58.6934"/>		</element>
+		<element name="copper"      formula="Cu" Z="29"> 	<atom value="63.546"/>		</element>
+		<element name="bromine"     formula="Br" Z="35"> 	<atom value="79.904"/>		</element>
+		<element name="beryllium"   formula="Be" Z="4">		<atom value="9.0121831"/>	</element>
+		<material name="matVacuum" formula="vacuum" >
 			<D value="1.e-25" unit="g/cm3"/>
 			<fraction n="1.0" ref="hydrogen"/>
 		</material>
-		<material formula=" " name="Air">
+		<material name="matAir" formula="air" >
 			<D value="0.001205" unit="g/cm3"/>
 			<fraction n="0.781154" ref="nitrogen"/>
 			<fraction n="0.209476" ref="oxygen"/>
 			<fraction n="0.00937"  ref="argon"/>
 		</material>
-		<material formula="H2O" name="Water">
+		<material name="matWater" formula="H2O" >
 			<D value="1.0" unit="g/cm3"/>
 			<fraction n="0.1119" ref="hydrogen"/>
 			<fraction n="0.8881" ref="oxygen"/>
 		</material>
-		<material formula=" " name="Granite">
+		<material name="matGranite" formula=" " >
 			<D value="2.7" unit="g/cm3"/>
 			<fraction n="0.438" ref="oxygen"/>
 			<fraction n="0.257" ref="silicon"/>
@@ -87,7 +135,7 @@
 			<fraction n="0.019" ref="iron"/>
 			<fraction n="0.015" ref="potassium"/>
 		</material>
-		<material formula=" " name="ShotRock">
+		<material name="matShotRock" formula=" " >
 			<D value="2.7*0.6" unit="g/cm3"/>
 			<fraction n="0.438" ref="oxygen"/>
 			<fraction n="0.257" ref="silicon"/>
@@ -96,7 +144,7 @@
 			<fraction n="0.019" ref="iron"/>
 			<fraction n="0.015" ref="potassium"/>
 		</material>
-		<material formula=" " name="Dirt">
+		<material name="matDirt" formula=" ">
 			<D value="1.7" unit="g/cm3"/>
 			<fraction n="0.438" ref="oxygen"/>
 			<fraction n="0.257" ref="silicon"/>
@@ -105,7 +153,7 @@
 			<fraction n="0.019" ref="iron"/>
 			<fraction n="0.015" ref="potassium"/>
 		</material>
-		<material formula=" " name="Concrete">
+		<material name="Concrete" formula=" " >
 			<D value="2.3" unit="g/cm3"/>
 			<fraction n="0.530" ref="oxygen"/>
 			<fraction n="0.335" ref="silicon"/>
@@ -114,61 +162,56 @@
 			<fraction n="0.020" ref="iron"/>
 			<fraction n="0.040" ref="aluminum"/>
 		</material>
-		<material name="ALUMINUM_Al" formula="ALUMINUM_Al">
+		<material name="matAluminum" formula="Al">
 			<D value="2.6990" unit="g/cm3"/>
 			<fraction n="1.0000" ref="aluminum"/>
 		</material>
-		<material name="SILICON_Si" formula="SILICON_Si">
+		<material name="matSilicon" formula="Si">
 			<D value="2.3300" unit="g/cm3"/>
 			<fraction n="1.0000" ref="silicon"/>
 		</material>
-		<material name="epoxy_resin" formula="C38H40O6Br4">
+		<material name="matEpoxyResin" formula="C38H40O6Br4">
 			<D value="1.1250" unit="g/cm3"/>
 			<composite n="38" ref="carbon"/>
 			<composite n="40" ref="hydrogen"/>
 			<composite n="6" ref="oxygen"/>
 			<composite n="4" ref="bromine"/>
 		</material>
-		<material name="PU_foam_dense" formula="C25H42N2O6">
+		<material name="matPUFoam_Cryostat" formula="Polyurethane">
 			<D value=".224" unit="g/cm3"/>
 			<composite n="25" ref="carbon"/>
 			<composite n="42" ref="hydrogen"/>
 			<composite n="2" ref="nitrogen"/>
 			<composite n="6" ref="oxygen"/>
 		</material>
-		<material name="PU_foam_walls" formula="C25H42N2O6">
+		<material name="matPUFoam_walls" formula="Polyurethane">
 			<D value="0.0240" unit="g/cm3"/>
 			<composite n="25" ref="carbon"/>
 			<composite n="42" ref="hydrogen"/>
 			<composite n="2" ref="nitrogen"/>
 			<composite n="6" ref="oxygen"/>
 		</material>
-		<material name="PIR_foam_ceiling" formula="C25H42N2O6">
+		<material name="matPIRALU_Cryostat" formula="Polyurethane">
+			<D value="0.035" unit="g/cm3"/>
+			<composite n="25" ref="carbon"/>
+			<composite n="42" ref="hydrogen"/>
+			<composite n="2" ref="nitrogen"/>
+			<composite n="6" ref="oxygen"/>
+		</material>
+		<material name="matPIRFoam" formula="Polyisocyanurate">
 			<D value="0.128" unit="g/cm3"/>
 			<composite n="3" ref="carbon"/>
 			<composite n="42" ref="hydrogen"/>
 			<composite n="3" ref="nitrogen"/>
 			<composite n="3" ref="oxygen"/>
 		</material>
-		<material name="Asphalt_ceiling" formula="Asphalt">
+		<material name="matAsphalt" formula="Asphalt">
 			<D value="2.32" unit="g/cm3"/>
 			<fraction n="0.8677" ref="carbon"/>
 			<fraction n="0.1094" ref="hydrogen"/>
 			<fraction n="0.0110" ref="nitrogen"/>
 			<fraction n="0.0099" ref="sulfur"/>
 			<fraction n="0.0020" ref="oxygen"/>
-		</material>
-		<material name="PU_foam_light" formula="C25H42N2O6">
-			<D value=".0384" unit="g/cm3"/>
-			<composite n="25" ref="carbon"/>
-			<composite n="42" ref="hydrogen"/>
-			<composite n="2" ref="nitrogen"/>
-			<composite n="6" ref="oxygen"/>
-		</material>
-		<material name="EPSInsulationWall" formula="C8H8">
-			<D value="0.400" unit="g/cm3"/>
-			<composite n="8" ref="carbon"/>
-			<composite n="8" ref="hydrogen"/>
 		</material>
 		<material name="SiO2" formula="SiO2">
 			<D value="2.2" unit="g/cm3"/>
@@ -215,19 +258,19 @@
 			<fraction n="0.010" ref="Na2O"/>
 			<fraction n="0.013" ref="TiO2"/>
 		</material>
-		<material name="FR4">
+		<material name="matFR4">
 			<D value="1.98281" unit="g/cm3"/>
-			<fraction n="0.47" ref="epoxy_resin"/>
+			<fraction n="0.47" ref="matEpoxyResin"/>
 			<fraction n="0.53" ref="fibrous_glass"/>
 		</material>
-		<material name="STEEL_STAINLESS_Fe7Cr2Ni" formula="STEEL_STAINLESS_Fe7Cr2Ni">
+		<material name="matStainlessSteel" formula="Fe7Cr2Ni">
 			<D value="7.9300" unit="g/cm3"/>
 			<fraction n="0.0010" ref="carbon"/>
 			<fraction n="0.1792" ref="chromium"/>
 			<fraction n="0.7298" ref="iron"/>
 			<fraction n="0.0900" ref="nickel"/>
 		</material>
-		<material name="STEEL_STRUCTURAL_S460L" formula="S460L">
+		<material name="matStructuralSteel" formula="S460L">
 			<D value="3.8321" unit="g/cm3"/>
 			<fraction n="0.95630" ref="iron"/>
 			<fraction n="0.01700" ref="manganese"/>
@@ -243,7 +286,7 @@
 			<fraction n="0.00020" ref="sulfur"/>
 			<fraction n="0.00020" ref="aluminum"/>
 		</material>
-		<material name="STEEL_GALVANIZED" formula="GSteel">
+		<material name="matGalvanizedSteel" formula="GSteel">
 			<D value="2.323" unit="g/cm3"/>
 			<fraction n="0.95630" ref="iron"/>
 			<fraction n="0.01700" ref="manganese"/>
@@ -259,26 +302,26 @@
 			<fraction n="0.00020" ref="sulfur"/>
 			<fraction n="0.00020" ref="aluminum"/>
 		</material>
-		<material name="LAr" formula="LAr">
+		<material name="matLiquidArgon" formula="LAr">
 			<D value="1.40" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
 		</material>
-		<material formula=" " name="G10">
+		<material name="matG10" >
 			<D value="1.7" unit="g/cm3"/>
 			<fraction n="0.2805" ref="silicon"/>
 			<fraction n="0.3954" ref="oxygen"/>
 			<fraction n="0.2990" ref="carbon"/>
 			<fraction n="0.0251" ref="hydrogen"/>
 		</material>
-		<material formula="Ti_Metal" name="Titanium">
+		<material name="matTitanium" >
 			<D value="4.506" unit="g/cm3"/>
 			<fraction n="1." ref="titanium"/>
 		</material>
-		<material name="TPB" formula="TPB">
+		<material name="matTPB" formula="TPB">
 			<D value="1.40" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
 		</material>
-		<material name="Glass">
+		<material name="matGlass">
 			<D value="2.5790" unit="g/cm3"/>
 			<fraction n="0.600" ref="SiO2"/>
 			<fraction n="0.118" ref="Al2O3"/>
@@ -288,36 +331,38 @@
 			<fraction n="0.010" ref="Na2O"/>
 			<fraction n="0.013" ref="TiO2"/>
 		</material>
-		<material name="Acrylic">
+		<material name="matAcrylic">
 			<D value="1.19" unit="g/cm3"/>
 			<fraction n="0.600" ref="carbon"/>
 			<fraction n="0.320" ref="oxygen"/>
 			<fraction n="0.080" ref="hydrogen"/>
 		</material>
-		<material name="Polystyrene">
+		<material name="matPolystyrene">
 			<D value="1.06" unit="g/cm3"/>
 			<fraction n="0.077418" ref="hydrogen"/>
 			<fraction n="0.922582" ref="carbon"/>
 		</material>
-		<material name="SteelMesh">
+		<material name="matSteelMesh">
 			<D value="2.865328573424478" unit="g/cm3"/>
-			<fraction n="0.62104145935931376" ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
-			<fraction n="0.37895854064068635" ref="LAr"/>
+			<fraction n="0.62104145935931376" ref="matStainlessSteel"/>
+			<fraction n="0.37895854064068635" ref="matLiquidArgon"/>
 		</material>
-		<material name="vm2000" formula="vm2000">
+		<material name="matVM2000" formula="VM2000">
 			<D value="1.2" unit="g/cm3"/>
 			<composite n="2" ref="carbon"/>
 			<composite n="4" ref="hydrogen"/>
 		</material>
-		<material name="Copper_Beryllium_alloy25" formula="Copper_Beryllium_alloy25">
+		<material name="matCopperBeryllium" formula="Copper Beryllium Alloy">
 			<D value="8.26" unit="g/cm3"/>
 			<fraction n="0.981" ref="copper"/>
 			<fraction n="0.019" ref="beryllium"/>
 		</material>
 	</materials>
-    <define>
-		<rotation name="rotBuldingCeilingSlopeP" unit="deg" x="0" y="0" z="1.1574"/>
-    </define>
+<!--
+	======================================================================
+		Building
+	======================================================================
+-->
     <solids>
 		<box name="boxBuldingOutter" lunit="mm" x="15240" y="11531.6" z="28854.400000000001" />
 		<box name="boxBuldingInner"  lunit="mm" x="12801.6" y="9906" z="27635.200000000001" />
@@ -416,15 +461,15 @@
 	</solids>
     <structure>
 		<volume name="volCeilingInsulation">
-			<materialref ref="PIR_foam_ceiling"/>
+			<materialref ref="matPIRFoam"/>
 			<solidref ref="solidCeilingInsulation_Sloped"/>
 		</volume>
 		<volume name="volCeilingInsulation_External">
-			<materialref ref="Asphalt_ceiling"/>
+			<materialref ref="matAsphalt"/>
 			<solidref ref="solidCeilingInsulation_External"/>
 		</volume>
 		<volume name="volCeilingSteelDeck">
-			<materialref ref="STEEL_GALVANIZED"/>
+			<materialref ref="matGalvanizedSteel"/>
 			<solidref ref="solidCeilingSteelDeck"/>
 		</volume>
 		
@@ -433,27 +478,27 @@
 			<solidref ref="boxCeilingSkylightCover"/>
 		</volume>
 		<volume name="volBuldingTube_H_1">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="solidBuldingTube_1"/>
 		</volume>
 		<volume name="volBuldingTube_H_2">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="solidBuldingTube_2"/>
 		</volume>
 		<volume name="volBuldingTube_V_1">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="solidBuldingTube_Q"/>
 		</volume>
 		<volume name="volWallMetalPlate_NorthSouth">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="boxWallMetalPlate_NorthSouth"/>
 		</volume>
 		<volume name="volWallInsulation_NorthSouth">
-			<materialref ref="PU_foam_walls"/>
+			<materialref ref="matPUFoam_walls"/>
 			<solidref ref="boxWallInsulation_NorthSouth"/>
 		</volume>
 		<volume name="volBuildingWall_NorthSouth">
-			<materialref ref="Air"/>
+			<materialref ref="matAir"/>
 			<solidref ref="boxWall_NorthSouth"/>
 			<physvol>
 				<volumeref ref="volWallMetalPlate_NorthSouth"/>
@@ -469,15 +514,15 @@
 			</physvol>
 		</volume>
 		<volume name="volWallMetalPlate_West">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="boxWallMetalPlate_West"/>
 		</volume>
 		<volume name="volWallInsulation_West">
-			<materialref ref="PU_foam_walls"/>
+			<materialref ref="matPUFoam_walls"/>
 			<solidref ref="boxWallInsulation_West"/>
 		</volume>
 		<volume name="volBuildingWall_West">
-			<materialref ref="Air"/>
+			<materialref ref="matAir"/>
 			<solidref ref="boxWall_West"/>
 			<physvol>
 				<volumeref ref="volWallMetalPlate_West"/>
@@ -493,15 +538,15 @@
 			</physvol>
 		</volume>
 		<volume name="volWallMetalPlate_East">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="boxWallMetalPlate_East"/>
 		</volume>
 		<volume name="volWallInsulation_East">
-			<materialref ref="PU_foam_walls"/>
+			<materialref ref="matPUFoam_walls"/>
 			<solidref ref="boxWallInsulation_East"/>
 		</volume>
 		<volume name="volBuildingWall_East">
-			<materialref ref="Air"/>
+			<materialref ref="matAir"/>
 			<solidref ref="boxWall_East"/>
 			<physvol>
 				<volumeref ref="volWallMetalPlate_East"/>
@@ -517,16 +562,16 @@
 			</physvol>
 		</volume>
 		<volume name="volBuildingIBeam_V">
-			<materialref ref="STEEL_STRUCTURAL_S460L"/>
+			<materialref ref="matStructuralSteel"/>
 			<solidref ref="solidBuildingIBeam_V"/>
 		</volume>
 		<volume name="volBuildingIBeam_H">
-			<materialref ref="STEEL_STRUCTURAL_S460L"/>
+			<materialref ref="matStructuralSteel"/>
 			<solidref ref="solidBuildingIBeam_H"/>
 		</volume>
 		
 		<volume name="volBuildingWindow">
-			<materialref ref="Glass"/>
+			<materialref ref="matGlass"/>
 			<solidref ref="boxBuldingWindow"/>
 		</volume>
 		<volume name="volBuildingTranslucentWall">
@@ -534,7 +579,7 @@
 			<solidref ref="boxBuldingTranslucentWall"/>
 		</volume>
 		<volume name="volBuilding">
-			<materialref ref="Air"/>
+			<materialref ref="matAir"/>
 			<solidref ref="solidBuilding"/>
 			
 			<physvol>
@@ -735,6 +780,11 @@
 			</physvol>
 		</volume>
     </structure>
+<!--
+	======================================================================
+		Ground
+	======================================================================
+-->
     <solids>
 		<box name="boxBuildingBase"  lunit="mm" x="15240" y="152.40000000000001" z="28854.400000000001" />
 		<box name="boxMezzanineEntrance"  lunit="mm" x="9448.8000000000011" y="152.40100000000001" z="18364.200000000001" />
@@ -778,8 +828,11 @@
 			</physvol>
 		</volume>
 	</structure>
-    <define>
-    </define>
+<!--
+	======================================================================
+		Undergrounounds
+	======================================================================
+-->
     <solids>
         <box name="boxGroundExterior" lunit="mm" x="40000" y="16916.400000000001" z="40000" />
         <box name="boxFoundationSlab" 		lunit="mm" x="19202.400000000001" y="914.40000000000009" z="21945.599999999999" />
@@ -929,19 +982,19 @@
             <solidref ref="mezzanineBuild7"/>
         </volume>
         <volume name="volGroundLevel0">
-            <materialref ref="Dirt"/>
+            <materialref ref="matDirt"/>
             <solidref ref="groundLevel0"/>
         </volume>
         <volume name="volGroundLevel1">
-            <materialref ref="Dirt"/>
+            <materialref ref="matDirt"/>
             <solidref ref="groundLevel1"/>
         </volume>
         <volume name="volGroundLevel2">
-            <materialref ref="Dirt"/>
+            <materialref ref="matDirt"/>
             <solidref ref="groundLevel2"/>
         </volume>
         <volume name="volUndergrounds" >
-            <materialref ref="Air"/>
+            <materialref ref="matAir"/>
             <solidref ref="boxGround"/>
             <physvol>
                 <volumeref ref="volDetectorHall"/>
@@ -965,8 +1018,6 @@
             </physvol>
         </volume>
     </structure>
-	<define>
-	</define>
 	<solids>
 		<tube name="tubeCPA_Center"  rmax="27" rmin="25" z="4140"   deltaphi="360"  aunit="deg"  lunit="mm"/>
 		<tube name="tubeCPA_Middle_H" rmax="27" rmin="25" z="2550"   deltaphi="360"  aunit="deg"  lunit="mm"/>
@@ -1167,20 +1218,18 @@
 	</solids>
 	<structure>
 		<volume name="volCPA_Around">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="solidCPAFrame_Around"/>
 		</volume>
 		<volume name="volCPA_East">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="solidCPAInner_East"/>
 		</volume>
 		<volume name="volCPA_West">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="solidCPAInner_West"/>
 		</volume>
 	</structure>
-        <define>
-        </define>
         <solids>
                 <box name="boxCPAMesh"  lunit="mm" x="0.5"  y="913" z="1153"/>
                 <box name="boxCPAFoil" lunit="mm" x="0.050799999999999998" y="932" z="1172"/>
@@ -1189,19 +1238,19 @@
         </solids>
         <structure>                    
                 <volume name="volCPAMesh">
-                        <materialref ref="SteelMesh"/>
+                        <materialref ref="matSteelMesh"/>
                         <solidref ref="boxCPAMesh"/>
                 </volume>
                 <volume name="volCPAFoil">
-                        <materialref ref="vm2000"/>
+                        <materialref ref="matVM2000"/>
                         <solidref ref="boxCPAFoil"/>
                 </volume>
                 <volume name="volCPATPB">
-                        <materialref ref="TPB"/>
+                        <materialref ref="matTPB"/>
                         <solidref ref="boxCPATPB"/>
                 </volume>
                 <volume name="volCPA_FoilTPB">
-                        <materialref ref="LAr"/>
+                        <materialref ref="matLiquidArgon"/>
                         <solidref ref="boxCPA_FoilTPB"/>
                         <physvol>
                                 <volumeref ref="volCPAFoil"/>
@@ -1213,13 +1262,6 @@
                         </physvol>
                 </volume>
         </structure>
-	<define>
-		
-		
-			
-		
-		
-	</define>
 	<solids>
 		<box name="boxFieldCage_In" lunit="mm" x="4044.0010000000002" y="4074.645" z="5094"/>
 		<box name="boxFieldCage_Out" lunit="mm" x="4044" y="5077.6450000000004" z="6097"/>
@@ -1262,24 +1304,23 @@
 	</solids>
 	<structure>
 		<volume name="volFC_IStructure">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="unionFC_I_4"/>
 		</volume>
 	
 		<volume name="volFC_strip_hor">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="boxFieldCage_strip_hor"/>
 		</volume>
 		<volume name="volFC_strip_ver">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="boxFieldCage_strip_ver"/>
 		</volume>
 		<volume name="volFieldCage">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="solidFieldCage"/>
 			<physvol>
 				<volumeref ref="volCPA_Around"/>
-				
 			</physvol>
 				<physvol>
 					<volumeref ref="volFC_strip_hor"/>
@@ -2451,8 +2492,6 @@
 				</physvol>
 		</volume>
 	</structure> 
-            <define>
-        </define>
         <solids>
                 <box lunit="cm" name="CRTmoduleX" x="360" y="180" z="1.8"/>
                 <box lunit="cm" name="CRTstripX" x="359.19999999999999" y="11.199999999999999" z="1"/>
@@ -2499,31 +2538,31 @@
         </solids>
         <structure>
                 <volume name="volAuxDetSensitiveCRTStripY">
-                        <materialref ref="Polystyrene"/>
+                        <materialref ref="matPolystyrene"/>
                         <solidref ref="CRTstripY"/>
                         <auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
                 </volume>
                 <volume name="volAuxDetSensitiveCRTStripX">
-                        <materialref ref="Polystyrene"/>
+                        <materialref ref="matPolystyrene"/>
                         <solidref ref="CRTstripX"/>
                         <auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
                 </volume>
                 <volume name="volAuxDetSensitiveCRTStripBERN">
-                        <materialref ref="Polystyrene"/>
+                        <materialref ref="matPolystyrene"/>
                         <solidref ref="CRTstripBERN"/>
                         <auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
                 </volume>
                 <volume name="volAuxDetSensitiveCRTStripMINOS">
-                        <materialref ref="Polystyrene"/>
+                        <materialref ref="matPolystyrene"/>
                         <solidref ref="CRTstripMINOS"/>
                         <auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
                 </volume>
                 <volume name="volG10strip_Bottom">
-                        <materialref ref="G10"/>
+                        <materialref ref="matG10"/>
                         <solidref ref="unionCPA_bottom_final"/>
                 </volume>
                         <volume name="volCRTModule_0">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_0" copynumber="0">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -2591,7 +2630,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_1">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_16" copynumber="16">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -2659,7 +2698,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_2">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_32" copynumber="32">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -2727,7 +2766,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_3">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_48" copynumber="48">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -2795,7 +2834,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_4">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_64" copynumber="64">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -2863,7 +2902,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_5">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_80" copynumber="80">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -2931,7 +2970,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_6">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_96" copynumber="96">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -2999,7 +3038,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_7">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_112" copynumber="112">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3067,7 +3106,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_8">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_128" copynumber="128">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3135,7 +3174,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_9">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_144" copynumber="144">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3203,7 +3242,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_10">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_160" copynumber="160">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3271,7 +3310,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_11">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_176" copynumber="176">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3339,7 +3378,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_12">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_192" copynumber="192">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3407,7 +3446,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_13">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_208" copynumber="208">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3475,7 +3514,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_14">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_224" copynumber="224">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3543,7 +3582,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_15">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_240" copynumber="240">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3611,7 +3650,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_16">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_256" copynumber="256">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3679,7 +3718,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_17">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_272" copynumber="272">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3747,7 +3786,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_18">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_288" copynumber="288">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3815,7 +3854,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_19">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_304" copynumber="304">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3883,7 +3922,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_20">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_320" copynumber="320">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -3951,7 +3990,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_21">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_336" copynumber="336">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4019,7 +4058,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_22">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_352" copynumber="352">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4087,7 +4126,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_23">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_368" copynumber="368">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4155,7 +4194,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_24">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_384" copynumber="384">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4223,7 +4262,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_25">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_400" copynumber="400">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4291,7 +4330,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_26">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_416" copynumber="416">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4359,7 +4398,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_27">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_432" copynumber="432">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4427,7 +4466,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_28">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_448" copynumber="448">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4495,7 +4534,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_29">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_464" copynumber="464">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4563,7 +4602,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_30">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_480" copynumber="480">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4631,7 +4670,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_31">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_496" copynumber="496">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4699,7 +4738,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_32">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_512" copynumber="512">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4767,7 +4806,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_33">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_528" copynumber="528">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4835,7 +4874,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_34">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_544" copynumber="544">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4903,7 +4942,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_35">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_560" copynumber="560">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -4971,7 +5010,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_36">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_576" copynumber="576">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -5039,7 +5078,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_37">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_592" copynumber="592">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -5107,7 +5146,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_38">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_608" copynumber="608">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -5175,7 +5214,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_39">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_624" copynumber="624">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -5243,7 +5282,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_40">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_640" copynumber="640">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5311,7 +5350,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_41">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_656" copynumber="656">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5379,7 +5418,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_42">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_672" copynumber="672">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5447,7 +5486,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_43">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_688" copynumber="688">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5515,7 +5554,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_44">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_704" copynumber="704">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5583,7 +5622,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_45">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_720" copynumber="720">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5651,7 +5690,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_46">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_736" copynumber="736">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5719,7 +5758,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_47">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_752" copynumber="752">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5787,7 +5826,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_48">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_768" copynumber="768">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5855,7 +5894,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_49">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_784" copynumber="784">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5923,7 +5962,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_50">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_800" copynumber="800">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -5991,7 +6030,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_51">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_816" copynumber="816">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6059,7 +6098,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_52">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_832" copynumber="832">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6127,7 +6166,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_53">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_848" copynumber="848">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6195,7 +6234,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_54">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_864" copynumber="864">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6263,7 +6302,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_55">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_880" copynumber="880">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6331,7 +6370,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_56">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_896" copynumber="896">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6399,7 +6438,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_57">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_912" copynumber="912">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6467,7 +6506,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_58">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_928" copynumber="928">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6535,7 +6574,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_59">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_944" copynumber="944">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6603,7 +6642,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_60">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_960" copynumber="960">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6671,7 +6710,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_61">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_976" copynumber="976">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6739,7 +6778,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_62">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_992" copynumber="992">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6807,7 +6846,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_63">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1008" copynumber="1008">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6875,7 +6914,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_64">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1024" copynumber="1024">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -6943,7 +6982,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_65">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1040" copynumber="1040">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -7011,7 +7050,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_66">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1056" copynumber="1056">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -7079,7 +7118,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_67">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1072" copynumber="1072">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -7147,7 +7186,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_68">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1088" copynumber="1088">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -7215,7 +7254,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_69">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1104" copynumber="1104">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -7283,7 +7322,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_70">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1120" copynumber="1120">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -7351,7 +7390,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_71">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1136" copynumber="1136">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -7419,7 +7458,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_72">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1152" copynumber="1152">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -7487,7 +7526,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_73">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1168" copynumber="1168">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -7555,7 +7594,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_74">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1184" copynumber="1184">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -7623,7 +7662,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_75">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1200" copynumber="1200">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -7691,7 +7730,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_76">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1216" copynumber="1216">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -7759,7 +7798,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_77">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1232" copynumber="1232">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -7827,7 +7866,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_78">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1248" copynumber="1248">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -7895,7 +7934,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_79">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1264" copynumber="1264">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -7963,7 +8002,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_80">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1280" copynumber="1280">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8031,7 +8070,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_81">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1296" copynumber="1296">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8099,7 +8138,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_82">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1312" copynumber="1312">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8167,7 +8206,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_83">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1328" copynumber="1328">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8235,7 +8274,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_84">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1344" copynumber="1344">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8303,7 +8342,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_85">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1360" copynumber="1360">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8371,7 +8410,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_86">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1376" copynumber="1376">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8439,7 +8478,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_87">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1392" copynumber="1392">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8507,7 +8546,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_88">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1408" copynumber="1408">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8575,7 +8614,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_89">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1424" copynumber="1424">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -8643,7 +8682,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_90">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1440" copynumber="1440">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -8711,7 +8750,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_91">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1456" copynumber="1456">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -8779,7 +8818,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_92">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1472" copynumber="1472">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -8847,7 +8886,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_93">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1488" copynumber="1488">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -8915,7 +8954,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_94">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1504" copynumber="1504">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -8983,7 +9022,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_95">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1520" copynumber="1520">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -9051,7 +9090,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_96">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1536" copynumber="1536">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -9119,7 +9158,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_97">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleY"/>
                                         <physvol name="CRTPaddle_1552" copynumber="1552">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripY"/>
@@ -9187,7 +9226,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_98">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1568" copynumber="1568">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9255,7 +9294,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_99">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1584" copynumber="1584">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9323,7 +9362,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_100">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1600" copynumber="1600">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9391,7 +9430,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_101">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1616" copynumber="1616">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9459,7 +9498,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_102">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1632" copynumber="1632">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9527,7 +9566,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_103">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1648" copynumber="1648">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9595,7 +9634,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_104">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1664" copynumber="1664">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9663,7 +9702,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_105">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1680" copynumber="1680">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9731,7 +9770,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_106">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1696" copynumber="1696">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9799,7 +9838,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_107">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleX"/>
                                         <physvol name="CRTPaddle_1712" copynumber="1712">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
@@ -9867,7 +9906,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_108">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1728" copynumber="1728">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -9935,7 +9974,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_109">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1744" copynumber="1744">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10003,7 +10042,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_110">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1760" copynumber="1760">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10071,7 +10110,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_111">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1776" copynumber="1776">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10139,7 +10178,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_112">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1792" copynumber="1792">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10207,7 +10246,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_113">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1808" copynumber="1808">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10275,7 +10314,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_114">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1824" copynumber="1824">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10343,7 +10382,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_115">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1840" copynumber="1840">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10411,7 +10450,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_116">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1856" copynumber="1856">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10479,7 +10518,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_117">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1872" copynumber="1872">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10547,7 +10586,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_118">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1888" copynumber="1888">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10615,7 +10654,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_119">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1904" copynumber="1904">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10683,7 +10722,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_120">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1920" copynumber="1920">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10751,7 +10790,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_121">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1936" copynumber="1936">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10819,7 +10858,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_122">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1952" copynumber="1952">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10887,7 +10926,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_123">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1968" copynumber="1968">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -10955,7 +10994,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_124">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_1984" copynumber="1984">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -11023,7 +11062,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_125">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_2000" copynumber="2000">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -11091,7 +11130,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_126">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleBERN"/>
                                         <physvol name="CRTPaddle_2016" copynumber="2016">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
@@ -11159,7 +11198,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_127">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                         <physvol name="CRTPaddle_2032" copynumber="2032">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripMINOS"/>
@@ -11243,7 +11282,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_128">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                         <physvol name="CRTPaddle_2052" copynumber="2052">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripMINOS"/>
@@ -11327,7 +11366,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_129">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                         <physvol name="CRTPaddle_2072" copynumber="2072">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripMINOS"/>
@@ -11411,7 +11450,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_130">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                         <physvol name="CRTPaddle_2092" copynumber="2092">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripMINOS"/>
@@ -11495,7 +11534,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_131">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                         <physvol name="CRTPaddle_2112" copynumber="2112">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripMINOS"/>
@@ -11579,7 +11618,7 @@
                                         </physvol>
                         </volume>
                         <volume name="volCRTModule_132">
-                                <materialref ref="ALUMINUM_Al"/>
+                                <materialref ref="matAluminum"/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                         <physvol name="CRTPaddle_2132" copynumber="2132">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripMINOS"/>
@@ -11663,7 +11702,7 @@
                                         </physvol>
                         </volume>
                 <volume name="volTaggerTopHigh">
-                        <materialref ref="Air"/>
+                        <materialref ref="matAir"/>
                         <solidref ref="TaggerTopHigh"/>
                                 <physvol>
                                         <volumeref ref="volCRTModule_0"/>
@@ -11757,7 +11796,7 @@
                                 </physvol>
                 </volume>
                 <volume name="volTaggerTopLow">
-                        <materialref ref="Air"/>
+                        <materialref ref="matAir"/>
                         <solidref ref="TaggerTopLow"/>
                                 <physvol>
                                         <volumeref ref="volCRTModule_20"/>
@@ -11851,7 +11890,7 @@
                                 </physvol>
                 </volume>
                 <volume name="volTaggerSouth">
-                        <materialref ref="Air"/>
+                        <materialref ref="matAir"/>
                         <solidref ref="TaggerSouth"/>
                                 <physvol>
                                         <volumeref ref="volCRTModule_40"/>
@@ -11927,7 +11966,7 @@
                                 </physvol>
                 </volume>
                 <volume name="volTaggerNorth">
-                        <materialref ref="Air"/>
+                        <materialref ref="matAir"/>
                         <solidref ref="TaggerNorth"/>
                                 <physvol>
                                         <volumeref ref="volCRTModule_56"/>
@@ -12004,7 +12043,7 @@
                 </volume>
 				
 				<volume name="volTaggerEast">
-                        <materialref ref="Air"/>
+                        <materialref ref="matAir"/>
                         <solidref ref="TaggerEast"/>
                                 <physvol>
                                         <volumeref ref="volCRTModule_72"/>
@@ -12090,7 +12129,7 @@
                                 </physvol>
                 </volume>
                 <volume name="volTaggerWest">
-                        <materialref ref="Air"/>
+                        <materialref ref="matAir"/>
                         <solidref ref="TaggerWest"/>
                                 <physvol>
                                         <volumeref ref="volCRTModule_90"/>
@@ -12176,7 +12215,7 @@
                                 </physvol>
                 </volume>	
                 <volume name="volTaggerBot">
-                        <materialref ref="Air"/>
+                        <materialref ref="matAir"/>
                         <solidref ref="TaggerBottom"/>
                         <physvol>
                                 <volumeref ref="volCRTModule_108"/>
@@ -12296,10 +12335,6 @@
                         </physvol>
                 </volume>
         </structure>
-	<define>
-		
-		
-	</define>
 	<solids>
 		<box name="XArapucaOut" lunit="mm" x="96" y="240" z="20"/>
 		<box name="XArapucaFilter" lunit="mm" x="76" y="206" z="2"/>
@@ -12314,20 +12349,20 @@
 	</solids>
 	<structure>
 		<volume name="volOpDetSensitiveXArapucaFilter">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="XArapucaFilter"/>
 			<auxiliary auxtype="SensDet" auxvalue="PhotonDetector"/>
 		</volume>
 		<volume name="volWalls_XArapuca">
-			<materialref ref="G10"/>
+			<materialref ref="matG10"/>
 			<solidref ref="XArapucaExternalWalls"/>
 		</volume>
 		<volume name="volCover_XArapuca">
-			<materialref ref="G10"/>
+			<materialref ref="matG10"/>
 			<solidref ref="XArapucaCover"/>
 		</volume>
 		<volume name="volXArapuca">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="XArapucaVolume"/>
 			<physvol>
 				<volumeref ref="volWalls_XArapuca"/>
@@ -12343,8 +12378,6 @@
 			</physvol>
 		</volume>
 	</structure>
-	<define>
-	</define>
 	<solids>
 		<tube name="PMTVolume" rmax="102" z="107" deltaphi="360" aunit="deg" lunit="mm"/>
 		<sphere name="PMT_Underside" rmin="96.599999999999994" rmax="101.59999999999999" deltaphi="360" deltatheta="90" aunit="deg" lunit="mm" />
@@ -12353,23 +12386,23 @@
 	</solids>
 	<structure>
 		<volume name="volOpDetSensitive">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="PMT_Underside"/>
 			<auxiliary auxtype="SensDet" auxvalue="PhotonDetector"/>
 		</volume>
 		
 		<volume name="vol_PMT_in">
-			<materialref ref="Vacuum"/>
+			<materialref ref="matVacuum"/>
 			<solidref ref="PMT_inside"/>
 		</volume>
 		
 		<volume name="vol_PMT_Back">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="PMT_Back"/>
 		</volume>
 		
 		<volume name="volPMT">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="PMTVolume"/>
 			<physvol>
 				<volumeref ref="vol_PMT_Back"/>
@@ -12388,14 +12421,12 @@
 	</structure>
 	<!-- building a structure that will contain all 8 XARAPUCAS and 5 PMTs 
 		per module of the APA -->
-	<define>
-	</define>
 	<solids>
 		<box name="PDS_moduleCase" lunit="mm" x="904.79999999999995" y="1040" z="133.5"/>
 	</solids>
 	<structure>
 		<volume name="volPDSstructure">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="PDS_moduleCase"/>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
@@ -12451,19 +12482,6 @@
 			</physvol>
 		</volume>
 	</structure>
-	<define>
-		<position name="posAPAVertical_L" 	unit="mm" x="0" y="0" z="-1232.8385000000001" />
-		<position name="posAPAVertical_R" 	unit="mm" x="0" y="0" z="1232.8385000000001" />
-		<position name="posAPAHorizontal_L_0" unit="mm" x="0" y="2025" z="-616.41925000000003" />
-		<position name="posAPAHorizontal_R_0" unit="mm" x="0" y="2025" z="616.41925000000003" />
-		<position name="posAPAHorizontal_L_1" unit="mm" x="0" y="675" z="-616.41925000000003" />
-		<position name="posAPAHorizontal_R_1" unit="mm" x="0" y="675" z="616.41925000000003" />
-		<position name="posAPAHorizontal_L_2" unit="mm" x="0" y="-675" z="-616.41925000000003" />
-		<position name="posAPAHorizontal_R_2" unit="mm" x="0" y="-675" z="616.41925000000003" />
-		<position name="posAPAHorizontal_L_3" unit="mm" x="0" y="-2025" z="-616.41925000000003" />
-		<position name="posAPAHorizontal_R_3" unit="mm" x="0" y="-2025" z="616.41925000000003" />
-		<position name="centerAtBorder" unit="mm" x="0" y="0" z="0" />
-	</define>
 	<solids>
 		<box name="boxAPATube_Longer_Outer"  lunit="mm" x="150"   y="4150"   z="100"/>
 		<box name="boxAPATube_Longer_Inner"  lunit="mm" x="145"   y="4145"   z="95"/>
@@ -12533,12 +12551,10 @@
 	
 	<structure> 
 		<volume name="volOneAPAFrame">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="unionAPA"/>
 		</volume>
 	</structure>
-	<define>
-	</define>
     <solids>
         <box name="boxCryoExt_inner" lunit="mm" x="6802" 	y="7023"	z="8627"/>
         <box name="boxCryoExt_outter" lunit="mm" x="6812" 	y="7033"	z="8637"/>
@@ -12817,13 +12833,15 @@
 	</solids>
 	<structure>
 		<volume name="volCryoExt">
-			<materialref ref="STEEL_STRUCTURAL_S460L"/>
+			<materialref ref="matStructuralSteel"/>
 			<solidref ref="solidCryoExt_ExtStruct_39"/>
 		</volume>        
 	</structure>
-	<define>
-	</define>
 	<solids>
+		<box name="boxCryostatLidSteelLarger" lunit="mm" x="5007" y="780" z="5833"/>
+		<box name="boxCryostatLidSteelSmaller" lunit="mm" x="5007" y="780" z="686.79999999999995"/>
+		<box name="boxCryostatLidInsulationLarger"  lunit="mm" x="5002" y="775" z="5828"/>
+		<box name="boxCryostatLidInsulationSmaller" lunit="mm" x="5002" y="775" z="681.79999999999995"/>
 		<box name="boxCryoInsul_inner" lunit="mm" x="5204.6000000000004" y="5435.6000000000004" z="7032"/>
 		<box name="boxCryoInsul_outter" lunit="mm" x="6802" 	y="7023"	z="8627"/>
 		<subtraction name="solidCryoInsul">
@@ -12832,9 +12850,41 @@
 		</subtraction>
 	</solids>
 	<structure>
+		<volume name="volCryostatLidInsulation_Larger">
+			<materialref ref="matPIRALU_Cryostat"/>
+			<solidref ref="boxCryostatLidInsulationLarger"/>
+		</volume>   
+		<volume name="volCryostatLidInsulation_Smaller">
+			<materialref ref="matPIRALU_Cryostat"/>
+			<solidref ref="boxCryostatLidInsulationSmaller"/>
+		</volume>   
+		<volume name="volCryostatLid_Larger">
+			<materialref ref="matStainlessSteel"/>
+			<solidref ref="boxCryostatLidSteelLarger"/>
+			<physvol>
+				<volumeref ref="volCryostatLidInsulation_Larger"/>
+			</physvol>
+			
+		</volume>        
+		<volume name="volCryostatLid_Smaller">
+			<materialref ref="matStainlessSteel"/>
+			<solidref ref="boxCryostatLidSteelSmaller"/>
+			<physvol>
+				<volumeref ref="volCryostatLidInsulation_Smaller"/>
+			</physvol>
+			
+		</volume>  
 		<volume name="volCryoInsulation">
-			<materialref ref="PU_foam_dense"/>
+			<materialref ref="matPUFoam_Cryostat"/>
 			<solidref ref="solidCryoInsul"/>
+			<physvol>
+				<volumeref ref="volCryostatLid_Larger"/>
+				<position  name="posCryoLid_Larger" unit="mm" x="0" y="3110.3000000000002" z="-412.5"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryostatLid_Smaller"/>
+				<position  name="posCryoLid_Smaller" unit="mm" x="0" y="3110.3000000000002" z="3161.4000000000001"/>
+			</physvol>
 		</volume>        
 	</structure>
 	<solids>
@@ -12847,16 +12897,10 @@
 	</solids>
 	<structure>
 		<volume name="volCryoMembrane">
-			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<materialref ref="matStainlessSteel"/>
 			<solidref ref="solidCryoMembrane"/>
 		</volume>        
 	</structure>
-	<define>
-		
-		<rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
-		
-		
-	</define>
 	<solids>
 		<box  name="boxTPCPlane"  lunit="mm" x="3"  y="4000.1523999999999" z="4995.1523999999999"/>
 		<tube name="solidWireVert" lunit="mm" rmax="0.076200000000000004" z="4000" aunit="deg" deltaphi="360" />
@@ -12864,53 +12908,41 @@
 	</solids>
 	<structure>
 		<volume name="volTPCWireVert">
-			<materialref ref="Copper_Beryllium_alloy25"/>
+			<materialref ref="matCopperBeryllium"/>
 			<solidref ref="solidWireVert"/>
 		</volume>
 		<volume name="volTPCPlaneVert">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>
 		<volume name="volTPCPlaneVert_dummy">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>
 	</structure>
 	<structure>
 		<volume name="volTPCPlane_U">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>		
 	</structure>
 	<structure>
 		<volume name="volTPCPlane_V">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>
 		<volume name="volTPCPlane_V_dummy">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>
 	</structure>
-	<define>
-		<position name="posTPC_East" unit="mm" x="-1011" y="0" z="-412.5"/>
-		<position name="posTPC_West" unit="mm" x="1011" y="0" z="-412.5"/>
-		<position name="posYPlane_E" unit="mm" x="-1009.5" y="0" z="0"/>
-		<position name="posVPlane_E" unit="mm" x="-1006.5" y="0" z="0"/>
-		<position name="posUPlane_E" unit="mm" x="-1003.5" y="0" z="0"/>
-		<position name="posYPlane_W" unit="mm" x="1009.5" y="0" z="0"/>
-		<position name="posVPlane_W" unit="mm" x="1006.5" y="0" z="0"/>
-		<position name="posUPlane_W" unit="mm" x="1003.5" y="0" z="0"/>
-	</define>
-	<define>
-	</define>
 	<solids>
 		<box name="boxTPCActive" 	lunit="mm" x="2013" 	y="4074.645"	z="5094"/>
 		<box name="boxTPC"	 		lunit="mm" x="2022"		y="4074.645"	z="5094"/>
 	</solids>
 	<structure> 
             <volume name="volTPCActive">
-				<materialref ref="LAr"/>
+				<materialref ref="matLiquidArgon"/>
 				<solidref ref="boxTPCActive"/>
 				<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
 				<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
@@ -13065,7 +13097,7 @@
                         </physvol>
 		</volume>
 		<volume name="volTPC_East"> 
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="boxTPC"/>
 			<physvol>
 				<volumeref ref="volTPCActive"/>
@@ -13086,12 +13118,12 @@
 			</physvol>
 		</volume>
 		<volume name="volTPC_West"> 
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="boxTPC"/>
 			<physvol>
 				<volumeref ref="volTPCActive"/>
 				<position name="posTPCActive_West" unit="mm" x="-4.5" y="0" z="0"/>
-                                <rotationref ref="rotateP180Y"/>
+                <rotationref ref="rotateP180Y"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlane_V"/>
@@ -13120,7 +13152,7 @@
 	</solids>
 	<structure> 
 		<volume name="volCryostat">
-			<materialref ref="LAr"/>
+			<materialref ref="matLiquidArgon"/>
 			<solidref ref="boxCryostat"/>
 			<physvol>
 				<volumeref ref="volFieldCage"/>
@@ -13288,18 +13320,18 @@
 	</solids>
 	<structure>
 		<volume name="volDetEnclosure_dummy" >
-			<materialref ref="Air"/>
+			<materialref ref="matAir"/>
 			<solidref ref="boxDetectorEnclosure"/>
 		</volume>
 	</structure>
 	
 	<structure>
 		<volume name="volDetEnclosure" >
-			<materialref ref="Air"/>
+			<materialref ref="matAir"/>
 			<solidref ref="boxDetectorEnclosure"/>
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
-					<position name="posCRT_TopHigh" unit="mm" x="0" y="9286" z="-474.69999999999999"/>
+					<position name="poCRT_TopHigh" unit="mm" x="0" y="9286" z="-474.69999999999999"/>
 					<rotationref ref="rotateN90X"/>
 			</physvol>
 			<physvol>
@@ -13356,7 +13388,7 @@
 	</solids>
 	<structure>
 		<volume name="volWorld" >
-			<materialref ref="Air"/>
+			<materialref ref="matAir"/>
 			<solidref ref="boxWorld"/>
 			<physvol>
 				<volumeref ref="volBuilding"/>
@@ -13380,7 +13412,7 @@
 			</physvol>
 		</volume>
 		<volume name="volIgnoredOnThisSetup" >
-			<materialref ref="Air"/>
+			<materialref ref="matAir"/>
 			<solidref ref="boxWorld"/>
 			<physvol>
 				<volumeref ref="volBuilding"/>
