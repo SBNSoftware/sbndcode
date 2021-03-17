@@ -89,7 +89,8 @@ private:
   std::string _mcshower_producer = "mcreco";
   bool _save_pi0_tree = true;
 
-  std::vector<std::string> _overburden_volumes = {"volShieldingLid", "volShieldingTop", "volMezzanineLid"};
+  // std::vector<std::string> _overburden_volumes = {"volShieldingLid", "volShieldingTop", "volMezzanineLid"};
+  std::vector<std::string> _overburden_volumes = {"volShielding"};
   std::vector<unsigned int> _pi0_ids;
 
   double _x_max; //!< x-max of volume box used to determine whether to save track information

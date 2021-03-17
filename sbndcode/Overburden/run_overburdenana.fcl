@@ -67,8 +67,5 @@ outputs:
 }
 
 # Geometry with overburden
-services.Geometry.GDML: "sbnd_v01_05_configA_ob.gdml"
-services.Geometry.ROOT: "sbnd_v01_05_configA_ob.gdml"
-services.AuxDetGeometry.GDML: "sbnd_v01_05_configA_ob.gdml"
-services.AuxDetGeometry.ROOT: "sbnd_v01_05_configA_ob.gdml"
+#include "geometry_shielding_on_sbnd.fcl"
 

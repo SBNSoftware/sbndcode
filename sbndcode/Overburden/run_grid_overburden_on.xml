@@ -3,10 +3,10 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release "v09_09_01">
+<!ENTITY release "v09_15_00">
 <!ENTITY releasetag "e19:prof">
-<!ENTITY my_version "v12">
-<!ENTITY config "configC">
+<!ENTITY my_version "v1">
+<!ENTITY config "config2">
 <!ENTITY name "mdeltutt_test_ob_on">
 <!ENTITY tag "test_ob_on">
 <!ENTITY file_type "data">
@@ -34,7 +34,7 @@
   <larsoft>
     <tag>&release;</tag>
     <qual>&releasetag;</qual>
-    <local>&PNFSpath;Tarballs/sbndcode_v09_09_01_ob__&my_version;.tgz</local>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_15_00_ob__&my_version;.tgz</local>
   </larsoft>
 
   <!-- Project stages -->
