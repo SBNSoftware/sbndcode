@@ -4747,32 +4747,32 @@
 
 	<structure>
 
-		<volume name="volCryostatLidInsulation_Larger">
+		<volume name="volCryoLidInsulation_Larger">
 			<materialref ref="matPIRALU_Cryostat"/>
 			<solidref ref="boxCryostatLidInsulationLarger"/>
 		</volume>   
 
-		<volume name="volCryostatLidInsulation_Smaller">
+		<volume name="volCryoLidInsulation_Smaller">
 			<materialref ref="matPIRALU_Cryostat"/>
 			<solidref ref="boxCryostatLidInsulationSmaller"/>
 		</volume>   
 
-		<volume name="volCryostatLid_Larger">
+		<volume name="volCryoLid_Larger">
 			<materialref ref="matStainlessSteel"/>
 			<solidref ref="boxCryostatLidSteelLarger"/>
 
 			<physvol>
-				<volumeref ref="volCryostatLidInsulation_Larger"/>
+				<volumeref ref="volCryoLidInsulation_Larger"/>
 			</physvol>
 			
 		</volume>        
 
-		<volume name="volCryostatLid_Smaller">
+		<volume name="volCryoLid_Smaller">
 			<materialref ref="matStainlessSteel"/>
 			<solidref ref="boxCryostatLidSteelSmaller"/>
 
 			<physvol>
-				<volumeref ref="volCryostatLidInsulation_Smaller"/>
+				<volumeref ref="volCryoLidInsulation_Smaller"/>
 			</physvol>
 			
 		</volume>  
@@ -4782,12 +4782,12 @@
 			<solidref ref="solidCryoInsul"/>
 
 			<physvol>
-				<volumeref ref="volCryostatLid_Larger"/>
+				<volumeref ref="volCryoLid_Larger"/>
 				<position  name="posCryoLid_Larger" unit="mm" x="0" y="(dimMembrane_Inner_Y_mm+dimCryostatLid_Outer_Y_mm)/2.0+dimMembrane_Inner_T_mm" z="whereTPC_Z"/>
 			</physvol>
 
 			<physvol>
-				<volumeref ref="volCryostatLid_Smaller"/>
+				<volumeref ref="volCryoLid_Smaller"/>
 				<position  name="posCryoLid_Smaller" unit="mm" x="0" y="(dimMembrane_Inner_Y_mm+dimCryostatLid_Outer_Y_mm)/2.0+dimMembrane_Inner_T_mm" z="whereTPC_Z+(dimCryostatLidLarger_Outer_Z_mm+dimCryostatLidSmaller_Outer_Z_mm)/2.0+314.0"/>
 			</physvol>
 
