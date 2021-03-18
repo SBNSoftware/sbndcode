@@ -940,7 +940,7 @@
 			<fraction n="0.00020" ref="aluminum"/>
 		</material>
 
-		<material name="matLiquidArgon" formula="LAr">
+		<material name="LAr" formula="LAr">
 			<D value="1.40" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
 		</material>
@@ -991,7 +991,7 @@
 		<material name="matSteelMesh">
 			<D value="meshDensity" unit="g/cm3"/>
 			<fraction n="meshWires_n" ref="matStainlessSteel"/>
-			<fraction n="meshLAr_n" ref="matLiquidArgon"/>
+			<fraction n="meshLAr_n" ref="LAr"/>
 		</material>
 
 		<material name="matVM2000" formula="VM2000">
@@ -2110,7 +2110,7 @@
 
                 <!-- mounting foil+tpb -->
                 <volume name="volCPA_FoilTPB">
-                        <materialref ref="matLiquidArgon"/>
+                        <materialref ref="LAr"/>
                         <solidref ref="boxCPA_FoilTPB"/>
                         <physvol>
                                 <volumeref ref="volCPAFoil"/>
@@ -2198,7 +2198,7 @@
 
 		<!-- placing everything -->
 		<volume name="volFieldCage">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="solidFieldCage"/>
 
 			<physvol>
@@ -4104,7 +4104,7 @@
 		<!-- defining materials and properties -->
 
 		<volume name="volOpDetSensitiveXArapucaFilter">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="XArapucaFilter"/>
 			<auxiliary auxtype="SensDet" auxvalue="PhotonDetector"/>
 		</volume>
@@ -4122,7 +4122,7 @@
 		<!-- Building one X-ARAPUCA -->
 
 		<volume name="volXArapuca">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="XArapucaVolume"/>
 			<physvol>
 				<volumeref ref="volWalls_XArapuca"/>
@@ -4156,7 +4156,7 @@
 		<!-- defining materials and properties -->
 
 		<volume name="volOpDetSensitive">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="PMT_Underside"/>
 			<auxiliary auxtype="SensDet" auxvalue="PhotonDetector"/>
 		</volume>
@@ -4174,7 +4174,7 @@
 		<!-- building one PMT -->
 		
 		<volume name="volPMT">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="PMTVolume"/>
 			<physvol>
 				<volumeref ref="vol_PMT_Back"/>
@@ -4208,7 +4208,7 @@
 	<structure>
 
 		<volume name="volPDSstructure">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="PDS_moduleCase"/>
 
 			<!-- placing XARAPUCAs -->
@@ -4847,7 +4847,7 @@
 		</volume>
 
 		<volume name="volTPCPlaneVert">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 
 			<!-- Y wires -->
@@ -4862,7 +4862,7 @@
 		</volume>
 
 		<volume name="volTPCPlaneVert_dummy">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>
 
@@ -4896,7 +4896,7 @@
 
 		<!-- U wireplane -->
 		<volume name="volTPCPlane_U">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 
 
@@ -4958,7 +4958,7 @@
 
 		<!-- V wireplane -->
 		<volume name="volTPCPlane_V">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 
 
@@ -4992,7 +4992,7 @@
 		</volume>
 
 		<volume name="volTPCPlane_V_dummy">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>
 
@@ -5011,7 +5011,7 @@
                 <!-- defined as being the East one -->
                 <!-- the West one is going to be this one mirrored -->
             <volume name="volTPCActive">
-				<materialref ref="matLiquidArgon"/>
+				<materialref ref="LAr"/>
 				<solidref ref="boxTPCActive"/>
 				<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
 				<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
@@ -5174,7 +5174,7 @@
 
 		<!-- a TPC at Negative X (East side) -->
 		<volume name="volTPC_East"> 
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPC"/>
 
 			<physvol>
@@ -5199,7 +5199,7 @@
 
 		<!-- a TPC at Positive X (West side) -->
 		<volume name="volTPC_West"> 
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPC"/>
 			<physvol>
 				<volumeref ref="volTPCActive"/>
@@ -5245,7 +5245,7 @@
 
 	<structure> 
 		<volume name="volCryostat">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxCryostat"/>
 
 			<physvol>

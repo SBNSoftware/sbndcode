@@ -302,7 +302,7 @@
 			<fraction n="0.00020" ref="sulfur"/>
 			<fraction n="0.00020" ref="aluminum"/>
 		</material>
-		<material name="matLiquidArgon" formula="LAr">
+		<material name="LAr" formula="LAr">
 			<D value="1.40" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
 		</material>
@@ -345,7 +345,7 @@
 		<material name="matSteelMesh">
 			<D value="2.865328573424478" unit="g/cm3"/>
 			<fraction n="0.62104145935931376" ref="matStainlessSteel"/>
-			<fraction n="0.37895854064068635" ref="matLiquidArgon"/>
+			<fraction n="0.37895854064068635" ref="LAr"/>
 		</material>
 		<material name="matVM2000" formula="VM2000">
 			<D value="1.2" unit="g/cm3"/>
@@ -1250,7 +1250,7 @@
                         <solidref ref="boxCPATPB"/>
                 </volume>
                 <volume name="volCPA_FoilTPB">
-                        <materialref ref="matLiquidArgon"/>
+                        <materialref ref="LAr"/>
                         <solidref ref="boxCPA_FoilTPB"/>
                         <physvol>
                                 <volumeref ref="volCPAFoil"/>
@@ -1317,7 +1317,7 @@
 			<solidref ref="boxFieldCage_strip_ver"/>
 		</volume>
 		<volume name="volFieldCage">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="solidFieldCage"/>
 			<physvol>
 				<volumeref ref="volCPA_Around"/>
@@ -12349,7 +12349,7 @@
 	</solids>
 	<structure>
 		<volume name="volOpDetSensitiveXArapucaFilter">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="XArapucaFilter"/>
 			<auxiliary auxtype="SensDet" auxvalue="PhotonDetector"/>
 		</volume>
@@ -12362,7 +12362,7 @@
 			<solidref ref="XArapucaCover"/>
 		</volume>
 		<volume name="volXArapuca">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="XArapucaVolume"/>
 			<physvol>
 				<volumeref ref="volWalls_XArapuca"/>
@@ -12386,7 +12386,7 @@
 	</solids>
 	<structure>
 		<volume name="volOpDetSensitive">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="PMT_Underside"/>
 			<auxiliary auxtype="SensDet" auxvalue="PhotonDetector"/>
 		</volume>
@@ -12402,7 +12402,7 @@
 		</volume>
 		
 		<volume name="volPMT">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="PMTVolume"/>
 			<physvol>
 				<volumeref ref="vol_PMT_Back"/>
@@ -12426,7 +12426,7 @@
 	</solids>
 	<structure>
 		<volume name="volPDSstructure">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="PDS_moduleCase"/>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
@@ -15576,7 +15576,7 @@
 			<solidref ref="solidWireVert"/>
 		</volume>
 		<volume name="volTPCPlaneVert">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 				<physvol>
 					<volumeref ref="volTPCWireVert"/>
@@ -23900,7 +23900,7 @@
 				</physvol>
 		</volume>
 		<volume name="volTPCPlaneVert_dummy">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>
 	</structure>
@@ -31842,7 +31842,7 @@
 				<solidref ref="solidWire_1984"/>
 			</volume>
 		<volume name="volTPCPlane_U">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 				<physvol>
 					<volumeref ref="volTPCWire_U_1"/>
@@ -49704,7 +49704,7 @@
 				<solidref ref="solidWire_1984"/>
 			</volume>
 		<volume name="volTPCPlane_V">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 				<physvol>
 					<volumeref ref="volTPCWire_V_1"/>
@@ -59628,7 +59628,7 @@
 				</physvol>
 		</volume>
 		<volume name="volTPCPlane_V_dummy">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 		</volume>
 	</structure>
@@ -59638,7 +59638,7 @@
 	</solids>
 	<structure> 
             <volume name="volTPCActive">
-				<materialref ref="matLiquidArgon"/>
+				<materialref ref="LAr"/>
 				<solidref ref="boxTPCActive"/>
 				<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
 				<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
@@ -59793,7 +59793,7 @@
                         </physvol>
 		</volume>
 		<volume name="volTPC_East"> 
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPC"/>
 			<physvol>
 				<volumeref ref="volTPCActive"/>
@@ -59814,7 +59814,7 @@
 			</physvol>
 		</volume>
 		<volume name="volTPC_West"> 
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxTPC"/>
 			<physvol>
 				<volumeref ref="volTPCActive"/>
@@ -59848,7 +59848,7 @@
 	</solids>
 	<structure> 
 		<volume name="volCryostat">
-			<materialref ref="matLiquidArgon"/>
+			<materialref ref="LAr"/>
 			<solidref ref="boxCryostat"/>
 			<physvol>
 				<volumeref ref="volFieldCage"/>
