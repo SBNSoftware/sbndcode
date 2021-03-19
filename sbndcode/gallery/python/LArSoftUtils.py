@@ -73,7 +73,7 @@ def loadGeometry(config=None, registry=None, mapping=None):
     mapping = ROOT.geo.ChannelMapStandardAlg
   SourceCode.loadHeaderFromUPS("larcorealg/Geometry/StandaloneGeometrySetup.h")
   SourceCode.loadLibrary("larcorealg_Geometry")
-  service = ROOT.lar.standalone.SetupGeometry(mapping)(geometryConfig)
+  service = ROOT.lar.standalone.SetupGeometry[mapping](geometryConfig)
   if registry: registry.register(serviceName, service)
 
   # make it easy to print points and vectors in python
