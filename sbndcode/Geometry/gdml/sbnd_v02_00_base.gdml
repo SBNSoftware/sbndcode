@@ -779,7 +779,7 @@
 			<fraction n="0.040" ref="aluminum"/>
 		</material>
 
-		<material name="matAluminum" formula="Al">
+		<material name="ALUMINUM_Al " formula="Al">
 			<D value="2.6990" unit="g/cm3"/>
 			<fraction n="1.0000" ref="aluminum"/>
 		</material>
@@ -898,7 +898,7 @@
 			<fraction n="0.53" ref="fibrous_glass"/>
 		</material>
 
-		<material name="matStainlessSteel" formula="Fe7Cr2Ni">
+		<material name="STEEL_STAINLESS_Fe7Cr2Ni" formula="Fe7Cr2Ni">
 			<D value="7.9300" unit="g/cm3"/>
 			<fraction n="0.0010" ref="carbon"/>
 			<fraction n="0.1792" ref="chromium"/>
@@ -945,7 +945,7 @@
 			<fraction n="1.0000" ref="argon"/>
 		</material>
 
-		<material name="matG10" >
+		<material name="G10 " >
 			<D value="1.7" unit="g/cm3"/>
 			<fraction n="0.2805" ref="silicon"/>
 			<fraction n="0.3954" ref="oxygen"/>
@@ -959,7 +959,7 @@
 			<fraction n="1." ref="titanium"/>
 		</material>
 
-		<material name="matTPB" formula="TPB">
+		<material name="TPB" formula="TPB">
 			<D value="1.40" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
 		</material>
@@ -990,17 +990,17 @@
 
 		<material name="matSteelMesh">
 			<D value="meshDensity" unit="g/cm3"/>
-			<fraction n="meshWires_n" ref="matStainlessSteel"/>
+			<fraction n="meshWires_n" ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<fraction n="meshLAr_n" ref="LAr"/>
 		</material>
 
-		<material name="matVM2000" formula="VM2000">
+		<material name="vm2000" formula="VM2000">
 			<D value="1.2" unit="g/cm3"/>
 			<composite n="2" ref="carbon"/>
 			<composite n="4" ref="hydrogen"/>
 		</material>
 
-		<material name="matCopperBeryllium" formula="Copper Beryllium Alloy">
+		<material name="Copper_Beryllium_alloy25" formula="Copper Beryllium Alloy">
 			<D value="8.26" unit="g/cm3"/>
 			<fraction n="0.981" ref="copper"/>
 			<fraction n="0.019" ref="beryllium"/>
@@ -1156,22 +1156,22 @@
 		</volume>
 
 		<volume name="volBuldingTube_H_1">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidBuldingTube_1"/>
 		</volume>
 
 		<volume name="volBuldingTube_H_2">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidBuldingTube_2"/>
 		</volume>
 
 		<volume name="volBuldingTube_V_1">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidBuldingTube_Q"/>
 		</volume>
 
 		<volume name="volWallMetalPlate_NorthSouth">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxWallMetalPlate_NorthSouth"/>
 		</volume>
 
@@ -1198,7 +1198,7 @@
 		</volume>
 
 		<volume name="volWallMetalPlate_West">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxWallMetalPlate_West"/>
 		</volume>
 
@@ -1225,7 +1225,7 @@
 		</volume>
 
 		<volume name="volWallMetalPlate_East">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxWallMetalPlate_East"/>
 		</volume>
 
@@ -2064,17 +2064,17 @@
 	<structure>
 
 		<volume name="volCPA_Around">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidCPAFrame_Around"/>
 		</volume>
 
 		<volume name="volCPA_East">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidCPAInner_East"/>
 		</volume>
 
 		<volume name="volCPA_West">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidCPAInner_West"/>
 		</volume>
 
@@ -2099,12 +2099,12 @@
                 </volume>
         
                 <volume name="volCPAFoil">
-                        <materialref ref="matVM2000"/>
+                        <materialref ref="vm2000"/>
                         <solidref ref="boxCPAFoil"/>
                 </volume>
                 
                 <volume name="volCPATPB">
-                        <materialref ref="matTPB"/>
+                        <materialref ref="TPB"/>
                         <solidref ref="boxCPATPB"/>
                 </volume>
 
@@ -2182,17 +2182,17 @@
 
 		<!-- materials -->
 		<volume name="volFC_IStructure">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="unionFC_I_4"/>
 		</volume>
 	
 		<volume name="volFC_strip_hor">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxFieldCage_strip_hor"/>
 		</volume>
 
 		<volume name="volFC_strip_ver">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxFieldCage_strip_ver"/>
 		</volume>
 
@@ -2320,7 +2320,7 @@
                 <box lunit="cm" name="TaggerWest" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerBottom" x="810" y="990" z="4.0"/>
 
-                <!-- matG10 strips between bottom modules -->
+                <!-- G10  strips between bottom modules -->
                 <box lunit="cm" name="BottomStrip_G10_Y" x="G10strip_Y_width" y="990" z="4.0"/>
                 <box lunit="cm" name="BottomStrip_G10_X" x="810" y="G10strip_X_width" z="4.0"/>
 
@@ -2383,11 +2383,11 @@
                 </volume>
 
                 <!-- ============================= -->
-                <!--     DECLARING matG10 STRIPS      -->
+                <!--     DECLARING G10  STRIPS      -->
                 <!-- ============================= -->
 
                 <volume name="volG10strip_Bottom">
-                        <materialref ref="matG10"/>
+                        <materialref ref="G10 "/>
                         <solidref ref="unionCPA_bottom_final"/>
                 </volume>
 
@@ -2398,7 +2398,7 @@
                 <!-- topHigh and topLow panels -->
                 <!-- begin -->
                         <volume name="volCRTModule_0">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="15" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2408,7 +2408,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_1">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="31" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2418,7 +2418,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_2">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="47" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2428,7 +2428,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_3">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="63" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2438,7 +2438,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_4">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="79" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2448,7 +2448,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_5">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="95" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2458,7 +2458,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_6">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="111" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2468,7 +2468,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_7">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="127" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2478,7 +2478,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_8">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="143" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2488,7 +2488,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_9">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="159" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2498,7 +2498,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_10">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="175" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2508,7 +2508,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_11">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="191" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2518,7 +2518,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_12">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="207" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2528,7 +2528,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_13">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="223" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2538,7 +2538,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_14">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="239" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2548,7 +2548,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_15">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="255" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2558,7 +2558,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_16">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="271" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2568,7 +2568,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_17">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="287" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2578,7 +2578,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_18">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="303" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2588,7 +2588,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_19">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="319" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2598,7 +2598,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_20">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="335" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2608,7 +2608,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_21">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="351" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2618,7 +2618,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_22">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="367" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2628,7 +2628,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_23">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="383" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2638,7 +2638,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_24">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="399" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2648,7 +2648,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_25">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="415" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2658,7 +2658,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_26">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="431" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2668,7 +2668,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_27">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="447" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2678,7 +2678,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_28">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="463" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2688,7 +2688,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_29">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="479" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2698,7 +2698,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_30">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="495" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2708,7 +2708,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_31">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="511" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2718,7 +2718,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_32">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="527" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2728,7 +2728,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_33">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="543" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2738,7 +2738,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_34">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="559" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2748,7 +2748,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_35">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="575" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2758,7 +2758,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_36">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="591" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2768,7 +2768,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_37">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="607" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2778,7 +2778,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_38">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="623" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2788,7 +2788,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_39">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="639" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2802,7 +2802,7 @@
                 <!-- south and north panels -->
                 <!-- begin -->
                         <volume name="volCRTModule_40">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="655" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2812,7 +2812,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_41">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="671" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2822,7 +2822,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_42">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="687" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2832,7 +2832,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_43">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="703" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2842,7 +2842,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_44">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="719" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2852,7 +2852,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_45">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="735" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2862,7 +2862,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_46">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="751" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2872,7 +2872,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_47">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="767" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2882,7 +2882,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_48">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="783" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2892,7 +2892,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_49">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="799" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2902,7 +2902,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_50">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="815" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2912,7 +2912,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_51">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="831" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2922,7 +2922,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_52">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="847" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2932,7 +2932,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_53">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="863" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2942,7 +2942,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_54">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="879" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2952,7 +2952,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_55">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="895" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2962,7 +2962,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_56">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="911" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2972,7 +2972,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_57">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="927" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2982,7 +2982,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_58">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="943" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -2992,7 +2992,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_59">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="959" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3002,7 +3002,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_60">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="975" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3012,7 +3012,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_61">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="991" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3022,7 +3022,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_62">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1007" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3032,7 +3032,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_63">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1023" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3042,7 +3042,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_64">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1039" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3052,7 +3052,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_65">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1055" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3062,7 +3062,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_66">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1071" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3072,7 +3072,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_67">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1087" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3082,7 +3082,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_68">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1103" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3092,7 +3092,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_69">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1119" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3102,7 +3102,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_70">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1135" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3112,7 +3112,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_71">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1151" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3127,7 +3127,7 @@
                 <!-- begin -->
                         <!-- moduleY -->
                         <volume name="volCRTModule_72">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1167" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3137,7 +3137,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_73">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1183" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3147,7 +3147,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_74">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1199" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3157,7 +3157,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_75">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1215" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3167,7 +3167,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_76">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1231" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3177,7 +3177,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_77">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1247" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3187,7 +3187,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_78">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1263" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3197,7 +3197,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_79">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1279" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3209,7 +3209,7 @@
                         
                         <!-- moduleX -->
                         <volume name="volCRTModule_80">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1295" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3219,7 +3219,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_81">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1311" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3229,7 +3229,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_82">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1327" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3239,7 +3239,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_83">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1343" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3249,7 +3249,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_84">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1359" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3259,7 +3259,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_85">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1375" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3269,7 +3269,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_86">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1391" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3279,7 +3279,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_87">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1407" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3289,7 +3289,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_88">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1423" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3299,7 +3299,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_89">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1439" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3314,7 +3314,7 @@
                 <!-- begin -->	
                         <!-- moduleY -->
                         <volume name="volCRTModule_90">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1455" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3324,7 +3324,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_91">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1471" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3334,7 +3334,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_92">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1487" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3344,7 +3344,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_93">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1503" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3354,7 +3354,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_94">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1519" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3364,7 +3364,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_95">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1535" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3374,7 +3374,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_96">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1551" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3384,7 +3384,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_97">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleY"/>
                                 <loop for="CRT_declaring_modules" to="1567" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3396,7 +3396,7 @@
                         
                         <!-- moduleX -->
                         <volume name="volCRTModule_98">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1583" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3406,7 +3406,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_99">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1599" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3416,7 +3416,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_100">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1615" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3426,7 +3426,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_101">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1631" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3436,7 +3436,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_102">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1647" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3446,7 +3446,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_103">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1663" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3456,7 +3456,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_104">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1679" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3466,7 +3466,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_105">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1695" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3476,7 +3476,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_106">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1711" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3486,7 +3486,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_107">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleX"/>
                                 <loop for="CRT_declaring_modules" to="1727" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3500,7 +3500,7 @@
                 <!-- bottom -->
                 <!-- begin -->
                         <volume name="volCRTModule_108">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1743" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3510,7 +3510,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_109">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1759" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3520,7 +3520,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_110">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1775" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3530,7 +3530,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_111">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1791" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3540,7 +3540,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_112">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1807" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3550,7 +3550,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_113">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1823" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3560,7 +3560,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_114">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1839" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3570,7 +3570,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_115">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1855" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3580,7 +3580,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_116">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1871" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3590,7 +3590,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_117">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1887" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3600,7 +3600,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_118">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1903" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3610,7 +3610,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_119">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1919" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3620,7 +3620,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_120">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1935" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3630,7 +3630,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_121">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1951" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3640,7 +3640,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_122">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1967" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3650,7 +3650,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_123">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1983" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3660,7 +3660,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_124">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="1999" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3670,7 +3670,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_125">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="2015" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3680,7 +3680,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_126">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleBERN"/>
                                 <loop for="CRT_declaring_modules" to="2031" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3694,7 +3694,7 @@
                 <!-- begin -->
                         <!-- moduleMINOS -->
                         <volume name="volCRTModule_127">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                 <loop for="CRT_declaring_modules" to="2051" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3704,7 +3704,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_128">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                 <loop for="CRT_declaring_modules" to="2071" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3714,7 +3714,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_129">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                 <loop for="CRT_declaring_modules" to="2091" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3724,7 +3724,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_130">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                 <loop for="CRT_declaring_modules" to="2111" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3734,7 +3734,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_131">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                 <loop for="CRT_declaring_modules" to="2131" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -3744,7 +3744,7 @@
                                 </loop>
                         </volume>
                         <volume name="volCRTModule_132">
-                                <materialref ref="matAluminum"/>
+                                <materialref ref="ALUMINUM_Al "/>
                                 <solidref ref="CRTmoduleMINOS"/>
                                 <loop for="CRT_declaring_modules" to="2151" step="1">
                                         <physvol name="CRTPaddle_CRT_declaring_modules" copynumber="CRT_declaring_modules">
@@ -4066,7 +4066,7 @@
                                 <position name="posCRT_module_132" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleMINOS_l/2)" y="-BERNmodule_DY_small/2-CRTmoduleMINOS_w/4" z="CRTmoduleMINOS_t/2"/>
                         </physvol>     
 
-                        <!-- matG10 strips -->
+                        <!-- G10  strips -->
                         <physvol> 
                                 <volumeref ref="volG10strip_Bottom"/>
                                 <position name="pos_BottomG10strips" unit="cm" x="BERNmodule_DX_middle-G10strip_Y_width/2.0" y="0" z="0"/>
@@ -4110,12 +4110,12 @@
 		</volume>
 
 		<volume name="volWalls_XArapuca">
-			<materialref ref="matG10"/>
+			<materialref ref="G10 "/>
 			<solidref ref="XArapucaExternalWalls"/>
 		</volume>
 
 		<volume name="volCover_XArapuca">
-			<materialref ref="matG10"/>
+			<materialref ref="G10 "/>
 			<solidref ref="XArapucaCover"/>
 		</volume>
 
@@ -4167,7 +4167,7 @@
 		</volume>
 		
 		<volume name="vol_PMT_Back">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="PMT_Back"/>
 		</volume>
 
@@ -4357,7 +4357,7 @@
 	<!-- APA Frame (metal structure) -->
 	<structure> 
 		<volume name="volOneAPAFrame">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="unionAPA"/>
 		</volume>
 	</structure>
@@ -4758,7 +4758,7 @@
 		</volume>   
 
 		<volume name="volCryoLid_Larger">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxCryostatLidSteelLarger"/>
 
 			<physvol>
@@ -4768,7 +4768,7 @@
 		</volume>        
 
 		<volume name="volCryoLid_Smaller">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxCryostatLidSteelSmaller"/>
 
 			<physvol>
@@ -4810,7 +4810,7 @@
 
 	<structure>
 		<volume name="volCryoMembrane">
-			<materialref ref="matStainlessSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidCryoMembrane"/>
 		</volume>        
 	</structure>
@@ -4842,7 +4842,7 @@
 
 		<!-- Vertical Wires Volume -->
 		<volume name="volTPCWireVert">
-			<materialref ref="matCopperBeryllium"/>
+			<materialref ref="Copper_Beryllium_alloy25"/>
 			<solidref ref="solidWireVert"/>
 		</volume>
 
@@ -4873,7 +4873,7 @@
 		<!-- lower channels: 1 ~ 832 -->
 		<loop for ="iWireVolumes_U_1" to="832" step="1"> <!-- #wire -->
 			<volume name="volTPCWire_U_iWireVolumes_U_1">
-				<materialref ref="matCopperBeryllium"/>
+				<materialref ref="Copper_Beryllium_alloy25"/>
 				<solidref ref="solidWire_iWireVolumes_U_1"/>
 			</volume>
 		</loop>
@@ -4881,7 +4881,7 @@
 		<!-- mid channels: 833 ~ 1152 -->
 		<loop for ="iWireVolumes_U_2" to="1152" step="1"> <!-- #wire -->
 			<volume name="volTPCWire_U_iWireVolumes_U_2">
-				<materialref ref="matCopperBeryllium"/>
+				<materialref ref="Copper_Beryllium_alloy25"/>
 				<solidref ref="solidWire"/>
 			</volume>
 		</loop>
@@ -4889,7 +4889,7 @@
 		<!-- higher channels: 1153 ~ 1984 -->
 		<loop for ="iWireVolumes_U_3" to="1984" step="1"> <!-- #wire -->
 			<volume name="volTPCWire_U_iWireVolumes_U_3">
-				<materialref ref="matCopperBeryllium"/>
+				<materialref ref="Copper_Beryllium_alloy25"/>
 				<solidref ref="solidWire_iWireVolumes_U_3"/>
 			</volume>
 		</loop>
@@ -4935,7 +4935,7 @@
 		<!-- lower channels: 1 ~ 832 -->
 		<loop for ="iWireVolumes_V_1" to="832" step="1"> <!-- #wire -->
 			<volume name="volTPCWire_V_iWireVolumes_V_1">
-				<materialref ref="matCopperBeryllium"/>
+				<materialref ref="Copper_Beryllium_alloy25"/>
 				<solidref ref="solidWire_iWireVolumes_V_1"/>
 			</volume>
 		</loop>
@@ -4943,7 +4943,7 @@
 		<!-- mid channels: 833 ~ 1152 -->
 		<loop for ="iWireVolumes_V_2" to="1152" step="1"> <!-- #wire -->
 			<volume name="volTPCWire_V_iWireVolumes_V_2">
-				<materialref ref="matCopperBeryllium"/>
+				<materialref ref="Copper_Beryllium_alloy25"/>
 				<solidref ref="solidWire"/>
 			</volume>
 		</loop>
@@ -4951,7 +4951,7 @@
 		<!-- higher channels: 1153 ~ 1984 -->
 		<loop for ="iWireVolumes_V_3" to="1984" step="1"> <!-- #wire -->
 			<volume name="volTPCWire_V_iWireVolumes_V_3">
-				<materialref ref="matCopperBeryllium"/>
+				<materialref ref="Copper_Beryllium_alloy25"/>
 				<solidref ref="solidWire_iWireVolumes_V_3"/>
 			</volume>
 		</loop>
