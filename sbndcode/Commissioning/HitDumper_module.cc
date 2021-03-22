@@ -42,6 +42,15 @@
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
+// Truth includes
+//#include "larsim/MCCheater/BackTrackerService.h"
+//#include "larsim/MCCheater/ParticleInventoryService.h"
+#include "nusimdata/SimulationBase/GTruth.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
+#include "nusimdata/SimulationBase/MCFlux.h"
+#include "lardataobj/Simulation/SimChannel.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
+
 // ROOT includes
 #include "TTree.h"
 #include "TTimeStamp.h"
@@ -112,6 +121,10 @@ public:
 private:
 
   void ResetVars();
+  /// Resize the data structure for MCNeutrino particles
+  void ResizeMCNeutrino(int nNeutrinos);
+  /// Resize the data strutcure for Genie primaries
+  void ResizeGenie(int nPrimaries);
 
   opdet::sbndPDMapAlg _pd_map;
 
@@ -194,6 +207,51 @@ private:
   double _ophit_opdet_y[kMaxHits];     ///< OpDet Y coordinate of the optical hit
   double _ophit_opdet_z[kMaxHits];     ///< OpDet Z coordinate of the optical hit
 
+  //mctruth information
+  size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
+  Int_t     mcevts_truth;    //number of neutrino Int_teractions in the spill
+  std::vector<Int_t>     nuScatterCode_truth; //Scattering code given by Genie for each neutrino
+  std::vector<Int_t>     nuID_truth;          //Unique ID of each true neutrino
+  std::vector<Int_t>     nuPDG_truth;         //neutrino PDG code
+  std::vector<Int_t>     ccnc_truth;          //0=CC 1=NC
+  std::vector<Int_t>     mode_truth;          //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
+  std::vector<Float_t>   enu_truth;           //true neutrino energy
+  std::vector<Float_t>   Q2_truth;            //Momentum transfer squared
+  std::vector<Float_t>   W_truth;             //hadronic invariant mass
+  std::vector<Int_t>     hitnuc_truth;        //hit nucleon
+  std::vector<Float_t>   nuvtxx_truth;        //neutrino vertex x
+  std::vector<Float_t>   nuvtxy_truth;        //neutrino vertex y
+  std::vector<Float_t>   nuvtxz_truth;        //neutrino vertex z
+  std::vector<Float_t>   nu_dcosx_truth;      //neutrino dcos x
+  std::vector<Float_t>   nu_dcosy_truth;      //neutrino dcos y
+  std::vector<Float_t>   nu_dcosz_truth;      //neutrino dcos z
+  std::vector<Float_t>   lep_mom_truth;       //lepton momentum
+  std::vector<Float_t>   lep_dcosx_truth;     //lepton dcos x
+  std::vector<Float_t>   lep_dcosy_truth;     //lepton dcos y
+  std::vector<Float_t>   lep_dcosz_truth;     //lepton dcos z
+
+  //flux information
+    std::vector<Float_t>  tpx_flux;        //Px of parent particle leaving BNB target
+    std::vector<Float_t>  tpy_flux;        //Py of parent particle leaving BNB target
+    std::vector<Float_t>  tpz_flux;        //Pz of parent particle leaving BNB target
+    std::vector<Int_t>     tptype_flux;     //Type of parent particle leaving BNB target
+
+    //genie information
+    size_t MaxGeniePrimaries = 0;
+    Int_t     genie_no_primaries;
+    std::vector<Int_t>     genie_primaries_pdg;
+    std::vector<Float_t>  genie_Eng;
+    std::vector<Float_t>  genie_Px;
+    std::vector<Float_t>  genie_Py;
+    std::vector<Float_t>  genie_Pz;
+    std::vector<Float_t>  genie_P;
+    std::vector<Int_t>     genie_status_code;
+    std::vector<Float_t>  genie_mass;
+    std::vector<Int_t>     genie_trackID;
+    std::vector<Int_t>     genie_ND;
+    std::vector<Int_t>     genie_mother;
+
+
 
 
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
@@ -203,6 +261,7 @@ private:
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fOpHitsModuleLabel;   ///< Label for OpHit dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
+  std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
 
   // double fSelectedPDG;
 
@@ -214,6 +273,14 @@ private:
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
+  // double fSelectedPDG;
+
+  bool fkeepCRThits;     ///< Keep the CRT hits (to be set via fcl)
+  bool fkeepCRTstrips;   ///< Keep the CRT strips (to be set via fcl)
+  bool fmakeCRTtracks;   ///< Make the CRT tracks (to be set via fcl)
+  bool freadCRTtracks;   ///< Keep the CRT tracks (to be set via fcl)
+  bool freadOpHits;      ///< Add OpHits to output (to be set via fcl)
+  bool freadTruth;       ///< Add Truth info to output (to be set via fcl)
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
@@ -224,6 +291,7 @@ private:
   art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
   const geo::AuxDetGeometry* fAuxDetGeo;
   const geo::AuxDetGeometryCore* fAuxDetGeoCore;
+
 
 };
 
@@ -253,6 +321,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel",   "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabel   = p.get<std::string>("OpHitsModuleLabel");
+  fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
   fkeepCRTstrips     = p.get<bool>("keepCRTstrips",false);
@@ -260,9 +329,13 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
+  freadTruth         = p.get<bool>("readTruth",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
+
   fWindow            = p.get<int>("window",100);
   fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
+
+  fKeepTaggerTypes = p.get<std::vector<int>>("KeepTaggerTypes");
 }
 
 
@@ -723,6 +796,136 @@ void Hitdumper::analyze(const art::Event& evt)
       } //end loop over hits
     }// end loop over waveforms
   }// end if fCheckTrasparency
+  if (freadTruth){
+
+    int nGeniePrimaries = 0, nMCNeutrinos = 0;
+    art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
+    std::vector<art::Ptr<simb::MCTruth> > mclist;
+    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle)){
+      art::fill_ptr_vector(mclist, mctruthListHandle);
+    }else {
+      std::cout << "Failed to get Genie data product." << std::endl;
+    }
+
+    art::Ptr<simb::MCTruth> mctruth;
+
+      if (!mclist.empty()) {//at least one mc record
+
+        mctruth = mclist[0];
+
+        if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
+
+    } // if have MC truth
+      MF_LOG_DEBUG("HitDumper") << "Expected " << nGeniePrimaries << " GENIE particles";
+
+    //Initially call the number of neutrinos to be stored the number of MCTruth objects.  This is not strictly true i.e. BNB + cosmic overlay but we will count the number of neutrinos later
+    nMCNeutrinos = mclist.size();
+
+    ResizeGenie(nGeniePrimaries);
+    ResizeMCNeutrino(nMCNeutrinos);
+
+    mcevts_truth = mclist.size();
+    //Brailsford 2017/10/16
+    //Issue 17917
+    //To keep a 1:1 between neutrinos and 'flux' we need the assns
+    art::FindManyP<simb::MCFlux> fmFluxNeutrino(mctruthListHandle, evt, fGenieGenModuleLabel);
+    // Get GTruth information for scattering code
+    art::FindManyP< simb::GTruth > fmgt( mctruthListHandle, evt, fGenieGenModuleLabel );
+
+    if (mcevts_truth > 0){//at least one mc record
+
+      //Brailsford 2017/10/16
+      //Issue 17917
+      //Loop over every truth in the spill rather than just looking at the first one.
+      //Because MCTruth could be a neutrino OR something else (e.g. cosmics) we are going to have to count up how many neutrinos there are
+      mcevts_truth = 0;
+      for (unsigned int i_mctruth = 0; i_mctruth < mclist.size(); i_mctruth++){
+        //fetch an mctruth
+        art::Ptr<simb::MCTruth> curr_mctruth = mclist[i_mctruth];
+        //Check if it's a neutrino
+        if (!curr_mctruth->NeutrinoSet()) continue;
+
+        // Genie Truth association only for the neutrino
+        if (fmgt.size()>i_mctruth){
+        std::vector< art::Ptr<simb::GTruth> > mcgtAssn = fmgt.at(i_mctruth);
+
+        nuScatterCode_truth[i_mctruth] = mcgtAssn[0]->fGscatter;
+      }else{
+        nuScatterCode_truth[i_mctruth] = -1.;
+      }
+
+        nuPDG_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().PdgCode();
+        ccnc_truth[i_mctruth] = curr_mctruth->GetNeutrino().CCNC();
+        mode_truth[i_mctruth] = curr_mctruth->GetNeutrino().Mode();
+        Q2_truth[i_mctruth] = curr_mctruth->GetNeutrino().QSqr();
+        W_truth[i_mctruth] = curr_mctruth->GetNeutrino().W();
+        hitnuc_truth[i_mctruth] = curr_mctruth->GetNeutrino().HitNuc();
+        enu_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().E();
+        nuvtxx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vx();
+        nuvtxy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vy();
+        nuvtxz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vz();
+        if (curr_mctruth->GetNeutrino().Nu().P()){
+          nu_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Px()/curr_mctruth->GetNeutrino().Nu().P();
+          nu_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Py()/curr_mctruth->GetNeutrino().Nu().P();
+          nu_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Pz()/curr_mctruth->GetNeutrino().Nu().P();
+        }
+        lep_mom_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().P();
+        if (curr_mctruth->GetNeutrino().Lepton().P()){
+          lep_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Px()/curr_mctruth->GetNeutrino().Lepton().P();
+          lep_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Py()/curr_mctruth->GetNeutrino().Lepton().P();
+          lep_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Pz()/curr_mctruth->GetNeutrino().Lepton().P();
+        }
+        //Brailsford
+        //2017/10/17
+        //Issue 12918
+        //Use the art::Ptr key as the neutrino's unique ID
+        nuID_truth[i_mctruth] = curr_mctruth.key();
+        //We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
+        if (fmFluxNeutrino.isValid()){
+          if (fmFluxNeutrino.at(0).size()>i_mctruth){
+          art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(0).at(i_mctruth);
+          tpx_flux[i_mctruth] = curr_mcflux->ftpx;
+          tpy_flux[i_mctruth] = curr_mcflux->ftpy;
+          tpz_flux[i_mctruth] = curr_mcflux->ftpz;
+          tptype_flux[i_mctruth] = curr_mcflux->ftptype;
+          }
+        }
+
+        //Let's increase the neutrino count
+        mcevts_truth++;
+      }
+
+      if (mctruth->NeutrinoSet()){
+        //genie particles information
+        genie_no_primaries = mctruth->NParticles();
+
+        size_t StoreParticles = std::min((size_t) genie_no_primaries, MaxGeniePrimaries);
+        if (genie_no_primaries > (int) StoreParticles) {
+          // got this error? it might be a bug,
+          // since the structure should have enough room for everything
+          mf::LogError("HitDumper") << "event has "
+            << genie_no_primaries << " MC particles, only "
+            << StoreParticles << " stored in tree";
+        }
+        for(size_t iPart = 0; iPart < StoreParticles; ++iPart){
+          const simb::MCParticle& part(mctruth->GetParticle(iPart));
+          genie_primaries_pdg[iPart]=part.PdgCode();
+          genie_Eng[iPart]=part.E();
+          genie_Px[iPart]=part.Px();
+          genie_Py[iPart]=part.Py();
+          genie_Pz[iPart]=part.Pz();
+          genie_P[iPart]=part.P();
+          genie_status_code[iPart]=part.StatusCode();
+          genie_mass[iPart]=part.Mass();
+          genie_trackID[iPart]=part.TrackId();
+          genie_ND[iPart]=part.NumberDaughters();
+          genie_mother[iPart]=part.Mother();
+        } // for particle
+      } //if neutrino set
+    }//if (mcevts_truth)
+  }//if (fReadTruth){
+
+
 
   fTree->Fill();
 
@@ -814,6 +1017,47 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opdet_x",_ophit_opdet_x,"ophit_opdet_x[nophits]/D");
     fTree->Branch("ophit_opdet_y",_ophit_opdet_y,"ophit_opdet_y[nophits]/D");
     fTree->Branch("ophit_opdet_z",_ophit_opdet_z,"ophit_opdet_z[nophits]/D");
+  }
+
+  if (freadTruth) {
+    fTree->Branch("mcevts_truth",&mcevts_truth,"mcevts_truth/I");
+    fTree->Branch("nuScatterCode_truth",&nuScatterCode_truth);
+    fTree->Branch("nuID_truth",&nuID_truth);
+    fTree->Branch("nuPDG_truth",&nuPDG_truth);
+    fTree->Branch("ccnc_truth",&ccnc_truth);
+    fTree->Branch("mode_truth",&mode_truth);
+    fTree->Branch("enu_truth",&enu_truth);
+    fTree->Branch("Q2_truth",&Q2_truth);
+    fTree->Branch("W_truth",&W_truth);
+    fTree->Branch("hitnuc_truth",&hitnuc_truth);
+    fTree->Branch("nuvtxx_truth",&nuvtxx_truth);
+    fTree->Branch("nuvtxy_truth",&nuvtxy_truth);
+    fTree->Branch("nuvtxz_truth",&nuvtxz_truth);
+    fTree->Branch("nu_dcosx_truth",&nu_dcosx_truth);
+    fTree->Branch("nu_dcosy_truth",&nu_dcosy_truth);
+    fTree->Branch("nu_dcosz_truth",&nu_dcosz_truth);
+    fTree->Branch("lep_mom_truth",&lep_mom_truth);
+    fTree->Branch("lep_dcosx_truth",&lep_dcosx_truth);
+    fTree->Branch("lep_dcosy_truth",&lep_dcosy_truth);
+    fTree->Branch("lep_dcosz_truth",&lep_dcosz_truth);
+
+    fTree->Branch("tpx_flux",&tpx_flux);
+    fTree->Branch("tpy_flux",&tpy_flux);
+    fTree->Branch("tpz_flux",&tpz_flux);
+    fTree->Branch("tptype_flux",&tptype_flux);
+
+    fTree->Branch("genie_no_primaries",&genie_no_primaries);
+    fTree->Branch("genie_primaries_pdg",&genie_primaries_pdg);
+    fTree->Branch("genie_Eng",&genie_Eng);
+    fTree->Branch("genie_Px",&genie_Px);
+    fTree->Branch("genie_Py",&genie_Py);
+    fTree->Branch("genie_Pz",&genie_Pz);
+    fTree->Branch("genie_P",&genie_P);
+    fTree->Branch("genie_status_code",&genie_status_code);
+    fTree->Branch("genie_mass",&genie_mass);
+    fTree->Branch("genie_trackID",&genie_trackID);
+    fTree->Branch("genie_ND",&genie_ND);
+    fTree->Branch("genie_mother",&genie_mother);
   }
 
 }
@@ -910,7 +1154,86 @@ void Hitdumper::ResetVars(){
     _ophit_opdet_z[i] = -9999.;
   }
 
+  mcevts_truth = 0;
+  nuScatterCode_truth.clear();
+  nuID_truth.clear();
+  nuPDG_truth.clear();
+  ccnc_truth.clear();
+  mode_truth.clear();
+  enu_truth.clear();
+  Q2_truth.clear();
+  W_truth.clear();
+  hitnuc_truth.clear();
+  nuvtxx_truth.clear();
+  nuvtxy_truth.clear();
+  nuvtxz_truth.clear();
+  nu_dcosx_truth.clear();
+  nu_dcosy_truth.clear();
+  nu_dcosz_truth.clear();
+  lep_mom_truth.clear();
+  lep_dcosx_truth.clear();
+  lep_dcosy_truth.clear();
+  lep_dcosz_truth.clear();
+  tpx_flux.clear();
+  tpy_flux.clear();
+  tpz_flux.clear();
+  tptype_flux.clear();
+
+  genie_no_primaries = 0;
+
 }
+
+void Hitdumper::ResizeMCNeutrino(int nNeutrinos){
+
+  //min size is 1, to guarantee an address
+  MaxMCNeutrinos = (size_t) std::max(nNeutrinos, 1);
+  nuScatterCode_truth.resize(MaxMCNeutrinos);
+  nuID_truth.resize(MaxMCNeutrinos);
+  nuPDG_truth.resize(MaxMCNeutrinos);
+  ccnc_truth.resize(MaxMCNeutrinos);
+  mode_truth.resize(MaxMCNeutrinos);
+  enu_truth.resize(MaxMCNeutrinos);
+  Q2_truth.resize(MaxMCNeutrinos);
+  W_truth.resize(MaxMCNeutrinos);
+  hitnuc_truth.resize(MaxMCNeutrinos);
+  nuvtxx_truth.resize(MaxMCNeutrinos);
+  nuvtxy_truth.resize(MaxMCNeutrinos);
+  nuvtxz_truth.resize(MaxMCNeutrinos);
+  nu_dcosx_truth.resize(MaxMCNeutrinos);
+  nu_dcosy_truth.resize(MaxMCNeutrinos);
+  nu_dcosz_truth.resize(MaxMCNeutrinos);
+  lep_mom_truth.resize(MaxMCNeutrinos);
+  lep_dcosx_truth.resize(MaxMCNeutrinos);
+  lep_dcosy_truth.resize(MaxMCNeutrinos);
+  lep_dcosz_truth.resize(MaxMCNeutrinos);
+  //Also resize the flux information here as it's a 1:1 with the MCNeutrino
+  tpx_flux.resize(MaxMCNeutrinos);
+  tpy_flux.resize(MaxMCNeutrinos);
+  tpz_flux.resize(MaxMCNeutrinos);
+  tptype_flux.resize(MaxMCNeutrinos);
+
+  return;
+} // sbnd::AnalysisTreeDataStruct::ResizeMCNeutrino()
+
+void Hitdumper::ResizeGenie(int nPrimaries) {
+
+  // minimum size is 1, so that we always have an address
+  MaxGeniePrimaries = (size_t) std::max(nPrimaries, 1);
+  genie_primaries_pdg.resize(MaxGeniePrimaries);
+  genie_Eng.resize(MaxGeniePrimaries);
+  genie_Px.resize(MaxGeniePrimaries);
+  genie_Py.resize(MaxGeniePrimaries);
+  genie_Pz.resize(MaxGeniePrimaries);
+  genie_P.resize(MaxGeniePrimaries);
+  genie_status_code.resize(MaxGeniePrimaries);
+  genie_mass.resize(MaxGeniePrimaries);
+  genie_trackID.resize(MaxGeniePrimaries);
+  genie_ND.resize(MaxGeniePrimaries);
+  genie_mother.resize(MaxGeniePrimaries);
+
+} // sbnd::AnalysisTreeDataStruct::ResizeGenie()
+
+
 
 DEFINE_ART_MODULE(Hitdumper)
 
