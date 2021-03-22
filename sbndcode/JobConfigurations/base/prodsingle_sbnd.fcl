@@ -108,3 +108,9 @@ outputs:
 # at the end of the configuration, we can override single parameters to reflect our needs:
 #
 physics.producers.generator.Theta0XZ: [ 10 ]
+
+# No beam here, so set reference time to 0 (these settings will be inherited by subsequent stages)
+services.DetectorClocksService.G4RefTime: 0
+services.DetectorClocksService.DefaultTrigTime: 0
+services.DetectorClocksService.DefaultBeamTime: 0
+
