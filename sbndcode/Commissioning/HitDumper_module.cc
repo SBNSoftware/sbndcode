@@ -9,15 +9,15 @@
 
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
-#include "art/Framework/Core/ModuleMacros.h" 
-#include "art/Framework/Principal/Event.h" 
-#include "fhiclcpp/ParameterSet.h" 
-#include "art/Framework/Principal/Handle.h" 
-#include "canvas/Persistency/Common/Ptr.h" 
-#include "canvas/Persistency/Common/PtrVector.h" 
-#include "art/Framework/Services/Registry/ServiceHandle.h" 
+#include "art/Framework/Core/ModuleMacros.h"
+#include "art/Framework/Principal/Event.h"
+#include "fhiclcpp/ParameterSet.h"
+#include "art/Framework/Principal/Handle.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
-#include "messagefacility/MessageLogger/MessageLogger.h" 
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
@@ -77,7 +77,7 @@ enum CRTPos {
   kSideRight,         ///< SideRight
   kTopLow,            ///< TopLow
   kTopHigh,           ///< TopHigh
-  kCRTPosMax 
+  kCRTPosMax
 };
 
 enum CRTOrientation {
@@ -106,8 +106,8 @@ public:
   // interactive event display.
   void reconfigure(fhicl::ParameterSet const& pset);
 
-  // The analysis routine, called once per event. 
-  void analyze (const art::Event& evt); 
+  // The analysis routine, called once per event.
+  void analyze (const art::Event& evt);
 
 private:
 
@@ -163,7 +163,7 @@ private:
   double _ctrk_t2[kMaxNCtrks];         ///< CRT track t2
   double _ctrk_adc2[kMaxNCtrks];       ///< CRT track adc2
   int _ctrk_mod2x[kMaxNCtrks];         ///< CRT track mod2x
-  
+
   int _nchits;                         ///< Number of CRT hits
   double _chit_x[kMaxCHits];           ///< CRT hit x
   double _chit_y[kMaxCHits];           ///< CRT hit y
@@ -316,7 +316,7 @@ void Hitdumper::analyze(const art::Event& evt)
     _hit_ph[i]          = hitlist[i]->PeakAmplitude();
     _hit_width[i]       = hitlist[i]->RMS();
   }
-  
+
   //
   // CRT strips
   //
@@ -331,10 +331,10 @@ void Hitdumper::analyze(const art::Event& evt)
   } else {
     std::cout << "Failed to get sbnd::crt::CRTData data product." << std::endl;
   }
-  
+
   int ns = 0;
   if (_nstr > kMaxCHits) _nstr = kMaxCHits;
-  // strips are always in pairs, one entry for each sipm (2 sipms per strip) 
+  // strips are always in pairs, one entry for each sipm (2 sipms per strip)
   for (int i = 0; i < _nstr; i += 2){
     uint32_t chan = striplist[i]->Channel();
 
@@ -418,7 +418,7 @@ void Hitdumper::analyze(const art::Event& evt)
           }
           else if (_crt_orient[i]==kCRTHorizontal && _crt_adc[i]>500) { // < 500 hardcoded
             if (nh1y==0 || (_crt_module[i]==plane1ym)) {
-              nh1y++; 
+              nh1y++;
               if (_crt_adc[i]>adc1y) {
                 plane1ty=_crt_time[i];
                 adc1y+=_crt_adc[i];
@@ -430,10 +430,10 @@ void Hitdumper::analyze(const art::Event& evt)
         }
         else {
           if (_crt_orient[i]==kCRTVertical && _crt_adc[i]>500) { // < 500 hardcoded
-            if (nh2x==0 ||  (_crt_module[i]==plane2xm)) { 
-              nh2x++;	  
+            if (nh2x==0 ||  (_crt_module[i]==plane2xm)) {
+              nh2x++;
               if (_crt_adc[i]>adc2x) {
-                plane2tx=_crt_time[i]; 
+                plane2tx=_crt_time[i];
                 adc2x+=_crt_adc[i];
                 plane2x=_crt_pos[i];
                 plane2xm=_crt_module[i];
@@ -442,7 +442,7 @@ void Hitdumper::analyze(const art::Event& evt)
           }
           else if (_crt_orient[i]==kCRTHorizontal && _crt_adc[i]>500) { // < 500 hardcoded
             if (nh2y==0 ||  (_crt_module[i]==plane2ym)) {
-              nh2y++; 
+              nh2y++;
               if (_crt_adc[i]>adc2y) {
                 plane2ty=_crt_time[i];
                 adc2y+=_crt_adc[i];
@@ -459,7 +459,7 @@ void Hitdumper::analyze(const art::Event& evt)
             if (_crt_plane[j]==kFaceFront) {
               if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
                 if (nh1x==0 ||  (_crt_module[j]==plane1xm)) {
-                  nh1x++;	  
+                  nh1x++;
                   if (_crt_adc[j]>adc1x) {
                     plane1tx=_crt_time[j];
                     adc1x+=_crt_adc[j];
@@ -470,7 +470,7 @@ void Hitdumper::analyze(const art::Event& evt)
               }
               else if (_crt_orient[j]==kCRTHorizontal && _crt_adc[j]>1000) {
                 if (nh1y==0 ||  (_crt_module[j]==plane1ym)) {
-                  nh1y++; 
+                  nh1y++;
                   if (_crt_adc[j]>adc1y) {
                     plane1ty=_crt_time[j];
                     adc1y+=_crt_adc[j];
@@ -483,7 +483,7 @@ void Hitdumper::analyze(const art::Event& evt)
             else {
               if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
                 if (nh2x==0 ||  (_crt_module[j]==plane2xm)) {
-                  nh2x++;	  
+                  nh2x++;
                   if (_crt_adc[j]>adc2x) {
                     plane2tx=_crt_time[j];
                     adc2x+=_crt_adc[j];
@@ -494,7 +494,7 @@ void Hitdumper::analyze(const art::Event& evt)
               }
               else if (_crt_orient[j]==kCRTHorizontal && _crt_adc[j]>1000) {
                 if (nh2y==0 ||  (_crt_module[j]==plane2ym)) {
-                  nh2y++; 
+                  nh2y++;
                   if (_crt_adc[j]>adc2y) {
                     plane2ty=_crt_time[j];
                     adc2y+=_crt_adc[j];
@@ -506,7 +506,7 @@ void Hitdumper::analyze(const art::Event& evt)
             }
           }
 	      } // look for hits at the same time as hit i
-	      if (nh1x>0 && nh1y>0 && nh2x>0 && nh2y>0 && adc1x<9000 && adc1y<9000 && adc2x<9000 && adc2y<9000) { 
+	      if (nh1x>0 && nh1y>0 && nh2x>0 && nh2y>0 && adc1x<9000 && adc1y<9000 && adc2x<9000 && adc2y<9000) {
 	      // make a track!
           _ctrk_x1[ntr]=plane1x;
           _ctrk_y1[ntr]=plane1y;
@@ -522,13 +522,13 @@ void Hitdumper::analyze(const art::Event& evt)
           _ctrk_mod2x[ntr]=plane2xm;
           ntr++;
 	        // std::cout << "track " << ntr << std::endl;
-	        // std::cout <<  "x y t adc: plane 1 " << plane1x << " " << plane1y << " " << 
+	        // std::cout <<  "x y t adc: plane 1 " << plane1x << " " << plane1y << " " <<
 	        //   0.5*(plane1tx+plane1ty) << " " << adc1x << " " << adc1y << std::endl;
-	        // std::cout <<  "         : plane 2 " << plane2x << " " << plane2y << " " << 
+	        // std::cout <<  "         : plane 2 " << plane2x << " " << plane2y << " " <<
 	        //   0.5*(plane2tx+plane2ty) << " " << adc2x << " " << adc2y << std::endl;
         }
       } // i is the first hit with this time
-    } // loop over hits      
+    } // loop over hits
     _nctrks = ntr;
   }  // end if make tracks
 
@@ -567,7 +567,7 @@ void Hitdumper::analyze(const art::Event& evt)
       else {
         mf::LogWarning("HitDumper") << "Cannot identify tagger of type " << chitlist[i]->tagger << std::endl;
       }
-             
+
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
       if (chitlist[i]->ts1_ns > MAX_INT) {
         _chit_time[i] = 0.001 * (chitlist[i]->ts1_ns - TIME_CORRECTION);
@@ -653,7 +653,7 @@ void Hitdumper::analyze(const art::Event& evt)
   if (fcheckTransparency) {
 
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
-    
+
     bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
     if(retVal == true) {
       mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
@@ -667,18 +667,18 @@ void Hitdumper::analyze(const art::Event& evt)
 
     // loop over waveforms
     for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
-      
+
       //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
       art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
       int channel   = digitVec->Channel();
       auto fDataSize = digitVec->Samples();
       std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
       rawadc.resize(fDataSize);
-      
+
       // see if there is a hit on this channel
       for (int ihit = 0; ihit < _nhits; ++ihit) {
-        if (_hit_channel[ihit] == channel) {        
-          
+        if (_hit_channel[ihit] == channel) {
+
           int pedestal = (int)digitVec->GetPedestal();
           //UNCOMPRESS THE DATA.
           if (fUncompressWithPed) {
@@ -687,7 +687,7 @@ void Hitdumper::analyze(const art::Event& evt)
           else {
             raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
           }
-          
+
           unsigned int bin = _hit_peakT[ihit];
           unsigned int low_edge,high_edge;
           if((int)bin > fWindow and _hit_plane[ihit] == 0) {
@@ -709,7 +709,7 @@ void Hitdumper::analyze(const art::Event& evt)
           for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
             _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
             counter_for_adc_in_waveform++;
-            _waveform_number[adc_counter] = waveform_number_tracker; 
+            _waveform_number[adc_counter] = waveform_number_tracker;
             _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
             _time_for_waveform[adc_counter] = ibin;
             //std::cout << "DUMP: " << _waveform_number[adc_counter] << " " << _adc_count << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<ibin << " " << (rawadc[ibin]-pedestal) << " " << _time_for_waveform[adc_counter] << " " << _adc_on_wire[adc_counter] << std::endl;
@@ -717,7 +717,7 @@ void Hitdumper::analyze(const art::Event& evt)
             _waveform_integral[adc_counter] = integral;
             adc_counter++;
           }
-          std::cout << "DUMP SUM: " << _hit_tpc[ihit] << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<  integral << " " << waveform_number_tracker << std::endl; 
+          std::cout << "DUMP SUM: " << _hit_tpc[ihit] << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<  integral << " " << waveform_number_tracker << std::endl;
           _hit_full_integral[ihit] = integral;
         } // if hit channel matches waveform channel
       } //end loop over hits
@@ -788,7 +788,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("chit_y",_chit_y,"chit_y[nchits]/D");
     fTree->Branch("chit_z",_chit_z,"chit_z[nchits]/D");
     fTree->Branch("chit_time",_chit_time,"chit_time[nchits]/D");
-    fTree->Branch("chit_plane",_chit_plane,"chit_plane[nchits]/I");    
+    fTree->Branch("chit_plane",_chit_plane,"chit_plane[nchits]/I");
   }
   if (freadCRTtracks) {
     fTree->Branch("ncts",&_ncts,"ncts/I");
@@ -815,7 +815,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opdet_y",_ophit_opdet_y,"ophit_opdet_y[nophits]/D");
     fTree->Branch("ophit_opdet_z",_ophit_opdet_z,"ophit_opdet_z[nophits]/D");
   }
-  
+
 }
 
 void Hitdumper::ResetVars(){
@@ -857,7 +857,7 @@ void Hitdumper::ResetVars(){
     _crt_adc[i]=-999999.;
     _crt_pos[i]=-999999.;
   }
-  
+
   _nctrks=0;
   for (int i = 0; i < kMaxNCtrks; ++i) {
     _ctrk_x1[i]=-9999.;
@@ -909,7 +909,7 @@ void Hitdumper::ResetVars(){
     _ophit_opdet_y[i] = -9999.;
     _ophit_opdet_z[i] = -9999.;
   }
-  
+
 }
 
 DEFINE_ART_MODULE(Hitdumper)
