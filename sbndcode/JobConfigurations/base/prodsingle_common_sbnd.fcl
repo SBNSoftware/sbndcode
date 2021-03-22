@@ -90,7 +90,7 @@ outputs:
 physics.producers.generator.X0: [ 0.0 ]
 physics.producers.generator.Y0: [ 0.0 ]
 physics.producers.generator.Z0: [ -42. ]
-physics.producers.generator.T0: [ 1700 ]
+physics.producers.generator.T0: [ 0 ]
 physics.producers.generator.SigmaX: [ 5.0 ]      # x = (0, 256)
 physics.producers.generator.SigmaY: [ 5.5 ]      # y = (-116.5, 116.5)
 physics.producers.generator.SigmaZ: [ 0 ]      # z = (0, 1037)
@@ -100,3 +100,8 @@ physics.producers.generator.Theta0XZ: [ 0. ]       # y-azimuth
 physics.producers.generator.Theta0YZ: [ 0. ]       # y-latitude
 physics.producers.generator.SigmaThetaXZ: [ 10. ] # Quasi-isotropic
 physics.producers.generator.SigmaThetaYZ: [ 10. ]
+
+# No beam here, so set reference time to 0 (these settings will be inherited by subsequent stages)
+services.DetectorClocksService.G4RefTime: 0
+services.DetectorClocksService.DefaultTrigTime: 0
+services.DetectorClocksService.DefaultBeamTime: 0
