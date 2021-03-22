@@ -1,13 +1,12 @@
 # Save 0.65ms (~50% drift) of readout pre/post main drift window.
-
-services.DetectorPropertiesService.NumberTimeSamples: 5200
-services.DetectorPropertiesService.ReadOutWindowSize: 5200
-services.DetectorClocksService.TriggerOffsetTPC: -0.65e3 # [us]
-
+#
 # Settings assuming generation and G4 stages were run in the full 
 # 3-drift configuration (special case only -- by default, we should 
 # be simulating shorter period to match up with a 15% porch)
-services.DetectorClocksService.G4RefTime:      -2.8e3 # [us]
-services.DetectorClocksService.DefaultTrigTime:	2.8e3 # [us]
-services.DetectorClocksService.DefaultBeamTime: 2.8e3 # [us]
+#
 
+#include "3drift_services_sbnd.fcl"
+services.DetectorClocksService.InheritClockConfig: false
+services.DetectorPropertiesService.NumberTimeSamples: 5200
+services.DetectorPropertiesService.ReadOutWindowSize: 5200
+services.DetectorClocksService.TriggerOffsetTPC: -0.65e3 # [us]
