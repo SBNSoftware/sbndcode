@@ -261,18 +261,22 @@ private:
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fOpHitsModuleLabel;   ///< Label for OpHit dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
+  std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
+
+  // double fSelectedPDG;
+
+  bool fkeepCRThits;       ///< Keep the CRT hits (to be set via fcl)
+  bool fkeepCRTstrips;     ///< Keep the CRT strips (to be set via fcl)
+  bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
+  bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
+  bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
+  bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
+
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
   // double fSelectedPDG;
-
-  bool fkeepCRThits;     ///< Keep the CRT hits (to be set via fcl)
-  bool fkeepCRTstrips;   ///< Keep the CRT strips (to be set via fcl)
-  bool fmakeCRTtracks;   ///< Make the CRT tracks (to be set via fcl)
-  bool freadCRTtracks;   ///< Keep the CRT tracks (to be set via fcl)
-  bool freadOpHits;      ///< Add OpHits to output (to be set via fcl)
-  bool freadTruth;       ///< Add Truth info to output (to be set via fcl)
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
@@ -627,12 +631,9 @@ void Hitdumper::analyze(const art::Event& evt)
       else if (chitlist[i]->tagger=="volTaggerTopLow_0")    ip = kTopLow;
       else if (chitlist[i]->tagger=="volTaggerTopHigh_0")   ip = kTopHigh;
       else if (chitlist[i]->tagger=="volTaggerBot_0")       ip = kBot;
-<<<<<<< HEAD:sbndcode/Commissioning/HitDumper_module.cc
       else {
         mf::LogWarning("HitDumper") << "Cannot identify tagger of type " << chitlist[i]->tagger << std::endl;
       }
-=======
->>>>>>> 6ddc3c46... added some truth information to hitdumper:sbndcode/AnalysisTree/HitDumper_module.cc
 
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
       if (chitlist[i]->ts1_ns > MAX_INT) {
