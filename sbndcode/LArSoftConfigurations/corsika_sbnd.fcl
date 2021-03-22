@@ -30,23 +30,20 @@
 # 20160817 (petrillo@fnal.gov) [v1.1]
 #   restyling (added comments)
 #
-
 #
 # inherited configuration
 #
-
 #include "CORSIKAGen.fcl"
-
-
+#include "cosmic_common_sbnd.fcl"
 BEGIN_PROLOG
 
 # Common settings related to detector readout
-sbnd_corsika_common: {
-  SampleTime:       3.2e-3  #  0.2 ms (G4 rise time) + 1.3 ms (1 full drift window) + 1.7 ms (readout) @ 500 V/cm, 154.4 cm/ms
-  TimeOffset:      -1.7e-3  # -0.2 ms (G4 rise time) - 1.3 ms (1 full drift window) - 0.2 ms (front porch)
-  BufferBox:        [ -300.0, +300.0, -300.0, +300.0, -300.0, +300.0 ]  # [ cm ]
-  ProjectToHeight:  1800 # height to which particles are projected
-}
+#sbnd_corsika_common: {
+#  SampleTime:       3.2e-3  #  0.2 ms (G4 rise time) + 1.3 ms (1 full drift window) + 1.7 ms (readout) @ 500 V/cm, 154.4 cm/ms
+#  TimeOffset:      -1.7e-3  # -0.2 ms (G4 rise time) - 1.3 ms (1 full drift window) - 0.2 ms (front porch)
+#  BufferBox:        [ -300.0, +300.0, -300.0, +300.0, -300.0, +300.0 ]  # [ cm ]
+#  ProjectToHeight:  1800 # height to which particles are projected
+#}
 
 #
 # sbnd_corsika_p
@@ -55,7 +52,7 @@ sbnd_corsika_common: {
 #
 sbnd_corsika_p: {
 		    @table::standard_CORSIKAGen_protons  # from CORSIKAGen.fcl
-		    @table::sbnd_corsika_common
+		    @table::sbnd_cosmic_common
   
   # use the shared copy of CORSIKA database files
   ShowerInputFiles: [
@@ -74,7 +71,7 @@ sbnd_corsika_p: {
 sbnd_corsika_cmc: {
   
                     @table::standard_CORSIKAGen_CMC  # from CORSIKAGen.fcl
-		    @table::sbnd_corsika_common
+		    @table::sbnd_cosmic_common
   
   # use the shared copy of CORSIKA database files
   ShowerInputFiles: [

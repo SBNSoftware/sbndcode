@@ -119,3 +119,7 @@ outputs:
 #
 physics.producers.generator.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
 
+# Ensure the clock settings related to G4 reference time and beam/trigger time match
+# up with the time frame used in the cosmic generation, so later stages can inherit
+# this configuration.
+#include "cosmic_clock_services_sbnd.fcl"

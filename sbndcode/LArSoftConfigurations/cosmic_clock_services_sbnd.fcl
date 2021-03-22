@@ -1,0 +1,7 @@
+# In order for the clock inheritance to work, we impose clock settings at the gen level (even though 
+# they aren't used here). This should match up with the offset used in the cosmic generator, defined
+# in cosmic_common_sbnd.fcl.
+services.DetectorClocksService: @local::sbnd_detectorclocks
+services.DetectorClocksService.G4RefTime: -1.7e3
+services.DetectorClocksService.DefaultBeamTime: 1.7e3
+services.DetectorClocksService.DefaultTrigTime: 1.7e3
