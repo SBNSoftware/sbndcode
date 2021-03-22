@@ -13,7 +13,6 @@ set( sbnd_util_lib_list lardata_Utilities_LArFFT_service
                           ${ART_FRAMEWORK_SERVICES_BASIC}
                           ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
                           ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-                          ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}
                           art_Framework_Services_System_TriggerNamesService_service
                           art_Utilities
                           canvas
@@ -31,16 +30,7 @@ simple_plugin( SignalShapingServiceT1053  "service"
 simple_plugin( SignalShapingServiceSBND  "service"
                ${sbnd_util_lib_list}
         )
-             
-simple_plugin( FileCatalogMetadataSBND  "service"
-               ${sbnd_util_lib_list}
-        )
 
-simple_plugin( TFileMetadataSBND "service"
-               ${sbnd_util_lib_list}
-               art_Framework_IO
-               art_Framework_IO_detail
-        )
 install_headers()
 install_fhicl()
 install_source()
