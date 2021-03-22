@@ -32,6 +32,10 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
+#include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RawData/raw.h"
+
+// SBN/SBND includes
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
@@ -129,6 +133,13 @@ private:
   double _hit_charge[kMaxHits];        ///< Hit charge
   double _hit_ph[kMaxHits];            ///< Hit ph?
   double _hit_width[kMaxHits];         ///< Hit width
+  double _hit_full_integral[kMaxHits]; ///< Hit charge integral
+  int    _waveform_number[kMaxHits*5001];   ///< Number for each waveform, to allow for searching
+  double _adc_on_wire[kMaxHits*5001];       ///< ADC on wire to draw waveform
+  int    _time_for_waveform[kMaxHits*5001]; ///<Time for waveform to plot
+  int    _adc_count;    ///<Used for plotting waveforms
+  int    _waveform_integral[kMaxHits*5001]; ///<Used to see progression of the waveform integral
+  int    _adc_count_in_waveform[kMaxHits*5001]; ///<Used to view all waveforms on a hitplane together
 
   int _nstrips;                        ///< Number of CRT strips
   int _crt_plane[kMaxCHits];           ///< CRT plane
@@ -183,6 +194,10 @@ private:
   double _ophit_opdet_y[kMaxHits];     ///< OpDet Y coordinate of the optical hit
   double _ophit_opdet_z[kMaxHits];     ///< OpDet Z coordinate of the optical hit
 
+  // 2020June adding access to raw waveforms 
+  std::string fDigitModuleLabel;          
+  bool fUncompressWithPed;
+  int fWindow;
 
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
   std::string fLArG4ModuleLabel;    ///< Label for LArG4 dataproduct (to be set via fcl)
@@ -191,6 +206,9 @@ private:
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fOpHitsModuleLabel;   ///< Label for OpHit dataproduct (to be set via fcl)
   // double fSelectedPDG;
+
+  // 2020June adding access to raw waveforms 
+  bool fcheckTransparency;
 
   bool fkeepCRThits;     ///< Keep the CRT hits (to be set via fcl)
   bool fkeepCRTstrips;   ///< Keep the CRT strips (to be set via fcl)
@@ -230,6 +248,10 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
 {  
 
   //  hitAlg(p.get<fhicl::ParameterSet>("HitAlg"));
+  // 2020June adding access to raw waveforms 
+  fDigitModuleLabel = p.get<std::string>("DigitModuleLabel","daq");
+  fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
+  fWindow = p.get<int>("window",100);
 
   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
   fLArG4ModuleLabel    = p.get<std::string>("LArG4ModuleLabel",    "largeant");
@@ -238,6 +260,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabel   = p.get<std::string>("OpHitsModuleLabel");
 
+  fcheckTransparency   = p.get<bool>("checkTransparency",false);
   fkeepCRThits   = p.get<bool>("keepCRThits",true);
   fkeepCRTstrips = p.get<bool>("keepCRTstrips",false);
   fmakeCRTtracks = p.get<bool>("makeCRTtracks",true);
@@ -592,39 +615,117 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // Optical Hits
   //
-  art::Handle< std::vector<recob::OpHit> > ophitListHandle;
-  std::vector<art::Ptr<recob::OpHit> > ophitlist;
-  if (evt.getByLabel(fOpHitsModuleLabel, ophitListHandle)) {
-    art::fill_ptr_vector(ophitlist, ophitListHandle);
-    _nophits = ophitlist.size();
-  }
-  else {
-    std::cout << "Failed to get recob::OpHit data product." << std::endl;
-    _nophits = 0;
+  if (freadOpHits) {
+    art::Handle< std::vector<recob::OpHit> > ophitListHandle;
+    std::vector<art::Ptr<recob::OpHit> > ophitlist;
+    if (evt.getByLabel(fOpHitsModuleLabel, ophitListHandle)) {
+      art::fill_ptr_vector(ophitlist, ophitListHandle);
+      _nophits = ophitlist.size();
+    }
+    else {
+      std::cout << "Failed to get recob::OpHit data product." << std::endl;
+      _nophits = 0;
+    }
+
+    if (_nophits > kMaxHits) {
+      std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
+      std::cout << "Will only store " << kMaxHits << " optical hits." << std::endl;
+      _nophits = kMaxHits;
+    }
+    int counter = 0;
+    for (int i = 0; i < _nophits; ++i) {
+      // TODO: why only pmt_coated? ~icaza
+      if (!_pd_map.isPDType(ophitlist.at(i)->OpChannel(), "pmt_coated")) continue;
+      _ophit_opch[counter] = ophitlist.at(i)->OpChannel();
+      _ophit_opdet[counter] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+      _ophit_peakT[counter] = ophitlist.at(i)->PeakTime();
+      _ophit_width[counter] = ophitlist.at(i)->Width();
+      _ophit_area[counter] = ophitlist.at(i)->Area();
+      _ophit_amplitude[counter] = ophitlist.at(i)->Amplitude();
+      _ophit_pe[counter] = ophitlist.at(i)->PE();
+      auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
+      _ophit_opdet_x[counter] = opdet_center.X();
+      _ophit_opdet_y[counter] = opdet_center.Y();
+      _ophit_opdet_z[counter] = opdet_center.Z();
+      counter++;
+    }
   }
 
-  if (_nophits > kMaxHits) {
-    std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
-    std::cout << "Will only store " << kMaxHits << " optical hits." << std::endl;
-    _nophits = kMaxHits;
-  }
-  int counter = 0;
-  for (int i = 0; i < _nophits; ++i) {
-    // TODO: why only pmt_coated? ~icaza
-    if (!_pd_map.isPDType(ophitlist.at(i)->OpChannel(), "pmt_coated")) continue;
-    _ophit_opch[counter] = ophitlist.at(i)->OpChannel();
-    _ophit_opdet[counter] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
-    _ophit_peakT[counter] = ophitlist.at(i)->PeakTime();
-    _ophit_width[counter] = ophitlist.at(i)->Width();
-    _ophit_area[counter] = ophitlist.at(i)->Area();
-    _ophit_amplitude[counter] = ophitlist.at(i)->Amplitude();
-    _ophit_pe[counter] = ophitlist.at(i)->PE();
-    auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
-    _ophit_opdet_x[counter] = opdet_center.X();
-    _ophit_opdet_y[counter] = opdet_center.Y();
-    _ophit_opdet_z[counter] = opdet_center.Z();
-    counter++;
-  }
+
+    // June 2020 added access to raw waveforms 
+  if (fcheckTransparency) {
+    
+    art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
+    
+    bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
+    if(retVal == true) {
+      mf::LogInfo("RawHitFinder_module")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
+    } else {
+      mf::LogWarning("RawHitFinder_module") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
+    }
+
+    int waveform_number_tracker = 0;
+    int adc_counter = 1;
+    _adc_count = _nhits * (fWindow*2+1);
+
+    // loop over waveforms
+    for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
+      
+      //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
+      art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
+      int channel   = digitVec->Channel();
+      auto fDataSize = digitVec->Samples();
+      std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
+      rawadc.resize(fDataSize);
+      
+      // see if there is a hit on this channel
+      for (int ihit = 0; ihit < _nhits; ++ihit) {
+        if (_hit_channel[ihit] == channel) {        
+          
+          int pedestal = (int)digitVec->GetPedestal();
+          //UNCOMPRESS THE DATA.
+          if (fUncompressWithPed) {
+            raw::Uncompress(digitVec->ADCs(), rawadc, pedestal, digitVec->Compression());
+          }
+          else {
+            raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
+          }
+          
+          unsigned int bin = _hit_peakT[ihit];
+          unsigned int low_edge,high_edge;
+          if((int)bin > fWindow and _hit_plane[ihit] == 0) {
+            low_edge = bin - (2*fWindow);
+          }
+          else if ((int)bin>fWindow) {
+            low_edge = bin-fWindow;
+          }
+          else {
+            low_edge = 0;
+          }
+          high_edge = bin + fWindow;
+          if (high_edge > (fDataSize-1)) {
+            high_edge = fDataSize - 1;
+          }
+          double integral = 0.0;
+          waveform_number_tracker++;
+          int counter_for_adc_in_waveform = 0;
+          for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
+            _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
+            counter_for_adc_in_waveform++;
+            _waveform_number[adc_counter] = waveform_number_tracker; 
+            _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
+            _time_for_waveform[adc_counter] = ibin;
+            //std::cout << "DUMP: " << _waveform_number[adc_counter] << " " << _adc_count << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<ibin << " " << (rawadc[ibin]-pedestal) << " " << _time_for_waveform[adc_counter] << " " << _adc_on_wire[adc_counter] << std::endl;
+            integral+=_adc_on_wire[adc_counter];
+            _waveform_integral[adc_counter] = integral;
+            adc_counter++;
+          }
+          std::cout << "DUMP SUM: " << _hit_tpc[ihit] << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<  integral << " " << waveform_number_tracker << std::endl; 
+          _hit_full_integral[ihit] = integral;
+        } // if hit channel matches waveform channel
+      } //end loop over hits
+    }// end loop over waveforms
+  }// end if fCheckTrasparency
 
   fTree->Fill();
 
@@ -648,6 +749,15 @@ void Hitdumper::analyze(const art::Event& evt)
   fTree->Branch("hit_channel",_hit_channel,"hit_channel[nhits]/I");
   fTree->Branch("hit_peakT",_hit_peakT,"hit_peakT[nhits]/D");
   fTree->Branch("hit_charge",_hit_charge,"hit_charge[nhits]/D");
+  fTree->Branch("hit_ph",_hit_ph,"hit_ph[nhits]/D");
+  fTree->Branch("hit_width",_hit_width,"hit_width[nhits]/D");
+  fTree->Branch("hit_full_integral",_hit_full_integral,"hit_full_integral[nhits]/D");
+  fTree->Branch("adc_count", &_adc_count,"adc_count/I");
+  fTree->Branch("waveform_number", _waveform_number,"waveform_number[adc_count]/I");
+  fTree->Branch("time_for_waveform",_time_for_waveform,"time_for_waveform[adc_count]/I");
+  fTree->Branch("adc_on_wire", _adc_on_wire, "adc_on_wire[adc_count]/D");
+  fTree->Branch("waveform_integral", _waveform_integral, "waveform_integral[adc_count]/I");
+  fTree->Branch("adc_count_in_waveform", _adc_count_in_waveform, "adc_count_in_waveform[adc_count]/I");
   fTree->Branch("hit_ph",_hit_ph,"hit_ph[nhits]/D");
   fTree->Branch("hit_width",_hit_width,"hit_width[nhits]/D");
   if (fkeepCRTstrips) {
@@ -719,6 +829,7 @@ void Hitdumper::ResetVars(){
   _evttime = -99999;
   _t0 = -99999;
   _nhits = 0;
+  _adc_count = 0;
   for (int i = 0; i < kMaxHits; ++i){
     _hit_cryostat[i] = -99999;
     _hit_tpc[i] = -99999;
@@ -729,7 +840,16 @@ void Hitdumper::ResetVars(){
     _hit_charge[i] = -99999;
     _hit_ph[i] = -99999;
     _hit_width[i] = -99999;
+    _hit_full_integral[i] = -99999;
   }
+
+  for (int i = 0; i < (kMaxHits * 5001); i++) {
+    _waveform_number[i] = -99999;
+    _adc_on_wire[i] = -99999;
+    _time_for_waveform[i] = -99999;
+    _adc_count_in_waveform[i] = -99999;
+  }
+
   _nstrips=0;
   for (int i = 0; i < kMaxCHits; ++i) {
     _crt_plane[i]=-999;
