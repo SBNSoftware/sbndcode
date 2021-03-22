@@ -194,10 +194,7 @@ private:
   double _ophit_opdet_y[kMaxHits];     ///< OpDet Y coordinate of the optical hit
   double _ophit_opdet_z[kMaxHits];     ///< OpDet Z coordinate of the optical hit
 
-  // 2020June adding access to raw waveforms 
-  std::string fDigitModuleLabel;          
-  bool fUncompressWithPed;
-  int fWindow;
+
 
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
   std::string fLArG4ModuleLabel;    ///< Label for LArG4 dataproduct (to be set via fcl)
@@ -205,16 +202,18 @@ private:
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fOpHitsModuleLabel;   ///< Label for OpHit dataproduct (to be set via fcl)
+  std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
+
   // double fSelectedPDG;
 
-  // 2020June adding access to raw waveforms 
-  bool fcheckTransparency;
-
-  bool fkeepCRThits;     ///< Keep the CRT hits (to be set via fcl)
-  bool fkeepCRTstrips;   ///< Keep the CRT strips (to be set via fcl)
-  bool fmakeCRTtracks;   ///< Make the CRT tracks (to be set via fcl)
-  bool freadCRTtracks;   ///< Keep the CRT tracks (to be set via fcl)
-  bool freadOpHits;      ///< Add OpHits to output (to be set via fcl)
+  bool fkeepCRThits;       ///< Keep the CRT hits (to be set via fcl)
+  bool fkeepCRTstrips;     ///< Keep the CRT strips (to be set via fcl)
+  bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
+  bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
+  bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
+  bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
+  bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
+  int fWindow;
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
@@ -245,29 +244,25 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
 }
 
 void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
-{  
-
-  //  hitAlg(p.get<fhicl::ParameterSet>("HitAlg"));
-  // 2020June adding access to raw waveforms 
-  fDigitModuleLabel = p.get<std::string>("DigitModuleLabel","daq");
-  fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
-  fWindow = p.get<int>("window",100);
+{
 
   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
+  fDigitModuleLabel    = p.get<std::string>("DigitModuleLabel",    "daq");
   fLArG4ModuleLabel    = p.get<std::string>("LArG4ModuleLabel",    "largeant");
   fCRTStripModuleLabel = p.get<std::string>("CRTStripModuleLabel", "crt");
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel",   "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabel   = p.get<std::string>("OpHitsModuleLabel");
 
-  fcheckTransparency   = p.get<bool>("checkTransparency",false);
-  fkeepCRThits   = p.get<bool>("keepCRThits",true);
-  fkeepCRTstrips = p.get<bool>("keepCRTstrips",false);
-  fmakeCRTtracks = p.get<bool>("makeCRTtracks",true);
-  freadCRTtracks = p.get<bool>("readCRTtracks",true);
-  freadOpHits    = p.get<bool>("readOpHits",true);
-
-  fKeepTaggerTypes = p.get<std::vector<int>>("KeepTaggerTypes");
+  fkeepCRThits       = p.get<bool>("keepCRThits",true);
+  fkeepCRTstrips     = p.get<bool>("keepCRTstrips",false);
+  fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
+  freadCRTtracks     = p.get<bool>("readCRTtracks",true);
+  freadOpHits        = p.get<bool>("readOpHits",true);
+  fcheckTransparency = p.get<bool>("checkTransparency",false);
+  fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
+  fWindow            = p.get<int>("window",100);
+  fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
 }
 
 
@@ -569,6 +564,9 @@ void Hitdumper::analyze(const art::Event& evt)
       else if (chitlist[i]->tagger=="volTaggerTopLow_0")    ip = kTopLow;
       else if (chitlist[i]->tagger=="volTaggerTopHigh_0")   ip = kTopHigh;
       else if (chitlist[i]->tagger=="volTaggerBot_0")       ip = kBot;
+      else {
+        mf::LogWarning("HitDumper") << "Cannot identify tagger of type " << chitlist[i]->tagger << std::endl;
+      }
              
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
       if (chitlist[i]->ts1_ns > MAX_INT) {
@@ -652,21 +650,20 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
 
-    // June 2020 added access to raw waveforms 
   if (fcheckTransparency) {
-    
+
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
     
     bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
     if(retVal == true) {
-      mf::LogInfo("RawHitFinder_module")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
+      mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
     } else {
-      mf::LogWarning("RawHitFinder_module") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
+      mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
     }
 
     int waveform_number_tracker = 0;
     int adc_counter = 1;
-    _adc_count = _nhits * (fWindow*2+1);
+    _adc_count = _nhits * (fWindow * 2 + 1);
 
     // loop over waveforms
     for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {

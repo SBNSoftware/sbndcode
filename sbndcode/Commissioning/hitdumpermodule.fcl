@@ -3,6 +3,7 @@ BEGIN_PROLOG
 hitdumper:
 {
     module_type:              "HitDumper"
+    DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
     OpHitsModuleLabel:        "ophit"
     CRTHitModuleLabel:        "crthit"
@@ -13,6 +14,9 @@ hitdumper:
     keepCRTstrips:            false
     makeCRTtracks:            true
     readCRTtracks:            true
+    checkTransparency:        false
+
+    window:                   100
 
     readOpHits:               true
 
