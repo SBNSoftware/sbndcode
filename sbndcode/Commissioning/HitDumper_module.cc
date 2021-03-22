@@ -270,17 +270,11 @@ private:
   bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
   bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
   bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
+  bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
   // double fSelectedPDG;
-
-  bool fkeepCRThits;     ///< Keep the CRT hits (to be set via fcl)
-  bool fkeepCRTstrips;   ///< Keep the CRT strips (to be set via fcl)
-  bool fmakeCRTtracks;   ///< Make the CRT tracks (to be set via fcl)
-  bool freadCRTtracks;   ///< Keep the CRT tracks (to be set via fcl)
-  bool freadOpHits;      ///< Add OpHits to output (to be set via fcl)
-  bool freadTruth;       ///< Add Truth info to output (to be set via fcl)
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
