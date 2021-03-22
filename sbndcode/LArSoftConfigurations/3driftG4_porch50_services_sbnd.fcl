@@ -1,12 +1,11 @@
 # Save 0.65ms (~50% drift) of readout pre/post main drift window.
 #
-# Settings assuming generation and G4 stages were run in the full 
-# 3-drift configuration (special case only -- by default, we should 
-# be simulating shorter period to match up with a 15% porch)
+# Use these settings if the generation and G4 stage were run in
+# the 3-drft-window configuration (TriggerOffsetTPC = -1.3ms);
 #
 
 #include "3drift_services_sbnd.fcl"
-services.DetectorClocksService.InheritClockConfig: false
 services.DetectorPropertiesService.NumberTimeSamples: 5200
 services.DetectorPropertiesService.ReadOutWindowSize: 5200
+services.DetectorClocksService.InheritClockConfig: false
 services.DetectorClocksService.TriggerOffsetTPC: -0.65e3 # [us]
