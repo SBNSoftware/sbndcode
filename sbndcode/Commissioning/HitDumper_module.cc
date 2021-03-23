@@ -32,6 +32,10 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
+#include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RawData/raw.h"
+
+// SBN/SBND includes
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
@@ -142,6 +146,13 @@ private:
   double _hit_charge[kMaxHits];        ///< Hit charge
   double _hit_ph[kMaxHits];            ///< Hit ph?
   double _hit_width[kMaxHits];         ///< Hit width
+  double _hit_full_integral[kMaxHits]; ///< Hit charge integral
+  int    _waveform_number[kMaxHits*5001];   ///< Number for each waveform, to allow for searching
+  double _adc_on_wire[kMaxHits*5001];       ///< ADC on wire to draw waveform
+  int    _time_for_waveform[kMaxHits*5001]; ///<Time for waveform to plot
+  int    _adc_count;    ///<Used for plotting waveforms
+  int    _waveform_integral[kMaxHits*5001]; ///<Used to see progression of the waveform integral
+  int    _adc_count_in_waveform[kMaxHits*5001]; ///<Used to view all waveforms on a hitplane together
 
   int _nstrips;                        ///< Number of CRT strips
   int _crt_plane[kMaxCHits];           ///< CRT plane
@@ -242,21 +253,28 @@ private:
 
 
 
+
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
   std::string fLArG4ModuleLabel;    ///< Label for LArG4 dataproduct (to be set via fcl)
   std::string fCRTStripModuleLabel; ///< Label for CRTStrip dataproduct (to be set via fcl)
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fOpHitsModuleLabel;   ///< Label for OpHit dataproduct (to be set via fcl)
+  std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
+
   // double fSelectedPDG;
 
-  bool fkeepCRThits;     ///< Keep the CRT hits (to be set via fcl)
-  bool fkeepCRTstrips;   ///< Keep the CRT strips (to be set via fcl)
-  bool fmakeCRTtracks;   ///< Make the CRT tracks (to be set via fcl)
-  bool freadCRTtracks;   ///< Keep the CRT tracks (to be set via fcl)
-  bool freadOpHits;      ///< Add OpHits to output (to be set via fcl)
-  bool freadTruth;       ///< Add Truth info to output (to be set via fcl)
+  bool fkeepCRThits;       ///< Keep the CRT hits (to be set via fcl)
+  bool fkeepCRTstrips;     ///< Keep the CRT strips (to be set via fcl)
+  bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
+  bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
+  bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
+  bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
+  bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
+  bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
+  int fWindow;
+  // double fSelectedPDG;
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
@@ -290,9 +308,8 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
 void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
 {
 
-  //  hitAlg(p.get<fhicl::ParameterSet>("HitAlg"));
-
   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
+  fDigitModuleLabel    = p.get<std::string>("DigitModuleLabel",    "daq");
   fLArG4ModuleLabel    = p.get<std::string>("LArG4ModuleLabel",    "largeant");
   fCRTStripModuleLabel = p.get<std::string>("CRTStripModuleLabel", "crt");
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel",   "crthit");
@@ -300,12 +317,17 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fOpHitsModuleLabel   = p.get<std::string>("OpHitsModuleLabel");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
-  fkeepCRThits   = p.get<bool>("keepCRThits",true);
-  fkeepCRTstrips = p.get<bool>("keepCRTstrips",false);
-  fmakeCRTtracks = p.get<bool>("makeCRTtracks",true);
-  freadCRTtracks = p.get<bool>("readCRTtracks",true);
-  freadOpHits    = p.get<bool>("readOpHits",true);
-  freadTruth     = p.get<bool>("readTruth",true);
+  fkeepCRThits       = p.get<bool>("keepCRThits",true);
+  fkeepCRTstrips     = p.get<bool>("keepCRTstrips",false);
+  fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
+  freadCRTtracks     = p.get<bool>("readCRTtracks",true);
+  freadOpHits        = p.get<bool>("readOpHits",true);
+  fcheckTransparency = p.get<bool>("checkTransparency",false);
+  freadTruth         = p.get<bool>("readTruth",true);
+  fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
+
+  fWindow            = p.get<int>("window",100);
+  fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
 
   fKeepTaggerTypes = p.get<std::vector<int>>("KeepTaggerTypes");
 }
@@ -609,6 +631,9 @@ void Hitdumper::analyze(const art::Event& evt)
       else if (chitlist[i]->tagger=="volTaggerTopLow_0")    ip = kTopLow;
       else if (chitlist[i]->tagger=="volTaggerTopHigh_0")   ip = kTopHigh;
       else if (chitlist[i]->tagger=="volTaggerBot_0")       ip = kBot;
+      else {
+        mf::LogWarning("HitDumper") << "Cannot identify tagger of type " << chitlist[i]->tagger << std::endl;
+      }
 
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
       if (chitlist[i]->ts1_ns > MAX_INT) {
@@ -655,44 +680,118 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // Optical Hits
   //
-  art::Handle< std::vector<recob::OpHit> > ophitListHandle;
-  std::vector<art::Ptr<recob::OpHit> > ophitlist;
-  if (evt.getByLabel(fOpHitsModuleLabel, ophitListHandle)) {
-    art::fill_ptr_vector(ophitlist, ophitListHandle);
-    _nophits = ophitlist.size();
-  }
-  else {
-    std::cout << "Failed to get recob::OpHit data product." << std::endl;
-    _nophits = 0;
+  if (freadOpHits) {
+    art::Handle< std::vector<recob::OpHit> > ophitListHandle;
+    std::vector<art::Ptr<recob::OpHit> > ophitlist;
+    if (evt.getByLabel(fOpHitsModuleLabel, ophitListHandle)) {
+      art::fill_ptr_vector(ophitlist, ophitListHandle);
+      _nophits = ophitlist.size();
+    }
+    else {
+      std::cout << "Failed to get recob::OpHit data product." << std::endl;
+      _nophits = 0;
+    }
+
+    if (_nophits > kMaxHits) {
+      std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
+      std::cout << "Will only store " << kMaxHits << " optical hits." << std::endl;
+      _nophits = kMaxHits;
+    }
+    int counter = 0;
+    for (int i = 0; i < _nophits; ++i) {
+      // TODO: why only pmt_coated? ~icaza
+      if (!_pd_map.isPDType(ophitlist.at(i)->OpChannel(), "pmt_coated")) continue;
+      _ophit_opch[counter] = ophitlist.at(i)->OpChannel();
+      _ophit_opdet[counter] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+      _ophit_peakT[counter] = ophitlist.at(i)->PeakTime();
+      _ophit_width[counter] = ophitlist.at(i)->Width();
+      _ophit_area[counter] = ophitlist.at(i)->Area();
+      _ophit_amplitude[counter] = ophitlist.at(i)->Amplitude();
+      _ophit_pe[counter] = ophitlist.at(i)->PE();
+      auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
+      _ophit_opdet_x[counter] = opdet_center.X();
+      _ophit_opdet_y[counter] = opdet_center.Y();
+      _ophit_opdet_z[counter] = opdet_center.Z();
+      counter++;
+    }
   }
 
-  if (_nophits > kMaxHits) {
-    std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
-    std::cout << "Will only store " << kMaxHits << " optical hits." << std::endl;
-    _nophits = kMaxHits;
-  }
-  int counter = 0;
-  for (int i = 0; i < _nophits; ++i) {
-    // TODO: why only pmt_coated? ~icaza
-    if (!_pd_map.isPDType(ophitlist.at(i)->OpChannel(), "pmt_coated")) continue;
-    _ophit_opch[counter] = ophitlist.at(i)->OpChannel();
-    _ophit_opdet[counter] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
-    _ophit_peakT[counter] = ophitlist.at(i)->PeakTime();
-    _ophit_width[counter] = ophitlist.at(i)->Width();
-    _ophit_area[counter] = ophitlist.at(i)->Area();
-    _ophit_amplitude[counter] = ophitlist.at(i)->Amplitude();
-    _ophit_pe[counter] = ophitlist.at(i)->PE();
-    auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
-    _ophit_opdet_x[counter] = opdet_center.X();
-    _ophit_opdet_y[counter] = opdet_center.Y();
-    _ophit_opdet_z[counter] = opdet_center.Z();
-    counter++;
-  }
 
+  if (fcheckTransparency) {
+
+    art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
+
+    bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
+    if(retVal == true) {
+      mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
+    } else {
+      mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
+    }
+
+    int waveform_number_tracker = 0;
+    int adc_counter = 1;
+    _adc_count = _nhits * (fWindow * 2 + 1);
+
+    // loop over waveforms
+    for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
+
+      //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
+      art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
+      int channel   = digitVec->Channel();
+      auto fDataSize = digitVec->Samples();
+      std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
+      rawadc.resize(fDataSize);
+
+      // see if there is a hit on this channel
+      for (int ihit = 0; ihit < _nhits; ++ihit) {
+        if (_hit_channel[ihit] == channel) {
+
+          int pedestal = (int)digitVec->GetPedestal();
+          //UNCOMPRESS THE DATA.
+          if (fUncompressWithPed) {
+            raw::Uncompress(digitVec->ADCs(), rawadc, pedestal, digitVec->Compression());
+          }
+          else {
+            raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
+          }
+
+          unsigned int bin = _hit_peakT[ihit];
+          unsigned int low_edge,high_edge;
+          if((int)bin > fWindow and _hit_plane[ihit] == 0) {
+            low_edge = bin - (2*fWindow);
+          }
+          else if ((int)bin>fWindow) {
+            low_edge = bin-fWindow;
+          }
+          else {
+            low_edge = 0;
+          }
+          high_edge = bin + fWindow;
+          if (high_edge > (fDataSize-1)) {
+            high_edge = fDataSize - 1;
+          }
+          double integral = 0.0;
+          waveform_number_tracker++;
+          int counter_for_adc_in_waveform = 0;
+          for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
+            _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
+            counter_for_adc_in_waveform++;
+            _waveform_number[adc_counter] = waveform_number_tracker;
+            _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
+            _time_for_waveform[adc_counter] = ibin;
+            //std::cout << "DUMP: " << _waveform_number[adc_counter] << " " << _adc_count << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<ibin << " " << (rawadc[ibin]-pedestal) << " " << _time_for_waveform[adc_counter] << " " << _adc_on_wire[adc_counter] << std::endl;
+            integral+=_adc_on_wire[adc_counter];
+            _waveform_integral[adc_counter] = integral;
+            adc_counter++;
+          }
+          std::cout << "DUMP SUM: " << _hit_tpc[ihit] << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<  integral << " " << waveform_number_tracker << std::endl;
+          _hit_full_integral[ihit] = integral;
+        } // if hit channel matches waveform channel
+      } //end loop over hits
+    }// end loop over waveforms
+  }// end if fCheckTrasparency
   if (freadTruth){
-    //art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-    //art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
-      // * MC truth information
+
     int nGeniePrimaries = 0, nMCNeutrinos = 0;
     art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
     std::vector<art::Ptr<simb::MCTruth> > mclist;
@@ -702,70 +801,22 @@ void Hitdumper::analyze(const art::Event& evt)
       std::cout << "Failed to get Genie data product." << std::endl;
     }
 
-    //auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
-
     art::Ptr<simb::MCTruth> mctruth;
-    //Brailsford 2017/10/16
-    //Fix for issue 17917
-    //With the code change to accept multiple neutrinos per TTree::Entry into the TTree, this int is no longer needed (it makes compilation fail due to a warning)
-    //int imc = 0;
-      if (!mclist.empty()){//at least one mc record
-        //if (fSaveGenieInfo){
-          //if (mclist[0]->NeutrinoSet()){//is neutrino
-          //sometimes there can be multiple neutrino interactions in one spill
-          //this is trying to find the primary interaction
-          //by looking for the highest energy deposition
-          //std::map<art::Ptr<simb::MCTruth>,double> mctruthemap;
-        /*static bool isfirsttime = true;
-        if (isfirsttime){
-                for (size_t i = 0; i<hitlist.size(); i++){
-                  //if (hitlist[i]->View() == geo::kV){//collection view
-            // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem to correspond to the g4 track FIXME may need further investigation
-                  std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(clockData, hitlist[i]);
-                  for (size_t e = 0; e<eveIDs.size(); e++){
-                    art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
-                    //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
-                    //if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
-                  }
-                //}
-              }
-              isfirsttime = false;
-              //if (fSaveCaloCosmics) isCosmics = false; //override to save calo info
-      }*/
 
-//        double maxenergy = -1;
-//        int imc0 = 0;
-//        for (std::map<art::Ptr<simb::MCTruth>,double>::iterator ii=mctruthemap.begin(); ii!=mctruthemap.end(); ++ii){
-//          if ((ii->second)>maxenergy){
-//            maxenergy = ii->second;
-//            mctruth = ii->first;
-//            imc = imc0;
-//          }
-//          imc0++;
-//        }
+      if (!mclist.empty()) {//at least one mc record
 
-          //imc = 0; //set imc to 0 to solve a confusion for BNB+cosmic files where there are two MCTruth
-      mctruth = mclist[0];
+        mctruth = mclist[0];
 
-      if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
-        //} //end (fSaveGenieInfo)
+        if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
 
-      //const sim::ParticleList& plist = pi_serv->ParticleList();
-      //nGEANTparticles = plist.size();
-
-      // to know the number of particles in AV would require
-      // looking at all of them; so we waste some memory here
     } // if have MC truth
-      MF_LOG_DEBUG("AnalysisTree") << "Expected "
-      /*<< nGEANTparticles << " GEANT particles, "*/
-      << nGeniePrimaries << " GENIE particles";
+      MF_LOG_DEBUG("HitDumper") << "Expected " << nGeniePrimaries << " GENIE particles";
 
-  //Brailsford 2017/10/16
-  //Initially call the number of neutrinos to be stored the number of MCTruth objects.  This is not strictly true i.e. BNB + cosmic overlay but we will count the number of neutrinos later
-  nMCNeutrinos = mclist.size();
+    //Initially call the number of neutrinos to be stored the number of MCTruth objects.  This is not strictly true i.e. BNB + cosmic overlay but we will count the number of neutrinos later
+    nMCNeutrinos = mclist.size();
 
-  ResizeGenie(nGeniePrimaries);
-  ResizeMCNeutrino(nMCNeutrinos);
+    ResizeGenie(nGeniePrimaries);
+    ResizeMCNeutrino(nMCNeutrinos);
 
     mcevts_truth = mclist.size();
     //Brailsford 2017/10/16
@@ -831,7 +882,7 @@ void Hitdumper::analyze(const art::Event& evt)
           tpy_flux[i_mctruth] = curr_mcflux->ftpy;
           tpz_flux[i_mctruth] = curr_mcflux->ftpz;
           tptype_flux[i_mctruth] = curr_mcflux->ftptype;
-        }
+          }
         }
 
         //Let's increase the neutrino count
@@ -846,7 +897,7 @@ void Hitdumper::analyze(const art::Event& evt)
         if (genie_no_primaries > (int) StoreParticles) {
           // got this error? it might be a bug,
           // since the structure should have enough room for everything
-          mf::LogError("AnalysisTree:limits") << "event has "
+          mf::LogError("HitDumper") << "event has "
             << genie_no_primaries << " MC particles, only "
             << StoreParticles << " stored in tree";
         }
@@ -865,8 +916,8 @@ void Hitdumper::analyze(const art::Event& evt)
           genie_mother[iPart]=part.Mother();
         } // for particle
       } //if neutrino set
-  }//if (mcevts_truth)
-}//if (fReadTruth){
+    }//if (mcevts_truth)
+  }//if (fReadTruth){
 
 
 
@@ -892,6 +943,15 @@ void Hitdumper::analyze(const art::Event& evt)
   fTree->Branch("hit_channel",_hit_channel,"hit_channel[nhits]/I");
   fTree->Branch("hit_peakT",_hit_peakT,"hit_peakT[nhits]/D");
   fTree->Branch("hit_charge",_hit_charge,"hit_charge[nhits]/D");
+  fTree->Branch("hit_ph",_hit_ph,"hit_ph[nhits]/D");
+  fTree->Branch("hit_width",_hit_width,"hit_width[nhits]/D");
+  fTree->Branch("hit_full_integral",_hit_full_integral,"hit_full_integral[nhits]/D");
+  fTree->Branch("adc_count", &_adc_count,"adc_count/I");
+  fTree->Branch("waveform_number", _waveform_number,"waveform_number[adc_count]/I");
+  fTree->Branch("time_for_waveform",_time_for_waveform,"time_for_waveform[adc_count]/I");
+  fTree->Branch("adc_on_wire", _adc_on_wire, "adc_on_wire[adc_count]/D");
+  fTree->Branch("waveform_integral", _waveform_integral, "waveform_integral[adc_count]/I");
+  fTree->Branch("adc_count_in_waveform", _adc_count_in_waveform, "adc_count_in_waveform[adc_count]/I");
   fTree->Branch("hit_ph",_hit_ph,"hit_ph[nhits]/D");
   fTree->Branch("hit_width",_hit_width,"hit_width[nhits]/D");
   if (fkeepCRTstrips) {
@@ -1004,6 +1064,7 @@ void Hitdumper::ResetVars(){
   _evttime = -99999;
   _t0 = -99999;
   _nhits = 0;
+  _adc_count = 0;
   for (int i = 0; i < kMaxHits; ++i){
     _hit_cryostat[i] = -99999;
     _hit_tpc[i] = -99999;
@@ -1014,7 +1075,16 @@ void Hitdumper::ResetVars(){
     _hit_charge[i] = -99999;
     _hit_ph[i] = -99999;
     _hit_width[i] = -99999;
+    _hit_full_integral[i] = -99999;
   }
+
+  for (int i = 0; i < (kMaxHits * 5001); i++) {
+    _waveform_number[i] = -99999;
+    _adc_on_wire[i] = -99999;
+    _time_for_waveform[i] = -99999;
+    _adc_count_in_waveform[i] = -99999;
+  }
+
   _nstrips=0;
   for (int i = 0; i < kMaxCHits; ++i) {
     _crt_plane[i]=-999;
