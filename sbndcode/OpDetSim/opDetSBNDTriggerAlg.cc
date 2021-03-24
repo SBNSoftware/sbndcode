@@ -74,9 +74,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   // get the threshold -- first check if channel is Arapuca or PMT
   std::string opdet_type = fOpDetMap.pdType(channel);
   bool is_arapuca = false;
-  if( opdet_type.find("xarapuca") != std::string::npos || 
-      opdet_type.find("arapuca")  != std::string::npos ){
-    is_arapuca = true; }
+  if( opdet_type.find("arapuca") != std::string::npos ) is_arapuca = true; 
   int threshold = is_arapuca ? fConfig.TriggerThresholdADCArapuca() : fConfig.TriggerThresholdADCPMT(); 
   int polarity = is_arapuca ? fConfig.PulsePolarityArapuca() : fConfig.PulsePolarityPMT(); 
 
@@ -158,7 +156,7 @@ bool opDetSBNDTriggerAlg::IsChannelMasked(raw::Channel_t channel) const {
   std::string opdet_type = fOpDetMap.pdType(channel);
   if (opdet_type == "bar" && fConfig.MaskLightBars() /* RIP */) return true;
   if (opdet_type == "pmt_coated" && fConfig.MaskPMTs()) return true;
-  if (opdet_type == "bar_uncoated" && fConfig.MaskBarePMTs()) return true;
+  if (opdet_type == "pmt_uncoated" && fConfig.MaskBarePMTs()) return true;
   if (opdet_type == "xarapucaprime" && fConfig.MaskXArapucaPrimes()) return true;
   if (opdet_type == "xarapuca" && fConfig.MaskXArapucas()) return true;
   if (opdet_type == "xarapuca_vuv" && fConfig.MaskXArapucas()) return true;
