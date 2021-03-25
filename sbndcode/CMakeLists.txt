@@ -30,3 +30,6 @@ add_subdirectory(SpaceChargeTest)
 add_subdirectory(FlashMatch)
 
 add_subdirectory(Filters)
+
+# subdirectory for blip reconstruction
+add_subdirectory(BlipReco)

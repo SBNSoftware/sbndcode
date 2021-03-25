@@ -1,0 +1,11 @@
+#include "calorimetry_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_blipana:
+{ 
+  module_type:              "BlipAna"
+  SomeLabel:               "gaushit"
+}
+
+END_PROLOG
