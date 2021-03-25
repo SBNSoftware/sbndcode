@@ -3444,7 +3444,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
      } // if (fSaveGeantInfo) 
       
     }//if (mcevts_truth)
-  }//if (isMC){
+  }//if (isMC)
   
   fData->taulife = detprop.ElectronLifetime();
   fTree->Fill();
