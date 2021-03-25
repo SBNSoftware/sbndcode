@@ -11,7 +11,7 @@ art_make(
                            lardataobj_RecoBase
                            lardataobj_MCBase
                            larreco_RecoAlg
-                           lardata_RecoObjects  
+                           lardata_RecoObjects
                            larpandora_LArPandoraInterface
                            nusimdata_SimulationBase
                            ${ART_FRAMEWORK_CORE}
@@ -23,11 +23,13 @@ art_make(
                            art_Persistency_Provenance canvas
                            art_Utilities canvas
                            ${MF_MESSAGELOGGER}
-                           
+
                            ${FHICLCPP}
                            ${ROOT_GEOM}
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}
+                           ${ROOT_EVE_LIB_LIST}
+                           ${ROOT_X3d}
                            ${ROOT_BASIC_LIB_LIST}
                            sbndcode_RecoUtils
         )
