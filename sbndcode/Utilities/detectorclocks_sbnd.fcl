@@ -1,3 +1,10 @@
+#####################################################################
+# Full drift is 1.3 ms (2600 time-ticks). Detector is read out for
+# additional 0.2 ms before and after  main drift window (~15% porch).
+# For neutrino/cosmic MC, G4 is run starting 1.7 ms before trigger time
+# (0.2ms rise time + 1.3ms full drift + 0.2ms front porch).
+#####################################################################
+
 #include "detectorclocks.fcl"
 
 BEGIN_PROLOG
@@ -5,16 +12,14 @@ BEGIN_PROLOG
 sbnd_detectorclocks: @local::standard_detectorclocks
 
 sbnd_detectorclocks.TrigModuleName:     "triggersim"
-sbnd_detectorclocks.InheritClockConfig: true
-sbnd_detectorclocks.G4RefTime:          0.      # G4 time [us] where electronics clock counting start
-sbnd_detectorclocks.TriggerOffsetTPC:   0.  # Time [us] for TPC readout start w.r.t. trigger time
-sbnd_detectorclocks.FramePeriod:        1.25e3   # Frame period [us]
-sbnd_detectorclocks.ClockSpeedTPC:      2.    # TPC clock speed in MHz
-sbnd_detectorclocks.ClockSpeedOptical:  500.   # Optical clock speed in MHz
-sbnd_detectorclocks.ClockSpeedTrigger:  16.   # Trigger clock speed in MHz
-sbnd_detectorclocks.DefaultTrigTime:    0. # Default trigger time [us].
-sbnd_detectorclocks.DefaultBeamTime:    0. # Default beam time [us].
-
-
+sbnd_detectorclocks.InheritClockConfig: true    # Clock settings at gen-level will be passed down
+sbnd_detectorclocks.TriggerOffsetTPC:   -0.2e3  # Time [us] for TPC readout start w.r.t. trigger time
+sbnd_detectorclocks.FramePeriod:        1.3e3   # Frame period [us]
+sbnd_detectorclocks.ClockSpeedTPC:      2.      # TPC clock speed in MHz
+sbnd_detectorclocks.ClockSpeedOptical:  500.    # Optical clock speed in MHz
+sbnd_detectorclocks.ClockSpeedTrigger:  16.     # Trigger clock speed in MHz
+sbnd_detectorclocks.G4RefTime:          0	# G4 time [us] where electronics clock counting start
+sbnd_detectorclocks.DefaultTrigTime:    0   # Default trigger time [us].
+sbnd_detectorclocks.DefaultBeamTime:    0   # Default beam time [us].
 
 END_PROLOG

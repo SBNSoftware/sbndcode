@@ -3,16 +3,18 @@
 BEGIN_PROLOG
 
 sbnd_detproperties:                   @local::standard_detproperties
-sbnd_detproperties.Temperature:       88.4  #(measured in ArgoNeut)
+sbnd_detproperties.Temperature:       89.0 # from MicroBooNE (arXiv:1910.01430)
 sbnd_detproperties.Efield:           [0.5,0.666,0.8]  #reasonable values 
 sbnd_detproperties.Electronlifetime:  10.0e3  # microseconds
 sbnd_detproperties.ElectronsToADC:    6.29778e-3 
-sbnd_detproperties.NumberTimeSamples: 3000
 sbnd_detproperties.TimeOffsetU:       0.
 sbnd_detproperties.TimeOffsetV:       0.
 sbnd_detproperties.TimeOffsetZ:       0.
-sbnd_detproperties.ReadOutWindowSize: 3000
 sbnd_detproperties.InheritNumberTimeSamples: false
+
+# Drift is 1.3 ms (2600 ticks)
+sbnd_detproperties.NumberTimeSamples: 3400
+sbnd_detproperties.ReadOutWindowSize: 3400 
 
 
 END_PROLOG
