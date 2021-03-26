@@ -1,1 +1,8 @@
+# Generates GENIE nue and anue events together with CORSIKA cosmic rays.
+# GENIE nue and anue events are generated from the BNB beam,
+# simulating the beam spill structure, inside the TPC volume
+# (with 10 cm padding on each side).
+# CORSIKA cosmics are generated using the
+# "proton" configuration. 
+
 #include "prodoverlay_corsika_cosmics_proton_genie_intrnue_spill_gsimple-configf-v1_tpc.fcl"
