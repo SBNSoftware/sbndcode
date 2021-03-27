@@ -1,0 +1,8 @@
+# Generates GENIE event together with CORSIKA cosmic rays.
+# GENIE events are generated from the BNB beam,
+# simulating the beam spill structure, inside the TPC volume
+# (with 10 cm padding on each side).
+# CORSIKA cosmics are generated using the
+# "constant mass composition" model. 
+
+#include "prodoverlay_corsika_cosmics_cmc_genie_nu_spill_gsimple-configh-v1_tpc.fcl"

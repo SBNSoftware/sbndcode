@@ -3,7 +3,7 @@
 
 /// Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
-#include "art/Framework/Core/ModuleMacros.h" 
+#include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/SubRun.h"
@@ -39,8 +39,8 @@
 #include <iostream>
 #include <fstream>
 
-// LArSoft includes                                                                                         
-#include "alg/NuAnaAlg.h"
+// LArSoft includes
+#include "sbndcode/MCTruthExtractor/alg/NuAnaAlg.h"
 
 
 
@@ -52,7 +52,7 @@ namespace sbnd{
     explicit NuAna(fhicl::ParameterSet const& pset);
     virtual ~NuAna(){};
 
-    void beginJob();    
+    void beginJob();
     // void reconfigure(fhicl::ParameterSet const& pset);
     void analyze(const art::Event& evt);
     void beginSubRun (const art::SubRun& subrun);
@@ -70,7 +70,7 @@ namespace sbnd{
     std::string fMode;      // mode is beam mode, nu or nubar
     double fBaseline;       // baseline is 100, 470, or 600 meters
     bool fFullOscTrue;      // fullosctrue is obvious.
-    
+
     //Variables needed from the .fcl file to get things out of the event
     std::string fGenieModuleLabel;
     std::string fLarg4ModuleLabel;
@@ -95,10 +95,10 @@ namespace sbnd{
     TTree* fTreeTot;    //This tree stores all the important information from an event
     // TTree* PoTTree;     //This tree only stores the POT of the file, nothing else.
 
-    std::vector<std::vector<float> > eventWeights;  
+    std::vector<std::vector<float> > eventWeights;
 
     std::vector<float>     neutMom;      // Neutrino Momentum
-    
+
     // Information about the lepton:
     // muons are tracked till they exit, electrons are just the initial
     // particle's position and momemtum (since they are showering)
@@ -106,16 +106,16 @@ namespace sbnd{
     std::vector< std::vector<float> > leptonMom; // mom of lepton till it exits
     double Elep;                // Energy of the produced lepton
     double thetaLep, phiLep;    // angles in the detector of the produced lepton
-    
-    
+
+
     int NPi0FinalState;     // Number of neutral pions in Final State Particles
     int NGamma;             // Number of gammas in the Final State Particles
     int NChargedPions;      // Number of charged pions in the Final State Particles
-    
+
     bool foundAllPhotons;   // True by default, goes to false ONLY if there
                             // are final state photons that the alg didn't
                             // find in the larg4 particle list
-                             
+
     // Keep track of where photons convert and what their energy is.
     // Except in categories 1, 3, 5, these are probably not filled.
     // The vectors here labeled p1 and p2 keep track only of photons from neutral pion decay
@@ -123,24 +123,24 @@ namespace sbnd{
     std::vector< std::vector<float> > p1PhotonConversionMom;  // Store the momentum 4vector at conversion
     std::vector< std::vector<float> > p2PhotonConversionPos;  // Store the position of conversion
     std::vector< std::vector<float> > p2PhotonConversionMom;  // Store the momentum 4vector at conversion
-    
+
     // These vectors keep track of any other photon conversions we need to look at.
     std::vector< std::vector<float> > miscPhotonConversionPos;  // Store the position of conversion
     std::vector< std::vector<float> > miscPhotonConversionMom;    // Store the momentum 4vector at conversion
-    
+
     std::vector< std::vector < std::vector<float> > > chargedPionPos; // store position of charged pions
     std::vector< std::vector < std::vector<float> > > chargedPionMom; // store momentum of charged pions
     std::vector< int > chargedPionSign;  // Sign (+/-) of the charged pions, one to one with above vectors
-    
+
     // Track any pions
     // Only keeping the position of decay and the momentum at decay
     std::vector< std::vector<float> > pionPos;  // Position at decay
-    std::vector< std::vector<float> > pionMom;  // Momentum at decay                            
-    
+    std::vector< std::vector<float> > pionMom;  // Momentum at decay
+
     //Info from the genie truth:
     std::vector<int>    GeniePDG;       // Contains the pdg of the FSP in genie generated
     std::vector<std::vector<float>> GenieMomentum;
-    std::vector<std::string> GenieProc; // Contains the process information 
+    std::vector<std::string> GenieProc; // Contains the process information
     // Genie Reweight vectors:
     std::vector< std::vector< float > > genieReweights;
 
@@ -152,7 +152,7 @@ namespace sbnd{
     int isCC;                       // isCC event? isCC == 1 means CC, isCC == 0 means NC
     int mode;                       // beam mode
     double enugen;                  // Energy of the neutrino
-    double nuleng;                  // Length the neutrino traveled. 
+    double nuleng;                  // Length the neutrino traveled.
     std::vector<float> vertex;                // Vertex location
     std::vector<float> neutVertexInWindow;    // origin of neutrino in flux window
     std::vector<float> ParentVertex;          // Parent Vertex (not in detector)
@@ -166,17 +166,17 @@ namespace sbnd{
     For more information on some of the neutrino parentage information, start here
     http://genie.hepforge.org/doxygen/html/classgenie_1_1flux_1_1GSimpleNtpNuMI.html
      */
-    
+
     // #---------------------------------------------------------------
     // # End of the list of variables for the tree
     // #---------------------------------------------------------------
-    
+
 
   }; // end of class NuAna
 // }
 
 // namespace sbnd{
-  
+
   NuAna::NuAna(fhicl::ParameterSet const& pset)
     : EDAnalyzer(pset)
     , fMode             (pset.get< std::string >              ("Mode"))
@@ -192,7 +192,7 @@ namespace sbnd{
   {
 
     // This function sets up the ttrees
-    // get access to the TFile service  
+    // get access to the TFile service
     art::ServiceHandle<art::TFileService> tfs;
 
     // PoTTree  = tfs->make<TTree>("POT", "POT");
@@ -208,9 +208,9 @@ namespace sbnd{
     gROOT -> ProcessLine(".L loadLibs.C+");
 
     fTreeTot = tfs->make<TTree>("EventsTot", "Event info for ALL types");
-    
+
     fTreeTot->Branch("POT",&POT,"POT/D");
-    
+
     // Neutrino/event variables:
     fTreeTot->Branch("iflux",    &iflux,    "iflux/I");
     fTreeTot->Branch("nuchan",   &nuchan,   "nuchan/I");
@@ -227,10 +227,10 @@ namespace sbnd{
 
     // Genie Variables
     fTreeTot->Branch("GeniePDG",       &GeniePDG);
-    fTreeTot->Branch("GenieMomentum", "std::vector<std::vector<float> >",  &GenieMomentum);  
+    fTreeTot->Branch("GenieMomentum", "std::vector<std::vector<float> >",  &GenieMomentum);
     fTreeTot->Branch("GenieProc",      &GenieProc);
           // "var","std::vector<std::vector<float> >",&vec
-    
+
     // Flux variables:
     fTreeTot->Branch("ptype", &ptype, "ptype/I");
     fTreeTot->Branch("tptype",&tptype,"tptype/I");
@@ -258,7 +258,7 @@ namespace sbnd{
     fTreeTot->Branch("ChargedPionPos","std::vector<std::vector< std::vector<float> > >",&chargedPionPos, 32000,0);
     fTreeTot->Branch("ChargedPionMom","std::vector<std::vector< std::vector<float> > >",&chargedPionMom, 32000,0);
     fTreeTot->Branch("ChargedPionSign","ChargedPionSign",&chargedPionSign, 32000,0);
-    
+
 
     if (fXSecReweight){
       fTreeTot->Branch("MultiWeight","MultiWeight",&eventWeights,32000,0);
@@ -277,7 +277,7 @@ namespace sbnd{
     std::cout << "This set of events is ";
     if (fFullOscTrue) std::cout << "fullosc" << std::endl;
     else std::cout << "not fullosc" << std::endl;
-    std::cout << "The baseline for this detector is " 
+    std::cout << "The baseline for this detector is "
               << fBaseline << "m." << std::endl << std::endl;
 
     reset();
@@ -300,8 +300,8 @@ namespace sbnd{
 
 
   void NuAna::beginSubRun(const art::SubRun& subrun){
-    
-    // Go through POTSummary objects 
+
+    // Go through POTSummary objects
     art::Handle< sumdata::POTSummary > potHandle;
     subrun.getByLabel(fGenieModuleLabel, potHandle);
     const sumdata::POTSummary& potSum = (*potHandle);
@@ -310,9 +310,9 @@ namespace sbnd{
     return;
   }
   void NuAna::reset(){
-    
+
     // This method takes ANYTHING that goes into the ntuple and sets it to default.
-    
+
     // Start by making sure the appropriate vectors are cleared and emptied:
     eventWeights.clear();
     leptonPos.clear();
@@ -328,11 +328,11 @@ namespace sbnd{
     chargedPionPos.clear();
     chargedPionMom.clear();
     chargedPionSign.clear();
-    
+
     GeniePDG.clear();
     GenieMomentum.clear();
     GenieProc.clear();
-    
+
     NPi0FinalState  = 0;
     NChargedPions   = 0;
     NGamma          = 0;
@@ -359,7 +359,7 @@ namespace sbnd{
     isCC     = -999;             // isCC event? isCC == 1 means CC, isCC == 0 means NC
     mode     = -999;             // beam mode
     enugen   = -999;             // Energy of the neutrino (both)
-    nuleng   = -999;             // Length the neutrino traveled.    
+    nuleng   = -999;             // Length the neutrino traveled.
     Elep     = -999;
     thetaLep = -999;
     phiLep   = -999;
@@ -370,7 +370,7 @@ namespace sbnd{
     // for (auto & weight : eventReweight)
     // {
     //   weight.clear();
-    //   weight.resize(1000); 
+    //   weight.resize(1000);
     // }
 
     return;
@@ -379,10 +379,10 @@ namespace sbnd{
   void NuAna::analyze(const art::Event& evt){
 
     this -> reset();
-    
-    //get the MC generator information out of the event       
+
+    //get the MC generator information out of the event
     //these are all handles to mc information.
-    art::Handle< std::vector<simb::MCTruth> > mclistGENIE;  
+    art::Handle< std::vector<simb::MCTruth> > mclistGENIE;
     art::Handle< std::vector<simb::MCParticle> > mclistLARG4;
     art::Handle< std::vector<simb::MCFlux> > mcflux;
     art::Handle< std::vector<simb::GTruth> > mcgtruth;
@@ -397,12 +397,12 @@ namespace sbnd{
     evt.getByLabel(fGenieModuleLabel,mclistGENIE);
     evt.getByLabel(fGenieModuleLabel,mcflux);
     evt.getByLabel(fGenieModuleLabel,mcgtruth);
-    if (!fFullOscTrue) 
+    if (!fFullOscTrue)
         evt.getByLabel(fLarg4ModuleLabel,mclistLARG4);
 
     // contains the mctruth object from genie
     art::Ptr<simb::MCTruth> mc(mclistGENIE,0);
-    
+
     // contains the mcflux object
     art::Ptr<simb::MCFlux > flux(mcflux,0);
 
@@ -413,8 +413,8 @@ namespace sbnd{
 
     // Contains the neutrino info
     simb::MCNeutrino neutrino = mc -> GetNeutrino();
-    
-    // std::cout << "The interaction info is: \n" 
+
+    // std::cout << "The interaction info is: \n"
     //           << "  gtruth->ftgtPDG................." << gtruth->ftgtPDG << "\n"
     //           << "  gtruth->ftgtZ..................." << gtruth->ftgtZ << "\n"
     //           << "  gtruth->ftgtA..................." << gtruth->ftgtA << "\n"
@@ -429,7 +429,7 @@ namespace sbnd{
 
     // Now start packing up the variables to fill the tree
     // In general, have the algorithm do this:
-    
+
 
     // get the basic neutrino info:
     fNuAnaAlg.packNeutrinoInfo( &neutrino,
@@ -446,9 +446,9 @@ namespace sbnd{
 
 
     // Pack up the flux info:
-    fNuAnaAlg.packFluxInfo(     flux, 
+    fNuAnaAlg.packFluxInfo(     flux,
                                 ptype, tptype, ndecay,
-                                neutVertexInWindow,  
+                                neutVertexInWindow,
                                 ParentVertex,
                                 nuParentMomAtDecay,
                                 nuParentMomAtProd,
@@ -468,11 +468,11 @@ namespace sbnd{
                                 NPi0FinalState,
                                 NGamma,
                                 NChargedPions);
-    
+
 
     // pack up the larg4 photon info:
     if(!fFullOscTrue)
-        fNuAnaAlg.packLarg4Info(mclistLARG4, isCC, NPi0FinalState, 
+        fNuAnaAlg.packLarg4Info(mclistLARG4, isCC, NPi0FinalState,
                                 NGamma, NChargedPions,
                                 leptonPos,
                                 leptonMom,
@@ -491,14 +491,14 @@ namespace sbnd{
 
 
 
-    
+
 
     // If needed, set up the weights.
-    
+
     if (fFluxReweight){
         fNuAnaAlg.packFluxWeight(flux, eventWeights);
     }
-    
+
     // Find a new weight for this event:
     // std::vector<std::vector<float> > weights;
     if (fXSecReweight){

@@ -12,7 +12,7 @@ sbnd_basicpandora:
     EnableProduction:                                               true
     EnableLineGaps:                                                 true
     UseGlobalCoordinates:                                           true
-    UseHitWidths:                                                   false
+    UseHitWidths:                                                   true
     ShouldRunAllHitsCosmicReco:                                     false
     ShouldRunStitching:                                             false
     ShouldRunCosmicHitRemoval:                                      false
