@@ -3,9 +3,9 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release "v09_10_00">
+<!ENTITY release "v09_18_00">
 <!ENTITY releasetag "e19:prof">
-<!ENTITY my_version "v3">
+<!ENTITY my_version "v2">
 <!ENTITY my_run "1">
 <!ENTITY name "mdeltutt_prism_bnb">
 <!-- <!ENTITY tag "test_ob_on"> -->
@@ -23,23 +23,20 @@
   <!-- Project size -->
   <numevents>2000000</numevents>
 
-  <!-- Operating System -->
-  <os>SL7</os>
-
   <!-- Batch resources -->
-  <resource>DEDICATED,OPPORTUNISTIC</resource>
+  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
 
   <!-- Larsoft information -->
   <larsoft>
     <tag>&release;</tag>
     <qual>&releasetag;</qual>
-    <local>&PNFSpath;Tarballs/sbndcode_v09_10_00_prism__&my_version;.tgz</local>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_18_00_02_prism__&my_version;.tgz</local>
   </larsoft>
 
   <!-- Project stages -->
 
   <stage name="gen">
-    <fcl>prodgenie_nu_spill_tpc_gsimple-configf-v1.fcl</fcl>
+    <fcl>prodgenie_nu_spill_tpc_sbnd.fcl</fcl>
     <fcl>run_prismanalyzer.fcl</fcl>
     <!-- <inputdef>official_MCP2020A_prodoverlay_corsika_cosmics_proton_genie_nu_spill_gsimple-configf-v1_tpc-configf-v1_tpc_reco2_sbnd</inputdef> -->
     <!-- <defname>&name;_&tag;_gen</defname> -->
@@ -49,7 +46,7 @@
     <numjobs>100</numjobs>
     <datatier>generated</datatier>
     <memory>2000</memory>
-    <jobsub>  --expected-lifetime=2h -Q --generate-email-summary </jobsub>
+    <jobsub> --expected-lifetime=2h -Q --generate-email-summary -l '+SingularityImage="/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest"' </jobsub>
     <disk>10GB</disk>
   </stage>
 

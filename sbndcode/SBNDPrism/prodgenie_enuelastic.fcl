@@ -1,4 +1,4 @@
-#include "prodgenie_nu_spill_tpc_gsimple-configf-v1.fcl"
+#include "prodgenie_nu_spill_tpc.fcl"
 
 physics.producers.generator.EventGeneratorList: "NuEElastic" #Only generate neutrinos scattering elastically with electrons
 
