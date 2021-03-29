@@ -3,4 +3,4 @@
 # (with 10 cm padding on each side),
 # selecting only CC events with pi0s in the final state.
 
-#include "prodgenie_nu_singleinteraction_tpc_gsimple-configf-v1_ccpi0filtered.fcl"
+#include "prodgenie_nu_singleinteraction_tpc_gsimple-configh-v1_ccpi0filtered.fcl"

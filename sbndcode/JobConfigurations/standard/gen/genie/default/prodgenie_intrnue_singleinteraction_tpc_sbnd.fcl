@@ -2,4 +2,4 @@
 # forcing one interaction per event, inside the TPC volume
 # (with 10 cm padding on each side).
 
-#include "prodgenie_intrnue_singleinteraction_tpc_gsimple-configf-v1.fcl"
+#include "prodgenie_intrnue_singleinteraction_tpc_gsimple-configh-v1.fcl"

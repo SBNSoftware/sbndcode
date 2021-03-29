@@ -1,0 +1,6 @@
+# Simulates GENIE neutrino interactions from the BNB beam 
+# with the beam spill structure, in the full world wolume.
+# Usually used for studyin dirt events. Uses flux files
+# with a larger window.
+
+#include "prodgenie_nu_spill_world_gsimple-configg-v1.fcl"
