@@ -3,4 +3,4 @@
 # (with 10 cm padding on each side),
 # with rotated buckets.
 
-#include "prodgenie_nu_singleinteraction_tpc_gsimple-configf-v1_rotatedbuckets.fcl"
+#include "prodgenie_nu_singleinteraction_tpc_gsimple-configh-v1_rotatedbuckets.fcl"
