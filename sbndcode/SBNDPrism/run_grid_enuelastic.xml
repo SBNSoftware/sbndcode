@@ -3,9 +3,9 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release "v09_18_00">
+<!ENTITY release "v09_19_00">
 <!ENTITY releasetag "e19:prof">
-<!ENTITY my_version "v2">
+<!ENTITY my_version "v1">
 <!ENTITY my_run "1">
 <!ENTITY name "mdeltutt_prism_enuelastic">
 <!-- <!ENTITY tag "test_ob_on"> -->
@@ -30,7 +30,7 @@
   <larsoft>
     <tag>&release;</tag>
     <qual>&releasetag;</qual>
-    <local>&PNFSpath;Tarballs/sbndcode_v09_18_00_02_prism__&my_version;.tgz</local>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_19_00_01_prism__&my_version;.tgz</local>
   </larsoft>
 
   <!-- Project stages -->
@@ -41,7 +41,7 @@
     <!-- <defname>&name;_&tag;_gen</defname> -->
     <maxfilesperjob>1</maxfilesperjob>
     <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/prism_ana_enuelastic_&my_version;_&my_run;</outdir>
-    <workdir>&PNFSpath;grid_workdir_sbnd/enuelastic</workdir>
+    <workdir>&PNFSpath;grid_workdir_sbnd/prism_ana_enuelastic</workdir>
     <numjobs>100</numjobs>
     <datatier>generated</datatier>
     <memory>2000</memory>

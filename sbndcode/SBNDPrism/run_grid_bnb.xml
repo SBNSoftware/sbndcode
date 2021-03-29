@@ -3,9 +3,9 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release "v09_18_00">
+<!ENTITY release "v09_19_00">
 <!ENTITY releasetag "e19:prof">
-<!ENTITY my_version "v2">
+<!ENTITY my_version "v1">
 <!ENTITY my_run "1">
 <!ENTITY name "mdeltutt_prism_bnb">
 <!-- <!ENTITY tag "test_ob_on"> -->
@@ -21,7 +21,7 @@
   <group>sbnd</group>
 
   <!-- Project size -->
-  <numevents>2000000</numevents>
+  <numevents>1000000</numevents>
 
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
@@ -30,7 +30,7 @@
   <larsoft>
     <tag>&release;</tag>
     <qual>&releasetag;</qual>
-    <local>&PNFSpath;Tarballs/sbndcode_v09_18_00_02_prism__&my_version;.tgz</local>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_19_00_01_prism__&my_version;.tgz</local>
   </larsoft>
 
   <!-- Project stages -->
@@ -42,8 +42,8 @@
     <!-- <defname>&name;_&tag;_gen</defname> -->
     <maxfilesperjob>1</maxfilesperjob>
     <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/prism_ana_bnb_&my_version;_&my_run;</outdir>
-    <workdir>&PNFSpath;grid_workdir_sbnd/ob_on</workdir>
-    <numjobs>100</numjobs>
+    <workdir>&PNFSpath;grid_workdir_sbnd/prism_ana_bnb</workdir>
+    <numjobs>200</numjobs>
     <datatier>generated</datatier>
     <memory>2000</memory>
     <jobsub> --expected-lifetime=2h -Q --generate-email-summary -l '+SingularityImage="/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest"' </jobsub>
