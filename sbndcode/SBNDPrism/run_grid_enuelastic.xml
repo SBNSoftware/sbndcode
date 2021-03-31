@@ -5,7 +5,7 @@
 <!DOCTYPE project [
 <!ENTITY release "v09_19_00">
 <!ENTITY releasetag "e19:prof">
-<!ENTITY my_version "v1">
+<!ENTITY my_version "v4">
 <!ENTITY my_run "1">
 <!ENTITY name "mdeltutt_prism_enuelastic">
 <!-- <!ENTITY tag "test_ob_on"> -->
@@ -45,7 +45,7 @@
     <numjobs>100</numjobs>
     <datatier>generated</datatier>
     <memory>2000</memory>
-    <jobsub> --expected-lifetime=2h -Q --generate-email-summary -l '+SingularityImage="/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest"' </jobsub>
+    <jobsub> --expected-lifetime=2h -Q --generate-email-summary -l +SingularityImage=\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\" --append_condor_requirements='(TARGET.HAS_SINGULARITY=?=true)' </jobsub>
     <disk>10GB</disk>
   </stage>
 

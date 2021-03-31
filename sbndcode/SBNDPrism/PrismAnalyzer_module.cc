@@ -57,7 +57,10 @@ private:
   float GetEnergyQE(float muon_energy, float muon_px, float muon_py, float muon_pz);
 
   std::string _mctruth_producer = "generator";
-  std::vector<float> _beam_origin = {-0.457 * 100, 0 * 100, 110 * 100}; // cm
+  float _beam_origin_x = 73.78;
+  float _beam_origin_y = 0.0;
+  float _beam_origin_z = 11000.0;
+  // std::vector<float> _beam_origin; // = {-0.457 * 100, 0 * 100, 110 * 100}; // cm
 
   const TDatabasePDG *_pdg_db = TDatabasePDG::Instance();
 
@@ -116,6 +119,11 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}  // ,
   // More initializers here.
 {
+
+  _beam_origin_x = p.get<float>("BeamCenterX");
+  _beam_origin_y = p.get<float>("BeamCenterY");
+  _beam_origin_z = p.get<float>("BeamCenterZ");
+
   art::ServiceHandle<art::TFileService> fs;
   _tree = fs->make<TTree>("tree","");
 
@@ -232,9 +240,9 @@ void PrismAnalyzer::analyze(art::Event const& e)
     _nu_prod_vtx_z_beam = mcf->fvz;
 
     // Also convert it to detector coordinates
-    _nu_prod_vtx_x = mcf->fvx - _beam_origin[0];
-    _nu_prod_vtx_y = mcf->fvy - _beam_origin[1];
-    _nu_prod_vtx_z = mcf->fvz - _beam_origin[2];
+    _nu_prod_vtx_x = mcf->fvx - _beam_origin_x;
+    _nu_prod_vtx_y = mcf->fvy - _beam_origin_y;
+    _nu_prod_vtx_z = mcf->fvz - _beam_origin_z;
 
     auto diff_x = _nu_vtx_x - _nu_prod_vtx_x;
     auto diff_y = _nu_vtx_y - _nu_prod_vtx_y;
@@ -318,7 +326,7 @@ void PrismAnalyzer::analyze(art::Event const& e)
 
 float PrismAnalyzer::GetOffAxisAngle(float x, float y, float z) {
   TVector3 nu_vtx(x, y, z);
-  TVector3 beam_center(_beam_origin[0], _beam_origin[1], _beam_origin[2]);
+  TVector3 beam_center(_beam_origin_x, _beam_origin_y, _beam_origin_z);
   TVector3 nu_vtx_beam = nu_vtx + beam_center;
   TVector3 beam(0, 0, 1);
 
