@@ -1,0 +1,10 @@
+# Simulates GENIE neutrino interactions from the BNB beam 
+# forcing one interaction per event, inside the TPC volume
+# (with 10 cm padding on each side),
+# selecting only CC events with pi0s in the final state.
+
+#include "filters_sbnd.fcl"
+
+#include "prodgenie_nu_singleinteraction_tpc_sbnd.fcl"
+
+#include "set_genie_filter_ccpi0.fcl"

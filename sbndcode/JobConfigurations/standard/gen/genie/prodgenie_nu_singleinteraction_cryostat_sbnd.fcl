@@ -1,0 +1,7 @@
+# Simulates GENIE neutrino interactions from the BNB beam 
+# forcing one interaction per event, inside the cryostat volume.
+
+#include "prodgenie_nu_spill_cryostat_sbnd.fcl"
+
+# Set single interaction mode
+#include "set_genie_singleinteraction.fcl"

@@ -1,0 +1,8 @@
+# Simulates GENIE neutrino interactions from the BNB beam 
+# forcing one interaction per event, inside the TPC volume
+# (with 10 cm padding on each side).
+
+#include "prodgenie_nu_singleinteraction_cryostat_sbnd.fcl"
+
+# Interactions in the tpc only
+#include "set_genie_tpc.fcl"

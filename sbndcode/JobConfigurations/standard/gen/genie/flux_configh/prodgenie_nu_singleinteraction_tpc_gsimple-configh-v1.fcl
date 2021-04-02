@@ -1,3 +1,0 @@
-#include "prodgenie_nu_singleinteraction_cryostat_gsimple-configh-v1.fcl"
-
-#include "prodgenie_tpc.fcl"

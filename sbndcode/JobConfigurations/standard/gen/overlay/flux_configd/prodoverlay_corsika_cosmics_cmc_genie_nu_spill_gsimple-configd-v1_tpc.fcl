@@ -1,3 +1,0 @@
-#include "prodoverlay_corsika_cosmics_cmc_genie_nu_spill_gsimple-configd-v1_cryostat.fcl"
-
-#include "prodgenie_tpc.fcl"
