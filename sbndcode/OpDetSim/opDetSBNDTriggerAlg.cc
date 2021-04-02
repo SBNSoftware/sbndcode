@@ -74,9 +74,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   // get the threshold -- first check if channel is Arapuca or PMT
   std::string opdet_type = fOpDetMap.pdType(channel);
   bool is_arapuca = false;
-  if( opdet_type.find("xarapuca") != std::string::npos || 
-      opdet_type.find("arapuca")  != std::string::npos ){
-    is_arapuca = true; }
+  if( opdet_type.find("arapuca") != std::string::npos ) is_arapuca = true; 
   int threshold = is_arapuca ? fConfig.TriggerThresholdADCArapuca() : fConfig.TriggerThresholdADCPMT(); 
   int polarity = is_arapuca ? fConfig.PulsePolarityArapuca() : fConfig.PulsePolarityPMT(); 
 
@@ -86,7 +84,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
 
   if (start > trigger_window[1]) return;
   size_t start_i = start > trigger_window[0] ? 0 : (size_t)((trigger_window[0] - start) / optical_period(clockData));
-  //..........................................................
+
   // fix rounding on division if necessary
   if (!IsTriggerEnabled(clockData,
                         detProp,
@@ -96,11 +94,6 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   assert(IsTriggerEnabled(clockData,
                           detProp,
                           tick_to_timestamp(clockData, waveform.TimeStamp(), start_i)));
-  //..........................................................
-  
-
-  //std::cout<<"Raw waveform timestamp: "<<waveform.TimeStamp()<<", with "<<adcs.size()<<" samples\n";  
-  //std::cout<<"Enable triggers in window start: "<<start<<"     end: "<<trigger_window[1]<<"\n";
 
   // if start is past end of waveform, we can return
   if (start_i >= adcs.size()) return;
@@ -108,7 +101,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   // get the end time
   raw::TimeStamp_t end = tick_to_timestamp(clockData, waveform.TimeStamp(), adcs.size() - 1);
   size_t end_i = end < trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / optical_period(clockData));
-  //..........................................................
+ 
   // fix rounding error...
   if (IsTriggerEnabled(clockData,
                        detProp,
@@ -118,7 +111,6 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   assert(end_i+1 == adcs.size() || !IsTriggerEnabled(clockData,
                                                      detProp,
                                                      tick_to_timestamp(clockData, waveform.TimeStamp(), end_i+1)));
-  //..........................................................
 
   std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_locations; 
   bool above_threshold = false;
@@ -162,17 +154,17 @@ bool opDetSBNDTriggerAlg::IsChannelMasked(raw::Channel_t channel) const {
 
   // mask by optical detector type
   std::string opdet_type = fOpDetMap.pdType(channel);
-  if (opdet_type == "bar"           && fConfig.MaskLightBars() /* RIP */) return true;
-  if (opdet_type == "pmt_coated"    && fConfig.MaskPMTs())        return true;
-  if (opdet_type == "bar_uncoated"  && fConfig.MaskBarePMTs())    return true;
+  if (opdet_type == "bar" && fConfig.MaskLightBars() /* RIP */) return true;
+  if (opdet_type == "pmt_coated" && fConfig.MaskPMTs()) return true;
+  if (opdet_type == "pmt_uncoated" && fConfig.MaskBarePMTs()) return true;
   if (opdet_type == "xarapucaprime" && fConfig.MaskXArapucaPrimes()) return true;
-  if (opdet_type == "xarapuca"      && fConfig.MaskXArapucas())   return true;
-  if (opdet_type == "xarapuca_vuv"  && fConfig.MaskXArapucas())   return true;
-  if (opdet_type == "xarapuca_vis"  && fConfig.MaskXArapucas())   return true;
-  if (opdet_type == "xarapucaT1"    && fConfig.MaskXArapucas())   return true;
-  if (opdet_type == "xarapucaT2"    && fConfig.MaskXArapucas())   return true;
-  if (opdet_type == "arapucaT1"     && fConfig.MaskArapucaT1s())  return true;
-  if (opdet_type == "arapucaT2"     && fConfig.MaskArapucaT2s())  return true;
+  if (opdet_type == "xarapuca" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "xarapuca_vuv" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "xarapuca_vis" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "xarapucaT1" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "xarapucaT2" && fConfig.MaskXArapucas()) return true;
+  if (opdet_type == "arapucaT1" && fConfig.MaskArapucaT1s()) return true;
+  if (opdet_type == "arapucaT2" && fConfig.MaskArapucaT2s()) return true;
   return false;
 }
 
@@ -273,8 +265,8 @@ std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow(detinfo::Detector
     // Hard-coding for now (TODO: FIX!!!)
     double drift  = 1300; // 1.3 ms
     double readout= detProp.ReadOutWindowSize() * clockData.TPCClock().TickPeriod();
-    start         = clockData.TriggerOffsetTPC() - drift;
-    end           = clockData.TriggerOffsetTPC() + readout;
+    start = clockData.TriggerOffsetTPC() - drift;
+    end = clockData.TriggerOffsetTPC() + readout;
   }
   else {
     start = fConfig.TriggerEnableWindowStart();

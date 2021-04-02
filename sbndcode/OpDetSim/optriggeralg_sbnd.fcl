@@ -11,7 +11,7 @@ sbnd_optrigger_alg:
   TriggerEnableWindowIsTPCReadoutWindow: true
   ReadoutWindowPreTrigger: 1 #[us]
   ReadoutWindowPostTrigger: 11 #[us]
-  ReadoutWindowPreTriggerBeam: 1 #[us]
-  ReadoutWindowPostTriggerBeam: 23 #[us]
+  ReadoutWindowPreTriggerBeam: 1 #[us] (currently not used; using uniform readout length for all triggers)
+  ReadoutWindowPostTriggerBeam: 23 #[us] (currently not used; using uniform readout length for all triggers)
 }
 END_PROLOG

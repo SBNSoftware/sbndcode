@@ -84,7 +84,6 @@
   <!-- VertexAlgorithms -->
   <algorithm type = "LArCutClusterCharacterisation">
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
-    <ZeroMode>true</ZeroMode>
   </algorithm>
   <algorithm type = "LArCandidateVertexCreation">
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
