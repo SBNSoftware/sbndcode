@@ -1,0 +1,8 @@
+# Include this file at the bottom of your GENIE fcl to use flux files produced with configuration B
+# Flux configurations are described here:
+# https://sbnsoftware.github.io/sbndcode_wiki/The_SBND_flux_files.html
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_nu_Bv1
+}

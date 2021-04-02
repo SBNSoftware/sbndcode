@@ -1,0 +1,7 @@
+# Include this file at the bottom of your GENIE fcl to filter CC0Pi events
+
+physics.simulate: [ rns, generator, filter ]
+
+physics.filters.filter: @local::sbnd_finalstateparticlefilter
+physics.filters.filter.PDG: [13, 111]
+outputs.out1.SelectEvents: [ "simulate" ]

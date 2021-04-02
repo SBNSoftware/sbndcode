@@ -1,0 +1,4 @@
+# Include this file at the bottom of your GENIE fcl to produce interactions
+# in the cryostat volume only
+
+physics.producers.generator.TopVolume: "volCryostat"

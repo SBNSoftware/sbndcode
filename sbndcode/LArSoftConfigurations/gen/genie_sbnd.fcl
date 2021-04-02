@@ -164,8 +164,8 @@ sbnd_flux_bnb_nu_Hv1_test1: {
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
 #
-sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Fv1
-sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Fv1_test1
+sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Hv1
+sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Hv1_test1
 
 #
 # Booster Neutrino Beam, interaction from dirt
