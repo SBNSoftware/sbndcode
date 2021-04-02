@@ -1,7 +1,0 @@
-#include "prodgenie_sbnd.fcl"
-
-physics.producers.generator: {
-     @table::physics.producers.generator
-     @table::sbnd_flux_bnb_nu_Hv1
-     TopVolume: "volCryostat"
-}

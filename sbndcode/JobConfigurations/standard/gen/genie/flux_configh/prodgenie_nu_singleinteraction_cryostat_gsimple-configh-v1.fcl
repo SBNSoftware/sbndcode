@@ -1,3 +1,0 @@
-#include "prodgenie_nu_spill_cryostat_gsimple-configh-v1.fcl"
-
-#include "prodgenie_singleinteraction.fcl"
