@@ -1,3 +1,5 @@
+#include "calorimetry_sbnd.fcl"
+
 BEGIN_PROLOG
 
 sbnd_analysistree:
@@ -33,6 +35,7 @@ sbnd_analysistree:
  SaveCaloCosmics:          false
  isCosmics:		             false
  G4minE:                   0.01
+ CaloAlg:		   @local::sbnd_calorimetryalgmc
 }
 
 END_PROLOG
