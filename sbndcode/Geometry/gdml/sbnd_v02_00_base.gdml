@@ -149,17 +149,23 @@
 
 		<!-- Cryostat -->
 		<!-- Cryostat Membrane -->
-		<constant name="dimMembrane_Inner_T_mm" value="5.0" />
+		<constant name="dimMembrane_Inner_T_mm" value="2.0" />
 		<constant name="dimMembrane_Inner_X_mm" value="5199.6" />
 		<constant name="dimMembrane_Inner_Y_mm" value="5430.6" />
 		<constant name="dimMembrane_Inner_Z_mm" value="7027.0" />
 
+		<constant name="dimPlywood_Insulation_T_mm" value="10.0" />
+
 		<!-- Cryostat Lid -->
 		<constant name="dimCryostatLid_T_mm" value="dimMembrane_Inner_T_mm" />
-		<constant name="dimCryostatLid_Outer_X_mm" value="5007.0" />
+		<constant name="dimCryostatLid_Outer_X_mm" value="dimMembrane_Inner_X_mm+2*dimMembrane_Inner_T_mm" />
 		<constant name="dimCryostatLid_Outer_Y_mm" value="780.0" />
-		<constant name="dimCryostatLidLarger_Outer_Z_mm" value="5833.0" />
-		<constant name="dimCryostatLidSmaller_Outer_Z_mm" value="686.8" />
+		<constant name="dimCryostatLidSmaller_Outer_Z_mm" value="686.8+dimCryostatLid_T_mm" />
+		<constant name="dimCryostatLidGap_mm" value="30.0" />
+		<constant name="dimCryostatLidLarger_Outer_Z_mm" value="dimMembrane_Inner_Z_mm+2*dimMembrane_Inner_T_mm-dimCryostatLidGap_mm-dimCryostatLidSmaller_Outer_Z_mm" />
+
+		<!-- Cryostat Lid -->
+		<constant name="dimCryostatUllage_T_mm" value="271.5" />
 
 		<!-- Cryostat Structure -->
 		<constant name="dimCryostat_Outer_T_mm" value="10.0" />
@@ -216,7 +222,8 @@
 		<constant name="dimCPAMeshFrame_Rmax_mm" value="dimCPAMeshFrame_Rmin_mm+dimCPAMeshFrame_W_mm"/>
 		
 
-		<constant name="LAr_Density" value="1.40" />
+		<constant name="LAr_Density" value="1.39" />
+		<constant name="GAr_Density" value="5.7e-3" />
 		<constant name="Steel_Density" value="7.9300" />
 		<constant name="meshRadius" value="1" />
 		<constant name="meshGap" value="5" />
@@ -798,7 +805,7 @@
 		</material>
 
 		<material name="matPUFoam_Cryostat" formula="Polyurethane">
-			<D value=".224" unit="g/cm3"/>
+			<D value="0.073" unit="g/cm3"/>
 			<composite n="25" ref="carbon"/>
 			<composite n="42" ref="hydrogen"/>
 			<composite n="2" ref="nitrogen"/>
@@ -899,7 +906,7 @@
 		</material>
 
 		<material name="STEEL_STAINLESS_Fe7Cr2Ni" formula="Fe7Cr2Ni">
-			<D value="7.9300" unit="g/cm3"/>
+			<D value="7.85" unit="g/cm3"/>
 			<fraction n="0.0010" ref="carbon"/>
 			<fraction n="0.1792" ref="chromium"/>
 			<fraction n="0.7298" ref="iron"/>
@@ -907,7 +914,7 @@
 		</material>
 
 		<material name="matStructuralSteel" formula="S460L">
-			<D value="3.8321" unit="g/cm3"/>
+			<D value="7.85" unit="g/cm3"/>
 			<fraction n="0.95630" ref="iron"/>
 			<fraction n="0.01700" ref="manganese"/>
 			<fraction n="0.00800" ref="nickel"/>
@@ -941,7 +948,12 @@
 		</material>
 
 		<material name="LAr" formula="LAr">
-			<D value="1.40" unit="g/cm3"/>
+			<D value="LAr_Density" unit="g/cm3"/>
+			<fraction n="1.0000" ref="argon"/>
+		</material>
+
+		<material name="GAr" formula="GAr">
+			<D value="GAr_Density" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
 		</material>
 
@@ -1004,6 +1016,13 @@
 			<D value="8.26" unit="g/cm3"/>
 			<fraction n="0.981" ref="copper"/>
 			<fraction n="0.019" ref="beryllium"/>
+		</material>
+
+		<material name="matPlywood" formula="wood">
+			<D value="0.67" unit="g/cm3"/>
+			<fraction n="0.495" ref="carbon"/>
+			<fraction n="0.063" ref="hydrogen"/>
+			<fraction n="0.442" ref="oxygen"/>
 		</material>
 
 	</materials>
@@ -1743,7 +1762,6 @@
         <subtraction name="groundLevel1">
             <first  ref="groundBuild2"/>
             <second ref="build6"/>
-            
         </subtraction>
         
         <subtraction name="groundBuild3">
@@ -4719,7 +4737,7 @@
 
 	<structure>
 		<volume name="volCryoExt">
-			<materialref ref="matStructuralSteel"/>
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidCryoExt_ExtStruct_39"/>
 		</volume>        
 	</structure>
@@ -4727,8 +4745,7 @@
 
 	<!-- Cryostat Insulation -->
 	<solids>
-
-		<!-- Distance between Large and Small: 314mm -->
+		
 		<box name="boxCryostatLidSteelLarger" lunit="mm" x="dimCryostatLid_Outer_X_mm" y="dimCryostatLid_Outer_Y_mm" z="dimCryostatLidLarger_Outer_Z_mm"/>
 		<box name="boxCryostatLidSteelSmaller" lunit="mm" x="dimCryostatLid_Outer_X_mm" y="dimCryostatLid_Outer_Y_mm" z="dimCryostatLidSmaller_Outer_Z_mm"/>
 		<box name="boxCryostatLidInsulationLarger"  lunit="mm" x="dimCryostatLid_Outer_X_mm-dimCryostatLid_T_mm" y="dimCryostatLid_Outer_Y_mm-dimCryostatLid_T_mm" z="dimCryostatLidLarger_Outer_Z_mm-dimCryostatLid_T_mm"/>
@@ -4742,6 +4759,13 @@
 			<second ref="boxCryoInsul_inner"/>
 		</subtraction>
 
+		<box name="boxCryoPlywood_outter_outter" lunit="mm" x="dimInsulation_Inner_X_mm+2*dimPlywood_Insulation_T_mm" y="dimInsulation_Inner_Y_mm+dimPlywood_Insulation_T_mm" z="dimInsulation_Inner_Z_mm+2*dimPlywood_Insulation_T_mm"/>
+		<box name="boxCryoPlywood_outter_inner" lunit="mm" x="dimInsulation_Inner_X_mm" y="dimInsulation_Inner_Y_mm" z="dimInsulation_Inner_Z_mm"/>
+		<subtraction name="solidCryoPlywood">
+			<first ref="boxCryoPlywood_outter_outter"/>
+			<second ref="boxCryoPlywood_outter_inner"/>
+			<position name="posSubPlywood" unit="mm" x="0" y="dimPlywood_Insulation_T_mm/2.0+_eD_" z="0"/>
+		</subtraction>
 	</solids>
 
 
@@ -4783,15 +4807,21 @@
 
 			<physvol>
 				<volumeref ref="volCryoLid_Larger"/>
-				<position  name="posCryoLid_Larger" unit="mm" x="0" y="(dimMembrane_Inner_Y_mm+dimCryostatLid_Outer_Y_mm)/2.0+dimMembrane_Inner_T_mm" z="whereTPC_Z"/>
+				<position  name="posCryoLid_Larger" unit="mm" x="0" y="(dimMembrane_Inner_Y_mm+dimCryostatLid_Outer_Y_mm)/2.0+dimMembrane_Inner_T_mm" z="-(dimCryostatLidSmaller_Outer_Z_mm+dimCryostatLidGap_mm)/2.0"/>
 			</physvol>
 
 			<physvol>
 				<volumeref ref="volCryoLid_Smaller"/>
-				<position  name="posCryoLid_Smaller" unit="mm" x="0" y="(dimMembrane_Inner_Y_mm+dimCryostatLid_Outer_Y_mm)/2.0+dimMembrane_Inner_T_mm" z="whereTPC_Z+(dimCryostatLidLarger_Outer_Z_mm+dimCryostatLidSmaller_Outer_Z_mm)/2.0+314.0"/>
+				<position  name="posCryoLid_Smaller" unit="mm" x="0" y="(dimMembrane_Inner_Y_mm+dimCryostatLid_Outer_Y_mm)/2.0+dimMembrane_Inner_T_mm" z="(dimMembrane_Inner_Z_mm+dimMembrane_Inner_T_mm-dimCryostatLidSmaller_Outer_Z_mm)/2.0"/>
 			</physvol>
 
-		</volume>        
+		</volume>   
+		
+		<volume name="volCryoPlywood">
+			<materialref ref="matPlywood"/>
+			<solidref ref="solidCryoPlywood"/>
+		</volume>
+
 	</structure>
 	<!-- end of Cryostat Insulation -->
 
@@ -4806,13 +4836,21 @@
 			<second ref="boxCryoMembrane_inner"/>
 		</subtraction>
 
+		<box name="boxCryostatUllage"  lunit="mm" x="dimMembrane_Inner_X_mm" y="dimCryostatUllage_T_mm" z="dimMembrane_Inner_Z_mm"/>
+
 	</solids>
 
 	<structure>
 		<volume name="volCryoMembrane">
 			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidCryoMembrane"/>
-		</volume>        
+		</volume>
+
+		<volume name="volCryoUllage">
+			<materialref ref="GAr"/>
+			<solidref ref="boxCryostatUllage"/>
+		</volume>
+
 	</structure>
 	<!-- end of Cryostat Membrane -->
 
@@ -5249,6 +5287,11 @@
 			<solidref ref="boxCryostat"/>
 
 			<physvol>
+				<volumeref ref="volCryoUllage"/>
+				<position name="posUllage" unit="mm" x="0" y="whereTPC_Y+(dimMembrane_Inner_Y_mm-dimCryostatUllage_T_mm)/2.0" z="0" />
+			</physvol>
+
+			<physvol>
 				<volumeref ref="volFieldCage"/>
 				<position name="posCPA" unit="mm" x="whereTPC_X" y="whereTPC_Y" z="whereTPC_Z" />
 			</physvol>
@@ -5487,6 +5530,10 @@
 			<physvol>
 				<volumeref ref="volCryoMembrane"/>
 				<positionref ref="posCryostat" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoPlywood"/>
+				<position name="posCryoPlywood"    unit="mm" x="whereMembrane_X" y="whereMembrane_Y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryoInsulation"/>
