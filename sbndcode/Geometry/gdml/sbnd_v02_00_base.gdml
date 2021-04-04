@@ -459,7 +459,24 @@
 		<constant name="whereShielding_X" value="whereEnclosure_X"/>
 		<constant name="whereShielding_Y" value="5215+my_dimSystem_Z_mm+dimBuildingBaseWidth_mm/2+shielding_thickness/2"/>
 		<constant name="whereShielding_Z" value="whereEnclosure_Z"/>
-		
+
+		<!-- Racks -->
+		<!-- Smaller (blue/yellow) racks -->
+		<variable name="small_rack_i" value="0"/>
+		<constant name="small_rack_x" value="610" />
+		<constant name="small_rack_y" value="2120" />
+		<constant name="small_rack_z" value="760" />
+		<constant name="smallrack_x_offset" value="450" />
+		<constant name="smallrack_z_offset" value="-4340" />
+		<!-- Larger (black) racks -->
+		<variable name="large_rack_i" value="0"/>
+		<constant name="large_rack_x" value="570" />
+		<constant name="large_rack_y" value="2100" />
+		<constant name="large_rack_z" value="940" />
+		<constant name="largerack_x_offset" value="2700" />
+		<constant name="largerack_z_offset" value="-2300" />
+		<constant name="rack_padding" value="20" />
+
 		<!-- CRT -->
 
 		<!-- _w = width | _l = length | _t = thickness | _b = border-->
@@ -932,6 +949,23 @@
 
 		<material name="matGalvanizedSteel" formula="GSteel">
 			<D value="2.323" unit="g/cm3"/>
+			<fraction n="0.95630" ref="iron"/>
+			<fraction n="0.01700" ref="manganese"/>
+			<fraction n="0.00800" ref="nickel"/>
+			<fraction n="0.00600" ref="silicon"/>
+			<fraction n="0.00550" ref="copper"/>
+			<fraction n="0.00300" ref="chromium"/>
+			<fraction n="0.00160" ref="carbon"/>
+			<fraction n="0.00120" ref="vanadium"/>
+			<fraction n="0.00050" ref="titanium"/>
+			<fraction n="0.00025" ref="phosphorous"/>
+			<fraction n="0.00025" ref="nitrogen"/>
+			<fraction n="0.00020" ref="sulfur"/>
+			<fraction n="0.00020" ref="aluminum"/>
+		</material>
+
+		<material name="matRackSteel" formula="RackSteel"> <!-- Reduced Density!!! 7.85*0.16 -->
+			<D value="1.256" unit="g/cm3"/>
 			<fraction n="0.95630" ref="iron"/>
 			<fraction n="0.01700" ref="manganese"/>
 			<fraction n="0.00800" ref="nickel"/>
@@ -1546,9 +1580,16 @@
 			<solidref ref="solidBuildingBase"/>
 		</volume>
 	</structure>
-    <!-- end of Ground -->
+	<!-- end of Ground -->
 
-    <!-- ========================================= -->
+	<!-- ========================================= -->
+	<!--  Racks                                    -->
+	<!-- ========================================= -->
+
+
+
+
+	<!-- ========================================= -->
 	<!--  Overburden                               -->
 	<!-- ========================================= -->
 	<solids>
@@ -1775,6 +1816,9 @@
             <second ref="mezzanineBuild7"/>
             <position name="posGL2bis" unit="mm" x="0" y="0" z="centerHall"/>
         </subtraction>
+
+        <box name="boxRackSmall"  lunit="mm" x="small_rack_x" y="small_rack_y" z="small_rack_z" />
+        <box name="boxRackLarge"  lunit="mm" x="large_rack_x" y="large_rack_y" z="large_rack_z" />
         
     </solids>
     
@@ -1783,9 +1827,46 @@
             <materialref ref="Concrete"/>
             <solidref ref="build6"/>
         </volume>
+        <volume name="volRackSmall">
+            <materialref ref="matRackSteel"/>
+            <solidref ref="boxRackSmall"/>
+        </volume>
+        <volume name="volRackLarge">
+            <materialref ref="matRackSteel"/>
+            <solidref ref="boxRackLarge"/>
+        </volume>
         <volume name="volMezzanine">
             <materialref ref="Concrete"/>
             <solidref ref="mezzanineBuild7"/>
+        </volume>
+        <volume name="volMezzanineItems">
+            <materialref ref="matRackSteel"/>
+            <solidref ref="mezzanineBuild7"/>
+            <loop for="large_rack_i" to="5" step="1">
+                <physvol>
+                    <volumeref ref="volRackLarge"/>
+                    <position name="posRackLarge_large_rack_i" unit="mm" 
+                              x="(-mX+large_rack_x)/2 + largerack_x_offset + large_rack_i * (large_rack_x + rack_padding)"
+                              y="(-mY+mezzanineFloorSlab_Y+large_rack_y)/2"
+                              z="(mZ-large_rack_z)/2 + largerack_z_offset" />
+                </physvol>
+            </loop>
+            <loop for="small_rack_i" to="8" step="1">
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_small_rack_i" unit="mm" 
+                              x="(-mX+small_rack_x)/2 + smallrack_x_offset + small_rack_i * (small_rack_x + rack_padding)"
+                              y="(-mY+mezzanineFloorSlab_Y+small_rack_y)/2"
+                              z="(mZ-small_rack_z)/2 + smallrack_z_offset" />
+                </physvol>
+            </loop>
+            <physvol>
+                <volumeref ref="volRackLarge"/>
+                <position name="posRackLarge_6" unit="mm" 
+                          x="(-mX+small_rack_x)/2 + smallrack_x_offset + small_rack_i * (small_rack_x + rack_padding) + large_rack_x/2 + rack_padding"
+                          y="(-mY+mezzanineFloorSlab_Y+small_rack_y)/2"
+                          z="(mZ-small_rack_z)/2 + smallrack_z_offset" />
+            </physvol>
         </volume>
         <volume name="volGroundLevel0">
             <materialref ref="matDirt"/>
@@ -1809,6 +1890,10 @@
             <physvol>
                 <volumeref ref="volMezzanine"/>
                 <position name="posMezzanine" unit="mm" x="0" y="mY/2+2*dHY-uGY/2" z="centerHall" />
+            </physvol>
+            <physvol>
+                <volumeref ref="volMezzanineItems"/>
+                <positionref ref="posMezzanine" />
             </physvol>
             <physvol>
                 <volumeref ref="volGroundLevel0"/>
