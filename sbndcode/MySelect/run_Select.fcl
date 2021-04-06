@@ -10,7 +10,7 @@ source:
 
 services:
 {
-  TFileService: { fileName: "2000events_selection_output.root" }
+  TFileService: { fileName: "2000events_no_diffusion_selection_output.root" }
   @table::sbnd_services
 
   ParticleInventoryService: @local::standard_particleinventoryservice
