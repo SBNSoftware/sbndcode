@@ -121,6 +121,7 @@
 		<constant name="mezzanineFloorSlab_Y" value="0.50*_ft_"/>
 		<constant name="mezzanine_Y" value="11*_ft_+mezzanineFloorSlab_Y"/>
 		<constant name="mezzanine_Z" value="20.25*_ft_"/>
+		<constant name="mezzanine_roof_thickness" value="50"/>
 
 		<constant name="dimBuildingBaseWidth_mm" value="0.50*_ft_"/>
 
@@ -476,6 +477,24 @@
 		<constant name="largerack_x_offset" value="2700" />
 		<constant name="largerack_z_offset" value="-2300" />
 		<constant name="rack_padding" value="20" />
+		<constant name="box_interiors_y" value="9000" />
+
+		<!-- Exteriors (dewars) -->
+		<constant name="dewar_outer_r" value="120 * _in_ / 2" />
+		<constant name="dewar_outer_thickness" value="0.288 * _in_" />
+		<constant name="dewar_outer_length" value="328 * _in_" />
+		<constant name="dewar_inner_r" value="102 * _in_ / 2" />
+		<constant name="dewar_inner_thickness" value="0.288 * _in_" />
+		<constant name="dewar_inner_length" value="225 * _in_" />
+		<constant name="dewar_box_base" value="2 * dewar_outer_r + _eD_" />
+		<constant name="dewar_box_h" value="dewar_outer_length + 2 * dewar_outer_thickness + 3 * _eD_" />
+		<constant name="dewar_pos_x_offset" value="502.03" />
+		<constant name="exterior_box_x" value="dimBuildingExternal_X_mm - 2 * dewar_pos_x_offset + dewar_box_base" />
+		<constant name="exterior_box_y" value="dimBuildingExternal_Y_mm" />
+		<constant name="exterior_box_z" value="9000" />
+		<constant name="building_dewar_dist" value="5791.20" />
+
+			rmin="dewar_inner_r + dewar_outer_thickness + _eD_"
 
 		<!-- CRT -->
 
@@ -964,7 +983,24 @@
 			<fraction n="0.00020" ref="aluminum"/>
 		</material>
 
-		<material name="matRackSteel" formula="RackSteel"> <!-- Reduced Density!!! 7.85*0.16 -->
+		<material name="matRackSteel" formula="RackSteel"> <!-- Reduced Density!!! 0.18 (~200 kg rack) -->
+			<D value="0.18" unit="g/cm3"/>
+			<fraction n="0.95630" ref="iron"/>
+			<fraction n="0.01700" ref="manganese"/>
+			<fraction n="0.00800" ref="nickel"/>
+			<fraction n="0.00600" ref="silicon"/>
+			<fraction n="0.00550" ref="copper"/>
+			<fraction n="0.00300" ref="chromium"/>
+			<fraction n="0.00160" ref="carbon"/>
+			<fraction n="0.00120" ref="vanadium"/>
+			<fraction n="0.00050" ref="titanium"/>
+			<fraction n="0.00025" ref="phosphorous"/>
+			<fraction n="0.00025" ref="nitrogen"/>
+			<fraction n="0.00020" ref="sulfur"/>
+			<fraction n="0.00020" ref="aluminum"/>
+		</material>
+
+		<material name="matGratingSteel" formula="RackSteel"> <!-- Reduced Density!!! 7.85*0.16 -->
 			<D value="1.256" unit="g/cm3"/>
 			<fraction n="0.95630" ref="iron"/>
 			<fraction n="0.01700" ref="manganese"/>
@@ -1062,13 +1098,34 @@
 	</materials>
 
 
-<!--
-	======================================================================
-		Building
-	======================================================================
--->
+	<!-- ====================================================================== -->
+	<!-- Interior Items                                                         -->
+	<!-- ====================================================================== -->
 
-    <solids>
+	<!-- Racks -->
+	<solids>
+		<box name="boxRackSmall"  lunit="mm" x="small_rack_x" y="small_rack_y" z="small_rack_z" />
+        <box name="boxRackLarge"  lunit="mm" x="large_rack_x" y="large_rack_y" z="large_rack_z" />
+	</solids>
+
+	<structure>
+		<volume name="volRackSmall">
+			<materialref ref="matRackSteel"/>
+			<solidref ref="boxRackSmall"/>
+		</volume>
+		<volume name="volRackLarge">
+			<materialref ref="matRackSteel"/>
+			<solidref ref="boxRackLarge"/>
+		</volume>
+	</structure>
+
+	<!-- Cryogenics TODO -->
+
+	<!-- ====================================================================== -->
+	<!-- Building                                                               -->
+	<!-- ====================================================================== -->
+
+	<solids>
 
 		<box name="boxBuldingOutter" lunit="mm" x="dimBuildingExternal_X_mm" y="dimBuildingExternal_Y_mm" z="dimBuildingExternal_Z_mm" />
 		<box name="boxBuldingInner"  lunit="mm" x="dimBuildingInternal_X_mm" y="dimBuildingInternal_Y_mm" z="dimBuildingInternal_Z_mm" />
@@ -1184,9 +1241,12 @@
 
 		<box name="boxCeilingSkylightCover" lunit="mm" x="dimBuildingSylight_L_mm" y="0.74*_in_" z="dimBuildingSylight_W_mm" />
 
+		<!-- A container for the interiors-->
+		<box name="boxInteriors"  lunit="mm" x="dimDetectorHall_X_mm" y="box_interiors_y" z="mezzanine_Z" />
+
 	</solids>
 
-    <structure>
+	<structure>
 
 		<volume name="volCeilingInsulation">
 			<materialref ref="matPIRFoam"/>
@@ -1313,7 +1373,7 @@
 			<materialref ref="matStructuralSteel"/>
 			<solidref ref="solidBuildingIBeam_H"/>
 		</volume>
-		
+
 		<volume name="volBuildingWindow">
 			<materialref ref="matGlass"/>
 			<solidref ref="boxBuldingWindow"/>
@@ -1324,10 +1384,84 @@
 			<solidref ref="boxBuldingTranslucentWall"/>
 		</volume>
 
+		<volume name="volInteriors">
+			<materialref ref="matAir"/>
+			<solidref ref="boxInteriors"/>
+			<!-- LCS1 Rack -->
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackLarge_0" unit="mm"
+							x="(-dimDetectorHall_X_mm/2+large_rack_z/2)"
+							y="(-box_interiors_y/2+large_rack_y/2)"
+							z="(-mezzanine_Z+large_rack_x)/2" />
+				<rotationref ref="rotateP90Y"/>
+			</physvol>
+			<!-- LCS2 Rack -->
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackLarge_1" unit="mm"
+							x="(-dimDetectorHall_X_mm/2+large_rack_z/2)"
+							y="(-box_interiors_y/2+large_rack_y/2)"
+							z="(-mezzanine_Z+large_rack_x)/2 + 1 * (large_rack_x + rack_padding)" />
+				<rotationref ref="rotateP90Y"/>
+			</physvol>
+			<!-- CRT-UTIL Rack -->
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackLarge_2" unit="mm"
+							x="(-dimDetectorHall_X_mm/2+large_rack_z/2)"
+							y="(-box_interiors_y/2+large_rack_y/2)"
+							z="(-mezzanine_Z+large_rack_x)/2 + 2 * (large_rack_x + rack_padding)" />
+				<rotationref ref="rotateP90Y"/>
+			</physvol>
+
+			<!-- PM1 Rack -->
+			<physvol>
+				<volumeref ref="volRackSmall"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="(-dimDetectorHall_X_mm/2+small_rack_x/2) + 5000"
+							y="(-box_interiors_y/2+small_rack_y/2)"
+							z="(-mezzanine_Z+small_rack_z)/2" />
+			</physvol>
+			<!-- PM2 Rack -->
+			<physvol>
+				<volumeref ref="volRackSmall"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="(-dimDetectorHall_X_mm/2+small_rack_x/2) + 5000"
+							y="(-box_interiors_y/2+small_rack_y/2)"
+							z="(-mezzanine_Z+small_rack_z)/2 + 1500" />
+			</physvol>
+			<!-- HV1 Rack -->
+			<physvol>
+				<volumeref ref="volRackSmall"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="(-dimDetectorHall_X_mm/2+small_rack_x/2) + 5000 + 1 * (small_rack_x + rack_padding)"
+							y="(-box_interiors_y/2+small_rack_y/2)"
+							z="(-mezzanine_Z+small_rack_z)/2" />
+			</physvol>
+
+			<!-- GA2 Rack -->
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="(-dimDetectorHall_X_mm/2+large_rack_x/2) + 7000"
+							y="(-box_interiors_y/2+large_rack_y/2)"
+							z="(-mezzanine_Z+large_rack_z)/2 + 3500" />
+			</physvol>
+			<!-- GA1 Rack -->
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="(-dimDetectorHall_X_mm/2+large_rack_x/2) + 7000 + 1 * (large_rack_x + rack_padding)"
+							y="(-box_interiors_y/2+large_rack_y/2)"
+							z="(-mezzanine_Z+large_rack_z)/2 + 3500" />
+			</physvol>
+		</volume>
+
 		<volume name="volBuilding">
 			<materialref ref="matAir"/>
 			<solidref ref="solidBuilding"/>
-			
+
 			<physvol>
 				<volumeref ref="volCeilingInsulation"/>
 				<position name="posCeiling" unit="mm" x="0" y="dimBuildingCeiling_Y_mm-dimBuildingExternal_Y_mm/2.0" z="0"/>
@@ -1554,19 +1688,18 @@
 
 		</volume>
 
-    </structure>
-    <!-- end of Building -->
+	</structure>
+	<!-- end of Building -->
 
-<!--
-	======================================================================
-		Ground
-	======================================================================
--->
+	<!-- ========================================= -->
+	<!-- Ground                                    -->
+	<!-- ========================================= -->
 
-    <solids>
+	<solids>
 		<box name="boxBuildingBase"  lunit="mm" x="dimBuildingExternal_X_mm" y="dimBuildingBaseWidth_mm" z="dimBuildingExternal_Z_mm" />
 		<box name="boxMezzanineEntrance"  lunit="mm" x="dimDetectorHall_X_mm" y="dimBuildingBaseWidth_mm+_eD_" z="mezzanine_Z+dimDetectorHall_Z_mm" />
-		
+		<box name="boxMezzanineRoof"  lunit="mm" x="dimDetectorHall_X_mm" y="mezzanine_roof_thickness" z="mezzanine_Z" />
+
 		<subtraction name="solidBuildingBase">
 			<first  ref="boxBuildingBase"/>
 			<second ref="boxMezzanineEntrance"/>
@@ -1575,18 +1708,28 @@
 	</solids>
 
 	<structure>
-		<volume name="volBuildingBase">
+		<volume name="volBuildingFloor">
 			<materialref ref="Concrete"/>
 			<solidref ref="solidBuildingBase"/>
 		</volume>
+		<volume name="volBuildingRoofMezzanine">
+			<materialref ref="matGratingSteel"/>
+			<solidref ref="boxMezzanineRoof"/>
+		</volume>
+		<volume name="volBuildingBase">
+			<materialref ref="matAir"/>
+			<solidref ref="boxBuildingBase"/>
+			<physvol>
+				<volumeref ref="volBuildingFloor"/>
+				<position name="posBuildingFloor" unit="mm" x="0" y="0" z="0" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volBuildingRoofMezzanine"/>
+				<position name="posBuildingRoofMezzanine" unit="mm" x="0" y="(dimBuildingBaseWidth_mm-mezzanine_roof_thickness)/2" z="-3.*_ft_+(dimBuildingExternal_Z_mm)/2.0 - (mezzanine_Z)/2" />
+			</physvol>
+		</volume>
 	</structure>
 	<!-- end of Ground -->
-
-	<!-- ========================================= -->
-	<!--  Racks                                    -->
-	<!-- ========================================= -->
-
-
 
 
 	<!-- ========================================= -->
@@ -1627,9 +1770,178 @@
 			</physvol>
 		</volume>
 	</structure>
-    <!-- end of Overburden -->
+	<!-- end of Overburden -->
 
-    
+
+	<!-- ========================================= -->
+	<!-- Exteriors                                 -->
+	<!-- ========================================= -->
+	<!-- This part contains the 2 LAr and LN2 dewars that are outside the building -->
+	<solids>
+		<!-- A box that will contain the objects outside the building, on the north side of it -->
+		<box name="boxExterior" lunit="mm" x="exterior_box_x" y="exterior_box_y" z="exterior_box_z" />
+
+		<!-- A box that will contain a single dewar-->
+		<box name="boxDewar" lunit="mm"
+			x="dewar_box_base" y="dewar_box_base" z="dewar_box_h" />
+
+		<!-- Dewar Construction: a dewar is made of two vessels one inside the other -->
+		<!-- Dewar: Outer vessel -->
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarOuterBody"
+			rmax="dewar_outer_r"
+			rmin="dewar_outer_r - dewar_outer_thickness"
+			z="dewar_outer_length"/>
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarOuterCap"
+			rmax="dewar_outer_r"
+			z="dewar_outer_thickness"/>
+
+		<union name="DewarOuterTemp">
+			<first  ref="DewarOuterBody"/>
+			<second ref="DewarOuterCap"/>
+			<position name="posDewarUnion1" unit="mm" x="0" y="0" z="-dewar_outer_length/2 - dewar_outer_thickness/2 - _eD_"/>
+		</union>
+		<union name="DewarOuter">
+			<first  ref="DewarOuterTemp"/>
+			<second ref="DewarOuterCap"/>
+			<position name="posDewarUnion2" unit="mm" x="0" y="0" z="+dewar_outer_length/2 + dewar_outer_thickness/2 + _eD_"/>
+		</union>
+
+		<!-- Dewar: Inner vessel -->
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarInnerBody"
+			rmax="dewar_inner_r"
+			rmin="dewar_inner_r - dewar_inner_thickness"
+			z="dewar_inner_length"/>
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarInnerCap"
+			rmax="dewar_inner_r"
+			z="dewar_inner_thickness"/>
+
+		<union name="DewarInnerTemp">
+			<first  ref="DewarInnerBody"/>
+			<second ref="DewarInnerCap"/>
+			<position name="posDewarUnion3" unit="mm" x="0" y="0"
+				z="-dewar_inner_length/2 - dewar_inner_thickness/2 - _eD_"/>
+		</union>
+		<union name="DewarInner">
+			<first  ref="DewarInnerTemp"/>
+			<second ref="DewarInnerCap"/>
+			<position name="posDewarUnion4" unit="mm" x="0" y="0"
+				z="+dewar_inner_length/2 + dewar_inner_thickness/2 + _eD_"/>
+		</union>
+
+		<!-- Dewar: Insulation between the two vessels -->
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarInsulationBody"
+			rmax="dewar_outer_r - dewar_outer_thickness - _eD_"
+			rmin="dewar_inner_r + 2*dewar_outer_thickness + _eD_"
+			z="dewar_outer_length - _eD_"/>
+
+		<subtraction name="DewarInsulation">
+			<first  ref="DewarInsulationBody"/>
+			<second ref="DewarInner"/>
+			<position name="posDewarUnion5" unit="mm" x="0" y="0" z="0"/>
+		</subtraction>
+
+		<!-- Dewar: Fluid (LAr/LN2) -->
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarFluid"
+			rmax="dewar_inner_r - dewar_inner_thickness - _eD_"
+			z="dewar_inner_length / 2"/>
+
+	</solids>
+
+	<structure>
+
+		<!-- The outer vessel -->
+		<volume name="volDewarOuter">
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<solidref ref="DewarOuter"/>
+		</volume>
+		<!-- The inner vessel -->
+		<volume name="volDewarInner">
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<solidref ref="DewarInner"/>
+		</volume>
+		<!-- The insulation between vessels -->
+		<volume name="volDewarInsulation">
+			<materialref ref="matVacuum"/>
+			<solidref ref="DewarInsulation"/>
+		</volume>
+		<!-- The fluid inside the vessel -->
+		<volume name="volDewarFluidLN2">
+			<materialref ref="LN2"/>
+			<solidref ref="DewarFluid"/>
+		</volume>
+		<volume name="volDewarFluidLAr">
+			<materialref ref="LAr"/>
+			<solidref ref="DewarFluid"/>
+		</volume>
+
+		<!-- The entire LN2 dewar -->
+		<volume name="volDewarLN2">
+			<materialref ref="matAir"/>
+			<solidref ref="boxDewar"/>
+			<physvol>
+				<volumeref ref="volDewarInner"/>
+				<position name="posvolDewar1" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarOuter"/>
+				<position name="posvolDewar2" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarInsulation"/>
+				<position name="posvolDewar3" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarFluidLN2"/>
+				<position name="posvolDewar4" unit="mm" x="0" y="0" z="dewar_outer_length/2 - dewar_inner_length+50"/>
+			</physvol>
+		</volume>
+
+		<!-- The entire LAr dewar -->
+		<volume name="volDewarLAr">
+			<materialref ref="matAir"/>
+			<solidref ref="boxDewar"/>
+			<physvol>
+				<volumeref ref="volDewarInner"/>
+				<position name="posvolDewar1" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarOuter"/>
+				<position name="posvolDewar2" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarInsulation"/>
+				<position name="posvolDewar3" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarFluidLAr"/>
+				<position name="posvolDewar4" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+		</volume>
+
+		<volume name="volExteriors">
+			<materialref ref="matAir"/>
+			<solidref ref="boxExterior"/>
+			<physvol>
+				<volumeref ref="volDewarLN2"/>
+				<position name="posvolDewarLN2" unit="mm"
+					x="(-exterior_box_x + dewar_box_base)/2"
+					y="(-exterior_box_y + dewar_box_h)/2 + 400"
+					z="-exterior_box_z/2 + building_dewar_dist"/>
+				<rotationref ref="rotateP90X"/>
+			</physvol>
+
+			<physvol>
+				<volumeref ref="volDewarLAr"/>
+				<position name="posvolDewarLAr" unit="mm"
+					x="(-exterior_box_x + dewar_box_base)/2 + 8000"
+					y="(-exterior_box_y + dewar_box_h)/2 - dewar_box_h/2 + dewar_outer_r + 400"
+					z="-exterior_box_z/2 + building_dewar_dist"/>
+				<rotationref ref="rotateP90Y"/>
+			</physvol>
+		</volume>
+	</structure>
+
+
 <!--
 	======================================================================
 		Undergrounounds
@@ -1731,7 +2043,9 @@
         <box name="boxMezzanineExterior"  lunit="mm" x="mX+2*concW" y="mY" z="mZ+2*concW" />
         <box name="boxMezzanineFloor"  lunit="mm" x="mX+_eD_" y="mezzanineFloorSlab_Y" z="(mZ-dHZ)" />
         <box name="boxVerticalSlab_2"  lunit="mm" x="s_W/2" y="mY" z="concW" />
-        
+        <!-- boxMezzanineItems is for hosting all the objects in the mezzanine -->
+        <box name="boxMezzanineItems"  lunit="mm" x="mX-_eD_" y="mY" z="(mZ-dHZ)" />
+
         <subtraction name="mezzanineBuild1">
             <first  ref="boxMezzanineExterior"/>
             <second ref="boxMezzanine"/>
@@ -1817,55 +2131,44 @@
             <position name="posGL2bis" unit="mm" x="0" y="0" z="centerHall"/>
         </subtraction>
 
-        <box name="boxRackSmall"  lunit="mm" x="small_rack_x" y="small_rack_y" z="small_rack_z" />
-        <box name="boxRackLarge"  lunit="mm" x="large_rack_x" y="large_rack_y" z="large_rack_z" />
-        
     </solids>
-    
+
     <structure>
         <volume name="volDetectorHall">
             <materialref ref="Concrete"/>
             <solidref ref="build6"/>
-        </volume>
-        <volume name="volRackSmall">
-            <materialref ref="matRackSteel"/>
-            <solidref ref="boxRackSmall"/>
-        </volume>
-        <volume name="volRackLarge">
-            <materialref ref="matRackSteel"/>
-            <solidref ref="boxRackLarge"/>
         </volume>
         <volume name="volMezzanine">
             <materialref ref="Concrete"/>
             <solidref ref="mezzanineBuild7"/>
         </volume>
         <volume name="volMezzanineItems">
-            <materialref ref="matRackSteel"/>
-            <solidref ref="mezzanineBuild7"/>
+            <materialref ref="matAir"/>
+            <solidref ref="boxMezzanineItems"/>
             <loop for="large_rack_i" to="5" step="1">
                 <physvol>
                     <volumeref ref="volRackLarge"/>
-                    <position name="posRackLarge_large_rack_i" unit="mm" 
-                              x="(-mX+large_rack_x)/2 + largerack_x_offset + large_rack_i * (large_rack_x + rack_padding)"
-                              y="(-mY+mezzanineFloorSlab_Y+large_rack_y)/2"
-                              z="(mZ-large_rack_z)/2 + largerack_z_offset" />
+                    <position name="posRackLarge_large_rack_i" unit="mm"
+                              x="(-(mX+_eD_)+large_rack_x)/2 + largerack_x_offset + large_rack_i * (large_rack_x + rack_padding)"
+                              y="(-(mY)+large_rack_y)/2+_eD_"
+                              z="((mZ-dHZ) - large_rack_z)/2 + largerack_z_offset + large_rack_z/2" />
                 </physvol>
             </loop>
             <loop for="small_rack_i" to="8" step="1">
                 <physvol>
                     <volumeref ref="volRackSmall"/>
-                    <position name="posRackSmall_small_rack_i" unit="mm" 
-                              x="(-mX+small_rack_x)/2 + smallrack_x_offset + small_rack_i * (small_rack_x + rack_padding)"
-                              y="(-mY+mezzanineFloorSlab_Y+small_rack_y)/2"
-                              z="(mZ-small_rack_z)/2 + smallrack_z_offset" />
+                    <position name="posRackSmall_small_rack_i" unit="mm"
+                              x="(-(mX+_eD_)+small_rack_x)/2 + smallrack_x_offset + small_rack_i * (small_rack_x + rack_padding)"
+                              y="(-(mY)+small_rack_y)/2+_eD_"
+                              z="((mZ-dHZ)-small_rack_z)/2 + smallrack_z_offset + small_rack_z/2" />
                 </physvol>
             </loop>
             <physvol>
                 <volumeref ref="volRackLarge"/>
-                <position name="posRackLarge_6" unit="mm" 
-                          x="(-mX+small_rack_x)/2 + smallrack_x_offset + small_rack_i * (small_rack_x + rack_padding) + large_rack_x/2 + rack_padding"
-                          y="(-mY+mezzanineFloorSlab_Y+small_rack_y)/2"
-                          z="(mZ-small_rack_z)/2 + smallrack_z_offset" />
+                <position name="posRackLarge_6" unit="mm"
+                          x="(-(mX+_eD_)+small_rack_x)/2 + smallrack_x_offset + small_rack_i * (small_rack_x + rack_padding) + large_rack_x/2 + rack_padding"
+                          y="(-(mY)+small_rack_y)/2+_eD_"
+                          z="((mZ-dHZ)-small_rack_z)/2 + smallrack_z_offset + small_rack_z/2" />
             </physvol>
         </volume>
         <volume name="volGroundLevel0">
@@ -1893,7 +2196,8 @@
             </physvol>
             <physvol>
                 <volumeref ref="volMezzanineItems"/>
-                <positionref ref="posMezzanine" />
+                <position name="posMezzanineItems" unit="mm" x="0" y="mY/2+2*dHY-uGY/2" z="mZ/2" />
+                <!-- <positionref ref="posMezzanine" /> -->
             </physvol>
             <physvol>
                 <volumeref ref="volGroundLevel0"/>
@@ -5632,14 +5936,14 @@
 
 		</volume>
 	</structure>
-    <!-- End of Detector Enclosure -->
+	<!-- End of Detector Enclosure -->
 
-    
+
 	<!-- ========== World ========== -->
-    <define>
-        <constant name="dimWorldSize_mm" value="1.0e6"/>
+	<define>
+		<constant name="dimWorldSize_mm" value="1.0e6"/>
 		<constant name="dimSystem_Z_mm" value="1130"/>		
-    </define>
+	</define>
 
 	<solids>
 		<box name="boxWorld" lunit="mm" x="dimWorldSize_mm" y="dimWorldSize_mm" z="dimWorldSize_mm"/>
@@ -5656,11 +5960,16 @@
 				<volumeref ref="volBuilding"/>
 				<position name="posBuildingWithSh"    unit="mm" x="whereBuild_X" y="whereBuild_Y+dimSystem_Z_mm" z="2200"/>
 			</physvol>
+			<!-- Positioning the Interiors of the Building -->
+			<physvol>
+				<volumeref ref="volInteriors"/>
+				<position name="posInteriorsWithSh" unit="mm" x="0" y="5215+dimSystem_Z_mm+dimBuildingBaseWidth_mm/2+9000/2+_eD_" z="-3.*_ft_+(dimBuildingExternal_Z_mm)/2.0 - (mezzanine_Z)/2+2200"/>
+			</physvol>
 			<!-- Positioning the Underground -->
-            <physvol>
-                <volumeref ref="volUndergrounds"/>
-        		<position name="posUndergroundWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y-3322.33+dimSystem_Z_mm" z="whereEnclosure_Z"/>
-            </physvol>
+			<physvol>
+			<volumeref ref="volUndergrounds"/>
+				<position name="posUndergroundWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y-3322.33+dimSystem_Z_mm" z="whereEnclosure_Z"/>
+			</physvol>
 			<!-- Positioning the Ground -->
 			<physvol>
 				<volumeref ref="volBuildingBase"/>
@@ -5671,10 +5980,15 @@
 				<volumeref ref="volShielding"/>
 				<position name="posShieldingWithSh" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
 			</physvol>
+			<!-- Positioning the Exteriors -->
+			<physvol>
+				<volumeref ref="volExteriors"/>
+				<position name="posExteriors" unit="mm" x="0" y="whereBuild_Y+dimSystem_Z_mm" z="2200 + dimBuildingExternal_Z_mm/2 + exterior_box_z/2" />
+			</physvol>
 			<!-- Positioning the Detector Enclosure -->
 			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-		    	<position name="posEnclosureWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />	
+				<position name="posEnclosureWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />	
 			</physvol>
 
 		</volume>
@@ -5689,31 +6003,41 @@
 				<volumeref ref="volBuilding"/>
 				<position name="posBuilding"    unit="mm" x="whereBuild_X" y="whereBuild_Y+dimSystem_Z_mm" z="2200"/>
 			</physvol>
+			<!-- Positioning the Interiors of the Building -->
+			<physvol>
+				<volumeref ref="volInteriors"/>
+				<position name="posInteriors" unit="mm" x="0" y="5215+dimSystem_Z_mm+dimBuildingBaseWidth_mm/2+9000/2+_eD_" z="-3.*_ft_+(dimBuildingExternal_Z_mm)/2.0 - (mezzanine_Z)/2+2200"/>
+			</physvol>
 			<!-- Positioning the Underground -->
-            <physvol>
-                <volumeref ref="volUndergrounds"/>
-        		<position name="posUnderground" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y-3322.33+dimSystem_Z_mm" z="whereEnclosure_Z"/>
-            </physvol>
+			<physvol>
+				<volumeref ref="volUndergrounds"/>
+				<position name="posUnderground" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y-3322.33+dimSystem_Z_mm" z="whereEnclosure_Z"/>
+				</physvol>
 			<!-- Positioning the Ground -->
 			<physvol>
 				<volumeref ref="volBuildingBase"/>
 				<position name="posBuildingBase" unit="mm" x="0" y="5215+dimSystem_Z_mm" z="2200" />
 			</physvol>
+			<!-- Positioning the Exteriors -->
+			<physvol>
+				<volumeref ref="volExteriors"/>
+				<position name="posExteriors" unit="mm" x="0" y="whereBuild_Y+dimSystem_Z_mm" z="2200 + dimBuildingExternal_Z_mm/2 + exterior_box_z/2" />
+			</physvol>
 			<!-- Positioning the Detector Enclosure -->
 			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-		    	<position name="posEnclosure" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />	
+				<position name="posEnclosure" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />	
 			</physvol>
 
 		</volume>
 	</structure>
-    <!-- End of World -->
+	<!-- End of World -->
 
 	<setup name="Default" version="1.0">
 		<world ref="volWorld" />
 	</setup>
 
-    <setup name="DefaultWithShielding" version="1.0">
+	<setup name="DefaultWithShielding" version="1.0">
 		<world ref="volWorldWithShielding" />
 	</setup>
 
