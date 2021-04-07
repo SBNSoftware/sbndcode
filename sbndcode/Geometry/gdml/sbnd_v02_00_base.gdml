@@ -88,9 +88,9 @@
 		<constant name="system_DY" value="12.899" />
 
 		<!-- Ground dimentions (mm) -->
-		<constant name="dimGround_X_mm" value="4.e4"/>
-		<constant name="dimGround_Y_mm" value="4.e4"/>
-		<constant name="dimGround_Z_mm" value="4.e4"/>
+		<constant name="dimGround_X_mm" value="5.e4"/>
+		<constant name="dimGround_Y_mm" value="5.e4"/>
+		<constant name="dimGround_Z_mm" value="5.e4"/>
 
 		<!-- Building dimentions (mm) -->
 		<constant name="buildingInternalSpace_X" value="15240"/>
