@@ -130,10 +130,16 @@ private:
 	const std::vector< art::Ptr<recob::PFParticle> > &pfps, 
 	const art::FindManyP<recob::Track> &trackAssoc) const;
   
-  bool CrossesCpa(
+  bool MCParticleCrossesCpa(
 	const simb::MCParticle& particle, 
 	const sbnd::TPCGeoAlg TPCGeo) const; 
 
+  double LengthTPC0(const simb::MCParticle& particle) const;
+  
+  double LengthTPC1(const simb::MCParticle& particle) const;
+  
+  bool MinLengthSquared(double lengthTPC0, double lengthTPC1) const;
+  
   void clearPfpTree();
 
   void clearTrueTree();
@@ -296,8 +302,7 @@ void sbnd::Select::analyze(art::Event const& e)
         //std::cout << std::endl;
           
         pfpTrueCrossesApa = fTPCGeo.CrossesApa(*particle);
-        pfpTrueCrossesCpa = this->CrossesCpa(*particle, fTPCGeo);
-
+        pfpTrueCrossesCpa = this->MCParticleCrossesCpa(*particle, fTPCGeo);
         trueTrackIDpfpID[pfpTrueTrackID] = pfpParticleID;
  
       } // End of MC loop
@@ -320,15 +325,17 @@ void sbnd::Select::analyze(art::Event const& e)
     mcEventID = e.id().event();
     mcTrackID = mcp->TrackId();
     mcCrossesApa = fTPCGeo.CrossesApa(*mcp);
-    mcCrossesCpa = this->CrossesCpa(*mcp, fTPCGeo);
+    mcCrossesCpa = this->MCParticleCrossesCpa(*mcp, fTPCGeo);
     mcTruePDG = mcp->PdgCode();  
     mcTrueMother = mcp->Mother();  
+
 
     if(mcTrueMother != 0) continue;
     if(std::abs(mcTruePDG) != 13) continue;
     if(!mcCrossesCpa) continue;
     if(!mcCrossesApa) continue;
-   
+    if(!MinLengthSquared(this->LengthTPC0(*mcp), this->LengthTPC1(*mcp))) continue;
+
     for(auto &[k,v] :trueTrackIDpfpID){
      
       if(mcTrackID == k){
@@ -482,7 +489,7 @@ bool sbnd::Select::TrackCrossesApa(const art::Ptr<recob::Track> trk) const{
 //------------------------------------------------------------------
 // Determine if a true particle crosses the CPA within the detector volume
 
-bool sbnd::Select::CrossesCpa(const simb::MCParticle& particle, const sbnd::TPCGeoAlg TPCGeo) const{  
+bool sbnd::Select::MCParticleCrossesCpa(const simb::MCParticle& particle, const sbnd::TPCGeoAlg TPCGeo) const{  
   for(size_t i = 0; i < particle.NumberTrajectoryPoints()-1; i++){
     double x = particle.Vx(i);
     double y = particle.Vy(i);
@@ -499,6 +506,82 @@ bool sbnd::Select::CrossesCpa(const simb::MCParticle& particle, const sbnd::TPCG
   }
  return false;
 }
+
+//------------------------------------------------------------------
+// Determine if a true particle, that crosses both APA & CPA, has min length squared > 50cm in TPC0
+
+double sbnd::Select::LengthTPC0(const simb::MCParticle& particle) const{
+
+  TPCGeoAlg TPCGeo;
+  bool first = true;
+  double length = 0; 
+  
+  TVector3 start (-99999, -99999, -99999);
+  TVector3 end (-99999, -99999, -99999); 
+
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints()-1; i++){
+    double x = particle.Vx(i);
+    double y = particle.Vy(i);
+    double z = particle.Vz(i);
+
+    if( x > TPCGeo.MinX() && y > TPCGeo.MinY() && z > TPCGeo.MinZ() && x < 0 && y < TPCGeo.MaxY() && z < TPCGeo.MaxZ() ){
+      if(first){
+        first = false;
+        start.SetXYZ(x, y, z);
+      }
+      end.SetXYZ(x, y, z);
+    }
+  } 
+  
+  if(start.X() != -99999 && end.X() != -99999){
+    length = (start-end).Mag();
+  }
+  
+  return length;
+} 
+
+//------------------------------------------------------------------
+// Determine if a true particle, that crosses both APA & CPA, has min length squared > 50cm in TPC1
+
+double sbnd::Select::LengthTPC1(const simb::MCParticle& particle) const{
+
+  TPCGeoAlg TPCGeo;
+  bool first = true;
+  double length = 0; 
+  
+  TVector3 start (-99999, -99999, -99999);
+  TVector3 end (-99999, -99999, -99999); 
+
+  for(size_t i = 0; i < particle.NumberTrajectoryPoints()-1; i++){
+    double x = particle.Vx(i);
+    double y = particle.Vy(i);
+    double z = particle.Vz(i);
+
+    if( x > 0 && y > TPCGeo.MinY() && z > TPCGeo.MinZ() && x < TPCGeo.MaxX() && y < TPCGeo.MaxY() && z < TPCGeo.MaxZ() ){
+      if(first){
+        first = false;
+        start.SetXYZ(x, y, z);
+      }
+      end.SetXYZ(x, y, z);
+    }
+  } 
+  
+  if(start.X() != -99999 && end.X() != -99999){
+    length = (start-end).Mag();
+  }
+  
+  return length;
+} 
+//------------------------------------------------------------------
+// Determine if a true particle, that crosses both APA & CPA, has min length squared > 50cm in both TPC
+bool sbnd::Select::MinLengthSquared(double lengthTPC0, double lengthTPC1) const{
+
+  //Stitching Cosmics rays requires min length squared 50cm on both TPC
+
+  if(lengthTPC0*lengthTPC0 > 50 && lengthTPC1*lengthTPC1 > 50) return true;  
+  return false;
+}
+
 //-------------------------------------------------------------------
 void sbnd::Select::clearPfpTree()
 {
