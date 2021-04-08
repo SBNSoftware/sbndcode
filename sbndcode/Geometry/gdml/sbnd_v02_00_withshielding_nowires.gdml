@@ -58,7 +58,6 @@
 		
 			
 		
-		
 		<position name="posAPAVertical_L" 	unit="mm" x="0" y="0" z="-1232.8385000000001" />
 		<position name="posAPAVertical_R" 	unit="mm" x="0" y="0" z="1232.8385000000001" />
 		<position name="posAPAHorizontal_L_0" unit="mm" x="0" y="2025" z="-616.41925000000003" />
@@ -302,6 +301,38 @@
 			<fraction n="0.00020" ref="sulfur"/>
 			<fraction n="0.00020" ref="aluminum"/>
 		</material>
+		<material name="matRackSteel" formula="RackSteel"> <!-- Reduced Density!!! 0.18 (~200 kg rack) -->
+			<D value="0.18" unit="g/cm3"/>
+			<fraction n="0.95630" ref="iron"/>
+			<fraction n="0.01700" ref="manganese"/>
+			<fraction n="0.00800" ref="nickel"/>
+			<fraction n="0.00600" ref="silicon"/>
+			<fraction n="0.00550" ref="copper"/>
+			<fraction n="0.00300" ref="chromium"/>
+			<fraction n="0.00160" ref="carbon"/>
+			<fraction n="0.00120" ref="vanadium"/>
+			<fraction n="0.00050" ref="titanium"/>
+			<fraction n="0.00025" ref="phosphorous"/>
+			<fraction n="0.00025" ref="nitrogen"/>
+			<fraction n="0.00020" ref="sulfur"/>
+			<fraction n="0.00020" ref="aluminum"/>
+		</material>
+		<material name="matGratingSteel" formula="RackSteel"> <!-- Reduced Density!!! 7.85*0.16 -->
+			<D value="1.256" unit="g/cm3"/>
+			<fraction n="0.95630" ref="iron"/>
+			<fraction n="0.01700" ref="manganese"/>
+			<fraction n="0.00800" ref="nickel"/>
+			<fraction n="0.00600" ref="silicon"/>
+			<fraction n="0.00550" ref="copper"/>
+			<fraction n="0.00300" ref="chromium"/>
+			<fraction n="0.00160" ref="carbon"/>
+			<fraction n="0.00120" ref="vanadium"/>
+			<fraction n="0.00050" ref="titanium"/>
+			<fraction n="0.00025" ref="phosphorous"/>
+			<fraction n="0.00025" ref="nitrogen"/>
+			<fraction n="0.00020" ref="sulfur"/>
+			<fraction n="0.00020" ref="aluminum"/>
+		</material>
 		<material name="LAr" formula="LAr">
 			<D value="1.3899999999999999" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
@@ -309,6 +340,10 @@
 		<material name="GAr" formula="GAr">
 			<D value="0.0057000000000000002" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
+		</material>
+		<material name="LN2" formula="LN2">
+			<D value="0.804" unit="g/cm3"/>
+			<fraction n="1.0000" ref="nitrogen"/>
 		</material>
 		<material name="G10 " >
 			<D value="1.7" unit="g/cm3"/>
@@ -368,12 +403,21 @@
 			<fraction n="0.442" ref="oxygen"/>
 		</material>
 	</materials>
-<!--
-	======================================================================
-		Building
-	======================================================================
--->
-    <solids>
+	<solids>
+		<box name="boxRackSmall"  lunit="mm" x="610" y="2120" z="760" />
+        <box name="boxRackLarge"  lunit="mm" x="570" y="2100" z="940" />
+	</solids>
+	<structure>
+		<volume name="volRackSmall">
+			<materialref ref="matRackSteel"/>
+			<solidref ref="boxRackSmall"/>
+		</volume>
+		<volume name="volRackLarge">
+			<materialref ref="matRackSteel"/>
+			<solidref ref="boxRackLarge"/>
+		</volume>
+	</structure>
+	<solids>
 		<box name="boxBuldingOutter" lunit="mm" x="15240" y="11531.6" z="28854.400000000001" />
 		<box name="boxBuldingInner"  lunit="mm" x="12801.6" y="9906" z="27635.200000000001" />
 		<subtraction name="solidBuilding">
@@ -468,8 +512,9 @@
 			<position name="posBuldingSubtraction_4" unit="mm" x="0" y="0" z="-3873.5"/>
 		</subtraction>
 		<box name="boxCeilingSkylightCover" lunit="mm" x="2438.4000000000001" y="18.795999999999999" z="2006.6000000000001" />
+		<box name="boxInteriors"  lunit="mm" x="9448.8000000000011" y="9000" z="6172.1999999999998" />
 	</solids>
-    <structure>
+	<structure>
 		<volume name="volCeilingInsulation">
 			<materialref ref="matPIRFoam"/>
 			<solidref ref="solidCeilingInsulation_Sloped"/>
@@ -579,7 +624,6 @@
 			<materialref ref="matStructuralSteel"/>
 			<solidref ref="solidBuildingIBeam_H"/>
 		</volume>
-		
 		<volume name="volBuildingWindow">
 			<materialref ref="matGlass"/>
 			<solidref ref="boxBuldingWindow"/>
@@ -588,10 +632,72 @@
 			<materialref ref="fibrous_glass"/>
 			<solidref ref="boxBuldingTranslucentWall"/>
 		</volume>
+		<volume name="volInteriors">
+			<materialref ref="matAir"/>
+			<solidref ref="boxInteriors"/>
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackLarge_0" unit="mm"
+							x="-4254.4000000000005"
+							y="-3450"
+							z="-2801.0999999999999" />
+				<rotationref ref="rotateP90Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackLarge_1" unit="mm"
+							x="-4254.4000000000005"
+							y="-3450"
+							z="-2211.0999999999999" />
+				<rotationref ref="rotateP90Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackLarge_2" unit="mm"
+							x="-4254.4000000000005"
+							y="-3450"
+							z="-1621.0999999999999" />
+				<rotationref ref="rotateP90Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volRackSmall"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="580.59999999999945"
+							y="-3440"
+							z="-2706.0999999999999" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volRackSmall"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="580.59999999999945"
+							y="-3440"
+							z="-1206.0999999999999" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volRackSmall"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="1210.5999999999995"
+							y="-3440"
+							z="-2706.0999999999999" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="2560.5999999999995"
+							y="-3450"
+							z="883.90000000000009" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volRackLarge"/>
+				<position name="posBuildingRackSmall_0" unit="mm"
+							x="3150.5999999999995"
+							y="-3450"
+							z="883.90000000000009" />
+			</physvol>
+		</volume>
 		<volume name="volBuilding">
 			<materialref ref="matAir"/>
 			<solidref ref="solidBuilding"/>
-			
 			<physvol>
 				<volumeref ref="volCeilingInsulation"/>
 				<position name="posCeiling" unit="mm" x="0" y="4902.1999999999998" z="0"/>
@@ -789,16 +895,11 @@
 				<position name="posTube_21" unit="mm" z="13982.700000000001" y="4825.9999999999991" x="0"/>
 			</physvol>
 		</volume>
-    </structure>
-<!--
-	======================================================================
-		Ground
-	======================================================================
--->
-    <solids>
+	</structure>
+	<solids>
 		<box name="boxBuildingBase"  lunit="mm" x="15240" y="152.40000000000001" z="28854.400000000001" />
 		<box name="boxMezzanineEntrance"  lunit="mm" x="9448.8000000000011" y="152.40100000000001" z="18364.200000000001" />
-		
+		<box name="boxMezzanineRoof"  lunit="mm" x="9448.8000000000011" y="50" z="6172.1999999999998" />
 		<subtraction name="solidBuildingBase">
 			<first  ref="boxBuildingBase"/>
 			<second ref="boxMezzanineEntrance"/>
@@ -806,9 +907,25 @@
 		</subtraction>
 	</solids>
 	<structure>
-		<volume name="volBuildingBase">
+		<volume name="volBuildingFloor">
 			<materialref ref="Concrete"/>
 			<solidref ref="solidBuildingBase"/>
+		</volume>
+		<volume name="volBuildingRoofMezzanine">
+			<materialref ref="matGratingSteel"/>
+			<solidref ref="boxMezzanineRoof"/>
+		</volume>
+		<volume name="volBuildingBase">
+			<materialref ref="matAir"/>
+			<solidref ref="boxBuildingBase"/>
+			<physvol>
+				<volumeref ref="volBuildingFloor"/>
+				<position name="posBuildingFloor" unit="mm" x="0" y="0" z="0" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volBuildingRoofMezzanine"/>
+				<position name="posBuildingRoofMezzanine" unit="mm" x="0" y="51.200000000000003" z="10426.700000000001" />
+			</physvol>
 		</volume>
 	</structure>
 	<solids>
@@ -838,13 +955,148 @@
 			</physvol>
 		</volume>
 	</structure>
+	<solids>
+		<box name="boxExterior" lunit="mm" x="17283.940999999999" y="11531.6" z="9000" />
+		<box name="boxDewar" lunit="mm"
+			x="3048.0010000000002" y="3048.0010000000002" z="8345.8333999999995" />
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarOuterBody"
+			rmax="1524"
+			rmin="1516.6848"
+			z="8331.1999999999989"/>
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarOuterCap"
+			rmax="1524"
+			z="7.315199999999999"/>
+		<union name="DewarOuterTemp">
+			<first  ref="DewarOuterBody"/>
+			<second ref="DewarOuterCap"/>
+			<position name="posDewarUnion1" unit="mm" x="0" y="0" z="-4169.2585999999992"/>
+		</union>
+		<union name="DewarOuter">
+			<first  ref="DewarOuterTemp"/>
+			<second ref="DewarOuterCap"/>
+			<position name="posDewarUnion2" unit="mm" x="0" y="0" z="4169.2585999999992"/>
+		</union>
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarInnerBody"
+			rmax="1295.3999999999999"
+			rmin="1288.0847999999999"
+			z="5715"/>
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarInnerCap"
+			rmax="1295.3999999999999"
+			z="7.315199999999999"/>
+		<union name="DewarInnerTemp">
+			<first  ref="DewarInnerBody"/>
+			<second ref="DewarInnerCap"/>
+			<position name="posDewarUnion3" unit="mm" x="0" y="0"
+				z="-2860.6586000000002"/>
+		</union>
+		<union name="DewarInner">
+			<first  ref="DewarInnerTemp"/>
+			<second ref="DewarInnerCap"/>
+			<position name="posDewarUnion4" unit="mm" x="0" y="0"
+				z="2860.6586000000002"/>
+		</union>
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarInsulationBody"
+			rmax="1516.6838"
+			rmin="1310.0313999999998"
+			z="8331.1989999999987"/>
+		<subtraction name="DewarInsulation">
+			<first  ref="DewarInsulationBody"/>
+			<second ref="DewarInner"/>
+			<position name="posDewarUnion5" unit="mm" x="0" y="0" z="0"/>
+		</subtraction>
+		<tube aunit="deg" deltaphi="360" lunit="mm" name="DewarFluid"
+			rmax="1288.0837999999999"
+			z="2857"/>
+	</solids>
+	<structure>
+		<volume name="volDewarOuter">
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<solidref ref="DewarOuter"/>
+		</volume>
+		<volume name="volDewarInner">
+			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
+			<solidref ref="DewarInner"/>
+		</volume>
+		<volume name="volDewarInsulation">
+			<materialref ref="matVacuum"/>
+			<solidref ref="DewarInsulation"/>
+		</volume>
+		<volume name="volDewarFluidLN2">
+			<materialref ref="LN2"/>
+			<solidref ref="DewarFluid"/>
+		</volume>
+		<volume name="volDewarFluidLAr">
+			<materialref ref="LAr"/>
+			<solidref ref="DewarFluid"/>
+		</volume>
+		<volume name="volDewarLN2">
+			<materialref ref="matAir"/>
+			<solidref ref="boxDewar"/>
+			<physvol>
+				<volumeref ref="volDewarInner"/>
+				<position name="posvolDewar1" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarOuter"/>
+				<position name="posvolDewar2" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarInsulation"/>
+				<position name="posvolDewar3" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarFluidLN2"/>
+				<position name="posvolDewar4" unit="mm" x="0" y="0" z="-1399.4000000000005"/>
+			</physvol>
+		</volume>
+		<volume name="volDewarLAr">
+			<materialref ref="matAir"/>
+			<solidref ref="boxDewar"/>
+			<physvol>
+				<volumeref ref="volDewarInner"/>
+				<position name="posvolDewar5" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarOuter"/>
+				<position name="posvolDewar6" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarInsulation"/>
+				<position name="posvolDewar7" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarFluidLAr"/>
+				<position name="posvolDewar8" unit="mm" x="0" y="0" z="0"/>
+			</physvol>
+		</volume>
+		<volume name="volExteriors">
+			<materialref ref="matAir"/>
+			<solidref ref="boxExterior"/>
+			<physvol>
+				<volumeref ref="volDewarLN2"/>
+				<position name="posvolDewarLN2" unit="mm"
+					x="-7117.9699999999993"
+					y="-1192.8833000000004"
+					z="1291.1999999999998"/>
+				<rotationref ref="rotateP90X"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volDewarLAr"/>
+				<position name="posvolDewarLAr" unit="mm"
+					x="882.03000000000065"
+					y="-3841.8000000000002"
+					z="1291.1999999999998"/>
+				<rotationref ref="rotateP90Y"/>
+			</physvol>
+		</volume>
+	</structure>
 <!--
 	======================================================================
 		Undergrounounds
 	======================================================================
 -->
     <solids>
-        <box name="boxGroundExterior" lunit="mm" x="40000" y="16916.400000000001" z="40000" />
+        <box name="boxGroundExterior" lunit="mm" x="50000" y="16916.400000000001" z="50000" />
         <box name="boxFoundationSlab" 		lunit="mm" x="19202.400000000001" y="914.40000000000009" z="21945.599999999999" />
         <box name="boxDetectorHall"  		lunit="mm" x="9448.8000000000011" y="6705.6010000000006" z="12192" />
         <box name="boxDetectorHallExterior"  	lunit="mm" x="10668.000000000002" y="6705.6000000000004" z="13411.200000000001" />
@@ -916,6 +1168,7 @@
         <box name="boxMezzanineExterior"  lunit="mm" x="10668.000000000002" y="3505.2000000000003" z="19583.400000000001" />
         <box name="boxMezzanineFloor"  lunit="mm" x="9448.8010000000013" y="152.40000000000001" z="6172.2000000000007" />
         <box name="boxVerticalSlab_2"  lunit="mm" x="2133.5999999999999" y="3505.2000000000003" z="609.60000000000002" />
+        <box name="boxMezzanineItems"  lunit="mm" x="9448.7990000000009" y="3352.799" z="6172.2000000000007" />
         <subtraction name="mezzanineBuild1">
             <first  ref="boxMezzanineExterior"/>
             <second ref="boxMezzanine"/>
@@ -951,8 +1204,8 @@
             <position name="posVS25" unit="mm" x="0" y="0" z="-10706.1"/>
             <rotationref ref="rotateP90Y"/>
         </union>
-        <box name="boxGroundLevel0" lunit="mm" x="40000" y="6705.598" z="40000" />
-        <box name="boxGroundLevel2" lunit="mm" x="40000" y="3505.1980000000003" z="40000" />
+        <box name="boxGroundLevel0" lunit="mm" x="50000" y="6705.598" z="50000" />
+        <box name="boxGroundLevel2" lunit="mm" x="50000" y="3505.1980000000003" z="50000" />
         <subtraction name="groundLevel0">
             <first  ref="boxGroundLevel0"/>
             <second ref="boxFoundationSlab"/>
@@ -991,6 +1244,122 @@
             <materialref ref="Concrete"/>
             <solidref ref="mezzanineBuild7"/>
         </volume>
+        <volume name="volMezzanineItems">
+            <materialref ref="matAir"/>
+            <solidref ref="boxMezzanineItems"/>
+                <physvol>
+                    <volumeref ref="volRackLarge"/>
+                    <position name="posRackLarge_0" unit="mm"
+                              x="-1739.4005000000006"
+                              y="-550.19849999999997"
+                              z="786.10000000000036" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackLarge"/>
+                    <position name="posRackLarge_1" unit="mm"
+                              x="-1149.4005000000006"
+                              y="-550.19849999999997"
+                              z="786.10000000000036" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackLarge"/>
+                    <position name="posRackLarge_2" unit="mm"
+                              x="-559.40050000000065"
+                              y="-550.19849999999997"
+                              z="786.10000000000036" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackLarge"/>
+                    <position name="posRackLarge_3" unit="mm"
+                              x="30.599499999999352"
+                              y="-550.19849999999997"
+                              z="786.10000000000036" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackLarge"/>
+                    <position name="posRackLarge_4" unit="mm"
+                              x="620.59949999999935"
+                              y="-550.19849999999997"
+                              z="786.10000000000036" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackLarge"/>
+                    <position name="posRackLarge_5" unit="mm"
+                              x="1210.5994999999994"
+                              y="-550.19849999999997"
+                              z="786.10000000000036" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_0" unit="mm"
+                              x="-3969.4005000000006"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_1" unit="mm"
+                              x="-3339.4005000000006"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_2" unit="mm"
+                              x="-2709.4005000000006"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_3" unit="mm"
+                              x="-2079.4005000000006"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_4" unit="mm"
+                              x="-1449.4005000000006"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_5" unit="mm"
+                              x="-819.40050000000065"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_6" unit="mm"
+                              x="-189.40050000000065"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_7" unit="mm"
+                              x="440.59949999999935"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+                <physvol>
+                    <volumeref ref="volRackSmall"/>
+                    <position name="posRackSmall_8" unit="mm"
+                              x="1070.5994999999994"
+                              y="-540.19849999999997"
+                              z="-1253.8999999999996" />
+                </physvol>
+            <physvol>
+                <volumeref ref="volRackLarge"/>
+                <position name="posRackLarge_6" unit="mm"
+                          x="2005.5994999999994"
+                          y="-540.19849999999997"
+                          z="-1253.8999999999996" />
+            </physvol>
+        </volume>
         <volume name="volGroundLevel0">
             <materialref ref="matDirt"/>
             <solidref ref="groundLevel0"/>
@@ -1013,6 +1382,10 @@
             <physvol>
                 <volumeref ref="volMezzanine"/>
                 <position name="posMezzanine" unit="mm" x="0" y="6705.6000000000004" z="3086.1000000000004" />
+            </physvol>
+            <physvol>
+                <volumeref ref="volMezzanineItems"/>
+                <position name="posMezzanineItems" unit="mm" x="0" y="6781.8010000000004" z="9182.1000000000004" />
             </physvol>
             <physvol>
                 <volumeref ref="volGroundLevel0"/>
@@ -12853,18 +13226,18 @@
 		<box name="boxCryostatLidSteelSmaller" lunit="mm" x="5203.6000000000004" y="780" z="688.79999999999995"/>
 		<box name="boxCryostatLidInsulationLarger"  lunit="mm" x="5201.6000000000004" y="778" z="6310.1999999999998"/>
 		<box name="boxCryostatLidInsulationSmaller" lunit="mm" x="5201.6000000000004" y="778" z="686.79999999999995"/>
-		<box name="boxCryoInsul_inner" lunit="mm" x="5201.6000000000004" y="5432.6000000000004" z="7029"/>
-		<box name="boxCryoInsul_outter" lunit="mm" x="6802" 	y="7023"	z="8627"/>
-		<subtraction name="solidCryoInsul">
-			<first ref="boxCryoInsul_outter"/>
-			<second ref="boxCryoInsul_inner"/>
-		</subtraction>
-		<box name="boxCryoPlywood_outter_outter" lunit="mm" x="5221.6000000000004" y="5442.6000000000004" z="7049"/>
-		<box name="boxCryoPlywood_outter_inner" lunit="mm" x="5201.6000000000004" y="5432.6000000000004" z="7029"/>
+		<box name="boxCryoPlywood_outter_inner" lunit="mm" x="6782" y="7003" z="8607"/>
+		<box name="boxCryoPlywood_outter_outter" lunit="mm" x="6802" 	y="7023"	z="8627"/>
 		<subtraction name="solidCryoPlywood">
 			<first ref="boxCryoPlywood_outter_outter"/>
 			<second ref="boxCryoPlywood_outter_inner"/>
 			<position name="posSubPlywood" unit="mm" x="0" y="5.0010000000000003" z="0"/>
+		</subtraction>
+		<box name="boxCryoInsul_inner" lunit="mm" x="5201.6000000000004" y="5432.6000000000004" z="7029"/>
+		<box name="boxCryoInsul_outter" lunit="mm" x="6781.9989999999998" y="7002.9989999999998" z="8606.9989999999998"/>
+		<subtraction name="solidCryoInsul">
+			<first ref="boxCryoInsul_outter"/>
+			<second ref="boxCryoInsul_inner"/>
 		</subtraction>
 	</solids>
 	<structure>
@@ -12904,7 +13277,6 @@
 				<position  name="posCryoLid_Smaller" unit="mm" x="0" y="3107.3000000000002" z="3170.0999999999999"/>
 			</physvol>
 		</volume>   
-		
 		<volume name="volCryoPlywood">
 			<materialref ref="matPlywood"/>
 			<solidref ref="solidCryoPlywood"/>
@@ -13417,8 +13789,8 @@
 			</physvol>
 		</volume>
 	</structure>
-    <define>
-    </define>
+	<define>
+	</define>
 	<solids>
 		<box name="boxWorld" lunit="mm" x="1000000" y="1000000" z="1000000"/>
 	</solids>
@@ -13430,10 +13802,14 @@
 				<volumeref ref="volBuilding"/>
 				<position name="posBuildingWithSh"    unit="mm" x="0" y="12086.301000000001" z="2200"/>
 			</physvol>
-            <physvol>
-                <volumeref ref="volUndergrounds"/>
-        		<position name="posUndergroundWithSh" unit="mm" x="0" y="-2192.3299999999999" z="3434.1999999999998"/>
-            </physvol>
+			<physvol>
+				<volumeref ref="volInteriors"/>
+				<position name="posInteriorsWithSh" unit="mm" x="0" y="10921.201000000001" z="12626.700000000001"/>
+			</physvol>
+			<physvol>
+			<volumeref ref="volUndergrounds"/>
+				<position name="posUndergroundWithSh" unit="mm" x="0" y="-2192.3299999999999" z="3434.1999999999998"/>
+			</physvol>
 			<physvol>
 				<volumeref ref="volBuildingBase"/>
 				<position name="posBuildingBaseWithSh" unit="mm" x="0" y="6345" z="2200" />
@@ -13443,8 +13819,12 @@
 				<position name="posShieldingWithSh" unit="mm" x="0" y="7843.6000000000004" z="3434.1999999999998" />
 			</physvol>
 			<physvol>
+				<volumeref ref="volExteriors"/>
+				<position name="posExteriors" unit="mm" x="0" y="12086.301000000001" z="21127.200000000001" />
+			</physvol>
+			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-		    	<position name="posEnclosureWithSh" unit="mm" x="0" y="0" z="3434.1999999999998" />	
+				<position name="posEnclosureWithSh" unit="mm" x="0" y="0" z="3434.1999999999998" />	
 			</physvol>
 		</volume>
 		<volume name="volIgnoredOnThisSetup" >
@@ -13454,17 +13834,25 @@
 				<volumeref ref="volBuilding"/>
 				<position name="posBuilding"    unit="mm" x="0" y="12086.301000000001" z="2200"/>
 			</physvol>
-            <physvol>
-                <volumeref ref="volUndergrounds"/>
-        		<position name="posUnderground" unit="mm" x="0" y="-2192.3299999999999" z="3434.1999999999998"/>
-            </physvol>
+			<physvol>
+				<volumeref ref="volInteriors"/>
+				<position name="posInteriors" unit="mm" x="0" y="10921.201000000001" z="12626.700000000001"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volUndergrounds"/>
+				<position name="posUnderground" unit="mm" x="0" y="-2192.3299999999999" z="3434.1999999999998"/>
+				</physvol>
 			<physvol>
 				<volumeref ref="volBuildingBase"/>
 				<position name="posBuildingBase" unit="mm" x="0" y="6345" z="2200" />
 			</physvol>
 			<physvol>
+				<volumeref ref="volExteriors"/>
+				<position name="posExteriors" unit="mm" x="0" y="12086.301000000001" z="21127.200000000001" />
+			</physvol>
+			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-		    	<position name="posEnclosure" unit="mm" x="0" y="0" z="3434.1999999999998" />	
+				<position name="posEnclosure" unit="mm" x="0" y="0" z="3434.1999999999998" />	
 			</physvol>
 		</volume>
 	</structure>

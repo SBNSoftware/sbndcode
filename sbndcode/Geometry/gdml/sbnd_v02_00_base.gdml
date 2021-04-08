@@ -494,8 +494,6 @@
 		<constant name="exterior_box_z" value="9000" />
 		<constant name="building_dewar_dist" value="5791.20" />
 
-			rmin="dewar_inner_r + dewar_outer_thickness + _eD_"
-
 		<!-- CRT -->
 
 		<!-- _w = width | _l = length | _t = thickness | _b = border-->
@@ -1025,6 +1023,11 @@
 		<material name="GAr" formula="GAr">
 			<D value="GAr_Density" unit="g/cm3"/>
 			<fraction n="1.0000" ref="argon"/>
+		</material>
+
+		<material name="LN2" formula="LN2">
+			<D value="0.804" unit="g/cm3"/>
+			<fraction n="1.0000" ref="nitrogen"/>
 		</material>
 
 		<material name="G10 " >
@@ -1892,7 +1895,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volDewarFluidLN2"/>
-				<position name="posvolDewar4" unit="mm" x="0" y="0" z="dewar_outer_length/2 - dewar_inner_length+50"/>
+				<position name="posvolDewar4" unit="mm" x="0" y="0" z="dewar_outer_length/2 - dewar_inner_length+150"/>
 			</physvol>
 		</volume>
 
@@ -1902,19 +1905,19 @@
 			<solidref ref="boxDewar"/>
 			<physvol>
 				<volumeref ref="volDewarInner"/>
-				<position name="posvolDewar1" unit="mm" x="0" y="0" z="0"/>
+				<position name="posvolDewar5" unit="mm" x="0" y="0" z="0"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volDewarOuter"/>
-				<position name="posvolDewar2" unit="mm" x="0" y="0" z="0"/>
+				<position name="posvolDewar6" unit="mm" x="0" y="0" z="0"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volDewarInsulation"/>
-				<position name="posvolDewar3" unit="mm" x="0" y="0" z="0"/>
+				<position name="posvolDewar7" unit="mm" x="0" y="0" z="0"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volDewarFluidLAr"/>
-				<position name="posvolDewar4" unit="mm" x="0" y="0" z="0"/>
+				<position name="posvolDewar8" unit="mm" x="0" y="0" z="0"/>
 			</physvol>
 		</volume>
 
@@ -2044,7 +2047,7 @@
         <box name="boxMezzanineFloor"  lunit="mm" x="mX+_eD_" y="mezzanineFloorSlab_Y" z="(mZ-dHZ)" />
         <box name="boxVerticalSlab_2"  lunit="mm" x="s_W/2" y="mY" z="concW" />
         <!-- boxMezzanineItems is for hosting all the objects in the mezzanine -->
-        <box name="boxMezzanineItems"  lunit="mm" x="mX-_eD_" y="mY" z="(mZ-dHZ)" />
+        <box name="boxMezzanineItems"  lunit="mm" x="mX-_eD_" y="mY-mezzanineFloorSlab_Y-_eD_" z="(mZ-dHZ)" />
 
         <subtraction name="mezzanineBuild1">
             <first  ref="boxMezzanineExterior"/>
@@ -2150,7 +2153,7 @@
                     <volumeref ref="volRackLarge"/>
                     <position name="posRackLarge_large_rack_i" unit="mm"
                               x="(-(mX+_eD_)+large_rack_x)/2 + largerack_x_offset + large_rack_i * (large_rack_x + rack_padding)"
-                              y="(-(mY)+large_rack_y)/2+_eD_"
+                              y="(-(mY-2*mezzanineFloorSlab_Y-_eD_)+large_rack_y)/2+_eD_"
                               z="((mZ-dHZ) - large_rack_z)/2 + largerack_z_offset + large_rack_z/2" />
                 </physvol>
             </loop>
@@ -2159,7 +2162,7 @@
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_small_rack_i" unit="mm"
                               x="(-(mX+_eD_)+small_rack_x)/2 + smallrack_x_offset + small_rack_i * (small_rack_x + rack_padding)"
-                              y="(-(mY)+small_rack_y)/2+_eD_"
+                              y="(-(mY-2*mezzanineFloorSlab_Y-_eD_)+small_rack_y)/2+_eD_"
                               z="((mZ-dHZ)-small_rack_z)/2 + smallrack_z_offset + small_rack_z/2" />
                 </physvol>
             </loop>
@@ -2167,7 +2170,7 @@
                 <volumeref ref="volRackLarge"/>
                 <position name="posRackLarge_6" unit="mm"
                           x="(-(mX+_eD_)+small_rack_x)/2 + smallrack_x_offset + small_rack_i * (small_rack_x + rack_padding) + large_rack_x/2 + rack_padding"
-                          y="(-(mY)+small_rack_y)/2+_eD_"
+                          y="(-(mY-2*mezzanineFloorSlab_Y-_eD_)+small_rack_y)/2+_eD_"
                           z="((mZ-dHZ)-small_rack_z)/2 + smallrack_z_offset + small_rack_z/2" />
             </physvol>
         </volume>
@@ -2196,7 +2199,7 @@
             </physvol>
             <physvol>
                 <volumeref ref="volMezzanineItems"/>
-                <position name="posMezzanineItems" unit="mm" x="0" y="mY/2+2*dHY-uGY/2" z="mZ/2" />
+                <position name="posMezzanineItems" unit="mm" x="0" y="mY/2+2*dHY-uGY/2+mezzanineFloorSlab_Y/2 + _eD_" z="mZ/2" />
                 <!-- <positionref ref="posMezzanine" /> -->
             </physvol>
             <physvol>
@@ -5140,21 +5143,25 @@
 		<box name="boxCryostatLidInsulationLarger"  lunit="mm" x="dimCryostatLid_Outer_X_mm-dimCryostatLid_T_mm" y="dimCryostatLid_Outer_Y_mm-dimCryostatLid_T_mm" z="dimCryostatLidLarger_Outer_Z_mm-dimCryostatLid_T_mm"/>
 		<box name="boxCryostatLidInsulationSmaller" lunit="mm" x="dimCryostatLid_Outer_X_mm-dimCryostatLid_T_mm" y="dimCryostatLid_Outer_Y_mm-dimCryostatLid_T_mm" z="dimCryostatLidSmaller_Outer_Z_mm-dimCryostatLid_T_mm"/>
 
-		<!-- Solid External Walls -->
-		<box name="boxCryoInsul_inner" lunit="mm" x="dimInsulation_Inner_X_mm" y="dimInsulation_Inner_Y_mm" z="dimInsulation_Inner_Z_mm"/>
-		<box name="boxCryoInsul_outter" lunit="mm" x="dimCryoExt_X_mm" 	y="dimCryoExt_Y_mm"	z="dimCryoExt_Z_mm"/>
-		<subtraction name="solidCryoInsul">
-			<first ref="boxCryoInsul_outter"/>
-			<second ref="boxCryoInsul_inner"/>
-		</subtraction>
-
-		<box name="boxCryoPlywood_outter_outter" lunit="mm" x="dimInsulation_Inner_X_mm+2*dimPlywood_Insulation_T_mm" y="dimInsulation_Inner_Y_mm+dimPlywood_Insulation_T_mm" z="dimInsulation_Inner_Z_mm+2*dimPlywood_Insulation_T_mm"/>
-		<box name="boxCryoPlywood_outter_inner" lunit="mm" x="dimInsulation_Inner_X_mm" y="dimInsulation_Inner_Y_mm" z="dimInsulation_Inner_Z_mm"/>
+		<!-- Plywood -->
+		<!-- <box name="boxCryoPlywood_outter_outter" lunit="mm" x="dimInsulation_Inner_X_mm+2*dimPlywood_Insulation_T_mm" y="dimInsulation_Inner_Y_mm+dimPlywood_Insulation_T_mm" z="dimInsulation_Inner_Z_mm+2*dimPlywood_Insulation_T_mm"/> -->
+		<box name="boxCryoPlywood_outter_inner" lunit="mm" x="dimCryoExt_X_mm-2*dimPlywood_Insulation_T_mm" y="dimCryoExt_Y_mm-2*dimPlywood_Insulation_T_mm" z="dimCryoExt_Z_mm-2*dimPlywood_Insulation_T_mm"/>
+		<box name="boxCryoPlywood_outter_outter" lunit="mm" x="dimCryoExt_X_mm" 	y="dimCryoExt_Y_mm"	z="dimCryoExt_Z_mm"/>
 		<subtraction name="solidCryoPlywood">
 			<first ref="boxCryoPlywood_outter_outter"/>
 			<second ref="boxCryoPlywood_outter_inner"/>
 			<position name="posSubPlywood" unit="mm" x="0" y="dimPlywood_Insulation_T_mm/2.0+_eD_" z="0"/>
 		</subtraction>
+
+		<!-- Insulation Foam -->
+		<box name="boxCryoInsul_inner" lunit="mm" x="dimInsulation_Inner_X_mm" y="dimInsulation_Inner_Y_mm" z="dimInsulation_Inner_Z_mm"/>
+		<!-- <box name="boxCryoInsul_outter" lunit="mm" x="dimCryoExt_X_mm" 	y="dimCryoExt_Y_mm"	z="dimCryoExt_Z_mm"/> -->
+		<box name="boxCryoInsul_outter" lunit="mm" x="dimCryoExt_X_mm-2*dimPlywood_Insulation_T_mm-_eD_" y="dimCryoExt_Y_mm-2*dimPlywood_Insulation_T_mm-_eD_" z="dimCryoExt_Z_mm-2*dimPlywood_Insulation_T_mm-_eD_"/>
+		<subtraction name="solidCryoInsul">
+			<first ref="boxCryoInsul_outter"/>
+			<second ref="boxCryoInsul_inner"/>
+		</subtraction>
+
 	</solids>
 
 
@@ -5205,7 +5212,7 @@
 			</physvol>
 
 		</volume>   
-		
+
 		<volume name="volCryoPlywood">
 			<materialref ref="matPlywood"/>
 			<solidref ref="solidCryoPlywood"/>
