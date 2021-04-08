@@ -1429,7 +1429,7 @@
 			<!-- PM2 Rack -->
 			<physvol>
 				<volumeref ref="volRackSmall"/>
-				<position name="posBuildingRackSmall_0" unit="mm"
+				<position name="posBuildingRackSmall_1" unit="mm"
 							x="(-dimDetectorHall_X_mm/2+small_rack_x/2) + 5000"
 							y="(-box_interiors_y/2+small_rack_y/2)"
 							z="(-mezzanine_Z+small_rack_z)/2 + 1500" />
@@ -1437,7 +1437,7 @@
 			<!-- HV1 Rack -->
 			<physvol>
 				<volumeref ref="volRackSmall"/>
-				<position name="posBuildingRackSmall_0" unit="mm"
+				<position name="posBuildingRackSmall_2" unit="mm"
 							x="(-dimDetectorHall_X_mm/2+small_rack_x/2) + 5000 + 1 * (small_rack_x + rack_padding)"
 							y="(-box_interiors_y/2+small_rack_y/2)"
 							z="(-mezzanine_Z+small_rack_z)/2" />
@@ -1446,7 +1446,7 @@
 			<!-- GA2 Rack -->
 			<physvol>
 				<volumeref ref="volRackLarge"/>
-				<position name="posBuildingRackSmall_0" unit="mm"
+				<position name="posBuildingRackSmall_3" unit="mm"
 							x="(-dimDetectorHall_X_mm/2+large_rack_x/2) + 7000"
 							y="(-box_interiors_y/2+large_rack_y/2)"
 							z="(-mezzanine_Z+large_rack_z)/2 + 3500" />
@@ -1454,7 +1454,7 @@
 			<!-- GA1 Rack -->
 			<physvol>
 				<volumeref ref="volRackLarge"/>
-				<position name="posBuildingRackSmall_0" unit="mm"
+				<position name="posBuildingRackSmall_4" unit="mm"
 							x="(-dimDetectorHall_X_mm/2+large_rack_x/2) + 7000 + 1 * (large_rack_x + rack_padding)"
 							y="(-box_interiors_y/2+large_rack_y/2)"
 							z="(-mezzanine_Z+large_rack_z)/2 + 3500" />
@@ -5990,7 +5990,7 @@
 			<!-- Positioning the Exteriors -->
 			<physvol>
 				<volumeref ref="volExteriors"/>
-				<position name="posExteriors" unit="mm" x="0" y="whereBuild_Y+dimSystem_Z_mm" z="2200 + dimBuildingExternal_Z_mm/2 + exterior_box_z/2" />
+				<position name="posExteriorsWithSh" unit="mm" x="0" y="whereBuild_Y+dimSystem_Z_mm" z="2200 + dimBuildingExternal_Z_mm/2 + exterior_box_z/2" />
 			</physvol>
 			<!-- Positioning the Detector Enclosure -->
 			<physvol>
