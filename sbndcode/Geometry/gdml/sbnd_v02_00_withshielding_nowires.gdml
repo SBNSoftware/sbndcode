@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <gdml_simple_extension xmlns:gdml_simple_extension="http://www.example.org"
-                       xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"          
+                       xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
                        xs:noNamespaceSchemaLocation="./RefactoredGDMLSchema/SimpleExtension.xsd">
 <!--
 	======================================================================
@@ -29,7 +29,7 @@
 		one of these in the entire file (not really, by it will generate
 		a warning if there's more than one).
 		A few notes on some constants:
-			+ All units of lenght are mm by default. Input values have the 
+			+ All units of lenght are mm by default. Input values have the
 		intentended unit appended to their names (e.g. _mm ).
 			+ The constant _eD_ is used to some geometrical constructions.
 			+ The constants _in_ and _ft_ convert inches and feet to mm.
@@ -51,13 +51,7 @@
 		<rotation name="rotateP180X" unit="deg" x="180" y="0" z="0"/>
 		<rotation name="rotate180X180Y" unit="deg" x="180" y="180" z="0"/>
         <rotation name="rotateP90X180Z" unit="deg" x="90" y="0" z="180"/>
-		
-		
 		<rotation name="rotBuldingCeilingSlopeP" unit="deg" x="0" y="0" z="1.1574"/>
-		
-		
-			
-		
 		<position name="posAPAVertical_L" 	unit="mm" x="0" y="0" z="-1232.8385000000001" />
 		<position name="posAPAVertical_R" 	unit="mm" x="0" y="0" z="1232.8385000000001" />
 		<position name="posAPAHorizontal_L_0" unit="mm" x="0" y="2025" z="-616.41925000000003" />
@@ -69,10 +63,7 @@
 		<position name="posAPAHorizontal_L_3" unit="mm" x="0" y="-2025" z="-616.41925000000003" />
 		<position name="posAPAHorizontal_R_3" unit="mm" x="0" y="-2025" z="616.41925000000003" />
 		<position name="centerAtBorder" unit="mm" x="0" y="0" z="0" />
-		
 		<rotation name="rPlusUVAngleAboutX" unit="deg" x="30" y="0" z="0"/>
-		
-		
 		<position name="posTPC_East" unit="mm" x="-1011" y="0" z="-412.5"/>
 		<position name="posTPC_West" unit="mm" x="1011" y="0" z="-412.5"/>
 		<position name="posYPlane_E" unit="mm" x="-1009.5" y="0" z="0"/>
@@ -527,7 +518,6 @@
 			<materialref ref="matGalvanizedSteel"/>
 			<solidref ref="solidCeilingSteelDeck"/>
 		</volume>
-		
 		<volume name="volCeilingSkylightCover">
 			<materialref ref="fibrous_glass"/>
 			<solidref ref="boxCeilingSkylightCover"/>
@@ -561,7 +551,6 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volWallInsulation_NorthSouth"/>
-				
 			</physvol>
 			<physvol>
 				<volumeref ref="volWallMetalPlate_NorthSouth"/>
@@ -585,7 +574,6 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volWallInsulation_West"/>
-				
 			</physvol>
 			<physvol>
 				<volumeref ref="volWallMetalPlate_West"/>
@@ -609,7 +597,6 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volWallInsulation_East"/>
-				
 			</physvol>
 			<physvol>
 				<volumeref ref="volWallMetalPlate_East"/>
@@ -668,28 +655,28 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volRackSmall"/>
-				<position name="posBuildingRackSmall_0" unit="mm"
+				<position name="posBuildingRackSmall_1" unit="mm"
 							x="580.59999999999945"
 							y="-3440"
 							z="-1206.0999999999999" />
 			</physvol>
 			<physvol>
 				<volumeref ref="volRackSmall"/>
-				<position name="posBuildingRackSmall_0" unit="mm"
+				<position name="posBuildingRackSmall_2" unit="mm"
 							x="1210.5999999999995"
 							y="-3440"
 							z="-2706.0999999999999" />
 			</physvol>
 			<physvol>
 				<volumeref ref="volRackLarge"/>
-				<position name="posBuildingRackSmall_0" unit="mm"
+				<position name="posBuildingRackSmall_3" unit="mm"
 							x="2560.5999999999995"
 							y="-3450"
 							z="883.90000000000009" />
 			</physvol>
 			<physvol>
 				<volumeref ref="volRackLarge"/>
-				<position name="posBuildingRackSmall_0" unit="mm"
+				<position name="posBuildingRackSmall_4" unit="mm"
 							x="3150.5999999999995"
 							y="-3450"
 							z="883.90000000000009" />
@@ -721,176 +708,171 @@
 				<volumeref ref="volBuildingWall_NorthSouth"/>
 				<position name="posWall_S" unit="mm" x="0" y="0" z="-14389.1"/>
 			</physvol>
-			
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingWall_NorthSouth"/>
 				<position name="posWall_N" unit="mm" x="0" y="0" z="14389.1"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingWall_West"/>
 				<position name="posWall_W" unit="mm" x="7581.8999999999996" y="0" z="0"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingWall_East"/>
 				<position name="posWall_E" unit="mm" x="-7581.8999999999996" y="4953" z="0"/>
 			</physvol>
-			
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingWindow"/>
 				<position name="posWindow_1" unit="mm" x="-7613.6499999999996" y="-4584.7000000000007" z="0"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingTranslucentWall"/>
 				<position name="posWindow_2" unit="mm" x="-7613.6499999999996" y="368.29999999999973" z="0"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_0" unit="mm" x="-7188.1999999999998" y="-1993.8999999999996" z="-13944.6"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_1" unit="mm" x="-7188.1999999999998" y="-1993.8999999999996" z="-6134.1000000000004"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_2" unit="mm" x="-7188.1999999999998" y="-1993.8999999999996" z="571.5"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_3" unit="mm" x="-7188.1999999999998" y="-1993.8999999999996" z="7277.1000000000022"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_4" unit="mm" x="-7188.1999999999998" y="-1993.8999999999996" z="13982.700000000001"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_5" unit="mm" x="7035.8000000000002" y="-1993.8999999999996" z="-13944.6"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_6" unit="mm" x="7035.8000000000002" y="-1993.8999999999996" z="-6134.1000000000004"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_7" unit="mm" x="7035.8000000000002" y="-1993.8999999999996" z="571.5"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_8" unit="mm" x="7035.8000000000002" y="-1993.8999999999996" z="7277.1000000000022"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_V"/>
 				<position name="posBeam_9" unit="mm" x="7035.8000000000002" y="-1993.8999999999996" z="13982.700000000001"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_H"/>
 				<position name="posBeam_10" unit="mm" x="-7188.1999999999998" y="2082.8000000000011" z="0"/>
 			</physvol>
-			<physvol>				
+			<physvol>
 				<volumeref ref="volBuildingIBeam_H"/>
 				<position name="posBeam_11" unit="mm" x="7035.8000000000002" y="2082.8000000000011" z="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_1"/>
 				<position name="posTube_1" unit="mm" x="7442.1989999999996" y="-3327.4000000000001" z="0"/>
 			</physvol>
-			
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_1"/>
 				<position name="posTube_2" unit="mm" x="7442.1989999999996" y="-889" z="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_1"/>
 				<position name="posTube_3" unit="mm" x="7442.1989999999996" y="1549.4000000000005" z="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_1"/>
 				<position name="posTube_4" unit="mm" x="7442.1989999999996" y="3987.8000000000002" z="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_5" unit="mm" z="14249.398999999999" y="-3327.4000000000001" x="0"/>
 			</physvol>
-			
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_6" unit="mm" z="14249.398999999999" y="-889" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_7" unit="mm" z="14249.398999999999" y="1549.4000000000005" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_8" unit="mm" z="14249.398999999999" y="3987.8000000000002" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_9" unit="mm" z="-14249.398999999999" y="-3327.4000000000001" x="0"/>
 			</physvol>
-			
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_10" unit="mm" z="-14249.398999999999" y="-889" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_11" unit="mm" z="-14249.398999999999" y="1549.4000000000005" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_12" unit="mm" z="-14249.398999999999" y="3987.8000000000002" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_V_1"/>
 				<position name="posTube_13" unit="mm"  x="-7492.9989999999998" y="-431.80000000000018" z="-14300.199000000001"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_V_1"/>
 				<position name="posTube_14" unit="mm"  x="7492.9989999999998" y="-431.80000000000018" z="-14300.199000000001"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_V_1"/>
 				<position name="posTube_13_2" unit="mm"  x="-2540" y="-431.80000000000018" z="-14096.999"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_V_1"/>
 				<position name="posTube_14_2" unit="mm"  x="2540" y="-431.80000000000018" z="-14096.999"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_V_1"/>
 				<position name="posTube_15" unit="mm"  x="-7492.9989999999998" y="-431.80000000000018" z="14300.199000000001"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_V_1"/>
 				<position name="posTube_16" unit="mm"  x="7492.9989999999998" y="-431.80000000000018" z="14300.199000000001"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_V_1"/>
 				<position name="posTube_15_2" unit="mm"  x="-2540" y="-431.80000000000018" z="14223.999"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_V_1"/>
 				<position name="posTube_16_2" unit="mm"  x="2540" y="-431.80000000000018" z="14223.999"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_17" unit="mm" z="-13944.6" y="4825.9999999999991" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_18" unit="mm" z="-6134.1000000000004" y="4825.9999999999991" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_19" unit="mm" z="571.5" y="4825.9999999999991" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_20" unit="mm" z="7277.1000000000022" y="4825.9999999999991" x="0"/>
 			</physvol>
-			<physvol>			
+			<physvol>
 				<volumeref ref="volBuldingTube_H_2"/>
 				<position name="posTube_21" unit="mm" z="13982.700000000001" y="4825.9999999999991" x="0"/>
 			</physvol>
@@ -1419,7 +1401,6 @@
 			<first  ref="tubeCPA_Middle_H"/>
 			<second ref="tubeCPA_Center"/>
 			<rotationref ref="rotateP90X"/>
-					
 		</union>
 		<union name="unionCPA_H_0">
 			<first  ref="unionCPA_Center"/>
@@ -1508,42 +1489,42 @@
 		<union name="unionCPA_WithMeshFrame_0">
 			<first  ref="unionCPA_Elbow_3"/>
 			<second ref="solidCPAMeshFrame"/>
-			<position name="posCPA_WithMeshFrame_0" unit="mm" x="0" y="1552.5" z="-637.5"/> 
+			<position name="posCPA_WithMeshFrame_0" unit="mm" x="0" y="1552.5" z="-637.5"/>
 		</union>
 		<union name="unionCPA_WithMeshFrame_1">
 			<first  ref="unionCPA_WithMeshFrame_0"/>
 			<second ref="solidCPAMeshFrame"/>
-			<position name="posCPA_WithMeshFrame_1" unit="mm" x="0" y="517.5" z="-637.5"/> 
+			<position name="posCPA_WithMeshFrame_1" unit="mm" x="0" y="517.5" z="-637.5"/>
 		</union>
 		<union name="unionCPA_WithMeshFrame_2">
 			<first  ref="unionCPA_WithMeshFrame_1"/>
 			<second ref="solidCPAMeshFrame"/>
-			<position name="posCPA_WithMeshFrame_2" unit="mm" x="0" y="-517.5" z="-637.5"/> 
+			<position name="posCPA_WithMeshFrame_2" unit="mm" x="0" y="-517.5" z="-637.5"/>
 		</union>
 		<union name="unionCPA_WithMeshFrame_3">
 			<first  ref="unionCPA_WithMeshFrame_2"/>
 			<second ref="solidCPAMeshFrame"/>
-			<position name="posCPA_WithMeshFrame_3" unit="mm" x="0" y="-1552.5" z="-637.5"/> 
+			<position name="posCPA_WithMeshFrame_3" unit="mm" x="0" y="-1552.5" z="-637.5"/>
 		</union>
 		<union name="unionCPA_WithMeshFrame_4">
 			<first  ref="unionCPA_WithMeshFrame_3"/>
 			<second ref="solidCPAMeshFrame"/>
-			<position name="posCPA_WithMeshFrame_4" unit="mm" x="0" y="1552.5" z="637.5"/> 
+			<position name="posCPA_WithMeshFrame_4" unit="mm" x="0" y="1552.5" z="637.5"/>
 		</union>
 		<union name="unionCPA_WithMeshFrame_5">
 			<first  ref="unionCPA_WithMeshFrame_4"/>
 			<second ref="solidCPAMeshFrame"/>
-			<position name="posCPA_WithMeshFrame_5" unit="mm" x="0" y="517.5" z="637.5"/> 
+			<position name="posCPA_WithMeshFrame_5" unit="mm" x="0" y="517.5" z="637.5"/>
 		</union>
 		<union name="unionCPA_WithMeshFrame_6">
 			<first  ref="unionCPA_WithMeshFrame_5"/>
 			<second ref="solidCPAMeshFrame"/>
-			<position name="posCPA_WithMeshFrame_6" unit="mm" x="0" y="-517.5" z="637.5"/> 
+			<position name="posCPA_WithMeshFrame_6" unit="mm" x="0" y="-517.5" z="637.5"/>
 		</union>
 		<union name="unionCPA_WithMeshFrame_7">
 			<first  ref="unionCPA_WithMeshFrame_6"/>
 			<second ref="solidCPAMeshFrame"/>
-			<position name="posCPA_WithMeshFrame_7" unit="mm" x="0" y="-1552.5" z="637.5"/> 
+			<position name="posCPA_WithMeshFrame_7" unit="mm" x="0" y="-1552.5" z="637.5"/>
 		</union>
 		<union name="unionCPA_Structure_0">
 			<first  ref="boxCPACenter"/>
@@ -1586,7 +1567,6 @@
 		<subtraction name="solidCPAInner">
 			<first  ref="unionCPA_Joint_3"/>
 			<second ref="subLeaveTPCSpace"/>
-			
 		</subtraction>
 		<subtraction name="solidCPAInner_East">
 			<first  ref="solidCPAInner"/>
@@ -1619,7 +1599,7 @@
                 <box name="boxCPATPB" lunit="mm" x="2.3e-05" y="932" z="1172"/>
                 <box name="boxCPA_FoilTPB" lunit="mm" x="0.050823" y="932" z="1172"/>
         </solids>
-        <structure>                    
+        <structure>
                 <volume name="volCPAMesh">
                         <materialref ref="matSteelMesh"/>
                         <solidref ref="boxCPAMesh"/>
@@ -1651,7 +1631,6 @@
 		<subtraction name="solidFieldCage">
 			<first ref="boxFieldCage_Out"/>
 			<second ref="boxFieldCage_In"/>
-			
 		</subtraction>
 		<box name="boxFieldCage_I_base" lunit="mm" x="3972" y="6.2999999999999998" z="76.200000000000003"/>
 		<box name="boxFieldCage_I_middle" lunit="mm" x="3972" y="139.80000000000001" z="6.2999999999999998"/>
@@ -1690,7 +1669,6 @@
 			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="unionFC_I_4"/>
 		</volume>
-	
 		<volume name="volFC_strip_hor">
 			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxFieldCage_strip_hor"/>
@@ -2874,7 +2852,7 @@
 					<rotationref ref="rotateP90X"/>
 				</physvol>
 		</volume>
-	</structure> 
+	</structure>
         <solids>
                 <box lunit="cm" name="CRTmoduleX" x="360" y="180" z="1.8"/>
                 <box lunit="cm" name="CRTstripX" x="359.19999999999999" y="11.199999999999999" z="1"/>
@@ -12424,7 +12402,6 @@
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                 </volume>
-				
 				<volume name="volTaggerEast">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerEast"/>
@@ -12596,7 +12573,7 @@
                                         <position name="posCRT_module_107" unit="cm" x="360" y="-180" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
-                </volume>	
+                </volume>
                 <volume name="volTaggerBot">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerBottom"/>
@@ -12687,32 +12664,32 @@
                         <physvol>
                                 <volumeref ref="volCRTModule_126"/>
                                 <position name="posCRT_module_126" unit="cm" x="268.55000000000001" y="-445.89999999999998" z="-0.80000000000000004"/>
-                        </physvol>   
+                        </physvol>
                         <physvol>
                                 <volumeref ref="volCRTModule_127"/>
                                 <position name="posCRT_module_127" unit="cm" x="-268.5" y="115.175" z="0.59999999999999998"/>
-                        </physvol>    
+                        </physvol>
                         <physvol>
                                 <volumeref ref="volCRTModule_128"/>
                                 <position name="posCRT_module_128" unit="cm" x="-268.5" y="0" z="0.59999999999999998"/>
-                        </physvol>  
+                        </physvol>
                         <physvol>
                                 <volumeref ref="volCRTModule_129"/>
                                 <position name="posCRT_module_129" unit="cm" x="-268.5" y="-115.175" z="0.59999999999999998"/>
-                        </physvol>  
+                        </physvol>
                         <physvol>
                                 <volumeref ref="volCRTModule_130"/>
                                 <position name="posCRT_module_130" unit="cm" x="268.5" y="115.175" z="0.59999999999999998"/>
-                        </physvol>    
+                        </physvol>
                         <physvol>
                                 <volumeref ref="volCRTModule_131"/>
                                 <position name="posCRT_module_131" unit="cm" x="268.5" y="0" z="0.59999999999999998"/>
-                        </physvol>  
+                        </physvol>
                         <physvol>
                                 <volumeref ref="volCRTModule_132"/>
                                 <position name="posCRT_module_132" unit="cm" x="268.5" y="-115.175" z="0.59999999999999998"/>
-                        </physvol>     
-                        <physvol> 
+                        </physvol>
+                        <physvol>
                                 <volumeref ref="volG10strip_Bottom"/>
                                 <position name="pos_BottomG10strips" unit="cm" x="116.65000000000001" y="0" z="0"/>
                         </physvol>
@@ -12773,17 +12750,14 @@
 			<solidref ref="PMT_Underside"/>
 			<auxiliary auxtype="SensDet" auxvalue="PhotonDetector"/>
 		</volume>
-		
 		<volume name="vol_PMT_in">
 			<materialref ref="matVacuum"/>
 			<solidref ref="PMT_inside"/>
 		</volume>
-		
 		<volume name="vol_PMT_Back">
 			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="PMT_Back"/>
 		</volume>
-		
 		<volume name="volPMT">
 			<materialref ref="LAr"/>
 			<solidref ref="PMTVolume"/>
@@ -12800,9 +12774,8 @@
 				<position name="pos_PMT_in" unit="mm" x="0" y="0" z="-48.5"/>
 			</physvol>
 		</volume>
-		
 	</structure>
-	<!-- building a structure that will contain all 8 XARAPUCAS and 5 PMTs 
+	<!-- building a structure that will contain all 8 XARAPUCAS and 5 PMTs
 		per module of the APA -->
 	<solids>
 		<box name="PDS_moduleCase" lunit="mm" x="904.79999999999995" y="1040" z="133.5"/>
@@ -12871,19 +12844,17 @@
 		<subtraction name="boxAPATube_Longer">
 			<first  ref="boxAPATube_Longer_Outer"/>
 			<second ref="boxAPATube_Longer_Inner"/>
-			
 		</subtraction>
 		<box name="boxAPATube_Shorter_Outer"  lunit="mm" x="150"   y="100"   z="1132.8385000000001"/>
 		<box name="boxAPATube_Shorter_Inner"  lunit="mm" x="145"   y="95"   z="1132.8405"/>
 		<subtraction name="boxAPATube_Shorter">
 			<first  ref="boxAPATube_Shorter_Outer"/>
 			<second ref="boxAPATube_Shorter_Inner"/>
-			
 		</subtraction>
 		<union name="unionAPA_L_0">
 			<first  ref="boxAPATube_Longer"/>
 			<second ref="boxAPATube_Shorter"/>
-			<positionref ref="posAPAHorizontal_L_0"/>		
+			<positionref ref="posAPAHorizontal_L_0"/>
 		</union>
 		<union name="unionAPA_L_1">
 			<first  ref="unionAPA_L_0"/>
@@ -12931,8 +12902,7 @@
 			<positionref ref="posAPAVertical_R"/>
 		</union>
 	</solids>
-	
-	<structure> 
+	<structure>
 		<volume name="volOneAPAFrame">
 			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="unionAPA"/>
@@ -13218,10 +13188,9 @@
 		<volume name="volCryoExt">
 			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="solidCryoExt_ExtStruct_39"/>
-		</volume>        
+		</volume>
 	</structure>
 	<solids>
-		
 		<box name="boxCryostatLidSteelLarger" lunit="mm" x="5203.6000000000004" y="780" z="6312.1999999999998"/>
 		<box name="boxCryostatLidSteelSmaller" lunit="mm" x="5203.6000000000004" y="780" z="688.79999999999995"/>
 		<box name="boxCryostatLidInsulationLarger"  lunit="mm" x="5201.6000000000004" y="778" z="6310.1999999999998"/>
@@ -13244,27 +13213,25 @@
 		<volume name="volCryoLidInsulation_Larger">
 			<materialref ref="matPIRALU_Cryostat"/>
 			<solidref ref="boxCryostatLidInsulationLarger"/>
-		</volume>   
+		</volume>
 		<volume name="volCryoLidInsulation_Smaller">
 			<materialref ref="matPIRALU_Cryostat"/>
 			<solidref ref="boxCryostatLidInsulationSmaller"/>
-		</volume>   
+		</volume>
 		<volume name="volCryoLid_Larger">
 			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxCryostatLidSteelLarger"/>
 			<physvol>
 				<volumeref ref="volCryoLidInsulation_Larger"/>
 			</physvol>
-			
-		</volume>        
+		</volume>
 		<volume name="volCryoLid_Smaller">
 			<materialref ref="STEEL_STAINLESS_Fe7Cr2Ni"/>
 			<solidref ref="boxCryostatLidSteelSmaller"/>
 			<physvol>
 				<volumeref ref="volCryoLidInsulation_Smaller"/>
 			</physvol>
-			
-		</volume>  
+		</volume>
 		<volume name="volCryoInsulation">
 			<materialref ref="matPUFoam_Cryostat"/>
 			<solidref ref="solidCryoInsul"/>
@@ -13276,7 +13243,7 @@
 				<volumeref ref="volCryoLid_Smaller"/>
 				<position  name="posCryoLid_Smaller" unit="mm" x="0" y="3107.3000000000002" z="3170.0999999999999"/>
 			</physvol>
-		</volume>   
+		</volume>
 		<volume name="volCryoPlywood">
 			<materialref ref="matPlywood"/>
 			<solidref ref="solidCryoPlywood"/>
@@ -13324,7 +13291,7 @@
 		<volume name="volTPCPlane_U">
 			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
-		</volume>		
+		</volume>
 	</structure>
 	<structure>
 		<volume name="volTPCPlane_V">
@@ -13340,170 +13307,169 @@
 		<box name="boxTPCActive" 	lunit="mm" x="2013" 	y="4074.645"	z="5094"/>
 		<box name="boxTPC"	 		lunit="mm" x="2022"		y="4074.645"	z="5094"/>
 	</solids>
-	<structure> 
-            <volume name="volTPCActive">
-				<materialref ref="LAr"/>
-				<solidref ref="boxTPCActive"/>
-				<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-				<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
-				<auxiliary auxtype="Efield" auxvalue="500."/>
-                <physvol>
-					<volumeref ref="volCPA_East"/>
-					<position name="posCPA_East" unit="mm" x="1006.5" y="0" z="0" />
-				</physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_1_CPAMesh_East" unit="mm" x="1006.25" y="1552.5" z="1942"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_2_CPAMesh_East" unit="mm" x="1006.25" y="517.5" z="1942"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_3_CPAMesh_East" unit="mm" x="1006.25" y="-517.5" z="1942"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_4_CPAMesh_East" unit="mm" x="1006.25" y="-1552.5" z="1942"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_5_CPAMesh_East" unit="mm" x="1006.25" y="1552.5" z="667"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_6_CPAMesh_East" unit="mm" x="1006.25" y="517.5" z="667"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_7_CPAMesh_East" unit="mm" x="1006.25" y="-517.5" z="667"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_8_CPAMesh_East" unit="mm" x="1006.25" y="-1552.5" z="667"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_9_CPAMesh_East" unit="mm" x="1006.25" y="1552.5" z="-667"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_10_CPAMesh_East" unit="mm" x="1006.25" y="517.5" z="-667"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_11_CPAMesh_East" unit="mm" x="1006.25" y="-517.5" z="-667"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_12_CPAMesh_East" unit="mm" x="1006.25" y="-1552.5" z="-667"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_13_CPAMesh_East" unit="mm" x="1006.25" y="1552.5" z="-1942"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_14_CPAMesh_East" unit="mm" x="1006.25" y="517.5" z="-1942"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_15_CPAMesh_East" unit="mm" x="1006.25" y="-517.5" z="-1942"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_16_CPAMesh_East" unit="mm" x="1006.25" y="-1552.5" z="-1942"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_1_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="1552.5" z="1942"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_2_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="517.5" z="1942"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_3_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-517.5" z="1942"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_4_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-1552.5" z="1942"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_5_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="1552.5" z="667"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_6_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="517.5" z="667"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_7_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-517.5" z="667"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_8_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-1552.5" z="667"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_9_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="1552.5" z="-667"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_10_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="517.5" z="-667"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_11_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-517.5" z="-667"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_12_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-1552.5" z="-667"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_13_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="1552.5" z="-1942"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_14_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="517.5" z="-1942"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_15_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-517.5" z="-1942"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_16_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-1552.5" z="-1942"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
+	<structure>
+		<volume name="volTPCActive">
+			<materialref ref="LAr"/>
+			<solidref ref="boxTPCActive"/>
+			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
+			<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
+			<auxiliary auxtype="Efield" auxvalue="500."/>
+			<physvol>
+				<volumeref ref="volCPA_East"/>
+				<position name="posCPA_East" unit="mm" x="1006.5" y="0" z="0" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_1_CPAMesh_East" unit="mm" x="1006.25" y="1552.5" z="1942"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_2_CPAMesh_East" unit="mm" x="1006.25" y="517.5" z="1942"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_3_CPAMesh_East" unit="mm" x="1006.25" y="-517.5" z="1942"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_4_CPAMesh_East" unit="mm" x="1006.25" y="-1552.5" z="1942"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_5_CPAMesh_East" unit="mm" x="1006.25" y="1552.5" z="667"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_6_CPAMesh_East" unit="mm" x="1006.25" y="517.5" z="667"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_7_CPAMesh_East" unit="mm" x="1006.25" y="-517.5" z="667"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_8_CPAMesh_East" unit="mm" x="1006.25" y="-1552.5" z="667"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_9_CPAMesh_East" unit="mm" x="1006.25" y="1552.5" z="-667"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_10_CPAMesh_East" unit="mm" x="1006.25" y="517.5" z="-667"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_11_CPAMesh_East" unit="mm" x="1006.25" y="-517.5" z="-667"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_12_CPAMesh_East" unit="mm" x="1006.25" y="-1552.5" z="-667"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_13_CPAMesh_East" unit="mm" x="1006.25" y="1552.5" z="-1942"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_14_CPAMesh_East" unit="mm" x="1006.25" y="517.5" z="-1942"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_15_CPAMesh_East" unit="mm" x="1006.25" y="-517.5" z="-1942"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_16_CPAMesh_East" unit="mm" x="1006.25" y="-1552.5" z="-1942"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_1_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="1552.5" z="1942"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_2_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="517.5" z="1942"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_3_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-517.5" z="1942"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_4_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-1552.5" z="1942"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_5_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="1552.5" z="667"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_6_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="517.5" z="667"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_7_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-517.5" z="667"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_8_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-1552.5" z="667"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_9_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="1552.5" z="-667"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_10_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="517.5" z="-667"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_11_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-517.5" z="-667"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_12_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-1552.5" z="-667"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_13_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="1552.5" z="-1942"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_14_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="517.5" z="-1942"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_15_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-517.5" z="-1942"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_16_CPAFoilTPB_East" unit="mm" x="1000.4745885" y="-1552.5" z="-1942"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
 		</volume>
-		<volume name="volTPC_East"> 
+		<volume name="volTPC_East">
 			<materialref ref="LAr"/>
 			<solidref ref="boxTPC"/>
 			<physvol>
 				<volumeref ref="volTPCActive"/>
 				<position name="posTPCActive_East" unit="mm" x="4.5" y="0" z="0"/>
 			</physvol>
-			
 			<physvol>
 				<volumeref ref="volTPCPlane_V"/>
 				<positionref ref="posVPlane_E"/>
@@ -13517,7 +13483,7 @@
 				<positionref ref="posYPlane_E"/>
 			</physvol>
 		</volume>
-		<volume name="volTPC_West"> 
+		<volume name="volTPC_West">
 			<materialref ref="LAr"/>
 			<solidref ref="boxTPC"/>
 			<physvol>
@@ -13547,10 +13513,9 @@
 		<subtraction name="boxSteelCryostat">
 			<first ref="boxSteel"/>
 			<second ref="boxCryostat"/>
-			
 		</subtraction>
 	</solids>
-	<structure> 
+	<structure>
 		<volume name="volCryostat">
 			<materialref ref="LAr"/>
 			<solidref ref="boxCryostat"/>
@@ -13569,7 +13534,7 @@
 			<physvol>
 				<volumeref ref="volTPC_West"/>
 				<positionref ref="posTPC_West"/>
-			</physvol>			
+			</physvol>
 			<physvol>
 				<volumeref ref="volOneAPAFrame"/>
 				<position name="posAPAFrame_NW" unit="mm" x="2112.3000000000002" y="0" z="889.33850000000007" />
@@ -13714,13 +13679,11 @@
 	<solids>
 		<box name="boxDetectorEnclosure_Pit"   lunit="mm" x="9448.7990000000009" y="10149.84" z="12191.999"/>
 		<box name="boxDetectorEnclosure_Tower" lunit="mm" x="9448.7990000000009" y="10670" z="12191.999"/>
-		
 		<union name="boxDetectorEnclosure">
 			<first ref="boxDetectorEnclosure_Pit"/>
 			<second ref="boxDetectorEnclosure_Tower"/>
-			<position name="posTopTower" unit="mm" x="0" y="10409.92" z="0"/>	
+			<position name="posTopTower" unit="mm" x="0" y="10409.92" z="0"/>
 		</union>
-			
 	</solids>
 	<structure>
 		<volume name="volDetEnclosure_dummy" >
@@ -13728,7 +13691,6 @@
 			<solidref ref="boxDetectorEnclosure"/>
 		</volume>
 	</structure>
-	
 	<structure>
 		<volume name="volDetEnclosure" >
 			<materialref ref="matAir"/>
@@ -13769,7 +13731,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryostat"/>
-				<positionref ref="posCryostat"/>			
+				<positionref ref="posCryostat"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryoMembrane"/>
@@ -13820,11 +13782,11 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volExteriors"/>
-				<position name="posExteriors" unit="mm" x="0" y="12086.301000000001" z="21127.200000000001" />
+				<position name="posExteriorsWithSh" unit="mm" x="0" y="12086.301000000001" z="21127.200000000001" />
 			</physvol>
 			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-				<position name="posEnclosureWithSh" unit="mm" x="0" y="0" z="3434.1999999999998" />	
+				<position name="posEnclosureWithSh" unit="mm" x="0" y="0" z="3434.1999999999998" />
 			</physvol>
 		</volume>
 		<volume name="volIgnoredOnThisSetup" >
@@ -13852,7 +13814,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-				<position name="posEnclosure" unit="mm" x="0" y="0" z="3434.1999999999998" />	
+				<position name="posEnclosure" unit="mm" x="0" y="0" z="3434.1999999999998" />
 			</physvol>
 		</volume>
 	</structure>

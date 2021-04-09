@@ -5442,167 +5442,166 @@
 
 	<structure>
 
-                <!-- defined as being the East one -->
-                <!-- the West one is going to be this one mirrored -->
-            <volume name="volTPCActive">
-				<materialref ref="LAr"/>
-				<solidref ref="boxTPCActive"/>
-				<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-				<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
-				<auxiliary auxtype="Efield" auxvalue="500."/>
+		<!-- defined as being the East one -->
+		<!-- the West one is going to be this one mirrored -->
+		<volume name="volTPCActive">
+			<materialref ref="LAr"/>
+			<solidref ref="boxTPCActive"/>
+			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
+			<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
+			<auxiliary auxtype="Efield" auxvalue="500."/>
 
-                <physvol>
-					<volumeref ref="volCPA_East"/>
-					<position name="posCPA_East" unit="mm" x="(theTPC_X-3*theTPCPlane_W)/2.0" y="0" z="0" />
-				</physvol>
+			<physvol>
+				<volumeref ref="volCPA_East"/>
+				<position name="posCPA_East" unit="mm" x="(theTPC_X-3*theTPCPlane_W)/2.0" y="0" z="0" />
+			</physvol>
 
-                        <!-- cpa mesh -->
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_1_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_2_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_3_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_4_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_5_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_6_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_7_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_8_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_9_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_10_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_11_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_12_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_13_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_14_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_15_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPAMesh"/>
-                                <position name="pos_16_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
-                        </physvol>
-
-                        <!-- cpa foil+tpb -->
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_1_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_2_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_3_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_4_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_5_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_6_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_7_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_8_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_9_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_10_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_11_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_12_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_13_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_14_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_15_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
-                        <physvol>
-                                <volumeref ref="volCPA_FoilTPB"/>
-                                <position name="pos_16_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
-                                <rotationref ref="rotateP180Y"/>
-                        </physvol>
+			<!-- cpa mesh -->
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_1_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_2_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_3_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_4_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_5_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_6_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_7_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_8_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_9_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_10_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_11_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_12_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_13_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_14_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_15_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPAMesh"/>
+				<position name="pos_16_CPAMesh_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-CPAMesh_T_mm/4.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
+			</physvol>
+			<!-- cpa foil+tpb -->
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_1_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_2_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_3_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_4_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(1.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_5_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_6_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_7_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_8_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(0.5)*dimCPASpacing_mm+(0.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_9_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_10_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_11_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_12_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-0.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_13_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_14_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_15_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-0.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCPA_FoilTPB"/>
+				<position name="pos_16_CPAFoilTPB_East" unit="mm" x="(1)*((theTPC_X-3*theTPCPlane_W)/2.0-(CPAFoil_T_mm+CPATPB_T_mm+dimCPAMeshFixture_T_mm)/2.0)" y="(-1.5)*dimCPAWindow_H_mm" z="(-0.5)*dimCPASpacing_mm+(-1.5)*dimCPAWindow_W_mm"/>
+				<rotationref ref="rotateP180Y"/>
+			</physvol>
 
 		</volume>
 
