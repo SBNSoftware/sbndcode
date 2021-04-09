@@ -1,0 +1,8 @@
+# Simulates GENIE neutrino interactions from the BNB beam 
+# with the beam spill structure, inside the cryostat volume.
+
+# Standard GENIE configuration
+#include "prodgenie_sbnd.fcl"
+
+# Interactions in the cryostat only
+#include "set_genie_cryostat.fcl"
