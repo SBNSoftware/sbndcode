@@ -67,5 +67,5 @@ outputs:
 }
 
 # Geometry with overburden
-#include "geometry_shielding_on_sbnd.fcl"
+#include "set_geometry_shielding_on.fcl"
 
