@@ -1,0 +1,8 @@
+#include "prodcosmics_corsika_sbnd.fcl"
+
+# overwrite CMC generator to instead use "proton" -- has a more accurate
+# cosmic rate
+physics.producers.generator: @local::sbnd_corsika_p
+physics.producers.generator.SampleTime: 0.5e-3
+physics.producers.generator.TimeOffset: -0.25e-3
+

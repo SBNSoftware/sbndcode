@@ -5,12 +5,13 @@
 <!DOCTYPE project [
 <!ENTITY release "v09_09_01">
 <!ENTITY releasetag "e19:prof">
-<!ENTITY my_version "v13">
-<!ENTITY config "configC_inair">
-<!ENTITY name "mdeltutt_test_inair">
-<!ENTITY tag "test_inair">
+<!ENTITY my_version "v16">
+<!ENTITY config "configC">
+<!ENTITY name "mdeltutt_ob_on_full">
+<!ENTITY tag "mdeltutt_ob_on_full">
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
+<!ENTITY n_submission "2">
 <!ENTITY PNFSpath "/pnfs/sbnd/resilient/users/mdeltutt/">
 ]>
 
@@ -21,7 +22,7 @@
   <group>sbnd</group>
 
   <!-- Project size -->
-  <numevents>10000</numevents>
+  <numevents>150000</numevents>
 
   <!-- Operating System -->
   <os>SL7</os>
@@ -38,20 +39,20 @@
 
   <!-- Project stages -->
 
-  <stage name="gen">
-    <fcl>prodcorsika_cosmics_proton_sbnd_short.fcl</fcl>
-    <fcl>standard_g4_sbnd_&config;.fcl</fcl>
+  <stage name="full">
+    <fcl>prodcorsika_cosmics_proton_sbnd_0.5ms.fcl</fcl>
+    <fcl>standard_g4_sbnd_&config;_ob_on.fcl</fcl>
     <fcl>run_overburdenana.fcl</fcl>
     <!-- <inputlist>&PNFSpath;cosmics_corsika_cmc_uboone_intime_v06_26_01.txt</inputlist> -->
     <defname>&name;_&tag;_gen</defname>
     <maxfilesperjob>1</maxfilesperjob>
-    <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/inair_gen_&config;_&my_version;</outdir>
-    <workdir>&PNFSpath;grid_workdir_sbnd/inair</workdir>
-    <numjobs>400</numjobs>
+    <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/ob_on_full_&config;_&my_version;_&n_submission;</outdir>
+    <workdir>&PNFSpath;grid_workdir_sbnd/ob_full_on</workdir>
+    <numjobs>500</numjobs>
     <datatier>generated</datatier>
-    <memory>9000</memory>
-    <jobsub>  --expected-lifetime=23h -Q --generate-email-summary </jobsub>
-    <disk>60GB</disk>
+    <memory>1999</memory>
+    <jobsub>  --expected-lifetime=8h -Q --generate-email-summary </jobsub>
+    <disk>10GB</disk>
   </stage>
 
   <!-- file type -->
