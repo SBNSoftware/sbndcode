@@ -5,10 +5,7 @@ physics.producers.mcreco.MCShowerRecoAlg.MinShowerEnergy: 1 # MeV
 physics.producers.mcreco.MCShowerRecoAlg.MinNumDaughters: 0
 
 # Geometry with overburden
-services.Geometry.GDML: "sbnd_v01_04_ob.gdml"
-services.Geometry.ROOT: "sbnd_v01_04_ob.gdml"
-services.AuxDetGeometry.GDML: "sbnd_v01_04_ob.gdml"
-services.AuxDetGeometry.ROOT: "sbnd_v01_04_ob.gdml"
+#include "set_geometry_shielding_on.fcl"
 
 services.LArG4Parameters.EnabledPhysics: [
          "Em",

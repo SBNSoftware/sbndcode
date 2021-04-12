@@ -3,7 +3,7 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release "v09_09_01">
+<!ENTITY release "v09_15_00">
 <!ENTITY releasetag "e19:prof">
 <!ENTITY my_version "v13">
 <!ENTITY config "configC_inair">
@@ -23,9 +23,6 @@
   <!-- Project size -->
   <numevents>10000</numevents>
 
-  <!-- Operating System -->
-  <os>SL7</os>
-
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC</resource>
 
@@ -33,7 +30,7 @@
   <larsoft>
     <tag>&release;</tag>
     <qual>&releasetag;</qual>
-    <local>&PNFSpath;Tarballs/sbndcode_v09_09_01_ob__&my_version;.tgz</local>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_15_00_ob__&my_version;.tgz</local>
   </larsoft>
 
   <!-- Project stages -->
@@ -42,7 +39,6 @@
     <fcl>prodcorsika_cosmics_proton_sbnd_short.fcl</fcl>
     <fcl>standard_g4_sbnd_&config;.fcl</fcl>
     <fcl>run_overburdenana.fcl</fcl>
-    <!-- <inputlist>&PNFSpath;cosmics_corsika_cmc_uboone_intime_v06_26_01.txt</inputlist> -->
     <defname>&name;_&tag;_gen</defname>
     <maxfilesperjob>1</maxfilesperjob>
     <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/inair_gen_&config;_&my_version;</outdir>
@@ -50,7 +46,7 @@
     <numjobs>400</numjobs>
     <datatier>generated</datatier>
     <memory>9000</memory>
-    <jobsub>  --expected-lifetime=23h -Q --generate-email-summary </jobsub>
+    <jobsub> --expected-lifetime=23h -Q --generate-email-summary -l +SingularityImage=\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\" --append_condor_requirements='(TARGET.HAS_SINGULARITY=?=true)' </jobsub>
     <disk>60GB</disk>
   </stage>
 
