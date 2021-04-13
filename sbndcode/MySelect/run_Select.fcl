@@ -10,7 +10,7 @@ source:
 
 services:
 {
-  TFileService: { fileName: "50events_test.root" }
+  TFileService: { fileName: "50_events.root" }
   @table::sbnd_services
 
   ParticleInventoryService: @local::standard_particleinventoryservice

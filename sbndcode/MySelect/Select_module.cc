@@ -83,6 +83,9 @@ private:
   size_t 		pfpParticleID;
   bool			pfpIsPrimary;
   int		        pfpParticlePDG;
+  double		pfpTrackLength;
+  double 		pfpYZAngle;
+  double		pfpXZAngle;
   std::vector<float>	pfpdQdx_0;
   std::vector<float>	pfpX_0;
   std::vector<float>	pfpY_0;
@@ -229,6 +232,10 @@ void sbnd::Select::analyze(art::Event const& e)
      
     for(const art::Ptr<recob::Track> &trk: pfpTrack){
 
+      pfpTrackLength = trk->Length();     
+      pfpYZAngle = trk->ZenithAngle();
+      pfpXZAngle = trk->AzimuthAngle();
+      
       // Calorimetry
     
       std::vector< art::Ptr<anab::Calorimetry> > trkCal = calAssoc.at(trk.key());
@@ -238,6 +245,7 @@ void sbnd::Select::analyze(art::Event const& e)
       for(const art::Ptr<anab::Calorimetry> &cal: trkCal){
    
         if(!cal->PlaneID().isValid) continue;
+       
 
         int planenum = cal->PlaneID().Plane;
 
@@ -360,6 +368,9 @@ void sbnd::Select::beginJob()
   pfpTree->Branch("ParticleID", &pfpParticleID, "ParticleID/i");
   pfpTree->Branch("IsPrimary", &pfpIsPrimary, "IsPrimary/O");
   pfpTree->Branch("ParticlePDG", &pfpParticlePDG, "ParticlePDG/I");
+  pfpTree->Branch("TrackLength", &pfpTrackLength, "TrackLength/D");
+  pfpTree->Branch("YZAngle", &pfpYZAngle, "YZAngle/D");
+  pfpTree->Branch("XZAngle", &pfpXZAngle, "XZAngle/D");
   pfpTree->Branch("dQdx_0", &pfpdQdx_0);
   pfpTree->Branch("X_0", &pfpX_0);
   pfpTree->Branch("Y_0", &pfpY_0);
@@ -589,6 +600,9 @@ void sbnd::Select::clearPfpTree()
   pfpParticleID = 99999;
   pfpIsPrimary = 99999;
   pfpParticlePDG = 99999;
+  pfpTrackLength = 99999;
+  pfpYZAngle = 99999;
+  pfpXZAngle = 99999;
   pfpdQdx_0.clear();
   pfpX_0.clear();
   pfpY_0.clear();
