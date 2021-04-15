@@ -483,7 +483,7 @@ namespace sbnd {
 
     // shower information
     ShowerDataStruct ShowerData;
-    
+
     // PFParticle information
     Int_t   num_pfps;			//number of PFParticles reconstructed
     Int_t   pfp_sliceid[kMaxPFPs];	//id of slice containing each PFP
@@ -656,7 +656,7 @@ namespace sbnd {
     
     /// Returns whether we have Slice data
     bool hasSliceInfo() const { return bits & tdSlice; }
-    
+
     /// Returns whether we have Vertex data
     bool hasVertexInfo() const { return bits & tdVtx; }
     
@@ -849,8 +849,8 @@ namespace sbnd {
     AnalysisTreeDataStruct* fData;
 //    AnalysisTreeDataStruct::RunData_t RunData;
     AnalysisTreeDataStruct::SubRunData_t SubRunData;
-    
-    
+
+
     std::string fDigitModuleLabel;
     std::string fHitsModuleLabel;
     std::string fLArG4ModuleLabel;
@@ -886,7 +886,7 @@ namespace sbnd {
     float fG4minE;         ///< Energy threshold to save g4 particle info
     
     calo::CalorimetryAlg fCaloAlg;
-   
+
     // ParticleInventoryService
     art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
 
@@ -911,7 +911,7 @@ namespace sbnd {
           fData->SetBits(AnalysisTreeDataStruct::tdTrack, !fSaveTrackInfo);	
           fData->SetBits(AnalysisTreeDataStruct::tdShower, !fSaveShowerInfo);	
           fData->SetBits(AnalysisTreeDataStruct::tdSlice, !fSaveSliceInfo);
-	  fData->SetBits(AnalysisTreeDataStruct::tdVtx, !fSaveVertexInfo);	  	  	    	  	    	  	    	  
+          fData->SetBits(AnalysisTreeDataStruct::tdVtx, !fSaveVertexInfo);	  	  	    	  	    	  	    	  
           fData->SetTrackers(GetNTrackers());
           fData->SetVertices(GetNTrackers());
           if (bClearData) fData->Clear();
@@ -1213,7 +1213,7 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   
   BranchName = "trkrange_" + TrackLabel;
   CreateBranch(BranchName, trkrange, BranchName + NTracksIndexStr + "[3]/F");
-  
+
   BranchName = "trkidtruth_recoutils_totaltrueenergy_" + TrackLabel;
   CreateBranch(BranchName, trkidtruth_recoutils_totaltrueenergy, BranchName + NTracksIndexStr + "[3]/I");
 
@@ -1644,12 +1644,10 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   FillWith(processname, "noname");
   FillWith(MergedId, -99999);
   FillWith(MotherNuId, -99999);
-  
   FillWith(DepEnergy,     -9999);
   FillWith(NumElectrons,  -9999);
   total_DepEnergy    = -9999.;
   total_NumElectrons = -9999.;
-  
   FillWith(genie_primaries_pdg, -99999);
   FillWith(genie_Eng, -99999.);
   FillWith(genie_Px, -99999.);
@@ -1699,7 +1697,7 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   //FillWith(pfp_id,-999);
   FillWith(pfp_sliceid,-999);
   FillWith(pfp_pdg,-999);
- 
+
   // Clear slice info
   num_slices = 0;
   num_nuslices = 0;
@@ -1712,8 +1710,8 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   best_nuslice_hitpurity = -9.;
   best_nuslice_lephitcomp = -9.;
   best_nuslice_lephitpurity = -9.;
-   
-  
+
+
 } // sbnd::AnalysisTreeDataStruct::ClearLocalData()
 
 
@@ -2057,7 +2055,6 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
     CreateBranch("MotherNuId", MotherNuId, "MotherNuId[geant_list_size]/I");
     CreateBranch("process_primary",process_primary,"process_primary[geant_list_size]/I");
     CreateBranch("processname", processname);
-    
     CreateBranch("DepEnergy",           DepEnergy,          "DepEnergy[geant_list_size]/F");
     CreateBranch("NumElectrons",        NumElectrons,       "NumElectrons[geant_list_size]/F");
     CreateBranch("total_DepEnergy",     &total_DepEnergy,   "total_DepEnergy/F");
@@ -2120,11 +2117,11 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   fUseBuffer                (pset.get< bool >("UseBuffers", false)),
   fSaveAuxDetInfo           (pset.get< bool >("SaveAuxDetInfo", false)),
   fSaveCryInfo              (pset.get< bool >("SaveCryInfo", false)),  
-  fSaveGenieInfo            (pset.get< bool >("SaveGenieInfo", false)), 
-  fSaveGeantInfo            (pset.get< bool >("SaveGeantInfo", false)), 
-  fSaveHitInfo	            (pset.get< bool >("SaveHitInfo", false)), 
-  fSaveTrackInfo            (pset.get< bool >("SaveTrackInfo", false)), 
-  fSaveShowerInfo           (pset.get< bool >("SaveShowerInfo", false)), 
+  fSaveGenieInfo            (pset.get< bool >("SaveGenieInfo", false)),
+  fSaveGeantInfo            (pset.get< bool >("SaveGeantInfo", false)),
+  fSaveHitInfo	            (pset.get< bool >("SaveHitInfo", false)),
+  fSaveTrackInfo            (pset.get< bool >("SaveTrackInfo", false)),
+  fSaveShowerInfo           (pset.get< bool >("SaveShowerInfo", false)),
   fSaveVertexInfo           (pset.get< bool >("SaveVertexInfo", false)),
   fSaveSliceInfo            (pset.get< bool >("SaveSliceInfo",true)),
   fSaveHierarchyInfo        (pset.get< std::vector<bool> >("SaveHierarchyInfo", {false})),
@@ -2166,7 +2163,6 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
       << "fTrackModuleLabel.size() = "<<fTrackModuleLabel.size()<<" does not match "
       << "fSaveHierarchyInfo.size() = "<<fSaveHierarchyInfo.size();
   }
-  
 
 } // sbnd::AnalysisTree::AnalysisTree()
 
@@ -2201,13 +2197,10 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 {
   //tell us what's going on
   std::cout<<"AnalysisTree: processing event "<<evt.id().event()<<"\n";
-  
+
   //services
   art::ServiceHandle<geo::Geometry> geom;
-//  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-  //art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
   auto const detprop = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
-  //auto const* detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
   // auto const* LArProp = lar::providerFrom<detinfo::LArPropertiesService>();
 
   // collect the sizes which might me needed to resize the tree data structure:
@@ -2221,14 +2214,14 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
   // * TPC SimChannels
   std::vector<const sim::SimChannel*> fSimChannels;
-  if (isMC && fSaveGeantInfo) 
+  if (isMC && fSaveGeantInfo)
     evt.getView(fLArG4ModuleLabel, fSimChannels);
-  
+
   // * AuxDetSimChannels
   std::vector<const sim::AuxDetSimChannel*> fAuxDetSimChannels;
-  if (fSaveAuxDetInfo && fSaveGeantInfo) 
+  if (fSaveAuxDetInfo && fSaveGeantInfo)
     evt.getView(fLArG4ModuleLabel, fAuxDetSimChannels);
-  
+
   // * hits
   art::Handle< std::vector<recob::Hit> > hitListHandle;
   std::vector<art::Ptr<recob::Hit> > hitlist;
@@ -2260,32 +2253,32 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   int nGeniePrimaries = 0, nGEANTparticles = 0, nMCNeutrinos = 0;
   
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
-  
+
   art::Ptr<simb::MCTruth> mctruth;
 
   if (isMC) { //is MC
-  
+
     // Determine if there are cosmics
     if (!mclist.empty()){ //at least one mc record
     static bool isfirsttime = true;
     if (isfirsttime){
-	    for (size_t i = 0; i<hitlist.size(); i++){
-	      // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem 
-	      // to correspond to the g4 track (FIXME may need further investigation)
-	      if(DoesHitHaveSimChannel(fSimChannels,hitlist[i])) {
-	        std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(clockData, hitlist[i]);
-	        for (size_t e = 0; e<eveIDs.size(); e++){
+      for (size_t i = 0; i<hitlist.size(); i++){
+        // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem 
+        // to correspond to the g4 track (FIXME may need further investigation)
+        if(DoesHitHaveSimChannel(fSimChannels,hitlist[i])) {
+          std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(clockData, hitlist[i]);
+          for (size_t e = 0; e<eveIDs.size(); e++){
             art::Ptr<simb::MCTruth> ev_mctruth;
             if( TrackIdToMCTruth(eveIDs[e].trackID, ev_mctruth)){
               if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
               break;
             }
           }
-	      }//check if simchan exists
+        }//check if simchan exists
         if( isCosmics ) break; // stop looping if we've already figured it out
-	    }//loop over hits
-	    isfirsttime = false;
-	    if (fSaveCaloCosmics) isCosmics = false; //override to save calo info
+      }//loop over hits
+      isfirsttime = false;
+      if (fSaveCaloCosmics) isCosmics = false; //override to save calo info
     }//isfirsttime
 
     mctruth = mclist[0];
@@ -2296,8 +2289,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
     // to know the number of particles in AV would require
     // looking at all of them; so we waste some memory here
-    } // if have MC truth
-    
+    } // if has MC truth
+
     MF_LOG_DEBUG("AnalysisTree") << "Expected "
       << nGEANTparticles << " GEANT particles, "
       << nGeniePrimaries << " GENIE particles";
@@ -2350,7 +2343,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   std::vector< std::vector< art::Ptr<recob::Vertex> > >    vtxlist(NTrackers);
   std::vector< art::Ptr<recob::Shower> >                   shwlist;
   std::vector< int > NVertices;
-  
+
   // Declare maps for track and vertex to pfparticle associations 
   //  this is the opposite way around to how they are produced
   typedef std::map<art::Ptr<recob::Track>,  art::Ptr<recob::PFParticle> > trkPfpMap;
@@ -2378,7 +2371,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       mf::LogError("AnalysisTree:limits") << " Event has no PFParticle information ";
     }
   }
-    
+
   // Loop over trackers and see if the hierarchy information needs saving
   for (unsigned int iTracker=0; iTracker < NTrackers; ++iTracker){
     verticesPFParticleMaps.push_back(vertexPFParticleMap);
@@ -2389,7 +2382,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     // Get and check that the pfparticle handle is valid and exists
     //if(pfpHandle->empty())
     //  mf::LogError("AnalysisTree:limits") << " Event has no PFParticle information ";
-  
+
     // Track and vertex associations
     art::FindManyP<recob::Vertex> fvtx(pfpHandle, evt, fVertexModuleLabel[iTracker]);
     art::FindManyP<recob::Track> fmtrk(pfpHandle, evt, fTrackModuleLabel[iTracker]);
@@ -2419,7 +2412,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       trackerPFParticleMaps.at(iTracker).emplace(trkAssn.front(),pfp);
     }
   }// end loop over trackers
- 
+
   if(fSaveShowerHierarchyInfo){
     if(pfpHandle->size()) {
       art::FindManyP<recob::Shower> fshw(pfpHandle, evt, fShowerModuleLabel);
@@ -2440,7 +2433,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       }
     }
   } // save maps for SaveShowerHierarchyInfo
-  
+
   if (evt.getByLabel(fShowerModuleLabel,showerHandle))
     art::fill_ptr_vector(shwlist, showerHandle);
   const size_t NShowers = shwlist.size();
@@ -2472,7 +2465,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 //  std::cout<<detprop->NumberTimeSamples()<<" "<<detprop->ReadOutWindowSize()<<std::endl;
 //  std::cout<<geom->DetHalfHeight()*2<<" "<<geom->DetHalfWidth()*2<<" "<<geom->DetLength()<<std::endl;
 //  std::cout<<geom->Nwires(0)<<" "<<geom->Nwires(1)<<" "<<geom->Nwires(2)<<std::endl;
-    
+
   //hit information
   fData->no_hits = (int) NHits; // save this # even if we aren't saving info for *every* hit
   if (fSaveHitInfo){
@@ -2494,7 +2487,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       fData->hit_endT[i]    = hitlist[i]->PeakTimePlusRMS();
       fData->hit_width[i]   = hitlist[i]->RMS();
       fData->hit_reconelec[i] = fCaloAlg.ElectronsFromADCArea(hitlist[i]->Integral(),hitlist[i]->WireID().Plane);
-      
+
       /*
       for (unsigned int it=0; it<fTrackModuleLabel.size();++it){
         art::FindManyP<recob::Track> fmtk(hitListHandle,evt,fTrackModuleLabel[it]);
@@ -2508,13 +2501,13 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
       if (!evt.isRealData()){
         // First determine if this hit matches to a simchannel (otherwise HitToTrackIDE will complain)
-	      if( DoesHitHaveSimChannel(fSimChannels,hitlist[i]) ) {
+        if( DoesHitHaveSimChannel(fSimChannels,hitlist[i]) ) {
 	        // Get total energy and electrons by finding sim::TrackIDE associated with this hit
 	        HitTruth(clockData, hitlist[i], fData->hit_mcid[i], fData->hit_frac[i], fData->hit_energy[i], fData->hit_nelec[i]);
 	      }//endif simchan was found
       }//endif MC
-    
-    }//endloop over hits 
+
+    }//endloop over hits
 
     if (evt.getByLabel(fHitsModuleLabel,hitListHandle)){
       //Find tracks associated with hits
@@ -2607,7 +2600,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       ShowerData.shwdirx[i]      = shw->Direction()[0];
       ShowerData.shwdiry[i]      = shw->Direction()[1];
       ShowerData.shwdirz[i]      = shw->Direction()[2];
-      
+
       // If also saving the hierarchy info, set the primaryvtx boolean
       if(fSaveShowerHierarchyInfo){
         shwPfpMapIt it;
@@ -2860,20 +2853,14 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
             }
           } // for calorimetry info
 
-	  // Find plane with most number of hits
-	  int bestPlane = 2, max = -999;
-	  for(size_t ipl = 0; ipl < 3; ipl++){
-	    int N = TrackerData.ntrkhits[iTrk][ipl];
-	    if( N > max ) { max = N; bestPlane = ipl;}
-	  }
-	  TrackerData.trkpidbestplane[iTrk] = bestPlane;
-//          if(TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][0] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
-//          else if(TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 1;
-//          else if(TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
-//          else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][1]) TrackerData.trkpidbestplane[iTrk] = 2;
-//          else if(TrackerData.ntrkhits[iTrk][2] == TrackerData.ntrkhits[iTrk][1] && TrackerData.ntrkhits[iTrk][2] > TrackerData.ntrkhits[iTrk][0]) TrackerData.trkpidbestplane[iTrk] = 2;
-//          else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] > TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 0;
-//          else if(TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][0] && TrackerData.ntrkhits[iTrk][1] == TrackerData.ntrkhits[iTrk][2]) TrackerData.trkpidbestplane[iTrk] = 2;
+          // Find plane with most number of hits
+          int bestPlane = 2, max = -999;
+          for(size_t ipl = 0; ipl < 3; ipl++){
+            int N = TrackerData.ntrkhits[iTrk][ipl];
+            if( N > max ) { max = N; bestPlane = ipl;}
+          }
+          TrackerData.trkpidbestplane[iTrk] = bestPlane;
+
         } // if has calorimetry info
 
         //track truth information
@@ -2935,45 +2922,44 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       }//end loop over track
     }//end loop over track module labels
   }// end (fSaveTrackInfo) 
- 
-  
-  
+
+
   //==================================================================
-  // Added Apr 2021, wforeman 
-  // 
-  // Save PFParticle and slice information into the AnaTree. The slices 
-  // themselves are only useful for organizing associations between 
+  // Added Apr 2021, wforeman
+  //
+  // Save PFParticle and slice information into the AnaTree. The slices
+  // themselves are only useful for organizing associations between
   // other objects of common origin, so only info about the best-matched
   // neutrino slice is stored.
   //
   if( fSaveSliceInfo ) {
-    
+
     // Get 'dem slices
     art::Handle< std::vector<recob::Slice> > sliceHandle;
     std::vector< art::Ptr<recob::Slice> > slicelist;
     if (evt.getByLabel(fPFParticleModuleLabel,sliceHandle))
       art::fill_ptr_vector(slicelist, sliceHandle);
-    
+
     // Map PFPs to their slices
     art::FindManyP<recob::Slice> fm_pfpslice(pfpHandle, evt, fPFParticleModuleLabel);
     // Map slices to hits and PFParticles
     art::FindManyP<recob::PFParticle> fm_slicepfp(slicelist, evt, fPFParticleModuleLabel);
     art::FindManyP<recob::Hit> fm_slicehits(sliceHandle, evt, fPFParticleModuleLabel);
-    // Map PFPs to their IDs for retrieval of nu scores 
+    // Map PFPs to their IDs for retrieval of nu scores
     art::FindManyP<larpandoraobj::PFParticleMetadata> fm_pfpmd(pfpHandle, evt, fPFParticleModuleLabel);
 
-    // Loop over all PFPs, save PDG and associated slice id    
+    // Loop over all PFPs, save PDG and associated slice id
     for(auto const &pfp : pfplist ) {
       std::vector< art::Ptr<recob::Slice> > slcAssn = fm_pfpslice.at(pfp.key());
       if(slcAssn.size() == 1) fData->pfp_sliceid[pfp.key()] = slcAssn.at(0)->ID();
-      fData->pfp_pdg[pfp.key()]  = pfp->PdgCode(); 
+      fData->pfp_pdg[pfp.key()]  = pfp->PdgCode();
     }
-    
+
     // Save the slice and PFP counts
     fData->num_pfps   = (int) pfplist.size();
     fData->num_slices = (int) slicelist.size();
-    
-    // Loop over the slices, and check the PFPs in each (save nu slices and 
+
+    // Loop over the slices, and check the PFPs in each (save nu slices and
     // PFPs into vectors so we can play with them later)
     std::vector<art::Ptr<recob::PFParticle>> nuPfpVec;
     std::vector<art::Ptr<recob::Slice>> nuSliceVec;
@@ -2994,11 +2980,11 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
     // If we found neutrino slices...
     if(nuPfpVec.size()){
-      
+
       // ...find the best neutrino slice
       float bestScore = -999.;
       art::Ptr<recob::Slice> bestNuSlice;
-      art::Ptr<recob::PFParticle> bestNuPfp; 
+      art::Ptr<recob::PFParticle> bestNuPfp;
       for(size_t i=0; i<nuPfpVec.size(); i++){
         float score = -999.;
         // Get the metadata to get the MVA score (there's probably a less clunky way to do this...)
@@ -3013,7 +2999,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           }
 	      }
       }//endloop over nuPfpVec
-        
+
       // Purity and completeness calculations
       //
       // Purity       = % of hits from true nu interaction
@@ -3031,28 +3017,28 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       bool foundNu = false;
       Int_t origin = -9;
       art::Ptr<simb::MCTruth> mctrueNeutrino;
-      for(auto const hit : sliceHits){ 
+      for(auto const hit : sliceHits){
         Int_t trkId;
         if( HitTruthId(clockData,hit,trkId) ) {
           art::Ptr<simb::MCTruth> mctruth;
           if( TrackIdToMCTruth(trkId,mctruth) ) {
-            if( origin < 0 ) origin = mctruth->Origin(); 
+            if( origin < 0 ) origin = mctruth->Origin();
             if( mctruth->Origin() == simb::kBeamNeutrino ) {
               origin = mctruth->Origin();
               nhits_originNu++;
-              if(!foundNu){ 
-                mctrueNeutrino = mctruth; 
-                foundNu = true; 
+              if(!foundNu){
+                mctrueNeutrino = mctruth;
+                foundNu = true;
               }
             }//endif Origin=nu
           }
         }
       }
-      
+
       // Now count up TOTAL hits in event that originate from *this* neutrino
       // (important in case there are multiple nu's interacting)
       int nhits_originNu_total = 0;
-      for(auto const hit : hitlist){ 
+      for(auto const hit : hitlist){
         Int_t trkId;
         if( HitTruthId(clockData,hit,trkId) ) {
           art::Ptr<simb::MCTruth> mctruth;
@@ -3076,9 +3062,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       //<<"   - comp   = "<<fData->best_nuslice_hitcomp<<"\n";
 
    }//if neutrino slices were found
-    
-  }//end SaveSliceInfo
 
+  }//end SaveSliceInfo
 
   //mc truth information
   if (isMC){
@@ -3115,7 +3100,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     art::FindManyP< simb::GTruth > fmgt( mctruthListHandle, evt, fGenieGenModuleLabel );
 
     if (fData->mcevts_truth > 0){//at least one mc record
-    
+
     if (fSaveGenieInfo){
 
       //Brailsford 2017/10/16 
@@ -3236,51 +3221,51 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     }// end (fSaveGenieInfo)  
 
     //GEANT particles information
-    if (fSaveGeantInfo){ 
+    if (fSaveGeantInfo){
       const sim::ParticleList& plist = pi_serv->ParticleList();
-        
+
       std::string pri("primary");
       int primary=0;
       int active = 0;
       int geant_particle=0;
       sim::ParticleList::const_iterator itPart = plist.begin(),
         pend = plist.end(); // iterator to pairs (track id, particle)
-      	  
+
       for(size_t iPart = 0; (iPart < plist.size()) && (itPart != pend); ++iPart){
         const simb::MCParticle* pPart = (itPart++)->second;
         if (!pPart) {
           throw art::Exception(art::errors::LogicError)
             << "GEANT particle #" << iPart << " returned a null pointer";
         }
-        
+
         ++geant_particle;
         bool isPrimary = pPart->Process() == pri;
         if (isPrimary) ++primary;
         int TrackID = pPart->TrackId();
-
-	      // calculate traj length in AV
+        
+        // calculate traj length in AV
         TVector3 mcstart, mcend;
         double plen = length(*pPart, mcstart, mcend);
         bool isActive = plen != 0;
         if (plen) active++;
-  
+
         // Get the total energy deposited by this particle by looking at IDEs from 3 planes.
         // The value should be the same on all planes, but better safe than sorry...
         geo::View_t views[3]={geo::kU, geo::kV, geo::kW};
-	      int nPlanes = 0;
-	      float totalE_particle = 0;
+        int nPlanes = 0;
+        float totalE_particle = 0;
         float totalne_particle = 0;
         for(const geo::View_t view : views ) {
-	        std::vector<const sim::IDE* > ides = bt_serv->TrackIdToSimIDEs_Ps(TrackID, view);
-	        if( ides.size() ) { 
+          std::vector<const sim::IDE* > ides = bt_serv->TrackIdToSimIDEs_Ps(TrackID, view);
+          if( ides.size() ){
             for (auto ide: ides) {
               totalE_particle += ide->energy;
-              totalne_particle += ide->numElectrons; 
+              totalne_particle += ide->numElectrons;
             }
-            nPlanes++; 
+            nPlanes++;
           }
-	      }
-	      if(nPlanes) {
+        }
+        if(nPlanes) {
           totalE_particle /= nPlanes;
           totalne_particle /= nPlanes;
         }
@@ -3332,29 +3317,29 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
             //Get the mother neutrino of this particle and use the hosting art::Ptr key as the matched ID
             const art::Ptr<simb::MCTruth> matched_mctruth = pi_serv->ParticleToMCTruth_P(pPart);
             fData->MotherNuId[iPart] = matched_mctruth.key();
-        
+
             //access auxiliary detector parameters
             if (fSaveAuxDetInfo) {
               unsigned short nAD = 0; // number of cells that particle hit
-          
+
               // find deposit of this particle in each of the detector cells
               for (const sim::AuxDetSimChannel* c: fAuxDetSimChannels) {
-      	
-      	        // find if this cell has a contribution (IDE) from this particle,
-      	        // and which one
-      	        const std::vector<sim::AuxDetIDE>& setOfIDEs = c->AuxDetIDEs();
-      	        // using a C++ "lambda" function here; this one:
-      	        // - sees only TrackID from the current scope
-      	        // - takes one parameter: the AuxDetIDE to be tested
-      	        // - returns if that IDE belongs to the track we are looking for
-      	        std::vector<sim::AuxDetIDE>::const_iterator iIDE 
+
+                // find if this cell has a contribution (IDE) from this particle,
+                // and which one
+                const std::vector<sim::AuxDetIDE>& setOfIDEs = c->AuxDetIDEs();
+                // using a C++ "lambda" function here; this one:
+                // - sees only TrackID from the current scope
+                // - takes one parameter: the AuxDetIDE to be tested
+                // - returns if that IDE belongs to the track we are looking for
+                std::vector<sim::AuxDetIDE>::const_iterator iIDE
                 = std::find_if( setOfIDEs.begin(), setOfIDEs.end(),
-      	          [TrackID](const sim::AuxDetIDE& IDE){ return IDE.trackID == TrackID; }
-      	        );
-      	        if (iIDE == setOfIDEs.end()) continue;
-      	
-      	        // now iIDE points to the energy released by the track #i (TrackID)
-          
+                  [TrackID](const sim::AuxDetIDE& IDE){ return IDE.trackID == TrackID; }
+                );
+                if (iIDE == setOfIDEs.end()) continue;
+
+                // now iIDE points to the energy released by the track #i (TrackID)
+
                 // look for IDE with matching trackID
                 // find trackIDs stored in setOfIDEs with the same trackID, but negative,
                 // this is an untracked particle who's energy should be added as deposited by this original trackID
@@ -3383,16 +3368,16 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
                 ++nAD;
               } // for aux det sim channels
 
-              fData->NAuxDets[iPart] = nAD; 
+              fData->NAuxDets[iPart] = nAD;
               if (nAD > kMaxAuxDets) {
                 // got this error? consider increasing kMaxAuxDets
                 mf::LogError("AnalysisTree:limits") << "particle #" << iPart
                 << " touches " << nAD << " auxiliary detector cells, only "
                 << kMaxAuxDets << " of them are saved in the tree";
               } // if too many detector cells
-            } // if (fSaveAuxDetInfo) 
-	
-	        }//endif E>G4min || isPrimary
+            } // if (fSaveAuxDetInfo)
+
+          }//endif E>G4min || isPrimary
 
         } else if (iPart == fData->GetMaxGEANTparticles()) {
           // got this error? it might be a bug,
@@ -3467,11 +3452,11 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         } // while ancestry exists
         ++currentMergedId;
       } // for merging check
-     
+
     }//if (fSaveGeantInfo) 
     }//if (mcevts_truth)
   }//if (isMC)
-  
+
   fData->taulife = detprop.ElectronLifetime();
   fTree->Fill();
   
@@ -3528,8 +3513,6 @@ void sbnd::AnalysisTree::HitsPurity(detinfo::DetectorClocksData const& clockData
   trackid = -1;
   purity = -1;
 
-//  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-
   std::map<int,double> trkide;
 
   for(size_t h = 0; h < hits.size(); ++h){
@@ -3573,11 +3556,11 @@ bool sbnd::AnalysisTree::DoesHitHaveSimChannel( std::vector<const sim::SimChanne
 void  sbnd::AnalysisTree::HitTruth( detinfo::DetectorClocksData const& clockData, art::Ptr<recob::Hit> const& hit, 
 				    Int_t& truthid, Float_t& truthidEnergyFrac, Float_t& energy, Float_t& numElectrons){
 
-  // Get associated sim::TrackIDEs for this hit	
+  // Get associated sim::TrackIDEs for this hit
 //  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
   std::vector<sim::TrackIDE> trackIDEs = bt_serv->HitToTrackIDEs(clockData, hit);
   if( !trackIDEs.size() ) return;
-  // Loop through and find the leading TrackIDE, and keep 
+  // Loop through and find the leading TrackIDE, and keep
   // track of the total energy of ALL IDEs.
   Float_t maxe = 0;
   Float_t bestfrac = 0;
@@ -3587,7 +3570,7 @@ void  sbnd::AnalysisTree::HitTruth( detinfo::DetectorClocksData const& clockData
   for(size_t i = 0; i < trackIDEs.size(); ++i){
     //totalE += trackIDEs[i].energy;
     ne += trackIDEs[i].numElectrons;
-    if( trackIDEs[i].energy > maxe ) { 
+    if( trackIDEs[i].energy > maxe ) {
       maxe = trackIDEs[i].energy;
       bestfrac = trackIDEs[i].energyFrac;
       bestid = trackIDEs[i].trackID;
@@ -3614,14 +3597,14 @@ bool sbnd::AnalysisTree::HitTruthId( detinfo::DetectorClocksData const& clockDat
 }
 
 
-// Get MCTruth associated with TrackID using a try bracket to avoid 
+// Get MCTruth associated with TrackID using a try bracket to avoid
 // fatal exceptions (return false if no match or exception thrown)
-bool sbnd::AnalysisTree::TrackIdToMCTruth( Int_t const trkID, art::Ptr<simb::MCTruth>& mctruth ) 
+bool sbnd::AnalysisTree::TrackIdToMCTruth( Int_t const trkID, art::Ptr<simb::MCTruth>& mctruth )
 {
 //  art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
   bool matchFound = false;
   try {
-    mctruth = pi_serv->TrackIdToMCTruth_P(trkID);   
+    mctruth = pi_serv->TrackIdToMCTruth_P(trkID);
     matchFound = true;
   } catch(...) {
     std::cout<<"Exception thrown matching TrackID "<<trkID<<" to MCTruth\n";
