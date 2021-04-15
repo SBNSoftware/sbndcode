@@ -23,8 +23,7 @@ physics.producers.generator: {
   Seed: 63213
   
   FluxCopyMethod: "DIRECT"
-  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configF-v1/april07/neutrinoMode"
-
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configH-v1/march2021/neutrinoMode"
 }
 
 # Override CORSIKA flux file path to be able to access them without a proxy
