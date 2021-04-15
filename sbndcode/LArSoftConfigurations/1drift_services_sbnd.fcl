@@ -4,9 +4,9 @@
 
 services.DetectorPropertiesService.NumberTimeSamples: 2600 # 1 drift window
 services.DetectorPropertiesService.ReadOutWindowSize: 2600
-services.DetectorClocksService.G4RefTime:	            0 # [us]
+services.DetectorClocksService.G4RefTime:             0 # [us]
 services.DetectorClocksService.TriggerOffsetTPC:      0 # [us]
-services.DetectorClocksService.DefaultTrigTime:	      0 # [us]
+services.DetectorClocksService.DefaultTrigTime:       0 # [us]
 services.DetectorClocksService.DefaultBeamTime:       0 # [us]
 
 
