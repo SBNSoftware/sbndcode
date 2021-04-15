@@ -2036,18 +2036,18 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
     CreateBranch("EndPointy",EndPointy,"EndPointy[geant_list_size]/F");
     CreateBranch("EndPointz",EndPointz,"EndPointz[geant_list_size]/F");
     CreateBranch("EndT",EndT,"EndT[geant_list_size]/F");
-    //CreateBranch("theta",theta,"theta[geant_list_size]/F");
-    //CreateBranch("phi",phi,"phi[geant_list_size]/F");
-    //CreateBranch("theta_xz",theta_xz,"theta_xz[geant_list_size]/F");
-    //CreateBranch("theta_yz",theta_yz,"theta_yz[geant_list_size]/F");
+    CreateBranch("theta",theta,"theta[geant_list_size]/F");
+    CreateBranch("phi",phi,"phi[geant_list_size]/F");
+    CreateBranch("theta_xz",theta_xz,"theta_xz[geant_list_size]/F");
+    CreateBranch("theta_yz",theta_yz,"theta_yz[geant_list_size]/F");
     CreateBranch("pathlen",pathlen,"pathlen[geant_list_size]/F");
     CreateBranch("inTPCActive",inTPCActive,"inTPCActive[geant_list_size]/I");  
-    //CreateBranch("StartPointx_tpcAV",StartPointx_tpcAV,"StartPointx_tpcAV[geant_list_size]/F");
-    //CreateBranch("StartPointy_tpcAV",StartPointy_tpcAV,"StartPointy_tpcAV[geant_list_size]/F");
-    //CreateBranch("StartPointz_tpcAV",StartPointz_tpcAV,"StartPointz_tpcAV[geant_list_size]/F");
-    //CreateBranch("EndPointx_tpcAV",EndPointx_tpcAV,"EndPointx_tpcAV[geant_list_size]/F");
-    //CreateBranch("EndPointy_tpcAV",EndPointy_tpcAV,"EndPointy_tpcAV[geant_list_size]/F");
-    //CreateBranch("EndPointz_tpcAV",EndPointz_tpcAV,"EndPointz_tpcAV[geant_list_size]/F");
+    CreateBranch("StartPointx_tpcAV",StartPointx_tpcAV,"StartPointx_tpcAV[geant_list_size]/F");
+    CreateBranch("StartPointy_tpcAV",StartPointy_tpcAV,"StartPointy_tpcAV[geant_list_size]/F");
+    CreateBranch("StartPointz_tpcAV",StartPointz_tpcAV,"StartPointz_tpcAV[geant_list_size]/F");
+    CreateBranch("EndPointx_tpcAV",EndPointx_tpcAV,"EndPointx_tpcAV[geant_list_size]/F");
+    CreateBranch("EndPointy_tpcAV",EndPointy_tpcAV,"EndPointy_tpcAV[geant_list_size]/F");
+    CreateBranch("EndPointz_tpcAV",EndPointz_tpcAV,"EndPointz_tpcAV[geant_list_size]/F");
     CreateBranch("NumberDaughters",NumberDaughters,"NumberDaughters[geant_list_size]/I");
     CreateBranch("Mother",Mother,"Mother[geant_list_size]/I");
     CreateBranch("TrackId",TrackId,"TrackId[geant_list_size]/I");
@@ -2119,7 +2119,7 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   fSaveCryInfo              (pset.get< bool >("SaveCryInfo", false)),  
   fSaveGenieInfo            (pset.get< bool >("SaveGenieInfo", false)),
   fSaveGeantInfo            (pset.get< bool >("SaveGeantInfo", false)),
-  fSaveHitInfo	            (pset.get< bool >("SaveHitInfo", false)),
+  fSaveHitInfo              (pset.get< bool >("SaveHitInfo", false)),
   fSaveTrackInfo            (pset.get< bool >("SaveTrackInfo", false)),
   fSaveShowerInfo           (pset.get< bool >("SaveShowerInfo", false)),
   fSaveVertexInfo           (pset.get< bool >("SaveVertexInfo", false)),
@@ -2969,8 +2969,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         if ((pfp->PdgCode() == 12 || pfp->PdgCode() == 14)) { // look for neutrino
           nuPfpVec.push_back(pfp);
           nuSliceVec.push_back(slice);
-	        break; // should be 1 nu per slice
-	      }//endif neutrino
+          break; // should be 1 nu per slice
+        }//endif neutrino
       }//endloop over slicePFPs
     }//endloop over slices
 
@@ -2995,7 +2995,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
             bestNuPfp = nuPfpVec.at(i);
             bestNuSlice = nuSliceVec.at(i);
           }
-	      }
+        }
       }//endloop over nuPfpVec
 
       // Purity and completeness calculations
@@ -3562,11 +3562,9 @@ void  sbnd::AnalysisTree::HitTruth( detinfo::DetectorClocksData const& clockData
   // track of the total energy of ALL IDEs.
   Float_t maxe = 0;
   Float_t bestfrac = 0;
-  //Float_t totalE = 0;
   Int_t bestid = 0;
   Int_t ne = 0;
   for(size_t i = 0; i < trackIDEs.size(); ++i){
-    //totalE += trackIDEs[i].energy;
     ne += trackIDEs[i].numElectrons;
     if( trackIDEs[i].energy > maxe ) {
       maxe = trackIDEs[i].energy;

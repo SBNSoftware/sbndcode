@@ -27,7 +27,6 @@ physics.producers.generator.PosDist: 0             # Flat position dist.
 physics.producers.generator.X0: [ 25.0 ]
 physics.producers.generator.Y0: [ 0.0 ]
 physics.producers.generator.Z0: [ -42. ]
-physics.producers.generator.T0: [ 0 ]
 physics.producers.generator.SigmaX: [ 5.0 ]        # x = (0, 256)
 physics.producers.generator.SigmaY: [ 5.5 ]        # y = (-116.5, 116.5)
 physics.producers.generator.SigmaZ: [ 0 ]          # z = (0, 1037)

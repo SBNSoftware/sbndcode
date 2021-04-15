@@ -29,6 +29,7 @@
 #
 
 #include "cry.fcl"
+#include "cosmic_common_sbnd.fcl"
 
 
 BEGIN_PROLOG
@@ -38,8 +39,7 @@ sbnd_cry:
 {
   
   @table::standard_cry  # from cry.fcl
-  SampleTime:           3.2e-3	      # integration time in seconds
-  TimeOffset:          -1.7e-3       # time in seconds before a spill to begin the interactions
+  @table::sbnd_cosmic_common
 
 } # sbnd_cry
 
