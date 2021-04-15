@@ -155,7 +155,6 @@ constexpr int kNplanes       = 3;     //number of wire planes
 constexpr int kMaxHits       = 25000; //maximum number of hits;
 constexpr int kMaxTrackHits  = 2000;  //maximum number of hits on a track
 constexpr int kMaxPFPs	     = 1000;  //maximum number of PFPs associated w/neutrino slice
-constexpr int kMaxSlices     = 1000;  //maximum number of slices to store info for
 constexpr int kMaxTrackers   = 15;    //number of trackers passed into fTrackModuleLabel
 constexpr unsigned short kMaxVertices = 100;    //max number of 3D vertices
 constexpr unsigned short kMaxShowers = 100;    //max number of 3D showers
@@ -248,9 +247,9 @@ namespace sbnd {
       Short_t  ntracks;             //number of reconstructed tracks
       PlaneData_t<Float_t>    trkke;
       PlaneData_t<Float_t>    trkrange;
-//      PlaneData_t<Int_t>      trkidtruth_recoutils_totaltrueenergy;  //true geant trackid from TrueParticleIDFromTotalTrueEnergy in RecoUtils 
-//      PlaneData_t<Int_t>      trkidtruth_recoutils_totalrecocharge;  //true geant trackid from TrueParticleIDFromTotalRecoCharge in RecoUtils 
-//      PlaneData_t<Int_t>      trkidtruth_recoutils_totalrecohits;  //true geant trackid from TrueParticleIDFromTotalTrueHits in RecoUtils 
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totaltrueenergy;  //true geant trackid from TrueParticleIDFromTotalTrueEnergy in RecoUtils 
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totalrecocharge;  //true geant trackid from TrueParticleIDFromTotalRecoCharge in RecoUtils 
+      PlaneData_t<Int_t>      trkidtruth_recoutils_totalrecohits;  //true geant trackid from TrueParticleIDFromTotalTrueHits in RecoUtils 
       PlaneData_t<Int_t>      trkidtruth;  //true geant trackid
       PlaneData_t<Short_t>    trkorigin;   //_ev_origin 0: unknown, 1: cosmic, 2: neutrino, 3: supernova, 4: singles
       PlaneData_t<Int_t>      trkpdgtruth; //true pdg code
@@ -492,7 +491,6 @@ namespace sbnd {
 
     // slice information
     Int_t   num_slices;			//number of recob::Slices in the event
-    Int_t   slice_tag[kMaxSlices];	//0 = cosmic, 1 = neutrino
     Int_t   num_nuslices;		//number of slices tagged as a neutrino
     Int_t   best_nuslice_id;			//best-matched neutrino slice ID
     Int_t   best_nuslice_pfpid;		//best-matched neutrino PFP ID: pfp->Self()
@@ -1061,9 +1059,9 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Resize(size_t nTracks)
   
   trkke.resize(MaxTracks);
   trkrange.resize(MaxTracks);
-//  trkidtruth_recoutils_totaltrueenergy.resize(MaxTracks);
-//  trkidtruth_recoutils_totalrecocharge.resize(MaxTracks);
-//  trkidtruth_recoutils_totalrecohits.resize(MaxTracks);
+  trkidtruth_recoutils_totaltrueenergy.resize(MaxTracks);
+  trkidtruth_recoutils_totalrecocharge.resize(MaxTracks);
+  trkidtruth_recoutils_totalrecohits.resize(MaxTracks);
   trkidtruth.resize(MaxTracks);
   trkorigin.resize(MaxTracks);
   trkpdgtruth.resize(MaxTracks);
@@ -1137,9 +1135,9 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::Clear() {
     // their iterators traverse all the array dimensions
     FillWith(trkke[iTrk]      , -99999.);
     FillWith(trkrange[iTrk]   , -99999.);
-//    FillWith(trkidtruth_recoutils_totaltrueenergy[iTrk] , -99999 );
-//    FillWith(trkidtruth_recoutils_totalrecocharge[iTrk] , -99999 );
-//    FillWith(trkidtruth_recoutils_totalrecohits[iTrk] , -99999 );
+    FillWith(trkidtruth_recoutils_totaltrueenergy[iTrk] , -99999 );
+    FillWith(trkidtruth_recoutils_totalrecocharge[iTrk] , -99999 );
+    FillWith(trkidtruth_recoutils_totalrecohits[iTrk] , -99999 );
     FillWith(trkidtruth[iTrk] , -99999 );
     FillWith(trkorigin[iTrk]  , -1 );
     FillWith(trkpdgtruth[iTrk], -99999 );
@@ -1216,14 +1214,14 @@ void sbnd::AnalysisTreeDataStruct::TrackDataStruct::SetAddresses(
   BranchName = "trkrange_" + TrackLabel;
   CreateBranch(BranchName, trkrange, BranchName + NTracksIndexStr + "[3]/F");
   
-  //BranchName = "trkidtruth_recoutils_totaltrueenergy_" + TrackLabel;
-  //CreateBranch(BranchName, trkidtruth_recoutils_totaltrueenergy, BranchName + NTracksIndexStr + "[3]/I");
+  BranchName = "trkidtruth_recoutils_totaltrueenergy_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totaltrueenergy, BranchName + NTracksIndexStr + "[3]/I");
 
-  //BranchName = "trkidtruth_recoutils_totalrecocharge_" + TrackLabel;
-  //CreateBranch(BranchName, trkidtruth_recoutils_totalrecocharge, BranchName + NTracksIndexStr + "[3]/I");
+  BranchName = "trkidtruth_recoutils_totalrecocharge_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totalrecocharge, BranchName + NTracksIndexStr + "[3]/I");
 
-  //BranchName = "trkidtruth_recoutils_totalrecohits_" + TrackLabel;
-  //CreateBranch(BranchName, trkidtruth_recoutils_totalrecohits, BranchName + NTracksIndexStr + "[3]/I");
+  BranchName = "trkidtruth_recoutils_totalrecohits_" + TrackLabel;
+  CreateBranch(BranchName, trkidtruth_recoutils_totalrecohits, BranchName + NTracksIndexStr + "[3]/I");
 
   BranchName = "trkidtruth_" + TrackLabel;
   CreateBranch(BranchName, trkidtruth, BranchName + NTracksIndexStr + "[3]/I");
@@ -1704,7 +1702,6 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
  
   // Clear slice info
   num_slices = 0;
-  FillWith(slice_tag,-9);
   num_nuslices = 0;
   best_nuslice_id = -999;
   best_nuslice_pdg = -999;
@@ -1948,7 +1945,6 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
     CreateBranch("pfp_sliceid",&pfp_sliceid,"pfp_sliceid[num_pfps]/I");
     CreateBranch("pfp_pdg",&pfp_pdg,"pfp_pdg[num_pfps]/I");
     CreateBranch("num_slices",&num_slices,"num_slices/I");
-    CreateBranch("slice_tag",&slice_tag,"slice_tag[num_slices]/I");
     CreateBranch("num_nuslices",&num_nuslices,"num_nuslices/I");
     CreateBranch("best_nuslice_id",&best_nuslice_id,"best_nuslice_id/I");
     CreateBranch("best_nuslice_pfpid",&best_nuslice_pfpid,"best_nuslice_pfpid/I");
@@ -2895,9 +2891,9 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           }
           
           for (size_t ipl = 0; ipl < 3; ++ipl){
-//            TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(clockData, hits[ipl]);
-//            TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(clockData, hits[ipl]);
-//            TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totaltrueenergy[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalTrueEnergy(clockData, hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totalrecocharge[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoCharge(clockData, hits[ipl]);
+            TrackerData.trkidtruth_recoutils_totalrecohits[iTrk][ipl] = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits[ipl]);
             double maxe = 0;
             HitsPurity(clockData, hits[ipl],TrackerData.trkidtruth[iTrk][ipl],TrackerData.trkpurtruth[iTrk][ipl],maxe);
           //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
@@ -2943,13 +2939,12 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   
   
   //==================================================================
-  // Added by wforeman, Apr 2021 
+  // Added Apr 2021, wforeman 
   // 
   // Save PFParticle and slice information into the AnaTree. The slices 
   // themselves are only useful for organizing associations between 
-  // other objects of common origin, so we store just a couple basic
-  // pieces of information for each slice, while storing more detailed
-  // metrics for the best-matched neutrino slice.
+  // other objects of common origin, so only info about the best-matched
+  // neutrino slice is stored.
   //
   if( fSaveSliceInfo ) {
     
@@ -2983,35 +2978,28 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     std::vector<art::Ptr<recob::PFParticle>> nuPfpVec;
     std::vector<art::Ptr<recob::Slice>> nuSliceVec;
     for(auto const &slice : slicelist ) {
-      //std::cout<<"Looking at slice "<<slice->ID()<<"...\n";
       std::vector<art::Ptr<recob::PFParticle>> slicePFPs = fm_slicepfp.at(slice.key());
-      //std::cout<<"matches to "<<slicePFPs.size()<<" PFPs:\n";
       bool isNeutrinoSlice(false);
       for (auto const &pfp : slicePFPs) {
-        //std::cout<<"   "<<pfp->Self()<<"    PDG "<<pfp->PdgCode()<<"\n";
         if ((pfp->PdgCode() == 12 || pfp->PdgCode() == 14)) { // look for neutrino
           isNeutrinoSlice = true;
           nuPfpVec.push_back(pfp);
           nuSliceVec.push_back(slice);
-          //std::cout<<"   --> Neutrino identified!\n";
 	        break; // should be 1 nu per slice
 	      }//endif neutrino
       }//endloop over slicePFPs
-      fData->slice_tag[slice.key()] = (int)isNeutrinoSlice;
     }//endloop over slices
 
     fData->num_nuslices = (int)nuPfpVec.size();
-    //std::cout<<"We found "<<fData->num_nuslices<<" nus\n";
 
     // If we found neutrino slices...
     if(nuPfpVec.size()){
-
-      // Find the best neutrino slice
+      
+      // ...find the best neutrino slice
       float bestScore = -999.;
       art::Ptr<recob::Slice> bestNuSlice;
       art::Ptr<recob::PFParticle> bestNuPfp; 
       for(size_t i=0; i<nuPfpVec.size(); i++){
-        //art::Ptr<recob::PFParticle> nuPfp = nuPfpVec.at(i);
         float score = -999.;
         // Get the metadata to get the MVA score (there's probably a less clunky way to do this...)
         const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = fm_pfpmd.at(nuPfpVec.at(i)->Self());
@@ -3019,7 +3007,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
           score = propertiesMap.at("NuScore");
           if( score > bestScore ) {
-            //std::cout<<"Updating best score, nuPfp.key = "<<nuPfp.key()<<"   "<<nuPfp->Self()<<"\n";
             bestScore = score;
             bestNuPfp = nuPfpVec.at(i);
             bestNuSlice = nuSliceVec.at(i);
@@ -3030,25 +3017,23 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       // Purity and completeness calculations
       //
       // Purity       = % of hits from true nu interaction
-      //              = (# true hits in slice)/(total# hits in slice)
+      //              = (# truth-matched hits in slice)/(total# hits in slice)
       //
       // Completeness = % of true nu-interaciton hits included in slice
-      //              = (# true hits in slice)/(total# true hits)
+      //              = (# truth-matched hits in slice)/(total# true hits overall)
       //
       std::vector<art::Ptr<recob::Hit>> sliceHits = fm_slicehits.at(bestNuSlice.key());
-      std::cout<<"There are "<<sliceHits.size()<<" hits in this slice (total event has "<<hitlist.size()<<"\n";
       int nhits_slice = (int)sliceHits.size();
 
       // Count up hits that originate from the MCTrue neutrino,
       // also store the MCTruth corresponding to this neutrino.
       int nhits_originNu = 0;
-      art::Ptr<simb::MCTruth> mctrueNeutrino;
       bool foundNu = false;
       Int_t origin = -9;
+      art::Ptr<simb::MCTruth> mctrueNeutrino;
       for(auto const hit : sliceHits){ 
         Int_t trkId;
         if( HitTruthId(clockData,hit,trkId) ) {
-        //  std::cout<<"   --> hit linked to particle ID "<<trkId<<"\n";
           art::Ptr<simb::MCTruth> mctruth;
           if( TrackIdToMCTruth(trkId,mctruth) ) {
             if( origin < 0 ) origin = mctruth->Origin(); 
@@ -3063,8 +3048,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           }
         }
       }
-     
-      std::cout<<nhits_originNu<<" hits trace back to neutrino in this slice\n";
       
       // Now count up TOTAL hits in event that originate from *this* neutrino
       // (important in case there are multiple nu's interacting)
@@ -3079,8 +3062,6 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
         }
       }
 
-      std::cout<<nhits_originNu_total<<" total hits trace back to neutrino (in entire event)\n";
-     
       // Save best nuslice info to tree
       fData->best_nuslice_id    = bestNuSlice->ID();
       fData->best_nuslice_pfpid = bestNuPfp->Self();
@@ -3089,11 +3070,10 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       fData->best_nuslice_origin = origin;
       if( nhits_slice > 0 ) fData->best_nuslice_hitpurity = nhits_originNu/float(nhits_slice);
       if( nhits_originNu_total > 0 ) fData->best_nuslice_hitcomp = nhits_originNu/float(nhits_originNu_total);
-     
-      std::cout
-      <<"Best nu slice ID: "<<bestNuSlice->ID()<<", PDG = "<<bestNuPfp->PdgCode()<<", score = "<<bestScore<<", origin = "<<origin<<"\n"
-      <<"   - purity = "<<fData->best_nuslice_hitpurity<<"\n"
-      <<"   - comp   = "<<fData->best_nuslice_hitcomp<<"\n";
+      //std::cout
+      //<<"Best nu slice ID: "<<bestNuSlice->ID()<<", PDG = "<<bestNuPfp->PdgCode()<<", score = "<<bestScore<<", origin = "<<origin<<"\n"
+      //<<"   - purity = "<<fData->best_nuslice_hitpurity<<"\n"
+      //<<"   - comp   = "<<fData->best_nuslice_hitcomp<<"\n";
 
    }//if neutrino slices were found
     
