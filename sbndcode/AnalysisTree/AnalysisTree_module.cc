@@ -1619,8 +1619,8 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   FillWith(StartPointx, -99999.);
   FillWith(StartPointy, -99999.);
   FillWith(StartPointz, -99999.);
-  FillWith(StartT, -99999.);
-  FillWith(EndT, -99999.);    
+  FillWith(StartT, -9999999.);
+  FillWith(EndT, -9999999.);    
   FillWith(EndPointx, -99999.);
   FillWith(EndPointy, -99999.);
   FillWith(EndPointz, -99999.);
@@ -2965,10 +2965,8 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     std::vector<art::Ptr<recob::Slice>> nuSliceVec;
     for(auto const &slice : slicelist ) {
       std::vector<art::Ptr<recob::PFParticle>> slicePFPs = fm_slicepfp.at(slice.key());
-      bool isNeutrinoSlice(false);
       for (auto const &pfp : slicePFPs) {
         if ((pfp->PdgCode() == 12 || pfp->PdgCode() == 14)) { // look for neutrino
-          isNeutrinoSlice = true;
           nuPfpVec.push_back(pfp);
           nuSliceVec.push_back(slice);
 	        break; // should be 1 nu per slice
