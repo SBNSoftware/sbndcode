@@ -13679,11 +13679,16 @@
 	<solids>
 		<box name="boxDetectorEnclosure_Pit"   lunit="mm" x="9448.7990000000009" y="10149.84" z="12191.999"/>
 		<box name="boxDetectorEnclosure_Tower" lunit="mm" x="9448.7990000000009" y="10670" z="12191.999"/>
-		<union name="boxDetectorEnclosure">
+		<union name="boxDetectorEnclosure_0">
 			<first ref="boxDetectorEnclosure_Pit"/>
 			<second ref="boxDetectorEnclosure_Tower"/>
 			<position name="posTopTower" unit="mm" x="0" y="10409.92" z="0"/>
 		</union>
+		<subtraction name="boxDetectorEnclosure">
+			<first ref="boxDetectorEnclosure_0"/>
+			<second ref="boxShielding"/>
+			<position name="posTopTower" unit="mm" x="0" y="7843.6000000000004" z="0"/>
+		</subtraction>
 	</solids>
 	<structure>
 		<volume name="volDetEnclosure_dummy" >
