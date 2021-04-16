@@ -1150,7 +1150,7 @@
         <box name="boxMezzanineExterior"  lunit="mm" x="10668.000000000002" y="3505.2000000000003" z="19583.400000000001" />
         <box name="boxMezzanineFloor"  lunit="mm" x="9448.8010000000013" y="152.40000000000001" z="6172.2000000000007" />
         <box name="boxVerticalSlab_2"  lunit="mm" x="2133.5999999999999" y="3505.2000000000003" z="609.60000000000002" />
-        <box name="boxMezzanineItems"  lunit="mm" x="9448.7990000000009" y="3352.799" z="6172.2000000000007" />
+        <box name="boxMezzanineItems"  lunit="mm" x="9448.7990000000009" y="3351.8000000000002" z="6172.2000000000007" />
         <subtraction name="mezzanineBuild1">
             <first  ref="boxMezzanineExterior"/>
             <second ref="boxMezzanine"/>
@@ -1233,112 +1233,112 @@
                     <volumeref ref="volRackLarge"/>
                     <position name="posRackLarge_0" unit="mm"
                               x="-1739.4005000000006"
-                              y="-550.19849999999997"
+                              y="-625.89900000000011"
                               z="786.10000000000036" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackLarge"/>
                     <position name="posRackLarge_1" unit="mm"
                               x="-1149.4005000000006"
-                              y="-550.19849999999997"
+                              y="-625.89900000000011"
                               z="786.10000000000036" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackLarge"/>
                     <position name="posRackLarge_2" unit="mm"
                               x="-559.40050000000065"
-                              y="-550.19849999999997"
+                              y="-625.89900000000011"
                               z="786.10000000000036" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackLarge"/>
                     <position name="posRackLarge_3" unit="mm"
                               x="30.599499999999352"
-                              y="-550.19849999999997"
+                              y="-625.89900000000011"
                               z="786.10000000000036" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackLarge"/>
                     <position name="posRackLarge_4" unit="mm"
                               x="620.59949999999935"
-                              y="-550.19849999999997"
+                              y="-625.89900000000011"
                               z="786.10000000000036" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackLarge"/>
                     <position name="posRackLarge_5" unit="mm"
                               x="1210.5994999999994"
-                              y="-550.19849999999997"
+                              y="-625.89900000000011"
                               z="786.10000000000036" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_0" unit="mm"
                               x="-3969.4005000000006"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_1" unit="mm"
                               x="-3339.4005000000006"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_2" unit="mm"
                               x="-2709.4005000000006"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_3" unit="mm"
                               x="-2079.4005000000006"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_4" unit="mm"
                               x="-1449.4005000000006"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_5" unit="mm"
                               x="-819.40050000000065"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_6" unit="mm"
                               x="-189.40050000000065"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_7" unit="mm"
                               x="440.59949999999935"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
                 <physvol>
                     <volumeref ref="volRackSmall"/>
                     <position name="posRackSmall_8" unit="mm"
                               x="1070.5994999999994"
-                              y="-540.19849999999997"
+                              y="-615.89900000000011"
                               z="-1253.8999999999996" />
                 </physvol>
             <physvol>
                 <volumeref ref="volRackLarge"/>
                 <position name="posRackLarge_6" unit="mm"
                           x="2005.5994999999994"
-                          y="-540.19849999999997"
+                          y="-615.89900000000011"
                           z="-1253.8999999999996" />
             </physvol>
         </volume>
@@ -13196,14 +13196,14 @@
 		<box name="boxCryostatLidInsulationLarger"  lunit="mm" x="5201.6000000000004" y="778" z="6310.1999999999998"/>
 		<box name="boxCryostatLidInsulationSmaller" lunit="mm" x="5201.6000000000004" y="778" z="686.79999999999995"/>
 		<box name="boxCryoPlywood_outter_inner" lunit="mm" x="6782" y="7003" z="8607"/>
-		<box name="boxCryoPlywood_outter_outter" lunit="mm" x="6802" 	y="7023"	z="8627"/>
+		<box name="boxCryoPlywood_outter_outter" lunit="mm" x="6802" y="7023" z="8627"/>
 		<subtraction name="solidCryoPlywood">
 			<first ref="boxCryoPlywood_outter_outter"/>
 			<second ref="boxCryoPlywood_outter_inner"/>
 			<position name="posSubPlywood" unit="mm" x="0" y="5.0010000000000003" z="0"/>
 		</subtraction>
 		<box name="boxCryoInsul_inner" lunit="mm" x="5201.6000000000004" y="5432.6000000000004" z="7029"/>
-		<box name="boxCryoInsul_outter" lunit="mm" x="6781.9989999999998" y="7002.9989999999998" z="8606.9989999999998"/>
+		<box name="boxCryoInsul_outter" lunit="mm" x="6781.9989999999998" y="6992.9989999999998" z="8606.9989999999998"/>
 		<subtraction name="solidCryoInsul">
 			<first ref="boxCryoInsul_outter"/>
 			<second ref="boxCryoInsul_inner"/>
