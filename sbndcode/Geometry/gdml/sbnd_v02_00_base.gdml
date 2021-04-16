@@ -5861,11 +5861,19 @@
 		<box name="boxDetectorEnclosure_Pit"   lunit="mm" x="dimDetEnclosure_X" y="dimDetEnclosure_Y" z="dimDetEnclosure_Z"/>
 		<box name="boxDetectorEnclosure_Tower" lunit="mm" x="dimDetEnclosure_X" y="dimTopCRTEnclosure_Y" z="dimDetEnclosure_Z"/>
 
-		<union name="boxDetectorEnclosure">
+		<union name="boxDetectorEnclosure_0">
 			<first ref="boxDetectorEnclosure_Pit"/>
 			<second ref="boxDetectorEnclosure_Tower"/>
 			<position name="posTopTower" unit="mm" x="0" y="(dimDetEnclosure_Y+dimTopCRTEnclosure_Y)/2.0" z="0"/>
 		</union>
+
+		<!-- Remove a piece to make room for the overburden -->
+		<subtraction name="boxDetectorEnclosure">
+			<first ref="boxDetectorEnclosure_0"/>
+			<second ref="boxShielding"/>
+			<position name="posTopTower" unit="mm" x="0" y="whereShielding_Y" z="0"/>
+		</subtraction>
+
 
 	</solids>
 
