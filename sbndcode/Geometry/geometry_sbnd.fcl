@@ -108,15 +108,6 @@ sbnd_geometry_services: {
   AuxDetGeometry:                 @local::sbnd_auxdetgeo
 } # sbnd_geometry_services
 
-#
-# Geometry with the Overburden
-#
-sbnd_geometry_services_with_shielding: @local::sbnd_geometry_services
-sbnd_geometry_services_with_shielding.Geometry.GDML: "sbnd_v02_00_withshielding.gdml"
-sbnd_geometry_services_with_shielding.Geometry.ROOT: "sbnd_v02_00_withshielding.gdml"
-sbnd_geometry_services_with_shielding.AuxDetGeometry.GDML: "sbnd_v02_00_withshielding.gdml"
-sbnd_geometry_services_with_shielding.AuxDetGeometry.ROOT: "sbnd_v02_00_withshielding.gdml"
-
 
 ###############################################################################
 #
