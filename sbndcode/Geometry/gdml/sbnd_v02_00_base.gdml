@@ -810,6 +810,23 @@
 			<fraction n="0.015" ref="potassium"/>
 		</material>
 
+                <material name="matCA6" formula=" " >
+                        <D value="1.698" unit="g/cm3"/>
+                        <fraction n="0.0030" ref="Na2O"/>
+                        <fraction n="0.1084" ref="MgO"/>
+                        <fraction n="0.0757" ref="Al2O3"/>
+                        <fraction n="0.3707" ref="SiO2"/>
+                        <fraction n="0.0010" ref="P2O5"/>
+                        <fraction n="0.0248" ref="SO3"/>
+                        <fraction n="0.0034" ref="K2O"/>
+                        <fraction n="0.3865" ref="CaO"/>
+                        <fraction n="0.0044" ref="TiO2"/>
+                        <fraction n="0.0066" ref="MnO"/>
+                        <fraction n="0.0056" ref="Fe2O3"/>
+                        <fraction n="0.0001" ref="V2O5"/>
+                        <fraction n="0.0102" ref="sulphur"/>
+                </material>
+
 		<material name="Concrete" formula=" " >
 			<D value="2.3" unit="g/cm3"/>
 			<fraction n="0.530" ref="oxygen"/>
@@ -2179,11 +2196,11 @@
             <solidref ref="groundLevel0"/>
         </volume>
         <volume name="volGroundLevel1">
-            <materialref ref="matDirt"/>
+            <materialref ref="matCA6"/>
             <solidref ref="groundLevel1"/>
         </volume>
         <volume name="volGroundLevel2">
-            <materialref ref="matDirt"/>
+            <materialref ref="matCA6"/>
             <solidref ref="groundLevel2"/>
         </volume>
         <volume name="volUndergrounds" >
