@@ -463,12 +463,12 @@
 
 		<!-- Racks -->
 		<!-- Smaller (blue/yellow) racks -->
-		<variable name="small_rack_i" value="0"/>
-		<constant name="small_rack_x" value="610" />
-		<constant name="small_rack_y" value="2120" />
-		<constant name="small_rack_z" value="760" />
-		<constant name="smallrack_x_offset" value="450" />
-		<constant name="smallrack_z_offset" value="-4340" />
+		<variable name="small_rack_i" value="0.0"/>
+		<constant name="small_rack_x" value="610.0" />
+		<constant name="small_rack_y" value="2120.0" />
+		<constant name="small_rack_z" value="760.0" />
+		<constant name="smallrack_x_offset" value="450.0" />
+		<constant name="smallrack_z_offset" value="-4340.0" />
 		<!-- Larger (black) racks -->
 		<variable name="large_rack_i" value="0"/>
 		<constant name="large_rack_x" value="570" />
@@ -727,6 +727,19 @@
 		<constant name="coordAPA_DY" value="0" />
 		<constant name="coordAPA_DZ" value="dimAPAFrame_W_mm/2.0+dimAPASpacing_mm/2.0" />
 
+		<!-- Mass Buffer -->
+		<!-- This is a solid as large as the cryostat top and as thich its lid.
+			Its mass is supposed to correspond to everything that will be installed 
+			above the cryostat.
+			See "matMassBuffer" in the materials section
+		-->
+		<constant name="massBuffer_kg" value="5854.0" />
+		<constant name="dimMassBuffer_X_mm" value="dimCryoExt_X_mm" />
+		<constant name="dimMassBuffer_Z_mm" value="dimCryoExt_Z_mm" />
+		<constant name="dimMassBuffer_Y_mm" value="dimCryostatLid_Outer_Y_mm" />
+		<constant name="volumeMassBuffer_cm3" value="45771066.12"/>
+		<!-- "dimMassBuffer_X_mm*dimMassBuffer_Y_mm*dimMassBuffer_Z_mm/1000.0"-->
+		<constant name="densityMassBuffer_g_cm3" value="massBuffer_kg/volumeMassBuffer_cm3*1000.0"/>
 
 
 	</define>
@@ -1113,6 +1126,14 @@
 			<fraction n="0.495" ref="carbon"/>
 			<fraction n="0.063" ref="hydrogen"/>
 			<fraction n="0.442" ref="oxygen"/>
+		</material>
+
+		<material name="matMassBuffer" formula="">
+			<D value="densityMassBuffer_g_cm3" unit="g/cm3"/>
+			<fraction n="0.7298" ref="iron"/>
+			<fraction n="0.1792" ref="chromium"/>
+			<fraction n="0.0900" ref="nickel"/>
+			<fraction n="0.0010" ref="carbon"/>
 		</material>
 
 	</materials>
@@ -5861,6 +5882,17 @@
 		</volume>
 	</structure>
 
+	<!-- ========== Mass Buffer ========== -->
+	<solids>
+		<box name="boxMassBuffer"   lunit="mm" x="dimMassBuffer_X_mm" y="dimMassBuffer_Y_mm" z="dimMassBuffer_Z_mm"/>
+	</solids>
+	<structure>
+		<volume name="volMassBuffer">
+			<materialref ref="matMassBuffer"/>
+			<solidref ref="boxMassBuffer"/>
+		</volume>
+	</structure>
+
 	<!-- ========== Detector Enclosure ========== -->
 	<define>
 
@@ -5964,7 +5996,15 @@
 			</physvol>
 
 
+			<!-- Positioning the Mass buffer -->
+			<physvol>
+				<volumeref ref="volMassBuffer"/>
+				<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
+			</physvol>
+			
 		</volume>
+			
+
 	</structure>
 	<!-- End of Detector Enclosure -->
 
