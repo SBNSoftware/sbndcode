@@ -1,0 +1,12 @@
+#
+# Cosmic generation configurations shared between Corsika and Cry
+BEGIN_PROLOG
+
+sbnd_cosmic_common: {
+  SampleTime:       3.2e-3  #  0.2 ms (G4 rise time) + 1.3 ms (1 full drift window) + 1.7 ms (readout) @ 500 V/cm, 154.4 cm/ms
+  TimeOffset:      -1.7e-3  # -0.2 ms (G4 rise time) - 1.3 ms (1 full drift window) - 0.2 ms (front porch)
+  BufferBox:        [ -300.0, +300.0, -300.0, +300.0, -300.0, +300.0 ]  # [ cm ]
+  ProjectToHeight:  1800 # height to which particles are projected
+}
+
+END_PROLOG
