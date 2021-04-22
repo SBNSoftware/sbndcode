@@ -115,16 +115,22 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_locations; 
   bool above_threshold = false;
   bool beam_trigger_added = false;
+  double t_since_last_trigger = 99999.; //[us]
+  double t_deadtime = fConfig.TriggerHoldoff();
   raw::TimeStamp_t trigger_start;
   // find all ADC counts above threshold
   for (size_t i = start_i; i <= end_i; i++) {
     raw::TimeStamp_t time = tick_to_timestamp(clockData, waveform.TimeStamp(),i);
+    t_since_last_trigger += optical_period(clockData);
+    bool isLive = (t_since_last_trigger > t_deadtime);
     raw::ADC_Count_t val = polarity * (adcs.at(i) - baseline);
-    if (!above_threshold && val > threshold) {
+    // only open new trigger if enough deadtime has passed
+    if (isLive && !above_threshold && val > threshold) {
       // new trigger! -- get the time
-      // raw::TimeStamp_t this_trigger_time 
       trigger_start = time;
       above_threshold = true;
+      t_since_last_trigger = 0;
+      t_deadtime = fConfig.TriggerHoldoff();
     }
     else if (above_threshold && (val < threshold || i+1 == end_i)) {
       raw::TimeStamp_t trigger_finish = time;
@@ -133,10 +139,12 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
     }
     // add beam trigger (if enabled)
     // since the clock ticks might not sync up exactly, use the closet sample
-    if( fConfig.BeamTriggerEnable() && !beam_trigger_added &&
+    if( isLive && fConfig.BeamTriggerEnable() && !beam_trigger_added &&
       fabs(time-fConfig.BeamTriggerTime()) <= optical_period(clockData)/2. ){
       AddTriggerLocation(this_trigger_locations, {{time,time}});
       beam_trigger_added = true;
+      t_since_last_trigger = 0;
+      t_deadtime = fConfig.BeamTriggerHoldoff();
     }
   }
 
@@ -367,7 +375,7 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detin
     // scan ahead to the "next" trigger if we've reached the end of the previous one
     double dT = time-next_trig;
     if( trigger_i < trigger_times.size()-1 &&
-        ((isBeamTrigger && dT > postTrigBeam)||(!isBeamTrigger && dT > postTrig))) {
+        ((isBeamTrigger && dT >= postTrigBeam)||(!isBeamTrigger && dT >= postTrig))) {
       for(size_t j=trigger_i+1; j<trigger_times.size(); j++){
         double this_trig = trigger_times[j];
         isBeamTrigger = ( fabs(this_trig-beamTrigTime)<optical_period(clockData)/2 );
