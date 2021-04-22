@@ -11,6 +11,8 @@ sbnd_optrigger_alg:
   AllowTriggerOverlap: true
   TriggerEnableWindowOneDriftBeforeTPCReadout: true
   DriftPeriod: 1300 #[us]
+  TriggerHoldoff: 0 #[us]
+  BeamTriggerHoldoff: 0 #[us]
   ReadoutWindowPreTrigger: 1 #[us]
   ReadoutWindowPostTrigger: 11 #[us]
   ReadoutWindowPreTriggerBeam: 1 #[us]

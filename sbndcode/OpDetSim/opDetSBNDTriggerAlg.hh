@@ -8,13 +8,14 @@
 //// Changes:
 //// 
 //// 2021.04.21 (wforeman)
+////   - Implemented TriggerHoldoff functionality (default behavior unchanged)
 ////   - Fixed bug where PreTrigBeam was getting assigned wrong value
 ////   - Changed name of TriggerEnableWindow parameter to better reflect
 ////     the actual behavior of module
-////   - Added drift period as fcl parameter, which basically sets how early
-////     the trigger enable window starts
-////   - Beam trigger is now added to trigger times vector in FindTriggers
-////   - Added option to toggle allowing overlapping triggers (default=true)
+////   - Added drift period as fcl parameter, which sets how early the trigger 
+////     enable window starts
+////   - Beam trigger is now added in FindTriggers instead of in ApplyTriggers
+////   - Added option to toggle trigger overlap (default behavior unchanged)
 ////   - Modified the ApplyTriggers function to accommodate trigger overlap
 ////   - Restored distinction of beam vs non-beam readout window sizes
 ////
