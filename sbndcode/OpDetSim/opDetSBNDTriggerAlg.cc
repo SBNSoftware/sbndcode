@@ -358,7 +358,7 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detin
   // Scan the waveform
   unsigned  trigger_i	= 0;
   double    next_trig	= trigger_times[trigger_i];
-  bool	    isReadingOut	= false;
+  bool      isReadingOut	= false;
   bool      isBeamTrigger = false;
   unsigned  min_ro_samples = ro_samples;
 
