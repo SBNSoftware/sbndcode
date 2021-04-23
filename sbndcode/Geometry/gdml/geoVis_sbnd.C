@@ -20,7 +20,8 @@ void geoVis_sbnd(const TString &inputFileName,const TString &volName="volWorld")
 	TGeoManager::Import(inputFileName);
 
 drawopt optsbnd[] = {
-	{"volBuildingBase", kGray+2,0},	
+        {"volBuildingFloor", kGray+2,0},
+        {"volBuildingRoofMezzanine", kGray+2,30},  
 	{"volBuldingTube_H_1", kRed+1,0},
 	{"volBuldingTube_H_2", kRed+1,0},
 	{"volBuldingTube_V_1", kRed+1,0},
@@ -40,6 +41,8 @@ drawopt optsbnd[] = {
 	{"volWallInsulation_East",kGray+2,0}, 
 	{"volGlassWindow", kBlue+4,50},
 	{"volMezzanine",kYellow-8,0},
+        {"volRackSmall", kBlue, 50},
+        {"volRackLarge", kBlack, 50},
 	{"volDetectorHall",kYellow-5,0},
 	{"volDummyTPCActive", kCyan-9, 10},
 	{"volGroundLevel0",kOrange+3,80},
@@ -50,13 +53,14 @@ drawopt optsbnd[] = {
 	{"volTPCActive_West",  kCyan-9,30},
 	{"volOneAPAFrame", 	  kMagenta-2,    0},	
 	{"volCryoExt", kOrange, 0}, 
-	{"volCryoInsulation", kOrange-10, 90},
+        {"volCryoInsulation", kRed-9, 0},
+        {"volCryoPlywood", kOrange+3, 0},
 	{"volCryoMembrane", kBlue-5,    0},
 	{"volAuxDetSensitiveCRT_X", kBlue,0},
 	{"volAuxDetSensitiveCRT_Z", kBlue,0},
 	{"volShieldingLid", kYellow-5, 0},
-	{"volShieldingTop", kWhite, 0},
-	{"volMezzanineLid", kWhite, 0},
+        {"volShieldingLayer1", kYellow-6, 0},
+        {"volShieldingLayer2And3", kYellow-5, 0},
 	{"volCryostatLidInsulation_Large", kBlue-9,    0},
 //	{"volCryostatLid_Larger", kBlue-5,    0},
 //	{"volDummyTPC", kCyan-9, 90},
@@ -75,6 +79,9 @@ drawopt optsbnd[] = {
 	{"volCPAMesh", kOrange-3, 90},
 	{"volCPAFoil", kWhite, 90},
 	{"volCPATPB", kCyan, 90},
+        {"volDewarInsulation", kRed, 0},
+        {"volDewarFluidLAr", kBlue+1, 0},
+        {"volDewarFluidLN2", kBlue+2, 0},
 	{0, 0}
 };
 
