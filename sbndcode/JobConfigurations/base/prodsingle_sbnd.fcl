@@ -107,4 +107,5 @@ outputs:
 #
 # at the end of the configuration, we can override single parameters to reflect our needs:
 #
+physics.producers.generator.T0: [ 1.7e3 ]
 physics.producers.generator.Theta0XZ: [ 10 ]
