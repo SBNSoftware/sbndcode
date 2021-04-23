@@ -72,6 +72,11 @@
 		<position name="posYPlane_W" unit="mm" x="1009.5" y="0" z="0"/>
 		<position name="posVPlane_W" unit="mm" x="1006.5" y="0" z="0"/>
 		<position name="posUPlane_W" unit="mm" x="1003.5" y="0" z="0"/>
+		<!-- This is a solid as large as the cryostat top and as thich its lid.
+			Its mass is supposed to correspond to everything that will be installed 
+			above the cryostat.
+			See "matMassBuffer" in the materials section
+		-->
 	</define>
 <!--
 	======================================================================
@@ -408,6 +413,13 @@
 			<fraction n="0.495" ref="carbon"/>
 			<fraction n="0.063" ref="hydrogen"/>
 			<fraction n="0.442" ref="oxygen"/>
+		</material>
+		<material name="matMassBuffer" formula="">
+			<D value="0.12789739231007452" unit="g/cm3"/>
+			<fraction n="0.7298" ref="iron"/>
+			<fraction n="0.1792" ref="chromium"/>
+			<fraction n="0.0900" ref="nickel"/>
+			<fraction n="0.0010" ref="carbon"/>
 		</material>
 	</materials>
 	<solids>
@@ -13689,6 +13701,15 @@
                         </physvol>
 		</volume>
 	</structure>
+	<solids>
+		<box name="boxMassBuffer"   lunit="mm" x="6802" y="780" z="8627"/>
+	</solids>
+	<structure>
+		<volume name="volMassBuffer">
+			<materialref ref="matMassBuffer"/>
+			<solidref ref="boxMassBuffer"/>
+		</volume>
+	</structure>
 	<define>
 		<position name="posCryostat"    unit="mm" x="0" y="0" z="-474.69999999999999" />
 	</define>
@@ -13700,11 +13721,11 @@
 			<second ref="boxDetectorEnclosure_Tower"/>
 			<position name="posTopTower" unit="mm" x="0" y="10409.92" z="0"/>
 		</union>
-		<subtraction name="boxDetectorEnclosure">
+		<union name="boxDetectorEnclosure">
 			<first ref="boxDetectorEnclosure_0"/>
 			<second ref="boxShielding"/>
 			<position name="posTopTower" unit="mm" x="0" y="7843.6000000000004" z="0"/>
-		</subtraction>
+		</union>
 	</solids>
 	<structure>
 		<volume name="volDetEnclosure_dummy" >
@@ -13770,6 +13791,77 @@
 				<volumeref ref="volCryoExt"/>
 				<positionref ref="posCryostat" />
 			</physvol>
+			<physvol>
+				<volumeref ref="volMassBuffer"/>
+				<position name="posMassBuffer" unit="mm" x="0" y="4274" z="-474.69999999999999"/>
+			</physvol>
+			
+		</volume>
+		<volume name="volDetEnclosureWithSh" >
+			<materialref ref="matAir"/>
+			<solidref ref="boxDetectorEnclosure"/>
+			<physvol>
+					<volumeref ref="volTaggerTopHigh"/>
+					<positionref ref="poCRT_TopHigh"/>
+					<rotationref ref="rotateN90X"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerTopLow"/>
+					<positionref ref="posCRT_TopLow"/>
+					<rotationref ref="rotateP90X"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerSouth"/>
+					<positionref ref="posCRT_South"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerNorth"/>
+					<positionref ref="posCRT_North"/>
+					<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerEast"/>
+					<positionref ref="posCRT_East"/>
+					<rotationref ref="rotateP90Y"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerWest"/>
+					<positionref ref="postCRT_West"/>
+					<rotationref ref="rotateN90Y"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerBot"/>
+					<positionref ref="posCRT_Bottom"/>
+					<rotationref ref="rotateP90X180Z"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volShielding"/>
+				<position name="posShielding" unit="mm" x="0" y="7843.6000000000004" z="0" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryostat"/>
+				<positionref ref="posCryostat"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoMembrane"/>
+				<positionref ref="posCryostat" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoPlywood"/>
+				<positionref ref="posCryoPlywood"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoInsulation"/>
+				<positionref ref="posCryostat" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoExt"/>
+				<positionref ref="posCryostat" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volMassBuffer"/>
+				<position name="posMassBuffer" unit="mm" x="0" y="4274" z="-474.69999999999999"/>
+			</physvol>
 		</volume>
 	</structure>
 	<define>
@@ -13798,15 +13890,11 @@
 				<position name="posBuildingBaseWithSh" unit="mm" x="0" y="6345" z="2200" />
 			</physvol>
 			<physvol>
-				<volumeref ref="volShielding"/>
-				<position name="posShieldingWithSh" unit="mm" x="0" y="7843.6000000000004" z="3434.1999999999998" />
-			</physvol>
-			<physvol>
 				<volumeref ref="volExteriors"/>
 				<position name="posExteriorsWithSh" unit="mm" x="0" y="12086.301000000001" z="21127.200000000001" />
 			</physvol>
 			<physvol>
-				<volumeref ref="volDetEnclosure"/>
+				<volumeref ref="volDetEnclosureWithSh"/>
 				<position name="posEnclosureWithSh" unit="mm" x="0" y="0" z="3434.1999999999998" />
 			</physvol>
 		</volume>

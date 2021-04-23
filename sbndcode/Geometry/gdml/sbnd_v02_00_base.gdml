@@ -457,9 +457,9 @@
 
 		<!-- Position of the Overburden (mm) -->
 		<constant name="my_dimSystem_Z_mm" value="1130"/>
-		<constant name="whereShielding_X" value="whereEnclosure_X"/>
+		<constant name="whereShielding_X" value="0"/>
 		<constant name="whereShielding_Y" value="5215+my_dimSystem_Z_mm+dimBuildingBaseWidth_mm/2+shielding_thickness/2"/>
-		<constant name="whereShielding_Z" value="whereEnclosure_Z"/>
+		<constant name="whereShielding_Z" value="0"/>
 
 		<!-- Racks -->
 		<!-- Smaller (blue/yellow) racks -->
@@ -5915,12 +5915,12 @@
 			<position name="posTopTower" unit="mm" x="0" y="(dimDetEnclosure_Y+dimTopCRTEnclosure_Y)/2.0" z="0"/>
 		</union>
 
-		<!-- Remove a piece to make room for the overburden -->
-		<subtraction name="boxDetectorEnclosure">
+		<!-- Expand the box to make room for the overburden -->
+		<union name="boxDetectorEnclosure">
 			<first ref="boxDetectorEnclosure_0"/>
 			<second ref="boxShielding"/>
 			<position name="posTopTower" unit="mm" x="0" y="whereShielding_Y" z="0"/>
-		</subtraction>
+		</union>
 
 
 	</solids>
@@ -5933,6 +5933,9 @@
 	</structure>
 
 	<structure>
+
+		<!-- Detector Enclusure Without Shielding (Overburden) -->
+		<!-- See below for volDetEnclosureWithSh-->
 		<volume name="volDetEnclosure" >
 			<materialref ref="matAir"/>
 			<solidref ref="boxDetectorEnclosure"/>
@@ -6003,8 +6006,83 @@
 			</physvol>
 			
 		</volume>
-			
 
+		<!-- Detector Enclusure With Shielding (Overburden) -->
+		<volume name="volDetEnclosureWithSh" >
+			<materialref ref="matAir"/>
+			<solidref ref="boxDetectorEnclosure"/>
+
+			<!-- Positioning the CRT -->
+			<physvol>
+					<volumeref ref="volTaggerTopHigh"/>
+					<positionref ref="poCRT_TopHigh"/>
+					<rotationref ref="rotateN90X"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerTopLow"/>
+					<positionref ref="posCRT_TopLow"/>
+					<rotationref ref="rotateP90X"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerSouth"/>
+					<positionref ref="posCRT_South"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerNorth"/>
+					<positionref ref="posCRT_North"/>
+					<rotationref ref="rotateP180Y"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerEast"/>
+					<positionref ref="posCRT_East"/>
+					<rotationref ref="rotateP90Y"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerWest"/>
+					<positionref ref="postCRT_West"/>
+					<rotationref ref="rotateN90Y"/>
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerBot"/>
+					<positionref ref="posCRT_Bottom"/>
+					<rotationref ref="rotateP90X180Z"/>
+			</physvol>
+
+			<!-- Positioning the Shielding (Overburden) -->
+			<physvol>
+				<volumeref ref="volShielding"/>
+				<position name="posShielding" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
+			</physvol>
+
+			<!-- Positioning the Cryostat -->
+			<physvol>
+				<volumeref ref="volCryostat"/>
+				<positionref ref="posCryostat"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoMembrane"/>
+				<positionref ref="posCryostat" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoPlywood"/>
+				<positionref ref="posCryoPlywood"/>
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoInsulation"/>
+				<positionref ref="posCryostat" />
+			</physvol>
+			<physvol>
+				<volumeref ref="volCryoExt"/>
+				<positionref ref="posCryostat" />
+			</physvol>
+
+
+			<!-- Positioning the Mass buffer -->
+			<physvol>
+				<volumeref ref="volMassBuffer"/>
+				<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
+			</physvol>
+		</volume>
 	</structure>
 	<!-- End of Detector Enclosure -->
 
@@ -6045,19 +6123,14 @@
 				<volumeref ref="volBuildingBase"/>
 				<position name="posBuildingBaseWithSh" unit="mm" x="0" y="5215+dimSystem_Z_mm" z="2200" />
 			</physvol>
-			<!-- Positioning the Overburden -->
-			<physvol>
-				<volumeref ref="volShielding"/>
-				<position name="posShieldingWithSh" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
-			</physvol>
 			<!-- Positioning the Exteriors -->
 			<physvol>
 				<volumeref ref="volExteriors"/>
 				<position name="posExteriorsWithSh" unit="mm" x="0" y="whereBuild_Y+dimSystem_Z_mm" z="2200 + dimBuildingExternal_Z_mm/2 + exterior_box_z/2" />
 			</physvol>
-			<!-- Positioning the Detector Enclosure -->
+			<!-- Positioning the Detector Enclosure with Shielding (Overburden) -->
 			<physvol>
-				<volumeref ref="volDetEnclosure"/>
+				<volumeref ref="volDetEnclosureWithSh"/>
 				<position name="posEnclosureWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />
 			</physvol>
 
