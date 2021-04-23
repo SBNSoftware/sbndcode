@@ -60533,7 +60533,7 @@
 			<solidref ref="boxDetectorEnclosure"/>
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
-					<positionref ref="poCRT_TopHigh"/>
+					<positionref ref="posCRT_TopHigh"/>
 					<rotationref ref="rotateN90X"/>
 			</physvol>
 			<physvol>
