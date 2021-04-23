@@ -293,7 +293,7 @@
 			<fraction n="0.0066" ref="MnO"/>
 			<fraction n="0.0056" ref="Fe2O3"/>
 			<fraction n="0.0001" ref="V2O5"/>
-			<fraction n="0.0102" ref="sulphur"/>
+			<fraction n="0.0102" ref="sulfur"/>
 		</material>
 		<material name="matFR4">
 			<D value="1.98281" unit="g/cm3"/>
@@ -60433,7 +60433,16 @@
 		</volume>
 	</structure>
 	<define>
-		<position name="posCryostat"    unit="mm" x="0" y="0" z="-474.69999999999999" />
+		<position name="posCryostat" unit="mm" x="0" y="0" z="-474.69999999999999" />
+		<position name="posCRT_TopHigh" unit="mm" x="0" y="9286" z="-474.69999999999999"/>
+		<position name="posCRT_TopLow" unit="mm" x="0" y="6401.2000000000007" z="-474.69999999999999"/>
+		<position name="posCRT_South" unit="mm" x="0" y="0" z="-5224.6999999999998"/>
+		<position name="posCRT_North" unit="mm" x="0" y="0" z="4275.3000000000002"/>
+		<position name="posCRT_East" unit="mm" x="3830" y="0" z="-474.69999999999999"/>
+		<position name="postCRT_West" unit="mm" x="-3830" y="0" z="-474.69999999999999"/>
+		<position name="posCRT_Bottom" unit="mm" x="0" y="-3780" z="-474.69999999999999"/>
+		<position name="posCryoPlywood" unit="mm" x="0" y="-5" z="-474.69999999999999" />
+		<position name="posMassBuffer" unit="mm" x="0" y="4274" z="-474.69999999999999"/>
 	</define>
 	<solids>
 		<box name="boxDetectorEnclosure_Pit"   lunit="mm" x="9448.7990000000009" y="10149.84" z="12191.999"/>
@@ -60461,36 +60470,36 @@
 			<solidref ref="boxDetectorEnclosure"/>
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
-					<position name="poCRT_TopHigh" unit="mm" x="0" y="9286" z="-474.69999999999999"/>
+					<positionref ref="posCRT_TopHigh"/>
 					<rotationref ref="rotateN90X"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerTopLow"/>
-					<position name="posCRT_TopLow" unit="mm" x="0" y="6401.2000000000007" z="-474.69999999999999"/>
+					<positionref ref="posCRT_TopLow"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerSouth"/>
-					<position name="posCRT_South" unit="mm" x="0" y="0" z="-5224.6999999999998"/>
+					<positionref ref="posCRT_South"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerNorth"/>
-					<position name="posCRT_North" unit="mm" x="0" y="0" z="4275.3000000000002"/>
+					<positionref ref="posCRT_North"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerEast"/>
-					<position name="posCRT_East" unit="mm" x="3830" y="0" z="-474.69999999999999"/>
+					<positionref ref="posCRT_East"/>
 					<rotationref ref="rotateP90Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerWest"/>
-					<position name="postCRT_West" unit="mm" x="-3830" y="0" z="-474.69999999999999"/>
+					<positionref ref="postCRT_West"/>
 					<rotationref ref="rotateN90Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerBot"/>
-					<position name="posCRT_Bottom" unit="mm" x="0" y="-3780" z="-474.69999999999999"/>
+					<positionref ref="posCRT_Bottom"/>
 					<rotationref ref="rotateP90X180Z"/>
 			</physvol>
 			<physvol>
@@ -60503,7 +60512,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryoPlywood"/>
-				<position name="posCryoPlywood"    unit="mm" x="0" y="-5" z="-474.69999999999999" />
+				<positionref ref="posCryoPlywood"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryoInsulation"/>
@@ -60515,7 +60524,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volMassBuffer"/>
-				<position name="posMassBuffer" unit="mm" x="0" y="4274" z="-474.69999999999999"/>
+				<positionref ref="posMassBuffer"/>
 			</physvol>
 			
 		</volume>

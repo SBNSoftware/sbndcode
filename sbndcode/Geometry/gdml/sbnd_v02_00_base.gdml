@@ -823,23 +823,6 @@
 			<fraction n="0.015" ref="potassium"/>
 		</material>
 
-                <material name="matCA6" formula=" " >
-                        <D value="1.698" unit="g/cm3"/>
-                        <fraction n="0.0030" ref="Na2O"/>
-                        <fraction n="0.1084" ref="MgO"/>
-                        <fraction n="0.0757" ref="Al2O3"/>
-                        <fraction n="0.3707" ref="SiO2"/>
-                        <fraction n="0.0010" ref="P2O5"/>
-                        <fraction n="0.0248" ref="SO3"/>
-                        <fraction n="0.0034" ref="K2O"/>
-                        <fraction n="0.3865" ref="CaO"/>
-                        <fraction n="0.0044" ref="TiO2"/>
-                        <fraction n="0.0066" ref="MnO"/>
-                        <fraction n="0.0056" ref="Fe2O3"/>
-                        <fraction n="0.0001" ref="V2O5"/>
-                        <fraction n="0.0102" ref="sulphur"/>
-                </material>
-
 		<material name="Concrete" formula=" " >
 			<D value="2.3" unit="g/cm3"/>
 			<fraction n="0.530" ref="oxygen"/>
@@ -952,6 +935,37 @@
 			<composite n="2" ref="oxygen"/>
 		</material>
 
+		<material name="P2O5" formula="P2O5">
+			<D value="1.562" unit="g/cm3"/>
+			<composite n="2" ref="phosphorous"/>
+			<composite n="5" ref="oxygen"/>
+		</material>
+
+		<material name="SO3" formula="SO3">
+			<D value="1.92" unit="g/cm3"/>
+			<composite n="1" ref="sulfur"/>
+			<composite n="3" ref="oxygen"/>
+		</material>
+
+		<material name="K2O" formula="K2O">
+			<D value="2.35" unit="g/cm3"/>
+			<composite n="1" ref="hydrogen"/>
+			<composite n="1" ref="oxygen"/>
+			<composite n="2" ref="potassium"/>
+		</material>
+
+		<material name="MnO" formula="MnO">
+			<D value="5.37" unit="g/cm3"/>
+			<composite n="1" ref="manganese"/>
+			<composite n="1" ref="oxygen"/>
+		</material>
+
+		<material name="V2O5" formula="V2O5">
+			<D value="3.36" unit="g/cm3"/>
+			<composite n="1" ref="vanadium"/>
+			<composite n="5" ref="oxygen"/>
+		</material>
+
 		<material name="fibrous_glass">
 			<D value="2.74351" unit="g/cm3"/>
 			<fraction n="0.600" ref="SiO2"/>
@@ -961,6 +975,23 @@
 			<fraction n="0.034" ref="MgO"/>
 			<fraction n="0.010" ref="Na2O"/>
 			<fraction n="0.013" ref="TiO2"/>
+		</material>
+
+		<material name="matCA6" formula=" " >
+			<D value="1.698" unit="g/cm3"/>
+			<fraction n="0.0030" ref="Na2O"/>
+			<fraction n="0.1084" ref="MgO"/>
+			<fraction n="0.0757" ref="Al2O3"/>
+			<fraction n="0.3707" ref="SiO2"/>
+			<fraction n="0.0010" ref="P2O5"/>
+			<fraction n="0.0248" ref="SO3"/>
+			<fraction n="0.0034" ref="K2O"/>
+			<fraction n="0.3865" ref="CaO"/>
+			<fraction n="0.0044" ref="TiO2"/>
+			<fraction n="0.0066" ref="MnO"/>
+			<fraction n="0.0056" ref="Fe2O3"/>
+			<fraction n="0.0001" ref="V2O5"/>
+			<fraction n="0.0102" ref="sulfur"/>
 		</material>
 
 		<material name="matFR4">
@@ -5900,8 +5931,16 @@
 		<constant name="whereMembrane_X" value="coordMembrane_at_Enclosure_X"/>
 		<constant name="whereMembrane_Y" value="coordMembrane_at_Enclosure_Y"/>
 		<constant name="whereMembrane_Z" value="coordMembrane_at_Enclosure_Z"/>
-		<position name="posCryostat"    unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z" />
-
+		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z" />
+		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
+		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
+		<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
+		<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/>
+		<position name="posCRT_East" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
+		<position name="postCRT_West" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
+		<position name="posCRT_Bottom" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-CRT_DY_Bottom" z="whereMembrane_Z"/>
+		<position name="posCryoPlywood" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
+		<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
 	</define>
 
 	<solids>
@@ -5919,7 +5958,7 @@
 		<union name="boxDetectorEnclosure">
 			<first ref="boxDetectorEnclosure_0"/>
 			<second ref="boxShielding"/>
-			<position name="posTopTower" unit="mm" x="0" y="whereShielding_Y" z="0"/>
+			<position name="posShield" unit="mm" x="0" y="whereShielding_Y" z="0"/>
 		</union>
 
 
@@ -5943,36 +5982,36 @@
 			<!-- Positioning the CRT -->
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
-					<position name="poCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
+					<positionref ref="posCRT_TopHigh"/>
 					<rotationref ref="rotateN90X"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerTopLow"/>
-					<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
+					<positionref ref="posCRT_TopLow"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerSouth"/>
-					<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
+					<positionref ref="posCRT_South"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerNorth"/>
-					<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/>
+					<positionref ref="posCRT_North"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerEast"/>
-					<position name="posCRT_East" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
+					<positionref ref="posCRT_East"/>
 					<rotationref ref="rotateP90Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerWest"/>
-					<position name="postCRT_West" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
+					<positionref ref="postCRT_West"/>
 					<rotationref ref="rotateN90Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerBot"/>
-					<position name="posCRT_Bottom" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-CRT_DY_Bottom" z="whereMembrane_Z"/>
+					<positionref ref="posCRT_Bottom"/>
 					<rotationref ref="rotateP90X180Z"/>
 			</physvol>
 
@@ -5987,7 +6026,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryoPlywood"/>
-				<position name="posCryoPlywood"    unit="mm" x="whereMembrane_X" y="whereMembrane_Y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
+				<positionref ref="posCryoPlywood"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryoInsulation"/>
@@ -6002,7 +6041,7 @@
 			<!-- Positioning the Mass buffer -->
 			<physvol>
 				<volumeref ref="volMassBuffer"/>
-				<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
+				<positionref ref="posMassBuffer"/>
 			</physvol>
 			
 		</volume>
@@ -6080,7 +6119,7 @@
 			<!-- Positioning the Mass buffer -->
 			<physvol>
 				<volumeref ref="volMassBuffer"/>
-				<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
+				<positionref ref="posMassBuffer"/>
 			</physvol>
 		</volume>
 	</structure>
