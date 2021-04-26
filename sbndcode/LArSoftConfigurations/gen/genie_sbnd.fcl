@@ -1,0 +1,310 @@
+#
+# File:    genie_sbnd.fcl
+# Purpose: Configuration of GENIE LArSoft module (GENIEGen) for SBND
+#
+# Description:
+#
+# Configurations in here are designed to be included in a FHiCL job
+# configuration.
+# This file includes two sections:
+# * flux: configuration of flux files, used in the configuration of GENIE module
+# * GENIE: configuration of the GENIEGen module, to be included in the job
+#
+#
+
+#include "genie.fcl"
+
+BEGIN_PROLOG
+
+################################################################################
+### Flux file configuration
+###
+#
+# These are pre-cooked flux file configurations for `GenieGen`. Use them in its
+# configuration as:
+#
+#     physics: {
+#       producers: {
+#         generator: {
+#           module_type: GenieGen
+#           # ...
+#           @table: bnb_flux_nu
+#         }
+#       }
+#     }
+#
+# or, if needed to override an existing configuration, with the less
+# straightforward:
+#
+#     physics.producers.generator: {
+#       @table::physics.producers.generator
+#       @table: bnb_flux_nu
+#     }
+#
+# Simple configurations "_testN" may be provided, which explicitly select the
+# flux files to be picked. This is useful in tests where randomness is
+# deleterious.
+#
+
+#
+# Booster Neutrino Beam, neutrino mode, configuration B (v1)
+#
+sbnd_flux_bnb_nu_Bv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/gsimple/v2_8_6d/configB-v1/april07/neutrinoMode"
+  FluxFiles: [ "gsimple_configB-v1_5e7POT*.root" ]
+}
+
+sbnd_flux_bnb_nu_Bv1_test1: {
+  @table::sbnd_flux_bnb_nu_Bv1
+  FluxFiles: [ "gsimple_configB-v1_5e7POT_2018_02018.root" ]
+}
+
+sbnd_flux_bnb_nu_Bv1_hist: {
+  @table::sbnd_flux_bnb_nu_Bv1
+  FluxType:       "histogram"
+}
+
+#
+# Booster Neutrino Beam, neutrino mode, configuration C (v1)
+#
+sbnd_flux_bnb_nu_Cv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/gsimple/v2_8_6d/configC-v1/april07/neutrinoMode"
+  FluxFiles: [ "gsimple_configC-v1_april07_baseline*.root" ]
+}
+
+sbnd_flux_bnb_nu_Cv1_test1: {
+  @table::sbnd_flux_bnb_nu_Cv1
+  FluxFiles: [ "gsimple_configC-v1_april07_baseline_2020_02020.root" ]
+}
+
+#
+# Booster Neutrino Beam, neutrino mode, configuration D (v1)
+#
+sbnd_flux_bnb_nu_Dv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configD-v1/april07/neutrinoMode"
+  FluxFiles: [ "converted_beammc_sbnd*.root" ]
+}
+
+sbnd_flux_bnb_nu_Dv1_test1: {
+  @table::sbnd_flux_bnb_nu_Dv1
+  FluxFiles: [ "converted_beammc_sbnd_2018.root" ]
+}
+
+#
+# Booster Neutrino Beam, neutrino mode, dirt, configuration E (v1)
+#
+sbnd_flux_bnb_nu_Ev1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configE-v1/april07/neutrinoMode"
+  FluxFiles: [ "converted_beammc_sbnd_dirt*.root" ]
+}
+
+sbnd_flux_bnb_nu_Ev1_test1: {
+  @table::sbnd_flux_bnb_nu_Ev1
+  FluxFiles: [ "converted_beammc_sbnd_dirt_2018.root" ]
+}
+
+#
+# Booster Neutrino Beam, neutrino mode, configuration F (v1)
+#
+sbnd_flux_bnb_nu_Fv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configF-v1/april07/neutrinoMode"
+  FluxFiles: [ "converted_beammc_sbnd*.root" ]
+}
+
+sbnd_flux_bnb_nu_Fv1_test1: {
+  @table::sbnd_flux_bnb_nu_Fv1
+  FluxFiles: [ "converted_beammc_sbnd_v1_0993.root" ]
+}
+
+#
+# Booster Neutrino Beam, neutrino mode, dirt, configuration G (v1)
+#
+sbnd_flux_bnb_nu_Gv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configG-v1/april07/neutrinoMode"
+  FluxFiles: [ "converted_beammc_sbnd_dirt_v1*.root" ]
+}
+
+sbnd_flux_bnb_nu_Gv1_test1: {
+  @table::sbnd_flux_bnb_nu_Gv1
+  FluxFiles: [ "converted_beammc_sbnd_dirt_v1_0004.root" ]
+}
+
+
+#
+# Booster Neutrino Beam, neutrino mode, configuration H (v1)
+#
+sbnd_flux_bnb_nu_Hv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configH-v1/march2021/neutrinoMode"
+  FluxFiles: [ "gsimple_bnb_neutrino_sbnd_v2_20210322_*.root" ]
+}
+
+sbnd_flux_bnb_nu_Hv1_test1: {
+  @table::sbnd_flux_bnb_nu_Hv1
+  FluxFiles: [ "gsimple_bnb_neutrino_sbnd_v2_20210322_4994.root" ]
+}
+
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+# Booster Neutrino Beam, neutrino mode, "default" configuration
+#
+sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Hv1
+sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Hv1_test1
+
+#
+# Booster Neutrino Beam, interaction from dirt
+#
+sbnd_flux_bnb_dirt: @local::sbnd_flux_bnb_nu_Gv1
+sbnd_flux_bnb_dirt_test1: @local::sbnd_flux_bnb_nu_Gv1_test1
+
+#
+# NuMI Beam (placeholder)
+#
+sbnd_flux_numi: {
+  @table::sbnd_flux_bnb_nu
+  // 20160707 (petrillo@fnal.gov) -  this does not exist yet:
+  FluxFiles:      ["uboonebeam/numi_gsimple_fluxes_12.17.2015_470/gsimple_*.root"]
+}
+
+#
+# NuMI Beam, interaction from dirt (placeholder)
+#
+sbnd_flux_numi_dirt: {
+  @table::sbnd_flux_numi
+  // 20160707 (petrillo@fnal.gov) -  this does not exist yet:
+  FluxFiles:      ["numi_gsimple_fluxes_02.27.2014/normal_window_dirt/second_try/*.root",
+                       "numi_gsimple_fluxes_02.27.2014/length_window_dirt/second_try/*.root",
+                     "numi_gsimple_fluxes_02.27.2014/bottom_window_dirt/second_try/*.root"]
+}
+
+
+################################################################################
+### Bucket structure configuration (Implemented by A. C. Ezeribe)
+###
+#
+# These are FCL tables that setup arranging the neutrino interactions into BNB buckets.
+# Use them in its configuration as:
+#
+#     physics: {
+#       producers: {
+#         generator: {
+#           module_type: GenieGen
+#           # ...
+#           @table: fluxbucket_bub
+#         }
+#       }
+#     }
+#
+# or, if needed to override an existing configuration, with the less
+# straightforward:
+#
+#     physics.producers.generator: {
+#       @table::physics.producers.generator
+#       @table: fluxbucket_bnb
+#     }
+#
+#
+# Booster Neutrino Beam, bucket
+#
+sbnd_fluxbucket_bnb: {
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.32059"
+}
+
+# Booster Neutrino Beam, rotated bucket
+#
+sbnd_fluxbucket_bnb_rotated: {
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.4841"
+}
+
+################################################################################
+### GENIE module configurations
+###
+### Include them like:
+###
+###     #include "genie_sbnd.fcl"
+###     physics: {
+###
+###       producers: {
+###
+###         generator: @local::sbnd_genie_simple
+###
+###         # ...
+###       }
+###
+###       # ...
+###     }
+###
+###
+###
+
+sbnd_genie: {
+  @table::standard_genie
+  @table::sbnd_flux_bnb_nu
+  @table::sbnd_fluxbucket_bnb
+  BeamName:           "booster"
+# GlobalTimeOffset:   1.28e6                  #sbnd reads out 1.6ms before the spill
+  GlobalTimeOffset:   0                  #Brailsford 2017/10/09 Simulation currently only reads out one drift frame so having a 1.6ms offset (one drift frame) means almost all events get placed outside the readout window.  We COULD make the readout window 2 or 3 drift frames long but we also have a disk space problem (we don't have any free).  The solution is to remove the offset and keep one frame readout
+  #EventGeneratorList:      "Default+CCMEC+NCMEC" # Only needed to generate partial samples in GENIE v3
+} # sbnd_genie
+
+sbnd_genie_hist: {
+  @table::sbnd_genie
+  @table::sbnd_flux_bnb_nu_Bv1_hist
+  BeamCenter:    [0., 0., 0.]
+  BeamDirection: [0., 0., 1.]
+  BeamRadius:    4.
+}
+
+
+#
+# Basic configuration (BnB beam)
+#
+sbnd_genie_simple: {
+  @table::sbnd_genie
+  @table::sbnd_flux_bnb_nu
+  EventsPerSpill: 0
+  POTPerSpill: 5e12
+}
+
+
+sbnd_genie_simple_dirt: {
+  @table::sbnd_genie
+  @table::sbnd_flux_bnb_dirt
+  EventsPerSpill: 0
+  POTPerSpill: 5e12
+}
+
+
+sbnd_genie_simple_numi: {
+  @table::standard_genie
+  @table::sbnd_flux_numi
+  BeamName:          "numi"
+  GlobalTimeOffset:  1.6e6
+  POTPerSpill:       3e13
+  EventsPerSpill:    0
+}
+
+sbnd_genie_simple_numi_dirt: {
+  @table::sbnd_genie_simple_numi
+  @table::sbnd_flux_numi_dirt
+}
+
+################################################################################
+
+END_PROLOG

@@ -12,14 +12,14 @@ BEGIN_PROLOG
 sbnd_detectorclocks: @local::standard_detectorclocks
 
 sbnd_detectorclocks.TrigModuleName:     "triggersim"
-sbnd_detectorclocks.InheritClockConfig: true    # Clock settings at gen-level will be passed down
+sbnd_detectorclocks.InheritClockConfig: true
 sbnd_detectorclocks.TriggerOffsetTPC:   -0.2e3  # Time [us] for TPC readout start w.r.t. trigger time
 sbnd_detectorclocks.FramePeriod:        1.3e3   # Frame period [us]
 sbnd_detectorclocks.ClockSpeedTPC:      2.      # TPC clock speed in MHz
 sbnd_detectorclocks.ClockSpeedOptical:  500.    # Optical clock speed in MHz
 sbnd_detectorclocks.ClockSpeedTrigger:  16.     # Trigger clock speed in MHz
-sbnd_detectorclocks.G4RefTime:          0	# G4 time [us] where electronics clock counting start
-sbnd_detectorclocks.DefaultTrigTime:    0   # Default trigger time [us].
-sbnd_detectorclocks.DefaultBeamTime:    0   # Default beam time [us].
+sbnd_detectorclocks.G4RefTime:          -1.7e3  # G4 time [us] where electronics clock counting start
+sbnd_detectorclocks.DefaultTrigTime:    1.7e3   # Default trigger time [us].
+sbnd_detectorclocks.DefaultBeamTime:    1.7e3   # Default beam time [us].
 
 END_PROLOG
