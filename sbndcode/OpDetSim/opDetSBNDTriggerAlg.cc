@@ -267,8 +267,9 @@ std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow(detinfo::Detector
   // and continuing over the full range of the TPC readout window
   if (fConfig.TriggerEnableWindowOneDriftBeforeTPCReadout()) {
     double tpcReadoutWindow = detProp.ReadOutWindowSize() * clockData.TPCClock().TickPeriod();
-    start = clockData.TriggerOffsetTPC() - fConfig.DriftPeriod() - 1; /* Give 1us of wiggle room */
-    end = clockData.TriggerOffsetTPC() + tpcReadoutWindow;
+    double tpcStart = fConfig.BeamTriggerTime() + clockData.TriggerOffsetTPC();
+    start = tpcStart - fConfig.DriftPeriod() - 1; /* Give 1us of wiggle room */
+    end = tpcStart + tpcReadoutWindow;
   }
   else {
     start = fConfig.TriggerEnableWindowStart();
