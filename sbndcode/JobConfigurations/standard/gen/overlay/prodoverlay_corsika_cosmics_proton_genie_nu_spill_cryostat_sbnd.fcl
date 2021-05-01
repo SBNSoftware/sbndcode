@@ -1,0 +1,7 @@
+# Generates GENIE events together with CORSIKA cosmic rays.
+# GENIE events are generated from the BNB beam,
+# simulating the beam spill structure, inside the cryostat volume.
+# CORSIKA cosmics are generated using the
+# "proton" configuration. 
+
+#include "prodoverlay_corsika_cosmics_proton_genie_nu_spill_gsimple-configh-v1_cryostat.fcl"

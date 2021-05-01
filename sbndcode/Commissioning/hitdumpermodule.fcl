@@ -1,0 +1,27 @@
+BEGIN_PROLOG
+
+hitdumper:
+{
+    module_type:              "HitDumper"
+    DigitModuleLabel:         "daq"
+    HitsModuleLabel:          "fasthit"
+    OpHitsModuleLabel:        "ophit"
+    CRTHitModuleLabel:        "crthit"
+    CRTStripModuleLabel:      "crt"
+    CRTTrackModuleLabel:      "crttrack"
+    GenieGenModuleLabel:      "generator"
+
+    keepCRThits:              true
+    keepCRTstrips:            false
+    makeCRTtracks:            true
+    readCRTtracks:            true
+    readOpHits:               true
+    readTruth:                true
+    checkTransparency:        false
+
+    window:                   100
+
+    KeepTaggerTypes:          [1, 2] # Front and back only
+}
+
+END_PROLOG
