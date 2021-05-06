@@ -171,7 +171,7 @@ physics:
          , caldata
          , gaushit
          , fasthit
-         , linecluster
+   #      , linecluster
    #      , rffhit
    #      , corner
    #      , fuzzycluster
@@ -185,11 +185,11 @@ physics:
           , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
-         , pmalgtrackmaker
+   #      , pmalgtrackmaker
    #      , trackkalmanhitcalo,
-         , pmatrackcalo
-         , pmatrackpid
-         , emshower
+   #      , pmatrackcalo
+   #      , pmatrackpid
+   #      , emshower
          , crthit
    #      , crttzero
          , crttrack
