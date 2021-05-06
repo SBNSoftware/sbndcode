@@ -34,6 +34,7 @@
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
+#include "larcoreobj/SummaryData/POTSummary.h"
 
 // SBN/SBND includes
 #include "sbnobj/SBND/CRT/CRTData.hh"
@@ -118,6 +119,8 @@ public:
   // The analysis routine, called once per event.
   void analyze (const art::Event& evt);
 
+  // Called at the beginning of every subrun
+  virtual void beginSubRun(art::SubRun const& sr) override;
 private:
 
   void ResetVars();
@@ -253,6 +256,12 @@ private:
 
 
 
+  TTree* _sr_tree; ///< A tree filled per subrun (for POT accounting)
+  int _sr_run, _sr_subrun;
+  double _sr_begintime, _sr_endtime;
+  double _sr_pot; ///< POTs in each subrun
+
+
 
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
   std::string fLArG4ModuleLabel;    ///< Label for LArG4 dataproduct (to be set via fcl)
@@ -271,6 +280,7 @@ private:
   bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
   bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
+  bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
@@ -324,6 +334,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadOpHits        = p.get<bool>("readOpHits",true);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
+  fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
 
   fWindow            = p.get<int>("window",100);
@@ -1054,6 +1065,15 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("genie_mother",&genie_mother);
   }
 
+  if (fsavePOTInfo) {
+    _sr_tree = tfs->make<TTree>("pottree","");
+    _sr_tree->Branch("run", &_sr_run, "run/I");
+    _sr_tree->Branch("subrun", &_sr_subrun, "subrun/I");
+    _sr_tree->Branch("begintime", &_sr_begintime, "begintime/D");
+    _sr_tree->Branch("endtime", &_sr_endtime, "endtime/D");
+    _sr_tree->Branch("pot", &_sr_pot, "pot/D");
+  }
+
 }
 
 void Hitdumper::ResetVars(){
@@ -1228,6 +1248,29 @@ void Hitdumper::ResizeGenie(int nPrimaries) {
 } // sbnd::AnalysisTreeDataStruct::ResizeGenie()
 
 
+void Hitdumper::beginSubRun(art::SubRun const& sr) {
+
+  if (!fsavePOTInfo) {
+    return;
+  }
+
+  _sr_run       = sr.run();
+  _sr_subrun    = sr.subRun();
+  _sr_begintime = sr.beginTime().value();
+  _sr_endtime   = sr.endTime().value();
+
+  art::Handle<sumdata::POTSummary> pot_handle;
+  sr.getByLabel(fGenieGenModuleLabel, pot_handle);
+
+  if (pot_handle.isValid()) {
+    _sr_pot = pot_handle->totpot;
+  } else {
+    _sr_pot = 0.;
+  }
+
+  _sr_tree->Fill();
+
+}
 
 DEFINE_ART_MODULE(Hitdumper)
 
