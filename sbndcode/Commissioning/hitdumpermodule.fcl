@@ -15,6 +15,9 @@ hitdumper:
     keepCRTstrips:            false
     makeCRTtracks:            true
     readCRTtracks:            true
+    readOpHits:               true
+    readTruth:                true
+    savePOTinfo:              true
     checkTransparency:        false
 
     window:                   100
