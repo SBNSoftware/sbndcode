@@ -260,7 +260,7 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 #physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
 #physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
-physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
+physics.producers.pandora.HitFinderModuleLabel:                  "gaushit"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
 physics.producers.pandoraShowerSBN.PFParticleLabel:              "pandora"
