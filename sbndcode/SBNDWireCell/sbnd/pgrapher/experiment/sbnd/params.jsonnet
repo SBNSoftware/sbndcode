@@ -109,7 +109,8 @@ base {
 
     adc: super.adc {
         // induction plane: 2000 ADC, collection plane: 650 ADC
-        baselines: [683.5*wc.millivolt, 683.5*wc.millivolt,222.2*wc.millivolt],
+        //baselines: [683.5*wc.millivolt, 683.5*wc.millivolt,222.2*wc.millivolt],
+        baselines: [879.1*wc.millivolt, 879.1*wc.millivolt,285.7*wc.millivolt],
 
         // check this
         fullscale: [0*wc.volt, 1.8*wc.volt],
