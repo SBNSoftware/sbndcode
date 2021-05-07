@@ -22,7 +22,7 @@ hitdumper:
 
     window:                   100
 
-    KeepTaggerTypes:          [1, 2] # Front and back only
+    KeepTaggerTypes:          [0, 1, 2, 3, 4, 5, 6]
 }
 
 END_PROLOG
