@@ -1,0 +1,7 @@
+# A detector simulation fcl file used for some particular 
+# commissioning studies.
+
+#include "standard_detsim_sbnd.fcl"
+
+# Raise the arapuca threshold to avoid saving arapucas (temporary)
+services.physics.producers.opdaq.TriggerThresholdADCArapuca: 500
