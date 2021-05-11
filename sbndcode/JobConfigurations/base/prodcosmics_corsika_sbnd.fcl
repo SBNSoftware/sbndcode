@@ -120,4 +120,3 @@ outputs:
 # override
 #
 physics.producers.generator.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
-

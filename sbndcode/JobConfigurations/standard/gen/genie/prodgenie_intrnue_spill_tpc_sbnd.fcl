@@ -1,0 +1,8 @@
+# Simulates GENIE nue and anue neutrino interactions from the BNB beam 
+# with the beam spill structure, inside the TPC volume
+# (with 10 cm padding on each side).
+
+#include "prodgenie_nu_spill_tpc_sbnd.fcl"
+
+#include "set_genie_nue.fcl"
+

@@ -1,3 +1,0 @@
-#include "standard_reco_sbnd_basic.fcl"
-
-services.NuRandomService.policy: "perEvent"
