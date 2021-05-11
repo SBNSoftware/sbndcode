@@ -1,0 +1,7 @@
+#include "gencrtfilter.fcl"
+#include "prodcorsika_cosmics_proton.fcl"
+
+physics.filters.filter: @local::sbnd_gencrtfilter
+physics.simulate: [ generator, filter, rns ]
+
+outputs.out1.SelectEvents: [ "simulate" ]
