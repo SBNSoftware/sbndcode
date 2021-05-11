@@ -10,7 +10,7 @@ sbnd_simple_flashmatch:{
   FlashStart: -0.02 # us, wrt flash time
   FlashEnd: 0.08 # us, wrt flash time
   SelectNeutrino: true
-  OnlyPrimaries: false
+  OnlyPrimaries: true
   UseUncoatedPMT: true
   UseARAPUCAS: true
   # UseCalo: false
