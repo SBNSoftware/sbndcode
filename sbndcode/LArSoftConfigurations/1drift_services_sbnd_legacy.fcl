@@ -1,0 +1,9 @@
+# Include this file at the bottom of any fhicl that is consuming MC files generated using the
+# default settings (single drift window, no front/back porch) prior to v09_22_00.
+
+#include "1drift_services_sbnd.fcl"
+services.DetectorPropertiesService.NumberTimeSamples: 3000
+services.DetectorPropertiesService.ReadOutWindowSize: 3000
+services.DetectorClocksService.FramePeriod:           1250 # [us]
+
+
