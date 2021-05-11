@@ -1,11 +1,6 @@
-#include "larg4crtfilter.fcl"
-#include "standard_g4_sbnd.fcl"
+#include "g4_mu_crt_filter_base.fcl"
 
-
-physics.simulate: [ rns, largeant, filter, mcreco ]
-
-physics.filters.filter: @local::sbnd_larg4crtfilter
-physics.filters.filter.PDGs:     [ 13, -13 ] 
+physics.filters.filter.PDGs:                [ 13, -13 ] 
 physics.filters.filter.ParticleMinMomentum: [ -999., -999. ]
 physics.filters.filter.ParticleMaxMomentum: [ -999., -999. ]
 physics.filters.filter.UseTopHighCRTs:      false
@@ -15,5 +10,3 @@ physics.filters.filter.UseFrontCRTs:        true
 physics.filters.filter.UseBackCRTs:         true
 physics.filters.filter.UseLeftCRTs:         false
 physics.filters.filter.UseRightCRTs:        false
-
-outputs.out1.SelectEvents: [ "simulate" ]
