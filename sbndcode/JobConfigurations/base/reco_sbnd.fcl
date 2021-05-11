@@ -179,7 +179,7 @@ physics:
          , caldata
          , gaushit
          , fasthit
-         , linecluster
+   #         , linecluster
          , gaushitTruthMatch 
    #      , rffhit
    #      , corner
@@ -274,7 +274,7 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 #physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
 #physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
-physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
+physics.producers.pandora.HitFinderModuleLabel:                  "gaushit"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
 physics.producers.pandoraShowerSBN.PFParticleLabel:              "pandora"
@@ -304,8 +304,8 @@ physics.producers.fmatchSCE.SpacePointProducer: "pandoraSCE"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "cccluster"
 
-physics.producers.pmalgtrackmaker.HitModuleLabel:               "linecluster"
-physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "linecluster"
+physics.producers.pmalgtrackmaker.HitModuleLabel:               "gaushit"
+physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "gaushit"
 physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # do not exculde any cluster
 
 
@@ -327,7 +327,7 @@ physics.producers.blurredcluster.VertexModuleLabel:             "linecluster"
 
 #To use Blurred Cluster the ClusterModuleLabel to blurredcluster and comment out the PFParticle module label, add blurred cluster to the reco chain.
 physics.producers.emshower.ClusterModuleLabel:                  "pandora"
-physics.producers.emshower.HitsModuleLabel:                     "linecluster"
+physics.producers.emshower.HitsModuleLabel:                     "gaushit"
 physics.producers.emshower.PFParticleModuleLabel:                "pandora"
 physics.producers.emshower.TrackModuleLabel:                    "pmalgtrackmaker"
 
@@ -342,6 +342,6 @@ physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 
 #physics.producers.gaushitTruthMatch.HitParticleAssociations:                        @local::DirectHitParticleAssnsTool
-physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "linecluster"
+physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
 #physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
 
