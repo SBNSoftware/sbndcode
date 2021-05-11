@@ -231,8 +231,19 @@ outputs:
 {
  out1:
  {
-                @table::sbnd_rootoutput
-   dataTier:    "reconstructed"
+     @table::sbnd_rootoutput
+     dataTier:    "reconstructed"
+     outputCommands: [
+         "keep *_*_*_*",
+         "drop raw::OpDetWaveforms_*_*_*",
+         "drop *raw::RawDigits*_*_*_*",
+         #"drop sim::SimChannels_*_*_*",
+         "drop sim::OpDetBacktrackerRecords_*_*_*",
+         "drop *_linecluster_*_*",
+         "drop *_fasthit_*_*"
+     ]
+     
+
  }
 }
 
@@ -304,8 +315,8 @@ physics.producers.fmatchSCE.SpacePointProducer: "pandoraSCE"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "cccluster"
 
-physics.producers.pmalgtrackmaker.HitModuleLabel:               "gaushit"
-physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "gaushit"
+physics.producers.pmalgtrackmaker.HitModuleLabel:               "linecluster"
+physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "linecluster"
 physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # do not exculde any cluster
 
 
