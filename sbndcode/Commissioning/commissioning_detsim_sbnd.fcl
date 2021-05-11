@@ -4,4 +4,4 @@
 #include "standard_detsim_sbnd.fcl"
 
 # Raise the arapuca threshold to avoid saving arapucas (temporary)
-services.physics.producers.opdaq.TriggerThresholdADCArapuca: 500
+physics.producers.opdaq.TriggerThresholdADCArapuca: 500
