@@ -1,10 +1,8 @@
-#include "gencrtfilter.fcl"
-#include "prodcosmics_corsika_sbnd.fcl"
+# CORSIKA cosmics only simulation selecting
+# only muons that cross the front-back CRTs:
+# along the beam direction
 
-physics.producers.generator: @local::sbnd_corsika_cmc
-physics.filters.filter: @local::sbnd_gencrtfilter
-
-physics.simulate: [ generator, filter, rns ]
+#include "prodcorsika_cosmics_cmc_filter.fcl"
 
 physics.filters.filter.UseTopHighCRTs: false
 physics.filters.filter.UseTopLowCRTs: false
@@ -17,8 +15,4 @@ physics.filters.filter.PDGs: [ 13, -13 ]
 physics.filters.filter.MinMomentums: [ -999., -999. ]
 physics.filters.filter.MaxMomentums: [ -999., -999. ]
 physics.filters.filter.CRTDimensionScaling: 1.2
-
-outputs.out1.SelectEvents: [ "simulate" ]
-
-#DO NOT DELETE.  NEEDED FOR MCC
-#MCCSTATEMENT: frontbackcrtfilter, G4: g4_mu_frontbackcrt_filter.fcl
+physics.filters.filter.UseTightReadoutWindow: true
