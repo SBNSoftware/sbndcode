@@ -20,6 +20,6 @@ outputs.out1.outputCommands: [
     "drop *raw::RawDigits*_*_*_*",
     #"drop sim::SimChannels_*_*_*",
     "drop sim::OpDetBacktrackerRecords_*_*_*",
-    "drop *_gaushit_*_*",
+    "drop *_linecluster_*_*",
     "drop *_fasthit_*_*"
 ]
