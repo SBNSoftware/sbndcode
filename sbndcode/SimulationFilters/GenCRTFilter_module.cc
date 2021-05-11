@@ -70,8 +70,8 @@ namespace filt{
     double rw_ticks = detProp.ReadOutWindowSize();
     double inv_samp_freq = clockData.TPCClock().Frequency();
     readoutWindow  = rw_ticks/inv_samp_freq;
-    // the function TPCTick2Time does not do what you think it does!  
-    //     It converts ticks to absolute time where 0 is the trigger time and not the start of the readout 
+    // the function TPCTick2Time does not do what you think it does!
+    //     It converts ticks to absolute time where 0 is the trigger time and not the start of the readout
     //     window, so if there is a front porch, this value is larger than the actually readout window
     // readoutWindow  = clockData.TPCTick2Time(static_cast<double>(detProp.ReadOutWindowSize())); // [us]
     driftTime = (2.*fGeometryService->DetHalfWidth())/detProp.DriftVelocity(); // [us]
@@ -105,7 +105,7 @@ namespace filt{
       for (unsigned int j = 0; j < mclists[i]->size(); j++){
         //Should have the truth record for the event now
         const art::Ptr<simb::MCTruth> mc_truth(mclists[i],j);
-	//	std::cout << " MCtruth particles " << mc_truth->NParticles() << std::endl;
+        // std::cout << " MCtruth particles " << mc_truth->NParticles() << std::endl;
         for (int part = 0; part < mc_truth->NParticles(); part++){
           const simb::MCParticle particle = mc_truth->GetParticle(part);
 
@@ -117,7 +117,7 @@ namespace filt{
             if (time < -driftTime || time > readoutWindow) continue;
             // Get the minimum and maximum |x| position in the TPC
             std::pair<double, double> xLimits = XLimitsTPC(particle);
-	    //	    std::cout << xLimits.first << " " << xLimits.second << std::endl;
+            // std::cout << xLimits.first << " " << xLimits.second << std::endl;
             // Calculate the expected time of arrival of those points
             double minTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.second)/detProp.DriftVelocity();
             double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/detProp.DriftVelocity();
@@ -126,6 +126,9 @@ namespace filt{
 	  }
 	  if (fUseTightReadoutWindow) {
 	    if (time<0 || time>(readoutWindow-driftTime)) continue;
+          }
+          if (fUseTightReadoutWindow) {
+            if (time<0 || time>(readoutWindow-driftTime)) continue;
           }
 
           if (fUseTopHighCRTs){

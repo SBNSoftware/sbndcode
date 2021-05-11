@@ -72,8 +72,8 @@ namespace filt{
     double rw_ticks = detProp.ReadOutWindowSize();
     double inv_samp_freq = clockData.TPCClock().Frequency();
     readoutWindow  = rw_ticks/inv_samp_freq;
-    // the function TPCTick2Time does not do what you think it does!  
-    //     It converts ticks to absolute time where 0 is the trigger time and not the start of the readout 
+    // the function TPCTick2Time does not do what you think it does!
+    //     It converts ticks to absolute time where 0 is the trigger time and not the start of the readout
     //     window, so if there is a front porch, this value is larger than the actually readout window
     // readoutWindow  = clockData.TPCTick2Time(static_cast<double>(detProp.ReadOutWindowSize())); // [us]
     driftTime = (2.*fGeometryService->DetHalfWidth())/detProp.DriftVelocity(); // [us]
@@ -123,7 +123,7 @@ namespace filt{
         if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
       }
       if (fUseTightReadoutWindow) {
-	if (time<0 || time>(readoutWindow-driftTime)) continue;
+        if (time<0 || time>(readoutWindow-driftTime)) continue;
       }
       if (fUseTPC && !EntersTPC(particle)) continue;
       if (fUseTopHighCRTs){
