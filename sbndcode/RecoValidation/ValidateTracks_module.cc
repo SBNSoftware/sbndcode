@@ -435,7 +435,6 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   // Get the number of PFParticles and skip event if none
   if(!pfps.size()){
     if(fVerbose){std::cout << "\nNo PFParticles found. Skip event.";}
-    continue;
   }  
   pfpart_number = pfps.size();
 
@@ -452,7 +451,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   art::FindManyP<anab::ParticleID>  ass_pid(tracks, evt, fPIDLabel);
 
   // Get the hits from all the PFPs in this event
-  // This will be used latter on for the total number of true in the mc particle
+  // This will be used later for the total number of true in the mc particle
   std::vector<art::Ptr<recob::Hit>> pfphits;
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
     const std::vector<art::Ptr<recob::Shower>> pfpshowers = ass_shower.at(pfp.key());
@@ -473,6 +472,14 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   }
 
   for(const art::Ptr<recob::PFParticle> &pfp : pfps){
+
+    // Check if there is an associated track to this particle before doing all the stuff
+    const std::vector<art::Ptr<recob::Track>> tracks = ass_track.at(pfp.key());
+    if(tracks.empty()){
+      if(fVerbose){std::cout << "No tracks." << std::endl;}
+      continue;
+    }
+    assert(tracks.size()==1); 
 
     pfpart_id->push_back(pfp->Self());
     pfpart_pdg->push_back(pfp->PdgCode());
@@ -511,121 +518,108 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     track_nclusters->push_back(thisclusters.size());
 
 
-    // Check if there is an associated track to this particle    
-    const std::vector<art::Ptr<recob::Track>> tracks = trackAssn.at(pfp.key());
-    if(tracks.empty()){
-    	if(fVerbose){std::cout << "No tracks." << std::endl;}
-    	continue;
-      /*
-      assert(tracks.size()==0);
-      track_lenght->emplace_back();
-      */
+    track_lenght->push_back(tracks.at(0)->Length());
+    track_vpoints->push_back(tracks.at(0)->CountValidPoints());        
+    track_startdirphi->push_back(tracks.at(0)->StartDirection().Phi());
+    track_startdirmag->push_back(tracks.at(0)->StartDirection().Mag2());
+    track_startdirz->push_back(tracks.at(0)->StartDirection().Z());
+    track_startx->push_back(tracks.at(0)->Start().X());
+    track_starty->push_back(tracks.at(0)->Start().Y());
+    track_startz->push_back(tracks.at(0)->Start().Z());
+    track_endx->push_back(tracks.at(0)->End().X());
+    track_endy->push_back(tracks.at(0)->End().Y());
+    track_endz->push_back(tracks.at(0)->End().Z());
+
+    // Get the hits associated to the track
+    const std::vector<art::Ptr<recob::Hit>> trackhits = ass_trackhit.at(tracks[0].key());
+    track_nhits->push_back(trackhits.size());
+    if(trackhits.empty()) continue;
+    std::vector<raw::TDCtick_t> temp_start;
+    std::vector<raw::TDCtick_t> temp_end;
+    std::vector<int> temp_planeid;
+    std::vector<float> temp_adc;
+    for (auto const& hit: trackhits){
+      temp_start.push_back(hit->StartTick());
+      temp_end.push_back(hit->EndTick());
+      temp_planeid.push_back(hit->WireID().Plane);
+      temp_adc.push_back(hit->SummedADC());
+    } // hits
+    hits_starttick ->push_back(temp_start);
+    hits_endtick   ->push_back(temp_end);
+    hits_planeid   ->push_back(temp_planeid);
+    hits_adc       ->push_back(temp_adc);  
+
+    // Use the hits to get the G4ID
+    auto mc_matched_id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, false); // rollupUnsavedIDs
+    bool valid_match = TruthMatchUtils::Valid(mc_matched_id);
+    if (!valid_match){
+      std::cout << "Unable to find MCParticle matched to this track." << std::endl;
+      continue;
     }
-    else{
-      assert(tracks.size()==1);
-      if(fVerbose){std::cout << "Found a track!" << std::endl;}
-      track_lenght->push_back(tracks.at(0)->Length());
-      track_vpoints->push_back(tracks.at(0)->CountValidPoints());        
-      track_startdirphi->push_back(tracks.at(0)->StartDirection().Phi());
-      track_startdirmag->push_back(tracks.at(0)->StartDirection().Mag2());
-      track_startdirz->push_back(tracks.at(0)->StartDirection().Z());
-      track_startx->push_back(tracks.at(0)->Start().X());
-      track_starty->push_back(tracks.at(0)->Start().Y());
-      track_startz->push_back(tracks.at(0)->Start().Z());
-      track_endx->push_back(tracks.at(0)->End().X());
-      track_endy->push_back(tracks.at(0)->End().Y());
-      track_endz->push_back(tracks.at(0)->End().Z());
+    // Use particle inventory service to get the mcparticle contributing to this track
+    // For the truth matching, get the MCParticle which trackid is the same as the g4id
+    const simb::MCParticle *particle = particleInventory->TrackIdToParticle_P(mc_matched_id);
+    mcpart_trackid->push_back(particle->TrackId());
+    mcpart_pdg->push_back(particle->PdgCode());
+    mcpart_ntpoints->push_back(int(particle->NumberTrajectoryPoints()));
+    mcpart_position_t->push_back(particle->Position().T());
+    mcpart_momentum_e->push_back(particle->Momentum().E());
+    mcpart_momentum_p->push_back(particle->P());
+    mcpart_momentum_pt->push_back(particle->Pt());
+    mcpart_momentum_mass->push_back(particle->Mass());
+    mcpart_vx->push_back(particle->Vx());
+    mcpart_vy->push_back(particle->Vy());
+    mcpart_vz->push_back(particle->Vz());
+    mcpart_endx->push_back(particle->EndY());
+    mcpart_endy->push_back(particle->EndY());
+    mcpart_endz->push_back(particle->EndZ());
 
-      // Get the hits associated to the track
-      const std::vector<art::Ptr<recob::Hit>> trackhits = hitAssn.at(tracks[0].key());
-      track_nhits->push_back(trackhits.size());
-      if(trackhits.empty()) continue;
-      std::vector<raw::TDCtick_t> temp_start;
-      std::vector<raw::TDCtick_t> temp_end;
-      std::vector<int> temp_planeid;
-      std::vector<float> temp_adc;
-      for (auto const& hit: trackhits){
-        temp_start.push_back(hit->StartTick());
-        temp_end.push_back(hit->EndTick());
-        temp_planeid.push_back(hit->WireID().Plane);
-        temp_adc.push_back(hit->SummedADC());
-      } // hits
-      hits_starttick ->push_back(temp_start);
-      hits_endtick   ->push_back(temp_end);
-      hits_planeid   ->push_back(temp_planeid);
-      hits_adc       ->push_back(temp_adc);  
+    int nsharedhits = NumberOfSharedHits(mc_matched_id, clock_data, trackhits);
+    // Returns the number of hits in the vector that are associated to the MC track.
+    // int ntruehits = NumberOfTrueHits(clock_data, trackhits,false);
+    int ntruehits = NumberOfTrueHits(clock_data, pfphits, true);
+    int nrecohits = trackhits.size();
+    float hitcompleteness = -9999.;
+    float hitpurity = -9999.;
+    if(nrecohits!=0)
+      hitpurity = float(nsharedhits)/float(nrecohits);
+    if(ntruehits!=0)
+      hitcompleteness = float(nsharedhits)/float(ntruehits);
+    std::cout << "shared hits: " << nsharedhits << ", recohits: " << nrecohits << ", truehits: " << ntruehits << std::endl;
+    std::cout << "hitpurity: " << hitpurity << ", hitcompleteness: " << hitcompleteness << std::endl;
+    
+    // Get the calorimetry information associated to this track
+    std::vector< art::Ptr<anab::Calorimetry> > trackcals = ass_cal.at(tracks[0].key());
+    if(trackcals.empty()) continue;
+    for(auto &cal : trackcals){
+      if(!cal->PlaneID().isValid) continue;
+      // Only look at the collection plane, since this is where the dEdx is acquired
+      int calplaneid = cal->PlaneID().Plane;
+      if(calplaneid!=2) continue;
+      track_dqdx->push_back(cal->dQdx());
+      track_dedx->push_back(cal->dEdx());
+      track_resrange->push_back(cal->ResidualRange());
+      // assert(calplaneid==2);
+      // track_dqdx->push_back(cal->dQdx().at(2));
+      // track_dedx->push_back(cal->dEdx().at(2));
+      // track_resrange->push_back(cal->ResidualRange().at(2));
+    } // calorimetry
 
-      // Use the hits to get the G4ID
-      auto mc_matched_id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, trackhits, false); // rollupUnsavedIDs
-      bool valid_match = TruthMatchUtils::Valid(mc_matched_id);
-      if (!valid_match){
-      	std::cout << "Unable to find MCParticle matched to this track." << std::endl;
-      	continue;
+    // Get the chi2 information associated to this track
+    std::vector< art::Ptr<anab::ParticleID> > trackpids = ass_pid.at(tracks[0].key());
+    if(trackpids.empty()) continue;
+    for(auto &pid : trackpids){
+      if(pid->PlaneID()){
+        assert(pid->PlaneID().deepestIndex()<3);
+        track_chi2kaon->push_back(pid->Chi2Kaon());
+        track_chi2muon->push_back(pid->Chi2Muon());
+        track_chi2pion->push_back(pid->Chi2Pion());
+        track_chi2proton->push_back(pid->Chi2Proton());
+        track_chi2ndof->push_back(pid->Ndf());
+        track_pida->push_back(pid->PIDA());
       }
-      // Use particle inventory service to get the mcparticle contributing to this track
-      // For the truth matching, get the MCParticle which trackid is the same as the g4id
-      const simb::MCParticle *particle = particleInventory->TrackIdToParticle_P(mc_matched_id);
-      mcpart_trackid->push_back(particle->TrackId());
-      mcpart_pdg->push_back(particle->PdgCode());
-      mcpart_ntpoints->push_back(int(particle->NumberTrajectoryPoints()));
-      mcpart_position_t->push_back(particle->Position().T());
-      mcpart_momentum_e->push_back(particle->Momentum().E());
-      mcpart_momentum_p->push_back(particle->P());
-      mcpart_momentum_pt->push_back(particle->Pt());
-      mcpart_momentum_mass->push_back(particle->Mass());
-      mcpart_vx->push_back(particle->Vx());
-      mcpart_vy->push_back(particle->Vy());
-      mcpart_vz->push_back(particle->Vz());
-      mcpart_endx->push_back(particle->EndY());
-      mcpart_endy->push_back(particle->EndY());
-      mcpart_endz->push_back(particle->EndZ());
+    }
 
-      int nsharedhits = NumberOfSharedHits(mc_matched_id, clock_data, trackhits);
-      // Returns the number of hits in the vector that are associated to the MC track.
-      // int ntruehits = NumberOfTrueHits(clock_data, trackhits,false);
-      int ntruehits = NumberOfTrueHits(clock_data, pfphits, true);
-      int nrecohits = trackhits.size();
-      float hitcompleteness = -9999.;
-      float hitpurity = -9999.;
-      if(nrecohits!=0)
-      	hitpurity = float(nsharedhits)/float(nrecohits);
-      if(ntruehits!=0)
-      	hitcompleteness = float(nsharedhits)/float(ntruehits);
-      std::cout << "shared hits: " << nsharedhits << ", recohits: " << nrecohits << ", truehits: " << ntruehits << std::endl;
-      std::cout << "hitpurity: " << hitpurity << ", hitcompleteness: " << hitcompleteness << std::endl;
-      // Get the calorimetry information associated to this track
-      std::vector< art::Ptr<anab::Calorimetry> > trackcals = calAssn.at(tracks[0].key());
-      if(trackcals.empty()) continue;
-      for(auto &cal : trackcals){
-        if(!cal->PlaneID().isValid) continue;
-        // Only look at the collection plane, since this is where the dEdx is acquired
-        int calplaneid = cal->PlaneID().Plane;
-        if(calplaneid!=2) continue;
-        track_dqdx->push_back(cal->dQdx());
-        track_dedx->push_back(cal->dEdx());
-        track_resrange->push_back(cal->ResidualRange());
-        // assert(calplaneid==2);
-        // track_dqdx->push_back(cal->dQdx().at(2));
-        // track_dedx->push_back(cal->dEdx().at(2));
-        // track_resrange->push_back(cal->ResidualRange().at(2));
-      } // calorimetry
-
-      // Get the chi2 information associated to this track
-      std::vector< art::Ptr<anab::ParticleID> > trackpids = pidAssn.at(tracks[0].key());
-      if(trackpids.empty()) continue;
-      for(auto &pid : trackpids){
-        if(pid->PlaneID()){
-          assert(pid->PlaneID().deepestIndex()<3);
-          track_chi2kaon->push_back(pid->Chi2Kaon());
-          track_chi2muon->push_back(pid->Chi2Muon());
-          track_chi2pion->push_back(pid->Chi2Pion());
-          track_chi2proton->push_back(pid->Chi2Proton());
-          track_chi2ndof->push_back(pid->Ndf());
-          track_pida->push_back(pid->PIDA());
-        }
-      }
-
-    } // tracks
   } // pfps
 
   // Fill the output tree with all the relevant variables
