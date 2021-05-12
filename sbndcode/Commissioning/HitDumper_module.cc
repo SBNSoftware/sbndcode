@@ -104,7 +104,7 @@ public:
 
   // This method is called once, at the start of the job. In this
   // example, it will define the histograms and n-tuples we'll write.
-  void beginJob();
+  void beginJob() override;
 
   // This method is called once, at the start of each run. It's a
   // good place to read databases or files that may have
@@ -118,7 +118,7 @@ public:
   void reconfigure(fhicl::ParameterSet const& pset);
 
   // The analysis routine, called once per event.
-  void analyze (const art::Event& evt);
+  void analyze (const art::Event& evt) override;
 
   // Called at the beginning of every subrun
   virtual void beginSubRun(art::SubRun const& sr) override;
