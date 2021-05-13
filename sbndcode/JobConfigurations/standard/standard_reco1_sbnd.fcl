@@ -13,3 +13,4 @@
 process_name: Reco1
 
 physics.trigger_paths: [ reco1 ]
+
