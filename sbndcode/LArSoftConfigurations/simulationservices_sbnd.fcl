@@ -38,6 +38,7 @@
 #include "larfft_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
 #include "magfield_larsoft.fcl"
+#include "particleinventoryservice.fcl"
 #include "backtrackerservice.fcl"
 #include "spacecharge.fcl"
 #include "noiseservices_sbnd.fcl"
@@ -67,6 +68,11 @@ sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulation
 
 sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
 
+sbnd_backtrackerservice.BackTracker.G4ModuleLabel: "largeant"
+sbnd_backtrackerservice.BackTracker.MinimumHitEnergyFraction: 1e-1
+sbnd_backtrackerservice.BackTracker.OverrideRealData: true
+
+sbnd_particleinventoryservice:  @local::standard_particleinventoryservice
 
 # Define sbnd_g4_services
 sbnd_g4_services:

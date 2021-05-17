@@ -34,6 +34,7 @@
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
+#include "larcoreobj/SummaryData/POTSummary.h"
 
 // SBN/SBND includes
 #include "sbnobj/SBND/CRT/CRTData.hh"
@@ -69,6 +70,7 @@
 #include <cmath>
 
 const int kMaxHits       = 30000; ///< maximum number of hits
+const int kMaxSamples    = 5001; ///< maximum number of samples
 //const int kMaxAuxDets = 100;
 //const unsigned short kMaxTkIDs = 100;
 const int kMaxCHits      = 1000;  ///< maximum number of CRT hits
@@ -102,7 +104,7 @@ public:
 
   // This method is called once, at the start of the job. In this
   // example, it will define the histograms and n-tuples we'll write.
-  void beginJob();
+  void beginJob() override;
 
   // This method is called once, at the start of each run. It's a
   // good place to read databases or files that may have
@@ -116,8 +118,10 @@ public:
   void reconfigure(fhicl::ParameterSet const& pset);
 
   // The analysis routine, called once per event.
-  void analyze (const art::Event& evt);
+  void analyze (const art::Event& evt) override;
 
+  // Called at the beginning of every subrun
+  virtual void beginSubRun(art::SubRun const& sr) override;
 private:
 
   void ResetVars();
@@ -136,23 +140,23 @@ private:
   double _evttime;                     ///< The event time number
   int _t0;                             ///< The t0
 
-  int    _nhits;                       ///< Number of reco hits in the event
-  int    _hit_cryostat[kMaxHits];      ///< Cryostat where the hit belongs to
-  int    _hit_tpc[kMaxHits];           ///< TPC where the hit belongs to
-  int    _hit_plane[kMaxHits];         ///< Plane where the hit belongs to
-  int    _hit_wire[kMaxHits];          ///< Wire where the hit belongs to
-  int    _hit_channel[kMaxHits];       ///< Channel where the hit belongs to
-  double _hit_peakT[kMaxHits];         ///< Hit peak time
-  double _hit_charge[kMaxHits];        ///< Hit charge
-  double _hit_ph[kMaxHits];            ///< Hit ph?
-  double _hit_width[kMaxHits];         ///< Hit width
-  double _hit_full_integral[kMaxHits]; ///< Hit charge integral
-  int    _waveform_number[kMaxHits*5001];   ///< Number for each waveform, to allow for searching
-  double _adc_on_wire[kMaxHits*5001];       ///< ADC on wire to draw waveform
-  int    _time_for_waveform[kMaxHits*5001]; ///<Time for waveform to plot
-  int    _adc_count;    ///<Used for plotting waveforms
-  int    _waveform_integral[kMaxHits*5001]; ///<Used to see progression of the waveform integral
-  int    _adc_count_in_waveform[kMaxHits*5001]; ///<Used to view all waveforms on a hitplane together
+  int    _nhits;                                       ///< Number of reco hits in the event
+  int    _hit_cryostat[kMaxHits];                      ///< Cryostat where the hit belongs to
+  int    _hit_tpc[kMaxHits];                           ///< TPC where the hit belongs to
+  int    _hit_plane[kMaxHits];                         ///< Plane where the hit belongs to
+  int    _hit_wire[kMaxHits];                          ///< Wire where the hit belongs to
+  int    _hit_channel[kMaxHits];                       ///< Channel where the hit belongs to
+  double _hit_peakT[kMaxHits];                         ///< Hit peak time
+  double _hit_charge[kMaxHits];                        ///< Hit charge
+  double _hit_ph[kMaxHits];                            ///< Hit ph?
+  double _hit_width[kMaxHits];                         ///< Hit width
+  double _hit_full_integral[kMaxHits];                 ///< Hit charge integral
+  int    _waveform_number[kMaxHits*kMaxSamples];       ///< Number for each waveform, to allow for searching
+  double _adc_on_wire[kMaxHits*kMaxSamples];           ///< ADC on wire to draw waveform
+  int    _time_for_waveform[kMaxHits*kMaxSamples];     ///<Time for waveform to plot
+  int    _adc_count;                                   ///<Used for plotting waveforms
+  int    _waveform_integral[kMaxHits*kMaxSamples];     ///<Used to see progression of the waveform integral
+  int    _adc_count_in_waveform[kMaxHits*kMaxSamples]; ///<Used to view all waveforms on a hitplane together
 
   int _nstrips;                        ///< Number of CRT strips
   int _crt_plane[kMaxCHits];           ///< CRT plane
@@ -210,47 +214,53 @@ private:
   //mctruth information
   size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
   Int_t     mcevts_truth;    //number of neutrino Int_teractions in the spill
-  std::vector<Int_t>     nuScatterCode_truth; //Scattering code given by Genie for each neutrino
-  std::vector<Int_t>     nuID_truth;          //Unique ID of each true neutrino
-  std::vector<Int_t>     nuPDG_truth;         //neutrino PDG code
-  std::vector<Int_t>     ccnc_truth;          //0=CC 1=NC
-  std::vector<Int_t>     mode_truth;          //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
-  std::vector<Float_t>   enu_truth;           //true neutrino energy
-  std::vector<Float_t>   Q2_truth;            //Momentum transfer squared
-  std::vector<Float_t>   W_truth;             //hadronic invariant mass
-  std::vector<Int_t>     hitnuc_truth;        //hit nucleon
-  std::vector<Float_t>   nuvtxx_truth;        //neutrino vertex x
-  std::vector<Float_t>   nuvtxy_truth;        //neutrino vertex y
-  std::vector<Float_t>   nuvtxz_truth;        //neutrino vertex z
-  std::vector<Float_t>   nu_dcosx_truth;      //neutrino dcos x
-  std::vector<Float_t>   nu_dcosy_truth;      //neutrino dcos y
-  std::vector<Float_t>   nu_dcosz_truth;      //neutrino dcos z
-  std::vector<Float_t>   lep_mom_truth;       //lepton momentum
-  std::vector<Float_t>   lep_dcosx_truth;     //lepton dcos x
-  std::vector<Float_t>   lep_dcosy_truth;     //lepton dcos y
-  std::vector<Float_t>   lep_dcosz_truth;     //lepton dcos z
+  std::vector<Int_t>     nuScatterCode_truth; ///< Scattering code given by Genie for each neutrino
+  std::vector<Int_t>     nuID_truth;          ///< Unique ID of each true neutrino
+  std::vector<Int_t>     nuPDG_truth;         ///< neutrino PDG code
+  std::vector<Int_t>     ccnc_truth;          ///< 0=CC 1=NC
+  std::vector<Int_t>     mode_truth;          ///< 0=QE/El, 1=RES, 2=DIS, 3=Coherent production
+  std::vector<Float_t>   enu_truth;           ///< true neutrino energy
+  std::vector<Float_t>   Q2_truth;            ///< Momentum transfer squared
+  std::vector<Float_t>   W_truth;             ///< hadronic invariant mass
+  std::vector<Int_t>     hitnuc_truth;        ///< hit nucleon
+  std::vector<Float_t>   nuvtxx_truth;        ///< neutrino vertex x
+  std::vector<Float_t>   nuvtxy_truth;        ///< neutrino vertex y
+  std::vector<Float_t>   nuvtxz_truth;        ///< neutrino vertex z
+  std::vector<Float_t>   nu_dcosx_truth;      ///< neutrino dcos x
+  std::vector<Float_t>   nu_dcosy_truth;      ///< neutrino dcos y
+  std::vector<Float_t>   nu_dcosz_truth;      ///< neutrino dcos z
+  std::vector<Float_t>   lep_mom_truth;       ///< lepton momentum
+  std::vector<Float_t>   lep_dcosx_truth;     ///< lepton dcos x
+  std::vector<Float_t>   lep_dcosy_truth;     ///< lepton dcos y
+  std::vector<Float_t>   lep_dcosz_truth;     ///< lepton dcos z
 
   //flux information
-    std::vector<Float_t>  tpx_flux;        //Px of parent particle leaving BNB target
-    std::vector<Float_t>  tpy_flux;        //Py of parent particle leaving BNB target
-    std::vector<Float_t>  tpz_flux;        //Pz of parent particle leaving BNB target
-    std::vector<Int_t>     tptype_flux;     //Type of parent particle leaving BNB target
+  std::vector<Float_t>  tpx_flux;             ///< Px of parent particle leaving BNB target
+  std::vector<Float_t>  tpy_flux;             ///< Py of parent particle leaving BNB target
+  std::vector<Float_t>  tpz_flux;             ///< Pz of parent particle leaving BNB target
+  std::vector<Int_t>     tptype_flux;         ///< Type of parent particle leaving BNB target
 
-    //genie information
-    size_t MaxGeniePrimaries = 0;
-    Int_t     genie_no_primaries;
-    std::vector<Int_t>     genie_primaries_pdg;
-    std::vector<Float_t>  genie_Eng;
-    std::vector<Float_t>  genie_Px;
-    std::vector<Float_t>  genie_Py;
-    std::vector<Float_t>  genie_Pz;
-    std::vector<Float_t>  genie_P;
-    std::vector<Int_t>     genie_status_code;
-    std::vector<Float_t>  genie_mass;
-    std::vector<Int_t>     genie_trackID;
-    std::vector<Int_t>     genie_ND;
-    std::vector<Int_t>     genie_mother;
+  //genie information
+  size_t MaxGeniePrimaries = 0;
+  Int_t     genie_no_primaries;
+  std::vector<Int_t>     genie_primaries_pdg;
+  std::vector<Float_t>  genie_Eng;
+  std::vector<Float_t>  genie_Px;
+  std::vector<Float_t>  genie_Py;
+  std::vector<Float_t>  genie_Pz;
+  std::vector<Float_t>  genie_P;
+  std::vector<Int_t>     genie_status_code;
+  std::vector<Float_t>  genie_mass;
+  std::vector<Int_t>     genie_trackID;
+  std::vector<Int_t>     genie_ND;
+  std::vector<Int_t>     genie_mother;
 
+
+
+  TTree* _sr_tree; ///< A tree filled per subrun (for POT accounting)
+  int _sr_run, _sr_subrun;
+  double _sr_begintime, _sr_endtime;
+  double _sr_pot; ///< POTs in each subrun
 
 
 
@@ -271,6 +281,7 @@ private:
   bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
   bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
+  bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
@@ -324,6 +335,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadOpHits        = p.get<bool>("readOpHits",true);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
+  fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
 
   fWindow            = p.get<int>("window",100);
@@ -790,6 +802,8 @@ void Hitdumper::analyze(const art::Event& evt)
       } //end loop over hits
     }// end loop over waveforms
   }// end if fCheckTrasparency
+
+
   if (freadTruth){
 
     int nGeniePrimaries = 0, nMCNeutrinos = 0;
@@ -840,13 +854,13 @@ void Hitdumper::analyze(const art::Event& evt)
         if (!curr_mctruth->NeutrinoSet()) continue;
 
         // Genie Truth association only for the neutrino
-        if (fmgt.size()>i_mctruth){
-        std::vector< art::Ptr<simb::GTruth> > mcgtAssn = fmgt.at(i_mctruth);
+        if (fmgt.size()>i_mctruth) {
+          std::vector< art::Ptr<simb::GTruth> > mcgtAssn = fmgt.at(i_mctruth);
 
-        nuScatterCode_truth[i_mctruth] = mcgtAssn[0]->fGscatter;
-      }else{
-        nuScatterCode_truth[i_mctruth] = -1.;
-      }
+          nuScatterCode_truth[i_mctruth] = mcgtAssn[0]->fGscatter;
+        } else {
+          nuScatterCode_truth[i_mctruth] = -1.;
+        }
 
         nuPDG_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().PdgCode();
         ccnc_truth[i_mctruth] = curr_mctruth->GetNeutrino().CCNC();
@@ -1054,6 +1068,15 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("genie_mother",&genie_mother);
   }
 
+  if (fsavePOTInfo) {
+    _sr_tree = tfs->make<TTree>("pottree","");
+    _sr_tree->Branch("run", &_sr_run, "run/I");
+    _sr_tree->Branch("subrun", &_sr_subrun, "subrun/I");
+    _sr_tree->Branch("begintime", &_sr_begintime, "begintime/D");
+    _sr_tree->Branch("endtime", &_sr_endtime, "endtime/D");
+    _sr_tree->Branch("pot", &_sr_pot, "pot/D");
+  }
+
 }
 
 void Hitdumper::ResetVars(){
@@ -1078,7 +1101,7 @@ void Hitdumper::ResetVars(){
     _hit_full_integral[i] = -99999;
   }
 
-  for (int i = 0; i < (kMaxHits * 5001); i++) {
+  for (int i = 0; i < (kMaxHits * kMaxSamples); i++) {
     _waveform_number[i] = -99999;
     _adc_on_wire[i] = -99999;
     _time_for_waveform[i] = -99999;
@@ -1228,6 +1251,29 @@ void Hitdumper::ResizeGenie(int nPrimaries) {
 } // sbnd::AnalysisTreeDataStruct::ResizeGenie()
 
 
+void Hitdumper::beginSubRun(art::SubRun const& sr) {
+
+  if (!fsavePOTInfo) {
+    return;
+  }
+
+  _sr_run       = sr.run();
+  _sr_subrun    = sr.subRun();
+  _sr_begintime = sr.beginTime().value();
+  _sr_endtime   = sr.endTime().value();
+
+  art::Handle<sumdata::POTSummary> pot_handle;
+  sr.getByLabel(fGenieGenModuleLabel, pot_handle);
+
+  if (pot_handle.isValid()) {
+    _sr_pot = pot_handle->totpot;
+  } else {
+    _sr_pot = 0.;
+  }
+
+  _sr_tree->Fill();
+
+}
 
 DEFINE_ART_MODULE(Hitdumper)
 
