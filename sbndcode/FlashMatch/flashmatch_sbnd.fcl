@@ -1,3 +1,4 @@
+BEGIN_PROLOG
 
 sbnd_simple_flashmatch:{
   module_type: FlashPredict
@@ -17,8 +18,11 @@ sbnd_simple_flashmatch:{
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
   MakeTree: false
-  MinFlashPE: 0.
+  MinHitQ: 0.
+  MinSliceQ: 0.
   QScale:  0.001
+  MinOpHPE: 0.
+  MinFlashPE: 0.
   PEScale: 1.0
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
@@ -52,3 +56,4 @@ sbnd_simple_flashmatch:{
   pe_up: 1.
 }
 
+END_PROLOG
