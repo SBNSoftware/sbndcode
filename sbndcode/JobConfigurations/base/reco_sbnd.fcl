@@ -95,11 +95,63 @@ physics:
   opflashtpc1:         @local::SBNDSimpleFlashTPC1
 
   ### calwire producers
-  caldata:             @local::sbnd_calwire
+  # caldata:             @local::sbnd_calwire
+
+  ### wirecell producers
+  wirecell : {
+    module_type : WireCellToolkit
+    wcls_main: {
+      tool_type: WCLS
+      apps: ["Pgrapher"]
+      
+      ## Libraries in which to look for WCT components
+      plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft"]
+      
+      ## The tool marshals the art::Event to these visitors before.
+      ## See notes below in params.
+      inputers: ["wclsRawFrameSource"
+        ## To use wclsMultiChannelNoiseDB you must also put epoch:dynamic below
+        ## and you must have geo::Geometry service in your environment.
+        ##,"wclsMultiChannelNoiseDB"
+      ]
+
+      ## or after the WCT app is run.  These names MUST be used identically in the Jsonnet
+      ## fixme: https://github.com/WireCell/larwirecell/issues/3
+      ##outputers: ["wclsFrameSaver:nfsaver", "wclsFrameSaver:spsaver"]
+      outputers: ["wclsFrameSaver:spsaver"]
+
+      ## This sets the "main" Jsonnet file which provides the
+      ## configuration for the Wire-Cell Toolkit components.  It is
+      ## take as relative to entries in WIRECELL_PATH.
+      configs: ["pgrapher/experiment/sbnd/wcls-nf-sp.jsonnet"]
+
+      ## Set the "external variables" required by the Jsonnet.
+      params : {
+        ## This locates the input raw::RawDigit collection in the art::Event
+        raw_input_label: "tpcrawdecoder:daq"
+        ##raw_input_label: "caldata"
+
+        ## Set "data" vs. "sim".  The epoch below probably should follow suit.
+        reality: "data"
+        ##reality: "sim"
+
+        ## if epoch is "dynamic" you MUST add "wclsMultiChannelNoiseDB" to "inputers" and must NOT add it if not "dynamic"
+        ##epoch: "dynamic"
+        ##epoch: "perfect"
+        epoch: "after"
+      
+        ## Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
+        signal_output_form: "sparse"
+
+        ## Set the waveform sample length, eg, 6000, 15000, "auto"
+        ##nsample: 6000
+      }
+    }
+  }   
 
   ### hit-finder producers
-  gaushit:             @local::sbnd_gaushitfinder
-  fasthit:             @local::sbnd_fasthitfinder
+######  gaushit:             @local::sbnd_gaushitfinder
+######  fasthit:             @local::sbnd_fasthitfinder
 #  rffhit:              @local::sbnd_rffhitfinder
 
   ### corner-finder
@@ -168,7 +220,8 @@ physics:
          , ophitarapuca
          , opflashtpc0
          , opflashtpc1
-         , caldata
+###         , caldata
+	 , wirecell
          , gaushit
          , fasthit
          , linecluster
@@ -243,10 +296,11 @@ physics.trigger_paths: [ fullreco ]
 #physics.producers.opflash.InputModule:                          "optreadout"
 #physics.producers.opflash.GenModule:                            "generator"
 
-physics.producers.caldata.DigitModuleLabel:                     "daq"
+#####physics.producers.caldata.DigitModuleLabel:                     "daq"
 
-physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
-physics.producers.fasthit.DigitModuleLabel:                     "daq"
+#####physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
+physics.producers.gaushit.CalDataModuleLabel:			 "gauss:wirecell"    
+physics.producers.fasthit.DigitModuleLabel:                      "daq"
 #physics.producers.rffhit.CalDataModuleLabel:                    "caldata"
 
 #physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
