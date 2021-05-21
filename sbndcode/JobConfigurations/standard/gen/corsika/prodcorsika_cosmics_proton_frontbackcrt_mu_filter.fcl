@@ -19,3 +19,4 @@ physics.filters.filter.CRTDimensionScaling:    1.2
 physics.filters.filter.UseTightReadoutWindow:  true
 
 outputs.out1.fileName: "prodcosmics_corsika_frontbackcrt_sbnd_%p-%tc.root"
+

@@ -15,3 +15,4 @@ physics.filters.filter.UseRightCRTs:             false
 physics.filters.filter.UseTPC:                   true
 physics.filters.filter.UseReadoutWindow:         false
 physics.filters.filter.UseTightReadoutWindow:    true
+

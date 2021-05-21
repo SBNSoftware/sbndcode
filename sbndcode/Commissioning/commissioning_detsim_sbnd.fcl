@@ -5,3 +5,4 @@
 
 # Raise the arapuca threshold to avoid saving arapucas (temporary)
 physics.producers.opdaq.TriggerThresholdADCArapuca: 500
+
