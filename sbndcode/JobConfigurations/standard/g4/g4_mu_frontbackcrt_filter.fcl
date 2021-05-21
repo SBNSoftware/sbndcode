@@ -1,12 +1,17 @@
 #include "g4_mu_crt_filter_base.fcl"
 
-physics.filters.filter.PDGs:                [ 13, -13 ] 
-physics.filters.filter.ParticleMinMomentum: [ -999., -999. ]
-physics.filters.filter.ParticleMaxMomentum: [ -999., -999. ]
-physics.filters.filter.UseTopHighCRTs:      false
-physics.filters.filter.UseTopLowCRTs:       false
-physics.filters.filter.UseBottomCRTs:       false
-physics.filters.filter.UseFrontCRTs:        true
-physics.filters.filter.UseBackCRTs:         true
-physics.filters.filter.UseLeftCRTs:         false
-physics.filters.filter.UseRightCRTs:        false
+physics.filters.filter.PDGs:                     [ 13, -13 ]
+# units GeV/c, needs at least 1 GeV/c to cross the active volume
+physics.filters.filter.ParticleMinMomentum:      [ 1., 1. ]
+physics.filters.filter.ParticleMaxMomentum:      [ -999., -999. ]
+physics.filters.filter.UseTopHighCRTs:           false
+physics.filters.filter.UseTopLowCRTs:            false
+physics.filters.filter.UseBottomCRTs:            false
+physics.filters.filter.UseFrontCRTs:             true
+physics.filters.filter.UseBackCRTs:              true
+physics.filters.filter.UseLeftCRTs:              false
+physics.filters.filter.UseRightCRTs:             false
+# Demand particle crosses the TPC enclosed volume
+physics.filters.filter.UseTPC:                   true
+physics.filters.filter.UseReadoutWindow:         false
+physics.filters.filter.UseTightReadoutWindow:    true
