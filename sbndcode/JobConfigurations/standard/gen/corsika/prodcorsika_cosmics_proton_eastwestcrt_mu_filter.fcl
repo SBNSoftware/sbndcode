@@ -4,18 +4,19 @@
 
 #include "prodcorsika_cosmics_proton_filter.fcl"
 
-physics.filters.filter.UseTopHighCRTs: false
-physics.filters.filter.UseTopLowCRTs: false
-physics.filters.filter.UseBottomCRTs: false
-physics.filters.filter.UseFrontCRTs: false
-physics.filters.filter.UseBackCRTs: false
-physics.filters.filter.UseLeftCRTs: true
-physics.filters.filter.UseRightCRTs: true
-physics.filters.filter.PDGs: [ 13, -13 ]
-# physics.filters.filter.MinMomentums: [ -999., -999. ]
-#  units are GeV/c, needs at least 0.8 GeV/c to cross active volume
-physics.filters.filter.MinMomentums: [ 0.8, 0.8 ]
-physics.filters.filter.MaxMomentums: [ -999., -999. ]
-physics.filters.filter.CRTDimensionScaling: 1.2
-physics.filters.filter.UseReadoutWindow: false
+physics.filters.filter.UseTopHighCRTs:        false
+physics.filters.filter.UseTopLowCRTs:         false
+physics.filters.filter.UseBottomCRTs:         false
+physics.filters.filter.UseFrontCRTs:          false
+physics.filters.filter.UseBackCRTs:           false
+physics.filters.filter.UseLeftCRTs:           true
+physics.filters.filter.UseRightCRTs:          true
+physics.filters.filter.PDGs:                  [ 13, -13 ]
+# units are GeV/c, needs at least 0.8 GeV/c to cross active volume
+physics.filters.filter.MinMomentums:          [ 0.8, 0.8 ]
+physics.filters.filter.MaxMomentums:          [ -999., -999. ]
+physics.filters.filter.CRTDimensionScaling:   1.2
+physics.filters.filter.UseReadoutWindow:      false
 physics.filters.filter.UseTightReadoutWindow: true
+
+outputs.out1.fileName: "prodcosmics_corsika_eastwestcrt_sbnd_%p-%tc.root"

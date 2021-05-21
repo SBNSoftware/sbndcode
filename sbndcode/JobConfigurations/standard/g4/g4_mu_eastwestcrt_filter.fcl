@@ -3,6 +3,7 @@
 physics.filters.filter.PDGs:                    [ 13, -13 ]
 # units GeV/c, needs at least 0.8 GeV/c to cross the active volume
 physics.filters.filter.ParticleMinMomentum:     [ 0.8, 0.8 ]
+physics.filters.filter.ParticleMaxMomentum:     [ -999., -999. ]
 physics.filters.filter.UseTopHighCRTs:          false
 physics.filters.filter.UseTopLowCRTs:           false
 physics.filters.filter.UseBottomCRTs:           false

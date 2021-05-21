@@ -5,3 +5,4 @@ physics.simulate: [ rns, largeant, filter, mcreco ]
 physics.filters.filter: @local::sbnd_larg4crtfilter
 
 outputs.out1.SelectEvents: [ "simulate" ]
+
