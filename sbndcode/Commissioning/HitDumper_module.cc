@@ -69,7 +69,7 @@
 #include <string>
 #include <cmath>
 
-const int kMaxHits       = 30000; ///< maximum number of hits
+const int kMaxHits       = 100000; ///< maximum number of hits
 const int kMaxSamples    = 5001; ///< maximum number of samples
 //const int kMaxAuxDets = 100;
 //const unsigned short kMaxTkIDs = 100;
