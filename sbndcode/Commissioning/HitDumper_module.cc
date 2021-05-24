@@ -97,6 +97,14 @@ enum CRTOrientation {
   kCRTVertical = 1,      ///< VertivalTagger
 };
 
+enum PhotoDetectorType {
+  kPDNotDefined = -1,   ///< Not defined
+  kPMTCoated = 0,       ///< Coated PMT
+  kPMTUnCoated = 1,     ///< Uncoated PMT
+  kXArapucaVis,         ///< Arapuca Vis
+  kXArapucaVuv,         ///< Arapuca VUV
+};
+
 class Hitdumper : public art::EDAnalyzer {
 public:
   explicit Hitdumper(fhicl::ParameterSet const & p);
@@ -199,17 +207,18 @@ private:
   double _ct_y2[kMaxNCtrks];           ///< CRT track y2
   double _ct_z2[kMaxNCtrks];           ///< CRT track z2
 
-  int _nophits;                        ///< Number of Optical Hits
-  int _ophit_opch[kMaxHits];           ///< OpChannel of the optical hit
-  int _ophit_opdet[kMaxHits];          ///< OpDet of the optical hit
-  double _ophit_peakT[kMaxHits];       ///< Peak time of the optical hit
-  double _ophit_width[kMaxHits];       ///< Width of the optical hit
-  double _ophit_area[kMaxHits];        ///< Area of the optical hit
-  double _ophit_amplitude[kMaxHits];   ///< Amplitude of the optical hit
-  double _ophit_pe[kMaxHits];          ///< PEs of the optical hit
-  double _ophit_opdet_x[kMaxHits];     ///< OpDet X coordinate of the optical hit
-  double _ophit_opdet_y[kMaxHits];     ///< OpDet Y coordinate of the optical hit
-  double _ophit_opdet_z[kMaxHits];     ///< OpDet Z coordinate of the optical hit
+  int _nophits;                            ///< Number of Optical Hits
+  int _ophit_opch[kMaxHits];               ///< OpChannel of the optical hit
+  int _ophit_opdet[kMaxHits];              ///< OpDet of the optical hit
+  double _ophit_peakT[kMaxHits];           ///< Peak time of the optical hit
+  double _ophit_width[kMaxHits];           ///< Width of the optical hit
+  double _ophit_area[kMaxHits];            ///< Area of the optical hit
+  double _ophit_amplitude[kMaxHits];       ///< Amplitude of the optical hit
+  double _ophit_pe[kMaxHits];              ///< PEs of the optical hit
+  double _ophit_opdet_x[kMaxHits];         ///< OpDet X coordinate of the optical hit
+  double _ophit_opdet_y[kMaxHits];         ///< OpDet Y coordinate of the optical hit
+  double _ophit_opdet_z[kMaxHits];         ///< OpDet Z coordinate of the optical hit
+  int _ophit_opdet_type[kMaxHits];         ///< OpDet tyoe of the optical hit
 
   //mctruth information
   size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
@@ -711,8 +720,6 @@ void Hitdumper::analyze(const art::Event& evt)
     }
     int counter = 0;
     for (int i = 0; i < _nophits; ++i) {
-      // TODO: why only pmt_coated? ~icaza
-      if (!_pd_map.isPDType(ophitlist.at(i)->OpChannel(), "pmt_coated")) continue;
       _ophit_opch[counter] = ophitlist.at(i)->OpChannel();
       _ophit_opdet[counter] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
       _ophit_peakT[counter] = ophitlist.at(i)->PeakTime();
@@ -724,6 +731,12 @@ void Hitdumper::analyze(const art::Event& evt)
       _ophit_opdet_x[counter] = opdet_center.X();
       _ophit_opdet_y[counter] = opdet_center.Y();
       _ophit_opdet_z[counter] = opdet_center.Z();
+      auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
+      if (pd_type == "pmt_coated") {_ophit_opdet_type[counter] = kPMTCoated;}
+      else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[counter] = kPMTUnCoated;}
+      else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[counter] = kXArapucaVis;}
+      else if (pd_type == "xarapuca_vuv") {_ophit_opdet_type[counter] = kXArapucaVuv;}
+      else {_ophit_opdet_type[counter] = kPDNotDefined;}
       counter++;
     }
   }
@@ -1025,6 +1038,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opdet_x",_ophit_opdet_x,"ophit_opdet_x[nophits]/D");
     fTree->Branch("ophit_opdet_y",_ophit_opdet_y,"ophit_opdet_y[nophits]/D");
     fTree->Branch("ophit_opdet_z",_ophit_opdet_z,"ophit_opdet_z[nophits]/D");
+    fTree->Branch("ophit_opdet_type",_ophit_opdet_type,"ophit_opdet_type[nophits]/I");
   }
 
   if (freadTruth) {
@@ -1169,6 +1183,7 @@ void Hitdumper::ResetVars(){
     _ophit_opdet_x[i] = -9999.;
     _ophit_opdet_y[i] = -9999.;
     _ophit_opdet_z[i] = -9999.;
+    _ophit_opdet_type[i] = kPDNotDefined;
   }
 
   mcevts_truth = 0;
