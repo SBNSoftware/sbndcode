@@ -69,11 +69,11 @@
 #include <string>
 #include <cmath>
 
-const int kMaxHits       = 100000; ///< maximum number of hits
+const int kMaxHits       = 50000; ///< maximum number of hits
 const int kMaxSamples    = 5001; ///< maximum number of samples
 //const int kMaxAuxDets = 100;
 //const unsigned short kMaxTkIDs = 100;
-const int kMaxCHits      = 1000;  ///< maximum number of CRT hits
+const int kMaxCHits      = 5000;  ///< maximum number of CRT hits
 const int kMaxNCtrks     = 10;
 
 const int MAX_INT = std::numeric_limits<int>::max();
