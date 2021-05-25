@@ -12,7 +12,6 @@
 #
 # module configuration
 #
-
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
 #include "cluster_sbnd.fcl"
@@ -29,7 +28,7 @@ process_name: HitDumper
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:              { fileName: @local::sbnd_tfileoutput.fileName }
+  TFileService:              { fileName: "hitdumper_tree.root" }
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
@@ -54,10 +53,8 @@ outputs:
 {
   out1:
   {
-    module_type: RootOutput
-    fileName:    "hitdumper-art.root"
-    dataTier:    "reconstructed"
-    compressionLevel: 1
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
     SelectEvents: ["reco2"]
  }
 }
