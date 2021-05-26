@@ -131,9 +131,9 @@ private:
   /// Resets wire hits tree variables
   void ResetWireHitsVars(int n);
   /// Resets crt strips tree variables
-  void ResetCRTStripsVars();
+  void ResetCRTStripsVars(int n);
   /// Resets custom crt tracks tree variables
-  void ResetCRTCustomTracksVars();
+  void ResetCRTCustomTracksVars(int n);
   /// Resets crt tracks tree variables
   void ResetCRTTracksVars(int n);
   /// Resets crt hits tree variables
@@ -448,7 +448,7 @@ void Hitdumper::analyze(const art::Event& evt)
   if (_nstr > _max_chits) _nstr = _max_chits;
   // strips are always in pairs, one entry for each sipm (2 sipms per strip)
 
-  ResetCRTStripsVars();
+  ResetCRTStripsVars(_nstr);
 
   for (int i = 0; i < _nstr; i += 2){
     uint32_t chan = striplist[i]->Channel();
@@ -511,7 +511,7 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // CRT Custom Tracks
   //
-  ResetCRTCustomTracksVars();
+  ResetCRTCustomTracksVars(_nstrips);
   _nctrks = 0;
   if (fmakeCRTtracks) {
     int ntr = 0;
@@ -1162,7 +1162,7 @@ void Hitdumper::ResetWireHitsVars(int n) {
   _hit_full_integral.assign(n, DEFAULT_VALUE);
 }
 
-void Hitdumper::ResetCRTStripsVars() {
+void Hitdumper::ResetCRTStripsVars(int n) {
   _crt_plane.clear();
   _crt_module.clear();
   _crt_strip.clear();
@@ -1170,9 +1170,17 @@ void Hitdumper::ResetCRTStripsVars() {
   _crt_time.clear();
   _crt_adc.clear();
   _crt_pos.clear();
+
+  _crt_plane.reserve(n);
+  _crt_module.reserve(n);
+  _crt_strip.reserve(n);
+  _crt_orient.reserve(n);
+  _crt_time.reserve(n);
+  _crt_adc.reserve(n);
+  _crt_pos.reserve(n);
 }
 
-void Hitdumper::ResetCRTCustomTracksVars() {
+void Hitdumper::ResetCRTCustomTracksVars(int n) {
   _ctrk_x1.clear();
   _ctrk_y1.clear();
   _ctrk_z1.clear();
@@ -1185,6 +1193,19 @@ void Hitdumper::ResetCRTCustomTracksVars() {
   _ctrk_t2.clear();
   _ctrk_adc2.clear();
   _ctrk_mod2x.clear();
+
+  _ctrk_x1.reserve(n);
+  _ctrk_y1.reserve(n);
+  _ctrk_z1.reserve(n);
+  _ctrk_t1.reserve(n);
+  _ctrk_adc1.reserve(n);
+  _ctrk_mod1x.reserve(n);
+  _ctrk_x2.reserve(n);
+  _ctrk_y2.reserve(n);
+  _ctrk_z2.reserve(n);
+  _ctrk_t2.reserve(n);
+  _ctrk_adc2.reserve(n);
+  _ctrk_mod2x.reserve(n);
 }
 
 void Hitdumper::ResetCRTTracksVars(int n) {
