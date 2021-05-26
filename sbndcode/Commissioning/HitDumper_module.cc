@@ -71,6 +71,7 @@
 
 const int MAX_INT = std::numeric_limits<int>::max();
 const long int TIME_CORRECTION = (long int) std::numeric_limits<int>::max() * 2;
+const int DEFAULT_VALUE = -9999;
 
 enum CRTPos {
   kNotDefined = -1,   ///< Not defined
@@ -127,6 +128,18 @@ private:
 
   /// Resets the variables that are saved to the TTree
   void ResetVars();
+  /// Resets wire hits tree variables
+  void ResetWireHitsVars(int n);
+  /// Resets crt strips tree variables
+  void ResetCRTStripsVars();
+  /// Resets custom crt tracks tree variables
+  void ResetCRTCustomTracksVars();
+  /// Resets crt tracks tree variables
+  void ResetCRTTracksVars(int n);
+  /// Resets crt hits tree variables
+  void ResetCRTHitsVars(int n);
+  /// Resets optical hits tree variables
+  void ResetOpHitsVars(int n);
   /// Resize the data structure for MCNeutrino particles
   void ResizeMCNeutrino(int nNeutrinos);
   /// Resize the data strutcure for Genie primaries
@@ -337,10 +350,10 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   _max_nctrks = p.get<int>("MaxCRTTracks", 10);
 
   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
-  fDigitModuleLabel    = p.get<std::string>("DigitModuleLabel",    "daq");
-  fLArG4ModuleLabel    = p.get<std::string>("LArG4ModuleLabel",    "largeant");
+  fDigitModuleLabel    = p.get<std::string>("DigitModuleLabel", "daq");
+  fLArG4ModuleLabel    = p.get<std::string>("LArG4ModuleLabel", "largeant");
   fCRTStripModuleLabel = p.get<std::string>("CRTStripModuleLabel", "crt");
-  fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel",   "crthit");
+  fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabel   = p.get<std::string>("OpHitsModuleLabel");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
@@ -394,22 +407,26 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   if (_nhits > _max_hits) {
-    std::cout << "Available hits are " << _nhits << ", which is above the maximum number allowed to store." << std::endl;
+    std::cout << "Available hits are " << _nhits 
+              << ", which is above the maximum number allowed to store." << std::endl;
     std::cout << "Will only store " << _max_hits << "hits." << std::endl;
     _nhits = _max_hits;
   }
-  for (int i = 0; i<_nhits; ++i){
+  
+  ResetWireHitsVars(_nhits);
+  
+  for (int i = 0; i < _nhits; ++i) {
     geo::WireID wireid = hitlist[i]->WireID();
-    _hit_cryostat.push_back(wireid.Cryostat);
-    _hit_tpc.push_back(wireid.TPC);
-    _hit_plane.push_back(wireid.Plane);
-    _hit_wire.push_back(wireid.Wire);
-    _hit_channel.push_back(hitlist[i]->Channel());
+    _hit_cryostat[i] = wireid.Cryostat;
+    _hit_tpc[i] = wireid.TPC;
+    _hit_plane[i] = wireid.Plane;
+    _hit_wire[i] = wireid.Wire;
+    _hit_channel[i] = hitlist[i]->Channel();
     // peak time needs plane dependent offset correction applied.
-    _hit_peakT.push_back(hitlist[i]->PeakTime());
-    _hit_charge.push_back(hitlist[i]->Integral());
-    _hit_ph.push_back(hitlist[i]->PeakAmplitude());
-    _hit_width.push_back(hitlist[i]->RMS());
+    _hit_peakT[i] = hitlist[i]->PeakTime();
+    _hit_charge[i] = hitlist[i]->Integral();
+    _hit_ph[i] = hitlist[i]->PeakAmplitude();
+    _hit_width[i] = hitlist[i]->RMS();
   }
 
   //
@@ -430,6 +447,9 @@ void Hitdumper::analyze(const art::Event& evt)
   int ns = 0;
   if (_nstr > _max_chits) _nstr = _max_chits;
   // strips are always in pairs, one entry for each sipm (2 sipms per strip)
+
+  ResetCRTStripsVars();
+
   for (int i = 0; i < _nstr; i += 2){
     uint32_t chan = striplist[i]->Channel();
 
@@ -486,6 +506,12 @@ void Hitdumper::analyze(const art::Event& evt)
   }
   _nstrips = ns;
 
+
+
+  //
+  // CRT Custom Tracks
+  //
+  ResetCRTCustomTracksVars();
   _nctrks = 0;
   if (fmakeCRTtracks) {
     int ntr = 0;
@@ -649,11 +675,14 @@ void Hitdumper::analyze(const art::Event& evt)
     }
 
     if (_nchits > _max_chits) {
-      std::cout << "Available CRT hits are " << _nchits << ", which is above the maximum number allowed to store." << std::endl;
+      std::cout << "Available CRT hits are " << _nchits 
+                << ", which is above the maximum number allowed to store." << std::endl;
       std::cout << "Will only store " << _max_chits << "CRT hits." << std::endl;
       _nchits = _max_chits;
     }
-    //  std::cout << " number CRT hits " << nchits << std::endl;
+
+    ResetCRTHitsVars(_nchits);
+
     for (int i = 0; i < _nchits; ++i){
       int ip = kNotDefined;
       if  (chitlist[i]->tagger=="volTaggerFaceFront_0" )    ip = kFaceFront;
@@ -664,7 +693,8 @@ void Hitdumper::analyze(const art::Event& evt)
       else if (chitlist[i]->tagger=="volTaggerTopHigh_0")   ip = kTopHigh;
       else if (chitlist[i]->tagger=="volTaggerBot_0")       ip = kBot;
       else {
-        mf::LogWarning("HitDumper") << "Cannot identify tagger of type " << chitlist[i]->tagger << std::endl;
+        mf::LogWarning("HitDumper") << "Cannot identify tagger of type "
+                                    << chitlist[i]->tagger << std::endl;
       }
 
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
@@ -672,10 +702,10 @@ void Hitdumper::analyze(const art::Event& evt)
         _chit_time[i] = 0.001 * (chitlist[i]->ts1_ns - TIME_CORRECTION);
       }
 
-      _chit_x.push_back(chitlist[i]->x_pos);
-      _chit_y.push_back(chitlist[i]->y_pos);
-      _chit_z.push_back(chitlist[i]->z_pos);
-      _chit_plane.push_back(ip);
+      _chit_x[i] = chitlist[i]->x_pos;
+      _chit_y[i] = chitlist[i]->y_pos;
+      _chit_z[i] = chitlist[i]->z_pos;
+      _chit_plane[i] = ip;
     }
   }
 
@@ -690,18 +720,21 @@ void Hitdumper::analyze(const art::Event& evt)
       art::fill_ptr_vector(ctrklist, crtTrackListHandle);
       _ncts = ctrklist.size();
       if (_ncts > _max_nctrks) _ncts = _max_nctrks;
+
+      ResetCRTTracksVars(_ncts);
+
       for (int i = 0; i < _ncts; ++i){
-        _ct_pes.push_back(ctrklist[i]->peshit);
-        _ct_time.push_back(ctrklist[i]->ts1_ns*0.001);
+        _ct_pes[i] = ctrklist[i]->peshit;
+        _ct_time[i] = ctrklist[i]->ts1_ns*0.001;
         if (ctrklist[i]->ts1_ns > MAX_INT) {
-          _ct_time.push_back(0.001 * (ctrklist[i]->ts1_ns - TIME_CORRECTION));
+          _ct_time[i] = 0.001 * (ctrklist[i]->ts1_ns - TIME_CORRECTION);
         }
-        _ct_x1.push_back(ctrklist[i]->x1_pos);
-        _ct_y1.push_back(ctrklist[i]->y1_pos);
-        _ct_z1.push_back(ctrklist[i]->z1_pos);
-        _ct_x2.push_back(ctrklist[i]->x2_pos);
-        _ct_y2.push_back(ctrklist[i]->y2_pos);
-        _ct_z2.push_back(ctrklist[i]->z2_pos);
+        _ct_x1[i] = ctrklist[i]->x1_pos;
+        _ct_y1[i] = ctrklist[i]->y1_pos;
+        _ct_z1[i] = ctrklist[i]->z1_pos;
+        _ct_x2[i] = ctrklist[i]->x2_pos;
+        _ct_y2[i] = ctrklist[i]->y2_pos;
+        _ct_z2[i] = ctrklist[i]->z2_pos;
       }
     } else {
       std::cout << "Failed to get sbn::crt::CRTTrack data product." << std::endl;
@@ -729,26 +762,27 @@ void Hitdumper::analyze(const art::Event& evt)
       std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
       _nophits = _max_ophits;
     }
-    int counter = 0;
+    
+    ResetOpHitsVars(_nophits);
+
     for (int i = 0; i < _nophits; ++i) {
-      _ophit_opch.push_back(ophitlist.at(i)->OpChannel());
-      _ophit_opdet.push_back(fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel()));
-      _ophit_peakT.push_back(ophitlist.at(i)->PeakTime());
-      _ophit_width.push_back(ophitlist.at(i)->Width());
-      _ophit_area.push_back(ophitlist.at(i)->Area());
-      _ophit_amplitude.push_back(ophitlist.at(i)->Amplitude());
-      _ophit_pe.push_back(ophitlist.at(i)->PE());
+      _ophit_opch[i] = ophitlist.at(i)->OpChannel();
+      _ophit_opdet[i] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+      _ophit_peakT[i] = ophitlist.at(i)->PeakTime();
+      _ophit_width[i] = ophitlist.at(i)->Width();
+      _ophit_area[i] = ophitlist.at(i)->Area();
+      _ophit_amplitude[i] = ophitlist.at(i)->Amplitude();
+      _ophit_pe[i] = ophitlist.at(i)->PE();
       auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
-      _ophit_opdet_x.push_back(opdet_center.X());
-      _ophit_opdet_y.push_back(opdet_center.Y());
-      _ophit_opdet_z.push_back(opdet_center.Z());
+      _ophit_opdet_x[i] = opdet_center.X();
+      _ophit_opdet_y[i] = opdet_center.Y();
+      _ophit_opdet_z[i] = opdet_center.Z();
       auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
-      if (pd_type == "pmt_coated") {_ophit_opdet_type.push_back(kPMTCoated);}
-      else if (pd_type == "pmt_uncoated") {_ophit_opdet_type.push_back(kPMTUnCoated);}
-      else if (pd_type == "xarapuca_vis") {_ophit_opdet_type.push_back(kXArapucaVis);}
-      else if (pd_type == "xarapuca_vuv") {_ophit_opdet_type.push_back(kXArapucaVuv);}
-      else {_ophit_opdet_type.push_back(kPDNotDefined);}
-      counter++;
+      if (pd_type == "pmt_coated") {_ophit_opdet_type[i] = kPMTCoated;}
+      else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[i] = kPMTUnCoated;}
+      else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[i] = kXArapucaVis;}
+      else if (pd_type == "xarapuca_vuv") {_ophit_opdet_type[i] = kXArapucaVuv;}
+      else {_ophit_opdet_type[i] = kPDNotDefined;}
     }
   }
 
@@ -1114,33 +1148,21 @@ void Hitdumper::analyze(const art::Event& evt)
 
 }
 
-void Hitdumper::ResetVars(){
 
-  _run = -99999;
-  _subrun = -99999;
-  _event = -99999;
-  _evttime = -99999;
-  _t0 = -99999;
-  // _adc_count = 0;
+void Hitdumper::ResetWireHitsVars(int n) {
+  _hit_cryostat.assign(n, DEFAULT_VALUE);
+  _hit_tpc.assign(n, DEFAULT_VALUE);
+  _hit_plane.assign(n, DEFAULT_VALUE);
+  _hit_wire.assign(n, DEFAULT_VALUE);
+  _hit_channel.assign(n, DEFAULT_VALUE);
+  _hit_peakT.assign(n, DEFAULT_VALUE);
+  _hit_charge.assign(n, DEFAULT_VALUE);
+  _hit_ph.assign(n, DEFAULT_VALUE);
+  _hit_width.assign(n, DEFAULT_VALUE);
+  _hit_full_integral.assign(n, DEFAULT_VALUE);
+}
 
-  _nhits = 0;
-  _hit_cryostat.clear();
-  _hit_tpc.clear();
-  _hit_plane.clear();
-  _hit_wire.clear();
-  _hit_channel.clear();
-  _hit_peakT.clear();
-  _hit_charge.clear();
-  _hit_ph.clear();
-  _hit_width.clear();
-  _hit_full_integral.clear();
-
-  _waveform_number.clear();
-  _adc_on_wire.clear();
-  _time_for_waveform.clear();
-  _adc_count_in_waveform.clear();
-
-  _nstrips=0;
+void Hitdumper::ResetCRTStripsVars() {
   _crt_plane.clear();
   _crt_module.clear();
   _crt_strip.clear();
@@ -1148,8 +1170,9 @@ void Hitdumper::ResetVars(){
   _crt_time.clear();
   _crt_adc.clear();
   _crt_pos.clear();
+}
 
-  _nctrks=0;
+void Hitdumper::ResetCRTCustomTracksVars() {
   _ctrk_x1.clear();
   _ctrk_y1.clear();
   _ctrk_z1.clear();
@@ -1162,115 +1185,106 @@ void Hitdumper::ResetVars(){
   _ctrk_t2.clear();
   _ctrk_adc2.clear();
   _ctrk_mod2x.clear();
-
-  _ncts=0;
-  _ct_x1.clear();
-  _ct_y1.clear();
-  _ct_z1.clear();
-  _ct_time.clear();
-  _ct_pes.clear();
-  _ct_x2.clear();
-  _ct_y2.clear();
-  _ct_z2.clear();
-
-  _nchits=0;
-  _chit_plane.clear();
-  _chit_time.clear();
-  _chit_x.clear();
-  _chit_y.clear();
-  _chit_z.clear();
-
-  _nophits = 0;
-  _ophit_opch.clear();
-  _ophit_opdet.clear();
-  _ophit_peakT.clear();
-  _ophit_width.clear();
-  _ophit_area.clear();
-  _ophit_amplitude.clear();
-  _ophit_pe.clear();
-  _ophit_opdet_x.clear();
-  _ophit_opdet_y.clear();
-  _ophit_opdet_z.clear();
-  _ophit_opdet_type.clear();
-
-  mcevts_truth = 0;
-  nuScatterCode_truth.clear();
-  nuID_truth.clear();
-  nuPDG_truth.clear();
-  ccnc_truth.clear();
-  mode_truth.clear();
-  enu_truth.clear();
-  Q2_truth.clear();
-  W_truth.clear();
-  hitnuc_truth.clear();
-  nuvtxx_truth.clear();
-  nuvtxy_truth.clear();
-  nuvtxz_truth.clear();
-  nu_dcosx_truth.clear();
-  nu_dcosy_truth.clear();
-  nu_dcosz_truth.clear();
-  lep_mom_truth.clear();
-  lep_dcosx_truth.clear();
-  lep_dcosy_truth.clear();
-  lep_dcosz_truth.clear();
-  tpx_flux.clear();
-  tpy_flux.clear();
-  tpz_flux.clear();
-  tptype_flux.clear();
-
-  genie_no_primaries = 0;
-
 }
 
-void Hitdumper::ResizeMCNeutrino(int nNeutrinos){
+void Hitdumper::ResetCRTTracksVars(int n) {
+  _ct_x1.assign(n, DEFAULT_VALUE);
+  _ct_y1.assign(n, DEFAULT_VALUE);
+  _ct_z1.assign(n, DEFAULT_VALUE);
+  _ct_time.assign(n, DEFAULT_VALUE);
+  _ct_pes.assign(n, DEFAULT_VALUE);
+  _ct_x2.assign(n, DEFAULT_VALUE);
+  _ct_y2.assign(n, DEFAULT_VALUE);
+  _ct_z2.assign(n, DEFAULT_VALUE);
+}
+
+void Hitdumper::ResetCRTHitsVars(int n) {
+  _chit_plane.assign(n, DEFAULT_VALUE);
+  _chit_time.assign(n, DEFAULT_VALUE);
+  _chit_x.assign(n, DEFAULT_VALUE);
+  _chit_y.assign(n, DEFAULT_VALUE);
+  _chit_z.assign(n, DEFAULT_VALUE);
+}
+
+void Hitdumper::ResetOpHitsVars(int n) {
+  _ophit_opch.assign(n, DEFAULT_VALUE);
+  _ophit_opdet.assign(n, DEFAULT_VALUE);
+  _ophit_peakT.assign(n, DEFAULT_VALUE);
+  _ophit_width.assign(n, DEFAULT_VALUE);
+  _ophit_area.assign(n, DEFAULT_VALUE);
+  _ophit_amplitude.assign(n, DEFAULT_VALUE);
+  _ophit_pe.assign(n, DEFAULT_VALUE);
+  _ophit_opdet_x.assign(n, DEFAULT_VALUE);
+  _ophit_opdet_y.assign(n, DEFAULT_VALUE);
+  _ophit_opdet_z.assign(n, DEFAULT_VALUE);
+  _ophit_opdet_type.assign(n, DEFAULT_VALUE);
+}
+
+
+
+void Hitdumper::ResetVars() {
+  
+
+  _run = -99999;
+  _subrun = -99999;
+  _event = -99999;
+  _evttime = -99999;
+  _t0 = -99999;
+
+  mcevts_truth = 0;
+  genie_no_primaries = 0;
+}
+
+void Hitdumper::ResizeMCNeutrino(int nNeutrinos) {
 
   //min size is 1, to guarantee an address
   MaxMCNeutrinos = (size_t) std::max(nNeutrinos, 1);
-  nuScatterCode_truth.resize(MaxMCNeutrinos);
-  nuID_truth.resize(MaxMCNeutrinos);
-  nuPDG_truth.resize(MaxMCNeutrinos);
-  ccnc_truth.resize(MaxMCNeutrinos);
-  mode_truth.resize(MaxMCNeutrinos);
-  enu_truth.resize(MaxMCNeutrinos);
-  Q2_truth.resize(MaxMCNeutrinos);
-  W_truth.resize(MaxMCNeutrinos);
-  hitnuc_truth.resize(MaxMCNeutrinos);
-  nuvtxx_truth.resize(MaxMCNeutrinos);
-  nuvtxy_truth.resize(MaxMCNeutrinos);
-  nuvtxz_truth.resize(MaxMCNeutrinos);
-  nu_dcosx_truth.resize(MaxMCNeutrinos);
-  nu_dcosy_truth.resize(MaxMCNeutrinos);
-  nu_dcosz_truth.resize(MaxMCNeutrinos);
-  lep_mom_truth.resize(MaxMCNeutrinos);
-  lep_dcosx_truth.resize(MaxMCNeutrinos);
-  lep_dcosy_truth.resize(MaxMCNeutrinos);
-  lep_dcosz_truth.resize(MaxMCNeutrinos);
-  //Also resize the flux information here as it's a 1:1 with the MCNeutrino
-  tpx_flux.resize(MaxMCNeutrinos);
-  tpy_flux.resize(MaxMCNeutrinos);
-  tpz_flux.resize(MaxMCNeutrinos);
-  tptype_flux.resize(MaxMCNeutrinos);
 
-  return;
-} // sbnd::AnalysisTreeDataStruct::ResizeMCNeutrino()
+  nuScatterCode_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  nuID_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  nuPDG_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  ccnc_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  mode_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  enu_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  Q2_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  W_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  hitnuc_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  nuvtxx_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  nuvtxy_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  nuvtxz_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  nu_dcosx_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  nu_dcosy_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  nu_dcosz_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  lep_mom_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  lep_dcosx_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  lep_dcosy_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  lep_dcosz_truth.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  //Also resize the flux information here as it's a 1:1 with the MCNeutrino
+  tpx_flux.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  tpy_flux.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  tpz_flux.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+  tptype_flux.assign(MaxMCNeutrinos, DEFAULT_VALUE);
+
+}
 
 void Hitdumper::ResizeGenie(int nPrimaries) {
 
   // minimum size is 1, so that we always have an address
   MaxGeniePrimaries = (size_t) std::max(nPrimaries, 1);
-  genie_primaries_pdg.resize(MaxGeniePrimaries);
-  genie_Eng.resize(MaxGeniePrimaries);
-  genie_Px.resize(MaxGeniePrimaries);
-  genie_Py.resize(MaxGeniePrimaries);
-  genie_Pz.resize(MaxGeniePrimaries);
-  genie_P.resize(MaxGeniePrimaries);
-  genie_status_code.resize(MaxGeniePrimaries);
-  genie_mass.resize(MaxGeniePrimaries);
-  genie_trackID.resize(MaxGeniePrimaries);
-  genie_ND.resize(MaxGeniePrimaries);
-  genie_mother.resize(MaxGeniePrimaries);
 
-} // sbnd::AnalysisTreeDataStruct::ResizeGenie()
+  genie_primaries_pdg.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_Eng.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_Px.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_Py.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_Pz.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_P.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_status_code.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_mass.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_trackID.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_ND.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+  genie_mother.assign(MaxGeniePrimaries, DEFAULT_VALUE);
+
+}
 
 
 void Hitdumper::beginSubRun(art::SubRun const& sr) {
