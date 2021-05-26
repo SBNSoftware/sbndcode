@@ -514,9 +514,30 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     	if(cluster->hasPlane()){
     		cluster_plane->push_back(cluster->Plane().Plane);
     	}
+      // Get hits in cluster
+      cluster_hits = ass_clusterhit.at(pfp.key());
+      auto mc_clustermatched_id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, cluster_hits, false); // rollupUnsavedIDs
+      bool valid_clustermatch = TruthMatchUtils::Valid(mc_clustermatched_id);
+      (!valid_clustermatch){
+        std::cout << "Unable to find MCParticle matched to this cluster hits." << std::endl;
+        continue;
+      }
+      int nsharedhits_cluster = NumberOfSharedHits(mc_clustermatched_id, clock_data, cluster_hits);
+      // Returns the number of hits in the vector that are associated to the MC track.
+      // int ntruehits = NumberOfTrueHits(clock_data, trackhits,false);
+      int ntruehits_cluster = NumberOfTrueHits(clock_data, pfphits, true);
+      int nrecohits_cluster = cluster_hits.size();
+      float clustercompleteness = -9999.;
+      float clusterpurity = -9999.;
+      if(nrecohits_cluster!=0)
+        clusterpurity = float(nsharedhits_cluster)/float(nrecohits_cluster);
+      if(ntruehits_cluster!=0)
+        clustercompleteness = float(nsharedhits_cluster)/float(ntruehits_cluster);
+      std::cout << "shared hits: " << nsharedhits_cluster << ", recohits: " << nrecohits_cluster << ", truehits: " << ntruehits_cluster << std::endl;
+      std::cout << "clusterpurity: " << clusterpurity << ", clustercompleteness: " << clustercompleteness << std::endl;
     }
-    track_nclusters->push_back(thisclusters.size());
 
+    track_nclusters->push_back(thisclusters.size());
 
     track_lenght->push_back(tracks.at(0)->Length());
     track_vpoints->push_back(tracks.at(0)->CountValidPoints());        
