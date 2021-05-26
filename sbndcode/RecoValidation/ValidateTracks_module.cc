@@ -131,6 +131,8 @@ private:
   std::vector<int>   *cluster_nhits;
   std::vector<float> *cluster_width;
   std::vector<int>   *cluster_plane;
+  std::vector<float> *clusterhits_purity;  
+  std::vector<float> *clusterhits_completeness;
   // --- tracks
   std::vector<int>   *track_nspoints;
   std::vector<int>   *track_nclusters;
@@ -146,6 +148,8 @@ private:
   std::vector<float> *track_endy;
   std::vector<float> *track_endz;
   std::vector<int>   *track_nhits;
+  std::vector<float> *trackhits_purity;
+  std::vector<float> *trackhits_completeness;
   // --- hits
   std::vector< std::vector<raw::TDCtick_t>>   *hits_starttick;
   std::vector< std::vector<raw::TDCtick_t>>   *hits_endtick;
@@ -215,6 +219,8 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   cluster_nhits(nullptr),
   cluster_width(nullptr),
   cluster_plane(nullptr),
+  clusterhits_purity(nullptr),
+  clusterhits_completeness(nullptr),
   // --- tracks
   track_nspoints(nullptr),
   track_nclusters(nullptr),
@@ -230,6 +236,8 @@ sbnd::ValidateTracks::ValidateTracks(fhicl::ParameterSet const& p)
   track_endy(nullptr),
   track_endz(nullptr),
   track_nhits(nullptr),
+  trackhits_purity(nullptr),
+  trackhits_completeness(nullptr),
   // --- hits
   hits_starttick(nullptr),
   hits_endtick(nullptr),
@@ -301,25 +309,29 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
   pfpart_id          ->clear();
   pfpart_pdg         ->clear();
   pfpart_isprimary   ->clear();
-  cluster_id    ->clear();
-  cluster_nhits ->clear();
-  cluster_width ->clear();
-  cluster_plane ->clear();
+  cluster_id              ->clear();
+  cluster_nhits           ->clear();
+  cluster_width           ->clear();
+  cluster_plane           ->clear();
+  clusterhits_purity      ->clear();
+  clusterhits_completeness->clear();
 
-  track_lenght       ->clear();
-  track_vpoints      ->clear();
-  track_startdirphi  ->clear();
-  track_startdirz    ->clear();
-  track_startdirmag  ->clear();
-  track_startx       ->clear();
-  track_starty       ->clear();
-  track_startz       ->clear();
-  track_endx         ->clear();
-  track_endy         ->clear();
-  track_endz         ->clear();
-  track_nspoints     ->clear();
-  track_nclusters    ->clear();
-  track_nhits        ->clear();
+  track_lenght          ->clear();
+  track_vpoints         ->clear();
+  track_startdirphi     ->clear();
+  track_startdirz       ->clear();
+  track_startdirmag     ->clear();
+  track_startx          ->clear();
+  track_starty          ->clear();
+  track_startz          ->clear();
+  track_endx            ->clear();
+  track_endy            ->clear();
+  track_endz            ->clear();
+  track_nspoints        ->clear();
+  track_nclusters       ->clear();
+  track_nhits           ->clear();
+  trackhits_purity      ->clear();
+  trackhits_completeness->clear();
 
   hits_starttick ->clear();
   hits_endtick   ->clear();
@@ -535,6 +547,9 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
         clustercompleteness = float(nsharedhits_cluster)/float(ntruehits_cluster);
       std::cout << "shared hits: " << nsharedhits_cluster << ", recohits: " << nrecohits_cluster << ", truehits: " << ntruehits_cluster << std::endl;
       std::cout << "clusterpurity: " << clusterpurity << ", clustercompleteness: " << clustercompleteness << std::endl;
+
+      clusterhits_purity -> push_back(clusterpurity);
+      clusterhits_completeness -> push_back(clustercompleteness);
     }
 
     track_nclusters->push_back(thisclusters.size());
@@ -609,6 +624,9 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
     std::cout << "shared hits: " << nsharedhits << ", recohits: " << nrecohits << ", truehits: " << ntruehits << std::endl;
     std::cout << "hitpurity: " << hitpurity << ", hitcompleteness: " << hitcompleteness << std::endl;
     
+    trackhits_purity       ->push_back(hitpurity);  
+    trackhits_completeness ->push_back(hitcompleteness);  
+
     // Get the calorimetry information associated to this track
     std::vector< art::Ptr<anab::Calorimetry> > trackcals = ass_cal.at(tracks[0].key());
     if(trackcals.empty()) continue;
@@ -684,6 +702,8 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("cluster_id",        &cluster_id);
   fTree->Branch("cluster_nhits",     &cluster_nhits);
   fTree->Branch("cluster_width",     &cluster_width);
+  fTree->Branch("clusterhits_purity",       &clusterhits_purity);
+  fTree->Branch("clusterhits_completeness", &clusterhits_completeness);
   fTree->Branch("cluster_plane",     &cluster_plane);
   fTree->Branch("track_nspoints",    &track_nspoints);
   fTree->Branch("track_nclusters",   &track_nclusters);
@@ -699,6 +719,8 @@ void sbnd::ValidateTracks::beginJob()
   fTree->Branch("track_endy",        &track_endy);
   fTree->Branch("track_endz",        &track_endz);
   fTree->Branch("track_nhits",       &track_nhits);
+  fTree->Branch("trackhits_purity",       &trackhits_purity);
+  fTree->Branch("trackhits_completeness", &trackhits_completeness);
   fTree->Branch("hits_starttick",    &hits_starttick);
   fTree->Branch("hits_endtick",      &hits_endtick);
   fTree->Branch("hits_planeid",      &hits_planeid);
