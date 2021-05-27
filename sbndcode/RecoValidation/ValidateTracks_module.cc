@@ -530,7 +530,7 @@ void sbnd::ValidateTracks::analyze(art::Event const& evt)
       cluster_hits = ass_clusterhit.at(pfp.key());
       auto mc_clustermatched_id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clock_data, cluster_hits, false); // rollupUnsavedIDs
       bool valid_clustermatch = TruthMatchUtils::Valid(mc_clustermatched_id);
-      (!valid_clustermatch){
+      if (!valid_clustermatch){
         std::cout << "Unable to find MCParticle matched to this cluster hits." << std::endl;
         continue;
       }
