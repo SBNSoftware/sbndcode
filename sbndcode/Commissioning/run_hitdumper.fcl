@@ -7,11 +7,11 @@
 #include "sam_sbnd.fcl"
 #include "larfft_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
 
 #
 # module configuration
 #
-
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
 #include "cluster_sbnd.fcl"
@@ -53,10 +53,8 @@ outputs:
 {
   out1:
   {
-    module_type: RootOutput
-    fileName:    "hitdumper-art.root"
-    dataTier:    "reconstructed"
-    compressionLevel: 1
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
     SelectEvents: ["reco2"]
  }
 }
