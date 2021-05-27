@@ -15,6 +15,7 @@ sbnd_larg4crtfilter:
   MaxMomentums:             [ -999 ]    #Same but for maximum momentum
   LArG4ModuleName:          "largeant"  #The name of the module which contains the simb::MCParticle data product we want to use
   UseReadoutWindow:         true        #Demand particle crosses CRTs within the reconstructable time window
+  UseTightReadoutWindow:    true        #Demand particle crosses CRTs within the reconstructable time window
   UseTPC:                   true        #Demand particle crosses the TPC enclosed volume
 }
 

@@ -3,6 +3,13 @@ BEGIN_PROLOG
 hitdumper:
 {
     module_type:              "HitDumper"
+
+    MaxHits: 100000
+    MaxOpHits: 100000
+    MaxSamples: 5001
+    MaxCRTHits: 5000
+    MaxCRTTracks: 10
+
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
     OpHitsModuleLabel:        "ophit"
