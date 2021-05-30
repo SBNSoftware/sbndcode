@@ -20,10 +20,8 @@ sbnd_simple_flashmatch:{
   MakeTree: false
   MinHitQ: 0.
   MinSliceQ: 0.
-  QScale:  0.001
   MinOpHPE: 0.
   MinFlashPE: 0.
-  PEScale: 1.0
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
   OpDetNormalizer: 4
