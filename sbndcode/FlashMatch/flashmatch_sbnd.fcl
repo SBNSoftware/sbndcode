@@ -24,7 +24,6 @@ sbnd_simple_flashmatch:{
   MinFlashPE: 0.
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
-  OpDetNormalizer: 4
 
   ThresholdTerm: 30.
 
