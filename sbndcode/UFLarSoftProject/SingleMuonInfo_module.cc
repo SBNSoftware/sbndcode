@@ -111,7 +111,7 @@ public:
  private:
     void ClearVecs();
 		 
-    TTree* fTruthTree; // Let's save both genie and G4 level information
+    TTree* fTruthTree; // Let's save G4 level information
     TTree* fRecHitTree; // Let's save reconstructed hit level informaion
     TTree* fRecTrackTree; // Let's save reconstructed track level information
     TTree* fRecShowerTree; // Let's save reconstructed shower information
@@ -121,6 +121,11 @@ public:
     Int_t    frun;                  
     Int_t    fsubrun;               
     Int_t    fevent;
+    
+    // Genie level Variables
+    
+    Int_t fn_g4;
+    vector<int> fg4_pdg;
     
     art::InputTag fGenLabel;
     art::InputTag fSimLabel;
@@ -168,6 +173,8 @@ void SingleMuonInfo::beginJob(){
   fTruthTree->Branch("run", &frun, "run/I");
   fTruthTree->Branch("subrun", &fsubrun, "subrun/I");
   fTruthTree->Branch("event", &fevent, "event/I");
+  fTruthTree->Branch("n_g4", &fn_g4, "n_g4/I");
+  fTruthTree->Branch("g4_pdg", &fg4_pdg);
   
   fRecHitTree = tfs->make<TTree>("RecHitTree","");
   fRecHitTree->Branch("run", &frun, "run/I");
@@ -191,6 +198,18 @@ void SingleMuonInfo::analyze( const art::Event& evt){
      fsubrun = evt.subRun();
      fevent = evt.id().event(); 
      
+     art::Handle< std::vector<simb::MCParticle> > mcParticleHandle; 
+     std::vector< art::Ptr<simb::MCParticle> > ptList;
+     if (evt.getByLabel(fSimLabel, mcParticleHandle))
+         art::fill_ptr_vector(ptList, mcParticleHandle); 
+     
+     fn_g4=ptList.size();
+     
+     for(auto const& pPart : ptList){
+         fg4_pdg.push_back(pPart->PdgCode());
+     }
+     
+     
      fTruthTree->Fill();
      fRecHitTree->Fill();
      fRecTrackTree->Fill();
@@ -204,6 +223,8 @@ void SingleMuonInfo::ClearVecs()
      frun = -9999;
      fsubrun = -9999;
      fevent = -9999;
+     fn_g4=-9999;
+     fg4_pdg.clear();
 }
 ////////////////////////////////////////////////////////////////////////////////////
 DEFINE_ART_MODULE(SingleMuonInfo)
