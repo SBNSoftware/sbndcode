@@ -98,6 +98,69 @@
 using namespace std;
 
 namespace sbnd{
+double length(const simb::MCParticle& part, TVector3& start, TVector3& end)
+{
+  art::ServiceHandle<geo::Geometry> geom;
+  double xmin = -2.0 * geom->DetHalfWidth();
+  double xmax = 2.0 * geom->DetHalfWidth();
+  double ymin = -geom->DetHalfHeight();
+  double ymax = geom->DetHalfHeight();
+  double zmin = 0.;
+  double zmax = geom->DetLength();
+  
+  double result = 0.;
+  TVector3 disp;
+  int n = part.NumberTrajectoryPoints();
+  bool first = true;
+  
+ for(int i = 0; i < n; ++i) {
+    double mypos[3] = {part.Vx(i), part.Vy(i), part.Vz(i)};
+    if(mypos[0] >= xmin && mypos[0] <= xmax && mypos[1] >= ymin && mypos[1] <= ymax && mypos[2] >= zmin && mypos[2] <= zmax){
+       double xGen   = part.Vx(i);
+       double newX = xGen;
+       
+       TVector3 pos(newX,part.Vy(i),part.Vz(i));
+       if(first){
+          start = pos;
+       }
+       else {
+          disp -= pos;
+          result += disp.Mag();
+       }
+       first=false;
+       disp = pos;
+       end = pos;
+   }
+  }
+  return result;
+}	
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
+
+vector<double> G4_eng_dep(int P_id){
+       art::ServiceHandle<cheat::BackTrackerService> bt_serv;
+       vector<double> eng_vec;
+       const geo::View_t views[3]={geo::kU, geo::kV, geo::kW};
+       double totalE_particle = 0.;
+       for(auto const &view : views){
+           std::vector< const sim::IDE * >  ides = bt_serv->TrackIdToSimIDEs_Ps(P_id, view);
+	   double plne_eng = 0.;
+	   if( ides.size() ){
+	      for (auto const &ide: ides){ 
+		   totalE_particle += ide->energy;
+		   plne_eng += ide->energy;
+	      }
+	   }
+	   
+	   eng_vec.push_back(plne_eng);
+       }
+       
+       totalE_particle /= 3.0;
+       eng_vec.push_back(totalE_particle);
+       return eng_vec;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 class SingleMuonInfo : public art::EDAnalyzer {
 public:
@@ -126,6 +189,15 @@ public:
     
     Int_t fn_g4;
     vector<int> fg4_pdg;
+    vector<string> fg4_st_process;
+    vector<double> fg4_plen;
+    vector<bool> fg4_nu_origin;
+    vector<int> fgen_ccnc;
+    vector<int> fgen_mode;
+    vector<double> fgen_nu_stx;
+    vector<double> fgen_nu_sty;
+    vector<double> fgen_nu_stz;
+    
     
     art::InputTag fGenLabel;
     art::InputTag fSimLabel;
@@ -134,9 +206,11 @@ public:
     art::InputTag fOpFlashModuleLabel1;
     art::InputTag fCrtHitModuleLabel;
     art::InputTag fCrtTrackModuleLabel;
+    bool fuse_run_genie;
     
     map<int,art::InputTag> fFlashLabels;
     geo::GeometryCore const* fGeometryService;   ///< pointer to Geometry provider
+    const cheat::ParticleInventory *inventory_service;
  }; // class SingleMuonInfo
 
 //========================================================================
@@ -148,7 +222,8 @@ fOpHitModuleLabel(pset.get<art::InputTag>("OpHitModuleLabel","ophitpmt")),
 fOpFlashModuleLabel0(pset.get<art::InputTag>("OpFlashModuleLabel0","opflashtpc0")),
 fOpFlashModuleLabel1(pset.get<art::InputTag>("OpFlashModuleLabel1","opflashtpc1")),
 fCrtHitModuleLabel(pset.get<art::InputTag>("CrtHitModuleLabel","crthit")),
-fCrtTrackModuleLabel(pset.get<art::InputTag>("CrtTrackModuleLabel","crttrack"))	
+fCrtTrackModuleLabel(pset.get<art::InputTag>("CrtTrackModuleLabel","crttrack")),
+fuse_run_genie(pset.get<bool>("use_run_genie",true))	
 {
  fFlashLabels[0] = fOpFlashModuleLabel0;
  fFlashLabels[1] = fOpFlashModuleLabel1;	
@@ -175,6 +250,14 @@ void SingleMuonInfo::beginJob(){
   fTruthTree->Branch("event", &fevent, "event/I");
   fTruthTree->Branch("n_g4", &fn_g4, "n_g4/I");
   fTruthTree->Branch("g4_pdg", &fg4_pdg);
+  fTruthTree->Branch("g4_st_process", &fg4_st_process);
+  fTruthTree->Branch("g4_plen", &fg4_plen);
+  fTruthTree->Branch("g4_nu_origin", &fg4_nu_origin);
+  fTruthTree->Branch("gen_ccnc", &fgen_ccnc);
+  fTruthTree->Branch("gen_mode", &fgen_mode);
+  fTruthTree->Branch("gen_nu_stx", &fgen_nu_stx);
+  fTruthTree->Branch("gen_nu_sty", &fgen_nu_sty);
+  fTruthTree->Branch("gen_nu_stz", &fgen_nu_stz);
   
   fRecHitTree = tfs->make<TTree>("RecHitTree","");
   fRecHitTree->Branch("run", &frun, "run/I");
@@ -203,11 +286,62 @@ void SingleMuonInfo::analyze( const art::Event& evt){
      if (evt.getByLabel(fSimLabel, mcParticleHandle))
          art::fill_ptr_vector(ptList, mcParticleHandle); 
      
+     inventory_service=lar::providerFrom<cheat::ParticleInventoryService>();
+     
      fn_g4=ptList.size();
+     
+     std::cout << "********************** Summary of the particles produced **********************\n";
      
      for(auto const& pPart : ptList){
          fg4_pdg.push_back(pPart->PdgCode());
-     }
+	 fg4_st_process.push_back(pPart->Process());
+	 
+	 TVector3 mcstart, mcend;
+         double plen = length(*pPart, mcstart, mcend);
+	 fg4_plen.push_back(plen);
+	 // Save trackID
+	 // Save initial Process name
+	 // Save end process name
+	 // Save number of daughters
+	 // Save Start X,Y,Z coordinates
+	 // Save End X,Y,Z coordinates
+	 // Save pathlength
+	 // Save Momentum and Px,Py, and Pz commponents
+	 // Save origin of the particle
+	 // Save the statuscode
+	 // Save start energy of the particle
+	 // Save end energy of the particle
+	 // Save the energy deposition inside detector as seen by different planes
+	 
+	 
+	 art::Ptr<simb::MCTruth> truth=inventory_service->TrackIdToMCTruth_P(pPart->TrackId());   
+	 fg4_nu_origin.push_back(truth->NeutrinoSet());
+	 
+	 if(fuse_run_genie){
+	    int ccnc=-1;
+	    int mode=-1;
+	    double nu_x=-9999; double nu_y=-9999; double nu_z=-9999;
+	    
+	    if(fg4_nu_origin.back()){
+	       const simb::MCNeutrino & my_neutrino = truth->GetNeutrino();
+	       ccnc = my_neutrino.CCNC(); //0=CC 1=NC
+	       mode = my_neutrino.Mode(); //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
+	       nu_x = my_neutrino.Nu().Vx();
+	       nu_y = my_neutrino.Nu().Vy();
+	       nu_z = my_neutrino.Nu().Vz();
+	       // save neutrino pdg;
+	       // save neutrnio momentums PX, Py, and Pz
+	       // Save energy of the neutrino
+	    }
+	    
+	    fgen_ccnc.push_back(ccnc);
+	    fgen_mode.push_back(mode);
+	    fgen_nu_stx.push_back(nu_x);
+	    fgen_nu_sty.push_back(nu_y);
+	    fgen_nu_stz.push_back(nu_z);
+	    
+        } // saving genie information
+     } // loop over ptlist
      
      
      fTruthTree->Fill();
@@ -225,6 +359,14 @@ void SingleMuonInfo::ClearVecs()
      fevent = -9999;
      fn_g4=-9999;
      fg4_pdg.clear();
+     fg4_st_process.clear();
+     fg4_plen.clear();
+     fg4_nu_origin.clear();
+     fgen_ccnc.clear();
+     fgen_mode.clear();
+     fgen_nu_stx.clear();
+     fgen_nu_sty.clear();
+     fgen_nu_stz.clear();
 }
 ////////////////////////////////////////////////////////////////////////////////////
 DEFINE_ART_MODULE(SingleMuonInfo)

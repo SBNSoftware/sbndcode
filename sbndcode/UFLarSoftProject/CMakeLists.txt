@@ -5,6 +5,7 @@ art_make(
                            larsim_Simulation lardataobj_Simulation
                            larsim_MCCheater_BackTrackerService_service
                            larsim_MCCheater_ParticleInventoryService_service
+			   larsim_MCCheater_ParticleInventory
                            lardata_Utilities
                            larevt_Filters
                            lardataobj_RawData
