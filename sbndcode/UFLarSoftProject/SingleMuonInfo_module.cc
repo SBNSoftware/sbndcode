@@ -187,19 +187,33 @@ public:
     
     // Genie level Variables
     
+    Int_t fn_nu;
+    vector<bool> fgen_nu_set;
+    vector<int>  fgen_n_part;
+    vector<int>  fgen_nu_pdg;
+ 
     Int_t fn_g4;
     vector<int> fg4_pdg;
     vector<string> fg4_st_process;
     vector<double> fg4_plen;
     vector<bool> fg4_nu_origin;
-    vector<int> fgen_ccnc;
-    vector<int> fgen_mode;
-    vector<double> fgen_nu_stx;
-    vector<double> fgen_nu_sty;
-    vector<double> fgen_nu_stz;
+    vector<int> fg4_nu_ccnc;
+    vector<int> fg4_nu_mode;
+    vector<double> fg4_nu_stx;
+    vector<double> fg4_nu_sty;
+    vector<double> fg4_nu_stz;
     
+    // Hit level Varialble;
+    
+    Int_t fn_hits;
+    vector<int> fhit_channel;
+    vector<int> fhit_wire;
+    vector<int> fhit_plane;
+    vector<int> fhit_tpc;
+    vector<int> fhit_cryostat;
     
     art::InputTag fGenLabel;
+    art::InputTag fHitsModuleLabel;
     art::InputTag fSimLabel;
     art::InputTag fOpHitModuleLabel;
     art::InputTag fOpFlashModuleLabel0;
@@ -217,6 +231,7 @@ public:
 SingleMuonInfo::SingleMuonInfo(fhicl::ParameterSet const& pset) :
 EDAnalyzer(pset),
 fGenLabel(pset.get<art::InputTag>("GenLabel","generator")),
+fHitsModuleLabel(pset.get<art::InputTag>("HitsModuleLabel","gaushit")),		
 fSimLabel(pset.get<art::InputTag>("SimLabel","largeant")),
 fOpHitModuleLabel(pset.get<art::InputTag>("OpHitModuleLabel","ophitpmt")),				
 fOpFlashModuleLabel0(pset.get<art::InputTag>("OpFlashModuleLabel0","opflashtpc0")),
@@ -248,21 +263,33 @@ void SingleMuonInfo::beginJob(){
   fTruthTree->Branch("run", &frun, "run/I");
   fTruthTree->Branch("subrun", &fsubrun, "subrun/I");
   fTruthTree->Branch("event", &fevent, "event/I");
+  
+  fTruthTree->Branch("n_nu", &fn_nu, "n_nu/I");
+  fTruthTree->Branch("gen_nu_set", &fgen_nu_set);
+  fTruthTree->Branch("gen_n_part", &fgen_n_part);
+  fTruthTree->Branch("gen_nu_pdg", &fgen_nu_pdg);
+  
   fTruthTree->Branch("n_g4", &fn_g4, "n_g4/I");
   fTruthTree->Branch("g4_pdg", &fg4_pdg);
   fTruthTree->Branch("g4_st_process", &fg4_st_process);
   fTruthTree->Branch("g4_plen", &fg4_plen);
   fTruthTree->Branch("g4_nu_origin", &fg4_nu_origin);
-  fTruthTree->Branch("gen_ccnc", &fgen_ccnc);
-  fTruthTree->Branch("gen_mode", &fgen_mode);
-  fTruthTree->Branch("gen_nu_stx", &fgen_nu_stx);
-  fTruthTree->Branch("gen_nu_sty", &fgen_nu_sty);
-  fTruthTree->Branch("gen_nu_stz", &fgen_nu_stz);
+  fTruthTree->Branch("g4_nu_ccnc", &fg4_nu_ccnc);
+  fTruthTree->Branch("g4_nu_mode", &fg4_nu_mode);
+  fTruthTree->Branch("g4_nu_stx", &fg4_nu_stx);
+  fTruthTree->Branch("g4_nu_sty", &fg4_nu_sty);
+  fTruthTree->Branch("g4_nu_stz", &fg4_nu_stz);
   
   fRecHitTree = tfs->make<TTree>("RecHitTree","");
   fRecHitTree->Branch("run", &frun, "run/I");
   fRecHitTree->Branch("subrun", &fsubrun, "subrun/I");
   fRecHitTree->Branch("event", &fevent, "event/I");
+  fRecHitTree->Branch("n_hits", &fn_hits, "n_hits/I");
+  fTruthTree->Branch("hit_channel", &fhit_channel);
+  fTruthTree->Branch("hit_wire", &fhit_wire);
+  fTruthTree->Branch("hit_tpc", &fhit_tpc);
+  fTruthTree->Branch("hit_plane", &fhit_plane);
+  fTruthTree->Branch("hit_cryostat", &fhit_cryostat);
   
   fRecTrackTree = tfs->make<TTree>("RecTrackTree","");
   fRecTrackTree->Branch("run", &frun, "run/I");
@@ -281,16 +308,40 @@ void SingleMuonInfo::analyze( const art::Event& evt){
      fsubrun = evt.subRun();
      fevent = evt.id().event(); 
      
+     art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
+     std::vector<art::Ptr<simb::MCTruth> > mclist;
+     if (evt.getByLabel(fGenLabel,mctruthListHandle))
+         art::fill_ptr_vector(mclist, mctruthListHandle);
+     
      art::Handle< std::vector<simb::MCParticle> > mcParticleHandle; 
      std::vector< art::Ptr<simb::MCParticle> > ptList;
      if (evt.getByLabel(fSimLabel, mcParticleHandle))
          art::fill_ptr_vector(ptList, mcParticleHandle); 
      
+     art::Handle< std::vector<recob::Hit> > hitListHandle;
+     std::vector<art::Ptr<recob::Hit> > hitlist;
+     if (evt.getByLabel(fHitsModuleLabel,hitListHandle))
+     art::fill_ptr_vector(hitlist, hitListHandle);
+     
      inventory_service=lar::providerFrom<cheat::ParticleInventoryService>();
      
-     fn_g4=ptList.size();
+     if(fuse_run_genie){
+        fn_nu = mclist.size();
+	for(auto const& my_Nu : mclist){
+	    fgen_nu_set.push_back(my_Nu->NeutrinoSet());
+	    fgen_n_part.push_back(my_Nu->NParticles());
+	    const simb::MCNeutrino & my_neutrino = my_Nu->GetNeutrino();
+	    fgen_nu_pdg.push_back(my_neutrino.Nu().PdgCode());
+	    // save nu energery
+	    // save nu st x,
+	    // save nu st y,
+	    // save nu st z,
+	    // save interaction type
+	    // save interaction mode
+        }
+     } // save nu info
      
-     std::cout << "********************** Summary of the particles produced **********************\n";
+     fn_g4=ptList.size();
      
      for(auto const& pPart : ptList){
          fg4_pdg.push_back(pPart->PdgCode());
@@ -322,7 +373,7 @@ void SingleMuonInfo::analyze( const art::Event& evt){
 	    int mode=-1;
 	    double nu_x=-9999; double nu_y=-9999; double nu_z=-9999;
 	    
-	    if(fg4_nu_origin.back()){
+	    if(fg4_nu_origin.back() && pPart->Process()=="primary"){
 	       const simb::MCNeutrino & my_neutrino = truth->GetNeutrino();
 	       ccnc = my_neutrino.CCNC(); //0=CC 1=NC
 	       mode = my_neutrino.Mode(); //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
@@ -334,14 +385,26 @@ void SingleMuonInfo::analyze( const art::Event& evt){
 	       // Save energy of the neutrino
 	    }
 	    
-	    fgen_ccnc.push_back(ccnc);
-	    fgen_mode.push_back(mode);
-	    fgen_nu_stx.push_back(nu_x);
-	    fgen_nu_sty.push_back(nu_y);
-	    fgen_nu_stz.push_back(nu_z);
+	    fg4_nu_ccnc.push_back(ccnc);
+	    fg4_nu_mode.push_back(mode);
+	    fg4_nu_stx.push_back(nu_x);
+	    fg4_nu_sty.push_back(nu_y);
+	    fg4_nu_stz.push_back(nu_z);
 	    
         } // saving genie information
      } // loop over ptlist
+     
+     ////////////////////////////////////// Reconstructed hits ///////////////////////////
+     
+     fn_hits = hitlist.size();
+     
+     for(auto const& hit : hitlist){
+         fhit_channel.push_back(hit->Channel());
+	 fhit_wire.push_back(hit->WireID().Wire);
+	 fhit_plane.push_back(hit->WireID().Plane);
+	 fhit_tpc.push_back(hit->WireID().TPC);
+	 fhit_cryostat.push_back(hit->WireID().Cryostat);
+     } // loop over recob hits
      
      
      fTruthTree->Fill();
@@ -357,16 +420,26 @@ void SingleMuonInfo::ClearVecs()
      frun = -9999;
      fsubrun = -9999;
      fevent = -9999;
+     fn_nu=-9999;
+     fgen_nu_set.clear();
+     fgen_n_part.clear();
+     fgen_nu_pdg.clear();
      fn_g4=-9999;
      fg4_pdg.clear();
      fg4_st_process.clear();
      fg4_plen.clear();
      fg4_nu_origin.clear();
-     fgen_ccnc.clear();
-     fgen_mode.clear();
-     fgen_nu_stx.clear();
-     fgen_nu_sty.clear();
-     fgen_nu_stz.clear();
+     fg4_nu_ccnc.clear();
+     fg4_nu_mode.clear();
+     fg4_nu_stx.clear();
+     fg4_nu_sty.clear();
+     fg4_nu_stz.clear();
+     fn_hits=-9999;
+     fhit_channel.clear();
+     fhit_wire.clear();
+     fhit_plane.clear();
+     fhit_tpc.clear();
+     fhit_cryostat.clear();
 }
 ////////////////////////////////////////////////////////////////////////////////////
 DEFINE_ART_MODULE(SingleMuonInfo)

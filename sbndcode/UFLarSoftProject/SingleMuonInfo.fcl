@@ -72,3 +72,5 @@ physics:
 
 physics.analyzers.SingleMuonInfo.CRTBackTrack:@local::standard_crtbacktracker
 
+#include "3drift_services_sbnd_legacy.fcl"
+
