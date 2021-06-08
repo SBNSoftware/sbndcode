@@ -83,10 +83,10 @@ private:
   float _nu_roaa; ///< Real Off-Axis Angle (angle between neutrino parent p and neutrino p)
   float _nu_l; ///< L [cm]: Distance the neutrino travelled from production to interaction point
   int _nu_decay; ///< Neutrino parent decay type (see dkproc_t in dk2nu)
-  float _nu_mu_e; ///< Final state muon (if any) energy
-  float _nu_mu_px; ///< Final state muon (if any) px
-  float _nu_mu_py; ///< Final state muon (if any) py
-  float _nu_mu_pz; ///< Final state muon (if any) pz
+  float _nu_lepton_e; ///< Final state lepton energy
+  float _nu_lepton_px; ///< Final state lepton px
+  float _nu_lepton_py; ///< Final state lepton py
+  float _nu_lepton_pz; ///< Final state lepton pz
   float _nu_e_reco; ///< Neutrino reconstructe energy using QE formula
   std::vector<int> _pars_pdg; ///< All other particles produced - pdg code
   std::vector<float> _pars_e; ///< All other particles produced - energy
@@ -146,10 +146,10 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _tree->Branch("nu_roaa", &_nu_roaa, "nu_roaa/F");
   _tree->Branch("nu_l", &_nu_l, "nu_l/F");
   _tree->Branch("nu_decay", &_nu_decay, "nu_decay/I");
-  _tree->Branch("nu_mu_e", &_nu_mu_e, "nu_mu_e/F");
-  _tree->Branch("nu_mu_px", &_nu_mu_px, "nu_mu_px/F");
-  _tree->Branch("nu_mu_py", &_nu_mu_py, "nu_mu_py/F");
-  _tree->Branch("nu_mu_pz", &_nu_mu_pz, "nu_mu_pz/F");
+  _tree->Branch("nu_lepton_e", &_nu_lepton_e, "nu_lepton_e/F");
+  _tree->Branch("nu_lepton_px", &_nu_lepton_px, "nu_lepton_px/F");
+  _tree->Branch("nu_lepton_py", &_nu_lepton_py, "nu_lepton_py/F");
+  _tree->Branch("nu_lepton_pz", &_nu_lepton_pz, "nu_lepton_pz/F");
   _tree->Branch("nu_e_reco", &_nu_e_reco, "nu_e_reco/F");
 
   _tree->Branch("nu_prod_vtx_x", &_nu_prod_vtx_x, "nu_prod_vtx_x/F");
@@ -256,10 +256,10 @@ void PrismAnalyzer::analyze(art::Event const& e)
     _p_dpz = mcf->fpdpz;
     _nu_roaa = TVector3(_nu_px, _nu_py, _nu_pz).Angle(TVector3(_p_dpx, _p_dpy, _p_dpz));
 
-    _nu_mu_e = -9999;
-    _nu_mu_px = -9999;
-    _nu_mu_py = -9999;
-    _nu_mu_pz = -9999;
+    _nu_lepton_e = -9999;
+    _nu_lepton_px = -9999;
+    _nu_lepton_py = -9999;
+    _nu_lepton_pz = -9999;
     _nu_e_reco = -9999;
 
     for (int p = 0; p < mct_v[i]->NParticles(); p++) {
@@ -277,11 +277,11 @@ void PrismAnalyzer::analyze(art::Event const& e)
       }
       else if (std::abs(mcp.PdgCode()) == 2112) {
         _nu_p_mult++;
-      } else if (std::abs(mcp.PdgCode()) == 13) {
-        _nu_mu_e = mcp.E();
-        _nu_mu_px = mcp.Px();
-        _nu_mu_py = mcp.Py();
-        _nu_mu_pz = mcp.Pz();
+      } else if (std::abs(mcp.PdgCode()) == 13 || std::abs(mcp.PdgCode()) == 11) {
+        _nu_lepton_e = mcp.E();
+        _nu_lepton_px = mcp.Px();
+        _nu_lepton_py = mcp.Py();
+        _nu_lepton_pz = mcp.Pz();
         _nu_e_reco = GetEnergyQE(mcp.E(), mcp.Px(), mcp.Py(), mcp.Pz());
       }
     }
