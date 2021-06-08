@@ -68,17 +68,17 @@ private:
 
   int _run, _subrun, _event;
 
-  float _nu_e;
-  int _nu_pdg;
-  int _nu_ccnc;
-  int _nu_mode;
-  int _nu_int_type;
-  float _nu_vtx_x;
-  float _nu_vtx_y;
-  float _nu_vtx_z;
-  float _nu_px;
-  float _nu_py;
-  float _nu_pz;
+  float _nu_e; ///< Neutrino energy
+  int _nu_pdg; ///< Neutrino PDG code
+  int _nu_ccnc; ///< 0: CC, 1: NC
+  int _nu_mode; ///< Neutrino interaction mode
+  int _nu_int_type; ///< Neutrino interaction type
+  float _nu_vtx_x; ///< Neutrino vertex X
+  float _nu_vtx_y; ///< Neutrino vertex Y
+  float _nu_vtx_z; ///< Neutrino vertex Z
+  float _nu_px; ///< Neutrino momentum along X
+  float _nu_py; ///< Neutrino momentum along Y
+  float _nu_pz; ///< Neutrino momentum along Z
   float _nu_oaa; ///< Off-Axis Angle (angle w.r.t. beam)
   float _nu_roaa; ///< Real Off-Axis Angle (angle between neutrino parent p and neutrino p)
   float _nu_l; ///< L [cm]: Distance the neutrino travelled from production to interaction point
@@ -91,12 +91,12 @@ private:
   std::vector<int> _pars_pdg; ///< All other particles produced - pdg code
   std::vector<float> _pars_e; ///< All other particles produced - energy
 
-  float _nu_prod_vtx_x;
-  float _nu_prod_vtx_y;
-  float _nu_prod_vtx_z;
-  float _nu_prod_vtx_x_beam;
-  float _nu_prod_vtx_y_beam;
-  float _nu_prod_vtx_z_beam;
+  float _nu_prod_vtx_x; ///< Neutrino production vertex in detector coordinates
+  float _nu_prod_vtx_y; ///< Neutrino production vertex in detector coordinates
+  float _nu_prod_vtx_z; ///< Neutrino production vertex in detector coordinates
+  float _nu_prod_vtx_x_beam; ///< Neutrino production vertex in beamline coordinates
+  float _nu_prod_vtx_y_beam; ///< Neutrino production vertex in beamline coordinates
+  float _nu_prod_vtx_z_beam; ///< Neutrino production vertex in beamline coordinates
 
   int _p_type; ///< Neutrino parent PDG code
   float _p_dpx; ///< Neutrino parent px at neutrino production vertex
@@ -110,7 +110,7 @@ private:
   TTree* _sr_tree;
   int _sr_run, _sr_subrun;
   double _sr_begintime, _sr_endtime;
-  double _sr_pot;
+  double _sr_pot; ///< Number of POTs per subrun
 
 };
 
