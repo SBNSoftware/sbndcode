@@ -85,7 +85,7 @@ physics:
   #filters reject all following items.  see lines starting physics.producers below
   reco2: [
     fasthit,
-    ophit
+    ophitpmt
   ]
 
   ana: [hitdumper]
