@@ -81,28 +81,28 @@ physics:
     hitdumper: @local::hitdumper
   }
 
-  #define the producer and filter modules for this path, order matters, 
+  #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
-  reco2: [         
+  reco2: [
     fasthit,
     ophit
   ]
 
   ana: [hitdumper]
 
-  # define the output stream, there could be more than one if using filters 
+  # define the output stream, there could be more than one if using filters
   stream1: [out1]
 
   # trigger_paths is a keyword and contains the paths that modify the art::event,
   #  ie filters and producers
-  # trigger_paths: [] 
-  trigger_paths: [reco2] 
+  # trigger_paths: []
+  trigger_paths: [reco2]
 
-  # end_paths is a keyword and contains the paths that do not modify the art::Event, 
+  # end_paths is a keyword and contains the paths that do not modify the art::Event,
   # ie analyzers and output streams.  these all run simultaneously
   #
-  end_paths: [ana, stream1]  
-  # end_paths: [ana]  
+  end_paths: [ana, stream1]
+  # end_paths: [ana]
 }
 
 
@@ -116,9 +116,9 @@ physics.analyzers.hitdumper.readCRTtracks: false
 physics.producers.fasthit.MinSigInd: 15.0
 physics.producers.fasthit.MinSigCol: 15.0
 physics.producers.fasthit.SkipInd: true
-# parameter below enlarges the window of the hit symmetrically by adding 
-#  this many widths to each side.   Original window is above threshold.  
-#  Both thresh and larger window in this file are appropriate only when 
+# parameter below enlarges the window of the hit symmetrically by adding
+#  this many widths to each side.   Original window is above threshold.
+#  Both thresh and larger window in this file are appropriate only when
 #  noise is turned off.
 physics.producers.fasthit.IncludeMoreTail: 3.0
 physics.producers.fasthit.ColMinWidth: 100.0
