@@ -419,14 +419,14 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   if (_nhits > _max_hits) {
-    std::cout << "Available hits are " << _nhits 
+    std::cout << "Available hits are " << _nhits
               << ", which is above the maximum number allowed to store." << std::endl;
     std::cout << "Will only store " << _max_hits << "hits." << std::endl;
     _nhits = _max_hits;
   }
-  
+
   ResetWireHitsVars(_nhits);
-  
+
   for (size_t i = 0; i < hitlist.size(); ++i) {
     geo::WireID wireid = hitlist[i]->WireID();
     if (fSkipInd && wireid.Plane != 2) {
@@ -691,7 +691,7 @@ void Hitdumper::analyze(const art::Event& evt)
     }
 
     if (_nchits > _max_chits) {
-      std::cout << "Available CRT hits are " << _nchits 
+      std::cout << "Available CRT hits are " << _nchits
                 << ", which is above the maximum number allowed to store." << std::endl;
       std::cout << "Will only store " << _max_chits << "CRT hits." << std::endl;
       _nchits = _max_chits;
@@ -778,7 +778,7 @@ void Hitdumper::analyze(const art::Event& evt)
       std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
       _nophits = _max_ophits;
     }
-    
+
     ResetOpHitsVars(_nophits);
 
     for (int i = 0; i < _nophits; ++i) {
@@ -1260,7 +1260,7 @@ void Hitdumper::ResetOpHitsVars(int n) {
 
 
 void Hitdumper::ResetVars() {
-  
+
 
   _run = -99999;
   _subrun = -99999;
