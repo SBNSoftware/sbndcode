@@ -427,22 +427,24 @@ void Hitdumper::analyze(const art::Event& evt)
 
   ResetWireHitsVars(_nhits);
 
+  size_t counter = 0;
   for (size_t i = 0; i < hitlist.size(); ++i) {
     geo::WireID wireid = hitlist[i]->WireID();
     if (fSkipInd && wireid.Plane != 2) {
       continue;
     }
 
-    _hit_cryostat[i] = wireid.Cryostat;
-    _hit_tpc[i] = wireid.TPC;
-    _hit_plane[i] = wireid.Plane;
-    _hit_wire[i] = wireid.Wire;
-    _hit_channel[i] = hitlist[i]->Channel();
+    _hit_cryostat[counter] = wireid.Cryostat;
+    _hit_tpc[counter] = wireid.TPC;
+    _hit_plane[counter] = wireid.Plane;
+    _hit_wire[counter] = wireid.Wire;
+    _hit_channel[counter] = hitlist[i]->Channel();
     // peak time needs plane dependent offset correction applied.
-    _hit_peakT[i] = hitlist[i]->PeakTime();
-    _hit_charge[i] = hitlist[i]->Integral();
-    _hit_ph[i] = hitlist[i]->PeakAmplitude();
-    _hit_width[i] = hitlist[i]->RMS();
+    _hit_peakT[counter] = hitlist[i]->PeakTime();
+    _hit_charge[counter] = hitlist[i]->Integral();
+    _hit_ph[counter] = hitlist[i]->PeakAmplitude();
+    _hit_width[counter] = hitlist[i]->RMS();
+    counter ++;
   }
 
   //
