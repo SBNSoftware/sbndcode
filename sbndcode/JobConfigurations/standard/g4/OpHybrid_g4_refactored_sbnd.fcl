@@ -1,0 +1,188 @@
+#include "simulationservices_sbnd.fcl"
+#include "largeantmodules_sbnd.fcl"
+#include "mcreco.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "scintillationtime_tool.fcl"
+
+#include "PDFastSim_sbnd.fcl"
+
+process_name: simul
+
+services:
+{
+    TFileService:            {fileName: "gen_hist.root" }
+    TimeTracker:             {}
+    MemoryTracker:           {} # default is one
+    RandomNumberGenerator:   {} # ART native random number generator
+    message:                 @local::sbnd_message_services_prod
+                             @table::sbnd_g4_services
+    FileCatalogMetadata: @local::sbnd_file_catalog_mc
+    DetectorHolder:          {}
+    ActionHolder:            {}
+    PhysicsListHolder:       {}
+    PhysicsList: 
+    {
+        PhysicsListName:                  "QGSP_BERT"
+        DumpList:                           true
+        enableNeutronLimit:                 false
+        NeutronTimeLimit:                   0.0
+        NeutronKinELimit:                   0.0
+        enableStepLimit:                    true
+        enableOptical:                      false
+        enableCerenkov:                     false
+        CerenkovStackPhotons:               false
+        CerenkovMaxNumPhotons:              100
+        CerenkovMaxBetaChange:              10.0
+        enableScintillation:                false
+        ScintillationStackPhotons:          false
+        ScintillationByParticleType:        false
+        ScintillationTrackInfo:             false
+        ScintillationTrackSecondariesFirst: false
+        enableAbsorption:                   false
+        enableRayleigh:                     false
+        enableMieHG:                        false
+        enableBoundary:                     false
+        enableWLS:                          false
+        BoundaryInvokeSD:                   false
+        Verbosity:                          1
+        WLSProfile:                         delta
+    }
+
+    LArG4Detector : 
+    {
+       category      : "world"
+       #List of volumes where Ionization/scintillation are simulated (i.e. material = "LAr")
+       #Volumes used by the Hybrid Model
+       volumeNames   : ["volTPCActive", "volCryostat", "volTPCPlaneVert","volXArapuca","volPMT","volFieldCage","volPDSstructure"]
+       # Corresponding stepLimits in mm for the volumes in the volumeNames list
+       stepLimits    : [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3] 
+      #gdmlFileName_ : "sbnd_v02_00_nowires.gdml"
+       gdmlFileName_ : "sbnd_v02_00.gdml"
+      }
+    
+    MCTruthEventAction:  
+    {
+        service_type: "MCTruthEventActionService"
+    }
+
+    ParticleListAction:
+    {
+        service_type:                 "ParticleListActionService"
+        EnergyCut:                    1e-5 # Kinetic Energy cut in [MeV]
+        keepEMShowerDaughters:        true
+        storeTrajectories:            true
+        keepGenTrajectories:          ["generator"] # list of generator labels for which we want to store
+                                                    # trajectory points. The protodune beam label is simply "generator"
+        keepOnlyPrimaryFullTrajectories : false     # (defaults to false in larg4) If set to true, only
+                                                    # the particles with MCTruth process == "primary" and
+                                                    # their descendants will have the full set of trajetory
+                                                    # points stored. Particles descending from primaries with
+                                                    # MCTruth process != "primary" will not have a full set
+                                                    # of trajectory points stored -- only their start and
+                                                    # end points. This filter only applies to the generator
+                                                    # labels listed in the keepGenTrajectories. E.g, for the
+                                                    # beam generator, no "primaryBackground" particles or their
+                                                    # descendants would have a full set of traj. points. if
+                                                    # this is set to true.
+        SparsifyTrajectories:             true      # call SparsifyTrajectory() method on MCParticles with full trajectories
+                                                    # being stored. This helps reduce memory usage in the root output stage
+                                                    # if there are many trajectory points.
+        SparsifyMargin:                   0.015     # required when SparsifyTrajectories is set to true
+    }
+
+    # (Re)Defining the Optical Library information/files for the PD-fast HYBRID optical mode 
+    PhotonVisibilityService:
+    {
+	@table::sbnd_library_vuv_vis_prop_timing_photonvisibilityservice
+	LibraryFile: "SBND_OpLibOUT_v2.00.root" 
+	NX: 66
+	NY: 56
+	NZ: 71
+	UseCryoBoundary: false
+	# IF UseCryoBoundary is set to false, so use the following parameters.
+	XMin:  -264
+	XMax:  264
+	YMin:  -280
+	YMax:  280
+	ZMin:  -60
+	ZMax:  650
+    }
+
+}
+
+## -- NuRandomService:
+services.NuRandomService.policy: "perEvent"
+
+source:
+{
+    module_type: RootInput
+    maxEvents:  1000
+    fileNames: ["Input-file.root"]
+}
+
+physics:
+{
+    producers:
+    {
+        largeant:
+        {
+            module_type:         "larg4Main"
+            enableVisualization:  false
+        }
+        rns:
+        {
+            module_type:         "RandomNumberSaver"
+        }
+        
+	# HYBRID Optical mode:
+	# Semi-Analytic model INSIDE the Active Volume
+        IonAndScintIN:
+        {
+            module_type:         "IonAndScint" 
+            Instances:           "LArG4DetectorServicevolTPCActive" # separated by semicolon
+            ISCalcAlg:           "Correlated"
+	    SavePriorSCE:        true		  
+        }  
+        PAR:  @local::sbnd_pdfastsim_par   
+
+	# Optical-Library model OUTSIDE the Active Volume
+        IonAndScintOUT:
+        {
+            module_type:         "IonAndScint"
+	    Instances:           "LArG4DetectorServicevolCryostat;LArG4DetectorServicevolTPCPlaneVert;LArG4DetectorServicevolXArapuca;LArG4DetectorServicevolPMT;LArG4DetectorServicevolFieldCage;LArG4DetectorServicevolPDSstructure" # separated by semicolon
+            ISCalcAlg:           "Correlated"
+        }
+	LIB:  @local::sbnd_pdfastsim_pvs	  
+    }
+    
+    analyzers:
+    {
+    }
+    
+    simulate: [ rns, largeant, IonAndScintIN, PAR, IonAndScintOUT, LIB ]
+    stream1:  [ out1 ]
+    trigger_paths: [ simulate ] 
+    end_paths:     [ stream1 ]  
+}
+
+outputs:
+{
+    out1:
+    {
+        module_type:      RootOutput
+        fileName:         "%ifb_ref.root"
+        dataTier:         "simulated"
+        outputCommands:   [ "keep *"]
+        compressionLevel: 1 #zlib argument (0-9) 
+    }
+}
+
+services.LArPropertiesService.ScintPreScale: 1
+
+services.LArG4Parameters.UseLitePhotons: true   # true = produce SimPhotonsLite and OpDetBacktrackerRecord, false = produce SimPhotons
+
+ services.LArG4Parameters.UseModLarqlRecomb: false
+
+services.Geometry.GDML: "sbnd_v02_00.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v02_00.gdml"
+services.Geometry.DisableWiresInG4: false
