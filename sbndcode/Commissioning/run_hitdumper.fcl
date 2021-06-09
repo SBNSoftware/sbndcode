@@ -115,7 +115,7 @@ physics.analyzers.hitdumper.readCRTtracks: false
 # set thresholds
 physics.producers.fasthit.MinSigInd: 15.0
 physics.producers.fasthit.MinSigCol: 15.0
-physics.producers.fasthit.SkipInd: true
+physics.producers.fasthit.SkipInd: false
 # parameter below enlarges the window of the hit symmetrically by adding
 #  this many widths to each side.   Original window is above threshold.
 #  Both thresh and larger window in this file are appropriate only when
