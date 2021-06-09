@@ -21,7 +21,7 @@
 #include "databaseutil_sbnd.fcl"
 #include "vertexfindermodules.fcl"
 #include "hitdumpermodule.fcl"
-#include "ophitfinder_sbnd.fcl"
+#include "ophit_finder_sbnd.fcl"
 
 process_name: HitDumper
 
@@ -72,7 +72,8 @@ physics:
     ### hit-finder producers
     # gaushit:             @local::sbnd_gaushitfinder
     fasthit:             @local::standard_fasthitfinder
-    ophit:               @local::sbnd_hit_finder
+    ophitpmt:            @local::sbnd_ophit_finder_pmt
+    # ophitarapuca:        @local::sbnd_ophit_finder_arapuca
 
   }
   analyzers:
