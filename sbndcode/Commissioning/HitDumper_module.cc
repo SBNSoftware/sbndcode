@@ -311,6 +311,7 @@ private:
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
+  bool fSkipInd;           ///< If true, induction planes are not saved (to be set via fcl)
   // double fSelectedPDG;
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
@@ -371,6 +372,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fWindow            = p.get<int>("window",100);
   fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
 
+  fSkipInd           = p.get<bool>("SkipInduction",false);
 }
 
 
@@ -400,6 +402,16 @@ void Hitdumper::analyze(const art::Event& evt)
   if (evt.getByLabel(fHitsModuleLabel,hitListHandle)) {
     art::fill_ptr_vector(hitlist, hitListHandle);
     _nhits = hitlist.size();
+
+    // Calculate how many hits we will save if skipping the induction planes
+    if (fSkipInd) {
+      _nhits = 0;
+      for (auto h : hitlist) {
+        if (h->WireID().Plane == 2) {
+          _nhits++;
+        }
+      }
+    }
   }
   else {
     std::cout << "Failed to get recob::Hit data product." << std::endl;
@@ -415,8 +427,12 @@ void Hitdumper::analyze(const art::Event& evt)
   
   ResetWireHitsVars(_nhits);
   
-  for (int i = 0; i < _nhits; ++i) {
+  for (size_t i = 0; i < hitlist.size(); ++i) {
     geo::WireID wireid = hitlist[i]->WireID();
+    if (fSkipInd && wireid.Plane != 2) {
+      continue;
+    }
+
     _hit_cryostat[i] = wireid.Cryostat;
     _hit_tpc[i] = wireid.TPC;
     _hit_plane[i] = wireid.Plane;

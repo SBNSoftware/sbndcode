@@ -30,6 +30,8 @@ hitdumper:
     window:                   100
 
     KeepTaggerTypes:          [0, 1, 2, 3, 4, 5, 6]
+
+    SkipInduction:            false
 }
 
 END_PROLOG
