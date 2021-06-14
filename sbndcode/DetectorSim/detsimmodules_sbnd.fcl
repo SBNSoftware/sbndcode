@@ -12,8 +12,9 @@ sbnd_simwire:
  NoiseRand:           0.1          #frac of randomness of noise freq-spec
  LowCutoff:           7.5          #Low frequency filter cutoff (kHz)
  CompressionType:     "none"       #could also be none		
- GenNoise:            true      # If false, NoiseService function is not called
- GetNoiseFromHisto:   false     # NO LONGER WORKS -- configure this through NoiseService
+ GenNoise:            true        #gen noise...if false function not called
+ GetNoiseFromHisto:   false
+ GenNoiseInTime:      true
 
  # the two settings below determine the ADC baseline for collection and induction plane, respectively;
  # here we read the settings from the pedestal service configuration,
