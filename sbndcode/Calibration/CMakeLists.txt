@@ -6,7 +6,6 @@ art_make(MODULE_LIBRARIES
 			lardata_ArtDataHelper
                         lardataobj_RawData
                         lardataobj_RecoBase
-                        sbndcode_Utilities_SignalShapingServiceT1053_service
                         sbndcode_Utilities_SignalShapingServiceSBND_service
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_PRINCIPAL}
