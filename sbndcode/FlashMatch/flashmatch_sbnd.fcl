@@ -1,27 +1,32 @@
+BEGIN_PROLOG
 
 sbnd_simple_flashmatch:{
   module_type: FlashPredict
-  Cryostat: 0
   PandoraProducer: "pandora"
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
   OpHitARAProducer: "ophitarapuca"
   BeamWindowStart: -0.2 # us
   BeamWindowEnd: 2.0 # us
-  LightWindowStart: -0.02 # us, wrt flash time
-  LightWindowEnd: 0.08 # us, wrt flash time
+  FlashStart: -0.02 # us, wrt flash time
+  FlashEnd: 0.08 # us, wrt flash time
   SelectNeutrino: true
+  OnlyPrimaries: true
   UseUncoatedPMT: true
   UseARAPUCAS: true
   # UseCalo: false
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
   MakeTree: false
+  MinHitQ: 0.
+  MinSliceQ: 0.
+  QScale:  0.001
+  MinOpHPE: 0.
   MinFlashPE: 0.
-  PEscale: 1.0
+  PEScale: 1.0
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
-  VUVToVIS: 4
+  OpDetNormalizer: 4
 
   ThresholdTerm: 30.
 
@@ -51,3 +56,4 @@ sbnd_simple_flashmatch:{
   pe_up: 1.
 }
 
+END_PROLOG

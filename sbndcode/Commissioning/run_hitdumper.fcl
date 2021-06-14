@@ -7,11 +7,11 @@
 #include "sam_sbnd.fcl"
 #include "larfft_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
 
 #
 # module configuration
 #
-
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
 #include "cluster_sbnd.fcl"
@@ -21,7 +21,7 @@
 #include "databaseutil_sbnd.fcl"
 #include "vertexfindermodules.fcl"
 #include "hitdumpermodule.fcl"
-#include "ophitfinder_sbnd.fcl"
+#include "ophit_finder_sbnd.fcl"
 
 process_name: HitDumper
 
@@ -53,10 +53,8 @@ outputs:
 {
   out1:
   {
-    module_type: RootOutput
-    fileName:    "hitdumper-art.root"
-    dataTier:    "reconstructed"
-    compressionLevel: 1
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
     SelectEvents: ["reco2"]
  }
 }
@@ -74,7 +72,8 @@ physics:
     ### hit-finder producers
     # gaushit:             @local::sbnd_gaushitfinder
     fasthit:             @local::standard_fasthitfinder
-    ophit:               @local::sbnd_hit_finder
+    ophitpmt:            @local::sbnd_ophit_finder_pmt
+    # ophitarapuca:        @local::sbnd_ophit_finder_arapuca
 
   }
   analyzers:
@@ -82,28 +81,28 @@ physics:
     hitdumper: @local::hitdumper
   }
 
-  #define the producer and filter modules for this path, order matters, 
+  #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
-  reco2: [         
+  reco2: [
     fasthit,
-    ophit
+    ophitpmt
   ]
 
-  ana:[hitdumper]
+  ana: [hitdumper]
 
-  # define the output stream, there could be more than one if using filters 
-  # stream1: [out1]
+  # define the output stream, there could be more than one if using filters
+  stream1: [out1]
 
   # trigger_paths is a keyword and contains the paths that modify the art::event,
   #  ie filters and producers
-  # trigger_paths: [] 
-  trigger_paths: [reco2] 
+  # trigger_paths: []
+  trigger_paths: [reco2]
 
-  # end_paths is a keyword and contains the paths that do not modify the art::Event, 
+  # end_paths is a keyword and contains the paths that do not modify the art::Event,
   # ie analyzers and output streams.  these all run simultaneously
   #
-  # end_paths: [ana, stream1]  
-  end_paths: [ana]  
+  end_paths: [ana, stream1]
+  # end_paths: [ana]
 }
 
 
@@ -116,10 +115,10 @@ physics.analyzers.hitdumper.readCRTtracks: false
 # set thresholds
 physics.producers.fasthit.MinSigInd: 15.0
 physics.producers.fasthit.MinSigCol: 15.0
-physics.producers.fasthit.SkipInd: true
-# parameter below enlarges the window of the hit symmetrically by adding 
-#  this many widths to each side.   Original window is above threshold.  
-#  Both thresh and larger window in this file are appropriate only when 
+physics.producers.fasthit.SkipInd: false
+# parameter below enlarges the window of the hit symmetrically by adding
+#  this many widths to each side.   Original window is above threshold.
+#  Both thresh and larger window in this file are appropriate only when
 #  noise is turned off.
 physics.producers.fasthit.IncludeMoreTail: 3.0
 physics.producers.fasthit.ColMinWidth: 100.0

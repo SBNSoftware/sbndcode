@@ -10,6 +10,7 @@
 # service configuration
 #
 
+#include "mctrutht0matching.fcl"
 #include "services_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
@@ -50,6 +51,8 @@
 #include "scecorrections.fcl"
 #include "flashmatch_sbnd.fcl"
 
+###include "hitparticleassociations.fcl"
+
 
 process_name: Reco
 
@@ -64,6 +67,8 @@ services:
                              @table::sbnd_g4_services           # from simulationservices_sbnd.fcl; required by opt0finder
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  BackTrackerService: @local::sbnd_backtrackerservice
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
 }
 
 #source is now a root file
@@ -101,6 +106,9 @@ physics:
   gaushit:             @local::sbnd_gaushitfinder
   fasthit:             @local::sbnd_fasthitfinder
 #  rffhit:              @local::sbnd_rffhitfinder
+
+  ### Truth-matich for hits
+  gaushitTruthMatch:   @local::standard_mcparticlehitmatching
 
   ### corner-finder
   #corner:              @local::standard_cornerfinder
@@ -171,7 +179,8 @@ physics:
          , caldata
          , gaushit
          , fasthit
-         , linecluster
+   #         , linecluster
+         , gaushitTruthMatch 
    #      , rffhit
    #      , corner
    #      , fuzzycluster
@@ -182,14 +191,15 @@ physics:
    #      , cccluster
    #      , spacepts,
    #       , blurredcluster
-          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraShowerLegacy
+          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN 
+  #       , pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
-         , pmalgtrackmaker
+   #      , pmalgtrackmaker
    #      , trackkalmanhitcalo,
-         , pmatrackcalo
-         , pmatrackpid
-         , emshower
+  #       , pmatrackcalo
+  #       , pmatrackpid
+  #        , emshower
          , crthit
    #      , crttzero
          , crttrack
@@ -221,8 +231,19 @@ outputs:
 {
  out1:
  {
-                @table::sbnd_rootoutput
-   dataTier:    "reconstructed"
+     @table::sbnd_rootoutput
+     dataTier:    "reconstructed"
+     outputCommands: [
+         "keep *_*_*_*",
+         "drop raw::OpDetWaveforms_*_*_*",
+         "drop *raw::RawDigits*_*_*_*",
+         #"drop sim::SimChannels_*_*_*",
+         "drop sim::OpDetBacktrackerRecords_*_*_*",
+         "drop *_linecluster_*_*",
+         "drop *_fasthit_*_*"
+     ]
+     
+
  }
 }
 
@@ -244,6 +265,10 @@ physics.trigger_paths: [ fullreco ]
 #physics.producers.opflash.GenModule:                            "generator"
 
 physics.producers.caldata.DigitModuleLabel:                     "daq"
+physics.producers.caldata.ROITool.Threshold: [19, 35 , 13]
+physics.producers.caldata.ROITool.uPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
+physics.producers.caldata.ROITool.vPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
+physics.producers.caldata.ROITool.zPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
 
 physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
 physics.producers.fasthit.DigitModuleLabel:                     "daq"
@@ -260,7 +285,7 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 #physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
 #physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
-physics.producers.pandora.HitFinderModuleLabel:                  "linecluster"
+physics.producers.pandora.HitFinderModuleLabel:                  "gaushit"
 physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
 physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
 physics.producers.pandoraShowerSBN.PFParticleLabel:              "pandora"
@@ -313,7 +338,7 @@ physics.producers.blurredcluster.VertexModuleLabel:             "linecluster"
 
 #To use Blurred Cluster the ClusterModuleLabel to blurredcluster and comment out the PFParticle module label, add blurred cluster to the reco chain.
 physics.producers.emshower.ClusterModuleLabel:                  "pandora"
-physics.producers.emshower.HitsModuleLabel:                     "linecluster"
+physics.producers.emshower.HitsModuleLabel:                     "gaushit"
 physics.producers.emshower.PFParticleModuleLabel:                "pandora"
 physics.producers.emshower.TrackModuleLabel:                    "pmalgtrackmaker"
 
@@ -326,3 +351,8 @@ physics.producers.pandoraSCE.CorrectNoT0Tag: true
 physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
 physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
+
+#physics.producers.gaushitTruthMatch.HitParticleAssociations:                        @local::DirectHitParticleAssnsTool
+physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
+#physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
+

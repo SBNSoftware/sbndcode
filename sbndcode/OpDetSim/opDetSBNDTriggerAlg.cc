@@ -114,20 +114,37 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
 
   std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_locations; 
   bool above_threshold = false;
+  bool beam_trigger_added = false;
+  double t_since_last_trigger = 99999.; //[us]
+  double t_deadtime = fConfig.TriggerHoldoff();
   raw::TimeStamp_t trigger_start;
   // find all ADC counts above threshold
   for (size_t i = start_i; i <= end_i; i++) {
+    raw::TimeStamp_t time = tick_to_timestamp(clockData, waveform.TimeStamp(),i);
+    t_since_last_trigger += optical_period(clockData);
+    bool isLive = (t_since_last_trigger > t_deadtime);
     raw::ADC_Count_t val = polarity * (adcs.at(i) - baseline);
-    if (!above_threshold && val > threshold) {
+    // only open new trigger if enough deadtime has passed
+    if (isLive && !above_threshold && val > threshold) {
       // new trigger! -- get the time
-      // raw::TimeStamp_t this_trigger_time 
-      trigger_start = tick_to_timestamp(clockData, waveform.TimeStamp(), i);
+      trigger_start = time;
       above_threshold = true;
+      t_since_last_trigger = 0;
+      t_deadtime = fConfig.TriggerHoldoff();
     }
     else if (above_threshold && (val < threshold || i+1 == end_i)) {
-      raw::TimeStamp_t trigger_finish = tick_to_timestamp(clockData, waveform.TimeStamp(), i);
+      raw::TimeStamp_t trigger_finish = time;
       AddTriggerLocation(this_trigger_locations, {{trigger_start, trigger_finish}});
       above_threshold = false;
+    }
+    // add beam trigger (if enabled)
+    // since the clock ticks might not sync up exactly, use the closet sample
+    if( isLive && fConfig.BeamTriggerEnable() && !beam_trigger_added &&
+      fabs(time-fConfig.BeamTriggerTime()) <= optical_period(clockData)/2. ){
+      AddTriggerLocation(this_trigger_locations, {{time,time}});
+      beam_trigger_added = true;
+      t_since_last_trigger = 0;
+      t_deadtime = fConfig.BeamTriggerHoldoff();
     }
   }
 
@@ -245,28 +262,14 @@ void opDetSBNDTriggerAlg::MergeTriggerLocations() {
 std::array<double, 2> opDetSBNDTriggerAlg::TriggerEnableWindow(detinfo::DetectorClocksData const& clockData,
                                                                detinfo::DetectorPropertiesData const& detProp) const {
   double start, end;
-  // Enable triggers over the range of the TPC readout
-  if (fConfig.TriggerEnableWindowIsTPCReadoutWindow()) {
-    // NOTE: assumes trigger is at t=0 in G4 time
-    //
-    // So currently the photon timing comes from G4 and this configuration relies
-    // on the TPC clock. However -- for some reason I don't understand there is 
-    // no way to convert a TPC time to a G4 time in the DetectorClock interface....
-    //
-    // Every reasonable configuration I have seen has setup the trigger time 
-    // to be at t=0. If some configuration breaks this invariant, I am sorry, I 
-    // did my best.
-    //start = clockData.TriggerOffsetTPC() - 1; /* Give 1us of wiggle room*/;
-    //end = start + detProp.ReadOutWindowSize() * clockData.TPCClock().TickPeriod() + 1; /* take back the wiggle room */;
-    
-    // Mar 2021:
-    // Enable triggers for 1 full drift period prior to + throughout main drift window.
-    // For some reason, drift period is not accessible from ClocksData nor DetProp... (?!)
-    // Hard-coding for now (TODO: FIX!!!)
-    double drift  = 1300; // 1.3 ms
-    double readout= detProp.ReadOutWindowSize() * clockData.TPCClock().TickPeriod();
-    start = clockData.TriggerOffsetTPC() - drift;
-    end = clockData.TriggerOffsetTPC() + readout;
+
+  // Enable triggers starting 1 drift period prior to the start of TPC readout,
+  // and continuing over the full range of the TPC readout window
+  if (fConfig.TriggerEnableWindowOneDriftBeforeTPCReadout()) {
+    double tpcReadoutWindow = detProp.ReadOutWindowSize() * clockData.TPCClock().TickPeriod();
+    double tpcStart = fConfig.BeamTriggerTime() + clockData.TriggerOffsetTPC();
+    start = tpcStart - fConfig.DriftPeriod() - 1; /* Give 1us of wiggle room */
+    end = tpcStart + tpcReadoutWindow;
   }
   else {
     start = fConfig.TriggerEnableWindowStart();
@@ -312,7 +315,7 @@ double opDetSBNDTriggerAlg::ReadoutWindowPreTriggerBeam(raw::Channel_t channel) 
   // Allow for different channels to have different readout window lengths
   // For now, we don't use this
   (void) channel;
-  return fConfig.ReadoutWindowPreTrigger();
+  return fConfig.ReadoutWindowPreTriggerBeam();
 }
 
 double opDetSBNDTriggerAlg::ReadoutWindowPostTriggerBeam(raw::Channel_t channel) const {
@@ -324,65 +327,94 @@ double opDetSBNDTriggerAlg::ReadoutWindowPostTriggerBeam(raw::Channel_t channel)
 
 std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detinfo::DetectorClocksData const& clockData,
                                                                            const raw::OpDetWaveform &waveform) const {
-  
   // Vector of "triggered" OpDetWaveforms
   std::vector<raw::OpDetWaveform> ret;
-  
+
   // Get the trigger times we found earlier for this channel
   raw::Channel_t channel = waveform.ChannelNumber();
   const std::vector<raw::TimeStamp_t> &trigger_times = GetTriggerTimes(channel);
   if( trigger_times.size() == 0 ) return ret;
+
+//  std::cout
+//  <<"=======================\n"
+//  <<"Found "<<trigger_times.size()<<" triggers\n";
+//  for(size_t i=0; i<trigger_times.size(); i++) std::cout<<"   - "<<trigger_times[i]<<"\n";
 
   // Extract waveform of raw ADC counts 
   const std::vector<raw::ADC_Count_t> &adcs = waveform; // upcast to get adcs
   raw::OpDetWaveform this_waveform;
 
   // Set the pre- and post-readout sizes
-  // NOTE: Using same readout window size for everything
-  //       as of Mar 2021. Eventually we might want to shrink
-  //       the readout for out-of-time stuff.
   double    preTrig	= ReadoutWindowPreTrigger(channel);
   double    postTrig	= ReadoutWindowPostTrigger(channel);
-  double    ro_length	= preTrig+postTrig;			// microseconds
-  unsigned  ro_samples  = ro_length/optical_period(clockData);	// samples
-  double    beamTrigTime= fConfig.BeamTriggerTime();		// should be 0
-  //double preTrigBeam	= ReadoutWindowPreTriggerBeam(channel); // (not used)
-  //double postTrigBeam	= ReadoutWindowPostTriggerBeam(channel);// (not used)
-  //double ro_length_beam = preTrigBeam+postTrigBeam;		// (not used)
-  //unsigned ro_samples_beam= ro_length_beam/optical_period(clockData); 
-  
+  unsigned  ro_samples  = (preTrig+postTrig)/optical_period(clockData);	// samples
+
   // Are beam triggers enabled?
-  bool	has_beam_trigger = fConfig.BeamTriggerEnable();
+  double    beamTrigTime= fConfig.BeamTriggerTime();		// should be 0
+  double    preTrigBeam	= ReadoutWindowPreTriggerBeam(channel);
+  double    postTrigBeam	= ReadoutWindowPostTriggerBeam(channel);
+  unsigned  ro_samples_beam= (preTrigBeam+postTrigBeam)/optical_period(clockData); // samples
 
   // --------------------------------------------
   // Scan the waveform
-  unsigned trigger_i	= 0;
-  double  next_trig	= trigger_times[trigger_i];
-  double  end_time	= tick_to_timestamp(clockData,waveform.TimeStamp(), adcs.size()-1);
-  bool	  isReadingOut	= false;
+  unsigned  trigger_i	= 0;
+  double    next_trig	= trigger_times[trigger_i];
+  bool      isReadingOut	= false;
+  bool      isBeamTrigger = false;
+  unsigned  min_ro_samples = ro_samples;
 
   for(size_t i=0; i<adcs.size(); i++){
     double time = tick_to_timestamp(clockData, waveform.TimeStamp(), i);
 
     // if we're out of triggers or nearing the end of the waveform, break
     if( trigger_i >= trigger_times.size() ) break;
-    if( time >= end_time - ro_length ) break;
-    
+    if( i >= adcs.size()-1-min_ro_samples ) break;
+
+    // check if the current trigger is from the beam
+    isBeamTrigger = ( fabs(next_trig-beamTrigTime)<optical_period(clockData)/2 );
+
+    // scan ahead to the "next" trigger if we've reached the end of the previous one
+    double dT = time-next_trig;
+    if( trigger_i < trigger_times.size()-1 &&
+        ((isBeamTrigger && dT >= postTrigBeam)||(!isBeamTrigger && dT >= postTrig))) {
+      for(size_t j=trigger_i+1; j<trigger_times.size(); j++){
+        double this_trig = trigger_times[j];
+        isBeamTrigger = ( fabs(this_trig-beamTrigTime)<optical_period(clockData)/2 );
+        double t1 = this_trig-preTrig;
+        double t2 = this_trig+postTrig;
+        if(isBeamTrigger){
+          t1 = this_trig-preTrigBeam;
+          t2 = this_trig+postTrigBeam;
+        }
+        if(  ( fConfig.AllowTriggerOverlap() && (t2 >= time) )
+           ||(!fConfig.AllowTriggerOverlap() && (t1 >= time) ) ){
+	        next_trig = this_trig;
+	        trigger_i = j;
+	        break;
+        }
+      }
+    }
+
+    // if we're within the trigger window, we're triggering
     bool  isTriggering	= false;
-    // if we're near a trigger time, we're triggering
-    if( time >= (next_trig-preTrig) &&  time < (next_trig+postTrig))
+    if(    (!isBeamTrigger && time >= (next_trig-preTrig) &&  time < (next_trig+postTrig))
+        || ( isBeamTrigger && time >= (next_trig-preTrigBeam) && time < (next_trig+postTrigBeam))
+      )
       isTriggering = true;
-    //
-    // if beam trigger is enabled, then we will ALWAYS read out
-    // a window around the beam time, so ensure that no triggers 
-    // prior to this overlap into this region
-    if( has_beam_trigger ){
-      if( time >= (beamTrigTime-preTrig-ro_length) &&
-	  time < beamTrigTime-preTrig ) {
-	isTriggering = false; 
-      } else 
-      if( time >= (beamTrigTime-preTrig) && time < (beamTrigTime+postTrig)) {
-	isTriggering = true;
+
+    // if already reading out, keep going!
+    if( isReadingOut && this_waveform.size() < min_ro_samples ){
+      this_waveform.push_back(adcs[i]);
+    }
+    // once we've saved at least 1 full window, only continue adding
+    // to it if we are allowing trigger overlaps. Otherwise, package up 
+    // the waveform into an OpDetWaveform object and reset the readout 
+    else if( isReadingOut && this_waveform.size() >= min_ro_samples ){
+      if( fConfig.AllowTriggerOverlap() && isTriggering ) {
+        this_waveform.push_back(adcs[i]);
+      } else {
+        ret.push_back(std::move(this_waveform));
+        isReadingOut = false;
       }
     }
 
@@ -391,31 +423,14 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detin
       this_waveform = raw::OpDetWaveform(time, channel); 
       this_waveform.push_back(adcs[i]);
       isReadingOut = true;
-    }
-    // if alraedy reading out, keep going!
-    else if( isReadingOut && this_waveform.size() < ro_samples ){
-      this_waveform.push_back(adcs[i]);
-    } 
-    // once we've saved a full readout window, package the 
-    // waveform and reset to start looking for next trigger
-    else if( isReadingOut && this_waveform.size() >= ro_samples ){
-      ret.push_back(std::move(this_waveform));
-      isReadingOut = false;
-      // keep in mind some triggers could have happened during
-      // the readout, so skip ahead to the next one coming up.
-      for(size_t j=trigger_i; j<trigger_times.size(); j++){
-	if( trigger_times.at(j) >= time ){
-	  next_trig = trigger_times.at(j);
-	  trigger_i = j;
-	  break;
-	}
-      }
+      min_ro_samples = ro_samples;
+      if( isBeamTrigger ) min_ro_samples = ro_samples_beam;
     }
 
   }//endloop over ADCs
 
-  //std::cout<<"We saved a total of "<<ret.size()<<" opdetwaveforms\n";
-  //for(size_t i=0; i<ret.size(); i++) std::cout<<"   - timestamp "<<ret.at(i).TimeStamp()<<"   size "<<ret.at(i).Waveform().size()<<"\n";
+//  std::cout<<"We saved a total of "<<ret.size()<<" opdetwaveforms\n";
+//  for(size_t i=0; i<ret.size(); i++) std::cout<<"   - timestamp "<<ret.at(i).TimeStamp()<<"   size "<<ret.at(i).Waveform().size()<<"\n";
   
   return ret;
 }
