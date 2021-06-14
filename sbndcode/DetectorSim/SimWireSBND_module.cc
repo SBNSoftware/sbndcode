@@ -81,8 +81,8 @@ public:
 
 private:
 
-  //void GenNoiseInTime(std::vector<float> &noise, double noise_factor) const;
-  //void GenNoiseInFreq(std::vector<float> &noise, double noise_factor) const;
+  void GenNoiseInTime(std::vector<float> &noise, double noise_factor) const;
+  void GenNoiseInFreq(std::vector<float> &noise, double noise_factor) const;
 
   std::string            fDriftEModuleLabel;///< module making the ionization electrons
   raw::Compress_t        fCompression;      ///< compression type to use
@@ -100,7 +100,7 @@ private:
   float                  fBaselineRMS;      ///< ADC value of baseline RMS within each channel
   TH1D*                  fNoiseDist;        ///< distribution of noise counts
   bool fGetNoiseFromHisto;                  ///< if True -> Noise from Histogram of Freq. spectrum
-  //bool fGenNoiseInTime;                     ///< if True -> Noise with Gaussian dsitribution in Time-domain
+  bool fGenNoiseInTime;                     ///< if True -> Noise with Gaussian dsitribution in Time-domain
   bool fGenNoise;                           ///< if True -> Gen Noise. if False -> Skip noise generation entierly
 
   art::ServiceHandle<ChannelNoiseService> noiseserv;
@@ -154,7 +154,7 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   fNoiseRand         = p.get< double              >("NoiseRand");
   fLowCutoff         = p.get< double              >("LowCutoff");
   fGetNoiseFromHisto = p.get< bool                >("GetNoiseFromHisto");
-  //fGenNoiseInTime    = p.get< bool                >("GenNoiseInTime");
+  fGenNoiseInTime    = p.get< bool                >("GenNoiseInTime");
   fGenNoise          = p.get< bool                >("GenNoise");
   fCollectionPed     = p.get< float               >("CollectionPed",690.);
   fInductionPed      = p.get< float               >("InductionPed",2100.);
