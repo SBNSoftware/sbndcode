@@ -385,6 +385,7 @@
     </MopUpAlgorithms>
   </algorithm>
 
+  <!-- Re-run the PFO Characterisation to recalculate the scores after recursive mop up -->
   <algorithm type = "LArBdtPfoCharacterisation">
     <TrackPfoListName>TrackParticles3D</TrackPfoListName>
     <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
