@@ -311,6 +311,7 @@ private:
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
+  bool fSkipInd;           ///< If true, induction planes are not saved (to be set via fcl)
   // double fSelectedPDG;
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
@@ -371,6 +372,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fWindow            = p.get<int>("window",100);
   fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
 
+  fSkipInd           = p.get<bool>("SkipInduction",false);
 }
 
 
@@ -400,6 +402,16 @@ void Hitdumper::analyze(const art::Event& evt)
   if (evt.getByLabel(fHitsModuleLabel,hitListHandle)) {
     art::fill_ptr_vector(hitlist, hitListHandle);
     _nhits = hitlist.size();
+
+    // Calculate how many hits we will save if skipping the induction planes
+    if (fSkipInd) {
+      _nhits = 0;
+      for (auto h : hitlist) {
+        if (h->WireID().Plane == 2) {
+          _nhits++;
+        }
+      }
+    }
   }
   else {
     std::cout << "Failed to get recob::Hit data product." << std::endl;
@@ -407,26 +419,32 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   if (_nhits > _max_hits) {
-    std::cout << "Available hits are " << _nhits 
+    std::cout << "Available hits are " << _nhits
               << ", which is above the maximum number allowed to store." << std::endl;
     std::cout << "Will only store " << _max_hits << "hits." << std::endl;
     _nhits = _max_hits;
   }
-  
+
   ResetWireHitsVars(_nhits);
-  
-  for (int i = 0; i < _nhits; ++i) {
+
+  size_t counter = 0;
+  for (size_t i = 0; i < hitlist.size(); ++i) {
     geo::WireID wireid = hitlist[i]->WireID();
-    _hit_cryostat[i] = wireid.Cryostat;
-    _hit_tpc[i] = wireid.TPC;
-    _hit_plane[i] = wireid.Plane;
-    _hit_wire[i] = wireid.Wire;
-    _hit_channel[i] = hitlist[i]->Channel();
+    if (fSkipInd && wireid.Plane != 2) {
+      continue;
+    }
+
+    _hit_cryostat[counter] = wireid.Cryostat;
+    _hit_tpc[counter] = wireid.TPC;
+    _hit_plane[counter] = wireid.Plane;
+    _hit_wire[counter] = wireid.Wire;
+    _hit_channel[counter] = hitlist[i]->Channel();
     // peak time needs plane dependent offset correction applied.
-    _hit_peakT[i] = hitlist[i]->PeakTime();
-    _hit_charge[i] = hitlist[i]->Integral();
-    _hit_ph[i] = hitlist[i]->PeakAmplitude();
-    _hit_width[i] = hitlist[i]->RMS();
+    _hit_peakT[counter] = hitlist[i]->PeakTime();
+    _hit_charge[counter] = hitlist[i]->Integral();
+    _hit_ph[counter] = hitlist[i]->PeakAmplitude();
+    _hit_width[counter] = hitlist[i]->RMS();
+    counter ++;
   }
 
   //
@@ -675,7 +693,7 @@ void Hitdumper::analyze(const art::Event& evt)
     }
 
     if (_nchits > _max_chits) {
-      std::cout << "Available CRT hits are " << _nchits 
+      std::cout << "Available CRT hits are " << _nchits
                 << ", which is above the maximum number allowed to store." << std::endl;
       std::cout << "Will only store " << _max_chits << "CRT hits." << std::endl;
       _nchits = _max_chits;
@@ -762,7 +780,7 @@ void Hitdumper::analyze(const art::Event& evt)
       std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
       _nophits = _max_ophits;
     }
-    
+
     ResetOpHitsVars(_nophits);
 
     for (int i = 0; i < _nophits; ++i) {
@@ -1244,7 +1262,7 @@ void Hitdumper::ResetOpHitsVars(int n) {
 
 
 void Hitdumper::ResetVars() {
-  
+
 
   _run = -99999;
   _subrun = -99999;
