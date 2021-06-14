@@ -352,8 +352,9 @@ void SimWireSBND::produce(art::Event& evt)
     } // End of new noise.
 
 */
+
     // Add noise to channel.
-    noiseserv->addNoise(clockData, chan,noisetmp);
+    if( fGenNoise ) noiseserv->addNoise(clockData, chan,noisetmp);
 
     //Pedestal determination
     float ped_mean = fCollectionPed;
@@ -363,13 +364,12 @@ void SimWireSBND::produce(art::Event& evt)
       ped_mean = fInductionPed;
       preamp_sat = fInductionSat;
     }
-    else if (sigtype == geo::kCollection) {    
-      ped_mean = fCollectionPed;
-      preamp_sat=fCollectionSat;
-    }
     //slight variation on ped on order of RMS of baseline variation
-    CLHEP::RandGaussQ rGaussPed(fPedestalEngine, 0.0, fBaselineRMS);
-    ped_mean += rGaussPed.fire();
+    // (skip this if BaselineRMS = 0 in fhicl)
+    if( fBaselineRMS ) {
+      CLHEP::RandGaussQ rGaussPed(fPedestalEngine, 0.0, fBaselineRMS);
+      ped_mean += rGaussPed.fire();
+    }
 
     for (unsigned int i = 0; i < fNTimeSamples; ++i) {
 
