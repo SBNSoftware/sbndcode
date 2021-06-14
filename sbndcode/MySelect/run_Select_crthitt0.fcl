@@ -11,7 +11,7 @@ source:
 
 services:
 {
-  TFileService: { fileName: "test.root" }
+  TFileService: { fileName: "track_T0_test.root" }
   @table::sbnd_services
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
@@ -26,5 +26,7 @@ physics:
   path0: 	[ ana ]
   end_paths: 	[ path0 ]
 }
+
+physics.analyzers.ana.T0Label: "crthitt0"
 
 #include "3drift_services_sbnd.fcl"

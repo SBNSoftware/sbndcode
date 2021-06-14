@@ -30,6 +30,7 @@
 #include "lardataobj/AnalysisBase/T0.h"
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 
@@ -59,6 +60,7 @@ public:
 
   // Selected optional functions.
   void beginJob() override;
+  void endJob() override; 
 
 private:
 
@@ -70,22 +72,30 @@ private:
   std::string fPFParticleLabel;
   std::string fT0Label;
   std::string fTrackLabel;
-  std::string fSpacePointLabel;
   std::string fCalorimetryLabel;
   std::string fHitLabel;
   
   // Declare trees
   TTree *pfpTree; 	// tree for selected CR
-  TTree *trueTree;	//tree for all true CR
+  TTree *trueTree;	// tree for all true CR
 
   // Things to go in pfptree
   unsigned int		pfpEventID;
   size_t 		pfpParticleID;
   bool			pfpIsPrimary;
   int		        pfpParticlePDG;
+  double		pfpT0; //ns
+  double		pfpT0Confidence;
   double		pfpTrackLength;
   double 		pfpYZAngle;
   double		pfpXZAngle;
+  std::vector<float>    pfpDriftTime_0;  
+  std::vector<float>    pfpDriftTime_1;  
+  std::vector<float>    pfpDriftTime_2;  
+  std::vector<float>    pfpTPC2TrigTime_0; 
+  std::vector<float>    pfpTPC2TrigTime_1; 
+  std::vector<float>    pfpTPC2TrigTime_2; 
+  std::vector<float>    pfpTrajLocationX;  
   std::vector<float>	pfpdQdx_0;
   std::vector<float>	pfpX_0;
   std::vector<float>	pfpY_0;
@@ -119,12 +129,17 @@ private:
   // Map to hold track truth id and particle id of a pfp
   std::map<int, bool> trueTrackIDpfpID;
 
-  //Additional member functions
+  // Purity and Efficiency check
+  double nSelectedTrack;
+  double nSelectedTrueTrack;
+  double nTrueTrack;
+  
+  // Additional member functions
   bool TrackCrossesApa(const art::Ptr<recob::Track> trk) const;
 
   bool TrackCrossesCpa(const art::Ptr<recob::Track> trk) const;
   
-  std::vector< art::Ptr<recob::PFParticle> > GetCrossingCR_T0(
+  std::vector< art::Ptr<recob::PFParticle> > GetCrossingCR_cathode_stitching_T0(
 	const std::vector< art::Ptr<recob::PFParticle> > &pfps, 
 	const art::FindManyP<recob::Track> &trackAssoc,
  	const art::FindManyP<anab::T0> &t0Assoc) const;
@@ -133,6 +148,16 @@ private:
 	const std::vector< art::Ptr<recob::PFParticle> > &pfps, 
 	const art::FindManyP<recob::Track> &trackAssoc) const;
   
+  std::vector< art::Ptr<recob::PFParticle> > GetCrossingCR_CRTHitT0(
+	const std::vector< art::Ptr<recob::PFParticle> > &pfps, 
+	const art::FindManyP<recob::Track> &trackAssoc, 
+ 	const art::FindManyP<anab::T0> &t0Assoc) const;
+
+  std::vector< art::Ptr<recob::PFParticle> > GetCrossingCR_SCE_CRT(
+	const std::vector< art::Ptr<recob::PFParticle> > &pfps, 
+	const art::FindManyP<recob::Track> &trackAssoc, 
+ 	const art::FindManyP<anab::T0> &t0Assoc) const;
+
   bool MCParticleCrossesCpa(
 	const simb::MCParticle& particle, 
 	const sbnd::TPCGeoAlg TPCGeo) const; 
@@ -142,7 +167,12 @@ private:
   double LengthTPC1(const simb::MCParticle& particle) const;
   
   bool MinLengthSquared(double lengthTPC0, double lengthTPC1) const;
-  
+
+  double GetHitTimeFromTPIndex_DetectorClock_ms(
+	const std::vector< art::Ptr<recob::Hit>> hits, 
+	const double tpIndex, 
+	const detinfo::DetectorClocksData clockData) const;
+
   void clearPfpTree();
 
   void clearTrueTree();
@@ -158,20 +188,34 @@ sbnd::Select::Select(fhicl::ParameterSet const& p)
   fPFParticleLabel 	= p.get<std::string>("PFParticleLabel");
   fT0Label 		= p.get<std::string>("T0Label");
   fTrackLabel 		= p.get<std::string>("TrackLabel");
-  fSpacePointLabel 	= p.get<std::string>("SpacePointLabel");
   fCalorimetryLabel 	= p.get<std::string>("CalorimetryLabel");
   fHitLabel 		= p.get<std::string>("HitLabel");
-}
+  
+  nSelectedTrack = 0;
+  nSelectedTrueTrack = 0;
+  nTrueTrack = 0;
+ 
+}  // End of constructor
 
 void sbnd::Select::analyze(art::Event const& e)
 {
   // Implementation of required member function here.
 
-  //std::cout << std::endl;
-  //std::cout << "Reading event: " << e.id().event() << std::endl;
-  
-  // and clock data for event
+ 
+// 25 May 2021: Current v_09_09_00 has pre trigger set to be 1.25 ms or 2500 ticks
+ 
+  // detector service for event
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
+  auto const detectorData = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
+
+  std::cout << std::endl;
+  std::cout << "Reading event: " << e.id().event() << std::endl; 
+//  std::cout << "FCL file Pretrigger : " << fPreTrig << " ticks" << std::endl;
+//  std::cout << "Clock service trigger offset : " << clockData.TriggerOffsetTPC() << std::endl;
+//  std::cout << "Drift Velocity : " << detectorData.DriftVelocity() << std::endl;
+//  std::cout << "Temperature : " << detectorData.Temperature() << std::endl;
+//  std::cout << "Efield: " << detectorData.Efield(0) << std::endl;  
+//  std::cout << "Read out window size: " << detectorData.ReadOutWindowSize() << std::endl;
 
   // Define handle and fill vector
  
@@ -190,16 +234,23 @@ void sbnd::Select::analyze(art::Event const& e)
   // Define association
  
   art::FindManyP<recob::Track> trackAssoc (PFParticleList, e, fTrackLabel);
-  art::FindManyP<anab::T0> t0Assoc (PFParticleList, e, fT0Label);
+  art::FindManyP<anab::T0> t0Assoc (PFParticleList, e , fT0Label);
 
   art::FindManyP<anab::Calorimetry> calAssoc (TrackList, e, fCalorimetryLabel);
   art::FindManyP<recob::Hit> hitAssoc (TrackList, e , fHitLabel);
+  //art::FindManyP<anab::T0> t0Assoc (TrackList, e , fT0Label);
+
 
   //--------------------------Selection------------------------------//
 
+  //std::cout << "Reading event: " << e.id().event() << std::endl;
+  //std::cout << "Checking PFParticle size: " << PFParticleList.size() << std::endl;
+
   if(PFParticleList.empty()) return;
 
-  std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_T0(PFParticleList, trackAssoc, t0Assoc);
+  //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_cathode_stitching_T0(PFParticleList, trackAssoc, t0Assoc);
+  std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_SCE_CRT(PFParticleList, trackAssoc, t0Assoc);
+  //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_CRTHitT0(PFParticleList, trackAssoc, t0Assoc);
 
   //std::cout << "No. of cathode-anode crossing muon: " << CrossingCR.size() << std::endl;
 
@@ -208,6 +259,7 @@ void sbnd::Select::analyze(art::Event const& e)
   // Save event every pfparticle as a single row in the tree
 
   for(const art::Ptr<recob::PFParticle> &pfp: CrossingCR){
+  //for(const art::Ptr<recob::PFParticle> &pfp: PFParticleList){
 
     clearPfpTree();
 
@@ -221,11 +273,24 @@ void sbnd::Select::analyze(art::Event const& e)
     pfpIsPrimary = pfp->IsPrimary();
     pfpParticlePDG = pfp->PdgCode();
     
-    //std::cout << "Saving " << "Paritcle ID: " << pfpParticleID;
+    //std::cout << "Saving event: " << pfpEventID << ", Paritcle ID: " << pfpParticleID;
     //std::cout << std::endl;
     
+    // PFP T0
+   
+    std::vector< art::Ptr<anab::T0> > pfpT0vect = t0Assoc.at(pfp.key());
+
+    if(pfpT0vect.empty()) continue;
+
+    for(const art::Ptr<anab::T0> &t0: pfpT0vect){
+
+       pfpT0 = t0->Time() / 1000000; //unit: ns -> Convert ns to ms: /10^6 
+       pfpT0Confidence = t0->TriggerConfidence();
+
+    } 
+
     // Track
-    
+ 
     std::vector< art::Ptr<recob::Track> > pfpTrack = trackAssoc.at(pfp.key());
 
     if(pfpTrack.empty()) continue;
@@ -235,6 +300,29 @@ void sbnd::Select::analyze(art::Event const& e)
       pfpTrackLength = trk->Length();     
       pfpYZAngle = trk->ZenithAngle();
       pfpXZAngle = trk->AzimuthAngle();
+ 
+      for(size_t i = 0; i < trk->NPoints()-1; i++){
+        pfpTrajLocationX.push_back(trk->LocationAtPoint(i).X());
+      }
+
+//      // Track T0
+//   
+//      std::vector< art::Ptr<anab::T0> > trkT0vect = t0Assoc.at(trk.key());
+//
+//      if(trkT0vect.empty()) continue;
+//
+//      for(const art::Ptr<anab::T0> &t0: trkT0vect){
+//
+//       pfpT0 = t0->Time() / 1000000; //unit: ns -> Convert ns to ms: /10^6 
+//       pfpT0Confidence = t0->TriggerConfidence();
+//
+//      } 
+ 
+      // Hit 
+           
+      std::vector< art::Ptr<recob::Hit> > trkHit = hitAssoc.at(trk.key());
+
+      if(trkHit.empty()) continue;
       
       // Calorimetry
     
@@ -246,11 +334,12 @@ void sbnd::Select::analyze(art::Event const& e)
    
         if(!cal->PlaneID().isValid) continue;
        
-
         int planenum = cal->PlaneID().Plane;
 
         if( planenum == 0 ){
 	  for(unsigned int i =0; i < cal->dQdx().size(); i++){ 
+            pfpDriftTime_0.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData)-pfpT0);
+      	    pfpTPC2TrigTime_0.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData));
             pfpdQdx_0.push_back(cal->dQdx()[i]);
             pfpX_0.push_back(cal->XYZ()[i].X());
             pfpY_0.push_back(cal->XYZ()[i].Y());
@@ -260,6 +349,8 @@ void sbnd::Select::analyze(art::Event const& e)
 
         if( planenum == 1 ){
 	  for(unsigned int i =0; i < cal->dQdx().size(); i++){ 
+            pfpDriftTime_1.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData)-pfpT0);
+      	    pfpTPC2TrigTime_1.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData));
             pfpdQdx_1.push_back(cal->dQdx()[i]);
             pfpX_1.push_back(cal->XYZ()[i].X());
             pfpY_1.push_back(cal->XYZ()[i].Y());
@@ -269,20 +360,20 @@ void sbnd::Select::analyze(art::Event const& e)
       
         if( planenum == 2 ){
 	  for(unsigned int i =0; i < cal->dQdx().size(); i++){ 
+            pfpDriftTime_2.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData)-pfpT0);
+      	    pfpTPC2TrigTime_2.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData));
             pfpdQdx_2.push_back(cal->dQdx()[i]);
             pfpX_2.push_back(cal->XYZ()[i].X());
             pfpY_2.push_back(cal->XYZ()[i].Y());
             pfpZ_2.push_back(cal->XYZ()[i].Z());
-          }
-        }
-     } 
-
+          } 
+        } 
+      }
+      
       // MC Truth Info
      
       if(!e.isRealData()){
   
-        std::vector< art::Ptr<recob::Hit> > trkHit = hitAssoc.at(trk.key());
-
         if(trkHit.empty()) continue;
 
 	int trkidtruth = TruthMatchUtils::TrueParticleIDFromTotalTrueEnergy(clockData, trkHit, true);
@@ -316,6 +407,8 @@ void sbnd::Select::analyze(art::Event const& e)
       } // End of MC loop
      
     } // End of track loop  
+
+    nSelectedTrack += 1;
  
     pfpTree->Fill(); 
   
@@ -347,9 +440,14 @@ void sbnd::Select::analyze(art::Event const& e)
     for(auto &[k,v] :trueTrackIDpfpID){
      
       if(mcTrackID == k){
+
+        nSelectedTrueTrack += 1;
+
         mcPfpParticleID = v;
       }      
     }
+
+    nTrueTrack += 1;
 
     trueTree->Fill();
   } // End of MCParticle loop
@@ -360,7 +458,7 @@ void sbnd::Select::analyze(art::Event const& e)
 void sbnd::Select::beginJob()
 {
   // Implementation of optional member function here.
-  
+ 
   pfpTree = tfs->make<TTree>("pfptree", "Selected Reconstructed Crossing Muons");
   trueTree = tfs->make<TTree>("truetree", "True MC Crossing Muons");
 
@@ -368,9 +466,18 @@ void sbnd::Select::beginJob()
   pfpTree->Branch("ParticleID", &pfpParticleID, "ParticleID/i");
   pfpTree->Branch("IsPrimary", &pfpIsPrimary, "IsPrimary/O");
   pfpTree->Branch("ParticlePDG", &pfpParticlePDG, "ParticlePDG/I");
+  pfpTree->Branch("T0", &pfpT0, "T0/D");
+  pfpTree->Branch("T0Confidence", &pfpT0Confidence, "T0Confidence/D");
   pfpTree->Branch("TrackLength", &pfpTrackLength, "TrackLength/D");
   pfpTree->Branch("YZAngle", &pfpYZAngle, "YZAngle/D");
   pfpTree->Branch("XZAngle", &pfpXZAngle, "XZAngle/D");
+  pfpTree->Branch("DriftTime_0", &pfpDriftTime_0);
+  pfpTree->Branch("DriftTime_1", &pfpDriftTime_1);
+  pfpTree->Branch("DriftTime_2", &pfpDriftTime_2);
+  pfpTree->Branch("TPC2TrigTime_0", &pfpTPC2TrigTime_0);
+  pfpTree->Branch("TPC2TrigTime_1", &pfpTPC2TrigTime_1);
+  pfpTree->Branch("TPC2TrigTime_2", &pfpTPC2TrigTime_2);
+  pfpTree->Branch("TrajLocationX", &pfpTrajLocationX);
   pfpTree->Branch("dQdx_0", &pfpdQdx_0);
   pfpTree->Branch("X_0", &pfpX_0);
   pfpTree->Branch("Y_0", &pfpY_0);
@@ -396,17 +503,30 @@ void sbnd::Select::beginJob()
   trueTree->Branch("CrossesCpa", &mcCrossesCpa, "CrossesCpa/O");
   trueTree->Branch("TrueMother", &mcTrueMother, "TrueMother/I");
   trueTree->Branch("PfpParticleID", &mcPfpParticleID, "PfpParticleID/I");
-}
+} // End of beginJob()
+
+void sbnd::Select::endJob()
+{
+
+  std::cout << std::endl;
+  std::cout << "=====================================" << std::endl;
+  std::cout << "=====================================" << std::endl;
+  std::cout << "Purtity = " << nSelectedTrueTrack / nSelectedTrack << std::endl;
+  std::cout << "Efficiency = " << nSelectedTrueTrack / nTrueTrack << std::endl;
+  std::cout << "=====================================" << std::endl;
+  std::cout << "=====================================" << std::endl;
+
+} // End of endJob();
 
 
   //----------------------Member Functions------------------------------//
 
 
 //-------------------------------------------------------------------
-// Get pfparticle that crosses cathode-anode
+// Get pfparticle that crosses cathode-anode i.e. checking track position
 
-std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc) const{
-
+std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc) const
+{
   std::vector< art::Ptr<recob::PFParticle> > crosser;
   crosser.clear();
 
@@ -431,10 +551,10 @@ std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR(const std
 }  
 
 //-------------------------------------------------------------------
-// Get pfparticle that crosses cathode-anode
+// Get pfparticle that crosses cathode-anode i.e. checking pandora T0 stitching
 
-std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_T0(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc, const art::FindManyP<anab::T0> &t0Assoc) const{
-
+std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_cathode_stitching_T0(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc, const art::FindManyP<anab::T0> &t0Assoc) const
+{
   std::vector< art::Ptr<recob::PFParticle> > crosser;
   crosser.clear();
 
@@ -446,7 +566,7 @@ std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_T0(const 
    
     std::vector< art::Ptr<anab::T0> > pfpT0 = t0Assoc.at(pfp.key());
 
-    if(pfpT0.empty()) continue; //T0 stiches cosmic track that crosses cathode -> look for cathode crosser 
+    if(pfpT0.empty()) continue; //T0 (label pandora) stiches cosmic track that crosses cathode -> look for cathode crosser 
  
     std::vector< art::Ptr<recob::Track> > pfpTrack = trackAssoc.at(pfp.key());
 
@@ -454,17 +574,87 @@ std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_T0(const 
 
     for(const art::Ptr<recob::Track> &trk: pfpTrack){
 
-      if(!(this->TrackCrossesApa(trk))) continue;
+      if(!(this->TrackCrossesApa(trk))) continue; //cross anode
       crosser.push_back(pfp);
     }
   }
   return crosser;
 }  
+
+//-------------------------------------------------------------------
+// Get pfparticle that crosses cathode-anode i.e. checking pandora T0 stitching
+
+std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_SCE_CRT(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc, const art::FindManyP<anab::T0> &t0Assoc) const
+{
+  std::vector< art::Ptr<recob::PFParticle> > crosser;
+  crosser.clear();
+
+  for(const art::Ptr<recob::PFParticle> &pfp: pfps){
+  
+    if(!pfp->IsPrimary()) continue; //check if it's a cosmic
+   
+    if(!(std::abs(pfp->PdgCode()) == 13)) continue; //check if  it's muon
+   
+    std::vector< art::Ptr<anab::T0> > pfpT0 = t0Assoc.at(pfp.key()); //check if T0 is reco'ed after SCE
+
+    if(pfpT0.empty()) continue; //check if T0 is reco'ed after SCE 
+ 
+    std::vector< art::Ptr<recob::Track> > pfpTrack = trackAssoc.at(pfp.key());
+
+    if(pfpTrack.empty()) continue;
+
+    for(const art::Ptr<recob::Track> &trk: pfpTrack){
+
+      if(!(this->TrackCrossesCpa(trk))) continue;
+
+      if(!(this->TrackCrossesApa(trk))) continue;
+ 
+      crosser.push_back(pfp);
+    }
+  }
+  return crosser;
+} 
+ 
+//------------------------------------------------------------------- 
+// Get pfparticle that crosses cathode-anode i.e. checking hit in both TPC for crthitt0 sample
+
+
+std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_CRTHitT0(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc, const art::FindManyP<anab::T0> &t0Assoc)  const
+{
+  std::vector< art::Ptr<recob::PFParticle> > crosser;
+  crosser.clear();
+
+  for(const art::Ptr<recob::PFParticle> &pfp: pfps){
+   
+    if(!pfp->IsPrimary()) continue; //check if it's a cosmic
+   
+    if(!(std::abs(pfp->PdgCode()) == 13)) continue; //check if  it's muon
+    
+    std::vector< art::Ptr<recob::Track> > pfpTrack = trackAssoc.at(pfp.key());
+
+    if(pfpTrack.empty()) continue;
+
+    for(const art::Ptr<recob::Track> &trk: pfpTrack){
+     
+      std::vector< art::Ptr<anab::T0> > trkT0 = t0Assoc.at(trk.key());
+
+      if(trkT0.empty()) continue; //check crt hit t0 is reco'ed  
+    
+      if(!(this->TrackCrossesCpa(trk))) continue;
+
+      if(!(this->TrackCrossesApa(trk))) continue; //hit near anode
+     
+      crosser.push_back(pfp);
+    }
+  }
+  return crosser;
+} 
+
 //-----------------------------------------------------------------
 // Determine if a reconstructed track crosses the cpa
 
-bool sbnd::Select::TrackCrossesCpa(const art::Ptr<recob::Track> trk) const{
-  
+bool sbnd::Select::TrackCrossesCpa(const art::Ptr<recob::Track> trk) const
+{  
   for(size_t i = 0; i < trk->NPoints()-1; i++){
 
     geo::Point_t pos = trk->LocationAtPoint(i);
@@ -473,9 +663,8 @@ bool sbnd::Select::TrackCrossesCpa(const art::Ptr<recob::Track> trk) const{
     geo::Point_t pos1 = trk->LocationAtPoint(i+1);
     double x1 = pos1.X();
 
-    if(x <= -0.5 && x1 >= 0.5) return true;
-    if(x >= 0.5 && x1 <= -0.5) return true;
- 
+    if((-200 < x && x <= 0) && (0 <= x1 && x1 < 200)) return true;
+    if((-200 < x1 && x1 <= 0) && (0 <= x && x < 200)) return true;
     }
  
   return false;
@@ -483,8 +672,8 @@ bool sbnd::Select::TrackCrossesCpa(const art::Ptr<recob::Track> trk) const{
 //------------------------------------------------------------------
 // Determine if a reconstructed track crosses the apa 
 
-bool sbnd::Select::TrackCrossesApa(const art::Ptr<recob::Track> trk) const{
-
+bool sbnd::Select::TrackCrossesApa(const art::Ptr<recob::Track> trk) const
+{
   geo::Point_t Start = trk->Start();    
   geo::Point_t End = trk->End();
   
@@ -500,7 +689,8 @@ bool sbnd::Select::TrackCrossesApa(const art::Ptr<recob::Track> trk) const{
 //------------------------------------------------------------------
 // Determine if a true particle crosses the CPA within the detector volume
 
-bool sbnd::Select::MCParticleCrossesCpa(const simb::MCParticle& particle, const sbnd::TPCGeoAlg TPCGeo) const{  
+bool sbnd::Select::MCParticleCrossesCpa(const simb::MCParticle& particle, const sbnd::TPCGeoAlg TPCGeo) const
+{  
   for(size_t i = 0; i < particle.NumberTrajectoryPoints()-1; i++){
     double x = particle.Vx(i);
     double y = particle.Vy(i);
@@ -521,8 +711,8 @@ bool sbnd::Select::MCParticleCrossesCpa(const simb::MCParticle& particle, const 
 //------------------------------------------------------------------
 // Determine if a true particle, that crosses both APA & CPA, has min length squared > 50cm in TPC0
 
-double sbnd::Select::LengthTPC0(const simb::MCParticle& particle) const{
-
+double sbnd::Select::LengthTPC0(const simb::MCParticle& particle) const
+{
   TPCGeoAlg TPCGeo;
   bool first = true;
   double length = 0; 
@@ -554,8 +744,8 @@ double sbnd::Select::LengthTPC0(const simb::MCParticle& particle) const{
 //------------------------------------------------------------------
 // Determine if a true particle, that crosses both APA & CPA, has min length squared > 50cm in TPC1
 
-double sbnd::Select::LengthTPC1(const simb::MCParticle& particle) const{
-
+double sbnd::Select::LengthTPC1(const simb::MCParticle& particle) const
+{
   TPCGeoAlg TPCGeo;
   bool first = true;
   double length = 0; 
@@ -585,24 +775,48 @@ double sbnd::Select::LengthTPC1(const simb::MCParticle& particle) const{
 } 
 //------------------------------------------------------------------
 // Determine if a true particle, that crosses both APA & CPA, has min length squared > 50cm in both TPC
-bool sbnd::Select::MinLengthSquared(double lengthTPC0, double lengthTPC1) const{
-
+bool sbnd::Select::MinLengthSquared(double lengthTPC0, double lengthTPC1) const
+{
   //Stitching Cosmics rays requires min length squared 50cm on both TPC
 
   if(lengthTPC0*lengthTPC0 > 50 && lengthTPC1*lengthTPC1 > 50) return true;  
   return false;
 }
 
-//-------------------------------------------------------------------
+
+//---------------------------------------------------------------------  
+
+double sbnd::Select::GetHitTimeFromTPIndex_DetectorClock_ms(const std::vector< art::Ptr<recob::Hit>> hits, const double tpIndex, const detinfo::DetectorClocksData clockData) const
+{
+  for(const art::Ptr<recob::Hit> &hit: hits){
+    if(hit.key() == tpIndex){
+      return ( clockData.TPCTick2TrigTime( hit->PeakTime() ) / 1000 );   
+    } 
+  }
+ 
+  return -99999;// recob::Hit();//recob::Hit();
+
+}
+//------------------------------------------------------------------
+
 void sbnd::Select::clearPfpTree()
 {
   pfpEventID = 99999;
   pfpParticleID = 99999;
   pfpIsPrimary = 99999;
   pfpParticlePDG = 99999;
+  pfpT0 = 99999;
+  pfpT0Confidence = 99999;
   pfpTrackLength = 99999;
   pfpYZAngle = 99999;
   pfpXZAngle = 99999;
+  pfpDriftTime_0.clear();
+  pfpDriftTime_1.clear();
+  pfpDriftTime_2.clear();
+  pfpTPC2TrigTime_0.clear(); 
+  pfpTPC2TrigTime_1.clear(); 
+  pfpTPC2TrigTime_2.clear(); 
+  pfpTrajLocationX.clear();  
   pfpdQdx_0.clear();
   pfpX_0.clear();
   pfpY_0.clear();

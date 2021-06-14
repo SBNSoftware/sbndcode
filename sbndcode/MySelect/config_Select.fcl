@@ -5,7 +5,6 @@ Select:
 	TrackLabel: 		"pandoraTrack"
         PFParticleLabel: 	"pandora"
       	T0Label:		"pandora"
- 	SpacePointLabel:	"pandora"
 	HitLabel:		"pandoraTrack"
 	CalorimetryLabel:	"pandoraCalo"
 }

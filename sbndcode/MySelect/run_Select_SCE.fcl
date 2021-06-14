@@ -1,0 +1,68 @@
+#include "config_Select.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "scecorrections.fcl"
+#include "pandoramodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: Select
+
+source:
+{
+  module_type: 	RootInput
+  maxEvents: 	-1
+}
+
+services:
+{
+  TFileService: { fileName: "apa_cpa_0_cut_test.root" }
+  @table::sbnd_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService: @local::standard_backtrackerservice
+}
+
+physics:
+{
+  producers: 
+  {
+    pandoraSCE: @local::scecorrection
+    pandoraSCETrack: @local::sbnd_pandoraTrackCreation
+    pandoraSCECalo: @local::sbnd_gnewcalomc
+  }
+  analyzers:  
+  {
+    ana: @local::Select
+  }
+  path0: 	[ ana ]
+  reco: 	[ pandoraSCE, pandoraSCETrack, pandoraSCECalo ]
+  trigger_paths: [ reco ]
+  end_paths: 	[ path0 ]
+}
+
+# Stuff for running sce correction
+
+# Configure the SCE correction module
+physics.producers.pandoraSCE.CorrectSCE: false
+physics.producers.pandoraSCE.T0Labels: ["pandora","crthitt0"]
+physics.producers.pandoraSCE.T0LabelsCorrectT0: [false,true]
+
+# Set to correct Pandora
+physics.producers.pandoraSCETrack.PFParticleLabel: "pandoraSCE"
+
+# Set to correct Trak
+physics.producers.pandoraSCECalo.TrackModuleLabel: "pandoraSCETrack"
+
+# Turn off distortion
+physics.producers.pandoraSCECalo.FieldDistortion: false
+physics.producers.pandoraSCECalo.FieldDistortionEfield: false
+physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected: false
+
+# analyser label
+physics.analyzers.ana.TrackLabel: "pandoraSCETrack"
+physics.analyzers.ana.PFParticleLabel: "pandoraSCE"
+physics.analyzers.ana.T0Label: "pandoraSCE"
+physics.analyzers.ana.HitLabel: "pandoraSCETrack"
+physics.analyzers.ana.CalorimetryLabel: "pandoraSCECalo"
+
+# End of stuff for running sce correction
+
+#include "3drift_services_sbnd.fcl"
