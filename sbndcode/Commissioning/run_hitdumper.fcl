@@ -73,7 +73,7 @@ physics:
     # gaushit:             @local::sbnd_gaushitfinder
     fasthit:             @local::standard_fasthitfinder
     ophitpmt:            @local::sbnd_ophit_finder_pmt
-    # ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+    ophitarapuca:        @local::sbnd_ophit_finder_arapuca
 
   }
   analyzers:
@@ -85,7 +85,8 @@ physics:
   #filters reject all following items.  see lines starting physics.producers below
   reco2: [
     fasthit,
-    ophitpmt
+    ophitpmt,
+    ophitarapuca
   ]
 
   ana: [hitdumper]
