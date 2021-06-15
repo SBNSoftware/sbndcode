@@ -4,8 +4,8 @@ BEGIN_PROLOG
 
 sbnd_blipana:
 { 
-  module_type:              "BlipAna"
-  SomeLabel:               "gaushit"
+  module_type:        "BlipAna"
+  HitModuleLabel:     "gaushit"
 }
 
 END_PROLOG
