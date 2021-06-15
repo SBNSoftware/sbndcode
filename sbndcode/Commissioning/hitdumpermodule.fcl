@@ -12,7 +12,7 @@ hitdumper:
 
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
-    OpHitsModuleLabel:        "ophitpmt"
+    OpHitsModuleLabel:        ["ophitpmt", "ophitarapuca"]
     CRTHitModuleLabel:        "crthit"
     CRTStripModuleLabel:      "crt"
     CRTTrackModuleLabel:      "crttrack"

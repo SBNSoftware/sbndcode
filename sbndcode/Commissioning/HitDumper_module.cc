@@ -295,9 +295,9 @@ private:
   std::string fCRTStripModuleLabel; ///< Label for CRTStrip dataproduct (to be set via fcl)
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
-  std::string fOpHitsModuleLabel;   ///< Label for OpHit dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
+  std::vector<std::string> fOpHitsModuleLabels; ///< Labels for OpHit dataproducts (to be set via fcl)
 
   // double fSelectedPDG;
 
@@ -356,7 +356,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTStripModuleLabel = p.get<std::string>("CRTStripModuleLabel", "crt");
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
-  fOpHitsModuleLabel   = p.get<std::string>("OpHitsModuleLabel");
+  fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
@@ -764,43 +764,51 @@ void Hitdumper::analyze(const art::Event& evt)
   // Optical Hits
   //
   if (freadOpHits) {
-    art::Handle< std::vector<recob::OpHit> > ophitListHandle;
-    std::vector<art::Ptr<recob::OpHit> > ophitlist;
-    if (evt.getByLabel(fOpHitsModuleLabel, ophitListHandle)) {
-      art::fill_ptr_vector(ophitlist, ophitListHandle);
-      _nophits = ophitlist.size();
-    }
-    else {
-      std::cout << "Failed to get recob::OpHit data product." << std::endl;
-      _nophits = 0;
-    }
+    _nophits = 0;
+    size_t previous_nophits = 0;
 
-    if (_nophits > _max_ophits) {
-      std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
-      std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
-      _nophits = _max_ophits;
-    }
+    // Loop over all the ophits labels
+    for (auto ophit_label : fOpHitsModuleLabels) {
 
-    ResetOpHitsVars(_nophits);
+      art::Handle<std::vector<recob::OpHit>> ophitListHandle;
+      std::vector<art::Ptr<recob::OpHit>> ophitlist;
+      if (evt.getByLabel(ophit_label, ophitListHandle)) {
+        art::fill_ptr_vector(ophitlist, ophitListHandle);
+        _nophits += ophitlist.size();
+      }
+      else {
+        std::cout << "Failed to get recob::OpHit data product." << std::endl;
+      }
 
-    for (int i = 0; i < _nophits; ++i) {
-      _ophit_opch[i] = ophitlist.at(i)->OpChannel();
-      _ophit_opdet[i] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
-      _ophit_peakT[i] = ophitlist.at(i)->PeakTime();
-      _ophit_width[i] = ophitlist.at(i)->Width();
-      _ophit_area[i] = ophitlist.at(i)->Area();
-      _ophit_amplitude[i] = ophitlist.at(i)->Amplitude();
-      _ophit_pe[i] = ophitlist.at(i)->PE();
-      auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
-      _ophit_opdet_x[i] = opdet_center.X();
-      _ophit_opdet_y[i] = opdet_center.Y();
-      _ophit_opdet_z[i] = opdet_center.Z();
-      auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
-      if (pd_type == "pmt_coated") {_ophit_opdet_type[i] = kPMTCoated;}
-      else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[i] = kPMTUnCoated;}
-      else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[i] = kXArapucaVis;}
-      else if (pd_type == "xarapuca_vuv") {_ophit_opdet_type[i] = kXArapucaVuv;}
-      else {_ophit_opdet_type[i] = kPDNotDefined;}
+      if (_nophits > _max_ophits) {
+        std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
+        std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
+        _nophits = _max_ophits;
+      }
+
+      ResetOpHitsVars(_nophits);
+
+      for (size_t i = 0; i < ophitlist.size(); ++i) {
+        size_t index = previous_nophits + i;
+        _ophit_opch[index] = ophitlist.at(i)->OpChannel();
+        _ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+        _ophit_peakT[index] = ophitlist.at(i)->PeakTime();
+        _ophit_width[index] = ophitlist.at(i)->Width();
+        _ophit_area[index] = ophitlist.at(i)->Area();
+        _ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
+        _ophit_pe[index] = ophitlist.at(i)->PE();
+        auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
+        _ophit_opdet_x[index] = opdet_center.X();
+        _ophit_opdet_y[index] = opdet_center.Y();
+        _ophit_opdet_z[index] = opdet_center.Z();
+        auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
+        if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
+        else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
+        else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
+        else if (pd_type == "xarapuca_vuv") {_ophit_opdet_type[index] = kXArapucaVuv;}
+        else {_ophit_opdet_type[index] = kPDNotDefined;}
+      }
+      previous_nophits = _nophits;
     }
   }
 
@@ -1246,17 +1254,17 @@ void Hitdumper::ResetCRTHitsVars(int n) {
 }
 
 void Hitdumper::ResetOpHitsVars(int n) {
-  _ophit_opch.assign(n, DEFAULT_VALUE);
-  _ophit_opdet.assign(n, DEFAULT_VALUE);
-  _ophit_peakT.assign(n, DEFAULT_VALUE);
-  _ophit_width.assign(n, DEFAULT_VALUE);
-  _ophit_area.assign(n, DEFAULT_VALUE);
-  _ophit_amplitude.assign(n, DEFAULT_VALUE);
-  _ophit_pe.assign(n, DEFAULT_VALUE);
-  _ophit_opdet_x.assign(n, DEFAULT_VALUE);
-  _ophit_opdet_y.assign(n, DEFAULT_VALUE);
-  _ophit_opdet_z.assign(n, DEFAULT_VALUE);
-  _ophit_opdet_type.assign(n, DEFAULT_VALUE);
+  _ophit_opch.resize(n, DEFAULT_VALUE);
+  _ophit_opdet.resize(n, DEFAULT_VALUE);
+  _ophit_peakT.resize(n, DEFAULT_VALUE);
+  _ophit_width.resize(n, DEFAULT_VALUE);
+  _ophit_area.resize(n, DEFAULT_VALUE);
+  _ophit_amplitude.resize(n, DEFAULT_VALUE);
+  _ophit_pe.resize(n, DEFAULT_VALUE);
+  _ophit_opdet_x.resize(n, DEFAULT_VALUE);
+  _ophit_opdet_y.resize(n, DEFAULT_VALUE);
+  _ophit_opdet_z.resize(n, DEFAULT_VALUE);
+  _ophit_opdet_type.resize(n, DEFAULT_VALUE);
 }
 
 
