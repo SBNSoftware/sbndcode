@@ -91,7 +91,6 @@ private:
   float                  fInductionPed;     ///< ADC value of baseline for induction plane
   float                  fCollectionSat;    ///< ADC value of pre-amp saturation for collection plane
   float                  fInductionSat;     ///< ADC value of pre-amp saturation for induction plane
-  float                  fAdcSaturation;    ///< ADC saturation value
   float                  fBaselineRMS;      ///< ADC value of baseline RMS within each channel
   TH1D*                  fNoiseDist;        ///< distribution of noise counts
   bool                   fGenNoise;         ///< if True -> Gen Noise. if False -> Skip noise generation entierly
@@ -101,7 +100,7 @@ private:
   std::string fTrigModName;                 ///< Trigger data product producer name
   //define max ADC value - if one wishes this can
   //be made a fcl parameter but not likely to ever change
-  //static constexpr float adcsaturation{4095};
+  static constexpr float adcsaturation{4095};
 
   //CLHEP::HepRandomEngine& fNoiseEngine;
   CLHEP::HepRandomEngine& fPedestalEngine;
@@ -142,7 +141,6 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   fCollectionSat     = p.get< float               >("CollectionSat",2922.);
   fInductionSat      = p.get< float               >("InductionSat",1247.);
   fBaselineRMS       = p.get< float               >("BaselineRMS");
-  fAdcSaturation     = p.get< float               >("AdcSaturation",4095);
   fTrigModName       = p.get< std::string         >("TrigModName");
 
   //Map the Shaping times to the entry position for the noise ADC
@@ -316,8 +314,8 @@ void SimWireSBND::produce(art::Event& evt)
         fNoiseDist->Fill(noisetmp.at(i));
 
       //allow for ADC saturation
-      if ( adcval > fAdcSaturation )
-        adcval = fAdcSaturation;
+      if ( adcval > adcsaturation )
+        adcval = adcsaturation;
       //don't allow for "negative" saturation
       if ( adcval < 0 )
         adcval = 0;
