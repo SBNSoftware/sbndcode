@@ -85,7 +85,6 @@ private:
   raw::Compress_t        fCompression;      ///< compression type to use
 
   size_t                 fNTicks;           ///< number of ticks of the clock
-  double                 fSampleRate;       ///< sampling rate in ns
   unsigned int           fNTimeSamples;     ///< number of ADC readout samples in all readout frames (per event)
   float                  fCollectionPed;    ///< ADC value of baseline for collection plane
   float                  fInductionPed;     ///< ADC value of baseline for induction plane
