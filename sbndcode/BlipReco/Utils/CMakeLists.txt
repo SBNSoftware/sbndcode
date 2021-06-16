@@ -1,5 +1,5 @@
-art_make(
-          MODULE_LIBRARIES larcorealg_Geometry
+art_make(    LIBRARY_NAME sbndcode_BlipUtils
+             LIB_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
                            larsim_MCCheater_BackTrackerService_service
@@ -8,14 +8,10 @@ art_make(
                            larevt_Filters
                            lardataobj_RawData
                            lardataobj_RecoBase
-                           larreco_Calorimetry
-                           larreco_RecoAlg
                            lardata_RecoObjects  
                            larpandora_LArPandoraInterface
-                           sbndcode_CRTUtils
-                           sbndcode_CRT
-                           sbnobj_Common_CRT
                            nusimdata_SimulationBase
+                           cetlib cetlib_except
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
                            ${ART_FRAMEWORK_SERVICES_REGISTRY}
@@ -31,13 +27,10 @@ art_make(
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}
                            ${ROOT_BASIC_LIB_LIST}
-                           sbndcode_RecoUtils
-                           sbndcode_BlipUtils
-                           sbndcode_OpDetSim
+                           ${Boost_SYSTEM_LIBRARY}
         )
 
-# install_headers()
-add_subdirectory(Utils)
+install_headers()
 install_fhicl()
 install_source()
 

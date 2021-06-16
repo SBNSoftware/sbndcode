@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////////////////
 // 
 ////////////////////////////////////////////////////////////////////////
-
 #ifndef BLIPANA_H
 #define BLIPANA_H
 
@@ -59,6 +58,7 @@
 //########################
 //### SBNDCode includes###
 //########################
+#include "sbndcode/BlipReco/Utils/BlipUtils.h"
 #include "sbndcode/RecoUtils/RecoUtils.h"
 
 //########################
@@ -87,19 +87,6 @@
 const int kNplanes  = 3;  
 const int kMaxHits  = 25000;
 
-// Helper templates for initializing arrays
-namespace{  
-  template <typename ITER, typename TYPE> 
-    inline void FillWith(ITER from, ITER to, TYPE value) 
-    { std::fill(from, to, value); }
-  template <typename ITER, typename TYPE> 
-    inline void FillWith(ITER from, size_t n, TYPE value)
-    { std::fill(from, from + n, value); }
-  template <typename CONT, typename V>
-    inline void FillWith(CONT& data, const V& value)
-    { FillWith(std::begin(data), std::end(data), value); }
-}
-
 namespace sbnd { 
   
   //====================================================
@@ -118,7 +105,6 @@ namespace sbnd {
 
     // --- Hit information ---
     int	  nhits;                    // number of hits
-    int   hit_id[kMaxHits];         // hit ID/key (in case only subset of hits are saved)
     int	  hit_tpc[kMaxHits];        // tpc number
     int	  hit_plane[kMaxHits];      // plane number
     int	  hit_wire[kMaxHits];       // wire number
@@ -127,19 +113,18 @@ namespace sbnd {
     float hit_rms[kMaxHits];        // shape RMS
     float	hit_ph[kMaxHits];         // amplitude
     float	hit_area[kMaxHits];       // charge (area) in ADC units
+    float hit_charge[kMaxHits];     // reconstructed number of electrons
     int	  hit_trkid[kMaxHits];      // is this hit associated with a reco track?
     int	  hit_mcid[kMaxHits];       // G4 TrackID of leading MCParticle that created the hit
     float hit_mcfrac[kMaxHits];     // fraction of hit energy from leading MCParticle
     float hit_mcenergy[kMaxHits];   // true energy
     float hit_mccharge[kMaxHits];   // true number of electrons (drift-attenuated)
-    float hit_charge[kMaxHits];     // reconstructed number of electrons
 
     // === Function for resetting data ===
     void Clear(){ 
       event     = -9;
       run       = -9;
       nhits     = 0;
-      FillWith(hit_id,      -999);
       FillWith(hit_tpc,     -999);
       FillWith(hit_plane,   -999);
       FillWith(hit_wire,    -999);
@@ -163,7 +148,6 @@ namespace sbnd {
       tree->Branch("event",&event,"event/I");
       tree->Branch("run",&run,"run/I");
       tree->Branch("nhits",nhits,"nhits/I");
-      tree->Branch("hit_id",hit_id,"hit_id[nhits]/I"); 
       tree->Branch("hit_tpc",hit_tpc,"hit_tpc[nhits]/I"); 
       tree->Branch("hit_plane",hit_plane,"hit_plane[nhits]/I"); 
       tree->Branch("hit_wire",hit_wire,"hit_wire[nhits]/I"); 
@@ -201,11 +185,20 @@ namespace sbnd {
 
     private:
 
-    // --- Tree data struct ---
+    // --- Data and calo alg objects ---
     BlipAnaTreeDataStruct*  fData;
+    calo::CalorimetryAlg    fCaloAlg;
+    
+    // --- ParticleInventoryService ---
+    //art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
+
+    // --- BackTrackerService ---
+    //art::ServiceHandle<cheat::BackTrackerService> bt_serv;
 
     // --- FCL configs ---
-    std::string   _hitModuleLabel;
+    std::string   fHitModuleLabel;
+    std::string   fLArG4ModuleLabel;
+    std::string   fTrackModuleLabel;
 
     // --- Histograms ---
     TH1F*         h_nhits;
@@ -221,12 +214,17 @@ namespace sbnd {
 }//namespace sbnd
 
 
+
 //====================================================
 //  BlipAna constructor and destructor
 //====================================================
 sbnd::BlipAna::BlipAna(fhicl::ParameterSet const& pset) : 
-  EDAnalyzer(pset),fData(nullptr),
-  _hitModuleLabel(pset.get<std::string>("HitModuleLabel","gaushit"))
+  EDAnalyzer(pset)
+  ,fData(nullptr)
+  ,fCaloAlg(pset.get< fhicl::ParameterSet >("CaloAlg"))
+  ,fHitModuleLabel(pset.get<std::string>("HitModuleLabel","gaushit"))
+  ,fLArG4ModuleLabel(pset.get<std::string>("LArG4ModuleLabel","largeant"))
+  ,fTrackModuleLabel(pset.get<std::string>("TrackModuleLabel","pandora"))
 {
   fData = new BlipAnaTreeDataStruct();
   fData ->Clear();
@@ -234,6 +232,7 @@ sbnd::BlipAna::BlipAna(fhicl::ParameterSet const& pset) :
   InitializeHistograms();
 }
 sbnd::BlipAna::~BlipAna(){}
+
 
 
 //====================================================
@@ -249,12 +248,69 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   // Event information
   fData->event  = evt.id().event();
   fData->run    = evt.id().run();
+  bool isMC     = !evt.isRealData();
+ 
+  //----------------------------------
+  // Get data products for this event
+  //---------------------------------- 
+  // * SimChannels
+  std::vector<const sim::SimChannel*> simChannels;
+  if (isMC) evt.getView(fLArG4ModuleLabel, simChannels);
+  // * Hits
+  art::Handle< std::vector<recob::Hit> > hitListHandle;
+  std::vector<art::Ptr<recob::Hit> > hitlist;
+  if (evt.getByLabel(fHitModuleLabel,hitListHandle))
+    art::fill_ptr_vector(hitlist, hitListHandle);
+  // * Tracks
+  art::Handle< std::vector<recob::Track> > tracklistHandle;
+  std::vector<art::Ptr<recob::Track> > tracklist;
+  if (evt.getByLabel(fTrackModuleLabel,tracklistHandle))
+    art::fill_ptr_vector(tracklist, tracklistHandle);
+  // * Hit <--> Track associations
+  art::FindManyP<recob::Track> fmtk(hitListHandle,evt,fTrackModuleLabel);
 
-  
+  //-------------------------------
+  // Save hit information
+  //------------------------------ 
+  fData->nhits = (int)hitlist.size();
+  for(size_t i=0; i<hitlist.size(); i++){
+    fData->hit_tpc[i]     = hitlist[i]->WireID().TPC;
+    fData->hit_channel[i] = hitlist[i]->Channel();
+    fData->hit_plane[i]   = hitlist[i]->WireID().Plane;
+    fData->hit_wire[i]    = hitlist[i]->WireID().Wire;
+    fData->hit_peakT[i]   = hitlist[i]->PeakTime();
+    fData->hit_rms[i]     = hitlist[i]->RMS();
+    fData->hit_ph[i]	    = hitlist[i]->PeakAmplitude();
+    fData->hit_area[i]    = hitlist[i]->Integral();
+    fData->hit_charge[i]  = fCaloAlg.ElectronsFromADCArea(hitlist[i]->Integral(),hitlist[i]->WireID().Plane);
+    // mcid, mcfrac, mcenergy, mccharge
+
+    // Associated track
+    if (fmtk.isValid()){
+      if (fmtk.at(i).size())  fData->hit_trkid[i] = fmtk.at(i)[0]->ID();
+      else                    fData->hit_trkid[i] = -1;
+    }
+    
+    // Find G4 particle ID for leading contributor to this hit
+    if( BlipUtils::DoesHitHaveSimChannel(simChannels,hitlist[i]) ) {
+      BlipUtils::HitTruth( hitlist[i], fData->hit_mcid[i], fData->hit_mcfrac[i], fData->hit_mcenergy[i], fData->hit_charge[i]);
+    }
+
+  }//endloop hits
+
+  // Procedure
+  //  - Look for hits that were not included in a track
+  //  - Plane-to-plane time matching
+  //  - Wire intersection check to get XYZ
+  //  - Create "blip" object and save to tree (nblips, blip_xyz, blip_charge, blip_mcenergy)
 
   // Fill TTree
   fData->FillTree();
 }
+
+
+
+
 
 DEFINE_ART_MODULE(sbnd::BlipAna)
 

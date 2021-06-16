@@ -6,6 +6,9 @@ sbnd_blipana:
 { 
   module_type:        "BlipAna"
   HitModuleLabel:     "gaushit"
+  LArG4ModuleLabel:   "largeant"
+  TrackModuleLabel:   "pandora"
+  CaloAlg:		        @local::sbnd_calorimetryalgmc
 }
 
 END_PROLOG
