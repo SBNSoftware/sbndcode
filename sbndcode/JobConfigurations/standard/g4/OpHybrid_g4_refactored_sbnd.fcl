@@ -53,11 +53,12 @@ services:
        category      : "world"
        #List of volumes where Ionization/scintillation are simulated (i.e. material = "LAr")
        #Volumes used by the Hybrid Model
+       #Warning: make sure that names of LAr volumes are correct regarding the geometry used
        volumeNames   : ["volTPCActive", "volCryostat", "volTPCPlaneVert","volXArapuca","volPMT","volFieldCage","volPDSstructure"]
-       # Corresponding stepLimits in mm for the volumes in the volumeNames list
+       #Corresponding stepLimits in mm for the volumes in the volumeNames list
        stepLimits    : [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3] 
-      #gdmlFileName_ : "sbnd_v02_00_nowires.gdml"
-       gdmlFileName_ : "sbnd_v02_00.gdml"
+       gdmlFileName_ : "sbnd_v02_00_nowires.gdml"
+      
       }
     
     MCTruthEventAction:  
@@ -177,12 +178,9 @@ outputs:
     }
 }
 
-services.LArPropertiesService.ScintPreScale: 1
 
 services.LArG4Parameters.UseLitePhotons: true   # true = produce SimPhotonsLite and OpDetBacktrackerRecord, false = produce SimPhotons
+services.LArG4Parameters.UseModLarqlRecomb: true
 
- services.LArG4Parameters.UseModLarqlRecomb: false
-
-services.Geometry.GDML: "sbnd_v02_00.gdml"
 services.AuxDetGeometry.GDML: "sbnd_v02_00.gdml"
 services.Geometry.DisableWiresInG4: false
