@@ -46,6 +46,7 @@ namespace filt{
       std::vector<double> fMaxMomentums;
       std::string fLArG4ModuleName;
       bool fUseReadoutWindow;
+      bool fUseTightReadoutWindow;
       bool fUseTPC;
 
       geo::GeometryCore const* fGeometryService;
@@ -68,8 +69,15 @@ namespace filt{
     fGeometryService = lar::providerFrom<geo::Geometry>();
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
-    readoutWindow  = clockData.TPCTick2Time((double)detProp.ReadOutWindowSize()); // [us]
+    double rw_ticks = detProp.ReadOutWindowSize();
+    double inv_samp_freq = clockData.TPCClock().Frequency();
+    readoutWindow  = rw_ticks/inv_samp_freq;
+    // the function TPCTick2Time does not do what you think it does!  
+    //     It converts ticks to absolute time where 0 is the trigger time and not the start of the readout 
+    //     window, so if there is a front porch, this value is larger than the actually readout window
+    // readoutWindow  = clockData.TPCTick2Time(static_cast<double>(detProp.ReadOutWindowSize())); // [us]
     driftTime = (2.*fGeometryService->DetHalfWidth())/detProp.DriftVelocity(); // [us]
+    std::cout << "readout window is " << readoutWindow << " us and drift time is " << driftTime << " us "<< std::endl;
   }
 
 
@@ -86,6 +94,7 @@ namespace filt{
     fMaxMomentums = pset.get<std::vector<double> >("MaxMomentums");
     fLArG4ModuleName = pset.get<std::string>("LArG4ModuleName");
     fUseReadoutWindow = pset.get<bool>("UseReadoutWindow");
+    fUseTightReadoutWindow = pset.get<bool>("UseTightReadoutWindow");
     fUseTPC = pset.get<bool>("UseTPC");
   }
 
@@ -112,6 +121,9 @@ namespace filt{
         double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/detProp.DriftVelocity();
         // If both times are below or above the readout window time then skip
         if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
+      }
+      if (fUseTightReadoutWindow) {
+	if (time<0 || time>(readoutWindow-driftTime)) continue;
       }
       if (fUseTPC && !EntersTPC(particle)) continue;
       if (fUseTopHighCRTs){

@@ -101,6 +101,7 @@ namespace sbnd {
     // Call appropriate produces<>() functions here.
     produces< std::vector<anab::T0>               >();
     produces< art::Assns<recob::Track , anab::T0> >();
+    //    produces< art::Assns<anab::T0, sbn::crt::CRTHit >();
     
     reconfigure(p);
 
@@ -127,6 +128,7 @@ namespace sbnd {
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
+    //    std::unique_ptr< art::Assns <anab::T0, sbn::crt::CRTHit > > t0_crthit_assn( new art::Assns<anab::T0, sbn::crt::CRTHit > );
 
     // Retrieve CRT hit list
     art::Handle<std::vector<sbn::crt::CRTHit>> crtListHandle;
@@ -155,14 +157,24 @@ namespace sbnd {
       // Loop over all the reconstructed tracks 
       for(size_t track_i = 0; track_i < trackList.size(); track_i++) {
 
-        // Get the closest matched time
-        std::pair<double, double> matchedTime = t0Alg.T0AndDCAFromCRTHits(detProp, *trackList[track_i], crtHits, event);
-        if(matchedTime.first != -99999){
+        // std::pair<double, double> matchedTime = t0Alg.T0AndDCAFromCRTHits(detProp, *trackList[track_i], crtHits, event);
+	matchCand closest = t0Alg.GetClosestCRTHit(detProp, *trackList[track_i], crtHits, event);
+	
+        if(closest.dca >=0 ){
           mf::LogInfo("CRTT0Matching")
-            <<"Matched time = "<<matchedTime.first<<" [us] to track "<<trackList[track_i]->ID()<<" with DCA = "<<matchedTime.second;
-          T0col->push_back(anab::T0(matchedTime.first * 1e3, 0, trackList[track_i]->ID(), (*T0col).size(), matchedTime.second));
+            <<"Matched time = "<<closest.t0<<" [us] to track "<<trackList[track_i]->ID()<<" with DCA = "<<closest.dca;
+          T0col->push_back(anab::T0(closest.t0*1e3, trackList[track_i]->ID(),  closest.thishit.plane, (int)closest.extrapLen, closest.dca));
           util::CreateAssn(*this, event, *T0col, trackList[track_i], *Trackassn);
-        }
+	  //find this CRThit in the collection
+ // note this does not work (both the loop and the assoc !!)
+	  // int CRThitIndex = -1;
+	  // for (int ic=0; ic<crtList.size(); ++ic){	    
+	  //   if (crtList[ic].ts0_ns==closest.thishit.ts0_ns && crtList[ic].z_pos==closest.thishit.z_pos && crtList[ic].peshit==closest.thishit.peshit)
+	  //     CRThitIndex=ic;
+	  // }
+	  //	  if (CRThitIndex>=0)           util::CreateAssn(*this, event, *T0col, *crtList[CRThitIndex], *t0_crthit_assn);
+
+	}
 
       } // Loop over tracks  
 
@@ -170,6 +182,7 @@ namespace sbnd {
    
     event.put(std::move(T0col));
     event.put(std::move(Trackassn));
+    //    event.put(std::move(t0_crthit_assn));
     
   } // CRTT0Matching::produce()
 

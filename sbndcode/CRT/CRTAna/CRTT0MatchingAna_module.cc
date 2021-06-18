@@ -1,3 +1,4 @@
+
 ////////////////////////////////////////////////////////////////////////
 // Class:       CRTT0MatchingAnaAna
 // Module Type: analyzer
@@ -134,13 +135,25 @@ namespace sbnd {
     std::map<std::string, TH1D*> hMatchDCA;
     std::map<std::string, TH1D*> hNoMatchDCA;
 
+    std::map<std::string, TH1D*> hDoL;
+    std::map<std::string, TH1D*> hMatchDoL;
+    std::map<std::string, TH1D*> hNoMatchDoL;
+
+    std::map<std::string, TH1D*> hT0;
+    std::map<std::string, TH1D*> hMatchT0;
+    std::map<std::string, TH1D*> hNoMatchT0;
+
     std::map<std::string, TH1D*> hEffDCATotal;
     std::map<std::string, TH1D*> hEffDCAReco;
+    std::map<std::string, TH1D*> hEffDoLTotal;
+    std::map<std::string, TH1D*> hEffDoLReco;
     std::map<std::string, TH1D*> hEffLengthTotal;
     std::map<std::string, TH1D*> hEffLengthReco;
 
     std::map<std::string, TH1D*> hPurityDCATotal;
     std::map<std::string, TH1D*> hPurityDCAReco;
+    std::map<std::string, TH1D*> hPurityDoLTotal;
+    std::map<std::string, TH1D*> hPurityDoLReco;
     std::map<std::string, TH1D*> hPurityLengthTotal;
     std::map<std::string, TH1D*> hPurityLengthReco;
 
@@ -174,14 +187,26 @@ namespace sbnd {
       hDCA[tagger]        = tfs->make<TH1D>(Form("DCA_%s", tagger.c_str()),        "", 50, 0, 100);
       hMatchDCA[tagger]   = tfs->make<TH1D>(Form("MatchDCA_%s", tagger.c_str()),   "", 50, 0, 100);
       hNoMatchDCA[tagger] = tfs->make<TH1D>(Form("NoMatchDCA_%s", tagger.c_str()), "", 50, 0, 100);
+
+      hDoL[tagger]        = tfs->make<TH1D>(Form("DoL_%s", tagger.c_str()),        "", 100, 0, 0.25);
+      hMatchDoL[tagger]   = tfs->make<TH1D>(Form("MatchDoL_%s", tagger.c_str()),   "", 100, 0, 0.25);
+      hNoMatchDoL[tagger] = tfs->make<TH1D>(Form("NoMatchDoL_%s", tagger.c_str()), "", 100, 0, 0.25);
       
-      hEffDCATotal[tagger] = tfs->make<TH1D>(Form("EffDCATotal_%s", tagger.c_str()), "", 20, 0, 80);
-      hEffDCAReco[tagger]  = tfs->make<TH1D>(Form("EffDCAReco_%s", tagger.c_str()),  "", 20, 0, 80);
+      hT0[tagger]        = tfs->make<TH1D>(Form("T0_%s", tagger.c_str()),        "", 600, -3000, 3000);
+      hMatchT0[tagger]   = tfs->make<TH1D>(Form("MatchT0_%s", tagger.c_str()),   "", 600, -3000, 3000);
+      hNoMatchT0[tagger] = tfs->make<TH1D>(Form("NoMatchT0_%s", tagger.c_str()), "", 600, -3000, 3000);
+      
+      hEffDCATotal[tagger] = tfs->make<TH1D>(Form("EffDCATotal_%s", tagger.c_str()), "", 50, 0, 100);
+      hEffDCAReco[tagger]  = tfs->make<TH1D>(Form("EffDCAReco_%s", tagger.c_str()),  "", 50, 0, 100);
+      hEffDoLTotal[tagger] = tfs->make<TH1D>(Form("EffDoLTotal_%s", tagger.c_str()), "", 100, 0, 0.25);
+      hEffDoLReco[tagger]  = tfs->make<TH1D>(Form("EffDoLReco_%s", tagger.c_str()),  "", 100, 0, 0.25);
       hEffLengthTotal[tagger] = tfs->make<TH1D>(Form("EffLengthTotal_%s", tagger.c_str()), "", 20, 0, 600);
       hEffLengthReco[tagger]  = tfs->make<TH1D>(Form("EffLengthReco_%s", tagger.c_str()),  "", 20, 0, 600);
     
-      hPurityDCATotal[tagger] = tfs->make<TH1D>(Form("PurityDCATotal_%s", tagger.c_str()), "", 20, 0, 80);
-      hPurityDCAReco[tagger]  = tfs->make<TH1D>(Form("PurityDCAReco_%s", tagger.c_str()),  "", 20, 0, 80);
+      hPurityDCATotal[tagger] = tfs->make<TH1D>(Form("PurityDCATotal_%s", tagger.c_str()), "", 50, 0, 100);
+      hPurityDCAReco[tagger]  = tfs->make<TH1D>(Form("PurityDCAReco_%s", tagger.c_str()),  "", 50, 0, 100);
+      hPurityDoLTotal[tagger] = tfs->make<TH1D>(Form("PurityDoLTotal_%s", tagger.c_str()), "", 100, 0, 0.25);
+      hPurityDoLReco[tagger]  = tfs->make<TH1D>(Form("PurityDoLReco_%s", tagger.c_str()),  "", 100, 0, 0.25);
       hPurityLengthTotal[tagger] = tfs->make<TH1D>(Form("PurityLengthTotal_%s", tagger.c_str()), "", 20, 0, 600);
       hPurityLengthReco[tagger]  = tfs->make<TH1D>(Form("PurityLengthReco_%s", tagger.c_str()),  "", 20, 0, 600);
     }
@@ -259,6 +284,7 @@ namespace sbnd {
       }
     }
 
+    //    std::cout << " New event" << std::endl;
     //----------------------------------------------------------------------------------------------------------
     //                                DISTANCE OF CLOSEST APPROACH ANALYSIS
     //----------------------------------------------------------------------------------------------------------
@@ -279,23 +305,38 @@ namespace sbnd {
       double trueTime = particles[trackTrueID].T() * 1e-3;
       if(trueTime < minHitTime || trueTime > maxHitTime) continue;
 
+      //      std::cout << "new track " << trueTime << std::endl;
       // Calculate t0 from CRT Hit matching
-      std::pair<sbn::crt::CRTHit, double> closest = t0Alg.ClosestCRTHit(detProp, tpcTrack, crtHits, event);
-      if(closest.second != -99999){ 
-        hDCA[closest.first.tagger]->Fill(closest.second);
-        hDCA["All"]->Fill(closest.second);
-      }
+      matchCand closest = t0Alg.GetClosestCRTHit(detProp, tpcTrack, crtHits, event);
+      //      std::cout << "closest match " << closest.t0 << std::endl;
+      double sin_angle = -99999;
+      if(closest.dca != -99999){ 
+        hDCA[closest.thishit.tagger]->Fill(closest.dca);
+        hDCA["All"]->Fill(closest.dca);
+	sin_angle = closest.dca/closest.extrapLen;
+        hDoL[closest.thishit.tagger]->Fill(sin_angle);
+        hDoL["All"]->Fill(sin_angle);	
+	hT0[closest.thishit.tagger]->Fill(closest.t0);
+	hT0["All"]->Fill(closest.t0);
+
 
       // Is hit matched to that track
-      if(closest.second != -99999){
-        int hitTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closest.first);
+        int hitTrueID = fCrtBackTrack.TrueIdFromTotalEnergy(event, closest.thishit);
         if(hitTrueID == trackTrueID && hitTrueID != -99999){
-          hMatchDCA[closest.first.tagger]->Fill(closest.second);
-          hMatchDCA["All"]->Fill(closest.second);
+          hMatchDCA[closest.thishit.tagger]->Fill(closest.dca);
+          hMatchDCA["All"]->Fill(closest.dca);
+	  hMatchDoL[closest.thishit.tagger]->Fill(sin_angle);
+	  hMatchDoL["All"]->Fill(sin_angle);	
+	  hMatchT0[closest.thishit.tagger]->Fill(closest.t0);
+	  hMatchT0["All"]->Fill(closest.t0);
         }
         else{
-          hNoMatchDCA[closest.first.tagger]->Fill(closest.second);
-          hNoMatchDCA["All"]->Fill(closest.second);
+          hNoMatchDCA[closest.thishit.tagger]->Fill(closest.dca);
+          hNoMatchDCA["All"]->Fill(closest.dca);
+	  hNoMatchDoL[closest.thishit.tagger]->Fill(sin_angle);
+	  hNoMatchDoL["All"]->Fill(sin_angle);	
+	  hNoMatchT0[closest.thishit.tagger]->Fill(closest.t0);
+	  hNoMatchT0["All"]->Fill(closest.t0);
         }
       }
 
@@ -309,28 +350,67 @@ namespace sbnd {
             hEffDCATotal[tagger]->Fill(DCAcut);
 
             // If closest hit is below limit and track matches any hits then fill efficiency
-            if(closest.second < DCAcut && closest.second != -99999){
+            if(closest.dca < DCAcut && closest.dca != -99999){
               hEffDCAReco[tagger]->Fill(DCAcut);
             }
           }
           // Fill total efficiency histograms
           hEffDCATotal["All"]->Fill(DCAcut);
-          if(closest.second < DCAcut && closest.second != -99999){
+          if(closest.dca < DCAcut && closest.dca != -99999){
             hEffDCAReco["All"]->Fill(DCAcut);
           }
         }
 
         // Fill total purity histogram with each cut if closest hit is below limit
-        if(closest.second < DCAcut && closest.second != -99999){
-          hPurityDCATotal[closest.first.tagger]->Fill(DCAcut);
+        if(closest.dca < DCAcut && closest.dca != -99999){
+          hPurityDCATotal[closest.thishit.tagger]->Fill(DCAcut);
           hPurityDCATotal["All"]->Fill(DCAcut);
 
           // If closest hit is below limit and matched time is correct then fill purity
-          double hitTime = closest.first.ts1_ns * 1e-3;
+          double hitTime = closest.thishit.ts1_ns * 1e-3;
           if(particles.find(trackTrueID) != particles.end()){
             if(std::abs(hitTime - trueTime) < 2.){
-              hPurityDCAReco[closest.first.tagger]->Fill(DCAcut);
+              hPurityDCAReco[closest.thishit.tagger]->Fill(DCAcut);
               hPurityDCAReco["All"]->Fill(DCAcut);
+            }
+          }
+
+        }
+      }
+
+      nbins = hEffDoLTotal.begin()->second->GetNbinsX();
+      
+      for(int i = 0; i < nbins; i++){
+        double DCAcut = hEffDoLTotal.begin()->second->GetBinCenter(i);
+
+        // Fill total efficiency histogram with each cut if track matches any hits
+        if(crtTaggerMap.find(trackTrueID) != crtTaggerMap.end()){
+          for(auto const& tagger : crtTaggerMap[trackTrueID]){
+            hEffDoLTotal[tagger]->Fill(DCAcut);
+
+            // If closest hit is below limit and track matches any hits then fill efficiency
+            if(sin_angle < DCAcut && closest.dca != -99999){
+              hEffDoLReco[tagger]->Fill(DCAcut);
+            }
+          }
+          // Fill total efficiency histograms
+          hEffDoLTotal["All"]->Fill(DCAcut);
+          if(sin_angle < DCAcut && closest.dca != -99999){
+            hEffDoLReco["All"]->Fill(DCAcut);
+          }
+        }
+
+        // Fill total purity histogram with each cut if closest hit is below limit
+        if(sin_angle < DCAcut && closest.dca != -99999){
+          hPurityDoLTotal[closest.thishit.tagger]->Fill(DCAcut);
+          hPurityDoLTotal["All"]->Fill(DCAcut);
+
+          // If closest hit is below limit and matched time is correct then fill purity
+          double hitTime = closest.thishit.ts1_ns * 1e-3;
+          if(particles.find(trackTrueID) != particles.end()){
+            if(std::abs(hitTime - trueTime) < 2.){
+              hPurityDoLReco[closest.thishit.tagger]->Fill(DCAcut);
+              hPurityDoLReco["All"]->Fill(DCAcut);
             }
           }
 
@@ -345,28 +425,28 @@ namespace sbnd {
           hEffLengthTotal[tagger]->Fill(tpcTrack.Length());
 
           // If closest hit is below limit and track matches any hits then fill efficiency
-          if(closest.second < fixedCut && closest.second != -99999){
+          if(closest.dca < fixedCut && closest.dca >=0 ){
             hEffLengthReco[tagger]->Fill(tpcTrack.Length());
           }
         }
         // Fill total efficiency histograms
         hEffLengthTotal["All"]->Fill(tpcTrack.Length());
-        if(closest.second < fixedCut && closest.second != -99999){
+        if(closest.dca < fixedCut && closest.dca >=0){
           hEffLengthReco["All"]->Fill(tpcTrack.Length());
         }
       }
 
       // Fill total purity histogram with each cut if closest hit is below limit
-      if(closest.second < fixedCut && closest.second != -99999){
-        hPurityLengthTotal[closest.first.tagger]->Fill(tpcTrack.Length());
+      if(closest.dca < fixedCut && closest.dca >= 0){
+        hPurityLengthTotal[closest.thishit.tagger]->Fill(tpcTrack.Length());
         hPurityLengthTotal["All"]->Fill(tpcTrack.Length());
 
         // If closest hit is below limit and matched time is correct then fill purity
-        double hitTime = closest.first.ts1_ns * 1e-3;
+        double hitTime = closest.thishit.ts1_ns * 1e-3;
         if(particles.find(trackTrueID) != particles.end()){
           double trueTime = particles[trackTrueID].T() * 1e-3;
           if(std::abs(hitTime - trueTime) < 2.){
-            hPurityLengthReco[closest.first.tagger]->Fill(tpcTrack.Length());
+            hPurityLengthReco[closest.thishit.tagger]->Fill(tpcTrack.Length());
             hPurityLengthReco["All"]->Fill(tpcTrack.Length());
           }
         }
