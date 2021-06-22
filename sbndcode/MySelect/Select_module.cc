@@ -89,6 +89,9 @@ private:
   double		pfpTrackLength;
   double 		pfpYZAngle;
   double		pfpXZAngle;
+  double		pfpTrackStartX;
+  double		pfpTrackStartY;
+  double		pfpTrackStartZ;
   std::vector<float>    pfpDriftTime_0;  
   std::vector<float>    pfpDriftTime_1;  
   std::vector<float>    pfpDriftTime_2;  
@@ -96,6 +99,8 @@ private:
   std::vector<float>    pfpTPC2TrigTime_1; 
   std::vector<float>    pfpTPC2TrigTime_2; 
   std::vector<float>    pfpTrajLocationX;  
+  std::vector<float>    pfpTrajLocationY;  
+  std::vector<float>    pfpTrajLocationZ;  
   std::vector<float>	pfpdQdx_0;
   std::vector<float>	pfpX_0;
   std::vector<float>	pfpY_0;
@@ -200,9 +205,6 @@ sbnd::Select::Select(fhicl::ParameterSet const& p)
 void sbnd::Select::analyze(art::Event const& e)
 {
   // Implementation of required member function here.
-
- 
-// 25 May 2021: Current v_09_09_00 has pre trigger set to be 1.25 ms or 2500 ticks
  
   // detector service for event
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
@@ -210,12 +212,11 @@ void sbnd::Select::analyze(art::Event const& e)
 
   std::cout << std::endl;
   std::cout << "Reading event: " << e.id().event() << std::endl; 
-//  std::cout << "FCL file Pretrigger : " << fPreTrig << " ticks" << std::endl;
 //  std::cout << "Clock service trigger offset : " << clockData.TriggerOffsetTPC() << std::endl;
+//  std::cout << "Read out window size: " << detectorData.ReadOutWindowSize() << std::endl;
 //  std::cout << "Drift Velocity : " << detectorData.DriftVelocity() << std::endl;
 //  std::cout << "Temperature : " << detectorData.Temperature() << std::endl;
 //  std::cout << "Efield: " << detectorData.Efield(0) << std::endl;  
-//  std::cout << "Read out window size: " << detectorData.ReadOutWindowSize() << std::endl;
 
   // Define handle and fill vector
  
@@ -248,11 +249,11 @@ void sbnd::Select::analyze(art::Event const& e)
 
   if(PFParticleList.empty()) return;
 
-  //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_cathode_stitching_T0(PFParticleList, trackAssoc, t0Assoc);
-  std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_SCE_CRT(PFParticleList, trackAssoc, t0Assoc);
+  std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_cathode_stitching_T0(PFParticleList, trackAssoc, t0Assoc);
+  //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_SCE_CRT(PFParticleList, trackAssoc, t0Assoc);
   //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_CRTHitT0(PFParticleList, trackAssoc, t0Assoc);
 
-  //std::cout << "No. of cathode-anode crossing muon: " << CrossingCR.size() << std::endl;
+  std::cout << "No. of cathode-anode crossing muon: " << CrossingCR.size() << std::endl;
 
  
   //-------------------------Fill pfptree----------------------------// 
@@ -300,9 +301,14 @@ void sbnd::Select::analyze(art::Event const& e)
       pfpTrackLength = trk->Length();     
       pfpYZAngle = trk->ZenithAngle();
       pfpXZAngle = trk->AzimuthAngle();
+      pfpTrackStartX = trk->Start().X();
+      pfpTrackStartY = trk->Start().Y();
+      pfpTrackStartZ = trk->Start().Z();
  
       for(size_t i = 0; i < trk->NPoints()-1; i++){
         pfpTrajLocationX.push_back(trk->LocationAtPoint(i).X());
+        pfpTrajLocationY.push_back(trk->LocationAtPoint(i).Y());
+        pfpTrajLocationZ.push_back(trk->LocationAtPoint(i).Z());
       }
 
 //      // Track T0
@@ -471,6 +477,9 @@ void sbnd::Select::beginJob()
   pfpTree->Branch("TrackLength", &pfpTrackLength, "TrackLength/D");
   pfpTree->Branch("YZAngle", &pfpYZAngle, "YZAngle/D");
   pfpTree->Branch("XZAngle", &pfpXZAngle, "XZAngle/D");
+  pfpTree->Branch("TrackStartX", &pfpTrackStartX, "TrackStartX/D");
+  pfpTree->Branch("TrackStartY", &pfpTrackStartY, "TrackStartY/D");
+  pfpTree->Branch("TrackStartZ", &pfpTrackStartZ, "TrackStartZ/D");
   pfpTree->Branch("DriftTime_0", &pfpDriftTime_0);
   pfpTree->Branch("DriftTime_1", &pfpDriftTime_1);
   pfpTree->Branch("DriftTime_2", &pfpDriftTime_2);
@@ -478,6 +487,8 @@ void sbnd::Select::beginJob()
   pfpTree->Branch("TPC2TrigTime_1", &pfpTPC2TrigTime_1);
   pfpTree->Branch("TPC2TrigTime_2", &pfpTPC2TrigTime_2);
   pfpTree->Branch("TrajLocationX", &pfpTrajLocationX);
+  pfpTree->Branch("TrajLocationY", &pfpTrajLocationY);
+  pfpTree->Branch("TrajLocationZ", &pfpTrajLocationZ);
   pfpTree->Branch("dQdx_0", &pfpdQdx_0);
   pfpTree->Branch("X_0", &pfpX_0);
   pfpTree->Branch("Y_0", &pfpY_0);
@@ -810,6 +821,9 @@ void sbnd::Select::clearPfpTree()
   pfpTrackLength = 99999;
   pfpYZAngle = 99999;
   pfpXZAngle = 99999;
+  pfpTrackStartX = 99999;
+  pfpTrackStartY = 99999;
+  pfpTrackStartZ = 99999;
   pfpDriftTime_0.clear();
   pfpDriftTime_1.clear();
   pfpDriftTime_2.clear();
@@ -817,6 +831,8 @@ void sbnd::Select::clearPfpTree()
   pfpTPC2TrigTime_1.clear(); 
   pfpTPC2TrigTime_2.clear(); 
   pfpTrajLocationX.clear();  
+  pfpTrajLocationY.clear();  
+  pfpTrajLocationZ.clear();  
   pfpdQdx_0.clear();
   pfpX_0.clear();
   pfpY_0.clear();

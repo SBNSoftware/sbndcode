@@ -15,4 +15,6 @@ mrbsetenv && mrbslp
 #lar -c run_Select.fcl -S /pnfs/sbnd/scratch/users/lnguyen/prodcorsika_cosmics_job/v09_09_00/reco2/prodcorsika_cosmics_3ms_no_diffusion_events/etime_3ms/files.list -n -1
 
 #lar -c run_multi_Select.fcl -S 12k_files.list -n 50
-lar -c run_Select_SCE.fcl -S 12k_files.list -n 20
+#lar -c run_Select_SCE.fcl -S 12k_files.list -n 20
+
+lar -c run_Select_SCEcorrection.fcl -S /pnfs/sbnd/scratch/users/lnguyen/prodcorsika_sce_no_diffusion_standard_readout_window/v09_24_01/reco2/prodcorsika_cosmics_sce_no_diffusion/10ms_standard_read_out_window/files.list -n 100
