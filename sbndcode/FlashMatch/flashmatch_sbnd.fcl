@@ -12,6 +12,7 @@ sbnd_simple_flashmatch:{
   FlashEnd: 0.08 # us, wrt flash time
   SelectNeutrino: true
   OnlyCollectionWires: false
+  ForceConcurrence: true
   UseUncoatedPMT: true
   UseARAPUCAS: true
   # UseCalo: false
@@ -19,9 +20,12 @@ sbnd_simple_flashmatch:{
   NoAvailableMetrics: false
   MakeTree: false
   MinHitQ: 0.
+  MinSpacePointQ: 0.
+  MinParticleQ: 0.
   MinSliceQ: 0.
+  MaxFlashes: 2
   MinOpHPE: 0.
-  MinFlashPE: 0.
+  MinFlashPE: 50.
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
 
@@ -38,6 +42,11 @@ sbnd_simple_flashmatch:{
 
   n_bins: 40
   DriftDistance: 202.05
+  XBinWidth: 5.
+
+  YBiasSlope: 0.004
+  ZBiasSlope: 0.35
+
 
   dy_bins: 100
   dy_low: -200.
@@ -45,12 +54,14 @@ sbnd_simple_flashmatch:{
   dz_bins: 100
   dz_low: -200.
   dz_up: 200.
-  rr_bins: 100
+  rr_bins: 50
   rr_low: 0.
   rr_up: 200
-  pe_bins: 50
-  pe_low: 0.
-  pe_up: 1.
+  rr_TF1_fit: "pol3"
+  ratio_bins: 50
+  ratio_low: 0.
+  ratio_up: 1.
+  ratio_TF1_fit: "pol3"
 }
 
 END_PROLOG
