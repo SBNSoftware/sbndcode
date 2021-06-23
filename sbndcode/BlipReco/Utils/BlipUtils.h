@@ -51,18 +51,19 @@ namespace{
 
 namespace BlipUtils{
 
-  void   HitsPurity(//detinfo::DetectorClocksData const& clockData,
+  void  HitsPurity(//detinfo::DetectorClocksData const& clockData,
                     std::vector< art::Ptr<recob::Hit> > const& hits, int& trackid, float& purity, double& maxe);
-  void   HitTruth(//detinfo::DetectorClocksData const& clockData, 
+  void  HitTruth(//detinfo::DetectorClocksData const& clockData, 
                     art::Ptr<recob::Hit> const& hit, int& truthid, float& frac, float& energy, float& numElectrons);
-  bool   HitTruthId( //detinfo::DetectorClocksData const& clockData, 
-                    art::Ptr<recob::Hit> const& hit, int& mcid);
-  bool   TrackIdToMCTruth( int const trkID, art::Ptr<simb::MCTruth>& mctruth );
-  bool   DoesHitHaveSimChannel( std::vector<const sim::SimChannel*> chans, art::Ptr<recob::Hit> const& hit);
+  bool  HitTruthId( //detinfo::DetectorClocksData const& clockData, 
+                  art::Ptr<recob::Hit> const& hit, int& mcid);
+  bool  TrackIdToMCTruth( int const trkID, art::Ptr<simb::MCTruth>& mctruth );
+  bool  DoesHitHaveSimChannel( std::vector<const sim::SimChannel*> chans, art::Ptr<recob::Hit> const& hit);
+
+  double PathLength(const recob::Track& track);
+  double PathLength(const simb::MCParticle& part, TVector3& start, TVector3& end);
+  double PathLength(const simb::MCParticle& part);
 
 }
-
-
-
 
 #endif
