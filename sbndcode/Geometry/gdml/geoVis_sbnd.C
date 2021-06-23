@@ -20,8 +20,7 @@ void geoVis_sbnd(const TString &inputFileName,const TString &volName="volWorld")
 	TGeoManager::Import(inputFileName);
 
 drawopt optsbnd[] = {
-        {"volBuildingFloor", kGray+2,0},
-        {"volBuildingRoofMezzanine", kGray+2,30},  
+	{"volBuildingBase", kGray+2,0},	
 	{"volBuldingTube_H_1", kRed+1,0},
 	{"volBuldingTube_H_2", kRed+1,0},
 	{"volBuldingTube_V_1", kRed+1,0},
@@ -41,31 +40,27 @@ drawopt optsbnd[] = {
 	{"volWallInsulation_East",kGray+2,0}, 
 	{"volGlassWindow", kBlue+4,50},
 	{"volMezzanine",kYellow-8,0},
-        {"volRackSmall", kBlue, 50},
-        {"volRackLarge", kBlack, 50},
 	{"volDetectorHall",kYellow-5,0},
 	{"volDummyTPCActive", kCyan-9, 10},
-	{"volGroundLevel0",kOrange+3,80},
-	{"volGroundLevel1",kOrange+4,80},
-	{"volGroundLevel2",kOrange+5,80},
+	{"volGroundLevel0",kOrange+3,0},
+	{"volGroundLevel1",kOrange+4,0},
+	{"volGroundLevel2",kOrange+5,0},
 	{"volOpDetSensitive", kYellow, 10},
 	{"volTPCActive_East",  kCyan-9,30},
 	{"volTPCActive_West",  kCyan-9,30},
 	{"volOneAPAFrame", 	  kMagenta-2,    0},	
-	{"volCryoExt", kOrange, 0}, 
-        {"volCryoInsulation", kRed-9, 0},
-        {"volCryoPlywood", kOrange+3, 0},
+	{"volCryoExt", kRed+1, 0}, 
+	{"volCryoInsulation", kOrange-10, 90},
+	{"volCryoPlywood", kOrange-6,    0},
 	{"volCryoMembrane", kBlue-5,    0},
+	{"volCryoLid_Larger", kBlue-5,    0},
+	{"volCryoLid_Smaller", kBlue-5,    0},
+	{"volCryoUllage", kCyan,    50},
 	{"volAuxDetSensitiveCRT_X", kBlue,0},
 	{"volAuxDetSensitiveCRT_Z", kBlue,0},
 	{"volShieldingLid", kYellow-5, 0},
-        {"volShieldingLayer1", kYellow-6, 0},
-        {"volShieldingLayer2And3", kYellow-5, 0},
-	{"volCryostatLidInsulation_Large", kBlue-9,    0},
-//	{"volCryostatLid_Larger", kBlue-5,    0},
-//	{"volDummyTPC", kCyan-9, 90},
-//	{"volDummyCryostat", kOrange-3, 40},
-//	{"volDummyDetEnclosure", kViolet+10, 80},
+	{"volShieldingTop", kWhite, 0},
+	{"volMezzanineLid", kWhite, 0},
 	{"volTPCPlane_U", kBlue-4,   80},
 	{"volTPCPlane_V", kGreen-6,  80},
 	{"volTPCPlaneVert", kRed-7,    80},
@@ -79,9 +74,6 @@ drawopt optsbnd[] = {
 	{"volCPAMesh", kOrange-3, 90},
 	{"volCPAFoil", kWhite, 90},
 	{"volCPATPB", kCyan, 90},
-        {"volDewarInsulation", kRed, 0},
-        {"volDewarFluidLAr", kBlue+1, 0},
-        {"volDewarFluidLN2", kBlue+2, 0},
 	{0, 0}
 };
 
@@ -103,7 +95,7 @@ struct wire{
 	float X,Y,Z;
 	wire(const TString &name, const float &x,const float &y,const float &z) : Name(name), X(x), Y(y), Z(z) {}
 };
-
+/*
 std::vector<wire> wires;
 TGeoNode *aNode;
 bool checkWDist = true;
@@ -205,11 +197,11 @@ if( vol ) { // check U plane
 }
 
 if(vol && checkWDist) std::cout << "V plane: All wire distances equal to 3mm (1e-3 precision). \n";
-
+*/
 
 gGeoManager->GetTopNode();
-gGeoManager->CheckOverlaps(10e-11);
-gGeoManager->PrintOverlaps();
+//gGeoManager->CheckOverlaps(10e-11);
+//gGeoManager->PrintOverlaps();
 gGeoManager->SetMaxVisNodes(70000);
 
 if ( ! volName.IsNull() ) {gGeoManager->FindVolumeFast(volName)->Draw("ogl");} 

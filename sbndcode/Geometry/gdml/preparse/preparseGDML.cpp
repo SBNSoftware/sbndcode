@@ -66,12 +66,19 @@ void replaceVariable(TString &key, Variables_t const& variables ){
 		if (!key.Contains("=") || !key.Contains(varName) ) continue;
 		if (debug >= 3) {
 			std::cout.precision(prec);
-			std::cout << "REPL '" << varName << "' => " << prec << std::endl;
+			std::cout << "REPLACING\t'" << varName << "'\t";
 		}
 		stream.str("");
 		stream.clear();	
+
 		if(0) { stream << scientific << value;} else {stream << value;}
 		stream >> varValue;
+
+		if (debug >= 3) {
+			std::cout.precision(prec);
+			std::cout << "=> " << varValue << "\n";
+		}
+
 		do {
 			i = key.Index(varName);
 			if (i>0) {
@@ -123,7 +130,7 @@ void getVariable(TString key, Variables_t& variables){
 
 	if (debug >= 2) {
 		std::cout.precision(prec);
-		std::cout << "VAR " << name << "=\"" << varValue << "\" => " << value << std::endl;
+		std::cout << "VARIABLE\t'" << name << "'=\"" << varValue << "\" => " << value << std::endl;
 	}
 	variables[name.Data()]=value;
 
@@ -286,9 +293,11 @@ int preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TStr
 	bool inSetup = 0;
 	bool isWire = 0;
 	bool keepLoop = 1;
+	uint64_t lineCounter = 0;
 	do{
+		lineCounter++;
 		key.ReadLine(input,0);
-//		cout << i << endl; i++;
+		if(debug>3) cout << lineCounter << "\t::\t" << key << "\n";
 		if ((key.Contains("<variable") && !key.Contains("<!--")) || (key.Contains("<constant") && !key.Contains("<!--"))) {
 			getVariable(key,variables);
 		} else if (key.Contains("<loop")) {
