@@ -457,9 +457,9 @@
 
 		<!-- Position of the Overburden (mm) -->
 		<constant name="my_dimSystem_Z_mm" value="1130"/>
-		<constant name="whereShielding_X" value="0"/>
+		<constant name="whereShielding_X" value="whereEnclosure_X"/>
 		<constant name="whereShielding_Y" value="5215+my_dimSystem_Z_mm+dimBuildingBaseWidth_mm/2+shielding_thickness/2"/>
-		<constant name="whereShielding_Z" value="0"/>
+		<constant name="whereShielding_Z" value="whereEnclosure_Z"/>
 
 		<!-- Racks -->
 		<!-- Smaller (blue/yellow) racks -->
@@ -670,7 +670,7 @@
 
 		<constant name="visibleWires" value="1" />
 		<rotation name="rPlusUVAngleAboutX" unit="deg" x="30.0" y="0" z="0"/>
-        <constant name="dimCommonWire_D_mm" value="0.006*25.4" />
+        <constant name="dimCommonWire_D_mm" value="0.6*25.4" />
         <constant name="commonWire_R" value="0.5*dimCommonWire_D_mm*visibleWires" />
 
 		<constant name="originWires_Z"  value="-dimWirePlane_Z_mm/2.0+dimWirePitch_Z_mm/2.0"/>
@@ -823,6 +823,23 @@
 			<fraction n="0.015" ref="potassium"/>
 		</material>
 
+                <material name="matCA6" formula=" " >
+                        <D value="1.698" unit="g/cm3"/>
+                        <fraction n="0.0030" ref="Na2O"/>
+                        <fraction n="0.1084" ref="MgO"/>
+                        <fraction n="0.0757" ref="Al2O3"/>
+                        <fraction n="0.3707" ref="SiO2"/>
+                        <fraction n="0.0010" ref="P2O5"/>
+                        <fraction n="0.0248" ref="SO3"/>
+                        <fraction n="0.0034" ref="K2O"/>
+                        <fraction n="0.3865" ref="CaO"/>
+                        <fraction n="0.0044" ref="TiO2"/>
+                        <fraction n="0.0066" ref="MnO"/>
+                        <fraction n="0.0056" ref="Fe2O3"/>
+                        <fraction n="0.0001" ref="V2O5"/>
+                        <fraction n="0.0102" ref="sulphur"/>
+                </material>
+
 		<material name="Concrete" formula=" " >
 			<D value="2.3" unit="g/cm3"/>
 			<fraction n="0.530" ref="oxygen"/>
@@ -935,37 +952,6 @@
 			<composite n="2" ref="oxygen"/>
 		</material>
 
-		<material name="P2O5" formula="P2O5">
-			<D value="1.562" unit="g/cm3"/>
-			<composite n="2" ref="phosphorous"/>
-			<composite n="5" ref="oxygen"/>
-		</material>
-
-		<material name="SO3" formula="SO3">
-			<D value="1.92" unit="g/cm3"/>
-			<composite n="1" ref="sulfur"/>
-			<composite n="3" ref="oxygen"/>
-		</material>
-
-		<material name="K2O" formula="K2O">
-			<D value="2.35" unit="g/cm3"/>
-			<composite n="1" ref="hydrogen"/>
-			<composite n="1" ref="oxygen"/>
-			<composite n="2" ref="potassium"/>
-		</material>
-
-		<material name="MnO" formula="MnO">
-			<D value="5.37" unit="g/cm3"/>
-			<composite n="1" ref="manganese"/>
-			<composite n="1" ref="oxygen"/>
-		</material>
-
-		<material name="V2O5" formula="V2O5">
-			<D value="3.36" unit="g/cm3"/>
-			<composite n="1" ref="vanadium"/>
-			<composite n="5" ref="oxygen"/>
-		</material>
-
 		<material name="fibrous_glass">
 			<D value="2.74351" unit="g/cm3"/>
 			<fraction n="0.600" ref="SiO2"/>
@@ -975,23 +961,6 @@
 			<fraction n="0.034" ref="MgO"/>
 			<fraction n="0.010" ref="Na2O"/>
 			<fraction n="0.013" ref="TiO2"/>
-		</material>
-
-		<material name="matCA6" formula=" " >
-			<D value="1.698" unit="g/cm3"/>
-			<fraction n="0.0030" ref="Na2O"/>
-			<fraction n="0.1084" ref="MgO"/>
-			<fraction n="0.0757" ref="Al2O3"/>
-			<fraction n="0.3707" ref="SiO2"/>
-			<fraction n="0.0010" ref="P2O5"/>
-			<fraction n="0.0248" ref="SO3"/>
-			<fraction n="0.0034" ref="K2O"/>
-			<fraction n="0.3865" ref="CaO"/>
-			<fraction n="0.0044" ref="TiO2"/>
-			<fraction n="0.0066" ref="MnO"/>
-			<fraction n="0.0056" ref="Fe2O3"/>
-			<fraction n="0.0001" ref="V2O5"/>
-			<fraction n="0.0102" ref="sulfur"/>
 		</material>
 
 		<material name="matFR4">
@@ -5334,7 +5303,7 @@
 			<tube name="solidWire" lunit="mm" rmax="commonWire_R" z="commonWire_L" aunit="deg" deltaphi="360." />
 
 		<!-- higher channels -->
-		<loop for ="iWireSizes_2" to="2984" step="1"> <!-- #wire -->
+		<loop for ="iWireSizes_2" to="1984" step="1"> <!-- #wire -->
 			<tube name="solidWire_iWireSizes_2" lunit="mm" rmax="commonWire_R" z="(dimWirePlane_Z_mm-(iWireSizes_2-channels_Higher)*dimWirePitch_Z_mm)*commonWire_L/dimWirePlane_Z_mm" aunit="deg" deltaphi="360." />
 		</loop>
 
@@ -5931,16 +5900,8 @@
 		<constant name="whereMembrane_X" value="coordMembrane_at_Enclosure_X"/>
 		<constant name="whereMembrane_Y" value="coordMembrane_at_Enclosure_Y"/>
 		<constant name="whereMembrane_Z" value="coordMembrane_at_Enclosure_Z"/>
-		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z" />
-		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
-		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
-		<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
-		<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/>
-		<position name="posCRT_East" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
-		<position name="postCRT_West" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
-		<position name="posCRT_Bottom" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-CRT_DY_Bottom" z="whereMembrane_Z"/>
-		<position name="posCryoPlywood" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
-		<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
+		<position name="posCryostat"    unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z" />
+
 	</define>
 
 	<solids>
@@ -5954,12 +5915,12 @@
 			<position name="posTopTower" unit="mm" x="0" y="(dimDetEnclosure_Y+dimTopCRTEnclosure_Y)/2.0" z="0"/>
 		</union>
 
-		<!-- Expand the box to make room for the overburden -->
-		<union name="boxDetectorEnclosure">
+		<!-- Remove a piece to make room for the overburden -->
+		<subtraction name="boxDetectorEnclosure">
 			<first ref="boxDetectorEnclosure_0"/>
 			<second ref="boxShielding"/>
-			<position name="posShield" unit="mm" x="0" y="whereShielding_Y" z="0"/>
-		</union>
+			<position name="posTopTower" unit="mm" x="0" y="whereShielding_Y" z="0"/>
+		</subtraction>
 
 
 	</solids>
@@ -5972,9 +5933,6 @@
 	</structure>
 
 	<structure>
-
-		<!-- Detector Enclusure Without Shielding (Overburden) -->
-		<!-- See below for volDetEnclosureWithSh-->
 		<volume name="volDetEnclosure" >
 			<materialref ref="matAir"/>
 			<solidref ref="boxDetectorEnclosure"/>
@@ -5982,36 +5940,36 @@
 			<!-- Positioning the CRT -->
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
-					<positionref ref="posCRT_TopHigh"/>
+					<position name="poCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
 					<rotationref ref="rotateN90X"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerTopLow"/>
-					<positionref ref="posCRT_TopLow"/>
+					<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerSouth"/>
-					<positionref ref="posCRT_South"/>
+					<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerNorth"/>
-					<positionref ref="posCRT_North"/>
+					<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerEast"/>
-					<positionref ref="posCRT_East"/>
+					<position name="posCRT_East" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
 					<rotationref ref="rotateP90Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerWest"/>
-					<positionref ref="postCRT_West"/>
+					<position name="postCRT_West" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
 					<rotationref ref="rotateN90Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerBot"/>
-					<positionref ref="posCRT_Bottom"/>
+					<position name="posCRT_Bottom" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-CRT_DY_Bottom" z="whereMembrane_Z"/>
 					<rotationref ref="rotateP90X180Z"/>
 			</physvol>
 
@@ -6026,7 +5984,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryoPlywood"/>
-				<positionref ref="posCryoPlywood"/>
+				<position name="posCryoPlywood"    unit="mm" x="whereMembrane_X" y="whereMembrane_Y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
 			</physvol>
 			<physvol>
 				<volumeref ref="volCryoInsulation"/>
@@ -6041,87 +5999,12 @@
 			<!-- Positioning the Mass buffer -->
 			<physvol>
 				<volumeref ref="volMassBuffer"/>
-				<positionref ref="posMassBuffer"/>
+				<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
 			</physvol>
 			
 		</volume>
+			
 
-		<!-- Detector Enclusure With Shielding (Overburden) -->
-		<volume name="volDetEnclosureWithSh" >
-			<materialref ref="matAir"/>
-			<solidref ref="boxDetectorEnclosure"/>
-
-			<!-- Positioning the CRT -->
-			<physvol>
-					<volumeref ref="volTaggerTopHigh"/>
-					<positionref ref="posCRT_TopHigh"/>
-					<rotationref ref="rotateN90X"/>
-			</physvol>
-			<physvol>
-					<volumeref ref="volTaggerTopLow"/>
-					<positionref ref="posCRT_TopLow"/>
-					<rotationref ref="rotateP90X"/>
-			</physvol>
-			<physvol>
-					<volumeref ref="volTaggerSouth"/>
-					<positionref ref="posCRT_South"/>
-			</physvol>
-			<physvol>
-					<volumeref ref="volTaggerNorth"/>
-					<positionref ref="posCRT_North"/>
-					<rotationref ref="rotateP180Y"/>
-			</physvol>
-			<physvol>
-					<volumeref ref="volTaggerEast"/>
-					<positionref ref="posCRT_East"/>
-					<rotationref ref="rotateP90Y"/>
-			</physvol>
-			<physvol>
-					<volumeref ref="volTaggerWest"/>
-					<positionref ref="postCRT_West"/>
-					<rotationref ref="rotateN90Y"/>
-			</physvol>
-			<physvol>
-					<volumeref ref="volTaggerBot"/>
-					<positionref ref="posCRT_Bottom"/>
-					<rotationref ref="rotateP90X180Z"/>
-			</physvol>
-
-			<!-- Positioning the Shielding (Overburden) -->
-			<physvol>
-				<volumeref ref="volShielding"/>
-				<position name="posShielding" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
-			</physvol>
-
-			<!-- Positioning the Cryostat -->
-			<physvol>
-				<volumeref ref="volCryostat"/>
-				<positionref ref="posCryostat"/>
-			</physvol>
-			<physvol>
-				<volumeref ref="volCryoMembrane"/>
-				<positionref ref="posCryostat" />
-			</physvol>
-			<physvol>
-				<volumeref ref="volCryoPlywood"/>
-				<positionref ref="posCryoPlywood"/>
-			</physvol>
-			<physvol>
-				<volumeref ref="volCryoInsulation"/>
-				<positionref ref="posCryostat" />
-			</physvol>
-			<physvol>
-				<volumeref ref="volCryoExt"/>
-				<positionref ref="posCryostat" />
-			</physvol>
-
-
-			<!-- Positioning the Mass buffer -->
-			<physvol>
-				<volumeref ref="volMassBuffer"/>
-				<positionref ref="posMassBuffer"/>
-			</physvol>
-		</volume>
 	</structure>
 	<!-- End of Detector Enclosure -->
 
@@ -6162,14 +6045,19 @@
 				<volumeref ref="volBuildingBase"/>
 				<position name="posBuildingBaseWithSh" unit="mm" x="0" y="5215+dimSystem_Z_mm" z="2200" />
 			</physvol>
+			<!-- Positioning the Overburden -->
+			<physvol>
+				<volumeref ref="volShielding"/>
+				<position name="posShieldingWithSh" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
+			</physvol>
 			<!-- Positioning the Exteriors -->
 			<physvol>
 				<volumeref ref="volExteriors"/>
 				<position name="posExteriorsWithSh" unit="mm" x="0" y="whereBuild_Y+dimSystem_Z_mm" z="2200 + dimBuildingExternal_Z_mm/2 + exterior_box_z/2" />
 			</physvol>
-			<!-- Positioning the Detector Enclosure with Shielding (Overburden) -->
+			<!-- Positioning the Detector Enclosure -->
 			<physvol>
-				<volumeref ref="volDetEnclosureWithSh"/>
+				<volumeref ref="volDetEnclosure"/>
 				<position name="posEnclosureWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />
 			</physvol>
 
@@ -6179,7 +6067,6 @@
 		<volume name="volWorld" >
 			<materialref ref="matAir"/>
 			<solidref ref="boxWorld"/>
-
 			<!-- Positioning the Building -->
 			<physvol>
 				<volumeref ref="volBuilding"/>
