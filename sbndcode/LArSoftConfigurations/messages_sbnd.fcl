@@ -169,6 +169,7 @@ sbnd_message_services_prod_debug:
 sbnd_message_services_prod_debug.destinations.LogDebugFile.categories:{
   default: { }
   GeometryBadInputPoint: { limit: 5 timespan: 1000}
+  BackTracker: { limit: 0 }
 }
 
 
