@@ -15,7 +15,7 @@ This will generate the two files required by larsoft:
 
 If you need to ENABLE the overburden (it is disabled by default) you need to generate the geometries with the right setup:
 
-$ preparseGDML sbnd_v02_00_base.gdml -w --setup DefaultWithShielding
+$ preparseGDML sbnd_v02_00_base.gdml -w --setup DefaultWithShielding -o sbnd_v02_00_withshielding.gdml
 
 You can visualize the geometries with the geoVis_sbnd.C root macro:
 
