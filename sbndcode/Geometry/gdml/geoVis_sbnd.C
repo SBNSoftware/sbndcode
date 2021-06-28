@@ -40,6 +40,8 @@ drawopt optsbnd[] = {
 	{"volWallInsulation_East",kGray+2,0}, 
 	{"volGlassWindow", kBlue+4,50},
 	{"volMezzanine",kYellow-8,0},
+	{"volRackSmall", kBlue, 50},
+	{"volRackLarge", kBlack, 50},
 	{"volDetectorHall",kYellow-5,0},
 	{"volDummyTPCActive", kCyan-9, 10},
 	{"volGroundLevel0",kOrange+3,0},
@@ -58,9 +60,9 @@ drawopt optsbnd[] = {
 	{"volCryoUllage", kCyan,    50},
 	{"volAuxDetSensitiveCRT_X", kBlue,0},
 	{"volAuxDetSensitiveCRT_Z", kBlue,0},
-	{"volShieldingLid", kYellow-5, 0},
-	{"volShieldingTop", kWhite, 0},
-	{"volMezzanineLid", kWhite, 0},
+	{"volShielding", kYellow-5, 0},
+	{"volShieldingLayer1", kYellow-6, 0},
+	{"volShieldingLayer2And3", kYellow-5, 0},
 	{"volTPCPlane_U", kBlue-4,   80},
 	{"volTPCPlane_V", kGreen-6,  80},
 	{"volTPCPlaneVert", kRed-7,    80},
@@ -74,6 +76,9 @@ drawopt optsbnd[] = {
 	{"volCPAMesh", kOrange-3, 90},
 	{"volCPAFoil", kWhite, 90},
 	{"volCPATPB", kCyan, 90},
+	{"volDewarInsulation", kRed, 0},
+	{"volDewarFluidLAr", kBlue+1, 0},
+	{"volDewarFluidLN2", kBlue+2, 0},
 	{0, 0}
 };
 
