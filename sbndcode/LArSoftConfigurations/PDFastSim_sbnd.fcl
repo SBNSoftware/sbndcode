@@ -14,6 +14,7 @@ BEGIN_PROLOG
 # standard configuration
 sbnd_pdfastsim_par:                     @local::standard_pdfastsim_par_ar
 
+sbnd_pdfastsim_par.SimulationLabel:     "IonAndScintIN"
 # Direct (VUV)
 sbnd_pdfastsim_par.VUVTiming:           @local::sbnd_vuv_timing_parameterization
 sbnd_pdfastsim_par.VUVHits:             @local::sbnd_vuv_RS100cm_hits_parameterization
@@ -22,6 +23,20 @@ sbnd_pdfastsim_par.VUVHits:             @local::sbnd_vuv_RS100cm_hits_parameteri
 sbnd_pdfastsim_par.DoReflectedLight: true
 sbnd_pdfastsim_par.VISTiming:        	@local::sbnd_vis_timing_parameterization
 sbnd_pdfastsim_par.VISHits:          	@local::sbnd_vis_RS100cm_hits_parameterization
+
+
+
+
+
+# Optical-Library mode
+
+# standard configuration
+sbnd_pdfastsim_pvs:                     @local::standard_pdfastsim_pvs
+
+sbnd_pdfastsim_pvs.SimulationLabel:     "IonAndScintOUT"
+sbnd_pdfastsim_pvs.IncludePropTime: true
+sbnd_pdfastsim_pvs.StoreReflected: true
+
 
 
 END_PROLOG
