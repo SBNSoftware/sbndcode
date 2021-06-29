@@ -9,16 +9,16 @@
 #define BLIPUTIL_H_SEEN
 
 // framework
-#include "art/Framework/Principal/Event.h"
-#include "fhiclcpp/ParameterSet.h" 
-#include "art/Framework/Principal/Handle.h" 
+#include "art_root_io/TFileService.h"
+#include "art_root_io/TFileDirectory.h"
+//#include "art/Framework/Principal/Event.h"
+//#include "art/Framework/Principal/Handle.h" 
+//#include "fhiclcpp/ParameterSet.h" 
 #include "canvas/Persistency/Common/Ptr.h" 
 #include "canvas/Persistency/Common/PtrVector.h" 
 #include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "art_root_io/TFileService.h"
-#include "art_root_io/TFileDirectory.h"
-#include "messagefacility/MessageLogger/MessageLogger.h" 
-#include "canvas/Persistency/Common/FindManyP.h"
+//#include "messagefacility/MessageLogger/MessageLogger.h" 
+//#include "canvas/Persistency/Common/FindManyP.h"
 
 // LArSoft
 #include "nusimdata/SimulationBase/MCParticle.h"
@@ -34,35 +34,56 @@
 #include <vector>
 #include <map>
 
-namespace detinfo { class DetectorClocksData; }
-
-// Helper templates for initializing arrays
-namespace{  
-  template <typename ITER, typename TYPE> 
-    inline void FillWith(ITER from, ITER to, TYPE value) 
-    { std::fill(from, to, value); }
-  template <typename ITER, typename TYPE> 
-    inline void FillWith(ITER from, size_t n, TYPE value)
-    { std::fill(from, from + n, value); }
-  template <typename CONT, typename V>
-    inline void FillWith(CONT& data, const V& value)
-    { FillWith(std::begin(data), std::end(data), value); }
-}
-
 namespace BlipUtils{
 
-  void  HitsPurity(//detinfo::DetectorClocksData const& clockData,
-                    std::vector< art::Ptr<recob::Hit> > const& hits, int& trackid, float& purity, double& maxe);
-  void  HitTruth(//detinfo::DetectorClocksData const& clockData, 
-                    art::Ptr<recob::Hit> const& hit, int& truthid, float& frac, float& energy, float& numElectrons);
-  bool  HitTruthId( //detinfo::DetectorClocksData const& clockData, 
-                  art::Ptr<recob::Hit> const& hit, int& mcid);
-  bool  TrackIdToMCTruth( int const trkID, art::Ptr<simb::MCTruth>& mctruth );
-  bool  DoesHitHaveSimChannel( std::vector<const sim::SimChannel*> chans, art::Ptr<recob::Hit> const& hit);
+  //###################################################
+  //  Data structure for true energy deposition
+  //###################################################
+  struct TrueBlip {
+    bool    isValid;
+    std::vector<int> vTrackIDs;
+    std::vector<int> vPDGs;
+    int       LeadingTrackID;
+    float     LeadingEnergy;
+    TVector3  Location;
+    TVector3  StartPoint;
+    TVector3  EndPoint;
+    float   Energy;
+    float   NumElectrons; // after drift
+    float   Length;
+    TrueBlip() {
+      isValid = false;
+      vTrackIDs.clear();
+      vPDGs.clear();
+      LeadingTrackID = -9;
+      LeadingEnergy = -9;
+      Energy  = 0;
+      Length  = 0;
+      NumElectrons = 0;
+    }
+  };
+ 
+  //###################################################
+  // Functions related to blip reconstruction
+  //###################################################
+  float     PartEnergyDep(int, float&);
+  float     PartEnergyDep(int);
+  TrueBlip  MakeTrueBlip(int);
+  void      GrowTrueBlip(simb::MCParticle&, TrueBlip&);
+  void      MergeBlips(std::vector<TrueBlip>&, float);
+  bool      DoHitsOverlap(art::Ptr<recob::Hit> const&, art::Ptr<recob::Hit> const&);
 
-  double PathLength(const recob::Track& track);
-  double PathLength(const simb::MCParticle& part, TVector3& start, TVector3& end);
-  double PathLength(const simb::MCParticle& part);
+  //###################################################
+  // General functions 
+  //###################################################
+  void    HitsPurity(std::vector< art::Ptr<recob::Hit> > const&, int&, float&, double&);
+  void    HitTruth(art::Ptr<recob::Hit> const&, int&, float&, float&, float&);
+  bool    HitTruthId(art::Ptr<recob::Hit> const&, int&);
+  bool    TrackIdToMCTruth( int const, art::Ptr<simb::MCTruth>&);
+  bool    DoesHitHaveSimChannel( std::vector<const sim::SimChannel*>, art::Ptr<recob::Hit> const&);
+  double  PathLength(const simb::MCParticle&, TVector3&, TVector3&);
+  double  PathLength(const simb::MCParticle&);
+  bool    IsAncestorOf(int, int, bool);
 
 }
 

@@ -52,8 +52,8 @@
 #include "larsim/MCCheater/ParticleInventoryService.h"
 
 // SBNDCode includes
-#include "sbndcode/BlipReco/Utils/BlipUtils.h"
 #include "sbndcode/RecoUtils/RecoUtils.h"
+#include "sbndcode/BlipReco/Utils/BlipUtils.h"
 
 // C++ includes
 #include <cstring>
@@ -73,12 +73,26 @@
 #include "TTree.h"
 #include "TH1F.h"
 
+// Helper templates for initializing arrays
+namespace{  
+  template <typename ITER, typename TYPE> 
+    inline void FillWith(ITER from, ITER to, TYPE value) 
+    { std::fill(from, to, value); }
+  template <typename ITER, typename TYPE> 
+    inline void FillWith(ITER from, size_t n, TYPE value)
+    { std::fill(from, from + n, value); }
+  template <typename CONT, typename V>
+    inline void FillWith(CONT& data, const V& value)
+    { FillWith(std::begin(data), std::end(data), value); }
+}
+
 // Set global constants and max array sizes
-const int kNplanes  = 3;  
 const int kMaxHits  = 20000;
 const int kMaxTrks  = 1000;
 const int kMaxG4    = 10000;
-
+const int kMaxEDeps = 10000;
+const int kNplanes  = 3;  
+    
 namespace sbnd { 
   
   //###################################################
@@ -112,51 +126,54 @@ namespace sbnd {
     float Px[kMaxG4];               // momentum x (MeV)
     float Py[kMaxG4];               // momentum y (MeV)
     float Pz[kMaxG4];               // momentum z (MeV)
-    float X[kMaxG4];                // starting x (cm)
-    float Y[kMaxG4];                // starting y (cm)
-    float Z[kMaxG4];                // starting y (cm)
-    float endX[kMaxG4];             // ending x (cm)
-    float endY[kMaxG4];             // ending y (cm)
-    float endZ[kMaxG4];             // ending y (cm)
+    float startPointx[kMaxG4];      // starting x (cm)
+    float startPointy[kMaxG4];      // starting y (cm)
+    float startPointz[kMaxG4];      // starting y (cm)
+    float endPointx[kMaxG4];        // ending x (cm)
+    float endPointy[kMaxG4];        // ending y (cm)
+    float endPointz[kMaxG4];        // ending y (cm)
     float startT[kMaxG4];           // starting time (us)
     float endT[kMaxG4];             // ending time (us)
     float pathlen[kMaxG4];          // path length (cm)
-    //int   inTPCActive[kMaxG4];      // in active volume
-    //float startpointX_tpcAV[kMaxG4];// first x in AV (cm)
-    //float startpointY_tpcAV[kMaxG4];// first y in AV (cm)
-    //float startpointZ_tpcAV[kMaxG4];// first z in AV (cm)
-    //float endpointX_tpcAV[kMaxG4];  // last x in AV (cm)
-    //float endpointY_tpcAV[kMaxG4];  // last y in AV (cm)
-    //float endpointZ_tpcAV[kMaxG4];  // last z in AV (cm)
     int   numElectrons[kMaxG4];     // electrons reaching anode wires
-    float depEnergy[kMaxG4];        // energy deposited in AV
+    float depEnergy[kMaxG4];        // energy deposited in AV (MeV)
     std::vector<std::string> process;// process name
-  
+ 
+    // --- True energy deposit info (derived) ---
+    int   nedeps;                   // number of true localized energy depositions
+    int   edep_mcid[kMaxEDeps];     // leading G4 track ID
+    float edep_energy[kMaxEDeps];   // total energy deposited (MeV)
+    float edep_x[kMaxEDeps];        // x (cm)
+    float edep_y[kMaxEDeps];        // y (cm)
+    float edep_z[kMaxEDeps];        // z (cm)
+    float edep_ds[kMaxEDeps];       // extent (cm)
+
     // --- Hit information ---
     int	  nhits;                    // number of hits
     int	  hit_tpc[kMaxHits];        // tpc number
     int	  hit_plane[kMaxHits];      // plane number
     int	  hit_wire[kMaxHits];       // wire number
     int	  hit_channel[kMaxHits];    // channel ID
-    float	hit_peakT[kMaxHits];      // peak time (tick)
+    float	hit_peakT[kMaxHits];      // raw peak time (tick)
+    float	hit_time[kMaxHits];       // corrected peak time (tick)
     float hit_rms[kMaxHits];        // shape RMS
     float	hit_ph[kMaxHits];         // amplitude
     float	hit_area[kMaxHits];       // charge (area) in ADC units
     float hit_charge[kMaxHits];     // reconstructed number of electrons
     int	  hit_trkid[kMaxHits];      // is this hit associated with a reco track?
-    int	  hit_mcid[kMaxHits];       // G4 TrackID of leading MCParticle that created the hit
+    int	  hit_mcid[kMaxHits];       // G4 TrackID of leading particle
     float hit_mcfrac[kMaxHits];     // fraction of hit energy from leading MCParticle
     float hit_mcenergy[kMaxHits];   // true energy
     float hit_mccharge[kMaxHits];   // true number of electrons (drift-attenuated)
 
     // === Function for resetting data ===
     void Clear(){ 
-      event                 = -999; // event-wide info
+      event                 = -999; // --- event-wide info ---
       run                   = -999;
       lifetime              = -999;
       total_depEnergy       = -999;
       total_numElectrons    = -999;
-      nparticles            = 0;    // G4 particles
+      nparticles            = 0;    // --- G4 particles ---
       FillWith(isPrimary,   -9);
       FillWith(trackID,     -999);
       FillWith(pdg,         -99999);
@@ -169,31 +186,32 @@ namespace sbnd {
       FillWith(Px,          -999.);
       FillWith(Py,          -999.);
       FillWith(Pz,          -999.);
-      FillWith(X, -99999.);
-      FillWith(Y, -99999.);
-      FillWith(Z, -99999.);
-      FillWith(endX,   -99999.);
-      FillWith(endY,   -99999.);
-      FillWith(endZ,   -99999.);
+      FillWith(startPointx, -99999.);
+      FillWith(startPointy, -99999.);
+      FillWith(startPointz, -99999.);
+      FillWith(endPointx,   -99999.);
+      FillWith(endPointy,   -99999.);
+      FillWith(endPointz,   -99999.);
       FillWith(startT,      -99999.);
       FillWith(endT,        -99999.);
       FillWith(pathlen,     -999.);
-      //FillWith(inTPCActive, -9);
-      //FillWith(startpointX_tpcAV, -99999.);
-      //FillWith(startpointY_tpcAV, -99999.);
-      //FillWith(startpointZ_tpcAV, -99999.);
-      //FillWith(endpointX_tpcAV,   -99999.);
-      //FillWith(endpointY_tpcAV,   -99999.);
-      //FillWith(endpointZ_tpcAV,   -99999.);
       FillWith(numElectrons,-999);
       FillWith(depEnergy,   -999.);
       FillWith(process,     "");
-      nhits                 = 0;    // TPC hits
+      nedeps                = 0;    // --- EDeps ---
+      FillWith(edep_energy, -999);
+      FillWith(edep_mcid,   -9);
+      FillWith(edep_x,      -99999.);
+      FillWith(edep_y,      -99999.);
+      FillWith(edep_z,      -99999.);
+      FillWith(edep_ds,     -999);
+      nhits                 = 0;    // --- TPC hits ---
       FillWith(hit_tpc,     -999);
       FillWith(hit_plane,   -999);
       FillWith(hit_wire,    -999);
       FillWith(hit_channel, -999);
       FillWith(hit_peakT,   -999);
+      FillWith(hit_time,    -999);
       FillWith(hit_rms,     -999);
       FillWith(hit_ph,      -999);
       FillWith(hit_area,    -999);
@@ -209,7 +227,7 @@ namespace sbnd {
     // To be called after numbers of hits/tracks/particles
     // in the event has been determined
     void Resize() {
-      if( nparticles >= 0 ) process.assign(nparticles,"");
+      if(nparticles) process.assign(nparticles,"");
     }
         
     // === Function for initializing tree branches ===
@@ -234,31 +252,32 @@ namespace sbnd {
       tree->Branch("Px",Px,"Px[nparticles]/F");
       tree->Branch("Py",Py,"Py[nparticles]/F");
       tree->Branch("Pz",Pz,"Pz[nparticles]/F");
-      tree->Branch("X",X,"X[nparticles]/F");
-      tree->Branch("Y",Y,"Y[nparticles]/F");
-      tree->Branch("Z",Z,"Z[nparticles]/F");
-      tree->Branch("endX",endX,"endX[nparticles]/F");
-      tree->Branch("endY",endY,"endY[nparticles]/F");
-      tree->Branch("endZ",endZ,"endZ[nparticles]/F");
+      tree->Branch("startPointx",startPointx,"startPointx[nparticles]/F");
+      tree->Branch("startPointy",startPointy,"startPointy[nparticles]/F");
+      tree->Branch("startPointz",startPointz,"startPointz[nparticles]/F");
+      tree->Branch("endPointx",endPointx,"endPointx[nparticles]/F");
+      tree->Branch("endPointy",endPointy,"endPointy[nparticles]/F");
+      tree->Branch("endPointz",endPointz,"endPointz[nparticles]/F");
       tree->Branch("startT",startT,"startT[nparticles]/F");
       tree->Branch("endT",endT,"endT[nparticles]/F");
       tree->Branch("pathlen",pathlen,"pathlen[nparticles]/F");
-      //tree->Branch("inTPCActive",inTPCActive,"inTPCActive[nparticles]/I");
-      //tree->Branch("startpointX_tpcAV",startpointX_tpcAV,"startpointX_tpcAV[nparticles]/F");
-      //tree->Branch("startpointY_tpcAV",startpointY_tpcAV,"startpointY_tpcAV[nparticles]/F");
-      //tree->Branch("startpointZ_tpcAV",startpointZ_tpcAV,"startpointZ_tpcAV[nparticles]/F");
-      //tree->Branch("endpointX_tpcAV",endpointX_tpcAV,"endpointX_tpcAV[nparticles]/F");
-      //tree->Branch("endpointY_tpcAV",endpointY_tpcAV,"endpointY_tpcAV[nparticles]/F");
-      //tree->Branch("endpointZ_tpcAV",endpointZ_tpcAV,"endpointZ_tpcAV[nparticles]/F");
-      //tree->Branch("numElectrons",numElectrons,"numElectrons[nparticles]/I");
+      tree->Branch("numElectrons",numElectrons,"numElectrons[nparticles]/I");
       tree->Branch("depEnergy",depEnergy,"depEnergy[nparticles]/F");
       tree->Branch("process",&process);
+      tree->Branch("nedeps",&nedeps,"nedeps/I");
+      tree->Branch("edep_mcid",edep_mcid,"edep_mcid[nedeps]/I"); 
+      tree->Branch("edep_energy",edep_energy,"edep_energy[nedeps]/F"); 
+      tree->Branch("edep_x",edep_x,"edep_x[nedeps]/F"); 
+      tree->Branch("edep_y",edep_y,"edep_y[nedeps]/F"); 
+      tree->Branch("edep_z",edep_z,"edep_z[nedeps]/F"); 
+      tree->Branch("edep_ds",edep_ds,"edep_ds[nedeps]/F"); 
       tree->Branch("nhits",&nhits,"nhits/I");
       tree->Branch("hit_tpc",hit_tpc,"hit_tpc[nhits]/I"); 
       tree->Branch("hit_plane",hit_plane,"hit_plane[nhits]/I"); 
       tree->Branch("hit_wire",hit_wire,"hit_wire[nhits]/I"); 
       tree->Branch("hit_channel",hit_channel,"hit_channel[nhits]/I"); 
       tree->Branch("hit_peakT",hit_peakT,"hit_peakT[nhits]/F"); 
+      tree->Branch("hit_time",hit_time,"hit_time[nhits]/F"); 
       tree->Branch("hit_rms",hit_rms,"hit_rms[nhits]/F"); 
       tree->Branch("hit_ph",hit_ph,"hit_ph[nhits]/F"); 
       tree->Branch("hit_area",hit_area,"hit_area[nhits]/F"); 
@@ -268,13 +287,14 @@ namespace sbnd {
       tree->Branch("hit_mcenergy",hit_mcenergy,"hit_mcenergy[nhits]/F"); 
       tree->Branch("hit_mccharge",hit_mccharge,"hit_mccharge[nhits]/F"); 
       tree->Branch("hit_charge",hit_charge,"hit_charge[nhits]/F");
-    
+       
     }
     
     // === Function for filling tree ===
     void FillTree(){ tree->Fill(); }
 
   };//BlipAnaTreeDataStruct class
+
 
 
   //###################################################
@@ -289,15 +309,10 @@ namespace sbnd {
     void analyze(const art::Event& evt);
 
     private:
-    
-    // --- Services --- 
-    art::ServiceHandle<geo::Geometry> fGeo;
-    art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
-    art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-    
+
     // --- Detector and clock data ---
-    float clkdata_BeamGateTime;
-    
+    float detprop_XTicksOffset[kNplanes];
+
     // --- Data and calo objects ---
     BlipAnaTreeDataStruct*  fData;
     calo::CalorimetryAlg    fCaloAlg;
@@ -306,14 +321,20 @@ namespace sbnd {
     std::string   fHitModuleLabel;
     std::string   fLArG4ModuleLabel;
     std::string   fTrackModuleLabel;
-
+    bool          fSaveParticleList;
+    float         fBlipMergeDist;
+    
     // --- Histograms ---
-    TH1F*         h_nhits;
-  
-    // === Function for initializing histograms ===
+    TH1F*   h_trueblip_ds;
+    TH1F*   h_trueblip_energy;
+    TH1F*   h_nhits[2][kNplanes];
+    TH1F*   h_hitrms[2][kNplanes];
+    TH1F*   h_hitph[2][kNplanes];
+
+    // Initialize histograms
     void InitializeHistograms(){
       art::ServiceHandle<art::TFileService> tfs;
-      h_nhits = tfs->make<TH1F>("nhits","Number of hits per event",1000,0,1000);
+      //h_nhits = tfs->make<TH1F>("nhits","Number of hits per event",1000,0,1000);
     }
 
   };//class BlipAna
@@ -332,6 +353,8 @@ sbnd::BlipAna::BlipAna(fhicl::ParameterSet const& pset) :
   ,fHitModuleLabel(pset.get<std::string>("HitModuleLabel","gaushit"))
   ,fLArG4ModuleLabel(pset.get<std::string>("LArG4ModuleLabel","largeant"))
   ,fTrackModuleLabel(pset.get<std::string>("TrackModuleLabel","pandora"))
+  ,fSaveParticleList(pset.get<bool>("SaveParticleList",true))
+  ,fBlipMergeDist(pset.get<float>("BlipMergeDist",0.2))
 {
   fData = new BlipAnaTreeDataStruct();
   fData ->Clear();
@@ -341,15 +364,20 @@ sbnd::BlipAna::BlipAna(fhicl::ParameterSet const& pset) :
 sbnd::BlipAna::~BlipAna(){}
 
 
+
 //###################################################
 //  beginJob: retrieve relevant detector and clock
 //  data here, and save them into class variables
 //###################################################
 void sbnd::BlipAna::beginJob() {
-  auto const clockData  = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
-  //auto const detProp    = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
-  clkdata_BeamGateTime = clockData.BeamGateTime();
+  //auto const clockData  = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+  //clkdata_BeamGateTime = clockData.BeamGateTime();
+  auto const detProp    = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+  detprop_XTicksOffset[0] = detProp.GetXTicksOffset(0,0,0);
+  detprop_XTicksOffset[1] = detProp.GetXTicksOffset(1,0,0);
+  detprop_XTicksOffset[2] = detProp.GetXTicksOffset(2,0,0);
 }
+
 
 //###################################################
 //  Main event-by-event analysis
@@ -361,7 +389,10 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   <<"Processing event "<<evt.id().event()<<"\n";
   fData->Clear();
 
-  std::cout<<"Beam time "<<clkdata_BeamGateTime<<"\n";
+  //std::cout
+  //<<"XTicksOffset "<<detprop_XTicksOffset[0]<<", "<<detprop_XTicksOffset[1]<<", "<<detprop_XTicksOffset[2]<<"\n";
+  //<<"\n";
+
 
   //=========================================
   // Event information
@@ -374,21 +405,27 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   //=========================================
   // Get data products for this event
   //=========================================
+  
   // -- simchannels
   std::vector<const sim::SimChannel*> simChannels;
   if (isMC) evt.getView(fLArG4ModuleLabel, simChannels);
+  
   // -- G4 particles
+  art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
   const sim::ParticleList& plist = pi_serv->ParticleList();
+
   // -- hits
   art::Handle< std::vector<recob::Hit> > hitListHandle;
   std::vector<art::Ptr<recob::Hit> > hitlist;
   if (evt.getByLabel(fHitModuleLabel,hitListHandle))
     art::fill_ptr_vector(hitlist, hitListHandle);
+  
   // -- tracks
   art::Handle< std::vector<recob::Track> > tracklistHandle;
   std::vector<art::Ptr<recob::Track> > tracklist;
   if (evt.getByLabel(fTrackModuleLabel,tracklistHandle))
     art::fill_ptr_vector(tracklist, tracklistHandle);
+  
   // -- hit<->track associations
   art::FindManyP<recob::Track> fmtk(hitListHandle,evt,fTrackModuleLabel);
 
@@ -404,10 +441,11 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   <<"\n";
 
 
+
   //====================================
   // Save G4 particle information
   //====================================
-  
+ 
   // -------------------------------------------------------
   // Find total visible energy deposited in the LAr AV 
   // by looking at the SimChannels for all three planes
@@ -421,71 +459,107 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
       }
     }
   }
-  
+ 
+  std::cout
+  <<"Total energy deposited: "<<fData->total_depEnergy<<" MeV \n";
+
+  //------------------------------------------------------
+  // Save all the "true" blips in the event
+  std::vector<BlipUtils::TrueBlip> trueBlipsVec;
+
   // ------------------------------------------------------
   // Loop through the MCParticles
   sim::ParticleList::const_iterator itPart = plist.begin();
-  for(size_t i = 0; (i<plist.size())&&(itPart!=plist.end())&&(i<kMaxG4); i++){
+  for(size_t i = 0; (i<plist.size())&&(itPart!=plist.end()); i++){
     const simb::MCParticle* pPart = (itPart++)->second;
 
-    // Get track ID and status
+    // Get important info about particle and convert units if necessary
     int trackID   = pPart->TrackId();
     int isPrimary = (int)(pPart->Process() == "primary");
-
-    // Convert units and make time reference the
-    // start of the main drift window (BeamTriggerTime)
     float mass    = /*GeV->MeV*/1e3 * pPart->Mass();
     float E       = /*GeV->MeV*/1e3 * pPart->E();
     float endE    = /*GeV->MeV*/1e3 * pPart->EndE();
+    float KE      = E-mass;
     float P       = /*GeV->MeV*/1e3 * pPart->Momentum().Vect().Mag();
     float Px      = /*GeV->MeV*/1e3 * pPart->Px();
     float Py      = /*GeV->MeV*/1e3 * pPart->Py();
     float Pz      = /*GeV->MeV*/1e3 * pPart->Pz();
-    float T       = pPart->T() - clkdata_BeamGateTime;
-    float endT    = pPart->EndT() - clkdata_BeamGateTime;
- 
-    // Get the total energy deposited by this particle by looking at IDEs from 3 planes.
-    // The value should be the same on all planes, but better safe than sorry...
-    geo::View_t views[3]={geo::kU, geo::kV, geo::kW};
-    int nPlanes = 0;
-    float totalE_particle = 0, totalne_particle = 0;
-    for(const geo::View_t view : views ) {
-      std::vector<const sim::IDE* > ides = bt_serv->TrackIdToSimIDEs_Ps(trackID, view);
-      if( ides.size() ) nPlanes++;
-      for (auto ide: ides) {
-        totalE_particle += ide->energy;
-        totalne_particle += ide->numElectrons;
-      }
-    }
-    if(nPlanes) {
-      fData->depEnergy[i]     = totalE_particle/nPlanes;
-      fData->numElectrons[i]  = totalne_particle/nPlanes;
-    }
+    float ne      = 0;
+    float edep    = BlipUtils::PartEnergyDep(trackID,ne);
+    float pathlen = BlipUtils::PathLength(*pPart);
+   
+    // Make true blips 
+    BlipUtils::TrueBlip tb = BlipUtils::MakeTrueBlip(trackID);
+    if( tb.isValid ) trueBlipsVec.push_back(tb);
+
+    // Save to TTree object
+    if(i<kMaxG4 && fSaveParticleList){
+      fData->trackID[i]         = trackID;
+      fData->isPrimary[i]       = isPrimary;
+      fData->pdg[i]             = pPart->PdgCode();
+      fData->nDaughters[i]      = pPart->NumberDaughters();
+      fData->mother[i]          = pPart->Mother();
+      fData->E[i]               = E;
+      fData->endE[i]            = endE;
+      fData->mass[i]            = mass;
+      fData->P[i]               = P;
+      fData->Px[i]              = Px;
+      fData->Py[i]              = Py;
+      fData->Pz[i]              = Pz;
+      fData->startPointx[i]     = pPart->Vx();
+      fData->startPointy[i]     = pPart->Vy();
+      fData->startPointz[i]     = pPart->Vz();
+      fData->endPointx[i]       = pPart->EndPosition()[0];
+      fData->endPointy[i]       = pPart->EndPosition()[1];
+      fData->endPointz[i]       = pPart->EndPosition()[2];
+      fData->startT[i]          = pPart->T();
+      fData->endT[i]            = pPart->EndT();
+      fData->pathlen[i]         = pathlen;
+      fData->process[i]         = pPart->Process();
+      fData->depEnergy[i]       = edep;
+      fData->numElectrons[i]    = ne;
+    }//endif saving particle list to TTree
       
-    fData->trackID[i]         = trackID;
-    fData->isPrimary[i]       = isPrimary;
-    fData->pdg[i]             = pPart->PdgCode();
-    fData->nDaughters[i]      = pPart->NumberDaughters();
-    fData->mother[i]          = pPart->Mother();
-    fData->E[i]               = E;
-    fData->endE[i]            = endE;
-    fData->mass[i]            = mass;
-    fData->P[i]               = P;
-    fData->Px[i]              = Px;
-    fData->Py[i]              = Py;
-    fData->Pz[i]              = Pz;
-    fData->X[i]               = pPart->Vx();
-    fData->Y[i]               = pPart->Vy();
-    fData->Z[i]               = pPart->Vz();
-    fData->endX[i]            = pPart->EndPosition()[0];
-    fData->endY[i]            = pPart->EndPosition()[1];
-    fData->endZ[i]            = pPart->EndPosition()[2];
-    fData->startT[i]          = T;
-    fData->endT[i]            = endT;
-    fData->pathlen[i]         = BlipUtils::PathLength(*pPart);
-    fData->process[i]         = pPart->Process();
-    
+    if(1){
+      // (for debugging output -- keep commented out during normal running)
+      //printf("  %5i  trkID: %-6i PDG: %-8i XYZ= %7.1f %7.1f %7.1f, dL=%7.1f, KE0=%8.1f,  KEf=%8.1f, Edep=%8.1f, T=%8.1f --> %8.1f, moth=%5i, %12s, ND=%i\n",
+      printf("  %5i  trkID: %-6i PDG: %-8i XYZ= %7.1f %7.1f %7.1f, dL=%7.1f, KE0=%8.1f, Edep=%8.3f, T=%8.1f --> %8.1f, moth=%5i, %12s, ND=%i\n",
+        (int)i,
+        trackID,
+        pPart->PdgCode(),
+        pPart->Vx(),
+        pPart->Vy(),
+        pPart->Vz(),
+        pathlen,   
+        KE,
+        edep,   
+        pPart->T(),
+        pPart->EndT(),
+        pPart->Mother(),
+        pPart->Process().c_str(),
+        pPart->NumberDaughters()
+      ); 
+    }
+  
   }//endloop over G4 particles
+
+
+
+  //====================================
+  // Merge and save true blip information
+  //====================================
+  MergeBlips(trueBlipsVec, fBlipMergeDist); 
+  fData->nedeps = (int)trueBlipsVec.size();
+  std::cout<<"Found "<<trueBlipsVec.size()<<" true blips:\n";
+  for(size_t i=0; i<trueBlipsVec.size(); i++ ) {
+    fData->edep_energy[i] = trueBlipsVec.at(i).Energy;
+    fData->edep_ds[i]     = trueBlipsVec.at(i).Length;
+    fData->edep_x[i]      = trueBlipsVec.at(i).Location.X();
+    fData->edep_y[i]      = trueBlipsVec.at(i).Location.Y();
+    fData->edep_z[i]      = trueBlipsVec.at(i).Location.Z();
+    fData->edep_mcid[i]   = trueBlipsVec.at(i).LeadingTrackID;
+    std::cout<<"   "<<trueBlipsVec.at(i).Energy<<" MeV, ds= "<<trueBlipsVec.at(i).Length<<" cm, trkID= "<<trueBlipsVec.at(i).LeadingTrackID<<"\n";
+  }
 
 
   //====================================
@@ -497,6 +571,7 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     fData->hit_plane[i]   = hitlist[i]->WireID().Plane;
     fData->hit_wire[i]    = hitlist[i]->WireID().Wire;
     fData->hit_peakT[i]   = hitlist[i]->PeakTime();
+    fData->hit_time[i]    = hitlist[i]->PeakTime()-detprop_XTicksOffset[fData->hit_plane[i]];
     fData->hit_rms[i]     = hitlist[i]->RMS();
     fData->hit_ph[i]	    = hitlist[i]->PeakAmplitude();
     fData->hit_area[i]    = hitlist[i]->Integral();
@@ -511,11 +586,16 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
       BlipUtils::HitTruth( hitlist[i], fData->hit_mcid[i], fData->hit_mcfrac[i], fData->hit_mcenergy[i], fData->hit_mccharge[i]);
   }//endloop hits
 
+
+
   // Procedure
   //  - Look for hits that were not included in a track
+  //  - Merge together closely-spaced hits on same wires, save average peakT +/- spread
+  //  - Merge together clusters on adjacent wires (if they match up in time)
   //  - Plane-to-plane time matching
   //  - Wire intersection check to get XYZ
   //  - Create "blip" object and save to tree (nblips, blip_xyz, blip_charge, blip_mcenergy)
+   
 
   //====================================
   // Fill TTree
