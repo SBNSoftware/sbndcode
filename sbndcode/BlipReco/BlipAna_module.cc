@@ -141,7 +141,7 @@ namespace sbnd {
  
     // --- True energy deposit info (derived) ---
     int   nedeps;                   // number of true localized energy depositions
-    int   edep_mcid[kMaxEDeps];     // leading G4 track ID
+    int   edep_g4id[kMaxEDeps];     // leading G4 track ID
     float edep_energy[kMaxEDeps];   // total energy deposited (MeV)
     float edep_x[kMaxEDeps];        // x (cm)
     float edep_y[kMaxEDeps];        // y (cm)
@@ -161,10 +161,12 @@ namespace sbnd {
     float	hit_area[kMaxHits];       // charge (area) in ADC units
     float hit_charge[kMaxHits];     // reconstructed number of electrons
     int	  hit_trkid[kMaxHits];      // is this hit associated with a reco track?
-    int	  hit_mcid[kMaxHits];       // G4 TrackID of leading particle
-    float hit_mcfrac[kMaxHits];     // fraction of hit energy from leading MCParticle
-    float hit_mcenergy[kMaxHits];   // true energy
-    float hit_mccharge[kMaxHits];   // true number of electrons (drift-attenuated)
+    int   hit_isreal[kMaxHits];     // is this hit real?
+    int	  hit_g4id[kMaxHits];       // G4 TrackID of leading particle
+    float hit_g4frac[kMaxHits];     // fraction of hit energy from leading MCParticle
+    float hit_g4energy[kMaxHits];   // true energy
+    float hit_g4charge[kMaxHits];   // true number of electrons (drift-attenuated)
+
 
     // === Function for resetting data ===
     void Clear(){ 
@@ -200,7 +202,7 @@ namespace sbnd {
       FillWith(process,     "");
       nedeps                = 0;    // --- EDeps ---
       FillWith(edep_energy, -999);
-      FillWith(edep_mcid,   -9);
+      FillWith(edep_g4id,   -9);
       FillWith(edep_x,      -99999.);
       FillWith(edep_y,      -99999.);
       FillWith(edep_z,      -99999.);
@@ -215,12 +217,13 @@ namespace sbnd {
       FillWith(hit_rms,     -999);
       FillWith(hit_ph,      -999);
       FillWith(hit_area,    -999);
-      FillWith(hit_trkid,   -999);
-      FillWith(hit_mcid,    -999);
-      FillWith(hit_mcfrac,  -999);
-      FillWith(hit_mcenergy,-999);
-      FillWith(hit_mccharge,-999);
       FillWith(hit_charge,  -999);
+      FillWith(hit_isreal,  -999);
+      FillWith(hit_trkid,   -999);
+      FillWith(hit_g4id,    -999);
+      FillWith(hit_g4frac,  -999);
+      FillWith(hit_g4energy,-999);
+      FillWith(hit_g4charge,-999);
     }
 
     // === Function for resizing vectors (if necessary) ===
@@ -265,7 +268,7 @@ namespace sbnd {
       tree->Branch("depEnergy",depEnergy,"depEnergy[nparticles]/F");
       tree->Branch("process",&process);
       tree->Branch("nedeps",&nedeps,"nedeps/I");
-      tree->Branch("edep_mcid",edep_mcid,"edep_mcid[nedeps]/I"); 
+      tree->Branch("edep_g4id",edep_g4id,"edep_g4id[nedeps]/I"); 
       tree->Branch("edep_energy",edep_energy,"edep_energy[nedeps]/F"); 
       tree->Branch("edep_x",edep_x,"edep_x[nedeps]/F"); 
       tree->Branch("edep_y",edep_y,"edep_y[nedeps]/F"); 
@@ -281,12 +284,13 @@ namespace sbnd {
       tree->Branch("hit_rms",hit_rms,"hit_rms[nhits]/F"); 
       tree->Branch("hit_ph",hit_ph,"hit_ph[nhits]/F"); 
       tree->Branch("hit_area",hit_area,"hit_area[nhits]/F"); 
-      tree->Branch("hit_trkid",hit_trkid,"hit_trkid[nhits]/I"); 
-      tree->Branch("hit_mcid",hit_mcid,"hit_mcid[nhits]/I");
-      tree->Branch("hit_mcfrac",hit_mcfrac,"hit_mcfrac[nhits]/F"); 
-      tree->Branch("hit_mcenergy",hit_mcenergy,"hit_mcenergy[nhits]/F"); 
-      tree->Branch("hit_mccharge",hit_mccharge,"hit_mccharge[nhits]/F"); 
       tree->Branch("hit_charge",hit_charge,"hit_charge[nhits]/F");
+      tree->Branch("hit_isreal",hit_isreal,"hit_isreal[nhits]/I"); 
+      tree->Branch("hit_trkid",hit_trkid,"hit_trkid[nhits]/I"); 
+      tree->Branch("hit_g4id",hit_g4id,"hit_g4id[nhits]/I");
+      tree->Branch("hit_g4frac",hit_g4frac,"hit_g4frac[nhits]/F"); 
+      tree->Branch("hit_g4energy",hit_g4energy,"hit_g4energy[nhits]/F"); 
+      tree->Branch("hit_g4charge",hit_g4charge,"hit_g4charge[nhits]/F"); 
        
     }
     
@@ -521,8 +525,6 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     }//endif saving particle list to TTree
       
     if(1){
-      // (for debugging output -- keep commented out during normal running)
-      //printf("  %5i  trkID: %-6i PDG: %-8i XYZ= %7.1f %7.1f %7.1f, dL=%7.1f, KE0=%8.1f,  KEf=%8.1f, Edep=%8.1f, T=%8.1f --> %8.1f, moth=%5i, %12s, ND=%i\n",
       printf("  %5i  trkID: %-6i PDG: %-8i XYZ= %7.1f %7.1f %7.1f, dL=%7.1f, KE0=%8.1f, Edep=%8.3f, T=%8.1f --> %8.1f, moth=%5i, %12s, ND=%i\n",
         (int)i,
         trackID,
@@ -557,14 +559,15 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     fData->edep_x[i]      = trueBlipsVec.at(i).Location.X();
     fData->edep_y[i]      = trueBlipsVec.at(i).Location.Y();
     fData->edep_z[i]      = trueBlipsVec.at(i).Location.Z();
-    fData->edep_mcid[i]   = trueBlipsVec.at(i).LeadingTrackID;
-    std::cout<<"   "<<trueBlipsVec.at(i).Energy<<" MeV, ds= "<<trueBlipsVec.at(i).Length<<" cm, trkID= "<<trueBlipsVec.at(i).LeadingTrackID<<"\n";
+    fData->edep_g4id[i]   = trueBlipsVec.at(i).LeadingG4TrackID;
+    std::cout<<"   "<<trueBlipsVec.at(i).Energy<<" MeV, ds= "<<trueBlipsVec.at(i).Length<<" cm, trkID= "<<trueBlipsVec.at(i).LeadingG4TrackID<<"\n";
   }
 
 
   //====================================
   // Save hit information
   //====================================
+
   for(size_t i=0; (i<hitlist.size()) && (i<kMaxHits); i++){
     fData->hit_tpc[i]     = hitlist[i]->WireID().TPC;
     fData->hit_channel[i] = hitlist[i]->Channel();
@@ -576,20 +579,37 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     fData->hit_ph[i]	    = hitlist[i]->PeakAmplitude();
     fData->hit_area[i]    = hitlist[i]->Integral();
     fData->hit_charge[i]  = fCaloAlg.ElectronsFromADCArea(hitlist[i]->Integral(),hitlist[i]->WireID().Plane);
+    
     // Find associated track
     if (fmtk.isValid()){
       if (fmtk.at(i).size())  fData->hit_trkid[i] = fmtk.at(i)[0]->ID();
       else                    fData->hit_trkid[i] = -1;
     }
+    
     // Find G4 particle ID for leading contributor
     if( BlipUtils::DoesHitHaveSimChannel(simChannels,hitlist[i]) )
-      BlipUtils::HitTruth( hitlist[i], fData->hit_mcid[i], fData->hit_mcfrac[i], fData->hit_mcenergy[i], fData->hit_mccharge[i]);
+      BlipUtils::HitTruth( hitlist[i], fData->hit_g4id[i], fData->hit_g4frac[i], fData->hit_g4energy[i], fData->hit_g4charge[i]);
+    
+    // Determine realness
+    if( fData->hit_g4id[i]>0 ) {
+      fData->hit_isreal[i] = 1;
+      for(size_t j=0; (j<hitlist.size())&&(j<kMaxHits); j++){
+        if( BlipUtils::DoHitsOverlap(hitlist.at(i),hitlist.at(j)) ) 
+          fData->hit_isreal[j] = 1;
+      }
+    }
+
+    // Make clusters
+
+
   }//endloop hits
+  
+  
 
-
+  
 
   // Procedure
-  //  - Look for hits that were not included in a track
+  //  - Look for hits that were not included in a track (do this later)
   //  - Merge together closely-spaced hits on same wires, save average peakT +/- spread
   //  - Merge together clusters on adjacent wires (if they match up in time)
   //  - Plane-to-plane time matching

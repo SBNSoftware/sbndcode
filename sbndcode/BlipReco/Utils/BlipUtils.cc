@@ -1,9 +1,5 @@
 #include "BlipUtils.h"
 
-//########################
-// Functions
-//########################
-
 namespace BlipUtils {
   
   //============================================================================
@@ -73,9 +69,9 @@ namespace BlipUtils {
   //====================================================================
   void GrowTrueBlip(simb::MCParticle& part, TrueBlip& tblip){
     // If this is a new blip, initialize
-    if( tblip.vTrackIDs.size() == 0 ) tblip.StartPoint = part.Position().Vect();
+    if( tblip.vG4TrackIDs.size() == 0 ) tblip.StartPoint = part.Position().Vect();
     float edep = PartEnergyDep(part.TrackId(),tblip.NumElectrons);
-    tblip.vTrackIDs  .push_back(part.TrackId());
+    tblip.vG4TrackIDs  .push_back(part.TrackId());
     tblip.vPDGs      .push_back(part.PdgCode());
     tblip.Energy      += edep;
     tblip.EndPoint  = part.EndPosition().Vect();
@@ -83,7 +79,7 @@ namespace BlipUtils {
     tblip.Length    = (tblip.EndPoint-tblip.StartPoint).Mag();
     if(edep > tblip.LeadingEnergy ) {
       tblip.LeadingEnergy = edep;
-      tblip.LeadingTrackID = part.TrackId();
+      tblip.LeadingG4TrackID = part.TrackId();
     }
   }
   
@@ -93,7 +89,7 @@ namespace BlipUtils {
     if( dmin <= 0 ) return;
     std::vector<TrueBlip> vtb_merged;
     std::vector<bool> isGrouped(vtb.size(),false);
-    for(size_t i=0; i<vtb.size()-1; i++){
+    for(size_t i=0; i<vtb.size(); i++){
       if( isGrouped.at(i) ) continue;
       else isGrouped.at(i) = true;
       TrueBlip blip_i = vtb.at(i);
@@ -107,13 +103,13 @@ namespace BlipUtils {
           blip_i.EndPoint = blip_j.EndPoint;
           blip_i.Location = (blip_i.EndPoint+blip_i.StartPoint)*0.5;
           blip_i.Length   = (blip_i.EndPoint-blip_i.StartPoint).Mag();
-          for(size_t kk=0; kk<blip_j.vTrackIDs.size(); kk++)
-            blip_i.vTrackIDs.push_back(blip_j.vTrackIDs.at(kk)); 
+          for(size_t kk=0; kk<blip_j.vG4TrackIDs.size(); kk++)
+            blip_i.vG4TrackIDs.push_back(blip_j.vG4TrackIDs.at(kk)); 
           for(size_t kk=0; kk<blip_j.vPDGs.size(); kk++)
             blip_i.vPDGs.push_back(blip_j.vPDGs.at(kk));
           if( blip_j.LeadingEnergy > blip_i.LeadingEnergy ) {
             blip_i.LeadingEnergy = blip_j.LeadingEnergy;
-            blip_i.LeadingTrackID = blip_j.LeadingTrackID;
+            blip_i.LeadingG4TrackID = blip_j.LeadingG4TrackID;
           }
         }//d < dmin
       }//loop over blip_j
@@ -145,12 +141,14 @@ namespace BlipUtils {
   //====================================================================
   bool DoHitsOverlap(art::Ptr<recob::Hit> const& hit1, art::Ptr<recob::Hit> const& hit2){
     if( hit1->Channel() != hit2->Channel() ) return false;
+    if( hit1->WireID() != hit2->WireID() ) return false;
     float t1 = hit1->PeakTime();
     float t2 = hit2->PeakTime();
     float sig = std::max(hit1->RMS(),hit2->RMS());
     if( fabs(t1-t2) < sig ) return true;
     else return false;
   }
+  
 
   //=====================================================================
   // Function to check if there was a SimChannel made for a hit (useful when checking for noise hits)

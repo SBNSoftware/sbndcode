@@ -11,14 +11,9 @@
 // framework
 #include "art_root_io/TFileService.h"
 #include "art_root_io/TFileDirectory.h"
-//#include "art/Framework/Principal/Event.h"
-//#include "art/Framework/Principal/Handle.h" 
-//#include "fhiclcpp/ParameterSet.h" 
 #include "canvas/Persistency/Common/Ptr.h" 
 #include "canvas/Persistency/Common/PtrVector.h" 
 #include "art/Framework/Services/Registry/ServiceHandle.h" 
-//#include "messagefacility/MessageLogger/MessageLogger.h" 
-//#include "canvas/Persistency/Common/FindManyP.h"
 
 // LArSoft
 #include "nusimdata/SimulationBase/MCParticle.h"
@@ -41,9 +36,9 @@ namespace BlipUtils{
   //###################################################
   struct TrueBlip {
     bool    isValid;
-    std::vector<int> vTrackIDs;
+    std::vector<int> vG4TrackIDs;
     std::vector<int> vPDGs;
-    int       LeadingTrackID;
+    int       LeadingG4TrackID;
     float     LeadingEnergy;
     TVector3  Location;
     TVector3  StartPoint;
@@ -53,16 +48,37 @@ namespace BlipUtils{
     float   Length;
     TrueBlip() {
       isValid = false;
-      vTrackIDs.clear();
+      vG4TrackIDs.clear();
       vPDGs.clear();
-      LeadingTrackID = -9;
+      LeadingG4TrackID = -9;
       LeadingEnergy = -9;
       Energy  = 0;
       Length  = 0;
       NumElectrons = 0;
     }
   };
- 
+  
+  //###################################################
+  //  Data structure for hit clusters
+  //###################################################
+  struct HitClust {
+    bool isValid;
+    std::vector<int> vHitIDs;
+    std::vector<int> vWires;
+    int   LeadingG4TrackID;
+    int   LeadingG4Energy;
+    int   LeadingHitID;
+    int   Wire;
+    int   TPC;
+    int   Plane;
+    float Area;
+    float Charge;
+    float StartTime;
+    float EndTime;
+    float Time;
+    float Width;
+  };
+
   //###################################################
   // Functions related to blip reconstruction
   //###################################################
