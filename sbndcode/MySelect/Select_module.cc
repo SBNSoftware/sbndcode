@@ -144,6 +144,8 @@ private:
 
   bool TrackCrossesCpa(const art::Ptr<recob::Track> trk) const;
   
+  bool TrackThroughGoing(const art::Ptr<recob::Track> trk) const;
+
   std::vector< art::Ptr<recob::PFParticle> > GetCrossingCR_cathode_stitching_T0(
 	const std::vector< art::Ptr<recob::PFParticle> > &pfps, 
 	const art::FindManyP<recob::Track> &trackAssoc,
@@ -310,19 +312,6 @@ void sbnd::Select::analyze(art::Event const& e)
         pfpTrajLocationY.push_back(trk->LocationAtPoint(i).Y());
         pfpTrajLocationZ.push_back(trk->LocationAtPoint(i).Z());
       }
-
-//      // Track T0
-//   
-//      std::vector< art::Ptr<anab::T0> > trkT0vect = t0Assoc.at(trk.key());
-//
-//      if(trkT0vect.empty()) continue;
-//
-//      for(const art::Ptr<anab::T0> &t0: trkT0vect){
-//
-//       pfpT0 = t0->Time() / 1000000; //unit: ns -> Convert ns to ms: /10^6 
-//       pfpT0Confidence = t0->TriggerConfidence();
-//
-//      } 
  
       // Hit 
            
@@ -593,7 +582,7 @@ std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_cathode_s
 }  
 
 //-------------------------------------------------------------------
-// Get pfparticle that crosses cathode-anode i.e. checking pandora T0 stitching
+// Get pfparticle that crt tracks that are through going
 
 std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_SCE_CRT(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc, const art::FindManyP<anab::T0> &t0Assoc) const
 {
@@ -615,13 +604,13 @@ std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_SCE_CRT(c
     if(pfpTrack.empty()) continue;
 
     for(const art::Ptr<recob::Track> &trk: pfpTrack){
-
-      if(!(this->TrackCrossesCpa(trk))) continue;
-
-      if(!(this->TrackCrossesApa(trk))) continue;
  
-      crosser.push_back(pfp);
+      if(!(this->TrackThroughGoing(trk))) continue; //check if track is through-going
+ 
     }
+  
+    crosser.push_back(pfp);
+
   }
   return crosser;
 } 
@@ -693,6 +682,28 @@ bool sbnd::Select::TrackCrossesApa(const art::Ptr<recob::Track> trk) const
    
   if(distStart < 10 || distEnd < 10){
     return true;
+  }
+  return false;
+} 
+
+//------------------------------------------------------------------
+// Determine if a reconstructed track is through going: start & end outside of TPC 
+
+bool sbnd::Select::TrackThroughGoing(const art::Ptr<recob::Track> trk) const
+{
+  double xStart = trk->Start().X();    
+  double yStart = trk->Start().Y();    
+  double zStart = trk->Start().Z();    
+ 
+  double xEnd = trk->End().X();
+  double yEnd = trk->End().Y();
+  double zEnd = trk->End().Z();
+   
+   
+  if((xStart < -200 || 200 < xStart) && (yStart < -200 || 200 < yStart) && (zStart < 0 || 500 < zStart)){
+    if((xEnd < -200 || 200 < xEnd) && (yEnd < -200 || 200 < yEnd) && (zEnd < 0 || 500 < zEnd)){
+      return true; 
+    }
   }
   return false;
 } 
