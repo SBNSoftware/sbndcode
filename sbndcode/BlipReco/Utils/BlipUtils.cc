@@ -67,7 +67,7 @@ namespace BlipUtils {
   }
 
   //====================================================================
-  void GrowTrueBlip(simb::MCParticle& part, TrueBlip& tblip){
+  void GrowTrueBlip(simb::MCParticle const& part, TrueBlip& tblip){
     // If this is a new blip, initialize
     if( tblip.vG4TrackIDs.size() == 0 ) tblip.StartPoint = part.Position().Vect();
     float edep = PartEnergyDep(part.TrackId(),tblip.NumElectrons);
@@ -118,6 +118,42 @@ namespace BlipUtils {
     vtb.clear();
     vtb = vtb_merged;
   }
+ 
+  //=================================================================
+  HitClust MakeHitClust(art::Ptr<recob::Hit> const& hit, HitInfo const& hitinfo){
+    HitClust hc;
+    hc.TPC          = hitinfo.hit->WireID().TPC;
+    hc.Plane        = hitinfo.hit->WireID().Plane;
+    hc.G4TrackIDs  .insert(hitinfo.g4ids.begin(), hitinfo.g4ids.end());
+    hc.HitIDs      .insert(hitinfo.hitid);
+    hc.Wires       .insert(hitinfo.hit->WireID().Wire);
+    hc.LeadWire     = hitinfo.hit->WireID().Wire;
+    hc.Charge       = hitinfo.Charge;
+    hc.LeadHitCharge = hc.Charge;
+    hc.mapWireCharge[hitinfo.hit->WireID().Wire] = hitinfo.Charge;
+    hc.Time         = hitinfo.Time;
+    hc.StartTime    = hitinfo.Time - hit->RMS();
+    hc.EndTime      = hitinfo.Time + hit->RMS();
+    return hc;
+  }
+
+  void GrowHitClust(art::Ptr<recob::Hit> const& hit, HitInfo const& hitinfo, HitClust& hc){
+    if( (int)hit->WireID().TPC   != hc.TPC ) return;
+    if( (int)hit->WireID().Plane != hc.Plane ) return;
+    if( hc.HitIDs.find(hitinfo.hitid) != hc.HitIDs.end() ) return;
+    hc.G4TrackIDs .insert(hitinfo.g4ids.begin(), hitinfo.g4ids.end());
+    hc.HitIDs     .insert(hitinfo.hitid);
+    hc.Wires      .insert(hit->WireID().Wire);
+    hc.Charge     += hitinfo.Charge;
+    hc.mapWireCharge[hit->WireID().Wire] += hitinfo.Charge;
+    if( hitinfo.Charge > hc.LeadHitCharge ) {
+      hc.LeadHitCharge = hitinfo.Charge;
+      hc.Time = hitinfo.Time;
+      hc.LeadWire = hitinfo.hit->WireID().Wire;
+    }
+    hc.StartTime  = std::min(hc.StartTime,hitinfo.Time - hit->RMS());
+    hc.EndTime    = std::max(hc.EndTime,  hitinfo.Time + hit->RMS());
+  }
 
   //====================================================================
   // Function to determine if a particle descended from another particle.
@@ -140,7 +176,7 @@ namespace BlipUtils {
 
   //====================================================================
   bool DoHitsOverlap(art::Ptr<recob::Hit> const& hit1, art::Ptr<recob::Hit> const& hit2){
-    if( hit1->Channel() != hit2->Channel() ) return false;
+    //if( hit1->Channel() != hit2->Channel() ) return false;
     if( hit1->WireID() != hit2->WireID() ) return false;
     float t1 = hit1->PeakTime();
     float t2 = hit2->PeakTime();
@@ -148,7 +184,7 @@ namespace BlipUtils {
     if( fabs(t1-t2) < sig ) return true;
     else return false;
   }
-  
+
 
   //=====================================================================
   // Function to check if there was a SimChannel made for a hit (useful when checking for noise hits)
@@ -157,35 +193,6 @@ namespace BlipUtils {
     for(size_t sc = 0; sc < chans.size(); ++sc) 
       if( chans[sc]->Channel() == hit->Channel() ) { isMatch = true; break; }
     return isMatch;
-  }
-  
-  //======================================================================
-  // Function to calculate purity of a collection of hits
-  void HitsPurity( std::vector< art::Ptr<recob::Hit> > const& hits, int& trackid, float& purity, double& maxe 
-    ) {
-    
-    art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
-    trackid = -1;
-    purity = -1;
-    std::map<int,double> trkide;
-    for(size_t h = 0; h < hits.size(); ++h){
-      art::Ptr<recob::Hit> hit = hits[h];
-      std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToEveTrackIDEs(clockData, hit);
-      for(size_t e = 0; e < eveIDs.size(); ++e){
-        trkide[eveIDs[e].trackID] += eveIDs[e].energy;
-      }
-    }
-    maxe = -1;
-    double tote = 0;
-    for (std::map<int,double>::iterator ii = trkide.begin(); ii!=trkide.end(); ++ii){
-      tote += ii->second;
-      if ((ii->second)>maxe){
-        maxe = ii->second;
-        trackid = ii->first;
-      }
-    }
-    if (tote>0) purity = maxe/tote;
   }
   
   
@@ -218,17 +225,18 @@ namespace BlipUtils {
     energy = maxe;
     numElectrons = ne;
   }
-  //----------------------------------------------------------------
-  // helper function to get TrackID (returns false if no match found)
-  bool HitTruthId( art::Ptr<recob::Hit> const& hit, int& mcid) 
-  {
-    mcid = std::numeric_limits<int>::lowest();
-    float dummy1;
-    float dummy2;
-    float dummy3;
-    HitTruth(hit,mcid,dummy1,dummy2,dummy3);
-    if( mcid > std::numeric_limits<int>::lowest() ) return true;
-    else return false;
+ 
+  //==================================================================
+  // Returns list of all G4 track IDs associated with a hit
+  std::set<int> HitTruthIds( art::Ptr<recob::Hit> const& hit){
+    std::set<int> ids;
+    art::ServiceHandle<cheat::BackTrackerService> bt_serv;
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    std::vector<sim::TrackIDE> trackIDEs = bt_serv->HitToTrackIDEs(clockData, hit);
+    for(size_t i = 0; i < trackIDEs.size(); ++i) ids.insert(trackIDEs[i].trackID);
+    //std::vector<int> vout(ids.begin(),ids.end());
+    //return vout;
+    return ids;
   }
   
   

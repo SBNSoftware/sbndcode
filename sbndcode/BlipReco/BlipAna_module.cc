@@ -166,6 +166,8 @@ namespace sbnd {
     float hit_g4frac[kMaxHits];     // fraction of hit energy from leading MCParticle
     float hit_g4energy[kMaxHits];   // true energy
     float hit_g4charge[kMaxHits];   // true number of electrons (drift-attenuated)
+    int   hit_clustid[kMaxHits];    // key of HitClust in which hit was included
+    int   hit_blipid[kMaxHits];     // key of Blip in which hit was included
 
 
     // === Function for resetting data ===
@@ -219,11 +221,13 @@ namespace sbnd {
       FillWith(hit_area,    -999);
       FillWith(hit_charge,  -999);
       FillWith(hit_isreal,  -999);
-      FillWith(hit_trkid,   -999);
-      FillWith(hit_g4id,    -999);
+      FillWith(hit_trkid,     -9);
+      FillWith(hit_g4id,      -9);
       FillWith(hit_g4frac,  -999);
       FillWith(hit_g4energy,-999);
       FillWith(hit_g4charge,-999);
+      FillWith(hit_clustid,   -9);
+      FillWith(hit_blipid,     -9);
     }
 
     // === Function for resizing vectors (if necessary) ===
@@ -291,7 +295,8 @@ namespace sbnd {
       tree->Branch("hit_g4frac",hit_g4frac,"hit_g4frac[nhits]/F"); 
       tree->Branch("hit_g4energy",hit_g4energy,"hit_g4energy[nhits]/F"); 
       tree->Branch("hit_g4charge",hit_g4charge,"hit_g4charge[nhits]/F"); 
-       
+      tree->Branch("hit_clustid",hit_clustid,"hit_clustid[nhits]/I"); 
+      tree->Branch("hit_blipid",hit_blipid,"hit_blipid[nhits]/I"); 
     }
     
     // === Function for filling tree ===
@@ -313,7 +318,8 @@ namespace sbnd {
     void analyze(const art::Event& evt);
 
     private:
-
+    void PrintParticleInfo(size_t);
+  
     // --- Detector and clock data ---
     float detprop_XTicksOffset[kNplanes];
 
@@ -322,12 +328,15 @@ namespace sbnd {
     calo::CalorimetryAlg    fCaloAlg;
 
     // --- FCL configs ---
-    std::string   fHitModuleLabel;
-    std::string   fLArG4ModuleLabel;
-    std::string   fTrackModuleLabel;
-    bool          fSaveParticleList;
-    float         fBlipMergeDist;
-    
+    std::string         fHitModuleLabel;
+    std::string         fLArG4ModuleLabel;
+    std::string         fTrackModuleLabel;
+    bool                fSaveParticleList;
+    float               fBlipMergeDist;
+    std::vector<float>  fMinHitRMS;
+    std::vector<float>  fMaxHitRMS;
+//    std::vector<float>  fMinHitPhWidthRatio;
+
     // --- Histograms ---
     TH1F*   h_trueblip_ds;
     TH1F*   h_trueblip_energy;
@@ -359,6 +368,9 @@ sbnd::BlipAna::BlipAna(fhicl::ParameterSet const& pset) :
   ,fTrackModuleLabel(pset.get<std::string>("TrackModuleLabel","pandora"))
   ,fSaveParticleList(pset.get<bool>("SaveParticleList",true))
   ,fBlipMergeDist(pset.get<float>("BlipMergeDist",0.2))
+  ,fMinHitRMS(pset.get<std::vector<float>>("MinHitRMS",{1,1.5,1}))
+  ,fMaxHitRMS(pset.get<std::vector<float>>("MaxHitRMS",{5,5,5}))
+//  ,fMinHitPhWidthRatio(pset.get<std::vector<float>>("MinHitPhWidthRatio",{0., 5., 0.}
 {
   fData = new BlipAnaTreeDataStruct();
   fData ->Clear();
@@ -393,18 +405,12 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   <<"Processing event "<<evt.id().event()<<"\n";
   fData->Clear();
 
-  //std::cout
-  //<<"XTicksOffset "<<detprop_XTicksOffset[0]<<", "<<detprop_XTicksOffset[1]<<", "<<detprop_XTicksOffset[2]<<"\n";
-  //<<"\n";
-
-
   //=========================================
   // Event information
   //=========================================
   fData->event  = evt.id().event();
   fData->run    = evt.id().run();
   bool isMC     = !evt.isRealData();
-
 
   //=========================================
   // Get data products for this event
@@ -450,7 +456,6 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   // Save G4 particle information
   //====================================
  
-  // -------------------------------------------------------
   // Find total visible energy deposited in the LAr AV 
   // by looking at the SimChannels for all three planes
   fData->total_depEnergy = 0;
@@ -463,15 +468,12 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
       }
     }
   }
- 
   std::cout
   <<"Total energy deposited: "<<fData->total_depEnergy<<" MeV \n";
 
-  //------------------------------------------------------
   // Save all the "true" blips in the event
   std::vector<BlipUtils::TrueBlip> trueBlipsVec;
 
-  // ------------------------------------------------------
   // Loop through the MCParticles
   sim::ParticleList::const_iterator itPart = plist.begin();
   for(size_t i = 0; (i<plist.size())&&(itPart!=plist.end()); i++){
@@ -483,7 +485,6 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     float mass    = /*GeV->MeV*/1e3 * pPart->Mass();
     float E       = /*GeV->MeV*/1e3 * pPart->E();
     float endE    = /*GeV->MeV*/1e3 * pPart->EndE();
-    float KE      = E-mass;
     float P       = /*GeV->MeV*/1e3 * pPart->Momentum().Vect().Mag();
     float Px      = /*GeV->MeV*/1e3 * pPart->Px();
     float Py      = /*GeV->MeV*/1e3 * pPart->Py();
@@ -497,7 +498,7 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     if( tb.isValid ) trueBlipsVec.push_back(tb);
 
     // Save to TTree object
-    if(i<kMaxG4 && fSaveParticleList){
+    if(i<kMaxG4){
       fData->trackID[i]         = trackID;
       fData->isPrimary[i]       = isPrimary;
       fData->pdg[i]             = pPart->PdgCode();
@@ -522,26 +523,8 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
       fData->process[i]         = pPart->Process();
       fData->depEnergy[i]       = edep;
       fData->numElectrons[i]    = ne;
+      PrintParticleInfo(i);
     }//endif saving particle list to TTree
-      
-    if(1){
-      printf("  %5i  trkID: %-6i PDG: %-8i XYZ= %7.1f %7.1f %7.1f, dL=%7.1f, KE0=%8.1f, Edep=%8.3f, T=%8.1f --> %8.1f, moth=%5i, %12s, ND=%i\n",
-        (int)i,
-        trackID,
-        pPart->PdgCode(),
-        pPart->Vx(),
-        pPart->Vy(),
-        pPart->Vz(),
-        pathlen,   
-        KE,
-        edep,   
-        pPart->T(),
-        pPart->EndT(),
-        pPart->Mother(),
-        pPart->Process().c_str(),
-        pPart->NumberDaughters()
-      ); 
-    }
   
   }//endloop over G4 particles
 
@@ -560,61 +543,162 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     fData->edep_y[i]      = trueBlipsVec.at(i).Location.Y();
     fData->edep_z[i]      = trueBlipsVec.at(i).Location.Z();
     fData->edep_g4id[i]   = trueBlipsVec.at(i).LeadingG4TrackID;
-    std::cout<<"   "<<trueBlipsVec.at(i).Energy<<" MeV, ds= "<<trueBlipsVec.at(i).Length<<" cm, trkID= "<<trueBlipsVec.at(i).LeadingG4TrackID<<"\n";
+    std::cout
+    <<"   ~ "<<trueBlipsVec.at(i).Energy<<" MeV, "
+    <<" ds= "<<trueBlipsVec.at(i).Length<<" cm, "
+    <<" trkID= "<<trueBlipsVec.at(i).LeadingG4TrackID<<"\n";
   }
+
 
 
   //====================================
   // Save hit information
   //====================================
+  
+  std::vector<BlipUtils::HitInfo> hitinfo(hitlist.size());
+  std::map<int,std::vector<int>> wirehitsMap;
 
-  for(size_t i=0; (i<hitlist.size()) && (i<kMaxHits); i++){
-    fData->hit_tpc[i]     = hitlist[i]->WireID().TPC;
-    fData->hit_channel[i] = hitlist[i]->Channel();
-    fData->hit_plane[i]   = hitlist[i]->WireID().Plane;
-    fData->hit_wire[i]    = hitlist[i]->WireID().Wire;
-    fData->hit_peakT[i]   = hitlist[i]->PeakTime();
-    fData->hit_time[i]    = hitlist[i]->PeakTime()-detprop_XTicksOffset[fData->hit_plane[i]];
-    fData->hit_rms[i]     = hitlist[i]->RMS();
-    fData->hit_ph[i]	    = hitlist[i]->PeakAmplitude();
-    fData->hit_area[i]    = hitlist[i]->Integral();
-    fData->hit_charge[i]  = fCaloAlg.ElectronsFromADCArea(hitlist[i]->Integral(),hitlist[i]->WireID().Plane);
+  for(size_t i=0; i<hitlist.size(); i++){
     
+    // Variables to be calculated
+    int wire = hitlist[i]->WireID().Wire;
+    int plane = hitlist[i]->WireID().Plane;
+    int trkid = -1;
+    int g4id = -1;
+    std::set<int> g4ids;
+    float g4frac, g4energy, g4charge;
+    float charge = fCaloAlg.ElectronsFromADCArea(hitlist[i]->Integral(),hitlist[i]->WireID().Plane);
+    float time = hitlist[i]->PeakTime()-detprop_XTicksOffset[fData->hit_plane[i]];
+
     // Find associated track
     if (fmtk.isValid()){
-      if (fmtk.at(i).size())  fData->hit_trkid[i] = fmtk.at(i)[0]->ID();
-      else                    fData->hit_trkid[i] = -1;
+      if (fmtk.at(i).size())  trkid = fmtk.at(i)[0]->ID();
     }
     
     // Find G4 particle ID for leading contributor
-    if( BlipUtils::DoesHitHaveSimChannel(simChannels,hitlist[i]) )
-      BlipUtils::HitTruth( hitlist[i], fData->hit_g4id[i], fData->hit_g4frac[i], fData->hit_g4energy[i], fData->hit_g4charge[i]);
-    
-    // Determine realness
-    if( fData->hit_g4id[i]>0 ) {
-      fData->hit_isreal[i] = 1;
-      for(size_t j=0; (j<hitlist.size())&&(j<kMaxHits); j++){
-        if( BlipUtils::DoHitsOverlap(hitlist.at(i),hitlist.at(j)) ) 
-          fData->hit_isreal[j] = 1;
-      }
+    if( BlipUtils::DoesHitHaveSimChannel(simChannels,hitlist[i]) ){
+      BlipUtils::HitTruth( hitlist[i], g4id, g4frac, g4energy, g4charge);
+      g4ids = BlipUtils::HitTruthIds(hitlist[i]);
     }
 
-    // Make clusters
+    // Add to the wire-by-wire hit map
+    wirehitsMap[wire].push_back(i);
 
-
+    // Bundle the info to access later
+    hitinfo[i].hit      = hitlist[i];
+    hitinfo[i].g4ids    = g4ids;
+    hitinfo[i].trkid    = trkid;
+    hitinfo[i].g4id     = g4id;
+    hitinfo[i].g4frac   = g4frac;
+    hitinfo[i].g4energy = g4energy;
+    hitinfo[i].g4charge = g4charge;
+    hitinfo[i].Charge   = charge;
+    hitinfo[i].Time     = time;
+    // Determine realness; group in overlapping hits
+    bool isreal         = (g4id > 0);
+    hitinfo[i].isreal   = isreal;
+    if( isreal ) {
+      for(size_t j=0; j<hitlist.size(); j++){
+        if( BlipUtils::DoHitsOverlap(hitlist[i],hitlist[j]) )
+          hitinfo[j].isreal = isreal;
+      }
+    }
+   
+    // Save TTree data
+    if( i < kMaxHits ) {
+      fData->hit_trkid[i]   = trkid;
+      fData->hit_plane[i]   = plane;
+      fData->hit_wire[i]    = wire;
+      fData->hit_tpc[i]     = hitlist[i]->WireID().TPC;
+      fData->hit_channel[i] = hitlist[i]->Channel();
+      fData->hit_peakT[i]   = hitlist[i]->PeakTime();
+      fData->hit_rms[i]     = hitlist[i]->RMS();
+      fData->hit_ph[i]	    = hitlist[i]->PeakAmplitude();
+      fData->hit_area[i]    = hitlist[i]->Integral();
+      fData->hit_time[i]    = time;
+      fData->hit_charge[i]  = charge;
+      fData->hit_g4id[i]    = g4id;
+      fData->hit_g4frac[i]  = g4frac;
+      fData->hit_g4energy[i]= g4energy;
+      fData->hit_g4charge[i]= g4charge;
+    }
+  
   }//endloop hits
   
-  
 
-  
-
-  // Procedure
-  //  - Look for hits that were not included in a track (do this later)
+  //=================================================================
+  // Blip Reconstruction
+  //================================================================
+  //  
+  //  Will eventually move these into separate alg class.
+  //
+  //  Procedure
+  //  [x] Look for hits that were not included in a track 
+  //  [x] Filter hits based on hit width, etc
   //  - Merge together closely-spaced hits on same wires, save average peakT +/- spread
   //  - Merge together clusters on adjacent wires (if they match up in time)
   //  - Plane-to-plane time matching
   //  - Wire intersection check to get XYZ
-  //  - Create "blip" object and save to tree (nblips, blip_xyz, blip_charge, blip_mcenergy)
+  //  - Create "blip" object and save to tree (nblips, blip_xyz, blip_charge, blip_g4energy)
+
+  // Create a hit mask
+  std::vector<bool> hitmask(hitlist.size(), false);
+  for(size_t i=0; i<hitlist.size(); i++){
+    int plane = hitlist[i]->WireID().Plane;
+    if( hitlist[i]->RMS() > fMinHitRMS[plane] &&
+        hitlist[i]->RMS() < fMaxHitRMS[plane] ) {
+      hitmask[i] = true;
+      // Any overlapping hits are probably good too
+      for(size_t j=0; j<hitlist.size(); j++){
+        if( BlipUtils::DoHitsOverlap(hitlist[i],hitlist[j]) ) {
+          hitmask[j] = true;
+        }
+      }
+    }
+  }
+
+  // Exclude any hits that were part of tracks
+  for(size_t i=0; i<hitlist.size(); i++){
+    if( hitinfo[i].trkid >= 0 ) hitmask[i] = false;
+  }
+
+  std::cout
+  <<"We masked "<<std::count(hitmask.begin(),hitmask.end(),true)<<" hits based on width and track assn cuts\n";
+
+  // Create collection of hit clusters on same wires
+  std::vector<BlipUtils::HitClust> hitclust;
+  std::vector<bool> hitIsClustered(hitlist.size(),false);
+  for(auto const& wirehits : wirehitsMap){
+    std::vector<int> hits = wirehits.second;
+    for(auto const& hi : hits ){
+      if( !hitmask[hi] ) continue;
+      if( hitIsClustered[hi] ) continue;
+      BlipUtils::HitClust hc = BlipUtils::MakeHitClust(hitlist[hi],hitinfo[hi]);
+      hitIsClustered[hi] = true;
+      // see if we can add other hits to it
+      for(auto const& hj : hits ) {
+        if( !hitmask[hj] ) continue;
+        if( hitlist[hj] == hitlist[hi] ) continue;
+        if( hitIsClustered[hj] ) continue;
+        float rms = hitlist[hj]->RMS();
+        float t = hitinfo[hj].Time;
+        float t1 = t-rms;
+        float t2 = t+rms;
+        if( (t1 > hc.StartTime && t1 < hc.EndTime )
+          ||(t2 > hc.StartTime && t2 < hc.EndTime ) ){
+          BlipUtils::GrowHitClust(hitlist[hj],hitinfo[hj],hc);
+          hitIsClustered[hj] = true;
+        }
+      }
+      hitclust.push_back(hc);
+    }
+  }
+  std::cout
+  <<"Reconstructed "<<hitclust.size()<<" hit clusters:\n";
+  for(auto const& hc : hitclust){
+    std::cout<<"   * wire: "<<hc.LeadWire<<", charge: "<<hc.Charge<<", time: "<<hc.Time<<", fullwidth="<<hc.EndTime-hc.StartTime<<", hitMult="<<hc.HitIDs.size()<<"\n";
+  }
+   
    
 
   //====================================
@@ -624,6 +708,29 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
 }
 
 
+
+//###################################################
+//  Printouts for debugging
+//###################################################
+
+void sbnd::BlipAna::PrintParticleInfo(size_t i){
+  printf("  %5i  trkID: %-6i PDG: %-8i XYZ= %7.1f %7.1f %7.1f, dL=%7.1f, KE0=%8.1f, Edep=%8.3f, T=%8.1f --> %8.1f, moth=%5i, %12s, ND=%i\n",
+   (int)i,
+   fData->trackID[i],
+   fData->pdg[i],
+   fData->startPointx[i],
+   fData->startPointy[i],
+   fData->startPointz[i],
+   fData->pathlen[i], 
+   fData->E[i]-fData->mass[i],
+   fData->depEnergy[i],
+   fData->startT[i],
+   fData->endT[i],
+   fData->mother[i],
+   fData->process[i].c_str(),
+   fData->nDaughters[i]
+  ); 
+}
 
 
 

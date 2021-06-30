@@ -29,23 +29,27 @@
 #include <vector>
 #include <map>
 
+typedef std::vector<int> vi_t;
+typedef std::set<int> si_t;
+
 namespace BlipUtils{
 
   //###################################################
-  //  Data structure for true energy deposition
+  //  Data structures
   //###################################################
+
   struct TrueBlip {
-    bool    isValid;
-    std::vector<int> vG4TrackIDs;
-    std::vector<int> vPDGs;
+    bool      isValid;
+    vi_t      vG4TrackIDs;
+    vi_t      vPDGs;
     int       LeadingG4TrackID;
     float     LeadingEnergy;
     TVector3  Location;
     TVector3  StartPoint;
     TVector3  EndPoint;
-    float   Energy;
-    float   NumElectrons; // after drift
-    float   Length;
+    float     Energy;
+    float     NumElectrons; // after drift
+    float     Length;
     TrueBlip() {
       isValid = false;
       vG4TrackIDs.clear();
@@ -57,26 +61,50 @@ namespace BlipUtils{
       NumElectrons = 0;
     }
   };
-  
-  //###################################################
-  //  Data structure for hit clusters
-  //###################################################
-  struct HitClust {
-    bool isValid;
-    std::vector<int> vHitIDs;
-    std::vector<int> vWires;
-    int   LeadingG4TrackID;
-    int   LeadingG4Energy;
-    int   LeadingHitID;
-    int   Wire;
-    int   TPC;
-    int   Plane;
-    float Area;
+
+  struct HitInfo {
+    art::Ptr<recob::Hit> hit;
+    si_t  g4ids;
+    int   trkid;
+    int   hitid;
     float Charge;
-    float StartTime;
-    float EndTime;
     float Time;
-    float Width;
+    int   isreal; 
+    int   g4id;
+    int   g4frac;
+    int   g4energy;
+    int   g4charge;
+  };
+  
+  struct HitClust {
+    bool    isValid;
+    si_t    HitIDs;
+    si_t    G4TrackIDs;
+    si_t    Wires;
+    std::map<int,float> mapWireCharge;
+    int     LeadWire;
+    int     TPC;
+    int     Plane;
+    float   Charge;
+    float   LeadHitCharge;
+    float   Time;
+    float   StartTime;
+    float   EndTime;
+  };
+
+  struct Blip { 
+    bool  isValid;
+    si_t  vG4TrackIDs;
+    si_t  vHitIDs;
+    float LeadingG4TrackID;
+    float LeadingG4Energy;
+    float G4Energy;
+    int   TPC;
+    bool  MatchedPlanes[3];
+    bool  Is3D;
+    float X,Y,Z;
+    float Charge;
+    float Energy;
   };
 
   //###################################################
@@ -85,16 +113,17 @@ namespace BlipUtils{
   float     PartEnergyDep(int, float&);
   float     PartEnergyDep(int);
   TrueBlip  MakeTrueBlip(int);
-  void      GrowTrueBlip(simb::MCParticle&, TrueBlip&);
+  void      GrowTrueBlip(simb::MCParticle const&, TrueBlip&);
   void      MergeBlips(std::vector<TrueBlip>&, float);
+  HitClust  MakeHitClust(art::Ptr<recob::Hit> const&, HitInfo const&);
+  void      GrowHitClust(art::Ptr<recob::Hit> const&, HitInfo const&, HitClust&);
   bool      DoHitsOverlap(art::Ptr<recob::Hit> const&, art::Ptr<recob::Hit> const&);
 
   //###################################################
   // General functions 
   //###################################################
-  void    HitsPurity(std::vector< art::Ptr<recob::Hit> > const&, int&, float&, double&);
   void    HitTruth(art::Ptr<recob::Hit> const&, int&, float&, float&, float&);
-  bool    HitTruthId(art::Ptr<recob::Hit> const&, int&);
+  si_t    HitTruthIds( art::Ptr<recob::Hit> const&);
   bool    TrackIdToMCTruth( int const, art::Ptr<simb::MCTruth>&);
   bool    DoesHitHaveSimChannel( std::vector<const sim::SimChannel*>, art::Ptr<recob::Hit> const&);
   double  PathLength(const simb::MCParticle&, TVector3&, TVector3&);
