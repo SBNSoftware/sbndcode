@@ -7,7 +7,7 @@ sbnd_basicpandora:
 {
     module_type:                                                    "StandardPandora"
     GeantModuleLabel:                                               "largeant"
-    HitFinderModuleLabel:                                           "linecluster"
+    HitFinderModuleLabel:                                           "gaushit"
     EnableMCParticles:                                              false
     EnableProduction:                                               true
     EnableLineGaps:                                                 true
@@ -48,8 +48,23 @@ sbnd_pandoraShowerCreation:
     module_type:                                                    "LArPandoraShowerCreation"
 }
 
-# Pandora Shower Configurations
+# Need to set up sbnd specific versions of the cheating tools to accomodate the change in input label
+sbnd_larpandorashowercheatingalg: @local::standard_larpandorashowercheatingalg
+sbnd_larpandorashowercheatingalg.HitModuleLabel: "gaushit"
 
+sbnd_showerstartpositioncheater: @local::showerstartpositioncheater
+sbnd_showerstartpositioncheater.HitModuleLabel: "gaushit"
+sbnd_showerstartpositioncheater.LArPandoraShowerCheatingAlg: @local::sbnd_larpandorashowercheatingalg
+
+sbnd_showerdirectioncheater: @local::showerdirectioncheater
+sbnd_showerdirectioncheater.HitModuleLabel: "gaushit"
+sbnd_showerdirectioncheater.LArPandoraShowerCheatingAlg: @local::sbnd_larpandorashowercheatingalg
+
+sbnd_showertrackfindercheater: @local::showertrackfindercheater
+sbnd_showertrackfindercheater.HitModuleLabel: "gaushit"
+sbnd_showertrackfindercheater.LArPandoraShowerCheatingAlg: @local::sbnd_larpandorashowercheatingalg
+
+# Pandora Shower Configurations
 sbnd_legacy_pandoraModularShowerCreation:      @local::legacy_pandoraModularShowerCreation
 sbnd_basic_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
 sbnd_3dTraj_pandoraModularShowerCreation:      @local::standard_pandoraModularShowerCreation
@@ -104,6 +119,17 @@ sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools: [
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[8].ShowerDirectionOutputLabel: "TrajDirection"
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[9].FirstDirectionInputLabel: "TrajDirection"
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[9].SecondDirectionInputLabel: "ShowerDirection"
+
+sbnd_cheat_pandoraModularShowerCreation.ShowerFinderTools: [
+  @local::sbnd_showerstartpositioncheater,
+  @local::sbnd_showerdirectioncheater,
+  @local::showerpcaeigenvaluelength,
+  @local::sbnd_showernumelectronsenergy,
+  @local::sbnd_showertrackfindercheater,
+  @local::sbnd_showerunidirectiondedx,
+  @local::showerpandoraslidingfittrackfinder,
+  @local::sbnd_showertrajpointdedx
+]
 
 # SCE aware PandoraShower
 sbnd_sce_showertrajpointdedx: @local::sbnd_showertrajpointdedx
