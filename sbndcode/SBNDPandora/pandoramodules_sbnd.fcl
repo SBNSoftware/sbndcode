@@ -41,6 +41,7 @@ sbnd_pandorawriter.EnableProduction:                                false
 sbnd_pandoraTrackCreation:
 {
     module_type:                                                    "LArPandoraTrackCreation"
+    PFParticleLabel:                                                "pandora"
 }
 
 sbnd_pandoraShowerCreation:
@@ -69,6 +70,7 @@ sbnd_legacy_pandoraModularShowerCreation:      @local::legacy_pandoraModularShow
 sbnd_basic_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
 sbnd_3dTraj_pandoraModularShowerCreation:      @local::standard_pandoraModularShowerCreation
 sbnd_incremental_pandoraModularShowerCreation: @local::standard_pandoraModularShowerCreation
+sbnd_cheat_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
 
 # Create SBND specific versions of tools which require SBND calorimetry numbers
 sbnd_showerlinearenergy:          @local::showerlinearenergy

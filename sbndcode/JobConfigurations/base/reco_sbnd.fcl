@@ -285,11 +285,6 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 #physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
 #physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
 
-physics.producers.pandoraTrack.PFParticleLabel:                  "pandora"
-physics.producers.pandoraShower.PFParticleLabel:                 "pandora"
-physics.producers.pandoraShowerSBN.PFParticleLabel:              "pandora"
-physics.producers.pandoraShowerLegacy.PFParticleLabel:           "pandora"
-
 ### Added for Rhiannon's analysis work
 physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
 physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"
