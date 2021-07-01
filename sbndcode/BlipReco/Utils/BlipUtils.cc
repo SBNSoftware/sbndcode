@@ -3,32 +3,41 @@
 namespace BlipUtils {
   
   //============================================================================
+  // Find total visible energy deposited in the LAr, and number of electrons drifted
+  // to wires, by looking at the SimChannels for all three planes
+  void CalcTotalDep(float& energy, float& ne){
+    energy  = 0;
+    ne      = 0;
+    for(auto const &chan : art::ServiceHandle<cheat::BackTrackerService>()->SimChannels()) {
+      for(auto const &tdcide : chan->TDCIDEMap() ) {
+        for(const auto& ide : tdcide.second) {
+          energy += ide.energy/art::ServiceHandle<geo::Geometry>()->Nplanes();
+          ne += ide.numElectrons/art::ServiceHandle<geo::Geometry>()->Nplanes();
+        }
+      }
+    }
+  }
+    
+
+  //============================================================================
   // Get the total energy deposited by this particle by looking at IDEs from 3 planes.
-  float PartEnergyDep(int trackID, float& ne){
-    art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-    geo::View_t views[3]={geo::kU, geo::kV, geo::kW};
+  void CalcPartDep(int trackID, float& energy, float& ne){
+    if( energy< 0 ) energy = 0;
+    if( ne    < 0 ) ne = 0;
     int nPlanes = 0;
     float totalE_particle = 0, totalne_particle = 0;
-    for(const geo::View_t view : views ) {
-      std::vector<const sim::IDE* > ides = bt_serv->TrackIdToSimIDEs_Ps(trackID, view);
+    for(const geo::View_t view : {geo::kU, geo::kV, geo::kW} ) {
+      std::vector<const sim::IDE* > ides 
+        = art::ServiceHandle<cheat::BackTrackerService>()->TrackIdToSimIDEs_Ps(trackID, view);
       if( ides.size() ) nPlanes++;
       for (auto ide: ides) {
         totalE_particle += ide->energy;
         totalne_particle += ide->numElectrons;
       }
     }
-    if(nPlanes) {
-      totalE_particle /= nPlanes;
-      totalne_particle /= nPlanes;
-    }
-    if(ne<0) ne=0;
-    ne += totalne_particle;
-    return totalE_particle; 
-  }
-  // Helper function
-  float PartEnergyDep(int trackID){
-    float dummy;
-    return PartEnergyDep(trackID,dummy);
+    if(nPlanes) { totalE_particle /= nPlanes; totalne_particle /= nPlanes; }
+    energy  += totalE_particle;
+    ne      += totalne_particle;
   }
 
 
@@ -70,13 +79,15 @@ namespace BlipUtils {
   void GrowTrueBlip(simb::MCParticle const& part, TrueBlip& tblip){
     // If this is a new blip, initialize
     if( tblip.vG4TrackIDs.size() == 0 ) tblip.StartPoint = part.Position().Vect();
-    float edep = PartEnergyDep(part.TrackId(),tblip.NumElectrons);
-    tblip.vG4TrackIDs  .push_back(part.TrackId());
-    tblip.vPDGs      .push_back(part.PdgCode());
+    float edep = 0, ne = 0;
+    CalcPartDep(part.TrackId(),edep,ne);
+    tblip.vG4TrackIDs .push_back(part.TrackId());
+    tblip.vPDGs       .push_back(part.PdgCode());
     tblip.Energy      += edep;
-    tblip.EndPoint  = part.EndPosition().Vect();
-    tblip.Location  = (tblip.EndPoint+tblip.StartPoint)*0.5;
-    tblip.Length    = (tblip.EndPoint-tblip.StartPoint).Mag();
+    tblip.NumElectrons+= ne;
+    tblip.EndPoint    = part.EndPosition().Vect();
+    tblip.Location    = (tblip.EndPoint+tblip.StartPoint)*0.5;
+    tblip.Length      = (tblip.EndPoint-tblip.StartPoint).Mag();
     if(edep > tblip.LeadingEnergy ) {
       tblip.LeadingEnergy = edep;
       tblip.LeadingG4TrackID = part.TrackId();
@@ -85,7 +96,7 @@ namespace BlipUtils {
   
   //====================================================================
   // Merge blips that are close
-  void MergeBlips(std::vector<TrueBlip>& vtb, float dmin){
+  void MergeTrueBlips(std::vector<TrueBlip>& vtb, float dmin){
     if( dmin <= 0 ) return;
     std::vector<TrueBlip> vtb_merged;
     std::vector<bool> isGrouped(vtb.size(),false);
@@ -120,24 +131,32 @@ namespace BlipUtils {
   }
  
   //=================================================================
-  HitClust MakeHitClust(art::Ptr<recob::Hit> const& hit, HitInfo const& hitinfo){
+  HitClust MakeHitClust(HitInfo const& hitinfo){
+    art::Ptr<recob::Hit> hit = hitinfo.hit;
     HitClust hc;
-    hc.TPC          = hitinfo.hit->WireID().TPC;
-    hc.Plane        = hitinfo.hit->WireID().Plane;
+    hc.TPC          = hit->WireID().TPC;
+    hc.Plane        = hit->WireID().Plane;
     hc.G4TrackIDs  .insert(hitinfo.g4ids.begin(), hitinfo.g4ids.end());
     hc.HitIDs      .insert(hitinfo.hitid);
-    hc.Wires       .insert(hitinfo.hit->WireID().Wire);
-    hc.LeadWire     = hitinfo.hit->WireID().Wire;
+    hc.Wires       .insert(hit->WireID().Wire);
+    hc.LeadHitWire     = hit->WireID().Wire;
     hc.Charge       = hitinfo.Charge;
     hc.LeadHitCharge = hc.Charge;
-    hc.mapWireCharge[hitinfo.hit->WireID().Wire] = hitinfo.Charge;
+    hc.mapWireCharge[hit->WireID().Wire] = hitinfo.Charge;
     hc.Time         = hitinfo.Time;
     hc.StartTime    = hitinfo.Time - hit->RMS();
     hc.EndTime      = hitinfo.Time + hit->RMS();
+    hc.StartWire    = hc.LeadHitWire;
+    hc.EndWire      = hc.LeadHitWire;
+    hc.isValid      = true;
+    hc.isMerged     = false;
+    hc.isMatched[hc.Plane] = true;
     return hc;
   }
 
-  void GrowHitClust(art::Ptr<recob::Hit> const& hit, HitInfo const& hitinfo, HitClust& hc){
+  //=================================================================
+  void GrowHitClust(HitInfo const& hitinfo, HitClust& hc){
+    art::Ptr<recob::Hit> hit = hitinfo.hit;
     if( (int)hit->WireID().TPC   != hc.TPC ) return;
     if( (int)hit->WireID().Plane != hc.Plane ) return;
     if( hc.HitIDs.find(hitinfo.hitid) != hc.HitIDs.end() ) return;
@@ -149,10 +168,35 @@ namespace BlipUtils {
     if( hitinfo.Charge > hc.LeadHitCharge ) {
       hc.LeadHitCharge = hitinfo.Charge;
       hc.Time = hitinfo.Time;
-      hc.LeadWire = hitinfo.hit->WireID().Wire;
+      hc.LeadHitWire = hitinfo.hit->WireID().Wire;
     }
     hc.StartTime  = std::min(hc.StartTime,hitinfo.Time - hit->RMS());
     hc.EndTime    = std::max(hc.EndTime,  hitinfo.Time + hit->RMS());
+    hc.StartWire  = *hc.Wires.begin();
+    hc.EndWire    = *hc.Wires.rbegin();
+  }
+
+  //=================================================================
+  HitClust MergeHitClusts(HitClust& hc1, HitClust& hc2){
+    HitClust hc = hc1;
+    if( (hc1.TPC != hc2.TPC)||(hc1.Plane != hc2.Plane) ) return hc;
+    hc1.isMerged = true;
+    hc2.isMerged = true;
+    hc.G4TrackIDs.insert(hc2.G4TrackIDs.begin(), hc2.G4TrackIDs.end());
+    hc.HitIDs   .insert(hc2.HitIDs.begin(),     hc2.HitIDs.end());
+    hc.Wires    .insert(hc2.Wires.begin(),      hc2.Wires.end());
+    hc.Charge   += hc2.Charge;
+    hc.mapWireCharge.insert(hc2.mapWireCharge.begin(),hc2.mapWireCharge.end());
+    if( hc2.LeadHitCharge > hc.LeadHitCharge ) {
+      hc.LeadHitCharge = hc2.LeadHitCharge;
+      hc.LeadHitWire = hc2.LeadHitWire;
+      hc.Time = hc2.Time;
+    }
+    hc.StartTime  = std::min(hc.StartTime,hc2.StartTime);
+    hc.EndTime    = std::max(hc.EndTime,hc2.EndTime);
+    hc.StartWire  = *hc.Wires.begin();
+    hc.EndWire    = *hc.Wires.rbegin();
+    return hc;
   }
 
   //====================================================================
@@ -184,15 +228,27 @@ namespace BlipUtils {
     if( fabs(t1-t2) < sig ) return true;
     else return false;
   }
+  
+  //====================================================================
+  bool DoHitClustsMatch(HitClust const& hc1, HitClust const& hc2){
+    // only match across different wires in same TPC
+    if( hc1.TPC != hc2.TPC    ) return false;
+    float t1 = hc1.Time;
+    float t2 = hc2.Time;
+    float sig = 0;
+    if( t2 >= t1 ) sig = std::max( fabs(hc1.EndTime - t1), fabs(hc2.StartTime - t2) );
+    if( t2 < t1  ) sig = std::max( fabs(hc1.StartTime - t1), fabs(hc2.EndTime - t2) );
+    if( fabs(t1-t2) < sig ) return true;
+    else return false;
+  }
 
 
   //=====================================================================
   // Function to check if there was a SimChannel made for a hit (useful when checking for noise hits)
-  bool DoesHitHaveSimChannel( std::vector<const sim::SimChannel*> chans, art::Ptr<recob::Hit> const& hit){
-    bool isMatch = false;
-    for(size_t sc = 0; sc < chans.size(); ++sc) 
-      if( chans[sc]->Channel() == hit->Channel() ) { isMatch = true; break; }
-    return isMatch;
+  bool DoesHitHaveSimChannel( art::Ptr<recob::Hit> const& hit){
+    for(auto const &chan : art::ServiceHandle<cheat::BackTrackerService>()->SimChannels()) 
+      if( chan->Channel() == hit->Channel() ) return true;
+    return false;
   }
   
   
@@ -201,9 +257,9 @@ namespace BlipUtils {
   // fraction of that hit's energy comes from that particle.
   void  HitTruth(art::Ptr<recob::Hit> const& hit, int& truthid, float& truthidEnergyFrac, float& energy,float& numElectrons){
     // Get associated sim::TrackIDEs for this hit
-    art::ServiceHandle<cheat::BackTrackerService> bt_serv;
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
-    std::vector<sim::TrackIDE> trackIDEs = bt_serv->HitToTrackIDEs(clockData, hit);
+    std::vector<sim::TrackIDE> trackIDEs 
+      = art::ServiceHandle<cheat::BackTrackerService>()->HitToTrackIDEs(clockData, hit);
     if( !trackIDEs.size() ) return;
     // Loop through and find the leading TrackIDE, and keep
     // track of the total energy of ALL IDEs.

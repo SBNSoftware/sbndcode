@@ -31,6 +31,7 @@
 
 typedef std::vector<int> vi_t;
 typedef std::set<int> si_t;
+typedef std::map<int,float> mif_t;
 
 namespace BlipUtils{
 
@@ -39,27 +40,17 @@ namespace BlipUtils{
   //###################################################
 
   struct TrueBlip {
-    bool      isValid;
-    vi_t      vG4TrackIDs;
-    vi_t      vPDGs;
-    int       LeadingG4TrackID;
-    float     LeadingEnergy;
+    bool      isValid           = false;
+    int       LeadingG4TrackID  = -9;
+    float     LeadingEnergy     = -9;
+    float     Energy            = 0;
+    float     NumElectrons      = 0; // (post-drift)
+    float     Length            = 0;
     TVector3  Location;
     TVector3  StartPoint;
     TVector3  EndPoint;
-    float     Energy;
-    float     NumElectrons; // after drift
-    float     Length;
-    TrueBlip() {
-      isValid = false;
-      vG4TrackIDs.clear();
-      vPDGs.clear();
-      LeadingG4TrackID = -9;
-      LeadingEnergy = -9;
-      Energy  = 0;
-      Length  = 0;
-      NumElectrons = 0;
-    }
+    vi_t      vG4TrackIDs;
+    vi_t      vPDGs;
   };
 
   struct HitInfo {
@@ -67,57 +58,63 @@ namespace BlipUtils{
     si_t  g4ids;
     int   trkid;
     int   hitid;
-    float Charge;
-    float Time;
     int   isreal; 
     int   g4id;
-    int   g4frac;
-    int   g4energy;
-    int   g4charge;
+    float g4frac;
+    float g4energy;
+    float g4charge;
+    float Charge;
+    float Time;
   };
   
   struct HitClust {
-    bool    isValid;
+    bool    isValid         = false;
+    bool    isMerged        = false;
+    bool    isMatched[3]    = {false, false, false};
+    int     LeadHitWire     = -999;
+    int     TPC             = -9;
+    int     Plane           = -9;
+    float   LeadHitCharge   = -999;
+    float   Charge          = -999;
+    float   Time            = -999;
+    float   StartTime       = -999;
+    float   EndTime         = -999;
+    int     StartWire       = -999;
+    int     EndWire         = -999;
     si_t    HitIDs;
     si_t    G4TrackIDs;
     si_t    Wires;
-    std::map<int,float> mapWireCharge;
-    int     LeadWire;
-    int     TPC;
-    int     Plane;
-    float   Charge;
-    float   LeadHitCharge;
-    float   Time;
-    float   StartTime;
-    float   EndTime;
+    mif_t   mapWireCharge;
   };
 
   struct Blip { 
-    bool  isValid;
-    si_t  vG4TrackIDs;
-    si_t  vHitIDs;
-    float LeadingG4TrackID;
-    float LeadingG4Energy;
-    float G4Energy;
-    int   TPC;
-    bool  MatchedPlanes[3];
-    bool  Is3D;
-    float X,Y,Z;
-    float Charge;
-    float Energy;
+    bool      isValid;
+    float     LeadingG4TrackID;
+    float     LeadingG4Energy;
+    float     G4Energy;
+    int       TPC;
+    bool      MatchedPlanes[3];
+    bool      Is3D;
+    float     Charge;
+    float     Energy;
+    TVector3  Location;
+    si_t      vG4TrackIDs;
+    si_t      vHitIDs;
   };
 
   //###################################################
   // Functions related to blip reconstruction
   //###################################################
-  float     PartEnergyDep(int, float&);
-  float     PartEnergyDep(int);
+  void      CalcTotalDep(float&,float&);
+  void      CalcPartDep(int, float&,float&);
   TrueBlip  MakeTrueBlip(int);
   void      GrowTrueBlip(simb::MCParticle const&, TrueBlip&);
-  void      MergeBlips(std::vector<TrueBlip>&, float);
-  HitClust  MakeHitClust(art::Ptr<recob::Hit> const&, HitInfo const&);
-  void      GrowHitClust(art::Ptr<recob::Hit> const&, HitInfo const&, HitClust&);
+  void      MergeTrueBlips(std::vector<TrueBlip>&, float);
+  HitClust  MakeHitClust(HitInfo const&);
+  HitClust  MergeHitClusts(HitClust&,HitClust&);
+  void      GrowHitClust(HitInfo const&, HitClust&);
   bool      DoHitsOverlap(art::Ptr<recob::Hit> const&, art::Ptr<recob::Hit> const&);
+  bool      DoHitClustsMatch(HitClust const&, HitClust const&);
 
   //###################################################
   // General functions 
@@ -125,7 +122,7 @@ namespace BlipUtils{
   void    HitTruth(art::Ptr<recob::Hit> const&, int&, float&, float&, float&);
   si_t    HitTruthIds( art::Ptr<recob::Hit> const&);
   bool    TrackIdToMCTruth( int const, art::Ptr<simb::MCTruth>&);
-  bool    DoesHitHaveSimChannel( std::vector<const sim::SimChannel*>, art::Ptr<recob::Hit> const&);
+  bool    DoesHitHaveSimChannel( art::Ptr<recob::Hit> const&);
   double  PathLength(const simb::MCParticle&, TVector3&, TVector3&);
   double  PathLength(const simb::MCParticle&);
   bool    IsAncestorOf(int, int, bool);
