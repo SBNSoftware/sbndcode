@@ -16,7 +16,7 @@ cet_test(geometry_sbnd HANDBUILT
 #
 # the following are tests equivalent to the module ones, but with no framework
 #
-# unit test (use the hard-coded configuration for SBND v0 geometry)
+# unit test (uses configuration in test_geometry_sbnd.fcl)
 cet_test(geometry_sbnd_test
   SOURCES geometry_sbnd_test.cxx
   DATAFILES test_geometry_sbnd.fcl
@@ -33,9 +33,11 @@ cet_test(geometry_sbnd_test
 )
 
 
-# unit test (use the hard-coded configuration for SBND v0 geometry)
+# unit test (uses configuration in test_geometry_sbnd.fcl)
 # this uses BOOST for the test
 cet_test(geometry_iterator_sbnd_test
+  DATAFILES test_geometry_sbnd.fcl
+  TEST_ARGS ./test_geometry_sbnd.fcl
   SOURCES geometry_iterator_sbnd_test.cxx
   LIBRARIES sbndcode_Geometry
             larcorealg_Geometry
@@ -49,9 +51,11 @@ cet_test(geometry_iterator_sbnd_test
 )
 
 
-# unit test (use the hard-coded configuration for SBND v0 geometry)
+# unit test (uses configuration in test_geometry_sbnd.fcl)
 cet_test(geometry_iterator_loop_sbnd_test
   SOURCES geometry_iterator_loop_sbnd_test.cxx
+  DATAFILES test_geometry_sbnd.fcl
+  TEST_ARGS ./test_geometry_sbnd.fcl
   LIBRARIES sbndcode_Geometry
             larcorealg_Geometry
             GeometryTestLib
