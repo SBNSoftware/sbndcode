@@ -13965,7 +13965,4 @@
 	<setup name="Default" version="1.0">
 		<world ref="volWorld" />
 	</setup>
-	<setup name="DefaultWithShielding" version="1.0">
-		<world ref="volWorldWithShielding" />
-	</setup>
 </gdml_simple_extension>

@@ -13962,7 +13962,7 @@
 			</physvol>
 		</volume>
 	</structure>
-<setup name="Default" version="1.0">
-	<world ref="volWorld" />
-</setup>
-</gdml>
+	<setup name="Default" version="1.0">
+		<world ref="volWorld" />
+	</setup>
+</gdml_simple_extension>
