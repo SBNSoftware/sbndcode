@@ -1,0 +1,211 @@
+# File:    standard_g4_sbnd.fcl
+# Purpose: Propagation of generated particle through matter (Geant4 simulation)
+# Version: 1.2
+# 
+# This configuration runs:
+# - LArG4: produces:
+#   * MCParticle's (particles produced by interaction with matter)
+#   * SimChannels (charge and energy deposited by each particle reaching
+#       each TPC readout channel)
+#   * SimPhotons (photons reaching each optical readout channel)
+# - MCReco: produces:
+#   * MCTrack, MCShower: deposited energy from each MCParticle
+# 
+# Input: a file with generated particles; all MCTruth data products in the input
+#        file are processed.
+# 
+# Dependencies:
+# - uses the bundle of SBND simulation services
+# - will require flux files for Genie and Corsika
+#
+# Changes:
+# 20160707 (petrillo@fnal.gov) [v1.1]
+#   - uniformed to prodsingle_sbnd.fcl
+#
+# 20161223 (petrillo@fnal.gov) [v1.2]
+#   - adopted shared root output configuration
+#
+
+#
+# services
+#
+#include "simulationservices_sbnd.fcl"
+
+#
+# algorithms
+#
+#include "largeantmodules_sbnd.fcl"
+#include "mcreco.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "scintillationtime_tool.fcl"
+
+process_name: G4
+
+#services:
+#{
+#  # Load the service that manages root files for histograms.
+#  TFileService:        { fileName: @local::sbnd_tfileoutput.fileName }
+#                       @table::sbnd_g4_services
+#  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+#}
+
+
+services:
+{
+  TFileService:        { fileName: @local::sbnd_tfileoutput.fileName }
+  TimeTracker:       {}
+  MemoryTracker:     {} # default is one
+  RandomNumberGenerator: {} #ART native random number generator
+  @table::sbnd_g4_services
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  DetectorHolder: {}
+  ActionHolder: {}
+  PhysicsListHolder: {}
+  PhysicsList: {
+    PhysicsListName: "QGSP_BERT"
+    DumpList: true
+    enableNeutronLimit: false
+    NeutronTimeLimit: 0.0
+    NeutronKinELimit: 0.0
+    enableStepLimit: true
+    enableOptical: false
+    enableCerenkov: false
+    CerenkovStackPhotons: false
+    CerenkovMaxNumPhotons: 100
+    CerenkovMaxBetaChange: 10.0
+    enableScintillation: false
+    ScintillationStackPhotons: false
+    ScintillationByParticleType: false
+    ScintillationTrackInfo: false
+    ScintillationTrackSecondariesFirst: false
+    enableAbsorption: false
+    enableRayleigh: false
+    enableMieHG: false
+    enableBoundary: false
+    enableWLS: false
+    BoundaryInvokeSD: false
+    Verbosity: 1
+    WLSProfile: delta
+ }
+
+  LArG4Detector : 
+  {
+
+    category      : "world"
+    gdmlFileName_ : "sbnd_v02_00_nowires.gdml"
+
+    #volumeNames   : ["volTPCActive", "volTPCActiveOuter"] # list of volumes for which the stepLimit should be set
+    volumeNames   : ["volTPCActive"] # deleting the requirement of having volTPCActiveOuter
+    
+    # stepLimits    : [0.3, 0.3] # corresponding stepLimits in mm for the volumes in the volumeNames list
+    stepLimits    : [0.3]
+     }
+   
+   MCTruthEventAction: {service_type: "MCTruthEventActionService"}
+   ParticleListAction: {service_type:  "ParticleListActionService"
+   EnergyCut: 1e-5 # Kinetic Energy cut in [MeV]
+   keepEMShowerDaughters: true
+   storeTrajectories: true
+   keepGenTrajectories: ["generator"] # list of generator labels for which we want to store
+    # trajectory points. The protodune beam label is simply
+    # "generator"
+   keepOnlyPrimaryFullTrajectories : false  # (defaults to false in larg4) If set to true, only                                                                    
+   SparsifyTrajectories: false # call SparsifyTrajectory() method on MCParticles with full trajectories                                                                                                        
+   SparsifyMargin: 0.015 # from protodune
+   }
+}
+ 
+#source is now a root file
+source:
+{
+  module_type: RootInput
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+ producers:
+ {
+   rns:      { module_type: "RandomNumberSaver" }
+#   largeant: @local::sbnd_largeant
+#   mcreco:   @local::standard_mcreco
+   
+    #retain largeant name for compatibility
+    largeant: { module_type: "larg4Main"
+                enableVisualization: false
+                macroPath: ".:./macros"
+                visMacro: "vis.mac"
+    }
+
+
+    IonAndScint:
+    {
+        module_type:           "IonAndScint"
+        #Instances:             "LArG4DetectorServicevolTPCActive;LArG4DetectorServicevolTPCActiveOuter" # separated by semicolon
+        Instances:             "LArG4DetectorServicevolTPCActive" # separated by semicolon
+        ISCalcAlg:             "Separate" #"NEST"
+    }
+
+    PDFastSim:
+    {
+       module_type:            "PDFastSimPVS"
+       #module_type:            "PDFastSimPAR"
+       SimulationLabel:        "IonAndScint"
+       DoSlowComponent:        true
+       ScintTimeTool:          @local::ScintTimeLAr
+   }
+
+   simdrift:
+   {
+       module_type:            SimDriftElectrons
+       SimulationLabel:        "IonAndScint"    
+   }
+
+   
+   
+   
+ }
+
+ #define the producer and filter modules for this path, order matters, 
+ #filters reject all following items.  see lines starting physics.producers below
+ 
+ simulate: [ rns, largeant, IonAndScint, PDFastSim, simdrift ]
+ 
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [ out1 ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [ simulate ]
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [ stream1 ]
+}
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+  out1:
+  {
+              @table::sbnd_rootoutput # inherit shared settings
+    dataTier: "simulated"
+  }
+}
+
+# only keep MCParticles that cross the cryostat;
+# this is relevant in extensive cosmic ray generators (like Corsika)
+#physics.producers.largeant.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"] 
+
+
+
+# .....ooOOoo.....ooOOoo.....ooOOoo.....ooOOoo.....ooOOoo.....ooOOoo.....ooOOoo.....ooOOoo.....ooOOoo.....ooOOoo
+# extra configurations
+
+services.LArG4Parameters.UseLitePhotons:        true   # true = produce SimPhotonsLite and OpDetBacktrackerRecord, false = produce SimPhotons
+services.PhotonVisibilityService:               @local::sbnd_library_vuv_vis_prop_timing_photonvisibilityservice
