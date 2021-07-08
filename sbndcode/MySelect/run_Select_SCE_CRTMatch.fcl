@@ -15,7 +15,7 @@ source:
 
 services:
 {
-  TFileService: { fileName: "compile_test.root" }
+  TFileService: { fileName: "crt_test.root" }
   @table::sbnd_services
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice
@@ -25,7 +25,7 @@ physics:
 {
   producers: 
   {
-    crtt0matching: @local::crtt0matchingalg_sbnd
+    crtt0matching: @local::standard_crtt0matchingalg
     pandoraSCE: @local::scecorrection
     pandoraSCETrack: @local::sbnd_pandoraTrackCreation
     pandoraSCECalo: @local::sbnd_gnewcalomc
@@ -70,4 +70,3 @@ physics.analyzers.ana.CalorimetryLabel: "pandoraSCECalo"
 
 # End of stuff for running sce correction
 
-#include "3drift_services_sbnd.fcl"

@@ -11,7 +11,7 @@ source:
 
 services:
 {
-  TFileService: { fileName: "lookup_curve_test.root" }
+  TFileService: { fileName: "throughgoing_test.root" }
   @table::sbnd_services
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService: @local::standard_backtrackerservice

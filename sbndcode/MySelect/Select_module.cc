@@ -138,14 +138,13 @@ private:
   double nSelectedTrack;
   double nSelectedTrueTrack;
   double nTrueTrack;
-  
+  double nEvent; 
+ 
   // Additional member functions
   bool TrackCrossesApa(const art::Ptr<recob::Track> trk) const;
 
   bool TrackCrossesCpa(const art::Ptr<recob::Track> trk) const;
   
-  bool TrackThroughGoing(const art::Ptr<recob::Track> trk) const;
-
   std::vector< art::Ptr<recob::PFParticle> > GetCrossingCR_cathode_stitching_T0(
 	const std::vector< art::Ptr<recob::PFParticle> > &pfps, 
 	const art::FindManyP<recob::Track> &trackAssoc,
@@ -160,11 +159,11 @@ private:
 	const art::FindManyP<recob::Track> &trackAssoc, 
  	const art::FindManyP<anab::T0> &t0Assoc) const;
 
-  std::vector< art::Ptr<recob::PFParticle> > GetCrossingCR_SCE_CRT(
+  std::vector< art::Ptr<recob::PFParticle> > GetThroughGoing_CRT(
 	const std::vector< art::Ptr<recob::PFParticle> > &pfps, 
 	const art::FindManyP<recob::Track> &trackAssoc, 
- 	const art::FindManyP<anab::T0> &t0Assoc) const;
-
+	const art::FindManyP<anab::T0> &t0Assoc) const;
+ 
   bool MCParticleCrossesCpa(
 	const simb::MCParticle& particle, 
 	const sbnd::TPCGeoAlg TPCGeo) const; 
@@ -201,7 +200,7 @@ sbnd::Select::Select(fhicl::ParameterSet const& p)
   nSelectedTrack = 0;
   nSelectedTrueTrack = 0;
   nTrueTrack = 0;
- 
+  nEvent = 0 ; 
 }  // End of constructor
 
 void sbnd::Select::analyze(art::Event const& e)
@@ -211,6 +210,8 @@ void sbnd::Select::analyze(art::Event const& e)
   // detector service for event
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
   auto const detectorData = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
+
+  nEvent++;
 
   std::cout << std::endl;
   std::cout << "Reading event: " << e.id().event() << std::endl; 
@@ -251,11 +252,11 @@ void sbnd::Select::analyze(art::Event const& e)
 
   if(PFParticleList.empty()) return;
 
-  std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_cathode_stitching_T0(PFParticleList, trackAssoc, t0Assoc);
-  //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_SCE_CRT(PFParticleList, trackAssoc, t0Assoc);
+  //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_cathode_stitching_T0(PFParticleList, trackAssoc, t0Assoc);
+  std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetThroughGoing_CRT(PFParticleList, trackAssoc, t0Assoc);
   //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_CRTHitT0(PFParticleList, trackAssoc, t0Assoc);
 
-  std::cout << "No. of cathode-anode crossing muon: " << CrossingCR.size() << std::endl;
+  //std::cout << "No. of cathode-anode crossing muon: " << CrossingCR.size() << std::endl;
 
  
   //-------------------------Fill pfptree----------------------------// 
@@ -511,6 +512,7 @@ void sbnd::Select::endJob()
   std::cout << std::endl;
   std::cout << "=====================================" << std::endl;
   std::cout << "=====================================" << std::endl;
+  std::cout << "Track/Event Rate = " << nSelectedTrack / nEvent << std::endl;
   std::cout << "Purtity = " << nSelectedTrueTrack / nSelectedTrack << std::endl;
   std::cout << "Efficiency = " << nSelectedTrueTrack / nTrueTrack << std::endl;
   std::cout << "=====================================" << std::endl;
@@ -582,9 +584,9 @@ std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_cathode_s
 }  
 
 //-------------------------------------------------------------------
-// Get pfparticle that crt tracks that are through going
+// Get pfparticle that crt tracks that are through going 
 
-std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_SCE_CRT(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc, const art::FindManyP<anab::T0> &t0Assoc) const
+std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetThroughGoing_CRT(const std::vector< art::Ptr<recob::PFParticle> > &pfps, const art::FindManyP<recob::Track> &trackAssoc, const art::FindManyP<anab::T0> &t0Assoc) const
 {
   std::vector< art::Ptr<recob::PFParticle> > crosser;
   crosser.clear();
@@ -595,17 +597,16 @@ std::vector< art::Ptr<recob::PFParticle> > sbnd::Select::GetCrossingCR_SCE_CRT(c
    
     if(!(std::abs(pfp->PdgCode()) == 13)) continue; //check if  it's muon
    
-    std::vector< art::Ptr<anab::T0> > pfpT0 = t0Assoc.at(pfp.key()); //check if T0 is reco'ed after SCE
+    std::vector< art::Ptr<anab::T0> > pfpT0 = t0Assoc.at(pfp.key()); //check if T0 reco 
 
-    if(pfpT0.empty()) continue; //check if T0 is reco'ed after SCE 
+    if(pfpT0.empty()) continue; //check if T0 is reco 
  
     std::vector< art::Ptr<recob::Track> > pfpTrack = trackAssoc.at(pfp.key());
 
     if(pfpTrack.empty()) continue;
 
     for(const art::Ptr<recob::Track> &trk: pfpTrack){
- 
-      if(!(this->TrackThroughGoing(trk))) continue; //check if track is through-going
+      if(trk->Length() < 200) continue; //require minimum length 2m 
  
     }
   
@@ -682,28 +683,6 @@ bool sbnd::Select::TrackCrossesApa(const art::Ptr<recob::Track> trk) const
    
   if(distStart < 10 || distEnd < 10){
     return true;
-  }
-  return false;
-} 
-
-//------------------------------------------------------------------
-// Determine if a reconstructed track is through going: start & end outside of TPC 
-
-bool sbnd::Select::TrackThroughGoing(const art::Ptr<recob::Track> trk) const
-{
-  double xStart = trk->Start().X();    
-  double yStart = trk->Start().Y();    
-  double zStart = trk->Start().Z();    
- 
-  double xEnd = trk->End().X();
-  double yEnd = trk->End().Y();
-  double zEnd = trk->End().Z();
-   
-   
-  if((xStart < -200 || 200 < xStart) && (yStart < -200 || 200 < yStart) && (zStart < 0 || 500 < zStart)){
-    if((xEnd < -200 || 200 < xEnd) && (yEnd < -200 || 200 < yEnd) && (zEnd < 0 || 500 < zEnd)){
-      return true; 
-    }
   }
   return false;
 } 
