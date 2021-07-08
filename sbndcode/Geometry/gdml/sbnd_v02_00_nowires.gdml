@@ -12750,10 +12750,10 @@
                 </volume>
         </structure>
 	<solids>
-		<box name="XArapucaOut" lunit="mm" x="96" y="240" z="20"/>
-		<box name="XArapucaFilter" lunit="mm" x="76" y="206" z="2"/>
-		<box name="XArapucaHole" lunit="mm" x="76" y="206" z="3.0009999999999999"/>
-		<box name="XArapucaCover" lunit="mm" x="76" y="8" z="1"/>
+                <box name="XArapucaOut" lunit="mm" x="20" y="240" z="96"/>
+                <box name="XArapucaFilter" lunit="mm" x="2" y="206" z="76"/>
+                <box name="XArapucaHole" lunit="mm" x="3.0009999999999999" y="206" z="76"/>
+                <box name="XArapucaCover" lunit="mm" x="1" y="8" z="76"/>
 		<subtraction name="XArapucaExternalWalls">
 			<first ref="XArapucaOut"/>
 			<second ref="XArapucaHole"/>
