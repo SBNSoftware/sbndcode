@@ -4563,10 +4563,10 @@
 
 	<solids>
 
-		<box name="XArapucaOut" lunit="mm" x="XArapucaOut_w" y="XArapucaOut_l" z="XArapucaOut_t"/>
-		<box name="XArapucaFilter" lunit="mm" x="XArapucaFilter_w" y="XArapucaFilter_l" z="XArapucaFilter_t"/>
-		<box name="XArapucaHole" lunit="mm" x="XArapucaFilter_w" y="XArapucaFilter_l" z="XArapucaFilter_t+XArapucaFilterDepth+_eD_"/>
-		<box name="XArapucaCover" lunit="mm" x="XArapucaFilter_w" y="distanceBetweenXArapucaFilters" z="XArapucaFilterDepth"/>
+                <box name="XArapucaOut" lunit="mm" x="XArapucaOut_t" y="XArapucaOut_l" z="XArapucaOut_w"/>
+                <box name="XArapucaFilter" lunit="mm" x="XArapucaFilter_t" y="XArapucaFilter_l" z="XArapucaFilter_w"/>
+                <box name="XArapucaHole" lunit="mm" x="XArapucaFilter_t+XArapucaFilterDepth+_eD_" y="XArapucaFilter_l" z="XArapucaFilter_w"/>
+                <box name="XArapucaCover" lunit="mm" x="XArapucaFilterDepth" y="distanceBetweenXArapucaFilters" z="XArapucaFilter_w"/>
 
 		<subtraction name="XArapucaExternalWalls">
 			<first ref="XArapucaOut"/>
