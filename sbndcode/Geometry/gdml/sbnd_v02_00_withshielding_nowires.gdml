@@ -12750,16 +12750,16 @@
                 </volume>
         </structure>
 	<solids>
-		<box name="XArapucaOut" lunit="mm" z="96" y="240" x="20"/>
-		<box name="XArapucaFilter" lunit="mm" z="76" y="206" x="2"/>
-		<box name="XArapucaHole" lunit="mm" z="76" y="206" x="3.0009999999999999"/>
-		<box name="XArapucaCover" lunit="mm" z="76" y="8" x="1"/>
+		<box name="XArapucaOut" lunit="mm" x="20" y="240" z="96"/>
+		<box name="XArapucaFilter" lunit="mm" x="2" y="206" z="76"/>
+		<box name="XArapucaHole" lunit="mm" x="3.0009999999999999" y="206" z="76"/>
+		<box name="XArapucaCover" lunit="mm" x="1" y="8" z="76"/>
 		<subtraction name="XArapucaExternalWalls">
 			<first ref="XArapucaOut"/>
 			<second ref="XArapucaHole"/>
-			<position name="posXArapucaSub" unit="mm" z="0" y="0" x="8.5"/>
+			<position name="posXArapucaSub" unit="mm" x="8.5" y="0" z="0"/>
 		</subtraction>
-		<box name="XArapucaVolume" lunit="mm" z="96" y="240" x="20"/>
+		<box name="XArapucaVolume" lunit="mm" x="20" y="240" z="96"/>
 	</solids>
 	<structure>
 		<volume name="volOpDetSensitiveXArapucaFilter">
@@ -12780,15 +12780,15 @@
 			<solidref ref="XArapucaVolume"/>
 			<physvol>
 				<volumeref ref="volWalls_XArapuca"/>
-				<position name="posXArapuca1" unit="mm" z="0" y="0" x="0"/>
+				<position name="posXArapuca1" unit="mm" x="0" y="0" z="0"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volCover_XArapuca"/>
-				<position name="posXArapuca2" unit="mm" z="0" y="0" x="9.5"/>
+				<position name="posXArapuca2" unit="mm" x="9.5" y="0" z="0"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volOpDetSensitiveXArapucaFilter"/>
-				<position name="posXArapuca3" unit="mm" z="0" y="0" x="8"/>
+				<position name="posXArapuca3" unit="mm" x="8" y="0" z="0"/>
 			</physvol>
 		</volume>
 	</structure>

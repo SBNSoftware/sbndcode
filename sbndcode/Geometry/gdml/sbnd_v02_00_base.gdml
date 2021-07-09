@@ -4563,18 +4563,18 @@
 
 	<solids>
 
-		<box name="XArapucaOut" lunit="mm" z="XArapucaOut_w" y="XArapucaOut_l" x="XArapucaOut_t"/>
-		<box name="XArapucaFilter" lunit="mm" z="XArapucaFilter_w" y="XArapucaFilter_l" x="XArapucaFilter_t"/>
-		<box name="XArapucaHole" lunit="mm" z="XArapucaFilter_w" y="XArapucaFilter_l" x="XArapucaFilter_t+XArapucaFilterDepth+_eD_"/>
-		<box name="XArapucaCover" lunit="mm" z="XArapucaFilter_w" y="distanceBetweenXArapucaFilters" x="XArapucaFilterDepth"/>
+		<box name="XArapucaOut" lunit="mm" x="XArapucaOut_t" y="XArapucaOut_l" z="XArapucaOut_w"/>
+		<box name="XArapucaFilter" lunit="mm" x="XArapucaFilter_t" y="XArapucaFilter_l" z="XArapucaFilter_w"/>
+		<box name="XArapucaHole" lunit="mm" x="XArapucaFilter_t+XArapucaFilterDepth+_eD_" y="XArapucaFilter_l" z="XArapucaFilter_w"/>
+		<box name="XArapucaCover" lunit="mm" x="XArapucaFilterDepth" y="distanceBetweenXArapucaFilters" z="XArapucaFilter_w"/>
 
 		<subtraction name="XArapucaExternalWalls">
 			<first ref="XArapucaOut"/>
 			<second ref="XArapucaHole"/>
-			<position name="posXArapucaSub" unit="mm" z="0" y="0" x="(XArapucaOut_t/2.)-((XArapucaFilterDepth+XArapucaFilter_t)/2.)"/>
+			<position name="posXArapucaSub" unit="mm" x="(XArapucaOut_t/2.)-((XArapucaFilterDepth+XArapucaFilter_t)/2.)" y="0" z="0"/>
 		</subtraction>
 
-		<box name="XArapucaVolume" lunit="mm" z="XArapucaOut_w" y="XArapucaOut_l" x="XArapucaOut_t"/>
+		<box name="XArapucaVolume" lunit="mm" x="XArapucaOut_t" y="XArapucaOut_l" z="XArapucaOut_w"/>
 
 	</solids>
 
@@ -4605,15 +4605,15 @@
 			<solidref ref="XArapucaVolume"/>
 			<physvol>
 				<volumeref ref="volWalls_XArapuca"/>
-				<position name="posXArapuca1" unit="mm" z="0" y="0" x="0"/>
+				<position name="posXArapuca1" unit="mm" x="0" y="0" z="0"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volCover_XArapuca"/>
-				<position name="posXArapuca2" unit="mm" z="0" y="0" x="(XArapucaOut_t/2.)-(XArapucaFilterDepth/2.)"/>
+				<position name="posXArapuca2" unit="mm" x="(XArapucaOut_t/2.)-(XArapucaFilterDepth/2.)" y="0" z="0"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volOpDetSensitiveXArapucaFilter"/>
-				<position name="posXArapuca3" unit="mm" z="0" y="0" x="(XArapucaOut_t/2.)-XArapucaFilterDepth-(XArapucaFilter_t)/2."/>
+				<position name="posXArapuca3" unit="mm" x="(XArapucaOut_t/2.)-XArapucaFilterDepth-(XArapucaFilter_t)/2." y="0" z="0"/>
 			</physvol>
 		</volume>
 
