@@ -84,7 +84,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
 
   if (start > trigger_window[1]) return;
   size_t start_i = start > trigger_window[0] ? 0 : (size_t)((trigger_window[0] - start) / optical_period(clockData));
-
+  //..........................................................
   // fix rounding on division if necessary
   if (!IsTriggerEnabled(clockData,
                         detProp,
@@ -94,6 +94,11 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   assert(IsTriggerEnabled(clockData,
                           detProp,
                           tick_to_timestamp(clockData, waveform.TimeStamp(), start_i)));
+  //..........................................................
+  
+
+  //std::cout<<"Raw waveform timestamp: "<<waveform.TimeStamp()<<", with "<<adcs.size()<<" samples\n";  
+  //std::cout<<"Enable triggers in window start: "<<start<<"     end: "<<trigger_window[1]<<"\n";
 
   // if start is past end of waveform, we can return
   if (start_i >= adcs.size()) return;
@@ -111,6 +116,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   assert(end_i+1 == adcs.size() || !IsTriggerEnabled(clockData,
                                                      detProp,
                                                      tick_to_timestamp(clockData, waveform.TimeStamp(), end_i+1)));
+  //..........................................................
 
   std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_locations; 
   bool above_threshold = false;

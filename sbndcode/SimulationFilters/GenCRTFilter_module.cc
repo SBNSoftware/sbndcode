@@ -123,6 +123,12 @@ namespace filt{
             double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/detProp.DriftVelocity();
             // If both times are below or above the readout window time then skip
             if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
+	  }
+	  if (fUseTightReadoutWindow) {
+	    if (time<0 || time>(readoutWindow-driftTime)) continue;
+          }
+          if (fUseTightReadoutWindow) {
+            if (time<0 || time>(readoutWindow-driftTime)) continue;
           }
           if (fUseTightReadoutWindow) {
             if (time<0 || time>(readoutWindow-driftTime)) continue;

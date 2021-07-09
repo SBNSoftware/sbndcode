@@ -14,7 +14,10 @@ BEGIN_PROLOG
 # standard configuration
 sbnd_pdfastsim_par:                     @local::standard_pdfastsim_par_ar
 
+<<<<<<< HEAD
 sbnd_pdfastsim_par.SimulationLabel:     "IonAndScintIN"
+=======
+>>>>>>> origin/feature/mstancar_CRTtimetag
 # Direct (VUV)
 sbnd_pdfastsim_par.VUVTiming:           @local::sbnd_vuv_timing_parameterization
 sbnd_pdfastsim_par.VUVHits:             @local::sbnd_vuv_RS100cm_hits_parameterization
@@ -25,6 +28,7 @@ sbnd_pdfastsim_par.VISTiming:        	@local::sbnd_vis_timing_parameterization
 sbnd_pdfastsim_par.VISHits:          	@local::sbnd_vis_RS100cm_hits_parameterization
 
 
+<<<<<<< HEAD
 
 
 
@@ -39,4 +43,6 @@ sbnd_pdfastsim_pvs.StoreReflected: true
 
 
 
+=======
+>>>>>>> origin/feature/mstancar_CRTtimetag
 END_PROLOG

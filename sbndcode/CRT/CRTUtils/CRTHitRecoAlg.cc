@@ -174,9 +174,10 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
             double time = (t0_1 + t0_2)/2;
             //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
             double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
+	    int plane = GetPlaneIndex(tagStrip.first.first);
 
             // Create a CRT hit
-            sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+            sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                             mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
             std::vector<int> dataIds;
             dataIds.push_back(tagStrip.second[hit_i].dataID);
@@ -200,9 +201,10 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
 
         double time = tagStrip.second[hit_i].t0;
         double pes = tagStrip.second[hit_i].pes;
+	int plane = GetPlaneIndex(tagStrip.first.first);
 
         // Just use the single plane limits as the crt hit
-        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                         mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
         std::vector<int> dataIds;
         dataIds.push_back(tagStrip.second[hit_i].dataID);
@@ -227,9 +229,10 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
 
         double time = taggerStrips[otherPlane][hit_j].t0;
         double pes = taggerStrips[otherPlane][hit_j].pes;
+	int plane = GetPlaneIndex(otherPlane.first);
 
         // Just use the single plane limits as the crt hit
-        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                         mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
         std::vector<int> dataIds;
         dataIds.push_back(taggerStrips[otherPlane][hit_j].dataID);
@@ -347,6 +350,24 @@ double CRTHitRecoAlg::CorrectNpe(CRTStrip strip1, CRTStrip strip2, TVector3 posi
 
   // Add the two strips together
   return pesCorr1 + pesCorr2;
+}
+
+
+int CRTHitRecoAlg::GetPlaneIndex(std::string tagger) {
+
+  int ip = -1;
+
+  // check the list of SBND tagger names and assign a plane number
+  if (tagger=="volTaggerBot_0")       ip = 0;
+  else if  (tagger=="volTaggerFaceFront_0" )    ip = 1;
+  else if (tagger=="volTaggerFaceBack_0")  ip = 2;
+  else if (tagger=="volTaggerSideLeft_0")  ip = 3;
+  else if (tagger=="volTaggerSideRight_0") ip = 4;
+  else if (tagger=="volTaggerTopLow_0")    ip = 5;
+  else if (tagger=="volTaggerTopHigh_0")   ip = 6;
+  
+  return ip;
+  
 }
 
 }

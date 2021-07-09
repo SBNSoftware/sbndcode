@@ -41,6 +41,8 @@ namespace detinfo {
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
+
+
 // c++
 #include <iostream>
 #include <stdio.h>
@@ -67,7 +69,6 @@ namespace sbnd{
     std::pair<std::string, unsigned> tagger;
     size_t dataID;
   };
-
 
   class CRTHitRecoAlg {
   public:
@@ -148,6 +149,10 @@ namespace sbnd{
 
     // Function to correct number of photoelectrons by distance down strip
     double CorrectNpe(CRTStrip strip1, CRTStrip strip2, TVector3 position);
+
+    int GetPlaneIndex(std::string tagger);
+
+
 
   private:
 

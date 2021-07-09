@@ -3677,7 +3677,6 @@ double sbnd::AnalysisTree::length(const simb::MCParticle& part, TVector3& start,
   return L;
 }
 
-
 namespace sbnd{
 
   DEFINE_ART_MODULE(AnalysisTree)
