@@ -12750,16 +12750,16 @@
                 </volume>
         </structure>
 	<solids>
-		<box name="XArapucaOut" lunit="mm" x="96" y="240" z="20"/>
-		<box name="XArapucaFilter" lunit="mm" x="76" y="206" z="2"/>
-		<box name="XArapucaHole" lunit="mm" x="76" y="206" z="3.0009999999999999"/>
-		<box name="XArapucaCover" lunit="mm" x="76" y="8" z="1"/>
+		<box name="XArapucaOut" lunit="mm" x="20" y="240" z="96"/>
+		<box name="XArapucaFilter" lunit="mm" x="2" y="206" z="76"/>
+		<box name="XArapucaHole" lunit="mm" x="3.0009999999999999" y="206" z="76"/>
+		<box name="XArapucaCover" lunit="mm" x="1" y="8" z="76"/>
 		<subtraction name="XArapucaExternalWalls">
 			<first ref="XArapucaOut"/>
 			<second ref="XArapucaHole"/>
-			<position name="posXArapucaSub" unit="mm" x="0" y="0" z="8.5"/>
+			<position name="posXArapucaSub" unit="mm" x="8.5" y="0" z="0"/>
 		</subtraction>
-		<box name="XArapucaVolume" lunit="mm" x="96" y="240" z="20"/>
+		<box name="XArapucaVolume" lunit="mm" x="20" y="240" z="96"/>
 	</solids>
 	<structure>
 		<volume name="volOpDetSensitiveXArapucaFilter">
@@ -12784,11 +12784,11 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volCover_XArapuca"/>
-				<position name="posXArapuca2" unit="mm" x="0" y="0" z="9.5"/>
+				<position name="posXArapuca2" unit="mm" x="9.5" y="0" z="0"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volOpDetSensitiveXArapucaFilter"/>
-				<position name="posXArapuca3" unit="mm" x="0" y="0" z="8"/>
+				<position name="posXArapuca3" unit="mm" x="8" y="0" z="0"/>
 			</physvol>
 		</volume>
 	</structure>
@@ -12832,7 +12832,7 @@
 	<!-- building a structure that will contain all 8 XARAPUCAS and 5 PMTs
 		per module of the APA -->
 	<solids>
-		<box name="PDS_moduleCase" lunit="mm" x="904.79999999999995" y="1040" z="133.5"/>
+		<box name="PDS_moduleCase" lunit="mm" z="904.79999999999995" y="1040" x="133.5"/>
 	</solids>
 	<structure>
 		<volume name="volPDSstructure">
@@ -12840,55 +12840,60 @@
 			<solidref ref="PDS_moduleCase"/>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
-				<position name="posXArapuca_1_Structure" unit="mm" x="-76.200000000000003" y="400" z="-56.75"/>
+				<position name="posXArapuca_1_Structure" unit="mm" z="-76.200000000000003" y="400" x="-56.75"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
-				<position name="posXArapuca_2_Structure" unit="mm" x="76.200000000000003" y="400" z="-56.75"/>
+				<position name="posXArapuca_2_Structure" unit="mm" z="76.200000000000003" y="400" x="-56.75"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
-				<position name="posXArapuca_3_Structure" unit="mm" x="-76.200000000000003" y="-400" z="-56.75"/>
+				<position name="posXArapuca_3_Structure" unit="mm" z="-76.200000000000003" y="-400" x="-56.75"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
-				<position name="posXArapuca_4_Structure" unit="mm" x="76.200000000000003" y="-400" z="-56.75"/>
+				<position name="posXArapuca_4_Structure" unit="mm" z="76.200000000000003" y="-400" x="-56.75"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
-				<position name="posXArapuca_5_Structure" unit="mm" x="-376.19999999999999" y="0" z="-56.75"/>
+				<position name="posXArapuca_5_Structure" unit="mm" z="-376.19999999999999" y="0" x="-56.75"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
-				<position name="posXArapuca_6_Structure" unit="mm" x="-223.80000000000001" y="0" z="-56.75"/>
+				<position name="posXArapuca_6_Structure" unit="mm" z="-223.80000000000001" y="0" x="-56.75"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
-				<position name="posXArapuca_7_Structure" unit="mm" x="223.80000000000001" y="0" z="-56.75"/>
+				<position name="posXArapuca_7_Structure" unit="mm" z="223.80000000000001" y="0" x="-56.75"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
-				<position name="posXArapuca_8_Structure" unit="mm" x="376.19999999999999" y="0" z="-56.75"/>
+				<position name="posXArapuca_8_Structure" unit="mm" z="376.19999999999999" y="0" x="-56.75"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT_1_Structure" unit="mm" x="-300" y="400" z="3.25"/>
+				<position name="posPMT_1_Structure" unit="mm" z="-300" y="400" x="3.25"/>
+				<rotationref ref="rotateN90Y"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT_2_Structure" unit="mm" x="300" y="400" z="3.25"/>
+				<position name="posPMT_2_Structure" unit="mm" z="300" y="400" x="3.25"/>
+				<rotationref ref="rotateN90Y"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT_3_Structure" unit="mm" x="0" y="0" z="3.25"/>
+				<position name="posPMT_3_Structure" unit="mm" z="0" y="0" x="3.25"/>
+				<rotationref ref="rotateN90Y"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT_4_Structure" unit="mm" x="-300" y="-400" z="3.25"/>
+				<position name="posPMT_4_Structure" unit="mm" z="-300" y="-400" x="3.25"/>
+				<rotationref ref="rotateN90Y"/>
 			</physvol>
 			<physvol>
 				<volumeref ref="volPMT"/>
-				<position name="posPMT_5_Structure" unit="mm" x="300" y="-400" z="3.25"/>
+				<position name="posPMT_5_Structure" unit="mm" z="300" y="-400" x="3.25"/>
+				<rotationref ref="rotateN90Y"/>
 			</physvol>
 		</volume>
 	</structure>
@@ -13608,122 +13613,110 @@
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_1_PDS" unit="mm" x="-2088.75" y="1350" z="-2380.7577500000002"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_2_PDS" unit="mm" x="-2088.75" y="1350" z="-1047.9192499999999"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_3_PDS" unit="mm" x="-2088.75" y="0" z="-2380.7577500000002"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_4_PDS" unit="mm" x="-2088.75" y="0" z="-1047.9192499999999"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_5_PDS" unit="mm" x="-2088.75" y="-1350" z="-2380.7577500000002"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_6_PDS" unit="mm" x="-2088.75" y="-1350" z="-1047.9192499999999"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_7_PDS" unit="mm" x="-2088.75" y="1350" z="222.91925000000003"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_8_PDS" unit="mm" x="-2088.75" y="1350" z="1555.7577500000002"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_9_PDS" unit="mm" x="-2088.75" y="0" z="222.91925000000003"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_10_PDS" unit="mm" x="-2088.75" y="0" z="1555.7577500000002"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_11_PDS" unit="mm" x="-2088.75" y="-1350" z="222.91925000000003"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_12_PDS" unit="mm" x="-2088.75" y="-1350" z="1555.7577500000002"/>
-                                <rotationref ref="rotateN90Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_13_PDS" unit="mm" x="2088.75" y="1350" z="-2380.7577500000002"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_14_PDS" unit="mm" x="2088.75" y="1350" z="-1047.9192499999999"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_15_PDS" unit="mm" x="2088.75" y="0" z="-2380.7577500000002"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_16_PDS" unit="mm" x="2088.75" y="0" z="-1047.9192499999999"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_17_PDS" unit="mm" x="2088.75" y="-1350" z="-2380.7577500000002"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_18_PDS" unit="mm" x="2088.75" y="-1350" z="-1047.9192499999999"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_19_PDS" unit="mm" x="2088.75" y="1350" z="222.91925000000003"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_20_PDS" unit="mm" x="2088.75" y="1350" z="1555.7577500000002"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_21_PDS" unit="mm" x="2088.75" y="0" z="222.91925000000003"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_22_PDS" unit="mm" x="2088.75" y="0" z="1555.7577500000002"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_23_PDS" unit="mm" x="2088.75" y="-1350" z="222.91925000000003"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
                         <physvol>
                                 <volumeref ref="volPDSstructure"/>
                                 <position name="pos_24_PDS" unit="mm" x="2088.75" y="-1350" z="1555.7577500000002"/>
-                                <rotationref ref="rotateP90Y"/>
+                                <rotationref ref="rotateP180Y"/>
                         </physvol>
 		</volume>
 	</structure>
