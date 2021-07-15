@@ -47,17 +47,18 @@ namespace sbnd{
   //###################################################
 
   struct TrueBlip {
-    bool      isValid           = false;
-    int       LeadingG4TrackID  = -9;
-    float     LeadingEnergy     = -9;
-    float     Energy            = 0;
-    float     NumElectrons      = 0; // (post-drift)
-    float     Length            = 0;
+    bool      isValid       = false;
+    int       LeadG4ID   = -9;
+    float     LeadEnergy = -9;
+    float     Energy        = 0;
+    float     NumElectrons  = 0; // (post-drift)
+    float     Length        = 0;
     TVector3  Position;
     TVector3  StartPoint;
     TVector3  EndPoint;
-    vi_t      vG4TrackIDs;
-    vi_t      vPDGs;
+    vi_t      G4IDs;
+    vi_t      PDGs;
+    int       ID;
   };
 
   struct HitInfo {
@@ -78,20 +79,22 @@ namespace sbnd{
     art::Ptr<recob::Hit> LeadHit;
     bool    isValid         = false;
     bool    isMerged        = false;
-    bool    isMatched[3]    = {false, false, false};
+    bool    isMatched       = false;
     int     LeadHitWire     = -999;
-    int     LeadHitG4TrackID= -9;
+    int     LeadHitG4ID     = -9;
+    float   LeadHitCharge   = -999;
     int     TPC             = -9;
     int     Plane           = -9;
-    float   LeadHitCharge   = -999;
     float   Charge          = -999;
     float   Time            = -999;
     float   StartTime       = -999;
     float   EndTime         = -999;
     int     StartWire       = -999;
     int     EndWire         = -999;
+    int     ID              = -9;
+    int     BlipID          = -9;
     si_t    HitIDs;
-    si_t    G4TrackIDs;
+    si_t    G4IDs;
     si_t    Wires;
     mif_t   mapWireCharge;
   };
@@ -104,6 +107,8 @@ namespace sbnd{
     int     NCrossings;
     TVector3 Position;
     float   PositionRMS;
+    int     ID;
+    si_t    ClustIDs;
   };
 
   //###################################################

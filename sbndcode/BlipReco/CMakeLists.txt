@@ -31,9 +31,9 @@ art_make(
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}
                            ${ROOT_BASIC_LIB_LIST}
-                           sbndcode_RecoUtils
                            sbndcode_BlipUtils
-                        #   sbndcode_OpDetSim
+                           #sbndcode_RecoUtils
+                           #sbndcode_OpDetSim
         )
 
 # install_headers()

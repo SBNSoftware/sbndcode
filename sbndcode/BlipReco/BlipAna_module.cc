@@ -52,7 +52,7 @@
 #include "larsim/MCCheater/ParticleInventoryService.h"
 
 // SBNDCode includes
-#include "sbndcode/RecoUtils/RecoUtils.h"
+//#include "sbndcode/RecoUtils/RecoUtils.h"
 #include "sbndcode/BlipReco/Utils/BlipUtils.h"
 
 // C++ includes
@@ -113,7 +113,6 @@ namespace sbnd {
     // --- Event information ---   
     int   event;                    // event number
     int   run;                      // run number
-    float lifetime;                 // electron lifetime (us)
 
     // --- G4 information ---
     float total_depEnergy;          // total deposited energy in AV
@@ -147,12 +146,14 @@ namespace sbnd {
     // --- True energy deposit info (derived) ---
     int   nedeps;                   // number of true localized energy depositions
     int   edep_g4id[kMaxEDeps];     // leading G4 track ID
+    int   edep_clustid[kMaxEDeps];  // hitclust ID
+    int   edep_blipid[kMaxEDeps];   // reconstructed blip ID
     float edep_energy[kMaxEDeps];   // total energy deposited (MeV)
+    float edep_charge[kMaxEDeps];   // total electrons reaching anode wires
     float edep_x[kMaxEDeps];        // x (cm)
     float edep_y[kMaxEDeps];        // y (cm)
     float edep_z[kMaxEDeps];        // z (cm)
     float edep_ds[kMaxEDeps];       // extent (cm)
-    int   edep_blipid[kMaxEDeps];   // key of reco blip
 
     // --- Hit information ---
     int	  nhits;                    // number of hits
@@ -173,7 +174,6 @@ namespace sbnd {
     float hit_g4energy[kMaxHits];   // true energy
     float hit_g4charge[kMaxHits];   // true number of electrons (drift-attenuated)
     int   hit_clustid[kMaxHits];    // key of HitClust in which hit was included
-    int   hit_blipid[kMaxHits];     // key of Blip in which hit was included
 
     // --- Hit cluster information ---
     int   nclusts;
@@ -191,6 +191,7 @@ namespace sbnd {
     int   clust_g4id[kMaxHits];
     int   clust_ismatched[kMaxHits];
     int   clust_blipid[kMaxHits];
+    int   clust_edepid[kMaxHits];
     
     // --- Blip information ---
     int   nblips;
@@ -202,15 +203,12 @@ namespace sbnd {
     float blip_z[kMaxBlips];
     float blip_prms[kMaxBlips];
     float blip_charge[kMaxBlips];
-    float blip_g4charge[kMaxBlips];
-    int   blip_g4id[kMaxBlips];
-     
+    int   blip_edepid[kMaxBlips];
 
     // === Function for resetting data ===
     void Clear(){ 
       event                 = -999; // --- event-wide info ---
       run                   = -999;
-      lifetime              = -999;
       total_depEnergy       = -999;
       total_numElectrons    = -999;
       nparticles            = 0;    // --- G4 particles ---
@@ -240,12 +238,14 @@ namespace sbnd {
       FillWith(process,     "");
       nedeps                = 0;    // --- EDeps ---
       FillWith(edep_energy, -999);
-      FillWith(edep_g4id,   -9);
+      FillWith(edep_charge, -999);
       FillWith(edep_x,      -99999.);
       FillWith(edep_y,      -99999.);
       FillWith(edep_z,      -99999.);
       FillWith(edep_ds,     -999);
-      FillWith(edep_blipid,     -9);
+      FillWith(edep_g4id,   -9);
+      FillWith(edep_clustid,-9);
+      FillWith(edep_blipid, -9);
       nhits                 = 0;    // --- TPC hits ---
       FillWith(hit_tpc,     -999);
       FillWith(hit_plane,   -999);
@@ -264,8 +264,7 @@ namespace sbnd {
       FillWith(hit_g4energy,-999);
       FillWith(hit_g4charge,-999);
       FillWith(hit_clustid,   -9);
-      FillWith(hit_blipid,    -9);
-      nclusts               = 0;
+      nclusts               = 0;    // --- Hit Clusters ---
       FillWith(clust_tpc,  -9);
       FillWith(clust_plane, -9);
       FillWith(clust_wire, -9);
@@ -279,8 +278,9 @@ namespace sbnd {
       FillWith(clust_g4charge, -999);
       FillWith(clust_g4energy, -999);
       FillWith(clust_ismatched, 0);
+      FillWith(clust_edepid, -9);
       FillWith(clust_blipid, -9);
-      nblips                = 0;
+      nblips                = 0;  // --- Blips ---
       FillWith(blip_tpc,  -9);
       FillWith(blip_bestplane, -9);
       FillWith(blip_x, -99999);
@@ -289,8 +289,7 @@ namespace sbnd {
       FillWith(blip_prms, -999999);
       FillWith(blip_ncrossings, -9);
       FillWith(blip_charge, -999);
-      FillWith(blip_g4id, -9);
-      FillWith(blip_g4charge, -999);
+      FillWith(blip_edepid, -9);
 
     }
 
@@ -307,7 +306,6 @@ namespace sbnd {
       tree = tfs->make<TTree>(treeName.c_str(),"analysis tree");
       tree->Branch("event",&event,"event/I");
       tree->Branch("run",&run,"run/I");
-      tree->Branch("lifetime",&lifetime,"lifetime/F");
       tree->Branch("total_depEnergy",&total_depEnergy,"total_depEnergy/F");
       tree->Branch("total_numElectrons",&total_numElectrons,"total_numElectrons/F");
       tree->Branch("nparticles",&nparticles,"nparticles/I");
@@ -337,12 +335,14 @@ namespace sbnd {
       tree->Branch("process",&process);
       tree->Branch("nedeps",&nedeps,"nedeps/I");
       tree->Branch("edep_g4id",edep_g4id,"edep_g4id[nedeps]/I"); 
+      tree->Branch("edep_blipid",edep_blipid,"edep_blipid[nedeps]/I"); 
+      tree->Branch("edep_clustid",edep_clustid,"edep_clustid[nedeps]/I"); 
       tree->Branch("edep_energy",edep_energy,"edep_energy[nedeps]/F"); 
+      tree->Branch("edep_charge",edep_charge,"edep_charge[nedeps]/F"); 
       tree->Branch("edep_x",edep_x,"edep_x[nedeps]/F"); 
       tree->Branch("edep_y",edep_y,"edep_y[nedeps]/F"); 
       tree->Branch("edep_z",edep_z,"edep_z[nedeps]/F"); 
       tree->Branch("edep_ds",edep_ds,"edep_ds[nedeps]/F"); 
-      tree->Branch("edep_blipid",edep_blipid,"edep_blipid[nedeps]/I"); 
       tree->Branch("nhits",&nhits,"nhits/I");
       tree->Branch("hit_tpc",hit_tpc,"hit_tpc[nhits]/I"); 
       tree->Branch("hit_plane",hit_plane,"hit_plane[nhits]/I"); 
@@ -361,7 +361,6 @@ namespace sbnd {
       tree->Branch("hit_g4energy",hit_g4energy,"hit_g4energy[nhits]/F"); 
       tree->Branch("hit_g4charge",hit_g4charge,"hit_g4charge[nhits]/F"); 
       tree->Branch("hit_clustid",hit_clustid,"hit_clustid[nhits]/I"); 
-      tree->Branch("hit_blipid",hit_blipid,"hit_blipid[nhits]/I");
       tree->Branch("nclusts",&nclusts,"nclusts/I");
       tree->Branch("clust_tpc",clust_tpc,"clust_tpc[nclusts]/I");
       tree->Branch("clust_plane",clust_plane,"clust_plane[nclusts]/I");
@@ -375,6 +374,7 @@ namespace sbnd {
       tree->Branch("clust_g4charge",clust_g4charge,"clust_g4charge[nclusts]/F");
       tree->Branch("clust_g4energy",clust_g4energy,"clust_g4energy[nclusts]/F");
       tree->Branch("clust_ismatched",clust_ismatched,"clust_ismatched[nclusts]/I");
+      tree->Branch("clust_edepid",clust_edepid,"clust_edepid[nclusts]/I");
       tree->Branch("clust_blipid",clust_blipid,"clust_blipid[nclusts]/I");
       tree->Branch("nblips",&nblips,"nblips/I");
       tree->Branch("blip_tpc",blip_tpc,"blip_tpc[nblips]/I");
@@ -385,8 +385,7 @@ namespace sbnd {
       tree->Branch("blip_z",blip_z,"blip_z[nblips]/F");
       tree->Branch("blip_prms",blip_prms,"blip_prms[nblips]/F");
       tree->Branch("blip_charge",blip_charge,"blip_charge[nblips]/F");
-      tree->Branch("blip_g4charge",blip_g4charge,"blip_g4charge[nblips]/F");
-      tree->Branch("blip_g4id",blip_g4id,"blip_g4id[nblips]/I");
+      tree->Branch("blip_edepid",blip_edepid,"blip_edepid[nblips]/I");
       
     }
     
@@ -412,7 +411,7 @@ namespace sbnd {
     void PrintParticleInfo(size_t);
   
     // --- Detector and clock data ---
-    float detprop_TickOffset[kNplanes];
+    float TickOffset[kNplanes];
 
     // --- Data and calo objects ---
     BlipAnaTreeDataStruct*  fData;
@@ -485,14 +484,14 @@ sbnd::BlipAna::~BlipAna(){}
 //  data here, and save them into class variables
 //###################################################
 void sbnd::BlipAna::beginJob() {
-  //auto const clockData  = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
-  //clkdata_BeamGateTime = clockData.BeamGateTime();
-  auto const detProp    = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+  // -- Detector Properties --
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
   // First plane induction plane will be treated as reference. Offsets for subsequent
   // planes must be subtracted off those times to line up with plane 0.
-  detprop_TickOffset[0] = 0;
-  detprop_TickOffset[1] = detProp.GetXTicksOffset(1,0,0)-detProp.GetXTicksOffset(0,0,0);
-  detprop_TickOffset[2] = detProp.GetXTicksOffset(2,0,0)-detProp.GetXTicksOffset(0,0,0);
+  TickOffset[0] = 0;
+  TickOffset[1] = detProp.GetXTicksOffset(1,0,0)-detProp.GetXTicksOffset(0,0,0);
+  TickOffset[2] = detProp.GetXTicksOffset(2,0,0)-detProp.GetXTicksOffset(0,0,0);
+  std::cout<<"Electron lifetime = "<<detProp.ElectronLifetime()<<"\n";
 }
 
 
@@ -511,13 +510,11 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   //=========================================
   fData->event  = evt.id().event();
   fData->run    = evt.id().run();
-
+  
   //=========================================
   // Get data products for this event
   //=========================================
   
-  // -- Detector Properties
-//  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
   
   // -- G4 particles
   art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
@@ -559,8 +556,8 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   std::cout<<"Total energy deposited: "<<fData->total_depEnergy<<" MeV \n";
 
   // Create empty vector to save all the "true" blips in the event
-  std::vector<BlipUtils::TrueBlip> trueBlipsVec;
-
+  std::vector<BlipUtils::TrueBlip> trueblips;
+  
   // Loop through the MCParticles
   sim::ParticleList::const_iterator itPart = plist.begin();
   for(size_t i = 0; (i<plist.size())&&(itPart!=plist.end()); i++){
@@ -583,8 +580,8 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     
     // Make true blips 
     BlipUtils::TrueBlip tb = BlipUtils::MakeTrueBlip(trackID);
-    if( tb.isValid ) trueBlipsVec.push_back(tb);
-    
+    if( tb.isValid ) trueblips.push_back(tb);
+
     // Save to TTree object
     if(i<kMaxG4){
       fData->trackID[i]         = trackID;
@@ -621,20 +618,22 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   //====================================
   // Merge and save true blip information
   //====================================
-  MergeTrueBlips(trueBlipsVec, fBlipMergeDist); 
-  fData->nedeps = (int)trueBlipsVec.size();
-  std::cout<<"Found "<<trueBlipsVec.size()<<" true blips:\n";
-  for(size_t i=0; i<trueBlipsVec.size(); i++ ) {
-    fData->edep_energy[i] = trueBlipsVec.at(i).Energy;
-    fData->edep_ds[i]     = trueBlipsVec.at(i).Length;
-    fData->edep_x[i]      = trueBlipsVec.at(i).Position.X();
-    fData->edep_y[i]      = trueBlipsVec.at(i).Position.Y();
-    fData->edep_z[i]      = trueBlipsVec.at(i).Position.Z();
-    fData->edep_g4id[i]   = trueBlipsVec.at(i).LeadingG4TrackID;
+  MergeTrueBlips(trueblips, fBlipMergeDist); 
+  fData->nedeps = (int)trueblips.size();
+  std::cout<<"Found "<<trueblips.size()<<" true blips:\n";
+  for(size_t i=0; i<trueblips.size(); i++ ) {
+    trueblips[i].ID       = i;
+    fData->edep_energy[i] = trueblips.at(i).Energy;
+    fData->edep_charge[i] = trueblips.at(i).NumElectrons;
+    fData->edep_ds[i]     = trueblips.at(i).Length;
+    fData->edep_x[i]      = trueblips.at(i).Position.X();
+    fData->edep_y[i]      = trueblips.at(i).Position.Y();
+    fData->edep_z[i]      = trueblips.at(i).Position.Z();
+    fData->edep_g4id[i]   = trueblips.at(i).LeadG4ID;
     std::cout
-    <<"   ~ "<<trueBlipsVec.at(i).Energy<<" MeV, "
-    <<" ds= "<<trueBlipsVec.at(i).Length<<" cm, "
-    <<" trkID= "<<trueBlipsVec.at(i).LeadingG4TrackID<<"\n";
+    <<"   ~ "<<trueblips.at(i).Energy<<" MeV, "
+    <<" ds= "<<trueblips.at(i).Length<<" cm, "
+    <<" trkID= "<<trueblips.at(i).LeadG4ID<<"\n";
   }
 
 
@@ -650,11 +649,12 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     // Variables to be calculated
     int wire = hitlist[i]->WireID().Wire;
     int plane = hitlist[i]->WireID().Plane;
-    int trkid = -1, g4id = -1;
+    int trkid = -9;
+    int g4id = -9;
     std::set<int> g4ids;
     float g4frac, g4energy, g4charge;
     float charge = fCaloAlg.ElectronsFromADCArea(hitlist[i]->Integral(),hitlist[i]->WireID().Plane);
-    float time = hitlist[i]->PeakTime()-detprop_TickOffset[hitlist[i]->WireID().Plane];
+    float time = hitlist[i]->PeakTime()-TickOffset[hitlist[i]->WireID().Plane];
   
     // Find associated track
     if (fmtk.isValid()){
@@ -671,6 +671,7 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     wirehitsMap[wire].push_back(i);
 
     // Bundle the info to access later
+    hitinfo[i].hitid    = i;
     hitinfo[i].hit      = hitlist[i];
     hitinfo[i].g4ids    = g4ids;
     hitinfo[i].trkid    = trkid;
@@ -709,7 +710,12 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
     }
   
   }//endloop hits
-  
+ 
+  // Flag real hits
+  for(size_t i=0; i<hitlist.size(); i++){
+    fData->hit_isreal[i] = hitinfo[i].isreal;
+  }
+
 
   //=================================================================
   // Blip Reconstruction
@@ -828,26 +834,37 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   std::cout<<"After merging: "<<hitclust_merged.size()<<" hit clusts:\n";
   for(auto const& hc : hitclust_merged)
     std::cout<<"   * wire: "<<hc.LeadHitWire<<", start/end wire: "<<hc.StartWire<<"/"<<hc.EndWire<<"  (span: "<<hc.Wires.size()<<"), plane: "<<hc.Plane<<", time: "<<hc.Time<<", half-width="<<(hc.EndTime-hc.StartTime)/2.<<"\n";
- 
+
+  //--------------------------------------------
   // Save hit cluster info
+  //--------------------------------------------
   fData->nclusts = (int)hitclust.size();
   for(size_t i=0; i<hitclust.size(); i++){
-    fData->clust_tpc[i] = hitclust[i].TPC;
-    fData->clust_plane[i] = hitclust[i].Plane;
-    fData->clust_wire[i] = hitclust[i].LeadHitWire;
-    fData->clust_nwires[i] = (int)hitclust[i].Wires.size();
-    fData->clust_nhits[i] = (int)hitclust[i].HitIDs.size();
+    hitclust[i].ID          = i;
+    fData->clust_tpc[i]     = hitclust[i].TPC;
+    fData->clust_plane[i]   = hitclust[i].Plane;
+    fData->clust_wire[i]    = hitclust[i].LeadHitWire;
+    fData->clust_nwires[i]  = (int)hitclust[i].Wires.size();
+    fData->clust_nhits[i]   = (int)hitclust[i].HitIDs.size();
     fData->clust_charge[i]  = hitclust[i].Charge;
     fData->clust_time[i]    = hitclust[i].Time;
     fData->clust_startTime[i]=hitclust[i].StartTime;
-    fData->clust_endTime[i]=hitclust[i].EndTime;
+    fData->clust_endTime[i] =hitclust[i].EndTime;
     // tag associated hits and get true G4 energy/charge
-    fData->clust_g4energy[i] = 0;
-    fData->clust_g4charge[i] = 0;
-    for(auto const& hitID : hitclust[i].HitIDs){
+    for(auto const& hitID : hitclust[i].HitIDs)
       fData->hit_clustid[hitID] = i;
-      fData->clust_g4energy[i] += hitinfo[hitID].g4energy;
-      fData->clust_g4charge[i] += hitinfo[hitID].g4charge;
+    // Find associated true energy dep
+    //fData->clust_g4energy[i] = 0;
+    //fData->clust_g4charge[i] = 0;
+    for(size_t j=0; j< trueblips.size(); j++){
+      int tbG4 = trueblips[j].LeadG4ID;
+      if( tbG4 > 0 && tbG4 == hitclust[i].LeadHitG4ID ) {
+        fData->edep_clustid[j] = hitclust[i].ID;
+        fData->clust_edepid[i] = trueblips[j].ID;
+        fData->clust_g4energy[i] = trueblips[j].Energy; 
+        fData->clust_g4charge[i] = trueblips[j].NumElectrons;
+        break;
+      }
     }
   }
 
@@ -858,40 +875,43 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   // Create collection of Blips
   // ---------------------------------------------------
   std::vector<BlipUtils::Blip> blips;
-  std::vector<bool> isClustMatched(hitclust.size(),false);
-  std::vector<int>  clustBlipID(hitclust.size(),-9);
+//  std::vector<bool> isClustMatched(hitclust.size(),false);
+//  std::vector<int>  clustBlipID(hitclust.size(),-9);
   //std::cout<<"Looping over clusters to make blips...\n";
   for(size_t i=0; i<hitclust.size(); i++){
     int iPlane = hitclust[i].Plane;
     int iTPC = hitclust[i].TPC;
-    if( isClustMatched[i] ) continue;
+//    if( isClustMatched[i] ) continue;
+    if( hitclust[i].isMatched ) continue;
     
     float t1 = hitclust[i].StartTime;
     float t2 = hitclust[i].EndTime;
     std::vector<BlipUtils::HitClust> hcgroup;
-    std::vector<int> hcindex;
+    //std::vector<int> hcindex;
     bool isPlaneMatched[3] = {false,false,false};
     //std::cout<<"    cl "<<i<<" on plane "<<iPlane<<"   t1-t2: "<<t1<<"   "<<t2<<"\n";
     for(size_t j=0; j<hitclust.size(); j++){
       int jPlane = hitclust[j].Plane;
       int jTPC = hitclust[j].TPC;
-      if( isClustMatched[j] || isPlaneMatched[jPlane] ) continue;
+      if( hitclust[j].isMatched || isPlaneMatched[jPlane] ) continue;
       if( i==j || iPlane==jPlane || jTPC!=iTPC )        continue;
       //std::cout<<"     does cl "<<j<<" on plane "<<jPlane<<" match up? "<<hitclust[j].StartTime<<"  "<<hitclust[j].EndTime<<"\n";
       
       if( BlipUtils::DoHitClustsMatch(hitclust[j],t1,t2)) {
       //  std::cout<<"    yep!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-        if( !isClustMatched[i] ) {
-          isClustMatched[i] = true;
+        if( !hitclust[i].isMatched ) {
+          hitclust[i].isMatched = true;
+//          isClustMatched[i] = true;
           isPlaneMatched[iPlane] = true;
           hcgroup.push_back(hitclust[i]);
-          hcindex.push_back(i);
+          //hcindex.push_back(i);
         }
-        if( !isClustMatched[j] ) {
-          isClustMatched[j] = true;
+        if( !hitclust[j].isMatched ) {
+          hitclust[j].isMatched = true;
+          //isClustMatched[j] = true;
           isPlaneMatched[jPlane] = true;
           hcgroup.push_back(hitclust[j]);
-          hcindex.push_back(j);
+        //  hcindex.push_back(j);
         }
         t1 = std::min(hitclust[i].StartTime,hitclust[j].StartTime);
         t2 = std::max(hitclust[i].EndTime,hitclust[j].EndTime);
@@ -903,12 +923,12 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
       BlipUtils::Blip newBlip = BlipUtils::MakeBlip(hcgroup);
       if( newBlip.isValid ){
         blips.push_back(newBlip);
-        for(auto index : hcindex ) clustBlipID[index] = blips.size()-1;
+        for(auto hc : hcgroup ) hitclust[hc.ID].BlipID = blips.size()-1;
       }
     }
 
-  }
-  
+  }//end loop over hitclusts
+
   std::cout<<"Reconstructed "<<blips.size()<<" blips:\n";
   for(auto const& b : blips)
     std::cout
@@ -923,30 +943,42 @@ void sbnd::BlipAna::analyze(const art::Event& evt)
   // Save blip info to tree
   fData->nblips = blips.size();
   for(size_t i=0; i<blips.size(); i++){
+
+    // determine "best" plane
     size_t bestplane = 2;
-    for(auto prefPlane : fPlanePriority ) {
+    for(auto prefPlane : fPlanePriority ) 
       if( blips[i].Charge[prefPlane] > 0 ) { bestplane = prefPlane; break;}
-    }
+
     fData->blip_tpc[i]        = blips[i].TPC;
     fData->blip_bestplane[i]  = bestplane;
     fData->blip_charge[i]     = blips[i].Charge[bestplane];
-    fData->blip_x[i] = (float)blips[i].Position.X();
-    fData->blip_y[i] = (float)blips[i].Position.Y();
-    fData->blip_z[i] = (float)blips[i].Position.Z();
-    fData->blip_prms[i] = blips[i].PositionRMS;
+    fData->blip_x[i]          = (float)blips[i].Position.X();
+    fData->blip_y[i]          = (float)blips[i].Position.Y();
+    fData->blip_z[i]          = (float)blips[i].Position.Z();
+    fData->blip_prms[i]       = blips[i].PositionRMS;
     fData->blip_ncrossings[i] = blips[i].NCrossings;
-    // loop over clusts associated with this blip
+    
+    // find associated true edep
+    float max = 0;
+    for(auto clustID : blips[i].ClustIDs ) {
+      int edepid = fData->clust_edepid[clustID];
+      float E = trueblips[edepid].Energy;
+      if( E > max ) {
+        fData->blip_edepid[i] = edepid;
+        fData->edep_blipid[edepid] = i;
+        max = E;
+      }
+    }
 
   }
 
   // Update clust data in Tree, so we can tie reconstructed hit clusters
   // to the blips they were grouped into
   for(size_t i=0; i<hitclust.size(); i++){
-    fData->clust_ismatched[i] = isClustMatched[i];
-    fData->clust_blipid[i] = clustBlipID[i];
+    fData->clust_ismatched[i] = hitclust[i].isMatched;
+    fData->clust_blipid[i] = hitclust[i].BlipID;
   }
 
-  // Calculate blip G4
 
   //====================================
   // Fill TTree
