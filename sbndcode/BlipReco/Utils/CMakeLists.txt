@@ -8,6 +8,7 @@ art_make(    LIBRARY_NAME sbndcode_BlipUtils
                            larevt_Filters
                            lardataobj_RawData
                            lardataobj_RecoBase
+                           lardataalg_DetectorInfo
                            lardata_RecoObjects  
                            larpandora_LArPandoraInterface
                            nusimdata_SimulationBase

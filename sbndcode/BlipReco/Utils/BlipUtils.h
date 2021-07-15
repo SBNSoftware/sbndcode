@@ -16,6 +16,8 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h" 
 
 // LArSoft
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "lardataobj/RecoBase/Hit.h"
@@ -23,7 +25,10 @@
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 #include "larcore/Geometry/Geometry.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+namespace detinfo {
+  class DetectorClocksData;
+  class DetectorPropertiesData;
+}
 
 // c++
 #include <vector>
@@ -33,7 +38,9 @@ typedef std::vector<int> vi_t;
 typedef std::set<int> si_t;
 typedef std::map<int,float> mif_t;
 
-namespace BlipUtils{
+namespace sbnd{
+
+  namespace BlipUtils{
 
   //###################################################
   //  Data structures
@@ -46,7 +53,7 @@ namespace BlipUtils{
     float     Energy            = 0;
     float     NumElectrons      = 0; // (post-drift)
     float     Length            = 0;
-    TVector3  Location;
+    TVector3  Position;
     TVector3  StartPoint;
     TVector3  EndPoint;
     vi_t      vG4TrackIDs;
@@ -68,10 +75,12 @@ namespace BlipUtils{
   };
   
   struct HitClust {
+    art::Ptr<recob::Hit> LeadHit;
     bool    isValid         = false;
     bool    isMerged        = false;
     bool    isMatched[3]    = {false, false, false};
     int     LeadHitWire     = -999;
+    int     LeadHitG4TrackID= -9;
     int     TPC             = -9;
     int     Plane           = -9;
     float   LeadHitCharge   = -999;
@@ -88,18 +97,13 @@ namespace BlipUtils{
   };
 
   struct Blip { 
-    bool      isValid;
-    float     LeadingG4TrackID;
-    float     LeadingG4Energy;
-    float     G4Energy;
-    int       TPC;
-    bool      MatchedPlanes[3];
-    bool      Is3D;
-    float     Charge;
-    float     Energy;
-    TVector3  Location;
-    si_t      vG4TrackIDs;
-    si_t      vHitIDs;
+    bool    isValid         = false;
+    int     TPC             = -9;
+    float   Charge[3]       = {-999, -999, -999};
+    bool    WireIntersect[3]= {false, false, false};
+    int     NCrossings;
+    TVector3 Position;
+    float   PositionRMS;
   };
 
   //###################################################
@@ -115,6 +119,9 @@ namespace BlipUtils{
   void      GrowHitClust(HitInfo const&, HitClust&);
   bool      DoHitsOverlap(art::Ptr<recob::Hit> const&, art::Ptr<recob::Hit> const&);
   bool      DoHitClustsMatch(HitClust const&, HitClust const&);
+  bool      DoHitClustsMatch(HitClust const&,float,float);
+  //Blip      MakeBlip(detinfo::DetectorPropertiesData const&, std::vector<HitClust> const&);
+  Blip      MakeBlip(std::vector<HitClust> const&);
 
   //###################################################
   // General functions 
@@ -127,6 +134,7 @@ namespace BlipUtils{
   double  PathLength(const simb::MCParticle&);
   bool    IsAncestorOf(int, int, bool);
 
+  }
 }
 
 #endif

@@ -33,7 +33,7 @@ art_make(
                            ${ROOT_BASIC_LIB_LIST}
                            sbndcode_RecoUtils
                            sbndcode_BlipUtils
-                           sbndcode_OpDetSim
+                        #   sbndcode_OpDetSim
         )
 
 # install_headers()
