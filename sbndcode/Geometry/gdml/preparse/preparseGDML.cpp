@@ -15,7 +15,7 @@
 bool sci = false;
 bool setupChoice = false;
 int debug = 0;
-TString mySetup;
+TString mySetup = "Default"; // Default volWorld
 int prec = std::numeric_limits<double>::max_digits10;
 
 using namespace std;
@@ -66,12 +66,19 @@ void replaceVariable(TString &key, Variables_t const& variables ){
 		if (!key.Contains("=") || !key.Contains(varName) ) continue;
 		if (debug >= 3) {
 			std::cout.precision(prec);
-			std::cout << "REPL '" << varName << "' => " << prec << std::endl;
+			std::cout << "REPLACING\t'" << varName << "'\t";
 		}
 		stream.str("");
 		stream.clear();	
+
 		if(0) { stream << scientific << value;} else {stream << value;}
 		stream >> varValue;
+
+		if (debug >= 3) {
+			std::cout.precision(prec);
+			std::cout << "=> " << varValue << "\n";
+		}
+
 		do {
 			i = key.Index(varName);
 			if (i>0) {
@@ -123,7 +130,7 @@ void getVariable(TString key, Variables_t& variables){
 
 	if (debug >= 2) {
 		std::cout.precision(prec);
-		std::cout << "VAR " << name << "=\"" << varValue << "\" => " << value << std::endl;
+		std::cout << "VARIABLE\t'" << name << "'=\"" << varValue << "\" => " << value << std::endl;
 	}
 	variables[name.Data()]=value;
 
@@ -286,9 +293,11 @@ int preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TStr
 	bool inSetup = 0;
 	bool isWire = 0;
 	bool keepLoop = 1;
+	uint64_t lineCounter = 0;
 	do{
+		lineCounter++;
 		key.ReadLine(input,0);
-//		cout << i << endl; i++;
+		if(debug>3) cout << lineCounter << "\t::\t" << key << "\n";
 		if ((key.Contains("<variable") && !key.Contains("<!--")) || (key.Contains("<constant") && !key.Contains("<!--"))) {
 			getVariable(key,variables);
 		} else if (key.Contains("<loop")) {
@@ -349,65 +358,68 @@ int preparse(TString inName="sbnd_base.gdml", TString outName1="sbnd.gdml", TStr
 	if(!noWiresFiles) output2.close();
 	input.close();
 
-	bool goAhead = setupChoice;
-	if(setupChoice)	{
+	bool goAhead = true;
+	if (!setupChoice) mySetup = "Default";
 
-		TString ver="1.0";
-		int pos=mySetup.Index(":");
-		if(pos>=0){
-			ver=mySetup;
-			ver.Replace(0,pos+1,"");
-			mySetup.Replace(pos,mySetup.Length()-pos,"");
-		}
+	TString ver="1.0";
+	int pos=mySetup.Index(":");
+	if(pos>=0){
+		ver=mySetup;
+		ver.Replace(0,pos+1,"");
+		mySetup.Replace(pos,mySetup.Length()-pos,"");
+	}
 
-		// is the indicated setup among the ones available?
-		for (std::vector<aSetup>::iterator itx = stpList.begin() ; itx != stpList.end(); ++itx){
+	// is the indicated setup among the ones available?
+	for (std::vector<aSetup>::iterator itx = stpList.begin() ; itx != stpList.end(); ++itx){
 
-			theSetup=(*itx);
-			if( theSetup.stpName==mySetup && theSetup.stpVersion==ver ){ goAhead=1; break;} 
-			else {goAhead=0;}
-		}
-		
-		if(goAhead){
+		theSetup=(*itx);
+		if( theSetup.stpName==mySetup && theSetup.stpVersion==ver ){ goAhead = true; break; }
+		else {goAhead = false;}
+	}
 
-			TString inName1, inName2, comm;
-			inName1 = outName1+"~";
-			inName2 = outName2+"~";
-			TString inNameVec[]={inName1,inName2};
-			TString outNameVec[]={outName1,outName2};
+	if (!goAhead) {
+		cout << "ERROR: Setup " << mySetup << " or its version not found." << endl;
+	} else {
 
-			const int kmax = 1+(!noWiresFiles);
-	
-			for(int k=0; k<kmax; k++){
-				errno = 0;
-				rename(outNameVec[k], inNameVec[k]);
-				if (errno != 0) {
-				  std::cerr << "Error renaming '" << outNameVec[k] << "' into '" << inNameVec[k] << "': "
-				    << strerror(errno) << std::endl;
-          return errno;
-				}
-				output1.open(outNameVec[k]);
-				ifstream input1(inNameVec[k]);
+		TString inName1, inName2, comm;
+		inName1 = outName1+"~";
+		inName2 = outName2+"~";
+		TString inNameVec[]={inName1,inName2};
+		TString outNameVec[]={outName1,outName2};
 
-				inSetup=0;
-				do{
-					key.ReadLine(input1,0);
-					if((!key.Contains("<setup") && !inSetup) ){
-						replaceKeyword(key,"volWorld","volIgnoredOnThisSetup");
-						if(!key.Contains("volumeref"))replaceKeyword(key,theSetup.stpWorldVolume,"volWorld");
-						output1 << key << endl;
-					}else {inSetup=1;}
-				}while(!input1.eof());
-	
-				output1 << "<setup name=\"Default\" version=\"1.0\">" << endl;
-				output1 << "\t<world ref=\"volWorld\" />" << endl;
-				output1 << "</setup>" << endl;
-				output1 << "</gdml>" << endl;
-				output1.close();
-				input1.close();
-				remove(inNameVec[k]);
+		const int kmax = 1+(!noWiresFiles);
+
+		for(int k=0; k<kmax; k++){
+			errno = 0;
+			rename(outNameVec[k], inNameVec[k]);
+			if (errno != 0) {
+			  std::cerr << "Error renaming '" << outNameVec[k] << "' into '" << inNameVec[k] << "': "
+			    << strerror(errno) << std::endl;
+        return errno;
 			}
-		}else { cout << "Setup or its version not found. " << endl;}
+			output1.open(outNameVec[k]);
+			ifstream input1(inNameVec[k]);
+
+			inSetup=0;
+			do{
+				key.ReadLine(input1,0);
+				if((!key.Contains("<setup") && !inSetup) ){
+					if (theSetup.stpWorldVolume != "volWorld") {
+						replaceKeyword(key,"volWorld","volIgnoredOnThisSetup");
+					}
+					if(!key.Contains("volumeref")) replaceKeyword(key,theSetup.stpWorldVolume,"volWorld");
+					output1 << key << endl;
+				}else {inSetup=1;}
+			}while(!input1.eof());
+
+			output1 << "\t<setup name=\"Default\" version=\"1.0\">" << endl;
+			output1 << "\t\t<world ref=\"volWorld\" />" << endl;
+			output1 << "\t</setup>" << endl;
+			output1 << "</gdml_simple_extension>" << endl;
+			output1.close();
+			input1.close();
+			remove(inNameVec[k]);
+		}
 	}
 	return 0;
 } // preparse()

@@ -1,0 +1,7 @@
+# Include this file at the end of your fcl file to switch
+# to the geometry with shielding (overburden)
+
+services.Geometry.GDML: "sbnd_v02_00_withshielding.gdml"
+services.Geometry.ROOT: "sbnd_v02_00_withshielding.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v02_00_withshielding.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v02_00_withshielding.gdml"
