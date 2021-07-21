@@ -359,7 +359,7 @@ void sbnd::Select::analyze(art::Event const& e)
         for(const art::Ptr<sbn::crt::CRTHit> &crthit: t0CRT){
  
           pfpCRTHitPESHit = crthit->peshit;
-          pfpCRTHitT0 = ((double) crthit->ts1_ns) / 1000000; //unit: ns -> Convert ns to ms: /10^6 
+          pfpCRTHitT0 = crthit->ts1_ns;// / 1000000; //unit: ns -> Convert ns to ms: /10^6 
           pfpCRTHitPlane = crthit->plane;     
  
         }

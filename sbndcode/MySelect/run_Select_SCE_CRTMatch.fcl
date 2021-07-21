@@ -25,7 +25,7 @@ physics:
 {
   producers: 
   {
-    crtt0matching: @local::standard_crtt0matchingalg
+    crtt0matching: @local::sbnd_crthitt0producer
     pandoraSCE: @local::scecorrection
     pandoraSCETrack: @local::sbnd_pandoraTrackCreation
     pandoraSCECalo: @local::sbnd_gnewcalomc
@@ -34,10 +34,22 @@ physics:
   {
     ana: @local::Select
   }
-  path0: 	[ ana ]
   reco: 	[ crtt0matching, pandoraSCE, pandoraSCETrack, pandoraSCECalo ]
+  path0: 	[ ana ]
+  stream1: 	[out1]
   trigger_paths: [ reco ]
-  end_paths: 	[ path0 ]
+  end_paths: 	[ path0, stream1 ]
+}
+
+# Output
+
+outputs: 
+{
+   out1: 
+   {
+     @table::sbnd_rootoutput
+     fileName: "processing_sbnd.root_%tc.root"
+   }
 }
 
 # Stuff for crt matching
@@ -47,7 +59,7 @@ physics.producers.crtt0matching.SCEposCorr: false
 
 # Configure the SCE correction module
 physics.producers.pandoraSCE.CorrectSCE: false
-physics.producers.pandoraSCE.T0Labels: ["pandora","crthitt0"]
+physics.producers.pandoraSCE.T0Labels: ["pandora","crtt0matching"]
 physics.producers.pandoraSCE.T0LabelsCorrectT0: [false, true]
 
 # Set to correct Pandora

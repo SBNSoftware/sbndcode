@@ -358,10 +358,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/feature/mstancar_CRTtimetag
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
   fkeepCRTstrips     = p.get<bool>("keepCRTstrips",false);
   fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
@@ -371,10 +368,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadTruth         = p.get<bool>("readTruth",true);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/feature/mstancar_CRTtimetag
   fWindow            = p.get<int>("window",100);
   fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
 
@@ -899,16 +893,9 @@ void Hitdumper::analyze(const art::Event& evt)
     }// end loop over waveforms
   }// end if fCheckTrasparency
 
-<<<<<<< HEAD
 
   if (freadTruth){
 
-=======
-  if (freadTruth){
-    //art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-    //art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
-      // * MC truth information
->>>>>>> origin/feature/mstancar_CRTtimetag
     int nGeniePrimaries = 0, nMCNeutrinos = 0;
     art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
     std::vector<art::Ptr<simb::MCTruth> > mclist;
@@ -918,7 +905,6 @@ void Hitdumper::analyze(const art::Event& evt)
       std::cout << "Failed to get Genie data product." << std::endl;
     }
 
-<<<<<<< HEAD
     art::Ptr<simb::MCTruth> mctruth;
 
       if (!mclist.empty()) {//at least one mc record
@@ -935,72 +921,6 @@ void Hitdumper::analyze(const art::Event& evt)
 
     ResizeGenie(nGeniePrimaries);
     ResizeMCNeutrino(nMCNeutrinos);
-=======
-    //auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
-
-    art::Ptr<simb::MCTruth> mctruth;
-    //Brailsford 2017/10/16
-    //Fix for issue 17917
-    //With the code change to accept multiple neutrinos per TTree::Entry into the TTree, this int is no longer needed (it makes compilation fail due to a warning)
-    //int imc = 0;
-      if (!mclist.empty()){//at least one mc record
-        //if (fSaveGenieInfo){
-          //if (mclist[0]->NeutrinoSet()){//is neutrino
-          //sometimes there can be multiple neutrino interactions in one spill
-          //this is trying to find the primary interaction
-          //by looking for the highest energy deposition
-          //std::map<art::Ptr<simb::MCTruth>,double> mctruthemap;
-        /*static bool isfirsttime = true;
-        if (isfirsttime){
-                for (size_t i = 0; i<hitlist.size(); i++){
-                  //if (hitlist[i]->View() == geo::kV){//collection view
-            // tbrooks: use TrackIDEs rather than eveTrackIDEs because the eve ID doesn't always seem to correspond to the g4 track FIXME may need further investigation
-                  std::vector<sim::TrackIDE> eveIDs = bt_serv->HitToTrackIDEs(clockData, hitlist[i]);
-                  for (size_t e = 0; e<eveIDs.size(); e++){
-                    art::Ptr<simb::MCTruth> ev_mctruth = pi_serv->TrackIdToMCTruth_P(eveIDs[e].trackID);
-                    //mctruthemap[ev_mctruth]+=eveIDs[e].energy;
-                    //if (ev_mctruth->Origin() == simb::kCosmicRay) isCosmics = true;
-                  }
-                //}
-              }
-              isfirsttime = false;
-              //if (fSaveCaloCosmics) isCosmics = false; //override to save calo info
-      }*/
-
-//        double maxenergy = -1;
-//        int imc0 = 0;
-//        for (std::map<art::Ptr<simb::MCTruth>,double>::iterator ii=mctruthemap.begin(); ii!=mctruthemap.end(); ++ii){
-//          if ((ii->second)>maxenergy){
-//            maxenergy = ii->second;
-//            mctruth = ii->first;
-//            imc = imc0;
-//          }
-//          imc0++;
-//        }
-
-          //imc = 0; //set imc to 0 to solve a confusion for BNB+cosmic files where there are two MCTruth
-      mctruth = mclist[0];
-
-      if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
-        //} //end (fSaveGenieInfo)
-
-      //const sim::ParticleList& plist = pi_serv->ParticleList();
-      //nGEANTparticles = plist.size();
-
-      // to know the number of particles in AV would require
-      // looking at all of them; so we waste some memory here
-    } // if have MC truth
-      MF_LOG_DEBUG("AnalysisTree") << "Expected "
-      /*<< nGEANTparticles << " GEANT particles, "*/
-      << nGeniePrimaries << " GENIE particles";
-
-  //Brailsford 2017/10/16
-  //Initially call the number of neutrinos to be stored the number of MCTruth objects.  This is not strictly true i.e. BNB + cosmic overlay but we will count the number of neutrinos later
-  nMCNeutrinos = mclist.size();
-
-  ResizeGenie(nGeniePrimaries);
-  ResizeMCNeutrino(nMCNeutrinos);
->>>>>>> origin/feature/mstancar_CRTtimetag
 
     mcevts_truth = mclist.size();
     //Brailsford 2017/10/16
@@ -1066,11 +986,7 @@ void Hitdumper::analyze(const art::Event& evt)
           tpy_flux[i_mctruth] = curr_mcflux->ftpy;
           tpz_flux[i_mctruth] = curr_mcflux->ftpz;
           tptype_flux[i_mctruth] = curr_mcflux->ftptype;
-<<<<<<< HEAD
           }
-=======
-        }
->>>>>>> origin/feature/mstancar_CRTtimetag
         }
 
         //Let's increase the neutrino count
@@ -1085,11 +1001,7 @@ void Hitdumper::analyze(const art::Event& evt)
         if (genie_no_primaries > (int) StoreParticles) {
           // got this error? it might be a bug,
           // since the structure should have enough room for everything
-<<<<<<< HEAD
           mf::LogError("HitDumper") << "event has "
-=======
-          mf::LogError("AnalysisTree:limits") << "event has "
->>>>>>> origin/feature/mstancar_CRTtimetag
             << genie_no_primaries << " MC particles, only "
             << StoreParticles << " stored in tree";
         }
@@ -1108,14 +1020,9 @@ void Hitdumper::analyze(const art::Event& evt)
           genie_mother[iPart]=part.Mother();
         } // for particle
       } //if neutrino set
-<<<<<<< HEAD
     }//if (mcevts_truth)
   }//if (fReadTruth){
 
-=======
-  }//if (mcevts_truth)
-}//if (fReadTruth){
->>>>>>> origin/feature/mstancar_CRTtimetag
 
 
   fTree->Fill();

@@ -7,5 +7,6 @@ Select:
       	T0Label:		"pandora"
 	HitLabel:		"pandoraTrack"
 	CalorimetryLabel:	"pandoraCalo"
+        CRTHitLabel:		"crtt0matching"
 }
 END_PROLOG
