@@ -183,7 +183,9 @@ private:
   std::vector<int> _crt_orient;          ///< CRT orientation (0 for y (horizontal) and 1 for x (vertical))
   std::vector<double> _crt_time;         ///< CRT time
   std::vector<double> _crt_adc;          ///< CRT adc
-  std::vector<double> _crt_pos;          ///< CRT position
+  std::vector<double> _crt_pos_x;          ///< CRT position X
+  std::vector<double> _crt_pos_y;          ///< CRT position Y
+  std::vector<double> _crt_pos_z;          ///< CRT position Z
 
   // CRT track variables
   int _nctrks;                          ///< Number of created CRT tracks
@@ -514,10 +516,9 @@ void Hitdumper::analyze(const art::Event& evt)
         _crt_orient.push_back(tagger.second);
         _crt_time.push_back(ctime);
         _crt_adc.push_back(adc1 + adc2 - 127.2); // -127.2/131.9 correct for gain and 2*ped to get pe
-        _crt_pos.push_back(center.Y());
-        if (tagger.second == kCRTVertical) {
-          _crt_pos.push_back(center.X());
-        };
+        _crt_pos_x.push_back(center.X());
+        _crt_pos_y.push_back(center.Y());
+        _crt_pos_z.push_back(center.Z());
         ns++;
       }
     }
@@ -554,7 +555,7 @@ void Hitdumper::analyze(const art::Event& evt)
               if (_crt_adc[i] > adc1x) {
                 plane1tx = _crt_time[i];
                 adc1x += _crt_adc[i];
-                plane1x = _crt_pos[i];
+                plane1x = _crt_pos_x[i];
                 plane1xm = _crt_module[i];
               }
             }
@@ -565,7 +566,7 @@ void Hitdumper::analyze(const art::Event& evt)
               if (_crt_adc[i]>adc1y) {
                 plane1ty=_crt_time[i];
                 adc1y+=_crt_adc[i];
-                plane1y=_crt_pos[i];
+                plane1y=_crt_pos_y[i];
                 plane1ym=_crt_module[i];
               }
             }
@@ -578,7 +579,7 @@ void Hitdumper::analyze(const art::Event& evt)
               if (_crt_adc[i]>adc2x) {
                 plane2tx=_crt_time[i];
                 adc2x+=_crt_adc[i];
-                plane2x=_crt_pos[i];
+                plane2x=_crt_pos_x[i];
                 plane2xm=_crt_module[i];
               }
             }
@@ -589,7 +590,7 @@ void Hitdumper::analyze(const art::Event& evt)
               if (_crt_adc[i]>adc2y) {
                 plane2ty=_crt_time[i];
                 adc2y+=_crt_adc[i];
-                plane2y=_crt_pos[i];
+                plane2y=_crt_pos_y[i];
                 plane2ym=_crt_module[i];
               }
             }
@@ -606,7 +607,7 @@ void Hitdumper::analyze(const art::Event& evt)
                   if (_crt_adc[j]>adc1x) {
                     plane1tx=_crt_time[j];
                     adc1x+=_crt_adc[j];
-                    plane1x=_crt_pos[j];
+                    plane1x=_crt_pos_x[j];
                     plane1xm=_crt_module[j];
                   }
                 }
@@ -617,7 +618,7 @@ void Hitdumper::analyze(const art::Event& evt)
                   if (_crt_adc[j]>adc1y) {
                     plane1ty=_crt_time[j];
                     adc1y+=_crt_adc[j];
-                    plane1y=_crt_pos[j];
+                    plane1y=_crt_pos_y[j];
                     plane1ym=_crt_module[j];
                   }
                 }
@@ -630,7 +631,7 @@ void Hitdumper::analyze(const art::Event& evt)
                   if (_crt_adc[j]>adc2x) {
                     plane2tx=_crt_time[j];
                     adc2x+=_crt_adc[j];
-                    plane2x=_crt_pos[j];
+                    plane2x=_crt_pos_x[j];
                     plane2xm=_crt_module[j];
                   }
                 }
@@ -641,7 +642,7 @@ void Hitdumper::analyze(const art::Event& evt)
                   if (_crt_adc[j]>adc2y) {
                     plane2ty=_crt_time[j];
                     adc2y+=_crt_adc[j];
-                    plane2y=_crt_pos[j];
+                    plane2y=_crt_pos_y[j];
                     plane2ym=_crt_module[j];
                   }
                 }
@@ -685,7 +686,7 @@ void Hitdumper::analyze(const art::Event& evt)
     // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
     if (evt.getByLabel(fCRTHitModuleLabel, crtHitListHandle))  {
       art::fill_ptr_vector(chitlist, crtHitListHandle);
-      _nchits = hitlist.size();
+      _nchits = chitlist.size();
     }
     else {
       std::cout << "Failed to get sbn::crt::CRTHit data product." << std::endl;
@@ -1069,7 +1070,9 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("crt_orient", &_crt_orient);
     fTree->Branch("crt_time", &_crt_time);
     fTree->Branch("crt_adc", &_crt_adc);
-    fTree->Branch("crt_pos", &_crt_pos);
+    fTree->Branch("crt_pos_x", &_crt_pos_x);
+    fTree->Branch("crt_pos_y", &_crt_pos_y);
+    fTree->Branch("crt_pos_z", &_crt_pos_z);
   }
 
   if (fmakeCRTtracks) {
@@ -1195,7 +1198,9 @@ void Hitdumper::ResetCRTStripsVars(int n) {
   _crt_orient.clear();
   _crt_time.clear();
   _crt_adc.clear();
-  _crt_pos.clear();
+  _crt_pos_x.clear();
+  _crt_pos_y.clear();
+  _crt_pos_z.clear();
 
   _crt_plane.reserve(n);
   _crt_module.reserve(n);
@@ -1203,7 +1208,9 @@ void Hitdumper::ResetCRTStripsVars(int n) {
   _crt_orient.reserve(n);
   _crt_time.reserve(n);
   _crt_adc.reserve(n);
-  _crt_pos.reserve(n);
+  _crt_pos_x.reserve(n);
+  _crt_pos_y.reserve(n);
+  _crt_pos_z.reserve(n);
 }
 
 void Hitdumper::ResetCRTCustomTracksVars(int n) {
