@@ -1,4 +1,4 @@
-BEGIN_PROLOG
+BEGIN_PROLOG #comment to run generate_simple_weighted_template.py
 
 sbnd_simple_flashmatch:{
   module_type: FlashPredict
@@ -17,7 +17,8 @@ sbnd_simple_flashmatch:{
   UseARAPUCAS: true
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
-  MakeTree: false
+  # MakeTree: true //uncomment for creating metrics
+  # StoreCheatMCT0: true //uncomment for creating metrics
   MinHitQ: 0.
   MinSpacePointQ: 0.
   MinParticleQ: 0.
@@ -63,4 +64,4 @@ sbnd_simple_flashmatch:{
   ratio_TF1_fit: "pol3"
 }
 
-END_PROLOG
+END_PROLOG #comment to run generate_simple_weighted_template.py
