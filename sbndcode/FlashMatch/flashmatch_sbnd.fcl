@@ -6,8 +6,8 @@ sbnd_simple_flashmatch:{
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
   OpHitARAProducer: "ophitarapuca"
-  BeamWindowStart: -0.2 # us
-  BeamWindowEnd: 2.0 # us
+  BeamWindowStart: -50 # us
+  BeamWindowEnd: 50.0 # us
   FlashStart: -0.02 # us, wrt flash time
   FlashEnd: 0.08 # us, wrt flash time
   SelectNeutrino: true
@@ -15,7 +15,6 @@ sbnd_simple_flashmatch:{
   ForceConcurrence: true
   UseUncoatedPMT: true
   UseARAPUCAS: true
-  # UseCalo: false
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
   MakeTree: false
@@ -23,13 +22,13 @@ sbnd_simple_flashmatch:{
   MinSpacePointQ: 0.
   MinParticleQ: 0.
   MinSliceQ: 0.
-  MaxFlashes: 2
+  MaxFlashes: 3
   MinOpHPE: 0.
-  MinFlashPE: 50.
+  MinFlashPE: 10.
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
 
-  ThresholdTerm: 30.
+  ThresholdTerm: 50.
 
   PDMapAlg: {
     tool_type: sbndPDMapAlg
