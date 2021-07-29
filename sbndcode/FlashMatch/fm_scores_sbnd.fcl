@@ -2,9 +2,6 @@
 #include "messages_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-# #include "backtrackerservice.fcl" //uncomment for creating metrics
-# #include "particleinventoryservice.fcl" //uncomment for creating metrics
-
 #include "flashmatch_sbnd.fcl"
 
 process_name: FlashMatch
@@ -15,8 +12,6 @@ services:{
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
   AuxDetGeometry:          { @table::sbnd_geo_source }
-  # BackTrackerService:        @local::standard_backtrackerservice //uncomment for creating metrics
-  # ParticleInventoryService:  @local::standard_particleinventoryservice //uncomment for creating metrics
 }
 
 

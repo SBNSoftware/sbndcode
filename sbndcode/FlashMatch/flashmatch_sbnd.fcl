@@ -17,8 +17,9 @@ sbnd_simple_flashmatch:{
   UseARAPUCAS: true
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
-  # MakeTree: true //uncomment for creating metrics
-  # StoreCheatMCT0: true //uncomment for creating metrics
+  MakeTree: false
+  StoreTrueNus: false
+  StoreCheatMCT0: false
   MinHitQ: 0.
   MinSpacePointQ: 0.
   MinParticleQ: 0.
