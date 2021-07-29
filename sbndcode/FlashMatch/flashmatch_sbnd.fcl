@@ -44,7 +44,14 @@ sbnd_simple_flashmatch:{
   XBins: 40
   # XBinWidth approx 5.
 
+  # block for Y and Z ophit distributions, used for unbiassing
+  YBins: 9
+  YLow: -180.
+  YHigh: 180.
   YBiasSlope: 0.004
+  ZBins: 12
+  ZLow: 10.
+  YHigh: 490.
   ZBiasSlope: 0.35
 
 
