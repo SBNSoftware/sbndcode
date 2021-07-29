@@ -48,9 +48,17 @@ class testFilter : public art::EDFilter {
     virtual ~testFilter() { }
 
   private:
+    void ResetWireHitsVars(int n);
     art::ServiceHandle<art::TFileService> tfs;
     int max_hits;
     std::string fHitsModuleLabel; 
+
+    // Wire hits variables
+    int                 nhits;            
+    std::vector<int>    hit_tpc;      
+    std::vector<int>    hit_plane;      
+    std::vector<int>    hit_wire;      
+    std::vector<double> hit_peakT;    
   };
 
   testFilter::testFilter(fhicl::ParameterSet const& p): EDFilter{p} 
@@ -73,20 +81,13 @@ class testFilter : public art::EDFilter {
     //int run = evt.run();
     int event = evt.id().event();
 
-    // Wire hits variables
-    int                 nhits;            
-    std::vector<int>    hit_tpc;      
-    std::vector<int>    hit_plane;      
-    std::vector<int>    hit_wire;      
-    std::vector<double> hit_peakT;    
-
     // get nhits 
     art::Handle<std::vector<recob::Hit>> hitListHandle;
     std::vector<art::Ptr<recob::Hit>> hitlist;
     if (evt.getByLabel(fHitsModuleLabel,hitListHandle)) {
       art::fill_ptr_vector(hitlist, hitListHandle);
       nhits = hitlist.size();
-      std::cout << "got data product" << std::endl;
+      std::cout << "got data product,check" << std::endl;
     }
     else {
       std::cout << "Failed to get recob::Hit data product." << std::endl;
@@ -97,14 +98,20 @@ class testFilter : public art::EDFilter {
                 << ", which is above the maximum number allowed to store." << std::endl;
       std::cout << "Will only store " << max_hits << "hits." << std::endl;
       nhits = max_hits;
-  }
-  
+    }
+
+    ResetWireHitsVars(nhits);
+
     for (int i = 0; i < nhits; ++i) {
+      //std::cout << "pre-wire ID" << std::endl; 
       geo::WireID wireid = hitlist[i]->WireID();
+      //std::cout << "post-wire ID" << std::endl;
       hit_plane[i] = wireid.Plane;
+      //std::cout << "post-hitplane ID" << std::endl;
       hit_tpc[i] = wireid.TPC;
       hit_wire[i] = wireid.Wire;
       hit_peakT[i] = hitlist[i]->PeakTime();
+      //std::cout << "post-hit_peakT" << std::endl;
       if (i<5){
         std::cout << "event #" << event << std::endl;
         std:: cout << "plane, tpc, wire, peakT: " << hit_plane[i] << ", " << hit_tpc[i] << ", " 
@@ -113,5 +120,12 @@ class testFilter : public art::EDFilter {
     }
     return KeepMe; 
   }
+
+  void testFilter::ResetWireHitsVars(int n) {
+  hit_tpc.assign(n, DEFAULT_VALUE);
+  hit_plane.assign(n, DEFAULT_VALUE);
+  hit_wire.assign(n, DEFAULT_VALUE);
+  hit_peakT.assign(n, DEFAULT_VALUE);
+}
   // A macro required for a JobControl module.
   DEFINE_ART_MODULE(testFilter)
