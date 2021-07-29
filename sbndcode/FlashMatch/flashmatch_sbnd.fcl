@@ -53,8 +53,7 @@ sbnd_simple_flashmatch:{
   ZBins: 12
   ZLow: 10.
   YHigh: 490.
-  ZBiasSlope: 0.35
-
+  ZBiasSlope: 0.002
 
   dy_bins: 100
   dy_low: -200.
