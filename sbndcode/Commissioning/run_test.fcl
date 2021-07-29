@@ -56,7 +56,6 @@ outputs:
   {
     @table::sbnd_rootoutput
     dataTier: "reconstructed"
-    SelectEvents: ["reco"]
     SelectEvents:  { SelectEvents: ["reco"] }
   }
   out2: 
