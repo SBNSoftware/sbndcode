@@ -113,6 +113,5 @@ class testFilter : public art::EDFilter {
     }
     return KeepMe; 
   }
-
   // A macro required for a JobControl module.
   DEFINE_ART_MODULE(testFilter)
