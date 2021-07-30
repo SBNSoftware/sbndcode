@@ -27,11 +27,16 @@ BEGIN_PROLOG
 
 test:
 {
-    module_type:              "testFilter"
+  
+  module_type:              "testFilter"
+  HitsModuleLabel:          "fasthit"
 
-    MaxHits: 100000
-
-    HitsModuleLabel:          "fasthit"
+  MaxHits: 100000
+  HoughThreshold: 8
+  HoughMaxGap: 30
+  HoughRange: 100
+  HoughMinLength: 500
+  HoughMuonLength: 2500
 }
 
 END_PROLOG

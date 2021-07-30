@@ -23,12 +23,12 @@
 #include "hitdumpermodule.fcl"
 #include "ophitfinder_sbnd.fcl"
 
-process_name: HitDumper
+process_name: MuonFilter
 
 services:
-{
+
   # Load the service that manages root files for histograms.
-  TFileService:              { fileName: "hitdumper_tree.root" }
+  TFileService:              { fileName: "test.root" }
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
