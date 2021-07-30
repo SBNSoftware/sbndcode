@@ -1,3 +1,6 @@
+// where you stopped: 
+// compile the module for the first time
+
 // Framework includes 
 #include "art/Framework/Core/EDFilter.h" 
 #include "art/Framework/Core/ModuleMacros.h" 
@@ -28,6 +31,7 @@
 #include "larcoreobj/SummaryData/POTSummary.h"
 
 // ROOT includes 
+#include "TRandom3.h"
 
 // C++ includes
 #include <map>
@@ -43,6 +47,8 @@
 #include <bitset>
 
 const int DEFAULT_VALUE = -9999;
+#define PI 3.14159265
+
 using std::vector;
 
 class testFilter : public art::EDFilter {
@@ -59,14 +65,14 @@ class testFilter : public art::EDFilter {
     /// function that calculates distance 
     float Distance(int x1, int y1, int x2, int y2);
     /// function that performs the Hough transform 
-    void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry)
+    void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
 
     // Wire hits variables
     int                 nhits;  
-    // std::vector<int>    hit_tpc;      
-    // std::vector<int>    hit_plane;      
-    // std::vector<int>    hit_wire;      
-    // std::vector<double> hit_peakT;    
+    // vector<int>    hit_tpc;      
+    // vector<int>    hit_plane;      
+    // vector<int>    hit_wire;      
+    // vector<double> hit_peakT;    
 
     art::ServiceHandle<art::TFileService> tfs;
     
@@ -104,8 +110,8 @@ class testFilter : public art::EDFilter {
     int event = evt.id().event();
 
     // get nhits 
-    art::Handle<std::vector<recob::Hit>> hitListHandle;
-    std::vector<art::Ptr<recob::Hit>> hitlist;
+    art::Handle<vector<recob::Hit>> hitListHandle;
+    vector<art::Ptr<recob::Hit>> hitlist;
     if (evt.getByLabel(fHitsModuleLabel,hitListHandle)) {
       art::fill_ptr_vector(hitlist, hitListHandle);
       nhits = hitlist.size();
@@ -122,23 +128,28 @@ class testFilter : public art::EDFilter {
     }
 
     //ResetWireHitsVars(nhits);
-    std::vector<std::vector<int>> coords(nhits, std::vector<int>(2)); 
+    vector<vector<int>> coords(nhits, vector<int>(2)); 
 
     for (int i = 0; i < nhits; ++i) {
       geo::WireID wireid = hitlist[i]->WireID();
       int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_plane = wireid.Plane;
-      if (hit_peakT > 10 && hit_peakT < 3490 && hit_plane->at(i)==2){
-        std::vector<int> v{hit_wire,hit_peakT};
+      if (hit_plane==2){
+        vector<int> v{hit_wire,hit_peakT};
         coords[i] = v;  
       }
-      coords[i] 
       // hit_plane[i] = wireid.Plane;
       // hit_tpc[i] = wireid.TPC;
       // hit_wire[i] = wireid.Wire;
       // hit_peakT[i] = hitlist[i]->PeakTime();
-
     }
-    return KeepMe; 
+    vector<vector<int>> lines; 
+    lines.reserve(10);
+    Hough(coords,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines);
+    lines.shrink_to_fit();
+    if (lines.empty() == false){
+      pass = true;
+    }
+    return pass; 
   }
 
   // void testFilter::ResetWireHitsVars(int n) {
@@ -153,7 +164,7 @@ class testFilter : public art::EDFilter {
     return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
   }
 
-  void testFilter:Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines){
+  void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines){
    //set global variables 
    TRandom3 rndgen;
    const int h = 3500; const int w = 2000; //range of hit_wire
@@ -200,12 +211,12 @@ class testFilter : public art::EDFilter {
          int i=0, gap=0;
          while (gap < max_gap){ 
             (k==0)? i++ : i--; 
-            if ( (idx+i) == data.size() || (idx+i) <0) // if we reach the edges of the data set 
+            if ( (idx+i) == int(data.size()) || (idx+i) <0) // if we reach the edges of the data set 
                break;
             if ((data.at(idx+i)).empty()) // if the point has already been removed 
                continue;
             int x1 = data[idx+i][0], y1 = int(data[idx+i][1]); 
-            int last_x, diffx, last_y, diffy;
+            int last_x, diffx; 
             if (endpoint[k][0]!= 0){ // ensure we don't jump large x-values 
                last_x = endpoint[k][0];
                diffx = abs(last_x - x1);
@@ -246,9 +257,9 @@ class testFilter : public art::EDFilter {
 
    } // end of point loop 
    // combine lines that are split 
-   for (int i=0; i<outlines.size(); i++){
+   for (int i=0; i<int(outlines.size()); i++){
       bool same = false;
-      for (int j=i+1; j<outlines.size() && same == false;j++){ 
+      for (int j=i+1; j<int(outlines.size()) && same == false;j++){ 
          int xi_coords[2] = {outlines[i][0], outlines[i][2]}; int xj_coords[2] = {outlines[j][0], outlines[j][2]};
          int yi_coords[2] = {outlines[i][1], outlines[i][3]}; int yj_coords[2] = {outlines[j][1], outlines[j][3]};
          int rhoi = outlines[i][4], rhoj = outlines[j][4];
@@ -299,7 +310,7 @@ class testFilter : public art::EDFilter {
       } // end of j loop 
    } // end of i loop 
 
-   for (int i=0; i<outlines.size(); i++){
+   for (int i=0; i<int(outlines.size()); i++){
       if ((outlines.at(i)).empty())
          continue;
       int x0_end = outlines[i][0], y0_end = outlines[i][1], x1_end = outlines[i][2], y1_end = outlines[i][3];
@@ -318,7 +329,6 @@ class testFilter : public art::EDFilter {
    }
    //free memory 
    data.clear(); deaccu.clear(); outlines.clear();
-} // end of hough 
-}
+   } // end of hough 
   // A macro required for a JobControl module.
   DEFINE_ART_MODULE(testFilter)
