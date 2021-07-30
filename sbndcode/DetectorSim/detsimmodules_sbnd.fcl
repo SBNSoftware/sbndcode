@@ -6,7 +6,7 @@ sbnd_simwire:
 { 
  module_type:         "SimWireSBND"
  TrigModName:         "triggersim"
- DriftEModuleLabel:   "largeant"
+ DriftEModuleLabel:   "simdrift"
  CompressionType:     "none"       #could also be none		
  BaselineRMS:         0.0         #ADC baseline fluctuation within channel        
  GenNoise:            true        # If false, NoiseService function is not called
@@ -19,6 +19,10 @@ sbnd_simwire:
  CollectionSat: 2922 # in ADC, default is 2922
  InductionSat: 1247  # in ADC, default is 1247
 }
+
+sbnd_simwire_legacy: @local::sbnd_simwire
+sbnd_simwire_legacy.DriftEModuleLabel: "largeant"
+
 #sbnd_simwireana: @local::standard_simwireana
 sbnd_simwireana:
 {
