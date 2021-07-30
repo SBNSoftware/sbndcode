@@ -1,5 +1,4 @@
 // where you stopped: 
-// compile the module for the first time
 
 // Framework includes 
 #include "art/Framework/Core/EDFilter.h" 
@@ -68,11 +67,7 @@ class testFilter : public art::EDFilter {
     void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
 
     // Wire hits variables
-    int                 nhits;  
-    // vector<int>    hit_tpc;      
-    // vector<int>    hit_plane;      
-    // vector<int>    hit_wire;      
-    // vector<double> hit_peakT;    
+    int                 nhits;   
 
     art::ServiceHandle<art::TFileService> tfs;
     
@@ -141,7 +136,7 @@ class testFilter : public art::EDFilter {
       // hit_tpc[i] = wireid.TPC;
       // hit_wire[i] = wireid.Wire;
       // hit_peakT[i] = hitlist[i]->PeakTime();
-    }
+    } // end of nhit loop 
     vector<vector<int>> lines; 
     lines.reserve(10);
     Hough(coords,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines);
@@ -150,15 +145,7 @@ class testFilter : public art::EDFilter {
       pass = true;
     }
     return pass; 
-  }
-
-  // void testFilter::ResetWireHitsVars(int n) {
-  // hit_tpc.assign(n, DEFAULT_VALUE);
-  // hit_plane.assign(n, DEFAULT_VALUE);
-  // hit_wire.assign(n, DEFAULT_VALUE);
-  // hit_peakT.assign(n, DEFAULT_VALUE);
-  // coords.assign(n, DEFAULT_VALUE);
-  // }
+  } // end of event loop 
 
   float testFilter::Distance(int x1, int y1, int x2, int y2){
     return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
@@ -280,7 +267,6 @@ class testFilter : public art::EDFilter {
                if ((thetai < (thetaj + theta_var)) && (thetai > (thetaj - theta_var)))
                   counter++;
                if (counter >= 3){ // if at least three of the conditions are fulfilled 
-
                   if(k==0){
                      if(l==0){
                         outlines[j][2] = outlines[i][0];
