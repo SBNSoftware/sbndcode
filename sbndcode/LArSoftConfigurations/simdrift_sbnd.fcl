@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+sbnd_simdrift:
+{
+    module_type:     SimDriftElectrons
+    SimulationLabel: "ionandscint"
+}
+
+END_PROLOG

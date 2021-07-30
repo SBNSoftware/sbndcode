@@ -4,29 +4,21 @@
 # Author:  Gianluca Petrillo (petrillo@fnal.gov)
 # Date:    December 23, 2016
 # Version: 1.1
-# 
+#
 # This configuration runs event generation, simulation of propagation through
 # matter and readout simulation.
-# 
+#
 # Input:
 # - output from LArG4 module (in particular, SimChannels)
-# 
+#
 # Output:
 # - daq: RawDigit collection with simulated TPC readout response as waveforms
 # - includes the whole input data
-# 
-# 
+#
+#
 # Dependencies:
 # - uses the bundle of SBND simulation services for readout simulation
-#
-# Changes:
-# 20160601 (petrillo@fnal.gov) [v1.0]
-#   first version
-#
-# 20161223 (petrillo@fnal.gov) [v1.1]
-#   - adopted shared root output configuration
-#
-#
+
 
 #
 # services
@@ -41,9 +33,8 @@
 
 #include "detsimmodules_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
-#include "rootoutput_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
-
+#include "rootoutput_sbnd.fcl"
 
 
 process_name: DetSim
@@ -74,18 +65,19 @@ physics:
   {
     rns:       { module_type: "RandomNumberSaver" }
     daq:       @local::sbnd_simwire
-    crt:       @local::sbnd_crtsim
+  #  crt:       @local::sbnd_crtsim
     opdaq:     @local::sbnd_opdetdigitizer
   }
 
-  #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, daq, crt, opdaq]
+  #define the producer and filter modules for this path, order matters,
+  # simulate:  [ rns,  daq, crt, opdaq]
+  simulate:  [ rns,  daq, opdaq]
 
-  #define the output stream, there could be more than one if using filters 
+  #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
 
   #ie analyzers and output streams.  these all run simultaneously
-  end_paths: [stream1]  
+  end_paths: [stream1]
 }
 
 # block to define where the output goes.  if you defined a filter in the physics
@@ -100,3 +92,9 @@ outputs:
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
   }
 }
+
+# physics.producers.daq.DriftEModuleLabel: "simdrift"
+# physics.producers.opdaq.InputModule: "PDFastSim"
+
+
+
