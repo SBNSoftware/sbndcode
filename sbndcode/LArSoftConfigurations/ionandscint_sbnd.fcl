@@ -8,6 +8,7 @@ sbnd_ionandscint:
     # Instances:  "LArG4DetectorServicevolTPCActive;LArG4DetectorServicevolTPCActiveOuter" # separated by semicolon
     Instances:   "LArG4DetectorServicevolTPCActive" # separated by semicolon
     ISCalcAlg:   "Separate" # "NEST"
+    SavePriorSCE: true
 }
 
 END_PROLOG
