@@ -14,7 +14,8 @@ BEGIN_PROLOG
 # standard configuration
 sbnd_pdfastsim_par:                     @local::standard_pdfastsim_par_ar
 
-sbnd_pdfastsim_par.SimulationLabel:     "IonAndScintIN"
+sbnd_pdfastsim_par.SimulationLabel:     "ionandscint:priorSCE"
+
 # Direct (VUV)
 sbnd_pdfastsim_par.VUVTiming:           @local::sbnd_vuv_timing_parameterization
 sbnd_pdfastsim_par.VUVHits:             @local::sbnd_vuv_RS100cm_hits_parameterization
