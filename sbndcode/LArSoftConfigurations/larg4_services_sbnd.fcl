@@ -8,7 +8,7 @@ BEGIN_PROLOG
 #
 sbnd_physics_list_fastoptical:
 {
-  PhysicsListName: "QGSP_BERT"
+  PhysicsListName: "QGSP_BERT" # "SBND_QGSP_BERT_NNC" # "QGSP_BERT"
   DumpList: true
   enableNeutronLimit: false
   NeutronTimeLimit: 0.0
@@ -41,8 +41,9 @@ sbnd_physics_list_fastoptical:
 sbnd_particle_list_action:
 {
   service_type: "ParticleListActionService"
-  EnergyCut: 1e-5 # Kinetic Energy cut in [MeV]
-  keepEMShowerDaughters: false
+  EnergyCut: 1e-5                          # Kinetic Energy cut in [MeV]
+  keepEMShowerDaughters: false             # If false, does not store electromagnetic shower daughter
+                                           # particles in the MCParticles data product.
   storeTrajectories: true
   keepGenTrajectories: ["generator"]       # list of generator labels for which we want to store
                                            # trajectory points.
@@ -74,7 +75,7 @@ sbnd_particle_list_action:
 sbnd_larg4detector:
 {
     category      : "world"
-    gdmlFileName_ : @local::sbnd_geometry_nowires
+    gdmlFileName_ : @local::sbnd_geometry_file_nowires
     volumeNames   : ["volTPCActive"] # list of volumes for which the stepLimit should be set
     stepLimits    : [0.3] # corresponding stepLimits in mm for the volumes in the volumeNames list
 }
