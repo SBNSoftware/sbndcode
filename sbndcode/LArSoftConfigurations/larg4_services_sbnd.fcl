@@ -80,6 +80,17 @@ sbnd_larg4detector:
     stepLimits    : [0.3] # corresponding stepLimits in mm for the volumes in the volumeNames list
 }
 
+sbnd_larg4detector_hybrid: @local::sbnd_larg4detector
+sbnd_larg4detector_hybrid.volumeNames: ["volTPCActive"
+                                      , "volCryostat"
+                                      , "volTPCPlaneVert"
+                                      , "volXArapuca"
+                                      , "volPMT"
+                                      , "volFieldCage"
+                                      , "volPDSstructure"
+                                       ]
+sbnd_larg4detector_hybrid.stepLimits: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
+
 
 #
 # The LArG4 Services
@@ -94,6 +105,12 @@ sbnd_larg4_services:
   ParticleListAction: @local::sbnd_particle_list_action
   PhysicsList:        @local::sbnd_physics_list_fastoptical
   LArG4Detector:      @local::sbnd_larg4detector
+}
+
+sbnd_larg4_services_hybrid:
+{
+                      @table::sbnd_larg4_services
+  LArG4Detector:      @local::sbnd_larg4detector_hybrid
 }
 
 END_PROLOG

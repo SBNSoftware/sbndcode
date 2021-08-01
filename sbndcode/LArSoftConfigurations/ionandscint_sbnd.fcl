@@ -11,4 +11,9 @@ sbnd_ionandscint:
     SavePriorSCE: true
 }
 
+sbnd_ionandscint_out: @local::sbnd_ionandscint
+sbnd_ionandscint_out.Instances: "LArG4DetectorServicevolCryostat;LArG4DetectorServicevolTPCPlaneVert;LArG4DetectorServicevolXArapuca;LArG4DetectorServicevolPMT;LArG4DetectorServicevolFieldCage;LArG4DetectorServicevolPDSstructure"
+sbnd_ionandscint_out.SavePriorSCE: false
+
+
 END_PROLOG

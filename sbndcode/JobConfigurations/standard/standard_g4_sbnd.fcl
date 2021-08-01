@@ -49,6 +49,7 @@ services:
   }
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   @table::sbnd_g4_services
+  # @table::sbnd_g4_services_hybrid
 }
 
 
@@ -70,14 +71,17 @@ physics:
     # The geant4 step
     largeant: @local::sbnd_larg4
 
-    # Creation of ionization electrons and scintillation photons
+    # Creation of ionization electrons and scintillation photons, inside the active volume
     ionandscint: @local::sbnd_ionandscint
 
-    # Light propogation
+    # Light propogation inside the active volume
     pdfastsim: @local::sbnd_pdfastsim_par
 
-    # Electron propogation
-    simdrift: @local::sbnd_simdrift
+    # Needed to create scintillation photons outside the active volume
+    # ionandscintout: @local::sbnd_ionandscint
+
+    # Light propogation outside the active volume
+    # pdfastsimout: @local::sbnd_pdfastsim_pvs
 
     # Truth-level reconstruction
     mcreco:   @local::standard_mcreco
@@ -88,7 +92,9 @@ physics:
   simulate: [ rns
             , largeant
             , ionandscint
-            , PDFastSim
+            , pdfastsim
+            # , ionandscintout
+            # , pdfastsimout
             , simdrift
             #, mcreco
           ]

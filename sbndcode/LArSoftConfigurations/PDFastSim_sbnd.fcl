@@ -34,7 +34,7 @@ sbnd_pdfastsim_par.VISHits:          	@local::sbnd_vis_RS100cm_hits_parameteriza
 # standard configuration
 sbnd_pdfastsim_pvs:                     @local::standard_pdfastsim_pvs
 
-sbnd_pdfastsim_pvs.SimulationLabel:     "IonAndScintOUT"
+sbnd_pdfastsim_pvs.SimulationLabel:     "ionandscintout"
 sbnd_pdfastsim_pvs.IncludePropTime: true
 sbnd_pdfastsim_pvs.StoreReflected: true
 
