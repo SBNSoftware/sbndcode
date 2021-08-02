@@ -51,107 +51,118 @@ const int DEFAULT_VALUE = -9999;
 using std::vector;
 
 class testFilter : public art::EDFilter {
-  public:
-    explicit testFilter(fhicl::ParameterSet const& p);
-    virtual bool filter(art::Event& e) override;
-    void    reconfigure(fhicl::ParameterSet const& p);
-    virtual ~testFilter() { }
+public:
+   explicit testFilter(fhicl::ParameterSet const& p);
+   virtual bool filter(art::Event& e) override;
+   void    reconfigure(fhicl::ParameterSet const& p);
+   virtual ~testFilter() { }
+   
+private:
+   // declare functions 
+   /// Resets variables that are saved to the tree 
+   void ResetWireHitsVars(int n);
+   /// function that calculates distance 
+   float Distance(int x1, int y1, int x2, int y2);
+   /// function that performs the Hough transform 
+   void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
 
-  private:
-    // declare functions 
-    /// Resets variables that are saved to the tree 
-    void ResetWireHitsVars(int n);
-    /// function that calculates distance 
-    float Distance(int x1, int y1, int x2, int y2);
-    /// function that performs the Hough transform 
-    void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
+   // Wire hits variables
+   int                 nhits;   
 
-    // Wire hits variables
-    int                 nhits;   
+   art::ServiceHandle<art::TFileService> tfs;
+   
+   std::string fHitsModuleLabel; 
+   int max_hits;
 
-    art::ServiceHandle<art::TFileService> tfs;
-    
-    std::string fHitsModuleLabel; 
-    int max_hits;
+   int fHoughThreshold;
+   int fHoughMaxGap;
+   int fHoughRange;
+   int fHoughMinLength;
+   int fHoughMuonLength;
+};  
 
-    int fHoughThreshold;
-    int fHoughMaxGap;
-    int fHoughRange;
-    int fHoughMinLength;
-    int fHoughMuonLength;
-  };
+testFilter::testFilter(fhicl::ParameterSet const& p): EDFilter{p} 
+{
+   this->reconfigure(p);
+}
 
-  testFilter::testFilter(fhicl::ParameterSet const& p): EDFilter{p} 
-  {
-    this->reconfigure(p);
-  }
+void testFilter::reconfigure(fhicl::ParameterSet const& p)
+{
+   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
+   max_hits             = p.get<int>("MaxHits", 50000);
 
-  void testFilter::reconfigure(fhicl::ParameterSet const& p)
-  {
-    fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
-    max_hits             = p.get<int>("MaxHits", 50000);
+   // Hough Transform parameters 
+   fHoughThreshold      = p.get<int>("HoughThreshold",10);
+   fHoughMaxGap         = p.get<int>("HoughMaxGap",30);
+   fHoughRange          = p.get<int>("HoughRange",100);
+   fHoughMinLength      = p.get<int>("HoughMinLength",500);
+   fHoughMuonLength     = p.get<int>("HoughMuonLength",2500);
+}
 
-    // Hough Transform parameters 
-    fHoughThreshold      = p.get<int>("HoughThreshold",10);
-    fHoughMaxGap         = p.get<int>("HoughMaxGap",30);
-    fHoughRange          = p.get<int>("HoughRange",100);
-    fHoughMinLength      = p.get<int>("HoughMinLength",500);
-    fHoughMuonLength     = p.get<int>("HoughMuonLength",2500);
-  }
+bool testFilter::filter(art::Event& evt)
+{ 
+   bool pass = false;
+   int event = evt.id().event();
 
-  bool testFilter::filter(art::Event& evt)
-  { 
-    bool pass = false;
-    int event = evt.id().event();
-
-    // get nhits 
-    art::Handle<vector<recob::Hit>> hitListHandle;
-    vector<art::Ptr<recob::Hit>> hitlist;
-    if (evt.getByLabel(fHitsModuleLabel,hitListHandle)) {
+   // get nhits 
+   art::Handle<vector<recob::Hit>> hitListHandle;
+   vector<art::Ptr<recob::Hit>> hitlist;
+   if (evt.getByLabel(fHitsModuleLabel,hitListHandle)) {
       art::fill_ptr_vector(hitlist, hitListHandle);
       nhits = hitlist.size();
-    }
-    else {
+   }
+   else {
       std::cout << "Failed to get recob::Hit data product." << std::endl;
       nhits = 0;
     }
-    if (nhits > max_hits) {
+   if (nhits > max_hits) {
       std::cout << "Available hits are " << nhits 
                 << ", which is above the maximum number allowed to store." << std::endl;
       std::cout << "Will only store " << max_hits << "hits." << std::endl;
       nhits = max_hits;
     }
 
-    //ResetWireHitsVars(nhits);
-    vector<vector<int>> coords(nhits, vector<int>(2)); 
+   //ResetWireHitsVars(nhits);
+   vector<vector<int>> collection_hits0, collection_hits1;
+   collection_hits0.reserve(3000); // set reserved length somewhere else in parameters? 
+   collection_hits1.reserve(3000); 
 
-    for (int i = 0; i < nhits; ++i) {
+   for (int i = 0; i < nhits; ++i) {
       geo::WireID wireid = hitlist[i]->WireID();
-      int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_plane = wireid.Plane;
-      if (hit_plane==2){
-        vector<int> v{hit_wire,hit_peakT};
-        coords[i] = v;  
+      int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_plane = wireid.Plane, hit_tpc = wireid.TPC;
+      if (hit_plane==2 && hit_peakT>0){ // if collection plane and only positive peakT 
+         vector<int> v{hit_wire,hit_peakT};
+         if (hit_tpc==0)
+            collection_hits0.push_back(v);  
+         else
+            collection_hits1.push_back(v); 
       }
-      // hit_plane[i] = wireid.Plane;
-      // hit_tpc[i] = wireid.TPC;
-      // hit_wire[i] = wireid.Wire;
-      // hit_peakT[i] = hitlist[i]->PeakTime();
-    } // end of nhit loop 
-    vector<vector<int>> lines; 
-    lines.reserve(10);
-    Hough(coords,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines);
-    lines.shrink_to_fit();
-    if (lines.empty() == false){
+   } // end of nhit loop
+   collection_hits0.shrink_to_fit(); collection_hits1.shrink_to_fit(); 
+   vector<vector<int>> lines0, lines1; 
+   lines0.reserve(10); lines1.reserve(10); 
+    
+   //transform to find lines 
+   Hough(collection_hits0,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines0);
+   Hough(collection_hits1,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines1);
+
+   lines0.shrink_to_fit(); lines1.shrink_to_fit();
+
+   if (lines0.empty() == false || lines1.empty() == true){
+      // if an AC muon is found, perform hough transform on hits in plane==0
       pass = true;
-    }
-    return pass; 
-  } // end of event loop 
+      if (lines0.empty == false){ // if a line was found in TPC0
 
-  float testFilter::Distance(int x1, int y1, int x2, int y2){
-    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
-  }
+      }
+   }
+   return pass; 
+} // end of event loop 
 
-  void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines){
+float testFilter::Distance(int x1, int y1, int x2, int y2){
+   return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
+}
+
+void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines){
    //set global variables 
    TRandom3 rndgen;
    const int h = 3500; const int w = 2000; //range of hit_wire
@@ -315,6 +326,6 @@ class testFilter : public art::EDFilter {
    }
    //free memory 
    data.clear(); deaccu.clear(); outlines.clear();
-   } // end of hough 
+} // end of hough 
   // A macro required for a JobControl module.
   DEFINE_ART_MODULE(testFilter)
