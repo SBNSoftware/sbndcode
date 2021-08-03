@@ -1,8 +1,11 @@
 #include "larg4crtfilter.fcl"
 #include "standard_g4_sbnd.fcl"
 
-physics.simulate: [ rns, largeant, filter, mcreco ]
 physics.filters.filter: @local::sbnd_larg4crtfilter
+
+physics.simulate: [ @table::physics.simulate
+                 , filter
+                  ]
 
 outputs.out1.SelectEvents: [ "simulate" ]
 
