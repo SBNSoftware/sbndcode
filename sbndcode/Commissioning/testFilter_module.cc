@@ -1,4 +1,7 @@
 // where you stopped: 
+// filled coord information for induction planes 
+// realized I need to store the wireID variable somewhere, might have to add it into the hough transform 
+// next step: performing hough transform on induction plane hits 
 
 // Framework includes 
 #include "art/Framework/Core/EDFilter.h" 
@@ -58,16 +61,29 @@ public:
    virtual ~testFilter() { }
    
 private:
-   // declare functions 
-   /// Resets variables that are saved to the tree 
-   void ResetWireHitsVars(int n);
-   /// function that calculates distance 
+   void ResetCollectionHitVectors();
+   void ResetInductionHitVectors();
    float Distance(int x1, int y1, int x2, int y2);
-   /// function that performs the Hough transform 
    void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
 
    // Wire hits variables
-   int                 nhits;   
+   int   nhits;
+   vector<vector<int>> hit_00; // tpc0, plane0
+   vector<vector<int>> hit_01; // tpc0, plane1
+   vector<vector<int>> hit_02; // tpc0, plane2
+
+   vector<vector<int>> hit_10; // tpc1, plane0
+   vector<vector<int>> hit_11; // tpc1, plane1
+   vector<vector<int>> hit_12; // tpc1, plane2 
+
+   vector<vector<int>> lines00; 
+   vector<vector<int>> lines01;
+   vector<vector<int>> lines02; 
+
+   vector<vector<int>> lines10;
+   vector<vector<int>> lines11;
+   vector<vector<int>> lines12; 
+
 
    art::ServiceHandle<art::TFileService> tfs;
    
@@ -122,10 +138,7 @@ bool testFilter::filter(art::Event& evt)
       nhits = max_hits;
     }
 
-   //ResetWireHitsVars(nhits);
-   vector<vector<int>> collection_hits0, collection_hits1;
-   collection_hits0.reserve(3000); // set reserved length somewhere else in parameters? 
-   collection_hits1.reserve(3000); 
+   ResetCollectionHitVectors();
 
    for (int i = 0; i < nhits; ++i) {
       geo::WireID wireid = hitlist[i]->WireID();
@@ -133,26 +146,72 @@ bool testFilter::filter(art::Event& evt)
       if (hit_plane==2 && hit_peakT>0){ // if collection plane and only positive peakT 
          vector<int> v{hit_wire,hit_peakT};
          if (hit_tpc==0)
-            collection_hits0.push_back(v);  
+            hit_02.push_back(v);  
          else
-            collection_hits1.push_back(v); 
+            hit_12.push_back(v); 
       }
    } // end of nhit loop
-   collection_hits0.shrink_to_fit(); collection_hits1.shrink_to_fit(); 
-   vector<vector<int>> lines0, lines1; 
-   lines0.reserve(10); lines1.reserve(10); 
-    
-   //transform to find lines 
-   Hough(collection_hits0,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines0);
-   Hough(collection_hits1,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines1);
+   hit_02.shrink_to_fit(); hit_12.shrink_to_fit(); 
+   Hough(hit_02,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines02);
+   Hough(hit_12,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines12);
 
-   lines0.shrink_to_fit(); lines1.shrink_to_fit();
-
-   if (lines0.empty() == false || lines1.empty() == true){
-      // if an AC muon is found, perform hough transform on hits in plane==0
+   //flags 
+   bool ac_tpc0 = !(lines02.empty());
+   bool ac_tpc1 = !(lines12.empty());
+   
+   //find induction plane hits
+   if (ac_tpc0true || ac_tpc1 == true){
       pass = true;
-      if (lines0.empty == false){ // if a line was found in TPC0
+      ResetInductionHitVectors();
+      for (int i = 0; i < nhits; ++i) {
+         geo::WireID wireid = hitlist[i]->WireID();
+         int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_tpc = wireid.TPC, hit_plane = wireid.Plane;
+         vector<int> v{hit_wire,hit_peakT};
+         if (ac_tpc0 == true){ //if ac muon was found in tpc0 
+            if (hit_plane==0 && hit_peakT>0){ 
+               hit_00.push_back(v);
+            if (hit_plane==1 && hit_peakT>0){
+               hit_01.push_back(v);
+            }
+         }
+         if (ac_tpc1 == true){ // if ac muon was found in tpc 1
+            if (hit_plane==0 && hit_peakT>0){ 
+               hit_10.push_back(v);
+            if (hit_plane==1 && hit_peakT>0){
+               hit_11.push_back(v);
+         }
+      }
+      if (ac_tpc == true)
 
+      for (int ntpc = 0; ntpc < 2; ntpc++){ //ntpc will equal 0 and then 1
+         vector<vector<int>> lines_plane2 = (ntpc==0) ? lines02 : lines12;
+         if (lines_plane2.size() > 1)
+            std::cout "WARNING: more than one muon event detected!"
+
+      }   // end of tpc loop 
+   }
+
+   if (lines0.empty() == false || lines1.empty() == false){
+      // if an AC muon is found, perform hough transform on hits in plane==0 or plane==1
+      pass = true;
+      vector<vector<int>> induction0_hits; 
+      vector<vector<int>> induction1_hits; 
+      for (int i=0; i<nhits; i++){
+         geo::WireID wireid = hitlist[i]->WireID();
+         int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_plane = wireid.Plane, hit_tpc = wireid.TPC;
+
+      }
+      if (lines0.empty == false){ // if a line was found in TPC0
+         vector<vector<int>> induction0_hits0; 
+         for (int i=0; i < nhits; i++){
+            geo::WireID wireid = hitlist[i]->WireID();
+            int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_plane = wireid.Plane, hit_tpc = wireid.TPC;
+            if (hit_plane==2 && hit_peakT>0){ // if collection plane and only positive peakT 
+               vector<int> v{hit_wire,hit_peakT};
+         } 
+      }
+      else{
+         vector<vector<int>> induction1_hits
       }
    }
    return pass; 
@@ -327,5 +386,40 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
    //free memory 
    data.clear(); deaccu.clear(); outlines.clear();
 } // end of hough 
-  // A macro required for a JobControl module.
-  DEFINE_ART_MODULE(testFilter)
+
+void testFilter::ResetCollectionHitVectors() {
+
+   hit_02.clear(); 
+   hit_12.clear(); 
+   lines02.clear(); 
+   lines12.clear(); 
+  
+   hit_02.reserve(3000); 
+   hit_12.reserve(3000); 
+   lines02.reserve(10); 
+   lines12.reserve(10); 
+}
+
+void testFilter::ResetInductionHitVectors(){
+   hit_00.clear();
+   hit_01.clear();
+   hit_10.clear();
+   hit_11.clear();
+
+   lines00.clear(); 
+   lines01.clear();
+   lines10.clear(); 
+   lines11.clear();
+
+   hit_00.reserve(5000);
+   hit_01.reserve(5000);
+   hit_10.reserve(5000);
+   hit_11.reserve(5000);
+
+   lines00.reserve(1); 
+   lines01.reserve(1);
+   lines10.reserve(1); 
+   lines11.reserve(1);
+}
+// A macro required for a JobControl module.
+DEFINE_ART_MODULE(testFilter)
