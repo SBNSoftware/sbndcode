@@ -2,12 +2,12 @@
 # File:    prodsingle_sbnd.fcl
 # Purpose: Produce single muon events including full SBND detector simulation
 # Version: 1.2
-# 
+#
 # This configuration runs event generation, simulation of propagation through
 # matter and readout simulation.
-# 
+#
 # Input: no input file required
-# 
+#
 # Dependencies:
 # - uses the bundle of SBND simulation services
 #
@@ -37,8 +37,8 @@
 #
 
 #include "singles_sbnd.fcl"
-#include "largeantmodules_sbnd.fcl"
-#include "detsimmodules_sbnd.fcl"
+##include "largeantmodules_sbnd.fcl"
+##include "detsimmodules_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 
@@ -78,18 +78,19 @@ physics:
   {
     rns:       { module_type: "RandomNumberSaver" }
     generator: @local::sbnd_singlep
-    largeant:  @local::sbnd_largeant
-    daq:       @local::sbnd_simwire
+    # largeant:  @local::sbnd_largeant
+    # daq:       @local::sbnd_simwire
   }
 
-  #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, generator, largeant, daq] 
+  #define the producer and filter modules for this path, order matters,
+  # simulate:  [ rns, generator, largeant, daq]
+  simulate:  [ rns, generator ]
 
-  #define the output stream, there could be more than one if using filters 
+  #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
 
   #ie analyzers and output streams.  these all run simultaneously
-  end_paths: [stream1]  
+  end_paths: [stream1]
 }
 
 # block to define where the output goes.  if you defined a filter in the physics
