@@ -77,22 +77,7 @@ sbnd_g4_services:
 sbnd_g4_services_hybrid:
 {
                              @table::sbnd_g4_services
-  PhotonVisibilityService:
-  {
-                     @table::sbnd_library_vuv_vis_prop_timing_photonvisibilityservice
-    LibraryFile:     "SBND_OpLibOUT_v2.00.root"
-    NX:              66
-    NY:              56
-    NZ:              71
-    UseCryoBoundary: false
-    # IF UseCryoBoundary is set to false, so use the following parameters.
-    XMin:            -264
-    XMax:            264
-    YMin:            -280
-    YMax:            280
-    ZMin:            -60
-    ZMax:            650
-  }
+  PhotonVisibilityService:   @local::sbnd_library_for_hybrid_mode_photonvisibilityservice
                              @table::sbnd_larg4_services_hybrid
 } # sbnd_g4_services_hybrid
 
