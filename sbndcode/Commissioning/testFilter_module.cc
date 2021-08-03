@@ -1,7 +1,8 @@
 // where you stopped: 
-// filled coord information for induction planes 
-// realized I need to store the wireID variable somewhere, might have to add it into the hough transform 
-// next step: performing hough transform on induction plane hits 
+// added wire information into the lines 
+
+// for each AC muon, want to store:
+// anode endpoint, cathode endpoint, t0, thetaxz, thetayz 
 
 // Framework includes 
 #include "art/Framework/Core/EDFilter.h" 
@@ -63,6 +64,7 @@ public:
 private:
    void ResetCollectionHitVectors();
    void ResetInductionHitVectors();
+   void FindWireIntersection(vector<vector<int>> lines_col, vector<vector<int>> lines_ind); 
    float Distance(int x1, int y1, int x2, int y2);
    void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
 
@@ -95,6 +97,8 @@ private:
    int fHoughRange;
    int fHoughMinLength;
    int fHoughMuonLength;
+
+   geo::GeometryCore const& geom,
 };  
 
 testFilter::testFilter(fhicl::ParameterSet const& p): EDFilter{p} 
@@ -144,7 +148,7 @@ bool testFilter::filter(art::Event& evt)
       geo::WireID wireid = hitlist[i]->WireID();
       int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_plane = wireid.Plane, hit_tpc = wireid.TPC;
       if (hit_plane==2 && hit_peakT>0){ // if collection plane and only positive peakT 
-         vector<int> v{hit_wire,hit_peakT};
+         vector<int> v{hit_wire,hit_peakT,i};
          if (hit_tpc==0)
             hit_02.push_back(v);  
          else
@@ -156,17 +160,21 @@ bool testFilter::filter(art::Event& evt)
    Hough(hit_12,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines12);
 
    //flags 
-   bool ac_tpc0 = !(lines02.empty());
-   bool ac_tpc1 = !(lines12.empty());
+   bool ac_tpc0 = !(lines02.empty()); // will be true if an ac muon was detected in tpc0 
+   bool ac_tpc1 = !(lines12.empty()); // will be true if an ac muon was detected in tpc1
+
+   if(lines02.size() > 1 || lines12.size() > 1){
+      std::cout << "more than one AC muon detected per TPC (rare and unusual)"
+   }
    
    //find induction plane hits
-   if (ac_tpc0true || ac_tpc1 == true){
+   if (ac_tpc0 == true || ac_tpc1 == true){
       pass = true;
       ResetInductionHitVectors();
       for (int i = 0; i < nhits; ++i) {
          geo::WireID wireid = hitlist[i]->WireID();
          int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_tpc = wireid.TPC, hit_plane = wireid.Plane;
-         vector<int> v{hit_wire,hit_peakT};
+         vector<int> v{hit_wire,hit_peakT,i};
          if (ac_tpc0 == true){ //if ac muon was found in tpc0 
             if (hit_plane==0 && hit_peakT>0){ 
                hit_00.push_back(v);
@@ -181,39 +189,39 @@ bool testFilter::filter(art::Event& evt)
                hit_11.push_back(v);
          }
       }
-      if (ac_tpc == true)
-
-      for (int ntpc = 0; ntpc < 2; ntpc++){ //ntpc will equal 0 and then 1
-         vector<vector<int>> lines_plane2 = (ntpc==0) ? lines02 : lines12;
-         if (lines_plane2.size() > 1)
-            std::cout "WARNING: more than one muon event detected!"
-
-      }   // end of tpc loop 
-   }
-
-   if (lines0.empty() == false || lines1.empty() == false){
-      // if an AC muon is found, perform hough transform on hits in plane==0 or plane==1
-      pass = true;
-      vector<vector<int>> induction0_hits; 
-      vector<vector<int>> induction1_hits; 
-      for (int i=0; i<nhits; i++){
-         geo::WireID wireid = hitlist[i]->WireID();
-         int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_plane = wireid.Plane, hit_tpc = wireid.TPC;
-
+      if (actpc0){
+         Hough(hit00,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines00);
+         if (lines00.empty == false){
+            FindWireIntersection(lines02,lines00);
+         }
+         else{
+            Hough(hit01,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines01);
+            if (lines01.empty==false){
+               FindWireIntersection(lines02,lines01);
+            }
+            else{
+               "tpc0: induction lines not found"
+            }
+         }
       }
-      if (lines0.empty == false){ // if a line was found in TPC0
-         vector<vector<int>> induction0_hits0; 
-         for (int i=0; i < nhits; i++){
-            geo::WireID wireid = hitlist[i]->WireID();
-            int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_plane = wireid.Plane, hit_tpc = wireid.TPC;
-            if (hit_plane==2 && hit_peakT>0){ // if collection plane and only positive peakT 
-               vector<int> v{hit_wire,hit_peakT};
-         } 
-      }
-      else{
-         vector<vector<int>> induction1_hits
+      if (actpc1){
+         Hough(hit10,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines10);
+      if (lines10.empty == false){
+            FindWireIntersection(lines12,lines10);
+         }
+         else{
+            Hough(hit11,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines11);
+            if (lines11.empty==false){
+               FindWireIntersection(lines12,lines11);
+            }
+            else{
+               "tpc1: induction lines not found"
+            }
+         }
       }
    }
+   
+   // structure of vector in lines = (x0_end, y0_end, x1_end, y1_end, wire0_end, wire1_end, rho, theta);
    return pass; 
 } // end of event loop 
 
@@ -263,7 +271,7 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
          continue;
       }
       //start at point and walk the corridor on both sides 
-      vector<vector<int>> endpoint(2, vector<int>(2));
+      vector<vector<int>> endpoint(2, vector<int>(3));
       for (int k=0; k<2;k++){ 
          int i=0, gap=0;
          while (gap < max_gap){ 
@@ -272,7 +280,7 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
                break;
             if ((data.at(idx+i)).empty()) // if the point has already been removed 
                continue;
-            int x1 = data[idx+i][0], y1 = int(data[idx+i][1]); 
+            int x1 = data[idx+i][0], y1 = int(data[idx+i][1]), wire_idx = data[idx+i][2]; 
             int last_x, diffx; 
             if (endpoint[k][0]!= 0){ // ensure we don't jump large x-values 
                last_x = endpoint[k][0];
@@ -284,7 +292,7 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
             int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
             if (y1 >= (y_val-range) && y1 <= (y_val+range)){
                gap = 0;
-               endpoint[k] = {x1, y1};
+               endpoint[k] = {x1, y1, wire_idx};
                (coords.at(idx+i)).clear();
                (data.at(idx+i)).clear();
             }
@@ -307,10 +315,11 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
       } // end of deaccumulator loop
 
       int x0_end = endpoint[0][0], y0_end = endpoint[0][1], x1_end = endpoint[1][0], y1_end = endpoint[1][1];
+      int wire0_end = endpoint[0][2], wire1_end = endpoint[1][2]; 
       if ((x0_end==0 && y0_end==0) || (x1_end==0 && y1_end==0)) // don't add the (0,0) points 
          continue;
-      vector<int> line = {x0_end, y0_end, x1_end, y1_end, rho, theta};
-      outlines.push_back(line);
+      vector<int> outline = {x0_end, y0_end, x1_end, y1_end, wire0_end, wire1_end, rho, theta};
+      outlines.push_back(outline);
 
    } // end of point loop 
    // combine lines that are split 
@@ -319,8 +328,8 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
       for (int j=i+1; j<int(outlines.size()) && same == false;j++){ 
          int xi_coords[2] = {outlines[i][0], outlines[i][2]}; int xj_coords[2] = {outlines[j][0], outlines[j][2]};
          int yi_coords[2] = {outlines[i][1], outlines[i][3]}; int yj_coords[2] = {outlines[j][1], outlines[j][3]};
-         int rhoi = outlines[i][4], rhoj = outlines[j][4];
-         int thetai = outlines[i][5], thetaj = outlines[j][5]; 
+         int rhoi = outlines[i][6], rhoj = outlines[j][6];
+         int thetai = outlines[i][7], thetaj = outlines[j][7]; 
 
          int var = 100;
          int rho_var = 30;
@@ -420,6 +429,66 @@ void testFilter::ResetInductionHitVectors(){
    lines01.reserve(1);
    lines10.reserve(1); 
    lines11.reserve(1);
+}
+
+void testFilter::FindWireIntersection( vector<vector<int>> lines_col, vector<vector<int>> lines_ind){
+   for (int i=0; i<int(lines_col.size()); i++){
+      for (int j=0; j<int(lines_ind.size()); j++){
+         int peakT0_col, peakT1_col, peakT0_ind, peakT1_ind; 
+         int wire0_col, wire1_col, wire0_ind, wire1_ind;
+         if (lines_col[i][1] < lines_col[i][3]){
+            peakT0_col = lines_col[i][1];
+            peakT1_col = lines_col[i][3];
+            wire0_col = lines_col[i][4]; 
+            wire1_col = lines_col[i][5]; 
+         }
+         else{
+            peakT0_col = lines_col[i][3];
+            peakT1_col = lines_col[i][1];
+            wire0_col = lines_col[i][5]; 
+            wire1_col = lines_col[i][4]; 
+         }
+
+         if (lines_ind[j][1] < lines_ind[j][3]){
+            peakT0_ind = lines_ind[j][1];
+            peakT1_ind = lines_ind[j][3];
+            wire0_ind = lines_ind[j][4]; 
+            wire1_ind = lines_ind[j][5]; 
+         }
+         else{
+            peakT0_ind = lines_ind[j][3];
+            peakT1_ind = lines_ind[j][1];
+            wire0_ind = lines_ind[j][5]; 
+            wire1_ind = lines_ind[j][4]; 
+         }
+
+         int peakT_range = 10; 
+         if ( (peakT0_col + peakT_range > peakT0_ind) && (peakT0_col - peakT_range < peakT0_ind) && 
+              (peakT1_col + peakT_range > peakT1_ind) && (peakT1_col + peakT_range > peakT1_ind)){
+               
+            std::cout << "wire intersection found!" << std::endl;
+            geo::WireID awire_col = hitlist[wire0_col]->WireId(); 
+            geo::WireID awire_ind = hitlist[wire0_ind]->WireId();
+            geo::WireID cwire_col = hitlist[wire1_col]->WireId();
+            geo::WireID cwire_ind = hitlist[wire1_col]->WireID();
+            geo::Point_t apoint, cpoint; 
+
+            if (geom.WireIDsIntersect(awire_col, awire_ind, apoint) == true){
+               std::cout << "intersection coord of awire:" << apoint.X() << ", " << apoint.Y() << ", " << apoint.Z() << std::endl;
+            }
+            else{
+               std::cout << "intersection of awire not found by WireIDsIntersect"
+            }
+
+            if (geom.WireIDsIntersect(cwire_col, cwire_ind, cpoint) == true){
+               std::cout << "intersection coord of cwire:" << cpoint.X() << ", " << cpoint.Y() << ", " << cpoint.Z() << std::endl;
+            }
+            else{
+               std::cout << "intersection of cwire not found by WireIDsIntersect"
+            }
+         }
+      }
+   }
 }
 // A macro required for a JobControl module.
 DEFINE_ART_MODULE(testFilter)
