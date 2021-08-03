@@ -34,7 +34,7 @@
 #include "ionandscint_sbnd.fcl"
 #include "PDFastSim_sbnd.fcl"
 #include "simdrift_sbnd.fcl"
-#include "mcreco.fcl"
+#include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 
@@ -43,13 +43,9 @@ process_name: G4
 
 services:
 {
-  TFileService:
-  {
-    fileName: @local::sbnd_tfileoutput.fileName
-  }
+  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   @table::sbnd_g4_services
-  # @table::sbnd_g4_services_hybrid
 }
 
 
@@ -58,15 +54,16 @@ source:
   module_type: RootInput
 }
 
-# Define and configure some modules to do work on each event.
-# First modules are defined; they are scheduled later.
-# Modules are grouped by type.
+
 physics:
 {
 
   producers:
   {
     rns: { module_type: "RandomNumberSaver" }
+
+    # A dummy module that forces G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
 
     # The geant4 step
     largeant: @local::sbnd_larg4
@@ -77,26 +74,22 @@ physics:
     # Light propogation inside the active volume
     pdfastsim: @local::sbnd_pdfastsim_par
 
-    # Needed to create scintillation photons outside the active volume
-    # ionandscintout: @local::sbnd_ionandscint
-
-    # Light propogation outside the active volume
-    # pdfastsimout: @local::sbnd_pdfastsim_pvs
+    # Electron propogation
+    simdrift: @local::sbnd_simdrift
 
     # Truth-level reconstruction
-    mcreco:   @local::standard_mcreco
+    mcreco: @local::sbnd_mcreco
 
   }
 
   # All producers and filters modules for this path, order matters
   simulate: [ rns
+            , loader
             , largeant
             , ionandscint
             , pdfastsim
-            # , ionandscintout
-            # , pdfastsimout
             , simdrift
-            #, mcreco
+            , mcreco
           ]
 
   # The output stream, there could be more than one if using filters
@@ -119,10 +112,4 @@ outputs:
   }
 }
 
-
-services.LArG4Parameters.UseLitePhotons:        true   # true = produce SimPhotonsLite and OpDetBacktrackerRecord, false = produce SimPhotons
-services.PhotonVisibilityService:               @local::sbnd_library_vuv_vis_prop_timing_photonvisibilityservice
-
-physics.producers.mcreco.MCParticleLabel: "largeant"
-physics.producers.mcreco.SimChannelLabel: "simdrift"
 
