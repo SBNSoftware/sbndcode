@@ -36,7 +36,7 @@ fwdir   product_dir scripts
 product          version
 sbncode          v09_27_00_02
 genie_xsec       v3_00_04a
-sbnd_data        v01_06_00 - optional
+sbnd_data        v01_07_00 - optional
 sbndutil         v09_27_00_02 - optional
 
 # list products required ONLY for the build
