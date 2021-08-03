@@ -1735,7 +1735,7 @@
 			<materialref ref="LAr"/>
 			<solidref ref="solidFieldCage"/>
 			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-			<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
+			<auxiliary auxtype="StepLimit" auxvalue="0.01" auxunit="mm"/>
 			<auxiliary auxtype="Efield" auxvalue="0."/>
 			<physvol>
 				<volumeref ref="volCPA_Around"/>
@@ -12782,7 +12782,7 @@
 			<materialref ref="LAr"/>
 			<solidref ref="XArapucaVolume"/>
 			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-            <auxiliary auxtype="StepLimit" auxvalue="0.01"/>
+            <auxiliary auxtype="StepLimit" auxvalue="0.01" auxunit="mm"/>
             <auxiliary auxtype="Efield" auxvalue="0."/>
 			<physvol>
 				<volumeref ref="volWalls_XArapuca"/>
@@ -12822,7 +12822,7 @@
 			<materialref ref="LAr"/>
 			<solidref ref="PMTVolume"/>
 			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-			<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
+			<auxiliary auxtype="StepLimit" auxvalue="0.01" auxunit="mm"/>
 			<auxiliary auxtype="Efield" auxvalue="0."/>
 			<physvol>
 				<volumeref ref="vol_PMT_Back"/>
@@ -12848,7 +12848,7 @@
 			<materialref ref="LAr"/>
 			<solidref ref="PDS_moduleCase"/>
 			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-			<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
+			<auxiliary auxtype="StepLimit" auxvalue="0.01" auxunit="mm"/>
 			<auxiliary auxtype="Efield" auxvalue="0."/>
 			<physvol>
 				<volumeref ref="volXArapuca"/>
@@ -13353,7 +13353,7 @@
 			<materialref ref="LAr"/>
 			<solidref ref="boxTPCPlane"/>
 			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-			<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
+			<auxiliary auxtype="StepLimit" auxvalue="0.01" auxunit="mm"/>
 			<auxiliary auxtype="Efield" auxvalue="0."/>
 		</volume>
 		<volume name="volTPCPlaneVert_dummy">
@@ -13386,7 +13386,7 @@
 			<materialref ref="LAr"/>
 			<solidref ref="boxTPCActive"/>
 			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-			<auxiliary auxtype="StepLimit" auxvalue="0.01"/>
+			<auxiliary auxtype="StepLimit" auxvalue="0.01" auxunit="mm"/>
 			<auxiliary auxtype="Efield" auxvalue="500."/>
 			<physvol>
 				<volumeref ref="volCPA_East"/>
@@ -13593,9 +13593,9 @@
 		<volume name="volCryostat">
 			<materialref ref="LAr"/>
 			<solidref ref="boxCryostat"/>
-			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"></auxiliary>
-			<auxiliary auxtype="StepLimit" auxvalue="0.01"></auxiliary>
-			<auxiliary auxtype="Efield" auxvalue="0."></auxiliary>
+			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit">
+			<auxiliary auxtype="StepLimit" auxvalue="0.01" auxunit="mm">
+			<auxiliary auxtype="Efield" auxvalue="0.">
 			<physvol>
 				<volumeref ref="volCryoUllage"/>
 				<position name="posUllage" unit="mm" x="0" y="2579.5500000000002" z="0" />
