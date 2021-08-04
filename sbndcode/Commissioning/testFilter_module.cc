@@ -182,7 +182,7 @@ bool testFilter::filter(art::Event& evt)
          }
          if (ac_tpc1 == true){ // if ac muon was found in tpc 1
             if (hit_plane != 2){
-               std::cout << hit_plane << endl;
+               std::cout << hit_plane << std::endl;
             }
             if (hit_plane==0){ //&& hit_tpc==1 && hit_peakT>0){
                std::cout << "here(1)!" << std::endl;
