@@ -28,9 +28,21 @@ namespace opdet {
     return false;
   }
 
+  bool sbndPDMapAlg::isSampling(size_t ch, std::string pdname) const
+  {
+    if(PDmap.at(ch)["sampling"] == std::string(pdname)) return true;
+    return false;
+  }
+
   std::string sbndPDMapAlg::pdType(size_t ch) const
   {
     if(ch < PDmap.size()) return PDmap.at(ch)["pd_type"];
+    return "There is no such channel";
+  }
+
+  std::string sbndPDMapAlg::SamplingType(size_t ch) const
+  {
+    if(ch < PDmap.size()) return PDmap.at(ch)["sampling"];
     return "There is no such channel";
   }
 

@@ -69,11 +69,13 @@ namespace opdet {
     void endJob() override;
 
     opdet::sbndPDMapAlg pdMap; //map for photon detector types
+
   private:
 
     size_t fEvNumber;
     size_t fChNumber;
     double fSampling;
+    double fSampling_Daphne;
     double fStartTime;
     double fEndTime;
     //TTree *fWaveformTree;
@@ -83,6 +85,7 @@ namespace opdet {
     std::vector<std::string> fOpDetsToPlot;
     std::stringstream histname;
     std::string opdetType;
+    std::string opdetSampling;
   };
 
 
@@ -96,7 +99,7 @@ namespace opdet {
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     fSampling = clockData.OpticalClock().Frequency(); // MHz
-
+    fSampling_Daphne=p.get<double >("DaphneFrequency" );
   }
 
   void wvfAna::beginJob()
@@ -152,6 +155,7 @@ namespace opdet {
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
       opdetType = pdMap.pdType(fChNumber);
+      opdetSampling = pdMap.SamplingType(fChNumber);
       if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
       histname.str(std::string());
       histname << "event_" << fEvNumber
@@ -160,7 +164,10 @@ namespace opdet {
                << "_" << hist_id;
 
       fStartTime = wvf.TimeStamp(); //in us
-      fEndTime = double(wvf.size()) / fSampling + fStartTime; //in us
+      if (opdetSampling == "daphne"){
+		  fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;} //in us
+			else{
+      fEndTime = double(wvf.size()) / fSampling + fStartTime;} //in us
 
       //Create a new histogram
       TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), fStartTime, fEndTime);

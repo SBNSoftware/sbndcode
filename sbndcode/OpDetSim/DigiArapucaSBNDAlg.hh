@@ -60,9 +60,12 @@ namespace opdet {
       double XArapucaVISEff;    //XArapucaVIS efficiency (optical window + cavity)
       double DecayTXArapucaVIS;// Decay time of EJ280 in ns
       std::string ArapucaDataFile; //File containing timing structure for arapucas
+      bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
       double frequency; ///< Optical-clock frequency
+      double frequency_Daphne; ///< Optical-clock frequency for daphne readouts	
+
       CLHEP::HepRandomEngine* engine = nullptr;
     };// ConfigurationParameters_t
 
@@ -80,12 +83,14 @@ namespace opdet {
                            sim::SimPhotons const& simphotons,
                            std::vector<short unsigned int>& waveform,
                            std::string pdtype,
+                           bool is_daphne,
                            double start_time,
                            unsigned n_samples);
     void ConstructWaveformLite(int ch,
                                sim::SimPhotonsLite const& litesimphotons,
                                std::vector<short unsigned int>& waveform,
                                std::string pdtype,
+                               bool is_daphne,
                                double start_time,
                                unsigned n_samples);
 
@@ -95,7 +100,9 @@ namespace opdet {
     ConfigurationParameters_t fParams;
 
     double fSampling;        //wave sampling frequency (GHz)
+    double fSampling_Daphne;        //wave sampling frequency (GHz)
     int pulsesize;
+    int pulsesize_Daphne;
     double fArapucaVUVEff;
     double fArapucaVISEff;
     double fXArapucaVUVEff;
@@ -111,27 +118,34 @@ namespace opdet {
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for visible (x)arapucas
 
     std::vector<double> wsp; //single photon pulse vector
+    std::vector<double> wsp_Daphne; //single photon pulse vector
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
     void CreatePDWaveform(sim::SimPhotons const& SimPhotons,
                           double t_min,
                           std::vector<double>& wave,
-                          std::string pdtype);
+                          std::string pdtype,
+                          bool is_daphne);
     void CreatePDWaveformLite(std::map<int, int> const& photonMap,
                               double t_min,
                               std::vector<double>& wave,
-                              std::string pdtype);
+                              std::string pdtype,
+                              bool is_daphne);
     void SinglePDWaveformCreatorLite(double effT,
                                      std::unique_ptr<CLHEP::RandGeneral>& timeHisto,
                                      std::vector<double>& wave,
                                      std::map<int, int> const& photonMap,
-                                     double const& t_min);
+                                     double const& t_min,
+                                     bool is_daphne);
     void SinglePDWaveformCreatorLite(double effT,
                                      std::vector<double>& wave,
                                      std::map<int, int> const& photonMap,
-                                     double const& t_min);
+                                     double const& t_min,
+                                     bool is_daphne);
     void AddSPE(size_t time_bin, std::vector<double>& wave, int nphotons); // add single pulse to auxiliary waveform
+    void AddSPE_Daphne(size_t time_bin, std::vector<double>& wave, int nphotons); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
+    void Pulse1PE_Daphne(std::vector<double>& wave);
     void AddLineNoise(std::vector<double>& wave);
     void AddDarkNoise(std::vector<double>& wave);
     double FindMinimumTime(sim::SimPhotons const& simphotons);
@@ -230,6 +244,17 @@ namespace opdet {
         Name("ArapucaDataFile"),
         Comment("File containing timing distribution for ArapucaVUV (optical window + cavity), ArapucaVIS (optical window + cavity), XArapuca VUV (optical window)")
       };
+      
+      fhicl::Atom<bool> singlePEmodel {
+        Name("SinglePEmodel"),
+        Comment("Model used for single PE response of PMT. =0 is ideal, =1 is from X-TDBoard data (with overshoot)")
+      };
+
+      fhicl::Atom<double> DaphneFrequency {
+        Name("DaphneFrequency"),
+        Comment("Sampling Frequency of the XArapucas with Daphne readouts (SBND Light detection system has 2 readout frequencies). Apsaia readouts read the frec value from LArSoft.")
+      };
+
 
     };    //struct Config
 

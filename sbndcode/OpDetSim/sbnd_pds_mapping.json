@@ -5,7 +5,8 @@
     "pds_box": 0,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 1,
@@ -13,7 +14,8 @@
     "pds_box": 1,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 2,
@@ -21,7 +23,8 @@
     "pds_box": 2,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 3,
@@ -29,7 +32,8 @@
     "pds_box": 3,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 4,
@@ -37,7 +41,8 @@
     "pds_box": 4,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 5,
@@ -45,7 +50,8 @@
     "pds_box": 5,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 6,
@@ -53,7 +59,8 @@
     "pds_box": 0,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 7,
@@ -61,7 +68,8 @@
     "pds_box": 1,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 8,
@@ -69,7 +77,8 @@
     "pds_box": 0,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 9,
@@ -77,7 +86,8 @@
     "pds_box": 1,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 10,
@@ -85,7 +95,8 @@
     "pds_box": 2,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 11,
@@ -93,7 +104,8 @@
     "pds_box": 3,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 12,
@@ -101,7 +113,8 @@
     "pds_box": 2,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 13,
@@ -109,7 +122,8 @@
     "pds_box": 3,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 14,
@@ -117,7 +131,8 @@
     "pds_box": 4,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 15,
@@ -125,7 +140,8 @@
     "pds_box": 5,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 16,
@@ -133,7 +149,8 @@
     "pds_box": 4,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 17,
@@ -141,7 +158,8 @@
     "pds_box": 5,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 18,
@@ -149,7 +167,8 @@
     "pds_box": 0,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 19,
@@ -157,7 +176,8 @@
     "pds_box": 1,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 20,
@@ -165,7 +185,8 @@
     "pds_box": 2,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 21,
@@ -173,7 +194,8 @@
     "pds_box": 3,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 22,
@@ -181,7 +203,8 @@
     "pds_box": 4,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 23,
@@ -189,7 +212,8 @@
     "pds_box": 5,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 24,
@@ -197,7 +221,8 @@
     "pds_box": 0,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 25,
@@ -205,7 +230,8 @@
     "pds_box": 1,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 26,
@@ -213,7 +239,8 @@
     "pds_box": 0,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 27,
@@ -221,7 +248,8 @@
     "pds_box": 1,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 28,
@@ -229,7 +257,8 @@
     "pds_box": 2,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 29,
@@ -237,7 +266,8 @@
     "pds_box": 3,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 30,
@@ -245,7 +275,8 @@
     "pds_box": 2,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 31,
@@ -253,7 +284,8 @@
     "pds_box": 3,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 32,
@@ -261,7 +293,8 @@
     "pds_box": 4,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 33,
@@ -269,7 +302,8 @@
     "pds_box": 5,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 34,
@@ -277,7 +311,8 @@
     "pds_box": 4,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 35,
@@ -285,7 +320,8 @@
     "pds_box": 5,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 36,
@@ -293,7 +329,8 @@
     "pds_box": 0,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 37,
@@ -301,7 +338,8 @@
     "pds_box": 1,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 38,
@@ -309,7 +347,8 @@
     "pds_box": 2,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 39,
@@ -317,7 +356,8 @@
     "pds_box": 3,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 40,
@@ -325,7 +365,8 @@
     "pds_box": 4,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 41,
@@ -333,7 +374,8 @@
     "pds_box": 5,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 42,
@@ -341,7 +383,8 @@
     "pds_box": 0,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 43,
@@ -349,7 +392,8 @@
     "pds_box": 1,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 44,
@@ -357,7 +401,8 @@
     "pds_box": 0,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 45,
@@ -365,7 +410,8 @@
     "pds_box": 1,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 46,
@@ -373,7 +419,8 @@
     "pds_box": 2,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 47,
@@ -381,7 +428,8 @@
     "pds_box": 3,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 48,
@@ -389,7 +437,8 @@
     "pds_box": 2,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 49,
@@ -397,7 +446,8 @@
     "pds_box": 3,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 50,
@@ -405,7 +455,8 @@
     "pds_box": 4,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 51,
@@ -413,7 +464,8 @@
     "pds_box": 5,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 52,
@@ -421,7 +473,8 @@
     "pds_box": 4,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 53,
@@ -429,7 +482,8 @@
     "pds_box": 5,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 54,
@@ -437,7 +491,8 @@
     "pds_box": 0,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 55,
@@ -445,7 +500,8 @@
     "pds_box": 1,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 56,
@@ -453,7 +509,8 @@
     "pds_box": 2,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 57,
@@ -461,7 +518,8 @@
     "pds_box": 3,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 58,
@@ -469,7 +527,8 @@
     "pds_box": 4,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 59,
@@ -477,7 +536,8 @@
     "pds_box": 5,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 60,
@@ -485,7 +545,8 @@
     "pds_box": 0,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 61,
@@ -493,7 +554,8 @@
     "pds_box": 1,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 62,
@@ -501,7 +563,8 @@
     "pds_box": 0,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 63,
@@ -509,7 +572,8 @@
     "pds_box": 1,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 64,
@@ -517,7 +581,8 @@
     "pds_box": 2,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 65,
@@ -525,7 +590,8 @@
     "pds_box": 3,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 66,
@@ -533,7 +599,8 @@
     "pds_box": 2,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 67,
@@ -541,7 +608,8 @@
     "pds_box": 3,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 68,
@@ -549,7 +617,8 @@
     "pds_box": 4,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 69,
@@ -557,7 +626,8 @@
     "pds_box": 5,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 70,
@@ -565,7 +635,8 @@
     "pds_box": 4,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 71,
@@ -573,7 +644,8 @@
     "pds_box": 5,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 72,
@@ -581,7 +653,8 @@
     "pds_box": 0,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 73,
@@ -589,7 +662,8 @@
     "pds_box": 1,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 74,
@@ -597,7 +671,8 @@
     "pds_box": 2,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 75,
@@ -605,7 +680,8 @@
     "pds_box": 3,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 76,
@@ -613,7 +689,8 @@
     "pds_box": 4,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 77,
@@ -621,7 +698,8 @@
     "pds_box": 5,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 78,
@@ -629,7 +707,8 @@
     "pds_box": 6,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 79,
@@ -637,7 +716,8 @@
     "pds_box": 7,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 80,
@@ -645,7 +725,8 @@
     "pds_box": 8,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 81,
@@ -653,7 +734,8 @@
     "pds_box": 9,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 82,
@@ -661,7 +743,8 @@
     "pds_box": 10,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 83,
@@ -669,7 +752,8 @@
     "pds_box": 11,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 84,
@@ -677,7 +761,8 @@
     "pds_box": 6,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 85,
@@ -685,7 +770,8 @@
     "pds_box": 7,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 86,
@@ -693,7 +779,8 @@
     "pds_box": 6,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 87,
@@ -701,7 +788,8 @@
     "pds_box": 7,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 88,
@@ -709,7 +797,8 @@
     "pds_box": 8,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 89,
@@ -717,7 +806,8 @@
     "pds_box": 9,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 90,
@@ -725,7 +815,8 @@
     "pds_box": 8,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 91,
@@ -733,7 +824,8 @@
     "pds_box": 9,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 92,
@@ -741,7 +833,8 @@
     "pds_box": 10,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 93,
@@ -749,7 +842,8 @@
     "pds_box": 11,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 94,
@@ -757,7 +851,8 @@
     "pds_box": 10,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 95,
@@ -765,7 +860,8 @@
     "pds_box": 11,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 96,
@@ -773,7 +869,8 @@
     "pds_box": 6,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 97,
@@ -781,7 +878,8 @@
     "pds_box": 7,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 98,
@@ -789,7 +887,8 @@
     "pds_box": 8,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 99,
@@ -797,7 +896,8 @@
     "pds_box": 9,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 100,
@@ -805,7 +905,8 @@
     "pds_box": 10,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 101,
@@ -813,7 +914,8 @@
     "pds_box": 11,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 102,
@@ -821,7 +923,8 @@
     "pds_box": 6,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 103,
@@ -829,7 +932,8 @@
     "pds_box": 7,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 104,
@@ -837,7 +941,8 @@
     "pds_box": 6,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 105,
@@ -845,7 +950,8 @@
     "pds_box": 7,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 106,
@@ -853,7 +959,8 @@
     "pds_box": 8,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 107,
@@ -861,7 +968,8 @@
     "pds_box": 9,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 108,
@@ -869,7 +977,8 @@
     "pds_box": 8,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 109,
@@ -877,7 +986,8 @@
     "pds_box": 9,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 110,
@@ -885,7 +995,8 @@
     "pds_box": 10,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 111,
@@ -893,7 +1004,8 @@
     "pds_box": 11,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 112,
@@ -901,7 +1013,8 @@
     "pds_box": 10,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 113,
@@ -909,7 +1022,8 @@
     "pds_box": 11,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 114,
@@ -917,7 +1031,8 @@
     "pds_box": 6,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 115,
@@ -925,7 +1040,8 @@
     "pds_box": 7,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 116,
@@ -933,7 +1049,8 @@
     "pds_box": 8,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 117,
@@ -941,7 +1058,8 @@
     "pds_box": 9,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 118,
@@ -949,7 +1067,8 @@
     "pds_box": 10,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 119,
@@ -957,7 +1076,8 @@
     "pds_box": 11,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 120,
@@ -965,7 +1085,8 @@
     "pds_box": 6,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 121,
@@ -973,7 +1094,8 @@
     "pds_box": 7,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 122,
@@ -981,7 +1103,8 @@
     "pds_box": 6,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 123,
@@ -989,7 +1112,8 @@
     "pds_box": 7,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 124,
@@ -997,7 +1121,8 @@
     "pds_box": 8,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 125,
@@ -1005,7 +1130,8 @@
     "pds_box": 9,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 126,
@@ -1013,7 +1139,8 @@
     "pds_box": 8,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 127,
@@ -1021,7 +1148,8 @@
     "pds_box": 9,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 128,
@@ -1029,7 +1157,8 @@
     "pds_box": 10,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 129,
@@ -1037,7 +1166,8 @@
     "pds_box": 11,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 130,
@@ -1045,7 +1175,8 @@
     "pds_box": 10,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 131,
@@ -1053,7 +1184,8 @@
     "pds_box": 11,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 132,
@@ -1061,7 +1193,8 @@
     "pds_box": 6,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 133,
@@ -1069,7 +1202,8 @@
     "pds_box": 7,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 134,
@@ -1077,7 +1211,8 @@
     "pds_box": 8,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "apsaia"
   },
   {
     "channel": 135,
@@ -1085,7 +1220,8 @@
     "pds_box": 9,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "apsaia"
   },
   {
     "channel": 136,
@@ -1093,7 +1229,8 @@
     "pds_box": 10,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 137,
@@ -1101,7 +1238,8 @@
     "pds_box": 11,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 138,
@@ -1109,7 +1247,8 @@
     "pds_box": 6,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 139,
@@ -1117,7 +1256,8 @@
     "pds_box": 7,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 140,
@@ -1125,7 +1265,8 @@
     "pds_box": 6,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 141,
@@ -1133,7 +1274,8 @@
     "pds_box": 7,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 142,
@@ -1141,7 +1283,8 @@
     "pds_box": 8,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 143,
@@ -1149,7 +1292,8 @@
     "pds_box": 9,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 144,
@@ -1157,7 +1301,8 @@
     "pds_box": 8,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 145,
@@ -1165,7 +1310,8 @@
     "pds_box": 9,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 146,
@@ -1173,7 +1319,8 @@
     "pds_box": 10,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 147,
@@ -1181,7 +1328,8 @@
     "pds_box": 11,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 148,
@@ -1189,7 +1337,8 @@
     "pds_box": 10,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 149,
@@ -1197,7 +1346,8 @@
     "pds_box": 11,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 150,
@@ -1205,7 +1355,8 @@
     "pds_box": 6,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "apsaia"
   },
   {
     "channel": 151,
@@ -1213,7 +1364,8 @@
     "pds_box": 7,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "apsaia"
   },
   {
     "channel": 152,
@@ -1221,7 +1373,8 @@
     "pds_box": 8,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "apsaia"
   },
   {
     "channel": 153,
@@ -1229,7 +1382,8 @@
     "pds_box": 9,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "apsaia"
   },
   {
     "channel": 154,
@@ -1237,7 +1391,8 @@
     "pds_box": 10,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "apsaia"
   },
   {
     "channel": 155,
@@ -1245,7 +1400,8 @@
     "pds_box": 11,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "apsaia"
   },
   {
     "channel": 156,
@@ -1253,7 +1409,8 @@
     "pds_box": 12,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "apsaia"
   },
   {
     "channel": 157,
@@ -1261,7 +1418,8 @@
     "pds_box": 13,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "apsaia"
   },
   {
     "channel": 158,
@@ -1269,7 +1427,8 @@
     "pds_box": 14,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "apsaia"
   },
   {
     "channel": 159,
@@ -1277,7 +1436,8 @@
     "pds_box": 15,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "apsaia"
   },
   {
     "channel": 160,
@@ -1285,7 +1445,8 @@
     "pds_box": 16,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "apsaia"
   },
   {
     "channel": 161,
@@ -1293,7 +1454,8 @@
     "pds_box": 17,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "apsaia"
   },
   {
     "channel": 162,
@@ -1301,7 +1463,8 @@
     "pds_box": 12,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 163,
@@ -1309,7 +1472,8 @@
     "pds_box": 13,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 164,
@@ -1317,7 +1481,8 @@
     "pds_box": 12,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 165,
@@ -1325,7 +1490,8 @@
     "pds_box": 13,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 166,
@@ -1333,7 +1499,8 @@
     "pds_box": 14,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 167,
@@ -1341,7 +1508,8 @@
     "pds_box": 15,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 168,
@@ -1349,7 +1517,8 @@
     "pds_box": 14,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 169,
@@ -1357,7 +1526,8 @@
     "pds_box": 15,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 170,
@@ -1365,7 +1535,8 @@
     "pds_box": 16,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 171,
@@ -1373,7 +1544,8 @@
     "pds_box": 17,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 172,
@@ -1381,7 +1553,8 @@
     "pds_box": 16,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 173,
@@ -1389,7 +1562,8 @@
     "pds_box": 17,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 174,
@@ -1397,7 +1571,8 @@
     "pds_box": 12,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 175,
@@ -1405,7 +1580,8 @@
     "pds_box": 13,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 176,
@@ -1413,7 +1589,8 @@
     "pds_box": 14,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "apsaia"
   },
   {
     "channel": 177,
@@ -1421,7 +1598,8 @@
     "pds_box": 15,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "apsaia"
   },
   {
     "channel": 178,
@@ -1429,7 +1607,8 @@
     "pds_box": 16,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 179,
@@ -1437,7 +1616,8 @@
     "pds_box": 17,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 180,
@@ -1445,7 +1625,8 @@
     "pds_box": 12,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 181,
@@ -1453,7 +1634,8 @@
     "pds_box": 13,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 182,
@@ -1461,7 +1643,8 @@
     "pds_box": 12,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 183,
@@ -1469,7 +1652,8 @@
     "pds_box": 13,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 184,
@@ -1477,7 +1661,8 @@
     "pds_box": 14,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 185,
@@ -1485,7 +1670,8 @@
     "pds_box": 15,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 186,
@@ -1493,7 +1679,8 @@
     "pds_box": 14,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 187,
@@ -1501,7 +1688,8 @@
     "pds_box": 15,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 188,
@@ -1509,7 +1697,8 @@
     "pds_box": 16,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 189,
@@ -1517,7 +1706,8 @@
     "pds_box": 17,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 190,
@@ -1525,7 +1715,8 @@
     "pds_box": 16,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 191,
@@ -1533,7 +1724,8 @@
     "pds_box": 17,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 192,
@@ -1541,7 +1733,8 @@
     "pds_box": 12,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 193,
@@ -1549,7 +1742,8 @@
     "pds_box": 13,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 194,
@@ -1557,7 +1751,8 @@
     "pds_box": 14,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 195,
@@ -1565,7 +1760,8 @@
     "pds_box": 15,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 196,
@@ -1573,7 +1769,8 @@
     "pds_box": 16,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 197,
@@ -1581,7 +1778,8 @@
     "pds_box": 17,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 198,
@@ -1589,7 +1787,8 @@
     "pds_box": 12,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 199,
@@ -1597,7 +1796,8 @@
     "pds_box": 13,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 200,
@@ -1605,7 +1805,8 @@
     "pds_box": 12,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 201,
@@ -1613,7 +1814,8 @@
     "pds_box": 13,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 202,
@@ -1621,7 +1823,8 @@
     "pds_box": 14,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 203,
@@ -1629,7 +1832,8 @@
     "pds_box": 15,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 204,
@@ -1637,7 +1841,8 @@
     "pds_box": 14,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 205,
@@ -1645,7 +1850,8 @@
     "pds_box": 15,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 206,
@@ -1653,7 +1859,8 @@
     "pds_box": 16,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 207,
@@ -1661,7 +1868,8 @@
     "pds_box": 17,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 208,
@@ -1669,7 +1877,8 @@
     "pds_box": 16,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 209,
@@ -1677,7 +1886,8 @@
     "pds_box": 17,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 210,
@@ -1685,7 +1895,8 @@
     "pds_box": 12,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 211,
@@ -1693,7 +1904,8 @@
     "pds_box": 13,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 212,
@@ -1701,7 +1913,8 @@
     "pds_box": 14,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 213,
@@ -1709,7 +1922,8 @@
     "pds_box": 15,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 214,
@@ -1717,7 +1931,8 @@
     "pds_box": 16,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 215,
@@ -1725,7 +1940,8 @@
     "pds_box": 17,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 216,
@@ -1733,7 +1949,8 @@
     "pds_box": 12,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 217,
@@ -1741,7 +1958,8 @@
     "pds_box": 13,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 218,
@@ -1749,7 +1967,8 @@
     "pds_box": 12,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 219,
@@ -1757,7 +1976,8 @@
     "pds_box": 13,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 220,
@@ -1765,7 +1985,8 @@
     "pds_box": 14,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 221,
@@ -1773,7 +1994,8 @@
     "pds_box": 15,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 222,
@@ -1781,7 +2003,8 @@
     "pds_box": 14,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 223,
@@ -1789,7 +2012,8 @@
     "pds_box": 15,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 224,
@@ -1797,7 +2021,8 @@
     "pds_box": 16,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 225,
@@ -1805,7 +2030,8 @@
     "pds_box": 17,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 226,
@@ -1813,7 +2039,8 @@
     "pds_box": 16,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 227,
@@ -1821,7 +2048,8 @@
     "pds_box": 17,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 228,
@@ -1829,7 +2057,8 @@
     "pds_box": 12,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 229,
@@ -1837,7 +2066,8 @@
     "pds_box": 13,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 230,
@@ -1845,7 +2075,8 @@
     "pds_box": 14,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 231,
@@ -1853,7 +2084,8 @@
     "pds_box": 15,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 232,
@@ -1861,7 +2093,8 @@
     "pds_box": 16,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 233,
@@ -1869,7 +2102,8 @@
     "pds_box": 17,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 234,
@@ -1877,7 +2111,8 @@
     "pds_box": 18,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 235,
@@ -1885,7 +2120,8 @@
     "pds_box": 19,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 236,
@@ -1893,7 +2129,8 @@
     "pds_box": 20,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 237,
@@ -1901,7 +2138,8 @@
     "pds_box": 21,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 238,
@@ -1909,7 +2147,8 @@
     "pds_box": 22,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 239,
@@ -1917,7 +2156,8 @@
     "pds_box": 23,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 240,
@@ -1925,7 +2165,8 @@
     "pds_box": 18,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 241,
@@ -1933,7 +2174,8 @@
     "pds_box": 19,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 242,
@@ -1941,7 +2183,8 @@
     "pds_box": 18,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 243,
@@ -1949,7 +2192,8 @@
     "pds_box": 19,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 244,
@@ -1957,7 +2201,8 @@
     "pds_box": 20,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 245,
@@ -1965,7 +2210,8 @@
     "pds_box": 21,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 246,
@@ -1973,7 +2219,8 @@
     "pds_box": 20,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 247,
@@ -1981,7 +2228,8 @@
     "pds_box": 21,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 248,
@@ -1989,7 +2237,8 @@
     "pds_box": 22,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 249,
@@ -1997,7 +2246,8 @@
     "pds_box": 23,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 250,
@@ -2005,7 +2255,8 @@
     "pds_box": 22,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 251,
@@ -2013,7 +2264,8 @@
     "pds_box": 23,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 252,
@@ -2021,7 +2273,8 @@
     "pds_box": 18,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 253,
@@ -2029,7 +2282,8 @@
     "pds_box": 19,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 254,
@@ -2037,7 +2291,8 @@
     "pds_box": 20,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 255,
@@ -2045,7 +2300,8 @@
     "pds_box": 21,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 256,
@@ -2053,7 +2309,8 @@
     "pds_box": 22,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 257,
@@ -2061,7 +2318,8 @@
     "pds_box": 23,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 258,
@@ -2069,7 +2327,8 @@
     "pds_box": 18,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 259,
@@ -2077,7 +2336,8 @@
     "pds_box": 19,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 260,
@@ -2085,7 +2345,8 @@
     "pds_box": 18,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 261,
@@ -2093,7 +2354,8 @@
     "pds_box": 19,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 262,
@@ -2101,7 +2363,8 @@
     "pds_box": 20,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 263,
@@ -2109,7 +2372,8 @@
     "pds_box": 21,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 264,
@@ -2117,7 +2381,8 @@
     "pds_box": 20,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 265,
@@ -2125,7 +2390,8 @@
     "pds_box": 21,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 266,
@@ -2133,7 +2399,8 @@
     "pds_box": 22,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 267,
@@ -2141,7 +2408,8 @@
     "pds_box": 23,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 268,
@@ -2149,7 +2417,8 @@
     "pds_box": 22,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 269,
@@ -2157,7 +2426,8 @@
     "pds_box": 23,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 270,
@@ -2165,7 +2435,8 @@
     "pds_box": 18,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 271,
@@ -2173,7 +2444,8 @@
     "pds_box": 19,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 272,
@@ -2181,7 +2453,8 @@
     "pds_box": 20,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 273,
@@ -2189,7 +2462,8 @@
     "pds_box": 21,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 274,
@@ -2197,7 +2471,8 @@
     "pds_box": 22,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 275,
@@ -2205,7 +2480,8 @@
     "pds_box": 23,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 276,
@@ -2213,7 +2489,8 @@
     "pds_box": 18,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 277,
@@ -2221,7 +2498,8 @@
     "pds_box": 19,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 278,
@@ -2229,7 +2507,8 @@
     "pds_box": 18,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 279,
@@ -2237,7 +2516,8 @@
     "pds_box": 19,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 280,
@@ -2245,7 +2525,8 @@
     "pds_box": 20,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 281,
@@ -2253,7 +2534,8 @@
     "pds_box": 21,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 282,
@@ -2261,7 +2543,8 @@
     "pds_box": 20,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 283,
@@ -2269,7 +2552,8 @@
     "pds_box": 21,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 284,
@@ -2277,7 +2561,8 @@
     "pds_box": 22,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 285,
@@ -2285,7 +2570,8 @@
     "pds_box": 23,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 286,
@@ -2293,7 +2579,8 @@
     "pds_box": 22,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 287,
@@ -2301,7 +2588,8 @@
     "pds_box": 23,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 288,
@@ -2309,7 +2597,8 @@
     "pds_box": 18,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 289,
@@ -2317,7 +2606,8 @@
     "pds_box": 19,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 290,
@@ -2325,7 +2615,8 @@
     "pds_box": 20,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 291,
@@ -2333,7 +2624,8 @@
     "pds_box": 21,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 292,
@@ -2341,7 +2633,8 @@
     "pds_box": 22,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 293,
@@ -2349,7 +2642,8 @@
     "pds_box": 23,
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 294,
@@ -2357,7 +2651,8 @@
     "pds_box": 18,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 295,
@@ -2365,7 +2660,8 @@
     "pds_box": 19,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 296,
@@ -2373,7 +2669,8 @@
     "pds_box": 18,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 297,
@@ -2381,7 +2678,8 @@
     "pds_box": 19,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 298,
@@ -2389,7 +2687,8 @@
     "pds_box": 20,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 299,
@@ -2397,7 +2696,8 @@
     "pds_box": 21,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 300,
@@ -2405,7 +2705,8 @@
     "pds_box": 20,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 301,
@@ -2413,7 +2714,8 @@
     "pds_box": 21,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 302,
@@ -2421,7 +2723,8 @@
     "pds_box": 22,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 303,
@@ -2429,7 +2732,8 @@
     "pds_box": 23,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 304,
@@ -2437,7 +2741,8 @@
     "pds_box": 22,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": ""
   },
   {
     "channel": 305,
@@ -2445,7 +2750,8 @@
     "pds_box": 23,
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": ""
   },
   {
     "channel": 306,
@@ -2453,7 +2759,8 @@
     "pds_box": 18,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 307,
@@ -2461,7 +2768,8 @@
     "pds_box": 19,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 308,
@@ -2469,7 +2777,8 @@
     "pds_box": 20,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 309,
@@ -2477,7 +2786,8 @@
     "pds_box": 21,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   },
   {
     "channel": 310,
@@ -2485,7 +2795,8 @@
     "pds_box": 22,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 0
+    "tpc": 0,
+    "sampling": "daphne"
   },
   {
     "channel": 311,
@@ -2493,6 +2804,7 @@
     "pds_box": 23,
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
-    "tpc": 1
+    "tpc": 1,
+    "sampling": "daphne"
   }
 ]

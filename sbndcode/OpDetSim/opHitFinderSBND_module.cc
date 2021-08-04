@@ -73,6 +73,7 @@ namespace opdet {
     std::string fInputModuleName;
     //  art::ServiceHandle<cheat::PhotonBackTracker> pbt;
     double fSampling; //in MHz
+    double fSampling_Daphne; //Daphne electronics's readout sampling frequency, in MHz
     double fBaselineSample; //in ticks
     double fPulsePolarityPMT;
     double fPulsePolarityArapuca;
@@ -85,16 +86,17 @@ namespace opdet {
     int fEvNumber;
     int fChNumber;
     std::string opdetType;
+    std::string SamplingType;
     int threshold;
     std::vector<double> fwaveform;
     std::vector<double> outwvform;
     //int fSize;
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
-    void subtractBaseline(std::vector<double>& waveform, std::string pdtype, double& rms);
+    void subtractBaseline(std::vector<double>& waveform, std::string pdtype, std::string SamplingType,double& rms);
     bool findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin,
                              double& Area, double& amplitude,
-                             const int& threshold, const std::string& opdetType);
+                             const int& threshold, const std::string& opdetType, const std::string& SamplingType);
     void denoise(std::vector<double>& waveform, std::vector<double>& outwaveform);
     bool TV1D_denoise(std::vector<double>& waveform,
                       std::vector<double>& outwaveform,
@@ -121,6 +123,7 @@ namespace opdet {
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     fSampling = clockData.OpticalClock().Frequency(); // MHz
+    fSampling_Daphne = p.get<double >("DaphneFrequency" );; 
 
     // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -159,11 +162,9 @@ namespace opdet {
 
       fChNumber = wvf.ChannelNumber();
       opdetType = map.pdType(fChNumber);
+      SamplingType = map.SamplingType(fChNumber);
       if(opdetType == "pmt_coated" || opdetType == "pmt_uncoated") {
         threshold = fThresholdPMT;
-      }
-      else if((opdetType == "arapuca_vuv") || (opdetType == "arapuca_vis")) {
-        threshold = fThresholdArapuca;
       }
       else if((opdetType == "xarapuca_vuv") || (opdetType == "xarapuca_vis")) {
         threshold = fThresholdArapuca;
@@ -178,13 +179,10 @@ namespace opdet {
         fwaveform[i] = wvf[i];
       }
 
-      subtractBaseline(fwaveform, opdetType, rms);
+      subtractBaseline(fwaveform, opdetType,SamplingType, rms);
 
       if(fUseDenoising) {
         if((opdetType == "pmt_coated") || (opdetType == "pmt_uncoated")) {
-        }
-        else if((opdetType == "arapuca_vuv") || (opdetType == "arapuca_vis")) {
-          denoise(fwaveform, outwvform);
         }
         else if((opdetType == "xarapuca_vuv") || (opdetType == "xarapuca_vis")) {
           denoise(fwaveform, outwvform);
@@ -197,14 +195,14 @@ namespace opdet {
       }
 
       // TODO: pass rms to this function once that's sorted. ~icaza
-      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, threshold, opdetType)){
-        time = wvf.TimeStamp() + (double)timebin / fSampling;
+      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, threshold, opdetType,SamplingType)){
+        if(SamplingType == "daphne"){
+        time = wvf.TimeStamp() + (double)timebin / fSampling_Daphne;}
+        else{
+        time = wvf.TimeStamp() + (double)timebin / fSampling;}
 
         if(opdetType == "pmt_coated" || opdetType == "pmt_uncoated") {
           phelec = Area / fArea1pePMT;
-        }
-        else if((opdetType == "arapuca_vuv") || (opdetType == "arapuca_vis")) {
-          phelec = Area / fArea1peSiPM;
         }
         else if((opdetType == "xarapuca_vuv") || (opdetType == "xarapuca_vis")) {
           phelec = Area / fArea1peSiPM;
@@ -228,15 +226,17 @@ namespace opdet {
   DEFINE_ART_MODULE(opHitFinderSBND)
 
   void opHitFinderSBND::subtractBaseline(std::vector<double>& waveform,
-                                         std::string pdtype, double& rms)
+                                         std::string pdtype,std::string SamplingType, double& rms)
   {
     double baseline = 0.0;
     rms = 0.0;
     int cnt = 0;
+    double NBins=fBaselineSample;
+    if (SamplingType=="daphne") NBins/=(fSampling/fSampling_Daphne);//correct the number of bins to the sampling frecuency. TODO: use a fixed time interval instead, then use the channel frequency to get the number of bins ~rodrigoa
     // TODO: this is broken it assumes that the beginning of the
     // waveform is only noise, which is not always the case. ~icaza.
     // TODO: use std::accumulate instead of this loop. ~icaza.
-    for(int i = 0; i < fBaselineSample; i++) {
+    for(int i = 0; i < NBins; i++) {
       baseline += waveform[i];
       rms += std::pow(waveform[i], 2);
       cnt++;
@@ -248,9 +248,6 @@ namespace opdet {
 
     if(pdtype == "pmt_coated" || pdtype == "pmt_uncoated") {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityPMT * (waveform[i] - baseline);
-    }
-    else if((opdetType == "arapuca_vuv") || (opdetType == "arapuca_vis")) {
-      for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
     }
     else if((opdetType == "xarapuca_vuv") || (opdetType == "xarapuca_vis")) {
       for(unsigned int i = 0; i < waveform.size(); i++) waveform[i] = fPulsePolarityArapuca * (waveform[i] - baseline);
@@ -266,7 +263,8 @@ namespace opdet {
   bool opHitFinderSBND::findAndSuppressPeak(std::vector<double>& waveform,
                                             size_t& timebin, double& Area,
                                             double& amplitude, const int& threshold,
-                                            const std::string& opdetType)
+                                            const std::string& opdetType,
+                                            const std::string& SamplingType)
   {
 
     std::vector<double>::iterator max_element_it = std::max_element(waveform.begin(), waveform.end());
@@ -292,7 +290,10 @@ namespace opdet {
     // we convert it to GHz here so as to
     // have an area in ADC*ns.
     Area = std::accumulate(it_s, it_e, 0.0);
-    Area = Area / (fSampling / 1000.);
+    if (SamplingType == "daphne"){
+    Area = Area / (fSampling_Daphne / 1000.);}
+    else{
+    Area = Area / (fSampling / 1000.);};
 
     // TODO: try to just remove this
     // TODO: better even, return iterator to last position
