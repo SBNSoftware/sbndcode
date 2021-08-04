@@ -64,7 +64,7 @@ public:
 private:
    void ResetCollectionHitVectors();
    void ResetInductionHitVectors();
-   void FindWireIntersection(vector<vector<int>> lines_col, vector<vector<int>> lines_ind); 
+   void FindWireIntersection(vector<vector<int>> lines_col, vector<vector<int>> lines_ind, vector<art::Ptr<recob::Hit>> hitlist); 
    float Distance(int x1, int y1, int x2, int y2);
    void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
 
@@ -78,14 +78,13 @@ private:
    vector<vector<int>> hit_11; // tpc1, plane1
    vector<vector<int>> hit_12; // tpc1, plane2 
 
-   vector<vector<int>> lines00; 
-   vector<vector<int>> lines01;
-   vector<vector<int>> lines02; 
+   vector<vector<int>> lines_00; 
+   vector<vector<int>> lines_01;
+   vector<vector<int>> lines_02; 
 
-   vector<vector<int>> lines10;
-   vector<vector<int>> lines11;
-   vector<vector<int>> lines12; 
-
+   vector<vector<int>> lines_10;
+   vector<vector<int>> lines_11;
+   vector<vector<int>> lines_12; 
 
    art::ServiceHandle<art::TFileService> tfs;
    
@@ -98,11 +97,13 @@ private:
    int fHoughMinLength;
    int fHoughMuonLength;
 
-   geo::GeometryCore const& geom,
-};  
+   geo::GeometryCore const* fGeometryService;
+};
 
 testFilter::testFilter(fhicl::ParameterSet const& p): EDFilter{p} 
 {
+   fGeometryService = lar::providerFrom<geo::Geometry>();
+
    this->reconfigure(p);
 }
 
@@ -156,66 +157,73 @@ bool testFilter::filter(art::Event& evt)
       }
    } // end of nhit loop
    hit_02.shrink_to_fit(); hit_12.shrink_to_fit(); 
-   Hough(hit_02,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines02);
-   Hough(hit_12,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines12);
+   Hough(hit_02,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_02);
+   Hough(hit_12,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_12);
 
    //flags 
-   bool ac_tpc0 = !(lines02.empty()); // will be true if an ac muon was detected in tpc0 
-   bool ac_tpc1 = !(lines12.empty()); // will be true if an ac muon was detected in tpc1
+   bool ac_tpc0 = !(lines_02.empty()); // will be true if an ac muon was detected in tpc0 
+   bool ac_tpc1 = !(lines_12.empty()); // will be true if an ac muon was detected in tpc1
 
-   if(lines02.size() > 1 || lines12.size() > 1){
-      std::cout << "more than one AC muon detected per TPC (rare and unusual)"
-   }
-   
+   ResetInductionHitVectors();
    //find induction plane hits
    if (ac_tpc0 == true || ac_tpc1 == true){
+      std::cout << "ac muon found in tpc0: " << ac_tpc0 << std::endl;
+      std::cout << "ac muon found in tpc1: " << ac_tpc1 << std::endl;
       pass = true;
-      ResetInductionHitVectors();
       for (int i = 0; i < nhits; ++i) {
          geo::WireID wireid = hitlist[i]->WireID();
          int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_tpc = wireid.TPC, hit_plane = wireid.Plane;
          vector<int> v{hit_wire,hit_peakT,i};
          if (ac_tpc0 == true){ //if ac muon was found in tpc0 
-            if (hit_plane==0 && hit_peakT>0){ 
+            if (hit_plane==0 && hit_tpc==0 && hit_peakT>0) 
                hit_00.push_back(v);
-            if (hit_plane==1 && hit_peakT>0){
+            if (hit_plane==1 && hit_tpc==0 && hit_peakT>0)
                hit_01.push_back(v);
-            }
          }
          if (ac_tpc1 == true){ // if ac muon was found in tpc 1
-            if (hit_plane==0 && hit_peakT>0){ 
-               hit_10.push_back(v);
-            if (hit_plane==1 && hit_peakT>0){
-               hit_11.push_back(v);
-         }
+            if (hit_plane != 2){
+               std::cout << hit_plane << endl;
+            }
+            if (hit_plane==0){ //&& hit_tpc==1 && hit_peakT>0){
+               std::cout << "here(1)!" << std::endl;
+               //hit_10.push_back(v);
+            }
+            if (hit_plane==1){ //&& hit_tpc==1 && hit_peakT>0){
+               std::cout << "here(2)!" << std::endl;
+               //hit_11.push_back(v);
+            }
+         } 
       }
-      if (actpc0){
-         Hough(hit00,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines00);
-         if (lines00.empty == false){
-            FindWireIntersection(lines02,lines00);
+      std::cout << "sizes of tpc1 hit coords: " << hit_10.size() << ", " << hit_11.size() << std::endl;
+      if (ac_tpc0){
+         Hough(hit_00,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_00);
+         if (lines_00.empty() == false){
+            FindWireIntersection(lines_02,lines_00,hitlist);
          }
          else{
-            Hough(hit01,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines01);
-            if (lines01.empty==false){
-               FindWireIntersection(lines02,lines01);
+            Hough(hit_01,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_01);
+            if (lines_01.empty()==false){
+               FindWireIntersection(lines_02,lines_01,hitlist);
             }
             else{
-               "tpc0: induction lines not found"
+               std::cout << "tpc0: induction lines not found" << std::endl;
             }
          }
       }
-      if (actpc1){
-         Hough(hit10,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines10);
-      if (lines10.empty == false){
-            FindWireIntersection(lines12,lines10);
+      if (ac_tpc1){
+         Hough(hit_10,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_10);
+         if (lines_10.empty() == false){
+            std::cout << "tpc1: line found on plane0 "  << std::endl;
+            FindWireIntersection(lines_12,lines_10,hitlist);
          }
          else{
-            Hough(hit11,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines11);
-            if (lines11.empty==false){
-               FindWireIntersection(lines12,lines11);
+            Hough(hit_11,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_11);
+            if (lines_11.empty() == false){
+               std::cout << "tpc1: line found on plane 0 "  << std::endl;
+               FindWireIntersection(lines_12,lines_11,hitlist);
             }
             else{
-               "tpc1: induction lines not found"
+               std::cout << "tpc1: induction lines not found" << std::endl;
             }
          }
       }
@@ -400,13 +408,13 @@ void testFilter::ResetCollectionHitVectors() {
 
    hit_02.clear(); 
    hit_12.clear(); 
-   lines02.clear(); 
-   lines12.clear(); 
+   lines_02.clear(); 
+   lines_12.clear(); 
   
    hit_02.reserve(3000); 
    hit_12.reserve(3000); 
-   lines02.reserve(10); 
-   lines12.reserve(10); 
+   lines_02.reserve(10); 
+   lines_12.reserve(10); 
 }
 
 void testFilter::ResetInductionHitVectors(){
@@ -415,23 +423,23 @@ void testFilter::ResetInductionHitVectors(){
    hit_10.clear();
    hit_11.clear();
 
-   lines00.clear(); 
-   lines01.clear();
-   lines10.clear(); 
-   lines11.clear();
+   lines_00.clear(); 
+   lines_01.clear();
+   lines_10.clear(); 
+   lines_11.clear();
 
    hit_00.reserve(5000);
    hit_01.reserve(5000);
    hit_10.reserve(5000);
    hit_11.reserve(5000);
 
-   lines00.reserve(1); 
-   lines01.reserve(1);
-   lines10.reserve(1); 
-   lines11.reserve(1);
+   lines_00.reserve(1); 
+   lines_01.reserve(1);
+   lines_10.reserve(1); 
+   lines_11.reserve(1);
 }
 
-void testFilter::FindWireIntersection( vector<vector<int>> lines_col, vector<vector<int>> lines_ind){
+void testFilter::FindWireIntersection( vector<vector<int>> lines_col, vector<vector<int>> lines_ind, vector<art::Ptr<recob::Hit>> hitlist){
    for (int i=0; i<int(lines_col.size()); i++){
       for (int j=0; j<int(lines_ind.size()); j++){
          int peakT0_col, peakT1_col, peakT0_ind, peakT1_ind; 
@@ -467,24 +475,24 @@ void testFilter::FindWireIntersection( vector<vector<int>> lines_col, vector<vec
               (peakT1_col + peakT_range > peakT1_ind) && (peakT1_col + peakT_range > peakT1_ind)){
                
             std::cout << "wire intersection found!" << std::endl;
-            geo::WireID awire_col = hitlist[wire0_col]->WireId(); 
-            geo::WireID awire_ind = hitlist[wire0_ind]->WireId();
-            geo::WireID cwire_col = hitlist[wire1_col]->WireId();
-            geo::WireID cwire_ind = hitlist[wire1_col]->WireID();
+            geo::WireID awire_col = hitlist[wire0_col]->WireID(); 
+            geo::WireID awire_ind = hitlist[wire0_ind]->WireID();
+            geo::WireID cwire_col = hitlist[wire1_col]->WireID();
+            geo::WireID cwire_ind = hitlist[wire1_ind]->WireID();
             geo::Point_t apoint, cpoint; 
 
-            if (geom.WireIDsIntersect(awire_col, awire_ind, apoint) == true){
+            if (fGeometryService->WireIDsIntersect(awire_col, awire_ind, apoint) == true){
                std::cout << "intersection coord of awire:" << apoint.X() << ", " << apoint.Y() << ", " << apoint.Z() << std::endl;
             }
             else{
-               std::cout << "intersection of awire not found by WireIDsIntersect"
+               std::cout << "intersection of awire not found by WireIDsIntersect" << std::endl;
             }
 
-            if (geom.WireIDsIntersect(cwire_col, cwire_ind, cpoint) == true){
+            if (fGeometryService->WireIDsIntersect(cwire_col, cwire_ind, cpoint) == true){
                std::cout << "intersection coord of cwire:" << cpoint.X() << ", " << cpoint.Y() << ", " << cpoint.Z() << std::endl;
             }
             else{
-               std::cout << "intersection of cwire not found by WireIDsIntersect"
+               std::cout << "intersection of cwire not found by WireIDsIntersect"<< std::endl;
             }
          }
       }
