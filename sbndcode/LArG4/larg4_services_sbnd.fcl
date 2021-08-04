@@ -58,7 +58,7 @@ sbnd_particle_list_action:
                                            # beam generator, no "primaryBackground" particles or their
                                            # descendants would have a full set of traj. points. if
                                            # this is set to true.
-  SparsifyTrajectories: false              # call SparsifyTrajectory() method on MCParticles with full trajectories
+  SparsifyTrajectories: true               # call SparsifyTrajectory() method on MCParticles with full trajectories
                                            # being stored. This helps reduce memory usage in the root output stage
                                            # if there are many trajectory points.
   SparsifyMargin: 0.015      # required when SparsifyTrajectories is set to true
@@ -81,6 +81,7 @@ sbnd_larg4detector:
 }
 
 sbnd_larg4detector_hybrid: @local::sbnd_larg4detector
+sbnd_larg4detector_hybrid.gdmlFileName_: @local::sbnd_geometry_file_ophybrid_nowires
 sbnd_larg4detector_hybrid.volumeNames: ["volTPCActive"
                                       , "volCryostat"
                                       , "volTPCPlaneVert"
