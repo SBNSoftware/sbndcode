@@ -56,7 +56,7 @@ namespace opdet {
 	
     if(fParams.SinglePEmodel) {
 		mf::LogDebug("DigiArapucaSBNDAlg") << " using testbench pe response";
-		TFile* file = TFile::Open("/sbnd/app/users/rodrigoa/digi_arapuca_sbnd.root", "READ");//Change to TFile::Open(fname.c_str(), "READ"); as soon as OpDetSim/digi_arapuca_sbnd.root is updated in sbnd_data
+		TFile* file =  TFile::Open(fname.c_str(), "READ");
       std::vector<double>* SinglePEVec_40ftCable_Daphne;
       std::vector<double>* SinglePEVec_40ftCable_Apsaia;
       file->GetObject("SinglePEVec_40ftCable_Apsaia", SinglePEVec_40ftCable_Apsaia);
