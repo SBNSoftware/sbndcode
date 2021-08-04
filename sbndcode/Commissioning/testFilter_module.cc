@@ -1,6 +1,3 @@
-// where you stopped: 
-// added wire information into the lines 
-
 // for each AC muon, want to store:
 // anode endpoint, cathode endpoint, t0, thetaxz, thetayz 
 
@@ -21,17 +18,13 @@
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "larcorealg/Geometry/WireGeo.h"
 #include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/RecoBase/OpHit.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
-#include "larcoreobj/SummaryData/POTSummary.h"
 
 // ROOT includes 
 #include "TRandom3.h"
@@ -62,22 +55,40 @@ public:
    virtual ~testFilter() { }
    
 private:
+   // Define functions 
+   // Resets hit information for collection plane
    void ResetCollectionHitVectors();
+   // Resets hit information for induction planes
    void ResetInductionHitVectors();
-   void FindWireIntersection(vector<vector<int>> lines_col, vector<vector<int>> lines_ind, vector<art::Ptr<recob::Hit>> hitlist); 
+   // Resets variables for AC Crossing muons 
+   void ResetACVariables(); 
+   // Finds distance between two points 
    float Distance(int x1, int y1, int x2, int y2);
+   // Performs Hough Transform 
    void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
+   // Finds collection plane hit info for AC muon, stores them in vectors 
+   // void FindCollectionPlaneHits();
+   // Finds t0, stores them in a vector<vector<double>> 
+   void Findt0(vector<vector<int>> lines, vector<double>& ac_t0); 
+   // Finds endpoints, stores them in a vector<vector<geo::Point_t>>    
+   void FindEndpoints(vector<vector<int>> lines_col, vector<vector<int>> lines_ind, int range, vector<art::Ptr<recob::Hit>> hitlist, vector<vector<geo::Point_t>>& ac_endpoints); 
+   // Finds trajectories, stores them in a vector<vector<double>> 
+   void FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints,vector<vector<double>>& ac_trajectories); 
 
+
+   // Define variables 
    // Wire hits variables
    int   nhits;
-   vector<vector<int>> hit_00; // tpc0, plane0
-   vector<vector<int>> hit_01; // tpc0, plane1
-   vector<vector<int>> hit_02; // tpc0, plane2
+   // will store hit_wire and hit_peakT for hit_<tpc><plane> 
+   vector<vector<int>> hit_00;
+   vector<vector<int>> hit_01;
+   vector<vector<int>> hit_02;
 
-   vector<vector<int>> hit_10; // tpc1, plane0
-   vector<vector<int>> hit_11; // tpc1, plane1
-   vector<vector<int>> hit_12; // tpc1, plane2 
+   vector<vector<int>> hit_10;
+   vector<vector<int>> hit_11;
+   vector<vector<int>> hit_12; 
 
+   // will store hough transform output for lines_<tpc><plane>
    vector<vector<int>> lines_00; 
    vector<vector<int>> lines_01;
    vector<vector<int>> lines_02; 
@@ -86,38 +97,46 @@ private:
    vector<vector<int>> lines_11;
    vector<vector<int>> lines_12; 
 
-   art::ServiceHandle<art::TFileService> tfs;
-   
-   std::string fHitsModuleLabel; 
-   int max_hits;
+   // AC crossing muon variables 
+   vector<double> ac_t0;
+   vector<vector<geo::Point_t>> ac_endpoints;
+   vector<vector<double>> ac_trajectories; 
 
+   // parameters from the fcl file 
+   std::string fHitsModuleLabel; 
+   int fMax_Hits;
    int fHoughThreshold;
    int fHoughMaxGap;
    int fHoughRange;
    int fHoughMinLength;
    int fHoughMuonLength;
+   int fEndpointRange; 
 
+   // services 
+   art::ServiceHandle<art::TFileService> tfs;
    geo::GeometryCore const* fGeometryService;
 };
 
 testFilter::testFilter(fhicl::ParameterSet const& p): EDFilter{p} 
 {
    fGeometryService = lar::providerFrom<geo::Geometry>();
-
    this->reconfigure(p);
 }
 
 void testFilter::reconfigure(fhicl::ParameterSet const& p)
 {
    fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
-   max_hits             = p.get<int>("MaxHits", 50000);
+   fMax_Hits             = p.get<int>("MaxHits", 50000);
 
-   // Hough Transform parameters 
+   // Hough parameters 
    fHoughThreshold      = p.get<int>("HoughThreshold",10);
    fHoughMaxGap         = p.get<int>("HoughMaxGap",30);
    fHoughRange          = p.get<int>("HoughRange",100);
    fHoughMinLength      = p.get<int>("HoughMinLength",500);
    fHoughMuonLength     = p.get<int>("HoughMuonLength",2500);
+
+   // FindEndpoints parameters 
+   fEndpointRange       = p.get<int>("EndpointRange",30);
 }
 
 bool testFilter::filter(art::Event& evt)
@@ -136,11 +155,11 @@ bool testFilter::filter(art::Event& evt)
       std::cout << "Failed to get recob::Hit data product." << std::endl;
       nhits = 0;
     }
-   if (nhits > max_hits) {
+   if (nhits > fMax_Hits) {
       std::cout << "Available hits are " << nhits 
                 << ", which is above the maximum number allowed to store." << std::endl;
-      std::cout << "Will only store " << max_hits << "hits." << std::endl;
-      nhits = max_hits;
+      std::cout << "Will only store " << fMax_Hits << "hits." << std::endl;
+      nhits = fMax_Hits;
     }
 
    ResetCollectionHitVectors();
@@ -165,6 +184,7 @@ bool testFilter::filter(art::Event& evt)
    bool ac_tpc1 = !(lines_12.empty()); // will be true if an ac muon was detected in tpc1
 
    ResetInductionHitVectors();
+   ResetACVariables();
    //find induction plane hits
    if (ac_tpc0 == true || ac_tpc1 == true){
       std::cout << "ac muon found in tpc0: " << ac_tpc0 << std::endl;
@@ -181,29 +201,25 @@ bool testFilter::filter(art::Event& evt)
                hit_01.push_back(v);
          }
          if (ac_tpc1 == true){ // if ac muon was found in tpc 1
-            if (hit_plane != 2){
-               std::cout << hit_plane << std::endl;
-            }
             if (hit_plane==0){ //&& hit_tpc==1 && hit_peakT>0){
-               std::cout << "here(1)!" << std::endl;
-               //hit_10.push_back(v);
+               hit_10.push_back(v);
             }
             if (hit_plane==1){ //&& hit_tpc==1 && hit_peakT>0){
-               std::cout << "here(2)!" << std::endl;
-               //hit_11.push_back(v);
+               hit_11.push_back(v);
             }
          } 
       }
-      std::cout << "sizes of tpc1 hit coords: " << hit_10.size() << ", " << hit_11.size() << std::endl;
+      //std::cout << "sizes of tpc1 hit coords: " << hit_10.size() << ", " << hit_11.size() << std::endl;
       if (ac_tpc0){
+         Findt0(lines_02, ac_t0);
          Hough(hit_00,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_00);
          if (lines_00.empty() == false){
-            FindWireIntersection(lines_02,lines_00,hitlist);
+            FindEndpoints(lines_02,lines_00,fEndpointRange,hitlist,ac_endpoints);
          }
          else{
             Hough(hit_01,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_01);
             if (lines_01.empty()==false){
-               FindWireIntersection(lines_02,lines_01,hitlist);
+               FindEndpoints(lines_02,lines_01,fEndpointRange,hitlist,ac_endpoints);
             }
             else{
                std::cout << "tpc0: induction lines not found" << std::endl;
@@ -211,22 +227,24 @@ bool testFilter::filter(art::Event& evt)
          }
       }
       if (ac_tpc1){
+         Findt0(lines_12, ac_t0);
          Hough(hit_10,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_10);
          if (lines_10.empty() == false){
             std::cout << "tpc1: line found on plane0 "  << std::endl;
-            FindWireIntersection(lines_12,lines_10,hitlist);
+            FindEndpoints(lines_12,lines_10,fEndpointRange,hitlist, ac_endpoints);
          }
          else{
             Hough(hit_11,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_11);
             if (lines_11.empty() == false){
-               std::cout << "tpc1: line found on plane 0 "  << std::endl;
-               FindWireIntersection(lines_12,lines_11,hitlist);
+               std::cout << "tpc1: line found on plane1 "  << std::endl;
+               FindEndpoints(lines_12,lines_11,fEndpointRange,hitlist, ac_endpoints);
             }
             else{
                std::cout << "tpc1: induction lines not found" << std::endl;
             }
          }
       }
+      FindTrajectories(ac_endpoints, ac_trajectories);
    }
    
    // structure of vector in lines = (x0_end, y0_end, x1_end, y1_end, wire0_end, wire1_end, rho, theta);
@@ -433,13 +451,72 @@ void testFilter::ResetInductionHitVectors(){
    hit_10.reserve(5000);
    hit_11.reserve(5000);
 
-   lines_00.reserve(1); 
-   lines_01.reserve(1);
-   lines_10.reserve(1); 
-   lines_11.reserve(1);
+   lines_00.reserve(5); 
+   lines_01.reserve(5);
+   lines_10.reserve(5); 
+   lines_11.reserve(5);
 }
 
-void testFilter::FindWireIntersection( vector<vector<int>> lines_col, vector<vector<int>> lines_ind, vector<art::Ptr<recob::Hit>> hitlist){
+void testFilter::ResetACVariables(){
+   ac_t0.clear();
+   ac_endpoints.clear();
+   ac_trajectories.clear(); 
+
+   ac_t0.reserve(5); 
+   ac_endpoints.reserve(5);
+   ac_trajectories.reserve(5);
+}
+
+// void testFilter::FindCollectionPlaneHits(vector<vector<int>> lines, vector<vector<<int>> data, int max_gap, int range,
+//                                          vector<int>& ac_wire, vector<int>& ac_peakT, vector<int>& ac_tpc){
+//       for (int n=0; n<int(lines.size()); n++){
+//          int x0_end = lines[n][0], y0_end = lines[n][1], x1_end = lines[n][2], y1_end = lines[n][3];
+//          int rho = lines[n][6], theta = lines[n][7]; 
+//          for (int k=0; k<2;k++){ 
+//             int i=0, gap=0;
+//             while (gap < max_gap){ 
+//                (k==0)? i++ : i--; 
+//                if ( (idx+i) == int(data.size()) || (idx+i) <0) // if we reach the edges of the data set 
+//                   break;
+//                if ((data.at(idx+i)).empty()) // if the point has already been removed 
+//                   continue;
+//                int x1 = data[idx+i][0], y1 = int(data[idx+i][1]), wire_idx = data[idx+i][2]; 
+//                int last_x, diffx; 
+//                if (endpoint[k][0]!= 0){ // ensure we don't jump large x-values 
+//                   last_x = endpoint[k][0];
+//                   diffx = abs(last_x - x1);
+//                   if (diffx > 30){
+//                      break;
+//                   }
+//                }
+//                int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
+//                if (y1 >= (y_val-range) && y1 <= (y_val+range)){
+//                   gap = 0;
+//                   endpoint[k] = {x1, y1, wire_idx};
+//                   (coords.at(idx+i)).clear();
+//                   (data.at(idx+i)).clear();
+//                }
+//                else
+//                   gap++;
+//             } // end of while loop 
+//          }// end of k loop 
+//       }  
+// }
+
+void testFilter::Findt0(vector<vector<int>> lines, vector<double>& ac_t0){
+   for (int i=0; i<int(lines.size()); i++){
+      double t_i, t_j; 
+      t_i = (lines[i][1]-500)*0.5;
+      t_j = (lines[i][3]-500)*0.5;
+      double t0 = (t_i<t_j)? t_i:t_j;
+      std::cout << "interaction times (in us): " << t0 << std::endl;
+      ac_t0.push_back(t0);
+   }           
+}
+
+void testFilter::FindEndpoints( vector<vector<int>> lines_col, vector<vector<int>> lines_ind, 
+                                int range, vector<art::Ptr<recob::Hit>> hitlist, 
+                                vector<vector<geo::Point_t>>& ac_endpoints){
    for (int i=0; i<int(lines_col.size()); i++){
       for (int j=0; j<int(lines_ind.size()); j++){
          int peakT0_col, peakT1_col, peakT0_ind, peakT1_ind; 
@@ -469,32 +546,54 @@ void testFilter::FindWireIntersection( vector<vector<int>> lines_col, vector<vec
             wire0_ind = lines_ind[j][5]; 
             wire1_ind = lines_ind[j][4]; 
          }
+         // std:: cout << "peakT0_col, peakT1_col, peakT0_ind, peakT1_ind: " << peakT0_col << ", " << peakT1_col << ", "<< peakT0_ind << ", "<< peakT1_ind << std::endl;
+         // std:: cout << "wire0_col, wire1_col, wire0_ind, wire1_ind: " << wire0_col << ", " << wire1_col << ", "<< wire0_ind << ", "<< wire1_ind << std::endl;
 
-         int peakT_range = 10; 
+         int peakT_range = range; 
          if ( (peakT0_col + peakT_range > peakT0_ind) && (peakT0_col - peakT_range < peakT0_ind) && 
               (peakT1_col + peakT_range > peakT1_ind) && (peakT1_col + peakT_range > peakT1_ind)){
                
-            std::cout << "wire intersection found!" << std::endl;
             geo::WireID awire_col = hitlist[wire0_col]->WireID(); 
             geo::WireID awire_ind = hitlist[wire0_ind]->WireID();
             geo::WireID cwire_col = hitlist[wire1_col]->WireID();
             geo::WireID cwire_ind = hitlist[wire1_ind]->WireID();
-            geo::Point_t apoint, cpoint; 
+            geo::Point_t apoint, cpoint;
 
-            if (fGeometryService->WireIDsIntersect(awire_col, awire_ind, apoint) == true){
-               std::cout << "intersection coord of awire:" << apoint.X() << ", " << apoint.Y() << ", " << apoint.Z() << std::endl;
-            }
-            else{
+            bool aintersect = fGeometryService->WireIDsIntersect(awire_col, awire_ind, apoint);
+            bool cintersect = fGeometryService->WireIDsIntersect(cwire_col, cwire_ind, cpoint); 
+
+            if (aintersect)
+               std::cout << "anode endpoint: " << apoint.X() << ", " << apoint.Y() << ", " << apoint.Z() << std::endl;
+            else
                std::cout << "intersection of awire not found by WireIDsIntersect" << std::endl;
+            
+            if (cintersect){
+               cpoint.SetX(0);
+               std::cout << "cathode endpoint: " << cpoint.X() << ", " << cpoint.Y() << ", " << cpoint.Z() << std::endl;
             }
-
-            if (fGeometryService->WireIDsIntersect(cwire_col, cwire_ind, cpoint) == true){
-               std::cout << "intersection coord of cwire:" << cpoint.X() << ", " << cpoint.Y() << ", " << cpoint.Z() << std::endl;
-            }
-            else{
+            else
                std::cout << "intersection of cwire not found by WireIDsIntersect"<< std::endl;
-            }
+            
+            vector<geo::Point_t> pair{apoint,cpoint};
+            ac_endpoints.push_back(pair);
          }
+      }
+   }
+}
+
+void testFilter::FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints, vector<vector<double>>& ac_trajectories){
+   if (ac_endpoints.empty() == false){
+      for (int i=0; i<int(ac_endpoints.size()); i++){
+         vector<geo::Point_t> pair = ac_endpoints[i];
+         float x_a = float(pair[0].X()), y_a = float(pair[0].Y()), z_a = float(pair[0].Z()); 
+         float x_c = float(pair[1].X()), y_c = float(pair[1].Y()), z_c = float(pair[1].Z()); 
+         float dx = x_a - x_c, dy = y_a - y_c, dz = z_a - z_c; 
+         double theta_xz = atan2(dx,dz) * 180/PI;
+         double theta_yz = atan2(dy,dz) * 180/PI;
+         std::cout << "theta_xz: " << theta_xz << std::endl;
+         std::cout << "theta_yz: " << theta_yz << std::endl;
+         vector<double> trajectories{theta_xz, theta_yz};
+         ac_trajectories.push_back(trajectories);
       }
    }
 }
