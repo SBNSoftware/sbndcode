@@ -68,12 +68,12 @@ private:
    void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines);
    // Finds collection plane hit info for AC muon, stores them in vectors 
    // void FindCollectionPlaneHits();
-   // Finds t0, stores them in a vector<vector<double>> 
-   void Findt0(vector<vector<int>> lines, vector<double>& ac_t0); 
+   // Finds t0, stores them in a <vector<double>
+   vector<double> Findt0(vector<vector<int>> lines); 
    // Finds endpoints, stores them in a vector<vector<geo::Point_t>>    
-   void FindEndpoints(vector<vector<int>> lines_col, vector<vector<int>> lines_ind, int range, vector<art::Ptr<recob::Hit>> hitlist, vector<vector<geo::Point_t>>& ac_endpoints); 
+   vector<vector<geo::Point_t>> FindEndpoints(vector<vector<int>> lines_col, vector<vector<int>> lines_ind, int range, vector<art::Ptr<recob::Hit>> hitlist); 
    // Finds trajectories, stores them in a vector<vector<double>> 
-   void FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints,vector<vector<double>>& ac_trajectories); 
+   vector<vector<double>> FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints,vector<vector<double>>& ac_trajectories); 
 
 
    // Define variables 
@@ -101,6 +101,9 @@ private:
    vector<double> ac_t0;
    vector<vector<geo::Point_t>> ac_endpoints;
    vector<vector<double>> ac_trajectories; 
+
+   // AC variables stored in CRTTrack 
+   vector<sbn::crt::CRTTrack> ac_tracks;
 
    // parameters from the fcl file 
    std::string fHitsModuleLabel; 
@@ -255,7 +258,8 @@ float testFilter::Distance(int x1, int y1, int x2, int y2){
    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
 }
 
-void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines){
+void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, 
+                       vector<vector<int>>& lines,vector<vector<int>>& colwire, vector<vector<int>>& colpeakT){
    //set global variables 
    TRandom3 rndgen;
    const int h = 3500; const int w = 2000; //range of hit_wire
@@ -271,6 +275,8 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
    vector<vector<int>> data = coords; // points will not be removed 
    vector<vector<int>> deaccu; //deaccumulator
    vector<vector<int>> outlines; 
+   vector<vector<int>> outcolwire; 
+   vector<vector<int>> outcolpeakT; 
 
    // loop over points and perform transform 
    int count = coords.size(); 
@@ -297,7 +303,10 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
          continue;
       }
       //start at point and walk the corridor on both sides 
-      vector<vector<int>> endpoint(2, vector<int>(3));
+      vector<vector<int>> endpoint(2, vector<int>(4));
+      vector<int> wires; 
+      vector<int> peakTs; 
+      wires.clear(); peakTs.clear(); 
       for (int k=0; k<2;k++){ 
          int i=0, gap=0;
          while (gap < max_gap){ 
@@ -318,9 +327,11 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
             int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
             if (y1 >= (y_val-range) && y1 <= (y_val+range)){
                gap = 0;
-               endpoint[k] = {x1, y1, wire_idx};
+               endpoint[k] = {x1, y1, wire_idx, idx+i};
                (coords.at(idx+i)).clear();
                (data.at(idx+i)).clear();
+               wires.push_back(x1);
+               peakTs.push_back(y1); 
             }
             else
                gap++;
@@ -342,10 +353,14 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
 
       int x0_end = endpoint[0][0], y0_end = endpoint[0][1], x1_end = endpoint[1][0], y1_end = endpoint[1][1];
       int wire0_end = endpoint[0][2], wire1_end = endpoint[1][2]; 
+      int idx0_end = endpoint[0][3], idx1_end = endpoint[1][3];
       if ((x0_end==0 && y0_end==0) || (x1_end==0 && y1_end==0)) // don't add the (0,0) points 
          continue;
-      vector<int> outline = {x0_end, y0_end, x1_end, y1_end, wire0_end, wire1_end, rho, theta};
+      vector<int> outline = {x0_end, y0_end, x1_end, y1_end, wire0_end, wire1_end, idx0_end, idx1_end, rho, theta};
+
       outlines.push_back(outline);
+      outcolwire.push_back(wires);
+      outcolpeakT.push_back(peakTs); 
 
    } // end of point loop 
    // combine lines that are split 
@@ -354,8 +369,8 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
       for (int j=i+1; j<int(outlines.size()) && same == false;j++){ 
          int xi_coords[2] = {outlines[i][0], outlines[i][2]}; int xj_coords[2] = {outlines[j][0], outlines[j][2]};
          int yi_coords[2] = {outlines[i][1], outlines[i][3]}; int yj_coords[2] = {outlines[j][1], outlines[j][3]};
-         int rhoi = outlines[i][6], rhoj = outlines[j][6];
-         int thetai = outlines[i][7], thetaj = outlines[j][7]; 
+         int rhoi = outlines[i][8], rhoj = outlines[j][8];
+         int thetai = outlines[i][9], thetaj = outlines[j][9]; 
 
          int var = 100;
          int rho_var = 30;
@@ -393,8 +408,12 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
                      }  
                   }
                   same = true;
+                  (outcolwire.at(j)).insert( (outcolwire.at(j)).begin,  (outcolwire.at(i)).begin(),  (outcolwire.at(i)).end()); 
+                  (outcolpeakT.at(j)).insert( (outcolpeakT.at(j)).begin,  (outcolpeakT.at(i)).begin(),  (outcolpeakT.at(i)).end());
+                  
                   (outlines.at(i)).clear();
-                  //std::fill ((outlines.at(i)).begin(),(outlines.at(i)).end(),0);
+                  (outcolwire.at(i)).clear();
+                  (outcolpeakT.at(i)).clear();
                } 
             }
          }
@@ -409,17 +428,21 @@ void testFilter::Hough(vector<vector<int>> coords, int threshold, int max_gap, i
          int y_diff = abs(y0_end-y1_end);
          if (y_diff > muon_length){
             lines.push_back(outlines.at(i));
+            colwire.push_back(outcolwire.at(i)); 
+            colpeakT.push_back(colpeakT.at(i);)
          }
       }
       else{
          float length = Distance(x0_end,y0_end,x1_end,y1_end);
          if (length > min_length){
             lines.push_back(outlines.at(i));
+            colwire.push_back(outcolwire.at(i)); 
+            colpeakT.push_back(colpeakT.at(i);)
          }
       }
    }
    //free memory 
-   data.clear(); deaccu.clear(); outlines.clear();
+   data.clear(); deaccu.clear(); outlines.clear(); outcolwire.clear(); outcolpeakT.clear(); 
 } // end of hough 
 
 void testFilter::ResetCollectionHitVectors() {
@@ -461,49 +484,28 @@ void testFilter::ResetACVariables(){
    ac_t0.clear();
    ac_endpoints.clear();
    ac_trajectories.clear(); 
+   
+   ac_tracks.clear();
 
    ac_t0.reserve(5); 
    ac_endpoints.reserve(5);
    ac_trajectories.reserve(5);
+
+   ac_tracks.reserve(5);
 }
 
-// void testFilter::FindCollectionPlaneHits(vector<vector<int>> lines, vector<vector<<int>> data, int max_gap, int range,
-//                                          vector<int>& ac_wire, vector<int>& ac_peakT, vector<int>& ac_tpc){
-//       for (int n=0; n<int(lines.size()); n++){
-//          int x0_end = lines[n][0], y0_end = lines[n][1], x1_end = lines[n][2], y1_end = lines[n][3];
-//          int rho = lines[n][6], theta = lines[n][7]; 
-//          for (int k=0; k<2;k++){ 
-//             int i=0, gap=0;
-//             while (gap < max_gap){ 
-//                (k==0)? i++ : i--; 
-//                if ( (idx+i) == int(data.size()) || (idx+i) <0) // if we reach the edges of the data set 
-//                   break;
-//                if ((data.at(idx+i)).empty()) // if the point has already been removed 
-//                   continue;
-//                int x1 = data[idx+i][0], y1 = int(data[idx+i][1]), wire_idx = data[idx+i][2]; 
-//                int last_x, diffx; 
-//                if (endpoint[k][0]!= 0){ // ensure we don't jump large x-values 
-//                   last_x = endpoint[k][0];
-//                   diffx = abs(last_x - x1);
-//                   if (diffx > 30){
-//                      break;
-//                   }
-//                }
-//                int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
-//                if (y1 >= (y_val-range) && y1 <= (y_val+range)){
-//                   gap = 0;
-//                   endpoint[k] = {x1, y1, wire_idx};
-//                   (coords.at(idx+i)).clear();
-//                   (data.at(idx+i)).clear();
-//                }
-//                else
-//                   gap++;
-//             } // end of while loop 
-//          }// end of k loop 
-//       }  
+// void testFilter::FindCollectionPlaneHits(vector<vector<int>> colwire; vector<vector<int>> colpeakT){
+//    for (int i=0; i<int(colwire.size()); i++){
+//       vector<int> cwire = (colwire.at(i)); 
+//       vector<int> cpeakT = (colpeakT.at(i)); 
+//       sbn::crt::CRTHit myhit; 
+
+//    }
 // }
 
-void testFilter::Findt0(vector<vector<int>> lines, vector<double>& ac_t0){
+vector<double> testFilter::Findt0(vector<vector<int>> lines){
+   vector<double> ac_t0;
+   ac_t0.reserve(int(lines.size())); 
    for (int i=0; i<int(lines.size()); i++){
       double t_i, t_j; 
       t_i = (lines[i][1]-500)*0.5;
@@ -511,13 +513,17 @@ void testFilter::Findt0(vector<vector<int>> lines, vector<double>& ac_t0){
       double t0 = (t_i<t_j)? t_i:t_j;
       std::cout << "interaction times (in us): " << t0 << std::endl;
       ac_t0.push_back(t0);
-   }           
+      sbn::crt::CTTrack mytrack = ac_tracks[i];
+      mytrack.ts0_ns = double(t0*1e-3); //t0 is currently in us 
+   } 
+   return ac_t0;         
 }
 
-void testFilter::FindEndpoints( vector<vector<int>> lines_col, vector<vector<int>> lines_ind, 
-                                int range, vector<art::Ptr<recob::Hit>> hitlist, 
-                                vector<vector<geo::Point_t>>& ac_endpoints){
-   for (int i=0; i<int(lines_col.size()); i++){
+vector<vector<geo::Point_t>> testFilter::FindEndpoints( vector<vector<int>> lines_col, vector<vector<int>> lines_ind, 
+                                int range, vector<art::Ptr<recob::Hit>> hitlist){
+   vector<vector<geo::Point_t>> ac_endpoints; 
+   ac_endpoints.reserve(int(lines.size())); 
+   or (int i=0; i<int(lines_col.size()); i++){
       for (int j=0; j<int(lines_ind.size()); j++){
          int peakT0_col, peakT1_col, peakT0_ind, peakT1_ind; 
          int wire0_col, wire1_col, wire0_ind, wire1_ind;
@@ -576,13 +582,27 @@ void testFilter::FindEndpoints( vector<vector<int>> lines_col, vector<vector<int
             
             vector<geo::Point_t> pair{apoint,cpoint};
             ac_endpoints.push_back(pair);
+            
+            float apoint_x = float(apoint.X()), apoint_y = float(apoint.Y()), apoint_z = float(apoint.Z()); 
+            float cpoint_x = float(cpoint.X()), cpoint_y = float(cpoint.Y()), cpoint_z = float(cpoint.Z()); 
+            
+            sbn::crt::CTTrack mytrack = ac_tracks[i];
+            mytrack.x1_pos = apoint_x; 
+            mytrack.y1_pos = apoint_y; 
+            mytrack.z1_pos = apoint_z; 
+            mytrack.x2_pos = cpoint_x; 
+            mytrack.y2_pos = cpoint_y; 
+            mytrack.z2_pos = cpoint_z; 
          }
-      }
-   }
-}
+      } // end of j loop 
+   } // end of i loop 
+   return ac_endpoints;
+} // end of function 
 
-void testFilter::FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints, vector<vector<double>>& ac_trajectories){
+vector<vector<double>> testFilter::FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints){
    if (ac_endpoints.empty() == false){
+      vector<vector<double>> ac_trajectories;
+      ac_trajectories.reserve(int(ac_endpoints.size())); 
       for (int i=0; i<int(ac_endpoints.size()); i++){
          vector<geo::Point_t> pair = ac_endpoints[i];
          float x_a = float(pair[0].X()), y_a = float(pair[0].Y()), z_a = float(pair[0].Z()); 
@@ -596,6 +616,9 @@ void testFilter::FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints, vec
          ac_trajectories.push_back(trajectories);
       }
    }
+   return ac_trajectories; 
 }
+
+
 // A macro required for a JobControl module.
 DEFINE_ART_MODULE(testFilter)
