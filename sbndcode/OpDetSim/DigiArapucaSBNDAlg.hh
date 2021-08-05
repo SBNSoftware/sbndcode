@@ -101,24 +101,21 @@ namespace opdet {
 
     double fSampling;        //wave sampling frequency (GHz)
     double fSampling_Daphne;        //wave sampling frequency (GHz)
-    int pulsesize;
-    int pulsesize_Daphne;
     double fArapucaVUVEff;
     double fArapucaVISEff;
     double fXArapucaVUVEff;
     double fXArapucaVISEff;
+    double fADCSaturation;
 
-    double saturation;
-
-    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
+    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine //check this works ~rodrigoa
 
     std::unique_ptr<CLHEP::RandGeneral> fTimeArapucaVUV; // histogram for getting the photon time distribution inside the Arapuca VUV box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeArapucaVIS; // histogram for getting the photon time distribution inside the Arapuca VIS box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeXArapucaVUV;// histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for visible (x)arapucas
 
-    std::vector<double> wsp; //single photon pulse vector
-    std::vector<double> wsp_Daphne; //single photon pulse vector
+    std::vector<double> fWaveformSP; //single photon pulse vector
+    std::vector<double> fWaveformSP_Daphne; //single photon pulse vector
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
     void CreatePDWaveform(sim::SimPhotons const& SimPhotons,
@@ -142,8 +139,7 @@ namespace opdet {
                                      std::map<int, int> const& photonMap,
                                      double const& t_min,
                                      bool is_daphne);
-    void AddSPE(size_t time_bin, std::vector<double>& wave, int nphotons); // add single pulse to auxiliary waveform
-    void AddSPE_Daphne(size_t time_bin, std::vector<double>& wave, int nphotons); // add single pulse to auxiliary waveform
+    void AddSPE(size_t time_bin, std::vector<double>& wave, const std::vector<double>& fWaveformSP, int nphotons); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
     void Pulse1PE_Daphne(std::vector<double>& wave);
     void AddLineNoise(std::vector<double>& wave);

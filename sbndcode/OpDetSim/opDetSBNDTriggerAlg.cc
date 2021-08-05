@@ -78,7 +78,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   bool is_arapuca = false;
   if( opdet_type.find("arapuca") != std::string::npos ) is_arapuca = true; 
   bool is_daphne = false;
-  std::string sampling_type = fOpDetMap.SamplingType(channel);
+  std::string sampling_type = fOpDetMap.electronicsType(channel);
   if (sampling_type == "daphne") is_daphne = true;
 
   int threshold = is_arapuca ? fConfig.TriggerThresholdADCArapuca() : fConfig.TriggerThresholdADCPMT(); 
@@ -340,7 +340,7 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detin
   const std::vector<raw::TimeStamp_t> &trigger_times = GetTriggerTimes(channel);
   if( trigger_times.size() == 0 ) return ret;
   bool is_daphne = false;
-  std::string sampling_type = fOpDetMap.SamplingType(channel);
+  std::string sampling_type = fOpDetMap.electronicsType(channel);
   if (sampling_type == "daphne") is_daphne = true;
 
 
