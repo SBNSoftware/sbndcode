@@ -5,9 +5,8 @@ BEGIN_PROLOG
 sbnd_ionandscint:
 {
     module_type: "IonAndScint"
-    # Instances:  "LArG4DetectorServicevolTPCActive;LArG4DetectorServicevolTPCActiveOuter" # separated by semicolon
     Instances:   "LArG4DetectorServicevolTPCActive" # separated by semicolon
-    ISCalcAlg:   "Separate" # "NEST"
+    ISCalcAlg:   "Separate"
     SavePriorSCE: true
 }
 
