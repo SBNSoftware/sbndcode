@@ -144,7 +144,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     //                [](auto& p) {return std::addressof(p);});
 
     // to temporarily store channel and combine PMT (direct and converted) time profiles
-    const double startTime = fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/;
+    const double startTime = fConfig.EnableWindow[0] * 1000. /*ns for digitizer*/;
 
     std::unordered_map<int, sim::SimPhotonsLite> DirectPhotonsMap;
     std::unordered_map<int, sim::SimPhotonsLite> ReflectedPhotonsMap;
@@ -160,8 +160,6 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         waveform.reserve(fConfig.Nsamples);
         const unsigned ch = litesimphotons.OpChannel;
         const std::string pdtype = fConfig.pdsMap.pdType(ch);
-        const bool is_daphne= fConfig.pdsMap.isSampling(ch,"daphne");
-        if (is_daphne)waveform.reserve(fConfig.Nsamples_Daphne);
 
         // only work on the prescribed channels
         if (ch < start || ch >= start + n) continue;
@@ -189,7 +187,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         // getting only xarapuca channels with appropriate type of light
         else if((pdtype == "xarapuca_vuv" && !Reflected) ||
                 (pdtype == "xarapuca_vis" && Reflected) ) {
-			if(is_daphne){		
+          const bool is_daphne= fConfig.pdsMap.isElectronics(ch,"daphne");
+			    if(is_daphne){
           arapucaDigitizer->ConstructWaveformLite(ch,
                                                   litesimphotons,
                                                   waveform,
@@ -235,7 +234,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     std::unordered_set<short unsigned int> coatedpmts_todigitize;
 
     const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
-    const double startTime = fConfig.EnableWindow[0] * 1000 /*ns for digitizer*/;
+    const double startTime = fConfig.EnableWindow[0] * 1000. /*ns for digitizer*/;
 
     const unsigned start = StartChannelToProcess(fConfig.nChannels);
     const unsigned n = NChannelsToProcess(fConfig.nChannels);
@@ -245,7 +244,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         std::vector<short unsigned int> waveform;
         const unsigned ch = simphotons.OpChannel();
         const std::string pdtype = fConfig.pdsMap.pdType(ch);
-        const bool is_daphne = fConfig.pdsMap.isSampling(ch,"daphne"); 
+        const bool is_daphne = fConfig.pdsMap.isElectronics(ch,"daphne");
         // only work on the prescribed channels
         if (ch < start || ch >= start + n) continue;
         //coated PMTs

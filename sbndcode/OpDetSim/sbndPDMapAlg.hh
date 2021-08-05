@@ -58,9 +58,9 @@ namespace opdet {
     // void setup() {}
 
     bool isPDType(size_t ch, std::string pdname) const override;
-    bool isSampling(size_t ch, std::string pdname) const;
+    bool isElectronics(size_t ch, std::string pdname) const;
     std::string pdType(size_t ch) const override;
-    std::string SamplingType(size_t ch) const;
+    std::string electronicsType(size_t ch) const;
     std::vector<int> getChannelsOfType(std::string pdname) const;
     size_t size() const;
     auto getChannelEntry(size_t ch) const;

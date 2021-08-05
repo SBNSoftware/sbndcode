@@ -28,22 +28,20 @@ namespace opdet {
     return false;
   }
 
-  bool sbndPDMapAlg::isSampling(size_t ch, std::string pdname) const
+  bool sbndPDMapAlg::isElectronics(size_t ch, std::string pdname) const
   {
-    if(PDmap.at(ch)["sampling"] == std::string(pdname)) return true;
-    return false;
+    if(PDmap.at(ch)["electronics"] == std::string(pdname)) return true; // TODO: add number of electronics, daphne01, daphne02, .... ~rodrigoa; at() throws an exception if no such channel
   }
 
   std::string sbndPDMapAlg::pdType(size_t ch) const
   {
-    if(ch < PDmap.size()) return PDmap.at(ch)["pd_type"];
+    if(ch < PDmap.size()) return PDmap.at(ch)["pd_type"];//TODO: remove all if(ch < PDmap.size()) 
     return "There is no such channel";
   }
 
-  std::string sbndPDMapAlg::SamplingType(size_t ch) const
+  std::string sbndPDMapAlg::electronicsType(size_t ch) const
   {
-    if(ch < PDmap.size()) return PDmap.at(ch)["sampling"];
-    return "There is no such channel";
+    return PDmap.at(ch)["electronics"]; //TODO: change to electronics, ~rodrigoa
   }
 
   std::vector<int> sbndPDMapAlg::getChannelsOfType(std::string pdname) const

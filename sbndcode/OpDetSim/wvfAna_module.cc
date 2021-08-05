@@ -85,7 +85,7 @@ namespace opdet {
     std::vector<std::string> fOpDetsToPlot;
     std::stringstream histname;
     std::string opdetType;
-    std::string opdetSampling;
+    std::string opdetElectronics;
   };
 
 
@@ -155,7 +155,7 @@ namespace opdet {
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
       opdetType = pdMap.pdType(fChNumber);
-      opdetSampling = pdMap.SamplingType(fChNumber);
+      opdetElectronics = pdMap.electronicsType(fChNumber);
       if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
       histname.str(std::string());
       histname << "event_" << fEvNumber
@@ -164,7 +164,7 @@ namespace opdet {
                << "_" << hist_id;
 
       fStartTime = wvf.TimeStamp(); //in us
-      if (opdetSampling == "daphne"){
+      if (opdetElectronics == "daphne"){
 		  fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;} //in us
 			else{
       fEndTime = double(wvf.size()) / fSampling + fStartTime;} //in us
