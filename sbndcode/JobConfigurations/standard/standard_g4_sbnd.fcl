@@ -6,15 +6,14 @@
 # This configuration runs:
 # - LArG4: produces:
 #   * MCParticle's (particles produced by interaction with matter)
-#   * SimChannels (charge and energy deposited by each particle reaching
-#       each TPC readout channel)
-#   * SimPhotons (photons reaching each optical readout channel)
+#   * SimEnergyDeposit (energy deposited)
 # - IonizationAndScintillation: produces:
-#   *
+#   * SimEnergyDeposit (photons and electrons)
+#   * SimEnergyDeposit before SCE (photons and electrons)
 # - OpticalFastSimulation: produces:
-#   *
+#   * SimPhoton or SimPhotonLite (photons at the optical detectors)
 # - ElectronDrift: produces:
-#   *
+#   * SimChannels (energy and charge at the wires)
 # - MCReco: produces:
 #   * MCTrack, MCShower: deposited energy from each MCParticle
 #

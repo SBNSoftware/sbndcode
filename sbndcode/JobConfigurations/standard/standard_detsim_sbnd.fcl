@@ -5,7 +5,7 @@
 # This configuration runs the detector simulation
 #
 # Input:
-# - output from LArG4 module
+# - output of OpticalFastSimulation and ElectronDrift modules
 #
 # Output:
 # - daq: RawDigit collection with simulated TPC readout response as waveforms
@@ -84,7 +84,7 @@ outputs:
   out1:
   {
     @table::sbnd_rootoutput # inherit shared settings
-    dataTier:    "simulated"
+    dataTier: "simulated"
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
   }
 }
