@@ -1,6 +1,3 @@
-// for each AC muon, want to store:
-// anode endpoint, cathode endpoint, t0, thetaxz, thetayz 
-
 // Framework includes 
 #include "art/Framework/Core/EDFilter.h" 
 #include "art/Framework/Core/ModuleMacros.h" 
@@ -110,7 +107,7 @@ private:
    vector<vector<int>> colpeakT_12;
 
    // AC crossing muon variables 
-    vector<int> ac_tpc; 
+   vector<int> ac_tpc; 
    vector<double> ac_t0;
    vector<vector<geo::Point_t>> ac_endpoints;
    vector<vector<double>> ac_trajectories; 
