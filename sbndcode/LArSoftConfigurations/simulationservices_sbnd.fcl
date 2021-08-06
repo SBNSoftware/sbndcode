@@ -40,6 +40,7 @@ sbnd_largeantparameters.ElectronClusterSize: 20.0
 sbnd_largeantparameters.UseCustomPhysics: true
 sbnd_largeantparameters.EnabledPhysics: [ "Em", "FastOptical", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
 sbnd_largeantparameters.UseLitePhotons: true
+sbnd_largeantparameters.IonAndScintCalculator: "Correlated"
 
 #Define a largeantparameters which doesn't use the optical simulation
 sbnd_largeantparameters_noopticalsim: @local::sbnd_largeantparameters
