@@ -48,12 +48,10 @@ namespace opdet {
     fTimeXArapucaVUV = std::make_unique<CLHEP::RandGeneral>
       (*fEngine, TimeXArapucaVUV_p->data(), TimeXArapucaVUV_p->size());
 
-    //~fSampling = fSampling / 1000; //in GHz to cancel with ns
     size_t pulseSize = fParams.PulseLength * fSampling;
     fWaveformSP.resize(pulseSize);
 
-    //~fSampling_Daphne = fSampling_Daphne/ 1000; //in GHz to cancel with ns
-    size_t pulseSize_Daphne = fParams.PulseLength * fSampling;
+    size_t pulseSize_Daphne = fParams.PulseLength * fSampling_Daphne;
 	  fWaveformSP_Daphne.resize(pulseSize_Daphne);
 	
     if(fParams.SinglePEmodel) {
