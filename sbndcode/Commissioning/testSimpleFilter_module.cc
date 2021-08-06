@@ -70,9 +70,10 @@ bool testSimpleFilter::filter(art::Event& evt)
    ncts = 0;
    art::Handle<std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
    std::vector<art::Ptr<sbn::crt::CRTTrack> > ctrklist;
-   if (evt.getByLabel("crttrack", crtTrackListHandle))  {
+   if (evt.getByLabel("testProducer", crtTrackListHandle))  {
       art::fill_ptr_vector(ctrklist, crtTrackListHandle);
       ncts = ctrklist.size();
+      std::cout << "size of ctrklist: " << ctrklist.size() << std::endl;
    }
    if (ncts > 0){
       pass = true;
