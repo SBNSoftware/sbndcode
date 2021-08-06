@@ -1,0 +1,11 @@
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "fm_scores_sbnd.fcl"
+
+services.BackTrackerService:        @local::standard_backtrackerservice
+services.ParticleInventoryService:  @local::standard_particleinventoryservice
+
+physics.producers.fmatch.MakeTree:       true
+physics.producers.fmatch.StoreTrueNus:   true
+physics.producers.fmatch.StoreCheatMCT0: true
