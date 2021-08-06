@@ -140,8 +140,7 @@ namespace opdet {
                                      double const& t_min,
                                      bool is_daphne);
     void AddSPE(size_t time_bin, std::vector<double>& wave, const std::vector<double>& fWaveformSP, int nphotons); // add single pulse to auxiliary waveform
-    void Pulse1PE(std::vector<double>& wave);
-    void Pulse1PE_Daphne(std::vector<double>& wave);
+    void Pulse1PE(std::vector<double>& wave,const double sampling);
     void AddLineNoise(std::vector<double>& wave);
     void AddDarkNoise(std::vector<double>& wave);
     double FindMinimumTime(sim::SimPhotons const& simphotons);

@@ -65,8 +65,8 @@ namespace opdet {
       fWaveformSP_Daphne = *SinglePEVec_40ftCable_Daphne;}	
   	else{
 	  	mf::LogDebug("DigiArapucaSBNDAlg") << " using ideal pe response";
-	    Pulse1PE(fWaveformSP);
-		  Pulse1PE_Daphne(fWaveformSP_Daphne);
+	    Pulse1PE(fWaveformSP,fSampling);
+		  Pulse1PE(fWaveformSP_Daphne,fSampling_Daphne);
 		  }
 
     file->Close();
@@ -250,11 +250,11 @@ namespace opdet {
   }
 
   //Ideal single pulse waveform, same shape for both electronics (not realistic: different capacitances, ...) 
-  void DigiArapucaSBNDAlg::Pulse1PE(std::vector<double>& fWaveformSP)//TODO: use only one Pulse1PE functions for both electronics ~rodrigoa
+  void DigiArapucaSBNDAlg::Pulse1PE(std::vector<double>& fWaveformSP, const double sampling)//TODO: use only one Pulse1PE functions for both electronics ~rodrigoa
   {
 		double constT1 = fParams.ADC * fParams.MeanAmplitude;
 		for(size_t i = 0; i<fWaveformSP.size(); i++) {
-		  double time = static_cast<double>(i) / fSampling;
+		  double time = static_cast<double>(i) / sampling;
 		  if (time < fParams.PeakTime)
 			fWaveformSP[i] = constT1 * std::exp((time - fParams.PeakTime) / fParams.RiseTime);
 		  else
@@ -262,19 +262,6 @@ namespace opdet {
 		}
   }
   
-  void DigiArapucaSBNDAlg::Pulse1PE_Daphne(std::vector<double>& fWaveformSP)//single pulse waveform for daphne readouts
-  {
-    double constT1 = fParams.ADC * fParams.MeanAmplitude;
-    for(size_t i = 0; i<fWaveformSP.size(); i++) {
-      double time = static_cast<double>(i) / fSampling_Daphne;
-      if (time < fParams.PeakTime)
-        fWaveformSP[i] = constT1 * std::exp((time - fParams.PeakTime) / fParams.RiseTime);
-      else
-        fWaveformSP[i] = constT1 * std::exp(-(time - fParams.PeakTime) / fParams.FallTime);
-    }
-  }
-
-
   void DigiArapucaSBNDAlg::AddSPE(
     const size_t time_bin,
     std::vector<double>& wave,
