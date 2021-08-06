@@ -1,0 +1,33 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "ncreco.fcl"
+
+process_name: AnaCI
+
+services:
+{
+  @table::sbnd_services
+  TFileService:		    { fileName: "ncrecoTree.root" }
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  	    @local::standard_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+
+physics:
+{
+  analyzers:
+  {
+    ncreco: @local::sbnd_ncreco_ci
+  }
+
+  ana:       [ ncreco ]
+  end_paths: [ ana ]
+
+}

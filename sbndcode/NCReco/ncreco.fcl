@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+sbnd_ncreco_ci: 
+{
+   module_type:			"NCReco"
+   GenieGenModuleLabel:		"generator"
+   LArGeantModuleLabel:		"largeant"
+
+}
+
+END_PROLOG
