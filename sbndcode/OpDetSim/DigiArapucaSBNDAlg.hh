@@ -54,8 +54,6 @@ namespace opdet {
       double DarkNoiseRate;  //in Hz
       double CrossTalk;      //probability for producing a signal of 2 PE in response to 1 photon
       double Saturation;     //Saturation in number of p.e.
-      double ArapucaVUVEff;   //ArapucaVUV efficiency (optical window + cavity)
-      double ArapucaVISEff;   //ArapucaVIS efficiency (optical window + cavity)
       double XArapucaVUVEff;    //XArapucaVUV efficiency (optical window + cavity)
       double XArapucaVISEff;    //XArapucaVIS efficiency (optical window + cavity)
       double DecayTXArapucaVIS;// Decay time of EJ280 in ns
@@ -105,10 +103,8 @@ namespace opdet {
     const double fXArapucaVISEff;
     const double fADCSaturation;
 
-    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine //check this works ~rodrigoa
+    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine	
 
-    std::unique_ptr<CLHEP::RandGeneral> fTimeArapucaVUV; // histogram for getting the photon time distribution inside the Arapuca VUV box (considering the optical window)
-    std::unique_ptr<CLHEP::RandGeneral> fTimeArapucaVIS; // histogram for getting the photon time distribution inside the Arapuca VIS box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeXArapucaVUV;// histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for visible (x)arapucas
 

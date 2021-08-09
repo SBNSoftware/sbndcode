@@ -99,7 +99,7 @@ namespace opdet {
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     fSampling = clockData.OpticalClock().Frequency(); // MHz
-    fSampling_Daphne=p.get<double >("DaphneFrequency" );
+    fSampling_Daphne = p.get<double>("DaphneFrequency" );
   }
 
   void wvfAna::beginJob()
@@ -165,9 +165,11 @@ namespace opdet {
 
       fStartTime = wvf.TimeStamp(); //in us
       if (opdetElectronics == "daphne"){
-		  fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;} //in us
+				fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;
+			} //in us
 			else{
-      fEndTime = double(wvf.size()) / fSampling + fStartTime;} //in us
+        fEndTime = double(wvf.size()) / fSampling + fStartTime;
+      } //in us
 
       //Create a new histogram
       TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), fStartTime, fEndTime);

@@ -188,31 +188,32 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         else if((pdtype == "xarapuca_vuv" && !Reflected) ||
                 (pdtype == "xarapuca_vis" && Reflected) ) {
           const bool is_daphne= fConfig.pdsMap.isElectronics(ch,"daphne");
-			    if(is_daphne){
-          arapucaDigitizer->ConstructWaveformLite(ch,
+          if(is_daphne){
+            arapucaDigitizer->ConstructWaveformLite(ch,
                                                   litesimphotons,
                                                   waveform,
                                                   pdtype,
                                                   is_daphne,
                                                   startTime,
                                                   fConfig.Nsamples_Daphne);
-          // including pre trigger window and transit time
-          fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
+            // including pre trigger window and transit time
+            fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-            }else{
-          arapucaDigitizer->ConstructWaveformLite(ch,
+            }
+            else{
+            arapucaDigitizer->ConstructWaveformLite(ch,
                                                   litesimphotons,
                                                   waveform,
                                                   pdtype,
                                                   is_daphne,
                                                   startTime,
                                                   fConfig.Nsamples);
-          // including pre trigger window and transit time
-          fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
+            // including pre trigger window and transit time
+            fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-											  }
+          }
         }
       }
     }  //end loop on simphoton lite collections
@@ -284,7 +285,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-        }else{
+        }
+        else{
         arapucaDigitizer->ConstructWaveform(ch,
                                               simphotons,
                                               waveform,

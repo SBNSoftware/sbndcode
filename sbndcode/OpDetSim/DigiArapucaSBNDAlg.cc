@@ -19,7 +19,6 @@ namespace opdet {
     if(fXArapucaVUVEff > 1.0001 || fXArapucaVISEff > 1.0001)
       mf::LogWarning("DigiArapucaSBNDAlg")
         << "Quantum efficiency set in fhicl file "
-        << fParams.ArapucaVUVEff << " or " << fParams.ArapucaVISEff << " or "
         << fParams.XArapucaVUVEff << " or " << fParams.XArapucaVISEff
         << " seems to be too large!\n"
         << "Final QE must be equal to or smaller than the scintillation "
@@ -52,19 +51,20 @@ namespace opdet {
 	  fWaveformSP_Daphne.resize(pulseSize_Daphne);
 	
     if(fParams.SinglePEmodel) {
-		  mf::LogDebug("DigiArapucaSBNDAlg") << " using testbench pe response";
-		  TFile* file =  TFile::Open(fname.c_str(), "READ");
+      mf::LogDebug("DigiArapucaSBNDAlg") << " using testbench pe response";
+      TFile* file =  TFile::Open(fname.c_str(), "READ");
       std::vector<double>* SinglePEVec_40ftCable_Daphne;
       std::vector<double>* SinglePEVec_40ftCable_Apsaia;
       file->GetObject("SinglePEVec_40ftCable_Apsaia", SinglePEVec_40ftCable_Apsaia);
       file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_40ftCable_Daphne);
       fWaveformSP = *SinglePEVec_40ftCable_Apsaia;
-      fWaveformSP_Daphne = *SinglePEVec_40ftCable_Daphne;}	
+      fWaveformSP_Daphne = *SinglePEVec_40ftCable_Daphne;
+    }	
   	else{
-	  	mf::LogDebug("DigiArapucaSBNDAlg") << " using ideal pe response";
-	    Pulse1PE(fWaveformSP,fSampling);
-		  Pulse1PE(fWaveformSP_Daphne,fSampling_Daphne);
-		  }
+      mf::LogDebug("DigiArapucaSBNDAlg") << " using ideal pe response";
+      Pulse1PE(fWaveformSP,fSampling);
+      Pulse1PE(fWaveformSP_Daphne,fSampling_Daphne);
+		}
 
     file->Close();
   } // end constructor
@@ -136,9 +136,10 @@ namespace opdet {
           else nCT = 1;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
           if(timeBin < wave.size()) {
-						if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
-						}
-            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);}
+            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            }
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);
+            }
           }
         }
       }
@@ -249,14 +250,12 @@ namespace opdet {
   //Ideal single pulse waveform, same shape for both electronics (not realistic: different capacitances, ...) 
   void DigiArapucaSBNDAlg::Pulse1PE(std::vector<double>& fWaveformSP, const double sampling)//TODO: use only one Pulse1PE functions for both electronics ~rodrigoa
   {
-		double constT1 = fParams.ADC * fParams.MeanAmplitude;
-		for(size_t i = 0; i<fWaveformSP.size(); i++) {
-		  double time = static_cast<double>(i) / sampling;
-		  if (time < fParams.PeakTime)
-			fWaveformSP[i] = constT1 * std::exp((time - fParams.PeakTime) / fParams.RiseTime);
-		  else
-			fWaveformSP[i] = constT1 * std::exp(-(time - fParams.PeakTime) / fParams.FallTime);
-		}
+    double constT1 = fParams.ADC * fParams.MeanAmplitude;
+    for(size_t i = 0; i<fWaveformSP.size(); i++) {
+      double time = static_cast<double>(i) / sampling;
+      if (time < fParams.PeakTime) fWaveformSP[i] = constT1 * std::exp((time - fParams.PeakTime) / fParams.RiseTime);
+      else fWaveformSP[i] = constT1 * std::exp(-(time - fParams.PeakTime) / fParams.FallTime);
+    }
   }
   
   void DigiArapucaSBNDAlg::AddSPE(
@@ -349,8 +348,6 @@ namespace opdet {
     fBaseConfig.ADC               = config.voltageToADC();
     fBaseConfig.Baseline          = config.baseline();
     fBaseConfig.Saturation        = config.saturation();
-    fBaseConfig.ArapucaVUVEff     = config.arapucaVUVEff();
-    fBaseConfig.ArapucaVISEff     = config.arapucaVISEff();
     fBaseConfig.XArapucaVUVEff    = config.xArapucaVUVEff();
     fBaseConfig.XArapucaVISEff    = config.xArapucaVISEff();
     fBaseConfig.RiseTime          = config.riseTime();
@@ -363,8 +360,8 @@ namespace opdet {
     fBaseConfig.PeakTime          = config.peakTime();
     fBaseConfig.DecayTXArapucaVIS = config.decayTXArapucaVIS();
     fBaseConfig.ArapucaDataFile   = config.arapucaDataFile();
-    fBaseConfig.SinglePEmodel  =  config.singlePEmodel();
-		fBaseConfig.frequency_Daphne= config.DaphneFrequency();
+    fBaseConfig.SinglePEmodel     = config.singlePEmodel();
+    fBaseConfig.frequency_Daphne  = config.DaphneFrequency();
   }
 
   std::unique_ptr<DigiArapucaSBNDAlg> DigiArapucaSBNDAlgMaker::operator()(

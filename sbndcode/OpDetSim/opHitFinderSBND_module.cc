@@ -93,7 +93,7 @@ namespace opdet {
     //int fSize;
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
-    void subtractBaseline(std::vector<double>& waveform, std::string pdtype, std::string electronicsType,double& rms);
+    void subtractBaseline(std::vector<double>& waveform, std::string pdtype, std::string electronicsType, double& rms);
     bool findAndSuppressPeak(std::vector<double>& waveform, size_t& timebin,
                              double& Area, double& amplitude,
                              const int& threshold, const std::string& opdetType, const std::string& electronicsType);
@@ -123,7 +123,7 @@ namespace opdet {
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     fSampling = clockData.OpticalClock().Frequency(); // MHz
-    fSampling_Daphne = p.get<double >("DaphneFrequency" );; 
+    fSampling_Daphne = p.get<double>("DaphneFrequency"); 
 
     // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -179,7 +179,7 @@ namespace opdet {
         fwaveform[i] = wvf[i];
       }
 
-      subtractBaseline(fwaveform, opdetType,electronicsType, rms);
+      subtractBaseline(fwaveform, opdetType, electronicsType, rms);
 
       if(fUseDenoising) {
         if((opdetType == "pmt_coated") || (opdetType == "pmt_uncoated")) {
@@ -195,11 +195,9 @@ namespace opdet {
       }
 
       // TODO: pass rms to this function once that's sorted. ~icaza
-      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, threshold, opdetType,electronicsType)){
-        if(electronicsType == "daphne"){
-        time = wvf.TimeStamp() + (double)timebin / fSampling_Daphne;}
-        else{
-        time = wvf.TimeStamp() + (double)timebin / fSampling;}
+      while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, threshold, opdetType, electronicsType)){
+        if(electronicsType == "daphne") time = wvf.TimeStamp() + (double)timebin / fSampling_Daphne;
+        else time = wvf.TimeStamp() + (double)timebin / fSampling;
 
         if(opdetType == "pmt_coated" || opdetType == "pmt_uncoated") {
           phelec = Area / fArea1pePMT;
@@ -226,7 +224,7 @@ namespace opdet {
   DEFINE_ART_MODULE(opHitFinderSBND)
 
   void opHitFinderSBND::subtractBaseline(std::vector<double>& waveform,
-                                         std::string pdtype,std::string electronicsType, double& rms)
+                                         std::string pdtype, std::string electronicsType, double& rms)
   {
     double baseline = 0.0;
     rms = 0.0;
