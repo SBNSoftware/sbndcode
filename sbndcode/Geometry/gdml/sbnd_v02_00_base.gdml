@@ -4607,8 +4607,8 @@
 			<materialref ref="LAr"/>
 			<solidref ref="XArapucaVolume"/>
 			<auxiliary auxtype="SensDet" auxvalue="SimEnergyDeposit"/>
-            <auxiliary auxtype="StepLimit" auxvalue="0.01" unit="mm"/>
-            <auxiliary auxtype="Efield" auxvalue="0."/>
+			<auxiliary auxtype="StepLimit" auxvalue="0.01" unit="mm"/>
+			<auxiliary auxtype="Efield" auxvalue="0."/>
 			<physvol>
 				<volumeref ref="volWalls_XArapuca"/>
 				<position name="posXArapuca1" unit="mm" x="0" y="0" z="0"/>
