@@ -1,0 +1,32 @@
+# File:    g4_noophybrid_sbnd.fcl
+# Purpose: Same as standard_g4_sbnd.fcl, but does not includ light produced outside the active volume
+#
+# This runs the new, refactored, LArG4 simulation.
+
+
+#include "standard_g4_sbnd.fcl"
+
+
+# Update the services to use the hybrid ones
+services:
+{
+  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  @table::sbnd_g4_services_noohybrid
+}
+
+# Add the scintillation outside the active volume
+# and PD simulation processed to the producers
+physics.producers.ionandscintout: @local::sbnd_ionandscint_out
+physics.producers.pdfastsimout: @local::sbnd_pdfastsim_pvs
+
+physics.simulate: [ rns
+                  , loader
+                  , largeant
+                  , ionandscint
+                  , pdfastsim
+                  , simdrift
+                  , mcreco
+                ]
+
+physics.trigger_paths: [ simulate ]
