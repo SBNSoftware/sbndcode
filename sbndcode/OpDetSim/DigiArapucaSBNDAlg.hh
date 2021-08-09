@@ -97,15 +97,13 @@ namespace opdet {
   private:
 
     // Declare member data here.
-    ConfigurationParameters_t fParams;
+    const ConfigurationParameters_t fParams;
 
-    double fSampling;        //wave sampling frequency (GHz)
-    double fSampling_Daphne;        //wave sampling frequency (GHz)
-    double fArapucaVUVEff;
-    double fArapucaVISEff;
-    double fXArapucaVUVEff;
-    double fXArapucaVISEff;
-    double fADCSaturation;
+    const double fSampling;        //wave sampling frequency (GHz)
+    const double fSampling_Daphne;        //wave sampling frequency (GHz)
+    const double fXArapucaVUVEff;
+    const double fXArapucaVISEff;
+    const double fADCSaturation;
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine //check this works ~rodrigoa
 

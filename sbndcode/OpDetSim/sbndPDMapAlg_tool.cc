@@ -31,7 +31,7 @@ namespace opdet {
   bool sbndPDMapAlg::isElectronics(size_t ch, std::string pdname) const
   {
     if(PDmap.at(ch)["electronics"] == std::string(pdname)) return true; // TODO: add number of electronics, daphne01, daphne02, .... ~rodrigoa; at() throws an exception if no such channel
-      return "There is no such channel";
+      return false;
 }
 
   std::string sbndPDMapAlg::pdType(size_t ch) const

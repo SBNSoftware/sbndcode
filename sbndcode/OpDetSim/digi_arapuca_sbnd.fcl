@@ -25,7 +25,7 @@ sbnd_digiarapuca_alg:
   XArapucaVISEff:            0.014  #XArapuca VIS efficiency (taking into account 70% mesh transparency 0.02*0.7)
   DecayTXArapucaVIS:         8.5     # decay time of EJ280 in ns
   ArapucaDataFile:           "OpDetSim/digi_arapuca_sbnd.root" # located in sbnd_data
-  SinglePEmodel:             true   # false for ideal XArapuca response, true for response from XTDBoard data (with overshoot)
+  SinglePEmodel:             false   # false for ideal XArapuca response, true for response from XTDBoard data (with overshoot)
   DaphneFrequency:             80.0  #in MHz. Frequency of the Daphne Readouts
 }
 

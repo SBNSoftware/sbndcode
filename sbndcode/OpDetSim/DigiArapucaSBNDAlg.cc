@@ -7,19 +7,16 @@
 namespace opdet {
 
   DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
-    : fParams(config)
+    : fParams{config}
     , fSampling(fParams.frequency/ 1000.) //in GHz to cancel with ns
     , fSampling_Daphne(fParams.frequency_Daphne/ 1000.) //in GHz to cancel with ns
-    , fArapucaVUVEff(fParams.ArapucaVUVEff / fParams.larProp->ScintPreScale())
-    , fArapucaVISEff(fParams.ArapucaVISEff / fParams.larProp->ScintPreScale())
     , fXArapucaVUVEff(fParams.XArapucaVUVEff / fParams.larProp->ScintPreScale())
     , fXArapucaVISEff(fParams.XArapucaVISEff / fParams.larProp->ScintPreScale())
     , fADCSaturation(fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude)
     , fEngine(fParams.engine)
   {
 
-    if(fArapucaVUVEff > 1.0001 || fArapucaVISEff > 1.0001 ||
-       fXArapucaVUVEff > 1.0001 || fXArapucaVISEff > 1.0001)
+    if(fXArapucaVUVEff > 1.0001 || fXArapucaVISEff > 1.0001)
       mf::LogWarning("DigiArapucaSBNDAlg")
         << "Quantum efficiency set in fhicl file "
         << fParams.ArapucaVUVEff << " or " << fParams.ArapucaVISEff << " or "
