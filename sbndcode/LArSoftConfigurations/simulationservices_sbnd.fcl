@@ -71,15 +71,15 @@ sbnd_g4_services:
   LArG4Parameters:           @local::sbnd_largeantparameters
   LArVoxelCalculator:        @local::sbnd_larvoxelcalculator
   MagneticField:             @local::no_mag_larsoft
-  PhotonVisibilityService:   @local::sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice
+  PhotonVisibilityService:   @local::sbnd_library_for_hybrid_mode_photonvisibilityservice
                              @table::sbnd_larg4_services
 } # sbnd_g4_services
 
-sbnd_g4_services_hybrid:
+sbnd_g4_services_noophybrid:
 {
                              @table::sbnd_g4_services
-  PhotonVisibilityService:   @local::sbnd_library_for_hybrid_mode_photonvisibilityservice
-                             @table::sbnd_larg4_services_hybrid
+  PhotonVisibilityService:   @local::sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice
+                             @table::sbnd_larg4_services_noophybrid
 } # sbnd_g4_services_hybrid
 
 

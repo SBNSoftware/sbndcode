@@ -74,23 +74,23 @@ sbnd_particle_list_action:
 #
 sbnd_larg4detector:
 {
-    category      : "world"
-    gdmlFileName_ : @local::sbnd_geometry_file_nowires
-    volumeNames   : ["volTPCActive"] # list of volumes for which the stepLimit should be set
-    stepLimits    : [0.3] # corresponding stepLimits in mm for the volumes in the volumeNames list
+  category      : "world"
+  gdmlFileName_ : @local::sbnd_geometry_file_nowires
+  volumeNames   : ["volTPCActive" # list of volumes for which the stepLimit should be set
+                 , "volCryostat"
+                 , "volTPCPlaneVert"
+                 , "volXArapuca"
+                 , "volPMT"
+                 , "volFieldCage"
+                 , "volPDSstructure"
+                  ]
+  stepLimits    : [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3] # corresponding stepLimits in mm for the volumes in the volumeNames list
 }
 
-sbnd_larg4detector_hybrid: @local::sbnd_larg4detector
-sbnd_larg4detector_hybrid.gdmlFileName_: @local::sbnd_geometry_file_ophybrid_nowires
-sbnd_larg4detector_hybrid.volumeNames: ["volTPCActive"
-                                      , "volCryostat"
-                                      , "volTPCPlaneVert"
-                                      , "volXArapuca"
-                                      , "volPMT"
-                                      , "volFieldCage"
-                                      , "volPDSstructure"
-                                       ]
-sbnd_larg4detector_hybrid.stepLimits: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
+sbnd_larg4detector_noophybrid: @local::sbnd_larg4detector
+sbnd_larg4detector_noophybrid.gdmlFileName_: @local::sbnd_geometry_file_noophybrid_nowires
+sbnd_larg4detector_noophybrid.volumeNames: ["volTPCActive"]
+sbnd_larg4detector_noophybrid.stepLimits: [0.3]
 
 
 #
@@ -108,10 +108,10 @@ sbnd_larg4_services:
   LArG4Detector:      @local::sbnd_larg4detector
 }
 
-sbnd_larg4_services_hybrid:
+sbnd_larg4_services_noophybrid:
 {
                       @table::sbnd_larg4_services
-  LArG4Detector:      @local::sbnd_larg4detector_hybrid
+  LArG4Detector:      @local::sbnd_larg4detector_noophybrid
 }
 
 END_PROLOG

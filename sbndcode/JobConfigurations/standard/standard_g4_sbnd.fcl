@@ -61,7 +61,7 @@ physics:
   {
     rns: { module_type: "RandomNumberSaver" }
 
-    # A dummy module that forces G4 physics list to be loaded
+    # A dummy module that forces the G4 physics list to be loaded
     loader: { module_type: "PhysListLoader" }
 
     # The geant4 step
@@ -70,8 +70,14 @@ physics:
     # Creation of ionization electrons and scintillation photons, inside the active volume
     ionandscint: @local::sbnd_ionandscint
 
+    # Creation of ionization electrons and scintillation photons, outside the active volume
+    ionandscintout: @local::sbnd_ionandscint_out
+
     # Light propogation inside the active volume
     pdfastsim: @local::sbnd_pdfastsim_par
+
+    # Light propogation outside the active volume
+    pdfastsimout: @local::sbnd_pdfastsim_pvs
 
     # Electron propogation
     simdrift: @local::sbnd_simdrift
@@ -86,7 +92,9 @@ physics:
             , loader
             , largeant
             , ionandscint
+            , ionandscintout
             , pdfastsim
+            , pdfastsimout
             , simdrift
             , mcreco
           ]
