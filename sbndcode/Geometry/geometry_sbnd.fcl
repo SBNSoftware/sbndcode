@@ -56,8 +56,8 @@ BEGIN_PROLOG
 sbnd_geometry_file: "sbnd_v02_00.gdml"
 sbnd_geometry_file_nowires: "sbnd_v02_00_nowires.gdml"
 
-sbnd_geometry_file_ophybrid: "sbnd_v02_00_ophybrid.gdml"
-sbnd_geometry_file_ophybrid_nowires: "sbnd_v02_00_ophybrid_nowires.gdml"
+sbnd_geometry_file_noophybrid: "sbnd_v02_00_noophybrid.gdml"
+sbnd_geometry_file_noophybrid_nowires: "sbnd_v02_00_noophybrid_nowires.gdml"
 
 #
 # sourec of geometry description
