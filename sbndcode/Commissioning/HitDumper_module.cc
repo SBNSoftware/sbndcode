@@ -140,6 +140,8 @@ private:
   void ResetCRTHitsVars(int n);
   /// Resets optical hits tree variables
   void ResetOpHitsVars(int n);
+  /// Resets anode-cathode crossing muon tracks tree variables 
+  void ResetACTracksVars(int n);
   /// Resize the data structure for MCNeutrino particles
   void ResizeMCNeutrino(int nNeutrinos);
   /// Resize the data strutcure for Genie primaries
@@ -235,6 +237,16 @@ private:
   std::vector<double> _ophit_opdet_z;         ///< OpDet Z coordinate of the optical hit
   std::vector<int> _ophit_opdet_type;         ///< OpDet tyoe of the optical hit
 
+  // Anode-cathode crossing muon track variables 
+  int _nactrks;                           ///< number of ac crossing tracks 
+  std::vector<double> _actrk_t0;          ///< t0 (time of interaction )
+  std::vector<float> _actrk_x1;           ///< x coordinate on anode
+  std::vector<float> _actrk_y1;           ///< y coordinate on anode 
+  std::vector<float> _actrk_z1;           ///< z coordinate on anode 
+  std::vector<float> _actrk_x2;           ///< x coordinate on cathode 
+  std::vector<float> _actrk_y2;           ///< y coordinate on cathode 
+  std::vector<float> _actrk_z2;           ///< z coordinate on cathode 
+  
   //mctruth information
   size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
   Int_t     mcevts_truth;                     ///< number of neutrino Int_teractions in the spill
@@ -297,6 +309,7 @@ private:
   std::string fCRTStripModuleLabel; ///< Label for CRTStrip dataproduct (to be set via fcl)
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
+  std::string fACTrackModuleLabel;  ///< Label for ACTrack dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
   std::vector<std::string> fOpHitsModuleLabels; ///< Labels for OpHit dataproducts (to be set via fcl)
@@ -308,6 +321,7 @@ private:
   bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
   bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
   bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
+  bool freadACTracks;      ///< Add ACTracks to output (to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
@@ -359,6 +373,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
+  fACTrackModuleLabel  = p.get<std::string>("ACTrackModuleLabel", "testProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
@@ -366,6 +381,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
+  freadACTracks      = p.get<bool>("readACTracks",true);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
@@ -813,6 +829,32 @@ void Hitdumper::analyze(const art::Event& evt)
     }
   }
 
+  //
+  // AC crossing tracks 
+  //
+  _nactrks = 0; 
+  if (freadACTracks){
+    art::Handle<std::vector<sbn::crt::CRTTrack> > acTrackListHandle;
+    std::vector<art::Ptr<sbn::crt::CRTTrack> > actrklist;
+    if (evt.getByLabel("testProducer", acTrackListHandle)){
+      art::fill_ptr_vector(actrklist, acTrackListHandle); 
+      _nactrks = actrklist.size();
+      ResetACTracksVars(_nactrks);
+
+      for (int i=0; i < _nactrks; i++){
+        _actrk_t0[i] = actrklist[i]->ts0_ns;
+        _actrk_x1[i] = actrklist[i]->x1_pos;
+        _actrk_y1[i] = actrklist[i]->y1_pos;
+        _actrk_z1[i] = actrklist[i]->z1_pos;
+        _actrk_x2[i] = actrklist[i]->x2_pos;
+        _actrk_y2[i] = actrklist[i]->y2_pos;
+        _actrk_z2[i] = actrklist[i]->z2_pos; 
+      }
+    }
+    else{
+      std::cout << "Failed to get sbn::crt::CRTTrack data product for AC muons." << std::endl;
+    }
+  }
 
   if (fcheckTransparency) {
 
@@ -1125,6 +1167,17 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opdet_type", &_ophit_opdet_type);
   }
 
+  if (freadACTracks) {
+    fTree->Branch("nactrks", &_nactrks, "nactrks/I");
+    fTree->Branch("actrk_t0", &_actrk_t0);
+    fTree->Branch("actrk_x1", &_actrk_x1);
+    fTree->Branch("actrk_y1", &_actrk_y1);
+    fTree->Branch("actrk_z1", &_actrk_z1);
+    fTree->Branch("actrk_x2", &_actrk_x2);
+    fTree->Branch("actrk_y2", &_actrk_y2);
+    fTree->Branch("actrk_z2", &_actrk_z2);
+  }
+
   if (freadTruth) {
     fTree->Branch("mcevts_truth",&mcevts_truth,"mcevts_truth/I");
     fTree->Branch("nuScatterCode_truth",&nuScatterCode_truth);
@@ -1274,7 +1327,23 @@ void Hitdumper::ResetOpHitsVars(int n) {
   _ophit_opdet_type.resize(n, DEFAULT_VALUE);
 }
 
+void Hitdumper::ResetACTracksVars(int n){
+  _actrk_t0.clear();
+  _actrk_x1.clear();
+  _actrk_y1.clear();
+  _actrk_z1.clear();
+  _actrk_x2.clear();
+  _actrk_y2.clear();
+  _actrk_z2.clear(); 
 
+  _actrk_t0.reserve(n);
+  _actrk_x1.reserve(n);
+  _actrk_y1.reserve(n);
+  _actrk_z1.reserve(n);
+  _actrk_x2.reserve(n);
+  _actrk_y2.reserve(n);
+  _actrk_z2.reserve(n); 
+}
 
 void Hitdumper::ResetVars() {
 
