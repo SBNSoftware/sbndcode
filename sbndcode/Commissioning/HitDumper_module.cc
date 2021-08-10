@@ -375,7 +375,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
-  fACTrackModuleLabel  = p.get<std::string>("ACTrackModuleLabel", "testProducer");
+  fACTrackModuleLabel  = p.get<std::string>("ACTrackModuleLabel", " ");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
@@ -838,7 +838,7 @@ void Hitdumper::analyze(const art::Event& evt)
   if (freadACTracks){
     art::Handle<std::vector<sbn::crt::CRTTrack> > acTrackListHandle;
     std::vector<art::Ptr<sbn::crt::CRTTrack> > actrklist;
-    if (evt.getByLabel("testProducer", acTrackListHandle)){
+    if (evt.getByLabel("ACProducer", acTrackListHandle)){
       art::fill_ptr_vector(actrklist, acTrackListHandle); 
       _nactrks = actrklist.size();
       ResetACTracksVars(_nactrks);

@@ -16,7 +16,7 @@ hitdumper:
     CRTHitModuleLabel:        "crthit"
     CRTStripModuleLabel:      "crt"
     CRTTrackModuleLabel:      "crttrack"
-    ACTrackModuleLabel:       "testProducer"
+    ACTrackModuleLabel:       "ACProducer"
     GenieGenModuleLabel:      "generator"
 
     keepCRThits:              true
