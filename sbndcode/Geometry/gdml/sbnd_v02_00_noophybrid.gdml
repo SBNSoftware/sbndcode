@@ -59227,12 +59227,13 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlane_V"/>
-				<positionref ref="posVPlane_E"/>
+				<positionref ref="posUPlane_E"/> <!-- WARNING: this should be posV, will have to be fixed once LArSoft View is fixed -->
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlane_U"/>
-				<positionref ref="posUPlane_E"/>
+				<positionref ref="posVPlane_E"/> <!-- WARNING: this should be posU, will have to be fixed once LArSoft View is fixed -->
 			</physvol>
+			<physvol>
 			<physvol>
 				<volumeref ref="volTPCPlaneVert"/>
 				<positionref ref="posYPlane_E"/>
