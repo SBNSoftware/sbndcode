@@ -1,6 +1,6 @@
 BEGIN_PROLOG
 
-sbnd_ncreco_ci: 
+sbnd_ncreco: 
 {
    module_type:			"NCReco"
    GenieGenModuleLabel:		"generator"

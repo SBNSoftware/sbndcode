@@ -24,7 +24,7 @@ physics:
 {
   analyzers:
   {
-    ncreco: @local::sbnd_ncreco_ci
+    ncreco: @local::sbnd_ncreco
   }
 
   ana:       [ ncreco ]
