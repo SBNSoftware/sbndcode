@@ -16,6 +16,8 @@ sbnd_hit_finder:
   PulsePolarityPMT:     -1         # use -1 for inverse polarity
   PulsePolarityArapuca:  1         # use -1 for inverse polarity
   UseDenoising:          true      # denoising algorithm to use with arapucas
+  DaphneFrequency:       80.0      # in MHz. Frequency of the Daphne Readouts
+
 }
 
 END_PROLOG
