@@ -245,7 +245,9 @@ private:
   std::vector<float> _actrk_z1;           ///< z coordinate on anode 
   std::vector<float> _actrk_x2;           ///< x coordinate on cathode 
   std::vector<float> _actrk_y2;           ///< y coordinate on cathode 
-  std::vector<float> _actrk_z2;           ///< z coordinate on cathode 
+  std::vector<float> _actrk_z2;           ///< z coordinate on cathode
+  std::vector<float> _actrk_theta_xz;     ///< theta_xz trajectory angle 
+  std::vector<float> _actrk_theta_yz;     ///< theta_yz trajectory angle 
   
   //mctruth information
   size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
@@ -841,14 +843,16 @@ void Hitdumper::analyze(const art::Event& evt)
       _nactrks = actrklist.size();
       ResetACTracksVars(_nactrks);
 
-      for (int i=0; i < _nactrks; i++){
-        _actrk_t0[i] = actrklist[i]->ts0_ns;
+      for (int i=0; i < _nactrks; i++){ 
+        _actrk_t0[i] = actrklist[i]->ts1_ns; //NOTE: t0 is in us!!!, only using ts1_ns as placeholder
         _actrk_x1[i] = actrklist[i]->x1_pos;
         _actrk_y1[i] = actrklist[i]->y1_pos;
         _actrk_z1[i] = actrklist[i]->z1_pos;
         _actrk_x2[i] = actrklist[i]->x2_pos;
         _actrk_y2[i] = actrklist[i]->y2_pos;
         _actrk_z2[i] = actrklist[i]->z2_pos; 
+        _actrk_theta_xz[i] = actrklist[i]->thetaxy; // NOTE: using theta**xy** from CRTTrack product as theta**xz**!!!
+        _actrk_theta_yz[i] = actrklist[i]->phizy; // NOTE: using **phi**zy from CRTTrack product as **theta**zy!!! 
       }
     }
     else{
@@ -1176,6 +1180,8 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("actrk_x2", &_actrk_x2);
     fTree->Branch("actrk_y2", &_actrk_y2);
     fTree->Branch("actrk_z2", &_actrk_z2);
+    fTree->Branch("actrk_theta_xz", &_actrk_theta_xz);
+    fTree->Branch("actrk_theta_yz", &_actrk_theta_yz);
   }
 
   if (freadTruth) {
@@ -1328,21 +1334,15 @@ void Hitdumper::ResetOpHitsVars(int n) {
 }
 
 void Hitdumper::ResetACTracksVars(int n){
-  _actrk_t0.clear();
-  _actrk_x1.clear();
-  _actrk_y1.clear();
-  _actrk_z1.clear();
-  _actrk_x2.clear();
-  _actrk_y2.clear();
-  _actrk_z2.clear(); 
-
-  _actrk_t0.reserve(n);
-  _actrk_x1.reserve(n);
-  _actrk_y1.reserve(n);
-  _actrk_z1.reserve(n);
-  _actrk_x2.reserve(n);
-  _actrk_y2.reserve(n);
-  _actrk_z2.reserve(n); 
+  _actrk_t0.assign(n, DEFAULT_VALUE);
+  _actrk_x1.assign(n, DEFAULT_VALUE);
+  _actrk_y1.assign(n, DEFAULT_VALUE);
+  _actrk_z1.assign(n, DEFAULT_VALUE);
+  _actrk_x2.assign(n, DEFAULT_VALUE);
+  _actrk_y2.assign(n, DEFAULT_VALUE);
+  _actrk_z2.assign(n, DEFAULT_VALUE); 
+  _actrk_theta_xz.assign(n, DEFAULT_VALUE); 
+  _actrk_theta_yz.assign(n, DEFAULT_VALUE);
 }
 
 void Hitdumper::ResetVars() {

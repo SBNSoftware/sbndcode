@@ -280,16 +280,19 @@ void testProducer::produce(art::Event & evt)
          geo::Point_t apoint = (ac_endpoints.at(i)).at(0), cpoint = (ac_endpoints.at(i)).at(1); 
          float apoint_x = float(apoint.X()), apoint_y = float(apoint.Y()), apoint_z = float(apoint.Z()); 
          float cpoint_x = float(cpoint.X()), cpoint_y = float(cpoint.Y()), cpoint_z = float(cpoint.Z()); 
+         double theta_xz = (ac_trajectories.at(i)).at(0), theta_yz = (ac_trajectories.at(i)).at(1);
 
          sbn::crt::CRTTrack mytrack;
 
-         mytrack.ts0_ns = t0*1e-3; //t0 is currently in us
+         mytrack.ts1_ns = t0; //NOTE: t0 is in us!!!, only using ts0_ns as placeholder 
          mytrack.x1_pos = apoint_x; 
          mytrack.y1_pos = apoint_y; 
          mytrack.z1_pos = apoint_z; 
          mytrack.x2_pos = cpoint_x; 
          mytrack.y2_pos = cpoint_y; 
          mytrack.z2_pos = cpoint_z; 
+         mytrack.thetaxy = theta_xz; // NOTE: using theta**xy** from CRTTrack product as theta**xz**!!!
+         mytrack.phizy = theta_yz; // NOTE: using **phi**zy from CRTTrack product as **theta**zy!!! 
 
          ac_tracks->push_back(mytrack);
       }
