@@ -38,6 +38,7 @@
 // ROOT includes
 #include <TTree.h>
 
+
 namespace sbnd {
   class Select;
 }
@@ -95,11 +96,9 @@ private:
   double   		pfpCRTHitT0; 
   double	        pfpCRTHitPlane;     
   double		pfpTrackLength;
-  double 		pfpYZAngle;
-  double		pfpXZAngle;
-  double		pfpTrackStartX;
-  double		pfpTrackStartY;
-  double		pfpTrackStartZ;
+  double		pfpTheta;
+  double 		pfpZenith;
+  double		pfpAzimuth;  
   std::vector<float>    pfpDriftTime_0;  
   std::vector<float>    pfpDriftTime_1;  
   std::vector<float>    pfpDriftTime_2;  
@@ -110,14 +109,17 @@ private:
   std::vector<float>    pfpTrajLocationY;  
   std::vector<float>    pfpTrajLocationZ;  
   std::vector<float>	pfpdQdx_0;
+  std::vector<float> 	pfpdEdx_0;
   std::vector<float>	pfpX_0;
   std::vector<float>	pfpY_0;
   std::vector<float>	pfpZ_0;
   std::vector<float>	pfpdQdx_1;
+  std::vector<float> 	pfpdEdx_1;
   std::vector<float>	pfpX_1;
   std::vector<float>	pfpY_1;
   std::vector<float>	pfpZ_1;
   std::vector<float>	pfpdQdx_2;
+  std::vector<float> 	pfpdEdx_2;
   std::vector<float>	pfpX_2;
   std::vector<float>	pfpY_2;
   std::vector<float>	pfpZ_2;
@@ -321,12 +323,12 @@ void sbnd::Select::analyze(art::Event const& e)
      
     for(const art::Ptr<recob::Track> &trk: pfpTrack){
 
-      pfpTrackLength = trk->Length();     
-      pfpYZAngle = trk->ZenithAngle();
-      pfpXZAngle = trk->AzimuthAngle();
-      pfpTrackStartX = trk->Start().X();
-      pfpTrackStartY = trk->Start().Y();
-      pfpTrackStartZ = trk->Start().Z();
+      pfpTrackLength 	= trk->Length();     
+      
+      pfpTheta 		= trk->Theta(trk->FirstValidPoint()) * 180 / M_PI;
+      pfpZenith 	= trk->ZenithAngle(trk->FirstValidPoint()) * 180 / M_PI;
+      pfpAzimuth 	= trk->AzimuthAngle(trk->FirstValidPoint()) * 180 / M_PI;
+ 
  
       for(size_t i = 0; i < trk->NPoints()-1; i++){
         pfpTrajLocationX.push_back(trk->LocationAtPoint(i).X());
@@ -388,6 +390,7 @@ void sbnd::Select::analyze(art::Event const& e)
             pfpDriftTime_0.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData)-pfpT0);
       	    pfpTPC2TrigTime_0.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData));
             pfpdQdx_0.push_back(cal->dQdx()[i]);
+	    pfpdEdx_0.push_back(cal->dEdx()[i]);
             pfpX_0.push_back(cal->XYZ()[i].X());
             pfpY_0.push_back(cal->XYZ()[i].Y());
             pfpZ_0.push_back(cal->XYZ()[i].Z());
@@ -399,6 +402,7 @@ void sbnd::Select::analyze(art::Event const& e)
             pfpDriftTime_1.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData)-pfpT0);
       	    pfpTPC2TrigTime_1.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData));
             pfpdQdx_1.push_back(cal->dQdx()[i]);
+	    pfpdEdx_1.push_back(cal->dEdx()[i]);
             pfpX_1.push_back(cal->XYZ()[i].X());
             pfpY_1.push_back(cal->XYZ()[i].Y());
             pfpZ_1.push_back(cal->XYZ()[i].Z());
@@ -410,6 +414,7 @@ void sbnd::Select::analyze(art::Event const& e)
             pfpDriftTime_2.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData)-pfpT0);
       	    pfpTPC2TrigTime_2.push_back(this->GetHitTimeFromTPIndex_DetectorClock_ms( trkHit, cal->TpIndices()[i], clockData));
             pfpdQdx_2.push_back(cal->dQdx()[i]);
+	    pfpdEdx_2.push_back(cal->dEdx()[i]);
             pfpX_2.push_back(cal->XYZ()[i].X());
             pfpY_2.push_back(cal->XYZ()[i].Y());
             pfpZ_2.push_back(cal->XYZ()[i].Z());
@@ -417,11 +422,12 @@ void sbnd::Select::analyze(art::Event const& e)
         } 
       }
       
+      
       // MC Truth Info
      
       if(!e.isRealData()){
   
-        if(trkHit.empty()) continue;
+        //if(trkHit.empty()) continue;
 
 	int trkidtruth = TruthMatchUtils::TrueParticleIDFromTotalTrueEnergy(clockData, trkHit, true);
         bool valid = TruthMatchUtils::Valid(trkidtruth);  
@@ -522,11 +528,9 @@ void sbnd::Select::beginJob()
   pfpTree->Branch("CRTHitT0", &pfpCRTHitT0, "CRTHitT0/D");        
   pfpTree->Branch("CRTHitPlane", &pfpCRTHitPlane, "CRTHitPlane/D");     
   pfpTree->Branch("TrackLength", &pfpTrackLength, "TrackLength/D");
-  pfpTree->Branch("YZAngle", &pfpYZAngle, "YZAngle/D");
-  pfpTree->Branch("XZAngle", &pfpXZAngle, "XZAngle/D");
-  pfpTree->Branch("TrackStartX", &pfpTrackStartX, "TrackStartX/D");
-  pfpTree->Branch("TrackStartY", &pfpTrackStartY, "TrackStartY/D");
-  pfpTree->Branch("TrackStartZ", &pfpTrackStartZ, "TrackStartZ/D");
+  pfpTree->Branch("Theta", &pfpTheta, "Theta/D");
+  pfpTree->Branch("Zenith", &pfpZenith, "Zenith/D");
+  pfpTree->Branch("Azimuth", &pfpAzimuth, "Azimuth/D");
   pfpTree->Branch("DriftTime_0", &pfpDriftTime_0);
   pfpTree->Branch("DriftTime_1", &pfpDriftTime_1);
   pfpTree->Branch("DriftTime_2", &pfpDriftTime_2);
@@ -537,14 +541,17 @@ void sbnd::Select::beginJob()
   pfpTree->Branch("TrajLocationY", &pfpTrajLocationY);
   pfpTree->Branch("TrajLocationZ", &pfpTrajLocationZ);
   pfpTree->Branch("dQdx_0", &pfpdQdx_0);
+  pfpTree->Branch("dEdx_0", &pfpdEdx_0);
   pfpTree->Branch("X_0", &pfpX_0);
   pfpTree->Branch("Y_0", &pfpY_0);
   pfpTree->Branch("Z_0", &pfpZ_0);
   pfpTree->Branch("dQdx_1", &pfpdQdx_1);
+  pfpTree->Branch("dEdx_1", &pfpdEdx_1);
   pfpTree->Branch("X_1", &pfpX_1);
   pfpTree->Branch("Y_1", &pfpY_1);
   pfpTree->Branch("Z_1", &pfpZ_1);
   pfpTree->Branch("dQdx_2", &pfpdQdx_2);
+  pfpTree->Branch("dEdx_2", &pfpdEdx_2);
   pfpTree->Branch("X_2", &pfpX_2);
   pfpTree->Branch("Y_2", &pfpY_2);
   pfpTree->Branch("Z_2", &pfpZ_2);
@@ -873,11 +880,9 @@ void sbnd::Select::clearPfpTree()
   pfpCRTHitT0 = 99999; 
   pfpCRTHitPlane = 99999;
   pfpTrackLength = 99999;
-  pfpYZAngle = 99999;
-  pfpXZAngle = 99999;
-  pfpTrackStartX = 99999;
-  pfpTrackStartY = 99999;
-  pfpTrackStartZ = 99999;
+  pfpTheta = 99999;
+  pfpZenith = 99999;
+  pfpAzimuth = 99999;
   pfpDriftTime_0.clear();
   pfpDriftTime_1.clear();
   pfpDriftTime_2.clear();
@@ -888,14 +893,17 @@ void sbnd::Select::clearPfpTree()
   pfpTrajLocationY.clear();  
   pfpTrajLocationZ.clear();  
   pfpdQdx_0.clear();
+  pfpdEdx_0.clear();
   pfpX_0.clear();
   pfpY_0.clear();
   pfpZ_0.clear();
   pfpdQdx_1.clear();
+  pfpdEdx_1.clear();
   pfpX_1.clear();
   pfpY_1.clear();
   pfpZ_1.clear();
   pfpdQdx_2.clear();
+  pfpdEdx_2.clear();
   pfpX_2.clear();
   pfpY_2.clear();
   pfpZ_2.clear();

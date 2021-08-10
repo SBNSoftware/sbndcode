@@ -21,6 +21,6 @@ mrbsetenv && mrbslp
 
 #lar -c run_Select_pandoraT0.fcl -S /pnfs/sbnd/scratch/users/lnguyen/prodcorsika_cosmics_job/v09_24_01/reco2/prodcorsika_cosmics_10ms_lower_bound_diffusion_standard_read_out_window/crossing_muons_etime/files.list -n 10
 
-#lar -c run_Select_pandoraT0.fcl -S /pnfs/sbnd/scratch/users/lnguyen/prodcorsika_cosmics_job/v09_24_01/reco2/prodcorsika_cosmics_10ms_lower_bound_diffusion_standard_read_out_window/crossing_muons_etime/files.list -n 10
+#lar -c run_Select_pandoraT0.fcl -S /pnfs/sbnd/scratch/users/lnguyen/prodcorsika_cosmics_job/v09_24_01/reco2/prodcorsika_cosmics_10ms_lower_bound_diffusion_standard_read_out_window/crossing_muons_etime/files.list -n 50
 
 lar -c run_Select_CRTMatch.fcl -S /pnfs/sbnd/scratch/users/lnguyen/prodcorsika_cosmics_job/v09_24_01/reco2/prodcorsika_cosmics_10ms_lower_bound_diffusion_standard_read_out_window/crossing_muons_etime/files.list -o crt_event.root -n 100
