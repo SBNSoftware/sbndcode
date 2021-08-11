@@ -5,32 +5,32 @@
 # they are fast and always run.
 # FCL files need to be copied to the test area (DATAFILES directive) since they
 # are not installed.
-cet_test(geometry_sbnd HANDBUILT
-  DATAFILES test_geometry_sbnd.fcl
-  TEST_EXEC lar
-  TEST_ARGS --rethrow-all --config ./test_geometry_sbnd.fcl
+#cet_test(geometry_sbnd HANDBUILT
+#  DATAFILES test_geometry_sbnd.fcl
+#  TEST_EXEC lar
+#  TEST_ARGS --rethrow-all --config ./test_geometry_sbnd.fcl
 #  OPTIONAL_GROUPS Broken
-)
+#)
 
 
 #
 # the following are tests equivalent to the module ones, but with no framework
 #
 # unit test (uses configuration in test_geometry_sbnd.fcl)
-cet_test(geometry_sbnd_test
-  SOURCES geometry_sbnd_test.cxx
-  DATAFILES test_geometry_sbnd.fcl
-  TEST_ARGS ./test_geometry_sbnd.fcl
-  LIBRARIES sbndcode_Geometry
-            larcorealg_Geometry
-            GeometryTestLib
-            ${MF_MESSAGELOGGER}
-            
-            ${FHICLCPP}
-            cetlib_except
-	    ${ROOT_CORE}
+#cet_test(geometry_sbnd_test
+#  SOURCES geometry_sbnd_test.cxx
+#  DATAFILES test_geometry_sbnd.fcl
+#  TEST_ARGS ./test_geometry_sbnd.fcl
+#  LIBRARIES sbndcode_Geometry
+#            larcorealg_Geometry
+#            GeometryTestLib
+#            ${MF_MESSAGELOGGER}
+#            
+#            ${FHICLCPP}
+#            cetlib_except
+#	    ${ROOT_CORE}
 #  OPTIONAL_GROUPS Broken
-)
+#)
 
 
 # unit test (uses configuration in test_geometry_sbnd.fcl)
