@@ -92,8 +92,8 @@ private:
     int fSubRun; ///< art subrun number
     int fEvent;  ///< art event number
 
-    vector<double> fETrue;
-    vector<int> fMode;
+    double fETrue;
+    int fMode;
     double fEh;
     double fPh;
     double fPzh;
@@ -126,7 +126,7 @@ void ana::NCReco::beginJob() {
  
   fTree->Branch("ETrue", &fETrue);
   fTree->Branch("Mode", &fMode);
-  fTree->Branch("EReco", &fEReco);
+//  fTree->Branch("EReco", &fEReco);
 
   fTree->Branch("ProtonOnly", &fProtonOnly);  //for double-checking only. can get rid of later
   fTree->Branch("CCNC", &fCCNC);
@@ -179,24 +179,24 @@ void ana::NCReco::analyze(const art::Event& evt) {
       const simb::MCParticle* particle = particleIt.second;
       trueParticles[particle->TrackId()] = particle;
       int id = particle->TrackId();
-      double Energy = particle.E();
+      double Energy = particle->E();
 
       if(id==14){ //if NC neutrino, get the true E
-	fETrue.push_back(Energy);
+	fETrue=Energy;
 
       }else if(id==2212 && Energy>0.025 && fNProtons==0){ //If proton, check if energy is above threshold, and if so, if this is the only one so far.
 	fNProtons = 1;
-	fEh = particle.E();
-	fPh = particle.P();
-	fPzh = particle.Pz();
+	fEh = particle->E();
+	fPh = particle->P();
+	fPzh = particle->Pz();
 
       } else if(id==2212 && Energy>0.025 && fNProtons>0){
 	fNProtons = 2;
-	break
+	break;
 
       } else if((abs(id)==211 && Energy>0.01) || (id=22 && Energy> 0.03)) { //check if there are pions or photons. If so, skip event
 	fProtonOnly = false;
-	break
+	break;
       }
 
       if(fVerbose){
@@ -211,15 +211,15 @@ void ana::NCReco::analyze(const art::Event& evt) {
   }
 
   if(fCCNC==1 && fNProtons==1 && fProtonOnly==true){
-    fTree.Fill();
+    fTree->Fill();
   }  
 
-  fETrue.clear();
-  fMode.clear();
-////  fEReco.clear();
-  fNProtons.clear();
-  fProtonOnly.clear();
-  fCCNC.clear();
+//  fETrue.clear();
+//  fMode.clear();
+//  fEReco.clear();
+//  fNProtons.clear();
+//  fProtonOnly.clear();
+//  fCCNC.clear();
   return;
 }// end analyze
 
