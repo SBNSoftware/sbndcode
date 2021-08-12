@@ -3,8 +3,8 @@
 
 physics.filters.filter: @local::sbnd_larg4crtfilter
 
-physics.simulate: [ @table::physics.simulate
-                 , filter
+physics.simulate: [ @sequence::physics.simulate
+                  , filter
                   ]
 
 outputs.out1.SelectEvents: [ "simulate" ]
