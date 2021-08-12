@@ -2,11 +2,13 @@
 #include "g4_no_opticalsim.fcl"
 
 
-physics.simulate: [ rns, largeant, filter, mcreco ]
+physics.simulate: [ @sequence::physics.simulate
+                  , filter
+                  ]
 
 
 physics.filters.filter: @local::sbnd_larg4particlefilter
-physics.filters.filter.InterestingPDGs: [ 13 , 11 ] 
+physics.filters.filter.InterestingPDGs: [ 13 , 11 ]
 physics.filters.filter.ParticleMinMomentum: [ -1, 0 ]
 physics.filters.filter.ParticleMaxMomentum: [ -1 , 0.053 ]
 physics.filters.filter.StartInTPC: [ 0, 1 ] #Don't care if the muon starts in the TPC but we definitely do care if the Michel electron does
