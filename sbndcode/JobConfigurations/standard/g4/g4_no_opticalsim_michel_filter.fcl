@@ -2,9 +2,17 @@
 #include "g4_no_opticalsim.fcl"
 
 
-physics.simulate: [ @sequence::physics.simulate
-                  , filter
-                  ]
+physics.simulate: [ rns
+                  , loader
+                  , largeant
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  , simdrift
+                  , filter # Adding filter
+                  , mcreco
+                ]
 
 
 physics.filters.filter: @local::sbnd_larg4particlefilter

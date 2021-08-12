@@ -15,11 +15,6 @@ services:
   @table::sbnd_g4_services_noohybrid
 }
 
-# Add the scintillation outside the active volume
-# and PD simulation processed to the producers
-physics.producers.ionandscintout: @local::sbnd_ionandscint_out
-physics.producers.pdfastsimout: @local::sbnd_pdfastsim_pvs
-
 physics.simulate: [ rns
                   , loader
                   , largeant

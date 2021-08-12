@@ -4,9 +4,17 @@
 
 
 physics.filters.filter: @local::sbnd_larg4faketriggerfilter
-physics.simulate: [ @sequence::physics.simulate
-                  , filter
-                  ]
+physics.simulate: [ rns
+                  , loader
+                  , largeant
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  , simdrift
+                  , filter # Adding filter
+                  , mcreco
+                ]
 
 outputs.out1.SelectEvents: [ "simulate" ]
 

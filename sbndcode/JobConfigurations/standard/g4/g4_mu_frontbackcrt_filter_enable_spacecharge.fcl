@@ -4,9 +4,17 @@
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE: true
 
-physics.simulate: [ @sequence::physics.simulate
-                  , filter
-                  ]
+physics.simulate: [ rns
+                  , loader
+                  , largeant
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  , simdrift
+                  , filter # Adding filter
+                  , mcreco
+                ]
 
 physics.filters.filter: @local::sbnd_larg4crtfilter
 physics.filters.filter.PDGs:     [ 13, -13 ]
