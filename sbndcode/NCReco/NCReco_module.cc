@@ -44,6 +44,11 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <cmath>
+
+#ifdef __MAKECINT__
+#pragma link C++ class vector<TLorentzVector>+;
+#endif 
 
 using namespace std;
 
@@ -92,15 +97,17 @@ private:
     int fSubRun; ///< art subrun number
     int fEvent;  ///< art event number
 
-    double fETrue;
-    int fMode;
-    double fEh;
-    double fPh;
-    double fPzh;
+//    double fETrue;
+//    double fEh;
+//    double fPh;
+//    double fPzh;
 //    double fEReco; 
+    vector<TLorentzVector> fPTrue;
+    int fMode;
     bool fProtonOnly;
     int fCCNC;
     int fNProtons = 0;
+    int fNParticles;
 };
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -124,13 +131,14 @@ void ana::NCReco::beginJob() {
   fTree->Branch("SubRun",       &fSubRun,       "SubRun/I");
   fTree->Branch("Event",        &fEvent,        "Event/I");
  
-  fTree->Branch("ETrue", &fETrue);
-  fTree->Branch("Mode", &fMode);
-//  fTree->Branch("EReco", &fEReco);
+  fTree->Branch("ETrue", &fETrue, "ETrue/D");
+  fTree->Branch("Mode", &fMode, "Mode/I");
+//  fTree->Branch("EReco", &fEReco, "EReco/D");
 
-  fTree->Branch("ProtonOnly", &fProtonOnly);  //for double-checking only. can get rid of later
-  fTree->Branch("CCNC", &fCCNC);
-  fTree->Branch("NProtons", &fNProtons);
+  fTree->Branch("ProtonOnly", &fProtonOnly, "ProtonOnly/O");  //for double-checking only. can get rid of later
+  fTree->Branch("CCNC", &fCCNC, "Mode/I");
+  fTree->Branch("NProtons", &fNProtons, "NProtons/I");
+  fTree->Branch("NParticles", &fNParticles, "NParticles/I");
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -165,61 +173,59 @@ void ana::NCReco::analyze(const art::Event& evt) {
   map<int,float> trueParticleEnergy;
 
   fProtonOnly = true;
-
+  fNProtons = 0;
+  fNParticles = 0;
+ 
   for(auto const& truth: mclist) {
     const simb::MCNeutrino neutrino = truth->GetNeutrino();
     fCCNC=neutrino.CCNC();
     fMode=neutrino.Mode();
   }
 
-  if(fCCNC==1){ 
   //Loops over particles, Makes a map of Track id and pdgcode
-    for (const auto& particleIt: particles) {
+  for (const auto& particleIt: particles) {
 
-      const simb::MCParticle* particle = particleIt.second;
-      trueParticles[particle->TrackId()] = particle;
-      int id = particle->TrackId();
-      double Energy = particle->E();
+    const simb::MCParticle* particle = particleIt.second;
+    if (particle->Process()!="primary"){
+      continue;
+    }
+    trueParticles[particle->TrackId()] = particle;
+    int id = particle->PdgCode();
+    double Energy = particle->E();
 
-      if(id==14){ //if NC neutrino, get the true E
-	fETrue=Energy;
+    fNParticles++;
 
-      }else if(id==2212 && Energy>0.025 && fNProtons==0){ //If proton, check if energy is above threshold, and if so, if this is the only one so far.
-	fNProtons = 1;
-	fEh = particle->E();
-	fPh = particle->P();
-	fPzh = particle->Pz();
+    if(id==12 || id==14){ //if NC neutrino, get the true E
+      fETrue=Energy;
 
-      } else if(id==2212 && Energy>0.025 && fNProtons>0){
-	fNProtons = 2;
-	break;
+    }else if(id==2212 && Energy>0.025 && fNProtons==0){ //If proton, check if energy is above threshold, and if so, if this is the only one so far.
+      fNProtons = 1;
+      fEh = particle->E();
+      fPh = particle->P();
+      fPzh = particle->Pz();
 
-      } else if((abs(id)==211 && Energy>0.01) || (id=22 && Energy> 0.03)) { //check if there are pions or photons. If so, skip event
-	fProtonOnly = false;
-	break;
-      }
+    } else if(id==2212 && Energy>0.025 && fNProtons>0){
+      fNProtons++;
 
-      if(fVerbose){
-          cout << "True Particle with track ID: " << particle->TrackId() << " Has code of: " 
-               << particle->PdgCode() << " and Energy of: " << particle->E() << " With Mother: " 
-               << particle->Mother() << " Proccess: " << particle->Process() << " End Process: "  
-               << particle->EndProcess() 
-          << endl;
-      }// if verbose
+    } else if(abs(id)==211 && Energy>0.01) { //check if there are pions. If so, skip event
+      fProtonOnly = false;
 
-    } // for MCParticles
-  }
+    } else if(id==22 && Energy> 0.03) { //check if there are photons. If so, skip event
+      fProtonOnly = false;
 
-  if(fCCNC==1 && fNProtons==1 && fProtonOnly==true){
-    fTree->Fill();
-  }  
+    }
 
-//  fETrue.clear();
-//  fMode.clear();
-//  fEReco.clear();
-//  fNProtons.clear();
-//  fProtonOnly.clear();
-//  fCCNC.clear();
+    if(fVerbose){
+        cout << "True Particle with track ID: " << particle->TrackId() << " Has code of: " 
+             << particle->PdgCode() << " and Energy of: " << particle->E() << " With Mother: " 
+             << particle->Mother() << " Proccess: " << particle->Process() << " End Process: "  
+             << particle->EndProcess() 
+        << endl;
+    }// if verbose
+
+  } // for MCParticles
+
+  fTree->Fill();
   return;
 }// end analyze
 
