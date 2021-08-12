@@ -785,11 +785,10 @@ void ACProducer::FindEndpoints( vector<vector<int>> lines_col, vector<vector<int
             
             if (cintersect){
                cpoint.SetX(0);
-               // std::cout << "cathode endpoint: " << cpoint.X() << ", " << cpoint.Y() << ", " << cpoint.Z() << std::endl;
+               std::cout << "cathode endpoint: " << cpoint.X() << ", " << cpoint.Y() << ", " << cpoint.Z() << std::endl;
             }
             else
                std::cout << "intersection of cwire not found by WireIDsIntersect"<< std::endl;
-            
             vector<geo::Point_t> pair{apoint,cpoint};
             ac_endpoints.push_back(pair); 
          }
