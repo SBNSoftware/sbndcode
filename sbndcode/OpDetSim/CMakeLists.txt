@@ -22,8 +22,9 @@ simple_plugin( sbndPDMapAlg tool
 )
 
 
-art_make(
+art_make( EXCLUDE sbndPDMapAlg_tool.cc
   LIB_LIBRARIES
+                    sbndcode_OpDetSim_sbndPDMapAlg_tool
                     larcore_Geometry_Geometry_service
                     lardataobj_Simulation
                     lardata_Utilities

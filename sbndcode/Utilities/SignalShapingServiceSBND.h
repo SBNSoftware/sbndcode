@@ -33,7 +33,7 @@
 
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Services/Registry/ActivityRegistry.h"
-#include "art/Framework/Services/Registry/ServiceMacros.h"
+#include "art/Framework/Services/Registry/ServiceDeclarationMacros.h"
 #include "lardata/Utilities/SignalShaping.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/TPCGeo.h"

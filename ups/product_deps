@@ -27,7 +27,7 @@ incdir  product_dir  include
 libdir  fq_dir       lib
 bindir  fq_dir       bin
 gdmldir product_dir
-fcldir  product_dir
+fcldir  product_dir fcl
 fwdir   product_dir scripts
 
 # With "product  version" table below, we now define dependencies
@@ -40,7 +40,8 @@ sbndutil         v09_28_00 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-cetbuildtools    v7_17_01  -   only_for_build
+cetbuildtools    v8_14_02  -   only_for_build
+end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
