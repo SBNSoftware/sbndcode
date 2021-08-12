@@ -779,7 +779,7 @@ void ACProducer::FindEndpoints( vector<vector<int>> lines_col, vector<vector<int
             bool cintersect = fGeometryService->WireIDsIntersect(cwire_col, cwire_ind, cpoint); 
 
             if (aintersect)
-               // std::cout << "anode endpoint: " << apoint.X() << ", " << apoint.Y() << ", " << apoint.Z() << std::endl;
+               std::cout << "anode endpoint: " << apoint.X() << ", " << apoint.Y() << ", " << apoint.Z() << std::endl;
             else
                std::cout << "intersection of awire not found by WireIDsIntersect" << std::endl;
             
