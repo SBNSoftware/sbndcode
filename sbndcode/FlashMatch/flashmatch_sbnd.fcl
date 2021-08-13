@@ -1,4 +1,4 @@
-BEGIN_PROLOG
+BEGIN_PROLOG #comment to run generate_simple_weighted_template.py
 
 sbnd_simple_flashmatch:{
   module_type: FlashPredict
@@ -6,29 +6,31 @@ sbnd_simple_flashmatch:{
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
   OpHitARAProducer: "ophitarapuca"
-  BeamWindowStart: -0.2 # us
-  BeamWindowEnd: 2.0 # us
+  BeamWindowStart: -50 # us
+  BeamWindowEnd: 50.0 # us
   FlashStart: -0.02 # us, wrt flash time
   FlashEnd: 0.08 # us, wrt flash time
   SelectNeutrino: true
-  OnlyPrimaries: true
+  OnlyCollectionWires: false
+  ForceConcurrence: true
   UseUncoatedPMT: true
-  UseARAPUCAS: true
-  # UseCalo: false
+  UseARAPUCAS: false
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
   MakeTree: false
+  StoreTrueNus: false
+  StoreCheatMCT0: false
   MinHitQ: 0.
+  MinSpacePointQ: 0.
+  MinParticleQ: 0.
   MinSliceQ: 0.
-  QScale:  0.001
+  MaxFlashes: 3
   MinOpHPE: 0.
-  MinFlashPE: 0.
-  PEScale: 1.0
+  MinFlashPE: 10.
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
-  OpDetNormalizer: 4
 
-  ThresholdTerm: 30.
+  ThresholdTerm: 50.
 
   PDMapAlg: {
     tool_type: sbndPDMapAlg
@@ -39,8 +41,19 @@ sbnd_simple_flashmatch:{
   score_hist_low: 0.
   score_hist_up: 50.
 
-  n_bins: 40
-  DriftDistance: 202.05
+  DriftDistance: 202.05 # only used for metrics creation
+  XBins: 40
+  # XBinWidth approx 5.
+
+  # block for Y and Z ophit distributions, used for unbiassing
+  YBins: 9
+  YLow: -180.
+  YHigh: 180.
+  YBiasSlope: 0.004
+  ZBins: 12
+  ZLow: 10.
+  YHigh: 490.
+  ZBiasSlope: 0.002
 
   dy_bins: 100
   dy_low: -200.
@@ -48,12 +61,14 @@ sbnd_simple_flashmatch:{
   dz_bins: 100
   dz_low: -200.
   dz_up: 200.
-  rr_bins: 100
+  rr_bins: 50
   rr_low: 0.
   rr_up: 200
-  pe_bins: 50
-  pe_low: 0.
-  pe_up: 1.
+  rr_TF1_fit: "pol3"
+  ratio_bins: 50
+  ratio_low: 0.
+  ratio_up: 1.
+  ratio_TF1_fit: "pol3"
 }
 
-END_PROLOG
+END_PROLOG #comment to run generate_simple_weighted_template.py
