@@ -1,0 +1,26 @@
+BEGIN_PROLOG
+
+MuonTrackProducer:
+{
+  module_type:              "MuonTrackProducer"
+  HitsModuleLabel:          "fasthit"
+  MaxHits: 100000
+
+  HoughThreshold:       8
+  HoughMaxGap:          30
+  HoughRange:           100
+  HoughMinLength:       500
+  HoughMuonLength:      2400
+
+  WriteACTracks:        true
+  WriteAnodeTracks:     false
+  WriteCathodeTracks:   false 
+  WriteTopBottomTracks: false
+}
+
+# MuonFilter :
+# {
+#   module_type:              "MuonFilter"
+# }
+
+END_PROLOG
