@@ -14,7 +14,7 @@ sbnd_simple_flashmatch:{
   OnlyCollectionWires: false
   ForceConcurrence: true
   UseUncoatedPMT: true
-  UseARAPUCAS: true
+  UseARAPUCAS: false
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
   MakeTree: false

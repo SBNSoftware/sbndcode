@@ -1,6 +1,5 @@
 # File:    prodsingle_sbnd_proj.fcl
 # Purpose: Version of prodsingle_sbnd.fcl designed to be submitted remotely
-# Version: 1.1
 # 
 # This configuration runs event generation only.
 # Simulation of propagation through matter and readout simulation are currently
@@ -12,12 +11,6 @@
 # - decorates prodsingle_sbnd.fcl
 # - additional services:
 #   * FileCatalogMetadata and FileCatalogMetadataSBND for metadata addition
-#
-# Changes:
-# 20160721 (petrillo@fnal.gov) [v1.1]
-#   - updated to prodsingle_sbnd.fcl
-#
-#
 
 # additional configuration
 #include "sam_sbnd.fcl"
@@ -45,7 +38,11 @@ physics.simulate: [ rns, generator ]
 
 # we delete the configuration for the other steps,
 # otherwise art will issue a warning
+physics.producers.loader: @erase
 physics.producers.largeant: @erase
+physics.producers.ionandscint: @erase
+physics.producers.pdfastsim: @erase
+physics.producers.simdrift: @erase
 physics.producers.daq     : @erase
 
 # specify the data tier for the ROOT output file
