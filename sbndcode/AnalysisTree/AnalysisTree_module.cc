@@ -854,6 +854,7 @@ namespace sbnd {
     std::string fDigitModuleLabel;
     std::string fHitsModuleLabel;
     std::string fLArG4ModuleLabel;
+    std::string fTPCSimChannelModuleLabel;
     std::string fCalDataModuleLabel;
     std::string fGenieGenModuleLabel;
     std::string fCryGenModuleLabel;
@@ -2102,6 +2103,7 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   fDigitModuleLabel         (pset.get< std::string >("DigitModuleLabel")                   ),
   fHitsModuleLabel          (pset.get< std::string >("HitsModuleLabel")                    ),
   fLArG4ModuleLabel         (pset.get< std::string >("LArGeantModuleLabel")                ),
+  fTPCSimChannelModuleLabel (pset.get< std::string >("TPCSimChannelModuleLabel")           ),
   fCalDataModuleLabel       (pset.get< std::string >("CalDataModuleLabel")                 ),
   fGenieGenModuleLabel      (pset.get< std::string >("GenieGenModuleLabel")                ),
   fCryGenModuleLabel        (pset.get< std::string >("CryGenModuleLabel")                  ), 
@@ -2215,7 +2217,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   // * TPC SimChannels
   std::vector<const sim::SimChannel*> fSimChannels;
   if (isMC && fSaveGeantInfo)
-    evt.getView(fLArG4ModuleLabel, fSimChannels);
+    evt.getView(fTPCSimChannelModuleLabel, fSimChannels);
 
   // * AuxDetSimChannels
   std::vector<const sim::AuxDetSimChannel*> fAuxDetSimChannels;
