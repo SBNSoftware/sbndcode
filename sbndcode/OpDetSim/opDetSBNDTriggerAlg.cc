@@ -2,16 +2,18 @@
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
 
 namespace {
-  double optical_period(detinfo::DetectorClocksData const& clockData)
+  double optical_period(detinfo::DetectorClocksData const& clockData,bool is_daphne)
   {
+    if (is_daphne) return clockData.OpticalClock().TickPeriod()*500/80; //500MHz Apsaia, 80MHz Daphne. TODO load frequency values from fcl ~rodrigoa
     return clockData.OpticalClock().TickPeriod();
   }
 
   raw::TimeStamp_t tick_to_timestamp(detinfo::DetectorClocksData const& clockData,
                                      raw::TimeStamp_t waveform_start,
-                                     size_t waveform_index)
+                                     size_t waveform_index,
+                                     bool is_daphne)
   {
-    return waveform_start + waveform_index * optical_period(clockData);
+    return waveform_start + waveform_index * optical_period(clockData,is_daphne);
   }
 }
 
@@ -75,48 +77,45 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   std::string opdet_type = fOpDetMap.pdType(channel);
   bool is_arapuca = false;
   if( opdet_type.find("arapuca") != std::string::npos ) is_arapuca = true; 
+  bool is_daphne = false;
+  std::string sampling_type = fOpDetMap.electronicsType(channel);
+  if (sampling_type == "daphne") is_daphne = true;
+
   int threshold = is_arapuca ? fConfig.TriggerThresholdADCArapuca() : fConfig.TriggerThresholdADCPMT(); 
   int polarity = is_arapuca ? fConfig.PulsePolarityArapuca() : fConfig.PulsePolarityPMT(); 
 
   // find the start and end points of the trigger window in this waveform
   std::array<double, 2> trigger_window = TriggerEnableWindow(clockData, detProp);
-  raw::TimeStamp_t start = tick_to_timestamp(clockData, waveform.TimeStamp(), 0);
-
+  raw::TimeStamp_t start = tick_to_timestamp(clockData, waveform.TimeStamp(), 0,is_daphne);
   if (start > trigger_window[1]) return;
-  size_t start_i = start > trigger_window[0] ? 0 : (size_t)((trigger_window[0] - start) / optical_period(clockData));
-  //..........................................................
+  size_t start_i = start > trigger_window[0] ? 0 : (size_t)((trigger_window[0] - start) / optical_period(clockData,is_daphne));
+
   // fix rounding on division if necessary
   if (!IsTriggerEnabled(clockData,
                         detProp,
-                        tick_to_timestamp(clockData, waveform.TimeStamp(), start_i))) {
+                        tick_to_timestamp(clockData, waveform.TimeStamp(), start_i,is_daphne))) {
     start_i += 1;
   }
   assert(IsTriggerEnabled(clockData,
                           detProp,
-                          tick_to_timestamp(clockData, waveform.TimeStamp(), start_i)));
-  //..........................................................
-  
-
-  //std::cout<<"Raw waveform timestamp: "<<waveform.TimeStamp()<<", with "<<adcs.size()<<" samples\n";  
-  //std::cout<<"Enable triggers in window start: "<<start<<"     end: "<<trigger_window[1]<<"\n";
+                          tick_to_timestamp(clockData, waveform.TimeStamp(), start_i,is_daphne)));
 
   // if start is past end of waveform, we can return
   if (start_i >= adcs.size()) return;
 
   // get the end time
-  raw::TimeStamp_t end = tick_to_timestamp(clockData, waveform.TimeStamp(), adcs.size() - 1);
-  size_t end_i = end < trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / optical_period(clockData));
+  raw::TimeStamp_t end = tick_to_timestamp(clockData, waveform.TimeStamp(), adcs.size() - 1,is_daphne);
+  size_t end_i = end < trigger_window[1] ? adcs.size()-1 : (size_t)((trigger_window[1] - start) / optical_period(clockData,is_daphne));
  
   // fix rounding error...
   if (IsTriggerEnabled(clockData,
                        detProp,
-                       tick_to_timestamp(clockData, waveform.TimeStamp(), end_i+1)) && end_i+1 < adcs.size()) {
+                       tick_to_timestamp(clockData, waveform.TimeStamp(), end_i+1,is_daphne)) && end_i+1 < adcs.size()) {
     end_i += 1;
   }
   assert(end_i+1 == adcs.size() || !IsTriggerEnabled(clockData,
                                                      detProp,
-                                                     tick_to_timestamp(clockData, waveform.TimeStamp(), end_i+1)));
-  //..........................................................
+                                                     tick_to_timestamp(clockData, waveform.TimeStamp(), end_i+1,is_daphne)));
 
   std::vector<std::array<raw::TimeStamp_t, 2>> this_trigger_locations; 
   bool above_threshold = false;
@@ -126,8 +125,8 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
   raw::TimeStamp_t trigger_start;
   // find all ADC counts above threshold
   for (size_t i = start_i; i <= end_i; i++) {
-    raw::TimeStamp_t time = tick_to_timestamp(clockData, waveform.TimeStamp(),i);
-    t_since_last_trigger += optical_period(clockData);
+    raw::TimeStamp_t time = tick_to_timestamp(clockData, waveform.TimeStamp(),i,is_daphne);
+    t_since_last_trigger += optical_period(clockData,is_daphne);
     bool isLive = (t_since_last_trigger > t_deadtime);
     raw::ADC_Count_t val = polarity * (adcs.at(i) - baseline);
     // only open new trigger if enough deadtime has passed
@@ -146,7 +145,7 @@ void opDetSBNDTriggerAlg::FindTriggerLocations(detinfo::DetectorClocksData const
     // add beam trigger (if enabled)
     // since the clock ticks might not sync up exactly, use the closet sample
     if( isLive && fConfig.BeamTriggerEnable() && !beam_trigger_added &&
-      fabs(time-fConfig.BeamTriggerTime()) <= optical_period(clockData)/2. ){
+      fabs(time-fConfig.BeamTriggerTime()) <= optical_period(clockData,is_daphne)/2. ){
       AddTriggerLocation(this_trigger_locations, {{time,time}});
       beam_trigger_added = true;
       t_since_last_trigger = 0;
@@ -340,6 +339,10 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detin
   raw::Channel_t channel = waveform.ChannelNumber();
   const std::vector<raw::TimeStamp_t> &trigger_times = GetTriggerTimes(channel);
   if( trigger_times.size() == 0 ) return ret;
+  bool is_daphne = false;
+  std::string sampling_type = fOpDetMap.electronicsType(channel);
+  if (sampling_type == "daphne") is_daphne = true;
+
 
 //  std::cout
 //  <<"=======================\n"
@@ -353,13 +356,13 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detin
   // Set the pre- and post-readout sizes
   double    preTrig	= ReadoutWindowPreTrigger(channel);
   double    postTrig	= ReadoutWindowPostTrigger(channel);
-  unsigned  ro_samples  = (preTrig+postTrig)/optical_period(clockData);	// samples
+  unsigned  ro_samples  = (preTrig+postTrig)/optical_period(clockData,is_daphne);	// samples
 
   // Are beam triggers enabled?
   double    beamTrigTime= fConfig.BeamTriggerTime();		// should be 0
   double    preTrigBeam	= ReadoutWindowPreTriggerBeam(channel);
   double    postTrigBeam	= ReadoutWindowPostTriggerBeam(channel);
-  unsigned  ro_samples_beam= (preTrigBeam+postTrigBeam)/optical_period(clockData); // samples
+  unsigned  ro_samples_beam= (preTrigBeam+postTrigBeam)/optical_period(clockData,is_daphne); // samples
 
   // --------------------------------------------
   // Scan the waveform
@@ -370,14 +373,14 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detin
   unsigned  min_ro_samples = ro_samples;
 
   for(size_t i=0; i<adcs.size(); i++){
-    double time = tick_to_timestamp(clockData, waveform.TimeStamp(), i);
+    double time = tick_to_timestamp(clockData, waveform.TimeStamp(), i,is_daphne);
 
     // if we're out of triggers or nearing the end of the waveform, break
     if( trigger_i >= trigger_times.size() ) break;
     if( i >= adcs.size()-1-min_ro_samples ) break;
 
     // check if the current trigger is from the beam
-    isBeamTrigger = ( fabs(next_trig-beamTrigTime)<optical_period(clockData)/2 );
+    isBeamTrigger = ( fabs(next_trig-beamTrigTime)<optical_period(clockData,is_daphne)/2 );
 
     // scan ahead to the "next" trigger if we've reached the end of the previous one
     double dT = time-next_trig;
@@ -385,7 +388,7 @@ std::vector<raw::OpDetWaveform> opDetSBNDTriggerAlg::ApplyTriggerLocations(detin
         ((isBeamTrigger && dT >= postTrigBeam)||(!isBeamTrigger && dT >= postTrig))) {
       for(size_t j=trigger_i+1; j<trigger_times.size(); j++){
         double this_trig = trigger_times[j];
-        isBeamTrigger = ( fabs(this_trig-beamTrigTime)<optical_period(clockData)/2 );
+        isBeamTrigger = ( fabs(this_trig-beamTrigTime)<optical_period(clockData,is_daphne)/2 );
         double t1 = this_trig-preTrig;
         double t2 = this_trig+postTrig;
         if(isBeamTrigger){

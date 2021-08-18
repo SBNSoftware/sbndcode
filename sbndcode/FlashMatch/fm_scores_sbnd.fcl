@@ -11,7 +11,7 @@ services:{
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
-  AuxDetGeometry: { @table::sbnd_geo_source }
+  AuxDetGeometry:          { @table::sbnd_geo_source }
 }
 
 

@@ -1,0 +1,4 @@
+#include "legacy_g4_sbnd.fcl"
+
+# setup services parameters for 3 drift windows
+#include "3drift_services_sbnd.fcl"

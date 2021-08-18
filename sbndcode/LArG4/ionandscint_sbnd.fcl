@@ -1,0 +1,18 @@
+#include "scintillationtime_tool.fcl"
+
+BEGIN_PROLOG
+
+sbnd_ionandscint:
+{
+    module_type: "IonAndScint"
+    Instances:   "LArG4DetectorServicevolTPCActive" # separated by semicolon
+    ISCalcAlg:   "Correlated"
+    SavePriorSCE: true
+}
+
+sbnd_ionandscint_out: @local::sbnd_ionandscint
+sbnd_ionandscint_out.Instances: "LArG4DetectorServicevolCryostat;LArG4DetectorServicevolTPCPlaneVert;LArG4DetectorServicevolXArapuca;LArG4DetectorServicevolPMT;LArG4DetectorServicevolFieldCage;LArG4DetectorServicevolPDSstructure"
+sbnd_ionandscint_out.SavePriorSCE: false
+
+
+END_PROLOG
