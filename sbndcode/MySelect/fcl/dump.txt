@@ -1,0 +1,751 @@
+# Produced from 'fhicl-dump' using:
+#   Input  : run_Select_CRTMatch.fcl
+#   Policy : cet::filepath_maker
+#   Path   : "FHICL_FILE_PATH"
+
+outputs: {
+   out1: {
+      compressionLevel: 1
+      fileName: "processing_sbnd.root_%tc.root"
+      module_type: "RootOutput"
+   }
+}
+physics: {
+   analyzers: {
+      ana: {
+         CRTHitLabel: "crtt0matching"
+         CalorimetryLabel: "pandoraCalo"
+         HitLabel: "pandoraTrack"
+         PFParticleLabel: "pandora"
+         T0Label: "crtt0matching"
+         TrackLabel: "pandoraTrack"
+         module_type: "Select"
+      }
+   }
+   end_paths: [
+      "path0",
+      "stream1"
+   ]
+   path0: [
+      "ana"
+   ]
+   producers: {
+      calorimetrylan: {
+         CaloAlg: {
+            CalAmpConstants: [
+               5.88726e-4,
+               5.88726e-4,
+               1.18998e-3
+            ]
+            CalAreaConstants: [
+               2.00906e-2,
+               2.00016e-2,
+               2.01293e-2
+            ]
+            CaloDoLifeTimeCorrection: true
+            CaloLifeTimeForm: 0
+            CaloUseModBox: true
+         }
+         CorrectSCE: false
+         FlipTrack_dQdx: false
+         SpacePointModuleLabel: "spacepointfinder"
+         T0ModuleLabel: "mctrutht0"
+         TrackModuleLabel: "track3d"
+         UseArea: true
+         module_type: "Calorimetry"
+      }
+      crthitlan: {
+         CrtModuleLabel: "crt"
+         HitAlg: {
+            ClockSpeedCRT: 1000
+            NpeScaleShift: -1085
+            QPed: 0
+            QSlope: 40
+            TimeCoincidenceLimit: 8e-2
+            UseReadoutWindow: false
+         }
+         module_type: "sbndcode/CRT/CRTSimHitProducer"
+      }
+      crtt0matching: {
+         CrtHitModuleLabel: "crthitlan"
+         T0Alg: {
+            DCAoverLength: false
+            DCAuseBox: false
+            DirMethod: 1
+            DistanceLimit: 20
+            DoverLLimit: 1
+            MaxUncert: 20
+            MinTrackLength: 20
+            PEcut: 60
+            SCEposCorr: false
+            TPCTrackLabel: "pandoraTrack"
+            TrackDirectionFrac: 5e-1
+         }
+         TpcTrackModuleLabel: "pandoraTrack"
+         module_type: "sbndcode/CRT/CRTTools/CRTT0Matching"
+      }
+   }
+   reco: [
+      "crthitlan",
+      "crtt0matching"
+   ]
+   stream1: [
+      "out1"
+   ]
+   trigger_paths: [
+      "reco"
+   ]
+}
+process_name: "Select"
+services: {
+   AuxDetExptGeoHelperInterface: {
+      service_provider: "sbndcode/CRT/CRTGeometryHelper"
+   }
+   AuxDetGeometry: {
+      GDML: "sbnd_v01_05.gdml"
+      Name: "sbndv1"
+      ROOT: "sbnd_v01_05.gdml"
+      SortingParameters: {}
+}
+   BackTrackerService: {
+      BackTracker: {
+         G4ModuleLabel: "largeant"
+         MinimumHitEnergyFraction: 1e-1
+         SimChannelModuleLabel: "largeant"
+      }
+   }
+   ChannelStatusService: {
+      BadChannels: [
+         4802,
+         4803,
+         4804,
+         4805,
+         4806,
+         4807,
+         10440,
+         10441,
+         10442,
+         10443,
+         10444,
+         10445,
+         4399,
+         5221,
+         10037,
+         10859,
+         0,
+         1,
+         2,
+         1983,
+         1984,
+         1985,
+         1986,
+         1987,
+         1988,
+         3969,
+         3970,
+         3971,
+         5638,
+         5639,
+         5640,
+         7621,
+         7622,
+         7623,
+         7624,
+         7625,
+         7626,
+         9607,
+         9608,
+         9609
+      ]
+      NoisyChannels: []
+      service_provider: "SimpleChannelStatusService"
+   }
+   DetPedestalService: {
+      DetPedestalRetrievalAlg: {
+         AlgName: "DetPedestalRetrievalAlg"
+         DatabaseRetrievalAlg: {
+            AlgName: "DatabaseRetrievalAlg"
+            DBFolderName: ""
+            DBTag: ""
+            DBUrl: ""
+         }
+         DefaultCollMean: 650
+         DefaultCollRms: 3e-1
+         DefaultIndMean: 2000
+         DefaultIndRms: 3e-1
+         DefaultMeanErr: 0
+         DefaultRmsErr: 0
+         UseDB: false
+         UseFile: false
+      }
+      service_provider: "SIOVDetPedestalService"
+   }
+   DetectorClocksService: {
+      ClockSpeedExternal: 3.125e1
+      ClockSpeedOptical: 500
+      ClockSpeedTPC: 2
+      ClockSpeedTrigger: 16
+      DefaultBeamTime: 1700
+      DefaultTrigTime: 1700
+      FramePeriod: 1300
+      G4RefTime: -1700
+      InheritClockConfig: true
+      TrigModuleName: "triggersim"
+      TriggerOffsetTPC: -200
+      service_provider: "DetectorClocksServiceStandard"
+   }
+   DetectorPropertiesService: {
+      DriftVelFudgeFactor: 1
+      Efield: [
+         5e-1,
+         6.66e-1,
+         8e-1
+      ]
+      Electronlifetime: 10000
+      ElectronsToADC: 6.29778e-3
+      InheritNumberTimeSamples: false
+      NumberTimeSamples: 3400
+      ReadOutWindowSize: 3400
+      SimpleBoundaryProcess: true
+      SternheimerA: 1.956e-1
+      SternheimerCbar: 5.2146
+      SternheimerK: 3
+      SternheimerX0: 2e-1
+      SternheimerX1: 3
+      Temperature: 8.84e1
+      TimeOffsetU: 0
+      TimeOffsetV: 0
+      TimeOffsetZ: 0
+      service_provider: "DetectorPropertiesServiceStandard"
+   }
+   ExptGeoHelperInterface: {
+      service_provider: "SBNDGeometryHelper"
+   }
+   Geometry: {
+      DisableWiresInG4: true
+      GDML: "sbnd_v01_05.gdml"
+      Name: "sbndv1"
+      ROOT: "sbnd_v01_05.gdml"
+      SortingParameters: {
+         DetectorVersion: "sbnd"
+      }
+      SurfaceY: 0
+   }
+   GeometryConfigurationWriter: {}
+   LArPropertiesService: {
+      AbsLengthEnergies: [
+         4,
+         5,
+         6,
+         7,
+         8,
+         9,
+         10,
+         11
+      ]
+      AbsLengthSpectrum: [
+         2000,
+         2000,
+         2000,
+         2000,
+         2000,
+         2000,
+         2000,
+         2000
+      ]
+      AlphaScintYield: 16800
+      AlphaScintYieldRatio: 5.6e-1
+      Argon39DecayRate: 0
+      AtomicMass: 3.9948e1
+      AtomicNumber: 18
+      ElectronScintYield: 20000
+      ElectronScintYieldRatio: 2.7e-1
+      EnableCerenkovLight: false
+      ExcitationEnergy: 188
+      FastScintEnergies: [
+         7.2,
+         7.9,
+         8.3,
+         8.6,
+         8.9,
+         9.1,
+         9.3,
+         9.6,
+         9.7,
+         9.8,
+         10,
+         1.02e1,
+         1.03e1,
+         1.06e1,
+         11,
+         1.16e1,
+         1.19e1
+      ]
+      FastScintSpectrum: [
+         0,
+         4e-2,
+         1.2e-1,
+         2.7e-1,
+         4.4e-1,
+         6.2e-1,
+         8e-1,
+         9.1e-1,
+         9.2e-1,
+         8.5e-1,
+         7e-1,
+         5e-1,
+         3.1e-1,
+         1.3e-1,
+         4e-2,
+         1e-2,
+         0
+      ]
+      KaonScintYield: 24000
+      KaonScintYieldRatio: 2.3e-1
+      LoadExtraMatProperties: true
+      MuonScintYield: 24000
+      MuonScintYieldRatio: 2.3e-1
+      PionScintYield: 24000
+      PionScintYieldRatio: 2.3e-1
+      ProtonScintYield: 19200
+      ProtonScintYieldRatio: 2.9e-1
+      RIndexEnergies: [
+         1.18626,
+         1.68626,
+         2.18626,
+         2.68626,
+         3.18626,
+         3.68626,
+         4.18626,
+         4.68626,
+         5.18626,
+         5.68626,
+         6.18626,
+         6.68626,
+         7.18626,
+         7.68626,
+         8.18626,
+         8.68626,
+         9.18626,
+         9.68626,
+         1.01863e1,
+         1.06863e1,
+         1.11863e1
+      ]
+      RIndexSpectrum: [
+         1.24664,
+         1.2205,
+         1.22694,
+         1.22932,
+         1.23124,
+         1.23322,
+         1.23545,
+         1.23806,
+         1.24116,
+         1.24489,
+         1.24942,
+         1.25499,
+         1.26197,
+         1.2709,
+         1.28263,
+         1.29865,
+         1.32169,
+         1.35747,
+         1.42039,
+         1.56011,
+         2.16626
+      ]
+      RadiationLength: 1.955e1
+      RayleighEnergies: [
+         1.18626,
+         1.68626,
+         2.18626,
+         2.68626,
+         3.18626,
+         3.68626,
+         4.18626,
+         4.68626,
+         5.18626,
+         5.68626,
+         6.18626,
+         6.68626,
+         7.18626,
+         7.68626,
+         8.18626,
+         8.68626,
+         9.18626,
+         9.68626,
+         1.01863e1,
+         1.06863e1,
+         1.11863e1
+      ]
+      RayleighSpectrum: [
+         1.2008e6,
+         390747,
+         128633,
+         5.49691e4,
+         2.71918e4,
+         1.48537e4,
+         8.7169e3,
+         5.39742e3,
+         3.48137e3,
+         2.31651e3,
+         1.57763e3,
+         1.09202e3,
+         7.63045e2,
+         5.34232e2,
+         3.71335e2,
+         2.52942e2,
+         1.6538e2,
+         9.99003e1,
+         5.12653e1,
+         1.7495e1,
+         9.64341e-1
+      ]
+      ReflectiveSurfaceDiffuseFractions: [
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ],
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ],
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ],
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ],
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ]
+      ]
+      ReflectiveSurfaceEnergies: [
+         1.77,
+         2.0675,
+         2.481,
+         2.819,
+         2.953,
+         3.1807,
+         3.54,
+         4.135,
+         4.962,
+         5.39,
+         7,
+         15
+      ]
+      ReflectiveSurfaceNames: [
+         "STEEL_STAINLESS_Fe7Cr2Ni",
+         "Copper_Beryllium_alloy25",
+         "G10",
+         "vm2000",
+         "ALUMINUM_Al"
+      ]
+      ReflectiveSurfaceReflectances: [
+         [
+            6.6e-1,
+            6.4e-1,
+            6.2e-1,
+            6e-1,
+            5.9e-1,
+            5.7e-1,
+            5.3e-1,
+            4.7e-1,
+            3.9e-1,
+            3.6e-1,
+            2.7e-1,
+            2.5e-1
+         ],
+         [
+            9.02e-1,
+            8.41e-1,
+            4.64e-1,
+            3.79e-1,
+            3.45e-1,
+            2.99e-1,
+            2.87e-1,
+            2.64e-1,
+            3.37e-1,
+            3e-1,
+            0,
+            0
+         ],
+         [
+            3.93e-1,
+            4.05e-1,
+            4.04e-1,
+            3.52e-1,
+            3.23e-1,
+            2.43e-1,
+            1.27e-1,
+            6.5e-2,
+            6.8e-2,
+            6.8e-2,
+            0,
+            0
+         ],
+         [
+            9.3e-1,
+            9.3e-1,
+            9.3e-1,
+            9.3e-1,
+            9.3e-1,
+            9.3e-1,
+            1e-1,
+            1e-1,
+            7e-1,
+            3e-1,
+            0,
+            0
+         ],
+         [
+            9e-1,
+            9e-1,
+            9e-1,
+            9e-1,
+            9e-1,
+            9e-1,
+            9e-1,
+            4.7e-1,
+            3.9e-1,
+            3.6e-1,
+            2.7e-1,
+            2.5e-1
+         ]
+      ]
+      ScintBirksConstant: 6.9e-2
+      ScintByParticleType: false
+      ScintFastTimeConst: 6
+      ScintPreScale: 3e-2
+      ScintResolutionScale: 1
+      ScintSlowTimeConst: 1590
+      ScintYield: 24000
+      ScintYieldRatio: 3e-1
+      SlowScintEnergies: [
+         7.2,
+         7.9,
+         8.3,
+         8.6,
+         8.9,
+         9.1,
+         9.3,
+         9.6,
+         9.7,
+         9.8,
+         10,
+         1.02e1,
+         1.03e1,
+         1.06e1,
+         11,
+         1.16e1,
+         1.19e1
+      ]
+      SlowScintSpectrum: [
+         0,
+         4e-2,
+         1.2e-1,
+         2.7e-1,
+         4.4e-1,
+         6.2e-1,
+         8e-1,
+         9.1e-1,
+         9.2e-1,
+         8.5e-1,
+         7e-1,
+         5e-1,
+         3.1e-1,
+         1.3e-1,
+         4e-2,
+         1e-2,
+         0
+      ]
+      TpbAbsorptionEnergies: [
+         5e-2,
+         1.77,
+         2.0675,
+         7.42,
+         7.75,
+         8.16,
+         8.73,
+         9.78,
+         1.069e1,
+         5.039e1
+      ]
+      TpbAbsorptionSpectrum: [
+         100000,
+         100000,
+         100000,
+         1e-3,
+         1e-11,
+         1e-11,
+         1e-11,
+         1e-11,
+         1e-11,
+         1e-11
+      ]
+      TpbEmmisionEnergies: [
+         5e-2,
+         1,
+         1.5,
+         2.25,
+         2.481,
+         2.819,
+         2.952,
+         2.988,
+         3.024,
+         3.1,
+         3.14,
+         3.1807,
+         3.54,
+         5.5,
+         5.039e1
+      ]
+      TpbEmmisionSpectrum: [
+         0,
+         0,
+         0,
+         5.88e-2,
+         2.35e-1,
+         8.53e-1,
+         1,
+         1,
+         9.259e-1,
+         7.04e-1,
+         2.96e-2,
+         1.1e-2,
+         0,
+         0,
+         0
+      ]
+      TpbTimeConstant: 0
+      service_provider: "LArPropertiesServiceStandard"
+   }
+   MemoryTracker: {
+      dbOutput: {
+         filename: "memory.db"
+         overwrite: true
+      }
+   }
+   ParticleInventoryService: {
+      ParticleInventory: {
+         EveIdCalculator: "EmEveIdCalculator"
+         G4ModuleLabel: "largeant"
+      }
+   }
+   SpaceCharge: {
+      CalibrationInputFilename: "SCEoffsets.root"
+      EnableCalEfieldSCE: false
+      EnableCalSpatialSCE: false
+      EnableCorrSCE: false
+      EnableSimEfield: false
+      EnableSimEfieldSCE: false
+      EnableSimSpatialSCE: false
+      InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_voxelTH3.root"
+      RepresentationType: "Voxelized_TH3"
+      service_provider: "SpaceChargeServiceSBND"
+   }
+   TFileService: {
+      fileName: "crt_test.root"
+   }
+   TimeTracker: {
+      dbOutput: {
+         filename: "cputime.db"
+         overwrite: true
+      }
+      printSummary: true
+   }
+   message: {
+      destinations: {
+         LogErrorFile: {
+            append: false
+            categories: {
+               default: {}
+}
+            filename: "errors.log"
+            threshold: "ERROR"
+            type: "file"
+}
+         LogInfoFile: {
+            append: false
+            categories: {
+               default: {}
+}
+            filename: "messages.log"
+            threshold: "INFO"
+            type: "file"
+}
+         LogStandardOut: {
+            categories: {
+               GeometryBadInputPoint: {
+                  limit: 5
+                  timespan: 1000
+               }
+               default: {}
+}
+            threshold: "WARNING"
+            type: "cout"
+}
+}
+}
+   scheduler: {
+      defaultExceptions: false
+   }
+}
+source: {
+   maxEvents: -1
+   module_type: "RootInput"
+}

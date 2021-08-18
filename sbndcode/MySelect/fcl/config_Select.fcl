@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+Select:
+{
+	module_type: 		"Select"
+	TrackLabel: 		"pandoraTrack"
+        PFParticleLabel: 	"pandora"
+      	T0Label:		"pandora"
+	HitLabel:		"pandoraTrack"
+	CalorimetryLabel:	"pandoraCalo"
+        CRTHitLabel:		"crtt0matching"
+}
+END_PROLOG

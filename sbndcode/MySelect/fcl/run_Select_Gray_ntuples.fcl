@@ -1,0 +1,38 @@
+#include "simulationservices_sbnd.fcl"
+#include "pandoramodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "icarus_trackcalo_skimmer.fcl"
+
+process_name: CaloSkim
+
+source:
+{
+  module_type: 	RootInput
+  maxEvents: 	-1
+}
+
+services:
+{
+  TFileService: { fileName: "ntuples_test.root" }
+  @table::sbnd_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService: @local::standard_backtrackerservice
+}
+
+physics:
+{
+  analyzers:  
+  {
+    caloskim: @local::caloskim_cryow_nodigits_goldentracks
+  }
+  path0: 	[ caloskim ]
+  end_paths: 	[ path0 ]
+}
+
+physics.analyzers.caloskim.CALOproducer: "pandoraCalo"
+physics.analyzers.caloskim.TRKproducer: "pandoraTrack"
+physics.analyzers.caloskim.T0producer: "pandora"
+physics.analyzers.caloskim.PFPproducer: "pandora"
+physics.analyzers.caloskim.HITproducer: "gaushit"
+
+

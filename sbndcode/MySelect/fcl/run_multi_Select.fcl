@@ -1,0 +1,94 @@
+#include "config_Select.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "scecorrections.fcl"
+#include "pandoramodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: Select
+
+source:
+{
+  module_type: 	RootInput
+  maxEvents: 	-1
+}
+
+services:
+{
+  TFileService: { fileName: "multi_test.root" }
+  @table::sbnd_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService: @local::standard_backtrackerservice
+}
+
+physics:
+{
+  producers: 
+  {
+    pandoraSCECRTOnly: @local::scecorrection
+    pandoraSCETrackCRTOnly: @local::sbnd_pandoraTrackCreation
+    pandoraSCECaloCRTOnly: @local::sbnd_gnewcalomc
+    pandoraSCECRTPandora: @local::scecorrection
+    pandoraSCETrackCRTPandora: @local::sbnd_pandoraTrackCreation
+    pandoraSCECaloCRTPandora: @local::sbnd_gnewcalomc
+  }
+  analyzers:  
+  {
+####    anaBeforeSCE: @local::Select
+    anaSCECRTOnly: @local::Select
+    anaSCECRTPandora: @local::Select
+  }
+  path0: 	[ anaSCECRTOnly, anaSCECRTPandora ]
+  reco: 	[ pandoraSCECRTOnly, pandoraSCETrackCRTOnly, pandoraSCECaloCRTOnly, pandoraSCECRTPandora, pandoraSCETrackCRTPandora, pandoraSCECaloCRTPandora]
+  trigger_paths: [ reco ]
+  end_paths: 	[ path0 ]
+}
+
+
+# SCE CRT Only
+physics.producers.pandoraSCECRTOnly.CorrectSCE: 	false
+physics.producers.pandoraSCECRTOnly.T0Labels: 		["crthitt0"]
+physics.producers.pandoraSCECRTOnly.T0LabelsCorrectT0: 	[true]
+
+physics.producers.pandoraSCETrackCRTOnly.PFParticleLabel: 	"pandoraSCECRTOnly"
+
+physics.producers.pandoraSCECaloCRTOnly.TrackModuleLabel: 	"pandoraSCETrackCRTOnly"
+physics.producers.pandoraSCECaloCRTOnly.FieldDistortion: 	false
+physics.producers.pandoraSCECaloCRTOnly.FieldDistortionEfield: 	false
+physics.producers.pandoraSCECaloCRTOnly.TrackIsFieldDistortionCorrected: false
+
+# SCE CRT+Pandora
+physics.producers.pandoraSCECRTPandora.CorrectSCE: 		false
+physics.producers.pandoraSCECRTPandora.T0Labels: 		["pandora", "crthitt0"]
+physics.producers.pandoraSCECRTPandora.T0LabelsCorrectT0: 	[false, true]
+
+physics.producers.pandoraSCETrackCRTPandora.PFParticleLabel: "pandoraSCECRTPandora"
+
+physics.producers.pandoraSCECaloCRTPandora.TrackModuleLabel: "pandoraSCETrackCRTPandora"
+physics.producers.pandoraSCECaloCRTPandora.FieldDistortion: false
+physics.producers.pandoraSCECaloCRTPandora.FieldDistortionEfield: false
+physics.producers.pandoraSCECaloCRTPandora.TrackIsFieldDistortionCorrected: false
+
+#### Analyzer before SCE
+###physics.analyzers.anaBeforeSCE.TrackLabel: 	"pandoraTrack"
+###physics.analyzers.anaBeforeSCE.PFParticleLabel: "pandora"
+###physics.analyzers.anaBeforeSCE.T0Label:         "crthitt0"
+###physics.analyzers.anaBeforeSCE.HitLabel:        "pandoraTrack"
+###physics.analyzers.anaBeforeSCE.CalorimetryLabel:"pandoraCalo"
+
+# Analyser SCE CRT Only
+physics.analyzers.anaSCECRTOnly.TrackLabel: 		"pandoraSCETrackCRTOnly"
+physics.analyzers.anaSCECRTOnly.PFParticleLabel: 	"pandoraSCECRTOnly"
+physics.analyzers.anaSCECRTOnly.T0Label: 		"pandoraSCECRTOnly"
+physics.analyzers.anaSCECRTOnly.HitLabel: 		"pandoraSCETrackCRTOnly"
+physics.analyzers.anaSCECRTOnly.CalorimetryLabel: 	"pandoraSCECaloCRTOnly"
+
+# Analyser SCE CRT Pandora
+physics.analyzers.anaSCECRTPandora.TrackLabel: 		"pandoraSCETrackCRTPandora"
+physics.analyzers.anaSCECRTPandora.PFParticleLabel: 	"pandoraSCECRTPandora"
+physics.analyzers.anaSCECRTPandora.T0Label: 		"pandoraSCECRTPandora"
+physics.analyzers.anaSCECRTPandora.HitLabel: 		"pandoraSCETrackCRTPandora"
+physics.analyzers.anaSCECRTPandora.CalorimetryLabel: 	"pandoraSCECaloCRTPandora"
+
+
+
+#include "3drift_services_sbnd.fcl"
