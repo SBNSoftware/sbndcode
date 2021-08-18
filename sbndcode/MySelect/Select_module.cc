@@ -274,7 +274,7 @@ void sbnd::Select::analyze(art::Event const& e)
   std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->Get_CRT(PFParticleList, trackAssoc, t0Assoc);
   //std::vector< art::Ptr<recob::PFParticle> > CrossingCR = this->GetCrossingCR_CRTHitT0(PFParticleList, trackAssoc, t0Assoc);
 
-  std::cout << std::endl << "No. of selected cosmic muon: " << CrossingCR.size() << std::endl;
+  //std::cout << std::endl << "No. of selected cosmic muon: " << CrossingCR.size() << std::endl;
 
  
   //-------------------------Fill pfptree----------------------------// 
@@ -295,8 +295,8 @@ void sbnd::Select::analyze(art::Event const& e)
     pfpIsPrimary = pfp->IsPrimary();
     pfpParticlePDG = pfp->PdgCode();
     
-    std::cout << "Saving event: " << pfpEventID << ", Paritcle ID: " << pfpParticleID;
-    std::cout << std::endl;
+//    std::cout << "Saving event: " << pfpEventID << ", Paritcle ID: " << pfpParticleID;
+//    std::cout << std::endl;
     
 //    // PFP T0
 //   
@@ -356,8 +356,6 @@ void sbnd::Select::analyze(art::Event const& e)
       
         if(t0CRT.empty()) continue;
  
-        std::cout << "This pfp has valid T0 &C CRTHit" << std::endl;
-      
         for(const art::Ptr<sbn::crt::CRTHit> &crthit: t0CRT){
  
           pfpCRTHitPESHit = crthit->peshit;

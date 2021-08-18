@@ -1,0 +1,276 @@
+%MSG-i MF_INIT_OK:  Early 17-Aug-2021 11:22:36 CDT JobSetup
+Messagelogger initialization complete.
+%MSG
+17-Aug-2021 11:22:38 CDT  Initiating request to open input file "crt_event.root"
+17-Aug-2021 11:22:39 CDT  Opened input file "crt_event.root"
+Begin processing the 1st record. run: 1 subRun: 1 event: 1 at 17-Aug-2021 11:22:40 CDT
+PRINCIPAL TYPE: Event
+PROCESS NAME | MODULE LABEL..... | PRODUCT INSTANCE NAME | DATA PRODUCT TYPE....................................................... | .SIZE
+CosmicsGen.. | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+CosmicsGen.. | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....2
+CosmicsGen.. | generator........ | ..................... | std::vector<simb::MCTruth>.............................................. | ....1
+G4.......... | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....2
+G4.......... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+G4.......... | mcreco........... | ..................... | std::vector<sim::MCShower>.............................................. | ...10
+G4.......... | largeant......... | ..................... | std::vector<simb::MCParticle>........................................... | ..282
+G4.......... | largeant......... | ..................... | std::vector<sim::AuxDetSimChannel>...................................... | .2272
+G4.......... | mcreco........... | ..................... | std::vector<sim::MCTrack>............................................... | ...91
+G4.......... | largeant......... | ..................... | art::Assns<simb::MCTruth,simb::MCParticle,sim::GeneratedParticleInfo>... | ..282
+G4.......... | largeant......... | ..................... | std::vector<sim::SimChannel>............................................ | .8304
+G4.......... | largeant......... | ..................... | std::vector<sim::SimPhotonsLite>........................................ | ....0
+DetSim...... | crt.............. | ..................... | art::Assns<sbnd::crt::CRTData,sim::AuxDetIDE,void>...................... | ..984
+DetSim...... | opdaq............ | ..................... | std::vector<raw::OpDetWaveform>......................................... | ....?
+DetSim...... | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....2
+DetSim...... | crt.............. | ..................... | std::vector<sbnd::crt::CRTData>......................................... | ..706
+DetSim...... | crt.............. | ..................... | std::vector<sim::AuxDetIDE>............................................. | ..984
+DetSim...... | daq.............. | ..................... | std::vector<raw::RawDigit>.............................................. | ....?
+DetSim...... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+Reco1....... | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....0
+Reco1....... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+Reco1....... | opflashtpc1...... | ..................... | std::vector<recob::OpFlash>............................................. | ....0
+Reco1....... | caldata.......... | ..................... | std::vector<recob::Wire>................................................ | 11236
+Reco1....... | opflashtpc0...... | ..................... | std::vector<recob::OpFlash>............................................. | ....0
+Reco1....... | opflashtpc0...... | ..................... | art::Assns<recob::OpHit,recob::OpFlash,void>............................ | ....0
+Reco1....... | gaushit.......... | ..................... | art::Assns<recob::Wire,recob::Hit,void>................................. | 11995
+Reco1....... | opflashtpc1...... | ..................... | art::Assns<recob::OpHit,recob::OpFlash,void>............................ | ....0
+Reco1....... | gaushit.......... | ..................... | std::vector<recob::Hit>................................................. | 11995
+Reco1....... | ophitarapuca..... | ..................... | std::vector<recob::OpHit>............................................... | ....0
+Reco1....... | caldata.......... | ..................... | art::Assns<raw::RawDigit,recob::Wire,void>.............................. | 11236
+Reco1....... | gaushitTruthMatch | ..................... | art::Assns<simb::MCParticle,recob::Hit,anab::BackTrackerHitMatchingData> | 16135
+Reco1....... | ophitpmt......... | ..................... | std::vector<recob::OpHit>............................................... | ....0
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::PCAxis,void>............................ | ...24
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::SpacePoint,void>........................ | ..259
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::Slice,recob::Hit,void>................................ | 11961
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,anab::T0,void>............................. | ....0
+Reco2....... | pandora.......... | ..................... | std::vector<recob::PFParticle>.......................................... | ...39
+Reco2....... | pandoraTrack..... | ..................... | std::vector<recob::Track>............................................... | ...13
+Reco2....... | crthit........... | ..................... | art::Assns<sbn::crt::CRTHit,sbnd::crt::CRTData,void>.................... | ..836
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,larpandoraobj::PFParticleMetadata,void>.... | ...39
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::PFParticle,void>........................ | ...24
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::Cluster,void>........................... | ...43
+Reco2....... | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....0
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::SpacePoint,recob::Hit,void>........................... | 11674
+Reco2....... | pandora.......... | ..................... | std::vector<larpandoraobj::PFParticleMetadata>.......................... | ...39
+Reco2....... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+Reco2....... | crttrack......... | ..................... | std::vector<sbn::crt::CRTTrack>......................................... | ...54
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::PFParticle,recob::PCAxis,void>........................ | ...24
+Reco2....... | fmatch........... | ..................... | std::vector<sbn::SimpleFlashMatch>...................................... | ...11
+Reco2....... | pandoraTrack..... | ..................... | art::Assns<recob::PFParticle,recob::Track,void>......................... | ...13
+Reco2....... | pandora.......... | ..................... | std::vector<recob::Cluster>............................................. | ...81
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::Track,void>............................. | ...23
+Reco2....... | pandora.......... | ..................... | std::vector<recob::Vertex>.............................................. | ...39
+Reco2....... | opt0finder....... | ..................... | art::Assns<recob::OpFlash,anab::T0,void>................................ | ....0
+Reco2....... | opt0finder....... | ..................... | art::Assns<recob::Slice,anab::T0,void>.................................. | ....0
+Reco2....... | crttrack......... | ..................... | art::Assns<sbn::crt::CRTTrack,sbn::crt::CRTHit,void>.................... | ..226
+Reco2....... | pandoraShowerSBN. | ..................... | std::vector<recob::PCAxis>.............................................. | ...24
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,recob::Vertex,void>........................ | ...39
+Reco2....... | pandoraShower.... | ..................... | std::vector<recob::Shower>.............................................. | ...24
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::Cluster,recob::Hit,void>.............................. | 11851
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::PFParticle,recob::PCAxis,void>........................ | ...24
+Reco2....... | crthit........... | ..................... | std::vector<sbn::crt::CRTHit>........................................... | ..213
+Reco2....... | pandoraCalo...... | ..................... | art::Assns<recob::Track,anab::Calorimetry,void>......................... | ...39
+Reco2....... | crthitt0......... | ..................... | std::vector<anab::T0>................................................... | ....7
+Reco2....... | crttrackt0....... | ..................... | std::vector<anab::T0>................................................... | ....6
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,recob::Cluster,void>....................... | ...81
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::PCAxis,void>............................ | ...24
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::PFParticle,void>........................ | ...24
+Reco2....... | pandoraCalo...... | ..................... | std::vector<anab::Calorimetry>.......................................... | ...39
+Reco2....... | crthitt0......... | ..................... | art::Assns<recob::Track,anab::T0,void>.................................. | ....7
+Reco2....... | pandora.......... | ..................... | std::vector<recob::SpacePoint>.......................................... | 11674
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::Hit,void>............................... | ..261
+Reco2....... | pandoraShowerSBN. | ..................... | std::vector<recob::Track>............................................... | ...23
+Reco2....... | pandoraShowerSBN. | ..................... | std::vector<recob::Shower>.............................................. | ...24
+Reco2....... | crttrackt0....... | ..................... | art::Assns<recob::Track,anab::T0,void>.................................. | ....6
+Reco2....... | pandoraTrack..... | ..................... | art::Assns<recob::Track,recob::Hit,void>................................ | 11590
+Reco2....... | pandora.......... | ..................... | std::vector<anab::T0>................................................... | ....0
+Reco2....... | pandoraTrack..... | ..................... | art::Assns<recob::Track,recob::Hit,recob::TrackHitMeta>................. | 11590
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,recob::SpacePoint,void>.................... | 11674
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::SpacePoint,void>........................ | ..259
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,recob::Slice,void>......................... | ...39
+Reco2....... | pandora.......... | ..................... | std::vector<recob::Slice>............................................... | ...11
+Reco2....... | opt0finder....... | ..................... | std::vector<anab::T0>................................................... | ....0
+Reco2....... | pandoraShower.... | ..................... | std::vector<recob::Track>............................................... | ....5
+Reco2....... | fmatch........... | ..................... | art::Assns<recob::PFParticle,sbn::SimpleFlashMatch,void>................ | ...11
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Track,recob::Hit,void>................................ | ...84
+Reco2....... | pandoraShower.... | ..................... | std::vector<recob::PCAxis>.............................................. | ...24
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::Track,void>............................. | ....5
+Reco2....... | pandoraPid....... | ..................... | std::vector<anab::ParticleID>........................................... | ...39
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Track,recob::Hit,void>................................ | ..229
+Reco2....... | pandoraPid....... | ..................... | art::Assns<recob::Track,anab::ParticleID,void>.......................... | ...39
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::Cluster,void>........................... | ...43
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::Hit,void>............................... | ..261
+Select...... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+Select...... | crthitlan........ | ..................... | std::vector<sbn::crt::CRTHit>........................................... | ..213
+Select...... | crthitlan........ | ..................... | art::Assns<sbn::crt::CRTHit,sbnd::crt::CRTData,void>.................... | ..836
+Select...... | crtt0matching.... | ..................... | art::Assns<recob::Track,anab::T0,void>.................................. | ....7
+Select...... | crtt0matching.... | ..................... | art::Assns<sbn::crt::CRTHit,anab::T0,void>.............................. | ....7
+Select...... | crtt0matching.... | ..................... | std::vector<anab::T0>................................................... | ....7
+
+Total products (present, not present): 99 (97, 2).
+
+PRINCIPAL TYPE: Run
+PROCESS NAME | MODULE LABEL............... | PRODUCT INSTANCE NAME | DATA PRODUCT TYPE................. | SIZE
+CosmicsGen.. | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+CosmicsGen.. | generator.................. | ..................... | sumdata::RunData.................. | ...-
+G4.......... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+DetSim...... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+Reco1....... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+Reco2....... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+Select...... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+
+Total products (present, not present): 7 (7, 0).
+
+17-Aug-2021 11:22:41 CDT  Closed input file "crt_event.root"
+
+TrigReport ---------- Event summary -------------
+TrigReport Events total = 1 passed = 1 failed = 0
+
+TrigReport ---------- Modules in End-path ----------
+TrigReport        Run    Success      Error Name
+TrigReport          1          1          0 out1
+
+TimeReport ---------- Time summary [sec] -------
+TimeReport CPU = 0.443313 Real = 0.648598
+
+MemReport  ---------- Memory summary [base-10 MB] ------
+MemReport  VmPeak = 878.866 VmHWM = 369.406
+
+Art has completed and will exit with status 0.
+%MSG-i MF_INIT_OK:  Early 17-Aug-2021 11:26:10 CDT JobSetup
+Messagelogger initialization complete.
+%MSG
+17-Aug-2021 11:26:14 CDT  Initiating request to open input file "crt_event.root"
+17-Aug-2021 11:26:16 CDT  Opened input file "crt_event.root"
+Begin processing the 1st record. run: 1 subRun: 1 event: 1 at 17-Aug-2021 11:26:18 CDT
+PRINCIPAL TYPE: Event
+PROCESS NAME | MODULE LABEL..... | PRODUCT INSTANCE NAME | DATA PRODUCT TYPE....................................................... | .SIZE
+CosmicsGen.. | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+CosmicsGen.. | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....2
+CosmicsGen.. | generator........ | ..................... | std::vector<simb::MCTruth>.............................................. | ....1
+G4.......... | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....2
+G4.......... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+G4.......... | mcreco........... | ..................... | std::vector<sim::MCShower>.............................................. | ...10
+G4.......... | largeant......... | ..................... | std::vector<simb::MCParticle>........................................... | ..282
+G4.......... | largeant......... | ..................... | std::vector<sim::AuxDetSimChannel>...................................... | .2272
+G4.......... | mcreco........... | ..................... | std::vector<sim::MCTrack>............................................... | ...91
+G4.......... | largeant......... | ..................... | art::Assns<simb::MCTruth,simb::MCParticle,sim::GeneratedParticleInfo>... | ..282
+G4.......... | largeant......... | ..................... | std::vector<sim::SimChannel>............................................ | .8304
+G4.......... | largeant......... | ..................... | std::vector<sim::SimPhotonsLite>........................................ | ....0
+DetSim...... | crt.............. | ..................... | art::Assns<sbnd::crt::CRTData,sim::AuxDetIDE,void>...................... | ..984
+DetSim...... | opdaq............ | ..................... | std::vector<raw::OpDetWaveform>......................................... | ....?
+DetSim...... | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....2
+DetSim...... | crt.............. | ..................... | std::vector<sbnd::crt::CRTData>......................................... | ..706
+DetSim...... | crt.............. | ..................... | std::vector<sim::AuxDetIDE>............................................. | ..984
+DetSim...... | daq.............. | ..................... | std::vector<raw::RawDigit>.............................................. | ....?
+DetSim...... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+Reco1....... | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....0
+Reco1....... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+Reco1....... | opflashtpc1...... | ..................... | std::vector<recob::OpFlash>............................................. | ....0
+Reco1....... | caldata.......... | ..................... | std::vector<recob::Wire>................................................ | 11236
+Reco1....... | opflashtpc0...... | ..................... | std::vector<recob::OpFlash>............................................. | ....0
+Reco1....... | opflashtpc0...... | ..................... | art::Assns<recob::OpHit,recob::OpFlash,void>............................ | ....0
+Reco1....... | gaushit.......... | ..................... | art::Assns<recob::Wire,recob::Hit,void>................................. | 11995
+Reco1....... | opflashtpc1...... | ..................... | art::Assns<recob::OpHit,recob::OpFlash,void>............................ | ....0
+Reco1....... | gaushit.......... | ..................... | std::vector<recob::Hit>................................................. | 11995
+Reco1....... | ophitarapuca..... | ..................... | std::vector<recob::OpHit>............................................... | ....0
+Reco1....... | caldata.......... | ..................... | art::Assns<raw::RawDigit,recob::Wire,void>.............................. | 11236
+Reco1....... | gaushitTruthMatch | ..................... | art::Assns<simb::MCParticle,recob::Hit,anab::BackTrackerHitMatchingData> | 16135
+Reco1....... | ophitpmt......... | ..................... | std::vector<recob::OpHit>............................................... | ....0
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::PCAxis,void>............................ | ...24
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::SpacePoint,void>........................ | ..259
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::Slice,recob::Hit,void>................................ | 11961
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,anab::T0,void>............................. | ....0
+Reco2....... | pandora.......... | ..................... | std::vector<recob::PFParticle>.......................................... | ...39
+Reco2....... | pandoraTrack..... | ..................... | std::vector<recob::Track>............................................... | ...13
+Reco2....... | crthit........... | ..................... | art::Assns<sbn::crt::CRTHit,sbnd::crt::CRTData,void>.................... | ..836
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,larpandoraobj::PFParticleMetadata,void>.... | ...39
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::PFParticle,void>........................ | ...24
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::Cluster,void>........................... | ...43
+Reco2....... | rns.............. | ..................... | std::vector<art::RNGsnapshot>........................................... | ....0
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::SpacePoint,recob::Hit,void>........................... | 11674
+Reco2....... | pandora.......... | ..................... | std::vector<larpandoraobj::PFParticleMetadata>.......................... | ...39
+Reco2....... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+Reco2....... | crttrack......... | ..................... | std::vector<sbn::crt::CRTTrack>......................................... | ...54
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::PFParticle,recob::PCAxis,void>........................ | ...24
+Reco2....... | fmatch........... | ..................... | std::vector<sbn::SimpleFlashMatch>...................................... | ...11
+Reco2....... | pandoraTrack..... | ..................... | art::Assns<recob::PFParticle,recob::Track,void>......................... | ...13
+Reco2....... | pandora.......... | ..................... | std::vector<recob::Cluster>............................................. | ...81
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::Track,void>............................. | ...23
+Reco2....... | pandora.......... | ..................... | std::vector<recob::Vertex>.............................................. | ...39
+Reco2....... | opt0finder....... | ..................... | art::Assns<recob::OpFlash,anab::T0,void>................................ | ....0
+Reco2....... | opt0finder....... | ..................... | art::Assns<recob::Slice,anab::T0,void>.................................. | ....0
+Reco2....... | crttrack......... | ..................... | art::Assns<sbn::crt::CRTTrack,sbn::crt::CRTHit,void>.................... | ..226
+Reco2....... | pandoraShowerSBN. | ..................... | std::vector<recob::PCAxis>.............................................. | ...24
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,recob::Vertex,void>........................ | ...39
+Reco2....... | pandoraShower.... | ..................... | std::vector<recob::Shower>.............................................. | ...24
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::Cluster,recob::Hit,void>.............................. | 11851
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::PFParticle,recob::PCAxis,void>........................ | ...24
+Reco2....... | crthit........... | ..................... | std::vector<sbn::crt::CRTHit>........................................... | ..213
+Reco2....... | pandoraCalo...... | ..................... | art::Assns<recob::Track,anab::Calorimetry,void>......................... | ...39
+Reco2....... | crthitt0......... | ..................... | std::vector<anab::T0>................................................... | ....7
+Reco2....... | crttrackt0....... | ..................... | std::vector<anab::T0>................................................... | ....6
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,recob::Cluster,void>....................... | ...81
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::PCAxis,void>............................ | ...24
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::PFParticle,void>........................ | ...24
+Reco2....... | pandoraCalo...... | ..................... | std::vector<anab::Calorimetry>.......................................... | ...39
+Reco2....... | crthitt0......... | ..................... | art::Assns<recob::Track,anab::T0,void>.................................. | ....7
+Reco2....... | pandora.......... | ..................... | std::vector<recob::SpacePoint>.......................................... | 11674
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::Hit,void>............................... | ..261
+Reco2....... | pandoraShowerSBN. | ..................... | std::vector<recob::Track>............................................... | ...23
+Reco2....... | pandoraShowerSBN. | ..................... | std::vector<recob::Shower>.............................................. | ...24
+Reco2....... | crttrackt0....... | ..................... | art::Assns<recob::Track,anab::T0,void>.................................. | ....6
+Reco2....... | pandoraTrack..... | ..................... | art::Assns<recob::Track,recob::Hit,void>................................ | 11590
+Reco2....... | pandora.......... | ..................... | std::vector<anab::T0>................................................... | ....0
+Reco2....... | pandoraTrack..... | ..................... | art::Assns<recob::Track,recob::Hit,recob::TrackHitMeta>................. | 11590
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,recob::SpacePoint,void>.................... | 11674
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::SpacePoint,void>........................ | ..259
+Reco2....... | pandora.......... | ..................... | art::Assns<recob::PFParticle,recob::Slice,void>......................... | ...39
+Reco2....... | pandora.......... | ..................... | std::vector<recob::Slice>............................................... | ...11
+Reco2....... | opt0finder....... | ..................... | std::vector<anab::T0>................................................... | ....0
+Reco2....... | pandoraShower.... | ..................... | std::vector<recob::Track>............................................... | ....5
+Reco2....... | fmatch........... | ..................... | art::Assns<recob::PFParticle,sbn::SimpleFlashMatch,void>................ | ...11
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Track,recob::Hit,void>................................ | ...84
+Reco2....... | pandoraShower.... | ..................... | std::vector<recob::PCAxis>.............................................. | ...24
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::Track,void>............................. | ....5
+Reco2....... | pandoraPid....... | ..................... | std::vector<anab::ParticleID>........................................... | ...39
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Track,recob::Hit,void>................................ | ..229
+Reco2....... | pandoraPid....... | ..................... | art::Assns<recob::Track,anab::ParticleID,void>.......................... | ...39
+Reco2....... | pandoraShower.... | ..................... | art::Assns<recob::Shower,recob::Cluster,void>........................... | ...43
+Reco2....... | pandoraShowerSBN. | ..................... | art::Assns<recob::Shower,recob::Hit,void>............................... | ..261
+Select...... | TriggerResults... | ..................... | art::TriggerResults..................................................... | ....-
+Select...... | crthitlan........ | ..................... | std::vector<sbn::crt::CRTHit>........................................... | ..213
+Select...... | crthitlan........ | ..................... | art::Assns<sbn::crt::CRTHit,sbnd::crt::CRTData,void>.................... | ..836
+Select...... | crtt0matching.... | ..................... | art::Assns<recob::Track,anab::T0,void>.................................. | ....7
+Select...... | crtt0matching.... | ..................... | art::Assns<sbn::crt::CRTHit,anab::T0,void>.............................. | ....7
+Select...... | crtt0matching.... | ..................... | std::vector<anab::T0>................................................... | ....7
+
+Total products (present, not present): 99 (97, 2).
+
+PRINCIPAL TYPE: Run
+PROCESS NAME | MODULE LABEL............... | PRODUCT INSTANCE NAME | DATA PRODUCT TYPE................. | SIZE
+CosmicsGen.. | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+CosmicsGen.. | generator.................. | ..................... | sumdata::RunData.................. | ...-
+G4.......... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+DetSim...... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+Reco1....... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+Reco2....... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+Select...... | GeometryConfigurationWriter | ..................... | sumdata::GeometryConfigurationInfo | ...-
+
+Total products (present, not present): 7 (7, 0).
+
+17-Aug-2021 11:26:18 CDT  Closed input file "crt_event.root"
+
+TrigReport ---------- Event summary -------------
+TrigReport Events total = 1 passed = 1 failed = 0
+
+TrigReport ---------- Modules in End-path ----------
+TrigReport        Run    Success      Error Name
+TrigReport          1          1          0 out1
+
+TimeReport ---------- Time summary [sec] -------
+TimeReport CPU = 0.431076 Real = 0.587082
+
+MemReport  ---------- Memory summary [base-10 MB] ------
+MemReport  VmPeak = 878.862 VmHWM = 367.55
+
+Art has completed and will exit with status 0.
