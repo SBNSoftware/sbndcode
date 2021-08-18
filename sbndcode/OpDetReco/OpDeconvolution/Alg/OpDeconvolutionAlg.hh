@@ -104,8 +104,6 @@ private:
   void ApplyUnAvSmoothing(std::vector<double>& wf);
   size_t WfSizeFFT(size_t n);
   std::vector<double> ScintArrivalTimesShape(size_t n, detinfo::LArProperties const& lar_prop);
-  std::vector<double> CreateNoiseHypothesis(size_t n, double baseline_stddev);
-  double EstimateBaseline(std::vector<double>& wf);
   void SubtractBaseline(std::vector<double> &wf, double baseline);
   void EstimateBaselineStdDev(std::vector<double> &wf, double &_mean, double &_stddev);
   std::vector<TComplex> DeconvolutionKernel(size_t size, double baseline_stddev, double snr_scaling);
@@ -185,9 +183,6 @@ opdet::OpDeconvolutionAlg::OpDeconvolutionAlg(fhicl::ParameterSet const& p)
     else if(fFilter=="Wiener1PE")
       fSignalHypothesis[0]=1;
     mf::LogInfo("OpDeconvolutionAlg")<<"Built light signal hypothesis... L="<<fFilter<<" size"<<fSignalHypothesis.size()<<std::endl;
-    //Create noisy signal hypothesis for "on-fly" Wiener filter
-    //fNoiseHypothesis = CreateNoiseHypothesis(MaxBinsFFT, 1.);
-    //mf::LogInfo("OpDeconvolutionAlg")<<"Creating noise... size"<<fNoiseHypothesis.size()<<std::endl;
   }
 }
 
@@ -335,37 +330,6 @@ std::vector<double> opdet::OpDeconvolutionAlg::ScintArrivalTimesShape(size_t n, 
     v[k]=value;
   }
   return v;
-}
-
-
-std::vector<double> opdet::OpDeconvolutionAlg::CreateNoiseHypothesis(size_t n, double baseline_stddev){
-  std::vector<double> v;
-  for(size_t k=0; k<n; k++){
-    v.push_back( fCLHEPEGauss->fire(0, baseline_stddev) );
-  }
-  return v;
-}
-
-
-double opdet::OpDeconvolutionAlg::EstimateBaseline(std::vector<double> &wf){
-  double minADC=*min_element(wf.begin(), wf.end());
-  double maxADC=*max_element(wf.begin(), wf.end());
-  TH1F h_ba = TH1F("",";;", (int)(maxADC-minADC)+1, minADC-0.5, maxADC+0.5);
-  for(auto &adc:wf)
-    h_ba.Fill(adc);
-
-  double _baseline=h_ba.GetXaxis()->GetBinCenter(h_ba.GetMaximumBin());
-
-  if(fDebug){
-    std::cout<<"   -- Estimating baseline: "<<_baseline<<std::endl;
-    std::string name="h_baseline_"+std::to_string(NDecoWf);
-    TH1F * hs_ba = tfs->make< TH1F >
-      (name.c_str(),"Baseline;ADC;# entries",h_ba.GetNbinsX(), h_ba.GetXaxis()->GetXmin(), h_ba.GetXaxis()->GetXmax());
-    for(int k=1; k<=h_ba.GetNbinsX(); k++)
-      hs_ba->SetBinContent(k, h_ba.GetBinContent(k));
-  }
-
-  return _baseline;
 }
 
 
