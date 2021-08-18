@@ -72,30 +72,27 @@ opdet::SBNDOpDeconvolution::SBNDOpDeconvolution(fhicl::ParameterSet const& p)
 
 void opdet::SBNDOpDeconvolution::produce(art::Event& e)
 {
-  //Load the waveforms 
+  //Load the waveforms
   art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
   e.getByLabel(fInputLabel, wfHandle);
   if (!wfHandle.isValid()) {
    std::cout<<"Non valid waveform handle\n";
+   mf::LogError("SBNDOpDeconvolution")<<"Input waveforms with input label "<<fInputLabel<<" couldn't be loaded..."<<std::endl;
    return;
   }
 
-  std::vector< raw::OpDetWaveform > DecoWfVector;
-  DecoWfVector.reserve(wfHandle->size());
+  std::vector< raw::OpDetWaveform > RawWfVector;
+  RawWfVector.reserve(wfHandle->size());
 
   for(auto const& wf : *wfHandle){
     if(std::find(fPDTypes.begin(), fPDTypes.end(), pdsmap.pdType(wf.ChannelNumber()) ) != fPDTypes.end() ){
-      DecoWfVector.push_back(wf);
+      RawWfVector.push_back(wf);
     }
   }
 
-  DecoWfVector=fOpDecoAlg->RunDeconvolution(DecoWfVector);
-
   std::unique_ptr< std::vector< raw::OpDetWaveform > > DecoWf_VecPtr(std::make_unique< std::vector< raw::OpDetWaveform > > ());
-  for (auto & wf : DecoWfVector) {
-    (*DecoWf_VecPtr).emplace_back( wf.TimeStamp(), wf.ChannelNumber(),
-      std::vector<short unsigned int> (wf.Waveform().begin(), wf.Waveform().end()) );
-  }
+  auto & DecoWf_Vec(*DecoWf_VecPtr);
+  DecoWf_Vec = fOpDecoAlg->RunDeconvolution(RawWfVector);
 
   e.put( std::move(DecoWf_VecPtr) );
 

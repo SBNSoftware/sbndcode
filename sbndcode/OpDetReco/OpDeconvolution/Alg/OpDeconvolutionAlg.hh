@@ -59,7 +59,7 @@ public:
   OpDeconvolutionAlg& operator=(OpDeconvolutionAlg&&) = delete;
 
   // Required functions.
-  std::vector<raw::OpDetWaveform> RunDeconvolution(std::vector<raw::OpDetWaveform> wfHandle);
+  std::vector<raw::OpDetWaveform> RunDeconvolution(std::vector<raw::OpDetWaveform> const& wfHandle);
 
 
 private:
@@ -187,9 +187,10 @@ opdet::OpDeconvolutionAlg::OpDeconvolutionAlg(fhicl::ParameterSet const& p)
 }
 
 
-std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlg::RunDeconvolution(std::vector<raw::OpDetWaveform> wfVector)
+std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlg::RunDeconvolution(std::vector<raw::OpDetWaveform> const& wfVector)
 {
   std::vector<raw::OpDetWaveform> wfDeco;
+  wfDeco.reserve(wfVector.size());
 
   for(auto const& wf : wfVector)
   {
@@ -238,10 +239,10 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlg::RunDeconvolution(std:
 
     //Debbuging and save wf in hist file
     if(fDebug){
-      std::cout<<"\n.....Debbuging.....\n";
+      std::cout<<".....Debbuging.....\n";
       auto minADC_ix=min_element(wave.begin(), wave.end());
       std::cout<<"Stamp="<<wf.TimeStamp()<<" OpCh"<<wf.ChannelNumber()<<" MinADC="<<minADC<<" (";
-      std::cout<<minADC_ix-wave.begin()<<") Size="<<wf.Waveform().size()<<" ScFactor="<<wfPeakPE<<std::endl;
+      std::cout<<minADC_ix-wave.begin()<<") Size="<<wf.Waveform().size()<<" ScFactor="<<wfPeakPE<<"\n\n";
 
       std::string name="h_deco"+std::to_string(NDecoWf)+"_"+std::to_string(wf.ChannelNumber())+"_"+std::to_string(wf.TimeStamp());
       TH1F * h_deco = tfs->make< TH1F >(name.c_str(),";Bin;#PE", MaxBinsFFT, 0, MaxBinsFFT);
