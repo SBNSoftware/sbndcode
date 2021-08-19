@@ -1,6 +1,3 @@
-
-cet_enable_asserts()
-
 art_make(
    LIB_LIBRARIES
          larcore_Geometry_Geometry_service

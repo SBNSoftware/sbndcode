@@ -3,6 +3,7 @@ BEGIN_PROLOG
 
 OpDeconvolutionAlg:
 {
+  tool_type: "OpDeconvolutionAlgWiener"
   Debug: false
   MaxFFTSizePow: 15
   OpDetDataFile: "OpDetSim/digi_pmt_sbnd.root"

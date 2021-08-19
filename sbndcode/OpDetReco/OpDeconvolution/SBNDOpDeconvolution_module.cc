@@ -16,6 +16,7 @@
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "art/Utilities/make_tool.h"
 
 #include <memory>
 
@@ -44,13 +45,14 @@ public:
   // Required functions.
   void produce(art::Event& e) override;
 
+
 private:
 
   // Declare member data here.
   std::string fInputLabel;
   std::vector<std::string> fPDTypes;
-  //OpDecoAlg
-  opdet::OpDeconvolutionAlg *fOpDecoAlg;
+  //OpDecoAlg tool
+  std::unique_ptr<opdet::OpDeconvolutionAlg> fOpDecoAlgPtr;
   //PDS map
   opdet::sbndPDMapAlg pdsmap;
 };
@@ -64,8 +66,7 @@ opdet::SBNDOpDeconvolution::SBNDOpDeconvolution(fhicl::ParameterSet const& p)
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   fInputLabel = p.get< std::string >("InputLabel");
   fPDTypes = p.get< std::vector<std::string> >("PDTypes");
-  auto const opdeco_pset = p.get< fhicl::ParameterSet >("OpDecoAlg");
-  fOpDecoAlg = new opdet::OpDeconvolutionAlg(opdeco_pset);
+  fOpDecoAlgPtr = art::make_tool<opdet::OpDeconvolutionAlg>( p.get< fhicl::ParameterSet >("OpDecoAlg") );
 
   produces< std::vector< raw::OpDetWaveform > >();
 }
@@ -76,9 +77,8 @@ void opdet::SBNDOpDeconvolution::produce(art::Event& e)
   art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
   e.getByLabel(fInputLabel, wfHandle);
   if (!wfHandle.isValid()) {
-   std::cout<<"Non valid waveform handle\n";
    mf::LogError("SBNDOpDeconvolution")<<"Input waveforms with input label "<<fInputLabel<<" couldn't be loaded..."<<std::endl;
-   return;
+   throw cet::exception("SBNDOpDeconvolution") << "Input waveforms with input label " << fInputLabel << " not found\n";
   }
 
   std::vector< raw::OpDetWaveform > RawWfVector;
@@ -92,7 +92,7 @@ void opdet::SBNDOpDeconvolution::produce(art::Event& e)
 
   std::unique_ptr< std::vector< raw::OpDetWaveform > > DecoWf_VecPtr(std::make_unique< std::vector< raw::OpDetWaveform > > ());
   auto & DecoWf_Vec(*DecoWf_VecPtr);
-  DecoWf_Vec = fOpDecoAlg->RunDeconvolution(RawWfVector);
+  DecoWf_Vec = fOpDecoAlgPtr->RunDeconvolution(RawWfVector);
 
   e.put( std::move(DecoWf_VecPtr) );
 
