@@ -73,9 +73,7 @@ physics: {
         # run the default test suite (actually unnecessary):
         "@default",
         # in addition (overriding the default): print wires
-        "+PrintWires",
-        # Disable WireIntersection temporarily as known to fail
-        "-WireIntersection"
+        "+PrintWires"
       ]
       
       # wire pitch for planes #0, #1 and #2
