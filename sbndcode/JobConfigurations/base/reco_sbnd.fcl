@@ -127,7 +127,7 @@ physics:
   pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
   pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
   pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
-  pandoraCalo:         @local::sbnd_calomc
+  pandoraCalo:         @local::sbnd_gnewcalomc
   pandoraPid:          @local::sbnd_chi2pid
 
   pandoraSCECalo:      @local::sbnd_gnewcalomc
