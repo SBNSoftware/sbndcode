@@ -53,6 +53,7 @@
 
 ###include "hitparticleassociations.fcl"
 
+#include "sbnd_trackcalo_skimmer.fcl"
 
 process_name: Reco
 
@@ -167,6 +168,10 @@ physics:
   fmatchSCE:           @local::sbnd_simple_flashmatch
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
+ 
+  ### Uncalibrated calorimetry producers for caloskimmer
+  caloskimCalorimetry: @local::caloskim_pandoraSCECalo
+ 
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -213,6 +218,16 @@ physics:
  # reco fcl files.
  opticalt0: [ opt0finder ]
 
+ # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
+ # First run the uncalibrated calorimetry producer then run the skimmer analyzer
+ caloskimprod: [ caloskimCalorimetry ]
+ 
+ analyzers:{
+  caloskimmer: @local::caloskim_nodigits_goldentracks
+ }
+
+ caloskimana: [ caloskimmer ]
+ 
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
 
