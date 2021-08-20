@@ -211,6 +211,7 @@ physics:
          , crthitt0
          , crttrackt0
          , fmatch
+	 , caloskimCalorimetry
  ]
 
  # The new flashmatching will eventually be part of reco2, but for now
@@ -219,8 +220,6 @@ physics:
  opticalt0: [ opt0finder ]
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
- # First run the uncalibrated calorimetry producer then run the skimmer analyzer
- caloskimprod: [ caloskimCalorimetry ]
  
  analyzers:{
   caloskimmer: @local::caloskim_nodigits_goldentracks
