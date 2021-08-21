@@ -15,6 +15,9 @@ BEGIN_PROLOG
 sbnd_pdfastsim_par:                     @local::standard_pdfastsim_par_ar
 
 sbnd_pdfastsim_par.SimulationLabel:     "ionandscint:priorSCE"
+# Updating the triplet decay-time (Phys. Rev. C 91, 035503). Note that in our simulations we account 
+# independently for the TPB-delay time and the emission (fast and slow) decay times.
+sbnd_pdfastsim_par.ScintTimeTool.SlowDecayTime: 1300.0
 
 # Direct (VUV)
 sbnd_pdfastsim_par.VUVTiming:           @local::sbnd_vuv_timing_parameterization
@@ -37,6 +40,7 @@ sbnd_pdfastsim_pvs:                     @local::standard_pdfastsim_pvs
 sbnd_pdfastsim_pvs.SimulationLabel:     "ionandscintout"
 sbnd_pdfastsim_pvs.IncludePropTime: true
 sbnd_pdfastsim_pvs.StoreReflected: true
+sbnd_pdfastsim_pvs.ScintTimeTool.SlowDecayTime: 1300.0
 
 
 
