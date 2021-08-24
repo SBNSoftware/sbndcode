@@ -265,10 +265,6 @@ physics.trigger_paths: [ fullreco ]
 #physics.producers.opflash.GenModule:                            "generator"
 
 physics.producers.caldata.DigitModuleLabel:                     "daq"
-physics.producers.caldata.ROITool.Threshold: [19, 35 , 13]
-physics.producers.caldata.ROITool.uPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
-physics.producers.caldata.ROITool.vPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
-physics.producers.caldata.ROITool.zPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
 
 physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
 physics.producers.fasthit.DigitModuleLabel:                     "daq"
@@ -350,3 +346,4 @@ physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
 #physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
 
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
