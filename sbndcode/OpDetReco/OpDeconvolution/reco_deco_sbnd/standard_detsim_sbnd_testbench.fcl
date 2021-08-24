@@ -1,0 +1,4 @@
+#include "standard_detsim_sbnd.fcl"
+
+physics.producers.opdaq.SinglePEmodel: true
+physics.producers.opdaq.PMTChargeToADC: -51.9
