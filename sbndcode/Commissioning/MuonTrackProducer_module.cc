@@ -87,7 +87,9 @@ private:
    // Finds t0, stores them in a vector<vector<double>> 
    void Findt0(vector<vector<int>> lines, vector<double>& ac_t0); 
    // Finds endpoints, stores them in a vector<vector<geo::Point_t>>    
-   void FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, int range, vector<art::Ptr<recob::Hit>> hitlist, int& nmuons, vector<vector<geo::Point_t>>& ac_endpoints); 
+   void FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, int range, vector<art::Ptr<recob::Hit>> hitlist, vector<vector<geo::Point_t>>& ac_endpoints); 
+   // Fixes endpoints, returns true if conditions are fulfilled 
+   bool FixEndpoint(geo::WireID wire_col, geo::WireID wire_ind, geo::Point_t& point); 
    // Finds trajectories, stores them in a vector<vector<double>> 
    void FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints,vector<vector<double>>& ac_trajectories); 
 
@@ -248,18 +250,17 @@ void MuonTrackProducer::produce(art::Event & evt)
                hit_11.push_back(v);
          } 
       }
-      int nmuons = 0; 
       if (ac_in_tpc0){
          //ac_tpc.insert(ac_tpc.end(),0,lines_02.size());
          //Findt0(lines_02, ac_t0);
          std::cout << "TPC0:" << std::endl;
          Hough_ind(hit_00,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_00);
          if (lines_00.empty() == false){
-            FindEndpoints(lines_02,lines_00,fEndpointRange,hitlist,nmuons,ac_endpoints);
+            FindEndpoints(lines_02,lines_00,fEndpointRange,hitlist,ac_endpoints);
          }
          Hough_ind(hit_01,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_01);
          if (lines_01.empty()==false){
-            FindEndpoints(lines_02,lines_01,fEndpointRange,hitlist,nmuons,ac_endpoints);
+            FindEndpoints(lines_02,lines_01,fEndpointRange,hitlist,ac_endpoints);
          }
       }
       if (ac_in_tpc1){
@@ -268,11 +269,11 @@ void MuonTrackProducer::produce(art::Event & evt)
          std::cout << "TPC1:" << std::endl;
          Hough_ind(hit_10,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_10);
          if (lines_10.empty() == false){
-            FindEndpoints(lines_12,lines_10,fEndpointRange,hitlist, nmuons,ac_endpoints);
+            FindEndpoints(lines_12,lines_10,fEndpointRange,hitlist,ac_endpoints);
          }
          Hough_ind(hit_11,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_11);
          if (lines_11.empty() == false){
-            FindEndpoints(lines_12,lines_11,fEndpointRange, hitlist, nmuons,ac_endpoints);
+            FindEndpoints(lines_12,lines_11, fEndpointRange, hitlist,ac_endpoints);
          }
       }
       // FindTrajectories(ac_endpoints, ac_trajectories);
@@ -729,7 +730,6 @@ void MuonTrackProducer::Findt0(vector<vector<int>> lines,
 void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, 
                                       vector<vector<int>>& lines_ind, 
                                       int range, vector<art::Ptr<recob::Hit>> hitlist, 
-                                      int& nmuons,
                                       vector<vector<geo::Point_t>>& muon_endpoints){
    for (int i=0; i<int(lines_col.size()); i++){
       bool match = false;
@@ -764,53 +764,71 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col,
             wire1_ind = (lines_ind.at(j)).at(4); 
          }
          int peakT_range = range; 
-         if ( (peakT0_col + peakT_range > peakT0_ind) && (peakT0_col - peakT_range < peakT0_ind) && 
-              (peakT1_col + peakT_range > peakT1_ind) && (peakT1_col + peakT_range > peakT1_ind)){
-
+         if ( (abs(peakT0_col - peakT0_ind) < peakT_range) && (abs(peakT1_col - peakT1_ind) < peakT_range)){
             geo::WireID awire_col = hitlist[wire0_col]->WireID(); 
             geo::WireID awire_ind = hitlist[wire0_ind]->WireID();
             geo::WireID cwire_col = hitlist[wire1_col]->WireID();
             geo::WireID cwire_ind = hitlist[wire1_ind]->WireID();
-            geo::Point_t apoint, cpoint;
+            geo::Point_t apoint, cpoint, endpoint1, endpoint2; 
 
             bool aintersect = fGeometryService->WireIDsIntersect(awire_col, awire_ind, apoint);
             bool cintersect = fGeometryService->WireIDsIntersect(cwire_col, cwire_ind, cpoint); 
 
             if (aintersect)
-               std::cout << "endpoint 1: " << apoint.X() << ", " << apoint.Y() << ", " << apoint.Z() << std::endl;
-            else{
-               std::cout << "intersection of awire not found:" << std::endl;
-               std::cout << "(peakT0_col, peakT0_ind): (" << peakT0_col  << ", " << peakT0_ind << ")" << std::endl;
-            }
+               endpoint1 = apoint;
             if (cintersect)
-               std::cout << "endpoint 2: " << cpoint.X() << ", " << cpoint.Y() << ", " << cpoint.Z() << std::endl;
-            else{
-               std::cout << "intersection of cwire not found by WireIDsIntersect"<< std::endl;
-               std::cout << "(peakT1_col, peakT1_ind): (" << peakT1_col  << ", " << peakT1_ind << ")" << std::endl;
+               endpoint2 = cpoint;
+            // NOTE: this next section is a hardcoded fix for mis-matched endpoints of a specific type. look at the README for more info
+            if (aintersect == false){
+               if (FixEndpoint(awire_col, awire_ind, apoint) == true){
+                  endpoint1 = apoint;
+               }
             }
-            //if (aintersect && cintersect){
-               // nmuons++; 
-               // std::cout << "endpoint 1: " << apoint.X() << ", " << apoint.Y() << ", " << apoint.Z() << std::endl;
-               // std::cout << "endpoint 2: " << cpoint.X() << ", " << cpoint.Y() << ", " << cpoint.Z() << std::endl;
-               // if (apoint.Y() > 190 || cpoint.Y() > 190 )
-               //    std::cout << "crosses top" << std::endl;
-               // if (apoint.Y() < -190 || cpoint.Y() < -190)
-               //    std::cout << "crosses bottom" << std::endl;
-               // if (apoint.Z() > 490 || cpoint.Z() > 490)
-               //    std::cout << "crosses downstream wall" << std::endl;
-               // if (apoint.Z() < 10 || cpoint.Z() < 10) 
-               //    std::cout << "crosses upstream wall" << std::endl;
-               // if ( abs(peakT0_col - peakT1_col) > 2400 )
-               //    std::cout << "anode-cathode crosser" << std::endl;
-               // vector<geo::Point_t> pair{apoint,cpoint};
-               // muon_endpoints.push_back(pair); 
-            //}
+            if (cintersect == false){
+               if (FixEndpoint(cwire_col, cwire_ind, cpoint) == true){
+                  endpoint2 = cpoint;
+               }
+            }
+            if (endpoint1.Mag2() != 0 && endpoint2.Mag2() != 0 ){
+               std::cout << "endpoint 1: " << endpoint1.X() << ", " << endpoint1.Y() << ", " << endpoint1.Z() << std::endl;
+               std::cout << "endpoint 2: " << endpoint2.X() << ", " << endpoint2.Y() << ", " << endpoint2.Z() << std::endl;
+               if (endpoint1.Y() > 198 || endpoint2.Y() > 198 )
+                  std::cout << "crosses top" << std::endl;
+               if (endpoint1.Y() < -198 || endpoint2.Y() < -198)
+                  std::cout << "crosses bottom" << std::endl;
+               if (endpoint1.Z() > 503 || endpoint2.Z() > 503)
+                  std::cout << "crosses downstream wall" << std::endl;
+               if (endpoint1.Z() < 6 || endpoint2.Z() < 6) 
+                  std::cout << "crosses upstream wall" << std::endl;
+               if ( abs(peakT0_col - peakT1_col) > 2400 )
+                  std::cout << "anode-cathode crosser" << std::endl;
+               vector<geo::Point_t> pair{endpoint1,endpoint2};
+               muon_endpoints.push_back(pair);
+            }
             (lines_col.at(i)).clear(); // remove the line from the collection plane if it's been found 
             match = true;
          }
       } // end of j loop 
-   } // end of i loop
-} // end of function 
+   } // end of i loop 
+} // end of function
+
+bool MuonTrackProducer::FixEndpoint(geo::WireID wire_col, geo::WireID wire_ind, geo::Point_t& point){
+   bool foo = false; 
+   double col_end1[3], col_end2[3], ind_end1[3], ind_end2[3];
+   fGeometryService->WireEndPoints(wire_col, col_end1, col_end2);
+   fGeometryService->WireEndPoints(wire_ind, ind_end1, ind_end2);
+   if (abs(ind_end1[1]) > 198 || abs(ind_end2[1]) > 198){ // if it's located on the top or bottom 
+      double ind_y = (abs(ind_end1[1]) == 199.792) ? ind_end1[1] : ind_end2[1];
+      double ind_z = (abs(ind_end1[1]) == 199.792) ? ind_end1[2] : ind_end2[2]; 
+      if (abs(col_end1[2] - ind_z) < 8){
+         point.SetX(col_end1[0]);
+         point.SetY(ind_y);
+         point.SetZ(ind_z);
+         foo = true;
+      }
+   }
+   return foo; 
+}
 
 void MuonTrackProducer::FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints, vector<vector<double>>& ac_trajectories){
    if (ac_endpoints.empty() == false){
