@@ -16,7 +16,6 @@
 #include "larcorealg/Geometry/WireGeo.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
-#include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
@@ -28,6 +27,8 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
+
+#include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 
 // ROOT includes 
 #include "TRandom3.h"
@@ -71,27 +72,28 @@ public:
 private:
    // Define functions 
    // Resets hit information for collection plane
-   void ResetCollectionHitVectors();
+   void ResetCollectionHitVectors(int n);
    // Resets hit information for induction planes
-   void ResetInductionHitVectors();
+   void ResetInductionHitVectors(int n);
    // Resets variables for AC Crossing muons 
-   void ResetACVariables(); 
+   void ResetMuonVariables(int n); 
    // Finds distance between two points 
    float Distance(int x1, int y1, int x2, int y2);
-   // Performs Hough Transform for collection planes (also stores collection plane hits)
-   void Hough_col(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, 
-                  vector<vector<int>>& lines, vector<vector<int>>& colwire, vector<vector<int>>& colpeakT);
-   // Performs Hough Transform for induction planes 
-   void Hough_ind(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, 
-                  vector<vector<int>>& lines);
-   // Finds t0, stores them in a vector<vector<double>> 
-   void Findt0(vector<vector<int>> lines, vector<double>& ac_t0); 
-   // Finds endpoints, stores them in a vector<vector<geo::Point_t>>    
-   void FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, int range, vector<art::Ptr<recob::Hit>> hitlist, vector<vector<geo::Point_t>>& ac_endpoints); 
+   // Performs Hough Transform for collection planes
+   void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, 
+                  vector<vector<int>>& lines, bool save_hits, vector<vector<int>>& colwire, vector<vector<int>>& colpeakT);
+   // Finds t0, stores them in a vector<vector<double>>     
+   void FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, int range, vector<art::Ptr<recob::Hit>> hitlist, 
+                     vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>>& muon_hitpeakT); 
    // Fixes endpoints, returns true if conditions are fulfilled 
-   bool FixEndpoint(geo::WireID wire_col, geo::WireID wire_ind, geo::Point_t& point); 
+   bool FixEndpoints(geo::WireID wire_col, geo::WireID wire_ind, geo::Point_t& point); 
+   // Sorts endpoints into categories 
+   void SortEndpoints(vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>> muon_hitpeakT, vector<int>& muon_type);
    // Finds trajectories, stores them in a vector<vector<double>> 
-   void FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints,vector<vector<double>>& ac_trajectories); 
+   void Findt0(vector<vector<int>> muon_hitpeakT, vector<int> muon_type, vector<double>& muon_t0); 
+   // Finds endpoints, stores them in a vector<vector<geo::Point_t>>
+   void FindTrajectories(vector<vector<geo::Point_t>> muon_endpoints, vector<vector<int>> muon_hitpeakT, 
+                         vector<vector<double>>& muon_trajectories); 
 
    // Define variables 
    // Wire hits variables
@@ -119,10 +121,12 @@ private:
    vector<vector<int>> colpeakT_12;
 
    // AC crossing muon variables 
-   vector<int> ac_tpc;
-   vector<double> ac_t0;
-   vector<vector<geo::Point_t>> ac_endpoints;
-   vector<vector<double>> ac_trajectories; 
+   vector<int> muon_tpc;
+   vector<double> muon_t0;
+   vector<vector<geo::Point_t>> muon_endpoints;
+   vector<vector<int>> muon_hitpeakT;
+   vector<int> muon_type;
+   vector<vector<double>> muon_trajectories; 
 
    // parameters from the fcl file 
    std::string fHitsModuleLabel; 
@@ -143,7 +147,8 @@ private:
 MuonTrackProducer::MuonTrackProducer(fhicl::ParameterSet const & p)
    : EDProducer(p)
 {
-   produces< std::vector<sbn::crt::CRTTrack>   >();
+   produces< std::vector<sbnd::comm::MuonTrack> >();
+   //produces< std::vector<sbn::crt::CRTTrack>   >();
    //produces< art::Assns<sbn::crt::CRTTrack , sbn::crt::CRTHit> >();
 
    fGeometryService = lar::providerFrom<geo::Geometry>();
@@ -170,7 +175,7 @@ void MuonTrackProducer::reconfigure(fhicl::ParameterSet const & p)
 
 void MuonTrackProducer::produce(art::Event & evt)
 {
-   std::unique_ptr<vector<sbn::crt::CRTTrack> > ac_tracks(new vector<sbn::crt::CRTTrack>);
+   std::unique_ptr<vector<sbnd::comm::MuonTrack>> muon_tracks(new vector<sbnd::comm::MuonTrack>);
    // std::unique_ptr< art::Assns<sbn::crt::CRTTrack, sbn::crt::CRTHit> > ac_track_assn( new art::Assns<sbn::crt::CRTTrack, sbn::crt::CRTHit>);
    // art::PtrMaker<sbn::crt::CRTTrack> makeTrackPtr(evt);
 
@@ -194,7 +199,7 @@ void MuonTrackProducer::produce(art::Event & evt)
       nhits = fMax_Hits;
    }
 
-   ResetCollectionHitVectors();
+   ResetCollectionHitVectors(20);
 
    for (int i = 0; i < nhits; ++i) {
       geo::WireID wireid = hitlist[i]->WireID();
@@ -208,29 +213,15 @@ void MuonTrackProducer::produce(art::Event & evt)
       }
    } // end of nhit loop
    hit_02.shrink_to_fit(); hit_12.shrink_to_fit(); 
-   Hough_col(hit_02,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_02,colwire_02,colpeakT_02);
-   Hough_col(hit_12,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_12,colwire_12,colpeakT_12);
-
-
-   //flags 
-   // if (lines_n2.empty() == false){ // if lines have been detected in tpc n 
-   //    for (int i=0; i < nhits; i++){ // get induction plane hits 
-   //       geo::WireID wireid = hitlist[i]->WireID();
-   //       int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_tpc = wireid.TPC, hit_plane = wireid.Plane;
-   //       vector<int> v{hit_wire,hit_peakT,i};
-   //       if (hit_plane==0 && hit_tpc==0 && hit_peakT>0) 
-   //          hit_n0.push_back(v);
-   //       if (hit_plane==1 && hit_tpc==0 && hit_peakT>0)
-   //          hit_n1.push_back(v);
-   //    }
-      
-   // }
+   bool save_col_hits = true;
+   Hough(hit_02,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_02,save_col_hits,colwire_02,colpeakT_02);
+   Hough(hit_12,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_12,save_col_hits,colwire_12,colpeakT_12);
 
    bool ac_in_tpc0 = !(lines_02.empty()); // will be true if an ac muon was detected in tpc0 
    bool ac_in_tpc1 = !(lines_12.empty()); // will be true if an ac muon was detected in tpc1
 
-   ResetInductionHitVectors();
-   ResetACVariables();
+   ResetInductionHitVectors(20);
+   ResetMuonVariables(20);
    //find induction plane hits
    if (ac_in_tpc0 == true || ac_in_tpc1 == true){
       for (int i = 0; i < nhits; ++i) {
@@ -250,65 +241,67 @@ void MuonTrackProducer::produce(art::Event & evt)
                hit_11.push_back(v);
          } 
       }
+      bool save_ind_hits = false;
+      vector<vector<int>> ind_empty; 
       if (ac_in_tpc0){
-         //ac_tpc.insert(ac_tpc.end(),0,lines_02.size());
-         //Findt0(lines_02, ac_t0);
          std::cout << "TPC0:" << std::endl;
-         Hough_ind(hit_00,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_00);
+         Hough(hit_00,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_00,save_ind_hits,ind_empty,ind_empty);
          if (lines_00.empty() == false){
-            FindEndpoints(lines_02,lines_00,fEndpointRange,hitlist,ac_endpoints);
+            FindEndpoints(lines_02,lines_00,fEndpointRange,hitlist,muon_endpoints,muon_hitpeakT);
+
          }
-         Hough_ind(hit_01,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_01);
+         Hough(hit_01,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_01,save_ind_hits,ind_empty,ind_empty);
          if (lines_01.empty()==false){
-            FindEndpoints(lines_02,lines_01,fEndpointRange,hitlist,ac_endpoints);
+            FindEndpoints(lines_02,lines_01,fEndpointRange,hitlist,muon_endpoints,muon_hitpeakT);
          }
       }
       if (ac_in_tpc1){
-         //ac_tpc.insert(ac_tpc.end(),0,lines_12.size());
-         //Findt0(lines_12, ac_t0);
          std::cout << "TPC1:" << std::endl;
-         Hough_ind(hit_10,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_10);
+         Hough(hit_10,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_10,save_ind_hits,ind_empty,ind_empty);
          if (lines_10.empty() == false){
-            FindEndpoints(lines_12,lines_10,fEndpointRange,hitlist,ac_endpoints);
+            FindEndpoints(lines_12,lines_10,fEndpointRange,hitlist,muon_endpoints,muon_hitpeakT);
          }
-         Hough_ind(hit_11,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_11);
+         Hough(hit_11,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_11,save_ind_hits,ind_empty,ind_empty);
          if (lines_11.empty() == false){
-            FindEndpoints(lines_12,lines_11, fEndpointRange, hitlist,ac_endpoints);
+            FindEndpoints(lines_12,lines_11, fEndpointRange, hitlist,muon_endpoints,muon_hitpeakT);
          }
       }
-      // FindTrajectories(ac_endpoints, ac_trajectories);
+      if (muon_endpoints.empty() == false){
+         SortEndpoints(muon_endpoints, muon_hitpeakT, muon_type);
+         FindTrajectories(muon_endpoints, muon_hitpeakT, muon_trajectories);
+         Findt0(muon_hitpeakT, muon_type, muon_t0);
+         for (int i=0; i<int(muon_endpoints.size()); i++){
 
-      // for (int i=0; i<int(ac_t0.size()); i++){
-      //    double t0 = ac_t0.at(i); 
-      //    geo::Point_t apoint = (ac_endpoints.at(i)).at(0), cpoint = (ac_endpoints.at(i)).at(1); 
-      //    float apoint_x = float(apoint.X()), apoint_y = float(apoint.Y()), apoint_z = float(apoint.Z()); 
-      //    float cpoint_x = float(cpoint.X()), cpoint_y = float(cpoint.Y()), cpoint_z = float(cpoint.Z()); 
-      //    double theta_xz = (ac_trajectories.at(i)).at(0), theta_yz = (ac_trajectories.at(i)).at(1);
+            geo::Point_t endpoint1 = (muon_endpoints.at(i)).at(0), endpoint2 = (muon_endpoints.at(i)).at(1); 
 
-      //    sbn::crt::CRTTrack mytrack;
+            sbnd::comm::MuonTrack mytrack;
+            mytrack.t0_us = muon_t0.at(i);
+            mytrack.x1_pos = float(endpoint1.X());
+            mytrack.y1_pos = float(endpoint1.Y());
+            mytrack.z1_pos = float(endpoint1.Z());
+            mytrack.x2_pos = float(endpoint2.X());
+            mytrack.y2_pos = float(endpoint2.Y());
+            mytrack.z2_pos = float(endpoint2.Z());
 
-      //    mytrack.ts1_ns = t0; //NOTE: t0 is in us!!!, only using ts0_ns as placeholder 
-      //    mytrack.x1_pos = apoint_x; 
-      //    mytrack.y1_pos = apoint_y; 
-      //    mytrack.z1_pos = apoint_z; 
-      //    mytrack.x2_pos = cpoint_x; 
-      //    mytrack.y2_pos = cpoint_y; 
-      //    mytrack.z2_pos = cpoint_z; 
-      //    mytrack.thetaxy = theta_xz; // NOTE: using theta**xy** from CRTTrack product as theta**xz**!!!
-      //    mytrack.phizy = theta_yz; // NOTE: using **phi**zy from CRTTrack product as **theta**zy!!! 
+            mytrack.theta_xz = (muon_trajectories.at(i)).at(0);
+            mytrack.theta_yz = (muon_trajectories.at(i)).at(1);
 
-      //    ac_tracks->push_back(mytrack);
-      // }
+            mytrack.tpc = (endpoint1.X() < 0)? 0:1;
+            mytrack.type = muon_type.at(i); 
+
+            muon_tracks->push_back(mytrack);
+         }
+      }
    } // end of finding ind hits 
-   evt.put(std::move(ac_tracks));
+   evt.put(std::move(muon_tracks));
 } // MuonTrackProducer::produce()
 
 float MuonTrackProducer::Distance(int x1, int y1, int x2, int y2){
    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
 }
 
-void MuonTrackProducer::Hough_col(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, 
-                       vector<vector<int>>& lines, vector<vector<int>>& colwire, vector<vector<int>>& colpeakT){
+void MuonTrackProducer::Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, 
+                       vector<vector<int>>& lines, bool save_hits, vector<vector<int>>& colwire, vector<vector<int>>& colpeakT){
    //set global variables 
    TRandom3 rndgen;
    const int h = 3500; const int w = 2000; //range of hit_wire
@@ -352,11 +345,10 @@ void MuonTrackProducer::Hough_col(vector<vector<int>> coords, int threshold, int
          continue;
       }
       //start at point and walk the corridor on both sides 
-      vector<vector<int>> endpoint(2, vector<int>(4));
-      vector<int> wires; 
-      vector<int> peakTs; 
+      vector<vector<int>> endpoint(2, vector<int>(4)); 
+      vector<int> wires, peakTs; 
       wires.clear(); peakTs.clear(); 
-      for (int k=0; k<2;k++){ 
+      for (int k=0; k<2;k++){
          int i=0, gap=0;
          while (gap < max_gap){ 
             (k==0)? i++ : i--; 
@@ -374,13 +366,15 @@ void MuonTrackProducer::Hough_col(vector<vector<int>> coords, int threshold, int
                }
             }
             int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
-            if (y1 >= (y_val-range) && y1 <= (y_val+range)){
+            if (abs(y_val-y1) <= range){
                gap = 0;
                endpoint[k] = {x1, y1, wire_idx, idx+i};
                (coords.at(idx+i)).clear();
                (data.at(idx+i)).clear();
-               wires.push_back(x1);
-               peakTs.push_back(y1); 
+               if (save_hits){
+                  wires.push_back(x1);
+                  peakTs.push_back(y1); 
+               }
             }
             else
                gap++;
@@ -408,8 +402,10 @@ void MuonTrackProducer::Hough_col(vector<vector<int>> coords, int threshold, int
       vector<int> outline = {x0_end, y0_end, x1_end, y1_end, wire0_end, wire1_end, idx0_end, idx1_end, rho, theta};
 
       outlines.push_back(outline);
-      outcolwire.push_back(wires);
-      outcolpeakT.push_back(peakTs); 
+      if (save_hits){
+         outcolwire.push_back(wires);
+         outcolpeakT.push_back(peakTs);
+      }
 
    } // end of point loop 
    // combine lines that are split 
@@ -457,12 +453,14 @@ void MuonTrackProducer::Hough_col(vector<vector<int>> coords, int threshold, int
                      }  
                   }
                   same = true;
-                  (outcolwire.at(j)).insert( (outcolwire.at(j)).end(),  (outcolwire.at(i)).begin(),  (outcolwire.at(i)).end()); 
-                  (outcolpeakT.at(j)).insert( (outcolpeakT.at(j)).end(),  (outcolpeakT.at(i)).begin(),  (outcolpeakT.at(i)).end());
-                  
+                  // remove the extra segment 
                   (outlines.at(i)).clear();
-                  (outcolwire.at(i)).clear();
-                  (outcolpeakT.at(i)).clear();
+                  if (save_hits){
+                     (outcolwire.at(j)).insert( (outcolwire.at(j)).end(),  (outcolwire.at(i)).begin(),  (outcolwire.at(i)).end()); 
+                     (outcolpeakT.at(j)).insert( (outcolpeakT.at(j)).end(),  (outcolpeakT.at(i)).begin(),  (outcolpeakT.at(i)).end());
+                     (outcolwire.at(i)).clear();
+                     (outcolpeakT.at(i)).clear();
+                  }
                } 
             }
          }
@@ -477,8 +475,10 @@ void MuonTrackProducer::Hough_col(vector<vector<int>> coords, int threshold, int
          int y_diff = abs(y0_end-y1_end);
          if (y_diff > muon_length){
             lines.push_back(outlines.at(i));
-            colwire.push_back(outcolwire.at(i)); 
-            colpeakT.push_back(outcolpeakT.at(i));
+            if (save_hits){
+               colwire.push_back(outcolwire.at(i)); 
+               colpeakT.push_back(outcolpeakT.at(i));
+            }
          }
       }
       else{
@@ -486,8 +486,10 @@ void MuonTrackProducer::Hough_col(vector<vector<int>> coords, int threshold, int
          if (length > min_length){
             // std::cout << "hough col output: (" << x0_end << ", " << y0_end << ") and (" << x1_end << ", " << y1_end << ")" << std::endl;
             lines.push_back(outlines.at(i));
-            colwire.push_back(outcolwire.at(i)); 
-            colpeakT.push_back(outcolpeakT.at(i));
+            if (save_hits){
+               colwire.push_back(outcolwire.at(i)); 
+               colpeakT.push_back(outcolpeakT.at(i));
+            }
          }
       }
    }
@@ -495,174 +497,7 @@ void MuonTrackProducer::Hough_col(vector<vector<int>> coords, int threshold, int
    data.clear(); deaccu.clear(); outlines.clear(); outcolwire.clear(); outcolpeakT.clear(); 
 } // end of hough 
 
-void MuonTrackProducer::Hough_ind(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, vector<vector<int>>& lines){
-   //set global variables 
-   TRandom3 rndgen;
-   const int h = 3500; const int w = 2000; //range of hit_wire
-   constexpr int accu_h = h + w + 1 ; const int accu_w = 180; 
-   const int x_c = (w/2); const int y_c = (h/2); 
-
-   //create accumulator/pointer to accumulator 
-   int accu[accu_h][accu_w] = {{0}};
-   int (*adata)[accu_w];
-   adata = &accu[(accu_h-1)/2]; // have pointer point to the middle of the accumulator array (then we can use negative indices)
-
-   //declare necessary vectors 
-   vector<vector<int>> data = coords; // points will not be removed 
-   vector<vector<int>> deaccu; //deaccumulator
-   vector<vector<int>> outlines; 
-
-   // loop over points and perform transform 
-   int count = coords.size(); 
-   for ( ; count>0; count--){ 
-      int idx = rndgen.Uniform(count);
-      int max_val = threshold-1;
-      if ((coords.at(idx)).empty())
-         continue; 
-      int x = coords[idx][0], y = coords[idx][1], rho = 0, theta = 0;
-      vector<int> v{x,y}; 
-      deaccu.push_back(v);
-      //loop over all angles and fill the accumulator 
-      for (int j=0; j<accu_w; j++){ 
-         int r = int(round((x-x_c)*cos(j*PI/accu_w) + (y-y_c)*sin(j*PI/accu_w)));
-         int val = ++(adata[r][j]);       
-         if (max_val < val){
-            max_val = val;
-            rho = r;
-            theta = j*180/accu_w;
-         }
-      }
-      if (max_val < threshold){
-         (coords.at(idx)).clear(); 
-         continue;
-      }
-      //start at point and walk the corridor on both sides 
-      vector<vector<int>> endpoint(2, vector<int>(3));
-      for (int k=0; k<2;k++){ 
-         int i=0, gap=0;
-         while (gap < max_gap){ 
-            (k==0)? i++ : i--; 
-            if ( (idx+i) == int(data.size()) || (idx+i) <0) // if we reach the edges of the data set 
-               break;
-            if ((data.at(idx+i)).empty()) // if the point has already been removed 
-               continue;
-            int x1 = data[idx+i][0], y1 = int(data[idx+i][1]), wire_idx = data[idx+i][2]; 
-            int last_x, diffx; 
-            if (endpoint[k][0]!= 0){ // ensure we don't jump large x-values 
-               last_x = endpoint[k][0];
-               diffx = abs(last_x - x1);
-               if (diffx > 30){
-                  break;
-               }
-            }
-            int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
-            if (y1 >= (y_val-range) && y1 <= (y_val+range)){
-               gap = 0;
-               endpoint[k] = {x1, y1, wire_idx};
-               (coords.at(idx+i)).clear();
-               (data.at(idx+i)).clear();
-            }
-            else
-               gap++;
-         } // end of while loop 
-      } // end of k loop 
-
-      // unvote from the accumulator 
-      for (int n = (deaccu.size()-1); n>=0; n--){ 
-         int x1 = deaccu[n][0], y1 = int(deaccu[n][1]);
-         int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
-         if (y1 >= (y_val-range) && y1 <= (y_val+range)){
-            for (int m=0; m<accu_w; m++){
-               int r = int(round((x1-x_c)*cos(m*PI/accu_w) + (y1-y_c)*sin(m*PI/accu_w)));
-               (adata[r][m])--;
-            }
-            deaccu.erase(deaccu.begin() + n);
-         }
-      } // end of deaccumulator loop
-
-      int x0_end = endpoint[0][0], y0_end = endpoint[0][1], x1_end = endpoint[1][0], y1_end = endpoint[1][1];
-      int wire0_end = endpoint[0][2], wire1_end = endpoint[1][2]; 
-      if ((x0_end==0 && y0_end==0) || (x1_end==0 && y1_end==0)) // don't add the (0,0) points 
-         continue;
-      vector<int> outline = {x0_end, y0_end, x1_end, y1_end, wire0_end, wire1_end, rho, theta};
-      outlines.push_back(outline);
-
-   } // end of point loop 
-   // combine lines that are split 
-   for (int i=0; i<int(outlines.size()); i++){
-      bool same = false;
-      for (int j=i+1; j<int(outlines.size()) && same == false;j++){ 
-         int xi_coords[2] = {outlines[i][0], outlines[i][2]}; int xj_coords[2] = {outlines[j][0], outlines[j][2]};
-         int yi_coords[2] = {outlines[i][1], outlines[i][3]}; int yj_coords[2] = {outlines[j][1], outlines[j][3]};
-         int rhoi = outlines[i][6], rhoj = outlines[j][6];
-         int thetai = outlines[i][7], thetaj = outlines[j][7]; 
-
-         int var = 100;
-         int rho_var = 30;
-         int theta_var = 20; 
-         for (int k=0; k<2 && same == false; k++){
-            for (int l=0; l<2 && same == false; l++){
-               int counter = 0; 
-               if ((xi_coords[k] < (xj_coords[l] + var)) && (xi_coords[k] > (xj_coords[l] - var)))
-                  counter++;
-               if ((yi_coords[k] < (yj_coords[l] + var)) && (yi_coords[k] > (yj_coords[l] - var)))
-                  counter++ ;
-               if ((rhoi < (rhoj + rho_var)) && (rhoi > (rhoj - rho_var)))
-                  counter++; 
-               if ((thetai < (thetaj + theta_var)) && (thetai > (thetaj - theta_var)))
-                  counter++;
-               if (counter >= 3){ // if at least three of the conditions are fulfilled 
-                  if(k==0){
-                     if(l==0){
-                        outlines[j][2] = outlines[i][0];
-                        outlines[j][3] = outlines[i][1];
-                     }
-                     else{
-                        outlines[j][0] = outlines[i][0];
-                        outlines[j][1] = outlines[i][1];
-                     }
-                  }
-                  else{
-                     if(l==0){
-                        outlines[j][2] = outlines[i][2]; 
-                        outlines[j][3] = outlines[i][3];                        
-                     }
-                     else{
-                        outlines[j][0] = outlines[i][2];
-                        outlines[j][1] = outlines[i][3]; 
-                     }  
-                  }
-                  same = true;
-                  (outlines.at(i)).clear();
-                  //std::fill ((outlines.at(i)).begin(),(outlines.at(i)).end(),0);
-               } 
-            }
-         }
-      } // end of j loop 
-   } // end of i loop 
-
-   for (int i=0; i<int(outlines.size()); i++){
-      if ((outlines.at(i)).empty())
-         continue;
-      int x0_end = outlines[i][0], y0_end = outlines[i][1], x1_end = outlines[i][2], y1_end = outlines[i][3];
-      if (muon_length!=0){
-         int y_diff = abs(y0_end-y1_end);
-         if (y_diff > muon_length){
-            lines.push_back(outlines.at(i));
-         }
-      }
-      else{
-         float length = Distance(x0_end,y0_end,x1_end,y1_end);
-         if (length > min_length){
-            lines.push_back(outlines.at(i));
-         }
-      }
-   }
-   //free memory 
-   data.clear(); deaccu.clear(); outlines.clear();
-} // end of hough 
-
-void MuonTrackProducer::ResetCollectionHitVectors() {
+void MuonTrackProducer::ResetCollectionHitVectors(int n) {
 
    hit_02.clear(); 
    hit_12.clear(); 
@@ -675,15 +510,15 @@ void MuonTrackProducer::ResetCollectionHitVectors() {
   
    hit_02.reserve(3000); 
    hit_12.reserve(3000); 
-   lines_02.reserve(10); 
-   lines_12.reserve(10); 
+   lines_02.reserve(n); 
+   lines_12.reserve(n); 
    colwire_02.reserve(3000); 
    colpeakT_02.reserve(3000); 
    colwire_12.reserve(3000); 
    colpeakT_12.reserve(3000); 
 }
 
-void MuonTrackProducer::ResetInductionHitVectors(){
+void MuonTrackProducer::ResetInductionHitVectors(int n){
    hit_00.clear();
    hit_01.clear();
    hit_10.clear();
@@ -693,44 +528,38 @@ void MuonTrackProducer::ResetInductionHitVectors(){
    lines_01.clear();
    lines_10.clear(); 
    lines_11.clear();
-
    hit_00.reserve(5000);
    hit_01.reserve(5000);
    hit_10.reserve(5000);
    hit_11.reserve(5000);
 
-   lines_00.reserve(5); 
-   lines_01.reserve(5);
-   lines_10.reserve(5); 
-   lines_11.reserve(5);
+   lines_00.reserve(n); 
+   lines_01.reserve(n);
+   lines_10.reserve(n); 
+   lines_11.reserve(n);
 }
 
-void MuonTrackProducer::ResetACVariables(){
-   ac_t0.clear();
-   ac_endpoints.clear();
-   ac_trajectories.clear(); 
-   
-   ac_t0.reserve(5); 
-   ac_endpoints.reserve(5);
-   ac_trajectories.reserve(5);
-}
+void MuonTrackProducer::ResetMuonVariables(int n){
+   muon_tpc.clear();
+   muon_endpoints.clear();
+   muon_hitpeakT.clear();
+   muon_type.clear();
+   muon_trajectories.clear(); 
+   muon_t0.clear();
 
-void MuonTrackProducer::Findt0(vector<vector<int>> lines,
-                        vector<double>& ac_t0){
-   for (int i=0; i<int(lines.size()); i++){
-      double t_i, t_j; 
-      t_i = (lines[i][1]-500)*0.5;
-      t_j = (lines[i][3]-500)*0.5;
-      double t0 = (t_i<t_j)? t_i:t_j;
-      std::cout << "interaction times (in us): " << t0 << std::endl;
-      ac_t0.push_back(t0);
-   }           
+   muon_tpc.reserve(n);
+   muon_endpoints.reserve(n);
+   muon_hitpeakT.reserve(n);
+   muon_type.reserve(n);
+   muon_trajectories.reserve(n);
+   muon_t0.reserve(n); 
+
 }
 
 void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, 
                                       vector<vector<int>>& lines_ind, 
                                       int range, vector<art::Ptr<recob::Hit>> hitlist, 
-                                      vector<vector<geo::Point_t>>& muon_endpoints){
+                                      vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>>& muon_hitpeakT){
    for (int i=0; i<int(lines_col.size()); i++){
       bool match = false;
       if ((lines_col.at(i)).empty() == true)
@@ -738,31 +567,19 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col,
       for (int j=0; j<int(lines_ind.size()) && match == false; j++){
          int peakT0_col, peakT1_col, peakT0_ind, peakT1_ind; 
          int wire0_col, wire1_col, wire0_ind, wire1_ind;
-         if ((lines_col.at(i)).at(1) < (lines_col.at(i)).at(3)){
-            peakT0_col = (lines_col.at(i)).at(1);
-            peakT1_col = (lines_col.at(i)).at(3);
-            wire0_col = (lines_col.at(i)).at(4); 
-            wire1_col = (lines_col.at(i)).at(5); 
-         }
-         else{
-            peakT0_col = (lines_col.at(i)).at(3);
-            peakT1_col = (lines_col.at(i)).at(1);
-            wire0_col = (lines_col.at(i)).at(5); 
-            wire1_col = (lines_col.at(i)).at(4); 
-         }
 
-         if ((lines_ind.at(j)).at(1) < (lines_ind.at(j)).at(3)) {
-            peakT0_ind = (lines_ind.at(j)).at(1);
-            peakT1_ind = (lines_ind.at(j)).at(3);
-            wire0_ind = (lines_ind.at(j)).at(4); 
-            wire1_ind = (lines_ind.at(j)).at(5); 
-         }
-         else{
-            peakT0_ind = (lines_ind.at(j)).at(3);
-            peakT1_ind = (lines_ind.at(j)).at(1);
-            wire0_ind = (lines_ind.at(j)).at(5); 
-            wire1_ind = (lines_ind.at(j)).at(4); 
-         }
+         bool order_col = (lines_col.at(i)).at(1) < (lines_col.at(i)).at(3); 
+         peakT0_col = order_col? (lines_col.at(i)).at(1) : (lines_col.at(i)).at(3);
+         peakT1_col = order_col? (lines_col.at(i)).at(3) : (lines_col.at(i)).at(1);
+         wire0_col  = order_col? (lines_col.at(i)).at(4) : (lines_col.at(i)).at(5); 
+         wire1_col  = order_col? (lines_col.at(i)).at(5) : (lines_col.at(i)).at(4); 
+
+         bool order_ind = (lines_ind.at(j)).at(1) < (lines_ind.at(j)).at(3); 
+         peakT0_ind = order_ind? (lines_ind.at(j)).at(1) : (lines_ind.at(j)).at(3);
+         peakT1_ind = order_ind? (lines_ind.at(j)).at(3) : (lines_ind.at(j)).at(1);
+         wire0_ind  = order_ind? (lines_ind.at(j)).at(4) : (lines_ind.at(j)).at(5); 
+         wire1_ind  = order_ind? (lines_ind.at(j)).at(5) : (lines_ind.at(j)).at(4); 
+
          int peakT_range = range; 
          if ( (abs(peakT0_col - peakT0_ind) < peakT_range) && (abs(peakT1_col - peakT1_ind) < peakT_range)){
             geo::WireID awire_col = hitlist[wire0_col]->WireID(); 
@@ -780,40 +597,30 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col,
                endpoint2 = cpoint;
             // NOTE: this next section is a hardcoded fix for mis-matched endpoints of a specific type. look at the README for more info
             if (aintersect == false){
-               if (FixEndpoint(awire_col, awire_ind, apoint) == true){
+               if (FixEndpoints(awire_col, awire_ind, apoint) == true){
                   endpoint1 = apoint;
                }
             }
             if (cintersect == false){
-               if (FixEndpoint(cwire_col, cwire_ind, cpoint) == true){
+               if (FixEndpoints(cwire_col, cwire_ind, cpoint) == true){
                   endpoint2 = cpoint;
                }
             }
             if (endpoint1.Mag2() != 0 && endpoint2.Mag2() != 0 ){
-               std::cout << "endpoint 1: " << endpoint1.X() << ", " << endpoint1.Y() << ", " << endpoint1.Z() << std::endl;
-               std::cout << "endpoint 2: " << endpoint2.X() << ", " << endpoint2.Y() << ", " << endpoint2.Z() << std::endl;
-               if (endpoint1.Y() > 198 || endpoint2.Y() > 198 )
-                  std::cout << "crosses top" << std::endl;
-               if (endpoint1.Y() < -198 || endpoint2.Y() < -198)
-                  std::cout << "crosses bottom" << std::endl;
-               if (endpoint1.Z() > 503 || endpoint2.Z() > 503)
-                  std::cout << "crosses downstream wall" << std::endl;
-               if (endpoint1.Z() < 6 || endpoint2.Z() < 6) 
-                  std::cout << "crosses upstream wall" << std::endl;
-               if ( abs(peakT0_col - peakT1_col) > 2400 )
-                  std::cout << "anode-cathode crosser" << std::endl;
                vector<geo::Point_t> pair{endpoint1,endpoint2};
                muon_endpoints.push_back(pair);
+               vector<int> v{peakT0_col, peakT1_col};
+               muon_hitpeakT.push_back(v);
             }
             (lines_col.at(i)).clear(); // remove the line from the collection plane if it's been found 
             match = true;
          }
       } // end of j loop 
    } // end of i loop 
-} // end of function
+} 
 
-bool MuonTrackProducer::FixEndpoint(geo::WireID wire_col, geo::WireID wire_ind, geo::Point_t& point){
-   bool foo = false; 
+bool MuonTrackProducer::FixEndpoints(geo::WireID wire_col, geo::WireID wire_ind, geo::Point_t& point){
+   bool pass = false; 
    double col_end1[3], col_end2[3], ind_end1[3], ind_end2[3];
    fGeometryService->WireEndPoints(wire_col, col_end1, col_end2);
    fGeometryService->WireEndPoints(wire_ind, ind_end1, ind_end2);
@@ -824,27 +631,90 @@ bool MuonTrackProducer::FixEndpoint(geo::WireID wire_col, geo::WireID wire_ind, 
          point.SetX(col_end1[0]);
          point.SetY(ind_y);
          point.SetZ(ind_z);
-         foo = true;
+         pass = true;
       }
    }
-   return foo; 
+   return pass; 
 }
 
-void MuonTrackProducer::FindTrajectories(vector<vector<geo::Point_t>> ac_endpoints, vector<vector<double>>& ac_trajectories){
-   if (ac_endpoints.empty() == false){
-      for (int i=0; i<int(ac_endpoints.size()); i++){
-         vector<geo::Point_t> pair = ac_endpoints[i];
-         float x_a = float(pair[0].X()), y_a = float(pair[0].Y()), z_a = float(pair[0].Z()); 
-         float x_c = float(pair[1].X()), y_c = float(pair[1].Y()), z_c = float(pair[1].Z()); 
-         float dx = x_a - x_c, dy = y_a - y_c, dz = z_a - z_c; 
-         double theta_xz = atan2(dx,dz) * 180/PI;
-         double theta_yz = atan2(dy,dz) * 180/PI;
-         std::cout << "theta_xz: " << theta_xz << std::endl;
-         std::cout << "theta_yz: " << theta_yz << std::endl;
-         vector<double> trajectories{theta_xz, theta_yz};
-         ac_trajectories.push_back(trajectories);
+void MuonTrackProducer::SortEndpoints(vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>> muon_hitpeakT, vector<int>& muon_type){
+   for (int i=0; i<int(muon_endpoints.size()); i++){
+      geo::Point_t endpoint1 = (muon_endpoints.at(i)).at(0), endpoint2 = (muon_endpoints.at(i)).at(1);
+      int dt = (muon_hitpeakT.at(i)).at(1) - (muon_hitpeakT.at(i)).at(0);
+
+
+      if (dt > 2400){
+         muon_type.push_back(0); // anode-cathode crosser 
+         endpoint2.SetX(0); 
+         continue;
       }
+
+      bool end1_edge = (endpoint1.Y() > 198 || endpoint1.Y() < -198 || endpoint1.Z() > 503 || endpoint1.Z() < 6);
+      bool end2_edge = (endpoint2.Y() > 198 || endpoint2.Y() < -198 || endpoint2.Z() > 503 || endpoint2.Z() < 6);
+
+      if (end1_edge == false && end2_edge == true ){ //  if the later one was on an edge, the earlier one must be on anode 
+         muon_type.push_back(1); // anode crosser 
+         double dx = dt*0.5*0.16; // conversion to distance (cm)
+         double true_x = (endpoint2.X() > 0)? (202.05-dx):(-202.05+dx);
+         endpoint2.SetX(true_x);
+      }
+      else if (end1_edge == true  && end2_edge == false){ // if the earlier one was on an edge, the later one must be on cathode 
+         muon_type.push_back(2); // cathode crosser
+         double dx = dt*0.5*0.16; // conversion to distance (cm)
+         double true_x = (endpoint1.X() > 0)? (202.05-dx):(-202.05+dx);
+         endpoint1.SetX(true_x); 
+         endpoint2.SetX(0.0); // change to location of cathode 
+      }
+      else if ( (endpoint1.Y() > 198 && endpoint2.Y() < -198) || (endpoint1.Y() < -198 && endpoint2.Y() > 198) ){
+         muon_type.push_back(3); // top-bottom crosser 
+      }
+      else if ( (endpoint1.Z() > 503 && endpoint2.Z() < 6) || (endpoint1.Z() < 6 && endpoint2.Z() > 503)){
+         muon_type.push_back(4); // upstream/downstream crosser 
+      }
+      else{
+         muon_type.push_back(5); // uncategorized
+      }
+      std::cout << "endpoint 1: " << endpoint1.X() << ", " << endpoint1.Y() << ", " << endpoint1.Z() << std::endl;
+      std::cout << "endpoint 2: " << endpoint2.X() << ", " << endpoint2.Y() << ", " << endpoint2.Z() << std::endl;
    }
+}
+
+void MuonTrackProducer::FindTrajectories(vector<vector<geo::Point_t>> muon_endpoints, vector<vector<int>> muon_hitpeakT, 
+                                         vector<vector<double>>& muon_trajectories){
+   for (int i=0; i<int(muon_endpoints.size()); i++){
+      vector<geo::Point_t> pair = muon_endpoints[i];
+
+      int dt = (muon_hitpeakT.at(i)).at(1) - (muon_hitpeakT.at(i)).at(0);
+      
+      double dx = dt*0.5*0.16;
+      double dy = float(pair[1].Y())-float(pair[0].Y());
+      double dz = float(pair[1].Z())-float(pair[0].Z());
+      
+      double theta_xz = atan2(dx,dz) * 180/PI;
+      double theta_yz = atan2(dy,dz) * 180/PI;
+
+      std::cout << "theta_xz: " << theta_xz << std::endl;
+      std::cout << "theta_yz: " << theta_yz << std::endl;
+      vector<double> trajectories{theta_xz, theta_yz};
+      muon_trajectories.push_back(trajectories);
+   }
+}
+
+void MuonTrackProducer::Findt0(vector<vector<int>> muon_hitpeakT, vector<int> muon_type, 
+                        vector<double>& muon_t0){
+   for (int i=0; i<int(muon_hitpeakT.size()); i++){
+      double t0; 
+      if (muon_type.at(i) == 0 || muon_type.at(i) == 1){ // anode-cathode crosser or anode crosser 
+         t0 = ((muon_hitpeakT.at(i)).at(0) - 500)*0.5; 
+      }
+      else if (muon_type.at(i) == 2){ // cathode crosser
+         t0 = ((muon_hitpeakT.at(i)).at(1) - 3000)*0.5; 
+      }
+      else{
+         t0 = -500; 
+      }
+      muon_t0.push_back(t0);
+   }           
 }
 
 // A macro required for a JobControl module.
