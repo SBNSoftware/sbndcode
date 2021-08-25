@@ -15,7 +15,7 @@
 
 cmake_minimum_required (VERSION 3.12...3.18 FATAL_ERROR)
 
-project(sbndcode LANGUAGES CXX)
+project(sbndcode VERSION 09.28.02.01 LANGUAGES CXX)
 
 message(STATUS "\n")
 message(STATUS "=================================   ${PROJECT_NAME}   =================================")
