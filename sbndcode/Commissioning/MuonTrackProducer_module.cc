@@ -23,26 +23,18 @@
 #include "lardataobj/RawData/raw.h"
 
 // SBN/SBND includes
-#include "sbnobj/SBND/CRT/CRTData.hh"
-#include "sbnobj/Common/CRT/CRTHit.hh"
-#include "sbnobj/Common/CRT/CRTTrack.hh"
-#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
-
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 
 // ROOT includes 
 #include "TRandom3.h"
 
 // C++ includes
-#include <map>
 #include <vector>
 #include <algorithm>
 #include <stdlib.h>
 #include <math.h>
 #include <vector>
-#include <algorithm>
 #include <iostream>
-#include <string>
 #include <cmath>
 #include <bitset>
 #include <memory>
@@ -80,8 +72,8 @@ private:
    // Finds distance between two points 
    float Distance(int x1, int y1, int x2, int y2);
    // Performs Hough Transform for collection planes
-   void Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, 
-                  vector<vector<int>>& lines, bool save_hits, vector<vector<int>>& colwire, vector<vector<int>>& colpeakT);
+   void Hough(vector<vector<int>> coords, vector<int> param, bool save_hits, int nentry, 
+                  vector<vector<int>>& lines, vector<vector<int>>& colwire, vector<vector<int>>& colpeakT);
    // Finds t0, stores them in a vector<vector<double>>     
    void FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, int range, vector<art::Ptr<recob::Hit>> hitlist, 
                      vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>>& muon_hitpeakT); 
@@ -137,6 +129,7 @@ private:
    int fHoughMinLength;
    int fHoughMuonLength;
    int fEndpointRange; 
+   std::vector<int> fKeepMuonTypes = {0, 1, 2, 3, 4, 5}; 
 
    // services 
    art::ServiceHandle<art::TFileService> tfs;
@@ -169,8 +162,10 @@ void MuonTrackProducer::reconfigure(fhicl::ParameterSet const & p)
    fHoughMinLength      = p.get<int>("HoughMinLength",500);
    fHoughMuonLength     = p.get<int>("HoughMuonLength",2500);
 
-   // FindEndpoints parameters 
+   // Muon function parameters 
    fEndpointRange       = p.get<int>("EndpointRange",30);
+   fKeepMuonTypes       = p.get<std::vector<int>>("KeepMuonTypes");
+
 } // MuonTrackProducer()
 
 void MuonTrackProducer::produce(art::Event & evt)
@@ -199,6 +194,10 @@ void MuonTrackProducer::produce(art::Event & evt)
       nhits = fMax_Hits;
    }
 
+   // obtain collection hits, perform hough transform, obtain tracks, and save col track info 
+   vector<vector<int>> hit_02, hit_12;
+   vector<vector<int>> lines_02, lines_12;
+   vector<vector<int>> colwire_02, colwire_12, colpeakT_02, colpeakT_12; 
    ResetCollectionHitVectors(20);
 
    for (int i = 0; i < nhits; ++i) {
@@ -213,83 +212,90 @@ void MuonTrackProducer::produce(art::Event & evt)
       }
    } // end of nhit loop
    hit_02.shrink_to_fit(); hit_12.shrink_to_fit(); 
+
+   // perform hough transform
    bool save_col_hits = true;
-   Hough(hit_02,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_02,save_col_hits,colwire_02,colpeakT_02);
-   Hough(hit_12,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_12,save_col_hits,colwire_12,colpeakT_12);
+   vector<int> HoughParam{HoughParam};
+   Hough(hit_02, HoughParam, save_col_hits, event, lines_02, colwire_02, colpeakT_02);
+   Hough(hit_12, HoughParam, save_col_hits, event, lines_12, colwire_12, colpeakT_12);
 
-   bool ac_in_tpc0 = !(lines_02.empty()); // will be true if an ac muon was detected in tpc0 
-   bool ac_in_tpc1 = !(lines_12.empty()); // will be true if an ac muon was detected in tpc1
+   bool muon_in_tpc0 = !(lines_02.empty()); // will be true if a muon was detected in tpc0 
+   bool muon_in_tpc1 = !(lines_12.empty()); // will be true if a muon was detected in tpc1
 
+   //find induction plane hits, tracks, and fill muon variables 
+   vector<vector<int>> hit_00, hit_01, hit_10, hit_11;
+   vector<vector<int>> lines_00, lines_01, lines_10, lines_11;
    ResetInductionHitVectors(20);
+
+
    ResetMuonVariables(20);
-   //find induction plane hits
-   if (ac_in_tpc0 == true || ac_in_tpc1 == true){
+   if (muon_in_tpc0 == true || muon_in_tpc1 == true){
       for (int i = 0; i < nhits; ++i) {
          geo::WireID wireid = hitlist[i]->WireID();
          int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_tpc = wireid.TPC, hit_plane = wireid.Plane;
          vector<int> v{hit_wire,hit_peakT,i};
-         if (ac_in_tpc0 == true){ //if ac muon was found in tpc0 
+         if (muon_in_tpc0 == true){ //if ac muon was found in tpc0 
             if (hit_plane==0 && hit_tpc==0 && hit_peakT>0) 
                hit_00.push_back(v);
-            if (hit_plane==1 && hit_tpc==0 && hit_peakT>0)
+            else if (hit_plane==1 && hit_tpc==0 && hit_peakT>0)
                hit_01.push_back(v);
          }
-         if (ac_in_tpc1 == true){ // if ac muon was found in tpc 1
+         else if (muon_in_tpc1 == true){ // if ac muon was found in tpc 1
             if (hit_plane==0 && hit_tpc==1 && hit_peakT>0)
                hit_10.push_back(v);
-            if (hit_plane==1 && hit_tpc==1 && hit_peakT>0)
+            else if (hit_plane==1 && hit_tpc==1 && hit_peakT>0)
                hit_11.push_back(v);
          } 
       }
       bool save_ind_hits = false;
-      vector<vector<int>> ind_empty; 
-      if (ac_in_tpc0){
-         std::cout << "TPC0:" << std::endl;
-         Hough(hit_00,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_00,save_ind_hits,ind_empty,ind_empty);
-         if (lines_00.empty() == false){
-            FindEndpoints(lines_02,lines_00,fEndpointRange,hitlist,muon_endpoints,muon_hitpeakT);
+      vector<vector<int>> ind_empty; // placeholder empty vector 
+      if (muon_in_tpc0){
+         Hough(hit_00, HoughParam, save_ind_hits, event, lines_00, ind_empty, ind_empty);
+         Hough(hit_01, HoughParam, save_ind_hits, event, lines_01, ind_empty, ind_empty);
 
-         }
-         Hough(hit_01,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_01,save_ind_hits,ind_empty,ind_empty);
-         if (lines_01.empty()==false){
-            FindEndpoints(lines_02,lines_01,fEndpointRange,hitlist,muon_endpoints,muon_hitpeakT);
-         }
+         FindEndpoints(lines_02, lines_00, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT);
+         FindEndpoints(lines_02, lines_01, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT);
       }
-      if (ac_in_tpc1){
-         std::cout << "TPC1:" << std::endl;
-         Hough(hit_10,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_10,save_ind_hits,ind_empty,ind_empty);
-         if (lines_10.empty() == false){
-            FindEndpoints(lines_12,lines_10,fEndpointRange,hitlist,muon_endpoints,muon_hitpeakT);
-         }
-         Hough(hit_11,fHoughThreshold,fHoughMaxGap,fHoughRange,fHoughMinLength,fHoughMuonLength,event,lines_11,save_ind_hits,ind_empty,ind_empty);
-         if (lines_11.empty() == false){
-            FindEndpoints(lines_12,lines_11, fEndpointRange, hitlist,muon_endpoints,muon_hitpeakT);
-         }
+      if (muon_in_tpc1){
+         Hough(hit_10, HoughParam, save_ind_hits, event, lines_10, ind_empty, ind_empty);
+         Hough(hit_11, HoughParam, save_ind_hits, event, lines_11, ind_empty, ind_empty);
+
+         FindEndpoints(lines_12, lines_10, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT);
+         FindEndpoints(lines_12, lines_11, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT);
       }
       if (muon_endpoints.empty() == false){
          SortEndpoints(muon_endpoints, muon_hitpeakT, muon_type);
          FindTrajectories(muon_endpoints, muon_hitpeakT, muon_trajectories);
          Findt0(muon_hitpeakT, muon_type, muon_t0);
+
          for (int i=0; i<int(muon_endpoints.size()); i++){
+            int track_type = muon_type.at(i);
+            bool keep_track = false; 
+            for (auto t : fKeepMuonTypes){
+               if (track_type == t){
+                  keep_track = true; 
+               }
+            }
+            if (keep_track){
+               geo::Point_t endpoint1 = (muon_endpoints.at(i)).at(0), endpoint2 = (muon_endpoints.at(i)).at(1); 
 
-            geo::Point_t endpoint1 = (muon_endpoints.at(i)).at(0), endpoint2 = (muon_endpoints.at(i)).at(1); 
+               sbnd::comm::MuonTrack mytrack;
+               mytrack.t0_us = muon_t0.at(i);
+               mytrack.x1_pos = float(endpoint1.X());
+               mytrack.y1_pos = float(endpoint1.Y());
+               mytrack.z1_pos = float(endpoint1.Z());
+               mytrack.x2_pos = float(endpoint2.X());
+               mytrack.y2_pos = float(endpoint2.Y());
+               mytrack.z2_pos = float(endpoint2.Z());
 
-            sbnd::comm::MuonTrack mytrack;
-            mytrack.t0_us = muon_t0.at(i);
-            mytrack.x1_pos = float(endpoint1.X());
-            mytrack.y1_pos = float(endpoint1.Y());
-            mytrack.z1_pos = float(endpoint1.Z());
-            mytrack.x2_pos = float(endpoint2.X());
-            mytrack.y2_pos = float(endpoint2.Y());
-            mytrack.z2_pos = float(endpoint2.Z());
+               mytrack.theta_xz = (muon_trajectories.at(i)).at(0);
+               mytrack.theta_yz = (muon_trajectories.at(i)).at(1);
 
-            mytrack.theta_xz = (muon_trajectories.at(i)).at(0);
-            mytrack.theta_yz = (muon_trajectories.at(i)).at(1);
+               mytrack.tpc = (endpoint1.X() < 0)? 0:1;
+               mytrack.type = muon_type.at(i); 
 
-            mytrack.tpc = (endpoint1.X() < 0)? 0:1;
-            mytrack.type = muon_type.at(i); 
-
-            muon_tracks->push_back(mytrack);
+               muon_tracks->push_back(mytrack);
+            }
          }
       }
    } // end of finding ind hits 
@@ -300,22 +306,29 @@ float MuonTrackProducer::Distance(int x1, int y1, int x2, int y2){
    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
 }
 
-void MuonTrackProducer::Hough(vector<vector<int>> coords, int threshold, int max_gap, int range, float min_length, int muon_length, int nentry, 
-                       vector<vector<int>>& lines, bool save_hits, vector<vector<int>>& colwire, vector<vector<int>>& colpeakT){
-   //set global variables 
+void MuonTrackProducer::Hough(vector<vector<int>> coords, vector<int> param,  bool save_hits, int nentry,
+                              vector<vector<int>>& lines, vector<vector<int>>& colwire, vector<vector<int>>& colpeakT){
+   // set parameters 
+   int threshold = param.at(0);
+   int max_gap = param.at(1);
+   int range = param.at(2);
+   int min_length = param.at(3);
+   int muon_length = param.at(4);
+
+   // set global variables 
    TRandom3 rndgen;
    const int h = 3500; const int w = 2000; //range of hit_wire
    constexpr int accu_h = h + w + 1 ; const int accu_w = 180; 
-   const int x_c = (w/2); const int y_c = (h/2); 
+   const int x_c = (w/2); const int y_c = (h/2);
 
-   //create accumulator/pointer to accumulator 
+   //c reate accumulator/pointer to accumulator 
    int accu[accu_h][accu_w] = {{0}};
    int (*adata)[accu_w];
    adata = &accu[(accu_h-1)/2]; // have pointer point to the middle of the accumulator array (then we can use negative indices)
 
-   //declare necessary vectors 
+   // declare necessary vectors 
    vector<vector<int>> data = coords; // points will not be removed 
-   vector<vector<int>> deaccu; //deaccumulator
+   vector<vector<int>> deaccu; // deaccumulator
    vector<vector<int>> outlines; 
    vector<vector<int>> outcolwire; 
    vector<vector<int>> outcolpeakT; 
@@ -556,67 +569,66 @@ void MuonTrackProducer::ResetMuonVariables(int n){
 
 }
 
-void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, 
-                                      vector<vector<int>>& lines_ind, 
+void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, 
                                       int range, vector<art::Ptr<recob::Hit>> hitlist, 
                                       vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>>& muon_hitpeakT){
-   for (int i=0; i<int(lines_col.size()); i++){
-      bool match = false;
-      if ((lines_col.at(i)).empty() == true)
-         continue;
-      for (int j=0; j<int(lines_ind.size()) && match == false; j++){
-         int peakT0_col, peakT1_col, peakT0_ind, peakT1_ind; 
-         int wire0_col, wire1_col, wire0_ind, wire1_ind;
+   if (lines_ind.empty() == false){
+      for (int i=0; i<int(lines_col.size()); i++){
+         bool match = false;
+         if ((lines_col.at(i)).empty() == true)
+            continue;
+         for (int j=0; j<int(lines_ind.size()) && match == false; j++){
+            int peakT0_col, peakT1_col, peakT0_ind, peakT1_ind; 
+            int wire0_col, wire1_col, wire0_ind, wire1_ind;
 
-         bool order_col = (lines_col.at(i)).at(1) < (lines_col.at(i)).at(3); 
-         peakT0_col = order_col? (lines_col.at(i)).at(1) : (lines_col.at(i)).at(3);
-         peakT1_col = order_col? (lines_col.at(i)).at(3) : (lines_col.at(i)).at(1);
-         wire0_col  = order_col? (lines_col.at(i)).at(4) : (lines_col.at(i)).at(5); 
-         wire1_col  = order_col? (lines_col.at(i)).at(5) : (lines_col.at(i)).at(4); 
+            bool order_col = (lines_col.at(i)).at(1) < (lines_col.at(i)).at(3); 
+            peakT0_col = order_col? (lines_col.at(i)).at(1) : (lines_col.at(i)).at(3);
+            peakT1_col = order_col? (lines_col.at(i)).at(3) : (lines_col.at(i)).at(1);
+            wire0_col  = order_col? (lines_col.at(i)).at(4) : (lines_col.at(i)).at(5); 
+            wire1_col  = order_col? (lines_col.at(i)).at(5) : (lines_col.at(i)).at(4); 
 
-         bool order_ind = (lines_ind.at(j)).at(1) < (lines_ind.at(j)).at(3); 
-         peakT0_ind = order_ind? (lines_ind.at(j)).at(1) : (lines_ind.at(j)).at(3);
-         peakT1_ind = order_ind? (lines_ind.at(j)).at(3) : (lines_ind.at(j)).at(1);
-         wire0_ind  = order_ind? (lines_ind.at(j)).at(4) : (lines_ind.at(j)).at(5); 
-         wire1_ind  = order_ind? (lines_ind.at(j)).at(5) : (lines_ind.at(j)).at(4); 
+            bool order_ind = (lines_ind.at(j)).at(1) < (lines_ind.at(j)).at(3); 
+            peakT0_ind = order_ind? (lines_ind.at(j)).at(1) : (lines_ind.at(j)).at(3);
+            peakT1_ind = order_ind? (lines_ind.at(j)).at(3) : (lines_ind.at(j)).at(1);
+            wire0_ind  = order_ind? (lines_ind.at(j)).at(4) : (lines_ind.at(j)).at(5); 
+            wire1_ind  = order_ind? (lines_ind.at(j)).at(5) : (lines_ind.at(j)).at(4); 
 
-         int peakT_range = range; 
-         if ( (abs(peakT0_col - peakT0_ind) < peakT_range) && (abs(peakT1_col - peakT1_ind) < peakT_range)){
-            geo::WireID awire_col = hitlist[wire0_col]->WireID(); 
-            geo::WireID awire_ind = hitlist[wire0_ind]->WireID();
-            geo::WireID cwire_col = hitlist[wire1_col]->WireID();
-            geo::WireID cwire_ind = hitlist[wire1_ind]->WireID();
-            geo::Point_t apoint, cpoint, endpoint1, endpoint2; 
+            int peakT_range = range; 
+            if ( (abs(peakT0_col - peakT0_ind) < peakT_range) && (abs(peakT1_col - peakT1_ind) < peakT_range)){
+               geo::WireID awire_col = hitlist[wire0_col]->WireID(); 
+               geo::WireID awire_ind = hitlist[wire0_ind]->WireID();
+               geo::WireID cwire_col = hitlist[wire1_col]->WireID();
+               geo::WireID cwire_ind = hitlist[wire1_ind]->WireID();
+               geo::Point_t apoint, cpoint, endpoint1, endpoint2; 
 
-            bool aintersect = fGeometryService->WireIDsIntersect(awire_col, awire_ind, apoint);
-            bool cintersect = fGeometryService->WireIDsIntersect(cwire_col, cwire_ind, cpoint); 
+               bool aintersect = fGeometryService->WireIDsIntersect(awire_col, awire_ind, apoint);
+               bool cintersect = fGeometryService->WireIDsIntersect(cwire_col, cwire_ind, cpoint); 
 
-            if (aintersect)
-               endpoint1 = apoint;
-            if (cintersect)
-               endpoint2 = cpoint;
-            // NOTE: this next section is a hardcoded fix for mis-matched endpoints of a specific type. look at the README for more info
-            if (aintersect == false){
-               if (FixEndpoints(awire_col, awire_ind, apoint) == true){
+               if (aintersect)
                   endpoint1 = apoint;
-               }
-            }
-            if (cintersect == false){
-               if (FixEndpoints(cwire_col, cwire_ind, cpoint) == true){
+               if (cintersect)
                   endpoint2 = cpoint;
+               // NOTE: this next section is a hardcoded fix for mis-matched endpoints of a specific type. look at the README for more info
+               if (aintersect == false){
+                  if (FixEndpoints(awire_col, awire_ind, apoint) == true)
+                     endpoint1 = apoint;
                }
+               if (cintersect == false){
+                  if (FixEndpoints(cwire_col, cwire_ind, cpoint) == true)
+                     endpoint2 = cpoint;
+               }
+               if (endpoint1.Mag2() != 0 && endpoint2.Mag2() != 0 ){
+                  vector<geo::Point_t> pair{endpoint1,endpoint2};
+                  muon_endpoints.push_back(pair);
+                  vector<int> v{peakT0_col, peakT1_col};
+                  muon_hitpeakT.push_back(v);
+               }
+               (lines_col.at(i)).clear(); // remove the line from the collection plane if it's been found 
+               match = true;
             }
-            if (endpoint1.Mag2() != 0 && endpoint2.Mag2() != 0 ){
-               vector<geo::Point_t> pair{endpoint1,endpoint2};
-               muon_endpoints.push_back(pair);
-               vector<int> v{peakT0_col, peakT1_col};
-               muon_hitpeakT.push_back(v);
-            }
-            (lines_col.at(i)).clear(); // remove the line from the collection plane if it's been found 
-            match = true;
-         }
-      } // end of j loop 
-   } // end of i loop 
+         } // end of j loop 
+      } // end of i loop 
+   }
 } 
 
 bool MuonTrackProducer::FixEndpoints(geo::WireID wire_col, geo::WireID wire_ind, geo::Point_t& point){
@@ -704,15 +716,12 @@ void MuonTrackProducer::Findt0(vector<vector<int>> muon_hitpeakT, vector<int> mu
                         vector<double>& muon_t0){
    for (int i=0; i<int(muon_hitpeakT.size()); i++){
       double t0; 
-      if (muon_type.at(i) == 0 || muon_type.at(i) == 1){ // anode-cathode crosser or anode crosser 
+      if (muon_type.at(i) == 0 || muon_type.at(i) == 1) // anode-cathode crosser or anode crosser 
          t0 = ((muon_hitpeakT.at(i)).at(0) - 500)*0.5; 
-      }
-      else if (muon_type.at(i) == 2){ // cathode crosser
+      else if (muon_type.at(i) == 2) // cathode crosser
          t0 = ((muon_hitpeakT.at(i)).at(1) - 3000)*0.5; 
-      }
-      else{
+      else
          t0 = -500; 
-      }
       muon_t0.push_back(t0);
    }           
 }
