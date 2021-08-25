@@ -1,0 +1,34 @@
+BEGIN_PROLOG
+
+
+OpDeconvolutionAlg:
+{
+  tool_type: "OpDeconvolutionAlgWiener"
+  Debug: false
+  MaxFFTSizePow: 15
+  OpDetDataFile: "OpDetSim/digi_pmt_sbnd.root"
+  ApplyExpoAvSmooth: true
+  ApplyUnAvSmooth: true
+  ExpoAvSmoothPar: 0.3
+  UnAvNeighbours: 1
+  BaselineSample: 15
+  ####SPE area must be set to 1./DecoWaveformPrecision in OpHit finder
+  DecoWaveformPrecision: 0.01
+  HypoSignalTimeWindow: 8000 #ns
+  HypoSignalCustom: true
+  HypoSignalTimeConsts: [25., 1500.] #ns
+  HypoSignalWeights: [0.3, 0.7] #weights must sum 1
+  HypoSignalScale: 0.3
+  PMTChargeToADC: 51.9 #is -11.1927 for ideal SER, -51.9 for test bench
+  ScaleHypoSignal: true
+  #### Filter type. Options are:
+  #### Wiener: hypothesis is 2,3,4...-exponential shape
+  #### Wiener1PE: hypothesis is 1PE (delta pulse)
+  #### Parameter filter
+  Filter: "Wiener"
+  UseParamFilter: false
+  #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
+  FilterParams: [0.1, 20]
+}
+
+END_PROLOG

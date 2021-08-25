@@ -1,0 +1,7 @@
+#include "LArG4.fcl"
+
+BEGIN_PROLOG
+
+sbnd_larg4: @local::standard_larg4
+
+END_PROLOG

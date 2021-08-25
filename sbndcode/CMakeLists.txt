@@ -5,6 +5,7 @@ add_subdirectory(JobConfigurations)
 add_subdirectory(LArSoftConfigurations)
 add_subdirectory(Utilities)
 add_subdirectory(Geometry)
+add_subdirectory(LArG4)
 add_subdirectory(Calibration)
 add_subdirectory(CRT)
 add_subdirectory(DetectorSim)
@@ -31,3 +32,4 @@ add_subdirectory(SpaceChargeTest)
 add_subdirectory(FlashMatch)
 
 add_subdirectory(Filters)
+

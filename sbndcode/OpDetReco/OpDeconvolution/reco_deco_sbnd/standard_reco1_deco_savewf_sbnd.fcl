@@ -1,0 +1,21 @@
+#include "opdeconvolution_sbnd.fcl"
+#include "flashfinder_deco_sbnd.fcl"
+
+#include "standard_reco1_sbnd.fcl"
+
+physics.producers.opdecopmt:     @local::SBNDOpDeconvolutionPMT
+physics.producers.ophitpmt:  @local::SBNDDecoOpHitFinderPMT
+physics.producers.opflashtpc0.PECalib.SPEAreaGain: 100
+physics.producers.opflashtpc1.PECalib.SPEAreaGain: 100
+
+physics.reco1: [opdecopmt, @sequence::physics.reco1]
+
+outputs.out1.outputCommands: [
+         "keep *_*_*_*",
+         "drop raw::OpDetWaveforms_opdaq_*_*",
+         "drop *raw::RawDigits*_*_*_*",
+         #"drop sim::SimChannels_*_*_*",
+         "drop sim::OpDetBacktrackerRecords_*_*_*",
+         "drop *_linecluster_*_*",
+         "drop *_fasthit_*_*"
+     ]
