@@ -42,6 +42,8 @@
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbnobj/SBND/Commissioning/MuonTrack.hh"
+
 
 // Truth includes
 //#include "larsim/MCCheater/BackTrackerService.h"
@@ -141,7 +143,7 @@ private:
   /// Resets optical hits tree variables
   void ResetOpHitsVars(int n);
   /// Resets anode-cathode crossing muon tracks tree variables 
-  void ResetACTracksVars(int n);
+  void ResetMuonTracksVars(int n);
   /// Resize the data structure for MCNeutrino particles
   void ResizeMCNeutrino(int nNeutrinos);
   /// Resize the data strutcure for Genie primaries
@@ -238,16 +240,18 @@ private:
   std::vector<int> _ophit_opdet_type;         ///< OpDet tyoe of the optical hit
 
   // Anode-cathode crossing muon track variables 
-  int _nactrks;                           ///< number of ac crossing tracks 
-  std::vector<double> _actrk_t0;          ///< t0 (time of interaction )
-  std::vector<float> _actrk_x1;           ///< x coordinate on anode
-  std::vector<float> _actrk_y1;           ///< y coordinate on anode 
-  std::vector<float> _actrk_z1;           ///< z coordinate on anode 
-  std::vector<float> _actrk_x2;           ///< x coordinate on cathode 
-  std::vector<float> _actrk_y2;           ///< y coordinate on cathode 
-  std::vector<float> _actrk_z2;           ///< z coordinate on cathode
-  std::vector<float> _actrk_theta_xz;     ///< theta_xz trajectory angle 
-  std::vector<float> _actrk_theta_yz;     ///< theta_yz trajectory angle 
+  int _nmuontrks;                            ///< number of muon tracks 
+  std::vector<double> _muontrk_t0;           ///< t0 (time of interaction)
+  std::vector<float>  _muontrk_x1;           ///< x coordinate closer to anode
+  std::vector<float>  _muontrk_y1;           ///< y coordinate closer to anode 
+  std::vector<float>  _muontrk_z1;           ///< z coordinate closer to anode 
+  std::vector<float>  _muontrk_x2;           ///< x coordinate closer to cathode 
+  std::vector<float>  _muontrk_y2;           ///< y coordinate closer to cathode 
+  std::vector<float>  _muontrk_z2;           ///< z coordinate closer to cathode
+  std::vector<float>  _muontrk_theta_xz;     ///< theta_xz trajectory angle 
+  std::vector<float>  _muontrk_theta_yz;     ///< theta_yz trajectory angle 
+  std::vector<int>    _muontrk_tpc;          ///< tpc that muon is located in 
+  std::vector<int>    _muontrk_type;         ///< type of muon track
   
   //mctruth information
   size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
@@ -276,19 +280,19 @@ private:
   std::vector<Float_t>  tpx_flux;             ///< Px of parent particle leaving BNB target
   std::vector<Float_t>  tpy_flux;             ///< Py of parent particle leaving BNB target
   std::vector<Float_t>  tpz_flux;             ///< Pz of parent particle leaving BNB target
-  std::vector<Int_t>     tptype_flux;         ///< Type of parent particle leaving BNB target
+  std::vector<Int_t>    tptype_flux;         ///< Type of parent particle leaving BNB target
 
   //genie information
   size_t MaxGeniePrimaries = 0;
   Int_t     genie_no_primaries;
   std::vector<Int_t>     genie_primaries_pdg;
-  std::vector<Float_t>  genie_Eng;
-  std::vector<Float_t>  genie_Px;
-  std::vector<Float_t>  genie_Py;
-  std::vector<Float_t>  genie_Pz;
-  std::vector<Float_t>  genie_P;
+  std::vector<Float_t>   genie_Eng;
+  std::vector<Float_t>   genie_Px;
+  std::vector<Float_t>   genie_Py;
+  std::vector<Float_t>   genie_Pz;
+  std::vector<Float_t>   genie_P;
   std::vector<Int_t>     genie_status_code;
-  std::vector<Float_t>  genie_mass;
+  std::vector<Float_t>   genie_mass;
   std::vector<Int_t>     genie_trackID;
   std::vector<Int_t>     genie_ND;
   std::vector<Int_t>     genie_mother;
@@ -311,7 +315,7 @@ private:
   std::string fCRTStripModuleLabel; ///< Label for CRTStrip dataproduct (to be set via fcl)
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
-  std::string fACTrackModuleLabel;  ///< Label for ACTrack dataproduct (to be set via fcl)
+  std::string fMuonTrackModuleLabel;  ///< Label for MuonTrack dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
   std::vector<std::string> fOpHitsModuleLabels; ///< Labels for OpHit dataproducts (to be set via fcl)
@@ -323,7 +327,7 @@ private:
   bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
   bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
   bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
-  bool freadACTracks;      ///< Add ACTracks to output (to be set via fcl)
+  bool freadMuonTracks;      ///< Add MuonTracks to output (to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
@@ -375,7 +379,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
-  fACTrackModuleLabel  = p.get<std::string>("ACTrackModuleLabel", " ");
+  fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", " ");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
@@ -383,7 +387,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
-  freadACTracks      = p.get<bool>("readACTracks",true);
+  freadMuonTracks      = p.get<bool>("readMuonTracks",true);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
@@ -832,31 +836,33 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   //
-  // AC crossing tracks 
+  // Muon tracks 
   //
-  _nactrks = 0; 
-  if (freadACTracks){
-    art::Handle<std::vector<sbn::crt::CRTTrack> > acTrackListHandle;
-    std::vector<art::Ptr<sbn::crt::CRTTrack> > actrklist;
-    if (evt.getByLabel("ACProducer", acTrackListHandle)){
-      art::fill_ptr_vector(actrklist, acTrackListHandle); 
-      _nactrks = actrklist.size();
-      ResetACTracksVars(_nactrks);
+  _nmuontrks = 0; 
+  if (freadMuonTracks){
+    art::Handle<std::vector<sbnd::comm::MuonTrack> > muonTrackListHandle;
+    std::vector<art::Ptr<sbnd::comm::MuonTrack> > muontrklist;
+    if (evt.getByLabel("MuonTrackProducer", muonTrackListHandle)){
+      art::fill_ptr_vector(muontrklist, muonTrackListHandle); 
+      _nmuontrks = muontrklist.size();
+      ResetMuonTracksVars(_nmuontrks);
 
-      for (int i=0; i < _nactrks; i++){ 
-        _actrk_t0[i] = actrklist[i]->ts1_ns; //NOTE: t0 is in us!!!, only using ts1_ns as placeholder
-        _actrk_x1[i] = actrklist[i]->x1_pos;
-        _actrk_y1[i] = actrklist[i]->y1_pos;
-        _actrk_z1[i] = actrklist[i]->z1_pos;
-        _actrk_x2[i] = actrklist[i]->x2_pos;
-        _actrk_y2[i] = actrklist[i]->y2_pos;
-        _actrk_z2[i] = actrklist[i]->z2_pos; 
-        _actrk_theta_xz[i] = actrklist[i]->thetaxy; // NOTE: using theta**xy** from CRTTrack product as theta**xz**!!!
-        _actrk_theta_yz[i] = actrklist[i]->phizy; // NOTE: using **phi**zy from CRTTrack product as **theta**zy!!! 
+      for (int i=0; i < _nmuontrks; i++){ 
+        _muontrk_t0[i] = muontrklist[i]->t0_us; 
+        _muontrk_x1[i] = muontrklist[i]->x1_pos;
+        _muontrk_y1[i] = muontrklist[i]->y1_pos;
+        _muontrk_z1[i] = muontrklist[i]->z1_pos;
+        _muontrk_x2[i] = muontrklist[i]->x2_pos;
+        _muontrk_y2[i] = muontrklist[i]->y2_pos;
+        _muontrk_z2[i] = muontrklist[i]->z2_pos; 
+        _muontrk_theta_xz[i] = muontrklist[i]->theta_xz; 
+        _muontrk_theta_yz[i] = muontrklist[i]->theta_yz;
+        _muontrk_tpc[i] = muontrklist[i]->tpc; 
+        _muontrk_type[i] = muontrklist[i]->type;
       }
     }
     else{
-      std::cout << "Failed to get sbn::crt::CRTTrack data product for AC muons." << std::endl;
+      std::cout << "Failed to get sbnd::comm::MuonTrack data product" << std::endl;
     }
   }
 
@@ -1171,17 +1177,19 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opdet_type", &_ophit_opdet_type);
   }
 
-  if (freadACTracks) {
-    fTree->Branch("nactrks", &_nactrks, "nactrks/I");
-    fTree->Branch("actrk_t0", &_actrk_t0);
-    fTree->Branch("actrk_x1", &_actrk_x1);
-    fTree->Branch("actrk_y1", &_actrk_y1);
-    fTree->Branch("actrk_z1", &_actrk_z1);
-    fTree->Branch("actrk_x2", &_actrk_x2);
-    fTree->Branch("actrk_y2", &_actrk_y2);
-    fTree->Branch("actrk_z2", &_actrk_z2);
-    fTree->Branch("actrk_theta_xz", &_actrk_theta_xz);
-    fTree->Branch("actrk_theta_yz", &_actrk_theta_yz);
+  if (freadMuonTracks) {
+    fTree->Branch("nmuontrks", &_nmuontrks, "nmuontrks/I");
+    fTree->Branch("muontrk_t0", &_muontrk_t0);
+    fTree->Branch("muontrk_x1", &_muontrk_x1);
+    fTree->Branch("muontrk_y1", &_muontrk_y1);
+    fTree->Branch("muontrk_z1", &_muontrk_z1);
+    fTree->Branch("muontrk_x2", &_muontrk_x2);
+    fTree->Branch("muontrk_y2", &_muontrk_y2);
+    fTree->Branch("muontrk_z2", &_muontrk_z2);
+    fTree->Branch("muontrk_theta_xz", &_muontrk_theta_xz);
+    fTree->Branch("muontrk_theta_yz", &_muontrk_theta_yz);
+    fTree->Branch("muontrk_tpc", &_muontrk_tpc); 
+    fTree->Branch("muontrk_type", &_muontrk_type); 
   }
 
   if (freadTruth) {
@@ -1333,16 +1341,18 @@ void Hitdumper::ResetOpHitsVars(int n) {
   _ophit_opdet_type.resize(n, DEFAULT_VALUE);
 }
 
-void Hitdumper::ResetACTracksVars(int n){
-  _actrk_t0.assign(n, DEFAULT_VALUE);
-  _actrk_x1.assign(n, DEFAULT_VALUE);
-  _actrk_y1.assign(n, DEFAULT_VALUE);
-  _actrk_z1.assign(n, DEFAULT_VALUE);
-  _actrk_x2.assign(n, DEFAULT_VALUE);
-  _actrk_y2.assign(n, DEFAULT_VALUE);
-  _actrk_z2.assign(n, DEFAULT_VALUE); 
-  _actrk_theta_xz.assign(n, DEFAULT_VALUE); 
-  _actrk_theta_yz.assign(n, DEFAULT_VALUE);
+void Hitdumper::ResetMuonTracksVars(int n){
+  _muontrk_t0.assign(n, DEFAULT_VALUE);
+  _muontrk_x1.assign(n, DEFAULT_VALUE);
+  _muontrk_y1.assign(n, DEFAULT_VALUE);
+  _muontrk_z1.assign(n, DEFAULT_VALUE);
+  _muontrk_x2.assign(n, DEFAULT_VALUE);
+  _muontrk_y2.assign(n, DEFAULT_VALUE);
+  _muontrk_z2.assign(n, DEFAULT_VALUE); 
+  _muontrk_theta_xz.assign(n, DEFAULT_VALUE); 
+  _muontrk_theta_yz.assign(n, DEFAULT_VALUE);
+  _muontrk_tpc.assign(n, DEFAULT_VALUE);
+  _muontrk_type.assign(n, DEFAULT_VALUE);
 }
 
 void Hitdumper::ResetVars() {
