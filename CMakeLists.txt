@@ -78,6 +78,7 @@ find_ups_product( postgresql )
 find_ups_product( hep_concurrency )
 find_ups_product( pandora )
 find_ups_product( eigen )
+find_ups_geant4()
 find_ups_boost()
 find_ups_root()
 
