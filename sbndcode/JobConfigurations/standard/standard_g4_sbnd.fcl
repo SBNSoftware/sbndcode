@@ -96,7 +96,10 @@ physics:
             , pdfastsim
             , pdfastsimout
             , simdrift
-            , mcreco
+            #, mcreco # Removed due to issues in LArG4 creating 
+                      # multiple copies of MCParticles without 
+                      # Trajectories leading to seg faults in mcreco
+                      # jaz8600@fnal.gov, Aug 26th, 2021
           ]
 
   # The output stream, there could be more than one if using filters
