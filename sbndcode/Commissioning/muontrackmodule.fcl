@@ -6,21 +6,19 @@ MuonTrackProducer:
   HitsModuleLabel:          "fasthit"
   MaxHits: 100000
 
-  HoughThreshold:       8
+  HoughThreshold:       10
   HoughMaxGap:          30
   HoughRange:           100
   HoughMinLength:       500
-  HoughMuonLength:      2400
-
-  WriteACTracks:        true
-  WriteAnodeTracks:     false
-  WriteCathodeTracks:   false 
-  WriteTopBottomTracks: false
+  HoughMuonLength:      0
+  
+  EndpointRange:        30
+  KeepMuonTypes:        [0, 1, 2, 3, 4]
 }
 
-# MuonFilter :
-# {
-#   module_type:              "MuonFilter"
-# }
+MuonTrackFilter :
+{
+  module_type:              "MuonTrackFilter"
+}
 
 END_PROLOG
