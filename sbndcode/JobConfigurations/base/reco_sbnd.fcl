@@ -169,8 +169,8 @@ physics:
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
  
-  ### Uncalibrated calorimetry producers for caloskimmer
-  caloskimCalorimetry: @local::caloskim_pandoraSCECalo
+  ### Uncalibrated calorimetry producer for calibration caloskimmer
+  caloskimCalorimetry: @local::caloskim_pandoraCalo
  
  }
 
@@ -301,7 +301,9 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 
 ### Added for Rhiannon's analysis work
 physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
-physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"
+physics.producers.pandoraCalo.FieldDistortion:                	 false
+physics.producers.pandoraCalo.FieldDistortionEfield:          	 false
+physics.producers.pandoraCalo.TrackIsFieldDistortionCorrected:	 false
 physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
 physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
 
