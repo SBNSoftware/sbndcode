@@ -222,10 +222,10 @@ physics:
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
  
  analyzers:{
-  caloskimmer: @local::caloskim_nodigits_goldentracks
+  caloskim: @local::caloskim_nodigits_goldentracks
  }
 
- caloskimana: [ caloskimmer ]
+ caloskimana: [ caloskim ]
  
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
