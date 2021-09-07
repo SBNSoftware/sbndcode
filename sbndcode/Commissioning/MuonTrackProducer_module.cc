@@ -127,7 +127,7 @@ MuonTrackProducer::MuonTrackProducer(fhicl::ParameterSet const & p)
    : EDProducer(p)
 {
    produces< std::vector<sbnd::comm::MuonTrack> >();
-   // produces< art::Assns<recob::Hit, sbnd::comm::MuonTrack> >();
+   produces< art::Assns<recob::Hit, sbnd::comm::MuonTrack> >();
 
    fGeometryService = lar::providerFrom<geo::Geometry>();
    this->reconfigure(p);
@@ -137,7 +137,7 @@ MuonTrackProducer::MuonTrackProducer(fhicl::ParameterSet const & p)
 void MuonTrackProducer::reconfigure(fhicl::ParameterSet const & p)
 {  
    // Initialize member data here.
-   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
+   fHitsModuleLabel      = p.get<std::string>("HitsModuleLabel");
    fMax_Hits             = p.get<int>("MaxHits", 50000);
 
    // Hough parameters 
@@ -156,7 +156,7 @@ void MuonTrackProducer::reconfigure(fhicl::ParameterSet const & p)
 void MuonTrackProducer::produce(art::Event & evt)
 {
    std::unique_ptr<vector<sbnd::comm::MuonTrack>> muon_tracks(new vector<sbnd::comm::MuonTrack>);
-   // std::unique_ptr<art::Assns<recob::Hit, sbnd::comm::MuonTrack>> muon_tracks_assn(new art::Assns<recob::Hit, sbnd::comm::MuonTrack>); 
+   std::unique_ptr<art::Assns<recob::Hit, sbnd::comm::MuonTrack>> muon_tracks_assn(new art::Assns<recob::Hit, sbnd::comm::MuonTrack>); 
    
    int event = evt.id().event();
    std::cout << "Processing event " << event << std::endl;
@@ -284,16 +284,15 @@ void MuonTrackProducer::produce(art::Event & evt)
                mytrack.type = muon_type.at(i); 
 
                muon_tracks->push_back(mytrack);
-               // for (int hit_i=0; hit_i<int(track_hit_idx.size()); hit_i++){
-
-               //    util::CreateAssn(*this, evt, *muon_tracks, hitlist[hit_i], *muon_tracks_assn);
-               // }
+               for (int hit_i=0; hit_i<int(track_hit_idx.size()); hit_i++){
+                  util::CreateAssn(*this, evt, *muon_tracks, hitlist[hit_i], *muon_tracks_assn);
+               }
             }
          }
       }
    } // end of finding ind hits 
    evt.put(std::move(muon_tracks));
-   // evt.put(std::move(muon_tracks_assn)); 
+   evt.put(std::move(muon_tracks_assn)); 
 } // MuonTrackProducer::produce()
 
 float MuonTrackProducer::Distance(int x1, int y1, int x2, int y2){
@@ -577,8 +576,6 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vec
 
             int peakT_range = range; 
             if ( (abs(peakT0_col - peakT0_ind) < peakT_range) && (abs(peakT1_col - peakT1_ind) < peakT_range)){
-               std::cout << "1st pair: " << peakT0_col << ", " << peakT0_ind << std::endl;
-               std::cout << "2nd pair: " << peakT1_col << ", " << peakT1_ind << std::endl;
                geo::WireID awire_col = hitlist[wire0_col]->WireID(); 
                geo::WireID awire_ind = hitlist[wire0_ind]->WireID();
                geo::WireID cwire_col = hitlist[wire1_col]->WireID();
@@ -607,7 +604,6 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vec
                   //    std::cout<< "c peakT: " << peakT1_col << ", " << peakT1_ind << std::endl;
                }  
                if (endpoint1.Mag2() != 0 && endpoint2.Mag2() != 0 ){
-                  std::cout << "endpoints identified" << std::endl;
                   vector<geo::Point_t> pair{endpoint1,endpoint2};
                   muon_endpoints.push_back(pair);
 
@@ -640,13 +636,6 @@ bool MuonTrackProducer::FixEndpoints(geo::WireID wire_col, geo::WireID wire_ind,
          pass = true;
       }
    }
-   // if (pass==false){
-   //    std::cout << "didn't pass FixEndpoints" << std::endl;
-   //    std::cout << "awire endpoints: (" << col_end1[0] << ", " << col_end1[1] << ", " << col_end1[2] << "), (" 
-   //                                      << col_end2[0] << ", " << col_end2[1] << ", " << col_end2[2] << ")" << std::endl;
-   //    std::cout << "cwire endpoints: (" << ind_end1[0] << ", " << ind_end1[1] << ", " << ind_end1[2] << "), (" 
-   //                                      << ind_end2[0] << ", " << ind_end2[1] << ", " << ind_end2[2] << ")" << std::endl;
-   //                 }
    return pass; 
 }
 
@@ -654,7 +643,6 @@ void MuonTrackProducer::SortEndpoints(vector<vector<geo::Point_t>>& muon_endpoin
    for (int i=0; i<int(muon_endpoints.size()); i++){
       geo::Point_t endpoint1 = (muon_endpoints.at(i)).at(0), endpoint2 = (muon_endpoints.at(i)).at(1);
       int dt = (muon_hitpeakT.at(i)).at(1) - (muon_hitpeakT.at(i)).at(0);
-
 
       if (dt > 2400){
          muon_type.push_back(0); // anode-cathode crosser 
