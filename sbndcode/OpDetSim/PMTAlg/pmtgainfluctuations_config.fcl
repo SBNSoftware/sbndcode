@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+FirstDynodeGainFluctuations:
+{
+  tool_type: "PMTGainFluctuations1Dynode"
+  DynodeK:                   0.75
+  VoltageDistribution:    [ 17.4, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
+  Gain:                   1e7            # total typical PMT gain
+}
+
+END_PROLOG
