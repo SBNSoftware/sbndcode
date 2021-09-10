@@ -142,11 +142,11 @@ private:
   void ResetCRTHitsVars(int n);
   /// Resets optical hits tree variables
   void ResetOpHitsVars(int n);
-  /// Resets anode-cathode crossing muon tracks tree variables 
+  /// Resets crossing muon tracks tree variables 
   void ResetMuonTracksVars(int n);
   /// Resize the data structure for MCNeutrino particles
   void ResizeMCNeutrino(int nNeutrinos);
-  /// Resize the data strutcure for Genie primaries
+  /// Resize the data structure for Genie primaries
   void ResizeGenie(int nPrimaries);
 
   opdet::sbndPDMapAlg _pd_map;
@@ -379,7 +379,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
-  fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", " ");
+  fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
@@ -387,7 +387,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
-  freadMuonTracks      = p.get<bool>("readMuonTracks",true);
+  freadMuonTracks    = p.get<bool>("readMuonTracks",true);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);

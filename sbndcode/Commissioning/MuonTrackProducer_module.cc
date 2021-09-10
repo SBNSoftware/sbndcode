@@ -168,8 +168,8 @@ void MuonTrackProducer::produce(art::Event & evt)
    else {
       std::cout << "Failed to get recob::Hit data product." << std::endl;
       nhits = 0;
-    }
-
+   }
+   
    // obtain collection hits, perform hough transform, obtain tracks, and save col track info 
    ResetCollectionHitVectors(20);
 
