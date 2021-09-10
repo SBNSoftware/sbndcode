@@ -27,7 +27,7 @@ process_name: MuonTrackProducer
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:              { fileName: "muon_output.root" }
+  TFileService:              { fileName: "muon_hitdumper.root" }
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
@@ -75,44 +75,8 @@ physics:
   }
     analyzers: 
   {
-    hitdumper:
-    { 
-      module_type:              "HitDumper"
-
-      MaxHits: 100000
-      MaxOpHits: 100000
-      MaxSamples: 5001
-      MaxCRTHits: 5000
-      MaxCRTTracks: 10
-
-      DigitModuleLabel:         "daq"
-      HitsModuleLabel:          "fasthit"
-      OpHitsModuleLabel:        ["ophitpmt", "ophitarapuca"]
-      CRTHitModuleLabel:        "crthit"
-      CRTStripModuleLabel:      "crt"
-      CRTTrackModuleLabel:      "crttrack"
-      MuonTrackModuleLabel:     "MuonTrackProducer"
-      GenieGenModuleLabel:      "generator"
-
-      keepCRThits:              false
-      keepCRTstrips:            false
-      makeCRTtracks:            false
-      readCRTtracks:            false
-      readOpHits:               false
-      readMuonTracks:           true 
-      readTruth:                false
-      savePOTinfo:              false
-      checkTransparency:        false
-
-      window:                   100
-
-      KeepTaggerTypes:          [0, 1, 2, 3, 4, 5, 6]
-
-      SkipInduction:            false
-      
-      SelectEvents: [reco]
-      }  
-    }
+    hitdumper:                @local::hitdumper
+  }
 
   #define the producer and filter modules for this path, order matters, 
   #filters reject all following items.  see lines starting physics.producers below
@@ -135,13 +99,15 @@ physics:
   end_paths: [ana, out]
 }
 
-physics.analyzers.hitdumper.HitsModuleLabel: "fasthit"
-physics.analyzers.hitdumper.keepCRThits: false
-physics.analyzers.hitdumper.keepCRTstrips: false
-physics.analyzers.hitdumper.makeCRTtracks: false
-physics.analyzers.hitdumper.readCRTtracks: true
-
 # set thresholds
+physics.analyzers.hitdumper.keepCRThits:   false
+physics.analyzers.hitdumper.makeCRTtracks: false
+physics.analyzers.hitdumper.readCRTtracks: false
+physics.analyzers.hitdumper.readOpHits:    false
+physics.analyzers.hitdumper.readTruth:     false
+physics.analyzers.hitdumper.savePOTinfo:   false
+physics.analyzers.hitdumper.SelectEvents:  [reco]
+
 physics.producers.fasthit.MinSigInd: 15.0
 physics.producers.fasthit.MinSigCol: 15.0
 physics.producers.fasthit.SkipInd: false
