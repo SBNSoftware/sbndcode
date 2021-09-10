@@ -1,21 +1,28 @@
-# Anode-cathode crossing muon tracks 
+# Crossing muon tracks
 
-These modules will run over raw data, create AC tracks and filter over events, and create a hitdumper tree with branches containing AC time, endpoint, and trajectory info. 
+These modules will run over samples, create crossing muon tracks products, filter over events, and finally create a hitdumper tree with branches containing 3D endpoints, t0 (for applicable tracks), and trajcetory info.
+
+## Run command
+
+To run the job, you only have to use one command:
+
+`lar -c run_muontrack.fcl <sample.root>`
+
+## Relevant info
 
 Relevant files (all located within subdirectory `/sbndcode/Commissioning/...`)
 
-- `ACProducer_module.cc`: produces information for AC tracks contained within the CRTTrack data product.
-- `ACFilter_module.cc`: Filters for events that contain AC tracks 
-- `run_acproducer.fcl`: contains relevant parameters for Hough Transform. Path contains: fasthit, ACProducer, and ACFilter 
-    - The defaults are appropriate ONLY for performing an *anode-cathode crossing* muon selection cut, not any other crossing tracks. 
+- `MuonTrackProducer_module.cc`: produces MuonTrack objects
+- `MuonTrackFilter_module.cc`: filters for events that contain MuonTrack objects
+- `muontrackmodule.fcl`: contains parameters for MuonTrackProducer + MuonTrackFilter
+  - by default, the producer will create *all* types of muon tracks. To create only anode-cathode crossing muon tracks for example, set `KeepMuonTypes: [0]`
+- `run_muontrack.fcl`: fcl for running the job, also overwrites default for the hitdumper tree
 
-`HitDumper_module.cc` and `hitdumpermodule.fcl` have both been changed to include parameters and branches for the AC tracks. The hitdumpertree includes branches that contain AC information such as t0, 3d endpoints, and trajectory. These branches are labeled: `actrk_<var>`. 
+`HitDumper_module.cc` and `hitdumpermodule.fcl` have both been changed to include parameters and branches for the muon tracks. The hitdumpertree now includes branches that contain track information such as t0, 3d endpoints, trajectory, tpc, and track type. These branches are labeled: `muontrk_<var>`.
 
-NOTE: A new data product is under development for AC tracks, but the information is currently stored in a CRTTrack data product. The endpoints are intuitively stored in variables `x1_pos` and `z2_pos` etc, but t0 (in us) for the AC muon is stored in variable `ts1_ns` and theta_xz and theta_yz are stored in `thetaxy` and `phizy` respectively. If you are looking only at the hitdumper output, this shouldn't interfere with anything.
+## Caveats
 
-## To obtain AC events in the hitdumper: 
+- t0 information is only available for tracks with a unique t0. Top-bottom,  up-downstream, and uncategorized tracks do not have unique t0's, and will be assigned a default value of -999.
+- similarly, 3D endpoint information is not accurate for tracks of type 5 (uncategorized). The endpoint information in the tree for these types of tracks are the wire intersection endpoints on the collection/induction planes.
 
-`<sample.root>` should be *raw* events, not a hitdumper tree. 
-
-1. `lar -c run_acproducer.fcl <sample.root>` 
-2. `lar -c run_hitdumper.fcl <output rootfile from step 1.>`
+NOTE: A new data product has been created to store the muon track information. A pull request has been initiated to merge the changes into sbnobj from branch: `sbnobj/feature/lynnt_obj_comm`. If you would like to use the crossing track modules before the pull request has been approved, please pull the files from lynnt_obj_comm to your local sbnobj directory.
