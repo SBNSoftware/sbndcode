@@ -108,7 +108,6 @@ private:
 
    // parameters from the fcl file 
    std::string fHitsModuleLabel; 
-   int fMax_Hits;
    int fHoughThreshold;
    int fHoughMaxGap;
    int fHoughRange;
@@ -138,7 +137,6 @@ void MuonTrackProducer::reconfigure(fhicl::ParameterSet const & p)
 {  
    // Initialize member data here.
    fHitsModuleLabel      = p.get<std::string>("HitsModuleLabel");
-   fMax_Hits             = p.get<int>("MaxHits", 50000);
 
    // Hough parameters 
    fHoughThreshold      = p.get<int>("HoughThreshold",10);
@@ -171,12 +169,6 @@ void MuonTrackProducer::produce(art::Event & evt)
       std::cout << "Failed to get recob::Hit data product." << std::endl;
       nhits = 0;
     }
-   if (nhits > fMax_Hits){
-      std::cout << "Available hits are " << nhits 
-                << ", which is above the maximum number allowed to store." << std::endl;
-      std::cout << "Will only store " << fMax_Hits << "hits." << std::endl;
-      nhits = fMax_Hits;
-   }
 
    // obtain collection hits, perform hough transform, obtain tracks, and save col track info 
    ResetCollectionHitVectors(20);
@@ -231,22 +223,12 @@ void MuonTrackProducer::produce(art::Event & evt)
          Hough(hit_00, HoughParam, save_ind_hits, event, lines_00, ind_empty);
          Hough(hit_01, HoughParam, save_ind_hits, event, lines_01, ind_empty);
 
-         std::cout << "TPC 0:" << std::endl;
-         // PrintHoughLines(lines_02, 2);
-         // PrintHoughLines(lines_00, 0);
-         // PrintHoughLines(lines_01, 1);
-
          FindEndpoints(lines_02, lines_00, hit_idx_02, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
          FindEndpoints(lines_02, lines_01, hit_idx_02, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
       }
       if (muon_in_tpc1){
          Hough(hit_10, HoughParam, save_ind_hits, event, lines_10, ind_empty);
          Hough(hit_11, HoughParam, save_ind_hits, event, lines_11, ind_empty);
-
-         std::cout << "TPC 1:" << std::endl;
-         // PrintHoughLines(lines_12, 2);
-         // PrintHoughLines(lines_10, 0);
-         // PrintHoughLines(lines_11, 1);
 
          FindEndpoints(lines_12, lines_10, hit_idx_12, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
          FindEndpoints(lines_12, lines_11, hit_idx_12, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
@@ -483,7 +465,6 @@ void MuonTrackProducer::Hough(vector<vector<int>> coords, vector<int> param,  bo
       else{
          float length = Distance(x0_end,y0_end,x1_end,y1_end);
          if (length > min_length){
-            // std::cout << "hough col output: (" << x0_end << ", " << y0_end << ") and (" << x1_end << ", " << y1_end << ")" << std::endl;
             lines.push_back(outlines.at(i));
             if (save_hits)
                hit_idx.push_back(outhit_idx.at(i)); 
@@ -591,8 +572,6 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vec
                   bool afix = FixEndpoints(awire_col, awire_ind, apoint); 
                   if (afix == true)
                      endpoint1 = apoint;
-                  // else
-                  //    std::cout<< "a peakT: " << peakT0_col << ", " << peakT0_ind << std::endl;
                }
                if (cintersect)
                   endpoint2 = cpoint;
@@ -600,8 +579,6 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vec
                   bool cfix = FixEndpoints(cwire_col, cwire_ind, cpoint); 
                   if ( cfix == true)
                      endpoint2 = cpoint;
-                  // else
-                  //    std::cout<< "c peakT: " << peakT1_col << ", " << peakT1_ind << std::endl;
                }  
                if (endpoint1.Mag2() != 0 && endpoint2.Mag2() != 0 ){
                   vector<geo::Point_t> pair{endpoint1,endpoint2};
@@ -675,8 +652,6 @@ void MuonTrackProducer::SortEndpoints(vector<vector<geo::Point_t>>& muon_endpoin
       else{
          muon_type.push_back(5); // uncategorized
       }
-      // std::cout << "endpoint 1: " << endpoint1.X() << ", " << endpoint1.Y() << ", " << endpoint1.Z() << std::endl;
-      // std::cout << "endpoint 2: " << endpoint2.X() << ", " << endpoint2.Y() << ", " << endpoint2.Z() << std::endl;
    }
 }
 
