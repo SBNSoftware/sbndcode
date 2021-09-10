@@ -1,4 +1,20 @@
+# File:    g4_no_opticalsim.fcl
+# Purpose: Same as standard_g4_sbnd.fcl, but does not do light simulation
+#
+# This runs the new, refactored, LArG4 simulation.
+
+
 #include "standard_g4_sbnd.fcl"
 
-services.PhotonVisibilityService: @erase
-services.LArG4Parameters: @local::sbnd_largeantparameters_noopticalsim
+# Remove the optical simulation process from the simulate path
+physics.simulate: [ rns
+                  , loader
+                  , largeant
+                  , ionandscint
+                  , simdrift
+                  , mcreco
+                ]
+
+physics.producers.ionandscintout: @erase
+physics.producers.pdfastsim: @erase
+physics.producers.pdfastsimout: @erase
