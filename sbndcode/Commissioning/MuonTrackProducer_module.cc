@@ -685,7 +685,7 @@ void MuonTrackProducer::Findt0(vector<vector<int>> muon_hitpeakT, vector<int> mu
       else if (muon_type.at(i) == 2) // cathode crosser
          t0 = ((muon_hitpeakT.at(i)).at(1) - 3000)*0.5; 
       else
-         t0 = -500; 
+         t0 = -999; 
       muon_t0.push_back(t0);
    }           
 }
