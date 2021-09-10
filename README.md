@@ -12,13 +12,13 @@ To run the job, you only have to use one command:
 
 Relevant files (all located within subdirectory `/sbndcode/Commissioning/...`)
 
-- `MuonTrackProducer_module.cc`: produces MuonTrack objects
-- `MuonTrackFilter_module.cc`: filters for events that contain MuonTrack objects
-- `muontrackmodule.fcl`: contains parameters for MuonTrackProducer + MuonTrackFilter
+- **MuonTrackProducer_module.cc**: produces MuonTrack objects
+- **MuonTrackFilter_module.cc**: filters for events that contain MuonTrack objects
+- **muontrackmodule.fcl**: contains parameters for MuonTrackProducer + MuonTrackFilter
   - by default, the producer will create *all* types of muon tracks. To create only anode-cathode crossing muon tracks for example, set `KeepMuonTypes: [0]`
-- `run_muontrack.fcl`: fcl for running the job, also overwrites default for the hitdumper tree
+- **run_muontrack.fcl**: fcl for running the job, also overwrites default for the hitdumper tree
 
-`HitDumper_module.cc` and `hitdumpermodule.fcl` have both been changed to include parameters and branches for the muon tracks. The hitdumpertree now includes branches that contain track information such as t0, 3d endpoints, trajectory, tpc, and track type. These branches are labeled: `muontrk_<var>`.
+**HitDumper_module.cc** and **hitdumpermodule.fcl** have both been changed to include parameters and branches for the muon tracks. The hitdumpertree now includes branches that contain track information such as t0, 3d endpoints, trajectory, tpc, and track type. These branches are labeled: `muontrk_<var>`.
 
 ## Caveats
 
