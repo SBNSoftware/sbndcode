@@ -10,7 +10,9 @@ To run the job, you only have to use one command:
 
 ## Relevant info
 
-Relevant files (all located within subdirectory `/sbndcode/Commissioning/...`)
+These modules use a new data product that is located within sbnobj. Make sure that your local version of sbnobj contains the Commissioning directory in the SBND subdirectory, and has the relevant files for the MuonTrack data product.
+
+Relevant files (mostly located within subdirectory `/sbndcode/Commissioning/...`)
 
 - **MuonTrackProducer_module.cc**: produces MuonTrack objects
 - **MuonTrackFilter_module.cc**: filters for events that contain MuonTrack objects
@@ -24,5 +26,3 @@ Relevant files (all located within subdirectory `/sbndcode/Commissioning/...`)
 
 - t0 information is only available for tracks with a unique t0. Top-bottom,  up-downstream, and uncategorized tracks do not have unique t0's, and will be assigned a default value of -999.
 - similarly, 3D endpoint information is not accurate for tracks of type 5 (uncategorized). The endpoint information in the tree for these types of tracks are the wire intersection endpoints on the collection/induction planes.
-
-NOTE: A new data product has been created to store the muon track information. A pull request has been initiated to merge the changes into sbnobj from branch: `sbnobj/feature/lynnt_obj_comm`. If you would like to use the crossing track modules before the pull request has been approved, please pull the files from lynnt_obj_comm to your local sbnobj directory.
