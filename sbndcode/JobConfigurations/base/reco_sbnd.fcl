@@ -170,7 +170,7 @@ physics:
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
  
   ### Uncalibrated calorimetry producer for calibration caloskimmer
-  caloskimCalorimetry: @local::caloskim_pandoraCalo
+  caloskimCalorimetry: @local::caloskim_calorimetry
  
  }
 
