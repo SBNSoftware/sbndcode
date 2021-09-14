@@ -33,7 +33,7 @@ sbnd_digipmt_alg:
   SinglePEmodel:             false   # false for ideal PMT response, true for test bench measured response
   PMTDataFile:               "OpDetSim/digi_pmt_sbnd.root" # located in sbnd_data
 
-  MakeGainFluctuations: false
+  MakeGainFluctuations: true
   GainFluctuationsPset: @local::FirstDynodeGainFluctuations
 }
 
