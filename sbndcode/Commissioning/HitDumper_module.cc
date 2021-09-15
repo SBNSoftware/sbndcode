@@ -18,6 +18,7 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "canvas/Persistency/Common/FindMany.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
@@ -144,6 +145,8 @@ private:
   void ResetOpHitsVars(int n);
   /// Resets crossing muon tracks tree variables 
   void ResetMuonTracksVars(int n);
+  /// Resets crossing muon hit tree variables 
+  void ResetMuonHitVars(int n); 
   /// Resize the data structure for MCNeutrino particles
   void ResizeMCNeutrino(int nNeutrinos);
   /// Resize the data structure for Genie primaries
@@ -239,8 +242,8 @@ private:
   std::vector<double> _ophit_opdet_z;         ///< OpDet Z coordinate of the optical hit
   std::vector<int> _ophit_opdet_type;         ///< OpDet tyoe of the optical hit
 
-  // Anode-cathode crossing muon track variables 
-  int _nmuontrks;                            ///< number of muon tracks 
+  // Muon track variables 
+  int _nmuontrks;                            ///< number of muon tracks
   std::vector<double> _muontrk_t0;           ///< t0 (time of interaction)
   std::vector<float>  _muontrk_x1;           ///< x coordinate closer to anode
   std::vector<float>  _muontrk_y1;           ///< y coordinate closer to anode 
@@ -252,6 +255,15 @@ private:
   std::vector<float>  _muontrk_theta_yz;     ///< theta_yz trajectory angle 
   std::vector<int>    _muontrk_tpc;          ///< tpc that muon is located in 
   std::vector<int>    _muontrk_type;         ///< type of muon track
+
+  // Muon Hit variables
+  int                 _nmhits;               ///< Number of muon collection hits per track
+  std::vector<int>    _mhit_trk;             ///< Track number that the hit belongs to
+  std::vector<int>    _mhit_tpc;             ///< TPC where the hit belongs to
+  std::vector<int>    _mhit_wire;            ///< Wire where the hit belongs to
+  std::vector<int>    _mhit_channel;         ///< Channel where the hit belongs to
+  std::vector<double> _mhit_peakT;           ///< Hit peak time
+  std::vector<double> _mhit_charge;          ///< Hit charge
   
   //mctruth information
   size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
@@ -327,7 +339,8 @@ private:
   bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
   bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
   bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
-  bool freadMuonTracks;      ///< Add MuonTracks to output (to be set via fcl)
+  bool freadMuonTracks;    ///< Add MuonTracks to output (to be set via fcl)
+  bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
@@ -388,6 +401,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
   freadMuonTracks    = p.get<bool>("readMuonTracks",true);
+  freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
@@ -842,7 +856,8 @@ void Hitdumper::analyze(const art::Event& evt)
   if (freadMuonTracks){
     art::Handle<std::vector<sbnd::comm::MuonTrack> > muonTrackListHandle;
     std::vector<art::Ptr<sbnd::comm::MuonTrack> > muontrklist;
-    if (evt.getByLabel("MuonTrackProducer", muonTrackListHandle)){
+
+    if (evt.getByLabel(fMuonTrackModuleLabel, muonTrackListHandle)){
       art::fill_ptr_vector(muontrklist, muonTrackListHandle); 
       _nmuontrks = muontrklist.size();
       ResetMuonTracksVars(_nmuontrks);
@@ -859,6 +874,25 @@ void Hitdumper::analyze(const art::Event& evt)
         _muontrk_theta_yz[i] = muontrklist[i]->theta_yz;
         _muontrk_tpc[i] = muontrklist[i]->tpc; 
         _muontrk_type[i] = muontrklist[i]->type;
+      }
+      if (freadMuonHits){
+        art::FindMany<recob::Hit> muontrkassn(muonTrackListHandle, evt, fMuonTrackModuleLabel);
+        ResetMuonHitVars(3000); //estimate of maximum collection hits
+        _nmhits = 0;
+        for (int i=0; i < _nmuontrks; i++){ 
+        std::vector< const recob::Hit*> muonhitsVec = muontrkassn.at(i);
+          _nmhits += (muonhitsVec.size()); 
+          for (size_t j=0; j<muonhitsVec.size(); j++){
+            auto muonhit = muonhitsVec.at(j);
+            geo::WireID wireid = muonhit->WireID();
+            _mhit_trk.push_back(i);
+            _mhit_tpc.push_back(wireid.TPC);
+            _mhit_wire.push_back(wireid.Wire);
+            _mhit_channel.push_back(muonhit->Channel());
+            _mhit_peakT.push_back(muonhit->PeakTime());
+            _mhit_charge.push_back(muonhit->Integral());
+          }
+        }
       }
     }
     else{
@@ -1192,6 +1226,16 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("muontrk_type", &_muontrk_type); 
   }
 
+    if (freadMuonHits) {
+    fTree->Branch("nmhits", &_nmhits, "nmhits/I");
+    fTree->Branch("mhit_trk", &_mhit_trk);
+    fTree->Branch("mhit_tpc", &_mhit_tpc);
+    fTree->Branch("mhit_wire", &_mhit_wire); 
+    fTree->Branch("mhit_channel", &_mhit_channel);
+    fTree->Branch("mhit_peakT", &_mhit_peakT);
+    fTree->Branch("mhit_charge", &_mhit_charge); 
+  }
+
   if (freadTruth) {
     fTree->Branch("mcevts_truth",&mcevts_truth,"mcevts_truth/I");
     fTree->Branch("nuScatterCode_truth",&nuScatterCode_truth);
@@ -1353,6 +1397,22 @@ void Hitdumper::ResetMuonTracksVars(int n){
   _muontrk_theta_yz.assign(n, DEFAULT_VALUE);
   _muontrk_tpc.assign(n, DEFAULT_VALUE);
   _muontrk_type.assign(n, DEFAULT_VALUE);
+}
+
+void Hitdumper::ResetMuonHitVars(int n){
+  _mhit_trk.clear(); 
+  _mhit_tpc.clear();
+  _mhit_wire.clear();
+  _mhit_channel.clear();
+  _mhit_peakT.clear();
+  _mhit_charge.clear();
+
+  _mhit_trk.reserve(n);
+  _mhit_tpc.reserve(n);
+  _mhit_wire.reserve(n);
+  _mhit_channel.reserve(n);
+  _mhit_peakT.reserve(n);
+  _mhit_charge.reserve(n);
 }
 
 void Hitdumper::ResetVars() {

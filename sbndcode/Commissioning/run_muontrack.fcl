@@ -102,6 +102,7 @@ physics.analyzers.hitdumper.readCRTtracks: false
 physics.analyzers.hitdumper.readOpHits:    false
 physics.analyzers.hitdumper.readTruth:     false
 physics.analyzers.hitdumper.savePOTinfo:   false
+physics.analyzers.hitdumper.readMuonHits:  true
 physics.analyzers.hitdumper.SelectEvents:  [reco] 
 
 # set thresholds 

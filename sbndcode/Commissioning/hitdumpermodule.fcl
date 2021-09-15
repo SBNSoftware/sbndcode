@@ -24,7 +24,8 @@ hitdumper:
     makeCRTtracks:            true
     readCRTtracks:            true
     readOpHits:               true
-    readMuonTracks:           true 
+    readMuonTracks:           true
+    readMuonHits:             false
     readTruth:                true
     savePOTinfo:              true
     checkTransparency:        false
