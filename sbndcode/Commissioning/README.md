@@ -8,9 +8,11 @@ To run the job, you only have to use one command:
 
 `lar -c run_muontrack.fcl <sample.root>`
 
+Output: `muon_hitdumper.root`
+
 ## Relevant info
 
-These modules use a new data product that is located within sbnobj. Make sure that your local version of sbnobj contains the Commissioning directory in the SBND subdirectory, and has the relevant files for the MuonTrack data product.
+These modules use a new data product that is located within sbnobj. Make sure that your local version of sbnobj contains the Commissioning directory in the SBND subdirectory, and has the files for the MuonTrack data product.
 
 Relevant files (mostly located within subdirectory `/sbndcode/Commissioning/...`)
 
