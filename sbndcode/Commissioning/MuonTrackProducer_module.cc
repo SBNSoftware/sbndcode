@@ -41,8 +41,6 @@
 #include <bitset>
 #include <memory>
 
-#define PI 3.14159265
-
 using std::vector;
 
 class MuonTrackProducer: public art::EDProducer {
@@ -108,13 +106,16 @@ private:
 
    // parameters from the fcl file 
    std::string fHitsModuleLabel; 
-   int fHoughThreshold;
-   int fHoughMaxGap;
-   int fHoughRange;
-   int fHoughMinLength;
-   int fHoughMuonLength;
-   int fEndpointRange; 
+   int fHoughThreshold;  // threshold to pass in Hough accumulator  
+   int fHoughMaxGap;     // maximum gap between last identified point on line and data point (flexibility in end point search)
+   int fHoughRange;      // range between expected value for point on line and actual (flexibility in line point identification)
+   int fHoughMinLength;  // minimum length of track (distance between endpoints), will only be used if fHoughMuonLength == 0
+   int fHoughMuonLength; // minimum change in hit_peakT (x pos); useful to do quick cut for AC-crossing muons, set to 0 otherwise 
+   int fEndpointRange;   // range between expected value and given value for hit_peakT matching in 3D endpoint function 
    std::vector<int> fKeepMuonTypes = {0, 1, 2, 3, 4, 5}; 
+   // [ac crossing, anode, cathode, top-bottom, up-downstream, other], define in fcl
+
+   int fLineCount;       // number of estimated hit lines/muon tracks 
 
    // services 
    art::ServiceHandle<art::TFileService> tfs;
@@ -149,6 +150,9 @@ void MuonTrackProducer::reconfigure(fhicl::ParameterSet const & p)
    fEndpointRange       = p.get<int>("EndpointRange",30);
    fKeepMuonTypes       = p.get<std::vector<int>>("KeepMuonTypes");
 
+   // Reset function parameters 
+   fLineCount            = p.get<int>("LineCount",20);
+
 } // MuonTrackProducer()
 
 void MuonTrackProducer::produce(art::Event & evt)
@@ -171,7 +175,7 @@ void MuonTrackProducer::produce(art::Event & evt)
    }
    
    // obtain collection hits, perform hough transform, obtain tracks, and save col track info 
-   ResetCollectionHitVectors(20);
+   ResetCollectionHitVectors(fLineCount);
 
    for (int i = 0; i < nhits; ++i) {
       geo::WireID wireid = hitlist[i]->WireID();
@@ -196,8 +200,8 @@ void MuonTrackProducer::produce(art::Event & evt)
    bool muon_in_tpc1 = !(lines_12.empty()); // will be true if a muon was detected in tpc1
 
    //find induction plane hits, tracks, and fill muon variables 
-   ResetInductionHitVectors(20);
-   ResetMuonVariables(20);
+   ResetInductionHitVectors(fLineCount);
+   ResetMuonVariables(fLineCount);
 
    if (muon_in_tpc0 == true || muon_in_tpc1 == true){
       for (int i = 0; i < nhits; ++i) {
@@ -238,7 +242,7 @@ void MuonTrackProducer::produce(art::Event & evt)
          FindTrajectories(muon_endpoints, muon_hitpeakT, muon_trajectories);
          Findt0(muon_hitpeakT, muon_type, muon_t0);
 
-         for (int i=0; i<int(muon_endpoints.size()); i++){
+         for (size_t i=0; i<muon_endpoints.size(); i++){
             int track_type = muon_type.at(i);
             vector<int> track_hit_idx = muon_hit_idx.at(i); 
             bool keep_track = false; 
@@ -266,7 +270,7 @@ void MuonTrackProducer::produce(art::Event & evt)
                mytrack.type = muon_type.at(i); 
 
                muon_tracks->push_back(mytrack);
-               for (int hit_i=0; hit_i<int(track_hit_idx.size()); hit_i++){
+               for (size_t hit_i=0; hit_i<track_hit_idx.size(); hit_i++){
                   util::CreateAssn(*this, evt, *muon_tracks, hitlist[hit_i], *muon_tracks_assn);
                }
             }
@@ -319,7 +323,7 @@ void MuonTrackProducer::Hough(vector<vector<int>> coords, vector<int> param,  bo
       deaccu.push_back(v);
       //loop over all angles and fill the accumulator 
       for (int j=0; j<accu_w; j++){ 
-         int r = int(round((x-x_c)*cos(j*PI/accu_w) + (y-y_c)*sin(j*PI/accu_w)));
+         int r = int(round((x-x_c)*cos(j*M_PI/accu_w) + (y-y_c)*sin(j*M_PI/accu_w)));
          int val = ++(adata[r][j]);       
          if (max_val < val){
             max_val = val;
@@ -352,7 +356,7 @@ void MuonTrackProducer::Hough(vector<vector<int>> coords, vector<int> param,  bo
                   break;
                }
             }
-            int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
+            int y_val = int(round((rho - (x1 - x_c)*cos(theta*M_PI/180.0))/sin(theta*M_PI/180.0) + y_c));
             if (abs(y_val-y1) <= range){
                gap = 0;
                endpoint[k] = {x1, y1, wire_idx, idx+i};
@@ -370,10 +374,10 @@ void MuonTrackProducer::Hough(vector<vector<int>> coords, vector<int> param,  bo
       // unvote from the accumulator 
       for (int n = (deaccu.size()-1); n>=0; n--){ 
          int x1 = deaccu[n][0], y1 = int(deaccu[n][1]);
-         int y_val = int(round((rho - (x1 - x_c)*cos(theta*PI/180.0))/sin(theta*PI/180.0) + y_c));
+         int y_val = int(round((rho - (x1 - x_c)*cos(theta*M_PI/180.0))/sin(theta*M_PI/180.0) + y_c));
          if (y1 >= (y_val-range) && y1 <= (y_val+range)){
             for (int m=0; m<accu_w; m++){
-               int r = int(round((x1-x_c)*cos(m*PI/accu_w) + (y1-y_c)*sin(m*PI/accu_w)));
+               int r = int(round((x1-x_c)*cos(m*M_PI/accu_w) + (y1-y_c)*sin(m*M_PI/accu_w)));
                (adata[r][m])--;
             }
             deaccu.erase(deaccu.begin() + n);
@@ -394,9 +398,9 @@ void MuonTrackProducer::Hough(vector<vector<int>> coords, vector<int> param,  bo
 
    } // end of point loop 
    // combine lines that are split 
-   for (int i=0; i<int(outlines.size()); i++){
+   for (size_t i=0; i<outlines.size(); i++){
       bool same = false;
-      for (int j=i+1; j<int(outlines.size()) && same == false; j++){ 
+      for (size_t j=i+1; j<outlines.size() && same == false; j++){ 
          int xi_coords[2] = {outlines[i][0], outlines[i][2]}; int xj_coords[2] = {outlines[j][0], outlines[j][2]};
          int yi_coords[2] = {outlines[i][1], outlines[i][3]}; int yj_coords[2] = {outlines[j][1], outlines[j][3]};
          int rhoi = outlines[i][8], rhoj = outlines[j][8];
@@ -450,7 +454,7 @@ void MuonTrackProducer::Hough(vector<vector<int>> coords, vector<int> param,  bo
       } // end of j loop 
    } // end of i loop 
 
-   for (int i=0; i<int(outlines.size()); i++){
+   for (size_t i=0; i < outlines.size(); i++){
       if ((outlines.at(i)).empty())
          continue;
       int x0_end = outlines[i][0], y0_end = outlines[i][1], x1_end = outlines[i][2], y1_end = outlines[i][3];
@@ -535,11 +539,11 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vec
                                       int range, vector<art::Ptr<recob::Hit>> hitlist, 
                                       vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>>& muon_hitpeakT, vector<vector<int>>& muon_hit_idx){
    if (lines_ind.empty() == false){
-      for (int i=0; i<int(lines_col.size()); i++){
+      for (size_t i=0; i<lines_col.size(); i++){
          bool match = false;
          if ((lines_col.at(i)).empty() == true)
             continue;
-         for (int j=0; j<int(lines_ind.size()) && match == false; j++){
+         for (size_t j=0; j < lines_ind.size() && match == false; j++){
             int peakT0_col, peakT1_col, peakT0_ind, peakT1_ind; 
             int wire0_col, wire1_col, wire0_ind, wire1_ind;
 
@@ -617,7 +621,7 @@ bool MuonTrackProducer::FixEndpoints(geo::WireID wire_col, geo::WireID wire_ind,
 }
 
 void MuonTrackProducer::SortEndpoints(vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>> muon_hitpeakT, vector<int>& muon_type){
-   for (int i=0; i<int(muon_endpoints.size()); i++){
+   for (size_t i=0; i< muon_endpoints.size(); i++){
       geo::Point_t endpoint1 = (muon_endpoints.at(i)).at(0), endpoint2 = (muon_endpoints.at(i)).at(1);
       int dt = (muon_hitpeakT.at(i)).at(1) - (muon_hitpeakT.at(i)).at(0);
 
@@ -657,7 +661,7 @@ void MuonTrackProducer::SortEndpoints(vector<vector<geo::Point_t>>& muon_endpoin
 
 void MuonTrackProducer::FindTrajectories(vector<vector<geo::Point_t>> muon_endpoints, vector<vector<int>> muon_hitpeakT, 
                                          vector<vector<double>>& muon_trajectories){
-   for (int i=0; i<int(muon_endpoints.size()); i++){
+   for (size_t i=0; i< muon_endpoints.size(); i++){
       vector<geo::Point_t> pair = muon_endpoints[i];
 
       int dt = (muon_hitpeakT.at(i)).at(1) - (muon_hitpeakT.at(i)).at(0);
@@ -666,8 +670,8 @@ void MuonTrackProducer::FindTrajectories(vector<vector<geo::Point_t>> muon_endpo
       double dy = float(pair[1].Y())-float(pair[0].Y());
       double dz = float(pair[1].Z())-float(pair[0].Z());
       
-      double theta_xz = atan2(dx,dz) * 180/PI;
-      double theta_yz = atan2(dy,dz) * 180/PI;
+      double theta_xz = atan2(dx,dz) * 180/M_PI;
+      double theta_yz = atan2(dy,dz) * 180/M_PI;
 
       // std::cout << "theta_xz: " << theta_xz << std::endl;
       // std::cout << "theta_yz: " << theta_yz << std::endl;
@@ -678,7 +682,7 @@ void MuonTrackProducer::FindTrajectories(vector<vector<geo::Point_t>> muon_endpo
 
 void MuonTrackProducer::Findt0(vector<vector<int>> muon_hitpeakT, vector<int> muon_type, 
                         vector<double>& muon_t0){
-   for (int i=0; i<int(muon_hitpeakT.size()); i++){
+   for (size_t i=0; i< muon_hitpeakT.size(); i++){
       double t0; 
       if (muon_type.at(i) == 0 || muon_type.at(i) == 1) // anode-cathode crosser or anode crosser 
          t0 = ((muon_hitpeakT.at(i)).at(0) - 500)*0.5; 
@@ -693,7 +697,7 @@ void MuonTrackProducer::Findt0(vector<vector<int>> muon_hitpeakT, vector<int> mu
 void MuonTrackProducer::PrintHoughLines(vector<vector<int>>& lines, int plane){
    if (lines.empty()==false){
       std::cout << "plane = " << plane << std::endl;
-      for (int i=0; i<int(lines.size()); i++){
+      for (size_t i=0; i< lines.size(); i++){
          vector<int> line = lines.at(i);
          int wire0 = line.at(0), wire1 = line.at(2); 
          int peakT0 = line.at(1), peakT1 = line.at(3);
