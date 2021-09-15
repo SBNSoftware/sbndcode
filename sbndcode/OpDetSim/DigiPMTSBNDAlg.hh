@@ -11,6 +11,7 @@
 
 #include "fhiclcpp/types/Atom.h"
 #include "fhiclcpp/types/DelegatedParameter.h"
+#include "fhiclcpp/types/OptionalDelegatedParameter.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
 #include "CLHEP/Random/RandFlat.h"
@@ -63,7 +64,7 @@ namespace opdet {
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
       bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
-      fhicl::ParameterSet GainFluctuationsPset;
+      fhicl::ParameterSet GainFluctuationsParams;
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       double frequency;       //wave sampling frequency (GHz)
@@ -132,7 +133,6 @@ namespace opdet {
     std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
-    void AddSPE(size_t time_bin, std::vector<double>& wave, double npe);
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
@@ -267,8 +267,8 @@ namespace opdet {
         Comment("Option to fluctuate PMT gain")
       };
 
-      fhicl::DelegatedParameter gainFluctuationsPset {
-        Name("GainFluctuationsPset"),
+      fhicl::OptionalDelegatedParameter gainFluctuationsParams {
+        Name("GainFluctuationsParams"),
         Comment("Parameters used for SinglePE response fluctuations")
       };
 

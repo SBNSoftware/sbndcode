@@ -61,7 +61,7 @@ namespace opdet {
     }
 
     if(fParams.MakeGainFluctuations){
-      fPMTGainFluctuationsPtr = art::make_tool<opdet::PMTGainFluctuations>(fParams.GainFluctuationsPset);
+      fPMTGainFluctuationsPtr = art::make_tool<opdet::PMTGainFluctuations>(fParams.GainFluctuationsParams);
     }
 
     saturation = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
@@ -145,10 +145,7 @@ namespace opdet {
         tphoton = ttsTime + simphotons[i].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
-        if(timeBin < wave.size()){
-          if(fParams.MakeGainFluctuations) AddSPE(timeBin, wave, fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine));
-          else AddSPE(timeBin, wave);
-        }
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
 
@@ -182,10 +179,7 @@ namespace opdet {
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
-        if(timeBin < wave.size()){
-          if(fParams.MakeGainFluctuations) AddSPE(timeBin, wave, fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine));
-          else AddSPE(timeBin, wave);
-        }
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
     // reflected light
@@ -198,10 +192,7 @@ namespace opdet {
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
-        if(timeBin < wave.size()){
-          if(fParams.MakeGainFluctuations) AddSPE(timeBin, wave, fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine));
-          else AddSPE(timeBin, wave);
-        }
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
 
@@ -238,10 +229,7 @@ namespace opdet {
         tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
-        if(timeBin < wave.size()){
-          if(fParams.MakeGainFluctuations) AddSPE(timeBin, wave, fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine));
-          else AddSPE(timeBin, wave);
-        }
+        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
 
@@ -277,10 +265,7 @@ namespace opdet {
           tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           timeBin = std::floor(tphoton*fSampling);
-          if(timeBin < wave.size()){
-            if(fParams.MakeGainFluctuations) AddSPE(timeBin, wave, fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine));
-            else AddSPE(timeBin, wave);
-          }
+          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
         }
       }
     }
@@ -298,10 +283,7 @@ namespace opdet {
           tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           timeBin = std::floor(tphoton*fSampling);
-          if(timeBin < wave.size()){
-            if(fParams.MakeGainFluctuations) AddSPE(timeBin, wave, fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine));
-            else AddSPE(timeBin, wave);
-          }
+          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
         }
       }
     }
@@ -343,20 +325,17 @@ namespace opdet {
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
-    std::transform(min_it, max_it,
+    if(fParams.MakeGainFluctuations){
+      double npe=fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine);
+      std::transform(min_it, max_it,
+                     fSinglePEWave.begin(), min_it,
+                     [npe](auto a, auto b) { return a+npe*b; });
+    }
+    else{
+      std::transform(min_it, max_it,
                    fSinglePEWave.begin(), min_it,
                    std::plus<double>( ));
-  }
-
-
-  void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave, double npe)
-  {
-    size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
-    auto min_it = std::next(wave.begin(), time_bin);
-    auto max_it = std::next(wave.begin(), max);
-    std::transform(min_it, max_it,
-                   fSinglePEWave.begin(), min_it,
-                   [npe](auto a, auto b) { return a+npe*b; });
+    }
   }
 
 
@@ -396,12 +375,7 @@ namespace opdet {
     double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
     while(darkNoiseTime < wave.size()) {
       timeBin = std::round(darkNoiseTime);
-      if(timeBin < wave.size()){
-        if(fParams.MakeGainFluctuations) {
-          AddSPE(timeBin, wave, fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine));
-        }
-        else AddSPE(timeBin, wave);
-      }
+      if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       // Find next time to add dark noise
       darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, mean);
     }
@@ -500,7 +474,7 @@ namespace opdet {
     fBaseConfig.CableTime                = config.cableTime();
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
     fBaseConfig.MakeGainFluctuations     = config.makeGainFluctuations();
-    fBaseConfig.GainFluctuationsPset      = config.gainFluctuationsPset.get<fhicl::ParameterSet>();
+    config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
   }
 
   std::unique_ptr<DigiPMTSBNDAlg>

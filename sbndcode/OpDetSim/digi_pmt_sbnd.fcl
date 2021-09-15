@@ -34,7 +34,7 @@ sbnd_digipmt_alg:
   PMTDataFile:               "OpDetSim/digi_pmt_sbnd.root" # located in sbnd_data
 
   MakeGainFluctuations: true
-  GainFluctuationsPset: @local::FirstDynodeGainFluctuations
+  GainFluctuationsParams: @local::FirstDynodeGainFluctuations
 }
 
 END_PROLOG
