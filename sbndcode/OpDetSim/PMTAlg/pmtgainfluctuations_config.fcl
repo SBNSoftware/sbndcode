@@ -1,0 +1,21 @@
+BEGIN_PROLOG
+
+FirstDynodeGainFluctuations:
+{
+  tool_type: "PMTGainFluctuations1Dynode"
+
+  #Constant DynodeK taken from Hamamatsu, PHOTOMULTIPLIER
+  #TUBES: Basics and Applications (Fourth Edition)
+  #In section 4.2.2.: "determined by the structure and material
+  #of the dynode and has a value from 0.7 to 0.8"
+  DynodeK:                   0.75
+
+  #VoltageDistribution and Gain taken from Hamamatsu datasheet
+  #https://www.hamamatsu.com/resources/pdf/etd/LARGE_AREA_PMT_TPMH1376E.pdf
+  #TODO: SBND PMTs base circuit is different to the one specified in the datasheet
+  #TODO: Customize these values for the SBND configuration
+  VoltageDistribution:    [ 17.4, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
+  Gain:                   1e7            # total typical PMT gain
+}
+
+END_PROLOG
