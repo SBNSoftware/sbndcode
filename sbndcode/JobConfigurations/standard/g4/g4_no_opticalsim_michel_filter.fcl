@@ -1,20 +1,29 @@
+# File:    g4_no_opticalsim_michel_filter.fcl
+# Purpose: Same as standard_g4_sbnd.fcl, but does not do light simulation and applies the Michel
+#          electron filter
+#
+# This runs the new, refactored, LArG4 simulation.
+
+
 #include "larg4particlefilter.fcl"
 #include "g4_no_opticalsim.fcl"
 
 
+# Remove the optical simulation process from the simulate path and add the filter
 physics.simulate: [ rns
                   , loader
                   , largeant
                   , ionandscint
-                  , ionandscintout
-                  , pdfastsim
-                  , pdfastsimout
                   , simdrift
                   , filter # Adding filter
                   , mcreco
                 ]
 
+physics.producers.ionandscintout: @erase
+physics.producers.pdfastsim: @erase
+physics.producers.pdfastsimout: @erase
 
+# Configure the Michel filter
 physics.filters.filter: @local::sbnd_larg4particlefilter
 physics.filters.filter.InterestingPDGs: [ 13 , 11 ]
 physics.filters.filter.ParticleMinMomentum: [ -1, 0 ]

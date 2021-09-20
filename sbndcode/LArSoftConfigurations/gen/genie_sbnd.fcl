@@ -280,6 +280,7 @@ sbnd_genie_simple: {
   @table::sbnd_flux_bnb_nu
   EventsPerSpill: 0
   POTPerSpill: 5e12
+  MaxFluxFileMB: 100
 }
 
 
@@ -288,6 +289,7 @@ sbnd_genie_simple_dirt: {
   @table::sbnd_flux_bnb_dirt
   EventsPerSpill: 0
   POTPerSpill: 5e12
+  MaxFluxFileMB: 100
 }
 
 
