@@ -86,7 +86,7 @@ do
     if [[ $stat -ne 0 && $stat -ne 1 ]]; then
         echo "Error parsing ${fcl} --- Exited with status ${stat}"
         echo "==================================================================================================================================="
-        echo "$larerr"
+        cat ${larerr}
         echo "==================================================================================================================================="
         let exit_code_parsing=201
         continue
@@ -111,6 +111,13 @@ do
     ###############################################################################
     ### Check the diff between the fcl configs for the ref and current versions ###
     ###############################################################################
+
+    if [[ ! -f ${ACCESS_REF_DIR}/${fcl%.fcl}_fhicl_dump.out ]]
+    then
+	echo "Cannot open reference file: ${ACCESS_REF_DIR}/${fcl%.fcl}_fhicl_dump.out it does not exist"
+	let exit_code_dump=201
+	continue
+    fi
 
     fcl_diff=$(diff ${ACCESS_REF_DIR}/${fcl%.fcl}_fhicl_dump.out ${fclout})
 
