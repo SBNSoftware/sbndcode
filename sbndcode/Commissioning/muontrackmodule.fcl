@@ -1,0 +1,26 @@
+BEGIN_PROLOG
+
+MuonTrackProducer:
+{
+  module_type:              "MuonTrackProducer"
+  HitsModuleLabel:          "fasthit"
+
+  HoughThreshold:       10
+  HoughMaxGap:          30
+  HoughRange:           100
+  HoughMinLength:       500
+  HoughMuonLength:      0
+  
+  EndpointRange:        30
+  KeepMuonTypes:        [0, 1, 2, 3, 4, 5] # default is keep all types 
+  #KeepMuonTypes key: [anode-cathode crosser, anode-piercer, cathode-piercer, top-bottom crosser, up-downstream crosser, other]
+
+  LineCount:            20
+}
+
+MuonTrackFilter :
+{
+  module_type:              "MuonTrackFilter"
+}
+
+END_PROLOG
