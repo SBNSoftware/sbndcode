@@ -58,6 +58,3 @@ Thumbs.db
 *.bak
 *.backup
 RepositoryTag
-sbndcode/Commissioning/safe/ACFilter_module.cc
-sbndcode/Commissioning/safe/ACProducer_module.cc
-sbndcode/Commissioning/safe/run_acproducer.fcl
