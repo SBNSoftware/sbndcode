@@ -271,7 +271,8 @@ void MuonTrackProducer::produce(art::Event & evt)
 
                muon_tracks->push_back(mytrack);
                for (size_t hit_i=0; hit_i<track_hit_idx.size(); hit_i++){
-                  util::CreateAssn(*this, evt, *muon_tracks, hitlist[hit_i], *muon_tracks_assn);
+                  int idx = track_hit_idx[hit_i];
+                  util::CreateAssn(*this, evt, *muon_tracks, hitlist[idx], *muon_tracks_assn);
                }
             }
          }
