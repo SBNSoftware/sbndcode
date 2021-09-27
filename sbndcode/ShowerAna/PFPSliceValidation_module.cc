@@ -241,10 +241,12 @@ void ana::PFPSliceValidation::analyze(art::Event const &evt) {
   eventTrueNeutrinos = truthVec.size();
 
   // Get reco stuff initialised
-  std::vector<art::Handle<std::vector<recob::Hit>>> hitHandles;
-  evt.getManyByType(hitHandles);
-  std::vector<art::Handle<std::vector<recob::Vertex>>> vertexHandles;
-  evt.getManyByType(vertexHandles);
+  //std::vector<art::Handle<std::vector<recob::Hit>>> hitHandles;
+  //evt.getManyByType(hitHandles);
+  auto hitHandles = evt.getMany<std::vector<recob::Hit>>();
+  //std::vector<art::Handle<std::vector<recob::Vertex>>> vertexHandles;
+  //evt.getManyByType(vertexHandles);
+  auto vertexHandles = evt.getMany<std::vector<recob::Vertex>>();
 
   // Set the handles
   art::Handle<std::vector<recob::Hit>> hitHandle;

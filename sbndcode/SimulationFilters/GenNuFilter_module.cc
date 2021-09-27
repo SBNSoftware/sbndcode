@@ -46,8 +46,9 @@ namespace filt{
 
 
   bool GenNuFilter::filter(art::Event & e){
-    std::vector< art::Handle< std::vector<simb::MCTruth> > > mclists;
-    e.getManyByType(mclists);
+    //std::vector< art::Handle< std::vector<simb::MCTruth> > > mclists;
+    //e.getManyByType(mclists);
+    auto mclists = e.getMany< std::vector<simb::MCTruth> >();
     for (unsigned int i = 0; i < mclists.size() ; i++){
       for (unsigned int j = 0; j < mclists[i]->size(); j++){
         //Should have the truth record for the event now

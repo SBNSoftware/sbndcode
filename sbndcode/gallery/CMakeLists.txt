@@ -8,9 +8,10 @@ foreach(ExampleDir IN ITEMS galleryAnalysis )
   
   # cet_install_files() will reproduce the intermediate subdirectories from the
   # source list into the destination directory
-  cet_install_files(
-    LIST ${GalleryExamples}
-    DIRNAME examples/gallery/${ExampleDir}
-    )
+ ## FIXME: replace with cmake install
+ ## cet_install_files(
+  ##  LIST ${GalleryExamples}
+  ##  DIRNAME examples/gallery/${ExampleDir}
+  ##  )
   
 endforeach()
