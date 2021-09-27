@@ -4,7 +4,7 @@ art_make(
          ${MF_MESSAGELOGGER}
          ${FHICLCPP}
          ${CETLIB}
-         ${CLHEP}
+         CLHEP::CLHEP
          cetlib
          cetlib_except
          ${MF_UTILITIES}

@@ -5,6 +5,7 @@
 
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "cetlib_except/exception.h"
 #include "larcore/Geometry/Geometry.h"
