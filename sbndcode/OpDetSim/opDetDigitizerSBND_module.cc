@@ -277,7 +277,6 @@ namespace opdet {
     if (fUseSimPhotonsLite) {
       fPhotonLiteHandles.clear();
       //Get *ALL* SimPhotonsCollectionLite from Event
-      //e.getManyByType(fPhotonLiteHandles);
       fPhotonLiteHandles = e.getMany<std::vector<sim::SimPhotonsLite>>();
       if (fPhotonLiteHandles.size() == 0)
         mf::LogError("OpDetDigitizer") << "sim::SimPhotonsLite not found -> No Optical Detector Simulation!\n";
@@ -285,7 +284,6 @@ namespace opdet {
     else {
       fPhotonHandles.clear();
       //Get *ALL* SimPhotonsCollection from Event
-      //e.getManyByType(fPhotonHandles);
       fPhotonLiteHandles = e.getMany<std::vector<sim::SimPhotonsLite>>();
       if (fPhotonHandles.size() == 0)
         mf::LogError("OpDetDigitizer") << "sim::SimPhotons not found -> No Optical Detector Simulation!\n";
