@@ -153,22 +153,22 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     for (const art::Handle<std::vector<sim::SimPhotonsLite>> &opdetHandle : photon_handles) {
       const bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       for (auto const& litesimphotons : (*opdetHandle)){
-	
-	if(Reflected){
-	  auto it = AllPhotonsMap["Reflected"].find(litesimphotons.OpChannel);
-	  if(it==AllPhotonsMap["Reflected"].end())
-	    AllPhotonsMap["Reflected"][litesimphotons.OpChannel] = litesimphotons;
-	  else
-	    AllPhotonsMap["Reflected"][litesimphotons.OpChannel] += litesimphotons;
-	}
 
-	else{ //Direct
-	  auto it = AllPhotonsMap["Direct"].find(litesimphotons.OpChannel);
-	  if(it==AllPhotonsMap["Direct"].end())
-	    AllPhotonsMap["Direct"][litesimphotons.OpChannel] = litesimphotons;
-	  else
-	    AllPhotonsMap["Direct"][litesimphotons.OpChannel] += litesimphotons;
-	}
+        if(Reflected){
+          auto it = AllPhotonsMap["Reflected"].find(litesimphotons.OpChannel);
+          if(it==AllPhotonsMap["Reflected"].end())
+            AllPhotonsMap["Reflected"][litesimphotons.OpChannel] = litesimphotons;
+          else
+            AllPhotonsMap["Reflected"][litesimphotons.OpChannel] += litesimphotons;
+        }
+
+        else{ //Direct
+          auto it = AllPhotonsMap["Direct"].find(litesimphotons.OpChannel);
+          if(it==AllPhotonsMap["Direct"].end())
+            AllPhotonsMap["Direct"][litesimphotons.OpChannel] = litesimphotons;
+          else
+            AllPhotonsMap["Direct"][litesimphotons.OpChannel] += litesimphotons;
+        }
       }
     }
 
@@ -185,8 +185,8 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
       const bool Reflected = (simphotons_cols.first=="Reflected");
       for (auto const& simphotons_map : simphotons_cols.second) {
 
-	auto const& litesimphotons = simphotons_map.second;
-	
+        auto const& litesimphotons = simphotons_map.second;
+
         std::vector<short unsigned int> waveform;
         waveform.reserve(fConfig.Nsamples);
         const unsigned ch = litesimphotons.OpChannel;
@@ -270,22 +270,22 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     for (const art::Handle<std::vector<sim::SimPhotons>> &opdetHandle : photon_handles) {
       const bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
       for (auto const& simphotons : (*opdetHandle)){
-	
-	if(Reflected){
-	  auto it = AllPhotonsMap["Reflected"].find(simphotons.OpChannel());
-	  if(it==AllPhotonsMap["Reflected"].end())
-	    AllPhotonsMap["Reflected"][simphotons.OpChannel()] = simphotons;
-	  else
-	    AllPhotonsMap["Reflected"][simphotons.OpChannel()] += simphotons;
-	}
 
-	else{ //Direct
-	  auto it = AllPhotonsMap["Direct"].find(simphotons.OpChannel());
-	  if(it==AllPhotonsMap["Direct"].end())
-	    AllPhotonsMap["Direct"][simphotons.OpChannel()] = simphotons;
-	  else
-	    AllPhotonsMap["Direct"][simphotons.OpChannel()] += simphotons;
-	}
+        if(Reflected){
+          auto it = AllPhotonsMap["Reflected"].find(simphotons.OpChannel());
+          if(it==AllPhotonsMap["Reflected"].end())
+            AllPhotonsMap["Reflected"][simphotons.OpChannel()] = simphotons;
+          else
+            AllPhotonsMap["Reflected"][simphotons.OpChannel()] += simphotons;
+        }
+
+        else{ //Direct
+          auto it = AllPhotonsMap["Direct"].find(simphotons.OpChannel());
+          if(it==AllPhotonsMap["Direct"].end())
+            AllPhotonsMap["Direct"][simphotons.OpChannel()] = simphotons;
+          else
+            AllPhotonsMap["Direct"][simphotons.OpChannel()] += simphotons;
+        }
       }
     }
 
@@ -304,7 +304,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
       const bool Reflected = (simphotons_cols.first=="Reflected");
       for (auto const& simphotons_map : simphotons_cols.second) {
 
-	auto const& simphotons = simphotons_map.second;
+        auto const& simphotons = simphotons_map.second;
 
         std::vector<short unsigned int> waveform;
         const unsigned ch = simphotons.OpChannel();
