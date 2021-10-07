@@ -101,7 +101,7 @@
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
     <OutputVertexListName>NeutrinoVertices3D</OutputVertexListName>
     <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
-    <MvaFileName>PandoraMVAs/PandoraBdt_v08_33_00_SBND.xml</MvaFileName>
+    <MvaFileName>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileName>
     <RegionMvaName>VertexBDTRegion</RegionMvaName>
     <VertexMvaName>VertexBDTVertex</VertexMvaName>
     <FeatureTools>
@@ -110,7 +110,10 @@
       <tool type = "LArGlobalAsymmetryFeature"/>
       <tool type = "LArShowerAsymmetryFeature"/>
       <tool type = "LArRPhiFeature"/>
+      <tool type = "LArEnergyDepositionAsymmetryFeature"/>
     </FeatureTools>
+    <LegacyEventShapes>false</LegacyEventShapes>
+    <LegacyVariables>false</LegacyVariables>
   </algorithm>
   <algorithm type = "LArCutClusterCharacterisation">
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
