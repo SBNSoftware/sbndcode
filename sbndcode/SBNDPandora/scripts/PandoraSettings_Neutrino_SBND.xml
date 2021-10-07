@@ -91,6 +91,11 @@
     <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
     <EnableCrossingCandidates>false</EnableCrossingCandidates>
   </algorithm>
+  <algorithm type = "LArVertexRefinement">
+    <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+    <InputVertexListName>CandidateVertices3D</InputVertexListName>
+    <OutputVertexListName>RefinedVertices3D</OutputVertexListName>
+  </algorithm>
   <algorithm type = "LArBdtVertexSelection">
     <InputCaloHitListNames>CaloHitListU CaloHitListV CaloHitListW</InputCaloHitListNames>
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
@@ -447,7 +452,7 @@
   <!-- Output list management -->
   <algorithm type = "LArPostProcessing">
     <PfoListNames>NeutrinoParticles3D TrackParticles3D ShowerParticles3D</PfoListNames>
-    <VertexListNames>NeutrinoVertices3D DaughterVertices3D CandidateVertices3D</VertexListNames>
+    <VertexListNames>NeutrinoVertices3D DaughterVertices3D RefinedVertices3D</VertexListNames>
     <ClusterListNames>ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</ClusterListNames>
     <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW CaloHitList2D</CaloHitListNames>
     <CurrentPfoListReplacement>NeutrinoParticles3D</CurrentPfoListReplacement>
