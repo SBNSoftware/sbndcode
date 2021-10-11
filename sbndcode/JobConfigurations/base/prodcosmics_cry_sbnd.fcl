@@ -47,7 +47,7 @@ process_name: CosmicsGen
 services:
 {
 
-  TFileService:         { fileName: "prodcosmics_cry_sbnd_%p-%tc_hists.root" }
+  TFileService:         { fileName: "hists_prodcosmics_cry_sbnd_%p-%tc.root" }
                         @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
                         @table::sbnd_random_services  # from simulationservices_sbnd.fcl
   FileCatalogMetadata:  @local::sbnd_file_catalog_mc  # from sam_sbnd.fcl

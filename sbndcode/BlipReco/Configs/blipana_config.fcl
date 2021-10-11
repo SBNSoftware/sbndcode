@@ -7,7 +7,7 @@ sbnd_blipana:
   module_type:        "BlipAna"
   HitModuleLabel:     "gaushit"
   LArG4ModuleLabel:   "largeant"
-  TrackModuleLabel:   "pandora"
+  TrackModuleLabel:   "pandoraTrack"
   CaloAlg:		        @local::sbnd_calorimetryalgmc
 }
 

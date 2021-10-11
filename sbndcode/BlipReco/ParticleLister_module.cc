@@ -136,7 +136,7 @@ namespace filt{
   void ParticleLister::reconfigure(fhicl::ParameterSet const& pset){
     fSimProducerLabel       = pset.get< std::string > ("SimProducer","largeant");
     fMaxEvents              = pset.get< int >         ("MaxEvents",-1);
-    fMaxParticles           = pset.get< int >         ("MaxParticles",100);
+    fMaxParticles           = pset.get< int >         ("MaxParticles",500);
   }
 
 
@@ -226,8 +226,10 @@ namespace filt{
 
     //std::vector<TVector3> primary_locs;
     
-    // Loop through particles 
+    // Loop through particles
+    int counter = 0;
     for( size_t iParticle=0; iParticle<particleHandle->size(); iParticle++){
+      counter++;
       const art::Ptr<simb::MCParticle> particle(particleHandle,iParticle);
       int     last	          = particle->NumberTrajectoryPoints() - 1;
       int     secToLast           = std::max(0,last-1);
@@ -313,22 +315,22 @@ namespace filt{
 
    
       if(printOut) {
-        if( fMaxParticles < 0 || trackId < fMaxParticles ) {
-           printf("  %3i PDG: %10i, dL=%5.1fcm, XYZ=(%7.1f,%7.1f,%7.1f),  KE0=%7.3f, KEf=%7.3f, T0=%9.2fns, moth=%3i, %18s -->%18s, nD=%i\n",
-             trackId,
-             pdg,
-             dL,
-             loc0.X(),
-	     loc0.Y(),
-	     loc0.Z(),
-             KE0,
-             KEf,
-	     T0,
-             mother,
-             proc.c_str(),
-             endProc.c_str(),      
-             ndaughters
-             );
+        if( fMaxParticles < 0 || counter <= fMaxParticles ) {
+          printf("  %3i PDG: %10i, dL=%5.1fcm, XYZ=(%7.1f,%7.1f,%7.1f),  KE0=%7.3f, KEf=%7.3f, T0=%9.2fns, moth=%3i, %18s -->%18s, nD=%i\n",
+            trackId,
+            pdg,
+            dL,
+            loc0.X(),
+            loc0.Y(),
+            loc0.Z(),
+            KE0,
+            KEf,
+            T0,
+            mother,
+            proc.c_str(),
+            endProc.c_str(),      
+            ndaughters
+            );
         } else {
           printf("---------- Max particle limit reached ----------------------\n");
           break;

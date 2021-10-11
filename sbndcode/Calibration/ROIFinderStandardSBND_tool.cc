@@ -42,6 +42,12 @@ namespace sbnd_tool
     // Services
     const geo::GeometryCore*                             fGeometry = lar::providerFrom<geo::Geometry>();
     art::ServiceHandle<util::SignalShapingServiceSBND> sss;
+
+    // Histograms
+    TH1D* h_threshVal[3];
+    TH1D* h_ampInROI[3];
+    TH1D* h_numROIs[3];
+
   };
     
   //----------------------------------------------------------------------
@@ -87,7 +93,14 @@ namespace sbnd_tool
     
     // Get signal shaping service.
     sss = art::ServiceHandle<util::SignalShapingServiceSBND>();
+      
+    // Configure histograms
+    art::ServiceHandle<art::TFileService> tfs;
+    for(int i=0; i<=2; i++) h_threshVal[i]= tfs->make<TH1D>(Form("pl%i_runningThreshVal",i),Form("Plane %i running sum values",i),200,-100,100);
+    for(int i=0; i<=2; i++) h_numROIs[i]  = tfs->make<TH1D>(Form("pl%i_numROIs",i),Form("Plane %i total number ROIs per wire",i),100,0,100);
+    for(int i=0; i<=2; i++) h_ampInROI[i] = tfs->make<TH1D>(Form("pl%i_ampInROIs",i),Form("Plane %i max signal height in ROIs",i),1000,0,100);
     
+
     return;
   }
     
@@ -110,12 +123,17 @@ namespace sbnd_tool
     float startThreshold = sqrt(float(numBins)) * (fNumSigma[planeID.Plane] * rawNoise + fThreshold[planeID.Plane]);
     float stopThreshold  = startThreshold;
     
+//    std::cout<<"Finding ROIs on plane "<<planeID.Plane<<": numBins "<<numBins<<", numSigma "<<fNumSigma[planeID.Plane]<<", rawnoise "<<rawNoise<<", thresh "<<fThreshold[planeID.Plane]<<"\n";
+//    std::cout<<"threshold --> "<<startThreshold<<"\n";
+
     // Setup
     float runningSum = std::accumulate(waveform.begin(),waveform.begin()+numBins, 0.);
     
     size_t roiStartBin(0);
     bool   roiCandStart(false);
-    
+   
+    float maxSig = -999;
+
     // search for ROIs - follow prescription from Bruce B using a running sum to make faster
     // Note that we start in the middle of the running sum... if we find an ROI padding will extend
     // past this to take care of ends of the waveform
@@ -127,27 +145,39 @@ namespace sbnd_tool
         
         // Case, we are at end of waveform
         runningSum += waveform[stopBin++];
-        
+       
+        float val = runningSum/sqrt(float(numBins)) - fNumSigma[planeID.Plane]*rawNoise;
+        h_threshVal[planeID.Plane]->Fill(val);
+
+//        std::cout<<"sig: "<<waveform[bin]<<"   start/stopBin: "<<startBin<<","<<stopBin<<"   numbins "<<numBins<<"   startThresh "<<startThreshold<<"   running sum "<<runningSum<<"\n";
+
         // We have already started a candidate ROI
         if (roiCandStart)
-	  {
-            if (fabs(runningSum) < stopThreshold)
 	      {
-                if (bin - roiStartBin > 2) roiVec.push_back(CandidateROI(roiStartBin, bin));
-                
-                roiCandStart = false;
+          if (fabs(runningSum) < stopThreshold)
+	        {
+            if (bin - roiStartBin > 2) roiVec.push_back(CandidateROI(roiStartBin, bin));
+            roiCandStart = false;
+            h_ampInROI[planeID.Plane]->Fill(maxSig);
+            maxSig = -999;
+	        }
 	      }
-	  }
         // Not yet started a candidate ROI
         else
-	  {
-            if (fabs(runningSum) > startThreshold)
 	      {
-                roiStartBin  = bin;
-                roiCandStart = true;
+          if (fabs(runningSum) > startThreshold)
+	        {
+            roiStartBin  = bin;
+            roiCandStart = true;
+	        }
 	      }
-	  }
+    
+          if( roiCandStart && waveform[bin] > maxSig ) maxSig = waveform[bin];
+      
+      
       } // bin
+          
+          
     
     // add the last ROI if existed
     if (roiCandStart) roiVec.push_back(CandidateROI(roiStartBin, waveform.size() - 1));
@@ -189,6 +219,8 @@ namespace sbnd_tool
         roiVec = tempRoiVec;
       }
     
+      h_numROIs[planeID.Plane]->Fill(roiVec.size());
+
     return;
   }
 

@@ -38,6 +38,7 @@ art_make(
 
 # install_headers()
 add_subdirectory(Utils)
+add_subdirectory(Configs)
 install_fhicl()
 install_source()
 

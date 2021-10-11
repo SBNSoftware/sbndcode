@@ -1,5 +1,7 @@
 #include "BlipUtils.h"
 
+const float rmsWidthFact = 1.0;
+
 namespace sbnd::BlipUtils {
   
   //============================================================================
@@ -17,8 +19,7 @@ namespace sbnd::BlipUtils {
       }
     }
   }
-    
-
+  
   //============================================================================
   // Get the total energy deposited by this particle by looking at IDEs from 3 planes.
   void CalcPartDep(int trackID, float& energy, float& ne){
@@ -53,11 +54,16 @@ namespace sbnd::BlipUtils {
 
     // If this is an electron that came from another electron, it would 
     // have already been grouped as part of the contiguous "blip" previously.
-    if( part.PdgCode() == 11 && (part.Process() == "eIoni" || part.Process() == "hIoni") ) return tb;
-
+    if( part.PdgCode() == 11 && (part.Process() == "eIoni" || part.Process() == "muIoni" || part.Process() == "hIoni") ) return tb;
+    
     // If this is a photon or neutron, don't even bother!
     if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return tb;
-    
+
+    // Only count protons < 3 MeV KE
+    float edep, ne; 
+    CalcPartDep(trackID,edep,ne);
+    if( part.PdgCode() == 2212 && edep < 3. ) return tb;
+
     // Create the new blip
     GrowTrueBlip(part,tb);
 
@@ -66,7 +72,7 @@ namespace sbnd::BlipUtils {
     if( part.NumberDaughters() ) {
       for(auto it = std::next(plist.find(trackID)); it != plist.end(); it++){
         simb::MCParticle p = *(it)->second;
-        if( p.PdgCode() != 2112 && (p.Process() == "eIoni" || p.Process() == "hIoni") ){
+        if( p.PdgCode() != 2112 && (p.Process() == "eIoni" || p.Process() == "muIoni" || p.Process() == "hIoni") ){
           if( IsAncestorOf(p.TrackId(),trackID,true) ) GrowTrueBlip(p,tb);
         }
       }
@@ -81,21 +87,36 @@ namespace sbnd::BlipUtils {
 
   //====================================================================
   void GrowTrueBlip(simb::MCParticle const& part, TrueBlip& tblip){
-    // If this is a new blip, initialize
-    if( tblip.G4IDs.size() == 0 ) tblip.StartPoint = part.Position().Vect();
+    
+    // Skip neutrons, photons
     if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
+
+    // Get particle path length and start/end position *inside TPC*
+    TVector3 start, end;
+    float len = PathLength(part,start,end);
+
+    if( !len ) return;
+
+    // If this is a new blip, initialize
+    if( tblip.G4IDs.size() == 0 ) {
+      tblip.StartPoint  = start;
+      //double posArray[3]= { tblip.Position.X(), tblip.Position.Y(), tblip.Position.Z() };
+      //tblip.TPC         = art::ServiceHandle<geo::Geometry>()->PositionToTPC({start.X(),start.Y(),start.Z()}).ID().TPC;
+    }
+    
     float edep = 0, ne = 0;
     CalcPartDep(part.TrackId(),edep,ne);
     tblip.G4IDs .push_back(part.TrackId());
     tblip.PDGs       .push_back(part.PdgCode());
     tblip.Energy      += edep;
     tblip.NumElectrons+= ne;
-    tblip.EndPoint    = part.EndPosition().Vect();
-    tblip.Position    = (tblip.EndPoint+tblip.StartPoint)*0.5;
-    tblip.Length      = (tblip.EndPoint-tblip.StartPoint).Mag();
+    tblip.EndPoint    = end;
+    tblip.Position    = (tblip.StartPoint + end)*0.5;
+    tblip.Length      += len; 
     if(edep > tblip.LeadEnergy ) {
       tblip.LeadEnergy = edep;
       tblip.LeadG4ID = part.TrackId();
+      tblip.LeadG4PDG = part.PdgCode();
     }
   }
   
@@ -108,14 +129,15 @@ namespace sbnd::BlipUtils {
     for(size_t i=0; i<vtb.size(); i++){
       if( isGrouped.at(i) ) continue;
       else isGrouped.at(i) = true;
-      TrueBlip blip_i = vtb.at(i);
+      auto& blip_i = vtb.at(i);
       for(size_t j=i+1; j<vtb.size(); j++){
         if( isGrouped.at(j) ) continue;
-        TrueBlip blip_j = vtb.at(j);
+        auto const& blip_j = vtb.at(j);
+//        if( blip_i.TPC != blip_j.TPC ) continue;
         float d = (blip_i.Position-blip_j.Position).Mag();
         if( d < dmin ) {
           isGrouped.at(j) = true;
-          blip_i.Energy += blip_j.Energy;
+          blip_i.Energy   += blip_j.Energy;
           blip_i.EndPoint = blip_j.EndPoint;
           blip_i.Position = (blip_i.EndPoint+blip_i.StartPoint)*0.5;
           blip_i.Length   = (blip_i.EndPoint-blip_i.StartPoint).Mag();
@@ -126,6 +148,7 @@ namespace sbnd::BlipUtils {
           if( blip_j.LeadEnergy > blip_i.LeadEnergy ) {
             blip_i.LeadEnergy = blip_j.LeadEnergy;
             blip_i.LeadG4ID = blip_j.LeadG4ID;
+            blip_i.LeadG4PDG = blip_j.LeadG4PDG;
           }
         }//d < dmin
       }//loop over blip_j
@@ -147,12 +170,15 @@ namespace sbnd::BlipUtils {
     hc.HitIDs       .insert(hitinfo.hitid);
     hc.Wires       .insert(hit->WireID().Wire);
     hc.LeadHitWire  = hit->WireID().Wire;
-    hc.Charge       = hitinfo.Charge;
+    hc.Charge       = hitinfo.qcoll;
     hc.LeadHitCharge= hc.Charge;
-    hc.mapWireCharge[hit->WireID().Wire] = hitinfo.Charge;
-    hc.Time         = hitinfo.Time;
-    hc.StartTime    = hitinfo.Time - hit->RMS();
-    hc.EndTime      = hitinfo.Time + hit->RMS();
+    hc.mapWireCharge[hit->WireID().Wire] = hitinfo.qcoll;
+    hc.mapTimeCharge[hitinfo.driftTicks] = hitinfo.qcoll;
+    hc.LeadHitTime  = hitinfo.driftTicks;
+    hc.Time         = hitinfo.driftTicks;
+    hc.WeightedTime = hitinfo.driftTicks;
+    hc.StartTime    = hitinfo.driftTicks - hit->RMS();
+    hc.EndTime      = hitinfo.driftTicks + hit->RMS();
     hc.StartWire    = hc.LeadHitWire;
     hc.EndWire      = hc.LeadHitWire;
     hc.isValid      = true;
@@ -171,19 +197,24 @@ namespace sbnd::BlipUtils {
     hc.G4IDs .insert(hitinfo.g4ids.begin(), hitinfo.g4ids.end());
     hc.HitIDs     .insert(hitinfo.hitid);
     hc.Wires      .insert(hit->WireID().Wire);
-    hc.Charge     += hitinfo.Charge;
-    hc.mapWireCharge[hit->WireID().Wire] += hitinfo.Charge;
-    if( hitinfo.Charge > hc.LeadHitCharge ) {
-      hc.LeadHit = hit;
-      hc.LeadHitCharge = hitinfo.Charge;
-      hc.LeadHitG4ID = hitinfo.g4id;
-      hc.Time = hitinfo.Time;
-      hc.LeadHitWire = hitinfo.hit->WireID().Wire;
-    }
-    hc.StartTime  = std::min(hc.StartTime,hitinfo.Time - hit->RMS());
-    hc.EndTime    = std::max(hc.EndTime,  hitinfo.Time + hit->RMS());
     hc.StartWire  = *hc.Wires.begin();
     hc.EndWire    = *hc.Wires.rbegin();
+    hc.Charge     += hitinfo.qcoll;
+    hc.mapWireCharge[hit->WireID().Wire] += hitinfo.qcoll;
+    hc.mapTimeCharge[hitinfo.driftTicks] += hitinfo.qcoll;
+    if( hitinfo.qcoll > hc.LeadHitCharge ) {
+      hc.LeadHit = hit;
+      hc.LeadHitCharge = hitinfo.qcoll;
+      hc.LeadHitG4ID = hitinfo.g4id;
+      hc.LeadHitTime = hitinfo.driftTicks;
+      hc.LeadHitWire = hitinfo.hit->WireID().Wire;
+    }
+    hc.StartTime  = std::min(hc.StartTime,hitinfo.driftTicks - hit->RMS());
+    hc.EndTime    = std::max(hc.EndTime,  hitinfo.driftTicks + hit->RMS());
+    hc.Time       = (hc.StartTime+hc.EndTime)/2.;
+    // recalculate charge-weighted time
+    hc.WeightedTime = 0;
+    for(auto const& tq : hc.mapTimeCharge ) hc.WeightedTime += (tq.first * tq.second)/hc.Charge;
   }
 
   //=================================================================
@@ -195,19 +226,24 @@ namespace sbnd::BlipUtils {
     hc.G4IDs.insert(hc2.G4IDs.begin(), hc2.G4IDs.end());
     hc.HitIDs   .insert(hc2.HitIDs.begin(),     hc2.HitIDs.end());
     hc.Wires    .insert(hc2.Wires.begin(),      hc2.Wires.end());
+    hc.StartWire  = *hc.Wires.begin();
+    hc.EndWire    = *hc.Wires.rbegin();
     hc.Charge   += hc2.Charge;
     hc.mapWireCharge.insert(hc2.mapWireCharge.begin(),hc2.mapWireCharge.end());
+    hc.mapTimeCharge.insert(hc2.mapTimeCharge.begin(),hc2.mapTimeCharge.end());
     if( hc2.LeadHitCharge > hc.LeadHitCharge ) {
       hc.LeadHit = hc2.LeadHit;
       hc.LeadHitCharge = hc2.LeadHitCharge;
       hc.LeadHitWire = hc2.LeadHitWire;
-      hc.Time = hc2.Time;
+      hc.LeadHitTime = hc2.LeadHitTime;
       hc.LeadHitG4ID = hc2.LeadHitG4ID;
     }
     hc.StartTime  = std::min(hc.StartTime,hc2.StartTime);
     hc.EndTime    = std::max(hc.EndTime,hc2.EndTime);
-    hc.StartWire  = *hc.Wires.begin();
-    hc.EndWire    = *hc.Wires.rbegin();
+    hc.Time       = (hc.StartTime+hc.EndTime)/2.;
+    // recalculate charge-weighted time
+    hc.WeightedTime = 0;
+    for(auto const& tq : hc.mapTimeCharge ) hc.WeightedTime += (tq.first * tq.second)/hc.Charge;
     return hc;
   }
 
@@ -219,26 +255,35 @@ namespace sbnd::BlipUtils {
     if( hcs.size() > 3  || hcs.size() < 1 ) return newblip;
 
     // All hits must be in same TPC, and no 2 planes can be repeated
+    std::set<int> planeIDs;
     for(size_t i=0; i<hcs.size(); i++) {
+      planeIDs.insert(hcs[i].Plane);
       for(size_t j=i+1; j<hcs.size(); j++){
         if( hcs[i].Plane == hcs[j].Plane )  { return newblip; }
         if( hcs[i].TPC   != hcs[j].TPC )    { return newblip; }
       }
     }
-   
+    
+    int nPlanes = planeIDs.size();
     int TPC = hcs[0].TPC;
 
-    // Calculate mean X
+    // Calculate mean time and X (assuming in-time deposition)
     auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
-    float x = 0;
-    for(auto hc : hcs ) 
+    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    float samplingPeriod = clockData.TPCClock().TickPeriod();
+    float t = 0, x = 0;
+    for(auto hc : hcs ) {
+      t += samplingPeriod * hc.Time/float(hcs.size());
       x += detProp.ConvertTicksToX(hc.LeadHit->PeakTime(),hc.Plane,TPC,0)/float(hcs.size());
-    
+    }
+    newblip.DriftTime = t;
+
     // Look for valid wire intersections and calculate
     // the mean Y/Z position from these
     std::vector<TVector3> wirex;
     for(size_t i=0; i<hcs.size(); i++) {
       newblip.ClustIDs.insert(hcs[i].ID);
+      newblip.HitIDs.insert(hcs[i].HitIDs.begin(), hcs[i].HitIDs.end());
       int pli = hcs[i].Plane;
       for(size_t j=i+1; j<hcs.size(); j++){
         int plj = hcs[j].Plane;
@@ -246,10 +291,12 @@ namespace sbnd::BlipUtils {
         bool match3d = art::ServiceHandle<geo::Geometry>()->ChannelsIntersect(
           hcs[i].LeadHit->Channel(),hcs[j].LeadHit->Channel(),y,z);
         if( match3d ) {
-          newblip.WireIntersect[pli] = true;
-          newblip.WireIntersect[plj] = true;
+//          newblip.WireIntersect[pli] = true;
+//          newblip.WireIntersect[plj] = true;
           newblip.Charge[pli] = hcs[i].Charge;
           newblip.Charge[plj] = hcs[j].Charge;
+          newblip.Planes[pli] = true;
+          newblip.Planes[plj] = true;
           TVector3 a(x,y,z);
           wirex.push_back(a);
         }
@@ -258,13 +305,21 @@ namespace sbnd::BlipUtils {
     if( wirex.size() ){
       TVector3 vecmean;
       for(size_t i=0; i<wirex.size(); i++) vecmean += wirex[i] * (1./wirex.size());
-      float sumSquares = 0;
-      for(size_t i=0; i<wirex.size(); i++) sumSquares += pow((wirex[i]-vecmean).Mag(),2);
-      newblip.PositionRMS = sqrt( sumSquares / wirex.size() );
       newblip.Position = vecmean;
       newblip.TPC = TPC;
-      newblip.NCrossings = (int)wirex.size();
+      newblip.NPlanes = nPlanes;
       newblip.isValid = true;
+      // find max difference
+      float max = -9;
+      if( wirex.size() > 1 ) {
+        for(size_t i=0; i<wirex.size(); i++){
+          for(size_t j=i+1; j<wirex.size(); j++){
+            float d = (wirex[i]-wirex[j]).Mag();
+            if( d > max ) max = d;
+          }
+        }
+      }
+      newblip.MaxIntersectDiff = max;
     }
     return newblip;
   }
@@ -280,7 +335,9 @@ namespace sbnd::BlipUtils {
     if( particleID == ancestorID ) return true;
     if( !plist.HasParticle(ancestorID) ) return false;
     while( particleID > ancestorID ) {
-      simb::MCParticle pM = *plist.at(plist.at(particleID)->Mother());
+      simb::MCParticle p = pi_serv->TrackIdToParticle(particleID);
+      if( !plist.HasParticle(p.Mother() ) )                       { return false; }   
+      simb::MCParticle pM = pi_serv->TrackIdToParticle(p.Mother());
       if      ( pM.TrackId() == ancestorID )                      { return true;  }
       else if ( breakAtPhots == true && pM.PdgCode() == 22 )      { return false; }
       else if ( pM.Process() == "primary" || pM.TrackId() == 1 )  { return false; }
@@ -296,34 +353,40 @@ namespace sbnd::BlipUtils {
     float t1 = hit1->PeakTime();
     float t2 = hit2->PeakTime();
     float sig = std::max(hit1->RMS(),hit2->RMS());
-    if( fabs(t1-t2) < sig ) return true;
+    if( fabs(t1-t2) < rmsWidthFact*sig ) return true;
     else return false;
   }
   
   //====================================================================
-  bool DoHitClustsMatch(HitClust const& hc1, HitClust const& hc2){
+  bool DoHitClustsOverlap(HitClust const& hc1, HitClust const& hc2){
     // only match across different wires in same TPC
     if( hc1.TPC != hc2.TPC    ) return false;
-    float t1_a = hc1.StartTime;
-    float t2_a = hc1.EndTime;
-    float t1_b = hc2.StartTime;
-    float t2_b = hc2.EndTime;
+    float x1 = hc1.StartTime;
+    float x2 = hc1.EndTime;
+    float y1 = hc2.StartTime;
+    float y2 = hc2.EndTime;
+//    std::cout<<"Checking if clusts match... "<<x1<<"-"<<x2<<", "<<y1<<"-"<<y2<<"\n";
     //float sig = 0;
     //if( t2 >= t1 ) sig = std::max( fabs(hc1.EndTime - t1), fabs(hc2.StartTime - t2) );
     //if( t2 < t1  ) sig = std::max( fabs(hc1.StartTime - t1), fabs(hc2.EndTime - t2) );
     //if( fabs(t1-t2) < sig ) return true;
-    if( (t1_a >= t1_b && t1_a <= t2_b )
-      ||(t2_a >= t1_b && t2_a <= t2_b )) return true;
+//    if( (t1_a >= t1_b && t1_a <= t2_b )
+//      ||(t2_a >= t1_b && t2_a <= t2_b )) return true;
+    if( x1 <= y2 && y1 <= x2 ) return true;
     else return false;
   }
-  
-  //====================================================================
-  bool DoHitClustsMatch(HitClust const& hc1, float t1, float t2 ){
+  bool DoHitClustsOverlap(HitClust const& hc1, float t1, float t2 ){
     HitClust hc2;
     hc2.TPC = hc1.TPC;
     hc2.StartTime = t1;
     hc2.EndTime = t2;
-    return DoHitClustsMatch(hc1,hc2);
+    return DoHitClustsOverlap(hc1,hc2);
+  }
+  
+  //====================================================================
+  bool DoHitClustsMatch(HitClust const& hc1, HitClust const& hc2, float minDiffTicks = 2){
+    if( fabs(hc1.WeightedTime-hc2.WeightedTime) < minDiffTicks ) return true;
+    else return false;
   }
 
 
@@ -335,7 +398,14 @@ namespace sbnd::BlipUtils {
     return false;
   }
   
-  
+  //===================================================================
+  float ModBoxRecomb(float dEdx, float Efield){
+    float B = 0.153142;
+    float A = 0.93;
+    float Xi = B * dEdx / Efield;
+    return log(A+Xi)/Xi;
+  }
+
   //====================================================================
   // This function calculates the leading MCParticle ID contributing to a hit and the
   // fraction of that hit's energy comes from that particle.
@@ -383,7 +453,7 @@ namespace sbnd::BlipUtils {
   //=====================================================================
   // Get MCTruth associated with TrackID using a try bracket to avoid
   // fatal exceptions (return false if no match or exception thrown)
-  bool TrackIdToMCTruth( int const trkID, art::Ptr<simb::MCTruth>& mctruth )
+  bool G4IdToMCTruth( int const trkID, art::Ptr<simb::MCTruth>& mctruth )
   { 
     art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
     bool matchFound = false;
@@ -397,20 +467,16 @@ namespace sbnd::BlipUtils {
     return matchFound;
   }
   
+
   
   //=============================================================================
   // Length of reconstructed track, trajectory by trajectory.
   double PathLength(const simb::MCParticle& part, TVector3& start, TVector3& end)
   {
-    // Get geometry.
-    art::ServiceHandle<geo::Geometry> geom;
-    // Get active volume boundary.
-    double xmin = -2.0 * geom->DetHalfWidth() - 1e-8;
-    double xmax = 2.0 * geom->DetHalfWidth() + 1e-8;
-    double ymin = -geom->DetHalfHeight() -1e-8;
-    double ymax = geom->DetHalfHeight() + 1e-8;
-    double zmin = 0. -1e-8;
-    double zmax = geom->DetLength() + 1e-8;
+    // Get geo boundaries
+    double xmin, xmax, ymin, ymax, zmin, zmax;
+    GetGeoBoundaries(xmin,xmax,ymin,ymax,zmin,zmax);
+    
     // Get number traj points
     int n = part.NumberTrajectoryPoints();
     if( n <= 1 ) return 0.;
@@ -434,6 +500,32 @@ namespace sbnd::BlipUtils {
   double PathLength(const simb::MCParticle& part){
     TVector3 a,b;
     return PathLength(part,a,b);
+  }
+
+
+  //=============================================================================
+  // Calculate distance to boundary.
+  double DistToBoundary(const recob::Track::Point_t& pos)
+  {
+    double xmin, xmax, ymin, ymax, zmin, zmax;
+    GetGeoBoundaries(xmin,xmax,ymin,ymax,zmin,zmax);
+    double d1 = std::min(pos.X()-xmin,xmax-pos.X());  // dist to wire plane
+    double d2 = fabs(pos.X());                        // dist to cathode
+    double d3 = std::min(pos.Y()-ymin,ymax-pos.Y());  // dist to closest top/bottom
+    double d4 = std::min(pos.Z()-zmin,zmax-pos.Z());  // dist to closest upstream/downstream wall
+    return std::min( std::min( std::min(d1,d2), d3), d4);
+  }
+
+
+  //===========================================================================
+  void GetGeoBoundaries(double& xmin, double& xmax, double& ymin, double& ymax, double&zmin, double& zmax){
+    art::ServiceHandle<geo::Geometry> geom;
+    xmin = -2.0 * geom->DetHalfWidth() - 1e-8;
+    xmax = 2.0 * geom->DetHalfWidth() + 1e-8;
+    ymin = -geom->DetHalfHeight() -1e-8;
+    ymax = geom->DetHalfHeight() + 1e-8;
+    zmin = 0. -1e-8;
+    zmax = geom->DetLength() + 1e-8;
   }
   
 

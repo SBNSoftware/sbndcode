@@ -77,9 +77,11 @@ namespace caldata {
   private:
     
     bool          fDoBaselineSub;     ///< subtract baseline to restore DC component post-deconvolution
-    bool          fDoAdvBaselineSub;  ///< use interpolation-based baseline subtraction
+    bool          fDoSimpleBaselineSub;     ///< subtract baseline to restore DC component post-deconvolution
+    std::vector<bool> fDoAdvBaselineSub;  ///< use interpolation-based baseline subtraction
     int           fBaseSampleBins;    ///< bin grouping size in "interpolate"  method
     float         fBaseVarCut;        ///< baseline variance cut used in "interpolate" method
+    bool          fMakeROIs;
    
     std::string  fDigitModuleLabel;   ///< module that made digits
                                                        
@@ -88,8 +90,10 @@ namespace caldata {
                               ///< ex.:  "daq:preSpill" for prespill data
     
     void          SubtractBaseline(std::vector<float>& holder);
+    void          SubtractBaselineSimple(std::vector<float>& holder);
     void          SubtractBaselineAdv(std::vector<float>& holder);
-    
+   
+    TH1D* h_BaseSubVariance;
 
   protected: 
     
@@ -110,6 +114,9 @@ namespace caldata {
     //--Hec else produces< std::vector<recob::Wire> >(fSpillName);
     produces< std::vector<recob::Wire> >(fSpillName);
     produces<art::Assns<raw::RawDigit, recob::Wire>>(fSpillName);
+
+    art::ServiceHandle<art::TFileService> tfs;
+    h_BaseSubVariance = tfs->make<TH1D>("BaseSubVariance","Baseline subtraction local variance metric",200,-100,100);
     
   }
   //-------------------------------------------------
@@ -122,9 +129,11 @@ namespace caldata {
   {
     fDigitModuleLabel = p.get< std::string >("DigitModuleLabel", "daq");
     fDoBaselineSub    = p.get< bool >       ("DoBaselineSub");
-    fDoAdvBaselineSub = p.get< bool >       ("DoAdvBaselineSub");
+    fDoSimpleBaselineSub  = p.get< bool >   ("DoSimpleBaselineSub",false);
+    fDoAdvBaselineSub = p.get< std::vector<bool> >       ("DoAdvBaselineSub");
     fBaseSampleBins   = p.get< int >        ("BaseSampleBins");
     fBaseVarCut       = p.get< int >        ("BaseVarCut");
+    fMakeROIs         = p.get< bool >       ("MakeROIs");
     
     fSpillName="";
     
@@ -148,13 +157,17 @@ namespace caldata {
   
   //////////////////////////////////////////////////////
   void CalWireSBND::produce(art::Event& evt)
-  {      
+  {     
+    std::cout<<"CalWireSBND: event "<<evt.id().event()<<"\n";
+
     // get the geometry
     art::ServiceHandle<geo::Geometry> geom;
 
     // get the FFT service to have access to the FFT size
     art::ServiceHandle<util::LArFFT> fFFT;
     int transformSize = fFFT->FFTSize();
+
+//    std::cout<<"transformsize = "<<transformSize<<"\n";
 
     // Get signal shaping service.
     art::ServiceHandle<util::SignalShapingServiceSBND> sss;
@@ -217,10 +230,14 @@ namespace caldata {
       art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
       channel = digitVec->Channel();
 
+      // get the plane
+      std::vector<geo::WireID> wids = geom->ChannelToWire(channel);
+      int plane = wids[0].planeID().Plane;
+
       // skip bad channels
-      //  if(!chanFilt->BadChannel(channel)) {
       if(true) {
 
+//        std::cout<<"holder size = "<<holder.size()<<"   datasize = "<<dataSize<<"   transformSize "<<transformSize<<"\n";
         // resize and pad with zeros
         holder.resize(transformSize, 0.);
         
@@ -237,8 +254,8 @@ namespace caldata {
 	for(bin = dataSize; bin < holder.size(); bin++){
 	  //  philosophy change - don't repeat data but instead fill extra space with zeros.
           //    not sure that one is better than the other.
-	  //	  holder[bin] = (rawadc[bin-dataSize]-pdstl);
-	  holder[bin] = 0.0;
+	  	  //holder[bin] = (rawadc[bin-dataSize]-pdstl);
+	      holder[bin] = 0.0;
 	}
 
         // Do deconvolution.
@@ -250,40 +267,48 @@ namespace caldata {
 
       // restore DC component through baseline subtraction
       if( fDoBaselineSub ) SubtractBaseline(holder);
+      if( fDoSimpleBaselineSub ) SubtractBaselineSimple(holder);
       // more advanced, interpolation-based subtraction alg 
       // that uses the BaseSampleBins and BaseVarCut params
-      if( fDoAdvBaselineSub ) SubtractBaselineAdv(holder);
-
-      // Make a single ROI that spans the entire data size
-      //RegionsOfInterest_t sparse_holder;
-      //sparse_holder.add_range(0,holder.begin(),holder.end());
-      CandidateROIVec candROIVec;
-      fROITool->FindROIs( holder, channel, candROIVec);//calculates ROI and returns it to roiVec.
-      //auto view = geom->View(channel);
-      recob::Wire::RegionsOfInterest_t roiVec;
-
-      //looping over roiVec to make a RegionOfInterest_t object.
-      for(auto const& CandidateROI: candROIVec){
-	size_t roiStart = CandidateROI.first;
-	size_t roiStop = CandidateROI.second;
-	std::vector<float> roiHolder;
-	for(size_t i_holder=roiStart; i_holder<=roiStop; i_holder++){
-	  roiHolder.push_back(holder[i_holder]);
-	}
-	roiVec.add_range(roiStart, std::move(roiHolder));
+      if(   (fDoAdvBaselineSub.size() == 1 && fDoAdvBaselineSub[0] )
+          ||(fDoAdvBaselineSub.size() == 3 && fDoAdvBaselineSub[plane] ) ) {
+        SubtractBaselineAdv(holder);
       }
-      wirecol->push_back(recob::WireCreator(std::move(roiVec),*digitVec).move());
+      
+      
+      recob::Wire::RegionsOfInterest_t roiVec;
+      
+      if( fMakeROIs ) {
+        CandidateROIVec candROIVec;
+        fROITool->FindROIs( holder, channel, candROIVec);//calculates ROI and returns it to roiVec.
+        //looping over roiVec to make a RegionOfInterest_t object.
+        for(auto const& CandidateROI: candROIVec){
+          size_t roiStart = CandidateROI.first;
+          size_t roiStop = CandidateROI.second;
+          std::vector<float> roiHolder;
+          for(size_t i_holder=roiStart; i_holder<=roiStop; i_holder++){
+            roiHolder.push_back(holder[i_holder]);
+          }
+          roiVec.add_range(roiStart, std::move(roiHolder));
+        }
+      } else {
+        
+        // make one big ROI over whole waveform
+        roiVec.add_range(0,holder);
 
+      }
+
+      wirecol->push_back(recob::WireCreator(std::move(roiVec),*digitVec).move());
 
       // add an association between the last object in wirecol--Hec
       // (that we just inserted) and digitVec
       if (!util::CreateAssn(*this, evt, *wirecol, digitVec, *WireDigitAssn, fSpillName)) {
         throw cet::exception("CalWireSBND")
-          << "Can't associate wire #" << (wirecol->size() - 1)
-          << " with raw digit #" << digitVec.key() << "\n";
+        << "Can't associate wire #" << (wirecol->size() - 1)
+        << " with raw digit #" << digitVec.key() << "\n";
       } // if failed to add association
-    }
 
+    }//end loop over wires
 
     if(wirecol->size() == 0)
       mf::LogWarning("CalWireSBND") << "No wires made for this event.";
@@ -300,6 +325,14 @@ namespace caldata {
   }
  
   
+  void CalWireSBND::SubtractBaselineSimple(std::vector<float>& holder)
+  {
+    if( fBaseSampleBins <= 0 ) return;
+    float mean = 0;
+    for(int i = 0; i < fBaseSampleBins; i++) mean += holder[i]/float(fBaseSampleBins);
+    for(int i = 0; i < fBaseSampleBins; i++) holder[i] -= mean;
+  }
+  
   void CalWireSBND::SubtractBaseline(std::vector<float>& holder)
   {
     // Robust baseline calculation that effectively ignores outlier 
@@ -308,28 +341,28 @@ namespace caldata {
     //   (2) find mode (bin with most entries),
     //   (3) calculate the mean along the entire waveform using
     //       only samples with values close to this mode.
-    unsigned int bin(0);  
     float min = 0, max = 0;
-    for(bin = 0; bin < holder.size(); bin++){
+    for(size_t bin = 0; bin < holder.size(); bin++){
       if (holder[bin] > max) max = holder[bin];
       if (holder[bin] < min) min = holder[bin];
     }
-    int nbin = max - min;
+    int nbin = (max - min);
     if (nbin > 0) {
       TH1F h("h","h",nbin,min,max);
-      for(bin = 0; bin < holder.size(); bin++) h.Fill(holder[bin]);
-      float x_max = h.GetXaxis()->GetBinCenter(h.GetMaximumBin());
+      for(size_t bin = 0; bin < holder.size(); bin++) h.Fill(holder[bin]);
+      int max_bin = h.GetMaximumBin();
+      float x_max = h.GetXaxis()->GetBinCenter(max_bin);
       float ped   = x_max;
       float sum   = 0;
       int ncount  = 0;
-      for(bin = 0; bin < holder.size(); bin++){
+      for(size_t bin = 0; bin < holder.size(); bin++){
         if( fabs(holder[bin]-x_max) < 2. ) {
           sum += holder[bin];
           ncount++; 
         }
       }
       if (ncount) ped = sum/ncount;
-      for(bin = 0; bin < holder.size(); bin++) holder[bin] -= ped;
+      for(size_t bin = 0; bin < holder.size(); bin++) holder[bin] -= ped;
     }
   }
  
@@ -359,6 +392,7 @@ namespace caldata {
         } // jj
         ave = ave / fbins;
         float var = (sum - fbins * ave * ave) / (fbins - 1.);
+        h_BaseSubVariance->Fill(var);
         // Set the baseline for this region if the variance is small
         if(var < fBaseVarCut) {
           base[ii] = ave;

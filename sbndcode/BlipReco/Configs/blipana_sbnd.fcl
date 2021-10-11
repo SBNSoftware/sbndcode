@@ -1,0 +1,44 @@
+# service configuration
+#
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#
+# algorithm configuration
+#
+#include "rootoutput_sbnd.fcl"
+#include "blipana_config.fcl"
+
+process_name: BlipAna
+
+services:
+{
+FileCatalogMetadata: 
+  @local::sbnd_file_catalog_mc
+  @table::sbnd_services
+  TFileService: { fileName: "BlipAna.root" }
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  @local::standard_backtrackerservice
+}
+
+source: {
+  module_type: RootInput
+}
+
+physics:
+{
+  producers:{}
+  
+  filters:  {} 
+  
+  analyzers:{
+    blipana: @local::sbnd_blipana
+  }
+
+  ana:  [ blipana ]
+  
+  trigger_paths: [] 
+  end_paths:     [ ana ] 
+
+} # physics
