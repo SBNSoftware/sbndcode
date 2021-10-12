@@ -4,11 +4,11 @@ sbnd_finalstateparticlefilter:
 {
   module_type:           "FinalStateParticleFilter"
   GenieModuleLabel:      "generator"
-  PDG:                   [13, 2212]                   
+  PDG:                   [13, 2212]
 }
 
 sbnd_nuefilter:
-{ 
+{
  module_type:    NueFilter
  PdgCode:  12  # 12=nue, 14=numu
 }
@@ -33,7 +33,7 @@ standard_crt_trig_filter:
    AllowedStripShift: 4
    EdgeCutInStrips: 12
    ADCthresh: 500.0
-	  
+
 }
 
 END_PROLOG
