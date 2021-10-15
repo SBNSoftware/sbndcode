@@ -214,7 +214,7 @@ void MuonTrackProducer::produce(art::Event & evt)
             else if (hit_plane==1 && hit_tpc==0 && hit_peakT>0)
                hit_01.push_back(v);
          }
-         else if (muon_in_tpc1 == true){ // if ac muon was found in tpc 1
+         if (muon_in_tpc1 == true){ // if ac muon was found in tpc 1
             if (hit_plane==0 && hit_tpc==1 && hit_peakT>0)
                hit_10.push_back(v);
             else if (hit_plane==1 && hit_tpc==1 && hit_peakT>0)
