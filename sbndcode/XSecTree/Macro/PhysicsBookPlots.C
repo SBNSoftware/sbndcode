@@ -63,6 +63,7 @@ std::vector<TString> fPlotVariables;
 std::vector<bool> fShowPlots;
 double fPotScale;
 bool fSinglePot;
+std::vector<double> fMaxy = {-99999.};
 
 // Plotting option configurations
 bool fPlotStacked;
@@ -324,6 +325,7 @@ void Configure(const std::string config_filename) {
     if(key.find("ShowPlots") != std::string::npos)    fShowPlots = ToBools(value);
     if(key.find("PotScale") != std::string::npos)     fPotScale = stod(value);
     if(key.find("SinglePot") != std::string::npos)     fSinglePot = (value=="true");
+    if(key.find("Maxy") != std::string::npos)           fMaxy = ToDoubles(value);
     // Plotting option configurations
     if(key.find("PlotStacked") != std::string::npos) fPlotStacked = (value=="true");
     if(key.find("StackBy") != std::string::npos)     fStackBy = TString(value);
@@ -1279,7 +1281,13 @@ TString GetXSecTitle(Titles titles, int i, int j = -1, int k = -1){
 }
 
 // Plot a 1D hist with statistical errors on the bottom
-void Plot1DHistWithErrors(TH1D* error_bands, Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1, int k = -1){
+void Plot1DHistWithErrors(TH1D* error_bands, 
+                          Titles titles, 
+                          TH1D* total_hist, 
+                          int modelIt, 
+                          int i, 
+                          int j = -1, 
+                          int k = -1){
 
   // Create the canvas
   TString name = total_hist->GetName();
@@ -1308,6 +1316,9 @@ void Plot1DHistWithErrors(TH1D* error_bands, Titles titles, TH1D* total_hist, in
   // Draw the stacked histogram and legend
   total_hist->SetTitle("");
   total_hist->Draw("HIST");
+  if(fMaxy.at(i) > -99999.)
+    total_hist->GetYaxis()->SetRangeUser(0,fMaxy.at(i));
+
   if(fPlotAreaNorm && !fPlotXSec)
     total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
 
@@ -1375,6 +1386,8 @@ void Plot1DHistWithErrors(TH1D* error_bands, Titles titles, TH1D* total_hist, in
   else
     width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
   double height = total_hist->GetMaximum();
+  if(fMaxy.at(i) > -99999.)
+    height = fMaxy.at(i)*0.92;
   double upper_text_size = 0.7*total_hist->GetYaxis()->GetTitleSize();
   if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt);
 
@@ -1447,7 +1460,15 @@ void Plot1DHistWithErrors(TH1D* error_bands, Titles titles, TH1D* total_hist, in
 }
 
 // Plot a 1D stacked hist with statistical errors on the bottom
-void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1, int k = -1){
+void Plot1DWithErrors(THStack* hstack, 
+                      TLegend* legend, 
+                      TH1D* error_bands, 
+                      Titles titles, 
+                      TH1D* total_hist, 
+                      int modelIt, 
+                      int i, 
+                      int j = -1, 
+                      int k = -1){
 
   // Create the canvas
   TString name = hstack->GetName();
@@ -1504,7 +1525,11 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
 
   // Y axis config
   hstack->GetYaxis()->SetTitleOffset(1.2);
-  hstack->GetYaxis()->SetRangeUser(0, 1.1*total_hist->GetMaximum());
+  if(fMaxy.at(i) > -99999.)
+    hstack->SetMaximum(fMaxy.at(i));
+  else
+    hstack->SetMaximum(1.1*total_hist->GetMaximum());
+
   double title_size = hstack->GetYaxis()->GetTitleSize();
   if(fPlotXSec && fPlotVariables.size()==1){ 
     title_size = 1.0*hstack->GetYaxis()->GetTitleSize();
@@ -1532,6 +1557,8 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
   else
     width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
   double height = hstack->GetMaximum();
+  if(fMaxy.at(i) > -99999.)
+    height = fMaxy.at(i)*0.92;
   double upper_text_size = 0.7*hstack->GetYaxis()->GetTitleSize();
   if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt);
 
@@ -1611,7 +1638,12 @@ void Plot1DWithErrors(THStack* hstack, TLegend* legend, TH1D* error_bands, Title
 }
 
 // Plot a 1D hist
-void Plot1DHist(Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1, int k = -1){
+void Plot1DHist(Titles titles, 
+                TH1D* total_hist, 
+                int modelIt, 
+                int i, 
+                int j = -1, 
+                int k = -1){
 
   // Create the canvas
   TString name = total_hist->GetName();
@@ -1625,6 +1657,10 @@ void Plot1DHist(Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1,
 
   // Draw the stacked histogram and legend
   total_hist->SetTitle("");
+  
+  if(fMaxy.at(i) > -99999.)
+    total_hist->GetYaxis()->SetRangeUser(0,fMaxy.at(i));
+  
   if(fPlotAreaNorm && !fPlotXSec)
     total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
   total_hist->Draw("HIST");
@@ -1700,6 +1736,8 @@ void Plot1DHist(Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1,
   else
     width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
   double height          = total_hist->GetMaximum();
+  if(fMaxy.at(i) > -99999.)
+    height = fMaxy.at(i)*0.92;
   double upper_text_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
   if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt);
 
@@ -1725,7 +1763,14 @@ void Plot1DHist(Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1,
 }
 
 // Plot a 1D stack
-void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, int modelIt, int i, int j = -1, int k = -1){
+void Plot1D(THStack* hstack, 
+            TLegend* legend, 
+            Titles titles, 
+            TH1D* total_hist, 
+            int modelIt, 
+            int i, 
+            int j = -1, 
+            int k = -1){
 
   // Create the canvas
   TString name = hstack->GetName();
@@ -1755,7 +1800,10 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, i
   hstack->GetYaxis()->SetTitleSize(0.05);
   hstack->GetYaxis()->SetLabelSize(0.035);
   hstack->GetYaxis()->SetNdivisions(110);
-  hstack->GetYaxis()->SetRangeUser(0, 1.1*total_hist->GetMaximum());
+  if(fMaxy.at(i) > -99999.)
+    hstack->SetMaximum(fMaxy.at(i));
+  else
+    hstack->SetMaximum(1.1*total_hist->GetMaximum());
 
   if(fShowErrorBars){
     TH1D* total_clone = static_cast<TH1D*>(total_hist->Clone("total_clone"));
@@ -1814,6 +1862,8 @@ void Plot1D(THStack* hstack, TLegend* legend, Titles titles, TH1D* total_hist, i
   else
     width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
   double height          = hstack->GetMaximum();
+  if(fMaxy.at(i) > -99999.)
+    height = fMaxy.at(i)*0.92;
   double upper_text_size = 0.6*hstack->GetYaxis()->GetTitleSize();
   if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt);
 
@@ -1952,7 +2002,7 @@ void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Tit
       total_hist->GetYaxis()->SetTitleSize(0.045);
       total_hist->GetYaxis()->SetLabelSize(0.035);
       total_hist->GetYaxis()->SetNdivisions(110);
-      total_hist->GetYaxis()->SetTitleOffset(1.2);
+      total_hist->GetYaxis()->SetTitleOffset(1);
       if(fPlotXSec)
       {
         total_hist->GetYaxis()->SetTitleOffset(1.45);
@@ -2793,6 +2843,7 @@ void PhysicsBookPlots(std::string config = "config.txt"){
 
     // Get the statistical errors per bin
     std::map< TString, std::map<TString, TH1D*> > total_hist, error_band;
+
     unsigned int mi = 0;
     for(const TString &m : fModelNames){
       if(mi > fPotScaleFac.size()) {
@@ -2822,11 +2873,11 @@ void PhysicsBookPlots(std::string config = "config.txt"){
           else
             Plot1DHist(titles, stage_total_hist.at(s), mi, d_i);
         }
-      }
+      } // Stage
       total_hist.emplace(m, stage_total_hist);
       error_band.emplace(m, stage_error_band);
       mi++;
-    }
+    } // Models
     if(fStage.size()+fModelNames.size() > 1){
       if(fShowStatError)
         PlotOverlay1DWithErrors(total_hist, error_band, titles, title_1D, d_i);

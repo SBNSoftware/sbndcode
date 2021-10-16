@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/pions_inclusive/pions_inclusive.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/cc0pi/pions/pions.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -50,10 +50,10 @@ PlotByFsi: true
 NumProtons: -1
 
 //- Number of charged pions
-NumPiPM: -1
+NumPiPM: 0
 
 //- Number of neutral pions
-NumPi0: -1
+NumPi0: 0
 
 //- Choose true interaction (ignored if plotting by fsi)
 //- QE (0), RES (1), DIS (2), COH (3), MEC (10)

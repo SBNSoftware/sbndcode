@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/lep_mom_inclusive/lep_mom_inclusive.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/lep_mom_int/lep_mom_int.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -116,7 +116,7 @@ SinglePot: true
 PlotStacked: true
 
 // Stack in true FSI (fsi), true interaction (int), neutrino type (nu)
-StackBy: fsi
+StackBy: int
 
 // Minimum bin (-1 for min tree value)
 MinValue: 0

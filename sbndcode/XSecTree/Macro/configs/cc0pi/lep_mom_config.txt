@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/nu_energy_int/nu_energy_int.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/thesis/cc0pi/lep_mom_int/lep_mom_int.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -50,10 +50,10 @@ PlotByFsi: true
 NumProtons: -1
 
 //- Number of charged pions
-NumPiPM: -1
+NumPiPM: 0
 
 //- Number of neutral pions
-NumPi0: -1
+NumPi0: 0
 
 //- Choose true interaction (ignored if plotting by fsi)
 //- QE (0), RES (1), DIS (2), COH (3), MEC (10)
@@ -95,7 +95,7 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: nu_energy
+PlotVariable: lep_mom
 
 // Save the plots for each variable
 ShowPlots: true
@@ -141,6 +141,9 @@ PlotAreaNorm: true
 
 // Plot filled histograms (true)
 PlotFilled: true
+
+// Maximum value on the y axis of each variable, default -99999. means this will not be checked
+Maxy: [0.18e6]
 
 //------------------------------------------------------------------------
 //                         Choose plot options

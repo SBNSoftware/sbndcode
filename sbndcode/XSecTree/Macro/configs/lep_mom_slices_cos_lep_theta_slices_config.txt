@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/lep_mom_slices_cos_lep_theta_slices_inclusive/lep_mom_slices_cos_lep_theta_slices_inclusive.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/cc0pi/lep_mom_slices_cos_lep_theta_slices/lep_mom_slices_cos_lep_theta_slices.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -50,10 +50,10 @@ PlotByFsi: true
 NumProtons: -1
 
 //- Number of charged pions
-NumPiPM: -1
+NumPiPM: 0
 
 //- Number of neutral pions
-NumPi0: -1
+NumPi0: 0
 
 //- Choose true interaction (ignored if plotting by fsi)
 //- QE (0), RES (1), DIS (2), COH (3), MEC (10)
@@ -116,7 +116,7 @@ SinglePot: true
 PlotStacked: true
 
 // Stack in true FSI (fsi), true interaction (int), neutrino type (nu)
-StackBy: fsi
+StackBy: int
 
 // Minimum bin (-1 for min tree value)
 MinValue: -1,0
@@ -134,7 +134,7 @@ BinEdges: [-1.,-0.5,0.0,0.3,0.45,0.6,0.7,0.8,0.9,1.0],[0.0,0.2,0.3,0.45,0.8,1.25
 MaxError: -1
 
 // Plot cross-section (true) or rate (false)
-PlotXSec: true
+PlotXSec: false
 
 // Plot scaled for area (true) or keep absolute rate (false) [not applicable to XSec]
 PlotAreaNorm: true
