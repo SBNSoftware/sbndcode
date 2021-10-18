@@ -1,16 +1,68 @@
 #include "standard_g4_sbnd.fcl"
 
-physics.producers.larg4outtime: @local::physics.producers.largeant
-physics.producers.larg4outtime.InputLabels: [ "GenInTimeSorter:outtime" ]
+# Add a geant4 process, that will run only on the outtime cosmics
+physics.producers.loader: { module_type: "PhysListLoader" }
+physics.producers.larg4outtime: @local::sbnd_larg4
+physics.producers.ionandscintouttime: @local::sbnd_ionandscint
+physics.producers.pdfastsimouttime: @local::sbnd_pdfastsim_par
+physics.producers.simdriftouttime: @local::sbnd_simdrift
 
+# Set the appropriate input labels, to run geant4 only on the outtime cosmics
+physics.producers.larg4outtime.inputCollections: [ "GenInTimeSorter:outtime" ]
+physics.producers.ionandscintouttime.InputCollections: ["larg4outtime"]
+physics.producers.pdfastsimouttime.SimulationLabel: "ionandscintouttime:priorSCE"
+physics.producers.simdriftouttime.SimulationLabel: "ionandscintouttime"
+
+# Add a process that merges the intime and outtime geant4 collections
 physics.producers.largeant: {
   module_type: "MergeSimSources"
-  InputSourcesLabels: [ "larg4intime","larg4outtime"]
-  TrackIDOffsets: [ 10000000,20000000 ]
+  InputSourcesLabels: [ "larg4intime", "larg4outtime"]
+  TrackIDOffsets: [ 10000000, 20000000 ]
 }
 
-physics.simulate: [ rns, larg4outtime, largeant, mcreco ]
+# Tell MCReco
+# physics.producers.mcreco.MCParticleLabel: "largeant"
+# physics.producers.mcreco.SimChannelLabel: "largeant"
 
-outputs.out1.outputCommands: [ "keep *_*_*_*",
-                     "drop *_larg4intime_*_*",
-                     "drop *_larg4outtime_*_*"]
+# Add all these new modules to the simulate path
+physics.simulate: [ rns
+                  , loader
+                  , larg4outtime
+                  , ionandscintouttime
+                  , pdfastsimouttime
+                  , simdriftouttime
+                  , largeant
+                  # , mcreco
+                  , rns ]
+
+# Drop the intime and outtime collections, which have now been
+# been merged into a 'largeant' collection
+# outputs.out1.outputCommands: [ "keep *_*_*_*",
+#                                "drop *_larg4intime_*_*",
+#                                "drop *_larg4outtime_*_*"]
+
+outputs.out1.outputCommands: [ "keep *_*_*_*"]
+
+# Remove unnecesary processes
+# physics.producers.ionandscint: @erase
+# physics.producers.ionandscintout: @erase
+# physics.producers.pdfastsim: @erase
+# physics.producers.pdfastsimout: @erase
+# physics.producers.simdrift: @erase
+
+
+
+# physics.producers.larg4outtime: @local::physics.producers.largeant
+# physics.producers.larg4outtime.InputLabels: [ "GenInTimeSorter:outtime" ]
+
+# physics.producers.largeant: {
+#   module_type: "MergeSimSources"
+#   InputSourcesLabels: [ "larg4intime","larg4outtime"]
+#   TrackIDOffsets: [ 10000000,20000000 ]
+# }
+
+# physics.simulate: [ rns, larg4outtime, largeant, mcreco ]
+
+# outputs.out1.outputCommands: [ "keep *_*_*_*",
+#                      "drop *_larg4intime_*_*",
+#                      "drop *_larg4outtime_*_*"]

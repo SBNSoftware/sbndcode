@@ -1,6 +1,10 @@
 #include "filtersgenintime_sbnd.fcl"
 #include "filterssimphotonlitetime_sbnd.fcl"
-#include "largeantmodules_sbnd.fcl"
+
+#include "larg4_sbnd.fcl"
+#include "ionandscint_sbnd.fcl"
+#include "PDFastSim_sbnd.fcl"
+#include "simdrift_sbnd.fcl"
 
 #include "prodcorsika_cosmics_proton.fcl"
 
@@ -12,17 +16,61 @@ services: {
   @table::sbnd_g4_services
 }
 
-physics.producers.larg4intime: @local::sbnd_largeant
-physics.filters.GenInTimeSorter: @local::sbnd_filtergenintime
-physics.filters.timefilter: @local::sbnd_timefilterssimphotonlitetime
-
+# Rename generator to corsika
 physics.producers.corsika: @local::physics.producers.generator
 
-physics.simulate: [ corsika, GenInTimeSorter, larg4intime, timefilter, rns ]
-outputs.out1.SelectEvents: [ "simulate" ]
+# Add a generation filter, that splits in intime and outtime cosmics
+physics.filters.GenInTimeSorter: @local::sbnd_filtergenintime
 
-physics.producers.larg4intime.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"]
-physics.producers.larg4intime.InputLabels: [ "GenInTimeSorter:intime" ]
-#physics.producers.larg4intime.SparsifyTrajectory: "true"
+# Add a geant4 process, only on the intime cosmics
+physics.producers.loader: { module_type: "PhysListLoader" }
+physics.producers.larg4intime: @local::sbnd_larg4
+physics.producers.ionandscintintime: @local::sbnd_ionandscint
+physics.producers.pdfastsimintime: @local::sbnd_pdfastsim_par
+physics.producers.simdriftintime: @local::sbnd_simdrift
 
-process_name: CosmicsCorsikaCMCGenAndG4InTime
+# Add a filter on the geant4 intime output, based on sim photons
+physics.filters.timefilter: @local::sbnd_timefilterssimphotonlitetime
+
+# Add all these new modules to the simulate path
+physics.simulate: [ corsika
+                  , GenInTimeSorter
+                  , loader
+                  , larg4intime
+                  , ionandscintintime
+                  , pdfastsimintime
+                  , simdriftintime
+                  , timefilter
+                  , rns ]
+
+# Remove unnecesary processes
+physics.producers.generator: @erase
+
+# Set the appropriate input labels
+physics.producers.larg4intime.inputCollections: ["GenInTimeSorter:intime"]
+physics.producers.ionandscintintime.InputCollections: ["larg4intime"]
+physics.producers.pdfastsimintime.SimulationLabel: "ionandscintintime:priorSCE"
+physics.producers.simdriftintime.SimulationLabel: "ionandscintintime"
+physics.filters.timefilter.SimPhotonsLiteCollectionLabel: "pdfastsimintime"
+
+process_name: CosmicsCorsikaProtonGenAndG4InTime
+
+
+
+
+
+
+
+# physics.producers.larg4intime: @local::sbnd_largeant
+# physics.filters.GenInTimeSorter: @local::sbnd_filtergenintime
+# physics.filters.timefilter: @local::sbnd_timefilterssimphotonlitetime
+
+
+# physics.simulate: [ corsika, GenInTimeSorter, larg4intime, timefilter, rns ]
+# outputs.out1.SelectEvents: [ "simulate" ]
+
+# physics.producers.larg4intime.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"]
+# physics.producers.larg4intime.InputLabels: [ "GenInTimeSorter:intime" ]
+# #physics.producers.larg4intime.SparsifyTrajectory: "true"
+
+# process_name: CosmicsCorsikaCMCGenAndG4InTime
