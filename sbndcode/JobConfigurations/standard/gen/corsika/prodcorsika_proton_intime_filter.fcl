@@ -1,5 +1,5 @@
 # File:    prodcorsika_proton_intime_filter.fcl
-# Purpose: Generated CORSIKA events filtering out events with no cosmics intime
+# Purpose: Generates CORSIKA events filtering out events with no cosmics intime
 #
 # This runs the new, refactored, LArG4 simulation.
 #

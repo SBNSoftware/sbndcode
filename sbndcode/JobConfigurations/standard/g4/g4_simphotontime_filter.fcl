@@ -1,5 +1,6 @@
 # File:    g4_simphotontime_filter.fcl
-# Purpose: ?
+# Purpose: A geant4 fcl, supposed to run after prodcorsika_proton_intime_filter.fcl, or similar,
+#          for making cosmics in time samples.
 #
 # This runs the new, refactored, LArG4 simulation.
 
