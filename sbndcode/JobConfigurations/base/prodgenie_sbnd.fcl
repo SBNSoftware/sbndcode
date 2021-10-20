@@ -2,11 +2,11 @@
 # File:    prodgenie_sbnd.fcl
 # Purpose: Produce GENIE events in the SBND detector with spill structure
 # Version: 1.1
-# 
+#
 # This configuration runs event generation only
-# 
+#
 # Input: no input file required
-# 
+#
 # Dependencies:
 # - uses the bundle of SBND simulation services
 #
@@ -65,14 +65,14 @@ physics:
     generator: @local::sbnd_genie_simple
   }
 
-  #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, generator ] 
+  #define the producer and filter modules for this path, order matters,
+  simulate:  [ rns, generator ]
 
-  #define the output stream, there could be more than one if using filters 
+  #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
 
   #ie analyzers and output streams.  these all run simultaneously
-  end_paths: [stream1]  
+  end_paths: [stream1]
 }
 
 # block to define where the output goes.  if you defined a filter in the physics

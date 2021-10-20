@@ -1,0 +1,7 @@
+# Simulates GENIE nue and anue neutrino interactions from the BNB beam
+# using the rockbox confiuration
+
+#include "prodgenie_rockbox_sbnd.fcl"
+
+#include "set_genie_nue.fcl"
+
