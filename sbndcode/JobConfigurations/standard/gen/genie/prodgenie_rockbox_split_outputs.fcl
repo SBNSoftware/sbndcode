@@ -1,0 +1,32 @@
+# Simulates GENIE interactions from the BNB beam using the rockbox confiuration
+# This configuration splits the outputs into two streams:
+# - Keep all events with an interaction in the TPC volume, this will have some random dirt interactions
+# - Kepp all events without an interaction in the TPC volume but with a dirt interaction
+
+#include "prodgenie_rockbox_sbnd.fcl"
+
+# Split events into one file with TPC interactions and one with dirt
+physics.stream1:   [ outTPC, outDirt ]
+
+outputs:
+  {
+  # Keep only the events with a TPC neutrino
+  # N.B. These events will still have some random coincidence of dirt interactions
+  outTPC:
+  {
+    module_type: RootOutput
+    fileName:    "prodgenie_tpc_sbnd_%p-%tc.root" 
+    dataTier:    "generated"
+    SelectEvents: [ simulatetpc ]
+  }
+
+  # Keep only the events that have a no TPC neutrino but a dirt interaction
+  outDirt:
+  {
+    module_type: RootOutput
+    fileName:    "prodgenie_dirt_sbnd_%p-%tc.root"
+    dataTier:    "generated"
+    SelectEvents: [ simulatedirt ]
+  }
+}
+

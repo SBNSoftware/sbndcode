@@ -92,9 +92,6 @@ physics:
   # By deault Keep everything in one file:
   stream1:   [ outAll ]
 
-  # Split events into one file with TPC interactions and one with dirt
-  # stream1:   [ outTPC, outDirt ]
-
   #ie analyzers and output streams.  these all run simultaneously
   end_paths: [stream1]
 }
@@ -111,24 +108,5 @@ outputs:
     fileName:    "prodgenie_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
     dataTier:    "generated"
     SelectEvents: [ simulatetpc, simulatedirt ]
-  }
-
-  # Keep only the events with a TPC neutrino
-  # N.B. These events will still have some random coincidence of dirt interactions
-  outTPC:
-  {
-    module_type: RootOutput
-    fileName:    "prodgenie_tpc_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
-    dataTier:    "generated"
-    SelectEvents: [ simulatetpc ]
-  }
-
-  # Keep only the events that have a no TPC neutrino but a dirt interaction
-  outDirt:
-  {
-    module_type: RootOutput
-    fileName:    "prodgenie_dirt_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
-    dataTier:    "generated"
-    SelectEvents: [ simulatedirt ]
   }
 }
