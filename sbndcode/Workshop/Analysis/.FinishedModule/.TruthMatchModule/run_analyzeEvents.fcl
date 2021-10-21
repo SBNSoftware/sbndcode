@@ -1,16 +1,14 @@
 #include "analysisConfig.fcl"
 #include "simulationservices_sbnd.fcl"
 
-
-
 process_name: AnalyzeEvents # The process name must NOT contain any underscores
 
-source: 
-{ 
+source:
+{
   module_type: RootInput # Telling art we want a ROOT input
-               maxEvents:   -1
+  maxEvents:   -1
 }
-services: 
+services:
 {
   TFileService: { fileName: "analysisOutput.root"}
   @table::sbnd_services
@@ -18,15 +16,15 @@ services:
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService:  @local::standard_backtrackerservice
 }
-physics: 
+
+physics:
 {
-  analyzers: 
+  analyzers:
   {
     ana: @local::analyzeEvents  #inserts into workflow, matches name in config fcl
   }
   path0:        [ ana ]
   end_paths:    [ path0 ]
 }
-
 
 services.BackTrackerService.SimChannelModuleLabel: "simdrift"

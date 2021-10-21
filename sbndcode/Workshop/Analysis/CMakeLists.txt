@@ -1,8 +1,5 @@
 art_make(
           MODULE_LIBRARIES
-                           larsim_MCCheater_ParticleInventoryService_service
-                           larsim_Utils
-
                            lardataobj_RecoBase
                            larpandora_LArPandoraInterface
 
