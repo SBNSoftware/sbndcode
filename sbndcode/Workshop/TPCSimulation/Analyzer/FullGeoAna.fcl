@@ -1,0 +1,21 @@
+BEGIN_PROLOG
+
+standard_FullGeoAna:
+{
+  module_type:    FullGeoAna
+
+  RawDigitLabel:      "daq"         # String for the process that made the raw digits
+  GeneratorLabel:     "generator"   # String for the process that made the MCParticles
+  GEANT4Label:        "largeant"    # String for the process that ran the geant4
+  HitLabel:           "hitfd"       # String for the process that made the Hits
+  CalDataModuleLabel: "caldata"
+  OpHitModuleLabel:   "ophit"
+
+  SaveTruth:            true # save all the generated particle
+  SaveIDEs:             false
+  SaveTPC:              true
+  SavePDS:              false
+
+}
+
+END_PROLOG
