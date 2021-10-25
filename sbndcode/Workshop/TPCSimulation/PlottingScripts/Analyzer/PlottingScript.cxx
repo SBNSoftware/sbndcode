@@ -1,9 +1,10 @@
-#include "IO/InputManager.hh"
-
 // Include anything from C++ you might need below
 
 // Include anything from ROOT you might need below
 #include "TCanvas.h"
+
+// Including the Input Manager
+#include "IO/InputManager.hh"
 
 int main(int argc, char** argv) {
 
@@ -13,10 +14,10 @@ int main(int argc, char** argv) {
   extern char *optarg;
   extern int   optopt;
 
-  int         nEvent      = -1;
-  std::string InFileName  = "";
-  std::string InTreeName  = "";
-  std::string OutFileName = "";
+  int         nEvent      = -1; // -n, number of events to run
+  std::string InFileName  = ""; // -i, input ROOT file
+  std::string InTreeName  = ""; // -t, input TTree name
+  std::string OutFileName = ""; // -o, output file name, no extension
 
   while ( (opt = getopt(argc, argv, "i:t:o:n")) != -1) {
     switch (opt) {
@@ -56,6 +57,13 @@ int main(int argc, char** argv) {
   // --- Stepping through each event --- //
   for (int CurrentEvent=0; CurrentEvent<fNEvent; ++CurrentEvent) {
     im->GetEntry(CurrentEvent);
+
+    /*
+    | You can get variables from the input manager using this.
+    | Suppose we want to check the i-th mother id for the 
+    | current event. We would do:
+    | std::cout << (*im->True_Bck_Mother)[i] << std::endl;
+    */
     
     // Determine which particle is your muon and proton
     
@@ -67,6 +75,15 @@ int main(int argc, char** argv) {
   }
 
   // --- Setting up the canvas for the output --- //
+
+  /*
+  | The c->Print() statement with ".pdf[" opens a new pdf file.
+  | Each line with ".pdf" put after drawing a plot object
+  | prints that plot to a new page of the pdf.
+  | The line with ".pdf]" closes the output pdf. without this
+  | you'll just have a corrupted pdf file
+  */
+
   TCanvas *c = new TCanvas("c", "c");
   c->Print((OutFileName + ".pdf[").c_str());
   // Draw the plot you've made
