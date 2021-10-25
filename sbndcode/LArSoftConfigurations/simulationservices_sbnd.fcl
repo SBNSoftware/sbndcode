@@ -35,6 +35,7 @@
 BEGIN_PROLOG
 
 sbnd_largeantparameters:   @local::standard_largeantparameters # from simulationservices.fcl
+sbnd_largeantparameters.UseModLarqlRecomb: true
 sbnd_largeantparameters.ElectronClusterSize: 20.0
 #Brailsford 27/10/09: Enable the custom physics list and disable its neutron killer
 sbnd_largeantparameters.UseCustomPhysics: true

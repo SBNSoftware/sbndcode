@@ -1,0 +1,40 @@
+#==========================================================================
+#                                                                         |
+# File:    sbnd_ci_empty_file_maker_sbndcode.fcl                          |
+# Purpose: Creates "empty event" files with just timestamps used as       |
+#          input files for the gen stage of the ci test suites            |
+#__________________________________________________________________________
+#                                                                         |
+# single_gen_quick_test_sbndcode uses input file EmptyEvents_01.root      |
+#                                                                         |
+# nucosmics_gen_quick_test_sbndcode uses input file EmptyEvents_02.root   |
+#                                                                         |
+# Both are 100 event files produced with this fcl and live in:            |
+#    /pnfs/sbnd/persistent/stash/ContinuousIntegration/input/empty        |
+#                                                                         |
+#==========================================================================
+
+
+process_name: EmptyEvent
+
+source: {
+   maxEvents: 100
+   module_type: "EmptyEvent"
+   timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+}
+
+outputs:
+{
+  out1:
+  {
+    fileName: "EmptyEvents_01.root"
+    module_type: "RootOutput"
+  }
+}
+
+physics: 
+{
+    stream1 : [ out1 ]
+
+    end_paths : [ stream1 ]
+}
