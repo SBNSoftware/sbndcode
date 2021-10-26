@@ -1,0 +1,95 @@
+#
+# File:    standard_detsim_sbnd.fcl
+# Purpose: Simulates readout response to induced and collected charge
+#
+# This configuration runs the detector simulation
+#
+# Input:
+# - output of OpticalFastSimulation and ElectronDrift modules
+#
+# Output:
+# - daq: RawDigit collection with simulated TPC readout response as waveforms
+# - includes the whole input data
+#
+#
+# Dependencies:
+# - uses the bundle of SBND simulation services for readout simulation
+
+
+#
+# services
+#
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+#
+# modules
+#
+
+#include "opdetdigitizer_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+# analyser
+#include "wvfana.fcl"
+
+
+process_name: DetSim
+
+services:
+{
+  TFileService: { fileName: "%ifb_%p_hist.root" }
+  @table::sbnd_detsim_services
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+}
+
+
+source:
+{
+  module_type:     RootInput
+}
+
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+  producers:
+  {
+    rns:       { module_type: "RandomNumberSaver" }
+    opdaq:     @local::sbnd_opdetdigitizer
+  }
+
+  analyzers:
+  {
+    wvfana: @local::wvf_ana
+  }
+
+  #define the producer and filter modules for this path, order matters,
+  simulate:  [ rns, opdaq]
+
+  #define the output stream, there could be more than one if using filters
+  stream1:   [ out1, wvfana ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
+
+# block to define where the output goes.  if you defined a filter in the physics
+# block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+# entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName: "%ifb_%p.root"
+    dataTier: "simulated"
+    compressionLevel: 1
+  }
+}
+
+
+

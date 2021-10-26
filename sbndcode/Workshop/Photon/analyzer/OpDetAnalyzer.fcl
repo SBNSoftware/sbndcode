@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+OpDetAnalyzer:
+{
+ module_type: "OpDetAnalyzer"
+
+ InputModule: [pdfastsim, pdfastsimout]
+
+ Verbosity: 0
+
+ PDSMapTool: {tool_type: sbndPDMapAlg}
+}
+
+END_PROLOG
