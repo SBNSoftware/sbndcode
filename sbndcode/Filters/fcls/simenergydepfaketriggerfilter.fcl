@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+sbnd_simenergydepfaketriggerfilter:
+{
+  module_type:     "SimEnergyDepFakeTriggerFilter"
+
+  # Select the beam spill timt to match that in sbnd_filtergenintime
+  BeamTimeMin:    -0.2        # Minimum time of beam window [us]
+  BeamTimeMax:     1.9        # Maximum time of beam window [us]
+  EnergyDeposit:   100        # Minimum energy deposit in TPC for trigger [MeV]
+  SimEnergyDepModuleName: "largeant:LArG4DetectorServicevolTPCActive" # Name of SimEnergyDeposit producer module
+}
+
+END_PROLOG

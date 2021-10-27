@@ -1,4 +1,4 @@
-# Runs standard g4 fcl without largeant, designed for use with gen stage fcls that run largeant to filter
+# Runs standard g4 fcl without largeant, ionandscint or simdrift designed for use with gen stage fcls that run dirt filter
 
 #include "standard_g4_sbnd.fcl"
 

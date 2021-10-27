@@ -15,7 +15,7 @@ outputs:
   outTPC:
   {
     module_type: RootOutput
-    fileName:    "prodgenie_tpc_sbnd_%p-%tc.root" 
+    fileName:    "prodgenie_tpc_sbnd_%p-%tc.root"
     dataTier:    "generated"
     SelectEvents: [ simulatetpc ]
   }
