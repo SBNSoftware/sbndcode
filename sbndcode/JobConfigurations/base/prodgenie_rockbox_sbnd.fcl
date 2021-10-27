@@ -33,8 +33,6 @@
 
 #include "genie_sbnd.fcl"
 #include "larg4_sbnd.fcl"
-#include "ionandscint_sbnd.fcl"
-#include "simdrift_sbnd.fcl"
 
 
 process_name: GenieGen
@@ -81,8 +79,6 @@ physics:
     # A dummy module that forces the G4 physics list to be loaded
     loader: { module_type: "PhysListLoader" }
     largeant: @local::sbnd_larg4
-    ionandscint: @local::sbnd_ionandscint
-    simdrift: @local::sbnd_simdrift
   }
 
   #define the producer and filter modules for this path, order matters,
