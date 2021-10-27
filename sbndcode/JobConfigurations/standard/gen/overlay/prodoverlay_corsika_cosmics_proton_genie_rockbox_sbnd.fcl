@@ -1,0 +1,3 @@
+#include "prodoverlay_corsika_cosmics_cmc_genie_rockbox_sbnd.fcl"
+
+physics.producers.corsika: @local::sbnd_corsika_p

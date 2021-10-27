@@ -1,0 +1,25 @@
+# Runs standard g4 fcl without largeant, ionandscint or simdrift designed for use with gen stage fcls that run dirt filter
+
+#include "mergesimsources_sbnd.fcl"
+#include "g4_dirt_filter.fcl"
+
+physics.producers.largeantcosmic: @local::sbnd_larg4
+physics.producers.largeantcosmic.inputCollections: [ "corsika" ]
+
+physics.producers.largeant: @local::sbnd_merge_sim_sources
+physics.producers.largeant.FillMCParticles: true
+physics.producers.largeant.FillSimEnergyDeposits: true
+physics.producers.largeant.InputSourcesLabels: [ "largeantnu", "largeantcosmic"]
+physics.producers.largeant.EnergyDepositInstanceLabels: [ "LArG4DetectorServicevolFieldCage" , "LArG4DetectorServicevolPMT" , "LArG4DetectorServicevolXArapuca" , "LArG4DetectorServicevolPDSstructure" , "LArG4DetectorServicevolTPCPlaneVert" , "LArG4DetectorServicevolCryostat" , "LArG4DetectorServicevolTPCActive" ]
+
+physics.producers.ionandscint.InputModuleLabels: ["largeant"]
+physics.producers.ionandscintout.InputModuleLabels: ["largeant"]
+
+physics.simulate: [ rns , loader, largeantcosmic , largeant , ionandscint , ionandscintout ]
+# physics.simulate: [ rns , loader, largeantcosmic , largeant , ionandscint , ionandscintout , pdfastsim , pdfastsimout , simdrift , mcreco ]
+
+outputs.out1.outputCommands: [ "keep *_*_*_*"
+                               # Drop G4
+                             , "drop *_largeantnu_*_*"
+                             , "drop *_largeantcosmic_*_*"
+                             ]
