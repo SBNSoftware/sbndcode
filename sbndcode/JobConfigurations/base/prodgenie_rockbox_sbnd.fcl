@@ -25,7 +25,7 @@
 #
 
 #include "gennufilter.fcl"
-#include "larg4faketriggerfilter.fcl"
+#include "simenergydepfaketriggerfilter.fcl"
 
 #
 # modules
@@ -33,6 +33,8 @@
 
 #include "genie_sbnd.fcl"
 #include "larg4_sbnd.fcl"
+#include "ionandscint_sbnd.fcl"
+#include "simdrift_sbnd.fcl"
 
 
 process_name: GenieGen
@@ -68,7 +70,7 @@ physics:
     tpcfilter: @local::sbnd_tpc_gennufilter
 
     # Filter events where a particle deposits >100MeV in the TPC (AKA Dirt)
-    g4filter: @local::sbnd_larg4faketriggerfilter
+    dirtfilter: @local::sbnd_simenergydepfaketriggerfilter
   }
 
 
@@ -79,11 +81,14 @@ physics:
     # A dummy module that forces the G4 physics list to be loaded
     loader: { module_type: "PhysListLoader" }
     largeant: @local::sbnd_larg4
+    ionandscint: @local::sbnd_ionandscint
+    simdrift: @local::sbnd_simdrift
   }
 
   #define the producer and filter modules for this path, order matters,
+  #define the producer and filter modules for this path, order matters,
   simulatetpc:  [ rns, generator, loader, largeant, tpcfilter ]
-  simulatedirt:  [ rns, generator, loader, largeant, "!tpcfilter", g4filter ]
+  simulatedirt:  [ rns, generator, loader, largeant, "!tpcfilter", dirtfilter ]
 
   #define the output stream, there could be more than one if using filters
   # One can run any combination of outAll, outTPC and outDirt
