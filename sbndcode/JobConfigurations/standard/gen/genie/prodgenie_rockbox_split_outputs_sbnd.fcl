@@ -1,7 +1,7 @@
 # Simulates GENIE interactions from the BNB beam using the rockbox confiuration
 # This configuration splits the outputs into two streams:
 # - Keep all events with an interaction in the TPC volume, this will have some random dirt interactions
-# - Kepp all events without an interaction in the TPC volume but with a dirt interaction
+# - Keep all events without an interaction in the TPC volume but with a dirt interaction
 
 #include "prodgenie_rockbox_sbnd.fcl"
 
