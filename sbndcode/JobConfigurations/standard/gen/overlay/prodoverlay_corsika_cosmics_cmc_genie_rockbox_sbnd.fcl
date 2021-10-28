@@ -2,25 +2,19 @@
 #include "corsika_sbnd.fcl"
 #include "prodgenie_rockbox_sbnd.fcl"
 
+# Now we are generating overlays we need to add CORSIKA to GENIE
 physics.producers.corsika:   @local::sbnd_corsika_cmc
 
+# Remove largeant, this name is now reserved for the merged output
 physics.producers.largeant: @erase
-physics.filters.dirtfilter.SimEnergyDepModuleName: "largeantnu:LArG4DetectorServicevolTPCActive"
 
+# Create a new instance of largeant to just look at GENIE
 physics.producers.largeantnu: @local::sbnd_larg4
 physics.producers.largeantnu.inputCollections: [ "generator" ]
 
+# Tell the dirt filter to use the new largeant for neutrinos only
+physics.filters.dirtfilter.SimEnergyDepModuleName: "largeantnu:LArG4DetectorServicevolTPCActive"
+
+# Rename largeant and add CORSIKA to the workflows
 physics.simulatetpc:  [ rns, generator, loader, largeantnu, tpcfilter, corsika ]
 physics.simulatedirt:  [ rns, generator, loader, largeantnu, "!tpcfilter", dirtfilter, corsika ]
-
-# physics.producers.largeantCosmic: @local::sbnd_larg4
-# physics.producers.largeantCosmic.inputCollections: [ "corsika" ]
-
-# physics.producers.largeant: @local::sbnd_merge_sim_sources
-# physics.producers.largeant.FillMCParticles: true
-# # physics.producers.largeant.FillSimEnergyDeposits: true
-# physics.producers.largeant.InputSourcesLabels: [ "larg4intime", "larg4outtime"]
-
-
-# physics.simulatetpc:  [ rns, generator, loader, largeantnu, tpcfilter, corsika, largeantCosmic, largeant ]
-# physics.simulatedirt:  [ rns, generator, loader, largeantnu, "!tpcfilter", dirtfilter, corsika, largeantCosmic, largeant ]
