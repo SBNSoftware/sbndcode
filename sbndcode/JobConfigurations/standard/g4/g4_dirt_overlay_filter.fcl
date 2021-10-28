@@ -8,11 +8,7 @@ physics.producers.largeantcosmic: @local::sbnd_larg4
 physics.producers.largeantcosmic.inputCollections: [ "corsika" ]
 
 # Merge together the largeant instances
-physics.producers.largeant: @local::sbnd_merge_sim_sources
-physics.producers.largeant.FillMCParticles: true
-physics.producers.largeant.FillSimEnergyDeposits: true
-physics.producers.largeant.InputSourcesLabels: [ "largeantnu", "largeantcosmic"]
-physics.producers.largeant.EnergyDepositInstanceLabels: [ "LArG4DetectorServicevolFieldCage" , "LArG4DetectorServicevolPMT" , "LArG4DetectorServicevolXArapuca" , "LArG4DetectorServicevolPDSstructure" , "LArG4DetectorServicevolTPCPlaneVert" , "LArG4DetectorServicevolCryostat" , "LArG4DetectorServicevolTPCActive" ]
+physics.producers.largeant: @local::sbnd_merge_overlay_sim_sources
 
 # We need to explicitly tell ionandscint to look at largeant otherwise it will take everything in the event and double count
 physics.producers.ionandscint.InputModuleLabels: ["largeant"]
