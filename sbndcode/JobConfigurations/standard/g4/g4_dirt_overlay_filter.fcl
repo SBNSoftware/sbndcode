@@ -1,4 +1,6 @@
-# Runs standard g4 fcl without largeant, ionandscint or simdrift designed for use with gen stage fcls that run dirt filter
+# Runs G4 on CORSIKA and merges with the G4 instance already run on GENIE
+# The remainder of standard g4 fcl is then run with minor modifications to the input labels
+# The output produced drops the GENIE and CORSIKA specific G4 instances and keeps only the merged output
 
 #include "mergesimsources_sbnd.fcl"
 #include "g4_dirt_filter.fcl"
@@ -14,9 +16,7 @@ physics.producers.largeant: @local::sbnd_merge_overlay_sim_sources
 physics.producers.ionandscint.InputModuleLabels: ["largeant"]
 physics.producers.ionandscintout.InputModuleLabels: ["largeant"]
 
-# TODO for testing run without the slow bits
-physics.simulate: [ rns , loader, largeantcosmic , largeant , ionandscint , ionandscintout ]
-# physics.simulate: [ rns , loader, largeantcosmic , largeant , ionandscint , ionandscintout , pdfastsim , pdfastsimout , simdrift , mcreco ]
+physics.simulate: [ rns , loader, largeantcosmic , largeant , ionandscint , ionandscintout , pdfastsim , pdfastsimout , simdrift , mcreco ]
 
 # Remove the GENIE and CORSIKA specific largeant instances and keep the merged one
 outputs.out1.outputCommands: [ "keep *_*_*_*"
