@@ -53,8 +53,17 @@ namespace geo {
     for (size_t a=0; a<adgeo.size(); a++){
       std::string volName(adgeo[a].TotalVolume()->GetName());
 
+      long unsigned int number_scintillating_strips = 0;
+
+      if (strncmp(((adgeo[a].TotalVolume())->GetShape())->GetName(), "CRTstripMINOSArray", 18) == 0) {
+	number_scintillating_strips = 20;    //To account for the MINOS modules.
+      }
+      else {number_scintillating_strips = 16;}
+
+      std::cout << "Module type: " << ((adgeo[a].TotalVolume())->GetShape())->GetName() << std::endl;
+
       size_t nsv = adgeo[a].NSensitiveVolume();
-      if (nsv != 16) {
+      if (nsv != number_scintillating_strips) {
         throw cet::exception("CRTChannelMap")
         << "Wrong number of sensitive volumes for CRT volume "
         << volName << " (got " << nsv << ", expected 16)" << std::endl;
@@ -64,7 +73,7 @@ namespace geo {
       fNameToADGeo[volName] = a;
 
       if (volName.find("CRTStripArray") != std::string::npos) {
-        for (size_t svID=0; svID<16; svID++) {
+        for (size_t svID=0; svID<number_scintillating_strips; svID++) {
           for (size_t ich=0; ich<2; ich++) {
             size_t chID = 2 * svID + ich;
             fADGeoToChannelAndSV[a].push_back(std::make_pair(chID, svID));
@@ -83,6 +92,8 @@ namespace geo {
       std::vector<geo::AuxDetGeo> const& auxDets,
       size_t& ad,
       size_t& sv) const {
+
+    std::cout << "CRTChannelMapAlg::PositionToAuxDetChannel" << std::endl;
 
     // Set the default to be that we don't find the position in any AuxDet
     uint32_t channel = UINT_MAX;
@@ -131,6 +142,8 @@ namespace geo {
     double x = 0;
     double y = 0;
     double z = 0;
+
+    std::cout << "CRTChannelMapAlg::AuxDetChannelToPosition" << std::endl;
 
     // Figure out which detector we are in
     size_t ad = UINT_MAX;
