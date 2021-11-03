@@ -1,0 +1,18 @@
+# Standard configuration for the SimDriftElectrons module
+#
+# Use the SimEnergyDeposits from IonAndScint withouth
+# the space-charge offsets are applied. These offsets
+# are then applied in the SimDriftElectrons itself.
+# Note that the "priorSCE" SimEnergyDeposits, while they
+# don't include space-charge offsets, they still
+# include space-charge e-field corrections (I know...)
+
+BEGIN_PROLOG
+
+sbnd_simdrift:
+{
+    module_type:     SimDriftElectrons
+    SimulationLabel: "ionandscint:priorSCE"
+}
+
+END_PROLOG

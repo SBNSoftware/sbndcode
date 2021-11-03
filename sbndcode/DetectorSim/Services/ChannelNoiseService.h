@@ -41,7 +41,7 @@ public:
 };
 
 #ifndef __CLING__
-#include "art/Framework/Services/Registry/ServiceMacros.h"
+#include "art/Framework/Services/Registry/ServiceDeclarationMacros.h"
 DECLARE_ART_SERVICE_INTERFACE(ChannelNoiseService, LEGACY)
 #endif
 

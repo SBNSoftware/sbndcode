@@ -31,7 +31,7 @@ services:
 {
                         @table::sbnd_basic_services
                         @table::sbnd_random_services
-  TFileService:         { fileName: "prodeminus_0.1_0.9_sbnd_%p-%tc_hists.root" }
+  TFileService:         { fileName: "hists_prodeminus_0.1_0.9_sbnd_%p-%tc.root" }
   FileCatalogMetadata:  @local::sbnd_file_catalog_mc
 }
 

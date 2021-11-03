@@ -1,5 +1,7 @@
 cet_enable_asserts()
 
+include_directories($ENV{EIGEN_INC})
+
 art_make( TOOL_LIBRARIES lardataobj_RecoBase
                          lardataobj_Simulation
                          larcorealg_Geometry

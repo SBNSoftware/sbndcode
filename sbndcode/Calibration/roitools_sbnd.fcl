@@ -6,16 +6,23 @@ sbnd_standardroifinder:
     tool_type:    "ROIFinderStandardSBND"
     Plane:        0
     NumBinsHalf:  3
-    ## ROI values changed after hit threshold update June 2020. A study is needed to optimise these!!!
-    Threshold:    [14, 14, 10] # abs(threshold) for finding a Region Of Interest. #ICARUS default was [3,3,3].
-    NumSigma:     [0, 0, 0] #ICARUS default was [3,3,3].
-    #Threshold:    [3,3,3] # abs(threshold) for finding a Region Of Interest. #ICARUS default was [3,3,3].
-    #NumSigma:     [3,3,3] #ICARUS default was [3,3,3].
+    NumSigma:     [ 0,  0,  0  ]  # ICARUS default was [3,3,3].
 
-    uPlaneROIPad: [ 50, 50 ] # number of bins to pad both ends of the ROIs
-    vPlaneROIPad: [ 50, 50 ] # number of bins to pad both ends of the ROIs
-    zPlaneROIPad: [ 50, 50 ] # number of bins to pad both ends of the ROIs
+    ## ROI threshold settings based on tuning by J. Zennamo (SBN-doc-20825). 
+    ## Previous defaults were [14,17,10] set in June 2020 to match updated hit thresholds.
+    ## NOTE: These are *not* thresholds on the absolute signal height, but on a running sum 
+    ## within a local window of +/- 'NumBinsHalf' bins. The actual value used as the threshold
+    ## is then calculated based on these values and the raw RMS or electronics noise:
+    ##
+    ##    thresh = sqrt( NumBinsHalf*2 + 1 ) * ( NumSigma*noise + Threshold )
+    ##
+    Threshold:    [ 19, 35, 13 ]
+
+    ## Number of bins to pad both ends of the ROI, based on tuning by J. Zennamo (SBN-doc-20825).
+    ## Previous defaults were [50,50] for all planes.
+    uPlaneROIPad: [ 10, 10 ] 
+    vPlaneROIPad: [ 10, 10 ] 
+    zPlaneROIPad: [ 10, 10 ] 
 }
-
 
 END_PROLOG

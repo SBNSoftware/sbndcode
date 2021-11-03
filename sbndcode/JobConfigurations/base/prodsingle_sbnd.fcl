@@ -1,29 +1,17 @@
 #
 # File:    prodsingle_sbnd.fcl
 # Purpose: Produce single muon events including full SBND detector simulation
-# Version: 1.2
-# 
+#
 # This configuration runs event generation, simulation of propagation through
 # matter and readout simulation.
-# 
+#
 # Input: no input file required
-# 
+#
+# This uses the new, refactored, LArG4
+#
 # Dependencies:
 # - uses the bundle of SBND simulation services
-#
-# Changes:
-# 20160601 (petrillo@fnal.gov) [v1.1]
-#   - added inline documentation
-#   - moved service configuration from services.user (deprecated) to services
-#   - changed Timing module (deprecated) with TimeTracker
-#   - added MemoryTracker module
-#   - tuned message facility configuration
-#
-# 20161223 (petrillo@fnal.gov) [v1.2]
-#   - changed the default generation parametrs (in singles_sbnd.fcl)
-#   - adopted shared root output configuration
-#
-#
+
 
 #
 # services
@@ -37,8 +25,14 @@
 #
 
 #include "singles_sbnd.fcl"
-#include "largeantmodules_sbnd.fcl"
+
+#include "larg4_sbnd.fcl"
+#include "ionandscint_sbnd.fcl"
+#include "PDFastSim_sbnd.fcl"
+#include "simdrift_sbnd.fcl"
+
 #include "detsimmodules_sbnd.fcl"
+
 #include "rootoutput_sbnd.fcl"
 
 
@@ -77,19 +71,47 @@ physics:
   producers:
   {
     rns:       { module_type: "RandomNumberSaver" }
+
+    # Generation
     generator: @local::sbnd_singlep
-    largeant:  @local::sbnd_largeant
-    daq:       @local::sbnd_simwire
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::sbnd_larg4
+
+    # Creation of ionization electrons and scintillation photons, inside the active volume
+    ionandscint: @local::sbnd_ionandscint
+
+    # Light propogation inside the active volume
+    pdfastsim: @local::sbnd_pdfastsim_par
+
+    # Electron propogation
+    simdrift: @local::sbnd_simdrift
+
+    # Detector simulation
+    daq: @local::sbnd_simwire
   }
 
-  #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, generator, largeant, daq] 
+  #define the producer and filter modules for this path, order matters,
+  # simulate:  [ rns, generator, largeant, daq]
+  # simulate:  [ rns, generator ]
+  simulate: [ rns
+          , generator
+          , loader
+          , largeant
+          , ionandscint
+          , pdfastsim
+          , simdrift
+          , daq
+        ]
 
-  #define the output stream, there could be more than one if using filters 
+  #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
 
   #ie analyzers and output streams.  these all run simultaneously
-  end_paths: [stream1]  
+  end_paths: [stream1]
 }
 
 # block to define where the output goes.  if you defined a filter in the physics
@@ -101,6 +123,9 @@ outputs:
   {
               @table::sbnd_rootoutput # inherit shared settings
     fileName: "prodsingle_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
+    outputCommands: [ "keep *_*_*_*"
+                    , "drop *_ionandscint__*" # Drop the IonAndScint w/ SCE offsets applied
+                    ]
   }
 }
 

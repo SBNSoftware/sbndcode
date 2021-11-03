@@ -15,6 +15,7 @@
 #include "TH1D.h"
 #include <fstream>
 #include <algorithm>
+#include <numeric> // std::accumulate
 
 namespace sbnd_tool
 {

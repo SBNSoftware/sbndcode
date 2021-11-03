@@ -53,6 +53,7 @@
 
 ###include "hitparticleassociations.fcl"
 
+#include "sbnd_trackcalo_skimmer.fcl"
 
 process_name: Reco
 
@@ -126,7 +127,7 @@ physics:
   pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
   pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
   pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
-  pandoraCalo:         @local::sbnd_calomc
+  pandoraCalo:         @local::sbnd_gnewcalomc
   pandoraPid:          @local::sbnd_chi2pid
 
   pandoraSCECalo:      @local::sbnd_gnewcalomc
@@ -167,6 +168,10 @@ physics:
   fmatchSCE:           @local::sbnd_simple_flashmatch
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
+ 
+  ### Uncalibrated calorimetry producer for calibration caloskimmer
+  caloskimCalorimetry: @local::caloskim_calorimetry
+ 
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -206,6 +211,7 @@ physics:
          , crthitt0
          , crttrackt0
          , fmatch
+	 , caloskimCalorimetry
  ]
 
  # The new flashmatching will eventually be part of reco2, but for now
@@ -213,6 +219,14 @@ physics:
  # reco fcl files.
  opticalt0: [ opt0finder ]
 
+ # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
+ 
+ analyzers:{
+  caloskim: @local::caloskim_nodigits_goldentracks
+ }
+
+ caloskimana: [ caloskim ]
+ 
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
 
@@ -250,8 +264,9 @@ outputs:
 
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
-                    @sequence::physics.reco2,
-                    opt0finder]
+                    @sequence::physics.reco2
+		    #,opt0finder
+		  ]
 physics.fullreco_noflashmatch: [ @sequence::physics.reco1,
                                  @sequence::physics.reco2]
 
@@ -265,10 +280,6 @@ physics.trigger_paths: [ fullreco ]
 #physics.producers.opflash.GenModule:                            "generator"
 
 physics.producers.caldata.DigitModuleLabel:                     "daq"
-physics.producers.caldata.ROITool.Threshold: [19, 35 , 13]
-physics.producers.caldata.ROITool.uPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
-physics.producers.caldata.ROITool.vPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
-physics.producers.caldata.ROITool.zPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
 
 physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
 physics.producers.fasthit.DigitModuleLabel:                     "daq"
@@ -287,7 +298,9 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 
 ### Added for Rhiannon's analysis work
 physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
-physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"
+physics.producers.pandoraCalo.FieldDistortion:                	 false
+physics.producers.pandoraCalo.FieldDistortionEfield:          	 false
+physics.producers.pandoraCalo.TrackIsFieldDistortionCorrected:	 false
 physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
 physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
 
@@ -350,3 +363,4 @@ physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
 #physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
 
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"

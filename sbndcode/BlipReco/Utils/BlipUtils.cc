@@ -25,6 +25,7 @@ namespace sbnd::BlipUtils {
   void CalcPartDep(int trackID, float& energy, float& ne){
     if( energy< 0 ) energy = 0;
     if( ne    < 0 ) ne = 0;
+    std::cout<<"Calculating energy dep for trackID "<<trackID<<"\n";
     int nPlanes = 0;
     float totalE_particle = 0, totalne_particle = 0;
     for(const geo::View_t view : {geo::kU, geo::kV, geo::kW} ) {
@@ -62,7 +63,7 @@ namespace sbnd::BlipUtils {
     // Only count protons < 3 MeV KE
     float edep, ne; 
     CalcPartDep(trackID,edep,ne);
-    if( part.PdgCode() == 2212 && edep < 3. ) return tb;
+    if( part.PdgCode() == 2212 && edep > 3. ) return tb;
 
     // Create the new blip
     GrowTrueBlip(part,tb);
@@ -88,6 +89,7 @@ namespace sbnd::BlipUtils {
   //====================================================================
   void GrowTrueBlip(simb::MCParticle const& part, TrueBlip& tblip){
     
+    
     // Skip neutrons, photons
     if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
 
@@ -104,9 +106,10 @@ namespace sbnd::BlipUtils {
       //tblip.TPC         = art::ServiceHandle<geo::Geometry>()->PositionToTPC({start.X(),start.Y(),start.Z()}).ID().TPC;
     }
     
+    
     float edep = 0, ne = 0;
     CalcPartDep(part.TrackId(),edep,ne);
-    tblip.G4IDs .push_back(part.TrackId());
+    tblip.G4IDs       .push_back(part.TrackId());
     tblip.PDGs       .push_back(part.PdgCode());
     tblip.Energy      += edep;
     tblip.NumElectrons+= ne;
@@ -365,13 +368,6 @@ namespace sbnd::BlipUtils {
     float x2 = hc1.EndTime;
     float y1 = hc2.StartTime;
     float y2 = hc2.EndTime;
-//    std::cout<<"Checking if clusts match... "<<x1<<"-"<<x2<<", "<<y1<<"-"<<y2<<"\n";
-    //float sig = 0;
-    //if( t2 >= t1 ) sig = std::max( fabs(hc1.EndTime - t1), fabs(hc2.StartTime - t2) );
-    //if( t2 < t1  ) sig = std::max( fabs(hc1.StartTime - t1), fabs(hc2.EndTime - t2) );
-    //if( fabs(t1-t2) < sig ) return true;
-//    if( (t1_a >= t1_b && t1_a <= t2_b )
-//      ||(t2_a >= t1_b && t2_a <= t2_b )) return true;
     if( x1 <= y2 && y1 <= x2 ) return true;
     else return false;
   }
@@ -381,6 +377,12 @@ namespace sbnd::BlipUtils {
     hc2.StartTime = t1;
     hc2.EndTime = t2;
     return DoHitClustsOverlap(hc1,hc2);
+  }
+
+  //====================================================================
+  bool DoChannelsIntersect(int ch1, int ch2 ){
+    double y,z;
+    return art::ServiceHandle<geo::Geometry>()->ChannelsIntersect(ch1,ch2,y,z);
   }
   
   //====================================================================
@@ -476,7 +478,7 @@ namespace sbnd::BlipUtils {
     // Get geo boundaries
     double xmin, xmax, ymin, ymax, zmin, zmax;
     GetGeoBoundaries(xmin,xmax,ymin,ymax,zmin,zmax);
-    
+   
     // Get number traj points
     int n = part.NumberTrajectoryPoints();
     if( n <= 1 ) return 0.;
@@ -489,8 +491,8 @@ namespace sbnd::BlipUtils {
         &&  p1.Y() >= ymin && p1.Y() <= ymax
         &&  p1.Z() >= zmin && p1.Z() <= zmax ) {
         TVector3 p0(part.Vx(i-1),part.Vy(i-1),part.Vz(i-1));
+        L += (p1-p0).Mag();
         if(first)	start = p1; 
-        else L += (p1-p0).Mag();
         first = false;
         end   = p1;
       }

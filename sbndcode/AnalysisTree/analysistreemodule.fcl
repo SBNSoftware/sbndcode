@@ -10,6 +10,7 @@ sbnd_analysistree:
  DigitModuleLabel:         "daq"
  HitsModuleLabel:          "gaushit"
  LArGeantModuleLabel:      "largeant"
+ TPCSimChannelModuleLabel: "simdrift"
  CalDataModuleLabel:       "caldata"
  GenieGenModuleLabel:      "generator"
  CryGenModuleLabel:        "generator"

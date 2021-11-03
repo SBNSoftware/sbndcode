@@ -80,20 +80,26 @@ namespace sbnd{
   struct HitInfo {
     art::Ptr<recob::Hit> hit;
     si_t  g4ids;
-    int   plane   = -9;
-    int   tpc     = -9;
-    int   wire    = -9;
-    int   trkid   = -9;
-    int   shwrid  = -9;
-    int   hitid   = -9;
-    bool  isreal  = false;
-    bool  ismatch = false;
-    int   g4id    = -9;
-    float g4frac  = -99;
-    float g4energy= -999;
-    float g4charge= -999;
-    float qcoll   = -999;
-    float driftTicks = -999999;
+    int   plane         = -9;
+    int   tpc           = -9;
+    int   wire          = -9;
+    int   trkid         = -9;
+    int   shwrid        = -9;
+    int   hitid         = -9;
+    bool  isgood        = false;
+    bool  isclustered   = false;
+    bool  ismatch       = false;
+    bool  isreal        = false;
+    int   blipid        = -9;
+    int   clustid       = -9;
+    int   g4id          = -9;
+    float g4frac        = -99;
+    float g4energy      = -999;
+    float g4charge      = -999;
+    float qcoll         = -999;
+    float driftTicks    = -999999;
+    bool  rmsCut        = false;
+    bool  ratioCut      = false;
   };
   
   struct HitClust {
@@ -116,6 +122,7 @@ namespace sbnd{
     int     EndWire         = -999;
     int     ID              = -9;
     int     BlipID          = -9;
+    int     EdepID          = -9;
     si_t    HitIDs;
     si_t    G4IDs;
     si_t    Wires;
@@ -124,19 +131,20 @@ namespace sbnd{
   };
 
   struct Blip {
+    int       ID              = -9;
     bool      isValid         = false;
     int       TPC             = -9;
-    int       NPlanes         = -9;
-    int       Planes[3]       = {false, false, false};
-    float     Charge[3]       = {-999, -999, -999};
-    float     Energy          = -999;
-    float     EnergyESTAR     = -999;
-    float     DriftTime       = -999;
-    float     MaxIntersectDiff= -9;
-    int       ID              = -9;
-    TVector3  Position;
-    si_t      ClustIDs;
-    si_t      HitIDs;
+    int       NPlanes         = -9;                     // Num. matched planes
+    int       Planes[3]       = {false, false, false};  // Match status for each plane
+    float     Charge[3]       = {-999, -999, -999};     // Charge (e-) on each plane
+    float     Energy          = -999;                   // Energy (const dE/dx = 2 MeV/cm)
+    float     EnergyESTAR     = -999;                   // Energy (ESTAR method from ArgoNeuT)
+    float     DriftTime       = -999;                   // Drift time (ticks)
+    float     MaxIntersectDiff= -9;                     // Max difference between wire intersection 
+                                                        // points (only valid for >=3 planes)
+    TVector3  Position;         // 3D position vector
+    std::set<int> ClustIDs;     // Associated clusters
+    std::set<int> HitIDs;       // Associasted hits (will be taken care of by LArSoft associations)
   };
 
   //###################################################
@@ -153,6 +161,7 @@ namespace sbnd{
   bool      DoHitsOverlap(art::Ptr<recob::Hit> const&, art::Ptr<recob::Hit> const&);
   bool      DoHitClustsOverlap(HitClust const&, HitClust const&);
   bool      DoHitClustsOverlap(HitClust const&,float,float);
+  bool      DoChannelsIntersect(int,int);
   bool      DoHitClustsMatch(HitClust const&, HitClust const&,float);
   //Blip      MakeBlip(detinfo::DetectorPropertiesData const&, std::vector<HitClust> const&);
   Blip      MakeBlip(std::vector<HitClust> const&);

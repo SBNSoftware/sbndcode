@@ -63,8 +63,6 @@ namespace filt{
       virtual bool filter(art::Event & e) override;
       void endJob();                 
   
-      float CalcEnergyDep(art::Handle<std::vector<simb::MCParticle>>& pHandle, int id);
- 
     private:
       
       geo::GeometryCore   *fGeometry;
@@ -84,10 +82,12 @@ namespace filt{
       
       //TH1D*   hProcess;
       //TH1D*   hKEfForDecayEvents;
-      //TH1D*   hNCaptureGammaSumE;
       //TH1D*   hNCaptureBlipsSumE;
       //TH1D*   hNCaptureBlipsSumE_60cm;
       //TH1D*   hNCaptureBlipsSumE_60cm_smear;
+      //
+      TH1D*     hNCaptureGammas;
+      TH1D*     hNCaptureGammaSumE;
       
       //TH1D*   hPrimarySep;
   
@@ -113,7 +113,7 @@ namespace filt{
 //    fRand = new TRandom2(0); 
   
     // get access to the TFile service
-    //art::ServiceHandle<art::TFileService> tfs;
+    art::ServiceHandle<art::TFileService> tfs;
     
     //hProcess = tfs->make<TH1D>("Process","Process",4,0,4);
     //hProcess->SetOption("HIST TEXT");
@@ -123,7 +123,8 @@ namespace filt{
     //hProcess->GetXaxis()->SetBinLabel(4,"other"); 
     
     //hKEfForDecayEvents  = tfs->make<TH1D>("KEfForDecayEvts","Final energy before decay;Kinetic energy [MeV]",500,0,100);
-    //hNCaptureGammaSumE  = tfs->make<TH1D>("NCaptureGammaSumE","Summed energy of gammas from neutron capture;Energy [MeV]",200,0,10);
+    hNCaptureGammas = tfs->make<TH1D>("NCaptureGammas","Energy of gammas from neutron capture;Energy [MeV]",200,0,10);
+    hNCaptureGammaSumE  = tfs->make<TH1D>("NCaptureGammaSumE","Summed energy of gammas from neutron capture;Energy [MeV]",500,0,50);
     //hNCaptureBlipsSumE  = tfs->make<TH1D>("NCaptureBlipsSumE","Summed energy of blips from neutron capture;Energy [MeV]",200,0,10);
     //hNCaptureBlipsSumE_60cm  = tfs->make<TH1D>("NCaptureBlipsSumE_60cm","Summed energy of blips from neutron capture (R=60cm);Energy [MeV]",200,0,10);
     //hNCaptureBlipsSumE_60cm_smear  = tfs->make<TH1D>("NCaptureBlipsSumE_60cm_smear","Summed energy of blips (R=60cm) with 50 keV smearing;Energy [MeV]",200,0,10);
@@ -221,7 +222,7 @@ namespace filt{
     //float primaryTf           = 0.;
     //int   primarySign         = 0;
     //float primaryKEf          = -9;
-    //float gammaE_ncapt        = 0.;
+    float gammaE_ncapt      = 0.;
     //TVector3 primaryEndpt     (-9., -9., -9.);
 
     //std::vector<TVector3> primary_locs;
@@ -232,21 +233,26 @@ namespace filt{
       counter++;
       const art::Ptr<simb::MCParticle> particle(particleHandle,iParticle);
       int     last	          = particle->NumberTrajectoryPoints() - 1;
-      int     secToLast           = std::max(0,last-1);
+      //int     secToLast           = std::max(0,last-1);
       int     trackId             = particle->TrackId();
       int     mother              = particle->Mother();
       int     pdg                 = particle->PdgCode();
       int     ndaughters          = particle->NumberDaughters(); 
       double  dL                  = (particle->Position(0).Vect()-particle->Position(last).Vect()).Mag();
       float   KE0                 = 1e3*(particle->E(0)-particle->Mass());
-      float   KEf                 = 1e3*(particle->E(secToLast)-particle->Mass());
+      //float   KEf                 = 1e3*(particle->E(secToLast)-particle->Mass());
       float   T0                  = particle->T(0);
-//      float   Tf                  = particle->T(last);
+      //float   Tf                  = particle->T(last);
       std::string proc            = particle->Process().c_str();
       std::string endProc         = particle->EndProcess().c_str();  
       TVector3 loc0               = particle->Position(0).Vect();
       TVector3 locf               = particle->Position(last).Vect();
       
+      if( pdg == 22 && proc == "nCapture" ) {
+        hNCaptureGammas->Fill(KE0);
+        gammaE_ncapt += KE0;
+      }
+
       /*
       if( proc == "primary" ){ 
         numPrimary++;
@@ -316,7 +322,15 @@ namespace filt{
    
       if(printOut) {
         if( fMaxParticles < 0 || counter <= fMaxParticles ) {
-          printf("  %3i PDG: %10i, dL=%5.1fcm, XYZ=(%7.1f,%7.1f,%7.1f),  KE0=%7.3f, KEf=%7.3f, T0=%9.2fns, moth=%3i, %18s -->%18s, nD=%i\n",
+          
+          std::stringstream stream;
+          stream << std::fixed << std::setprecision(1) << T0;
+          std::string timeString = stream.str() + "ns";
+          
+
+          if( fabs(T0) > 1e6 ) timeString = "> 1ms";
+          //printf("  %5i PDG: %11i, dL: %5.1fcm, XYZ: (%7.1f,%7.1f,%7.1f),  KE0: %7.3f, KEf: %7.3f, T0: %8.8s, moth: %5i, %20.20s -->%20.20s, nD: %i\n",
+          printf("  %5i PDG: %11i, dL: %6.1fcm, XYZ: (%7.1f,%7.1f,%7.1f),  KE0: %7.3f, T0: %8.8s, moth: %5i, %20.20s -->%20.20s, nD: %i\n",
             trackId,
             pdg,
             dL,
@@ -324,8 +338,9 @@ namespace filt{
             loc0.Y(),
             loc0.Z(),
             KE0,
-            KEf,
-            T0,
+            //KEf,
+            //T0,
+            timeString.c_str(),
             mother,
             proc.c_str(),
             endProc.c_str(),      
@@ -424,6 +439,8 @@ namespace filt{
 
     }
     */
+        
+    hNCaptureGammaSumE->Fill(gammaE_ncapt);
 
     return true;
   }
@@ -439,31 +456,6 @@ namespace filt{
 
   }
 
-
-  float ParticleLister::CalcEnergyDep(art::Handle<std::vector<simb::MCParticle>>& particleHandle, int iP){
-    const art::Ptr<simb::MCParticle> particle(particleHandle,iP);
-    int     trackId = particle->TrackId(); 
-    int     nPts    = particle->NumberTrajectoryPoints();
-    float   KE0 = 1e3*(particle->E(0)-particle->Mass());
-    float   KEf = 1e3*(particle->E(nPts-1)-particle->Mass());
-    
-    // at first approximation, Edep is energy difference 
-    float Edep = KE0 - KEf;
-    
-    // if there are daughters, we may need to subtract their energy
-    if( particle->NumberDaughters() > 0 ) {
-      for(size_t i=iP; i<particleHandle->size(); i++){
-        const art::Ptr<simb::MCParticle> p(particleHandle,i);
-        if( p->Mother() == trackId ) {
-          if( p->Process() == "eBrem" || p->Process() == "eIoni"){
-            Edep -= 1e3*(p->E(0) - p->Mass());
-          }
-        }
-      }
-    }
-
-    return Edep;
-  }
 
   DEFINE_ART_MODULE(ParticleLister)
 

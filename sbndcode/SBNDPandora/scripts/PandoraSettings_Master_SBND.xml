@@ -30,7 +30,7 @@
     </CosmicRayTaggingTools>
     <SliceIdTools>
       <tool type = "LArBdtNeutrinoId">
-        <MvaFileName>PandoraMVAs/PandoraBdt_v08_33_00_SBND.xml</MvaFileName>
+        <MvaFileName>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileName>
         <MvaName>NeutrinoId</MvaName>
         <MinimumNeutrinoProbability>0</MinimumNeutrinoProbability>
         <MaximumNeutrinos>999</MaximumNeutrinos>

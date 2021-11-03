@@ -11,6 +11,8 @@
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
+#include "art/Framework/Principal/Run.h"
+#include "art/Framework/Principal/SubRun.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Principal/Handle.h"
 #include "canvas/Persistency/Common/Ptr.h"
@@ -18,6 +20,7 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "canvas/Persistency/Common/FindMany.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
@@ -42,6 +45,8 @@
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbnobj/SBND/Commissioning/MuonTrack.hh"
+
 
 // Truth includes
 //#include "larsim/MCCheater/BackTrackerService.h"
@@ -140,9 +145,13 @@ private:
   void ResetCRTHitsVars(int n);
   /// Resets optical hits tree variables
   void ResetOpHitsVars(int n);
+  /// Resets crossing muon tracks tree variables 
+  void ResetMuonTracksVars(int n);
+  /// Resets crossing muon hit tree variables 
+  void ResetMuonHitVars(int n); 
   /// Resize the data structure for MCNeutrino particles
   void ResizeMCNeutrino(int nNeutrinos);
-  /// Resize the data strutcure for Genie primaries
+  /// Resize the data structure for Genie primaries
   void ResizeGenie(int nPrimaries);
 
   opdet::sbndPDMapAlg _pd_map;
@@ -183,7 +192,9 @@ private:
   std::vector<int> _crt_orient;          ///< CRT orientation (0 for y (horizontal) and 1 for x (vertical))
   std::vector<double> _crt_time;         ///< CRT time
   std::vector<double> _crt_adc;          ///< CRT adc
-  std::vector<double> _crt_pos;          ///< CRT position
+  std::vector<double> _crt_pos_x;          ///< CRT position X
+  std::vector<double> _crt_pos_y;          ///< CRT position Y
+  std::vector<double> _crt_pos_z;          ///< CRT position Z
 
   // CRT track variables
   int _nctrks;                          ///< Number of created CRT tracks
@@ -233,6 +244,29 @@ private:
   std::vector<double> _ophit_opdet_z;         ///< OpDet Z coordinate of the optical hit
   std::vector<int> _ophit_opdet_type;         ///< OpDet tyoe of the optical hit
 
+  // Muon track variables 
+  int _nmuontrks;                            ///< number of muon tracks
+  std::vector<double> _muontrk_t0;           ///< t0 (time of interaction)
+  std::vector<float>  _muontrk_x1;           ///< x coordinate closer to anode
+  std::vector<float>  _muontrk_y1;           ///< y coordinate closer to anode 
+  std::vector<float>  _muontrk_z1;           ///< z coordinate closer to anode 
+  std::vector<float>  _muontrk_x2;           ///< x coordinate closer to cathode 
+  std::vector<float>  _muontrk_y2;           ///< y coordinate closer to cathode 
+  std::vector<float>  _muontrk_z2;           ///< z coordinate closer to cathode
+  std::vector<float>  _muontrk_theta_xz;     ///< theta_xz trajectory angle 
+  std::vector<float>  _muontrk_theta_yz;     ///< theta_yz trajectory angle 
+  std::vector<int>    _muontrk_tpc;          ///< tpc that muon is located in 
+  std::vector<int>    _muontrk_type;         ///< type of muon track
+
+  // Muon Hit variables
+  int                 _nmhits;               ///< Number of muon collection hits per track
+  std::vector<int>    _mhit_trk;             ///< Track number that the hit belongs to
+  std::vector<int>    _mhit_tpc;             ///< TPC where the hit belongs to
+  std::vector<int>    _mhit_wire;            ///< Wire where the hit belongs to
+  std::vector<int>    _mhit_channel;         ///< Channel where the hit belongs to
+  std::vector<double> _mhit_peakT;           ///< Hit peak time
+  std::vector<double> _mhit_charge;          ///< Hit charge
+  
   //mctruth information
   size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
   Int_t     mcevts_truth;                     ///< number of neutrino Int_teractions in the spill
@@ -260,19 +294,19 @@ private:
   std::vector<Float_t>  tpx_flux;             ///< Px of parent particle leaving BNB target
   std::vector<Float_t>  tpy_flux;             ///< Py of parent particle leaving BNB target
   std::vector<Float_t>  tpz_flux;             ///< Pz of parent particle leaving BNB target
-  std::vector<Int_t>     tptype_flux;         ///< Type of parent particle leaving BNB target
+  std::vector<Int_t>    tptype_flux;         ///< Type of parent particle leaving BNB target
 
   //genie information
   size_t MaxGeniePrimaries = 0;
   Int_t     genie_no_primaries;
   std::vector<Int_t>     genie_primaries_pdg;
-  std::vector<Float_t>  genie_Eng;
-  std::vector<Float_t>  genie_Px;
-  std::vector<Float_t>  genie_Py;
-  std::vector<Float_t>  genie_Pz;
-  std::vector<Float_t>  genie_P;
+  std::vector<Float_t>   genie_Eng;
+  std::vector<Float_t>   genie_Px;
+  std::vector<Float_t>   genie_Py;
+  std::vector<Float_t>   genie_Pz;
+  std::vector<Float_t>   genie_P;
   std::vector<Int_t>     genie_status_code;
-  std::vector<Float_t>  genie_mass;
+  std::vector<Float_t>   genie_mass;
   std::vector<Int_t>     genie_trackID;
   std::vector<Int_t>     genie_ND;
   std::vector<Int_t>     genie_mother;
@@ -295,6 +329,7 @@ private:
   std::string fCRTStripModuleLabel; ///< Label for CRTStrip dataproduct (to be set via fcl)
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
+  std::string fMuonTrackModuleLabel;  ///< Label for MuonTrack dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
   std::vector<std::string> fOpHitsModuleLabels; ///< Labels for OpHit dataproducts (to be set via fcl)
@@ -306,6 +341,8 @@ private:
   bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
   bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
   bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
+  bool freadMuonTracks;    ///< Add MuonTracks to output (to be set via fcl)
+  bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
@@ -357,6 +394,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
+  fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
@@ -364,6 +402,8 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
+  freadMuonTracks    = p.get<bool>("readMuonTracks",true);
+  freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
@@ -514,10 +554,9 @@ void Hitdumper::analyze(const art::Event& evt)
         _crt_orient.push_back(tagger.second);
         _crt_time.push_back(ctime);
         _crt_adc.push_back(adc1 + adc2 - 127.2); // -127.2/131.9 correct for gain and 2*ped to get pe
-        _crt_pos.push_back(center.Y());
-        if (tagger.second == kCRTVertical) {
-          _crt_pos.push_back(center.X());
-        };
+        _crt_pos_x.push_back(center.X());
+        _crt_pos_y.push_back(center.Y());
+        _crt_pos_z.push_back(center.Z());
         ns++;
       }
     }
@@ -554,7 +593,7 @@ void Hitdumper::analyze(const art::Event& evt)
               if (_crt_adc[i] > adc1x) {
                 plane1tx = _crt_time[i];
                 adc1x += _crt_adc[i];
-                plane1x = _crt_pos[i];
+                plane1x = _crt_pos_x[i];
                 plane1xm = _crt_module[i];
               }
             }
@@ -565,7 +604,7 @@ void Hitdumper::analyze(const art::Event& evt)
               if (_crt_adc[i]>adc1y) {
                 plane1ty=_crt_time[i];
                 adc1y+=_crt_adc[i];
-                plane1y=_crt_pos[i];
+                plane1y=_crt_pos_y[i];
                 plane1ym=_crt_module[i];
               }
             }
@@ -578,7 +617,7 @@ void Hitdumper::analyze(const art::Event& evt)
               if (_crt_adc[i]>adc2x) {
                 plane2tx=_crt_time[i];
                 adc2x+=_crt_adc[i];
-                plane2x=_crt_pos[i];
+                plane2x=_crt_pos_x[i];
                 plane2xm=_crt_module[i];
               }
             }
@@ -589,7 +628,7 @@ void Hitdumper::analyze(const art::Event& evt)
               if (_crt_adc[i]>adc2y) {
                 plane2ty=_crt_time[i];
                 adc2y+=_crt_adc[i];
-                plane2y=_crt_pos[i];
+                plane2y=_crt_pos_y[i];
                 plane2ym=_crt_module[i];
               }
             }
@@ -606,7 +645,7 @@ void Hitdumper::analyze(const art::Event& evt)
                   if (_crt_adc[j]>adc1x) {
                     plane1tx=_crt_time[j];
                     adc1x+=_crt_adc[j];
-                    plane1x=_crt_pos[j];
+                    plane1x=_crt_pos_x[j];
                     plane1xm=_crt_module[j];
                   }
                 }
@@ -617,7 +656,7 @@ void Hitdumper::analyze(const art::Event& evt)
                   if (_crt_adc[j]>adc1y) {
                     plane1ty=_crt_time[j];
                     adc1y+=_crt_adc[j];
-                    plane1y=_crt_pos[j];
+                    plane1y=_crt_pos_y[j];
                     plane1ym=_crt_module[j];
                   }
                 }
@@ -630,7 +669,7 @@ void Hitdumper::analyze(const art::Event& evt)
                   if (_crt_adc[j]>adc2x) {
                     plane2tx=_crt_time[j];
                     adc2x+=_crt_adc[j];
-                    plane2x=_crt_pos[j];
+                    plane2x=_crt_pos_x[j];
                     plane2xm=_crt_module[j];
                   }
                 }
@@ -641,7 +680,7 @@ void Hitdumper::analyze(const art::Event& evt)
                   if (_crt_adc[j]>adc2y) {
                     plane2ty=_crt_time[j];
                     adc2y+=_crt_adc[j];
-                    plane2y=_crt_pos[j];
+                    plane2y=_crt_pos_y[j];
                     plane2ym=_crt_module[j];
                   }
                 }
@@ -685,7 +724,7 @@ void Hitdumper::analyze(const art::Event& evt)
     // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
     if (evt.getByLabel(fCRTHitModuleLabel, crtHitListHandle))  {
       art::fill_ptr_vector(chitlist, crtHitListHandle);
-      _nchits = hitlist.size();
+      _nchits = chitlist.size();
     }
     else {
       std::cout << "Failed to get sbn::crt::CRTHit data product." << std::endl;
@@ -812,6 +851,56 @@ void Hitdumper::analyze(const art::Event& evt)
     }
   }
 
+  //
+  // Muon tracks 
+  //
+  _nmuontrks = 0; 
+  if (freadMuonTracks){
+    art::Handle<std::vector<sbnd::comm::MuonTrack> > muonTrackListHandle;
+    std::vector<art::Ptr<sbnd::comm::MuonTrack> > muontrklist;
+
+    if (evt.getByLabel(fMuonTrackModuleLabel, muonTrackListHandle)){
+      art::fill_ptr_vector(muontrklist, muonTrackListHandle); 
+      _nmuontrks = muontrklist.size();
+      ResetMuonTracksVars(_nmuontrks);
+
+      for (int i=0; i < _nmuontrks; i++){ 
+        _muontrk_t0[i] = muontrklist[i]->t0_us; 
+        _muontrk_x1[i] = muontrklist[i]->x1_pos;
+        _muontrk_y1[i] = muontrklist[i]->y1_pos;
+        _muontrk_z1[i] = muontrklist[i]->z1_pos;
+        _muontrk_x2[i] = muontrklist[i]->x2_pos;
+        _muontrk_y2[i] = muontrklist[i]->y2_pos;
+        _muontrk_z2[i] = muontrklist[i]->z2_pos; 
+        _muontrk_theta_xz[i] = muontrklist[i]->theta_xz; 
+        _muontrk_theta_yz[i] = muontrklist[i]->theta_yz;
+        _muontrk_tpc[i] = muontrklist[i]->tpc; 
+        _muontrk_type[i] = muontrklist[i]->type;
+      }
+      if (freadMuonHits){
+        art::FindMany<recob::Hit> muontrkassn(muonTrackListHandle, evt, fMuonTrackModuleLabel);
+        ResetMuonHitVars(3000); //estimate of maximum collection hits
+        _nmhits = 0;
+        for (int i=0; i < _nmuontrks; i++){ 
+        std::vector< const recob::Hit*> muonhitsVec = muontrkassn.at(i);
+          _nmhits += (muonhitsVec.size()); 
+          for (size_t j=0; j<muonhitsVec.size(); j++){
+            auto muonhit = muonhitsVec.at(j);
+            geo::WireID wireid = muonhit->WireID();
+            _mhit_trk.push_back(i);
+            _mhit_tpc.push_back(wireid.TPC);
+            _mhit_wire.push_back(wireid.Wire);
+            _mhit_channel.push_back(muonhit->Channel());
+            _mhit_peakT.push_back(muonhit->PeakTime());
+            _mhit_charge.push_back(muonhit->Integral());
+          }
+        }
+      }
+    }
+    else{
+      std::cout << "Failed to get sbnd::comm::MuonTrack data product" << std::endl;
+    }
+  }
 
   if (fcheckTransparency) {
 
@@ -1069,7 +1158,9 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("crt_orient", &_crt_orient);
     fTree->Branch("crt_time", &_crt_time);
     fTree->Branch("crt_adc", &_crt_adc);
-    fTree->Branch("crt_pos", &_crt_pos);
+    fTree->Branch("crt_pos_x", &_crt_pos_x);
+    fTree->Branch("crt_pos_y", &_crt_pos_y);
+    fTree->Branch("crt_pos_z", &_crt_pos_z);
   }
 
   if (fmakeCRTtracks) {
@@ -1120,6 +1211,31 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opdet_y", &_ophit_opdet_y);
     fTree->Branch("ophit_opdet_z", &_ophit_opdet_z);
     fTree->Branch("ophit_opdet_type", &_ophit_opdet_type);
+  }
+
+  if (freadMuonTracks) {
+    fTree->Branch("nmuontrks", &_nmuontrks, "nmuontrks/I");
+    fTree->Branch("muontrk_t0", &_muontrk_t0);
+    fTree->Branch("muontrk_x1", &_muontrk_x1);
+    fTree->Branch("muontrk_y1", &_muontrk_y1);
+    fTree->Branch("muontrk_z1", &_muontrk_z1);
+    fTree->Branch("muontrk_x2", &_muontrk_x2);
+    fTree->Branch("muontrk_y2", &_muontrk_y2);
+    fTree->Branch("muontrk_z2", &_muontrk_z2);
+    fTree->Branch("muontrk_theta_xz", &_muontrk_theta_xz);
+    fTree->Branch("muontrk_theta_yz", &_muontrk_theta_yz);
+    fTree->Branch("muontrk_tpc", &_muontrk_tpc); 
+    fTree->Branch("muontrk_type", &_muontrk_type); 
+  }
+
+    if (freadMuonHits) {
+    fTree->Branch("nmhits", &_nmhits, "nmhits/I");
+    fTree->Branch("mhit_trk", &_mhit_trk);
+    fTree->Branch("mhit_tpc", &_mhit_tpc);
+    fTree->Branch("mhit_wire", &_mhit_wire); 
+    fTree->Branch("mhit_channel", &_mhit_channel);
+    fTree->Branch("mhit_peakT", &_mhit_peakT);
+    fTree->Branch("mhit_charge", &_mhit_charge); 
   }
 
   if (freadTruth) {
@@ -1195,7 +1311,9 @@ void Hitdumper::ResetCRTStripsVars(int n) {
   _crt_orient.clear();
   _crt_time.clear();
   _crt_adc.clear();
-  _crt_pos.clear();
+  _crt_pos_x.clear();
+  _crt_pos_y.clear();
+  _crt_pos_z.clear();
 
   _crt_plane.reserve(n);
   _crt_module.reserve(n);
@@ -1203,7 +1321,9 @@ void Hitdumper::ResetCRTStripsVars(int n) {
   _crt_orient.reserve(n);
   _crt_time.reserve(n);
   _crt_adc.reserve(n);
-  _crt_pos.reserve(n);
+  _crt_pos_x.reserve(n);
+  _crt_pos_y.reserve(n);
+  _crt_pos_z.reserve(n);
 }
 
 void Hitdumper::ResetCRTCustomTracksVars(int n) {
@@ -1267,7 +1387,35 @@ void Hitdumper::ResetOpHitsVars(int n) {
   _ophit_opdet_type.resize(n, DEFAULT_VALUE);
 }
 
+void Hitdumper::ResetMuonTracksVars(int n){
+  _muontrk_t0.assign(n, DEFAULT_VALUE);
+  _muontrk_x1.assign(n, DEFAULT_VALUE);
+  _muontrk_y1.assign(n, DEFAULT_VALUE);
+  _muontrk_z1.assign(n, DEFAULT_VALUE);
+  _muontrk_x2.assign(n, DEFAULT_VALUE);
+  _muontrk_y2.assign(n, DEFAULT_VALUE);
+  _muontrk_z2.assign(n, DEFAULT_VALUE); 
+  _muontrk_theta_xz.assign(n, DEFAULT_VALUE); 
+  _muontrk_theta_yz.assign(n, DEFAULT_VALUE);
+  _muontrk_tpc.assign(n, DEFAULT_VALUE);
+  _muontrk_type.assign(n, DEFAULT_VALUE);
+}
 
+void Hitdumper::ResetMuonHitVars(int n){
+  _mhit_trk.clear(); 
+  _mhit_tpc.clear();
+  _mhit_wire.clear();
+  _mhit_channel.clear();
+  _mhit_peakT.clear();
+  _mhit_charge.clear();
+
+  _mhit_trk.reserve(n);
+  _mhit_tpc.reserve(n);
+  _mhit_wire.reserve(n);
+  _mhit_channel.reserve(n);
+  _mhit_peakT.reserve(n);
+  _mhit_charge.reserve(n);
+}
 
 void Hitdumper::ResetVars() {
 

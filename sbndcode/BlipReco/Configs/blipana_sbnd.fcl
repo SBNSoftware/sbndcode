@@ -14,12 +14,12 @@ process_name: BlipAna
 
 services:
 {
-FileCatalogMetadata: 
-  @local::sbnd_file_catalog_mc
+  FileCatalogMetadata: 
+    @local::sbnd_file_catalog_mc
   @table::sbnd_services
   TFileService: { fileName: "BlipAna.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
-  BackTrackerService:  @local::standard_backtrackerservice
+  BackTrackerService:  @local::sbnd_backtrackerservice
 }
 
 source: {
