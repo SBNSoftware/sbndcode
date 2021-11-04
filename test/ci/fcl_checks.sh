@@ -122,7 +122,7 @@ do
 	continue
     fi
 
-    fcl_diff=$(diff ${REF_DIR}/${fcl%.fcl}_fhicl_dump.out ${fclout})
+    fcl_diff=$(diff ${LOCAL_REF_DIR}/${fcl%.fcl}_fhicl_dump.out ${fclout})
 
     if [[ -n $fcl_diff ]]; then
         echo "Non-zero diff from file: ${fcl}"
@@ -146,7 +146,7 @@ if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
     cd ${WORK_DIR}
     echo -e "\nMaking tar of new output files"
     echo "tar -czvf fhicl_dump_references.tar.gz *_fhicl_dump.out"
-    eval tar -czvf fhicl_dump_references.tar.gz ${WORK_DIR}/*_fhicl_dump.out
+    eval tar -czvf fhicl_dump_references.tar.gz *_fhicl_dump.out
     echo -e "Copy reference tar to pnfs"
     echo "ifdh cp fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz"
     eval ifdh cp fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz
