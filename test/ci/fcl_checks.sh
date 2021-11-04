@@ -40,22 +40,23 @@ cd "${WORK_DIR}"
 ### Loop over fcl files for checks ###
 ######################################
 
+ACCESS_REF_DIR=${REF_DIR///pnfs//cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr}
 exit_code_parsing=0
 exit_code_dump=0
 
-echo -e "\nReference Directory: ${REF_DIR}"
-echo "ls ${REF_DIR}"
-eval ifdh ls $REF_DIR
+echo -e "\nReference Directory: ${ACCESS_REF_DIR}"
+echo "ls ${ACCESS_REF_DIR}"
+eval ifdh ls $ACCESS_REF_DIR
 
-if [[ ! -f ${REF_DIR}/fhicl_dump_references.tar.gz ]]
+if [[ ! -f ${ACCESS_REF_DIR}/fhicl_dump_references.tar.gz ]]
 then
-    echo -e "\nCannot find reference tar: ${REF_DIR}/fhicl_dump_references.tar.gz"
+    echo -e "\nCannot find reference tar: ${ACCESS_REF_DIR}/fhicl_dump_references.tar.gz"
     echo "Exiting with exit code: $exit_code"
     exit 1
 else
-    echo -e "\nFound reference tar: ${REF_DIR}/fhicl_dump_references.tar.gz"
-    echo "cp ${REF_DIR}/fhicl_dump_references.tar.gz ${LOCAL_REF_DIR}/fhicl_dump_references.tar.gz"
-    eval ifdh cp ${REF_DIR}/fhicl_dump_references.tar.gz ${LOCAL_REF_DIR}/fhicl_dump_references.tar.gz
+    echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/fhicl_dump_references.tar.gz"
+    echo "cp ${ACCESS_REF_DIR}/fhicl_dump_references.tar.gz ${LOCAL_REF_DIR}/fhicl_dump_references.tar.gz"
+    eval ifdh cp ${ACCESS_REF_DIR}/fhicl_dump_references.tar.gz ${LOCAL_REF_DIR}/fhicl_dump_references.tar.gz
     echo -e "\nExtract tar to local references directory"
     echo "tar -xzvf references/fhicl_dump_references.tar.gz -C ${LOCAL_REF_DIR}"
     eval tar -xzvf references/fhicl_dump_references.tar.gz -C ${LOCAL_REF_DIR}
