@@ -144,6 +144,34 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     //                [](auto& p) {return std::addressof(p);});
 
     // to temporarily store channel and combine PMT (direct and converted) time profiles
+
+
+    //need to combine direct and reflected photons
+    std::unordered_map<std::string, std::unordered_map<int, sim::SimPhotonsLite> > AllPhotonsMap;
+    AllPhotonsMap["Direct"] = std::unordered_map<int, sim::SimPhotonsLite>();
+    AllPhotonsMap["Reflected"] = std::unordered_map<int, sim::SimPhotonsLite>();
+    for (const art::Handle<std::vector<sim::SimPhotonsLite>> &opdetHandle : photon_handles) {
+      const bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
+      for (auto const& litesimphotons : (*opdetHandle)){
+
+        if(Reflected){
+          auto it = AllPhotonsMap["Reflected"].find(litesimphotons.OpChannel);
+          if(it==AllPhotonsMap["Reflected"].end())
+            AllPhotonsMap["Reflected"][litesimphotons.OpChannel] = litesimphotons;
+          else
+            AllPhotonsMap["Reflected"][litesimphotons.OpChannel] += litesimphotons;
+        }
+
+        else{ //Direct
+          auto it = AllPhotonsMap["Direct"].find(litesimphotons.OpChannel);
+          if(it==AllPhotonsMap["Direct"].end())
+            AllPhotonsMap["Direct"][litesimphotons.OpChannel] = litesimphotons;
+          else
+            AllPhotonsMap["Direct"][litesimphotons.OpChannel] += litesimphotons;
+        }
+      }
+    }
+
     const double startTime = fConfig.EnableWindow[0] * 1000. /*ns for digitizer*/;
 
     std::unordered_map<int, sim::SimPhotonsLite> DirectPhotonsMap;
@@ -152,10 +180,13 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
 
     const unsigned start = StartChannelToProcess(fConfig.nChannels);
     const unsigned n = NChannelsToProcess(fConfig.nChannels);
-    for (const art::Handle<std::vector<sim::SimPhotonsLite>> &opdetHandle : photon_handles) {
+    for (auto const& simphotons_cols : AllPhotonsMap){
       // this now tells you if light collection is reflected
-      const bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
-      for (auto const& litesimphotons : (*opdetHandle)) {
+      const bool Reflected = (simphotons_cols.first=="Reflected");
+      for (auto const& simphotons_map : simphotons_cols.second) {
+
+        auto const& litesimphotons = simphotons_map.second;
+
         std::vector<short unsigned int> waveform;
         waveform.reserve(fConfig.Nsamples);
         const unsigned ch = litesimphotons.OpChannel;
@@ -163,6 +194,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
 
         // only work on the prescribed channels
         if (ch < start || ch >= start + n) continue;
+
 
         if( pdtype == "pmt_coated" ){
           if(Reflected)
@@ -229,19 +261,51 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     }
   }
   else { // for SimPhotons
+    const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
+
+    //need to combine direct and reflected photons
+    std::unordered_map<std::string, std::unordered_map<int, sim::SimPhotons> > AllPhotonsMap;
+    AllPhotonsMap["Direct"] = std::unordered_map<int, sim::SimPhotons>();
+    AllPhotonsMap["Reflected"] = std::unordered_map<int, sim::SimPhotons>();
+    for (const art::Handle<std::vector<sim::SimPhotons>> &opdetHandle : photon_handles) {
+      const bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
+      for (auto const& simphotons : (*opdetHandle)){
+
+        if(Reflected){
+          auto it = AllPhotonsMap["Reflected"].find(simphotons.OpChannel());
+          if(it==AllPhotonsMap["Reflected"].end())
+            AllPhotonsMap["Reflected"][simphotons.OpChannel()] = simphotons;
+          else
+            AllPhotonsMap["Reflected"][simphotons.OpChannel()] += simphotons;
+        }
+
+        else{ //Direct
+          auto it = AllPhotonsMap["Direct"].find(simphotons.OpChannel());
+          if(it==AllPhotonsMap["Direct"].end())
+            AllPhotonsMap["Direct"][simphotons.OpChannel()] = simphotons;
+          else
+            AllPhotonsMap["Direct"][simphotons.OpChannel()] += simphotons;
+        }
+      }
+    }
+
+
     // to temporarily store channel and direct light distribution
     std::unordered_map<int, sim::SimPhotons> DirectPhotonsMap;
     std::unordered_map<int, sim::SimPhotons> ReflectedPhotonsMap;
     std::unordered_set<short unsigned int> coatedpmts_todigitize;
 
-    const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
     const double startTime = fConfig.EnableWindow[0] * 1000. /*ns for digitizer*/;
 
     const unsigned start = StartChannelToProcess(fConfig.nChannels);
     const unsigned n = NChannelsToProcess(fConfig.nChannels);
-    for (const art::Handle<std::vector<sim::SimPhotons>> &opdetHandle : photon_handles) {
-      const bool Reflected = (opdetHandle.provenance()->productInstanceName() == "Reflected");
-      for (auto const& simphotons : (*opdetHandle)) {
+    for (auto const& simphotons_cols : AllPhotonsMap){
+      // this now tells you if light collection is reflected
+      const bool Reflected = (simphotons_cols.first=="Reflected");
+      for (auto const& simphotons_map : simphotons_cols.second) {
+
+        auto const& simphotons = simphotons_map.second;
+
         std::vector<short unsigned int> waveform;
         const unsigned ch = simphotons.OpChannel();
         const std::string pdtype = fConfig.pdsMap.pdType(ch);

@@ -22,8 +22,9 @@ simple_plugin( sbndPDMapAlg tool
 )
 
 
-art_make(
+art_make( EXCLUDE sbndPDMapAlg_tool.cc
   LIB_LIBRARIES
+                    sbndcode_OpDetSim_sbndPDMapAlg_tool
                     larcore_Geometry_Geometry_service
                     lardataobj_Simulation
                     lardata_Utilities
@@ -73,6 +74,7 @@ install_fhicl()
 install_source()
 cet_enable_asserts()
 add_subdirectory(FlashFinder)
+add_subdirectory(PMTAlg)
 
 # install sbnd_pds_mapping.json with mapping of the photon detectors
 install_fw(LIST sbnd_pds_mapping.json)

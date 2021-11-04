@@ -13,6 +13,7 @@
 
 // LArSoft libraries
 #include "larcore/Geometry/ExptGeoHelperInterface.h"
+#include "art/Framework/Services/Registry/ServiceDeclarationMacros.h"
 
 // C++ libraries
 #include <memory> // std::unique_ptr<>

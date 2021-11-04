@@ -12,6 +12,7 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
 #include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/Assns.h"
 #include "art/Persistency/Common/PtrMaker.h"
 
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"

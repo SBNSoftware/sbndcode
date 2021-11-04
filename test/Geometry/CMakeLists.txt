@@ -23,9 +23,8 @@ cet_test(geometry_sbnd_test
   TEST_ARGS ./test_geometry_sbnd.fcl
   LIBRARIES sbndcode_Geometry
             larcorealg_Geometry
-            GeometryTestLib
+            larcorealg::GeometryTestLib
             ${MF_MESSAGELOGGER}
-            
             ${FHICLCPP}
             cetlib_except
 	    ${ROOT_CORE}
@@ -41,9 +40,8 @@ cet_test(geometry_iterator_sbnd_test
   SOURCES geometry_iterator_sbnd_test.cxx
   LIBRARIES sbndcode_Geometry
             larcorealg_Geometry
-            GeometryTestLib
+            larcorealg::GeometryTestLib
             ${MF_MESSAGELOGGER}
-            
             ${FHICLCPP}
             cetlib_except
 	    ${ROOT_CORE}
@@ -58,9 +56,8 @@ cet_test(geometry_iterator_loop_sbnd_test
   TEST_ARGS ./test_geometry_sbnd.fcl
   LIBRARIES sbndcode_Geometry
             larcorealg_Geometry
-            GeometryTestLib
+            larcorealg::GeometryTestLib
             ${MF_MESSAGELOGGER}
-            
             ${FHICLCPP}
             cetlib_except
 	    ${ROOT_CORE}

@@ -17,6 +17,7 @@
 #include "larcore/Geometry/AuxDetExptGeoHelperInterface.h"
 #include "larcorealg/Geometry/AuxDetChannelMapAlg.h"
 #include "sbndcode/CRT/CRTChannelMapAlg.h"
+#include "art/Framework/Services/Registry/ServiceDeclarationMacros.h"
 
 namespace sbnd {
 
