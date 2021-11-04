@@ -10,6 +10,7 @@ echo "%%%------------------------------%%%"
 
 CWD="$(pwd)"
 WORK_DIR="${CWD}/fcl_tests"
+LOCAL_REF_DIR="${WORK_DIR}/references"
 
 echo -e "\nWorking Directory: ${WORK_DIR}"
 
@@ -25,36 +26,51 @@ do
 done
 
 
-################################################
-### Create working directory and output file ###
-################################################
+######################################################
+### Create working and reference store directories ###
+######################################################
 
-rm -Rf "$WORK_DIR"
-mkdir "$WORK_DIR"
-cd "$WORK_DIR"
+rm -rf "${WORK_DIR}"
+mkdir "${WORK_DIR}"
+mkdir "${LOCAL_REF_DIR}"
+cd "${WORK_DIR}"
 
 
 ######################################
 ### Loop over fcl files for checks ###
 ######################################
 
-ACCESS_REF_DIR=${REF_DIR///pnfs//cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr}
 exit_code_parsing=0
 exit_code_dump=0
 
-echo -e "\nReference Directory: ${ACCESS_REF_DIR}"
-echo "ls ${ACCESS_REF_DIR}"
-eval ifdh ls $ACCESS_REF_DIR
+echo -e "\nReference Directory: ${REF_DIR}"
+echo "ls ${REF_DIR}"
+eval ifdh ls $REF_DIR
 
+if [[ ! -f ${REF_DIR}/fhicl_dump_references.tar.gz ]]
+then
+    echo -e "\nCannot find reference tar: ${REF_DIR}/fhicl_dump_references.tar.gz"
+    echo "Exiting with exit code: $exit_code"
+    exit 1
+else
+    echo -e "\nFound reference tar: ${REF_DIR}/fhicl_dump_references.tar.gz"
+    echo "cp ${REF_DIR}/fhicl_dump_references.tar.gz ${LOCAL_REF_DIR}/fhicl_dump_references.tar.gz"
+    eval ifdh cp ${REF_DIR}/fhicl_dump_references.tar.gz ${LOCAL_REF_DIR}/fhicl_dump_references.tar.gz
+    echo -e "\nExtract tar to local references directory"
+    echo "tar -xzvf references/fhicl_dump_references.tar.gz -C ${LOCAL_REF_DIR}"
+    eval tar -xzvf references/fhicl_dump_references.tar.gz -C ${LOCAL_REF_DIR}
+fi
+
+echo -e "\nList of reference files in: ${LOCAL_REF_DIR}"
+echo "$(ls ${LOCAL_REF_DIR}/*)"
 
 echo -e "\nList of files from: ${SBNDCODE_DIR}/test/fcl_file_checks.list"
 echo "$(cat ${SBNDCODE_DIR}/test/fcl_file_checks.list)"
-echo
 
 export datestamp=$(date +"%Y%m%d%H%M")
 
 if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
-    echo -e "Updating ref files for fcl checks\n"
+    echo -e "\nUpdating ref files for fcl checks"
 fi
 
 for fcl in `cat ${SBNDCODE_DIR}/test/fcl_file_checks.list`
@@ -62,18 +78,14 @@ for fcl in `cat ${SBNDCODE_DIR}/test/fcl_file_checks.list`
 do
     echo -e "\nTesting fcl file ${fcl}"
 
-    fcl_dir="${WORK_DIR}/${fcl%.fcl}"
-    mkdir "$fcl_dir"
-    cd "$fcl_dir"
-
 
     #######################################
     ### Perform debug check on fcl file ###
     #######################################
 
     fclout=${fcl%.fcl}_fhicl_dump.out
-    larout=lar.out
-    larerr=lar.err
+    larout=${fcl%.fcl}_lar.out
+    larerr=${fcl%.fcl}_lar.err
     lar -c ${SBNDCODE_DIR}/fcl/${fcl} --debug-config $fclout > $larout 2> $larerr
 
 
@@ -94,32 +106,23 @@ do
         echo "Successful parsing of ${fcl} --- Exited with status ${stat}"
     fi
 
-    ############################################
-    ### Update reference file (if requested) ###
-    ############################################
-
-    if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
-        echo "Removing ${REF_DIR}/${fcl%.fcl}_fhicl_dump.out"
-        ifdh rm ${REF_DIR}/${fcl%.fcl}_fhicl_dump.out
-        echo "Copying: ${fclout} to ${REF_DIR}/old/${fcl%.fcl}_fhicl_dump_${datestamp}.out"
-        ifdh cp ${fclout} ${REF_DIR}/old/${fcl%.fcl}_fhicl_dump_${datestamp}.out
-        echo "Copying: ${fclout} to ${REF_DIR}/${fcl%.fcl}_fhicl_dump.out"
-        ifdh cp ${fclout} ${REF_DIR}/${fcl%.fcl}_fhicl_dump.out
-        continue
-    fi
 
     ###############################################################################
     ### Check the diff between the fcl configs for the ref and current versions ###
     ###############################################################################
 
-    if [[ ! -f ${ACCESS_REF_DIR}/${fcl%.fcl}_fhicl_dump.out ]]
+    if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
+	continue
+    fi
+
+    if [[ ! -f ${LOCAL_REF_DIR}/${fcl%.fcl}_fhicl_dump.out ]]
     then
-	echo "Cannot open reference file: ${ACCESS_REF_DIR}/${fcl%.fcl}_fhicl_dump.out it does not exist"
+	echo "Cannot open reference file: ${LOCAL_REF_DIR}/${fcl%.fcl}_fhicl_dump.out it does not exist"
 	let exit_code_dump=201
 	continue
     fi
 
-    fcl_diff=$(diff ${ACCESS_REF_DIR}/${fcl%.fcl}_fhicl_dump.out ${fclout})
+    fcl_diff=$(diff ${REF_DIR}/${fcl%.fcl}_fhicl_dump.out ${fclout})
 
     if [[ -n $fcl_diff ]]; then
         echo "Non-zero diff from file: ${fcl}"
@@ -132,6 +135,30 @@ do
     fi
     echo
 done
+
+
+############################################
+### Update reference file (if requested) ###
+############################################
+
+if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
+
+    echo -e "\nMaking tar of new output files"
+    echo "tar -czvf fhicl_dump_references.tar.gz ${WORK_DIR}/*_fhicl_dump.out"
+    eval tar -czvf fhicl_dump_references.tar.gz ${WORK_DIR}/*_fhicl_dump.out
+    echo -e "Copy reference tar to pnfs"
+    echo "ifdh cp fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz"
+    eval ifdh cp fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz
+    echo -e "Moving old reference tar to backup"
+    echo "ifdh rename ${REF_DIR}/fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references.tar.gz.bak"
+    eval ifdh rename ${REF_DIR}/fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references.tar.gz.bak
+    echo -e "Copy new tar to reference name"
+    echo "ifdh cp ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz ${REF_DIR}/fhicl_dump_references.tar.gz"
+    eval ifdh cp ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz ${REF_DIR}/fhicl_dump_references.tar.gz
+    
+    continue
+fi
+
 
 ##################################
 ### Prepare exit code and exit ###
