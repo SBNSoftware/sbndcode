@@ -39,7 +39,7 @@ art_make(
 install_headers()
 install_fhicl()
 install_source()
-FILE(GLOB fcl_files *.fcl)
+##FILE(GLOB fcl_files *.fcl)
 
 add_subdirectory(Alg)
 add_subdirectory(reco_deco_sbnd)

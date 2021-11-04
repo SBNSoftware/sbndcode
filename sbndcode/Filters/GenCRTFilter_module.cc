@@ -6,6 +6,7 @@
 #include "art/Framework/Core/EDFilter.h" 
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Principal/Event.h" 
+#include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -96,8 +97,9 @@ namespace filt{
 
 
   bool GenFilter::filter(art::Event & e){
-    std::vector< art::Handle< std::vector<simb::MCTruth> > > mclists;
-    e.getManyByType(mclists);
+    //std::vector< art::Handle< std::vector<simb::MCTruth> > > mclists;
+    //e.getManyByType(mclists);
+    auto mclists = e.getMany< std::vector<simb::MCTruth> >();
 
     auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 

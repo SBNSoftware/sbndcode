@@ -123,6 +123,9 @@ outputs:
   {
               @table::sbnd_rootoutput # inherit shared settings
     fileName: "prodsingle_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
+    outputCommands: [ "keep *_*_*_*"
+                    , "drop *_ionandscint__*" # Drop the IonAndScint w/ SCE offsets applied
+                    ]
   }
 }
 

@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 sbnd_larg4faketriggerfilter:
 {
-  module_type:     "LArG4FakeTriggerFilter" 
+  module_type:     "LArG4FakeTriggerFilter"
 
   BeamTimeMin:     0.         # Minimum time of beam window [us]
   BeamTimeMax:     1.6        # Maximum time of beam window [us]

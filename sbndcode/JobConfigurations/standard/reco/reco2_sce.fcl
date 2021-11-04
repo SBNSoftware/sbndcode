@@ -17,5 +17,7 @@ physics.reco2_sce: [@sequence::physics.reco2, #opt0finder,
 
 physics.trigger_paths: [ reco2_sce ]
 
+physics.end_paths: [stream1, caloskimana]
+
 # turn on space charge service
 #include "enable_spacecharge_services_sbnd.fcl"

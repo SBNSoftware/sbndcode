@@ -23,6 +23,7 @@
 #include "sbndcode/DetectorSim/Services/ChannelNoiseService.h"
 
 #include "art_root_io/TFileService.h"
+#include "art/Framework/Services/Registry/ServiceDeclarationMacros.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/LArFFT.h"
 #include "larcore/Geometry/Geometry.h"

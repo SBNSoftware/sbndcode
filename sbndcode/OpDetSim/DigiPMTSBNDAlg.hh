@@ -10,6 +10,8 @@
 #define SBND_OPDETSIM_DIGIPMTSBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/DelegatedParameter.h"
+#include "fhiclcpp/types/OptionalDelegatedParameter.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
 #include "CLHEP/Random/RandFlat.h"
@@ -17,6 +19,7 @@
 #include "CLHEP/Random/RandGeneral.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
+#include "art/Utilities/make_tool.h"
 
 #include <algorithm>
 #include <memory>
@@ -33,6 +36,8 @@
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
+
+#include "sbndcode/OpDetSim/PMTAlg/PMTGainFluctuations.hh"
 
 #include "TFile.h"
 
@@ -58,6 +63,8 @@ namespace opdet {
       double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
       bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
+      bool MakeGainFluctuations; //Fluctuate PMT gain
+      fhicl::ParameterSet GainFluctuationsParams;
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       double frequency;       //wave sampling frequency (GHz)
@@ -121,6 +128,9 @@ namespace opdet {
     double saturation;
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
+
+    //PMTFluctuationsAlg
+    std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
 
     void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
@@ -251,6 +261,17 @@ namespace opdet {
         Name("PMTDataFile"),
         Comment("File containing timing emission distribution for TPB and single pe pulse from data")
       };
+
+      fhicl::Atom<bool> makeGainFluctuations {
+        Name("MakeGainFluctuations"),
+        Comment("Option to fluctuate PMT gain")
+      };
+
+      fhicl::OptionalDelegatedParameter gainFluctuationsParams {
+        Name("GainFluctuationsParams"),
+        Comment("Parameters used for SinglePE response fluctuations")
+      };
+
     };    //struct Config
 
     DigiPMTSBNDAlgMaker(Config const& config); //Constructor

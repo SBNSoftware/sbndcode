@@ -114,8 +114,12 @@ outputs:
 {
   out1:
   {
-              @table::sbnd_rootoutput
-    dataTier: "simulated"
+                    @table::sbnd_rootoutput
+    dataTier:       "simulated"
+                    # Drop the IonAndScint w/ SCE offsets applied
+    outputCommands: [ "keep *_*_*_*"
+                    , "drop *_ionandscint__*"
+                    ]
   }
 }
 

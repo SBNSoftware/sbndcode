@@ -4,6 +4,7 @@
 // Based upon SPhaseChannelNoiseService.cxx developed by Jingbo Wang for ProtoDUNE.
 
 #include "sbndcode/DetectorSim/Services/SBNDThermalNoiseServiceInTime.h"
+#include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 
 using std::cout;
 using std::ostream;

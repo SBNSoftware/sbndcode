@@ -37,6 +37,7 @@ art_make(
     ${G4EVENT}
     ${G4GEOMETRY}
     ${G4GLOBAL}
+    ${G4PHYSICSLISTS}
     ${G4GRAPHICS_REPS}
     ${G4MATERIALS}
     ${G4INTERCOMS}
