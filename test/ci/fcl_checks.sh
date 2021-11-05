@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo "%%%------------------------------%%%"
-echo "%  Executing ${0} script  %"
+echo "%  Executing $(basename ${0}) script  %"
 echo "%%%------------------------------%%%"
 
 echo "args: ${@}"
