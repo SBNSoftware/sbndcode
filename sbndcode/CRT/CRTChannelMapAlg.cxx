@@ -59,9 +59,7 @@ namespace geo {
 	number_scintillating_strips = 20;    //To account for the MINOS modules.
       }
       else {number_scintillating_strips = 16;}
-
-      std::cout << "Module type: " << ((adgeo[a].TotalVolume())->GetShape())->GetName() << std::endl;
-
+      
       size_t nsv = adgeo[a].NSensitiveVolume();
       if (nsv != number_scintillating_strips) {
         throw cet::exception("CRTChannelMap")
