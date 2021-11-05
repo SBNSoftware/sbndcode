@@ -1,11 +1,7 @@
-#include <algorithm>
-
 #include "art/Framework/Core/EDFilter.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
 
-#include "larcore/Geometry/Geometry.h"
-#include "larcorealg/Geometry/GeometryCore.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 
 namespace filt {
@@ -16,11 +12,11 @@ class SimEnergyDepFakeTriggerFilter : public art::EDFilter {
   virtual bool filter(art::Event& e) override;
 
   private:
-  double fBeamTimeMin;   // Minimum time of beam window [us]
-  double fBeamTimeMax;   // Maximum time of beam window [us]
-  double fEnergyDeposit; // Minimum energy deposit in TPC for trigger [MeV]
+  const double fBeamTimeMin;   // Minimum time of beam window [us]
+  const double fBeamTimeMax;   // Maximum time of beam window [us]
+  const double fEnergyDeposit; // Minimum energy deposit in TPC for trigger [MeV]
 
-  std::string fSimEnergyDepModuleName;
+  const std::string fSimEnergyDepModuleName;
 };
 
 SimEnergyDepFakeTriggerFilter::SimEnergyDepFakeTriggerFilter(fhicl::ParameterSet const& pset)
@@ -34,15 +30,14 @@ SimEnergyDepFakeTriggerFilter::SimEnergyDepFakeTriggerFilter(fhicl::ParameterSet
 
 bool SimEnergyDepFakeTriggerFilter::filter(art::Event& e)
 {
-  art::Handle<std::vector<sim::SimEnergyDeposit>> energyDeps;
-  e.getByLabel(fSimEnergyDepModuleName, energyDeps);
+  const art::ValidHandle<std::vector<sim::SimEnergyDeposit>>&
+      energyDeps(e.getValidHandle<std::vector<sim::SimEnergyDeposit>>(fSimEnergyDepModuleName)t);
 
   double energy(0);
 
   for (const sim::SimEnergyDeposit& energyDep : *energyDeps) {
-
     // Check particle time is within the beam time
-    const double time = energyDep.Time() * 1e-3; // [ns] -> [us]
+    const double time(energyDep.Time() * 1e-3); // [ns] -> [us]
     if (time < fBeamTimeMin || time > fBeamTimeMax)
       continue;
 
