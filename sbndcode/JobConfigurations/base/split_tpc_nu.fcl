@@ -1,0 +1,88 @@
+#
+# File:    split_tpc_nu.fcl
+# Purpose: Take in pregenerated GENIE events that contain both TPC and dirt events and split
+#          them into two output streams based on whether they had a TPC interaction or not
+# Version: 1.0
+#
+# Input: File with GENIE run as generator and largeant to track energy depositions
+#
+# Dependencies:
+# - uses the bundle of SBND simulation services
+#
+#
+
+#
+# services
+#
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+#
+# filters
+#
+
+#include "gennufilter.fcl"
+
+process_name: GenieDirtOutputs
+
+services:
+{
+  TFileService: { fileName: "hists_split_tpc_nu_sbnd_%p-%tc.root" }
+  @table::sbnd_simulation_services # load simulation services in bulk
+}
+
+#source is now a root file
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1        # Number of events to create
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+  filters:
+  {
+    # Filter events that have an interaction in the TPC
+    tpcfilter: @local::sbnd_tpc_gennufilter
+  }
+
+  # Note we assume that every event has already been filtered to require a tpc interaction
+  # or a dirt interaction previously. Therefore, anything without a tpc interaction is
+  # assumed to be dirt
+  filtertpc:  [ tpcfilter ]
+  filterdirt: [ "!tpcfilter" ]
+
+  # Split the outputs into those with/without TPC interactions
+  stream1:   [ outTPC, outDirt ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
+
+outputs:
+  {
+  # Keep only the events with a TPC neutrino
+  # N.B. These events will still have some random coincidence of dirt interactions
+  outTPC:
+  {
+    module_type: RootOutput
+    fileName:    "tpc_%p-%tc.root"
+    dataTier:    "generated"
+    SelectEvents: [ filtertpc ]
+  }
+
+  # Keep only the events that have a no TPC neutrino but a dirt interaction
+  outDirt:
+  {
+    module_type: RootOutput
+    fileName:    "dirt_%p-%tc.root"
+    dataTier:    "generated"
+    SelectEvents: [ filterdirt ]
+  }
+}
+
