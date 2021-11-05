@@ -91,7 +91,8 @@ namespace geo {
       double const worldLoc[3],
       std::vector<geo::AuxDetGeo> const& auxDets,
       size_t& ad,
-      size_t& sv) const {
+      size_t& sv,
+      double tolerance) const {
 
     std::cout << "CRTChannelMapAlg::PositionToAuxDetChannel" << std::endl;
 
@@ -100,7 +101,7 @@ namespace geo {
 
     // Figure out which detector we are in
     ad = 0;
-    sv = this->NearestSensitiveAuxDet(worldLoc, auxDets, ad);
+    sv = this->NearestSensitiveAuxDet(worldLoc, auxDets, ad, 0.0001);
 
     // Get the origin of the sensitive volume in the world coordinate system
     double svOrigin[3] = {0, 0, 0};
