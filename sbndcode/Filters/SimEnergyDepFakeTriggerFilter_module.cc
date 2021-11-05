@@ -31,7 +31,7 @@ SimEnergyDepFakeTriggerFilter::SimEnergyDepFakeTriggerFilter(fhicl::ParameterSet
 bool SimEnergyDepFakeTriggerFilter::filter(art::Event& e)
 {
   const art::ValidHandle<std::vector<sim::SimEnergyDeposit>>&
-      energyDeps(e.getValidHandle<std::vector<sim::SimEnergyDeposit>>(fSimEnergyDepModuleName)t);
+      energyDeps(e.getValidHandle<std::vector<sim::SimEnergyDeposit>>(fSimEnergyDepModuleName));
 
   double energy(0);
 
