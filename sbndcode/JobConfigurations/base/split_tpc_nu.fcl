@@ -71,7 +71,7 @@ outputs:
   outTPC:
   {
     module_type: RootOutput
-    fileName:    "tpc_%p-%tc.root"
+    fileName:    "tpc_%ifb_%p-%tc.root"
     dataTier:    "generated"
     SelectEvents: [ filtertpc ]
   }
@@ -80,7 +80,7 @@ outputs:
   outDirt:
   {
     module_type: RootOutput
-    fileName:    "dirt_%p-%tc.root"
+    fileName:    "dirt_%ifb_%p-%tc.root"
     dataTier:    "generated"
     SelectEvents: [ filterdirt ]
   }
