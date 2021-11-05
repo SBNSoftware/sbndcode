@@ -45,8 +45,6 @@ exit_code_parsing=0
 exit_code_dump=0
 
 echo -e "\nReference Directory: ${ACCESS_REF_DIR}"
-echo "ls ${ACCESS_REF_DIR}"
-eval ifdh ls $ACCESS_REF_DIR
 
 if [[ ! -f ${ACCESS_REF_DIR}/fhicl_dump_references.tar.gz ]]
 then
@@ -148,13 +146,13 @@ if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
     echo -e "\nMaking tar of new output files"
     echo "tar -czvf fhicl_dump_references.tar.gz *_fhicl_dump.out"
     eval tar -czvf fhicl_dump_references.tar.gz *_fhicl_dump.out
-    echo -e "Copy reference tar to pnfs"
+    echo -e "\nCopy reference tar to pnfs"
     echo "ifdh cp fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz"
     eval ifdh cp fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz
-    echo -e "Moving old reference tar to backup"
+    echo -e "\nMoving old reference tar to backup"
     echo "ifdh rename ${REF_DIR}/fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references.tar.gz.bak"
     eval ifdh rename ${REF_DIR}/fhicl_dump_references.tar.gz ${REF_DIR}/fhicl_dump_references.tar.gz.bak
-    echo -e "Copy new tar to reference name"
+    echo -e "\nCopy new tar to reference name"
     echo "ifdh cp ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz ${REF_DIR}/fhicl_dump_references.tar.gz"
     eval ifdh cp ${REF_DIR}/fhicl_dump_references_${datestamp}.tar.gz ${REF_DIR}/fhicl_dump_references.tar.gz
     
