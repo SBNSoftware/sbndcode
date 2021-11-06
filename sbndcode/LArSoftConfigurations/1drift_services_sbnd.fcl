@@ -1,0 +1,12 @@
+# Include this file at the bottom of any fhicl file handling MC produced using only 1 drift window
+# It will modify all services parameters necessary.
+# Note: this is how sbndcode behaved by *default* prior to incorporating a 0.2 ms front/back porch
+
+services.DetectorPropertiesService.NumberTimeSamples: 2600 # 1 drift window
+services.DetectorPropertiesService.ReadOutWindowSize: 2600
+services.DetectorClocksService.G4RefTime:             0 # [us]
+services.DetectorClocksService.TriggerOffsetTPC:      0 # [us]
+services.DetectorClocksService.DefaultTrigTime:       0 # [us]
+services.DetectorClocksService.DefaultBeamTime:       0 # [us]
+
+

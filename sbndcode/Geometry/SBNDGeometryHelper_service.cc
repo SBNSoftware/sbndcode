@@ -15,6 +15,7 @@
 
 // LArSoft libraries
 #include "larcorealg/Geometry/ChannelMapAlg.h"
+#include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 
 namespace sbnd
 {

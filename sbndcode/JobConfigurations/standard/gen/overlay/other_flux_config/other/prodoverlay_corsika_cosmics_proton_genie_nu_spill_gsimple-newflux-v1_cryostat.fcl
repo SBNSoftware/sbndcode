@@ -29,8 +29,6 @@ physics.producers.generator.FiducialCut: "mbox: -210,-210,-10,210,210,510"
 # Use proton mode for cosmics -- uBooNE sees better match with data
 physics.producers.cosmgen: @local::sbnd_corsika_p
 
-physics.producers.cosmgen.SampleTime:       5.2e-3   # 0.2 ms (G4 rise time) + 1.25 ms (1 full drift window) + 3.75 ms (readout) @ -70 kv, 114 cm/ms
-physics.producers.cosmgen.TimeOffset:      -2.7e-3   # 3.75 ms readout should start at -1.25 ms to match data
 physics.producers.cosmgen.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
 
 # this process does not use detector clocks -- no need to setup 3drfit services

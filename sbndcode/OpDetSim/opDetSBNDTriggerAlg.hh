@@ -4,6 +4,29 @@
 //// This algorithm emulates the behavior of the SBND trigger going
 //// to the photon detection system. Created by Gray Putnam
 //// <grayputnam@uchicago.edu>
+//// 
+//// Changes:
+//// 
+//// 2021.04.21 (wforeman)
+////   - Implemented TriggerHoldoff functionality (default behavior unchanged)
+////   - Fixed bug where PreTrigBeam was getting assigned wrong value
+////   - Changed name of TriggerEnableWindow parameter to better reflect
+////     the actual behavior of module
+////   - Added drift period as fcl parameter, which sets how early the trigger 
+////     enable window starts
+////   - Beam trigger is now added in FindTriggers instead of in ApplyTriggers
+////   - Added option to toggle trigger overlap (default behavior unchanged)
+////   - Modified the ApplyTriggers function to accommodate trigger overlap
+////   - Restored distinction of beam vs non-beam readout window sizes
+////
+//// 2021.03.24 (wforeman)
+////   - Fixed wrong threshold used for ARAPUCAs
+////   - TriggerEnableWindow now starts 1 drift period prior to TPC RO
+////   - Set readout length to 12us (1us + 11us)
+////   - Made changes to ApplyTriggers function that enforced no overlap of
+////     triggers (ie, uniform readout size)
+////
+//// 
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef SBND_OPDETSIM_OPDETSBNDTRIGGERALG_HH
@@ -160,21 +183,33 @@ namespace opdet {
         0.
       };
 
-      fhicl::Atom<bool> TriggerEnableWindowIsTPCReadoutWindow {
-        Name("TriggerEnableWindowIsTPCReadoutWindow"),
-        Comment("If true, triggers will be enabled for the length of time that the TPC is read-out (DetectorClocks and DetectorProperties are used to determine this time span. Otherwise, the config options TriggerEnableWindowStart and TriggerEnableWindowLength are checked."),
+      fhicl::Atom<bool> AllowTriggerOverlap {
+        Name("AllowTriggerOverlap"),
+        Comment("Extend the readout length if a second trigger occurs during a readout (CAEN board setting)."),
+        true
+      };
+
+      fhicl::Atom<bool> TriggerEnableWindowOneDriftBeforeTPCReadout {
+        Name("TriggerEnableWindowOneDriftBeforeTPCReadout"),
+        Comment("If true, triggers will be enabled starting one full drift period prior to the start of the TPC readout, continuing for the length of time that the TPC is read-out (DetectorClocks and DetectorProperties are used to determine this time span. Otherwise, the config options TriggerEnableWindowStart and TriggerEnableWindowLength are checked."),
+        true
+      };
+
+      fhicl::Atom<double> DriftPeriod {
+        Name("DriftPeriod"),
+        Comment("Drift period, used to determine how soon before the TPC readout the trigger enable window begins. [us]"),
         true
       };
 
       fhicl::Atom<double> TriggerEnableWindowStart {
         Name("TriggerEnableWindowStart"),
-        Comment("Start of the window of time for which triggers are enabled. Ignored if TriggerEnableWindowIsTPCReadoutWindow is true. [us]"),
+        Comment("Start of the window of time for which triggers are enabled. Ignored if TriggerEnableWindowOneDriftBeforeTPCReadout is true. [us]"),
         0.
       };
 
       fhicl::Atom<double> TriggerEnableWindowLength {
         Name("TriggerEnableWindowLength"),
-        Comment("Length of time for which trigger are enabled. Ignored if TriggerEnableWindowIsTPCReadoutWindow is true. [us]"),
+        Comment("Length of time for which trigger are enabled. Ignored if TriggerEnableWindowOneDriftBeforeTPCReadout is true. [us]"),
         0.
       };
 

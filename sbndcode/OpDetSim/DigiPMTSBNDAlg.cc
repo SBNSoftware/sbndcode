@@ -60,6 +60,10 @@ namespace opdet {
       Pulse1PE(fSinglePEWave);
     }
 
+    if(fParams.MakeGainFluctuations){
+      fPMTGainFluctuationsPtr = art::make_tool<opdet::PMTGainFluctuations>(fParams.GainFluctuationsParams);
+    }
+
     saturation = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
     file->Close();
   } // end constructor
@@ -248,7 +252,6 @@ namespace opdet {
     double tphoton;
     size_t timeBin;
     double ttpb;
-
     // direct light
     if ( auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) ){
       for (auto& directPhotons : (it->second).DetectedPhotons) {
@@ -322,9 +325,17 @@ namespace opdet {
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
-    std::transform(min_it, max_it,
+    if(fParams.MakeGainFluctuations){
+      double npe=fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine);
+      std::transform(min_it, max_it,
+                     fSinglePEWave.begin(), min_it,
+                     [npe](auto a, auto b) { return a+npe*b; });
+    }
+    else{
+      std::transform(min_it, max_it,
                    fSinglePEWave.begin(), min_it,
                    std::plus<double>( ));
+    }
   }
 
 
@@ -462,6 +473,8 @@ namespace opdet {
     fBaseConfig.TTS                      = config.tts();
     fBaseConfig.CableTime                = config.cableTime();
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
+    fBaseConfig.MakeGainFluctuations     = config.makeGainFluctuations();
+    config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
   }
 
   std::unique_ptr<DigiPMTSBNDAlg>

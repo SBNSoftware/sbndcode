@@ -1,0 +1,49 @@
+#
+# This fhicl takes an input ArtROOT file containing reconstructed events
+# and outputs a file with the raw::Digit and recob::Wire objects dropped
+# to save a considerable amount of disk space. Add this as the final fcl 
+# in your grid reco stage if you only intend to access the higher-level 
+# objects like hits, tracks, and showers for your analysis.
+#
+
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: DropRaw
+
+services:
+{
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  
+}
+
+physics:
+{
+ stream1:   [ out1 ]
+ end_paths: [ stream1 ]
+}
+
+outputs:
+{
+ out1:
+ {
+                @table::sbnd_rootoutput
+    fileName:    "%ifb_%p.root"
+    dataTier:    "reconstructed"
+    outputCommands: [
+      "keep *_*_*_*",
+      "drop *_daq_*_*",
+      "drop *_opdaq_*_*",
+      "drop *_caldata_*_*"
+    ]
+ }
+}
+
+

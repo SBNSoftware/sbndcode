@@ -46,7 +46,7 @@ process_name: GenieGen
 #
 services: {
   
-  TFileService:          { fileName: "prodgenie_common_cosmic_sbnd_%p-%tc_hists.root" }
+  TFileService:          { fileName: "hists_prodgenie_common_cosmic_sbnd_%p-%tc.root" }
   IFDH:                  {} # required by GENIEGen
                          @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
                          @table::sbnd_random_services  # from simulationservices_sbnd.fcl
@@ -114,4 +114,3 @@ outputs:
 # override
 #
 physics.producers.generator.BufferBox: [ -250.0, +250.0, -250.0, +250.0, -250.0, +250.0 ]
-

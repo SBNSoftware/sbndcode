@@ -70,7 +70,7 @@ sbnd_evdlayoutopt.ShowEndPointSection:      1
 sbnd_evdlayoutopt.ShowEndPointMarkers:      1
 sbnd_evdlayoutopt.ChangeWire:               1
 
-sbnd_rawdrawingopt.TotalTicks: 3000
+sbnd_rawdrawingopt.TotalTicks: 3400
 
 sbnd_disp:                                                                       
 {

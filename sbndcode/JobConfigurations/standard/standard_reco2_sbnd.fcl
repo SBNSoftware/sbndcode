@@ -12,4 +12,6 @@
 
 process_name: Reco2
 
-physics.trigger_paths: [ reco2, opticalt0 ]
+physics.trigger_paths: [reco2 #, opticalt0
+			]
+physics.end_paths: [stream1, caloskimana]

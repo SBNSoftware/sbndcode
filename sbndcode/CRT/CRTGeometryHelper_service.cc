@@ -9,6 +9,7 @@
 
 #include "sbndcode/CRT/CRTGeometryHelper.h"
 #include "sbndcode/CRT/CRTChannelMapAlg.h"
+#include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 
 #include <memory>
 

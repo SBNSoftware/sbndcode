@@ -9,6 +9,7 @@ art_make(
                            larevt_Filters
                            lardataobj_RawData
                            lardataobj_RecoBase
+			   larreco_Calorimetry
                            larreco_RecoAlg
                            lardata_RecoObjects  
                            larpandora_LArPandoraInterface

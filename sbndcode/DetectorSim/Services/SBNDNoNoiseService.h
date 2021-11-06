@@ -12,6 +12,7 @@
 #define SBNDNoNoiseService_H
 
 #include "sbndcode/DetectorSim/Services/ChannelNoiseService.h"
+#include "art/Framework/Services/Registry/ServiceDeclarationMacros.h"
 
 #include <vector>
 #include <iostream>

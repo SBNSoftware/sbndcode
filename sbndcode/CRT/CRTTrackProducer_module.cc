@@ -39,6 +39,7 @@
 #include <utility>
 #include <cmath> 
 #include <memory>
+#include <numeric> // std::accumulate
 
 namespace sbnd {
 

@@ -1,6 +1,6 @@
-#
 # Channel filter service configuration for SBND
 #
+#include "badchannels_sbnd.fcl"
 #
 BEGIN_PROLOG
 
@@ -10,8 +10,16 @@ sbnd_channelstatus: {
   service_provider: SimpleChannelStatusService
   
   # list of bad channels:
-  #BadChannels:   [ 22, 65, 237, 307, 308, 309, 310, 311, 410, 412, 438, 439, 448 ]
-  BadChannels:   [ ]
+  BadChannels:   [ 
+    @sequence::sbnd_badchannels_tpc0_plane2_missing_jumpered,
+    @sequence::sbnd_badchannels_tpc1_plane2_missing_jumpered,
+    @sequence::sbnd_badchannels_tpc0_plane2_missing_combs,
+    @sequence::sbnd_badchannels_tpc1_plane2_missing_combs,
+    @sequence::sbnd_badchannels_tpc0_plane0_missing_extremities,
+    @sequence::sbnd_badchannels_tpc0_plane1_missing_extremities,
+    @sequence::sbnd_badchannels_tpc1_plane0_missing_extremities,
+    @sequence::sbnd_badchannels_tpc1_plane1_missing_extremities
+  ]
   
   # list of bad noisy channels:
   #NoisyChannels: [ 31, 41, 108, 120, 121, 124, 392, 399 ]

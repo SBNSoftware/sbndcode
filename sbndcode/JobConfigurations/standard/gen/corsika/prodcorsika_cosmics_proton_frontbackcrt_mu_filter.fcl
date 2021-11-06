@@ -1,8 +1,22 @@
-#include "prodcorsika_cosmics_cmc_frontbackcrt_mu_filter.fcl"
+# CORSIKA cosmics only simulation selecting
+# only muons that cross the front-back CRTs:
+# along the beam direction
 
-# overwrite CMC generator to instead use "proton" -- has a more accurate
-# cosmic rate
-physics.producers.generator: @local::sbnd_corsika_p
+#include "prodcorsika_cosmics_proton_filter.fcl"
 
-#DO NOT DELETE.  NEEDED FOR MCC
-#MCCSTATEMENT: michel_electron, G4: g4_michel_electron_filter.fcl
+physics.filters.filter.UseTopHighCRTs:         false
+physics.filters.filter.UseTopLowCRTs:          false
+physics.filters.filter.UseBottomCRTs:          false
+physics.filters.filter.UseFrontCRTs:           true
+physics.filters.filter.UseBackCRTs:            true
+physics.filters.filter.UseLeftCRTs:            false
+physics.filters.filter.UseRightCRTs:           false
+physics.filters.filter.PDGs:                   [ 13, -13 ]
+# units are GeV/c, needs at least 1 GeV/c to cross active volume
+physics.filters.filter.MinMomentums:           [ 1., 1. ]
+physics.filters.filter.MaxMomentums:           [ -999., -999. ]
+physics.filters.filter.CRTDimensionScaling:    1.2
+physics.filters.filter.UseTightReadoutWindow:  true
+
+outputs.out1.fileName: "prodcosmics_corsika_frontbackcrt_sbnd_%p-%tc.root"
+

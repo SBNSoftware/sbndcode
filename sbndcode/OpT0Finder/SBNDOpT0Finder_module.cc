@@ -247,8 +247,8 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
   auto const & flash_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[tpc]);
   if(!flash_h.isValid() || flash_h->empty()) {
-    mf::LogWarning("SBNDOpT0Finder") << "Don't have good flashes from producer "
-                                     << _opflash_producer_v[tpc] << std::endl;
+    mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes from producer "
+                                  << _opflash_producer_v[tpc] << std::endl;
     return;
   }
 

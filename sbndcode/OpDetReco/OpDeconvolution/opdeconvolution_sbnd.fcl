@@ -1,0 +1,21 @@
+#include "opdeconvolution_alg.fcl"
+
+BEGIN_PROLOG
+
+SBNDOpDeconvolution:
+{
+  module_type:	"SBNDOpDeconvolution"
+  InputLabel: "opdaq"
+  PDTypes: []
+  OpDecoAlg: @local::OpDeconvolutionAlg
+}
+
+SBNDOpDeconvolutionPMT: @local::SBNDOpDeconvolution
+SBNDOpDeconvolutionPMT.PDTypes: ["pmt_coated", "pmt_uncoated"]
+SBNDOpDeconvolutionPMT.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_pmt_sbnd.root"
+
+#SBNDOpDeconvolutionXARAPUCA: @local::SBNDOpDeconvolution
+#SBNDOpDeconvolutionXARAPUCA.PDTypes: ["xarapuca_vuv", "xarapuca_vis"]
+#SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_arapuca_sbnd.root"
+
+END_PROLOG

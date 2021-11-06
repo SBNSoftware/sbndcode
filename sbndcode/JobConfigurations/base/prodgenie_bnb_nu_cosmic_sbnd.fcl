@@ -25,7 +25,7 @@
 process_name: GenieGen
 
 # output files
-services.TFileService.fileName: "prodgenie_bnb_nu_cosmic_sbnd_%p-%tc_hists.root"
+services.TFileService.fileName: "hists_prodgenie_bnb_nu_cosmic_sbnd_%p-%tc.root"
 outputs.out1.fileName: "prodgenie_bnb_nu_cosmic_sbnd_%p-%tc.root"
 
 physics.producers.generator: @local::sbnd_genie_simple
