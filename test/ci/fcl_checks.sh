@@ -90,7 +90,7 @@ do
     fclout=${fcl%.fcl}_fhicl_dump.out
     larout=${fcl%.fcl}_lar.out
     larerr=${fcl%.fcl}_lar.err
-    lar -c ${SBNDCODE_DIR}/fcl/${fcl} --debug-config $fclout > $larout 2> $larerr
+    lar -c ${fcl} --debug-config $fclout > $larout 2> $larerr
 
 
     ##############################################
