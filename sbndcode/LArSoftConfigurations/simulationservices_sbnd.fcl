@@ -59,6 +59,7 @@ sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulation
 sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
 
 sbnd_backtrackerservice.BackTracker.G4ModuleLabel: "largeant"
+sbnd_backtrackerservice.BackTracker.SimChannelModuleLabel: "simdrift"
 sbnd_backtrackerservice.BackTracker.MinimumHitEnergyFraction: 1e-1
 sbnd_backtrackerservice.BackTracker.OverrideRealData: true
 
