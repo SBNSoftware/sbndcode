@@ -16,8 +16,6 @@ LOCAL_REF_DIR="${WORK_DIR}/references"
 
 echo -e "\nWorking Directory: ${WORK_DIR}"
 
-# declare x=$@
-
 while :
 do
     case "x$1" in
