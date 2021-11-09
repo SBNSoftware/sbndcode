@@ -242,7 +242,8 @@ namespace filt{
         fRightCRTAuxDetIDs.push_back(auxdet_i);
       }
       else {
-        std::cout<<"Tagger with name: " << taggerName << " does not fit the logic.  This should not happen!!!!!!one"<<std::endl;
+        std::cout << "Tagger with name: " << taggerName
+                  << " does not fit the logic. This should not happen!!!!!!" << std::endl;
       }
     }
 
