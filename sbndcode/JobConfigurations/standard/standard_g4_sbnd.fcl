@@ -116,8 +116,10 @@ outputs:
   {
                     @table::sbnd_rootoutput
     dataTier:       "simulated"
-                    # Drop the IonAndScint w/ SCE offsets applied
     outputCommands: [ "keep *_*_*_*"
+                    # Drop the SimEnergyDeposits made by LArG4
+                    , "drop sim::SimEnergyDeposits_largeant_*_*"
+                    # Drop the IonAndScint w/ SCE offsets applied
                     , "drop *_ionandscint__*"
                     ]
   }
