@@ -124,6 +124,7 @@ outputs:
                     # Drop the IonAndScint w/ SCE offsets applied
     outputCommands: [ "keep *_*_*_*"
                     , "drop *_ionandscint__*"
+		    , "drop sim::AuxDetHits_*_*_*"
                     ]
   }
 }
