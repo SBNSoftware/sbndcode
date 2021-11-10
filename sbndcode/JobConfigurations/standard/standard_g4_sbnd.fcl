@@ -14,6 +14,8 @@
 #   * SimPhoton or SimPhotonLite (photons at the optical detectors)
 # - ElectronDrift: produces:
 #   * SimChannels (energy and charge at the wires)
+# - GenericCRT: produces:
+#   * AuxDetSimChannels (from LArG4 AuxDetHits)
 # - MCReco: produces:
 #   * MCTrack, MCShower: deposited energy from each MCParticle
 #
@@ -86,7 +88,7 @@ physics:
     # Truth-level reconstruction
     mcreco: @local::sbnd_mcreco
 
-    #Generic CRT
+    # Generic CRT
     genericcrt: @local::sbnd_genericCRT
 
   }
@@ -101,7 +103,7 @@ physics:
             , pdfastsimout
             , simdrift
             , mcreco
-	    , genericcrt
+            , genericcrt
           ]
 
   # The output stream, there could be more than one if using filters
@@ -121,10 +123,11 @@ outputs:
   {
                     @table::sbnd_rootoutput
     dataTier:       "simulated"
-                    # Drop the IonAndScint w/ SCE offsets applied
     outputCommands: [ "keep *_*_*_*"
+                    # Drop the IonAndScint w/ SCE offsets applied
                     , "drop *_ionandscint__*"
-		    , "drop sim::AuxDetHits_*_*_*"
+                    # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
+                    , "drop sim::AuxDetHits_*_*_*"
                     ]
   }
 }
