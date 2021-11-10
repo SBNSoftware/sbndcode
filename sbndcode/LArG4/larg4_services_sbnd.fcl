@@ -88,7 +88,6 @@ sbnd_larg4detector:
 }
 
 sbnd_larg4detector_noophybrid: @local::sbnd_larg4detector
-sbnd_larg4detector_noophybrid.gdmlFileName_: @local::sbnd_geometry_file_noophybrid_nowires
 sbnd_larg4detector_noophybrid.volumeNames: ["volTPCActive"]
 sbnd_larg4detector_noophybrid.stepLimits: [0.3]
 
