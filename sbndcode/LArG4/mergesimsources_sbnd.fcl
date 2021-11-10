@@ -14,4 +14,23 @@ sbnd_merge_sim_sources : {
   EnergyDepositInstanceLabels: [ "priorSCE" ]
 }
 
+# Save the list of volumes (instance names) in which largeant creates SimEnergyDeposits
+largeant_volumes: [ "LArG4DetectorServicevolFieldCage"
+                  , "LArG4DetectorServicevolPMT"
+                  , "LArG4DetectorServicevolXArapuca"
+                  , "LArG4DetectorServicevolPDSstructure"
+                  , "LArG4DetectorServicevolTPCPlaneVert"
+                  , "LArG4DetectorServicevolCryostat"
+                  , "LArG4DetectorServicevolTPCActive"
+                  ]
+
+# Merge seperate instances of largeant for GENIE and CORSIKA
+sbnd_merge_overlay_sim_sources : {
+  @table::sbnd_merge_sim_sources
+  FillMCParticles:             true
+  FillSimEnergyDeposits:       true
+  InputSourcesLabels:          [ "largeantnu", "largeantcosmic"]
+  EnergyDepositInstanceLabels: @local::largeant_volumes
+}
+
 END_PROLOG
