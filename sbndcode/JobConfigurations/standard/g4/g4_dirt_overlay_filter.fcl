@@ -18,8 +18,12 @@ physics.producers.ionandscintout.InputModuleLabels: ["largeant"]
 
 physics.simulate: [ rns , loader, largeantcosmic , largeant , ionandscint , ionandscintout , pdfastsim , pdfastsimout , simdrift , mcreco ]
 
-# Remove the GENIE and CORSIKA specific largeant instances and keep the merged one
 outputs.out1.outputCommands: [ "keep *_*_*_*"
+                             # Drop the SimEnergyDeposits made by LArG4
+                             , "drop sim::SimEnergyDeposits_largeant_*_*"
+                             # Drop the IonAndScint w/ SCE offsets applied
+                             , "drop *_ionandscint__*"
+                             # Drop the GENIE and CORSIKA specific largeant instances
                              , "drop *_largeantnu_*_*"
                              , "drop *_largeantcosmic_*_*"
                              ]
