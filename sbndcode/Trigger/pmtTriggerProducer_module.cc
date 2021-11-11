@@ -1,3 +1,36 @@
+/*
+ File:    pmtTriggerProducer_module.cc
+ Purpose: Simulates pmt hardware trigger
+ Author:  Erin Yandel (eyandel@fnal.gov)
+ Date:    October 26, 2021
+ Version: 1.0
+
+ This is a module to simulate the PMT hardware trigger on simulated data.
+ It takes a largeant file with optical detectors waveforms and produces a
+ vector whose index is time within the trigger (beam) window and content
+ is number of PMT pairs passsing the trigger threshold.
+
+ More information can be found at:
+ https://sbnsoftware.github.io/sbndcode_wiki/SBND_Trigger
+ and
+ sbn-docdb: 23922
+
+ The trigger logic implemented currently:
+ - Turn raw OpDetWaveforms (in ADC) into binary waveforms (0=not above threshold, 1=above threshold)
+ - Downsample binary waveform by 4 (simulate 2ns rate, hardware reads every 8ns)
+ - Pair waveforms -> combine 2 downsampled waveforms based on parameters set in fhicl files
+ - Extend wavelength when a rising edge is seen
+ - Count the number of paired waveforms above threshold for various times within the trigger window
+
+ Input:
+ - output from OpDetSim module (in particular, OpDetWaveforms)
+
+ Output:
+ - std::vector<sbnd::comm::pmtTrigger> > : PMT trigger array
+
+ fhicl: run_pmttriggerproducer.fcl
+*/
+
 // Framework includes
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -72,13 +105,9 @@ public:
 
 private:
    // Define producer-specific functions
-   // EXAMPLE:
-   // float Distance(int x1, int y1, int x2, int y2);
 
 
    // Define global variables
-   // EXAMPLE:
-   // int nhits;
    int run;
    int subrun;
    int event;
@@ -87,14 +116,13 @@ private:
    double fSampling; //sampling rate
    double fStartTime; //start time (in us) of raw waveform
    double fEndTime; //end time (in us) of raw waveform
-   //TTree *fTree;
 
    double fBaseline = 8000.0; //baseline ADC (set in simulation)
    std::stringstream histname; //raw waveform hist name
    std::stringstream histname2; //other hists names
    std::string opdetType; //opdet wavform's opdet type (required to be pmt_coated or pmt_uncoated)
 
-   //std::vector<int> passed_trigger; //index =time (us, triger window only), content = number of pmt pairs passed threshold
+   std::vector<int> passed_trigger; //index =time (us, triger window only), content = number of pmt pairs passed threshold
    int max_passed = 0; //maximum number of pmt pairs passing threshold at the same time within trigger window
    std::vector<int> channel_numbers = {6,7,8,9,10,11,12,13,14,15,16,17,36,37,38,39,40,41,60,61,62,63,64,65,66,67,68,69,70,71,
      84,85,86,87,88,89,90,91,92,93,94,95,114,115,116,117,118,119,138,139,140,141,142,143,144,145,146,147,148,149,
@@ -105,12 +133,7 @@ private:
    std::vector<int> paired;
    std::vector<std::vector<int>> unpaired_wvfs;
 
-   std::vector<int> passed_trigger;
-
    // List parameters for the fcl file
-   // convention is to label as "f<Parameter>"
-   // EXAMPLE:
-   // int fHoughThreshold;  // threshold to pass in Hough accumulator
    double fThreshold; //individual pmt threshold in ADC (set in fcl, passes if ADC is LESS THAN threshold)
    int fOVTHRWidth;//over-threshold width, page 40 of manual (set in fcl)
    std::vector<int> fPair1 = {6,8,10,12,14,16,36,38,40,84,86,88,90,92,94,114,116,118,138,140,142,144,146,148,162,164,166,168,170,172,192,194,196,216,218,220,222,224,226,240,242,244,246,248,250,270,272,274,294,296}; //channel numbers for first set of paired pmts (set in fcl)
@@ -133,9 +156,6 @@ pmtTriggerProducer::pmtTriggerProducer(fhicl::ParameterSet const & p)
    : EDProducer(p)
 {
    // put produces<> function here!
-   // EXAMPLES:
-   // produces< std::vector<sbnd::comm::MuonTrack> >();
-   // produces< art::Assns<recob::Hit, sbnd::comm::MuonTrack> >();
 
    produces< std::vector<sbnd::comm::pmtTrigger> >();
 
@@ -150,9 +170,6 @@ void pmtTriggerProducer::reconfigure(fhicl::ParameterSet const & p)
 {
    // Initialize member data here
    // here we set initialize and set defaults for the parameters in the fcl file
-   // examples:
-   // fHitsModuleLabel      = p.get<std::string>("HitsModuleLabel");
-   // fHoughThreshold      = p.get<int>("HoughThreshold",10);
 
    fInputModuleName = p.get< std::string >("InputModule", "opdaq");
    fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
@@ -173,16 +190,10 @@ void pmtTriggerProducer::produce(art::Event & e)
 {
    // load event info here:
 
-   //int event = evt.id().event();
    std::cout << "Processing event " << e.id().event() << std::endl;
 
    std::unique_ptr< std::vector<sbnd::comm::pmtTrigger> > pmts_passed( new std::vector<sbnd::comm::pmtTrigger>);
 
-
-
-   //std::cout << "My module on event #" << e.id().event() << std::endl;
-
-   //art::ServiceHandle<art::TFileService> tfs;
    fEvNumber = e.id().event();
    run = e.run();
    subrun = e.subRun();
@@ -218,8 +229,6 @@ void pmtTriggerProducer::produce(art::Event & e)
    //   std::cout << "e:\t" << e << "\n";
    // }
 
-   //fOpDetsToPlot = ["pmt_coated", "pmt_uncoated"];
-
    int i_ev = -1;
    auto iev = std::find(fEvHists.begin(), fEvHists.end(), fEvNumber);
    if (iev != fEvHists.end() && fSaveHists){
@@ -230,7 +239,6 @@ void pmtTriggerProducer::produce(art::Event & e)
 
    max_passed = 0;
 
-   //std::cout << "Number of PMT waveforms: " << waveHandle->size() << std::endl;
    int num_pmt_wvf = 0;
    int num_pmt_ch = 0;
 
@@ -238,23 +246,7 @@ void pmtTriggerProducer::produce(art::Event & e)
    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
    std::cout << std::endl;
 
-   //size_t previous_channel = -1;
-   //std::vector<int> previous_waveform;
-   //std::vector<int> previous_waveform_down;
 
-   /*std::vector<int> channel_numbers = {6,7,8,9,10,11,12,13,14,15,16,17,36,37,38,39,40,41,60,61,62,63,64,65,66,67,68,69,70,71,
-     84,85,86,87,88,89,90,91,92,93,94,95,114,115,116,117,118,119,138,139,140,141,142,143,144,145,146,147,148,149,
-     162,163,164,165,166,167,168,169,170,171,172,173,192,193,194,195,196,197,216,217,218,219,220,221,222,223,224,225,226,227,
-     240,241,242,243,244,245,246,247,248,249,250,251,270,271,272,273,274,275,294,295,296,297,298,299,300,301,302,303,304,305};
-   std::vector<std::vector<int>> channel_bin_wvfs;
-
-   std::vector<int> paired;
-   std::vector<std::vector<int>> unpaired_wvfs;
-
-   std::vector<int> passed_trigger;*/
-
-
-   //std::vector<int> wvf_bin_0;
    for (double i = -1500.0; i<1500.0+(1./fSampling); i+=(1./fSampling)){
      wvf_bin_0.push_back(0);
    }
@@ -270,7 +262,6 @@ void pmtTriggerProducer::produce(art::Event & e)
      unpaired_wvfs.push_back(wvf_bin_0);
    }
 
-   //passed_trigger.clear();
    for (double i = fWindowStart; i<fWindowEnd+(4./fSampling); i+=(4./fSampling)){
      passed_trigger.push_back(0);
    }
@@ -293,19 +284,8 @@ void pmtTriggerProducer::produce(art::Event & e)
        fStartTime = wvf.TimeStamp(); //in us
        fEndTime = double(wvf.size()) / fSampling + fStartTime; //in us
 
-       //double orig_size = double(wvf.size());
-
-       //baseline
-       //double baseline = -1.;
-
-       //std::vector<double> wvf_full;
-
        //create binary waveform
        std::vector<int> wvf_bin;
-       //std::vector<int> wvf_bin_down;
-
-       //pmt above Threshold
-       //bool above_thres = false;
 
       if (i_ev!=-1 && i_ev<3){
         histname.str(std::string());
@@ -322,8 +302,6 @@ void pmtTriggerProducer::produce(art::Event & e)
        }
      }
 
-
-
         if (fStartTime > -1500.0){
           for (double i = fStartTime+1500.0; i>0.; i-=(1./fSampling)){
             wvf_bin.push_back(0);
@@ -334,16 +312,11 @@ void pmtTriggerProducer::produce(art::Event & e)
          if((double)wvf[i]<fThreshold){wvf_bin.push_back(1);}else{wvf_bin.push_back(0);}
        }
 
-
-
        if (fEndTime < 1500.0){
          for (double i = 1500.0-fEndTime; i>0.; i-=(1./fSampling)){
            wvf_bin.push_back(0);
          }
        }
-
-     //  fStartTime = -1500.0;
-     //  fEndTime = 1500.0;//1473.08;
 
        //combine wavform with any other waveforms from same channel
        int i_ch = -1.;
@@ -366,9 +339,6 @@ void pmtTriggerProducer::produce(art::Event & e)
 
      }//wave handle loop
 
-
-       //if (wvf_bin.size()!=wvf.size()){std::cout << "Mismatch analog and binary waveform size" << std::endl;}
-
      int wvf_num = -1;
 
      for (auto wvf_bin : channel_bin_wvfs){
@@ -382,8 +352,6 @@ void pmtTriggerProducer::produce(art::Event & e)
        for(unsigned int i = 0; i < wvf_bin.size(); i++) {
          if(i%4==0){wvf_bin_down.push_back(wvf_bin[i]);}
        }
-
-     //if (wvf_id==waveHandle->size() || waveHandle->at(wvf_id+1).ChannelNumber()!=fChNumber){
 
        num_pmt_ch++;
 
@@ -417,9 +385,6 @@ void pmtTriggerProducer::produce(art::Event & e)
        bool unpaired = false;
        size_t pair_num = -1;
 
-
-
-
        for (size_t i = 0; i < fUnpaired.size(); i++){
          if (fUnpaired.at(i) == (int)fChNumber){found=true; unpaired=true;}
        }
@@ -443,7 +408,6 @@ void pmtTriggerProducer::produce(art::Event & e)
          if (combine){
            if (unpaired_wvfs.at(pair_num).size()!=wvf_bin_down.size()){std::cout<<"Mismatched paired waveform size"<<std::endl;}
            for(unsigned int i = 0; i < wvf_bin_down.size(); i++) {
-             //if (i==unpaired_wvfs.at(pair_num).size()){unpaired_wvfs.at(pair_num).push_back(0);}
             if (fPairLogic=="OR"){
               if(unpaired_wvfs.at(pair_num)[i]==1 || wvf_bin_down[i]==1){wvf_combine.push_back(1);}else{wvf_combine.push_back(0);}
             }else if (fPairLogic=="AND"){
@@ -474,8 +438,6 @@ void pmtTriggerProducer::produce(art::Event & e)
          wvfcHist->SetBinContent(i + 1, wvf_combine[i]);
        }
      }
-
-       //std::cout<<"Hist "<<histname2.str().c_str()<<" created"<<std::endl;
 
        //implement over threshold trigger signal width
        //(Every time the combined waveform transitions from 0 to 1, change the next fOVTHRWidth values to 1 (ex: fOVTHRWidth=11 -> 12 high -> 12*8=96 ns true) )
@@ -525,19 +487,12 @@ void pmtTriggerProducer::produce(art::Event & e)
          if (wvf_combine.at(i)==1){passed_trigger.at(i_p)++;}
          i_p++;
        }
-       //std::cout<<"Passed Trigger Size: "<<passed_trigger.size()<<" End Bin - Start Bin: "<<endbin-startbin<<std::endl;
 
        wvf_bin_down.clear();
        wvf_combine.clear();
 
      }
 
-
-
-       //previous_channel = fChNumber;
-       //previous_waveform = wvf_bin;
-       //previous_waveform_down = wvf_bin_down;
-       //hist_id++;
    }
 
 
@@ -553,19 +508,14 @@ void pmtTriggerProducer::produce(art::Event & e)
    }
  }
 
-
   sbnd::comm::pmtTrigger pmt_time;
 
    for (int pmts: passed_trigger){
-     //sbnd::comm::pmtTrigger pmt_time;
      pmt_time.numPassed.push_back(pmts);
-     //pmts_passed->push_back(pmt_time);
      if (pmts > max_passed) max_passed = pmts;
    }
    pmt_time.maxPMTs = max_passed;
    pmts_passed->push_back(pmt_time);
-
-   //fTree->Fill();
 
    // the following lines "push" the relevant products you want to produce
    // EXAMPLE:
@@ -575,27 +525,18 @@ void pmtTriggerProducer::produce(art::Event & e)
    e.put(std::move(pmts_passed));
 
    //clear variables
-   //pmts_passed.clear();
    passed_trigger.clear();
    max_passed = 0;
 
    std::cout << "Number of PMT waveforms: " << num_pmt_wvf << std::endl;
    std::cout << "Number of PMT channels: " << num_pmt_ch << std::endl;
 
-   //channel_numbers.clear();
    channel_bin_wvfs.clear();
    paired.clear();
    unpaired_wvfs.clear();
    wvf_bin_0.clear();
 
 } // pmtTriggerProducer::produce()
-
-// Here I would define module-specific functions (remember to define them under "private")
-// EXAMPLE:
-
-// float pmtTriggerProducer::Distance(int x1, int y1, int x2, int y2){
-//    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
-// }
 
 // A macro required for a JobControl module.
 DEFINE_ART_MODULE(pmtTriggerProducer)
