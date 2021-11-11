@@ -46,6 +46,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
+#include "sbnobj/SBND/Trigger/pmtTrigger.hh"
 
 
 // Truth includes
@@ -145,7 +146,9 @@ private:
   void ResetCRTHitsVars(int n);
   /// Resets optical hits tree variables
   void ResetOpHitsVars(int n);
-  /// Resets crossing muon tracks tree variables 
+  /// Resets pmt hardware trigger variables
+  void ResetPmtTriggerVars(int n);
+  /// Resets crossing muon tracks tree variables
   void ResetMuonTracksVars(int n);
   /// Resets crossing muon hit tree variables 
   void ResetMuonHitVars(int n); 
@@ -244,6 +247,10 @@ private:
   std::vector<double> _ophit_opdet_z;         ///< OpDet Z coordinate of the optical hit
   std::vector<int> _ophit_opdet_type;         ///< OpDet tyoe of the optical hit
 
+  //pmt hardware trigger variables
+  std::vector<int> _pmtTrigger_npmtshigh;    ///< number of pmt pairs above threshold, index = time during trigger window (usually beam spill)
+  int _pmtTrigger_maxpassed;    ///< maximum number of pmt pairs above threshold during trigger window (usually beam spill)
+
   // Muon track variables 
   int _nmuontrks;                            ///< number of muon tracks
   std::vector<double> _muontrk_t0;           ///< t0 (time of interaction)
@@ -329,6 +336,7 @@ private:
   std::string fCRTStripModuleLabel; ///< Label for CRTStrip dataproduct (to be set via fcl)
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
+  std::string fpmtTriggerModuleLabel; ///< Label for pmtTrigger dataproduct (to be set vis fcl)
   std::string fMuonTrackModuleLabel;  ///< Label for MuonTrack dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
@@ -344,6 +352,7 @@ private:
   bool freadMuonTracks;    ///< Add MuonTracks to output (to be set via fcl)
   bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
+  bool freadpmtTrigger;    ///< Add pmt hardware trigger info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
@@ -394,6 +403,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
+  fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmttriggerproducer");
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
@@ -402,6 +412,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
+  freadpmtTrigger    = p.get<bool>("readpmtTrigger",true);
   freadMuonTracks    = p.get<bool>("readMuonTracks",true);
   freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
@@ -852,6 +863,26 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   //
+  // pmt hardware trigger
+  //
+
+  if (freadpmtTrigger){
+    art::Handle<std::vector<sbnd::comm::pmtTrigger> > pmtTriggerListHandle;
+    std::vector<art::Ptr<sbnd::comm::pmtTrigger> > pmttriggerlist;
+
+    if (evt.getByLabel(fpmtTriggerModuleLabel, pmtTriggerListHandle)){
+      art::fill_ptr_vector(pmttriggerlist, pmtTriggerListHandle);
+      ResetPmtTriggerVars( (int)pmttriggerlist[0]->numPassed.size());
+
+      for (int i=0; i < (int)pmttriggerlist[0]->numPassed.size(); i++){
+        _pmtTrigger_npmtshigh[i] = pmttriggerlist[0]->numPassed[i];
+      }
+      _pmtTrigger_maxpassed = pmttriggerlist[0]->maxPMTs;
+
+    }
+  }
+
+  //
   // Muon tracks 
   //
   _nmuontrks = 0; 
@@ -1213,6 +1244,11 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opdet_type", &_ophit_opdet_type);
   }
 
+  if (freadpmtTrigger){
+    fTree->Branch("pmtTrigger_npmtshigh", &_pmtTrigger_npmtshigh);
+    fTree->Branch("pmtTrigger_maxpassed", &_pmtTrigger_maxpassed, "pmtTrigger_maxpassed/I");
+  }
+
   if (freadMuonTracks) {
     fTree->Branch("nmuontrks", &_nmuontrks, "nmuontrks/I");
     fTree->Branch("muontrk_t0", &_muontrk_t0);
@@ -1385,6 +1421,11 @@ void Hitdumper::ResetOpHitsVars(int n) {
   _ophit_opdet_y.resize(n, DEFAULT_VALUE);
   _ophit_opdet_z.resize(n, DEFAULT_VALUE);
   _ophit_opdet_type.resize(n, DEFAULT_VALUE);
+}
+
+void Hitdumper::ResetPmtTriggerVars(int n){
+  _pmtTrigger_npmtshigh.assign(n, DEFAULT_VALUE);
+  _pmtTrigger_maxpassed = 0;
 }
 
 void Hitdumper::ResetMuonTracksVars(int n){
