@@ -16,13 +16,26 @@ physics.producers.largeant: @local::sbnd_merge_overlay_sim_sources
 physics.producers.ionandscint.InputModuleLabels: ["largeant"]
 physics.producers.ionandscintout.InputModuleLabels: ["largeant"]
 
-physics.simulate: [ rns , loader, largeantcosmic , largeant , ionandscint , ionandscintout , pdfastsim , pdfastsimout , simdrift , mcreco ]
+physics.simulate: [ rns
+                  , loader
+                  , largeantcosmic
+                  , largeant
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  , simdrift
+                  , genericcrt
+                  , mcreco
+                  ]
 
 outputs.out1.outputCommands: [ "keep *_*_*_*"
                              # Drop the SimEnergyDeposits made by LArG4
                              , "drop sim::SimEnergyDeposits_largeant_*_*"
                              # Drop the IonAndScint w/ SCE offsets applied
                              , "drop *_ionandscint__*"
+                             # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
+                             , "drop sim::AuxDetHits_*_*_*"
                              # Drop the GENIE and CORSIKA specific largeant instances
                              , "drop *_largeantnu_*_*"
                              , "drop *_largeantcosmic_*_*"
