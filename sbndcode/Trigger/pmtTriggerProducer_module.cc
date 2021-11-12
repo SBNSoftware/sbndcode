@@ -117,7 +117,7 @@ private:
    double fStartTime; //start time (in us) of raw waveform
    double fEndTime; //end time (in us) of raw waveform
 
-   double fBaseline = 8000.0; //baseline ADC (set in simulation)
+   //double fBaseline = 8000.0; //baseline ADC (set in simulation)
    std::stringstream histname; //raw waveform hist name
    std::stringstream histname2; //other hists names
    std::string opdetType; //opdet wavform's opdet type (required to be pmt_coated or pmt_uncoated)
@@ -190,14 +190,15 @@ void pmtTriggerProducer::produce(art::Event & e)
 {
    // load event info here:
 
-   std::cout << "Processing event " << e.id().event() << std::endl;
+   run = e.run();
+   subrun = e.subRun();
+   event = e.id().event();
+
+   std::cout << "Processing event " << run << " " << subrun << " " << event << std::endl;
 
    std::unique_ptr< std::vector<sbnd::comm::pmtTrigger> > pmts_passed( new std::vector<sbnd::comm::pmtTrigger>);
 
    fEvNumber = e.id().event();
-   run = e.run();
-   subrun = e.subRun();
-   event = e.id().event();
 
    art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
    e.getByLabel(fInputModuleName, waveHandle);
