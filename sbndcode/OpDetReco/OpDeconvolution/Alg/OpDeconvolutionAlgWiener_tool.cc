@@ -66,8 +66,8 @@ private:
 
   double fNormUnAvSmooth;
   double fSamplingFreq;
+  double fDaphne_Freq;
   size_t MaxBinsFFT;
-
   unsigned int NDecoWf;
 
   TF1 *fFilterTF1;
@@ -114,6 +114,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fOpDetDataFile = p.get< std::string >("OpDetDataFile");
   fFilter = p.get< std::string >("Filter");
   fElectronics = p.get< std::string >("Electronics");
+  fDaphne_Freq  = p.get< double >("DaphneFreq");
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
   fUseParamFilter = p.get< bool >("UseParamFilter");
   fFilterParams = p.get< std::vector<double> >("FilterParams");
@@ -124,7 +125,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
 
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
   fSamplingFreq=clockData.OpticalClock().Frequency()/1000.;//in GHz
-  if (fElectronics=="Daphne") fSamplingFreq=80/1000.;//in GHz
+  if (fElectronics=="Daphne") fSamplingFreq=fDaphne_Freq/1000.;//in GHz
   auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
 
 
