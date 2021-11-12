@@ -62,6 +62,7 @@ namespace opdet {
     std::string pdType(size_t ch) const override;
     std::string electronicsType(size_t ch) const;
     std::vector<int> getChannelsOfType(std::string pdname) const;
+    std::vector<int> getChannelsOfType(std::string pdname,std::string elname) const;//overload
     size_t size() const;
     auto getChannelEntry(size_t ch) const;
 
