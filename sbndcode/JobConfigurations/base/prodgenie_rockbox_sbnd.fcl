@@ -1,9 +1,10 @@
 #
-# File:    prodgenie_sbnd.fcl
-# Purpose: Produce GENIE events in the SBND detector with spill structure
-# Version: 1.1
+# File:    prodgenie_rockbox sbnd.fcl
+# Purpose: Produce GENIE events in the SBND detector and surrounding dirt with spill structure
+#          using rockbox functionality in GENIEHelper
+# Version: 1.0
 #
-# This configuration runs event generation only
+# This configuration runs event generation and largenat
 #
 # Input: no input file required
 #
@@ -20,11 +21,18 @@
 #include "messages_sbnd.fcl"
 
 #
+# filters
+#
+
+#include "gennufilter.fcl"
+#include "simenergydepfaketriggerfilter.fcl"
+
+#
 # modules
 #
 
 #include "genie_sbnd.fcl"
-
+#include "larg4_sbnd.fcl"
 
 
 process_name: GenieGen
@@ -34,13 +42,9 @@ services:
   # Load the service that manages root files for histograms.
   TFileService: { fileName: "hists_prodgenie_sbnd_%p-%tc.root" }
   IFDH:         {} # required by GENIEGen
-                @table::sbnd_simulation_services # load simulation services in bulk
+  @table::sbnd_simulation_services # load simulation services in bulk
+  @table::sbnd_g4_services
 }
-
-# since this is a configuration typically run as interactive test,
-# we set up message configuration accordingly:
-services.message: @local::sbnd_message_services_interactive # from messages_sbnd.fcl
-
 
 # Start each new event with an empty event.
 source:
@@ -52,24 +56,46 @@ source:
   firstEvent:      1          # number of first event in the file
 }
 
-
 # Define and configure some modules to do work on each event.
 # First modules are defined; they are scheduled later.
 # Modules are grouped by type.
 physics:
 {
 
+  filters:
+  {
+    # Filter events that have an interaction in the TPC
+    tpcfilter: @local::sbnd_tpc_gennufilter
+
+    # Filter events where a particle deposits >100MeV in the TPC (AKA Dirt)
+    dirtfilter: @local::sbnd_simenergydepfaketriggerfilter
+  }
+
+
   producers:
   {
     rns:       { module_type: "RandomNumberSaver" }
-    generator: @local::sbnd_genie_simple
+
+    # Run GENIE in rockbox mode
+    generator: @local::sbnd_genie_simple_rockbox
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::sbnd_larg4
   }
 
   #define the producer and filter modules for this path, order matters,
-  simulate:  [ rns, generator ]
+  simulatetpc:  [ rns, generator, loader, largeant, tpcfilter ]
+  simulatedirt: [ rns, generator, loader, largeant, "!tpcfilter", dirtfilter ]
 
   #define the output stream, there could be more than one if using filters
-  stream1:   [ out1 ]
+  # One can run any combination of outAll, outTPC and outDirt
+  # Each of which will produce an output with the specifeied interactions
+
+  # By deault Keep everything in one file:
+  stream1:   [ outAll ]
 
   #ie analyzers and output streams.  these all run simultaneously
   end_paths: [stream1]
@@ -80,11 +106,12 @@ physics:
 # entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
 outputs:
 {
-  out1:
+  # Keep all events with either TPC neutrinos or dirt interactions in one output
+  outAll:
   {
     module_type: RootOutput
     fileName:    "prodgenie_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
     dataTier:    "generated"
+    SelectEvents: [ simulatetpc, simulatedirt ]
   }
 }
-

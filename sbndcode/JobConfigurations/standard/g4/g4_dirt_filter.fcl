@@ -1,0 +1,5 @@
+# Runs standard g4 fcl without largeant designed for use with gen stage fcls that run a largeant dirt filter
+
+#include "standard_g4_sbnd.fcl"
+
+physics.simulate: [ rns , ionandscint , ionandscintout , pdfastsim , pdfastsimout , simdrift , mcreco ]
