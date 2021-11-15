@@ -13,7 +13,8 @@ physics.simulate: [ rns
                   , simdrift
                   , filter # Adding filter
                   , mcreco
-                ]
+                  , genericcrt
+                 ]
 
 outputs.out1.SelectEvents: [ "simulate" ]
 
