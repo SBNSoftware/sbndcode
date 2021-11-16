@@ -58,7 +58,7 @@ namespace opdet {
       double XArapucaVISEff;    //XArapucaVIS efficiency (optical window + cavity)
       double DecayTXArapucaVIS;// Decay time of EJ280 in ns
       std::string ArapucaDataFile; //File containing timing structure for arapucas
-      bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
+      bool ArapucaSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
       double frequency; ///< Optical-clock frequency
@@ -234,8 +234,8 @@ namespace opdet {
         Comment("File containing timing distribution for ArapucaVUV (optical window + cavity), ArapucaVIS (optical window + cavity), XArapuca VUV (optical window)")
       };
       
-      fhicl::Atom<bool> singlePEmodel {
-        Name("SinglePEmodel"),
+      fhicl::Atom<bool> ArapucasinglePEmodel {
+        Name("ArapucaSinglePEmodel"),
         Comment("Model used for single PE response of PMT. =0 is ideal, =1 is from X-TDBoard data (with overshoot)")
       };
 
