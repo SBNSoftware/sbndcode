@@ -90,8 +90,6 @@ physics:
    @table::cafmaker_common_producers
 
    flashtrig: @local::pmtflashtrigmaker_sbnd
-   #pandoraTrackMCS:   @local::mcs_sbn
-   #pandoraTrackRange:   @local::range_sbn
    crtconvhit:            @local::crthitconverter_sbnd
    pandoraTrackCRTHit:          @local::crthitmatch_sbnd
    pandoraTrackCRTTrack:  @local::crttrackmatch_sbnd
@@ -106,6 +104,9 @@ physics:
    pandoraShowerCosmicDist: @local::showerCosmicDist_sbn
    pandoraShowerRazzle:         @local::razzle_sbnd
 
+   # The following producers were moved to cafmaker_common_defs.fcl
+   #pandoraTrackMCS:   @local::mcs_sbn
+   #pandoraTrackRange:   @local::range_sbn
    #rns: { module_type: "RandomNumberSaver" }
    #genieweight: @local::sbn_genie_eventweight
    #fluxweight: @local::sbn_eventweight_flux
