@@ -72,13 +72,15 @@ physics:
     ionandscint: @local::sbnd_ionandscint
 
     # Creation of ionization electrons and scintillation photons, outside the active volume
-    ionandscintout: @local::sbnd_ionandscint_out
+    # ionandscintout: @local::sbnd_ionandscint_out
 
     # Light propogation inside the active volume
     pdfastsim: @local::sbnd_pdfastsim_par
 
     # Light propogation outside the active volume
-    pdfastsimout: @local::sbnd_pdfastsim_pvs
+    # Nov 16th, 2021
+    # Temporarily disable light simulation in the OUT-TPC (sbndcode issue 219)
+    # pdfastsimout: @local::sbnd_pdfastsim_pvs
 
     # Electron propogation
     simdrift: @local::sbnd_simdrift
@@ -96,9 +98,9 @@ physics:
             , loader
             , largeant
             , ionandscint
-            , ionandscintout
+            # , ionandscintout
             , pdfastsim
-            , pdfastsimout
+            # , pdfastsimout
             , simdrift
             , mcreco
 	    , genericcrt
