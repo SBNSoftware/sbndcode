@@ -87,6 +87,7 @@ physics:
 #  cosmictrack:          @local::standard_cosmictrack         #reco
 #  windowtrack:          @local::window_cosmictrack           #reco
 
+   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, genieweight, fluxweight
    @table::cafmaker_common_producers
 
    flashtrig: @local::pmtflashtrigmaker_sbnd
@@ -103,13 +104,6 @@ physics:
    pandoraShowerSelectionVars:  @local::showerSelectionVars_sbn
    pandoraShowerCosmicDist: @local::showerCosmicDist_sbn
    pandoraShowerRazzle:         @local::razzle_sbnd
-
-   # The following producers were moved to cafmaker_common_defs.fcl
-   #pandoraTrackMCS:   @local::mcs_sbn
-   #pandoraTrackRange:   @local::range_sbn
-   #rns: { module_type: "RandomNumberSaver" }
-   #genieweight: @local::sbn_genie_eventweight
-   #fluxweight: @local::sbn_eventweight_flux
 }
   filters:{
     flashtrigfilter: @local::pmtflashtrigfilter_sbnd
