@@ -97,7 +97,8 @@ physics:
 }
 
 ## Uncomment these if you switch to test bench response
-# physics.producers.opdaq.SinglePEmodel: true
+# physics.producers.opdaq.PMTSinglePEmodel: true
+# physics.producers.opdaq.ArapucaSinglePEmodel: true
 # physics.producers.opdaq.PMTChargeToADC: -51.9
 # physics.producers.ophit.SPEArea: 317.1
 # physics.producers.ophit.PedAlgoPset.SampleSize: 10
