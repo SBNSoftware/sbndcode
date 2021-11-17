@@ -125,7 +125,8 @@ physics:
 #physics.producers.ophit.Area1pePMT:  1.3266    #in ADC*ns
 #physics.producers.opdaq.QEDirect: 0.03
 #physics.producers.opdaq.QERefl: 0.03
-#physics.producers.opdaq.SinglePEmodel: true
+#physics.producers.opdaq.PMTSinglePEmodel: true
+#physics.producers.opdaq.ArapucaSinglePEmodel: true
 #physics.producers.opdaq.PMTChargeToADC: -51.9
 
 #physics.analyzers.wvfana.  OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]

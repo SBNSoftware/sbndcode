@@ -50,7 +50,7 @@ namespace opdet {
     size_t pulseSize_Daphne = fParams.PulseLength * fSampling_Daphne;
 	  fWaveformSP_Daphne.resize(pulseSize_Daphne);
 	
-    if(fParams.SinglePEmodel) {
+    if(fParams.ArapucaSinglePEmodel) {
       mf::LogDebug("DigiArapucaSBNDAlg") << " using testbench pe response";
       TFile* file =  TFile::Open(fname.c_str(), "READ");
       std::vector<double>* SinglePEVec_40ftCable_Daphne;
@@ -345,23 +345,23 @@ namespace opdet {
   (Config const& config)
   {
     // settings
-    fBaseConfig.ADC               = config.voltageToADC();
-    fBaseConfig.Baseline          = config.baseline();
-    fBaseConfig.Saturation        = config.saturation();
-    fBaseConfig.XArapucaVUVEff    = config.xArapucaVUVEff();
-    fBaseConfig.XArapucaVISEff    = config.xArapucaVISEff();
-    fBaseConfig.RiseTime          = config.riseTime();
-    fBaseConfig.FallTime          = config.fallTime();
-    fBaseConfig.MeanAmplitude     = config.meanAmplitude();
-    fBaseConfig.DarkNoiseRate     = config.darkNoiseRate();
-    fBaseConfig.BaselineRMS       = config.baselineRMS();
-    fBaseConfig.CrossTalk         = config.crossTalk();
-    fBaseConfig.PulseLength       = config.pulseLength();
-    fBaseConfig.PeakTime          = config.peakTime();
-    fBaseConfig.DecayTXArapucaVIS = config.decayTXArapucaVIS();
-    fBaseConfig.ArapucaDataFile   = config.arapucaDataFile();
-    fBaseConfig.SinglePEmodel     = config.singlePEmodel();
-    fBaseConfig.frequency_Daphne  = config.DaphneFrequency();
+    fBaseConfig.ADC                   = config.voltageToADC();
+    fBaseConfig.Baseline              = config.baseline();
+    fBaseConfig.Saturation            = config.saturation();
+    fBaseConfig.XArapucaVUVEff        = config.xArapucaVUVEff();
+    fBaseConfig.XArapucaVISEff        = config.xArapucaVISEff();
+    fBaseConfig.RiseTime              = config.riseTime();
+    fBaseConfig.FallTime              = config.fallTime();
+    fBaseConfig.MeanAmplitude         = config.meanAmplitude();
+    fBaseConfig.DarkNoiseRate         = config.darkNoiseRate();
+    fBaseConfig.BaselineRMS           = config.baselineRMS();
+    fBaseConfig.CrossTalk             = config.crossTalk();
+    fBaseConfig.PulseLength           = config.pulseLength();
+    fBaseConfig.PeakTime              = config.peakTime();
+    fBaseConfig.DecayTXArapucaVIS     = config.decayTXArapucaVIS();
+    fBaseConfig.ArapucaDataFile       = config.arapucaDataFile();
+    fBaseConfig.ArapucaSinglePEmodel  = config.ArapucasinglePEmodel();
+    fBaseConfig.frequency_Daphne      = config.DaphneFrequency();
   }
 
   std::unique_ptr<DigiArapucaSBNDAlg> DigiArapucaSBNDAlgMaker::operator()(
