@@ -2,12 +2,14 @@
 
 #include "standard_g4_sbnd.fcl"
 
+<<<<<<< HEAD
 physics.simulate: [ rns
-	              , ionandscint
-                  , ionandscintout
+                  , ionandscint
+                  # , ionandscintout
                   , pdfastsim
-                  , pdfastsimout
+                  # , pdfastsimout
                   , simdrift
                   , mcreco
                   , genericcrt
                   ]
+

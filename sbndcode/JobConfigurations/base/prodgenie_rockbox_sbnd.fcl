@@ -91,11 +91,8 @@ physics:
   simulatedirt: [ rns, generator, loader, largeant, "!tpcfilter", dirtfilter ]
 
   #define the output stream, there could be more than one if using filters
-  # One can run any combination of outAll, outTPC and outDirt
-  # Each of which will produce an output with the specifeied interactions
-
   # By deault Keep everything in one file:
-  stream1:   [ outAll ]
+  stream1:   [ out1 ]
 
   #ie analyzers and output streams.  these all run simultaneously
   end_paths: [stream1]
@@ -107,7 +104,7 @@ physics:
 outputs:
 {
   # Keep all events with either TPC neutrinos or dirt interactions in one output
-  outAll:
+  out1:
   {
     module_type: RootOutput
     fileName:    "prodgenie_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
