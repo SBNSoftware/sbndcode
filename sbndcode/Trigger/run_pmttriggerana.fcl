@@ -1,17 +1,17 @@
 #
-# File:    ophit_wvfana_sbnd.fcl
+# File:    ophit_pmtTriggerana_sbnd.fcl
 # Purpose: Simulates optical detectors waveforms
 # Author:  Iker de Icaza (icaza@fnal.gov)
 # Date:    June 11, 2020
 # Version: 1.0
-# 
+#
 # This is a convenience configuration to ease development of optical simulations.
 # It takes a largeant file with light simulation and produces the photon detectors
 # daq response, the ophit finder algorithm and produces the optical detectors waveforms.
-# 
+#
 # Input:
 # - output from LArG4 module (in particular, SimPhotons or SimPhotonsLite)
-# 
+#
 # Output:
 # - daq: Optical Waveforms
 #
@@ -26,7 +26,7 @@
 #include "detsimmodules_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
 #include "ophitfinder_sbnd.fcl"
-#include "wvfana.fcl"
+#include "pmttriggerana.fcl"
 
 #include "hitfindermodules_sbnd.fcl"
 #include "cluster_sbnd.fcl"
@@ -41,12 +41,12 @@
 #include "rootoutput_sbnd.fcl"
 
 
-process_name: ophitfindingwvfana
+process_name: pmtTriggerana
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:              { fileName: "test_ophit_wvf_.root" }
+  TFileService:              { fileName: "test_pmtTrigger.root" }
   @table::sbnd_detsim_services
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
@@ -88,17 +88,17 @@ physics:
     opdaq:     @local::sbnd_opdetdigitizer
     ophit:     @local::sbnd_hit_finder
   }
-  
+
   analyzers:
   {
-    wvfana: @local::wvf_ana
+    pmttriggerana: @local::pmtTrigger_ana
   }
 
   # define the producer and filter modules for this path, order matters,
   # filters reject all following items.  see lines starting physics.producers below
   reco: [rns, opdaq,  ophit ]
 
-  ana: [ wvfana]
+  ana: [ pmttriggerana]
 
   # define the output stream, there could be more than one if using filters
   stream1:  []
@@ -125,13 +125,7 @@ physics:
 #physics.producers.ophit.Area1pePMT:  1.3266    #in ADC*ns
 #physics.producers.opdaq.QEDirect: 0.03
 #physics.producers.opdaq.QERefl: 0.03
-#physics.producers.opdaq.PMTSinglePEmodel: true
-#physics.producers.opdaq.ArapucaSinglePEmodel: true
+#physics.producers.opdaq.SinglePEmodel: true
 #physics.producers.opdaq.PMTChargeToADC: -51.9
 
-#physics.analyzers.wvfana.  OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
-
-
-
-
-
+#physics.analyzers.pmtTriggerana.  OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]

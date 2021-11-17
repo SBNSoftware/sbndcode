@@ -1,19 +1,20 @@
 #
-# File:    ophit_wvfana_sbnd.fcl
-# Purpose: Simulates optical detectors waveforms
-# Author:  Iker de Icaza (icaza@fnal.gov)
-# Date:    June 11, 2020
+# File:    pmtTriggerproducer_sbnd.fcl
+# Purpose: Simulates pmt hardware trigger
+# Author:  Erin Yandel (eyandel@fnal.gov)
+# Date:    October 26, 2021
 # Version: 1.0
-# 
-# This is a convenience configuration to ease development of optical simulations.
-# It takes a largeant file with light simulation and produces the photon detectors
-# daq response, the ophit finder algorithm and produces the optical detectors waveforms.
-# 
+#
+# This is a module to simulate the PMT hardware trigger on simulated data.
+# It takes a largeant file with optical detectors waveforms and produces a
+# vector whose index is time within the trigger (beam) window and content
+# is number of PMT pairs passsing the trigger threshold.
+#
 # Input:
-# - output from LArG4 module (in particular, SimPhotons or SimPhotonsLite)
-# 
+# - output from OpDetSim module (in particular, OpDetWaveforms)
+#
 # Output:
-# - daq: Optical Waveforms
+# - std::vector<sbnd::comm::pmtTrigger> > : PMT trigger array
 #
 
 
@@ -21,12 +22,12 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 #include "larfft_sbnd.fcl"
-##include "signalservices_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "detsimmodules_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
-#include "ophitfinder_sbnd.fcl"
-#include "wvfana.fcl"
+#include "ophit_finder_sbnd.fcl"
+#include "pmttriggerproducer.fcl"
 
 #include "hitfindermodules_sbnd.fcl"
 #include "cluster_sbnd.fcl"
@@ -37,16 +38,16 @@
 #include "vertexfindermodules.fcl"
 
 
-#inlcude "crtsimmodules_sbnd.fcl"
+
 #include "rootoutput_sbnd.fcl"
 
 
-process_name: ophitfindingwvfana
+process_name: pmtTriggerproducer
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:              { fileName: "test_ophit_wvf_.root" }
+  TFileService:              { fileName: "pmtTrigger_hist.root" }
   @table::sbnd_detsim_services
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
@@ -70,7 +71,12 @@ source:
 #entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
 outputs:
 {
-
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+    SelectEvents:  [reco]
+  }
 }
 
 # Define and configure some modules to do work on each event.
@@ -86,22 +92,19 @@ physics:
     # random number saver
     rns:       { module_type: RandomNumberSaver }
     opdaq:     @local::sbnd_opdetdigitizer
-    ophit:     @local::sbnd_hit_finder
+    ophit:     @local::sbnd_ophit_finder_pmt
+    pmttriggerproducer: @local::pmtTriggerProducer
   }
-  
-  analyzers:
-  {
-    wvfana: @local::wvf_ana
-  }
+
 
   # define the producer and filter modules for this path, order matters,
   # filters reject all following items.  see lines starting physics.producers below
-  reco: [rns, opdaq,  ophit ]
+  reco: [rns, opdaq, ophit, pmttriggerproducer]
 
-  ana: [ wvfana]
+  #ana: [ hitdumper]
 
   # define the output stream, there could be more than one if using filters
-  stream1:  []
+  out:  [ out1 ]
 
   # trigger_paths is a keyword and contains the paths that modify the art::event,
   # ie filters and producers
@@ -109,12 +112,14 @@ physics:
 
   # end_paths is a keyword and contains the paths that do not modify the art::Event,
   # ie analyzers and output streams.  these all run simultaneously
-  end_paths:     [ana, stream1]
+  end_paths:     [out]
 
 }
 
 
 ### Some potential overwrites below
+
+#physics.producers.pmttriggerproducer.PairLogic: "AND"
 
 #physics.producers.fpred.OpHitProducer: "ophit"
 #physics.producers.fpred.BeamWindowStart: -0.2       # in us
@@ -125,13 +130,7 @@ physics:
 #physics.producers.ophit.Area1pePMT:  1.3266    #in ADC*ns
 #physics.producers.opdaq.QEDirect: 0.03
 #physics.producers.opdaq.QERefl: 0.03
-#physics.producers.opdaq.PMTSinglePEmodel: true
-#physics.producers.opdaq.ArapucaSinglePEmodel: true
+#physics.producers.opdaq.SinglePEmodel: true
 #physics.producers.opdaq.PMTChargeToADC: -51.9
 
-#physics.analyzers.wvfana.  OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
-
-
-
-
-
+#physics.producers.pmtTriggerproducer.OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]

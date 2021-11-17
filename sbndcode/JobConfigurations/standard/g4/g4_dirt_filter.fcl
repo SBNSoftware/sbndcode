@@ -3,11 +3,15 @@
 #include "standard_g4_sbnd.fcl"
 
 physics.simulate: [ rns
-	              , ionandscint
-                  , ionandscintout
+                  , ionandscint
+                  # , ionandscintout
                   , pdfastsim
-                  , pdfastsimout
+                  # , pdfastsimout
                   , simdrift
                   , mcreco
                   , genericcrt
                   ]
+
+# Remove unnecesary processes
+physics.producers.loader: @erase
+physics.producers.largeant: @erase
