@@ -2,4 +2,5 @@
 
 #include "standard_g4_sbnd.fcl"
 
-physics.simulate: [ rns , ionandscint , ionandscintout , pdfastsim , pdfastsimout , simdrift , mcreco ]
+#physics.simulate: [ rns , ionandscint , ionandscintout , pdfastsim , pdfastsimout , simdrift , mcreco ]
+physics.simulate: [ rns , ionandscint , pdfastsim , simdrift , mcreco ]
