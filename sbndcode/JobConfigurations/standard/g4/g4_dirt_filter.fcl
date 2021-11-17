@@ -2,7 +2,6 @@
 
 #include "standard_g4_sbnd.fcl"
 
-<<<<<<< HEAD
 physics.simulate: [ rns
                   , ionandscint
                   # , ionandscintout
@@ -13,3 +12,6 @@ physics.simulate: [ rns
                   , genericcrt
                   ]
 
+# Remove unnecesary processes
+physics.producers.loader: @erase
+physics.producers.largeant: @erase
