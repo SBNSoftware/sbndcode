@@ -22,6 +22,10 @@ largeant_volumes: [ "LArG4DetectorServicevolFieldCage"
                   , "LArG4DetectorServicevolTPCPlaneVert"
                   , "LArG4DetectorServicevolCryostat"
                   , "LArG4DetectorServicevolTPCActive"
+                  , "LArG4DetectorServicevolAuxDetSensitiveCRTStripY"
+                  , "LArG4DetectorServicevolAuxDetSensitiveCRTStripX"
+                  , "LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN"
+                  , "LArG4DetectorServicevolAuxDetSensitiveCRTStripMINOS"
                   ]
 
 # Merge seperate instances of largeant for GENIE and CORSIKA
