@@ -2,8 +2,6 @@
 
 #include "services_sbnd.fcl"
 #include "geometry_sbnd.fcl"
-#include "eventweight_genie_sbn.fcl"
-#include "eventweight_flux_sbn.fcl"
 
 #include "larproperties.fcl"
 #include "backtrackerservice.fcl"
@@ -16,8 +14,6 @@
 
 #include "trackscatterclosestapproach.fcl"
 #include "trackstoppingchi2fitter.fcl"
-#include "mcsproducer.fcl"
-#include "rangeproducer.fcl"
 #include "showerselectionvarsproducer.fcl"
 #include "showercosmicdistanceproducer.fcl"
 #include "sbn_pid.fcl"
@@ -63,13 +59,6 @@ services:
 
 # services.IFBeam: {}
 # services.BackTracker: @local::standard_backtracker
-
-#Start each new event with an empty event.
-source:
-{
-  module_type: RootInput
-  maxEvents:   -1        # Number of events to create
-}
 
 # Define and configure some modules to do work on each event.
 # First modules are defined; they are scheduled later.
@@ -122,8 +111,6 @@ physics:
   stream1:       [ ]
   trigger_paths: [ runprod ]
   end_paths:     [ stream1 ]
-
-
 }
 
 physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
