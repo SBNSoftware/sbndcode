@@ -89,8 +89,7 @@ namespace geo {
       double const worldLoc[3],
       std::vector<geo::AuxDetGeo> const& auxDets,
       size_t& ad,
-      size_t& sv,
-      double tolerance) const {
+      size_t& sv) const {
 
     std::cout << "CRTChannelMapAlg::PositionToAuxDetChannel" << std::endl;
 

@@ -82,6 +82,7 @@ physics.simulate: [ rns
                   , ionandscintouttime
                   , pdfastsimouttime
                   , simdriftouttime
+                  , genericcrtouttime
                   ### Simulate the light outside the AV
                   # , ionandscintoutintime
                   # , pdfastsimoutintime
@@ -121,6 +122,8 @@ outputs.out1.outputCommands: [ "keep *_*_*_*"
                              # Drop PDFastSim Ouside AV
                              # , "drop *_pdfastsimoutintime_*_*"
                              # , "drop *_pdfastsimoutouttime_*_*"
+                             # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
+                             , "drop sim::AuxDetHits_*_*_*"
                              ]
 
 # Remove unnecesary processes
