@@ -1,0 +1,43 @@
+BEGIN_PROLOG
+
+hitdumper:
+{
+    module_type:              "HitDumper"
+
+    MaxHits: 100000
+    MaxOpHits: 100000
+    MaxSamples: 5001
+    MaxCRTHits: 5000
+    MaxCRTTracks: 10
+
+    DigitModuleLabel:         "daq"
+    HitsModuleLabel:          "fasthit"
+    OpHitsModuleLabel:        ["ophitpmt", "ophitarapuca"]
+    CRTHitModuleLabel:        "crthit"
+    CRTStripModuleLabel:      "crt"
+    CRTTrackModuleLabel:      "crttrack"
+    pmtTriggerModuleLabel:    "pmttriggerproducer"
+    MuonTrackModuleLabel:     "MuonTrackProducer"
+    GenieGenModuleLabel:      "generator"
+ 
+    keepCRThits:              true
+    keepCRTstrips:            false
+    makeCRTtracks:            true
+    readCRTtracks:            true
+    readOpHits:               true
+    readpmtTrigger:	      true
+    readMuonTracks:           true
+    readMuonHits:             false
+    readTruth:                true
+    savePOTinfo:              true
+    checkTransparency:        false
+
+    window:                   100
+
+    KeepTaggerTypes:          [0, 1, 2, 3, 4, 5, 6]
+
+    SkipInduction:            false
+    SelectEvents: []
+}
+
+END_PROLOG

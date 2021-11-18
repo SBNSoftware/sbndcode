@@ -1,3 +1,4 @@
+add_subdirectory(fcls)
 
 art_make(
    MODULE_LIBRARIES
@@ -36,6 +37,5 @@ art_make(
         sbndcode_OpDetSim
 )
 
-install_fhicl()
 install_source()
 
