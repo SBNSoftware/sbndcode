@@ -62,7 +62,10 @@ else
     exit_code=${?}
     echo -e "\nCannot find reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
     echo "Exiting with exit code: ${exit_code}"
-    exit 1
+    EXITSTATUS=F
+    ERRORSTRING="Failure accessing reference tar file~Check the log"
+    echo "`basename $CWD`~${EXITSTATUS}~$ERRORSTRING" >> $CWD/data_production_stats${ci_cur_exp_name}.log
+    exit $exit_code
 fi
 
 echo -e "\nList of reference files in: ${LOCAL_REF_DIR}"
@@ -161,13 +164,13 @@ fi
 exit_code=0
 
 if [[ $exit_code_parsing -ne 0 && $exit_code_dump -ne 0 ]]; then
-    ERRORSTRING="Error parsing fcl file and differences in fhicl dump outputs"
+    ERRORSTRING="Error parsing fcl file and differences in fhicl dump outputs~Check error in log"
     let exit_code=201
 elif [[ $exit_code_parsing -ne 0 ]]; then
-    ERRORSTRING="Error parsing fcl file"
+    ERRORSTRING="Error parsing fcl file~Check error in log"
     let exit_code=201
 elif [[ $exit_code_dump -ne 0 ]]; then
-    ERRORSTRING="Differences in fhicl dump outputs"
+    ERRORSTRING="Differences in fhicl dump outputs~Update reference files"
     let exit_code=201
 else
     ERRORSTRING="All checks successful"
@@ -175,5 +178,11 @@ fi
 
 echo "Exiting with exit code: $exit_code"
 echo "$ERRORSTRING"
+
+
+if [[ $exit_code -ne 0 ]]; then
+    EXITSTATUS=W
+    echo "`basename $CWD`~${EXITSTATUS}~$ERRORSTRING" >> $CWD/data_production_stats${ci_cur_exp_name}.log
+fi
 
 exit $exit_code
