@@ -54,35 +54,35 @@ exit_code_dump=0
 
 echo -e "\nRemote Reference Directory: ${ACCESS_REF_DIR}"
 
-if IFDH_DEBUG=0 ifdh ll --force=root ${ACCESS_REF_DIR}/${REF_FILE}
-then
-    echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
-    echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
-    ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}
-    echo -e "\nExtract tar to local references directory"
-    echo "tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}"
-    tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}
-else
-    exit_code=${?}
-    echo -e "\nCannot find reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
-    echo "Exiting with exit code: ${exit_code}"
-    EXITSTATUS=F
-    ERRORSTRING="Failure accessing reference tar file~Check the log"
-    echo "`basename $CWD`~${exit_code}~${EXITSTATUS}~$ERRORSTRING" >> $WORKSPACE/data_production_stats${ci_cur_exp_name}.log
-    exit $exit_code
-fi
+if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
+    echo -e "\nUpdating ref files for fcl checks"
+    export datestamp=$(date +"%Y%m%d%H%M")
 
-echo -e "\nList of reference files in: ${LOCAL_REF_DIR}"
-echo "$(ls ${LOCAL_REF_DIR}/*)"
+else
+    if IFDH_DEBUG=0 ifdh ll --force=root ${ACCESS_REF_DIR}/${REF_FILE}
+    then
+	echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
+	echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
+	ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}
+	echo -e "\nExtract tar to local references directory"
+	echo "tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}"
+	tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}
+    else
+	exit_code=${?}
+	echo -e "\nCannot find reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
+	echo "Exiting with exit code: ${exit_code}"
+	EXITSTATUS=F
+	ERRORSTRING="Failure accessing reference tar file~Check the log"
+	echo "`basename $CWD`~${exit_code}~${EXITSTATUS}~$ERRORSTRING" >> $WORKSPACE/data_production_stats${ci_cur_exp_name}.log
+	exit $exit_code
+    fi
+
+    echo -e "\nList of reference files in: ${LOCAL_REF_DIR}"
+    echo "$(ls ${LOCAL_REF_DIR}/*)"
+fi
 
 echo -e "\nList of files from: ${SBNDCODE_DIR}/test/fcl_file_checks.list"
 echo "$(cat ${SBNDCODE_DIR}/test/fcl_file_checks.list)"
-
-export datestamp=$(date +"%Y%m%d%H%M")
-
-if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
-    echo -e "\nUpdating ref files for fcl checks"
-fi
 
 for fcl in `cat ${SBNDCODE_DIR}/test/fcl_file_checks.list`
 
@@ -180,8 +180,8 @@ else
     ERRORSTRING="All checks successful"
 fi
 
-echo "Exiting with exit code: $exit_code"
-echo "$ERRORSTRING"
+echo -e "\nExiting with exit code: $exit_code"
+echo $ERRORSTRING | cut -d~ -f 1
 
 
 if [[ $exit_code -ne 0 ]]; then
