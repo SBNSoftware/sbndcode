@@ -1,5 +1,5 @@
-#include "reco1_sce.fcl"
 #include "hitdumpermodule.fcl"
+#include "reco1_sce.fcl"
 
 process_name: Reco1Comm
 
@@ -9,10 +9,10 @@ physics.ana: [hitdumper]
 physics.end_paths: [ana, stream1]
 
 # Do not drop optical waveforms and fasthits
-outputs.out1.outputCommands [ "keep *_*_*_*"
-                            # , "drop raw::OpDetWaveforms_*_*_*"
-                            # , "drop *raw::RawDigits*_*_*_*"
-                            # , "drop sim::OpDetBacktrackerRecords_*_*_*"
-                            , "drop *_linecluster_*_*"
-                            # , "drop *_fasthit_*_*"
-                            ]
+outputs.out1.outputCommands: [ "keep *_*_*_*"
+                             # , "drop raw::OpDetWaveforms_*_*_*"
+                             # , "drop *raw::RawDigits*_*_*_*"
+                             # , "drop sim::OpDetBacktrackerRecords_*_*_*"
+                             , "drop *_linecluster_*_*"
+                             # , "drop *_fasthit_*_*"
+                             ]
