@@ -31,8 +31,7 @@ namespace geo {
         double const worldLoc[3],
         std::vector<geo::AuxDetGeo> const& auxDets,
         size_t& ad,
-        size_t& sv,
-	double tolerance = 0) const override;
+        size_t& sv) const override;
 
     const TVector3 AuxDetChannelToPosition(
         uint32_t const& channel,
