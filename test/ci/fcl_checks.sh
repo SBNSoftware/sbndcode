@@ -68,7 +68,7 @@ else
     echo "Exiting with exit code: ${exit_code}"
     EXITSTATUS=F
     ERRORSTRING="Failure accessing reference tar file~Check the log"
-    echo "`basename $CWD`~${EXITSTATUS}~$ERRORSTRING" >> $WORKSPACE/data_production_stats${ci_cur_exp_name}.log
+    echo "`basename $CWD`~${exit_code}~${EXITSTATUS}~$ERRORSTRING" >> $WORKSPACE/data_production_stats${ci_cur_exp_name}.log
     exit $exit_code
 fi
 
@@ -186,7 +186,7 @@ echo "$ERRORSTRING"
 
 if [[ $exit_code -ne 0 ]]; then
     EXITSTATUS=W
-    echo "`basename $CWD`~${EXITSTATUS}~$ERRORSTRING" >> $WORKSPACE/data_production_stats${ci_cur_exp_name}.log
+    echo "`basename $CWD`~${exit_code}~${EXITSTATUS}~$ERRORSTRING" >> $WORKSPACE/data_production_stats${ci_cur_exp_name}.log
 fi
 
 exit $exit_code
