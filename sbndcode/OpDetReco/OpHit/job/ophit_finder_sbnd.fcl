@@ -10,6 +10,8 @@ sbnd_ophit_finder:
   InputLabels:    [""]
   ChannelMasks:   []                  # Will ignore channels in this list
   PD:             ["pmt_coated", "pmt_uncoated"]  # Will only use PDS in this list
+  Electronics:    "CAEN" #Will only use PDS with CAEN/Daphne readouts (500/80MHz sampling frec)
+  DaphneFreq:     80    # Frequency of Daphne(XArapucas) readouts (in MHz)
   HitThreshold:   0.2   # PE
   AreaToPE:       true  # Use area to calculate number of PEs
   SPEArea:        66.33 # If AreaToPE is true, this number is
@@ -36,10 +38,11 @@ sbnd_ophit_finder_pmt.PedAlgoPset.MaxSigma:     1.7
 sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 7
 
 #
-# OpHit for Arapuca - Configuration
+# OpHit for XArapuca - Configuration
 #
 sbnd_ophit_finder_arapuca: @local::sbnd_ophit_finder
-sbnd_ophit_finder_arapuca.PD: ["xarapuca_vis", "xarapuca_vuv", "arapuca_vis", "arapuca_vuv"]
+sbnd_ophit_finder_arapuca.PD: ["xarapuca_vis", "xarapuca_vuv"]
+sbnd_ophit_finder_arapuca.Electronics: "Daphne"
 sbnd_ophit_finder_arapuca.SPEArea: 8541. # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
 sbnd_ophit_finder_arapuca.PedAlgoPset.PedRangeMax:  1520
 sbnd_ophit_finder_arapuca.PedAlgoPset.PedRangeMin:  1480
