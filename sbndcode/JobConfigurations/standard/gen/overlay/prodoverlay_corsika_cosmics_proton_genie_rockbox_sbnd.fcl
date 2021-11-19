@@ -31,3 +31,7 @@ outputs.out1.outputCommands: [ "keep *_*_*_*"
                              , "drop *_largeantnu_*_*"
                              , "drop *_largeantcosmic_*_*"
                              ]
+
+# Overidde the names of the output files
+outputs.out1.fileName: "prodgenie_cosmic_rockbox_sbnd_%p-%tc.root"
+services.TFileService.fileName: "hists_prodgenie_cosmic_rockbox_sbnd_%p-%tc.root"
