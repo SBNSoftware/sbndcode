@@ -51,6 +51,7 @@ private:
   // Declare member data here.
   std::string fInputLabel;
   std::vector<std::string> fPDTypes;
+  std::vector<std::string> fElectronics;
   //OpDecoAlg tool
   std::unique_ptr<opdet::OpDeconvolutionAlg> fOpDecoAlgPtr;
   //PDS map
@@ -66,6 +67,7 @@ opdet::SBNDOpDeconvolution::SBNDOpDeconvolution(fhicl::ParameterSet const& p)
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   fInputLabel = p.get< std::string >("InputLabel");
   fPDTypes = p.get< std::vector<std::string> >("PDTypes");
+  fElectronics = p.get< std::vector<std::string> >("Electronics");
   fOpDecoAlgPtr = art::make_tool<opdet::OpDeconvolutionAlg>( p.get< fhicl::ParameterSet >("OpDecoAlg") );
 
   produces< std::vector< raw::OpDetWaveform > >();
@@ -85,7 +87,8 @@ void opdet::SBNDOpDeconvolution::produce(art::Event& e)
   RawWfVector.reserve(wfHandle->size());
 
   for(auto const& wf : *wfHandle){
-    if(std::find(fPDTypes.begin(), fPDTypes.end(), pdsmap.pdType(wf.ChannelNumber()) ) != fPDTypes.end() ){
+    if((std::find(fPDTypes.begin(), fPDTypes.end(), pdsmap.pdType(wf.ChannelNumber()) ) != fPDTypes.end() ) &&
+       (std::find(fElectronics.begin(), fElectronics.end(), pdsmap.electronicsType(wf.ChannelNumber()) ) != fElectronics.end()) ){
       RawWfVector.push_back(wf);
     }
   }

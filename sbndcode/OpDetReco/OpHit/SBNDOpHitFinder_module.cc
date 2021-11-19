@@ -76,13 +76,14 @@ namespace opdet {
     std::vector< std::string > fInputLabels;
     std::set< unsigned int > fChannelMasks;
     std::vector<std::string> _pd_to_use; ///< PDS to use (ex: "pmt", "barepmt")
+    std::string fElectronics; ///< PDS readouts to use (ex: "CAEN", "Daphne")
     std::vector<int> _opch_to_use; ///< List of of opch (will be infered from _pd_to_use)
 
     pmtana::PulseRecoManager  fPulseRecoMgr;
     pmtana::PMTPulseRecoBase* fThreshAlg;
     pmtana::PMTPedestalBase*  fPedAlg;
 
-    Float_t  fHitThreshold;
+    Float_t  fHitThreshold,fDaphne_Freq;
     unsigned int fMaxOpChannel;
 
     calib::IPhotonCalibrator const* fCalib = nullptr;
@@ -113,9 +114,11 @@ namespace opdet {
       ("ChannelMasks", std::vector< unsigned int >()))
       fChannelMasks.insert(ch);
 
-    _pd_to_use = pset.get<std::vector<std::string>>("PD", _pd_to_use);
+    _pd_to_use   = pset.get< std::vector< std::string > >("PD", _pd_to_use);
+    fElectronics = pset.get< std::string >("Electronics");
     _opch_to_use = this->PDNamesToList(_pd_to_use);
 
+    fDaphne_Freq  = pset.get< float >("DaphneFreq");
     fHitThreshold = pset.get< float >("HitThreshold");
     bool useCalibrator = pset.get< bool > ("UseCalibrator", false);
 
@@ -213,8 +216,21 @@ namespace opdet {
     }
 
     auto const& geometry(*lar::providerFrom< geo::Geometry >());
-    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(evt);
+    auto const clockData_CAEN = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(evt);
     auto const& calibrator(*fCalib);
+    detinfo::ElecClock const optical_clock_daphne = detinfo::ElecClock(clockData_CAEN.OpticalClock().Time(),
+                                                                       clockData_CAEN.OpticalClock().FramePeriod(),
+                                                                       fDaphne_Freq);
+    detinfo::DetectorClocksData const& clockData_Daphne = detinfo::DetectorClocksData(-clockData_CAEN.G4ToElecTime(0),
+                                                                                       clockData_CAEN.TriggerOffsetTPC(),
+                                                                                       clockData_CAEN.TriggerTime(),
+                                                                                       clockData_CAEN.BeamGateTime(),
+                                                                                       clockData_CAEN.TPCClock(),
+                                                                                       optical_clock_daphne,
+                                                                                       clockData_CAEN.TriggerClock(),
+                                                                                       clockData_CAEN.ExternalClock());
+    detinfo::DetectorClocksData const& clockData = (fElectronics=="Daphne") ?  clockData_Daphne : clockData_CAEN;
+    // std::cout<<"@rodrigoa debug: frecuencies "<<clockData_Daphne.OpticalClock().Frequency()<<"  "<<clockData.OpticalClock().Frequency()<<std::endl;
     //
     // Get the pulses from the event
     //
@@ -266,7 +282,7 @@ namespace opdet {
           WaveformVector.push_back(wf);
         }
       }
-
+    
       RunHitFinder(WaveformVector,
                    *HitPtr,
                    fPulseRecoMgr,
@@ -305,7 +321,15 @@ namespace opdet {
     std::vector<int> out_ch_v;
 
     for (auto name : pd_names) {
-      auto ch_v = _pds_map.getChannelsOfType(name);
+      std::vector<int> ch_v;
+      // std::cout<<"@rodrigoa debug: Electronics="<<fElectronics<<std::endl;
+
+      if (fElectronics=="Daphne"){
+        //take only daphne xarapuca channels (80 Mhz) for now ~rodrigoa
+        ch_v = _pds_map.getChannelsOfType(name, "daphne");
+      }else{
+        ch_v = _pds_map.getChannelsOfType(name);
+      }
       out_ch_v.insert(out_ch_v.end(), ch_v.begin(), ch_v.end());
     }
 
