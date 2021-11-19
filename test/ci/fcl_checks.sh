@@ -11,6 +11,10 @@ echo "args: ${@}"
 #########################################################################
 
 CWD="$(pwd)"
+
+WORKSPACE=${WORKSPACE:-$PWD}
+ci_cur_exp_name=${ci_cur_exp_name:-${EXPERIMENT}}
+
 WORK_DIR="${CWD}/fcl_tests"
 LOCAL_REF_DIR="${WORK_DIR}/references"
 
@@ -50,32 +54,35 @@ exit_code_dump=0
 
 echo -e "\nRemote Reference Directory: ${ACCESS_REF_DIR}"
 
-if IFDH_DEBUG=0 ifdh ll --force=root ${ACCESS_REF_DIR}/${REF_FILE}
-then
-    echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
-    echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
-    ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}
-    echo -e "\nExtract tar to local references directory"
-    echo "tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}"
-    tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}
-else
-    exit_code=${?}
-    echo -e "\nCannot find reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
-    echo "Exiting with exit code: ${exit_code}"
-    exit 1
-fi
+if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
+    echo -e "\nUpdating ref files for fcl checks"
+    export datestamp=$(date +"%Y%m%d%H%M")
 
-echo -e "\nList of reference files in: ${LOCAL_REF_DIR}"
-echo "$(ls ${LOCAL_REF_DIR}/*)"
+else
+    if IFDH_DEBUG=0 ifdh ll --force=root ${ACCESS_REF_DIR}/${REF_FILE}
+    then
+	echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
+	echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
+	ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}
+	echo -e "\nExtract tar to local references directory"
+	echo "tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}"
+	tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}
+    else
+	exit_code=${?}
+	echo -e "\nCannot find reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
+	echo "Exiting with exit code: ${exit_code}"
+	EXITSTATUS=F
+	ERRORSTRING="Failure accessing reference tar file~Check the log"
+	echo "`basename $CWD`~${exit_code}~${EXITSTATUS}~$ERRORSTRING" >> $WORKSPACE/data_production_stats${ci_cur_exp_name}.log
+	exit $exit_code
+    fi
+
+    echo -e "\nList of reference files in: ${LOCAL_REF_DIR}"
+    echo "$(ls ${LOCAL_REF_DIR}/*)"
+fi
 
 echo -e "\nList of files from: ${SBNDCODE_DIR}/test/fcl_file_checks.list"
 echo "$(cat ${SBNDCODE_DIR}/test/fcl_file_checks.list)"
-
-export datestamp=$(date +"%Y%m%d%H%M")
-
-if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
-    echo -e "\nUpdating ref files for fcl checks"
-fi
 
 for fcl in `cat ${SBNDCODE_DIR}/test/fcl_file_checks.list`
 
@@ -161,19 +168,25 @@ fi
 exit_code=0
 
 if [[ $exit_code_parsing -ne 0 && $exit_code_dump -ne 0 ]]; then
-    ERRORSTRING="Error parsing fcl file and differences in fhicl dump outputs"
+    ERRORSTRING="Error parsing fcl file and differences in fhicl dump outputs~Check error in log"
     let exit_code=201
 elif [[ $exit_code_parsing -ne 0 ]]; then
-    ERRORSTRING="Error parsing fcl file"
+    ERRORSTRING="Error parsing fcl file~Check error in log"
     let exit_code=201
 elif [[ $exit_code_dump -ne 0 ]]; then
-    ERRORSTRING="Differences in fhicl dump outputs"
+    ERRORSTRING="Differences in fhicl dump outputs~Update reference files"
     let exit_code=201
 else
     ERRORSTRING="All checks successful"
 fi
 
-echo "Exiting with exit code: $exit_code"
-echo "$ERRORSTRING"
+echo -e "\nExiting with exit code: $exit_code"
+echo $ERRORSTRING | cut -d~ -f 1
+
+
+if [[ $exit_code -ne 0 ]]; then
+    EXITSTATUS=W
+    echo "`basename $CWD`~${exit_code}~${EXITSTATUS}~$ERRORSTRING" >> $WORKSPACE/data_production_stats${ci_cur_exp_name}.log
+fi
 
 exit $exit_code

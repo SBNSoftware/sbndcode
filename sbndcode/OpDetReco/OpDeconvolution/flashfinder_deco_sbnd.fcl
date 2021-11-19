@@ -50,5 +50,10 @@ SBNDDecoSimpleFlashTPC1: @local::SBNDSimpleFlashTPC1
 SBNDDecoSimpleFlashTPC1.PECalib.SPEAreaGain: 100
 SBNDDecoSimpleFlashTPC1.OpHitProducers: ["ophitdecopmt"]
 
+#####OpHit finder for XArapuca deconvolved waveforms#####
+SBNDDecoOpHitFinderXArapuca:               @local::SBNDDecoOpHitFinderPMT
+SBNDDecoOpHitFinderXArapuca.InputModule:   "opdecoxarapuca"
+SBNDDecoOpHitFinderXArapuca.Electronics:   "Daphne"
+SBNDDecoOpHitFinderXArapuca.PD:            ["xarapuca_vis","xarapuca_vuv"]
 
 END_PROLOG

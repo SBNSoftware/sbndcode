@@ -2,4 +2,5 @@
 
 physics.producers.opdaq.PMTSinglePEmodel: true
 physics.producers.opdaq.ArapucaSinglePEmodel: true
-physics.producers.opdaq.PMTChargeToADC: -51.9
+physics.producers.opdaq.PMTChargeToADC: -25.97
+physics.producers.opdaq.PMTDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"
