@@ -25,6 +25,7 @@ services:
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   AuxDetExptGeoHelperInterface: { service_provider: "CRTGeometryHelper" }
   AuxDetGeometry: { @table::sbnd_geo_source }
+  @table::sbnd_g4_services
 }
 
 

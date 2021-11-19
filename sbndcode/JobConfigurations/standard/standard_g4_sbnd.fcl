@@ -35,6 +35,7 @@
 #include "simdrift_sbnd.fcl"
 #include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
+#include "config_genericCRT.fcl"
 
 
 process_name: G4
@@ -87,6 +88,9 @@ physics:
     # Truth-level reconstruction
     mcreco: @local::sbnd_mcreco
 
+    #Generic CRT
+    genericcrt: @local::sbnd_genericCRT
+
   }
 
   # All producers and filters modules for this path, order matters
@@ -99,6 +103,7 @@ physics:
             # , pdfastsimout
             , simdrift
             , mcreco
+	    , genericcrt
           ]
 
   # The output stream, there could be more than one if using filters
@@ -123,6 +128,7 @@ outputs:
                     , "drop sim::SimEnergyDeposits_largeant_*_*"
                     # Drop the IonAndScint w/ SCE offsets applied
                     , "drop *_ionandscint__*"
+		    , "drop sim::AuxDetHits_*_*_*"
                     ]
   }
 }
