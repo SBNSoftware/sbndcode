@@ -158,6 +158,7 @@ void CRTDetSim::produce(art::Event & e) {
         geoService->AuxDet(adsc.AuxDetID());
     const geo::AuxDetSensitiveGeo& adsGeo =
         adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
+
     // Return the vector of IDEs
     std::vector<sim::AuxDetIDE> ides = adsc.AuxDetIDEs();
     std::sort(ides.begin(), ides.end(),
@@ -165,8 +166,8 @@ void CRTDetSim::produce(art::Event & e) {
                 return ((a.entryT + a.exitT)/2) < ((b.entryT + b.exitT)/2);
               });
 
-    // Find the path to the strip geo node, to locate it in the hierarchy
-    std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
+    // std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
+    std::set<std::string> volNames = { adGeo.TotalVolume()->GetName() };
     std::vector<std::vector<TGeoNode const*> > paths =
       geoService->FindAllVolumePaths(volNames);
 
@@ -181,10 +182,14 @@ void CRTDetSim::produce(art::Event & e) {
     TGeoManager* manager = geoService->ROOTGeoManager();
     manager->cd(path.c_str());
 
-    TGeoNode* nodeStrip = manager->GetCurrentNode();
-    TGeoNode* nodeArray = manager->GetMother(1);
-    TGeoNode* nodeModule = manager->GetMother(2);
-    TGeoNode* nodeTagger = manager->GetMother(3);
+    // We get the array of strips first, which is the AuxDet,
+    // then from the AuxDet, we get the strip by picking the
+    // daughter with the ID of the AuxDetSensitive, and finally
+    // from the AuxDet, we go up and pick the module and tagger
+    TGeoNode* nodeArray = manager->GetCurrentNode();
+    TGeoNode* nodeStrip = nodeArray->GetDaughter(adsc.AuxDetSensitiveID());
+    TGeoNode* nodeModule = manager->GetMother(1);
+    TGeoNode* nodeTagger = manager->GetMother(2);
 
     // Module position in parent (tagger) frame
     double origin[3] = {0, 0, 0};
@@ -298,7 +303,6 @@ void CRTDetSim::produce(art::Event & e) {
       uint32_t stripID = adsc.AuxDetSensitiveID();
       uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
       uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
-
 
       if (moduleID >= 127) {continue;}        //Ignoring MINOS modules for now.
 
