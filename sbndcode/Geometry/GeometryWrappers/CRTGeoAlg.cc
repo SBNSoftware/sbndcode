@@ -23,33 +23,38 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
   // Loop over them
   for(auto const& auxDet : auxDets){
 
+    // Get the geometry object for the auxDet
+    std::set<std::string> volNames = {auxDet.TotalVolume()->GetName()};
+    std::vector<std::vector<TGeoNode const*>> paths = fGeometryService->FindAllVolumePaths(volNames);
+
+    // Build up a path that ROOT understands
+    std::string path = "";
+    for (size_t inode = 0; inode < paths.at(0).size(); inode++){
+      path += paths.at(0).at(inode)->GetName();
+      if(inode < paths.at(0).size() - 1){
+        path += "/";
+      }
+    }
+
     int sv_i = 0;
     // Loop over the strips in the arrays
     for(size_t i = 0; i < auxDet.NSensitiveVolume(); i++){
 
-      // Get the geometry object for the strip
       geo::AuxDetSensitiveGeo const& auxDetSensitive = auxDet.SensitiveVolume(i);
-      std::set<std::string> volNames = {auxDetSensitive.TotalVolume()->GetName()};
-      std::vector<std::vector<TGeoNode const*>> paths = fGeometryService->FindAllVolumePaths(volNames);
-
-      // Build up a path that ROOT understands
-      std::string path = "";
-      for (size_t inode = 0; inode < paths.at(0).size(); inode++){
-        path += paths.at(0).at(inode)->GetName();
-        if(inode < paths.at(0).size() - 1){
-          path += "/";
-        }
-      }
 
       // Access the path
       TGeoManager* manager = fGeometryService->ROOTGeoManager();
       manager->cd(path.c_str());
 
-      // Get all of the things we're intersted in in the path
-      TGeoNode* nodeStrip = manager->GetCurrentNode();
-      TGeoNode* nodeModule = manager->GetMother(2);
-      TGeoNode* nodeTagger = manager->GetMother(3);
-      TGeoNode* nodeDet = manager->GetMother(4);
+      // We get the array of strips first, which is the AuxDet,
+      // then from the AuxDet, we get the strip by picking the
+      // daughter with the ID of the AuxDetSensitive, and finally
+      // from the AuxDet, we go up and pick the module, tagger, and det
+      TGeoNode* nodeArray = manager->GetCurrentNode();
+      TGeoNode* nodeStrip = nodeArray->GetDaughter(i);
+      TGeoNode* nodeModule = manager->GetMother(1);
+      TGeoNode* nodeTagger = manager->GetMother(2);
+      TGeoNode* nodeDet = manager->GetMother(3);
 
       // Fill the tagger information
       std::string taggerName = nodeTagger->GetName();
