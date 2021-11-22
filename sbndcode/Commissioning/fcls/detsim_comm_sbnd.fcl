@@ -1,4 +1,4 @@
-# A detector simulation fcl file used for some particular 
+# A detector simulation fcl file used for some particular
 # commissioning studies.
 
 #include "standard_detsim_sbnd.fcl"
@@ -7,5 +7,5 @@
 physics.producers.opdaq.TriggerThresholdADCArapuca: 500
 
 # Lower the PMT threshold to save the full waveform
-physics.producers.opdaq.TriggerThresholdADCPMT: -100
+physics.producers.opdaq.TriggerThresholdADCPMT: 0
 
