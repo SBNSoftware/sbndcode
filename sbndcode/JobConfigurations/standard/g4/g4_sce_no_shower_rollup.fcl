@@ -1,5 +1,5 @@
 # File:    g4_no_shower_rollup.fcl
-# Purpose: Same as standard_g4_sbnd.fcl, but saves all EM shower daughter particles.
+# Purpose: Same as g4_sce.fcl, but saves all EM shower daughter particles.
 #
 # This runs the new, refactored, LArG4 simulation.
 
