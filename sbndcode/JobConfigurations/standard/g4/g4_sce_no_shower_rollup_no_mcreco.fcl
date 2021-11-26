@@ -1,4 +1,4 @@
-# File:    g4_no_shower_rollup.fcl
+# File:    g4_sce_no_shower_rollup_no_mcreco.fcl
 # Purpose: Same as g4_sce_no_shower_rollup.fcl, but removes mcreco from the simulate process
 #
 # This runs the new, refactored, LArG4 simulation.
