@@ -1,4 +1,4 @@
-#include "cafmakerjob_sbnd.fcl"
+#include "cafmakerjob_sbnd_genie_and_fluxwgt.fcl"
 
 services.NuRandomService.policy: "perEvent"
 
@@ -6,3 +6,7 @@ services.NuRandomService.policy: "perEvent"
 # currently no way of controlling this from the command line
 
 physics.producers.mycafmaker.CAFFilename: "nucosmics_caf_test_sbndcode_Current.caf.root"
+
+physics.producers.genieweight.genie_sbnd_multisim.number_of_multisims: 1
+physics.producers.genieweight.genie_sbnd_multisim_exclusive.number_of_multisims: 1
+physics.producers.genieweight.genie_ub_multisim.number_of_multisims: 1
