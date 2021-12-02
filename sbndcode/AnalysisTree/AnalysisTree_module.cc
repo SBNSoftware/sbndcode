@@ -2796,8 +2796,15 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 	      << " track " << iTrk << ". Not saving particleID information."; 
 	  }
 	  // Set dummy values
-	  double pidpdg[3] = {-1,-1,-1};
-	  double pidchi[3] = {99999.,99999.,99999.};
+	  double pidpdg[3] = {0,0,0};
+	  double pidchi[3] = {0.,0.,0.};
+          for(size_t planenum=0; planenum<3; ++planenum) {
+            TrackerData.trkpidchimu[iTrk][planenum] = 0.;
+            TrackerData.trkpidchipi[iTrk][planenum] = 0.;
+            TrackerData.trkpidchika[iTrk][planenum] = 0.;
+            TrackerData.trkpidchipr[iTrk][planenum] = 0.;
+            TrackerData.trkpidpida[iTrk][planenum] = 0.;
+          }
 	  for (size_t ipid=0; ipid<pids.size(); ipid++){ 
 	    std::vector<anab::sParticleIDAlgScores> AlgScoresVec = pids[ipid]->ParticleIDAlgScores();
 
@@ -2823,28 +2830,28 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 	      if (AlgScore.fAlgName == "Chi2"){
 		if (TMath::Abs(AlgScore.fAssumedPdg) == 13){ // chi2mu
 		  TrackerData.trkpidchimu[iTrk][planenum] = AlgScore.fValue;
-		  if (AlgScore.fValue<pidchi[planenum]){
+		  if (AlgScore.fValue<pidchi[planenum] || (pidchi[planenum] == 0. && AlgScore.fValue>0.)){
 		    pidchi[planenum] = AlgScore.fValue;
 		    pidpdg[planenum] = TMath::Abs(AlgScore.fAssumedPdg);
 		  }
 		}
 		else if (TMath::Abs(AlgScore.fAssumedPdg) == 2212){ // chi2pr
 		  TrackerData.trkpidchipr[iTrk][planenum] = AlgScore.fValue;
-		  if (AlgScore.fValue<pidchi[planenum]){
+		  if (AlgScore.fValue<pidchi[planenum] || (pidchi[planenum] == 0. && AlgScore.fValue>0.)){
 		    pidchi[planenum] = AlgScore.fValue;
 		    pidpdg[planenum] = TMath::Abs(AlgScore.fAssumedPdg);
 		  }
 		}
 		else if (TMath::Abs(AlgScore.fAssumedPdg) == 211){ // chi2pi
 		  TrackerData.trkpidchipi[iTrk][planenum] = AlgScore.fValue;
-		  if (AlgScore.fValue<pidchi[planenum]){
+		  if (AlgScore.fValue<pidchi[planenum] || (pidchi[planenum] == 0. && AlgScore.fValue>0.)){
 		    pidchi[planenum] = AlgScore.fValue;
 		    pidpdg[planenum] = TMath::Abs(AlgScore.fAssumedPdg);
 		  }
 		}
 		else if (TMath::Abs(AlgScore.fAssumedPdg) == 321){ // chi2ka
 		  TrackerData.trkpidchika[iTrk][planenum] = AlgScore.fValue;
-		  if (AlgScore.fValue<pidchi[planenum]){
+		  if (AlgScore.fValue<pidchi[planenum] || (pidchi[planenum] == 0. && AlgScore.fValue>0.)){
 		    pidchi[planenum] = AlgScore.fValue;
 		    pidpdg[planenum] = TMath::Abs(AlgScore.fAssumedPdg);
 		  }
