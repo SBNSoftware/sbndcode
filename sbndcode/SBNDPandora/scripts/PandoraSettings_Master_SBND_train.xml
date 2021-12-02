@@ -36,6 +36,8 @@
         <MaximumNeutrinos>999</MaximumNeutrinos>
       </tool>
     </SliceIdTools>
+    <InputMCParticleListName>Input</InputMCParticleListName>
+    <PassMCParticlesToWorkerInstances>true</PassMCParticlesToWorkerInstances>
     <InputHitListName>CaloHitList2D</InputHitListName>
     <RecreatedPfoListName>RecreatedPfos</RecreatedPfoListName>
     <RecreatedClusterListName>RecreatedClusters</RecreatedClusterListName>
