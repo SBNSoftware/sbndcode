@@ -1,0 +1,5 @@
+#include "g4_simphotontime_filter.fcl"
+
+#include "enable_spacecharge_services_sbnd.fcl"
+
+services.ParticleListAction.keepEMShowerDaughters: true

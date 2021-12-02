@@ -1,0 +1,7 @@
+# Runs standard g4 fcl without largeant designed for use with gen stage fcls that run a largeant dirt filter with sce
+# and has shower rollup disabled
+#include "g4_dirt_filter.fcl"
+
+#include "enable_spacecharge_services_sbnd.fcl"
+
+services.ParticleListAction.keepEMShowerDaughters: true

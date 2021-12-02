@@ -1,0 +1,5 @@
+#include "standard_g4_sbnd.fcl"
+#include "enable_spacecharge_services_sbnd.fcl"
+
+services.ParticleListAction.keepGenTrajectories: ["generator", "corsika"]
+services.ParticleListAction.keepEMShowerDaughters: true
