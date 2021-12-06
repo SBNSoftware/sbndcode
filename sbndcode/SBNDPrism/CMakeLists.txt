@@ -1,6 +1,7 @@
 
 art_make(
-          MODULE_LIBRARIES larcorealg_Geometry
+          MODULE_LIBRARIES sbnobj_Common_SBNEventWeight
+                           larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
                            larsim_MCCheater_BackTrackerService_service

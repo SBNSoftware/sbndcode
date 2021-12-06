@@ -7,6 +7,9 @@
 // from cetlib version v3_10_00.
 ////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
+#include <functional>
+
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
@@ -27,6 +30,8 @@
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
+
+#include "sbnobj/Common/SBNEventWeight/EventWeightMap.h"
 
 class PrismAnalyzer;
 
@@ -57,6 +62,7 @@ private:
   float GetEnergyQE(float muon_energy, float muon_px, float muon_py, float muon_pz);
 
   std::string _mctruth_producer = "generator";
+  std::string _flux_eventweight_multisim_producer;
   float _beam_origin_x = 73.78;
   float _beam_origin_y = 0.0;
   float _beam_origin_z = 11000.0;
@@ -107,6 +113,12 @@ private:
   int _nu_pi0_mult; ///< Pi plus multiplicity
   int _nu_p_mult; ///< Proton multiplicity
 
+  int _evtwgt_flux_nfunc; ///< Number of functions used for FLUX reweighting (multisim)
+  std::vector<std::string> _evtwgt_flux_funcname; ///< Names of the functions used for FLUX reweighting (multisim)
+  std::vector<int> _evtwgt_flux_nweight; ///< Number of weights per function name used for FLUX reweighting (multisim)
+  std::vector<std::vector<float>> _evtwgt_flux_weight; ///< Weights per function name used for FLUX reweighting (multisim)
+  std::vector<float> _evtwgt_flux_oneweight; ///< Weights for FLUX reweighting (multisim) (combines all variations)
+
   TTree* _sr_tree;
   int _sr_run, _sr_subrun;
   double _sr_begintime, _sr_endtime;
@@ -119,6 +131,7 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}  // ,
   // More initializers here.
 {
+  _flux_eventweight_multisim_producer = p.get<std::string>("FluxEventWeightProducer", "fluxweight");
 
   _beam_origin_x = p.get<float>("BeamCenterX");
   _beam_origin_y = p.get<float>("BeamCenterY");
@@ -171,6 +184,12 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _tree->Branch("nu_pi0_mult", &_nu_pi0_mult, "nu_pi0_mult/I");
   _tree->Branch("nu_p_mult", &_nu_p_mult, "nu_p_mult/I");
 
+  // _tree->Branch("evtwgt_flux_nfunc", &_evtwgt_flux_nfunc, "evtwgt_flux_nfunc/I");
+  // _tree->Branch("evtwgt_flux_funcname", "std::vector<std::string>", &_evtwgt_flux_funcname);
+  // _tree->Branch("evtwgt_flux_nweight", "std::vector<int>", &_evtwgt_flux_nweight);
+  // _tree->Branch("evtwgt_flux_weight", "std::vector<std::vector<float>>", &_evtwgt_flux_weight);
+  _tree->Branch("evtwgt_flux_oneweight", "std::vector<float>", &_evtwgt_flux_oneweight);
+
   _sr_tree = fs->make<TTree>("pottree","");
   _sr_tree->Branch("run", &_sr_run, "run/I");
   _sr_tree->Branch("subrun", &_sr_subrun, "subrun/I");
@@ -198,9 +217,10 @@ void PrismAnalyzer::analyze(art::Event const& e)
   art::fill_ptr_vector(mct_v, mct_h);
 
   //
-  // Get the associated MCFlux
+  // Get the associated MCFlux and Flux Event Weight Map (ewm)
   //
   art::FindManyP<simb::MCFlux> mct_to_mcf (mct_h, e, _mctruth_producer);
+  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_fluxewm(mct_h, e, _flux_eventweight_multisim_producer);
 
   _pars_pdg.clear();
   _pars_e.clear();
@@ -299,6 +319,48 @@ void PrismAnalyzer::analyze(art::Event const& e)
     //   if (mcp.PdgCode() != 2112) continue;
     //   std::cout << "Got neutron, mother is " << mcp.Mother() << ", energy is " << mcp.E() << std::endl;
     // }
+
+    // Flux weights
+    std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> flux_ewm_v = mct_to_fluxewm.at(i);
+    if (flux_ewm_v.size() != 1) {
+      std::cout << "[PrismAnalyzer] EventWeightMap of " << _flux_eventweight_multisim_producer << " bigger than 1?" << std::endl;
+    }
+    std::map<std::string, std::vector<float>> evtwgt_map = *(flux_ewm_v[0]);
+
+    _evtwgt_flux_funcname.clear();
+    _evtwgt_flux_weight.clear();
+    _evtwgt_flux_nweight.clear();
+    _evtwgt_flux_oneweight.clear();
+
+    std::vector<float> previous_weights;
+    std::vector<float> final_weights;
+
+    int countFunc = 0;
+    for(auto it : evtwgt_map) {
+      std::string func_name = it.first;
+      std::vector<float> weight_v = it.second;
+
+      if (previous_weights.size() == 0) {
+        previous_weights.resize(weight_v.size(), 1.);
+        final_weights.resize(weight_v.size(), 1.);
+      }
+
+      _evtwgt_flux_funcname.push_back(func_name);
+      _evtwgt_flux_weight.push_back(weight_v);
+      _evtwgt_flux_nweight.push_back(weight_v.size());
+      countFunc++;
+
+      std::cout << "weight_v.at(0) " << weight_v.at(0) << ", final_weights.at(0) " << final_weights.at(0) << std::endl;
+
+      // Construct a single weight
+      std::transform(previous_weights.begin(), previous_weights.end(),
+                     weight_v.begin(),
+                     final_weights.begin(),
+                     std::multiplies<float>());
+      previous_weights = final_weights;
+    }
+    _evtwgt_flux_nfunc = countFunc;
+    _evtwgt_flux_oneweight = final_weights;
 
     _tree->Fill();
   }
