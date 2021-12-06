@@ -96,6 +96,11 @@ std::pair<double, double> CRTHitRecoAlg::DistanceBetweenSipms(art::Ptr<sbnd::crt
   
   uint32_t channel = sipm1->Channel();
   std::string stripName = fCrtGeo.ChannelToStripName(channel);
+  if (stripName.empty()) {
+    throw cet::exception("CRTHitRecoAlg")
+        << "Cannot find strip name for channel " << channel << std::endl;
+  }
+
   double width = fCrtGeo.GetStrip(stripName).width;
 
   // Calculate the number of photoelectrons at each SiPM

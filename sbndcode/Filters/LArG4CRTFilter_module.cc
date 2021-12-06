@@ -229,20 +229,21 @@ namespace filt{
       else if (taggerName.find("Bot")!=std::string::npos){
         fBottomCRTAuxDetIDs.push_back(auxdet_i);
       }
-      else if (taggerName.find("Front")!=std::string::npos){
+      else if (taggerName.find("South")!=std::string::npos){
         fFrontCRTAuxDetIDs.push_back(auxdet_i);
       }
-      else if (taggerName.find("Back")!=std::string::npos){
+      else if (taggerName.find("North")!=std::string::npos){
         fBackCRTAuxDetIDs.push_back(auxdet_i);
       }
-      else if (taggerName.find("Left")!=std::string::npos){
+      else if (taggerName.find("West")!=std::string::npos){
         fLeftCRTAuxDetIDs.push_back(auxdet_i);
       }
-      else if (taggerName.find("Right")!=std::string::npos){
+      else if (taggerName.find("East")!=std::string::npos){
         fRightCRTAuxDetIDs.push_back(auxdet_i);
       }
       else {
-        std::cout<<"Tagger with name: " << taggerName << " does not fit the logic.  This should not happen!!!!!!one"<<std::endl;
+        std::cout << "Tagger with name: " << taggerName
+                  << " does not fit the logic. This should not happen!!!!!!" << std::endl;
       }
     }
 

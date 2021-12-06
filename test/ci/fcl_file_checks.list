@@ -1,0 +1,11 @@
+prodoverlay_corsika_cosmics_proton_genie_nu_spill_tpc_sbnd.fcl
+prodoverlay_corsika_cosmics_proton_genie_fullosc_spill_gsimple-configh-v1_tpc.fcl
+prodoverlay_corsika_cosmics_proton_genie_intrnue_spill_tpc_sbnd.fcl
+prodgenie_nu_singleinteraction_tpc_sbnd.fcl
+prodcorsika_proton_intime_filter_sce.fcl
+prodsingle_sbnd_proj.fcl
+g4_sce.fcl
+detsim_sce.fcl
+reco1_sce.fcl
+reco2_sce.fcl
+cafmakerjob_sbnd_sce_genie_and_fluxwgt.fcl

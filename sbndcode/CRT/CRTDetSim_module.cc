@@ -73,7 +73,7 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
   fTaggerPlaneCoincidenceWindow = p.get<double>("TaggerPlaneCoincidenceWindow");
   fAbsLenEff = p.get<double>("AbsLenEff");
   fSipmTimeResponse = p.get<double>("SipmTimeResponse");
-  fAdcSaturation = p.get<short>("AdcSaturation");
+  fAdcSaturation = p.get<uint32_t>("AdcSaturation");
 }
 
 
@@ -150,11 +150,12 @@ void CRTDetSim::produce(art::Event & e) {
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
   e.getByLabel(fG4ModuleLabel, channels);
 
+  if (!channels.isValid()) {std::cout << "No Channels!" << std::endl;}
+
   // Loop through truth AD channels
   for (auto& adsc : *channels) {
     const geo::AuxDetGeo& adGeo =
         geoService->AuxDet(adsc.AuxDetID());
-
     const geo::AuxDetSensitiveGeo& adsGeo =
         adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
 
@@ -165,8 +166,8 @@ void CRTDetSim::produce(art::Event & e) {
                 return ((a.entryT + a.exitT)/2) < ((b.entryT + b.exitT)/2);
               });
 
-    // Find the path to the strip geo node, to locate it in the hierarchy
-    std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
+    // std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
+    std::set<std::string> volNames = { adGeo.TotalVolume()->GetName() };
     std::vector<std::vector<TGeoNode const*> > paths =
       geoService->FindAllVolumePaths(volNames);
 
@@ -181,10 +182,14 @@ void CRTDetSim::produce(art::Event & e) {
     TGeoManager* manager = geoService->ROOTGeoManager();
     manager->cd(path.c_str());
 
-    TGeoNode* nodeStrip = manager->GetCurrentNode();
-    TGeoNode* nodeArray = manager->GetMother(1);
-    TGeoNode* nodeModule = manager->GetMother(2);
-    TGeoNode* nodeTagger = manager->GetMother(3);
+    // We get the array of strips first, which is the AuxDet,
+    // then from the AuxDet, we get the strip by picking the
+    // daughter with the ID of the AuxDetSensitive, and finally
+    // from the AuxDet, we go up and pick the module and tagger
+    TGeoNode* nodeArray = manager->GetCurrentNode();
+    TGeoNode* nodeStrip = nodeArray->GetDaughter(adsc.AuxDetSensitiveID());
+    TGeoNode* nodeModule = manager->GetMother(1);
+    TGeoNode* nodeTagger = manager->GetMother(2);
 
     // Module position in parent (tagger) frame
     double origin[3] = {0, 0, 0};
@@ -244,10 +249,10 @@ void CRTDetSim::produce(art::Event & e) {
 
       double distToReadout;
       if (top) {
-        distToReadout = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);
+        distToReadout = abs( adsGeo.HalfWidth1() - svHitPosLocal[0]);
       }
       else {
-        distToReadout = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);
+        distToReadout = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]);
       }
 
       // The expected number of PE, using a quadratic model for the distance
@@ -259,8 +264,8 @@ void CRTDetSim::produce(art::Event & e) {
 
       // Put PE on channels weighted by transverse distance across the strip,
       // using an exponential model
-      double d0 = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]);  // L
-      double d1 = abs( adsGeo.HalfWidth1() - svHitPosLocal[0]);  // R
+      double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);  // L
+      double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);  // R
       double abs0 = exp(-d0 / fAbsLenEff);
       double abs1 = exp(-d1 / fAbsLenEff);
       double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
@@ -282,10 +287,10 @@ void CRTDetSim::produce(art::Event & e) {
         CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fClockSpeedCRT * 1e6);
 
       // SiPM and ADC response: Npe to ADC counts
-      short q0 =
+      uint32_t q0 =
         CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe0, fQRMS * sqrt(npe0));
       if(q0 > fAdcSaturation) q0 = fAdcSaturation;
-      short q1 =
+      uint32_t q1 =
         CLHEP::RandGauss::shoot(&fEngine, fQPed + fQSlope * npe1, fQRMS * sqrt(npe1));
       if(q1 > fAdcSaturation) q1 = fAdcSaturation;
 
@@ -298,6 +303,8 @@ void CRTDetSim::produce(art::Event & e) {
       uint32_t stripID = adsc.AuxDetSensitiveID();
       uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
       uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
+
+      if (moduleID >= 127) {continue;}        //Ignoring MINOS modules for now.
 
       // Apply ADC threshold and strip-level coincidence (both fibers fire)
       if (q0 > fQThreshold &&
@@ -362,6 +369,7 @@ void CRTDetSim::produce(art::Event & e) {
         }
       }
     }
+
 
     if (trigger || trg.first.find("TaggerBot") != std::string::npos) {
       // Write out all hits on a tagger when there is any coincidence FIXME this reads out everything!

@@ -20,6 +20,7 @@ add_subdirectory(OpT0Finder)
 add_subdirectory(CosmicId)
 add_subdirectory(ShowerAna)
 add_subdirectory(Commissioning)
+add_subdirectory(Trigger)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)

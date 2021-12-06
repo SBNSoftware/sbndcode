@@ -42,7 +42,7 @@ namespace opdet {
       (*fEngine, timeTPB_p->data(), timeTPB_p->size());
 
     //shape of single pulse
-    if (fParams.SinglePEmodel) {
+    if (fParams.PMTSinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
       std::vector<double>* SinglePEVec_p;
       file->GetObject("SinglePEVec", SinglePEVec_p);
@@ -463,7 +463,7 @@ namespace opdet {
     fBaseConfig.PMTSaturation            = config.pmtsaturation();
     fBaseConfig.QEDirect                 = config.qEDirect();
     fBaseConfig.QERefl                   = config.qERefl();
-    fBaseConfig.SinglePEmodel            = config.singlePEmodel();
+    fBaseConfig.PMTSinglePEmodel         = config.PMTsinglePEmodel();
     fBaseConfig.PMTRiseTime              = config.pmtriseTime();
     fBaseConfig.PMTFallTime              = config.pmtfallTime();
     fBaseConfig.PMTMeanAmplitude         = config.pmtmeanAmplitude();

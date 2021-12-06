@@ -9,4 +9,7 @@ sbnd_gennufilter:
   NC:                       true
 }
 
+sbnd_tpc_gennufilter: @local::sbnd_gennufilter
+sbnd_tpc_gennufilter.VtxInTPC: true
+
 END_PROLOG

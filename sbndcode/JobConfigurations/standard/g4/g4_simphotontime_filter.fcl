@@ -10,6 +10,7 @@
 
 # Add process to finish the electron drift simulation for the intimes
 physics.producers.simdriftintime: @local::sbnd_simdrift
+physics.producers.genericcrtintime: @local::sbnd_genericCRT
 
 # Add a geant4 process, that will run only on the outtime cosmics
 physics.producers.loader: { module_type: "PhysListLoader" }
@@ -17,25 +18,28 @@ physics.producers.larg4outtime: @local::sbnd_larg4
 physics.producers.ionandscintouttime: @local::sbnd_ionandscint
 physics.producers.pdfastsimouttime: @local::sbnd_pdfastsim_par
 physics.producers.simdriftouttime: @local::sbnd_simdrift
+physics.producers.genericcrtouttime: @local::sbnd_genericCRT
 
 # Set the appropriate input labels, to run geant4 only on the outtime cosmics
 physics.producers.simdriftintime.SimulationLabel: "ionandscintintime:priorSCE"
+physics.producers.genericcrtintime.LArG4Label: "larg4intime"
 physics.producers.larg4outtime.inputCollections: [ "GenInTimeSorter:outtime" ]
 physics.producers.ionandscintouttime.InputModuleLabels: ["larg4outtime"]
 physics.producers.pdfastsimouttime.SimulationLabel: "ionandscintouttime:priorSCE"
 physics.producers.simdriftouttime.SimulationLabel: "ionandscintouttime:priorSCE"
+physics.producers.genericcrtouttime.LArG4Label: "larg4outtime"
 
 # Add processes for light simulation outside the active volume (AV) for the intimes
-physics.producers.ionandscintoutintime: @local::sbnd_ionandscint_out
-physics.producers.pdfastsimoutintime: @local::sbnd_pdfastsim_pvs
-physics.producers.ionandscintoutintime.InputModuleLabels: ["larg4intime"]
-physics.producers.pdfastsimoutintime.SimulationLabel: "ionandscintoutintime"
+# physics.producers.ionandscintoutintime: @local::sbnd_ionandscint_out
+# physics.producers.pdfastsimoutintime: @local::sbnd_pdfastsim_pvs
+# physics.producers.ionandscintoutintime.InputModuleLabels: ["larg4intime"]
+# physics.producers.pdfastsimoutintime.SimulationLabel: "ionandscintoutintime"
 
 # Add processes for light simulation outside the active volume (AV) for the outtimes
-physics.producers.ionandscintoutouttime: @local::sbnd_ionandscint_out
-physics.producers.pdfastsimoutouttime: @local::sbnd_pdfastsim_pvs
-physics.producers.ionandscintoutouttime.InputModuleLabels: ["larg4outtime"]
-physics.producers.pdfastsimoutouttime.SimulationLabel: "ionandscintoutouttime"
+# physics.producers.ionandscintoutouttime: @local::sbnd_ionandscint_out
+# physics.producers.pdfastsimoutouttime: @local::sbnd_pdfastsim_pvs
+# physics.producers.ionandscintoutouttime.InputModuleLabels: ["larg4outtime"]
+# physics.producers.pdfastsimoutouttime.SimulationLabel: "ionandscintoutouttime"
 
 # Add a process that merges the MCParticles
 physics.producers.largeant: @local::sbnd_merge_sim_sources
@@ -52,10 +56,10 @@ physics.producers.simdrift: @local::sbnd_merge_sim_sources
 physics.producers.simdrift.FillSimChannels: true
 physics.producers.simdrift.InputSourcesLabels: [ "simdriftintime", "simdriftouttime"]
 
-# Add a process that merges the AuxDetSimChannels TODO
-physics.producers.crtsimch: @local::sbnd_merge_sim_sources
-physics.producers.crtsimch.FillAuxDetSimChannels: true
-physics.producers.crtsimch.InputSourcesLabels: [ "?", "?"]
+# Add a process that merges the AuxDetSimChannels
+physics.producers.genericcrt: @local::sbnd_merge_sim_sources
+physics.producers.genericcrt.FillAuxDetSimChannels: true
+physics.producers.genericcrt.InputSourcesLabels: [ "genericcrtintime", "genericcrtouttime"]
 
 # Add a process that merges the SimPhotons inside the AV
 physics.producers.pdfastsim: @local::sbnd_merge_sim_sources
@@ -63,31 +67,34 @@ physics.producers.pdfastsim.FillSimPhotons: true
 physics.producers.pdfastsim.InputSourcesLabels: [ "pdfastsimintime", "pdfastsimouttime"]
 
 # Add a process that merges the SimPhotons outside the AV
-physics.producers.pdfastsimout: @local::sbnd_merge_sim_sources
-physics.producers.pdfastsimout.FillSimPhotons: true
-physics.producers.pdfastsimout.InputSourcesLabels: [ "pdfastsimoutintime", "pdfastsimoutouttime"]
+# physics.producers.pdfastsimout: @local::sbnd_merge_sim_sources
+# physics.producers.pdfastsimout.FillSimPhotons: true
+# physics.producers.pdfastsimout.InputSourcesLabels: [ "pdfastsimoutintime", "pdfastsimoutouttime"]
 
 # Add all these new modules to the simulate path
 physics.simulate: [ rns
-                  ### Complete intime drift simulation
+                  ### Complete intime drift simulation and generic CRT
                   , simdriftintime
+                  , genericcrtintime
                   ### Do full Geant4 simulation for the outtimes
                   , loader
                   , larg4outtime
                   , ionandscintouttime
                   , pdfastsimouttime
                   , simdriftouttime
+                  , genericcrtouttime
                   ### Simulate the light outside the AV
-                  , ionandscintoutintime
-                  , pdfastsimoutintime
-                  , ionandscintoutouttime
-                  , pdfastsimoutouttime
+                  # , ionandscintoutintime
+                  # , pdfastsimoutintime
+                  # , ionandscintoutouttime
+                  # , pdfastsimoutouttime
                   ### Merge the intime and outtime paths
                   , largeant
                   , ionandscint
                   , simdrift
                   , pdfastsim
-                  , pdfastsimout
+                  # , pdfastsimout
+                  , genericcrt
                   ### Do truth-level reconstruction
                   , mcreco
                   ]
@@ -110,11 +117,13 @@ outputs.out1.outputCommands: [ "keep *_*_*_*"
                              , "drop *_simdriftintime_*_*"
                              , "drop *_simdriftouttime_*_*"
                              # Drop IonAndScint Outside AV
-                             , "drop *_ionandscintoutintime_*_*"
-                             , "drop *_ionandscintoutouttime_*_*"
+                             # , "drop *_ionandscintoutintime_*_*"
+                             # , "drop *_ionandscintoutouttime_*_*"
                              # Drop PDFastSim Ouside AV
-                             , "drop *_pdfastsimoutintime_*_*"
-                             , "drop *_pdfastsimoutouttime_*_*"
+                             # , "drop *_pdfastsimoutintime_*_*"
+                             # , "drop *_pdfastsimoutouttime_*_*"
+                             # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
+                             , "drop sim::AuxDetHits_*_*_*"
                              ]
 
 # Remove unnecesary processes

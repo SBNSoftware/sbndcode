@@ -12,10 +12,13 @@ physics.reco1: [opdecopmt, @sequence::physics.reco1]
 
 outputs.out1.outputCommands: [
          "keep *_*_*_*",
-         "drop raw::OpDetWaveforms_opdaq_*_*",
+         #"drop raw::OpDetWaveforms_opdaq_*_*",
          "drop *raw::RawDigits*_*_*_*",
          #"drop sim::SimChannels_*_*_*",
          "drop sim::OpDetBacktrackerRecords_*_*_*",
          "drop *_linecluster_*_*",
          "drop *_fasthit_*_*"
      ]
+
+physics.producers.opdecopmt.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"
+physics.producers.opdecopmt.OpDecoAlg.PMTChargeToADC: 25.97

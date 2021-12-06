@@ -45,13 +45,23 @@ physics:
     opflashdecotpc0:   @local::SBNDDecoSimpleFlashTPC0
     opflashdecotpc1:   @local::SBNDDecoSimpleFlashTPC1
 
+    opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
+    ophitdecoxarapuca:  @local::SBNDDecoOpHitFinderXArapuca
+    # opflashdecotpc0:   @local::SBNDDecoSimpleFlashTPC0
+    # opflashdecotpc1:   @local::SBNDDecoSimpleFlashTPC1
+
   }
 
   reco: [
     opdecopmt,
     ophitdecopmt,
     opflashdecotpc0,
-    opflashdecotpc1
+    opflashdecotpc1,
+
+    opdecoxarapuca,
+    ophitdecoxarapuca
+    # opflashdecotpc0,
+    # opflashdecotpc1
   ]
 
 

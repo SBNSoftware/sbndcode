@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 sbnd_crtsim: {
   module_type: "sbndcode/CRT/CRTDetSim"
-  G4ModuleLabel: "largeant"
+  G4ModuleLabel: "genericcrt"
 
   // Global timing offset [ns]
   // For Corsika cosmics, use 2.76e6 (see corsika_sbnd.fcl)

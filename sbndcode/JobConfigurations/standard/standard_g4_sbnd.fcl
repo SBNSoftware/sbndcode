@@ -14,6 +14,8 @@
 #   * SimPhoton or SimPhotonLite (photons at the optical detectors)
 # - ElectronDrift: produces:
 #   * SimChannels (energy and charge at the wires)
+# - GenericCRT: produces:
+#   * AuxDetSimChannels (from LArG4 AuxDetHits)
 # - MCReco: produces:
 #   * MCTrack, MCShower: deposited energy from each MCParticle
 #
@@ -35,6 +37,7 @@
 #include "simdrift_sbnd.fcl"
 #include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
+#include "config_genericCRT.fcl"
 
 
 process_name: G4
@@ -71,19 +74,24 @@ physics:
     ionandscint: @local::sbnd_ionandscint
 
     # Creation of ionization electrons and scintillation photons, outside the active volume
-    ionandscintout: @local::sbnd_ionandscint_out
+    # ionandscintout: @local::sbnd_ionandscint_out
 
     # Light propogation inside the active volume
     pdfastsim: @local::sbnd_pdfastsim_par
 
     # Light propogation outside the active volume
-    pdfastsimout: @local::sbnd_pdfastsim_pvs
+    # Nov 16th, 2021
+    # Temporarily disable light simulation in the OUT-TPC (sbndcode issue 219)
+    # pdfastsimout: @local::sbnd_pdfastsim_pvs
 
     # Electron propogation
     simdrift: @local::sbnd_simdrift
 
     # Truth-level reconstruction
     mcreco: @local::sbnd_mcreco
+
+    # Generic CRT
+    genericcrt: @local::sbnd_genericCRT
 
   }
 
@@ -92,11 +100,12 @@ physics:
             , loader
             , largeant
             , ionandscint
-            , ionandscintout
+            # , ionandscintout
             , pdfastsim
-            , pdfastsimout
+            # , pdfastsimout
             , simdrift
             , mcreco
+            , genericcrt
           ]
 
   # The output stream, there could be more than one if using filters
@@ -116,9 +125,13 @@ outputs:
   {
                     @table::sbnd_rootoutput
     dataTier:       "simulated"
-                    # Drop the IonAndScint w/ SCE offsets applied
     outputCommands: [ "keep *_*_*_*"
+                    # Drop the SimEnergyDeposits made by LArG4
+                    , "drop sim::SimEnergyDeposits_largeant_*_*"
+                    # Drop the IonAndScint w/ SCE offsets applied
                     , "drop *_ionandscint__*"
+                    # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
+                    , "drop sim::AuxDetHits_*_*_*"
                     ]
   }
 }

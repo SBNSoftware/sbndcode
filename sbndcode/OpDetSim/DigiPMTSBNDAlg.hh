@@ -62,7 +62,7 @@ namespace opdet {
       double QEDirect; //PMT quantum efficiency for direct (VUV) light
       double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
-      bool SinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
+      bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
 
@@ -252,8 +252,8 @@ namespace opdet {
         Comment("PMT quantum efficiency for reflected (TPB emitted)light")
       };
 
-      fhicl::Atom<bool> singlePEmodel {
-        Name("SinglePEmodel"),
+      fhicl::Atom<bool> PMTsinglePEmodel {
+        Name("PMTSinglePEmodel"),
         Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
       };
 
