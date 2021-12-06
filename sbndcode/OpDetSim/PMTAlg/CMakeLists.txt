@@ -1,13 +1,13 @@
 art_make(
    TOOL_LIBRARIES
-         art_Utilities
-         ${MF_MESSAGELOGGER}
-         ${FHICLCPP}
-         ${CETLIB}
+         art::Utilities
+         messagefacility::MF_MessageLogger
+         fhiclcpp::fhiclcpp
+         cetlib::cetlib
          CLHEP::CLHEP
-         cetlib
-         cetlib_except
-         ${MF_UTILITIES}
+         cetlib::cetlib
+         cetlib_except::cetlib_except
+         
 )
 
 

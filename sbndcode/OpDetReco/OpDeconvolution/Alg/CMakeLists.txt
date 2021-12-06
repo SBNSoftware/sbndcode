@@ -1,27 +1,27 @@
 art_make(
    TOOL_LIBRARIES
-         art_Utilities
+         art::Utilities
          larcore_Geometry_Geometry_service
          lardataobj_RawData
          lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
          sbndcode_Utilities_SignalShapingServiceSBND_service
-         ${MF_MESSAGELOGGER}
-         ${FHICLCPP}
-         ${CETLIB}
-         ${CLHEP}
+         messagefacility::MF_MessageLogger
+         fhiclcpp::fhiclcpp
+         cetlib::cetlib
+         CLHEP::CLHEP
          ${ROOT_BASIC_LIB_LIST}
-         ${ART_FRAMEWORK_CORE}
-         ${ART_FRAMEWORK_PRINCIPAL}
+         art::Framework_Core
+         art::Framework_Principal
          ${ART_FRAMEWORK_BASIC}
-         ${ART_FRAMEWORK_SERVICES_REGISTRY}
+         art::Framework_Services_Registry
          ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-         ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-         ${ART_PERSISTENCY_COMMON}
-         ${ART_PERSISTENCY_PROVENANCE}
-         ${ART_UTILITIES}
-         cetlib
-         cetlib_except
-         ${MF_UTILITIES}
+         
+         art::Persistency_Common
+         art::Persistency_Provenance
+         art::Utilities
+         cetlib::cetlib
+         cetlib_except::cetlib_except
+         
 
 )
 
