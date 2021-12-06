@@ -13,18 +13,18 @@ art_make(
     ROOT::Geom
     ROOT::MathCore
     CLHEP::CLHEP
-    ${Geant4::G4digits_hits}
-    ${Geant4::G4event}
-    ${Geant4::G4geometry}
-    ${Geant4::G4global}
-    ${Geant4::G4graphics_reps}
-    ${Geant4::G4materials}
-    ${Geant4::G4intercoms}
-    ${Geant4::G4particles}
-    ${Geant4::G4physicslists}
-    ${Geant4::G4processes}
-    ${Geant4::G4track}
-    ${Geant4::G4run}
+    Geant4::G4digits_hits
+    Geant4::G4event
+    Geant4::G4geometry
+    Geant4::G4global
+    Geant4::G4graphics_reps
+    Geant4::G4materials
+    Geant4::G4intercoms
+    Geant4::G4particles
+    Geant4::G4physicslists
+    Geant4::G4processes
+    Geant4::G4track
+    Geant4::G4run
     sbndcode_LArG4_PhysicsLists
 
   LIB_LIBRARIES
@@ -36,18 +36,18 @@ art_make(
     ROOT::Geom
     ROOT::MathCore
     CLHEP::CLHEP
-    ${Geant4::G4digits_hits}
-    ${Geant4::G4event}
-    ${Geant4::G4geometry}
-    ${Geant4::G4global}
-    ${Geant4::G4graphics_reps}
-    ${Geant4::G4materials}
-    ${Geant4::G4intercoms}
-    ${Geant4::G4particles}
-    ${Geant4::G4physicslists}
-    ${Geant4::G4processes}
-    ${Geant4::G4track}
-    ${Geant4::G4run}
+    Geant4::G4digits_hits
+    Geant4::G4event
+    Geant4::G4geometry
+    Geant4::G4global
+    Geant4::G4graphics_reps
+    Geant4::G4materials
+    Geant4::G4intercoms
+    Geant4::G4particles
+    Geant4::G4physicslists
+    Geant4::G4processes
+    Geant4::G4track
+    Geant4::G4run
     sbndcode_LArG4_PhysicsLists
 
   SERVICE_LIBRARIES
