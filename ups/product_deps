@@ -34,9 +34,9 @@ fwdir   product_dir scripts
 # Add the dependent product and version
 
 product          version
-sbncode          v09_37_01
+sbncode          v09_38_00
 sbnd_data        v01_10_00 - optional
-sbndutil         v09_37_01 - optional
+sbndutil         v09_38_00 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
