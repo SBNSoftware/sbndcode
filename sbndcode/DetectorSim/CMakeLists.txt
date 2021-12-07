@@ -6,17 +6,17 @@ simple_plugin(SimWireSBND "module"
                            lardataobj_RawData
                            lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                            sbndcode_Utilities_SignalShapingServiceSBND_service
-                           nurandom_RandomUtils_NuRandomService_service
-                           ${ART_FRAMEWORK_CORE}
-                           ${ART_FRAMEWORK_PRINCIPAL}
-                           ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-                           ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-                           canvas
-                           ${MF_MESSAGELOGGER}
+                           nurandom::RandomUtils_NuRandomService_service
+                           art::Framework_Core
+                           art::Framework_Principal
+                           art_root_io::TFileService_service
+                           art::Framework_Services_Optional_RandomNumberGenerator_service
+                           canvas::canvas
+                           messagefacility::MF_MessageLogger
                            
-                           ${FHICLCPP}
-                           cetlib cetlib_except
-                           ${CLHEP}
+                           fhiclcpp::fhiclcpp
+                           cetlib::cetlib cetlib_except
+                           CLHEP::CLHEP
                            ${ROOT_BASIC_LIB_LIST}
 			   
 			   

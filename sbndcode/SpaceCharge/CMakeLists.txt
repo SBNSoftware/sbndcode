@@ -2,12 +2,12 @@ art_make( NO_PLUGINS
           LIB_LIBRARIES
                         lardata_Utilities
 			larcorealg_Geometry
-                        ${MF_MESSAGELOGGER}
+                        messagefacility::MF_MessageLogger
                         
-                        cetlib cetlib_except
-			${FHICLCPP}
+                        cetlib::cetlib cetlib_except
+			fhiclcpp::fhiclcpp
                         ${ROOT_BASIC_LIB_LIST}
-			${Boost_SYSTEM_LIBRARY}
+			
         )
 install_headers()
 install_fhicl()

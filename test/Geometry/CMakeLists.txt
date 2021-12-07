@@ -24,10 +24,10 @@ cet_test(geometry_sbnd_test
   LIBRARIES sbndcode_Geometry
             larcorealg_Geometry
             larcorealg::GeometryTestLib
-            ${MF_MESSAGELOGGER}
-            ${FHICLCPP}
-            cetlib_except
-	    ${ROOT_CORE}
+            messagefacility::MF_MessageLogger
+            fhiclcpp::fhiclcpp
+            cetlib_except::cetlib_except
+	    ROOT::Core
 #  OPTIONAL_GROUPS Broken
 )
 
@@ -41,10 +41,10 @@ cet_test(geometry_iterator_sbnd_test
   LIBRARIES sbndcode_Geometry
             larcorealg_Geometry
             larcorealg::GeometryTestLib
-            ${MF_MESSAGELOGGER}
-            ${FHICLCPP}
-            cetlib_except
-	    ${ROOT_CORE}
+            messagefacility::MF_MessageLogger
+            fhiclcpp::fhiclcpp
+            cetlib_except::cetlib_except
+	    ROOT::Core
   USE_BOOST_UNIT
 )
 
@@ -57,10 +57,10 @@ cet_test(geometry_iterator_loop_sbnd_test
   LIBRARIES sbndcode_Geometry
             larcorealg_Geometry
             larcorealg::GeometryTestLib
-            ${MF_MESSAGELOGGER}
-            ${FHICLCPP}
-            cetlib_except
-	    ${ROOT_CORE}
+            messagefacility::MF_MessageLogger
+            fhiclcpp::fhiclcpp
+            cetlib_except::cetlib_except
+	    ROOT::Core
 )
 
 
