@@ -1,0 +1,20 @@
+BEGIN_PROLOG
+
+common_pfpslicevalidation_ci:
+{
+    module_type:              PFPSliceValidationCI
+    GenieGenModuleLabel:      "generator"
+    PFParticleLabels:         ["pandora"]
+    HitLabels:                ["gaushit"]
+    UseBeamSpillXCorrection:  true
+}
+
+common_pfpvalidation_ci:
+{
+    module_type:      PFPValidationCI
+    SimChannelLabel:  "simdrift"
+    PFPLabels:       ["pandora"]
+    HitLabels:       ["gaushit"]
+}
+
+END_PROLOG
