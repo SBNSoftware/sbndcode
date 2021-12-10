@@ -156,6 +156,10 @@ void CRTDetSim::produce(art::Event & e) {
   for (auto& adsc : *channels) {
     const geo::AuxDetGeo& adGeo =
         geoService->AuxDet(adsc.AuxDetID());
+
+    if(adsc.AuxDetSensitiveID() == UINT_MAX)
+      continue;
+
     const geo::AuxDetSensitiveGeo& adsGeo =
         adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
 
