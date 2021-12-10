@@ -5887,11 +5887,11 @@
 
 			<physvol>
 				<volumeref ref="volTPCPlane_V"/>
-				<positionref ref="posUPlane_E"/> <!-- WARNING: this should be posV, will have to be fixed once LArSoft View is fixed -->
+				<positionref ref="posUPlane_E"/> <!-- Plane V is placed at U position as this wire plane is rotated w.r.t. TPC West -->
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlane_U"/>
-				<positionref ref="posVPlane_E"/> <!-- WARNING: this should be posU, will have to be fixed once LArSoft View is fixed -->
+				<positionref ref="posVPlane_E"/> <!-- Plane U is placed at V position as this wire plane is rotated w.r.t. TPC West -->
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlaneVert"/>

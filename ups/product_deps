@@ -34,13 +34,13 @@ fwdir   product_dir scripts
 # Add the dependent product and version
 
 product          version
-sbncode          v09_38_00
+sbncode          v09_39_01
 sbnd_data        v01_10_00 - optional
-sbndutil         v09_38_00 - optional
+sbndutil         v09_39_01 - optional
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
-cetbuildtools    v8_18_05  -   only_for_build
+cetbuildtools    v8_18_09  -   only_for_build
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
