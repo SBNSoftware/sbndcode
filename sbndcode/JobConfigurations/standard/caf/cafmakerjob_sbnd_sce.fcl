@@ -3,15 +3,15 @@
 #include "cafmakerjob_sbnd.fcl"
 
 # change all the labels we need to
-physics.producers.mycafmaker.PandoraTagSuffixes: []
-physics.producers.mycafmaker.PFParticleLabel: "pandoraSCE"
-physics.producers.mycafmaker.RecoShowerLabel: "pandoraSCEShowerSBN"
-physics.producers.mycafmaker.RecoTrackLabel: "pandoraSCETrack"
-physics.producers.mycafmaker.TrackCaloLabel: "pandoraSCECalo"
-physics.producers.mycafmaker.TrackChi2PidLabel:  "pandoraSCEPid"
-physics.producers.mycafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
-physics.producers.mycafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
-physics.producers.mycafmaker.FlashMatchLabel:  "fmatchSCE"
+physics.producers.cafmaker.PandoraTagSuffixes: []
+physics.producers.cafmaker.PFParticleLabel: "pandoraSCE"
+physics.producers.cafmaker.RecoShowerLabel: "pandoraSCEShowerSBN"
+physics.producers.cafmaker.RecoTrackLabel: "pandoraSCETrack"
+physics.producers.cafmaker.TrackCaloLabel: "pandoraSCECalo"
+physics.producers.cafmaker.TrackChi2PidLabel:  "pandoraSCEPid"
+physics.producers.cafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
+physics.producers.cafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
+physics.producers.cafmaker.FlashMatchLabel:  "fmatchSCE"
 
 physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
@@ -49,10 +49,10 @@ physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             pandoraSCETrackCRTHit, pandoraSCETrackCRTTrack, fmatchSCE, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
             pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle,
-            mycafmaker ]
+            cafmaker ]
 
 # Enable the Space-Charge service
 #include "enable_spacecharge_services_sbnd.fcl"
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
-physics.producers.mycafmaker.SimChannelLabel: "simdrift"
+physics.producers.cafmaker.SimChannelLabel: "simdrift"
