@@ -318,10 +318,11 @@
     <TrackPfoListName>TrackParticles3D</TrackPfoListName>
     <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
     <UseThreeDInformation>true</UseThreeDInformation>
-    <MvaFileName>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileName>
+    <MvaFileName>BDT1_combined.xml</MvaFileName>
     <MvaName>PfoCharBDT</MvaName>
-    <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileNameNoChargeInfo>
+    <MvaFileNameNoChargeInfo>BDT1_combined.xml</MvaFileNameNoChargeInfo>
     <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
+    <MinProbabilityCut>0.51</MinProbabilityCut> 
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>
@@ -398,11 +399,11 @@
     <TrackPfoListName>TrackParticles3D</TrackPfoListName>
     <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
     <UseThreeDInformation>true</UseThreeDInformation>
-    <MvaFileName>BDT2_combined.xml</MvaFileName>
+    <MvaFileName>BDT1_combined.xml</MvaFileName>
     <MvaName>PfoCharBDT</MvaName>
-    <MvaFileNameNoChargeInfo>BDT2_combined.xml</MvaFileNameNoChargeInfo>
+    <MvaFileNameNoChargeInfo>BDT1_combined.xml</MvaFileNameNoChargeInfo>
     <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
-    <MinProbabilityCut>0.51</MinProbabilityCut> 
+    <MinProbabilityCut>0.51</MinProbabilityCut>
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>

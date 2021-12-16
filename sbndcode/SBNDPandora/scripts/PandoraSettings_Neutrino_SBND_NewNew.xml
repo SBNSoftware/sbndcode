@@ -322,6 +322,7 @@
     <MvaName>PfoCharBDT</MvaName>
     <MvaFileNameNoChargeInfo>BDT1_combined.xml</MvaFileNameNoChargeInfo>
     <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
+    <MinProbabilityCut>0.51</MinProbabilityCut> 
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>
@@ -402,6 +403,7 @@
     <MvaName>PfoCharBDT</MvaName>
     <MvaFileNameNoChargeInfo>BDT2_combined.xml</MvaFileNameNoChargeInfo>
     <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
+    <MinProbabilityCut>0.51</MinProbabilityCut>
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>
