@@ -123,10 +123,11 @@ namespace geo {
     }
 
     if (channel == UINT_MAX) {
-      throw cet::exception("CRTChannelMapAlg")
-      << "position ("
-      << worldLoc[0] << "," << worldLoc[1] << "," << worldLoc[2]
-      << ") does not correspond to any AuxDet";
+      mf::LogDebug("CRTChannelMapAlg") << "Can't find AuxDet for position ("
+                                       << worldLoc[0] << "," 
+                                       << worldLoc[1] << "," 
+                                       << worldLoc[2]
+                                       << ")\n";
     }
 
     return channel;

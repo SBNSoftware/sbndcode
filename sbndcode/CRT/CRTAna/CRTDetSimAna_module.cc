@@ -328,6 +328,13 @@ namespace sbnd {
     for (auto& adsc : *channels) {
       // Get the IDEs from the Aux Det channels
       const geo::AuxDetGeo& adGeo = fGeometryService->AuxDet(adsc.AuxDetID());
+
+      if(adsc.AuxDetSensitiveID() == UINT_MAX) {
+        mf::LogWarning("CRTDetSimAna") << "AuxDetSimChannel with ID: UINT_MAX\n"
+                                       << "skipping channel...";
+        continue;
+      }
+
       const geo::AuxDetSensitiveGeo& adsGeo = adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
       std::string stripName = adsGeo.TotalVolume()->GetName();
       stripName.append("_0");

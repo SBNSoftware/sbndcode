@@ -44,10 +44,16 @@ namespace geo {
     virtual geo::GeoObjectSorter const& Sorter() const override 
       { return fSBNDsorter; }
     
-    
+    /// Returns the auxiliary detector closest to the specified point
+    virtual size_t NearestAuxDet
+      (const double* point, std::vector<geo::AuxDetGeo> const& auxDets, double tolerance = 0) const override;
+
+    /// Returns sensitive auxiliary detector closest to specified point
+    virtual size_t NearestSensitiveAuxDet
+      (const double* point, std::vector<geo::AuxDetGeo> const& auxDets, double tolerance = 0) const override;
+
   }; // class ChannelMapSBNDAlg
 
 } // namespace geo
 
 #endif // SBNDCODE_GEOMETYR_CHANNELMAPSBNDALG_H
-
