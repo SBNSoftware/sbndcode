@@ -42,6 +42,9 @@ sbnd_pdfastsim_pvs.IncludePropTime: true
 sbnd_pdfastsim_pvs.StoreReflected: true
 sbnd_pdfastsim_pvs.ScintTimeTool.SlowDecayTime: 1300.0
 
+# propagation times
+sbnd_pdfastsim_pvs.VUVTiming: 			@local::sbnd_vuv_timing_parameterization_fast
+sbnd_pdfastsim_pvs.VISTiming: 			@local::sbnd_vis_timing_parameterization
 
 
 END_PROLOG

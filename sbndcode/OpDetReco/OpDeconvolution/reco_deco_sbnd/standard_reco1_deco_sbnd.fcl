@@ -9,3 +9,6 @@ physics.producers.opflashtpc0.PECalib.SPEAreaGain: 100
 physics.producers.opflashtpc1.PECalib.SPEAreaGain: 100
 
 physics.reco1: [opdecopmt, @sequence::physics.reco1]
+
+physics.producers.opdecopmt.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"
+physics.producers.opdecopmt.OpDecoAlg.PMTChargeToADC: 25.97

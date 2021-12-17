@@ -1,18 +1,18 @@
 art_make(
 MODULE_LIBRARIES
-  ${ART_FRAMEWORK_CORE}
-  ${ART_FRAMEWORK_PRINCIPAL}
-  ${ART_FRAMEWORK_SERVICES_REGISTRY}
+  art::Framework_Core
+  art::Framework_Principal
+  art::Framework_Services_Registry
   ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-  ${ART_ROOT_IO_TFILE_SUPPORT}
-  ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-  art_Persistency_Common canvas
-  art_Persistency_Provenance canvas
-  art_Utilities canvas
-  nusimdata_SimulationBase
-  cetlib cetlib_except
-  ${MF_MESSAGELOGGER}
-  ${FHICLCPP}
+  art_root_io::tfile_support
+  art_root_io::TFileService_service
+  art::Persistency_Common canvas
+  art::Persistency_Provenance canvas
+  art::Utilities canvas
+  nusimdata::SimulationBase
+  cetlib::cetlib cetlib_except
+  messagefacility::MF_MessageLogger
+  fhiclcpp::fhiclcpp
   ${ROOT_BASIC_LIB_LIST}
 
   lardataobj_Simulation

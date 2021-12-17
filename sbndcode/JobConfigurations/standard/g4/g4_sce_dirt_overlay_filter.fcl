@@ -1,6 +1,0 @@
-# Runs G4 on CORSIKA and merges with the G4 instance already run on GENIE with sce
-# The remainder of standard g4 fcl is then run with minor modifications to the input labels
-# The output produced drops the GENIE and CORSIKA specific G4 instances and keeps only the merged output
-#include "g4_dirt_overlay_filter.fcl"
-
-#include "enable_spacecharge_services_sbnd.fcl"

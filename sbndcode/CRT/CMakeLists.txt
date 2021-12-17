@@ -21,17 +21,17 @@ art_make(
         larcorealg_Geometry
         larcore_Geometry_Geometry_service
         lardataobj_RecoBase
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-        canvas
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${MF_MESSAGELOGGER}
+        art::Framework_Core
+        art::Framework_IO_Sources
+        art::Framework_Principal
+        canvas::canvas
+        art::Framework_Services_Registry
+        messagefacility::MF_MessageLogger
         
-        ${FHICLCPP}
+        fhiclcpp::fhiclcpp
         ${ROOT_BASIC_LIB_LIST}
-        ${ROOT_GEOM}
-        ${CETLIB}
+        ROOT::Geom
+        cetlib::cetlib
 )
 
 art_make_library( LIBRARY_NAME sbndcode_CRT
@@ -40,28 +40,28 @@ art_make_library( LIBRARY_NAME sbndcode_CRT
     LIBRARIES 
         larcorealg_Geometry
         sbndcode_CRTData
-        cetlib_except
-        ${MF_MESSAGELOGGER}
+        cetlib_except::cetlib_except
+        messagefacility::MF_MessageLogger
         
-        ${FHICLCPP}
+        fhiclcpp::fhiclcpp
         ${ROOT_BASIC_LIB_LIST}
-        ${ROOT_GEOM}
-        ${CETLIB}
+        ROOT::Geom
+        cetlib::cetlib
 )
 
 simple_plugin( CRTGeometryHelper service
         larcorealg_Geometry
         sbndcode_CRT
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-        canvas
-        cetlib_except
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${MF_MESSAGELOGGER}
+        art::Framework_Core
+        art::Framework_IO_Sources
+        art::Framework_Principal
+        canvas::canvas
+        cetlib_except::cetlib_except
+        art::Framework_Services_Registry
+        messagefacility::MF_MessageLogger
         
         ${ROOT_BASIC_LIB_LIST}
-        ${CETLIB}
+        cetlib::cetlib
 )
 
 simple_plugin( CRTDetSim module
@@ -70,21 +70,21 @@ simple_plugin( CRTDetSim module
         sbndcode_CRTData
         sbnobj_SBND_CRT
         sbnobj_Common_CRT
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-	${ART_PERSISTENCY_PROVENANCE}
-        canvas
-        cetlib_except
+        art::Framework_Core
+        art::Framework_IO_Sources
+        art::Framework_Principal
+	art::Persistency_Provenance
+        canvas::canvas
+        cetlib_except::cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nurandom_RandomUtils_NuRandomService_service
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-        ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
+        nurandom::RandomUtils_NuRandomService_service
+        art::Framework_Services_Registry
+        art::Framework_Services_Optional_RandomNumberGenerator_service
+        messagefacility::MF_MessageLogger
+        
         ${ROOT_BASIC_LIB_LIST}
-        ${CLHEP}
-        ${CETLIB}
+        CLHEP::CLHEP
+        cetlib::cetlib
 )
 
 simple_plugin( CRTSimHitProducer module
@@ -94,21 +94,21 @@ simple_plugin( CRTSimHitProducer module
         sbnobj_Common_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-	${ART_PERSISTENCY_PROVENANCE}
-        canvas
-        cetlib_except
+        art::Framework_Core
+        art::Framework_IO_Sources
+        art::Framework_Principal
+	art::Persistency_Provenance
+        canvas::canvas
+        cetlib_except::cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nurandom_RandomUtils_NuRandomService_service
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-	${ART_ROOT_IO_TFILESERVICE_SERVICE}
-        ${MF_MESSAGELOGGER}
+        nurandom::RandomUtils_NuRandomService_service
+        art::Framework_Services_Registry
+        art::Framework_Services_Optional_RandomNumberGenerator_service
+	art_root_io::TFileService_service
+        messagefacility::MF_MessageLogger
         ${ROOT_BASIC_LIB_LIST}
-        ${CLHEP}
-        ${CETLIB}
+        CLHEP::CLHEP
+        cetlib::cetlib
 )
 
 simple_plugin(CRTTrackProducer module
@@ -118,22 +118,22 @@ simple_plugin(CRTTrackProducer module
         sbnobj_Common_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-	${ART_PERSISTENCY_PROVENANCE}
-        canvas
-        cetlib_except
+        art::Framework_Core
+        art::Framework_IO_Sources
+        art::Framework_Principal
+	art::Persistency_Provenance
+        canvas::canvas
+        cetlib_except::cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nurandom_RandomUtils_NuRandomService_service
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-	${ART_ROOT_IO_TFILESERVICE_SERVICE}
-        ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
+        nurandom::RandomUtils_NuRandomService_service
+        art::Framework_Services_Registry
+        art::Framework_Services_Optional_RandomNumberGenerator_service
+	art_root_io::TFileService_service
+        messagefacility::MF_MessageLogger
+        
         ${ROOT_BASIC_LIB_LIST}
-        ${CLHEP}
-        ${CETLIB}
+        CLHEP::CLHEP
+        cetlib::cetlib
 )
 
 simple_plugin(CRTTzeroProducer module
@@ -141,22 +141,22 @@ simple_plugin(CRTTzeroProducer module
         sbndcode_CRT
         sbndcode_CRTData
         sbnobj_Common_CRT
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_IO_SOURCES}
-        ${ART_FRAMEWORK_PRINCIPAL}
-	${ART_PERSISTENCY_PROVENANCE}
-        canvas
-        cetlib_except
+        art::Framework_Core
+        art::Framework_IO_Sources
+        art::Framework_Principal
+	art::Persistency_Provenance
+        canvas::canvas
+        cetlib_except::cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-        nurandom_RandomUtils_NuRandomService_service
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-	${ART_ROOT_IO_TFILESERVICE_SERVICE}
-        ${MF_MESSAGELOGGER}
-        ${MF_UTILITIES}
+        nurandom::RandomUtils_NuRandomService_service
+        art::Framework_Services_Registry
+        art::Framework_Services_Optional_RandomNumberGenerator_service
+	art_root_io::TFileService_service
+        messagefacility::MF_MessageLogger
+        
         ${ROOT_BASIC_LIB_LIST}
-        ${CLHEP}
-        ${CETLIB}
+        CLHEP::CLHEP
+        cetlib::cetlib
 )
 
 install_headers()

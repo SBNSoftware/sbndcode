@@ -4,23 +4,23 @@ art_make(
             LIB_LIBRARIES
             larcore_Geometry_Geometry_service
             larcorealg_Geometry
-            nugen_NuReweight_art
-            nugen_NuReweight
-            nusimdata_SimulationBase
-            ${ART_FRAMEWORK_CORE}
-            ${ART_FRAMEWORK_PRINCIPAL}
-            ${ART_FRAMEWORK_SERVICES_REGISTRY}
-            ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-            art_Persistency_Common
-            art_Persistency_Provenance
-            art_Utilities
-            canvas
-            ${MF_MESSAGELOGGER}
+            nugen::NuReweight_art
+            nugen::NuReweight
+            nusimdata::SimulationBase
+            art::Framework_Core
+            art::Framework_Principal
+            art::Framework_Services_Registry
+            art_root_io::tfile_support ROOT::Core
+            art::Persistency_Common
+            art::Persistency_Provenance
+            art::Utilities
+            canvas::canvas
+            messagefacility::MF_MessageLogger
 
-            ${FHICLCPP}
-            cetlib cetlib_except
-            ${CLHEP}
-            ${Boost_SYSTEM_LIBRARY}
+            fhiclcpp::fhiclcpp
+            cetlib::cetlib cetlib_except
+            CLHEP::CLHEP
+            
             ${ROOT_BASIC_LIB_LIST}
           )
 
