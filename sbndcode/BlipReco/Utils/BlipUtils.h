@@ -180,6 +180,8 @@ namespace sbnd{
   bool    IsAncestorOf(int, int, bool);
   double  DistToBoundary(const recob::Track::Point_t&);
   void    GetGeoBoundaries(double&,double&,double&,double&,double&,double&);
+  bool    IsPointInAV(float,float,float);
+  bool    IsPointInAV(TVector3&);
 
   }
 }

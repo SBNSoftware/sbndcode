@@ -39,20 +39,7 @@
 #include "TH1D.h"
 #include "TRandom2.h"
 
-
-// Data structure for blip object (experimental)
-struct blip{
-  TVector3 location;
-  float   Energy;
-  bool    isGrouped;
-  
-  blip(){ blip(-99,-99,-99,-99);}
-  blip(float x, float y, float z, float E){
-    location.SetXYZ(x,y,z);
-    Energy = E;
-    isGrouped = false;
-  }
-};
+#include "sbndcode/BlipReco/Utils/BlipUtils.h"
 
 namespace filt{
 
@@ -69,10 +56,10 @@ namespace filt{
       std::string         fSimProducerLabel;
       int                 fMaxEvents;
       int                 fMaxParticles;  
-      //float               fThresholdKeV;
-     
-//      TRandom2            *fRand;
-  
+
+      // filter settings
+      bool fSelectNCaptureInAV;
+
       // counters
       int     n_evts;
       //int     n_capture;
@@ -88,7 +75,7 @@ namespace filt{
       //
       TH1D*     hNCaptureGammas;
       TH1D*     hNCaptureGammaSumE;
-      
+
       //TH1D*   hPrimarySep;
   
   };
@@ -99,7 +86,6 @@ namespace filt{
   {
     // Read in fhicl parameters
     this->reconfigure(pset);
-    //fThresholdKeV     = 75.; 
     n_evts            = 0; 
     
     // Get a pointer to the geometry service provider
@@ -138,6 +124,7 @@ namespace filt{
     fSimProducerLabel       = pset.get< std::string > ("SimProducer","largeant");
     fMaxEvents              = pset.get< int >         ("MaxEvents",-1);
     fMaxParticles           = pset.get< int >         ("MaxParticles",500);
+    fSelectNCaptureInAV     = pset.get< bool >        ("SelectNCaptureInAV",false);
   }
 
 
@@ -153,48 +140,6 @@ namespace filt{
     std::vector<art::Ptr<simb::MCParticle>> particleList;
     e.getByLabel(fSimProducerLabel, particleHandle);
     n_evts++;
-
-    //std::vector<blip> blipVector;
-
-    /* 
-    // Check if this event has simwires saved
-    art::Handle< std::vector<sim::SimChannel> > simchanHandle;
-    std::vector<art::Ptr<sim::SimChannel>> chanList;
-    if(e.getByLabel("largeant", simchanHandle)) art::fill_ptr_vector(chanList, simchanHandle);
-      for(size_t nChan = 0; nChan < chanList.size(); nChan++) {
-        geo::View_t view = fGeometry->View(chanList.at(nChan)->Channel());
-        int plane = 0;
-        if (view == geo::kU) plane = 0;
-        if( view == geo::kV) plane = 1;
-        if( view == geo::kZ) plane = 2;
-        std::cout<<"nChan = "<<nChan<<"  plane "<<plane<<"\n"; 
-      }
-      */ 
-   /* 
-    for( auto const& simchan : (*simchanHandle) ){
-        geo::View_t view = fGeometry->View(simchan.Channel());
-        int plane = 0;
-        if (view == geo::kU) plane = 0;
-        if( view == geo::kV) plane = 1;
-        if( view == geo::kZ) plane = 2;
-        std::cout<<"nChan = "<<simchan.Channel()<<"  plane "<<plane<<"\n"; 
-    }
-    */
-
-//    std::vector<art::Ptr<sim::SimChannel> > simList;
-//    if(e.getByLabel(f,SimListHandle)) art::fill_ptr_vector(simList, SimListHandle);
-//    std::cout<<"simlist size = "<<simList.size()<<"\n";
-     /* 
-      // Loop over track's IDEs and convert each to scintillation 
-      for(size_t nChan = 0; nChan < simList.size(); nChan++) {
-        geo::View_t view = fGeometry->View(simList.at(nChan)->Channel());
-        int plane = 0;
-        if (view == geo::kU) plane = 0;
-        if( view == geo::kV) plane = 1;
-        if( view == geo::kZ) plane = 2;
-        std::cout<<"nChan = "<<nChan<<"  plane "<<plane<<"\n"; 
-      } 
-     */
 
 
     // .....................................................................
@@ -222,11 +167,13 @@ namespace filt{
     //float primaryTf           = 0.;
     //int   primarySign         = 0;
     //float primaryKEf          = -9;
-    float gammaE_ncapt      = 0.;
     //TVector3 primaryEndpt     (-9., -9., -9.);
-
-    //std::vector<TVector3> primary_locs;
     
+    bool      isNCapture        = false;
+    bool      isNCaptureInAV    = false;
+    float     gammaE_ncapt      = 0.;
+    TVector3  NCapture_Point    (-9.,-9.,-9.);
+
     // Loop through particles
     int counter = 0;
     for( size_t iParticle=0; iParticle<particleHandle->size(); iParticle++){
@@ -248,9 +195,15 @@ namespace filt{
       TVector3 loc0               = particle->Position(0).Vect();
       TVector3 locf               = particle->Position(last).Vect();
       
-      if( pdg == 22 && proc == "nCapture" ) {
-        hNCaptureGammas->Fill(KE0);
-        gammaE_ncapt += KE0;
+      if( pdg == 22 && proc == "nCapture" && mother == 1 ) {
+        isNCapture = true;
+        NCapture_Point = loc0;
+        // ensure in AV but not on cathode plane
+        if( BlipUtils::IsPointInAV(loc0) && fabs(loc0.X()) > 3. ) {
+          isNCaptureInAV = true;
+          hNCaptureGammas->Fill(KE0);
+          gammaE_ncapt += KE0;
+        }
       }
 
       /*
@@ -352,97 +305,16 @@ namespace filt{
         }
       }
 
-
-
-
     } // end particle loop
       
-      /*
-    if( primary_locs.size() == 2 ) {
-      hPrimarySep->Fill( (primary_locs.at(0)-primary_locs.at(1)).Mag());
-    }
-        
-    if( isCapture ) 
-    { 
-      n_capture++; 
-      hProcess->Fill("capture",1);
-    } 
-    if( isDecayInFlight   ) 
-    { 
-      n_decayIF++; 
-      hProcess->Fill("decay in flight",1);
-      hKEfForDecayEvents->Fill(primaryKEf);
-    }
-    if( isDecayAtRest   ) 
-    { 
-      n_decayAR++; 
-      hProcess->Fill("decay at rest",1);
-      hKEfForDecayEvents->Fill(primaryKEf);
-    }
-    if( isOther   ) 
-    { 
-      n_other++;   
-      hProcess->Fill("other",1);
-    }
-    */
-
-  /*
-    // Neutron capture blip analysis
-    if( primaryPdg == 2112 ) {
-
-      size_t blips_grouped = 0;
-      while (blips_grouped < blipVector.size() ) {
-        float blipE_ncapt         = 0.;
-        float blipE_ncapt_60cm    = 0.;
-        float blipE_ncapt_60cm_smear   = 0.;
-        
-        // loop through the blips we found and find the largest
-        float Ehighest = -9;
-        TVector3 lbLoc;
-        for(size_t i=0; i<blipVector.size(); i++){
-          if( blipVector.at(i).isGrouped ) continue;
-          if( blipVector.at(i).Energy > Ehighest ) {
-            Ehighest = blipVector.at(i).Energy;
-            lbLoc = blipVector.at(i).location;
-          }
-        }
-
-        // now draw spheres around largest blip
-        for(size_t i=0; i<blipVector.size(); i++){
-          if( blipVector.at(i).isGrouped ) continue;
-          
-          float E = blipVector.at(i).Energy;
-          blipE_ncapt += E;
-          float d = (blipVector.at(i).location - lbLoc).Mag();
-          if( d < 60. ) {
-            blipVector.at(i).isGrouped = true;
-            blips_grouped++;
-            blipE_ncapt_60cm += E;
-            blipE_ncapt_60cm_smear += fRand->Gaus(E,0.050);
-          }
-        }
-        
-
-        //std::cout<<"Gamma energy              = "<<gammaE_ncapt<<"\n";      
-        //std::cout<<"Summed blip energy        = "<<blipE_ncapt<<"\n";
-        //std::cout<<"Summed blip energy (60cm) = "<<blipE_ncapt_60cm<<"\n";
-
-        hNCaptureGammaSumE->Fill(gammaE_ncapt);
-        hNCaptureBlipsSumE->Fill(blipE_ncapt);
-        hNCaptureBlipsSumE_60cm->Fill(blipE_ncapt_60cm);
-        hNCaptureBlipsSumE_60cm_smear->Fill(blipE_ncapt_60cm_smear);
-        if( gammaE_ncapt > 6.1 ) std::cout<<"!!!!! Neutron capture gamma energy > 6.1 MeV! !!!!!!\n";
-        if( blipE_ncapt > 6.1 )  std::cout<<"!!!!! Blips add up to > 6.1 MeV!!!!\n";
-
-
-      }
-
-    }
-    */
-        
     hNCaptureGammaSumE->Fill(gammaE_ncapt);
 
-    return true;
+    bool passEvent = true;
+    if( fSelectNCaptureInAV && !isNCaptureInAV ) {
+      passEvent = false;
+    }
+
+    return passEvent;
   }
 
   void ParticleLister::endJob() {

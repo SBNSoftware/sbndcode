@@ -529,6 +529,26 @@ namespace sbnd::BlipUtils {
     zmin = 0. -1e-8;
     zmax = geom->DetLength() + 1e-8;
   }
+
+  //===========================================================================
+  bool IsPointInAV(float x, float y, float z){
+    
+    // Get geo boundaries
+    double xmin, xmax, ymin, ymax, zmin, zmax;
+    GetGeoBoundaries(xmin,xmax,ymin,ymax,zmin,zmax);
+      
+    if(     x >= xmin && x <= xmax
+        &&  y >= ymin && y <= ymax
+        &&  z >= zmin && z <= zmax ) {
+      return true;
+    } else {
+      return false;
+    }
+    
+  }
   
+  bool IsPointInAV(TVector3& v){
+    return IsPointInAV(v.X(), v.Y(), v.Z());
+  }
 
 }
