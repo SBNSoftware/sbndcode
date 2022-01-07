@@ -1,15 +1,11 @@
 
-add_subdirectory(Utils)
-add_subdirectory(Algs)
-add_subdirectory(Ana)
-add_subdirectory(Crumbs)
-
 art_make(
           MODULE_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
                            larsim_MCCheater_BackTrackerService_service
                            larsim_MCCheater_ParticleInventoryService_service
+			   larsim_Utils
                            lardata_Utilities
                            larevt_Filters
                            lardataobj_RawData
@@ -30,7 +26,6 @@ art_make(
                            
                            fhiclcpp::fhiclcpp
                            ROOT::Geom
-                           ${ROOT_GENVECTOR}
                            ROOT::XMLIO
                            ROOT::Gdml
                            ${ROOT_BASIC_LIB_LIST}
@@ -38,11 +33,11 @@ art_make(
                            ${ROOT_ROOFIT}
                            ${ROOT_ROOFITCORE} 
                            sbndcode_RecoUtils
-                           sbndcode_CosmicIdUtils
-                           sbndcode_CosmicIdAlgs
-                           sbndcode_CRTUtils
                            sbndcode_CRT
-                           sbnobj_Common_CRT
+                           sbndcode_CRTUtils
+                           sbndcode_GeoWrappers
+                           sbndcode_CosmicIdAlgs
+                           sbndcode_CosmicIdUtils
                            larreco_RecoAlg
         )
 

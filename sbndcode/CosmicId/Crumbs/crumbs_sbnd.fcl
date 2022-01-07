@@ -1,0 +1,20 @@
+BEGIN_PROLOG
+
+sbnd_crumbs: 
+{
+  # The "module_type" tells us which module to run. The name here
+  # must match the name supplied to DEFINE_ART_MODULE
+  module_type:     "sbndcode/CosmicId/Crumbs/Crumbs"
+
+  # The input parameters
+  MCParticlesModuleLabel:        "largeant"
+  PFParticlesModuleLabel:        "pandora"
+  HitsModuleLabel:		 "gaushit"
+  TrackModuleLabel:		 "pandoraTrack"
+  ShowerModuleLabel:		 "pandoraShower"
+  SliceModuleLabel:		 "pandora"
+  GeneratorModuleLabel:		 "generator"
+  CosmicModuleLabel:		 "corsika"
+}
+
+END_PROLOG
