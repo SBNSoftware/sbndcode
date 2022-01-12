@@ -12,9 +12,10 @@ sbnd_crumbs:
   HitsModuleLabel:		 "gaushit"
   TrackModuleLabel:		 "pandoraTrack"
   ShowerModuleLabel:		 "pandoraShower"
-  SliceModuleLabel:		 "pandora"
   GeneratorModuleLabel:		 "generator"
   CosmicModuleLabel:		 "corsika"
+  FlashMatchModuleLabel:	 "opt0finder"
+  SliceModuleLabel:		 "pandora"
 }
 
 END_PROLOG

@@ -29,6 +29,9 @@
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
+#include "art_root_io/TFileService.h"
+#include "TTree.h"
+#include "lardataobj/AnalysisBase/T0.h"
 
 class Crumbs;
 
@@ -53,7 +56,8 @@ public:
   void endJob() override;
 
   void ClearMaps();
-  void SetupMaps(art::Event const& e, art::Handle<std::vector<simb::MCParticle> > handleMCParticles, art::Handle<std::vector<recob::Hit> > handleHits);
+  void ResetVars();
+  void SetupMaps(art::Event const& e);
   std::vector<art::Ptr<recob::Hit> > GetAllSliceHits(art::Event const& e, const art::Ptr<recob::PFParticle> pPrimary);
   std::map<int,float> SlicePurity(art::Event const& e, std::vector<art::Ptr<recob::Hit> > sliceHits);
   int SliceTruthId(std::map<int, float> purities);
@@ -63,71 +67,87 @@ private:
 
   // Declare member data here.
 
-  std::string fMCParticlesModuleLabel, fPFParticlesModuleLabel, fHitsModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fSliceModuleLabel,
-    fGeneratorModuleLabel, fCosmicModuleLabel;
+  bool fVerbose, fProcessUnambiguousSlices;
 
-  std::map<int, art::Ptr<simb::MCParticle> > trueParticleIdMap;
-  std::map<int, int> truePrimariesMap, nHitsMap, fTrackToGenMap;
+  std::string fMCParticlesModuleLabel, fPFParticlesModuleLabel, fHitsModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fSliceModuleLabel,
+    fGeneratorModuleLabel, fCosmicModuleLabel, fFlashMatchModuleLabel;
+
+  std::map<int, int> fTrackToGenMap;
   std::map<int, std::string> fGenTypeMap;
 
   sbnd::TPCGeoAlg fTpcGeo;
+
+  TTree *fSliceTree;
+
+  double tpc_NuScore, tpc_CRFracHitsInLongestTrack, tpc_CRLongestTrackDeflection, tpc_CRLongestTrackDirY, tpc_CRNHitsMax,
+    tpc_NuEigenRatioInSphere, tpc_NuNFinalStatePfos, tpc_NuNHitsTotal, tpc_NuNSpacePointsInSphere, tpc_NuVertexY, tpc_NuWeightedDirZ;
+
+  unsigned eventID, subRunID, runID, slicePDG, sliceIndex, matchedIndex;
+  std::string matchedType;
+  double matchedPurity;
 };
 
 
 Crumbs::Crumbs(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
-  fMCParticlesModuleLabel   (p.get<std::string>("MCParticlesModuleLabel")),
-  fPFParticlesModuleLabel   (p.get<std::string>("PFParticlesModuleLabel")),
-  fHitsModuleLabel          (p.get<std::string>("HitsModuleLabel")),
-  fTrackModuleLabel         (p.get<std::string>("TrackModuleLabel")),
-  fShowerModuleLabel        (p.get<std::string>("ShowerModuleLabel")),
-  fSliceModuleLabel         (p.get<std::string>("SliceModuleLabel")),
-  fGeneratorModuleLabel     (p.get<std::string>("GeneratorModuleLabel")),
-  fCosmicModuleLabel        (p.get<std::string>("CosmicModuleLabel"))
+  fVerbose                    (p.get<bool>("Verbose",false)),
+  fProcessUnambiguousSlices   (p.get<bool>("ProcessUnambiguousSlices",false)),
+  fMCParticlesModuleLabel     (p.get<std::string>("MCParticlesModuleLabel")),
+  fPFParticlesModuleLabel     (p.get<std::string>("PFParticlesModuleLabel")),
+  fHitsModuleLabel            (p.get<std::string>("HitsModuleLabel")),
+  fTrackModuleLabel           (p.get<std::string>("TrackModuleLabel")),
+  fShowerModuleLabel          (p.get<std::string>("ShowerModuleLabel")),
+  fSliceModuleLabel           (p.get<std::string>("SliceModuleLabel")),
+  fGeneratorModuleLabel       (p.get<std::string>("GeneratorModuleLabel")),
+  fCosmicModuleLabel          (p.get<std::string>("CosmicModuleLabel")),
+  fFlashMatchModuleLabel      (p.get<std::string>("FlashMatchModuleLabel"))
 
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
+  art::ServiceHandle<art::TFileService> tfs;
+  fSliceTree = tfs->make<TTree>("SliceTree","Slice data TTree");
+
+  fSliceTree->Branch("tpc_NuScore",&tpc_NuScore);
+  fSliceTree->Branch("tpc_CRFracHitsInLongestTrack",&tpc_CRFracHitsInLongestTrack);
+  fSliceTree->Branch("tpc_CRLongestTrackDeflection",&tpc_CRLongestTrackDeflection);
+  fSliceTree->Branch("tpc_CRLongestTrackDirY",&tpc_CRLongestTrackDirY);
+  fSliceTree->Branch("tpc_CRNHitsMax",&tpc_CRNHitsMax);
+  fSliceTree->Branch("tpc_NuEigenRatioInSphere",&tpc_NuEigenRatioInSphere);
+  fSliceTree->Branch("tpc_NuNFinalStatePfos",&tpc_NuNFinalStatePfos);
+  fSliceTree->Branch("tpc_NuNHitsTotal",&tpc_NuNHitsTotal);
+  fSliceTree->Branch("tpc_NuNSpacePointsInSphere",&tpc_NuNSpacePointsInSphere);
+  fSliceTree->Branch("tpc_NuVertexY",&tpc_NuVertexY);
+  fSliceTree->Branch("tpc_NuWeightedDirZ",tpc_NuWeightedDirZ);
+
+  fSliceTree->Branch("eventID",&eventID);
+  fSliceTree->Branch("subRunID",&subRunID);
+  fSliceTree->Branch("runID",&runID);
+  fSliceTree->Branch("slicePDG",&slicePDG);
+  fSliceTree->Branch("sliceIndex",&sliceIndex);
+  fSliceTree->Branch("matchedIndex",&matchedIndex);
+  fSliceTree->Branch("matchedType",&matchedType);
+  fSliceTree->Branch("matchedPurity",&matchedPurity);
 }
 
 void Crumbs::ClearMaps() 
 {
-  trueParticleIdMap.clear();
-  truePrimariesMap.clear();
-  nHitsMap.clear();
   fTrackToGenMap.clear();
   fGenTypeMap.clear();
 }
 
-void Crumbs::SetupMaps(art::Event const& e, art::Handle<std::vector<simb::MCParticle> > handleMCParticles, art::Handle<std::vector<recob::Hit> > handleHits)
+void Crumbs::ResetVars()
 {
-  for (unsigned int i = 0; i < handleMCParticles->size(); ++i){
-    const art::Ptr<simb::MCParticle> pParticle(handleMCParticles, i);
+  tpc_NuScore = -999999.; tpc_CRFracHitsInLongestTrack = -999999.; tpc_CRLongestTrackDeflection = -999999.; tpc_CRLongestTrackDirY = -999999.; tpc_CRNHitsMax = -999999.;
+  tpc_NuEigenRatioInSphere = -999999.; tpc_NuNFinalStatePfos = -999999.; tpc_NuNHitsTotal = -999999.; tpc_NuNSpacePointsInSphere = -999999.; tpc_NuVertexY = -999999.;
+  tpc_NuWeightedDirZ = -999999.;
 
-    trueParticleIdMap[pParticle->TrackId()] = pParticle;
-  }
+  slicePDG = 999999; sliceIndex = 999999; matchedIndex = 999999;
+  matchedType = "";
+  matchedPurity = -999999.;
+}
 
-  for (unsigned int i = 0; i < handleMCParticles->size(); ++i){
-    const art::Ptr<simb::MCParticle> pParticle(handleMCParticles, i);
-
-    int id = pParticle->TrackId();
-    int motherId = pParticle->Mother();
-    while(trueParticleIdMap.count(motherId) != 0) {
-      id = motherId;
-      motherId = trueParticleIdMap.at(id)->Mother();
-    }
-
-    truePrimariesMap[pParticle->TrackId()] = id;
-  }
-
-  auto clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
-
-  for (unsigned int i = 0; i < handleHits->size(); ++i){
-    const art::Ptr<recob::Hit> pHit(handleHits, i);
-
-    int primaryId = truePrimariesMap[TruthMatchUtils::TrueParticleID(clockData,pHit,true)];
-    ++nHitsMap[primaryId];
-  }
-
+void Crumbs::SetupMaps(art::Event const& e)
+{
   art::Handle<std::vector<simb::MCTruth> > handleMCTruthNu;
   e.getByLabel(fGeneratorModuleLabel, handleMCTruthNu);
 
@@ -167,8 +187,14 @@ void Crumbs::SetupMaps(art::Event const& e, art::Handle<std::vector<simb::MCPart
       }
   }
   
-  for(auto const& [id, type] : fGenTypeMap)
-    std::cout << "MCTruth " << id << " " << type << std::endl;
+  for(auto const& [id, type] : fGenTypeMap){
+    if(fVerbose)
+      std::cout << "MCTruth " << id << " " << type << std::endl;
+  }
+
+  eventID = e.event();
+  subRunID = e.subRun();
+  runID = e.run();
 }
 
 void Crumbs::analyze(art::Event const& e)
@@ -176,17 +202,16 @@ void Crumbs::analyze(art::Event const& e)
   // Implementation of required member function here.
 
   this->ClearMaps();
-
-  art::Handle<std::vector<simb::MCParticle> > handleMCParticles;
-  e.getByLabel(fMCParticlesModuleLabel, handleMCParticles);
-
-  art::Handle<std::vector<recob::Hit> > handleHits;
-  e.getByLabel(fHitsModuleLabel, handleHits);
-
-  this->SetupMaps(e, handleMCParticles, handleHits);
+  this->SetupMaps(e);
 
   art::Handle<std::vector<recob::PFParticle> > handlePFPs;
   e.getByLabel(fPFParticlesModuleLabel, handlePFPs);
+
+  art::Handle<std::vector<recob::Slice> > handleSlices;
+  e.getByLabel(fSliceModuleLabel, handleSlices);
+
+  art::Handle<std::vector<anab::T0> > handleT0s;
+  e.getByLabel(fFlashMatchModuleLabel, handleT0s);
 
   std::vector<art::Ptr<recob::PFParticle> > unambigPrimariesVector, nuPrimariesVector;
 
@@ -200,41 +225,198 @@ void Crumbs::analyze(art::Event const& e)
   }
 
   art::FindManyP<larpandoraobj::PFParticleMetadata> pfpMetadataAssoc(handlePFPs, e, fPFParticlesModuleLabel);
+  art::FindManyP<recob::Slice> pfpSliceAssoc(handlePFPs, e, fSliceModuleLabel);
+  art::FindManyP<anab::T0> sliceT0Assoc(handleSlices, e, fFlashMatchModuleLabel);
+
+  unsigned nSlices(0);
   
   for (auto const& primary : nuPrimariesVector)
     {
-      std::cout << "\nNeutrino Slice" << std::endl;
+      this->ResetVars();
+
+      if(fVerbose)
+	std::cout << "\nNeutrino Slice" << std::endl;
+
       std::vector<art::Ptr<recob::Hit> > sliceHits = this->GetAllSliceHits(e, primary);
       std::map<int, float> puritiesMap = this->SlicePurity(e, sliceHits);
       int truthId = this->SliceTruthId(puritiesMap);
-      std::cout << " matches to MCTruth of origin " << fGenTypeMap[truthId] << " with purity " << puritiesMap[truthId] << std::endl;
 
-      const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata> > pfpMetaVec = pfpMetadataAssoc.at(primary->Self());
+      if(fVerbose)
+	std::cout << " matches to MCTruth of origin " << fGenTypeMap[truthId] << " with purity " << puritiesMap[truthId] << std::endl;
 
-      if (pfpMetaVec.size() !=1){
-	std::cout<<"Cannot get PFPMetadata"<<std::endl;
+      const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata> > pfpMetaVec = pfpMetadataAssoc.at(primary.key());
+      const std::vector<art::Ptr<recob::Slice> > pfpSliceVec = pfpSliceAssoc.at(primary.key());
+
+      if (pfpMetaVec.size() != 1){
+	std::cout << "Cannot get PFPMetadata" << std::endl;
       }
 
-      art::Ptr<larpandoraobj::PFParticleMetadata> pfpMeta = pfpMetaVec.front();
+      if (pfpSliceVec.size() != 1){
+	std::cout << "Cannot find single slice" << std::endl;
+      }
+
+      const art::Ptr<larpandoraobj::PFParticleMetadata> pfpMeta = pfpMetaVec.front();
       auto propertiesMap = pfpMeta->GetPropertiesMap();
 
-      for (auto const& propertiesMapIter : propertiesMap)
+      const art::Ptr<recob::Slice> slice = pfpSliceVec.front();
+      const std::vector<art::Ptr<anab::T0> > sliceT0Vec = sliceT0Assoc.at(slice.key());
+
+      if(fVerbose)
 	{
-	  std::cout << propertiesMapIter.first << ": " << propertiesMapIter.second << std::endl;
+	  for (auto const& propertiesMapIter : propertiesMap)
+	    std::cout << propertiesMapIter.first << ": " << propertiesMapIter.second << std::endl;
+
+	  std::cout << "Size of T0 Vector: " << sliceT0Vec.size() << std::endl;
+
+	  for (auto const& t0 : sliceT0Vec)
+	    {
+	      std::cout << "------- A T0 Object -------\n"
+			<< "Time: " << t0->Time() << '\n'
+			<< "TriggerType: " << t0->TriggerType() << '\n'
+			<< "TriggerBits: " << t0->TriggerBits() << '\n'
+			<< "ID: " << t0->ID() << '\n'
+			<< "TriggerConfidence: " << t0->TriggerConfidence() << '\n' << std::endl;
+	    }
 	}
 
+      auto propertiesMapIter = propertiesMap.find("NuScore");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_NuScore = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("CRFracHitsInLongestTrack");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_CRFracHitsInLongestTrack = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("CRLongestTrackDeflection");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_CRLongestTrackDeflection = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("CRLongestTrackDirY");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_CRLongestTrackDirY = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("CRNHitsMax");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_CRNHitsMax = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("NuEigenRatioInSphere");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_NuEigenRatioInSphere = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("NuNFinalStatePfos");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_NuNFinalStatePfos = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("NuNHitsTotal");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_NuNHitsTotal = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("NuNSpacePointsInSphere");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_NuNSpacePointsInSphere = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("NuVertexY");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_NuVertexY = propertiesMapIter->second;
+
+      propertiesMapIter = propertiesMap.find("NuWeightedDirZ");
+      if (propertiesMapIter == propertiesMap.end()){
+	std::cout << "Error finding variable" << std::endl;
+	continue;
+      }
+      tpc_NuWeightedDirZ = propertiesMapIter->second;
+
+      slicePDG = primary->PdgCode();
+      sliceIndex = nSlices;
+      matchedIndex = truthId;
+      matchedType = fGenTypeMap[truthId];
+      matchedPurity = puritiesMap[truthId];
+
+      fSliceTree->Fill();
+      ++nSlices;
     }
 
-  for (auto const& primary : unambigPrimariesVector)
+  if(fProcessUnambiguousSlices)
     {
-      std::cout << "\nCosmic Slice" << std::endl;
-      std::vector<art::Ptr<recob::Hit> > sliceHits = this->GetAllSliceHits(e, primary);
-      std::map<int, float> puritiesMap = this->SlicePurity(e, sliceHits);
-      int truthId = this->SliceTruthId(puritiesMap);
-      std::cout << " matches to MCTruth of origin " << fGenTypeMap[truthId] << " with purity " << puritiesMap[truthId] << std::endl;
+      for (auto const& primary : unambigPrimariesVector)
+	{
+	  this->ResetVars();
+      
+	  if(fVerbose)
+	    std::cout << "\nCosmic Slice" << std::endl;
+
+	  std::vector<art::Ptr<recob::Hit> > sliceHits = this->GetAllSliceHits(e, primary);
+	  std::map<int, float> puritiesMap = this->SlicePurity(e, sliceHits);
+	  int truthId = this->SliceTruthId(puritiesMap);
+
+	  if(fVerbose)
+	    std::cout << " matches to MCTruth of origin " << fGenTypeMap[truthId] << " with purity " << puritiesMap[truthId] << std::endl;
+
+	  const std::vector<art::Ptr<recob::Slice> > pfpSliceVec = pfpSliceAssoc.at(primary.key());
+
+	  if (pfpSliceVec.size() != 1){
+	    std::cout << "Cannot find single slice" << std::endl;
+	  }
+
+	  const art::Ptr<recob::Slice> slice = pfpSliceVec.front();
+	  const std::vector<art::Ptr<anab::T0> > sliceT0Vec = sliceT0Assoc.at(slice.key());
+
+	  if(fVerbose)
+	    {
+	      std::cout << "Size of T0 Vector: " << sliceT0Vec.size() << std::endl;
+	      
+	      for (auto const& t0 : sliceT0Vec)
+		{
+		  std::cout << "------- A T0 Object -------\n"
+			    << "Time: " << t0->Time() << '\n'
+			    << "TriggerType: " << t0->TriggerType() << '\n'
+			    << "TriggerBits: " << t0->TriggerBits() << '\n'
+			    << "ID: " << t0->ID() << '\n'
+			    << "TriggerConfidence: " << t0->TriggerConfidence() << '\n' << std::endl;
+		}
+	    }
+
+	  slicePDG = primary->PdgCode();
+	  sliceIndex = nSlices;
+	  matchedIndex = truthId;
+	  matchedType = fGenTypeMap[truthId];
+	  matchedPurity = puritiesMap[truthId];
+
+	  fSliceTree->Fill();
+	  ++nSlices;
+	}
     }
 
-  
 }
 
 std::vector<art::Ptr<recob::Hit> > Crumbs::GetAllSliceHits(art::Event const& e, const art::Ptr<recob::PFParticle> pPrimary)
