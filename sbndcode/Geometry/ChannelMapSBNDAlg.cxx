@@ -50,6 +50,9 @@ namespace geo {
 
     size_t auxDetIdx = this->NearestAuxDet(point, auxDets, tolerance);
 
+    if(auxDetIdx == UINT_MAX)
+      return UINT_MAX;
+
     geo::AuxDetGeo const& adg = auxDets[auxDetIdx];
 
     for(size_t a = 0; a < adg.NSensitiveVolume(); ++a) {
