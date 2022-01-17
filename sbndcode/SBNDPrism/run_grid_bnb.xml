@@ -3,7 +3,7 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release "v09_35_01">
+<!ENTITY release "v09_37_01_01">
 <!ENTITY releasetag "e20:prof">
 <!ENTITY my_version "v1">
 <!ENTITY my_run "1">
@@ -22,7 +22,7 @@
 
   <!-- Project size -->
   <!-- <numevents>10</numevents> -->
-  <numevents>1000000</numevents>
+  <numevents>2000000</numevents>
 
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
@@ -31,7 +31,7 @@
   <larsoft>
     <tag>&release;</tag>
     <qual>&releasetag;</qual>
-    <local>&PNFSpath;Tarballs/sbndcode_v09_35_01_prism__&my_version;.tgz</local>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_37_01_01_prism__&my_version;.tgz</local>
   </larsoft>
 
   <!-- Project stages -->
