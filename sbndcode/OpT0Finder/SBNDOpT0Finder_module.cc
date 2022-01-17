@@ -314,20 +314,20 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
   // Don't waste time if there are no flashes
   if (n_flashes == 0) {
-    mf::LogWarning("SBNDOpT0Finder") << "Zero good flashes in this event." << std::endl;
+    mf::LogInfo("SBNDOpT0Finder") << "Zero good flashes in this event." << std::endl;
     return;
   }
 
   // Get all the ligh clusters
   // auto light_cluster_v = GetLighClusters(e);
   if (!ConstructLightClusters(e, tpc)) {
-    mf::LogWarning("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
+    mf::LogInfo("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
     return;
   }
 
   // Don't waste time if there are no clusters
   if (!_light_cluster_v.size()) {
-    mf::LogWarning("SBNDOpT0Finder") << "No slices to work with." << std::endl;
+    mf::LogInfo("SBNDOpT0Finder") << "No slices to work with in TPC " << tpc << "." << std::endl;
     return;
   }
 
@@ -356,6 +356,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
     mf::LogInfo("SBNDOpT0Finder") << "Matched TPC object " << _tpcid
                                   << " with flash number " << _flashid
+                                  << " in TPC " << tpc
                                   << " -> score: " << _score
                                   << ", qll xmin: " << _qll_xmin << std::endl;
 
