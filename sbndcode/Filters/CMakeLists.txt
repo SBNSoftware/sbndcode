@@ -12,26 +12,26 @@ art_make(
                 lardataobj_RecoBase
                 lardata_RecoObjects
                 larpandora_LArPandoraInterface
-                nusimdata_SimulationBase
+                nusimdata::SimulationBase
                 sbndcode_CRT
                 sbndcode_CRTData
                 sbnobj_Common_CRT
                 sbndcode_CRTUtils
-                ${ART_FRAMEWORK_CORE}
+                art::Framework_Core
                 ${ART_FRAMEWORK_MODULES}
-                ${ART_FRAMEWORK_PRINCIPAL}
-                ${ART_FRAMEWORK_SERVICES_REGISTRY}
+                art::Framework_Principal
+                art::Framework_Services_Registry
                 ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-                ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-                art_Persistency_Common canvas
-                art_Persistency_Provenance canvas
-                art_Utilities canvas
-                ${MF_MESSAGELOGGER}
-                ${MF_UTILITIES}
-                ${FHICLCPP}
-                ${ROOT_GEOM}
-                ${ROOT_XMLIO}
-                ${ROOT_GDML}
+                
+                art::Persistency_Common canvas
+                art::Persistency_Provenance canvas
+                art::Utilities canvas
+                messagefacility::MF_MessageLogger
+                
+                fhiclcpp::fhiclcpp
+                ROOT::Geom
+                ROOT::XMLIO
+                ROOT::Gdml
                 ${ROOT_BASIC_LIB_LIST}
                 sbndcode_RecoUtils
         )

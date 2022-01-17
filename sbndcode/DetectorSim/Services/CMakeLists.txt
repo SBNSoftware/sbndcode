@@ -6,13 +6,13 @@ simple_plugin(SBNDThermalNoiseServiceInTime   "service"
                 
 		larcorealg_Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
-		${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-		${ART_ROOT_IO_TFILESERVICE_SERVICE}
-		nurandom_RandomUtils_NuRandomService_service
-		${ART_FRAMEWORK_CORE}
-		art_Utilities canvas
-		cetlib cetlib_except
-		${CLHEP}
+		art_root_io::tfile_support ROOT::Core
+		art_root_io::TFileService_service
+		nurandom::RandomUtils_NuRandomService_service
+		art::Framework_Core
+		art::Utilities canvas
+		cetlib::cetlib cetlib_except
+		CLHEP::CLHEP
  		${ROOT_BASIC_LIB_LIST}                                                                                                                   
 )
 
@@ -20,13 +20,13 @@ simple_plugin(SBNDThermalNoiseServiceInFreq   "service"
                 
 		larcorealg_Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
-		${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-		${ART_ROOT_IO_TFILESERVICE_SERVICE}
-		nurandom_RandomUtils_NuRandomService_service
-		${ART_FRAMEWORK_CORE}
-		art_Utilities canvas
-		cetlib cetlib_except
-		${CLHEP}
+		art_root_io::tfile_support ROOT::Core
+		art_root_io::TFileService_service
+		nurandom::RandomUtils_NuRandomService_service
+		art::Framework_Core
+		art::Utilities canvas
+		cetlib::cetlib cetlib_except
+		CLHEP::CLHEP
  		${ROOT_BASIC_LIB_LIST}                                                                                                                   
 )      
 
@@ -34,13 +34,13 @@ simple_plugin(SBNDuBooNEDataDrivenNoiseService   "service"
                 
 		larcorealg_Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
-		${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-		${ART_ROOT_IO_TFILESERVICE_SERVICE}
-		nurandom_RandomUtils_NuRandomService_service
-		${ART_FRAMEWORK_CORE}
-		art_Utilities canvas
-		cetlib cetlib_except
-		${CLHEP}
+		art_root_io::tfile_support ROOT::Core
+		art_root_io::TFileService_service
+		nurandom::RandomUtils_NuRandomService_service
+		art::Framework_Core
+		art::Utilities canvas
+		cetlib::cetlib cetlib_except
+		CLHEP::CLHEP
  		${ROOT_BASIC_LIB_LIST}                                                                                                                   
 )      
 

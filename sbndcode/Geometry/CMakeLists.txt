@@ -1,19 +1,19 @@
 art_make(
           LIB_LIBRARIES larcorealg_Geometry
-                        ${MF_MESSAGELOGGER}
-                        cetlib
-                        cetlib_except
-                        ${FHICLCPP}
+                        messagefacility::MF_MessageLogger
+                        cetlib::cetlib
+                        cetlib_except::cetlib_except
+                        fhiclcpp::fhiclcpp
                         ${ROOT_BASIC_LIB_LIST}
-                        ${ROOT_GEOM}
+                        ROOT::Geom
           SERVICE_LIBRARIES
                         sbndcode_Geometry
                         larcorealg_Geometry
-                        art_Framework_Services_Registry
-                        canvas
-                        ${FHICLCPP}
-                        cetlib_except
-                        ${ROOT_CORE}
+                        art::Framework_Services_Registry
+                        canvas::canvas
+                        fhiclcpp::fhiclcpp
+                        cetlib_except::cetlib_except
+                        ROOT::Core
         )
 
 
