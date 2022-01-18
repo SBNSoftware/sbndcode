@@ -25,11 +25,13 @@
 #include "TTree.h"
 #include "TVector3.h"
 #include "TDatabasePDG.h"
+#include "TString.h"
 
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
+#include "larcorealg/CoreUtils/zip.h"
 
 #include "sbnobj/Common/SBNEventWeight/EventWeightMap.h"
 
@@ -61,12 +63,18 @@ private:
   /// Returns the reco energy using QE formula
   float GetEnergyQE(float muon_energy, float muon_px, float muon_py, float muon_pz);
 
+  /// Returns the reco energy using calorometric approach
+  float GetEnergyCalo(std::vector<int> pdgs, std::vector<float> energies);
+
   std::string _mctruth_producer = "generator";
   std::string _flux_eventweight_multisim_producer;
   float _beam_origin_x = 73.78;
   float _beam_origin_y = 0.0;
   float _beam_origin_z = 11000.0;
   // std::vector<float> _beam_origin; // = {-0.457 * 100, 0 * 100, 110 * 100}; // cm
+
+  float _p_th;
+  float _pi_th;
 
   const TDatabasePDG *_pdg_db = TDatabasePDG::Instance();
 
@@ -93,7 +101,8 @@ private:
   float _nu_lepton_px; ///< Final state lepton px
   float _nu_lepton_py; ///< Final state lepton py
   float _nu_lepton_pz; ///< Final state lepton pz
-  float _nu_e_reco; ///< Neutrino reconstructe energy using QE formula
+  float _nu_e_reco_kin; ///< Neutrino reconstructe energy using QE formula
+  float _nu_e_reco_calo; ///< Neutrino reconstructe energy using calorimetry
   std::vector<int> _pars_pdg; ///< All other particles produced - pdg code
   std::vector<float> _pars_e; ///< All other particles produced - energy
 
@@ -137,6 +146,9 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _beam_origin_y = p.get<float>("BeamCenterY");
   _beam_origin_z = p.get<float>("BeamCenterZ");
 
+  _p_th = p.get<float>("ProtonThreshold", 35e-3); // Gev
+  _pi_th = p.get<float>("PionThreshold", 20e-3); // GeV
+
   art::ServiceHandle<art::TFileService> fs;
   _tree = fs->make<TTree>("tree","");
 
@@ -163,7 +175,8 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _tree->Branch("nu_lepton_px", &_nu_lepton_px, "nu_lepton_px/F");
   _tree->Branch("nu_lepton_py", &_nu_lepton_py, "nu_lepton_py/F");
   _tree->Branch("nu_lepton_pz", &_nu_lepton_pz, "nu_lepton_pz/F");
-  _tree->Branch("nu_e_reco", &_nu_e_reco, "nu_e_reco/F");
+  _tree->Branch("nu_e_reco_kin", &_nu_e_reco_kin, "nu_e_reco_kin/F");
+  _tree->Branch("nu_e_reco_calo", &_nu_e_reco_calo, "nu_e_reco_calo/F");
 
   _tree->Branch("nu_prod_vtx_x", &_nu_prod_vtx_x, "nu_prod_vtx_x/F");
   _tree->Branch("nu_prod_vtx_y", &_nu_prod_vtx_y, "nu_prod_vtx_y/F");
@@ -280,7 +293,8 @@ void PrismAnalyzer::analyze(art::Event const& e)
     _nu_lepton_px = -9999;
     _nu_lepton_py = -9999;
     _nu_lepton_pz = -9999;
-    _nu_e_reco = -9999;
+    _nu_e_reco_kin = -9999;
+    _nu_e_reco_calo = -9999;
 
     for (int p = 0; p < mct_v[i]->NParticles(); p++) {
       auto const & mcp = mct_v[i]->GetParticle(p);
@@ -302,10 +316,14 @@ void PrismAnalyzer::analyze(art::Event const& e)
         _nu_lepton_px = mcp.Px();
         _nu_lepton_py = mcp.Py();
         _nu_lepton_pz = mcp.Pz();
-        _nu_e_reco = GetEnergyQE(mcp.E(), mcp.Px(), mcp.Py(), mcp.Pz());
+        _nu_e_reco_kin = GetEnergyQE(mcp.E(), mcp.Px(), mcp.Py(), mcp.Pz());
       }
+
     }
 
+    _nu_e_reco_calo = GetEnergyCalo(_pars_pdg, _pars_e);
+
+    std::cout << "True energy: " << _nu_e << " Reco calo: " << _nu_e_reco_calo << std::endl;
     // _n_pi0 = 0;
     // for (int p = 0; p < mct_v[i]->NParticles(); p++) {
     //   auto const & mcp = mct_v[i]->GetParticle(p);
@@ -415,6 +433,49 @@ float PrismAnalyzer::GetEnergyQE(float muon_energy, float px, float py, float pz
   return num / den;
 }
 
+float PrismAnalyzer::GetEnergyCalo(std::vector<int> pdgs, std::vector<float> energies) {
+  float calo_e = 0;
+
+  for (auto&& [pdg, e]: util::zip(pdgs, energies)) {
+
+    auto particle = _pdg_db->GetParticle(pdg);
+
+    float mass = particle->Mass(); // GeV
+    float charge = particle->Charge() / 3;
+    std::cout << std::endl;
+    std::cout << "PDG: " << pdg << " - Mass: " << mass << " = Charge: " << charge << std::endl;
+
+    if (charge == 0) {
+      std::cout << "Charge is zero." << std::endl;
+    }
+
+    float k = e - mass;
+
+    TString p_class = TString(particle->ParticleClass());
+    std::cout << "Class: " << p_class << std::endl;
+    if (p_class.Contains("Meson")) {
+      std::cout << "\tIt's meson, " << e << std::endl;
+      if (k > _pi_th) {
+        std::cout << "\t->" << std::endl;
+        calo_e += e; // full energy
+      }
+    } else if(p_class.Contains("Baryon")) {
+      std::cout << "\tIt's barion, " << k << std::endl;
+      if (k > _p_th && charge != 0) {
+        std::cout << "\t->" << std::endl;
+        calo_e += k; // kinetic energy
+      }
+    } else if(p_class.Contains("Lepton")) {
+      std::cout << "\tIt's lepton, " << e << std::endl;
+      std::cout << "\t->" << std::endl;
+      calo_e += e; // full energy
+    } else {
+      std::cout << "\tI don't know" << std::endl;
+    }
+  }
+
+  return calo_e;
+}
 
 void PrismAnalyzer::beginSubRun(art::SubRun const& sr) {
 
