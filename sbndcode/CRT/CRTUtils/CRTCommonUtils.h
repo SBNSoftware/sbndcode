@@ -18,9 +18,23 @@
 // ROOT
 #include "TVector3.h"
 
+namespace sbnd {
+  enum CRTPlane {
+    kCRTNotDefined = -1,   ///< Not defined
+    kCRTBot = 0,           ///< Bottom
+    kCRTFaceFront = 1,     ///< Face Front (South)
+    kCRTFaceBack,          ///< Face Back (North)
+    kCRTSideWest,          ///< SideLeft
+    kCRTSideEast,          ///< SideRight
+    kCRTTopLow,            ///< Top Low
+    kCRTTopHigh,           ///< Top High
+    kCRTPosMax
+  };
+}
+
 namespace sbnd{
 namespace CRTCommonUtils{
-  
+
   // Simple distance of closest approach between infinite track and centre of hit
   double SimpleDCA(sbn::crt::CRTHit hit, TVector3 start, TVector3 direction);
 
@@ -35,6 +49,8 @@ namespace CRTCommonUtils{
   // (https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection)
   std::pair<TVector3, TVector3> CubeIntersection(TVector3 min, TVector3 max, TVector3 start, TVector3 end);
 
+  // Returns the CRT plane index given the tagger name
+  enum ::sbnd::CRTPlane GetPlaneIndex(std::string tagger);
 }
 }
 
