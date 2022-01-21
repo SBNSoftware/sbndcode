@@ -38,6 +38,7 @@ namespace detinfo {
 
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
