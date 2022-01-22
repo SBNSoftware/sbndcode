@@ -8,6 +8,9 @@
 // Common functions for CRT reconstruction
 ///////////////////////////////////////////////
 
+// framework includes
+#include "messagefacility/MessageLogger/MessageLogger.h"
+
 // sbndcode includes
 #include "sbnobj/Common/CRT/CRTHit.hh"
 
@@ -22,10 +25,10 @@ namespace sbnd {
   enum CRTPlane {
     kCRTNotDefined = -1,   ///< Not defined
     kCRTBot = 0,           ///< Bottom
-    kCRTFaceFront = 1,     ///< Face Front (South)
-    kCRTFaceBack,          ///< Face Back (North)
-    kCRTSideWest,          ///< SideLeft
-    kCRTSideEast,          ///< SideRight
+    kCRTFaceSouth = 1,     ///< Face South (Front)
+    kCRTFaceNorth,         ///< Face North (Back)
+    kCRTSideWest,          ///< Side Weast (Left)
+    kCRTSideEast,          ///< Side East (Right)
     kCRTTopLow,            ///< Top Low
     kCRTTopHigh,           ///< Top High
     kCRTPosMax
