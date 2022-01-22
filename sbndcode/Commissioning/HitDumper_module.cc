@@ -579,7 +579,7 @@ void Hitdumper::analyze(const art::Event& evt)
         int  nh1y = 0, nh2y = 0;
         float adc1x = 0, adc2x = 0;
         float adc1y = 0, adc2y = 0;
-        if (_crt_plane[i] == sbnd::kCRTFaceFront) { // 1
+        if (_crt_plane[i] == sbnd::kCRTFaceSouth) { // 1
           if (_crt_orient[i] == kCRTVertical && _crt_adc[i] > 500) { // < 500 hardcoded
             if (nh1x == 0 || (_crt_module[i] == plane1xm)) {
               nh1x++;
@@ -631,7 +631,7 @@ void Hitdumper::analyze(const art::Event& evt)
           float tdiff = fabs(_crt_time[i]-_crt_time[j]);
           if (tdiff<0.1) {
             iflag[j]=1;
-            if (_crt_plane[j]==sbnd::kCRTFaceFront) {
+            if (_crt_plane[j]==sbnd::kCRTFaceSouth) {
               if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
                 if (nh1x==0 ||  (_crt_module[j]==plane1xm)) {
                   nh1x++;
