@@ -64,7 +64,13 @@ private:
   float GetEnergyQE(float muon_energy, float muon_px, float muon_py, float muon_pz);
 
   /// Returns the reco energy using calorometric approach
-  float GetEnergyCalo(std::vector<int> pdgs, std::vector<float> energies);
+  float GetEnergyCalo(float & e_excit, float & k_recoil, float & k_neutron, bool argoneut = false);
+
+  /// Returns the T recoil
+  float GetRecoilEnergy(int n_protons, TVector3 muon_t_mom, std::vector<TVector3> proton_t_mom);
+
+  /// Returns the separation + exictation energy
+  float GetSeparationEnergy(int n_protons);
 
   std::string _mctruth_producer = "generator";
   std::string _flux_eventweight_multisim_producer;
@@ -101,10 +107,17 @@ private:
   float _nu_lepton_px; ///< Final state lepton px
   float _nu_lepton_py; ///< Final state lepton py
   float _nu_lepton_pz; ///< Final state lepton pz
-  float _nu_e_reco_kin; ///< Neutrino reconstructe energy using QE formula
-  float _nu_e_reco_calo; ///< Neutrino reconstructe energy using calorimetry
+  float _nu_e_reco_kin; ///< Neutrino reconstructed energy using QE formula
+  float _nu_e_reco_calo; ///< Neutrino reconstructed energy using calorimetry
+  float _nu_e_reco_caloa; ///< Neutrino reconstructed energy using calorimetry (argoneut)
+  float _nu_e_excit; ///< Excitation + separation energy
+  float _nu_e_recoil; ///< Nucleus kinetic recoil energy
+  float _nu_e_neutron; ///< Neutron kinetic energy
   std::vector<int> _pars_pdg; ///< All other particles produced - pdg code
   std::vector<float> _pars_e; ///< All other particles produced - energy
+  std::vector<float> _pars_px; ///< All other particles produced - p_x
+  std::vector<float> _pars_py; ///< All other particles produced - p_y
+  std::vector<float> _pars_pz; ///< All other particles produced - p_z
 
   float _nu_prod_vtx_x; ///< Neutrino production vertex in detector coordinates
   float _nu_prod_vtx_y; ///< Neutrino production vertex in detector coordinates
@@ -118,8 +131,8 @@ private:
   float _p_dpy; ///< Neutrino parent py at neutrino production vertex
   float _p_dpz; ///< Neutrino parent pz at neutrino production vertex
 
-  int _nu_pip_mult; ///< Pi0 multiplicity
-  int _nu_pi0_mult; ///< Pi plus multiplicity
+  int _nu_pip_mult; ///< Pi plus and minum multiplicity
+  int _nu_pi0_mult; ///< Pi zero multiplicity
   int _nu_p_mult; ///< Proton multiplicity
 
   int _evtwgt_flux_nfunc; ///< Number of functions used for FLUX reweighting (multisim)
@@ -177,6 +190,10 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _tree->Branch("nu_lepton_pz", &_nu_lepton_pz, "nu_lepton_pz/F");
   _tree->Branch("nu_e_reco_kin", &_nu_e_reco_kin, "nu_e_reco_kin/F");
   _tree->Branch("nu_e_reco_calo", &_nu_e_reco_calo, "nu_e_reco_calo/F");
+  _tree->Branch("nu_e_reco_caloa", &_nu_e_reco_caloa, "nu_e_reco_caloa/F");
+  _tree->Branch("nu_e_excit", &_nu_e_excit, "nu_e_excit/F");
+  _tree->Branch("nu_e_recoil", &_nu_e_recoil, "nu_e_recoil/F");
+  _tree->Branch("nu_e_neutron", &_nu_e_neutron, "nu_e_neutron/F");
 
   _tree->Branch("nu_prod_vtx_x", &_nu_prod_vtx_x, "nu_prod_vtx_x/F");
   _tree->Branch("nu_prod_vtx_y", &_nu_prod_vtx_y, "nu_prod_vtx_y/F");
@@ -295,6 +312,7 @@ void PrismAnalyzer::analyze(art::Event const& e)
     _nu_lepton_pz = -9999;
     _nu_e_reco_kin = -9999;
     _nu_e_reco_calo = -9999;
+    _nu_e_reco_caloa = -9999;
 
     for (int p = 0; p < mct_v[i]->NParticles(); p++) {
       auto const & mcp = mct_v[i]->GetParticle(p);
@@ -303,6 +321,9 @@ void PrismAnalyzer::analyze(art::Event const& e)
 
       _pars_pdg.push_back(mcp.PdgCode());
       _pars_e.push_back(mcp.E());
+      _pars_px.push_back(mcp.Px());
+      _pars_py.push_back(mcp.Py());
+      _pars_pz.push_back(mcp.Pz());
 
       if (mcp.PdgCode() == 111) {
         _nu_pi0_mult++;
@@ -321,9 +342,14 @@ void PrismAnalyzer::analyze(art::Event const& e)
 
     }
 
-    _nu_e_reco_calo = GetEnergyCalo(_pars_pdg, _pars_e);
+    std::cout << "******************************************************" << std::endl;
+    _nu_e_reco_calo = GetEnergyCalo(_nu_e_excit, _nu_e_recoil, _nu_e_neutron, false);
+    std::cout << "******************************************************" << std::endl;
+    _nu_e_reco_caloa = GetEnergyCalo(_nu_e_excit, _nu_e_recoil, _nu_e_neutron, true);
 
     std::cout << "True energy: " << _nu_e << " Reco calo: " << _nu_e_reco_calo << std::endl;
+    std::cout << "True energy: " << _nu_e << " Reco calo: " << _nu_e_reco_caloa << " (argoneut)" << std::endl;
+    std::cout << "******************************************************" << std::endl;
     // _n_pi0 = 0;
     // for (int p = 0; p < mct_v[i]->NParticles(); p++) {
     //   auto const & mcp = mct_v[i]->GetParticle(p);
@@ -433,12 +459,26 @@ float PrismAnalyzer::GetEnergyQE(float muon_energy, float px, float py, float pz
   return num / den;
 }
 
-float PrismAnalyzer::GetEnergyCalo(std::vector<int> pdgs, std::vector<float> energies) {
-  float calo_e = 0;
+float PrismAnalyzer::GetEnergyCalo(float & e_excit, float & k_recoil, float & k_neutron, bool argoneut) {
 
-  for (auto&& [pdg, e]: util::zip(pdgs, energies)) {
+  float calo_e = 0;
+  int n_protons = 0;
+  std::vector<TVector3> proton_t_mom = std::vector<TVector3>(); // Transverse momenta of protons
+  TVector3 muon_t_mom = TVector3(0, 0, 0); // Transverse momentum of muon
+  e_excit = k_recoil = k_neutron = 0;
+
+  // for (auto&& [pdg, e]: util::zip(pdgs, energies)) {
+  for (size_t i = 0; i < _pars_pdg.size(); i++) {
+    int pdg = _pars_pdg[i];
+    float e = _pars_e[i];
+    float px = _pars_px[i];
+    float py = _pars_py[i];
 
     auto particle = _pdg_db->GetParticle(pdg);
+
+    if (!particle) {
+      continue;
+    }
 
     float mass = particle->Mass(); // GeV
     float charge = particle->Charge() / 3;
@@ -450,32 +490,105 @@ float PrismAnalyzer::GetEnergyCalo(std::vector<int> pdgs, std::vector<float> ene
     }
 
     float k = e - mass;
+    // float p_t = std::sqrt(px * px + py * py);
+    TVector3 p_t = TVector3(px, py, 0.);
 
     TString p_class = TString(particle->ParticleClass());
     std::cout << "Class: " << p_class << std::endl;
-    if (p_class.Contains("Meson")) {
-      std::cout << "\tIt's meson, " << e << std::endl;
-      if (k > _pi_th) {
-        std::cout << "\t->" << std::endl;
-        calo_e += e; // full energy
+
+    bool is_lepton = p_class.Contains("Lepton");
+    bool is_meson = p_class.Contains("Meson");
+    bool is_proton = p_class.Contains("Baryon") && (charge != 0);
+    bool is_neutron = p_class.Contains("Baryon") && (charge == 0);
+
+    if (argoneut)
+    {
+      if (is_meson and k > 8e-3) {
+        calo_e += e;
+        std::cout << "Meson, e = " << e << std::endl;
       }
-    } else if(p_class.Contains("Baryon")) {
-      std::cout << "\tIt's barion, " << k << std::endl;
-      if (k > _p_th && charge != 0) {
-        std::cout << "\t->" << std::endl;
-        calo_e += k; // kinetic energy
+      else if (is_proton and k > 21e-3) {
+        calo_e += k;
+        n_protons++;
+        proton_t_mom.push_back(p_t);
+        std::cout << "Proton, k = " << k << std::endl;
       }
-    } else if(p_class.Contains("Lepton")) {
-      std::cout << "\tIt's lepton, " << e << std::endl;
-      std::cout << "\t->" << std::endl;
-      calo_e += e; // full energy
-    } else {
-      std::cout << "\tI don't know" << std::endl;
+      else if (is_neutron) {
+        k_neutron += k;
+      }
+      else if (is_lepton) {
+        calo_e += e;
+        muon_t_mom = p_t;
+        std::cout << "Lepton, e = " << e << std::endl;
+      }
+      else std::cout << "Unknown" << std::endl;
+    } else
+    {
+      if (is_meson and k > _pi_th) calo_e += e;
+      else if (is_proton and k > _p_th) calo_e += k;
+      else if (is_lepton) calo_e += e;
+      else std::cout << "Unknown" << std::endl;
     }
+  }
+
+  if (argoneut) {
+    k_recoil = GetRecoilEnergy(n_protons, muon_t_mom, proton_t_mom);
+    e_excit = GetSeparationEnergy(n_protons);
+
+    calo_e += k_recoil;
+    calo_e += e_excit;
+
+    if (n_protons == 2) std::cout << "+++ 2 protons +++" << std::endl;
+    else calo_e *= -1; // assign a negative value if not 2 protons, as the estimation is not correct
   }
 
   return calo_e;
 }
+
+float PrismAnalyzer::GetRecoilEnergy(int n_protons, TVector3 muon_t_mom, std::vector<TVector3> proton_t_mom) {
+
+  // Estimate p_t miss
+  TVector3 p_t_miss_v = muon_t_mom;
+  for (auto t : proton_t_mom) { p_t_miss_v += t; };
+
+  float p_t_miss = p_t_miss_v.Mag() * -1;
+
+  std::cout << "Pt miss is " << p_t_miss << std::endl;
+
+
+  // 40Ar mass: 39.9623831 amu * 931.5 MeV / amu = 37.22 GeV
+  float Ar40_mass = 37.22; // GeV
+  double Cl38_mass = 35.3669; // GeV
+  float proton_mass = 0.938; // GeV
+  float m_anp = Ar40_mass - n_protons * proton_mass;
+  if (n_protons == 2) {
+    m_anp = Cl38_mass;
+  }
+
+  std::cout << "M_{A-np} is " << m_anp << ", n protons: " << n_protons << std::endl;
+
+  // Estimate recoil kinetic energy
+  // float t_recoil = p_t_miss * p_t_miss / (2 * m_anp);
+  float t_recoil = std::sqrt(p_t_miss * p_t_miss + m_anp * m_anp) - m_anp;
+
+  std::cout << "T_{recoil} is " << t_recoil << std::endl;
+
+  return t_recoil;
+
+}
+
+float PrismAnalyzer::GetSeparationEnergy(int n_protons) {
+
+  // return 30.4*1e-3; // GeV
+
+  if (n_protons == 2) {
+    return 30.4*1e-3; // GeV
+  }
+
+  return 8.595e-3 * n_protons; // GeV
+  // http://barwinski.net/isotopes/all_isotopes_query_results.php?element=18-Argon&order_isotopes_by_field=total_binding_energy/mass_number+DESC&all_radioactive_stable=ALL
+}
+
 
 void PrismAnalyzer::beginSubRun(art::SubRun const& sr) {
 
