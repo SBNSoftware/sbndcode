@@ -1,0 +1,7 @@
+#include "reco_sbnd.fcl"
+
+process_name: RecoCRT
+
+physics.crtreco: [ rns, crthit, crttrack ]
+
+physics.trigger_paths: [ crtreco ]
