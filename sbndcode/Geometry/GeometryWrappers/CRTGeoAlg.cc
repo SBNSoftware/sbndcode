@@ -275,19 +275,6 @@ size_t CRTGeoAlg::NumModules() const{
   return fModules.size();
 }
 
-// Get the number of modules in a tagger by name
-size_t CRTGeoAlg::NumModules(std::string taggerName) const{
-  CRTTaggerGeo tagger = GetTagger(taggerName);
-  if(!tagger.null) return tagger.modules.size();
-  return 0;
-}
-
-// Get the number of modules in a tagger by index
-size_t CRTGeoAlg::NumModules(size_t tagger_i) const{
-  CRTTaggerGeo tagger = GetTagger(tagger_i);
-  if(!tagger.null) return tagger.modules.size();
-  return 0;
-}
 
 
 // ----------------------------------------------------------------------------------
@@ -296,26 +283,6 @@ size_t CRTGeoAlg::NumStrips() const{
   return fStrips.size();
 }
 
-// Get the number of strips in module by name
-size_t CRTGeoAlg::NumStrips(std::string moduleName) const{
-  CRTModuleGeo module = GetModule(moduleName);
-  if(!module.null) return module.strips.size();
-  return 0;
-}
-
-// Get the number of strips in  module by global index
-size_t CRTGeoAlg::NumStrips(size_t module_i) const{
-  CRTModuleGeo module = GetModule(module_i);
-  if(!module.null) return module.strips.size();
-  return 0;
-}
-
-// Get the number of strips in module by tagger index and local module index
-size_t CRTGeoAlg::NumStrips(size_t tagger_i, size_t module_i) const{
-  CRTModuleGeo module = GetModule(tagger_i, module_i);
-  if(!module.null) return module.strips.size();
-  return 0;
-}
 
 // ----------------------------------------------------------------------------------
 // Get the tagger geometry object by name
@@ -364,21 +331,6 @@ CRTModuleGeo CRTGeoAlg::GetModule(size_t module_i) const{
   return nullModule;
 }
 
-// Get the module geometry object by tagger index and local module index
-CRTModuleGeo CRTGeoAlg::GetModule(size_t tagger_i, size_t module_i) const{
-  CRTModuleGeo nullModule = {};
-  nullModule.null = true;
-
-  CRTTaggerGeo tagger = GetTagger(tagger_i);
-  if(tagger.null) return nullModule;
-
-  size_t index = 0;
-  for(auto const& module : tagger.modules){
-    if(module_i == index) return module.second;
-    index++;
-  }
-  return nullModule;
-}
 
 
 // ----------------------------------------------------------------------------------
@@ -392,49 +344,6 @@ CRTStripGeo CRTGeoAlg::GetStrip(std::string stripName) const{
   return nullStrip;
 }
 
-// Get the strip geometry object by global index
-CRTStripGeo CRTGeoAlg::GetStrip(size_t strip_i) const{
-  size_t index = 0;
-  for(auto const& strip : fStrips){
-    if(strip_i == index) return strip.second;
-    index++;
-  }
-  CRTStripGeo nullStrip = {};
-  nullStrip.null = true;
-  return nullStrip;
-}
-
-// Get the strip geometry object by global module index and local strip index
-CRTStripGeo CRTGeoAlg::GetStrip(size_t module_i, size_t strip_i) const{
-  CRTStripGeo nullStrip = {};
-  nullStrip.null = true;
-
-  CRTModuleGeo module = GetModule(module_i);
-  if(module.null) return nullStrip;
-
-  size_t index = 0;
-  for(auto const& strip : module.strips){
-    if(strip_i == index) return strip.second;
-    index++;
-  }
-  return nullStrip;
-}
-
-// Get the strip geometry object by tagger index, local module index and local strip index
-CRTStripGeo CRTGeoAlg::GetStrip(size_t tagger_i, size_t module_i, size_t strip_i) const{
-  CRTStripGeo nullStrip = {};
-  nullStrip.null = true;
-
-  CRTModuleGeo module = GetModule(tagger_i, module_i);
-  if(module.null) return nullStrip;
-
-  size_t index = 0;
-  for(auto const& strip : module.strips){
-    if(strip_i == index) return strip.second;
-    index++;
-  }
-  return nullStrip;
-}
 
 
 // Get the tagger name from strip or module name
