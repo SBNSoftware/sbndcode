@@ -28,6 +28,7 @@
 #include "TString.h"
 
 #include "nusimdata/SimulationBase/MCTruth.h"
+#include "nusimdata/SimulationBase/GTruth.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
@@ -119,6 +120,10 @@ private:
   std::vector<float> _pars_py; ///< All other particles produced - p_y
   std::vector<float> _pars_pz; ///< All other particles produced - p_z
 
+  float _nu_gt_FShadSystP4;
+  float _nu_gt_FSleptonP4;
+  float _nu_gt_TgtP4;
+
   float _nu_prod_vtx_x; ///< Neutrino production vertex in detector coordinates
   float _nu_prod_vtx_y; ///< Neutrino production vertex in detector coordinates
   float _nu_prod_vtx_z; ///< Neutrino production vertex in detector coordinates
@@ -195,6 +200,10 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _tree->Branch("nu_e_recoil", &_nu_e_recoil, "nu_e_recoil/F");
   _tree->Branch("nu_e_neutron", &_nu_e_neutron, "nu_e_neutron/F");
 
+  _tree->Branch("nu_gt_FShadSystP4", &_nu_gt_FShadSystP4, "nu_gt_FShadSystP4/F");
+  _tree->Branch("nu_gt_FSleptonP4", &_nu_gt_FSleptonP4, "nu_gt_FSleptonP4/F");
+  _tree->Branch("nu_gt_TgtP4", &_nu_gt_TgtP4, "nu_gt_TgtP4/F");
+
   _tree->Branch("nu_prod_vtx_x", &_nu_prod_vtx_x, "nu_prod_vtx_x/F");
   _tree->Branch("nu_prod_vtx_y", &_nu_prod_vtx_y, "nu_prod_vtx_y/F");
   _tree->Branch("nu_prod_vtx_z", &_nu_prod_vtx_z, "nu_prod_vtx_z/F");
@@ -250,6 +259,7 @@ void PrismAnalyzer::analyze(art::Event const& e)
   // Get the associated MCFlux and Flux Event Weight Map (ewm)
   //
   art::FindManyP<simb::MCFlux> mct_to_mcf (mct_h, e, _mctruth_producer);
+  art::FindManyP<simb::GTruth> mct_to_gt (mct_h, e, _mctruth_producer);
   art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_fluxewm(mct_h, e, _flux_eventweight_multisim_producer);
 
   _pars_pdg.clear();
@@ -264,6 +274,11 @@ void PrismAnalyzer::analyze(art::Event const& e)
       std::cout << "[PrismAnalyzer] MCTruth from generator does not have neutrino origin?!" << std::endl;
     }
 
+    // Get the associated GTruth
+    std::vector<art::Ptr<simb::GTruth>> gt_v = mct_to_gt.at(i);
+    assert(gt_v.size() == 1);
+    auto gt = gt_v[0];
+
     _nu_e = mct_v[i]->GetNeutrino().Nu().E();
     _nu_pdg = mct_v[i]->GetNeutrino().Nu().PdgCode();
     _nu_ccnc = mct_v[i]->GetNeutrino().CCNC();
@@ -277,6 +292,10 @@ void PrismAnalyzer::analyze(art::Event const& e)
     _nu_pz = mct_v[i]->GetNeutrino().Nu().Pz();
 
     _nu_oaa = GetOffAxisAngle(_nu_vtx_x, _nu_vtx_y, _nu_vtx_z);
+
+    _nu_gt_FShadSystP4 = gt->fFShadSystP4.E();
+    _nu_gt_FSleptonP4 = gt->fFSleptonP4.E();
+    _nu_gt_TgtP4 = gt->fTgtP4.E();
 
     // Get the associated MCFlux
     std::vector<art::Ptr<simb::MCFlux>> mcf_v = mct_to_mcf.at(i);
