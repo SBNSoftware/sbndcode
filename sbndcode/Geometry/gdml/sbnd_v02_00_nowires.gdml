@@ -14267,6 +14267,86 @@
                         <position name="posvolAuxDetCRTStripArray132" unit="cm" x="0" y="0" z="0"/>
                       </physvol>
                     </volume>
+                    <volume name="CRTmoduleBERNCover133">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERNCover"/>
+                    </volume>
+                    <volume name="volCRTModule133">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERN"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleBERNCover133"/>
+                        <position name="posCRTModuleCover133" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArray133"/>
+                        <position name="posvolAuxDetCRTStripArray133" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                    <volume name="CRTmoduleBERNCover134">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERNCover"/>
+                    </volume>
+                    <volume name="volCRTModule134">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERN"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleBERNCover134"/>
+                        <position name="posCRTModuleCover134" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArray134"/>
+                        <position name="posvolAuxDetCRTStripArray134" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                    <volume name="CRTmoduleBERNCover135">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERNCover"/>
+                    </volume>
+                    <volume name="volCRTModule135">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERN"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleBERNCover135"/>
+                        <position name="posCRTModuleCover135" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArray135"/>
+                        <position name="posvolAuxDetCRTStripArray135" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                    <volume name="CRTmoduleBERNCover136">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERNCover"/>
+                    </volume>
+                    <volume name="volCRTModule136">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERN"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleBERNCover136"/>
+                        <position name="posCRTModuleCover136" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArray136"/>
+                        <position name="posvolAuxDetCRTStripArray136" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                    <volume name="CRTmoduleBERNCover137">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERNCover"/>
+                    </volume>
+                    <volume name="volCRTModule137">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERN"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleBERNCover137"/>
+                        <position name="posCRTModuleCover137" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArray137"/>
+                        <position name="posvolAuxDetCRTStripArray137" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
                 <volume name="volTaggerTopHigh">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerTopHigh"/>
@@ -14458,6 +14538,35 @@
                 <volume name="volTaggerSouth">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerSouth"/>
+                        <physvol>
+								<volumeref ref="volCRTModule108"/>
+								<position name="posCRT_module108" unit="cm" x="0" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule109"/>
+								<position name="posCRT_module109" unit="cm" x="95.799999999999997" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule110"/>
+								<position name="posCRT_module110" unit="cm" x="-95.799999999999997" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+						<physvol>
+								<volumeref ref="volCRTModule111"/>
+								<position name="posCRT_module111" unit="cm" x="0" y="-312.10000000000002" z="2.4000000000000004"/>
+						</physvol>
+						<physvol>
+								<volumeref ref="volCRTModule112"/>
+								<position name="posCRT_module112" unit="cm" x="0" y="-216.30000000000001" z="2.4000000000000004"/>
+						</physvol>
+						<physvol>
+								<volumeref ref="volCRTModule113"/>
+								<position name="posCRT_module113" unit="cm" x="0" y="-120.5" z="2.4000000000000004"/>
+						</physvol>
+					
+                        <!-- orginal Geometry 
                                 <physvol>
                                         <volumeref ref="volCRTModule40"/>
                                         <position name="posCRT_module40" unit="cm" x="180" y="-270" z="0.90000000000000002"/>
@@ -14530,10 +14639,95 @@
                                         <position name="posCRT_module55" unit="cm" x="270" y="-180" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
+                       -->
                 </volume>
                 <volume name="volTaggerNorth">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerNorth"/>
+                        <physvol>
+								<volumeref ref="volCRTModule114"/>
+								<position name="posCRT_module114" unit="cm" x="0" y="-312.10000000000002" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule115"/>
+								<position name="posCRT_module115" unit="cm" x="0" y="-216.30000000000001" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule116"/>
+								<position name="posCRT_module116" unit="cm" x="0" y="-120.5" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule117"/>
+								<position name="posCRT_module117" unit="cm" x="-294.20000000000005" y="-312.10000000000002" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule118"/>
+								<position name="posCRT_module118" unit="cm" x="-294.20000000000005" y="-216.30000000000001" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule119"/>
+								<position name="posCRT_module119" unit="cm" x="-294.20000000000005" y="-120.5" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule120"/>
+								<position name="posCRT_module120" unit="cm" x="294.20000000000005" y="-312.10000000000002" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule121"/>
+								<position name="posCRT_module121" unit="cm" x="294.20000000000005" y="-216.30000000000001" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule122"/>
+								<position name="posCRT_module122" unit="cm" x="294.20000000000005" y="-120.5" z="-2.4000000000000004"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule123"/>
+								<position name="posCRT_module123" unit="cm" x="0" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule124"/>
+								<position name="posCRT_module124" unit="cm" x="-95.799999999999997" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule125"/>
+								<position name="posCRT_module125" unit="cm" x="-191.59999999999999" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule126"/>
+								<position name="posCRT_module126" unit="cm" x="-287.39999999999998" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol> <!-- because they are new modules declared, so the number start after the MINOs module : 133 -->
+								<volumeref ref="volCRTModule133"/>
+								<position name="posCRT_module133" unit="cm" x="-383.19999999999999" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule134"/>
+								<position name="posCRT_module134" unit="cm" x="95.799999999999997" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule135"/>
+								<position name="posCRT_module135" unit="cm" x="191.59999999999999" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule136"/>
+								<position name="posCRT_module136" unit="cm" x="287.39999999999998" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+                        <physvol>
+								<volumeref ref="volCRTModule137"/>
+								<position name="posCRT_module137" unit="cm" x="383.19999999999999" y="-223.94999999999999" z="0.80000000000000004"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+						
+						
+						<!-- old geometry 
                                 <physvol>
                                         <volumeref ref="volCRTModule56"/>
                                         <position name="posCRT_module56" unit="cm" x="180" y="-270" z="0.90000000000000002"/>
@@ -14606,6 +14800,7 @@
                                         <position name="posCRT_module71" unit="cm" x="270" y="-180" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
+						-->
                 </volume>
 				<volume name="volTaggerEast">
                         <materialref ref="matAir"/>
@@ -14782,6 +14977,7 @@
                 <volume name="volTaggerBot">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerBottom"/>
+                    <!-- Jiaoyang's Modification, since I am using BERN module here, Just comment out this part in case that LArSoft is unhappy 
                         <physvol>
                                 <volumeref ref="volCRTModule108"/>
                                 <position name="posCRT_module108" unit="cm" x="-268.55000000000001" y="445.89999999999998" z="-0.80000000000000004"/>
@@ -14870,6 +15066,7 @@
                                 <volumeref ref="volCRTModule126"/>
                                 <position name="posCRT_module126" unit="cm" x="268.55000000000001" y="-445.89999999999998" z="-0.80000000000000004"/>
                         </physvol>
+                    -->
                         <physvol>
                                 <volumeref ref="volCRTModule127"/>
                                 <position name="posCRT_module127" unit="cm" x="-268.5" y="115.175" z="0.59999999999999998"/>
@@ -15694,11 +15891,11 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlane_V"/>
-				<positionref ref="posUPlane_E"/> <!-- Plane V is placed at U position as this wire plane is rotated w.r.t. TPC West -->
+				<positionref ref="posUPlane_E"/> <!-- WARNING: this should be posV, will have to be fixed once LArSoft View is fixed -->
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlane_U"/>
-				<positionref ref="posVPlane_E"/> <!-- Plane U is placed at V position as this wire plane is rotated w.r.t. TPC West -->
+				<positionref ref="posVPlane_E"/> <!-- WARNING: this should be posU, will have to be fixed once LArSoft View is fixed -->
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlaneVert"/>
@@ -15896,24 +16093,24 @@
 		</volume>
 	</structure>
 	<define>
-		<position name="posCryostat" unit="mm" x="0" y="0" z="-474.69999999999999" />
+		<position name="posCryostat" unit="mm" x="0" y="30000" z="-474.69999999999999" />
 		<position name="posCRT_TopHigh" unit="mm" x="0" y="9286" z="-474.69999999999999"/>
 		<position name="posCRT_TopLow" unit="mm" x="0" y="6401.2000000000007" z="-474.69999999999999"/>
-		<position name="posCRT_South" unit="mm" x="0" y="0" z="-5224.6999999999998"/>
-		<position name="posCRT_North" unit="mm" x="0" y="0" z="4275.3000000000002"/>
+		<position name="posCRT_South" unit="mm" x="0" y="0" z="4378.3000000000002"/>
+		<position name="posCRT_North" unit="mm" x="0" y="0" z="-5084.1999999999998"/>
 		<position name="posCRT_East" unit="mm" x="3830" y="0" z="-474.69999999999999"/>
 		<position name="postCRT_West" unit="mm" x="-3830" y="0" z="-474.69999999999999"/>
 		<position name="posCRT_Bottom" unit="mm" x="0" y="-3780" z="-474.69999999999999"/>
-		<position name="posCryoPlywood" unit="mm" x="0" y="-5" z="-474.69999999999999" />
+		<position name="posCryoPlywood" unit="mm" x="0" y="29995" z="-474.69999999999999" />
 		<position name="posMassBuffer" unit="mm" x="0" y="4274" z="-474.69999999999999"/>
 	</define>
 	<solids>
-		<box name="boxDetectorEnclosure_Pit"   lunit="mm" x="9448.7990000000009" y="10149.84" z="12191.999"/>
+		<box name="boxDetectorEnclosure_Pit"   lunit="mm" x="9448.7990000000009" y="101589.84000000001" z="12191.999"/>
 		<box name="boxDetectorEnclosure_Tower" lunit="mm" x="9448.7990000000009" y="10670" z="12191.999"/>
 		<union name="boxDetectorEnclosure_0">
 			<first ref="boxDetectorEnclosure_Pit"/>
 			<second ref="boxDetectorEnclosure_Tower"/>
-			<position name="posTopTower" unit="mm" x="0" y="10409.92" z="0"/>
+			<position name="posTopTower" unit="mm" x="0" y="56129.920000000006" z="0"/>
 		</union>
 		<union name="boxDetectorEnclosure">
 			<first ref="boxDetectorEnclosure_0"/>
@@ -15931,6 +16128,7 @@
 		<volume name="volDetEnclosure" >
 			<materialref ref="matAir"/>
 			<solidref ref="boxDetectorEnclosure"/>
+			<!--
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
 					<positionref ref="posCRT_TopHigh"/>
@@ -15941,6 +16139,7 @@
 					<positionref ref="posCRT_TopLow"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
+			-->
 			<physvol>
 					<volumeref ref="volTaggerSouth"/>
 					<positionref ref="posCRT_South"/>
@@ -15950,6 +16149,7 @@
 					<positionref ref="posCRT_North"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
+			<!--
 			<physvol>
 					<volumeref ref="volTaggerEast"/>
 					<positionref ref="posCRT_East"/>
@@ -15965,6 +16165,7 @@
 					<positionref ref="posCRT_Bottom"/>
 					<rotationref ref="rotateP90X180Z"/>
 			</physvol>
+			-->
 			<physvol>
 				<volumeref ref="volCryostat"/>
 				<positionref ref="posCryostat"/>
@@ -15993,6 +16194,7 @@
 		<volume name="volDetEnclosureWithSh" >
 			<materialref ref="matAir"/>
 			<solidref ref="boxDetectorEnclosure"/>
+			<!--
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
 					<positionref ref="posCRT_TopHigh"/>
@@ -16003,6 +16205,7 @@
 					<positionref ref="posCRT_TopLow"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
+			-->
 			<physvol>
 					<volumeref ref="volTaggerSouth"/>
 					<positionref ref="posCRT_South"/>
@@ -16012,6 +16215,7 @@
 					<positionref ref="posCRT_North"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
+			<!--
 			<physvol>
 					<volumeref ref="volTaggerEast"/>
 					<positionref ref="posCRT_East"/>
@@ -16027,6 +16231,7 @@
 					<positionref ref="posCRT_Bottom"/>
 					<rotationref ref="rotateP90X180Z"/>
 			</physvol>
+			-->
 			<physvol>
 				<volumeref ref="volShielding"/>
 				<position name="posShielding" unit="mm" x="0" y="7843.6000000000004" z="0" />
