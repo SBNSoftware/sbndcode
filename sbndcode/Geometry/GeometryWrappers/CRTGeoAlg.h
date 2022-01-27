@@ -111,19 +111,9 @@ namespace sbnd{
 
     // Get the total number of modules in the geometry
     size_t NumModules() const;
-    // Get the number of modules in a tagger by name
-    size_t NumModules(std::string taggerName) const;
-    // Get the number of modules in a tagger by index
-    size_t NumModules(size_t tagger_i) const;
 
     // Get the total number of strips in the geometry
     size_t NumStrips() const;
-    // Get the number of strips in module by name
-    size_t NumStrips(std::string moduleName) const;
-    // Get the number of strips in  module by global index
-    size_t NumStrips(size_t module_i) const;
-    // Get the number of strips in module by tagger index and local module index
-    size_t NumStrips(size_t tagger_i, size_t module_i) const;
 
     // Get the tagger geometry object by name
     CRTTaggerGeo GetTagger(std::string taggerName) const;
@@ -134,17 +124,9 @@ namespace sbnd{
     CRTModuleGeo GetModule(std::string moduleName) const;
     // Get the module geometry object by global index
     CRTModuleGeo GetModule(size_t module_i) const;
-    // Get the module geometry object by tagger index and local module index
-    CRTModuleGeo GetModule(size_t tagger_i, size_t module_i) const;
 
     // Get the strip geometry object by name
     CRTStripGeo GetStrip(std::string stripName) const;
-    // Get the strip geometry object by global index
-    CRTStripGeo GetStrip(size_t strip_i) const;
-    // Get the strip geometry object by global module index and local strip index
-    CRTStripGeo GetStrip(size_t module_i, size_t strip_i) const;
-    // Get the strip geometry object by tagger index, local module index and local strip index
-    CRTStripGeo GetStrip(size_t tagger_i, size_t module_i, size_t strip_i) const;
 
     // Get tagger name from strip or module name
     std::string GetTaggerName(std::string name) const;
