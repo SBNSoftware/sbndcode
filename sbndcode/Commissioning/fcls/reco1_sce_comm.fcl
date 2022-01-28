@@ -16,3 +16,7 @@ outputs.out1.outputCommands: [ "keep *_*_*_*"
                              , "drop *_linecluster_*_*"
                              # , "drop *_fasthit_*_*"
                              ]
+
+
+# HitDumper configuration
+physics.analyzers.hitdumper.keepCRTstrips: true

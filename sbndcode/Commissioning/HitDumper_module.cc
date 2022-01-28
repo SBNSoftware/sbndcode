@@ -43,6 +43,7 @@
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
@@ -78,18 +79,6 @@
 const int MAX_INT = std::numeric_limits<int>::max();
 const long int TIME_CORRECTION = (long int) std::numeric_limits<int>::max() * 2;
 const int DEFAULT_VALUE = -9999;
-
-enum CRTPos {
-  kNotDefined = -1,   ///< Not defined
-  kBot = 0,           ///< Bot
-  kFaceFront = 1,     ///< FaceFront
-  kFaceBack,          ///< FaceBack
-  kSideLeft,          ///< SideLeft
-  kSideRight,         ///< SideRight
-  kTopLow,            ///< TopLow
-  kTopHigh,           ///< TopHigh
-  kCRTPosMax
-};
 
 enum CRTOrientation {
   kCRTNotDefined = -1,   ///< Not defined
@@ -524,14 +513,7 @@ void Hitdumper::analyze(const art::Event& evt)
 
     //    std::pair<std::string,unsigned> tagger = CRTHitRecoAlg::ChannelToTagger(chan);
     std::pair<std::string,unsigned> tagger = hitAlg.ChannelToTagger(chan);
-    CRTPos ip = kNotDefined;
-    if  (tagger.first=="volTaggerFaceFront_0" )    ip = kFaceFront;
-    else if (tagger.first=="volTaggerFaceBack_0")  ip = kFaceBack;
-    else if (tagger.first=="volTaggerSideLeft_0")  ip = kSideLeft;
-    else if (tagger.first=="volTaggerSideRight_0") ip = kSideRight;
-    else if (tagger.first=="volTaggerTopLow_0")    ip = kTopLow;
-    else if (tagger.first=="volTaggerTopHigh_0")   ip = kTopHigh;
-    else if (tagger.first=="volTaggerBot_0")       ip = kBot;
+    sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(tagger.first);
 
     bool keep_tagger = false;
     for (auto t : fKeepTaggerTypes) {
@@ -541,7 +523,7 @@ void Hitdumper::analyze(const art::Event& evt)
     }
     // std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
 
-    if (ip != kNotDefined && keep_tagger) {
+    if (ip != sbnd::kCRTNotDefined && keep_tagger) {
 
       uint32_t ttime = striplist[i]->T0();
       float ctime = (int)ttime * 0.001; // convert form ns to us
@@ -597,7 +579,7 @@ void Hitdumper::analyze(const art::Event& evt)
         int  nh1y = 0, nh2y = 0;
         float adc1x = 0, adc2x = 0;
         float adc1y = 0, adc2y = 0;
-        if (_crt_plane[i] == kFaceFront) { // 1
+        if (_crt_plane[i] == sbnd::kCRTFaceSouth) { // 1
           if (_crt_orient[i] == kCRTVertical && _crt_adc[i] > 500) { // < 500 hardcoded
             if (nh1x == 0 || (_crt_module[i] == plane1xm)) {
               nh1x++;
@@ -649,7 +631,7 @@ void Hitdumper::analyze(const art::Event& evt)
           float tdiff = fabs(_crt_time[i]-_crt_time[j]);
           if (tdiff<0.1) {
             iflag[j]=1;
-            if (_crt_plane[j]==kFaceFront) {
+            if (_crt_plane[j]==sbnd::kCRTFaceSouth) {
               if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
                 if (nh1x==0 ||  (_crt_module[j]==plane1xm)) {
                   nh1x++;
@@ -752,18 +734,8 @@ void Hitdumper::analyze(const art::Event& evt)
     ResetCRTHitsVars(_nchits);
 
     for (int i = 0; i < _nchits; ++i){
-      int ip = kNotDefined;
-      if  (chitlist[i]->tagger=="volTaggerFaceFront_0" )    ip = kFaceFront;
-      else if (chitlist[i]->tagger=="volTaggerFaceBack_0")  ip = kFaceBack;
-      else if (chitlist[i]->tagger=="volTaggerSideLeft_0")  ip = kSideLeft;
-      else if (chitlist[i]->tagger=="volTaggerSideRight_0") ip = kSideRight;
-      else if (chitlist[i]->tagger=="volTaggerTopLow_0")    ip = kTopLow;
-      else if (chitlist[i]->tagger=="volTaggerTopHigh_0")   ip = kTopHigh;
-      else if (chitlist[i]->tagger=="volTaggerBot_0")       ip = kBot;
-      else {
-        mf::LogWarning("HitDumper") << "Cannot identify tagger of type "
-                                    << chitlist[i]->tagger << std::endl;
-      }
+      // int ip = kNotDefined;
+      sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(chitlist[i]->tagger);
 
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
       if (chitlist[i]->ts1_ns > MAX_INT) {
