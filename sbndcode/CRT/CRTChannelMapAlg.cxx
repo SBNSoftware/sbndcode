@@ -91,8 +91,6 @@ namespace geo {
       size_t& ad,
       size_t& sv) const {
 
-    std::cout << "CRTChannelMapAlg::PositionToAuxDetChannel" << std::endl;
-
     // Set the default to be that we don't find the position in any AuxDet
     uint32_t channel = UINT_MAX;
 
