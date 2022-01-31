@@ -820,8 +820,7 @@ bool CRTGeoAlg::EntersVolume(const simb::MCParticle& particle){
     else if(i == 0) startOutside = true;
     else if(i == particle.NumberTrajectoryPoints()-1) endOutside = true;
   }
-  if(enters && (startOutside || endOutside)) return true;
-  return false;
+  return enters && (startOutside || endOutside);
 }
 
 // ----------------------------------------------------------------------------------
