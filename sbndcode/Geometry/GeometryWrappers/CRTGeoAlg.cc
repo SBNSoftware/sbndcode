@@ -472,11 +472,8 @@ bool CRTGeoAlg::IsInsideCRT(TVector3 point){
 
 bool CRTGeoAlg::IsInsideCRT(geo::Point_t point){
   std::vector<double> limits = CRTLimits();
-  if(point.X() > limits[0] && point.Y() > limits[1] && point.Z() > limits[2]
-     && point.X() < limits[3] && point.Y() < limits[4] && point.Z() < limits[5]){
-    return true;
-  }
-  return false;
+  return point.X() > limits[0] && point.Y() > limits[1] && point.Z() > limits[2]
+    && point.X() < limits[3] && point.Y() < limits[4] && point.Z() < limits[5];
 }
 
 // ----------------------------------------------------------------------------------
@@ -497,8 +494,8 @@ bool CRTGeoAlg::IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point){
   double xmax = tagger.maxX;
   double ymax = tagger.maxY;
   double zmax = tagger.maxZ;
-  if(x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax) return true;
-  return false;
+
+  return x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax;
 }
 
 // ----------------------------------------------------------------------------------
@@ -519,12 +516,8 @@ bool CRTGeoAlg::IsInsideModule(const CRTModuleGeo& module, geo::Point_t point){
   double xmax = module.maxX;
   double ymax = module.maxY;
   double zmax = module.maxZ;
-  // Make the width limits a bit more generous to account for steps in true trajectory
-  /*if(std::abs(xmax-xmin)==1){ xmin-=1; xmax+=1; }
-  if(std::abs(ymax-ymin)==1){ ymin-=1; ymax+=1; }
-  if(std::abs(zmax-zmin)==1){ zmin-=1; zmax+=1; }*/
-  if(x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax) return true;
-  return false;
+
+  return x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax;
 }
 
 // ----------------------------------------------------------------------------------
@@ -545,12 +538,8 @@ bool CRTGeoAlg::IsInsideStrip(const CRTStripGeo& strip, geo::Point_t point){
   double xmax = strip.maxX;
   double ymax = strip.maxY;
   double zmax = strip.maxZ;
-  // Make the width limits a bit more generous to account for steps in true trajectory
-  /*if(std::abs(xmax-xmin)==1){ xmin-=0.5; xmax+=0.5; }
-  if(std::abs(ymax-ymin)==1){ ymin-=0.5; ymax+=0.5; }
-  if(std::abs(zmax-zmin)==1){ zmin-=0.5; zmax+=0.5; }*/
-  if(x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax) return true;
-  return false;
+
+  return x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax;
 }
 
 // ----------------------------------------------------------------------------------
@@ -565,9 +554,7 @@ bool CRTGeoAlg::CheckOverlap(const CRTModuleGeo& module1, const CRTModuleGeo& mo
   double maxZ = std::min(module1.maxZ, module2.maxZ);
 
   // If the two strips overlap in 2 dimensions then return true
-  if ((minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ)) return true;
-  // Otherwise return a "null" value
-  return false;
+  return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
 }
 
 // ----------------------------------------------------------------------------------
@@ -838,8 +825,7 @@ bool CRTGeoAlg::CrossesVolume(const simb::MCParticle& particle){
     else if(i == 0) startOutside = true;
     else if(i == particle.NumberTrajectoryPoints()-1) endOutside = true;
   }
-  if(startOutside && enters && endOutside) return true;
-  return false;
+  return startOutside && enters && endOutside;
 }
 
 
