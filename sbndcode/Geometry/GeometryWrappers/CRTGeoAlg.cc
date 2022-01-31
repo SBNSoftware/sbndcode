@@ -276,7 +276,6 @@ size_t CRTGeoAlg::NumModules() const{
 }
 
 
-
 // ----------------------------------------------------------------------------------
 // Get the total number of strips in the geometry
 size_t CRTGeoAlg::NumStrips() const{
@@ -477,12 +476,7 @@ bool CRTGeoAlg::IsInsideCRT(geo::Point_t point){
 }
 
 // ----------------------------------------------------------------------------------
-// Determine if a point is inside a tagger by name
-bool CRTGeoAlg::IsInsideTagger(std::string taggerName, geo::Point_t point){
-  CRTTaggerGeo tagger = GetTagger(taggerName);
-  return IsInsideTagger(tagger, point);
-}
-
+// Determine if a point is inside a tagger
 bool CRTGeoAlg::IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point){
   if(tagger.null) return false;
   double x = point.X();
@@ -499,12 +493,7 @@ bool CRTGeoAlg::IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point){
 }
 
 // ----------------------------------------------------------------------------------
-// Determine if a point is inside a module by name
-bool CRTGeoAlg::IsInsideModule(std::string moduleName, geo::Point_t point){
-  CRTModuleGeo module = GetModule(moduleName);
-  return IsInsideModule(module, point);
-}
-
+// Determine if a point is inside a module
 bool CRTGeoAlg::IsInsideModule(const CRTModuleGeo& module, geo::Point_t point){
   if(module.null) return false;
   double x = point.X();
@@ -521,12 +510,7 @@ bool CRTGeoAlg::IsInsideModule(const CRTModuleGeo& module, geo::Point_t point){
 }
 
 // ----------------------------------------------------------------------------------
-// Determine if a point is inside a strip by name
-bool CRTGeoAlg::IsInsideStrip(std::string stripName, geo::Point_t point){
-  CRTStripGeo strip = GetStrip(stripName);
-  return IsInsideStrip(strip, point);
-}
-
+// Determine if a point is inside a strip
 bool CRTGeoAlg::IsInsideStrip(const CRTStripGeo& strip, geo::Point_t point){
   if(strip.null) return false;
   double x = point.X();
@@ -576,26 +560,6 @@ bool CRTGeoAlg::HasOverlap(const CRTModuleGeo& module){
 
 bool CRTGeoAlg::StripHasOverlap(std::string stripName){
   return HasOverlap(fModules.at(fStrips.at(stripName).module));
-}
-
-std::vector<double> CRTGeoAlg::StripOverlap(std::string strip1Name, std::string strip2Name){
-  auto const& strip1 = fStrips.at(strip1Name);
-  auto const& strip2 = fStrips.at(strip2Name);
-
-  double minX = std::max(strip1.minX, strip2.minX);
-  double maxX = std::min(strip1.maxX, strip2.maxY);
-  double minY = std::max(strip1.minY, strip2.minY);
-  double maxY = std::min(strip1.maxY, strip2.maxY);
-  double minZ = std::max(strip1.minZ, strip2.minZ);
-  double maxZ = std::min(strip1.maxZ, strip2.maxZ);
-
-  std::vector<double> null = {-99999, -99999, -99999, -99999, -99999, -99999};
-  std::vector<double> overlap = {minX, maxX, minY, maxY, minZ, maxZ};
-
-  // If the two strips overlap in 2 dimensions then return the overlap
-  if ((minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ)) return overlap;
-  // Otherwise return a "null" value
-  return null;
 }
 
 // ----------------------------------------------------------------------------------
