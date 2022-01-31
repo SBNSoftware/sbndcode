@@ -154,13 +154,10 @@ namespace sbnd{
     bool IsInsideCRT(TVector3 point);
     bool IsInsideCRT(geo::Point_t point);
     // Determine if a point is inside a tagger by name
-    bool IsInsideTagger(std::string taggerName, geo::Point_t point);
     bool IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point);
     // Determine if a point is inside a module by name
-    bool IsInsideModule(std::string moduleName, geo::Point_t point);
     bool IsInsideModule(const CRTModuleGeo& module, geo::Point_t point);
     // Determine if a point is inside a strip by name
-    bool IsInsideStrip(std::string stripName, geo::Point_t point);
     bool IsInsideStrip(const CRTStripGeo& strip, geo::Point_t point);
 
     // Check if two modules overlap in 2D
@@ -168,7 +165,6 @@ namespace sbnd{
     // Check is a module overlaps with a perpendicual module in the same tagger
     bool HasOverlap(const CRTModuleGeo& module);
     bool StripHasOverlap(std::string stripName);
-    std::vector<double> StripOverlap(std::string strip1Name, std::string strip2Name);
 
     // Find the average of the tagger entry and exit points of a true particle trajectory
     geo::Point_t TaggerCrossingPoint(std::string taggerName, const simb::MCParticle& particle);
