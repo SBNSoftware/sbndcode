@@ -168,7 +168,7 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         strip.minZ = std::min(limitsWorld[2], limitsWorld2[2]);
         strip.maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
         strip.normal = auxDetSensitive.GetNormalVector();
-        strip.width = halfWidth * 2.;
+        strip.width = halfHeight * 2.;
         strip.null = false;
         strip.module = moduleName;
 
@@ -176,12 +176,12 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         uint32_t channel0 = 32 * ad_i + 2 * sv_i + 0;
         uint32_t channel1 = 32 * ad_i + 2 * sv_i + 1;
         // Sipm0 is on the left in local coords
-        double sipm0X = -halfWidth;
-        double sipm1X = halfWidth;
-        // In local coordinates the Y position is at half height (top if top) (bottom if not)
-        double sipmY = halfHeight;
-        if(!fModules[moduleName].top) sipmY = - halfHeight;
-        double sipm0XYZ[3] = {sipm0X, sipmY, 0};
+        double sipm0Y = -halfHeight;
+        double sipm1Y = halfHeight;
+        // In local coordinates the X position is at half width (top if top) (bottom if not)
+        double sipmX = halfWidth;
+        if(!fModules[moduleName].top) sipmX = - halfWidth;
+        double sipm0XYZ[3] = {sipmX, sipm0Y, 0};
         double sipm0XYZWorld[3];
         auxDetSensitive.LocalToWorld(sipm0XYZ, sipm0XYZWorld);
 
@@ -194,7 +194,7 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         sipm0.null = false;
         fSipms[channel0] = sipm0;
 
-        double sipm1XYZ[3] = {sipm1X, sipmY, 0};
+        double sipm1XYZ[3] = {sipmX, sipm1Y, 0};
         double sipm1XYZWorld[3];
         auxDetSensitive.LocalToWorld(sipm1XYZ, sipm1XYZWorld);
 
@@ -380,12 +380,12 @@ std::vector<double> CRTGeoAlg::StripLimitsWithChargeSharing(std::string stripNam
   double halfLength = sensitiveGeo.HalfLength();
 
   // Get the maximum strip limits in world coordinates
-  double l1[3] = {-halfWidth + x + ex, halfHeight, halfLength};
+  double l1[3] = {halfWidth, -halfHeight + x + ex, halfLength};
   double w1[3];
   sensitiveGeo.LocalToWorld(l1, w1);
 
   // Get the minimum strip limits in world coordinates
-  double l2[3] = {-halfWidth + x - ex, -halfHeight, -halfLength};
+  double l2[3] = {-halfWidth, -halfHeight + x - ex, -halfLength};
   double w2[3];
   sensitiveGeo.LocalToWorld(l2, w2);
 
