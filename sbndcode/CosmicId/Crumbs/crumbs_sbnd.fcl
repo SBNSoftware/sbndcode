@@ -7,15 +7,17 @@ sbnd_crumbs:
   module_type:     "sbndcode/CosmicId/Crumbs/Crumbs"
 
   # The input parameters
-  MCParticlesModuleLabel:        "largeant"
-  PFParticlesModuleLabel:        "pandora"
-  HitsModuleLabel:		 "gaushit"
-  TrackModuleLabel:		 "pandoraTrack"
-  ShowerModuleLabel:		 "pandoraShower"
-  GeneratorModuleLabel:		 "generator"
-  CosmicModuleLabel:		 "corsika"
-  FlashMatchModuleLabel:	 "opt0finder"
-  SliceModuleLabel:		 "pandora"
+  MCParticlesModuleLabel:	"largeant"
+  PFParticlesModuleLabel:	"pandora"
+  HitsModuleLabel:		"gaushit"
+  TrackModuleLabel:		"pandoraTrack"
+  ShowerModuleLabel:		"pandoraShower"
+  GeneratorModuleLabel:		"generator"
+  CosmicModuleLabel:		"corsika"
+  FlashMatchModuleLabel:	"fmatch"
+  SliceModuleLabel:		"pandora"
+  CRTTrackMatchModuleLabel:	"crttrackt0"
+  CRTHitMatchModuleLabel:	"crthitt0"
 }
 
 END_PROLOG
