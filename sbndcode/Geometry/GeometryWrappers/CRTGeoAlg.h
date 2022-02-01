@@ -127,6 +127,8 @@ namespace sbnd{
 
     // Get the strip geometry object by name
     CRTStripGeo GetStrip(std::string stripName) const;
+    // Get the strip geometry object by global index
+    CRTStripGeo GetStrip(size_t strip_i) const;
 
     // Get tagger name from strip or module name
     std::string GetTaggerName(std::string name) const;

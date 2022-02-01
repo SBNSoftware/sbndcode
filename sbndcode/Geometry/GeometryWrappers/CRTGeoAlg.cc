@@ -343,6 +343,17 @@ CRTStripGeo CRTGeoAlg::GetStrip(std::string stripName) const{
   return nullStrip;
 }
 
+// Get the strip geometry object by global index
+CRTStripGeo CRTGeoAlg::GetStrip(size_t strip_i) const{
+  size_t index = 0;
+  for(auto const& strip : fStrips){
+    if(strip_i == index) return strip.second;
+    index++;
+  }
+  CRTStripGeo nullStrip = {};
+  nullStrip.null = true;
+  return nullStrip;
+}
 
 
 // Get the tagger name from strip or module name
