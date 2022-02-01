@@ -7,6 +7,6 @@ services.NuRandomService.policy: "perEvent"
 
 physics.producers.cafmaker.CAFFilename: "nucosmics_caf_test_sbndcode_Current.caf.root"
 
-physics.producers.genieweight.genie_sbnd_multisim.number_of_multisims: 1
-physics.producers.genieweight.genie_sbnd_multisim_exclusive.number_of_multisims: 1
-physics.producers.genieweight.genie_ub_multisim.number_of_multisims: 1
+physics.producers.genieweight.genie_sbnd_multisim.number_of_multisims: 5
+physics.producers.genieweight.genie_sbnd_multisim_exclusive.number_of_multisims: 5
+physics.producers.genieweight.genie_ub_multisim.number_of_multisims: 5
