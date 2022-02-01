@@ -154,6 +154,12 @@ void CRTDetSim::produce(art::Event & e) {
 
   // Loop through truth AD channels
   for (auto& adsc : *channels) {
+    if(adsc.AuxDetID() == UINT_MAX) {
+      mf::LogWarning("CRTDetSim") << "AuxDetSimChannel with ID: UINT_MAX\n"
+                                  << "skipping channel...";
+      continue;
+    }
+
     const geo::AuxDetGeo& adGeo =
         geoService->AuxDet(adsc.AuxDetID());
 
