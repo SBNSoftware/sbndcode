@@ -1,4 +1,5 @@
 #include "flashmatchalg.fcl"
+#include "opticalsimparameterisations_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -14,6 +15,9 @@ sbnd_opt0_finder:
 
   PhotoDetectors: ["pmt_coated", "pmt_uncoated"]
   TPC: 0
+
+  VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
+  VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
 
   FlashMatchConfig: @local::flashmatch_config
 

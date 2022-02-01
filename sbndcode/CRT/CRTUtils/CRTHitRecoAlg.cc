@@ -179,9 +179,10 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
             double time = (t0_1 + t0_2)/2;
             //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
             double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
+            int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
 
             // Create a CRT hit
-            sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+            sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                             mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
             std::vector<int> dataIds;
             dataIds.push_back(tagStrip.second[hit_i].dataID);
@@ -205,9 +206,10 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
 
         double time = tagStrip.second[hit_i].t0;
         double pes = tagStrip.second[hit_i].pes;
+        int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
 
         // Just use the single plane limits as the crt hit
-        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                         mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
         std::vector<int> dataIds;
         dataIds.push_back(tagStrip.second[hit_i].dataID);
@@ -232,9 +234,10 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
 
         double time = taggerStrips[otherPlane][hit_j].t0;
         double pes = taggerStrips[otherPlane][hit_j].pes;
+        int plane = sbnd::CRTCommonUtils::GetPlaneIndex(otherPlane.first);
 
         // Just use the single plane limits as the crt hit
-        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                         mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
         std::vector<int> dataIds;
         dataIds.push_back(taggerStrips[otherPlane][hit_j].dataID);
