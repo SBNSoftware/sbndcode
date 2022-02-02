@@ -1,0 +1,26 @@
+#include "prodsingle_sbnd_proj.fcl"
+
+physics.producers.generator.PDG: [13, 11] # Generate muons (1 muon per event)
+physics.producers.generator.ParticleSelectionMode: 1 # one particle per event, selected randomly
+
+physics.producers.generator.PadOutVectors: true
+
+physics.producers.generator.P0: [1.05]  # 1.05 +- 0.95, to cover 100 MeV to 2 GeV with uniform dist
+physics.producers.generator.SigmaP: [0.95]
+physics.producers.generator.PDist: 0
+
+physics.producers.generator.T0: [10] # 10 ns time offset
+
+# physics.producers.generator.P0: [3]
+# physics.producers.generator.SigmaP: [0]
+
+physics.producers.generator.X0: [0]
+physics.producers.generator.Y0: [-200]
+physics.producers.generator.Z0:[-200]
+
+physics.producers.generator.Theta0XZ: [0]
+physics.producers.generator.Theta0YZ: [0]
+physics.producers.generator.SigmaThetaXZ: [0]
+physics.producers.generator.SigmaThetaYZ: [0]
+physics.producers.generator.AngleDist: 1
+
