@@ -2825,8 +2825,8 @@
 
                 <box lunit="cm" name="TaggerTopHigh" x="2*CRTmoduleY_l" y="5*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerTopLow" x="2*CRTmoduleY_l" y="5*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
-                <box lunit="cm" name="TaggerSouth" x="2*CRTmoduleX_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t"/>
-                <box lunit="cm" name="TaggerNorth" x="2*CRTmoduleX_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t"/>
+                <box lunit="cm" name="TaggerSouth" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t+4"/>
+                <box lunit="cm" name="TaggerNorth" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t+4"/>
                 <box lunit="cm" name="TaggerEast" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerWest" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerBottom" x="810" y="990" z="4.0"/>
@@ -4595,17 +4595,17 @@
 
 						<physvol>
 								<volumeref ref="volCRTModule111"/>
-								<position name="posCRT_module111" unit="cm" x="0." y="-360.+CRTmoduleBERN_w/2" z="CRTmoduleBERN_t*3/2"/>
+								<position name="posCRT_module111" unit="cm" x="0." y="-360.+CRTmoduleBERN_w/2" z="-CRTmoduleBERN_t*3/2"/>
 						</physvol>
 
 						<physvol>
 								<volumeref ref="volCRTModule112"/>
-								<position name="posCRT_module112" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*3/2" z="CRTmoduleBERN_t*3/2"/>
+								<position name="posCRT_module112" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*3/2" z="-CRTmoduleBERN_t*3/2"/>
 						</physvol>
 
 						<physvol>
 								<volumeref ref="volCRTModule113"/>
-								<position name="posCRT_module113" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*5/2" z="CRTmoduleBERN_t*3/2"/>
+								<position name="posCRT_module113" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*5/2" z="-CRTmoduleBERN_t*3/2"/>
 						</physvol>
 					
 

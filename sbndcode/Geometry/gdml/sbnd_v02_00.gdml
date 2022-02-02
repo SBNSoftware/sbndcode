@@ -2941,8 +2941,8 @@
                 </subtraction>
                 <box lunit="cm" name="TaggerTopHigh" x="900" y="900" z="3.6000000000000001"/>
                 <box lunit="cm" name="TaggerTopLow" x="900" y="900" z="3.6000000000000001"/>
-                <box lunit="cm" name="TaggerSouth" x="720" y="720" z="3.6000000000000001"/>
-                <box lunit="cm" name="TaggerNorth" x="720" y="720" z="3.6000000000000001"/>
+                <box lunit="cm" name="TaggerSouth" x="900" y="720" z="7.6000000000000001"/>
+                <box lunit="cm" name="TaggerNorth" x="900" y="720" z="7.6000000000000001"/>
                 <box lunit="cm" name="TaggerEast" x="900" y="720" z="3.6000000000000001"/>
                 <box lunit="cm" name="TaggerWest" x="900" y="720" z="3.6000000000000001"/>
                 <box lunit="cm" name="TaggerBottom" x="810" y="990" z="4"/>
@@ -14895,15 +14895,15 @@
 						</physvol>
 						<physvol>
 								<volumeref ref="volCRTModule111"/>
-								<position name="posCRT_module111" unit="cm" x="0" y="-312.10000000000002" z="2.4000000000000004"/>
+								<position name="posCRT_module111" unit="cm" x="0" y="-312.10000000000002" z="-2.4000000000000004"/>
 						</physvol>
 						<physvol>
 								<volumeref ref="volCRTModule112"/>
-								<position name="posCRT_module112" unit="cm" x="0" y="-216.30000000000001" z="2.4000000000000004"/>
+								<position name="posCRT_module112" unit="cm" x="0" y="-216.30000000000001" z="-2.4000000000000004"/>
 						</physvol>
 						<physvol>
 								<volumeref ref="volCRTModule113"/>
-								<position name="posCRT_module113" unit="cm" x="0" y="-120.5" z="2.4000000000000004"/>
+								<position name="posCRT_module113" unit="cm" x="0" y="-120.5" z="-2.4000000000000004"/>
 						</physvol>
 					
                         <!-- orginal Geometry 
