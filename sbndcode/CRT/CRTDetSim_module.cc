@@ -229,7 +229,8 @@ void CRTDetSim::produce(art::Event & e) {
 
       double tTrue = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
       double tTrueLast = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset;
-      double eDep = ide.energyDeposited;
+      // double eDep = ide.energyDeposited;
+      double eDep = ide.energyDeposited * 1e-3; // from MeV to GeV
 
       std::vector<sim::AuxDetIDE> trueIdes;
       trueIdes.push_back(ide);
