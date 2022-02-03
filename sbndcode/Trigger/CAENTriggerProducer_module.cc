@@ -201,7 +201,7 @@ void CAENTriggerProducer::produce(art::Event & e)
    std::vector< raw::OpDetWaveform > wvf_vector; 
 
    // set the threshold for # of total PMTs
-   if (pmtTrigger_maxpassed > fpmtMaxThreshold){ // passes the initial threshold
+   if (pmtTrigger_maxpassed > fpmtMaxThreshold && event < 10){ // passes the initial threshold
       double trig_time = -999; 
       for (size_t i=0; i< pmtTrigger_npmtshigh.size(); i++){
          if (pmtTrigger_npmtshigh[i] >= fpmtThreshold){
