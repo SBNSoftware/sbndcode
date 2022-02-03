@@ -9,3 +9,5 @@ physics.producers.opdaq.TriggerThresholdADCArapuca: 500
 # Lower the PMT threshold to save the full waveform
 physics.producers.opdaq.TriggerThresholdADCPMT: 0
 
+# Do not apply optical triggers (done to save the full waveform)
+physics.producers.opdaq.ApplyTriggers: false
