@@ -554,7 +554,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  fsubrun=evt.subRun();
  fevent=evt.id().event(); 
  
- std::cout << frun << "  " << fsubrun << "  " << fevent << "\n";
+ //std::cout << "******************  " <<  frun << "  " << fsubrun << "  " << fevent << "  *****************\n";
  
  //===================Neutrino information =========================
  
@@ -602,12 +602,13 @@ void ToFAnalyzer::analyze(art::Event const& evt)
         }
 	
 	fg4_pdg.push_back(part->PdgCode());
-        fg4_trkid.push_back(part->TrackId());
+	fg4_trkid.push_back(part->TrackId());
         if(part->Process()=="primary") fg4is_prim.push_back(true);
 	else fg4is_prim.push_back(false);
 	fg4_T0.push_back(part->T());
 	art::Ptr<simb::MCTruth> truth=inventory_service->TrackIdToMCTruth_P(part->TrackId());
 	fg4_org.push_back(truth->NeutrinoSet());
+	//std::cout << "******* Total number of trajectory points : " << part->NumberTrajectoryPoints() <<"\n";
 	const TLorentzVector st_xyzt = part->Position(0);
 	double st_point[3] = {st_xyzt.X(), st_xyzt.Y(), st_xyzt.Z()};
 	fg4_stX.push_back(st_point[0]); 
@@ -637,6 +638,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
         for(size_t i=0; i<part->NumberTrajectoryPoints(); i++){
 	    const TLorentzVector& pos = part->Position(i);
             double point[3] = {pos.X(),pos.Y(),pos.Z()};
+	    //std::cout << "Trjectory point : " << i << "  " << pos.X() << "  " << pos.Y() << "  " << pos.Z() << "\n";
             if(cryo0.ContainsPosition(point) && !is_filled){ 
 	       is_filled=true;	   
 	       is_in_CRYO=true;
@@ -855,6 +857,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	       fLhit_pmthitY_vec.push_back(pos[1]);
 	       fLhit_pmthitZ_vec.push_back(pos[2]);
 	       fLhit_pmthitpe_vec.push_back(opHitList[ophit_index]->PE());
+	       //std::cout << "CRT time : " << crt->ts1_ns << "  CRT PE : " << crt->peshit << "   CRT Tagger : " << crt->tagger << "\n"; 
 	   }
 	}
      }
