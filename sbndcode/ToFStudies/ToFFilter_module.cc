@@ -137,12 +137,12 @@ private:
   bool fuse_Cflsh;
   bool fuse_Lflsh_hit;
   bool fuse_Cflsh_hit;
-  double ftof_Lhit_cut;
-  double ftof_Chit_cut;
-  double ftof_Lflsh_cut;
-  double ftof_Cflsh_cut;
-  double ftof_Lflshhit_cut;
-  double ftof_Cflshhit_cut;
+  float ftof_Lhit_cut;
+  float ftof_Chit_cut;
+  float ftof_Lflsh_cut;
+  float ftof_Cflsh_cut;
+  float ftof_Lflshhit_cut;
+  float ftof_Cflshhit_cut;
 };
 
 
@@ -160,12 +160,12 @@ fuse_Lflsh(pset.get<bool>("use_Lflsh")),
 fuse_Cflsh(pset.get<bool>("use_Cflsh")),
 fuse_Lflsh_hit(pset.get<bool>("use_Lflsh_hit")),
 fuse_Cflsh_hit(pset.get<bool>("use_Cflsh_hit")),		
-ftof_Lhit_cut(pset.get<double>("tof_Lhit_cut")),
-ftof_Chit_cut(pset.get<double>("tof_Chit_cut")),
-ftof_Lflsh_cut(pset.get<double>("tof_Lflsh_cut")),
-ftof_Cflsh_cut(pset.get<double>("tof_Cflsh_cut")),
-ftof_Lflshhit_cut(pset.get<double>("tof_Lflshhit_cut")),
-ftof_Cflshhit_cut(pset.get<double>("tof_Cflshhit_cut"))
+ftof_Lhit_cut(pset.get<float>("tof_Lhit_cut")),
+ftof_Chit_cut(pset.get<float>("tof_Chit_cut")),
+ftof_Lflsh_cut(pset.get<float>("tof_Lflsh_cut")),
+ftof_Cflsh_cut(pset.get<float>("tof_Cflsh_cut")),
+ftof_Lflshhit_cut(pset.get<float>("tof_Lflshhit_cut")),
+ftof_Cflshhit_cut(pset.get<float>("tof_Cflshhit_cut"))
 {
 }
 
