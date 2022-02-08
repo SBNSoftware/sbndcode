@@ -1,0 +1,344 @@
+#include "crtbacktracker_sbnd.fcl"
+
+BEGIN_PROLOG
+
+############################################## Configuration to run Analyzer module ###############################################################################
+
+config_tofana:
+{
+module_type: "ToFAnalyzer"
+GenLabel: "generator"
+SimLabel: "largeant"
+OpHitModuleLabel: "ophitpmt"
+OpFlashModuleLabel0: "opflashtpc0"
+OpFlashModuleLabel1: "opflashtpc1"
+CrtHitModuleLabel: "crthit"
+CrtTrackModuleLabel: "crttrack"
+CoincidenceWindow: 100.0
+OpDelay: 194.5
+FlashPeThresh: 10.0
+HitPeThresh: 5.0
+BeamLow: -200
+BeamUp: 1800
+LFlash: true
+LFlash_hit: true
+CFlash: true
+CFlash_hit: true
+Lhit: true
+Chit: true
+SaveNuInfo: false
+SaveG4Info: true
+G4timeUp: 1800
+G4timeLow: -9999
+keeponlytracks: true
+SaveTrueToFInfo: true
+CRTBackTrack: @local::standard_crtbacktracker
+}
+
+#################### Configuration to run Producer module (calculate ToF metric using largest optical hit inside coincidence window) ###############################
+
+config_Lhit:
+{
+module_type: "ToFProducer"
+OpHitModuleLabel: "ophitpmt"
+OpFlashModuleLabel0: "opflashtpc0"
+OpFlashModuleLabel1: "opflashtpc1"
+CrtHitModuleLabel: "crthit"
+CrtTrackModuleLabel: "crttrack"
+CoincidenceWindow: 200.0
+OpDelay: 194.5
+CRThitThresh: 10.0
+FlashPeThresh: 10.0
+HitPeThresh: 5.0
+BeamLow: -200.0
+BeamUp: 1800.0
+LFlash: false
+LFlash_hit: false
+CFlash: false
+CFlash_hit: false
+Lhit: true
+Chit: false
+CRTBackTrack: @local::standard_crtbacktracker
+}
+
+#################### Configuration to run Producer module (calculate ToF metric using closest optical hit inside coincidence window) #################################
+
+config_Chit:
+{
+module_type: "ToFProducer"
+OpHitModuleLabel: "ophitpmt"
+OpFlashModuleLabel0: "opflashtpc0"
+OpFlashModuleLabel1: "opflashtpc1"
+CrtHitModuleLabel: "crthit"
+CrtTrackModuleLabel: "crttrack"
+CoincidenceWindow: 200.0
+OpDelay: 194.5
+CRThitThresh: 10.0
+FlashPeThresh: 10.0
+HitPeThresh: 5.0
+BeamLow: -200.0
+BeamUp: 1800.0
+LFlash: false
+LFlash_hit: false
+CFlash: false
+CFlash_hit: false
+Lhit: false
+Chit: true
+CRTBackTrack: @local::standard_crtbacktracker
+}
+
+#################### Configuration to run Producer module (calculate ToF metric using largest optical flash inside coincidence window) #################################
+
+config_LFlash:
+{
+module_type: "ToFProducer"
+OpHitModuleLabel: "ophitpmt"
+OpFlashModuleLabel0: "opflashtpc0"
+OpFlashModuleLabel1: "opflashtpc1"
+CrtHitModuleLabel: "crthit"
+CrtTrackModuleLabel: "crttrack"
+CoincidenceWindow: 200.0
+OpDelay: 194.5
+CRThitThresh: 10.0
+FlashPeThresh: 10.0
+HitPeThresh: 5.0
+BeamLow: -200.0
+BeamUp: 1800.0
+LFlash: true
+LFlash_hit: false
+CFlash: false
+CFlash_hit: false
+Lhit: false
+Chit: false
+CRTBackTrack: @local::standard_crtbacktracker
+}
+
+#################### Configuration to run Producer module (calculate ToF metric using closest optical flash inside coincidence window) ##################################
+
+config_CFlash:
+{
+module_type: "ToFProducer"
+OpHitModuleLabel: "ophitpmt"
+OpFlashModuleLabel0: "opflashtpc0"
+OpFlashModuleLabel1: "opflashtpc1"
+CrtHitModuleLabel: "crthit"
+CrtTrackModuleLabel: "crttrack"
+CoincidenceWindow: 200.0
+OpDelay: 194.5
+CRThitThresh: 10.0
+FlashPeThresh: 10.0
+HitPeThresh: 5.0
+BeamLow: -200.0
+BeamUp: 1800.0
+LFlash: false
+LFlash_hit: false
+CFlash: true
+CFlash_hit: false
+Lhit: false
+Chit: false
+CRTBackTrack: @local::standard_crtbacktracker
+}
+
+############ Configuration to run Producer module (calculate ToF metric using earliest optical hit of the largest optical flash inside coincidence window) ###############
+
+config_LFlashHit:
+{
+module_type: "ToFProducer"
+OpHitModuleLabel: "ophitpmt"
+OpFlashModuleLabel0: "opflashtpc0"
+OpFlashModuleLabel1: "opflashtpc1"
+CrtHitModuleLabel: "crthit"
+CrtTrackModuleLabel: "crttrack"
+CoincidenceWindow: 200.0
+OpDelay: 194.5
+CRThitThresh: 10.0
+FlashPeThresh: 10.0
+HitPeThresh: 5.0
+BeamLow: -200.0
+BeamUp: 1800.0
+LFlash: false
+LFlash_hit: true
+CFlash: false
+CFlash_hit: false
+Lhit: false
+Chit: false
+CRTBackTrack: @local::standard_crtbacktracker
+}
+
+############ Configuration to run Producer module (calculate ToF metric using earliest optical hit of the closest optical flash inside coincidence window) ###############
+
+config_CFlashHit:
+{
+module_type: "ToFProducer"
+OpHitModuleLabel: "ophitpmt"
+OpFlashModuleLabel0: "opflashtpc0"
+OpFlashModuleLabel1: "opflashtpc1"
+CrtHitModuleLabel: "crthit"
+CrtTrackModuleLabel: "crttrack"
+CoincidenceWindow: 200.0
+OpDelay: 194.5
+CRThitThresh: 10.0
+FlashPeThresh: 10.0
+HitPeThresh: 5.0
+BeamLow: -200.0
+BeamUp: 1800.0
+LFlash: false
+LFlash_hit: false
+CFlash: false
+CFlash_hit: true
+Lhit: false
+Chit: false
+CRTBackTrack: @local::standard_crtbacktracker
+}
+
+#################### Configuration to run Filter module (remove cosmic like events by looking at ToF values calculated using largest optical hit methode) #################
+
+config_Lhit_Filt:
+{
+module_type: "ToFFilter"
+tofLhitLabel: "ToFLhit"
+tofChitLabel: "ToFChit"
+tofLflashLabel: "ToFLFlash"
+tofCflashLabel: "ToFCFlash"
+tofLflashhitLabel: "ToFLFlashHit"
+tofCflashhitLabel: "ToFCFlashHit"
+use_Lhit: true
+use_Chit: false
+use_Lflsh: false
+use_Cflsh: false
+use_Lflsh_hit: false
+use_Cflsh_hit: false
+tof_Lhit_cut: -10.0
+tof_Chit_cut: -10.0
+tof_Lflsh_cut: -10.0
+tof_Cflsh_cut: -10.0
+tof_Lflshhit_cut: -10.0
+tof_Cflshhit_cut: -10.0
+}
+
+#################### Configuration to run Filter module (remove cosmic like events by looking at ToF values calculated using closest optical hit methode) #################
+
+config_Chit_Filt:
+{
+module_type: "ToFFilter"
+tofLhitLabel: "ToFLhit"
+tofChitLabel: "ToFChit"
+tofLflashLabel: "ToFLFlash"
+tofCflashLabel: "ToFCFlash"
+tofLflashhitLabel: "ToFLFlashHit"
+tofCflashhitLabel: "ToFCFlashHit"
+use_Lhit: false
+use_Chit: true
+use_Lflsh: false
+use_Cflsh: false
+use_Lflsh_hit: false
+use_Cflsh_hit: false
+tof_Lhit_cut: -10.0
+tof_Chit_cut: -10.0
+tof_Lflsh_cut: -10.0
+tof_Cflsh_cut: -10.0
+tof_Lflshhit_cut: -10.0
+tof_Cflshhit_cut: -10.0
+}
+
+#################### Configuration to run Filter module (remove cosmic like events by looking at ToF values calculated using largest optical flash methode) ################
+
+config_LFlash_Filt:
+{
+module_type: "ToFFilter"
+tofLhitLabel: "ToFLhit"
+tofChitLabel: "ToFChit"
+tofLflashLabel: "ToFLFlash"
+tofCflashLabel: "ToFCFlash"
+tofLflashhitLabel: "ToFLFlashHit"
+tofCflashhitLabel: "ToFCFlashHit"
+use_Lhit: false
+use_Chit: false
+use_Lflsh: true
+use_Cflsh: false
+use_Lflsh_hit: false
+use_Cflsh_hit: false
+tof_Lhit_cut: -10.0
+tof_Chit_cut: -10.0
+tof_Lflsh_cut: -10.0
+tof_Cflsh_cut: -10.0
+tof_Lflshhit_cut: -10.0
+tof_Cflshhit_cut: -10.0
+}
+
+#################### Configuration to run Filter module (remove cosmic like events by looking at ToF values calculated using closest optical flash methode) ################
+
+config_CFlash_Filt:
+{
+module_type: "ToFFilter"
+tofLhitLabel: "ToFLhit"
+tofChitLabel: "ToFChit"
+tofLflashLabel: "ToFLFlash"
+tofCflashLabel: "ToFCFlash"
+tofLflashhitLabel: "ToFLFlashHit"
+tofCflashhitLabel: "ToFCFlashHit"
+use_Lhit: false
+use_Chit: false
+use_Lflsh: false
+use_Cflsh: true
+use_Lflsh_hit: false
+use_Cflsh_hit: false
+tof_Lhit_cut: -10.0
+tof_Chit_cut: -10.0
+tof_Lflsh_cut: -10.0
+tof_Cflsh_cut: -10.0
+tof_Lflshhit_cut: -10.0
+tof_Cflshhit_cut: -10.0
+}
+
+################ Configuration to run Filter module (remove cosmic like events by looking at ToF values calculated using earliest hit of the largest flash) ###################
+
+config_LFlashHit_Filt:
+{
+module_type: "ToFFilter"
+tofLhitLabel: "ToFLhit"
+tofChitLabel: "ToFChit"
+tofLflashLabel: "ToFLFlash"
+tofCflashLabel: "ToFCFlash"
+tofLflashhitLabel: "ToFLFlashHit"
+tofCflashhitLabel: "ToFCFlashHit"
+use_Lhit: false
+use_Chit: false
+use_Lflsh: false
+use_Cflsh: false
+use_Lflsh_hit: true
+use_Cflsh_hit: false
+tof_Lhit_cut: -10.0
+tof_Chit_cut: -10.0
+tof_Lflsh_cut: -10.0
+tof_Cflsh_cut: -10.0
+tof_Lflshhit_cut: -10.0
+tof_Cflshhit_cut: -10.0
+}
+
+################ Configuration to run Filter module (remove cosmic like events by looking at ToF values calculated using earliest hit of the closest flash) ###################
+
+config_CFlashHit_Filt:
+{
+module_type: "ToFFilter"
+tofLhitLabel: "ToFLhit"
+tofChitLabel: "ToFChit"
+tofLflashLabel: "ToFLFlash"
+tofCflashLabel: "ToFCFlash"
+tofLflashhitLabel: "ToFLFlashHit"
+tofCflashhitLabel: "ToFCFlashHit"
+use_Lhit: false
+use_Chit: false
+use_Lflsh: false
+use_Cflsh: false
+use_Lflsh_hit: false
+use_Cflsh_hit: true
+tof_Lhit_cut: -10.0
+tof_Chit_cut: -10.0
+tof_Lflsh_cut: -10.0
+tof_Cflsh_cut: -10.0
+tof_Lflshhit_cut: -10.0
+tof_Cflshhit_cut: -10.0
+}
+
+END_PROLOG

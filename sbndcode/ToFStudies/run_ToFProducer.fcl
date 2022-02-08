@@ -9,11 +9,10 @@
 #include "signalservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-process_name: ToFAna
+process_name: ToFProd
 
 services:
 {
-  TFileService: { fileName: "ToF_Analyzer.root" }
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
@@ -32,16 +31,41 @@ source:
 
 physics:
 {
- producers:{}
+ producers:{
+       ToFLhit: @local::config_Lhit
+       ToFLFlash: @local::config_LFlash
+       ToFLFlashHit: @local::config_LFlashHit
+       ToFChit: @local::config_Chit
+       ToFCFlash: @local::config_CFlash
+       ToFCFlashHit: @local::config_CFlashHit
+ }
  
  filters:  {} 
  
- analyzers:{
-    TOF: @local::config_tofana
- }
+ analyzers:{}
  
- ana:  [ TOF ]
- end_paths:     [  ana ] 
+ #reco: [ ToFLFlashHit ]
+ 
+ ############# if you want to save ToF values calculated in different methods use the following path in the trigger path ############
+ 
+ fullreco : [ ToFLhit, ToFLFlash, ToFLFlashHit, ToFChit, ToFCFlash, ToFCFlashHit ]
+ 
+ stream: [ out ]
+ 
+ trigger_paths: [ reco ] 
+ 
+ end_paths: [ stream ]
 }
 
-outputs:{}
+outputs:
+{
+ out:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   #SelectEvents: [ reco ]
+   SelectEvents: [ fullreco ]
+   fileName: @local::sbnd_rootoutput.fileName
+ } 
+}
+
