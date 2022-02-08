@@ -341,6 +341,7 @@ fCrtHitModuleLabel(pset.get<art::InputTag>("CrtHitModuleLabel")),
 fCrtTrackModuleLabel(pset.get<art::InputTag>("CrtTrackModuleLabel")),
 fCoinWindow(pset.get<double>("CoincidenceWindow")),
 fOpDelay(pset.get<double>("OpDelay")), // the cable time delay (135 ns) + PMTTransit Time delay (55 ns) + average TPB emission time delay (~4.5 ns)
+fCRThitThresh(pset.get<double>("CRThitThresh")),
 fFlashPeThresh(pset.get<int>("FlashPeThresh")),
 fHitPeThresh(pset.get<int>("HitPeThresh")),
 fBeamLow(pset.get<double>("BeamLow")),

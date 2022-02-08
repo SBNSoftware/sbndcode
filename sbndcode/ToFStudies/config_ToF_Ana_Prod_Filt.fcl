@@ -16,6 +16,7 @@ CrtHitModuleLabel: "crthit"
 CrtTrackModuleLabel: "crttrack"
 CoincidenceWindow: 100.0
 OpDelay: 194.5
+CRThitThresh: 10.0
 FlashPeThresh: 10.0
 HitPeThresh: 5.0
 BeamLow: -200
@@ -45,7 +46,7 @@ OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
 CrtHitModuleLabel: "crthit"
 CrtTrackModuleLabel: "crttrack"
-CoincidenceWindow: 200.0
+CoincidenceWindow: 100.0
 OpDelay: 194.5
 CRThitThresh: 10.0
 FlashPeThresh: 10.0
@@ -71,7 +72,7 @@ OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
 CrtHitModuleLabel: "crthit"
 CrtTrackModuleLabel: "crttrack"
-CoincidenceWindow: 200.0
+CoincidenceWindow: 100.0
 OpDelay: 194.5
 CRThitThresh: 10.0
 FlashPeThresh: 10.0
@@ -97,7 +98,7 @@ OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
 CrtHitModuleLabel: "crthit"
 CrtTrackModuleLabel: "crttrack"
-CoincidenceWindow: 200.0
+CoincidenceWindow: 100.0
 OpDelay: 194.5
 CRThitThresh: 10.0
 FlashPeThresh: 10.0
@@ -123,7 +124,7 @@ OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
 CrtHitModuleLabel: "crthit"
 CrtTrackModuleLabel: "crttrack"
-CoincidenceWindow: 200.0
+CoincidenceWindow: 100.0
 OpDelay: 194.5
 CRThitThresh: 10.0
 FlashPeThresh: 10.0
@@ -149,7 +150,7 @@ OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
 CrtHitModuleLabel: "crthit"
 CrtTrackModuleLabel: "crttrack"
-CoincidenceWindow: 200.0
+CoincidenceWindow: 100.0
 OpDelay: 194.5
 CRThitThresh: 10.0
 FlashPeThresh: 10.0
@@ -175,7 +176,7 @@ OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
 CrtHitModuleLabel: "crthit"
 CrtTrackModuleLabel: "crttrack"
-CoincidenceWindow: 200.0
+CoincidenceWindow: 100.0
 OpDelay: 194.5
 CRThitThresh: 10.0
 FlashPeThresh: 10.0
