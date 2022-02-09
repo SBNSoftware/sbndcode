@@ -52,7 +52,7 @@ physics:
  
  stream: [ out ]
  
- trigger_paths: [ reco ] 
+ trigger_paths: [ fullreco ] 
  
  end_paths: [ stream ]
 }
