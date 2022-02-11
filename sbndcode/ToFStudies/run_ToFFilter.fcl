@@ -1,6 +1,6 @@
 ############################### NOTE : This fcl file should be run on an Art-ROOT files which has ToF data products ##################
 
-#include "congig_ToF_Ana_Prod_Filt.fcl"
+#include "config_ToF_Ana_Prod_Filt.fcl"
 
 #include "simulationservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
@@ -54,7 +54,7 @@ physics:
  
  ################## Make sure to specify only one of the module labels here ######
  
- reco : [ ToFLFlashFilt ]
+ reco : [ ToFLhitFilt ]
  
  stream: [ out ]
  
