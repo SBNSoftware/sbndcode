@@ -44,15 +44,11 @@ physics:
  
  analyzers:{}
  
- #reco: [ ToFLFlashHit ]
- 
- ############# if you want to save ToF values calculated in different methods use the following path in the trigger path ############
- 
- fullreco : [ ToFLhit, ToFLFlash, ToFLFlashHit, ToFChit, ToFCFlash, ToFCFlashHit ]
+ reco: [ ToFLhit, ToFLFlash, ToFLFlashHit, ToFChit, ToFCFlashHit ]
  
  stream: [ out ]
  
- trigger_paths: [ fullreco ] 
+ trigger_paths: [ reco ] 
  
  end_paths: [ stream ]
 }
@@ -63,8 +59,7 @@ outputs:
  {
    module_type: RootOutput
    dataTier: "reconstructed"
-   #SelectEvents: [ reco ]
-   SelectEvents: [ fullreco ]
+   SelectEvents: [ reco ]
    fileName: @local::sbnd_rootoutput.fileName
  } 
 }
