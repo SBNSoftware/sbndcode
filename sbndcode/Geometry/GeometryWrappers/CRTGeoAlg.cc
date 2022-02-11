@@ -144,6 +144,10 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         usedStrips.push_back(stripName);
 
         // Get the limits in local coordinates
+	// Note that these dimensions DO NOT conform to the expected mapping
+	// width  = conventional strip length (one end to another)
+	// height = conventional strip width (distance between the two SiPMs)
+	// length = conventional thickness
         double halfWidth = auxDetSensitive.HalfWidth1();
         double halfHeight = auxDetSensitive.HalfHeight();
         double halfLength = auxDetSensitive.Length()/2;
@@ -178,7 +182,8 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         // Sipm0 is on the left in local coords
         double sipm0Y = -halfHeight;
         double sipm1Y = halfHeight;
-        // In local coordinates the X position is at half width (top if top) (bottom if not)
+        // In local coordinates the X position is at half width (remembering width is actually length)
+	// (top if top) (bottom if not)
         double sipmX = halfWidth;
         if(!fModules[moduleName].top) sipmX = - halfWidth;
         double sipm0XYZ[3] = {sipmX, sipm0Y, 0};
@@ -388,6 +393,9 @@ std::vector<double> CRTGeoAlg::StripLimitsWithChargeSharing(std::string stripNam
   double halfWidth = sensitiveGeo.HalfWidth1();
   double halfHeight = sensitiveGeo.HalfHeight();
   double halfLength = sensitiveGeo.HalfLength();
+
+  // Note that for the purpose of this reconstruction the "height" coordinates (in y)
+  // is the dimension we would conventionally think of as width (distance between the SiPMs)
 
   // Get the maximum strip limits in world coordinates
   double l1[3] = {halfWidth, -halfHeight + x + ex, halfLength};
