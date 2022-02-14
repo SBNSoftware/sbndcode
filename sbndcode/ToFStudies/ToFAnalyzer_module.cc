@@ -119,8 +119,8 @@ public:
   ToFAnalyzer& operator=(ToFAnalyzer const&) = delete;
   ToFAnalyzer& operator=(ToFAnalyzer&&) = delete;
 
-  void beginJob();
-  void analyze(art::Event const& e) override;
+  void beginJob() override;
+  void analyze(art::Event const& evt) override;
   bool HitCompare(const art::Ptr<CRTHit>& h1, const art::Ptr<CRTHit>& h2);
   void ClearVecs();
   double length(const simb::MCParticle& part, TVector3& start, TVector3& end);

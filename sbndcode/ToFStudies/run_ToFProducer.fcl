@@ -44,7 +44,7 @@ physics:
  
  analyzers:{}
  
- reco: [ ToFLhit, ToFLFlash, ToFLFlashHit, ToFChit, ToFCFlashHit ]
+ reco: [ ToFLhit, ToFLFlash, ToFLFlashHit, ToFChit, ToFCFlash, ToFCFlashHit ]
  
  stream: [ out ]
  

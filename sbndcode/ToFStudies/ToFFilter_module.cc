@@ -122,7 +122,7 @@ public:
   ToFFilter& operator=(ToFFilter const&) = delete;
   ToFFilter& operator=(ToFFilter&&) = delete;
 
-  bool filter(art::Event& e) override;
+  bool filter(art::Event& evt) override;
 
 private:
   art::InputTag ftofLhitLabel;

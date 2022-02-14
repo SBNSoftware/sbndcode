@@ -122,7 +122,7 @@ public:
   ToFProducer& operator=(ToFProducer const&) = delete;
   ToFProducer& operator=(ToFProducer&&) = delete;
 
-  void beginJob();
+  void beginJob() override;
   void produce(art::Event& evt) override;
   bool HitCompare(const art::Ptr<CRTHit>& h1, const art::Ptr<CRTHit>& h2);
   
