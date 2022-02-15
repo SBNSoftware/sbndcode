@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+pmtArtdaqFragmentProducer:
+{
+  module_type: "pmtArtdaqFragmentProducer"
+  InputModuleNameWvfm: "opdaq"
+  InputModuleNameTrigger: "pmttriggerproducer"
+  Baseline: 8000
+  Threshold: 7900
+  Verbose: true
+}
+
+END_PROLOG
+
+
