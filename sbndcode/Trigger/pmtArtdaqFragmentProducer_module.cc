@@ -90,11 +90,7 @@ private:
 
   // waveforms
   std::vector<std::vector<short>> wvf_channel;
-  std::vector<std::vector<short>> wvf_bin_channel;
-
-  // downsampled waveforms
-  std::vector<std::vector<short>> wvf_channel_down;
-  std::vector<std::vector<short>> wvf_bin_channel_down;  
+  std::vector<short> wvf_beam_trigger;
    
   // sampling rate
   double fSampling;
@@ -162,14 +158,11 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   }
 
   // create empty vectors to hold waveforms for each channel
-  std::vector<short> wvf_bin_0; wvf_bin_0.reserve((int)(3000/fSampling));
   std::vector<short> wvf_0; wvf_0.reserve((int)(3000/fSampling)); 
   for (double i = -1500.0; i<1500.0+(1./fSampling); i+=(1./fSampling)){
-    wvf_bin_0.push_back(0);
     wvf_0.push_back(fBaseline);
   }
   for (size_t i = 0; i < channelList.size(); i++){
-    wvf_bin_channel.push_back(wvf_bin_0);
     wvf_channel.push_back(wvf_0);
   }
 
@@ -192,27 +185,21 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     double fStartTime = wvf.TimeStamp(); // in us
     double fEndTime = double(wvf.size()) / fSampling + fStartTime; // in us
 
-    //create binary waveform and full waveform
-    std::vector<short> wvf_bin; wvf_bin.reserve((short)(3000/fSampling));
+    // create full waveform
     std::vector<short> wvf_full; wvf_full.reserve((short)(3000/fSampling));
 
     if (fStartTime > -1500.0){
       for (double i = fStartTime+1500.0; i>0.; i-=(1./fSampling)){
-        wvf_bin.push_back(0);
         wvf_full.push_back(fBaseline);
       }
     }
 
     for(unsigned int i = 0; i < wvf.size(); i++) {
-      if((double)wvf[i]<fThreshold) wvf_bin.push_back(1);
-      else  wvf_bin.push_back(0);
-
       wvf_full.push_back(wvf[i]);
     }
 
     if (fEndTime < 1500.0){
       for (double i = 1500.0-fEndTime; i>0.; i-=(1./fSampling)){
-        wvf_bin.push_back(0);
         wvf_full.push_back(fBaseline);
       }
     }
@@ -223,28 +210,18 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     if (ich != channelList.end()){
       i_ch = ich - channelList.begin();
     }
-    if (wvf_bin_channel.at(i_ch).size() < wvf_bin.size()){
-      if (fVerbose) std::cout<<"Binary waveform -- Previous Channel" << fChNumber <<" Size: "<<wvf_bin_channel.at(i_ch).size()<<"New Channel" << fChNumber <<" Size: "<<wvf_bin.size()<<std::endl;
-      for(unsigned int i = wvf_bin_channel.at(i_ch).size(); i < wvf_bin.size(); i++) {
-        wvf_bin_channel.at(i_ch).push_back(0);
-      }
-    }
     if (wvf_channel.at(i_ch).size() < wvf_full.size()){
       if (fVerbose) std::cout<<"Full waveform -- Previous Channel" << fChNumber <<" Size: "<<wvf_channel.at(i_ch).size()<<"New Channel" << fChNumber <<" Size: "<<wvf_full.size()<<std::endl;
       for(unsigned int i = wvf_channel.at(i_ch).size(); i < wvf_full.size(); i++) {
         wvf_channel.at(i_ch).push_back(fBaseline);
       }
     }
-    for(unsigned int i = 0; i < wvf_bin.size(); i++) {
-      if(wvf_bin_channel.at(i_ch).at(i) == 1 || wvf_bin[i] == 1) wvf_bin_channel.at(i_ch)[i] = 1;
-      else wvf_bin_channel.at(i_ch)[i] = 0;
-    }
     for(unsigned int i = 0; i < wvf_full.size(); i++) {
        wvf_channel.at(i_ch)[i] += (wvf_full[i] - fBaseline);
     } 
 
     hist_id++;
-    //if (hist_id < 15) {
+    if (hist_id < 4) {
     // histogram for testing
     std::stringstream histname;
     histname << "event_" << fEvent
@@ -258,99 +235,10 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     for(unsigned int i = 0; i < wvf.size(); i++) {
       wvfHist->SetBinContent(i+1, (double)wvf[i]);
     }
-    //}
-    
-    wvf_bin.clear();
+    }
+
     wvfmHandle.clear();
-
   } // waveform handle loop
-
-  // loop through waveforms applying factor 4 downsampling (simulate at 2ns, hardware at 8ns)
-  // binary
-  int wvf_num = -1;
-  for (auto wvf_bin : wvf_bin_channel){
-    wvf_num++;
-    int fChNumber = channelList.at(wvf_num);
-    double fStartTime = -1500.0;
-    double fEndTime = 1500.0;
-
-    // downscale binary waveform by 4
-    std::vector<short> wvf_bin_down; wvf_bin_down.reserve((short)(3000/fSampling/4));
-    for(unsigned int i = 0; i < wvf_bin.size(); i++) {
-      if(i%4==0) wvf_bin_down.push_back(wvf_bin[i]);
-    }
-
-    // save
-    wvf_bin_channel_down.push_back(wvf_bin_down);
-
-    // plot for testing
-    if (wvf_num < 1){
-       std::stringstream histname_binary;
-       histname_binary << "event_" << fEvent
-                << "_opchannel_" << fChNumber
-                << "_binary";
-       TH1D *wvfbHist = tfs->make< TH1D >(histname_binary.str().c_str(), "Binary Waveform", wvf_bin.size(), fStartTime, fEndTime);
-       wvfbHist->GetXaxis()->SetTitle("t (#mus)");
-       std::cout << "size of binary wvf: " << wvf_bin.size() << std::endl;
-       for(unsigned int i = 0; i < wvf_bin.size(); i++) {
-         wvfbHist->SetBinContent(i + 1, wvf_bin[i]);
-       }
-     
-       std::stringstream histname_binary_down;
-       histname_binary_down << "event_" << fEvent
-                << "_opchannel_" << fChNumber
-                << "_binary_down";
-
-       TH1D *wvfbdHist = tfs->make< TH1D >(histname_binary_down.str().c_str(), "Downsampled Binary Waveform", wvf_bin_down.size(), fStartTime, fEndTime);
-       wvfbdHist->GetXaxis()->SetTitle("t (#mus)");
-       for(unsigned int i = 0; i < wvf_bin_down.size(); i++) {
-         wvfbdHist->SetBinContent(i + 1, wvf_bin_down[i]);
-       }
-    }
-  }
-  // full
-  wvf_num = -1;
-  for (auto wvf : wvf_channel){
-    wvf_num++;
-    int fChNumber = channelList.at(wvf_num);
-    double fStartTime = -1500.0;
-    double fEndTime = 1500.0;
-
-    // downscale full waveform by 4
-    std::vector<short> wvf_down; wvf_down.reserve((short)(3000/fSampling/4));
-    for(unsigned int i = 0; i < wvf.size(); i++) {
-      if(i%4==0) wvf_down.push_back(wvf[i]);
-    }
-
-    // save
-    wvf_channel_down.push_back(wvf_down);
-
-    // plot for testing
-    if (wvf_num < 1){
-       std::stringstream histname_full;
-       histname_full << "event_" << fEvent
-                << "_opchannel_" << fChNumber
-                << "_full";
-       TH1D *wvfHist = tfs->make< TH1D >(histname_full.str().c_str(), "Full Waveform", wvf.size(), fStartTime, fEndTime);
-       wvfHist->GetXaxis()->SetTitle("t (#mus)");
-       //std::cout << "wvf" << std::endl;
-       for(unsigned int i = 0; i < wvf.size(); i++) {
-         wvfHist->SetBinContent(i + 1, wvf[i]);
-       }
-     
-       std::stringstream histname_full_down;
-       histname_full_down << "event_" << fEvent
-                << "_opchannel_" << fChNumber
-                << "_full_down";
-
-       TH1D *wvfdHist = tfs->make< TH1D >(histname_full_down.str().c_str(), "Downsampled Full Waveform", wvf_down.size(), fStartTime, fEndTime);
-       wvfdHist->GetXaxis()->SetTitle("t (#mus)");
-       //std::cout << "wvf_down" << std::endl;
-       for(unsigned int i = 0; i < wvf_down.size(); i++) {
-         wvfdHist->SetBinContent(i + 1, wvf_down[i]);
-       }
-    }
-  }
 
   // access hardware trigger information
   std::vector<size_t> triggerIndex; 
@@ -363,7 +251,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
         idx += 1280;
       }
     }
-  }
+  } // trigger handle loop
 
   if (fVerbose) std::cout << "Number of PMT hardware triggers found: " << triggerIndex.size() << std::endl; 
   
@@ -377,34 +265,30 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   uint32_t wfm_length = 5120; // ~10us, 2ns tick
 
   // fragment properties
-  uint32_t timestampVal = std::time(nullptr); // current time
   uint32_t sequenceIDVal = fEvent;
-        
-  // create and populate metadata
-  sbndaq::CAENV1730FragmentMetadata metadata;
-  metadata.nChannels = nChannelsFrag;
-  metadata.nSamples = wfm_length;
-  metadata.timeStampSec = timestampVal;
-  metadata.timeStampNSec = timestampVal*1e9;
 
+  // create and populate common metadata
+  sbndaq::CAENV1730FragmentMetadata metadata;
+  metadata.nChannels = nChannelsFrag + 1; // 15 PMT channels + final channel to store beam window / trigger information
+  metadata.nSamples = wfm_length;
+  
   // fragment handle properties
   uint32_t eventCounterVal = fEvent;
   uint32_t boardIDVal = 0;
   uint32_t triggerTimeTagVal = (uint32_t)CLHEP::RandFlat::shoot(&fTriggerTimeEngine, 0, 1e9/16);
-   
-
+  
   // loop over PMT hardware triggers
   for (auto wvfIdx : triggerIndex) {
-
-    // index in downsampled waveform, 8ns tick
-    //size_t trigIdx_down = wvfIdx;
-    //size_t startIdx_down = trigIdx_down-125; // -1us
-    //size_t endIdx_down = trigIdx_down+1125; // +9us
 
     // index in full waveform, 2ns tick
     size_t trigIdx = wvfIdx*4;
     size_t startIdx = trigIdx-500; // -1us
-    //size_t endIdx = trigIdx+4500; // +9us
+
+    // determine and set timestamp for particular trigger
+    double triggerTime = -1500 + wvfIdx*0.008; // in us
+    double timestampVal = 0.5 + (triggerTime*1e-6); // in seconds // std::time(nullptr); // current time
+    metadata.timeStampSec = (uint32_t)timestampVal;
+    metadata.timeStampNSec = (uint32_t)(timestampVal*1e9);
 
     // create fragments to hold waveforms, set properties and populate
     // 15 PMTs stored per fragment, 120/15 = 8 fragments per trigger
@@ -442,15 +326,30 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
         }
       }
 
+      // create add beam window trigger waveform
+      ch_offset = (size_t)(nChannelsFrag*wfm_length);
+      size_t beamStartIdx = 1500*1e3/2;
+      size_t beamEndIdx = beamStartIdx + 1600/2;
+      // loop over waveform
+      for (size_t i_t = 0; i_t < wfm_length; i_t++) {
+        // set value
+        if (startIdx + i_t >= beamStartIdx && startIdx + i_t <= beamEndIdx) value = 1;
+        else value = 0;
+        value_ptr = data_begin + ch_offset + i_t;
+        *value_ptr = value;
+      }
+
       // add fragment to vector
       vecFrag->push_back(*fragment_uptr);  
     }
   }
 
+  if(fVerbose) std::cout << "Fragments written: " << vecFrag->size() << std::endl;
+
   // plot for testing
   for (size_t i_frag = 0; i_frag < 8; i_frag++) {
 
-  artdaq::Fragment frag = (*vecFrag)[i_frag];
+  artdaq::Fragment frag = (*vecFrag)[7*7+ i_frag];
 
   const uint16_t* data_begin = reinterpret_cast<const uint16_t*>(frag.dataBeginBytes() 
                  + sizeof(sbndaq::CAENV1730EventHeader));
@@ -460,7 +359,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   size_t ch_offset = 0;
 
   // loop over channels
-  for (size_t i_ch = 0; i_ch < 15; i_ch++) {
+  for (size_t i_ch = 0; i_ch < 16; i_ch++) {
     ch_offset = (size_t)(i_ch*wfm_length);
     std::vector<uint16_t> wvf_frag; wvf_frag.reserve(wfm_length);
   
@@ -474,9 +373,16 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     }
 
     std::stringstream histname_frag;
+    if (i_ch < 15) {
     histname_frag << "event_" << fEvent
             << "_opchannel_" << channelList[i_ch+i_frag*15]
             << "_full_fromFragment";
+    }
+    else {
+      histname_frag << "event_" << fEvent
+            << "_beamTrigger"
+            << "_full_fromFragment_" << i_frag;  
+    }
 
     TH1D *wvFragHist = tfs->make< TH1D >(histname_frag.str().c_str(), "Full Waveform from fragment", wvf_frag.size(), 0, 10*1e9);
     wvFragHist->GetXaxis()->SetTitle("t (ns)");
