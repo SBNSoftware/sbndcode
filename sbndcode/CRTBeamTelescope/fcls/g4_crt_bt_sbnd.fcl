@@ -15,3 +15,5 @@ physics.producers.pdfastsim: @erase
 physics.producers.pdfastsimout: @erase
 physics.producers.simdrift: @erase
 physics.producers.mcreco: @erase
+
+services.ParticleListAction.keepEMShowerDaughters: false
