@@ -25,6 +25,7 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "larcoreobj/SummaryData/POTSummary.h"
+#include "lardataobj/Simulation/AuxDetHit.h"
 
 class CRTAnalysis;
 
@@ -48,6 +49,8 @@ public:
 private:
 
   std::string _mctruth_label;
+  std::string _g4_label;
+  std::string _auxdethit_label;
   std::string _crthit_label;
   std::string _crttrack_label;
 
@@ -63,6 +66,18 @@ private:
   float _mct_sp_vx; ///< Single particle vertex X
   float _mct_sp_vy; ///< Single particle vertex Y
   float _mct_sp_vz; ///< Single particle vertex Z
+
+  std::vector<int> _mcp_pdg; ///< G4 MCParticle PDG
+  std::vector<double> _mcp_endx; ///< G4 MCParticle end point X
+  std::vector<double> _mcp_endy; ///< G4 MCParticle end point Y
+  std::vector<double> _mcp_endz; ///< G4 MCParticle end point Z
+  std::vector<int> _mcp_isprimary; ///< G4 MCParticle, true if primary
+
+  std::vector<double> _adh_e; ///< AuxDetHit deposited energy
+  std::vector<double> _adh_x; ///< AuxDetHit X
+  std::vector<double> _adh_y; ///< AuxDetHit Y
+  std::vector<double> _adh_z; ///< AuxDetHit Z
+  std::vector<double> _adh_p_exit; ///< AuxDetHit exit momentum
 
   std::vector<double> _chit_x; ///< CRT hit x
   std::vector<double> _chit_y; ///< CRT hit y
@@ -94,6 +109,8 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   // More initializers here.
 {
   _mctruth_label = p.get<std::string>("MCTruthLabel", "generator");
+  _g4_label = p.get<std::string>("G4Label", "largeant");
+  _auxdethit_label = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
   _crthit_label = p.get<std::string>("CRTHitLabel", "crthit");
   _crttrack_label = p.get<std::string>("CRTTrackLabel", "crttrack");
 
@@ -112,6 +129,18 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("mct_sp_vx", &_mct_sp_vx, "mct_sp_vx/F");
   _tree->Branch("mct_sp_vy", &_mct_sp_vy, "mct_sp_vy/F");
   _tree->Branch("mct_sp_vz", &_mct_sp_vz, "mct_sp_vz/F");
+
+  _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
+  _tree->Branch("mcp_endx", "std::vector<double>", &_mcp_endx);
+  _tree->Branch("mcp_endy", "std::vector<double>", &_mcp_endy);
+  _tree->Branch("mcp_endz", "std::vector<double>", &_mcp_endz);
+  _tree->Branch("mcp_isprimary", "std::vector<int>", &_mcp_isprimary);
+
+  _tree->Branch("adh_e", "std::vector<double>", &_adh_e);
+  _tree->Branch("adh_x", "std::vector<double>", &_adh_x);
+  _tree->Branch("adh_y", "std::vector<double>", &_adh_y);
+  _tree->Branch("adh_z", "std::vector<double>", &_adh_z);
+  _tree->Branch("adh_p_exit", "std::vector<double>", &_adh_p_exit);
 
   _tree->Branch("chit_x", "std::vector<double>", &_chit_x);
   _tree->Branch("chit_y", "std::vector<double>", &_chit_y);
@@ -155,6 +184,30 @@ void CRTAnalysis::analyze(art::Event const& e)
   }
   std::vector<art::Ptr<simb::MCTruth>> mct_v;
   art::fill_ptr_vector(mct_v, mct_h);
+
+  //
+  // Get the MCParticles from G4
+  //
+  art::Handle<std::vector<simb::MCParticle>> mcp_h;
+  e.getByLabel(_g4_label, mcp_h);
+  if(!mcp_h.isValid()){
+    std::cout << "MCTruth product " << _g4_label << " not found..." << std::endl;
+    throw std::exception();
+  }
+  std::vector<art::Ptr<simb::MCParticle>> mcp_v;
+  art::fill_ptr_vector(mcp_v, mcp_h);
+
+  //
+  // Get the AuxDetHits from G4
+  //
+  art::Handle<std::vector<sim::AuxDetHit>> adh_h;
+  e.getByLabel(_auxdethit_label, adh_h);
+  if(!adh_h.isValid()){
+    std::cout << "AuxDetHit product " << _auxdethit_label << " not found..." << std::endl;
+    throw std::exception();
+  }
+  std::vector<art::Ptr<sim::AuxDetHit>> adh_v;
+  art::fill_ptr_vector(adh_v, adh_h);
 
   //
   // Get the CRT Hits
@@ -203,8 +256,59 @@ void CRTAnalysis::analyze(art::Event const& e)
     _mct_sp_vx = particle.Vx();
     _mct_sp_vy = particle.Vy();
     _mct_sp_vz = particle.Vz();
-
   }
+
+
+  //
+  // Fill the MCParticles in the tree
+  //
+  size_t n_mcp = mcp_v.size();
+  _mcp_pdg.resize(n_mcp);
+  _mcp_endx.resize(n_mcp);
+  _mcp_endy.resize(n_mcp);
+  _mcp_endz.resize(n_mcp);
+  _mcp_isprimary.resize(n_mcp);
+
+  for (size_t i = 0; i < n_mcp; i++) {
+    auto particle = mcp_v[i];
+    if (particle->StatusCode() != 1) continue;
+    // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
+    _mcp_pdg[i] = particle->PdgCode();
+    _mcp_endx[i] = particle->EndX();
+    _mcp_endy[i] = particle->EndY();
+    _mcp_endz[i] = particle->EndZ();
+    _mcp_isprimary[i] = particle->Process() == "primary";
+    std::cout << "MCP " << _mcp_pdg[i] << ", p = " << particle->P() << ", process = "
+              << particle->Process() << ": end point = ("
+              << _mcp_endx[i] << ", " << _mcp_endy[i] << ", " << _mcp_endz[i]
+              << ") - end process: " << particle->EndProcess() << std::endl;
+  }
+
+
+  //
+  // Fill the AuxDetHits in the tree
+  //
+  size_t n_adh = adh_v.size();
+  std::cout << "n_adh " << n_adh << std::endl;
+  _adh_e.resize(n_adh);
+  _adh_x.resize(n_adh);
+  _adh_y.resize(n_adh);
+  _adh_z.resize(n_adh);
+  _adh_p_exit.resize(n_adh);
+
+  for (size_t i = 0; i < n_adh; i++) {
+    auto auxdethit = adh_v[i];
+    // if (0.5 * (auxdethit->GetEntryZ() + auxdethit->GetExitZ()) > -164) continue;
+    _adh_e[i] = auxdethit->GetEnergyDeposited();
+    _adh_x[i] = 0.5 * (auxdethit->GetEntryX() + auxdethit->GetExitX());
+    _adh_y[i] = 0.5 * (auxdethit->GetEntryY() + auxdethit->GetExitY());
+    _adh_z[i] = 0.5 * (auxdethit->GetEntryZ() + auxdethit->GetExitZ());
+    _adh_p_exit[i] = std::sqrt(auxdethit->GetExitMomentumX()*auxdethit->GetExitMomentumX() +
+                               auxdethit->GetExitMomentumY()*auxdethit->GetExitMomentumY() +
+                               auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
+  }
+
+
 
   //
   // Fill the CRT Hits in the tree
@@ -228,11 +332,12 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_pes[i] = hit->peshit;
 
     if (hit->tagger == "volTaggerNorth_0") {
-      _chit_plane[i] = 0;
+      _chit_plane[i] = 0; // upstream
     } else {
-      _chit_plane[i] = 1;
+      _chit_plane[i] = 1; // downstream
     }
 
+    std::cout << "CRT hit, z = " << _chit_z[i] << std::endl;
   }
 
   //
@@ -260,6 +365,7 @@ void CRTAnalysis::analyze(art::Event const& e)
     _ct_x2[i] = track->x2_pos;
     _ct_y2[i] = track->y2_pos;
     _ct_z2[i] = track->z2_pos;
+    std::cout << "CRT track, z1 = " << _ct_z1[i] << ", z2 = " << _ct_z2[i] << std::endl;
   }
 
 
