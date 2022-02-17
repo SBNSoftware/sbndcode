@@ -392,7 +392,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
-  fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmttriggerproducer");
+  fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmtTriggerProducer");
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
@@ -851,6 +851,9 @@ void Hitdumper::analyze(const art::Event& evt)
       }
       _pmtTrigger_maxpassed = pmttriggerlist[0]->maxPMTs;
 
+    }
+    else{
+      std::cout << "Failed to get sbnd::comm::pmtTrigger data product" << std::endl;
     }
   }
 
