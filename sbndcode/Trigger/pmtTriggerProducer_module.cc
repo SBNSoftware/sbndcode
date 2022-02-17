@@ -127,10 +127,10 @@ private:
      84,85,86,87,88,89,90,91,92,93,94,95,114,115,116,117,118,119,138,139,140,141,142,143,144,145,146,147,148,149,
      162,163,164,165,166,167,168,169,170,171,172,173,192,193,194,195,196,197,216,217,218,219,220,221,222,223,224,225,226,227,
      240,241,242,243,244,245,246,247,248,249,250,251,270,271,272,273,274,275,294,295,296,297,298,299,300,301,302,303,304,305};
-   std::vector<std::vector<int>> channel_bin_wvfs;
-   std::vector<int> wvf_bin_0;
-   std::vector<int> paired;
-   std::vector<std::vector<int>> unpaired_wvfs;
+   std::vector<std::vector<char>> channel_bin_wvfs;
+   std::vector<char> wvf_bin_0;
+   std::vector<char> paired;
+   std::vector<std::vector<char>> unpaired_wvfs;
 
    // List parameters for the fcl file
    double fThreshold; //individual pmt threshold in ADC (set in fcl, passes if ADC is LESS THAN threshold)
@@ -241,6 +241,12 @@ void pmtTriggerProducer::produce(art::Event & e)
    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
    std::cout << std::endl;
 
+   wvf_bin_0.reserve(int((3000)/(1./fSampling)));
+   channel_bin_wvfs.reserve(120);
+   paired.reserve(fPair1.size());
+   unpaired_wvfs.reserve(fPair1.size());
+   passed_trigger.reserve(int((fWindowEnd-fWindowStart)/(4./fSampling)));
+
   // create a vector w/ the number of entries necessary for the sampling rate
   // e.g. if sampling rate is 500 MHz, each bin has width of 0.002 us or 2 ns, vector length of ~75000
    for (double i = -1500.0; i<1500.0+(1./fSampling); i+=(1./fSampling)){
@@ -280,7 +286,8 @@ void pmtTriggerProducer::produce(art::Event & e)
       fStartTime = wvf.TimeStamp(); //in us
       fEndTime = double(wvf.size()) / fSampling + fStartTime; //in us
       //create binary waveform
-      std::vector<int> wvf_bin;
+      std::vector<char> wvf_bin;
+      wvf_bin.reserve(wvf.size());
       // start histo
       if (i_ev!=-1 && i_ev<3){
          histname.str(std::string());
@@ -343,7 +350,8 @@ void pmtTriggerProducer::produce(art::Event & e)
        fEndTime = 1500.0;
 
        //downscale binary waveform by 4
-       std::vector<int> wvf_bin_down;
+       std::vector<char> wvf_bin_down;
+       wvf_bin_down.reserve(int(wvf_bin.size()/4));
        for(unsigned int i = 0; i < wvf_bin.size(); i++) {
          if(i%4==0){wvf_bin_down.push_back(wvf_bin[i]);}
        }
@@ -405,7 +413,8 @@ void pmtTriggerProducer::produce(art::Event & e)
 
        //pair waveforms
        if (combine || unpaired){
-         std::vector<int> wvf_combine;
+         std::vector<char> wvf_combine;
+         wvf_combine.reserve(wvf_bin_down.size());
          if (combine){
            if (unpaired_wvfs.at(pair_num).size()!=wvf_bin_down.size()){std::cout<<"Mismatched paired waveform size"<<std::endl;}
            for(unsigned int i = 0; i < wvf_bin_down.size(); i++) {
@@ -517,6 +526,8 @@ void pmtTriggerProducer::produce(art::Event & e)
    }
    pmt_time.maxPMTs = max_passed;
    pmts_passed->push_back(pmt_time);
+
+   std::cout << "max passed: " << max_passed << std::endl;
 
    // the following lines "push" the relevant products you want to produce
    // EXAMPLE:
