@@ -7,6 +7,12 @@
 // from  version .
 
 // Module to convert simulated PMT waveforms into artdaq fragment format
+// Input: PMT waveforms and output from hardware trigger producer (pmtTriggerProducer_module.cc)
+// For each hardware trigger, creates and saves CAEN1730 art-daq fragments for each PMT waveform. 
+// Time range: -1us to +9us from hardware trigger time. 8 fragments per trigger, each containing 15 PMT waveforms (channels 0-14)
+// Sets trigger time to 0.5 seconds +- PMT trigger time; and adds step function for beam time (relative to trigger) (channel 15)
+// Output: adds std::vector<artdaq::Fragment> containing the fragments from each event
+// To do -- change timerange offset and trigger time offset to be fhicl parameters + any other hardcoded pieces  
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
@@ -77,7 +83,6 @@ private:
   std::string fInputModuleNameWvfm;
   std::string fInputModuleNameTrigger;
   int fBaseline; // baseline in simulation, default 8000 ADC
-  int fThreshold; // individual PMT threshold in ADC, pass if ADC less than threshold
   bool fVerbose;
 
   // event information
@@ -90,7 +95,6 @@ private:
 
   // waveforms
   std::vector<std::vector<short>> wvf_channel;
-  std::vector<short> wvf_beam_trigger;
    
   // sampling rate
   double fSampling;
@@ -109,7 +113,6 @@ sbnd::trigger::pmtArtdaqFragmentProducer::pmtArtdaqFragmentProducer(fhicl::Param
   fInputModuleNameWvfm(p.get<std::string>("InputModuleNameWvfm")),
   fInputModuleNameTrigger(p.get<std::string>("InputModuleNameTrigger")),
   fBaseline(p.get<int>("Baseline",8000)),
-  fThreshold(p.get<int>("Threshold",7900)),
   fVerbose(p.get<bool>("Verbose", false)),
   fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
   // More initializers here.
@@ -158,7 +161,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   }
 
   // create empty vectors to hold waveforms for each channel
-  std::vector<short> wvf_0; wvf_0.reserve((int)(3000/fSampling)); 
+  std::vector<short> wvf_0; wvf_0.reserve((int)(3000*1e6/2)); 
   for (double i = -1500.0; i<1500.0+(1./fSampling); i+=(1./fSampling)){
     wvf_0.push_back(fBaseline);
   }
@@ -186,7 +189,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     double fEndTime = double(wvf.size()) / fSampling + fStartTime; // in us
 
     // create full waveform
-    std::vector<short> wvf_full; wvf_full.reserve((short)(3000/fSampling));
+    std::vector<short> wvf_full; wvf_full.reserve((short)(3000*1e6/2));
 
     if (fStartTime > -1500.0){
       for (double i = fStartTime+1500.0; i>0.; i-=(1./fSampling)){
@@ -221,6 +224,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     } 
 
     hist_id++;
+    /*
     if (hist_id < 4) {
     // histogram for testing
     std::stringstream histname;
@@ -236,6 +240,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
       wvfHist->SetBinContent(i+1, (double)wvf[i]);
     }
     }
+    */
 
     wvfmHandle.clear();
   } // waveform handle loop
@@ -346,6 +351,8 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
 
   if(fVerbose) std::cout << "Fragments written: " << vecFrag->size() << std::endl;
 
+
+  /*
   // plot for testing
   for (size_t i_frag = 0; i_frag < 8; i_frag++) {
 
@@ -365,8 +372,8 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   
     //--loop over waveform samples
     for(size_t i_t=0; i_t<wfm_length; ++i_t){ 
-      //fTicksVec[i_t] = t0*Ttt_DownSamp + i_t;   /*timestamps, event level*/
-      value_ptr = data_begin + ch_offset + i_t; /*pointer arithmetic*/
+      //fTicksVec[i_t] = t0*Ttt_DownSamp + i_t;   //timestamps, event level
+      value_ptr = data_begin + ch_offset + i_t; //pointer arithmetic
       value = *(value_ptr);
       //std::cout << value << std::endl;
       wvf_frag.push_back(value);
@@ -392,6 +399,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   
   }
   }
+  */
 
   // add fragments to event
   e.put(std::move(vecFrag));

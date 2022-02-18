@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+pmtSoftwareTriggerProducer:
+{
+  module_type: "pmtSoftwareTriggerProducer"
+  is_persistable: true
+  Verbose: true
+}
+
+END_PROLOG
