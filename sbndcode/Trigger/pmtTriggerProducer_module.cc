@@ -527,8 +527,6 @@ void pmtTriggerProducer::produce(art::Event & e)
    pmt_time.maxPMTs = max_passed;
    pmts_passed->push_back(pmt_time);
 
-   std::cout << "max passed: " << max_passed << std::endl;
-
    // the following lines "push" the relevant products you want to produce
    // EXAMPLE:
    // evt.put(std::move(muon_tracks));
