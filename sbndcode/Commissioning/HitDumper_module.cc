@@ -392,7 +392,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
-  fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmtTriggerProducer");
+  fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmttriggerproducer");
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
