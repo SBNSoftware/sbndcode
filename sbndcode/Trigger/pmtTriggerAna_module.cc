@@ -83,7 +83,7 @@ namespace opdet {
     double fWindowEnd; //end time (in us) of trigger window (set in fcl, 1.6 for beam spill)
     TTree *fTree;
 
-    double fBaseline = 8000.0; //baseline ADC (set in simulation)
+    //double fBaseline = 8000.0; //baseline ADC (set in simulation)
     double fThreshold; //individual pmt threshold in ADC (set in fcl, passes if ADC is LESS THAN threshold)
     int fOVTHRWidth;//over-threshold width, page 40 of manual (set in fcl)
     std::vector<int> fPair1; //channel numbers for first set of paired pmts (set in fcl)
