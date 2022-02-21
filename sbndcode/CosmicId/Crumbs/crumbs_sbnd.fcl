@@ -7,17 +7,28 @@ sbnd_crumbs:
   module_type:     "sbndcode/CosmicId/Crumbs/Crumbs"
 
   # The input parameters
-  MCParticlesModuleLabel:	"largeant"
-  PFParticlesModuleLabel:	"pandora"
-  HitsModuleLabel:		"gaushit"
-  TrackModuleLabel:		"pandoraTrack"
-  ShowerModuleLabel:		"pandoraShower"
-  GeneratorModuleLabel:		"generator"
-  CosmicModuleLabel:		"corsika"
-  FlashMatchModuleLabel:	"fmatch"
-  SliceModuleLabel:		"pandora"
-  CRTTrackMatchModuleLabel:	"crttrackt0"
-  CRTHitMatchModuleLabel:	"crthitt0"
+  MCParticlesModuleLabel:		"largeant"
+  PFParticlesModuleLabel:		"pandoraSCE"
+  HitsModuleLabel:			"gaushit"
+  TrackModuleLabel:			"pandoraSCETrack"
+  ShowerModuleLabel:			"pandoraSCEShower"
+  GeneratorModuleLabel:			"generator"
+  CosmicModuleLabel:			"corsika"
+  FlashMatchModuleLabel:		"fmatchSCE"
+  SliceModuleLabel:			"pandoraSCE"
+  CRTTrackMatchModuleLabel:		"crttrackt0"
+  CRTHitMatchModuleLabel:		"crthitt0"
+  TrackStoppingChi2ModuleLabel:		"stoppingchi2fit"
+  CalorimetryModuleLabel:		"pandoraSCECalo"
+    
+  Chi2FitParams: {
+    TrackLabel: pandoraSCETrack
+    CaloLabel: pandoraSCECalo
+    MinTrackLength: 10
+    FitRange: 30
+    MaxdEdx: 30
+    MinHits: 30
+  }
 }
 
 END_PROLOG

@@ -28,13 +28,16 @@
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Persistency/Common/FindOneP.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
-#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbncode/GeometryTools/TPCGeoAlg.h"
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "art_root_io/TFileService.h"
 #include "TTree.h"
 #include "sbnobj/Common/Reco/SimpleFlashMatchVars.h"
 #include "lardataobj/AnalysisBase/T0.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
+#include "sbnobj/Common/Reco/StoppingChi2Fit.h"
+#include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "sbncode/LArRecoProducer/TrackStoppingChi2Alg.h"
 
 class Crumbs;
 
@@ -67,7 +70,8 @@ public:
   int SliceTruthId(std::map<int, float> purities);
   std::vector<art::Ptr<anab::T0> > GetCRTTrackT0s(art::Event const& e, const art::Ptr<recob::PFParticle> pPrimary);
   std::vector<art::Ptr<anab::T0> > GetCRTHitT0s(art::Event const& e, const art::Ptr<recob::PFParticle> pPrimary);
-
+  art::Ptr<sbn::StoppingChi2Fit> GetLongestTrackChi2Fit(art::Event const& e, const art::Ptr<recob::PFParticle> pPrimary);
+  sbn::StoppingChi2Fit GetLongestTrackChi2FitCosmic(art::Event const& e, const art::Ptr<recob::PFParticle> pPrimary);
 
 private:
 
@@ -76,45 +80,55 @@ private:
   bool fVerbose, fProcessUnambiguousSlices, fProcessNeutrinos, fProcessCosmics;
 
   std::string fMCParticlesModuleLabel, fPFParticlesModuleLabel, fHitsModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fSliceModuleLabel,
-    fGeneratorModuleLabel, fCosmicModuleLabel, fFlashMatchModuleLabel, fCRTTrackMatchModuleLabel, fCRTHitMatchModuleLabel;
+    fGeneratorModuleLabel, fCosmicModuleLabel, fFlashMatchModuleLabel, fCRTTrackMatchModuleLabel, fCRTHitMatchModuleLabel, fTrackStoppingChi2ModuleLabel, 
+    fCalorimetryModuleLabel;
 
   std::map<int, int> fTrackToGenMap;
   std::map<int, std::string> fGenTypeMap;
 
-  sbnd::TPCGeoAlg fTpcGeo;
+  sbn::TPCGeoAlg fTpcGeo;
 
-  TTree *fNuSliceTree, *fNotNuSliceTree, *fRunTree;
+  TTree *fNuSliceTree, *fNotNuSliceTree, *fAllSliceTree, *fRunTree;
 
   double tpc_NuScore, tpc_CRFracHitsInLongestTrack, tpc_CRLongestTrackDeflection, tpc_CRLongestTrackDirY, tpc_CRNHitsMax,
-    tpc_NuEigenRatioInSphere, tpc_NuNFinalStatePfos, tpc_NuNHitsTotal, tpc_NuNSpacePointsInSphere, tpc_NuVertexY, tpc_NuWeightedDirZ,
-    pds_FMTotalScore, pds_FMYScore, pds_FMZScore, pds_FMRRScore, pds_FMRatioScore, pds_FMPE, crt_TrackScore, crt_HitScore;
+    tpc_NuEigenRatioInSphere, tpc_NuNFinalStatePfos, tpc_NuNHitsTotal, tpc_NuNSpacePointsInSphere, tpc_NuVertexY, tpc_NuWeightedDirZ, tpc_StoppingChi2Pol0, 
+    tpc_StoppingChi2Exp, tpc_StoppingChi2Ratio, tpc_StoppingChi2CosmicPol0, tpc_StoppingChi2CosmicExp, tpc_StoppingChi2CosmicRatio, pds_FMTotalScore, pds_FMYScore, pds_FMZScore, 
+    pds_FMRRScore, pds_FMRatioScore, pds_FMPE, pds_FMTime, crt_TrackScore, crt_HitScore, crt_TrackTime, crt_HitTime;
+  int crt_nTrackMatches, crt_nHitMatches;
 
   unsigned eventID, subRunID, runID, slicePDG, sliceIndex, matchedIndex;
   std::string matchedType;
   double matchedPurity, matchedCompleteness;
 
   float fTotalPOT;
+
+  fhicl::ParameterSet fChi2FitParams;
+
+  sbn::TrackStoppingChi2Alg fTrackStoppingChi2Alg;
 };
 
 
 Crumbs::Crumbs(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
-  fVerbose                    (p.get<bool>("Verbose",false)),
-  fProcessUnambiguousSlices   (p.get<bool>("ProcessUnambiguousSlices",false)),
-  fProcessNeutrinos           (p.get<bool>("ProcessNeutrinos",true)),
-  fProcessCosmics             (p.get<bool>("ProcessCosmics",true)),
-  fMCParticlesModuleLabel     (p.get<std::string>("MCParticlesModuleLabel")),
-  fPFParticlesModuleLabel     (p.get<std::string>("PFParticlesModuleLabel")),
-  fHitsModuleLabel            (p.get<std::string>("HitsModuleLabel")),
-  fTrackModuleLabel           (p.get<std::string>("TrackModuleLabel")),
-  fShowerModuleLabel          (p.get<std::string>("ShowerModuleLabel")),
-  fSliceModuleLabel           (p.get<std::string>("SliceModuleLabel")),
-  fGeneratorModuleLabel       (p.get<std::string>("GeneratorModuleLabel")),
-  fCosmicModuleLabel          (p.get<std::string>("CosmicModuleLabel")),
-  fFlashMatchModuleLabel      (p.get<std::string>("FlashMatchModuleLabel")),
-  fCRTTrackMatchModuleLabel   (p.get<std::string>("CRTTrackMatchModuleLabel")),
-  fCRTHitMatchModuleLabel     (p.get<std::string>("CRTHitMatchModuleLabel"))
-
+  fVerbose                      (p.get<bool>("Verbose",false)),
+  fProcessUnambiguousSlices     (p.get<bool>("ProcessUnambiguousSlices",false)),
+  fProcessNeutrinos             (p.get<bool>("ProcessNeutrinos",true)),
+  fProcessCosmics               (p.get<bool>("ProcessCosmics",true)),
+  fMCParticlesModuleLabel       (p.get<std::string>("MCParticlesModuleLabel")),
+  fPFParticlesModuleLabel       (p.get<std::string>("PFParticlesModuleLabel")),
+  fHitsModuleLabel              (p.get<std::string>("HitsModuleLabel")),
+  fTrackModuleLabel             (p.get<std::string>("TrackModuleLabel")),
+  fShowerModuleLabel            (p.get<std::string>("ShowerModuleLabel")),
+  fSliceModuleLabel             (p.get<std::string>("SliceModuleLabel")),
+  fGeneratorModuleLabel         (p.get<std::string>("GeneratorModuleLabel")),
+  fCosmicModuleLabel            (p.get<std::string>("CosmicModuleLabel")),
+  fFlashMatchModuleLabel        (p.get<std::string>("FlashMatchModuleLabel")),
+  fCRTTrackMatchModuleLabel     (p.get<std::string>("CRTTrackMatchModuleLabel")),
+  fCRTHitMatchModuleLabel       (p.get<std::string>("CRTHitMatchModuleLabel")),
+  fTrackStoppingChi2ModuleLabel (p.get<std::string>("TrackStoppingChi2ModuleLabel")),
+  fCalorimetryModuleLabel       (p.get<std::string>("CalorimetryModuleLabel")),
+  fChi2FitParams                (p.get<fhicl::ParameterSet>("Chi2FitParams")),
+  fTrackStoppingChi2Alg(fChi2FitParams)
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   art::ServiceHandle<art::TFileService> tfs;
@@ -131,6 +145,12 @@ Crumbs::Crumbs(fhicl::ParameterSet const& p)
   fNuSliceTree->Branch("tpc_NuNSpacePointsInSphere",&tpc_NuNSpacePointsInSphere);
   fNuSliceTree->Branch("tpc_NuVertexY",&tpc_NuVertexY);
   fNuSliceTree->Branch("tpc_NuWeightedDirZ",&tpc_NuWeightedDirZ);
+  fNuSliceTree->Branch("tpc_StoppingChi2Pol0",&tpc_StoppingChi2Pol0);
+  fNuSliceTree->Branch("tpc_StoppingChi2Exp",&tpc_StoppingChi2Exp);
+  fNuSliceTree->Branch("tpc_StoppingChi2Ratio",&tpc_StoppingChi2Ratio);
+  fNuSliceTree->Branch("tpc_StoppingChi2CosmicPol0",&tpc_StoppingChi2CosmicPol0);
+  fNuSliceTree->Branch("tpc_StoppingChi2CosmicExp",&tpc_StoppingChi2CosmicExp);
+  fNuSliceTree->Branch("tpc_StoppingChi2CosmicRatio",&tpc_StoppingChi2CosmicRatio);
 
   fNuSliceTree->Branch("pds_FMTotalScore",&pds_FMTotalScore);
   fNuSliceTree->Branch("pds_FMYScore",&pds_FMYScore);
@@ -138,9 +158,14 @@ Crumbs::Crumbs(fhicl::ParameterSet const& p)
   fNuSliceTree->Branch("pds_FMRRScore",&pds_FMRRScore);
   fNuSliceTree->Branch("pds_FMRatioScore",&pds_FMRatioScore);
   fNuSliceTree->Branch("pds_FMPE",&pds_FMPE);
+  fNuSliceTree->Branch("pds_FMTime",&pds_FMTime);
 
   fNuSliceTree->Branch("crt_TrackScore",&crt_TrackScore);
   fNuSliceTree->Branch("crt_HitScore",&crt_HitScore);
+  fNuSliceTree->Branch("crt_TrackTime",&crt_TrackTime);
+  fNuSliceTree->Branch("crt_HitTime",&crt_HitTime);
+  fNuSliceTree->Branch("crt_nTrackMatches",&crt_nTrackMatches);
+  fNuSliceTree->Branch("crt_nHitMatches",&crt_nHitMatches);
 
   fNuSliceTree->Branch("eventID",&eventID);
   fNuSliceTree->Branch("subRunID",&subRunID);
@@ -165,6 +190,12 @@ Crumbs::Crumbs(fhicl::ParameterSet const& p)
   fNotNuSliceTree->Branch("tpc_NuNSpacePointsInSphere",&tpc_NuNSpacePointsInSphere);
   fNotNuSliceTree->Branch("tpc_NuVertexY",&tpc_NuVertexY);
   fNotNuSliceTree->Branch("tpc_NuWeightedDirZ",&tpc_NuWeightedDirZ);
+  fNotNuSliceTree->Branch("tpc_StoppingChi2Pol0",&tpc_StoppingChi2Pol0);
+  fNotNuSliceTree->Branch("tpc_StoppingChi2Exp",&tpc_StoppingChi2Exp);
+  fNotNuSliceTree->Branch("tpc_StoppingChi2Ratio",&tpc_StoppingChi2Ratio);
+  fNotNuSliceTree->Branch("tpc_StoppingChi2CosmicPol0",&tpc_StoppingChi2CosmicPol0);
+  fNotNuSliceTree->Branch("tpc_StoppingChi2CosmicExp",&tpc_StoppingChi2CosmicExp);
+  fNotNuSliceTree->Branch("tpc_StoppingChi2CosmicRatio",&tpc_StoppingChi2CosmicRatio);
 
   fNotNuSliceTree->Branch("pds_FMTotalScore",&pds_FMTotalScore);
   fNotNuSliceTree->Branch("pds_FMYScore",&pds_FMYScore);
@@ -172,9 +203,14 @@ Crumbs::Crumbs(fhicl::ParameterSet const& p)
   fNotNuSliceTree->Branch("pds_FMRRScore",&pds_FMRRScore);
   fNotNuSliceTree->Branch("pds_FMRatioScore",&pds_FMRatioScore);
   fNotNuSliceTree->Branch("pds_FMPE",&pds_FMPE);
+  fNotNuSliceTree->Branch("pds_FMTime",&pds_FMTime);
 
   fNotNuSliceTree->Branch("crt_TrackScore",&crt_TrackScore);
   fNotNuSliceTree->Branch("crt_HitScore",&crt_HitScore);
+  fNotNuSliceTree->Branch("crt_TrackTime",&crt_TrackTime);
+  fNotNuSliceTree->Branch("crt_HitTime",&crt_HitTime);
+  fNotNuSliceTree->Branch("crt_nTrackMatches",&crt_nTrackMatches);
+  fNotNuSliceTree->Branch("crt_nHitMatches",&crt_nHitMatches);
 
   fNotNuSliceTree->Branch("eventID",&eventID);
   fNotNuSliceTree->Branch("subRunID",&subRunID);
@@ -185,6 +221,51 @@ Crumbs::Crumbs(fhicl::ParameterSet const& p)
   fNotNuSliceTree->Branch("matchedType",&matchedType);
   fNotNuSliceTree->Branch("matchedPurity",&matchedPurity);
   fNotNuSliceTree->Branch("matchedCompleteness",&matchedCompleteness);
+
+  fAllSliceTree = tfs->make<TTree>("AllSliceTree","All Slice data TTree");
+
+  fAllSliceTree->Branch("tpc_NuScore",&tpc_NuScore);
+  fAllSliceTree->Branch("tpc_CRFracHitsInLongestTrack",&tpc_CRFracHitsInLongestTrack);
+  fAllSliceTree->Branch("tpc_CRLongestTrackDeflection",&tpc_CRLongestTrackDeflection);
+  fAllSliceTree->Branch("tpc_CRLongestTrackDirY",&tpc_CRLongestTrackDirY);
+  fAllSliceTree->Branch("tpc_CRNHitsMax",&tpc_CRNHitsMax);
+  fAllSliceTree->Branch("tpc_NuEigenRatioInSphere",&tpc_NuEigenRatioInSphere);
+  fAllSliceTree->Branch("tpc_NuNFinalStatePfos",&tpc_NuNFinalStatePfos);
+  fAllSliceTree->Branch("tpc_NuNHitsTotal",&tpc_NuNHitsTotal);
+  fAllSliceTree->Branch("tpc_NuNSpacePointsInSphere",&tpc_NuNSpacePointsInSphere);
+  fAllSliceTree->Branch("tpc_NuVertexY",&tpc_NuVertexY);
+  fAllSliceTree->Branch("tpc_NuWeightedDirZ",&tpc_NuWeightedDirZ);
+
+  fAllSliceTree->Branch("pds_FMTotalScore",&pds_FMTotalScore);
+  fAllSliceTree->Branch("pds_FMYScore",&pds_FMYScore);
+  fAllSliceTree->Branch("pds_FMZScore",&pds_FMZScore);
+  fAllSliceTree->Branch("pds_FMRRScore",&pds_FMRRScore);
+  fAllSliceTree->Branch("pds_FMRatioScore",&pds_FMRatioScore);
+  fAllSliceTree->Branch("pds_FMPE",&pds_FMPE);
+  fAllSliceTree->Branch("pds_FMTime",&pds_FMTime);
+  fAllSliceTree->Branch("tpc_StoppingChi2Pol0",&tpc_StoppingChi2Pol0);
+  fAllSliceTree->Branch("tpc_StoppingChi2Exp",&tpc_StoppingChi2Exp);
+  fAllSliceTree->Branch("tpc_StoppingChi2Ratio",&tpc_StoppingChi2Ratio);
+  fAllSliceTree->Branch("tpc_StoppingChi2CosmicPol0",&tpc_StoppingChi2CosmicPol0);
+  fAllSliceTree->Branch("tpc_StoppingChi2CosmicExp",&tpc_StoppingChi2CosmicExp);
+  fAllSliceTree->Branch("tpc_StoppingChi2CosmicRatio",&tpc_StoppingChi2CosmicRatio);
+
+  fAllSliceTree->Branch("crt_TrackScore",&crt_TrackScore);
+  fAllSliceTree->Branch("crt_HitScore",&crt_HitScore);
+  fAllSliceTree->Branch("crt_TrackTime",&crt_TrackTime);
+  fAllSliceTree->Branch("crt_HitTime",&crt_HitTime);
+  fAllSliceTree->Branch("crt_nTrackMatches",&crt_nTrackMatches);
+  fAllSliceTree->Branch("crt_nHitMatches",&crt_nHitMatches);
+
+  fAllSliceTree->Branch("eventID",&eventID);
+  fAllSliceTree->Branch("subRunID",&subRunID);
+  fAllSliceTree->Branch("runID",&runID);
+  fAllSliceTree->Branch("slicePDG",&slicePDG);
+  fAllSliceTree->Branch("sliceIndex",&sliceIndex);
+  fAllSliceTree->Branch("matchedIndex",&matchedIndex);
+  fAllSliceTree->Branch("matchedType",&matchedType);
+  fAllSliceTree->Branch("matchedPurity",&matchedPurity);
+  fAllSliceTree->Branch("matchedCompleteness",&matchedCompleteness);
 
   fTotalPOT = 0;
 
@@ -217,11 +298,12 @@ void Crumbs::ResetVars()
 {
   tpc_NuScore = -999999.; tpc_CRFracHitsInLongestTrack = -999999.; tpc_CRLongestTrackDeflection = -999999.; tpc_CRLongestTrackDirY = -999999.; tpc_CRNHitsMax = -999999.;
   tpc_NuEigenRatioInSphere = -999999.; tpc_NuNFinalStatePfos = -999999.; tpc_NuNHitsTotal = -999999.; tpc_NuNSpacePointsInSphere = -999999.; tpc_NuVertexY = -999999.;
-  tpc_NuWeightedDirZ = -999999.;
+  tpc_NuWeightedDirZ = -999999.; tpc_StoppingChi2Pol0 = -100.; tpc_StoppingChi2Exp = -100.; tpc_StoppingChi2Ratio = -4.; tpc_StoppingChi2CosmicPol0 = -100.; 
+  tpc_StoppingChi2CosmicExp = -100.; tpc_StoppingChi2CosmicRatio = -4.;
 
-  pds_FMTotalScore = -999999.; pds_FMYScore = -999999.; pds_FMZScore = -999999.; pds_FMRRScore = -999999.; pds_FMRatioScore = -999999.; pds_FMPE = -999999.;
+  pds_FMTotalScore = -999999.; pds_FMYScore = -999999.; pds_FMZScore = -999999.; pds_FMRRScore = -999999.; pds_FMRatioScore = -999999.; pds_FMPE = -999999.; pds_FMTime = -500.;
 
-  crt_TrackScore = -4.; crt_HitScore = -4.;
+  crt_TrackScore = -4.; crt_HitScore = -4.; crt_nTrackMatches = 0; crt_nHitMatches = 0; crt_TrackTime = -3000.; crt_HitTime = -3000.;
 
   slicePDG = 999999; sliceIndex = 999999; matchedIndex = 999999;
   matchedType = "";
@@ -344,6 +426,8 @@ void Crumbs::analyze(art::Event const& e)
       const std::vector<art::Ptr<sbn::SimpleFlashMatch> > pfpFMVec = pfpFMAssoc.at(primary.key());
       const std::vector<art::Ptr<anab::T0> > sliceCRTTrackT0s = this->GetCRTTrackT0s(e, primary);
       const std::vector<art::Ptr<anab::T0> > sliceCRTHitT0s = this->GetCRTHitT0s(e, primary);
+      const art::Ptr<sbn::StoppingChi2Fit> stoppingChi2Fit = this->GetLongestTrackChi2Fit(e, primary);
+      const sbn::StoppingChi2Fit stoppingChi2FitCosmic = this->GetLongestTrackChi2FitCosmic(e, primary);
 
       if(fVerbose) 
 	{
@@ -360,21 +444,28 @@ void Crumbs::analyze(art::Event const& e)
 	std::cout << "ERROR: ----- Cannot find single flash match" << std::endl;
       }
 
-      if (sliceCRTTrackT0s.size() > 1){
-	std::cout << "ERROR: ----- Multiple CRT Track t0s" << std::endl;
-      }
-      else if(sliceCRTTrackT0s.size() == 1) {
-	const art::Ptr<anab::T0> crttrackmatcht0 = sliceCRTTrackT0s.front();
-	crt_TrackScore = crttrackmatcht0->TriggerConfidence();
+      crt_nTrackMatches = sliceCRTTrackT0s.size();
+      if (crt_nTrackMatches != 0){
+	crt_TrackScore = 999999;
+	for(auto const crttrackmatcht0 : sliceCRTTrackT0s)
+	  {
+	    if(crttrackmatcht0->TriggerConfidence() < crt_TrackScore) {
+	      crt_TrackScore = crttrackmatcht0->TriggerConfidence();
+	      crt_TrackTime = crttrackmatcht0->Time() * 1e-3;
+	    }
+	  }
       }
 
-
-      if (sliceCRTHitT0s.size() > 1){
-	std::cout << "ERROR: ----- Multiple CRT Hit t0s" << std::endl;
-      }
-      else if(sliceCRTHitT0s.size() == 1) {
-	const art::Ptr<anab::T0> crthitmatcht0 = sliceCRTHitT0s.front();
-	crt_HitScore = crthitmatcht0->TriggerConfidence();
+      crt_nHitMatches = sliceCRTHitT0s.size();
+      if (sliceCRTHitT0s.size() != 0){
+	crt_HitScore = 999999;
+	for(auto const crthitmatcht0 : sliceCRTHitT0s)
+	  {
+	    if(crthitmatcht0->TriggerConfidence() < crt_HitScore) {
+	      crt_HitScore = crthitmatcht0->TriggerConfidence();
+	      crt_HitTime = crthitmatcht0->Time() * 1e-3;
+	    }
+	  }
       }
 
       const art::Ptr<larpandoraobj::PFParticleMetadata> pfpMeta = pfpMetaVec.front();
@@ -396,6 +487,21 @@ void Crumbs::analyze(art::Event const& e)
 			    << "PE: " << t0->light.pe << '\n'
 			    << "Score: " << t0->score.total << '\n' << std::endl;
 	    }
+
+	  if(stoppingChi2Fit.isNonnull())
+	    {
+	      std::cout << "Longest Track Chi2 Fit\n"
+			<< "Pol0 Chi2:      " << stoppingChi2Fit->pol0Chi2 << '\n'
+			<< "Exp Chi2:       " << stoppingChi2Fit->expChi2 << '\n'
+			<< "Ratio:          " << stoppingChi2Fit->pol0Chi2 / stoppingChi2Fit->expChi2 << '\n'
+			<< "Pol0 Fit Value: " << stoppingChi2Fit->pol0Fit << '\n' << std::endl;
+	    }
+	  std::cout << "Longest Track Chi2 Fit Using Cosmic Direction\n"
+		    << "Pol0 Chi2:      " << stoppingChi2FitCosmic.pol0Chi2 << '\n'
+		    << "Exp Chi2:       " << stoppingChi2FitCosmic.expChi2 << '\n'
+		    << "Ratio:          " << stoppingChi2FitCosmic.pol0Chi2 / stoppingChi2FitCosmic.expChi2 << '\n'
+		    << "Pol0 Fit Value: " << stoppingChi2FitCosmic.pol0Fit << '\n' << std::endl;
+
 	}
 
       auto propertiesMapIter = propertiesMap.find("NuScore");
@@ -475,12 +581,26 @@ void Crumbs::analyze(art::Event const& e)
       }
       tpc_NuWeightedDirZ = propertiesMapIter->second;
 
+      if(stoppingChi2Fit.isNonnull())
+	{
+	  tpc_StoppingChi2Pol0 = stoppingChi2Fit->pol0Chi2;
+	  tpc_StoppingChi2Exp = stoppingChi2Fit->expChi2;
+	  tpc_StoppingChi2Ratio = tpc_StoppingChi2Pol0 / tpc_StoppingChi2Exp;
+	}
+      tpc_StoppingChi2CosmicPol0 = stoppingChi2FitCosmic.pol0Chi2;
+      tpc_StoppingChi2CosmicExp = stoppingChi2FitCosmic.expChi2;
+      tpc_StoppingChi2CosmicRatio = tpc_StoppingChi2CosmicPol0 / tpc_StoppingChi2CosmicExp;
+
       pds_FMTotalScore = flashmatch->score.total;
       pds_FMYScore = flashmatch->score.y;
       pds_FMZScore = flashmatch->score.z;
       pds_FMRRScore = flashmatch->score.rr;
       pds_FMRatioScore = flashmatch->score.ratio;
       pds_FMPE = flashmatch->light.pe;
+      pds_FMTime = flashmatch->time;
+      
+      if(pds_FMTime == -9999)
+	pds_FMTime = -100;
 
       slicePDG = primary->PdgCode();
       sliceIndex = nSlices;
@@ -488,10 +608,13 @@ void Crumbs::analyze(art::Event const& e)
       matchedType = fGenTypeMap[truthId];
       matchedPurity = puritiesMap[truthId];
       
-      if(matchedType == "Nu" && matchedPurity > 0.8)
+      if(matchedType == "Nu" && matchedPurity > 0.8 && matchedCompleteness > 0.8)
 	fNuSliceTree->Fill();
+      else if(matchedType == "Nu") {}
       else
 	fNotNuSliceTree->Fill();
+
+      fAllSliceTree->Fill();
       
       ++nSlices;
     }
@@ -510,14 +633,15 @@ void Crumbs::analyze(art::Event const& e)
 	  int truthId = this->SliceTruthId(puritiesMap);
 	  matchedCompleteness = this->SliceCompleteness(e, sliceHits, allHits, truthId);
 
-	  const std::vector<art::Ptr<anab::T0> > sliceCRTrackT0s = this->GetCRTTrackT0s(e, primary);
-	  const std::vector<art::Ptr<anab::T0> > sliceCRHitT0s = this->GetCRTHitT0s(e, primary);
+	  const std::vector<art::Ptr<anab::T0> > sliceCRTTrackT0s = this->GetCRTTrackT0s(e, primary);
+	  const std::vector<art::Ptr<anab::T0> > sliceCRTHitT0s = this->GetCRTHitT0s(e, primary);
+	  const art::Ptr<sbn::StoppingChi2Fit> stoppingChi2Fit = this->GetLongestTrackChi2Fit(e, primary);
 
 	  if(fVerbose)
 	    {
 	      std::cout << " matches to MCTruth of origin " << fGenTypeMap[truthId] << " with purity " << puritiesMap[truthId] << std::endl;
-	      std::cout << "Number of CRT Track T0 matches: " << sliceCRTrackT0s.size() << std::endl;
-	      std::cout << "Number of CRT Hit T0 matches: " << sliceCRHitT0s.size() << std::endl;
+	      std::cout << "Number of CRT Track T0 matches: " << sliceCRTTrackT0s.size() << std::endl;
+	      std::cout << "Number of CRT Hit T0 matches: " << sliceCRTHitT0s.size() << std::endl;
 	    }
 
 	  const std::vector<art::Ptr<sbn::SimpleFlashMatch> > pfpFMVec = pfpFMAssoc.at(primary.key());
@@ -525,6 +649,8 @@ void Crumbs::analyze(art::Event const& e)
 	  if (pfpFMVec.size() != 1){
 	    std::cout << "Cannot find single flash match" << std::endl;
 	  }
+	  
+	  const art::Ptr<sbn::SimpleFlashMatch> flashmatch = pfpFMVec.front();
 
 	  if(fVerbose)
 	    {
@@ -537,7 +663,54 @@ void Crumbs::analyze(art::Event const& e)
 			    << "PE: " << t0->light.pe << '\n'
 			    << "Score: " << t0->score.total << '\n' << std::endl;
 		}
+
+	      if(stoppingChi2Fit.isNonnull())
+		{
+		  std::cout << "Longest Track Chi2 Fit\n"
+			    << "Pol0 Chi2: " << stoppingChi2Fit->pol0Chi2 << '\n'
+			    << "Exp Chi2: " << stoppingChi2Fit->expChi2 << '\n'
+			    << "Pol0 Fit Value: " << stoppingChi2Fit->pol0Fit << '\n' << std::endl;
+		}
 	    }
+
+	  crt_nTrackMatches = sliceCRTTrackT0s.size();
+	  if (crt_nTrackMatches != 0){
+	    crt_TrackScore = 999999;
+	    for(auto const crttrackmatcht0 : sliceCRTTrackT0s)
+	      {
+		if(crttrackmatcht0->TriggerConfidence() < crt_TrackScore) {
+		  crt_TrackScore = crttrackmatcht0->TriggerConfidence();
+		  crt_TrackTime = crttrackmatcht0->Time() * 1e-3;
+		}	      
+	      }
+	  }
+
+	  crt_nHitMatches = sliceCRTHitT0s.size();
+	  if (sliceCRTHitT0s.size() != 0){
+	    crt_HitScore = 999999;
+	    for(auto const crthitmatcht0 : sliceCRTHitT0s)
+	      {
+		if(crthitmatcht0->TriggerConfidence() < crt_HitScore) {
+		  crt_HitScore = crthitmatcht0->TriggerConfidence();
+		  crt_HitTime = crthitmatcht0->Time() * 1e-3;
+		}
+	      }
+	  }
+
+	  if(stoppingChi2Fit.isNonnull())
+	    {
+	      tpc_StoppingChi2Pol0 = stoppingChi2Fit->pol0Chi2;
+	      tpc_StoppingChi2Exp = stoppingChi2Fit->expChi2;
+	      tpc_StoppingChi2Ratio = tpc_StoppingChi2Pol0 / tpc_StoppingChi2Exp;
+	    }
+
+	  pds_FMTotalScore = flashmatch->score.total;
+	  pds_FMYScore = flashmatch->score.y;
+	  pds_FMZScore = flashmatch->score.z;
+	  pds_FMRRScore = flashmatch->score.rr;
+	  pds_FMRatioScore = flashmatch->score.ratio;
+	  pds_FMPE = flashmatch->light.pe;
+	  pds_FMTime = flashmatch->time;
 
 	  slicePDG = primary->PdgCode();
 	  sliceIndex = nSlices;
@@ -545,11 +718,14 @@ void Crumbs::analyze(art::Event const& e)
 	  matchedType = fGenTypeMap[truthId];
 	  matchedPurity = puritiesMap[truthId];
 
-	  if(matchedType == "Nu" && matchedPurity > 0.8)
+	  if(matchedType == "Nu" && matchedPurity > 0.8 && matchedCompleteness > 0.8)
 	    fNuSliceTree->Fill();
+	  else if(matchedType == "Nu") {}
 	  else
 	    fNotNuSliceTree->Fill();
 
+	  fAllSliceTree->Fill();
+      
 	  ++nSlices;
 	}
     }
@@ -716,6 +892,100 @@ std::vector<art::Ptr<anab::T0> > Crumbs::GetCRTHitT0s(art::Event const& e, const
     }
   
   return t0Vec;
+}
+
+art::Ptr<sbn::StoppingChi2Fit> Crumbs::GetLongestTrackChi2Fit(art::Event const& e, const art::Ptr<recob::PFParticle> pPrimary)
+{
+  art::Ptr<sbn::StoppingChi2Fit> returnFit;
+  float maxLength = -999999.;
+
+  art::Handle<std::vector<recob::PFParticle> > handlePFPs;
+  e.getByLabel(fPFParticlesModuleLabel, handlePFPs);
+
+  art::Handle<std::vector<recob::Slice> > handleSlices;
+  e.getByLabel(fSliceModuleLabel, handleSlices);
+
+  art::Handle<std::vector<recob::Track> > handleTracks;
+  e.getByLabel(fTrackModuleLabel, handleTracks);
+
+  art::FindOneP<recob::Slice> pfpSliceAssn(handlePFPs,e,fSliceModuleLabel);
+  art::FindManyP<recob::PFParticle> slicePFPAssn(handleSlices,e,fSliceModuleLabel);
+  art::FindOneP<recob::Track> pfpTrackAssn(handlePFPs,e,fTrackModuleLabel);
+  art::FindOneP<sbn::StoppingChi2Fit> trackStoppingChi2Assn(handleTracks,e,fTrackStoppingChi2ModuleLabel);
+
+  const art::Ptr<recob::Slice> slice = pfpSliceAssn.at(pPrimary.key());
+  const std::vector<art::Ptr<recob::PFParticle> > pfps = slicePFPAssn.at(slice.key());
+  
+  for(auto const& pfp : pfps)
+    {
+      if(pfp->PdgCode() != 13)
+	continue;
+
+      const art::Ptr<recob::Track> track = pfpTrackAssn.at(pfp.key());
+
+      if(track.isNull())
+	continue;
+
+      if(track->Length() > maxLength)
+       	{
+      	  maxLength = track->Length();
+	  returnFit = trackStoppingChi2Assn.at(track.key());
+	}
+    }
+  
+  return returnFit;
+}
+
+sbn::StoppingChi2Fit Crumbs::GetLongestTrackChi2FitCosmic(art::Event const& e, const art::Ptr<recob::PFParticle> pPrimary)
+{
+  sbn::StoppingChi2Fit returnFit;
+  float maxLength = -999999.;
+
+  art::Handle<std::vector<recob::PFParticle> > handlePFPs;
+  e.getByLabel(fPFParticlesModuleLabel, handlePFPs);
+
+  art::Handle<std::vector<recob::Slice> > handleSlices;
+  e.getByLabel(fSliceModuleLabel, handleSlices);
+
+  art::Handle<std::vector<recob::Track> > handleTracks;
+  e.getByLabel(fTrackModuleLabel, handleTracks);
+
+  art::FindOneP<recob::Slice> pfpSliceAssn(handlePFPs,e,fSliceModuleLabel);
+  art::FindManyP<recob::PFParticle> slicePFPAssn(handleSlices,e,fSliceModuleLabel);
+  art::FindOneP<recob::Track> pfpTrackAssn(handlePFPs,e,fTrackModuleLabel);
+  art::FindManyP<anab::Calorimetry> trackCaloAssn(handleTracks,e,fCalorimetryModuleLabel);
+
+  const art::Ptr<recob::Slice> slice = pfpSliceAssn.at(pPrimary.key());
+  const std::vector<art::Ptr<recob::PFParticle> > pfps = slicePFPAssn.at(slice.key());
+  
+  for(auto const& pfp : pfps)
+    {
+      if(pfp->PdgCode() != 13)
+	continue;
+
+      const art::Ptr<recob::Track> track = pfpTrackAssn.at(pfp.key());
+
+      if(track.isNull())
+	continue;
+
+      const std::vector<art::Ptr<anab::Calorimetry> > calos = trackCaloAssn.at(track.key());
+
+      const unsigned int maxHits(std::max({ calos[0]->dEdx().size(), calos[1]->dEdx().size(), calos[2]->dEdx().size() }));
+      const int bestPlane((calos[2]->dEdx().size() == maxHits) ? 2 : (calos[0]->dEdx().size() == maxHits) ? 0 : (calos[1]->dEdx().size() == maxHits) ? 1 : -1);
+
+      if (bestPlane == -1)
+	continue;
+
+      const art::Ptr<anab::Calorimetry> calo = calos.at(bestPlane);
+
+      if(track->Length() > maxLength)
+       	{
+      	  maxLength = track->Length();
+	  returnFit = fTrackStoppingChi2Alg.RunFitForCosmicID(*calo);
+	}
+    }
+  
+  return returnFit;
 }
 
 DEFINE_ART_MODULE(Crumbs)
