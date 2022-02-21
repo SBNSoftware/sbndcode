@@ -53,6 +53,8 @@ private:
 
   // fhicl parameters
   art::Persistable is_persistable_;
+  double fTriggerTimeOffset;    // offset of trigger time, default 0.5 sec
+  uint32_t fWvfmLength;
   bool fVerbose;
 
   // event information
@@ -67,8 +69,8 @@ private:
 
   // waveforms
   uint32_t fTriggerTime;
-  uint32_t fWvfmLength;
   bool fWvfmsFound;
+  std::vector<uint16_t> fRWMVec;
   std::vector<std::vector<uint16_t>> fWvfmsVec;
 
   void checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag);
@@ -80,18 +82,16 @@ private:
 sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::ParameterSet const& p)
   : EDProducer{p},
   is_persistable_(p.get<bool>("is_persistable", true) ? art::Persistable::Yes : art::Persistable::No),
+  fTriggerTimeOffset(p.get<double>("TriggerTimeOffset", 0.5)),
+  fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
   fVerbose(p.get<bool>("Verbose", false))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
   produces< sbnd::trigger::pmtSoftwareTrigger >("", is_persistable_);
 
-  // Call appropriate consumes<>() for any products to be retrieved by this module.
-
-  beamWindowStart = 0.5*1e9; // 0.5 seconds // set as fhicl parameter
+  beamWindowStart = fTriggerTimeOffset*1e9;
   beamWindowEnd = beamWindowStart + 1600;
-
-  fWvfmLength = 5000; // 10 us, 2ns sampling // set as fhicl parameter (or could extract from fragment?)
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
@@ -161,9 +161,24 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(c
   sbndaq::CAENV1730Fragment bb(frag);
   auto const* md = bb.Metadata();
 
-  // access timestamp and check whether in beamspill window
+  // access timestamp
   uint32_t timestamp = md->timeStampNSec;
-  if (timestamp >= beamWindowStart && timestamp <= beamWindowEnd) {
+
+  // access RWM signal, in ch15 of first PMT of each fragment set
+  // check entry 500 (0us), at trigger time
+  const uint16_t* data_begin = reinterpret_cast<const uint16_t*>(frag.dataBeginBytes() 
+                 + sizeof(sbndaq::CAENV1730EventHeader));
+  const uint16_t* value_ptr =  data_begin;
+  uint16_t value = 0;
+
+  size_t ch_offset = (size_t)(15*fWvfmLength);
+  size_t tr_offset = 500;
+
+  value_ptr = data_begin + ch_offset + tr_offset; // pointer arithmetic 
+  value = *(value_ptr);
+  
+  if (value == 1 && timestamp >= beamWindowStart && timestamp <= beamWindowEnd) {
+  //if (timestamp >= beamWindowStart && timestamp <= beamWindowEnd) {
     foundBeamTrigger = true;
     fTriggerTime = timestamp;
   }

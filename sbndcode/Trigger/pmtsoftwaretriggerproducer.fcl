@@ -4,6 +4,8 @@ pmtSoftwareTriggerProducer:
 {
   module_type: "pmtSoftwareTriggerProducer"
   is_persistable: true
+  TriggerTimeOffset: 0.5
+  WvfmLength: 5120
   Verbose: true
 }
 
