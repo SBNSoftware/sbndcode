@@ -25,8 +25,6 @@
 #include "signalservices_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "detsimmodules_sbnd.fcl"
-#include "opdetdigitizer_sbnd.fcl"
-#include "ophit_finder_sbnd.fcl"
 #include "pmttriggerproducer.fcl"
 
 #include "hitfindermodules_sbnd.fcl"
@@ -91,15 +89,13 @@ physics:
   {
     # random number saver
     rns:       { module_type: RandomNumberSaver }
-    opdaq:     @local::sbnd_opdetdigitizer
-    ophit:     @local::sbnd_ophit_finder_pmt
     pmttriggerproducer: @local::pmtTriggerProducer
   }
 
 
   # define the producer and filter modules for this path, order matters,
   # filters reject all following items.  see lines starting physics.producers below
-  reco: [rns, opdaq, ophit, pmttriggerproducer]
+  reco: [rns, pmttriggerproducer]
 
   #ana: [ hitdumper]
 
