@@ -34,6 +34,7 @@
         <MvaName>NeutrinoId</MvaName>
         <MinimumNeutrinoProbability>0</MinimumNeutrinoProbability>
         <MaximumNeutrinos>999</MaximumNeutrinos>
+	<PersistFeatures>true</PersistFeatures>
       </tool>
     </SliceIdTools>
     <InputHitListName>CaloHitList2D</InputHitListName>
