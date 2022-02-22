@@ -852,6 +852,9 @@ void Hitdumper::analyze(const art::Event& evt)
       _pmtTrigger_maxpassed = pmttriggerlist[0]->maxPMTs;
 
     }
+    else{
+      std::cout << "Failed to get sbnd::comm::pmtTrigger data product" << std::endl;
+    }
   }
 
   //
