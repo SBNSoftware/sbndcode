@@ -82,7 +82,9 @@ private:
   // fhicl parameters
   std::string fInputModuleNameWvfm;
   std::string fInputModuleNameTrigger;
-  int fBaseline; // baseline in simulation, default 8000 ADC
+  int fBaseline; // baseline in simulation, default 8000 ADC (for expanding waveforms only, when not fully simulated)
+  int fMultiplicityThreshold; // number of PMT pairs in hardware trigger to pass
+  double fBeamWindowLength;
   bool fVerbose;
 
   // event information
@@ -113,6 +115,8 @@ sbnd::trigger::pmtArtdaqFragmentProducer::pmtArtdaqFragmentProducer(fhicl::Param
   fInputModuleNameWvfm(p.get<std::string>("InputModuleNameWvfm")),
   fInputModuleNameTrigger(p.get<std::string>("InputModuleNameTrigger")),
   fBaseline(p.get<int>("Baseline",8000)),
+  fMultiplicityThreshold(p.get<int>("MultiplicityThreshold")),
+  fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)),
   fVerbose(p.get<bool>("Verbose", false)),
   fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
   // More initializers here.
@@ -224,23 +228,6 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     } 
 
     hist_id++;
-    /*
-    if (hist_id < 4) {
-    // histogram for testing
-    std::stringstream histname;
-    histname << "event_" << fEvent
-                 << "_opchannel_" << fChNumber
-                 << "_" << opdetType
-                 << "_" << hist_id
-                 << "raw";
-
-    TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), "Raw Waveform", wvf.size(), 0, (wvf.size()*2)/1000);
-    wvfHist->GetXaxis()->SetTitle("t (#mus)");
-    for(unsigned int i = 0; i < wvf.size(); i++) {
-      wvfHist->SetBinContent(i+1, (double)wvf[i]);
-    }
-    }
-    */
 
     wvfmHandle.clear();
   } // waveform handle loop
@@ -249,7 +236,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   std::vector<size_t> triggerIndex; 
   for(auto const& trigger : (*triggerHandle)) {
     for (size_t idx = 0; idx < trigger.numPassed.size(); idx++) {
-      if (trigger.numPassed[idx] > 1) {
+      if (trigger.numPassed[idx] >= fMultiplicityThreshold) {
         // save index
         triggerIndex.push_back(idx);
         // skip ahead by 5120 samples (downsampled by 4) before checking again
@@ -333,8 +320,8 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
 
       // create add beam window trigger waveform
       ch_offset = (size_t)(nChannelsFrag*wfm_length);
-      size_t beamStartIdx = 1500*1e3/2;
-      size_t beamEndIdx = beamStartIdx + 1600/2;
+      size_t beamStartIdx = 1500*1000/2;
+      size_t beamEndIdx = beamStartIdx + fBeamWindowLength*1000/2;
       // loop over waveform
       for (size_t i_t = 0; i_t < wfm_length; i_t++) {
         // set value
@@ -351,59 +338,8 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
 
   if(fVerbose) std::cout << "Fragments written: " << vecFrag->size() << std::endl;
 
-
-  /*
-  // plot for testing
-  for (size_t i_frag = 0; i_frag < 8; i_frag++) {
-
-  artdaq::Fragment frag = (*vecFrag)[7*7+ i_frag];
-
-  const uint16_t* data_begin = reinterpret_cast<const uint16_t*>(frag.dataBeginBytes() 
-                 + sizeof(sbndaq::CAENV1730EventHeader));
-
-  const uint16_t* value_ptr =  data_begin;
-  uint16_t value = 0;
-  size_t ch_offset = 0;
-
-  // loop over channels
-  for (size_t i_ch = 0; i_ch < 16; i_ch++) {
-    ch_offset = (size_t)(i_ch*wfm_length);
-    std::vector<uint16_t> wvf_frag; wvf_frag.reserve(wfm_length);
-  
-    //--loop over waveform samples
-    for(size_t i_t=0; i_t<wfm_length; ++i_t){ 
-      //fTicksVec[i_t] = t0*Ttt_DownSamp + i_t;   //timestamps, event level
-      value_ptr = data_begin + ch_offset + i_t; //pointer arithmetic
-      value = *(value_ptr);
-      //std::cout << value << std::endl;
-      wvf_frag.push_back(value);
-    }
-
-    std::stringstream histname_frag;
-    if (i_ch < 15) {
-    histname_frag << "event_" << fEvent
-            << "_opchannel_" << channelList[i_ch+i_frag*15]
-            << "_full_fromFragment";
-    }
-    else {
-      histname_frag << "event_" << fEvent
-            << "_beamTrigger"
-            << "_full_fromFragment_" << i_frag;  
-    }
-
-    TH1D *wvFragHist = tfs->make< TH1D >(histname_frag.str().c_str(), "Full Waveform from fragment", wvf_frag.size(), 0, 10*1e9);
-    wvFragHist->GetXaxis()->SetTitle("t (ns)");
-    for(unsigned int i = 0; i < wvf_frag.size(); i++) {
-      wvFragHist->SetBinContent(i + 1, wvf_frag[i]);
-    }
-  
-  }
-  }
-  */
-
   // add fragments to event
   e.put(std::move(vecFrag));
-
   
 }
 

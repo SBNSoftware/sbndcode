@@ -1,9 +1,15 @@
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+#include "simulationservices_sbnd.fcl"
+
 #include "pmtArtdaqFragmentProducer.fcl"
 
 process_name: FragmentProducer
 
 services:
 {
+    @table::sbnd_detsim_services
     TFileService: { fileName: "test_hist.root" }
     RandomNumberGenerator: {} #ART native random number generator 
 } 

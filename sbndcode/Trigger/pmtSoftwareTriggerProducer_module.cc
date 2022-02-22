@@ -54,6 +54,7 @@ private:
   // fhicl parameters
   art::Persistable is_persistable_;
   double fTriggerTimeOffset;    // offset of trigger time, default 0.5 sec
+  double fBeamWindowLength; // beam window length after trigger time, default 1.6us
   uint32_t fWvfmLength;
   bool fVerbose;
 
@@ -70,7 +71,6 @@ private:
   // waveforms
   uint32_t fTriggerTime;
   bool fWvfmsFound;
-  std::vector<uint16_t> fRWMVec;
   std::vector<std::vector<uint16_t>> fWvfmsVec;
 
   void checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag);
@@ -83,6 +83,7 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   : EDProducer{p},
   is_persistable_(p.get<bool>("is_persistable", true) ? art::Persistable::Yes : art::Persistable::No),
   fTriggerTimeOffset(p.get<double>("TriggerTimeOffset", 0.5)),
+  fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)), 
   fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
   fVerbose(p.get<bool>("Verbose", false))
   // More initializers here.
@@ -91,7 +92,7 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   produces< sbnd::trigger::pmtSoftwareTrigger >("", is_persistable_);
 
   beamWindowStart = fTriggerTimeOffset*1e9;
-  beamWindowEnd = beamWindowStart + 1600;
+  beamWindowEnd = beamWindowStart + fBeamWindowLength*1000;
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
@@ -164,7 +165,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(c
   // access timestamp
   uint32_t timestamp = md->timeStampNSec;
 
-  // access RWM signal, in ch15 of first PMT of each fragment set
+  // access beam signal, in ch15 of first PMT of each fragment set
   // check entry 500 (0us), at trigger time
   const uint16_t* data_begin = reinterpret_cast<const uint16_t*>(frag.dataBeginBytes() 
                  + sizeof(sbndaq::CAENV1730EventHeader));
@@ -178,7 +179,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(c
   value = *(value_ptr);
   
   if (value == 1 && timestamp >= beamWindowStart && timestamp <= beamWindowEnd) {
-  //if (timestamp >= beamWindowStart && timestamp <= beamWindowEnd) {
     foundBeamTrigger = true;
     fTriggerTime = timestamp;
   }
