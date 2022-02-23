@@ -17,6 +17,7 @@
 #include "showerselectionvarsproducer.fcl"
 #include "showercosmicdistanceproducer.fcl"
 #include "sbn_pid.fcl"
+#include "crumbs_producer.fcl"
 
 #include "crthitconverter_producer.fcl"
 #include "crtmatch_producer.fcl"
@@ -86,6 +87,8 @@ physics:
 
    vertexCharge: @local::vertex_charge_sbnd
    vertexStub: @local::vertex_stub_sbnd
+   crumbs: @local::crumbs_sbnd
+
    pandoraTrackClosestApproach:          @local::trackscatterclosestapproach_sbn
    pandoraTrackStoppingChi2: @local::trackstoppingchi2fitter_sbn
    pandoraTrackDazzle:       @local::dazzle_sbnd
@@ -104,7 +107,7 @@ physics:
  runprod: [ pandoraTrackMCS, pandoraTrackRange, pandoraShowerSelectionVars,
             pandoraTrackCRTHit, pandoraTrackCRTTrack, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerCosmicDist, pandoraShowerRazzle,
+            pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
             cafmaker ]
 # makecaf: [cafmaker] #list the modules for this path, order matters, filters reject all following items
 # stream1: [metadata]
