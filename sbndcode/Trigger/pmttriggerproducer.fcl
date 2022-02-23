@@ -18,7 +18,7 @@ pmtTriggerProducer:
   Unpaired: [298,299,300,301,302,303,304,305]
   PairLogic: "OR" #logic for pairing PMTs, option are "OR" or "AND"
   WindowStart: 0.0 #us, window for pmt trigger time start
-  WindowEnd: 1.6 #us, window for pmt trigger time end
+  WindowEnd: 1.8 #us, window for pmt trigger time end
   SaveHists: true #save hists for all steps (raw, digital, paired, etc.)
   EvHists: [1,2,3] #if fSaveHists=true, then what events all hists are saved for. max number of events = 3
 

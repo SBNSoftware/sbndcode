@@ -116,7 +116,7 @@ private:
    double fStartTime; //start time (in us) of raw waveform
    double fEndTime; //end time (in us) of raw waveform
 
-   double fBaseline = 8000.0; //baseline ADC (set in simulation)
+   // double fBaseline = 8000.0; //baseline ADC (set in simulation)
    std::stringstream histname; //raw waveform hist name
    std::stringstream histname2; //other hists names
    std::string opdetType; //opdet wavform's opdet type (required to be pmt_coated or pmt_uncoated)
