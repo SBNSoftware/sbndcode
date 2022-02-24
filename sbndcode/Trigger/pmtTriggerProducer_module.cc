@@ -116,11 +116,7 @@ private:
    double fStartTime; //start time (in us) of raw waveform
    double fEndTime; //end time (in us) of raw waveform
 
-<<<<<<< HEAD
    // double fBaseline = 8000.0; //baseline ADC (set in simulation)
-=======
-   //double fBaseline = 8000.0; //baseline ADC (set in simulation)
->>>>>>> 1d3dde99a01f0e705321972900b0f63ea5a26af9
    std::stringstream histname; //raw waveform hist name
    std::stringstream histname2; //other hists names
    std::string opdetType; //opdet wavform's opdet type (required to be pmt_coated or pmt_uncoated)
@@ -178,7 +174,7 @@ void pmtTriggerProducer::reconfigure(fhicl::ParameterSet const & p)
    fUnpaired    = p.get<std::vector<int> >("Unpaired");
    fPairLogic   = p.get<std::string>("PairLogic","OR");
    fWindowStart = p.get<double>("WindowStart",0.0);
-   fWindowEnd = p.get<double>("WindowEnd",1.6);
+   fWindowEnd = p.get<double>("WindowEnd",1.8);
    fSaveHists = p.get<bool>("SaveHists",true);
    fEvHists    = p.get<std::vector<int> >("EvHists");
 
