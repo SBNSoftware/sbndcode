@@ -142,18 +142,22 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     }
   } // end loop over handles
 
-  if (foundBeamTrigger && fWvfmsFound) {
+  // object to store trigger metrics in
+  std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
 
-    // object to store trigger metrics in
-    std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
+  if (foundBeamTrigger && fWvfmsFound) {
+    pmtSoftwareTriggerMetrics->foundBeamTrigger = true;
 
     // store timestamp of trigger, relative to beam window start
     pmtSoftwareTriggerMetrics->triggerTimestamp = fTriggerTime - beamWindowStart;
-    if (fVerbose) std::cout << "Saving trigger timestamp: " << fTriggerTime - beamWindowStart << " ns" << std::endl;
-
-    // add to event
-    e.put(std::move(pmtSoftwareTriggerMetrics));      
+    if (fVerbose) std::cout << "Saving trigger timestamp: " << fTriggerTime - beamWindowStart << " ns" << std::endl;  
   }
+  else {
+    pmtSoftwareTriggerMetrics->foundBeamTrigger = false;
+  }
+
+  // add to event
+  e.put(std::move(pmtSoftwareTriggerMetrics));    
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag) {
