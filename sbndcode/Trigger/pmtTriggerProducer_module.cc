@@ -241,15 +241,15 @@ void pmtTriggerProducer::produce(art::Event & e)
    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
    std::cout << std::endl;
 
-   wvf_bin_0.reserve(int((3000)/(1./fSampling)));
+   wvf_bin_0.reserve(int((3020)/(1./fSampling)));
    channel_bin_wvfs.reserve(120);
    paired.reserve(fPair1.size());
    unpaired_wvfs.reserve(fPair1.size());
    passed_trigger.reserve(int((fWindowEnd-fWindowStart)/(4./fSampling)));
-
+   
   // create a vector w/ the number of entries necessary for the sampling rate
   // e.g. if sampling rate is 500 MHz, each bin has width of 0.002 us or 2 ns, vector length of ~75000
-   for (double i = -1500.0; i<1500.0+(1./fSampling); i+=(1./fSampling)){
+   for (double i = -1510.0; i<1510.0+(1./fSampling); i+=(1./fSampling)){
       wvf_bin_0.push_back(0);
    }
   // each pmt channel should have a vector of this length 
@@ -285,6 +285,7 @@ void pmtTriggerProducer::produce(art::Event & e)
      
       fStartTime = wvf.TimeStamp(); //in us
       fEndTime = double(wvf.size()) / fSampling + fStartTime; //in us
+
       //create binary waveform
       std::vector<char> wvf_bin;
       wvf_bin.reserve(wvf.size());
@@ -304,8 +305,8 @@ void pmtTriggerProducer::produce(art::Event & e)
          }
       } // end histo 
 
-      if (fStartTime > -1500.0){
-         for (double i = fStartTime+1500.0; i>0.; i-=(1./fSampling)){
+      if (fStartTime > -1510.0){
+         for (double i = fStartTime+1510.0; i>0.; i-=(1./fSampling)){
             wvf_bin.push_back(0);
          }
       }
@@ -314,8 +315,8 @@ void pmtTriggerProducer::produce(art::Event & e)
          if((double)wvf[i]<fThreshold){wvf_bin.push_back(1);}else{wvf_bin.push_back(0);}
       }
 
-      if (fEndTime < 1500.0){
-         for (double i = 1500.0-fEndTime; i>0.; i-=(1./fSampling)){
+      if (fEndTime < 1510.0){
+         for (double i = 1510.0-fEndTime; i>0.; i-=(1./fSampling)){
             wvf_bin.push_back(0);
          }
       }
@@ -337,6 +338,7 @@ void pmtTriggerProducer::produce(art::Event & e)
          if(channel_bin_wvfs.at(i_ch).at(i)==1 || wvf_bin[i]==1){channel_bin_wvfs.at(i_ch)[i]=1;}else{channel_bin_wvfs.at(i_ch)[i]=0;}
       }
       wvf_bin.clear();
+      wvf_bin.shrink_to_fit();
       waveHandle.clear();
 
    }//wave handle loop
@@ -346,8 +348,8 @@ void pmtTriggerProducer::produce(art::Event & e)
      for (auto wvf_bin : channel_bin_wvfs){ // wvf_bin is a vector with entries making up the wvf, one for every channel 
        wvf_num++;
        fChNumber = channel_numbers.at(wvf_num);
-       fStartTime = -1500.0;
-       fEndTime = 1500.0;
+       fStartTime = -1510.0;
+       fEndTime = 1510.0;
 
        //downscale binary waveform by 4
        std::vector<char> wvf_bin_down;
@@ -499,7 +501,9 @@ void pmtTriggerProducer::produce(art::Event & e)
        }
 
        wvf_bin_down.clear();
+       wvf_bin_down.shrink_to_fit();
        wvf_combine.clear();
+       wvf_combine.shrink_to_fit();
 
      }
 
@@ -536,15 +540,21 @@ void pmtTriggerProducer::produce(art::Event & e)
 
    //clear variables
    passed_trigger.clear();
+   passed_trigger.shrink_to_fit();
    max_passed = 0;
 
    std::cout << "Number of PMT waveforms: " << num_pmt_wvf << std::endl;
    std::cout << "Number of PMT channels: " << num_pmt_ch << std::endl;
 
    channel_bin_wvfs.clear();
+   channel_bin_wvfs.shrink_to_fit();
    paired.clear();
+   paired.shrink_to_fit();
    unpaired_wvfs.clear();
+   unpaired_wvfs.shrink_to_fit();
+
    wvf_bin_0.clear();
+   wvf_bin_0.shrink_to_fit();
 
 } // pmtTriggerProducer::produce()
 

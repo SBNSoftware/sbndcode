@@ -165,8 +165,8 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   }
 
   // create empty vectors to hold waveforms for each channel
-  std::vector<short> wvf_0; wvf_0.reserve((int)(3000*1e6/2)); 
-  for (double i = -1500.0; i<1500.0+(1./fSampling); i+=(1./fSampling)){
+  std::vector<short> wvf_0; wvf_0.reserve((int)(3020*1e6/2)); 
+  for (double i = -1510.0; i<1510.0+(1./fSampling); i+=(1./fSampling)){
     wvf_0.push_back(fBaseline);
   }
   for (size_t i = 0; i < channelList.size(); i++){
@@ -193,10 +193,10 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     double fEndTime = double(wvf.size()) / fSampling + fStartTime; // in us
 
     // create full waveform
-    std::vector<short> wvf_full; wvf_full.reserve((short)(3000*1e6/2));
+    std::vector<short> wvf_full; wvf_full.reserve((short)(3020*1e6/2));
 
-    if (fStartTime > -1500.0){
-      for (double i = fStartTime+1500.0; i>0.; i-=(1./fSampling)){
+    if (fStartTime > -1510.0){
+      for (double i = fStartTime+1510.0; i>0.; i-=(1./fSampling)){
         wvf_full.push_back(fBaseline);
       }
     }
@@ -205,8 +205,8 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
       wvf_full.push_back(wvf[i]);
     }
 
-    if (fEndTime < 1500.0){
-      for (double i = 1500.0-fEndTime; i>0.; i-=(1./fSampling)){
+    if (fEndTime < 1510.0){
+      for (double i = 1510.0-fEndTime; i>0.; i-=(1./fSampling)){
         wvf_full.push_back(fBaseline);
       }
     }
@@ -277,7 +277,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
     size_t startIdx = trigIdx-500; // -1us
 
     // determine and set timestamp for particular trigger
-    double triggerTime = -1500 + wvfIdx*0.008; // in us
+    double triggerTime = -1510 + wvfIdx*0.008; // in us
     double timestampVal = 0.5 + (triggerTime*1e-6); // in seconds // std::time(nullptr); // current time
     metadata.timeStampSec = (uint32_t)timestampVal;
     metadata.timeStampNSec = (uint32_t)(timestampVal*1e9);
@@ -320,7 +320,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
 
       // create add beam window trigger waveform
       ch_offset = (size_t)(nChannelsFrag*wfm_length);
-      size_t beamStartIdx = 1500*1000/2;
+      size_t beamStartIdx = 1510*1000/2;
       size_t beamEndIdx = beamStartIdx + fBeamWindowLength*1000/2;
       // loop over waveform
       for (size_t i_t = 0; i_t < wfm_length; i_t++) {
@@ -340,7 +340,10 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
 
   // add fragments to event
   e.put(std::move(vecFrag));
-  
+
+  // clear variables
+  wvf_channel.clear();
+  wvf_channel.shrink_to_fit();
 }
 
 DEFINE_ART_MODULE(sbnd::trigger::pmtArtdaqFragmentProducer)
