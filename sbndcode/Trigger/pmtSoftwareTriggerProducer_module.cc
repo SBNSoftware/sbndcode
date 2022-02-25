@@ -25,6 +25,8 @@
 #include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
 
 #include <memory>
+#include <algorithm>
+#include <valarray>
 
 namespace sbnd {
   namespace trigger {
@@ -58,6 +60,10 @@ private:
   uint32_t fWvfmLength;
   bool fVerbose;
 
+  std::string fBaselineAlgo;
+  double fInputBaseline;
+  // std::string fPulseAlgoType; 
+
   // event information
   int fRun, fSubrun;
   art::EventNumber_t fEvent;
@@ -72,9 +78,12 @@ private:
   uint32_t fTriggerTime;
   bool fWvfmsFound;
   std::vector<std::vector<uint16_t>> fWvfmsVec;
+  std::vector<double> fWvfmsBaseline;
+  std::vector<double> fWvfmsBaselineSigma; 
 
   void checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag);
   void analyzeCAEN1730Fragment(const artdaq::Fragment &frag);
+  void calculateBaseline();
 
 };
 
@@ -85,7 +94,9 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   fTriggerTimeOffset(p.get<double>("TriggerTimeOffset", 0.5)),
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)), 
   fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
-  fVerbose(p.get<bool>("Verbose", false))
+  fVerbose(p.get<bool>("Verbose", false)),
+  fBaselineAlgo(p.get<std::string>("BaselineAlgo", "constant")),
+  fInputBaseline(p.get<double>("InputBaseline", 8000))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
@@ -110,6 +121,9 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   foundBeamTrigger = false;
   fWvfmsFound = false;
   fWvfmsVec.clear(); fWvfmsVec.resize(15*8); // 15 pmt channels per fragment, 8 fragments per trigger
+  fWvfmsBaseline.clear(); fWvfmsBaseline.resize(15*8);
+  fWvfmsBaselineSigma.clear(); fWvfmsBaselineSigma.resize(15*8);
+
 
   // get fragment handles
   std::vector<art::Handle<artdaq::Fragments>> fragmentHandles = e.getMany<std::vector<artdaq::Fragment>>();
@@ -143,6 +157,14 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   } // end loop over handles
 
   if (foundBeamTrigger && fWvfmsFound) {
+
+    // calculate baseline 
+    if (fBaselineAlgo == "constant"){
+      std::fill(fWvfmsBaseline.begin(), fWvfmsBaseline.end(), fInputBaseline);
+    }
+    else if (fBaselineAlgo == "estimate"){
+      calculateBaseline();
+    }
 
     // object to store trigger metrics in
     std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
@@ -211,5 +233,34 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::analyzeCAEN1730Fragment(const ar
     } //--end loop samples
   } //--end loop channels
 }
+
+void sbnd::trigger::pmtSoftwareTriggerProducer::calculateBaseline(){
+  for (size_t i_wvfm = 0; i_wvfm < fWvfmsVec.size(); ++i_wvfm){
+    std::vector<uint16_t> wvfm = fWvfmsVec[i_wvfm];
+    // assuming that the first 500 ns doesn't include peaks, find the mean of the ADC count as the baseline 
+    // this is also assuming the sampling rate of the waveform is 1 ns 
+    std::vector<uint16_t> slice_vec = std::vector<uint16_t>(wvfm.begin(), wvfm.begin()+500);
+    std::valarray<uint16_t> slice(slice_vec.data(), slice_vec.size());
+
+    double slice_mean = (slice.sum())/(slice.size());
+    double val = 0;
+    for (size_t i=0; i<slice.size();i++){ val += (slice[i] - slice_mean)*(slice[i] - slice_mean);}
+    double slice_stddev = sqrt(val/slice.size()); 
+    // put in some if statement about stddev 
+    fWvfmsBaseline[i_wvfm] = slice_mean;
+    fWvfmsBaselineSigma[i_wvfm] = slice_stddev;
+    if (fVerbose) std::cout << "baseline (ADC):" << slice_mean << ", stddev:" <<  slice_stddev << std::endl;
+  }
+}
+
+// void sbnd::trigger:pmtSoftwareTriggerProducer::PulseAlgo(){
+//   if (fPulseAlgoType = "SimpleThreshold"){
+
+//   }
+//   if (fPulseAlgoType = "SlidingWindow"){
+
+//   }
+
+// }
 
 DEFINE_ART_MODULE(sbnd::trigger::pmtSoftwareTriggerProducer)

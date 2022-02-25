@@ -8,6 +8,9 @@ pmtSoftwareTriggerProducer:
   BeamWindowLength: 1.8 # us, extended by 0.2us to account for delayed signals
   WvfmLength: 5120
   Verbose: true
+
+  fBaselineAlgo: "constant" 
+  fInputBaseline: 8000.0 #ADC
 }
 
 END_PROLOG
