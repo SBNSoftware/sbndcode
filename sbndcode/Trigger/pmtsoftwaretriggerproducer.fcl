@@ -9,8 +9,11 @@ pmtSoftwareTriggerProducer:
   WvfmLength: 5120
   Verbose: true
 
-  fBaselineAlgo: "constant" 
-  fInputBaseline: 8000.0 #ADC
+  BaselineAlgo: "constant" 
+  InputBaseline: 8000.0 #ADC
+  AreaToPE: true # Use area to calculate number of PEs
+  SPEArea: 66.33 #  If AreaToPE is true, this number is used as single PE area (in ADC counts)
+
 }
 
 END_PROLOG

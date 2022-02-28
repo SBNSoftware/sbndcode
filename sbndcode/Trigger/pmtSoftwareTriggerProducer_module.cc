@@ -62,7 +62,9 @@ private:
 
   std::string fBaselineAlgo;
   double fInputBaseline;
-  // std::string fPulseAlgoType; 
+
+  bool fAreaToPE; // Use area to calculate number of PEs
+  double fSPEArea; // If AreaToPE is true, this number is used as single PE area (in ADC counts)
 
   // event information
   int fRun, fSubrun;
@@ -84,6 +86,7 @@ private:
   void checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag);
   void analyzeCAEN1730Fragment(const artdaq::Fragment &frag);
   void calculateBaseline();
+  void SimpleThreshAlgo();
 
 };
 
@@ -96,7 +99,9 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
   fVerbose(p.get<bool>("Verbose", false)),
   fBaselineAlgo(p.get<std::string>("BaselineAlgo", "constant")),
-  fInputBaseline(p.get<double>("InputBaseline", 8000))
+  fInputBaseline(p.get<double>("InputBaseline", 8000)),
+  fAreaToPE(p.get<bool>("AreaToPE", false)),
+  fSPEArea(p.get<double>("SPEArea", 66.33))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
@@ -137,41 +142,53 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       // identify whether any fragments correspond to the beam spill
       // loop over fragments, in steps of 8
       size_t beamFragmentIdx = 9999;
+      // std::cout << "here 1" << std::endl;
       for (size_t fragmentIdx = 0; fragmentIdx < handle->size(); fragmentIdx += 8) {
+        // std::cout << "here 2" << std::endl;
         checkCAEN1730FragmentTimeStamp(handle->at(fragmentIdx));
+        // std::cout << "here 3" << std::endl;
         if (foundBeamTrigger) {
+          // std::cout << "here 4" << std::endl;
           beamFragmentIdx = fragmentIdx;
           if (fVerbose) std::cout << "Found fragment in time with beam at index: " << beamFragmentIdx << std::endl;
           break;
+          // std::cout << "here 5" << std::endl;
         }
       }
-
+      // std::cout << "here 5.5" << std::endl;
       // if set of fragment in time with beam found, process waveforms
       if (foundBeamTrigger && beamFragmentIdx != 9999) {
+        // std::cout << "here 6" << std::endl;
         for (size_t fragmentIdx = beamFragmentIdx; fragmentIdx < beamFragmentIdx+8; fragmentIdx++) {
+          // std::cout << "here 7" << std::endl;
           analyzeCAEN1730Fragment(handle->at(fragmentIdx));
+          // std::cout << "here 8" << std::endl;
         }
+        // std::cout << "here 9" << std::endl;
         fWvfmsFound = true;
       }
     }
   } // end loop over handles
 
+  // object to store trigger metrics in
+  std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
+
   if (foundBeamTrigger && fWvfmsFound) {
 
     // calculate baseline 
-    if (fBaselineAlgo == "constant"){
-      std::fill(fWvfmsBaseline.begin(), fWvfmsBaseline.end(), fInputBaseline);
-    }
-    else if (fBaselineAlgo == "estimate"){
-      calculateBaseline();
-    }
-
-    // object to store trigger metrics in
-    std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
+    if (fBaselineAlgo == "constant") std::fill(fWvfmsBaseline.begin(), fWvfmsBaseline.end(), fInputBaseline);
+    else if (fBaselineAlgo == "estimate") calculateBaseline();
 
     // store timestamp of trigger, relative to beam window start
     pmtSoftwareTriggerMetrics->triggerTimestamp = fTriggerTime - beamWindowStart;
     if (fVerbose) std::cout << "Saving trigger timestamp: " << fTriggerTime - beamWindowStart << " ns" << std::endl;
+
+    // add to event
+    e.put(std::move(pmtSoftwareTriggerMetrics));      
+  }
+  else{
+    pmtSoftwareTriggerMetrics->triggerTimestamp = -9999;
+    if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
 
     // add to event
     e.put(std::move(pmtSoftwareTriggerMetrics));      
@@ -186,6 +203,9 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(c
 
   // access timestamp
   uint32_t timestamp = md->timeStampNSec;
+  std::cout << "timestamp: " << timestamp << std::endl;
+  std::cout << "beamWindowStart: " << beamWindowStart << std::endl;
+  std::cout << "beamWindowEnd: " << beamWindowEnd << std::endl;
 
   // access beam signal, in ch15 of first PMT of each fragment set
   // check entry 500 (0us), at trigger time
@@ -195,10 +215,12 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(c
   uint16_t value = 0;
 
   size_t ch_offset = (size_t)(15*fWvfmLength);
-  size_t tr_offset = 500;
+  size_t tr_offset = fTriggerTimeOffset*1e3;
 
   value_ptr = data_begin + ch_offset + tr_offset; // pointer arithmetic 
   value = *(value_ptr);
+
+  std::cout << "value: " << value << std::endl;
   
   if (value == 1 && timestamp >= beamWindowStart && timestamp <= beamWindowEnd) {
     foundBeamTrigger = true;
@@ -253,14 +275,67 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::calculateBaseline(){
   }
 }
 
-// void sbnd::trigger:pmtSoftwareTriggerProducer::PulseAlgo(){
-//   if (fPulseAlgoType = "SimpleThreshold"){
+void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(){
+  for (size_t i_wvfm = 0; i_wvfm < fWvfmsVec.size(); ++i_wvfm){
+    std::vector<uint16_t> wvfm = fWvfmsVec[i_wvfm];
+    double baseline = fWvfmsBaseline[i_wvfm];
+    double baseline_sigma = fWvfmsBaselineSigma[i_wvfm];
+    
+    bool fire = false; // bool for if pulse has been detected
+    int counter = 0; // counts the number of pulses 
 
-//   }
-//   if (fPulseAlgoType = "SlidingWindow"){
+    // these should be fcl parameters 
+    double start_adc_thres = 5, end_adc_thres = 2; 
+    double nsigma_start = 5, nsigma_end = 3; 
+    
+    auto start_threshold = ( start_adc_thres > (nsigma_start * baseline_sigma) ? start_adc_thres : (nsigma_start * baseline_sigma));
+    auto end_threshold = ( end_adc_thres > (nsigma_end * baseline_sigma) ? end_adc_thres : (nsigma_end * baseline_sigma));
+    
+    start_threshold += baseline; end_threshold += baseline; 
 
-//   }
+    std::vector<sbnd::trigger::pmtPulse> pulse_vec;
+    sbnd::trigger::pmtPulse pulse; 
+    for (auto const &adc : wvfm){
+      if ( !fire && ((double)adc) >= start_threshold ){ // if its a new pulse 
+        fire = true;
+        //vic: i move t_start back one, this helps with porch
+        pulse.t_start = counter - 1 > 0 ? counter - 1 : counter;    
+      }
+  
+      if( fire && ((double)adc) < end_threshold ){ // found end of a pulse
+        fire = false;
+        //vic: i move t_start forward one, this helps with tail
+        pulse.t_end = counter < ((int)wvfm.size())  ? counter : counter - 1;
+        pulse_vec.push_back(pulse);
+        pulse.area = 0; pulse.peak = 0; pulse.t_start = 0; pulse.t_end = 0; pulse.t_peak = 0;
+      }   
 
+      if(fire){ // if we're in a pulse 
+        if (fAreaToPE == true) // Add this adc count to the integral
+          pulse.area += ((double)adc - baseline);
+        if (pulse.peak < ((double)adc - baseline)) { // Found a new maximum
+          pulse.peak = ((double)adc - baseline);
+          pulse.t_peak = counter;
+        }
+      }
+      counter++;
+    }
+
+    if(fire){ // Take care of a pulse that did not finish within the readout window.
+      fire = false;
+      pulse.t_end = counter - 1;
+      pulse_vec.push_back(pulse);
+      pulse.area = 0; pulse.peak = 0; pulse.t_start = 0; pulse.t_end = 0; pulse.t_peak = 0;
+    }
+
+    // for (size_t i_pulse = 0; i_pulse < pulse_vec.size(); ++i_pulse){
+    //   sbnd::trigger::pmtPulse &pulse = pulse_vec[i_pulse];
+    //   if (fAreaToPE == true){ pulse.pe = pulse.area/fSPEArea;}
+    // }
+  }
+}
+
+// void sbnd::trigger:pmtSoftwareTriggerProducer::SlidingThreshAlgo(){
 // }
 
 DEFINE_ART_MODULE(sbnd::trigger::pmtSoftwareTriggerProducer)
