@@ -373,6 +373,11 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
   e.getByLabel(m_pandora_label, pfp_handle );
   int pfp_size = pfp_handle->size();
 
+  // Get the Vertex handle
+//  art::Handle< std::vector< recob::Vertex > > vtx_handle;
+//  e.getByLabel(m_pandora_label, vtx_handle );
+//  int vtx_size = vtx_handle->size();
+
   // Get the hit handle
   art::Handle< std::vector< recob::Hit > > hit_handle;
   e.getByLabel(m_hit_label, hit_handle );
@@ -425,15 +430,19 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
       art::Ptr< recob::PFParticle > pfp( pfp_handle, i );
 
       // Only look for a single muon neutrino event
+      if(pfp->IsPrimary() && pfp->PdgCode() == 13) 
+        std::cout << " COSMIC BEANS" << std::endl;
+
       if(pfp->IsPrimary() && pfp->PdgCode() != 13){
         neutrino_found = true;
+        // Assume self is key
         neutrino_id = pfp->Self();
         it = std::find(neutrinos.begin(), neutrinos.end(), neutrino_id);
         // Fill a vector of each of the neutrino ids in the event
         if(it == neutrinos.end()){
           neutrinos.push_back(neutrino_id);
-          // txtfile << " -------------------------------- " << std::endl;
-          // txtfile << " Neutrino candidate ID : " << neutrino_id << std::endl;
+          std::cout << " -------------------------------- " << std::endl;
+          std::cout << " Neutrino candidate ID : " << neutrino_id << std::endl;
         }
       }
     }
@@ -447,6 +456,7 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
 
     // If there are multiple neutrino candidates, find the one with the 
     if(neutrinos.size() > 1){
+      std::cout << " There are multiple candidate neutrinos, looking at hits to see how to categorise " << std::endl;
       std::vector<int> associated_hits;
       std::vector<int> candidate_neutrinos;
 
@@ -504,16 +514,15 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
         std::cerr << " No candidate neutrinos" << std::endl;
         return;
       }
-      // txtfile << " Candidate size : " << candidate_neutrinos.size() << std::endl;
-      /*for(unsigned int i = 0; i < associated_hits.size(); ++i)
-        txtfile << " Number of associated truth hits : " << i << " - " << associated_hits[i] << std::endl;
-        */
+      std::cout << " Candidate size : " << candidate_neutrinos.size() << std::endl;
+      for(unsigned int i = 0; i < associated_hits.size(); ++i)
+        std::cout << " Number of associated truth hits : " << i << " - " << associated_hits[i] << std::endl;
 
       // Set the best neutrino ID to be the one which corresponds to the highest 
       // number of good GENIE MCTruth hits
       best_neutrino = candidate_neutrinos[std::distance(associated_hits.begin(), std::max_element(associated_hits.begin(), associated_hits.end()))];
-      //txtfile << " Best candidate    : " << std::distance(associated_hits.begin(), std::max_element(associated_hits.begin(), associated_hits.end())) << std::endl;
-      //txtfile << " Best candidate ID : " << best_neutrino << std::endl;
+      std::cout << " Best candidate    : " << std::distance(associated_hits.begin(), std::max_element(associated_hits.begin(), associated_hits.end())) << std::endl;
+      std::cout << " Best candidate ID : " << best_neutrino << std::endl;
 
     } // Multiple neutrino candidates
 
@@ -536,14 +545,31 @@ void sbnd::SelectionTree::analyze(art::Event const & e)
     art::FindManyP< recob::Vertex  > fvtx( pfp_handle, e, m_pandora_label );
     std::vector< art::Ptr<recob::Vertex> > vtx_assn = fvtx.at(best_neutrino);
 
-    if(vtx_assn.size()  > 1) return;
-    if(vtx_assn.size() == 0) return;
+    // Get the first vertex for the microboone case
+    //art::Ptr< recob::Vertex > vtx( vtx_handle, 0 );
 
     // Set array to be current vertex position
+    //if(m_detector_name == "sbnd" || m_detector_name == "icarus"){
+    if(vtx_assn.size() > 1)
+      std::cout << " Number of vertices : " << vtx_assn.size() << std::endl;
+    if(vtx_assn.size()  > 1) return;
+    if(vtx_assn.size() == 0) return;
     vtx_assn[0]->XYZ(r_vertex);
+    //}
+   // else{
+   //   vtx->XYZ(r_vertex);
+   // }
     float reco_vertex_x = r_vertex[0];
     float reco_vertex_y = r_vertex[1];
     float reco_vertex_z = r_vertex[2];
+    // If we are looking at microboone, 
+    // Shift the reconstructed vertex x position by half the detector width 
+    // For correct definition wrt truth and borders
+    std::cout << "Vertex location, x: " << r_vertex[0] << std::endl;
+    //if(m_detector_name == "uboone"){
+    //  r_vertex[0] += 128.175;
+    //  reco_vertex_x = r_vertex[0];
+    //}
 
     // Make sure reconstructed vertex is within the TPC configuration-defined volume
     assert(m_minX.size() == m_minY.size());
