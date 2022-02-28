@@ -172,24 +172,20 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
 
   // object to store trigger metrics in
   std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
-<<<<<<< HEAD
 
   if (foundBeamTrigger && fWvfmsFound) {
 
     // calculate baseline 
     if (fBaselineAlgo == "constant") std::fill(fWvfmsBaseline.begin(), fWvfmsBaseline.end(), fInputBaseline);
     else if (fBaselineAlgo == "estimate") calculateBaseline();
-=======
-
-  if (foundBeamTrigger && fWvfmsFound) {
-    pmtSoftwareTriggerMetrics->foundBeamTrigger = true;
->>>>>>> origin/feature/pgreen_artdaq_fragment_conversion
 
     // store timestamp of trigger, relative to beam window start
     pmtSoftwareTriggerMetrics->triggerTimestamp = fTriggerTime - beamWindowStart;
-    if (fVerbose) std::cout << "Saving trigger timestamp: " << fTriggerTime - beamWindowStart << " ns" << std::endl;  
+    if (fVerbose) std::cout << "Saving trigger timestamp: " << fTriggerTime - beamWindowStart << " ns" << std::endl;
+
+    // add to event
+    e.put(std::move(pmtSoftwareTriggerMetrics));      
   }
-<<<<<<< HEAD
   else{
     pmtSoftwareTriggerMetrics->triggerTimestamp = -9999;
     if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
@@ -197,14 +193,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     // add to event
     e.put(std::move(pmtSoftwareTriggerMetrics));      
   }
-=======
-  else {
-    pmtSoftwareTriggerMetrics->foundBeamTrigger = false;
-  }
-
-  // add to event
-  e.put(std::move(pmtSoftwareTriggerMetrics));    
->>>>>>> origin/feature/pgreen_artdaq_fragment_conversion
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag) {
