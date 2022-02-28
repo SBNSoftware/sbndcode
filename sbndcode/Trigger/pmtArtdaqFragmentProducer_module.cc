@@ -267,7 +267,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   // fragment handle properties
   uint32_t eventCounterVal = fEvent;
   uint32_t boardIDVal = 0;
-  uint32_t triggerTimeTagVal = (uint32_t)CLHEP::RandFlat::shoot(&fTriggerTimeEngine, 0, 1e9/16);
+  uint32_t triggerTimeTagVal = (uint32_t)CLHEP::RandFlat::shoot(&fTriggerTimeEngine, 0, 1e9);
   
   // loop over PMT hardware triggers
   for (auto wvfIdx : triggerIndex) {
@@ -297,7 +297,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
         
       header_ptr->eventCounter = eventCounterVal;
       header_ptr->boardID = boardIDVal;
-      header_ptr->triggerTimeTag = triggerTimeTagVal + trigIdx*2;  // ns // set timetag as random value for event, but encode trigger time within this event as offset
+      header_ptr->triggerTimeTag = triggerTimeTagVal;  // ns // set timetag as random value for event
         
       // populate waveforms  
       // populate fragment with waveform

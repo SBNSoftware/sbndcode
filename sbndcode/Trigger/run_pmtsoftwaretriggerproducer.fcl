@@ -15,7 +15,7 @@ services:
 source:
 {
   module_type: RootInput
-  maxEvents:  10        # Number of events to create
+  maxEvents:  -1        # Number of events to create
 }
 
 outputs:
@@ -45,3 +45,5 @@ physics:
  end_paths: [ stream1]
 
 }
+
+physics.producers.pmtSoftwareTrigger.BeamWindowLength: 1.8

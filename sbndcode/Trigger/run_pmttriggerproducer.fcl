@@ -73,7 +73,6 @@ outputs:
   {
     @table::sbnd_rootoutput
     dataTier: "reconstructed"
-    SelectEvents:  [reco]
   }
 }
 
@@ -114,6 +113,9 @@ physics:
 
 
 ### Some potential overwrites below
+physics.producers.pmttriggerproducer.WindowStart: -1510
+physics.producers.pmttriggerproducer.WindowEnd: 1510
+physics.producers.pmttriggerproducer.SaveHists: false
 
 #physics.producers.pmttriggerproducer.PairLogic: "AND"
 
