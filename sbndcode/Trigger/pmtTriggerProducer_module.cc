@@ -263,7 +263,7 @@ void pmtTriggerProducer::produce(art::Event & e)
    paired.reserve(fPair1.size());
    unpaired_wvfs.reserve(fPair1.size());
    passed_trigger.reserve(int((fWindowEnd-fWindowStart)/(4./fSampling)));
-
+   
   // create a vector w/ the number of entries necessary for the sampling rate
   // e.g. if sampling rate is 500 MHz, each bin has width of 0.002 us or 2 ns, vector length of ~75000
    for (double i = fMinStartTime; i<fMaxEndTime+(1./fSampling); i+=(1./fSampling)){
@@ -302,6 +302,7 @@ void pmtTriggerProducer::produce(art::Event & e)
 
       fStartTime = wvf.TimeStamp(); //in us
       fEndTime = double(wvf.size()) / fSampling + fStartTime; //in us
+
       //create binary waveform
       std::vector<char> wvf_bin;
       wvf_bin.reserve(wvf.size());
@@ -320,7 +321,6 @@ void pmtTriggerProducer::produce(art::Event & e)
             wvfHist->SetBinContent(i + 1, (double)wvf[i]);
          }
       } // end histo
-
 
       if (fStartTime > fMinStartTime){
          for (double i = fStartTime-fMinStartTime; i>0.; i-=(1./fSampling)){
@@ -355,6 +355,7 @@ void pmtTriggerProducer::produce(art::Event & e)
          if(channel_bin_wvfs.at(i_ch).at(i)==1 || wvf_bin[i]==1){channel_bin_wvfs.at(i_ch)[i]=1;}else{channel_bin_wvfs.at(i_ch)[i]=0;}
       }
       wvf_bin.clear();
+      wvf_bin.shrink_to_fit();
       waveHandle.clear();
 
    }//wave handle loop
@@ -517,7 +518,9 @@ void pmtTriggerProducer::produce(art::Event & e)
        }
 
        wvf_bin_down.clear();
+       wvf_bin_down.shrink_to_fit();
        wvf_combine.clear();
+       wvf_combine.shrink_to_fit();
 
      }
 
@@ -554,15 +557,21 @@ void pmtTriggerProducer::produce(art::Event & e)
 
    //clear variables
    passed_trigger.clear();
+   passed_trigger.shrink_to_fit();
    max_passed = 0;
 
    if (fVerbose){std::cout << "Number of PMT waveforms: " << num_pmt_wvf << std::endl;}
    if (fVerbose){std::cout << "Number of PMT channels: " << num_pmt_ch << std::endl;}
 
    channel_bin_wvfs.clear();
+   channel_bin_wvfs.shrink_to_fit();
    paired.clear();
+   paired.shrink_to_fit();
    unpaired_wvfs.clear();
+   unpaired_wvfs.shrink_to_fit();
+
    wvf_bin_0.clear();
+   wvf_bin_0.shrink_to_fit();
 
 } // pmtTriggerProducer::produce()
 

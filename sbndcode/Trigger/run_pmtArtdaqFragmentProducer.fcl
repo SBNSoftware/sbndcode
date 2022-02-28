@@ -2,6 +2,7 @@
 #include "messages_sbnd.fcl"
 
 #include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
 
 #include "pmtArtdaqFragmentProducer.fcl"
 
@@ -18,15 +19,14 @@ services:
 source:
 {
   module_type: RootInput
-  maxEvents:  10        # Number of events to create                                                              
+  maxEvents:  -1        # Number of events to create                                                              
 }
 
 outputs:
 {
  out1:
  {
-   module_type: RootOutput
-   fileName:    "fragmenttest.root" #default file name, can override from command line with -o or --output             
+   @table::sbnd_rootoutput
    fastCloning: true
  }
 }
@@ -48,3 +48,6 @@ physics:
  end_paths: [ stream1 ]
 
 }
+
+physics.producers.fragmentProducer.MultiplicityThreshold: 10
+physics.producers.fragmentProducer.BeamWindowLength: 1.8
