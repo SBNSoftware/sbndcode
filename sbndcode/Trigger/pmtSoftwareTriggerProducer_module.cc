@@ -23,6 +23,7 @@
 #include "artdaq-core/Data/Fragment.hh"
 #include "artdaq-core/Data/ContainerFragment.hh"
 
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
 
 // ROOT includes
@@ -70,13 +71,20 @@ private:
 
   std::string fBaselineAlgo;
   double fInputBaseline;
-
   bool fAreaToPE; // Use area to calculate number of PEs
   double fSPEArea; // If AreaToPE is true, this number is used as single PE area (in ADC counts)
+
+  // histogram info  
+  std::stringstream histname; //raw waveform hist name
+  art::ServiceHandle<art::TFileService> tfs;
 
   // event information
   int fRun, fSubrun;
   art::EventNumber_t fEvent;
+
+  // PD information
+  opdet::sbndPDMapAlg pdMap; // photon detector map
+  std::vector<unsigned int> channelList; 
 
   // beam window
   // set in artdaqFragment producer, in reality would be provided by event builder
@@ -88,14 +96,9 @@ private:
   uint32_t fTriggerTime;
   bool fWvfmsFound;
   std::vector<std::vector<uint16_t>> fWvfmsVec;
-  // std::vector<double> fWvfmsBaseline;
-  // std::vector<double> fWvfmsBaselineSigma; 
 
   // pmt information 
   std::vector<sbnd::trigger::pmtInfo> fpmtInfoVec;
-
-  std::stringstream histname; //raw waveform hist name
-  art::ServiceHandle<art::TFileService> tfs;
 
   void checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag);
   void analyzeCAEN1730Fragment(const artdaq::Fragment &frag);
@@ -115,7 +118,7 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   fSaveHists(p.get<bool>("SaveHists",false)),
   fBaselineAlgo(p.get<std::string>("BaselineAlgo", "estimate")),
   fInputBaseline(p.get<double>("InputBaseline", 8000)),
-  fAreaToPE(p.get<bool>("AreaToPE", false)),
+  fAreaToPE(p.get<bool>("AreaToPE", true)),
   fSPEArea(p.get<double>("SPEArea", 66.33))
   // More initializers here.
 {
@@ -124,6 +127,13 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
 
   beamWindowStart = fTriggerTimeOffset*1e9;
   beamWindowEnd = beamWindowStart + fBeamWindowLength*1000;
+
+  // build PD map and channel list
+  auto subsetCondition = [](auto const& i)->bool { return i["pd_type"] == "pmt_coated" || i["pd_type"] == "pmt_uncoated"; };
+  auto pmtMap = pdMap.getCollectionFromCondition(subsetCondition);
+  for(auto const& i:pmtMap){
+    channelList.push_back(i["channel"]);
+  }
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
@@ -181,18 +191,53 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
 
     pmtSoftwareTriggerMetrics->foundBeamTrigger = true;
     // store timestamp of trigger, relative to beam window start
-    pmtSoftwareTriggerMetrics->triggerTimestamp = fTriggerTime - beamWindowStart;
-    if (fVerbose) std::cout << "Saving trigger timestamp: " << fTriggerTime - beamWindowStart << " ns" << std::endl;
-  
+    double triggerTimeStamp = fTriggerTime - beamWindowStart;
+    pmtSoftwareTriggerMetrics->triggerTimestamp = triggerTimeStamp;
+    if (fVerbose) std::cout << "Saving trigger timestamp: " << triggerTimeStamp << " ns" << std::endl;
+
+    double promptPE = 0;
+    double prelimPE = 0; 
+
+    int nAboveThreshold = 0; 
+    int beamStartBin = (triggerTimeStamp > 1000)? 0 : int(500 - abs((triggerTimeStamp-1000)/2));
+    int beamEndBin   = (triggerTimeStamp > 1000)? int(500 + (1800 - triggerTimeStamp)/2) : (beamStartBin + 900);
+
     // wvfm loop to calculate metrics 
     for (int i_ch = 0; i_ch < 120; ++i_ch){
-      auto pmtInfo = fpmtInfoVec.at(i_ch);
+      auto &pmtInfo = fpmtInfoVec.at(i_ch);
+      pmtInfo.channel = channelList.at(i_ch);
+
       // calculate baseline 
       if (fBaselineAlgo == "constant"){ pmtInfo.baseline=fInputBaseline; pmtInfo.baselineSigma = 2; }
       else if (fBaselineAlgo == "estimate") calculateBaseline(i_ch);
 
-      SimpleThreshAlgo(i_ch); 
-    }
+      // count number of PMTs above threshold 
+      auto wvfm = fWvfmsVec[i_ch];
+      for (int bin = beamStartBin; bin < beamEndBin; ++bin){
+        auto adc = wvfm[bin];
+        if (adc < 7690){nAboveThreshold++; break; } 
+        }
+
+      // pulse finder
+      SimpleThreshAlgo(i_ch);
+
+      // calculate prompt and preliminary light
+      for (auto pulse : pmtInfo.pulseVec){
+        // std::cout << "t_start, t_end" << pulse.t_start << ", " << pulse.t_end << std::endl;
+        if (pulse.t_start > 500 && pulse.t_end < 550) promptPE+=pulse.pe;
+        if ((triggerTimeStamp) > 1000){ if (pulse.t_end < 500) prelimPE+=pulse.pe; }
+        else if (triggerTimeStamp < 1000){
+          if (pulse.t_start > (500 - abs((triggerTimeStamp-1000)/2)) && pulse.t_end < 500) prelimPE+=pulse.pe; 
+        }
+      }
+    } // end of wvfm loop 
+    pmtSoftwareTriggerMetrics->promptPE = promptPE;
+    pmtSoftwareTriggerMetrics->prelimPE = prelimPE;
+    pmtSoftwareTriggerMetrics->nAboveThreshold = nAboveThreshold;
+    // std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
+    // std::cout << "prompt pe: " << promptPE << std::endl;
+    // std::cout << "prelim pe: " << prelimPE << std::endl;
+
     // start histo 
     if (fSaveHists == true){
       int hist_id = -1; 
@@ -321,6 +366,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
 
   std::vector<sbnd::trigger::pmtPulse> pulse_vec;
   sbnd::trigger::pmtPulse pulse; 
+  pulse.area = 0; pulse.peak = 0; pulse.t_start = 0; pulse.t_end = 0; pulse.t_peak = 0;
   for (auto const &adc : wvfm){
     if ( !fire && ((double)adc) <= start_threshold ){ // if its a new pulse 
       fire = true;
@@ -338,9 +384,9 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
 
     if(fire){ // if we're in a pulse 
       if (fAreaToPE == true) // Add this adc count to the integral
-        pulse.area += ((double)adc - baseline);
-      if (pulse.peak < ((double)adc - baseline)) { // Found a new maximum
-        pulse.peak = ((double)adc - baseline);
+        pulse.area += (baseline-(double)adc);
+      if (pulse.peak > (baseline-(double)adc)) { // Found a new maximum
+        pulse.peak = (baseline-(double)adc);
         pulse.t_peak = counter;
       }
     }
@@ -354,11 +400,8 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
     pulse.area = 0; pulse.peak = 0; pulse.t_start = 0; pulse.t_end = 0; pulse.t_peak = 0;
   }
 
-  std::cout << "number of pulses: " << pulse_vec.size() << std::endl;
-  pmtInfo.pulseVec = pulse_vec; 
-
-  for (size_t i_pulse = 0; i_pulse < pulse_vec.size(); ++i_pulse){
-    auto &pulse = pulse_vec[i_pulse];
+  pmtInfo.pulseVec = pulse_vec;
+  for (auto &pulse : pmtInfo.pulseVec){
     if (fAreaToPE == true){ pulse.pe = pulse.area/fSPEArea;}
   }
 }
