@@ -22,10 +22,12 @@
 #include "TTree.h"
 
 #include "nusimdata/SimulationBase/MCTruth.h"
+#include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "larcoreobj/SummaryData/POTSummary.h"
 #include "lardataobj/Simulation/AuxDetHit.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
 
 class CRTAnalysis;
 
@@ -51,6 +53,7 @@ private:
   std::string _mctruth_label;
   std::string _g4_label;
   std::string _auxdethit_label;
+  std::string _crtdata_label;
   std::string _crthit_label;
   std::string _crttrack_label;
 
@@ -68,11 +71,15 @@ private:
   float _mct_sp_vz; ///< Single particle vertex Z
 
   std::vector<int> _mcp_pdg; ///< G4 MCParticle PDG
+  std::vector<double> _mcp_startx; ///< G4 MCParticle start point X
+  std::vector<double> _mcp_starty; ///< G4 MCParticle start point Y
+  std::vector<double> _mcp_startz; ///< G4 MCParticle start point Z
   std::vector<double> _mcp_endx; ///< G4 MCParticle end point X
   std::vector<double> _mcp_endy; ///< G4 MCParticle end point Y
   std::vector<double> _mcp_endz; ///< G4 MCParticle end point Z
   std::vector<int> _mcp_isprimary; ///< G4 MCParticle, true if primary
 
+  std::vector<double> _adh_t; ///< AuxDetHit time
   std::vector<double> _adh_e; ///< AuxDetHit deposited energy
   std::vector<double> _adh_x; ///< AuxDetHit X
   std::vector<double> _adh_y; ///< AuxDetHit Y
@@ -83,11 +90,18 @@ private:
   std::vector<double> _chit_y; ///< CRT hit y
   std::vector<double> _chit_z; ///< CRT hit z
   std::vector<double> _chit_time; ///< CRT hit time
+  std::vector<double> _chit_h1_time; ///< CRT hit time (1DHit 1)
+  std::vector<double> _chit_h2_time; ///< CRT hit time (1DHit 2)
   std::vector<double> _chit_pes; ///< CRT hit PEs
   std::vector<int> _chit_plane; ///< CRT hit plane
+  std::vector<float> _chit_true_t; ///< CRT hit true time (from sim energy dep)
+  std::vector<float> _chit_true_e; ///< CRT hit true energy (from sim energy dep)
 
   std::vector<double> _ct_time; ///< CRT track time
   std::vector<double> _ct_pes; ///< CRT track PEs
+  std::vector<double> _ct_length; ///< CRT track length
+  std::vector<double> _ct_tof; ///< CRT track time of flight
+  std::vector<double> _ct_true_tof;  ///< CRT track time of flight, true
   std::vector<double> _ct_x1; ///< CRT track x1
   std::vector<double> _ct_y1; ///< CRT track y1
   std::vector<double> _ct_z1; ///< CRT track z1
@@ -111,6 +125,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _mctruth_label = p.get<std::string>("MCTruthLabel", "generator");
   _g4_label = p.get<std::string>("G4Label", "largeant");
   _auxdethit_label = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
+  _crtdata_label = p.get<std::string>("CRTDataLabel", "crt");
   _crthit_label = p.get<std::string>("CRTHitLabel", "crthit");
   _crttrack_label = p.get<std::string>("CRTTrackLabel", "crttrack");
 
@@ -131,11 +146,15 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("mct_sp_vz", &_mct_sp_vz, "mct_sp_vz/F");
 
   _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
+  _tree->Branch("mcp_startx", "std::vector<double>", &_mcp_startx);
+  _tree->Branch("mcp_starty", "std::vector<double>", &_mcp_starty);
+  _tree->Branch("mcp_startz", "std::vector<double>", &_mcp_startz);
   _tree->Branch("mcp_endx", "std::vector<double>", &_mcp_endx);
   _tree->Branch("mcp_endy", "std::vector<double>", &_mcp_endy);
   _tree->Branch("mcp_endz", "std::vector<double>", &_mcp_endz);
   _tree->Branch("mcp_isprimary", "std::vector<int>", &_mcp_isprimary);
 
+  _tree->Branch("adh_t", "std::vector<double>", &_adh_t);
   _tree->Branch("adh_e", "std::vector<double>", &_adh_e);
   _tree->Branch("adh_x", "std::vector<double>", &_adh_x);
   _tree->Branch("adh_y", "std::vector<double>", &_adh_y);
@@ -146,11 +165,18 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_y", "std::vector<double>", &_chit_y);
   _tree->Branch("chit_z", "std::vector<double>", &_chit_z);
   _tree->Branch("chit_time", "std::vector<double>", &_chit_time);
+  _tree->Branch("chit_h1_time", "std::vector<double>", &_chit_h1_time);
+  _tree->Branch("chit_h2_time", "std::vector<double>", &_chit_h2_time);
   _tree->Branch("chit_pes", "std::vector<double>", &_chit_pes);
   _tree->Branch("chit_plane", "std::vector<int>", &_chit_plane);
+  _tree->Branch("chit_true_t", "std::vector<float>", &_chit_true_t);
+  _tree->Branch("chit_true_e", "std::vector<float>", &_chit_true_e);
 
   _tree->Branch("ct_time", "std::vector<double>", &_ct_time);
   _tree->Branch("ct_pes", "std::vector<double>", &_ct_pes);
+  _tree->Branch("ct_length", "std::vector<double>", &_ct_length);
+  _tree->Branch("ct_tof", "std::vector<double>", &_ct_tof);
+  _tree->Branch("ct_true_tof", "std::vector<double>", &_ct_true_tof);
   _tree->Branch("ct_x1", "std::vector<double>", &_ct_x1);
   _tree->Branch("ct_y1", "std::vector<double>", &_ct_y1);
   _tree->Branch("ct_z1", "std::vector<double>", &_ct_z1);
@@ -221,6 +247,14 @@ void CRTAnalysis::analyze(art::Event const& e)
   std::vector<art::Ptr<sbn::crt::CRTHit>> crt_hit_v;
   art::fill_ptr_vector(crt_hit_v, crt_hit_h);
 
+  // Get the CRT Hits to CRTData association
+  art::FindManyP<sbnd::crt::CRTData> crt_hit_to_data (crt_hit_h, e, _crthit_label);
+
+  // Get the CRTData to AuxDetIDE association
+  art::Handle<std::vector<sbnd::crt::CRTData>> crt_data_h;
+  e.getByLabel(_crtdata_label, crt_data_h);
+  art::FindManyP<sim::AuxDetIDE> crt_data_to_ides (crt_data_h, e, _crtdata_label);
+
   //
   // Get the CRT Tracks
   //
@@ -264,6 +298,9 @@ void CRTAnalysis::analyze(art::Event const& e)
   //
   size_t n_mcp = mcp_v.size();
   _mcp_pdg.resize(n_mcp);
+  _mcp_startx.resize(n_mcp);
+  _mcp_starty.resize(n_mcp);
+  _mcp_startz.resize(n_mcp);
   _mcp_endx.resize(n_mcp);
   _mcp_endy.resize(n_mcp);
   _mcp_endz.resize(n_mcp);
@@ -274,12 +311,20 @@ void CRTAnalysis::analyze(art::Event const& e)
     if (particle->StatusCode() != 1) continue;
     // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
     _mcp_pdg[i] = particle->PdgCode();
+    _mcp_startx[i] = particle->Vx();
+    _mcp_starty[i] = particle->Vy();
+    _mcp_startz[i] = particle->Vz();
     _mcp_endx[i] = particle->EndX();
     _mcp_endy[i] = particle->EndY();
     _mcp_endz[i] = particle->EndZ();
     _mcp_isprimary[i] = particle->Process() == "primary";
-    std::cout << "MCP " << _mcp_pdg[i] << ", p = " << particle->P() << ", process = "
-              << particle->Process() << ": end point = ("
+    std::cout << "MCP " << _mcp_pdg[i] << ", p = " << particle->P()
+              << "(" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
+              << ", process = "
+              << particle->Process() << ": start point = ("
+              << _mcp_startx[i] << ", " << _mcp_starty[i] << ", " << _mcp_startz[i]
+              << ") - start process: " << particle->Process()
+              << " --- end point = ("
               << _mcp_endx[i] << ", " << _mcp_endy[i] << ", " << _mcp_endz[i]
               << ") - end process: " << particle->EndProcess() << std::endl;
   }
@@ -290,6 +335,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   //
   size_t n_adh = adh_v.size();
   std::cout << "n_adh " << n_adh << std::endl;
+  _adh_t.resize(n_adh);
   _adh_e.resize(n_adh);
   _adh_x.resize(n_adh);
   _adh_y.resize(n_adh);
@@ -299,6 +345,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   for (size_t i = 0; i < n_adh; i++) {
     auto auxdethit = adh_v[i];
     // if (0.5 * (auxdethit->GetEntryZ() + auxdethit->GetExitZ()) > -164) continue;
+    _adh_t[i] = 0.5 * (auxdethit->GetEntryT() + auxdethit->GetExitT());
     _adh_e[i] = auxdethit->GetEnergyDeposited();
     _adh_x[i] = 0.5 * (auxdethit->GetEntryX() + auxdethit->GetExitX());
     _adh_y[i] = 0.5 * (auxdethit->GetEntryY() + auxdethit->GetExitY());
@@ -318,8 +365,12 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_y.resize(n_hits);
   _chit_z.resize(n_hits);
   _chit_time.resize(n_hits);
+  _chit_h1_time.resize(n_hits);
+  _chit_h2_time.resize(n_hits);
   _chit_pes.resize(n_hits);
   _chit_plane.resize(n_hits);
+  _chit_true_t.resize(n_hits);
+  _chit_true_e.resize(n_hits);
 
   for (size_t i = 0; i < n_hits; i++) {
 
@@ -328,7 +379,9 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_x[i] = hit->x_pos;
     _chit_y[i] = hit->y_pos;
     _chit_z[i] = hit->z_pos;
-    _chit_time[i] = hit->ts1_ns * 0.001;
+    _chit_time[i] = hit->ts1_ns;
+    _chit_h1_time[i] = 0.; // to be implemented
+    _chit_h2_time[i] = 0.; // to be implemented
     _chit_pes[i] = hit->peshit;
 
     if (hit->tagger == "volTaggerNorth_0") {
@@ -337,7 +390,31 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_plane[i] = 1; // downstream
     }
 
-    std::cout << "CRT hit, z = " << _chit_z[i] << std::endl;
+    // From the hit, get the associated CRTData,
+    // then the associated AuxDetIDE, so we can
+    // retrieve the truth info
+    _chit_true_t[i] = 0;
+    _chit_true_e[i] = 0;
+    size_t n_ides = 0;
+    auto crt_data_v = crt_hit_to_data.at(hit.key());
+    for (auto crt_data : crt_data_v) {
+      auto ide_v = crt_data_to_ides.at(crt_data.key());
+      for (auto ide : ide_v) {
+        _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
+        _chit_true_e[i] += ide->energyDeposited;
+        n_ides++;
+      }
+    }
+    _chit_true_t[i] /= n_ides;
+    _chit_true_e[i] /= n_ides;
+
+    // Also extract the times of the two
+    if (crt_data_v.size() == 2) {
+      _chit_h1_time[i] = crt_data_v.at(0)->T0();
+      _chit_h2_time[i] = crt_data_v.at(1)->T0();
+    }
+
+    std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_time[i] << ", h2 time " << _chit_h2_time[i] << ", hit time " << _chit_time[i] << std::endl;
   }
 
   //
@@ -346,6 +423,9 @@ void CRTAnalysis::analyze(art::Event const& e)
   size_t n_tracks = crt_track_v.size();
   _ct_pes.resize(n_tracks);
   _ct_time.resize(n_tracks);
+  _ct_length.resize(n_tracks);
+  _ct_tof.resize(n_tracks);
+  _ct_true_tof.resize(n_tracks);
   _ct_x1.resize(n_tracks);
   _ct_y1.resize(n_tracks);
   _ct_z1.resize(n_tracks);
@@ -358,15 +438,44 @@ void CRTAnalysis::analyze(art::Event const& e)
     auto track = crt_track_v[i];
 
     _ct_pes[i] = track->peshit;
-    _ct_time[i] = track->ts1_ns * 0.001;
+    _ct_time[i] = track->ts1_ns;
+    _ct_length[i] = track->length;
+    _ct_tof[i] = track->ts0_ns_h2 - track->ts0_ns_h1;
     _ct_x1[i] = track->x1_pos;
     _ct_y1[i] = track->y1_pos;
     _ct_z1[i] = track->z1_pos;
     _ct_x2[i] = track->x2_pos;
     _ct_y2[i] = track->y2_pos;
     _ct_z2[i] = track->z2_pos;
-    std::cout << "CRT track, z1 = " << _ct_z1[i] << ", z2 = " << _ct_z2[i] << std::endl;
+    std::cout << "CRT track, z1 = " << _ct_z1[i] << ", z2 = " << _ct_z2[i] << ", ts0_ns_h1 = " << track->ts0_ns_h1 << ", ts0_ns_h2 = " << track->ts0_ns_h2 << ", tof = " << _ct_tof[i] << std::endl;
+
+    // From the hit, get the associated CRTData,
+    // then the associated AuxDetIDE, so we can
+    // retrieve the truth info
+    _ct_true_tof[i] = 0;
+    // 1. Get the hits
+    auto hit_v = crt_track_to_hit.at(track.key());
+    assert(hit_v.size == 2); // 2 hits per track
+    for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++) {
+      auto hit = hit_v[i_hit];
+      float hit_time = 0;
+      size_t n_ides = 0;
+      // 1. Get the CRTData
+      auto crt_data_v = crt_hit_to_data.at(hit.key());
+      for (auto crt_data : crt_data_v) {
+        // 2. Get the AuxDetIDE
+        auto ide_v = crt_data_to_ides.at(crt_data.key());
+        for (auto ide : ide_v) {
+          hit_time += 0.5 * (ide->entryT + ide->exitT);
+          n_ides++;
+        }
+      }
+      hit_time /= n_ides;
+      if (i_hit == 0) _ct_true_tof[i] -= hit_time;
+      if (i_hit == 1) _ct_true_tof[i] += hit_time;
+    }
   }
+
 
 
   //
