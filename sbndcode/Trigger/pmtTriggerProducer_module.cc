@@ -246,8 +246,8 @@ void pmtTriggerProducer::produce(art::Event & e)
    }
 
    //find min and max start and end times to initialize all vectors to same full waveform length
-   double fMinStartTime = -1500.0;//in us
-   double fMaxEndTime = 1500.0;//in us
+   double fMinStartTime = -1510.0;//in us
+   double fMaxEndTime = 1510.0;//in us
 
    for(auto const& wvf : (*waveHandle)) {
      fChNumber = wvf.ChannelNumber();
@@ -547,6 +547,9 @@ void pmtTriggerProducer::produce(art::Event & e)
    }
    pmt_time.maxPMTs = max_passed;
    pmts_passed->push_back(pmt_time);
+
+   if (fVerbose){std::cout << "Length of passed trigger: "  << pmt_time.numPassed.size() << std::endl;}
+   if (fVerbose){std::cout << "Max number of PMTs passed: " << pmt_time.maxPMTs << std::endl;}
 
    // the following lines "push" the relevant products you want to produce
    // EXAMPLE:

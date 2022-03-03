@@ -165,8 +165,8 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   }
 
   // create empty vectors to hold waveforms for each channel
-  double fMinStartTime = -1500.0;//in us
-  double fMaxEndTime = 1500.0;//in us
+  double fMinStartTime = -1510.0;//in us
+  double fMaxEndTime = 1510.0;//in us
 
   for(auto const& wvf : (*wvfmHandle)) {
     double fChNumber = wvf.ChannelNumber();
