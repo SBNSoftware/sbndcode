@@ -7,3 +7,5 @@ physics.simulate: [ rns, crt ]
 # Remove unnecesary processes
 physics.producers.daq: @erase
 physics.producers.opdaq: @erase
+
+#include "use_crt_beam_tele_geometry.fcl"

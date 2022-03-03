@@ -5,3 +5,6 @@ process_name: RecoCRT
 physics.crtreco: [ rns, crthit, crttrack ]
 
 physics.trigger_paths: [ crtreco ]
+
+#include "use_crt_beam_tele_geometry.fcl"
+

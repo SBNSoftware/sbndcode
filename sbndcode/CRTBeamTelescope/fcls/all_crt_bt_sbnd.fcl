@@ -107,3 +107,7 @@ outputs:
 
 services.ParticleListAction.keepEMShowerDaughters: false
 
+
+#include "use_crt_beam_tele_geometry.fcl"
+
+
