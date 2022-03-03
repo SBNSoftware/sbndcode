@@ -67,6 +67,15 @@ private:
   float _mct_sp_vy; ///< Single particle vertex Y
   float _mct_sp_vz; ///< Single particle vertex Z
 
+  float _mct_sp_2_pdg; ///< For the double-muon studys, the second particle PDG
+  float _mct_sp_2_e; ///< For the double-muon studys, the second particle energy
+  float _mct_sp_2_px; ///< For the double-muon studys, the second particle momentum X
+  float _mct_sp_2_py; ///< For the double-muon studys, the second particle momentum Y
+  float _mct_sp_2_pz; ///< For the double-muon studys, the second particle momentum Z
+  float _mct_sp_2_vx; ///< For the double-muon studys, the second particle vertex X
+  float _mct_sp_2_vy; ///< For the double-muon studys, the second particle vertex Y
+  float _mct_sp_2_vz; ///< For the double-muon studys, the second particle vertex Z
+
   std::vector<int> _mcp_pdg; ///< G4 MCParticle PDG
   std::vector<double> _mcp_endx; ///< G4 MCParticle end point X
   std::vector<double> _mcp_endy; ///< G4 MCParticle end point Y
@@ -100,7 +109,6 @@ private:
   int _sr_run, _sr_subrun;
   double _sr_begintime, _sr_endtime;
   double _sr_pot; ///< Number of POTs per subrun
-
 };
 
 
@@ -129,6 +137,15 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("mct_sp_vx", &_mct_sp_vx, "mct_sp_vx/F");
   _tree->Branch("mct_sp_vy", &_mct_sp_vy, "mct_sp_vy/F");
   _tree->Branch("mct_sp_vz", &_mct_sp_vz, "mct_sp_vz/F");
+
+  _tree->Branch("mct_sp_2_pdg", &_mct_sp_2_pdg, "mct_sp_2_pdg/F");
+  _tree->Branch("mct_sp_2_e", &_mct_sp_2_e, "mct_sp_2_e/F");
+  _tree->Branch("mct_sp_2_px", &_mct_sp_2_px, "mct_sp_2_px/F");
+  _tree->Branch("mct_sp_2_py", &_mct_sp_2_py, "mct_sp_2_py/F");
+  _tree->Branch("mct_sp_2_pz", &_mct_sp_2_pz, "mct_sp_2_pz/F");
+  _tree->Branch("mct_sp_2_vx", &_mct_sp_2_vx, "mct_sp_2_vx/F");
+  _tree->Branch("mct_sp_2_vy", &_mct_sp_2_vy, "mct_sp_2_vy/F");
+  _tree->Branch("mct_sp_2_vz", &_mct_sp_2_vz, "mct_sp_2_vz/F");
 
   _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
   _tree->Branch("mcp_endx", "std::vector<double>", &_mcp_endx);
@@ -240,13 +257,14 @@ void CRTAnalysis::analyze(art::Event const& e)
   //
   // Fill the MCTruth in the tree
   //
-  assert(mct_v.size() == 1);
+  assert(mct_v.size() <= 2);
   auto mct = mct_v[0];
   if (mct->Origin() == simb::kBeamNeutrino) {
 
   }
   else if (mct->Origin() == simb::kSingleParticle) {
-    assert(mct->NParticles() == 1);
+
+    assert(mct->NParticles() <= 2); // die if mct->NPartickes() != 1
     auto particle = mct->GetParticle(0);
     _mct_sp_pdg = particle.PdgCode();
     _mct_sp_e = particle.E();
@@ -255,7 +273,21 @@ void CRTAnalysis::analyze(art::Event const& e)
     _mct_sp_pz = particle.Pz();
     _mct_sp_vx = particle.Vx();
     _mct_sp_vy = particle.Vy();
-    _mct_sp_vz = particle.Vz();
+    _mct_sp_vz = particle.Vz();    
+    
+    if (mct->NParticles() > 1){ // modified to include double MIPs. 
+      auto particle_2 = mct->GetParticle(1);
+      _mct_sp_2_pdg = particle_2.PdgCode();
+      _mct_sp_2_e = particle_2.E();
+      _mct_sp_2_px = particle_2.Px();
+      _mct_sp_2_py = particle_2.Py();
+      _mct_sp_2_pz = particle_2.Pz();
+      _mct_sp_2_vx = particle_2.Vx();
+      _mct_sp_2_vy = particle_2.Vy();
+      _mct_sp_2_vz = particle_2.Vz();
+    }
+
+    //std::cout<<mct->NParticles()<<" "<<_mct_sp_pdg<<" "<<_mct_sp_2_pdg<<std::endl;
   }
 
 
@@ -278,10 +310,10 @@ void CRTAnalysis::analyze(art::Event const& e)
     _mcp_endy[i] = particle->EndY();
     _mcp_endz[i] = particle->EndZ();
     _mcp_isprimary[i] = particle->Process() == "primary";
-    std::cout << "MCP " << _mcp_pdg[i] << ", p = " << particle->P() << ", process = "
+    /*std::cout << "MCP " << _mcp_pdg[i] << ", p = " << particle->P() << ", process = "
               << particle->Process() << ": end point = ("
               << _mcp_endx[i] << ", " << _mcp_endy[i] << ", " << _mcp_endz[i]
-              << ") - end process: " << particle->EndProcess() << std::endl;
+              << ") - end process: " << particle->EndProcess() << std::endl;*/
   }
 
 
@@ -289,7 +321,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   // Fill the AuxDetHits in the tree
   //
   size_t n_adh = adh_v.size();
-  std::cout << "n_adh " << n_adh << std::endl;
+  //std::cout << "n_adh " << n_adh << std::endl;
   _adh_e.resize(n_adh);
   _adh_x.resize(n_adh);
   _adh_y.resize(n_adh);
@@ -337,13 +369,17 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_plane[i] = 1; // downstream
     }
 
-    std::cout << "CRT hit, z = " << _chit_z[i] << std::endl;
+    //std::cout << "CRT hit, z = " << _chit_z[i] << " "<< "_chit_pes: " <<_chit_pes[i] << std::endl;
   }
+
 
   //
   // Fill the CRT Tracks in the tree
   //
   size_t n_tracks = crt_track_v.size();
+
+  //std::cout<<crt_track_v.size()<<std::endl;
+
   _ct_pes.resize(n_tracks);
   _ct_time.resize(n_tracks);
   _ct_x1.resize(n_tracks);
@@ -365,7 +401,7 @@ void CRTAnalysis::analyze(art::Event const& e)
     _ct_x2[i] = track->x2_pos;
     _ct_y2[i] = track->y2_pos;
     _ct_z2[i] = track->z2_pos;
-    std::cout << "CRT track, z1 = " << _ct_z1[i] << ", z2 = " << _ct_z2[i] << std::endl;
+    //std::cout << "CRT track, z1 = " << _ct_z1[i] << ", z2 = " << _ct_z2[i] <<". _ct_pes: "<<_ct_pes[i]<< std::endl;
   }
 
 
@@ -373,8 +409,6 @@ void CRTAnalysis::analyze(art::Event const& e)
   // Fill the Tree
   //
   _tree->Fill();
-
-
 }
 
 

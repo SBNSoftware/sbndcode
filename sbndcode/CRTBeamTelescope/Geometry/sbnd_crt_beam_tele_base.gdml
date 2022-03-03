@@ -54,6 +54,24 @@
 	======================================================================
 -->
 
+<!--
+	======================================================================
+
+		SBND Geometry (Single file)
+		
+
+		Modifiers:
+			Li Jiaoyang (University of Edinburgh) 
+			< contact: jiaoyang.li@ed.ac.uk >
+
+		Notes: 
+			This file is only used to the CRT Beam Telescope study. 
+		Search for: 
+			Jiaoyang's Modification to see the change w.r.t the 
+			sbnd_v02_00_base.gdml
+	======================================================================
+-->
+
 	<define>
 
 		<constant name="_eD_" value="1.0e-3"/>
@@ -180,10 +198,13 @@
 
 		<!-- Detector Enclosure = Cryostat + CRTs -->
 		<constant name="dimDetEnclosure_X" value="dimDetectorHall_X_mm-_eD_" />
-		<constant name="dimDetEnclosure_Y" value="33.3*_ft_" />
+		<constant name="dimDetEnclosure_Y" value="333.3*_ft_" />
 		<constant name="dimDetEnclosure_Z" value="dimDetectorHall_Z_mm-_eD_" />
 		<constant name="dimTopCRTEnclosure_Y" value="buildingInternalSpace_Y" />
 
+		<!-- Jiaoyang modification -->
+		<constant name="cryostat_offset_y" value="30000.0" /> 
+		<!-- end of modification -->
 
 		<!-- Position of Enclosure (mm) -->
 		<constant name="whereEnclosure_X" 	value="-coordMembrane_at_Enclosure_X-coordTPC_at_Membrane_X"/>
@@ -195,7 +216,6 @@
 		<constant name="whereTPC_Y" value="coordTPC_at_Membrane_Y"/>
 		<constant name="whereTPC_Z" value="coordTPC_at_Membrane_Z"/>
 
-
 		<!-- APA Frames -->
 		<constant name="dimAPAFrame_W_mm" value="2565.677"/>
 		<constant name="dimAPAFrame_H_mm" value="4150.000"/>
@@ -205,7 +225,6 @@
 		<constant name="dimAPATube_W_mm" value="100"/>
 		<constant name="dimAPATube_T_mm" value="5"/>
 		<constant name="coordAPA_X_mm" value="4074.6/2.0"/>
-
 
 		<!-- CPA Frames -->
 		<constant name="dimCPATube_T_mm" value="2.0"/>
@@ -554,6 +573,12 @@
 		<constant name="CRT_DX_Side" value="3830"/>
 		<constant name="CRT_DZ_South" value="4750"/>
 		<constant name="CRT_DY_Bottom" value="3780"/>
+
+
+		<!--Jiaoyang's Edition for CRT stuff-->
+		<constant name="CRT_South_pos" value="7812.5 - whereEnclosure_Z"/>
+		<constant name="CRT_North_pos" value="-1650.0 - whereEnclosure_Z"/>
+		<!--end of my edition.-->
 
 		<constant name="G10strip_Y_width" value="BERNmodule_DX_middle-BERNmodule_DX_small-CRTmoduleBERN_w"/>
 		<constant name="G10strip_X_width" value="(BERNmodule_DY_small-1.5*CRTmoduleMINOS_w)/2.0"/>
@@ -2818,8 +2843,8 @@
 
                 <box lunit="cm" name="TaggerTopHigh" x="2*CRTmoduleY_l" y="5*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerTopLow" x="2*CRTmoduleY_l" y="5*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
-                <box lunit="cm" name="TaggerSouth" x="2*CRTmoduleX_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t"/>
-                <box lunit="cm" name="TaggerNorth" x="2*CRTmoduleX_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t"/>
+                <box lunit="cm" name="TaggerSouth" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t+4"/>
+                <box lunit="cm" name="TaggerNorth" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t+4"/>
                 <box lunit="cm" name="TaggerEast" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerWest" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerBottom" x="810" y="990" z="4.0"/>
@@ -4262,6 +4287,61 @@
                         </volume>
                 <!-- end -->
 
+                    <!-- Jiaoyang's modification: the new geometry which need more strips. -->
+                        <volume name="volAuxDetCRTStripArray133">
+                                <materialref ref="matPolystyrene"/>
+                                <solidref ref="CRTstripBERNArray"/>
+                                <loop for="CRT_declaring_modules" to="2167" step="1">
+                                        <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                                                <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                                                <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2152)*CRTstripBERN_w" z="0"/>
+                                        </physvol>
+                                </loop>
+                        </volume>
+                       
+                        <volume name="volAuxDetCRTStripArray134">
+                                <materialref ref="matPolystyrene"/>
+                                <solidref ref="CRTstripBERNArray"/>
+                                <loop for="CRT_declaring_modules" to="2183" step="1">
+                                        <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                                                <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                                                <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2168)*CRTstripBERN_w" z="0"/>
+                                        </physvol>
+                                </loop>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray135">
+                                <materialref ref="matPolystyrene"/>
+                                <solidref ref="CRTstripBERNArray"/>
+                                <loop for="CRT_declaring_modules" to="2199" step="1">
+                                        <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                                                <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                                                <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2184)*CRTstripBERN_w" z="0"/>
+                                        </physvol>
+                                </loop>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray136">
+                                <materialref ref="matPolystyrene"/>
+                                <solidref ref="CRTstripBERNArray"/>
+                                <loop for="CRT_declaring_modules" to="2215" step="1">
+                                        <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                                                <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                                                <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2200)*CRTstripBERN_w" z="0"/>
+                                        </physvol>
+                                </loop>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray137">
+                                <materialref ref="matPolystyrene"/>
+                                <solidref ref="CRTstripBERNArray"/>
+                                <loop for="CRT_declaring_modules" to="2231" step="1">
+                                        <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                                                <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                                                <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2216)*CRTstripBERN_w" z="0"/>
+                                        </physvol>
+                                </loop>
+                        </volume>
+                    
+                        <!-- end of Jiaoyang's modification -->
+
 
                 <!-- Declaring Modules -->
                    <loop for="CRT_module_maker" to="39" step="1">
@@ -4417,6 +4497,27 @@
                   </loop>
 
 
+                  <!-- Jiaoyang modification to declare more BERN modules to use -->
+                  <loop for="CRT_module_maker" to="137" step="1">
+                    <volume name="CRTmoduleBERNCoverCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERNCover"/>
+                    </volume>
+                    <volume name="volCRTModuleCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleBERN"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleBERNCoverCRT_module_maker"/>
+                        <position name="posCRTModuleCoverCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArrayCRT_module_maker"/>
+                        <position name="posvolAuxDetCRTStripArrayCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                  </loop>
+
+
 
                 <!-- ============================= -->
                 <!--        MOUNTING PANELS        -->
@@ -4484,9 +4585,49 @@
                         </loop>
                 </volume>
 
+
+               	<!-- Jiaoyang's modification -->
                 <volume name="volTaggerSouth">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerSouth"/>
+
+                    <!-- New modification-->
+                        <physvol>
+								<volumeref ref="volCRTModule108"/>
+								<position name="posCRT_module108" unit="cm" x="0." y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule109"/>
+								<position name="posCRT_module109" unit="cm" x="0.+CRTmoduleBERN_w" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule110"/>
+								<position name="posCRT_module110" unit="cm" x="0.-CRTmoduleBERN_w" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+
+						<physvol>
+								<volumeref ref="volCRTModule111"/>
+								<position name="posCRT_module111" unit="cm" x="0." y="-360.+CRTmoduleBERN_w/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+						<physvol>
+								<volumeref ref="volCRTModule112"/>
+								<position name="posCRT_module112" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*3/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+						<physvol>
+								<volumeref ref="volCRTModule113"/>
+								<position name="posCRT_module113" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*5/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+					
+
+                        <!-- orginal Geometry 
                         <loop for="CRT_placing_modules" to="43" step="1"/>
                                 <physvol>
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
@@ -4513,11 +4654,118 @@
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
+                       -->
                 </volume>
 
                 <volume name="volTaggerNorth">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerNorth"/>
+                        <!-- new geometry -->
+                        <physvol>
+								<volumeref ref="volCRTModule114"/>
+								<position name="posCRT_module114" unit="cm" x="0." y="-360.+CRTmoduleBERN_w/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule115"/>
+								<position name="posCRT_module115" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*3/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule116"/>
+								<position name="posCRT_module116" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*5/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule117"/>
+								<position name="posCRT_module117" unit="cm" x="0.-CRTmoduleBERN_l-22.1" y="-360.+CRTmoduleBERN_w/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule118"/>
+								<position name="posCRT_module118" unit="cm" x="0.-CRTmoduleBERN_l-22.1" y="-360.+CRTmoduleBERN_w*3/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule119"/>
+								<position name="posCRT_module119" unit="cm" x="0.-CRTmoduleBERN_l-22.1" y="-360.+CRTmoduleBERN_w*5/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule120"/>
+								<position name="posCRT_module120" unit="cm" x="0.+CRTmoduleBERN_l+22.1" y="-360.+CRTmoduleBERN_w/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule121"/>
+								<position name="posCRT_module121" unit="cm" x="0.+CRTmoduleBERN_l+22.1" y="-360.+CRTmoduleBERN_w*3/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule122"/>
+								<position name="posCRT_module122" unit="cm" x="0.+CRTmoduleBERN_l+22.1" y="-360.+CRTmoduleBERN_w*5/2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+
+
+                        <physvol>
+								<volumeref ref="volCRTModule123"/>
+								<position name="posCRT_module123" unit="cm" x="0." y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule124"/>
+								<position name="posCRT_module124" unit="cm" x="0.-CRTmoduleBERN_w" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule125"/>
+								<position name="posCRT_module125" unit="cm" x="0.-CRTmoduleBERN_w*2" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule126"/>
+								<position name="posCRT_module126" unit="cm" x="0.-CRTmoduleBERN_w*3" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+						
+                        <physvol>  because they are new modules declared, so the number start after the MINOs module : 133 
+								<volumeref ref="volCRTModule133"/>
+								<position name="posCRT_module133" unit="cm" x="0.-CRTmoduleBERN_w*4" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule134"/>
+								<position name="posCRT_module134" unit="cm" x="0.+CRTmoduleBERN_w" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule135"/>
+								<position name="posCRT_module135" unit="cm" x="0.+CRTmoduleBERN_w*2" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule136"/>
+								<position name="posCRT_module136" unit="cm" x="0.+CRTmoduleBERN_w*3" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol>
+								<volumeref ref="volCRTModule137"/>
+								<position name="posCRT_module137" unit="cm" x="0.+CRTmoduleBERN_w*4" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+						
+
+
+						<!-- old geometry 
                         <loop for="CRT_placing_modules" to="59" step="1"/>
                                 <physvol>
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
@@ -4544,6 +4792,7 @@
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
+						-->
                 </volume>
 
 				<volume name="volTaggerEast">
@@ -4613,6 +4862,7 @@
                         <solidref ref="TaggerBottom"/>
 
                         <!-- BERN -->
+                    <!-- Jiaoyang's Modification, since I am using BERN module here, Just comment out this part in case that LArSoft is unhappy 
                         <physvol>
                                 <volumeref ref="volCRTModule108"/>
                                 <position name="posCRT_module108" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleBERN_l/2)" y="BERNmodule_DY_large+(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
@@ -4703,6 +4953,9 @@
                                 <volumeref ref="volCRTModule126"/>
                                 <position name="posCRT_module126" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_l/2)" y="-BERNmodule_DY_large-(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
+                    -->
+
+
                         <!-- MINOS -->
                         <physvol>
                                 <volumeref ref="volCRTModule127"/>
@@ -5887,11 +6140,11 @@
 
 			<physvol>
 				<volumeref ref="volTPCPlane_V"/>
-				<positionref ref="posUPlane_E"/> <!-- Plane V is placed at U position as this wire plane is rotated w.r.t. TPC West -->
+				<positionref ref="posUPlane_E"/> <!-- WARNING: this should be posV, will have to be fixed once LArSoft View is fixed -->
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlane_U"/>
-				<positionref ref="posVPlane_E"/> <!-- Plane U is placed at V position as this wire plane is rotated w.r.t. TPC West -->
+				<positionref ref="posVPlane_E"/> <!-- WARNING: this should be posU, will have to be fixed once LArSoft View is fixed -->
 			</physvol>
 			<physvol>
 				<volumeref ref="volTPCPlaneVert"/>
@@ -6124,15 +6377,17 @@
 		<constant name="whereMembrane_X" value="coordMembrane_at_Enclosure_X"/>
 		<constant name="whereMembrane_Y" value="coordMembrane_at_Enclosure_Y"/>
 		<constant name="whereMembrane_Z" value="coordMembrane_at_Enclosure_Z"/>
-		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z" />
+		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="cryostat_offset_y" z="whereMembrane_Z" />
 		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
 		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
-		<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
-		<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/>
+
+		<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="CRT_South_pos"/>
+		<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="CRT_North_pos"/>
+
 		<position name="posCRT_East" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
 		<position name="postCRT_West" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
 		<position name="posCRT_Bottom" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-CRT_DY_Bottom" z="whereMembrane_Z"/>
-		<position name="posCryoPlywood" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
+		<position name="posCryoPlywood" unit="mm" x="whereMembrane_X" y="cryostat_offset_y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
 		<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
 	</define>
 
@@ -6173,6 +6428,7 @@
 			<solidref ref="boxDetectorEnclosure"/>
 
 			<!-- Positioning the CRT -->
+			<!-- Jiaoyang's modification: 
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
 					<positionref ref="posCRT_TopHigh"/>
@@ -6183,6 +6439,7 @@
 					<positionref ref="posCRT_TopLow"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
+			-->
 			<physvol>
 					<volumeref ref="volTaggerSouth"/>
 					<positionref ref="posCRT_South"/>
@@ -6192,6 +6449,7 @@
 					<positionref ref="posCRT_North"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
+			<!-- Jiaoyang's modification: 
 			<physvol>
 					<volumeref ref="volTaggerEast"/>
 					<positionref ref="posCRT_East"/>
@@ -6207,6 +6465,7 @@
 					<positionref ref="posCRT_Bottom"/>
 					<rotationref ref="rotateP90X180Z"/>
 			</physvol>
+			-->
 
 			<!-- Positioning the Cryostat -->
 			<physvol>
@@ -6232,11 +6491,12 @@
 
 
 			<!-- Positioning the Mass buffer -->
+			<!-- Jiaoyang's modification: 
 			<physvol>
 				<volumeref ref="volMassBuffer"/>
 				<positionref ref="posMassBuffer"/>
 			</physvol>
-
+			-->
 		</volume>
 
 		<!-- Detector Enclusure With Shielding (Overburden) -->
@@ -6245,6 +6505,7 @@
 			<solidref ref="boxDetectorEnclosure"/>
 
 			<!-- Positioning the CRT -->
+			
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
 					<positionref ref="posCRT_TopHigh"/>
@@ -6255,6 +6516,7 @@
 					<positionref ref="posCRT_TopLow"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
+			-->
 			<physvol>
 					<volumeref ref="volTaggerSouth"/>
 					<positionref ref="posCRT_South"/>
@@ -6264,6 +6526,7 @@
 					<positionref ref="posCRT_North"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
+			<!-- Jiaoyang's modification: 
 			<physvol>
 					<volumeref ref="volTaggerEast"/>
 					<positionref ref="posCRT_East"/>
@@ -6279,12 +6542,14 @@
 					<positionref ref="posCRT_Bottom"/>
 					<rotationref ref="rotateP90X180Z"/>
 			</physvol>
+			-->
 
 			<!-- Positioning the Shielding (Overburden) -->
 			<physvol>
 				<volumeref ref="volShielding"/>
 				<position name="posShielding" unit="mm" x="whereShielding_X" y="whereShielding_Y" z="whereShielding_Z" />
 			</physvol>
+
 
 			<!-- Positioning the Cryostat -->
 			<physvol>
@@ -6310,10 +6575,12 @@
 
 
 			<!-- Positioning the Mass buffer -->
+			<!-- Jiaoyang's modification: 
 			<physvol>
 				<volumeref ref="volMassBuffer"/>
 				<positionref ref="posMassBuffer"/>
 			</physvol>
+			-->
 		</volume>
 	</structure>
 	<!-- End of Detector Enclosure -->

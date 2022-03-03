@@ -1,4 +1,5 @@
 add_subdirectory(fcls)
+add_subdirectory(Geometry)
 
 art_make(
 MODULE_LIBRARIES larcorealg_Geometry
@@ -36,3 +37,4 @@ MODULE_LIBRARIES larcorealg_Geometry
                  sbndcode_RecoUtils
                  sbndcode_OpDetSim
 )
+
