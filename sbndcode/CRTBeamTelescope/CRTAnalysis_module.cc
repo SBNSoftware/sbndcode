@@ -309,9 +309,9 @@ void CRTAnalysis::analyze(art::Event const& e)
     _mct_sp_pz = particle.Pz();
     _mct_sp_vx = particle.Vx();
     _mct_sp_vy = particle.Vy();
-    _mct_sp_vz = particle.Vz();    
-    
-    if (mct->NParticles() > 1){ // modified to include double MIPs. 
+    _mct_sp_vz = particle.Vz();
+
+    if (mct->NParticles() > 1){ // modified to include double MIPs.
       auto particle_2 = mct->GetParticle(1);
       _mct_sp_2_pdg = particle_2.PdgCode();
       _mct_sp_2_e = particle_2.E();
@@ -443,12 +443,6 @@ void CRTAnalysis::analyze(art::Event const& e)
     }
     _chit_true_t[i] /= n_ides;
     _chit_true_e[i] /= n_ides;
-
-    // Also extract the times of the two
-    if (crt_data_v.size() == 2) {
-      _chit_h1_time[i] = crt_data_v.at(0)->T0();
-      _chit_h2_time[i] = crt_data_v.at(1)->T0();
-    }
 
     if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_time[i] << ", h2 time " << _chit_h2_time[i] << ", hit time " << _chit_time[i] << std::endl;
   }
