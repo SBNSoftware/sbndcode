@@ -181,7 +181,7 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
             double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
 
             // Create a CRT hit
-            std::cout << "Time resolution: " std::abs(t0_1 - t0_2) << std::endl;
+            std::cout << "Time resolution: " << std::abs(t0_1 - t0_2) << std::endl;
             sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
                                             mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
             std::vector<int> dataIds;
