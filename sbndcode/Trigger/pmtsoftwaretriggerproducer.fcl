@@ -8,6 +8,7 @@ pmtSoftwareTriggerProducer:
   BeamWindowLength: 1.8 # us, extended by 0.2us to account for delayed signals
   WvfmLength: 5120
   Verbose: true
+  SaveHists: false
 
   BaselineAlgo: "constant" 
   InputBaseline: 8000.0 #ADC
