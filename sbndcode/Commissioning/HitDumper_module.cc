@@ -48,6 +48,7 @@
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
+#include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
 
 
 // Truth includes
@@ -137,6 +138,8 @@ private:
   void ResetOpHitsVars(int n);
   /// Resets pmt hardware trigger variables
   void ResetPmtTriggerVars(int n);
+  /// Rests pmt software trigger variables
+  void ResetPmtSoftTriggerVars();
   /// Resets crossing muon tracks tree variables
   void ResetMuonTracksVars(int n);
   /// Resets crossing muon hit tree variables 
@@ -240,6 +243,14 @@ private:
   std::vector<int> _pmtTrigger_npmtshigh;    ///< number of pmt pairs above threshold, index = time during trigger window (usually beam spill)
   int _pmtTrigger_maxpassed;    ///< maximum number of pmt pairs above threshold during trigger window (usually beam spill)
 
+  // PMT software trigger variables 
+  bool   _pmtSoftTrigger_foundBeamTrigger;   /// Whether the beam spill was found or not 
+  int    _pmtSoftTrigger_tts;                /// Trigger Time Stamp (TTS), ns (relative to start of beam spill)
+  double _pmtSoftTrigger_promptPE;           /// Total PE 100 ns after the TTS
+  double _pmtSoftTrigger_prelimPE;           /// Total PE before the TTS, during the beam spill             
+  int    _pmtSoftTrigger_nAboveThreshold;    /// number of individual PMTs above ADC threshold during the beam spill
+  // std::vector<sbnd::trigger::pmtInfo> _pmtSoftTrigger_pmtInfoVec; /// vector of PMT information 
+
   // Muon track variables 
   int _nmuontrks;                            ///< number of muon tracks
   std::vector<double> _muontrk_t0;           ///< t0 (time of interaction)
@@ -326,6 +337,7 @@ private:
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fpmtTriggerModuleLabel; ///< Label for pmtTrigger dataproduct (to be set vis fcl)
+  std::string fpmtSoftTriggerModuleLabel; ///< Label for pmt software trigger data product (to be set via fcl)
   std::string fMuonTrackModuleLabel;  ///< Label for MuonTrack dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
@@ -342,6 +354,7 @@ private:
   bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
   bool freadpmtTrigger;    ///< Add pmt hardware trigger info to output (to be set via fcl)
+  bool freadpmtSoftTrigger;///< Add pmt software trigger info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
@@ -393,6 +406,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
   fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmttriggerproducer");
+  fpmtSoftTriggerModuleLabel = p.get<std::string>("pmtSoftTriggerModuleLabel", "pmtSoftwareTrigger");
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
@@ -402,6 +416,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
   freadpmtTrigger    = p.get<bool>("readpmtTrigger",true);
+  freadpmtSoftTrigger= p.get<bool>("readpmtSoftTrigger",true);
   freadMuonTracks    = p.get<bool>("readMuonTracks",true);
   freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
@@ -858,6 +873,26 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   //
+  // PMT Software Trigger
+  //
+  if (freadpmtSoftTrigger){
+    art::Handle<sbnd::trigger::pmtSoftwareTrigger> pmtSoftTriggerHandle;
+    if (evt.getByLabel(fpmtSoftTriggerModuleLabel, pmtSoftTriggerHandle)){
+      const sbnd::trigger::pmtSoftwareTrigger &pmtSoftTriggerMetrics = (*pmtSoftTriggerHandle);
+      ResetPmtSoftTriggerVars();
+      _pmtSoftTrigger_foundBeamTrigger = pmtSoftTriggerMetrics.foundBeamTrigger;
+      _pmtSoftTrigger_tts = pmtSoftTriggerMetrics.triggerTimestamp;
+      _pmtSoftTrigger_promptPE = pmtSoftTriggerMetrics.promptPE;
+      _pmtSoftTrigger_prelimPE = pmtSoftTriggerMetrics.prelimPE;
+      _pmtSoftTrigger_nAboveThreshold = pmtSoftTriggerMetrics.nAboveThreshold;
+      // _pmtSoftTrigger_pmtInfoVec = pmtsofttriggerlist[0]->pmtInfoVec;
+    }
+    else{
+      std::cout << "Failed to get sbnd::trigger::pmtSoftwareTrigger data product" << std::endl;
+    }
+  }
+
+  //
   // Muon tracks 
   //
   _nmuontrks = 0; 
@@ -1224,6 +1259,15 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("pmtTrigger_maxpassed", &_pmtTrigger_maxpassed, "pmtTrigger_maxpassed/I");
   }
 
+  if (freadpmtSoftTrigger){
+    fTree->Branch("pmtSoftTrigger_foundBeamTrigger", &_pmtSoftTrigger_foundBeamTrigger);
+    fTree->Branch("pmtSoftTrigger_tts", &_pmtSoftTrigger_tts);
+    fTree->Branch("pmtSoftTrigger_promptPE", &_pmtSoftTrigger_promptPE);
+    fTree->Branch("pmtSoftTrigger_prelimPE", &_pmtSoftTrigger_prelimPE);
+    fTree->Branch("pmtSoftTrigger_nAboveThreshold", &_pmtSoftTrigger_nAboveThreshold);
+    // fTree->Branch("pmtSoftTrigger_", &_pmtSoftTigger_)
+  }
+
   if (freadMuonTracks) {
     fTree->Branch("nmuontrks", &_nmuontrks, "nmuontrks/I");
     fTree->Branch("muontrk_t0", &_muontrk_t0);
@@ -1401,6 +1445,14 @@ void Hitdumper::ResetOpHitsVars(int n) {
 void Hitdumper::ResetPmtTriggerVars(int n){
   _pmtTrigger_npmtshigh.assign(n, DEFAULT_VALUE);
   _pmtTrigger_maxpassed = 0;
+}
+
+void Hitdumper::ResetPmtSoftTriggerVars(){
+  _pmtSoftTrigger_foundBeamTrigger = false;
+  _pmtSoftTrigger_tts = 0;
+  _pmtSoftTrigger_promptPE = 0;
+  _pmtSoftTrigger_prelimPE = 0;
+  _pmtSoftTrigger_nAboveThreshold = 0;
 }
 
 void Hitdumper::ResetMuonTracksVars(int n){

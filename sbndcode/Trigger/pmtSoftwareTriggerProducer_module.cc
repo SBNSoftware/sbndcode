@@ -71,6 +71,7 @@ private:
 
   std::string fBaselineAlgo;
   double fInputBaseline;
+  bool fFindPulses;
   bool fAreaToPE; // Use area to calculate number of PEs
   double fSPEArea; // If AreaToPE is true, this number is used as single PE area (in ADC counts)
 
@@ -118,7 +119,8 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   fSaveHists(p.get<bool>("SaveHists",false)),
   fBaselineAlgo(p.get<std::string>("BaselineAlgo", "estimate")),
   fInputBaseline(p.get<double>("InputBaseline", 8000)),
-  fAreaToPE(p.get<bool>("AreaToPE", true)),
+  fFindPulses(p.get<bool>("FindPulses", false)),
+  fAreaToPE(p.get<bool>("AreaToPE", false)),
   fSPEArea(p.get<double>("SPEArea", 66.33))
   // More initializers here.
 {
@@ -199,12 +201,16 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     double prelimPE = 0; 
 
     int nAboveThreshold = 0; 
-    int beamStartBin = (triggerTimeStamp > 1000)? 0 : int(500 - abs((triggerTimeStamp-1000)/2));
-    int beamEndBin   = (triggerTimeStamp > 1000)? int(500 + (1800 - triggerTimeStamp)/2) : (beamStartBin + 900);
+    int beamStartBin = (triggerTimeStamp >= 1000)? 0 : int(500 - abs((triggerTimeStamp-1000)/2));
+    int beamEndBin   = (triggerTimeStamp >= 1000)? int(500 + (1800 - triggerTimeStamp)/2) : (beamStartBin + 900);
+    // std::cout << "beamStartBin and beamEndBin: " << beamStartBin << ", " << beamEndBin << std::endl;
 
     // wvfm loop to calculate metrics 
     for (int i_ch = 0; i_ch < 120; ++i_ch){
       auto &pmtInfo = fpmtInfoVec.at(i_ch);
+      auto wvfm = fWvfmsVec[i_ch];
+
+      // assign channel 
       pmtInfo.channel = channelList.at(i_ch);
 
       // calculate baseline 
@@ -212,31 +218,44 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       else if (fBaselineAlgo == "estimate") calculateBaseline(i_ch);
 
       // count number of PMTs above threshold 
-      auto wvfm = fWvfmsVec[i_ch];
       for (int bin = beamStartBin; bin < beamEndBin; ++bin){
         auto adc = wvfm[bin];
-        if (adc < 7690){nAboveThreshold++; break; } 
-        }
+        if (adc < 7960){ nAboveThreshold++; break; } 
+      }
 
-      // pulse finder
-      SimpleThreshAlgo(i_ch);
+      // quick estimate prompt and preliminary light 
+      double baseline = pmtInfo.baseline;
+      // look at the 100 ns window after the trigger time 
+      auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
+      auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
+      if (fFindPulses == false){
+        double ch_promptPE = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
+        double ch_prelimPE = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
+        promptPE += ch_promptPE;
+        prelimPE += ch_prelimPE;
+      }
 
-      // calculate prompt and preliminary light
-      for (auto pulse : pmtInfo.pulseVec){
-        // std::cout << "t_start, t_end" << pulse.t_start << ", " << pulse.t_end << std::endl;
-        if (pulse.t_start > 500 && pulse.t_end < 550) promptPE+=pulse.pe;
-        if ((triggerTimeStamp) > 1000){ if (pulse.t_end < 500) prelimPE+=pulse.pe; }
-        else if (triggerTimeStamp < 1000){
-          if (pulse.t_start > (500 - abs((triggerTimeStamp-1000)/2)) && pulse.t_end < 500) prelimPE+=pulse.pe; 
+
+      // pulse finder + prompt and prelim calculation with pulses 
+      if (fFindPulses == true){
+        SimpleThreshAlgo(i_ch);
+        for (auto pulse : pmtInfo.pulseVec){
+          // std::cout << "t_start, t_end" << pulse.t_start << ", " << pulse.t_end << std::endl;
+          if (pulse.t_start > 500 && pulse.t_end < 550) promptPE+=pulse.pe;
+          if ((triggerTimeStamp) >= 1000){ if (pulse.t_end < 500) prelimPE+=pulse.pe; }
+          else if (triggerTimeStamp < 1000){
+            if (pulse.t_start > (500 - abs((triggerTimeStamp-1000)/2)) && pulse.t_end < 500) prelimPE+=pulse.pe; 
+          }
         }
       }
     } // end of wvfm loop 
+    
     pmtSoftwareTriggerMetrics->promptPE = promptPE;
     pmtSoftwareTriggerMetrics->prelimPE = prelimPE;
     pmtSoftwareTriggerMetrics->nAboveThreshold = nAboveThreshold;
-    // std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
-    // std::cout << "prompt pe: " << promptPE << std::endl;
-    // std::cout << "prelim pe: " << prelimPE << std::endl;
+    if (fVerbose) std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
+    if (fVerbose) std::cout << "prompt pe: " << promptPE << std::endl;
+    if (fVerbose) std::cout << "prelim pe: " << prelimPE << std::endl;
 
     // start histo 
     if (fSaveHists == true){
@@ -244,12 +263,10 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       for (size_t i_wvfm = 0; i_wvfm < fWvfmsVec.size(); ++i_wvfm){
         std::vector<uint16_t> wvfm = fWvfmsVec[i_wvfm];
         hist_id++;
-        if (fEvent<3){
+        if (fEvent<4){
             histname.str(std::string());
             histname << "event_" << fEvent
-                    << "_channel_" << i_wvfm
-                    << "_" << hist_id;
-            //Create a new histogram for binary waveform
+                    << "_channel_" << i_wvfm;
             double StartTime = ((fTriggerTime-beamWindowStart) - 500)*1e-3; // us
             double EndTime = StartTime + (5210*2)*1e-03; // us 
             TH1D *wvfmHist = tfs->make< TH1D >(histname.str().c_str(), "Raw Waveform", wvfm.size(), StartTime, EndTime);
@@ -329,8 +346,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::calculateBaseline(int i_ch){
   auto wvfm = fWvfmsVec[i_ch];
   auto &pmtInfo = fpmtInfoVec[i_ch]; 
   // assuming that the first 500 ns doesn't include peaks, find the mean of the ADC count as the baseline 
-  // this is also assuming the sampling rate of the waveform is 1 ns 
-  std::vector<uint16_t> subset = std::vector<uint16_t>(wvfm.begin(), wvfm.begin()+500);
+  std::vector<uint16_t> subset = std::vector<uint16_t>(wvfm.begin(), wvfm.begin()+250);
   double subset_mean = (std::accumulate(subset.begin(), subset.end(), 0))/(subset.size()); 
   double val = 0;
   for (size_t i=0; i<subset.size();i++){ val += (subset[i] - subset_mean)*(subset[i] - subset_mean);}
