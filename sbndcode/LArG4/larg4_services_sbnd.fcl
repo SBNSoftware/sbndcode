@@ -41,7 +41,8 @@ sbnd_physics_list_fastoptical:
 sbnd_particle_list_action:
 {
   service_type: "ParticleListActionService"
-  EnergyCut: 1e-5                          # Kinetic Energy cut in [MeV]
+  EnergyCut: 1e-2                          # Kinetic Energy cut, note Geant4 assumes this is in MeV.
+                                           # So: 1e-2 MeV = 10 KeV: we are applying a 10 keV cut.
   keepEMShowerDaughters: false             # If false, does not store electromagnetic shower daughter
                                            # particles in the MCParticles data product.
   storeTrajectories: true
