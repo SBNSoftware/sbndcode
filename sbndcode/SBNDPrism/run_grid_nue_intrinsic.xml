@@ -3,12 +3,11 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release "v09_35_01">
+<!ENTITY release "v09_42_00">
 <!ENTITY releasetag "e20:prof">
-<!ENTITY my_version "v1">
+<!ENTITY my_version "v10">
 <!ENTITY my_run "1">
 <!ENTITY name "mdeltutt_prism_nue_intr">
-<!-- <!ENTITY tag "test_ob_on"> -->
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY PNFSpath "/pnfs/sbnd/resilient/users/mdeltutt/">
@@ -31,7 +30,7 @@
   <larsoft>
     <tag>&release;</tag>
     <qual>&releasetag;</qual>
-    <local>&PNFSpath;Tarballs/sbndcode_v09_35_01_prism__&my_version;.tgz</local>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_42_00_prism__&my_version;.tgz</local>
   </larsoft>
 
   <!-- Project stages -->

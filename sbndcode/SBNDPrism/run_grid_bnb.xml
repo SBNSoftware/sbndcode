@@ -5,7 +5,7 @@
 <!DOCTYPE project [
 <!ENTITY release "v09_42_00">
 <!ENTITY releasetag "e20:prof">
-<!ENTITY my_version "v5">
+<!ENTITY my_version "v10">
 <!ENTITY my_run "1">
 <!ENTITY name "mdeltutt_prism_bnb">
 <!ENTITY file_type "data">
@@ -21,7 +21,7 @@
 
   <!-- Project size -->
   <!-- <numevents>10</numevents> -->
-  <numevents>2000000</numevents>
+  <numevents>1000000</numevents>
 
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
@@ -39,7 +39,6 @@
     <!-- <initscript>/pnfs/sbnd/persistent/users/mdeltutt/flux/setup_flux.sh</initscript> -->
     <fcl>prodgenie_nu_spill_tpc_sbnd.fcl</fcl>
     <fcl>run_prismanalyzer.fcl</fcl>
-    <!-- <inputdef>official_MCP2020A_prodoverlay_corsika_cosmics_proton_genie_nu_spill_gsimple-configf-v1_tpc-configf-v1_tpc_reco2_sbnd</inputdef> -->
     <!-- <defname>&name;_&tag;_gen</defname> -->
     <maxfilesperjob>1</maxfilesperjob>
     <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/prism_ana_bnb_&my_version;_&my_run;</outdir>
