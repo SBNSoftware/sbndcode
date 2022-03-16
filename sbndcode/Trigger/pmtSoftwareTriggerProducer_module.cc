@@ -5,6 +5,14 @@
 //
 // Generated at Thu Feb 17 13:22:51 2022 by Patrick Green using cetskelgen
 // from  version .
+
+// Module to implement software trigger metrics to the PMT Trigger simulation
+// Input: artdaq fragment output from the pmtArtdaqFragmentProducer.cc module
+// Calculates various PMT metrics for every event (that passes the hardware trigger)
+// Output: sbnd::trigger::pmtSoftwareTrigger data product 
+
+// More information can be found at:
+// https://sbnsoftware.github.io/sbndcode_wiki/SBND_Trigger
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
@@ -71,9 +79,10 @@ private:
 
   std::string fBaselineAlgo;
   double fInputBaseline;
+  double fInputBaselineSigma;
+  int fADCThreshold;
   bool fFindPulses;
-  bool fAreaToPE; // Use area to calculate number of PEs
-  double fSPEArea; // If AreaToPE is true, this number is used as single PE area (in ADC counts)
+  double fPEArea; // conversion factor from ADCxns area to PE count 
 
   // histogram info  
   std::stringstream histname; //raw waveform hist name
@@ -103,7 +112,7 @@ private:
 
   void checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag);
   void analyzeCAEN1730Fragment(const artdaq::Fragment &frag);
-  void calculateBaseline(int i_ch);
+  void estimateBaseline(int i_ch);
   void SimpleThreshAlgo(int i_ch);
 
 };
@@ -119,9 +128,10 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   fSaveHists(p.get<bool>("SaveHists",false)),
   fBaselineAlgo(p.get<std::string>("BaselineAlgo", "estimate")),
   fInputBaseline(p.get<double>("InputBaseline", 8000)),
+  fInputBaselineSigma(p.get<double>("InputBaselineSigma", 2)),
+  fADCThreshold(p.get<double>("ADCThreshold", 7960)),
   fFindPulses(p.get<bool>("FindPulses", false)),
-  fAreaToPE(p.get<bool>("AreaToPE", false)),
-  fSPEArea(p.get<double>("SPEArea", 66.33))
+  fPEArea(p.get<double>("PEArea", 66.33))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
@@ -200,10 +210,11 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     double promptPE = 0;
     double prelimPE = 0; 
 
-    int nAboveThreshold = 0; 
+    int nAboveThreshold = 0;
+    // find the waveform bins that correspond to the start and end of the extended spill window (0 -> 1.8 us) within the 10 us waveform 
+    // if the triggerTimeStamp < 1000, the beginning of the beam spill is *not* contained within the waveform 
     int beamStartBin = (triggerTimeStamp >= 1000)? 0 : int(500 - abs((triggerTimeStamp-1000)/2));
-    int beamEndBin   = (triggerTimeStamp >= 1000)? int(500 + (1800 - triggerTimeStamp)/2) : (beamStartBin + 900);
-    // std::cout << "beamStartBin and beamEndBin: " << beamStartBin << ", " << beamEndBin << std::endl;
+    int beamEndBin   = (triggerTimeStamp >= 1000)? int(500 + (fBeamWindowLength*1e3 - triggerTimeStamp)/2) : (beamStartBin + (fBeamWindowLength*1e3)/2);
 
     // wvfm loop to calculate metrics 
     for (int i_ch = 0; i_ch < 120; ++i_ch){
@@ -214,18 +225,17 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       pmtInfo.channel = channelList.at(i_ch);
 
       // calculate baseline 
-      if (fBaselineAlgo == "constant"){ pmtInfo.baseline=fInputBaseline; pmtInfo.baselineSigma = 2; }
-      else if (fBaselineAlgo == "estimate") calculateBaseline(i_ch);
+      if (fBaselineAlgo == "constant"){ pmtInfo.baseline=fInputBaseline; pmtInfo.baselineSigma = fInputBaselineSigma; }
+      else if (fBaselineAlgo == "estimate") estimateBaseline(i_ch);
 
       // count number of PMTs above threshold 
       for (int bin = beamStartBin; bin < beamEndBin; ++bin){
         auto adc = wvfm[bin];
-        if (adc < 7960){ nAboveThreshold++; break; } 
+        if (adc < ADCThreshold){ nAboveThreshold++; break; } 
       }
 
-      // quick estimate prompt and preliminary light 
+      // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
       double baseline = pmtInfo.baseline;
-      // look at the 100 ns window after the trigger time 
       auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
       auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
       if (fFindPulses == false){
@@ -235,12 +245,10 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
         prelimPE += ch_prelimPE;
       }
 
-
       // pulse finder + prompt and prelim calculation with pulses 
       if (fFindPulses == true){
         SimpleThreshAlgo(i_ch);
         for (auto pulse : pmtInfo.pulseVec){
-          // std::cout << "t_start, t_end" << pulse.t_start << ", " << pulse.t_end << std::endl;
           if (pulse.t_start > 500 && pulse.t_end < 550) promptPE+=pulse.pe;
           if ((triggerTimeStamp) >= 1000){ if (pulse.t_end < 500) prelimPE+=pulse.pe; }
           else if (triggerTimeStamp < 1000){
@@ -249,10 +257,10 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
         }
       }
     } // end of wvfm loop 
-    
+
+    pmtSoftwareTriggerMetrics->nAboveThreshold = nAboveThreshold;    
     pmtSoftwareTriggerMetrics->promptPE = promptPE;
     pmtSoftwareTriggerMetrics->prelimPE = prelimPE;
-    pmtSoftwareTriggerMetrics->nAboveThreshold = nAboveThreshold;
     if (fVerbose) std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
     if (fVerbose) std::cout << "prompt pe: " << promptPE << std::endl;
     if (fVerbose) std::cout << "prelim pe: " << prelimPE << std::endl;
@@ -279,8 +287,12 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     }
   }
   else{
-    pmtSoftwareTriggerMetrics->foundBeamTrigger = false;
     if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
+    pmtSoftwareTriggerMetrics->foundBeamTrigger = false;
+    pmtSoftwareTriggerMetrics->triggerTimestamp = -9999;
+    pmtSoftwareTriggerMetrics->nAboveThreshold = -9999;
+    pmtSoftwareTriggerMetrics->promptPE = -9999;
+    pmtSoftwareTriggerMetrics->prelimPE = -9999;
   }
   e.put(std::move(pmtSoftwareTriggerMetrics));      
 
@@ -342,7 +354,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::analyzeCAEN1730Fragment(const ar
   } //--end loop channels
 }
 
-void sbnd::trigger::pmtSoftwareTriggerProducer::calculateBaseline(int i_ch){
+void sbnd::trigger::pmtSoftwareTriggerProducer::estimateBaseline(int i_ch){
   auto wvfm = fWvfmsVec[i_ch];
   auto &pmtInfo = fpmtInfoVec[i_ch]; 
   // assuming that the first 500 ns doesn't include peaks, find the mean of the ADC count as the baseline 
@@ -399,8 +411,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
     }   
 
     if(fire){ // if we're in a pulse 
-      if (fAreaToPE == true) // Add this adc count to the integral
-        pulse.area += (baseline-(double)adc);
+      pulse.area += (baseline-(double)adc);
       if (pulse.peak > (baseline-(double)adc)) { // Found a new maximum
         pulse.peak = (baseline-(double)adc);
         pulse.t_peak = counter;
@@ -417,9 +428,8 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
   }
 
   pmtInfo.pulseVec = pulse_vec;
-  for (auto &pulse : pmtInfo.pulseVec){
-    if (fAreaToPE == true){ pulse.pe = pulse.area/fSPEArea;}
-  }
+  // calculate PE from area 
+  for (auto &pulse : pmtInfo.pulseVec){pulse.pe = pulse.area/fPEArea;}
 }
 
 // void sbnd::trigger:pmtSoftwareTriggerProducer::SlidingThreshAlgo(){

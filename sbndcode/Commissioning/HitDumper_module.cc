@@ -246,9 +246,9 @@ private:
   // PMT software trigger variables 
   bool   _pmtSoftTrigger_foundBeamTrigger;   /// Whether the beam spill was found or not 
   int    _pmtSoftTrigger_tts;                /// Trigger Time Stamp (TTS), ns (relative to start of beam spill)
-  double _pmtSoftTrigger_promptPE;           /// Total PE 100 ns after the TTS
-  double _pmtSoftTrigger_prelimPE;           /// Total PE before the TTS, during the beam spill             
-  int    _pmtSoftTrigger_nAboveThreshold;    /// number of individual PMTs above ADC threshold during the beam spill
+  double _pmtSoftTrigger_promptPE;           /// Total photoelectron count 100 ns after the TTS
+  double _pmtSoftTrigger_prelimPE;           /// Total photoelectron count before the TTS, during the beam spill             
+  int    _pmtSoftTrigger_nAboveThreshold;    /// number of individual PMTs above ADC threshold (fcl) during the beam spill
   // std::vector<sbnd::trigger::pmtInfo> _pmtSoftTrigger_pmtInfoVec; /// vector of PMT information 
 
   // Muon track variables 
