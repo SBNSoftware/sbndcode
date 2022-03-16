@@ -162,6 +162,8 @@ physics:
   crttrack:            @local::standard_crttrackproducer
   crthitt0:            @local::sbnd_crthitt0producer
   crttrackt0:          @local::sbnd_crttrackt0producer
+  crthitt0SCE:         @local::sbnd_crthitt0producer
+  crttrackt0SCE:       @local::sbnd_crttrackt0producer
 
   ### flash-matching
   fmatch:              @local::sbnd_simple_flashmatch
@@ -317,6 +319,11 @@ physics.producers.fmatchSCE.PandoraProducer: "pandoraSCE"
 physics.producers.fmatchSCE.TrackProducer: "pandoraSCETrack"
 physics.producers.fmatchSCE.CaloProducer: "pandoraSCECalo"
 physics.producers.fmatchSCE.SpacePointProducer: "pandoraSCE"
+
+physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
+physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"
+physics.producers.crttrackt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
+physics.producers.crttrackt0SCE.CrtTrackAlg.TPCTrackLabel: "pandoraSCETrack"
 
 #physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
