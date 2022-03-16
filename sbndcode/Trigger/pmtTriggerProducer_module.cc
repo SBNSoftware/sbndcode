@@ -269,15 +269,12 @@ void pmtTriggerProducer::produce(art::Event & e)
    for (double i = fMinStartTime; i<fMaxEndTime+(1./fSampling); i+=(1./fSampling)){
       wvf_bin_0.push_back(0);
    }
-  // each pmt channel should have a vector of this length
    for (size_t i = 0; i<120; i++){
       channel_bin_wvfs.push_back(wvf_bin_0);
    }
-  // each pair should have a vector of this length
    for (size_t i = 0; i<fPair1.size(); i++){
       paired.push_back(0);
    }
-  // shouldn't this be fUnpaired instead of fPair1?
    for (size_t i = 0; i<fPair1.size(); i++){
       unpaired_wvfs.push_back(wvf_bin_0);
    }
