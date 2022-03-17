@@ -231,7 +231,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       // count number of PMTs above threshold 
       for (int bin = beamStartBin; bin < beamEndBin; ++bin){
         auto adc = wvfm[bin];
-        if (adc < ADCThreshold){ nAboveThreshold++; break; } 
+        if (adc < fADCThreshold){ nAboveThreshold++; break; } 
       }
 
       // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
