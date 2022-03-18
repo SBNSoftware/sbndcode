@@ -116,7 +116,7 @@ private:
    double fStartTime; //start time (in us) of raw waveform
    double fEndTime; //end time (in us) of raw waveform
 
-   //double fBaseline = 8000.0; //baseline ADC (set in simulation)
+   // double fBaseline = 8000.0; //baseline ADC (set in simulation)
    std::stringstream histname; //raw waveform hist name
    std::stringstream histname2; //other hists names
    std::string opdetType; //opdet wavform's opdet type (required to be pmt_coated or pmt_uncoated)
@@ -145,6 +145,7 @@ private:
    std::vector<std::string> fOpDetsToPlot = {"pmt_coated", "pmt_uncoated"}; //types of optical detetcors (e.g. "pmt_coated", "xarapuca_vuv", etc.), should only be pmt_coated and pmt_uncoated (set in fcl)
    bool fSaveHists; //save raw, binary, etc. histograms (set in fcl)
    std::vector<int> fEvHists = {1,2,3}; //if fSaveHists=true, which event hists to save?, maximum events = 3 (set in fcl)
+   bool fVerbose; //true=output all cout statements, false=no non-error cout statements (set in fcl)
 
    // services
    art::ServiceHandle<art::TFileService> tfs;
@@ -174,9 +175,10 @@ void pmtTriggerProducer::reconfigure(fhicl::ParameterSet const & p)
    fUnpaired    = p.get<std::vector<int> >("Unpaired");
    fPairLogic   = p.get<std::string>("PairLogic","OR");
    fWindowStart = p.get<double>("WindowStart",0.0);
-   fWindowEnd = p.get<double>("WindowEnd",1.6);
+   fWindowEnd = p.get<double>("WindowEnd",1.8);
    fSaveHists = p.get<bool>("SaveHists",true);
    fEvHists    = p.get<std::vector<int> >("EvHists");
+   fVerbose = p.get<bool>("Verbose", true);
 
 }
 
@@ -184,7 +186,7 @@ void pmtTriggerProducer::produce(art::Event & e)
 {
    // load event info here:
 
-   std::cout << "Processing event " << e.id().event() << std::endl;
+   if (fVerbose){std::cout << "Processing event " << e.id().event() << std::endl;}
 
    std::unique_ptr< std::vector<sbnd::comm::pmtTrigger> > pmts_passed( new std::vector<sbnd::comm::pmtTrigger>);
 
@@ -223,49 +225,61 @@ void pmtTriggerProducer::produce(art::Event & e)
    //   std::cout << "e:\t" << e << "\n";
    // }
 
-  // determine whether to this event should be plotted 
+  // determine whether to this event should be plotted
    int i_ev = -1;
    auto iev = std::find(fEvHists.begin(), fEvHists.end(), fEvNumber);
    if (iev != fEvHists.end() && fSaveHists){
       i_ev = iev - fEvHists.begin();
    }
 
-   if (i_ev!=-1 && i_ev<4){std::cout << "Outputting Hists" << std::endl;}
+   if (i_ev!=-1 && i_ev<4){if (fVerbose){std::cout << "Outputting Hists" << std::endl;}}
 
    max_passed = 0;
 
    int num_pmt_wvf = 0;
    int num_pmt_ch = 0;
 
-   std::cout << "fOpDetsToPlot:\t";
-   for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
-   std::cout << std::endl;
+   if (fVerbose){
+     std::cout << "fOpDetsToPlot:\t";
+     for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
+     std::cout << std::endl;
+   }
 
-   wvf_bin_0.reserve(int((3000)/(1./fSampling)));
+   //find min and max start and end times to initialize all vectors to same full waveform length
+   double fMinStartTime = -1510.0;//in us
+   double fMaxEndTime = 1510.0;//in us
+
+   for(auto const& wvf : (*waveHandle)) {
+     fChNumber = wvf.ChannelNumber();
+     opdetType = pdMap.pdType(fChNumber);
+     if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
+     if (wvf.TimeStamp() < fMinStartTime){ fMinStartTime = wvf.TimeStamp(); }
+     if ((double(wvf.size()) / fSampling + wvf.TimeStamp()) > fMaxEndTime){ fMaxEndTime = double(wvf.size()) / fSampling + wvf.TimeStamp();}
+  }
+  if (fVerbose){std::cout<<"MinStartTime: "<<fMinStartTime<<" MaxEndTime: "<<fMaxEndTime<<std::endl;}
+
+   wvf_bin_0.reserve(int((fMaxEndTime-fMinStartTime)/(1./fSampling)));
    channel_bin_wvfs.reserve(120);
    paired.reserve(fPair1.size());
    unpaired_wvfs.reserve(fPair1.size());
    passed_trigger.reserve(int((fWindowEnd-fWindowStart)/(4./fSampling)));
-
+   
   // create a vector w/ the number of entries necessary for the sampling rate
   // e.g. if sampling rate is 500 MHz, each bin has width of 0.002 us or 2 ns, vector length of ~75000
-   for (double i = -1500.0; i<1500.0+(1./fSampling); i+=(1./fSampling)){
+   for (double i = fMinStartTime; i<fMaxEndTime+(1./fSampling); i+=(1./fSampling)){
       wvf_bin_0.push_back(0);
    }
-  // each pmt channel should have a vector of this length 
    for (size_t i = 0; i<120; i++){
       channel_bin_wvfs.push_back(wvf_bin_0);
    }
-  // each pair should have a vector of this length 
    for (size_t i = 0; i<fPair1.size(); i++){
       paired.push_back(0);
    }
-  // shouldn't this be fUnpaired instead of fPair1? 
    for (size_t i = 0; i<fPair1.size(); i++){
       unpaired_wvfs.push_back(wvf_bin_0);
    }
-  // window of the beam spill, 0.0 to 1.6 us 
-  // e.g. if sampling rate is 500 MHz, each bin has width of 0.008 us or 8 ns 
+  // window of the beam spill, 0.0 to 1.6 us
+  // e.g. if sampling rate is 500 MHz, each bin has width of 0.008 us or 8 ns
    for (double i = fWindowStart; i<fWindowEnd+(4./fSampling); i+=(4./fSampling)){
       passed_trigger.push_back(0);
    }
@@ -282,9 +296,10 @@ void pmtTriggerProducer::produce(art::Event & e)
       opdetType = pdMap.pdType(fChNumber);
       if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
       num_pmt_wvf++;
-     
+
       fStartTime = wvf.TimeStamp(); //in us
       fEndTime = double(wvf.size()) / fSampling + fStartTime; //in us
+
       //create binary waveform
       std::vector<char> wvf_bin;
       wvf_bin.reserve(wvf.size());
@@ -302,10 +317,10 @@ void pmtTriggerProducer::produce(art::Event & e)
          for(unsigned int i = 0; i < wvf.size(); i++) {
             wvfHist->SetBinContent(i + 1, (double)wvf[i]);
          }
-      } // end histo 
+      } // end histo
 
-      if (fStartTime > -1500.0){
-         for (double i = fStartTime+1500.0; i>0.; i-=(1./fSampling)){
+      if (fStartTime > fMinStartTime){
+         for (double i = fStartTime-fMinStartTime; i>0.; i-=(1./fSampling)){
             wvf_bin.push_back(0);
          }
       }
@@ -314,8 +329,8 @@ void pmtTriggerProducer::produce(art::Event & e)
          if((double)wvf[i]<fThreshold){wvf_bin.push_back(1);}else{wvf_bin.push_back(0);}
       }
 
-      if (fEndTime < 1500.0){
-         for (double i = 1500.0-fEndTime; i>0.; i-=(1./fSampling)){
+      if (fEndTime < fMaxEndTime){
+         for (double i = fMaxEndTime-fEndTime; i>0.; i-=(1./fSampling)){
             wvf_bin.push_back(0);
          }
       }
@@ -326,9 +341,9 @@ void pmtTriggerProducer::produce(art::Event & e)
       if (ich != channel_numbers.end()){
          i_ch = ich - channel_numbers.begin(); // the index for the channel of interest
       }
-      // if the number of bins is mismatched 
+      // if the number of bins is mismatched
       if (channel_bin_wvfs.at(i_ch).size() < wvf_bin.size()){
-      std::cout<<"Previous Channel" << fChNumber <<" Size: "<<channel_bin_wvfs.at(i_ch).size()<<"New Channel" << fChNumber <<" Size: "<<wvf_bin.size()<<std::endl;
+	       std::cout<<"Previous Channel" << fChNumber <<" Size: "<<channel_bin_wvfs.at(i_ch).size()<<"New Channel" << fChNumber <<" Size: "<<wvf_bin.size()<<std::endl;
          for(unsigned int i = channel_bin_wvfs.at(i_ch).size(); i < wvf_bin.size(); i++) {
             channel_bin_wvfs.at(i_ch).push_back(0);
          }
@@ -337,17 +352,18 @@ void pmtTriggerProducer::produce(art::Event & e)
          if(channel_bin_wvfs.at(i_ch).at(i)==1 || wvf_bin[i]==1){channel_bin_wvfs.at(i_ch)[i]=1;}else{channel_bin_wvfs.at(i_ch)[i]=0;}
       }
       wvf_bin.clear();
+      wvf_bin.shrink_to_fit();
       waveHandle.clear();
 
    }//wave handle loop
 
      int wvf_num = -1;
 
-     for (auto wvf_bin : channel_bin_wvfs){ // wvf_bin is a vector with entries making up the wvf, one for every channel 
+     for (auto wvf_bin : channel_bin_wvfs){ // wvf_bin is a vector with entries making up the wvf, one for every channel
        wvf_num++;
        fChNumber = channel_numbers.at(wvf_num);
-       fStartTime = -1500.0;
-       fEndTime = 1500.0;
+       fStartTime = fMinStartTime;
+       fEndTime = fMaxEndTime;
 
        //downscale binary waveform by 4
        std::vector<char> wvf_bin_down;
@@ -397,13 +413,13 @@ void pmtTriggerProducer::produce(art::Event & e)
          // set found == true, set pair_num = index of location in Pair1
          for (size_t i = 0; i < fPair1.size(); i++){
            if (fPair1.at(i) == (int)fChNumber && paired.at(i)==1){found=true; pair_num=i; combine=true; break;}
-            // else if pmt is found in pair1 vector and has not yet passed threshold, 
-            // set found == true, set the corresponding channel's wvf equal to downscaled wvf in the unpaired vector 
-            // should be paired now 
+            // else if pmt is found in pair1 vector and has not yet passed threshold,
+            // set found == true, set the corresponding channel's wvf equal to downscaled wvf in the unpaired vector
+            // should be paired now
            else if (fPair1.at(i) == (int)fChNumber && paired.at(i)==0){found=true; unpaired_wvfs.at(i)=wvf_bin_down; paired.at(i)=1; break;}
          }
          if (!found){
-         // if still not found in pair1, check pair2 channels 
+         // if still not found in pair1, check pair2 channels
            for (size_t i = 0; i < fPair2.size(); i++){
              if (fPair2.at(i) == (int)fChNumber && paired.at(i)==1){found=true; pair_num=i; combine=true; break;}
              else if (fPair2.at(i) == (int)fChNumber && paired.at(i)==0){found=true; unpaired_wvfs.at(i)=wvf_bin_down; paired.at(i)=1; break;}
@@ -499,7 +515,9 @@ void pmtTriggerProducer::produce(art::Event & e)
        }
 
        wvf_bin_down.clear();
+       wvf_bin_down.shrink_to_fit();
        wvf_combine.clear();
+       wvf_combine.shrink_to_fit();
 
      }
 
@@ -527,6 +545,9 @@ void pmtTriggerProducer::produce(art::Event & e)
    pmt_time.maxPMTs = max_passed;
    pmts_passed->push_back(pmt_time);
 
+   if (fVerbose){std::cout << "Length of passed trigger: "  << pmt_time.numPassed.size() << std::endl;}
+   if (fVerbose){std::cout << "Max number of PMTs passed: " << pmt_time.maxPMTs << std::endl;}
+
    // the following lines "push" the relevant products you want to produce
    // EXAMPLE:
    // evt.put(std::move(muon_tracks));
@@ -536,15 +557,21 @@ void pmtTriggerProducer::produce(art::Event & e)
 
    //clear variables
    passed_trigger.clear();
+   passed_trigger.shrink_to_fit();
    max_passed = 0;
 
-   std::cout << "Number of PMT waveforms: " << num_pmt_wvf << std::endl;
-   std::cout << "Number of PMT channels: " << num_pmt_ch << std::endl;
+   if (fVerbose){std::cout << "Number of PMT waveforms: " << num_pmt_wvf << std::endl;}
+   if (fVerbose){std::cout << "Number of PMT channels: " << num_pmt_ch << std::endl;}
 
    channel_bin_wvfs.clear();
+   channel_bin_wvfs.shrink_to_fit();
    paired.clear();
+   paired.shrink_to_fit();
    unpaired_wvfs.clear();
+   unpaired_wvfs.shrink_to_fit();
+
    wvf_bin_0.clear();
+   wvf_bin_0.shrink_to_fit();
 
 } // pmtTriggerProducer::produce()
 
