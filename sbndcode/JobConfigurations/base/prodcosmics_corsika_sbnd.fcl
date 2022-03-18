@@ -112,6 +112,7 @@ outputs:
     fileName:         "prodcosmics_corsika_sbnd_%p-%tc.root"
     dataTier:         "generated"
     compressionLevel:  1
+    saveMemoryObjectThreshold: 0
   }
 } # outputs
 
