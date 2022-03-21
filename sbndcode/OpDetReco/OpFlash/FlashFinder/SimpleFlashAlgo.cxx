@@ -104,7 +104,7 @@ namespace lightana{
             std::cerr << "Length of OpChannel array parameter is 0..." << std::endl;
             throw std::exception();
         }
-        // std::cout << "Number of opch used to construct flashes: " << _index_to_opch_v.size() << std::endl;
+        std::cout << "Number of opch used to construct flashes: " << _index_to_opch_v.size() << std::endl;
         /*
         if(_pe_baseline_v.size() != duplicate.size()) {
           std::cout << "PEBaseline array length (" << _pe_baseline_v.size()
