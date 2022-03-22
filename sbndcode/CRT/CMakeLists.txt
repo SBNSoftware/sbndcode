@@ -5,6 +5,7 @@ include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 add_subdirectory(CRTTools)
 add_subdirectory(CRTUtils)
 add_subdirectory(CRTAna)
+add_subdirectory(CRTSimulation)
 add_subdirectory(Examples)
 
 art_make( 
@@ -67,13 +68,14 @@ simple_plugin( CRTGeometryHelper service
 simple_plugin( CRTDetSim module
         larcorealg_Geometry
         sbndcode_CRT
+        sbndcode_CRT_CRTSimulation
         sbndcode_CRTData
         sbnobj_SBND_CRT
         sbnobj_Common_CRT
         art::Framework_Core
         art::Framework_IO_Sources
         art::Framework_Principal
-	art::Persistency_Provenance
+        art::Persistency_Provenance
         canvas::canvas
         cetlib_except::cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
