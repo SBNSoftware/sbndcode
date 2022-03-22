@@ -16,9 +16,9 @@ sbnd_crtdetsimana:
       SimModuleLabel:       "largeant"    # Simulation producer module label
       CRTSimLabel:          "crt"         # CRT producer module label
       Verbose:              false         # Print extra information about what's going on
-      QPed:                 @local::sbnd_crtsim.QPed
-      QSlope:               @local::sbnd_crtsim.QSlope
-      ClockSpeedCRT:        @local::sbnd_crtsim.ClockSpeedCRT
+      QPed:                 @local::sbnd_crtsim.DetSimParams.QPed
+      QSlope:               @local::sbnd_crtsim.DetSimParams.QSlope
+      ClockSpeedCRT:        @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
       CrtBackTrack:         @local::standard_crtbacktracker
 }
 
