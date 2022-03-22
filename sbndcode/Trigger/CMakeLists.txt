@@ -16,6 +16,14 @@ art_make(
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
+			
+		    artdaq_core::artdaq-core_Data
+                    artdaq_core::artdaq-core_Utilities
+                    artdaq_core::artdaq-core_Data_Artdaq_fragmentNameHelper
+                    sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
+                    sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
+
+
                     
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas

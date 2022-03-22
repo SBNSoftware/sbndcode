@@ -17,6 +17,7 @@ hitdumper:
     CRTStripModuleLabel:      "crt"
     CRTTrackModuleLabel:      "crttrack"
     pmtTriggerModuleLabel:    "pmttriggerproducer"
+    pmtSoftTriggerModuleLabel:"pmtSoftwareTrigger"
     MuonTrackModuleLabel:     "MuonTrackProducer"
     GenieGenModuleLabel:      "generator"
  
@@ -25,8 +26,9 @@ hitdumper:
     makeCRTtracks:            true
     readCRTtracks:            true
     readOpHits:               true
-    readpmtTrigger:	      true
-    readMuonTracks:           true
+    readpmtTrigger:	          true
+    readpmtSoftTrigger:       true
+    readMuonTracks:           false
     readMuonHits:             false
     readTruth:                true
     savePOTinfo:              true
