@@ -95,8 +95,10 @@ void CRTDetSim::produce(art::Event & e) {
       continue;
     }
 
-    if(adsc.AuxDetIDEs().size()>0) {
+    if(adsc.AuxDetIDEs().size() > 0) {
+      std::cout << "Adding AuxDetSimChannel with AuxDetID " << adsc.AuxDetID() << ", AuxDetSensitiveID " << adsc.AuxDetSensitiveID() << std::endl;
       fDetAlg.FillTaggers(adsc.AuxDetID(), adsc.AuxDetSensitiveID(), adsc.AuxDetIDEs());
+      std::cout << std::endl;
     }
 
   } // loop over AuxDetSimChannels
@@ -108,17 +110,17 @@ void CRTDetSim::produce(art::Event & e) {
 
   std::vector<std::pair<sbnd::crt::CRTData, std::vector<sim::AuxDetIDE>>> data = fDetAlg.CreateData();
 
-  for(auto const& dataPair : data){
+  // for(auto const& dataPair : data){
 
-    triggeredCRTHits->push_back(dataPair.first);
-    art::Ptr<CRTData> dataPtr = makeDataPtr(triggeredCRTHits->size()-1);
+  //   triggeredCRTHits->push_back(dataPair.first);
+  //   art::Ptr<CRTData> dataPtr = makeDataPtr(triggeredCRTHits->size()-1);
 
-    for(auto const& ide : dataPair.second){
-      auxDetIdes->push_back(ide);
-      art::Ptr<sim::AuxDetIDE> idePtr = makeIdePtr(auxDetIdes->size()-1);
-      Dataassn->addSingle(dataPtr, idePtr);
-    }
-  }
+  //   for(auto const& ide : dataPair.second){
+  //     auxDetIdes->push_back(ide);
+  //     art::Ptr<sim::AuxDetIDE> idePtr = makeIdePtr(auxDetIdes->size()-1);
+  //     Dataassn->addSingle(dataPtr, idePtr);
+  //   }
+  // }
 
 
   mf::LogInfo("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << "\n";
