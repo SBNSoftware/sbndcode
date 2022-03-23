@@ -4426,26 +4426,26 @@
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerTopHigh"/>
                         <loop for="CRT_placing_modules" to="4" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l/2" y="(-2*CRTmoduleY_w)+(CRT_placing_modules-0*5)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="9" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l/2" y="(-2*CRTmoduleY_w)+(CRT_placing_modules-1*5)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="14" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleY_w)+(CRT_placing_modules-2*5)*CRTmoduleY_w" y="CRTmoduleY_l/2" z="-CRTmoduleY_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="19" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleY_w)+(CRT_placing_modules-3*5)*CRTmoduleY_w" y="-CRTmoduleY_l/2" z="-CRTmoduleY_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
@@ -4457,26 +4457,26 @@
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerTopLow"/>
                         <loop for="CRT_placing_modules" to="24" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l/2" y="(-2*CRTmoduleY_w)+(CRT_placing_modules-4*5)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="29" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l/2" y="(-2*CRTmoduleY_w)+(CRT_placing_modules-5*5)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="34" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleY_w)+(CRT_placing_modules-6*5)*CRTmoduleY_w" y="CRTmoduleY_l/2" z="-CRTmoduleY_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="39" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleY_w)+(CRT_placing_modules-7*5)*CRTmoduleY_w" y="-CRTmoduleY_l/2" z="-CRTmoduleY_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
@@ -4488,26 +4488,26 @@
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerSouth"/>
                         <loop for="CRT_placing_modules" to="43" step="1"/>
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleX_l/2" y="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-40)*CRTmoduleX_w" z="CRTmoduleX_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="47" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleX_l/2" y="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-44)*CRTmoduleX_w" z="CRTmoduleX_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="51" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-48)*CRTmoduleX_w" y="CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="55" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-52)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
@@ -4519,26 +4519,26 @@
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerNorth"/>
                         <loop for="CRT_placing_modules" to="59" step="1"/>
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleX_l/2" y="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-56)*CRTmoduleX_w" z="CRTmoduleX_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="63" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleX_l/2" y="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-60)*CRTmoduleX_w" z="CRTmoduleX_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="67" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-64)*CRTmoduleX_w" y="CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="71" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-68)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
@@ -4550,26 +4550,26 @@
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerEast"/>
                         <loop for="CRT_placing_modules" to="75" step="1"/>
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-72)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="79" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-76)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="84" step="1"/>
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-80)*CRTmoduleX_w" y="CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="89" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-85)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
@@ -4581,26 +4581,26 @@
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerWest"/>
                         <loop for="CRT_placing_modules" to="93" step="1"/>
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-90)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="97" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-94)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="102" step="1"/>
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-98)*CRTmoduleX_w" y="CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="107" step="1">
-                                <physvol>
+                                <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-103)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
@@ -4613,118 +4613,118 @@
                         <solidref ref="TaggerBottom"/>
 
                         <!-- BERN -->
-                        <physvol>
+                        <physvol copynumber="108">
                                 <volumeref ref="volCRTModule108"/>
                                 <position name="posCRT_module108" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleBERN_l/2)" y="BERNmodule_DY_large+(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="109">
                                 <volumeref ref="volCRTModule109"/>
                                 <position name="posCRT_module109" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleBERN_l/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="110">
                                 <volumeref ref="volCRTModule110"/>
                                 <position name="posCRT_module110" unit="cm" x="-BERNmodule_DX_large-(CRTmoduleBERN_w/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
 						</physvol>
-                        <physvol>
+                        <physvol copynumber="111">
                                 <volumeref ref="volCRTModule111"/>
                                 <position name="posCRT_module111" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleBERN_w/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
 
-                        <physvol>
+                        <physvol copynumber="112">
                                 <volumeref ref="volCRTModule112"/>
                                 <position name="posCRT_module112" unit="cm" x="-BERNmodule_DX_small-(CRTmoduleBERN_w/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="113">
                                 <volumeref ref="volCRTModule113"/>
                                 <position name="posCRT_module113" unit="cm" x="BERNmodule_DX_small+(CRTmoduleBERN_w/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="114">
                                 <volumeref ref="volCRTModule114"/>
                                 <position name="posCRT_module114" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_w/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="115">
                                 <volumeref ref="volCRTModule115"/>
                                 <position name="posCRT_module115" unit="cm" x="BERNmodule_DX_large+(CRTmoduleBERN_w/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="116">
                                 <volumeref ref="volCRTModule116"/>
                                 <position name="posCRT_module116" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_l/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
 
-                        <physvol>
+                        <physvol copynumber="117">
                                 <volumeref ref="volCRTModule117"/>
                                 <position name="posCRT_module117" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleBERN_l/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="118">
                                 <volumeref ref="volCRTModule118"/>
                                 <position name="posCRT_module118" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleBERN_l/2)" y="-BERNmodule_DY_large-(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="119">
                                 <volumeref ref="volCRTModule119"/>
                                 <position name="posCRT_module119" unit="cm" x="-BERNmodule_DX_large-(CRTmoduleBERN_w/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="120">
                                 <volumeref ref="volCRTModule120"/>
                                 <position name="posCRT_module120" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleBERN_w/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="121">
                                 <volumeref ref="volCRTModule121"/>
                                 <position name="posCRT_module121" unit="cm" x="-BERNmodule_DX_small-(CRTmoduleBERN_w/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="122">
                                 <volumeref ref="volCRTModule122"/>
                                 <position name="posCRT_module122" unit="cm" x="BERNmodule_DX_small+(CRTmoduleBERN_w/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="123">
                                 <volumeref ref="volCRTModule123"/>
                                 <position name="posCRT_module123" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_w/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="124">
                                 <volumeref ref="volCRTModule124"/>
                                 <position name="posCRT_module124" unit="cm" x="BERNmodule_DX_large+(CRTmoduleBERN_w/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_l/2)" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="125">
                                 <volumeref ref="volCRTModule125"/>
                                 <position name="posCRT_module125" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_l/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="126">
                                 <volumeref ref="volCRTModule126"/>
                                 <position name="posCRT_module126" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_l/2)" y="-BERNmodule_DY_large-(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
                         <!-- MINOS -->
-                        <physvol>
+                        <physvol copynumber="127">
                                 <volumeref ref="volCRTModule127"/>
                                 <position name="posCRT_module127" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleMINOS_l/2)" y="BERNmodule_DY_small/2+CRTmoduleMINOS_w/4" z="CRTmoduleMINOS_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="128">
                                 <volumeref ref="volCRTModule128"/>
                                 <position name="posCRT_module128" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleMINOS_l/2)" y="0" z="CRTmoduleMINOS_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="129">
                                 <volumeref ref="volCRTModule129"/>
                                 <position name="posCRT_module129" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleMINOS_l/2)" y="-BERNmodule_DY_small/2-CRTmoduleMINOS_w/4" z="CRTmoduleMINOS_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="130">
                                 <volumeref ref="volCRTModule130"/>
                                 <position name="posCRT_module130" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleMINOS_l/2)" y="BERNmodule_DY_small/2+CRTmoduleMINOS_w/4" z="CRTmoduleMINOS_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="131">
                                 <volumeref ref="volCRTModule131"/>
                                 <position name="posCRT_module131" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleMINOS_l/2)" y="0" z="CRTmoduleMINOS_t/2"/>
                         </physvol>
-                        <physvol>
+                        <physvol copynumber="132">
                                 <volumeref ref="volCRTModule132"/>
                                 <position name="posCRT_module132" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleMINOS_l/2)" y="-BERNmodule_DY_small/2-CRTmoduleMINOS_w/4" z="CRTmoduleMINOS_t/2"/>
                         </physvol>
