@@ -81,6 +81,8 @@ void CRTDetSim::produce(art::Event & e) {
     mf::LogWarning("CRTDetSim") << "No AuxDetSimChannel..." << std::endl;
   }
 
+  fDetAlg.ClearTaggers();
+
 
   //
   // Step 1: Construct Taggers
