@@ -12,6 +12,7 @@
 #include "larcorealg/Geometry/AuxDetGeo.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "larcorealg/CoreUtils/NumericUtils.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
 // CLHEP includes
 #include "CLHEP/Random/RandomEngine.h"
@@ -119,37 +120,46 @@ public:
 
 
     /**
-       * Function to clear member data at beginning of each art::event
-       */
+     * Function to clear member data at beginning of each art::event
+     */
     void ClearTaggers();
 
 
     /**
-       * Filles CRT taggers from AuxDetSimChannels.
-       *
-       * Intented to be called within loop over AuxDetChannels and provided the
-       * AuxDetChannelID, AuxDetSensitiveChannelID, vector of AuxDetIDEs and
-       * the number of ides from the end of the vector to include in the detector sim.
-       * It handles deposited energy ti light output at SiPM (including attenuation)
-       * and to PEs from the SiPM with associated time stamps.
-       *
-       * @param adid The AuxDetChannelID
-       * @param adsid The AuxDetSensitiveChannelID
-       * @param ides The vector of AuxDetIDE
-       */
+     * Filles CRT taggers from AuxDetSimChannels.
+     *
+     * Intented to be called within loop over AuxDetChannels and provided the
+     * AuxDetChannelID, AuxDetSensitiveChannelID, vector of AuxDetIDEs and
+     * the number of ides from the end of the vector to include in the detector sim.
+     * It handles deposited energy ti light output at SiPM (including attenuation)
+     * and to PEs from the SiPM with associated time stamps.
+     *
+     * @param adid The AuxDetChannelID
+     * @param adsid The AuxDetSensitiveChannelID
+     * @param ides The vector of AuxDetIDE
+     */
     void FillTaggers(const uint32_t adid, const uint32_t adsid, vector<AuxDetIDE> ides);
 
     /**
-       * Returns FEBData objects.
-       *
-       * This function is called after loop over AuxDetSimChannels where FillTaggers
-       * was used to perform first detsim step. This function applies trigger logic,
-       * deadtime, and close-in-time signal biasing effects. it produces the
-       * "triggered data" products which make it into the event.
-       *
-       * @return Vector of pairs (FEBData, vector of AuxDetIDE)
-       */
-    std::vector<std::pair<sbnd::crt::CRTData, std::vector<AuxDetIDE>>> CreateData();
+     * Returns FEBData objects.
+     *
+     * This function is called after loop over AuxDetSimChannels where FillTaggers
+     * was used to perform first detsim step. This function applies trigger logic,
+     * deadtime, and close-in-time signal biasing effects. it produces the
+     * "triggered data" products which make it into the event. Use "GetData"
+     * to retrieve the result.
+     *
+     * @return Vector of pairs (FEBData, vector of AuxDetIDE)
+     */
+    void CreateData();
+
+    /**
+     * Returns the simulated FEBData and AuxDetIDEs
+     *
+     * @return Vector of pairs (FEBData, vector of AuxDetIDE)
+     */
+    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> GetData();
+
 
 
 private:
@@ -190,6 +200,7 @@ private:
     std::map<std::string, Tagger> fTaggers;
 
     std::vector<sbnd::crt::FEBData> fFEBDatas;
+    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData;
 
     /**
        * Get the channel trigger time relative to the start of the MC event.

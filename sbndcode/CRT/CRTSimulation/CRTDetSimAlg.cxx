@@ -49,6 +49,11 @@ namespace crt {
 
     }
 
+    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> CRTDetSimAlg::GetData()
+    {
+        return fData;
+    }
+
 
 
     uint16_t CRTDetSimAlg::WaveformEmulation(uint32_t time_delay, uint16_t adc)
@@ -79,9 +84,11 @@ namespace crt {
     void CRTDetSimAlg::ProcessStrips(uint32_t trigger_time, uint32_t coinc, std::vector<StripData> strips)
     {
         std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
+        std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
 
         bool plane0_hit, plane1_hit = false;
 
+        // TODO Add pedestal fluctuations
         std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fQPed)};
 
         for (auto & strip : strips) {
@@ -95,11 +102,13 @@ namespace crt {
                                                                 trigger_time, // Ts1
                                                                 adc_pedestal, // ADCs
                                                                 coinc);       // Coinc
+
+                mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
             }
         }
 
         // Emulate the tagger-level trigger
-        if (! (plane0_hit and plane1_hit)) {
+        if (!(plane0_hit and plane1_hit)) {
             return;
         }
 
@@ -118,17 +127,23 @@ namespace crt {
             AddADC(feb_data, strip.sipm0.sipmID, adc_sipm0);
             AddADC(feb_data, strip.sipm1.sipmID, adc_sipm1);
 
+            auto &ides = mac_to_ides[strip.mac5];
+            ides.push_back(strip.ide);
+
         }
 
         for (auto const& [mac, feb_data] : mac_to_febdata) {
             fFEBDatas.push_back(feb_data);
+            fData.push_back(std::make_pair(feb_data, mac_to_ides[mac]));
         }
 
+        std::cout << "Constructed " << mac_to_febdata.size()
+                  << "FEBData objects for trigger time " << trigger_time << std::endl;
     }
 
 
 
-    std::vector<std::pair<sbnd::crt::CRTData, std::vector<AuxDetIDE>>>  CRTDetSimAlg::CreateData()
+    void CRTDetSimAlg::CreateData()
     {
 
         // Loop over all the CRT Taggers and simulate triggering, dead time, ...
@@ -246,8 +261,8 @@ namespace crt {
         //     }
         // }
 
-        std::vector<std::pair<sbnd::crt::CRTData, std::vector<AuxDetIDE>>> dataCol;
-        return dataCol;
+        // std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> dataCol;
+        // return dataCol;
 
     }
 
