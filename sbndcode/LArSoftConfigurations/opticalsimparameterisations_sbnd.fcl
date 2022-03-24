@@ -62,6 +62,11 @@ sbnd_vuv_timing_parameterization:
   angle_bin_timing_vuv: 45
 }
 
+// faster, lower precision case for external argon volume (hybrid model)
+sbnd_vuv_timing_parameterization_fast: @local::sbnd_vuv_timing_parameterization
+sbnd_vuv_timing_parameterization_fast.step_size: 5.
+sbnd_vuv_timing_parameterization_fast.angle_bin_timing_vuv: 90
+
 
 # VUV/DIRECT LIGHT: NUMBER OF HITS CORRECTIONS
 # SBND Gaisser-Hillas      

@@ -5,9 +5,9 @@ physics.simulate: [ rns
                   , loader
                   , largeant
                   , ionandscint
-                  # , ionandscintout
+                  , ionandscintout
                   , pdfastsim
-                  # , pdfastsimout
+                  , pdfastsimout
                   , simdrift
                   , filter # Adding filter
                   , mcreco
