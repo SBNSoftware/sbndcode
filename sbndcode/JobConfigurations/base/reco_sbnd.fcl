@@ -213,13 +213,9 @@ physics:
          , crthitt0
          , crttrackt0
          , fmatch
+         , opt0finder
 	 , caloskimCalorimetry
  ]
-
- # The new flashmatching will eventually be part of reco2, but for now
- # we are keeping it separate here so we can easily remove if from the
- # reco fcl files.
- opticalt0: [ opt0finder ]
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
  
@@ -267,10 +263,7 @@ outputs:
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
                     @sequence::physics.reco2
-		    #,opt0finder
-		  ]
-physics.fullreco_noflashmatch: [ @sequence::physics.reco1,
-                                 @sequence::physics.reco2]
+		          ]
 
 physics.trigger_paths: [ fullreco ]
 

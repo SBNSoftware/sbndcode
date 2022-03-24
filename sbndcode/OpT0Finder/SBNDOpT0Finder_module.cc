@@ -33,6 +33,8 @@
 #include "lardataobj/AnalysisBase/T0.h"
 #include "larcore/Geometry/Geometry.h"
 
+#include "larsim/PhotonPropagation/SemiAnalyticalModel.h"
+
 #include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 
 #include "sbncode/OpT0Finder/flashmatch/Base/OpT0FinderTypes.h"
@@ -87,6 +89,10 @@ private:
   /// Returns a list of uncoated PMTs that are a subset of those in ch_to_use
   std::vector<int> GetUncoatedPTMList(std::vector<int> ch_to_use);
 
+  std::unique_ptr<SemiAnalyticalModel> _semi_model;
+  fhicl::ParameterSet _vuv_params;
+  fhicl::ParameterSet _vis_params;
+
   ::flashmatch::FlashMatchManager _mgr; ///< The flash matching manager
   std::vector<flashmatch::FlashMatch_t> _result_v; ///< Matching result will be stored here
 
@@ -137,6 +143,10 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   ::art::ServiceHandle<geo::Geometry> geo;
 
+  _vuv_params = p.get<fhicl::ParameterSet>("VUVHits");
+  _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
+  _semi_model = std::make_unique<SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
+
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _tpc_v = p.get<std::vector<unsigned int>>("TPCs");
   _slice_producer = p.get<std::string>("SliceProducer");
@@ -162,6 +172,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   _mgr.SetUncoatedPMTs(_uncoated_pmts);
 
+  _mgr.SetSemiAnalyticalModel(std::move(_semi_model));
 
   _flash_spec.resize(geo->NOpDets(), 0.);
   _hypo_spec.resize(geo->NOpDets(), 0.);
@@ -303,20 +314,20 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
   // Don't waste time if there are no flashes
   if (n_flashes == 0) {
-    mf::LogWarning("SBNDOpT0Finder") << "Zero good flashes in this event." << std::endl;
+    mf::LogInfo("SBNDOpT0Finder") << "Zero good flashes in this event." << std::endl;
     return;
   }
 
   // Get all the ligh clusters
   // auto light_cluster_v = GetLighClusters(e);
   if (!ConstructLightClusters(e, tpc)) {
-    mf::LogWarning("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
+    mf::LogInfo("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
     return;
   }
 
   // Don't waste time if there are no clusters
   if (!_light_cluster_v.size()) {
-    mf::LogWarning("SBNDOpT0Finder") << "No slices to work with." << std::endl;
+    mf::LogInfo("SBNDOpT0Finder") << "No slices to work with in TPC " << tpc << "." << std::endl;
     return;
   }
 
@@ -345,6 +356,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
     mf::LogInfo("SBNDOpT0Finder") << "Matched TPC object " << _tpcid
                                   << " with flash number " << _flashid
+                                  << " in TPC " << tpc
                                   << " -> score: " << _score
                                   << ", qll xmin: " << _qll_xmin << std::endl;
 

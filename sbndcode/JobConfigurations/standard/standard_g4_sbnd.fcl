@@ -74,15 +74,13 @@ physics:
     ionandscint: @local::sbnd_ionandscint
 
     # Creation of ionization electrons and scintillation photons, outside the active volume
-    # ionandscintout: @local::sbnd_ionandscint_out
+    ionandscintout: @local::sbnd_ionandscint_out
 
     # Light propogation inside the active volume
     pdfastsim: @local::sbnd_pdfastsim_par
 
     # Light propogation outside the active volume
-    # Nov 16th, 2021
-    # Temporarily disable light simulation in the OUT-TPC (sbndcode issue 219)
-    # pdfastsimout: @local::sbnd_pdfastsim_pvs
+    pdfastsimout: @local::sbnd_pdfastsim_pvs
 
     # Electron propogation
     simdrift: @local::sbnd_simdrift
@@ -100,9 +98,9 @@ physics:
             , loader
             , largeant
             , ionandscint
-            # , ionandscintout
+            , ionandscintout
             , pdfastsim
-            # , pdfastsimout
+            , pdfastsimout
             , simdrift
             , mcreco
             , genericcrt
@@ -129,7 +127,7 @@ outputs:
                     # Drop the SimEnergyDeposits made by LArG4
                     , "drop sim::SimEnergyDeposits_largeant_*_*"
                     # Drop the IonAndScint w/ SCE offsets applied
-                    , "drop *_ionandscint__*"
+                    , "drop *_ionandscint_*_*"
                     # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
                     , "drop sim::AuxDetHits_*_*_*"
                     ]

@@ -4,9 +4,9 @@
 
 physics.simulate: [ rns
                   , ionandscint
-                  # , ionandscintout
+                  , ionandscintout
                   , pdfastsim
-                  # , pdfastsimout
+                  , pdfastsimout
                   , simdrift
                   , mcreco
                   , genericcrt

@@ -59,7 +59,7 @@ if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
     export datestamp=$(date +"%Y%m%d%H%M")
 
 else
-    if IFDH_DEBUG=0 ifdh ll --force=root ${ACCESS_REF_DIR}/${REF_FILE}
+    if IFDH_DEBUG=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
     then
 	echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
 	echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
