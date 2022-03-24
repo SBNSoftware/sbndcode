@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+sbnd_crtslimmer: {
+  module_type: "CRTSlimmer"
+
+  FEBDataProducer: "crtsim"
+  ADCThreshold: 60
+}
+
+END_PROLOG

@@ -57,6 +57,8 @@ standard_sbnd_crtsimparams: {
   SipmTimeResponse: 2.0
 
   AdcSaturation: 4095
+
+  DeadTime: 22000
 }
 
 sbnd_crtsim: {
