@@ -32,6 +32,7 @@
 // ROOT includes
 #include "TGeoManager.h"
 #include "TGeoNode.h"
+#include "Math/Interpolator.h"
 
 // CRT includes
 #include "sbnobj/SBND/CRT/FEBData.hh"
@@ -193,8 +194,12 @@ private:
     double fSipmTimeResponse; //!< Minimum time to resolve separate energy deposits [ns]
     uint32_t fAdcSaturation; //!< Saturation limit per SiPM in ADC counts
     double fDeadTime; //!< Saturation limit per SiPM in ADC counts
+    std::vector<double> fWaveformX; //!< SiPM waveform sampled, X
+    std::vector<double> fWaveformY; //!< SiPM waveform sampled, Y
 
     CLHEP::HepRandomEngine& fEngine;
+
+    std::unique_ptr<ROOT::Math::Interpolator> fInterpolator;
 
     // A list of hit taggers, before any coincidence requirement (mac5 -> tagger)
     std::map<std::string, Tagger> fTaggers;

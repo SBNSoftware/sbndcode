@@ -23,6 +23,7 @@ art_make(   LIB_LIBRARIES  larcorealg_Geometry
                            ROOT::XMLIO
                            ROOT::Gdml
                            ${ROOT_BASIC_LIB_LIST}
+                           ${ROOT_MATHMORE}
 
                            sbndcode_CRT
                            sbnobj_Common_CRT

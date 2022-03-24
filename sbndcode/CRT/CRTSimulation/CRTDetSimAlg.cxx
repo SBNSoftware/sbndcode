@@ -46,6 +46,19 @@ namespace crt {
         fSipmTimeResponse = p.get<double>("SipmTimeResponse");
         fAdcSaturation = p.get<uint32_t>("AdcSaturation");
         fDeadTime = p.get<double>("DeadTime");
+        fWaveformX = p.get<std::vector<double>>("WaveformX");
+        fWaveformY = p.get<std::vector<double>>("WaveformY");
+
+        // Normalize the waveform
+        float max_y = *std::max_element(std::begin(fWaveformY), std::end(fWaveformY));
+        for (auto & y : fWaveformY) y /= max_y;
+        // Reverse
+        std::reverse(fWaveformY.begin(),fWaveformY.end());
+
+        fInterpolator = std::make_unique<ROOT::Math::Interpolator>
+            (fWaveformX.size(), ROOT::Math::Interpolation::kLINEAR);
+
+        fInterpolator->SetData(fWaveformX, fWaveformY);
 
     }
 
@@ -58,7 +71,17 @@ namespace crt {
 
     uint16_t CRTDetSimAlg::WaveformEmulation(uint32_t time_delay, uint16_t adc)
     {
-        return adc;
+        std::cout << "[WaveformEmulation] time_delay " << time_delay
+                  << ", waveform " << fInterpolator->Eval(time_delay) << std::endl;
+
+        if (time_delay > fWaveformX.back()) {
+            return 0;
+        }
+
+        // Evaluate the waveform
+        double wf = fInterpolator->Eval(time_delay);
+
+        return adc * static_cast<uint16_t>(wf);
     }
 
 
