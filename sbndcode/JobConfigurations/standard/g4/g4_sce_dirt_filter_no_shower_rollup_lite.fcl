@@ -1,0 +1,22 @@
+#-------------------------------------------------------------------
+#
+# Name: g4_sce_dirt_filter_no_shower_rollup_lite.fcl
+#
+# Purpose: Lite version of g4_sce_dirt_filter_no_shower_rollup.fcl
+#
+# Created: 22-Mar-2022  H. Greenlee
+#
+# Automatically generated.
+#
+#-------------------------------------------------------------------
+
+#include "g4_sce_dirt_filter_no_shower_rollup.fcl"
+
+# Drop truth data products.
+
+outputs.out1.saveMemoryObjectThreshold: 0
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                               "drop sim::SimEnergyDeposits_*_*_*",
+                               "drop sim::OpDetBacktrackerRecords_*_*_*",
+                               "drop *_ionandscint__*",
+                               "drop sim::AuxDetHits_*_*_*" ]

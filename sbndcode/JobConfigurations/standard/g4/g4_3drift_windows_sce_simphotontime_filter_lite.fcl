@@ -1,0 +1,29 @@
+#-------------------------------------------------------------------
+#
+# Name: g4_3drift_windows_sce_simphotontime_filter_lite.fcl
+#
+# Purpose: Lite version of g4_3drift_windows_sce_simphotontime_filter.fcl
+#
+# Created: 22-Mar-2022  H. Greenlee
+#
+# Automatically generated.
+#
+#-------------------------------------------------------------------
+
+#include "g4_3drift_windows_sce_simphotontime_filter.fcl"
+
+# Drop truth data products.
+
+outputs.out1.saveMemoryObjectThreshold: 0
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                               "drop sim::SimEnergyDeposits_*_*_*",
+                               "drop sim::OpDetBacktrackerRecords_*_*_*",
+                               "drop *_larg4intime_*_*",
+                               "drop *_larg4outtime_*_*",
+                               "drop *_ionandscintintime_*_*",
+                               "drop *_ionandscintouttime_*_*",
+                               "drop *_pdfastsimintime_*_*",
+                               "drop *_pdfastsimouttime_*_*",
+                               "drop *_simdriftintime_*_*",
+                               "drop *_simdriftouttime_*_*",
+                               "drop sim::AuxDetHits_*_*_*" ]
