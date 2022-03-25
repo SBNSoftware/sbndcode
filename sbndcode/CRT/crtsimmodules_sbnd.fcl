@@ -57,6 +57,11 @@ standard_sbnd_crtsimparams: {
   SipmTimeResponse: 2.0
 
   AdcSaturation: 4095
+
+  DeadTime: 22000
+
+  WaveformX: [0., 11.83, 18.59, 28.72,  41.40,  51.53,  62.51, 75.]
+  WaveformY: [0., 3.412, 12.08, 34.138, 65.646, 84.554, 101.1, 108.3]
 }
 
 sbnd_crtsim: {

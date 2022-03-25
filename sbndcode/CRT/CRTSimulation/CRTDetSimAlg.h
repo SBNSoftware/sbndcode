@@ -12,6 +12,7 @@
 #include "larcorealg/Geometry/AuxDetGeo.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "larcorealg/CoreUtils/NumericUtils.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
 // CLHEP includes
 #include "CLHEP/Random/RandomEngine.h"
@@ -26,12 +27,15 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <algorithm>
 
 // ROOT includes
 #include "TGeoManager.h"
 #include "TGeoNode.h"
+#include "Math/Interpolator.h"
 
 // CRT includes
+#include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
 
 using std::vector;
@@ -47,10 +51,63 @@ namespace sbnd {
     }
 }
 
+// struct Tagger {
+//   std::vector<std::pair<unsigned, uint32_t> > planesHit;
+//   std::vector<sbnd::crt::CRTData> data;
+//   std::vector<std::vector<sim::AuxDetIDE>> ides;
+// };
+
+struct SiPMData {
+    // uint16_t mac5;
+    // unsigned planeID;
+    int sipmID;
+    int channel;
+    uint64_t t0;
+    uint64_t t1;
+    uint16_t adc;
+    SiPMData(int _sipmID, int _channel, uint64_t _t0, uint64_t _t1, uint16_t _adc) :
+        sipmID(_sipmID)
+      , channel(_channel)
+      , t0(_t0)
+      , t1(_t1)
+      , adc(_adc)
+    {};
+    // sim::AuxDetIDE ide;
+};
+
+struct StripData {
+    uint16_t mac5;
+    unsigned planeID;
+    SiPMData sipm0;
+    SiPMData sipm1;
+    // int channel;
+    // uint64_t t0;
+    // uint64_t t1;
+    // uint16_t adc;
+    sim::AuxDetIDE ide;
+
+    StripData(uint16_t _mac5, unsigned _planeID, SiPMData _sipm0, SiPMData _sipm1, sim::AuxDetIDE _ide) :
+        mac5(_mac5)
+      , planeID(_planeID)
+      , sipm0(_sipm0)
+      , sipm1(_sipm1)
+      , ide(_ide)
+    {};
+};
+
+// struct ModuleData {
+//     uint16_t mac5;
+//     std::vector<uint16_t> adcs;
+//     std::vector<uint64_t> times;
+// };
+
 struct Tagger {
-  std::vector<std::pair<unsigned, uint32_t> > planesHit;
-  std::vector<sbnd::crt::CRTData> data;
-  std::vector<std::vector<sim::AuxDetIDE>> ides;
+  // std::vector<uint32_t> mac5;
+  // std::vector<unsigned> planeID;
+  // std::vector<uint32_t> time;
+  std::vector<StripData> data;
+  // std::vector<sim::AuxDetIDE> ide;
+  int size() {return data.size();}
 };
 
 
@@ -64,37 +121,46 @@ public:
 
 
     /**
-       * Function to clear member data at beginning of each art::event
-       */
+     * Function to clear member data at beginning of each art::event
+     */
     void ClearTaggers();
 
 
     /**
-       * Filles CRT taggers from AuxDetSimChannels.
-       *
-       * Intented to be called within loop over AuxDetChannels and provided the
-       * AuxDetChannelID, AuxDetSensitiveChannelID, vector of AuxDetIDEs and
-       * the number of ides from the end of the vector to include in the detector sim.
-       * It handles deposited energy ti light output at SiPM (including attenuation)
-       * and to PEs from the SiPM with associated time stamps.
-       *
-       * @param adid The AuxDetChannelID
-       * @param adsid The AuxDetSensitiveChannelID
-       * @param ides The vector of AuxDetIDE
-       */
+     * Filles CRT taggers from AuxDetSimChannels.
+     *
+     * Intented to be called within loop over AuxDetChannels and provided the
+     * AuxDetChannelID, AuxDetSensitiveChannelID, vector of AuxDetIDEs and
+     * the number of ides from the end of the vector to include in the detector sim.
+     * It handles deposited energy ti light output at SiPM (including attenuation)
+     * and to PEs from the SiPM with associated time stamps.
+     *
+     * @param adid The AuxDetChannelID
+     * @param adsid The AuxDetSensitiveChannelID
+     * @param ides The vector of AuxDetIDE
+     */
     void FillTaggers(const uint32_t adid, const uint32_t adsid, vector<AuxDetIDE> ides);
 
     /**
-       * Returns CRTData objects.
-       *
-       * This function is called after loop over AuxDetSimChannels where FillTaggers
-       * was used to perform first detsim step. This function applies trigger logic,
-       * deadtime, and close-in-time signal biasing effects. it produces the
-       * "triggered data" products which make it into the event.
-       *
-       * @return Vector of pairs (CRTData, vector of AuxDetIDE)
-       */
-    std::vector<std::pair<sbnd::crt::CRTData, std::vector<AuxDetIDE>>> CreateData();
+     * Returns FEBData objects.
+     *
+     * This function is called after loop over AuxDetSimChannels where FillTaggers
+     * was used to perform first detsim step. This function applies trigger logic,
+     * deadtime, and close-in-time signal biasing effects. it produces the
+     * "triggered data" products which make it into the event. Use "GetData"
+     * to retrieve the result.
+     *
+     * @return Vector of pairs (FEBData, vector of AuxDetIDE)
+     */
+    void CreateData();
+
+    /**
+     * Returns the simulated FEBData and AuxDetIDEs
+     *
+     * @return Vector of pairs (FEBData, vector of AuxDetIDE)
+     */
+    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> GetData();
+
 
 
 private:
@@ -127,11 +193,19 @@ private:
     bool fUseEdep;  //!< Use the true G4 energy deposited, assume mip if false.
     double fSipmTimeResponse; //!< Minimum time to resolve separate energy deposits [ns]
     uint32_t fAdcSaturation; //!< Saturation limit per SiPM in ADC counts
+    double fDeadTime; //!< Saturation limit per SiPM in ADC counts
+    std::vector<double> fWaveformX; //!< SiPM waveform sampled, X
+    std::vector<double> fWaveformY; //!< SiPM waveform sampled, Y
 
     CLHEP::HepRandomEngine& fEngine;
 
+    std::unique_ptr<ROOT::Math::Interpolator> fInterpolator;
+
     // A list of hit taggers, before any coincidence requirement (mac5 -> tagger)
     std::map<std::string, Tagger> fTaggers;
+
+    std::vector<sbnd::crt::FEBData> fFEBDatas;
+    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData;
 
     /**
        * Get the channel trigger time relative to the start of the MC event.
@@ -146,6 +220,10 @@ private:
     uint32_t getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
                                     /*detinfo::ElecClock& clock,*/
                                     float t0, float npeMean, float r);
+
+    void ProcessStrips(uint32_t trigger_time, uint32_t coinc, std::vector<StripData> strips);
+    uint16_t WaveformEmulation(uint32_t time_delay, uint16_t adc);
+    void AddADC(sbnd::crt::FEBData & feb_data, int sipmID, uint16_t adc);
 
 };
 

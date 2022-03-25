@@ -33,6 +33,7 @@
 #include "TNtuple.h"
 #include "TGeoManager.h"
 #include "TGeoNode.h"
+#include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbndcode/CRT/CRTDetSim.h"
 
@@ -55,22 +56,25 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
 {
   this->reconfigure(p);
 
-  produces<std::vector<sbnd::crt::CRTData> >();
+  produces<std::vector<sbnd::crt::FEBData> >();
   produces<std::vector<sim::AuxDetIDE> >();
-  produces< art::Assns<sbnd::crt::CRTData , sim::AuxDetIDE> >();
+  produces<art::Assns<sbnd::crt::FEBData , sim::AuxDetIDE> >();
+
+  consumes<std::vector<sim::AuxDetSimChannel>>(fG4ModuleLabel);
 }
 
 
 
 void CRTDetSim::produce(art::Event & e) {
 
-  std::unique_ptr<std::vector<sbnd::crt::CRTData> > triggeredCRTHits(new std::vector<sbnd::crt::CRTData>);
-  art::PtrMaker<sbnd::crt::CRTData> makeDataPtr(e);
+  std::unique_ptr<std::vector<sbnd::crt::FEBData> > FEBDataOut(new std::vector<sbnd::crt::FEBData>);
+  art::PtrMaker<sbnd::crt::FEBData> makeDataPtr(e);
 
   std::unique_ptr<std::vector<sim::AuxDetIDE> > auxDetIdes(new std::vector<sim::AuxDetIDE>);
   art::PtrMaker<sim::AuxDetIDE> makeIdePtr(e);
 
-  std::unique_ptr< art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE> > Dataassn( new art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE>);
+  std::unique_ptr<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE>> Dataassn
+    (new art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE>);
 
 
   // Handle for (truth) AuxDetSimChannels
@@ -80,6 +84,8 @@ void CRTDetSim::produce(art::Event & e) {
   if (!channels.isValid()) {
     mf::LogWarning("CRTDetSim") << "No AuxDetSimChannel..." << std::endl;
   }
+
+  fDetAlg.ClearTaggers();
 
 
   //
@@ -93,8 +99,10 @@ void CRTDetSim::produce(art::Event & e) {
       continue;
     }
 
-    if(adsc.AuxDetIDEs().size()>0) {
+    if(adsc.AuxDetIDEs().size() > 0) {
+      std::cout << "Adding AuxDetSimChannel with AuxDetID " << adsc.AuxDetID() << ", AuxDetSensitiveID " << adsc.AuxDetSensitiveID() << std::endl;
       fDetAlg.FillTaggers(adsc.AuxDetID(), adsc.AuxDetSensitiveID(), adsc.AuxDetIDEs());
+      std::cout << std::endl;
     }
 
   } // loop over AuxDetSimChannels
@@ -104,12 +112,17 @@ void CRTDetSim::produce(art::Event & e) {
   // Step 1: Apply Coincidence, deadtime, etc.
   //
 
-  std::vector<std::pair<sbnd::crt::CRTData, std::vector<sim::AuxDetIDE>>> data = fDetAlg.CreateData();
+  fDetAlg.CreateData();
+  std::vector<std::pair<sbnd::crt::FEBData, std::vector<sim::AuxDetIDE>>> data = fDetAlg.GetData();
+
+  //
+  // Step 3: Save output
+  //
 
   for(auto const& dataPair : data){
 
-    triggeredCRTHits->push_back(dataPair.first);
-    art::Ptr<CRTData> dataPtr = makeDataPtr(triggeredCRTHits->size()-1);
+    FEBDataOut->push_back(dataPair.first);
+    art::Ptr<FEBData> dataPtr = makeDataPtr(FEBDataOut->size()-1);
 
     for(auto const& ide : dataPair.second){
       auxDetIdes->push_back(ide);
@@ -118,10 +131,9 @@ void CRTDetSim::produce(art::Event & e) {
     }
   }
 
+  mf::LogInfo("CRTDetSim") << "Number of FEBData objects produced: " << FEBDataOut->size() << "\n";
 
-  mf::LogInfo("CRT") << "CRT TRIGGERED HITS: " << triggeredCRTHits->size() << "\n";
-
-  e.put(std::move(triggeredCRTHits));
+  e.put(std::move(FEBDataOut));
   e.put(std::move(auxDetIdes));
   e.put(std::move(Dataassn));
 }
