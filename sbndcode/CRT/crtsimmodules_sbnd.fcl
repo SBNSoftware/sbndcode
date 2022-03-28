@@ -25,7 +25,7 @@ standard_sbnd_crtsimparams: {
 
   # Propagation delay [ns/cm]
   PropDelay: 0.0061
-  fPropDelayError: 0.007
+  PropDelayError: 0.007
 
   # Interpolator time resolution [ns]
   TResInterpolator: 1.268

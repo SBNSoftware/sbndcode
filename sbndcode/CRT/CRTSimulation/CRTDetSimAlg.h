@@ -37,6 +37,7 @@
 // CRT includes
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbndcode/CRT/CRTSimulation/CRTDetSimParams.h"
 
 using std::vector;
 using std::pair;
@@ -116,8 +117,9 @@ class sbnd::crt::CRTDetSimAlg {
 
 public:
 
-    CRTDetSimAlg(fhicl::ParameterSet const & p, CLHEP::HepRandomEngine& fRandEngine);
-    void reconfigure(fhicl::ParameterSet const & p);
+    using Parameters = fhicl::Table<CRTDetSimParams>;
+    CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine);
+    void ConfigureWaveform();
 
 
     /**
@@ -165,44 +167,13 @@ public:
 
 private:
 
-    double fGlobalT0Offset;  //!< Time delay fit: Gaussian normalization
-    double fTDelayNorm;  //!< Time delay fit: Gaussian normalization
-    double fTDelayShift;  //!< Time delay fit: Gaussian x shift
-    double fTDelaySigma;  //!< Time delay fit: Gaussian width
-    double fTDelayOffset;  //!< Time delay fit: Gaussian baseline offset
-    double fTDelayRMSGausNorm;  //!< Time delay RMS fit: Gaussian normalization
-    double fTDelayRMSGausShift;  //!< Time delay RMS fit: Gaussian x shift
-    double fTDelayRMSGausSigma;  //!< Time delay RMS fit: Gaussian width
-    double fTDelayRMSExpNorm;  //!< Time delay RMS fit: Exponential normalization
-    double fTDelayRMSExpShift;  //!< Time delay RMS fit: Exponential x shift
-    double fTDelayRMSExpScale;  //!< Time delay RMS fit: Exponential scale
-    double fClockSpeedCRT; //!< Clock speed for the CRT system [MHz]
-    double fNpeScaleNorm;  //!< Npe vs. distance: 1/r^2 scale
-    double fNpeScaleShift;  //!< Npe vs. distance: 1/r^2 x shift
-    double fQ0;  //!< Average energy deposited for mips, for charge scaling [GeV]
-    double fQPed;  //!< ADC offset for the single-peak peak mean [ADC]
-    double fQSlope;  //!< Slope in mean ADC / Npe [ADC]
-    double fQRMS;  //!< ADC single-pe spectrum width [ADC]
-    double fQThreshold;  //!< ADC charge threshold [ADC]
-    double fTResInterpolator;  //!< Interpolator time resolution [ns]
-    double fPropDelay;  //!< Delay in pulse arrival time [ns/m]
-    double fPropDelayError;  //!< Delay in pulse arrival time, uncertainty [ns/m]
-    double fStripCoincidenceWindow;  //!< Time window for two-fiber coincidence [ns]
-    double fTaggerPlaneCoincidenceWindow;  //!< Time window for two-plane coincidence [ticks]
-    double fAbsLenEff;  //!< Effective abs. length for transverse Npe scaling [cm]
-    bool fUseEdep;  //!< Use the true G4 energy deposited, assume mip if false.
-    double fSipmTimeResponse; //!< Minimum time to resolve separate energy deposits [ns]
-    uint32_t fAdcSaturation; //!< Saturation limit per SiPM in ADC counts
-    double fDeadTime; //!< Saturation limit per SiPM in ADC counts
-    std::vector<double> fWaveformX; //!< SiPM waveform sampled, X
-    std::vector<double> fWaveformY; //!< SiPM waveform sampled, Y
+    CRTDetSimParams fParams; //!< The table of CRT simulation parameters
 
-    CLHEP::HepRandomEngine& fEngine;
+    CLHEP::HepRandomEngine& fEngine; //!< The random-number engine
 
-    std::unique_ptr<ROOT::Math::Interpolator> fInterpolator;
+    std::unique_ptr<ROOT::Math::Interpolator> fInterpolator; //!< The interpolator used to estimate the CRT waveform
 
-    // A list of hit taggers, before any coincidence requirement (mac5 -> tagger)
-    std::map<std::string, Tagger> fTaggers;
+    std::map<std::string, Tagger> fTaggers; // A list of hit taggers, before any coincidence requirement (name -> tagger)
 
     std::vector<sbnd::crt::FEBData> fFEBDatas;
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData;

@@ -6,59 +6,32 @@
 namespace sbnd {
 namespace crt {
 
-    CRTDetSimAlg::CRTDetSimAlg(fhicl::ParameterSet const & p, CLHEP::HepRandomEngine& engine) :
-        fEngine(engine)
+    CRTDetSimAlg::CRTDetSimAlg(const Parameters & params, CLHEP::HepRandomEngine& engine)
+    : fParams(params())
+    , fEngine(engine)
     {
-
-        this->reconfigure(p);
+        ConfigureWaveform();
         fTaggers.clear();
         fFEBDatas.clear();
     }
 
-    void CRTDetSimAlg::reconfigure(fhicl::ParameterSet const & p) {
-
-        fGlobalT0Offset = p.get<double>("GlobalT0Offset");
-        fTDelayNorm = p.get<double>("TDelayNorm");
-        fTDelayShift = p.get<double>("TDelayShift");
-        fTDelaySigma = p.get<double>("TDelaySigma");
-        fTDelayOffset = p.get<double>("TDelayOffset");
-        fTDelayRMSGausNorm = p.get<double>("TDelayRMSGausNorm");
-        fTDelayRMSGausShift = p.get<double>("TDelayRMSGausShift");
-        fTDelayRMSGausSigma = p.get<double>("TDelayRMSGausSigma");
-        fTDelayRMSExpNorm = p.get<double>("TDelayRMSExpNorm");
-        fTDelayRMSExpShift = p.get<double>("TDelayRMSExpShift");
-        fTDelayRMSExpScale = p.get<double>("TDelayRMSExpScale");
-        fClockSpeedCRT = p.get<double>("ClockSpeedCRT");
-        fPropDelay = p.get<double>("PropDelay");
-        fPropDelayError = p.get<double>("fPropDelayError");
-        fTResInterpolator = p.get<double>("TResInterpolator");
-        fNpeScaleNorm = p.get<double>("NpeScaleNorm");
-        fNpeScaleShift = p.get<double>("NpeScaleShift");
-        fUseEdep = p.get<bool>("UseEdep");
-        fQ0 = p.get<double>("Q0");
-        fQPed = p.get<double>("QPed");
-        fQSlope = p.get<double>("QSlope");
-        fQRMS = p.get<double>("QRMS");
-        fQThreshold = p.get<double>("QThreshold");
-        fStripCoincidenceWindow = p.get<double>("StripCoincidenceWindow");
-        fTaggerPlaneCoincidenceWindow = p.get<double>("TaggerPlaneCoincidenceWindow");
-        fAbsLenEff = p.get<double>("AbsLenEff");
-        fSipmTimeResponse = p.get<double>("SipmTimeResponse");
-        fAdcSaturation = p.get<uint32_t>("AdcSaturation");
-        fDeadTime = p.get<double>("DeadTime");
-        fWaveformX = p.get<std::vector<double>>("WaveformX");
-        fWaveformY = p.get<std::vector<double>>("WaveformY");
+    void CRTDetSimAlg::ConfigureWaveform()
+    {
 
         // Normalize the waveform
-        float max_y = *std::max_element(std::begin(fWaveformY), std::end(fWaveformY));
-        for (auto & y : fWaveformY) y /= max_y;
+        std::vector<double> wvf_x = fParams.WaveformX();
+        std::vector<double> wvf_y = fParams.WaveformY();
+
+        float max_y = *std::max_element(std::begin(wvf_y), std::end(wvf_y));
+        for (auto & y : wvf_y) y /= max_y;
         // Reverse
-        std::reverse(fWaveformY.begin(),fWaveformY.end());
+        std::reverse(wvf_y.begin(),wvf_y.end());
 
+        // Construct the interpolator
         fInterpolator = std::make_unique<ROOT::Math::Interpolator>
-            (fWaveformX.size(), ROOT::Math::Interpolation::kLINEAR);
+            (wvf_x.size(), ROOT::Math::Interpolation::kLINEAR);
 
-        fInterpolator->SetData(fWaveformX, fWaveformY);
+        fInterpolator->SetData(wvf_x, wvf_y);
 
     }
 
@@ -71,15 +44,23 @@ namespace crt {
 
     uint16_t CRTDetSimAlg::WaveformEmulation(uint32_t time_delay, uint16_t adc)
     {
-        std::cout << "[WaveformEmulation] time_delay " << time_delay
-                  << ", waveform " << fInterpolator->Eval(time_delay) << std::endl;
 
-        if (time_delay > fWaveformX.back()) {
+        if (time_delay < 0) {
+            throw art::Exception(art::errors::LogicError)
+                << "time_delay cannot be negative." << std::endl;;
+        }
+
+        if (time_delay > fParams.WaveformX().back()) {
+            // If the time delay is more than the waveform rise time, we
+            // will never be able to see this signal. So return a 0 ADC value.
             return 0;
         }
 
         // Evaluate the waveform
         double wf = fInterpolator->Eval(time_delay);
+
+        std::cout << "[WaveformEmulation] time_delay " << time_delay
+                  << ", waveform " << wf << std::endl;
 
         return adc * static_cast<uint16_t>(wf);
     }
@@ -90,8 +71,8 @@ namespace crt {
         uint16_t original_adc = feb_data.ADC(sipmID);
         uint16_t new_adc = original_adc + adc;
 
-        if (new_adc > fAdcSaturation) {
-            new_adc = fAdcSaturation;
+        if (new_adc > fParams.AdcSaturation()) {
+            new_adc = fParams.AdcSaturation();
         }
 
         mf::LogDebug("CRTDetSimAlg") << "Updating ADC value for FEB " << feb_data.Mac5()
@@ -112,7 +93,7 @@ namespace crt {
         bool plane0_hit, plane1_hit = false;
 
         // TODO Add pedestal fluctuations
-        std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fQPed)};
+        std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
 
         for (auto & strip : strips) {
             if (strip.planeID == 0) plane0_hit = true;
@@ -205,12 +186,12 @@ namespace crt {
 
                 std::cout << "[CreateData]   This is strip " << i << " mac " << strip_data.mac5 << " on plane " << strip_data.planeID << ", with time " << current_time << std::endl;
 
-                if (current_time - trigger_time < fTaggerPlaneCoincidenceWindow)
+                if (current_time - trigger_time < fParams.TaggerPlaneCoincidenceWindow())
                 {
                     std::cout << "[CreateData]   -> Is in" << std::endl;
                     strips.push_back(strip_data);
                 }
-                else if (current_time > trigger_time + fDeadTime)
+                else if (current_time > trigger_time + fParams.DeadTime())
                 {
                     std::cout << "[CreateData]   -> Created new trigger. " << std::endl;
                     ProcessStrips(trigger_time, coinc, strips);
@@ -360,7 +341,7 @@ namespace crt {
           double y = (ide.entryY + ide.exitY) / 2;
           double z = (ide.entryZ + ide.exitZ) / 2;
 
-          double tTrue = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset; // ns
+          double tTrue = (ide.entryT + ide.exitT) / 2 + fParams.GlobalT0Offset(); // ns
           double eDep = ide.energyDeposited;
 
           double world[3] = {x, y, z};
@@ -377,17 +358,17 @@ namespace crt {
 
           // The expected number of PE, using a quadratic model for the distance
           // dependence, and scaling linearly with deposited energy.
-          double qr = fUseEdep ? 1.0 * eDep / fQ0 : 1.0;
+          double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
 
           double npeExpected =
-            fNpeScaleNorm / pow(distToReadout - fNpeScaleShift, 2) * qr;
+            fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
 
           // Put PE on channels weighted by transverse distance across the strip,
           // using an exponential model
           double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);  // L
           double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);  // R
-          double abs0 = exp(-d0 / fAbsLenEff);
-          double abs1 = exp(-d1 / fAbsLenEff);
+          double abs0 = exp(-d0 / fParams.AbsLenEff());
+          double abs1 = exp(-d1 / fParams.AbsLenEff());
           double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
           double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
 
@@ -404,15 +385,15 @@ namespace crt {
 
           // Time relative to PPS: Random for now! (FIXME)
           uint32_t ppsTicks =
-            CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fClockSpeedCRT * 1e6);
+            CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fParams.ClockSpeedCRT() * 1e6);
 
           // SiPM and ADC response: Npe to ADC counts, pedestal is added later
           uint32_t q0 =
-            CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fQSlope * npe0, fQRMS * sqrt(npe0));
-          if(q0 > fAdcSaturation) q0 = fAdcSaturation;
+            CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe0, fParams.QRMS() * sqrt(npe0));
+          if(q0 > fParams.AdcSaturation()) q0 = fParams.AdcSaturation();
           uint32_t q1 =
-            CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fQSlope * npe1, fQRMS * sqrt(npe1));
-          if(q1 > fAdcSaturation) q1 = fAdcSaturation;
+            CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1, fParams.QRMS() * sqrt(npe1));
+          if(q1 > fParams.AdcSaturation()) q1 = fParams.AdcSaturation();
 
           // Adjacent channels on a strip are numbered sequentially.
           //
@@ -429,9 +410,9 @@ namespace crt {
           if (moduleID >= 127) {continue;}        //Ignoring MINOS modules for now.
 
           // Apply ADC threshold and strip-level coincidence (both fibers fire)
-          if (q0 > fQThreshold &&
-              q1 > fQThreshold &&
-              util::absDiff(t0, t1) < fStripCoincidenceWindow) {
+          if (q0 > fParams.QThreshold() &&
+              q1 > fParams.QThreshold() &&
+              util::absDiff(t0, t1) < fParams.StripCoincidenceWindow()) {
 
             // Time ordered
             if (t0 > t1) {
@@ -496,30 +477,30 @@ namespace crt {
                                              float t0, float npeMean, float r) {
       // Hit timing, with smearing and NPE dependence
       double tDelayMean =
-        fTDelayNorm *
-          exp(-0.5 * pow((npeMean - fTDelayShift) / fTDelaySigma, 2)) +
-        fTDelayOffset;
+        fParams.TDelayNorm() *
+          exp(-0.5 * pow((npeMean - fParams.TDelayShift()) / fParams.TDelaySigma(), 2)) +
+        fParams.TDelayOffset();
 
       double tDelayRMS =
-        fTDelayRMSGausNorm *
-          exp(-pow(npeMean - fTDelayRMSGausShift, 2) / fTDelayRMSGausSigma) +
-        fTDelayRMSExpNorm *
-          exp(-(npeMean - fTDelayRMSExpShift) / fTDelayRMSExpScale);
+        fParams.TDelayRMSGausNorm() *
+          exp(-pow(npeMean - fParams.TDelayRMSGausShift(), 2) / fParams.TDelayRMSGausSigma()) +
+        fParams.TDelayRMSExpNorm() *
+          exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale());
 
       double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
       // Time resolution of the interpolator
-      tDelay += CLHEP::RandGauss::shoot(engine, 0, fTResInterpolator);
+      tDelay += CLHEP::RandGauss::shoot(engine, 0, fParams.TResInterpolator());
 
       // Propagation time
-      double tProp = CLHEP::RandGauss::shoot(fPropDelay, fPropDelayError) * r;
+      double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;
 
       double t = t0 + tProp + tDelay;
 
       // Get clock ticks
       // FIXME no clock available for CRTs, have to do it by hand
       //clock.SetTime(t / 1e3);  // SetTime takes microseconds
-      int time = (t / 1e3) * fClockSpeedCRT;
+      int time = (t / 1e3) * fParams.ClockSpeedCRT();
 
       mf::LogInfo("CRT")
         << "CRT TIMING: t0=" << t0
