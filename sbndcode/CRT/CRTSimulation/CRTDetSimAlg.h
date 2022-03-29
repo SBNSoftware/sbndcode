@@ -118,9 +118,7 @@ class sbnd::crt::CRTDetSimAlg {
 public:
 
     using Parameters = fhicl::Table<CRTDetSimParams>;
-    CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine);
-    void ConfigureWaveform();
-
+    CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine, double g4RefTime);
 
     /**
      * Function to clear member data at beginning of each art::event
@@ -141,7 +139,7 @@ public:
      * @param adsid The AuxDetSensitiveChannelID
      * @param ides The vector of AuxDetIDE
      */
-    void FillTaggers(const uint32_t adid, const uint32_t adsid, vector<AuxDetIDE> ides);
+    void FillTaggers(const uint32_t adid, const uint32_t adsid, std::vector<AuxDetIDE> ides);
 
     /**
      * Returns FEBData objects.
@@ -171,12 +169,19 @@ private:
 
     CLHEP::HepRandomEngine& fEngine; //!< The random-number engine
 
+    double fG4RefTime;
+
+    double fTimeOffset;
+
     std::unique_ptr<ROOT::Math::Interpolator> fInterpolator; //!< The interpolator used to estimate the CRT waveform
 
     std::map<std::string, Tagger> fTaggers; // A list of hit taggers, before any coincidence requirement (name -> tagger)
 
-    std::vector<sbnd::crt::FEBData> fFEBDatas;
+    // std::vector<sbnd::crt::FEBData> fFEBDatas;
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData;
+
+    void ConfigureWaveform();
+    void ConfigureTimeOffset();
 
     /**
        * Get the channel trigger time relative to the start of the MC event.
@@ -192,9 +197,15 @@ private:
                                     /*detinfo::ElecClock& clock,*/
                                     float t0, float npeMean, float r);
 
-    void ProcessStrips(uint32_t trigger_time, uint32_t coinc, std::vector<StripData> strips);
-    uint16_t WaveformEmulation(uint32_t time_delay, uint16_t adc);
-    void AddADC(sbnd::crt::FEBData & feb_data, int sipmID, uint16_t adc);
+    void ProcessStrips(const uint32_t & trigger_ts1,
+                       const uint32_t & trigger_ts0,
+                       const uint32_t & coinc,
+                       const std::vector<StripData> & strips,
+                       const std::string & tagger_name);
+
+    uint16_t WaveformEmulation(const uint32_t & time_delay, const uint16_t & adc);
+
+    void AddADC(sbnd::crt::FEBData & feb_data, const int & sipmID, const uint16_t & adc);
 
 };
 

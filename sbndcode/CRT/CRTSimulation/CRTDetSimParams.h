@@ -27,6 +27,11 @@ namespace crt
       Comment("Time delay fit: Gaussian normalization"),
       // true
     };
+    Atom<bool> UseG4RefTimeOffset {
+      Name("UseG4RefTimeOffset"),
+      Comment("Time delay fit: Gaussian normalization"),
+      // true
+    };
     Atom<double> TDelayNorm {
       Name("TDelayNorm"),
       Comment("Time delay fit: Gaussian normalization"),
@@ -75,6 +80,11 @@ namespace crt
     Atom<double> TDelayRMSExpScale {
       Name("TDelayRMSExpScale"),
       Comment("Time delay RMS fit: Exponential scale"),
+      // true
+    };
+    Atom<uint32_t> TriggerDelay {
+      Name("TriggerDelay"),
+      Comment("Time between signal starts and waveform goes above threshold"),
       // true
     };
     Atom<double> ClockSpeedCRT {

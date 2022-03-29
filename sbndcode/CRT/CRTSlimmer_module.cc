@@ -104,6 +104,8 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
 
       uint16_t & adc = adcs[i];
 
+      std::cout << "[CRTSlimmer] ADC of " << i << " is " << adc << " (th is " << _adc_threshold << ")" << std::endl;
+
       if (adc < _adc_threshold) {
         continue;
       }

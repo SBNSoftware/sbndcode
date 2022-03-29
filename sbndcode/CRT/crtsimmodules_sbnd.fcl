@@ -4,6 +4,7 @@ standard_sbnd_crtsimparams: {
   # Global timing offset [ns]
   # For Corsika cosmics, use 2.76e6 (see corsika_sbnd.fcl)
   GlobalT0Offset: 0.0
+  UseG4RefTimeOffset: true
 
   # Shape parameters for mean time delay vs. Npe
   TDelayNorm: 4125.74
@@ -18,6 +19,8 @@ standard_sbnd_crtsimparams: {
   TDelayRMSExpNorm: 1.6544
   TDelayRMSExpShift: 75.6183
   TDelayRMSExpScale: 79.3543
+
+  TriggerDelay: 10 # ns
 
   # Clock speed of the CRT system [MHz] (1 ns = 1 tick @ 1000 MHz)
   # (was 16 MHz for files before v08_25_00)
