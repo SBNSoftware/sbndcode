@@ -64,8 +64,8 @@ struct SiPMData {
     int channel;
     uint64_t t0;
     uint64_t t1;
-    uint16_t adc;
-    SiPMData(int _sipmID, int _channel, uint64_t _t0, uint64_t _t1, uint16_t _adc) :
+    double adc;
+    SiPMData(int _sipmID, int _channel, uint64_t _t0, uint64_t _t1, double _adc) :
         sipmID(_sipmID)
       , channel(_channel)
       , t0(_t0)
@@ -80,17 +80,20 @@ struct StripData {
     unsigned planeID;
     SiPMData sipm0;
     SiPMData sipm1;
+    bool sipm_coinc;
     // int channel;
     // uint64_t t0;
     // uint64_t t1;
     // uint16_t adc;
     sim::AuxDetIDE ide;
 
-    StripData(uint16_t _mac5, unsigned _planeID, SiPMData _sipm0, SiPMData _sipm1, sim::AuxDetIDE _ide) :
+    StripData(uint16_t _mac5, unsigned _planeID, SiPMData _sipm0, SiPMData _sipm1,
+              bool _sipm_coinc, sim::AuxDetIDE _ide) :
         mac5(_mac5)
       , planeID(_planeID)
       , sipm0(_sipm0)
       , sipm1(_sipm1)
+      , sipm_coinc(_sipm_coinc)
       , ide(_ide)
     {};
 };
@@ -116,9 +119,14 @@ class sbnd::crt::CRTDetSimAlg {
 
 public:
 
+<<<<<<< Updated upstream
     CRTDetSimAlg(fhicl::ParameterSet const & p, CLHEP::HepRandomEngine& fRandEngine);
     void reconfigure(fhicl::ParameterSet const & p);
 
+=======
+    using Parameters = fhicl::Table<CRTDetSimParams>;
+    CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine, double g4RefTime);
+>>>>>>> Stashed changes
 
     /**
      * Function to clear member data at beginning of each art::event
@@ -139,7 +147,7 @@ public:
      * @param adsid The AuxDetSensitiveChannelID
      * @param ides The vector of AuxDetIDE
      */
-    void FillTaggers(const uint32_t adid, const uint32_t adsid, vector<AuxDetIDE> ides);
+    void FillTaggers(const uint32_t adid, const uint32_t adsid, std::vector<AuxDetIDE> ides);
 
     /**
      * Returns FEBData objects.
@@ -165,6 +173,7 @@ public:
 
 private:
 
+<<<<<<< Updated upstream
     double fGlobalT0Offset;  //!< Time delay fit: Gaussian normalization
     double fTDelayNorm;  //!< Time delay fit: Gaussian normalization
     double fTDelayShift;  //!< Time delay fit: Gaussian x shift
@@ -203,9 +212,25 @@ private:
 
     // A list of hit taggers, before any coincidence requirement (mac5 -> tagger)
     std::map<std::string, Tagger> fTaggers;
+=======
+    CRTDetSimParams fParams; //!< The table of CRT simulation parameters
 
-    std::vector<sbnd::crt::FEBData> fFEBDatas;
+    CLHEP::HepRandomEngine& fEngine; //!< The random-number engine
+
+    double fG4RefTime;
+
+    double fTimeOffset;
+
+    std::unique_ptr<ROOT::Math::Interpolator> fInterpolator; //!< The interpolator used to estimate the CRT waveform
+
+    std::map<std::string, Tagger> fTaggers; // A list of hit taggers, before any coincidence requirement (name -> tagger)
+>>>>>>> Stashed changes
+
+    // std::vector<sbnd::crt::FEBData> fFEBDatas;
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData;
+
+    void ConfigureWaveform();
+    void ConfigureTimeOffset();
 
     /**
        * Get the channel trigger time relative to the start of the MC event.
@@ -221,9 +246,15 @@ private:
                                     /*detinfo::ElecClock& clock,*/
                                     float t0, float npeMean, float r);
 
-    void ProcessStrips(uint32_t trigger_time, uint32_t coinc, std::vector<StripData> strips);
-    uint16_t WaveformEmulation(uint32_t time_delay, uint16_t adc);
-    void AddADC(sbnd::crt::FEBData & feb_data, int sipmID, uint16_t adc);
+    void ProcessStrips(const uint32_t & trigger_ts1,
+                       const uint32_t & trigger_ts0,
+                       const uint32_t & coinc,
+                       const std::vector<StripData> & strips,
+                       const std::string & tagger_name);
+
+    uint16_t WaveformEmulation(const uint32_t & time_delay, const double & adc);
+
+    void AddADC(sbnd::crt::FEBData & feb_data, const int & sipmID, const uint16_t & adc);
 
 };
 

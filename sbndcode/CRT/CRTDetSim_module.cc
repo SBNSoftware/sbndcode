@@ -52,9 +52,16 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
 CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
   : EDProducer{p}
   , fEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "crt", p, "Seed"))
-  , fDetAlg(p.get<fhicl::ParameterSet>("DetSimParams"), fEngine)
+  , fG4RefTime(art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob().G4ToElecTime(0) * 1e3) // ns
+  , fDetAlg(p.get<fhicl::ParameterSet>("DetSimParams"), fEngine, fG4RefTime)
 {
   this->reconfigure(p);
+
+  // auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+  // double g4RefTime = -clockData.G4ToElecTime(0); // us
+  // std::cout << "--- G4ToElecTime(0) " << clockData.G4ToElecTime(0) << std::endl;
+
+  // fDetAlg = CRTDetSimAlg(p.get<fhicl::ParameterSet>("DetSimParams"), fEngine, g4RefTime);
 
   produces<std::vector<sbnd::crt::FEBData> >();
   produces<std::vector<sim::AuxDetIDE> >();
@@ -75,6 +82,14 @@ void CRTDetSim::produce(art::Event & e) {
 
   std::unique_ptr<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE>> Dataassn
     (new art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE>);
+
+  auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
+  std::cout << "TriggerOffsetTPC " << clockData.TriggerOffsetTPC() << std::endl;
+  std::cout << "TriggerTime " << clockData.TriggerTime() << std::endl;
+  std::cout << "TPCTime " << clockData.TPCTime() << std::endl;
+  std::cout << "G4ToElecTime(0) " << clockData.G4ToElecTime(0) << std::endl;
+
+  // double g4RefTime = -clockData.G4ToElecTime(0);
 
 
   // Handle for (truth) AuxDetSimChannels

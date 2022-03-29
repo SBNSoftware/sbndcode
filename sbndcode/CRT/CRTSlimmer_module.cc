@@ -100,11 +100,16 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
 
     auto adcs = feb_data->ADC();
 
-    for (size_t i = 0; i < adcs.size(); i++) {
+    for (size_t i = 0; i < adcs.size(); i+=2) {
 
-      uint16_t & adc = adcs[i];
+      // uint16_t & adc_0 = adcs[i];
+      // uint16_t & adc_1 = adcs[i+1];
 
-      if (adc < _adc_threshold) {
+      // std::cout << "[CRTSlimmer] ADC of " << i << " is " << adc << " (th is " << _adc_threshold << ")" << std::endl;
+
+      // Either one of the two sipms above threshold is enough to save
+      // both sipms
+      if (adcs[i] < _adc_threshold and adcs[i+1] < _adc_threshold) {
         continue;
       }
 
@@ -114,28 +119,30 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
       // uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
       // uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
 
-      sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(feb_data->Mac5() * 32 + i,
-                                                       feb_data->Ts0(),
-                                                       feb_data->Ts1(),
-                                                       adc);
+      for (size_t sipm = 0; sipm < 2; sipm++) {
+        sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(feb_data->Mac5() * 32 + i + sipm,
+                                                         feb_data->Ts0(),
+                                                         feb_data->Ts1(),
+                                                         adcs[i+sipm]);
 
-      std::cout << "[CRTSlimmer] Adding SiPM with mac " << feb_data->Mac5()
-                << " mapped to channel " << crt_data.Channel() << std::endl;
+        std::cout << "[CRTSlimmer] Adding SiPM with mac " << feb_data->Mac5()
+                  << " mapped to channel " << crt_data.Channel() << std::endl;
 
-      crt_data_v->emplace_back(std::move(crt_data));
+        crt_data_v->emplace_back(std::move(crt_data));
 
-      art::Ptr<sbnd::crt::CRTData> crt_data_p = makeDataPtr(crt_data_v->size() - 1);
+        art::Ptr<sbnd::crt::CRTData> crt_data_p = makeDataPtr(crt_data_v->size() - 1);
 
-      // Create the association between CRTData and FEBData
-      crtdata_to_febdata_assns->addSingle(crt_data_p, feb_data);
+        // Create the association between CRTData and FEBData
+        crtdata_to_febdata_assns->addSingle(crt_data_p, feb_data);
 
-      // Create the association between CRTData and AuxDetIDEs
-      // Note: we should further selects AuxDetIDEs that belong
-      // to a particular strip; this would require an additional
-      // product to do the bookkeping.
-      auto ides = febdata_to_ides.at(feb_data.key());
-      for (auto ide : ides) {
-        crtdata_to_ide_assns->addSingle(crt_data_p, ide);
+        // Create the association between CRTData and AuxDetIDEs
+        // Note: we should further selects AuxDetIDEs that belong
+        // to a particular strip; this would require an additional
+        // product to do the bookkeping.
+        auto ides = febdata_to_ides.at(feb_data.key());
+        for (auto ide : ides) {
+          crtdata_to_ide_assns->addSingle(crt_data_p, ide);
+        }
       }
     }
   }

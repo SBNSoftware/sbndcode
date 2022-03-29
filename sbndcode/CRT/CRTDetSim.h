@@ -37,6 +37,7 @@ public:
 private:
 
   CLHEP::HepRandomEngine& fEngine; //!< Reference to art-managed random-number engine
+  double fG4RefTime;
   CRTDetSimAlg fDetAlg; //!< Instance of the CRT detector simulation algorithm
 };
 
