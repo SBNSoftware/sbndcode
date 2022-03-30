@@ -37,6 +37,7 @@
 // CRT includes
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
+#include "CRTDetSimParams.h"
 
 using std::vector;
 using std::pair;
@@ -48,23 +49,16 @@ using sim::AuxDetIDE;
 namespace sbnd {
     namespace crt {
         class CRTDetSimAlg;
+        struct SiPMData;
+        struct StripData;
+        struct Tagger;
     }
 }
 
-// struct Tagger {
-//   std::vector<std::pair<unsigned, uint32_t> > planesHit;
-//   std::vector<sbnd::crt::CRTData> data;
-//   std::vector<std::vector<sim::AuxDetIDE>> ides;
-// };
-
-struct SiPMData {
-    // uint16_t mac5;
-    // unsigned planeID;
-    int sipmID;
-    int channel;
-    uint64_t t0;
-    uint64_t t1;
-    double adc;
+/** An enum type. 
+ *  The documentation block cannot be put after the enum! 
+ */
+struct sbnd::crt::SiPMData {
     SiPMData(int _sipmID, int _channel, uint64_t _t0, uint64_t _t1, double _adc) :
         sipmID(_sipmID)
       , channel(_channel)
@@ -72,21 +66,15 @@ struct SiPMData {
       , t1(_t1)
       , adc(_adc)
     {};
-    // sim::AuxDetIDE ide;
+
+    int sipmID; ///< The SiPM ID in the strip (0-31)
+    int channel; ///< The SiPM global channel number, calculated as 32 x (module) + 2 x (strip) + j
+    uint64_t t0; ///< The SiPM Ts0
+    uint64_t t1; ///< The SiPM Ts1
+    double adc; ///< The SiPM simulated ADC value in double format
 };
 
-struct StripData {
-    uint16_t mac5;
-    unsigned planeID;
-    SiPMData sipm0;
-    SiPMData sipm1;
-    bool sipm_coinc;
-    // int channel;
-    // uint64_t t0;
-    // uint64_t t1;
-    // uint16_t adc;
-    sim::AuxDetIDE ide;
-
+struct sbnd::crt::StripData {
     StripData(uint16_t _mac5, unsigned _planeID, SiPMData _sipm0, SiPMData _sipm1,
               bool _sipm_coinc, sim::AuxDetIDE _ide) :
         mac5(_mac5)
@@ -96,20 +84,18 @@ struct StripData {
       , sipm_coinc(_sipm_coinc)
       , ide(_ide)
     {};
+
+    uint16_t mac5; ///< The FEB number this strip is in
+    unsigned planeID; ///< The plane ID (0 or 1 for horizontal or vertical)
+    SiPMData sipm0; ///< One SiPM (the one that sees signal first) 
+    SiPMData sipm1; ///< One SiPM
+    bool sipm_coinc; ///< Stores the ID of the SiPM that sees signal first (0-31)
+    sim::AuxDetIDE ide; ///< The AuxDetIDE associated with this strip
 };
 
-// struct ModuleData {
-//     uint16_t mac5;
-//     std::vector<uint16_t> adcs;
-//     std::vector<uint64_t> times;
-// };
-
-struct Tagger {
-  // std::vector<uint32_t> mac5;
-  // std::vector<unsigned> planeID;
-  // std::vector<uint32_t> time;
-  std::vector<StripData> data;
-  // std::vector<sim::AuxDetIDE> ide;
+struct sbnd::crt::Tagger {
+  std::vector<StripData> data; ///< A vector of strips that have energy deposits
+  /** \brief Returns the number of strips with energy deposits for this tagger */
   int size() {return data.size();}
 };
 
@@ -119,14 +105,8 @@ class sbnd::crt::CRTDetSimAlg {
 
 public:
 
-<<<<<<< Updated upstream
-    CRTDetSimAlg(fhicl::ParameterSet const & p, CLHEP::HepRandomEngine& fRandEngine);
-    void reconfigure(fhicl::ParameterSet const & p);
-
-=======
     using Parameters = fhicl::Table<CRTDetSimParams>;
     CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine, double g4RefTime);
->>>>>>> Stashed changes
 
     /**
      * Function to clear member data at beginning of each art::event
@@ -173,46 +153,6 @@ public:
 
 private:
 
-<<<<<<< Updated upstream
-    double fGlobalT0Offset;  //!< Time delay fit: Gaussian normalization
-    double fTDelayNorm;  //!< Time delay fit: Gaussian normalization
-    double fTDelayShift;  //!< Time delay fit: Gaussian x shift
-    double fTDelaySigma;  //!< Time delay fit: Gaussian width
-    double fTDelayOffset;  //!< Time delay fit: Gaussian baseline offset
-    double fTDelayRMSGausNorm;  //!< Time delay RMS fit: Gaussian normalization
-    double fTDelayRMSGausShift;  //!< Time delay RMS fit: Gaussian x shift
-    double fTDelayRMSGausSigma;  //!< Time delay RMS fit: Gaussian width
-    double fTDelayRMSExpNorm;  //!< Time delay RMS fit: Exponential normalization
-    double fTDelayRMSExpShift;  //!< Time delay RMS fit: Exponential x shift
-    double fTDelayRMSExpScale;  //!< Time delay RMS fit: Exponential scale
-    double fClockSpeedCRT; //!< Clock speed for the CRT system [MHz]
-    double fNpeScaleNorm;  //!< Npe vs. distance: 1/r^2 scale
-    double fNpeScaleShift;  //!< Npe vs. distance: 1/r^2 x shift
-    double fQ0;  //!< Average energy deposited for mips, for charge scaling [GeV]
-    double fQPed;  //!< ADC offset for the single-peak peak mean [ADC]
-    double fQSlope;  //!< Slope in mean ADC / Npe [ADC]
-    double fQRMS;  //!< ADC single-pe spectrum width [ADC]
-    double fQThreshold;  //!< ADC charge threshold [ADC]
-    double fTResInterpolator;  //!< Interpolator time resolution [ns]
-    double fPropDelay;  //!< Delay in pulse arrival time [ns/m]
-    double fPropDelayError;  //!< Delay in pulse arrival time, uncertainty [ns/m]
-    double fStripCoincidenceWindow;  //!< Time window for two-fiber coincidence [ns]
-    double fTaggerPlaneCoincidenceWindow;  //!< Time window for two-plane coincidence [ticks]
-    double fAbsLenEff;  //!< Effective abs. length for transverse Npe scaling [cm]
-    bool fUseEdep;  //!< Use the true G4 energy deposited, assume mip if false.
-    double fSipmTimeResponse; //!< Minimum time to resolve separate energy deposits [ns]
-    uint32_t fAdcSaturation; //!< Saturation limit per SiPM in ADC counts
-    double fDeadTime; //!< Saturation limit per SiPM in ADC counts
-    std::vector<double> fWaveformX; //!< SiPM waveform sampled, X
-    std::vector<double> fWaveformY; //!< SiPM waveform sampled, Y
-
-    CLHEP::HepRandomEngine& fEngine;
-
-    std::unique_ptr<ROOT::Math::Interpolator> fInterpolator;
-
-    // A list of hit taggers, before any coincidence requirement (mac5 -> tagger)
-    std::map<std::string, Tagger> fTaggers;
-=======
     CRTDetSimParams fParams; //!< The table of CRT simulation parameters
 
     CLHEP::HepRandomEngine& fEngine; //!< The random-number engine
@@ -224,7 +164,6 @@ private:
     std::unique_ptr<ROOT::Math::Interpolator> fInterpolator; //!< The interpolator used to estimate the CRT waveform
 
     std::map<std::string, Tagger> fTaggers; // A list of hit taggers, before any coincidence requirement (name -> tagger)
->>>>>>> Stashed changes
 
     // std::vector<sbnd::crt::FEBData> fFEBDatas;
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData;

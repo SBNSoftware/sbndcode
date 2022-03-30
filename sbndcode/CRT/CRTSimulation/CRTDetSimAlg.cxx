@@ -6,13 +6,6 @@
 namespace sbnd {
 namespace crt {
 
-<<<<<<< Updated upstream
-    CRTDetSimAlg::CRTDetSimAlg(fhicl::ParameterSet const & p, CLHEP::HepRandomEngine& engine) :
-        fEngine(engine)
-    {
-
-        this->reconfigure(p);
-=======
     CRTDetSimAlg::CRTDetSimAlg(const Parameters & params, CLHEP::HepRandomEngine& engine, double g4RefTime)
     : fParams(params())
     , fEngine(engine)
@@ -21,55 +14,25 @@ namespace crt {
         ConfigureWaveform();
         ConfigureTimeOffset();
 
->>>>>>> Stashed changes
         fTaggers.clear();
         fData.clear();
     }
 
-    void CRTDetSimAlg::reconfigure(fhicl::ParameterSet const & p) {
+    void CRTDetSimAlg::ConfigureWaveform() {
 
-        fGlobalT0Offset = p.get<double>("GlobalT0Offset");
-        fTDelayNorm = p.get<double>("TDelayNorm");
-        fTDelayShift = p.get<double>("TDelayShift");
-        fTDelaySigma = p.get<double>("TDelaySigma");
-        fTDelayOffset = p.get<double>("TDelayOffset");
-        fTDelayRMSGausNorm = p.get<double>("TDelayRMSGausNorm");
-        fTDelayRMSGausShift = p.get<double>("TDelayRMSGausShift");
-        fTDelayRMSGausSigma = p.get<double>("TDelayRMSGausSigma");
-        fTDelayRMSExpNorm = p.get<double>("TDelayRMSExpNorm");
-        fTDelayRMSExpShift = p.get<double>("TDelayRMSExpShift");
-        fTDelayRMSExpScale = p.get<double>("TDelayRMSExpScale");
-        fClockSpeedCRT = p.get<double>("ClockSpeedCRT");
-        fPropDelay = p.get<double>("PropDelay");
-        fPropDelayError = p.get<double>("fPropDelayError");
-        fTResInterpolator = p.get<double>("TResInterpolator");
-        fNpeScaleNorm = p.get<double>("NpeScaleNorm");
-        fNpeScaleShift = p.get<double>("NpeScaleShift");
-        fUseEdep = p.get<bool>("UseEdep");
-        fQ0 = p.get<double>("Q0");
-        fQPed = p.get<double>("QPed");
-        fQSlope = p.get<double>("QSlope");
-        fQRMS = p.get<double>("QRMS");
-        fQThreshold = p.get<double>("QThreshold");
-        fStripCoincidenceWindow = p.get<double>("StripCoincidenceWindow");
-        fTaggerPlaneCoincidenceWindow = p.get<double>("TaggerPlaneCoincidenceWindow");
-        fAbsLenEff = p.get<double>("AbsLenEff");
-        fSipmTimeResponse = p.get<double>("SipmTimeResponse");
-        fAdcSaturation = p.get<uint32_t>("AdcSaturation");
-        fDeadTime = p.get<double>("DeadTime");
-        fWaveformX = p.get<std::vector<double>>("WaveformX");
-        fWaveformY = p.get<std::vector<double>>("WaveformY");
+        std::vector<double> wvf_x = fParams.WaveformX();
+        std::vector<double> wvf_y = fParams.WaveformY();
 
         // Normalize the waveform
-        float max_y = *std::max_element(std::begin(fWaveformY), std::end(fWaveformY));
-        for (auto & y : fWaveformY) y /= max_y;
+        float max_y = *std::max_element(std::begin(wvf_y), std::end(wvf_y));
+        for (auto & y : wvf_y) y /= max_y;
         // Reverse
-        std::reverse(fWaveformY.begin(),fWaveformY.end());
+        std::reverse(wvf_y.begin(),wvf_y.end());
 
         fInterpolator = std::make_unique<ROOT::Math::Interpolator>
-            (fWaveformX.size(), ROOT::Math::Interpolation::kLINEAR);
+            (wvf_y.size(), ROOT::Math::Interpolation::kLINEAR);
 
-        fInterpolator->SetData(fWaveformX, fWaveformY);
+        fInterpolator->SetData(wvf_x, wvf_y);
 
     }
 
@@ -101,9 +64,7 @@ namespace crt {
         std::cout << "[WaveformEmulation] time_delay " << time_delay
                   << ", waveform " << fInterpolator->Eval(time_delay) << std::endl;
 
-<<<<<<< Updated upstream
-        if (time_delay > fWaveformX.back()) {
-=======
+
         if (time_delay < 0) {
             throw art::Exception(art::errors::LogicError)
                 << "time_delay cannot be negative." << std::endl;
@@ -112,7 +73,6 @@ namespace crt {
         if (time_delay > fParams.WaveformX().back()) {
             // If the time delay is more than the waveform rise time, we
             // will never be able to see this signal. So return a 0 ADC value.
->>>>>>> Stashed changes
             return 0;
         }
 
@@ -120,16 +80,12 @@ namespace crt {
         double wf = fInterpolator->Eval(time_delay);
         wf *= adc;
 
-<<<<<<< Updated upstream
-        return adc * static_cast<uint16_t>(wf);
-=======
         std::cout << "[WaveformEmulation] time_delay " << time_delay
                   << ", adc " << adc
                   << ", waveform " << wf << std::endl;
 
 
         return static_cast<uint16_t>(wf);
->>>>>>> Stashed changes
     }
 
 
@@ -139,8 +95,8 @@ namespace crt {
         uint16_t original_adc = feb_data.ADC(sipmID);
         uint16_t new_adc = original_adc + adc;
 
-        if (new_adc > fAdcSaturation) {
-            new_adc = fAdcSaturation;
+        if (new_adc > fParams.AdcSaturation()) {
+            new_adc = fParams.AdcSaturation();
         }
 
         mf::LogDebug("CRTDetSimAlg") << "Updating ADC value for FEB " << feb_data.Mac5()
@@ -170,7 +126,7 @@ namespace crt {
         bool plane0_hit, plane1_hit = false;
 
         // TODO Add pedestal fluctuations
-        std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fQPed)};
+        std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
 
         // The system is triggered when the fast-shaped waveform goes above threshold
         // Here, we don't simulate this waveform, but we should take into account
@@ -283,20 +239,12 @@ namespace crt {
 
                 std::cout << "[CreateData]   This is strip " << i << " mac " << strip_data.mac5 << " on plane " << strip_data.planeID << ", with time " << current_time << std::endl;
 
-<<<<<<< Updated upstream
-                if (current_time - trigger_time < fTaggerPlaneCoincidenceWindow)
-=======
                 if (current_time - trigger_ts1 < fParams.TaggerPlaneCoincidenceWindow())
->>>>>>> Stashed changes
                 {
                     std::cout << "[CreateData]   -> Is in" << std::endl;
                     strips.push_back(strip_data);
                 }
-<<<<<<< Updated upstream
-                else if (current_time > trigger_time + fDeadTime)
-=======
                 else if (current_time - trigger_ts1 > fParams.DeadTime() and strip_data.sipm_coinc)
->>>>>>> Stashed changes
                 {
                     std::cout << "[CreateData]   -> Created new trigger. " << std::endl;
                     ProcessStrips(trigger_ts1, trigger_ts0, coinc, strips, name);
@@ -447,11 +395,7 @@ namespace crt {
           double y = (ide.entryY + ide.exitY) / 2;
           double z = (ide.entryZ + ide.exitZ) / 2;
 
-<<<<<<< Updated upstream
-          double tTrue = (ide.entryT + ide.exitT) / 2 + fGlobalT0Offset; // ns
-=======
           double tTrue = (ide.entryT + ide.exitT) / 2 + fTimeOffset; // ns
->>>>>>> Stashed changes
           double eDep = ide.energyDeposited;
 
           mf::LogInfo("CRTDetSimAlg") << "True IDE with time " << tTrue
@@ -478,17 +422,17 @@ namespace crt {
 
           // The expected number of PE, using a quadratic model for the distance
           // dependence, and scaling linearly with deposited energy.
-          double qr = fUseEdep ? 1.0 * eDep / fQ0 : 1.0;
+          double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
 
           double npeExpected =
-            fNpeScaleNorm / pow(distToReadout - fNpeScaleShift, 2) * qr;
+            fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
 
           // Put PE on channels weighted by transverse distance across the strip,
           // using an exponential model
           double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);  // L
           double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);  // R
-          double abs0 = exp(-d0 / fAbsLenEff);
-          double abs1 = exp(-d1 / fAbsLenEff);
+          double abs0 = exp(-d0 / fParams.AbsLenEff());
+          double abs1 = exp(-d1 / fParams.AbsLenEff());
           double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
           double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
 
@@ -505,17 +449,9 @@ namespace crt {
 
           // Time relative to PPS: Random for now! (FIXME)
           uint32_t ppsTicks =
-            CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fClockSpeedCRT * 1e6);
+            CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fParams.ClockSpeedCRT() * 1e6);
 
           // SiPM and ADC response: Npe to ADC counts, pedestal is added later
-<<<<<<< Updated upstream
-          uint32_t q0 =
-            CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fQSlope * npe0, fQRMS * sqrt(npe0));
-          if(q0 > fAdcSaturation) q0 = fAdcSaturation;
-          uint32_t q1 =
-            CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fQSlope * npe1, fQRMS * sqrt(npe1));
-          if(q1 > fAdcSaturation) q1 = fAdcSaturation;
-=======
           double q0 =
             CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe0, fParams.QRMS() * sqrt(npe0));
           double q1 =
@@ -525,7 +461,6 @@ namespace crt {
           double saturation = static_cast<double>(fParams.AdcSaturation());
           if (q0 > saturation) q0 = saturation;
           if (q1 > saturation) q1 = saturation;
->>>>>>> Stashed changes
 
           // Adjacent channels on a strip are numbered sequentially.
           //
@@ -542,19 +477,6 @@ namespace crt {
           if (moduleID >= 127) {continue;}        //Ignoring MINOS modules for now.
 
           // Apply ADC threshold and strip-level coincidence (both fibers fire)
-<<<<<<< Updated upstream
-          if (q0 > fQThreshold &&
-              q1 > fQThreshold &&
-              util::absDiff(t0, t1) < fStripCoincidenceWindow) {
-
-            // Time ordered
-            if (t0 > t1) {
-                std::swap(t0, t1);
-                std::swap(channel0ID, channel1ID);
-                std::swap(q0, q1);
-                std::swap(sipm0ID, sipm1ID);
-            }
-=======
           double threshold = static_cast<double>(fParams.QThreshold());
           bool sipm_coinc = false;
 
@@ -563,7 +485,6 @@ namespace crt {
               util::absDiff(ts1_ch0, ts1_ch1) < fParams.StripCoincidenceWindow()) {
             sipm_coinc = true;
           }
->>>>>>> Stashed changes
 
           // Time ordered
           if (ts1_ch0 > ts1_ch1) {
@@ -628,34 +549,30 @@ namespace crt {
                                              float t0, float npeMean, float r) {
       // Hit timing, with smearing and NPE dependence
       double tDelayMean =
-        fTDelayNorm *
-          exp(-0.5 * pow((npeMean - fTDelayShift) / fTDelaySigma, 2)) +
-        fTDelayOffset;
+        fParams.TDelayNorm() *
+          exp(-0.5 * pow((npeMean - fParams.TDelayShift()) / fParams.TDelaySigma(), 2)) +
+        fParams.TDelayOffset();
 
       double tDelayRMS =
-        fTDelayRMSGausNorm *
-          exp(-pow(npeMean - fTDelayRMSGausShift, 2) / fTDelayRMSGausSigma) +
-        fTDelayRMSExpNorm *
-          exp(-(npeMean - fTDelayRMSExpShift) / fTDelayRMSExpScale);
+        fParams.TDelayRMSGausNorm() *
+          exp(-pow(npeMean - fParams.TDelayRMSGausShift(), 2) / fParams.TDelayRMSGausSigma()) +
+        fParams.TDelayRMSExpNorm() *
+          exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale());
 
       double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
       // Time resolution of the interpolator
-      tDelay += CLHEP::RandGauss::shoot(engine, 0, fTResInterpolator);
+      tDelay += CLHEP::RandGauss::shoot(engine, 0, fParams.TResInterpolator());
 
       // Propagation time
-      double tProp = CLHEP::RandGauss::shoot(fPropDelay, fPropDelayError) * r;
+      double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;
 
       double t = t0 + tProp + tDelay;
 
       // Get clock ticks
       // FIXME no clock available for CRTs, have to do it by hand
       //clock.SetTime(t / 1e3);  // SetTime takes microseconds
-<<<<<<< Updated upstream
-      int time = (t / 1e3) * fClockSpeedCRT;
-=======
       float time = (t / 1e3) * fParams.ClockSpeedCRT();
->>>>>>> Stashed changes
 
       if (time < 0) {
         mf::LogWarning("CRTSetSimAlg") << "Time is negative. Check the time offset used." << std::endl;
