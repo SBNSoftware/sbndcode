@@ -63,6 +63,12 @@ namespace crt {
 
     uint16_t CRTDetSimAlg::WaveformEmulation(const uint32_t & time_delay, const double & adc)
     {
+        if (!fParams.DoWaveformEmulation()) {
+            return static_cast<uint16_t>(adc);
+        }
+
+        std::cout << "[WaveformEmulation] time_delay " << time_delay
+                  << ", waveform " << fInterpolator->Eval(time_delay) << std::endl;
 
         if (time_delay < 0) {
             throw art::Exception(art::errors::LogicError)

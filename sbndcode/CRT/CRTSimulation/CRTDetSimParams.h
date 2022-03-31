@@ -185,6 +185,11 @@ namespace crt
       Name("WaveformY"),
       Comment("SiPM waveform sampled, Y")
     };
+    Atom<bool> DoWaveformEmulation {
+      Name("DoWaveformEmulation"),
+      Comment("Weather or not to perform waveform simulation"),
+      true
+    };
   };
 }
 }
