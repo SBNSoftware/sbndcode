@@ -351,8 +351,8 @@ void CRTTrackProducer::produce(art::Event & evt)
   }
 
   mf::LogInfo("CRTTrackProducer")
-    <<"Number of tracks            = "<<"\n"
-    <<"Number of complete tracks   = "<<"\n"
+    <<"Number of tracks            = "<<CRTTrackCol->size()<<"\n"
+    <<"Number of complete tracks   = "<<CRTTrackCol->size()-nIncTrack<<"\n"
     <<"Number of incomplete tracks = "<<nIncTrack;
   
 } // CRTTrackProducer::produce()
