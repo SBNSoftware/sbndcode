@@ -43,9 +43,9 @@ std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg:
   for (size_t i = 0; i < crtList.size(); i+=2){
 
     // Get the time
-    //fTrigClock.SetTime(crtList[i]->T0());
+    //fTrigClock.SetTime(crtList[i]->T1());
     //double t1 = fTrigClock.Time(); // [us]
-    double t1 = (double)(int)crtList[i]->T0()/fClockSpeedCRT; // [tick -> us]
+    double t1 = (double)(int)crtList[i]->T1()/fClockSpeedCRT; // [tick -> us]
     if(fUseReadoutWindow){
       if(!(t1 >= -driftTimeMuS && t1 <= readoutWindowMuS)) continue;
     }
@@ -65,9 +65,9 @@ std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg:
 CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<sbnd::crt::CRTData> sipm1, art::Ptr<sbnd::crt::CRTData> sipm2, size_t ind){
 
   // Get the time, channel, center and width
-  //fTrigClock.SetTime(sipm1->T0());
+  //fTrigClock.SetTime(sipm1->T1());
   //double t1 = fTrigClock.Time(); // [us]
-  double t1 = (double)(int)sipm1->T0()/fClockSpeedCRT; // [tick -> us]
+  double t1 = (double)(int)sipm1->T1()/fClockSpeedCRT; // [tick -> us]
 
   // Get strip info from the geometry service
   uint32_t channel = sipm1->Channel();
@@ -75,9 +75,9 @@ CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<sbnd::crt::CRTData> sipm1, art::
   std::pair<std::string,unsigned> tagger = ChannelToTagger(channel);
 
   // Get the time of hit on the second SiPM
-  //fTrigClock.SetTime(sipm2->T0());
+  //fTrigClock.SetTime(sipm2->T1());
   //double t2 = fTrigClock.Time(); // [us]
-  double t2 = (double)(int)sipm2->T0()/fClockSpeedCRT; // [tick -> us]
+  double t2 = (double)(int)sipm2->T1()/fClockSpeedCRT; // [tick -> us]
 
   // Calculate the number of photoelectrons at each SiPM
   double npe1 = ((double)sipm1->ADC() - fQPed)/fQSlope;
