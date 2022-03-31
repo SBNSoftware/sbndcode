@@ -50,6 +50,7 @@ std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg:
       if(!(t1 >= -driftTimeMuS && t1 <= readoutWindowMuS)) continue;
     }
 
+    std::cout << "[CRTHitRecoAlg] Creating CRTStrip for channels " << crtList[i]->Channel() << ", " << crtList[i+1]->Channel()  << std::endl;
     CRTStrip strip = CreateCRTStrip(crtList[i], crtList[i+1], i);
 
     taggerStrips[strip.tagger].push_back(strip);
@@ -88,6 +89,7 @@ CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<sbnd::crt::CRTData> sipm1, art::
   double time = (t1 + t2)/2.;
 
   CRTStrip stripHit = {time, channel, sipmDist.first, sipmDist.second, npe1+npe2, tagger, ind};
+  std::cout << "[CRTHitRecoAlg] Created CRTStrip for channel " << channel << ", tagger " << tagger.first << std::endl;
   return stripHit;
 
 }

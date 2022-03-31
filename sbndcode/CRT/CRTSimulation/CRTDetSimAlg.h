@@ -37,7 +37,7 @@
 // CRT includes
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
-#include "sbndcode/CRT/CRTSimulation/CRTDetSimParams.h"
+#include "CRTDetSimParams.h"
 
 using std::vector;
 using std::pair;
@@ -49,65 +49,53 @@ using sim::AuxDetIDE;
 namespace sbnd {
     namespace crt {
         class CRTDetSimAlg;
+        struct SiPMData;
+        struct StripData;
+        struct Tagger;
     }
 }
 
-// struct Tagger {
-//   std::vector<std::pair<unsigned, uint32_t> > planesHit;
-//   std::vector<sbnd::crt::CRTData> data;
-//   std::vector<std::vector<sim::AuxDetIDE>> ides;
-// };
-
-struct SiPMData {
-    // uint16_t mac5;
-    // unsigned planeID;
-    int sipmID;
-    int channel;
-    uint64_t t0;
-    uint64_t t1;
-    uint16_t adc;
-    SiPMData(int _sipmID, int _channel, uint64_t _t0, uint64_t _t1, uint16_t _adc) :
+/** An enum type. 
+ *  The documentation block cannot be put after the enum! 
+ */
+struct sbnd::crt::SiPMData {
+    SiPMData(int _sipmID, int _channel, uint64_t _t0, uint64_t _t1, double _adc) :
         sipmID(_sipmID)
       , channel(_channel)
       , t0(_t0)
       , t1(_t1)
       , adc(_adc)
     {};
-    // sim::AuxDetIDE ide;
+
+    int sipmID; ///< The SiPM ID in the strip (0-31)
+    int channel; ///< The SiPM global channel number, calculated as 32 x (module) + 2 x (strip) + j
+    uint64_t t0; ///< The SiPM Ts0
+    uint64_t t1; ///< The SiPM Ts1
+    double adc; ///< The SiPM simulated ADC value in double format
 };
 
-struct StripData {
-    uint16_t mac5;
-    unsigned planeID;
-    SiPMData sipm0;
-    SiPMData sipm1;
-    // int channel;
-    // uint64_t t0;
-    // uint64_t t1;
-    // uint16_t adc;
-    sim::AuxDetIDE ide;
-
-    StripData(uint16_t _mac5, unsigned _planeID, SiPMData _sipm0, SiPMData _sipm1, sim::AuxDetIDE _ide) :
+struct sbnd::crt::StripData {
+    StripData(uint16_t _mac5, unsigned _planeID, SiPMData _sipm0, SiPMData _sipm1,
+              bool _sipm_coinc, sim::AuxDetIDE _ide) :
         mac5(_mac5)
       , planeID(_planeID)
       , sipm0(_sipm0)
       , sipm1(_sipm1)
+      , sipm_coinc(_sipm_coinc)
       , ide(_ide)
     {};
+
+    uint16_t mac5; ///< The FEB number this strip is in
+    unsigned planeID; ///< The plane ID (0 or 1 for horizontal or vertical)
+    SiPMData sipm0; ///< One SiPM (the one that sees signal first) 
+    SiPMData sipm1; ///< One SiPM
+    bool sipm_coinc; ///< Stores the ID of the SiPM that sees signal first (0-31)
+    sim::AuxDetIDE ide; ///< The AuxDetIDE associated with this strip
 };
 
-// struct ModuleData {
-//     uint16_t mac5;
-//     std::vector<uint16_t> adcs;
-//     std::vector<uint64_t> times;
-// };
-
-struct Tagger {
-  // std::vector<uint32_t> mac5;
-  // std::vector<unsigned> planeID;
-  // std::vector<uint32_t> time;
-  std::vector<StripData> data;
-  // std::vector<sim::AuxDetIDE> ide;
+struct sbnd::crt::Tagger {
+  std::vector<StripData> data; ///< A vector of strips that have energy deposits
+  /** \brief Returns the number of strips with energy deposits for this tagger */
   int size() {return data.size();}
 };
 
@@ -118,9 +106,7 @@ class sbnd::crt::CRTDetSimAlg {
 public:
 
     using Parameters = fhicl::Table<CRTDetSimParams>;
-    CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine);
-    void ConfigureWaveform();
-
+    CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine, double g4RefTime);
 
     /**
      * Function to clear member data at beginning of each art::event
@@ -141,7 +127,7 @@ public:
      * @param adsid The AuxDetSensitiveChannelID
      * @param ides The vector of AuxDetIDE
      */
-    void FillTaggers(const uint32_t adid, const uint32_t adsid, vector<AuxDetIDE> ides);
+    void FillTaggers(const uint32_t adid, const uint32_t adsid, std::vector<AuxDetIDE> ides);
 
     /**
      * Returns FEBData objects.
@@ -171,12 +157,18 @@ private:
 
     CLHEP::HepRandomEngine& fEngine; //!< The random-number engine
 
+    double fG4RefTime;
+
+    double fTimeOffset;
+
     std::unique_ptr<ROOT::Math::Interpolator> fInterpolator; //!< The interpolator used to estimate the CRT waveform
 
     std::map<std::string, Tagger> fTaggers; // A list of hit taggers, before any coincidence requirement (name -> tagger)
 
-    std::vector<sbnd::crt::FEBData> fFEBDatas;
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData;
+
+    void ConfigureWaveform();
+    void ConfigureTimeOffset();
 
     /**
        * Get the channel trigger time relative to the start of the MC event.
@@ -192,9 +184,15 @@ private:
                                     /*detinfo::ElecClock& clock,*/
                                     float t0, float npeMean, float r);
 
-    void ProcessStrips(uint32_t trigger_time, uint32_t coinc, std::vector<StripData> strips);
-    uint16_t WaveformEmulation(uint32_t time_delay, uint16_t adc);
-    void AddADC(sbnd::crt::FEBData & feb_data, int sipmID, uint16_t adc);
+    void ProcessStrips(const uint32_t & trigger_ts1,
+                       const uint32_t & trigger_ts0,
+                       const uint32_t & coinc,
+                       const std::vector<StripData> & strips,
+                       const std::string & tagger_name);
+
+    uint16_t WaveformEmulation(const uint32_t & time_delay, const double & adc);
+
+    void AddADC(sbnd::crt::FEBData & feb_data, const int & sipmID, const uint16_t & adc);
 
 };
 
