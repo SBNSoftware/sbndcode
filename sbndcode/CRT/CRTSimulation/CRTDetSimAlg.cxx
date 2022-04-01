@@ -66,10 +66,6 @@ namespace crt {
             return static_cast<uint16_t>(adc);
         }
 
-        std::cout << "[WaveformEmulation] time_delay " << time_delay
-                  << ", waveform " << fInterpolator->Eval(time_delay) << std::endl;
-
-
         if (time_delay < 0) {
             throw art::Exception(art::errors::LogicError)
                 << "time_delay cannot be negative." << std::endl;
@@ -88,7 +84,6 @@ namespace crt {
         std::cout << "[WaveformEmulation] time_delay " << time_delay
                   << ", adc " << adc
                   << ", waveform " << wf << std::endl;
-
 
         return static_cast<uint16_t>(wf);
     }
@@ -451,6 +446,11 @@ namespace crt {
             getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe0, distToReadout);
           uint32_t ts1_ch1 =
             getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe1, distToReadout);
+
+          if (fParams.EqualizeSiPMTimes()) {
+            mf::LogWarning("CRTDetSimAlg") << "EqualizeSiPMTimes is on." << std::endl;
+            ts1_ch1 = ts1_ch0;
+          }
 
           // Time relative to PPS: Random for now! (FIXME)
           uint32_t ppsTicks =

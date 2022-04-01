@@ -87,6 +87,11 @@ namespace crt
       Comment("Time between signal starts and waveform goes above threshold"),
       // true
     };
+    Atom<bool> EqualizeSiPMTimes {
+      Name("EqualizeSiPMTimes"),
+      Comment("Makes the time simulation to the two SiPMs on a strip identical."),
+      false
+    };
     Atom<double> ClockSpeedCRT {
       Name("ClockSpeedCRT"),
       Comment("Clock speed for the CRT system [MHz]"),
