@@ -185,7 +185,7 @@ private:
                                     float t0, float npeMean, float r);
 
     void ProcessStrips(/*const uint32_t & trigger_ts1,
-                       const uint32_t & trigger_ts0*/,
+                       const uint32_t & trigger_ts0,*/
                        const uint32_t & coinc,
                        const std::vector<StripData> & strips,
                        const std::string & tagger_name);
