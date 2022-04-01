@@ -18,8 +18,8 @@
 BEGIN_PROLOG
 
 detsim_drops: [ @sequence::g4_drops,
-                "sim::SimPhotonsLites",
-                "sim::SimPhotons" ]
+                "drop sim::SimPhotonsLites_*_*_*",
+                "drop sim::SimPhotons_*_*_*" ]
 
 END_PROLOG
 
