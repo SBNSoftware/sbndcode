@@ -1,0 +1,58 @@
+
+BEGIN_PROLOG
+
+annie_analyzer: 
+{
+    module_type: "G4Analyzer"
+
+}
+
+END_PROLOG
+
+###################################################################################
+
+
+process_name: GenieAnalysis
+
+services:
+{
+  scheduler:               {defaultExceptions: false}
+  TFileService:            {fileName: "annie_tree.root"}
+
+}
+
+# Configuration
+
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+  fileNames: []
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName: "%ifb_%tc_decayfinder.root"
+   dataTier: "reconstructed"
+   compressionLevel: 1
+   saveMemoryObjectThreshold: 0
+ }
+}
+
+physics:
+{
+ producers:{}
+ analyzers: 
+ {
+    anniereco:                    @local::annie_analyzer
+ }
+
+ prod: []    
+ ana:  [anniereco]
+ trigger_paths: []
+ end_paths: [ ana ]
+}
