@@ -1,0 +1,25 @@
+#=============================================================================
+#
+# Name: detsim_drops.fcl
+#
+# Purpose: Sequence of RootOutput drop commands to drop data products after detsim.
+#
+# Created: 28-Mar-2022  H. Greenlee
+#
+# Notes.
+#
+# 1.  Keeping SimChannels by choice, for now.
+#
+#
+#=============================================================================
+
+#include "g4_drops.fcl"
+
+BEGIN_PROLOG
+
+detsim_drops: [ @sequence::g4_drops,
+                "sim::SimPhotonsLites",
+                "sim::SimPhotons" ]
+
+END_PROLOG
+
