@@ -114,8 +114,8 @@ namespace crt {
 
 
 
-    void CRTDetSimAlg::ProcessStrips(const uint32_t & trigger_ts1,
-                                     const uint32_t & trigger_ts0,
+    void CRTDetSimAlg::ProcessStrips(/*const uint32_t & trigger_ts1,
+                                     const uint32_t & trigger_ts0*/,
                                      const uint32_t & coinc,
                                      const std::vector<StripData> & strips,
                                      const std::string & tagger_name)
@@ -131,22 +131,33 @@ namespace crt {
         // The system is triggered when the fast-shaped waveform goes above threshold
         // Here, we don't simulate this waveform, but we should take into account
         // the delay that this introduces.
-        uint32_t time_ts0 = trigger_ts0 + fParams.TriggerDelay();
-        uint32_t time_ts1 = trigger_ts1 + fParams.TriggerDelay();
+        // uint32_t time_ts0 = trigger_ts0 + fParams.TriggerDelay();
+        // uint32_t time_ts1 = trigger_ts1 + fParams.TriggerDelay();
 
         for (auto & strip : strips) {
             if (strip.planeID == 0 and strip.sipm_coinc) plane0_hit = true;
             if (strip.planeID == 1 and strip.sipm_coinc) plane1_hit = true;
 
-            if (!mac_to_febdata.count(strip.mac5)) {
+            // First time we encounter this FEB...
+            if (!mac_to_febdata.count(strip.mac5))
+            {
                 // Construct a new FEBData object with only pedestal values (will be filled later)
-                mac_to_febdata[strip.mac5] = sbnd::crt::FEBData(strip.mac5,   // FEB ID
-                                                                time_ts0,     // Ts0
-                                                                time_ts1,     // Ts1
-                                                                adc_pedestal, // ADCs
-                                                                coinc);       // Coinc
+                mac_to_febdata[strip.mac5] = sbnd::crt::FEBData(strip.mac5,     // FEB ID
+                                                                strip.sipm0.t0, // Ts0
+                                                                strip.sipm0.t1, // Ts1
+                                                                adc_pedestal,   // ADCs
+                                                                coinc);         // Coinc
 
                 mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
+            }
+            // ... all the other times we encounter this FEB
+            else
+            {
+                // We want to save the earliest t1 and t0 for each FEB.
+                if (strip.sipm0.t1 < mac_to_febdata[strip.mac5].Ts1()) {
+                    mac_to_febdata[strip.mac5].SetTs1(strip.sipm0.t1);
+                    mac_to_febdata[strip.mac5].SetTs0(strip.sipm0.t0);
+                }
             }
         }
 
@@ -215,7 +226,7 @@ namespace crt {
                          return strip1.sipm0.t1 < strip2.sipm0.t1;
                          });
 
-            uint32_t trigger_ts1 = 0, trigger_ts0 = 0, current_time = 0, coinc = 0;
+            uint32_t trigger_ts1 = 0, /*trigger_ts0 = 0, */current_time = 0, coinc = 0;
             int trigger_index = -1;
             bool first_trigger = true;
             std::vector<StripData> strips;
@@ -231,7 +242,7 @@ namespace crt {
                 {
                     first_trigger = false;
                     trigger_ts1 = current_time;
-                    trigger_ts0 = strip_data.sipm0.t0;
+                    // trigger_ts0 = strip_data.sipm0.t0;
                     coinc = strip_data.sipm0.sipmID;
                     trigger_index ++;
                     std::cout << "[CreateData]   TRIGGER TIME IS " << trigger_ts1 << std::endl;
@@ -247,10 +258,10 @@ namespace crt {
                 else if (current_time - trigger_ts1 > fParams.DeadTime() and strip_data.sipm_coinc)
                 {
                     std::cout << "[CreateData]   -> Created new trigger. " << std::endl;
-                    ProcessStrips(trigger_ts1, trigger_ts0, coinc, strips, name);
+                    ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
 
                     trigger_ts1 = current_time;
-                    trigger_ts0 = strip_data.sipm0.t0;
+                    // trigger_ts0 = strip_data.sipm0.t0;
                     coinc = strip_data.sipm0.sipmID;
                     trigger_index ++;
 
@@ -269,7 +280,7 @@ namespace crt {
 
             }
 
-            ProcessStrips(trigger_ts1, trigger_ts0, coinc, strips, name);
+            ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
 
         } // loop over taggers
 
