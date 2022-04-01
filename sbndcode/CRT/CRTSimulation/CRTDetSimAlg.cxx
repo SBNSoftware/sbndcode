@@ -115,7 +115,7 @@ namespace crt {
 
 
     void CRTDetSimAlg::ProcessStrips(/*const uint32_t & trigger_ts1,
-                                     const uint32_t & trigger_ts0*/,
+                                     const uint32_t & trigger_ts0,*/
                                      const uint32_t & coinc,
                                      const std::vector<StripData> & strips,
                                      const std::string & tagger_name)
@@ -176,13 +176,14 @@ namespace crt {
         for (auto & strip : strips)
         {
 
-            std::cout << "sipm 0 time " << strip.sipm0.t1 << ", time diff " << strip.sipm0.t1 - trigger_ts1 << std::endl;
-            std::cout << "sipm 1 time " << strip.sipm1.t1 << ", time diff " << strip.sipm1.t1 - trigger_ts1 << std::endl;
-
-            uint16_t adc_sipm0 = WaveformEmulation(strip.sipm0.t1 - trigger_ts1, strip.sipm0.adc);
-            uint16_t adc_sipm1 = WaveformEmulation(strip.sipm1.t1 - trigger_ts1, strip.sipm1.adc);
-
             auto &feb_data = mac_to_febdata[strip.mac5];
+            uint32_t trigger_time = feb_data.Ts1();
+
+            std::cout << "sipm 0 time " << strip.sipm0.t1 << ", time diff " << strip.sipm0.t1 - trigger_time << std::endl;
+            std::cout << "sipm 1 time " << strip.sipm1.t1 << ", time diff " << strip.sipm1.t1 - trigger_time << std::endl;
+
+            uint16_t adc_sipm0 = WaveformEmulation(strip.sipm0.t1 - trigger_time, strip.sipm0.adc);
+            uint16_t adc_sipm1 = WaveformEmulation(strip.sipm1.t1 - trigger_time, strip.sipm1.adc);
 
             AddADC(feb_data, strip.sipm0.sipmID, adc_sipm0);
             AddADC(feb_data, strip.sipm1.sipmID, adc_sipm1);
@@ -201,7 +202,7 @@ namespace crt {
         }
 
         std::cout << "Constructed " << mac_to_febdata.size()
-                  << " FEBData object(s) for trigger time " << trigger_ts1 << std::endl << std::endl;
+                  << " FEBData object(s)." << std::endl << std::endl;
     }
 
 
