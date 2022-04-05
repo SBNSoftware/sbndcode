@@ -106,6 +106,7 @@ outputs:
     fileName:    "prodgenie_common_cosmic_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
     dataTier:    "generated"
     compressionLevel: 1
+    saveMemoryObjectThreshold: 0
   }
 } # outputs
 

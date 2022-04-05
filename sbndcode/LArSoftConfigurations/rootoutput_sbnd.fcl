@@ -47,6 +47,7 @@ sbnd_rootoutput: {
   
   fileName:         "%ifb_%p-%tc.root"
   compressionLevel:  1  # minimum compression, but some
+  saveMemoryObjectThreshold: 0
   
 } # sbnd_rootoutput
 
