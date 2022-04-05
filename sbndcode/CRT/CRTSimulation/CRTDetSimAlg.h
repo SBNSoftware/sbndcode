@@ -228,9 +228,7 @@ private:
      *
      * @param strips The set of strips that belong to the same trigger
      */
-    void ProcessStrips(const std::vector<StripData> & strips,
-                       const std::string & tagger_name,
-                       const uint32_t & coinc);
+    void ProcessStrips(const std::vector<StripData> & strips);
 
     /**
      * Emulated the CRT slow-shaped waveform. This is not a full waveform simulation,
