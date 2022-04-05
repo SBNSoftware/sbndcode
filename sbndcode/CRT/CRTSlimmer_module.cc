@@ -102,27 +102,10 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
 
     for (size_t i = 0; i < adcs.size(); i+=2) {
 
-      // uint16_t & adc_0 = adcs[i];
-      // uint16_t & adc_1 = adcs[i+1];
-
-      // std::cout << "[CRTSlimmer] ADC of " << i << " is " << adc << " (th is " << _adc_threshold << ")" << std::endl;
-
-      // Either one of the two sipms above threshold is enough to save
-      // both sipms
-      if (adcs[i] < _adc_threshold and adcs[i+1] < _adc_threshold) {
+      // Both sipms need to be above threshold to save them
+      if (not (adcs[i] >= _adc_threshold and adcs[i+1] >= _adc_threshold)) {
         continue;
       }
-
-      // // Both sipms need to be above threshold to save them
-      // if (not (adcs[i] >= _adc_threshold and adcs[i+1] >= _adc_threshold) {
-      //   continue;
-      // }
-
-      // 32 * feb_data->Mac5() + 2 * stripID + 0
-      // uint32_t moduleID = feb_data->Mac5();
-      // uint32_t stripID = std::floor(i / 2);
-      // uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
-      // uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
 
       for (size_t sipm = 0; sipm < 2; sipm++) {
         sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(feb_data->Mac5() * 32 + i + sipm,
@@ -130,8 +113,8 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
                                                          feb_data->Ts1(),
                                                          adcs[i+sipm]);
 
-        std::cout << "[CRTSlimmer] Adding SiPM with mac " << feb_data->Mac5()
-                  << " mapped to channel " << crt_data.Channel() << std::endl;
+        mf::LogDebug("CRTSlimmer") << "Adding SiPM with mac " << feb_data->Mac5()
+                                   << " mapped to channel " << crt_data.Channel() << std::endl;
 
         crt_data_v->emplace_back(std::move(crt_data));
 
@@ -152,7 +135,8 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
     }
   }
 
-  std::cout << "[CRTSlimmer] Creating " << crt_data_v->size() << " CRTData products." << std::endl;
+  mf::LogInfo("CRTSlimmer") << "Creating " << crt_data_v->size()
+                            << " CRTData products." << std::endl;
 
   e.put(std::move(crt_data_v));
   e.put(std::move(crtdata_to_febdata_assns));
