@@ -116,9 +116,7 @@ namespace crt {
 
 
 
-    void CRTDetSimAlg::ProcessStrips(const uint32_t & coinc,
-                                     const std::vector<StripData> & strips,
-                                     const std::string & tagger_name)
+    void CRTDetSimAlg::ProcessStrips(const std::vector<StripData> & strips)
     {
         std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
         std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
@@ -134,11 +132,11 @@ namespace crt {
             if (!mac_to_febdata.count(strip.mac5))
             {
                 // Construct a new FEBData object with only pedestal values (will be filled later)
-                mac_to_febdata[strip.mac5] = sbnd::crt::FEBData(strip.mac5,     // FEB ID
-                                                                strip.sipm0.t0, // Ts0
-                                                                strip.sipm0.t1, // Ts1
-                                                                adc_pedestal,   // ADCs
-                                                                coinc);         // Coinc
+                mac_to_febdata[strip.mac5] = sbnd::crt::FEBData(strip.mac5,          // FEB ID
+                                                                strip.sipm0.t0,      // Ts0
+                                                                strip.sipm0.t1,      // Ts1
+                                                                adc_pedestal,        // ADCs
+                                                                strip.sipm0.sipmID); // Coinc
 
                 mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
             }
@@ -149,6 +147,7 @@ namespace crt {
                 if (strip.sipm0.t1 < mac_to_febdata[strip.mac5].Ts1()) {
                     mac_to_febdata[strip.mac5].SetTs1(strip.sipm0.t1);
                     mac_to_febdata[strip.mac5].SetTs0(strip.sipm0.t0);
+                    mac_to_febdata[strip.mac5].SetCoinc(strip.sipm0.sipmID);
                 }
             }
         }
@@ -211,8 +210,7 @@ namespace crt {
                          return strip1.sipm0.t1 < strip2.sipm0.t1;
                          });
 
-            uint32_t trigger_ts1 = 0, /*trigger_ts0 = 0, */current_time = 0, coinc = 0;
-            int trigger_index = -1;
+            uint32_t trigger_ts1 = 0, /*trigger_ts0 = 0, */current_time = 0;
             bool first_trigger = true;
             std::vector<StripData> strips;
 
@@ -230,8 +228,6 @@ namespace crt {
                 {
                     first_trigger = false;
                     trigger_ts1 = current_time;
-                    coinc = strip_data.sipm0.sipmID;
-                    trigger_index ++;
                     std::cout << "[CreateData]   TRIGGER TIME IS " << trigger_ts1 << std::endl;
                 }
 
@@ -246,12 +242,10 @@ namespace crt {
                 {
                     std::cout << "[CreateData]   -> Created new trigger. " << std::endl;
                     if (trigger.tagger_triggered()) {
-                        ProcessStrips(coinc, strips, name);
+                        ProcessStrips(strips);
                     }
 
                     trigger_ts1 = current_time;
-                    coinc = strip_data.sipm0.sipmID;
-                    trigger_index ++;
 
                     // Reset the trigger object
                     trigger.reset();
@@ -277,7 +271,7 @@ namespace crt {
             }
 
             if (trigger.tagger_triggered()) {
-                ProcessStrips(coinc, strips, name);
+                ProcessStrips(strips);
             }
 
         } // loop over taggers

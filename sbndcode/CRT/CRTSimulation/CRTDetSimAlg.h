@@ -179,40 +179,71 @@ private:
 
     CLHEP::HepRandomEngine& fEngine; //!< The random-number engine
 
-    double fG4RefTime;
-
-    double fTimeOffset;
+    double fG4RefTime; //!< The G4 reference time that can be used as a time offset
+    double fTimeOffset; //!< The time that will be used in the simulation
 
     std::unique_ptr<ROOT::Math::Interpolator> fInterpolator; //!< The interpolator used to estimate the CRT waveform
 
-    std::map<std::string, Tagger> fTaggers; // A list of hit taggers, before any coincidence requirement (name -> tagger)
+    std::map<std::string, Tagger> fTaggers; //!< A list of hit taggers, before any coincidence requirement (name -> tagger)
 
-    // std::vector<sbnd::crt::FEBData> fFEBDatas;
-    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData;
+    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData; //!< This member stores the final FEBData for the CRT simulation
 
+    /**
+     * Configures the waveform by reading waveform points from configuration and
+     * setting up the interpolator.
+     */
     void ConfigureWaveform();
+
+    /**
+     * Configures the time offset to use, either a custom number,
+     * of the G4RefTime, depending on user configuration.
+     */
     void ConfigureTimeOffset();
 
     /**
-       * Get the channel trigger time relative to the start of the MC event.
-       *
-       * @param engine The random number generator engine
-       * @param clock The clock to count ticks on
-       * @param t0 The starting time (which delay is added to)
-       * @param npe Number of observed photoelectrons
-       * @param r Distance between the energy deposit and strip readout end [mm]
-       * @return Trigger clock ticks at this true hit time
-       */
+     * Get the channel trigger time relative to the start of the MC event.
+     *
+     * @param engine The random number generator engine
+     * @param clock The clock to count ticks on
+     * @param t0 The starting time (which delay is added to)
+     * @param npe Number of observed photoelectrons
+     * @param r Distance between the energy deposit and strip readout end [mm]
+     * @return Trigger clock ticks at this true hit time
+     */
     uint32_t getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
                                     /*detinfo::ElecClock& clock,*/
                                     float t0, float npeMean, float r);
 
-    void ProcessStrips(const uint32_t & coinc,
-                       const std::vector<StripData> & strips,
-                       const std::string & tagger_name);
+    /**
+     * Proccesses a set of CRT strips that belong to the same trigger. This method
+     * takes as input all the strips that belong to a single CRT tagger-level trigger
+     * and constructs FEBData objects from them.
+     *
+     * @param strips The set of strips that belong to the same trigger
+     */
+    void ProcessStrips(const std::vector<StripData> & strips,
+                       const std::string & tagger_name,
+                       const uint32_t & coinc);
 
+    /**
+     * Emulated the CRT slow-shaped waveform. This is not a full waveform simulation,
+     * but it tries to encapsulate the main effect of the waveform, which is that the ADC
+     * counts are reduced if the signal arrives with a time delay w.r.t. the primary event
+     * trigger.
+     *
+     * @param time_delay The time delay of this SiPM signal w.r.t. the primary event trigger.
+     * @param adc The simulated ADC counts (double) of this SiPM.
+     * @return The simulated ADC counts after waveform emulation (in uint16_t format).
+     */
     uint16_t WaveformEmulation(const uint32_t & time_delay, const double & adc);
 
+    /**
+     * Adds ADCs to a certain SiPM in a FEBData object
+     *
+     * @param feb_data The FEBData object.
+     * @param sipmID The SiPM index (0-31).
+     * @param adc ADC value to be added.
+     */
     void AddADC(sbnd::crt::FEBData & feb_data, const int & sipmID, const uint16_t & adc);
 
 };
