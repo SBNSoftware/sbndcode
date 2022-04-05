@@ -113,6 +113,11 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
         continue;
       }
 
+      // // Both sipms need to be above threshold to save them
+      // if (not (adcs[i] >= _adc_threshold and adcs[i+1] >= _adc_threshold) {
+      //   continue;
+      // }
+
       // 32 * feb_data->Mac5() + 2 * stripID + 0
       // uint32_t moduleID = feb_data->Mac5();
       // uint32_t stripID = std::floor(i / 2);
