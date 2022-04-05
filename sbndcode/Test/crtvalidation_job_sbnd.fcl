@@ -1,0 +1,33 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "crtvalidation.fcl"
+
+process_name: AnaCI
+
+services:
+{
+  @table::sbnd_services
+  TFileService:		    { fileName: "crtValidationTree.root" }
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:  	    @local::sbnd_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+
+physics:
+{
+  analyzers:
+  {
+    crtvalidation: @local::common_crtvalidation_ci
+  }
+
+  ana:       [ crtvalidation ]
+  end_paths: [ ana ]
+
+}

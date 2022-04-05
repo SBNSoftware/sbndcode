@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+common_crtvalidation_ci: 
+{
+   module_type:			"CRTValidation"
+   GenieGenModuleLabel:		"generator"
+   LArGeantModuleLabel:		"largeant"
+   CRTHitLabel:                 "crthit"
+
+}
+
+END_PROLOG
