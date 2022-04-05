@@ -27,7 +27,9 @@ namespace crt {
         // Normalize the waveform
         float max_y = *std::max_element(std::begin(wvf_y), std::end(wvf_y));
         for (auto & y : wvf_y) y /= max_y;
-        // Reverse
+
+        // Reverse the waveform, as we are only interested to use it to
+        // estimate its effect on time delays.
         std::reverse(wvf_y.begin(),wvf_y.end());
 
         // Construct the interpolator
@@ -44,13 +46,13 @@ namespace crt {
         {
             fTimeOffset = fG4RefTime;
             mf::LogInfo("CRTDetSimAlg") << "Configured to use G4 ref time as time offset: "
-            << fTimeOffset << " ns." << std::endl;
+                                        << fTimeOffset << " ns." << std::endl;
         }
         else
         {
             fTimeOffset = fParams.GlobalT0Offset();
             mf::LogInfo("CRTDetSimAlg") << "Configured to use GlobalT0Offset as time offset: "
-            << fTimeOffset << " ns." << std::endl;
+                                        << fTimeOffset << " ns." << std::endl;
         }
     }
 
@@ -69,7 +71,7 @@ namespace crt {
 
         if (time_delay < 0) {
             throw art::Exception(art::errors::LogicError)
-                << "time_delay cannot be negative." << std::endl;
+                << "Time delay cannot be negative for waveform emulation to happen." << std::endl;
         }
 
         if (time_delay > fParams.WaveformX().back()) {
@@ -117,39 +119,25 @@ namespace crt {
 
 
 
-    void CRTDetSimAlg::ProcessStrips(/*const uint32_t & trigger_ts1,
-                                     const uint32_t & trigger_ts0,*/
-                                     const uint32_t & coinc,
-                                     const std::vector<StripData> & strips,
-                                     const std::string & tagger_name)
+    void CRTDetSimAlg::ProcessStrips(const std::vector<StripData> & strips)
     {
         std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
         std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
 
-        bool plane0_hit, plane1_hit = false;
-
         // TODO Add pedestal fluctuations
         std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
 
-        // The system is triggered when the fast-shaped waveform goes above threshold
-        // Here, we don't simulate this waveform, but we should take into account
-        // the delay that this introduces.
-        // uint32_t time_ts0 = trigger_ts0 + fParams.TriggerDelay();
-        // uint32_t time_ts1 = trigger_ts1 + fParams.TriggerDelay();
-
         for (auto & strip : strips) {
-            if (strip.planeID == 0 and strip.sipm_coinc) plane0_hit = true;
-            if (strip.planeID == 1 and strip.sipm_coinc) plane1_hit = true;
 
             // First time we encounter this FEB...
             if (!mac_to_febdata.count(strip.mac5))
             {
                 // Construct a new FEBData object with only pedestal values (will be filled later)
-                mac_to_febdata[strip.mac5] = sbnd::crt::FEBData(strip.mac5,     // FEB ID
-                                                                strip.sipm0.t0, // Ts0
-                                                                strip.sipm0.t1, // Ts1
-                                                                adc_pedestal,   // ADCs
-                                                                coinc);         // Coinc
+                mac_to_febdata[strip.mac5] = sbnd::crt::FEBData(strip.mac5,          // FEB ID
+                                                                strip.sipm0.t0,      // Ts0
+                                                                strip.sipm0.t1,      // Ts1
+                                                                adc_pedestal,        // ADCs
+                                                                strip.sipm0.sipmID); // Coinc
 
                 mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
             }
@@ -160,19 +148,9 @@ namespace crt {
                 if (strip.sipm0.t1 < mac_to_febdata[strip.mac5].Ts1()) {
                     mac_to_febdata[strip.mac5].SetTs1(strip.sipm0.t1);
                     mac_to_febdata[strip.mac5].SetTs0(strip.sipm0.t0);
+                    mac_to_febdata[strip.mac5].SetCoinc(strip.sipm0.sipmID);
                 }
             }
-        }
-
-        bool is_bottom = tagger_name.find("Bottom") != std::string::npos;
-        if (is_bottom) std::cout << "Is bottom tagger." << std::endl;
-
-        // Emulate the tagger-level trigger for all the taggers but not for the bottom one
-        if (!is_bottom and !(plane0_hit and plane1_hit)) {
-            return;
-        }
-        if (is_bottom and !(plane0_hit or plane1_hit)) {
-            return;
         }
 
 
@@ -200,7 +178,6 @@ namespace crt {
         }
 
         for (auto const& [mac, feb_data] : mac_to_febdata) {
-            // fFEBDatas.push_back(feb_data);
             fData.push_back(std::make_pair(feb_data, mac_to_ides[mac]));
         }
 
@@ -221,6 +198,9 @@ namespace crt {
 
             std::cout << "[CreateData] This is tagger " << name << std::endl;
 
+            bool is_bottom = name.find("Bottom") != std::string::npos;
+            Trigger trigger(is_bottom);
+
             auto & strip_data_v = tagger.data;
 
             // Time order the data
@@ -230,8 +210,7 @@ namespace crt {
                          return strip1.sipm0.t1 < strip2.sipm0.t1;
                          });
 
-            uint32_t trigger_ts1 = 0, /*trigger_ts0 = 0, */current_time = 0, coinc = 0;
-            int trigger_index = -1;
+            uint32_t trigger_ts1 = 0, /*trigger_ts0 = 0, */current_time = 0;
             bool first_trigger = true;
             std::vector<StripData> strips;
 
@@ -242,13 +221,13 @@ namespace crt {
 
                 current_time = strip_data.sipm0.t1;
 
+                if (strip_data.planeID == 0) trigger.planeX = true;
+                if (strip_data.planeID == 1) trigger.planeY = true;
+
                 if (strip_data.sipm_coinc and first_trigger)
                 {
                     first_trigger = false;
                     trigger_ts1 = current_time;
-                    // trigger_ts0 = strip_data.sipm0.t0;
-                    coinc = strip_data.sipm0.sipmID;
-                    trigger_index ++;
                     std::cout << "[CreateData]   TRIGGER TIME IS " << trigger_ts1 << std::endl;
                 }
 
@@ -262,18 +241,26 @@ namespace crt {
                 else if (current_time - trigger_ts1 > fParams.DeadTime() and strip_data.sipm_coinc)
                 {
                     std::cout << "[CreateData]   -> Created new trigger. " << std::endl;
-                    ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
+                    if (trigger.tagger_triggered()) {
+                        ProcessStrips(strips);
+                    }
 
+                    // Set the current, new, trigger
                     trigger_ts1 = current_time;
-                    // trigger_ts0 = strip_data.sipm0.t0;
-                    coinc = strip_data.sipm0.sipmID;
-                    trigger_index ++;
+
+                    // Reset the trigger object
+                    trigger.reset();
 
                     // Clear the current strips as we are working on a new trigger
                     strips.clear();
 
                     // Add this strip, which created the trigger
                     strips.push_back(strip_data);
+
+                    // Check this strip, which created the trigger
+                    if (strip_data.planeID == 0) trigger.planeX = true;
+                    if (strip_data.planeID == 1) trigger.planeY = true;
+
                     std::cout << "[CreateData]   TRIGGER TIME IS " << trigger_ts1 << std::endl;
                 }
                 else
@@ -285,58 +272,13 @@ namespace crt {
 
             }
 
-            ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
+            if (trigger.tagger_triggered()) {
+                ProcessStrips(strips);
+            }
 
         } // loop over taggers
 
         std::cout << "We have " << fData.size() << " FEBData objects." << std::endl;
-
-        // for (auto & feb_data : fFEBDatas) {
-        //     std::cout << "FEBData mac5: " << feb_data.Mac5() << std::endl;
-        // }
-
-
-        // Logic: For normal taggers, require at least one hit in each perpendicular
-        // plane. For the bottom tagger, any hit triggers read out.
-        // for (auto trg : fTaggers) {
-        //     bool trigger = false;
-
-        //     auto name = trg.first;
-        //     auto tagger = trg.second;
-
-        //     // Loop over pairs of hits
-        //     for (size_t i = 0; i < tagger.size(); i++) {
-        //       auto planeID1 =  tagger.planeID[i];
-        //       auto time1 = tagger.time[i];
-
-        //       for (size_t j = 0; j < tagger.size(); j++) {
-        //         auto planeID2 =  tagger.planeID[j];
-        //         auto time2 = tagger.time[j];
-
-        //         if (planeID1 == planeID2 && time1 == time2) {
-        //           continue;
-        //         }
-
-        //         // Two hits on different planes with proximal t0 times
-        //         if (planeID1 != planeID2 && util::absDiff(time1, time2) < fTaggerPlaneCoincidenceWindow) {
-        //           trigger = true;
-        //           break;
-        //         }
-        //       }
-        //     }
-
-        //     if (trigger || name.find("TaggerBot") != std::string::npos) {
-        //         // Write out all hits on a tagger when there is any coincidence FIXME this reads out everything!
-        //         for (size_t d_i = 0; d_i < tagger.data.size(); d_i++) {
-
-        //             dataCol.push_back(std::make_pair(tagger.data[d_i], tagger.ides[d_i]));
-
-        //         }
-        //     }
-        // }
-
-        // std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> dataCol;
-        // return dataCol;
 
     }
 
@@ -417,12 +359,12 @@ namespace crt {
           mf::LogInfo("CRTDetSimAlg") << "True IDE with time " << tTrue
                                       << ", energy " << eDep << std::endl;
 
-          // if (tTrue < 0) {
-          //   throw art::Exception(art::errors::LogicError)
-          //       << "Time cannot be negative. Check the time offset used for the CRT simulation.\n"
-          //       << "True time: " << (ide.entryT + ide.exitT) / 2 << "\n"
-          //       << "TimeOffset: " << fTimeOffset << std::endl;
-          // }
+          if (tTrue < 0) {
+            throw art::Exception(art::errors::LogicError)
+                << "Time cannot be negative. Check the time offset used for the CRT simulation.\n"
+                << "True time: " << (ide.entryT + ide.exitT) / 2 << "\n"
+                << "TimeOffset: " << fTimeOffset << std::endl;
+          }
 
           double world[3] = {x, y, z};
           double svHitPosLocal[3];
