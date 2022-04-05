@@ -106,7 +106,9 @@ namespace crt {
         feb_data.SetADC(sipmID, new_adc);
 
         std::cout << "Updating ADC value for FEB " << feb_data.Mac5()
-                                     << "sipmID " << sipmID << ": was " << original_adc
+                                     << ", sipmID " << sipmID
+                                     << " with adc " << adc
+                                     << ": was " << original_adc
                                      << ", now is " << feb_data.ADC(sipmID) << std::endl;
 
     }
@@ -179,8 +181,8 @@ namespace crt {
             auto &feb_data = mac_to_febdata[strip.mac5];
             uint32_t trigger_time = feb_data.Ts1();
 
-            std::cout << "sipm 0 time " << strip.sipm0.t1 << ", time diff " << strip.sipm0.t1 - trigger_time << std::endl;
-            std::cout << "sipm 1 time " << strip.sipm1.t1 << ", time diff " << strip.sipm1.t1 - trigger_time << std::endl;
+            std::cout << "sipm 0 channel " << strip.sipm0.channel << ", time " << strip.sipm0.t1 << ", time diff " << strip.sipm0.t1 - trigger_time << std::endl;
+            std::cout << "sipm 1 channel " << strip.sipm1.channel << ", time " << strip.sipm1.t1 << ", time diff " << strip.sipm1.t1 - trigger_time << std::endl;
 
             uint16_t adc_sipm0 = WaveformEmulation(strip.sipm0.t1 - trigger_time, strip.sipm0.adc);
             uint16_t adc_sipm1 = WaveformEmulation(strip.sipm1.t1 - trigger_time, strip.sipm1.adc);
@@ -192,7 +194,7 @@ namespace crt {
             ides.push_back(strip.ide);
 
             std::cout << "adc of sipm " << strip.sipm0.sipmID << " is now " << feb_data.ADC(strip.sipm0.sipmID) << std::endl;
-            std::cout << "adc of sipm " << strip.sipm1.sipmID << " is now " << feb_data.ADC(strip.sipm0.sipmID) << std::endl;
+            std::cout << "adc of sipm " << strip.sipm1.sipmID << " is now " << feb_data.ADC(strip.sipm1.sipmID) << std::endl;
 
         }
 
@@ -277,6 +279,7 @@ namespace crt {
                 {
                     // mf::LogDebug("CRTDetSimAlg") << "Strip happened during dead time." << std::endl;
                     std::cout << "[CreateData]   -> Strip happened during dead time or didn't have SiPMs coincidence. " << std::endl;
+                    if (!strip_data.sipm_coinc) std::cout << "[CreateData]   -> (didn't have SiPMs coincidence.) " << strip_data.sipm0.adc << " " << strip_data.sipm1.adc << std::endl;
                 }
 
             }
@@ -413,12 +416,12 @@ namespace crt {
           mf::LogInfo("CRTDetSimAlg") << "True IDE with time " << tTrue
                                       << ", energy " << eDep << std::endl;
 
-          if (tTrue < 0) {
-            throw art::Exception(art::errors::LogicError)
-                << "Time cannot be negative. Check the time offset used for the CRT simulation.\n"
-                << "True time: " << (ide.entryT + ide.exitT) / 2 << "\n"
-                << "TimeOffset: " << fTimeOffset << std::endl;
-          }
+          // if (tTrue < 0) {
+          //   throw art::Exception(art::errors::LogicError)
+          //       << "Time cannot be negative. Check the time offset used for the CRT simulation.\n"
+          //       << "True time: " << (ide.entryT + ide.exitT) / 2 << "\n"
+          //       << "TimeOffset: " << fTimeOffset << std::endl;
+          // }
 
           double world[3] = {x, y, z};
           double svHitPosLocal[3];
