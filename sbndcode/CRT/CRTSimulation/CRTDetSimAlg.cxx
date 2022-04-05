@@ -116,25 +116,15 @@ namespace crt {
 
 
 
-    void CRTDetSimAlg::ProcessStrips(/*const uint32_t & trigger_ts1,
-                                     const uint32_t & trigger_ts0,*/
-                                     const uint32_t & coinc,
+    void CRTDetSimAlg::ProcessStrips(const uint32_t & coinc,
                                      const std::vector<StripData> & strips,
                                      const std::string & tagger_name)
     {
         std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
         std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
 
-        // bool plane0_hit, plane1_hit = false;
-
         // TODO Add pedestal fluctuations
         std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
-
-        // The system is triggered when the fast-shaped waveform goes above threshold
-        // Here, we don't simulate this waveform, but we should take into account
-        // the delay that this introduces.
-        // uint32_t time_ts0 = trigger_ts0 + fParams.TriggerDelay();
-        // uint32_t time_ts1 = trigger_ts1 + fParams.TriggerDelay();
 
         for (auto & strip : strips) {
             // if (strip.planeID == 0 and strip.sipm_coinc) plane0_hit = true;
@@ -162,17 +152,6 @@ namespace crt {
                 }
             }
         }
-
-        // bool is_bottom = tagger_name.find("Bottom") != std::string::npos;
-        // if (is_bottom) std::cout << "Is bottom tagger." << std::endl;
-
-        // // Emulate the tagger-level trigger for all the taggers but not for the bottom one
-        // if (!is_bottom and !(plane0_hit and plane1_hit)) {
-        //     return;
-        // }
-        // if (is_bottom and !(plane0_hit or plane1_hit)) {
-        //     return;
-        // }
 
 
         for (auto & strip : strips)
@@ -251,7 +230,6 @@ namespace crt {
                 {
                     first_trigger = false;
                     trigger_ts1 = current_time;
-                    // trigger_ts0 = strip_data.sipm0.t0;
                     coinc = strip_data.sipm0.sipmID;
                     trigger_index ++;
                     std::cout << "[CreateData]   TRIGGER TIME IS " << trigger_ts1 << std::endl;
@@ -268,11 +246,10 @@ namespace crt {
                 {
                     std::cout << "[CreateData]   -> Created new trigger. " << std::endl;
                     if (trigger.tagger_triggered()) {
-                        ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
+                        ProcessStrips(coinc, strips, name);
                     }
 
                     trigger_ts1 = current_time;
-                    // trigger_ts0 = strip_data.sipm0.t0;
                     coinc = strip_data.sipm0.sipmID;
                     trigger_index ++;
 
@@ -300,59 +277,12 @@ namespace crt {
             }
 
             if (trigger.tagger_triggered()) {
-                ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
+                ProcessStrips(coinc, strips, name);
             }
 
         } // loop over taggers
 
         std::cout << "We have " << fData.size() << " FEBData objects." << std::endl;
-
-        // for (auto & feb_data : fFEBDatas) {
-        //     std::cout << "FEBData mac5: " << feb_data.Mac5() << std::endl;
-        // }
-
-
-        // Logic: For normal taggers, require at least one hit in each perpendicular
-        // plane. For the bottom tagger, any hit triggers read out.
-        // for (auto trg : fTaggers) {
-        //     bool trigger = false;
-
-        //     auto name = trg.first;
-        //     auto tagger = trg.second;
-
-        //     // Loop over pairs of hits
-        //     for (size_t i = 0; i < tagger.size(); i++) {
-        //       auto planeID1 =  tagger.planeID[i];
-        //       auto time1 = tagger.time[i];
-
-        //       for (size_t j = 0; j < tagger.size(); j++) {
-        //         auto planeID2 =  tagger.planeID[j];
-        //         auto time2 = tagger.time[j];
-
-        //         if (planeID1 == planeID2 && time1 == time2) {
-        //           continue;
-        //         }
-
-        //         // Two hits on different planes with proximal t0 times
-        //         if (planeID1 != planeID2 && util::absDiff(time1, time2) < fTaggerPlaneCoincidenceWindow) {
-        //           trigger = true;
-        //           break;
-        //         }
-        //       }
-        //     }
-
-        //     if (trigger || name.find("TaggerBot") != std::string::npos) {
-        //         // Write out all hits on a tagger when there is any coincidence FIXME this reads out everything!
-        //         for (size_t d_i = 0; d_i < tagger.data.size(); d_i++) {
-
-        //             dataCol.push_back(std::make_pair(tagger.data[d_i], tagger.ides[d_i]));
-
-        //         }
-        //     }
-        // }
-
-        // std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> dataCol;
-        // return dataCol;
 
     }
 
