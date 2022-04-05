@@ -1,0 +1,19 @@
+#-------------------------------------------------------------------
+#
+# Name: detsim_thermalnoiseintime_lite.fcl
+#
+# Purpose: Lite version of detsim_thermalnoiseintime.fcl
+#
+# Created: 01-Apr-2022  H. Greenlee
+#
+# Automatically generated.
+#
+#-------------------------------------------------------------------
+
+#include "detsim_drops.fcl"
+#include "detsim_thermalnoiseintime.fcl"
+
+# Drop truth data products.
+
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                               @sequence::detsim_drops ]
