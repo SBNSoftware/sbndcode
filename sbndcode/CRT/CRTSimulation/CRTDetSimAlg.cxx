@@ -125,7 +125,7 @@ namespace crt {
         std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
         std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
 
-        bool plane0_hit, plane1_hit = false;
+        // bool plane0_hit, plane1_hit = false;
 
         // TODO Add pedestal fluctuations
         std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
@@ -137,8 +137,8 @@ namespace crt {
         // uint32_t time_ts1 = trigger_ts1 + fParams.TriggerDelay();
 
         for (auto & strip : strips) {
-            if (strip.planeID == 0 and strip.sipm_coinc) plane0_hit = true;
-            if (strip.planeID == 1 and strip.sipm_coinc) plane1_hit = true;
+            // if (strip.planeID == 0 and strip.sipm_coinc) plane0_hit = true;
+            // if (strip.planeID == 1 and strip.sipm_coinc) plane1_hit = true;
 
             // First time we encounter this FEB...
             if (!mac_to_febdata.count(strip.mac5))
@@ -163,16 +163,16 @@ namespace crt {
             }
         }
 
-        bool is_bottom = tagger_name.find("Bottom") != std::string::npos;
-        if (is_bottom) std::cout << "Is bottom tagger." << std::endl;
+        // bool is_bottom = tagger_name.find("Bottom") != std::string::npos;
+        // if (is_bottom) std::cout << "Is bottom tagger." << std::endl;
 
-        // Emulate the tagger-level trigger for all the taggers but not for the bottom one
-        if (!is_bottom and !(plane0_hit and plane1_hit)) {
-            return;
-        }
-        if (is_bottom and !(plane0_hit or plane1_hit)) {
-            return;
-        }
+        // // Emulate the tagger-level trigger for all the taggers but not for the bottom one
+        // if (!is_bottom and !(plane0_hit and plane1_hit)) {
+        //     return;
+        // }
+        // if (is_bottom and !(plane0_hit or plane1_hit)) {
+        //     return;
+        // }
 
 
         for (auto & strip : strips)
@@ -220,6 +220,9 @@ namespace crt {
 
             std::cout << "[CreateData] This is tagger " << name << std::endl;
 
+            bool is_bottom = name.find("Bottom") != std::string::npos;
+            Trigger trigger(is_bottom);
+
             auto & strip_data_v = tagger.data;
 
             // Time order the data
@@ -241,6 +244,9 @@ namespace crt {
 
                 current_time = strip_data.sipm0.t1;
 
+                if (strip_data.planeID == 0) trigger.planeX = true;
+                if (strip_data.planeID == 1) trigger.planeY = true;
+
                 if (strip_data.sipm_coinc and first_trigger)
                 {
                     first_trigger = false;
@@ -261,18 +267,27 @@ namespace crt {
                 else if (current_time - trigger_ts1 > fParams.DeadTime() and strip_data.sipm_coinc)
                 {
                     std::cout << "[CreateData]   -> Created new trigger. " << std::endl;
-                    ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
+                    if (trigger.tagger_triggered()) {
+                        ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
+                    }
 
                     trigger_ts1 = current_time;
                     // trigger_ts0 = strip_data.sipm0.t0;
                     coinc = strip_data.sipm0.sipmID;
                     trigger_index ++;
 
+                    // Reset the trigger object
+                    trigger.reset();
+
                     // Clear the current strips as we are working on a new trigger
                     strips.clear();
 
                     // Add this strip, which created the trigger
                     strips.push_back(strip_data);
+
+                    if (strip_data.planeID == 0) trigger.planeX = true;
+                    if (strip_data.planeID == 1) trigger.planeY = true;
+
                     std::cout << "[CreateData]   TRIGGER TIME IS " << trigger_ts1 << std::endl;
                 }
                 else
@@ -284,7 +299,9 @@ namespace crt {
 
             }
 
-            ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
+            if (trigger.tagger_triggered()) {
+                ProcessStrips(/*trigger_ts1, trigger_ts0, */coinc, strips, name);
+            }
 
         } // loop over taggers
 

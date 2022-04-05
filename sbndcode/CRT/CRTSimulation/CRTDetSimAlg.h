@@ -52,6 +52,7 @@ namespace sbnd {
         struct SiPMData;
         struct StripData;
         struct Tagger;
+        struct Trigger;
     }
 }
 
@@ -100,6 +101,27 @@ struct sbnd::crt::Tagger {
 };
 
 
+struct sbnd::crt::Trigger {
+    bool is_bottom;
+    bool planeX;
+    bool planeY;
+
+    Trigger(bool _is_bottom) {
+        planeX = planeY = false;
+        is_bottom = _is_bottom;
+    }
+
+    void reset() {
+        planeX = planeY = false;
+    }
+
+    bool tagger_triggered() {
+        if (is_bottom) {
+            return planeX or planeY;
+        }
+        return planeX and planeY;
+    }
+};
 
 class sbnd::crt::CRTDetSimAlg {
 
