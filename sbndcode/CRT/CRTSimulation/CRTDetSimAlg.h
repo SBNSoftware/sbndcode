@@ -56,8 +56,7 @@ namespace sbnd {
     }
 }
 
-/** An enum type. 
- *  The documentation block cannot be put after the enum! 
+/** A struct to temporarily store information on a single SiPM.
  */
 struct sbnd::crt::SiPMData {
     SiPMData(int _sipmID, int _channel, uint64_t _t0, uint64_t _t1, double _adc) :
@@ -75,6 +74,8 @@ struct sbnd::crt::SiPMData {
     double adc; ///< The SiPM simulated ADC value in double format
 };
 
+/** A struct to temporarily store information on a single CRT Strip.
+ */
 struct sbnd::crt::StripData {
     StripData(uint16_t _mac5, unsigned _planeID, SiPMData _sipm0, SiPMData _sipm1,
               bool _sipm_coinc, sim::AuxDetIDE _ide) :
@@ -88,19 +89,23 @@ struct sbnd::crt::StripData {
 
     uint16_t mac5; ///< The FEB number this strip is in
     unsigned planeID; ///< The plane ID (0 or 1 for horizontal or vertical)
-    SiPMData sipm0; ///< One SiPM (the one that sees signal first) 
+    SiPMData sipm0; ///< One SiPM (the one that sees signal first)
     SiPMData sipm1; ///< One SiPM
     bool sipm_coinc; ///< Stores the ID of the SiPM that sees signal first (0-31)
     sim::AuxDetIDE ide; ///< The AuxDetIDE associated with this strip
 };
 
+/** A struct to temporarily store information on a CRT Tagger.
+ */
 struct sbnd::crt::Tagger {
-  std::vector<StripData> data; ///< A vector of strips that have energy deposits
-  /** \brief Returns the number of strips with energy deposits for this tagger */
-  int size() {return data.size();}
+    std::vector<StripData> data; ///< A vector of strips that have energy deposits
+
+    /** \brief Returns the number of strips with energy deposits for this tagger */
+    int size() {return data.size();}
 };
 
-
+/** A struct to temporarily store information on a CRT Tagger trigger.
+ */
 struct sbnd::crt::Trigger {
     bool is_bottom;
     bool planeX;
@@ -111,10 +116,12 @@ struct sbnd::crt::Trigger {
         is_bottom = _is_bottom;
     }
 
+    /** \brief Resets this trigger object */
     void reset() {
         planeX = planeY = false;
     }
 
+    /** \brief Tells is a tagger is triggering or not */
     bool tagger_triggered() {
         if (is_bottom) {
             return planeX or planeY;

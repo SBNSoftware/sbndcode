@@ -26,7 +26,9 @@ namespace crt {
         // Normalize the waveform
         float max_y = *std::max_element(std::begin(wvf_y), std::end(wvf_y));
         for (auto & y : wvf_y) y /= max_y;
-        // Reverse
+
+        // Reverse the waveform, as we are only interested to use it to
+        // estimate its effect on time delays.
         std::reverse(wvf_y.begin(),wvf_y.end());
 
         fInterpolator = std::make_unique<ROOT::Math::Interpolator>
@@ -42,13 +44,13 @@ namespace crt {
         {
             fTimeOffset = fG4RefTime;
             mf::LogInfo("CRTDetSimAlg") << "Configured to use G4 ref time as time offset: "
-            << fTimeOffset << " ns." << std::endl;
+                                        << fTimeOffset << " ns." << std::endl;
         }
         else
         {
             fTimeOffset = fParams.GlobalT0Offset();
             mf::LogInfo("CRTDetSimAlg") << "Configured to use GlobalT0Offset as time offset: "
-            << fTimeOffset << " ns." << std::endl;
+                                        << fTimeOffset << " ns." << std::endl;
         }
     }
 
@@ -68,7 +70,7 @@ namespace crt {
 
         if (time_delay < 0) {
             throw art::Exception(art::errors::LogicError)
-                << "time_delay cannot be negative." << std::endl;
+                << "Time delay cannot be negative for waveform emulation to happen." << std::endl;
         }
 
         if (time_delay > fParams.WaveformX().back()) {
@@ -125,8 +127,6 @@ namespace crt {
         std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
 
         for (auto & strip : strips) {
-            // if (strip.planeID == 0 and strip.sipm_coinc) plane0_hit = true;
-            // if (strip.planeID == 1 and strip.sipm_coinc) plane1_hit = true;
 
             // First time we encounter this FEB...
             if (!mac_to_febdata.count(strip.mac5))
@@ -177,7 +177,6 @@ namespace crt {
         }
 
         for (auto const& [mac, feb_data] : mac_to_febdata) {
-            // fFEBDatas.push_back(feb_data);
             fData.push_back(std::make_pair(feb_data, mac_to_ides[mac]));
         }
 
@@ -245,6 +244,7 @@ namespace crt {
                         ProcessStrips(strips);
                     }
 
+                    // Set the current, new, trigger
                     trigger_ts1 = current_time;
 
                     // Reset the trigger object
@@ -256,6 +256,7 @@ namespace crt {
                     // Add this strip, which created the trigger
                     strips.push_back(strip_data);
 
+                    // Check this strip, which created the trigger
                     if (strip_data.planeID == 0) trigger.planeX = true;
                     if (strip_data.planeID == 1) trigger.planeY = true;
 
@@ -357,12 +358,12 @@ namespace crt {
           mf::LogInfo("CRTDetSimAlg") << "True IDE with time " << tTrue
                                       << ", energy " << eDep << std::endl;
 
-          // if (tTrue < 0) {
-          //   throw art::Exception(art::errors::LogicError)
-          //       << "Time cannot be negative. Check the time offset used for the CRT simulation.\n"
-          //       << "True time: " << (ide.entryT + ide.exitT) / 2 << "\n"
-          //       << "TimeOffset: " << fTimeOffset << std::endl;
-          // }
+          if (tTrue < 0) {
+            throw art::Exception(art::errors::LogicError)
+                << "Time cannot be negative. Check the time offset used for the CRT simulation.\n"
+                << "True time: " << (ide.entryT + ide.exitT) / 2 << "\n"
+                << "TimeOffset: " << fTimeOffset << std::endl;
+          }
 
           double world[3] = {x, y, z};
           double svHitPosLocal[3];
