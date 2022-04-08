@@ -13,13 +13,15 @@
 #include "sbndcode/CRT/CRTSimulation/CRTDetSimAlg.h"
 #include "sbndcode/CRT/CRTSimulation/CRTDetSimParams.h"
 
+constexpr long SEED = 0;
 
-int main(int argc, char const** argv) {
+using Parameters = fhicl::Table<sbnd::crt::CRTDetSimParams>;
+
+Parameters get_parameters(int argc, char const** argv) {
 
     int iParam = 0;
 
     // first argument: configuration file (mandatory)
-    std::cout << "simpleCRT_test SetConfigurationPath" << std::endl;
     std::string config_path;
     if (++iParam < argc) config_path = argv[iParam];
 
@@ -28,7 +30,6 @@ int main(int argc, char const** argv) {
     std::string search_path = fhicl_env? std::string(fhicl_env) + ":": ".:";
     testing::details::FirstAbsoluteOrLookupWithDotPolicy policy(search_path);
 
-    // parse a configuration file; obtain intermediate form
     fhicl::intermediate_table table;
     table = fhicl::parse_document(argv[iParam], policy);
 
@@ -36,26 +37,27 @@ int main(int argc, char const** argv) {
     fhicl::ParameterSet params;
     params = fhicl::ParameterSet::make(table);
 
-    std::cout << "simpleCRT_test " << params.to_string() << std::endl;
-
-
-    long seed = 0;
-    CLHEP::HepJamesRandom engine(seed);
-
     fhicl::ParameterSet p = params.get<fhicl::ParameterSet>("testcrtsim");
 
-    std::cout << "Just before CRTDetSimAlg:" << std::endl;
-    std::cout << "p " << p.to_string() << std::endl;
-    std::cout << "p.get<fhicl::ParameterSet>(DetSimParams) " << p.get<fhicl::ParameterSet>("DetSimParams").to_string() << std::endl;
+    // std::cout << "p " << p.to_string() << std::endl;
 
-    using Parameters = fhicl::Table<sbnd::crt::CRTDetSimParams>;
     Parameters detsim_params(p.template get<fhicl::ParameterSet>("DetSimParams"));
 
+    return detsim_params;
+}
 
+int main(int argc, char const** argv) {
+
+    Parameters detsim_params = get_parameters(argc, argv);
+
+
+    CLHEP::HepJamesRandom engine(SEED);
 
     sbnd::crt::CRTDetSimAlg detsim_alg(detsim_params,
                                        engine,
                                        0.);
+
+    detsim_alg.getChannelTriggerTicks(10000, 100, 50);
 
 
 
