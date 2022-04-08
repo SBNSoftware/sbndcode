@@ -29,6 +29,7 @@
 
 #include "detsimmodules_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
+#include "crtslimmer_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
@@ -61,13 +62,14 @@ physics:
   {
     rns:       { module_type: "RandomNumberSaver" }
     daq:       @local::sbnd_simwire
-    crt:       @local::sbnd_crtsim
+    crtsim:    @local::sbnd_crtsim
+    crt:       @local::sbnd_crtslimmer
     opdaq:     @local::sbnd_opdetdigitizer
   }
 
   #define the producer and filter modules for this path, order matters,
-  simulate:  [ rns,  daq, crt, opdaq]
-  
+  simulate:  [ rns, daq, crtsim, crt, opdaq]
+
 
   #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
