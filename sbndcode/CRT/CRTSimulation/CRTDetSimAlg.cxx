@@ -196,6 +196,33 @@ namespace crt {
     void CRTDetSimAlg::CreateData()
     {
 
+        /** A struct to temporarily store information on a CRT Tagger trigger.
+         */
+        struct Trigger {
+            bool is_bottom;
+            bool planeX;
+            bool planeY;
+
+            Trigger(bool _is_bottom) {
+                planeX = planeY = false;
+                is_bottom = _is_bottom;
+            }
+
+            /** \brief Resets this trigger object */
+            void reset() {
+                planeX = planeY = false;
+            }
+
+            /** \brief Tells is a tagger is triggering or not */
+            bool tagger_triggered() {
+                if (is_bottom) {
+                    return planeX or planeY;
+                }
+                return planeX and planeY;
+            }
+        };
+
+
         // Loop over all the CRT Taggers and simulate triggering, dead time, ...
         for (auto iter : fTaggers)
         {
