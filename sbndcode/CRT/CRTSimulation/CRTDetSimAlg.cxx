@@ -376,6 +376,7 @@ namespace crt {
             double svHitPosLocal[3];
             adsGeo.WorldToLocal(world, svHitPosLocal);
 
+            // Calculate distance to the readout
             double distToReadout;
             if (top) {
                 distToReadout = abs( adsGeo.HalfWidth1() - svHitPosLocal[0]);
@@ -384,33 +385,17 @@ namespace crt {
                 distToReadout = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]);
             }
 
-            // Distance to fibers
+            // Calculate distance to fibers
             double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);  // L
             double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);  // R
 
+            // Simulate time response
+            // Waveform emulation is added later, because
+            // it depends on trigger time
             long npe0, npe1;
             double q0, q1;
             ChargeResponse(eDep, d0, d1, distToReadout,
                            npe0, npe1, q0, q1);
-
-            // // The expected number of PE, using a quadratic model for the distance
-            // // dependence, and scaling linearly with deposited energy.
-            // double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
-
-            // double npeExpected =
-            //   fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
-
-            // // Put PE on channels weighted by transverse distance across the strip,
-            // // using an exponential model
-
-            // double abs0 = exp(-d0 / fParams.AbsLenEff());
-            // double abs1 = exp(-d1 / fParams.AbsLenEff());
-            // double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
-            // double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
-
-            // // Observed PE (Poisson-fluctuated)
-            // long npe0 = CLHEP::RandPoisson::shoot(&fEngine, npeExp0);
-            // long npe1 = CLHEP::RandPoisson::shoot(&fEngine, npeExp1);
 
             // Time relative to trigger, accounting for propagation delay and 'walk'
             // for the fixed-threshold discriminator
@@ -427,17 +412,6 @@ namespace crt {
             // Time relative to PPS: Random for now! (FIXME)
             uint32_t ppsTicks =
               CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fParams.ClockSpeedCRT() * 1e6);
-
-            // // SiPM and ADC response: Npe to ADC counts, pedestal is added later
-            // double q0 =
-            //   CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe0, fParams.QRMS() * sqrt(npe0));
-            // double q1 =
-            //   CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1, fParams.QRMS() * sqrt(npe1));
-
-            // // Apply saturation
-            // double saturation = static_cast<double>(fParams.AdcSaturation());
-            // if (q0 > saturation) q0 = saturation;
-            // if (q1 > saturation) q1 = saturation;
 
             // Adjacent channels on a strip are numbered sequentially.
             //
