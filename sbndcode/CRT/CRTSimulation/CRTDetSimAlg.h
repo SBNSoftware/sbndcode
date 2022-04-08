@@ -2,9 +2,7 @@
 #define SBND_CRTDETSIMALG_H
 
 // art includes
-#include "art/Framework/Principal/Handle.h"
 #include "fhiclcpp/ParameterSet.h"
-#include "nurandom/RandomUtils/NuRandomService.h"
 
 // larsoft includes
 #include "lardataobj/Simulation/AuxDetSimChannel.h"

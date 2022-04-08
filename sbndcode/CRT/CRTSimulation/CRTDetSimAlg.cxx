@@ -65,16 +65,20 @@ namespace crt {
 
     uint16_t CRTDetSimAlg::WaveformEmulation(const uint32_t & time_delay, const double & adc)
     {
-        if (!fParams.DoWaveformEmulation()) {
+
+        if (!fParams.DoWaveformEmulation())
+        {
             return static_cast<uint16_t>(adc);
         }
 
-        if (time_delay < 0) {
+        if (time_delay < 0)
+        {
             throw art::Exception(art::errors::LogicError)
                 << "Time delay cannot be negative for waveform emulation to happen." << std::endl;
         }
 
-        if (time_delay > fParams.WaveformX().back()) {
+        if (time_delay > fParams.WaveformX().back())
+        {
             // If the time delay is more than the waveform rise time, we
             // will never be able to see this signal. So return a 0 ADC value.
             return 0;
@@ -98,7 +102,8 @@ namespace crt {
         uint16_t original_adc = feb_data.ADC(sipmID);
         uint16_t new_adc = original_adc + adc;
 
-        if (new_adc > fParams.AdcSaturation()) {
+        if (new_adc > fParams.AdcSaturation())
+        {
             new_adc = fParams.AdcSaturation();
         }
 
@@ -127,7 +132,8 @@ namespace crt {
         // TODO Add pedestal fluctuations
         std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
 
-        for (auto & strip : strips) {
+        for (auto & strip : strips)
+        {
 
             // First time we encounter this FEB...
             if (!mac_to_febdata.count(strip.mac5))
@@ -145,7 +151,8 @@ namespace crt {
             else
             {
                 // We want to save the earliest t1 and t0 for each FEB.
-                if (strip.sipm0.t1 < mac_to_febdata[strip.mac5].Ts1()) {
+                if (strip.sipm0.t1 < mac_to_febdata[strip.mac5].Ts1())
+                {
                     mac_to_febdata[strip.mac5].SetTs1(strip.sipm0.t1);
                     mac_to_febdata[strip.mac5].SetTs0(strip.sipm0.t0);
                     mac_to_febdata[strip.mac5].SetCoinc(strip.sipm0.sipmID);
@@ -174,10 +181,10 @@ namespace crt {
 
             std::cout << "adc of sipm " << strip.sipm0.sipmID << " is now " << feb_data.ADC(strip.sipm0.sipmID) << std::endl;
             std::cout << "adc of sipm " << strip.sipm1.sipmID << " is now " << feb_data.ADC(strip.sipm1.sipmID) << std::endl;
-
         }
 
-        for (auto const& [mac, feb_data] : mac_to_febdata) {
+        for (auto const& [mac, feb_data] : mac_to_febdata)
+        {
             fData.push_back(std::make_pair(feb_data, mac_to_ides[mac]));
         }
 
@@ -270,7 +277,7 @@ namespace crt {
                     if (!strip_data.sipm_coinc) std::cout << "[CreateData]   -> (didn't have SiPMs coincidence.) " << strip_data.sipm0.adc << " " << strip_data.sipm1.adc << std::endl;
                 }
 
-            }
+            } // loop over strips
 
             if (trigger.tagger_triggered()) {
                 ProcessStrips(strips);
@@ -345,164 +352,164 @@ namespace crt {
         std::cout << "We have " << ides.size() << " IDE for this SimChannel." << std::endl;
         for (size_t ide_i = 0; ide_i < ides.size(); ide_i++) {
 
-          sim::AuxDetIDE ide = ides[ide_i];
+            sim::AuxDetIDE ide = ides[ide_i];
 
-          // Finally, what is the distance from the hit (centroid of the entry
-          // and exit points) to the readout end?
-          double x = (ide.entryX + ide.exitX) / 2;
-          double y = (ide.entryY + ide.exitY) / 2;
-          double z = (ide.entryZ + ide.exitZ) / 2;
+            // Finally, what is the distance from the hit (centroid of the entry
+            // and exit points) to the readout end?
+            double x = (ide.entryX + ide.exitX) / 2;
+            double y = (ide.entryY + ide.exitY) / 2;
+            double z = (ide.entryZ + ide.exitZ) / 2;
 
-          double tTrue = (ide.entryT + ide.exitT) / 2 + fTimeOffset; // ns
-          double eDep = ide.energyDeposited;
+            double tTrue = (ide.entryT + ide.exitT) / 2 + fTimeOffset; // ns
+            double eDep = ide.energyDeposited;
 
-          mf::LogInfo("CRTDetSimAlg") << "True IDE with time " << tTrue
+            mf::LogInfo("CRTDetSimAlg") << "True IDE with time " << tTrue
                                       << ", energy " << eDep << std::endl;
 
-          if (tTrue < 0) {
-            throw art::Exception(art::errors::LogicError)
-                << "Time cannot be negative. Check the time offset used for the CRT simulation.\n"
-                << "True time: " << (ide.entryT + ide.exitT) / 2 << "\n"
-                << "TimeOffset: " << fTimeOffset << std::endl;
-          }
+            if (tTrue < 0) {
+                throw art::Exception(art::errors::LogicError)
+                    << "Time cannot be negative. Check the time offset used for the CRT simulation.\n"
+                    << "True time: " << (ide.entryT + ide.exitT) / 2 << "\n"
+                    << "TimeOffset: " << fTimeOffset << std::endl;
+            }
 
-          double world[3] = {x, y, z};
-          double svHitPosLocal[3];
-          adsGeo.WorldToLocal(world, svHitPosLocal);
+            double world[3] = {x, y, z};
+            double svHitPosLocal[3];
+            adsGeo.WorldToLocal(world, svHitPosLocal);
 
-          double distToReadout;
-          if (top) {
-            distToReadout = abs( adsGeo.HalfWidth1() - svHitPosLocal[0]);
-          }
-          else {
-            distToReadout = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]);
-          }
+            double distToReadout;
+            if (top) {
+                distToReadout = abs( adsGeo.HalfWidth1() - svHitPosLocal[0]);
+            }
+            else {
+                distToReadout = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]);
+            }
 
-          // The expected number of PE, using a quadratic model for the distance
-          // dependence, and scaling linearly with deposited energy.
-          double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
+            // The expected number of PE, using a quadratic model for the distance
+            // dependence, and scaling linearly with deposited energy.
+            double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
 
-          double npeExpected =
-            fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
+            double npeExpected =
+              fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
 
-          // Put PE on channels weighted by transverse distance across the strip,
-          // using an exponential model
-          double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);  // L
-          double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);  // R
-          double abs0 = exp(-d0 / fParams.AbsLenEff());
-          double abs1 = exp(-d1 / fParams.AbsLenEff());
-          double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
-          double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
+            // Put PE on channels weighted by transverse distance across the strip,
+            // using an exponential model
+            double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);  // L
+            double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);  // R
+            double abs0 = exp(-d0 / fParams.AbsLenEff());
+            double abs1 = exp(-d1 / fParams.AbsLenEff());
+            double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
+            double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
 
-          // Observed PE (Poisson-fluctuated)
-          long npe0 = CLHEP::RandPoisson::shoot(&fEngine, npeExp0);
-          long npe1 = CLHEP::RandPoisson::shoot(&fEngine, npeExp1);
+            // Observed PE (Poisson-fluctuated)
+            long npe0 = CLHEP::RandPoisson::shoot(&fEngine, npeExp0);
+            long npe1 = CLHEP::RandPoisson::shoot(&fEngine, npeExp1);
 
-          // Time relative to trigger, accounting for propagation delay and 'walk'
-          // for the fixed-threshold discriminator
-          uint32_t ts1_ch0 =
-            getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe0, distToReadout);
-          uint32_t ts1_ch1 =
-            getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe1, distToReadout);
+            // Time relative to trigger, accounting for propagation delay and 'walk'
+            // for the fixed-threshold discriminator
+            uint32_t ts1_ch0 =
+              getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe0, distToReadout);
+            uint32_t ts1_ch1 =
+              getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe1, distToReadout);
 
-          if (fParams.EqualizeSiPMTimes()) {
-            mf::LogWarning("CRTDetSimAlg") << "EqualizeSiPMTimes is on." << std::endl;
-            ts1_ch1 = ts1_ch0;
-          }
+            if (fParams.EqualizeSiPMTimes()) {
+                mf::LogWarning("CRTDetSimAlg") << "EqualizeSiPMTimes is on." << std::endl;
+                ts1_ch1 = ts1_ch0;
+            }
 
-          // Time relative to PPS: Random for now! (FIXME)
-          uint32_t ppsTicks =
-            CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fParams.ClockSpeedCRT() * 1e6);
+            // Time relative to PPS: Random for now! (FIXME)
+            uint32_t ppsTicks =
+              CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fParams.ClockSpeedCRT() * 1e6);
 
-          // SiPM and ADC response: Npe to ADC counts, pedestal is added later
-          double q0 =
-            CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe0, fParams.QRMS() * sqrt(npe0));
-          double q1 =
-            CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1, fParams.QRMS() * sqrt(npe1));
+            // SiPM and ADC response: Npe to ADC counts, pedestal is added later
+            double q0 =
+              CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe0, fParams.QRMS() * sqrt(npe0));
+            double q1 =
+              CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1, fParams.QRMS() * sqrt(npe1));
 
-          // Apply saturation
-          double saturation = static_cast<double>(fParams.AdcSaturation());
-          if (q0 > saturation) q0 = saturation;
-          if (q1 > saturation) q1 = saturation;
+            // Apply saturation
+            double saturation = static_cast<double>(fParams.AdcSaturation());
+            if (q0 > saturation) q0 = saturation;
+            if (q1 > saturation) q1 = saturation;
 
-          // Adjacent channels on a strip are numbered sequentially.
-          //
-          // In the AuxDetChannelMapAlg methods, channels are identified by an
-          // AuxDet name (retrievable given the hit AuxDet ID) which specifies a
-          // module, and a channel number from 0 to 32.
-          uint32_t moduleID = adid;
-          uint32_t stripID = adsid;
-          uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
-          uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
-          uint32_t sipm0ID = stripID * 2 + 0;
-          uint32_t sipm1ID = stripID * 2 + 1;
+            // Adjacent channels on a strip are numbered sequentially.
+            //
+            // In the AuxDetChannelMapAlg methods, channels are identified by an
+            // AuxDet name (retrievable given the hit AuxDet ID) which specifies a
+            // module, and a channel number from 0 to 32.
+            uint32_t moduleID = adid;
+            uint32_t stripID = adsid;
+            uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
+            uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
+            uint32_t sipm0ID = stripID * 2 + 0;
+            uint32_t sipm1ID = stripID * 2 + 1;
 
-          if (moduleID >= 127) {continue;}        //Ignoring MINOS modules for now.
+            if (moduleID >= 127) {continue;}        //Ignoring MINOS modules for now.
 
-          // Apply ADC threshold and strip-level coincidence (both fibers fire)
-          double threshold = static_cast<double>(fParams.QThreshold());
-          bool sipm_coinc = false;
+            // Apply ADC threshold and strip-level coincidence (both fibers fire)
+            double threshold = static_cast<double>(fParams.QThreshold());
+            bool sipm_coinc = false;
 
-          if (q0 > threshold &&
-              q1 > threshold &&
-              util::absDiff(ts1_ch0, ts1_ch1) < fParams.StripCoincidenceWindow()) {
-            sipm_coinc = true;
-          }
+            if (q0 > threshold &&
+                q1 > threshold &&
+                util::absDiff(ts1_ch0, ts1_ch1) < fParams.StripCoincidenceWindow())
+            {
+                sipm_coinc = true;
+            }
 
-          // Time ordered
-          if (ts1_ch0 > ts1_ch1) {
-              std::swap(ts1_ch0, ts1_ch1);
-              std::swap(channel0ID, channel1ID);
-              std::swap(q0, q1);
-              std::swap(sipm0ID, sipm1ID);
-          }
+            // Time ordered
+            if (ts1_ch0 > ts1_ch1)
+            {
+                std::swap(ts1_ch0, ts1_ch1);
+                std::swap(channel0ID, channel1ID);
+                std::swap(q0, q1);
+                std::swap(sipm0ID, sipm1ID);
+            }
 
-          SiPMData sipm0 = SiPMData(sipm0ID,
-                                    channel0ID,
-                                    ppsTicks,
-                                    ts1_ch0,
-                                    q0);
-          SiPMData sipm1 = SiPMData(sipm1ID,
-                                    channel1ID,
-                                    ppsTicks,
-                                    ts1_ch1,
-                                    q1);
+            SiPMData sipm0 = SiPMData(sipm0ID,
+                                      channel0ID,
+                                      ppsTicks,
+                                      ts1_ch0,
+                                      q0);
+            SiPMData sipm1 = SiPMData(sipm1ID,
+                                      channel1ID,
+                                      ppsTicks,
+                                      ts1_ch1,
+                                      q1);
 
-          StripData strip_data = StripData(mac5,
-                                           planeID,
-                                           sipm0,
-                                           sipm1,
-                                           sipm_coinc,
-                                           ide);
+            StripData strip_data = StripData(mac5,
+                                             planeID,
+                                             sipm0,
+                                             sipm1,
+                                             sipm_coinc,
+                                             ide);
 
-        std::cout << "Constructed StripData for mac " << mac5 << " with true time " << tTrue << " ns. and for trackID " << ide.trackID << std::endl;
-        std::cout << std::endl;
+            std::cout << "Constructed StripData for mac " << mac5 << " with true time " << tTrue << " ns. and for trackID " << ide.trackID << std::endl;
+            std::cout << std::endl;
 
-        // Retrive the Tagger object
-        Tagger& tagger = fTaggers[nodeTagger->GetName()];
-        tagger.data.push_back(strip_data);
+            // Retrive the Tagger object
+            Tagger& tagger = fTaggers[nodeTagger->GetName()];
+            tagger.data.push_back(strip_data);
 
-          double poss[3];
-          adsGeo.LocalToWorld(origin, poss);
-          mf::LogInfo("CRTDetSimAlg")
-            << "CRT HIT in " << adid << "/" << adsid << "\n"
-            << "CRT HIT POS " << x << " " << y << " " << z << "\n"
-            << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << "\n"
-            << "CRT MODULE POS " << modulePosMother[0] << " "
-                                 << modulePosMother[1] << " "
-                                 << modulePosMother[2] << " "
-                                 << "\n"
-            << "CRT PATH: " << path << "\n"
-            << "CRT level 0 (strip): " << nodeStrip->GetName() << "\n"
-            << "CRT level 1 (array): " << nodeArray->GetName() << "\n"
-            << "CRT level 2 (module): " << nodeModule->GetName() << "\n"
-            << "CRT level 3 (tagger): " << nodeTagger->GetName() << "\n"
-            << "CRT PLANE ID: " << planeID << "\n"
-            << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << "\n"
-            << "CRT q0: " << q0 << ", q1: " << q1 << ", ts1_ch0: " << ts1_ch0 << ", ts1_ch1: " << ts1_ch1 << ", dt: " << util::absDiff(ts1_ch0,ts1_ch1) << "\n";
+            double poss[3];
+            adsGeo.LocalToWorld(origin, poss);
+            mf::LogInfo("CRTDetSimAlg")
+                << "CRT HIT in " << adid << "/" << adsid << "\n"
+                << "CRT HIT POS " << x << " " << y << " " << z << "\n"
+                << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << "\n"
+                << "CRT MODULE POS " << modulePosMother[0] << " "
+                                     << modulePosMother[1] << " "
+                                     << modulePosMother[2] << " "
+                                    << "\n"
+                << "CRT PATH: " << path << "\n"
+                << "CRT level 0 (strip): " << nodeStrip->GetName() << "\n"
+                << "CRT level 1 (array): " << nodeArray->GetName() << "\n"
+                << "CRT level 2 (module): " << nodeModule->GetName() << "\n"
+                << "CRT level 3 (tagger): " << nodeTagger->GetName() << "\n"
+                << "CRT PLANE ID: " << planeID << "\n"
+                << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << "\n"
+                << "CRT q0: " << q0 << ", q1: " << q1 << ", ts1_ch0: " << ts1_ch0 << ", ts1_ch1: " << ts1_ch1 << ", dt: " << util::absDiff(ts1_ch0,ts1_ch1) << "\n";
         }
-
-
     } //end FillTaggers
 
 
@@ -510,50 +517,50 @@ namespace crt {
     uint32_t CRTDetSimAlg::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
                                              /*detinfo::ElecClock& clock,*/
                                              float t0, float npeMean, float r) {
-      // Hit timing, with smearing and NPE dependence
-      double tDelayMean =
-        fParams.TDelayNorm() *
-          exp(-0.5 * pow((npeMean - fParams.TDelayShift()) / fParams.TDelaySigma(), 2)) +
-        fParams.TDelayOffset();
+        // Hit timing, with smearing and NPE dependence
+        double tDelayMean =
+          fParams.TDelayNorm() *
+            exp(-0.5 * pow((npeMean - fParams.TDelayShift()) / fParams.TDelaySigma(), 2)) +
+          fParams.TDelayOffset();
 
-      double tDelayRMS =
-        fParams.TDelayRMSGausNorm() *
-          exp(-pow(npeMean - fParams.TDelayRMSGausShift(), 2) / fParams.TDelayRMSGausSigma()) +
-        fParams.TDelayRMSExpNorm() *
-          exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale());
+        double tDelayRMS =
+          fParams.TDelayRMSGausNorm() *
+            exp(-pow(npeMean - fParams.TDelayRMSGausShift(), 2) / fParams.TDelayRMSGausSigma()) +
+          fParams.TDelayRMSExpNorm() *
+            exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale());
 
-      double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
+        double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
 
-      // Time resolution of the interpolator
-      tDelay += CLHEP::RandGauss::shoot(engine, 0, fParams.TResInterpolator());
+        // Time resolution of the interpolator
+        tDelay += CLHEP::RandGauss::shoot(engine, 0, fParams.TResInterpolator());
 
-      // Propagation time
-      double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;
+        // Propagation time
+        double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;
 
-      double t = t0 + tProp + tDelay;
+        double t = t0 + tProp + tDelay;
 
-      // Get clock ticks
-      // FIXME no clock available for CRTs, have to do it by hand
-      //clock.SetTime(t / 1e3);  // SetTime takes microseconds
-      float time = (t / 1e3) * fParams.ClockSpeedCRT();
+        // Get clock ticks
+        // FIXME no clock available for CRTs, have to do it by hand
+        //clock.SetTime(t / 1e3);  // SetTime takes microseconds
+        float time = (t / 1e3) * fParams.ClockSpeedCRT();
 
-      if (time < 0) {
-        mf::LogWarning("CRTSetSimAlg") << "Time is negative. Check the time offset used." << std::endl;
-      }
+        if (time < 0) {
+          mf::LogWarning("CRTSetSimAlg") << "Time is negative. Check the time offset used." << std::endl;
+        }
 
-      uint32_t time_int = static_cast<uint32_t>(time);
+        uint32_t time_int = static_cast<uint32_t>(time);
 
-      mf::LogInfo("CRTSetSimAlg")
-        << "CRT TIMING: t0=" << t0
-        << ", tDelayMean=" << tDelayMean
-        << ", tDelayRMS=" << tDelayRMS
-        << ", tDelay=" << tDelay
-        << ", tProp=" << tProp
-        << ", t=" << t
-        << ", time=" << time
-        << ", time_int=" << time_int << std::endl;
+        mf::LogInfo("CRTSetSimAlg")
+            << "CRT TIMING: t0=" << t0
+            << ", tDelayMean=" << tDelayMean
+            << ", tDelayRMS=" << tDelayRMS
+            << ", tDelay=" << tDelay
+            << ", tProp=" << tProp
+            << ", t=" << t
+            << ", time=" << time
+            << ", time_int=" << time_int << std::endl;
 
-      return time_int; // clock.Ticks();
+        return time_int; // clock.Ticks();
     }
 
 
@@ -563,7 +570,7 @@ namespace crt {
         fData.clear();
     }
 
- }//namespace crt
-}//namespace sbnd
+} // namespace crt
+} // namespace sbnd
 
 #endif

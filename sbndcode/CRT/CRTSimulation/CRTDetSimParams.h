@@ -5,8 +5,6 @@
 #include "fhiclcpp/types/OptionalTable.h"
 #include "fhiclcpp/types/Sequence.h"
 #include "fhiclcpp/types/OptionalSequence.h"
-#include "canvas/Utilities/InputTag.h"
-// #include "art/Framework/Core/EDProducer.h"
 
 namespace sbnd
 {
@@ -14,185 +12,178 @@ namespace crt
 {
   struct CRTDetSimParams
   {
-    template<class T> using Atom = fhicl::Atom<T>;
-    template<class T> using Sequence = fhicl::Sequence<T>;
-    template<class T> using Table = fhicl::Table<T>;
-    using Comment  = fhicl::Comment;
-    using Name     = fhicl::Name;
-    using string   = std::string;
-    using InputTag = art::InputTag;
 
-    Atom<double> GlobalT0Offset {
-      Name("GlobalT0Offset"),
-      Comment("Time delay fit: Gaussian normalization"),
+    fhicl::Atom<double> GlobalT0Offset {
+      fhicl::Name("GlobalT0Offset"),
+      fhicl::Comment("Time delay fit: Gaussian normalization"),
       // true
     };
-    Atom<bool> UseG4RefTimeOffset {
-      Name("UseG4RefTimeOffset"),
-      Comment("Time delay fit: Gaussian normalization"),
+    fhicl::Atom<bool> UseG4RefTimeOffset {
+      fhicl::Name("UseG4RefTimeOffset"),
+      fhicl::Comment("Time delay fit: Gaussian normalization"),
       // true
     };
-    Atom<double> TDelayNorm {
-      Name("TDelayNorm"),
-      Comment("Time delay fit: Gaussian normalization"),
+    fhicl::Atom<double> TDelayNorm {
+      fhicl::Name("TDelayNorm"),
+      fhicl::Comment("Time delay fit: Gaussian normalization"),
       // true
     };
-    Atom<double> TDelayShift {
-      Name("TDelayShift"),
-      Comment("Time delay fit: Gaussian x shift"),
+    fhicl::Atom<double> TDelayShift {
+      fhicl::Name("TDelayShift"),
+      fhicl::Comment("Time delay fit: Gaussian x shift"),
       // true
     };
-    Atom<double> TDelaySigma {
-      Name("TDelaySigma"),
-      Comment("Time delay fit: Gaussian width"),
+    fhicl::Atom<double> TDelaySigma {
+      fhicl::Name("TDelaySigma"),
+      fhicl::Comment("Time delay fit: Gaussian width"),
       // true
     };
-    Atom<double> TDelayOffset {
-      Name("TDelayOffset"),
-      Comment("Time delay fit: Gaussian baseline offset"),
+    fhicl::Atom<double> TDelayOffset {
+      fhicl::Name("TDelayOffset"),
+      fhicl::Comment("Time delay fit: Gaussian baseline offset"),
       // true
     };
-    Atom<double> TDelayRMSGausNorm {
-      Name("TDelayRMSGausNorm"),
-      Comment("Time delay RMS fit: Gaussian normalization"),
+    fhicl::Atom<double> TDelayRMSGausNorm {
+      fhicl::Name("TDelayRMSGausNorm"),
+      fhicl::Comment("Time delay RMS fit: Gaussian normalization"),
       // true
     };
-    Atom<double> TDelayRMSGausShift {
-      Name("TDelayRMSGausShift"),
-      Comment("Time delay RMS fit: Gaussian x shift"),
+    fhicl::Atom<double> TDelayRMSGausShift {
+      fhicl::Name("TDelayRMSGausShift"),
+      fhicl::Comment("Time delay RMS fit: Gaussian x shift"),
       // true
     };
-    Atom<double> TDelayRMSGausSigma {
-      Name("TDelayRMSGausSigma"),
-      Comment("Time delay fit: Gaussian width"),
+    fhicl::Atom<double> TDelayRMSGausSigma {
+      fhicl::Name("TDelayRMSGausSigma"),
+      fhicl::Comment("Time delay fit: Gaussian width"),
       // true
     };
-    Atom<double> TDelayRMSExpNorm {
-      Name("TDelayRMSExpNorm"),
-      Comment("Time delay RMS fit: Exponential normalization"),
+    fhicl::Atom<double> TDelayRMSExpNorm {
+      fhicl::Name("TDelayRMSExpNorm"),
+      fhicl::Comment("Time delay RMS fit: Exponential normalization"),
       // true
     };
-    Atom<double> TDelayRMSExpShift {
-      Name("TDelayRMSExpShift"),
-      Comment("Time delay RMS fit: Exponential x shift"),
+    fhicl::Atom<double> TDelayRMSExpShift {
+      fhicl::Name("TDelayRMSExpShift"),
+      fhicl::Comment("Time delay RMS fit: Exponential x shift"),
       // true
     };
-    Atom<double> TDelayRMSExpScale {
-      Name("TDelayRMSExpScale"),
-      Comment("Time delay RMS fit: Exponential scale"),
+    fhicl::Atom<double> TDelayRMSExpScale {
+      fhicl::Name("TDelayRMSExpScale"),
+      fhicl::Comment("Time delay RMS fit: Exponential scale"),
       // true
     };
-    Atom<uint32_t> TriggerDelay {
-      Name("TriggerDelay"),
-      Comment("Time between signal starts and waveform goes above threshold"),
+    fhicl::Atom<uint32_t> TriggerDelay {
+      fhicl::Name("TriggerDelay"),
+      fhicl::Comment("Time between signal starts and waveform goes above threshold"),
       // true
     };
-    Atom<bool> EqualizeSiPMTimes {
-      Name("EqualizeSiPMTimes"),
-      Comment("Makes the time simulation to the two SiPMs on a strip identical."),
+    fhicl::Atom<bool> EqualizeSiPMTimes {
+      fhicl::Name("EqualizeSiPMTimes"),
+      fhicl::Comment("Makes the time simulation to the two SiPMs on a strip identical."),
       false
     };
-    Atom<double> ClockSpeedCRT {
-      Name("ClockSpeedCRT"),
-      Comment("Clock speed for the CRT system [MHz]"),
+    fhicl::Atom<double> ClockSpeedCRT {
+      fhicl::Name("ClockSpeedCRT"),
+      fhicl::Comment("Clock speed for the CRT system [MHz]"),
       // true
     };
-    Atom<double> NpeScaleNorm {
-      Name("NpeScaleNorm"),
-      Comment("Npe vs. distance: 1/r^2 scale"),
+    fhicl::Atom<double> NpeScaleNorm {
+      fhicl::Name("NpeScaleNorm"),
+      fhicl::Comment("Npe vs. distance: 1/r^2 scale"),
       // true
     };
-    Atom<double> NpeScaleShift {
-      Name("NpeScaleShift"),
-      Comment("Npe vs. distance: 1/r^2 x shift"),
+    fhicl::Atom<double> NpeScaleShift {
+      fhicl::Name("NpeScaleShift"),
+      fhicl::Comment("Npe vs. distance: 1/r^2 x shift"),
       // true
     };
-    Atom<double> Q0 {
-      Name("Q0"),
-      Comment("Average energy deposited for mips, for charge scaling [GeV]"),
+    fhicl::Atom<double> Q0 {
+      fhicl::Name("Q0"),
+      fhicl::Comment("Average energy deposited for mips, for charge scaling [GeV]"),
       // true
     };
-    Atom<double> QPed {
-      Name("QPed"),
-      Comment("ADC offset for the single-peak peak mean [ADC]"),
+    fhicl::Atom<double> QPed {
+      fhicl::Name("QPed"),
+      fhicl::Comment("ADC offset for the single-peak peak mean [ADC]"),
       // true
     };
-    Atom<double> QSlope {
-      Name("QSlope"),
-      Comment("Slope in mean ADC / Npe [ADC]"),
+    fhicl::Atom<double> QSlope {
+      fhicl::Name("QSlope"),
+      fhicl::Comment("Slope in mean ADC / Npe [ADC]"),
       // true
     };
-    Atom<double> QRMS {
-      Name("QRMS"),
-      Comment("ADC single-pe spectrum width [ADC]"),
+    fhicl::Atom<double> QRMS {
+      fhicl::Name("QRMS"),
+      fhicl::Comment("ADC single-pe spectrum width [ADC]"),
       // true
     };
-    Atom<double> QThreshold {
-      Name("QThreshold"),
-      Comment("ADC charge threshold [ADC]"),
+    fhicl::Atom<double> QThreshold {
+      fhicl::Name("QThreshold"),
+      fhicl::Comment("ADC charge threshold [ADC]"),
       // true
     };
-    Atom<double> TResInterpolator {
-      Name("TResInterpolator"),
-      Comment("Interpolator time resolution [ns]"),
+    fhicl::Atom<double> TResInterpolator {
+      fhicl::Name("TResInterpolator"),
+      fhicl::Comment("Interpolator time resolution [ns]"),
       // true
     };
-    Atom<double> PropDelay {
-      Name("PropDelay"),
-      Comment("Delay in pulse arrival time [ns/m]"),
+    fhicl::Atom<double> PropDelay {
+      fhicl::Name("PropDelay"),
+      fhicl::Comment("Delay in pulse arrival time [ns/m]"),
       // true
     };
-    Atom<double> PropDelayError {
-      Name("PropDelayError"),
-      Comment("Delay in pulse arrival time, uncertainty [ns/m]"),
+    fhicl::Atom<double> PropDelayError {
+      fhicl::Name("PropDelayError"),
+      fhicl::Comment("Delay in pulse arrival time, uncertainty [ns/m]"),
       // true
     };
-    Atom<double> StripCoincidenceWindow {
-      Name("StripCoincidenceWindow"),
-      Comment("Time window for two-fiber coincidence [ns]"),
+    fhicl::Atom<double> StripCoincidenceWindow {
+      fhicl::Name("StripCoincidenceWindow"),
+      fhicl::Comment("Time window for two-fiber coincidence [ns]"),
       // true
     };
-    Atom<double> TaggerPlaneCoincidenceWindow {
-      Name("TaggerPlaneCoincidenceWindow"),
-      Comment("Time window for two-plane coincidence [ticks]"),
+    fhicl::Atom<double> TaggerPlaneCoincidenceWindow {
+      fhicl::Name("TaggerPlaneCoincidenceWindow"),
+      fhicl::Comment("Time window for two-plane coincidence [ticks]"),
       // true
     };
-    Atom<double> AbsLenEff {
-      Name("AbsLenEff"),
-      Comment("Effective abs. length for transverse Npe scaling [cm]"),
+    fhicl::Atom<double> AbsLenEff {
+      fhicl::Name("AbsLenEff"),
+      fhicl::Comment("Effective abs. length for transverse Npe scaling [cm]"),
       // true
     };
-    Atom<bool> UseEdep {
-      Name("UseEdep"),
-      Comment("Use the true G4 energy deposited, assume mip if false"),
+    fhicl::Atom<bool> UseEdep {
+      fhicl::Name("UseEdep"),
+      fhicl::Comment("Use the true G4 energy deposited, assume mip if false"),
       // true
     };
-    Atom<double> SipmTimeResponse {
-      Name("SipmTimeResponse"),
-      Comment("Minimum time to resolve separate energy deposits [ns]"),
+    fhicl::Atom<double> SipmTimeResponse {
+      fhicl::Name("SipmTimeResponse"),
+      fhicl::Comment("Minimum time to resolve separate energy deposits [ns]"),
       // true
     };
-    Atom<uint32_t> AdcSaturation {
-      Name("AdcSaturation"),
-      Comment("Saturation limit per SiPM in ADC counts"),
+    fhicl::Atom<uint32_t> AdcSaturation {
+      fhicl::Name("AdcSaturation"),
+      fhicl::Comment("Saturation limit per SiPM in ADC counts"),
       // true
     };
-    Atom<double> DeadTime {
-      Name("DeadTime"),
-      Comment("Saturation limit per SiPM in ADC counts"),
+    fhicl::Atom<double> DeadTime {
+      fhicl::Name("DeadTime"),
+      fhicl::Comment("Saturation limit per SiPM in ADC counts"),
       // true
     };
     fhicl::Sequence<double> WaveformX {
-      Name("WaveformX"),
-      Comment("SiPM waveform sampled, X")
+      fhicl::Name("WaveformX"),
+      fhicl::Comment("SiPM waveform sampled, X")
     };
     fhicl::Sequence<double> WaveformY {
-      Name("WaveformY"),
-      Comment("SiPM waveform sampled, Y")
+      fhicl::Name("WaveformY"),
+      fhicl::Comment("SiPM waveform sampled, Y")
     };
-    Atom<bool> DoWaveformEmulation {
-      Name("DoWaveformEmulation"),
-      Comment("Weather or not to perform waveform simulation"),
+    fhicl::Atom<bool> DoWaveformEmulation {
+      fhicl::Name("DoWaveformEmulation"),
+      fhicl::Comment("Weather or not to perform waveform simulation"),
       true
     };
   };
