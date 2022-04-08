@@ -384,25 +384,33 @@ namespace crt {
                 distToReadout = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]);
             }
 
-            // The expected number of PE, using a quadratic model for the distance
-            // dependence, and scaling linearly with deposited energy.
-            double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
-
-            double npeExpected =
-              fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
-
-            // Put PE on channels weighted by transverse distance across the strip,
-            // using an exponential model
+            // Distance to fibers
             double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);  // L
             double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);  // R
-            double abs0 = exp(-d0 / fParams.AbsLenEff());
-            double abs1 = exp(-d1 / fParams.AbsLenEff());
-            double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
-            double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
 
-            // Observed PE (Poisson-fluctuated)
-            long npe0 = CLHEP::RandPoisson::shoot(&fEngine, npeExp0);
-            long npe1 = CLHEP::RandPoisson::shoot(&fEngine, npeExp1);
+            long npe0, npe1;
+            double q0, q1;
+            ChargeResponse(eDep, d0, d1, distToReadout,
+                           npe0, npe1, q0, q1);
+
+            // // The expected number of PE, using a quadratic model for the distance
+            // // dependence, and scaling linearly with deposited energy.
+            // double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
+
+            // double npeExpected =
+            //   fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
+
+            // // Put PE on channels weighted by transverse distance across the strip,
+            // // using an exponential model
+
+            // double abs0 = exp(-d0 / fParams.AbsLenEff());
+            // double abs1 = exp(-d1 / fParams.AbsLenEff());
+            // double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
+            // double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
+
+            // // Observed PE (Poisson-fluctuated)
+            // long npe0 = CLHEP::RandPoisson::shoot(&fEngine, npeExp0);
+            // long npe1 = CLHEP::RandPoisson::shoot(&fEngine, npeExp1);
 
             // Time relative to trigger, accounting for propagation delay and 'walk'
             // for the fixed-threshold discriminator
@@ -420,16 +428,16 @@ namespace crt {
             uint32_t ppsTicks =
               CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fParams.ClockSpeedCRT() * 1e6);
 
-            // SiPM and ADC response: Npe to ADC counts, pedestal is added later
-            double q0 =
-              CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe0, fParams.QRMS() * sqrt(npe0));
-            double q1 =
-              CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1, fParams.QRMS() * sqrt(npe1));
+            // // SiPM and ADC response: Npe to ADC counts, pedestal is added later
+            // double q0 =
+            //   CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe0, fParams.QRMS() * sqrt(npe0));
+            // double q1 =
+            //   CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1, fParams.QRMS() * sqrt(npe1));
 
-            // Apply saturation
-            double saturation = static_cast<double>(fParams.AdcSaturation());
-            if (q0 > saturation) q0 = saturation;
-            if (q1 > saturation) q1 = saturation;
+            // // Apply saturation
+            // double saturation = static_cast<double>(fParams.AdcSaturation());
+            // if (q0 > saturation) q0 = saturation;
+            // if (q1 > saturation) q1 = saturation;
 
             // Adjacent channels on a strip are numbered sequentially.
             //
@@ -512,9 +520,43 @@ namespace crt {
     } //end FillTaggers
 
 
+    void CRTDetSimAlg::ChargeResponse(double eDep, double d0, double d1, double distToReadout, // input
+                                      long & npe0, long & npe1, double & q0, double &q1) // output
+    {
+        // The expected number of PE, using a quadratic model for the distance
+        // dependence, and scaling linearly with deposited energy.
+        double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
+
+        double npeExpected =
+            fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
+
+        // Put PE on channels weighted by transverse distance across the strip,
+        // using an exponential model
+
+        double abs0 = exp(-d0 / fParams.AbsLenEff());
+        double abs1 = exp(-d1 / fParams.AbsLenEff());
+        double npeExp0 = npeExpected * abs0 / (abs0 + abs1);
+        double npeExp1 = npeExpected * abs1 / (abs0 + abs1);
+
+        // Observed PE (Poisson-fluctuated)
+        npe0 = CLHEP::RandPoisson::shoot(&fEngine, npeExp0);
+        npe1 = CLHEP::RandPoisson::shoot(&fEngine, npeExp1);
+
+        // SiPM and ADC response: Npe to ADC counts, pedestal is added later
+        q0 = CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe0,
+                                     fParams.QRMS() * sqrt(npe0));
+        q1 = CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1,
+                                     fParams.QRMS() * sqrt(npe1));
+
+        // Apply saturation
+        double saturation = static_cast<double>(fParams.AdcSaturation());
+        if (q0 > saturation) q0 = saturation;
+        if (q1 > saturation) q1 = saturation;
+    }
 
     uint32_t CRTDetSimAlg::getChannelTriggerTicks(/*detinfo::ElecClock& clock,*/
-                                             float t0, float npeMean, float r) {
+                                             float t0, float npeMean, float r)
+    {
         // Hit timing, with smearing and NPE dependence
         double tDelayMean =
           fParams.TDelayNorm() *
@@ -562,7 +604,8 @@ namespace crt {
     }
 
 
-    void CRTDetSimAlg::ClearTaggers() {
+    void CRTDetSimAlg::ClearTaggers()
+    {
 
         fTaggers.clear();
         fData.clear();

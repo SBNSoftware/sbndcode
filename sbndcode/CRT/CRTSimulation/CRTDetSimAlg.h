@@ -190,6 +190,22 @@ public:
                                     float t0, float npeMean, float r);
 
 
+    /**
+     * Simulated the CRT charge response. Does not include waveform emulation.
+     *
+     * @param eDep The simulated energy deposited on the strip from G4
+     * @param d0 The distance to the optical fiber connected to SiPM 0
+     * @param d1 The distance to the optical fiber connected to SiPM 1
+     * @param distToReadout The distance to the readout
+     * @param npe0 The output number of PEs for SiPM 0
+     * @param npe1 The output number of PEs for SiPM 1
+     * @param q0 The output ADC simulated value (double) for SiPM 0
+     * @param q1 The output ADC simulated value (double) for SiPM 1
+     */
+    void ChargeResponse(double eDep, double d0, double d1, double distToReadout,
+                        long & npe0, long & npe1, double & q0, double & q1);
+
+
 
 private:
 
