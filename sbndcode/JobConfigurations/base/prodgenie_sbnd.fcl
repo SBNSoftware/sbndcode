@@ -85,6 +85,7 @@ outputs:
     module_type: RootOutput
     fileName:    "prodgenie_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
     dataTier:    "generated"
+    saveMemoryObjectThreshold: 0
   }
 }
 

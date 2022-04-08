@@ -25,6 +25,8 @@
 #include "signalservices_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "detsimmodules_sbnd.fcl"
+#include "opdetdigitizer_sbnd.fcl"
+#include "ophit_finder_sbnd.fcl"
 #include "pmttriggerproducer.fcl"
 
 #include "hitfindermodules_sbnd.fcl"
@@ -89,6 +91,8 @@ physics:
   {
     # random number saver
     rns:       { module_type: RandomNumberSaver }
+    #opdaq:     @local::sbnd_opdetdigitizer
+    #ophit:     @local::sbnd_ophit_finder_pmt
     pmttriggerproducer: @local::pmtTriggerProducer
   }
 
@@ -96,8 +100,6 @@ physics:
   # define the producer and filter modules for this path, order matters,
   # filters reject all following items.  see lines starting physics.producers below
   reco: [rns, pmttriggerproducer]
-
-  #ana: [ hitdumper]
 
   # define the output stream, there could be more than one if using filters
   out:  [ out1 ]
@@ -115,18 +117,9 @@ physics:
 
 ### Some potential overwrites below
 
+#physics.producers.pmttriggerproducer.SaveHists: true
+#physics.producers.pmttriggerproducer.Verbose: true
+
 #physics.producers.pmttriggerproducer.PairLogic: "AND"
-
-#physics.producers.fpred.OpHitProducer: "ophit"
-#physics.producers.fpred.BeamWindowStart: -0.2       # in us
-#physics.producers.fpred.BeamWindowEnd: 2.0   # in us
-#physics.producers.fpred.ChargeToNPhotonsShower: 1.0
-#physics.producers.fpred.ChargeToNPhotonsTrack: 1.0
-
-#physics.producers.ophit.Area1pePMT:  1.3266    #in ADC*ns
-#physics.producers.opdaq.QEDirect: 0.03
-#physics.producers.opdaq.QERefl: 0.03
-#physics.producers.opdaq.SinglePEmodel: true
-#physics.producers.opdaq.PMTChargeToADC: -51.9
 
 #physics.producers.pmtTriggerproducer.OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]

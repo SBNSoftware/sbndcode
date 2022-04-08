@@ -13,13 +13,14 @@ sbnd_crtdetsimana:
       module_type:     "sbndcode/CRT/CRTAna/CRTDetSimAna"
 
       # The input parameters
-      SimModuleLabel:       "largeant"    # Simulation producer module label
-      CRTSimLabel:          "crt"         # CRT producer module label
-      Verbose:              false         # Print extra information about what's going on
-      QPed:                 @local::sbnd_crtsim.DetSimParams.QPed
-      QSlope:               @local::sbnd_crtsim.DetSimParams.QSlope
-      ClockSpeedCRT:        @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
-      CrtBackTrack:         @local::standard_crtbacktracker
+      SimModuleLabel:           "largeant"    # Simulation producer module label (for MCParticles)
+      SimChannelModuleLabel:    "genericcrt"  # Sim Channel producer module label
+      CRTSimLabel:              "crt"         # CRT producer module label
+      Verbose:                  false         # Print extra information about what's going on
+      QPed:                     @local::sbnd_crtsim.DetSimParams.QPed
+      QSlope:                   @local::sbnd_crtsim.DetSimParams.QSlope
+      ClockSpeedCRT:            @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
+      CrtBackTrack:             @local::standard_crtbacktracker
 }
 
 sbnd_crthitrecoana:
