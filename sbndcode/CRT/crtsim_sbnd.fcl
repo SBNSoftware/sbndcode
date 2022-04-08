@@ -13,6 +13,7 @@
 
 #include "detsimmodules_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
+#include "crtslimmer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 
@@ -44,17 +45,18 @@ physics:
   producers:
   {
     rns:       { module_type: "RandomNumberSaver" }
-    crt:       @local::sbnd_crtsim
+    crtsim:    @local::sbnd_crtsim
+    crt:       @local::sbnd_crtslimmer
   }
 
-  #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, crt ]
+  #define the producer and filter modules for this path, order matters,
+  simulate:  [ rns, crtsim, crt ]
 
-  #define the output stream, there could be more than one if using filters 
+  #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
 
   #ie analyzers and output streams.  these all run simultaneously
-  end_paths: [stream1]  
+  end_paths: [stream1]
 }
 
 # block to define where the output goes.  if you defined a filter in the physics
