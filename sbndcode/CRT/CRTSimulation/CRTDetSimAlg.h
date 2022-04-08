@@ -206,6 +206,27 @@ public:
                         long & npe0, long & npe1, double & q0, double & q1);
 
 
+    /**
+     * Emulated the CRT slow-shaped waveform. This is not a full waveform simulation,
+     * but it tries to encapsulate the main effect of the waveform, which is that the ADC
+     * counts are reduced if the signal arrives with a time delay w.r.t. the primary event
+     * trigger.
+     *
+     * @param time_delay The time delay of this SiPM signal w.r.t. the primary event trigger.
+     * @param adc The simulated ADC counts (double) of this SiPM.
+     * @return The simulated ADC counts after waveform emulation (in uint16_t format).
+     */
+    uint16_t WaveformEmulation(const uint32_t & time_delay, const double & adc);
+
+
+    /**
+     * Returns the CRT simulation parmeters
+     *
+     * @return The CRT simulation parameters
+     */
+    const CRTDetSimParams & Params() {return fParams;}
+
+
 
 private:
 
@@ -242,18 +263,6 @@ private:
      * @param strips The set of strips that belong to the same trigger
      */
     void ProcessStrips(const std::vector<StripData> & strips);
-
-    /**
-     * Emulated the CRT slow-shaped waveform. This is not a full waveform simulation,
-     * but it tries to encapsulate the main effect of the waveform, which is that the ADC
-     * counts are reduced if the signal arrives with a time delay w.r.t. the primary event
-     * trigger.
-     *
-     * @param time_delay The time delay of this SiPM signal w.r.t. the primary event trigger.
-     * @param adc The simulated ADC counts (double) of this SiPM.
-     * @return The simulated ADC counts after waveform emulation (in uint16_t format).
-     */
-    uint16_t WaveformEmulation(const uint32_t & time_delay, const double & adc);
 
     /**
      * Adds ADCs to a certain SiPM in a FEBData object
