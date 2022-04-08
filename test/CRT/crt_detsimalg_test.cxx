@@ -48,20 +48,85 @@ Parameters get_parameters(int argc, char const** argv) {
 
 int main(int argc, char const** argv) {
 
+    int errors = 0;
+
+    //
+    // Read parameters
+    //
     Parameters detsim_params = get_parameters(argc, argv);
 
 
+    //
+    // Create DetSimAlg class
+    //
     CLHEP::HepJamesRandom engine(SEED);
 
     sbnd::crt::CRTDetSimAlg detsim_alg(detsim_params,
                                        engine,
                                        0.);
 
-    detsim_alg.getChannelTriggerTicks(10000, 100, 50);
+    //
+    // Time response
+    //
+    uint32_t ts = detsim_alg.getChannelTriggerTicks(10000, // true time, ns
+                                                    30, // PEs
+                                                    50); // distance to readout
+
+    std::cout << "ts " << ts << std::endl;
+
+    // if (ts) {
+    //     std::cout << "Signal saturated with a 1.5 MeV deposited energy?" << std::endl;
+    //     errors++;
+    // }
+
+
+    //
+    // Charge response
+    //
+    long npe0, npe1;
+    double q0, q1;
+    detsim_alg.ChargeResponse(1.5*1e-3, // 1.5 MeV deposited energy
+                              5, // 5 cm distance to fiber 0
+                              5, // 5 cm distance to fiber 1
+                              50, // 50 cm distance to readout
+                              npe0, npe1, q0, q1);
+
+    std::cout << "npe0 " << npe0
+              << "\nnpe1 " << npe1
+              << "\nq0 " << q0
+              << "\nq1 " << q1 << std::endl;
+
+    if (q0 == detsim_alg.Params().AdcSaturation() or q1 == detsim_alg.Params().AdcSaturation()) {
+        std::cout << "Signal saturated with a 1.5 MeV deposited energy?" << std::endl;
+        errors++;
+    }
+
+    if (q0 < 0 or q1 < 0) {
+        std::cout << "Predicted ADCs are negative?" << std::endl;
+        errors++;
+    }
+
+
+    //
+    // Waveform emulation
+    //
+
+    double original_adc = 2000;
+    uint16_t adc = detsim_alg.WaveformEmulation(10, // time delay
+                                                original_adc); // adc
+
+    std::cout << "original_adc " << original_adc
+              << "\nadc " << adc << std::endl;
+
+    if (adc > static_cast<uint16_t>(original_adc)) {
+        std::cout << "ADC value after waveform emulation is larger?" << std::endl;
+        errors++;
+    }
 
 
 
-    return 0;
+
+    return errors;
 
 }
 
