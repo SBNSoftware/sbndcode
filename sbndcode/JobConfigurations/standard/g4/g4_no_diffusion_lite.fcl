@@ -1,0 +1,19 @@
+#-------------------------------------------------------------------
+#
+# Name: g4_no_diffusion_lite.fcl
+#
+# Purpose: Lite version of g4_no_diffusion.fcl
+#
+# Created: 01-Apr-2022  H. Greenlee
+#
+# Automatically generated.
+#
+#-------------------------------------------------------------------
+
+#include "g4_drops.fcl"
+#include "g4_no_diffusion.fcl"
+
+# Drop truth data products.
+
+outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
+                               @sequence::g4_drops ]

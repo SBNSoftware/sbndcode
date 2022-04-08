@@ -1,0 +1,21 @@
+BEGIN_PROLOG
+
+pmtSoftwareTriggerProducer:
+{
+  module_type: "pmtSoftwareTriggerProducer"
+  is_persistable: true
+  TriggerTimeOffset: 0.5    # seconds, defined by fragment producer
+  BeamWindowLength: 1.8     # us, extended by 0.2us to account for delayed signals
+  WvfmLength: 5120
+  Verbose: true
+  SaveHists: false          # save 10 us waveform histograms
+
+  BaselineAlgo: "estimate"  # options are: "constant" or "estimate"
+  InputBaseline: 8000.0     # in ADC, used if BaselineAlgo: "constant"
+  InputBaselineSigma: 2.0   # in ADC, used if BaselineAlgo: "constant"
+  ADCThreshold: 7960        # in ADC, corresponds to ~5 PE in ideal response 
+  FindPulses: false         # use crude pulse finding algorithm (more computational)
+  PEArea: 66.33             # conversion factor from ADCxns area to PE count 
+}
+
+END_PROLOG
