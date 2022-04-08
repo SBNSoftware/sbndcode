@@ -407,9 +407,9 @@ namespace crt {
             // Time relative to trigger, accounting for propagation delay and 'walk'
             // for the fixed-threshold discriminator
             uint32_t ts1_ch0 =
-              getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe0, distToReadout);
+              getChannelTriggerTicks(/*trigClock,*/ tTrue, npe0, distToReadout);
             uint32_t ts1_ch1 =
-              getChannelTriggerTicks(&fEngine, /*trigClock,*/ tTrue, npe1, distToReadout);
+              getChannelTriggerTicks(/*trigClock,*/ tTrue, npe1, distToReadout);
 
             if (fParams.EqualizeSiPMTimes()) {
                 mf::LogWarning("CRTDetSimAlg") << "EqualizeSiPMTimes is on." << std::endl;
@@ -513,8 +513,7 @@ namespace crt {
 
 
 
-    uint32_t CRTDetSimAlg::getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
-                                             /*detinfo::ElecClock& clock,*/
+    uint32_t CRTDetSimAlg::getChannelTriggerTicks(/*detinfo::ElecClock& clock,*/
                                              float t0, float npeMean, float r) {
         // Hit timing, with smearing and NPE dependence
         double tDelayMean =
@@ -528,10 +527,10 @@ namespace crt {
           fParams.TDelayRMSExpNorm() *
             exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale());
 
-        double tDelay = CLHEP::RandGauss::shoot(engine, tDelayMean, tDelayRMS);
+        double tDelay = CLHEP::RandGauss::shoot(&fEngine, tDelayMean, tDelayRMS);
 
         // Time resolution of the interpolator
-        tDelay += CLHEP::RandGauss::shoot(engine, 0, fParams.TResInterpolator());
+        tDelay += CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator());
 
         // Propagation time
         double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;

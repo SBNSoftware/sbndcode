@@ -177,6 +177,19 @@ public:
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> GetData();
 
 
+    /**
+     * Get the channel trigger time relative to the start of the MC event.
+     *
+     * @param clock The clock to count ticks on
+     * @param t0 The starting time (which delay is added to)
+     * @param npe Number of observed photoelectrons
+     * @param r Distance between the energy deposit and strip readout end [mm]
+     * @return Trigger clock ticks at this true hit time
+     */
+    uint32_t getChannelTriggerTicks(/*detinfo::ElecClock& clock,*/
+                                    float t0, float npeMean, float r);
+
+
 
 private:
 
@@ -204,20 +217,6 @@ private:
      * of the G4RefTime, depending on user configuration.
      */
     void ConfigureTimeOffset();
-
-    /**
-     * Get the channel trigger time relative to the start of the MC event.
-     *
-     * @param engine The random number generator engine
-     * @param clock The clock to count ticks on
-     * @param t0 The starting time (which delay is added to)
-     * @param npe Number of observed photoelectrons
-     * @param r Distance between the energy deposit and strip readout end [mm]
-     * @return Trigger clock ticks at this true hit time
-     */
-    uint32_t getChannelTriggerTicks(CLHEP::HepRandomEngine* engine,
-                                    /*detinfo::ElecClock& clock,*/
-                                    float t0, float npeMean, float r);
 
     /**
      * Proccesses a set of CRT strips that belong to the same trigger. This method
