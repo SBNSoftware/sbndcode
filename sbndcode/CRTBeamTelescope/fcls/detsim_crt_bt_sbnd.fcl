@@ -2,7 +2,7 @@
 
 process_name: DetSimCRT
 
-physics.simulate: [ rns, crt ]
+physics.simulate: [ rns, crtsim, crt ]
 
 # Remove unnecesary processes
 physics.producers.daq: @erase

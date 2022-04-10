@@ -9,6 +9,7 @@
 #include "larg4_sbnd.fcl"
 #include "config_genericCRT.fcl"
 #include "crtsimmodules_sbnd.fcl"
+#include "crtslimmer_sbnd.fcl"
 #include "crtsimhitproducer_sbnd.fcl"
 #include "crttrackproducer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
@@ -49,7 +50,10 @@ physics:
     genericcrt: @local::sbnd_genericCRT
 
     # CRT Detsim
-    crt: @local::sbnd_crtsim
+    crtsim: @local::sbnd_crtsim
+
+    # CRT Slimmer
+    crt: @local::sbnd_crtslimmer
 
     # CRT Hits
     crthit: @local::standard_crtsimhitproducer
@@ -70,6 +74,7 @@ physics:
             , loader
             , largeant
             , genericcrt
+            , crtsim
             , crt
             , crthit
             , crttrack
