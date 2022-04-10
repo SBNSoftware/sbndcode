@@ -2843,8 +2843,10 @@
 
                 <box lunit="cm" name="TaggerTopHigh" x="2*CRTmoduleY_l" y="5*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerTopLow" x="2*CRTmoduleY_l" y="5*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
-                <box lunit="cm" name="TaggerSouth" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t+4"/>
-                <box lunit="cm" name="TaggerNorth" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleX_t+4"/>
+                <box lunit="cm" name="TaggerSouth" x="1*CRTmoduleBERN_l+50" y="3*CRTmoduleBERN_w+20" z="2*CRTmoduleBERN_t+4+10"/> <!-- Modified for CRT BT-->
+                <box lunit="cm" name="TaggerNorthOne" x="1*CRTmoduleBERN_l+50" y="3*CRTmoduleBERN_w+20" z="2*CRTmoduleBERN_t+4+10"/> <!-- Modified for CRT BT-->
+                <box lunit="cm" name="TaggerNorthTwo" x="1*CRTmoduleBERN_l+50" y="3*CRTmoduleBERN_w+20" z="2*CRTmoduleBERN_t+4+10"/> <!-- Modified for CRT BT-->
+                <box lunit="cm" name="TaggerNorthThree" x="1*CRTmoduleBERN_l+50" y="3*CRTmoduleBERN_w+20" z="2*CRTmoduleBERN_t+4+10"/> <!-- Modified for CRT BT-->
                 <box lunit="cm" name="TaggerEast" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerWest" x="2*CRTmoduleY_l" y="4*CRTmoduleY_w" z="2*CRTmoduleY_t"/>
                 <box lunit="cm" name="TaggerBottom" x="810" y="990" z="4.0"/>
@@ -4592,38 +4594,38 @@
                         <solidref ref="TaggerSouth"/>
 
                     <!-- New modification-->
-                        <physvol>
+                        <physvol copynumber="0">
 								<volumeref ref="volCRTModule108"/>
-								<position name="posCRT_module108" unit="cm" x="0." y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<position name="posCRT_module108" unit="cm" x="0." y="-10" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
 						</physvol>
 
-                        <physvol>
+                        <physvol copynumber="1">
 								<volumeref ref="volCRTModule109"/>
-								<position name="posCRT_module109" unit="cm" x="0.+CRTmoduleBERN_w" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<position name="posCRT_module109" unit="cm" x="-CRTmoduleBERN_w-2" y="-10" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
 						</physvol>
 
-                        <physvol>
+                        <physvol copynumber="2">
 								<volumeref ref="volCRTModule110"/>
-								<position name="posCRT_module110" unit="cm" x="0.-CRTmoduleBERN_w" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
+								<position name="posCRT_module110" unit="cm" x="+CRTmoduleBERN_w+2" y="-10" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
 						</physvol>
 
 
-						<physvol>
+						<physvol copynumber="3">
 								<volumeref ref="volCRTModule111"/>
-								<position name="posCRT_module111" unit="cm" x="0." y="-360.+CRTmoduleBERN_w/2" z="-CRTmoduleBERN_t*3/2"/>
+								<position name="posCRT_module111" unit="cm" x="-10" y="-CRTmoduleBERN_w-2" z="-CRTmoduleBERN_t*3/2"/>
 						</physvol>
 
-						<physvol>
+						<physvol copynumber="4">
 								<volumeref ref="volCRTModule112"/>
-								<position name="posCRT_module112" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*3/2" z="-CRTmoduleBERN_t*3/2"/>
+								<position name="posCRT_module112" unit="cm" x="-10" y="0" z="-CRTmoduleBERN_t*3/2"/>
 						</physvol>
 
-						<physvol>
+						<physvol copynumber="5">
 								<volumeref ref="volCRTModule113"/>
-								<position name="posCRT_module113" unit="cm" x="0." y="-360.+CRTmoduleBERN_w*5/2" z="-CRTmoduleBERN_t*3/2"/>
+								<position name="posCRT_module113" unit="cm" x="-10" y="+CRTmoduleBERN_w+2" z="-CRTmoduleBERN_t*3/2"/>
 						</physvol>
 					
 
@@ -4657,11 +4659,128 @@
                        -->
                 </volume>
 
-                <volume name="volTaggerNorth">
+                <volume name="volTaggerNorthOne">
                         <materialref ref="matAir"/>
-                        <solidref ref="TaggerNorth"/>
+                        <solidref ref="TaggerNorthOne"/>
                         <!-- new geometry -->
-                        <physvol>
+                        <physvol copynumber="6">
+								<volumeref ref="volCRTModule114"/>
+								<position name="posCRT_module114" unit="cm" x="0+10" y="-CRTmoduleBERN_w-2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol copynumber="7">
+								<volumeref ref="volCRTModule115"/>
+								<position name="posCRT_module115" unit="cm" x="0+10" y="0" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol copynumber="8">
+								<volumeref ref="volCRTModule116"/>
+								<position name="posCRT_module116" unit="cm" x="0+10" y="+CRTmoduleBERN_w+2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+						<physvol copynumber="9">
+								<volumeref ref="volCRTModule123"/>
+								<position name="posCRT_module123" unit="cm" x="0." y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol copynumber="10">
+								<volumeref ref="volCRTModule124"/>
+								<position name="posCRT_module124" unit="cm" x="-CRTmoduleBERN_w-2" y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol copynumber="11">
+								<volumeref ref="volCRTModule125"/>
+								<position name="posCRT_module125" unit="cm" x="+CRTmoduleBERN_w+2" y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+				</volume>
+
+
+				<volume name="volTaggerNorthTwo">
+                        <materialref ref="matAir"/>
+                        <solidref ref="TaggerNorthTwo"/>
+                        <!-- new geometry -->
+                        <physvol copynumber="12">
+								<volumeref ref="volCRTModule117"/>
+								<position name="posCRT_module117" unit="cm" x="0+10" y="-CRTmoduleBERN_w-2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol copynumber="13">
+								<volumeref ref="volCRTModule118"/>
+								<position name="posCRT_module118" unit="cm" x="0+10" y="0" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol copynumber="14">
+								<volumeref ref="volCRTModule119"/>
+								<position name="posCRT_module119" unit="cm" x="0+10" y="+CRTmoduleBERN_w+2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+						<physvol copynumber="15">
+								<volumeref ref="volCRTModule126"/>
+								<position name="posCRT_module126" unit="cm" x="0." y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol copynumber="16">
+								<volumeref ref="volCRTModule133"/>
+								<position name="posCRT_module133" unit="cm" x="-CRTmoduleBERN_w-2" y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol copynumber="17">
+								<volumeref ref="volCRTModule134"/>
+								<position name="posCRT_module134" unit="cm" x="+CRTmoduleBERN_w+2" y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+				</volume>
+
+				<volume name="volTaggerNorthThree">
+                        <materialref ref="matAir"/>
+                        <solidref ref="TaggerNorthThree"/>
+                        <!-- new geometry -->
+                        <physvol copynumber="18">
+								<volumeref ref="volCRTModule120"/>
+								<position name="posCRT_module120" unit="cm" x="0+10" y="-CRTmoduleBERN_w-2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol copynumber="19">
+								<volumeref ref="volCRTModule121"/>
+								<position name="posCRT_module121" unit="cm" x="0+10" y="0" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+                        <physvol copynumber="20">
+								<volumeref ref="volCRTModule122"/>
+								<position name="posCRT_module122" unit="cm" x="0+10" y="+CRTmoduleBERN_w+2" z="-CRTmoduleBERN_t*3/2"/>
+						</physvol>
+
+						<physvol copynumber="21">
+								<volumeref ref="volCRTModule135"/>
+								<position name="posCRT_module135" unit="cm" x="0." y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol copynumber="22">
+								<volumeref ref="volCRTModule136"/>
+								<position name="posCRT_module136" unit="cm" x="-CRTmoduleBERN_w-2" y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+
+                        <physvol copynumber="23">
+								<volumeref ref="volCRTModule137"/>
+								<position name="posCRT_module137" unit="cm" x="+CRTmoduleBERN_w+2" y="-10" z="CRTmoduleBERN_t/2"/>
+								<rotationref ref="rotateP90Z"/>
+						</physvol>
+				</volume>
+
+    <!--             <volume name="volTaggerNorth">
+                        <materialref ref="matAir"/>
+                        <solidref ref="TaggerNorth"/> -->
+                        <!-- new geometry -->
+                        <!-- <physvol>
 								<volumeref ref="volCRTModule114"/>
 								<position name="posCRT_module114" unit="cm" x="0." y="-360.+CRTmoduleBERN_w/2" z="-CRTmoduleBERN_t*3/2"/>
 						</physvol>
@@ -4761,7 +4880,7 @@
 								<volumeref ref="volCRTModule137"/>
 								<position name="posCRT_module137" unit="cm" x="0.+CRTmoduleBERN_w*4" y="-360.+CRTmoduleBERN_l/2" z="CRTmoduleBERN_t/2"/>
 								<rotationref ref="rotateP90Z"/>
-						</physvol>
+						</physvol> -->
 						
 
 
@@ -4793,7 +4912,7 @@
                                 </physvol>
                         </loop>
 						-->
-                </volume>
+                <!-- </volume> -->
 
 				<volume name="volTaggerEast">
                         <materialref ref="matAir"/>
@@ -6381,8 +6500,10 @@
 		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
 		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
 
-		<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="CRT_South_pos"/>
-		<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="CRT_North_pos"/>
+		<position name="posCRT_South" unit="mm" x="whereMembrane_X+250" y="whereMembrane_Y-2400" z="CRT_South_pos"/>
+		<position name="posCRT_NorthOne" unit="mm" x="whereMembrane_X+3200" y="whereMembrane_Y-2400" z="CRT_North_pos"/>
+		<position name="posCRT_NorthTwo" unit="mm" x="whereMembrane_X+250" y="whereMembrane_Y-2400" z="CRT_North_pos"/>
+		<position name="posCRT_NorthThree" unit="mm" x="whereMembrane_X-2700" y="whereMembrane_Y-2400" z="CRT_North_pos"/>
 
 		<position name="posCRT_East" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
 		<position name="postCRT_West" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
@@ -6443,11 +6564,22 @@
 			<physvol>
 					<volumeref ref="volTaggerSouth"/>
 					<positionref ref="posCRT_South"/>
+                    <rotationref ref="rotateP180Y"/>
 			</physvol>
 			<physvol>
-					<volumeref ref="volTaggerNorth"/>
-					<positionref ref="posCRT_North"/>
-					<rotationref ref="rotateP180Y"/>
+					<volumeref ref="volTaggerNorthOne"/>
+					<positionref ref="posCRT_NorthOne"/>
+					<!-- <rotationref ref="rotateP180Y"/> -->
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerNorthTwo"/>
+					<positionref ref="posCRT_NorthTwo"/>
+					<!-- <rotationref ref="rotateP180Y"/> -->
+			</physvol>
+			<physvol>
+					<volumeref ref="volTaggerNorthThree"/>
+					<positionref ref="posCRT_NorthThree"/>
+					<!-- <rotationref ref="rotateP180Y"/> -->
 			</physvol>
 			<!-- Jiaoyang's modification: 
 			<physvol>
@@ -6522,8 +6654,8 @@
 					<positionref ref="posCRT_South"/>
 			</physvol>
 			<physvol>
-					<volumeref ref="volTaggerNorth"/>
-					<positionref ref="posCRT_North"/>
+					<volumeref ref="volTaggerNorthOne"/>
+					<positionref ref="posCRT_NorthOne"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
 			<!-- Jiaoyang's modification: 
