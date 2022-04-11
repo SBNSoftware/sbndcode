@@ -355,10 +355,13 @@ namespace crt {
         TGeoNode* nodeModule = manager->GetMother(1);
         TGeoNode* nodeTagger = manager->GetMother(2);
 
+        std::string volumeName = nodeStrip->GetVolume()->GetName();
+
         std::cout << "Strip name: " << nodeStrip->GetName() << ", number = " << nodeStrip->GetNumber() << std::endl;
         std::cout << "Array name: " << nodeArray->GetName() << ", number = " << nodeArray->GetNumber() << std::endl;
         std::cout << "Module name: " << nodeModule->GetName() << ", number = " << nodeModule->GetNumber() << std::endl;
         std::cout << "Tagger name: " << nodeTagger->GetName() << ", number = " << nodeTagger->GetNumber() << std::endl;
+        std::cout << "Strip volume name: " << volumeName << std::endl;
 
         // Retrive the ID of this CRT module
         uint16_t mac5 = static_cast<uint16_t>(nodeModule->GetNumber());
@@ -445,14 +448,15 @@ namespace crt {
             // In the AuxDetChannelMapAlg methods, channels are identified by an
             // AuxDet name (retrievable given the hit AuxDet ID) which specifies a
             // module, and a channel number from 0 to 32.
-            uint32_t moduleID = adid;
+            // uint32_t moduleID = adid;
+            uint32_t moduleID = mac5;
             uint32_t stripID = adsid;
             uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
             uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
             uint32_t sipm0ID = stripID * 2 + 0;
             uint32_t sipm1ID = stripID * 2 + 1;
 
-            if (moduleID >= 127) {continue;}        //Ignoring MINOS modules for now.
+            if (volumeName.find("MINOS") != std::string::npos) {continue;} // Ignoring MINOS modules for now.
 
             // Apply ADC threshold and strip-level coincidence (both fibers fire)
             double threshold = static_cast<double>(fParams.QThreshold());
