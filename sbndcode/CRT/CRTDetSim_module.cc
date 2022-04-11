@@ -115,9 +115,9 @@ void CRTDetSim::produce(art::Event & e) {
     }
 
     if(adsc.AuxDetIDEs().size() > 0) {
-      std::cout << "Adding AuxDetSimChannel with AuxDetID " << adsc.AuxDetID() << ", AuxDetSensitiveID " << adsc.AuxDetSensitiveID() << std::endl;
+      mf::LogDebug("CRTDetSim") << "Adding AuxDetSimChannel with AuxDetID " << adsc.AuxDetID()
+                                << ", AuxDetSensitiveID " << adsc.AuxDetSensitiveID() << std::endl;
       fDetAlg.FillTaggers(adsc.AuxDetID(), adsc.AuxDetSensitiveID(), adsc.AuxDetIDEs());
-      std::cout << std::endl;
     }
 
   } // loop over AuxDetSimChannels

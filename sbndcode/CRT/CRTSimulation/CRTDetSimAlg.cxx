@@ -87,9 +87,9 @@ namespace crt {
         double wf = fInterpolator->Eval(time_delay);
         wf *= adc;
 
-        std::cout << "[WaveformEmulation] time_delay " << time_delay
-                  << ", adc " << adc
-                  << ", waveform " << wf << std::endl;
+        mf::LogDebug("CRTDetSimAlg") << "WaveformEmulation, time_delay " << time_delay
+                                     << ", adc " << adc
+                                     << ", waveform " << wf << std::endl;
 
         return static_cast<uint16_t>(wf);
     }
@@ -106,13 +106,9 @@ namespace crt {
             new_adc = fParams.AdcSaturation();
         }
 
-        mf::LogDebug("CRTDetSimAlg") << "Updating ADC value for FEB " << feb_data.Mac5()
-                                     << "sipmID " << sipmID << ": was " << original_adc
-                                     << ", now is " << new_adc << std::endl;
-
         feb_data.SetADC(sipmID, new_adc);
 
-        std::cout << "Updating ADC value for FEB " << feb_data.Mac5()
+        mf::LogDebug("CRTDetSimAlg") << "Updating ADC value for FEB " << feb_data.Mac5()
                                      << ", sipmID " << sipmID
                                      << " with adc " << adc
                                      << ": was " << original_adc
@@ -166,9 +162,6 @@ namespace crt {
             auto &feb_data = mac_to_febdata[strip.mac5];
             uint32_t trigger_time = feb_data.Ts1();
 
-            std::cout << "sipm 0 channel " << strip.sipm0.channel << ", time " << strip.sipm0.t1 << ", time diff " << strip.sipm0.t1 - trigger_time << std::endl;
-            std::cout << "sipm 1 channel " << strip.sipm1.channel << ", time " << strip.sipm1.t1 << ", time diff " << strip.sipm1.t1 - trigger_time << std::endl;
-
             uint16_t adc_sipm0 = WaveformEmulation(strip.sipm0.t1 - trigger_time, strip.sipm0.adc);
             uint16_t adc_sipm1 = WaveformEmulation(strip.sipm1.t1 - trigger_time, strip.sipm1.adc);
 
@@ -177,9 +170,6 @@ namespace crt {
 
             auto &ides = mac_to_ides[strip.mac5];
             ides.push_back(strip.ide);
-
-            std::cout << "adc of sipm " << strip.sipm0.sipmID << " is now " << feb_data.ADC(strip.sipm0.sipmID) << std::endl;
-            std::cout << "adc of sipm " << strip.sipm1.sipmID << " is now " << feb_data.ADC(strip.sipm1.sipmID) << std::endl;
         }
 
         for (auto const& [mac, feb_data] : mac_to_febdata)
@@ -187,8 +177,8 @@ namespace crt {
             fData.push_back(std::make_pair(feb_data, mac_to_ides[mac]));
         }
 
-        std::cout << "Constructed " << mac_to_febdata.size()
-                  << " FEBData object(s)." << std::endl << std::endl;
+        mf::LogDebug("CRTDetSimAlg") << "Constructed " << mac_to_febdata.size()
+                                     << " FEBData object(s)." << std::endl << std::endl;
     }
 
 
@@ -383,7 +373,7 @@ namespace crt {
         bool top = (planeID == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
 
         // Simulate the CRT response for each hit
-        std::cout << "We have " << ides.size() << " IDE for this SimChannel." << std::endl;
+        mf::LogInfo("CRTDetSimAlg") << "We have " << ides.size() << " IDE for this SimChannel." << std::endl;
         for (size_t ide_i = 0; ide_i < ides.size(); ide_i++) {
 
             sim::AuxDetIDE ide = ides[ide_i];
