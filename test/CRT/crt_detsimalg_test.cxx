@@ -1,4 +1,8 @@
-
+/**
+ * \brief Basic unit tests for the CRT detector simulation
+ *
+ * \author Marco Del Tutto
+ */
 
 #include <iostream> // for output before message facility is set up
 #include <string>

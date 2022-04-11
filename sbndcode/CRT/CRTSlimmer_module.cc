@@ -1,3 +1,13 @@
+/**
+ * \brief Makes sbnd::crt::CRTData from sbnd::crt::FEBData
+ *
+ * \details This class loops over sbnd::crt::FEBData objects and only selects
+ * strips which have both SiPM ADC values above a certain (configurable) threshold.
+ * The two SiPMs in the selected strips are then saved in sbnd::crt::CRTData objects.
+ *
+ * \author Marco Del Tutto
+ */
+
 ////////////////////////////////////////////////////////////////////////
 // Class:       CRTSlimmer
 // Plugin Type: producer (Unknown Unknown)

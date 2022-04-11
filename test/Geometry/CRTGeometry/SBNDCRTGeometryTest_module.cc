@@ -1,11 +1,8 @@
-////////////////////////////////////////////////////////////////////////
-// Class:       SBNDCRTGeometryTest
-// Plugin Type: analyzer (Unknown Unknown)
-// File:        SBNDCRTGeometryTest_module.cc
-//
-// Generated at Sun Apr 10 18:21:00 2022 by Marco Del Tutto using cetskelgen
-// from  version .
-////////////////////////////////////////////////////////////////////////
+/**
+ * \brief Unit tests for the CRT geometry
+ *
+ * \author Marco Del Tutto
+ */
 
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
