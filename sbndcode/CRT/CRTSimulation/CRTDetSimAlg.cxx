@@ -312,7 +312,7 @@ namespace crt {
 
         } // loop over taggers
 
-        mf::LogInfo("CRTDetSimAlg") "We have " << fData.size() << " FEBData objects." << std::endl;
+        mf::LogInfo("CRTDetSimAlg") << "There are " << fData.size() << " FEBData objects." << std::endl;
 
     }
 
