@@ -229,7 +229,7 @@ namespace crt {
             auto & name = iter.first;
             auto & tagger = iter.second;
 
-            std::cout << "[CreateData] This is tagger " << name << std::endl;
+            mf::LogDebug("CRTDetSimAlg") << "[CreateData] Simulating trigger for tagger " << name << std::endl;
 
             bool is_bottom = name.find("Bottom") != std::string::npos;
             Trigger trigger(is_bottom);
@@ -261,19 +261,22 @@ namespace crt {
                 {
                     first_trigger = false;
                     trigger_ts1 = current_time;
-                    std::cout << "[CreateData]   TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
                 }
 
-                std::cout << "[CreateData]   This is strip " << i << " mac " << strip_data.mac5 << " on plane " << strip_data.planeID << ", with time " << current_time << std::endl;
+                mf::LogDebug("CRTDetSimAlg") << "[CreateData] This is strip " << i
+                                             << " mac " << strip_data.mac5
+                                             << " on plane " << strip_data.planeID
+                                             << ", with time " << current_time << std::endl;
 
                 if (current_time - trigger_ts1 < fParams.TaggerPlaneCoincidenceWindow())
                 {
-                    std::cout << "[CreateData]   -> Is in" << std::endl;
+                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] \t Is in" << std::endl;
                     strips.push_back(strip_data);
                 }
                 else if (current_time - trigger_ts1 > fParams.DeadTime() and strip_data.sipm_coinc)
                 {
-                    std::cout << "[CreateData]   -> Created new trigger. " << std::endl;
+                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] \t Creates new trigger. " << std::endl;
                     if (trigger.tagger_triggered()) {
                         ProcessStrips(strips);
                     }
@@ -294,13 +297,11 @@ namespace crt {
                     if (strip_data.planeID == 0) trigger.planeX = true;
                     if (strip_data.planeID == 1) trigger.planeY = true;
 
-                    std::cout << "[CreateData]   TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
                 }
                 else
                 {
-                    // mf::LogDebug("CRTDetSimAlg") << "Strip happened during dead time." << std::endl;
-                    std::cout << "[CreateData]   -> Strip happened during dead time or didn't have SiPMs coincidence. " << std::endl;
-                    if (!strip_data.sipm_coinc) std::cout << "[CreateData]   -> (didn't have SiPMs coincidence.) " << strip_data.sipm0.adc << " " << strip_data.sipm1.adc << std::endl;
+                    mf::LogDebug("CRTDetSimAlg") << "Strip happened during dead time or didn't have SiPMs coincidence." << std::endl;
                 }
 
             } // loop over strips
@@ -311,7 +312,7 @@ namespace crt {
 
         } // loop over taggers
 
-        std::cout << "We have " << fData.size() << " FEBData objects." << std::endl;
+        mf::LogInfo("CRTDetSimAlg") "We have " << fData.size() << " FEBData objects." << std::endl;
 
     }
 
@@ -357,11 +358,15 @@ namespace crt {
 
         std::string volumeName = nodeStrip->GetVolume()->GetName();
 
-        std::cout << "Strip name: " << nodeStrip->GetName() << ", number = " << nodeStrip->GetNumber() << std::endl;
-        std::cout << "Array name: " << nodeArray->GetName() << ", number = " << nodeArray->GetNumber() << std::endl;
-        std::cout << "Module name: " << nodeModule->GetName() << ", number = " << nodeModule->GetNumber() << std::endl;
-        std::cout << "Tagger name: " << nodeTagger->GetName() << ", number = " << nodeTagger->GetNumber() << std::endl;
-        std::cout << "Strip volume name: " << volumeName << std::endl;
+        mf::LogDebug("CRTDetSimAlg") << "Strip name: " << nodeStrip->GetName()
+                                     << ", number = " << nodeStrip->GetNumber()
+                                     << "\n Array name: " << nodeArray->GetName()
+                                     << ", number = " << nodeArray->GetNumber()
+                                     << "\n Module name: " << nodeModule->GetName()
+                                     << ", number = " << nodeModule->GetNumber()
+                                     << "\n Tagger name: " << nodeTagger->GetName()
+                                     << ", number = " << nodeTagger->GetNumber()
+                                     << "\n Strip volume name: " << volumeName << std::endl;
 
         // Retrive the ID of this CRT module
         uint16_t mac5 = static_cast<uint16_t>(nodeModule->GetNumber());
@@ -496,9 +501,6 @@ namespace crt {
                                              sipm_coinc,
                                              ide);
 
-            std::cout << "Constructed StripData for mac " << mac5 << " with true time " << tTrue << " ns. and for trackID " << ide.trackID << std::endl;
-            std::cout << std::endl;
-
             // Retrive the Tagger object
             Tagger& tagger = fTaggers[nodeTagger->GetName()];
             tagger.data.push_back(strip_data);
@@ -506,7 +508,10 @@ namespace crt {
             double poss[3];
             adsGeo.LocalToWorld(origin, poss);
             mf::LogInfo("CRTDetSimAlg")
-                << "CRT HIT in " << adid << "/" << adsid << "\n"
+                << "CRT HIT in adid/adsid " << adid << "/" << adsid << "\n"
+                << "MAC5 " << mac5 << "\n"
+                << "TRUE TIME  " << tTrue << "\n"
+                << "TRACK ID  " << ide.trackID << "\n"
                 << "CRT HIT POS " << x << " " << y << " " << z << "\n"
                 << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << "\n"
                 << "CRT MODULE POS " << modulePosMother[0] << " "
@@ -520,7 +525,8 @@ namespace crt {
                 << "CRT level 3 (tagger): " << nodeTagger->GetName() << "\n"
                 << "CRT PLANE ID: " << planeID << "\n"
                 << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << "\n"
-                << "CRT q0: " << q0 << ", q1: " << q1 << ", ts1_ch0: " << ts1_ch0 << ", ts1_ch1: " << ts1_ch1 << ", dt: " << util::absDiff(ts1_ch0,ts1_ch1) << "\n";
+                << "CRT Q SiPM 0: " << q0 << ", SiPM 1: " << q1
+                << "CRT Ts1 SiPM 0: " << ts1_ch0 << " SiPM 1: " << ts1_ch1 << "\n";
         }
     } //end FillTaggers
 
@@ -596,14 +602,14 @@ namespace crt {
         uint32_t time_int = static_cast<uint32_t>(time);
 
         mf::LogInfo("CRTSetSimAlg")
-            << "CRT TIMING: t0=" << t0
-            << ", tDelayMean=" << tDelayMean
-            << ", tDelayRMS=" << tDelayRMS
-            << ", tDelay=" << tDelay
-            << ", tProp=" << tProp
-            << ", t=" << t
-            << ", time=" << time
-            << ", time_int=" << time_int << std::endl;
+            << "CRT TIMING: t0 = " << t0 << " (true G4 time)"
+            << ", tDelayMean = " << tDelayMean
+            << ", tDelayRMS = " << tDelayRMS
+            << ", tDelay = " << tDelay
+            << ", tProp = " << tProp
+            << ", t = " << t
+            << ", time = " << time
+            << ", time_int = " << time_int << " (time in uint32_t)" << std::endl;
 
         return time_int; // clock.Ticks();
     }
