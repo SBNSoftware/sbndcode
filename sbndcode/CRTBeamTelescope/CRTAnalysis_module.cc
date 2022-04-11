@@ -22,6 +22,7 @@
 #include "TTree.h"
 
 #include "nusimdata/SimulationBase/MCTruth.h"
+#include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
@@ -56,6 +57,7 @@ private:
   std::string _crtdata_label;
   std::string _crthit_label;
   std::string _crttrack_label;
+  std::string _febdata_label;
   bool _debug;
 
   TTree* _tree;
@@ -119,6 +121,11 @@ private:
   std::vector<double> _ct_y2; ///< CRT track y2
   std::vector<double> _ct_z2; ///< CRT track z2
 
+  std::vector<uint16_t> _feb_mac5; ///< FEBData Mac5 ID
+  std::vector<uint32_t> _feb_ts0; ///< FEBData Ts0
+  std::vector<uint32_t> _feb_ts1; ///< FEBData Fs1
+  std::vector<std::vector<uint16_t>> _feb_adc; ///< FEBData 32 ADC values
+
 
   TTree* _sr_tree;
   int _sr_run, _sr_subrun;
@@ -137,6 +144,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _crtdata_label = p.get<std::string>("CRTDataLabel", "crt");
   _crthit_label = p.get<std::string>("CRTHitLabel", "crthit");
   _crttrack_label = p.get<std::string>("CRTTrackLabel", "crttrack");
+  _febdata_label = p.get<std::string>("FEBDataLabel", "crtsim");
   _debug = p.get<bool>("Debug", false);
 
   art::ServiceHandle<art::TFileService> fs;
@@ -203,6 +211,10 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("ct_y2", "std::vector<double>", &_ct_y2);
   _tree->Branch("ct_z2", "std::vector<double>", &_ct_z2);
 
+  _tree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
+  _tree->Branch("feb_ts0", "std::vector<uint32_t>", &_feb_ts0);
+  _tree->Branch("feb_ts1", "std::vector<uint32_t>", &_feb_ts1);
+  _tree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
 
   _sr_tree = fs->make<TTree>("pottree","");
   _sr_tree->Branch("run", &_sr_run, "run/I");
@@ -288,6 +300,20 @@ void CRTAnalysis::analyze(art::Event const& e)
 
   // Get the CRT Tracks to Hits association
   art::FindManyP<sbn::crt::CRTHit> crt_track_to_hit (crt_track_h, e, _crttrack_label);
+
+
+  //
+  // Get the FEB Data
+  //
+  art::Handle<std::vector<sbnd::crt::FEBData>> feb_data_h;
+  e.getByLabel(_febdata_label, feb_data_h);
+  if(!feb_data_h.isValid()){
+    std::cout << "FEBData product " << _febdata_label << " not found..." << std::endl;
+    throw std::exception();
+  }
+  std::vector<art::Ptr<sbnd::crt::FEBData>> feb_data_v;
+  art::fill_ptr_vector(feb_data_v, feb_data_h);
+
 
 
   //
@@ -510,6 +536,28 @@ void CRTAnalysis::analyze(art::Event const& e)
     }
   }
 
+
+  //
+  // Fill the FEBData objects in the tree
+  //
+  size_t n_febdata = feb_data_v.size();
+
+  _feb_mac5.resize(n_febdata);
+  _feb_ts0.resize(n_febdata);
+  _feb_ts1.resize(n_febdata);
+  _feb_adc.resize(n_febdata, std::vector<uint16_t>(32));
+
+  for (size_t i = 0; i < n_febdata; ++i){
+
+    auto feb_data = feb_data_v[i];
+
+    _feb_mac5[i] = feb_data->Mac5();
+    _feb_ts0[i] = feb_data->Ts0();
+    _feb_ts1[i] = feb_data->Ts1();
+    for (size_t j = 0; j < 32; j++) {
+      _feb_adc[i][j] = feb_data->ADC(j);
+    }
+  }
 
 
   //
