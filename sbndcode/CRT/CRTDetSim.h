@@ -1,4 +1,11 @@
-///////////////////////////////////////////////////////////////////////////////
+/**
+ * \brief LArSoft plugin for SBND CRT detector simulation parameters
+ *
+ * \author Andy Mastbaum
+ * \author Marco Del Tutto
+ */
+
+ ///////////////////////////////////////////////////////////////////////////////
 /// Class: CRTDetSim
 /// Module Type: producer
 /// File: CRTDetSim_module.cc
@@ -37,7 +44,7 @@ public:
 private:
 
   CLHEP::HepRandomEngine& fEngine; //!< Reference to art-managed random-number engine
-  double fG4RefTime;
+  double fG4RefTime; //!< Stores the G4 reference time
   CRTDetSimAlg fDetAlg; //!< Instance of the CRT detector simulation algorithm
 };
 

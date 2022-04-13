@@ -1,3 +1,15 @@
+/**
+ * \brief Class for SBND CRT detector simulation.
+ *
+ * \details This class performs the SBND CRT detector simulation starting from AuxDetSimChannels.
+ * Each AuxDetSimChannel can be passed to this class by calling method FillTaggers for each
+ * AuxDetSimChannel. Then, the CreateData method performs the CRT detector simulation
+ * (time and charge responde, and triggering).
+ *
+ * \author Andy Mastbaum
+ * \author Marco Del Tutto
+ */
+
 #ifndef SBND_CRTDETSIMALG_H
 #define SBND_CRTDETSIMALG_H
 
