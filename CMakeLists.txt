@@ -15,11 +15,11 @@
 
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.37.02.03)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.37.02.04)
 project(sbndcode LANGUAGES CXX)
 
 # for CI:
-# project(sbndcode VERSION 09.37.02.03)
+# project(sbndcode VERSION 09.37.02.04)
 
 message(STATUS "\n")
 message(STATUS "=================================   ${PROJECT_NAME}   =================================")
