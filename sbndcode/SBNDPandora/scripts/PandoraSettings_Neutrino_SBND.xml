@@ -328,6 +328,7 @@
       <tool type = "LArThreeDPCAFeatureTool"/>
       <tool type = "LArThreeDOpeningAngleFeatureTool"/>
       <tool type = "LArThreeDChargeFeatureTool"/>
+      <tool type = "LArLArConeChargeFeatureTool"/>
     </FeatureTools>
     <FeatureToolsNoChargeInfo>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
