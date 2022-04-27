@@ -329,7 +329,7 @@
       <tool type = "LArThreeDPCAFeatureTool"/>
       <tool type = "LArThreeDOpeningAngleFeatureTool"/>
       <tool type = "LArThreeDChargeFeatureTool"/>
-      <tool type = "LArLArConeChargeFeatureTool"/>
+      <tool type = "LArConeChargeFeatureTool"/>  
     </FeatureTools>
     <FeatureToolsNoChargeInfo>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
@@ -431,7 +431,7 @@
       <tool type = "LArThreeDPCAFeatureTool"/>
       <tool type = "LArThreeDOpeningAngleFeatureTool"/>
       <tool type = "LArThreeDChargeFeatureTool"/>
-      <tool type = "LArLArConeChargeFeatureTool"/>
+      <tool type = "LArConeChargeFeatureTool"/>
     </FeatureTools>
     <FeatureToolsNoChargeInfo>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
