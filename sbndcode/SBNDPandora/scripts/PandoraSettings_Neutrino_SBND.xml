@@ -319,9 +319,10 @@
     <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
     <UseThreeDInformation>true</UseThreeDInformation>
     <MvaFileName>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileName>
-    <MvaName>PfoCharBDT</MvaName>
+    <MvaName>PfoCharBDT1</MvaName>
     <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileNameNoChargeInfo>
-    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
+    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo1</MvaNameNoChargeInfo>
+    <MinProbabilityCut>0.51</MinProbabilityCut>
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>
@@ -420,9 +421,10 @@
     <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
     <UseThreeDInformation>true</UseThreeDInformation>
     <MvaFileName>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileName>
-    <MvaName>PfoCharBDT</MvaName>
+    <MvaName>PfoCharBDT2</MvaName>
     <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileNameNoChargeInfo>
-    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
+    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo2</MvaNameNoChargeInfo>
+    <MinProbabilityCut>0.51</MinProbabilityCut>
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>
