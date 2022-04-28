@@ -4,9 +4,13 @@
 
 namespace sbnd{
 
-CRTHitRecoAlg::CRTHitRecoAlg(const Config& config){
+CRTHitRecoAlg::CRTHitRecoAlg(const Config& config, double g4RefTime){
 
   this->reconfigure(config);
+
+  if (fUseG4RefTimeOffset) {
+    fTimeOffset = g4RefTime;
+  }
 }
 
 
@@ -27,6 +31,8 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   fNpeScaleShift = config.NpeScaleShift();
   fTimeCoincidenceLimit = config.TimeCoincidenceLimit();
   fClockSpeedCRT = config.ClockSpeedCRT();
+  fTimeOffset = config.TimeOffset();
+  fUseG4RefTimeOffset = config.UseG4RefTimeOffset();
 
   return;
 }
@@ -176,7 +182,7 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                            std::abs((overlap[5] - overlap[4])/2.));
 
             // Average the time
-            double time = (t0_1 + t0_2)/2;
+            double time = (t0_1 + t0_2)/2 - fTimeOffset;
             //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
             double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
             int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
@@ -204,7 +210,7 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                        std::abs((limits1[3] - limits1[2])/2.), 
                        std::abs((limits1[5] - limits1[4])/2.));
 
-        double time = tagStrip.second[hit_i].t0;
+        double time = tagStrip.second[hit_i].t0 - fTimeOffset;
         double pes = tagStrip.second[hit_i].pes;
         int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
 
@@ -232,7 +238,7 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                        std::abs((limits1[3] - limits1[2])/2.), 
                        std::abs((limits1[5] - limits1[4])/2.));
 
-        double time = taggerStrips[otherPlane][hit_j].t0;
+        double time = taggerStrips[otherPlane][hit_j].t0 - fTimeOffset;
         double pes = taggerStrips[otherPlane][hit_j].pes;
         int plane = sbnd::CRTCommonUtils::GetPlaneIndex(otherPlane.first);
 
@@ -315,6 +321,8 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
 
   sbn::crt::CRTHit crtHit;
 
+  std::cout << "Filling hit with time " << time << ", fTimeOffset " << fTimeOffset << std::endl;
+
   crtHit.feb_id      = tfeb_id;
   crtHit.pesmap      = tpesmap;
   crtHit.peshit      = peshit;
@@ -331,6 +339,7 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
   crtHit.z_pos       = z;
   crtHit.z_err       = ez;
   crtHit.tagger      = tagger;
+  std::cout << "\t and is in fact " << crtHit.ts0_ns << " " << crtHit.ts0_s << " " <<crtHit.ts1_ns << std::endl;
 
   return crtHit;
 
