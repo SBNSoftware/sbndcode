@@ -182,7 +182,8 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         // Sipm0 is on the left in local coords
         double sipm0Y = -halfHeight;
         double sipm1Y = halfHeight;
-        // In local coordinates the X position is at half width (top if top) (bottom if not)
+        // In local coordinates the X position is at half width (remembering width is actually length)
+	// (top if top) (bottom if not)
         double sipmX = halfWidth;
         if(!fModules[moduleName].top) sipmX = - halfWidth;
         double sipm0XYZ[3] = {sipmX, sipm0Y, 0};
