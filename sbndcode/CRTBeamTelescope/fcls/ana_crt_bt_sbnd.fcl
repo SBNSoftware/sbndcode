@@ -30,8 +30,7 @@ physics:
 
  analyzers:
  {
-  crtana: { module_type: "CRTAnalysis"
-            KeepMCPFromADH: true }
+  crtana: { module_type: "CRTAnalysis" }
  }
 
  #define the producer and filter modules for this path, order matters,
