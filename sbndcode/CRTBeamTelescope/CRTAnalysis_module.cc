@@ -59,10 +59,23 @@ private:
   std::string _crttrack_label;
   std::string _febdata_label;
   bool _debug;
+  bool _keep_mcp_from_adh; ///< Whether or not to keep only MCParticles that produce energy deposit on the CRT
 
   TTree* _tree;
 
   int _run, _subrun, _event;
+
+  float _nu_e; ///< Neutrino energy
+  int _nu_pdg; ///< Neutrino PDG code
+  int _nu_ccnc; ///< 0: CC, 1: NC
+  int _nu_mode; ///< Neutrino interaction mode
+  int _nu_int_type; ///< Neutrino interaction type
+  float _nu_vtx_x; ///< Neutrino vertex X
+  float _nu_vtx_y; ///< Neutrino vertex Y
+  float _nu_vtx_z; ///< Neutrino vertex Z
+  float _nu_px; ///< Neutrino momentum along X
+  float _nu_py; ///< Neutrino momentum along Y
+  float _nu_pz; ///< Neutrino momentum along Z
 
   float _mct_sp_pdg; ///< Single particle PDG
   float _mct_sp_e; ///< Single particle energy
@@ -86,6 +99,10 @@ private:
   float _weight; //the weight which store as the vertex of dark neutrino. 
 
   std::vector<int> _mcp_pdg; ///< G4 MCParticle PDG
+  std::vector<double> _mcp_e; ///< G4 MCParticle Energy
+  std::vector<double> _mcp_px; ///< G4 MCParticle Momentum along X
+  std::vector<double> _mcp_py; ///< G4 MCParticle Momentum along Y
+  std::vector<double> _mcp_pz; ///< G4 MCParticle Momentum along Z
   std::vector<double> _mcp_startx; ///< G4 MCParticle start point X
   std::vector<double> _mcp_starty; ///< G4 MCParticle start point Y
   std::vector<double> _mcp_startz; ///< G4 MCParticle start point Z
@@ -93,6 +110,8 @@ private:
   std::vector<double> _mcp_endy; ///< G4 MCParticle end point Y
   std::vector<double> _mcp_endz; ///< G4 MCParticle end point Z
   std::vector<int> _mcp_isprimary; ///< G4 MCParticle, true if primary
+  std::vector<int> _mcp_trackid; ///< G4 MCParticle, track ID
+  std::vector<int> _mcp_makes_adh; ///< G4 MCParticle, true if this MCP deposits energy in CRT
 
   std::vector<double> _adh_t; ///< AuxDetHit time
   std::vector<double> _adh_e; ///< AuxDetHit deposited energy
@@ -100,6 +119,7 @@ private:
   std::vector<double> _adh_y; ///< AuxDetHit Y
   std::vector<double> _adh_z; ///< AuxDetHit Z
   std::vector<double> _adh_p_exit; ///< AuxDetHit exit momentum
+  std::vector<int> _adh_trackid; ///< AuxDetHit trackID of MCParticle
 
   std::vector<double> _chit_x; ///< CRT hit x
   std::vector<double> _chit_y; ///< CRT hit y
@@ -153,6 +173,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _crttrack_label = p.get<std::string>("CRTTrackLabel", "crttrack");
   _febdata_label = p.get<std::string>("FEBDataLabel", "crtsim");
   _debug = p.get<bool>("Debug", false);
+  _keep_mcp_from_adh = p.get<bool>("KeepMCPFromADH", false);
 
   art::ServiceHandle<art::TFileService> fs;
 
@@ -160,6 +181,18 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("run", &_run, "run/I");
   _tree->Branch("subrun", &_subrun, "subrun/I");
   _tree->Branch("event", &_event, "event/I");
+
+  _tree->Branch("nu_e", &_nu_e, "nu_e/F");
+  _tree->Branch("nu_pdg", &_nu_pdg, "nu_pdg/I");
+  _tree->Branch("nu_ccnc", &_nu_ccnc, "nu_ccnc/I");
+  _tree->Branch("nu_mode", &_nu_mode, "nu_mode/I");
+  _tree->Branch("nu_int_type", &_nu_int_type, "nu_int_type/I");
+  _tree->Branch("nu_vtx_x", &_nu_vtx_x, "nu_vtx_x/F");
+  _tree->Branch("nu_vtx_y", &_nu_vtx_y, "nu_vtx_y/F");
+  _tree->Branch("nu_vtx_z", &_nu_vtx_z, "nu_vtx_z/F");
+  _tree->Branch("nu_px", &_nu_px, "nu_px/F");
+  _tree->Branch("nu_py", &_nu_py, "nu_px/F");
+  _tree->Branch("nu_pz", &_nu_pz, "nu_px/F");
 
   _tree->Branch("mct_sp_pdg", &_mct_sp_pdg, "mct_sp_pdg/F");
   _tree->Branch("mct_sp_e", &_mct_sp_e, "mct_sp_e/F");
@@ -183,6 +216,10 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("weight", &_weight, "weight/F");
 
   _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
+  _tree->Branch("mcp_e", "std::vector<double>", &_mcp_e);
+  _tree->Branch("mcp_px", "std::vector<double>", &_mcp_px);
+  _tree->Branch("mcp_py", "std::vector<double>", &_mcp_py);
+  _tree->Branch("mcp_pz", "std::vector<double>", &_mcp_pz);
   _tree->Branch("mcp_startx", "std::vector<double>", &_mcp_startx);
   _tree->Branch("mcp_starty", "std::vector<double>", &_mcp_starty);
   _tree->Branch("mcp_startz", "std::vector<double>", &_mcp_startz);
@@ -190,6 +227,8 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("mcp_endy", "std::vector<double>", &_mcp_endy);
   _tree->Branch("mcp_endz", "std::vector<double>", &_mcp_endz);
   _tree->Branch("mcp_isprimary", "std::vector<int>", &_mcp_isprimary);
+  _tree->Branch("mcp_trackid", "std::vector<int>", &_mcp_trackid);
+  _tree->Branch("mcp_makes_adh", "std::vector<int>", &_mcp_makes_adh);
 
   _tree->Branch("adh_t", "std::vector<double>", &_adh_t);
   _tree->Branch("adh_e", "std::vector<double>", &_adh_e);
@@ -197,6 +236,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("adh_y", "std::vector<double>", &_adh_y);
   _tree->Branch("adh_z", "std::vector<double>", &_adh_z);
   _tree->Branch("adh_p_exit", "std::vector<double>", &_adh_p_exit);
+  _tree->Branch("adh_trackid", "std::vector<int>", &_adh_trackid);
 
   _tree->Branch("chit_x", "std::vector<double>", &_chit_x);
   _tree->Branch("chit_y", "std::vector<double>", &_chit_y);
@@ -348,15 +388,42 @@ void CRTAnalysis::analyze(art::Event const& e)
   //
   assert(mct_v.size() <= 3);
   auto mct = mct_v[0];
-  if (mct->Origin() == simb::kBeamNeutrino) {
+  if (mct->Origin() == simb::kBeamNeutrino)
+  {
+    _nu_e = mct->GetNeutrino().Nu().E();
+    _nu_pdg = mct->GetNeutrino().Nu().PdgCode();
+    _nu_ccnc = mct->GetNeutrino().CCNC();
+    _nu_mode = mct->GetNeutrino().Mode();
+    _nu_int_type = mct->GetNeutrino().InteractionType();
+    _nu_vtx_x = mct->GetNeutrino().Nu().Vx();
+    _nu_vtx_y = mct->GetNeutrino().Nu().Vy();
+    _nu_vtx_z = mct->GetNeutrino().Nu().Vz();
+    _nu_px = mct->GetNeutrino().Nu().Px();
+    _nu_py = mct->GetNeutrino().Nu().Py();
+    _nu_pz = mct->GetNeutrino().Nu().Pz();
 
+    // In the neutrino case, save the outgoing lepton in the first mct_sp object
+    for (int p = 0; p < mct->NParticles(); p++)
+    {
+      auto particle = mct->GetParticle(p);
+      if (std::abs(particle.PdgCode()) == 13 || std::abs(particle.PdgCode()) == 11) {
+        _mct_sp_pdg = particle.PdgCode();
+        _mct_sp_e = particle.E();
+        _mct_sp_px = particle.Px();
+        _mct_sp_py = particle.Py();
+        _mct_sp_pz = particle.Pz();
+        _mct_sp_vx = particle.Vx();
+        _mct_sp_vy = particle.Vy();
+        _mct_sp_vz = particle.Vz();
+      }
+    }
   }
   
   // To-do (?) comment by Jiaoyang:
   // Removed the if-condition for now as in we are using TextFileGen instead of SingleGen.
   // Thus the if-condiction is no longer hold. 
   //else if (mct->Origin() == simb::kSingleParticle) {
-
+  else {
     assert(mct->NParticles() <= 3); // die if mct->NPartickes() != 1
     auto particle = mct->GetParticle(0);
     _mct_sp_pdg = particle.PdgCode();
@@ -380,50 +447,13 @@ void CRTAnalysis::analyze(art::Event const& e)
       _mct_sp_2_vz = particle_2.Vz();
     }
 
-    auto particle_3 = mct->GetParticle(2);
-    _mct_darkNeutrino_e = particle_3.E();
-    _weight = particle_3.Vx();
-
-    if (_debug) std::cout<<mct->NParticles()<<" "<<_mct_sp_pdg<<" "<<_mct_sp_2_pdg<<std::endl;
-  //}
-
-
-  //
-  // Fill the MCParticles in the tree
-  //
-  size_t n_mcp = mcp_v.size();
-  _mcp_pdg.resize(n_mcp);
-  _mcp_startx.resize(n_mcp);
-  _mcp_starty.resize(n_mcp);
-  _mcp_startz.resize(n_mcp);
-  _mcp_endx.resize(n_mcp);
-  _mcp_endy.resize(n_mcp);
-  _mcp_endz.resize(n_mcp);
-  _mcp_isprimary.resize(n_mcp);
-
-  for (size_t i = 0; i < n_mcp; i++) {
-    auto particle = mcp_v[i];
-    if (particle->StatusCode() != 1) continue;
-    // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
-    _mcp_pdg[i] = particle->PdgCode();
-    _mcp_startx[i] = particle->Vx();
-    _mcp_starty[i] = particle->Vy();
-    _mcp_startz[i] = particle->Vz();
-    _mcp_endx[i] = particle->EndX();
-    _mcp_endy[i] = particle->EndY();
-    _mcp_endz[i] = particle->EndZ();
-    _mcp_isprimary[i] = particle->Process() == "primary";
-
-    if (_debug) {
-      std::cout << "MCP " << _mcp_pdg[i] << ", p = " << particle->P()
-              << "(" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
-              << ", process = "
-              << particle->Process() << ": start point = ("
-              << _mcp_startx[i] << ", " << _mcp_starty[i] << ", " << _mcp_startz[i]
-              << ") - start process: " << particle->Process()
-              << " --- end point = (" << std::endl;
+    if (mct->NParticles() > 2){ 
+      auto particle_3 = mct->GetParticle(2);
+      _mct_darkNeutrino_e = particle_3.E();
+      _weight = particle_3.Vx();
     }
 
+    if (_debug) std::cout<<mct->NParticles()<<" "<<_mct_sp_pdg<<" "<<_mct_sp_2_pdg<<std::endl;
   }
 
 
@@ -438,6 +468,9 @@ void CRTAnalysis::analyze(art::Event const& e)
   _adh_y.resize(n_adh);
   _adh_z.resize(n_adh);
   _adh_p_exit.resize(n_adh);
+  _adh_trackid.resize(n_adh);
+
+  std::set<unsigned int> trackids_from_adh;
 
   for (size_t i = 0; i < n_adh; i++) {
     auto auxdethit = adh_v[i];
@@ -450,6 +483,75 @@ void CRTAnalysis::analyze(art::Event const& e)
     _adh_p_exit[i] = std::sqrt(auxdethit->GetExitMomentumX()*auxdethit->GetExitMomentumX() +
                                auxdethit->GetExitMomentumY()*auxdethit->GetExitMomentumY() +
                                auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
+    _adh_trackid[i] = auxdethit->GetTrackID();
+    trackids_from_adh.insert(auxdethit->GetTrackID());
+    std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
+  }
+
+
+  //
+  // Fill the MCParticles in the tree
+  //
+  size_t n_mcp = 0; // mcp_v.size();
+  // Count mcp that have status code different than zero
+  for (auto mcp : mcp_v) { if (mcp->StatusCode() == 1) n_mcp++; }
+  // If we only keep MCP that make energy deposits in the CRT, count only those
+  if (_keep_mcp_from_adh) { n_mcp = trackids_from_adh.size(); }
+  _mcp_pdg.resize(n_mcp);
+  _mcp_e.resize(n_mcp);
+  _mcp_px.resize(n_mcp);
+  _mcp_py.resize(n_mcp);
+  _mcp_pz.resize(n_mcp);
+  _mcp_startx.resize(n_mcp);
+  _mcp_starty.resize(n_mcp);
+  _mcp_startz.resize(n_mcp);
+  _mcp_endx.resize(n_mcp);
+  _mcp_endy.resize(n_mcp);
+  _mcp_endz.resize(n_mcp);
+  _mcp_isprimary.resize(n_mcp);
+  _mcp_trackid.resize(n_mcp);
+  _mcp_makes_adh.resize(n_mcp);
+
+  size_t counter = 0;
+  for (size_t i = 0; i < mcp_v.size(); i++) {
+    auto particle = mcp_v[i];
+    // Exclude particles that are not propagated
+    if (particle->StatusCode() != 1) continue;
+    // Exclude particles that don't make energy deposit in the CRT, if we only keep those
+    std::cout << "MCParticle has track ID " << particle->TrackId() << std::endl;
+    if (_keep_mcp_from_adh and
+         trackids_from_adh.find(particle->TrackId()) == trackids_from_adh.end()) {
+      continue;
+    }
+    std::cout << "  ->" << std::endl;
+    // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
+    _mcp_pdg[counter] = particle->PdgCode();
+    _mcp_e[counter] = particle->E();
+    _mcp_px[counter] = particle->Px();
+    _mcp_py[counter] = particle->Py();
+    _mcp_pz[counter] = particle->Pz();
+    _mcp_startx[counter] = particle->Vx();
+    _mcp_starty[counter] = particle->Vy();
+    _mcp_startz[counter] = particle->Vz();
+    _mcp_endx[counter] = particle->EndX();
+    _mcp_endy[counter] = particle->EndY();
+    _mcp_endz[counter] = particle->EndZ();
+    _mcp_isprimary[counter] = particle->Process() == "primary";
+    _mcp_trackid[counter] = particle->TrackId();
+    _mcp_makes_adh[counter] = trackids_from_adh.find(particle->TrackId()) != trackids_from_adh.end();
+
+    counter++;
+
+    if (_debug) {
+      std::cout << "MCP " << _mcp_pdg[counter] << ", p = " << particle->P()
+              << "(" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
+              << ", process = "
+              << particle->Process() << ": start point = ("
+              << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter]
+              << ") - start process: " << particle->Process()
+              << " --- end point = (" << std::endl;
+    }
+
   }
 
 
