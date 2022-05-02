@@ -1,0 +1,134 @@
+#
+# services
+#
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+#
+# modules
+#
+#include "singles_sbnd.fcl"
+#include "textfilegen.fcl"
+
+#include "larg4_sbnd.fcl"
+#include "config_genericCRT.fcl"
+#include "crtsimmodules_sbnd.fcl"
+#include "crtslimmer_sbnd.fcl"
+#include "crtsimhitproducer_sbnd.fcl"
+#include "crttrackproducer_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+
+process_name: FullCRTSim
+
+services:
+{
+  TFileService: { fileName: "crtana_sbnd.root" }
+  # TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  @table::sbnd_simulation_services
+}
+
+# since this is a configuration typically run as interactive test,
+# we set up message configuration accordingly:
+services.message: @local::sbnd_message_services_interactive # from messages_sbnd.fcl
+
+source:
+{
+  module_type:     EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:       10000           # Number of events to create
+  firstRun:        1            # Run number to use for this file
+  firstEvent:      1            # number of first event in the file
+}
+
+
+physics:
+{
+
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+    
+    # Generation
+    generator: @local::standard_textfilegen
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::sbnd_larg4
+
+    # Generic CRT
+    genericcrt: @local::sbnd_genericCRT
+
+    # CRT Detsim
+    crtsim: @local::sbnd_crtsim
+
+    # CRT Slimmer
+    crt: @local::sbnd_crtslimmer
+
+    # CRT Hits
+    crthit: @local::standard_crtsimhitproducer
+
+    # CRT Tracks
+    crttrack: @local::standard_crttrackproducer
+
+  }
+
+  analyzers:
+  {
+    # Analysis
+    crtana: { module_type: "CRTAnalysis" }
+  }
+
+  # All producers and filters modules for this path, order matters
+  simulate: [ rns
+            , generator
+            , loader
+            , largeant
+            , genericcrt
+            , crtsim
+            , crt
+            , crthit
+            , crttrack
+          ]
+
+  ana: [ crtana ]
+
+  # The output stream, there could be more than one if using filters
+  stream1: [ out1 ]
+
+  # Contains the paths that modify the art::event
+  trigger_paths: [ simulate ]
+
+  # Contains the paths that do not modify the art::Event
+  end_paths: [ ana, stream1 ]
+}
+
+
+outputs:
+{
+  out1:
+  {
+                    @table::sbnd_rootoutput
+    dataTier:       "simulated"
+    outputCommands: [ "keep *_*_*_*"
+                    # # Drop the SimEnergyDeposits made by LArG4
+                    # , "drop sim::SimEnergyDeposits_largeant_*_*"
+                    # # Drop the IonAndScint w/ SCE offsets applied
+                    # , "drop *_ionandscint__*"
+                    # # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
+                    # , "drop sim::AuxDetHits_*_*_*"
+                    ]
+  }
+}
+
+services.ParticleListAction.keepEMShowerDaughters: false
+
+
+#
+# at the end of the configuration, we can override single parameters to reflect our needs:
+#
+physics.producers.generator.InputFileName: "DarkNeutrino_20cmlifetime_file.hepevt"
+#include "use_crt_beam_tele_geometry.fcl"
