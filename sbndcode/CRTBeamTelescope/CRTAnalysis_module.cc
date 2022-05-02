@@ -82,6 +82,9 @@ private:
   float _mct_sp_2_vy; ///< For the double-muon studys, the second particle vertex Y
   float _mct_sp_2_vz; ///< For the double-muon studys, the second particle vertex Z
 
+  float _mct_darkNeutrino_e;
+  float _weight; //the weight which store as the vertex of dark neutrino. 
+
   std::vector<int> _mcp_pdg; ///< G4 MCParticle PDG
   std::vector<double> _mcp_startx; ///< G4 MCParticle start point X
   std::vector<double> _mcp_starty; ///< G4 MCParticle start point Y
@@ -126,6 +129,10 @@ private:
   std::vector<uint32_t> _feb_ts1; ///< FEBData Fs1
   std::vector<std::vector<uint16_t>> _feb_adc; ///< FEBData 32 ADC values
 
+  std::vector<uint16_t> _crt_channel; ///< crtData channel ID
+  std::vector<uint32_t> _crt_t0; ///< crtData T0
+  std::vector<uint32_t> _crt_t1; ///< crtData T1
+  std::vector<uint32_t> _crt_adc; ///< crtData 32 ADC values
 
   TTree* _sr_tree;
   int _sr_run, _sr_subrun;
@@ -165,12 +172,15 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
   _tree->Branch("mct_sp_2_pdg", &_mct_sp_2_pdg, "mct_sp_2_pdg/F");
   _tree->Branch("mct_sp_2_e", &_mct_sp_2_e, "mct_sp_2_e/F");
-  _tree->Branch("mct_sp_2_px", &_mct_sp_2_px, "mct_sp_2_px/F");
   _tree->Branch("mct_sp_2_py", &_mct_sp_2_py, "mct_sp_2_py/F");
   _tree->Branch("mct_sp_2_pz", &_mct_sp_2_pz, "mct_sp_2_pz/F");
   _tree->Branch("mct_sp_2_vx", &_mct_sp_2_vx, "mct_sp_2_vx/F");
   _tree->Branch("mct_sp_2_vy", &_mct_sp_2_vy, "mct_sp_2_vy/F");
   _tree->Branch("mct_sp_2_vz", &_mct_sp_2_vz, "mct_sp_2_vz/F");
+
+
+  _tree->Branch("mct_darkNeutrino_e", &_mct_darkNeutrino_e, "mct_darkNeutrino_e/F");
+  _tree->Branch("weight", &_weight, "weight/F");
 
   _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
   _tree->Branch("mcp_startx", "std::vector<double>", &_mcp_startx);
@@ -215,6 +225,11 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("feb_ts0", "std::vector<uint32_t>", &_feb_ts0);
   _tree->Branch("feb_ts1", "std::vector<uint32_t>", &_feb_ts1);
   _tree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
+
+  _tree->Branch("crt_channel", "std::vector<uint16_t>", &_crt_channel);
+  _tree->Branch("crt_t0", "std::vector<uint32_t>", &_crt_t0);
+  _tree->Branch("crt_t1", "std::vector<uint32_t>", &_crt_t1);
+  _tree->Branch("crt_adc", "std::vector<uint32_t>", &_crt_adc);
 
   _sr_tree = fs->make<TTree>("pottree","");
   _sr_tree->Branch("run", &_sr_run, "run/I");
@@ -286,6 +301,18 @@ void CRTAnalysis::analyze(art::Event const& e)
   e.getByLabel(_crtdata_label, crt_data_h);
   art::FindManyP<sim::AuxDetIDE> crt_data_to_ides (crt_data_h, e, _crtdata_label);
 
+
+  //
+  // Get the CRT Data
+  //
+  if(!crt_data_h.isValid()){
+    std::cout << "CRTData product " << _crtdata_label << " not found..." << std::endl;
+    throw std::exception();
+  }
+  std::vector<art::Ptr<sbnd::crt::CRTData>> crt_data_v;
+  art::fill_ptr_vector(crt_data_v, crt_data_h);
+
+
   //
   // Get the CRT Tracks
   //
@@ -319,14 +346,18 @@ void CRTAnalysis::analyze(art::Event const& e)
   //
   // Fill the MCTruth in the tree
   //
-  assert(mct_v.size() <= 2);
+  assert(mct_v.size() <= 3);
   auto mct = mct_v[0];
   if (mct->Origin() == simb::kBeamNeutrino) {
 
   }
-  else if (mct->Origin() == simb::kSingleParticle) {
+  
+  // To-do (?) comment by Jiaoyang:
+  // Removed the if-condition for now as in we are using TextFileGen instead of SingleGen.
+  // Thus the if-condiction is no longer hold. 
+  //else if (mct->Origin() == simb::kSingleParticle) {
 
-    assert(mct->NParticles() <= 2); // die if mct->NPartickes() != 1
+    assert(mct->NParticles() <= 3); // die if mct->NPartickes() != 1
     auto particle = mct->GetParticle(0);
     _mct_sp_pdg = particle.PdgCode();
     _mct_sp_e = particle.E();
@@ -349,8 +380,12 @@ void CRTAnalysis::analyze(art::Event const& e)
       _mct_sp_2_vz = particle_2.Vz();
     }
 
+    auto particle_3 = mct->GetParticle(2);
+    _mct_darkNeutrino_e = particle_3.E();
+    _weight = particle_3.Vx();
+
     if (_debug) std::cout<<mct->NParticles()<<" "<<_mct_sp_pdg<<" "<<_mct_sp_2_pdg<<std::endl;
-  }
+  //}
 
 
   //
@@ -557,6 +592,27 @@ void CRTAnalysis::analyze(art::Event const& e)
     for (size_t j = 0; j < 32; j++) {
       _feb_adc[i][j] = feb_data->ADC(j);
     }
+  }
+
+
+  //
+  // Fill the CRTData objects in the tree
+  //
+  size_t n_crtdata = crt_data_v.size();
+
+  _crt_channel.resize(n_crtdata);
+  _crt_t0.resize(n_crtdata);
+  _crt_t1.resize(n_crtdata);
+  _crt_adc.resize(n_crtdata);
+
+  for (size_t i = 0; i < n_crtdata; ++i){
+
+    auto crt_data = crt_data_v[i];
+
+    _crt_channel[i] = crt_data->Channel();
+    _crt_t0[i] = crt_data->T0();
+    _crt_t1[i] = crt_data->T1();
+    _crt_adc[i]= crt_data->ADC();
   }
 
 

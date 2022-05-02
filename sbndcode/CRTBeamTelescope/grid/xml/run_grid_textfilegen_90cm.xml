@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+<!-- Takes about 2.5 minues to run on a single gsimple file -->
+
+<!DOCTYPE project [
+<!ENTITY release "v09_47_00">
+<!ENTITY releasetag "e20:prof">
+<!ENTITY my_version "dark_neutrino_90cm">
+<!ENTITY my_run "1">
+<!ENTITY flux_config "H">
+<!ENTITY name "jiaoyang_crt_dark_neutrino_90cm">
+<!ENTITY file_type "data">
+<!ENTITY run_type "physics">
+<!ENTITY PNFSpath "/pnfs/sbnd/resilient/users/jiaoyang/">
+]>
+
+
+<project name="&name;_textfilegen">
+
+  <!-- Group -->
+  <group>sbnd</group>
+
+  <!-- Project size -->
+  <numevents>300000</numevents>
+
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>&releasetag;</qual>
+    <local>&PNFSpath;Tarballs/v09_47_00_dark_neutrino_crt_env_v1.tar</local>
+  </larsoft>
+
+  <!-- Project stages -->
+  <stage name="CRTFullSimulation">
+    <fcl>&PNFSpath;fcls/crt_darkNeutrino_90cm.fcl</fcl>
+    <initsource>/pnfs/sbnd/resilient/users/jiaoyang/TextFileGenSetup.sh</initsource>
+    <outdir>/pnfs/sbnd/persistent/users/jiaoyang/CRT_darkNeutrino/&release;/&my_version;_&my_run;</outdir>
+    <workdir>&PNFSpath;grid_workdir_sbnd/&my_version;_&my_run;</workdir>
+    <logdir>/sbnd/app/users/jiaoyang/gridjob_log/&my_version;_&my_run;</logdir>
+    <inputlist>&PNFSpath;TextFileGenFiles_90cm.list</inputlist>  <!--Input list of text input files -->
+    <inputmode>textfile</inputmode>
+    <numjobs>30</numjobs>
+    <datatier>generated</datatier>
+    <memory>2500</memory>
+    <jobsub> --expected-lifetime=24h -Q --generate-email-summary -l +SingularityImage=\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\" --append_condor_requirements='(TARGET.HAS_SINGULARITY=?=true)' </jobsub>
+    <disk>20GB</disk>
+    <defname>crt_dark_neutrino_90cm</defname>
+  </stage>
+
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
