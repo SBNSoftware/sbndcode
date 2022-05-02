@@ -1,0 +1,4 @@
+#include "all_crt_bt_sbnd.fcl"
+
+physics.analyzers.crtana.KeepMCPFromADH: true
+
