@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+
+<!DOCTYPE project [
+<!ENTITY release "v09_47_00">
+<!ENTITY releasetag "e20:prof">
+<!ENTITY my_version "v1">
+<!ENTITY my_run "1">
+<!ENTITY name "mdeltutt_bt_dirt">
+<!ENTITY file_type "data">
+<!ENTITY run_type "physics">
+<!ENTITY PNFSpath "/pnfs/sbnd/resilient/users/mdeltutt/">
+]>
+
+
+<project name="&name;">
+
+  <!-- Group -->
+  <group>sbnd</group>
+
+  <!-- Project size -->
+  <numevents>60000</numevents>
+
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>&releasetag;</qual>
+    <local>&PNFSpath;Tarballs/sbndcode_v09_47_00_bt__&my_version;.tgz</local>
+  </larsoft>
+
+  <!-- Project stages -->
+
+  <stage name="gen">
+    <fcl>prodgenie_dirt_bt_sbnd.fcl</fcl>
+    <fcl>all_crt_bt_dirt_sbnd.fcl</fcl>
+    <maxfilesperjob>1</maxfilesperjob>
+    <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/bt_dirt_&my_version;_&my_run;</outdir>
+    <workdir>&PNFSpath;grid_workdir_sbnd/bt_dirt</workdir>
+    <numjobs>200</numjobs>
+    <datatier>generated</datatier>
+    <memory>2000</memory>
+    <jobsub> --expected-lifetime=6h -Q --generate-email-summary -l +SingularityImage=\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\" --append_condor_requirements='(TARGET.HAS_SINGULARITY=?=true)' </jobsub>
+    <disk>10GB</disk>
+  </stage>
+
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
