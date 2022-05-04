@@ -22,6 +22,7 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 namespace detinfo { class DetectorClocksData; }
 
 // Utility libraries
