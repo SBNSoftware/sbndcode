@@ -20,7 +20,7 @@
   <group>sbnd</group>
 
   <!-- Project size -->
-  <numevents>60000</numevents>
+  <numevents>600000</numevents>
 
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
