@@ -309,6 +309,9 @@ void CRTAnalysis::analyze(art::Event const& e)
   std::vector<art::Ptr<simb::MCParticle>> mcp_v;
   art::fill_ptr_vector(mcp_v, mcp_h);
 
+  std::map<int, MCParticle> trackid_to_mcp;
+  for (auto mcp : mcp_v) { trackid_to_mcp[mcp->TrackId()] = *mcp; }
+
   //
   // Get the AuxDetHits from G4
   //
@@ -417,11 +420,16 @@ void CRTAnalysis::analyze(art::Event const& e)
         _mct_sp_vz = particle.Vz();
       }
     }
+    if (_debug) std::cout << "Neutrino E = " << _nu_e
+                          << ", x = " << _nu_vtx_x
+                          << ", y = " << _nu_vtx_y
+                          << ", z = " << _nu_vtx_z << std::endl;
+
   }
-  
+
   // To-do (?) comment by Jiaoyang:
   // Removed the if-condition for now as in we are using TextFileGen instead of SingleGen.
-  // Thus the if-condiction is no longer hold. 
+  // Thus the if-condiction is no longer hold.
   //else if (mct->Origin() == simb::kSingleParticle) {
   else {
     assert(mct->NParticles() <= 3); // die if mct->NPartickes() != 1
@@ -518,12 +526,10 @@ void CRTAnalysis::analyze(art::Event const& e)
     // Exclude particles that are not propagated
     if (particle->StatusCode() != 1) continue;
     // Exclude particles that don't make energy deposit in the CRT, if we only keep those
-    std::cout << "MCParticle has track ID " << particle->TrackId() << std::endl;
     if (_keep_mcp_from_adh and
          trackids_from_adh.find(particle->TrackId()) == trackids_from_adh.end()) {
       continue;
     }
-    std::cout << "  ->" << std::endl;
     // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
     _mcp_pdg[counter] = particle->PdgCode();
     _mcp_e[counter] = particle->E();
@@ -540,17 +546,18 @@ void CRTAnalysis::analyze(art::Event const& e)
     _mcp_trackid[counter] = particle->TrackId();
     _mcp_makes_adh[counter] = trackids_from_adh.find(particle->TrackId()) != trackids_from_adh.end();
 
-    counter++;
 
     if (_debug) {
-      std::cout << "MCP " << _mcp_pdg[counter] << ", p = " << particle->P()
-              << "(" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
-              << ", process = "
-              << particle->Process() << ": start point = ("
-              << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter]
-              << ") - start process: " << particle->Process()
-              << " --- end point = (" << std::endl;
+      std::cout << "MCP " << _mcp_pdg[counter] << ", trackID = " << _mcp_trackid[counter]
+                << ", p = " << particle->P()
+                << "(" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
+                << ", process = "
+                << particle->Process() << ": start point = ("
+                << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter]
+                << ") - start process: " << particle->Process()
+                << " --- end point = (" << std::endl;
     }
+    counter++;
 
   }
 
@@ -715,7 +722,21 @@ void CRTAnalysis::analyze(art::Event const& e)
     _crt_t0[i] = crt_data->T0();
     _crt_t1[i] = crt_data->T1();
     _crt_adc[i]= crt_data->ADC();
+
+    // auto ide_v = crt_data_to_ides.at(crt_data.key());
+    // for (auto ide : ide_v) {
+    //   _crt_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
+    //   _crt_true_e[i] += ide->energyDeposited;
+    //   _crt_true_x[i] += 0.5 * (ide->entryX + ide->exitX);
+    //   _crt_true_y[i] += 0.5 * (ide->entryY + ide->exitY);
+    //   _crt_true_z[i] += 0.5 * (ide->entryZ + ide->exitZ);
+    //   _crt_true_exitp[i] += std::sqrt(ide->exitMomentumX*ide->exitMomentumX +
+    //                                   ide->exitMomentumY*ide->exitMomentumY +
+    //                                   ide->exitMomentumZ*ide->exitMomentumZ);
+    //   _crt_true_pdg = trackid_to_mcp
+    // }
   }
+
 
 
   //
