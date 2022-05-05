@@ -87,9 +87,9 @@ namespace crt {
         double wf = fInterpolator->Eval(time_delay);
         wf *= adc;
 
-        mf::LogDebug("CRTDetSimAlg") << "WaveformEmulation, time_delay " << time_delay
-                                     << ", adc " << adc
-                                     << ", waveform " << wf << std::endl;
+        if (fParams.DebugTrigger()) std::cout << "WaveformEmulation, time_delay " << time_delay
+                                              << ", adc " << adc
+                                              << ", waveform " << wf << std::endl;
 
         return static_cast<uint16_t>(wf);
     }
@@ -108,11 +108,11 @@ namespace crt {
 
         feb_data.SetADC(sipmID, new_adc);
 
-        mf::LogDebug("CRTDetSimAlg") << "Updating ADC value for FEB " << feb_data.Mac5()
-                                     << ", sipmID " << sipmID
-                                     << " with adc " << adc
-                                     << ": was " << original_adc
-                                     << ", now is " << feb_data.ADC(sipmID) << std::endl;
+        if (fParams.DebugTrigger()) std::cout << "Updating ADC value for FEB " << feb_data.Mac5()
+                                              << ", sipmID " << sipmID
+                                              << " with adc " << adc
+                                              << ": was " << original_adc
+                                              << ", now is " << feb_data.ADC(sipmID) << std::endl;
 
     }
 
@@ -177,8 +177,8 @@ namespace crt {
             fData.push_back(std::make_pair(feb_data, mac_to_ides[mac]));
         }
 
-        mf::LogDebug("CRTDetSimAlg") << "Constructed " << mac_to_febdata.size()
-                                     << " FEBData object(s)." << std::endl << std::endl;
+        if (fParams.DebugTrigger()) std::cout << "Constructed " << mac_to_febdata.size()
+                                              << " FEBData object(s)." << std::endl << std::endl;
     }
 
 
@@ -219,7 +219,7 @@ namespace crt {
             auto & name = iter.first;
             auto & tagger = iter.second;
 
-            mf::LogDebug("CRTDetSimAlg") << "[CreateData] Simulating trigger for tagger " << name << std::endl;
+            if (fParams.DebugTrigger()) std::cout << "[CreateData] Simulating trigger for tagger " << name << std::endl;
 
             bool is_bottom = name.find("Bottom") != std::string::npos;
             Trigger trigger(is_bottom);
@@ -233,7 +233,7 @@ namespace crt {
                          return strip1.sipm0.t1 < strip2.sipm0.t1;
                          });
 
-            uint32_t trigger_ts1 = 0, /*trigger_ts0 = 0, */current_time = 0;
+            uint32_t trigger_ts1 = 0, current_time = 0;
             bool first_trigger = true;
             std::vector<StripData> strips;
 
@@ -244,29 +244,28 @@ namespace crt {
 
                 current_time = strip_data.sipm0.t1;
 
-                if (strip_data.planeID == 0) trigger.planeX = true;
-                if (strip_data.planeID == 1) trigger.planeY = true;
-
                 if (strip_data.sipm_coinc and first_trigger)
                 {
                     first_trigger = false;
                     trigger_ts1 = current_time;
-                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    if (fParams.DebugTrigger()) std::cout << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    if (strip_data.planeID == 0) trigger.planeX = true;
+                    if (strip_data.planeID == 1) trigger.planeY = true;
                 }
 
-                mf::LogDebug("CRTDetSimAlg") << "[CreateData] This is strip " << i
+                if (fParams.DebugTrigger()) std::cout << "[CreateData] This is strip " << i
                                              << " mac " << strip_data.mac5
                                              << " on plane " << strip_data.planeID
                                              << ", with time " << current_time << std::endl;
 
                 if (current_time - trigger_ts1 < fParams.TaggerPlaneCoincidenceWindow())
                 {
-                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] \t Is in" << std::endl;
+                    if (fParams.DebugTrigger()) std::cout << "[CreateData] \t Is in" << std::endl;
                     strips.push_back(strip_data);
                 }
                 else if (current_time - trigger_ts1 > fParams.DeadTime() and strip_data.sipm_coinc)
                 {
-                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] \t Creates new trigger. " << std::endl;
+                    if (fParams.DebugTrigger()) std::cout << "[CreateData] \t Creates new trigger. " << std::endl;
                     if (trigger.tagger_triggered()) {
                         ProcessStrips(strips);
                     }
@@ -287,11 +286,15 @@ namespace crt {
                     if (strip_data.planeID == 0) trigger.planeX = true;
                     if (strip_data.planeID == 1) trigger.planeY = true;
 
-                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    if (fParams.DebugTrigger()) std::cout << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                }
+                else if (!strip_data.sipm_coinc)
+                {
+                    if (fParams.DebugTrigger()) std::cout << "Strip didn't have SiPMs coincidence." << std::endl;
                 }
                 else
                 {
-                    mf::LogDebug("CRTDetSimAlg") << "Strip happened during dead time or didn't have SiPMs coincidence." << std::endl;
+                    if (fParams.DebugTrigger()) std::cout << "Strip happened during dead time." << std::endl;
                 }
 
             } // loop over strips
@@ -524,12 +527,15 @@ namespace crt {
     void CRTDetSimAlg::ChargeResponse(double eDep, double d0, double d1, double distToReadout, // input
                                       long & npe0, long & npe1, double & q0, double &q1) // output
     {
+        std::cout << "[ChargeResponse] eDep = " << eDep << std::endl;
         // The expected number of PE, using a quadratic model for the distance
         // dependence, and scaling linearly with deposited energy.
         double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
+        std::cout << "[ChargeResponse] qr = " << qr << std::endl;
 
         double npeExpected =
             fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
+        std::cout << "[ChargeResponse] npeExpected = " << npeExpected << std::endl;
 
         // Put PE on channels weighted by transverse distance across the strip,
         // using an exponential model
@@ -548,11 +554,19 @@ namespace crt {
                                      fParams.QRMS() * sqrt(npe0));
         q1 = CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1,
                                      fParams.QRMS() * sqrt(npe1));
+        std::cout << "[ChargeResponse] npe0 = " << npe0 << " -> q0 = " << q0 << std::endl;
+        std::cout << "[ChargeResponse] npe1 = " << npe1 << " -> q1 = " << q1 << std::endl;
 
         // Apply saturation
         double saturation = static_cast<double>(fParams.AdcSaturation());
         if (q0 > saturation) q0 = saturation;
         if (q1 > saturation) q1 = saturation;
+
+        mf::LogInfo("CRTSetSimAlg")
+            << "CRT CHARGE RESPONSE: eDep = " << eDep
+            << ", npeExpected = " << npeExpected
+            << ", npe0 = " << npe0 << " -> q0 = " << q0
+            << ", npe1 = " << npe1 << " -> q1 = " << q1 << std::endl;
     }
 
     uint32_t CRTDetSimAlg::getChannelTriggerTicks(/*detinfo::ElecClock& clock,*/
