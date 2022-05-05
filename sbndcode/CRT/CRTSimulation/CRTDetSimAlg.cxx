@@ -60,6 +60,11 @@ namespace crt {
         return fData;
     }
 
+    std::vector<std::vector<int>> CRTDetSimAlg::GetAuxData()
+    {
+        return fAuxData;
+    }
+
 
 
     uint16_t CRTDetSimAlg::WaveformEmulation(const uint32_t & time_delay, const double & adc)
@@ -123,6 +128,7 @@ namespace crt {
     {
         std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
         std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
+        std::map<uint16_t, std::vector<int>> mac_to_sipmids;
 
         // TODO Add pedestal fluctuations
         std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
@@ -141,6 +147,7 @@ namespace crt {
                                                                 strip.sipm0.sipmID); // Coinc
 
                 mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
+                mac_to_sipmids[strip.mac5] = std::vector<int>();
             }
             // ... all the other times we encounter this FEB
             else
@@ -170,11 +177,15 @@ namespace crt {
 
             auto &ides = mac_to_ides[strip.mac5];
             ides.push_back(strip.ide);
+
+            auto &sipmids = mac_to_sipmids[strip.mac5];
+            sipmids.push_back(std::min(strip.sipm0.sipmID, strip.sipm1.sipmID));
         }
 
         for (auto const& [mac, feb_data] : mac_to_febdata)
         {
             fData.push_back(std::make_pair(feb_data, mac_to_ides[mac]));
+            fAuxData.push_back(mac_to_sipmids[mac]);
         }
 
         if (fParams.DebugTrigger()) std::cout << "Constructed " << mac_to_febdata.size()
@@ -249,6 +260,10 @@ namespace crt {
                     first_trigger = false;
                     trigger_ts1 = current_time;
                     if (fParams.DebugTrigger()) std::cout << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                }
+
+                if (strip_data.sipm_coinc)
+                {
                     if (strip_data.planeID == 0) trigger.planeX = true;
                     if (strip_data.planeID == 1) trigger.planeY = true;
                 }
@@ -263,7 +278,13 @@ namespace crt {
                     if (fParams.DebugTrigger()) std::cout << "[CreateData] \t Is in" << std::endl;
                     strips.push_back(strip_data);
                 }
-                else if (current_time - trigger_ts1 > fParams.DeadTime() and strip_data.sipm_coinc)
+                // Create a new trigger if either the current tagger is not trigger, or,
+                // if it is triggered, if we are past the dead time. Also, always require
+                // both sipm coincidence.
+                else if ((!trigger.tagger_triggered() or
+                         (trigger.tagger_triggered() and
+                          (current_time - trigger_ts1 > fParams.DeadTime()))) and
+                         strip_data.sipm_coinc)
                 {
                     if (fParams.DebugTrigger()) std::cout << "[CreateData] \t Creates new trigger. " << std::endl;
                     if (trigger.tagger_triggered()) {
