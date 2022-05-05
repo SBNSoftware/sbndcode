@@ -35,6 +35,7 @@
 #include "TGeoNode.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbnobj/SBND/CRT/FEBTruthInfo.hh"
 #include "sbndcode/CRT/CRTDetSim.h"
 
 #include <cmath>
@@ -59,7 +60,7 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
 
   produces<std::vector<sbnd::crt::FEBData> >();
   produces<std::vector<sim::AuxDetIDE> >();
-  produces<art::Assns<sbnd::crt::FEBData , sim::AuxDetIDE> >();
+  produces<art::Assns<sbnd::crt::FEBData , sim::AuxDetIDE , sbnd::crt::FEBTruthInfo>>();
 
   consumes<std::vector<sim::AuxDetSimChannel>>(fG4ModuleLabel);
 }
@@ -74,8 +75,8 @@ void CRTDetSim::produce(art::Event & e) {
   std::unique_ptr<std::vector<sim::AuxDetIDE> > auxDetIdes(new std::vector<sim::AuxDetIDE>);
   art::PtrMaker<sim::AuxDetIDE> makeIdePtr(e);
 
-  std::unique_ptr<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE>> Dataassn
-    (new art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE>);
+  std::unique_ptr<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>> Dataassn
+    (new art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>);
 
   // Handle for (truth) AuxDetSimChannels
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
@@ -114,20 +115,30 @@ void CRTDetSim::produce(art::Event & e) {
 
   fDetAlg.CreateData();
   std::vector<std::pair<sbnd::crt::FEBData, std::vector<sim::AuxDetIDE>>> data = fDetAlg.GetData();
+  std::vector<std::vector<int>> auxdata = fDetAlg.GetAuxData();
 
   //
   // Step 3: Save output
   //
 
-  for(auto const& dataPair : data){
+  // for(auto const& dataPair : data){
+  for (size_t i = 0; i < data.size(); i++) {
 
-    FEBDataOut->push_back(dataPair.first);
+    auto & dataPair = data[i];
+    auto & feb = dataPair.first;
+    auto & ides = dataPair.second;
+    auto & idxs = auxdata.at(i);
+
+    FEBDataOut->push_back(feb);
     art::Ptr<FEBData> dataPtr = makeDataPtr(FEBDataOut->size()-1);
 
-    for(auto const& ide : dataPair.second){
+    for(size_t j = 0; j < ides.size(); j++){
+      auto const& ide = ides[j];
       auxDetIdes->push_back(ide);
+      FEBTruthInfo const feb_truth_info {idxs[j]};
+      mf::LogDebug("CRTDetSim") << "Adding " << idxs[j] << " to FEBTruthInfo." << std::endl;
       art::Ptr<sim::AuxDetIDE> idePtr = makeIdePtr(auxDetIdes->size()-1);
-      Dataassn->addSingle(dataPtr, idePtr);
+      Dataassn->addSingle(dataPtr, idePtr, feb_truth_info);
     }
   }
 
