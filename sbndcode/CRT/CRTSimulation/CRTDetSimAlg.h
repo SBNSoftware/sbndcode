@@ -163,6 +163,13 @@ public:
      */
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> GetData();
 
+    /**
+     * Returns the indeces of SiPMs associated to the AuxDetIDEs
+     *
+     * @return Vector of vector (1: FEBs, 2: SiPMs indeces per AuxDetIDE)
+     */
+    std::vector<std::vector<int>> GetAuxData();
+
 
     /**
      * Get the channel trigger time relative to the start of the MC event.
@@ -229,6 +236,8 @@ private:
     std::map<std::string, Tagger> fTaggers; //!< A list of hit taggers, before any coincidence requirement (name -> tagger)
 
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData; //!< This member stores the final FEBData for the CRT simulation
+
+    std::vector<std::vector<int>> fAuxData; //!< This member stores the indeces of SiPM per AuxDetIDE
 
     /**
      * Configures the waveform by reading waveform points from configuration and

@@ -164,7 +164,11 @@ namespace crt
     fhicl::Atom<bool> DoWaveformEmulation {
       fhicl::Name("DoWaveformEmulation"),
       fhicl::Comment("Weather or not to perform waveform simulation"),
-      true
+    };
+    fhicl::Atom<bool> DebugTrigger {
+      fhicl::Name("DebugTrigger"),
+      fhicl::Comment("If true, prints out additional debug messages for trigger debugging"),
+      false
     };
   };
 }
