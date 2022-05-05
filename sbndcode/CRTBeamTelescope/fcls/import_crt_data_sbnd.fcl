@@ -1,0 +1,65 @@
+# Driver fcl file for reading in gsimple files
+# for SBND
+
+#include "simulationservices_sbnd.fcl"
+
+process_name: ImportCRTData
+
+services:
+{
+  TFileService: { fileName: "hist.root" }
+  RandomNumberGenerator: {}
+  TimeTracker:       {}
+  FileCatalogMetadata:     @local::art_file_catalog_mc
+  @table::sbnd_basic_services
+  @table::sbnd_random_services
+}
+
+
+source:
+{
+  fileNames:        []
+  module_type:      ImportCRTData
+  skipEvents:       0
+  maxEvents:        -1
+  inputType:        "gsimple"
+  nBins:            200
+  Elow:             0
+  Ehigh:            10
+  SelfIncrementRun: true
+}
+
+outputs:
+{
+ out1:
+  {
+    module_type: RootOutput
+    fileName:    "importcrtdata.root"
+    compressionLevel: 1
+    dataTier:    "simulated"
+    # SelectEvents: [ filter ]
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+  }
+
+  filters:
+  {
+  }
+
+  analyzers:
+  {
+  }
+
+  filter: [ rns ]
+  ana: [ ]
+  stream1: [ out1 ]
+  trigger_paths: [ filter ]
+  end_paths: [ ana, stream1 ]
+}
+
