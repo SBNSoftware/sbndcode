@@ -200,26 +200,73 @@ namespace crt {
         /** A struct to temporarily store information on a CRT Tagger trigger.
          */
         struct Trigger {
-            bool is_bottom;
-            bool planeX;
-            bool planeY;
+            bool _is_bottom;
+            double _dead_time;
+            bool _planeX;
+            bool _planeY;
+            std::set<int> _mac5s;
+            std::vector<StripData> _strips;
+            uint32_t _trigger_time;
+            bool _debug;
 
-            Trigger(bool _is_bottom) {
-                planeX = planeY = false;
-                is_bottom = _is_bottom;
+            Trigger(bool is_bottom, double dead_time, bool debug) {
+                _planeX = _planeY = false;
+                _is_bottom = is_bottom;
+                _dead_time = dead_time;
+                _debug = debug;
             }
 
             /** \brief Resets this trigger object */
-            void reset() {
-                planeX = planeY = false;
+            void reset(uint32_t trigger_time) {
+                _planeX = _planeY = false;
+                _strips.clear();
+                _mac5s.clear();
+                _trigger_time = trigger_time;
+
+                if(_debug) std::cout << "TRIGGER TIME IS " << _trigger_time << std::endl;
+            }
+
+            /** \brief Add a strip belonging to a particular trigger */
+            void add_strip(StripData strip) {
+                _strips.push_back(strip);
+                _mac5s.insert(strip.mac5);
+
+                if (strip.sipm_coinc) {
+                    if (strip.planeID == 0) _planeX = true;
+                    if (strip.planeID == 1) _planeY = true;
+                }
+
+                if(_debug) std::cout << "\tAdded strip with mac " << strip.mac5
+                                     << " on plane " << strip.planeID
+                                     << ", with time " << strip.sipm0.t1 << std::endl;
             }
 
             /** \brief Tells is a tagger is triggering or not */
             bool tagger_triggered() {
-                if (is_bottom) {
-                    return planeX or planeY;
+                if (_is_bottom) {
+                    return _planeX or _planeY;
                 }
-                return planeX and planeY;
+                return _planeX and _planeY;
+            }
+
+            /** \brief Returns true is the strip is in dead time */
+            bool is_in_dead_time(int mac5, int time) {
+                if (!_mac5s.count(mac5)) { return false; }
+                return (time <= _dead_time);
+            }
+
+            void print_no_coinc(StripData strip) {
+                if (_debug) std::cout << "\tStrip with mac " << strip.mac5
+                                     << " on plane " << strip.planeID
+                                     << ", with time " << strip.sipm0.t1
+                                     << " -> didn't have SiPMs coincidence" << std::endl;
+            }
+
+            void print_dead_time(StripData strip) {
+                if (_debug) std::cout << "\tStrip with mac " << strip.mac5
+                                     << " on plane " << strip.planeID
+                                     << ", with time " << strip.sipm0.t1
+                                     << " -> happened during dead time." << std::endl;
             }
         };
 
@@ -230,10 +277,10 @@ namespace crt {
             auto & name = iter.first;
             auto & tagger = iter.second;
 
-            if (fParams.DebugTrigger()) std::cout << "[CreateData] Simulating trigger for tagger " << name << std::endl;
+           mf::LogInfo("CRTDetSimAlg") << "Simulating trigger for tagger " << name << std::endl;
 
             bool is_bottom = name.find("Bottom") != std::string::npos;
-            Trigger trigger(is_bottom);
+            Trigger trigger(is_bottom, fParams.DeadTime(), fParams.DebugTrigger());
 
             auto & strip_data_v = tagger.data;
 
@@ -246,7 +293,6 @@ namespace crt {
 
             uint32_t trigger_ts1 = 0, current_time = 0;
             bool first_trigger = true;
-            std::vector<StripData> strips;
 
             // Loop over all the strips in this tagger
             for (size_t i = 0; i < strip_data_v.size(); i++)
@@ -255,73 +301,53 @@ namespace crt {
 
                 current_time = strip_data.sipm0.t1;
 
+                // Save the first trigger
                 if (strip_data.sipm_coinc and first_trigger)
                 {
                     first_trigger = false;
                     trigger_ts1 = current_time;
-                    if (fParams.DebugTrigger()) std::cout << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    trigger.reset(trigger_ts1);
                 }
 
-                if (strip_data.sipm_coinc)
-                {
-                    if (strip_data.planeID == 0) trigger.planeX = true;
-                    if (strip_data.planeID == 1) trigger.planeY = true;
-                }
-
-                if (fParams.DebugTrigger()) std::cout << "[CreateData] This is strip " << i
-                                             << " mac " << strip_data.mac5
-                                             << " on plane " << strip_data.planeID
-                                             << ", with time " << current_time << std::endl;
-
+                // Save strips belonging to this trigger
                 if (current_time - trigger_ts1 < fParams.TaggerPlaneCoincidenceWindow())
                 {
-                    if (fParams.DebugTrigger()) std::cout << "[CreateData] \t Is in" << std::endl;
-                    strips.push_back(strip_data);
+                    trigger.add_strip(strip_data);
                 }
                 // Create a new trigger if either the current tagger is not trigger, or,
                 // if it is triggered, if we are past the dead time. Also, always require
                 // both sipm coincidence.
                 else if ((!trigger.tagger_triggered() or
                          (trigger.tagger_triggered() and
-                          (current_time - trigger_ts1 > fParams.DeadTime()))) and
+                          !trigger.is_in_dead_time(strip_data.mac5, current_time - trigger_ts1))) and
                          strip_data.sipm_coinc)
                 {
-                    if (fParams.DebugTrigger()) std::cout << "[CreateData] \t Creates new trigger. " << std::endl;
                     if (trigger.tagger_triggered()) {
-                        ProcessStrips(strips);
+                        ProcessStrips(trigger._strips);
                     }
 
                     // Set the current, new, trigger
                     trigger_ts1 = current_time;
 
                     // Reset the trigger object
-                    trigger.reset();
-
-                    // Clear the current strips as we are working on a new trigger
-                    strips.clear();
+                    trigger.reset(trigger_ts1);
 
                     // Add this strip, which created the trigger
-                    strips.push_back(strip_data);
-
-                    // Check this strip, which created the trigger
-                    if (strip_data.planeID == 0) trigger.planeX = true;
-                    if (strip_data.planeID == 1) trigger.planeY = true;
-
-                    if (fParams.DebugTrigger()) std::cout << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    trigger.add_strip(strip_data);
                 }
                 else if (!strip_data.sipm_coinc)
                 {
-                    if (fParams.DebugTrigger()) std::cout << "Strip didn't have SiPMs coincidence." << std::endl;
+                    trigger.print_no_coinc(strip_data);
                 }
                 else
                 {
-                    if (fParams.DebugTrigger()) std::cout << "Strip happened during dead time." << std::endl;
+                    trigger.print_dead_time(strip_data);
                 }
 
             } // loop over strips
 
             if (trigger.tagger_triggered()) {
-                ProcessStrips(strips);
+                ProcessStrips(trigger._strips);
             }
 
         } // loop over taggers
