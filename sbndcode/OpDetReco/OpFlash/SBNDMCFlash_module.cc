@@ -24,6 +24,7 @@
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 // #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
