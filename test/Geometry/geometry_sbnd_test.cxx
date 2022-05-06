@@ -16,7 +16,7 @@
 
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_sbnd.h"
-#include "test/Geometry/GeometryTestAlg.h"
+#include "larcorealg/test/Geometry/GeometryTestAlg.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 
 // utility libraries

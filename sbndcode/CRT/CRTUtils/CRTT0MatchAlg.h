@@ -24,6 +24,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
 #include "larcore/Geometry/Geometry.h"

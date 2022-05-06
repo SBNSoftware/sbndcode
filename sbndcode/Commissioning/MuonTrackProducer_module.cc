@@ -12,6 +12,7 @@
 
 // LArSoft includes 
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "larcorealg/Geometry/WireGeo.h"
 #include "lardataobj/RecoBase/Hit.h"
