@@ -110,8 +110,10 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
   for (size_t feb_i = 0; feb_i < feb_data_v.size(); feb_i++) {
 
     auto const feb_data = feb_data_v[feb_i];
+    mf::LogDebug("CRTSlimmer") << "FEB " << feb_i << " with mac " << feb_data->Mac5() << std::endl;
 
     auto ides = febdata_to_ides.at(feb_data.key());
+    mf::LogDebug("CRTSlimmer") << "We have " << ides.size() << " IDEs." << std::endl;
 
     // Construct a map to go from SiPM ID to the index of the IDE
     // FEBTruthInfo stores, for each AuxDetIDE, a vector containing
@@ -121,6 +123,7 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
     for (size_t ide_i = 0; ide_i < febdata_to_ides.data(feb_i).size(); ide_i++) {
       const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(feb_i)[ide_i];
       sipm_to_ideids[fti->GetChannel()].push_back(ide_i);
+      mf::LogDebug("CRTSlimmer") << "ide_i " << ide_i << " ene " << ides[ide_i]->energyDeposited << " fti->GetChannel() " << fti->GetChannel() << std::endl;
     }
 
     auto adcs = feb_data->ADC();
