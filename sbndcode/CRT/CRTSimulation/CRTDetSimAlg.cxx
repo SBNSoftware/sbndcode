@@ -16,6 +16,7 @@ namespace crt {
 
         fTaggers.clear();
         fData.clear();
+        fAuxData.clear();
     }
 
 
@@ -671,6 +672,7 @@ namespace crt {
 
         fTaggers.clear();
         fData.clear();
+        fAuxData.clear();
     }
 
 } // namespace crt
