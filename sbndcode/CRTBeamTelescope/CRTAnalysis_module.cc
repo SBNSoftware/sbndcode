@@ -410,6 +410,8 @@ void CRTAnalysis::analyze(art::Event const& e)
   _subrun = e.id().subRun();
   _event =  e.id().event();
 
+  std::cout << "This is event " << _event << std::endl;
+
   //
   // Get the MCTruth
   //
