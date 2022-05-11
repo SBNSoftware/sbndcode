@@ -1107,8 +1107,14 @@ void CRTAnalysis::analyze(art::Event const& e)
     _crt_true_mcp_isprimary[i] = trackid_to_mcp[ide->trackID].Process() == "primary";
     _crt_true_mcp_process[i] = trackid_to_mcp[ide->trackID].Process();
     _crt_true_mcp_mother[i] = trackid_to_mcp[ide->trackID].Mother();
-    _crt_true_mcp_time[i] = trackid_to_mcp[ide->trackID].T();
-    _crt_true_mcp_k[i] = trackid_to_mcp[ide->trackID].E() - trackid_to_mcp[ide->trackID].Mass();
+    if (trackid_to_mcp[ide->trackID].NumberTrajectoryPoints()) {
+      _crt_true_mcp_time[i] = trackid_to_mcp[ide->trackID].T();
+      _crt_true_mcp_k[i] = trackid_to_mcp[ide->trackID].E() - trackid_to_mcp[ide->trackID].Mass();
+    } else {
+      std::cout << "Don't have trajectory points for track ID " << ide->trackID << std::endl;
+      _crt_true_mcp_time[i] = -9999;
+      _crt_true_mcp_k[i] = -9999;
+    }
   }
 
 
