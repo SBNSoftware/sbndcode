@@ -3,6 +3,8 @@
 
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art/Framework/Principal/Event.h"
+#include "art/Framework/Principal/Handle.h"
 #include "larcore/Geometry/Geometry.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"

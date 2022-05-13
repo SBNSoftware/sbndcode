@@ -5,6 +5,7 @@
 #include "art/Framework/Principal/Event.h" 
 
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 
