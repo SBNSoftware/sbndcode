@@ -5,8 +5,6 @@
 #include "sbn_crumbs_producer.fcl"
 
 #include "rootoutput_sbnd.fcl"
-#include "geometry_sbnd.fcl"
-#include "messages_sbnd.fcl"
 #include "services_sbnd.fcl"
 
 process_name: CRUMBS
@@ -14,10 +12,7 @@ process_name: CRUMBS
 services:
 {
    TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
-   Geometry: @local::sbnd_geo
-   ExptGeoHelperInterface:    @local::sbnd_geometry_helper
    @table::sbnd_services
-   @table::sbnd_resourcemonitorservices
 }
 
 source: {
@@ -30,12 +25,9 @@ physics:
    {
       crumbs: @local::crumbs_sbnd
    }
-   
+
    runcrumbs: [ crumbs ]
    stream1:   [ out1 ]
-
-   trigger_paths: [ runcrumbs ]
-   end_paths:	  [ stream1 ]
 }
 
 outputs:
