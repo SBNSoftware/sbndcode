@@ -15,6 +15,7 @@
 
 // art includes
 #include "fhiclcpp/ParameterSet.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
 
 // larsoft includes
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
