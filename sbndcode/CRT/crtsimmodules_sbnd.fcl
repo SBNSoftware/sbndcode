@@ -67,7 +67,7 @@ standard_sbnd_crtsimparams: {
   WaveformY: [0., 3.412, 12.08, 34.138, 65.646, 84.554, 101.1, 108.3]
   DoWaveformEmulation: true
 
-  DebugTrigger: true
+  DebugTrigger: false
 }
 
 sbnd_crtsim: {
