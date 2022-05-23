@@ -14,6 +14,10 @@ namespace opdet {
     , fQERefl(fParams.QERefl / fParams.larProp->ScintPreScale())
       //  , fSinglePEmodel(fParams.SinglePEmodel)
     , fEngine(fParams.engine)
+    , fFlatGen(*fEngine)
+    , fPoissonQGen(*fEngine)
+    , fGaussQGen(*fEngine)
+    , fExponentialGen(*fEngine)
   {
 
     mf::LogInfo("DigiPMTSBNDAlg") << "PMT corrected efficiencies = "
@@ -139,7 +143,7 @@ namespace opdet {
     size_t timeBin;
     double ttpb=0;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
-      if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
+      if(fFlatGen.fire(1.0) < fQERefl) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + simphotons[i].Time - t_min + ttpb + fParams.CableTime;
@@ -173,7 +177,7 @@ namespace opdet {
     if(auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) )
     {auxphotons = it->second;}
     for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
-      if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQEDirect) {
+      if(fFlatGen.fire(1.0) < fQEDirect) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
@@ -186,7 +190,7 @@ namespace opdet {
     if(auto it{ ReflectedPhotonsMap.find(ch) }; it != std::end(ReflectedPhotonsMap) )
     {auxphotons = it->second;}
     for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is now reflected light
-      if(CLHEP::RandFlat::shoot(fEngine, 1.0) < fQERefl) {
+      if(fFlatGen.fire(1.0) < fQERefl) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
@@ -222,7 +226,7 @@ namespace opdet {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias. ~icaza
       mean_photons = reflectedPhotons.second*fQERefl;
-      accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
+      accepted_photons = fPoissonQGen.fire(mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
         ttpb = fTimeTPB->fire(); //for including TPB emission time
@@ -258,7 +262,7 @@ namespace opdet {
         // TODO: check that this new approach of not using the last
         // (1-accepted_photons) doesn't introduce some bias. ~icaza
         mean_photons = directPhotons.second*fQEDirect;
-        accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
+        accepted_photons = fPoissonQGen.fire(mean_photons);
         for(size_t i = 0; i < accepted_photons; i++) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
           ttpb = fTimeTPB->fire(); //for including TPB emission time
@@ -276,7 +280,7 @@ namespace opdet {
         // TODO: check that this new approach of not using the last
         // (1-accepted_photons) doesn't introduce some bias. ~icaza
         mean_photons = reflectedPhotons.second*fQERefl;
-        accepted_photons = CLHEP::RandPoissonQ::shoot(fEngine, mean_photons);
+        accepted_photons = fPoissonQGen.fire(mean_photons);
         for(size_t i = 0; i < accepted_photons; i++) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
           ttpb = fTimeTPB->fire(); //for including TPB emission time
@@ -315,7 +319,7 @@ namespace opdet {
   {
     double tts, sigma;
     sigma = fwhm / transitTimeSpread_frac;
-    tts = CLHEP::RandGaussQ::shoot(fEngine, 0, sigma);
+    tts = fGaussQGen.fire(0., sigma);
     return tts;
   }
 
@@ -363,7 +367,7 @@ namespace opdet {
     //
     std::transform(wave.begin(), wave.end(), wave.begin(),
                    [this](double w) -> double {
-                     return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.PMTBaselineRMS) ; });
+                     return w + fGaussQGen.fire(0., fParams.PMTBaselineRMS) ; });
   }
 
 
@@ -372,12 +376,12 @@ namespace opdet {
     size_t timeBin;
     // Multiply by 10^9 since fParams.DarkNoiseRate is in Hz (conversion from s to ns)
     double mean =  1000000000.0 / fParams.PMTDarkNoiseRate;
-    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
+    double darkNoiseTime = fExponentialGen.fire(mean);
     while(darkNoiseTime < wave.size()) {
       timeBin = std::round(darkNoiseTime);
       if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       // Find next time to add dark noise
-      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, mean);
+      darkNoiseTime += fExponentialGen.fire(mean);
     }
   }
 
