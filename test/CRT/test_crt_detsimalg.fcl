@@ -1,0 +1,12 @@
+#
+# CRT simulation test configuration
+#
+
+#include "crtsimmodules_sbnd.fcl"
+
+process_name: TestCRTSim
+
+testcrtsim: @local::sbnd_crtsim
+
+
+

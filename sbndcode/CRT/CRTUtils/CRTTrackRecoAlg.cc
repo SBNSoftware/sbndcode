@@ -80,15 +80,15 @@ sbn::crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(sbn::crt::CRTHit hit1, sbn::crt
   sbn::crt::CRTTrack newtr;
 
   newtr.ts0_s         = (hit1.ts0_s + hit2.ts0_s)/2.;
-  newtr.ts0_s_err     = (uint32_t)((hit1.ts0_s - hit2.ts0_s)/2.);
+  newtr.ts0_s_err     = (hit1.ts0_s - hit2.ts0_s)/2.;
   newtr.ts0_ns_h1     = hit1.ts0_ns;
   newtr.ts0_ns_err_h1 = hit1.ts0_ns_corr;
   newtr.ts0_ns_h2     = hit2.ts0_ns;
   newtr.ts0_ns_err_h2 = hit2.ts0_ns_corr;
-  newtr.ts0_ns        = (uint32_t)((hit1.ts0_ns + hit2.ts0_ns)/2.);
-  newtr.ts0_ns_err    = (uint16_t)(sqrt(hit1.ts0_ns_corr*hit1.ts0_ns_corr + hit2.ts0_ns_corr*hit2.ts0_ns_corr)/2.);
-  newtr.ts1_ns        = (int32_t)(((double)(int)hit1.ts1_ns + (double)(int)hit2.ts1_ns)/2.);
-  newtr.ts1_ns_err    = (uint16_t)(sqrt(hit1.ts0_ns_corr*hit1.ts0_ns_corr + hit2.ts0_ns_corr*hit2.ts0_ns_corr)/2.);
+  newtr.ts0_ns        = (hit1.ts0_ns + hit2.ts0_ns)/2.;
+  newtr.ts0_ns_err    = sqrt(hit1.ts0_ns_corr*hit1.ts0_ns_corr + hit2.ts0_ns_corr*hit2.ts0_ns_corr)/2.;
+  newtr.ts1_ns        = (hit1.ts1_ns + hit2.ts1_ns)/2.;
+  newtr.ts1_ns_err    = sqrt(hit1.ts0_ns_corr*hit1.ts0_ns_corr + hit2.ts0_ns_corr*hit2.ts0_ns_corr)/2.;
   newtr.peshit        = hit1.peshit+hit2.peshit;
   newtr.x1_pos        = hit1.x_pos;
   newtr.x1_err        = hit1.x_err;

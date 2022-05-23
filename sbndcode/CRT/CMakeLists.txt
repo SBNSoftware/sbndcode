@@ -5,6 +5,7 @@ include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 add_subdirectory(CRTTools)
 add_subdirectory(CRTUtils)
 add_subdirectory(CRTAna)
+add_subdirectory(CRTSimulation)
 add_subdirectory(Examples)
 
 art_make( 
@@ -12,6 +13,7 @@ art_make(
         CRTChannelMapAlg.cxx
         CRTGeometryHelper_service.cc
         CRTDetSim_module.cc
+        CRTSlimmer_module.cc
         CRTSimHitProducer_module.cc
         CRTTzeroProducer_module.cc
         CRTTrackProducer_module.cc
@@ -67,13 +69,14 @@ simple_plugin( CRTGeometryHelper service
 simple_plugin( CRTDetSim module
         larcorealg_Geometry
         sbndcode_CRT
+        sbndcode_CRT_CRTSimulation
         sbndcode_CRTData
         sbnobj_SBND_CRT
         sbnobj_Common_CRT
         art::Framework_Core
         art::Framework_IO_Sources
         art::Framework_Principal
-	art::Persistency_Provenance
+        art::Persistency_Provenance
         canvas::canvas
         cetlib_except::cetlib_except
         lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
@@ -81,7 +84,31 @@ simple_plugin( CRTDetSim module
         art::Framework_Services_Registry
         art::Framework_Services_Optional_RandomNumberGenerator_service
         messagefacility::MF_MessageLogger
-        
+
+        ${ROOT_BASIC_LIB_LIST}
+        CLHEP::CLHEP
+        cetlib::cetlib
+)
+
+simple_plugin( CRTSlimmer module
+        larcorealg_Geometry
+        sbndcode_CRT
+        sbndcode_CRT_CRTSimulation
+        sbndcode_CRTData
+        sbnobj_SBND_CRT
+        sbnobj_Common_CRT
+        art::Framework_Core
+        art::Framework_IO_Sources
+        art::Framework_Principal
+        art::Persistency_Provenance
+        canvas::canvas
+        cetlib_except::cetlib_except
+        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+        nurandom::RandomUtils_NuRandomService_service
+        art::Framework_Services_Registry
+        art::Framework_Services_Optional_RandomNumberGenerator_service
+        messagefacility::MF_MessageLogger
+
         ${ROOT_BASIC_LIB_LIST}
         CLHEP::CLHEP
         cetlib::cetlib
