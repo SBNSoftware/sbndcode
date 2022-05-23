@@ -250,7 +250,7 @@ namespace opdet {
       acceptedPhotons = fPoissonQGen.fire(meanPhotons);
       for(size_t i = 0; i < acceptedPhotons; i++) {
         tphoton = fExponentialGen.fire(fParams.DecayTXArapucaVIS);
-        tphoton += photonMember.first - t_min;
+        tphoton += photonMember.first - t_min + fTimeTPB->fire();
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
