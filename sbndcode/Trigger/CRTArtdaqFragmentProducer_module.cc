@@ -16,6 +16,11 @@
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/SBND/CRT/FEBTruthInfo.hh"
+#include "sbnobj/Common/CRT/CRTHit.hh"
+#include "sbnobj/Common/CRT/CRTTrack.hh"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
+
 
 // LArSoft includes
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
@@ -62,7 +67,7 @@
 #include <vector>
 #include <string>
 #include <random>
-
+#include <iomanip>
 
 namespace sbnd {
   namespace trigger {
@@ -104,7 +109,7 @@ private:
   };
 
   //arrays to store FEBinfo by module (want one fragment per module per event)
-  std::string tagger_nums[num_module];
+  std::string taggers[num_module];
   uint16_t feb_hits_in_fragments[num_module];
   uint16_t ADCs[num_module][max_hits_in_fragment][num_channels];
   uint32_t T0s[num_module][max_hits_in_fragment];
@@ -209,7 +214,7 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
         int channel = feb_data->Mac5() * 32;
         std::string stripName = fCrtGeo.ChannelToStripName(channel);
         std::string tagger = fCrtGeo.GetTaggerName(stripName);
-        tagger_nums[feb_data->Mac5()] = tagger;
+        taggers[feb_data->Mac5()] = tagger;
 
         T0s[feb_data->Mac5()][feb_hits_in_fragments[feb_data->Mac5()]] = feb_data->Ts0();
         T1s[feb_data->Mac5()][feb_hits_in_fragments[feb_data->Mac5()]] = feb_data->Ts1();
@@ -251,7 +256,9 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
         uint64_t  timestamp = (uint64_t)(T0s[feb_i][feb_hits_in_fragments[feb_i]]/fClockSpeedCRT); //absolute timestamp
 
         // create fragment
-        uint16_t fragmentIDVal = (uint16_t)mac5;
+        sbnd::CRTPlane plane_num = sbnd::CRTCommonUtils::GetPlaneIndex(taggers[feb_i]);
+        uint16_t fragmentIDVal = 32768 + 12288 + (plane_num * 256) + (uint16_t)mac5;
+        if(fVerbose){std::cout<<"fragmentID: "<<std::bitset<16>{fragmentIDVal}<<std::endl;}
         auto fragment_uptr = artdaq::Fragment::FragmentBytes(sizeof(sbndaq::BernCRTHitV2)*metadata.hits_in_fragment(), //payload_size
             sequence_id,
             fragmentIDVal,
