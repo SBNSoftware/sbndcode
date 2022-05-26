@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+CRTArtdaqFragmentProducer:
+{
+  module_type: "CRTArtdaqFragmentProducer"
+  SimModuleLabel: "largeant"
+  CRTSimLabel: "crt"
+  FEBDataLabel: "crtsim"
+  ClockSpeedCRT: @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
+  Verbose: true
+}
+
+END_PROLOG
