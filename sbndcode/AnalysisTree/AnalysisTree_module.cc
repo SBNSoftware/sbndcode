@@ -540,6 +540,7 @@ namespace sbnd {
     std::vector<Float_t>  genie_Py;
     std::vector<Float_t>  genie_Pz;
     std::vector<Float_t>  genie_P;
+    std::vector<Float_t>  genie_T;
     std::vector<Int_t>     genie_status_code;
     std::vector<Float_t>  genie_mass;
     std::vector<Int_t>     genie_trackID;
@@ -1655,6 +1656,7 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   FillWith(genie_Py, -99999.);
   FillWith(genie_Pz, -99999.);
   FillWith(genie_P, -99999.);
+  FillWith(genie_T, -99999.);
   FillWith(genie_status_code, -99999);
   FillWith(genie_mass, -99999.);
   FillWith(genie_trackID, -99999);
@@ -1830,6 +1832,7 @@ void sbnd::AnalysisTreeDataStruct::ResizeGenie(int nPrimaries) {
   genie_Py.resize(MaxGeniePrimaries);
   genie_Pz.resize(MaxGeniePrimaries);
   genie_P.resize(MaxGeniePrimaries);
+  genie_T.resize(MaxGeniePrimaries);
   genie_status_code.resize(MaxGeniePrimaries);
   genie_mass.resize(MaxGeniePrimaries);
   genie_trackID.resize(MaxGeniePrimaries);
@@ -1990,6 +1993,7 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
     CreateBranch("genie_Py",genie_Py,"genie_Py[genie_no_primaries]/F");
     CreateBranch("genie_Pz",genie_Pz,"genie_Pz[genie_no_primaries]/F");
     CreateBranch("genie_P",genie_P,"genie_P[genie_no_primaries]/F");
+    CreateBranch("genie_T",genie_T,"genie_T[genie_no_primaries]/F");
     CreateBranch("genie_status_code",genie_status_code,"genie_status_code[genie_no_primaries]/I");
     CreateBranch("genie_mass",genie_mass,"genie_mass[genie_no_primaries]/F");
     CreateBranch("genie_trackID",genie_trackID,"genie_trackID[genie_no_primaries]/I");
@@ -3012,15 +3016,26 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     art::FindManyP<larpandoraobj::PFParticleMetadata> fm_pfpmd(pfpHandle, evt, fPFParticleModuleLabel);
 
     // Loop over all PFPs, save PDG and associated slice id
+    // int pfp_counter = 0;
     for(auto const &pfp : pfplist ) {
       std::vector< art::Ptr<recob::Slice> > slcAssn = fm_pfpslice.at(pfp.key());
       if(slcAssn.size() == 1) fData->pfp_sliceid[pfp.key()] = slcAssn.at(0)->ID();
       fData->pfp_pdg[pfp.key()]  = pfp->PdgCode();
     }
+    // for (int i=0;i<kMaxPFPs;i++){
+    //   auto sliceid = fData->pfp_sliceid[i];
+    //   if (sliceid != -999){
+    //     std::cout << "pfp_counter: " << pfp_counter << std::endl;
+    //     std::cout << "slice id: " << sliceid << std::endl;
+    //   }
+    //   pfp_counter++;
+    // }
 
     // Save the slice and PFP counts
     fData->num_pfps   = (int) pfplist.size();
     fData->num_slices = (int) slicelist.size();
+    // std::cout << "pfplist size: " << pfplist.size() << std::endl;
+    // std::cout << "slicelist size: " << slicelist.size() << std::endl;
 
     // Loop over the slices, and check the PFPs in each (save nu slices and
     // PFPs into vectors so we can play with them later)
@@ -3028,7 +3043,11 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     std::vector<art::Ptr<recob::Slice>> nuSliceVec;
     for(auto const &slice : slicelist ) {
       std::vector<art::Ptr<recob::PFParticle>> slicePFPs = fm_slicepfp.at(slice.key());
+      // std::cout << "slice ID: " << slice->ID() << std::endl;
       for (auto const &pfp : slicePFPs) {
+        // std::cout << "pfp ID: " << pfp->Self() << std::endl;
+        // std::cout << "pfp pdg code: " <<pfp->PdgCode() << std::endl;
+        // std::cout << "pfp primary: " <<pfp->IsPrimary() << std::endl;
         if ((pfp->PdgCode() == 12 || pfp->PdgCode() == 14)) { // look for neutrino
           nuPfpVec.push_back(pfp);
           nuSliceVec.push_back(slice);
@@ -3272,6 +3291,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           fData->genie_Py[iPart]=part.Py();
           fData->genie_Pz[iPart]=part.Pz();
           fData->genie_P[iPart]=part.P();
+          fData->genie_T[iPart]=part.T();
           fData->genie_status_code[iPart]=part.StatusCode();
           fData->genie_mass[iPart]=part.Mass();
           fData->genie_trackID[iPart]=part.TrackId();
