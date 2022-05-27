@@ -215,6 +215,30 @@ physics:
 	 , caloskimCalorimetry
  ]
 
+  reco2_nofm: [ rns
+#         , linecluster
+   #      , cccluster
+   #      , spacepts,
+   #       , blurredcluster
+          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN 
+  #       , pandoraShowerLegacy
+          , pandoraCalo, pandoraPid
+   #      , trackkalmanhit, spacepointfinder, trackkalsps,
+   #      , pmalgtrackmaker
+   #      , trackkalmanhitcalo,
+  #       , pmatrackcalo
+  #       , pmatrackpid
+  #        , emshower
+        #  , crthit
+   #      , crttzero
+  #        , crttrack
+  #        , crthitt0
+  #        , crttrackt0
+  #        , fmatch
+  #        , opt0finder
+	#  , caloskimCalorimetry
+ ]
+
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
  
  analyzers:{
