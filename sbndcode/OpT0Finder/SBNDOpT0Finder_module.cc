@@ -121,7 +121,7 @@ private:
   TTree* _tree1;
   int _run, _subrun, _event;
   int _tpc;
-  int _matchid, _flashid, _tpcid;
+  int _matchid, _flashid, _tpcid, _sliceid; 
   double _t0, _score;
   double _tpc_xmin, _qll_xmin;
   double _hypo_pe, _flash_pe;
@@ -197,6 +197,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tree2->Branch("tpc",             &_tpc,                             "tpc/I");
   _tree2->Branch("matchid",         &_matchid,                         "matchid/I");
   _tree2->Branch("tpcid",           &_tpcid,                           "tpcid/I");
+  _tree2->Branch("sliceid",         &_sliceid,                         "sliceid/I");
   _tree2->Branch("flashid",         &_flashid,                         "flashid/I");
   _tree2->Branch("tpc_xmin",        &_tpc_xmin,                        "tpc_xmin/D");
   _tree2->Branch("qll_xmin",        &_qll_xmin,                        "qll_xmin/D");
@@ -383,7 +384,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     for(auto const& v : _hypo_spec) _hypo_pe += v;
     for(auto const& v : _flash_spec) _flash_pe += v;
 
-    _tree2->Fill();
 
     // Construct the anab::T0 dataproduc to put in the Event
     auto t0 = anab::T0(_t0,        // "Time": The recontructed flash time, or t0
@@ -395,6 +395,21 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     t0_v->push_back(t0);
     util::CreateAssn(*this, e, *t0_v, _clusterid_to_slice[_tpcid], *slice_t0_assn_v);
     util::CreateAssn(*this, e, *t0_v, _flashid_to_opflash[_flashid], *flash_t0_assn_v);
+
+    art::Ptr<recob::Slice> ptr_slice = _clusterid_to_slice[_tpcid];
+    int slice_id = ptr_slice->ID();
+    _sliceid = slice_id;
+    std::cout << "slice_id: " << slice_id << std::endl;
+    // std::cout << "_sliceid: " << _sliceid << std::endl;
+
+    double new_score = t0.TriggerConfidence(); 
+    // std::cout << "new_score: " << new_score << std::endl;
+    _score = new_score; 
+    // std::cout << "score: " << _score << std::endl;
+    // std::cout << "alt score:" << t0.TriggerConfidence() << std::endl;
+    // _score    = t0.TriggerConfidence();
+
+    _tree2->Fill();
   }
 
 }
