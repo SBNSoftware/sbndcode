@@ -1,0 +1,25 @@
+#=============================================================================
+#
+# Name: reco_drops.fcl
+#
+# Purpose: Sequence of RootOutput drop commands to drop data products after
+#          stage 1 reconstruction.
+#
+# Created: 28-Mar-2022  H. Greenlee
+#
+# Notes.
+#
+# 1.  Drop raw data (RawDigits and OpDetWaveforms).
+#
+#=============================================================================
+
+#include "detsim_drops.fcl"
+
+BEGIN_PROLOG
+
+reco_drops: [ @sequence::detsim_drops,
+              "drop raw::RawDigits_*_*_*",
+              "drop raw::OpDetWaveforms_*_*_*" ]
+
+END_PROLOG
+

@@ -8,7 +8,9 @@ pmtTriggerProducer:
   InputModule: "opdaq"
   ClusterModuleLabel: "linecluster"
   OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
-  Threshold: 7960.0 #ADC, ideal single PE response: 1 PE ~ 8 ADC, test bench: 1 PE ~ 25 ADC
+  IndividualThresholds: false #if true, Threshold needs to be a 120 element array of each individual PMT ADC threshold in order of lowest to highest channel number
+  Threshold: [7960.0, 7976.0] #[coated, uncoated], unless IndividualThresholds is true
+  #ADC, ideal single PE response: 1 PE ~ 8 ADC, test bench: 1 PE ~ 25 ADC
   OVTHRWidth: 11 #over-threshold width, page 40 of manual
   #paired and unpaired pmt channel numbers, to pair two channels put them at the same index in Pair1 and Pair2
   #i.e. to pair channel 14 and 15 -> Pair1:[x,x,x,14,x,...] and Pair2: [x,x,x,15,x,...]
@@ -19,9 +21,9 @@ pmtTriggerProducer:
   PairLogic: "OR" #logic for pairing PMTs, option are "OR" or "AND"
   WindowStart: 0.0 #us, window for pmt trigger time start
   WindowEnd: 1.8 #us, window for pmt trigger time end
-  SaveHists: true #save hists for all steps (raw, digital, paired, etc.)
-  EvHists: [1] #if fSaveHists=true, then what events all hists are saved for. max = 3, if code is killed for memory try only one or two.
-  Verbose: true
+  SaveHists: false #save hists for all steps (raw, digital, paired, etc.)
+  EvHists: [1] #if fSaveHists=true, then what events all hists are saved for. if too many hists are saved, may have memory issues; try saving less events.
+  Verbose: false
 
 }
 

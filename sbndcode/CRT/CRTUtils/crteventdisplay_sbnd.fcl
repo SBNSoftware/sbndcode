@@ -10,7 +10,7 @@ standard_crteventdisplay:
     CRTHitLabel:      "crthit"
     CRTTrackLabel:    "crttrack"
     TPCTrackLabel:    "pandoraTrack"
-    ClockSpeedCRT:    @local::sbnd_crtsim.ClockSpeedCRT
+    ClockSpeedCRT:    @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
 
     DrawTaggers:          false   
     DrawModules:          false

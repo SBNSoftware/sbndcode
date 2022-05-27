@@ -133,7 +133,8 @@ private:
    std::vector<std::vector<char>> unpaired_wvfs;
 
    // List parameters for the fcl file
-   double fThreshold; //individual pmt threshold in ADC (set in fcl, passes if ADC is LESS THAN threshold)
+   std::vector<double> fThreshold = {7960.0,7976.0}; //individual pmt threshold in ADC (set in fcl, passes if ADC is LESS THAN threshold), [coated, uncoated]
+   bool fIndividualThresholds;
    int fOVTHRWidth;//over-threshold width, page 40 of manual (set in fcl)
    std::vector<int> fPair1 = {6,8,10,12,14,16,36,38,40,84,86,88,90,92,94,114,116,118,138,140,142,144,146,148,162,164,166,168,170,172,192,194,196,216,218,220,222,224,226,240,242,244,246,248,250,270,272,274,294,296}; //channel numbers for first set of paired pmts (set in fcl)
    std::vector<int> fPair2 = {7,9,11,13,15,17,37,39,41,85,87,89,91,93,95,115,117,119,139,141,143,145,147,149,163,165,167,169,171,173,193,195,197,217,219,221,223,225,227,241,243,245,247,249,251,271,273,275,295,297}; //channel numbers for second set of paired pmts (set in fcl)
@@ -144,7 +145,7 @@ private:
    std::string fInputModuleName; //opdet waveform module name (set in fcl)
    std::vector<std::string> fOpDetsToPlot = {"pmt_coated", "pmt_uncoated"}; //types of optical detetcors (e.g. "pmt_coated", "xarapuca_vuv", etc.), should only be pmt_coated and pmt_uncoated (set in fcl)
    bool fSaveHists; //save raw, binary, etc. histograms (set in fcl)
-   std::vector<int> fEvHists = {1,2,3}; //if fSaveHists=true, which event hists to save?, maximum events = 3 (set in fcl)
+   std::vector<int> fEvHists = {1,2,3}; //if fSaveHists=true, which event hists to save? (set in fcl)
    bool fVerbose; //true=output all cout statements, false=no non-error cout statements (set in fcl)
 
    // services
@@ -168,7 +169,8 @@ void pmtTriggerProducer::reconfigure(fhicl::ParameterSet const & p)
    // Initialize member data here
    fInputModuleName = p.get< std::string >("InputModule", "opdaq");
    fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
-   fThreshold       = p.get<double>("Threshold",7960.0);
+   fIndividualThresholds = p.get<bool>("IndividualThresholds",false);
+   fThreshold       = p.get<std::vector<double> >("Threshold");
    fOVTHRWidth        = p.get<int>("OVTHRWidth",11);
    fPair1    = p.get<std::vector<int> >("Pair1");
    fPair2    = p.get<std::vector<int> >("Pair2");
@@ -263,7 +265,7 @@ void pmtTriggerProducer::produce(art::Event & e)
    paired.reserve(fPair1.size());
    unpaired_wvfs.reserve(fPair1.size());
    passed_trigger.reserve(int((fWindowEnd-fWindowStart)/(4./fSampling)));
-   
+
   // create a vector w/ the number of entries necessary for the sampling rate
   // e.g. if sampling rate is 500 MHz, each bin has width of 0.002 us or 2 ns, vector length of ~75000
    for (double i = fMinStartTime; i<fMaxEndTime+(1./fSampling); i+=(1./fSampling)){
@@ -300,6 +302,22 @@ void pmtTriggerProducer::produce(art::Event & e)
       fStartTime = wvf.TimeStamp(); //in us
       fEndTime = double(wvf.size()) / fSampling + fStartTime; //in us
 
+      //find threshold in ADC
+      double adc_threshold = 0;
+      if(fThreshold.size()>0){
+        adc_threshold = fThreshold.at(0); //if fIndividualThresholds=false, coated threshold
+        if (!fIndividualThresholds){
+          if (opdetType == "pmt_uncoated" && fThreshold.size()>1.){
+          adc_threshold = fThreshold.at(1); //if fIndividualThresholds=false, uncoated threshold
+        }
+      }else{
+        adc_threshold = fThreshold.at(num_pmt_wvf-1); //if fIndividualThresholds=true, pmt threshold
+      }
+    }else{
+      std::cout<<"Threshold Array Empty!"<<std::endl;
+    }
+    if(fVerbose){std::cout<<"Channel "<<fChNumber<<" is "<<opdetType<<" and is using theshold "<<adc_threshold<<" ADC."<<std::endl;}
+
       //create binary waveform
       std::vector<char> wvf_bin;
       wvf_bin.reserve(wvf.size());
@@ -326,7 +344,7 @@ void pmtTriggerProducer::produce(art::Event & e)
       }
 
       for(unsigned int i = 0; i < wvf.size(); i++) {
-         if((double)wvf[i]<fThreshold){wvf_bin.push_back(1);}else{wvf_bin.push_back(0);}
+         if((double)wvf[i]<adc_threshold){wvf_bin.push_back(1);}else{wvf_bin.push_back(0);}
       }
 
       if (fEndTime < fMaxEndTime){

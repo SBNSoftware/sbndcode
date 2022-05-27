@@ -74,3 +74,4 @@ cet_test(dump_channel_map_sbnd_test HANDBUILT
 
 
 install_headers()
+add_subdirectory(CRTGeometry)

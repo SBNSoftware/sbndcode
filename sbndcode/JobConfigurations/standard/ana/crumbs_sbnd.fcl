@@ -1,0 +1,40 @@
+#
+# fcl file to run CRUMBS on a reco2 file
+#
+
+#include "sbn_crumbs_producer.fcl"
+
+#include "rootoutput_sbnd.fcl"
+#include "services_sbnd.fcl"
+
+process_name: CRUMBS
+
+services:
+{
+   TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+   @table::sbnd_services
+}
+
+source: {
+   module_type: RootInput
+}
+
+physics:
+{
+   producers:
+   {
+      crumbs: @local::crumbs_sbnd
+   }
+
+   runcrumbs: [ crumbs ]
+   stream1:   [ out1 ]
+}
+
+outputs:
+{
+   out1:
+   { 
+      @table::sbnd_rootoutput
+      dataTier: "reconstructed"
+   }
+}

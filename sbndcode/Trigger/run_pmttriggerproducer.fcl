@@ -117,9 +117,8 @@ physics:
 
 ### Some potential overwrites below
 
-physics.producers.pmttriggerproducer.WindowEnd: 1.8
-physics.producers.pmttriggerproducer.EvHists: [2]
-physics.producers.pmttriggerproducer.Verbose: false
+#physics.producers.pmttriggerproducer.SaveHists: true
+#physics.producers.pmttriggerproducer.Verbose: true
 
 #physics.producers.pmttriggerproducer.PairLogic: "AND"
 

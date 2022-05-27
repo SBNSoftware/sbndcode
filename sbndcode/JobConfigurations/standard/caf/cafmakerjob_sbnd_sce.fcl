@@ -44,11 +44,22 @@ physics.producers.pandoraTrackDazzle.Chi2Label: "pandoraSCEPid"
 
 physics.producers.fmatchSCE: @local::transfer_flashmatch_sce_sbnd
 
+physics.producers.crumbs.PFParticleModuleLabel:    "pandoraSCE"
+physics.producers.crumbs.TrackModuleLabel: 	   "pandoraSCETrack"
+physics.producers.crumbs.SliceModuleLabel:	   "pandoraSCE"
+physics.producers.crumbs.FlashMatchModuleLabel:    "fmatchSCE"
+physics.producers.crumbs.CalorimetryModuleLabel:   "pandoraSCECalo"
+physics.producers.crumbs.CRTHitMatchModuleLabel:   "crthitt0SCE"
+physics.producers.crumbs.CRTTrackMatchModuleLabel: "crttrackt0SCE"
+
+physics.producers.crumbs.Chi2FitParams.TrackLabel: "pandoraSCETrack"
+physics.producers.crumbs.Chi2FitParams.CaloLabel:  "pandoraSCECalo"
+
 physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             pandoraTrackCRTHit, pandoraTrackCRTTrack,
             pandoraSCETrackCRTHit, pandoraSCETrackCRTTrack, fmatchSCE, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle,
+            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
             cafmaker ]
 
 # Enable the Space-Charge service

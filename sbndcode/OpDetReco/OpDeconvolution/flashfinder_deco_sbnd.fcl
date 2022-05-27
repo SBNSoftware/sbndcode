@@ -55,5 +55,26 @@ SBNDDecoOpHitFinderXArapuca:               @local::SBNDDecoOpHitFinderPMT
 SBNDDecoOpHitFinderXArapuca.InputModule:   "opdecoxarapuca"
 SBNDDecoOpHitFinderXArapuca.Electronics:   "Daphne"
 SBNDDecoOpHitFinderXArapuca.PD:            ["xarapuca_vis","xarapuca_vuv"]
+SBNDDecoOpHitFinderXArapuca.SPEArea: 500
+
+#HitAlgoPset
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.ADCThreshold: 8
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NSigmaThreshold: 3
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.EndADCThreshold: 8
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.EndNSigmaThreshold: 0.2
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.MinPulseWidth: 1
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.Name: "SlidingWindow"
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NumPreSample:  3
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NumPostSample: 6
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.PositivePolarity: true
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.TailADCThreshold: 2
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.TailNSigmaThreshold: 2
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.Verbosity: false
+
+#BaselinePset
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.Name:"Edges"
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleFront:50
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleTail:500
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.Method:0
 
 END_PROLOG
