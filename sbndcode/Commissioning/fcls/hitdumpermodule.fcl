@@ -26,8 +26,8 @@ hitdumper:
     makeCRTtracks:            true
     readCRTtracks:            true
     readOpHits:               true
-    readpmtTrigger:	          true
-    readpmtSoftTrigger:       true
+    readpmtTrigger:	          false
+    readpmtSoftTrigger:       false
     readMuonTracks:           false
     readMuonHits:             false
     readTruth:                true
