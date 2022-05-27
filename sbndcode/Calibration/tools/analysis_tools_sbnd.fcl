@@ -10,7 +10,7 @@ TrackHitEfficiencyAnalysisTool:
   WireModuleLabelVec:	   ["caldata"]
   HitModuleLabelVec:       ["gaushit"]
   MCParticleLabel:         "largeant"
-  SimChannelLabel:         "largeant"
+  SimChannelLabel:         "simdrift"
   LocalDirName:            "EfficHists"
   OffsetVec:               [0,0,0]
   SigmaVec:                [1.,1.,1.]

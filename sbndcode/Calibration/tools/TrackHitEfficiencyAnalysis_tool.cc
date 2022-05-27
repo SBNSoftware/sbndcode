@@ -224,7 +224,7 @@ void TrackHitEfficiencyAnalysis::configure(fhicl::ParameterSet const & pset)
     fWireProducerLabelVec     = pset.get< std::vector<art::InputTag>>("WireModuleLabelVec", std::vector<art::InputTag>() = {"decon1droi"});
     fHitProducerLabelVec      = pset.get< std::vector<art::InputTag>>("HitModuleLabelVec",  std::vector<art::InputTag>() = {"gauss"});
     fMCParticleProducerLabel  = pset.get< art::InputTag             >("MCParticleLabel",    "largeant");
-    fSimChannelProducerLabel  = pset.get< art::InputTag             >("SimChannelLabel",    "largeant");
+    fSimChannelProducerLabel  = pset.get< art::InputTag             >("SimChannelLabel",    "simdrift");
     fBadChannelProducerLabel  = pset.get< art::InputTag             >("BadChannelLabel",    "simnfspl1:badchannels");
     fUseBadChannelDB          = pset.get< bool                      >("UseBadChannelDB",    true);
     fLocalDirName             = pset.get<std::string                >("LocalDirName",       std::string("wow"));
@@ -388,11 +388,11 @@ void TrackHitEfficiencyAnalysis::clear() const
 
 void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
 {
-    std::cout << " filling histos " << std::endl;
+    // std::cout << " filling histos " << std::endl;
     // Basic assumption is that the producer label vecs for RawDigits and Wire data are
     // all the same length and in the same order. Here we just check for length
     if (fRawDigitProducerLabelVec.size() != fWireProducerLabelVec.size()) return;
-    std::cout<<fRawDigitProducerLabelVec.size()<<std::endl;
+    // std::cout<<fRawDigitProducerLabelVec.size()<<std::endl;
     // Always clear the tuple
     clear();
     
@@ -408,7 +408,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
 	std::cout<<"No sim channel information"<<std::endl;
 	return;
       }
-    std::cout<<"There is sim channel information"<<std::endl;
+    // std::cout<<"There is sim channel information"<<std::endl;
     
     
     // There are several things going on here... for each channel we have particles (track id's) depositing energy in a range to ticks
@@ -423,6 +423,7 @@ void TrackHitEfficiencyAnalysis::fillHistograms(const art::Event& event) const
     // Build out the above data structure
     for(const auto& simChannel : *simChannelHandle)
     {
+        std::cout << "sim channel #: " << simChannel.Channel() << std::endl;
         for(const auto& tdcide : simChannel.TDCIDEMap())
         {
             for(const auto& ide : tdcide.second) partToChanToTDCToIDEMap[ide.trackID][simChannel.Channel()][tdcide.first] = ide;

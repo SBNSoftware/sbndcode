@@ -72,6 +72,7 @@ public:
   art::Ptr<simb::MCTruth>
   GetSliceTruthMatchHits(const detinfo::DetectorClocksData &clockData,
                          const std::vector<art::Ptr<recob::Hit>> &sliceHits,
+                        //  const std::vector<art::Ptr<sim::SimChannel>> &simChannels,
                          const std::map<int, art::Ptr<simb::MCTruth>> &particleTruthMap,
                          const std::map<art::Ptr<simb::MCTruth>, int> &truthHitMap,
                          float &completeness, float &purity);
@@ -253,11 +254,16 @@ void ana::PFPSliceValidation::analyze(art::Event const &evt) {
   art::Handle<std::vector<recob::PFParticle>> pfpHandle;
   art::Handle<std::vector<recob::Slice>> sliceHandle;
   art::Handle<std::vector<recob::Vertex>> vertexHandle;
+  // art::Handle<std::vector<sim::SimChannel>> simChannelHandle;
 
   // Get all the hits
   std::vector<art::Ptr<recob::Hit>> allHits;
   if (evt.getByLabel(fHitLabel, hitHandle))
     art::fill_ptr_vector(allHits, hitHandle);
+
+  // std::vector<art::Ptr<sim::SimChannel>> simChannels;;
+  //   if (evt.getByLabel("simdrift", simChannelHandle))
+  //     art::fill_ptr_vector(simChannels, simChannelHandle);
 
   // Get map of true primary particle to number of reco hits / energy in reco hits
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(evt);
@@ -352,10 +358,13 @@ void ana::PFPSliceValidation::analyze(art::Event const &evt) {
     eventPFPNeutrinos[fPFParticleLabel] = pfpNeutrinoVec.size();
 
     for (const auto &pfpSlice : pfpSliceVec) {
+      // std::cout << "-- DEBUGGING -- " << std::endl;
 
       std::vector<art::Ptr<recob::Hit>> sliceHits        = fmSliceHits.at(pfpSlice.key());
       std::vector<art::Ptr<recob::PFParticle>> slicePFPs = fmSlicePFPs.at(pfpSlice.key());
 
+      // std::cout << "sliceHits size: " << sliceHits.size() << std::endl;
+      // std::cout << "slicePFPs size: " << slicePFPs.size() << std::endl;
       bool isNeutrinoSlice(false);
       float nuScore(-999);
       long unsigned int pfpNu(-999);
@@ -372,8 +381,14 @@ void ana::PFPSliceValidation::analyze(art::Event const &evt) {
       // Find the MCTruth that contains most of the hits from the slice
       float purity(-999), completeness(-999);
       art::Ptr<simb::MCTruth> trueMatch = GetSliceTruthMatchHits(
-          clockData, sliceHits, particleTruthMap, truthHitMap, completeness, purity);
+          clockData, sliceHits, 
+          // simChannels, 
+          particleTruthMap, truthHitMap, completeness, purity);
 
+      // std::cout << "pfpNu: " << pfpNu << std::endl;
+      // std::cout << "nuScore: " << nuScore << std::endl;
+      // std::cout << "isNeutrinoSlice: " << isNeutrinoSlice << std::endl;
+      // std::cout << "-- DEBUGGING -- " << std::endl;
       // Check if it matched to anything
       if (trueMatch.isNull())
         continue;
@@ -554,6 +569,7 @@ std::map<art::Ptr<simb::MCTruth>, int> ana::PFPSliceValidation::GetTruthHitMap(
 art::Ptr<simb::MCTruth> ana::PFPSliceValidation::GetSliceTruthMatchHits(
     const detinfo::DetectorClocksData &clockData,
     const std::vector<art::Ptr<recob::Hit>> &sliceHits,
+    // const std::vector<art::Ptr<sim::SimChannel>> &simChannels,
     const std::map<int, art::Ptr<simb::MCTruth>> &particleTruthMap,
     const std::map<art::Ptr<simb::MCTruth>, int> &truthHitMap, float &completeness, float &purity) {
 
@@ -564,8 +580,65 @@ art::Ptr<simb::MCTruth> ana::PFPSliceValidation::GetSliceTruthMatchHits(
     float hitEnergy = 0;
 
     // For each hit, chose the particle that contributed the most energy
+    // std::vector<sim::TrackIDE> trackIDEs;
+    // trackIDEs.clear();
     std::vector<sim::TrackIDE> trackIDEs = bt_serv->HitToTrackIDEs(clockData, hit);
+    // std::cout << "start output" << std::endl;
+    // const double start = hit->PeakTimeMinusRMS();
+    // const double end = hit->PeakTimePlusRMS();
+    // auto channel = hit->Channel(); 
+    // std::cout << "hit start, hit end: " << start << ", " << end << std::endl;
+    // std::cout << "hit channel: " << channel << std::endl;
+    // // ChannelToTrackIDEs
+    // sim::SimChannel schannel; 
+    // bool schannel_found = false; 
+    // double totalE = 0.;
+
+    // for (const auto &simChannel : simChannels){
+    //   if (simChannel->Channel() == channel){
+    //     std::cout << "sim channel found" << std::endl;
+    //     schannel_found = true;
+    //     schannel = *simChannel;
+    //     break;
+    //   }
+    // }
+    // // art::Ptr<sim::SimChannel> schannel = bt_serv->FindSimChannel(channel);
+    // // if (!schannel) {std::cout << "schannel not found" << std::endl;}
+    // int start_tdc = clockData.TPCTick2TDC(start);
+    // int end_tdc = clockData.TPCTick2TDC(end);
+    // std::cout << "start_tdc, end_tdc: " << start_tdc << ", " << end_tdc << std::endl;
+
+    // if (schannel_found){    
+    //   std::vector<sim::IDE> simides = schannel.TrackIDsAndEnergies(start_tdc, end_tdc);
+    //   std::cout << "simides size: " << simides.size() << std::endl;
+    //   // first get the total energy represented by all track ids for
+    //   // this channel and range of tdc values
+    //   for (size_t e = 0; e < simides.size(); ++e)
+    //     totalE += simides[e].energy;
+    //   // protect against a divide by zero below
+    //   if (totalE < 1.e-5) totalE = 1.;
+    //   // loop over the entries in the map and fill the input vectors
+    //   for (size_t e = 0; e < simides.size(); ++e) {
+    //     // if (simides[e].trackID == sim::NoParticleId) continue;
+    //     sim::TrackIDE info;
+    //     info.trackID = simides[e].trackID;
+    //     info.energyFrac = simides[e].energy / totalE;
+    //     info.energy = simides[e].energy;
+    //     info.numElectrons = simides[e].numElectrons;
+
+    //     std::cout << "sim ide trackID: " << simides[e].trackID << std::endl;
+    //     std::cout << "sim ide energy Frac: " << simides[e].energy / totalE << std::endl;
+    //     std::cout << "sim ide energy: " << simides[e].energy << std::endl;
+    //     std::cout << "sim ide numElectrons: " << simides[e].numElectrons << std::endl;
+    //     trackIDEs.push_back(info);
+    //   }
+    // }
+    // std::cout << "end output" << std::endl;
+    
+    // std::cout<< "trackIDEs size: " << trackIDEs.size() << std::endl;
     for (const auto &ide : trackIDEs) {
+      // std::cout << "trackID: " << ide.trackID << std::endl;
+      // std::cout << "Energy: " << ide.energy << std::endl;
       if (ide.energy > hitEnergy) {
         hitEnergy = ide.energy;
         trackID   = std::abs(ide.trackID);
@@ -584,6 +657,8 @@ art::Ptr<simb::MCTruth> ana::PFPSliceValidation::GetSliceTruthMatchHits(
   int maxHits = 0;
   art::Ptr<simb::MCTruth> bestTruthMatch;
   for (const auto &[truth, truthHits] : sliceTruthHitMap) {
+    // std::cout << "truthHits: " << truthHits << std::endl;
+    // std::cout << "maxHits: " << maxHits << std::endl;
     if (truthHits > maxHits) {
       maxHits        = truthHits;
       bestTruthMatch = truth;
