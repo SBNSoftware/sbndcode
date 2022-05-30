@@ -12,6 +12,7 @@
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "TH1D.h"
 #include <fstream>
 #include <algorithm>

@@ -106,8 +106,11 @@ namespace opdet {
     const double fXArapucaVISEff;
     const double fADCSaturation;
 
-    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine	
-
+    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
+    CLHEP::RandFlat fFlatGen;
+    CLHEP::RandPoissonQ fPoissonQGen;
+    CLHEP::RandGaussQ fGaussQGen;
+    CLHEP::RandExponential fExponentialGen;
     std::unique_ptr<CLHEP::RandGeneral> fTimeXArapucaVUV;// histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for visible (x)arapucas
 

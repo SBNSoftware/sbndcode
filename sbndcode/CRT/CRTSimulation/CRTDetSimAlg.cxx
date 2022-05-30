@@ -575,15 +575,12 @@ namespace crt {
     void CRTDetSimAlg::ChargeResponse(double eDep, double d0, double d1, double distToReadout, // input
                                       long & npe0, long & npe1, double & q0, double &q1) // output
     {
-        std::cout << "[ChargeResponse] eDep = " << eDep << std::endl;
         // The expected number of PE, using a quadratic model for the distance
         // dependence, and scaling linearly with deposited energy.
         double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
-        std::cout << "[ChargeResponse] qr = " << qr << std::endl;
 
         double npeExpected =
             fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
-        std::cout << "[ChargeResponse] npeExpected = " << npeExpected << std::endl;
 
         // Put PE on channels weighted by transverse distance across the strip,
         // using an exponential model
@@ -602,8 +599,6 @@ namespace crt {
                                      fParams.QRMS() * sqrt(npe0));
         q1 = CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1,
                                      fParams.QRMS() * sqrt(npe1));
-        std::cout << "[ChargeResponse] npe0 = " << npe0 << " -> q0 = " << q0 << std::endl;
-        std::cout << "[ChargeResponse] npe1 = " << npe1 << " -> q1 = " << q1 << std::endl;
 
         // Apply saturation
         double saturation = static_cast<double>(fParams.AdcSaturation());

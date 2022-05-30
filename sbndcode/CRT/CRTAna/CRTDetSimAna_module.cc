@@ -18,6 +18,7 @@
 // LArSoft includes
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
