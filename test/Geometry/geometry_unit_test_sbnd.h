@@ -16,7 +16,7 @@
 #define TEST_GEOMETRY_UNIT_TEST_SBND_H
 
 // LArSoft libraries
-#include "test/Geometry/geometry_unit_test_base.h"
+#include "larcorealg/TestUtils/geometry_unit_test_base.h"
 // #include "sbndcode/Geometry/ChannelMapSBNDAlg.h"
 #include "larcorealg/Geometry/ChannelMapStandardAlg.h"
 

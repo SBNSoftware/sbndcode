@@ -6,5 +6,6 @@ add_subdirectory(caf)
 add_subdirectory(anatree)
 add_subdirectory(workshops)
 add_subdirectory(deprecated)
+add_subdirectory(ana)
 
 install_fhicl()

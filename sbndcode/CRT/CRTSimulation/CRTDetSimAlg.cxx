@@ -16,6 +16,7 @@ namespace crt {
 
         fTaggers.clear();
         fData.clear();
+        fAuxData.clear();
     }
 
 
@@ -60,6 +61,11 @@ namespace crt {
         return fData;
     }
 
+    std::vector<std::vector<int>> CRTDetSimAlg::GetAuxData()
+    {
+        return fAuxData;
+    }
+
 
 
     uint16_t CRTDetSimAlg::WaveformEmulation(const uint32_t & time_delay, const double & adc)
@@ -87,9 +93,9 @@ namespace crt {
         double wf = fInterpolator->Eval(time_delay);
         wf *= adc;
 
-        mf::LogDebug("CRTDetSimAlg") << "WaveformEmulation, time_delay " << time_delay
-                                     << ", adc " << adc
-                                     << ", waveform " << wf << std::endl;
+        if (fParams.DebugTrigger()) std::cout << "WaveformEmulation, time_delay " << time_delay
+                                              << ", adc " << adc
+                                              << ", waveform " << wf << std::endl;
 
         return static_cast<uint16_t>(wf);
     }
@@ -108,11 +114,11 @@ namespace crt {
 
         feb_data.SetADC(sipmID, new_adc);
 
-        mf::LogDebug("CRTDetSimAlg") << "Updating ADC value for FEB " << feb_data.Mac5()
-                                     << ", sipmID " << sipmID
-                                     << " with adc " << adc
-                                     << ": was " << original_adc
-                                     << ", now is " << feb_data.ADC(sipmID) << std::endl;
+        if (fParams.DebugTrigger()) std::cout << "Updating ADC value for FEB " << feb_data.Mac5()
+                                              << ", sipmID " << sipmID
+                                              << " with adc " << adc
+                                              << ": was " << original_adc
+                                              << ", now is " << feb_data.ADC(sipmID) << std::endl;
 
     }
 
@@ -123,6 +129,7 @@ namespace crt {
     {
         std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
         std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
+        std::map<uint16_t, std::vector<int>> mac_to_sipmids;
 
         // TODO Add pedestal fluctuations
         std::array<uint16_t, 32> adc_pedestal = {static_cast<uint16_t>(fParams.QPed())};
@@ -141,6 +148,7 @@ namespace crt {
                                                                 strip.sipm0.sipmID); // Coinc
 
                 mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
+                mac_to_sipmids[strip.mac5] = std::vector<int>();
             }
             // ... all the other times we encounter this FEB
             else
@@ -170,15 +178,19 @@ namespace crt {
 
             auto &ides = mac_to_ides[strip.mac5];
             ides.push_back(strip.ide);
+
+            auto &sipmids = mac_to_sipmids[strip.mac5];
+            sipmids.push_back(std::min(strip.sipm0.sipmID, strip.sipm1.sipmID));
         }
 
         for (auto const& [mac, feb_data] : mac_to_febdata)
         {
             fData.push_back(std::make_pair(feb_data, mac_to_ides[mac]));
+            fAuxData.push_back(mac_to_sipmids[mac]);
         }
 
-        mf::LogDebug("CRTDetSimAlg") << "Constructed " << mac_to_febdata.size()
-                                     << " FEBData object(s)." << std::endl << std::endl;
+        if (fParams.DebugTrigger()) std::cout << "Constructed " << mac_to_febdata.size()
+                                              << " FEBData object(s)." << std::endl << std::endl;
     }
 
 
@@ -189,26 +201,73 @@ namespace crt {
         /** A struct to temporarily store information on a CRT Tagger trigger.
          */
         struct Trigger {
-            bool is_bottom;
-            bool planeX;
-            bool planeY;
+            bool _is_bottom;
+            double _dead_time;
+            bool _planeX;
+            bool _planeY;
+            std::set<int> _mac5s;
+            std::vector<StripData> _strips;
+            uint32_t _trigger_time;
+            bool _debug;
 
-            Trigger(bool _is_bottom) {
-                planeX = planeY = false;
-                is_bottom = _is_bottom;
+            Trigger(bool is_bottom, double dead_time, bool debug) {
+                _planeX = _planeY = false;
+                _is_bottom = is_bottom;
+                _dead_time = dead_time;
+                _debug = debug;
             }
 
             /** \brief Resets this trigger object */
-            void reset() {
-                planeX = planeY = false;
+            void reset(uint32_t trigger_time) {
+                _planeX = _planeY = false;
+                _strips.clear();
+                _mac5s.clear();
+                _trigger_time = trigger_time;
+
+                if(_debug) std::cout << "TRIGGER TIME IS " << _trigger_time << std::endl;
+            }
+
+            /** \brief Add a strip belonging to a particular trigger */
+            void add_strip(StripData strip) {
+                _strips.push_back(strip);
+                _mac5s.insert(strip.mac5);
+
+                if (strip.sipm_coinc) {
+                    if (strip.planeID == 0) _planeX = true;
+                    if (strip.planeID == 1) _planeY = true;
+                }
+
+                if(_debug) std::cout << "\tAdded strip with mac " << strip.mac5
+                                     << " on plane " << strip.planeID
+                                     << ", with time " << strip.sipm0.t1 << std::endl;
             }
 
             /** \brief Tells is a tagger is triggering or not */
             bool tagger_triggered() {
-                if (is_bottom) {
-                    return planeX or planeY;
+                if (_is_bottom) {
+                    return _planeX or _planeY;
                 }
-                return planeX and planeY;
+                return _planeX and _planeY;
+            }
+
+            /** \brief Returns true is the strip is in dead time */
+            bool is_in_dead_time(int mac5, int time) {
+                if (!_mac5s.count(mac5)) { return false; }
+                return (time <= _dead_time);
+            }
+
+            void print_no_coinc(StripData strip) {
+                if (_debug) std::cout << "\tStrip with mac " << strip.mac5
+                                     << " on plane " << strip.planeID
+                                     << ", with time " << strip.sipm0.t1
+                                     << " -> didn't have SiPMs coincidence" << std::endl;
+            }
+
+            void print_dead_time(StripData strip) {
+                if (_debug) std::cout << "\tStrip with mac " << strip.mac5
+                                     << " on plane " << strip.planeID
+                                     << ", with time " << strip.sipm0.t1
+                                     << " -> happened during dead time." << std::endl;
             }
         };
 
@@ -219,10 +278,10 @@ namespace crt {
             auto & name = iter.first;
             auto & tagger = iter.second;
 
-            mf::LogDebug("CRTDetSimAlg") << "[CreateData] Simulating trigger for tagger " << name << std::endl;
+           mf::LogInfo("CRTDetSimAlg") << "Simulating trigger for tagger " << name << std::endl;
 
             bool is_bottom = name.find("Bottom") != std::string::npos;
-            Trigger trigger(is_bottom);
+            Trigger trigger(is_bottom, fParams.DeadTime(), fParams.DebugTrigger());
 
             auto & strip_data_v = tagger.data;
 
@@ -233,9 +292,8 @@ namespace crt {
                          return strip1.sipm0.t1 < strip2.sipm0.t1;
                          });
 
-            uint32_t trigger_ts1 = 0, /*trigger_ts0 = 0, */current_time = 0;
+            uint32_t trigger_ts1 = 0, current_time = 0;
             bool first_trigger = true;
-            std::vector<StripData> strips;
 
             // Loop over all the strips in this tagger
             for (size_t i = 0; i < strip_data_v.size(); i++)
@@ -244,60 +302,53 @@ namespace crt {
 
                 current_time = strip_data.sipm0.t1;
 
-                if (strip_data.planeID == 0) trigger.planeX = true;
-                if (strip_data.planeID == 1) trigger.planeY = true;
-
+                // Save the first trigger
                 if (strip_data.sipm_coinc and first_trigger)
                 {
                     first_trigger = false;
                     trigger_ts1 = current_time;
-                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    trigger.reset(trigger_ts1);
                 }
 
-                mf::LogDebug("CRTDetSimAlg") << "[CreateData] This is strip " << i
-                                             << " mac " << strip_data.mac5
-                                             << " on plane " << strip_data.planeID
-                                             << ", with time " << current_time << std::endl;
-
+                // Save strips belonging to this trigger
                 if (current_time - trigger_ts1 < fParams.TaggerPlaneCoincidenceWindow())
                 {
-                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] \t Is in" << std::endl;
-                    strips.push_back(strip_data);
+                    trigger.add_strip(strip_data);
                 }
-                else if (current_time - trigger_ts1 > fParams.DeadTime() and strip_data.sipm_coinc)
+                // Create a new trigger if either the current tagger is not trigger, or,
+                // if it is triggered, if we are past the dead time. Also, always require
+                // both sipm coincidence.
+                else if ((!trigger.tagger_triggered() or
+                         (trigger.tagger_triggered() and
+                          !trigger.is_in_dead_time(strip_data.mac5, current_time - trigger_ts1))) and
+                         strip_data.sipm_coinc)
                 {
-                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] \t Creates new trigger. " << std::endl;
                     if (trigger.tagger_triggered()) {
-                        ProcessStrips(strips);
+                        ProcessStrips(trigger._strips);
                     }
 
                     // Set the current, new, trigger
                     trigger_ts1 = current_time;
 
                     // Reset the trigger object
-                    trigger.reset();
-
-                    // Clear the current strips as we are working on a new trigger
-                    strips.clear();
+                    trigger.reset(trigger_ts1);
 
                     // Add this strip, which created the trigger
-                    strips.push_back(strip_data);
-
-                    // Check this strip, which created the trigger
-                    if (strip_data.planeID == 0) trigger.planeX = true;
-                    if (strip_data.planeID == 1) trigger.planeY = true;
-
-                    mf::LogDebug("CRTDetSimAlg") << "[CreateData] TRIGGER TIME IS " << trigger_ts1 << std::endl;
+                    trigger.add_strip(strip_data);
+                }
+                else if (!strip_data.sipm_coinc)
+                {
+                    trigger.print_no_coinc(strip_data);
                 }
                 else
                 {
-                    mf::LogDebug("CRTDetSimAlg") << "Strip happened during dead time or didn't have SiPMs coincidence." << std::endl;
+                    trigger.print_dead_time(strip_data);
                 }
 
             } // loop over strips
 
             if (trigger.tagger_triggered()) {
-                ProcessStrips(strips);
+                ProcessStrips(trigger._strips);
             }
 
         } // loop over taggers
@@ -553,6 +604,12 @@ namespace crt {
         double saturation = static_cast<double>(fParams.AdcSaturation());
         if (q0 > saturation) q0 = saturation;
         if (q1 > saturation) q1 = saturation;
+
+        mf::LogInfo("CRTSetSimAlg")
+            << "CRT CHARGE RESPONSE: eDep = " << eDep
+            << ", npeExpected = " << npeExpected
+            << ", npe0 = " << npe0 << " -> q0 = " << q0
+            << ", npe1 = " << npe1 << " -> q1 = " << q1 << std::endl;
     }
 
     uint32_t CRTDetSimAlg::getChannelTriggerTicks(/*detinfo::ElecClock& clock,*/
@@ -610,6 +667,7 @@ namespace crt {
 
         fTaggers.clear();
         fData.clear();
+        fAuxData.clear();
     }
 
 } // namespace crt

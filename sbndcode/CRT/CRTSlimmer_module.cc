@@ -38,6 +38,7 @@
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbnobj/SBND/CRT/FEBTruthInfo.hh"
 
 namespace sbnd {
   namespace crt {
@@ -79,7 +80,7 @@ sbnd::crt::CRTSlimmer::CRTSlimmer(fhicl::ParameterSet const& p)
   produces<art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE>>();
 
   consumes<std::vector<sbnd::crt::FEBData>>(_feb_data_producer);
-  consumes<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE>>(_feb_data_producer);
+  consumes<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>>(_feb_data_producer);
 }
 
 void sbnd::crt::CRTSlimmer::produce(art::Event& e)
@@ -102,11 +103,28 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
   std::vector<art::Ptr<sbnd::crt::FEBData>> feb_data_v;
   art::fill_ptr_vector(feb_data_v, feb_data_h);
 
-  art::FindManyP<sim::AuxDetIDE> febdata_to_ides (feb_data_h, e, _feb_data_producer);
+  art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides (feb_data_h, e, _feb_data_producer);
 
   art::PtrMaker<sbnd::crt::CRTData> makeDataPtr(e);
 
-  for (auto const feb_data : feb_data_v) {
+  for (size_t feb_i = 0; feb_i < feb_data_v.size(); feb_i++) {
+
+    auto const feb_data = feb_data_v[feb_i];
+    mf::LogDebug("CRTSlimmer") << "FEB " << feb_i << " with mac " << feb_data->Mac5() << std::endl;
+
+    auto ides = febdata_to_ides.at(feb_data.key());
+    mf::LogDebug("CRTSlimmer") << "We have " << ides.size() << " IDEs." << std::endl;
+
+    // Construct a map to go from SiPM ID to the index of the IDE
+    // FEBTruthInfo stores, for each AuxDetIDE, a vector containing
+    // the SiPM IDs contributing to that energy deposit
+    std::map<int, std::vector<int>> sipm_to_ideids;
+    for (size_t j = 0; j < 32; j++) sipm_to_ideids[j] = std::vector<int>();
+    for (size_t ide_i = 0; ide_i < febdata_to_ides.data(feb_i).size(); ide_i++) {
+      const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(feb_i)[ide_i];
+      sipm_to_ideids[fti->GetChannel()].push_back(ide_i);
+      mf::LogDebug("CRTSlimmer") << "ide_i " << ide_i << " ene " << ides[ide_i]->energyDeposited << " fti->GetChannel() " << fti->GetChannel() << std::endl;
+    }
 
     auto adcs = feb_data->ADC();
 
@@ -123,7 +141,7 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
                                                          feb_data->Ts1(),
                                                          adcs[i+sipm]);
 
-        mf::LogDebug("CRTSlimmer") << "Adding SiPM with mac " << feb_data->Mac5()
+        mf::LogDebug("CRTSlimmer") << "Adding SiPM " << i + sipm << " with mac " << feb_data->Mac5()
                                    << " mapped to channel " << crt_data.Channel() << std::endl;
 
         crt_data_v->emplace_back(std::move(crt_data));
@@ -134,11 +152,10 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
         crtdata_to_febdata_assns->addSingle(crt_data_p, feb_data);
 
         // Create the association between CRTData and AuxDetIDEs
-        // Note: we should further selects AuxDetIDEs that belong
-        // to a particular strip; this would require an additional
-        // product to do the bookkeping.
-        auto ides = febdata_to_ides.at(feb_data.key());
-        for (auto ide : ides) {
+        auto & ide_ids = sipm_to_ideids[i];
+        for (auto ide_id: ide_ids) {
+          auto ide = ides[ide_id];
+          mf::LogDebug("CRTSlimmer") << "Adding IDE with ID " << ide_id << std::endl;
           crtdata_to_ide_assns->addSingle(crt_data_p, ide);
         }
       }
