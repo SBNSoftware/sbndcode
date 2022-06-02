@@ -1,31 +1,27 @@
-#
 # File:    standard_g4_sbnd.fcl
 # Purpose: Propagation of generated particle through matter (Geant4 simulation)
-# Version: 1.2
-# 
+#
+# This runs the new, refactored, LArG4 simulation.
+#
 # This configuration runs:
 # - LArG4: produces:
 #   * MCParticle's (particles produced by interaction with matter)
-#   * SimChannels (charge and energy deposited by each particle reaching
-#       each TPC readout channel)
-#   * SimPhotons (photons reaching each optical readout channel)
+#   * SimEnergyDeposit (energy deposited)
+# - IonizationAndScintillation: produces:
+#   * SimEnergyDeposit (photons and electrons)
+#   * SimEnergyDeposit before SCE (photons and electrons)
+# - OpticalFastSimulation: produces:
+#   * SimPhoton or SimPhotonLite (photons at the optical detectors)
+# - ElectronDrift: produces:
+#   * SimChannels (energy and charge at the wires)
+# - GenericCRT: produces:
+#   * AuxDetSimChannels (from LArG4 AuxDetHits)
 # - MCReco: produces:
 #   * MCTrack, MCShower: deposited energy from each MCParticle
-# 
+#
 # Input: a file with generated particles; all MCTruth data products in the input
 #        file are processed.
-# 
-# Dependencies:
-# - uses the bundle of SBND simulation services
-# - will require flux files for Genie and Corsika
-#
-# Changes:
-# 20160707 (petrillo@fnal.gov) [v1.1]
-#   - uniformed to prodsingle_sbnd.fcl
-#
-# 20161223 (petrillo@fnal.gov) [v1.2]
-#   - adopted shared root output configuration
-#
+
 
 #
 # services
@@ -33,71 +29,109 @@
 #include "simulationservices_sbnd.fcl"
 
 #
-# algorithms
+# modules
 #
-#include "largeantmodules_sbnd.fcl"
-#include "mcreco.fcl"
+#include "larg4_sbnd.fcl"
+#include "ionandscint_sbnd.fcl"
+#include "PDFastSim_sbnd.fcl"
+#include "simdrift_sbnd.fcl"
+#include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
+#include "config_genericCRT.fcl"
 
 
 process_name: G4
 
+
 services:
 {
-  # Load the service that manages root files for histograms.
-  TFileService:        { fileName: @local::sbnd_tfileoutput.fileName }
-                       @table::sbnd_g4_services
+  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  @table::sbnd_g4_services
 }
 
-#source is now a root file
+
 source:
 {
   module_type: RootInput
 }
 
-# Define and configure some modules to do work on each event.
-# First modules are defined; they are scheduled later.
-# Modules are grouped by type.
+
 physics:
 {
 
- producers:
- {
-   rns:      { module_type: "RandomNumberSaver" }
-   largeant: @local::sbnd_largeant
-   mcreco:   @local::standard_mcreco
- }
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
 
- #define the producer and filter modules for this path, order matters, 
- #filters reject all following items.  see lines starting physics.producers below
- simulate: [ rns, largeant, mcreco ]
- 
- #define the output stream, there could be more than one if using filters 
- stream1:  [ out1 ]
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
 
- #trigger_paths is a keyword and contains the paths that modify the art::event, 
- #ie filters and producers
- trigger_paths: [simulate] 
+    # The geant4 step
+    largeant: @local::sbnd_larg4
 
- #end_paths is a keyword and contains the paths that do not modify the art::Event, 
- #ie analyzers and output streams.  these all run simultaneously
- end_paths:     [stream1]  
+    # Creation of ionization electrons and scintillation photons, inside the active volume
+    ionandscint: @local::sbnd_ionandscint
+
+    # Creation of ionization electrons and scintillation photons, outside the active volume
+    ionandscintout: @local::sbnd_ionandscint_out
+
+    # Light propogation inside the active volume
+    pdfastsim: @local::sbnd_pdfastsim_par
+
+    # Light propogation outside the active volume
+    pdfastsimout: @local::sbnd_pdfastsim_pvs
+
+    # Electron propogation
+    simdrift: @local::sbnd_simdrift
+
+    # Truth-level reconstruction
+    mcreco: @local::sbnd_mcreco
+
+    # Generic CRT
+    genericcrt: @local::sbnd_genericCRT
+
+  }
+
+  # All producers and filters modules for this path, order matters
+  simulate: [ rns
+            , loader
+            , largeant
+            , ionandscint
+            , ionandscintout
+            , pdfastsim
+            , pdfastsimout
+            , simdrift
+            , mcreco
+            , genericcrt
+          ]
+
+  # The output stream, there could be more than one if using filters
+  stream1: [ out1 ]
+
+  # Contains the paths that modify the art::event
+  trigger_paths: [ simulate ]
+
+  # Contains the paths that do not modify the art::Event
+  end_paths: [ stream1 ]
 }
 
-#block to define where the output goes.  if you defined a filter in the physics
-#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
-#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+
 outputs:
 {
   out1:
   {
-              @table::sbnd_rootoutput # inherit shared settings
-    dataTier: "simulated"
+                    @table::sbnd_rootoutput
+    dataTier:       "simulated"
+    outputCommands: [ "keep *_*_*_*"
+                    # Drop the SimEnergyDeposits made by LArG4
+                    , "drop sim::SimEnergyDeposits_largeant_*_*"
+                    # Drop the IonAndScint w/ SCE offsets applied
+                    , "drop *_ionandscint_*_*"
+                    # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
+                    , "drop sim::AuxDetHits_*_*_*"
+                    ]
   }
 }
 
-# only keep MCParticles that cross the cryostat;
-# this is relevant in extensive cosmic ray generators (like Corsika)
-physics.producers.largeant.KeepParticlesInVolumes: ["volCryostat", "volTaggerTopHigh", "volTaggerTopLow", "volTaggerSideLeft", "volTaggerSideRight", "volTaggerFaceFront", "volTaggerFaceBack", "volTaggerBot"] 
-physics.producers.largeant.SparsifyTrajectories: "true"
+

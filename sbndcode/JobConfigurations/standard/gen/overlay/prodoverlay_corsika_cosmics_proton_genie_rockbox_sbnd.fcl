@@ -1,0 +1,37 @@
+# Produce GENIE rockbox interactions and overlay CORSIKA cosmics
+# Note: To run G4 over CORSIKA and merge collections together you will need g4_dirt_overlay_filter.fcl
+
+#include "mergesimsources_sbnd.fcl"
+#include "corsika_sbnd.fcl"
+#include "prodgenie_rockbox_sbnd.fcl"
+
+# Now we are generating overlays we need to add CORSIKA to GENIE
+physics.producers.corsika: @local::sbnd_corsika_p
+
+# Create a new instance of largeant to just look at GENIE
+physics.producers.largeantnu: @local::sbnd_larg4
+physics.producers.largeantnu.inputCollections: [ "generator" ]
+
+# Create a new instance of largeant to just look at CORSIKA
+physics.producers.largeantcosmic: @local::sbnd_larg4
+physics.producers.largeantcosmic.inputCollections: [ "corsika" ]
+
+# Merge together the largeant instances
+physics.producers.largeant: @local::sbnd_merge_overlay_sim_sources
+
+# Tell the dirt filter to use the new largeant for neutrinos only
+physics.filters.dirtfilter.SimEnergyDepModuleName: "largeantnu:LArG4DetectorServicevolTPCActive"
+
+// Change the name of largeant->largeantnu and add corsika and largeant merging
+physics.simulatetpc:  [ rns, generator, loader, largeantnu, tpcfilter, corsika, largeantcosmic, largeant ]
+physics.simulatedirt: [ rns, generator, loader, largeantnu, "!tpcfilter", dirtfilter, corsika, largeantcosmic, largeant ]
+
+# Drop the GENIE and CORSIKA specific largeant instances and keep the merged output
+outputs.out1.outputCommands: [ "keep *_*_*_*"
+                             , "drop *_largeantnu_*_*"
+                             , "drop *_largeantcosmic_*_*"
+                             ]
+
+# Overidde the names of the output files
+outputs.out1.fileName: "prodgenie_cosmic_rockbox_sbnd_%p-%tc.root"
+services.TFileService.fileName: "hists_prodgenie_cosmic_rockbox_sbnd_%p-%tc.root"

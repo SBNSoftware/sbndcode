@@ -1,0 +1,45 @@
+
+BEGIN_PROLOG
+
+sbnd_merge_sim_sources : {
+  module_type: "MergeSimSources"
+  FillMCParticles:             false
+  FillSimPhotons:              false
+  FillSimChannels:             false
+  FillAuxDetSimChannels:       false
+  FillSimEnergyDeposits:       false
+  FillAuxDetHits:              false
+  InputSourcesLabels:          [ "larg4intime", "larg4outtime"]
+  TrackIDOffsets:              [ 10000000, 20000000 ]
+  StoreReflected:              true
+  EnergyDepositInstanceLabels: [ "priorSCE" ]
+  AuxDetHitsInstanceLabels:    [ "" ]
+}
+
+# Save the list of volumes (instance names) in which largeant creates SimEnergyDeposits
+largeant_volumes: [ "LArG4DetectorServicevolFieldCage"
+                  , "LArG4DetectorServicevolPMT"
+                  , "LArG4DetectorServicevolXArapuca"
+                  , "LArG4DetectorServicevolPDSstructure"
+                  , "LArG4DetectorServicevolTPCPlaneVert"
+                  , "LArG4DetectorServicevolCryostat"
+                  , "LArG4DetectorServicevolTPCActive"
+                  ]
+largeant_crt_volumes: [ "LArG4DetectorServicevolAuxDetSensitiveCRTStripY"
+                      , "LArG4DetectorServicevolAuxDetSensitiveCRTStripX"
+                      , "LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN"
+                      , "LArG4DetectorServicevolAuxDetSensitiveCRTStripMINOS"
+                      ]
+
+# Merge seperate instances of largeant for GENIE and CORSIKA
+sbnd_merge_overlay_sim_sources : {
+  @table::sbnd_merge_sim_sources
+  FillMCParticles:             true
+  FillSimEnergyDeposits:       true
+  FillAuxDetHits:              true
+  InputSourcesLabels:          [ "largeantnu", "largeantcosmic"]
+  EnergyDepositInstanceLabels: @local::largeant_volumes
+  AuxDetHitsInstanceLabels:    @local::largeant_crt_volumes
+}
+
+END_PROLOG

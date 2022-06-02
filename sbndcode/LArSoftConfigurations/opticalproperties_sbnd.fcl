@@ -21,7 +21,11 @@ BEGIN_PROLOG
 #
 sbnd_opticalproperties: {
     
-    ScintByParticleType: false
+    # Updating the triplet decay-time (Phys. Rev. C 91, 035503). Note that in our simulations we account 
+    # independently for the TPB-delay time and the emission (fast and slow) decay times.
+    ScintSlowTimeConst:   1300.  # slow scintillation time constant (ns)
+    
+    ScintByParticleType: true
 
     ScintPreScale:  0.03   # QE x TPB_FW x TPB_Absorption (15% x 50% x 45%)
                            # MUST match between g4 and detsim

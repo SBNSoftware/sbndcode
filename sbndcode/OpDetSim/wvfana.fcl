@@ -9,8 +9,9 @@ wvf_ana:
   InputModule: "opdaq"
   ClusterModuleLabel: "linecluster"
   OpDetsToPlot: ["pmt_coated", "pmt_uncoated",
-                 "xarapuca_vuv", "xarapuca_vis",
-                 "arapuca_vuv", "arapuca_vis"]
+                 "xarapuca_vuv", "xarapuca_vis"]
+  DaphneFrequency: 80.0  #in MHz. Frequency of the Daphne Readouts
+
 }
 
 END_PROLOG

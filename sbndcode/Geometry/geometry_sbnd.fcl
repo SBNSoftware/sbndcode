@@ -53,13 +53,17 @@
 
 BEGIN_PROLOG
 
+sbnd_geometry_file: "sbnd_v02_00.gdml"
+sbnd_geometry_file_nowires: "sbnd_v02_00_nowires.gdml"
+
+
 #
 # sourec of geometry description
 #
 sbnd_geo_source: {
   Name:  "sbndv2"
-  GDML:  "sbnd_v02_00.gdml"
-  ROOT:  "sbnd_v02_00.gdml"
+  GDML:  @local::sbnd_geometry_file
+  ROOT:  @local::sbnd_geometry_file
 } # sbnd_geo_source
 
 #

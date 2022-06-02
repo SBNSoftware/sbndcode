@@ -8,15 +8,16 @@
 // This class stores the SBND PDS Map and channel's properties;
 // also implements functions to access these.
 //
-// As of version v09_08_00 each entry of the PDS Map
+// As of version v09_24_01 each entry of the PDS Map
 // has the following characteristics:
 //
-// channel: 0 to 303
-// pd_type: pmt_coated, pmt_uncoated, xarapuca_vuv, xarapuca_vis, arapuca_vuv, arapuca_vis
+// channel: 0 to 311
+// pd_type: pmt_coated, pmt_uncoated, xarapuca_vuv, xarapuca_vis
 // pds_box: 0 to 23
 // sensible_to_vis: true or false
 // sensible_to_vuv: true or false
 // tpc: 0, 1
+// sampling: apsaia, daphne
 ////////////////////////////////////////////////////////////////////////
 
 #ifndef SBND_OPDETSIM_SBNDPDMAPALG_HH
@@ -57,8 +58,11 @@ namespace opdet {
     // void setup() {}
 
     bool isPDType(size_t ch, std::string pdname) const override;
+    bool isElectronics(size_t ch, std::string pdname) const;
     std::string pdType(size_t ch) const override;
+    std::string electronicsType(size_t ch) const;
     std::vector<int> getChannelsOfType(std::string pdname) const;
+    std::vector<int> getChannelsOfType(std::string pdname,std::string elname) const;//overload
     size_t size() const;
     auto getChannelEntry(size_t ch) const;
 

@@ -1,8 +1,20 @@
 #include "larg4crtfilter.fcl"
 #include "standard_g4_sbnd.fcl"
 
-physics.simulate: [ rns, largeant, filter, mcreco ]
 physics.filters.filter: @local::sbnd_larg4crtfilter
+
+physics.simulate: [ rns
+                  , loader
+                  , largeant
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  , simdrift
+                  , filter # Adding filter
+                  , mcreco
+                  , genericcrt
+                 ]
 
 outputs.out1.SelectEvents: [ "simulate" ]
 

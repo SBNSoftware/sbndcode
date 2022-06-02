@@ -48,7 +48,7 @@ process_name: CosmicsGen
 services:
 {
 
-  TFileService:         { fileName: "prodcosmics_corsika_sbnd_%p-%tc_hists.root" }
+  TFileService:         { fileName: "hists_prodcosmics_corsika_sbnd_%p-%tc.root" }
                         @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
                         @table::sbnd_random_services  # from simulationservices_sbnd.fcl
                         @table::sbnd_services  # from simulationservices_sbnd.fcl
@@ -112,6 +112,7 @@ outputs:
     fileName:         "prodcosmics_corsika_sbnd_%p-%tc.root"
     dataTier:         "generated"
     compressionLevel:  1
+    saveMemoryObjectThreshold: 0
   }
 } # outputs
 

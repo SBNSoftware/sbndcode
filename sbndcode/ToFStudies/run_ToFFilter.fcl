@@ -1,0 +1,76 @@
+############################### NOTE : This fcl file should be run on an Art-ROOT files which has ToF data products ##################
+
+#include "config_ToF_Ana_Prod_Filt.fcl"
+
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: ToFFilt
+
+services:
+{
+  RandomNumberGenerator:     {}                                 # required by fuzzyCluster
+  message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+                             @table::sbnd_services              # from services_sbnd.fcl
+  LArFFT:                    @local::sbnd_larfft
+  SignalShapingServiceSBND:  @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  ParticleInventoryService:  @local::standard_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+}
+
+
+physics:
+{
+ producers:{}
+ 
+ filters:  {
+    ToFLhitFilt: @local::config_Lhit_Filt
+    ToFLFlashFilt: @local::config_LFlash_Filt
+    ToFLFlashHitFilt: @local::config_LFlashHit_Filt  
+    ToFChitFilt: @local::config_Chit_Filt 
+    ToFCFlashFilt: @local::config_CFlash_Filt
+    ToFCFlashHitFilt: @local::config_CFlashHit_Filt
+ } 
+ 
+ analyzers:{}
+ 
+ ###################### Use this to keep cosmic like events ######################
+ 
+ #reco : [ "!ToFLFlashFilt" ]
+ 
+ ################## Use this to filter out cosmic like events ####################
+ 
+ ################## Make sure to specify only one of the module labels here ######
+ 
+ reco : [ ToFLhitFilt ]
+ 
+ stream: [ out ]
+ 
+ trigger_paths: [ reco ] 
+ 
+ end_paths: [ stream ]
+}
+
+outputs:
+{
+ out:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   SelectEvents: [ reco ]
+   fileName: @local::sbnd_rootoutput.fileName
+ } 
+}
+

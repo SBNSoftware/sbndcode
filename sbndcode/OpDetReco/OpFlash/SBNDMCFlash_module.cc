@@ -24,6 +24,7 @@
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 // #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
@@ -186,8 +187,9 @@ void SBNDMCFlash::produce(art::Event& e)
   //   return;
   // }
 
-  std::vector<art::Handle<std::vector<sim::SimPhotonsLite> >> evt_simphot_hs;
-  e.getManyByType(evt_simphot_hs);
+  //std::vector<art::Handle<std::vector<sim::SimPhotonsLite> >> evt_simphot_hs;
+  //e.getManyByType(evt_simphot_hs);
+  auto evt_simphot_hs = e.getMany<std::vector<sim::SimPhotonsLite> >();
   if( evt_simphot_hs.size() == 0 ) {
     std::cerr << "[NeutrinoMCFlash] SimPhotonsLite product is not valid or empty." << std::endl;
     e.put(std::move(opflashes));

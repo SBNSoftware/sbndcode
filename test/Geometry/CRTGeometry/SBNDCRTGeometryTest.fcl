@@ -1,0 +1,33 @@
+#include "geometry_sbnd.fcl"
+
+services: {
+  RandomNumberGenerator: {}
+  TimeTracker:           {}
+  MemoryTracker:         {}
+  @table::sbnd_geometry_services
+}
+
+
+source: {
+  module_type: EmptyEvent
+
+  timestampPlugin: {
+    plugin_type: "GeneratedEventTimestamp"
+  }
+}
+
+
+physics: {
+
+  analyzers: {
+    crtgeometrytest: {
+      module_type:  "SBNDCRTGeometryTest"
+      # module_label: "timestampTest"
+    }
+  }
+
+  analysis: [ crtgeometrytest ]
+
+  end_paths: [ analysis ]
+
+}

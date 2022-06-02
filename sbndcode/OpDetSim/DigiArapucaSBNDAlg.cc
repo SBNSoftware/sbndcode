@@ -7,20 +7,22 @@
 namespace opdet {
 
   DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
-    : fParams(config)
-    , fSampling(fParams.frequency)
-    , fArapucaVUVEff(fParams.ArapucaVUVEff / fParams.larProp->ScintPreScale())
-    , fArapucaVISEff(fParams.ArapucaVISEff / fParams.larProp->ScintPreScale())
+    : fParams{config}
+    , fSampling(fParams.frequency/ 1000.) //in GHz to cancel with ns
+    , fSampling_Daphne(fParams.frequency_Daphne/ 1000.) //in GHz to cancel with ns
     , fXArapucaVUVEff(fParams.XArapucaVUVEff / fParams.larProp->ScintPreScale())
     , fXArapucaVISEff(fParams.XArapucaVISEff / fParams.larProp->ScintPreScale())
+    , fADCSaturation(fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude)
     , fEngine(fParams.engine)
+    , fFlatGen(*fEngine)
+    , fPoissonQGen(*fEngine)
+    , fGaussQGen(*fEngine)
+    , fExponentialGen(*fEngine)
   {
 
-    if(fArapucaVUVEff > 1.0001 || fArapucaVISEff > 1.0001 ||
-       fXArapucaVUVEff > 1.0001 || fXArapucaVISEff > 1.0001)
+    if(fXArapucaVUVEff > 1.0001 || fXArapucaVISEff > 1.0001)
       mf::LogWarning("DigiArapucaSBNDAlg")
         << "Quantum efficiency set in fhicl file "
-        << fParams.ArapucaVUVEff << " or " << fParams.ArapucaVISEff << " or "
         << fParams.XArapucaVUVEff << " or " << fParams.XArapucaVISEff
         << " seems to be too large!\n"
         << "Final QE must be equal to or smaller than the scintillation "
@@ -41,25 +43,32 @@ namespace opdet {
     fTimeTPB = std::make_unique<CLHEP::RandGeneral>
       (*fEngine, timeTPB_p->data(), timeTPB_p->size());
 
-    std::vector<double>* TimeArapucaVUV_p;
-    file->GetObject("TimeArapucaVUV", TimeArapucaVUV_p);
-    fTimeArapucaVUV = std::make_unique<CLHEP::RandGeneral>
-      (*fEngine, TimeArapucaVUV_p->data(), TimeArapucaVUV_p->size());
-    std::vector<double>* TimeArapucaVIS_p;
-    file->GetObject("TimeArapucaVIS", TimeArapucaVIS_p);
-    fTimeArapucaVIS = std::make_unique<CLHEP::RandGeneral>
-      (*fEngine, TimeArapucaVIS_p->data(), TimeArapucaVIS_p->size());
     std::vector<double>* TimeXArapucaVUV_p;
     file->GetObject("TimeXArapucaVUV", TimeXArapucaVUV_p);
     fTimeXArapucaVUV = std::make_unique<CLHEP::RandGeneral>
       (*fEngine, TimeXArapucaVUV_p->data(), TimeXArapucaVUV_p->size());
 
-    fSampling = fSampling / 1000; //in GHz to cancel with ns
-    pulsesize = fParams.PulseLength * fSampling;
-    wsp.resize(pulsesize);
+    size_t pulseSize = fParams.PulseLength * fSampling;
+    fWaveformSP.resize(pulseSize);
 
-    Pulse1PE(wsp);
-    saturation = fParams.Baseline + fParams.Saturation * fParams.ADC * fParams.MeanAmplitude;
+    size_t pulseSize_Daphne = fParams.PulseLength * fSampling_Daphne;
+    fWaveformSP_Daphne.resize(pulseSize_Daphne);
+  
+    if(fParams.ArapucaSinglePEmodel) {
+      mf::LogDebug("DigiArapucaSBNDAlg") << " using testbench pe response";
+      TFile* file =  TFile::Open(fname.c_str(), "READ");
+      std::vector<double>* SinglePEVec_40ftCable_Daphne;
+      std::vector<double>* SinglePEVec_40ftCable_Apsaia;
+      file->GetObject("SinglePEVec_40ftCable_Apsaia", SinglePEVec_40ftCable_Apsaia);
+      file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_40ftCable_Daphne);
+      fWaveformSP = *SinglePEVec_40ftCable_Apsaia;
+      fWaveformSP_Daphne = *SinglePEVec_40ftCable_Daphne;
+    }  
+    else{
+      mf::LogDebug("DigiArapucaSBNDAlg") << " using ideal pe response";
+      Pulse1PE(fWaveformSP,fSampling);
+      Pulse1PE(fWaveformSP_Daphne,fSampling_Daphne);
+    }
     file->Close();
   } // end constructor
 
@@ -71,11 +80,12 @@ namespace opdet {
     sim::SimPhotons const& simphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
+    bool is_daphne,
     double start_time,
     unsigned n_samples)
   {
     std::vector<double> waves(n_samples, fParams.Baseline);
-    CreatePDWaveform(simphotons, start_time, waves, pdtype);
+    CreatePDWaveform(simphotons, start_time, waves, pdtype,is_daphne);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -85,12 +95,17 @@ namespace opdet {
     sim::SimPhotonsLite const& litesimphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
+    bool is_daphne,
     double start_time,
     unsigned n_samples)
   {
     std::vector<double> waves(n_samples, fParams.Baseline);
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
-    CreatePDWaveformLite(photonMap, start_time, waves, pdtype);
+    CreatePDWaveformLite(photonMap, start_time, waves, pdtype,is_daphne);
+    // std::ofstream ofs("True_PE.log",std::ofstream::out | std::ofstream::app);
+    // ofs<<ch<<"\t"<<P_truth<<std::endl;
+    // ofs.close();
+    // P_truth=0;
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -99,62 +114,40 @@ namespace opdet {
     sim::SimPhotons const& simphotons,
     double t_min,
     std::vector<double>& wave,
-    std::string pdtype)
+    std::string pdtype,
+    bool is_daphne)
   {
     int nCT = 1;
-    double tphoton;
-    size_t timeBin;
-    if(pdtype == "arapuca_vuv") {
+    if(pdtype == "xarapuca_vuv") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVUVEff) { //Sample a random subset according to Arapuca's efficiency
-          tphoton = (fTimeArapucaVUV->fire());
-          tphoton += simphotons[i].Time - t_min;
+        if(fFlatGen.fire(1.0) < fXArapucaVUVEff) {
+          double tphoton = (fTimeXArapucaVUV->fire()) + simphotons[i].Time - t_min;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+          if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          timeBin = std::floor(tphoton * fSampling);
-          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
-        }
-      }
-    }
-    else if(pdtype == "arapuca_vis") {
-      for(size_t i = 0; i < simphotons.size(); i++) {
-        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fArapucaVISEff) { //Sample a random subset according to Arapuca's efficiency.
-          tphoton = (fTimeArapucaVIS->fire());
-          tphoton += simphotons[i].Time - t_min;
-          tphoton +=fTimeTPB->fire();
-          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-          else nCT = 1;
-          timeBin = std::floor(tphoton * fSampling);
-          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
-        }
-      }
-    }
-    else if(pdtype == "xarapuca_vuv") {
-      for(size_t i = 0; i < simphotons.size(); i++) {
-        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVUVEff) {
-          tphoton = (fTimeXArapucaVUV->fire());
-          tphoton += simphotons[i].Time - t_min;
-          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-          else nCT = 1;
-          timeBin = std::floor(tphoton * fSampling);
-          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
+          if(timeBin < wave.size()) {
+            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            }
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);}
+          }
         }
       }
     }
     else if(pdtype == "xarapuca_vis") {
       for(size_t i = 0; i < simphotons.size(); i++) {
-        if((CLHEP::RandFlat::shoot(fEngine, 1.0)) < fXArapucaVISEff) {
-          tphoton = (CLHEP::RandExponential::shoot(fEngine, 8.5)); //decay time of EJ280 in ns
-          tphoton += simphotons[i].Time - t_min;
-          tphoton +=fTimeTPB->fire();
+        if(fFlatGen.fire(1.0) < fXArapucaVISEff) {
+          double tphoton = fExponentialGen.fire(fParams.DecayTXArapucaVIS) + simphotons[i].Time - t_min + fTimeTPB->fire();
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+          if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          timeBin = std::floor(tphoton * fSampling);
-          if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
+          if(timeBin < wave.size()) {
+            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            }
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);
+            }
+          }
         }
       }
     }
@@ -162,7 +155,11 @@ namespace opdet {
       throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
     }
     if(fParams.BaselineRMS > 0.0) AddLineNoise(wave);
-    if(fParams.DarkNoiseRate > 0.0) AddDarkNoise(wave);
+    if(fParams.DarkNoiseRate > 0.0)
+    {
+      if (!is_daphne) AddDarkNoise(wave,fWaveformSP);
+      else            AddDarkNoise(wave,fWaveformSP_Daphne);
+    } 
     CreateSaturation(wave);
   }
 
@@ -171,27 +168,27 @@ namespace opdet {
     std::map<int, int> const& photonMap,
     double t_min,
     std::vector<double>& wave,
-    std::string pdtype)
+    std::string pdtype,
+    bool is_daphne)
   {
     if(pdtype == "xarapuca_vuv"){
-      SinglePDWaveformCreatorLite(fXArapucaVUVEff, fTimeXArapucaVUV, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fXArapucaVUVEff, fTimeXArapucaVUV, wave, photonMap, t_min,is_daphne);
     }
     else if(pdtype == "xarapuca_vis"){
       // creating the waveforms for xarapuca_vis is different than the rest
       // so there's an overload for that which lacks the timeHisto
-      SinglePDWaveformCreatorLite(fXArapucaVISEff, wave, photonMap, t_min);
-    }
-    else if(pdtype == "arapuca_vuv"){
-      SinglePDWaveformCreatorLite(fArapucaVUVEff, fTimeArapucaVUV, wave, photonMap, t_min);
-    }
-    else if(pdtype == "arapuca_vis"){
-      SinglePDWaveformCreatorLite(fArapucaVISEff, fTimeArapucaVIS, wave, photonMap, t_min);
+      SinglePDWaveformCreatorLite(fXArapucaVISEff, wave, photonMap, t_min,is_daphne);
     }
     else{
       throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
     }
     if(fParams.BaselineRMS > 0.0) AddLineNoise(wave);
-    if(fParams.DarkNoiseRate > 0.0) AddDarkNoise(wave);
+    if(fParams.DarkNoiseRate > 0.0)
+    {
+      if (!is_daphne) AddDarkNoise(wave,fWaveformSP);
+      else            AddDarkNoise(wave,fWaveformSP_Daphne);
+    } 
+
     CreateSaturation(wave);
   }
 
@@ -201,7 +198,8 @@ namespace opdet {
     std::unique_ptr<CLHEP::RandGeneral>& timeHisto,
     std::vector<double>& wave,
     std::map<int, int> const& photonMap,
-    double const& t_min
+    double const& t_min,
+    bool is_daphne
     )
   {
     // TODO: check that this new approach of not using the last
@@ -209,22 +207,25 @@ namespace opdet {
     double meanPhotons;
     size_t acceptedPhotons;
     double tphoton;
-    int nCT;
-    size_t timeBin;
     for (auto const& photonMember : photonMap) {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias
       meanPhotons = photonMember.second*effT;
-      acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
+      acceptedPhotons = fPoissonQGen.fire(meanPhotons);
       for(size_t i = 0; i < acceptedPhotons; i++) {
         tphoton = timeHisto->fire();
         tphoton += photonMember.first - t_min;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
+        int nCT=1;
         if(fParams.CrossTalk > 0.0 &&
-           (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
-        else nCT = 1;
-        timeBin = std::floor(tphoton * fSampling);
-        if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+           fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
+          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
+          if(timeBin < wave.size()) {
+            // P_truth=P_truth+nCT;
+            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            }
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);}
+          }
       }
     }
   }
@@ -234,65 +235,71 @@ namespace opdet {
     double effT,
     std::vector<double>& wave,
     std::map<int, int> const& photonMap,
-    double const& t_min
+    double const& t_min,
+    bool is_daphne
     )
   {
     double meanPhotons;
     size_t acceptedPhotons;
     double tphoton;
     int nCT;
-    size_t timeBin;
     for (auto const& photonMember : photonMap) {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias
       meanPhotons = photonMember.second*effT;
-      acceptedPhotons = CLHEP::RandPoissonQ::shoot(fEngine, meanPhotons);
+      acceptedPhotons = fPoissonQGen.fire(meanPhotons);
       for(size_t i = 0; i < acceptedPhotons; i++) {
-        tphoton = (CLHEP::RandExponential::shoot(fEngine, fParams.DecayTXArapucaVIS));
-        tphoton += photonMember.first - t_min;
+        tphoton = fExponentialGen.fire(fParams.DecayTXArapucaVIS);
+        tphoton += photonMember.first - t_min + fTimeTPB->fire();
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+        if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
-        timeBin = std::floor(tphoton * fSampling);
-        if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
+          if(timeBin < wave.size()) {
+            // P_truth=P_truth+nCT;
+            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            }
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);}
+          }
       }
     }
   }
 
-  void DigiArapucaSBNDAlg::Pulse1PE(std::vector<double>& wsp)//single pulse waveform
+  //Ideal single pulse waveform, same shape for both electronics (not realistic: different capacitances, ...) 
+  void DigiArapucaSBNDAlg::Pulse1PE(std::vector<double>& fWaveformSP, const double sampling)//TODO: use only one Pulse1PE functions for both electronics ~rodrigoa
   {
-    double time;
     double constT1 = fParams.ADC * fParams.MeanAmplitude;
-    for(size_t i = 0; i<wsp.size(); i++) {
-      time = static_cast<double>(i) / fSampling;
-      if (time < fParams.PeakTime)
-        wsp[i] = constT1 * std::exp((time - fParams.PeakTime) / fParams.RiseTime);
-      else
-        wsp[i] = constT1 * std::exp(-(time - fParams.PeakTime) / fParams.FallTime);
+    for(size_t i = 0; i<fWaveformSP.size(); i++) {
+      double time = static_cast<double>(i) / sampling;
+      if (time < fParams.PeakTime) fWaveformSP[i] = constT1 * std::exp((time - fParams.PeakTime) / fParams.RiseTime);
+      else fWaveformSP[i] = constT1 * std::exp(-(time - fParams.PeakTime) / fParams.FallTime);
     }
   }
-
-
+  
   void DigiArapucaSBNDAlg::AddSPE(
-    size_t time_bin,
+    const size_t time_bin,
     std::vector<double>& wave,
-    int nphotons) //adding single pulse
+    const std::vector<double>& fWaveformSP,
+    const int nphotons) //adding single pulse //TODO: use only one function, use pulsize and fWaveformSP as arguments instead ~rodrigoa
   {
     // if(time_bin > wave.size()) return;
-    size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
+    size_t max = time_bin + fWaveformSP.size() < wave.size() ? time_bin + fWaveformSP.size() : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
-    std::transform(min_it, max_it,
-                   wsp.begin(), min_it,
-                   [nphotons](double w, double ws) -> double {
-                     return w + ws*nphotons  ; });
-  }
 
+    double nphotons_aux= nphotons;
+    if(fParams.MakeAmpFluctuations) nphotons_aux = fGaussQGen.fire(nphotons, std::sqrt(nphotons) * fParams.AmpFluctuation);
+
+    std::transform(min_it, max_it,
+                   fWaveformSP.begin(), min_it,
+                   [nphotons_aux](double w, double ws) -> double {
+                     return w + ws*nphotons_aux  ; });
+  }
 
   void DigiArapucaSBNDAlg::CreateSaturation(std::vector<double>& wave)
   {
     std::replace_if(wave.begin(), wave.end(),
-                    [&](auto w){return w > saturation;}, saturation);
+                    [&](auto w){return w > fADCSaturation;}, fADCSaturation);
   }
 
 
@@ -313,25 +320,24 @@ namespace opdet {
     //
     std::transform(wave.begin(), wave.end(), wave.begin(),
                    [this](double w) -> double {
-                     return w + CLHEP::RandGaussQ::shoot(fEngine, 0, fParams.BaselineRMS) ; });
+                     return w + fGaussQGen.fire(0., fParams.BaselineRMS) ; });
   }
 
 
-  void DigiArapucaSBNDAlg::AddDarkNoise(std::vector<double>& wave)
+  void DigiArapucaSBNDAlg::AddDarkNoise(std::vector<double>& wave,std::vector<double>& WaveformSP)
   {
     int nCT;
-    size_t timeBin;
     // Multiply by 10^9 since fDarkNoiseRate is in Hz (conversion from s to ns)
     double mean = 1000000000.0 / fParams.DarkNoiseRate;
-    double darkNoiseTime = CLHEP::RandExponential::shoot(fEngine, mean);
+    double darkNoiseTime = fExponentialGen.fire(mean);
     while(darkNoiseTime < wave.size()) {
-      timeBin = std::round(darkNoiseTime);
-      if(fParams.CrossTalk > 0.0 && (CLHEP::RandFlat::shoot(fEngine, 1.0)) < fParams.CrossTalk) nCT = 2;
+      size_t timeBin = std::round(darkNoiseTime);
+      if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
       else nCT = 1;
-      if(timeBin < wave.size()) AddSPE(timeBin, wave, nCT);
+      if(timeBin < wave.size()) AddSPE(timeBin, wave, WaveformSP, nCT);
       // Find next time to add dark noise
-      darkNoiseTime += CLHEP::RandExponential::shoot(fEngine, mean);
-    }
+      darkNoiseTime += fExponentialGen.fire(mean);
+    }//while
   }
 
 
@@ -361,24 +367,25 @@ namespace opdet {
   (Config const& config)
   {
     // settings
-    fBaseConfig.ADC               = config.voltageToADC();
-    fBaseConfig.Baseline          = config.baseline();
-    fBaseConfig.Saturation        = config.saturation();
-    fBaseConfig.ArapucaVUVEff     = config.arapucaVUVEff();
-    fBaseConfig.ArapucaVISEff     = config.arapucaVISEff();
-    fBaseConfig.XArapucaVUVEff    = config.xArapucaVUVEff();
-    fBaseConfig.XArapucaVISEff    = config.xArapucaVISEff();
-    fBaseConfig.RiseTime          = config.riseTime();
-    fBaseConfig.FallTime          = config.fallTime();
-    fBaseConfig.MeanAmplitude     = config.meanAmplitude();
-    fBaseConfig.DarkNoiseRate     = config.darkNoiseRate();
-    fBaseConfig.BaselineRMS       = config.baselineRMS();
-    fBaseConfig.CrossTalk         = config.crossTalk();
-    fBaseConfig.PulseLength       = config.pulseLength();
-    fBaseConfig.PeakTime          = config.peakTime();
-    fBaseConfig.DecayTXArapucaVIS = config.decayTXArapucaVIS();
-    fBaseConfig.ArapucaDataFile   = config.arapucaDataFile();
-
+    fBaseConfig.ADC                   = config.voltageToADC();
+    fBaseConfig.Baseline              = config.baseline();
+    fBaseConfig.Saturation            = config.saturation();
+    fBaseConfig.XArapucaVUVEff        = config.xArapucaVUVEff();
+    fBaseConfig.XArapucaVISEff        = config.xArapucaVISEff();
+    fBaseConfig.RiseTime              = config.riseTime();
+    fBaseConfig.FallTime              = config.fallTime();
+    fBaseConfig.MeanAmplitude         = config.meanAmplitude();
+    fBaseConfig.DarkNoiseRate         = config.darkNoiseRate();
+    fBaseConfig.BaselineRMS           = config.baselineRMS();
+    fBaseConfig.CrossTalk             = config.crossTalk();
+    fBaseConfig.PulseLength           = config.pulseLength();
+    fBaseConfig.PeakTime              = config.peakTime();
+    fBaseConfig.DecayTXArapucaVIS     = config.decayTXArapucaVIS();
+    fBaseConfig.ArapucaDataFile       = config.arapucaDataFile();
+    fBaseConfig.ArapucaSinglePEmodel  = config.ArapucasinglePEmodel();
+    fBaseConfig.frequency_Daphne      = config.DaphneFrequency();
+    fBaseConfig.MakeAmpFluctuations   = config.makeAmpFluctuations();
+    fBaseConfig.AmpFluctuation        = config.ampFluctuation();
   }
 
   std::unique_ptr<DigiArapucaSBNDAlg> DigiArapucaSBNDAlgMaker::operator()(
@@ -393,6 +400,7 @@ namespace opdet {
     // set up parameters
     params.larProp = &larProp;
     params.frequency = clockData.OpticalClock().Frequency();
+    params.frequency_Daphne = fBaseConfig.frequency_Daphne; //Mhz
     params.engine = engine;
 
     return std::make_unique<DigiArapucaSBNDAlg>(params);

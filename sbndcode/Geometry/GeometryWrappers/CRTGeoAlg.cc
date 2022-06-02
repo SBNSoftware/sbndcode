@@ -23,33 +23,38 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
   // Loop over them
   for(auto const& auxDet : auxDets){
 
+    // Get the geometry object for the auxDet
+    std::set<std::string> volNames = {auxDet.TotalVolume()->GetName()};
+    std::vector<std::vector<TGeoNode const*>> paths = fGeometryService->FindAllVolumePaths(volNames);
+
+    // Build up a path that ROOT understands
+    std::string path = "";
+    for (size_t inode = 0; inode < paths.at(0).size(); inode++){
+      path += paths.at(0).at(inode)->GetName();
+      if(inode < paths.at(0).size() - 1){
+        path += "/";
+      }
+    }
+
     int sv_i = 0;
     // Loop over the strips in the arrays
     for(size_t i = 0; i < auxDet.NSensitiveVolume(); i++){
 
-      // Get the geometry object for the strip
       geo::AuxDetSensitiveGeo const& auxDetSensitive = auxDet.SensitiveVolume(i);
-      std::set<std::string> volNames = {auxDetSensitive.TotalVolume()->GetName()};
-      std::vector<std::vector<TGeoNode const*>> paths = fGeometryService->FindAllVolumePaths(volNames);
-
-      // Build up a path that ROOT understands
-      std::string path = "";
-      for (size_t inode = 0; inode < paths.at(0).size(); inode++){
-        path += paths.at(0).at(inode)->GetName();
-        if(inode < paths.at(0).size() - 1){
-          path += "/";
-        }
-      }
 
       // Access the path
       TGeoManager* manager = fGeometryService->ROOTGeoManager();
       manager->cd(path.c_str());
 
-      // Get all of the things we're intersted in in the path
-      TGeoNode* nodeStrip = manager->GetCurrentNode();
-      TGeoNode* nodeModule = manager->GetMother(2);
-      TGeoNode* nodeTagger = manager->GetMother(3);
-      TGeoNode* nodeDet = manager->GetMother(4);
+      // We get the array of strips first, which is the AuxDet,
+      // then from the AuxDet, we get the strip by picking the
+      // daughter with the ID of the AuxDetSensitive, and finally
+      // from the AuxDet, we go up and pick the module, tagger, and det
+      TGeoNode* nodeArray = manager->GetCurrentNode();
+      TGeoNode* nodeStrip = nodeArray->GetDaughter(i);
+      TGeoNode* nodeModule = manager->GetMother(1);
+      TGeoNode* nodeTagger = manager->GetMother(2);
+      TGeoNode* nodeDet = manager->GetMother(3);
 
       // Fill the tagger information
       std::string taggerName = nodeTagger->GetName();
@@ -139,6 +144,10 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         usedStrips.push_back(stripName);
 
         // Get the limits in local coordinates
+	// Note that these dimensions DO NOT conform to the expected mapping
+	// width  = conventional strip length (one end to another)
+	// height = conventional strip width (distance between the two SiPMs)
+	// length = conventional thickness
         double halfWidth = auxDetSensitive.HalfWidth1();
         double halfHeight = auxDetSensitive.HalfHeight();
         double halfLength = auxDetSensitive.Length()/2;
@@ -163,7 +172,7 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         strip.minZ = std::min(limitsWorld[2], limitsWorld2[2]);
         strip.maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
         strip.normal = auxDetSensitive.GetNormalVector();
-        strip.width = halfWidth * 2.;
+        strip.width = halfHeight * 2.;
         strip.null = false;
         strip.module = moduleName;
 
@@ -171,12 +180,13 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         uint32_t channel0 = 32 * ad_i + 2 * sv_i + 0;
         uint32_t channel1 = 32 * ad_i + 2 * sv_i + 1;
         // Sipm0 is on the left in local coords
-        double sipm0X = -halfWidth;
-        double sipm1X = halfWidth;
-        // In local coordinates the Y position is at half height (top if top) (bottom if not)
-        double sipmY = halfHeight;
-        if(!fModules[moduleName].top) sipmY = - halfHeight;
-        double sipm0XYZ[3] = {sipm0X, sipmY, 0};
+        double sipm0Y = -halfHeight;
+        double sipm1Y = halfHeight;
+        // In local coordinates the X position is at half width (remembering width is actually length)
+	// (top if top) (bottom if not)
+        double sipmX = halfWidth;
+        if(!fModules[moduleName].top) sipmX = - halfWidth;
+        double sipm0XYZ[3] = {sipmX, sipm0Y, 0};
         double sipm0XYZWorld[3];
         auxDetSensitive.LocalToWorld(sipm0XYZ, sipm0XYZWorld);
 
@@ -189,7 +199,7 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         sipm0.null = false;
         fSipms[channel0] = sipm0;
 
-        double sipm1XYZ[3] = {sipm1X, sipmY, 0};
+        double sipm1XYZ[3] = {sipmX, sipm1Y, 0};
         double sipm1XYZWorld[3];
         auxDetSensitive.LocalToWorld(sipm1XYZ, sipm1XYZWorld);
 
@@ -270,20 +280,6 @@ size_t CRTGeoAlg::NumModules() const{
   return fModules.size();
 }
 
-// Get the number of modules in a tagger by name
-size_t CRTGeoAlg::NumModules(std::string taggerName) const{
-  CRTTaggerGeo tagger = GetTagger(taggerName);
-  if(!tagger.null) return tagger.modules.size();
-  return 0;
-}
-
-// Get the number of modules in a tagger by index
-size_t CRTGeoAlg::NumModules(size_t tagger_i) const{
-  CRTTaggerGeo tagger = GetTagger(tagger_i);
-  if(!tagger.null) return tagger.modules.size();
-  return 0;
-}
-
 
 // ----------------------------------------------------------------------------------
 // Get the total number of strips in the geometry
@@ -291,26 +287,6 @@ size_t CRTGeoAlg::NumStrips() const{
   return fStrips.size();
 }
 
-// Get the number of strips in module by name
-size_t CRTGeoAlg::NumStrips(std::string moduleName) const{
-  CRTModuleGeo module = GetModule(moduleName);
-  if(!module.null) return module.strips.size();
-  return 0;
-}
-
-// Get the number of strips in  module by global index
-size_t CRTGeoAlg::NumStrips(size_t module_i) const{
-  CRTModuleGeo module = GetModule(module_i);
-  if(!module.null) return module.strips.size();
-  return 0;
-}
-
-// Get the number of strips in module by tagger index and local module index
-size_t CRTGeoAlg::NumStrips(size_t tagger_i, size_t module_i) const{
-  CRTModuleGeo module = GetModule(tagger_i, module_i);
-  if(!module.null) return module.strips.size();
-  return 0;
-}
 
 // ----------------------------------------------------------------------------------
 // Get the tagger geometry object by name
@@ -359,21 +335,6 @@ CRTModuleGeo CRTGeoAlg::GetModule(size_t module_i) const{
   return nullModule;
 }
 
-// Get the module geometry object by tagger index and local module index
-CRTModuleGeo CRTGeoAlg::GetModule(size_t tagger_i, size_t module_i) const{
-  CRTModuleGeo nullModule = {};
-  nullModule.null = true;
-
-  CRTTaggerGeo tagger = GetTagger(tagger_i);
-  if(tagger.null) return nullModule;
-
-  size_t index = 0;
-  for(auto const& module : tagger.modules){
-    if(module_i == index) return module.second;
-    index++;
-  }
-  return nullModule;
-}
 
 
 // ----------------------------------------------------------------------------------
@@ -396,38 +357,6 @@ CRTStripGeo CRTGeoAlg::GetStrip(size_t strip_i) const{
   }
   CRTStripGeo nullStrip = {};
   nullStrip.null = true;
-  return nullStrip;
-}
-
-// Get the strip geometry object by global module index and local strip index
-CRTStripGeo CRTGeoAlg::GetStrip(size_t module_i, size_t strip_i) const{
-  CRTStripGeo nullStrip = {};
-  nullStrip.null = true;
-
-  CRTModuleGeo module = GetModule(module_i);
-  if(module.null) return nullStrip;
-
-  size_t index = 0;
-  for(auto const& strip : module.strips){
-    if(strip_i == index) return strip.second;
-    index++;
-  }
-  return nullStrip;
-}
-
-// Get the strip geometry object by tagger index, local module index and local strip index
-CRTStripGeo CRTGeoAlg::GetStrip(size_t tagger_i, size_t module_i, size_t strip_i) const{
-  CRTStripGeo nullStrip = {};
-  nullStrip.null = true;
-
-  CRTModuleGeo module = GetModule(tagger_i, module_i);
-  if(module.null) return nullStrip;
-
-  size_t index = 0;
-  for(auto const& strip : module.strips){
-    if(strip_i == index) return strip.second;
-    index++;
-  }
   return nullStrip;
 }
 
@@ -465,13 +394,16 @@ std::vector<double> CRTGeoAlg::StripLimitsWithChargeSharing(std::string stripNam
   double halfHeight = sensitiveGeo.HalfHeight();
   double halfLength = sensitiveGeo.HalfLength();
 
+  // Note that for the purpose of this reconstruction the "height" coordinates (in y)
+  // is the dimension we would conventionally think of as width (distance between the SiPMs)
+
   // Get the maximum strip limits in world coordinates
-  double l1[3] = {-halfWidth + x + ex, halfHeight, halfLength};
+  double l1[3] = {halfWidth, -halfHeight + x + ex, halfLength};
   double w1[3];
   sensitiveGeo.LocalToWorld(l1, w1);
 
   // Get the minimum strip limits in world coordinates
-  double l2[3] = {-halfWidth + x - ex, -halfHeight, -halfLength};
+  double l2[3] = {-halfWidth, -halfHeight + x - ex, -halfLength};
   double w2[3];
   sensitiveGeo.LocalToWorld(l2, w2);
 
@@ -558,20 +490,12 @@ bool CRTGeoAlg::IsInsideCRT(TVector3 point){
 
 bool CRTGeoAlg::IsInsideCRT(geo::Point_t point){
   std::vector<double> limits = CRTLimits();
-  if(point.X() > limits[0] && point.Y() > limits[1] && point.Z() > limits[2]
-     && point.X() < limits[3] && point.Y() < limits[4] && point.Z() < limits[5]){
-    return true;
-  }
-  return false;
+  return point.X() > limits[0] && point.Y() > limits[1] && point.Z() > limits[2]
+    && point.X() < limits[3] && point.Y() < limits[4] && point.Z() < limits[5];
 }
 
 // ----------------------------------------------------------------------------------
-// Determine if a point is inside a tagger by name
-bool CRTGeoAlg::IsInsideTagger(std::string taggerName, geo::Point_t point){
-  CRTTaggerGeo tagger = GetTagger(taggerName);
-  return IsInsideTagger(tagger, point);
-}
-
+// Determine if a point is inside a tagger
 bool CRTGeoAlg::IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point){
   if(tagger.null) return false;
   double x = point.X();
@@ -583,17 +507,12 @@ bool CRTGeoAlg::IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point){
   double xmax = tagger.maxX;
   double ymax = tagger.maxY;
   double zmax = tagger.maxZ;
-  if(x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax) return true;
-  return false;
+
+  return x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax;
 }
 
 // ----------------------------------------------------------------------------------
-// Determine if a point is inside a module by name
-bool CRTGeoAlg::IsInsideModule(std::string moduleName, geo::Point_t point){
-  CRTModuleGeo module = GetModule(moduleName);
-  return IsInsideModule(module, point);
-}
-
+// Determine if a point is inside a module
 bool CRTGeoAlg::IsInsideModule(const CRTModuleGeo& module, geo::Point_t point){
   if(module.null) return false;
   double x = point.X();
@@ -605,21 +524,12 @@ bool CRTGeoAlg::IsInsideModule(const CRTModuleGeo& module, geo::Point_t point){
   double xmax = module.maxX;
   double ymax = module.maxY;
   double zmax = module.maxZ;
-  // Make the width limits a bit more generous to account for steps in true trajectory
-  /*if(std::abs(xmax-xmin)==1){ xmin-=1; xmax+=1; }
-  if(std::abs(ymax-ymin)==1){ ymin-=1; ymax+=1; }
-  if(std::abs(zmax-zmin)==1){ zmin-=1; zmax+=1; }*/
-  if(x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax) return true;
-  return false;
+
+  return x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax;
 }
 
 // ----------------------------------------------------------------------------------
-// Determine if a point is inside a strip by name
-bool CRTGeoAlg::IsInsideStrip(std::string stripName, geo::Point_t point){
-  CRTStripGeo strip = GetStrip(stripName);
-  return IsInsideStrip(strip, point);
-}
-
+// Determine if a point is inside a strip
 bool CRTGeoAlg::IsInsideStrip(const CRTStripGeo& strip, geo::Point_t point){
   if(strip.null) return false;
   double x = point.X();
@@ -631,12 +541,8 @@ bool CRTGeoAlg::IsInsideStrip(const CRTStripGeo& strip, geo::Point_t point){
   double xmax = strip.maxX;
   double ymax = strip.maxY;
   double zmax = strip.maxZ;
-  // Make the width limits a bit more generous to account for steps in true trajectory
-  /*if(std::abs(xmax-xmin)==1){ xmin-=0.5; xmax+=0.5; }
-  if(std::abs(ymax-ymin)==1){ ymin-=0.5; ymax+=0.5; }
-  if(std::abs(zmax-zmin)==1){ zmin-=0.5; zmax+=0.5; }*/
-  if(x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax) return true;
-  return false;
+
+  return x > xmin && x < xmax && y > ymin && y < ymax && z > zmin && z < zmax;
 }
 
 // ----------------------------------------------------------------------------------
@@ -651,9 +557,7 @@ bool CRTGeoAlg::CheckOverlap(const CRTModuleGeo& module1, const CRTModuleGeo& mo
   double maxZ = std::min(module1.maxZ, module2.maxZ);
 
   // If the two strips overlap in 2 dimensions then return true
-  if ((minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ)) return true;
-  // Otherwise return a "null" value
-  return false;
+  return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
 }
 
 // ----------------------------------------------------------------------------------
@@ -675,26 +579,6 @@ bool CRTGeoAlg::HasOverlap(const CRTModuleGeo& module){
 
 bool CRTGeoAlg::StripHasOverlap(std::string stripName){
   return HasOverlap(fModules.at(fStrips.at(stripName).module));
-}
-
-std::vector<double> CRTGeoAlg::StripOverlap(std::string strip1Name, std::string strip2Name){
-  auto const& strip1 = fStrips.at(strip1Name);
-  auto const& strip2 = fStrips.at(strip2Name);
-
-  double minX = std::max(strip1.minX, strip2.minX);
-  double maxX = std::min(strip1.maxX, strip2.maxY);
-  double minY = std::max(strip1.minY, strip2.minY);
-  double maxY = std::min(strip1.maxY, strip2.maxY);
-  double minZ = std::max(strip1.minZ, strip2.minZ);
-  double maxZ = std::min(strip1.maxZ, strip2.maxZ);
-
-  std::vector<double> null = {-99999, -99999, -99999, -99999, -99999, -99999};
-  std::vector<double> overlap = {minX, maxX, minY, maxY, minZ, maxZ};
-
-  // If the two strips overlap in 2 dimensions then return the overlap
-  if ((minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ)) return overlap;
-  // Otherwise return a "null" value
-  return null;
 }
 
 // ----------------------------------------------------------------------------------
@@ -906,8 +790,7 @@ bool CRTGeoAlg::EntersVolume(const simb::MCParticle& particle){
     else if(i == 0) startOutside = true;
     else if(i == particle.NumberTrajectoryPoints()-1) endOutside = true;
   }
-  if(enters && (startOutside || endOutside)) return true;
-  return false;
+  return enters && (startOutside || endOutside);
 }
 
 // ----------------------------------------------------------------------------------
@@ -925,8 +808,7 @@ bool CRTGeoAlg::CrossesVolume(const simb::MCParticle& particle){
     else if(i == 0) startOutside = true;
     else if(i == particle.NumberTrajectoryPoints()-1) endOutside = true;
   }
-  if(startOutside && enters && endOutside) return true;
-  return false;
+  return startOutside && enters && endOutside;
 }
 
 

@@ -1,0 +1,117 @@
+#include "geometry_sbnd.fcl"
+
+BEGIN_PROLOG
+
+
+#
+# Physics List
+#
+sbnd_physics_list_fastoptical:
+{
+  PhysicsListName: "SBND_QGSP_BERT_NNC"
+  DumpList: true
+  enableNeutronLimit: false
+  NeutronTimeLimit: 0.0
+  NeutronKinELimit: 0.0
+  enableStepLimit: true
+  enableOptical: false
+  enableCerenkov: false
+  CerenkovStackPhotons: false
+  CerenkovMaxNumPhotons: 100
+  CerenkovMaxBetaChange: 10.0
+  enableScintillation: false
+  ScintillationStackPhotons: false
+  ScintillationByParticleType: false
+  ScintillationTrackInfo: false
+  ScintillationTrackSecondariesFirst: false
+  enableAbsorption: false
+  enableRayleigh: false
+  enableMieHG: false
+  enableBoundary: false
+  enableWLS: false
+  BoundaryInvokeSD: false
+  Verbosity: 1
+  WLSProfile: delta
+}
+
+
+#
+# Particle List Action
+#
+sbnd_particle_list_action:
+{
+  service_type: "ParticleListActionService"
+  EnergyCut: 1e-2                          # Kinetic Energy cut, note Geant4 assumes this is in MeV.
+                                           # So: 1e-2 MeV = 10 KeV: we are applying a 10 keV cut.
+  keepEMShowerDaughters: false             # If false, does not store electromagnetic shower daughter
+                                           # particles in the MCParticles data product.
+  storeTrajectories: true
+  keepGenTrajectories: ["generator"]       # list of generator labels for which we want to store
+                                           # trajectory points.
+  keepOnlyPrimaryFullTrajectories: false   # (defaults to false in larg4) If set to true, only
+                                           # the particles with MCTruth process == "primary" and
+                                           # their descendants will have the full set of trajetory
+                                           # points stored. Particles descending from primaries with
+                                           # MCTruth process != "primary" will not have a full set
+                                           # of trajectory points stored -- only their start and
+                                           # end points. This filter only applies to the generator
+                                           # labels listed in the keepGenTrajectories. E.g, for the
+                                           # beam generator, no "primaryBackground" particles or their
+                                           # descendants would have a full set of traj. points. if
+                                           # this is set to true.
+  SparsifyTrajectories: true               # call SparsifyTrajectory() method on MCParticles with full trajectories
+                                           # being stored. This helps reduce memory usage in the root output stage
+                                           # if there are many trajectory points.
+  SparsifyMargin: 0.015      # required when SparsifyTrajectories is set to true
+  KeepTransportation: true   # When sparsifying: forces steps with the 'Transportation' process to be saved
+                             # Can be useful to keep the first step in the active volume
+  KeepSecondToLast: true     # Sparsifying could cut out the penultimate step point, which holds the correct info
+                             # of the end of the track (the final step is defined to have 0 kinetic energy)
+                             # This forces that true penultimate point to be saved, thus preserving the info
+}
+
+#
+# The LArG4 Detector
+#
+sbnd_larg4detector:
+{
+  category      : "world"
+  gdmlFileName_ : @local::sbnd_geometry_file_nowires
+  volumeNames   : ["volTPCActive" # list of volumes for which the stepLimit should be set
+                 , "volCryostat"
+                 , "volTPCPlaneVert"
+                 , "volXArapuca"
+                 , "volPMT"
+                 , "volFieldCage"
+                 , "volPDSstructure"
+                  ]
+  stepLimits    : [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3] # corresponding stepLimits in mm for the volumes in the volumeNames list
+}
+
+sbnd_larg4detector_noophybrid: @local::sbnd_larg4detector
+sbnd_larg4detector_noophybrid.volumeNames: ["volTPCActive"]
+sbnd_larg4detector_noophybrid.stepLimits: [0.3]
+
+
+#
+# The LArG4 Services
+#
+sbnd_larg4_services:
+{
+  DetectorHolder:    {}
+  ActionHolder:      {}
+  PhysicsListHolder: {}
+
+  MCTruthEventAction: {service_type: "MCTruthEventActionService"}
+  ParticleListAction: @local::sbnd_particle_list_action
+  PhysicsList:        @local::sbnd_physics_list_fastoptical
+  LArG4Detector:      @local::sbnd_larg4detector
+}
+
+sbnd_larg4_services_noophybrid:
+{
+                      @table::sbnd_larg4_services
+  LArG4Detector:      @local::sbnd_larg4detector_noophybrid
+}
+
+END_PROLOG

@@ -1,0 +1,75 @@
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+#include "flashfinder_deco_sbnd.fcl"
+#include "opdeconvolution_sbnd.fcl"
+
+process_name: DecoReco
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService:              { fileName: "decoreco_tree.root" }
+  RandomNumberGenerator:     {}
+  message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+                             @table::sbnd_services              # from services_sbnd.fcl
+			                       @table::sbnd_simulation_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  # Number of events to create
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "%ifb_%p.root"
+    dataTier:    "reconstructed"
+    compressionLevel: 1
+ }
+}
+
+physics:
+{
+  producers:
+  {
+    opdecopmt:     @local::SBNDOpDeconvolutionPMT
+    ophitdecopmt:  @local::SBNDDecoOpHitFinderPMT
+    opflashdecotpc0:   @local::SBNDDecoSimpleFlashTPC0
+    opflashdecotpc1:   @local::SBNDDecoSimpleFlashTPC1
+
+    opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
+    ophitdecoxarapuca:  @local::SBNDDecoOpHitFinderXArapuca
+    # opflashdecotpc0:   @local::SBNDDecoSimpleFlashTPC0
+    # opflashdecotpc1:   @local::SBNDDecoSimpleFlashTPC1
+
+  }
+
+  reco: [
+    opdecopmt,
+    ophitdecopmt,
+    opflashdecotpc0,
+    opflashdecotpc1,
+
+    opdecoxarapuca,
+    ophitdecoxarapuca
+    # opflashdecotpc0,
+    # opflashdecotpc1
+  ]
+
+
+  stream1: [out1]
+  trigger_paths: [reco]
+
+  end_paths: [stream1]
+}
+
+#Uncomment to drop deconvolved waveforms
+#outputs.out1.outputCommands: [ "keep *_*_*_*", "drop raw::OpDetWaveforms_opdecopmt__DecoReco"]

@@ -28,10 +28,20 @@ namespace opdet {
     return false;
   }
 
+  bool sbndPDMapAlg::isElectronics(size_t ch, std::string pdname) const
+  {
+    if(PDmap.at(ch)["electronics"] == std::string(pdname)) return true; // TODO: add number of electronics, daphne01, daphne02, .... ~rodrigoa
+    return false;
+  }
+
   std::string sbndPDMapAlg::pdType(size_t ch) const
   {
-    if(ch < PDmap.size()) return PDmap.at(ch)["pd_type"];
-    return "There is no such channel";
+    return PDmap.at(ch)["pd_type"];
+  }
+
+  std::string sbndPDMapAlg::electronicsType(size_t ch) const
+  {
+    return PDmap.at(ch)["electronics"]; 
   }
 
   std::vector<int> sbndPDMapAlg::getChannelsOfType(std::string pdname) const
@@ -39,6 +49,15 @@ namespace opdet {
     std::vector<int> out_ch_v;
     for (size_t ch = 0; ch < PDmap.size(); ch++) {
       if (PDmap.at(ch)["pd_type"] == pdname) out_ch_v.push_back(ch);
+    }
+    return out_ch_v;
+  }
+
+  std::vector<int> sbndPDMapAlg::getChannelsOfType(std::string pdname,std::string elname) const
+  {//overload to select channels by pdtype AND electronics type ~rodrigoa
+    std::vector<int> out_ch_v;
+    for (size_t ch = 0; ch < PDmap.size(); ch++) {
+      if ((PDmap.at(ch)["pd_type"] == pdname) && (PDmap.at(ch)["electronics"] == elname))out_ch_v.push_back(ch);
     }
     return out_ch_v;
   }

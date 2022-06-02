@@ -8,22 +8,23 @@ simple_plugin( sbndPDMapAlg tool
                     lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora_LArPandoraInterface
                     sbndcode_Utilities_SignalShapingServiceSBND_service
-                    nurandom_RandomUtils_NuRandomService_service
-                    ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-                    canvas
-                    cetlib_except
-                    ${MF_MESSAGELOGGER}
-                    ${MF_UTILITIES}
-                    ${FHICLCPP}
-                    cetlib cetlib_except
-                    ${CLHEP}
+                    nurandom::RandomUtils_NuRandomService_service
+                    art::Framework_Services_Optional_RandomNumberGenerator_service
+                    canvas::canvas
+                    cetlib_except::cetlib_except
+                    messagefacility::MF_MessageLogger
+                    
+                    fhiclcpp::fhiclcpp
+                    cetlib::cetlib cetlib_except
+                    CLHEP::CLHEP
                     ${ROOT_BASIC_LIB_LIST}
-                    ${ROOT_CORE}
+                    ROOT::Core
 )
 
 
-art_make(
+art_make( EXCLUDE sbndPDMapAlg_tool.cc
   LIB_LIBRARIES
+                    sbndcode_OpDetSim_sbndPDMapAlg_tool
                     larcore_Geometry_Geometry_service
                     lardataobj_Simulation
                     lardata_Utilities
@@ -32,17 +33,17 @@ art_make(
                     lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora_LArPandoraInterface
                     sbndcode_Utilities_SignalShapingServiceSBND_service
-                    nurandom_RandomUtils_NuRandomService_service
-                    ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-                    canvas
-                    cetlib_except
-                    ${MF_MESSAGELOGGER}
-                    ${MF_UTILITIES}
-                    ${FHICLCPP}
-                    cetlib cetlib_except
-                    ${CLHEP}
+                    nurandom::RandomUtils_NuRandomService_service
+                    art::Framework_Services_Optional_RandomNumberGenerator_service
+                    canvas::canvas
+                    cetlib_except::cetlib_except
+                    messagefacility::MF_MessageLogger
+                    
+                    fhiclcpp::fhiclcpp
+                    cetlib::cetlib cetlib_except
+                    CLHEP::CLHEP
                     ${ROOT_BASIC_LIB_LIST}
-                    ${ROOT_CORE}
+                    ROOT::Core
 
   MODULE_LIBRARIES
                     sbndcode_OpDetSim
@@ -55,17 +56,17 @@ art_make(
                     lardataobj_AnalysisBase
                     lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
                     sbndcode_Utilities_SignalShapingServiceSBND_service
-                    nurandom_RandomUtils_NuRandomService_service
-                    ${ART_FRAMEWORK_CORE}
-                    ${ART_FRAMEWORK_PRINCIPAL}
-                    ${ART_FRAMEWORK_SERVICES_OPTIONAL_TFILESERVICE_SERVICE}
-                    ${ART_FRAMEWORK_SERVICES_OPTIONAL_RANDOMNUMBERGENERATOR_SERVICE}
-                    canvas
-                    ${MF_MESSAGELOGGER}
-                    ${MF_UTILITIES}
-                    ${FHICLCPP}
-                    cetlib cetlib_except
-                    ${CLHEP}
+                    nurandom::RandomUtils_NuRandomService_service
+                    art::Framework_Core
+                    art::Framework_Principal
+                    
+                    art::Framework_Services_Optional_RandomNumberGenerator_service
+                    canvas::canvas
+                    messagefacility::MF_MessageLogger
+                    
+                    fhiclcpp::fhiclcpp
+                    cetlib::cetlib cetlib_except
+                    CLHEP::CLHEP
                     ${ROOT_BASIC_LIB_LIST}
 )
 install_headers()
@@ -73,6 +74,7 @@ install_fhicl()
 install_source()
 cet_enable_asserts()
 add_subdirectory(FlashFinder)
+add_subdirectory(PMTAlg)
 
 # install sbnd_pds_mapping.json with mapping of the photon detectors
 install_fw(LIST sbnd_pds_mapping.json)

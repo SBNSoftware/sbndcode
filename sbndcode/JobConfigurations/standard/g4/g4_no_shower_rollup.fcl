@@ -1,3 +1,9 @@
+# File:    g4_no_shower_rollup.fcl
+# Purpose: Same as standard_g4_sbnd.fcl, but saves all EM shower daughter particles.
+#
+# This runs the new, refactored, LArG4 simulation.
+
+
 #include "standard_g4_sbnd.fcl"
 
-services.LArG4Parameters.KeepEMShowerDaughters: true
+services.ParticleListAction.keepEMShowerDaughters: true

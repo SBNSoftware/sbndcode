@@ -5,6 +5,7 @@
 
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "cetlib_except/exception.h"
 #include "larcore/Geometry/Geometry.h"
@@ -222,13 +223,11 @@ util::SignalShapingServiceSBND::SignalShaping(unsigned int channel) const
   if(!fInit)
     init();
 
+  //  art::ServiceHandle<geo::Geometry> geom;
+
   // Figure out plane type.
-
-  art::ServiceHandle<geo::Geometry> geom;
-  //geo::SigType_t sigtype = geom->SignalType(channel);
-
   // we need to distiguish the U and V planes
-  geo::View_t view = geom->View(channel);
+  geo::View_t view = GetView(channel);
 
   // Return appropriate shaper.
   //geo::SigType_t sigtype = geom->SignalType(channel);
@@ -250,11 +249,8 @@ util::SignalShapingServiceSBND::SignalShaping(unsigned int channel) const
 //---Give Gain Settings to SimWire ---//
 double util::SignalShapingServiceSBND::GetASICGain(unsigned int const channel) const
 {
-  art::ServiceHandle<geo::Geometry> geom;
-  //geo::SigType_t sigtype = geom->SignalType(channel);
-
   // we need to distiguish the U and V planes
-  geo::View_t view = geom->View(channel);
+  geo::View_t view = GetView(channel);
 
   double gain = 0.0;
   if(view == geo::kU)
@@ -272,11 +268,8 @@ double util::SignalShapingServiceSBND::GetASICGain(unsigned int const channel) c
 // //---Give Shaping time Settings to SimWire ---//
 // double util::SignalShapingServiceSBND::GetShapingTime(unsigned int const channel) const
 // {
-//   art::ServiceHandle<geo::Geometry> geom;
-//   //geo::SigType_t sigtype = geom->SignalType(channel);
-
 //   // we need to distiguish the U and V planes
-//   geo::View_t view = geom->View(channel);
+//   geo::View_t view = GetView(channel); 
 
 //   double shaping_time = 0;
 //   if(view == geo::kU)
@@ -294,11 +287,11 @@ double util::SignalShapingServiceSBND::GetASICGain(unsigned int const channel) c
 double util::SignalShapingServiceSBND::GetRawNoise(unsigned int const channel) const
 {
   unsigned int plane;
-  art::ServiceHandle<geo::Geometry> geom;
+//  art::ServiceHandle<geo::Geometry> geom;
   //geo::SigType_t sigtype = geom->SignalType(channel);
 
   // we need to distiguish the U and V planes
-  geo::View_t view = geom->View(channel);
+  geo::View_t view = GetView(channel);
 
   if(view == geo::kU)
     plane = 0;
@@ -334,11 +327,11 @@ double util::SignalShapingServiceSBND::GetRawNoise(unsigned int const channel) c
 double util::SignalShapingServiceSBND::GetDeconNoise(unsigned int const channel) const
 {
   unsigned int plane;
-  art::ServiceHandle<geo::Geometry> geom;
+//  art::ServiceHandle<geo::Geometry> geom;
   //geo::SigType_t sigtype = geom->SignalType(channel);
 
   // we need to distiguish the U and V planes
-  geo::View_t view = geom->View(channel);
+  geo::View_t view = GetView(channel);
 
   if(view == geo::kU)
     plane = 0;
@@ -878,8 +871,8 @@ void util::SignalShapingServiceSBND::SetResponseSampling()
 int util::SignalShapingServiceSBND::FieldResponseTOffset(detinfo::DetectorClocksData const& clockData,
                                                          unsigned int const channel) const
 {
-  art::ServiceHandle<geo::Geometry> geom;
-  geo::View_t view = geom->View(channel);
+  //art::ServiceHandle<geo::Geometry> geom;
+  geo::View_t view = GetView(channel);
 
   double time_offset = 0;
   if(view == geo::kU)
@@ -895,6 +888,23 @@ int util::SignalShapingServiceSBND::FieldResponseTOffset(detinfo::DetectorClocks
 
   auto tpc_clock = clockData.TPCClock();
   return tpc_clock.Ticks(time_offset/1.e3);
+}
+
+geo::View_t util::SignalShapingServiceSBND::GetView(unsigned int chan) const {
+  art::ServiceHandle<geo::Geometry> geom;
+  geo::View_t view = geom->View(chan);
+  
+  // TEMPORARY BUG FIX (7/23/2021, v09_26_00): With geometry v2, LArSoft is mixing 
+  // up the view assignments for the U and V planes in TPC0, but not TPC1, resulting
+  // in the wrong signal shapes being used. To work around this, we explicitly assign 
+  // the view based on the plane number for the two induction planes. -wforeman
+  std::vector<geo::WireID> wires = geom->ChannelToWire(chan);
+  if( wires.size() ) {
+    if      ( wires[0].Plane == 0 ) view = geo::kU;
+    else if ( wires[0].Plane == 1 ) view = geo::kV;
+  }
+
+  return view;
 }
 
 

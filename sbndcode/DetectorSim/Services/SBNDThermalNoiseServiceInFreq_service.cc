@@ -5,6 +5,7 @@
 
 #include "sbndcode/DetectorSim/Services/SBNDThermalNoiseServiceInFreq.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 
 using std::cout;
 using std::ostream;

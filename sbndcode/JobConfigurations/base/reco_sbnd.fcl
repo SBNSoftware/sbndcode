@@ -53,6 +53,7 @@
 
 ###include "hitparticleassociations.fcl"
 
+#include "sbnd_trackcalo_skimmer.fcl"
 
 process_name: Reco
 
@@ -126,7 +127,7 @@ physics:
   pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
   pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
   pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
-  pandoraCalo:         @local::sbnd_calomc
+  pandoraCalo:         @local::sbnd_gnewcalomc
   pandoraPid:          @local::sbnd_chi2pid
 
   pandoraSCECalo:      @local::sbnd_gnewcalomc
@@ -161,12 +162,18 @@ physics:
   crttrack:            @local::standard_crttrackproducer
   crthitt0:            @local::sbnd_crthitt0producer
   crttrackt0:          @local::sbnd_crttrackt0producer
+  crthitt0SCE:         @local::sbnd_crthitt0producer
+  crttrackt0SCE:       @local::sbnd_crttrackt0producer
 
   ### flash-matching
   fmatch:              @local::sbnd_simple_flashmatch
   fmatchSCE:           @local::sbnd_simple_flashmatch
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
+ 
+  ### Uncalibrated calorimetry producer for calibration caloskimmer
+  caloskimCalorimetry: @local::caloskim_calorimetry
+ 
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -206,13 +213,18 @@ physics:
          , crthitt0
          , crttrackt0
          , fmatch
+         , opt0finder
+	 , caloskimCalorimetry
  ]
 
- # The new flashmatching will eventually be part of reco2, but for now
- # we are keeping it separate here so we can easily remove if from the
- # reco fcl files.
- opticalt0: [ opt0finder ]
+ # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
+ 
+ analyzers:{
+  caloskim: @local::caloskim_nodigits_goldentracks
+ }
 
+ caloskimana: [ caloskim ]
+ 
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
 
@@ -250,10 +262,8 @@ outputs:
 
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
-                    @sequence::physics.reco2,
-                    opt0finder]
-physics.fullreco_noflashmatch: [ @sequence::physics.reco1,
-                                 @sequence::physics.reco2]
+                    @sequence::physics.reco2
+		          ]
 
 physics.trigger_paths: [ fullreco ]
 
@@ -265,10 +275,6 @@ physics.trigger_paths: [ fullreco ]
 #physics.producers.opflash.GenModule:                            "generator"
 
 physics.producers.caldata.DigitModuleLabel:                     "daq"
-physics.producers.caldata.ROITool.Threshold: [19, 35 , 13]
-physics.producers.caldata.ROITool.uPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
-physics.producers.caldata.ROITool.vPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
-physics.producers.caldata.ROITool.zPlaneROIPad: [ 10, 10 ] # number of bins to pad both ends of the ROIs
 
 physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
 physics.producers.fasthit.DigitModuleLabel:                     "daq"
@@ -287,7 +293,9 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 
 ### Added for Rhiannon's analysis work
 physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
-physics.producers.pandoraCalo.SpacePointModuleLabel:             "pandora"
+physics.producers.pandoraCalo.FieldDistortion:                	 false
+physics.producers.pandoraCalo.FieldDistortionEfield:          	 false
+physics.producers.pandoraCalo.TrackIsFieldDistortionCorrected:	 false
 physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
 physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
 
@@ -304,6 +312,11 @@ physics.producers.fmatchSCE.PandoraProducer: "pandoraSCE"
 physics.producers.fmatchSCE.TrackProducer: "pandoraSCETrack"
 physics.producers.fmatchSCE.CaloProducer: "pandoraSCECalo"
 physics.producers.fmatchSCE.SpacePointProducer: "pandoraSCE"
+
+physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
+physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"
+physics.producers.crttrackt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
+physics.producers.crttrackt0SCE.CrtTrackAlg.TPCTrackLabel: "pandoraSCETrack"
 
 #physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
@@ -350,3 +363,4 @@ physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
 #physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
 
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"

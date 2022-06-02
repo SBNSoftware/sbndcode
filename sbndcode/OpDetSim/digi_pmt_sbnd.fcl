@@ -1,4 +1,5 @@
 #include "detsimmodules.fcl"
+#include "pmtgainfluctuations_config.fcl"
 
 BEGIN_PROLOG
 
@@ -29,8 +30,11 @@ sbnd_digipmt_alg:
 
   QEDirect:                  0.03    #PMT quantum efficiency for direct (VUV) light
   QERefl:                    0.03    #PMT quantum efficiency for reflected (TPB converted) light
-  SinglePEmodel:             false   # false for ideal PMT response, true for test bench measured response
+  PMTSinglePEmodel:        false   # false for ideal PMT response, true for test bench measured response
   PMTDataFile:               "OpDetSim/digi_pmt_sbnd.root" # located in sbnd_data
+
+  MakeGainFluctuations: true
+  GainFluctuationsParams: @local::FirstDynodeGainFluctuations
 }
 
 END_PROLOG

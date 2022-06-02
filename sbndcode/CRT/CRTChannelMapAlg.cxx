@@ -53,8 +53,15 @@ namespace geo {
     for (size_t a=0; a<adgeo.size(); a++){
       std::string volName(adgeo[a].TotalVolume()->GetName());
 
+      long unsigned int number_scintillating_strips = 0;
+
+      if (strncmp(((adgeo[a].TotalVolume())->GetShape())->GetName(), "CRTstripMINOSArray", 18) == 0) {
+	number_scintillating_strips = 20;    //To account for the MINOS modules.
+      }
+      else {number_scintillating_strips = 16;}
+      
       size_t nsv = adgeo[a].NSensitiveVolume();
-      if (nsv != 16) {
+      if (nsv != number_scintillating_strips) {
         throw cet::exception("CRTChannelMap")
         << "Wrong number of sensitive volumes for CRT volume "
         << volName << " (got " << nsv << ", expected 16)" << std::endl;
@@ -64,7 +71,7 @@ namespace geo {
       fNameToADGeo[volName] = a;
 
       if (volName.find("CRTStripArray") != std::string::npos) {
-        for (size_t svID=0; svID<16; svID++) {
+        for (size_t svID=0; svID<number_scintillating_strips; svID++) {
           for (size_t ich=0; ich<2; ich++) {
             size_t chID = 2 * svID + ich;
             fADGeoToChannelAndSV[a].push_back(std::make_pair(chID, svID));
@@ -89,7 +96,7 @@ namespace geo {
 
     // Figure out which detector we are in
     ad = 0;
-    sv = this->NearestSensitiveAuxDet(worldLoc, auxDets, ad);
+    sv = this->NearestSensitiveAuxDet(worldLoc, auxDets, ad, 0.0001);
 
     // Get the origin of the sensitive volume in the world coordinate system
     double svOrigin[3] = {0, 0, 0};
@@ -114,10 +121,11 @@ namespace geo {
     }
 
     if (channel == UINT_MAX) {
-      throw cet::exception("CRTChannelMapAlg")
-      << "position ("
-      << worldLoc[0] << "," << worldLoc[1] << "," << worldLoc[2]
-      << ") does not correspond to any AuxDet";
+      mf::LogDebug("CRTChannelMapAlg") << "Can't find AuxDet for position ("
+                                       << worldLoc[0] << "," 
+                                       << worldLoc[1] << "," 
+                                       << worldLoc[2]
+                                       << ")\n";
     }
 
     return channel;
@@ -131,6 +139,8 @@ namespace geo {
     double x = 0;
     double y = 0;
     double z = 0;
+
+    std::cout << "CRTChannelMapAlg::AuxDetChannelToPosition" << std::endl;
 
     // Figure out which detector we are in
     size_t ad = UINT_MAX;

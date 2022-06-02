@@ -39,6 +39,7 @@
 #include <utility>
 #include <cmath> 
 #include <memory>
+#include <numeric> // std::accumulate
 
 namespace sbnd {
 
@@ -343,16 +344,16 @@ void CRTTrackProducer::produce(art::Event & evt)
     }// loop over tzeros
   }
   
+  mf::LogInfo("CRTTrackProducer")
+    <<"Number of tracks            = "<<CRTTrackCol->size()<<"\n"
+    <<"Number of complete tracks   = "<<CRTTrackCol->size()-nIncTrack<<"\n"
+    <<"Number of incomplete tracks = "<<nIncTrack;
+
   //store track collection into event
   if(fStoreTrack == 1){
     evt.put(std::move(CRTTrackCol));
     evt.put(std::move(Trackassn));
   }
-
-  mf::LogInfo("CRTTrackProducer")
-    <<"Number of tracks            = "<<"\n"
-    <<"Number of complete tracks   = "<<"\n"
-    <<"Number of incomplete tracks = "<<nIncTrack;
   
 } // CRTTrackProducer::produce()
 

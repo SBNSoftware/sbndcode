@@ -213,8 +213,10 @@ namespace opdet {
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
     wConfig.Sampling = (clockData.OpticalClock().Frequency()) / 1000.0; //in GHz
+    wConfig.Sampling_Daphne =  config().araAlgoConfig().DaphneFrequency() / 1000.0; //in GHz
     wConfig.EnableWindow = fTriggerAlg.TriggerEnableWindow(clockData, detProp); // us
     wConfig.Nsamples = (wConfig.EnableWindow[1] - wConfig.EnableWindow[0]) * 1000. /*us -> ns*/ * wConfig.Sampling /* GHz */;
+    wConfig.Nsamples_Daphne = (wConfig.EnableWindow[1] - wConfig.EnableWindow[0]) * 1000. /*us -> ns*/ * wConfig.Sampling_Daphne /* GHz */;
 
     fFinished = false;
 
@@ -275,14 +277,14 @@ namespace opdet {
     if (fUseSimPhotonsLite) {
       fPhotonLiteHandles.clear();
       //Get *ALL* SimPhotonsCollectionLite from Event
-      e.getManyByType(fPhotonLiteHandles);
+      fPhotonLiteHandles = e.getMany<std::vector<sim::SimPhotonsLite>>();
       if (fPhotonLiteHandles.size() == 0)
         mf::LogError("OpDetDigitizer") << "sim::SimPhotonsLite not found -> No Optical Detector Simulation!\n";
     }
     else {
       fPhotonHandles.clear();
       //Get *ALL* SimPhotonsCollection from Event
-      e.getManyByType(fPhotonHandles);
+      fPhotonLiteHandles = e.getMany<std::vector<sim::SimPhotonsLite>>();
       if (fPhotonHandles.size() == 0)
         mf::LogError("OpDetDigitizer") << "sim::SimPhotons not found -> No Optical Detector Simulation!\n";
     }
