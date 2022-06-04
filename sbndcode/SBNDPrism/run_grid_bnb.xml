@@ -46,7 +46,7 @@
     <numjobs>200</numjobs>
     <!-- <numjobs>2</numjobs> -->
     <datatier>generated</datatier>
-    <memory>2000</memory>
+    <memory>4000</memory>
     <jobsub> --expected-lifetime=6h -Q --generate-email-summary -l +SingularityImage=\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\" --append_condor_requirements='(TARGET.HAS_SINGULARITY=?=true)' </jobsub>
     <disk>50GB</disk>
   </stage>
