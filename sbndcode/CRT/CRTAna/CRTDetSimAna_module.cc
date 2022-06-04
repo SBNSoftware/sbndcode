@@ -18,6 +18,7 @@
 // LArSoft includes
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
@@ -70,7 +71,12 @@ namespace sbnd {
       // One Atom for each parameter
       fhicl::Atom<art::InputTag> SimModuleLabel {
         Name("SimModuleLabel"),
-        Comment("tag of detector simulation data product")
+        Comment("tag of particle simulation data product")
+      };
+
+      fhicl::Atom<art::InputTag> SimChannelModuleLabel {
+        Name("SimChannelModuleLabel"),
+        Comment("tag of channel simulation data product")
       };
 
       fhicl::Atom<art::InputTag> CRTSimLabel {
@@ -119,9 +125,10 @@ namespace sbnd {
   private:
 
     // fcl file parameters
-    art::InputTag fSimModuleLabel;      ///< name of detsim producer
-    art::InputTag fCRTSimLabel;         ///< name of CRT producer
-    bool          fVerbose;             ///< print information about what's going on
+    art::InputTag fSimModuleLabel;         ///< name of MCParticle producer in g4
+    art::InputTag fSimChannelModuleLabel;  ///< name of SimChannel producer in g4
+    art::InputTag fCRTSimLabel;            ///< name of CRT producer
+    bool          fVerbose;                ///< print information about what's going on
     double        fQPed;
     double        fQSlope;
     double        fClockSpeedCRT;
@@ -165,6 +172,7 @@ namespace sbnd {
   CRTDetSimAna::CRTDetSimAna(Parameters const& config)
     : EDAnalyzer(config)
     , fSimModuleLabel       (config().SimModuleLabel())
+    , fSimChannelModuleLabel(config().SimChannelModuleLabel())
     , fCRTSimLabel          (config().CRTSimLabel())
     , fVerbose              (config().Verbose())
     , fQPed                 (config().QPed())
@@ -240,7 +248,7 @@ namespace sbnd {
 
     // Get all the auxdet IDEs from the event
     art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
-    event.getByLabel(fSimModuleLabel, channels);
+    event.getByLabel(fSimChannelModuleLabel, channels);
 
     //----------------------------------------------------------------------------------------------------------
     //                                          TRUTH MATCHING
@@ -327,17 +335,13 @@ namespace sbnd {
 
     for (auto& adsc : *channels) {
       // Get the IDEs from the Aux Det channels
-      const geo::AuxDetGeo& adGeo = fGeometryService->AuxDet(adsc.AuxDetID());
-
       if(adsc.AuxDetSensitiveID() == UINT_MAX) {
         mf::LogWarning("CRTDetSimAna") << "AuxDetSimChannel with ID: UINT_MAX\n"
                                        << "skipping channel...";
         continue;
       }
 
-      const geo::AuxDetSensitiveGeo& adsGeo = adGeo.SensitiveVolume(adsc.AuxDetSensitiveID());
-      std::string stripName = adsGeo.TotalVolume()->GetName();
-      stripName.append("_0");
+      std::string stripName = fCrtGeo.GetStrip(adsc.AuxDetSensitiveID()).name;
       std::string tagger = fCrtGeo.GetTaggerName(stripName);
       std::vector<sim::AuxDetIDE> ides = adsc.AuxDetIDEs();
 

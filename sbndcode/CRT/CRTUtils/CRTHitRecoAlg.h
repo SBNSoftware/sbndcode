@@ -38,6 +38,7 @@ namespace detinfo {
 
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
@@ -106,12 +107,21 @@ namespace sbnd{
         Comment("Clock speed of the CRT system [MHz]")
       };
 
+      fhicl::Atom<double> TimeOffset {
+        Name("TimeOffset"),
+        Comment("The global time offset to use for the CRT times")
+      };
+      fhicl::Atom<bool> UseG4RefTimeOffset {
+        Name("UseG4RefTimeOffset"),
+        Comment("Wheater or not to use the G4RefTime as GlobalT0Offset"),
+      };
+
     };
 
-    CRTHitRecoAlg(const Config& config);
+    CRTHitRecoAlg(const Config& config, double g4RefTime);
 
-    CRTHitRecoAlg(const fhicl::ParameterSet& pset) :
-      CRTHitRecoAlg(fhicl::Table<Config>(pset, {})()) {}
+    CRTHitRecoAlg(const fhicl::ParameterSet& pset,  double g4RefTime) :
+      CRTHitRecoAlg(fhicl::Table<Config>(pset, {})(), g4RefTime) {}
 
     CRTHitRecoAlg();
 
@@ -160,6 +170,8 @@ namespace sbnd{
     double fNpeScaleShift;
     double fTimeCoincidenceLimit;
     double fClockSpeedCRT;
+    double fTimeOffset;
+    bool fUseG4RefTimeOffset;
 
   };
 

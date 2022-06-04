@@ -7,6 +7,18 @@ services.NuRandomService.policy: "perEvent"
 
 physics.producers.cafmaker.CAFFilename: "nucosmics_caf_test_sbndcode_Current.caf.root"
 
-physics.producers.genieweight.genie_sbnd_multisim.number_of_multisims: 5
-physics.producers.genieweight.genie_sbnd_multisim_exclusive.number_of_multisims: 5
-physics.producers.genieweight.genie_ub_multisim.number_of_multisims: 5
+physics.producers.genieweight.multisim.number_of_multisims: 5
+
+physics.producers.fluxweight.horncurrent.number_of_multisims: 5
+physics.producers.fluxweight.expskin.number_of_multisims: 5
+physics.producers.fluxweight.pioninexsec.number_of_multisims: 5
+physics.producers.fluxweight.pionqexsec.number_of_multisims: 5
+physics.producers.fluxweight.piontotxsec.number_of_multisims: 5
+physics.producers.fluxweight.nucleoninexsec.number_of_multisims: 5
+physics.producers.fluxweight.nucleonqexsec.number_of_multisims: 5
+physics.producers.fluxweight.nucleontotxsec.number_of_multisims: 5
+physics.producers.fluxweight.kplus.number_of_multisims: 5
+physics.producers.fluxweight.kminus.number_of_multisims: 5
+physics.producers.fluxweight.kzero.number_of_multisims: 5
+physics.producers.fluxweight.piplus.number_of_multisims: 5
+physics.producers.fluxweight.piminus.number_of_multisims: 5

@@ -59,6 +59,8 @@ namespace opdet {
       double DecayTXArapucaVIS;// Decay time of EJ280 in ns
       std::string ArapucaDataFile; //File containing timing structure for arapucas
       bool ArapucaSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
+      bool MakeAmpFluctuations;  //Add amplitude fluctuations to the simulation
+      double AmpFluctuation; //Model for single pe response, false for ideal, true for test bench meas
 
       detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
       double frequency; ///< Optical-clock frequency
@@ -91,6 +93,7 @@ namespace opdet {
                                bool is_daphne,
                                double start_time,
                                unsigned n_samples);
+  // double P_truth=0;
 
   private:
 
@@ -103,8 +106,11 @@ namespace opdet {
     const double fXArapucaVISEff;
     const double fADCSaturation;
 
-    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine	
-
+    CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
+    CLHEP::RandFlat fFlatGen;
+    CLHEP::RandPoissonQ fPoissonQGen;
+    CLHEP::RandGaussQ fGaussQGen;
+    CLHEP::RandExponential fExponentialGen;
     std::unique_ptr<CLHEP::RandGeneral> fTimeXArapucaVUV;// histogram for getting the photon time distribution inside the XArapuca VUV box (considering the optical window)
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for visible (x)arapucas
 
@@ -136,7 +142,7 @@ namespace opdet {
     void AddSPE(size_t time_bin, std::vector<double>& wave, const std::vector<double>& fWaveformSP, int nphotons); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave,const double sampling);
     void AddLineNoise(std::vector<double>& wave);
-    void AddDarkNoise(std::vector<double>& wave);
+    void AddDarkNoise(std::vector<double>& wave , std::vector<double>& WaveformSP);
     double FindMinimumTime(sim::SimPhotons const& simphotons);
     double FindMinimumTimeLite(std::map< int, int > const& photonMap);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects
@@ -242,6 +248,16 @@ namespace opdet {
       fhicl::Atom<double> DaphneFrequency {
         Name("DaphneFrequency"),
         Comment("Sampling Frequency of the XArapucas with Daphne readouts (SBND Light detection system has 2 readout frequencies). Apsaia readouts read the frec value from LArSoft.")
+      };
+
+      fhicl::Atom<bool> makeAmpFluctuations {
+        Name("MakeAmpFluctuations"),
+        Comment("Include amplitude fluctuations to the simulated wvfs. For each PE, roll a rand number(gaussian distributed) with std=AmpFluctuation.")
+      };
+
+      fhicl::Atom<double> ampFluctuation {
+        Name("AmpFluctuation"),
+        Comment("Std of the gaussian fit (from data) to the 1PE distribution. Relative units i.e.: AmpFluctuation=0.1-> Amp(1PE)= 18+-1.8 ADC counts")
       };
 
 

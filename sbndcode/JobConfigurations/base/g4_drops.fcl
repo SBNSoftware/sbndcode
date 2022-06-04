@@ -1,0 +1,26 @@
+#=============================================================================
+#
+# Name: g4_drops.fcl
+#
+# Purpose: Sequence of RootOutput drop commands to drop data products after g4.
+#
+# Created: 28-Mar-2022  H. Greenlee
+#
+# Notes:
+#
+# 1.  OpDetBacktrackRecords are genearted in combination with SimPhtonsLites and
+#     contain truth.  SimPhotons or SimPhotonsLite will always be required at 
+#     detsim stage, but truth in OpDetBacktrackerRecords is in general not used
+#     in standard workflows.
+#
+# 2.  MCParticles are used in standard sbnd reco1, so can't be dropped after g4.
+#
+#=============================================================================
+
+BEGIN_PROLOG
+
+g4_drops: [ "drop sim::SimEnergyDeposits_*_*_*",
+            "drop sim::OpDetBacktrackerRecords_*_*_*" ]
+
+END_PROLOG
+

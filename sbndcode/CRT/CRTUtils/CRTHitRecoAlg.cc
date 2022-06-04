@@ -4,9 +4,13 @@
 
 namespace sbnd{
 
-CRTHitRecoAlg::CRTHitRecoAlg(const Config& config){
+CRTHitRecoAlg::CRTHitRecoAlg(const Config& config, double g4RefTime){
 
   this->reconfigure(config);
+
+  if (fUseG4RefTimeOffset) {
+    fTimeOffset = g4RefTime;
+  }
 }
 
 
@@ -27,6 +31,8 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   fNpeScaleShift = config.NpeScaleShift();
   fTimeCoincidenceLimit = config.TimeCoincidenceLimit();
   fClockSpeedCRT = config.ClockSpeedCRT();
+  fTimeOffset = config.TimeOffset();
+  fUseG4RefTimeOffset = config.UseG4RefTimeOffset();
 
   return;
 }
@@ -43,9 +49,9 @@ std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg:
   for (size_t i = 0; i < crtList.size(); i+=2){
 
     // Get the time
-    //fTrigClock.SetTime(crtList[i]->T0());
+    //fTrigClock.SetTime(crtList[i]->T1());
     //double t1 = fTrigClock.Time(); // [us]
-    double t1 = (double)(int)crtList[i]->T0()/fClockSpeedCRT; // [tick -> us]
+    double t1 = (double)(int)crtList[i]->T1()/fClockSpeedCRT; // [tick -> us]
     if(fUseReadoutWindow){
       if(!(t1 >= -driftTimeMuS && t1 <= readoutWindowMuS)) continue;
     }
@@ -64,9 +70,9 @@ std::map<std::pair<std::string, unsigned>, std::vector<CRTStrip>> CRTHitRecoAlg:
 CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<sbnd::crt::CRTData> sipm1, art::Ptr<sbnd::crt::CRTData> sipm2, size_t ind){
 
   // Get the time, channel, center and width
-  //fTrigClock.SetTime(sipm1->T0());
+  //fTrigClock.SetTime(sipm1->T1());
   //double t1 = fTrigClock.Time(); // [us]
-  double t1 = (double)(int)sipm1->T0()/fClockSpeedCRT; // [tick -> us]
+  double t1 = (double)(int)sipm1->T1()/fClockSpeedCRT; // [tick -> us]
 
   // Get strip info from the geometry service
   uint32_t channel = sipm1->Channel();
@@ -74,9 +80,9 @@ CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<sbnd::crt::CRTData> sipm1, art::
   std::pair<std::string,unsigned> tagger = ChannelToTagger(channel);
 
   // Get the time of hit on the second SiPM
-  //fTrigClock.SetTime(sipm2->T0());
+  //fTrigClock.SetTime(sipm2->T1());
   //double t2 = fTrigClock.Time(); // [us]
-  double t2 = (double)(int)sipm2->T0()/fClockSpeedCRT; // [tick -> us]
+  double t2 = (double)(int)sipm2->T1()/fClockSpeedCRT; // [tick -> us]
 
   // Calculate the number of photoelectrons at each SiPM
   double npe1 = ((double)sipm1->ADC() - fQPed)/fQSlope;
@@ -176,12 +182,13 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                            std::abs((overlap[5] - overlap[4])/2.));
 
             // Average the time
-            double time = (t0_1 + t0_2)/2;
+            double time = (t0_1 + t0_2)/2 - fTimeOffset;
             //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
             double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
+            int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
 
             // Create a CRT hit
-            sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+            sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                             mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
             std::vector<int> dataIds;
             dataIds.push_back(tagStrip.second[hit_i].dataID);
@@ -203,11 +210,12 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                        std::abs((limits1[3] - limits1[2])/2.), 
                        std::abs((limits1[5] - limits1[4])/2.));
 
-        double time = tagStrip.second[hit_i].t0;
+        double time = tagStrip.second[hit_i].t0 - fTimeOffset;
         double pes = tagStrip.second[hit_i].pes;
+        int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
 
         // Just use the single plane limits as the crt hit
-        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                         mean.Y(), error.Y(), mean.Z(), error.Z(), tagStrip.first.first);
         std::vector<int> dataIds;
         dataIds.push_back(tagStrip.second[hit_i].dataID);
@@ -230,11 +238,12 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                        std::abs((limits1[3] - limits1[2])/2.), 
                        std::abs((limits1[5] - limits1[4])/2.));
 
-        double time = taggerStrips[otherPlane][hit_j].t0;
+        double time = taggerStrips[otherPlane][hit_j].t0 - fTimeOffset;
         double pes = taggerStrips[otherPlane][hit_j].pes;
+        int plane = sbnd::CRTCommonUtils::GetPlaneIndex(otherPlane.first);
 
         // Just use the single plane limits as the crt hit
-        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, 0, mean.X(), error.X(), 
+        sbn::crt::CRTHit crtHit = FillCrtHit(tfeb_id, tpesmap, pes, time, plane, mean.X(), error.X(), 
                                         mean.Y(), error.Y(), mean.Z(), error.Z(), otherPlane.first);
         std::vector<int> dataIds;
         dataIds.push_back(taggerStrips[otherPlane][hit_j].dataID);
@@ -312,6 +321,8 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
 
   sbn::crt::CRTHit crtHit;
 
+  std::cout << "Filling hit with time " << time << ", fTimeOffset " << fTimeOffset << std::endl;
+
   crtHit.feb_id      = tfeb_id;
   crtHit.pesmap      = tpesmap;
   crtHit.peshit      = peshit;
@@ -328,6 +339,7 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
   crtHit.z_pos       = z;
   crtHit.z_err       = ez;
   crtHit.tagger      = tagger;
+  std::cout << "\t and is in fact " << crtHit.ts0_ns << " " << crtHit.ts0_s << " " <<crtHit.ts1_ns << std::endl;
 
   return crtHit;
 

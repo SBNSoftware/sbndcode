@@ -96,6 +96,8 @@ namespace sbnd {
 
     // Params from fcl file.......
     art::InputTag fCrtModuleLabel;      ///< name of crt producer
+
+    double fG4RefTime;
    
     CRTHitRecoAlg hitAlg;
 
@@ -103,7 +105,9 @@ namespace sbnd {
 
 
   CRTSimHitProducer::CRTSimHitProducer(fhicl::ParameterSet const & p)
-  : EDProducer(p), hitAlg(p.get<fhicl::ParameterSet>("HitAlg"))
+  : EDProducer(p)
+  , fG4RefTime(art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob().G4ToElecTime(0)) // us
+  , hitAlg(p.get<fhicl::ParameterSet>("HitAlg"), fG4RefTime)
   // Initialize member data here, if know don't want to reconfigure on the fly
   {
 

@@ -24,6 +24,7 @@
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "larcorealg/Geometry/WireGeo.h"
 #include "lardataobj/RecoBase/Hit.h"
@@ -43,10 +44,12 @@
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
+#include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
 
 
 // Truth includes
@@ -78,18 +81,6 @@
 const int MAX_INT = std::numeric_limits<int>::max();
 const long int TIME_CORRECTION = (long int) std::numeric_limits<int>::max() * 2;
 const int DEFAULT_VALUE = -9999;
-
-enum CRTPos {
-  kNotDefined = -1,   ///< Not defined
-  kBot = 0,           ///< Bot
-  kFaceFront = 1,     ///< FaceFront
-  kFaceBack,          ///< FaceBack
-  kSideLeft,          ///< SideLeft
-  kSideRight,         ///< SideRight
-  kTopLow,            ///< TopLow
-  kTopHigh,           ///< TopHigh
-  kCRTPosMax
-};
 
 enum CRTOrientation {
   kCRTNotDefined = -1,   ///< Not defined
@@ -148,6 +139,8 @@ private:
   void ResetOpHitsVars(int n);
   /// Resets pmt hardware trigger variables
   void ResetPmtTriggerVars(int n);
+  /// Rests pmt software trigger variables
+  void ResetPmtSoftTriggerVars();
   /// Resets crossing muon tracks tree variables
   void ResetMuonTracksVars(int n);
   /// Resets crossing muon hit tree variables 
@@ -251,6 +244,14 @@ private:
   std::vector<int> _pmtTrigger_npmtshigh;    ///< number of pmt pairs above threshold, index = time during trigger window (usually beam spill)
   int _pmtTrigger_maxpassed;    ///< maximum number of pmt pairs above threshold during trigger window (usually beam spill)
 
+  // PMT software trigger variables 
+  bool   _pmtSoftTrigger_foundBeamTrigger;   /// Whether the beam spill was found or not 
+  int    _pmtSoftTrigger_tts;                /// Trigger Time Stamp (TTS), ns (relative to start of beam spill)
+  double _pmtSoftTrigger_promptPE;           /// Total photoelectron count 100 ns after the TTS
+  double _pmtSoftTrigger_prelimPE;           /// Total photoelectron count before the TTS, during the beam spill             
+  int    _pmtSoftTrigger_nAboveThreshold;    /// number of individual PMTs above ADC threshold (fcl) during the beam spill
+  // std::vector<sbnd::trigger::pmtInfo> _pmtSoftTrigger_pmtInfoVec; /// vector of PMT information 
+
   // Muon track variables 
   int _nmuontrks;                            ///< number of muon tracks
   std::vector<double> _muontrk_t0;           ///< t0 (time of interaction)
@@ -337,6 +338,7 @@ private:
   std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fpmtTriggerModuleLabel; ///< Label for pmtTrigger dataproduct (to be set vis fcl)
+  std::string fpmtSoftTriggerModuleLabel; ///< Label for pmt software trigger data product (to be set via fcl)
   std::string fMuonTrackModuleLabel;  ///< Label for MuonTrack dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
@@ -353,6 +355,7 @@ private:
   bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
   bool freadpmtTrigger;    ///< Add pmt hardware trigger info to output (to be set via fcl)
+  bool freadpmtSoftTrigger;///< Add pmt software trigger info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
@@ -404,6 +407,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
   fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmttriggerproducer");
+  fpmtSoftTriggerModuleLabel = p.get<std::string>("pmtSoftTriggerModuleLabel", "pmtSoftwareTrigger");
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
@@ -413,6 +417,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadCRTtracks     = p.get<bool>("readCRTtracks",true);
   freadOpHits        = p.get<bool>("readOpHits",true);
   freadpmtTrigger    = p.get<bool>("readpmtTrigger",true);
+  freadpmtSoftTrigger= p.get<bool>("readpmtSoftTrigger",true);
   freadMuonTracks    = p.get<bool>("readMuonTracks",true);
   freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
@@ -524,14 +529,7 @@ void Hitdumper::analyze(const art::Event& evt)
 
     //    std::pair<std::string,unsigned> tagger = CRTHitRecoAlg::ChannelToTagger(chan);
     std::pair<std::string,unsigned> tagger = hitAlg.ChannelToTagger(chan);
-    CRTPos ip = kNotDefined;
-    if  (tagger.first=="volTaggerFaceFront_0" )    ip = kFaceFront;
-    else if (tagger.first=="volTaggerFaceBack_0")  ip = kFaceBack;
-    else if (tagger.first=="volTaggerSideLeft_0")  ip = kSideLeft;
-    else if (tagger.first=="volTaggerSideRight_0") ip = kSideRight;
-    else if (tagger.first=="volTaggerTopLow_0")    ip = kTopLow;
-    else if (tagger.first=="volTaggerTopHigh_0")   ip = kTopHigh;
-    else if (tagger.first=="volTaggerBot_0")       ip = kBot;
+    sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(tagger.first);
 
     bool keep_tagger = false;
     for (auto t : fKeepTaggerTypes) {
@@ -541,7 +539,7 @@ void Hitdumper::analyze(const art::Event& evt)
     }
     // std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
 
-    if (ip != kNotDefined && keep_tagger) {
+    if (ip != sbnd::kCRTNotDefined && keep_tagger) {
 
       uint32_t ttime = striplist[i]->T0();
       float ctime = (int)ttime * 0.001; // convert form ns to us
@@ -597,7 +595,7 @@ void Hitdumper::analyze(const art::Event& evt)
         int  nh1y = 0, nh2y = 0;
         float adc1x = 0, adc2x = 0;
         float adc1y = 0, adc2y = 0;
-        if (_crt_plane[i] == kFaceFront) { // 1
+        if (_crt_plane[i] == sbnd::kCRTFaceSouth) { // 1
           if (_crt_orient[i] == kCRTVertical && _crt_adc[i] > 500) { // < 500 hardcoded
             if (nh1x == 0 || (_crt_module[i] == plane1xm)) {
               nh1x++;
@@ -649,7 +647,7 @@ void Hitdumper::analyze(const art::Event& evt)
           float tdiff = fabs(_crt_time[i]-_crt_time[j]);
           if (tdiff<0.1) {
             iflag[j]=1;
-            if (_crt_plane[j]==kFaceFront) {
+            if (_crt_plane[j]==sbnd::kCRTFaceSouth) {
               if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
                 if (nh1x==0 ||  (_crt_module[j]==plane1xm)) {
                   nh1x++;
@@ -752,18 +750,8 @@ void Hitdumper::analyze(const art::Event& evt)
     ResetCRTHitsVars(_nchits);
 
     for (int i = 0; i < _nchits; ++i){
-      int ip = kNotDefined;
-      if  (chitlist[i]->tagger=="volTaggerFaceFront_0" )    ip = kFaceFront;
-      else if (chitlist[i]->tagger=="volTaggerFaceBack_0")  ip = kFaceBack;
-      else if (chitlist[i]->tagger=="volTaggerSideLeft_0")  ip = kSideLeft;
-      else if (chitlist[i]->tagger=="volTaggerSideRight_0") ip = kSideRight;
-      else if (chitlist[i]->tagger=="volTaggerTopLow_0")    ip = kTopLow;
-      else if (chitlist[i]->tagger=="volTaggerTopHigh_0")   ip = kTopHigh;
-      else if (chitlist[i]->tagger=="volTaggerBot_0")       ip = kBot;
-      else {
-        mf::LogWarning("HitDumper") << "Cannot identify tagger of type "
-                                    << chitlist[i]->tagger << std::endl;
-      }
+      // int ip = kNotDefined;
+      sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(chitlist[i]->tagger);
 
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
       if (chitlist[i]->ts1_ns > MAX_INT) {
@@ -879,6 +867,29 @@ void Hitdumper::analyze(const art::Event& evt)
       }
       _pmtTrigger_maxpassed = pmttriggerlist[0]->maxPMTs;
 
+    }
+    else{
+      std::cout << "Failed to get sbnd::comm::pmtTrigger data product" << std::endl;
+    }
+  }
+
+  //
+  // PMT Software Trigger
+  //
+  if (freadpmtSoftTrigger){
+    art::Handle<sbnd::trigger::pmtSoftwareTrigger> pmtSoftTriggerHandle;
+    if (evt.getByLabel(fpmtSoftTriggerModuleLabel, pmtSoftTriggerHandle)){
+      const sbnd::trigger::pmtSoftwareTrigger &pmtSoftTriggerMetrics = (*pmtSoftTriggerHandle);
+      ResetPmtSoftTriggerVars();
+      _pmtSoftTrigger_foundBeamTrigger = pmtSoftTriggerMetrics.foundBeamTrigger;
+      _pmtSoftTrigger_tts = pmtSoftTriggerMetrics.triggerTimestamp;
+      _pmtSoftTrigger_promptPE = pmtSoftTriggerMetrics.promptPE;
+      _pmtSoftTrigger_prelimPE = pmtSoftTriggerMetrics.prelimPE;
+      _pmtSoftTrigger_nAboveThreshold = pmtSoftTriggerMetrics.nAboveThreshold;
+      // _pmtSoftTrigger_pmtInfoVec = pmtsofttriggerlist[0]->pmtInfoVec;
+    }
+    else{
+      std::cout << "Failed to get sbnd::trigger::pmtSoftwareTrigger data product" << std::endl;
     }
   }
 
@@ -1249,6 +1260,15 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("pmtTrigger_maxpassed", &_pmtTrigger_maxpassed, "pmtTrigger_maxpassed/I");
   }
 
+  if (freadpmtSoftTrigger){
+    fTree->Branch("pmtSoftTrigger_foundBeamTrigger", &_pmtSoftTrigger_foundBeamTrigger);
+    fTree->Branch("pmtSoftTrigger_tts", &_pmtSoftTrigger_tts);
+    fTree->Branch("pmtSoftTrigger_promptPE", &_pmtSoftTrigger_promptPE);
+    fTree->Branch("pmtSoftTrigger_prelimPE", &_pmtSoftTrigger_prelimPE);
+    fTree->Branch("pmtSoftTrigger_nAboveThreshold", &_pmtSoftTrigger_nAboveThreshold);
+    // fTree->Branch("pmtSoftTrigger_", &_pmtSoftTigger_)
+  }
+
   if (freadMuonTracks) {
     fTree->Branch("nmuontrks", &_nmuontrks, "nmuontrks/I");
     fTree->Branch("muontrk_t0", &_muontrk_t0);
@@ -1426,6 +1446,14 @@ void Hitdumper::ResetOpHitsVars(int n) {
 void Hitdumper::ResetPmtTriggerVars(int n){
   _pmtTrigger_npmtshigh.assign(n, DEFAULT_VALUE);
   _pmtTrigger_maxpassed = 0;
+}
+
+void Hitdumper::ResetPmtSoftTriggerVars(){
+  _pmtSoftTrigger_foundBeamTrigger = false;
+  _pmtSoftTrigger_tts = 0;
+  _pmtSoftTrigger_promptPE = 0;
+  _pmtSoftTrigger_prelimPE = 0;
+  _pmtSoftTrigger_nAboveThreshold = 0;
 }
 
 void Hitdumper::ResetMuonTracksVars(int n){

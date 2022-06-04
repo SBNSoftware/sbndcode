@@ -36,3 +36,4 @@ add_subdirectory(Filters)
 
 add_subdirectory(SBNDPrism)
 
+add_subdirectory(ToFStudies)

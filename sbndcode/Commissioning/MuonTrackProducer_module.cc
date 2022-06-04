@@ -12,6 +12,7 @@
 
 // LArSoft includes 
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "larcorealg/Geometry/WireGeo.h"
 #include "lardataobj/RecoBase/Hit.h"
@@ -623,7 +624,7 @@ bool MuonTrackProducer::FixEndpoints(geo::WireID wire_col, geo::WireID wire_ind,
 
 void MuonTrackProducer::SortEndpoints(vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>> muon_hitpeakT, vector<int>& muon_type){
    for (size_t i=0; i< muon_endpoints.size(); i++){
-      geo::Point_t endpoint1 = (muon_endpoints.at(i)).at(0), endpoint2 = (muon_endpoints.at(i)).at(1);
+      geo::Point_t &endpoint1 = (muon_endpoints.at(i)).at(0), &endpoint2 = (muon_endpoints.at(i)).at(1);
       int dt = (muon_hitpeakT.at(i)).at(1) - (muon_hitpeakT.at(i)).at(0);
 
       if (dt > 2400){
