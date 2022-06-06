@@ -133,6 +133,7 @@
 #include "larreco/RecoAlg/PMAlg/PmaTrack3D.h"
 #include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 #include "sbndcode/RecoUtils/RecoUtils.h"
+#include "sbnobj/SBND/Trigger/pmtTrigger.hh"
 
 #include <cstring> // std::memcpy()
 #include <vector>
@@ -614,6 +615,10 @@ namespace sbnd {
     Float_t total_DepEnergy;
     Float_t total_NumElectrons;
 
+    // PMT Hardware Trigger Info 
+    // std::vector<int> _pmtTrigger_npmtshigh;    ///< number of pmt pairs above threshold, index = time during trigger window (usually beam spill)
+    int pmtTrigger_maxpassed;    ///< maximum number of pmt pairs above threshold during trigger window (usually beam spill)
+
     // Auxiliary detector variables saved for each geant track
     // This data is saved as a vector (one item per GEANT particle) of C arrays
     // (wrapped in a BoxedArray for technical reasons), one item for each
@@ -869,6 +874,7 @@ namespace sbnd {
     std::vector<std::string> fCalorimetryModuleLabel;
     std::vector<std::string> fParticleIDModuleLabel;
     std::string fPOTModuleLabel;
+    std::string fPmtTriggerModuleLabel;
     bool fUseBuffer; ///< whether to use a permanent buffer (faster, huge memory)    
     bool fSaveAuxDetInfo; ///< whether to extract and save auxiliary detector data
     bool fSaveCryInfo; ///whether to extract and save CRY particle data
@@ -881,6 +887,7 @@ namespace sbnd {
     bool fSaveSliceInfo; ///whether to extract and save Slice information
     std::vector<bool> fSaveHierarchyInfo;  ///< if the user wants to access the tracks with their hierarchy for each tracker
     bool fSaveShowerHierarchyInfo;  ///< if the user wants to access the showers with their hierarchy
+    bool fSavePmtTriggerInfo;
     
     std::vector<std::string> fCosmicTaggerAssocLabel;
     std::vector<std::string> fFlashMatchAssocLabel;
@@ -1653,6 +1660,7 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   FillWith(NumElectrons,  -9999);
   total_DepEnergy    = -9999.;
   total_NumElectrons = -9999.;
+  pmtTrigger_maxpassed = -9999;
   FillWith(genie_primaries_pdg, -99999);
   FillWith(genie_Eng, -99999.);
   FillWith(genie_Px, -99999.);
@@ -2070,6 +2078,8 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
     CreateBranch("total_NumElectrons",  &total_NumElectrons,"total_NumElectrons/F");
   }
 
+  CreateBranch("pmtTrigger_maxpassed", &pmtTrigger_maxpassed, "pmtTrigger_maxpassed/I");
+
   if (hasAuxDetector()) {
     // Geant information is required to fill aux detector information.
     // if fSaveGeantInfo is not set to true, show an error message and quit!
@@ -2123,6 +2133,7 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   fCalorimetryModuleLabel   (pset.get< std::vector<std::string> >("CalorimetryModuleLabel")),
   fParticleIDModuleLabel    (pset.get< std::vector<std::string> >("ParticleIDModuleLabel") ),
   fPOTModuleLabel           (pset.get< std::string >("POTModuleLabel")                     ),
+  fPmtTriggerModuleLabel    (pset.get< std::string >("PmtTriggerModuleLabel")              ),
 
   fUseBuffer                (pset.get< bool >("UseBuffers", false)),
   fSaveAuxDetInfo           (pset.get< bool >("SaveAuxDetInfo", false)),
@@ -2136,6 +2147,7 @@ sbnd::AnalysisTree::AnalysisTree(fhicl::ParameterSet const& pset) :
   fSaveSliceInfo            (pset.get< bool >("SaveSliceInfo",true)),
   fSaveHierarchyInfo        (pset.get< std::vector<bool> >("SaveHierarchyInfo", {false})),
   fSaveShowerHierarchyInfo  (pset.get< bool >("SaveShowerHierarchyInfo", false)),
+  fSavePmtTriggerInfo       (pset.get< bool >("SavePmtTriggerInfo",false)),
   //fCosmicTaggerAssocLabel  (pset.get<std::vector< std::string > >("CosmicTaggerAssocLabel") ),
   //fFlashMatchAssocLabel (pset.get<std::vector< std::string > >("FlashMatchAssocLabel") ),
   isCosmics(false),
@@ -2252,10 +2264,19 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
       art::fill_ptr_vector(mclistcry, mctruthcryListHandle);
   }
 
-  // MCParticle information (for dep energy info)
+  // * MCParticle information (for dep energy info)
   art::Handle<std::vector<simb::MCParticle> > mcparticleListHandle;
-  evt.getByLabel(fLArG4ModuleLabel,mcparticleListHandle);       
-  
+  evt.getByLabel(fLArG4ModuleLabel,mcparticleListHandle);
+
+  // * pmt hardware trigger information 
+  art::Handle<std::vector<sbnd::comm::pmtTrigger> > pmtTriggerListHandle;
+  std::vector<art::Ptr<sbnd::comm::pmtTrigger> > pmttriggerlist;      
+  if (fSavePmtTriggerInfo){
+    if (evt.getByLabel(fPmtTriggerModuleLabel, pmtTriggerListHandle)){
+      art::fill_ptr_vector(pmttriggerlist, pmtTriggerListHandle);
+    }
+  }
+
   art::Ptr<simb::MCTruth> mctruthcry;
   int nCryPrimaries = 0;
    
@@ -2263,6 +2284,11 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     mctruthcry = mclistcry[0];      
     nCryPrimaries = mctruthcry->NParticles();  
   } 
+
+  // int nPmtTrigger = 0;
+  // if (fSavePmtTriggerInfo){
+  //   nPmtTrigger = (int)pmttriggerlist[0]->numPassed.size();
+  // }
   
   int nGeniePrimaries = 0, nGEANTparticles = 0, nMCNeutrinos = 0;
   
@@ -3559,6 +3585,10 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
     }//if (fSaveGeantInfo) 
     }//if (mcevts_truth)
   }//if (isMC)
+
+  if (fSavePmtTriggerInfo){
+    fData->pmtTrigger_maxpassed = pmttriggerlist[0]->maxPMTs;
+  }
 
   fData->taulife = detprop.ElectronLifetime();
   fTree->Fill();

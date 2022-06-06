@@ -22,6 +22,7 @@ sbnd_analysistree:
  CalorimetryModuleLabel:   [ "pandoraCalo" ]
  ParticleIDModuleLabel:    [ "pandoraPid" ]
  POTModuleLabel:           "generator"
+ PmtTriggerModuleLabel:    "pmttriggerproducer"
  UseBuffers:               false
  SaveAuxDetInfo:           false
  SaveCryInfo:              true
@@ -33,6 +34,7 @@ sbnd_analysistree:
  SaveVertexInfo:           false
  SaveHierarchyInfo:        [ false ]
  SaveShowerHierarchyInfo:  false
+ SavePmtTriggerInfo:       false
  SaveCaloCosmics:          false
  isCosmics:		             false
  G4minE:                   0.01
