@@ -534,6 +534,7 @@ namespace sbnd {
     //genie information
     size_t MaxGeniePrimaries = 0;
     Int_t     genie_no_primaries;
+    double   genie_EngDep;
     std::vector<Int_t>     genie_primaries_pdg;
     std::vector<Float_t>  genie_Eng;
     std::vector<Float_t>  genie_Px;
@@ -841,6 +842,7 @@ namespace sbnd {
     double length(const recob::Track& track);
     double length(const simb::MCParticle& part, TVector3& start, TVector3& end);
     double bdist(const recob::Track::Point_t& pos);
+    double EnergyInTPC(const art::Ptr<simb::MCParticle> particle);
 
     TTree* fTree;
 
@@ -1604,6 +1606,7 @@ void sbnd::AnalysisTreeDataStruct::ClearLocalData() {
   FillWith(tptype_flux,-99999);
 
   genie_no_primaries = 0;
+  genie_EngDep = 0;
   cry_no_primaries = 0;
   no_primaries = 0;
   geant_list_size=0;
@@ -1987,6 +1990,7 @@ void sbnd::AnalysisTreeDataStruct::SetAddresses(
     CreateBranch("tptype_flux",tptype_flux,"tptype_flux[mcevts_truth]/I");
 
     CreateBranch("genie_no_primaries",&genie_no_primaries,"genie_no_primaries/I");
+    CreateBranch("genie_EngDep",&genie_EngDep,"genie_EngDep/D");
     CreateBranch("genie_primaries_pdg",genie_primaries_pdg,"genie_primaries_pdg[genie_no_primaries]/I");
     CreateBranch("genie_Eng",genie_Eng,"genie_Eng[genie_no_primaries]/F");
     CreateBranch("genie_Px",genie_Px,"genie_Px[genie_no_primaries]/F");
@@ -2246,7 +2250,11 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
   if (fSaveCryInfo){
     if (evt.getByLabel(fCryGenModuleLabel,mctruthcryListHandle))
       art::fill_ptr_vector(mclistcry, mctruthcryListHandle);
-  }       
+  }
+
+  // MCParticle information (for dep energy info)
+  art::Handle<std::vector<simb::MCParticle> > mcparticleListHandle;
+  evt.getByLabel(fLArG4ModuleLabel,mcparticleListHandle);       
   
   art::Ptr<simb::MCTruth> mctruthcry;
   int nCryPrimaries = 0;
@@ -3274,6 +3282,7 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
 
         //genie particles information
         fData->genie_no_primaries = mctruth->NParticles();
+        double e_dep = 0;
 
         size_t StoreParticles = std::min((size_t) fData->genie_no_primaries, fData->GetMaxGeniePrimaries());
         if (fData->genie_no_primaries > (int) StoreParticles) {
@@ -3298,6 +3307,19 @@ void sbnd::AnalysisTree::analyze(const art::Event& evt)
           fData->genie_ND[iPart]=part.NumberDaughters();
           fData->genie_mother[iPart]=part.Mother();
         } // for particle
+
+        for (unsigned int part_i = 0; part_i < mcparticleListHandle->size(); part_i++){
+          const art::Ptr<simb::MCParticle> particle(mcparticleListHandle, part_i);
+          double time = particle->T()*1e-3;
+          if ( !(time < 1.8) || !(time > 0)) continue;
+          int pdg = particle->PdgCode(); 
+          if (particle->StatusCode() != 1 || !(pdg==11 || pdg==13 || pdg==211 || pdg==321 || pdg==2212)) continue;
+          // auto e_out = EnergyInTPC(particle);
+          // std::cout << "energy output: " << e_out << std::endl;
+          e_dep += EnergyInTPC(particle); // GeV
+        }
+        fData->genie_EngDep = e_dep;
+        // std::cout << "e_dep: " << e_dep << std::endl;
       } //if neutrino set
     }// end (fSaveGenieInfo)  
 
@@ -3758,6 +3780,29 @@ double sbnd::AnalysisTree::length(const simb::MCParticle& part, TVector3& start,
   }
 
   return L;
+}
+
+double sbnd::AnalysisTree::EnergyInTPC(const art::Ptr<simb::MCParticle> particle){
+  art::ServiceHandle<geo::Geometry> geom;
+
+  double xmin = -2.0 * geom->DetHalfWidth();
+  double xmax = 2.0 * geom->DetHalfWidth();
+  double ymin = -geom->DetHalfHeight();
+  double ymax = geom->DetHalfHeight();
+  double zmin = 0.;
+  double zmax = geom->DetLength();
+  double e_dep = 0;
+
+  int npts = particle->NumberTrajectoryPoints();
+
+  for (int i = 1; i < npts; i++){
+    TVector3 pos(particle->Vx(i), particle->Vy(i), particle->Vz(i));
+    // Check if point is within the TPC
+    if (pos[0] >= xmin && pos[0] <= xmax && pos[1] >= ymin && pos[1] <= ymax && pos[2] >= zmin && pos[2] <= zmax){
+      e_dep += particle->E(i-1) - particle->E(i);
+    }
+  }
+  return e_dep;
 }
 
 
