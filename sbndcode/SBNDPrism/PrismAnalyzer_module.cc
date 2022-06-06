@@ -96,6 +96,10 @@ private:
   int _nu_ccnc; ///< 0: CC, 1: NC
   int _nu_mode; ///< Neutrino interaction mode
   int _nu_int_type; ///< Neutrino interaction type
+  float _nu_x; ///< Neutrino Bjorken x
+  float _nu_y; ///< Neutrino inelasticity y
+  float _nu_w; ///< Neutrino hadronic invariant mass w
+  float _nu_q2; ///< Neutrino q2
   float _nu_vtx_x; ///< Neutrino vertex X
   float _nu_vtx_y; ///< Neutrino vertex Y
   float _nu_vtx_z; ///< Neutrino vertex Z
@@ -231,6 +235,10 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _tree->Branch("nu_ccnc", &_nu_ccnc, "nu_ccnc/I");
   _tree->Branch("nu_mode", &_nu_mode, "nu_mode/I");
   _tree->Branch("nu_int_type", &_nu_int_type, "nu_int_type/I");
+  _tree->Branch("nu_x", &_nu_x, "nu_x/D");
+  _tree->Branch("nu_y", &_nu_y, "nu_x/D");
+  _tree->Branch("nu_w", &_nu_w, "nu_x/D");
+  _tree->Branch("nu_q2", &_nu_q2, "nu_x/D");
   _tree->Branch("nu_vtx_x", &_nu_vtx_x, "nu_vtx_x/F");
   _tree->Branch("nu_vtx_y", &_nu_vtx_y, "nu_vtx_y/F");
   _tree->Branch("nu_vtx_z", &_nu_vtx_z, "nu_vtx_z/F");
@@ -354,6 +362,10 @@ void PrismAnalyzer::analyze(art::Event const& e)
     _nu_ccnc = mct_v[i]->GetNeutrino().CCNC();
     _nu_mode = mct_v[i]->GetNeutrino().Mode();
     _nu_int_type = mct_v[i]->GetNeutrino().InteractionType();
+    _nu_x = mct_v[i]->GetNeutrino().X();
+    _nu_y = mct_v[i]->GetNeutrino().Y();
+    _nu_w = mct_v[i]->GetNeutrino().W();
+    _nu_q2 = mct_v[i]->GetNeutrino().QSqr();
     _nu_vtx_x = mct_v[i]->GetNeutrino().Nu().Vx();
     _nu_vtx_y = mct_v[i]->GetNeutrino().Nu().Vy();
     _nu_vtx_z = mct_v[i]->GetNeutrino().Nu().Vz();

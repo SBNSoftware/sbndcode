@@ -82,16 +82,18 @@ outputs:
 
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 
+physics.producers.genieweight.weight_functions_genie: [multisim]
 physics.producers.genieweight.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
-physics.producers.genieweight.genie_sbnd_multisim.number_of_multisims: 100
+physics.producers.genieweight.multisim.number_of_multisims: 100
 
 # physics.producers.genieweightsk.genie_sbnd_multisim.number_of_multisims: 1
 
 
 # Double the MACCQE sigma
+physics.producers.genieweightA.weight_functions_genie: [multisim]
 physics.producers.genieweightA.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
-physics.producers.genieweightA.genie_sbnd_multisim.number_of_multisims: 100
-physics.producers.genieweightA.genie_sbnd_multisim.parameter_sigma: [
+physics.producers.genieweightA.multisim.number_of_multisims: 100
+physics.producers.genieweightA.multisim.parameter_sigma: [
       #CCQE
       2,
       #Res
@@ -107,9 +109,10 @@ physics.producers.genieweightA.genie_sbnd_multisim.parameter_sigma: [
 ]
 
 # Double the MaCCRES sigma
+physics.producers.genieweightB.weight_functions_genie: [multisim]
 physics.producers.genieweightB.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
-physics.producers.genieweightB.genie_sbnd_multisim.number_of_multisims: 100
-physics.producers.genieweightB.genie_sbnd_multisim.parameter_sigma: [
+physics.producers.genieweightB.multisim.number_of_multisims: 100
+physics.producers.genieweightB.multisim.parameter_sigma: [
       #CCQE
       1,
       #Res
@@ -125,9 +128,10 @@ physics.producers.genieweightB.genie_sbnd_multisim.parameter_sigma: [
 ]
 
 # Double the MvCCRES sigma
+physics.producers.genieweightC.weight_functions_genie: [multisim]
 physics.producers.genieweightC.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
-physics.producers.genieweightC.genie_sbnd_multisim.number_of_multisims: 100
-physics.producers.genieweightC.genie_sbnd_multisim.parameter_sigma: [
+physics.producers.genieweightC.multisim.number_of_multisims: 100
+physics.producers.genieweightC.multisim.parameter_sigma: [
       #CCQE
       1,
       #Res
