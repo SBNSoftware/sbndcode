@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------
 #
-# Name: standard_reco1reco2_noflashmatch_sbnd_lite.fcl
+# Name: standard_reco1reco2_no_opt0finder_sbnd_lite.fcl
 #
-# Purpose: Lite version of standard_reco1reco2_noflashmatch_sbnd.fcl
+# Purpose: Lite version of standard_reco1reco2_no_opt0finder_sbnd.fcl
 #
 # Created: 01-Apr-2022  H. Greenlee
 #

@@ -193,7 +193,7 @@ physics:
    #      , fuzzycluster
  ]
 
-  reco2_noflashmatch: [
+  reco2_no_opt0finder: [
           rns
 #         , linecluster
    #      , cccluster
@@ -217,7 +217,7 @@ physics:
 	 , caloskimCalorimetry
  ]
 
-  reco2: [ reco2_noflashmatch, opt0finder ]
+  reco2: [ reco2_no_opt0finder, opt0finder ]
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
  
@@ -266,8 +266,8 @@ outputs:
 physics.fullreco: [ @sequence::physics.reco1,
                     @sequence::physics.reco2
 		          ]
-physics.fullreco_noflashmatch: [ @sequence::physics.reco1,
-                                 @sequence::physics.reco2_noflashmatch]
+physics.fullreco_no_opt0finder: [ @sequence::physics.reco1,
+                                 @sequence::physics.reco2_no_opt0finder]
 
 physics.trigger_paths: [ fullreco ]
 
