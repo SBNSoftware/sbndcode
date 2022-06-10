@@ -1,4 +1,4 @@
-# File:    standard_reco2_sce_sbnd.fcl
+# File:    standard_reco2_sce_no_opt0finder.fcl
 # Purpose: The standard reconstruction workflow for 'reco2', starts at 2D clustering and includes all high level reconstruction (+ SCE reco)
 # Version: 1.0
 #
@@ -12,8 +12,8 @@
 
 process_name: Reco2
 
-physics.reco2_sce: [@sequence::physics.reco2,
-            pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCECalo, pandoraSCEPid]
+physics.reco2_sce: [@sequence::physics.reco2_no_opt0finder,
+                    pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCECalo, pandoraSCEPid]
 
 physics.trigger_paths: [ reco2_sce ]
 
