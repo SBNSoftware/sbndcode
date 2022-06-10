@@ -193,7 +193,8 @@ physics:
    #      , fuzzycluster
  ]
 
- reco2: [ rns
+ reco2_no_opt0finder: [
+          rns
 #         , linecluster
    #      , cccluster
    #      , spacepts,
@@ -213,9 +214,9 @@ physics:
          , crthitt0
          , crttrackt0
          , fmatch
-         , opt0finder
 	 , caloskimCalorimetry
  ]
+
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
  
@@ -259,11 +260,14 @@ outputs:
  }
 }
 
+physics.reco2: [ @sequence::physics.reco2_no_opt0finder, opt0finder ] 
 
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
                     @sequence::physics.reco2
 		          ]
+physics.fullreco_no_opt0finder: [ @sequence::physics.reco1,
+                                 @sequence::physics.reco2_no_opt0finder]
 
 physics.trigger_paths: [ fullreco ]
 
