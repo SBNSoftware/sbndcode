@@ -33,6 +33,7 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   fClockSpeedCRT = config.ClockSpeedCRT();
   fTimeOffset = config.TimeOffset();
   fUseG4RefTimeOffset = config.UseG4RefTimeOffset();
+  fPropDelay = config.PropDelay();
 
   return;
 }
@@ -181,8 +182,8 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                            std::abs((overlap[3] - overlap[2])/2.), 
                            std::abs((overlap[5] - overlap[4])/2.));
 
-            // Average the time
-            double time = (t0_1 + t0_2)/2 - fTimeOffset;
+            // Correct and average the time
+	    double time = CorrectTime(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean) - fTimeOffset;
             //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
             double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
             int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
@@ -364,6 +365,25 @@ double CRTHitRecoAlg::CorrectNpe(CRTStrip strip1, CRTStrip strip2, TVector3 posi
 
   // Add the two strips together
   return pesCorr1 + pesCorr2;
+}
+
+double CRTHitRecoAlg::CorrectTime(CRTStrip strip1, CRTStrip strip2, TVector3 position){
+  geo::Point_t pos {position.X(), position.Y(), position.Z()};
+
+  // Get the strip name from the channel ID
+  std::string name1 = fCrtGeo.ChannelToStripName(strip1.channel);
+  std::string name2 = fCrtGeo.ChannelToStripName(strip2.channel);
+
+  // Get the distance from the CRT hit to the sipm end
+  double stripDist1 = fCrtGeo.DistanceDownStrip(pos, name1);
+  double stripDist2 = fCrtGeo.DistanceDownStrip(pos, name2);
+
+  // Correct the measured time
+  double timeCorr1 = strip1.t0 - stripDist1 * fPropDelay * 1e-3;
+  double timeCorr2 = strip2.t0 - stripDist2 * fPropDelay * 1e-3;
+
+  // Average the two strips times
+  return (timeCorr1 + timeCorr2) / 2.;
 }
 
 }
