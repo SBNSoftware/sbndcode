@@ -27,7 +27,7 @@ standard_sbnd_crtsimparams: {
   ClockSpeedCRT: 1000.
 
   # Propagation delay [ns/cm]
-  PropDelay: 0.0061
+  PropDelay: 0.061
   PropDelayError: 0.007
 
   # Interpolator time resolution [ns]
