@@ -322,8 +322,6 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
 
   sbn::crt::CRTHit crtHit;
 
-  std::cout << "Filling hit with time " << time << ", fTimeOffset " << fTimeOffset << std::endl;
-
   crtHit.feb_id      = tfeb_id;
   crtHit.pesmap      = tpesmap;
   crtHit.peshit      = peshit;
@@ -340,7 +338,9 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
   crtHit.z_pos       = z;
   crtHit.z_err       = ez;
   crtHit.tagger      = tagger;
-  std::cout << "\t and is in fact " << crtHit.ts0_ns << " " << crtHit.ts0_s << " " <<crtHit.ts1_ns << std::endl;
+
+  mf::LogInfo("CRTHitRecoAlg") << "Filling hit with time " << time << ", fTimeOffset " << fTimeOffset << '\n'
+			       << "\t and is in fact " << crtHit.ts0_ns << " " << crtHit.ts0_s << " " <<crtHit.ts1_ns << std::endl;
 
   return crtHit;
 
