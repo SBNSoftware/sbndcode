@@ -119,6 +119,23 @@ namespace sbnd{
         Name("PropDelay"),
         Comment("Delay in pulse arrival time [ns/m]"),
       };
+      fhicl::Atom<double> TDelayNorm {
+        Name("TDelayNorm"),
+        Comment("Time delay fit: Gaussian normalization"),
+      };
+      fhicl::Atom<double> TDelayShift {
+        Name("TDelayShift"),
+        Comment("Time delay fit: Gaussian x shift"),
+      };
+      fhicl::Atom<double> TDelaySigma {
+        Name("TDelaySigma"),
+        Comment("Time delay fit: Gaussian width"),
+      };
+      fhicl::Atom<double> TDelayOffset {
+        Name("TDelayOffset"),
+        Comment("Time delay fit: Gaussian baseline offset"),
+      };
+
 
     };
 
@@ -180,6 +197,10 @@ namespace sbnd{
     double fTimeOffset;
     bool fUseG4RefTimeOffset;
     double fPropDelay;
+    double fTDelayNorm;
+    double fTDelayShift;
+    double fTDelaySigma;
+    double fTDelayOffset;
 
   };
 
