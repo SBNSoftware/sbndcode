@@ -34,6 +34,10 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   fTimeOffset = config.TimeOffset();
   fUseG4RefTimeOffset = config.UseG4RefTimeOffset();
   fPropDelay = config.PropDelay();
+  fTDelayNorm = config.TDelayNorm();
+  fTDelayShift = config.TDelayShift();
+  fTDelaySigma = config.TDelaySigma();
+  fTDelayOffset = config.TDelayOffset();
 
   return;
 }
@@ -378,9 +382,17 @@ double CRTHitRecoAlg::CorrectTime(CRTStrip strip1, CRTStrip strip2, TVector3 pos
   double stripDist1 = fCrtGeo.DistanceDownStrip(pos, name1);
   double stripDist2 = fCrtGeo.DistanceDownStrip(pos, name2);
 
-  // Correct the measured time
+  // Correct the measured time for propagation delay
   double timeCorr1 = strip1.t0 - stripDist1 * fPropDelay * 1e-3;
   double timeCorr2 = strip2.t0 - stripDist2 * fPropDelay * 1e-3;
+
+  // Find the corrected pe
+  double pesCorr1 = strip1.pes * pow(stripDist1 - fNpeScaleShift, 2) / pow(fNpeScaleShift, 2);
+  double pesCorr2 = strip2.pes * pow(stripDist2 - fNpeScaleShift, 2) / pow(fNpeScaleShift, 2);
+
+  // Use to correct for time walk
+  timeCorr1 -= (fTDelayNorm * exp(-0.5 * pow((pesCorr1 - fTDelayShift) / fTDelaySigma, 2)) + fTDelayOffset) * 1e-3;
+  timeCorr2 -= (fTDelayNorm * exp(-0.5 * pow((pesCorr2 - fTDelayShift) / fTDelaySigma, 2)) + fTDelayOffset) * 1e-3;
 
   // Average the two strips times
   return (timeCorr1 + timeCorr2) / 2.;
