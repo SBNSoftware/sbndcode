@@ -77,7 +77,7 @@ namespace opdet {
     //Default destructor
     ~DigiPMTSBNDAlg();
 
-    void ConstructWaveform(
+    void ConstructWaveformUncoatedPMT(
       int ch,
       sim::SimPhotons const& simphotons,
       std::vector<short unsigned int>& waveform,
@@ -93,7 +93,7 @@ namespace opdet {
       double start_time,
       unsigned n_sample);
 
-    void ConstructWaveformLite(
+    void ConstructWaveformLiteUncoatedPMT(
       int ch,
       sim::SimPhotonsLite const& litesimphotons,
       std::vector<short unsigned int>& waveform,
@@ -148,7 +148,7 @@ namespace opdet {
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
-    void CreatePDWaveform(
+    void CreatePDWaveformUncoatedPMT(
       sim::SimPhotons const& SimPhotons,
       double t_min,
       std::vector<double>& wave,
@@ -160,7 +160,7 @@ namespace opdet {
       std::vector<double>& wave,
       std::unordered_map<int, sim::SimPhotons>& DirectPhotonsMap,
       std::unordered_map<int, sim::SimPhotons>& ReflectedPhotonsMap);
-    void CreatePDWaveformLite(
+    void CreatePDWaveformLiteUncoatedPMT(
       sim::SimPhotonsLite const& litesimphotons,
       double t_min,
       std::vector<double>& wave,

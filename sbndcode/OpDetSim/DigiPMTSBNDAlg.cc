@@ -79,7 +79,7 @@ namespace opdet {
   DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){}
 
 
-  void DigiPMTSBNDAlg::ConstructWaveform(
+  void DigiPMTSBNDAlg::ConstructWaveformUncoatedPMT(
     int ch,
     sim::SimPhotons const& simphotons,
     std::vector<short unsigned int>& waveform,
@@ -88,7 +88,7 @@ namespace opdet {
     unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
-    CreatePDWaveform(simphotons, start_time, waves, ch, pdtype);
+    CreatePDWaveformUncoatedPMT(simphotons, start_time, waves, ch, pdtype);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -107,7 +107,7 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::ConstructWaveformLite(
+  void DigiPMTSBNDAlg::ConstructWaveformLiteUncoatedPMT(
     int ch,
     sim::SimPhotonsLite const& litesimphotons,
     std::vector<short unsigned int>& waveform,
@@ -116,7 +116,7 @@ namespace opdet {
     unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
-    CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype);
+    CreatePDWaveformLiteUncoatedPMT(litesimphotons, start_time, waves, ch, pdtype);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -135,7 +135,7 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::CreatePDWaveform(
+  void DigiPMTSBNDAlg::CreatePDWaveformUncoatedPMT(
     sim::SimPhotons const& simphotons,
     double t_min,
     std::vector<double>& wave,
@@ -211,7 +211,7 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::CreatePDWaveformLite(
+  void DigiPMTSBNDAlg::CreatePDWaveformLiteUncoatedPMT(
     sim::SimPhotonsLite const& litesimphotons,
     double t_min,
     std::vector<double>& wave,
