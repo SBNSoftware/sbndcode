@@ -187,7 +187,7 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                            std::abs((overlap[5] - overlap[4])/2.));
 
             // Correct and average the time
-	    double time = CorrectTime(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean) - fTimeOffset;
+            double time = CorrectTime(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean) - fTimeOffset;
             //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
             double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
             int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
@@ -344,7 +344,7 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
   crtHit.tagger      = tagger;
 
   mf::LogInfo("CRTHitRecoAlg") << "Filling hit with time " << time << ", fTimeOffset " << fTimeOffset << '\n'
-			       << "\t and is in fact " << crtHit.ts0_ns << " " << crtHit.ts0_s << " " <<crtHit.ts1_ns << std::endl;
+                               << "\t and is in fact " << crtHit.ts0_ns << " " << crtHit.ts0_s << " " <<crtHit.ts1_ns << std::endl;
 
   return crtHit;
 
