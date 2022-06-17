@@ -12,6 +12,11 @@ standard_crtsimhitalg:
     ClockSpeedCRT:        @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
     TimeOffset:           @local::sbnd_crtsim.DetSimParams.GlobalT0Offset
     UseG4RefTimeOffset:   @local::sbnd_crtsim.DetSimParams.UseG4RefTimeOffset
+    PropDelay:            @local::sbnd_crtsim.DetSimParams.PropDelay
+    TDelayNorm:           @local::sbnd_crtsim.DetSimParams.TDelayNorm
+    TDelayShift:          @local::sbnd_crtsim.DetSimParams.TDelayShift
+    TDelaySigma:          @local::sbnd_crtsim.DetSimParams.TDelaySigma
+    TDelayOffset:         @local::sbnd_crtsim.DetSimParams.TDelayOffset
 }
 
 
