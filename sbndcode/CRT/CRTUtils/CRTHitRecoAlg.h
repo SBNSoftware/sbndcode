@@ -115,6 +115,27 @@ namespace sbnd{
         Name("UseG4RefTimeOffset"),
         Comment("Wheater or not to use the G4RefTime as GlobalT0Offset"),
       };
+      fhicl::Atom<double> PropDelay {
+        Name("PropDelay"),
+        Comment("Delay in pulse arrival time [ns/m]"),
+      };
+      fhicl::Atom<double> TDelayNorm {
+        Name("TDelayNorm"),
+        Comment("Time delay fit: Gaussian normalization"),
+      };
+      fhicl::Atom<double> TDelayShift {
+        Name("TDelayShift"),
+        Comment("Time delay fit: Gaussian x shift"),
+      };
+      fhicl::Atom<double> TDelaySigma {
+        Name("TDelaySigma"),
+        Comment("Time delay fit: Gaussian width"),
+      };
+      fhicl::Atom<double> TDelayOffset {
+        Name("TDelayOffset"),
+        Comment("Time delay fit: Gaussian baseline offset"),
+      };
+
 
     };
 
@@ -159,6 +180,9 @@ namespace sbnd{
     // Function to correct number of photoelectrons by distance down strip
     double CorrectNpe(CRTStrip strip1, CRTStrip strip2, TVector3 position);
 
+    // Function to correct the time by distance down strip
+    double CorrectTime(CRTStrip strip1, CRTStrip strip2, TVector3 position);
+
   private:
 
     TPCGeoAlg fTpcGeo;
@@ -172,6 +196,11 @@ namespace sbnd{
     double fClockSpeedCRT;
     double fTimeOffset;
     bool fUseG4RefTimeOffset;
+    double fPropDelay;
+    double fTDelayNorm;
+    double fTDelayShift;
+    double fTDelaySigma;
+    double fTDelayOffset;
 
   };
 
