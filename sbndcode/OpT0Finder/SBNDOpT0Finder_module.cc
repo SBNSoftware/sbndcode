@@ -32,6 +32,7 @@
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/AnalysisBase/T0.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 
 #include "larsim/PhotonPropagation/SemiAnalyticalModel.h"
 
@@ -269,6 +270,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   art::fill_ptr_vector(flash_v, flash_h);
 
   ::art::ServiceHandle<geo::Geometry> geo;
+  // art::ServiceHandle<sim::LarG4Parameters const> LArG4PropHandle;
 
   int n_flashes = 0;
   std::vector<::flashmatch::Flash_t> all_flashes;
@@ -534,6 +536,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
 
 float SBNDOpT0Finder::GetNPhotons(const float charge,
                                   const art::Ptr<recob::PFParticle> &pfp) {
+  // double Wion = 1. / fGeVToElectrons * 1e3; // MeV 
+  // double Wph  = 19.5 * 1e-6; // MeV
+  // double ds = 0.3 // cm 
+  // // double energy_deposit = ;
   return charge * (::lar_pandora::LArPandoraHelper::IsTrack(pfp) ? _charge_to_n_photons_track
                                                                  : _charge_to_n_photons_shower);
 }
