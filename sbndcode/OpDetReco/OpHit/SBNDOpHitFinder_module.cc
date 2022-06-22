@@ -282,7 +282,7 @@ namespace opdet {
           WaveformVector.push_back(wf);
         }
       }
-    
+
       RunHitFinder(WaveformVector,
                    *HitPtr,
                    fPulseRecoMgr,
@@ -304,6 +304,8 @@ namespace opdet {
       (*HitPtrFinal).emplace_back(h.OpChannel(),
                                   h.PeakTime() + clockData.TriggerTime(),
                                   h.PeakTimeAbs(),
+                                  h.StartTime() + clockData.TriggerTime(),
+                                  h.RiseTime() + clockData.TriggerTime(),
                                   h.Frame(),
                                   h.Width(),
                                   h.Area(),
