@@ -22,6 +22,10 @@
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/RecoBase/OpHit.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "larcore/Geometry/Geometry.h"
+#include "larcorealg/Geometry/GeometryCore.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 
 #include <TTree.h>
 
@@ -56,6 +60,7 @@ private:
   int _run, _subrun, _event;
   int _tpc;
   double _flash_time;
+  double _flash_time_width;
   double _flash_total_pe;
   std::vector<double> _flash_pe_v;
   double _flash_y;
@@ -69,7 +74,11 @@ private:
   std::vector<double> _flash_ophit_pe;
   std::vector<int> _flash_ophit_ch;
   std::vector<std::string> _flash_ophit_chname;
+  std::vector<double> _flash_ophit_x;
+  std::vector<double> _flash_ophit_y;
+  std::vector<double> _flash_ophit_z;  
 
+  geo::GeometryCore const* fGeometryService;
   TTree *_mcflash_tree;
 };
 
@@ -82,6 +91,7 @@ SBNDFlashAna::SBNDFlashAna(fhicl::ParameterSet const& p)
   _ophit_label_v   = p.get<std::vector<std::string>>("OpHitProducer", _ophit_label_v);
   _tpc_v           = p.get<std::vector<int>>("TPC", _tpc_v);
 
+  fGeometryService = lar::providerFrom<geo::Geometry>();
   art::ServiceHandle<art::TFileService> fs;
   _flash_tree = fs->make<TTree>("FlashTree","");
   _flash_tree->Branch("run", &_run, "run/I");
@@ -89,6 +99,7 @@ SBNDFlashAna::SBNDFlashAna(fhicl::ParameterSet const& p)
   _flash_tree->Branch("event", &_event, "event/I");
   _flash_tree->Branch("tpc", &_tpc, "tpc/I");
   _flash_tree->Branch("flash_time", &_flash_time, "flash_time/D");
+  _flash_tree->Branch("flash_time_width", &_flash_time_width, "flash_time_width/D");
   _flash_tree->Branch("flash_total_pe", &_flash_total_pe, "flash_total_pe/D");
   _flash_tree->Branch("flash_y", &_flash_y, "flash_y/D");
   _flash_tree->Branch("flash_yerr", &_flash_yerr, "flash_yerr/D");
@@ -102,6 +113,9 @@ SBNDFlashAna::SBNDFlashAna(fhicl::ParameterSet const& p)
   _flash_tree->Branch("flash_ophit_pe", "std::vector<double>", &_flash_ophit_pe);
   _flash_tree->Branch("flash_ophit_ch", "std::vector<int>", &_flash_ophit_ch);
   _flash_tree->Branch("flash_ophit_chname", "std::vector<std::string>", &_flash_ophit_chname);
+  _flash_tree->Branch("flash_ophit_x","std::vector<double>",&_flash_ophit_x);
+  _flash_tree->Branch("flash_ophit_y","std::vector<double>",&_flash_ophit_y);
+  _flash_tree->Branch("flash_ophit_z","std::vector<double>",&_flash_ophit_z);  
 
   _mcflash_tree = fs->make<TTree>("MCFlashTree","");
   _mcflash_tree->Branch("run", &_run, "run/I");
@@ -109,6 +123,7 @@ SBNDFlashAna::SBNDFlashAna(fhicl::ParameterSet const& p)
   _mcflash_tree->Branch("event", &_event, "event/I");
   _mcflash_tree->Branch("tpc", &_tpc, "tpc/I");
   _mcflash_tree->Branch("flash_time", &_flash_time, "flash_time/D");
+  _mcflash_tree->Branch("flash_time_width", &_flash_time_width, "flash_time_width/D");
   _mcflash_tree->Branch("flash_total_pe", &_flash_total_pe, "flash_total_pe/D");
   _mcflash_tree->Branch("flash_y", &_flash_y, "flash_y/D");
   _mcflash_tree->Branch("flash_yerr", &_flash_yerr, "flash_yerr/D");
@@ -160,6 +175,7 @@ void SBNDFlashAna::analyze(art::Event const& e)
       std::cout << "Flash " << i << ", time " << f.AbsTime() << std::endl;
       _tpc = _tpc_v[l];
       _flash_time = f.AbsTime();
+      _flash_time_width = f.TimeWidth();
       _flash_total_pe = f.TotalPE();
       _flash_pe_v = f.PEs();
       _flash_y = f.YCenter();
@@ -173,6 +189,9 @@ void SBNDFlashAna::analyze(art::Event const& e)
       _flash_ophit_width.clear();
       _flash_ophit_pe.clear();
       _flash_ophit_ch.clear();
+      _flash_ophit_x.clear();
+      _flash_ophit_y.clear();
+      _flash_ophit_z.clear();
 
       std::vector<art::Ptr<recob::OpHit>> ophit_v = flashToOpHitAssns.at(i);
       for (auto ophit : ophit_v) {
@@ -183,7 +202,10 @@ void SBNDFlashAna::analyze(art::Event const& e)
         _flash_ophit_pe.push_back(ophit->PE());
         _flash_ophit_ch.push_back(ophit->OpChannel());
         _flash_ophit_chname.push_back(_pds_map.pdType(ophit->OpChannel()));
-        
+        auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophit->OpChannel()).GetCenter();
+        _flash_ophit_x.push_back(opdet_center.X());
+        _flash_ophit_y.push_back(opdet_center.Y());
+        _flash_ophit_z.push_back(opdet_center.Z());
       }
 
       _flash_tree->Fill();
@@ -200,6 +222,7 @@ void SBNDFlashAna::analyze(art::Event const& e)
       auto const& f = (*flash_h)[i];
       _tpc = _tpc_v[l];
       _flash_time = f.Time();
+      _flash_time_width = f.TimeWidth();
       _flash_total_pe = f.TotalPE();
       _flash_pe_v = f.PEs();
       _flash_y = f.YCenter();
