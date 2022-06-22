@@ -6,13 +6,13 @@
 #include <algorithm>
 
 namespace lightana{
-    
+
     static SimpleFlashAlgoFactory __SimpleFlashAlgoFactoryStaticObject__;
-    
+
     SimpleFlashAlgo::SimpleFlashAlgo(const std::string name)
     : FlashAlgoBase(name)
     {}
-    
+
     void SimpleFlashAlgo::Configure(const Config_t &p)
     {
         Reset();
@@ -24,9 +24,10 @@ namespace lightana{
         _pre_sample    = p.get<double>("PreSample",0.1);
         _veto_time     = p.get<double>("VetoSize",8.);
         _time_res      = p.get<double>("TimeResolution",0.03);
+        _tpc           = p.get<int>("TPC",-1);
         //_pe_baseline_v.clear();
         //_pe_baseline_v = p.get<std::vector<double> >("PEBaseline",_pe_baseline_v);
-        
+
         if(_integral_time > _veto_time) {
             std::cerr << "Integral time cannot exceed veto time!" << std::endl;
             throw std::exception();
@@ -52,13 +53,13 @@ namespace lightana{
         std::vector<std::string> pd_to_use;
         pd_to_use = p.get<std::vector<std::string>>("PD", pd_to_use);
         std::vector<int> opch_to_use = PDNamesToList(pd_to_use);
-        
+
         _index_to_opch_v.clear();
         _index_to_opch_v =  p.get<std::vector<int> >("OpChannel",_index_to_opch_v);
         if(_index_to_opch_v.empty()) {
-            int tpc = p.get<int>("TPC",-1);
-            if(tpc>=0) {
-                auto const opch_v = ListOpChannelsByTPC(tpc);
+
+            if(_tpc>=0) {
+                auto const opch_v = ListOpChannelsByTPC(_tpc);
                 _index_to_opch_v.reserve(opch_v.size());
                 for(auto const& v : opch_v) {
                     auto iter = std::find(opch_to_use.begin(), opch_to_use.end(), v);
@@ -99,7 +100,7 @@ namespace lightana{
             valid_id += 1;
             duplicate.insert(ch);
         }
-        
+
         if(_opch_to_index_v.empty()) {
             std::cerr << "Length of OpChannel array parameter is 0..." << std::endl;
             throw std::exception();
@@ -113,23 +114,23 @@ namespace lightana{
         }
         */
     }
-    
+
     bool SimpleFlashAlgo::Veto(double t) const
     {
         auto iter = _flash_veto_range_m.lower_bound(t);
         if(iter == _flash_veto_range_m.end()) return false;
         return (t >= (*iter).second);
     }
-    
+
     SimpleFlashAlgo::~SimpleFlashAlgo()
     {}
-    
+
     LiteOpFlashArray_t SimpleFlashAlgo::RecoFlash(const LiteOpHitArray_t ophits) {
-        
+
         Reset();
         size_t max_ch = _opch_to_index_v.size() - 1;
         size_t NOpDet = _index_to_opch_v.size();
-        
+
         //static std::vector<double> pesum_v;
         static std::vector<double> mult_v;  //< this is not strictly a multiplicity of PMTs, but multiplicity of hits
         static std::vector<std::vector<double> > pespec_v;
@@ -144,7 +145,7 @@ namespace lightana{
         max_time += 10* _time_res;
         if(_debug)
             std::cout << "T span: " << min_time << " => " << max_time << " ... " << (size_t)((max_time - min_time) / _time_res) << std::endl;
-        
+
         size_t nbins_pesum_v = (size_t)((max_time - min_time) / _time_res) + 1;
         if(_pesum_v.size() < nbins_pesum_v) _pesum_v.resize(nbins_pesum_v,0);
         if(mult_v.size()   < nbins_pesum_v) mult_v.resize(nbins_pesum_v,0);
@@ -156,7 +157,7 @@ namespace lightana{
             hitidx_v[i].clear();
             for(auto& v : pespec_v[i]) v=0;
         }
-        
+
         // Fill _pesum_v
         for(size_t hitidx = 0; hitidx < ophits.size(); ++hitidx) {
             auto const& oph = ophits[hitidx];
@@ -175,7 +176,7 @@ namespace lightana{
             pespec_v[index][_opch_to_index_v[oph.channel]] += oph.pe;
             hitidx_v[index].push_back(hitidx);
         }
-        
+
         // Order by pe (above threshold)
         std::map<double,size_t> pesum_idx_map;
         for(size_t idx=0; idx<nbins_pesum_v; ++idx) {
@@ -185,7 +186,7 @@ namespace lightana{
             if(mult_v[idx]  < _min_mult_coinc ) continue;
             pesum_idx_map[1./(_pesum_v[idx])] = idx;
         }
-        
+
         // Get candidate flash times
         std::vector<std::pair<size_t,size_t> > flash_period_v;
         std::vector<size_t> flash_time_v;
@@ -194,19 +195,19 @@ namespace lightana{
         size_t precount = (size_t)(_pre_sample / _time_res);
         flash_period_v.reserve(pesum_idx_map.size());
         flash_time_v.reserve(pesum_idx_map.size());
-        
+
         double sum_baseline = 0;
         //for(auto const& v : _pe_baseline_v) sum_baseline += v;
 
         for(auto const& pe_idx : pesum_idx_map) {
-                        
+
           //auto const& pe  = 1./(pe_idx.first);
             auto const& idx = pe_idx.second;
-            
+
             size_t start_time = idx;
             if(start_time < precount) start_time = 0;
             else start_time = idx - precount;
-            
+
             // see if this idx can be used
             bool skip=false;
             size_t integral_ctr = default_integral_ctr;
@@ -224,7 +225,7 @@ namespace lightana{
                         << " (previous flash @ " << used_period.first
                         << ") ... integral ctr change: " << integral_ctr
                         << " => " << used_period.first - start_time << std::endl;
-                    
+
                     integral_ctr = used_period.first - start_time;
                 }
                 if(_debug) {
@@ -238,57 +239,57 @@ namespace lightana{
                 if(_debug) std::cout << "Skipping a candidate @ " << min_time + start_time * _time_res << " as it is in a veto window!" <<std::endl;
                 continue;
             }
-            
+
             // See if this flash is declarable
             double pesum = 0;
             for(size_t i=start_time; i<std::min(nbins_pesum_v,(start_time+integral_ctr)); ++i)
-                
+
                 pesum += _pesum_v[i];
-            
+
             if(pesum < (_min_pe_flash + sum_baseline)) {
                 if(_debug) std::cout << "Skipping a candidate @ " << start_time  << " => " << start_time + integral_ctr
                     << " as it got " << pesum
                     << " PE which is lower than threshold " << (_min_pe_flash + sum_baseline) << std::endl;
                 continue;
             }
-            
+
             flash_period_v.push_back(std::pair<size_t,size_t>(start_time,integral_ctr));
             flash_time_v.push_back(idx);
         }
-        
+
         // Construct flash
         LiteOpFlashArray_t res;
         for(size_t flash_idx=0; flash_idx<flash_period_v.size(); ++flash_idx) {
-            
+
             auto const& start  = flash_period_v[flash_idx].first;
             auto const& period = flash_period_v[flash_idx].second;
             auto const& time   = flash_time_v[flash_idx];
-            
+
             std::vector<double> pe_v(max_ch+1,0);
             for(size_t index=start; index<(start+period) && index<pespec_v.size(); ++index) {
-                
+
                 for(size_t pmt_index=0; pmt_index<NOpDet; ++pmt_index)
-                    
+
                     pe_v[_index_to_opch_v[pmt_index]] += pespec_v[index][pmt_index];
-                
+
             }
-            
+
             for(size_t opch=0; opch<max_ch; ++opch) {
-                
+
                 if(_opch_to_index_v[opch]<0) continue;
-                
+
                 //pe_v[opch] -= _pe_baseline_v[_opch_to_index_v[opch]];
-                
+
                 if(pe_v[opch]<0) pe_v[opch]=0;
-                
+
             }
-            
+
             std::vector<unsigned int> asshit_v;
             for(size_t index=start; index<(start+period) && index<pespec_v.size(); ++index) {
                 for(auto const& idx : hitidx_v[index])
                     asshit_v.push_back(idx);
             }
-            
+
             if(_debug) {
                 std::cout << "Claiming a flash @ " << min_time + time * _time_res
                 << " : " << std::flush;
@@ -296,19 +297,18 @@ namespace lightana{
                 for(auto const& v : pe_v) { std::cout << v << " "; tmpsum +=v; }
                 std::cout << " ... sum = " << tmpsum << std::endl;
             }
-            
+
             LiteOpFlash_t flash( min_time + time * _time_res,
                                 period * _time_res / 2.,
+                                _tpc,
                                 std::move(pe_v),
                                 std::move(asshit_v));
             res.emplace_back( std::move(flash) );
-            
+
         }
         if(_debug) std::cout << std::endl;
         return res;
     }
-    
+
 }
 #endif
-
-
