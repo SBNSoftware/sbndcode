@@ -49,3 +49,5 @@ physics:
  end_paths: [ stream1 ]
 
 }
+
+physics.producers.fragmentProducer.ClockSpeedCRT: @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
