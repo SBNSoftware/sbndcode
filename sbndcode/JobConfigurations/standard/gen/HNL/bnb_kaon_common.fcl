@@ -1,0 +1,165 @@
+BEGIN_PROLOG
+
+empty_kaon: {
+  tool_type: EmptyKaonGen
+}
+
+sbnd_bnb_beam2detector_rotation: [ 1, 0, 0,
+                                   0, 1, 0,
+                                   0, 0, 1] #bnb to sbnd is in z-direction, only need a translation.
+
+sbnd_bnb_beam_origin: [-73.78, 0, -11000] # cm in deterctor frame
+#sbnd_bnb_beam_origin: [0, 0, 0, 73.78, 0, 11000] # cm in beam frame
+
+#sbnd detector in det frame
+sbnd_detector_box: [-200, 200, -200, 200, 0, 500] #cm
+
+sbnd_bnb_solid_angle_box: 1.3223e-3 #front face / detector distance ^2 = 4*4/110^2
+sbnd_bnb_solid_angle_cryostat: 0.0133 
+
+kaon_energy: 6 #GeV Max energy from kaon 
+
+bnb_kaon: {
+  tool_type: "BNBKaonGen" # BooNe Ntuples
+  SearchPath: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configI-v1/march2021/neutrinoMode/"
+  FluxFiles: ["*.root"]
+  TreeName: "h101"
+  MetaTreeName: "meta"
+  MaxFluxFileMB: 8192 # 8GB
+  FluxCopyMethod: DIRECT
+  RandomizeFiles: false
+  FluxFilesFullPath:[
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0000.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0001.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0002.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0003.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0004.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0005.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0006.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0007.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0008.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0009.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0010.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0011.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0012.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0013.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0014.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0015.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0016.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0017.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0018.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0019.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0020.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0021.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0022.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0023.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0024.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0025.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0026.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0027.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0028.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0029.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0030.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0031.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0032.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0033.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0034.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0035.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0036.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0037.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0038.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0039.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0040.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0041.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0042.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0043.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0044.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0045.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0046.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0047.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0048.root",
+                                    "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_
+0049.root"
+]
+
+ray_trace_box: {
+  tool_type: RayTraceBox
+  # Volume: volCryostat
+  Box: @local::sbnd_detector_box
+}
+
+rethrow_ray_trace_box: {
+  tool_type: ReThrowRayTraceBox
+  Box: @local::sbnd_detector_box
+  ReferenceLabSolidAngle: @local::sbnd_bnb_solid_angle_box
+  ReferenceKaonEnergy: @local::kaon_energy
+}
+
+weighted_ray_trace_box: {
+  tool_type: WeightedRayTraceBox
+  Box: @local::sbnd_detector_box
+  ReferenceLabSolidAngle: @local::sbnd_bnb_solid_angle_box
+  ReferenceKaonEnergy: @local::kaon_energy 
+}
+
+mixedweight_ray_trace_box: {
+  tool_type: MixedWeightRayTraceBox
+  Box: @local::sbnd_detector_box
+  ReferenceLabSolidAngle: @local::sbnd_bnb_solid_angle_box
+  ReferenceKaonEnergy: @local::kaon_energy
+  MaxWeightFudge: 2.
+  NThrow: 250
+  FixNSuccess: false
+}
+
+
+END_PROLOG
