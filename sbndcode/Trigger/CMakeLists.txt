@@ -1,4 +1,6 @@
-
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
+include_directories( $ENV{NUTOOLS_INC} )
+include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 
 art_make(
   MODULE_LIBRARIES
@@ -23,7 +25,12 @@ art_make(
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
 
-
+		    sbndcode_CRT
+		    sbndcode_CRTUtils
+                    sbnobj_Common_CRT
+		    sbnobj_SBND_CRT
+                    sbndcode_CRTUtils
+                    sbndcode_GeoWrappers
                     
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
