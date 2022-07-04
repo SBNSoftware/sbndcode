@@ -35,9 +35,9 @@ fwdir   product_dir scripts
 
 product          version
 
-sbncode          v09_53_02
+sbncode          v09_54_00
 sbnd_data        v01_13_00 - optional
-sbndutil         v09_53_02 - optional
+sbndutil         v09_54_00 - optional
 
 
 # list products required ONLY for the build
