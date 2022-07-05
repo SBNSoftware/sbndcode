@@ -1,0 +1,2835 @@
+# Produced from 'fhicl-dump' using:
+#   Input  : hnl_sbnd_gen_m385.fcl
+#   Policy : cet::filepath_maker
+#   Path   : "FHICL_FILE_PATH"
+
+outputs: {
+   out: {
+      compressionLevel: 1
+      dataTier: "simulated"
+      fileName: "prod_BNB_HNL_sbnd_%p-%tc.root"
+      module_type: "RootOutput"
+      saveMemoryObjectThreshold: 0
+   }
+}
+physics: {
+   analyzers: {}
+   end_paths: [
+      "stream"
+   ]
+   filters: {}
+   producers: {
+      generator: {
+         AnaOutput: true
+         Decay: {
+            Decays: [
+               "mu_pi"
+            ]
+            Majorana: true
+            MinDetectorDistance: 11000
+            ReferenceHNLEnergyFromKaonEnergy: 6
+            ReferenceHNLMass: 3.85e-1
+            ReferenceRayLength: 7.549834e2
+            ReferenceUE4: 0
+            ReferenceUM4: 1e-7
+            tool_type: "HNLMakeDecay"
+         }
+         Deweight: false
+         Flux: {
+            Beam2DetectorRotation: [
+               1,
+               0,
+               0,
+               0,
+               1,
+               0,
+               0,
+               0,
+               1
+            ]
+            BeamOrigin: [
+               0,
+               0,
+               0,
+               7.378e1,
+               0,
+               11000
+            ]
+            KDAROnly: false
+            M: 3.85e-1
+            MagUe4: 0
+            MagUm4: 1e-7
+            MaxImportanceWeight: 1
+            SpillTimeConfig: ""
+            Target2Absorber: 5000
+            tool_type: "Kaon2HNLFlux"
+         }
+         MesonGen: {
+            FluxCopyMethod: "DIRECT"
+            FluxFiles: [
+               "*.root"
+            ]
+            FluxFilesFullPath: [
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0000.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0001.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0002.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0003.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0004.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0005.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0006.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0007.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0008.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0009.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0010.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0011.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0012.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0013.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0014.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0015.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0016.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0017.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0018.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0019.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0020.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0021.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0022.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0023.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0024.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0025.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0026.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0027.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0028.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0029.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0030.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0031.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0032.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0033.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0034.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0035.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0036.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0037.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0038.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0039.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0040.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0041.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0042.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0043.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0044.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0045.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0046.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0047.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0048.root",
+               "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0049.root"
+            ]
+            MaxFluxFileMB: 8192
+            MetaTreeName: "meta"
+            RandomizeFiles: false
+            SearchPath: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/"
+            TreeName: "h101"
+            tool_type: "BNBKaonGen"
+         }
+         Produce: true
+         RayTrace: {
+            ReferenceKaonEnergy: 6
+            ReferenceLabSolidAngle: 1.33e-2
+            ReferencePrtlMass: 3.85e-1
+            ReferenceScndPDG: 13
+            Volume: "volCryostat"
+            tool_type: "WeightedRayTraceBox"
+         }
+         module_type: "MeVPrtlGen"
+      }
+      rns: {
+         module_type: "RandomNumberSaver"
+      }
+   }
+   runprod: [
+      "generator",
+      "rns"
+   ]
+   stream: [
+      "out"
+   ]
+   trigger_paths: [
+      "runprod"
+   ]
+}
+process_name: "Gen"
+services: {
+   ActionHolder: {}
+   AuxDetExptGeoHelperInterface: {
+      service_provider: "sbndcode/CRT/CRTGeometryHelper"
+   }
+   AuxDetGeometry: {
+      GDML: "sbnd_v02_00.gdml"
+      Name: "sbndv2"
+      ROOT: "sbnd_v02_00.gdml"
+      SortingParameters: {}
+}
+   ChannelStatusService: {
+      BadChannels: [
+         4802,
+         4803,
+         4804,
+         4805,
+         4806,
+         4807,
+         10440,
+         10441,
+         10442,
+         10443,
+         10444,
+         10445,
+         4399,
+         5221,
+         10037,
+         10859,
+         0,
+         1,
+         2,
+         1983,
+         1984,
+         1985,
+         1986,
+         1987,
+         1988,
+         3969,
+         3970,
+         3971,
+         5638,
+         5639,
+         5640,
+         7621,
+         7622,
+         7623,
+         7624,
+         7625,
+         7626,
+         9607,
+         9608,
+         9609
+      ]
+      NoisyChannels: []
+      service_provider: "SimpleChannelStatusService"
+   }
+   DetPedestalService: {
+      DetPedestalRetrievalAlg: {
+         AlgName: "DetPedestalRetrievalAlg"
+         DatabaseRetrievalAlg: {
+            AlgName: "DatabaseRetrievalAlg"
+            DBFolderName: ""
+            DBTag: ""
+            DBUrl: ""
+         }
+         DefaultCollMean: 650
+         DefaultCollRms: 3e-1
+         DefaultIndMean: 2000
+         DefaultIndRms: 3e-1
+         DefaultMeanErr: 0
+         DefaultRmsErr: 0
+         UseDB: false
+         UseFile: false
+      }
+      service_provider: "SIOVDetPedestalService"
+   }
+   DetectorClocksService: {
+      ClockSpeedExternal: 3.125e1
+      ClockSpeedOptical: 500
+      ClockSpeedTPC: 2
+      ClockSpeedTrigger: 16
+      DefaultBeamTime: 1700
+      DefaultTrigTime: 1700
+      FramePeriod: 1300
+      G4RefTime: -1700
+      InheritClockConfig: true
+      TrigModuleName: "triggersim"
+      TriggerOffsetTPC: -200
+      service_provider: "DetectorClocksServiceStandard"
+   }
+   DetectorHolder: {}
+   DetectorPropertiesService: {
+      DriftVelFudgeFactor: 1
+      Efield: [
+         5e-1,
+         6.66e-1,
+         8e-1
+      ]
+      Electronlifetime: 10000
+      ElectronsToADC: 6.29778e-3
+      IncludeInterPlanePitchInXTickOffsets: true
+      InheritNumberTimeSamples: false
+      NumberTimeSamples: 3400
+      ReadOutWindowSize: 3400
+      SimpleBoundaryProcess: true
+      SternheimerA: 1.956e-1
+      SternheimerCbar: 5.2146
+      SternheimerK: 3
+      SternheimerX0: 2e-1
+      SternheimerX1: 3
+      Temperature: 8.84e1
+      TimeOffsetU: 0
+      TimeOffsetV: 0
+      TimeOffsetZ: 0
+      UseIcarusMicrobooneDriftModel: false
+      service_provider: "DetectorPropertiesServiceStandard"
+   }
+   ExptGeoHelperInterface: {
+      service_provider: "SBNDGeometryHelper"
+   }
+   Geometry: {
+      DisableWiresInG4: true
+      GDML: "sbnd_v02_00.gdml"
+      Name: "sbndv2"
+      ROOT: "sbnd_v02_00.gdml"
+      SortingParameters: {
+         DetectorVersion: "sbnd"
+      }
+      SurfaceY: 0
+   }
+   GeometryConfigurationWriter: {}
+   IFDH: {}
+   LArFFT: {
+      FFTOption: ""
+      FFTSize: 0
+      FitBins: 20
+   }
+   LArG4Detector: {
+      category: "world"
+      gdmlFileName_: "sbnd_v02_00_nowires.gdml"
+      stepLimits: [
+         3e-1,
+         3e-1,
+         3e-1,
+         3e-1,
+         3e-1,
+         3e-1,
+         3e-1
+      ]
+      volumeNames: [
+         "volTPCActive",
+         "volCryostat",
+         "volTPCPlaneVert",
+         "volXArapuca",
+         "volPMT",
+         "volFieldCage",
+         "volPDSstructure"
+      ]
+   }
+   LArG4Parameters: {
+      CosmogenicK0Bias: 0
+      CosmogenicXSMNBiasFactor: 1
+      CosmogenicXSMNBiasOn: 0
+      DisableWireplanes: false
+      ElectronClusterSize: 20
+      EnabledPhysics: [
+         "Em",
+         "FastOptical",
+         "SynchrotronAndGN",
+         "Ion",
+         "Hadron",
+         "Decay",
+         "HadronElastic",
+         "Stopping"
+      ]
+      IonAndScintCalculator: "Correlated"
+      KeepEMShowerDaughters: false
+      LarqlAlpha: 3.72e-2
+      LarqlBeta: 1.24e-2
+      LarqlChi0A: 3.38427e-3
+      LarqlChi0B: -6.57037
+      LarqlChi0C: 1.88418
+      LarqlChi0D: 1.29379e-4
+      LongitudinalDiffusion: 4e-9
+      MinNumberOfElCluster: 0
+      ModBoxA: 9.3e-1
+      ModBoxB: 2.12e-1
+      ModifyProtonCut: false
+      NewProtonCut: 0
+      OpticalParamModels: [
+         "OverlaidWireplanes"
+      ]
+      OpticalParamOrientations: [
+         0
+      ]
+      OpticalParamParameters: [
+         [
+            [
+               60,
+               3,
+               1.5e-1
+            ],
+            [
+               -60,
+               3,
+               1.5e-1
+            ],
+            [
+               0,
+               3,
+               1.5e-1
+            ]
+         ]
+      ]
+      OpticalParamVolumes: [
+         "volTPCPlaneVert_PV"
+      ]
+      OpticalSimVerbosity: 0
+      ParticleKineticEnergyCut: 1e-5
+      RecombA: 8e-1
+      Recombk: 4.86e-2
+      SkipWireSignalInTPCs: []
+      StoreTrajectories: true
+      TransverseDiffusion: 8.8e-9
+      UseCustomPhysics: true
+      UseLitePhotons: true
+      UseModBoxRecomb: true
+      UseModLarqlRecomb: true
+      VisualizationEnergyCut: 1e-2
+      VisualizeNeutrals: false
+   }
+   LArPropertiesService: {
+      AbsLengthEnergies: [
+         4,
+         5,
+         6,
+         7,
+         8,
+         9,
+         10,
+         11
+      ]
+      AbsLengthSpectrum: [
+         2000,
+         2000,
+         2000,
+         2000,
+         2000,
+         2000,
+         2000,
+         2000
+      ]
+      AlphaScintYield: 16800
+      AlphaScintYieldRatio: 5.6e-1
+      Argon39DecayRate: 0
+      AtomicMass: 3.9948e1
+      AtomicNumber: 18
+      ElectronScintYield: 20000
+      ElectronScintYieldRatio: 2.7e-1
+      EnableCerenkovLight: false
+      ExcitationEnergy: 188
+      FastScintEnergies: [
+         7.2,
+         7.9,
+         8.3,
+         8.6,
+         8.9,
+         9.1,
+         9.3,
+         9.6,
+         9.7,
+         9.8,
+         10,
+         1.02e1,
+         1.03e1,
+         1.06e1,
+         11,
+         1.16e1,
+         1.19e1
+      ]
+      FastScintSpectrum: [
+         0,
+         4e-2,
+         1.2e-1,
+         2.7e-1,
+         4.4e-1,
+         6.2e-1,
+         8e-1,
+         9.1e-1,
+         9.2e-1,
+         8.5e-1,
+         7e-1,
+         5e-1,
+         3.1e-1,
+         1.3e-1,
+         4e-2,
+         1e-2,
+         0
+      ]
+      KaonScintYield: 24000
+      KaonScintYieldRatio: 2.3e-1
+      LoadExtraMatProperties: true
+      MuonScintYield: 24000
+      MuonScintYieldRatio: 2.3e-1
+      PionScintYield: 24000
+      PionScintYieldRatio: 2.3e-1
+      ProtonScintYield: 19200
+      ProtonScintYieldRatio: 2.9e-1
+      RIndexEnergies: [
+         1.18626,
+         1.68626,
+         2.18626,
+         2.68626,
+         3.18626,
+         3.68626,
+         4.18626,
+         4.68626,
+         5.18626,
+         5.68626,
+         6.18626,
+         6.68626,
+         7.18626,
+         7.68626,
+         8.18626,
+         8.68626,
+         9.18626,
+         9.68626,
+         1.01863e1,
+         1.06863e1,
+         1.11863e1
+      ]
+      RIndexSpectrum: [
+         1.24664,
+         1.2205,
+         1.22694,
+         1.22932,
+         1.23124,
+         1.23322,
+         1.23545,
+         1.23806,
+         1.24116,
+         1.24489,
+         1.24942,
+         1.25499,
+         1.26197,
+         1.2709,
+         1.28263,
+         1.29865,
+         1.32169,
+         1.35747,
+         1.42039,
+         1.56011,
+         2.16626
+      ]
+      RadiationLength: 1.955e1
+      RayleighEnergies: [
+         1.18626,
+         1.68626,
+         2.18626,
+         2.68626,
+         3.18626,
+         3.68626,
+         4.18626,
+         4.68626,
+         5.18626,
+         5.68626,
+         6.18626,
+         6.68626,
+         7.18626,
+         7.68626,
+         8.18626,
+         8.68626,
+         9.18626,
+         9.68626,
+         1.01863e1,
+         1.06863e1,
+         1.11863e1
+      ]
+      RayleighSpectrum: [
+         1.2008e6,
+         390747,
+         128633,
+         5.49691e4,
+         2.71918e4,
+         1.48537e4,
+         8.7169e3,
+         5.39742e3,
+         3.48137e3,
+         2.31651e3,
+         1.57763e3,
+         1.09202e3,
+         7.63045e2,
+         5.34232e2,
+         3.71335e2,
+         2.52942e2,
+         1.6538e2,
+         9.99003e1,
+         5.12653e1,
+         1.7495e1,
+         9.64341e-1
+      ]
+      ReflectiveSurfaceDiffuseFractions: [
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ],
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ],
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ],
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ],
+         [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+         ]
+      ]
+      ReflectiveSurfaceEnergies: [
+         1.77,
+         2.0675,
+         2.481,
+         2.819,
+         2.953,
+         3.1807,
+         3.54,
+         4.135,
+         4.962,
+         5.39,
+         7,
+         15
+      ]
+      ReflectiveSurfaceNames: [
+         "STEEL_STAINLESS_Fe7Cr2Ni",
+         "Copper_Beryllium_alloy25",
+         "G10",
+         "vm2000",
+         "ALUMINUM_Al"
+      ]
+      ReflectiveSurfaceReflectances: [
+         [
+            6.6e-1,
+            6.4e-1,
+            6.2e-1,
+            6e-1,
+            5.9e-1,
+            5.7e-1,
+            5.3e-1,
+            4.7e-1,
+            3.9e-1,
+            3.6e-1,
+            2.7e-1,
+            2.5e-1
+         ],
+         [
+            9.02e-1,
+            8.41e-1,
+            4.64e-1,
+            3.79e-1,
+            3.45e-1,
+            2.99e-1,
+            2.87e-1,
+            2.64e-1,
+            3.37e-1,
+            3e-1,
+            0,
+            0
+         ],
+         [
+            3.93e-1,
+            4.05e-1,
+            4.04e-1,
+            3.52e-1,
+            3.23e-1,
+            2.43e-1,
+            1.27e-1,
+            6.5e-2,
+            6.8e-2,
+            6.8e-2,
+            0,
+            0
+         ],
+         [
+            9.3e-1,
+            9.3e-1,
+            9.3e-1,
+            9.3e-1,
+            9.3e-1,
+            9.3e-1,
+            1e-1,
+            1e-1,
+            7e-1,
+            3e-1,
+            0,
+            0
+         ],
+         [
+            9e-1,
+            9e-1,
+            9e-1,
+            9e-1,
+            9e-1,
+            9e-1,
+            9e-1,
+            4.7e-1,
+            3.9e-1,
+            3.6e-1,
+            2.7e-1,
+            2.5e-1
+         ]
+      ]
+      ScintBirksConstant: 6.9e-2
+      ScintByParticleType: true
+      ScintFastTimeConst: 6
+      ScintPreScale: 3e-2
+      ScintResolutionScale: 1
+      ScintSlowTimeConst: 1300
+      ScintYield: 24000
+      ScintYieldRatio: 3e-1
+      SlowScintEnergies: [
+         7.2,
+         7.9,
+         8.3,
+         8.6,
+         8.9,
+         9.1,
+         9.3,
+         9.6,
+         9.7,
+         9.8,
+         10,
+         1.02e1,
+         1.03e1,
+         1.06e1,
+         11,
+         1.16e1,
+         1.19e1
+      ]
+      SlowScintSpectrum: [
+         0,
+         4e-2,
+         1.2e-1,
+         2.7e-1,
+         4.4e-1,
+         6.2e-1,
+         8e-1,
+         9.1e-1,
+         9.2e-1,
+         8.5e-1,
+         7e-1,
+         5e-1,
+         3.1e-1,
+         1.3e-1,
+         4e-2,
+         1e-2,
+         0
+      ]
+      TpbAbsorptionEnergies: [
+         5e-2,
+         1.77,
+         2.0675,
+         7.42,
+         7.75,
+         8.16,
+         8.73,
+         9.78,
+         1.069e1,
+         5.039e1
+      ]
+      TpbAbsorptionSpectrum: [
+         100000,
+         100000,
+         100000,
+         1e-3,
+         1e-11,
+         1e-11,
+         1e-11,
+         1e-11,
+         1e-11,
+         1e-11
+      ]
+      TpbEmmisionEnergies: [
+         5e-2,
+         1,
+         1.5,
+         2.25,
+         2.481,
+         2.819,
+         2.952,
+         2.988,
+         3.024,
+         3.1,
+         3.14,
+         3.1807,
+         3.54,
+         5.5,
+         5.039e1
+      ]
+      TpbEmmisionSpectrum: [
+         0,
+         0,
+         0,
+         5.88e-2,
+         2.35e-1,
+         8.53e-1,
+         1,
+         1,
+         9.259e-1,
+         7.04e-1,
+         2.96e-2,
+         1.1e-2,
+         0,
+         0,
+         0
+      ]
+      TpbTimeConstant: 0
+      service_provider: "LArPropertiesServiceStandard"
+   }
+   LArVoxelCalculator: {
+      VoxelEnergyCut: 1e-6
+      VoxelOffsetT: -2500
+      VoxelOffsetX: 0
+      VoxelOffsetY: 0
+      VoxelOffsetZ: 0
+      VoxelSizeT: 5000
+      VoxelSizeX: 3e-2
+      VoxelSizeY: 3e-2
+      VoxelSizeZ: 3e-2
+   }
+   MCTruthEventAction: {
+      service_type: "MCTruthEventActionService"
+   }
+   MagneticField: {
+      FieldDescriptions: [
+         {
+            ConstantField: [
+               0,
+               0,
+               0
+            ]
+            MagnetizedVolume: "volWorld"
+            UseField: 0
+         }
+      ]
+      service_provider: "MagneticFieldServiceStandard"
+   }
+   MemoryTracker: {
+      dbOutput: {
+         filename: "memory.db"
+         overwrite: true
+      }
+   }
+   NoiseModel: {
+      CohExpNorm: 3.67206
+      CohExpOffset: 2.32098e-1
+      CohExpWidth: 3.39581
+      CohGausMean: [
+         3.55622e1,
+         6.63823e-2,
+         1.162e2,
+         1.739e2,
+         2.898e2
+      ]
+      CohGausNorm: [
+         6.88535,
+         5.21692e-1,
+         2.00001,
+         2.0363,
+         2.00003
+      ]
+      CohGausSigma: [
+         1.75992e1,
+         3.16607e2,
+         3.68024e-1,
+         3.26335e-1,
+         5.1472e-2
+      ]
+      CohNoiseArrayPoints: 1000
+      EffectiveNBits: 1.06e1
+      EnableCoherentNoise: false
+      EnableGaussianNoise: false
+      EnableMicroBooNoise: true
+      EnableWhiteNoise: false
+      GausMeanU: [
+         630,
+         640,
+         730
+      ]
+      GausMeanV: [
+         130,
+         330,
+         430
+      ]
+      GausMeanZ: [
+         34
+      ]
+      GausNormU: [
+         30,
+         -3,
+         15
+      ]
+      GausNormV: [
+         30,
+         40,
+         15
+      ]
+      GausNormZ: [
+         3
+      ]
+      GausSigmaU: [
+         5e-1,
+         5e-1,
+         5e-1
+      ]
+      GausSigmaV: [
+         5e-1,
+         2,
+         5e-1
+      ]
+      GausSigmaZ: [
+         5
+      ]
+      IncludeJumpers: false
+      JumperCapacitance: 5
+      LogLevel: 0
+      NChannelsPerCoherentGroup: [
+         40,
+         40,
+         48
+      ]
+      NoiseArrayPoints: 1000
+      NoiseFunctionParameters: [
+         1.19777e1,
+         170000,
+         4.93692e3,
+         1.03438e3,
+         2.33306e2,
+         1.36605,
+         4.08741,
+         3.5e-3,
+         9596
+      ]
+      UFirstJumper: 420
+      ULastJumper: 1568
+      VFirstJumper: 417
+      VLastJumper: 1565
+      WhiteNoiseU: 1.6
+      WhiteNoiseV: 1.6
+      WhiteNoiseZ: 1.6
+      service_provider: "SBNDuBooNEDataDrivenNoiseService"
+   }
+   NuRandomService: {
+      endOfJobSummary: true
+      policy: "random"
+   }
+   OpDetResponseInterface: {
+      QuantumEfficiency: 1
+      WavelengthCutHigh: 10000
+      WavelengthCutLow: 0
+      service_provider: "MicrobooneOpDetResponse"
+   }
+   ParticleListAction: {
+      EnergyCut: 1e-2
+      KeepSecondToLast: true
+      KeepTransportation: true
+      SparsifyMargin: 1.5e-2
+      SparsifyTrajectories: true
+      keepEMShowerDaughters: false
+      keepGenTrajectories: [
+         "generator"
+      ]
+      keepOnlyPrimaryFullTrajectories: false
+      service_type: "ParticleListActionService"
+      storeTrajectories: true
+   }
+   PhotonVisibilityService: {
+      Cut_off: [
+         [
+            [
+               1.08879e2,
+               1.17713e2,
+               1.26561e2,
+               1.35013e2,
+               1.38019e2,
+               1.47266e2,
+               1.48173e2,
+               1.51039e2,
+               1.56576e2,
+               1.57368e2
+            ],
+            [
+               1.07123e2,
+               1.17204e2,
+               1.26197e2,
+               1.32051e2,
+               1.38645e2,
+               1.43567e2,
+               1.4871e2,
+               1.50631e2,
+               1.52873e2,
+               1.53062e2
+            ],
+            [
+               1.01158e2,
+               1.10499e2,
+               1.1897e2,
+               1.25651e2,
+               1.31928e2,
+               1.37559e2,
+               1.40803e2,
+               1.44461e2,
+               1.48055e2,
+               1.4767e2
+            ],
+            [
+               9.5743e1,
+               1.05422e2,
+               1.13131e2,
+               1.20794e2,
+               1.26101e2,
+               1.3175e2,
+               1.36817e2,
+               1.40403e2,
+               1.44638e2,
+               1.44621e2
+            ],
+            [
+               9.0199e1,
+               9.9504e1,
+               1.07253e2,
+               1.1439e2,
+               1.20331e2,
+               1.25562e2,
+               1.30335e2,
+               1.34945e2,
+               1.37119e2,
+               1.37499e2
+            ],
+            [
+               8.06139e1,
+               8.94706e1,
+               9.61147e1,
+               1.05681e2,
+               1.11707e2,
+               1.16878e2,
+               1.18331e2,
+               1.29243e2,
+               1.30337e2,
+               1.32494e2
+            ]
+         ],
+         [
+            [
+               1.10859e2,
+               1.19899e2,
+               1.27787e2,
+               1.32744e2,
+               1.40344e2,
+               1.46117e2,
+               1.49407e2,
+               1.53365e2,
+               1.56509e2,
+               1.55408e2
+            ],
+            [
+               1.0929e2,
+               1.18677e2,
+               1.2658e2,
+               1.32996e2,
+               1.38773e2,
+               1.4469e2,
+               1.4872e2,
+               1.51492e2,
+               1.53446e2,
+               1.53059e2
+            ],
+            [
+               1.02812e2,
+               1.11585e2,
+               1.2002e2,
+               1.26483e2,
+               1.32528e2,
+               1.37919e2,
+               1.42511e2,
+               1.45935e2,
+               1.47783e2,
+               1.47661e2
+            ],
+            [
+               9.7498e1,
+               1.05994e2,
+               1.14085e2,
+               1.20801e2,
+               1.26817e2,
+               1.32482e2,
+               1.36423e2,
+               1.39902e2,
+               1.43529e2,
+               1.44307e2
+            ],
+            [
+               9.14671e1,
+               1.00444e2,
+               1.08344e2,
+               1.15064e2,
+               1.2127e2,
+               1.2739e2,
+               1.32363e2,
+               1.35465e2,
+               1.38877e2,
+               1.40423e2
+            ],
+            [
+               8.47913e1,
+               9.46445e1,
+               1.02154e2,
+               1.09808e2,
+               1.14435e2,
+               1.19918e2,
+               1.25283e2,
+               1.29101e2,
+               1.33017e2,
+               1.34976e2
+            ]
+         ],
+         [
+            [
+               1.13473e2,
+               1.22253e2,
+               1.29973e2,
+               1.35681e2,
+               1.4203e2,
+               1.47891e2,
+               1.52069e2,
+               1.53661e2,
+               1.57246e2,
+               1.57143e2
+            ],
+            [
+               1.11526e2,
+               1.20351e2,
+               1.28326e2,
+               1.34993e2,
+               1.41243e2,
+               1.4518e2,
+               1.49429e2,
+               1.5299e2,
+               1.54259e2,
+               1.55184e2
+            ],
+            [
+               1.06443e2,
+               1.14964e2,
+               1.2285e2,
+               1.29208e2,
+               1.35683e2,
+               1.4031e2,
+               1.43793e2,
+               1.48454e2,
+               1.50894e2,
+               1.50622e2
+            ],
+            [
+               1.01014e2,
+               1.09385e2,
+               1.16918e2,
+               1.23392e2,
+               1.2973e2,
+               1.34869e2,
+               1.39516e2,
+               1.42497e2,
+               1.46382e2,
+               1.45781e2
+            ],
+            [
+               9.57601e1,
+               1.04313e2,
+               1.11902e2,
+               1.18858e2,
+               1.24205e2,
+               1.30367e2,
+               1.34146e2,
+               1.37843e2,
+               1.4085e2,
+               1.40721e2
+            ],
+            [
+               8.8227e1,
+               9.68771e1,
+               1.04217e2,
+               1.10683e2,
+               1.16074e2,
+               1.22027e2,
+               1.28004e2,
+               1.3105e2,
+               1.36799e2,
+               1.34261e2
+            ]
+         ],
+         [
+            [
+               1.17545e2,
+               1.25174e2,
+               1.32845e2,
+               1.39015e2,
+               1.44447e2,
+               1.49025e2,
+               1.52787e2,
+               1.53969e2,
+               1.58573e2,
+               1.58526e2
+            ],
+            [
+               1.15274e2,
+               1.23511e2,
+               1.30751e2,
+               1.36751e2,
+               1.42789e2,
+               1.47191e2,
+               1.51494e2,
+               1.54343e2,
+               1.55427e2,
+               1.56897e2
+            ],
+            [
+               1.11345e2,
+               1.19575e2,
+               1.26844e2,
+               1.32808e2,
+               1.39206e2,
+               1.43527e2,
+               1.47367e2,
+               1.50525e2,
+               1.52621e2,
+               1.5349e2
+            ],
+            [
+               1.06945e2,
+               1.1498e2,
+               1.22664e2,
+               1.28581e2,
+               1.34635e2,
+               1.39054e2,
+               1.42915e2,
+               1.46447e2,
+               1.48629e2,
+               1.4938e2
+            ],
+            [
+               1.01952e2,
+               1.1016e2,
+               1.17166e2,
+               1.23437e2,
+               1.29051e2,
+               1.33848e2,
+               1.38325e2,
+               1.41032e2,
+               1.4434e2,
+               1.43797e2
+            ],
+            [
+               9.57831e1,
+               1.03094e2,
+               1.10602e2,
+               1.16772e2,
+               1.22035e2,
+               1.28367e2,
+               1.2932e2,
+               1.3499e2,
+               1.37224e2,
+               1.38517e2
+            ]
+         ],
+         [
+            [
+               1.22059e2,
+               1.29706e2,
+               1.36634e2,
+               1.4241e2,
+               1.47122e2,
+               1.51765e2,
+               1.56203e2,
+               1.58534e2,
+               1.59641e2,
+               1.59687e2
+            ],
+            [
+               1.21198e2,
+               1.29397e2,
+               1.36316e2,
+               1.41944e2,
+               1.46887e2,
+               1.51695e2,
+               1.54492e2,
+               1.57212e2,
+               1.58883e2,
+               1.5878e2
+            ],
+            [
+               1.18617e2,
+               1.26902e2,
+               1.33136e2,
+               1.39301e2,
+               1.44749e2,
+               1.49136e2,
+               1.52547e2,
+               1.55325e2,
+               1.5644e2,
+               1.57326e2
+            ],
+            [
+               1.1493e2,
+               1.22657e2,
+               1.29171e2,
+               1.3525e2,
+               1.40923e2,
+               1.45447e2,
+               1.48867e2,
+               1.51778e2,
+               1.54523e2,
+               1.5422e2
+            ],
+            [
+               1.10447e2,
+               1.18776e2,
+               1.25102e2,
+               1.30857e2,
+               1.36014e2,
+               1.4027e2,
+               1.44789e2,
+               1.47129e2,
+               1.49476e2,
+               1.4993e2
+            ],
+            [
+               1.04124e2,
+               1.12665e2,
+               1.18815e2,
+               1.24201e2,
+               1.29634e2,
+               1.34767e2,
+               1.37868e2,
+               1.40187e2,
+               1.4466e2,
+               1.43859e2
+            ]
+         ],
+         [
+            [
+               1.26237e2,
+               1.33998e2,
+               1.40403e2,
+               1.46168e2,
+               1.50601e2,
+               1.55466e2,
+               1.5639e2,
+               1.57403e2,
+               1.62758e2,
+               1.61648e2
+            ],
+            [
+               1.28138e2,
+               1.36133e2,
+               1.42206e2,
+               1.47985e2,
+               1.53284e2,
+               1.56167e2,
+               1.60598e2,
+               1.62771e2,
+               1.64584e2,
+               1.63997e2
+            ],
+            [
+               1.28168e2,
+               1.35637e2,
+               1.42499e2,
+               1.48122e2,
+               1.52425e2,
+               1.56461e2,
+               1.59679e2,
+               1.62192e2,
+               1.63726e2,
+               1.64242e2
+            ],
+            [
+               1.2494e2,
+               1.32548e2,
+               1.38967e2,
+               1.45065e2,
+               1.49917e2,
+               1.5383e2,
+               1.56655e2,
+               1.59069e2,
+               1.60642e2,
+               1.61262e2
+            ],
+            [
+               1.20791e2,
+               1.29263e2,
+               1.35849e2,
+               1.40397e2,
+               1.46083e2,
+               1.49077e2,
+               1.5302e2,
+               1.55276e2,
+               1.57498e2,
+               1.58006e2
+            ],
+            [
+               1.15162e2,
+               1.23234e2,
+               1.29656e2,
+               1.34745e2,
+               1.39527e2,
+               1.42669e2,
+               1.48269e2,
+               1.50398e2,
+               1.52025e2,
+               1.51664e2
+            ]
+         ],
+         [
+            [
+               1.26237e2,
+               1.33998e2,
+               1.40403e2,
+               1.46168e2,
+               1.50601e2,
+               1.55466e2,
+               1.5639e2,
+               1.57403e2,
+               1.62758e2,
+               1.61648e2
+            ],
+            [
+               1.28138e2,
+               1.36133e2,
+               1.42206e2,
+               1.47985e2,
+               1.53284e2,
+               1.56167e2,
+               1.60598e2,
+               1.62771e2,
+               1.64584e2,
+               1.63997e2
+            ],
+            [
+               1.33806e2,
+               1.41375e2,
+               1.47856e2,
+               1.52848e2,
+               1.58234e2,
+               1.60793e2,
+               1.64829e2,
+               1.64129e2,
+               1.69376e2,
+               1.68286e2
+            ],
+            [
+               1.32637e2,
+               1.4057e2,
+               1.47406e2,
+               1.5175e2,
+               1.56099e2,
+               1.60353e2,
+               1.62947e2,
+               1.65174e2,
+               1.66656e2,
+               1.66734e2
+            ],
+            [
+               1.30847e2,
+               1.38784e2,
+               1.45106e2,
+               1.50963e2,
+               1.55084e2,
+               1.58991e2,
+               1.61935e2,
+               1.64596e2,
+               1.66148e2,
+               1.66383e2
+            ],
+            [
+               1.2726e2,
+               1.34345e2,
+               1.41726e2,
+               1.46923e2,
+               1.51455e2,
+               1.54986e2,
+               1.57498e2,
+               1.60633e2,
+               1.62228e2,
+               1.63082e2
+            ]
+         ],
+         [
+            [
+               1.26237e2,
+               1.33998e2,
+               1.40403e2,
+               1.46168e2,
+               1.50601e2,
+               1.55466e2,
+               1.5639e2,
+               1.57403e2,
+               1.62758e2,
+               1.61648e2
+            ],
+            [
+               1.28138e2,
+               1.36133e2,
+               1.42206e2,
+               1.47985e2,
+               1.53284e2,
+               1.56167e2,
+               1.60598e2,
+               1.62771e2,
+               1.64584e2,
+               1.63997e2
+            ],
+            [
+               1.33806e2,
+               1.41375e2,
+               1.47856e2,
+               1.52848e2,
+               1.58234e2,
+               1.60793e2,
+               1.64829e2,
+               1.64129e2,
+               1.69376e2,
+               1.68286e2
+            ],
+            [
+               1.32637e2,
+               1.4057e2,
+               1.47406e2,
+               1.5175e2,
+               1.56099e2,
+               1.60353e2,
+               1.62947e2,
+               1.65174e2,
+               1.66656e2,
+               1.66734e2
+            ],
+            [
+               1.30847e2,
+               1.38784e2,
+               1.45106e2,
+               1.50963e2,
+               1.55084e2,
+               1.58991e2,
+               1.61935e2,
+               1.64596e2,
+               1.66148e2,
+               1.66383e2
+            ],
+            [
+               1.2726e2,
+               1.34345e2,
+               1.41726e2,
+               1.46923e2,
+               1.51455e2,
+               1.54986e2,
+               1.57498e2,
+               1.60633e2,
+               1.62228e2,
+               1.63082e2
+            ]
+         ],
+         [
+            [
+               1.26237e2,
+               1.33998e2,
+               1.40403e2,
+               1.46168e2,
+               1.50601e2,
+               1.55466e2,
+               1.5639e2,
+               1.57403e2,
+               1.62758e2,
+               1.61648e2
+            ],
+            [
+               1.28138e2,
+               1.36133e2,
+               1.42206e2,
+               1.47985e2,
+               1.53284e2,
+               1.56167e2,
+               1.60598e2,
+               1.62771e2,
+               1.64584e2,
+               1.63997e2
+            ],
+            [
+               1.33806e2,
+               1.41375e2,
+               1.47856e2,
+               1.52848e2,
+               1.58234e2,
+               1.60793e2,
+               1.64829e2,
+               1.64129e2,
+               1.69376e2,
+               1.68286e2
+            ],
+            [
+               1.32637e2,
+               1.4057e2,
+               1.47406e2,
+               1.5175e2,
+               1.56099e2,
+               1.60353e2,
+               1.62947e2,
+               1.65174e2,
+               1.66656e2,
+               1.66734e2
+            ],
+            [
+               1.30847e2,
+               1.38784e2,
+               1.45106e2,
+               1.50963e2,
+               1.55084e2,
+               1.58991e2,
+               1.61935e2,
+               1.64596e2,
+               1.66148e2,
+               1.66383e2
+            ],
+            [
+               1.2726e2,
+               1.34345e2,
+               1.41726e2,
+               1.46923e2,
+               1.51455e2,
+               1.54986e2,
+               1.57498e2,
+               1.60633e2,
+               1.62228e2,
+               1.63082e2
+            ]
+         ]
+      ]
+      Distances_exp: [
+         0,
+         25,
+         50,
+         75,
+         100,
+         125,
+         150,
+         175,
+         200,
+         225,
+         250,
+         275,
+         300,
+         325,
+         350,
+         375
+      ]
+      Distances_landau: [
+         0,
+         25,
+         50,
+         75,
+         100,
+         125,
+         150,
+         175,
+         200,
+         225,
+         250,
+         275,
+         300,
+         325,
+         350,
+         375,
+         400,
+         425,
+         450,
+         475,
+         500,
+         525,
+         550
+      ]
+      Distances_radial_refl: [
+         10,
+         6.046e1,
+         1.3542e2,
+         1.8613e2,
+         2.3432e2,
+         2.843e2
+      ]
+      Distances_refl: [
+         30,
+         50,
+         70,
+         90,
+         110,
+         130,
+         150,
+         170,
+         190,
+         195
+      ]
+      DoNotLoadLibrary: false
+      Expo_over_Landau_norm: [
+         [
+            1.49644e-2,
+            1.49644e-2,
+            3.37403e-2,
+            9.67895e-2,
+            1.52669e-1,
+            1.81732e-1,
+            2.3025e-1,
+            2.90033e-1,
+            3.38948e-1,
+            3.72986e-1,
+            4.04828e-1,
+            4.41243e-1,
+            4.41243e-1,
+            4.41243e-1,
+            4.41243e-1,
+            4.41243e-1
+         ],
+         [
+            2.52807e-2,
+            2.52807e-2,
+            6.38727e-2,
+            1.13343e-1,
+            1.65669e-1,
+            2.16794e-1,
+            2.74868e-1,
+            3.25299e-1,
+            3.8959e-1,
+            4.66117e-1,
+            5.15046e-1,
+            5.78897e-1,
+            6.21872e-1,
+            6.89713e-1,
+            7.42833e-1,
+            7.73619e-1
+         ]
+      ]
+      IncludePropTime: true
+      LibraryBuildJob: false
+      LibraryFile: "OpticalLibrary/SBND_OpLibOUT_v2.00.root"
+      Mpv: [
+         [
+            2.73373,
+            2.73373,
+            3.599,
+            5.80141,
+            7.57883,
+            9.56959,
+            1.16047e1,
+            1.36676e1,
+            1.56126e1,
+            1.75389e1,
+            1.9492e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1,
+            2.13254e1
+         ],
+         [
+            2.19076,
+            2.19076,
+            4.0163,
+            5.86531,
+            8.09466,
+            1.04547e1,
+            1.29261e1,
+            1.52731e1,
+            1.77939e1,
+            2.06664e1,
+            2.299e1,
+            2.57017e1,
+            2.79139e1,
+            3.09469e1,
+            3.36378e1,
+            3.61413e1,
+            3.98435e1,
+            4.21625e1,
+            4.46396e1,
+            4.65133e1,
+            4.86331e1,
+            5.06754e1,
+            5.33949e1
+         ]
+      ]
+      NX: 104
+      NY: 54
+      NZ: 71
+      Norm_over_entries: [
+         [
+            4.64837,
+            4.64837,
+            2.86581,
+            1.4143,
+            9.74871e-1,
+            7.1311e-1,
+            5.5772e-1,
+            4.61078e-1,
+            4.11807e-1,
+            3.64951e-1,
+            3.25477e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1,
+            2.97132e-1
+         ],
+         [
+            3.43562,
+            3.43562,
+            1.61042,
+            9.81127e-1,
+            6.4465e-1,
+            4.76552e-1,
+            3.69063e-1,
+            3.10461e-1,
+            2.64819e-1,
+            2.31387e-1,
+            2.15373e-1,
+            1.99128e-1,
+            1.89638e-1,
+            1.70387e-1,
+            1.59308e-1,
+            1.51498e-1,
+            1.40134e-1,
+            1.35217e-1,
+            1.31114e-1,
+            1.29511e-1,
+            1.26329e-1,
+            1.2452e-1,
+            1.24595e-1
+         ]
+      ]
+      Slope: [
+         [
+            -1.81318e-1,
+            -1.81318e-1,
+            -1.48935e-1,
+            -1.26243e-1,
+            -1.0837e-1,
+            -8.60558e-2,
+            -7.59728e-2,
+            -7.06126e-2,
+            -6.72814e-2,
+            -6.22897e-2,
+            -5.77351e-2,
+            -5.46709e-2,
+            -5.46709e-2,
+            -5.46709e-2,
+            -5.46709e-2,
+            -5.46709e-2
+         ],
+         [
+            -1.69274e-1,
+            -1.69274e-1,
+            -1.19906e-1,
+            -9.83691e-2,
+            -7.81793e-2,
+            -6.59805e-2,
+            -5.87059e-2,
+            -5.45288e-2,
+            -5.14041e-2,
+            -4.89773e-2,
+            -4.7259e-2,
+            -4.54668e-2,
+            -4.39597e-2,
+            -4.15122e-2,
+            -3.96851e-2,
+            -3.78005e-2
+         ]
+      ]
+      StoreReflected: true
+      Tau: [
+         [
+            [
+               3.37773,
+               5.67524,
+               4.23857,
+               4.04827,
+               3.50598,
+               3.09153,
+               2.82991,
+               2.74153,
+               2.50424,
+               2.51098
+            ],
+            [
+               3.42384,
+               5.76302,
+               4.24915,
+               3.99481,
+               3.47452,
+               2.92546,
+               2.74473,
+               2.57978,
+               2.43933,
+               2.41633
+            ],
+            [
+               3.3234,
+               5.65588,
+               3.72343,
+               3.50578,
+               2.97039,
+               2.46387,
+               2.34442,
+               2.20104,
+               2.08184,
+               2.07292
+            ],
+            [
+               3.09768,
+               4.77873,
+               3.25213,
+               3.11725,
+               2.58829,
+               2.11184,
+               2.03799,
+               1.87696,
+               1.86368,
+               1.82172
+            ],
+            [
+               2.83897,
+               4.59257,
+               2.99183,
+               2.89601,
+               2.44985,
+               1.81676,
+               1.69844,
+               1.67326,
+               1.64045,
+               1.62682
+            ],
+            [
+               2.24195,
+               3.62967,
+               2.38022,
+               2.21063,
+               1.77588,
+               1.69214,
+               9.75968e-1,
+               1.11193,
+               1.29554,
+               1.27876
+            ]
+         ],
+         [
+            [
+               3.41297,
+               5.95886,
+               4.39599,
+               4.1988,
+               3.58909,
+               3.11005,
+               2.91525,
+               2.74339,
+               2.64943,
+               2.52263
+            ],
+            [
+               3.45504,
+               5.95178,
+               4.34456,
+               4.17342,
+               3.48337,
+               3.054,
+               2.8128,
+               2.60983,
+               2.51229,
+               2.48704
+            ],
+            [
+               3.35757,
+               5.83494,
+               3.81424,
+               3.6331,
+               3.01154,
+               2.50273,
+               2.39638,
+               2.18084,
+               2.15704,
+               2.08133
+            ],
+            [
+               3.23112,
+               5.22438,
+               3.43076,
+               3.30744,
+               2.69743,
+               2.16353,
+               2.09492,
+               1.94232,
+               1.853,
+               1.88973
+            ],
+            [
+               2.87672,
+               4.81873,
+               3.14107,
+               3.0108,
+               2.49182,
+               1.85505,
+               1.81588,
+               1.70546,
+               1.66224,
+               1.64217
+            ],
+            [
+               2.41847,
+               4.23497,
+               2.48155,
+               2.50752,
+               2.00871,
+               1.50138,
+               1.33433,
+               1.29673,
+               1.36109,
+               1.36027
+            ]
+         ],
+         [
+            [
+               3.51225,
+               6.19679,
+               4.72908,
+               4.49082,
+               3.66667,
+               3.30587,
+               3.03423,
+               2.77513,
+               2.67516,
+               2.61675
+            ],
+            [
+               3.51704,
+               6.07228,
+               4.64436,
+               4.41025,
+               3.59614,
+               3.19848,
+               2.93285,
+               2.67327,
+               2.5368,
+               2.5385
+            ],
+            [
+               3.50964,
+               5.51796,
+               4.20475,
+               4.01172,
+               3.14469,
+               2.75958,
+               2.58262,
+               2.3296,
+               2.24272,
+               2.19922
+            ],
+            [
+               3.23421,
+               4.89865,
+               3.74765,
+               3.52677,
+               2.76721,
+               2.38141,
+               2.28118,
+               2.04523,
+               2.00265,
+               1.91851
+            ],
+            [
+               2.93819,
+               4.61545,
+               3.48217,
+               3.27706,
+               2.57221,
+               2.11197,
+               2.04526,
+               1.84741,
+               1.77289,
+               1.7419
+            ],
+            [
+               2.38026,
+               4.14456,
+               2.72722,
+               2.60646,
+               2.01861,
+               1.53543,
+               1.48663,
+               1.37924,
+               1.32047,
+               1.29723
+            ]
+         ],
+         [
+            [
+               6.4584,
+               6.81789,
+               5.23841,
+               4.71468,
+               3.93022,
+               3.62204,
+               3.08621,
+               2.84607,
+               2.77384,
+               2.66418
+            ],
+            [
+               5.69945,
+               6.50649,
+               5.11628,
+               4.59747,
+               3.77208,
+               3.47841,
+               2.99785,
+               2.71059,
+               2.61914,
+               2.61192
+            ],
+            [
+               5.11601,
+               5.81431,
+               4.73139,
+               4.24668,
+               3.42459,
+               3.12305,
+               2.75533,
+               2.48413,
+               2.38089,
+               2.37636
+            ],
+            [
+               4.64392,
+               5.11341,
+               4.2487,
+               3.82068,
+               3.11183,
+               2.78096,
+               2.4599,
+               2.23122,
+               2.17768,
+               2.12872
+            ],
+            [
+               3.76892,
+               4.63917,
+               3.92189,
+               3.50733,
+               2.76486,
+               2.45824,
+               2.20454,
+               1.97289,
+               1.89508,
+               1.90504
+            ],
+            [
+               2.60969,
+               3.81077,
+               3.22217,
+               2.87626,
+               2.26577,
+               1.89226,
+               1.70091,
+               1.5454,
+               1.52499,
+               1.49217
+            ]
+         ],
+         [
+            [
+               7.98137,
+               1.18903e1,
+               5.89993,
+               5.44383,
+               4.21656,
+               3.75399,
+               3.22818,
+               2.91275,
+               2.77715,
+               2.73681
+            ],
+            [
+               8.17119,
+               1.17947e1,
+               6.0833,
+               5.54124,
+               4.17976,
+               3.79177,
+               3.21898,
+               2.9156,
+               2.77822,
+               2.70759
+            ],
+            [
+               7.24128,
+               1.03503e1,
+               5.51381,
+               4.98346,
+               3.92027,
+               3.63101,
+               3.07344,
+               2.76202,
+               2.64124,
+               2.59486
+            ],
+            [
+               6.35025,
+               7.74736,
+               4.83283,
+               4.42004,
+               3.53543,
+               3.27141,
+               2.78187,
+               2.49664,
+               2.41864,
+               2.37423
+            ],
+            [
+               5.18985,
+               6.44826,
+               4.4504,
+               4.04286,
+               3.19083,
+               2.95287,
+               2.49538,
+               2.23093,
+               2.16525,
+               2.15358
+            ],
+            [
+               4.1528,
+               4.93534,
+               3.73414,
+               3.47409,
+               2.65761,
+               2.41434,
+               2.04314,
+               1.82511,
+               1.80785,
+               1.76681
+            ]
+         ],
+         [
+            [
+               5.82314,
+               1.05088e1,
+               8.39185,
+               6.94545,
+               3.98804,
+               3.75549,
+               3.28186,
+               2.9109,
+               2.70377,
+               2.67178
+            ],
+            [
+               6.74817,
+               1.34954e1,
+               1.05046e1,
+               9.16714,
+               4.77805,
+               4.27457,
+               3.56114,
+               3.24013,
+               2.9388,
+               2.90071
+            ],
+            [
+               7.28422,
+               1.30955e1,
+               1.08966e1,
+               8.45688,
+               5.5568,
+               4.70011,
+               3.64741,
+               3.25593,
+               3.0012,
+               2.95399
+            ],
+            [
+               6.87267,
+               1.22464e1,
+               8.56654,
+               6.47212,
+               4.66347,
+               4.11222,
+               3.38328,
+               3.02702,
+               2.85428,
+               2.78282
+            ],
+            [
+               6.51522,
+               1.07341e1,
+               6.25556,
+               5.10716,
+               3.96247,
+               3.61264,
+               3.08214,
+               2.78129,
+               2.6048,
+               2.59514
+            ],
+            [
+               6.22582,
+               7.23888,
+               4.82071,
+               4.272,
+               3.45411,
+               3.0887,
+               2.60353,
+               2.35789,
+               2.31151,
+               2.28667
+            ]
+         ],
+         [
+            [
+               5.82314,
+               1.05088e1,
+               8.39185,
+               6.94545,
+               3.98804,
+               3.75549,
+               3.28186,
+               2.9109,
+               2.70377,
+               2.67178
+            ],
+            [
+               6.74817,
+               1.34954e1,
+               1.05046e1,
+               9.16714,
+               4.77805,
+               4.27457,
+               3.56114,
+               3.24013,
+               2.9388,
+               2.90071
+            ],
+            [
+               1.37947e1,
+               1.34404e1,
+               1.17965e1,
+               1.13239e1,
+               8.28857,
+               5.80406,
+               3.91979,
+               3.45336,
+               3.21981,
+               3.15334
+            ],
+            [
+               1.22469e1,
+               1.31488e1,
+               1.16768e1,
+               1.105e1,
+               7.62147,
+               5.77695,
+               4.07048,
+               3.44591,
+               3.21365,
+               3.1508
+            ],
+            [
+               1.09941e1,
+               1.31968e1,
+               1.07938e1,
+               9.98867,
+               6.47435,
+               5.12157,
+               3.85559,
+               3.39796,
+               3.15723,
+               3.10781
+            ],
+            [
+               7.55675,
+               1.19677e1,
+               8.81276,
+               7.06091,
+               4.85345,
+               4.24957,
+               3.45344,
+               3.12578,
+               2.86344,
+               2.84666
+            ]
+         ],
+         [
+            [
+               5.82314,
+               1.05088e1,
+               8.39185,
+               6.94545,
+               3.98804,
+               3.75549,
+               3.28186,
+               2.9109,
+               2.70377,
+               2.67178
+            ],
+            [
+               6.74817,
+               1.34954e1,
+               1.05046e1,
+               9.16714,
+               4.77805,
+               4.27457,
+               3.56114,
+               3.24013,
+               2.9388,
+               2.90071
+            ],
+            [
+               1.37947e1,
+               1.34404e1,
+               1.17965e1,
+               1.13239e1,
+               8.28857,
+               5.80406,
+               3.91979,
+               3.45336,
+               3.21981,
+               3.15334
+            ],
+            [
+               1.22469e1,
+               1.31488e1,
+               1.16768e1,
+               1.105e1,
+               7.62147,
+               5.77695,
+               4.07048,
+               3.44591,
+               3.21365,
+               3.1508
+            ],
+            [
+               1.09941e1,
+               1.31968e1,
+               1.07938e1,
+               9.98867,
+               6.47435,
+               5.12157,
+               3.85559,
+               3.39796,
+               3.15723,
+               3.10781
+            ],
+            [
+               7.55675,
+               1.19677e1,
+               8.81276,
+               7.06091,
+               4.85345,
+               4.24957,
+               3.45344,
+               3.12578,
+               2.86344,
+               2.84666
+            ]
+         ],
+         [
+            [
+               5.82314,
+               1.05088e1,
+               8.39185,
+               6.94545,
+               3.98804,
+               3.75549,
+               3.28186,
+               2.9109,
+               2.70377,
+               2.67178
+            ],
+            [
+               6.74817,
+               1.34954e1,
+               1.05046e1,
+               9.16714,
+               4.77805,
+               4.27457,
+               3.56114,
+               3.24013,
+               2.9388,
+               2.90071
+            ],
+            [
+               1.37947e1,
+               1.34404e1,
+               1.17965e1,
+               1.13239e1,
+               8.28857,
+               5.80406,
+               3.91979,
+               3.45336,
+               3.21981,
+               3.15334
+            ],
+            [
+               1.22469e1,
+               1.31488e1,
+               1.16768e1,
+               1.105e1,
+               7.62147,
+               5.77695,
+               4.07048,
+               3.44591,
+               3.21365,
+               3.1508
+            ],
+            [
+               1.09941e1,
+               1.31968e1,
+               1.07938e1,
+               9.98867,
+               6.47435,
+               5.12157,
+               3.85559,
+               3.39796,
+               3.15723,
+               3.10781
+            ],
+            [
+               7.55675,
+               1.19677e1,
+               8.81276,
+               7.06091,
+               4.85345,
+               4.24957,
+               3.45344,
+               3.12578,
+               2.86344,
+               2.84666
+            ]
+         ]
+      ]
+      UseCryoBoundary: false
+      Width: [
+         [
+            1.98303e-1,
+            1.98303e-1,
+            3.47397e-1,
+            5.62874e-1,
+            7.50881e-1,
+            9.98318e-1,
+            1.2622,
+            1.55553,
+            1.79799,
+            2.05579,
+            2.3295,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611,
+            2.57611
+         ],
+         [
+            3.05766e-1,
+            3.05766e-1,
+            5.08544e-1,
+            7.47765e-1,
+            1.12059,
+            1.57047,
+            2.07501,
+            2.54661,
+            3.09789,
+            3.79078,
+            4.19731,
+            4.74438,
+            5.09894,
+            5.83702,
+            6.36225,
+            6.80253,
+            8.278,
+            8.717,
+            9.2568,
+            9.7239,
+            1.05865e1,
+            1.13262e1,
+            1.18423e1
+         ]
+      ]
+      XMax: 2.6169e2
+      XMin: -2.6169e2
+      YMax: 2.750382e2
+      YMin: -2.750382e2
+      ZMax: 6.492353e2
+      ZMin: -5.99294e1
+      angle_bin_timing_vis: 10
+      angle_bin_timing_vuv: 45
+      inflexion_point_distance: 350
+      max_d: 2500
+      min_d: 25
+      step_size: 1
+      vis_vmean: 2.399e1
+      vuv_vgroup_max: 18
+      vuv_vgroup_mean: 1.35e1
+   }
+   PhysicsList: {
+      BoundaryInvokeSD: false
+      CerenkovMaxBetaChange: 10
+      CerenkovMaxNumPhotons: 100
+      CerenkovStackPhotons: false
+      DumpList: true
+      NeutronKinELimit: 0
+      NeutronTimeLimit: 0
+      PhysicsListName: "SBND_QGSP_BERT_NNC"
+      ScintillationByParticleType: false
+      ScintillationStackPhotons: false
+      ScintillationTrackInfo: false
+      ScintillationTrackSecondariesFirst: false
+      Verbosity: 1
+      WLSProfile: "delta"
+      enableAbsorption: false
+      enableBoundary: false
+      enableCerenkov: false
+      enableMieHG: false
+      enableNeutronLimit: false
+      enableOptical: false
+      enableRayleigh: false
+      enableScintillation: false
+      enableStepLimit: true
+      enableWLS: false
+   }
+   PhysicsListHolder: {}
+   RandomNumberGenerator: {}
+   SignalShapingServiceSBND: {
+      ADCPerPCAtLowestASICGain: 10696
+      ADCTicksPerPCAtLowestASICGainSetting: 10696
+      ASICGainInMVPerFC: [
+         14,
+         14,
+         14
+      ]
+      Col3DCorrection: 2.5
+      ColFieldParams: [
+         8,
+         16,
+         7.5e-1
+      ]
+      ColFieldRespAmp: 1
+      ColFieldShape: "x^[2]/(1.0+(x/[0])^[1])"
+      ColFilter: "(x>0)*gaus"
+      ColFilterParams: [
+         1,
+         0,
+         2e-1
+      ]
+      DeconNorm: 50
+      FieldBins: 1000
+      FieldResponseFname: "Response/sbnd_response_v1.0.root"
+      FieldResponseHistoName: "FieldResponse"
+      FieldResponseTOffset: [
+         -26600,
+         -26600,
+         -26600
+      ]
+      FilterFunctionFname: "sbnd_filters_v0.1.root"
+      FilterHistoName: "noisefilter_%d"
+      GetFilterFromHisto: false
+      Ind3DCorrection: 1.5
+      IndUFieldParams: [
+         8.43e-3,
+         1.534e-1,
+         1.77,
+         0,
+         5e-1
+      ]
+      IndUFieldRespAmp: 1
+      IndUFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
+      IndUFilter: "(x>0)*gaus"
+      IndUFilterParams: [
+         1,
+         0,
+         2e-1
+      ]
+      IndVFieldParams: [
+         8.43e-3,
+         1.534e-1,
+         1.77,
+         0,
+         5e-1
+      ]
+      IndVFieldRespAmp: 1
+      IndVFieldShape: "[0]*(1.0+[3]*tanh(x-[4]))*([4]-x)*exp(-0.5*((x-[4])/[2])^2.0)"
+      IndVFilter: "(x>0)*gaus"
+      IndVFilterParams: [
+         1,
+         0,
+         2e-1
+      ]
+      InputFieldRespSamplingPeriod: 30
+      NoiseFactVec: [
+         [
+            8.23e-1,
+            8.23e-1,
+            8.23e-1,
+            8.23e-1
+         ],
+         [
+            8.23e-1,
+            8.23e-1,
+            8.23e-1,
+            8.23e-1
+         ],
+         [
+            6.51e-1,
+            6.51e-1,
+            6.51e-1,
+            6.51e-1
+         ]
+      ]
+      ShapeTimeConst: [
+         2,
+         2,
+         2
+      ]
+      UseFunctionFieldShape: false
+      UseHistogramFieldShape: true
+      UseSimpleFieldShape: false
+   }
+   SpaceCharge: {
+      CalibrationInputFilename: "SCEoffsets.root"
+      EnableCalEfieldSCE: false
+      EnableCalSpatialSCE: false
+      EnableCorrSCE: false
+      EnableSimEfield: false
+      EnableSimEfieldSCE: false
+      EnableSimSpatialSCE: false
+      InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_voxelTH3.root"
+      RepresentationType: "Voxelized_TH3"
+      service_provider: "SpaceChargeServiceSBND"
+   }
+   TFileService: {
+      fileName: "hists_prod_BNB_HNL_sbnd_%p-%tc.root"
+   }
+   TimeTracker: {
+      dbOutput: {
+         filename: "cputime.db"
+         overwrite: true
+      }
+      printSummary: true
+   }
+   message: {
+      destinations: {
+         LogErrorFile: {
+            append: false
+            categories: {
+               default: {}
+}
+            filename: "errors.log"
+            threshold: "ERROR"
+            type: "file"
+}
+         LogInfoFile: {
+            append: false
+            categories: {
+               default: {}
+}
+            filename: "messages.log"
+            threshold: "INFO"
+            type: "file"
+}
+         LogStandardOut: {
+            categories: {
+               GeometryBadInputPoint: {
+                  limit: 5
+                  timespan: 1000
+               }
+               default: {}
+}
+            threshold: "WARNING"
+            type: "cout"
+}
+}
+}
+   scheduler: {
+      defaultExceptions: false
+   }
+}
+source: {
+   firstEvent: 1
+   firstRun: 1
+   module_type: "EmptyEvent"
+   timestampPlugin: {
+      plugin_type: "GeneratedEventTimestamp"
+   }
+}

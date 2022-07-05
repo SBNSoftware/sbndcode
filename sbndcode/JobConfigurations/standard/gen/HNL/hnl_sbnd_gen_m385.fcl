@@ -54,3 +54,6 @@ outputs: {
 }
 
 services.NuRandomService.policy: "random"
+physics.producers.generator.Flux.M: 0.385
+physics.producers.generator.RayTrace.ReferencePrtlMass: 0.385
+physics.producers.generator.Decay.ReferenceHNLMass: 0.385

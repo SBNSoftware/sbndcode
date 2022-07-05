@@ -1,4 +1,4 @@
-nclude "bnb_kaon_common.fcl"
+#include "bnb_kaon_common.fcl"
 BEGIN_PROLOG
 
 hnlM: 0.265
@@ -64,12 +64,12 @@ mxdraytrace_kdar.ReferenceScndPDG: 13 # muon
 hnl_gen: {
   module_type: MeVPrtlGen
   Deweight: false
-  Produce: false
+  Produce: true
   AnaOutput: true
   MesonGen: @local::bnb_kaon
   Flux: @local::kaon2hnl
-  RayTrace: @local::mxdraytrace
-//  RayTrace: @local::wgtraytrace
+//  RayTrace: @local::mxdraytrace
+  RayTrace: @local::wgtraytrace
   Decay: @local::decay_hnl
 }
 hnl_gen.RayTrace.Volume: "volCryostat" #Use Geometry Service instead 
@@ -97,3 +97,5 @@ hnl_test_raytrace: {
     , @local::mxdraytrace
   ]
 }
+
+END_PROLOG
