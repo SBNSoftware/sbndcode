@@ -98,7 +98,12 @@ private:
     vector<double> fPx;
     vector<double> fPy;
     vector<double> fPz;
+    vector<Double_t> fTime;
     int fMode;
+    vector<int> fMother;
+    vector<int> fStatus;
+    vector<std::string> fProcess;
+    double fNuE;
     int fCCNC;
     int fNuPdg;
     vector<int> fPdg;
@@ -127,12 +132,17 @@ void ana::NCReco::beginJob() {
   fTree->Branch("Event",        &fEvent,        "Event/I");
  
   fTree->Branch("E", &fE);
+  fTree->Branch("NuE", &fNuE);
   fTree->Branch("P", &fP);
   fTree->Branch("Px", &fPx);
   fTree->Branch("Py", &fPy);
   fTree->Branch("Pz", &fPz);
-  fTree->Branch("Mode", &fMode, "Mode/I");
+  fTree->Branch("Time", &fTime);
   fTree->Branch("CCNC", &fCCNC, "CCNC/I");
+  fTree->Branch("Mother", &fMother);
+  fTree->Branch("Status", &fStatus);
+  fTree->Branch("Process", &fProcess);
+  fTree->Branch("Mode", &fMode, "Mode/I");
   fTree->Branch("NuPdg", &fNuPdg, "NuPdg/I");  //for double-checking only. can get rid of later
   fTree->Branch("Pdg", &fPdg);
   fTree->Branch("NParticles", &fNParticles, "NParticles/I");
@@ -144,6 +154,8 @@ void ana::NCReco::analyze(const art::Event& evt) {
   fRun    = evt.run();
   fSubRun = evt.subRun();
   fEvent  = evt.event();
+
+  fNParticles = 0;
 
   if(fVerbose) {
       cout << "Analysing run " << fRun << ", subrun " << fSubRun << ", event: " << fEvent << endl;
@@ -174,7 +186,9 @@ void ana::NCReco::analyze(const art::Event& evt) {
     const simb::MCNeutrino neutrino = truth->GetNeutrino();
     fCCNC=neutrino.CCNC();
     fMode=neutrino.Mode();
-  
+ 
+    fNuE=neutrino.Nu().E();
+ 
 //  for (const auto& particleIt: particles) {
 //
 //    const simb::MCParticle* particle = particleIt.second;
@@ -190,9 +204,9 @@ void ana::NCReco::analyze(const art::Event& evt) {
       //think I need to put in all the stuff below this (from the if id=12 or 14 to before filling trees)
       //and also include all the stuff that was in the commented out lines below
 
-      if (particle.Process()!="primary"){
-        continue;
-      }
+//      if (particle.Process()!="primary"){
+//        continue;
+//      }
 
       fNParticles++;
 
@@ -207,7 +221,11 @@ void ana::NCReco::analyze(const art::Event& evt) {
       fPx.push_back(particle.Px());
       fPy.push_back(particle.Py());
       fPz.push_back(particle.Pz());
+      fTime.push_back(particle.Position().T());
       fPdg.push_back(particle.PdgCode());
+      fMother.push_back(particle.Mother());
+      fStatus.push_back(particle.StatusCode());
+      fProcess.push_back(particle.Process());
       
       if(fVerbose){
         cout << "True Particle with track ID: " << particle.TrackId() << " Has code of: " 
@@ -225,7 +243,12 @@ void ana::NCReco::analyze(const art::Event& evt) {
   fPx.clear();
   fPy.clear();
   fPz.clear();
+  fTime.clear();
   fPdg.clear();
+  fMother.clear();
+  fStatus.clear();
+  fProcess.clear();
+
 
   return;
 }// end analyze
