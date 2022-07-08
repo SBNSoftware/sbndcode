@@ -15,6 +15,7 @@ sbnd_simple_flashmatch:{
   SelectNeutrino: false # TODO: decide if true is better
   OnlyCollectionWires: false
   ForceConcurrence: true
+  CorrectDriftDistance: false // TODO: test and change to true
   UseUncoatedPMT: true
   UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
