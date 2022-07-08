@@ -6,29 +6,34 @@ sbnd_simple_flashmatch:{
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
   OpHitARAProducer: "ophitarapuca"
-  BeamWindowStart: -50 # us
-  BeamWindowEnd: 50.0 # us
-  FlashStart: -0.02 # us, wrt flash time
-  FlashEnd: 0.08 # us, wrt flash time
-  SelectNeutrino: true
+  BeamSpillTimeStart:       0.15 # us, with some tolerance # TODO: update this when time gets zeroed
+  BeamSpillTimeEnd:         1.8  # us, with some tolerance # TODO: update this when time gets zeroed
+  FlashFindingTimeStart: -100.   # us # TODO: tune
+  FlashFindingTimeEnd:    100.   # us # TODO: tune
+  FlashStart:              -0.02 # us, wrt flash time
+  FlashEnd:                 0.08 # us, wrt flash time
+  SelectNeutrino: false # TODO: decide if true is better
   OnlyCollectionWires: false
   ForceConcurrence: true
   UseUncoatedPMT: true
-  UseARAPUCAS: false
+  UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
   MakeTree: false
   StoreTrueNus: false
   StoreCheatMCT0: false
+  # TODO: tune below
   MinHitQ: 0.
   MinSpacePointQ: 0.
   MinParticleQ: 0.
   MinSliceQ: 0.
-  MaxFlashes: 3
+  OpHitTime: "PeakTime"
+  MaxFlashes: 10.
   MinOpHPE: 0.
   MinFlashPE: 10.
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
+  # TODO: tune above
 
   ThresholdTerm: 50.
 
@@ -49,11 +54,13 @@ sbnd_simple_flashmatch:{
   YBins: 9
   YLow: -180.
   YHigh: 180.
-  YBiasSlope: 0.004
+  PolCoefsY: [0., 0., 0.004] # TODO: find these values
   ZBins: 12
   ZLow: 10.
   YHigh: 490.
-  ZBiasSlope: 0.002
+  PolCoefsZ: [0., 0., 0.002] # TODO: find these values
+  SkewLimitY: 10.
+  SkewLimitZ: 10.
 
   dy_bins: 100
   dy_low: -200.
@@ -69,6 +76,12 @@ sbnd_simple_flashmatch:{
   ratio_low: 0.
   ratio_up: 1.
   ratio_TF1_fit: "pol3"
+  slope_bins: 100  # TODO
+  slope_low: -15.  # TODO
+  slope_up: 5.     # TODO
+  petoq_bins: 20   # TODO
+  petoq_low: 0.    # TODO
+  petoq_up: 2.     # TODO
 }
 
 END_PROLOG #comment to run generate_simple_weighted_template.py
