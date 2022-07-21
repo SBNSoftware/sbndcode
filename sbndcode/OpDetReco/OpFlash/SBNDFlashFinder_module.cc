@@ -26,6 +26,7 @@
 #include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderManager.h"
 #include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderFMWKInterface.h"
 #include "sbndcode/OpDetReco/OpFlash/FlashFinder/PECalib.h"
+#include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashGeoBase.hh"
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashT0Base.hh"
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/DriftEstimatorBase.hh"
 
@@ -57,6 +58,9 @@ namespace opdet{
     bool _use_t0tool;
     bool _correct_light_propagation;
 
+    // Tool for calculating the OpFlash Y and Z centers
+    std::unique_ptr<lightana::FlashGeoBase> _flashgeo;
+
     // Tool for calculating the OpFlash t0
     std::unique_ptr<lightana::FlashT0Base> _flasht0calculator;
 
@@ -65,8 +69,6 @@ namespace opdet{
 
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t lite_flash,
                                                        ::lightana::LiteOpHitArray_t lite_hits_v);
-
-    void GetFlashLocation(std::vector<double>, double&, double&, double&, double&);
 
   };
 
@@ -85,6 +87,9 @@ namespace opdet{
     _ophit_input_time = p.get<std::string>("OpHitInputTime", "PeakTime");
     _use_t0tool = p.get<bool>("UseT0Tool", false);
     _correct_light_propagation = p.get<bool>("CorrectLightPropagation", false);
+
+    auto const flashgeo_pset = p.get<lightana::Config_t>("FlashGeoConfig");
+    _flashgeo = art::make_tool<lightana::FlashGeoBase>(flashgeo_pset);
 
     if(_use_t0tool){
       auto const flasht0_pset = p.get<lightana::Config_t>("FlashT0Config");
@@ -134,9 +139,7 @@ namespace opdet{
       ::lightana::LiteOpHit_t loph;
       if(trigger_time > 1.e20) trigger_time = oph->PeakTimeAbs() - oph->PeakTime();
 
-      //Improve this...
-      if(_ophit_input_time=="PeakTime") loph.peak_time = oph->PeakTime();
-      else if(_ophit_input_time=="RiseTime") loph.peak_time = oph->RiseTime();
+      else if(_ophit_input_time=="RiseTime") loph.peak_time = oph->StartTime()+oph->RiseTime();
       else if(_ophit_input_time=="StartTime") loph.peak_time = oph->StartTime();
       else loph.peak_time = oph->PeakTime();
 
@@ -152,25 +155,23 @@ namespace opdet{
 
       // Get Flash Barycenter
       double Ycenter, Zcenter, Ywidth, Zwidth;
-      GetFlashLocation(lflash.channel_pe, Ycenter, Zcenter, Ywidth, Zwidth);
+      _flashgeo->GetFlashLocation(lflash.channel_pe, Ycenter, Zcenter, Ywidth, Zwidth);
 
       // Get flasht0
       double flasht0 = lflash.time;
-      std::cout<<" FlashT0="<<flasht0<<" Abs="<<trigger_time + flasht0<<" TTime="<<trigger_time<<std::endl;
 
       // Refine t0 calculation
-      if(_use_t0tool){
+      if(_use_t0tool)
         flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
-        std::cout<<" New FlashT0="<<flasht0<<std::endl;
-      }
 
       // Estimate drift location of the interaction and
       // make t0 unbias (lght propagation time correction)
       if(_correct_light_propagation){
+        
         double drift_distance = _driftestimator->GetDriftPosition( lflash.channel_pe );
         double propagation_time = _driftestimator->GetPropagationTime( drift_distance );
         flasht0 = flasht0-propagation_time * 1e-3;
-        std::cout<<" PropTime: "<<propagation_time<<" FinalFlashT0="<<flasht0<<std::endl;
+
         drift_distance = (lflash.tpc==0 ? -drift_distance : drift_distance);
 
         recob::OpFlash flash(flasht0, lflash.time_err, trigger_time + flasht0,
@@ -209,41 +210,6 @@ namespace opdet{
     }
 
     return flash_hits_v;
-  }
-
-  void SBNDFlashFinder::GetFlashLocation(std::vector<double> pePerOpChannel,
-                                         double& Ycenter,
-                                         double& Zcenter,
-                                         double& Ywidth,
-                                         double& Zwidth)
-  {
-
-    // Reset variables
-    Ycenter = Zcenter = 0.;
-    Ywidth  = Zwidth  = -999.;
-    double totalPE = 0.;
-    double sumy = 0., sumz = 0., sumy2 = 0., sumz2 = 0.;
-    for (unsigned int opch = 0; opch < pePerOpChannel.size(); opch++) {
-      // Get physical detector location for this opChannel
-      double PMTxyz[3];
-      ::lightana::OpDetCenterFromOpChannel(opch, PMTxyz);
-      // Add up the position, weighting with PEs
-      sumy    += pePerOpChannel[opch]*PMTxyz[1];
-      sumy2   += pePerOpChannel[opch]*PMTxyz[1]*PMTxyz[1];
-      sumz    += pePerOpChannel[opch]*PMTxyz[2];
-      sumz2   += pePerOpChannel[opch]*PMTxyz[2]*PMTxyz[2];
-      totalPE += pePerOpChannel[opch];
-    }
-
-    Ycenter = sumy/totalPE;
-    Zcenter = sumz/totalPE;
-
-    // This is just sqrt(<x^2> - <x>^2)
-    if ( (sumy2*totalPE - sumy*sumy) > 0. )
-      Ywidth = std::sqrt(sumy2*totalPE - sumy*sumy)/totalPE;
-
-    if ( (sumz2*totalPE - sumz*sumz) > 0. )
-      Zwidth = std::sqrt(sumz2*totalPE - sumz*sumz)/totalPE;
   }
 
   DEFINE_ART_MODULE(SBNDFlashFinder)
