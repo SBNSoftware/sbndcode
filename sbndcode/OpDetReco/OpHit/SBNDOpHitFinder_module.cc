@@ -52,6 +52,18 @@
 #include <memory>
 #include <algorithm>
 
+namespace {
+  template <typename T>
+  pmtana::PMTPulseRecoBase* thresholdAlgorithm(fhicl::ParameterSet const& hit_alg_pset,
+                                            std::optional<fhicl::ParameterSet> const& rise_alg_pset)
+  {
+    if (rise_alg_pset)
+      return new T(hit_alg_pset, art::make_tool<pmtana::RiseTimeCalculatorBase>(*rise_alg_pset) );
+    else
+      return new T(hit_alg_pset, nullptr);
+  }
+}
+
 namespace opdet {
 
   class SBNDOpHitFinder : public art::EDProducer{
@@ -149,50 +161,26 @@ namespace opdet {
     }
 
     // Initialize the rise time calculator tool
-    using RTC = pmtana::RiseTimeCalculatorBase;
-    using PS = fhicl::ParameterSet;
-
-    PS rise_alg_pset;
-    bool computeRiseTime = pset.get_if_present< PS >("RiseTimeCalculator", rise_alg_pset);
+    auto const rise_alg_pset = pset.get_if_present<fhicl::ParameterSet>("RiseTimeCalculator");
 
     // Initialize the hit finder algorithm
     auto const hit_alg_pset = pset.get<fhicl::ParameterSet>("HitAlgoPset");
     std::string threshAlgName = hit_alg_pset.get<std::string>("Name");
-    if (threshAlgName == "Threshold"){
-      if(computeRiseTime)
-        fThreshAlg = new pmtana::AlgoThreshold(hit_alg_pset, art::make_tool<RTC>(rise_alg_pset));
-      else
-        fThreshAlg = new pmtana::AlgoThreshold(hit_alg_pset, nullptr);
-    }
-    else if (threshAlgName == "SiPM"){
-      if(computeRiseTime)
-        fThreshAlg = new pmtana::AlgoSiPM(hit_alg_pset, art::make_tool<RTC>(rise_alg_pset));
-      else
-        fThreshAlg = new pmtana::AlgoSiPM(hit_alg_pset, nullptr);
-    }
-    else if (threshAlgName == "SlidingWindow"){
-      if(computeRiseTime)
-        fThreshAlg = new pmtana::AlgoSlidingWindow(hit_alg_pset, art::make_tool<RTC>(rise_alg_pset));
-      else
-        fThreshAlg = new pmtana::AlgoSlidingWindow(hit_alg_pset, nullptr);
-    }
-    else if (threshAlgName == "FixedWindow"){
-      if(computeRiseTime)
-        fThreshAlg = new pmtana::AlgoFixedWindow(hit_alg_pset, art::make_tool<RTC>(rise_alg_pset));
-      else
-        fThreshAlg = new pmtana::AlgoFixedWindow(hit_alg_pset, nullptr);
-    }
-    else if (threshAlgName == "CFD"){
-      if(computeRiseTime)
-        fThreshAlg = new pmtana::AlgoCFD(hit_alg_pset, art::make_tool<RTC>(rise_alg_pset));
-      else
-        fThreshAlg = new pmtana::AlgoCFD(hit_alg_pset, nullptr);
-    }
-    else{
+    if (threshAlgName == "Threshold")
+      fThreshAlg = thresholdAlgorithm<pmtana::AlgoThreshold>(hit_alg_pset, rise_alg_pset);
+    else if (threshAlgName == "SiPM")
+      fThreshAlg = thresholdAlgorithm<pmtana::AlgoSiPM>(hit_alg_pset, rise_alg_pset);
+    else if (threshAlgName == "SlidingWindow")
+      fThreshAlg = thresholdAlgorithm<pmtana::AlgoSlidingWindow>(hit_alg_pset, rise_alg_pset);
+    else if (threshAlgName == "FixedWindow")
+      fThreshAlg = thresholdAlgorithm<pmtana::AlgoFixedWindow>(hit_alg_pset, rise_alg_pset);
+    else if (threshAlgName == "CFD")
+      fThreshAlg = thresholdAlgorithm<pmtana::AlgoCFD>(hit_alg_pset, rise_alg_pset);
+    else
       throw art::Exception(art::errors::UnimplementedFeature)
         << "Cannot find implementation for " << threshAlgName << " algorithm.\n";
-    }
 
+    // Initialize the pedestal estimation algorithm
     auto const ped_alg_pset = pset.get< fhicl::ParameterSet >("PedAlgoPset");
     std::string pedAlgName = ped_alg_pset.get< std::string >("Name");
     if      (pedAlgName == "Edges")
