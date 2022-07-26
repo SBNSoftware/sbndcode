@@ -24,7 +24,7 @@ namespace lightana{
         _pre_sample    = p.get<double>("PreSample",0.1);
         _veto_time     = p.get<double>("VetoSize",8.);
         _time_res      = p.get<double>("TimeResolution",0.03);
-        _tpc           = p.get<int>("TPC",-1);
+        _tpc           = p.get<int>("TPC");
         //_pe_baseline_v.clear();
         //_pe_baseline_v = p.get<std::vector<double> >("PEBaseline",_pe_baseline_v);
 

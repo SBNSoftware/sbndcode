@@ -3,7 +3,12 @@
 ///
 /// Base class: DriftEstimatorBase.hh
 ///
-/// Tool description: .....
+/// Tool description: this tool estimates the drift coordinate
+/// from the ratio between the #PE reconstructed for the
+/// uncoated/coated PMTs. It requires a calibration curve
+/// (speficied in the CalibrationFile fhicl parameter).
+/// Once the drift has been estimated, the photon propagation
+/// time is calculated using the VUV and VIS light group velocities
 ///
 /// Created by Fran Nicolas, June 2022
 ////////////////////////////////////////////////////////////////////////
