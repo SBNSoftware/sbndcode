@@ -77,6 +77,7 @@ private:
   std::string _flux_eventweight_multisim_producer;
   std::string _genie_eventweight_multisim_producer;
   std::string _genie_eventweight_sk_producer;
+  bool _save_systs;
   float _beam_origin_x = 73.78;
   float _beam_origin_y = 0.0;
   float _beam_origin_z = 11000.0;
@@ -142,7 +143,7 @@ private:
   float _p_dpy; ///< Neutrino parent py at neutrino production vertex
   float _p_dpz; ///< Neutrino parent pz at neutrino production vertex
 
-  int _nu_pip_mult; ///< Pi plus and minum multiplicity
+  int _nu_pip_mult; ///< Pi plus and minus multiplicity
   int _nu_pi0_mult; ///< Pi zero multiplicity
   int _nu_p_mult; ///< Proton multiplicity
 
@@ -215,6 +216,8 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _flux_eventweight_multisim_producer = p.get<std::string>("FluxEventWeightProducer", "fluxweight");
   _genie_eventweight_multisim_producer = p.get<std::string>("GENIEEventWeightProducer", "genieweight");
   _genie_eventweight_sk_producer = p.get<std::string>("GENIEEventWeightSKProducer", "genieweightsk");
+
+  _save_systs = p.get<bool>("SaveSysts", false);
 
   _beam_origin_x = p.get<float>("BeamCenterX");
   _beam_origin_y = p.get<float>("BeamCenterY");
@@ -443,14 +446,11 @@ void PrismAnalyzer::analyze(art::Event const& e)
 
     }
 
-    std::cout << "******************************************************" << std::endl;
     _nu_e_reco_calo = GetEnergyCalo(_nu_e_excit, _nu_e_recoil, _nu_e_neutron, false);
-    std::cout << "******************************************************" << std::endl;
     _nu_e_reco_caloa = GetEnergyCalo(_nu_e_excit, _nu_e_recoil, _nu_e_neutron, true);
 
     std::cout << "True energy: " << _nu_e << " Reco calo: " << _nu_e_reco_calo << std::endl;
     std::cout << "True energy: " << _nu_e << " Reco calo: " << _nu_e_reco_caloa << " (argoneut)" << std::endl;
-    std::cout << "******************************************************" << std::endl;
     // _n_pi0 = 0;
     // for (int p = 0; p < mct_v[i]->NParticles(); p++) {
     //   auto const & mcp = mct_v[i]->GetParticle(p);
@@ -465,191 +465,204 @@ void PrismAnalyzer::analyze(art::Event const& e)
     //   std::cout << "Got neutron, mother is " << mcp.Mother() << ", energy is " << mcp.E() << std::endl;
     // }
 
-    // Flux weights
-    std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> flux_ewm_v = mct_to_fluxewm.at(i);
-    if (flux_ewm_v.size() != 1) {
-      std::cout << "[PrismAnalyzer] EventWeightMap of " << _flux_eventweight_multisim_producer << " bigger than 1?" << std::endl;
-    }
-    std::map<std::string, std::vector<float>> evtwgt_map = *(flux_ewm_v[0]);
+    if (_save_systs) {
 
-    _evtwgt_flux_funcname.clear();
-    _evtwgt_flux_weight.clear();
-    _evtwgt_flux_nweight.clear();
-    _evtwgt_flux_oneweight.clear();
+      // Flux weights
+      std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> flux_ewm_v = mct_to_fluxewm.at(i);
+      if (flux_ewm_v.size() != 1) {
+        std::cout << "[PrismAnalyzer] EventWeightMap of " << _flux_eventweight_multisim_producer << " bigger than 1?" << std::endl;
+      }
+      std::map<std::string, std::vector<float>> evtwgt_map = *(flux_ewm_v[0]);
 
-    std::vector<float> previous_weights;
-    std::vector<float> final_weights;
+      _evtwgt_flux_funcname.clear();
+      _evtwgt_flux_weight.clear();
+      _evtwgt_flux_nweight.clear();
+      _evtwgt_flux_oneweight.clear();
 
-    int countFunc = 0;
-    for(auto it : evtwgt_map) {
-      std::string func_name = it.first;
-      std::vector<float> weight_v = it.second;
+      std::vector<float> previous_weights;
+      std::vector<float> final_weights;
 
-      if (previous_weights.size() == 0) {
-        previous_weights.resize(weight_v.size(), 1.);
-        final_weights.resize(weight_v.size(), 1.);
+      int countFunc = 0;
+      for(auto it : evtwgt_map) {
+        std::string func_name = it.first;
+        std::vector<float> weight_v = it.second;
+
+        if (previous_weights.size() == 0) {
+          previous_weights.resize(weight_v.size(), 1.);
+          final_weights.resize(weight_v.size(), 1.);
+        }
+
+        _evtwgt_flux_funcname.push_back(func_name);
+        _evtwgt_flux_weight.push_back(weight_v);
+        _evtwgt_flux_nweight.push_back(weight_v.size());
+        countFunc++;
+
+        std::cout << "weight_v.at(0) " << weight_v.at(0) << ", final_weights.at(0) " << final_weights.at(0) << std::endl;
+
+        // Construct a single weight
+        std::transform(previous_weights.begin(), previous_weights.end(),
+                       weight_v.begin(),
+                       final_weights.begin(),
+                       std::multiplies<float>());
+        previous_weights = final_weights;
+      }
+      _evtwgt_flux_nfunc = countFunc;
+      _evtwgt_flux_oneweight = final_weights;
+
+      std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> genie_ewm_v;
+
+      // Cross section weights
+      if (mct_to_genieewm.size()) {
+        std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> genie_ewm_v = mct_to_genieewm.at(i);
+        if (genie_ewm_v.size() != 1) {
+          std::cout << "[PrismAnalyzer] EventWeightMap of " << _genie_eventweight_multisim_producer << " bigger than 1?" << std::endl;
+        }
+        evtwgt_map = *(genie_ewm_v[0]);
+
+        // _evtwgt_genie_funcname.clear();
+        // _evtwgt_genie_weight.clear();
+        // _evtwgt_genie_nweight.clear();
+        _evtwgt_genie_oneweight.clear();
+
+        previous_weights.clear();
+        final_weights.clear();
+
+        countFunc = 0;
+        for(auto it : evtwgt_map) {
+          std::string func_name = it.first;
+          std::vector<float> weight_v = it.second;
+
+          if (previous_weights.size() == 0) {
+            previous_weights.resize(weight_v.size(), 1.);
+            final_weights.resize(weight_v.size(), 1.);
+          }
+
+          // _evtwgt_genie_funcname.push_back(func_name);
+          // _evtwgt_genie_weight.push_back(weight_v);
+          // _evtwgt_genie_nweight.push_back(weight_v.size());
+          countFunc++;
+
+          std::cout << func_name << ", weight_v.at(0) " << weight_v.at(0) << ", final_weights.at(0) " << final_weights.at(0) << std::endl;
+
+          // Construct a single weight
+          std::transform(previous_weights.begin(), previous_weights.end(),
+                         weight_v.begin(),
+                         final_weights.begin(),
+                         std::multiplies<float>());
+          previous_weights = final_weights;
+        }
+        _evtwgt_genie_oneweight = final_weights;
       }
 
-      _evtwgt_flux_funcname.push_back(func_name);
-      _evtwgt_flux_weight.push_back(weight_v);
-      _evtwgt_flux_nweight.push_back(weight_v.size());
-      countFunc++;
 
-      std::cout << "weight_v.at(0) " << weight_v.at(0) << ", final_weights.at(0) " << final_weights.at(0) << std::endl;
+      // Cross section weights - special config A
+      if (mct_to_genieewmA.size()) {
+        genie_ewm_v = mct_to_genieewmA.at(i);
+        evtwgt_map = *(genie_ewm_v[0]);
+        _evtwgt_genie_oneweightA.clear();
+        previous_weights.clear();
+        final_weights.clear();
+        countFunc = 0;
+        for(auto it : evtwgt_map) {
+          std::string func_name = it.first;
+          std::vector<float> weight_v = it.second;
 
-      // Construct a single weight
-      std::transform(previous_weights.begin(), previous_weights.end(),
-                     weight_v.begin(),
-                     final_weights.begin(),
-                     std::multiplies<float>());
-      previous_weights = final_weights;
-    }
-    _evtwgt_flux_nfunc = countFunc;
-    _evtwgt_flux_oneweight = final_weights;
-
-
-    // Cross section weights
-    std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> genie_ewm_v = mct_to_genieewm.at(i);
-    if (genie_ewm_v.size() != 1) {
-      std::cout << "[PrismAnalyzer] EventWeightMap of " << _genie_eventweight_multisim_producer << " bigger than 1?" << std::endl;
-    }
-    evtwgt_map = *(genie_ewm_v[0]);
-
-    // _evtwgt_genie_funcname.clear();
-    // _evtwgt_genie_weight.clear();
-    // _evtwgt_genie_nweight.clear();
-    _evtwgt_genie_oneweight.clear();
-
-    previous_weights.clear();
-    final_weights.clear();
-
-    countFunc = 0;
-    for(auto it : evtwgt_map) {
-      std::string func_name = it.first;
-      std::vector<float> weight_v = it.second;
-
-      if (previous_weights.size() == 0) {
-        previous_weights.resize(weight_v.size(), 1.);
-        final_weights.resize(weight_v.size(), 1.);
+          if (previous_weights.size() == 0) {
+            previous_weights.resize(weight_v.size(), 1.);
+            final_weights.resize(weight_v.size(), 1.);
+          }
+          countFunc++;
+          // Construct a single weight
+          std::transform(previous_weights.begin(), previous_weights.end(),
+                         weight_v.begin(),
+                         final_weights.begin(),
+                         std::multiplies<float>());
+          previous_weights = final_weights;
+        }
+        _evtwgt_genie_oneweightA = final_weights;
       }
 
-      // _evtwgt_genie_funcname.push_back(func_name);
-      // _evtwgt_genie_weight.push_back(weight_v);
-      // _evtwgt_genie_nweight.push_back(weight_v.size());
-      countFunc++;
 
-      std::cout << func_name << ", weight_v.at(0) " << weight_v.at(0) << ", final_weights.at(0) " << final_weights.at(0) << std::endl;
+      // Cross section weights - special config B
+      if (mct_to_genieewmB.size()) {
+        genie_ewm_v = mct_to_genieewmB.at(i);
+        evtwgt_map = *(genie_ewm_v[0]);
+        _evtwgt_genie_oneweightB.clear();
+        previous_weights.clear();
+        final_weights.clear();
+        countFunc = 0;
+        for(auto it : evtwgt_map) {
+          std::string func_name = it.first;
+          std::vector<float> weight_v = it.second;
 
-      // Construct a single weight
-      std::transform(previous_weights.begin(), previous_weights.end(),
-                     weight_v.begin(),
-                     final_weights.begin(),
-                     std::multiplies<float>());
-      previous_weights = final_weights;
-    }
-    _evtwgt_genie_oneweight = final_weights;
-
-
-    // Cross section weights - special config A
-    genie_ewm_v = mct_to_genieewmA.at(i);
-    evtwgt_map = *(genie_ewm_v[0]);
-    _evtwgt_genie_oneweightA.clear();
-    previous_weights.clear();
-    final_weights.clear();
-    countFunc = 0;
-    for(auto it : evtwgt_map) {
-      std::string func_name = it.first;
-      std::vector<float> weight_v = it.second;
-
-      if (previous_weights.size() == 0) {
-        previous_weights.resize(weight_v.size(), 1.);
-        final_weights.resize(weight_v.size(), 1.);
-      }
-      countFunc++;
-      // Construct a single weight
-      std::transform(previous_weights.begin(), previous_weights.end(),
-                     weight_v.begin(),
-                     final_weights.begin(),
-                     std::multiplies<float>());
-      previous_weights = final_weights;
-    }
-    _evtwgt_genie_oneweightA = final_weights;
-
-
-    // Cross section weights - special config B
-    genie_ewm_v = mct_to_genieewmB.at(i);
-    evtwgt_map = *(genie_ewm_v[0]);
-    _evtwgt_genie_oneweightB.clear();
-    previous_weights.clear();
-    final_weights.clear();
-    countFunc = 0;
-    for(auto it : evtwgt_map) {
-      std::string func_name = it.first;
-      std::vector<float> weight_v = it.second;
-
-      if (previous_weights.size() == 0) {
-        previous_weights.resize(weight_v.size(), 1.);
-        final_weights.resize(weight_v.size(), 1.);
-      }
-      countFunc++;
-      // Construct a single weight
-      std::transform(previous_weights.begin(), previous_weights.end(),
-                     weight_v.begin(),
-                     final_weights.begin(),
-                     std::multiplies<float>());
-      previous_weights = final_weights;
-    }
-    _evtwgt_genie_oneweightB = final_weights;
-
-    // Cross section weights - special config C
-    genie_ewm_v = mct_to_genieewmC.at(i);
-    evtwgt_map = *(genie_ewm_v[0]);
-    _evtwgt_genie_oneweightC.clear();
-    previous_weights.clear();
-    final_weights.clear();
-    countFunc = 0;
-    for(auto it : evtwgt_map) {
-      std::string func_name = it.first;
-      std::vector<float> weight_v = it.second;
-
-      if (previous_weights.size() == 0) {
-        previous_weights.resize(weight_v.size(), 1.);
-        final_weights.resize(weight_v.size(), 1.);
-      }
-      countFunc++;
-      // Construct a single weight
-      std::transform(previous_weights.begin(), previous_weights.end(),
-                     weight_v.begin(),
-                     final_weights.begin(),
-                     std::multiplies<float>());
-      previous_weights = final_weights;
-    }
-    _evtwgt_genie_oneweightC = final_weights;
-
-
-
-    //
-    // Cross section weights - single knob
-    //
-    std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> genie_ewm_sk_v = mct_to_genieewm_sk.at(i);
-    if (genie_ewm_sk_v.size() != 1) {
-      std::cout << "[PrismAnalyzer] EventWeightMap of " << _genie_eventweight_sk_producer << " bigger than 1?" << std::endl;
-    }
-    evtwgt_map = *(genie_ewm_sk_v[0]);
-
-    for(auto it : evtwgt_map) {
-      std::string func_name = it.first;
-      std::vector<float> weight_v = it.second;
-
-      func_name.erase(func_name.length() - 6); // remove "_Genie" from func_name
-
-      auto iter = _evtwgt_xsec_sk.find(func_name);
-      if (iter != _evtwgt_xsec_sk.end()) {
-        iter->second = weight_v;
+          if (previous_weights.size() == 0) {
+            previous_weights.resize(weight_v.size(), 1.);
+            final_weights.resize(weight_v.size(), 1.);
+          }
+          countFunc++;
+          // Construct a single weight
+          std::transform(previous_weights.begin(), previous_weights.end(),
+                         weight_v.begin(),
+                         final_weights.begin(),
+                         std::multiplies<float>());
+          previous_weights = final_weights;
+        }
+        _evtwgt_genie_oneweightB = final_weights;
       }
 
-    }
+      // Cross section weights - special config C
+      if (mct_to_genieewmC.size()) {
+        genie_ewm_v = mct_to_genieewmC.at(i);
+        evtwgt_map = *(genie_ewm_v[0]);
+        _evtwgt_genie_oneweightC.clear();
+        previous_weights.clear();
+        final_weights.clear();
+        countFunc = 0;
+        for(auto it : evtwgt_map) {
+          std::string func_name = it.first;
+          std::vector<float> weight_v = it.second;
 
+          if (previous_weights.size() == 0) {
+            previous_weights.resize(weight_v.size(), 1.);
+            final_weights.resize(weight_v.size(), 1.);
+          }
+          countFunc++;
+          // Construct a single weight
+          std::transform(previous_weights.begin(), previous_weights.end(),
+                         weight_v.begin(),
+                         final_weights.begin(),
+                         std::multiplies<float>());
+          previous_weights = final_weights;
+        }
+        _evtwgt_genie_oneweightC = final_weights;
+      }
+
+
+      //
+      // Cross section weights - single knob
+      //
+      if (mct_to_genieewm_sk.size()) {
+        std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> genie_ewm_sk_v = mct_to_genieewm_sk.at(i);
+        if (genie_ewm_sk_v.size() != 1) {
+          std::cout << "[PrismAnalyzer] EventWeightMap of " << _genie_eventweight_sk_producer << " bigger than 1?" << std::endl;
+        }
+        evtwgt_map = *(genie_ewm_sk_v[0]);
+
+        for(auto it : evtwgt_map) {
+          std::string func_name = it.first;
+          std::vector<float> weight_v = it.second;
+
+          func_name.erase(func_name.length() - 6); // remove "_Genie" from func_name
+
+          auto iter = _evtwgt_xsec_sk.find(func_name);
+          if (iter != _evtwgt_xsec_sk.end()) {
+            iter->second = weight_v;
+          }
+
+        }
+      }
+
+    } // _save_systs
 
     _tree->Fill();
   }

@@ -4,6 +4,9 @@ prismanalyzer:
 {
   module_type:   "PrismAnalyzer"
 
+  # Whether or not to save flux and genie systematic weights
+  SaveSysts:     false
+
   # Detector Center in Beam Coordinates [cm]
   BeamCenterX:   73.78
   BeamCenterY:   0.0

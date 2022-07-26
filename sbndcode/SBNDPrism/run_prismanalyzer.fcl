@@ -51,7 +51,14 @@ physics:
 
  #define the producer and filter modules for this path, order matters,
  #filters reject all following items.  see lines starting physics.producers below
- simulate: [ rns, fluxweight, genieweight, genieweightA, genieweightB, genieweightC, genieweightsk ]
+ simulate: [ rns
+           # , fluxweight
+           # , genieweight
+           # , genieweightA
+           # , genieweightB
+           # , genieweightC
+           # , genieweightsk
+           ]
  ana: [ prismana ]
 
  #define the output stream, there could be more than one if using filters
