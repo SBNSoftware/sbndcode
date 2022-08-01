@@ -318,6 +318,7 @@
     <TrackPfoListName>TrackParticles3D</TrackPfoListName>
     <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
     <UseThreeDInformation>true</UseThreeDInformation>
+    <PersistFeatures>true</PersistFeatures>
     <MvaFileName>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileName>
     <MvaName>PfoCharBDT1</MvaName>
     <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileNameNoChargeInfo>
@@ -425,6 +426,7 @@
     <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileNameNoChargeInfo>
     <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo2</MvaNameNoChargeInfo>
     <MinProbabilityCut>0.51</MinProbabilityCut>
+    <PersistFeatures>true</PersistFeatures>
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>
