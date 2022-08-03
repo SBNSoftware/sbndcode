@@ -1,0 +1,26 @@
+BEGIN_PROLOG
+
+handscanalyser:
+{ 
+  module_type:              "HandScanalyser"
+  
+  GenieGenModuleLabel:      "generator"
+  G4ModuleLabel:            "largeant"
+  TrackModuleLabel:         "pandoraTrack"
+  ShowerModuleLabel:        "pandoraShower"
+  PFParticleModuleLabel:    "pandora"
+  VertexModuleLabel:        "pandora"
+
+  ### Parameters to define topological (final state) selections in truth
+  TopologyLabels  : ["1mu1p", "1mu1p1cpi", "1mu1p1npi", "1e1p", "1e1p1cpi"]
+  NumberMuons     : [1, 1, 1, 0, 0]
+  NumberElectrons : [0, 0, 0, 1, 1]
+  NumberProtons   : [1, 1, 1, 1, 1]
+  NumberCPions    : [0, 1, 0, 0, 1]
+  NumberNPions    : [0, 0, 1, 0, 0]
+
+  ## Additional analysis parameters
+  OutputFileName  : "file_event_data.csv"
+}
+
+END_PROLOG
