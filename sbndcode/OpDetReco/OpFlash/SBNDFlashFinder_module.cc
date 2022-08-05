@@ -139,7 +139,7 @@ namespace opdet{
       ::lightana::LiteOpHit_t loph;
       if(trigger_time > 1.e20) trigger_time = oph->PeakTimeAbs() - oph->PeakTime();
 
-      else if(_ophit_input_time=="RiseTime") loph.peak_time = oph->StartTime()+oph->RiseTime();
+      if(_ophit_input_time=="RiseTime") loph.peak_time = oph->StartTime()+oph->RiseTime();
       else if(_ophit_input_time=="StartTime") loph.peak_time = oph->StartTime();
       else loph.peak_time = oph->PeakTime();
 
