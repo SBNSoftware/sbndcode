@@ -1,4 +1,5 @@
 #include "opticaldetectormodules.fcl"
+#include "risetimecalculator_tool.fcl"
 
 BEGIN_PROLOG
 
@@ -62,5 +63,11 @@ sbnd_opreco_hit_cfd.Delay:       2
 sbnd_opreco_hit_cfd.PeakThresh:  7.5
 sbnd_opreco_hit_cfd.StartThresh: 5.0
 sbnd_opreco_hit_cfd.EndThresh:   1.5
+
+#
+# RiseTime calculator
+#
+sbnd_opreco_risetimecalculator: @local::RiseTimeThreshold
+sbnd_opreco_risetimecalculator.PeakRatio: 0.15
 
 END_PROLOG
