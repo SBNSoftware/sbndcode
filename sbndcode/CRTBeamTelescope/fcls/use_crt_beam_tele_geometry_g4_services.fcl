@@ -4,3 +4,5 @@ services.Geometry.ROOT: "sbnd_crt_beam_tele.gdml"
 
 services.AuxDetGeometry.GDML: "sbnd_crt_beam_tele.gdml"
 services.AuxDetGeometry.ROOT: "sbnd_crt_beam_tele.gdml"
+
+services.LArG4Detector.gdmlFileName_: "sbnd_crt_beam_tele_nowires.gdml"

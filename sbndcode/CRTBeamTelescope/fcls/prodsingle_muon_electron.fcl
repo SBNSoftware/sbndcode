@@ -23,5 +23,5 @@ physics.producers.generator.SigmaThetaXZ: [0]
 physics.producers.generator.SigmaThetaYZ: [0]
 physics.producers.generator.AngleDist: 1
 
-#include "use_crt_beam_tele_geometry.fcl"
+#include "use_crt_beam_tele_geometry_g4_services.fcl"
 

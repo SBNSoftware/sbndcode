@@ -1,4 +1,4 @@
 #include "prodgenie_nu_spill_world_sbnd.fcl"
 
-#include "use_crt_beam_tele_geometry.fcl"
+#include "use_crt_beam_tele_geometry_g4_services.fcl"
 
