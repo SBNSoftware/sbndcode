@@ -49,7 +49,9 @@ services:
 {
 
   TFileService:         { fileName: "hists_prodcosmics_corsika_sbnd_%p-%tc.root" }
-                        @table::sbnd_simulation_services  # from simulationservices_sbnd.fcl
+                        @table::sbnd_basic_services   # from simulationservices_sbnd.fcl
+                        @table::sbnd_random_services  # from simulationservices_sbnd.fcl
+                        @table::sbnd_services  # from simulationservices_sbnd.fcl
   FileCatalogMetadata:  @local::sbnd_file_catalog_mc  # from sam_sbnd.fcl
 
 } # services
