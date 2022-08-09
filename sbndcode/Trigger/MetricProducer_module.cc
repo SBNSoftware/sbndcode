@@ -22,6 +22,7 @@
 #include "artdaq-core/Data/Fragment.hh"
 #include "artdaq-core/Data/ContainerFragment.hh"
 
+//#include "sbndaq-artdaq-core/Obj/SBND/CRTmetric.h"
 #include "sbnobj/SBND/Trigger/CRTmetric.hh"
 
 #include <memory>
@@ -76,14 +77,14 @@ sbndaq::MetricProducer::MetricProducer(fhicl::ParameterSet const& p)
   {
   // Call appropriate produces<>() functions here.
   produces< sbndaq::CRTmetric >("", is_persistable_);
-  
+
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
 
 void sbndaq::MetricProducer::produce(art::Event& evt)
 {
-  
+
   // load event information
   int fRun = evt.run();
   art::EventNumber_t fEvent = evt.event();
@@ -95,8 +96,8 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
 
   // clear variables at the beginning of the event
   // move this to constructor??
-  for (int ip=0;ip<7;++ip)     CRTMetricInfo->hitsperplane[ip]=0;
-  std::fill(hitsperplane, hitsperplane + sizeof(hitsperplane), 0);
+  for (int ip=0;ip<7;++ip)  { CRTMetricInfo->hitsperplane[ip]=0; hitsperplane[ip]=0;}
+  //std::fill(hitsperplane, hitsperplane + sizeof(hitsperplane), 0);
 
   // get fragment handles
   std::vector<art::Handle<artdaq::Fragments>> fragmentHandles = evt.getMany<std::vector<artdaq::Fragment>>();
@@ -104,28 +105,28 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
   // loop over fragment handles
   for (auto handle : fragmentHandles) {
     if (!handle.isValid() || handle->size() == 0) continue;
-    
+
     if (handle->front().type() == artdaq::Fragment::ContainerFragmentType) {
-      // container fragment                                                                                               
+      // container fragment
       for (auto cont : *handle) {
         artdaq::ContainerFragment contf(cont);
         if (contf.fragment_type() != sbndaq::detail::FragmentType::BERNCRTV2) continue;
 	if (fVerbose)     std::cout << "    Found " << contf.block_count() << " CRT Fragments in container " << std::endl;
 	for (size_t ii = 0; ii < contf.block_count(); ++ii) analyze_crt_fragment(*contf[ii].get());
-      } 
-    }   
-    else {      
+      }
+    }
+    else {
       // normal fragment
       if (handle->front().type()!=sbndaq::detail::FragmentType::BERNCRTV2) continue;
       if (fVerbose)   std::cout << "   found CRT fragments " << handle->size() << std::endl;
       for (auto frag : *handle)	analyze_crt_fragment(frag);
-    }    
+    }
   } // loop over frag handles
-  
+
 /*
   // determine relevant metrics
   fNAboveThreshold = checkCoincidence();
-  
+
   // add to trigger object
   CRTMetricInfo->nAboveThreshold = fNAboveThreshold;
   CRTMetricInfo->PMT_chA = fPMT_chA;
@@ -138,14 +139,14 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
   for (int i=0;i<7;++i) {CRTMetricInfo->hitsperplane[i] = hitsperplane[i];}
 
   if (fVerbose) {
-    std::cout << "CRT hit count during beam spill "; 
+    std::cout << "CRT hit count during beam spill ";
     for (int i=0;i<7;++i) std::cout << i << " " << CRTMetricInfo->hitsperplane[i] ;
     std::cout << std::endl;
   }
-  
+
   // add to event
   evt.put(std::move(CRTMetricInfo));
-  
+
 }
 
 
@@ -159,14 +160,14 @@ void sbndaq::MetricProducer::analyze_crt_fragment(artdaq::Fragment & frag)
   // use  fragment ID to get plane information
   const sbndaq::BernCRTFragmentMetadataV2* md = bern_fragment.metadata();
   //frag.sequenceID()
-  auto thisone = frag.fragmentID();  uint plane = thisone & 0x700;
+  auto thisone = frag.fragmentID();  uint plane = (thisone & 0x0700) >> 8;
   if (plane>7) {std::cout << "bad plane value " << plane << std::endl; plane=0;}
 
   for(unsigned int iHit = 0; iHit < md->hits_in_fragment(); iHit++) {
     sbndaq::BernCRTHitV2 const* bevt = bern_fragment.eventdata(iHit);
     // require that this is data and not clock reset (0xC), and that the ts1 time is valid (0x2)
     auto thisflag = bevt->flags;
-    if (thisflag & 0x2 && !(thisflag & 0xC) ) {  
+    if (thisflag & 0x2 && !(thisflag & 0xC) ) {
       // check ts1 for beam window
       auto thistime=bevt->ts1;
       if ((int)thistime>fBeamWindowStart && (int)thistime<fBeamWindowEnd) hitsperplane[plane]++;
@@ -178,7 +179,7 @@ void sbndaq::MetricProducer::analyze_crt_fragment(artdaq::Fragment & frag)
 
 }
 
-// ------------------------------------------------- 
+// -------------------------------------------------
 
 // -------------------------------------------------
 

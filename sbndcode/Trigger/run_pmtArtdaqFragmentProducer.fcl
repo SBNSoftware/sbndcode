@@ -6,7 +6,7 @@
 
 #include "pmtArtdaqFragmentProducer.fcl"
 
-process_name: FragmentProducer
+process_name: PMTFragmentProducer
 
 services:
 {

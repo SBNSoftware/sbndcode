@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+MetricProducer:
+{
+  module_type: "MetricProducer"
+  is_persistable: true
+  BeamWindowStart: 320000
+  BeamWindowEnd: 350000
+  Verbose: true 
+}
+
+END_PROLOG

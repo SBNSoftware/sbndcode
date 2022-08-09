@@ -7,7 +7,7 @@
 
 #include "CRTArtdaqFragmentProducer.fcl"
 
-process_name: FragmentProducer
+process_name: CRTFragmentProducer
 
 services:
 {
