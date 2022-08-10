@@ -45,5 +45,3 @@ physics:
  end_paths: [ stream1]
 
 }
-
-physics.producers.pmtSoftwareTrigger.BeamWindowLength: 1.8
