@@ -461,7 +461,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   // Fill the AuxDetHits in the tree
   //
   size_t n_adh = adh_v.size();
-  std::cout << "n_adh " << n_adh << std::endl;
+  if (_debug) std::cout << "n_adh " << n_adh << std::endl;
   _adh_t.resize(n_adh);
   _adh_e.resize(n_adh);
   _adh_x.resize(n_adh);
@@ -485,7 +485,7 @@ void CRTAnalysis::analyze(art::Event const& e)
                                auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
     _adh_trackid[i] = auxdethit->GetTrackID();
     trackids_from_adh.insert(auxdethit->GetTrackID());
-    std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
+    if (_debug) std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
   }
 
 
@@ -518,12 +518,12 @@ void CRTAnalysis::analyze(art::Event const& e)
     // Exclude particles that are not propagated
     if (particle->StatusCode() != 1) continue;
     // Exclude particles that don't make energy deposit in the CRT, if we only keep those
-    std::cout << "MCParticle has track ID " << particle->TrackId() << std::endl;
+    if (_debug) std::cout << "MCParticle has track ID " << particle->TrackId() << std::endl;
     if (_keep_mcp_from_adh and
          trackids_from_adh.find(particle->TrackId()) == trackids_from_adh.end()) {
       continue;
     }
-    std::cout << "  ->" << std::endl;
+    if (_debug) std::cout << "  ->" << std::endl;
     // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
     _mcp_pdg[counter] = particle->PdgCode();
     _mcp_e[counter] = particle->E();
@@ -740,7 +740,7 @@ void CRTAnalysis::beginSubRun(art::SubRun const& sr) {
   } else {
     _sr_pot = 0.;
   }
-  std::cout << "POT for this subrun: " << _sr_pot << std::endl;
+  if (_debug) std::cout << "POT for this subrun: " << _sr_pot << std::endl;
 
   _sr_tree->Fill();
 
