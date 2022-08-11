@@ -118,8 +118,11 @@ physics:
 ### Some potential overwrites below
 
 #physics.producers.pmttriggerproducer.SaveHists: true
-#physics.producers.pmttriggerproducer.Verbose: true
+physics.producers.pmttriggerproducer.Verbose: true
 
 #physics.producers.pmttriggerproducer.PairLogic: "AND"
 
-#physics.producers.pmtTriggerproducer.OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
+#physics.producers.pmttriggerproducer.OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
+
+#physics.producers.pmttriggerproducer.WindowStart: -1510.0
+#physics.producers.pmttriggerproducer.WindowEnd: 1510.0

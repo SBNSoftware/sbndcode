@@ -45,3 +45,7 @@ physics:
  end_paths: [ stream1]
 
 }
+
+physics.producers.SoftwareTriggerMetric.BeamWindowStart: 1650000
+physics.producers.SoftwareTriggerMetric.BeamWindowEnd: 1750000
+#physics.producers.SoftwareTriggerMetric.crt_metrics: false

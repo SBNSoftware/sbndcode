@@ -101,6 +101,10 @@ private:
   // pmt information
   std::vector<sbnd::trigger::pmtInfo> fpmtInfoVec;
 
+  //both info
+  int num_crt_frags;
+  int num_pmt_frags;
+
 
   void analyze_crt_fragment(artdaq::Fragment & frag);
   void checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag);
@@ -117,14 +121,14 @@ sbndaq::MetricProducer::MetricProducer(fhicl::ParameterSet const& p)
   fBeamWindowStart(p.get<int>("BeamWindowStart",320000)),
   fBeamWindowEnd(p.get<int>("BeamWindowEnd",350000)),
   fVerbose(p.get<bool>("Verbose",false)),
-  fcrt_metrics(p.get<bool>("crt_metrics",false)),
-  fpmt_metrics(p.get<bool>("pmt_metrics",false)),
+  fcrt_metrics(p.get<bool>("crt_metrics",true)),
+  fpmt_metrics(p.get<bool>("pmt_metrics",true)),
   fTriggerTimeOffset(p.get<double>("TriggerTimeOffset", 0.5)),
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)),
   fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
   fBaselineAlgo(p.get<std::string>("BaselineAlgo", "estimate")),
   fInputBaseline(p.get<double>("InputBaseline", 8000)),
-  fInputBaselineSigma(p.get<double>("InputBaselineSigma")),//, 2)),
+  fInputBaselineSigma(p.get<double>("InputBaselineSigma", 2)),
   fADCThreshold(p.get<double>("ADCThreshold", 7960)),
   fFindPulses(p.get<bool>("FindPulses", false)),
   fPEArea(p.get<double>("PEArea", 66.33))
@@ -174,48 +178,64 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
   for (auto handle : fragmentHandles) {
     if (!handle.isValid() || handle->size() == 0) continue;
 
-      if (fcrt_metrics){
+    num_crt_frags = 0;
+    num_pmt_frags = 0;
+
       if (handle->front().type() == artdaq::Fragment::ContainerFragmentType) {
         // container fragment
         for (auto cont : *handle) {
           artdaq::ContainerFragment contf(cont);
-          if (contf.fragment_type() != sbndaq::detail::FragmentType::BERNCRTV2) continue;
-  	      if (fVerbose)     std::cout << "    Found " << contf.block_count() << " CRT Fragments in container " << std::endl;
-  	      for (size_t ii = 0; ii < contf.block_count(); ++ii) analyze_crt_fragment(*contf[ii].get());
+          if (contf.fragment_type() == sbndaq::detail::FragmentType::BERNCRTV2){
+    	      if (fVerbose)     std::cout << "    Found " << contf.block_count() << " CRT Fragments in container " << std::endl;
+            if (fcrt_metrics){
+    	         for (size_t ii = 0; ii < contf.block_count(); ++ii) analyze_crt_fragment(*contf[ii].get());
+            }
+          }
         }
       }
       else {
         // normal fragment
-        if (handle->front().type()!=sbndaq::detail::FragmentType::BERNCRTV2) continue;
-        if (fVerbose)   std::cout << "   found CRT fragments " << handle->size() << std::endl;
-        for (auto frag : *handle)	analyze_crt_fragment(frag);
-      }
-    }//if saving crt metrics
+        size_t beamFragmentIdx = -1;
+        for (auto frag : *handle){
+          beamFragmentIdx++;
+          if (frag.type()==sbndaq::detail::FragmentType::BERNCRTV2) {
+            num_crt_frags++;
+          	if (fcrt_metrics){analyze_crt_fragment(frag);}
+          }
 
-    if (fpmt_metrics){
-      if (handle->front().type()==sbndaq::detail::FragmentType::CAENV1730) {
-      if (fVerbose)   std::cout << "Found " << handle->size() << " CAEN1730 fragments" << std::endl;
 
-      // identify whether any fragments correspond to the beam spill
-      // loop over fragments, in steps of 8
-      size_t beamFragmentIdx = 9999;
-      for (size_t fragmentIdx = 0; fragmentIdx < handle->size(); fragmentIdx += 8) {
-        checkCAEN1730FragmentTimeStamp(handle->at(fragmentIdx));
-        if (foundBeamTrigger) {
-          beamFragmentIdx = fragmentIdx;
-          if (fVerbose) std::cout << "Found fragment in time with beam at index: " << beamFragmentIdx << std::endl;
-          break;
+
+      if (frag.type()==sbndaq::detail::FragmentType::CAENV1730) {
+        num_pmt_frags++;
+        if (fpmt_metrics){
+        // identify whether any fragments correspond to the beam spill
+        // loop over fragments, in steps of 8
+        //size_t beamFragmentIdx = 9999;
+        //for (size_t fragmentIdx = 0; fragmentIdx < handle->size(); fragmentIdx += 8) {
+        if (!foundBeamTrigger){
+          checkCAEN1730FragmentTimeStamp(frag);//handle->at(fragmentIdx));
+          if (foundBeamTrigger) {
+            //beamFragmentIdx = fragmentIdx;
+            if (fVerbose) std::cout << "Found fragment in time with beam" << std::endl;// at index: " << beamFragmentIdx << std::endl;
+            //break;
+          }
+
+          // if set of fragment in time with beam found, process waveforms
+          if (foundBeamTrigger && beamFragmentIdx != 9999) {
+            for (size_t fragmentIdx = beamFragmentIdx; fragmentIdx < beamFragmentIdx+8; fragmentIdx++) {
+              analyzeCAEN1730Fragment(handle->at(fragmentIdx));
+            }
+            fWvfmsFound = true;
+          }
         }
-      }
-      // if set of fragment in time with beam found, process waveforms
-      if (foundBeamTrigger && beamFragmentIdx != 9999) {
-        for (size_t fragmentIdx = beamFragmentIdx; fragmentIdx < beamFragmentIdx+8; fragmentIdx++) {
-          analyzeCAEN1730Fragment(handle->at(fragmentIdx));
-        }
-        fWvfmsFound = true;
-      }
-    }
-    }//if saving pmt metrics
+      }//if saving pmt metrics
+    }//if is pmt frag
+
+    }//loop over frags
+  }
+
+    if (fVerbose)   std::cout << "Found " << num_crt_frags << " BERNCRTV2 fragments" << std::endl;
+    if (fVerbose)   std::cout << "Found " << num_pmt_frags << " CAEN1730 fragments" << std::endl;
 
   } // loop over frag handles
 
