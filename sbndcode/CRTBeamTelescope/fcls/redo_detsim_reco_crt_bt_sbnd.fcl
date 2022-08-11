@@ -1,0 +1,99 @@
+#
+# services
+#
+#include "simulationservices_sbnd.fcl"
+
+#
+# modules
+#
+#include "crtsimmodules_sbnd.fcl"
+#include "crtslimmer_sbnd.fcl"
+#include "crtsimhitproducer_sbnd.fcl"
+#include "crttrackproducer_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+
+process_name: RedoCRTDetsimReco
+
+
+services:
+{
+  TFileService: { fileName: "crtana_sbnd.root" }
+  # TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  @table::sbnd_simulation_services
+}
+
+
+source:
+{
+    inputCommands: [ "keep *",
+    		     "drop *_crtsim_*_*",
+    		     "drop *_crt_*_*",
+    		     "drop *_crthit_*_*",
+    		     "drop *_crttrack_*_*"
+    ]
+
+    module_type: RootInput
+}
+
+
+physics:
+{
+
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+
+    # CRT Detsim
+    crtsim: @local::sbnd_crtsim
+
+    # CRT Slimmer
+    crt: @local::sbnd_crtslimmer
+
+    # CRT Hits
+    crthit: @local::standard_crtsimhitproducer
+
+    # CRT Tracks
+    crttrack: @local::standard_crttrackproducer
+
+  }
+
+  analyzers:
+  {
+    # Analysis
+    crtana: { module_type: "CRTAnalysis" }
+  }
+
+  # All producers and filters modules for this path, order matters
+  simulate: [ rns
+            , crtsim
+            , crt
+            , crthit
+            , crttrack
+          ]
+
+  ana: [ crtana ]
+
+  # The output stream, there could be more than one if using filters
+  stream1: [ out1 ]
+
+  # Contains the paths that modify the art::event
+  trigger_paths: [ simulate ]
+
+  # Contains the paths that do not modify the art::Event
+  end_paths: [ ana, stream1 ]
+}
+
+
+outputs:
+{
+  out1:
+  {
+                    @table::sbnd_rootoutput
+    dataTier:       "simulated"
+    outputCommands: [ "keep *_*_*_*" ]
+  }
+}
+
+#include "use_crt_beam_tele_geometry_g4_services.fcl"
