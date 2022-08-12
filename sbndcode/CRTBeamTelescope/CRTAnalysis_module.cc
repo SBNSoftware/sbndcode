@@ -49,6 +49,8 @@ public:
   void analyze(art::Event const& e) override;
   virtual void beginSubRun(art::SubRun const& sr) override;
 
+  std::map<int, int> TrackIDToPrimaryIDMapMaker(std::vector<art::Ptr<simb::MCParticle> > &mcp_v);
+
 private:
 
   std::string _mctruth_label;
@@ -111,7 +113,9 @@ private:
   std::vector<double> _mcp_endz; ///< G4 MCParticle end point Z
   std::vector<int> _mcp_isprimary; ///< G4 MCParticle, true if primary
   std::vector<int> _mcp_trackid; ///< G4 MCParticle, track ID
+  std::vector<int> _mcp_primaryid; ///< G4 MCParticle, primary ID
   std::vector<int> _mcp_makes_adh; ///< G4 MCParticle, true if this MCP deposits energy in CRT
+  std::vector<int> _mcp_primary_makes_adh; ///< G4 MCParticle, true if this MCP's primary deposits energy in CRT
 
   std::vector<double> _adh_t; ///< AuxDetHit time
   std::vector<double> _adh_e; ///< AuxDetHit deposited energy
@@ -228,7 +232,9 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("mcp_endz", "std::vector<double>", &_mcp_endz);
   _tree->Branch("mcp_isprimary", "std::vector<int>", &_mcp_isprimary);
   _tree->Branch("mcp_trackid", "std::vector<int>", &_mcp_trackid);
+  _tree->Branch("mcp_primaryid", "std::vector<int>", &_mcp_primaryid);
   _tree->Branch("mcp_makes_adh", "std::vector<int>", &_mcp_makes_adh);
+  _tree->Branch("mcp_primary_makes_adh", "std::vector<int>", &_mcp_primary_makes_adh);
 
   _tree->Branch("adh_t", "std::vector<double>", &_adh_t);
   _tree->Branch("adh_e", "std::vector<double>", &_adh_e);
@@ -456,6 +462,13 @@ void CRTAnalysis::analyze(art::Event const& e)
     if (_debug) std::cout<<mct->NParticles()<<" "<<_mct_sp_pdg<<" "<<_mct_sp_2_pdg<<std::endl;
   }
 
+  std::map<int, int> trackid_to_primaryid_map = TrackIDToPrimaryIDMapMaker(mcp_v);
+  if(trackid_to_primaryid_map.size() != mcp_v.size())
+    {
+      std::cout << "TrackIDToPrimaryIDMap is wrong size (" << trackid_to_primaryid_map.size() << " vs. " << mcp_v.size() << ")" << std::endl;
+      throw std::exception();
+    }
+
 
   //
   // Fill the AuxDetHits in the tree
@@ -471,6 +484,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   _adh_trackid.resize(n_adh);
 
   std::set<unsigned int> trackids_from_adh;
+  std::set<unsigned int> primaryids_from_adh;
 
   for (size_t i = 0; i < n_adh; i++) {
     auto auxdethit = adh_v[i];
@@ -485,6 +499,7 @@ void CRTAnalysis::analyze(art::Event const& e)
                                auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
     _adh_trackid[i] = auxdethit->GetTrackID();
     trackids_from_adh.insert(auxdethit->GetTrackID());
+    primaryids_from_adh.insert(trackid_to_primaryid_map[auxdethit->GetTrackID()]);
     if (_debug) std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
   }
 
@@ -510,7 +525,9 @@ void CRTAnalysis::analyze(art::Event const& e)
   _mcp_endz.resize(n_mcp);
   _mcp_isprimary.resize(n_mcp);
   _mcp_trackid.resize(n_mcp);
+  _mcp_primaryid.resize(n_mcp);
   _mcp_makes_adh.resize(n_mcp);
+  _mcp_primary_makes_adh.resize(n_mcp);
 
   size_t counter = 0;
   for (size_t i = 0; i < mcp_v.size(); i++) {
@@ -538,7 +555,12 @@ void CRTAnalysis::analyze(art::Event const& e)
     _mcp_endz[counter] = particle->EndZ();
     _mcp_isprimary[counter] = particle->Process() == "primary";
     _mcp_trackid[counter] = particle->TrackId();
+    _mcp_primaryid[counter] = trackid_to_primaryid_map[particle->TrackId()];
     _mcp_makes_adh[counter] = trackids_from_adh.find(particle->TrackId()) != trackids_from_adh.end();
+    if(_mcp_isprimary[counter])
+      _mcp_primary_makes_adh[counter] = primaryids_from_adh.find(particle->TrackId()) != primaryids_from_adh.end();
+    else
+      _mcp_primary_makes_adh[counter] = -1;
 
     counter++;
 
@@ -746,4 +768,40 @@ void CRTAnalysis::beginSubRun(art::SubRun const& sr) {
 
 }
 
+std::map<int, int> CRTAnalysis::TrackIDToPrimaryIDMapMaker(std::vector<art::Ptr<simb::MCParticle> > &mcp_v) 
+{
+  std::map<int, art::Ptr<simb::MCParticle> > particle_map;
+
+  for(auto const & mcp : mcp_v)
+    {
+      particle_map[mcp->TrackId()] = mcp;
+    }
+
+  std::map<int, int> map;
+
+  for(auto const &mcp : mcp_v)
+    {
+      if(mcp->StatusCode() != 1) continue;
+
+      if(mcp->Process() == "primary")
+	map[mcp->TrackId()] = mcp->TrackId();
+      else 
+	{
+	  bool filled = false;
+	  art::Ptr<simb::MCParticle> mother = mcp;
+	  
+	  while(!filled)
+	    {
+	      if(map.find(mother->Mother()) != map.end())
+		{
+		  map[mcp->TrackId()] = map[mother->Mother()];
+		  filled = true;
+		}
+	      mother = particle_map[mother->Mother()];
+	    }
+	}
+    }
+  return map;
+}
+      
 DEFINE_ART_MODULE(CRTAnalysis)
