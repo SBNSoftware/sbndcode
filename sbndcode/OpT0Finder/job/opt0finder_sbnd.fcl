@@ -33,9 +33,11 @@ sbnd_opt0_finder:
   # ChargeToNPhotonsTrack:    164. # 240 e-/ADC x 23.6/1e6 MeV/e- x 29,000 gamma/MeV = 164. (not including recombination)
   # ChargeToNPhotonsShower:   164. # Not tuned! higher mainly beacause we need to account for missing charge contributions
 
+  CalcCorrelated: false # turn on charge-photon anti-correlation calculation 
   PDSMapTool: {
     tool_type: "sbndPDMapAlg"
   }
+  SelectNeutrino: true # select only potential neutrino slices (ignore unambiguous cosmics)
 }
 
 #
