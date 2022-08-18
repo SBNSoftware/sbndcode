@@ -346,6 +346,7 @@ private:
 
   // double fSelectedPDG;
 
+  bool freadRawHits;        ///< Keep Raw Hits (to be set via fcl)
   bool fkeepCRThits;       ///< Keep the CRT hits (to be set via fcl)
   bool fkeepCRTstrips;     ///< Keep the CRT strips (to be set via fcl)
   bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
@@ -411,6 +412,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
+  freadRawHits       = p.get<bool>("readRawHits",true);
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
   fkeepCRTstrips     = p.get<bool>("keepCRTstrips",false);
   fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
@@ -484,25 +486,26 @@ void Hitdumper::analyze(const art::Event& evt)
   ResetWireHitsVars(_nhits);
 
   size_t counter = 0;
-  for (size_t i = 0; i < hitlist.size(); ++i) {
-    geo::WireID wireid = hitlist[i]->WireID();
-    if (fSkipInd && wireid.Plane != 2) {
-      continue;
+  if (freadRawHits){
+    for (size_t i = 0; i < hitlist.size(); ++i) {
+      geo::WireID wireid = hitlist[i]->WireID();
+      if (fSkipInd && wireid.Plane != 2) {
+        continue;
+      }
+
+      _hit_cryostat[counter] = wireid.Cryostat;
+      _hit_tpc[counter] = wireid.TPC;
+      _hit_plane[counter] = wireid.Plane;
+      _hit_wire[counter] = wireid.Wire;
+      _hit_channel[counter] = hitlist[i]->Channel();
+      // peak time needs plane dependent offset correction applied.
+      _hit_peakT[counter] = hitlist[i]->PeakTime();
+      _hit_charge[counter] = hitlist[i]->Integral();
+      _hit_ph[counter] = hitlist[i]->PeakAmplitude();
+      _hit_width[counter] = hitlist[i]->RMS();
+      counter ++;
     }
-
-    _hit_cryostat[counter] = wireid.Cryostat;
-    _hit_tpc[counter] = wireid.TPC;
-    _hit_plane[counter] = wireid.Plane;
-    _hit_wire[counter] = wireid.Wire;
-    _hit_channel[counter] = hitlist[i]->Channel();
-    // peak time needs plane dependent offset correction applied.
-    _hit_peakT[counter] = hitlist[i]->PeakTime();
-    _hit_charge[counter] = hitlist[i]->Integral();
-    _hit_ph[counter] = hitlist[i]->PeakAmplitude();
-    _hit_width[counter] = hitlist[i]->RMS();
-    counter ++;
   }
-
   //
   // CRT strips
   //

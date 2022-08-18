@@ -21,6 +21,7 @@ hitdumper:
     MuonTrackModuleLabel:     "MuonTrackProducer"
     GenieGenModuleLabel:      "generator"
  
+    readRawHits:              true
     keepCRThits:              true
     keepCRTstrips:            false
     makeCRTtracks:            true
