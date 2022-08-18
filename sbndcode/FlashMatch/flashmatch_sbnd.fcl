@@ -8,8 +8,8 @@ sbnd_simple_flashmatch:{
   OpHitARAProducer: "ophitarapuca"
   OpFlashProducer: ["opflashtpc0", "opflashtpc1"]
   OpFlashHitProducer: ["opflashtpc0", "opflashtpc1"]
-  BeamWindowStart: -50 # us
-  BeamWindowEnd: 50.0 # us
+  BeamWindowStart: 0 # us
+  BeamWindowEnd: 1.8 # us
   FlashStart: -0.02 # us, wrt flash time
   FlashEnd: 0.08 # us, wrt flash time
   SelectNeutrino: true
