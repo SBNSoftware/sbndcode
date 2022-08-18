@@ -210,15 +210,15 @@ void MuonTrackProducer::produce(art::Event & evt)
          int hit_wire = int(wireid.Wire), hit_peakT = int(hitlist[i]->PeakTime()), hit_tpc = wireid.TPC, hit_plane = wireid.Plane;
          vector<int> v{hit_wire,hit_peakT,i};
          if (muon_in_tpc0 == true){ //if ac muon was found in tpc0 
-            if (hit_plane==0 && hit_tpc==0 && hit_peakT>0) 
+            if (hit_plane==0 && hit_tpc==0 && hit_peakT>10 && hit_peakT<3490) 
                hit_00.push_back(v);
-            else if (hit_plane==1 && hit_tpc==0 && hit_peakT>0)
+            else if (hit_plane==1 && hit_tpc==0 && hit_peakT>10 && hit_peakT<3490)
                hit_01.push_back(v);
          }
          if (muon_in_tpc1 == true){ // if ac muon was found in tpc 1
-            if (hit_plane==0 && hit_tpc==1 && hit_peakT>0)
+            if (hit_plane==0 && hit_tpc==1 && hit_peakT>10 && hit_peakT<3490)
                hit_10.push_back(v);
-            else if (hit_plane==1 && hit_tpc==1 && hit_peakT>0)
+            else if (hit_plane==1 && hit_tpc==1 && hit_peakT>10 && hit_peakT<3490)
                hit_11.push_back(v);
          } 
       }
@@ -610,8 +610,8 @@ bool MuonTrackProducer::FixEndpoints(geo::WireID wire_col, geo::WireID wire_ind,
    fGeometryService->WireEndPoints(wire_col, col_end1, col_end2);
    fGeometryService->WireEndPoints(wire_ind, ind_end1, ind_end2);
    if (abs(ind_end1[1]) > 198 || abs(ind_end2[1]) > 198){ // if it's located on the top or bottom 
-      double ind_y = (abs(ind_end1[1]) == 199.792) ? ind_end1[1] : ind_end2[1];
-      double ind_z = (abs(ind_end1[1]) == 199.792) ? ind_end1[2] : ind_end2[2]; 
+      double ind_y = (abs(ind_end1[1]) > 198) ? ind_end1[1] : ind_end2[1];
+      double ind_z = (abs(ind_end1[1]) > 198) ? ind_end1[2] : ind_end2[2]; 
       if (abs(col_end1[2] - ind_z) < 8){
          point.SetX(col_end1[0]);
          point.SetY(ind_y);
