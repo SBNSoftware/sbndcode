@@ -14,7 +14,7 @@ sbnd_simple_flashmatch:{
   FlashEnd:                 0.08 # us, wrt flash time
   OnlyCollectionWires: false
   ForceConcurrence: true
-  CorrectDriftDistance: false // TODO: test and change to true
+  CorrectDriftDistance: true
   UseUncoatedPMT: true
   UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
