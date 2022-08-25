@@ -63,7 +63,7 @@ namespace crt {
     // art::TypeLabel                fTLnuchoice;
 
     TTree * fTree;
-    UShort_t fMac5;
+    // UShort_t fMac5;
     // UShort_t flags;
     // UShort_t lostcpu;
     // UShort_t lostfpga;
@@ -73,6 +73,14 @@ namespace crt {
     // Int_t s;
     // Int_t ms;
     // Double_t cable;
+    std::vector<double> fHit1Feb;
+    std::vector<double> fHit1T0;
+    std::vector<double> fHit1T1;
+    std::vector<std::vector<uint16_t>> fHit1Adc;
+    std::vector<double> fHit2Feb;
+    std::vector<double> fHit2T0;
+    std::vector<double> fHit2T1;
+    std::vector<std::vector<uint16_t>> fHit2Adc;
   };  // ImportCRTData
 }
 

@@ -1,7 +1,5 @@
-add_subdirectory(fcls)
-add_subdirectory(Geometry)
-add_subdirectory(DataImport)
-add_subdirectory(Reconstruction)
+add_subdirectory(LibCRTImport)
+add_subdirectory(DataSettings)
 
 art_make(
 MODULE_LIBRARIES larcorealg_Geometry
@@ -36,7 +34,4 @@ MODULE_LIBRARIES larcorealg_Geometry
                  ROOT::XMLIO
                  ROOT::Gdml
                  ${ROOT_BASIC_LIB_LIST}
-                 sbndcode_RecoUtils
-                 sbndcode_OpDetSim
 )
-

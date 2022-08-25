@@ -81,17 +81,28 @@ namespace crt {
       //throw cet::exception(__PRETTY_FUNCTION__) << "Failed to open "<<fCRTInputFile<<std::endl;
     }
 
+    fTree = (TTree*)(fCRTInputFile->Get("t"));
+    fTree->SetBranchAddress("hit1_feb", &fHit1Feb);
+    fTree->SetBranchAddress("hit1_t0", &fHit1T0);
+    fTree->SetBranchAddress("hit1_t1", &fHit1T1);
+    fTree->SetBranchAddress("hit1_adc", &fHit1Adc);
+
+    fTree->SetBranchAddress("hit2_feb", &fHit2Feb);
+    fTree->SetBranchAddress("hit2_t0", &fHit2T0);
+    fTree->SetBranchAddress("hit2_t1", &fHit2T1);
+    fTree->SetBranchAddress("hit2_adc", &fHit2Adc);
 
 
-    TTree * aux = (TTree*)(fCRTInputFile->Get("treeaux"));
+
+    TTree * aux = (TTree*)(fCRTInputFile->Get("aux"));
 
     double pot = 0.;
     aux->SetBranchAddress("pot", &pot);
     aux->GetEntry(0);
 
-    fTree = (TTree*)(fCRTInputFile->Get("tree"));
+    // fTree = (TTree*)(fCRTInputFile->Get("tree"));
 
-    fTree->SetBranchAddress("mac5", &fMac5);
+    // fTree->SetBranchAddress("mac5", &fMac5);
     // fTree->SetBranchAddress("flags", &flags);
     // fTree->SetBranchAddress("lostcpu", &lostcpu);
     // fTree->SetBranchAddress("lostfpga", &lostfpga);
@@ -139,33 +150,39 @@ namespace crt {
     if (fMaxEvents > 0 && fEventCounter == unsigned(fMaxEvents))
       return false;
 
-    //if (fEventCounter%10000==0)
-      //mf::LogInfo(__FUNCTION__)<<"Attempting to read event: "<<fEventCounter<<std::endl;
     // Create empty result, then fill it from current file:
     std::unique_ptr< std::vector<sbnd::crt::FEBData>  > febdata_v(new std::vector<sbnd::crt::FEBData>);
-    // std::unique_ptr< std::vector<simb::MCTruth>  > mctruthvec(new std::vector<simb::MCTruth >);
 
-    // std::unique_ptr< std::vector<bsim::Dk2Nu>  > dk2nuvec(new std::vector<bsim::Dk2Nu >);
-    // std::unique_ptr< std::vector<bsim::NuChoice>  > nuchoicevec(new std::vector<bsim::NuChoice >);
-    // std::unique_ptr< art::Assns<simb::MCTruth, bsim::Dk2Nu> >
-    //   dk2nuassn(new art::Assns<simb::MCTruth, bsim::Dk2Nu>);
-    // std::unique_ptr< art::Assns<simb::MCTruth, bsim::NuChoice> >
-    //   nuchoiceassn(new art::Assns<simb::MCTruth, bsim::NuChoice>);
-    // std::unique_ptr< art::Assns<simb::MCTruth, simb::MCFlux> >
-    //   mcfluxassn(new art::Assns<simb::MCTruth, simb::MCFlux>);
 
     fTree->GetEntry(fEventCounter);
-    std::cout << "--> mac5 " << fMac5 << std::endl;
 
-    sbnd::crt::FEBData feb_data;
-    // if (!fFluxDriver->FillMCFlux(fEntry,flux))
-    //   return false;
+    std::array<uint16_t, 32> adc;
 
-    febdata_v->push_back(feb_data);
+    for (size_t j = 0; j < fHit1Feb.size(); j++)
+    {
+      for (int s = 0; s < 32; s++) { adc[s] = fHit1Adc[j][s]; }
+      sbnd::crt::FEBData feb_data_1(fHit1Feb[j],
+                                    fHit1T0[j],
+                                    fHit1T1[j],
+                                    adc,
+                                    0);
+
+      febdata_v->push_back(feb_data_1);
+
+      for (int s = 0; s < 32; s++) { adc[s] = fHit2Adc[j][s]; }
+      sbnd::crt::FEBData feb_data_2(fHit2Feb[j],
+                                    fHit2T0[j],
+                                    fHit2T1[j],
+                                    adc,
+                                    0);
+
+      febdata_v->push_back(feb_data_2);
+    }
+
     fEventCounter++;
     fEntry++;
 
-    art::RunNumber_t rn = 1000; // fFluxDriver->GetRun();
+    art::RunNumber_t rn = 1000;
     if (rn==0) rn=999999;
     art::Timestamp tstamp(time(0));
 
@@ -185,7 +202,7 @@ namespace crt {
 
       art::put_product_in_principal(std::move(pot),
                                     *outSR,
-                                    "crtdata2");
+                                    "crtdata");
 
       fSubRunID = newID;
     }
