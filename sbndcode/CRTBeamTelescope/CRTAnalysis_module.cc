@@ -1129,7 +1129,7 @@ void CRTAnalysis::analyze(art::Event const& e)
     int leading_ide_id = -999; double leading_energy = -std::numeric_limits<double>::max();
     unsigned counter = 0;
 
-    _crt_true_total_e = 0.;
+    _crt_true_total_e[i] = 0.;
 
     for(auto const ide : ide_v)
       {
@@ -1138,7 +1138,7 @@ void CRTAnalysis::analyze(art::Event const& e)
 	    leading_ide_id = counter;
 	    leading_energy = ide->energyDeposited;
 	  }
-	_crt_true_total_e += ide->energyDeposited;
+	_crt_true_total_e[i] += ide->energyDeposited;
 	++counter;
       }
     
