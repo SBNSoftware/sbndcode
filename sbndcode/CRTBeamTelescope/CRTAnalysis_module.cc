@@ -172,7 +172,8 @@ private:
   int _crt_n_dw; ///< crtData Number of SiPMs in the downstream tagger
   std::vector<int> _crt_true_nide; ///< crtData, assns truth, number of IDEs
   std::vector<double> _crt_true_t; ///< crtData, assns truth, IDE time
-  std::vector<double> _crt_true_e; ///< crtData, assns truth, IDE deposited energy
+  std::vector<double> _crt_true_e; ///< crtData, assns truth, IDE deposited energy (leading ide)
+  std::vector<double> _crt_true_total_e; ///< crtData, assns truth, IDE deposited energy (summed all ides)
   std::vector<double> _crt_true_x; ///< crtData, assns truth, IDE x
   std::vector<double>_crt_true_y; ///< crtData, assns truth, IDE y
   std::vector<double>_crt_true_z; ///< crtData, assns truth, IDE z
@@ -321,6 +322,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("crt_true_nide", "std::vector<int>", &_crt_true_nide);
   _tree->Branch("crt_true_t", "std::vector<double>", &_crt_true_t);
   _tree->Branch("crt_true_e", "std::vector<double>", &_crt_true_e);
+  _tree->Branch("crt_true_total_e", "std::vector<double>", &_crt_true_total_e);
   _tree->Branch("crt_true_x", "std::vector<double>", &_crt_true_x);
   _tree->Branch("crt_true_y", "std::vector<double>", &_crt_true_y);
   _tree->Branch("crt_true_z", "std::vector<double>", &_crt_true_z);
@@ -1086,6 +1088,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   _crt_true_nide.resize(n_crtdata);
   _crt_true_t.resize(n_crtdata);
   _crt_true_e.resize(n_crtdata);
+  _crt_true_total_e.resize(n_crtdata);
   _crt_true_x.resize(n_crtdata);
   _crt_true_y.resize(n_crtdata);
   _crt_true_z.resize(n_crtdata);
@@ -1121,8 +1124,26 @@ void CRTAnalysis::analyze(art::Event const& e)
     }
 
     auto ide_v = crt_data_to_ides.at(crt_data.key());
-    auto ide = ide_v[0]; // TODO: saving only the first IDE, may be enough?
     _crt_true_nide[i] = ide_v.size();
+
+    int leading_ide_id = -999; double leading_energy = -std::numeric_limits<double>::max();
+    unsigned counter = 0;
+
+    _crt_true_total_e = 0.;
+
+    for(auto const ide : ide_v)
+      {
+	if(ide->energyDeposited > leading_energy)
+	  {
+	    leading_ide_id = counter;
+	    leading_energy = ide->energyDeposited;
+	  }
+	_crt_true_total_e += ide->energyDeposited;
+	++counter;
+      }
+    
+    auto ide = ide_v[leading_ide_id];
+
     _crt_true_t[i] = 0.5 * (ide->entryT + ide->exitT);
     _crt_true_e[i] = ide->energyDeposited;
     _crt_true_x[i] = 0.5 * (ide->entryX + ide->exitX);
