@@ -77,4 +77,28 @@ SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleFront:50
 SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleTail:500
 SBNDDecoOpHitFinderXArapuca.PedAlgoPset.Method:0
 
+####OpFlash finder for XArapucas deconvolved waveforms#####
+###TPC0
+SBNDDecoSimpleFlashTPC0Arapuca: @local::SBNDSimpleFlashTPC0
+SBNDDecoSimpleFlashTPC0Arapuca.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC0Arapuca.OpHitProducers: ["ophitdecoxarapuca"]
+SBNDDecoSimpleFlashTPC0Arapuca.OpFlashProducer: "opflasharapuca"
+SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.PD: ["xarapuca_vuv","xarapuca_vis"]
+#TPC1
+SBNDDecoSimpleFlashTPC1Arapuca: @local::SBNDSimpleFlashTPC1
+SBNDDecoSimpleFlashTPC1Arapuca.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC1Arapuca.OpHitProducers: ["ophitdecoxarapuca"]
+SBNDDecoSimpleFlashTPC1Arapuca.OpFlashProducer: "opflasharapuca"
+SBNDDecoSimpleFlashTPC1Arapuca.AlgoConfig.PD: ["xarapuca_vuv","xarapuca_vis"]
+
+physics.producers.opflashdecotpc0arapuca.AlgoConfig.MinMultCoinc: 3
+physics.producers.opflashdecotpc0arapuca.AlgoConfig.PEThreshold: 30
+physics.producers.opflashdecotpc0arapuca.AlgoConfig.TimeResolution: 0.06
+
+physics.producers.opflashdecotpc1arapuca.AlgoConfig.MinMultCoinc: 3
+physics.producers.opflashdecotpc1arapuca.AlgoConfig.PEThreshold: 30
+physics.producers.opflashdecotpc1arapuca.AlgoConfig.TimeResolution: 0.06
+
+
+
 END_PROLOG
