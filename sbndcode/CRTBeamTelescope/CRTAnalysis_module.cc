@@ -50,7 +50,7 @@ public:
   void analyze(art::Event const& e) override;
   virtual void beginSubRun(art::SubRun const& sr) override;
 
-  std::map<int, int> TrackIDToPrimaryIDMapMaker(std::vector<art::Ptr<simb::MCParticle> > &mcp_v);
+  std::map<int, int> TrackIDToPrimaryIDMapMaker(art::Event const& e, std::vector<art::Ptr<simb::MCParticle> > &mcp_v);
 
 private:
 
@@ -146,6 +146,19 @@ private:
   std::vector<int> _chit_plane; ///< CRT hit plane
   std::vector<float> _chit_true_t; ///< CRT hit true time (from sim energy dep)
   std::vector<float> _chit_true_e; ///< CRT hit true energy (from sim energy dep)
+  std::vector<std::vector<int> > _chit_true_mcp_trackids; ///< CRT hit contributing true trackIDs
+  std::vector<std::vector<int> > _chit_true_mcp_pdg; ///< CRT hit contributing PDG codes
+  std::vector<std::vector<double> > _chit_true_mcp_e; ///< CRT hit contributing MCP's Energy
+  std::vector<std::vector<double> > _chit_true_mcp_px; ///< CRT hit contributing MCP's Momentum along X
+  std::vector<std::vector<double> > _chit_true_mcp_py; ///< CRT hit contributing MCP's Momentum along Y
+  std::vector<std::vector<double> > _chit_true_mcp_pz; ///< CRT hit contributing MCP's Momentum along Z
+  std::vector<std::vector<double> > _chit_true_mcp_startx; ///< CRT hit contributing MCP's start point X
+  std::vector<std::vector<double> > _chit_true_mcp_starty; ///< CRT hit contributing MCP's start point Y
+  std::vector<std::vector<double> > _chit_true_mcp_startz; ///< CRT hit contributing MCP's start point Z
+  std::vector<std::vector<double> > _chit_true_mcp_endx; ///< CRT hit contributing MCP's end point X
+  std::vector<std::vector<double> > _chit_true_mcp_endy; ///< CRT hit contributing MCP's end point Y
+  std::vector<std::vector<double> > _chit_true_mcp_endz; ///< CRT hit contributing MCP's end point Z
+  std::vector<std::vector<int> > _chit_true_mcp_isprimary; ///< CRT hit contributing MCP's, true if primary
 
   std::vector<double> _ct_time; ///< CRT track time
   std::vector<double> _ct_pes; ///< CRT track PEs
@@ -295,6 +308,19 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_plane", "std::vector<int>", &_chit_plane);
   _tree->Branch("chit_true_t", "std::vector<float>", &_chit_true_t);
   _tree->Branch("chit_true_e", "std::vector<float>", &_chit_true_e);
+  _tree->Branch("chit_true_mcp_trackids", "std::vector<std::vector<int> >", &_chit_true_mcp_trackids);
+  _tree->Branch("chit_true_mcp_pdg", "std::vector<std::vector<int> >", &_chit_true_mcp_pdg);
+  _tree->Branch("chit_true_mcp_e", "std::vector<std::vector<double> >", &_chit_true_mcp_e);
+  _tree->Branch("chit_true_mcp_px", "std::vector<std::vector<double> >", &_chit_true_mcp_px);
+  _tree->Branch("chit_true_mcp_py", "std::vector<std::vector<double> >", &_chit_true_mcp_py);
+  _tree->Branch("chit_true_mcp_pz", "std::vector<std::vector<double> >", &_chit_true_mcp_pz);
+  _tree->Branch("chit_true_mcp_startx", "std::vector<std::vector<double> >", &_chit_true_mcp_startx);
+  _tree->Branch("chit_true_mcp_starty", "std::vector<std::vector<double> >", &_chit_true_mcp_starty);
+  _tree->Branch("chit_true_mcp_startz", "std::vector<std::vector<double> >", &_chit_true_mcp_startz);
+  _tree->Branch("chit_true_mcp_endx", "std::vector<std::vector<double> >", &_chit_true_mcp_endx);
+  _tree->Branch("chit_true_mcp_endy", "std::vector<std::vector<double> >", &_chit_true_mcp_endy);
+  _tree->Branch("chit_true_mcp_endz", "std::vector<std::vector<double> >", &_chit_true_mcp_endz);
+  _tree->Branch("chit_true_mcp_isprimary", "std::vector<std::vector<int> >", &_chit_true_mcp_isprimary);
 
   _tree->Branch("ct_time", "std::vector<double>", &_ct_time);
   _tree->Branch("ct_pes", "std::vector<double>", &_ct_pes);
@@ -607,11 +633,11 @@ void CRTAnalysis::analyze(art::Event const& e)
     if (_debug) std::cout<<mct->NParticles()<<" "<<_mct_sp_pdg<<" "<<_mct_sp_2_pdg<<std::endl;
   }
 
-  std::map<int, int> trackid_to_primaryid_map = TrackIDToPrimaryIDMapMaker(mcp_v);
+  std::map<int, int> trackid_to_primaryid_map = TrackIDToPrimaryIDMapMaker(e, mcp_v);
   if(trackid_to_primaryid_map.size() != mcp_v.size())
     {
       std::cout << "TrackIDToPrimaryIDMap is wrong size (" << trackid_to_primaryid_map.size() << " vs. " << mcp_v.size() << ")" << std::endl;
-      throw std::exception();
+      //      throw std::exception();
     }
 
 
@@ -949,6 +975,21 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_plane.resize(n_hits);
   _chit_true_t.resize(n_hits);
   _chit_true_e.resize(n_hits);
+  _chit_true_mcp_trackids.resize(n_hits);
+  _chit_true_mcp_pdg.resize(n_hits);
+  _chit_true_mcp_e.resize(n_hits);
+  _chit_true_mcp_px.resize(n_hits);
+  _chit_true_mcp_py.resize(n_hits);
+  _chit_true_mcp_pz.resize(n_hits);
+  _chit_true_mcp_startx.resize(n_hits);
+  _chit_true_mcp_starty.resize(n_hits);
+  _chit_true_mcp_startz.resize(n_hits);
+  _chit_true_mcp_endx.resize(n_hits);
+  _chit_true_mcp_endy.resize(n_hits);
+  _chit_true_mcp_endz.resize(n_hits);
+  _chit_true_mcp_px.resize(n_hits);
+  _chit_true_mcp_py.resize(n_hits);
+  _chit_true_mcp_isprimary.resize(n_hits);
 
   for (size_t i = 0; i < n_hits; i++) {
 
@@ -974,13 +1015,77 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_true_t[i] = 0;
     _chit_true_e[i] = 0;
     size_t n_ides = 0;
+
     auto crt_data_v = crt_hit_to_data.at(hit.key());
     for (auto crt_data : crt_data_v) {
+      n_ides += crt_data_to_ides.at(crt_data.key()).size();
+    }
+  
+    _chit_true_mcp_trackids[i].resize(n_ides);
+    _chit_true_mcp_pdg[i].resize(n_ides);
+    _chit_true_mcp_e[i].resize(n_ides);
+    _chit_true_mcp_px[i].resize(n_ides);
+    _chit_true_mcp_py[i].resize(n_ides);
+    _chit_true_mcp_pz[i].resize(n_ides);
+    _chit_true_mcp_startx[i].resize(n_ides);
+    _chit_true_mcp_starty[i].resize(n_ides);
+    _chit_true_mcp_startz[i].resize(n_ides);
+    _chit_true_mcp_endx[i].resize(n_ides);
+    _chit_true_mcp_endy[i].resize(n_ides);
+    _chit_true_mcp_endz[i].resize(n_ides);
+    _chit_true_mcp_px[i].resize(n_ides);
+    _chit_true_mcp_py[i].resize(n_ides);
+    _chit_true_mcp_isprimary[i].resize(n_ides);
+
+    size_t ide_counter = 0;
+    for (auto crt_data : crt_data_v) {
       auto ide_v = crt_data_to_ides.at(crt_data.key());
+
       for (auto ide : ide_v) {
         _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
         _chit_true_e[i] += ide->energyDeposited;
-        n_ides++;
+	
+	std::cout << "IDE Track ID: " << ide->trackID << std::endl;
+	if(trackid_to_mcp.find(ide->trackID) != trackid_to_mcp.end())
+	  std::cout << "Opened map: Success! " << ide->energyDeposited << std::endl;
+	else
+	  std::cout << "Opened map: Failure! " << ide->energyDeposited << std::endl;
+	auto mcp = trackid_to_mcp[ide->trackID];
+	_chit_true_mcp_trackids[i][ide_counter] = mcp.TrackId();
+	_chit_true_mcp_pdg[i][ide_counter] = mcp.PdgCode();
+
+	std::cout << _chit_true_mcp_trackids[i][ide_counter] << " " << _chit_true_mcp_pdg[i][ide_counter] << '\n' << std::endl;
+
+	if(mcp.NumberTrajectoryPoints())
+	  {
+	    _chit_true_mcp_e[i][ide_counter] = mcp.E();
+	    _chit_true_mcp_px[i][ide_counter] = mcp.Px();
+	    _chit_true_mcp_py[i][ide_counter] = mcp.Py();
+	    _chit_true_mcp_pz[i][ide_counter] = mcp.Pz();
+	    _chit_true_mcp_startx[i][ide_counter] = mcp.Vx();
+	    _chit_true_mcp_starty[i][ide_counter] = mcp.Vy();
+	    _chit_true_mcp_startz[i][ide_counter] = mcp.Vz();
+	    _chit_true_mcp_endx[i][ide_counter] = mcp.EndX();
+	    _chit_true_mcp_endy[i][ide_counter] = mcp.EndY();
+	    _chit_true_mcp_endz[i][ide_counter] = mcp.EndZ();
+	  }
+	else
+	  {
+	    _chit_true_mcp_e[i][ide_counter] = -9999.;
+	    _chit_true_mcp_px[i][ide_counter] = -9999.;
+	    _chit_true_mcp_py[i][ide_counter] = -9999.;
+	    _chit_true_mcp_pz[i][ide_counter] = -9999.;
+	    _chit_true_mcp_startx[i][ide_counter] = -9999.;
+	    _chit_true_mcp_starty[i][ide_counter] = -9999.;
+	    _chit_true_mcp_startz[i][ide_counter] = -9999.;
+	    _chit_true_mcp_endx[i][ide_counter] = -9999.;
+	    _chit_true_mcp_endy[i][ide_counter] = -9999.;
+	    _chit_true_mcp_endz[i][ide_counter] = -9999.;
+	  }
+
+	_chit_true_mcp_isprimary[i][ide_counter] = mcp.Process() == "primary";
+
+	++ide_counter;
       }
     }
     _chit_true_t[i] /= n_ides;
@@ -1209,7 +1314,7 @@ void CRTAnalysis::beginSubRun(art::SubRun const& sr) {
 
 }
 
-std::map<int, int> CRTAnalysis::TrackIDToPrimaryIDMapMaker(std::vector<art::Ptr<simb::MCParticle> > &mcp_v) 
+std::map<int, int> CRTAnalysis::TrackIDToPrimaryIDMapMaker(art::Event const& e, std::vector<art::Ptr<simb::MCParticle> > &mcp_v) 
 {
   std::map<int, art::Ptr<simb::MCParticle> > particle_map;
 
@@ -1242,7 +1347,22 @@ std::map<int, int> CRTAnalysis::TrackIDToPrimaryIDMapMaker(std::vector<art::Ptr<
 	    }
 	}
     }
+
+  art::Handle<std::map<int, std::set<int> > > dropped_map_h;
+  e.getByLabel(_g4_label, dropped_map_h);
+
+  for(unsigned i = 0; i < dropped_map_h->size(); ++i)
+    {
+      const art::Ptr<std::pair<const int, std::set<int> > > entry(dropped_map_h, i);
+
+      if(map.find(entry->first) == map.end())
+	std::cout << "\nIssue finding original MCP for mother ID: " << entry->first << " (" << entry->second.size() << ")"<< '\n' << std::endl;
+      for(int trackid : entry->second)
+	  map[trackid] = map[entry->first];
+    }
+
   return map;
+
 }
       
 DEFINE_ART_MODULE(CRTAnalysis)
