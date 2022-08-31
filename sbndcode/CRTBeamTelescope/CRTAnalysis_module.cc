@@ -159,6 +159,7 @@ private:
   std::vector<std::vector<double> > _chit_true_mcp_endy; ///< CRT hit contributing MCP's end point Y
   std::vector<std::vector<double> > _chit_true_mcp_endz; ///< CRT hit contributing MCP's end point Z
   std::vector<std::vector<int> > _chit_true_mcp_isprimary; ///< CRT hit contributing MCP's, true if primary
+  std::vector<std::vector<uint16_t> > _chit_sipm_adc; ///< The 4 contributing ADC values to this CRTHit
 
   std::vector<double> _ct_time; ///< CRT track time
   std::vector<double> _ct_pes; ///< CRT track PEs
@@ -321,6 +322,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_true_mcp_endy", "std::vector<std::vector<double> >", &_chit_true_mcp_endy);
   _tree->Branch("chit_true_mcp_endz", "std::vector<std::vector<double> >", &_chit_true_mcp_endz);
   _tree->Branch("chit_true_mcp_isprimary", "std::vector<std::vector<int> >", &_chit_true_mcp_isprimary);
+  _tree->Branch("chit_sipm_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_adc);
 
   _tree->Branch("ct_time", "std::vector<double>", &_ct_time);
   _tree->Branch("ct_pes", "std::vector<double>", &_ct_pes);
@@ -990,6 +992,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_true_mcp_px.resize(n_hits);
   _chit_true_mcp_py.resize(n_hits);
   _chit_true_mcp_isprimary.resize(n_hits);
+  _chit_sipm_adc.resize(n_hits);
 
   for (size_t i = 0; i < n_hits; i++) {
 
@@ -1036,20 +1039,27 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_true_mcp_px[i].resize(n_ides);
     _chit_true_mcp_py[i].resize(n_ides);
     _chit_true_mcp_isprimary[i].resize(n_ides);
+    _chit_sipm_adc.resize(crt_data_v.size());
 
-    size_t ide_counter = 0;
+    size_t data_counter = 0, ide_counter = 0;
     for (auto crt_data : crt_data_v) {
       auto ide_v = crt_data_to_ides.at(crt_data.key());
+
+      _chit_sipm_adc[data_counter] = crt_data->ADC();
 
       for (auto ide : ide_v) {
         _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
         _chit_true_e[i] += ide->energyDeposited;
 	
-	std::cout << "IDE Track ID: " << ide->trackID << std::endl;
-	if(trackid_to_mcp.find(ide->trackID) != trackid_to_mcp.end())
-	  std::cout << "Opened map: Success! " << ide->energyDeposited << std::endl;
-	else
-	  std::cout << "Opened map: Failure! " << ide->energyDeposited << std::endl;
+	if(_debug)
+	  {
+	    std::cout << "IDE Track ID: " << ide->trackID << std::endl;
+	    if(trackid_to_mcp.find(ide->trackID) != trackid_to_mcp.end())
+	      std::cout << "Opened map: Success! " << ide->energyDeposited << std::endl;
+	    else
+	      std::cout << "Opened map: Failure! " << ide->energyDeposited << std::endl;
+	  }
+
 	auto mcp = trackid_to_mcp[ide->trackID];
 	_chit_true_mcp_trackids[i][ide_counter] = mcp.TrackId();
 	_chit_true_mcp_pdg[i][ide_counter] = mcp.PdgCode();
@@ -1087,6 +1097,7 @@ void CRTAnalysis::analyze(art::Event const& e)
 
 	++ide_counter;
       }
+      ++data_counter;
     }
     _chit_true_t[i] /= n_ides;
     _chit_true_e[i] /= n_ides;
@@ -1346,19 +1357,6 @@ std::map<int, int> CRTAnalysis::TrackIDToPrimaryIDMapMaker(art::Event const& e, 
 	      mother = particle_map[mother->Mother()];
 	    }
 	}
-    }
-
-  art::Handle<std::map<int, std::set<int> > > dropped_map_h;
-  e.getByLabel(_g4_label, dropped_map_h);
-
-  for(unsigned i = 0; i < dropped_map_h->size(); ++i)
-    {
-      const art::Ptr<std::pair<const int, std::set<int> > > entry(dropped_map_h, i);
-
-      if(map.find(entry->first) == map.end())
-	std::cout << "\nIssue finding original MCP for mother ID: " << entry->first << " (" << entry->second.size() << ")"<< '\n' << std::endl;
-      for(int trackid : entry->second)
-	  map[trackid] = map[entry->first];
     }
 
   return map;
