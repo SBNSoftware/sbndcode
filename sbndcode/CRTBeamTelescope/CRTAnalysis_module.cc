@@ -1039,13 +1039,13 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_true_mcp_px[i].resize(n_ides);
     _chit_true_mcp_py[i].resize(n_ides);
     _chit_true_mcp_isprimary[i].resize(n_ides);
-    _chit_sipm_adc.resize(crt_data_v.size());
+    _chit_sipm_adc[i].resize(crt_data_v.size());
 
     size_t data_counter = 0, ide_counter = 0;
     for (auto crt_data : crt_data_v) {
       auto ide_v = crt_data_to_ides.at(crt_data.key());
 
-      _chit_sipm_adc[data_counter] = crt_data->ADC();
+      _chit_sipm_adc[i][data_counter] = crt_data->ADC();
 
       for (auto ide : ide_v) {
         _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
@@ -1063,8 +1063,6 @@ void CRTAnalysis::analyze(art::Event const& e)
 	auto mcp = trackid_to_mcp[ide->trackID];
 	_chit_true_mcp_trackids[i][ide_counter] = mcp.TrackId();
 	_chit_true_mcp_pdg[i][ide_counter] = mcp.PdgCode();
-
-	std::cout << _chit_true_mcp_trackids[i][ide_counter] << " " << _chit_true_mcp_pdg[i][ide_counter] << '\n' << std::endl;
 
 	if(mcp.NumberTrajectoryPoints())
 	  {
