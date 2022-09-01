@@ -590,31 +590,29 @@ float SBNDOpT0Finder::GetNPhotons(const float charge,
   // TODO don't hardcode lar_density, scint prescale, efield, ADCToElectron? 
   // charge-light anti-correlation variables 
   double lar_density = 1.3886; // g/cm^3 
+  double EField = 0.5; // kV/cm, assuming constant EField 
   // double RecombA = g4param->RecombA(); // unitless 
   // double Recombk = g4param->Recombk() / lar_density; // kV/MeV
-  double ModBoxA = g4param->ModBoxA();
-  double ModBoxB = g4param->ModBoxB() / lar_density; 
+  double ModBoxA = g4param->ModBoxA(); // unitless 
+  double ModBoxB = g4param->ModBoxB() / lar_density / EField; // units of cm/MeV
   double W_ion = 1. / g4param->GeVToElectrons() * 1e3; // MeV, ionization work function 
   double W_ph  = 19.5*1e-6; // MeV, ion+excitation work function 
-  double ds = 0.3; // cm, setting step size equal to wire separation
-  double EField = 0.5; // kV/cm, assuming constant EField 
+  double ds = 0.3; // cm, assuming step size equal to wire separation
   double ADCToElectron = 1/(6.29778e-3*2); // e- /ADC*time_ticks, from detectorproperties_sbnd.fcl
 
   // charge-light anti-correlation calculation 
   double N_e = charge * ADCToElectron; // number of electrons collected per wire 
-  // double e_dep = 1/((RecombA/(W_ion*N_e))-(Recombk/(ds*EField))); // deposited energy per wire, MeV
-  double C_E = ModBoxB*EField/ds; // e_dep constant 
-  double e_dep = (1/C_E)*(exp(C_E*W_ion*N_e)-ModBoxA);
+  // double e_dep = 1/((RecombA/(W_ion*N_e))-(Recombk/(ds*EField))); // deposited energy per wire, MeV (Birks model)
+  double e_dep = (ds/ModBoxB)*(exp(ModBoxB*W_ion*N_e/ds)-ModBoxA); // (Box Model)
+  // std::cout << "ModBoxA: " << ModBoxA << ", ModBoxB: " << g4param->ModBoxB() << ", W_ion (MeV): " << W_ion << std::endl;
 
   double N_q = e_dep/W_ph; // total number of quanta, ions + excitons
-  double ScintPreScale = 0.03; 
-  // std::cout << "N_e: " << N_e << ", e_dep: " << e_dep << ", N_q: " << N_q << std::endl;
+  std::cout << "N_e: " << N_e << ", e_dep: " << e_dep << ", N_q: " << N_q << std::endl;
 
-  double N_ph_on = (N_q - N_e)*ScintPreScale;
+  double N_ph_on = (N_q - N_e); 
   float  N_ph_off = charge * (::lar_pandora::LArPandoraHelper::IsTrack(pfp) ? _charge_to_n_photons_track : _charge_to_n_photons_shower);
 
-  // std::cout << "CalcCorrelated off: " << N_ph_off << ", CalcCorrelated on: " << N_ph_on << std::endl;
-
+  std::cout << "CalcCorrelated off: " << N_ph_off << ", CalcCorrelated on: " << N_ph_on << ", off/on: " << N_ph_off/N_ph_on <<  ", track?: " << ::lar_pandora::LArPandoraHelper::IsTrack(pfp) << std::endl;
   if (_calc_correlated) N_ph = (float)N_ph_on;
   else N_ph = N_ph_off;
 
