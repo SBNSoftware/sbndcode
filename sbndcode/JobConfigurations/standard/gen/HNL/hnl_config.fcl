@@ -10,14 +10,16 @@ kaon2hnl: {
   MagUe4: 0
   MagUm4: 1e-7
   KDAROnly: false
-  Target2Absorber: 5000 #m decay horn length
+  Target2Absorber: 5000 #cm decay horn length
   MaxImportanceWeight: 1 #BNB gsimple flat weight at 1
 
   Beam2DetectorRotation: @local::sbnd_bnb_beam2detector_rotation
   BeamOrigin: @local::sbnd_bnb_beam_origin
 
   // timing config
-  SpillTimeConfig: "" #"evgb::EvtTimeFlat 10000 0" // 10us duration, no offset  
+  SpillTimeConfig: "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=0.32059"
+  //SpilTimeConfig: "" #"evgb::EvtTimeFlat 10000 0" // 10us duration, no offset  
+  GlobalTimeOffset: 0
 }
 
 # RAY TRACE CONFIGS

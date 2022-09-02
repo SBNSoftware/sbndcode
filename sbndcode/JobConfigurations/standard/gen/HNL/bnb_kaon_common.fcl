@@ -8,8 +8,8 @@ sbnd_bnb_beam2detector_rotation: [ 1, 0, 0,
                                    0, 1, 0,
                                    0, 0, 1] #bnb to sbnd is in z-direction, only need a translation.
 
-#sbnd_bnb_beam_origin: [-73.78, 0, -11000] # cm in deterctor frame
-sbnd_bnb_beam_origin: [0, 0, 0, 73.78, 0, 11000] # cm in deterctor frame
+#sbnd_bnb_beam_origin: [-73.78, 0, -11000] # cm in beam in deterctor frame
+sbnd_bnb_beam_origin: [0, 0, 0, 73.78, 0, 11000] # cm in detector in beam frame
 
 #sbnd detector in det frame
 sbnd_detector_box: [-200, 200, -200, 200, 0, 500] #cm
