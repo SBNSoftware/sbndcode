@@ -41,11 +41,6 @@ sbnd_simple_flashmatch:{
     tool_type: sbndPDMapAlg
   }
 
-  # binning and geometry
-  score_hist_bins: 100
-  score_hist_low: 0.
-  score_hist_up: 50.
-
   DriftDistance: 202.05 # only used for metrics creation
   XBins: 40
   # XBinWidth approx 5.
@@ -71,26 +66,30 @@ sbnd_simple_flashmatch:{
   SkewLimitY: 10.
   SkewLimitZ: 10.
 
-  dy_bins: 100
-  dy_low: -200.
-  dy_up: 200.
-  dz_bins: 100
-  dz_low: -200.
-  dz_up: 200.
-  rr_bins: 80
-  rr_low: 0.
-  rr_up: 200
+  # binning for template and metrics generation
+  score_bins:  60
+  score_low:    0.
+  score_up:    30.
+  dy_bins:     60
+  dy_low:    -150.
+  dy_up:      150.
+  dz_bins:     60
+  dz_low:    -150.
+  dz_up:      150.
+  rr_bins:     40
+  rr_low:       0.
+  rr_up:      200.
   # rr_TF1_fit: "pol3" # LEGACY, not used in the normal operation but helpful for diagnostics
-  ratio_bins: 80
-  ratio_low: 0.
-  ratio_up: 1.
+  ratio_bins:  40
+  ratio_low:    0.
+  ratio_up:     1.
   # ratio_TF1_fit: "pol3" # LEGACY, not used in the normal operation but helpful for diagnostics
-  slope_bins: 50  # TODO
-  slope_low: -2.   # TODO
-  slope_up:   2.   # TODO
-  petoq_bins: 50   # TODO
-  petoq_low: 0.    # TODO
-  petoq_up: 2.     # TODO
+  slope_bins:  40     # TODO
+  slope_low:   -2.    # TODO
+  slope_up:     2.    # TODO
+  petoq_bins:  40     # TODO
+  petoq_low:    0.    # TODO
+  petoq_up:     1.4   # TODO
 }
 
 END_PROLOG #comment to run generate_simple_weighted_template.py
