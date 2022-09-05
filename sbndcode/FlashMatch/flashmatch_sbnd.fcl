@@ -19,7 +19,7 @@ sbnd_simple_flashmatch:{
   UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
-  SelectNeutrino: false # TODO: decide if true is better
+  SelectNeutrino: true # it's too buggy to set 'false'
   MakeTree: false
   StoreMCInfo: false
   # TODO: tune below
