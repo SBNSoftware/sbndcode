@@ -110,20 +110,22 @@ private:
   std::string fFEBDataLabel;          ///< name of FEBData producer
   bool          fVerbose;             ///< print information about what's going on
   double        fClockSpeedCRT;
+  size_t        fFirstFEBMac5;        ///< lowest mac5 address for CRT FEBs
 
   //limits for array sizes
   enum LIMITS{
     max_hits_in_fragment = 50,
-    num_module = 255,
+    num_febs = 255,
     num_channels = 32
   };
 
   //arrays to store FEBinfo by module (want one fragment per module per event)
-  std::string taggers[num_module];
-  uint16_t feb_hits_in_fragments[num_module];
-  uint16_t ADCs[num_module][max_hits_in_fragment][num_channels];
-  uint32_t T0s[num_module][max_hits_in_fragment];
-  uint32_t T1s[num_module][max_hits_in_fragment];
+  std::string taggers[num_febs];
+  uint16_t feb_hits_in_fragments[num_febs];
+  uint16_t ADCs[num_febs][max_hits_in_fragment][num_channels];
+  uint32_t T0s[num_febs][max_hits_in_fragment];
+  uint32_t T1s[num_febs][max_hits_in_fragment];
+  bool empty_fragment[num_febs];
 
 
   // Other variables shared between different methods.
@@ -165,6 +167,7 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
   fFEBDataLabel(p.get<std::string>("FEBDataLabel", "crtsim")),
   fVerbose(p.get<bool>("Verbose", false)),
   fClockSpeedCRT(p.get<double>("ClockSpeedCRT")),
+  fFirstFEBMac5(p.get<size_t>("FirstFEBMac5", 0)),
   fInputModuleNameWvfm(p.get<std::string>("InputModuleNameWvfm")),
   fInputModuleNameTrigger(p.get<std::string>("InputModuleNameTrigger")),
   fBaseline(p.get<int>("Baseline",8000)),
@@ -211,6 +214,10 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
     //----------------------------------------------------------------------------------------------------------
     //                                          CRT
     //----------------------------------------------------------------------------------------------------------
+
+    for(int i=0; i<num_febs; i++){empty_fragment[i]=true;}
+
+    int num_module = fCrtGeo.NumModules();
 
     //----------------------------------------------------------------------------------------------------------
     //                                          GETTING PRODUCTS
@@ -267,6 +274,8 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
 
         if(fVerbose){std::cout << "FEB " << feb_i << " with mac " << feb_data->Mac5() << std::endl;}
 
+        empty_fragment[feb_data->Mac5()] = false;
+
         int channel = feb_data->Mac5() * 32;
         std::string stripName = fCrtGeo.ChannelToStripName(channel);
         std::string tagger = fCrtGeo.GetTaggerName(stripName);
@@ -292,8 +301,24 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
     }//FEBData loop
 
     //make one fragment for every module
-    for (size_t feb_i = 0; feb_i < num_module; feb_i++){
+    for (size_t feb_i = fFirstFEBMac5; feb_i < num_module+fFirstFEBMac5; feb_i++){
         //quantities in fragment
+        if (empty_fragment[feb_i]){
+          //if no hits for a module, make a simulated "T1 reset" event to avoid missing fragments
+          feb_hits_in_fragments[feb_i] = 1;
+          int channel = feb_i * 32;
+          std::string stripName = fCrtGeo.ChannelToStripName(channel);
+          std::string tagger = fCrtGeo.GetTaggerName(stripName);
+          taggers[feb_i] = tagger;
+
+          T0s[feb_i][0] = 0;
+          T1s[feb_i][0] = 0;
+          for (int i_adc = 0; i_adc<32; i_adc++){
+            uint16_t adc = distribution(generator);
+            ADCs[feb_i][0][i_adc] = adc;
+          }
+        }
+
         if (feb_hits_in_fragments[feb_i]==0) continue;
 
       //metadata

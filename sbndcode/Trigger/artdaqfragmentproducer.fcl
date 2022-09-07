@@ -16,6 +16,7 @@ ArtdaqFragmentProducer:
   CRTSimLabel: @local::CRTArtdaqFragmentProducer.CRTSimLabel
   FEBDataLabel: @local::CRTArtdaqFragmentProducer.FEBDataLabel
   ClockSpeedCRT: @local::CRTArtdaqFragmentProducer.ClockSpeedCRT  
+  FirstFEBMac5: @local::CRTArtdaqFragmentProducer.FirstFEBMac5  
 
   Verbose: true
 }
