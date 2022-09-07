@@ -137,7 +137,7 @@ private:
 
   TTree* _tree2;
   std::vector<float> _dep_x, _dep_y, _dep_z, _dep_charge, _dep_n_photons;
-  std::vector<int> _dep_slice;
+  std::vector<int> _dep_slice, _dep_trk;
 };
 
 
@@ -199,6 +199,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tree1->Branch("dep_z", "std::vector<float>", &_dep_z);
   _tree1->Branch("dep_charge", "std::vector<float>", &_dep_charge);
   _tree1->Branch("dep_n_photons", "std::vector<float>", &_dep_n_photons);
+  _tree1->Branch("dep_trk","std::vector<int>",&_dep_trk);
 
   _tree2 = fs->make<TTree>("flash_match_tree","");
   _tree2->Branch("run",             &_run,                             "run/I");
@@ -501,6 +502,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
     _dep_z.clear();
     _dep_charge.clear();
     _dep_n_photons.clear();
+    _dep_trk.clear();
 
     // Get the associated PFParticles
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfps.at(n_slice);
@@ -561,6 +563,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           _dep_z.push_back(position[2]);
           _dep_charge.push_back(charge);
           _dep_n_photons.push_back(GetNPhotons(charge, pfp, g4param));
+          _dep_trk.push_back(::lar_pandora::LArPandoraHelper::IsTrack(pfp));
         }
       } // End loop over Spacepoints
     } // End loop over PFParticle
@@ -598,7 +601,7 @@ float SBNDOpT0Finder::GetNPhotons(const float charge,
   double W_ion = 1. / g4param->GeVToElectrons() * 1e3; // MeV, ionization work function 
   double W_ph  = 19.5*1e-6; // MeV, ion+excitation work function 
   double ds = 0.3; // cm, assuming step size equal to wire separation
-  double ADCToElectron = 1/(6.29778e-3*2); // e- /ADC*time_ticks, from detectorproperties_sbnd.fcl
+  double ADCToElectron = (1 / 0.0201293) // e-/ADC*time_ticks
 
   // charge-light anti-correlation calculation 
   double N_e = charge * ADCToElectron; // number of electrons collected per wire 
