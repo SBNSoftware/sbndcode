@@ -11,6 +11,8 @@ ArtdaqFragmentProducer:
   Baseline: @local::pmtArtdaqFragmentProducer.Baseline
   MultiplicityThreshold: @local::pmtArtdaqFragmentProducer.MultiplicityThreshold
   BeamWindowLength: @local::pmtArtdaqFragmentProducer.BeamWindowLength
+  nChannelsFrag: @local::pmtArtdaqFragmentProducer.nChannelsFrag
+  WfmLength: @local::pmtArtdaqFragmentProducer.WfmLength
   
   SimModuleLabel: @local::CRTArtdaqFragmentProducer.SimModuleLabel
   CRTSimLabel: @local::CRTArtdaqFragmentProducer.CRTSimLabel

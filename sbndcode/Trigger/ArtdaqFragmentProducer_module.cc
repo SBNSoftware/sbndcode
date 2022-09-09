@@ -140,6 +140,8 @@ private:
   int fBaseline; // baseline in simulation, default 8000 ADC (for expanding waveforms only, when not fully simulated)
   int fMultiplicityThreshold; // number of PMT pairs in hardware trigger to pass
   double fBeamWindowLength;
+  uint32_t nChannelsFrag;
+  uint32_t wfm_length; // ~10us, 2ns tick
 
   // PD information
   opdet::sbndPDMapAlg pdMap; // photon detector map
@@ -173,6 +175,8 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
   fBaseline(p.get<int>("Baseline",8000)),
   fMultiplicityThreshold(p.get<int>("MultiplicityThreshold")),
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)),
+  nChannelsFrag(p.get<double>("nChannelsFrag", 15)),
+  wfm_length(p.get<double>("WfmLength", 5120)),
   fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
   // More initializers here.
 {
@@ -510,9 +514,9 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
 
   // set properties of fragment that are common to event
   uint32_t nChannelsTotal = channelList.size();
-  uint32_t nChannelsFrag = 15;
+  //uint32_t nChannelsFrag = 15;
   uint32_t nFrag = (uint32_t)nChannelsTotal/nChannelsFrag;
-  uint32_t wfm_length = 5120; // ~10us, 2ns tick
+  //uint32_t wfm_length = 5120; // ~10us, 2ns tick
 
   // fragment properties
   uint32_t sequenceIDVal = fEvent;
@@ -526,6 +530,7 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
   uint32_t eventCounterVal = fEvent;
   uint32_t boardIDVal = 0;
   uint32_t triggerTimeTagVal = (uint32_t)CLHEP::RandFlat::shoot(&fTriggerTimeEngine, 0, 1e9);
+  uint32_t eventSizeVal = ((wfm_length * (nChannelsFrag+1)) / 2.) + sizeof(sbndaq::CAENV1730EventHeader);
 
   // loop over PMT hardware triggers
   for (auto wvfIdx : triggerIndex) {
@@ -556,6 +561,7 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
       header_ptr->eventCounter = eventCounterVal;
       header_ptr->boardID = boardIDVal;
       header_ptr->triggerTimeTag = triggerTimeTagVal;  // ns // set timetag as random value for event
+      header_ptr->eventSize = eventSizeVal;
 
       // populate waveforms
       // populate fragment with waveform
