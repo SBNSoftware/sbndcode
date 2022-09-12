@@ -95,4 +95,10 @@ sbnd_simple_flashmatch:{
   petoq_up:     1.4
 }
 
+sbnd_simple_flashmatch_sce: @local::sbnd_simple_flashmatch
+sbnd_simple_flashmatch_sce.PandoraProducer: "pandoraSCE"
+sbnd_simple_flashmatch_sce.TrackProducer: "pandoraSCETrack"
+sbnd_simple_flashmatch_sce.CaloProducer: "pandoraSCECalo"
+sbnd_simple_flashmatch_sce.SpacePointProducer: "pandoraSCE"
+
 END_PROLOG #comment to run generate_simple_weighted_template.py
