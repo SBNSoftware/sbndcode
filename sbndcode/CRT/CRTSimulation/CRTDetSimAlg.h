@@ -50,6 +50,8 @@
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "CRTDetSimParams.h"
 
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+
 using std::vector;
 using std::pair;
 using std::map;
@@ -239,6 +241,8 @@ private:
     std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData; //!< This member stores the final FEBData for the CRT simulation
 
     std::vector<std::vector<int>> fAuxData; //!< This member stores the indeces of SiPM per AuxDetIDE
+
+    CRTGeoAlg fCRTGeo;
 
     /**
      * Configures the waveform by reading waveform points from configuration and

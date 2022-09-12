@@ -79,6 +79,14 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         double limitsWorld2[3];
         nodeDet->LocalToMaster(limitsDet2, limitsWorld2);
 
+	std::cout << "Tagger: " << taggerName << '\n'
+		  << "\tLocal: " << (limits[0] + limits2[0]) / 2. << " (" << abs(limits[0] - limits2[0]) << ") in x\n" 
+		  << "\t       " << (limits[1] + limits2[1]) / 2. << " (" << abs(limits[1] - limits2[1]) << ") in y\n" 
+		  << "\t       " << (limits[2] + limits2[2]) / 2. << " (" << abs(limits[2] - limits2[2]) << ") in z\n" 
+		  << "\tWorld: " << (limitsWorld[0] + limitsWorld2[0]) / 2. << " (" << abs(limitsWorld[0] - limitsWorld2[0]) << ") in x\n" 
+		  << "\t       " << (limitsWorld[1] + limitsWorld2[1]) / 2. << " (" << abs(limitsWorld[1] - limitsWorld2[1]) << ") in y\n" 
+		  << "\t       " << (limitsWorld[2] + limitsWorld2[2]) / 2. << " (" << abs(limitsWorld[2] - limitsWorld2[2]) << ") in z\n" << std::endl;
+
         // Create a tagger geometry object
         CRTTaggerGeo tagger = {};
         tagger.name = taggerName;
@@ -119,6 +127,30 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         size_t planeID = (modulePosMother[2] > 0);
         // Are the sipms at the top or bottom
         bool top = (planeID == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+
+	std::cout << "\t\tModule: " << moduleName << '\n'
+		  << "\t\t\tLocal: " << (limits[0] + limits2[0]) / 2. << " (" << abs(limits[0] - limits2[0]) << ") in x\n" 
+		  << "\t\t\t       " << (limits[1] + limits2[1]) / 2. << " (" << abs(limits[1] - limits2[1]) << ") in y\n" 
+		  << "\t\t\t       " << (limits[2] + limits2[2]) / 2. << " (" << abs(limits[2] - limits2[2]) << ") in z\n" 
+		  << "\t\t\tWorld: " << (limitsWorld[0] + limitsWorld2[0]) / 2. << " (" << abs(limitsWorld[0] - limitsWorld2[0]) << ") in x\n" 
+		  << "\t\t\t       " << (limitsWorld[1] + limitsWorld2[1]) / 2. << " (" << abs(limitsWorld[1] - limitsWorld2[1]) << ") in y\n" 
+		  << "\t\t\t       " << (limitsWorld[2] + limitsWorld2[2]) / 2. << " (" << abs(limitsWorld[2] - limitsWorld2[2]) << ") in z\n" 
+		  << "\t\t\tPlane: " << planeID << '\n'
+		  << "\t\t\tTop?:  " << top << '\n';
+
+	if (top) {
+	  double sipmEnd[3] = {halfWidth, 0, 0};
+	  double sipmEndWorld[3];
+	  auxDet.LocalToWorld(sipmEnd, sipmEndWorld);
+	  std::cout << "\t\t\tSiPM:  " << sipmEndWorld[0] << ", " << sipmEndWorld[1] << ", " << sipmEndWorld[2] << '\n' << std::endl;
+	}
+	else {
+	  double sipmEnd[3] = {-halfWidth, 0, 0};
+	  double sipmEndWorld[3];
+	  auxDet.LocalToWorld(sipmEnd, sipmEndWorld);
+	  std::cout << "\t\t\tSiPM:  " << sipmEndWorld[0] << ", " << sipmEndWorld[1] << ", " << sipmEndWorld[2] << '\n' << std::endl;
+	}
+
 
         // Create a module geometry object
         CRTModuleGeo module = {};
