@@ -1,9 +1,4 @@
-#include "simulationservices_sbnd.fcl"
-
 #include "fm_scores_sbnd.fcl"
-
-services.BackTrackerService:        @local::sbnd_backtrackerservice
-services.ParticleInventoryService:  @local::sbnd_particleinventoryservice
 
 physics.producers.fmatch.MakeTree:       true
 physics.producers.fmatch.StoreMCInfo:    true
