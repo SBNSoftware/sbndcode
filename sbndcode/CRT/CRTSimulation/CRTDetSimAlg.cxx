@@ -420,8 +420,8 @@ namespace crt {
         // Determine plane ID (1 for z > 0, 0 for z < 0 in local coordinates)
         unsigned planeID = (modulePosMother[2] > 0);
 
-        // Determine module orientation: which way is the top (readout end)?
-        bool top = (planeID == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+        // Determine module orientation: which way is the top (readout end)? (Specific to CRT BeamTelescope)
+        bool top = false;
 
         // Simulate the CRT response for each hit
         mf::LogInfo("CRTDetSimAlg") << "We have " << ides.size() << " IDE for this SimChannel." << std::endl;

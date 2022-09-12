@@ -125,8 +125,9 @@ CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore 
         double modulePosMother[3];
         nodeModule->LocalToMaster(origin, modulePosMother);
         size_t planeID = (modulePosMother[2] > 0);
-        // Are the sipms at the top or bottom
-        bool top = (planeID == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+
+        // Are the sipms at the top or bottom (CRT BeamTelescope specific)
+        bool top = false;
 
 	std::cout << "\t\tModule: " << moduleName << '\n'
 		  << "\t\t\tLocal: " << (limits[0] + limits2[0]) / 2. << " (" << abs(limits[0] - limits2[0]) << ") in x\n" 
