@@ -2955,10 +2955,10 @@
                 </subtraction>
                 <box lunit="cm" name="TaggerTopHigh" x="900" y="900" z="3.6000000000000001"/>
                 <box lunit="cm" name="TaggerTopLow" x="900" y="900" z="3.6000000000000001"/>
-                <box lunit="cm" name="TaggerSouth" x="322.10000000000002" y="307.39999999999998" z="17.199999999999999"/> <!-- Modified for CRT BT-->
-                <box lunit="cm" name="TaggerNorthOne" x="322.10000000000002" y="307.39999999999998" z="17.199999999999999"/> <!-- Modified for CRT BT-->
-                <box lunit="cm" name="TaggerNorthTwo" x="322.10000000000002" y="307.39999999999998" z="17.199999999999999"/> <!-- Modified for CRT BT-->
-                <box lunit="cm" name="TaggerNorthThree" x="322.10000000000002" y="307.39999999999998" z="17.199999999999999"/> <!-- Modified for CRT BT-->
+                <box lunit="cm" name="TaggerNorth" x="322.10000000000002" y="307.39999999999998" z="17.199999999999999"/> <!-- Modified for CRT BT-->
+                <box lunit="cm" name="TaggerSouthOne" x="322.10000000000002" y="307.39999999999998" z="17.199999999999999"/> <!-- Modified for CRT BT-->
+                <box lunit="cm" name="TaggerSouthTwo" x="322.10000000000002" y="307.39999999999998" z="17.199999999999999"/> <!-- Modified for CRT BT-->
+                <box lunit="cm" name="TaggerSouthThree" x="322.10000000000002" y="307.39999999999998" z="17.199999999999999"/> <!-- Modified for CRT BT-->
                 <box lunit="cm" name="TaggerEast" x="900" y="720" z="3.6000000000000001"/>
                 <box lunit="cm" name="TaggerWest" x="900" y="720" z="3.6000000000000001"/>
                 <box lunit="cm" name="TaggerBottom" x="810" y="990" z="4"/>
@@ -14891,9 +14891,9 @@
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                 </volume>
-                <volume name="volTaggerSouth">
+                <volume name="volTaggerNorth">
                         <materialref ref="matAir"/>
-                        <solidref ref="TaggerSouth"/>
+                        <solidref ref="TaggerNorth"/>
                         <physvol copynumber="0">
 								<volumeref ref="volCRTModule108"/>
 								<position name="posCRT_module108" unit="cm" x="0" y="-10" z="0.80000000000000004"/>
@@ -14997,9 +14997,9 @@
                                 </physvol>
                        -->
                 </volume>
-                <volume name="volTaggerNorthOne">
+                <volume name="volTaggerSouthOne">
                         <materialref ref="matAir"/>
-                        <solidref ref="TaggerNorthOne"/>
+                        <solidref ref="TaggerSouthOne"/>
                         <physvol copynumber="6">
 								<volumeref ref="volCRTModule114"/>
 								<position name="posCRT_module114" unit="cm" x="10" y="-97.799999999999997" z="-2.4000000000000004"/>
@@ -15028,9 +15028,9 @@
 								<rotationref ref="rotateP90Z"/>
 						</physvol>
 				</volume>
-				<volume name="volTaggerNorthTwo">
+				<volume name="volTaggerSouthTwo">
                         <materialref ref="matAir"/>
-                        <solidref ref="TaggerNorthTwo"/>
+                        <solidref ref="TaggerSouthTwo"/>
                         <physvol copynumber="12">
 								<volumeref ref="volCRTModule117"/>
 								<position name="posCRT_module117" unit="cm" x="10" y="-97.799999999999997" z="-2.4000000000000004"/>
@@ -15059,9 +15059,9 @@
 								<rotationref ref="rotateP90Z"/>
 						</physvol>
 				</volume>
-				<volume name="volTaggerNorthThree">
+				<volume name="volTaggerSouthThree">
                         <materialref ref="matAir"/>
-                        <solidref ref="TaggerNorthThree"/>
+                        <solidref ref="TaggerSouthThree"/>
                         <physvol copynumber="18">
 								<volumeref ref="volCRTModule120"/>
 								<position name="posCRT_module120" unit="cm" x="10" y="-97.799999999999997" z="-2.4000000000000004"/>
@@ -16544,10 +16544,10 @@
 		<position name="posCryostat" unit="mm" x="0" y="30000" z="-474.69999999999999" />
 		<position name="posCRT_TopHigh" unit="mm" x="0" y="9286" z="-474.69999999999999"/>
 		<position name="posCRT_TopLow" unit="mm" x="0" y="6401.2000000000007" z="-474.69999999999999"/>
-		<position name="posCRT_South" unit="mm" x="250" y="-2400" z="4378.3000000000002"/>
-		<position name="posCRT_NorthOne" unit="mm" x="3200" y="-2400" z="-5084.1999999999998"/>
-		<position name="posCRT_NorthTwo" unit="mm" x="250" y="-2400" z="-5084.1999999999998"/>
-		<position name="posCRT_NorthThree" unit="mm" x="-2700" y="-2400" z="-5084.1999999999998"/>
+		<position name="posCRT_North" unit="mm" x="250" y="-2400" z="4378.3000000000002"/>
+		<position name="posCRT_SouthOne" unit="mm" x="3200" y="-2400" z="-5084.1999999999998"/>
+		<position name="posCRT_SouthTwo" unit="mm" x="250" y="-2400" z="-5084.1999999999998"/>
+		<position name="posCRT_SouthThree" unit="mm" x="-2700" y="-2400" z="-5084.1999999999998"/>
 		<position name="posCRT_East" unit="mm" x="3830" y="0" z="-474.69999999999999"/>
 		<position name="postCRT_West" unit="mm" x="-3830" y="0" z="-474.69999999999999"/>
 		<position name="posCRT_Bottom" unit="mm" x="0" y="-3780" z="-474.69999999999999"/>
@@ -16591,21 +16591,21 @@
 			</physvol>
 			-->
 			<physvol>
-					<volumeref ref="volTaggerSouth"/>
-					<positionref ref="posCRT_South"/>
+					<volumeref ref="volTaggerNorth"/>
+					<positionref ref="posCRT_North"/>
                     <rotationref ref="rotateP180Y"/>
 			</physvol>
 			<physvol>
-					<volumeref ref="volTaggerNorthOne"/>
-					<positionref ref="posCRT_NorthOne"/>
+					<volumeref ref="volTaggerSouthOne"/>
+					<positionref ref="posCRT_SouthOne"/>
 			</physvol>
 			<physvol>
-					<volumeref ref="volTaggerNorthTwo"/>
-					<positionref ref="posCRT_NorthTwo"/>
+					<volumeref ref="volTaggerSouthTwo"/>
+					<positionref ref="posCRT_SouthTwo"/>
 			</physvol>
 			<physvol>
-					<volumeref ref="volTaggerNorthThree"/>
-					<positionref ref="posCRT_NorthThree"/>
+					<volumeref ref="volTaggerSouthThree"/>
+					<positionref ref="posCRT_SouthThree"/>
 			</physvol>
 			<!-- Jiaoyang's modification: 
 			<physvol>
@@ -16667,12 +16667,12 @@
 			</physvol>
 			-->
 			<physvol>
-					<volumeref ref="volTaggerSouth"/>
-					<positionref ref="posCRT_South"/>
+					<volumeref ref="volTaggerNorth"/>
+					<positionref ref="posCRT_North"/>
 			</physvol>
 			<physvol>
-					<volumeref ref="volTaggerNorthOne"/>
-					<positionref ref="posCRT_NorthOne"/>
+					<volumeref ref="volTaggerSouthOne"/>
+					<positionref ref="posCRT_SouthOne"/>
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
 			<!-- Jiaoyang's modification: 
