@@ -41,20 +41,23 @@ sbnd_simple_flashmatch:{
     tool_type: sbndPDMapAlg
   }
 
+  # Metrics binning
   DriftDistance: 202.05 # only used for metrics creation
   XBins: 40
   # XBinWidth approx 5.
+  #
   # TODO: Metrics should depend on X,Y,Z.
-  #       the limiting factor to the number of bins
-  #        is having enough nu only stats.
+  #       The limiting factor to the number of bins is having enough
+  #       nu only stats.  The binning has to be done such that no two
+  #       PMTs fall under the same bin. Could potentially use
+  #       irregular binning?
   #
   # DriftDistance: 202.05 # only used for metrics creation
   # XBins: 20
   # HeightDistance: 400.
-  # YBins: 4 or 8
+  # YBins: at least 9
   # LengthDistance: 500.
-  # ZBins: 5 or 10
-  
+  # ZBins: at least 12
 
   # block for Y and Z ophit distributions, used for unbiassing
   YBins: 9
@@ -87,9 +90,9 @@ sbnd_simple_flashmatch:{
   slope_bins:  40     # TODO
   slope_low:   -2.    # TODO
   slope_up:     2.    # TODO
-  petoq_bins:  40     # TODO
-  petoq_low:    0.    # TODO
-  petoq_up:     1.4   # TODO
+  petoq_bins:  40  
+  petoq_low:    0. 
+  petoq_up:     1.4
 }
 
 END_PROLOG #comment to run generate_simple_weighted_template.py
