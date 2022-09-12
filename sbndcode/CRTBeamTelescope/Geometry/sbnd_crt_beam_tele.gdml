@@ -14891,9 +14891,9 @@
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                 </volume>
-                <volume name="volTaggerSouth">
+                <volume name="volTaggerNorth">
                         <materialref ref="matAir"/>
-                        <solidref ref="TaggerSouth"/>
+                        <solidref ref="TaggerNorth"/>
                         <physvol copynumber="0">
 								<volumeref ref="volCRTModule108"/>
 								<position name="posCRT_module108" unit="cm" x="0" y="-10" z="0.80000000000000004"/>
