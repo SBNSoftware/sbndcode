@@ -192,6 +192,9 @@ private:
   std::vector<double>_crt_true_y; ///< crtData, assns truth, IDE y
   std::vector<double>_crt_true_z; ///< crtData, assns truth, IDE z
   std::vector<double>_crt_true_exitp; ///< crtData, assns truth, IDE exit momentum
+  std::vector<double>_crt_true_exitp_x; ///< crtData, assns truth, IDE exit momentum - x component
+  std::vector<double>_crt_true_exitp_y; ///< crtData, assns truth, IDE exit momentum - y component
+  std::vector<double>_crt_true_exitp_z; ///< crtData, assns truth, IDE exit momentum - z component
   std::vector<int> _crt_true_mcp_pdg; ///< crtData, assns truth, MCP PDG
   std::vector<int> _crt_true_mcp_isprimary; ///< crtData, assns truth, MCP is primary?
   std::vector<std::string> _crt_true_mcp_process; ///< crtData, assns truth, MCP process
@@ -355,6 +358,9 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("crt_true_y", "std::vector<double>", &_crt_true_y);
   _tree->Branch("crt_true_z", "std::vector<double>", &_crt_true_z);
   _tree->Branch("crt_true_exitp", "std::vector<double>", &_crt_true_exitp);
+  _tree->Branch("crt_true_exitp_x", "std::vector<double>", &_crt_true_exitp_x);
+  _tree->Branch("crt_true_exitp_y", "std::vector<double>", &_crt_true_exitp_y);
+  _tree->Branch("crt_true_exitp_z", "std::vector<double>", &_crt_true_exitp_z);
   _tree->Branch("crt_true_mcp_pdg", "std::vector<int>", &_crt_true_mcp_pdg);
   _tree->Branch("crt_true_mcp_isprimary", "std::vector<int>", &_crt_true_mcp_isprimary);
   _tree->Branch("crt_true_mcp_process", "std::vector<std::string>", &_crt_true_mcp_process);
@@ -1207,6 +1213,9 @@ void CRTAnalysis::analyze(art::Event const& e)
   _crt_true_y.resize(n_crtdata);
   _crt_true_z.resize(n_crtdata);
   _crt_true_exitp.resize(n_crtdata);
+  _crt_true_exitp_x.resize(n_crtdata);
+  _crt_true_exitp_y.resize(n_crtdata);
+  _crt_true_exitp_z.resize(n_crtdata);
   _crt_true_mcp_pdg.resize(n_crtdata);
   _crt_true_mcp_isprimary.resize(n_crtdata);
   _crt_true_mcp_process.resize(n_crtdata);
@@ -1266,6 +1275,10 @@ void CRTAnalysis::analyze(art::Event const& e)
     _crt_true_exitp[i] = std::sqrt(ide->exitMomentumX*ide->exitMomentumX +
                                     ide->exitMomentumY*ide->exitMomentumY +
                                     ide->exitMomentumZ*ide->exitMomentumZ);
+    _crt_true_exitp_x[i] = ide->exitMomentumX;
+    _crt_true_exitp_y[i] = ide->exitMomentumY;
+    _crt_true_exitp_z[i] = ide->exitMomentumZ;
+
     // Get the MCParticle that caused this CRTData
     auto mcp = trackid_to_mcp[ide->trackID];
     _crt_true_mcp_pdg[i] = mcp.PdgCode();
