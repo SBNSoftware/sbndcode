@@ -4744,8 +4744,8 @@
 
         <!-- TEST CRTs -->
         <define>
-            <constant name="whereNuBeamX" value="-73.78"/>
-            <constant name="whereNuBeamY" value="0.0"/>
+            <constant name="whereNuBeamX_mm" value="-737.8"/>
+            <constant name="whereNuBeamY_mm" value="0.0"/>
         </define>
         
         <solid>
@@ -6350,11 +6350,11 @@
 
             <physvol>
 					<volumeref ref="volTESTTaggerSouth"/>
-                    <position name="posCRT_TEST_South" unit="mm" x="whereNuBeamX+whereMembrane_X" y="whereNuBeamY+whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
+                    <position name="posCRT_TEST_South" unit="mm" x="whereNuBeamX_mm+whereMembrane_X" y="whereNuBeamY_mm+whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTESTTaggerNorth"/>
-    		    <position name="posCRT_TEST_North" unit="mm" x="whereNuBeamX+whereMembrane_X" y="whereNuBeamY+whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/> 
+    		    <position name="posCRT_TEST_North" unit="mm" x="whereNuBeamX_mm+whereMembrane_X" y="whereNuBeamY_mm+whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/> 
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
 
