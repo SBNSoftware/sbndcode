@@ -25,7 +25,8 @@
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
-//#include "sbndaq-artdaq-core/Obj/SBND/CRTmetric.h"
+//#include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
+//#include "sbndaq-artdaq-core/Obj/SBND/CRTmetric.hh"
 #include "sbnobj/SBND/Trigger/CRTmetric.hh"
 
 #include <memory>
@@ -155,13 +156,17 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
 {
 
   // load event information
-  int fRun = evt.run();
-  art::EventNumber_t fEvent = evt.event();
+  fRun = evt.run();
+  fSubrun = evt.subRun();
+  fEvent = evt.event();
 
-  if (fVerbose) std::cout << "Processing: Run " << fRun << ", Event " << fEvent << std::endl;
+  if (fVerbose) std::cout << "Processing: Run " << fRun << ", Subrun " << fSubrun << ", Event " << fEvent << std::endl;
 
   // object to store required trigger information in
   std::unique_ptr<sbndaq::CRTmetric> CRTMetricInfo = std::make_unique<sbndaq::CRTmetric>();
+
+  // object to store trigger metrics in
+  std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
 
   // clear variables at the beginning of the event
   // move this to constructor??
@@ -249,13 +254,10 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
       std::cout << std::endl;
     }
 
-    // add to event
-    evt.put(std::move(CRTMetricInfo));
+
   }//if save crt metrics
 
   if (fpmt_metrics){
-      // object to store trigger metrics in
-    std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
 
     if (foundBeamTrigger && fWvfmsFound) {
 
@@ -331,8 +333,12 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
       pmtSoftwareTriggerMetrics->promptPE = -9999;
       pmtSoftwareTriggerMetrics->prelimPE = -9999;
     }
-    evt.put(std::move(pmtSoftwareTriggerMetrics));
+
   }//if save pmt metrics
+
+  // add to event
+  evt.put(std::move(CRTMetricInfo));
+  evt.put(std::move(pmtSoftwareTriggerMetrics));
 
 }//produce
 
