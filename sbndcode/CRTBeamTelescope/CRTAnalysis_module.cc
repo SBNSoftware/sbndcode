@@ -146,6 +146,9 @@ private:
   std::vector<int> _chit_plane; ///< CRT hit plane
   std::vector<float> _chit_true_t; ///< CRT hit true time (from sim energy dep)
   std::vector<float> _chit_true_e; ///< CRT hit true energy (from sim energy dep)
+  std::vector<float> _chit_true_x; ///< CRT hit true x position (from sim energy dep)
+  std::vector<float> _chit_true_y; ///< CRT hit true y position (from sim energy dep)
+  std::vector<float> _chit_true_z; ///< CRT hit true z position (from sim energy dep)
   std::vector<std::vector<int> > _chit_true_mcp_trackids; ///< CRT hit contributing true trackIDs
   std::vector<std::vector<int> > _chit_true_mcp_pdg; ///< CRT hit contributing PDG codes
   std::vector<std::vector<double> > _chit_true_mcp_e; ///< CRT hit contributing MCP's Energy
@@ -312,6 +315,9 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_plane", "std::vector<int>", &_chit_plane);
   _tree->Branch("chit_true_t", "std::vector<float>", &_chit_true_t);
   _tree->Branch("chit_true_e", "std::vector<float>", &_chit_true_e);
+  _tree->Branch("chit_true_x", "std::vector<float>", &_chit_true_x);
+  _tree->Branch("chit_true_y", "std::vector<float>", &_chit_true_y);
+  _tree->Branch("chit_true_z", "std::vector<float>", &_chit_true_z);
   _tree->Branch("chit_true_mcp_trackids", "std::vector<std::vector<int> >", &_chit_true_mcp_trackids);
   _tree->Branch("chit_true_mcp_pdg", "std::vector<std::vector<int> >", &_chit_true_mcp_pdg);
   _tree->Branch("chit_true_mcp_e", "std::vector<std::vector<double> >", &_chit_true_mcp_e);
@@ -983,6 +989,9 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_plane.resize(n_hits);
   _chit_true_t.resize(n_hits);
   _chit_true_e.resize(n_hits);
+  _chit_true_x.resize(n_hits);
+  _chit_true_y.resize(n_hits);
+  _chit_true_z.resize(n_hits);
   _chit_true_mcp_trackids.resize(n_hits);
   _chit_true_mcp_pdg.resize(n_hits);
   _chit_true_mcp_e.resize(n_hits);
@@ -1023,6 +1032,9 @@ void CRTAnalysis::analyze(art::Event const& e)
     // retrieve the truth info
     _chit_true_t[i] = 0;
     _chit_true_e[i] = 0;
+    _chit_true_x[i] = 0;
+    _chit_true_y[i] = 0;
+    _chit_true_z[i] = 0;
     size_t n_ides = 0;
 
     auto crt_data_v = crt_hit_to_data.at(hit.key());
@@ -1056,6 +1068,9 @@ void CRTAnalysis::analyze(art::Event const& e)
       for (auto ide : ide_v) {
         _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
         _chit_true_e[i] += ide->energyDeposited;
+        _chit_true_x[i] += 0.5 * (ide->entryX + ide->exitX);
+        _chit_true_y[i] += 0.5 * (ide->entryY + ide->exitY);
+        _chit_true_z[i] += 0.5 * (ide->entryZ + ide->exitZ);
 	
 	if(_debug)
 	  {
@@ -1105,6 +1120,9 @@ void CRTAnalysis::analyze(art::Event const& e)
     }
     _chit_true_t[i] /= n_ides;
     _chit_true_e[i] /= n_ides;
+    _chit_true_x[i] /= n_ides;
+    _chit_true_y[i] /= n_ides;
+    _chit_true_z[i] /= n_ides;
 
     if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_time[i] << ", h2 time " << _chit_h2_time[i] << ", hit time " << _chit_time[i] << std::endl;
   }
