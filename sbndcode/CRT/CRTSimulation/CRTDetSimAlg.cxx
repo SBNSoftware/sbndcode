@@ -625,10 +625,12 @@ namespace crt {
         q1 = CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1,
                                      fParams.QRMS() * sqrt(npe1));
 
-        // Apply saturation
+        // Apply saturation and catch rare negative values from random sample
         double saturation = static_cast<double>(fParams.AdcSaturation());
         if (q0 > saturation) q0 = saturation;
+        else if (q0 < 0.) q0 = 0.;
         if (q1 > saturation) q1 = saturation;
+        else if (q1 < 0.) q1 = 0.;
 
         mf::LogInfo("CRTSetSimAlg")
             << "CRT CHARGE RESPONSE: eDep = " << eDep
