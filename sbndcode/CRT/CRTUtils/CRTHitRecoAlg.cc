@@ -89,6 +89,10 @@ CRTStrip CRTHitRecoAlg::CreateCRTStrip(art::Ptr<sbnd::crt::CRTData> sipm1, art::
   //double t2 = fTrigClock.Time(); // [us]
   double t2 = (double)(int)sipm2->T1()/fClockSpeedCRT; // [tick -> us]
 
+  std::cout << sipm1->ADC() << " " << sipm2->ADC() << '\n' 
+	    << sipm1->Channel() << " " << sipm2->Channel() << '\n'
+	    << fCrtGeo.ChannelToStripName(sipm1->Channel()) << " " << fCrtGeo.ChannelToStripName(sipm2->Channel()) << '\n' << std::endl;
+
   // Calculate the number of photoelectrons at each SiPM
   double npe1 = ((double)sipm1->ADC() - fQPed)/fQSlope;
   double npe2 = ((double)sipm2->ADC() - fQPed)/fQSlope;
