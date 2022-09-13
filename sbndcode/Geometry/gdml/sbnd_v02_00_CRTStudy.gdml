@@ -61780,11 +61780,11 @@
 			</physvol>
             <physvol>
 					<volumeref ref="volTESTTaggerSouth"/>
-                    <position name="posCRT_TEST_South" unit="mm" x="0" y="0" z="-5224.6999999999998"/>
+                    <position name="posCRT_TEST_South" unit="mm" x="-737.79999999999995" y="0" z="-5224.6999999999998"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTESTTaggerNorth"/>
-    		    <position name="posCRT_TEST_North" unit="mm" x="0" y="0" z="4275.3000000000002"/> 
+    		    <position name="posCRT_TEST_North" unit="mm" x="-737.79999999999995" y="0" z="4275.3000000000002"/> 
 					<rotationref ref="rotateP180Y"/>
 			</physvol>
 			<physvol>
