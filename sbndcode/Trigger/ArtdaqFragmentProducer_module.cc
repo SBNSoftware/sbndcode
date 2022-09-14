@@ -530,7 +530,7 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
   uint32_t eventCounterVal = fEvent;
   uint32_t boardIDVal = 0;
   uint32_t triggerTimeTagVal = (uint32_t)CLHEP::RandFlat::shoot(&fTriggerTimeEngine, 0, 1e9);
-  uint32_t eventSizeVal = ((wfm_length * (nChannelsFrag+1)) / 2.) + sizeof(sbndaq::CAENV1730EventHeader);
+  uint32_t eventSizeVal = ((wfm_length * (nChannelsFrag+1)) * sizeof(uint16_t) + sizeof(sbndaq::CAENV1730EventHeader)) / sizeof(uint32_t);
 
   // loop over PMT hardware triggers
   for (auto wvfIdx : triggerIndex) {
