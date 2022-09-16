@@ -44,11 +44,9 @@
 #include "art_root_io/TFileService.h"
 #include "TTree.h"
 
-//SBNDCODE
+//sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
-
-//SBNCI
-#include "sbnci/Common/Modules/MCRecoUtils/ShowerUtils.h"
+#include "sbndcode/RecoUtils/ShowerUtils.h"
 
 constexpr int def_int     = -999;
 constexpr float def_float = -999.0f;
