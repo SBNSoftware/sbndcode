@@ -259,7 +259,7 @@ namespace sbnd {
 
       // Match to the true particle
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
       std::string type = "none";
       if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()) type = "NuMuTrack";
       if(std::find(nuParticleIds.begin(), nuParticleIds.end(), trueId) != nuParticleIds.end()) type = "NuTrack";
@@ -339,7 +339,7 @@ namespace sbnd {
 
         // Truth match muon tracks and pfps
         std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
         if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()){ 
           type = "NuMuPfp";
         }
@@ -361,7 +361,7 @@ namespace sbnd {
 
       recob::Track tpcTrack = nuTracks[0];
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
 
       std::vector<art::Ptr<anab::Calorimetry>> calos = findManyCalo.at(tpcTrack.ID());
       if(calos.size()==0) continue;

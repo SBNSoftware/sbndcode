@@ -529,7 +529,7 @@ namespace sbnd {
 
         // Truth match muon tracks and pfps
         std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
         if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()){ 
           pfp_type = "NuMu";
         }
@@ -562,7 +562,7 @@ namespace sbnd {
       // Choose longest track as cosmic muon candidate
       recob::Track tpcTrack = nuTracks[0];
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
 
       std::vector<art::Ptr<anab::Calorimetry>> calos = findManyCalo.at(tpcTrack.ID());
 
@@ -674,7 +674,7 @@ namespace sbnd {
 
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
 
       std::vector<art::Ptr<anab::Calorimetry>> calos = findManyCalo.at(tpcTrack.ID());
 

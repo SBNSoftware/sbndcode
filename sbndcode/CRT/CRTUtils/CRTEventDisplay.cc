@@ -292,7 +292,7 @@ void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
 
       // Skip if it doesn't match the true ID if true ID is used
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(track.ID());
-      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+      int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
       if(fUseTrueID && trueId != fTrueID) continue;
       
       size_t npts = track.NumberTrajectoryPoints();

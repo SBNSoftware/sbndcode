@@ -278,7 +278,7 @@ namespace sbnd {
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated hits
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+      int trackTrueID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
 
       if(particles.find(trackTrueID) == particles.end()) continue;
       // Only consider primary muons

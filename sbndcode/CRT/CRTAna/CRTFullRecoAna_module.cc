@@ -388,7 +388,7 @@ namespace sbnd {
     for (auto const& tpcTrack : (*tpcTrackHandle)){
       // Get the associated true particle
       std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-      int partID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+      int partID = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
       if(truthMatching.find(partID) == truthMatching.end()) continue;
       truthMatching[partID].hasTpcTrack = true;
 

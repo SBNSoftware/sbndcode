@@ -359,7 +359,7 @@ namespace sbnd {
 
         // Truth match muon tracks and pfps
         std::vector<art::Ptr<recob::Hit>> hits = findManyHits.at(tpcTrack.ID());
-        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, false);
+        int trueId = RecoUtils::TrueParticleIDFromTotalRecoHits(clockData, hits);
         int trackType = 3;
         if(std::find(lepParticleIds.begin(), lepParticleIds.end(), trueId) != lepParticleIds.end()){ 
           trackType = 0;
