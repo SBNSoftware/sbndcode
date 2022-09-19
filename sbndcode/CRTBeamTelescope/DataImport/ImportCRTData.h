@@ -1,3 +1,11 @@
+/**
+ * \brief Import CRT data from standalone DAQ into LArSoft
+ *
+ * \details To be written.
+ *
+ * \author Marco Del Tutto
+ */
+
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Core/ProductRegistryHelper.h"
 #include "art/Framework/IO/Sources/SourceHelper.h"

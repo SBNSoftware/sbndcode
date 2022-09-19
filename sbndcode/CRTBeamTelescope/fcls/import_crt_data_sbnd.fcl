@@ -1,5 +1,5 @@
-# Driver fcl file for reading in gsimple files
-# for SBND
+# Reads CRT data events and converts them
+# into LArSoft format
 
 #include "simulationservices_sbnd.fcl"
 
