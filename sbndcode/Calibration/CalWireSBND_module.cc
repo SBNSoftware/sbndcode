@@ -80,6 +80,10 @@ namespace caldata {
     bool          fDoAdvBaselineSub;  ///< use interpolation-based baseline subtraction
     int           fBaseSampleBins;    ///< bin grouping size in "interpolate"  method
     float         fBaseVarCut;        ///< baseline variance cut used in "interpolate" method
+    //FFT service options
+    int fFFTSize;
+    std::string fFFTOption;
+    int fFFTFitBins;
    
     std::string  fDigitModuleLabel;   ///< module that made digits
                                                        
@@ -125,6 +129,9 @@ namespace caldata {
     fDoAdvBaselineSub = p.get< bool >       ("DoAdvBaselineSub");
     fBaseSampleBins   = p.get< int >        ("BaseSampleBins");
     fBaseVarCut       = p.get< int >        ("BaseVarCut");
+    fFFTSize          = p.get< int >        ("FFTSize", 0);
+    fFFTOption        = p.get< std::string >("FFTOption", "");
+    fFFTFitBins       = p.get< int >        ("FFTFitBins", 20);
     
     fSpillName="";
     
@@ -154,6 +161,10 @@ namespace caldata {
 
     // get the FFT service to have access to the FFT size
     art::ServiceHandle<util::LArFFT> fFFT;
+
+    // reset FFT service for each event
+    fFFT->ReinitializeFFT(fFFTSize,fFFTOption,fFFTFitBins);
+
     int transformSize = fFFT->FFTSize();
 
     // Get signal shaping service.
