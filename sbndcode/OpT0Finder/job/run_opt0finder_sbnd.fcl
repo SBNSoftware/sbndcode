@@ -6,7 +6,7 @@
 #include "opt0finder_sbnd.fcl"
 #include "opt0finderana_sbnd.fcl"
 
-process_name: FlashFinder
+process_name: OpT0Finder
 
 services:
 {
