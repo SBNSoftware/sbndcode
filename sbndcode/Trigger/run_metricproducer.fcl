@@ -1,0 +1,51 @@
+#include "resourcemonitorservices_sbnd.fcl"
+
+#include "metricproducer.fcl"
+
+process_name: SoftwareTriggerMetricProducer
+
+services:
+{
+    TFileService: { fileName: "softmetric_hist.root" }
+    @table::sbnd_resourcemonitorservices
+    RandomNumberGenerator: {} #ART native random number generator
+}
+
+#source is now a root file
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1        # Number of events to create
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "%ifb_%p-%tc.root" #default file name, can override from command line with -o or --output
+   fastCloning: true
+ }
+}
+
+physics:
+{
+
+ producers:
+ {
+  SoftwareTriggerMetric: @local::MetricProducer
+ }
+
+ mode0: [ SoftwareTriggerMetric ]
+
+ stream1: [ out1 ]
+
+ trigger_paths: [ mode0 ]
+
+ end_paths: [ stream1]
+
+}
+
+physics.producers.SoftwareTriggerMetric.BeamWindowStart: 1650000
+physics.producers.SoftwareTriggerMetric.BeamWindowEnd: 1750000
+#physics.producers.SoftwareTriggerMetric.crt_metrics: false
