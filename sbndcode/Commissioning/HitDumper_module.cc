@@ -50,7 +50,7 @@
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
 #include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
-
+#include "sbnobj/SBND/Trigger/CRTmetric.hh"
 
 // Truth includes
 //#include "larsim/MCCheater/BackTrackerService.h"
@@ -141,6 +141,8 @@ private:
   void ResetPmtTriggerVars(int n);
   /// Rests pmt software trigger variables
   void ResetPmtSoftTriggerVars();
+  /// Resets crt software trigger variables
+  void ResetCrtSoftTriggerVars();
   /// Resets crossing muon tracks tree variables
   void ResetMuonTracksVars(int n);
   /// Resets crossing muon hit tree variables 
@@ -252,6 +254,9 @@ private:
   int    _pmtSoftTrigger_nAboveThreshold;    /// number of individual PMTs above ADC threshold (fcl) during the beam spill
   // std::vector<sbnd::trigger::pmtInfo> _pmtSoftTrigger_pmtInfoVec; /// vector of PMT information 
 
+  // CRT software trigger variables
+  int    _crtSoftTrigger_hitsperplane[7];       ///< Number of (very low level) CRT hits per plane
+
   // Muon track variables 
   int _nmuontrks;                            ///< number of muon tracks
   std::vector<double> _muontrk_t0;           ///< t0 (time of interaction)
@@ -339,6 +344,7 @@ private:
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fpmtTriggerModuleLabel; ///< Label for pmtTrigger dataproduct (to be set vis fcl)
   std::string fpmtSoftTriggerModuleLabel; ///< Label for pmt software trigger data product (to be set via fcl)
+  std::string fcrtSoftTriggerModuleLabel; ///< Label for crt software trigger data product (to be set via fcl)
   std::string fMuonTrackModuleLabel;  ///< Label for MuonTrack dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
@@ -356,6 +362,7 @@ private:
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
   bool freadpmtTrigger;    ///< Add pmt hardware trigger info to output (to be set via fcl)
   bool freadpmtSoftTrigger;///< Add pmt software trigger info to output (to be set via fcl)
+  bool freadcrtSoftTrigger;///< Add crt software trigger info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
@@ -408,6 +415,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
   fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmttriggerproducer");
   fpmtSoftTriggerModuleLabel = p.get<std::string>("pmtSoftTriggerModuleLabel", "pmtSoftwareTrigger");
+  fcrtSoftTriggerModuleLabel = p.get<std::string>("crtSoftTriggerModuleLabel", "MetricProducer");
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
 
@@ -418,6 +426,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadOpHits        = p.get<bool>("readOpHits",true);
   freadpmtTrigger    = p.get<bool>("readpmtTrigger",true);
   freadpmtSoftTrigger= p.get<bool>("readpmtSoftTrigger",true);
+  freadcrtSoftTrigger= p.get<bool>("readcrtSoftTrigger",false);
   freadMuonTracks    = p.get<bool>("readMuonTracks",true);
   freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
@@ -894,6 +903,24 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   //
+  // CRT Software Trigger
+  //
+  if (freadcrtSoftTrigger){
+    art::Handle<sbndaq::CRTmetric> crtSoftTriggerHandle;
+    if (evt.getByLabel(fcrtSoftTriggerModuleLabel, crtSoftTriggerHandle)){
+      const sbndaq::CRTmetric &crtSoftTriggerMetrics = (*crtSoftTriggerHandle);
+      ResetCrtSoftTriggerVars();
+      for (int i=0; i<7; i++){
+	_crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics.hitsperplane[i];
+      }
+    }
+    else{
+      std::cout << "Failed to get sbndaq::crtMetric data product" << std::endl;
+    }
+
+  }
+
+  //
   // Muon tracks 
   //
   _nmuontrks = 0; 
@@ -1269,6 +1296,10 @@ void Hitdumper::analyze(const art::Event& evt)
     // fTree->Branch("pmtSoftTrigger_", &_pmtSoftTigger_)
   }
 
+  if (freadcrtSoftTrigger){
+    fTree->Branch("crtSoftTrigger_hitsperplane", &_crtSoftTrigger_hitsperplane,"crtSoftTrigger_hitsperplane[7]/I");
+  }
+
   if (freadMuonTracks) {
     fTree->Branch("nmuontrks", &_nmuontrks, "nmuontrks/I");
     fTree->Branch("muontrk_t0", &_muontrk_t0);
@@ -1454,6 +1485,12 @@ void Hitdumper::ResetPmtSoftTriggerVars(){
   _pmtSoftTrigger_promptPE = 0;
   _pmtSoftTrigger_prelimPE = 0;
   _pmtSoftTrigger_nAboveThreshold = 0;
+}
+
+void Hitdumper::ResetCrtSoftTriggerVars(){
+  for (int i=0; i<7; i++){
+    _crtSoftTrigger_hitsperplane[i] = 0;
+  }
 }
 
 void Hitdumper::ResetMuonTracksVars(int n){

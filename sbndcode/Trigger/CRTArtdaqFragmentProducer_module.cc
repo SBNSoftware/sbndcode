@@ -97,28 +97,32 @@ private:
   // fcl file parameters
   art::InputTag fSimModuleLabel;      ///< name of detsim producer
   art::InputTag fCRTSimLabel;         ///< name of CRT producer
-  std::string fFEBDataLabel;          ///< name of FEBData producer
+  std::string   fFEBDataLabel;        ///< name of FEBData producer
   bool          fVerbose;             ///< print information about what's going on
   double        fClockSpeedCRT;
-
-  //limits for array sizes
-  enum LIMITS{
-    max_hits_in_fragment = 50,
-    num_module = 255,
-    num_channels = 32
-  };
-
-  //arrays to store FEBinfo by module (want one fragment per module per event)
-  std::string taggers[num_module];
-  uint16_t feb_hits_in_fragments[num_module];
-  uint16_t ADCs[num_module][max_hits_in_fragment][num_channels];
-  uint32_t T0s[num_module][max_hits_in_fragment];
-  uint32_t T1s[num_module][max_hits_in_fragment];
-
+  size_t           fFirstFEBMac5;        ///< lowest mac5 address for CRT FEBs
 
   // Other variables shared between different methods.
   geo::GeometryCore const* fGeometryService;
   CRTGeoAlg fCrtGeo;
+
+  //limits for array sizes
+  enum LIMITS{
+    max_hits_in_fragment = 50,
+    num_febs = 255,
+    num_channels = 32
+  };
+
+  //arrays to store FEBinfo by module (want one fragment per module per event)
+  std::string taggers[num_febs];
+  uint16_t feb_hits_in_fragments[num_febs];
+  uint16_t ADCs[num_febs][max_hits_in_fragment][num_channels];
+  uint32_t T0s[num_febs][max_hits_in_fragment];
+  uint32_t T1s[num_febs][max_hits_in_fragment];
+  bool empty_fragment[num_febs];
+
+
+
 
 }; // class CRTArtdaqFragmentProducer
 
@@ -129,7 +133,8 @@ sbnd::trigger::CRTArtdaqFragmentProducer::CRTArtdaqFragmentProducer(fhicl::Param
   fCRTSimLabel(p.get<std::string>("CRTSimLabel", "crt")),
   fFEBDataLabel(p.get<std::string>("FEBDataLabel", "crtsim")),
   fVerbose(p.get<bool>("Verbose", false)),
-  fClockSpeedCRT(p.get<double>("ClockSpeedCRT"))
+  fClockSpeedCRT(p.get<double>("ClockSpeedCRT")),
+  fFirstFEBMac5(p.get<size_t>("FirstFEBMac5", 0))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
@@ -155,6 +160,10 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
                <<"============================================"<<std::endl;
     }
 
+
+    for(int i=0; i<num_febs; i++){empty_fragment[i]=true;}
+
+    int num_module = fCrtGeo.NumModules();
 
     //----------------------------------------------------------------------------------------------------------
     //                                          GETTING PRODUCTS
@@ -200,9 +209,16 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
 
     uint64_t temp_last_time = 0;
 
-    //random number generator to bu used to simulate pedestal
+    //random number generator to be used to simulate pedestal
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(175.0,23.0);
+
+    //list all fragment ids - uncomment if needed for daq running
+  /*if (fVerbose){std::cout<<"Num Modules: "<<fCrtGeo.NumModules()<<std::endl;}
+    for (size_t mod_i = 0; mod_i<fCrtGeo.NumModules(); mod_i++){
+      int plane = sbnd::CRTCommonUtils::GetPlaneIndex(fCrtGeo.GetTaggerName(fCrtGeo.ChannelToStripName(mod_i * 32)));
+      if (fVerbose){std::cout << std::hex << (32768 + 12288 + (plane * 256) + (int)mod_i) << std::endl;}
+    } */
 
     //loop through FEBData product and sort by module/mac5
     for (size_t feb_i = 0; feb_i < feb_data_v.size(); feb_i++) {
@@ -210,6 +226,8 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
         auto const feb_data = feb_data_v[feb_i];
 
         if(fVerbose){std::cout << "FEB " << feb_i << " with mac " << feb_data->Mac5() << std::endl;}
+
+        empty_fragment[feb_data->Mac5()] = false;
 
         int channel = feb_data->Mac5() * 32;
         std::string stripName = fCrtGeo.ChannelToStripName(channel);
@@ -236,8 +254,24 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
     }//FEBData loop
 
     //make one fragment for every module
-    for (size_t feb_i = 0; feb_i < num_module; feb_i++){
+    for (size_t feb_i = fFirstFEBMac5; feb_i < num_module+fFirstFEBMac5; feb_i++){
         //quantities in fragment
+        if (empty_fragment[feb_i]){
+          //if no hits for a module, make a simulated "T1 reset" event to avoid missing fragments
+          feb_hits_in_fragments[feb_i] = 1;
+          int channel = feb_i * 32;
+          std::string stripName = fCrtGeo.ChannelToStripName(channel);
+          std::string tagger = fCrtGeo.GetTaggerName(stripName);
+          taggers[feb_i] = tagger;
+
+          T0s[feb_i][0] = 0;
+          T1s[feb_i][0] = 0;
+          for (int i_adc = 0; i_adc<32; i_adc++){
+            uint16_t adc = distribution(generator);
+            ADCs[feb_i][0][i_adc] = adc;
+          }
+        }
+
         if (feb_hits_in_fragments[feb_i]==0) continue;
 
       //metadata
@@ -276,7 +310,7 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
           uint32_t ts0 = T0s[feb_i][i_frag];
           uint32_t ts1 = T1s[feb_i][i_frag];
 
-          if (ts0==0){flags=7;}else if (ts1==0){flags=11;}
+          if (ts1==0){flags=11;}else if (ts0==0){flags=7;}
 
           uint64_t  feb_hit_number = feb_hits_in_fragments[feb_i]; //hit counter for individual FEB, including hits lost in FEB or fragment generator
           timestamp = (uint64_t)ts0/fClockSpeedCRT; //absolute timestamp

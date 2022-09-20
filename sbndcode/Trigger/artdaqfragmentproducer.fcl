@@ -1,0 +1,28 @@
+#include "pmtArtdaqFragmentProducer.fcl"
+#include "CRTArtdaqFragmentProducer.fcl"
+
+BEGIN_PROLOG
+
+ArtdaqFragmentProducer:
+{
+  module_type: "ArtdaqFragmentProducer"
+  InputModuleNameWvfm: @local::pmtArtdaqFragmentProducer.InputModuleNameWvfm
+  InputModuleNameTrigger: @local::pmtArtdaqFragmentProducer.InputModuleNameTrigger
+  Baseline: @local::pmtArtdaqFragmentProducer.Baseline
+  MultiplicityThreshold: @local::pmtArtdaqFragmentProducer.MultiplicityThreshold
+  BeamWindowLength: @local::pmtArtdaqFragmentProducer.BeamWindowLength
+  nChannelsFrag: @local::pmtArtdaqFragmentProducer.nChannelsFrag
+  WfmLength: @local::pmtArtdaqFragmentProducer.WfmLength
+  
+  SimModuleLabel: @local::CRTArtdaqFragmentProducer.SimModuleLabel
+  CRTSimLabel: @local::CRTArtdaqFragmentProducer.CRTSimLabel
+  FEBDataLabel: @local::CRTArtdaqFragmentProducer.FEBDataLabel
+  ClockSpeedCRT: @local::CRTArtdaqFragmentProducer.ClockSpeedCRT  
+  FirstFEBMac5: @local::CRTArtdaqFragmentProducer.FirstFEBMac5  
+
+  Verbose: true
+}
+
+END_PROLOG
+
+
