@@ -32,8 +32,10 @@
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/AnalysisBase/T0.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 
 #include "larsim/PhotonPropagation/SemiAnalyticalModel.h"
+#include "larsim/Simulation/LArG4Parameters.h"
 
 #include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 
@@ -81,7 +83,7 @@ private:
   bool ConstructLightClusters(art::Event& e, unsigned int tpc);
 
   /// Returns the number of photons given charge and PFParticle
-  float GetNPhotons(const float charge, const art::Ptr<recob::PFParticle> &pfp);
+  float GetNPhotons(const float charge, const art::Ptr<recob::PFParticle> &pfp, art::ServiceHandle<sim::LArG4Parameters const> g4param);
 
   /// Convert from a list of PDS names to a list of op channels
   std::vector<int> PDNamesToList(std::vector<std::string>);
@@ -106,12 +108,17 @@ private:
   float _charge_to_n_photons_track; ///< The conversion factor betweeen hit integral and photons (to be set)
   float _charge_to_n_photons_shower; ///< The conversion factor betweeen hit integral and photons (to be set)
 
+  bool _calc_correlated;
+  art::ServiceHandle<sim::LArG4Parameters const> g4param;
+
   std::vector<std::string> _photo_detectors; ///< The photodetector to use (to be set)
   std::vector<int> _opch_to_use; ///< List of opch to use (will be infered from _photo_detectors)
   std::vector<int> _uncoated_pmts; ///< List of uncoated opch to use (will be infered from _opch_to_use)
 
   opdet::sbndPDMapAlg _pds_map; ///< map for photon detector types
   // std::unique_ptr<opdet::sbndPDMapAlg> _pds_map;
+
+  bool _select_nus;
 
   std::vector<flashmatch::QCluster_t> _light_cluster_v; ///< Vector that contains all the TPC objects
 
@@ -121,7 +128,7 @@ private:
   TTree* _tree1;
   int _run, _subrun, _event;
   int _tpc;
-  int _matchid, _flashid, _tpcid;
+  int _matchid, _flashid, _tpcid, _sliceid, _pfpid; 
   double _t0, _score;
   double _tpc_xmin, _qll_xmin;
   double _hypo_pe, _flash_pe;
@@ -161,6 +168,9 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
   _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
 
+  _calc_correlated = p.get<bool>("CalcCorrelated",false);
+  _select_nus = p.get<bool>("SelectNeutrino", true);
+
   if (_tpc_v.size() != _opflash_producer_v.size()) {
     throw cet::exception("SBNDOpT0Finder")
       << "TPC vector and OpFlash producer vector don't have the same size, check your fcl params.";
@@ -197,6 +207,8 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tree2->Branch("tpc",             &_tpc,                             "tpc/I");
   _tree2->Branch("matchid",         &_matchid,                         "matchid/I");
   _tree2->Branch("tpcid",           &_tpcid,                           "tpcid/I");
+  _tree2->Branch("sliceid",         &_sliceid,                         "sliceid/I");
+  _tree2->Branch("pfpid",           &_pfpid,                           "pfpid/I");
   _tree2->Branch("flashid",         &_flashid,                         "flashid/I");
   _tree2->Branch("tpc_xmin",        &_tpc_xmin,                        "tpc_xmin/D");
   _tree2->Branch("qll_xmin",        &_qll_xmin,                        "qll_xmin/D");
@@ -219,6 +231,10 @@ void SBNDOpT0Finder::produce(art::Event& e)
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  = e.id().event();
+
+  std::cout << "run: " << _run <<  std::endl;
+  std::cout << "subrun: " << _subrun  << std::endl;
+  std::cout << "event: " <<  _event << std::endl;
 
   // Loop over the specified TPCs
   for (auto tpc : _tpc_v) {
@@ -268,6 +284,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   art::fill_ptr_vector(flash_v, flash_h);
 
   ::art::ServiceHandle<geo::Geometry> geo;
+  art::ServiceHandle<sim::LArG4Parameters const> g4param;
 
   int n_flashes = 0;
   std::vector<::flashmatch::Flash_t> all_flashes;
@@ -383,7 +400,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     for(auto const& v : _hypo_spec) _hypo_pe += v;
     for(auto const& v : _flash_spec) _flash_pe += v;
 
-    _tree2->Fill();
 
     // Construct the anab::T0 dataproduc to put in the Event
     auto t0 = anab::T0(_t0,        // "Time": The recontructed flash time, or t0
@@ -395,6 +411,42 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     t0_v->push_back(t0);
     util::CreateAssn(*this, e, *t0_v, _clusterid_to_slice[_tpcid], *slice_t0_assn_v);
     util::CreateAssn(*this, e, *t0_v, _flashid_to_opflash[_flashid], *flash_t0_assn_v);
+
+    art::Ptr<recob::Slice> ptr_slice = _clusterid_to_slice[_tpcid];
+    int slice_id = ptr_slice->ID();
+    _sliceid = slice_id;
+    std::cout << "slice_id: " << slice_id << std::endl;
+    // std::cout << "_sliceid: " << _sliceid << std::endl;
+
+    ::art::Handle<std::vector<recob::Slice>> slice_h;
+    e.getByLabel(_slice_producer, slice_h);
+    if(!slice_h.isValid() || slice_h->empty()) {
+      mf::LogWarning("SBNDOpT0Finder") << "Don't have good Slices." << std::endl;
+          }
+    // Construct the vector of Slices
+    std::vector<art::Ptr<recob::Slice>> slice_v;
+    art::fill_ptr_vector(slice_v, slice_h);
+    art::FindManyP<recob::PFParticle> slice_to_pfps (slice_h, e, _slice_producer);
+    for (size_t n_slice = 0; n_slice < slice_h->size(); n_slice++) {
+      auto slice = slice_v[n_slice];
+      if (slice->ID() != _sliceid) continue;
+
+      std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfps.at(n_slice);
+      for (size_t n_pfp = 0; n_pfp < pfp_v.size(); n_pfp++) {
+        auto pfp = pfp_v[n_pfp];
+        if (!pfp->IsPrimary()) continue;
+        std::cout << "pfp id: " << pfp->Self() << std::endl;
+        _pfpid = pfp->Self();
+      }
+    }
+    double new_score = t0.TriggerConfidence(); 
+    // std::cout << "new_score: " << new_score << std::endl;
+    _score = new_score; 
+    // std::cout << "score: " << _score << std::endl;
+    // std::cout << "alt score:" << t0.TriggerConfidence() << std::endl;
+    // _score    = t0.TriggerConfidence();
+
+    _tree2->Fill();
   }
 
 }
@@ -453,6 +505,18 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
     // Get the associated PFParticles
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfps.at(n_slice);
 
+    if (_select_nus){
+      bool nu_pfp = false;
+      for (size_t n_pfp = 0; n_pfp < pfp_v.size(); n_pfp++) {
+        auto pfp = pfp_v[n_pfp];
+        unsigned pfpPDGC = std::abs(pfp->PdgCode());
+        if ((pfpPDGC == 12) || (pfpPDGC == 14) || (pfpPDGC == 16))
+          nu_pfp = true;
+      }
+      if (nu_pfp == false)
+        break;
+    }
+
     for (size_t n_pfp = 0; n_pfp < pfp_v.size(); n_pfp++) {
 
       auto pfp = pfp_v[n_pfp];
@@ -488,7 +552,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           light_cluster.emplace_back(position[0],
                                      position[1],
                                      position[2],
-                                     GetNPhotons(charge, pfp));
+                                     GetNPhotons(charge, pfp, g4param));
 
           // Also save the quantites for the output tree
           _dep_slice.push_back(_light_cluster_v.size());
@@ -496,7 +560,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           _dep_y.push_back(position[1]);
           _dep_z.push_back(position[2]);
           _dep_charge.push_back(charge);
-          _dep_n_photons.push_back(GetNPhotons(charge, pfp));
+          _dep_n_photons.push_back(GetNPhotons(charge, pfp, g4param));
         }
       } // End loop over Spacepoints
     } // End loop over PFParticle
@@ -518,9 +582,41 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
 }
 
 float SBNDOpT0Finder::GetNPhotons(const float charge,
-                                  const art::Ptr<recob::PFParticle> &pfp) {
-  return charge * (::lar_pandora::LArPandoraHelper::IsTrack(pfp) ? _charge_to_n_photons_track
-                                                                 : _charge_to_n_photons_shower);
+                                  const art::Ptr<recob::PFParticle> &pfp,
+                                  art::ServiceHandle<sim::LArG4Parameters const> g4param) {
+  
+  float N_ph; // number of photons 
+
+  // TODO don't hardcode lar_density, scint prescale, efield, ADCToElectron? 
+  // charge-light anti-correlation variables 
+  double lar_density = 1.3886; // g/cm^3 
+  double EField = 0.5; // kV/cm, assuming constant EField 
+  // double RecombA = g4param->RecombA(); // unitless 
+  // double Recombk = g4param->Recombk() / lar_density; // kV/MeV
+  double ModBoxA = g4param->ModBoxA(); // unitless 
+  double ModBoxB = g4param->ModBoxB() / lar_density / EField; // units of cm/MeV
+  double W_ion = 1. / g4param->GeVToElectrons() * 1e3; // MeV, ionization work function 
+  double W_ph  = 19.5*1e-6; // MeV, ion+excitation work function 
+  double ds = 0.3; // cm, assuming step size equal to wire separation
+  double ADCToElectron = 1/(6.29778e-3*2); // e- /ADC*time_ticks, from detectorproperties_sbnd.fcl
+
+  // charge-light anti-correlation calculation 
+  double N_e = charge * ADCToElectron; // number of electrons collected per wire 
+  // double e_dep = 1/((RecombA/(W_ion*N_e))-(Recombk/(ds*EField))); // deposited energy per wire, MeV (Birks model)
+  double e_dep = (ds/ModBoxB)*(exp(ModBoxB*W_ion*N_e/ds)-ModBoxA); // (Box Model)
+  // std::cout << "ModBoxA: " << ModBoxA << ", ModBoxB: " << g4param->ModBoxB() << ", W_ion (MeV): " << W_ion << std::endl;
+
+  double N_q = e_dep/W_ph; // total number of quanta, ions + excitons
+  std::cout << "N_e: " << N_e << ", e_dep: " << e_dep << ", N_q: " << N_q << std::endl;
+
+  double N_ph_on = (N_q - N_e); 
+  float  N_ph_off = charge * (::lar_pandora::LArPandoraHelper::IsTrack(pfp) ? _charge_to_n_photons_track : _charge_to_n_photons_shower);
+
+  std::cout << "CalcCorrelated off: " << N_ph_off << ", CalcCorrelated on: " << N_ph_on << ", off/on: " << N_ph_off/N_ph_on <<  ", track?: " << ::lar_pandora::LArPandoraHelper::IsTrack(pfp) << std::endl;
+  if (_calc_correlated) N_ph = (float)N_ph_on;
+  else N_ph = N_ph_off;
+
+  return N_ph;
 }
 
 std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names) {
@@ -551,6 +647,5 @@ std::vector<int> SBNDOpT0Finder::GetUncoatedPTMList(std::vector<int> ch_to_use) 
 
 
 DEFINE_ART_MODULE(SBNDOpT0Finder)
-
 
 
