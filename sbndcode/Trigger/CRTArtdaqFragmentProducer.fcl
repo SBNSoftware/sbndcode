@@ -9,6 +9,7 @@ CRTArtdaqFragmentProducer:
   FEBDataLabel: "crtsim"
   ClockSpeedCRT: 1 #set to @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT in run fcl
   Verbose: true
+  FirstFEBMac5: 0
 }
 
 END_PROLOG

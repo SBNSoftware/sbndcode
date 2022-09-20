@@ -107,11 +107,14 @@ physics:
 }
 
 
+physics.analyzers.hitdumper.pmtSoftTriggerModuleLabel: "SoftwareTriggerMetric"
+physics.analyzers.hitdumper.crtSoftTriggerModuleLabel: "SoftwareTriggerMetric"
 physics.analyzers.hitdumper.HitsModuleLabel: "fasthit"
 physics.analyzers.hitdumper.keepCRThits: false
 physics.analyzers.hitdumper.keepCRTstrips: true
 physics.analyzers.hitdumper.makeCRTtracks: true
 physics.analyzers.hitdumper.readCRTtracks: false
+physics.analyzers.hitdumper.readcrtSoftTrigger: true
 
 # set thresholds
 physics.producers.fasthit.MinSigInd: 15.0
