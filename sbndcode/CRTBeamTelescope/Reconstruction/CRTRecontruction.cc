@@ -5,6 +5,7 @@
 
 #include "sbndcode/CRTBeamTelescope/Reconstruction/LibCRTImport/CRTEvent.h"
 #include "cetlib/search_path.h"
+// #include "cetlib_except/exception.h"
 
 namespace sbnd{
 namespace crt{
@@ -23,7 +24,7 @@ namespace crt{
     std::string fname_calibs;
     sp.find_file("SBND_ADCCalib-V4.txt", fname_calibs);
 
-    _calibs = CRTCalibs(fname_cabledelay, fname_positions, fname_calibs);
+    _calibs = CRTCalibs(fname_cabledelay.c_str(), fname_positions.c_str(), fname_calibs.c_str());
   }
 
 

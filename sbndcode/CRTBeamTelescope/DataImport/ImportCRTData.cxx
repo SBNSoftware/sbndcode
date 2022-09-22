@@ -1,25 +1,21 @@
 // See header file for documentation
 
-//LArSoft
-#include "larcoreobj/SummaryData/POTSummary.h"
-
-//ART, ...
+// ART
 #include "art/Framework/IO/Sources/put_product_in_principal.h"
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+// LArSoft
+#include "larcoreobj/SummaryData/POTSummary.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
-
-#include "dk2nu/tree/dk2nu.h"
-#include "dk2nu/tree/NuChoice.h"
-
-#include "sbnobj/SBND/CRT/FEBData.hh"
-
 #include "lardata/Utilities/AssociationUtil.h"
 
+// SBN
+#include "sbnobj/SBND/CRT/FEBData.hh"
 #include "ImportCRTData.h"
+
 
 namespace crt {
 
@@ -29,29 +25,14 @@ namespace crt {
     :
     fSourceHelper(pm),
     fSubRunID(),
-    fEventCounter(0),
-    fInputType(ps.get<std::string>("inputType")),
-    fSelfIncrementRuns(ps.get<bool>("SelfIncrementRun")),
-    fIncrement(1),
-    fTLfebdata{helper.reconstitutes<std::vector<sbnd::crt::FEBData>, art::InEvent>("data")}
-    // fTLmctruth{helper.reconstitutes<std::vector<simb::MCTruth>, art::InEvent>("flux")},
-    // fTLmcflux{helper.reconstitutes<std::vector<simb::MCFlux>, art::InEvent>("flux")},
-    // fTLdk2nu{fInputType=="dk2nu" ? helper.reconstitutes<std::vector<bsim::Dk2Nu>, art::InEvent>("flux"):fTLmctruth},
-    // fTLnuchoice{fInputType=="dk2nu" ? helper.reconstitutes<std::vector<bsim::NuChoice>, art::InEvent>("flux"):fTLmctruth}
+    fTLfebdata{helper.reconstitutes<std::vector<sbnd::crt::FEBData>, art::InEvent>("crtdata")}
   {
 
     fPOT = fCurrentPOT = 0;
+    helper.reconstitutes<sumdata::POTSummary, art::InSubRun >("crtdata");
 
-    // helper.reconstitutes<sumdata::POTSummary, art::InSubRun >("flux");
-
-    // if (fInputType=="dk2nu") {
-    //   helper.reconstitutes<art::Assns<simb::MCTruth, bsim::Dk2Nu>, art::InEvent>("flux");
-    //   helper.reconstitutes<art::Assns<simb::MCTruth, bsim::NuChoice>, art::InEvent>("flux");
-    //   helper.reconstitutes<art::Assns<simb::MCTruth, simb::MCFlux>, art::InEvent>("flux");
-
-    //   fConfigPS=ps.get<fhicl::ParameterSet>(ps.get<std::string>("dk2nuConfig"));
-    // }
-
+    fEventCounter = 0;
+    fMaxEvents = ps.get<int>("MaxEvents", -1);
   }
 
   void ImportCRTData::closeCurrentFile()
@@ -61,14 +42,11 @@ namespace crt {
     fEventCounter=0;
     fCRTInputFile->Close();
     delete fCRTInputFile;
-    fSkipEvents=0; //if crossing file boundary don't skip events in next file
-    fEntry=0;
   }
 
   void ImportCRTData::readFile(std::string const &name,
                                art::FileBlock* &fb)
   {
-    std::cout << "readFile " << name << std::endl;
     // Fill and return a new Fileblock.
     fb = new art::FileBlock(art::FileFormatVersion(1, "ImportCRTData"), name);
 
@@ -89,51 +67,16 @@ namespace crt {
     fTree->SetBranchAddress("hit2_adc", &fHit2Adc);
 
 
-
     TTree * aux = (TTree*)(fCRTInputFile->Get("aux"));
-
     double pot = 0.;
     aux->SetBranchAddress("pot", &pot);
     aux->GetEntry(0);
 
-    // fTree = (TTree*)(fCRTInputFile->Get("tree"));
-
-    // fTree->SetBranchAddress("mac5", &fMac5);
-    // fTree->SetBranchAddress("flags", &flags);
-    // fTree->SetBranchAddress("lostcpu", &lostcpu);
-    // fTree->SetBranchAddress("lostfpga", &lostfpga);
-    // fTree->SetBranchAddress("ts0", &ts0);
-    // fTree->SetBranchAddress("ts1", &ts1);
-    // fTree->SetBranchAddress("adc", &adc);
-    // fTree->SetBranchAddress("s", &s);
-    // fTree->SetBranchAddress("ms", &ms);
-    // fTree->SetBranchAddress("cable", &cable);
-    // fTree->GetEntry(0);
-    // std::cout << "--------> mac5 " << fMac5 << std::endl;
-
-
-    // if (fInputType=="gsimple") {
-      // fFluxDriver=new GSimpleInterface();
-      // ((GSimpleInterface*)fFluxDriver)->SetRootFile(fCRTInputFile);
-    // } else if (fInputType=="dk2nu") {
-    //   fFluxDriver=new DK2NuInterface();
-    //   ((DK2NuInterface*)fFluxDriver)->SetRootFile(fCRTInputFile);
-    //   ((DK2NuInterface*)fFluxDriver)->Init(fConfigPS);
-    // } else if (fInputType=="boone") {
-    //   fFluxDriver=new BooNEInterface();
-    //   ((BooNEInterface*)fFluxDriver)->SetRootFile(fCRTInputFile);
-    // } else {
-    //   throw cet::exception(__PRETTY_FUNCTION__) << "Ntuple format "<<fInputType<<" not supported"<<std::endl;
-    // }
     std::cout << "Reading in file " << name << std::endl;
     std::cout << "POT = " << pot << std::endl;
     fPOT+=pot;
     fCurrentPOT = pot;
 
-    // if (fSelfIncrementRuns) {
-    //   fIncrement ++;
-    //   fFluxDriver->SetRun(fFluxDriver->GetRun() + fIncrement);
-    // }
   }
 
 
@@ -143,8 +86,9 @@ namespace crt {
                                art::SubRunPrincipal* &outSR,
                                art::EventPrincipal* &outE)
   {
-    if (fMaxEvents > 0 && fEventCounter == unsigned(fMaxEvents))
+    if (fMaxEvents > 0 && fEventCounter == unsigned(fMaxEvents)) {
       return false;
+    }
 
     // Create empty result, then fill it from current file:
     std::unique_ptr< std::vector<sbnd::crt::FEBData>  > febdata_v(new std::vector<sbnd::crt::FEBData>);
@@ -154,21 +98,21 @@ namespace crt {
 
     std::array<uint16_t, 32> adc;
 
-    for (size_t j = 0; j < fHit1Feb.size(); j++)
+    for (size_t j = 0; j < fHit1Feb->size(); j++)
     {
-      for (int s = 0; s < 32; s++) { adc[s] = fHit1Adc[j][s]; }
-      sbnd::crt::FEBData feb_data_1(fHit1Feb[j],
-                                    fHit1T0[j],
-                                    fHit1T1[j],
+      for (int s = 0; s < 32; s++) { adc[s] = fHit1Adc->at(j)[s]; }
+      sbnd::crt::FEBData feb_data_1(fHit1Feb->at(j),
+                                    fHit1T0->at(j),
+                                    fHit1T1->at(j),
                                     adc,
                                     0);
 
       febdata_v->push_back(feb_data_1);
 
-      for (int s = 0; s < 32; s++) { adc[s] = fHit2Adc[j][s]; }
-      sbnd::crt::FEBData feb_data_2(fHit2Feb[j],
-                                    fHit2T0[j],
-                                    fHit2T1[j],
+      for (int s = 0; s < 32; s++) { adc[s] = fHit2Adc->at(j)[s]; }
+      sbnd::crt::FEBData feb_data_2(fHit2Feb->at(j),
+                                    fHit2T0->at(j),
+                                    fHit2T1->at(j),
                                     adc,
                                     0);
 
@@ -176,25 +120,21 @@ namespace crt {
     }
 
     fEventCounter++;
-    fEntry++;
 
     art::RunNumber_t rn = 1000;
     if (rn==0) rn=999999;
     art::Timestamp tstamp(time(0));
 
-    art::SubRunID newID(rn, 0); //subrun not used in flux files, so set to 0
+    art::SubRunID newID(rn, 0);
     if (fSubRunID.runID() != newID.runID()) { // New Run
-      std::cout << "Making new run" << std::endl;
       outR = fSourceHelper.makeRunPrincipal(rn, tstamp);
-    }
-    if (fSubRunID != newID) { // New SubRun
-      std::cout << "Making new subrun" << std::endl;
       outSR = fSourceHelper.makeSubRunPrincipal(rn,0,tstamp);
+      std::cout << "Made new run " << outSR->run() << ", subrun " << outSR->subRun() << std::endl;
+
+      // Save POTs
       std::unique_ptr<sumdata::POTSummary> pot(new sumdata::POTSummary);
       pot->totpot = fPOT;
       pot->totgoodpot = fPOT;
-
-      std::cout << "run " << outSR->run() << ", subrun " << outSR->subRun() << std::endl;
 
       art::put_product_in_principal(std::move(pot),
                                     *outSR,

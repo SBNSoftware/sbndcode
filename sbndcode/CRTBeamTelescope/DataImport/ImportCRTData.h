@@ -47,48 +47,23 @@ namespace crt {
     art::SubRunID                 fSubRunID;
 
     uint32_t                      fEventCounter;
-    uint32_t                      fEntry;
     int                           fMaxEvents;    // fhicl parameter.  Maximum number of events.
-    uint32_t                      fSkipEvents;   // fhicl parameter.  Number of events to skip.
-    std::string                   fInputType;    // fhicl parameter.  Maximum number of events.
     float                         fPOT;
     float                         fCurrentPOT;
-    bool                          fSelfIncrementRuns; // fhicl parameter. If true it increments run numbers sequentially
-    art::RunNumber_t              fIncrement = 1;
 
-    // FluxInterface*                fFluxDriver;
     TFile*                        fCRTInputFile;
-    // TH1D*                         fHFlux[4];
-    // TH1D*                         fHFluxParent[4][4];
-    // TH1D*                         fHFluxSec[4][5];
-
-    fhicl::ParameterSet           fConfigPS;
 
     art::TypeLabel                fTLfebdata;
-    // art::TypeLabel                fTLmctruth;
-    // art::TypeLabel                fTLmcflux;
-    // art::TypeLabel                fTLdk2nu;
-    // art::TypeLabel                fTLnuchoice;
 
     TTree * fTree;
-    // UShort_t fMac5;
-    // UShort_t flags;
-    // UShort_t lostcpu;
-    // UShort_t lostfpga;
-    // Int_t ts0;
-    // Int_t ts1;
-    // UShort_t adc[32];
-    // Int_t s;
-    // Int_t ms;
-    // Double_t cable;
-    std::vector<double> fHit1Feb;
-    std::vector<double> fHit1T0;
-    std::vector<double> fHit1T1;
-    std::vector<std::vector<uint16_t>> fHit1Adc;
-    std::vector<double> fHit2Feb;
-    std::vector<double> fHit2T0;
-    std::vector<double> fHit2T1;
-    std::vector<std::vector<uint16_t>> fHit2Adc;
+    std::vector<double> *fHit1Feb = nullptr;
+    std::vector<double> *fHit1T0 = nullptr;
+    std::vector<double> *fHit1T1 = nullptr;
+    std::vector<std::vector<uint16_t>> *fHit1Adc = nullptr;
+    std::vector<double> *fHit2Feb = nullptr;
+    std::vector<double> *fHit2T0 = nullptr;
+    std::vector<double> *fHit2T1 = nullptr;
+    std::vector<std::vector<uint16_t>> *fHit2Adc = nullptr;
   };  // ImportCRTData
 }
 

@@ -20,13 +20,7 @@ source:
 {
   fileNames:        []
   module_type:      ImportCRTData
-  skipEvents:       0
-  maxEvents:        -1
-  inputType:        "gsimple"
-  nBins:            200
-  Elow:             0
-  Ehigh:            10
-  SelfIncrementRun: true
+  MaxEvents:        10
 }
 
 outputs:
@@ -34,7 +28,7 @@ outputs:
  out1:
   {
     module_type: RootOutput
-    fileName:    "importcrtdata.root"
+    fileName:    "%ifb_%p-%tc.root"
     compressionLevel: 1
     dataTier:    "simulated"
     # SelectEvents: [ filter ]

@@ -12,6 +12,8 @@
 #include <utility>
 #include <array>
 
+#include "LibCRTImport/CRTEvent.h"
+
 
 namespace sbnd::crt {
 
