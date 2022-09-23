@@ -1,0 +1,122 @@
+# File:    standard_g4_sbnd.fcl
+# Purpose: Propagation of generated particle through matter (Geant4 simulation)
+#
+# This runs the new, refactored, LArG4 simulation.
+#
+# This configuration runs:
+# - LArG4: produces:
+#   * MCParticle's (particles produced by interaction with matter)
+#   * SimEnergyDeposit (energy deposited)
+# - IonizationAndScintillation: produces:
+#   * SimEnergyDeposit (photons and electrons)
+#   * SimEnergyDeposit before SCE (photons and electrons)
+# - OpticalFastSimulation: produces:
+#   * SimPhoton or SimPhotonLite (photons at the optical detectors)
+# - ElectronDrift: produces:
+#   * SimChannels (energy and charge at the wires)
+# - MCReco: produces:
+#   * MCTrack, MCShower: deposited energy from each MCParticle
+#
+# Input: a file with generated particles; all MCTruth data products in the input
+#        file are processed.
+
+
+#
+# services
+#
+#include "simulationservices_sbnd.fcl"
+
+#
+# modules
+#
+#include "larg4_sbnd.fcl"
+#include "ionandscint_sbnd.fcl"
+#include "PDFastSim_sbnd.fcl"
+#include "simdrift_sbnd.fcl"
+#include "mcreco_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+
+process_name: G4
+
+
+services:
+{
+  TFileService: { fileName: "hist_g4.root" }
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  @table::sbnd_g4_services
+}
+
+
+source:
+{
+  module_type: RootInput
+}
+
+
+physics:
+{
+
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::sbnd_larg4
+
+    # Creation of ionization electrons and scintillation photons, inside the active volume
+    ionandscint: @local::sbnd_ionandscint
+
+    # Creation of ionization electrons and scintillation photons, outside the active volume
+    ionandscintout: @local::sbnd_ionandscint_out
+
+    # Light propogation inside the active volume
+    pdfastsim: @local::sbnd_pdfastsim_par
+
+    # Light propogation outside the active volume
+    pdfastsimout: @local::sbnd_pdfastsim_pvs
+
+    # Electron propogation
+    simdrift: @local::sbnd_simdrift
+
+    # Truth-level reconstruction
+    mcreco: @local::sbnd_mcreco
+
+  }
+
+  # All producers and filters modules for this path, order matters
+  simulate: [ rns
+            , loader
+            , largeant
+            , ionandscint
+            , ionandscintout
+            , pdfastsim
+            , pdfastsimout
+            , simdrift
+            , mcreco
+          ]
+
+  # The output stream, there could be more than one if using filters
+  stream1: [ out1 ]
+
+  # Contains the paths that modify the art::event
+  trigger_paths: [ simulate ]
+
+  # Contains the paths that do not modify the art::Event
+  end_paths: [ stream1 ]
+}
+
+
+outputs:
+{
+  out1:
+  {
+              @table::sbnd_rootoutput
+    dataTier: "simulated"
+  }
+}
+
+

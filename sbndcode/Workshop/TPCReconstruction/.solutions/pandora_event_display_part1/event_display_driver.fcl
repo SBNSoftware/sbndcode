@@ -1,0 +1,10 @@
+#include "my_reco_sbnd_basic.fcl"
+
+process_name: EventDisplay
+
+physics.producers.pandora.ConfigFile: "MyPandoraSettings_Master_Standard.xml"
+
+physics.eventDisplay: [ pandora ]
+physics.trigger_paths: [ eventDisplay ]
+
+physics.end_paths: []

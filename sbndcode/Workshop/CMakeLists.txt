@@ -1,0 +1,5 @@
+add_subdirectory(TPCSimulation)
+#add_subdirectory(Photon)
+add_subdirectory(TPCReconstruction)
+add_subdirectory(Analysis)
+add_subdirectory(DeepLearning)
