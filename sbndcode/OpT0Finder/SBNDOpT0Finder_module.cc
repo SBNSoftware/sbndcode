@@ -415,7 +415,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     art::Ptr<recob::Slice> ptr_slice = _clusterid_to_slice[_tpcid];
     int slice_id = ptr_slice->ID();
     _sliceid = slice_id;
-    std::cout << "slice_id: " << slice_id << std::endl;
+    // std::cout << "slice_id: " << slice_id << std::endl;
     // std::cout << "_sliceid: " << _sliceid << std::endl;
 
     ::art::Handle<std::vector<recob::Slice>> slice_h;
@@ -435,7 +435,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
       for (size_t n_pfp = 0; n_pfp < pfp_v.size(); n_pfp++) {
         auto pfp = pfp_v[n_pfp];
         if (!pfp->IsPrimary()) continue;
-        std::cout << "pfp id: " << pfp->Self() << std::endl;
+        // std::cout << "pfp id: " << pfp->Self() << std::endl;
         _pfpid = pfp->Self();
       }
     }
@@ -607,12 +607,12 @@ float SBNDOpT0Finder::GetNPhotons(const float charge,
   // std::cout << "ModBoxA: " << ModBoxA << ", ModBoxB: " << g4param->ModBoxB() << ", W_ion (MeV): " << W_ion << std::endl;
 
   double N_q = e_dep/W_ph; // total number of quanta, ions + excitons
-  std::cout << "N_e: " << N_e << ", e_dep: " << e_dep << ", N_q: " << N_q << std::endl;
+  // std::cout << "N_e: " << N_e << ", e_dep: " << e_dep << ", N_q: " << N_q << std::endl;
 
   double N_ph_on = (N_q - N_e); 
   float  N_ph_off = charge * (::lar_pandora::LArPandoraHelper::IsTrack(pfp) ? _charge_to_n_photons_track : _charge_to_n_photons_shower);
 
-  std::cout << "CalcCorrelated off: " << N_ph_off << ", CalcCorrelated on: " << N_ph_on << ", off/on: " << N_ph_off/N_ph_on <<  ", track?: " << ::lar_pandora::LArPandoraHelper::IsTrack(pfp) << std::endl;
+  // std::cout << "CalcCorrelated off: " << N_ph_off << ", CalcCorrelated on: " << N_ph_on << ", off/on: " << N_ph_off/N_ph_on <<  ", track?: " << ::lar_pandora::LArPandoraHelper::IsTrack(pfp) << std::endl;
   if (_calc_correlated) N_ph = (float)N_ph_on;
   else N_ph = N_ph_off;
 
