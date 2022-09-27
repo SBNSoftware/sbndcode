@@ -163,6 +163,8 @@ private:
   std::vector<std::vector<double> > _chit_true_mcp_endz; ///< CRT hit contributing MCP's end point Z
   std::vector<std::vector<int> > _chit_true_mcp_isprimary; ///< CRT hit contributing MCP's, true if primary
   std::vector<std::vector<uint16_t> > _chit_sipm_adc; ///< The 4 contributing ADC values to this CRTHit
+  std::vector<std::vector<uint16_t> > _chit_sipm_channel_id; ///< The IDs of the four SiPMs that were used to make this CRTHit
+  std::vector<std::vector<uint16_t> > _chit_sipm_feb_mac5; ///< The IDs of the two FEBs that were used in the making of this hit.
 
   std::vector<double> _ct_time; ///< CRT track time
   std::vector<double> _ct_pes; ///< CRT track PEs
@@ -332,6 +334,8 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_true_mcp_endz", "std::vector<std::vector<double> >", &_chit_true_mcp_endz);
   _tree->Branch("chit_true_mcp_isprimary", "std::vector<std::vector<int> >", &_chit_true_mcp_isprimary);
   _tree->Branch("chit_sipm_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_adc);
+  _tree->Branch("chit_sipm_channel_id", "std::vector<std::vector<uint16_t> >", &_chit_sipm_channel_id);
+  _tree->Branch("chit_sipm_feb_mac5", "std::vector<std::vector<uint16_t> >", &_chit_sipm_feb_mac5);
 
   _tree->Branch("ct_time", "std::vector<double>", &_ct_time);
   _tree->Branch("ct_pes", "std::vector<double>", &_ct_pes);
@@ -527,6 +531,8 @@ void CRTAnalysis::analyze(art::Event const& e)
   e.getByLabel(_crtdata_label, crt_data_h);
   art::FindManyP<sim::AuxDetIDE> crt_data_to_ides (crt_data_h, e, _crtdata_label);
 
+  // Get the FEBData to CRTData association
+  art::FindManyP<sbnd::crt::FEBData> crt_data_to_feb_data (crt_data_h, e, _crtdata_label);
 
   //
   // Get the CRT Data
@@ -1008,6 +1014,8 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_true_mcp_py.resize(n_hits);
   _chit_true_mcp_isprimary.resize(n_hits);
   _chit_sipm_adc.resize(n_hits);
+  _chit_sipm_channel_id.resize(n_hits);
+  _chit_sipm_feb_mac5.resize(n_hits);
 
   for (size_t i = 0; i < n_hits; i++) {
 
@@ -1058,12 +1066,19 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_true_mcp_py[i].resize(n_ides);
     _chit_true_mcp_isprimary[i].resize(n_ides);
     _chit_sipm_adc[i].resize(crt_data_v.size());
+    _chit_sipm_channel_id[i].resize(crt_data_v.size());
+    _chit_sipm_feb_mac5[i].resize(crt_data_v.size());
 
     size_t data_counter = 0, ide_counter = 0;
     for (auto crt_data : crt_data_v) {
       auto ide_v = crt_data_to_ides.at(crt_data.key());
+      auto feb_v = crt_data_to_feb_data.at(crt_data.key());
+
+      if(feb_v.size() != 1) std::cout << "========== ERROR: Found " << feb_v.size() << " FEBDatas for one CRTData?" << std::endl;
 
       _chit_sipm_adc[i][data_counter] = crt_data->ADC();
+      _chit_sipm_channel_id[i][data_counter] = crt_data->Channel();
+      _chit_sipm_feb_mac5[i][data_counter] = feb_v[0]->Mac5();
 
       for (auto ide : ide_v) {
         _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
