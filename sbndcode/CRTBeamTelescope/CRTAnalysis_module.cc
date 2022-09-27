@@ -782,7 +782,6 @@ void CRTAnalysis::analyze(art::Event const& e)
       upstream_wide_limits[j] += buffer_box[j];
       downstream_wide_limits[j] += buffer_box[j];
     }
-    counter++;
 
     const std::vector<double> x0 = {_mcp_startx[counter], _mcp_starty[counter], _mcp_startz[counter]};
     const std::vector<double> dx = {_mcp_px[counter], _mcp_py[counter], _mcp_pz[counter]};
