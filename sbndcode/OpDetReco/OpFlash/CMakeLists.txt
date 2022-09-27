@@ -71,5 +71,6 @@ install_fhicl()
 install_source()
 
 add_subdirectory(FlashFinder)
+add_subdirectory(FlashTools)
 add_subdirectory(job)
 

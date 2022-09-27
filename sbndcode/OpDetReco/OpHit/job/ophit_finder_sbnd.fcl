@@ -19,6 +19,8 @@ sbnd_ophit_finder:
   reco_man:       @local::standard_preco_manager
   HitAlgoPset:    @local::sbnd_opreco_hit_slidingwindow
   PedAlgoPset:    @local::sbnd_opreco_pedestal_rmsslider
+  #uncomment to calculate risetime
+  #RiseTimeCalculator:   @local::sbnd_opreco_risetimecalculator
 }
 
 #
