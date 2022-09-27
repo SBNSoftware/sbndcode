@@ -173,10 +173,11 @@ namespace crt {
             uint16_t adc_sipm0 = WaveformEmulation(strip.sipm0.t1 - trigger_time, strip.sipm0.adc);
             uint16_t adc_sipm1 = WaveformEmulation(strip.sipm1.t1 - trigger_time, strip.sipm1.adc);
 
+	    /*
 	    std::cout << "After triggering effect\n"
 		      << "SiPM0: " << strip.sipm0.adc << " -> " << adc_sipm0 << '\n'
 		      << "SiPM1: " << strip.sipm1.adc << " -> " << adc_sipm1 << '\n' << std::endl;
-
+	    */
 
             AddADC(feb_data, strip.sipm0.sipmID, adc_sipm0);
             AddADC(feb_data, strip.sipm1.sipmID, adc_sipm1);
@@ -574,6 +575,7 @@ namespace crt {
                 << "CRT Q SiPM 0: " << q0 << ", SiPM 1: " << q1 << '\n'
                 << "CRT Ts1 SiPM 0: " << ts1_ch0 << " SiPM 1: " << ts1_ch1 << "\n";
 	    
+	    /*
 	    std::cout << "CRT HIT in adid/adsid " << adid << "/" << adsid << "\n"
 		      << "MAC5 " << mac5 << "\n"
 		      << "TRUE TIME  " << tTrue << "\n"
@@ -593,6 +595,7 @@ namespace crt {
 		      << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << "\n"
 		      << "CRT Q SiPM 0: " << q0 << ", SiPM 1: " << q1 << '\n'
 		      << "CRT Ts1 SiPM 0: " << ts1_ch0 << " SiPM 1: " << ts1_ch1 << "\n" << std::endl;
+	    */
         }
     } //end FillTaggers
 
@@ -636,10 +639,12 @@ namespace crt {
             << ", npe0 = " << npe0 << " -> q0 = " << q0
             << ", npe1 = " << npe1 << " -> q1 = " << q1 << std::endl;
 
+	/*
 	std::cout << "CRT CHARGE RESPONSE: eDep = " << eDep
 		  << "\n\tnpeExpected = " << npeExpected
 		  << "\n\tnpe0 = " << npe0 << " -> q0 = " << q0
 		  << "\n\tnpe1 = " << npe1 << " -> q1 = " << q1 << '\n' << std::endl;
+	*/
     }
 
     uint32_t CRTDetSimAlg::getChannelTriggerTicks(/*detinfo::ElecClock& clock,*/
