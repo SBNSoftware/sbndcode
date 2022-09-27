@@ -46,10 +46,12 @@ namespace crt {
     art::SourceHelper const      &fSourceHelper;
     art::SubRunID                 fSubRunID;
 
+    bool                          fVerbose;
     uint32_t                      fEventCounter;
     int                           fMaxEvents;    // fhicl parameter.  Maximum number of events.
     float                         fPOT;
     float                         fCurrentPOT;
+    uint32_t                      fTotalTreeEvents;
 
     TFile*                        fCRTInputFile;
 

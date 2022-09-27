@@ -33,6 +33,7 @@ namespace crt {
 
     fEventCounter = 0;
     fMaxEvents = ps.get<int>("MaxEvents", -1);
+    fVerbose   = ps.get<bool>("Verbose", false);
   }
 
   void ImportCRTData::closeCurrentFile()
@@ -77,6 +78,7 @@ namespace crt {
     fPOT+=pot;
     fCurrentPOT = pot;
 
+    fTotalTreeEvents = fTree->GetEntries();
   }
 
 
@@ -93,7 +95,11 @@ namespace crt {
     // Create empty result, then fill it from current file:
     std::unique_ptr< std::vector<sbnd::crt::FEBData>  > febdata_v(new std::vector<sbnd::crt::FEBData>);
 
-
+    if(fVerbose)
+      std::cout << "==================================\n"
+		<< "Event: " << fEventCounter << " / " << fTotalTreeEvents << '\n'
+		<< "==================================" << std::endl;
+    
     fTree->GetEntry(fEventCounter);
 
     std::array<uint16_t, 32> adc;
@@ -117,8 +123,28 @@ namespace crt {
                                     0);
 
       febdata_v->push_back(feb_data_2);
-    }
 
+      if(fVerbose)
+	{
+	  std::cout << "---------- FEB 1 ---------\n"
+		    << "Mac5: " << feb_data_1.Mac5() << '\n'
+		    << "T0:   " << feb_data_1.Ts0() << '\n'
+		    << "T1:   " << feb_data_1.Ts1() << '\n'
+		    << "ADC:  [";
+	  for(auto const &adc : feb_data_1.ADC()) 
+	    { std::cout << adc << ", ";}
+	  std::cout << "]\n" << std::endl;
+
+	  std::cout << "---------- FEB 2 ---------\n"
+		    << "Mac5: " << feb_data_2.Mac5() << '\n'
+		    << "T0:   " << feb_data_2.Ts0() << '\n'
+		    << "T1:   " << feb_data_2.Ts1() << '\n'
+		    << "ADC:  [";
+	  for(auto const &adc : feb_data_2.ADC()) 
+	    { std::cout << adc << ", ";}
+	  std::cout << "]\n" << std::endl;
+	}
+    }
     fEventCounter++;
 
     art::RunNumber_t rn = 1000;
