@@ -88,7 +88,7 @@ namespace crt {
                                art::SubRunPrincipal* &outSR,
                                art::EventPrincipal* &outE)
   {
-    if (fMaxEvents > 0 && fEventCounter == unsigned(fMaxEvents)) {
+    if ((fMaxEvents > 0 && fEventCounter == unsigned(fMaxEvents)) || fEventCounter == fTotalTreeEvents) {
       return false;
     }
 
