@@ -101,7 +101,7 @@
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
     <OutputVertexListName>NeutrinoVertices3D</OutputVertexListName>
     <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
-    <MvaFileName>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileName>
+    <MvaFileName>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileName>
     <RegionMvaName>VertexBDTRegion</RegionMvaName>
     <VertexMvaName>VertexBDTVertex</VertexMvaName>
     <FeatureTools>
@@ -318,16 +318,18 @@
     <TrackPfoListName>TrackParticles3D</TrackPfoListName>
     <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
     <UseThreeDInformation>true</UseThreeDInformation>
-    <MvaFileName>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileName>
-    <MvaName>PfoCharBDT</MvaName>
-    <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileNameNoChargeInfo>
-    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
+    <MvaFileName>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileName>
+    <MvaName>PfoCharBDT1</MvaName>
+    <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileNameNoChargeInfo>
+    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo1</MvaNameNoChargeInfo>
+    <MinProbabilityCut>0.51</MinProbabilityCut>
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>
       <tool type = "LArThreeDPCAFeatureTool"/>
       <tool type = "LArThreeDOpeningAngleFeatureTool"/>
       <tool type = "LArThreeDChargeFeatureTool"/>
+      <tool type = "LArConeChargeFeatureTool"/>  
     </FeatureTools>
     <FeatureToolsNoChargeInfo>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
@@ -393,30 +395,6 @@
     </MopUpAlgorithms>
   </algorithm>
 
-  <!-- Re-run the PFO Characterisation to recalculate the scores after recursive mop up -->
-  <algorithm type = "LArBdtPfoCharacterisation">
-    <TrackPfoListName>TrackParticles3D</TrackPfoListName>
-    <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
-    <UseThreeDInformation>true</UseThreeDInformation>
-    <MvaFileName>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileName>
-    <MvaName>PfoCharBDT</MvaName>
-    <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_v09_32_00_SBND.xml</MvaFileNameNoChargeInfo>
-    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo</MvaNameNoChargeInfo>
-    <FeatureTools>
-      <tool type = "LArThreeDLinearFitFeatureTool"/>
-      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
-      <tool type = "LArThreeDPCAFeatureTool"/>
-      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
-      <tool type = "LArThreeDChargeFeatureTool"/>
-    </FeatureTools>
-    <FeatureToolsNoChargeInfo>
-      <tool type = "LArThreeDLinearFitFeatureTool"/>
-      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
-      <tool type = "LArThreeDPCAFeatureTool"/>
-      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
-    </FeatureToolsNoChargeInfo>
-  </algorithm>
-
   <!-- NeutrinoAlgorithms -->
   <algorithm type = "LArNeutrinoCreation">
     <InputVertexListName>NeutrinoVertices3D</InputVertexListName>
@@ -435,6 +413,32 @@
   <algorithm type = "LArNeutrinoDaughterVertices">
     <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
     <OutputVertexListName>DaughterVertices3D</OutputVertexListName>
+  </algorithm>
+
+  <!-- Re-run the PFO Characterisation to recalculate the scores after recursive mop up -->
+  <algorithm type = "LArBdtPfoCharacterisation">
+    <TrackPfoListName>TrackParticles3D</TrackPfoListName>
+    <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
+    <UseThreeDInformation>true</UseThreeDInformation>
+    <MvaFileName>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileName>
+    <MvaName>PfoCharBDT2</MvaName>
+    <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileNameNoChargeInfo>
+    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo2</MvaNameNoChargeInfo>
+    <MinProbabilityCut>0.51</MinProbabilityCut>
+    <FeatureTools>
+      <tool type = "LArThreeDLinearFitFeatureTool"/>
+      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+      <tool type = "LArThreeDPCAFeatureTool"/>
+      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
+      <tool type = "LArThreeDChargeFeatureTool"/>
+      <tool type = "LArConeChargeFeatureTool"/>
+    </FeatureTools>
+    <FeatureToolsNoChargeInfo>
+      <tool type = "LArThreeDLinearFitFeatureTool"/>
+      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+      <tool type = "LArThreeDPCAFeatureTool"/>
+      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
+    </FeatureToolsNoChargeInfo>
   </algorithm>
 
   <algorithm type = "LArShowerHierarchyMopUp">

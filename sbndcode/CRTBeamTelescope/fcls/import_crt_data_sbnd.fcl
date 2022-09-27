@@ -1,0 +1,59 @@
+# Reads CRT data events and converts them
+# into LArSoft format
+
+#include "simulationservices_sbnd.fcl"
+
+process_name: ImportCRTData
+
+services:
+{
+  TFileService: { fileName: "hist.root" }
+  RandomNumberGenerator: {}
+  TimeTracker:       {}
+  FileCatalogMetadata:     @local::art_file_catalog_mc
+  @table::sbnd_basic_services
+  @table::sbnd_random_services
+}
+
+
+source:
+{
+  fileNames:        []
+  module_type:      ImportCRTData
+  MaxEvents:        10
+}
+
+outputs:
+{
+ out1:
+  {
+    module_type: RootOutput
+    fileName:    "%ifb_%p-%tc.root"
+    compressionLevel: 1
+    dataTier:    "simulated"
+    # SelectEvents: [ filter ]
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+  }
+
+  filters:
+  {
+  }
+
+  analyzers:
+  {
+  }
+
+  filter: [ rns ]
+  ana: [ ]
+  stream1: [ out1 ]
+  trigger_paths: [ filter ]
+  end_paths: [ ana, stream1 ]
+}
+

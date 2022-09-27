@@ -128,6 +128,12 @@ namespace opdet {
     double saturation;
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
+    CLHEP::RandFlat fFlatGen;
+    CLHEP::RandPoissonQ fPoissonQGen;
+    CLHEP::RandGaussQ fGaussQGen;
+    CLHEP::RandExponential fExponentialGen;
+    std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for coated PMTs
+
 
     //PMTFluctuationsAlg
     std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
@@ -138,7 +144,6 @@ namespace opdet {
 
     std::vector<double> fSinglePEWave; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
-    std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for coated PMTs
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
     void CreatePDWaveform(

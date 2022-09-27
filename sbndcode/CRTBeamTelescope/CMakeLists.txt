@@ -1,5 +1,7 @@
 add_subdirectory(fcls)
 add_subdirectory(Geometry)
+add_subdirectory(DataImport)
+add_subdirectory(Reconstruction)
 
 art_make(
 MODULE_LIBRARIES larcorealg_Geometry
