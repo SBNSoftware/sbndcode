@@ -20,7 +20,7 @@ source:
 {
   fileNames:        []
   module_type:      ImportCRTData
-  MaxEvents:        10
+  MaxEvents:        -1
 }
 
 outputs:
