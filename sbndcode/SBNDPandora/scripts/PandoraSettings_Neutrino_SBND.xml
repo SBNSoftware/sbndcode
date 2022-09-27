@@ -425,6 +425,7 @@
     <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileNameNoChargeInfo>
     <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo2</MvaNameNoChargeInfo>
     <MinProbabilityCut>0.51</MinProbabilityCut>
+    <PersistFeatures>true</PersistFeatures>
     <FeatureTools>
       <tool type = "LArThreeDLinearFitFeatureTool"/>
       <tool type = "LArThreeDVertexDistanceFeatureTool"/>
