@@ -141,9 +141,12 @@ private:
   std::vector<double> _chit_x; ///< CRT hit x
   std::vector<double> _chit_y; ///< CRT hit y
   std::vector<double> _chit_z; ///< CRT hit z
-  std::vector<double> _chit_time; ///< CRT hit time
-  std::vector<double> _chit_h1_time; ///< CRT hit time (1DHit 1)
-  std::vector<double> _chit_h2_time; ///< CRT hit time (1DHit 2)
+  std::vector<double> _chit_t0; ///< CRT hit t0
+  std::vector<double> _chit_t1; ///< CRT hit t1
+  std::vector<double> _chit_h1_t0; ///< CRT hit t0 (1DHit 1)
+  std::vector<double> _chit_h2_t0; ///< CRT hit t0 (1DHit 2)
+  std::vector<double> _chit_h1_t1; ///< CRT hit t1 (1DHit 1)
+  std::vector<double> _chit_h2_t1; ///< CRT hit t1 (1DHit 2)
   std::vector<double> _chit_pes; ///< CRT hit PEs
   std::vector<int> _chit_plane; ///< CRT hit plane
   std::vector<float> _chit_true_t; ///< CRT hit true time (from sim energy dep)
@@ -318,9 +321,12 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_x", "std::vector<double>", &_chit_x);
   _tree->Branch("chit_y", "std::vector<double>", &_chit_y);
   _tree->Branch("chit_z", "std::vector<double>", &_chit_z);
-  _tree->Branch("chit_time", "std::vector<double>", &_chit_time);
-  _tree->Branch("chit_h1_time", "std::vector<double>", &_chit_h1_time);
-  _tree->Branch("chit_h2_time", "std::vector<double>", &_chit_h2_time);
+  _tree->Branch("chit_t0", "std::vector<double>", &_chit_t0);
+  _tree->Branch("chit_t1", "std::vector<double>", &_chit_t1);
+  _tree->Branch("chit_h1_t0", "std::vector<double>", &_chit_h1_t0);
+  _tree->Branch("chit_h2_t0", "std::vector<double>", &_chit_h2_t0);
+  _tree->Branch("chit_h1_t1", "std::vector<double>", &_chit_h1_t1);
+  _tree->Branch("chit_h2_t1", "std::vector<double>", &_chit_h2_t1);
   _tree->Branch("chit_pes", "std::vector<double>", &_chit_pes);
   _tree->Branch("chit_plane", "std::vector<int>", &_chit_plane);
   _tree->Branch("chit_true_t", "std::vector<float>", &_chit_true_t);
@@ -1000,9 +1006,12 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_x.resize(n_hits);
   _chit_y.resize(n_hits);
   _chit_z.resize(n_hits);
-  _chit_time.resize(n_hits);
-  _chit_h1_time.resize(n_hits);
-  _chit_h2_time.resize(n_hits);
+  _chit_t0.resize(n_hits);
+  _chit_t1.resize(n_hits);
+  _chit_h1_t0.resize(n_hits);
+  _chit_h2_t0.resize(n_hits);
+  _chit_h1_t1.resize(n_hits);
+  _chit_h2_t1.resize(n_hits);
   _chit_pes.resize(n_hits);
   _chit_plane.resize(n_hits);
   _chit_true_t.resize(n_hits);
@@ -1036,13 +1045,21 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_x[i] = hit->x_pos;
     _chit_y[i] = hit->y_pos;
     _chit_z[i] = hit->z_pos;
-    _chit_time[i] = hit->ts1_ns;
-    _chit_h1_time[i] = 0.; // to be implemented
-    _chit_h2_time[i] = 0.; // to be implemented
+    _chit_t0[i] = hit->ts0_ns;
+    _chit_t1[i] = hit->ts1_ns;
     _chit_pes[i] = hit->peshit;
 
     auto crt_data_v = crt_hit_to_data.at(hit.key());
-    std::cout << "CRTDataSize: " << crt_data_v.size() << std::endl;
+    _chit_h1_t0[i] = crt_data_v[0]->T0();
+    _chit_h2_t0[i] = crt_data_v[2]->T0();
+    _chit_h1_t1[i] = (int32_t) crt_data_v[0]->T1();
+    _chit_h2_t1[i] = (int32_t) crt_data_v[2]->T1();
+
+    std::cout << crt_data_v[0]->T1() << " " << crt_data_v[1]->T1() << '\n' 
+              << crt_data_v[2]->T1() << " " << crt_data_v[3]->T1() << '\n' << std::endl;
+    std::cout << "Amended\n"
+	      << (int32_t)crt_data_v[0]->T1() << " " << (int32_t)crt_data_v[1]->T1() << '\n' 
+              << (int32_t)crt_data_v[2]->T1() << " " << (int32_t)crt_data_v[3]->T1() << '\n' << std::endl;
 
     if (hit->tagger == "volTaggerNorth_0") {
       _chit_plane[i] = 0; // upstream
@@ -1162,7 +1179,7 @@ void CRTAnalysis::analyze(art::Event const& e)
 	_chit_true_z[i] /= n_ides;
       }
 
-    if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_time[i] << ", h2 time " << _chit_h2_time[i] << ", hit time " << _chit_time[i] << std::endl;
+    if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_t1[i] << ", h2 time " << _chit_h2_t1[i] << ", hit time " << _chit_t1[i] << std::endl;
   }
 
 
@@ -1297,7 +1314,6 @@ void CRTAnalysis::analyze(art::Event const& e)
 
     _crt_channel[i] = crt_data->Channel();
     _crt_t0[i] = crt_data->T0();
-    std::cout << "CRT T1: " << crt_data->T1() << std::endl;
     _crt_t1[i] = crt_data->T1();
     _crt_adc[i]= crt_data->ADC();
 
