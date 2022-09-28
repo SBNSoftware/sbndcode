@@ -1,0 +1,3 @@
+#include "reco_crt_bt_sbnd.fcl"
+
+services.BackTrackerService: @erase
