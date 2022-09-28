@@ -67,7 +67,8 @@ private:
   std::string _feb_data_producer;
   uint16_t _adc_threshold;
   bool _data_mode;
-
+  std::map<unsigned, unsigned> _feb_mac5_to_geometry_id;
+  std::vector<std::pair<unsigned, unsigned> > _feb_mac5_to_geometry_id_vector;
 };
 
 
@@ -85,6 +86,11 @@ sbnd::crt::CRTSlimmer::CRTSlimmer(fhicl::ParameterSet const& p)
   consumes<std::vector<sbnd::crt::FEBData>>(_feb_data_producer);
   if(!_data_mode)
     consumes<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>>(_feb_data_producer);
+
+  if(_data_mode) {
+    _feb_mac5_to_geometry_id_vector = p.get<std::vector<std::pair<unsigned, unsigned>>>("FEBMac5ToGeometryIDMap");
+    _feb_mac5_to_geometry_id        = std::map<unsigned, unsigned>(_feb_mac5_to_geometry_id_vector.begin(), _feb_mac5_to_geometry_id_vector.end());
+  }
 }
 
 void sbnd::crt::CRTSlimmer::produce(art::Event& e)
@@ -113,7 +119,8 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
     for (size_t feb_i = 0; feb_i < feb_data_v.size(); feb_i++) {
       
       auto const feb_data = feb_data_v[feb_i];
-      mf::LogDebug("CRTSlimmer") << "FEB " << feb_i << " with mac " << feb_data->Mac5() << std::endl;
+      mf::LogDebug("CRTSlimmer") << "FEB " << feb_i << " with mac " << feb_data->Mac5() 
+				 << " and geometry ID: " << _feb_mac5_to_geometry_id[feb_data->Mac5()] << std::endl;
       
       auto adcs = feb_data->ADC();
       
@@ -125,7 +132,7 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
 	}
 
 	for (size_t sipm = 0; sipm < 2; sipm++) {
-	  sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(feb_data->Mac5() * 32 + i + sipm,
+	  sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(_feb_mac5_to_geometry_id[feb_data->Mac5()] * 32 + i + sipm,
 							   feb_data->Ts0(),
 							   feb_data->Ts1(),
 							   adcs[i+sipm]);
