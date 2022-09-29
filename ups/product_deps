@@ -35,7 +35,6 @@ fwdir   product_dir scripts
 
 product          version
 
-
 sbncode          v09_59_00
 sbnd_data        v01_15_00 - optional
 sbndutil         v09_59_00 - optional
