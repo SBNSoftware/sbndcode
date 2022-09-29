@@ -1055,12 +1055,6 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_h1_t1[i] = (int32_t) crt_data_v[0]->T1();
     _chit_h2_t1[i] = (int32_t) crt_data_v[2]->T1();
 
-    std::cout << crt_data_v[0]->T1() << " " << crt_data_v[1]->T1() << '\n' 
-              << crt_data_v[2]->T1() << " " << crt_data_v[3]->T1() << '\n' << std::endl;
-    std::cout << "Amended\n"
-	      << (int32_t)crt_data_v[0]->T1() << " " << (int32_t)crt_data_v[1]->T1() << '\n' 
-              << (int32_t)crt_data_v[2]->T1() << " " << (int32_t)crt_data_v[3]->T1() << '\n' << std::endl;
-
     if (hit->tagger == "volTaggerNorth_0") {
       _chit_plane[i] = 0; // upstream
     } else {
