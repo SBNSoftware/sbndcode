@@ -4,7 +4,7 @@ include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 
 add_subdirectory(CRTTools)
 add_subdirectory(CRTUtils)
-add_subdirectory(CRTAna)
+#add_subdirectory(CRTAna)
 add_subdirectory(CRTSimulation)
 add_subdirectory(Examples)
 
@@ -14,7 +14,7 @@ art_make(
         CRTGeometryHelper_service.cc
         CRTDetSim_module.cc
         CRTSlimmer_module.cc
-        CRTSimHitProducer_module.cc
+        CRTHitProducer_module.cc
         CRTTzeroProducer_module.cc
         CRTTrackProducer_module.cc
     LIBRARY_NAME
@@ -114,11 +114,12 @@ simple_plugin( CRTSlimmer module
         cetlib::cetlib
 )
 
-simple_plugin( CRTSimHitProducer module
+simple_plugin( CRTHitProducer module
         larcorealg_Geometry
         sbndcode_CRT
         sbndcode_CRTData
         sbnobj_Common_CRT
+        sbnobj_SBND_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
         art::Framework_Core
