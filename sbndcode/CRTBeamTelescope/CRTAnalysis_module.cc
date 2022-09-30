@@ -411,10 +411,11 @@ void CRTAnalysis::analyze(art::Event const& e)
     {
       for(size_t i = 0; i < _crt_geo.NumTaggers(); i++)
 	{
-	  std::cout << "Tagger:  " << _crt_geo.GetTagger(i).name << '\n'
+	  /*	  std::cout << "Tagger:  " << _crt_geo.GetTagger(i).name << '\n'
 		    << "X - Min: " << _crt_geo.GetTagger(i).minX << " Max: " << _crt_geo.GetTagger(i).maxX << '\n'
 		    << "Y - Min: " << _crt_geo.GetTagger(i).minY << " Max: " << _crt_geo.GetTagger(i).maxY << '\n'
 		    << "Z - Min: " << _crt_geo.GetTagger(i).minZ << " Max: " << _crt_geo.GetTagger(i).maxZ << '\n' << std::endl;
+	  */
 	}
     }
   
@@ -1052,8 +1053,8 @@ void CRTAnalysis::analyze(art::Event const& e)
     auto crt_data_v = crt_hit_to_data.at(hit.key());
     _chit_h1_t0[i] = crt_data_v[0]->T0();
     _chit_h2_t0[i] = crt_data_v[2]->T0();
-    _chit_h1_t1[i] = (int32_t) crt_data_v[0]->T1();
-    _chit_h2_t1[i] = (int32_t) crt_data_v[2]->T1();
+    _chit_h1_t1[i] = crt_data_v[0]->T1();
+    _chit_h2_t1[i] = crt_data_v[2]->T1();
 
     if (hit->tagger == "volTaggerNorth_0") {
       _chit_plane[i] = 0; // upstream
