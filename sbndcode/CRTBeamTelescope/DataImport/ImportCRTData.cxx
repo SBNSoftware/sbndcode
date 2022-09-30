@@ -34,6 +34,11 @@ namespace crt {
     fEventCounter = 0;
     fMaxEvents = ps.get<int>("MaxEvents", -1);
     fVerbose   = ps.get<bool>("Verbose", false);
+
+    fCableLengthCorrectionsVector = ps.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrectionsMap");
+    fCableLengthCorrections       = std::map<unsigned, double>(fCableLengthCorrectionsVector.begin(), fCableLengthCorrectionsVector.end());
+
+    fT1Offset = ps.get<unsigned>("T1Offset",100000);
   }
 
   void ImportCRTData::closeCurrentFile()
@@ -108,8 +113,8 @@ namespace crt {
     {
       for (int s = 0; s < 32; s++) { adc[s] = fHit1Adc->at(j)[s]; }
       sbnd::crt::FEBData feb_data_1(fHit1Feb->at(j),
-                                    fHit1T0->at(j),
-                                    fHit1T1->at(j),
+                                    fHit1T0->at(j) + fCableLengthCorrections[fHit1Feb->at(j)],
+                                    fHit1T1->at(j) + fCableLengthCorrections[fHit1Feb->at(j)] + fT1Offset,
                                     adc,
                                     0);
 
@@ -117,8 +122,8 @@ namespace crt {
 
       for (int s = 0; s < 32; s++) { adc[s] = fHit2Adc->at(j)[s]; }
       sbnd::crt::FEBData feb_data_2(fHit2Feb->at(j),
-                                    fHit2T0->at(j),
-                                    fHit2T1->at(j),
+                                    fHit2T0->at(j) + fCableLengthCorrections[fHit2Feb->at(j)],
+                                    fHit2T1->at(j) + fCableLengthCorrections[fHit2Feb->at(j)] + fT1Offset,
                                     adc,
                                     0);
 
