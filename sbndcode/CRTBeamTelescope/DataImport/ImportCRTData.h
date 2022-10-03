@@ -53,9 +53,6 @@ namespace crt {
     float                         fCurrentPOT;
     uint32_t                      fTotalTreeEvents;
 
-    std::map<unsigned, double>                fCableLengthCorrections;         // Map between FEB Mac5 and the corresponding cable length correction in ns
-    std::vector<std::pair<unsigned, double> > fCableLengthCorrectionsVector;   // Vector format for the above (in order to read as fcl parameter)
-
     unsigned fT1Offset;
 
     TFile*                        fCRTInputFile;
