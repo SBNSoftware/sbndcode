@@ -10,10 +10,10 @@ namespace sbnd{
 
   CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p)
   {
-    fCableLengthCorrectionsVector = p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrectionsMap");
+    fCableLengthCorrectionsVector = p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrectionsMap", std::vector<std::pair<unsigned, double>>());
     fCableLengthCorrections       = std::map<unsigned, double>(fCableLengthCorrectionsVector.begin(), fCableLengthCorrectionsVector.end());
 
-    fSiPMPedestalsVector          = p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestalsVector");
+    fSiPMPedestalsVector          = p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestalsVector", std::vector<std::pair<unsigned, double>>());
     fSiPMPedestals                = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), fSiPMPedestalsVector.end());
 
     CRTGeoAlg(lar::providerFrom<geo::Geometry>(), 
@@ -78,7 +78,8 @@ namespace sbnd{
             const std::string moduleName = nodeModule->GetName();
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-		const uint32_t cableDelayCorrection = fCableLengthCorrections.at(32 * ad_i);
+		const uint32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
+		  fCableLengthCorrections.at(32 * ad_i) : 0;
                 usedModules.push_back(moduleName);
                 fModules.at(moduleName) = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
 						       cableDelayCorrection);
@@ -113,8 +114,8 @@ namespace sbnd{
             double sipm1XYZWorld[3];
             auxDetSensitive.LocalToWorld(sipm1XYZ, sipm1XYZWorld);
 
-	    const uint32_t pedestal0 = fSiPMPedestals.at(channel0);
-	    const uint32_t pedestal1 = fSiPMPedestals.at(channel1);
+	    const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : 0;
+	    const uint32_t pedestal1 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel1) : 0;
 
             // Fill SiPM information
             fSiPMs.at(channel0) = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0);
