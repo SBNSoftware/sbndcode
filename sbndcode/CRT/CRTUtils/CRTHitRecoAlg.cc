@@ -2,20 +2,14 @@
 
 namespace sbnd{
 
-  CRTHitRecoAlg::CRTHitRecoAlg(const Config& config)
-  {
-    this->reconfigure(config);
-  }
+  CRTHitRecoAlg::CRTHitRecoAlg(const fhicl::ParameterSet &p) 
+    : fCRTGeoAlg(p.get<fhicl::ParameterSet>("GeoAlg"))
+    , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
+  {}
 
   CRTHitRecoAlg::CRTHitRecoAlg() {}
 
   CRTHitRecoAlg::~CRTHitRecoAlg() {}
-
-  void CRTHitRecoAlg::reconfigure(const Config& config) 
-  {
-    fADCThreshold = config.ADCThreshold();
-    return;
-  }
 
   std::vector<CRTStripHit> CRTHitRecoAlg::ProduceStripHits(std::vector<art::Ptr<sbnd::crt::FEBData>> &dataVec) 
   {
@@ -26,7 +20,7 @@ namespace sbnd{
       {
 	uint32_t mac5 = data->Mac5();
 
-	CRTModuleGeo module = fCrtGeo.GetModule(mac5 * 32);
+	CRTModuleGeo module = fCRTGeoAlg.GetModule(mac5 * 32);
 
 	// Correct for FEB readout cable length
 	uint32_t t0 = data->Ts0() + module.cableDelayCorrection;
@@ -39,9 +33,9 @@ namespace sbnd{
 	    // Add an offset for the SiPM channel number
 	    uint16_t channel = mac5 * 32 + adc_i;
 
-	    CRTStripGeo strip = fCrtGeo.GetStrip(channel);
-	    CRTSiPMGeo sipm1  = fCrtGeo.GetSiPM(channel);
-	    CRTSiPMGeo sipm2  = fCrtGeo.GetSiPM(channel+1);
+	    CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
+	    CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
+	    CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
 
 	    // Subtract channel pedestals
 	    uint16_t adc1 = sipm_adcs[adc_i]   - sipm1.pedestal;
