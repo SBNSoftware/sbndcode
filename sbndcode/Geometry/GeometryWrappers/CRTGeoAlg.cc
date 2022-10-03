@@ -8,6 +8,18 @@ namespace sbnd{
                          ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
   {}
 
+  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p)
+  {
+    fCableLengthCorrectionsVector = p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrectionsMap");
+    fCableLengthCorrections       = std::map<unsigned, double>(fCableLengthCorrectionsVector.begin(), fCableLengthCorrectionsVector.end());
+
+    fSiPMPedestalsVector          = p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestalsVector");
+    fSiPMPedestals                = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), fSiPMPedestalsVector.end());
+
+    CRTGeoAlg(lar::providerFrom<geo::Geometry>(), 
+	      ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr());
+  }
+
   CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, 
                        geo::AuxDetGeometryCore const *auxdet_geometry) 
   {
@@ -44,7 +56,7 @@ namespace sbnd{
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
           {
             const geo::AuxDetSensitiveGeo &auxDetSensitive = auxDet.SensitiveVolume(ads_i);
-        
+
             // Access the path
             manager->cd(path.c_str());
 
@@ -61,16 +73,16 @@ namespace sbnd{
                 usedTaggers.push_back(taggerName);
                 fTaggers.at(taggerName) = CRTTaggerGeo(nodeTagger, nodeDet);
               }
-        
 
             // Fill the module information
             const std::string moduleName = nodeModule->GetName();
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
+		const uint32_t cableDelayCorrection = fCableLengthCorrections.at(32 * ad_i);
                 usedModules.push_back(moduleName);
-                fModules.at(moduleName) = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName);
+                fModules.at(moduleName) = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
+						       cableDelayCorrection);
               }
-       
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
@@ -101,9 +113,12 @@ namespace sbnd{
             double sipm1XYZWorld[3];
             auxDetSensitive.LocalToWorld(sipm1XYZ, sipm1XYZWorld);
 
+	    const uint32_t pedestal0 = fSiPMPedestals.at(channel0);
+	    const uint32_t pedestal1 = fSiPMPedestals.at(channel1);
+
             // Fill SiPM information
-            fSiPMs.at(channel0) = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld);
-            fSiPMs.at(channel1) = CRTSiPMGeo(stripName, channel1, sipm0XYZWorld);
+            fSiPMs.at(channel0) = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0);
+            fSiPMs.at(channel1) = CRTSiPMGeo(stripName, channel1, sipm0XYZWorld, pedestal1);
           }
       }
   }
@@ -162,9 +177,24 @@ namespace sbnd{
     return fModules.at(moduleName);
   }
 
+  CRTModuleGeo CRTGeoAlg::GetModule(const uint16_t channel) const
+  {
+    return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName);
+  }
+
   CRTStripGeo CRTGeoAlg::GetStrip(const std::string stripName) const
   {
     return fStrips.at(stripName);
+  }
+
+  CRTStripGeo CRTGeoAlg::GetStrip(const uint16_t channel) const
+  {
+    return fStrips.at(fSiPMs.at(channel).stripName);
+  }
+
+  CRTSiPMGeo CRTGeoAlg::GetSiPM(const uint16_t channel) const
+  {
+    return fSiPMs.at(channel);
   }
 
   std::string CRTGeoAlg::GetTaggerName(const std::string name) const
