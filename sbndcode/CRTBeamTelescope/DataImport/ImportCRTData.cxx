@@ -35,6 +35,9 @@ namespace crt {
     fMaxEvents = ps.get<int>("MaxEvents", -1);
     fVerbose   = ps.get<bool>("Verbose", false);
 
+    fMac5ToGeoIDVec = ps.get<std::vector<std::pair<unsigned, unsigned>>>("FEBMac5ToGeometryIDMap");
+    fMac5ToGeoID    = std::map<unsigned, unsigned>(fMac5ToGeoIDVec.begin(), fMac5ToGeoIDVec.end());
+    
     fT1Offset = ps.get<unsigned>("T1Offset",100000);
   }
 
@@ -109,7 +112,7 @@ namespace crt {
     for (size_t j = 0; j < fHit1Feb->size(); j++)
     {
       for (int s = 0; s < 32; s++) { adc[s] = fHit1Adc->at(j)[s]; }
-      sbnd::crt::FEBData feb_data_1(fHit1Feb->at(j),
+      sbnd::crt::FEBData feb_data_1(fMac5ToGeoID[fHit1Feb->at(j)],
                                     fHit1T0->at(j),
                                     fHit1T1->at(j) + fT1Offset,
                                     adc,
@@ -118,7 +121,7 @@ namespace crt {
       febdata_v->push_back(feb_data_1);
 
       for (int s = 0; s < 32; s++) { adc[s] = fHit2Adc->at(j)[s]; }
-      sbnd::crt::FEBData feb_data_2(fHit2Feb->at(j),
+      sbnd::crt::FEBData feb_data_2(fMac5ToGeoID[fHit2Feb->at(j)],
                                     fHit2T0->at(j),
                                     fHit2T1->at(j) + fT1Offset,
                                     adc,

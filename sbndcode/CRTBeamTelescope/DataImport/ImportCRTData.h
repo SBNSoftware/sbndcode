@@ -53,6 +53,9 @@ namespace crt {
     float                         fCurrentPOT;
     uint32_t                      fTotalTreeEvents;
 
+    std::map<unsigned, unsigned>               fMac5ToGeoID;
+    std::vector<std::pair<unsigned, unsigned>> fMac5ToGeoIDVec;
+
     unsigned fT1Offset;
 
     TFile*                        fCRTInputFile;
