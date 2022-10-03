@@ -138,6 +138,8 @@ private:
   TTree* _tree2;
   std::vector<float> _dep_x, _dep_y, _dep_z, _dep_charge, _dep_n_photons;
   std::vector<int> _dep_slice;
+  std::vector<int> _dep_pfpid;
+  std::vector<int> _dep_trk;
 };
 
 
@@ -194,11 +196,13 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tree1->Branch("subrun",          &_subrun,                          "subrun/I");
   _tree1->Branch("event",           &_event,                           "event/I");
   _tree1->Branch("dep_slice", "std::vector<int>", &_dep_slice);
+  _tree1->Branch("dep_pfpid", "std::vector<int>", &_dep_pfpid);
   _tree1->Branch("dep_x", "std::vector<float>", &_dep_x);
   _tree1->Branch("dep_y", "std::vector<float>", &_dep_y);
   _tree1->Branch("dep_z", "std::vector<float>", &_dep_z);
   _tree1->Branch("dep_charge", "std::vector<float>", &_dep_charge);
   _tree1->Branch("dep_n_photons", "std::vector<float>", &_dep_n_photons);
+  _tree1->Branch("dep_trk", "std::vector<int>", &_dep_trk);
 
   _tree2 = fs->make<TTree>("flash_match_tree","");
   _tree2->Branch("run",             &_run,                             "run/I");
@@ -492,15 +496,18 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
 
   // Loop over the Slices
   for (size_t n_slice = 0; n_slice < slice_h->size(); n_slice++) {
+    // std::cout <<"n_slice: " << n_slice << std::endl;
 
     flashmatch::QCluster_t light_cluster;
 
     _dep_slice.clear();
+    _dep_pfpid.clear();
     _dep_x.clear();
     _dep_y.clear();
     _dep_z.clear();
     _dep_charge.clear();
     _dep_n_photons.clear();
+    _dep_trk.clear();
 
     // Get the associated PFParticles
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfps.at(n_slice);
@@ -520,7 +527,9 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
     for (size_t n_pfp = 0; n_pfp < pfp_v.size(); n_pfp++) {
 
       auto pfp = pfp_v[n_pfp];
-
+      // std::cout << "pfpid: " << pfp->Self() << std::endl;
+      // if (pfp->IsPrimary())
+      //   std::cout << "primary pfpid:" << pfp->Self() << std::endl;
       // Get the associated SpacePoints
       std::vector<art::Ptr<recob::SpacePoint>> spacepoint_v = pfp_to_spacepoints.at(pfp.key());
 
@@ -552,15 +561,19 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           light_cluster.emplace_back(position[0],
                                      position[1],
                                      position[2],
-                                     GetNPhotons(charge, pfp, g4param));
+                                     GetNPhotons(charge, pfp, g4param),
+                                     -1);
 
           // Also save the quantites for the output tree
-          _dep_slice.push_back(_light_cluster_v.size());
+          // _dep_slice.push_back(_light_cluster_v.size());,
+          _dep_slice.push_back(n_slice);
+          _dep_pfpid.push_back(pfp->Self());
           _dep_x.push_back(position[0]);
           _dep_y.push_back(position[1]);
           _dep_z.push_back(position[2]);
           _dep_charge.push_back(charge);
           _dep_n_photons.push_back(GetNPhotons(charge, pfp, g4param));
+          _dep_trk.push_back(::lar_pandora::LArPandoraHelper::IsTrack(pfp)); 
         }
       } // End loop over Spacepoints
     } // End loop over PFParticle
@@ -595,7 +608,10 @@ float SBNDOpT0Finder::GetNPhotons(const float charge,
   // double Recombk = g4param->Recombk() / lar_density; // kV/MeV
   double ModBoxA = g4param->ModBoxA(); // unitless 
   double ModBoxB = g4param->ModBoxB() / lar_density / EField; // units of cm/MeV
-  double W_ion = 1. / g4param->GeVToElectrons() * 1e3; // MeV, ionization work function 
+  double W_ion = 1. / g4param->GeVToElectrons() * 1e3; // MeV, ionization work function
+  // std::cout << "W_ion: " << W_ion << std::endl; 
+  // std::cout << "A: " << ModBoxA << std::endl;
+  // std::cout << "B: " << ModBoxB << std::endl;
   double W_ph  = 19.5*1e-6; // MeV, ion+excitation work function 
   double ds = 0.3; // cm, assuming step size equal to wire separation
   double ADCToElectron = 1/(6.29778e-3*2); // e- /ADC*time_ticks, from detectorproperties_sbnd.fcl
