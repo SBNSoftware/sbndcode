@@ -40,7 +40,7 @@
 #include "particleid_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-#include "crtsimhitproducer_sbnd.fcl"
+#include "crthitproducer_sbnd.fcl"
 ##include "crttzeroproducer_sbnd.fcl"
 #include "crttrackproducer_sbnd.fcl"
 #include "crtt0matchingalg_sbnd.fcl"
@@ -157,7 +157,7 @@ physics:
   pmatrackcalo:        @local::sbnd_calomc
   pmatrackpid:         @local::sbnd_chi2pid
 
-  crthit:              @local::standard_crtsimhitproducer
+  crthit:              @local::standard_crthitproducer
   #crttzero:            @local::standard_crttzeroproducer
   crttrack:            @local::standard_crttrackproducer
   crthitt0:            @local::sbnd_crthitt0producer

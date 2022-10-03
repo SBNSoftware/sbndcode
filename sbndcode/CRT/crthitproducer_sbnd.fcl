@@ -1,0 +1,16 @@
+BEGIN_PROLOG
+
+standard_crthitalg:
+{
+   ADCThreshold: 60
+}
+
+
+standard_crthitproducer:
+{
+    module_type:          "sbndcode/CRT/CRTHitProducer"
+    FEBDataModuleLabel:   "crtsim"
+    HitRecoAlg:           @local::standard_crthitalg
+}
+
+END_PROLOG
