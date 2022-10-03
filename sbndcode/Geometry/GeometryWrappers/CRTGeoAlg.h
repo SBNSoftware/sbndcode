@@ -1,7 +1,6 @@
 #ifndef CRTGEOALG_H_SEEN
 #define CRTGEOALG_H_SEEN
 
-
 ///////////////////////////////////////////////
 // CRTGeoAlg.h
 //
@@ -38,14 +37,15 @@
 namespace sbnd{
 
   struct CRTSiPMGeo{
-    CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const double location[3])
+    CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const double location[3], 
+	       const uint32_t _pedestal)
     {
       stripName = _stripName;
       channel   = _channel;
       x         = location[0];
       y         = location[1];
       z         = location[2];
-
+      pedestal  = _pedestal;
       null = false;
     }
     std::string stripName;
@@ -54,6 +54,7 @@ namespace sbnd{
     double      y;
     double      z;
     bool        null;
+    uint32_t    pedestal;
   };
 
   // CRT strip geometry struct contains dimensions and mother module
@@ -111,7 +112,8 @@ namespace sbnd{
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet, 
-		 const uint16_t _adID, const std::string &_taggerName)
+		 const uint16_t _adID, const std::string &_taggerName,
+		 const uint32_t _cableDelayCorrection)
     {
       name       = moduleNode->GetName();
       taggerName = _taggerName;
@@ -147,6 +149,8 @@ namespace sbnd{
       minZ = std::min(limitsWorld[2], limitsWorld2[2]);
       maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
 
+      cableDelayCorrection = _cableDelayCorrection;
+
       adID = _adID;
       null = false;
     }
@@ -161,6 +165,7 @@ namespace sbnd{
     size_t        planeID;
     bool          top;
     uint16_t      adID;
+    uint32_t      cableDelayCorrection;
     bool          null;
   };
 
@@ -214,6 +219,7 @@ namespace sbnd{
   public:
 
     CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore const *auxdet_geometry);
+    CRTGeoAlg(fhicl::ParameterSet const &p);
     CRTGeoAlg();
 
     ~CRTGeoAlg();
@@ -230,7 +236,13 @@ namespace sbnd{
 
     CRTModuleGeo GetModule(const std::string moduleName) const;
 
+    CRTModuleGeo GetModule(const uint16_t channel) const;
+
     CRTStripGeo GetStrip(const std::string stripName) const;
+
+    CRTStripGeo GetStrip(const uint16_t channel) const;
+
+    CRTSiPMGeo GetSiPM(const uint16_t channel) const;
 
     std::string GetTaggerName(const std::string name) const;
 
@@ -264,8 +276,12 @@ namespace sbnd{
 
     geo::GeometryCore const       *fGeometryService;
     const geo::AuxDetGeometryCore *fAuxDetGeoCore;
-  };
 
+    std::vector<std::pair<unsigned, double>> fCableLengthCorrectionsVector;
+    std::map<unsigned, double>               fCableLengthCorrections;
+    std::vector<std::pair<unsigned, double>> fSiPMPedestalsVector;
+    std::map<unsigned, double>               fSiPMPedestals;
+  };
 }
 
 #endif
