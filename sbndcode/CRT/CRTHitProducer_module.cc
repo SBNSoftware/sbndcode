@@ -43,8 +43,7 @@ public:
 
 private:
 
-  CRTHitRecoAlg *hitRecoAlg;
-
+  CRTHitRecoAlg fHitRecoAlg;
   std::string fFEBDataModuleLabel;
 
 };
@@ -52,6 +51,7 @@ private:
 
 sbnd::CRTHitProducer::CRTHitProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
+  , fHitRecoAlg(p.get<fhicl::ParameterSet>("HitRecoAlg"))
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   {
     produces<std::vector<sbn::crt::CRTHit> >();
@@ -71,7 +71,7 @@ void sbnd::CRTHitProducer::produce(art::Event& e)
 
   // Performs pedestal subtraction and cable length corrections
   // Only keeps strips passing threshold requirement
-  std::vector<sbnd::CRTStripHit> stripHits = hitRecoAlg->ProduceStripHits(FEBDataVec);
+  std::vector<sbnd::CRTStripHit> stripHits = fHitRecoAlg.ProduceStripHits(FEBDataVec);
 
   e.put(std::move(crtHitVec));
   e.put(std::move(crtHitDataAssn));

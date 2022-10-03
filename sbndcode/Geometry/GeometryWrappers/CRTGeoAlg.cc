@@ -2,30 +2,24 @@
 
 namespace sbnd{
 
-  // Constructor - get values from the auxdet geometry service
-  CRTGeoAlg::CRTGeoAlg() :
-    CRTGeoAlg::CRTGeoAlg(lar::providerFrom<geo::Geometry>(), 
-                         ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
+  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p) :
+    CRTGeoAlg(p, lar::providerFrom<geo::Geometry>(), 
+              ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
   {}
 
-  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p)
-  {
-    fCableLengthCorrectionsVector = p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrectionsMap", std::vector<std::pair<unsigned, double>>());
-    fCableLengthCorrections       = std::map<unsigned, double>(fCableLengthCorrectionsVector.begin(), fCableLengthCorrectionsVector.end());
-
-    fSiPMPedestalsVector          = p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestalsVector", std::vector<std::pair<unsigned, double>>());
-    fSiPMPedestals                = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), fSiPMPedestalsVector.end());
-
-    CRTGeoAlg(lar::providerFrom<geo::Geometry>(), 
-	      ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr());
-  }
-
-  CRTGeoAlg::CRTGeoAlg(geo::GeometryCore const *geometry, 
-                       geo::AuxDetGeometryCore const *auxdet_geometry) 
+  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry, 
+                       geo::AuxDetGeometryCore const *auxdet_geometry)
+    : fCableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
+    , fSiPMPedestalsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestals", std::vector<std::pair<unsigned, double>>()))
   {
     fGeometryService = geometry;
     fAuxDetGeoCore   = auxdet_geometry;
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
+
+    fCableLengthCorrections = std::map<unsigned, double>(fCableLengthCorrectionsVector.begin(), 
+                                                         fCableLengthCorrectionsVector.end());
+    fSiPMPedestals          = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), 
+                                                         fSiPMPedestalsVector.end());
 
     // Record used objects
     std::vector<std::string> usedTaggers;
@@ -71,18 +65,20 @@ namespace sbnd{
             if(std::find(usedTaggers.begin(), usedTaggers.end(), taggerName) == usedTaggers.end())
               {
                 usedTaggers.push_back(taggerName);
-                fTaggers.at(taggerName) = CRTTaggerGeo(nodeTagger, nodeDet);
+                CRTTaggerGeo tagger  = CRTTaggerGeo(nodeTagger, nodeDet);
+                fTaggers.insert(std::pair<std::string, CRTTaggerGeo>(taggerName, tagger));
               }
 
             // Fill the module information
             const std::string moduleName = nodeModule->GetName();
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-		const uint32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
-		  fCableLengthCorrections.at(32 * ad_i) : 0;
+                const uint32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
+                  fCableLengthCorrections.at(ad_i) : 0;
                 usedModules.push_back(moduleName);
-                fModules.at(moduleName) = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-						       cableDelayCorrection);
+                CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
+                                                    cableDelayCorrection);
+                fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
             // Fill the strip information
@@ -92,12 +88,13 @@ namespace sbnd{
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
               {
                 usedStrips.push_back(stripName);
-                fStrips.at(stripName) = CRTStripGeo(nodeStrip, auxDetSensitive, ads_i, moduleName,
-                                                    channel0, channel1);
+                CRTStripGeo strip  = CRTStripGeo(nodeStrip, auxDetSensitive, ads_i, moduleName,
+                                                 channel0, channel1);
+                fStrips.insert(std::pair<std::string, CRTStripGeo>(stripName, strip));
               }
 
-	    double halfWidth  = auxDetSensitive.HalfWidth1();
-	    double halfHeight = auxDetSensitive.HalfHeight();
+            double halfWidth  = auxDetSensitive.HalfWidth1();
+            double halfHeight = auxDetSensitive.HalfHeight();
 
             // Calcualte SiPM locations
             // SiPM0 is on the left in local coordinates
@@ -114,12 +111,14 @@ namespace sbnd{
             double sipm1XYZWorld[3];
             auxDetSensitive.LocalToWorld(sipm1XYZ, sipm1XYZWorld);
 
-	    const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : 0;
-	    const uint32_t pedestal1 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel1) : 0;
+            const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : 0;
+            const uint32_t pedestal1 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel1) : 0;
 
             // Fill SiPM information
-            fSiPMs.at(channel0) = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0);
-            fSiPMs.at(channel1) = CRTSiPMGeo(stripName, channel1, sipm0XYZWorld, pedestal1);
+            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0);
+            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, pedestal1);
+            fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel0, sipm0));
+            fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel1, sipm1));
           }
       }
   }
@@ -224,7 +223,7 @@ namespace sbnd{
   }
 
   std::vector<double> CRTGeoAlg::StripLimitsWithChargeSharing(const std::string stripName, const double x, 
-							      const double ex)
+                                                              const double ex)
   {
     const CRTStripGeo &strip = fStrips.at(stripName);
 
@@ -306,7 +305,7 @@ namespace sbnd{
 
     for(auto const &[moduleName, module2] : fModules)
       {
-	
+        
         if(module.taggerName != taggerName || module2.planeID == planeID) 
           continue;
 

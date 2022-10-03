@@ -36,29 +36,17 @@ namespace sbnd{
   class CRTHitRecoAlg {
   public:
 
-    struct Config {
-      using Name = fhicl::Name;
-      using Comment = fhicl::Comment;
-
-      fhicl::Atom<uint16_t> ADCThreshold {
-        Name("ADCThreshold"),
-	  Comment("SiPM ADC value required to produce a hit")
-	  };
-    };
-
-    CRTHitRecoAlg(const Config& config);
+    CRTHitRecoAlg(const fhicl::ParameterSet &p);
 
     CRTHitRecoAlg();
 
     ~CRTHitRecoAlg();
 
-    void reconfigure(const Config& config);
-    
     std::vector<CRTStripHit> ProduceStripHits(std::vector<art::Ptr<sbnd::crt::FEBData>> &dataVec);
     
   private:
     
-    CRTGeoAlg fCrtGeo;
+    CRTGeoAlg fCRTGeoAlg;
     uint16_t fADCThreshold;
   };
 

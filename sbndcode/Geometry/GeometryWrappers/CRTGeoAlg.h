@@ -218,9 +218,9 @@ namespace sbnd{
   class CRTGeoAlg {
   public:
 
-    CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore const *auxdet_geometry);
-    CRTGeoAlg(fhicl::ParameterSet const &p);
-    CRTGeoAlg();
+    CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry, 
+	      geo::AuxDetGeometryCore const *auxdet_geometry);
+    CRTGeoAlg(fhicl::ParameterSet const &p = fhicl::ParameterSet());
 
     ~CRTGeoAlg();
 

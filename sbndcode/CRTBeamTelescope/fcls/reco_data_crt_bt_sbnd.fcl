@@ -1,3 +1,7 @@
+#include "crt_bt_data_params.fcl"
 #include "reco_crt_bt_sbnd.fcl"
 
 services.BackTrackerService: @erase
+
+physics.producers.crthit.HitRecoAlg.GeoAlg.CableLengthCorrections: @local::crt_bt_data_params.CableLengthCorrections
+physics.producers.crthit.HitRecoAlg.GeoAlg.SiPMPedestals:          @local::crt_bt_data_params.SiPMPedestals
