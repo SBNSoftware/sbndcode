@@ -15,7 +15,6 @@ sbnd_simple_flashmatch:{
   OnlyCollectionWires: false
   ForceConcurrence: true
   CorrectDriftDistance: true
-  UseUncoatedPMT: true
   UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
@@ -28,9 +27,11 @@ sbnd_simple_flashmatch:{
   MinParticleQ: 0.
   MinSliceQ: 0.
   OpHitTime: "PeakTime" # TODO: test and change to RiseTime or StartTime once they become available
+  MinInTimeFlashes: 2
   MaxFlashes: 7
   MinOpHPE: 0.
   MinFlashPE: 10.
+  FlashPEFraction: 0.8
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
   # TODO: tune above
@@ -51,48 +52,60 @@ sbnd_simple_flashmatch:{
   #       nu only stats.  The binning has to be done such that no two
   #       PMTs fall under the same bin. Could potentially use
   #       irregular binning?
-  #
-  # DriftDistance: 202.05 # only used for metrics creation
-  # XBins: 20
-  # HeightDistance: 400.
-  # YBins: at least 9
-  # LengthDistance: 500.
-  # ZBins: at least 12
+  # TODO: below needs to be tested
+  x_bins_: 10
+  x_low:    0.
+  x_up:   202.05
+  y_bins:   9
+  y_low: -204.
+  y_up:   204.
+  z_bins:  12
+  z_low:  -11.0
+  z_up:   511.0
 
   # block for Y and Z ophit distributions, used for unbiassing
+  fit_func_y:    "pol2"
   YBins: 9
   YLow: -180.
   YHigh: 180.
+  fit_func_z:    "pol2"
   ZBins: 12
   ZLow: 10.
-  YHigh: 490.
-  SkewLimitY: 10.
-  SkewLimitZ: 10.
+  ZHigh: 490.
+  SkewLimitY: 5.
+  SkewLimitZ: 5.
 
   # binning for template and metrics generation
-  score_bins:  60
-  score_low:    0.
-  score_up:    30.
-  dy_bins:     60
-  dy_low:    -150.
-  dy_up:      150.
-  dz_bins:     60
-  dz_low:    -150.
-  dz_up:      150.
-  rr_bins:     40
-  rr_low:       0.
-  rr_up:      200.
+  score: {
+    bins:     60
+    low:       0.
+    up:       30. }
+  dy: {
+    bins:     60
+    low:    -150.
+    up:      150. }
+  dz: {
+    bins:     60
+    low:    -150.
+    up:      150. }
+  rr: {
+    bins:     40
+    low:       0.
+    up:      200. }
+  ratio: {
+    bins:     40
+    low:       0.
+    up:        1. }
+  slope: {
+    bins:     40     # TODO
+    low:       0.    # TODO
+    up:        1.}   # TODO
+  petoq: {
+    bins:     40  
+    low:       0. 
+    up:        1.4}
   # rr_TF1_fit: "pol3" # LEGACY, not used in the normal operation but helpful for diagnostics
-  ratio_bins:  40
-  ratio_low:    0.
-  ratio_up:     1.
   # ratio_TF1_fit: "pol3" # LEGACY, not used in the normal operation but helpful for diagnostics
-  slope_bins:  40     # TODO
-  slope_low:   -2.    # TODO
-  slope_up:     2.    # TODO
-  petoq_bins:  40  
-  petoq_low:    0. 
-  petoq_up:     1.4
 }
 
 sbnd_simple_flashmatch_sce: @local::sbnd_simple_flashmatch

@@ -4,6 +4,7 @@ physics.producers.fmatch.MakeTree:       true
 physics.producers.fmatch.StoreMCInfo:    true
 physics.producers.fmatch.SelectNeutrino: true
 physics.producers.fmatch.CorrectDriftDistance: false
+physics.producers.fmatch.MinInTimeFlashes:     1
 physics.producers.fmatch.MaxFlashes:     1
 physics.producers.fmatch.FlashFindingTimeStart: @local::sbnd_simple_flashmatch.BeamSpillTimeStart
 physics.producers.fmatch.FlashFindingTimeEnd:   @local::sbnd_simple_flashmatch.BeamSpillTimeEnd
