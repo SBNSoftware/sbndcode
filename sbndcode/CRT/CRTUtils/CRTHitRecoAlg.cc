@@ -92,7 +92,7 @@ namespace sbnd{
         std::vector<CRTStripHit> hitsOrien0 = stripHitsVec[0];
         std::vector<CRTStripHit> hitsOrien1 = stripHitsVec[1];
 
-	std::set<unsigned> used;
+        std::set<unsigned> used;
 
         for(unsigned i = 0; i < hitsOrien0.size(); ++i)
           {
@@ -101,10 +101,10 @@ namespace sbnd{
 
             for(unsigned j = 0; j < hitsOrien1.size(); ++j)
               {
-		if(used.find(j) != used.end())
-		  continue;
+                if(used.find(j) != used.end())
+                  continue;
 
-                const CRTStripHit hit1     = hitsOrien1[i];
+                const CRTStripHit hit1     = hitsOrien1[j];
                 const CRTStripGeo strip1 = fCRTGeoAlg.GetStrip(hit1.channel);
 
                 // Check whether the two strips responsible for these hits overlap.
@@ -137,10 +137,19 @@ namespace sbnd{
                                         err,
                                         tagger);
 
-		used.insert(j);
+                mf::LogInfo("CRTHitRecoAlg") << "\nCreating CRTHit"
+                                             << "from FEBs: " << (unsigned) crtHit.feb_id[0] 
+                                             << " & " << (unsigned) crtHit.feb_id[1] << '\n'
+                                             << "at position: " << pos.X() << ", " 
+                                             << pos.Y() << ", " << pos.Z() << "cm\n"
+                                             << "and t1: " << t1 << '\n'
+                                             << "with PE: " << pe0+pe1 << '\n'
+                                             << "on tagger: " << tagger << std::endl;
 
+                used.insert(j);
                 crtHits.emplace_back(crtHit);
-              }         
+                break;
+              }
           }
       }
     return crtHits;
