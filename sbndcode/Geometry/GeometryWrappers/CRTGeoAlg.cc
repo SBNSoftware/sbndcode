@@ -217,13 +217,13 @@ namespace sbnd{
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).taggerName;
   }
 
-  size_t CRTGeoAlg::ChannelToPlaneID(const uint16_t channel) const
+  size_t CRTGeoAlg::ChannelToOrientation(const uint16_t channel) const
   {
-    return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).planeID;
+    return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).orientation;
   }
 
-  std::vector<double> CRTGeoAlg::StripLimitsWithChargeSharing(const std::string stripName, const double x, 
-                                                              const double ex)
+  std::vector<double> CRTGeoAlg::StripHit3DPos(const std::string stripName, const double x, 
+                                               const double ex)
   {
     const CRTStripGeo &strip = fStrips.at(stripName);
 
@@ -250,7 +250,7 @@ namespace sbnd{
     return limits;
   }
 
-  geo::Point_t CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
+  TVector3 CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
   {
     const CRTSiPMGeo &sipm = fSiPMs.at(channel);
     return {sipm.x, sipm.y, sipm.z};
@@ -262,7 +262,7 @@ namespace sbnd{
     return std::make_pair(strip.channel0, strip.channel1);
   }
 
-  double CRTGeoAlg::DistanceDownStrip(const geo::Point_t position, const std::string stripName) const
+  double CRTGeoAlg::DistanceDownStrip(const TVector3 position, const std::string stripName) const
   {
     // === TO-DO ===
     // This assumes that the CRT is arranged such that its three axes map onto the
@@ -272,7 +272,7 @@ namespace sbnd{
     const CRTStripGeo &strip = fStrips.at(stripName);
     double distance = std::numeric_limits<double>::max();
 
-    const geo::Point_t pos = ChannelToSipmPosition(strip.channel0);
+    const TVector3 pos = ChannelToSipmPosition(strip.channel0);
 
     const double xdiff = std::abs(strip.maxX-strip.minX);
     const double ydiff = std::abs(strip.maxY-strip.minY);
@@ -285,38 +285,23 @@ namespace sbnd{
     return std::abs(distance);
   }
 
-  bool CRTGeoAlg::CheckOverlap(const CRTModuleGeo &module1, const CRTModuleGeo &module2)
+  double CRTGeoAlg::DistanceDownStrip(const TVector3 position, const uint16_t channel) const
   {
-    const double minX = std::max(module1.minX, module2.minX);
-    const double maxX = std::min(module1.maxX, module2.maxX);
-    const double minY = std::max(module1.minY, module2.minY);
-    const double maxY = std::min(module1.maxY, module2.maxY);
-    const double minZ = std::max(module1.minZ, module2.minZ);
-    const double maxZ = std::min(module1.maxZ, module2.maxZ);
+    const CRTSiPMGeo sipm = fSiPMs.at(channel);
+   
+    return DistanceDownStrip(position, sipm.stripName);
+  }
+
+  bool CRTGeoAlg::CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2)
+  {
+    const double minX = std::max(strip1.minX, strip2.minX);
+    const double maxX = std::min(strip1.maxX, strip2.maxX);
+    const double minY = std::max(strip1.minY, strip2.minY);
+    const double maxY = std::min(strip1.maxY, strip2.maxY);
+    const double minZ = std::max(strip1.minZ, strip2.minZ);
+    const double maxZ = std::min(strip1.maxZ, strip2.maxZ);
 
     // If the two strips overlap in 2 dimensions then return true
     return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
-  }
-
-  bool CRTGeoAlg::HasOverlap(const CRTModuleGeo &module)
-  {
-    const size_t planeID         = module.planeID;
-    const std::string taggerName = module.taggerName;
-
-    for(auto const &[moduleName, module2] : fModules)
-      {
-        
-        if(module.taggerName != taggerName || module2.planeID == planeID) 
-          continue;
-
-        if(CheckOverlap(module, module2)) 
-          return true;
-      }
-    return false;
-  }
-
-  bool CRTGeoAlg::StripHasOverlap(const std::string stripName)
-  {
-    return HasOverlap(fModules.at(fStrips.at(stripName).moduleName));
   }
 }
