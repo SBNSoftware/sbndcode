@@ -232,6 +232,12 @@ namespace sbnd{
 
     size_t NumStrips() const;
 
+    std::map<std::string, CRTTaggerGeo> GetTaggers() const;
+
+    std::map<std::string, CRTModuleGeo> GetModules() const;
+
+    std::map<std::string, CRTStripGeo> GetStrips() const;
+
     CRTTaggerGeo GetTagger(const std::string taggerName) const;
 
     CRTModuleGeo GetModule(const std::string moduleName) const;

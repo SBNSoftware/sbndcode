@@ -1,0 +1,11 @@
+#include "crteventdisplayalg_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crteventdisplay_sbnd:
+{
+   EventDisplayConfig: @local::crteventdisplayalg_sbnd
+   module_type:	       "sbndcode/CRT/CRTEventDisplay"
+}
+
+END_PROLOG

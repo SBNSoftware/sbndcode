@@ -167,6 +167,21 @@ namespace sbnd{
     return fStrips.size();
   }
 
+  std::map<std::string, CRTTaggerGeo> CRTGeoAlg::GetTaggers() const
+  {
+    return fTaggers;
+  }
+
+  std::map<std::string, CRTModuleGeo> CRTGeoAlg::GetModules() const
+  {
+    return fModules;
+  }
+
+  std::map<std::string, CRTStripGeo> CRTGeoAlg::GetStrips() const
+  {
+    return fStrips;
+  }
+
   CRTTaggerGeo CRTGeoAlg::GetTagger(const std::string taggerName) const
   {
     return fTaggers.at(taggerName);
