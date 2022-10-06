@@ -3,7 +3,7 @@
 namespace sbnd{
 
   CRTHitRecoAlg::CRTHitRecoAlg(const fhicl::ParameterSet &p) 
-    : fCRTGeoAlg(p.get<fhicl::ParameterSet>("GeoAlg"))
+    : fCRTGeoAlg(p.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
     , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
     , fQPedestal(p.get<double>("QPedestal"))
     , fQSlope(p.get<double>("QSlope"))
