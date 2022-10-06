@@ -88,17 +88,22 @@ namespace sbnd{
         }
 
         // Split hits by orientation, we want to look for coincidences between strips in 
-        // opposite orientation
+        // opposite orientations
         std::vector<CRTStripHit> hitsOrien0 = stripHitsVec[0];
         std::vector<CRTStripHit> hitsOrien1 = stripHitsVec[1];
 
+	std::set<unsigned> used;
+
         for(unsigned i = 0; i < hitsOrien0.size(); ++i)
           {
-            const CRTStripHit hit0    = hitsOrien0[i];
+            const CRTStripHit hit0   = hitsOrien0[i];
             const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(hit0.channel);
 
             for(unsigned j = 0; j < hitsOrien1.size(); ++j)
               {
+		if(used.find(j) != used.end())
+		  continue;
+
                 const CRTStripHit hit1     = hitsOrien1[i];
                 const CRTStripGeo strip1 = fCRTGeoAlg.GetStrip(hit1.channel);
 
@@ -131,6 +136,9 @@ namespace sbnd{
                                         pos,
                                         err,
                                         tagger);
+
+		used.insert(j);
+
                 crtHits.emplace_back(crtHit);
               }         
           }
