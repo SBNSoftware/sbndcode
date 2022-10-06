@@ -3,7 +3,7 @@
 
 BEGIN_PROLOG
 
-standard_crteventdisplay:
+crteventdisplayalg_sbnd:
 {
     SimLabel:         "largeant"
     CRTDataLabel:     "crt"
@@ -12,7 +12,7 @@ standard_crteventdisplay:
     TPCTrackLabel:    "pandoraTrack"
     ClockSpeedCRT:    @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
 
-    DrawTaggers:          false   
+    DrawTaggers:          false
     DrawModules:          false
     DrawTpc:              true
     DrawCrtData:          false

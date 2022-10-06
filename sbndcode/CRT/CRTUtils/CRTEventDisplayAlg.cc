@@ -1,25 +1,25 @@
-#include "CRTEventDisplay.h"
+#include "CRTEventDisplayAlg.h"
 
 namespace sbnd{
 
-CRTEventDisplay::CRTEventDisplay(const Config& config){
+CRTEventDisplayAlg::CRTEventDisplayAlg(const Config& config){
 
   this->reconfigure(config);
   
 }
 
 
-CRTEventDisplay::CRTEventDisplay(){
+CRTEventDisplayAlg::CRTEventDisplayAlg(){
 
 }
 
 
-CRTEventDisplay::~CRTEventDisplay(){
+CRTEventDisplayAlg::~CRTEventDisplayAlg(){
 
 }
 
 
-void CRTEventDisplay::reconfigure(const Config& config){
+void CRTEventDisplayAlg::reconfigure(const Config& config){
 
   fSimLabel = config.SimLabel();
   fCRTDataLabel = config.CRTDataLabel();
@@ -62,37 +62,37 @@ void CRTEventDisplay::reconfigure(const Config& config){
 
 }
  
-void CRTEventDisplay::SetDrawTaggers(bool tf){
+void CRTEventDisplayAlg::SetDrawTaggers(bool tf){
   fDrawTaggers = tf;
 }
-void CRTEventDisplay::SetDrawTpc(bool tf){
+void CRTEventDisplayAlg::SetDrawTpc(bool tf){
   fDrawTpc = tf;
 }
-void CRTEventDisplay::SetDrawCrtData(bool tf){
+void CRTEventDisplayAlg::SetDrawCrtData(bool tf){
   fDrawCrtData = tf;
 }
-void CRTEventDisplay::SetDrawCrtHits(bool tf){
+void CRTEventDisplayAlg::SetDrawCrtHits(bool tf){
   fDrawCrtHits = tf;
 }
-void CRTEventDisplay::SetDrawCrtTracks(bool tf){
+void CRTEventDisplayAlg::SetDrawCrtTracks(bool tf){
   fDrawCrtTracks = tf;
 }
-void CRTEventDisplay::SetDrawTpcTracks(bool tf){
+void CRTEventDisplayAlg::SetDrawTpcTracks(bool tf){
   fDrawTpcTracks = tf;
 }
-void CRTEventDisplay::SetDrawTrueTracks(bool tf){
+void CRTEventDisplayAlg::SetDrawTrueTracks(bool tf){
   fDrawTrueTracks = tf;
 }
-void CRTEventDisplay::SetPrint(bool tf){
+void CRTEventDisplayAlg::SetPrint(bool tf){
   fPrint = tf;
 }
 
-void CRTEventDisplay::SetTrueId(int id){
+void CRTEventDisplayAlg::SetTrueId(int id){
   fUseTrueID = true;
   fTrueID = id;
 }
 
-bool CRTEventDisplay::IsVisible(const simb::MCParticle& particle){
+bool CRTEventDisplayAlg::IsVisible(const simb::MCParticle& particle){
   int pdg = std::abs(particle.PdgCode());
   double momentum = particle.P();
   double momLimit = 0.05;
@@ -105,7 +105,7 @@ bool CRTEventDisplay::IsVisible(const simb::MCParticle& particle){
   return false;
 }
 
-void CRTEventDisplay::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour){
+void CRTEventDisplayAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour){
 
   c1->cd();
   TList *outline = new TList;
@@ -130,33 +130,33 @@ void CRTEventDisplay::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colo
 
 }
 
-void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
+void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                            const art::Event& event){
   // Create a canvas 
   TCanvas *c1 = new TCanvas("c1","",700,700);
 
   // Draw the CRT taggers
   if(fDrawTaggers){
-    for(size_t i = 0; i < fCrtGeo.NumTaggers(); i++){
-      double rmin[3] = {fCrtGeo.GetTagger(i).minX, 
-                        fCrtGeo.GetTagger(i).minY, 
-                        fCrtGeo.GetTagger(i).minZ};
-      double rmax[3] = {fCrtGeo.GetTagger(i).maxX, 
-                        fCrtGeo.GetTagger(i).maxY, 
-                        fCrtGeo.GetTagger(i).maxZ};
+    for(auto const &[name, tagger] : fCrtGeo.GetTaggers()){
+      double rmin[3] = {tagger.minX, 
+                        tagger.minY, 
+                        tagger.minZ};
+      double rmax[3] = {tagger.maxX, 
+                        tagger.maxY, 
+                        tagger.maxZ};
       DrawCube(c1, rmin, rmax, fTaggerColour);
     }
   }
 
   // Draw individual CRT modules
   if(fDrawModules){
-    for(size_t i = 0; i < fCrtGeo.NumModules(); i++){
-      double rmin[3] = {fCrtGeo.GetModule(i).minX, 
-                        fCrtGeo.GetModule(i).minY, 
-                        fCrtGeo.GetModule(i).minZ};
-      double rmax[3] = {fCrtGeo.GetModule(i).maxX, 
-                        fCrtGeo.GetModule(i).maxY, 
-                        fCrtGeo.GetModule(i).maxZ};
+    for(auto const &[name, module] : fCrtGeo.GetModules()){
+      double rmin[3] = {module.minX, 
+                        module.minY, 
+                        module.minZ};
+      double rmax[3] = {module.maxX, 
+                        module.maxY, 
+                        module.maxZ};
       DrawCube(c1, rmin, rmax, fTaggerColour);
     }
   }
@@ -209,7 +209,7 @@ void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
       DrawCube(c1, rmin, rmax, fCrtDataColour);
 
       if(fPrint) std::cout<<"->True ID: "<<trueId<<", channel = "<<data.Channel()<<", tagger = "
-                          <<fCrtGeo.GetModule(fCrtGeo.GetStrip(stripName).module).tagger<<", time = "<<time<<"\n";
+                          <<fCrtGeo.GetModule(fCrtGeo.GetStrip(stripName).moduleName).taggerName<<", time = "<<time<<"\n";
     }
   }
 
@@ -222,13 +222,13 @@ void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
     for(auto const& hit : (*crtHitHandle)){
 
       // Skip if outside specified time window if time window used
-      double time = (double)(int)hit.ts1_ns * 1e-3;
+      /*      double time = (double)(int)hit.ts1_ns * 1e-3;
       if(!(fMinTime == fMaxTime || (time > fMinTime && time < fMaxTime))) continue;
 
       // Skip if it doesn't match the true ID if true ID is used
       int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, hit);
       if(fUseTrueID && trueId != fTrueID) continue;
-
+      */
       double rmin[3] = {hit.x_pos - hit.x_err,
                         hit.y_pos - hit.y_err,
                         hit.z_pos - hit.z_err};
@@ -237,8 +237,7 @@ void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
                         hit.z_pos + hit.z_err};
       DrawCube(c1, rmin, rmax, fCrtHitColour);
 
-      if(fPrint) std::cout<<"->True ID: "<<trueId<<", position = ("<<hit.x_pos<<", "
-                          <<hit.y_pos<<", "<<hit.z_pos<<"), time = "<<time<<"\n";
+      if(fPrint) std::cout << "Position = (" << hit.x_pos << ", " << hit.y_pos << ", " << hit.z_pos << ")\n";
     }
   }
 
@@ -346,7 +345,7 @@ void CRTEventDisplay::Draw(detinfo::DetectorClocksData const& clockData,
       if(!IsVisible(part)) continue;
 
       // Skip if particle doesn't cross the boundary enclosed by the CRTs
-      if(!fCrtGeo.EntersVolume(part)) continue;
+      //      if(!fCrtGeo.EntersVolume(part)) continue;
 
       size_t npts = part.NumberTrajectoryPoints();
       TPolyLine3D *line = new TPolyLine3D(npts);

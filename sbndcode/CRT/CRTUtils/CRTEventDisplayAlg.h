@@ -1,9 +1,9 @@
-#ifndef CRTEVENTDISPLAY_H_SEEN
-#define CRTEVENTDISPLAY_H_SEEN
+#ifndef CRTEVENTDISPLAYALG_H_SEEN
+#define CRTEVENTDISPLAYALG_H_SEEN
 
 
 ///////////////////////////////////////////////
-// CRTEventDisplay.h
+// CRTEventDisplayAlg.h
 //
 // Quick and dirty event display for SBND CRT
 // T Brooks (tbrooks@fnal.gov), November 2018
@@ -56,7 +56,7 @@ namespace detinfo { class DetectorClocksData; }
 
 namespace sbnd{
 
-  class CRTEventDisplay {
+  class CRTEventDisplayAlg {
   public:
 
     struct Config {
@@ -162,14 +162,14 @@ namespace sbnd{
 
     };
 
-    CRTEventDisplay(const Config& config);
+    CRTEventDisplayAlg(const Config& config);
 
-    CRTEventDisplay(const fhicl::ParameterSet& pset) :
-      CRTEventDisplay(fhicl::Table<Config>(pset, {})()) {}
+    CRTEventDisplayAlg(const fhicl::ParameterSet& pset) :
+      CRTEventDisplayAlg(fhicl::Table<Config>(pset, {})()) {}
 
-    CRTEventDisplay();
+    CRTEventDisplayAlg();
 
-    ~CRTEventDisplay();
+    ~CRTEventDisplayAlg();
 
     void reconfigure(const Config& config);
 
