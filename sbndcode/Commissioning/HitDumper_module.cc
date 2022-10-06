@@ -538,7 +538,7 @@ void Hitdumper::analyze(const art::Event& evt)
     uint32_t chan = striplist[i]->Channel();
 
     std::string taggerName = fCrtGeo.ChannelToTaggerName(chan);
-    size_t planeID         = fCrtGeo.ChannelToPlaneID(chan);
+    size_t planeID         = fCrtGeo.ChannelToOrientation(chan);
     sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(taggerName);
 
     bool keep_tagger = false;

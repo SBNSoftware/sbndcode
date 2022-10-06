@@ -38,7 +38,7 @@ namespace sbnd{
 
   struct CRTSiPMGeo{
     CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const double location[3], 
-	       const uint32_t _pedestal)
+               const uint32_t _pedestal)
     {
       stripName = _stripName;
       channel   = _channel;
@@ -60,8 +60,8 @@ namespace sbnd{
   // CRT strip geometry struct contains dimensions and mother module
   struct CRTStripGeo{
     CRTStripGeo(const TGeoNode *stripNode, const geo::AuxDetSensitiveGeo &auxDetSensitive, 
-		const uint16_t _adsID, const std::string &_moduleName,
-		const uint16_t _channel0, const uint16_t _channel1)
+                const uint16_t _adsID, const std::string &_moduleName,
+                const uint16_t _channel0, const uint16_t _channel1)
     {
       name       = stripNode->GetName();
       moduleName = _moduleName;
@@ -112,8 +112,8 @@ namespace sbnd{
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet, 
-		 const uint16_t _adID, const std::string &_taggerName,
-		 const uint32_t _cableDelayCorrection)
+                 const uint16_t _adID, const std::string &_taggerName,
+                 const uint32_t _cableDelayCorrection)
     {
       name       = moduleNode->GetName();
       taggerName = _taggerName;
@@ -136,7 +136,7 @@ namespace sbnd{
       double origin[3] = {0, 0, 0};
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
-      planeID = (modulePosMother[2] > 0);
+      orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs - CRT BeamTelescope specific
       top = false;
@@ -162,7 +162,7 @@ namespace sbnd{
     double        maxY;
     double        minZ;
     double        maxZ;
-    size_t        planeID;
+    uint16_t      orientation;
     bool          top;
     uint16_t      adID;
     uint32_t      cableDelayCorrection;
@@ -219,7 +219,7 @@ namespace sbnd{
   public:
 
     CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry, 
-	      geo::AuxDetGeometryCore const *auxdet_geometry);
+              geo::AuxDetGeometryCore const *auxdet_geometry);
     CRTGeoAlg(fhicl::ParameterSet const &p = fhicl::ParameterSet());
 
     ~CRTGeoAlg();
@@ -250,22 +250,19 @@ namespace sbnd{
 
     std::string ChannelToTaggerName(const uint16_t channel) const;
 
-    size_t ChannelToPlaneID(const uint16_t channel) const;
+    size_t ChannelToOrientation(const uint16_t channel) const;
 
-    std::vector<double> StripLimitsWithChargeSharing(const std::string stripName, const double x, 
-						     const double ex);
+    std::vector<double> StripHit3DPos(const std::string stripName, const double x, const double ex);
 
-    geo::Point_t ChannelToSipmPosition(const uint16_t channel) const;
+    TVector3 ChannelToSipmPosition(const uint16_t channel) const;
 
     std::pair<int, int> GetStripSipmChannels(const std::string stripName) const;
 
-    double DistanceDownStrip(const geo::Point_t position, const std::string stripName) const;
+    double DistanceDownStrip(const TVector3 position, const std::string stripName) const;
 
-    bool CheckOverlap(const CRTModuleGeo &module1, const CRTModuleGeo &module2);
+    double DistanceDownStrip(const TVector3 position, const uint16_t channel) const;
 
-    bool HasOverlap(const CRTModuleGeo &module);
-
-    bool StripHasOverlap(const std::string stripName);
+    bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
 
   private:
 
