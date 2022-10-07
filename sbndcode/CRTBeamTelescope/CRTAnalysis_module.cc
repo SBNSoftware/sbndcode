@@ -409,22 +409,21 @@ void CRTAnalysis::analyze(art::Event const& e)
 {
   if(_debug)
     {
-      for(size_t i = 0; i < _crt_geo.NumTaggers(); i++)
+      for(auto const &[name, tagger] : _crt_geo.GetTaggers())
 	{
-	  /*	  std::cout << "Tagger:  " << _crt_geo.GetTagger(i).name << '\n'
-		    << "X - Min: " << _crt_geo.GetTagger(i).minX << " Max: " << _crt_geo.GetTagger(i).maxX << '\n'
-		    << "Y - Min: " << _crt_geo.GetTagger(i).minY << " Max: " << _crt_geo.GetTagger(i).maxY << '\n'
-		    << "Z - Min: " << _crt_geo.GetTagger(i).minZ << " Max: " << _crt_geo.GetTagger(i).maxZ << '\n' << std::endl;
-	  */
+	  std::cout << "Tagger:  " << tagger.name << '\n'
+		    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
+		    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
+		    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
 	}
     }
   
   
   std::vector<double> upstream_limits = {999999., -999999., 999999., -999999., 999999., -999999.};
-  auto south_tagger = _crt_geo.GetTagger("volTaggerSouth_0");
-  std::vector<double> downstream_limits = {south_tagger.minX, south_tagger.maxX, south_tagger.minY, south_tagger.maxY, south_tagger.minZ, south_tagger.maxZ};
+  auto north_tagger = _crt_geo.GetTagger("volTaggerNorth_0");
+  std::vector<double> downstream_limits = {north_tagger.minX, north_tagger.maxX, north_tagger.minY, north_tagger.maxY, north_tagger.minZ, north_tagger.maxZ};
 
-  for(std::string name : {"volTaggerNorthOne_0", "volTaggerNorthTwo_0", "volTaggerNorthThree_0"})
+  for(std::string name : {"volTaggerSouthOne_0", "volTaggerSouthTwo_0", "volTaggerSouthThree_0"})
     {
       auto tagger = _crt_geo.GetTagger(name);
       if(tagger.minX < upstream_limits[0]) upstream_limits[0] = tagger.minX;
@@ -494,6 +493,8 @@ void CRTAnalysis::analyze(art::Event const& e)
   std::map<int, simb::MCParticle> trackid_to_mcp;
   art::Handle<std::vector<sim::AuxDetHit>> adh_h;
   std::vector<art::Ptr<sim::AuxDetHit>> adh_v;
+  art::Handle<std::vector<sbnd::crt::CRTData>> crt_data_h;
+  std::vector<art::Ptr<sbnd::crt::CRTData>> crt_data_v;
   
   if(!_data_mode)
     {
@@ -528,6 +529,16 @@ void CRTAnalysis::analyze(art::Event const& e)
 	throw std::exception();
       }
       art::fill_ptr_vector(adh_v, adh_h);
+
+      //
+      // Get the CRT Data
+      //
+      e.getByLabel(_crtdata_label, crt_data_h);
+      if(!crt_data_h.isValid()){
+	std::cout << "CRTData product " << _crtdata_label << " not found..." << std::endl;
+	throw std::exception();
+      }
+      art::fill_ptr_vector(crt_data_v, crt_data_h);
     }
      
   //
@@ -543,19 +554,10 @@ void CRTAnalysis::analyze(art::Event const& e)
   art::fill_ptr_vector(crt_hit_v, crt_hit_h);
   
   // Get the CRT Hits to CRTData association
-  art::FindManyP<sbnd::crt::CRTData> crt_hit_to_data (crt_hit_h, e, _crthit_label);
-
-  //
-  // Get the CRT Data
-  //
-  art::Handle<std::vector<sbnd::crt::CRTData>> crt_data_h;
-  e.getByLabel(_crtdata_label, crt_data_h);
-  if(!crt_data_h.isValid()){
-    std::cout << "CRTData product " << _crtdata_label << " not found..." << std::endl;
-    throw std::exception();
-  }
-  std::vector<art::Ptr<sbnd::crt::CRTData>> crt_data_v;
-  art::fill_ptr_vector(crt_data_v, crt_data_h);
+  art::FindManyP<sbnd::crt::CRTData> *crt_hit_to_data;
+    if(!_data_mode) {
+      crt_hit_to_data = new art::FindManyP<sbnd::crt::CRTData>(crt_hit_h, e, _crthit_label);
+    }
 
   // Get the CRTData to AuxDetIDE association
   art::FindManyP<sim::AuxDetIDE> *crt_data_to_ides;
@@ -564,7 +566,10 @@ void CRTAnalysis::analyze(art::Event const& e)
   }
 
   // Get the FEBData to CRTData association
-  art::FindManyP<sbnd::crt::FEBData> crt_data_to_feb_data (crt_data_h, e, _crtdata_label);
+  art::FindManyP<sbnd::crt::FEBData> *crt_data_to_feb_data;
+    if(!_data_mode) {
+      crt_data_to_feb_data = new art::FindManyP<sbnd::crt::FEBData>(crt_data_h, e, _crtdata_label);
+    }
 
   //
   // Get the CRT Tracks
@@ -1050,12 +1055,6 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_t1[i] = hit->ts1_ns;
     _chit_pes[i] = hit->peshit;
 
-    auto crt_data_v = crt_hit_to_data.at(hit.key());
-    _chit_h1_t0[i] = crt_data_v[0]->T0();
-    _chit_h2_t0[i] = crt_data_v[2]->T0();
-    _chit_h1_t1[i] = crt_data_v[0]->T1();
-    _chit_h2_t1[i] = crt_data_v[2]->T1();
-
     if (hit->tagger == "volTaggerNorth_0") {
       _chit_plane[i] = 0; // upstream
     } else {
@@ -1064,6 +1063,7 @@ void CRTAnalysis::analyze(art::Event const& e)
 
     size_t n_ides = 0;
     if(!_data_mode) {
+
       // From the hit, get the associated CRTData,
       // then the associated AuxDetIDE, so we can
       // retrieve the truth info
@@ -1073,7 +1073,12 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_true_y[i] = 0;
       _chit_true_z[i] = 0;
 
-      auto crt_data_v = crt_hit_to_data.at(hit.key());
+      auto crt_data_v = crt_hit_to_data->at(hit.key());
+      _chit_h1_t0[i] = crt_data_v[0]->T0();
+      _chit_h2_t0[i] = crt_data_v[2]->T0();
+      _chit_h1_t1[i] = crt_data_v[0]->T1();
+      _chit_h2_t1[i] = crt_data_v[2]->T1();
+
       for (auto crt_data : crt_data_v) {
 	n_ides += crt_data_to_ides->at(crt_data.key()).size();
       }
@@ -1093,23 +1098,21 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_true_mcp_px[i].resize(n_ides);
       _chit_true_mcp_py[i].resize(n_ides);
       _chit_true_mcp_isprimary[i].resize(n_ides);
-    }
 
-    _chit_sipm_adc[i].resize(crt_data_v.size());
-    _chit_sipm_channel_id[i].resize(crt_data_v.size());
-    _chit_sipm_feb_mac5[i].resize(crt_data_v.size());
+      _chit_sipm_adc[i].resize(crt_data_v.size());
+      _chit_sipm_channel_id[i].resize(crt_data_v.size());
+      _chit_sipm_feb_mac5[i].resize(crt_data_v.size());
 
-    size_t data_counter = 0, ide_counter = 0;
-    for (auto crt_data : crt_data_v) {
-      auto feb_v = crt_data_to_feb_data.at(crt_data.key());
+      size_t data_counter = 0, ide_counter = 0;
+      for (auto crt_data : crt_data_v) {
+	auto feb_v = crt_data_to_feb_data->at(crt_data.key());
 
-      if(feb_v.size() != 1) std::cout << "========== ERROR: Found " << feb_v.size() << " FEBDatas for one CRTData?" << std::endl;
+	if(feb_v.size() != 1) std::cout << "========== ERROR: Found " << feb_v.size() << " FEBDatas for one CRTData?" << std::endl;
 
-      _chit_sipm_adc[i][data_counter] = crt_data->ADC();
-      _chit_sipm_channel_id[i][data_counter] = crt_data->Channel();
-      _chit_sipm_feb_mac5[i][data_counter] = feb_v[0]->Mac5();
+	_chit_sipm_adc[i][data_counter] = crt_data->ADC();
+	_chit_sipm_channel_id[i][data_counter] = crt_data->Channel();
+	_chit_sipm_feb_mac5[i][data_counter] = feb_v[0]->Mac5();
 
-      if(!_data_mode) {
 	auto ide_v = crt_data_to_ides->at(crt_data.key());
 	for (auto ide : ide_v) {
 	  _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
@@ -1162,17 +1165,14 @@ void CRTAnalysis::analyze(art::Event const& e)
 
 	  ++ide_counter;
 	}
+	++data_counter;
       }
-      ++data_counter;
+      _chit_true_t[i] /= n_ides;
+      _chit_true_e[i] /= n_ides;
+      _chit_true_x[i] /= n_ides;
+      _chit_true_y[i] /= n_ides;
+      _chit_true_z[i] /= n_ides;
     }
-    if(!_data_mode)
-      {
-	_chit_true_t[i] /= n_ides;
-	_chit_true_e[i] /= n_ides;
-	_chit_true_x[i] /= n_ides;
-	_chit_true_y[i] /= n_ides;
-	_chit_true_z[i] /= n_ides;
-      }
 
     if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_t1[i] << ", h2 time " << _chit_h2_t1[i] << ", hit time " << _chit_t1[i] << std::endl;
   }
@@ -1226,7 +1226,7 @@ void CRTAnalysis::analyze(art::Event const& e)
 	float hit_time = 0;
 	size_t n_ides = 0;
 	// 1. Get the CRTData
-	auto crt_data_v = crt_hit_to_data.at(hit.key());
+	auto crt_data_v = crt_hit_to_data->at(hit.key());
 	for (auto crt_data : crt_data_v) {
 	  // 2. Get the AuxDetIDE
 	  auto ide_v = crt_data_to_ides->at(crt_data.key());
