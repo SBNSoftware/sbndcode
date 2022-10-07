@@ -81,6 +81,7 @@ namespace sbnd{
     double    fTimeWalkSigma;
     double    fTimeWalkOffset;
     double    fHitCoincidenceRequirement;
+    uint32_t  fT1Offset;
   };
 
 }

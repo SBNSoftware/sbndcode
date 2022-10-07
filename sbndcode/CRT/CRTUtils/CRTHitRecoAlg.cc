@@ -14,6 +14,7 @@ namespace sbnd{
     , fTimeWalkSigma(p.get<double>("TimeWalkSigma"))
     , fTimeWalkOffset(p.get<double>("TimeWalkOffset"))
     , fHitCoincidenceRequirement(p.get<double>("HitCoincidenceRequirement"))
+    , fT1Offset(p.get<uint32_t>("T1Offset", 0))
   {}
 
   CRTHitRecoAlg::CRTHitRecoAlg() {}
@@ -65,8 +66,8 @@ namespace sbnd{
                 // === TO-DO === //
                 // AMEND THE CODE AND IMPROVE CALCULATION
                 double width = strip.width;
-                double x     = width/2.;
-                double ex    = width/2.;
+                double x     = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
+                double ex    = 2.5;
 
                 // Create hit
                 stripHits[module.taggerName][module.orientation].emplace_back(channel, t0, t1, x, ex, adc1, adc2, feb_i);
@@ -132,7 +133,7 @@ namespace sbnd{
                 sbn::crt::CRTHit crtHit({(uint8_t)hit0.febdataindex, (uint8_t)hit1.febdataindex},
                                         pe0+pe1,
                                         t0,
-                                        t1,
+                                        (double)t1 - fT1Offset,
                                         pos,
                                         err,
                                         tagger);
