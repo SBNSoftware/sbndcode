@@ -23,6 +23,7 @@
 
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
+#include "sbnobj/SBND/CRT/FEBTruthInfo.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
@@ -188,36 +189,6 @@ private:
   std::vector<uint32_t> _feb_ts1; ///< FEBData Fs1
   std::vector<std::vector<uint16_t>> _feb_adc; ///< FEBData 32 ADC values
 
-  std::vector<uint16_t> _crt_channel; ///< crtData channel ID
-  std::vector<uint32_t> _crt_t0; ///< crtData T0
-  std::vector<uint32_t> _crt_t1; ///< crtData T1
-  std::vector<uint32_t> _crt_adc; ///< crtData 32 ADC values
-  int _crt_n_up; ///< crtData Number of SiPMs in the upstream tagger
-  int _crt_n_dw; ///< crtData Number of SiPMs in the downstream tagger
-  std::vector<int> _crt_true_nide; ///< crtData, assns truth, number of IDEs
-  std::vector<double> _crt_true_t; ///< crtData, assns truth, IDE time
-  std::vector<double> _crt_true_e; ///< crtData, assns truth, IDE deposited energy (leading ide)
-  std::vector<double> _crt_true_total_e; ///< crtData, assns truth, IDE deposited energy (summed all ides)
-  std::vector<double> _crt_true_x; ///< crtData, assns truth, IDE x
-  std::vector<double>_crt_true_y; ///< crtData, assns truth, IDE y
-  std::vector<double>_crt_true_z; ///< crtData, assns truth, IDE z
-  std::vector<double>_crt_true_exitp; ///< crtData, assns truth, IDE exit momentum
-  std::vector<double>_crt_true_exitp_x; ///< crtData, assns truth, IDE exit momentum - x component
-  std::vector<double>_crt_true_exitp_y; ///< crtData, assns truth, IDE exit momentum - y component
-  std::vector<double>_crt_true_exitp_z; ///< crtData, assns truth, IDE exit momentum - z component
-  std::vector<int> _crt_true_mcp_pdg; ///< crtData, assns truth, MCP PDG
-  std::vector<int> _crt_true_mcp_isprimary; ///< crtData, assns truth, MCP is primary?
-  std::vector<std::string> _crt_true_mcp_process; ///< crtData, assns truth, MCP process
-  std::vector<int> _crt_true_mcp_mother; ///< crtData, assns truth, MCP mother ID
-  std::vector<int> _crt_true_mcp_mother_pdg; ///< crtData, assns truth, MCP mother PDG
-  std::vector<double> _crt_true_mcp_time; ///< crtData, assns truth, MCP time
-  std::vector<double> _crt_true_mcp_k_start; ///< crtData, assns truth, MCP kinetic energy at start
-  std::vector<double> _crt_true_mcp_k_end; ///< crtData, assns truth, MCP kinetic energy at end
-  std::vector<double> _crt_true_mcp_vx; ///< crtData, assns truth, MCP start X
-  std::vector<double> _crt_true_mcp_vy; ///< crtData, assns truth, MCP start Y
-  std::vector<double> _crt_true_mcp_vz; ///< crtData, assns truth, MCP start Z
-
-
   TTree* _sr_tree;
   int _sr_run, _sr_subrun;
   double _sr_begintime, _sr_endtime;
@@ -232,7 +203,6 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _mctruth_label = p.get<std::string>("MCTruthLabel", "generator");
   _g4_label = p.get<std::string>("G4Label", "largeant");
   _auxdethit_label = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
-  _crtdata_label = p.get<std::string>("CRTDataLabel", "crt");
   _crthit_label = p.get<std::string>("CRTHitLabel", "crthit");
   _crttrack_label = p.get<std::string>("CRTTrackLabel", "crttrack");
   _febdata_label = p.get<std::string>("FEBDataLabel", "crtsim");
@@ -329,24 +299,27 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_h2_t1", "std::vector<double>", &_chit_h2_t1);
   _tree->Branch("chit_pes", "std::vector<double>", &_chit_pes);
   _tree->Branch("chit_plane", "std::vector<int>", &_chit_plane);
-  _tree->Branch("chit_true_t", "std::vector<float>", &_chit_true_t);
-  _tree->Branch("chit_true_e", "std::vector<float>", &_chit_true_e);
-  _tree->Branch("chit_true_x", "std::vector<float>", &_chit_true_x);
-  _tree->Branch("chit_true_y", "std::vector<float>", &_chit_true_y);
-  _tree->Branch("chit_true_z", "std::vector<float>", &_chit_true_z);
-  _tree->Branch("chit_true_mcp_trackids", "std::vector<std::vector<int> >", &_chit_true_mcp_trackids);
-  _tree->Branch("chit_true_mcp_pdg", "std::vector<std::vector<int> >", &_chit_true_mcp_pdg);
-  _tree->Branch("chit_true_mcp_e", "std::vector<std::vector<double> >", &_chit_true_mcp_e);
-  _tree->Branch("chit_true_mcp_px", "std::vector<std::vector<double> >", &_chit_true_mcp_px);
-  _tree->Branch("chit_true_mcp_py", "std::vector<std::vector<double> >", &_chit_true_mcp_py);
-  _tree->Branch("chit_true_mcp_pz", "std::vector<std::vector<double> >", &_chit_true_mcp_pz);
-  _tree->Branch("chit_true_mcp_startx", "std::vector<std::vector<double> >", &_chit_true_mcp_startx);
-  _tree->Branch("chit_true_mcp_starty", "std::vector<std::vector<double> >", &_chit_true_mcp_starty);
-  _tree->Branch("chit_true_mcp_startz", "std::vector<std::vector<double> >", &_chit_true_mcp_startz);
-  _tree->Branch("chit_true_mcp_endx", "std::vector<std::vector<double> >", &_chit_true_mcp_endx);
-  _tree->Branch("chit_true_mcp_endy", "std::vector<std::vector<double> >", &_chit_true_mcp_endy);
-  _tree->Branch("chit_true_mcp_endz", "std::vector<std::vector<double> >", &_chit_true_mcp_endz);
-  _tree->Branch("chit_true_mcp_isprimary", "std::vector<std::vector<int> >", &_chit_true_mcp_isprimary);
+  if(!_data_mode)
+    {
+      _tree->Branch("chit_true_t", "std::vector<float>", &_chit_true_t);
+      _tree->Branch("chit_true_e", "std::vector<float>", &_chit_true_e);
+      _tree->Branch("chit_true_x", "std::vector<float>", &_chit_true_x);
+      _tree->Branch("chit_true_y", "std::vector<float>", &_chit_true_y);
+      _tree->Branch("chit_true_z", "std::vector<float>", &_chit_true_z);
+      _tree->Branch("chit_true_mcp_trackids", "std::vector<std::vector<int> >", &_chit_true_mcp_trackids);
+      _tree->Branch("chit_true_mcp_pdg", "std::vector<std::vector<int> >", &_chit_true_mcp_pdg);
+      _tree->Branch("chit_true_mcp_e", "std::vector<std::vector<double> >", &_chit_true_mcp_e);
+      _tree->Branch("chit_true_mcp_px", "std::vector<std::vector<double> >", &_chit_true_mcp_px);
+      _tree->Branch("chit_true_mcp_py", "std::vector<std::vector<double> >", &_chit_true_mcp_py);
+      _tree->Branch("chit_true_mcp_pz", "std::vector<std::vector<double> >", &_chit_true_mcp_pz);
+      _tree->Branch("chit_true_mcp_startx", "std::vector<std::vector<double> >", &_chit_true_mcp_startx);
+      _tree->Branch("chit_true_mcp_starty", "std::vector<std::vector<double> >", &_chit_true_mcp_starty);
+      _tree->Branch("chit_true_mcp_startz", "std::vector<std::vector<double> >", &_chit_true_mcp_startz);
+      _tree->Branch("chit_true_mcp_endx", "std::vector<std::vector<double> >", &_chit_true_mcp_endx);
+      _tree->Branch("chit_true_mcp_endy", "std::vector<std::vector<double> >", &_chit_true_mcp_endy);
+      _tree->Branch("chit_true_mcp_endz", "std::vector<std::vector<double> >", &_chit_true_mcp_endz);
+      _tree->Branch("chit_true_mcp_isprimary", "std::vector<std::vector<int> >", &_chit_true_mcp_isprimary);
+    }
   _tree->Branch("chit_sipm_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_adc);
   _tree->Branch("chit_sipm_channel_id", "std::vector<std::vector<uint16_t> >", &_chit_sipm_channel_id);
   _tree->Branch("chit_sipm_feb_mac5", "std::vector<std::vector<uint16_t> >", &_chit_sipm_feb_mac5);
@@ -355,7 +328,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("ct_pes", "std::vector<double>", &_ct_pes);
   _tree->Branch("ct_length", "std::vector<double>", &_ct_length);
   _tree->Branch("ct_tof", "std::vector<double>", &_ct_tof);
-  _tree->Branch("ct_true_tof", "std::vector<double>", &_ct_true_tof);
+  if(!_data_mode) _tree->Branch("ct_true_tof", "std::vector<double>", &_ct_true_tof);
   _tree->Branch("ct_x1", "std::vector<double>", &_ct_x1);
   _tree->Branch("ct_y1", "std::vector<double>", &_ct_y1);
   _tree->Branch("ct_z1", "std::vector<double>", &_ct_z1);
@@ -367,35 +340,6 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("feb_ts0", "std::vector<uint32_t>", &_feb_ts0);
   _tree->Branch("feb_ts1", "std::vector<uint32_t>", &_feb_ts1);
   _tree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
-
-  _tree->Branch("crt_channel", "std::vector<uint16_t>", &_crt_channel);
-  _tree->Branch("crt_t0", "std::vector<uint32_t>", &_crt_t0);
-  _tree->Branch("crt_t1", "std::vector<uint32_t>", &_crt_t1);
-  _tree->Branch("crt_adc", "std::vector<uint32_t>", &_crt_adc);
-  _tree->Branch("crt_n_up", &_crt_n_up, "crt_n_up/I");
-  _tree->Branch("crt_n_dw", &_crt_n_dw, "crt_n_dw/I");
-  _tree->Branch("crt_true_nide", "std::vector<int>", &_crt_true_nide);
-  _tree->Branch("crt_true_t", "std::vector<double>", &_crt_true_t);
-  _tree->Branch("crt_true_e", "std::vector<double>", &_crt_true_e);
-  _tree->Branch("crt_true_total_e", "std::vector<double>", &_crt_true_total_e);
-  _tree->Branch("crt_true_x", "std::vector<double>", &_crt_true_x);
-  _tree->Branch("crt_true_y", "std::vector<double>", &_crt_true_y);
-  _tree->Branch("crt_true_z", "std::vector<double>", &_crt_true_z);
-  _tree->Branch("crt_true_exitp", "std::vector<double>", &_crt_true_exitp);
-  _tree->Branch("crt_true_exitp_x", "std::vector<double>", &_crt_true_exitp_x);
-  _tree->Branch("crt_true_exitp_y", "std::vector<double>", &_crt_true_exitp_y);
-  _tree->Branch("crt_true_exitp_z", "std::vector<double>", &_crt_true_exitp_z);
-  _tree->Branch("crt_true_mcp_pdg", "std::vector<int>", &_crt_true_mcp_pdg);
-  _tree->Branch("crt_true_mcp_isprimary", "std::vector<int>", &_crt_true_mcp_isprimary);
-  _tree->Branch("crt_true_mcp_process", "std::vector<std::string>", &_crt_true_mcp_process);
-  _tree->Branch("crt_true_mcp_mother", "std::vector<int>", &_crt_true_mcp_mother);
-  _tree->Branch("crt_true_mcp_mother_pdg", "std::vector<int>", &_crt_true_mcp_mother_pdg);
-  _tree->Branch("crt_true_mcp_time", "std::vector<double>", &_crt_true_mcp_time);
-  _tree->Branch("crt_true_mcp_k_start", "std::vector<double>", &_crt_true_mcp_k_start);
-  _tree->Branch("crt_true_mcp_k_end", "std::vector<double>", &_crt_true_mcp_k_end);
-  _tree->Branch("crt_true_mcp_vx", "std::vector<double>", &_crt_true_mcp_vx);
-  _tree->Branch("crt_true_mcp_vy", "std::vector<double>", &_crt_true_mcp_vy);
-  _tree->Branch("crt_true_mcp_vz", "std::vector<double>", &_crt_true_mcp_vz);
 
   _sr_tree = fs->make<TTree>("pottree","");
   _sr_tree->Branch("run", &_sr_run, "run/I");
@@ -493,8 +437,6 @@ void CRTAnalysis::analyze(art::Event const& e)
   std::map<int, simb::MCParticle> trackid_to_mcp;
   art::Handle<std::vector<sim::AuxDetHit>> adh_h;
   std::vector<art::Ptr<sim::AuxDetHit>> adh_v;
-  art::Handle<std::vector<sbnd::crt::CRTData>> crt_data_h;
-  std::vector<art::Ptr<sbnd::crt::CRTData>> crt_data_v;
   
   if(!_data_mode)
     {
@@ -529,16 +471,6 @@ void CRTAnalysis::analyze(art::Event const& e)
 	throw std::exception();
       }
       art::fill_ptr_vector(adh_v, adh_h);
-
-      //
-      // Get the CRT Data
-      //
-      e.getByLabel(_crtdata_label, crt_data_h);
-      if(!crt_data_h.isValid()){
-	std::cout << "CRTData product " << _crtdata_label << " not found..." << std::endl;
-	throw std::exception();
-      }
-      art::fill_ptr_vector(crt_data_v, crt_data_h);
     }
      
   //
@@ -552,25 +484,28 @@ void CRTAnalysis::analyze(art::Event const& e)
   }
   std::vector<art::Ptr<sbn::crt::CRTHit>> crt_hit_v;
   art::fill_ptr_vector(crt_hit_v, crt_hit_h);
-  
-  // Get the CRT Hits to CRTData association
-  art::FindManyP<sbnd::crt::CRTData> *crt_hit_to_data;
-    if(!_data_mode) {
-      crt_hit_to_data = new art::FindManyP<sbnd::crt::CRTData>(crt_hit_h, e, _crthit_label);
-    }
 
-  // Get the CRTData to AuxDetIDE association
-  art::FindManyP<sim::AuxDetIDE> *crt_data_to_ides;
-  if(!_data_mode) {
-    crt_data_to_ides = new art::FindManyP<sim::AuxDetIDE>(crt_data_h, e, _crtdata_label);
+  // Get the CRTHit to FEBData association
+  art::FindManyP<sbnd::crt::FEBData> crt_hit_to_feb_data(crt_hit_h, e, _crthit_label);
+
+  //
+  // Get the FEB Data
+  //
+  art::Handle<std::vector<sbnd::crt::FEBData>> feb_data_h;
+  e.getByLabel(_febdata_label, feb_data_h);
+  if(!feb_data_h.isValid()){
+    std::cout << "FEBData product " << _febdata_label << " not found..." << std::endl;
+    throw std::exception();
   }
+  std::vector<art::Ptr<sbnd::crt::FEBData>> feb_data_v;
+  art::fill_ptr_vector(feb_data_v, feb_data_h);
 
-  // Get the FEBData to CRTData association
-  art::FindManyP<sbnd::crt::FEBData> *crt_data_to_feb_data;
-    if(!_data_mode) {
-      crt_data_to_feb_data = new art::FindManyP<sbnd::crt::FEBData>(crt_data_h, e, _crtdata_label);
-    }
-
+  // Get the FEBData to AuxDetIDE & FEBTruthInfo association
+  /*  art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> *feb_data_to_ides;
+  if(!_data_mode) {
+    feb_data_to_ides = new art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>(feb_data_h, e, _crtdata_label);
+  }
+  */
   //
   // Get the CRT Tracks
   //
@@ -585,19 +520,6 @@ void CRTAnalysis::analyze(art::Event const& e)
 
   // Get the CRT Tracks to Hits association
   art::FindManyP<sbn::crt::CRTHit> crt_track_to_hit (crt_track_h, e, _crttrack_label);
-
-  //
-  // Get the FEB Data
-  //
-  art::Handle<std::vector<sbnd::crt::FEBData>> feb_data_h;
-  e.getByLabel(_febdata_label, feb_data_h);
-  if(!feb_data_h.isValid()){
-    std::cout << "FEBData product " << _febdata_label << " not found..." << std::endl;
-    throw std::exception();
-  }
-  std::vector<art::Ptr<sbnd::crt::FEBData>> feb_data_v;
-  art::fill_ptr_vector(feb_data_v, feb_data_h);
-
 
   if(!_data_mode) {
     //
@@ -1060,10 +982,10 @@ void CRTAnalysis::analyze(art::Event const& e)
     } else {
       _chit_plane[i] = 1; // downstream
     }
-
+    /*
     size_t n_ides = 0;
     if(!_data_mode) {
-
+      
       // From the hit, get the associated CRTData,
       // then the associated AuxDetIDE, so we can
       // retrieve the truth info
@@ -1073,16 +995,25 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_true_y[i] = 0;
       _chit_true_z[i] = 0;
 
-      auto crt_data_v = crt_hit_to_data->at(hit.key());
+      auto feb_datas = crt_hit_to_feb_data.at(hit.key());
       _chit_h1_t0[i] = crt_data_v[0]->T0();
       _chit_h2_t0[i] = crt_data_v[2]->T0();
       _chit_h1_t1[i] = crt_data_v[0]->T1();
       _chit_h2_t1[i] = crt_data_v[2]->T1();
-
-      for (auto crt_data : crt_data_v) {
-	n_ides += crt_data_to_ides->at(crt_data.key()).size();
-      }
-  
+      
+      for(auto const &feb_data : feb_datas)
+	{
+	  auto ides       = feb_data_to_ides->at(feb_data.key());
+	  auto feb_truths = feb_data_to_ides->at(feb_data.key());
+	  
+	  for(unsigned ii = 0; ii < ides.size(); ++ii)
+	    {
+	    if(feb_truths[ii]->GetChannel());
+	    
+	    n_ides += ;
+	    }
+	}
+	
       _chit_true_mcp_trackids[i].resize(n_ides);
       _chit_true_mcp_pdg[i].resize(n_ides);
       _chit_true_mcp_e[i].resize(n_ides);
@@ -1173,7 +1104,7 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_true_y[i] /= n_ides;
       _chit_true_z[i] /= n_ides;
     }
-
+    */    
     if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_t1[i] << ", h2 time " << _chit_h2_t1[i] << ", hit time " << _chit_t1[i] << std::endl;
   }
 
@@ -1222,14 +1153,10 @@ void CRTAnalysis::analyze(art::Event const& e)
       auto hit_v = crt_track_to_hit.at(track.key());
       assert(hit_v.size == 2); // 2 hits per track
       for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++) {
-	auto hit = hit_v[i_hit];
+	/*	auto hit = hit_v[i_hit];
 	float hit_time = 0;
 	size_t n_ides = 0;
-	// 1. Get the CRTData
-	auto crt_data_v = crt_hit_to_data->at(hit.key());
-	for (auto crt_data : crt_data_v) {
-	  // 2. Get the AuxDetIDE
-	  auto ide_v = crt_data_to_ides->at(crt_data.key());
+	  auto ide_v = feb_data_to_ides->at(crt_.key());
 	  for (auto ide : ide_v) {
 	    hit_time += 0.5 * (ide->entryT + ide->exitT);
 	    n_ides++;
@@ -1238,6 +1165,7 @@ void CRTAnalysis::analyze(art::Event const& e)
 	hit_time /= n_ides;
 	if (i_hit == 0) _ct_true_tof[i] -= hit_time;
 	if (i_hit == 1) _ct_true_tof[i] += hit_time;
+	*/
       }
     }
   }
@@ -1264,123 +1192,6 @@ void CRTAnalysis::analyze(art::Event const& e)
       _feb_adc[i][j] = feb_data->ADC(j);
     }
   }
-
-
-  //
-  // Fill the CRTData objects in the tree
-  //
-  size_t n_crtdata = crt_data_v.size();
-
-  _crt_channel.resize(n_crtdata);
-  _crt_t0.resize(n_crtdata);
-  _crt_t1.resize(n_crtdata);
-  _crt_adc.resize(n_crtdata);
-  if(!_data_mode) {
-    _crt_true_nide.resize(n_crtdata);
-    _crt_true_t.resize(n_crtdata);
-    _crt_true_e.resize(n_crtdata);
-    _crt_true_total_e.resize(n_crtdata);
-    _crt_true_x.resize(n_crtdata);
-    _crt_true_y.resize(n_crtdata);
-    _crt_true_z.resize(n_crtdata);
-    _crt_true_exitp.resize(n_crtdata);
-    _crt_true_exitp_x.resize(n_crtdata);
-    _crt_true_exitp_y.resize(n_crtdata);
-    _crt_true_exitp_z.resize(n_crtdata);
-    _crt_true_mcp_pdg.resize(n_crtdata);
-    _crt_true_mcp_isprimary.resize(n_crtdata);
-    _crt_true_mcp_process.resize(n_crtdata);
-    _crt_true_mcp_mother.resize(n_crtdata);
-    _crt_true_mcp_mother_pdg.resize(n_crtdata);
-    _crt_true_mcp_time.resize(n_crtdata);
-    _crt_true_mcp_k_start.resize(n_crtdata);
-    _crt_true_mcp_k_end.resize(n_crtdata);
-    _crt_true_mcp_vx.resize(n_crtdata);
-    _crt_true_mcp_vy.resize(n_crtdata);
-    _crt_true_mcp_vz.resize(n_crtdata);
-  }
-
-  int n_up = 0;
-  int n_dw = 0;
-
-  for (size_t i = 0; i < n_crtdata; ++i){
-
-    auto crt_data = crt_data_v[i];
-
-    _crt_channel[i] = crt_data->Channel();
-    _crt_t0[i] = crt_data->T0();
-    _crt_t1[i] = crt_data->T1();
-    _crt_adc[i]= crt_data->ADC();
-
-    if (_crt_channel[i] <= 191) {
-      n_up++;
-    } else {
-      n_dw++;
-    }
-
-    if(!_data_mode) {
-      auto ide_v = crt_data_to_ides->at(crt_data.key());
-      _crt_true_nide[i] = ide_v.size();
-
-      int leading_ide_id = -999; double leading_energy = -std::numeric_limits<double>::max();
-      unsigned counter = 0;
-
-      _crt_true_total_e[i] = 0.;
-
-      for(auto const ide : ide_v)
-	{
-	  if(ide->energyDeposited > leading_energy)
-	    {
-	      leading_ide_id = counter;
-	      leading_energy = ide->energyDeposited;
-	    }
-	  _crt_true_total_e[i] += ide->energyDeposited;
-	  ++counter;
-	}
-    
-      auto ide = ide_v[leading_ide_id];
-
-      _crt_true_t[i] = 0.5 * (ide->entryT + ide->exitT);
-      _crt_true_e[i] = ide->energyDeposited;
-      _crt_true_x[i] = 0.5 * (ide->entryX + ide->exitX);
-      _crt_true_y[i] = 0.5 * (ide->entryY + ide->exitY);
-      _crt_true_z[i] = 0.5 * (ide->entryZ + ide->exitZ);
-      _crt_true_exitp[i] = std::sqrt(ide->exitMomentumX*ide->exitMomentumX +
-				     ide->exitMomentumY*ide->exitMomentumY +
-				     ide->exitMomentumZ*ide->exitMomentumZ);
-      _crt_true_exitp_x[i] = ide->exitMomentumX;
-      _crt_true_exitp_y[i] = ide->exitMomentumY;
-      _crt_true_exitp_z[i] = ide->exitMomentumZ;
-
-      // Get the MCParticle that caused this CRTData
-      auto mcp = trackid_to_mcp[ide->trackID];
-      _crt_true_mcp_pdg[i] = mcp.PdgCode();
-      _crt_true_mcp_isprimary[i] = mcp.Process() == "primary";
-      _crt_true_mcp_process[i] = mcp.Process();
-      _crt_true_mcp_mother[i] = mcp.Mother();
-      _crt_true_mcp_mother_pdg[i] = trackid_to_mcp[mcp.Mother()].PdgCode();;
-      if (mcp.NumberTrajectoryPoints()) {
-	_crt_true_mcp_time[i] = mcp.T();
-	_crt_true_mcp_k_start[i] = mcp.E() - mcp.Mass();
-	_crt_true_mcp_k_end[i] = mcp.E(mcp.Trajectory().size() - 1) - mcp.Mass();
-	_crt_true_mcp_vx[i] = mcp.Vx();
-	_crt_true_mcp_vy[i] = mcp.Vy();
-	_crt_true_mcp_vz[i] = mcp.Vz();
-      } else {
-	std::cout << "Don't have trajectory points for track ID " << ide->trackID << std::endl;
-	_crt_true_mcp_time[i] = -9999;
-	_crt_true_mcp_k_start[i] = -9999;
-	_crt_true_mcp_k_end[i] = -9999;
-	_crt_true_mcp_vx[i] = -9999;
-	_crt_true_mcp_vy[i] = -9999;
-	_crt_true_mcp_vz[i] = -9999;
-      }
-    }
-  }
-
-  _crt_n_up = n_up;
-  _crt_n_dw = n_dw;
-
 
   //
   // Fill the Tree
