@@ -134,9 +134,12 @@ namespace sbnd{
                                         pe0+pe1,
                                         t0,
                                         (double)t1 - fT1Offset,
+					diff,
                                         pos,
                                         err,
-                                        tagger);
+                                        tagger,
+					hit0.channel,
+					hit1.channel);
 
                 mf::LogInfo("CRTHitRecoAlg") << "\nCreating CRTHit"
                                              << "from FEBs: " << (unsigned) crtHit.feb_id[0] 
