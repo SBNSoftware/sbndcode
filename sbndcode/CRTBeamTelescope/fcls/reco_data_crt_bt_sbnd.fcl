@@ -3,6 +3,7 @@
 
 services.BackTrackerService: @erase
 
+physics.producers.crthit.FEBDataModuleLabel:                       "crtdata"
 physics.producers.crthit.HitRecoAlg.GeoAlg.CableLengthCorrections: @local::crt_bt_data_params.CableLengthCorrections
 physics.producers.crthit.HitRecoAlg.GeoAlg.SiPMPedestals:          @local::crt_bt_data_params.SiPMPedestals
 physics.producers.crthit.HitRecoAlg.T1Offset:			   100000

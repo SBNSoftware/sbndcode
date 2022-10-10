@@ -6,6 +6,4 @@ physics.crtreco: [ rns, crthit, crttrack ]
 
 physics.trigger_paths: [ crtreco ]
 
-physics.producers.crthit.FEBDataModuleLabel: "crtdata"
-
 #include "use_crt_beam_tele_geometry_g4_services.fcl"
