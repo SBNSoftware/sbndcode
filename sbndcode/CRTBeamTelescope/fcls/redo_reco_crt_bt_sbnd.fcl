@@ -1,0 +1,6 @@
+#include "reco_crt_bt_sbnd.fcl"
+
+process_name: RedoReco
+
+source.inputCommands: [ "keep *_*_*_*",
+	                "drop *_*_*_RecoCRT" ]
