@@ -144,6 +144,7 @@ private:
   std::vector<double> _chit_z; ///< CRT hit z
   std::vector<double> _chit_t0; ///< CRT hit t0
   std::vector<double> _chit_t1; ///< CRT hit t1
+  std::vector<double> _chit_t1_diff; ///< CRT hit difference between the two 1D hit t1s
   std::vector<double> _chit_h1_t0; ///< CRT hit t0 (1DHit 1)
   std::vector<double> _chit_h2_t0; ///< CRT hit t0 (1DHit 2)
   std::vector<double> _chit_h1_t1; ///< CRT hit t1 (1DHit 1)
@@ -293,6 +294,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_z", "std::vector<double>", &_chit_z);
   _tree->Branch("chit_t0", "std::vector<double>", &_chit_t0);
   _tree->Branch("chit_t1", "std::vector<double>", &_chit_t1);
+  _tree->Branch("chit_t1_diff", "std::vector<double>", &_chit_t1_diff);
   _tree->Branch("chit_h1_t0", "std::vector<double>", &_chit_h1_t0);
   _tree->Branch("chit_h2_t0", "std::vector<double>", &_chit_h2_t0);
   _tree->Branch("chit_h1_t1", "std::vector<double>", &_chit_h1_t1);
@@ -936,6 +938,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_z.resize(n_hits);
   _chit_t0.resize(n_hits);
   _chit_t1.resize(n_hits);
+  _chit_t1_diff.resize(n_hits);
   _chit_h1_t0.resize(n_hits);
   _chit_h2_t0.resize(n_hits);
   _chit_h1_t1.resize(n_hits);
@@ -975,6 +978,7 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_z[i] = hit->z_pos;
     _chit_t0[i] = hit->ts0_ns;
     _chit_t1[i] = hit->ts1_ns;
+    _chit_t1_diff[i] = hit->ts0_ns_corr;   // the variable name in the object is old and is just a placeholder for diff, don't worry!
     _chit_pes[i] = hit->peshit;
 
     if (hit->tagger == "volTaggerNorth_0") {
