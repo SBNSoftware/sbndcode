@@ -93,70 +93,91 @@ namespace sbnd{
         std::vector<CRTStripHit> hitsOrien0 = stripHitsVec[0];
         std::vector<CRTStripHit> hitsOrien1 = stripHitsVec[1];
 
-        std::set<unsigned> used;
+	// Get all possible combinations of strips that could make coincident hits
+        std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates = ProduceCRTHitCandidates(tagger, hitsOrien0, hitsOrien1);
 
-        for(unsigned i = 0; i < hitsOrien0.size(); ++i)
+	// Order by the hits with the largest reconstructed PE, should be better than random?
+        std::sort(candidates.begin(), candidates.end(), 
+                  [](const std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit> &a, std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit> &b) 
+                  {
+                    return a.second.peshit > b.second.peshit;
+                  });
+
+        std::set<unsigned> used_i, used_j;
+        for(auto const &cand : candidates)
           {
-            const CRTStripHit hit0   = hitsOrien0[i];
-            const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(hit0.channel);
+            if(used_i.find(cand.first.first) == used_i.end() || used_j.find(cand.first.second) == used_j.end())
+              continue;
 
-            for(unsigned j = 0; j < hitsOrien1.size(); ++j)
-              {
-                if(used.find(j) != used.end())
-                  continue;
-
-                const CRTStripHit hit1     = hitsOrien1[j];
-                const CRTStripGeo strip1 = fCRTGeoAlg.GetStrip(hit1.channel);
-
-                // Check whether the two strips responsible for these hits overlap.
-                if(!fCRTGeoAlg.CheckOverlap(strip0, strip1))
-                   continue;
-
-                // Find overlap region between two strip hits
-                std::vector<double> overlap = FindOverlap(hit0, hit1, strip0, strip1);
-
-                // Using overlap region find centre and 'error'
-                TVector3 pos, err;
-                CentralPosition(overlap, pos, err);
-                
-                // Reconstruct the number of photoelectrons from the ADC values
-                double pe0, pe1;
-                ReconstructPE(pos, hit0, hit1, pe0, pe1);
-
-                // Correct timings to find how coincident the hits were
-                uint32_t t0, t1, diff;
-                CorrectTimings(pos, hit0, hit1, pe0, pe1, t0, t1, diff);
-
-                if(diff > fHitCoincidenceRequirement)
-                  continue;
-
-                sbn::crt::CRTHit crtHit({(uint8_t)hit0.febdataindex, (uint8_t)hit1.febdataindex},
-                                        pe0+pe1,
-                                        t0,
-                                        (double)t1 - fT1Offset,
-					diff,
-                                        pos,
-                                        err,
-                                        tagger,
-					hit0.channel,
-					hit1.channel);
-
-                mf::LogInfo("CRTHitRecoAlg") << "\nCreating CRTHit"
-                                             << "from FEBs: " << (unsigned) crtHit.feb_id[0] 
-                                             << " & " << (unsigned) crtHit.feb_id[1] << '\n'
-                                             << "at position: " << pos.X() << ", " 
-                                             << pos.Y() << ", " << pos.Z() << "cm\n"
-                                             << "and t1: " << t1 << '\n'
-                                             << "with PE: " << pe0+pe1 << '\n'
-                                             << "on tagger: " << tagger << std::endl;
-
-                used.insert(j);
-                crtHits.emplace_back(crtHit);
-                break;
-              }
+            crtHits.push_back(cand.second);
           }
       }
     return crtHits;
+  }
+
+  std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> CRTHitRecoAlg::ProduceCRTHitCandidates(const std::string &tagger, const std::vector<CRTStripHit> &hitsOrien0,
+                                                                                                                 const std::vector<CRTStripHit> &hitsOrien1)
+  {
+    std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates;
+
+    for(unsigned i = 0; i < hitsOrien0.size(); ++i)
+      {
+        const CRTStripHit hit0   = hitsOrien0[i];
+        const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(hit0.channel);
+
+        for(unsigned j = 0; j < hitsOrien1.size(); ++j)
+          {
+            const CRTStripHit hit1     = hitsOrien1[j];
+            const CRTStripGeo strip1 = fCRTGeoAlg.GetStrip(hit1.channel);
+
+            // Check whether the two strips responsible for these hits overlap.
+            if(!fCRTGeoAlg.CheckOverlap(strip0, strip1))
+              continue;
+
+            // Find overlap region between two strip hits
+            std::vector<double> overlap = FindOverlap(hit0, hit1, strip0, strip1);
+
+            // Using overlap region find centre and 'error'
+            TVector3 pos, err;
+            CentralPosition(overlap, pos, err);
+                
+            // Reconstruct the number of photoelectrons from the ADC values
+            double pe0, pe1;
+            ReconstructPE(pos, hit0, hit1, pe0, pe1);
+
+            // Correct timings to find how coincident the hits were
+            uint32_t t0, t1, diff;
+            CorrectTimings(pos, hit0, hit1, pe0, pe1, t0, t1, diff);
+
+            if(diff > fHitCoincidenceRequirement)
+              continue;
+
+            sbn::crt::CRTHit crtHit({(uint8_t)hit0.febdataindex, (uint8_t)hit1.febdataindex},
+                                    pe0+pe1,
+                                    t0,
+                                    (double)t1 - fT1Offset,
+                                    diff,
+                                    pos,
+                                    err,
+                                    tagger,
+                                    hit0.channel,
+                                    hit1.channel);
+
+            mf::LogInfo("CRTHitRecoAlg") << "\nCreating CRTHit"
+                                         << "from FEBs: " << (unsigned) crtHit.feb_id[0] 
+                                         << " & " << (unsigned) crtHit.feb_id[1] << '\n'
+                                         << "at position: " << pos.X() << ", " 
+                                         << pos.Y() << ", " << pos.Z() << "cm\n"
+                                         << "and t1: " << t1 << '\n'
+                                         << "with PE: " << pe0+pe1 << '\n'
+                                         << "on tagger: " << tagger << std::endl;
+
+	    // Record which strip hits were used to make this candidate
+            candidates.push_back({{i, j}, crtHit});
+          }
+      }
+
+    return candidates;
   }
 
   std::vector<double> CRTHitRecoAlg::FindOverlap(const CRTStripHit &hit0, const CRTStripHit &hit1,

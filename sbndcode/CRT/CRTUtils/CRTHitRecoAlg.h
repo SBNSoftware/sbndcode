@@ -50,6 +50,9 @@ namespace sbnd{
     
     std::vector<sbn::crt::CRTHit> ProduceCRTHits(const std::map<std::string, std::vector<std::vector<CRTStripHit>>> &taggerStripHits);
 
+    std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> ProduceCRTHitCandidates(const std::string &tagger, const std::vector<CRTStripHit> &hitsOrien0,
+                                                                                                    const std::vector<CRTStripHit> &hitsOrien1);
+
     std::vector<double> FindOverlap(const CRTStripHit &hit0, const CRTStripHit &hit1,
                                     const CRTStripGeo &strip0, const CRTStripGeo &strip1);
 
