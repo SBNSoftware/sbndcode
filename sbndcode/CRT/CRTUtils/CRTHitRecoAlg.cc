@@ -1,3 +1,4 @@
+
 #include "CRTHitRecoAlg.h"
 
 namespace sbnd{
@@ -106,10 +107,12 @@ namespace sbnd{
         std::set<unsigned> used_i, used_j;
         for(auto const &cand : candidates)
           {
-            if(used_i.find(cand.first.first) == used_i.end() || used_j.find(cand.first.second) == used_j.end())
+            if(used_i.find(cand.first.first) != used_i.end() || used_j.find(cand.first.second) != used_j.end())
               continue;
 
             crtHits.push_back(cand.second);
+	    used_i.insert(cand.first.first);
+	    used_j.insert(cand.first.second);
           }
       }
     return crtHits;
@@ -146,10 +149,11 @@ namespace sbnd{
             ReconstructPE(pos, hit0, hit1, pe0, pe1);
 
             // Correct timings to find how coincident the hits were
-            uint32_t t0, t1, diff;
+            uint32_t t0, t1;
+            double diff;
             CorrectTimings(pos, hit0, hit1, pe0, pe1, t0, t1, diff);
 
-            if(diff > fHitCoincidenceRequirement)
+            if(std::abs(diff) > fHitCoincidenceRequirement)
               continue;
 
             sbn::crt::CRTHit crtHit({(uint8_t)hit0.febdataindex, (uint8_t)hit1.febdataindex},
@@ -231,7 +235,7 @@ namespace sbnd{
 
   void CRTHitRecoAlg::CorrectTimings(const TVector3 &pos, const CRTStripHit &hit0, 
                                      const CRTStripHit &hit1, const double &pe0, const double &pe1,
-                                     uint32_t &t0, uint32_t &t1, uint32_t &diff)
+                                     uint32_t &t0, uint32_t &t1, double &diff)
   {
     const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0.channel);
     const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1.channel);
@@ -242,7 +246,7 @@ namespace sbnd{
     t0 = (hit0.t0 - corr0 + hit1.t0 - corr1) / 2.;
     t1 = (hit0.t1 - corr0 + hit1.t1 - corr1) / 2.;
     
-    diff = std::abs((hit0.t1 - corr0) - (hit1.t1 - corr1));
+    diff = (hit0.t1 - corr0) - (hit1.t1 - corr1);
   }
 
   double CRTHitRecoAlg::TimingCorrectionOffset(const double &dist, const double &pe)
