@@ -74,10 +74,10 @@ namespace sbnd{
 
             // Fill the module information
             const std::string moduleName = nodeModule->GetName();
-	    const bool invert = fChannelInversion.size() ? fChannelInversion.at(ad_i) : false;
+            const bool invert = fChannelInversion.size() ? fChannelInversion.at(ad_i) : false;
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                const uint32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
+                const int32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
                   fCableLengthCorrections.at(ad_i) : 0;
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
@@ -87,7 +87,7 @@ namespace sbnd{
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
-	    // Some modules need their channel numbers counted in reverse as they're inverted relative to the geometry
+            // Some modules need their channel numbers counted in reverse as they're inverted relative to the geometry
             const uint32_t channel0 = invert ? 32 * ad_i + (31 - 2 * ads_i) : 32 * ad_i + 2 * ads_i;
             const uint32_t channel1 = invert ? 32 * ad_i + (31 - 2 * ads_i -1) : 32 * ad_i + 2 * ads_i + 1;
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
