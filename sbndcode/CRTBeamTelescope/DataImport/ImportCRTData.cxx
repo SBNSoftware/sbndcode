@@ -116,25 +116,36 @@ namespace crt {
 
     for (size_t j = 0; j < fHit1Feb->size(); j++)
     {
-      for (int s = 0; s < 32; s++) { adc[s] = fHit1Adc->at(j)[s]; }
+      int max_s = 999999; uint16_t max_adc = 0;
+      for (int s = 0; s < 32; s++) 
+	{ 
+	  adc[s] = fHit1Adc->at(j)[s];
+	  if(adc[s] > max_adc) { max_adc = adc[s]; max_s = s;}
+	}
+
       sbnd::crt::FEBData feb_data_1(fMac5ToGeoID[fHit1Feb->at(j)],
                                     fHit1Flags->at(j),
                                     fHit1T0->at(j),
                                     fHit1T1->at(j) + fT1Offset,
                                     fUnixS->at(j),
                                     adc,
-                                    0);
+                                    max_s);
 
       febdata_v->push_back(feb_data_1);
 
-      for (int s = 0; s < 32; s++) { adc[s] = fHit2Adc->at(j)[s]; }
+      max_s = 999999; max_adc = 0;
+      for (int s = 0; s < 32; s++) 
+	{ 
+	  adc[s] = fHit2Adc->at(j)[s];
+	  if(adc[s] > max_adc) { max_adc = adc[s]; max_s = s;}
+	}
       sbnd::crt::FEBData feb_data_2(fMac5ToGeoID[fHit2Feb->at(j)],
                                     fHit2Flags->at(j),
                                     fHit2T0->at(j),
                                     fHit2T1->at(j) + fT1Offset,
                                     fUnixS->at(j),
                                     adc,
-                                    0);
+                                    max_s);
 
       febdata_v->push_back(feb_data_2);
 
