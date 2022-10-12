@@ -62,12 +62,17 @@ namespace crt {
     }
 
     fTree = (TTree*)(fCRTInputFile->Get("t"));
+
+    fTree->SetBranchAddress("s", &fUnixS);
+
     fTree->SetBranchAddress("hit1_feb", &fHit1Feb);
+    fTree->SetBranchAddress("hit1_flags", &fHit1Flags);
     fTree->SetBranchAddress("hit1_t0", &fHit1T0);
     fTree->SetBranchAddress("hit1_t1", &fHit1T1);
     fTree->SetBranchAddress("hit1_adc", &fHit1Adc);
 
     fTree->SetBranchAddress("hit2_feb", &fHit2Feb);
+    fTree->SetBranchAddress("hit2_flags", &fHit2Flags);
     fTree->SetBranchAddress("hit2_t0", &fHit2T0);
     fTree->SetBranchAddress("hit2_t1", &fHit2T1);
     fTree->SetBranchAddress("hit2_adc", &fHit2Adc);
@@ -102,8 +107,8 @@ namespace crt {
 
     if(fVerbose)
       std::cout << "==================================\n"
-		<< "Event: " << fEventCounter << " / " << fTotalTreeEvents << '\n'
-		<< "==================================" << std::endl;
+                << "Event: " << fEventCounter << " / " << fTotalTreeEvents << '\n'
+                << "==================================" << std::endl;
     
     fTree->GetEntry(fEventCounter);
 
@@ -113,8 +118,10 @@ namespace crt {
     {
       for (int s = 0; s < 32; s++) { adc[s] = fHit1Adc->at(j)[s]; }
       sbnd::crt::FEBData feb_data_1(fMac5ToGeoID[fHit1Feb->at(j)],
+                                    fHit1Flags->at(j),
                                     fHit1T0->at(j),
                                     fHit1T1->at(j) + fT1Offset,
+                                    fUnixS->at(j),
                                     adc,
                                     0);
 
@@ -122,33 +129,39 @@ namespace crt {
 
       for (int s = 0; s < 32; s++) { adc[s] = fHit2Adc->at(j)[s]; }
       sbnd::crt::FEBData feb_data_2(fMac5ToGeoID[fHit2Feb->at(j)],
+                                    fHit2Flags->at(j),
                                     fHit2T0->at(j),
                                     fHit2T1->at(j) + fT1Offset,
+                                    fUnixS->at(j),
                                     adc,
                                     0);
 
       febdata_v->push_back(feb_data_2);
 
       if(fVerbose)
-	{
-	  std::cout << "---------- FEB 1 ---------\n"
-		    << "Mac5: " << feb_data_1.Mac5() << '\n'
-		    << "T0:   " << feb_data_1.Ts0() << '\n'
-		    << "T1:   " << feb_data_1.Ts1() << '\n'
-		    << "ADC:  [";
-	  for(auto const &adc : feb_data_1.ADC()) 
-	    { std::cout << adc << ", ";}
-	  std::cout << "]\n" << std::endl;
+        {
+          std::cout << "---------- FEB 1 ---------\n"
+                    << "Mac5:  " << feb_data_1.Mac5() << '\n'
+                    << "Flags: " << feb_data_1.Flags() << '\n'
+                    << "T0:    " << feb_data_1.Ts0() << '\n'
+                    << "T1:    " << feb_data_1.Ts1() << '\n'
+                    << "UnixS: " << feb_data_1.UnixS() << '\n'
+                    << "ADC:   [";
+          for(auto const &adc : feb_data_1.ADC()) 
+            { std::cout << adc << ", ";}
+          std::cout << "]\n" << std::endl;
 
-	  std::cout << "---------- FEB 2 ---------\n"
-		    << "Mac5: " << feb_data_2.Mac5() << '\n'
-		    << "T0:   " << feb_data_2.Ts0() << '\n'
-		    << "T1:   " << feb_data_2.Ts1() << '\n'
-		    << "ADC:  [";
-	  for(auto const &adc : feb_data_2.ADC()) 
-	    { std::cout << adc << ", ";}
-	  std::cout << "]\n" << std::endl;
-	}
+          std::cout << "---------- FEB 2 ---------\n"
+                    << "Mac5:  " << feb_data_2.Mac5() << '\n'
+                    << "Flags: " << feb_data_2.Flags() << '\n'
+                    << "T0:    " << feb_data_2.Ts0() << '\n'
+                    << "T1:    " << feb_data_2.Ts1() << '\n'
+                    << "UnixS: " << feb_data_2.UnixS() << '\n'
+                    << "ADC:   [";
+          for(auto const &adc : feb_data_2.ADC()) 
+            { std::cout << adc << ", ";}
+          std::cout << "]\n" << std::endl;
+        }
     }
     fEventCounter++;
 

@@ -63,11 +63,14 @@ namespace crt {
     art::TypeLabel                fTLfebdata;
 
     TTree * fTree;
+    std::vector<int> *fUnixS = nullptr; 
     std::vector<double> *fHit1Feb = nullptr;
+    std::vector<UShort_t> *fHit1Flags = nullptr;
     std::vector<double> *fHit1T0 = nullptr;
     std::vector<double> *fHit1T1 = nullptr;
     std::vector<std::vector<uint16_t>> *fHit1Adc = nullptr;
     std::vector<double> *fHit2Feb = nullptr;
+    std::vector<UShort_t> *fHit2Flags = nullptr;
     std::vector<double> *fHit2T0 = nullptr;
     std::vector<double> *fHit2T1 = nullptr;
     std::vector<std::vector<uint16_t>> *fHit2Adc = nullptr;
