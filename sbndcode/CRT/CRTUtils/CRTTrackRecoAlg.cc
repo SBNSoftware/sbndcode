@@ -2,12 +2,14 @@
 
 namespace sbnd{
 
-CRTTrackRecoAlg::CRTTrackRecoAlg(const Config& config)
-  : hitAlg() {
+  CRTTrackRecoAlg::CRTTrackRecoAlg(const fhicl::ParameterSet &p)
+    : fTimeLimit(p.get<double>("TimeLimit"))
+    , fAverageHitDistance(p.get<double>("AverageHitDistance"))
+    , fDistanceLimit(p.get<double>("DistanceLimit"))
+    , hitAlg(p.get<fhicl::ParameterSet>("HitRecoAlg"))
+    , fCrtGeo(p.get<fhicl::ParameterSet>("GeoAlg"))
+ {}
 
-  this->reconfigure(config);
-  
-}
 
 CRTTrackRecoAlg::CRTTrackRecoAlg(double aveHitDist, double distLim)
   : hitAlg() {
@@ -19,17 +21,6 @@ CRTTrackRecoAlg::CRTTrackRecoAlg(double aveHitDist, double distLim)
 
 
 CRTTrackRecoAlg::~CRTTrackRecoAlg(){
-
-}
-
-
-void CRTTrackRecoAlg::reconfigure(const Config& config){
-
-  fTimeLimit          = config.TimeLimit();
-  fAverageHitDistance = config.AverageHitDistance();
-  fDistanceLimit      = config.DistanceLimit();
-
-  return;
 
 }
 
