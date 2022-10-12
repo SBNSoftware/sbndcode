@@ -113,8 +113,8 @@ namespace sbnd{
   struct CRTModuleGeo{
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet, 
                  const uint16_t _adID, const std::string &_taggerName,
-                 const uint32_t _cableDelayCorrection,
-		 const bool _invertedOrdering)
+                 const int32_t _cableDelayCorrection,
+                 const bool _invertedOrdering)
     {
       name       = moduleNode->GetName();
       taggerName = _taggerName;
@@ -168,7 +168,7 @@ namespace sbnd{
     uint16_t      orientation;
     bool          top;
     uint16_t      adID;
-    uint32_t      cableDelayCorrection;
+    int32_t       cableDelayCorrection;
     bool          invertedOrdering;
     bool          null;
   };
