@@ -11,6 +11,7 @@ namespace sbnd{
                        geo::AuxDetGeometryCore const *auxdet_geometry)
     : fCableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
     , fSiPMPedestalsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestals", std::vector<std::pair<unsigned, double>>()))
+    , fChannelInversionVector(p.get<std::vector<std::pair<unsigned, bool>>>("InvertedChannelOrder", std::vector<std::pair<unsigned, bool>>()))
   {
     fGeometryService = geometry;
     fAuxDetGeoCore   = auxdet_geometry;
@@ -20,6 +21,8 @@ namespace sbnd{
                                                          fCableLengthCorrectionsVector.end());
     fSiPMPedestals          = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), 
                                                          fSiPMPedestalsVector.end());
+    fChannelInversion       = std::map<unsigned, bool>(fChannelInversionVector.begin(), 
+                                                       fChannelInversionVector.end());
 
     // Record used objects
     std::vector<std::string> usedTaggers;
@@ -71,20 +74,21 @@ namespace sbnd{
 
             // Fill the module information
             const std::string moduleName = nodeModule->GetName();
+	    const bool invert = fChannelInversion.size() ? fChannelInversion.at(ad_i) : false;
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
                 const uint32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
                   fCableLengthCorrections.at(ad_i) : 0;
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-                                                    cableDelayCorrection);
+                                                    cableDelayCorrection, invert);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
-            const uint32_t channel0 = 32 * ad_i + 2 * ads_i + 0;
-            const uint32_t channel1 = 32 * ad_i + 2 * ads_i + 1;          
+            const uint32_t channel0 = invert ? 32 * ad_i + (31 - 2 * ads_i) : 32 * ad_i + 2 * ads_i;
+            const uint32_t channel1 = invert ? 32 * ad_i + (31 - 2 * ads_i -1) : 32 * ad_i + 2 * ads_i + 1;
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
               {
                 usedStrips.push_back(stripName);
