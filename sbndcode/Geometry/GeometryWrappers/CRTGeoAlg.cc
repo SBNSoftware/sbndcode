@@ -87,6 +87,7 @@ namespace sbnd{
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
+	    // Some modules need their channel numbers counted in reverse as they're inverted relative to the geometry
             const uint32_t channel0 = invert ? 32 * ad_i + (31 - 2 * ads_i) : 32 * ad_i + 2 * ads_i;
             const uint32_t channel1 = invert ? 32 * ad_i + (31 - 2 * ads_i -1) : 32 * ad_i + 2 * ads_i + 1;
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
