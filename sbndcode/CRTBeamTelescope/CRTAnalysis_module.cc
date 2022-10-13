@@ -438,7 +438,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   _subrun = e.id().subRun();
   _event =  e.id().event();
 
-  std::cout << "This is event " << _event << std::endl;
+  if(_debug) std::cout << "This is event " << _event << std::endl;
 
   art::Handle<std::vector<simb::MCTruth>> mct_h;
   std::vector<art::Ptr<simb::MCTruth>> mct_v;
