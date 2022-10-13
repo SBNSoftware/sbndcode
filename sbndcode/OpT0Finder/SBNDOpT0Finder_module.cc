@@ -83,7 +83,7 @@ private:
   bool ConstructLightClusters(art::Event& e, unsigned int tpc);
 
   /// Returns the number of photons given charge and PFParticle
-  float GetNPhotons(const float charge, const art::Ptr<recob::PFParticle> &pfp, art::ServiceHandle<sim::LArG4Parameters const> g4param);
+  // float GetNPhotons(const float charge, const art::Ptr<recob::PFParticle> &pfp, art::ServiceHandle<sim::LArG4Parameters const> g4param);
 
   /// Convert from a list of PDS names to a list of op channels
   std::vector<int> PDNamesToList(std::vector<std::string>);
@@ -105,11 +105,13 @@ private:
   double _flash_trange_start; ///< The time start from where to include flashes (to be set)
   double _flash_trange_end; ///< The time stop from where to stop including flashes (to be set)
 
-  float _charge_to_n_photons_track; ///< The conversion factor betweeen hit integral and photons (to be set)
-  float _charge_to_n_photons_shower; ///< The conversion factor betweeen hit integral and photons (to be set)
+  float _calibration_const;  /// conversion from (ADC*time ticks) to e- (to be set), given in units of (ADC*time ticks)/e- 
 
-  bool _calc_correlated;
-  art::ServiceHandle<sim::LArG4Parameters const> g4param;
+  // float _charge_to_n_photons_track; ///< The conversion factor betweeen hit integral and photons (to be set)
+  // float _charge_to_n_photons_shower; ///< The conversion factor betweeen hit integral and photons (to be set)
+
+  // bool _calc_correlated;
+  // art::ServiceHandle<sim::LArG4Parameters const> g4param;
 
   std::vector<std::string> _photo_detectors; ///< The photodetector to use (to be set)
   std::vector<int> _opch_to_use; ///< List of opch to use (will be infered from _photo_detectors)
@@ -167,10 +169,12 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _opch_to_use = this->PDNamesToList(_photo_detectors);
   _uncoated_pmts = this->GetUncoatedPTMList(_opch_to_use);
 
-  _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
-  _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
+  _calibration_const = p.get<float>("CalibrationConst");
 
-  _calc_correlated = p.get<bool>("CalcCorrelated",false);
+  // _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
+  // _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
+
+  // _calc_correlated = p.get<bool>("CalcCorrelated",false);
   _select_nus = p.get<bool>("SelectNeutrino", true);
 
   if (_tpc_v.size() != _opflash_producer_v.size()) {
@@ -555,14 +559,15 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           }
 
           const auto &position(spacepoint->XYZ());
-          const auto charge(hit->Integral());
+          const auto charge((1/_calibration_const)*hit->Integral());
+          // std::cout << "check: " << ::lar_pandora::LArPandoraHelper::IsTrack(pfp) << std::endl;
 
           // Emplace this point with charge to the light cluster
           light_cluster.emplace_back(position[0],
                                      position[1],
                                      position[2],
-                                     GetNPhotons(charge, pfp, g4param),
-                                     -1);
+                                     charge,
+                                     ::lar_pandora::LArPandoraHelper::IsTrack(pfp));
 
           // Also save the quantites for the output tree
           // _dep_slice.push_back(_light_cluster_v.size());,
@@ -572,7 +577,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           _dep_y.push_back(position[1]);
           _dep_z.push_back(position[2]);
           _dep_charge.push_back(charge);
-          _dep_n_photons.push_back(GetNPhotons(charge, pfp, g4param));
+          // _dep_n_photons.push_back(GetNPhotons(charge, pfp, g4param));
           _dep_trk.push_back(::lar_pandora::LArPandoraHelper::IsTrack(pfp)); 
         }
       } // End loop over Spacepoints
@@ -594,6 +599,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
   return true;
 }
 
+/*
 float SBNDOpT0Finder::GetNPhotons(const float charge,
                                   const art::Ptr<recob::PFParticle> &pfp,
                                   art::ServiceHandle<sim::LArG4Parameters const> g4param) {
@@ -634,6 +640,7 @@ float SBNDOpT0Finder::GetNPhotons(const float charge,
 
   return N_ph;
 }
+*/
 
 std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names) {
 
