@@ -31,7 +31,8 @@ namespace sbnd{
     for(unsigned feb_i = 0; feb_i < dataVec.size(); ++feb_i)
       {
         art::Ptr<sbnd::crt::FEBData> data = dataVec.at(feb_i);
-        uint32_t mac5 = data->Mac5();
+        uint32_t mac5  = data->Mac5();
+        uint32_t unixs = data->UnixS();
 
         CRTModuleGeo module    = fCRTGeoAlg.GetModule(mac5 * 32);
         std::string taggerName = module.taggerName;
@@ -71,7 +72,7 @@ namespace sbnd{
                 double ex    = 2.5;
 
                 // Create hit
-                stripHits[module.taggerName][module.orientation].emplace_back(channel, t0, t1, x, ex, adc1, adc2, feb_i);
+                stripHits[module.taggerName][module.orientation].emplace_back(channel, t0, t1, unixs, x, ex, adc1, adc2, feb_i);
               }
           }
       }
@@ -94,10 +95,10 @@ namespace sbnd{
         std::vector<CRTStripHit> hitsOrien0 = stripHitsVec[0];
         std::vector<CRTStripHit> hitsOrien1 = stripHitsVec[1];
 
-	// Get all possible combinations of strips that could make coincident hits
+        // Get all possible combinations of strips that could make coincident hits
         std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates = ProduceCRTHitCandidates(tagger, hitsOrien0, hitsOrien1);
 
-	// Order by the hits with the largest reconstructed PE, should be better than random?
+        // Order by the hits with the largest reconstructed PE, should be better than random?
         std::sort(candidates.begin(), candidates.end(), 
                   [](const std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit> &a, std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit> &b) 
                   {
@@ -111,8 +112,8 @@ namespace sbnd{
               continue;
 
             crtHits.push_back(cand.second);
-	    used_i.insert(cand.first.first);
-	    used_j.insert(cand.first.second);
+            used_i.insert(cand.first.first);
+            used_j.insert(cand.first.second);
           }
       }
     return crtHits;
@@ -156,11 +157,17 @@ namespace sbnd{
             if(std::abs(diff) > fHitCoincidenceRequirement)
               continue;
 
+            if(abs((int)hit0.s - (int)hit1.s) > 1)
+              continue;
+
+            const uint64_t unixs = std::min(hit0.s, hit1.s);
+
             sbn::crt::CRTHit crtHit({(uint8_t)hit0.febdataindex, (uint8_t)hit1.febdataindex},
                                     pe0+pe1,
                                     t0,
                                     (double)t1 - fT1Offset,
                                     diff,
+                                    unixs,
                                     pos,
                                     err,
                                     tagger,
@@ -176,7 +183,7 @@ namespace sbnd{
                                          << "with PE: " << pe0+pe1 << '\n'
                                          << "on tagger: " << tagger << std::endl;
 
-	    // Record which strip hits were used to make this candidate
+            // Record which strip hits were used to make this candidate
             candidates.push_back({{i, j}, crtHit});
           }
       }
