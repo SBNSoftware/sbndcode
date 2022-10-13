@@ -145,6 +145,7 @@ private:
   std::vector<double> _chit_t0; ///< CRT hit t0
   std::vector<double> _chit_t1; ///< CRT hit t1
   std::vector<double> _chit_t1_diff; ///< CRT hit difference between the two 1D hit t1s
+  std::vector<uint64_t> _chit_unix_s; ///< CRT hit unix timestamp
   std::vector<double> _chit_h1_t0; ///< CRT hit t0 (1DHit 1)
   std::vector<double> _chit_h2_t0; ///< CRT hit t0 (1DHit 2)
   std::vector<double> _chit_h1_t1; ///< CRT hit t1 (1DHit 1)
@@ -186,9 +187,12 @@ private:
   std::vector<double> _ct_z2; ///< CRT track z2
 
   std::vector<uint16_t> _feb_mac5; ///< FEBData Mac5 ID
+  std::vector<uint16_t> _feb_flags; ///< FEBData Flags
   std::vector<uint32_t> _feb_ts0; ///< FEBData Ts0
-  std::vector<uint32_t> _feb_ts1; ///< FEBData Fs1
+  std::vector<uint32_t> _feb_ts1; ///< FEBData Ts1
+  std::vector<uint32_t> _feb_unixs; ///< FEBData UnixS
   std::vector<std::vector<uint16_t>> _feb_adc; ///< FEBData 32 ADC values
+  std::vector<uint32_t> _feb_coinc; ///< FEBData Coinc
 
   TTree* _sr_tree;
   int _sr_run, _sr_subrun;
@@ -295,6 +299,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_t0", "std::vector<double>", &_chit_t0);
   _tree->Branch("chit_t1", "std::vector<double>", &_chit_t1);
   _tree->Branch("chit_t1_diff", "std::vector<double>", &_chit_t1_diff);
+  _tree->Branch("chit_unix_s", "std::vector<uint64_t>", &_chit_unix_s);
   _tree->Branch("chit_h1_t0", "std::vector<double>", &_chit_h1_t0);
   _tree->Branch("chit_h2_t0", "std::vector<double>", &_chit_h2_t0);
   _tree->Branch("chit_h1_t1", "std::vector<double>", &_chit_h1_t1);
@@ -339,9 +344,12 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("ct_z2", "std::vector<double>", &_ct_z2);
 
   _tree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
+  _tree->Branch("feb_flags", "std::vector<uint16_t>", &_feb_flags);
   _tree->Branch("feb_ts0", "std::vector<uint32_t>", &_feb_ts0);
   _tree->Branch("feb_ts1", "std::vector<uint32_t>", &_feb_ts1);
+  _tree->Branch("feb_unixs", "std::vector<uint32_t>", &_feb_unixs);
   _tree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
+  _tree->Branch("feb_coinc", "std::vector<uint32_t>", &_feb_coinc);
 
   _sr_tree = fs->make<TTree>("pottree","");
   _sr_tree->Branch("run", &_sr_run, "run/I");
@@ -939,6 +947,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_t0.resize(n_hits);
   _chit_t1.resize(n_hits);
   _chit_t1_diff.resize(n_hits);
+  _chit_unix_s.resize(n_hits);
   _chit_h1_t0.resize(n_hits);
   _chit_h2_t0.resize(n_hits);
   _chit_h1_t1.resize(n_hits);
@@ -979,6 +988,7 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_t0[i] = hit->ts0_ns;
     _chit_t1[i] = hit->ts1_ns;
     _chit_t1_diff[i] = hit->ts0_ns_corr;   // the variable name in the object is old and is just a placeholder for diff, don't worry!
+    _chit_unix_s[i] = hit->ts0_s;   // the variable name in the object is old and is just a placeholder for diff, don't worry!
     _chit_pes[i] = hit->peshit;
 
     if (hit->tagger == "volTaggerNorth_0") {
@@ -1181,20 +1191,26 @@ void CRTAnalysis::analyze(art::Event const& e)
   size_t n_febdata = feb_data_v.size();
 
   _feb_mac5.resize(n_febdata);
+  _feb_flags.resize(n_febdata);
   _feb_ts0.resize(n_febdata);
   _feb_ts1.resize(n_febdata);
+  _feb_unixs.resize(n_febdata);
   _feb_adc.resize(n_febdata, std::vector<uint16_t>(32));
+  _feb_coinc.resize(n_febdata);
 
   for (size_t i = 0; i < n_febdata; ++i){
 
     auto feb_data = feb_data_v[i];
 
     _feb_mac5[i] = feb_data->Mac5();
+    _feb_flags[i] = feb_data->Flags();
     _feb_ts0[i] = feb_data->Ts0();
     _feb_ts1[i] = feb_data->Ts1();
+    _feb_unixs[i] = feb_data->UnixS();
     for (size_t j = 0; j < 32; j++) {
       _feb_adc[i][j] = feb_data->ADC(j);
     }
+    _feb_coinc[i] = feb_data->Coinc();
   }
 
   //
