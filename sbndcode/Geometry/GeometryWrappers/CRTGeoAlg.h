@@ -111,6 +111,23 @@ namespace sbnd{
 
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
+    CRTModuleGeo() 
+    : name("")
+    , taggerName("")
+    , minX(-std::numeric_limits<double>::max())
+    , maxX(std::numeric_limits<double>::max())
+    , minY(-std::numeric_limits<double>::max())
+    , maxY(std::numeric_limits<double>::max())
+    , minZ(-std::numeric_limits<double>::max())
+    , maxZ(std::numeric_limits<double>::max())
+    , orientation(0)
+    , top(false)
+    , adID(std::numeric_limits<uint16_t>::max())
+    , cableDelayCorrection(0)
+    , invertedOrdering(false)
+    , null(false)
+    {}
+
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet, 
                  const uint16_t _adID, const std::string &_taggerName,
                  const int32_t _cableDelayCorrection,
@@ -248,9 +265,13 @@ namespace sbnd{
 
     CRTModuleGeo GetModule(const uint16_t channel) const;
 
+    CRTModuleGeo GetModuleByAuxDetIndex(const unsigned ad_i) const;
+
     CRTStripGeo GetStrip(const std::string stripName) const;
 
     CRTStripGeo GetStrip(const uint16_t channel) const;
+
+    CRTStripGeo GetStripByAuxDetIndices(const unsigned ad_i, const unsigned ads_i) const;
 
     CRTSiPMGeo GetSiPM(const uint16_t channel) const;
 
@@ -261,6 +282,9 @@ namespace sbnd{
     std::string ChannelToTaggerName(const uint16_t channel) const;
 
     size_t ChannelToOrientation(const uint16_t channel) const;
+
+    std::vector<double> StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
+                                             const double y, const double z);
 
     std::vector<double> StripHit3DPos(const std::string stripName, const double x, const double ex);
 

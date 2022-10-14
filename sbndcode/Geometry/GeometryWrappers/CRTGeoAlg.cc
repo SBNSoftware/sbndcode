@@ -202,6 +202,18 @@ namespace sbnd{
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName);
   }
 
+  CRTModuleGeo CRTGeoAlg::GetModuleByAuxDetIndex(const unsigned ad_i) const
+  {
+    for(auto const &[name, module] : fModules)
+      {
+        if(module.adID == ad_i)
+          return module;
+      }
+
+    CRTModuleGeo void_return;
+    return void_return;
+  }
+
   CRTStripGeo CRTGeoAlg::GetStrip(const std::string stripName) const
   {
     return fStrips.at(stripName);
@@ -210,6 +222,15 @@ namespace sbnd{
   CRTStripGeo CRTGeoAlg::GetStrip(const uint16_t channel) const
   {
     return fStrips.at(fSiPMs.at(channel).stripName);
+  }
+
+  CRTStripGeo CRTGeoAlg::GetStripByAuxDetIndices(const unsigned ad_i, const unsigned ads_i) const
+  {
+    const CRTModuleGeo module = GetModule(ad_i);
+    const uint16_t channel = 
+      module.invertedOrdering ? 32 * ad_i + (31 -2 *ads_i) : 32 * ad_i + 2 * ads_i;
+    
+    return GetStrip(channel);
   }
 
   CRTSiPMGeo CRTGeoAlg::GetSiPM(const uint16_t channel) const
@@ -268,6 +289,22 @@ namespace sbnd{
                                   std::min(w1[1],w2[1]), std::max(w1[1],w2[1]),
                                   std::min(w1[2],w2[2]), std::max(w1[2],w2[2])};
     return limits;
+  }
+
+  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const CRTStripGeo &strip, const double x, 
+                                                      const double y, const double z)
+  {
+    const uint16_t adsID = strip.adsID;
+    const uint16_t adID  = fModules.at(strip.moduleName).adID;
+  
+    const geo::AuxDetSensitiveGeo &auxDetSensitive = fAuxDetGeoCore->AuxDetGeoVec()[adID].SensitiveVolume(adsID);
+
+    double worldpos[3] = {x, y, z};
+    double localpos[3];
+    auxDetSensitive.WorldToLocal(worldpos, localpos);
+
+    std::vector<double> localvec = {localpos[0], localpos[1], localpos[2]};
+    return localvec;
   }
 
   TVector3 CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
