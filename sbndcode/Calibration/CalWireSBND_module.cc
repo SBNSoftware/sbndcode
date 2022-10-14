@@ -129,9 +129,9 @@ namespace caldata {
     fDoAdvBaselineSub = p.get< bool >       ("DoAdvBaselineSub");
     fBaseSampleBins   = p.get< int >        ("BaseSampleBins");
     fBaseVarCut       = p.get< int >        ("BaseVarCut");
-    fFFTSize          = p.get< int >        ("FFTSize", 0);
-    fFFTOption        = p.get< std::string >("FFTOption", "");
-    fFFTFitBins       = p.get< int >        ("FFTFitBins", 20);
+    fFFTSize          = p.get< int >        ("FFTSize");
+    fFFTOption        = p.get< std::string >("FFTOption");
+    fFFTFitBins       = p.get< int >        ("FFTFitBins");
     
     fSpillName="";
     
@@ -193,12 +193,12 @@ namespace caldata {
 
 
     if( (unsigned int)transformSize < dataSize){
-      mf::LogWarning("CalWireSBND")<<"FFT size (" << transformSize << ") "
+      mf::LogInfo("CalWireSBND")<<"FFT size (" << transformSize << ") "
                                     << "is smaller than the data size (" << dataSize << ") "
                                     << "\nResizing the FFT now...";
       fFFT->ReinitializeFFT(dataSize,fFFT->FFTOptions(),fFFT->FFTFitBins());
       transformSize = fFFT->FFTSize();
-      mf::LogWarning("CalWireSBND")<<"FFT size is now (" << transformSize << ") "
+      mf::LogInfo("CalWireSBND")<<"FFT size is now (" << transformSize << ") "
                                     << "and should be larger than the data size (" << dataSize << ")";
     }
 
