@@ -9,6 +9,9 @@ sbnd_opt0_finder:
   OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
   TPCs: [0, 1]
   SliceProducer:   "pandora"
+  TrackProducer:   "pandoraTrack"
+  ShowerProducer:  "pandoraShower"
+  CaloProducer:    "pandoraCalo"
 
   FlashVetoTimeStart: -1e9
   FlashVetoTimeEnd:   +1e9
