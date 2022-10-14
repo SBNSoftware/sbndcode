@@ -31,6 +31,7 @@
 #include "lardataobj/RecoBase/OpHit.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/AnalysisBase/T0.h"
+#include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/CoreUtils/ServiceUtil.h"
 
@@ -101,6 +102,9 @@ private:
   std::vector<std::string> _opflash_producer_v; ///< The OpFlash producers (to be set)
   std::vector<unsigned int> _tpc_v; ///< TPC number per OpFlash producer (to be set)
   std::string _slice_producer; ///< The Slice producer (to be set)
+  std::string _trk_producer;
+  std::string _shw_producer;
+  std::string _calo_producer;
 
   double _flash_trange_start; ///< The time start from where to include flashes (to be set)
   double _flash_trange_end; ///< The time stop from where to stop including flashes (to be set)
@@ -138,7 +142,7 @@ private:
   std::vector<double> _hypo_spec;
 
   TTree* _tree2;
-  std::vector<float> _dep_x, _dep_y, _dep_z, _dep_charge, _dep_n_photons;
+  std::vector<float> _dep_x, _dep_y, _dep_z, _dep_charge, _dep_photons;
   std::vector<int> _dep_slice;
   std::vector<int> _dep_pfpid;
   std::vector<int> _dep_trk;
@@ -161,6 +165,9 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _tpc_v = p.get<std::vector<unsigned int>>("TPCs");
   _slice_producer = p.get<std::string>("SliceProducer");
+  _trk_producer   = p.get<std::string>("TrackProducer");
+  _shw_producer   = p.get<std::string>("ShowerProducer");
+  _calo_producer  = p.get<std::string>("CaloProducer");
 
   _flash_trange_start = p.get<double>("FlashVetoTimeStart", 0);
   _flash_trange_end = p.get<double>("FlashVetoTimeEnd", 2);
@@ -205,7 +212,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tree1->Branch("dep_y", "std::vector<float>", &_dep_y);
   _tree1->Branch("dep_z", "std::vector<float>", &_dep_z);
   _tree1->Branch("dep_charge", "std::vector<float>", &_dep_charge);
-  _tree1->Branch("dep_n_photons", "std::vector<float>", &_dep_n_photons);
+  _tree1->Branch("dep_photons", "std::vector<float>", &_dep_photons);
   _tree1->Branch("dep_trk", "std::vector<int>", &_dep_trk);
 
   _tree2 = fs->make<TTree>("flash_match_tree","");
@@ -489,6 +496,12 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
     return false;
   }
 
+  ::art::Handle<std::vector<recob::Track>> trk_h; 
+  e.getByLabel(_trk_producer, trk_h);
+
+  ::art::Handle<std::vector<recob::Shower>> shw_h;
+  e.getByLabel(_shw_producer, shw_h);
+
   // Construct the vector of Slices
   std::vector<art::Ptr<recob::Slice>> slice_v;
   art::fill_ptr_vector(slice_v, slice_h);
@@ -497,6 +510,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
   art::FindManyP<recob::PFParticle> slice_to_pfps (slice_h, e, _slice_producer);
   art::FindManyP<recob::SpacePoint> pfp_to_spacepoints (pfp_h, e, _slice_producer);
   art::FindManyP<recob::Hit> spacepoint_to_hits (spacepoint_h, e, _slice_producer);
+  // For using track calorimetry objects, get slice->pfp->track->calo 
+  art::FindManyP<recob::Track> pfp_to_trks (pfp_h, e, _trk_producer);
+  // art::FindManyP<recob::Shower> pfp_to_shw (pfp_h, e, _shw_producer);
+  art::FindManyP<anab::Calorimetry> trk_to_calo (trk_h, e, _calo_producer);
 
   // Loop over the Slices
   for (size_t n_slice = 0; n_slice < slice_h->size(); n_slice++) {
@@ -510,7 +527,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
     _dep_y.clear();
     _dep_z.clear();
     _dep_charge.clear();
-    _dep_n_photons.clear();
+    _dep_photons.clear();
     _dep_trk.clear();
 
     // Get the associated PFParticles
@@ -532,55 +549,102 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
 
       auto pfp = pfp_v[n_pfp];
       // std::cout << "pfpid: " << pfp->Self() << std::endl;
-      // if (pfp->IsPrimary())
-      //   std::cout << "primary pfpid:" << pfp->Self() << std::endl;
-      // Get the associated SpacePoints
-      std::vector<art::Ptr<recob::SpacePoint>> spacepoint_v = pfp_to_spacepoints.at(pfp.key());
+      
+      auto pfpistrack = ::lar_pandora::LArPandoraHelper::IsTrack(pfp);
 
-      for (size_t n_spacepoint = 0; n_spacepoint < spacepoint_v.size(); n_spacepoint++) {
+      // std::cout<< "ntracks: " << track_v.size() << std::endl;
+      // std::vector<art::Ptr<recob::Shower>> shower_v = pfp_to_shw.at(pfp.key());
+      // std::cout << "nshowers: " << shower_v.size() << std::endl;
 
-        auto spacepoint = spacepoint_v[n_spacepoint];
+      if (pfpistrack){
+        std::vector<art::Ptr<recob::Track>> track_v = pfp_to_trks.at(pfp.key());
+        for (size_t n_trk = 0; n_trk < track_v.size(); n_trk++){
+          auto track = track_v[n_trk];
+          // Get the associate calo objects, we expect one for each plane
+          // choose collection plane (calo object only stores pitch for collection plane)
+          std::vector<art::Ptr<anab::Calorimetry>> calo_v = trk_to_calo.at(track.key());
+          auto calo = calo_v[2];
+          auto dEdx_v = calo->dEdx(); // assuming units in MeV/cm
+          auto dQdx_v = calo->dQdx(); // assuming units in electrons/cm,
+          auto pitch_v = calo->TrkPitchVec(); // assuming units in cm 
+          auto pos_v   = calo->XYZ();
+          for (size_t n_calo = 0; n_calo < calo->dEdx().size(); n_calo++){
+            // only select steps that are in the right TPC
+            auto &position = pos_v[n_calo];
+            auto x_calo = position.X();
+            if ((x_calo < 0 && tpc==1 ) || (x_calo > 0 && tpc==0))
+              continue;
+            auto dE = dEdx_v[n_calo] * pitch_v[n_calo];
+            auto dQ = dQdx_v[n_calo] * pitch_v[n_calo];
 
-        // Get the associated hits
-        std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hits.at(spacepoint.key());
+            // calc number of photons
+            auto nphotons = dE/(19.5*1e-6) - dQ; // W_ph is in units of MeV 
+            // emplace this point into the light cluster 
+            light_cluster.emplace_back(position.X(),
+                                      position.Y(),
+                                      position.Z(),
+                                      nphotons,
+                                      1);
+            // Fill tree variables 
+            _dep_slice.push_back(n_slice);
+            _dep_pfpid.push_back(pfp->Self());
+            _dep_x.push_back(position.X());
+            _dep_y.push_back(position.Y());
+            _dep_z.push_back(position.Z());
+            _dep_charge.push_back(dQ);
+            _dep_photons.push_back(nphotons);
+            _dep_trk.push_back(1);
+          } // end loop over calo steps 
+        } // end loop over tracks 
+      } // end calo track section 
+      else{ // if pfp is not a track (belongs to shower or neither track nor shower)
+        // Get the associated SpacePoints
+        std::vector<art::Ptr<recob::SpacePoint>> spacepoint_v = pfp_to_spacepoints.at(pfp.key());
 
-        for (size_t n_hit = 0; n_hit < hit_v.size(); n_hit++) {
+        for (size_t n_spacepoint = 0; n_spacepoint < spacepoint_v.size(); n_spacepoint++) {
+          auto spacepoint = spacepoint_v[n_spacepoint];
 
-          auto hit = hit_v[n_hit];
+          // Get the associated hits
+          std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hits.at(spacepoint.key());
 
-          // Only select hits from the collection plane
-          if (hit->View() != geo::kZ) {
-            continue;
+          for (size_t n_hit = 0; n_hit < hit_v.size(); n_hit++) {
+
+            auto hit = hit_v[n_hit];
+
+            // Only select hits from the collection plane
+            if (hit->View() != geo::kZ) {
+              continue;
+            }
+
+            // Only use hits (and so spacepoints) that are in the specified TPC
+            if (hit->WireID().TPC != tpc) {
+              continue;
+            }
+
+            const auto &position(spacepoint->XYZ());
+            const auto charge((1/_calibration_const)*hit->Integral());
+            // std::cout << "check: " << ::lar_pandora::LArPandoraHelper::IsTrack(pfp) << std::endl;
+
+            // Emplace this point with charge to the light cluster
+            light_cluster.emplace_back(position[0],
+                                       position[1],
+                                       position[2],
+                                       charge,
+                                       0);
+
+            // Also save the quantites for the output tree
+            // _dep_slice.push_back(_light_cluster_v.size());,
+            _dep_slice.push_back(n_slice);
+            _dep_pfpid.push_back(pfp->Self());
+            _dep_x.push_back(position[0]);
+            _dep_y.push_back(position[1]);
+            _dep_z.push_back(position[2]);
+            _dep_charge.push_back(charge);
+            _dep_photons.push_back(-1.);
+            _dep_trk.push_back(0); 
           }
-
-          // Only use hits (and so spacepoints) that are in the specified TPC
-          if (hit->WireID().TPC != tpc) {
-            continue;
-          }
-
-          const auto &position(spacepoint->XYZ());
-          const auto charge((1/_calibration_const)*hit->Integral());
-          // std::cout << "check: " << ::lar_pandora::LArPandoraHelper::IsTrack(pfp) << std::endl;
-
-          // Emplace this point with charge to the light cluster
-          light_cluster.emplace_back(position[0],
-                                     position[1],
-                                     position[2],
-                                     charge,
-                                     ::lar_pandora::LArPandoraHelper::IsTrack(pfp));
-
-          // Also save the quantites for the output tree
-          // _dep_slice.push_back(_light_cluster_v.size());,
-          _dep_slice.push_back(n_slice);
-          _dep_pfpid.push_back(pfp->Self());
-          _dep_x.push_back(position[0]);
-          _dep_y.push_back(position[1]);
-          _dep_z.push_back(position[2]);
-          _dep_charge.push_back(charge);
-          // _dep_n_photons.push_back(GetNPhotons(charge, pfp, g4param));
-          _dep_trk.push_back(::lar_pandora::LArPandoraHelper::IsTrack(pfp)); 
-        }
-      } // End loop over Spacepoints
+        } // End loop over Spacepoints
+      } // end non-track loop
     } // End loop over PFParticle
 
     _tree1->Fill();
