@@ -368,3 +368,5 @@ physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:     
 #physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
+
+physics.producers.crttrack.TrackAlg.HitRecoAlg: @local::physics.producers.crthit.HitRecoAlg
