@@ -7,7 +7,7 @@ namespace sbnd{
     , fAverageHitDistance(p.get<double>("AverageHitDistance"))
     , fDistanceLimit(p.get<double>("DistanceLimit"))
     , hitAlg(p.get<fhicl::ParameterSet>("HitRecoAlg"))
-    , fCrtGeo(p.get<fhicl::ParameterSet>("GeoAlg"))
+    , fCrtGeo(p.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
  {}
 
 
