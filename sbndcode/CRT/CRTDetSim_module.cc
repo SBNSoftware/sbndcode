@@ -110,7 +110,7 @@ void CRTDetSim::produce(art::Event & e) {
 
 
   //
-  // Step 1: Apply Coincidence, deadtime, etc.
+  // Step 2: Apply Coincidence, deadtime, etc.
   //
 
   fDetAlg.CreateData();
