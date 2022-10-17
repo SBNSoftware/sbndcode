@@ -85,6 +85,8 @@ find_ups_product( eigen )
 find_ups_geant4()
 find_ups_boost()
 find_ups_root()
+find_package(artdaq_core)
+find_package(sbndaq_artdaq_core)
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
