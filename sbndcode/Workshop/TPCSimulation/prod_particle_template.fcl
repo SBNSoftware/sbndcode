@@ -1,0 +1,42 @@
+# services
+
+# modules
+
+process_name: 
+
+# Configure the services used by the modules
+services:
+{
+
+}
+
+# Start each new event with an empty event.
+source:
+{
+
+}
+
+
+# Define and configure some modules to do work on each event.
+physics:
+{
+
+}
+
+# block to define where the output goes.
+outputs:
+{
+
+}
+
+
+# Define the particle types with their PDG code
+
+# Momentum
+
+# Vertex position
+
+# Time relative to start of "beam" (t=0)
+
+# Angles
+
