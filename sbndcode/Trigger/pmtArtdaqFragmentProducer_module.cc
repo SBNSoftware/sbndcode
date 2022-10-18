@@ -85,6 +85,8 @@ private:
   int fBaseline; // baseline in simulation, default 8000 ADC (for expanding waveforms only, when not fully simulated)
   int fMultiplicityThreshold; // number of PMT pairs in hardware trigger to pass
   double fBeamWindowLength;
+  uint32_t nChannelsFrag;
+  uint32_t wfm_length; // ~10us, 2ns tick 
   bool fVerbose;
 
   // event information
@@ -117,6 +119,8 @@ sbnd::trigger::pmtArtdaqFragmentProducer::pmtArtdaqFragmentProducer(fhicl::Param
   fBaseline(p.get<int>("Baseline",8000)),
   fMultiplicityThreshold(p.get<int>("MultiplicityThreshold")),
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)),
+  nChannelsFrag(p.get<double>("nChannelsFrag", 15)),
+  wfm_length(p.get<double>("WfmLength", 5120)),
   fVerbose(p.get<bool>("Verbose", false)),
   fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
   // More initializers here.
@@ -266,9 +270,9 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
 
   // set properties of fragment that are common to event
   uint32_t nChannelsTotal = channelList.size();
-  uint32_t nChannelsFrag = 15;
+  //uint32_t nChannelsFrag = 15;
   uint32_t nFrag = (uint32_t)nChannelsTotal/nChannelsFrag;
-  uint32_t wfm_length = 5120; // ~10us, 2ns tick
+  //uint32_t wfm_length = 5120; // ~10us, 2ns tick
 
   // fragment properties
   uint32_t sequenceIDVal = fEvent;
@@ -282,16 +286,16 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
   uint32_t eventCounterVal = fEvent;
   uint32_t boardIDVal = 0;
   uint32_t triggerTimeTagVal = (uint32_t)CLHEP::RandFlat::shoot(&fTriggerTimeEngine, 0, 1e9);
+  uint32_t eventSizeVal = ((wfm_length * (nChannelsFrag+1)) * sizeof(uint16_t) + sizeof(sbndaq::CAENV1730EventHeader)) / sizeof(uint32_t);
   
   // loop over PMT hardware triggers
   for (auto wvfIdx : triggerIndex) {
 
     // index in full waveform, 2ns tick
     size_t trigIdx = wvfIdx*4;
-    size_t startIdx = trigIdx-500; // -1us
-
+    size_t startIdx = abs(fMinStartTime)*1000/2 + trigIdx-500;
     // determine and set timestamp for particular trigger
-    double triggerTime = fMinStartTime + wvfIdx*0.008; // in us
+    double triggerTime = wvfIdx*0.008; // in us
     double timestampVal = 0.5 + (triggerTime*1e-6); // in seconds // std::time(nullptr); // current time
     metadata.timeStampSec = (uint32_t)timestampVal;
     metadata.timeStampNSec = (uint32_t)(timestampVal*1e9);
@@ -312,6 +316,7 @@ void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)
       header_ptr->eventCounter = eventCounterVal;
       header_ptr->boardID = boardIDVal;
       header_ptr->triggerTimeTag = triggerTimeTagVal;  // ns // set timetag as random value for event
+      header_ptr->eventSize = eventSizeVal;
         
       // populate waveforms  
       // populate fragment with waveform

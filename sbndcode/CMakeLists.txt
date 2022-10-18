@@ -34,3 +34,11 @@ add_subdirectory(FlashMatch)
 
 add_subdirectory(Filters)
 add_subdirectory(ToFStudies)
+
+#My stuff
+add_subdirectory(ImageMaker)
+
+
+
+
+

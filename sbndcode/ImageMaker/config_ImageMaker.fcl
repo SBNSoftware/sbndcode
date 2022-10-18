@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+config_image:
+{
+ module_type: "ImageMaker"
+ DrawEVD: false
+ SliceLabel: "pandora"
+ PFPLabel: "pandora"
+ TrackLabel: "pandoraTrack"
+ ShowerLabel: "pandoraShower"
+}
+END_PROLOG

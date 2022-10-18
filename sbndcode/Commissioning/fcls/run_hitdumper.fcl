@@ -23,6 +23,8 @@
 #include "hitdumpermodule.fcl"
 #include "ophit_finder_sbnd.fcl"
 
+#include "muontrackmodule.fcl"
+
 process_name: HitDumper
 
 services:
@@ -74,7 +76,12 @@ physics:
     fasthit:             @local::standard_fasthitfinder
     ophitpmt:            @local::sbnd_ophit_finder_pmt
     ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+    MuonTrackProducer:        @local::MuonTrackProducer
 
+  }
+  filters:
+  {
+    MuonTrackFilter:          @local::MuonTrackFilter
   }
   analyzers:
   {
@@ -86,7 +93,7 @@ physics:
   reco2: [
     fasthit,
     ophitpmt,
-    ophitarapuca
+    ophitarapuca, MuonTrackProducer, MuonTrackFilter
   ]
 
   ana: [hitdumper]
@@ -112,6 +119,9 @@ physics.analyzers.hitdumper.keepCRThits: false
 physics.analyzers.hitdumper.keepCRTstrips: true
 physics.analyzers.hitdumper.makeCRTtracks: true
 physics.analyzers.hitdumper.readCRTtracks: false
+physics.analyzers.hitdumper.SelectEvents:  [reco2]
+physics.analyzers.hitdumper.readMuonHits:  true
+physics.analyzers.hitdumper.readMuonTracks:  true
 
 # set thresholds
 physics.producers.fasthit.MinSigInd: 15.0

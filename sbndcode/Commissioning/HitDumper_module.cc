@@ -881,6 +881,7 @@ void Hitdumper::analyze(const art::Event& evt)
     if (evt.getByLabel(fpmtSoftTriggerModuleLabel, pmtSoftTriggerHandle)){
       const sbnd::trigger::pmtSoftwareTrigger &pmtSoftTriggerMetrics = (*pmtSoftTriggerHandle);
       ResetPmtSoftTriggerVars();
+      std::cout<<"prompt PE: "<<pmtSoftTriggerMetrics.promptPE<<std::endl;
       _pmtSoftTrigger_foundBeamTrigger = pmtSoftTriggerMetrics.foundBeamTrigger;
       _pmtSoftTrigger_tts = pmtSoftTriggerMetrics.triggerTimestamp;
       _pmtSoftTrigger_promptPE = pmtSoftTriggerMetrics.promptPE;

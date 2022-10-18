@@ -77,11 +77,13 @@ private:
   bool fVerbose;
   bool fSaveHists;
 
-  std::string fBaselineAlgo;
-  double fInputBaseline;
-  double fInputBaselineSigma;
-  int fADCThreshold;
+  bool fCalculateBaseline;
+  bool fCountPMTs;
+  bool fCalculatePEMetrics;
   bool fFindPulses;
+
+  std::vector<double> fInputBaseline;
+  int fADCThreshold;
   double fPEArea; // conversion factor from ADCxns area to PE count 
 
   // histogram info  
@@ -126,11 +128,12 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
   fVerbose(p.get<bool>("Verbose", false)),
   fSaveHists(p.get<bool>("SaveHists",false)),
-  fBaselineAlgo(p.get<std::string>("BaselineAlgo", "estimate")),
-  fInputBaseline(p.get<double>("InputBaseline", 8000)),
-  fInputBaselineSigma(p.get<double>("InputBaselineSigma", 2)),
-  fADCThreshold(p.get<double>("ADCThreshold", 7960)),
+  fCalculateBaseline(p.get<bool>("CalculateBaseline",true)),
+  fCountPMTs(p.get<bool>("CountPMTs",true)),
+  fCalculatePEMetrics(p.get<bool>("CalculatePEMetrics",false)),
   fFindPulses(p.get<bool>("FindPulses", false)),
+  fInputBaseline(p.get<std::vector<double>>("InputBaseline")),
+  fADCThreshold(p.get<double>("ADCThreshold", 7960)),
   fPEArea(p.get<double>("PEArea", 66.33))
   // More initializers here.
 {
@@ -225,25 +228,31 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       pmtInfo.channel = channelList.at(i_ch);
 
       // calculate baseline 
-      if (fBaselineAlgo == "constant"){ pmtInfo.baseline=fInputBaseline; pmtInfo.baselineSigma = fInputBaselineSigma; }
-      else if (fBaselineAlgo == "estimate") estimateBaseline(i_ch);
+      if (fCalculateBaseline) estimateBaseline(i_ch);
+      else { pmtInfo.baseline=fInputBaseline.at(0); pmtInfo.baselineSigma = fInputBaseline.at(1); }
 
-      // count number of PMTs above threshold 
-      for (int bin = beamStartBin; bin < beamEndBin; ++bin){
-        auto adc = wvfm[bin];
-        if (adc < fADCThreshold){ nAboveThreshold++; break; } 
+      // count number of PMTs above threshold within the beam window
+      if (fCountPMTs){
+        for (int bin = beamStartBin; bin < beamEndBin; ++bin){
+          auto adc = wvfm[bin];
+          if (adc < fADCThreshold){ nAboveThreshold++; break; } 
+        }
       }
+      else nAboveThreshold=-9999;
 
       // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
-      double baseline = pmtInfo.baseline;
-      auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
-      auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
-      if (fFindPulses == false){
-        double ch_promptPE = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
-        double ch_prelimPE = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
-        promptPE += ch_promptPE;
-        prelimPE += ch_prelimPE;
+      if (fCalculatePEMetrics){
+        double baseline = pmtInfo.baseline;
+        auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
+        auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
+        if (fFindPulses == false){
+          double ch_promptPE = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
+          double ch_prelimPE = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
+          promptPE += ch_promptPE;
+          prelimPE += ch_prelimPE;
+        }
       }
+      else {promptPE = -9999; prelimPE =-9999;}
 
       // pulse finder + prompt and prelim calculation with pulses 
       if (fFindPulses == true){
@@ -294,6 +303,8 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     pmtSoftwareTriggerMetrics->promptPE = -9999;
     pmtSoftwareTriggerMetrics->prelimPE = -9999;
   }
+  // NOTE: the pmtInfoVec (which contains pulse information) exists in this module but **is not** produced in the subsequent artroot file
+  //       only the metrics are actually propogated into the artroot file, *not* the crude pulse information 
   e.put(std::move(pmtSoftwareTriggerMetrics));      
 
 }

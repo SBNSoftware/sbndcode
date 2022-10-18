@@ -29,6 +29,7 @@ art_make(
 		    sbndcode_CRTUtils
                     sbnobj_Common_CRT
 		    sbnobj_SBND_CRT
+		    sbnobj_SBND_Trigger
                     sbndcode_CRTUtils
                     sbndcode_GeoWrappers
                     
