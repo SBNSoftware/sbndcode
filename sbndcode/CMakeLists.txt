@@ -37,4 +37,4 @@ add_subdirectory(Filters)
 add_subdirectory(ToFStudies)
 
 add_subdirectory(CRTBeamTelescope)
-
+add_subdirectory(CRTSharps)
