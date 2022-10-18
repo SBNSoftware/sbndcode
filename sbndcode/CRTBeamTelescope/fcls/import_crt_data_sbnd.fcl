@@ -1,0 +1,83 @@
+# Reads CRT data events and converts them
+# into LArSoft format
+
+#include "simulationservices_sbnd.fcl"
+
+process_name: ImportCRTData
+
+services:
+{
+  TFileService: { fileName: "hist.root" }
+  RandomNumberGenerator: {}
+  TimeTracker:       {}
+  FileCatalogMetadata:     @local::art_file_catalog_mc
+  @table::sbnd_basic_services
+  @table::sbnd_random_services
+}
+
+
+source:
+{
+  fileNames:        []
+  module_type:      ImportCRTData
+  MaxEvents:        -1
+  FEBMac5ToGeometryIDMap: [ [81, 0],
+  			    [79, 1],
+			    [80, 2],
+			    [95, 3],
+			    [94, 4],
+			    [93, 5],
+			    [104, 6],
+			    [103, 7],
+			    [102, 8],
+			    [90, 9],
+			    [89, 10],
+			    [91, 11],
+			    [101, 12],
+			    [100, 13],
+			    [99, 14],
+			    [87, 15],
+			    [86, 16],
+			    [88, 17],
+			    [98, 18],
+			    [97, 19],
+			    [96, 20],
+			    [84, 21],
+			    [83, 22],
+			    [85, 23] ]
+}
+
+outputs:
+{
+ out1:
+  {
+    module_type: RootOutput
+    fileName:    "%ifb_%p-%tc.root"
+    compressionLevel: 1
+    dataTier:    "simulated"
+    # SelectEvents: [ filter ]
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+  }
+
+  filters:
+  {
+  }
+
+  analyzers:
+  {
+  }
+
+  filter: [ rns ]
+  ana: [ ]
+  stream1: [ out1 ]
+  trigger_paths: [ filter ]
+  end_paths: [ ana, stream1 ]
+}
+

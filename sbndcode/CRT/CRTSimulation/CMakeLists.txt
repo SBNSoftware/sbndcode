@@ -13,6 +13,7 @@ art_make(   LIB_LIBRARIES  larcorealg_Geometry
                            ${ROOT_MATHMORE}
 
                            sbnobj_SBND_CRT
+                           sbndcode_GeoWrappers
         )
 
 install_headers()

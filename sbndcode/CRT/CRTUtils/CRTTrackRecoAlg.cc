@@ -2,12 +2,14 @@
 
 namespace sbnd{
 
-CRTTrackRecoAlg::CRTTrackRecoAlg(const Config& config)
-  : hitAlg() {
+  CRTTrackRecoAlg::CRTTrackRecoAlg(const fhicl::ParameterSet &p)
+    : fTimeLimit(p.get<double>("TimeLimit"))
+    , fAverageHitDistance(p.get<double>("AverageHitDistance"))
+    , fDistanceLimit(p.get<double>("DistanceLimit"))
+    , hitAlg(p.get<fhicl::ParameterSet>("HitRecoAlg"))
+    , fCrtGeo(p.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
+ {}
 
-  this->reconfigure(config);
-  
-}
 
 CRTTrackRecoAlg::CRTTrackRecoAlg(double aveHitDist, double distLim)
   : hitAlg() {
@@ -19,17 +21,6 @@ CRTTrackRecoAlg::CRTTrackRecoAlg(double aveHitDist, double distLim)
 
 
 CRTTrackRecoAlg::~CRTTrackRecoAlg(){
-
-}
-
-
-void CRTTrackRecoAlg::reconfigure(const Config& config){
-
-  fTimeLimit          = config.TimeLimit();
-  fAverageHitDistance = config.AverageHitDistance();
-  fDistanceLimit      = config.DistanceLimit();
-
-  return;
 
 }
 
@@ -238,6 +229,7 @@ sbn::crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<sbn::crt::CRTHi
   double xmax = -99999; double xmin = 99999;
   double ymax = -99999; double ymin = 99999;
   double zmax = -99999; double zmin = 99999;
+  double ts0_ns = 0.;
   double ts1_ns = 0.;
   int nhits = 0;
 
@@ -258,11 +250,11 @@ sbn::crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<sbn::crt::CRTHi
     // Add all the unique IDs in the vector
     nhits++;
   }
+  const TVector3 pos(xpos/nhits, ypos/nhits, zpos/nhits);
+  const TVector3 err((xmax-xmin)/2., (ymax-ymin)/2., (zmax-zmin)/2.);
 
   // Create a hit
-  sbn::crt::CRTHit crtHit = hitAlg.FillCrtHit(hits[0]->feb_id, hits[0]->pesmap, hits[0]->peshit, 
-                                  (ts1_ns/nhits)*1e-3, 0, xpos/nhits, (xmax-xmin)/2,
-                                  ypos/nhits, (ymax-ymin)/2., zpos/nhits, (zmax-zmin)/2., tagger);
+  sbn::crt::CRTHit crtHit(hits[0]->feb_id, hits[0]->peshit, (ts0_ns/nhits), (ts1_ns/nhits), 0, 0., pos, err, tagger, 0, 0);
 
   return crtHit;
 

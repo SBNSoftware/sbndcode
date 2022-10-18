@@ -125,7 +125,7 @@ CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const & p)
   fDataLabelTZeros    = p.get<std::string>("DataLabelTZeros");    // CRTTzero producer module name
   fStoreTrack         = p.get<int>        ("StoreTrack");         // method 1 = all, method 2 = ave, method 3 = pure, method 4 = top plane
   fTrackMethodType    = p.get<int>        ("TrackMethodType");    // Print stuff
-  
+
   // Call appropriate produces<>() functions here.
   if(fStoreTrack == 1){ 
     produces< std::vector<sbn::crt::CRTTrack>   >();

@@ -21,6 +21,7 @@
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindMany.h"
+#include "canvas/Persistency/Common/FindManyP.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
@@ -45,7 +46,7 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
@@ -372,7 +373,7 @@ private:
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
-  sbnd::CRTHitRecoAlg hitAlg;
+  sbnd::CRTGeoAlg fCrtGeo;
 
   geo::GeometryCore const* fGeometryService;
   // detinfo::ElecClock fTrigClock;
@@ -536,9 +537,9 @@ void Hitdumper::analyze(const art::Event& evt)
   for (int i = 0; i < _nstr; i += 2){
     uint32_t chan = striplist[i]->Channel();
 
-    //    std::pair<std::string,unsigned> tagger = CRTHitRecoAlg::ChannelToTagger(chan);
-    std::pair<std::string,unsigned> tagger = hitAlg.ChannelToTagger(chan);
-    sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(tagger.first);
+    std::string taggerName = fCrtGeo.ChannelToTaggerName(chan);
+    size_t planeID         = fCrtGeo.ChannelToOrientation(chan);
+    sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(taggerName);
 
     bool keep_tagger = false;
     for (auto t : fKeepTaggerTypes) {
@@ -546,7 +547,6 @@ void Hitdumper::analyze(const art::Event& evt)
         keep_tagger = true;
       }
     }
-    // std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
 
     if (ip != sbnd::kCRTNotDefined && keep_tagger) {
 
@@ -559,8 +559,6 @@ void Hitdumper::analyze(const art::Event& evt)
         uint32_t adc2 = striplist[i+1]->ADC();
         if (adc1 > 4095) adc1 = 4095;
         if (adc2 > 4095) adc2 = 4095;
-        //    std::cout << tagger.first << " " << tagger.second << std::endl;
-        //    int sipm = chan & 1;  // 0 or 1
         int strip = (chan >> 1) & 15;
         int module = (chan>> 5);
         //
@@ -569,7 +567,7 @@ void Hitdumper::analyze(const art::Event& evt)
         _crt_plane.push_back(ip);
         _crt_module.push_back(module);
         _crt_strip.push_back(strip);
-        _crt_orient.push_back(tagger.second);
+        _crt_orient.push_back(planeID);
         _crt_time.push_back(ctime);
         _crt_adc.push_back(adc1 + adc2 - 127.2); // -127.2/131.9 correct for gain and 2*ped to get pe
         _crt_pos_x.push_back(center.X());

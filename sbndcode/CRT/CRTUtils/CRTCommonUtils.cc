@@ -183,7 +183,10 @@ std::pair<TVector3, TVector3> CRTCommonUtils::CubeIntersection(TVector3 min, TVe
 enum CRTPlane CRTCommonUtils::GetPlaneIndex(std::string tagger) {
 
   if      (tagger == "volTaggerBot_0"     ) return kCRTBot;
-  else if (tagger == "volTaggerSouth_0"   ) return kCRTFaceSouth;
+  else if (tagger == "volTaggerSouth_0" ||
+	   tagger == "volTaggerSouthOne_0" ||
+	   tagger == "volTaggerSouthTwo_0" ||
+	   tagger == "volTaggerSouthThree_0") return kCRTFaceSouth;
   else if (tagger == "volTaggerNorth_0"   ) return kCRTFaceNorth;
   else if (tagger == "volTaggerWest_0"    ) return kCRTSideWest;
   else if (tagger == "volTaggerEast_0"    ) return kCRTSideEast;

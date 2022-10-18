@@ -59,37 +59,11 @@ namespace sbnd{
   class CRTTrackRecoAlg {
   public:
 
-    struct Config {
-      using Name = fhicl::Name;
-      using Comment = fhicl::Comment;
-
-      fhicl::Atom<double> TimeLimit {
-        Name("TimeLimit"),
-        Comment("")
-      };
-
-      fhicl::Atom<double> AverageHitDistance {
-        Name("AverageHitDistance"),
-        Comment("Distance to average hits over on same plane")
-      };
-
-      fhicl::Atom<double> DistanceLimit {
-        Name("DistanceLimit"),
-        Comment("Distance to combine CRT hits into track")
-      };
-
-    };
-
-    CRTTrackRecoAlg(const Config& config);
-
-    CRTTrackRecoAlg(const fhicl::ParameterSet& pset) :
-      CRTTrackRecoAlg(fhicl::Table<Config>(pset, {})()) {}
+    CRTTrackRecoAlg(const fhicl::ParameterSet& p);
 
     CRTTrackRecoAlg(double aveHitDist, double distLim);
 
     ~CRTTrackRecoAlg();
-
-    void reconfigure(const Config& config);
 
     std::vector<std::vector<art::Ptr<sbn::crt::CRTHit>>> CreateCRTTzeros(std::vector<art::Ptr<sbn::crt::CRTHit>>);
 

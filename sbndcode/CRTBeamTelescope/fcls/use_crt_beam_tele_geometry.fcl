@@ -1,0 +1,6 @@
+
+services.Geometry.GDML: "sbnd_crt_beam_tele.gdml"
+services.Geometry.ROOT: "sbnd_crt_beam_tele.gdml"
+
+services.AuxDetGeometry.GDML: "sbnd_crt_beam_tele.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_crt_beam_tele.gdml"
