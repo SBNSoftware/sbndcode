@@ -197,7 +197,16 @@ namespace crt {
 
       fSubRunID = newID;
     }
+    
+    std::sort(febdata_v->begin(), febdata_v->end(),
+              [](const sbnd::crt::FEBData &a, const sbnd::crt::FEBData &b) -> bool {
+                return a.Mac5() < b.Mac5() || (a.Mac5() == b.Mac5() && a.Ts1() < b.Ts1());
+              });
 
+    febdata_v->erase(std::unique(febdata_v->begin(), febdata_v->end(),
+				 [](const sbnd::crt::FEBData &a, const sbnd::crt::FEBData &b) -> bool {
+				   return a.Mac5() == b.Mac5() && a.Ts1() == b.Ts1();
+				 }), febdata_v->end());
 
     outE = fSourceHelper.makeEventPrincipal(fSubRunID.run(),
                                             fSubRunID.subRun(),
