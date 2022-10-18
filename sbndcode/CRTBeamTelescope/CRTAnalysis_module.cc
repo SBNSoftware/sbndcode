@@ -988,7 +988,7 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_t0[i] = hit->ts0_ns;
     _chit_t1[i] = hit->ts1_ns;
     _chit_t1_diff[i] = hit->ts0_ns_corr;   // the variable name in the object is old and is just a placeholder for diff, don't worry!
-    _chit_unix_s[i] = hit->ts0_s;   // the variable name in the object is old and is just a placeholder for diff, don't worry!
+    _chit_unix_s[i] = hit->ts0_s;
     _chit_pes[i] = hit->peshit;
 
     if (hit->tagger == "volTaggerNorth_0") {
@@ -996,6 +996,29 @@ void CRTAnalysis::analyze(art::Event const& e)
     } else {
       _chit_plane[i] = 1; // downstream
     }
+
+    auto feb_datas = crt_hit_to_feb_data.at(hit.key());
+    if(feb_datas.size() != 2) std::cout << "ERROR: CRTHit associated to " << feb_datas.size() << " FEBDatas" << std::endl;
+
+    _chit_sipm_adc[i].resize(2 * feb_datas.size());
+    _chit_sipm_feb_mac5[i].resize(feb_datas.size());
+
+    _chit_sipm_channel_id[i].resize(2);
+    _chit_sipm_channel_id[i][0] = hit->channel0;
+    _chit_sipm_channel_id[i][1] = hit->channel1;
+
+    for(unsigned ii = 0; ii < feb_datas.size(); ++ii)
+      {
+	const auto& feb_data = feb_datas[ii];
+	_chit_sipm_feb_mac5[i][ii] = feb_data->Mac5();
+	_chit_sipm_adc[i][ii] = 0;
+
+	if(_chit_sipm_channel_id[i][0] / 32 == _chit_sipm_feb_mac5[i][ii])
+	  _chit_sipm_adc[i][ii] = feb_data->ADC()[_chit_sipm_channel_id[i][0] % 32];
+	if(_chit_sipm_channel_id[i][1] / 32 == _chit_sipm_feb_mac5[i][ii])
+	  _chit_sipm_adc[i][ii] = feb_data->ADC()[_chit_sipm_channel_id[i][1] % 32];
+      }
+
     /*
     size_t n_ides = 0;
     if(!_data_mode) {

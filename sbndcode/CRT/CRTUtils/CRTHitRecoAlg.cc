@@ -116,6 +116,7 @@ namespace sbnd{
             used_j.insert(cand.first.second);
           }
       }
+
     return crtHits;
   }
 
