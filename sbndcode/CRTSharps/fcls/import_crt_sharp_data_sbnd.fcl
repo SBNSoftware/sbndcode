@@ -35,7 +35,7 @@ outputs:
   out1:
   {
     module_type: RootOutput
-    fileName:	 "tpc_%ifb_%p-%tc.root"
+    fileName:	 "%ifb_%p-%tc.root"
   }
 }
 
