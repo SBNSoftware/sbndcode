@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+lightcalo_ana:
+{
+    module_type: "LightCaloAna"
+    OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
+    SliceProducer:   "pandora"
+    FlashMatchProducer: "fmatch"
+}
+END_PROLOG
