@@ -1,10 +1,8 @@
 ////////////////////////////////////////////////////////////////////////
 // Class:       ImportCRTSharpData
-// Plugin Type: producer (Unknown Unknown)
+// Plugin Type: producer
 // File:        ImportCRTSharpData_module.cc
-//
-// Generated at Tue Oct 18 19:19:21 2022 by Henry Lay using cetskelgen
-// from  version .
+// Author:      Henry Lay (h.lay@lancaster.ac.uk)
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
@@ -22,6 +20,8 @@
 #include "artdaq-core/Data/ContainerFragment.hh"
 #include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "sbndaq-artdaq-core/Overlays/Common/BernCRTFragmentV2.hh"
+
+#include "sbnobj/SBND/CRT/FEBData.hh"
 
 class ImportCRTSharpData;
 
@@ -41,54 +41,100 @@ public:
   // Required functions.
   void produce(art::Event& e) override;
 
-  void FragToFEB(const artdaq::Fragment &frag);
+  std::vector<sbnd::crt::FEBData> FragToFEB(const artdaq::Fragment &frag);
 
 private:
-
-  // Declare member data here.
 
 };
 
 
 ImportCRTSharpData::ImportCRTSharpData(fhicl::ParameterSet const& p)
-  : EDProducer{p}  // ,
-  // More initializers here.
+  : EDProducer{p}
 {
-  // Call appropriate produces<>() functions here.
-  // Call appropriate consumes<>() for any products to be retrieved by this module.
+  produces<std::vector<sbnd::crt::FEBData>>();
+  //  produces<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
 }
 
 void ImportCRTSharpData::produce(art::Event& e)
 {
+  auto febDataVec      = std::make_unique<std::vector<sbnd::crt::FEBData>>();
+  //  auto febDataFragAssn = std::make_unique<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
+  
   std::vector<art::Handle<artdaq::Fragments>> fragmentHandles = e.getMany<std::vector<artdaq::Fragment>>();
 
-  // Loop fragment handles
   for(auto handle : fragmentHandles)
     {
       if(!handle.isValid() || handle->size() == 0)
         continue;
 
-      // Container or standard?
       if(handle->front().type() == artdaq::Fragment::ContainerFragmentType)
-	{
-	  for(auto cont : *handle)
-	    {
-	      artdaq::ContainerFragment contf(cont);
-	      if(contf.fragment_type() == sbndaq::detail::FragmentType::BERNCRTV2)
-		{
-		  for(unsigned i = 0; i < contf.block_count(); ++i)
-		    FragToFEB(*contf[i].get());
-		}
-	    }
-	}
+        {
+          for(auto cont : *handle)
+            {
+              artdaq::ContainerFragment contf(cont);
+              if(contf.fragment_type() == sbndaq::detail::FragmentType::BERNCRTV2)
+                {
+                  for(unsigned i = 0; i < contf.block_count(); ++i)
+                    {
+                      std::vector<sbnd::crt::FEBData> newFebDatas = FragToFEB(*contf[i].get());
+                      febDataVec->insert(febDataVec->end(), newFebDatas.begin(), newFebDatas.end());
+                    }
+                }
+            }
+        }
     }
+  
+  e.put(std::move(febDataVec));
 }
 
-void ImportCRTSharpData::FragToFEB(const artdaq::Fragment &frag)
+std::vector<sbnd::crt::FEBData> ImportCRTSharpData::FragToFEB(const artdaq::Fragment &frag)
 {
-  sbndaq::BernCRTFragmentV2 bern_frag(frag);
+  std::vector<sbnd::crt::FEBData> feb_datas;
 
-  std::cout << bern_frag.metadata()->hits_in_fragment() << std::endl;
+  const sbndaq::BernCRTFragmentV2 bern_frag(frag);
+  const sbndaq::BernCRTFragmentMetadataV2* bern_frag_meta = bern_frag.metadata();
+  
+  for(unsigned i = 0; i < bern_frag_meta->hits_in_fragment(); ++i)
+    {
+      const sbndaq::BernCRTHitV2 *bern_hit = bern_frag.eventdata(i);
+
+      std::array<uint16_t, 32> adc_array;
+      unsigned ii = 0;
+      for(auto const &adc : bern_hit->adc)
+        {
+          adc_array[ii] = adc;
+          ++ii;
+        }
+
+      feb_datas.emplace_back(bern_frag_meta->MAC5(),
+                             bern_hit->flags,
+                             bern_hit->ts0,
+                             bern_hit->ts1,
+                             bern_hit->timestamp / 1e9,
+                             adc_array,
+                             bern_hit->coinc);
+
+      std::string adc_string = "";
+
+      for(auto const &adc : feb_datas.back().ADC())
+        {
+          adc_string += std::to_string(adc);
+          adc_string += ", ";
+        }
+      adc_string.resize(adc_string.size() - 2);
+
+      mf::LogInfo("ImportCRTSharpData")
+        << "Creating FEBData object from BernCRT Fragment\n"
+        << "Mac5: " << feb_datas.back().Mac5() << '\n'
+        << "Flags: " << feb_datas.back().Flags() << '\n'
+        << "Ts0: " << feb_datas.back().Ts0() << '\n'
+        << "Ts1: " << feb_datas.back().Ts1() << '\n'
+        << "UnixS: " << feb_datas.back().UnixS() << '\n'
+        << "ADC: [" << adc_string << "]\n"
+        << "Coinc: " << feb_datas.back().Coinc() << '\n' << std::endl;
+    }
+
+  return feb_datas;
 }
 
 DEFINE_ART_MODULE(ImportCRTSharpData)
