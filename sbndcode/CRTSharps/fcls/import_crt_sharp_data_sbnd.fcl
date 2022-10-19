@@ -1,0 +1,42 @@
+#include "services_sbnd.fcl"
+
+process_name: ImportData
+
+services:
+{
+  @table::sbnd_basic_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+
+  producers:
+  {
+    importdata: 
+    { 
+      module_type: "ImportCRTSharpData" 
+    }
+  }
+
+  import: [ importdata ]
+  stream1:  [ out1 ]
+
+  trigger_paths: [ import ]
+  end_paths:     [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:	 "tpc_%ifb_%p-%tc.root"
+  }
+}
+
+#include "use_crt_sharps_geometry.fcl"
