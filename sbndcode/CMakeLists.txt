@@ -32,3 +32,5 @@ add_subdirectory(FlashMatch)
 
 add_subdirectory(Filters)
 add_subdirectory(ToFStudies)
+
+add_subdirectory(Calorimetry)
