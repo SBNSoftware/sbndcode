@@ -1,0 +1,19 @@
+#include "lightcalo.fcl"
+
+process_name: LightCaloAna
+
+source:
+{
+    module_type: RootInput
+                 maxEvents: -1
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::lightcalo_ana
+    }
+    path: [ana]
+    end_paths: [path]
+}
