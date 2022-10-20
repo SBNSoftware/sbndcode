@@ -45,6 +45,8 @@ public:
 
 private:
 
+  std::vector<std::pair<unsigned, unsigned>> fMac5ToGeoIDVec;
+  std::map<unsigned, unsigned>               fMac5ToGeoID;
 };
 
 
@@ -53,6 +55,9 @@ ImportCRTSharpData::ImportCRTSharpData(fhicl::ParameterSet const& p)
 {
   produces<std::vector<sbnd::crt::FEBData>>();
   //  produces<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
+
+  fMac5ToGeoIDVec = p.get<std::vector<std::pair<unsigned, unsigned>>>("FEBMac5ToGeometryIDMap");
+  fMac5ToGeoID    = std::map<unsigned, unsigned>(fMac5ToGeoIDVec.begin(), fMac5ToGeoIDVec.end());
 }
 
 void ImportCRTSharpData::produce(art::Event& e)
@@ -106,7 +111,7 @@ std::vector<sbnd::crt::FEBData> ImportCRTSharpData::FragToFEB(const artdaq::Frag
           ++ii;
         }
 
-      feb_datas.emplace_back(bern_frag_meta->MAC5(),
+      feb_datas.emplace_back(fMac5ToGeoID[bern_frag_meta->MAC5()],
                              bern_hit->flags,
                              bern_hit->ts0,
                              bern_hit->ts1,

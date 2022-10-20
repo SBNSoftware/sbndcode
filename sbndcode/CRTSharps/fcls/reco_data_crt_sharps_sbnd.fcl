@@ -1,0 +1,5 @@
+#include "reco_crt_sharps_sbnd.fcl"
+
+services.BackTrackerService: @erase
+
+physics.producers.crthit.FEBDataModuleLabel: "importdata"
