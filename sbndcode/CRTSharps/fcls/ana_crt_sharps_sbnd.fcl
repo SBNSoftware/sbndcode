@@ -1,0 +1,30 @@
+#include "services_sbnd.fcl"
+
+process_name: CRTAnalyzer
+
+services:
+{
+  TFileService: { fileName: "crtsharps_ana_sbnd.root" }
+  @table::sbnd_basic_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+
+  analyzers:
+  {
+    crtana: { module_type: "CRTSharpsAnalysis" }
+  }
+
+  ana:       [ crtana ]
+  end_paths: [ ana ]
+}
+
+#include "use_crt_sharps_geometry.fcl"
+
+
