@@ -5,5 +5,7 @@ lightcalo_ana:
     OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
     SliceProducer:   "pandora"
     FlashMatchProducer: "fmatch"
+    nuScoreCut: 0.4 # accep nusScore > 0.4, to analyze all slices, set = 0 
+    fmScoreCut: 7   # accept 0 < fm score < fmScoreCut, to analyze all slices, set = 1e3
 }
 END_PROLOG
