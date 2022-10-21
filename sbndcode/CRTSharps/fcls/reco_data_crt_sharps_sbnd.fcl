@@ -1,5 +1,9 @@
+#include "crt_sharps_data_params.fcl"
 #include "reco_crt_sharps_sbnd.fcl"
 
 services.BackTrackerService: @erase
 
 physics.producers.crthit.FEBDataModuleLabel: "importdata"
+physics.producers.crthit.HitRecoAlg.GeoAlg.CableLengthCorrections: @local::crt_sharps_data_params.CableLengthCorrections
+physics.producers.crthit.HitRecoAlg.GeoAlg.SiPMPedestals:          @local::crt_sharps_data_params.SiPMPedestals
+physics.producers.crthit.HitRecoAlg.GeoAlg.InvertedChannelOrder:   @local::crt_sharps_data_params.InvertedChannelOrder
