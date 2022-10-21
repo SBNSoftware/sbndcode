@@ -1,5 +1,5 @@
-services.Geometry.GDML: "sbnd_v02_00_CRTSharps.gdml"
-services.Geometry.ROOT: "sbnd_v02_00_CRTSharps.gdml"
+services.Geometry.GDML: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
+services.Geometry.ROOT: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
 
-services.AuxDetGeometry.GDML: "sbnd_v02_00_CRTSharps.gdml"
-services.AuxDetGeometry.ROOT: "sbnd_v02_00_CRTSharps.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
