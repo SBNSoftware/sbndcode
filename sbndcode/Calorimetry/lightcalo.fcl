@@ -1,11 +1,17 @@
+#include "opticalsimparameterisations_sbnd.fcl"
+
 BEGIN_PROLOG
 lightcalo_ana:
 {
     module_type: "LightCaloAna"
+
+    VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
+    VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
+
     OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
     SliceProducer:   "pandora"
     FlashMatchProducer: "fmatch"
-    nuScoreCut: 0.4 # accep nusScore > 0.4, to analyze all slices, set = 0 
+    nuScoreCut: 0.4 # accept nusScore > 0.4, to analyze all slices, set = 0 
     fmScoreCut: 7   # accept 0 < fm score < fmScoreCut, to analyze all slices, set = 1e3
 }
 END_PROLOG
