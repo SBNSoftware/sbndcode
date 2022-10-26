@@ -12,3 +12,4 @@ art_make(
 
 )
 
+install_fhicl()

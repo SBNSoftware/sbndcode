@@ -1,0 +1,29 @@
+#include "simulationservices_sbnd.fcl"
+#include "basictreemaker.fcl"
+
+process_name: Analysis
+
+services:
+{
+  TFileService: { fileName: "basictree_ana_sbnd.root" }
+  @table::sbnd_simulation_services
+  ParticleInventoryService:   @local::sbnd_particleinventoryservice
+  BackTrackerService:         @local::sbnd_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+
+  analyzers:
+  {
+    basictreeana: @local::basictreemaker_sbnd
+  }
+
+  ana:       [ basictreeana ]
+  end_paths: [ ana ]
+}
