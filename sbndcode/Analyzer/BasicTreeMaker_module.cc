@@ -197,19 +197,19 @@ private:
 
 BasicTreeMaker::BasicTreeMaker(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
-  fNuGenModuleLabel (p.get<std::string>("NuGenModuleLabel")),
-  fCosmicGenModuleLabel (p.get<std::string>("CosmicGenModuleLabel")),
-  fLArGeantModuleLabel (p.get<std::string>("LArGeantModuleLabel")),
-  fPFParticleModuleLabel (p.get<std::string>("PFParticleModuleLabel")),
-  fTrackModuleLabel (p.get<std::string>("TrackModuleLabel")),
-  fShowerModuleLabel (p.get<std::string>("ShowerModuleLabel")),
-  fVertexModuleLabel (p.get<std::string>("VertexModuleLabel")),
-  fHitsModuleLabel (p.get<std::string>("HitsModuleLabel")),
-  fClusterModuleLabel (p.get<std::string>("ClusterModuleLabel")),
-  fSpacePointModuleLabel (p.get<std::string>("SpacePointModuleLabel")),
-  fParticleIDModuleLabel (p.get<std::string>("ParticleIDModuleLabel")),
-  fSliceModuleLabel (p.get<std::string>("SliceModuleLabel")),
-  fProcessCosmics (p.get<bool>("ProcessCosmics"))
+  fNuGenModuleLabel (p.get<std::string>("NuGenModuleLabel", "generator")),
+  fCosmicGenModuleLabel (p.get<std::string>("CosmicGenModuleLabel", "corsika")),
+  fLArGeantModuleLabel (p.get<std::string>("LArGeantModuleLabel", "largeant")),
+  fPFParticleModuleLabel (p.get<std::string>("PFParticleModuleLabel", "pandoraSCE")),
+  fTrackModuleLabel (p.get<std::string>("TrackModuleLabel", "pandoraSCETrack")),
+  fShowerModuleLabel (p.get<std::string>("ShowerModuleLabel", "pandoraSCEShower")),
+  fVertexModuleLabel (p.get<std::string>("VertexModuleLabel", "pandoraSCE")),
+  fHitsModuleLabel (p.get<std::string>("HitsModuleLabel", "gaushit")),
+  fClusterModuleLabel (p.get<std::string>("ClusterModuleLabel", "pandoraSCE")),
+  fSpacePointModuleLabel (p.get<std::string>("SpacePointModuleLabel", "pandoraSCE")),
+  fParticleIDModuleLabel (p.get<std::string>("ParticleIDModuleLabel", "pandoraSCEPid")),
+  fSliceModuleLabel (p.get<std::string>("SliceModuleLabel", "pandoraSCE")),
+  fProcessCosmics (p.get<bool>("ProcessCosmics", true))
   // More initializers here.
   {
     // Call appropriate consumes<>() for any products to be retrieved by this module.
@@ -543,7 +543,7 @@ void BasicTreeMaker::ReconstructionProcessor(art::Event const &e)
     art::Ptr<recob::PFParticle> nuPrimary = primaryPFPs[0];
 
     std::vector<art::Ptr<recob::Vertex> > pfpVertices = pfpVertexAssoc.at(nuPrimary.key());
-    if(pfpVertices.size() != 1) {std::cout << "Multiple vertices!!!" << std::endl; return;}
+    if(pfpVertices.size() != 1) {std::cout << "Not exactly 1 vertex!!!" << std::endl; continue;}
     
     sl_primaryIndex.push_back(nuPrimary->Self());
     sl_VX.push_back(pfpVertices[0]->position().X());
