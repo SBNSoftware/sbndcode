@@ -604,7 +604,7 @@ void analysis::TrackProcessor(art::Event const &e,
   
   art::FindManyP<anab::ParticleID>pidTrackAssoc(eHandleTracks,e,fParticleIDModuleLabel);
   std::vector<art::Ptr<anab::ParticleID> > trackPIDs = pidTrackAssoc.at(track.key());
-  art::Ptr<anab::ParticleID> trackPID = trackPIDs[2];
+  std::vector<anab::sParticleIDAlgScores> trackPID = trackPIDs[2]->ParticleIDAlgScores();
 
   art::Ptr<simb::MCParticle> mc = GetTrueParticle(trackHits);
   if(mc.isNull()) return;
@@ -631,13 +631,29 @@ void analysis::TrackProcessor(art::Event const &e,
   tr_theta.push_back(track->StartDirection().Theta());
   tr_length.push_back(TrackLength(track));
   tr_nHits.push_back(trackHits.size());
-  tr_chi2Proton.push_back(trackPID->Chi2Proton());
-  tr_chi2Pion.push_back(trackPID->Chi2Pion());
-  tr_chi2Muon.push_back(trackPID->Chi2Muon());
   tr_meanScatter.push_back(MeanScatter(track));
   tr_stdDevScatter.push_back(StdDevScatter(track,tr_meanScatter.back()));
 
+  for(const auto &algScore : trackPID)
+    {
+      if(!algScore.fPlaneMask.test(2)) 
+	std::cout << "ERROR: Didn't get collection plane PID" << std::endl;
+      
+      if(algScore.fAlgName == "Chi2" && TMath::Abs(algScore.fAssumedPdg) == 13)
+	tr_chi2Muon.push_back(algScore.fValue);
+
+      if(algScore.fAlgName == "Chi2" && TMath::Abs(algScore.fAssumedPdg) == 211)
+	tr_chi2Pion.push_back(algScore.fValue);
+
+      if(algScore.fAlgName == "Chi2" && TMath::Abs(algScore.fAssumedPdg) == 2212)
+	tr_chi2Proton.push_back(algScore.fValue);
+    }
+
   ++nTracks;
+
+  assert(tr_chi2Muon.size() == nTracks);
+  assert(tr_chi2Pion.size() == nTracks);
+  assert(tr_chi2Proton.size() == nTracks);
 }
 
 void analysis::ShowerProcessor(art::Event const &e,
