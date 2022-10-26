@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       analysis
+// Class:       BasicTreeMaker
 // Plugin Type: analyzer (art v3_05_01)
-// File:        analysis_module.cc
+// File:        BasicTreeMaker_module.cc
 //
 // Generated at Tue Sep 29 05:57:52 2020 by Henry Lay using cetskelgen
 // from cetlib version v3_10_00.
@@ -54,20 +54,20 @@
 #include "TGraph2D.h"
 #include "TCanvas.h"
 
-class analysis;
+class BasicTreeMaker;
 
 
-class analysis : public art::EDAnalyzer {
+class BasicTreeMaker : public art::EDAnalyzer {
 public:
-  explicit analysis(fhicl::ParameterSet const& p);
+  explicit BasicTreeMaker(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  analysis(analysis const&) = delete;
-  analysis(analysis&&) = delete;
-  analysis& operator=(analysis const&) = delete;
-  analysis& operator=(analysis&&) = delete;
+  BasicTreeMaker(BasicTreeMaker const&) = delete;
+  BasicTreeMaker(BasicTreeMaker&&) = delete;
+  BasicTreeMaker& operator=(BasicTreeMaker const&) = delete;
+  BasicTreeMaker& operator=(BasicTreeMaker&&) = delete;
 
   // Required functions.
   void analyze(art::Event const& e) override;
@@ -195,7 +195,7 @@ private:
 };
 
 
-analysis::analysis(fhicl::ParameterSet const& p)
+BasicTreeMaker::BasicTreeMaker(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
   fNuGenModuleLabel (p.get<std::string>("NuGenModuleLabel")),
   fCosmicGenModuleLabel (p.get<std::string>("CosmicGenModuleLabel")),
@@ -369,7 +369,7 @@ analysis::analysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("v_Z",&v_Z);
 }
 
-void analysis::SimulationProcessor(art::Event const &e)
+void BasicTreeMaker::SimulationProcessor(art::Event const &e)
 {
   eRunID = e.run(); 
   eSubRunID = e.subRun();
@@ -461,7 +461,7 @@ void analysis::SimulationProcessor(art::Event const &e)
   }
 }
 
-void analysis::MCParticleProcessor(art::Event const &e, 
+void BasicTreeMaker::MCParticleProcessor(art::Event const &e, 
 				   art::Ptr<simb::MCParticle> const &particle, 
 				   bool const &isCosmic) 
 {
@@ -518,7 +518,7 @@ void analysis::MCParticleProcessor(art::Event const &e,
   ++nMCParticles;
 }
 
-void analysis::ReconstructionProcessor(art::Event const &e)
+void BasicTreeMaker::ReconstructionProcessor(art::Event const &e)
 {
   art::FindManyP<recob::Vertex> pfpVertexAssoc(eHandlePFPs,e,fVertexModuleLabel);
   art::FindManyP<recob::Track> pfpTrackAssoc(eHandlePFPs,e,fTrackModuleLabel);
@@ -593,7 +593,7 @@ void analysis::ReconstructionProcessor(art::Event const &e)
   }
 }
 
-void analysis::TrackProcessor(art::Event const &e,
+void BasicTreeMaker::TrackProcessor(art::Event const &e,
 			      art::Ptr<recob::PFParticle> const &pfp,
 			      art::Ptr<recob::Track> const &track)
 {
@@ -656,7 +656,7 @@ void analysis::TrackProcessor(art::Event const &e,
   assert(tr_chi2Proton.size() == nTracks);
 }
 
-void analysis::ShowerProcessor(art::Event const &e,
+void BasicTreeMaker::ShowerProcessor(art::Event const &e,
 			       art::Ptr<recob::PFParticle> const &pfp,
 			       art::Ptr<recob::Shower> const &shower)
 {
@@ -716,7 +716,7 @@ void analysis::ShowerProcessor(art::Event const &e,
   ++nShowers;
 }
 
-void analysis::HitProcessor(art::Event const &e, int const &nuID)
+void BasicTreeMaker::HitProcessor(art::Event const &e, int const &nuID)
 {
   art::FindManyP<recob::Track> hitTrackAssoc(eHandleHits,e,fTrackModuleLabel);
   art::FindManyP<recob::Shower> hitShowerAssoc(eHandleHits,e,fShowerModuleLabel);
@@ -766,7 +766,7 @@ void analysis::HitProcessor(art::Event const &e, int const &nuID)
   
 }
 
-void analysis::SliceHits(art::Event const &e, std::vector<art::Ptr<recob::Hit> > const &sliceHits)
+void BasicTreeMaker::SliceHits(art::Event const &e, std::vector<art::Ptr<recob::Hit> > const &sliceHits)
 {
   int nuTrueHits = 0, nuRecoHits = 0;
 
@@ -789,7 +789,7 @@ void analysis::SliceHits(art::Event const &e, std::vector<art::Ptr<recob::Hit> >
   sl_purity.push_back(nuRecoHits/static_cast<float>(sliceHits.size()));  
 }
 
-void analysis::VertexProcessor(art::Event const &e)
+void BasicTreeMaker::VertexProcessor(art::Event const &e)
 {
   nVertices = eHandleVertices->size();
   
@@ -802,7 +802,7 @@ void analysis::VertexProcessor(art::Event const &e)
   }
 }
 
-void analysis::SetupMaps(art::Event const &e) 
+void BasicTreeMaker::SetupMaps(art::Event const &e) 
 {
   MCPDGMap.clear();
   hitsMap.clear();
@@ -850,7 +850,7 @@ void analysis::SetupMaps(art::Event const &e)
   }
 }
 
-const art::Ptr<simb::MCParticle> analysis::GetMCParticle(int const &trackID)
+const art::Ptr<simb::MCParticle> BasicTreeMaker::GetMCParticle(int const &trackID)
 {
   for(unsigned int part_i = 0; part_i < eHandleParticles->size(); ++part_i) {
     const art::Ptr<simb::MCParticle> particle(eHandleParticles,part_i);
@@ -861,7 +861,7 @@ const art::Ptr<simb::MCParticle> analysis::GetMCParticle(int const &trackID)
   return nullReturn;
 }
 
-const art::Ptr<recob::PFParticle> analysis::GetPrimaryPFP() 
+const art::Ptr<recob::PFParticle> BasicTreeMaker::GetPrimaryPFP() 
 {
   for(unsigned int pfp_i = 0; pfp_i < eHandlePFPs->size(); ++pfp_i) {
     const art::Ptr<recob::PFParticle> pfp(eHandlePFPs,pfp_i);
@@ -872,7 +872,7 @@ const art::Ptr<recob::PFParticle> analysis::GetPrimaryPFP()
   return nullReturn;
 }
 
-const art::Ptr<recob::PFParticle> analysis::GetPFP(unsigned int const &index) 
+const art::Ptr<recob::PFParticle> BasicTreeMaker::GetPFP(unsigned int const &index) 
 {
   for(unsigned int pfp_i = 0; pfp_i < eHandlePFPs->size(); ++pfp_i) {
     const art::Ptr<recob::PFParticle> pfp(eHandlePFPs,pfp_i);
@@ -883,7 +883,7 @@ const art::Ptr<recob::PFParticle> analysis::GetPFP(unsigned int const &index)
   return nullReturn;
 }
 
-const std::vector<art::Ptr<recob::PFParticle> > analysis::GetPrimaryNeutrinoPFPs() 
+const std::vector<art::Ptr<recob::PFParticle> > BasicTreeMaker::GetPrimaryNeutrinoPFPs() 
 {
   std::vector<art::Ptr<recob::PFParticle> > primaries;
   for(unsigned int pfp_i = 0; pfp_i < eHandlePFPs->size(); ++pfp_i) {
@@ -898,7 +898,7 @@ const std::vector<art::Ptr<recob::PFParticle> > analysis::GetPrimaryNeutrinoPFPs
   return primaries;
 }
 
-const std::vector<art::Ptr<recob::PFParticle> > analysis::GetSlicePrimary(std::vector<art::Ptr<recob::PFParticle> > const &slicePFPs)
+const std::vector<art::Ptr<recob::PFParticle> > BasicTreeMaker::GetSlicePrimary(std::vector<art::Ptr<recob::PFParticle> > const &slicePFPs)
 {
   std::vector<art::Ptr<recob::PFParticle> > primaries;
   for(auto pfp : slicePFPs) {
@@ -909,7 +909,7 @@ const std::vector<art::Ptr<recob::PFParticle> > analysis::GetSlicePrimary(std::v
   return primaries;
 }
 
-const art::Ptr<simb::MCParticle> analysis::GetTrueParticle(std::vector<art::Ptr<recob::Hit> > const &trackHits)
+const art::Ptr<simb::MCParticle> BasicTreeMaker::GetTrueParticle(std::vector<art::Ptr<recob::Hit> > const &trackHits)
 {
   int particleID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true);
 
@@ -922,7 +922,7 @@ const art::Ptr<simb::MCParticle> analysis::GetTrueParticle(std::vector<art::Ptr<
   return nullReturn;
 }
 
-const art::Ptr<simb::MCParticle> analysis::GetTrueShowerParticle(std::vector<art::Ptr<recob::Hit> > const &showerHits)
+const art::Ptr<simb::MCParticle> BasicTreeMaker::GetTrueShowerParticle(std::vector<art::Ptr<recob::Hit> > const &showerHits)
 {
   art::Ptr<simb::MCParticle> original = GetTrueParticle(showerHits);
   if(original.isNull()) return original;
@@ -938,7 +938,7 @@ const art::Ptr<simb::MCParticle> analysis::GetTrueShowerParticle(std::vector<art
   return original;
 }
 
-unsigned int analysis::HierarchyPrimary(art::Ptr<recob::PFParticle> const &pfp)
+unsigned int BasicTreeMaker::HierarchyPrimary(art::Ptr<recob::PFParticle> const &pfp)
 {
   bool regress = true;
   art::Ptr<recob::PFParticle> parent = pfp;
@@ -950,7 +950,7 @@ unsigned int analysis::HierarchyPrimary(art::Ptr<recob::PFParticle> const &pfp)
   return 999999;  
 }
 
-float analysis::HitPurity(art::Event const &e, art::Ptr<recob::Shower> const &shower)
+float BasicTreeMaker::HitPurity(art::Event const &e, art::Ptr<recob::Shower> const &shower)
 {
   art::FindManyP<recob::Hit> showerHitsAssn(eHandleShowers,e,fShowerModuleLabel);
   std::vector<art::Ptr<recob::Hit> > showerHits = showerHitsAssn.at(shower.key());
@@ -967,7 +967,7 @@ float analysis::HitPurity(art::Event const &e, art::Ptr<recob::Shower> const &sh
   return showerHitsMap[trackID]/static_cast<float>(showerHits.size());
 }
 
-float analysis::HitPurity(art::Event const &e, art::Ptr<recob::Track> const &track)
+float BasicTreeMaker::HitPurity(art::Event const &e, art::Ptr<recob::Track> const &track)
 {
   art::FindManyP<recob::Hit> trackHitsAssn(eHandleTracks,e,fTrackModuleLabel);
   std::vector<art::Ptr<recob::Hit> > trackHits = trackHitsAssn.at(track.key());
@@ -983,7 +983,7 @@ float analysis::HitPurity(art::Event const &e, art::Ptr<recob::Track> const &tra
   return trackHitsMap[trackID]/static_cast<float>(trackHits.size());
 }
 
-float analysis::Completeness(art::Event const &e, art::Ptr<recob::Shower> const &shower)
+float BasicTreeMaker::Completeness(art::Event const &e, art::Ptr<recob::Shower> const &shower)
 {
   art::FindManyP<recob::Hit> showerHitsAssn(eHandleShowers,e,fShowerModuleLabel);
   std::vector<art::Ptr<recob::Hit> > showerHits = showerHitsAssn.at(shower.key());
@@ -1001,7 +1001,7 @@ float analysis::Completeness(art::Event const &e, art::Ptr<recob::Shower> const 
   return showerHitsMap[trackID]/static_cast<float>(hitsMap[trackID]);
 }
 
-float analysis::Completeness(art::Event const &e, art::Ptr<recob::Track> const &track)
+float BasicTreeMaker::Completeness(art::Event const &e, art::Ptr<recob::Track> const &track)
 {
   art::FindManyP<recob::Hit> trackHitsAssn(eHandleTracks,e,fTrackModuleLabel);
   std::vector<art::Ptr<recob::Hit> > trackHits = trackHitsAssn.at(track.key());
@@ -1019,7 +1019,7 @@ float analysis::Completeness(art::Event const &e, art::Ptr<recob::Track> const &
   return trackHitsMap[trackID]/static_cast<float>(hitsMap[trackID]);
 }
 
-float analysis::TruedEdx(art::Ptr<simb::MCParticle> const &particle)
+float BasicTreeMaker::TruedEdx(art::Ptr<simb::MCParticle> const &particle)
 {
   const int tID = particle->TrackId();
   std::vector<TVector3> stubPoints;
@@ -1062,7 +1062,7 @@ float analysis::TruedEdx(art::Ptr<simb::MCParticle> const &particle)
   return 0.0;
 }
 
-float analysis::TrueTrackLength(art::Ptr<simb::MCParticle> const &particle)
+float BasicTreeMaker::TrueTrackLength(art::Ptr<simb::MCParticle> const &particle)
 {
   float length = 0;
   unsigned int nTrajPoints = particle->NumberTrajectoryPoints();
@@ -1081,7 +1081,7 @@ float analysis::TrueTrackLength(art::Ptr<simb::MCParticle> const &particle)
   return length;
 }
 
-float analysis::TrackLength(art::Ptr<recob::Track> const &track)
+float BasicTreeMaker::TrackLength(art::Ptr<recob::Track> const &track)
 {
   float length = 0;
   int nTrajPoints = track->NumberTrajectoryPoints();
@@ -1098,7 +1098,7 @@ float analysis::TrackLength(art::Ptr<recob::Track> const &track)
   return length;
 }
 
-float analysis::MeanScatter(art::Ptr<recob::Track> const &track)
+float BasicTreeMaker::MeanScatter(art::Ptr<recob::Track> const &track)
 {
   float sumScatAngle = 0;
   int N = 0;
@@ -1120,7 +1120,7 @@ float analysis::MeanScatter(art::Ptr<recob::Track> const &track)
   return mean;
 }
 
-float analysis::StdDevScatter(art::Ptr<recob::Track> const &track, const float &meanScatter)
+float BasicTreeMaker::StdDevScatter(art::Ptr<recob::Track> const &track, const float &meanScatter)
 {
   float sumSqDiff = 0;
   int N = 0;
@@ -1146,11 +1146,11 @@ float analysis::StdDevScatter(art::Ptr<recob::Track> const &track, const float &
   return stdDev;
 }
 
-void analysis::TestingPlace(art::Event const& e) 
+void BasicTreeMaker::TestingPlace(art::Event const& e) 
 {
 }
 
-void analysis::ClearData()
+void BasicTreeMaker::ClearData()
 {
   eRunID = -999; eSubRunID = -999; eEventID = -999;
   nNeutrinos = 0; nMCParticles = 0; nUsedSlices = 0; nSlices = 0;
@@ -1202,7 +1202,7 @@ void analysis::ClearData()
 }
 
 
-void analysis::analyze(art::Event const& e)
+void BasicTreeMaker::analyze(art::Event const& e)
 {
   e.getByLabel(fNuGenModuleLabel,eHandleNeutrinos);
   if(fProcessCosmics) e.getByLabel(fCosmicGenModuleLabel,eHandleCosmics);
@@ -1226,4 +1226,4 @@ void analysis::analyze(art::Event const& e)
   fEventTree->Fill();
 }
 
-DEFINE_ART_MODULE(analysis)
+DEFINE_ART_MODULE(BasicTreeMaker)
