@@ -1013,12 +1013,21 @@ void CRTAnalysis::analyze(art::Event const& e)
       {
 	const auto& feb_data = feb_datas[ii];
 	_chit_sipm_feb_mac5[i][ii] = feb_data->Mac5();
-	_chit_sipm_adc[i][ii] = 0;
+	_chit_sipm_adc[i][2*ii] = 0;
+	_chit_sipm_adc[i][2*ii+1] = 0;
 
-	if(_chit_sipm_channel_id[i][0] / 32 == _chit_sipm_feb_mac5[i][ii])
-	  _chit_sipm_adc[i][ii] = feb_data->ADC()[_chit_sipm_channel_id[i][0] % 32];
+	if(_chit_sipm_channel_id[i][0] / 32 == _chit_sipm_feb_mac5[i][ii]) 
+	  {
+	    const uint otherchannel = (_chit_sipm_channel_id[i][0] % 2 == 0) ? _chit_sipm_channel_id[i][0] + 1 : _chit_sipm_channel_id[i][0] - 1;
+	    _chit_sipm_adc[i][2*ii]   = feb_data->ADC()[_chit_sipm_channel_id[i][0] % 32];
+	    _chit_sipm_adc[i][2*ii+1] = feb_data->ADC()[otherchannel % 32];
+	  }
 	if(_chit_sipm_channel_id[i][1] / 32 == _chit_sipm_feb_mac5[i][ii])
-	  _chit_sipm_adc[i][ii] = feb_data->ADC()[_chit_sipm_channel_id[i][1] % 32];
+	  {
+	    const uint otherchannel = (_chit_sipm_channel_id[i][1] % 2 == 0) ? _chit_sipm_channel_id[i][1] + 1 : _chit_sipm_channel_id[i][1] - 1;
+	    _chit_sipm_adc[i][2*ii]   = feb_data->ADC()[_chit_sipm_channel_id[i][1] % 32];
+	    _chit_sipm_adc[i][2*ii+2] = feb_data->ADC()[otherchannel % 32];
+	  }
       }
 
     /*
