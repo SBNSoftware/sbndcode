@@ -82,7 +82,7 @@ namespace crt {
     TTree * aux = (TTree*)(fCRTInputFile->Get("aux"));
     double pot = 0., spills = 0.;
     aux->SetBranchAddress("pot", &pot);
-    aux->SetBranchAddress("pot", &spills);
+    aux->SetBranchAddress("spills", &spills);
     aux->GetEntry(0);
 
     std::cout << "Reading in file " << name << std::endl;
