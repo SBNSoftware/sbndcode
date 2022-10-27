@@ -198,6 +198,7 @@ private:
   int _sr_run, _sr_subrun;
   double _sr_begintime, _sr_endtime;
   double _sr_pot; ///< Number of POTs per subrun
+  double _sr_spills; ///< Number of Spills per subrun
 };
 
 
@@ -357,6 +358,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _sr_tree->Branch("begintime", &_sr_begintime, "begintime/D");
   _sr_tree->Branch("endtime", &_sr_endtime, "endtime/D");
   _sr_tree->Branch("pot", &_sr_pot, "pot/D");
+  _sr_tree->Branch("spills", &_sr_spills, "spills/D");
 }
 
 void CRTAnalysis::analyze(art::Event const& e)
@@ -1254,11 +1256,13 @@ void CRTAnalysis::beginSubRun(art::SubRun const& sr) {
   sr.getByLabel(_pot_label, pot_handle);
 
   if (pot_handle.isValid()) {
-    _sr_pot = pot_handle->totpot;
+    _sr_pot    = pot_handle->totpot;
+    _sr_spills = pot_handle->totspills;
   } else {
-    _sr_pot = 0.;
+    _sr_pot    = 0.;
+    _sr_spills = 0.;
   }
-  if (_debug) std::cout << "POT for this subrun: " << _sr_pot << std::endl;
+  if (_debug) std::cout << "POT for this subrun: " << _sr_pot << " (" << _sr_spills << " spills)" << std::endl;
 
   _sr_tree->Fill();
 

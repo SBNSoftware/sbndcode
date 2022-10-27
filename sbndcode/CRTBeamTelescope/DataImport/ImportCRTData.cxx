@@ -29,6 +29,7 @@ namespace crt {
   {
 
     fPOT = fCurrentPOT = 0;
+    fSpills = fCurrentSpills = 0;
     helper.reconstitutes<sumdata::POTSummary, art::InSubRun >("crtdata");
 
     fEventCounter = 0;
@@ -79,14 +80,18 @@ namespace crt {
 
 
     TTree * aux = (TTree*)(fCRTInputFile->Get("aux"));
-    double pot = 0.;
+    double pot = 0., spills = 0.;
     aux->SetBranchAddress("pot", &pot);
+    aux->SetBranchAddress("pot", &spills);
     aux->GetEntry(0);
 
     std::cout << "Reading in file " << name << std::endl;
     std::cout << "POT = " << pot << std::endl;
-    fPOT+=pot;
-    fCurrentPOT = pot;
+    std::cout << "Spills = " << spills << std::endl;
+    fPOT           += pot;
+    fCurrentPOT    =  pot;
+    fSpills        += spills;
+    fCurrentSpills =  spills;
 
     fTotalTreeEvents = fTree->GetEntries();
   }
@@ -188,8 +193,10 @@ namespace crt {
 
       // Save POTs
       std::unique_ptr<sumdata::POTSummary> pot(new sumdata::POTSummary);
-      pot->totpot = fPOT;
+      pot->totpot     = fPOT;
       pot->totgoodpot = fPOT;
+      pot->totspills  = fSpills;
+      pot->goodspills = fSpills;
 
       art::put_product_in_principal(std::move(pot),
                                     *outSR,

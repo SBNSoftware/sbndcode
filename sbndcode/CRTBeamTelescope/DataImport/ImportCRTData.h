@@ -51,6 +51,8 @@ namespace crt {
     int                           fMaxEvents;    // fhicl parameter.  Maximum number of events.
     float                         fPOT;
     float                         fCurrentPOT;
+    float                         fSpills;
+    float                         fCurrentSpills;
     uint32_t                      fTotalTreeEvents;
 
     std::map<unsigned, unsigned>               fMac5ToGeoID;
