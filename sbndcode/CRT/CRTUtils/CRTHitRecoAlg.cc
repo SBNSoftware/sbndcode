@@ -150,6 +150,11 @@ namespace sbnd{
             double pe0, pe1;
             ReconstructPE(pos, hit0, hit1, pe0, pe1);
 
+            // Just perform the correction to the ADC values, no PE reconstruction
+            const std::array<uint16_t, 4> adc = {hit0.adc1, hit0.adc2, hit1.adc1, hit1.adc2};
+            std::array<uint16_t, 4> corr_adc  = {0, 0, 0, 0};
+            CorrectADC(pos, hit0, hit1, corr_adc);
+
             // Correct timings to find how coincident the hits were
             uint32_t t0, t1;
             double diff;
@@ -173,7 +178,9 @@ namespace sbnd{
                                     err,
                                     tagger,
                                     hit0.channel,
-                                    hit1.channel);
+                                    hit1.channel,
+                                    adc,
+                                    corr_adc);
 
             mf::LogInfo("CRTHitRecoAlg") << "\nCreating CRTHit"
                                          << "from FEBs: " << (unsigned) crtHit.feb_id[0] 
@@ -234,6 +241,21 @@ namespace sbnd{
   {
     const double stripPE = ADCtoPE(hit.adc1 + hit.adc2);
     return stripPE * std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2);
+  }
+
+  void CRTHitRecoAlg::CorrectADC(const TVector3 &pos, const CRTStripHit &hit0, 
+                                 const CRTStripHit &hit1, std::array<uint16_t, 4> &corr_adc)
+  {
+    const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0.channel);
+    const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1.channel);
+
+    const double corr0 = std::pow(dist0 - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2);
+    const double corr1 = std::pow(dist1 - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2);
+
+    corr_adc[0] = hit0.adc1 * corr0;
+    corr_adc[1] = hit0.adc2 * corr0;
+    corr_adc[2] = hit1.adc1 * corr1;
+    corr_adc[3] = hit1.adc2 * corr1;
   }
 
   double CRTHitRecoAlg::ADCtoPE(const uint16_t &adc)

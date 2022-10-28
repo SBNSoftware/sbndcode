@@ -254,7 +254,7 @@ sbn::crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<sbn::crt::CRTHi
   const TVector3 err((xmax-xmin)/2., (ymax-ymin)/2., (zmax-zmin)/2.);
 
   // Create a hit
-  sbn::crt::CRTHit crtHit(hits[0]->feb_id, hits[0]->peshit, (ts0_ns/nhits), (ts1_ns/nhits), 0, 0., pos, err, tagger, 0, 0);
+  sbn::crt::CRTHit crtHit(hits[0]->feb_id, hits[0]->peshit, (ts0_ns/nhits), (ts1_ns/nhits), 0, 0., pos, err, tagger, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0});
 
   return crtHit;
 
