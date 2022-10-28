@@ -1,3 +1,5 @@
+#inlclude "crthitproducer_sbnd.fcl"
+
 BEGIN_PROLOG
 
 standard_crttrackalg:
@@ -5,6 +7,7 @@ standard_crttrackalg:
     AverageHitDistance: 60.         # Maximum distance to avarage hits on the same tagger over [cm]
     DistanceLimit:      25.         # Maximum distance from CRTTrack to absorb a new CRTHit [cm]
     TimeLimit:          0.1         # Maximum time difference to combine hits into a tzero [us]
+    HitRecoAlg:         @local::standard_crthitalg
 }
 
 standard_crttrackproducer:
