@@ -170,6 +170,7 @@ private:
   std::vector<std::vector<double> > _chit_true_mcp_endy; ///< CRT hit contributing MCP's end point Y
   std::vector<std::vector<double> > _chit_true_mcp_endz; ///< CRT hit contributing MCP's end point Z
   std::vector<std::vector<int> > _chit_true_mcp_isprimary; ///< CRT hit contributing MCP's, true if primary
+  std::vector<std::vector<uint16_t> > _chit_sipm_raw_adc; ///< The 4 contributing ADC values to this CRTHit before corrections are made (but after pedestal subtraction)
   std::vector<std::vector<uint16_t> > _chit_sipm_adc; ///< The 4 contributing ADC values to this CRTHit
   std::vector<std::vector<uint16_t> > _chit_sipm_channel_id; ///< The IDs of the four SiPMs that were used to make this CRTHit
   std::vector<std::vector<uint16_t> > _chit_sipm_feb_mac5; ///< The IDs of the two FEBs that were used in the making of this hit.
@@ -328,6 +329,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       _tree->Branch("chit_true_mcp_endz", "std::vector<std::vector<double> >", &_chit_true_mcp_endz);
       _tree->Branch("chit_true_mcp_isprimary", "std::vector<std::vector<int> >", &_chit_true_mcp_isprimary);
     }
+  _tree->Branch("chit_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_raw_adc);
   _tree->Branch("chit_sipm_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_adc);
   _tree->Branch("chit_sipm_channel_id", "std::vector<std::vector<uint16_t> >", &_chit_sipm_channel_id);
   _tree->Branch("chit_sipm_feb_mac5", "std::vector<std::vector<uint16_t> >", &_chit_sipm_feb_mac5);
@@ -366,12 +368,12 @@ void CRTAnalysis::analyze(art::Event const& e)
   if(_debug)
     {
       for(auto const &[name, tagger] : _crt_geo.GetTaggers())
-	{
-	  std::cout << "Tagger:  " << tagger.name << '\n'
-		    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
-		    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
-		    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
-	}
+        {
+          std::cout << "Tagger:  " << tagger.name << '\n'
+                    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
+                    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
+                    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
+        }
     }
   
   
@@ -393,37 +395,37 @@ void CRTAnalysis::analyze(art::Event const& e)
   if(_debug)
     {
       std::cout << "- Upstream Tagger -\n" 
-		<< "X - Min: " << upstream_limits[0] << " Max: " << upstream_limits[1] << '\n'
-		<< "Y - Min: " << upstream_limits[2] << " Max: " << upstream_limits[3] << '\n'
-		<< "Z - Min: " << upstream_limits[4] << " Max: " << upstream_limits[5] << '\n' << std::endl;
+                << "X - Min: " << upstream_limits[0] << " Max: " << upstream_limits[1] << '\n'
+                << "Y - Min: " << upstream_limits[2] << " Max: " << upstream_limits[3] << '\n'
+                << "Z - Min: " << upstream_limits[4] << " Max: " << upstream_limits[5] << '\n' << std::endl;
       
       std::cout << "- Downstream Tagger -\n" 
-		<< "X - Min: " << downstream_limits[0] << " Max: " << downstream_limits[1] << '\n'
-		<< "Y - Min: " << downstream_limits[2] << " Max: " << downstream_limits[3] << '\n'
-		<< "Z - Min: " << downstream_limits[4] << " Max: " << downstream_limits[5] << '\n' << std::endl;
+                << "X - Min: " << downstream_limits[0] << " Max: " << downstream_limits[1] << '\n'
+                << "Y - Min: " << downstream_limits[2] << " Max: " << downstream_limits[3] << '\n'
+                << "Z - Min: " << downstream_limits[4] << " Max: " << downstream_limits[5] << '\n' << std::endl;
     }
 
   for(unsigned i = 0; i < 6; ++i)
     {
       if(i%2 == 0) {
-	upstream_limits[i] -= 200.; downstream_limits[i] -= 200.;
+        upstream_limits[i] -= 200.; downstream_limits[i] -= 200.;
       }
       if(i%2 == 1) {
-	upstream_limits[i] += 200.; downstream_limits[i] += 200.;
+        upstream_limits[i] += 200.; downstream_limits[i] += 200.;
       }
     }
   
   if(_debug)
     {
       std::cout << "- Upstream Tagger -\n" 
-		<< "X - Min: " << upstream_limits[0] << " Max: " << upstream_limits[1] << '\n'
-		<< "Y - Min: " << upstream_limits[2] << " Max: " << upstream_limits[3] << '\n'
-		<< "Z - Min: " << upstream_limits[4] << " Max: " << upstream_limits[5] << '\n' << std::endl;
+                << "X - Min: " << upstream_limits[0] << " Max: " << upstream_limits[1] << '\n'
+                << "Y - Min: " << upstream_limits[2] << " Max: " << upstream_limits[3] << '\n'
+                << "Z - Min: " << upstream_limits[4] << " Max: " << upstream_limits[5] << '\n' << std::endl;
       
       std::cout << "- Downstream Tagger -\n" 
-		<< "X - Min: " << downstream_limits[0] << " Max: " << downstream_limits[1] << '\n'
-		<< "Y - Min: " << downstream_limits[2] << " Max: " << downstream_limits[3] << '\n'
-		<< "Z - Min: " << downstream_limits[4] << " Max: " << downstream_limits[5] << '\n' << std::endl;
+                << "X - Min: " << downstream_limits[0] << " Max: " << downstream_limits[1] << '\n'
+                << "Y - Min: " << downstream_limits[2] << " Max: " << downstream_limits[3] << '\n'
+                << "Z - Min: " << downstream_limits[4] << " Max: " << downstream_limits[5] << '\n' << std::endl;
     }
 
   const double upstream_x   = 0.5 * (upstream_limits[0] + upstream_limits[1]);
@@ -457,8 +459,8 @@ void CRTAnalysis::analyze(art::Event const& e)
       //
       e.getByLabel(_mctruth_label, mct_h);
       if(!mct_h.isValid()){
-	std::cout << "MCTruth product " << _mctruth_label << " not found..." << std::endl;
-	throw std::exception();
+        std::cout << "MCTruth product " << _mctruth_label << " not found..." << std::endl;
+        throw std::exception();
       }
       art::fill_ptr_vector(mct_v, mct_h);
 
@@ -467,8 +469,8 @@ void CRTAnalysis::analyze(art::Event const& e)
       //
       e.getByLabel(_g4_label, mcp_h);
       if(!mcp_h.isValid()){
-	std::cout << "MCTruth product " << _g4_label << " not found..." << std::endl;
-	throw std::exception();
+        std::cout << "MCTruth product " << _g4_label << " not found..." << std::endl;
+        throw std::exception();
       }
       art::fill_ptr_vector(mcp_v, mcp_h);
       
@@ -479,8 +481,8 @@ void CRTAnalysis::analyze(art::Event const& e)
       //
       e.getByLabel(_auxdethit_label, adh_h);
       if(!adh_h.isValid()){
-	std::cout << "AuxDetHit product " << _auxdethit_label << " not found..." << std::endl;
-	throw std::exception();
+        std::cout << "AuxDetHit product " << _auxdethit_label << " not found..." << std::endl;
+        throw std::exception();
       }
       art::fill_ptr_vector(adh_v, adh_h);
     }
@@ -541,37 +543,37 @@ void CRTAnalysis::analyze(art::Event const& e)
     auto mct = mct_v[0];
     if (mct->Origin() == simb::kBeamNeutrino)
       {
-	_nu_e = mct->GetNeutrino().Nu().E();
-	_nu_pdg = mct->GetNeutrino().Nu().PdgCode();
-	_nu_ccnc = mct->GetNeutrino().CCNC();
-	_nu_mode = mct->GetNeutrino().Mode();
-	_nu_int_type = mct->GetNeutrino().InteractionType();
-	_nu_vtx_x = mct->GetNeutrino().Nu().Vx();
-	_nu_vtx_y = mct->GetNeutrino().Nu().Vy();
-	_nu_vtx_z = mct->GetNeutrino().Nu().Vz();
-	_nu_px = mct->GetNeutrino().Nu().Px();
-	_nu_py = mct->GetNeutrino().Nu().Py();
-	_nu_pz = mct->GetNeutrino().Nu().Pz();
+        _nu_e = mct->GetNeutrino().Nu().E();
+        _nu_pdg = mct->GetNeutrino().Nu().PdgCode();
+        _nu_ccnc = mct->GetNeutrino().CCNC();
+        _nu_mode = mct->GetNeutrino().Mode();
+        _nu_int_type = mct->GetNeutrino().InteractionType();
+        _nu_vtx_x = mct->GetNeutrino().Nu().Vx();
+        _nu_vtx_y = mct->GetNeutrino().Nu().Vy();
+        _nu_vtx_z = mct->GetNeutrino().Nu().Vz();
+        _nu_px = mct->GetNeutrino().Nu().Px();
+        _nu_py = mct->GetNeutrino().Nu().Py();
+        _nu_pz = mct->GetNeutrino().Nu().Pz();
 
-	// In the neutrino case, save the outgoing lepton in the first mct_sp object
-	for (int p = 0; p < mct->NParticles(); p++)
-	  {
-	    auto particle = mct->GetParticle(p);
-	    if (std::abs(particle.PdgCode()) == 13 || std::abs(particle.PdgCode()) == 11) {
-	      _mct_sp_pdg = particle.PdgCode();
-	      _mct_sp_e = particle.E();
-	      _mct_sp_px = particle.Px();
-	      _mct_sp_py = particle.Py();
-	      _mct_sp_pz = particle.Pz();
-	      _mct_sp_vx = particle.Vx();
-	      _mct_sp_vy = particle.Vy();
-	      _mct_sp_vz = particle.Vz();
-	    }
-	  }
-	if (_debug) std::cout << "Neutrino E = " << _nu_e
-			      << ", x = " << _nu_vtx_x
-			      << ", y = " << _nu_vtx_y
-			      << ", z = " << _nu_vtx_z << std::endl;
+        // In the neutrino case, save the outgoing lepton in the first mct_sp object
+        for (int p = 0; p < mct->NParticles(); p++)
+          {
+            auto particle = mct->GetParticle(p);
+            if (std::abs(particle.PdgCode()) == 13 || std::abs(particle.PdgCode()) == 11) {
+              _mct_sp_pdg = particle.PdgCode();
+              _mct_sp_e = particle.E();
+              _mct_sp_px = particle.Px();
+              _mct_sp_py = particle.Py();
+              _mct_sp_pz = particle.Pz();
+              _mct_sp_vx = particle.Vx();
+              _mct_sp_vy = particle.Vy();
+              _mct_sp_vz = particle.Vz();
+            }
+          }
+        if (_debug) std::cout << "Neutrino E = " << _nu_e
+                              << ", x = " << _nu_vtx_x
+                              << ", y = " << _nu_vtx_y
+                              << ", z = " << _nu_vtx_z << std::endl;
 
       }
 
@@ -592,21 +594,21 @@ void CRTAnalysis::analyze(art::Event const& e)
       _mct_sp_vz = particle.Vz();
 
       if (mct->NParticles() > 1){ // modified to include double MIPs.
-	auto particle_2 = mct->GetParticle(1);
-	_mct_sp_2_pdg = particle_2.PdgCode();
-	_mct_sp_2_e = particle_2.E();
-	_mct_sp_2_px = particle_2.Px();
-	_mct_sp_2_py = particle_2.Py();
-	_mct_sp_2_pz = particle_2.Pz();
-	_mct_sp_2_vx = particle_2.Vx();
-	_mct_sp_2_vy = particle_2.Vy();
-	_mct_sp_2_vz = particle_2.Vz();
+        auto particle_2 = mct->GetParticle(1);
+        _mct_sp_2_pdg = particle_2.PdgCode();
+        _mct_sp_2_e = particle_2.E();
+        _mct_sp_2_px = particle_2.Px();
+        _mct_sp_2_py = particle_2.Py();
+        _mct_sp_2_pz = particle_2.Pz();
+        _mct_sp_2_vx = particle_2.Vx();
+        _mct_sp_2_vy = particle_2.Vy();
+        _mct_sp_2_vz = particle_2.Vz();
       }
 
       if (mct->NParticles() > 2){
-	auto particle_3 = mct->GetParticle(2);
-	_mct_darkNeutrino_e = particle_3.E();
-	_weight = particle_3.Vx();
+        auto particle_3 = mct->GetParticle(2);
+        _mct_darkNeutrino_e = particle_3.E();
+        _weight = particle_3.Vx();
       }
 
       if (_debug) std::cout<<mct->NParticles()<<" "<<_mct_sp_pdg<<" "<<_mct_sp_2_pdg<<std::endl;
@@ -615,8 +617,8 @@ void CRTAnalysis::analyze(art::Event const& e)
     std::map<int, int> trackid_to_primaryid_map = TrackIDToPrimaryIDMapMaker(e, mcp_v);
     if(trackid_to_primaryid_map.size() != mcp_v.size())
       {
-	std::cout << "TrackIDToPrimaryIDMap is wrong size (" << trackid_to_primaryid_map.size() << " vs. " << mcp_v.size() << ")" << std::endl;
-	//      throw std::exception();
+        std::cout << "TrackIDToPrimaryIDMap is wrong size (" << trackid_to_primaryid_map.size() << " vs. " << mcp_v.size() << ")" << std::endl;
+        //      throw std::exception();
       }
 
 
@@ -645,8 +647,8 @@ void CRTAnalysis::analyze(art::Event const& e)
       _adh_y[i] = 0.5 * (auxdethit->GetEntryY() + auxdethit->GetExitY());
       _adh_z[i] = 0.5 * (auxdethit->GetEntryZ() + auxdethit->GetExitZ());
       _adh_p_exit[i] = std::sqrt(auxdethit->GetExitMomentumX()*auxdethit->GetExitMomentumX() +
-				 auxdethit->GetExitMomentumY()*auxdethit->GetExitMomentumY() +
-				 auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
+                                 auxdethit->GetExitMomentumY()*auxdethit->GetExitMomentumY() +
+                                 auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
       _adh_trackid[i] = auxdethit->GetTrackID();
       trackids_from_adh.insert(auxdethit->GetTrackID());
       primaryids_from_adh.insert(trackid_to_primaryid_map[auxdethit->GetTrackID()]);
@@ -694,8 +696,8 @@ void CRTAnalysis::analyze(art::Event const& e)
       if (particle->StatusCode() != 1) continue;
       // Exclude particles that don't make energy deposit in the CRT, if we only keep those
       if (_keep_mcp_from_adh and
-	  trackids_from_adh.find(particle->TrackId()) == trackids_from_adh.end()) {
-	continue;
+          trackids_from_adh.find(particle->TrackId()) == trackids_from_adh.end()) {
+        continue;
       }
       // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
       _mcp_pdg[counter] = particle->PdgCode();
@@ -714,9 +716,9 @@ void CRTAnalysis::analyze(art::Event const& e)
       _mcp_primaryid[counter] = trackid_to_primaryid_map[particle->TrackId()];
       _mcp_makes_adh[counter] = trackids_from_adh.find(particle->TrackId()) != trackids_from_adh.end();
       if(_mcp_isprimary[counter])
-	_mcp_primary_makes_adh[counter] = primaryids_from_adh.find(particle->TrackId()) != primaryids_from_adh.end();
+        _mcp_primary_makes_adh[counter] = primaryids_from_adh.find(particle->TrackId()) != primaryids_from_adh.end();
       else
-	_mcp_primary_makes_adh[counter] = -1;
+        _mcp_primary_makes_adh[counter] = -1;
 
       const double t_upstream   = (upstream_z -_mcp_startz[counter]) / _mcp_pz[counter];
       const double t_downstream = (downstream_z -_mcp_startz[counter]) / _mcp_pz[counter];
@@ -738,8 +740,8 @@ void CRTAnalysis::analyze(art::Event const& e)
       std::vector<double> buffer_box = {-0., 0., -0., 0., -0., 0};
 
       for (unsigned j = 0; j < 6; ++j) {
-	upstream_wide_limits[j] += buffer_box[j];
-	downstream_wide_limits[j] += buffer_box[j];
+        upstream_wide_limits[j] += buffer_box[j];
+        downstream_wide_limits[j] += buffer_box[j];
       }
 
       const std::vector<double> x0 = {_mcp_startx[counter], _mcp_starty[counter], _mcp_startz[counter]};
@@ -749,90 +751,90 @@ void CRTAnalysis::analyze(art::Event const& e)
       double closest_approach_upstream = std::numeric_limits<double>::max();
 
       for (int bnd = 0; bnd != 6; ++bnd) {
-	if (bnd<2) {
-	  double p2[3] = {upstream_wide_limits[bnd],  x0[1] + (dx[1]/dx[0])*(upstream_wide_limits[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(upstream_wide_limits[bnd] - x0[0])};
-	  if ( p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3] &&
-	       p2[2] >= upstream_wide_limits[4] && p2[2] <= upstream_wide_limits[5] ) {
-	    intersects_upstream = true;
-	    closest_approach_upstream = 0.;
-	    break;
-	  }
-	  else if (p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3])
-	    closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[4] - p2[2]), std::abs(upstream_wide_limits[5] - p2[2])});
-	  else
-	    closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[2] - p2[1]), std::abs(upstream_wide_limits[3] - p2[1])});
-	}
-	else if (bnd>=2 && bnd<4) {
-	  double p2[3] = {x0[0] + (dx[0]/dx[1])*(upstream_wide_limits[bnd] - x0[1]), upstream_wide_limits[bnd], x0[2] + (dx[2]/dx[1])*(upstream_wide_limits[bnd] - x0[1])};
-	  if ( p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1] &&
-	       p2[2] >= upstream_wide_limits[4] && p2[2] <= upstream_wide_limits[5] ) {
-	    intersects_upstream = true;
-	    closest_approach_upstream = 0.;
-	    break;
-	  }
-	  else if (p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1])
-	    closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[4] - p2[2]), std::abs(upstream_wide_limits[5] - p2[2])});
-	  else
-	    closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[0] - p2[0]), std::abs(upstream_wide_limits[1] - p2[0])});
-	}
-	else if (bnd>=4) {
-	  double p2[3] = {x0[0] + (dx[0]/dx[2])*(upstream_wide_limits[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(upstream_wide_limits[bnd] - x0[2]), upstream_wide_limits[bnd]};
-	  if ( p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1] &&
-	       p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3] ) {
-	    intersects_upstream = true;
-	    closest_approach_upstream = 0.;
-	    break;
-	  }
-	  else if (p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1])
-	    closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[2] - p2[1]), std::abs(upstream_wide_limits[3] - p2[1])});
-	  else
-	    closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[0] - p2[0]), std::abs(upstream_wide_limits[1] - p2[0])});
-	}
+        if (bnd<2) {
+          double p2[3] = {upstream_wide_limits[bnd],  x0[1] + (dx[1]/dx[0])*(upstream_wide_limits[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(upstream_wide_limits[bnd] - x0[0])};
+          if ( p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3] &&
+               p2[2] >= upstream_wide_limits[4] && p2[2] <= upstream_wide_limits[5] ) {
+            intersects_upstream = true;
+            closest_approach_upstream = 0.;
+            break;
+          }
+          else if (p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3])
+            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[4] - p2[2]), std::abs(upstream_wide_limits[5] - p2[2])});
+          else
+            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[2] - p2[1]), std::abs(upstream_wide_limits[3] - p2[1])});
+        }
+        else if (bnd>=2 && bnd<4) {
+          double p2[3] = {x0[0] + (dx[0]/dx[1])*(upstream_wide_limits[bnd] - x0[1]), upstream_wide_limits[bnd], x0[2] + (dx[2]/dx[1])*(upstream_wide_limits[bnd] - x0[1])};
+          if ( p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1] &&
+               p2[2] >= upstream_wide_limits[4] && p2[2] <= upstream_wide_limits[5] ) {
+            intersects_upstream = true;
+            closest_approach_upstream = 0.;
+            break;
+          }
+          else if (p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1])
+            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[4] - p2[2]), std::abs(upstream_wide_limits[5] - p2[2])});
+          else
+            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[0] - p2[0]), std::abs(upstream_wide_limits[1] - p2[0])});
+        }
+        else if (bnd>=4) {
+          double p2[3] = {x0[0] + (dx[0]/dx[2])*(upstream_wide_limits[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(upstream_wide_limits[bnd] - x0[2]), upstream_wide_limits[bnd]};
+          if ( p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1] &&
+               p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3] ) {
+            intersects_upstream = true;
+            closest_approach_upstream = 0.;
+            break;
+          }
+          else if (p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1])
+            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[2] - p2[1]), std::abs(upstream_wide_limits[3] - p2[1])});
+          else
+            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[0] - p2[0]), std::abs(upstream_wide_limits[1] - p2[0])});
+        }
       }
 
       bool intersects_downstream = false;
       double closest_approach_downstream = std::numeric_limits<double>::max();
 
       for (int bnd = 0; bnd != 6; ++bnd) {
-	if (bnd<2) {
-	  double p2[3] = {downstream_wide_limits[bnd],  x0[1] + (dx[1]/dx[0])*(downstream_wide_limits[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(downstream_wide_limits[bnd] - x0[0])};
-	  if ( p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3] &&
-	       p2[2] >= downstream_wide_limits[4] && p2[2] <= downstream_wide_limits[5] ) {
-	    intersects_downstream = true;
-	    closest_approach_downstream = 0.;
-	    break;
-	  }
-	  else if (p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3])
-	    closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[4] - p2[2]), std::abs(downstream_wide_limits[5] - p2[2])});
-	  else
-	    closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[2] - p2[1]), std::abs(downstream_wide_limits[3] - p2[1])});
-	}
-	else if (bnd>=2 && bnd<4) {
-	  double p2[3] = {x0[0] + (dx[0]/dx[1])*(downstream_wide_limits[bnd] - x0[1]), downstream_wide_limits[bnd], x0[2] + (dx[2]/dx[1])*(downstream_wide_limits[bnd] - x0[1])};
-	  if ( p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1] &&
-	       p2[2] >= downstream_wide_limits[4] && p2[2] <= downstream_wide_limits[5] ) {
-	    intersects_downstream = true;
-	    closest_approach_downstream = 0.;
-	    break;
-	  }
-	  else if (p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1])
-	    closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[4] - p2[2]), std::abs(downstream_wide_limits[5] - p2[2])});
-	  else
-	    closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[0] - p2[0]), std::abs(downstream_wide_limits[1] - p2[0])});
-	}
-	else if (bnd>=4) {
-	  double p2[3] = {x0[0] + (dx[0]/dx[2])*(downstream_wide_limits[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(downstream_wide_limits[bnd] - x0[2]), downstream_wide_limits[bnd]};
-	  if ( p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1] &&
-	       p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3] ) {
-	    intersects_downstream = true;
-	    closest_approach_downstream = 0.;
-	    break;
-	  }
-	  else if (p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1])
-	    closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[2] - p2[1]), std::abs(downstream_wide_limits[3] - p2[1])});
-	  else
-	    closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[0] - p2[0]), std::abs(downstream_wide_limits[1] - p2[0])});
-	}
+        if (bnd<2) {
+          double p2[3] = {downstream_wide_limits[bnd],  x0[1] + (dx[1]/dx[0])*(downstream_wide_limits[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(downstream_wide_limits[bnd] - x0[0])};
+          if ( p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3] &&
+               p2[2] >= downstream_wide_limits[4] && p2[2] <= downstream_wide_limits[5] ) {
+            intersects_downstream = true;
+            closest_approach_downstream = 0.;
+            break;
+          }
+          else if (p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3])
+            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[4] - p2[2]), std::abs(downstream_wide_limits[5] - p2[2])});
+          else
+            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[2] - p2[1]), std::abs(downstream_wide_limits[3] - p2[1])});
+        }
+        else if (bnd>=2 && bnd<4) {
+          double p2[3] = {x0[0] + (dx[0]/dx[1])*(downstream_wide_limits[bnd] - x0[1]), downstream_wide_limits[bnd], x0[2] + (dx[2]/dx[1])*(downstream_wide_limits[bnd] - x0[1])};
+          if ( p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1] &&
+               p2[2] >= downstream_wide_limits[4] && p2[2] <= downstream_wide_limits[5] ) {
+            intersects_downstream = true;
+            closest_approach_downstream = 0.;
+            break;
+          }
+          else if (p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1])
+            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[4] - p2[2]), std::abs(downstream_wide_limits[5] - p2[2])});
+          else
+            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[0] - p2[0]), std::abs(downstream_wide_limits[1] - p2[0])});
+        }
+        else if (bnd>=4) {
+          double p2[3] = {x0[0] + (dx[0]/dx[2])*(downstream_wide_limits[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(downstream_wide_limits[bnd] - x0[2]), downstream_wide_limits[bnd]};
+          if ( p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1] &&
+               p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3] ) {
+            intersects_downstream = true;
+            closest_approach_downstream = 0.;
+            break;
+          }
+          else if (p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1])
+            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[2] - p2[1]), std::abs(downstream_wide_limits[3] - p2[1])});
+          else
+            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[0] - p2[0]), std::abs(downstream_wide_limits[1] - p2[0])});
+        }
       }
 
       _mcp_intersects_upstream[counter] = intersects_upstream;
@@ -845,95 +847,95 @@ void CRTAnalysis::analyze(art::Event const& e)
       std::vector<double> buffer_box1000 = {-1000., 1000., -1000., 1000., -1000., 1000.};
 
       for (unsigned j = 0; j < 6; ++j) {
-	upstream_wide_limits1000[j] += buffer_box1000[j];
-	downstream_wide_limits1000[j] += buffer_box1000[j];
+        upstream_wide_limits1000[j] += buffer_box1000[j];
+        downstream_wide_limits1000[j] += buffer_box1000[j];
       }
 
       bool intersects_upstream1000 = false;
 
       for (int bnd = 0; bnd != 6; ++bnd) {
-	if (bnd<2) {
-	  double p2[3] = {upstream_wide_limits1000[bnd],  x0[1] + (dx[1]/dx[0])*(upstream_wide_limits1000[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(upstream_wide_limits1000[bnd] - x0[0])};
-	  if ( p2[1] >= upstream_wide_limits1000[2] && p2[1] <= upstream_wide_limits1000[3] &&
-	       p2[2] >= upstream_wide_limits1000[4] && p2[2] <= upstream_wide_limits1000[5] ) {
-	    intersects_upstream1000 = true;
-	    break;
-	  }
-	}
-	else if (bnd>=2 && bnd<4) {
-	  double p2[3] = {x0[0] + (dx[0]/dx[1])*(upstream_wide_limits1000[bnd] - x0[1]), upstream_wide_limits1000[bnd], x0[2] + (dx[2]/dx[1])*(upstream_wide_limits1000[bnd] - x0[1])};
-	  if ( p2[0] >= upstream_wide_limits1000[0] && p2[0] <= upstream_wide_limits1000[1] &&
-	       p2[2] >= upstream_wide_limits1000[4] && p2[2] <= upstream_wide_limits1000[5] ) {
-	    intersects_upstream1000 = true;
-	    break;
-	  }
-	}
-	else if (bnd>=4) {
-	  double p2[3] = {x0[0] + (dx[0]/dx[2])*(upstream_wide_limits1000[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(upstream_wide_limits1000[bnd] - x0[2]), upstream_wide_limits1000[bnd]};
-	  if ( p2[0] >= upstream_wide_limits1000[0] && p2[0] <= upstream_wide_limits1000[1] &&
-	       p2[1] >= upstream_wide_limits1000[2] && p2[1] <= upstream_wide_limits1000[3] ) {
-	    intersects_upstream1000 = true;
-	    break;
-	  }
-	}
+        if (bnd<2) {
+          double p2[3] = {upstream_wide_limits1000[bnd],  x0[1] + (dx[1]/dx[0])*(upstream_wide_limits1000[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(upstream_wide_limits1000[bnd] - x0[0])};
+          if ( p2[1] >= upstream_wide_limits1000[2] && p2[1] <= upstream_wide_limits1000[3] &&
+               p2[2] >= upstream_wide_limits1000[4] && p2[2] <= upstream_wide_limits1000[5] ) {
+            intersects_upstream1000 = true;
+            break;
+          }
+        }
+        else if (bnd>=2 && bnd<4) {
+          double p2[3] = {x0[0] + (dx[0]/dx[1])*(upstream_wide_limits1000[bnd] - x0[1]), upstream_wide_limits1000[bnd], x0[2] + (dx[2]/dx[1])*(upstream_wide_limits1000[bnd] - x0[1])};
+          if ( p2[0] >= upstream_wide_limits1000[0] && p2[0] <= upstream_wide_limits1000[1] &&
+               p2[2] >= upstream_wide_limits1000[4] && p2[2] <= upstream_wide_limits1000[5] ) {
+            intersects_upstream1000 = true;
+            break;
+          }
+        }
+        else if (bnd>=4) {
+          double p2[3] = {x0[0] + (dx[0]/dx[2])*(upstream_wide_limits1000[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(upstream_wide_limits1000[bnd] - x0[2]), upstream_wide_limits1000[bnd]};
+          if ( p2[0] >= upstream_wide_limits1000[0] && p2[0] <= upstream_wide_limits1000[1] &&
+               p2[1] >= upstream_wide_limits1000[2] && p2[1] <= upstream_wide_limits1000[3] ) {
+            intersects_upstream1000 = true;
+            break;
+          }
+        }
       }
 
       bool intersects_downstream1000 = false;
 
       for (int bnd = 0; bnd != 6; ++bnd) {
-	if (bnd<2) {
-	  double p2[3] = {downstream_wide_limits1000[bnd],  x0[1] + (dx[1]/dx[0])*(downstream_wide_limits1000[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(downstream_wide_limits1000[bnd] - x0[0])};
-	  if ( p2[1] >= downstream_wide_limits1000[2] && p2[1] <= downstream_wide_limits1000[3] &&
-	       p2[2] >= downstream_wide_limits1000[4] && p2[2] <= downstream_wide_limits1000[5] ) {
-	    intersects_downstream1000 = true;
-	    break;
-	  }
-	}
-	else if (bnd>=2 && bnd<4) {
-	  double p2[3] = {x0[0] + (dx[0]/dx[1])*(downstream_wide_limits1000[bnd] - x0[1]), downstream_wide_limits1000[bnd], x0[2] + (dx[2]/dx[1])*(downstream_wide_limits1000[bnd] - x0[1])};
-	  if ( p2[0] >= downstream_wide_limits1000[0] && p2[0] <= downstream_wide_limits1000[1] &&
-	       p2[2] >= downstream_wide_limits1000[4] && p2[2] <= downstream_wide_limits1000[5] ) {
-	    intersects_downstream1000 = true;
-	    break;
-	  }
-	}
-	else if (bnd>=4) {
-	  double p2[3] = {x0[0] + (dx[0]/dx[2])*(downstream_wide_limits1000[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(downstream_wide_limits1000[bnd] - x0[2]), downstream_wide_limits1000[bnd]};
-	  if ( p2[0] >= downstream_wide_limits1000[0] && p2[0] <= downstream_wide_limits1000[1] &&
-	       p2[1] >= downstream_wide_limits1000[2] && p2[1] <= downstream_wide_limits1000[3] ) {
-	    intersects_downstream1000 = true;
-	    break;
-	  }
-	}
+        if (bnd<2) {
+          double p2[3] = {downstream_wide_limits1000[bnd],  x0[1] + (dx[1]/dx[0])*(downstream_wide_limits1000[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(downstream_wide_limits1000[bnd] - x0[0])};
+          if ( p2[1] >= downstream_wide_limits1000[2] && p2[1] <= downstream_wide_limits1000[3] &&
+               p2[2] >= downstream_wide_limits1000[4] && p2[2] <= downstream_wide_limits1000[5] ) {
+            intersects_downstream1000 = true;
+            break;
+          }
+        }
+        else if (bnd>=2 && bnd<4) {
+          double p2[3] = {x0[0] + (dx[0]/dx[1])*(downstream_wide_limits1000[bnd] - x0[1]), downstream_wide_limits1000[bnd], x0[2] + (dx[2]/dx[1])*(downstream_wide_limits1000[bnd] - x0[1])};
+          if ( p2[0] >= downstream_wide_limits1000[0] && p2[0] <= downstream_wide_limits1000[1] &&
+               p2[2] >= downstream_wide_limits1000[4] && p2[2] <= downstream_wide_limits1000[5] ) {
+            intersects_downstream1000 = true;
+            break;
+          }
+        }
+        else if (bnd>=4) {
+          double p2[3] = {x0[0] + (dx[0]/dx[2])*(downstream_wide_limits1000[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(downstream_wide_limits1000[bnd] - x0[2]), downstream_wide_limits1000[bnd]};
+          if ( p2[0] >= downstream_wide_limits1000[0] && p2[0] <= downstream_wide_limits1000[1] &&
+               p2[1] >= downstream_wide_limits1000[2] && p2[1] <= downstream_wide_limits1000[3] ) {
+            intersects_downstream1000 = true;
+            break;
+          }
+        }
       }
 
       _mcp_intersects_upstream1000[counter] = intersects_upstream1000;
       _mcp_intersects_downstream1000[counter] = intersects_downstream1000;
 
       if(_debug)
-	{
-	  std::cout << "MCP - " << counter << '\n'
-		    << "Start:  " << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter] << '\n'
-		    << "Mom:    " << _mcp_px[counter] << ", " << _mcp_py[counter] << ", " << _mcp_pz[counter] << '\n'
-		    << "t_up:   " << t_upstream << '\n'
-		    << "t_down: " << t_downstream << '\n' 
-		    << "UP:     " << mcp_upstream.x() << ", " << mcp_upstream.y() << ", " << mcp_upstream.z() << '\n'
-		    << "DOWN:   " << mcp_downstream.x() << ", " << mcp_downstream.y() << ", " << mcp_downstream.z() << '\n'
-		    << "DIST-U: " << _mcp_upstream_dist[counter] << '\n'
-		    << "DIST-D: " << _mcp_downstream_dist[counter] << '\n'
-		    << std::endl;
-	}
+        {
+          std::cout << "MCP - " << counter << '\n'
+                    << "Start:  " << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter] << '\n'
+                    << "Mom:    " << _mcp_px[counter] << ", " << _mcp_py[counter] << ", " << _mcp_pz[counter] << '\n'
+                    << "t_up:   " << t_upstream << '\n'
+                    << "t_down: " << t_downstream << '\n' 
+                    << "UP:     " << mcp_upstream.x() << ", " << mcp_upstream.y() << ", " << mcp_upstream.z() << '\n'
+                    << "DOWN:   " << mcp_downstream.x() << ", " << mcp_downstream.y() << ", " << mcp_downstream.z() << '\n'
+                    << "DIST-U: " << _mcp_upstream_dist[counter] << '\n'
+                    << "DIST-D: " << _mcp_downstream_dist[counter] << '\n'
+                    << std::endl;
+        }
 
 
       if (_debug) {
-	std::cout << "MCP " << _mcp_pdg[counter] << ", trackID = " << _mcp_trackid[counter]
-		  << ", p = " << particle->P()
-		  << "(" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
-		  << ", process = "
-		  << particle->Process() << ": start point = ("
-		  << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter]
-		  << ") - start process: " << particle->Process()
-		  << " --- end point = (" << std::endl;
+        std::cout << "MCP " << _mcp_pdg[counter] << ", trackID = " << _mcp_trackid[counter]
+                  << ", p = " << particle->P()
+                  << "(" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
+                  << ", process = "
+                  << particle->Process() << ": start point = ("
+                  << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter]
+                  << ") - start process: " << particle->Process()
+                  << " --- end point = (" << std::endl;
       }
       counter++;
     }
@@ -976,6 +978,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_true_mcp_px.resize(n_hits);
   _chit_true_mcp_py.resize(n_hits);
   _chit_true_mcp_isprimary.resize(n_hits);
+  _chit_sipm_raw_adc.resize(n_hits);
   _chit_sipm_adc.resize(n_hits);
   _chit_sipm_channel_id.resize(n_hits);
   _chit_sipm_feb_mac5.resize(n_hits);
@@ -999,10 +1002,20 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_plane[i] = 1; // downstream
     }
 
+    _chit_sipm_raw_adc[i].resize(4);
+    _chit_sipm_adc[i].resize(4);
+    const std::array<uint16_t,4> raw_adcs = hit->raw_adcs;
+    const std::array<uint16_t,4> adcs     = hit->adcs;
+
+    for(uint adc_i = 0; adc_i < 4; ++adc_i)
+      {
+        _chit_sipm_raw_adc[i][adc_i] = raw_adcs[adc_i];
+        _chit_sipm_adc[i][adc_i]     = adcs[adc_i];
+      }
+
     auto feb_datas = crt_hit_to_feb_data.at(hit.key());
     if(feb_datas.size() != 2) std::cout << "ERROR: CRTHit associated to " << feb_datas.size() << " FEBDatas" << std::endl;
 
-    _chit_sipm_adc[i].resize(2 * feb_datas.size());
     _chit_sipm_feb_mac5[i].resize(feb_datas.size());
 
     _chit_sipm_channel_id[i].resize(2);
@@ -1011,23 +1024,8 @@ void CRTAnalysis::analyze(art::Event const& e)
 
     for(unsigned ii = 0; ii < feb_datas.size(); ++ii)
       {
-	const auto& feb_data = feb_datas[ii];
-	_chit_sipm_feb_mac5[i][ii] = feb_data->Mac5();
-	_chit_sipm_adc[i][2*ii] = 0;
-	_chit_sipm_adc[i][2*ii+1] = 0;
-
-	if(_chit_sipm_channel_id[i][0] / 32 == _chit_sipm_feb_mac5[i][ii]) 
-	  {
-	    const uint otherchannel = (_chit_sipm_channel_id[i][0] % 2 == 0) ? _chit_sipm_channel_id[i][0] + 1 : _chit_sipm_channel_id[i][0] - 1;
-	    _chit_sipm_adc[i][2*ii]   = feb_data->ADC()[_chit_sipm_channel_id[i][0] % 32];
-	    _chit_sipm_adc[i][2*ii+1] = feb_data->ADC()[otherchannel % 32];
-	  }
-	if(_chit_sipm_channel_id[i][1] / 32 == _chit_sipm_feb_mac5[i][ii])
-	  {
-	    const uint otherchannel = (_chit_sipm_channel_id[i][1] % 2 == 0) ? _chit_sipm_channel_id[i][1] + 1 : _chit_sipm_channel_id[i][1] - 1;
-	    _chit_sipm_adc[i][2*ii]   = feb_data->ADC()[_chit_sipm_channel_id[i][1] % 32];
-	    _chit_sipm_adc[i][2*ii+1] = feb_data->ADC()[otherchannel % 32];
-	  }
+        const auto& feb_data = feb_datas[ii];
+        _chit_sipm_feb_mac5[i][ii] = feb_data->Mac5();
       }
 
     /*
@@ -1050,18 +1048,18 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_h2_t1[i] = crt_data_v[2]->T1();
       
       for(auto const &feb_data : feb_datas)
-	{
-	  auto ides       = feb_data_to_ides->at(feb_data.key());
-	  auto feb_truths = feb_data_to_ides->at(feb_data.key());
-	  
-	  for(unsigned ii = 0; ii < ides.size(); ++ii)
-	    {
-	    if(feb_truths[ii]->GetChannel());
-	    
-	    n_ides += ;
-	    }
-	}
-	
+        {
+          auto ides       = feb_data_to_ides->at(feb_data.key());
+          auto feb_truths = feb_data_to_ides->at(feb_data.key());
+          
+          for(unsigned ii = 0; ii < ides.size(); ++ii)
+            {
+            if(feb_truths[ii]->GetChannel());
+            
+            n_ides += ;
+            }
+        }
+        
       _chit_true_mcp_trackids[i].resize(n_ides);
       _chit_true_mcp_pdg[i].resize(n_ides);
       _chit_true_mcp_e[i].resize(n_ides);
@@ -1084,67 +1082,67 @@ void CRTAnalysis::analyze(art::Event const& e)
 
       size_t data_counter = 0, ide_counter = 0;
       for (auto crt_data : crt_data_v) {
-	auto feb_v = crt_data_to_feb_data->at(crt_data.key());
+        auto feb_v = crt_data_to_feb_data->at(crt_data.key());
 
-	if(feb_v.size() != 1) std::cout << "========== ERROR: Found " << feb_v.size() << " FEBDatas for one CRTData?" << std::endl;
+        if(feb_v.size() != 1) std::cout << "========== ERROR: Found " << feb_v.size() << " FEBDatas for one CRTData?" << std::endl;
 
-	_chit_sipm_adc[i][data_counter] = crt_data->ADC();
-	_chit_sipm_channel_id[i][data_counter] = crt_data->Channel();
-	_chit_sipm_feb_mac5[i][data_counter] = feb_v[0]->Mac5();
+        _chit_sipm_adc[i][data_counter] = crt_data->ADC();
+        _chit_sipm_channel_id[i][data_counter] = crt_data->Channel();
+        _chit_sipm_feb_mac5[i][data_counter] = feb_v[0]->Mac5();
 
-	auto ide_v = crt_data_to_ides->at(crt_data.key());
-	for (auto ide : ide_v) {
-	  _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
-	  _chit_true_e[i] += ide->energyDeposited;
-	  _chit_true_x[i] += 0.5 * (ide->entryX + ide->exitX);
-	  _chit_true_y[i] += 0.5 * (ide->entryY + ide->exitY);
-	  _chit_true_z[i] += 0.5 * (ide->entryZ + ide->exitZ);
-	
-	  if(_debug)
-	    {
-	      std::cout << "IDE Track ID: " << ide->trackID << std::endl;
-	      if(trackid_to_mcp.find(ide->trackID) != trackid_to_mcp.end())
-		std::cout << "Opened map: Success! " << ide->energyDeposited << std::endl;
-	      else
-		std::cout << "Opened map: Failure! " << ide->energyDeposited << std::endl;
-	    }
+        auto ide_v = crt_data_to_ides->at(crt_data.key());
+        for (auto ide : ide_v) {
+          _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
+          _chit_true_e[i] += ide->energyDeposited;
+          _chit_true_x[i] += 0.5 * (ide->entryX + ide->exitX);
+          _chit_true_y[i] += 0.5 * (ide->entryY + ide->exitY);
+          _chit_true_z[i] += 0.5 * (ide->entryZ + ide->exitZ);
+        
+          if(_debug)
+            {
+              std::cout << "IDE Track ID: " << ide->trackID << std::endl;
+              if(trackid_to_mcp.find(ide->trackID) != trackid_to_mcp.end())
+                std::cout << "Opened map: Success! " << ide->energyDeposited << std::endl;
+              else
+                std::cout << "Opened map: Failure! " << ide->energyDeposited << std::endl;
+            }
 
-	  auto mcp = trackid_to_mcp[ide->trackID];
-	  _chit_true_mcp_trackids[i][ide_counter] = mcp.TrackId();
-	  _chit_true_mcp_pdg[i][ide_counter] = mcp.PdgCode();
+          auto mcp = trackid_to_mcp[ide->trackID];
+          _chit_true_mcp_trackids[i][ide_counter] = mcp.TrackId();
+          _chit_true_mcp_pdg[i][ide_counter] = mcp.PdgCode();
 
-	  if(mcp.NumberTrajectoryPoints())
-	    {
-	      _chit_true_mcp_e[i][ide_counter] = mcp.E();
-	      _chit_true_mcp_px[i][ide_counter] = mcp.Px();
-	      _chit_true_mcp_py[i][ide_counter] = mcp.Py();
-	      _chit_true_mcp_pz[i][ide_counter] = mcp.Pz();
-	      _chit_true_mcp_startx[i][ide_counter] = mcp.Vx();
-	      _chit_true_mcp_starty[i][ide_counter] = mcp.Vy();
-	      _chit_true_mcp_startz[i][ide_counter] = mcp.Vz();
-	      _chit_true_mcp_endx[i][ide_counter] = mcp.EndX();
-	      _chit_true_mcp_endy[i][ide_counter] = mcp.EndY();
-	      _chit_true_mcp_endz[i][ide_counter] = mcp.EndZ();
-	    }
-	  else
-	    {
-	      _chit_true_mcp_e[i][ide_counter] = -9999.;
-	      _chit_true_mcp_px[i][ide_counter] = -9999.;
-	      _chit_true_mcp_py[i][ide_counter] = -9999.;
-	      _chit_true_mcp_pz[i][ide_counter] = -9999.;
-	      _chit_true_mcp_startx[i][ide_counter] = -9999.;
-	      _chit_true_mcp_starty[i][ide_counter] = -9999.;
-	      _chit_true_mcp_startz[i][ide_counter] = -9999.;
-	      _chit_true_mcp_endx[i][ide_counter] = -9999.;
-	      _chit_true_mcp_endy[i][ide_counter] = -9999.;
-	      _chit_true_mcp_endz[i][ide_counter] = -9999.;
-	    }
+          if(mcp.NumberTrajectoryPoints())
+            {
+              _chit_true_mcp_e[i][ide_counter] = mcp.E();
+              _chit_true_mcp_px[i][ide_counter] = mcp.Px();
+              _chit_true_mcp_py[i][ide_counter] = mcp.Py();
+              _chit_true_mcp_pz[i][ide_counter] = mcp.Pz();
+              _chit_true_mcp_startx[i][ide_counter] = mcp.Vx();
+              _chit_true_mcp_starty[i][ide_counter] = mcp.Vy();
+              _chit_true_mcp_startz[i][ide_counter] = mcp.Vz();
+              _chit_true_mcp_endx[i][ide_counter] = mcp.EndX();
+              _chit_true_mcp_endy[i][ide_counter] = mcp.EndY();
+              _chit_true_mcp_endz[i][ide_counter] = mcp.EndZ();
+            }
+          else
+            {
+              _chit_true_mcp_e[i][ide_counter] = -9999.;
+              _chit_true_mcp_px[i][ide_counter] = -9999.;
+              _chit_true_mcp_py[i][ide_counter] = -9999.;
+              _chit_true_mcp_pz[i][ide_counter] = -9999.;
+              _chit_true_mcp_startx[i][ide_counter] = -9999.;
+              _chit_true_mcp_starty[i][ide_counter] = -9999.;
+              _chit_true_mcp_startz[i][ide_counter] = -9999.;
+              _chit_true_mcp_endx[i][ide_counter] = -9999.;
+              _chit_true_mcp_endy[i][ide_counter] = -9999.;
+              _chit_true_mcp_endz[i][ide_counter] = -9999.;
+            }
 
-	  _chit_true_mcp_isprimary[i][ide_counter] = mcp.Process() == "primary";
+          _chit_true_mcp_isprimary[i][ide_counter] = mcp.Process() == "primary";
 
-	  ++ide_counter;
-	}
-	++data_counter;
+          ++ide_counter;
+        }
+        ++data_counter;
       }
       _chit_true_t[i] /= n_ides;
       _chit_true_e[i] /= n_ides;
@@ -1201,19 +1199,19 @@ void CRTAnalysis::analyze(art::Event const& e)
       auto hit_v = crt_track_to_hit.at(track.key());
       assert(hit_v.size == 2); // 2 hits per track
       for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++) {
-	/*	auto hit = hit_v[i_hit];
-	float hit_time = 0;
-	size_t n_ides = 0;
-	  auto ide_v = feb_data_to_ides->at(crt_.key());
-	  for (auto ide : ide_v) {
-	    hit_time += 0.5 * (ide->entryT + ide->exitT);
-	    n_ides++;
-	  }
-	}
-	hit_time /= n_ides;
-	if (i_hit == 0) _ct_true_tof[i] -= hit_time;
-	if (i_hit == 1) _ct_true_tof[i] += hit_time;
-	*/
+        /*      auto hit = hit_v[i_hit];
+        float hit_time = 0;
+        size_t n_ides = 0;
+          auto ide_v = feb_data_to_ides->at(crt_.key());
+          for (auto ide : ide_v) {
+            hit_time += 0.5 * (ide->entryT + ide->exitT);
+            n_ides++;
+          }
+        }
+        hit_time /= n_ides;
+        if (i_hit == 0) _ct_true_tof[i] -= hit_time;
+        if (i_hit == 1) _ct_true_tof[i] += hit_time;
+        */
       }
     }
   }
@@ -1293,22 +1291,22 @@ std::map<int, int> CRTAnalysis::TrackIDToPrimaryIDMapMaker(art::Event const& e, 
       if(mcp->StatusCode() != 1) continue;
 
       if(mcp->Process() == "primary")
-	map[mcp->TrackId()] = mcp->TrackId();
+        map[mcp->TrackId()] = mcp->TrackId();
       else 
-	{
-	  bool filled = false;
-	  art::Ptr<simb::MCParticle> mother = mcp;
-	  
-	  while(!filled)
-	    {
-	      if(map.find(mother->Mother()) != map.end())
-		{
-		  map[mcp->TrackId()] = map[mother->Mother()];
-		  filled = true;
-		}
-	      mother = particle_map[mother->Mother()];
-	    }
-	}
+        {
+          bool filled = false;
+          art::Ptr<simb::MCParticle> mother = mcp;
+          
+          while(!filled)
+            {
+              if(map.find(mother->Mother()) != map.end())
+                {
+                  map[mcp->TrackId()] = map[mother->Mother()];
+                  filled = true;
+                }
+              mother = particle_map[mother->Mother()];
+            }
+        }
     }
 
   return map;
