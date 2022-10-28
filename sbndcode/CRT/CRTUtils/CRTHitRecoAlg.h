@@ -67,6 +67,9 @@ namespace sbnd{
 
     double ADCtoPE(const uint16_t &adc);
 
+    void CorrectADC(const TVector3 &pos, const CRTStripHit &hit0,
+                    const CRTStripHit &hit1, std::array<uint16_t, 4> &corr_adc);
+
     void CorrectTimings(const TVector3 &pos, const CRTStripHit &hit0,
                         const CRTStripHit &hit1, const double &pe0, const double &pe1,
                         uint32_t &t0, uint32_t &t1, double &diff);
