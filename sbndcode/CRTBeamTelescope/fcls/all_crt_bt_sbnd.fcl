@@ -10,7 +10,7 @@
 #include "config_genericCRT.fcl"
 #include "crtsimmodules_sbnd.fcl"
 #include "crtslimmer_sbnd.fcl"
-#include "crtsimhitproducer_sbnd.fcl"
+#include "crthitproducer_sbnd.fcl"
 #include "crttrackproducer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
@@ -56,7 +56,7 @@ physics:
     crt: @local::sbnd_crtslimmer
 
     # CRT Hits
-    crthit: @local::standard_crtsimhitproducer
+    crthit: @local::standard_crthitproducer
 
     # CRT Tracks
     crttrack: @local::standard_crttrackproducer
