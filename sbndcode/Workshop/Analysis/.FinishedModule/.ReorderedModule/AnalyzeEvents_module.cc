@@ -29,6 +29,8 @@
 #include "lardataobj/RecoBase/Track.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 #include "larsim/Utils/TruthMatchUtils.h"
+#include "lardataobj/AnalysisBase/T0.h"
+#include "lardataobj/RecoBase/Slice.h"
 
 // ROOT includes
 #include <TH1F.h>
@@ -74,6 +76,7 @@ class test::AnalyzeEvents : public art::EDAnalyzer {
   unsigned int fNPFParticles;
   unsigned int fNPrimaries;
   int fNPrimaryDaughters;
+  float fT0;
 
   std::vector<float> fDaughterTrackLengths;
   std::vector<bool> fDaughterLongestTrack;
@@ -86,6 +89,8 @@ class test::AnalyzeEvents : public art::EDAnalyzer {
   const std::string fPFParticleLabel;
   const std::string fTrackLabel;
   const std::string fCaloLabel;
+  const std::string fSliceLabel;
+  const std::string fOptLabel;
 
   // Write some member functions to make our code more readable
   void ResetTree();
@@ -94,6 +99,10 @@ class test::AnalyzeEvents : public art::EDAnalyzer {
       const size_t neutrinoID,
       const std::vector<art::Ptr<recob::PFParticle>>& pfpVec,
       const art::FindManyP<recob::Track>& pfpTrackAssns) const;
+  const art::Ptr<recob::Slice> GetNeutrinoSlice(
+      const size_t neutrinoID,
+      const std::vector<art::Ptr<recob::PFParticle>>& pfpVec,
+      const art::FindManyP<recob::Slice>& pfpSliceAssns) const;
   const int GetLongestTrackID(const std::vector<art::Ptr<recob::Track>>& daughterTracks) const;
 };
 
@@ -103,6 +112,8 @@ test::AnalyzeEvents::AnalyzeEvents(fhicl::ParameterSet const& p)
     , fPFParticleLabel(p.get<std::string>("PFParticleLabel"))
     , fTrackLabel(p.get<std::string>("TrackLabel"))
     , fCaloLabel(p.get<std::string>("CalorimetryLabel"))
+    , fSliceLabel(p.get<std::string>("SliceLabel"))
+    , fOptLabel(p.get<std::string>("OptLabel"))
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
@@ -132,10 +143,19 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
   if (e.getByLabel(fTrackLabel, trackHandle))
     art::fill_ptr_vector(trackVec, trackHandle);
 
+  // Load all of the slices from pandora
+  art::Handle<std::vector<recob::Slice>> sliceHandle;
+  std::vector<art::Ptr<recob::Slice>> sliceVec;
+  if (e.getByLabel(fSliceLabel, sliceHandle))
+    art::fill_ptr_vector(sliceVec, sliceHandle);
+
   // Load the associations between PFPs, Tracks and Calorimetries
+  // Load the associations between PFPs, Slices and T0
   art::FindManyP<recob::Track> pfpTrackAssns(pfpVec, e, fTrackLabel);
   art::FindManyP<anab::Calorimetry> trackCaloAssns(trackVec, e, fCaloLabel);
   art::FindManyP<recob::Hit> trackHitAssns(trackVec, e, fTrackLabel);
+  art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, fSliceLabel);
+  art::FindManyP<anab::T0> sliceT0Assns(sliceVec, e, fOptLabel);
 
   // If there are no PFParticles then give up and skip the event
   if (pfpVec.empty())
@@ -202,6 +222,23 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
       fDaughterTrackTruePDG.push_back(particle->PdgCode());
     }
   }
+  
+  // Access the neutrino slice to recover the T0
+  const art::Ptr<recob::Slice> neutrinoSlice(this->GetNeutrinoSlice(neutrinoID, pfpVec, pfpSliceAssns));
+  
+  // Check that we found a reconstructed neutrino slice, if not skip the event
+  if (!neutrinoSlice)
+    return;
+
+  // Get the T0 object associated with the slice
+  const std::vector<art::Ptr<anab::T0>> sliceT0s(sliceT0Assns.at(neutrinoSlice.key()));
+
+  // There should only be 1 T0 per slice
+  if (sliceT0s.size() == 1) {
+    const art::Ptr<anab::T0>& t0(sliceT0s.front());
+    fT0 = t0->Time();
+  } // T0s
+
   // Store the outputs in the TTree
   fTree->Fill();
 }
@@ -230,6 +267,8 @@ void test::AnalyzeEvents::beginJob()
 
   fTree->Branch("daughterTrackdEdx", &fDaughterTrackdEdx);
   fTree->Branch("daughterTrackResidualRange", &fDaughterTrackResidualRange);
+  
+  fTree->Branch("t0", &fT0);
 }
 
 void test::AnalyzeEvents::endJob()
@@ -241,9 +280,10 @@ void test::AnalyzeEvents::ResetTree()
 {
   // Reset all of our variables to 0 or empty vectors
   // This ensures things are not kept from the previous event
-  fNPFParticles = 0;
-  fNPrimaries = 0;
+  fNPFParticles      = 0;
+  fNPrimaries        = 0;
   fNPrimaryDaughters = 0;
+  fT0                = 0.;
   fDaughterTrackLengths.clear();
   fDaughterLongestTrack.clear();
   fDaughterTrackTruePDG.clear();
@@ -291,6 +331,31 @@ const std::vector<art::Ptr<recob::Track>> test::AnalyzeEvents::GetDaughterTracks
       daughterTracks.push_back(pfpTracks.front()); // As we have one entry in the vector, take the first (only) element
   }
   return daughterTracks;
+}
+
+const art::Ptr<recob::Slice> test::AnalyzeEvents::GetNeutrinoSlice(
+    const size_t neutrinoID,
+    const std::vector<art::Ptr<recob::PFParticle>>& pfpVec,
+    const art::FindManyP<recob::Slice>& pfpSliceAssns) const
+{
+  art::Ptr<recob::Slice> pfpSlice;
+  // Now access the slices and corresponding timing information
+  for (const art::Ptr<recob::PFParticle>& pfp : pfpVec) {
+    // Start by assessing the neutrino PFParticle itself
+    if(pfp->Self() != neutrinoID) continue;
+
+    // Get the slices associated with the current PFParticle
+    const std::vector<art::Ptr<recob::Slice>> pfpSlices(pfpSliceAssns.at(pfp.key()));
+
+    // There should only ever be 0 or 1 slices associated to the neutrino PFP
+    if (pfpSlices.size() == 1) {
+      // Get the first (only) element of the vector
+      pfpSlice = pfpSlices.front();
+    }
+  } // PFParticle vector
+
+  // Will be null if != 1 slice found
+  return pfpSlice;
 }
 
 const int test::AnalyzeEvents::GetLongestTrackID(const std::vector<art::Ptr<recob::Track>>& trackVec) const
