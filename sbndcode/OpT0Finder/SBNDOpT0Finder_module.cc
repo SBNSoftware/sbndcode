@@ -109,7 +109,8 @@ private:
   double _flash_trange_start; ///< The time start from where to include flashes (to be set)
   double _flash_trange_end; ///< The time stop from where to stop including flashes (to be set)
 
-  float _calibration_const;  /// conversion from (ADC*time ticks) to e- (to be set), given in units of (ADC*time ticks)/e- 
+  float _calibration_const;  /// conversion from (ADC*time ticks) to e- (to be set), given in units of (ADC*time ticks)/e-
+  float _nphoton_limit; 
 
   // float _charge_to_n_photons_track; ///< The conversion factor betweeen hit integral and photons (to be set)
   // float _charge_to_n_photons_shower; ///< The conversion factor betweeen hit integral and photons (to be set)
@@ -142,7 +143,7 @@ private:
   std::vector<double> _hypo_spec;
 
   TTree* _tree2;
-  std::vector<float> _dep_x, _dep_y, _dep_z, _dep_charge, _dep_photons;
+  std::vector<float> _dep_x, _dep_y, _dep_z, _dep_E, _dep_charge, _dep_photons, _dep_pitch;
   std::vector<int> _dep_slice;
   std::vector<int> _dep_pfpid;
   std::vector<int> _dep_trk;
@@ -177,6 +178,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _uncoated_pmts = this->GetUncoatedPTMList(_opch_to_use);
 
   _calibration_const = p.get<float>("CalibrationConst");
+  _nphoton_limit     = p.get<float>("nPhotonLimit");
 
   // _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
   // _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
@@ -211,8 +213,10 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tree1->Branch("dep_x", "std::vector<float>", &_dep_x);
   _tree1->Branch("dep_y", "std::vector<float>", &_dep_y);
   _tree1->Branch("dep_z", "std::vector<float>", &_dep_z);
+  _tree1->Branch("dep_E", "std::vector<float>", &_dep_E);
   _tree1->Branch("dep_charge", "std::vector<float>", &_dep_charge);
   _tree1->Branch("dep_photons", "std::vector<float>", &_dep_photons);
+  _tree1->Branch("dep_pitch"  , "std::vector<float>", &_dep_pitch);
   _tree1->Branch("dep_trk", "std::vector<int>", &_dep_trk);
 
   _tree2 = fs->make<TTree>("flash_match_tree","");
@@ -526,8 +530,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
     _dep_x.clear();
     _dep_y.clear();
     _dep_z.clear();
+    _dep_E.clear();
     _dep_charge.clear();
     _dep_photons.clear();
+    _dep_pitch.clear();
     _dep_trk.clear();
 
     // Get the associated PFParticles
@@ -565,7 +571,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           std::vector<art::Ptr<anab::Calorimetry>> calo_v = trk_to_calo.at(track.key());
           auto calo = calo_v[2];
           auto dEdx_v = calo->dEdx(); // assuming units in MeV/cm
-          auto dQdx_v = calo->dQdx(); // assuming units in electrons/cm,
+          auto dQdx_v = calo->dQdx(); // assuming units in electrons/cm, this might be?????? ADC/cm?? 
           auto pitch_v = calo->TrkPitchVec(); // assuming units in cm 
           auto pos_v   = calo->XYZ();
           for (size_t n_calo = 0; n_calo < calo->dEdx().size(); n_calo++){
@@ -575,25 +581,31 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             if ((x_calo < 0 && tpc==1 ) || (x_calo > 0 && tpc==0))
               continue;
             auto dE = dEdx_v[n_calo] * pitch_v[n_calo];
-            auto dQ = dQdx_v[n_calo] * pitch_v[n_calo];
-
+            auto dQ = dQdx_v[n_calo] * pitch_v[n_calo] * (1/_calibration_const);
+            // std::cout << "pitch: " << pitch_v[n_calo] << std::endl;
             // calc number of photons
             auto nphotons = dE/(19.5*1e-6) - dQ; // W_ph is in units of MeV 
-            // emplace this point into the light cluster 
-            light_cluster.emplace_back(position.X(),
-                                      position.Y(),
-                                      position.Z(),
-                                      nphotons,
-                                      1);
             // Fill tree variables 
             _dep_slice.push_back(n_slice);
             _dep_pfpid.push_back(pfp->Self());
             _dep_x.push_back(position.X());
             _dep_y.push_back(position.Y());
             _dep_z.push_back(position.Z());
+            _dep_E.push_back(dE);
             _dep_charge.push_back(dQ);
             _dep_photons.push_back(nphotons);
+            _dep_pitch.push_back(pitch_v[n_calo]);
             _dep_trk.push_back(1);
+
+            // test placing an upper limit on nphotons to avoid extremely high values 
+            if (nphotons > _nphoton_limit)
+              nphotons = _nphoton_limit;
+            // emplace this point into the light cluster 
+            light_cluster.emplace_back(position.X(),
+                                      position.Y(),
+                                      position.Z(),
+                                      nphotons,
+                                      1);
           } // end loop over calo steps 
         } // end loop over tracks 
       } // end calo track section 
@@ -639,8 +651,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             _dep_x.push_back(position[0]);
             _dep_y.push_back(position[1]);
             _dep_z.push_back(position[2]);
+            _dep_E.push_back(-1.);
             _dep_charge.push_back(charge);
             _dep_photons.push_back(-1.);
+            _dep_pitch.push_back(-1.);
             _dep_trk.push_back(0); 
           }
         } // End loop over Spacepoints

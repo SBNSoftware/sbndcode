@@ -25,6 +25,7 @@ sbnd_opt0_finder:
   FlashMatchConfig: @local::flashmatch_config
   CalibrationConst:          0.0201293  # the calibration constant for
                                         # collection plane derived in docdb 19505
+  nPhotonLimit:    1e10
 
  #  ChargeToNPhotonsTrack:    39   #  (1 / 0.0201293) e-/ADC*time_ticks  x
                                  #  x  23.6e-6 MeV/e-  x
