@@ -1,4 +1,5 @@
 BEGIN_PROLOG
+
 analyzeEvents:
 {
   module_type:      "AnalyzeEvents"
@@ -7,5 +8,7 @@ analyzeEvents:
   CalorimetryLabel: "pandoraCalo"
   SliceLabel:       "pandora"
   OptLabel:         "opt0finder"
+
 }
+
 END_PROLOG

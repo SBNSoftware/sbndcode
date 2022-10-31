@@ -2,6 +2,9 @@ art_make(
           MODULE_LIBRARIES
                            lardataobj_RecoBase
                            larpandora_LArPandoraInterface
+                           lardata_RecoObjects  
+                           lardataobj_AnalysisBase
+                           larreco_RecoAlg
 
                            art_Persistency_Common canvas
                            art_Persistency_Provenance canvas
@@ -20,7 +23,8 @@ art_make(
                            ${MF_UTILITIES}
                            ${FHICLCPP}
                            ${CLHEP}
-
+                           sbndcode_RecoUtils
+                           sbndcode_OpDetSim
 
                            ${ROOT_GEOM}
                            ${ROOT_XMLIO}

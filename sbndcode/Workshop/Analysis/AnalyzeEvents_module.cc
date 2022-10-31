@@ -80,7 +80,7 @@ class test::AnalyzeEvents : public art::EDAnalyzer {
   std::vector<std::vector<float>> fDaughterTrackdEdx;
   std::vector<std::vector<float>> fDaughterTrackResidualRange;
 
-  // Define input labels
+  // Declare input labels
   const std::string fPFParticleLabel;
   const std::string fTrackLabel;
   const std::string fCaloLabel;
@@ -160,10 +160,8 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
 
   // Load the associations between PFPs, Tracks and Calorimetries
   art::FindManyP<recob::Track> pfpTrackAssns(pfpVec, e, fTrackLabel);
-  art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, fSliceLabel);
   art::FindManyP<anab::Calorimetry> trackCaloAssns(trackVec, e, fCaloLabel);
-  art::FindManyP<anab::T0> sliceT0Assns(sliceVec, e, fOptLabel);
-
+  
   // Search for the longest daughter track ID
   int longestID(-1);
   float longestLength(std::numeric_limits<float>::lowest());
@@ -231,15 +229,20 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
     }
   }
   
+  
+  // Load the associations between PFPs, Slices and T0
+  art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, fSliceLabel);
+  art::FindManyP<anab::T0> sliceT0Assns(sliceVec, e, fOptLabel);
+
   // Now access the slices and corresponding timing information
   for (const art::Ptr<recob::PFParticle>& pfp : pfpVec) {
     // Start by assessing the neutrino PFParticle itself
     if(pfp->Self() != neutrinoID) continue;
 
-    // Get the tracks associated with the PFP
+    // Get the slices associated with the current PFParticle
     const std::vector<art::Ptr<recob::Slice>> pfpSlices(pfpSliceAssns.at(pfp.key()));
 
-    // There should only ever be 0 or 1 tracks associated to the neutrino PFP
+    // There should only ever be 0 or 1 slices associated to the neutrino PFP
     if (pfpSlices.size() == 1) {
       // Get the first (only) element of the vector
       const art::Ptr<recob::Slice>& pfpSlice(pfpSlices.front());
@@ -247,7 +250,7 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
       // Get the T0 object associated with the slice
       const std::vector<art::Ptr<anab::T0>> sliceT0s(sliceT0Assns.at(pfpSlice.key()));
 
-      // There should only be 1 slice per neutrino
+      // There should only be 1 T0 per slice
       if (sliceT0s.size() == 1) {
         const art::Ptr<anab::T0>& t0(sliceT0s.front());
         fT0 = t0->Time();
@@ -255,6 +258,7 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
       } // T0s
     } // Slices
   } // PFParticles
+
   // Store the outputs in the TTree
   fTree->Fill();
 }
