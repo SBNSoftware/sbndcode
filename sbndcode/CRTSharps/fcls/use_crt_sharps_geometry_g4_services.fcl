@@ -1,0 +1,7 @@
+services.Geometry.GDML: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
+services.Geometry.ROOT: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
+
+services.AuxDetGeometry.GDML: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
+
+services.LArG4Detector.gdmlFileName_: "sbnd_v02_00_CRTSharpsNoBottomCRT.gdml"
