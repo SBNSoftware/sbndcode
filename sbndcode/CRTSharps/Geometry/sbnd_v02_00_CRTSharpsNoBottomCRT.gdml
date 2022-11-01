@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <gdml_simple_extension xmlns:gdml_simple_extension="http://www.example.org"
                        xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
                        xs:noNamespaceSchemaLocation="./RefactoredGDMLSchema/SimpleExtension.xsd">
@@ -12138,6 +12138,278 @@
                                                 <volumeref ref="volAuxDetSensitiveCRTStripMINOS"/>
                                                 <position name="posCRT2151_CRT" unit="cm" x="0" y="37.799999999999997" z="0"/>
                                         </physvol>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray_FEB74">
+                          <materialref ref="matPolystyrene"/>
+                          <solidref ref="CRTstripBERNArray"/>
+                            <physvol name="AuxDetSensitiveCRTStrip2152" copynumber="2152">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2152_CRT" unit="cm" x="0" y="-44.574999999999996" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2153" copynumber="2153">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2153_CRT" unit="cm" x="0" y="-38.624999999999993" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2154" copynumber="2154">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2154_CRT" unit="cm" x="0" y="-32.674999999999997" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2155" copynumber="2155">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2155_CRT" unit="cm" x="0" y="-26.724999999999994" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2156" copynumber="2156">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2156_CRT" unit="cm" x="0" y="-20.774999999999995" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2157" copynumber="2157">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2157_CRT" unit="cm" x="0" y="-14.824999999999996" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2158" copynumber="2158">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2158_CRT" unit="cm" x="0" y="-8.8749999999999929" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2159" copynumber="2159">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2159_CRT" unit="cm" x="0" y="-2.9249999999999972" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2160" copynumber="2160">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2160_CRT" unit="cm" x="0" y="3.0250000000000057" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2161" copynumber="2161">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2161_CRT" unit="cm" x="0" y="8.9750000000000085" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2162" copynumber="2162">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2162_CRT" unit="cm" x="0" y="14.925000000000004" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2163" copynumber="2163">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2163_CRT" unit="cm" x="0" y="20.875000000000007" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2164" copynumber="2164">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2164_CRT" unit="cm" x="0" y="26.82500000000001" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2165" copynumber="2165">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2165_CRT" unit="cm" x="0" y="32.775000000000013" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2166" copynumber="2166">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2166_CRT" unit="cm" x="0" y="38.725000000000001" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2167" copynumber="2167">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2167_CRT" unit="cm" x="0" y="44.675000000000004" z="0"/>
+                            </physvol>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray_FEB87">
+                          <materialref ref="matPolystyrene"/>
+                          <solidref ref="CRTstripBERNArray"/>
+                            <physvol name="AuxDetSensitiveCRTStrip2168" copynumber="2168">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2168_CRT" unit="cm" x="0" y="-44.574999999999996" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2169" copynumber="2169">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2169_CRT" unit="cm" x="0" y="-38.624999999999993" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2170" copynumber="2170">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2170_CRT" unit="cm" x="0" y="-32.674999999999997" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2171" copynumber="2171">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2171_CRT" unit="cm" x="0" y="-26.724999999999994" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2172" copynumber="2172">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2172_CRT" unit="cm" x="0" y="-20.774999999999995" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2173" copynumber="2173">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2173_CRT" unit="cm" x="0" y="-14.824999999999996" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2174" copynumber="2174">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2174_CRT" unit="cm" x="0" y="-8.8749999999999929" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2175" copynumber="2175">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2175_CRT" unit="cm" x="0" y="-2.9249999999999972" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2176" copynumber="2176">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2176_CRT" unit="cm" x="0" y="3.0250000000000057" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2177" copynumber="2177">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2177_CRT" unit="cm" x="0" y="8.9750000000000085" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2178" copynumber="2178">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2178_CRT" unit="cm" x="0" y="14.925000000000004" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2179" copynumber="2179">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2179_CRT" unit="cm" x="0" y="20.875000000000007" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2180" copynumber="2180">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2180_CRT" unit="cm" x="0" y="26.82500000000001" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2181" copynumber="2181">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2181_CRT" unit="cm" x="0" y="32.775000000000013" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2182" copynumber="2182">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2182_CRT" unit="cm" x="0" y="38.725000000000001" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2183" copynumber="2183">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2183_CRT" unit="cm" x="0" y="44.675000000000004" z="0"/>
+                            </physvol>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray_FEB85">
+                          <materialref ref="matPolystyrene"/>
+                          <solidref ref="CRTstripBERNArray"/>
+                            <physvol name="AuxDetSensitiveCRTStrip2184" copynumber="2184">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2184_CRT" unit="cm" x="0" y="-44.574999999999996" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2185" copynumber="2185">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2185_CRT" unit="cm" x="0" y="-38.624999999999993" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2186" copynumber="2186">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2186_CRT" unit="cm" x="0" y="-32.674999999999997" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2187" copynumber="2187">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2187_CRT" unit="cm" x="0" y="-26.724999999999994" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2188" copynumber="2188">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2188_CRT" unit="cm" x="0" y="-20.774999999999995" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2189" copynumber="2189">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2189_CRT" unit="cm" x="0" y="-14.824999999999996" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2190" copynumber="2190">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2190_CRT" unit="cm" x="0" y="-8.8749999999999929" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2191" copynumber="2191">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2191_CRT" unit="cm" x="0" y="-2.9249999999999972" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2192" copynumber="2192">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2192_CRT" unit="cm" x="0" y="3.0250000000000057" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2193" copynumber="2193">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2193_CRT" unit="cm" x="0" y="8.9750000000000085" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2194" copynumber="2194">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2194_CRT" unit="cm" x="0" y="14.925000000000004" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2195" copynumber="2195">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2195_CRT" unit="cm" x="0" y="20.875000000000007" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2196" copynumber="2196">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2196_CRT" unit="cm" x="0" y="26.82500000000001" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2197" copynumber="2197">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2197_CRT" unit="cm" x="0" y="32.775000000000013" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2198" copynumber="2198">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2198_CRT" unit="cm" x="0" y="38.725000000000001" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2199" copynumber="2199">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2199_CRT" unit="cm" x="0" y="44.675000000000004" z="0"/>
+                            </physvol>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray_FEB88">
+                          <materialref ref="matPolystyrene"/>
+                          <solidref ref="CRTstripBERNArray"/>
+                            <physvol name="AuxDetSensitiveCRTStrip2200" copynumber="2200">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2200_CRT" unit="cm" x="0" y="-44.574999999999996" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2201" copynumber="2201">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2201_CRT" unit="cm" x="0" y="-38.624999999999993" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2202" copynumber="2202">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2202_CRT" unit="cm" x="0" y="-32.674999999999997" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2203" copynumber="2203">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2203_CRT" unit="cm" x="0" y="-26.724999999999994" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2204" copynumber="2204">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2204_CRT" unit="cm" x="0" y="-20.774999999999995" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2205" copynumber="2205">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2205_CRT" unit="cm" x="0" y="-14.824999999999996" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2206" copynumber="2206">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2206_CRT" unit="cm" x="0" y="-8.8749999999999929" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2207" copynumber="2207">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2207_CRT" unit="cm" x="0" y="-2.9249999999999972" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2208" copynumber="2208">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2208_CRT" unit="cm" x="0" y="3.0250000000000057" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2209" copynumber="2209">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2209_CRT" unit="cm" x="0" y="8.9750000000000085" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2210" copynumber="2210">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2210_CRT" unit="cm" x="0" y="14.925000000000004" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2211" copynumber="2211">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2211_CRT" unit="cm" x="0" y="20.875000000000007" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2212" copynumber="2212">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2212_CRT" unit="cm" x="0" y="26.82500000000001" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2213" copynumber="2213">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2213_CRT" unit="cm" x="0" y="32.775000000000013" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2214" copynumber="2214">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2214_CRT" unit="cm" x="0" y="38.725000000000001" z="0"/>
+                            </physvol>
+                            <physvol name="AuxDetSensitiveCRTStrip2215" copynumber="2215">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="pos2215_CRT" unit="cm" x="0" y="44.675000000000004" z="0"/>
+                            </physvol>
                         </volume>
                     <volume name="CRTmoduleYCover0">
                       <materialref ref="ALUMINUM_Al"/>
