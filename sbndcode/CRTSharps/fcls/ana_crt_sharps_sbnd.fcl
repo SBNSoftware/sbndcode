@@ -26,5 +26,3 @@ physics:
 }
 
 #include "use_crt_sharps_geometry.fcl"
-
-
