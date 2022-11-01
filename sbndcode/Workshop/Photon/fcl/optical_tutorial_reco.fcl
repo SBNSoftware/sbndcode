@@ -13,7 +13,7 @@
 
 
 
-process_name: Reco1
+process_name: Reco
 
 services:
 {
@@ -60,7 +60,6 @@ physics:
   producers:
   {
     ophitpmt:      @local::sbnd_ophit_finder_pmt
-    ophitarapuca:  @local::sbnd_ophit_finder_arapuca
     opflashtpc0:   @local::SBNDSimpleFlashTPC0
     opflashtpc1:   @local::SBNDSimpleFlashTPC1
   }
@@ -80,7 +79,6 @@ physics:
   #filters reject all following items.  see lines starting physics.producers below
   reco: [
     ophitpmt,
-    ophitarapuca,
     opflashtpc0,
     opflashtpc1
   ]
