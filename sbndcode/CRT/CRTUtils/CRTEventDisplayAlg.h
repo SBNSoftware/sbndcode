@@ -88,6 +88,9 @@ namespace sbnd{
       fhicl::Atom<bool> DrawModules {
         Name("DrawModules")
       };
+      fhicl::Atom<bool> DrawStrips {
+        Name("DrawStrips")
+      };
       fhicl::Atom<bool> DrawTpc {
         Name("DrawTpc")
       };
@@ -207,6 +210,7 @@ namespace sbnd{
 
     bool fDrawTaggers;
     bool fDrawModules;
+    bool fDrawStrips;
     bool fDrawTpc;
     bool fDrawCrtData;
     bool fDrawCrtHits;

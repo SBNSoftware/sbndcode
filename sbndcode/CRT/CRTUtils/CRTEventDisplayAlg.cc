@@ -30,6 +30,7 @@ void CRTEventDisplayAlg::reconfigure(const Config& config){
 
   fDrawTaggers = config.DrawTaggers();
   fDrawModules = config.DrawModules();
+  fDrawStrips = config.DrawStrips();
   fDrawTpc = config.DrawTpc();
   fDrawCrtData = config.DrawCrtData();
   fDrawCrtHits = config.DrawCrtHits();
@@ -157,6 +158,19 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
       double rmax[3] = {module.maxX, 
                         module.maxY, 
                         module.maxZ};
+      DrawCube(c1, rmin, rmax, fTaggerColour);
+    }
+  }
+
+  // Draw individual CRT modules
+  if(fDrawStrips){
+    for(auto const &[name, strip] : fCrtGeo.GetStrips()){
+      double rmin[3] = {strip.minX, 
+                        strip.minY, 
+                        strip.minZ};
+      double rmax[3] = {strip.maxX, 
+                        strip.maxY, 
+                        strip.maxZ};
       DrawCube(c1, rmin, rmax, fTaggerColour);
     }
   }
