@@ -72,13 +72,27 @@ void Pedestals()
 	  gausFunc->SetLineWidth(5);
 	  gausFunc->Draw("same");
 
+	  TPaveText *pt = new TPaveText(.7,.78,.9,.9, "NDC");
+	  pt->AddText(Form("GeoID: %i, Channel: %i", geoID, channel));
+	  pt->AddText(Form("Mean:  %.3f", gausFunc->GetParameter("Mean")));
+	  pt->AddText(Form("Sigma: %.3f", gausFunc->GetParameter("Sigma")));
+	  pt->SetFillColor(kWhite);
+	  pt->SetLineColor(kBlack);
+	  pt->SetLineWidth(4);
+	  pt->SetTextColor(kRed+2);
+	  TText *t1 = pt->GetLineWith("GeoID");
+	  t1->SetTextColor(kBlack);
+	  pt->SetTextAlign(12);
+	  pt->Draw("same");
+
 	  if(save)
 	    {
 	      canvas->SaveAs(saveDir + "/" + run_name + "/pedestal" + boardname + "_fit.png");
-	      canvas->SaveAs(saveDir + "/" + run_name + "/pedestal" + boardname + "_fit.png");
+	      canvas->SaveAs(saveDir + "/" + run_name + "/pedestal" + boardname + "_fit.pdf");
 	    }
+	  
 	  delete canvas;
-
+	  
 	  ss << "[" << geoID * 32 + channel << ", " << gausFunc->GetParameter("Mean") 
 	     << "]," << std::endl;
 	}
