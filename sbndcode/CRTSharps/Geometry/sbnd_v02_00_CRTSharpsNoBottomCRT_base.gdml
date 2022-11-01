@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 
 <gdml_simple_extension xmlns:gdml_simple_extension="http://www.example.org"
                        xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
@@ -4261,7 +4261,7 @@
                                 </loop>
                         </volume>
                         <!-- Henry & Jiaoyang's modifications -->
-                        <volume name="volAuxDetCRTStripArray_FEB74">
+                        <volume name="volAuxDetCRTStripArray_FEB193">
                           <materialref ref="matPolystyrene"/>
                           <solidref ref="CRTstripBERNArray"/>
                           <loop for="CRT_declaring_modules" to="2167" step="1">
@@ -4271,6 +4271,7 @@
                             </physvol>
                           </loop>
                         </volume>
+
                         <volume name="volAuxDetCRTStripArray_FEB87">
                           <materialref ref="matPolystyrene"/>
                           <solidref ref="CRTstripBERNArray"/>
@@ -4298,6 +4299,47 @@
                             <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                               <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
                               <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2200)*CRTstripBERN_w" z="0"/>
+                            </physvol>
+                          </loop>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray_FEB80">
+                          <materialref ref="matPolystyrene"/>
+                          <solidref ref="CRTstripBERNArray"/>
+                          <loop for="CRT_declaring_modules" to="2231" step="1">
+                            <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2216)*CRTstripBERN_w" z="0"/>
+                            </physvol>
+                          </loop>
+                        </volume>
+
+                        <volume name="volAuxDetCRTStripArray_FEB81">
+                          <materialref ref="matPolystyrene"/>
+                          <solidref ref="CRTstripBERNArray"/>
+                          <loop for="CRT_declaring_modules" to="2247" step="1">
+                            <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2232)*CRTstripBERN_w" z="0"/>
+                            </physvol>
+                          </loop>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray_FEB89">
+                          <materialref ref="matPolystyrene"/>
+                          <solidref ref="CRTstripBERNArray"/>
+                          <loop for="CRT_declaring_modules" to="2263" step="1">
+                            <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2248)*CRTstripBERN_w" z="0"/>
+                            </physvol>
+                          </loop>
+                        </volume>
+                        <volume name="volAuxDetCRTStripArray_FEB79">
+                          <materialref ref="matPolystyrene"/>
+                          <solidref ref="CRTstripBERNArray"/>
+                          <loop for="CRT_declaring_modules" to="2279" step="1">
+                            <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                              <volumeref ref="volAuxDetSensitiveCRTStripBERN"/>
+                              <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleBERN_w/2)+(CRTmoduleBERN_b)+(CRTstripBERN_w/2)+(CRT_declaring_modules-2264)*CRTstripBERN_w" z="0"/>
                             </physvol>
                           </loop>
                         </volume>
@@ -4795,20 +4837,20 @@
         </solid>
 
 
-        <volume name="CRTmoduleBERNCover_FEB74">
+        <volume name="CRTmoduleBERNCover_FEB193">
             <materialref ref="ALUMINUM_Al"/>
             <solidref ref="CRTmoduleBERNCover"/>
         </volume>
-        <volume name="volCRTModule_FEB74">
+        <volume name="volCRTModule_FEB193">
             <materialref ref="ALUMINUM_Al"/>
             <solidref ref="CRTmoduleBERN"/>
             <physvol>
-                <volumeref ref="CRTmoduleBERNCover_FEB74"/>
-                <position name="posCRTModuleCover_FEB74" unit="cm" x="0" y="0" z="0"/>
+                <volumeref ref="CRTmoduleBERNCover_FEB193"/>
+                <position name="posCRTModuleCover_FEB193" unit="cm" x="0" y="0" z="0"/>
             </physvol>
             <physvol>
-                <volumeref ref="volAuxDetCRTStripArray_FEB74"/>
-                <position name="posvolAuxDetCRTStripArray_FEB74" unit="cm" x="0" y="0" z="0"/>
+                <volumeref ref="volAuxDetCRTStripArray_FEB193"/>
+                <position name="posvolAuxDetCRTStripArray_FEB193" unit="cm" x="0" y="0" z="0"/>
             </physvol>
         </volume>
 
@@ -4862,6 +4904,74 @@
                 <position name="posvolAuxDetCRTStripArray_FEB88" unit="cm" x="0" y="0" z="0"/>
             </physvol>
         </volume>
+
+        <volume name="CRTmoduleBERNCover_FEB80">
+            <materialref ref="ALUMINUM_Al"/>
+            <solidref ref="CRTmoduleBERNCover"/>
+        </volume>
+        <volume name="volCRTModule_FEB80">
+            <materialref ref="ALUMINUM_Al"/>
+            <solidref ref="CRTmoduleBERN"/>
+            <physvol>
+                <volumeref ref="CRTmoduleBERNCover_FEB80"/>
+                <position name="posCRTModuleCover_FEB80" unit="cm" x="0" y="0" z="0"/>
+            </physvol>
+            <physvol>
+                <volumeref ref="volAuxDetCRTStripArray_FEB80"/>
+                <position name="posvolAuxDetCRTStripArray_FEB80" unit="cm" x="0" y="0" z="0"/>
+            </physvol>
+        </volume>
+
+        <volume name="CRTmoduleBERNCover_FEB81">
+            <materialref ref="ALUMINUM_Al"/>
+            <solidref ref="CRTmoduleBERNCover"/>
+        </volume>
+        <volume name="volCRTModule_FEB81">
+            <materialref ref="ALUMINUM_Al"/>
+            <solidref ref="CRTmoduleBERN"/>
+            <physvol>
+                <volumeref ref="CRTmoduleBERNCover_FEB81"/>
+                <position name="posCRTModuleCover_FEB81" unit="cm" x="0" y="0" z="0"/>
+            </physvol>
+            <physvol>
+                <volumeref ref="volAuxDetCRTStripArray_FEB81"/>
+                <position name="posvolAuxDetCRTStripArray_FEB81" unit="cm" x="0" y="0" z="0"/>
+            </physvol>
+        </volume>
+
+        <volume name="CRTmoduleBERNCover_FEB89">
+            <materialref ref="ALUMINUM_Al"/>
+            <solidref ref="CRTmoduleBERNCover"/>
+        </volume>
+        <volume name="volCRTModule_FEB89">
+            <materialref ref="ALUMINUM_Al"/>
+            <solidref ref="CRTmoduleBERN"/>
+            <physvol>
+                <volumeref ref="CRTmoduleBERNCover_FEB89"/>
+                <position name="posCRTModuleCover_FEB89" unit="cm" x="0" y="0" z="0"/>
+            </physvol>
+            <physvol>
+                <volumeref ref="volAuxDetCRTStripArray_FEB89"/>
+                <position name="posvolAuxDetCRTStripArray_FEB89" unit="cm" x="0" y="0" z="0"/>
+            </physvol>
+        </volume>
+
+        <volume name="CRTmoduleBERNCover_FEB79">
+            <materialref ref="ALUMINUM_Al"/>
+            <solidref ref="CRTmoduleBERNCover"/>
+        </volume>
+        <volume name="volCRTModule_FEB79">
+            <materialref ref="ALUMINUM_Al"/>
+            <solidref ref="CRTmoduleBERN"/>
+            <physvol>
+                <volumeref ref="CRTmoduleBERNCover_FEB79"/>
+                <position name="posCRTModuleCover_FEB79" unit="cm" x="0" y="0" z="0"/>
+            </physvol>
+            <physvol>
+                <volumeref ref="volAuxDetCRTStripArray_FEB79"/>
+                <position name="posvolAuxDetCRTStripArray_FEB79" unit="cm" x="0" y="0" z="0"/>
+            </physvol>
+        </volume>
         
         <structure>
 
@@ -4878,8 +4988,8 @@
                             <position name="posvolCRTModule_FEB85" unit="cm" x="0" y="-(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
                         </physvol>
                         <physvol copynumber="135">
-                            <volumeref ref="volCRTModule_FEB74"/>
-                            <position name="posvolCRTModule_FEB74" unit="cm" y="0" x="-(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
+                            <volumeref ref="volCRTModule_FEB193"/>
+                            <position name="posvolCRTModule_FEB193" unit="cm" y="0" x="-(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
                             <rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="136">
@@ -4894,21 +5004,21 @@
                         <materialref ref="matAir"/>
                         <solidref ref="TESTTaggerNorth"/>
                         <physvol copynumber="137">
-                            <volumeref ref="volCRTModule_FEB88"/>
-                            <position name="posvolCRTModule_FEB88" unit="cm" x="0" y="(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
+                            <volumeref ref="volCRTModule_FEB79"/>
+                            <position name="posvolCRTModule_FEB79" unit="cm" x="0" y="(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
                         </physvol>
                         <physvol copynumber="138">
-                            <volumeref ref="volCRTModule_FEB85"/>
-                            <position name="posvolCRTModule_FEB85" unit="cm" x="0" y="-(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
+                            <volumeref ref="volCRTModule_FEB89"/>
+                            <position name="posvolCRTModule_FEB89" unit="cm" x="0" y="-(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
                         </physvol>
                         <physvol copynumber="139">
-                            <volumeref ref="volCRTModule_FEB74"/>
-                            <position name="posvolCRTModule_FEB74" unit="cm" y="0" x="-(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
+                            <volumeref ref="volCRTModule_FEB80"/>
+                            <position name="posvolCRTModule_FEB80" unit="cm" y="0" x="-(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
                             <rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="140">
-                            <volumeref ref="volCRTModule_FEB87"/>
-                            <position name="posvolCRTModule_FEB87" unit="cm" y="0" x="(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
+                            <volumeref ref="volCRTModule_FEB81"/>
+                            <position name="posvolCRTModule_FEB81" unit="cm" y="0" x="(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
                             <rotationref ref="rotateP90Z"/>
                         </physvol>   
                 </volume>
@@ -6383,11 +6493,11 @@
 					<positionref ref="postCRT_West"/>
 					<rotationref ref="rotateN90Y"/>
 			</physvol-->
-			<!--physvol>
+			<!--<physvol>
 					<volumeref ref="volTaggerBot"/>
 					<positionref ref="posCRT_Bottom"/>
 					<rotationref ref="rotateP90X180Z"/>
-			</physvol-->
+			</physvol>-->
 
             <physvol>
 					<volumeref ref="volTESTTaggerSouth"/>
