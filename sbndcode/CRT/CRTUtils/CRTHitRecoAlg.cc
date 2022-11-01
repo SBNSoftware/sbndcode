@@ -34,6 +34,11 @@ namespace sbnd{
         uint32_t mac5  = data->Mac5();
         uint32_t unixs = data->UnixS();
 
+	// Ignore events where the readout was due to a reset or where the
+	// clocks aren't in a 'good' state
+	if(data->Flags() != 3) 
+	  continue;
+
         CRTModuleGeo module    = fCRTGeoAlg.GetModule(mac5 * 32);
         std::string taggerName = module.taggerName;
 
