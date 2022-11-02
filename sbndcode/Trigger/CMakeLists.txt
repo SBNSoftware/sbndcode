@@ -25,7 +25,7 @@ art_make(
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
 
-		    sbndcode_CRT
+#		    sbndcode_CRT
 		    sbndcode_CRTUtils
                     sbnobj_Common_CRT
 		    sbnobj_SBND_CRT

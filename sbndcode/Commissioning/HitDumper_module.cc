@@ -21,6 +21,7 @@
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindMany.h"
+#include "canvas/Persistency/Common/FindManyP.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
@@ -45,7 +46,7 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
+//#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
@@ -372,7 +373,7 @@ private:
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
-  sbnd::CRTHitRecoAlg hitAlg;
+  //  sbnd::CRTHitRecoAlg hitAlg;
 
   geo::GeometryCore const* fGeometryService;
   // detinfo::ElecClock fTrigClock;
@@ -537,7 +538,7 @@ void Hitdumper::analyze(const art::Event& evt)
     uint32_t chan = striplist[i]->Channel();
 
     //    std::pair<std::string,unsigned> tagger = CRTHitRecoAlg::ChannelToTagger(chan);
-    std::pair<std::string,unsigned> tagger = hitAlg.ChannelToTagger(chan);
+    std::pair<std::string,unsigned> tagger = {"",0};//hitAlg.ChannelToTagger(chan);
     sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(tagger.first);
 
     bool keep_tagger = false;

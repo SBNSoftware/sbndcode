@@ -13,9 +13,10 @@ art_make(
                 lardata_RecoObjects
                 larpandora_LArPandoraInterface
                 nusimdata::SimulationBase
-                sbndcode_CRT
-                sbndcode_CRTData
+#                sbndcode_CRT
+#                sbndcode_CRTData
                 sbnobj_Common_CRT
+                sbnobj_SBND_CRT
                 sbndcode_CRTUtils
                 art::Framework_Core
                 ${ART_FRAMEWORK_MODULES}
