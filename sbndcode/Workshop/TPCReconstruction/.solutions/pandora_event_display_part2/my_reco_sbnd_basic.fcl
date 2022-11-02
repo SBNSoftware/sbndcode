@@ -1,9 +1,0 @@
-#include "standard_reco2_sbnd.fcl"
-
-physics.producers.pandora.ShouldRunAllHitsCosmicReco: false
-physics.producers.pandora.ShouldRunStitching: false
-physics.producers.pandora.ShouldRunCosmicHitRemoval: false
-physics.producers.pandora.ShouldRunSlicing: false
-physics.producers.pandora.ShouldRunCosmicRecoOption: false
-physics.producers.pandora.ShouldRunNeutrinoRecoOption: true
-physics.producers.pandora.ShouldPerformSliceId: false
