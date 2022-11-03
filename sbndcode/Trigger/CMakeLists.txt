@@ -21,7 +21,6 @@ art_make(
 			
 		    artdaq_core::artdaq-core_Data
                     artdaq_core::artdaq-core_Utilities
-                    artdaq_core::artdaq-core_Data_Artdaq_fragmentNameHelper
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
 
