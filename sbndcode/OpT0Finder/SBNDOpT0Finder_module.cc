@@ -110,7 +110,8 @@ private:
   double _flash_trange_end; ///< The time stop from where to stop including flashes (to be set)
 
   float _calibration_const;  /// conversion from (ADC*time ticks) to e- (to be set), given in units of (ADC*time ticks)/e-
-  float _nphoton_limit; 
+  float _charge_limit;
+  float _pitch_limit;
 
   // float _charge_to_n_photons_track; ///< The conversion factor betweeen hit integral and photons (to be set)
   // float _charge_to_n_photons_shower; ///< The conversion factor betweeen hit integral and photons (to be set)
@@ -178,7 +179,8 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _uncoated_pmts = this->GetUncoatedPTMList(_opch_to_use);
 
   _calibration_const = p.get<float>("CalibrationConst");
-  _nphoton_limit     = p.get<float>("nPhotonLimit");
+  _charge_limit      = p.get<float>("ChargeLimit");
+  _pitch_limit       = p.get<float>("PitchLimit");
 
   // _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
   // _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
@@ -571,20 +573,54 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           std::vector<art::Ptr<anab::Calorimetry>> calo_v = trk_to_calo.at(track.key());
           auto calo = calo_v[2];
           auto dEdx_v = calo->dEdx(); // assuming units in MeV/cm
-          auto dQdx_v = calo->dQdx(); // assuming units in electrons/cm, this might be?????? ADC/cm?? 
+          auto dQdx_v = calo->dQdx(); // this is in ADC/cm!!!!!!
           auto pitch_v = calo->TrkPitchVec(); // assuming units in cm 
           auto pos_v   = calo->XYZ();
+
+          // create vector of e- instead of ADC units 
+          std::vector<float> dQ_v(dQdx_v.size(),0);
+          for (size_t n_calo = 0; n_calo < dQdx_v.size(); n_calo++){
+            dQ_v[n_calo] = dQdx_v[n_calo]*pitch_v[n_calo]*(1/_calibration_const);
+          }
+
+          // remove outliers and find average pitch and dQ
+          for (size_t n_calo = 0; n_calo < calo->dEdx().size(); n_calo++){
+            if (pitch_v[n_calo] > _pitch_limit) pitch_v[n_calo] = 0.0; 
+            if (dQ_v[n_calo] > _charge_limit) dQ_v[n_calo] = 0.0;
+          }
+          // float avg_dQ = std::reduce(dQ_v.begin(), dQ_v.end()) / (dQ_v.size());
+          float avg_pitch = std::reduce(pitch_v.begin(), pitch_v.end()) / (pitch_v.size());
+          float max_dQ = _charge_limit;
+          // loop over all entries in the calo object and replace outliers with averages
           for (size_t n_calo = 0; n_calo < calo->dEdx().size(); n_calo++){
             // only select steps that are in the right TPC
             auto &position = pos_v[n_calo];
             auto x_calo = position.X();
             if ((x_calo < 0 && tpc==1 ) || (x_calo > 0 && tpc==0))
               continue;
-            auto dE = dEdx_v[n_calo] * pitch_v[n_calo];
-            auto dQ = dQdx_v[n_calo] * pitch_v[n_calo] * (1/_calibration_const);
-            // std::cout << "pitch: " << pitch_v[n_calo] << std::endl;
-            // calc number of photons
-            auto nphotons = dE/(19.5*1e-6) - dQ; // W_ph is in units of MeV 
+            // variables to fill the tree
+            float dE; 
+            float dQ;
+            float pitch; 
+            float W_ph = 19.5*1e-6; // MeV
+            // steps that do not contain an outlier: 
+            if (pitch_v[n_calo] != 0.0 && dQ_v[n_calo] != 0.0){
+              pitch = pitch_v[n_calo];
+              dQ = dQ_v[n_calo];
+              dE = dEdx_v[n_calo] * pitch_v[n_calo];
+            } 
+            // steps that do contain an outlier: 
+            else{
+              float ModBoxA = 0.93;
+              float ModBoxB = 0.305344;
+              float W_ion = 2.36016e-05;
+
+              pitch = (pitch_v[n_calo] == 0.0)? avg_pitch : pitch_v[n_calo];
+              dQ = (dQ_v[n_calo] == 0.0)? max_dQ: dQ_v[n_calo];
+              dE = (pitch/ModBoxB)*(std::exp(ModBoxB*W_ion*dQ/pitch) - ModBoxA);
+            }
+            auto nphotons = dE/W_ph - dQ;
+
             // Fill tree variables 
             _dep_slice.push_back(n_slice);
             _dep_pfpid.push_back(pfp->Self());
@@ -594,12 +630,9 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             _dep_E.push_back(dE);
             _dep_charge.push_back(dQ);
             _dep_photons.push_back(nphotons);
-            _dep_pitch.push_back(pitch_v[n_calo]);
+            _dep_pitch.push_back(pitch);
             _dep_trk.push_back(1);
 
-            // test placing an upper limit on nphotons to avoid extremely high values 
-            if (nphotons > _nphoton_limit)
-              nphotons = _nphoton_limit;
             // emplace this point into the light cluster 
             light_cluster.emplace_back(position.X(),
                                       position.Y(),
