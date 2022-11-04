@@ -1,6 +1,19 @@
 
 art_make(
-          MODULE_LIBRARIES larcorealg_Geometry
+         LIB_LIBRARIES     larsim_PhotonPropagation
+                           larsim_PhotonPropagation_PhotonVisibilityService_service
+                           larsim_LegacyLArG4
+                           larcorealg_GeoAlgo
+                           sbncode_OpT0Finder_flashmatch_Base
+                           lardataobj_Simulation
+
+          MODULE_LIBRARIES 
+                           larsim_PhotonPropagation
+                           larsim_PhotonPropagation_PhotonVisibilityService_service
+                           larsim_LegacyLArG4
+                           larcorealg_GeoAlgo
+                           sbncode_OpT0Finder_flashmatch_Base
+                           larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
                            larsim_MCCheater_BackTrackerService_service
