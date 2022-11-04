@@ -17,6 +17,7 @@
 #include "showerselectionvarsproducer.fcl"
 #include "showercosmicdistanceproducer.fcl"
 #include "sbn_pid.fcl"
+#include "particleid_sbnd.fcl"
 #include "sbn_crumbs_producer.fcl"
 
 #include "crthitconverter_producer.fcl"
@@ -77,6 +78,9 @@ physics:
 #  cosmictrack:          @local::standard_cosmictrack         #reco
 #  windowtrack:          @local::window_cosmictrack           #reco
 
+  pandoraCalo:         @local::sbnd_gnewcalomc
+  pandoraPid:          @local::sbnd_chi2pid
+
    # Includes: pandoraTrackMCS, pandoraTrackRange, rns, genieweight, fluxweight
    @table::cafmaker_common_producers
 
@@ -96,6 +100,7 @@ physics:
    pandoraShowerSelectionVars:  @local::showerSelectionVars_sbn
    pandoraShowerCosmicDist: @local::showerCosmicDist_sbn
    pandoraShowerRazzle:         @local::razzle_sbnd
+   pandoraShowerRazzleSBN:         @local::razzle_sbnd
 }
   filters:{
     flashtrigfilter: @local::pmtflashtrigfilter_sbnd
@@ -104,11 +109,13 @@ physics:
   {
 #    metadata: @local::standard_metadata            #prod
   }
- runprod: [ pandoraTrackMCS, pandoraTrackRange, pandoraShowerSelectionVars,
+ runprod: [
+            pandoraCalo, pandoraPid, pandoraTrackMCS, pandoraTrackRange, pandoraShowerSelectionVars,
             pandoraTrackCRTHit, pandoraTrackCRTTrack, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
-            cafmaker ]
+            pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraShowerRazzleSBN
+            # cafmaker
+            ]
 # makecaf: [cafmaker] #list the modules for this path, order matters, filters reject all following items
 # stream1: [metadata]
   stream1:       [ ]
@@ -119,7 +126,12 @@ physics:
 physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 
+physics.producers.pandoraTrackDazzle.MakeTree: true
+physics.producers.pandoraShowerRazzle.MakeTree: true
+physics.producers.pandoraShowerRazzle.ShowerLabel: "pandoraShower"
+physics.producers.pandoraShowerRazzleSBN.MakeTree: true
 physics.producers.cafmaker: @local::standard_cafmaker
+
 physics.producers.cafmaker.CosmicGenLabel: "corsika"
 
 # Blinding not needed for MC
@@ -131,5 +143,14 @@ physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxwei
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
+
+### Added for Rhiannon's analysis work
+physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
+physics.producers.pandoraCalo.FieldDistortion:                   false
+physics.producers.pandoraCalo.FieldDistortionEfield:             false
+physics.producers.pandoraCalo.TrackIsFieldDistortionCorrected:   false
+physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
+physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
+
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
