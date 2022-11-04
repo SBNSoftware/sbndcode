@@ -122,6 +122,9 @@ physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.cafmaker: @local::standard_cafmaker
 physics.producers.cafmaker.CosmicGenLabel: "corsika"
 
+# Blinding not needed for MC
+physics.producers.cafmaker.CreateBlindedCAF: false
+
 # Overwrite weight_functions label:
 physics.producers.genieweight.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
