@@ -54,7 +54,7 @@ private:
 
 sbnd::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   {
@@ -121,13 +121,17 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::CRTStripHitProducer::CreateStripHits(a
 	{
 	  // Access width of strip from the geometry algorithm
 	  double width = strip.width;
-	  double x     = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
+	  double pos   = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
 	  // ===== TO-DO =====
 	  // Amend the error calculation!
-	  double ex    = 2.5;
+	  double err   = 2.5;
+
+	  const std::vector<double> limits = fCRTGeoAlg.StripHit3DPos(strip.name, pos, err);
+	  TVector3 xyz((limits[0] + limits[1])/2., (limits[2] + limits[3])/2., (limits[4] + limits[5])/2.);
+	  TVector3 exyz(std::abs(limits[0] - limits[1])/2., std::abs(limits[2] - limits[3])/2., std::abs(limits[4] - limits[5])/2.);
 
 	  // Create hit
-	  stripHits.emplace_back(channel, t0, t1, unixs, x, ex, adc1, adc2);
+	  stripHits.emplace_back(channel, t0, t1, unixs, pos, err, adc1, adc2, xyz, exyz);
 	}
     }
 
