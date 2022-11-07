@@ -255,6 +255,7 @@ namespace sbnd{
 	  }
       }
 
-    c1->SaveAs("crtEventDisplay.root");
+    c1->SaveAs(Form("crtEventDisplayEvent%d.root", event.event()));
+    delete c1;
   }
 }
