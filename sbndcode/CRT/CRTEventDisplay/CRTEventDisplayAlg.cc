@@ -15,6 +15,7 @@ namespace sbnd{
   {
     fSimLabel = config.SimLabel();
     fSimDepositLabel = config.SimDepositLabel();
+    fStripHitLabel = config.StripHitLabel();
 
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
@@ -22,11 +23,13 @@ namespace sbnd{
     fDrawTpc = config.DrawTpc();
     fDrawTrueTracks = config.DrawTrueTracks();
     fDrawSimDeposits = config.DrawSimDeposits();
+    fDrawStripHits = config.DrawStripHits();
 
     fTaggerColour = config.TaggerColour();
     fTpcColour = config.TpcColour();
     fTrueTrackColour = config.TrueTrackColour();
     fSimDepositColour = config.SimDepositColour();
+    fStripHitColour = config.StripHitColour();
 
     fPrint = config.Print();
 
@@ -53,6 +56,11 @@ namespace sbnd{
   void CRTEventDisplayAlg::SetDrawSimDeposits(bool tf)
   {
     fDrawSimDeposits = tf;
+  }
+
+  void CRTEventDisplayAlg::SetDrawStripHits(bool tf)
+  {
+    fDrawStripHits = tf;
   }
 
   void CRTEventDisplayAlg::SetPrint(bool tf)
@@ -164,7 +172,7 @@ namespace sbnd{
 	crtLims[0] -= 100; crtLims[2] -= 100; crtLims[4] -= 100;
 	crtLims[1] += 100; crtLims[3] -= 100; crtLims[5] -= 100;
 
-        for(auto const& part : (*particleHandle))
+        for(auto const& part : *particleHandle)
           {
             size_t npts = part.NumberTrajectoryPoints();
             TPolyLine3D *line = new TPolyLine3D(npts);
@@ -223,10 +231,30 @@ namespace sbnd{
 			    << x << ", " << y << ", " << z << ")" << std::endl;
 		DrawCube(c1, rmin, rmax, fSimDepositColour);
 	      }
-	  }
-	
+	  }	
       }
+
+    if(fDrawStripHits)
+      {
+	auto stripHitsHandle = event.getValidHandle<std::vector<sbnd::crt::CRTStripHit>>(fStripHitLabel);
+
+	for(auto const stripHit : *stripHitsHandle)
+	  {
+	    TVector3 xyz  = stripHit.XYZ();
+	    TVector3 exyz = stripHit.XYZ_Error();
+
+	    double rmin[3] = {xyz.X() - exyz.X(), xyz.Y() - exyz.Y(), xyz.Z() - exyz.Z()};
+	    double rmax[3] = {xyz.X() + exyz.X(), xyz.Y() + exyz.Y(), xyz.Z() + exyz.Z()};
+
+	    if(fPrint)
+	      std::cout << "Strip Hit: (" 
+			<< rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
+			<< rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ")" << std::endl;
     
+	    DrawCube(c1, rmin, rmax, fStripHitColour);
+	  }
+      }
+
     c1->SaveAs("crtEventDisplay.root");
   }
 }

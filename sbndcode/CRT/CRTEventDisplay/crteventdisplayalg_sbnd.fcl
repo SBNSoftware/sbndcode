@@ -6,6 +6,7 @@ crteventdisplayalg_sbnd:
 {
    SimLabel:         "largeant"
    SimDepositLabel:  "genericcrt"
+   StripHitLabel:    "crtstrips"
 
    DrawTaggers:      true
    DrawModules:      false
@@ -13,11 +14,13 @@ crteventdisplayalg_sbnd:
    DrawTpc:          true
    DrawTrueTracks:   true
    DrawSimDeposits:  true
+   DrawStripHits:    true
 
    TaggerColour:     1
    TpcColour:        1
    TrueTrackColour:  8
    SimDepositColour: 2
+   StripHitColour:   4
 
    Print:            true
 

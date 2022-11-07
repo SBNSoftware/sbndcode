@@ -23,6 +23,9 @@
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
 
+// sbnobj
+#include "sbnobj/SBND/CRT/CRTStripHit.hh"
+
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
@@ -50,6 +53,9 @@ namespace sbnd
       fhicl::Atom<art::InputTag> SimDepositLabel {
         Name("SimDepositLabel")
           };
+      fhicl::Atom<art::InputTag> StripHitLabel {
+        Name("StripHitLabel")
+          };
 
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
@@ -69,6 +75,9 @@ namespace sbnd
       fhicl::Atom<bool> DrawSimDeposits {
         Name("DrawSimDeposits")
           };
+      fhicl::Atom<bool> DrawStripHits {
+        Name("DrawStripHits")
+          };
 
       fhicl::Atom<int> TaggerColour {
         Name("TaggerColour")
@@ -81,6 +90,9 @@ namespace sbnd
           };
       fhicl::Atom<int> SimDepositColour {
         Name("SimDepositColour")
+          };
+      fhicl::Atom<int> StripHitColour {
+        Name("StripHitColour")
           };
 
       fhicl::Atom<bool> Print {
@@ -107,6 +119,7 @@ namespace sbnd
     void SetDrawTpc(bool tf);
     void SetDrawTrueTracks(bool tf);
     void SetDrawSimDeposits(bool tf);
+    void SetDrawStripHits(bool tf);
 
     void SetPrint(bool tf);
 
@@ -121,6 +134,7 @@ namespace sbnd
     
     art::InputTag fSimLabel;
     art::InputTag fSimDepositLabel;
+    art::InputTag fStripHitLabel;
 
     bool fDrawTaggers;
     bool fDrawModules;
@@ -128,11 +142,13 @@ namespace sbnd
     bool fDrawTpc;
     bool fDrawTrueTracks;
     bool fDrawSimDeposits;
+    bool fDrawStripHits;
 
     int fTaggerColour;
     int fTpcColour;
     int fTrueTrackColour;
     int fSimDepositColour;
+    int fStripHitColour;
 
     bool fPrint;
 
