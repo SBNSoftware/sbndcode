@@ -1,0 +1,52 @@
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+# --- modules
+#include "singles_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: SingleGen
+
+# --- configure the services used by the modules
+services:
+{
+	@table::sbnd_simulation_services
+	TFileService: { fileName: "my_test_root.root" }
+}
+
+# --- start each new event with an empty event
+source:
+{
+	module_type: EmptyEvent
+	timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+	maxEvents: 10
+	firstRun: 1
+	firstEvent: 1
+}
+
+# --- define and configure some modules to do work on each event
+physics:
+{
+	producers: 
+	{
+		rns: { module_type: "RandomNumberSaver" }
+		generator: @local::sbnd_singlep
+	}
+	simulate: [ rns, generator ]
+	stream1: [ out1 ]
+	trigger_paths: [ simulate ]
+	end_paths: [ stream1 ]
+}
+
+# --- block to define where the output goes
+outputs:
+{
+	out1:
+	{
+		@table::sbnd_rootoutput
+		fileName: "prodsingle_sbnd_%p-%tc.root"
+	}
+}
+
+# --- override single parameters to reflect our needs
+

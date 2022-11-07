@@ -1,0 +1,79 @@
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+# --- modules
+#include "singles_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: SingleGen
+
+# --- configure the services used by the modules
+services:
+{
+	@table::sbnd_simulation_services
+	TFileService: { fileName: "my_test_root.root" }
+}
+
+# --- start each new event with an empty event
+source:
+{
+	module_type: EmptyEvent
+	timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+	maxEvents: 10
+	firstRun: 1
+	firstEvent: 1
+}
+
+# --- define and configure some modules to do work on each event
+physics:
+{
+	producers: 
+	{
+		rns: { module_type: "RandomNumberSaver" }
+		generator: @local::sbnd_singlep
+	}
+	simulate: [ rns, generator ]
+	stream1: [ out1 ]
+	trigger_paths: [ simulate ]
+	end_paths: [ stream1 ]
+}
+
+# --- block to define where the output goes
+outputs:
+{
+	out1:
+	{
+		@table::sbnd_rootoutput
+		fileName: "prodsingle_sbnd_%p-%tc.root"
+	}
+}
+
+# --- override single parameters to reflect our needs
+
+# Particles http://pdg.lbl.gov/2007/reviews/montecarlorpp.pdf
+physics.producers.generator.PDG:              [ 13 , 2212 ]           # muon and proton
+# Momentum
+physics.producers.generator.P0:               [ 0.7 , 0.8 ]           # momentum GeV/c
+physics.producers.generator.SigmaP:           [ 0.0 , 0.0 ]           # momentum variation
+physics.producers.generator.PDist:            0                       # 0 = flat, 1 = gaussian
+# Vertex position
+physics.producers.generator.X0:               [ -100.0 , -100.0 ]     # cm
+physics.producers.generator.Y0:               [ 0.0 , 0.0 ]           # cm
+physics.producers.generator.Z0:               [ 150.0 , 150.0 ]       # cm
+physics.producers.generator.SigmaX:           [ 0.0, 0.0 ]            # cm
+physics.producers.generator.SigmaY:           [ 0.0, 0.0 ]            # cm
+physics.producers.generator.SigmaZ:           [ 0.0, 0.0 ]            # cm
+physics.producers.generator.PosDist:          0                       # 0 = uniform, 1 = gaussian
+physics.producers.generator.SingleVertex:     true                    # all particles from the same vertex
+# Time relative to start of "beam" (t=0)
+physics.producers.generator.T0:               [ 100.0 , 100.0 ]       # microsecond
+physics.producers.generator.SigmaT:           [ 0.0 , 0.0 ]           # microsecond
+physics.producers.generator.TDist:            0                       # 0 = uniform, 1 = gaussian
+# Angles
+physics.producers.generator.Theta0XZ:         [ -10.0 , 35.0 ]        # degrees
+physics.producers.generator.Theta0YZ:         [ 0.0 , 10.0 ]          # degrees
+physics.producers.generator.SigmaThetaXZ:     [ 0.0, 0.0 ]            # degrees
+physics.producers.generator.SigmaThetaYZ:     [ 0.0, 0.0 ]            # degrees
+physics.producers.generator.AngleDist:        0                       # 0 = uniform, 1 = gaussian
+
+
