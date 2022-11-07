@@ -168,9 +168,10 @@ namespace sbnd{
         if(fPrint) std::cout<<"\nTrue tracks in event:\n";
         
         auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimLabel);
+
         std::vector<double> crtLims = fCrtGeo.CRTLimits();
-	crtLims[0] -= 100; crtLims[2] -= 100; crtLims[4] -= 100;
-	crtLims[1] += 100; crtLims[3] -= 100; crtLims[5] -= 100;
+	crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
+	crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
 
         for(auto const& part : *particleHandle)
           {
@@ -202,7 +203,7 @@ namespace sbnd{
             line->SetLineWidth(fLineWidth);
             line->Draw();
           
-            if(fPrint) std::cout<<"->True ID: "<<part.TrackId()<<", start = ("<<start.X()<<", "<<start.Y()<<", "
+            if(fPrint) std::cout<<"->True ID: "<<part.TrackId()<<", traj points: "<<npts<<", start = ("<<start.X()<<", "<<start.Y()<<", "
                                 <<start.Z()<<"), end = ("<<end.X()<<", "<<end.Y()<<", "<<end.Z()<<")\n";
           }
       }
@@ -228,7 +229,7 @@ namespace sbnd{
 
 		if(fPrint)
 		  std::cout << "Sim Energy Deposit: (" 
-			    << x << ", " << y << ", " << z << ")" << std::endl;
+			    << x << ", " << y << ", " << z << ") by trackID: " << ide.trackID << std::endl;
 		DrawCube(c1, rmin, rmax, fSimDepositColour);
 	      }
 	  }	
@@ -240,16 +241,15 @@ namespace sbnd{
 
 	for(auto const stripHit : *stripHitsHandle)
 	  {
-	    TVector3 xyz  = stripHit.XYZ();
-	    TVector3 exyz = stripHit.XYZ_Error();
+	    CRTStripGeo strip = fCrtGeo.GetStrip(stripHit.Channel());
 
-	    double rmin[3] = {xyz.X() - exyz.X(), xyz.Y() - exyz.Y(), xyz.Z() - exyz.Z()};
-	    double rmax[3] = {xyz.X() + exyz.X(), xyz.Y() + exyz.Y(), xyz.Z() + exyz.Z()};
+	    double rmin[3] = {strip.minX, strip.minY, strip.minZ};
+	    double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
 
 	    if(fPrint)
 	      std::cout << "Strip Hit: (" 
 			<< rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
-			<< rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ")" << std::endl;
+			<< rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << stripHit.Ts1() << std::endl;
     
 	    DrawCube(c1, rmin, rmax, fStripHitColour);
 	  }
