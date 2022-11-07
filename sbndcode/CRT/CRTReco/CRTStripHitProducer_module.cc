@@ -95,6 +95,10 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::CRTStripHitProducer::CreateStripHits(a
   uint32_t mac5  = data->Mac5();
   uint32_t unixs = data->UnixS();
 
+  // Only consider "real data" readouts, not clock resets etc
+  if(data->Flags() != 3)
+    return stripHits;
+  
   CRTModuleGeo module    = fCRTGeoAlg.GetModule(mac5 * 32);
 
   // Correct for FEB readout cable length
@@ -126,12 +130,8 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::CRTStripHitProducer::CreateStripHits(a
 	  // Amend the error calculation!
 	  double err   = 2.5;
 
-	  const std::vector<double> limits = fCRTGeoAlg.StripHit3DPos(strip.name, pos, err);
-	  TVector3 xyz((limits[0] + limits[1])/2., (limits[2] + limits[3])/2., (limits[4] + limits[5])/2.);
-	  TVector3 exyz(std::abs(limits[0] - limits[1])/2., std::abs(limits[2] - limits[3])/2., std::abs(limits[4] - limits[5])/2.);
-
 	  // Create hit
-	  stripHits.emplace_back(channel, t0, t1, unixs, pos, err, adc1, adc2, xyz, exyz);
+	  stripHits.emplace_back(channel, t0, t1, unixs, pos, err, adc1, adc2);
 	}
     }
 
