@@ -1,0 +1,27 @@
+#include "crtsimmodules_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crteventdisplayalg_sbnd:
+{
+   SimLabel:         "largeant"
+   SimDepositLabel:  "genericcrt"
+
+   DrawTaggers:      true
+   DrawModules:      false
+   DrawStrips:       false
+   DrawTpc:          true
+   DrawTrueTracks:   true
+   DrawSimDeposits:  true
+
+   TaggerColour:     1
+   TpcColour:        1
+   TrueTrackColour:  8
+   SimDepositColour: 2
+
+   Print:            true
+
+   LineWidth:        2.
+}
+
+END_PROLOG
