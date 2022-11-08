@@ -66,7 +66,7 @@ physics.producers.generator.SigmaZ:           [ 0.0, 0.0 ]            # cm
 physics.producers.generator.PosDist:          0                       # 0 = uniform, 1 = gaussian
 physics.producers.generator.SingleVertex:     true                    # all particles from the same vertex
 # Time relative to start of "beam" (t=0)
-physics.producers.generator.T0:               [ 100.0 , 100.0 ]       # microsecond
+physics.producers.generator.T0:               [ 1600 , 1600 ]         # nanoseconds
 physics.producers.generator.SigmaT:           [ 0.0 , 0.0 ]           # microsecond
 physics.producers.generator.TDist:            0                       # 0 = uniform, 1 = gaussian
 # Angles
