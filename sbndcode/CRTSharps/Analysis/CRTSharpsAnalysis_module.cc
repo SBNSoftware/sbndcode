@@ -91,6 +91,7 @@ private:
 
 CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
 {
   fFEBDataModuleLabel = p.get<std::string>("FEBDataLabel", "importdata");
   fCRTHitModuleLabel  = p.get<std::string>("CRTHitLabel", "crthit");
@@ -137,6 +138,14 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
 		    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
 		    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
 		    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
+	}
+
+      std::cout << std::endl;
+
+      for(auto const &[name, sipm] : fCRTGeoAlg.GetSiPMs())
+	{
+	  std::cout << "SiPM:  " << sipm.channel << " (" << sipm.channel/32 << " - " << sipm.channel%32 << ")" << '\n'
+		    << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
 	}
     }
 }
