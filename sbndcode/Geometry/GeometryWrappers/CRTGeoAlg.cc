@@ -172,6 +172,11 @@ namespace sbnd{
     return fStrips.size();
   }
 
+  size_t CRTGeoAlg::NumSiPMs() const
+  {
+    return fSiPMs.size();
+  }
+
   std::map<std::string, CRTTaggerGeo> CRTGeoAlg::GetTaggers() const
   {
     return fTaggers;
@@ -185,6 +190,11 @@ namespace sbnd{
   std::map<std::string, CRTStripGeo> CRTGeoAlg::GetStrips() const
   {
     return fStrips;
+  }
+
+  std::map<uint16_t, CRTSiPMGeo> CRTGeoAlg::GetSiPMs() const
+  {
+    return fSiPMs;
   }
 
   CRTTaggerGeo CRTGeoAlg::GetTagger(const std::string taggerName) const
