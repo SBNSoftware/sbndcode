@@ -1,5 +1,5 @@
 
-art_make(
+set (
           MODULE_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
@@ -22,21 +22,24 @@ art_make(
                            art::Persistency_Provenance canvas
                            art::Utilities canvas
                            messagefacility::MF_MessageLogger
-                           
                            fhiclcpp::fhiclcpp
                            ROOT::Geom
                            ROOT::XMLIO
                            ROOT::Gdml
-                           ${ROOT_BASIC_LIB_LIST}
-                           ${ROOT_SPECTRUM}
-                           ${ROOT_ROOFIT}
-                           ${ROOT_ROOFITCORE} 
+                           ROOT::Core
+                           ROOT::Spectrum
+                           ROOT::RooFit
+                           ROOT::RooFitCore 
                            sbndcode_RecoUtils
                            sbndcode_CRT
-                           sbnobj_Common_CRT
+                           sbnobj::Common_CRT
                            sbndcode_CRTUtils
                            sbndcode_GeoWrappers
-        )
+        ) 
+
+cet_build_plugin(CRTT0Matching art::module SOURCE CRTT0Matching_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(CRTTrackMatching art::module SOURCE CRTTrackMatching_module.cc LIBRARIES ${MODULE_LIBRARIES})
+
 
 install_headers()
 install_fhicl()

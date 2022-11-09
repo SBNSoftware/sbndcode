@@ -1,17 +1,19 @@
-art_make(    LIBRARY_NAME sbndcode_GeoWrappers
-             LIB_LIBRARIES larcorealg_Geometry
-                           larcore_Geometry_Geometry_service
-                           larsim_Simulation lardataobj_Simulation
-                           larsim_MCCheater_BackTrackerService_service
-                           larsim_MCCheater_ParticleInventoryService_service
-                           lardata_Utilities
-                           larevt_Filters
-                           lardataobj_RawData
-                           lardataobj_RecoBase
-                           lardata_RecoObjects  
-                           larpandora_LArPandoraInterface
+art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
+                SOURCE CRTGeoAlg.cc  TPCGeoAlg.cc
+             LIBRARIES     larcorealg::Geometry
+                           larcore::Geometry_Geometry_service
+                           larsim::Simulation lardataobj_Simulation
+                           larsim::MCCheater_BackTrackerService_service
+                           larsim::MCCheater_ParticleInventoryService_service
+                           lardata::Utilities
+                           larevt::Filters
+                           lardataobj::RawData
+                           lardataobj::RecoBase
+                           lardata::RecoObjects  
+                           larpandora::LArPandoraInterface
                            nusimdata::SimulationBase
-                           cetlib::cetlib cetlib_except
+                           cetlib::cetlib
+                           cetlib_except::cetlib_except
                            art::Framework_Core
                            art::Framework_Principal
                            art::Framework_Services_Registry
@@ -21,14 +23,12 @@ art_make(    LIBRARY_NAME sbndcode_GeoWrappers
                            art::Persistency_Provenance canvas
                            art::Utilities canvas
                            messagefacility::MF_MessageLogger
-                           
                            fhiclcpp::fhiclcpp
                            ROOT::Geom
                            ROOT::XMLIO
                            ROOT::Gdml
-                           ${ROOT_BASIC_LIB_LIST}
-                           
-        )
+                           ROOT::Core
+        ) 
 
 install_headers()
 install_source()

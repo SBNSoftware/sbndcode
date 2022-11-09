@@ -1,5 +1,14 @@
-art_make(    LIBRARY_NAME sbndcode_CRTUtils
-             LIB_LIBRARIES larcorealg_Geometry
+art_make_library(    LIBRARY_NAME sbndcode_CRTUtils
+                   SOURCE
+                           CRTBackTracker.cc
+                           CRTCommonUtils.cc
+                           CRTEventDisplay.cc
+                           CRTHitRecoAlg.cc
+                           CRTT0MatchAlg.cc
+                           CRTTrackMatchAlg.cc
+                           CRTTrackRecoAlg.cc
+                           TPCGeoUtil.cc
+                 LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
                            larsim_MCCheater_BackTrackerService_service
@@ -22,19 +31,17 @@ art_make(    LIBRARY_NAME sbndcode_CRTUtils
                            art::Persistency_Provenance canvas
                            art::Utilities canvas
                            messagefacility::MF_MessageLogger
-                           
                            fhiclcpp::fhiclcpp
                            ROOT::Geom
                            ROOT::XMLIO
                            ROOT::Gdml
-                           ${ROOT_BASIC_LIB_LIST}
-                           
+                           ROOT::Core
                            sbndcode_CRT
-                           sbnobj_Common_CRT
-                           sbnobj_SBND_CRT
+                           sbnobj::Common_CRT
+                           sbnobj::SBND_CRT
                            sbndcode_GeoWrappers
                            sbndcode_RecoUtils
-        )
+        ) 
 
 install_headers()
 install_fhicl()

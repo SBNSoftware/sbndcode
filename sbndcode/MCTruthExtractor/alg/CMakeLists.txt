@@ -1,11 +1,10 @@
-include_directories ( $ENV{GENIE_INC}/GENIE )
-
-art_make(
-            LIB_LIBRARIES
-            larcore_Geometry_Geometry_service
-            larcorealg_Geometry
+art_make_library( SOURCE NuAnaAlg.cxx
+            LIBRARIES
+            larcore::Geometry_Geometry_service
+            larcorealg::Geometry
             nugen::NuReweight_art
             nugen::NuReweight
+            nugen::EventGeneratorBase_GENIE
             nusimdata::SimulationBase
             art::Framework_Core
             art::Framework_Principal
@@ -16,13 +15,11 @@ art_make(
             art::Utilities
             canvas::canvas
             messagefacility::MF_MessageLogger
-
             fhiclcpp::fhiclcpp
             cetlib::cetlib cetlib_except
             CLHEP::CLHEP
-            
-            ${ROOT_BASIC_LIB_LIST}
-          )
+            ROOT::Core
+          ) 
 
 install_headers()
 

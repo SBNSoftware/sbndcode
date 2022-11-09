@@ -1,30 +1,28 @@
-simple_plugin(SpaceChargeTest "module"
-                           larcore_Geometry_Geometry_service
-                           lardata_Utilities
-                           larevt_Filters
-                           lardataobj_RawData
-                           lardataobj_RecoBase
-                           lardata_RecoObjects  
-                           larpandora_LArPandoraInterface
+cet_build_plugin(SpaceChargeTest art::module SOURCE SpaceChargeTest_module.cc LIBRARIES
+                           larcore::Geometry_Geometry_service
+                           lardata::Utilities
+                           larevt::Filters
+                           lardataobj::RawData
+                           lardataobj::RecoBase
+                           lardata::RecoObjects
+                           larpandora::LArPandoraInterface
                            nusimdata::SimulationBase
                            art::Framework_Core
                            art::Framework_Principal
                            art::Framework_Services_Registry
-                           art_root_io::tfile_support ROOT::Core
+                           art_root_io::tfile_support
                            art_root_io::TFileService_service
-                           art::Persistency_Common canvas
-                           art::Persistency_Provenance canvas
-                           art::Utilities canvas
+                           art::Persistency_Common
+                           art::Persistency_Provenance
                            messagefacility::MF_MessageLogger
-                           
                            fhiclcpp::fhiclcpp
+                           ROOT::Core
                            ROOT::Geom
                            ROOT::XMLIO
                            ROOT::Gdml
-                           ${ROOT_BASIC_LIB_LIST}
                            sbndcode_RecoUtils
 			   sbndcode_SpaceCharge
-        )
+        ) 
 
 install_headers()
 install_fhicl()

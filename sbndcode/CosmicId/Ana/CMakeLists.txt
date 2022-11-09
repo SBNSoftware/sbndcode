@@ -1,5 +1,5 @@
 
-art_make(
+set(
           MODULE_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
                            larsim_Simulation lardataobj_Simulation
@@ -20,25 +20,31 @@ art_make(
                            art_root_io::TFileService_service
                            art::Persistency_Common canvas
                            art::Persistency_Provenance canvas
-                           art::Utilities canvas
+                           art::Utilities
+                           canvas::canvas
                            messagefacility::MF_MessageLogger
-                           
                            fhiclcpp::fhiclcpp
                            ROOT::Geom
                            ROOT::XMLIO
                            ROOT::Gdml
-                           ${ROOT_BASIC_LIB_LIST}
-                           ${ROOT_SPECTRUM}
-                           ${ROOT_ROOFIT}
-                           ${ROOT_ROOFITCORE} 
+                           ROOT::Core
+                           ROOT:Spectrum
+                           ROOT:RooFit
+                           ROOT:RooFitCore
                            sbndcode_RecoUtils
                            sbndcode_CRT
                            sbndcode_CRTUtils
                            sbndcode_GeoWrappers
                            sbndcode_CosmicIdAlgs
                            sbndcode_CosmicIdUtils
-                           larreco_RecoAlg
+                           larreco::RecoAlg
         )
+
+cet_build_plugin(CosmicIdAna art::module SOURCE CosmicIdAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(CosmicIdTree art::module SOURCE CosmicIdTree_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(CRTHitCosmicIdAna art::module SOURCE CRTHitCosmicIdAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(CRTTrackCosmicIdAna art::module SOURCE CRTTrackCosmicIdAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(StoppingCosmicIdAna art::module SOURCE StoppingCosmicIdAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
