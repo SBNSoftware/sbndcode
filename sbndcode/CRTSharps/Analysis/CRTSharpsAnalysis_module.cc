@@ -72,6 +72,9 @@ private:
   std::vector<double>                _chit_x;
   std::vector<double>                _chit_y;
   std::vector<double>                _chit_z;
+  std::vector<double>                _chit_ex;
+  std::vector<double>                _chit_ey;
+  std::vector<double>                _chit_ez;
   std::vector<double>                _chit_t0;
   std::vector<double>                _chit_t1;
   std::vector<double>                _chit_t1_diff;
@@ -82,6 +85,7 @@ private:
   std::vector<double>                _chit_h2_t1;
   std::vector<double>                _chit_pes;
   std::vector<int>                   _chit_plane;
+  std::vector<std::vector<uint16_t>> _chit_sipm_raw_adc;
   std::vector<std::vector<uint16_t>> _chit_sipm_adc;
   std::vector<std::vector<uint16_t>> _chit_sipm_corr_adc;
   std::vector<std::vector<uint16_t>> _chit_sipm_channel_id;
@@ -115,6 +119,9 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("chit_x", "std::vector<double>", &_chit_x);
   fTree->Branch("chit_y", "std::vector<double>", &_chit_y);
   fTree->Branch("chit_z", "std::vector<double>", &_chit_z);
+  fTree->Branch("chit_ex", "std::vector<double>", &_chit_ex);
+  fTree->Branch("chit_ey", "std::vector<double>", &_chit_ey);
+  fTree->Branch("chit_ez", "std::vector<double>", &_chit_ez);
   fTree->Branch("chit_t0", "std::vector<double>", &_chit_t0);
   fTree->Branch("chit_t1", "std::vector<double>", &_chit_t1);
   fTree->Branch("chit_t1_diff", "std::vector<double>", &_chit_t1_diff);
@@ -125,6 +132,7 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("chit_h2_t1", "std::vector<double>", &_chit_h2_t1);
   fTree->Branch("chit_pes", "std::vector<double>", &_chit_pes);
   fTree->Branch("chit_plane", "std::vector<int>", &_chit_plane);
+  fTree->Branch("chit_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_raw_adc);
   fTree->Branch("chit_sipm_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_adc);
   fTree->Branch("chit_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_corr_adc);
   fTree->Branch("chit_sipm_channel_id", "std::vector<std::vector<uint16_t> >", &_chit_sipm_channel_id);
@@ -226,6 +234,9 @@ void CRTSharpsAnalysis::AnalyseCRTHits(std::vector<art::Ptr<sbn::crt::CRTHit>> &
   _chit_x.resize(nCRTHits);
   _chit_y.resize(nCRTHits);
   _chit_z.resize(nCRTHits);
+  _chit_ex.resize(nCRTHits);
+  _chit_ey.resize(nCRTHits);
+  _chit_ez.resize(nCRTHits);
   _chit_t0.resize(nCRTHits);
   _chit_t1.resize(nCRTHits);
   _chit_t1_diff.resize(nCRTHits);
@@ -236,6 +247,7 @@ void CRTSharpsAnalysis::AnalyseCRTHits(std::vector<art::Ptr<sbn::crt::CRTHit>> &
   _chit_h2_t1.resize(nCRTHits);
   _chit_pes.resize(nCRTHits);
   _chit_plane.resize(nCRTHits);
+  _chit_sipm_raw_adc.resize(nCRTHits);
   _chit_sipm_adc.resize(nCRTHits);
   _chit_sipm_corr_adc.resize(nCRTHits);
   _chit_sipm_channel_id.resize(nCRTHits);
@@ -248,6 +260,9 @@ void CRTSharpsAnalysis::AnalyseCRTHits(std::vector<art::Ptr<sbn::crt::CRTHit>> &
       _chit_x[i]       = hit->x_pos;
       _chit_y[i]       = hit->y_pos;
       _chit_z[i]       = hit->z_pos;
+      _chit_ex[i]      = hit->x_err;
+      _chit_ey[i]      = hit->y_err;
+      _chit_ez[i]      = hit->z_err;
       _chit_t0[i]      = hit->ts0_ns;
       _chit_t1[i]      = hit->ts1_ns;
       _chit_t1_diff[i] = hit->ts0_ns_corr; // the variable name in the object is old and is just a placeholder for diff, don't worry!
@@ -259,13 +274,16 @@ void CRTSharpsAnalysis::AnalyseCRTHits(std::vector<art::Ptr<sbn::crt::CRTHit>> &
       else
 	_chit_plane[i] = 1; // downstream
       
+      _chit_sipm_raw_adc[i].resize(4);
       _chit_sipm_adc[i].resize(4);
       _chit_sipm_corr_adc[i].resize(4);
-      const std::array<uint16_t, 4> adcs      = hit->raw_adcs;
-      const std::array<uint16_t, 4> corr_adcs = hit->adcs;
+      const std::array<uint16_t, 4> raw_adcs  = hit->raw_adcs;
+      const std::array<uint16_t, 4> adcs      = hit->adcs;
+      const std::array<uint16_t, 4> corr_adcs = hit->corr_adcs;
 
       for(unsigned adc_i = 0; adc_i < 4; ++adc_i)
 	{
+	  _chit_sipm_raw_adc[i][adc_i]      = raw_adcs[adc_i];
 	  _chit_sipm_adc[i][adc_i]      = adcs[adc_i];
 	  _chit_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
 	}
