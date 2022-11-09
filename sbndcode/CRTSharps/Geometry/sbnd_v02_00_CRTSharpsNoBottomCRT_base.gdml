@@ -4981,20 +4981,20 @@
                         <solidref ref="TESTTaggerSouth"/>
                         <physvol copynumber="133">
                             <volumeref ref="volCRTModule_FEB88"/>
-                            <position name="posvolCRTModule_FEB88" unit="cm" x="0" y="(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
+                            <position name="posvolCRTModule_FEB88" unit="cm" x="0" y="(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
                         </physvol>
                         <physvol copynumber="134">
                             <volumeref ref="volCRTModule_FEB85"/>
-                            <position name="posvolCRTModule_FEB85" unit="cm" x="0" y="-(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
+                            <position name="posvolCRTModule_FEB85" unit="cm" x="0" y="-(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
                         </physvol>
                         <physvol copynumber="135">
                             <volumeref ref="volCRTModule_FEB193"/>
-                            <position name="posvolCRTModule_FEB193" unit="cm" y="0" x="-(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
+                            <position name="posvolCRTModule_FEB193" unit="cm" y="0" x="-(CRTmoduleBERN_w)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
                             <rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="136">
                             <volumeref ref="volCRTModule_FEB87"/>
-                            <position name="posvolCRTModule_FEB87" unit="cm" y="0" x="(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
+                            <position name="posvolCRTModule_FEB87" unit="cm" y="0" x="(CRTmoduleBERN_w)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
                             <rotationref ref="rotateP90Z"/>
                         </physvol>                        
                 </volume>
@@ -5005,20 +5005,20 @@
                         <solidref ref="TESTTaggerNorth"/>
                         <physvol copynumber="137">
                             <volumeref ref="volCRTModule_FEB79"/>
-                            <position name="posvolCRTModule_FEB79" unit="cm" x="0" y="(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
+                            <position name="posvolCRTModule_FEB79" unit="cm" x="0" y="(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
                         </physvol>
                         <physvol copynumber="138">
                             <volumeref ref="volCRTModule_FEB89"/>
-                            <position name="posvolCRTModule_FEB89" unit="cm" x="0" y="-(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
+                            <position name="posvolCRTModule_FEB89" unit="cm" x="0" y="-(CRTmoduleBERN_w+2.75*_in_/10.)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
                         </physvol>
                         <physvol copynumber="139">
                             <volumeref ref="volCRTModule_FEB80"/>
-                            <position name="posvolCRTModule_FEB80" unit="cm" y="0" x="-(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
+                            <position name="posvolCRTModule_FEB80" unit="cm" y="0" x="-(CRTmoduleBERN_w)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
                             <rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="140">
                             <volumeref ref="volCRTModule_FEB81"/>
-                            <position name="posvolCRTModule_FEB81" unit="cm" y="0" x="(CRTmoduleBERN_w)/2.0" z="+(CRTmoduleBERN_t/2.0)"/>
+                            <position name="posvolCRTModule_FEB81" unit="cm" y="0" x="(CRTmoduleBERN_w)/2.0" z="-(CRTmoduleBERN_t/2.0)"/>
                             <rotationref ref="rotateP90Z"/>
                         </physvol>   
                 </volume>
