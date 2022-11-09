@@ -38,7 +38,7 @@ namespace sbnd{
 
   struct CRTSiPMGeo{
     CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const double location[3], 
-               const uint32_t _pedestal)
+               const uint16_t _pedestal)
     {
       stripName = _stripName;
       channel   = _channel;
@@ -54,7 +54,7 @@ namespace sbnd{
     double      y;
     double      z;
     bool        null;
-    uint32_t    pedestal;
+    uint16_t    pedestal;
   };
 
   // CRT strip geometry struct contains dimensions and mother module
