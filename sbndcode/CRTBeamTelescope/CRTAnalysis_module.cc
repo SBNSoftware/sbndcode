@@ -184,12 +184,28 @@ private:
   std::vector<double> _ct_length; ///< CRT track length
   std::vector<double> _ct_tof; ///< CRT track time of flight
   std::vector<double> _ct_true_tof;  ///< CRT track time of flight, true
-  std::vector<double> _ct_x1; ///< CRT track x1
-  std::vector<double> _ct_y1; ///< CRT track y1
-  std::vector<double> _ct_z1; ///< CRT track z1
-  std::vector<double> _ct_x2; ///< CRT track x2
-  std::vector<double> _ct_y2; ///< CRT track y2
-  std::vector<double> _ct_z2; ///< CRT track z2
+  std::vector<double> _ct_hit1_x; ///< CRT track x position of hit 1
+  std::vector<double> _ct_hit1_y; ///< CRT track y position of hit 1
+  std::vector<double> _ct_hit1_z; ///< CRT track z position of hit 1
+  std::vector<double> _ct_hit2_x; ///< CRT track x position of hit 2
+  std::vector<double> _ct_hit2_y; ///< CRT track y position of hit 2
+  std::vector<double> _ct_hit2_z; ///< CRT track z position of hit 2
+  std::vector<double> _ct_hit1_ex; ///< CRT track x position error of hit 1
+  std::vector<double> _ct_hit1_ey; ///< CRT track y position error of hit 1
+  std::vector<double> _ct_hit1_ez; ///< CRT track z position error of hit 1
+  std::vector<double> _ct_hit2_ex; ///< CRT track x position error of hit 2
+  std::vector<double> _ct_hit2_ey; ///< CRT track y position error of hit 2
+  std::vector<double> _ct_hit2_ez; ///< CRT track z position error of hit 2
+  std::vector<double> _ct_hit1_t0; ///< CRT track t0 of hit 1
+  std::vector<double> _ct_hit1_t1; ///< CRT track t1 of hit 1
+  std::vector<double> _ct_hit2_t0; ///< CRT track t0 of hit 2
+  std::vector<double> _ct_hit2_t1; ///< CRT track t1 of hit 2
+  std::vector<std::vector<uint16_t> > _ct_hit1_sipm_raw_adc; ///< CRT track, 4 ADC values from hit 1 before corrections are made or pedestals subtracted
+  std::vector<std::vector<uint16_t> > _ct_hit1_sipm_adc; ///< CRT track, 4 ADC values from hit 1 before corrections are made (but with pedestals subtracted)
+  std::vector<std::vector<uint16_t> > _ct_hit1_sipm_corr_adc; ///< CRT track, 4 ADC values from hit 1
+  std::vector<std::vector<uint16_t> > _ct_hit2_sipm_raw_adc; ///< CRT track, 4 ADC values from hit 2 before corrections are made or pedestals subtracted
+  std::vector<std::vector<uint16_t> > _ct_hit2_sipm_adc; ///< CRT track, 4 ADC values from hit 2 before corrections are made (but with pedestals subtracted)
+  std::vector<std::vector<uint16_t> > _ct_hit2_sipm_corr_adc; ///< CRT track, 4 ADC values from hit 2
 
   std::vector<uint16_t> _feb_mac5; ///< FEBData Mac5 ID
   std::vector<uint16_t> _feb_flags; ///< FEBData Flags
@@ -347,12 +363,28 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("ct_length", "std::vector<double>", &_ct_length);
   _tree->Branch("ct_tof", "std::vector<double>", &_ct_tof);
   if(!_data_mode) _tree->Branch("ct_true_tof", "std::vector<double>", &_ct_true_tof);
-  _tree->Branch("ct_x1", "std::vector<double>", &_ct_x1);
-  _tree->Branch("ct_y1", "std::vector<double>", &_ct_y1);
-  _tree->Branch("ct_z1", "std::vector<double>", &_ct_z1);
-  _tree->Branch("ct_x2", "std::vector<double>", &_ct_x2);
-  _tree->Branch("ct_y2", "std::vector<double>", &_ct_y2);
-  _tree->Branch("ct_z2", "std::vector<double>", &_ct_z2);
+  _tree->Branch("ct_hit1_x", "std::vector<double>", &_ct_hit1_x);
+  _tree->Branch("ct_hit1_y", "std::vector<double>", &_ct_hit1_y);
+  _tree->Branch("ct_hit1_z", "std::vector<double>", &_ct_hit1_z);
+  _tree->Branch("ct_hit2_x", "std::vector<double>", &_ct_hit2_x);
+  _tree->Branch("ct_hit2_y", "std::vector<double>", &_ct_hit2_y);
+  _tree->Branch("ct_hit2_z", "std::vector<double>", &_ct_hit2_z);
+  _tree->Branch("ct_hit1_ex", "std::vector<double>", &_ct_hit1_ex);
+  _tree->Branch("ct_hit1_ey", "std::vector<double>", &_ct_hit1_ey);
+  _tree->Branch("ct_hit1_ez", "std::vector<double>", &_ct_hit1_ez);
+  _tree->Branch("ct_hit2_ex", "std::vector<double>", &_ct_hit2_ex);
+  _tree->Branch("ct_hit2_ey", "std::vector<double>", &_ct_hit2_ey);
+  _tree->Branch("ct_hit2_ez", "std::vector<double>", &_ct_hit2_ez);
+  _tree->Branch("ct_hit1_t0", "std::vector<double>", &_ct_hit1_t0);
+  _tree->Branch("ct_hit1_t1", "std::vector<double>", &_ct_hit1_t1);
+  _tree->Branch("ct_hit2_t0", "std::vector<double>", &_ct_hit2_t0);
+  _tree->Branch("ct_hit2_t1", "std::vector<double>", &_ct_hit2_t1);
+  _tree->Branch("ct_hit1_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_raw_adc);
+  _tree->Branch("ct_hit1_sipm_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_adc);
+  _tree->Branch("ct_hit1_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_corr_adc);
+  _tree->Branch("ct_hit2_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_raw_adc);
+  _tree->Branch("ct_hit2_sipm_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_adc);
+  _tree->Branch("ct_hit2_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_corr_adc);
 
   _tree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
   _tree->Branch("feb_flags", "std::vector<uint16_t>", &_feb_flags);
@@ -1178,19 +1210,33 @@ void CRTAnalysis::analyze(art::Event const& e)
   //
   size_t n_tracks = crt_track_v.size();
 
-  //std::cout<<crt_track_v.size()<<std::endl;
-
   _ct_pes.resize(n_tracks);
   _ct_time.resize(n_tracks);
   _ct_length.resize(n_tracks);
   _ct_tof.resize(n_tracks);
   _ct_true_tof.resize(n_tracks);
-  _ct_x1.resize(n_tracks);
-  _ct_y1.resize(n_tracks);
-  _ct_z1.resize(n_tracks);
-  _ct_x2.resize(n_tracks);
-  _ct_y2.resize(n_tracks);
-  _ct_z2.resize(n_tracks);
+  _ct_hit1_x.resize(n_tracks);
+  _ct_hit1_y.resize(n_tracks);
+  _ct_hit1_z.resize(n_tracks);
+  _ct_hit2_x.resize(n_tracks);
+  _ct_hit2_y.resize(n_tracks);
+  _ct_hit2_z.resize(n_tracks);
+  _ct_hit1_x.resize(n_tracks);
+  _ct_hit1_y.resize(n_tracks);
+  _ct_hit1_z.resize(n_tracks);
+  _ct_hit2_x.resize(n_tracks);
+  _ct_hit2_y.resize(n_tracks);
+  _ct_hit2_z.resize(n_tracks);
+  _ct_hit1_t0.resize(n_tracks);
+  _ct_hit1_t1.resize(n_tracks);
+  _ct_hit2_t0.resize(n_tracks);
+  _ct_hit2_t1.resize(n_tracks);
+  _ct_hit1_sipm_raw_adc.resize(n_tracks);
+  _ct_hit1_sipm_adc.resize(n_tracks);
+  _ct_hit1_sipm_corr_adc.resize(n_tracks);
+  _ct_hit2_sipm_raw_adc.resize(n_tracks);
+  _ct_hit2_sipm_adc.resize(n_tracks);
+  _ct_hit2_sipm_corr_adc.resize(n_tracks);
 
   for (size_t i = 0; i < n_tracks; ++i){
 
@@ -1200,37 +1246,70 @@ void CRTAnalysis::analyze(art::Event const& e)
     _ct_time[i] = track->ts1_ns;
     _ct_length[i] = track->length;
     _ct_tof[i] = track->ts0_ns_h2 - track->ts0_ns_h1;
-    _ct_x1[i] = track->x1_pos;
-    _ct_y1[i] = track->y1_pos;
-    _ct_z1[i] = track->z1_pos;
-    _ct_x2[i] = track->x2_pos;
-    _ct_y2[i] = track->y2_pos;
-    _ct_z2[i] = track->z2_pos;
-    if (_debug) std::cout << "CRT track, z1 = " << _ct_z1[i] << ", z2 = " << _ct_z2[i] << ", ts0_ns_h1 = " << track->ts0_ns_h1 << ", ts0_ns_h2 = " << track->ts0_ns_h2 << ", tof = " << _ct_tof[i] << std::endl;
+    _ct_hit1_x[i] = track->x1_pos;
+    _ct_hit1_y[i] = track->y1_pos;
+    _ct_hit1_z[i] = track->z1_pos;
+    _ct_hit2_x[i] = track->x2_pos;
+    _ct_hit2_y[i] = track->y2_pos;
+    _ct_hit2_z[i] = track->z2_pos;
+    _ct_hit1_ex[i] = track->x1_err;
+    _ct_hit1_ey[i] = track->y1_err;
+    _ct_hit1_ez[i] = track->z1_err;
+    _ct_hit2_ex[i] = track->x2_err;
+    _ct_hit2_ey[i] = track->y2_err;
+    _ct_hit2_ez[i] = track->z2_err;
+
+    if (_debug) std::cout << "CRT track, z1 = " << _ct_hit1_z[i] << ", z2 = " << _ct_hit2_z[i] << ", ts0_ns_h1 = " << track->ts0_ns_h1 << ", ts0_ns_h2 = " << track->ts0_ns_h2 << ", tof = " << _ct_tof[i] << std::endl;
+    _ct_hit1_sipm_raw_adc[i].resize(4);
+    _ct_hit1_sipm_adc[i].resize(4);
+    _ct_hit1_sipm_corr_adc[i].resize(4);
+    _ct_hit2_sipm_raw_adc[i].resize(4);
+    _ct_hit2_sipm_adc[i].resize(4);
+    _ct_hit2_sipm_corr_adc[i].resize(4);
 
     if(!_data_mode) {
-      // From the hit, get the associated CRTData,
-      // then the associated AuxDetIDE, so we can
-      // retrieve the truth info
+
       _ct_true_tof[i] = 0;
-      // 1. Get the hits
       auto hit_v = crt_track_to_hit.at(track.key());
-      assert(hit_v.size == 2); // 2 hits per track
-      for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++) {
-        /*      auto hit = hit_v[i_hit];
-        float hit_time = 0;
-        size_t n_ides = 0;
-          auto ide_v = feb_data_to_ides->at(crt_.key());
-          for (auto ide : ide_v) {
-            hit_time += 0.5 * (ide->entryT + ide->exitT);
-            n_ides++;
-          }
+      assert(hit_v.size == 2);
+
+      for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++)
+	{
+	  auto hit = hit_v[i_hit];
+	  
+	  if(i_hit == 0)
+	    {
+	      _ct_hit1_t0[i] = hit->ts0_ns;
+	      _ct_hit1_t1[i] = hit->ts1_ns;
+
+	      const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+	      const std::array<uint16_t,4> adcs      = hit->adcs;
+	      const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
+
+	      for(uint adc_i = 0; adc_i < 4; ++adc_i)
+		{
+		  _ct_hit1_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
+		  _ct_hit1_sipm_adc[i][adc_i]      = adcs[adc_i];
+		  _ct_hit1_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+		}
+	    }
+	  else if(i_hit == 1)
+	    {
+	      _ct_hit2_t0[i] = hit->ts0_ns;
+	      _ct_hit2_t1[i] = hit->ts1_ns;
+
+	      const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+	      const std::array<uint16_t,4> adcs      = hit->adcs;
+	      const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
+
+	      for(uint adc_i = 0; adc_i < 4; ++adc_i)
+		{
+		  _ct_hit2_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
+		  _ct_hit2_sipm_adc[i][adc_i]      = adcs[adc_i];
+		  _ct_hit2_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+		}
+	    }
         }
-        hit_time /= n_ides;
-        if (i_hit == 0) _ct_true_tof[i] -= hit_time;
-        if (i_hit == 1) _ct_true_tof[i] += hit_time;
-        */
-      }
     }
   }
 
