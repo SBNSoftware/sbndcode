@@ -127,6 +127,9 @@ private:
   std::vector<double> _chit_x; ///< CRT hit x
   std::vector<double> _chit_y; ///< CRT hit y
   std::vector<double> _chit_z; ///< CRT hit z
+  std::vector<double> _chit_ex; ///< CRT hit error on x
+  std::vector<double> _chit_ey; ///< CRT hit error on y
+  std::vector<double> _chit_ez; ///< CRT hit error on z
   std::vector<double> _chit_t0; ///< CRT hit t0
   std::vector<double> _chit_t1; ///< CRT hit t1
   std::vector<double> _chit_t1_diff; ///< CRT hit difference between the two 1D hit t1s
@@ -155,8 +158,9 @@ private:
   // std::vector<std::vector<double> > _chit_true_mcp_endy; ///< CRT hit contributing MCP's end point Y
   // std::vector<std::vector<double> > _chit_true_mcp_endz; ///< CRT hit contributing MCP's end point Z
   // std::vector<std::vector<int> > _chit_true_mcp_isprimary; ///< CRT hit contributing MCP's, true if primary
-  std::vector<std::vector<uint16_t> > _chit_sipm_raw_adc; ///< The 4 contributing ADC values to this CRTHit before corrections are made (but after pedestal subtraction)
-  std::vector<std::vector<uint16_t> > _chit_sipm_adc; ///< The 4 contributing ADC values to this CRTHit
+  std::vector<std::vector<uint16_t> > _chit_sipm_raw_adc; ///< The 4 contributing ADC values to this CRTHit before corrections are made or pedestals subtracted
+  std::vector<std::vector<uint16_t> > _chit_sipm_adc; ///< The 4 contributing ADC values to this CRTHit before corrections are made (but after pedestal subtraction)
+  std::vector<std::vector<uint16_t> > _chit_sipm_corr_adc; ///< The 4 contributing ADC values to this CRTHit
   std::vector<std::vector<uint16_t> > _chit_sipm_channel_id; ///< The IDs of the four SiPMs that were used to make this CRTHit
   std::vector<std::vector<uint16_t> > _chit_sipm_feb_mac5; ///< The IDs of the two FEBs that were used in the making of this hit.
 
@@ -300,6 +304,9 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("chit_x", "std::vector<double>", &_chit_x);
   _tree->Branch("chit_y", "std::vector<double>", &_chit_y);
   _tree->Branch("chit_z", "std::vector<double>", &_chit_z);
+  _tree->Branch("chit_ex", "std::vector<double>", &_chit_ex);
+  _tree->Branch("chit_ey", "std::vector<double>", &_chit_ey);
+  _tree->Branch("chit_ez", "std::vector<double>", &_chit_ez);
   _tree->Branch("chit_t0", "std::vector<double>", &_chit_t0);
   _tree->Branch("chit_t1", "std::vector<double>", &_chit_t1);
   _tree->Branch("chit_t1_diff", "std::vector<double>", &_chit_t1_diff);
@@ -333,6 +340,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   }
   _tree->Branch("chit_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_raw_adc);
   _tree->Branch("chit_sipm_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_adc);
+  _tree->Branch("chit_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_corr_adc);
   _tree->Branch("chit_sipm_channel_id", "std::vector<std::vector<uint16_t> >", &_chit_sipm_channel_id);
   _tree->Branch("chit_sipm_feb_mac5", "std::vector<std::vector<uint16_t> >", &_chit_sipm_feb_mac5);
 
@@ -696,6 +704,9 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_x.resize(n_hits);
   _chit_y.resize(n_hits);
   _chit_z.resize(n_hits);
+  _chit_ex.resize(n_hits);
+  _chit_ey.resize(n_hits);
+  _chit_ez.resize(n_hits);
   _chit_t0.resize(n_hits);
   _chit_t1.resize(n_hits);
   _chit_t1_diff.resize(n_hits);
@@ -728,6 +739,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   // _chit_true_mcp_isprimary.resize(n_hits);
   _chit_sipm_raw_adc.resize(n_hits);
   _chit_sipm_adc.resize(n_hits);
+  _chit_sipm_corr_adc.resize(n_hits);
   _chit_sipm_channel_id.resize(n_hits);
   _chit_sipm_feb_mac5.resize(n_hits);
 
@@ -738,6 +750,9 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_x[i] = hit->x_pos;
     _chit_y[i] = hit->y_pos;
     _chit_z[i] = hit->z_pos;
+    _chit_ex[i] = hit->x_err;
+    _chit_ey[i] = hit->y_err;
+    _chit_ez[i] = hit->z_err;
     _chit_t0[i] = hit->ts0_ns;
     _chit_t1[i] = hit->ts1_ns;
     _chit_t1_diff[i] = hit->ts0_ns_corr;   // the variable name in the object is old and is just a placeholder for diff, don't worry!
@@ -752,14 +767,17 @@ void CRTAnalysis::analyze(art::Event const& e)
 
     _chit_sipm_raw_adc[i].resize(4);
     _chit_sipm_adc[i].resize(4);
-    const std::array<uint16_t,4> raw_adcs = hit->raw_adcs;
-    const std::array<uint16_t,4> adcs     = hit->adcs;
+    _chit_sipm_corr_adc[i].resize(4);
+    const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+    const std::array<uint16_t,4> adcs      = hit->adcs;
+    const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
     for(uint adc_i = 0; adc_i < 4; ++adc_i)
-    {
-      _chit_sipm_raw_adc[i][adc_i] = raw_adcs[adc_i];
-      _chit_sipm_adc[i][adc_i]     = adcs[adc_i];
-    }
+      {
+        _chit_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
+        _chit_sipm_adc[i][adc_i]      = adcs[adc_i];
+        _chit_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+      }
 
     auto feb_datas = crt_hit_to_feb_data.at(hit.key());
     if(feb_datas.size() != 2) std::cout << "ERROR: CRTHit associated to " << feb_datas.size() << " FEBDatas" << std::endl;
