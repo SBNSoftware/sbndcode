@@ -129,11 +129,15 @@ namespace sbnd{
       {
         const CRTStripHit hit0   = hitsOrien0[i];
         const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(hit0.channel);
+        const CRTSiPMGeo  hit0sipm0 = fCRTGeoAlg.GetSiPM(strip0.channel0);
+        const CRTSiPMGeo  hit0sipm1 = fCRTGeoAlg.GetSiPM(strip0.channel1);
 
         for(unsigned j = 0; j < hitsOrien1.size(); ++j)
           {
             const CRTStripHit hit1     = hitsOrien1[j];
             const CRTStripGeo strip1 = fCRTGeoAlg.GetStrip(hit1.channel);
+            const CRTSiPMGeo  hit1sipm0 = fCRTGeoAlg.GetSiPM(strip1.channel0);
+            const CRTSiPMGeo  hit1sipm1 = fCRTGeoAlg.GetSiPM(strip1.channel1);
 
             // Check whether the two strips responsible for these hits overlap.
             if(!fCRTGeoAlg.CheckOverlap(strip0, strip1))
@@ -152,6 +156,11 @@ namespace sbnd{
 
             // Just perform the correction to the ADC values, no PE reconstruction
             const std::array<uint16_t, 4> adc = {hit0.adc1, hit0.adc2, hit1.adc1, hit1.adc2};
+            const uint16_t raw_adc0 = hit0.adc1 + hit0sipm0.pedestal;
+            const uint16_t raw_adc1 = hit0.adc2 + hit0sipm1.pedestal;
+            const uint16_t raw_adc2 = hit1.adc1 + hit1sipm0.pedestal;
+            const uint16_t raw_adc3 = hit1.adc2 + hit1sipm1.pedestal;
+            const std::array<uint16_t, 4> raw_adc = {raw_adc0, raw_adc1, raw_adc2, raw_adc3};
             std::array<uint16_t, 4> corr_adc  = {0, 0, 0, 0};
             CorrectADC(pos, hit0, hit1, corr_adc);
 
@@ -179,6 +188,7 @@ namespace sbnd{
                                     tagger,
                                     hit0.channel,
                                     hit1.channel,
+                                    raw_adc,
                                     adc,
                                     corr_adc);
 
