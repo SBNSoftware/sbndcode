@@ -869,12 +869,12 @@ void CRTAnalysis::analyze(art::Event const& e)
   _ct_hit2_x.resize(n_tracks);
   _ct_hit2_y.resize(n_tracks);
   _ct_hit2_z.resize(n_tracks);
-  _ct_hit1_x.resize(n_tracks);
-  _ct_hit1_y.resize(n_tracks);
-  _ct_hit1_z.resize(n_tracks);
-  _ct_hit2_x.resize(n_tracks);
-  _ct_hit2_y.resize(n_tracks);
-  _ct_hit2_z.resize(n_tracks);
+  _ct_hit1_ex.resize(n_tracks);
+  _ct_hit1_ey.resize(n_tracks);
+  _ct_hit1_ez.resize(n_tracks);
+  _ct_hit2_ex.resize(n_tracks);
+  _ct_hit2_ey.resize(n_tracks);
+  _ct_hit2_ez.resize(n_tracks);
   _ct_hit1_t0.resize(n_tracks);
   _ct_hit1_t1.resize(n_tracks);
   _ct_hit2_t0.resize(n_tracks);
@@ -915,52 +915,49 @@ void CRTAnalysis::analyze(art::Event const& e)
     _ct_hit2_sipm_adc[i].resize(4);
     _ct_hit2_sipm_corr_adc[i].resize(4);
 
-    if(!_data_mode) {
+    _ct_true_tof[i] = 0;
+   
+    auto hit_v = crt_track_to_hit.at(track.key());
+    assert(hit_v.size == 2);
 
-      _ct_true_tof[i] = 0;
-      auto hit_v = crt_track_to_hit.at(track.key());
-      assert(hit_v.size == 2);
-
-      for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++)
-	{
-	  auto hit = hit_v[i_hit];
+    for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++)
+      {
+	auto hit = hit_v[i_hit];
 	  
-	  if(i_hit == 0)
-	    {
-	      _ct_hit1_t0[i] = hit->ts0_ns;
-	      _ct_hit1_t1[i] = hit->ts1_ns;
+	if(i_hit == 0)
+	  {
+	    _ct_hit1_t0[i] = hit->ts0_ns;
+	    _ct_hit1_t1[i] = hit->ts1_ns;
 
-	      const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
-	      const std::array<uint16_t,4> adcs      = hit->adcs;
-	      const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
+	    const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+	    const std::array<uint16_t,4> adcs      = hit->adcs;
+	    const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
-	      for(uint adc_i = 0; adc_i < 4; ++adc_i)
-		{
-		  _ct_hit1_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-		  _ct_hit1_sipm_adc[i][adc_i]      = adcs[adc_i];
-		  _ct_hit1_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
-		}
-	    }
-	  else if(i_hit == 1)
-	    {
-	      _ct_hit2_t0[i] = hit->ts0_ns;
-	      _ct_hit2_t1[i] = hit->ts1_ns;
+	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
+	      {
+		_ct_hit1_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
+		_ct_hit1_sipm_adc[i][adc_i]      = adcs[adc_i];
+		_ct_hit1_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+	      }
+	  }
+	else if(i_hit == 1)
+	  {
+	    _ct_hit2_t0[i] = hit->ts0_ns;
+	    _ct_hit2_t1[i] = hit->ts1_ns;
 
-	      const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
-	      const std::array<uint16_t,4> adcs      = hit->adcs;
-	      const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
+	    const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+	    const std::array<uint16_t,4> adcs      = hit->adcs;
+	    const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
-	      for(uint adc_i = 0; adc_i < 4; ++adc_i)
-		{
-		  _ct_hit2_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-		  _ct_hit2_sipm_adc[i][adc_i]      = adcs[adc_i];
-		  _ct_hit2_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
-		}
-	    }
-        }
-    }
+	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
+	      {
+		_ct_hit2_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
+		_ct_hit2_sipm_adc[i][adc_i]      = adcs[adc_i];
+		_ct_hit2_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+	      }
+	  }
+      }
   }
-
 
   //
   // Fill the FEBData objects in the tree
