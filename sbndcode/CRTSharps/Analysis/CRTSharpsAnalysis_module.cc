@@ -2,7 +2,7 @@
 // Class:       CRTSharpsAnalysis
 // Plugin Type: analyzer
 // File:        CRTSharpsAnalysis_module.cc
-// Author:      Henry Lay (h.lay@lancaster.ac.uk
+// Author:      Henry Lay (h.lay@lancaster.ac.uk)
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -146,6 +146,16 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
 		    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
 		    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
 		    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
+	}
+
+      std::cout << std::endl;
+
+      for(auto const &[name, module] : fCRTGeoAlg.GetModules())
+	{
+	  std::cout << "Module:  " << module.name << '\n'
+		    << "X - Min: " << module.minX << " Max: " << module.maxX << '\n'
+		    << "Y - Min: " << module.minY << " Max: " << module.maxY << '\n'
+		    << "Z - Min: " << module.minZ << " Max: " << module.maxZ << '\n' << std::endl;
 	}
 
       std::cout << std::endl;
