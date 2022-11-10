@@ -134,7 +134,7 @@ namespace sbnd{
 
         for(unsigned j = 0; j < hitsOrien1.size(); ++j)
           {
-            const CRTStripHit hit1     = hitsOrien1[j];
+            const CRTStripHit hit1   = hitsOrien1[j];
             const CRTStripGeo strip1 = fCRTGeoAlg.GetStrip(hit1.channel);
             const CRTSiPMGeo  hit1sipm0 = fCRTGeoAlg.GetSiPM(strip1.channel0);
             const CRTSiPMGeo  hit1sipm1 = fCRTGeoAlg.GetSiPM(strip1.channel1);
@@ -215,7 +215,7 @@ namespace sbnd{
     const std::vector<double> hit0pos = fCRTGeoAlg.StripHit3DPos(strip0.name, hit0.x, hit0.ex);
     const std::vector<double> hit1pos = fCRTGeoAlg.StripHit3DPos(strip1.name, hit1.x, hit1.ex);
 
-    std::vector<double> overlap({std::max(hit0pos[0], hit1pos[1]),
+    std::vector<double> overlap({std::max(hit0pos[0], hit1pos[0]),
                                  std::min(hit0pos[1], hit1pos[1]),
                                  std::max(hit0pos[2], hit1pos[2]),
                                  std::min(hit0pos[3], hit1pos[3]),
