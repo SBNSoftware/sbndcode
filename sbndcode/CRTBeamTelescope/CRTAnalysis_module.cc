@@ -248,8 +248,8 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     _tree->Branch("nu_vtx_y", &_nu_vtx_y, "nu_vtx_y/F");
     _tree->Branch("nu_vtx_z", &_nu_vtx_z, "nu_vtx_z/F");
     _tree->Branch("nu_px", &_nu_px, "nu_px/F");
-    _tree->Branch("nu_py", &_nu_py, "nu_px/F");
-    _tree->Branch("nu_pz", &_nu_pz, "nu_px/F");
+    _tree->Branch("nu_py", &_nu_py, "nu_py/F");
+    _tree->Branch("nu_pz", &_nu_pz, "nu_pz/F");
 
     _tree->Branch("mct_sp_pdg", &_mct_sp_pdg, "mct_sp_pdg/F");
     _tree->Branch("mct_sp_e", &_mct_sp_e, "mct_sp_e/F");
@@ -557,7 +557,7 @@ void CRTAnalysis::analyze(art::Event const& e)
     // Thus the if-condiction is no longer hold.
     //else if (mct->Origin() == simb::kSingleParticle) {
     else {
-      assert(mct->NParticles() <= 3); // die if mct->NPartickes() != 1
+      assert(mct->NParticles() <= 3); // die if mct->NPartickes() > 3
       auto particle = mct->GetParticle(0);
       _mct_sp_pdg = particle.PdgCode();
       _mct_sp_e = particle.E();
@@ -673,17 +673,17 @@ void CRTAnalysis::analyze(art::Event const& e)
 
 
       if (_debug) {
-        std::cout << "MCP " << _mcp_pdg[counter] << ", trackID = " << _mcp_trackid[counter]
+        std::cout << counter << ", " << i << "MCP " << _mcp_pdg[counter] << ", trackID = " << _mcp_trackid[counter]
                   << ", p = " << particle->P()
-                  << "(" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
+                  << ", (" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
                   << ", process = "
                   << particle->Process() << ": start point = ("
                   << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter]
                   << ") - start process: " << particle->Process()
-                  << " --- end point = (" << std::endl;
+                  << " --- end point = (" 
+                  << _mcp_endx[counter] << ", " << _mcp_endy[counter] << ", " << _mcp_endz[counter] << "); "<< std::endl;
       }
       counter++;
-
     }
   }
 
