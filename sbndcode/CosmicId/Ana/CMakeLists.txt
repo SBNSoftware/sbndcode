@@ -1,25 +1,26 @@
 
 set(
-          MODULE_LIBRARIES larcorealg_Geometry
-                           larcore_Geometry_Geometry_service
-                           larsim_Simulation lardataobj_Simulation
-                           larsim_MCCheater_BackTrackerService_service
-                           larsim_MCCheater_ParticleInventoryService_service
-                           lardata_Utilities
-                           larevt_Filters
-                           lardataobj_RawData
-                           lardataobj_RecoBase
-                           lardataobj_AnalysisBase
-                           lardata_RecoObjects
-                           larpandora_LArPandoraInterface
+          MODULE_LIBRARIES larcorealg::Geometry
+                           larcore::Geometry_Geometry_service
+                           larsim::Simulation
+                           lardataobj::Simulation
+                           larsim::MCCheater_BackTrackerService_service
+                           larsim::MCCheater_ParticleInventoryService_service
+                           lardata::Utilities
+                           larevt::Filters
+                           lardataobj::RawData
+                           lardataobj::RecoBase
+                           lardataobj::AnalysisBase
+                           lardata::RecoObjects
+                           larpandora::LArPandoraInterface
                            nusimdata::SimulationBase
                            art::Framework_Core
                            art::Framework_Principal
                            art::Framework_Services_Registry
-                           art_root_io::tfile_support ROOT::Core
+                           art_root_io::tfile_support
                            art_root_io::TFileService_service
-                           art::Persistency_Common canvas
-                           art::Persistency_Provenance canvas
+                           art::Persistency_Common
+                           art::Persistency_Provenance
                            art::Utilities
                            canvas::canvas
                            messagefacility::MF_MessageLogger
@@ -28,9 +29,9 @@ set(
                            ROOT::XMLIO
                            ROOT::Gdml
                            ROOT::Core
-                           ROOT:Spectrum
-                           ROOT:RooFit
-                           ROOT:RooFitCore
+                           ROOT::Spectrum
+                           ROOT::RooFit
+                           ROOT::RooFitCore
                            sbndcode_RecoUtils
                            sbndcode_CRT
                            sbndcode_CRTUtils

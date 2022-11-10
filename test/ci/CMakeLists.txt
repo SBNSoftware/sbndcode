@@ -51,4 +51,4 @@ install_scripts(AS_TEST)
 
 install_fhicl()
 
-install(FILES fcl_file_checks.list DESTINATION "${product}/${version}/test")
+install(FILES fcl_file_checks.list DESTINATION "${sbndcode_UPS_PRODUCT_NAME}/${sbndcode_UPS_PRODUCT_VERSION}/test")

@@ -2,7 +2,8 @@
 set(
           MODULE_LIBRARIES larcorealg::Geometry
                            larcore::Geometry_Geometry_service
-                           larsim::Simulation lardataobj_Simulation
+                           larsim::Simulation
+                           lardataobj::Simulation
                            larsim::MCCheater_BackTrackerService_service
                            larsim::MCCheater_ParticleInventoryService_service
                            lardata::Utilities
@@ -18,8 +19,8 @@ set(
                            art::Framework_Services_Registry
                            art_root_io::tfile_support ROOT::Core
                            art_root_io::TFileService_service
-                           art::Persistency_Common canvas
-                           art::Persistency_Provenance canvas
+                           art::Persistency_Common
+                           art::Persistency_Provenance
                            art::Utilities
                            canvas::canvas
                            messagefacility::MF_MessageLogger
@@ -28,6 +29,7 @@ set(
                            ROOT::XMLIO
                            ROOT::Gdml
                            ROOT::Core
+                           ROOT::Tree
                            ROOT::Spectrum
                            ROOT::RooFit
                            ROOT::RooFitCore
@@ -36,7 +38,7 @@ set(
                            sbnobj::Common_CRT
                            sbndcode_CRTUtils
                            sbndcode_GeoWrappers
-        ) 
+        )
 
 cet_build_plugin(CRTDetSimAna art::module SOURCE CRTDetSimAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(CRTFullRecoAna art::module SOURCE CRTFullRecoAna_module.cc LIBRARIES ${MODULE_LIBRARIES})

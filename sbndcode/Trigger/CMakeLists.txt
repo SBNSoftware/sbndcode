@@ -28,7 +28,7 @@ set(
                     canvas::canvas
                     messagefacility::MF_MessageLogger
                     fhiclcpp::fhiclcpp
-                    cetlib::cetlib cetlib_except
+                    cetlib::cetlib
                     CLHEP::CLHEP
                     ROOT::Core
 ) 

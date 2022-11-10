@@ -8,7 +8,7 @@ set(
         lardata::Utilities
         lardataobj::RecoBase
         larsim::Simulation
-        lardataobj_Simulation
+        lardataobj::Simulation
         nusimdata::SimulationBase
         canvas::canvas
         cetlib::cetlib
@@ -16,7 +16,7 @@ set(
         art::Framework_Core
         art::Framework_Principal
         art::Framework_Services_Registry
-        art_root_io::tfile_support ROOT::Core
+        art_root_io::tfile_support
         art_root_io::TFileService_service
         art::Persistency_Common
         art::Persistency_Provenance
@@ -27,6 +27,7 @@ set(
         ROOT::XMLIO
         ROOT::Gdml
         ROOT::Core
+        ROOT::Tree
 ) 
 
 cet_build_plugin(SBNDFlashAna art::module SOURCE SBNDFlashAna_module.cc LIBRARIES ${MODULE_LIBRARIES})

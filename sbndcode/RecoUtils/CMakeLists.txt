@@ -2,7 +2,8 @@ art_make_library(
                     SOURCE  RecoUtils.cc
                  LIBRARIES larcorealg::Geometry
                            larcore::Geometry_Geometry_service
-                           larsim::Simulation lardataobj_Simulation
+                           larsim::Simulation
+                           lardataobj::Simulation
                            larsim::MCCheater_BackTrackerService_service
                            larsim::MCCheater_ParticleInventoryService_service
                            lardata::Utilities

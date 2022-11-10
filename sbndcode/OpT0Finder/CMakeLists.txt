@@ -1,7 +1,7 @@
 set(
     MODULE_LIBRARIES
-        sbncode_OpT0Finder_flashmatch_Base
-        sbncode_OpT0Finder_flashmatch_Algorithms
+        sbncode::OpT0Finder_flashmatch_Base
+        sbncode::OpT0Finder_flashmatch_Algorithms
         # sbndcode_OpDetReco_OpFlash_FlashFinder
         sbndcode_OpDetSim
         sbndcode::Geometry
@@ -31,6 +31,7 @@ set(
         ROOT::XMLIO
         ROOT::Gdml
         ROOT::Core
+        ROOT::Tree
 ) 
 
 cet_build_plugin(SBNDOpT0FinderAna art::module SOURCE SBNDOpT0FinderAna_module.cc LIBRARIES ${MODULE_LIBRARIES})

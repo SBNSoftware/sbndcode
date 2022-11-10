@@ -15,6 +15,7 @@ cet_build_plugin( SBNDGeometryHelper art::service
           LIBRARIES
                         sbndcode::Geometry
                         larcorealg::Geometry
+                        larcore::Geometry_Geometry_service
                         art::Framework_Services_Registry
                         canvas::canvas
                         fhiclcpp::fhiclcpp

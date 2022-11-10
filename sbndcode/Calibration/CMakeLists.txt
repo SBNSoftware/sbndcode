@@ -19,7 +19,8 @@ set (MODULE_LIBRARIES
                         ROOT::Core
                         ROOT::Tree
                         fhiclcpp::fhiclcpp
-                        cetlib::cetlib cetlib_except
+                        cetlib::cetlib
+                        cetlib_except::cetlib_except
                         ROOT::Geom
                         ROOT::XMLIO
                         ROOT::Gdml
@@ -41,7 +42,8 @@ set (TOOL_LIBRARIES
                         messagefacility::MF_MessageLogger
                         ROOT::Core
                         fhiclcpp::fhiclcpp
-                        cetlib::cetlib cetlib_except
+                        cetlib::cetlib
+                        cetlib_except::cetlib_except
                         ROOT::Geom
                         ROOT::XMLIO
                         ROOT::Gdml

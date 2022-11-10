@@ -1,8 +1,9 @@
-art_make_library(     NAME sbndcode_CosmicIdUtils
+art_make_library(LIBRARY_NAME sbndcode_CosmicIdUtils
                     SOURCE CosmicIdUtils.cc
                  LIBRARIES larcorealg::Geometry
                            larcore::Geometry_Geometry_service
-                           larsim::Simulation lardataobj_Simulation
+                           larsim::Simulation
+                           lardataobj::Simulation
                            larsim::MCCheater_BackTrackerService_service
                            larsim::MCCheater_ParticleInventoryService_service
                            lardata::Utilities

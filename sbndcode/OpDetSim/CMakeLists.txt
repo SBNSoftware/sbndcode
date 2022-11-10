@@ -10,15 +10,14 @@ cet_build_plugin( sbndPDMapAlg art::tool
                     # lardataobj::RecoBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora::LArPandoraInterface
+                    sbncode::OpDet_PDMapAlgSimple_tool
                     sbndcode_Utilities_SignalShapingServiceSBND_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
-                    cetlib_except::cetlib_except
                     messagefacility::MF_MessageLogger
                     fhiclcpp::fhiclcpp
                     cetlib::cetlib
-                    cetlib_except::cetlib_except
                     CLHEP::CLHEP
                     ROOT::Core
 )
@@ -31,21 +30,20 @@ art_make_library( SOURCE
                     opDetSBNDTriggerAlg.cc
                   LIBRARIES
                     sbndcode_OpDetSim_sbndPDMapAlg_tool
-                    larcore_Geometry_Geometry_service
-                    lardataobj_Simulation
-                    lardata_Utilities
-                    lardataobj_RawData
-                    # lardataobj_RecoBase
-                    lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
-                    larpandora_LArPandoraInterface
-                    sbndcode_Utilities_SignalShapingServiceSBND_service
+                    larcore::Geometry_Geometry_service
+                    lardataobj::Simulation
+                    lardata::Utilities
+                    lardataobj::RawData
+                    # lardataobj::RecoBase
+                    lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
+                    larpandora::LArPandoraInterface
+                    sbndcode::Utilities_SignalShapingServiceSBND_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
-                    cetlib_except::cetlib_except
                     messagefacility::MF_MessageLogger
                     fhiclcpp::fhiclcpp
-                    cetlib::cetlib cetlib_except
+                    cetlib::cetlib
                     CLHEP::CLHEP
                     ROOT::Core
 )
@@ -67,7 +65,7 @@ set (
                     canvas::canvas
                     messagefacility::MF_MessageLogger
                     fhiclcpp::fhiclcpp
-                    cetlib::cetlib cetlib_except
+                    cetlib::cetlib
                     CLHEP::CLHEP
                     ROOT::Core
 )

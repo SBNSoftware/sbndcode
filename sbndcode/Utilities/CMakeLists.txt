@@ -12,7 +12,7 @@ set( sbnd_util_lib_list   lardata::Utilities_LArFFT_service
                           art::Persistency_Provenance 
                           art_root_io::tfile_support
                           art_root_io::TFileService_service
-                          art_Framework_Services_System_TriggerNamesService_service
+                          art::Framework_Services_System_TriggerNamesService_service
                           art::Utilities
                           canvas::canvas
                           messagefacility::MF_MessageLogger

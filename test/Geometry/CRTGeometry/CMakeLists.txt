@@ -1,6 +1,7 @@
 
-simple_plugin( SBNDCRTGeometryTest "module"
-  larcorealg_Geometry
+cet_build_plugin( SBNDCRTGeometryTest art::module LIBRARIES
+  larcorealg::Geometry
+  larcore::Geometry_Geometry_service
   art::Framework_Core
   art::Framework_Principal
   art::Framework_Services_Registry
@@ -8,9 +9,9 @@ simple_plugin( SBNDCRTGeometryTest "module"
   art::Persistency_Provenance
   canvas::canvas
   messagefacility::MF_MessageLogger
-
   fhiclcpp::fhiclcpp
-  cetlib::cetlib cetlib_except
+  cetlib::cetlib
+  cetlib_except::cetlib_except
   NO_INSTALL
 )
 

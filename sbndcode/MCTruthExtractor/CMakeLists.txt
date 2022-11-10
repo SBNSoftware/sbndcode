@@ -19,15 +19,17 @@ set(     MODULE_LIBRARIES
             art::Framework_Services_Registry
             art_root_io::tfile_support
             ROOT::Core
+            ROOT::Tree
             art::Persistency_Common
             art::Persistency_Provenance
             art::Utilities
             canvas::canvas
             messagefacility::MF_MessageLogger
             fhiclcpp::fhiclcpp
-            cetlib::cetlib cetlib_except
+            cetlib::cetlib
             CLHEP::CLHEP
           ) 
 cet_build_plugin( NuAna art::module SOURCE NuAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
+target_include_directories (sbndcode_MCTruthExtractor_NuAna_module PRIVATE $ENV{GENIE_INC}/GENIE )
 install_headers()
 install_fhicl()

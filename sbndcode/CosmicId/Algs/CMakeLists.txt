@@ -1,4 +1,4 @@
-art_make_library(    NAME  sbndcode_CosmicIdAlgs
+art_make_library(LIBRARY_NAME  sbndcode_CosmicIdAlgs
                  SOURCE ApaCrossCosmicIdAlg.cc
                         CosmicIdAlg.cc
                         CpaCrossCosmicIdAlg.cc
@@ -11,7 +11,8 @@ art_make_library(    NAME  sbndcode_CosmicIdAlgs
                         StoppingParticleCosmicIdAlg.cc
                  LIBRARIES larcorealg::Geometry
                            larcore::Geometry_Geometry_service
-                           larsim::Simulation lardataobj_Simulation
+                           larsim::Simulation
+                           lardataobj::Simulation
                            larsim::MCCheater_BackTrackerService_service
                            larsim::MCCheater_ParticleInventoryService_service
                            lardata::Utilities
@@ -30,7 +31,7 @@ art_make_library(    NAME  sbndcode_CosmicIdAlgs
                            art_root_io::TFileService_service
                            art::Persistency_Common
                            canvas::canvas
-                           art::Persistency_Provenance canvas
+                           art::Persistency_Provenance
                            art::Utilities
                            messagefacility::MF_MessageLogger
                            ROOT::Core

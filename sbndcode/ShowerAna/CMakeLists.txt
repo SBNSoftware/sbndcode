@@ -20,7 +20,7 @@ set(
   art::Framework_Services_Registry
   art::Persistency_Common
   art::Persistency_Provenance
-  art::Utilities canvas
+  art::Utilities
   messagefacility::MF_MessageLogger
   fhiclcpp::fhiclcpp
   ROOT::Geom
@@ -30,7 +30,7 @@ set(
   sbndcode_RecoUtils
 ) 
 
-cet_build_plugin( SOURCE PFPSliceValidation_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(PFPSliceValidation art::module SOURCE PFPSliceValidation_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 #install_headers()
 install_fhicl()

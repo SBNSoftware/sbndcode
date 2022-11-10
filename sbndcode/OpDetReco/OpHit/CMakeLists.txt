@@ -11,9 +11,10 @@ set(
          lardataobj::RecoBase
          lardataobj::AnalysisBase
          lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
+         larreco::Calorimetry
+         sbndcode_Utilities_SignalShapingServiceSBND_service
          sbndcode_Utilities_SignalShapingServiceSBND_service
          nurandom::RandomUtils_NuRandomService_service
-         art::Framework_Core
          art::Framework_Principal
          art::Framework_Services_Optional_RandomNumberGenerator_service
          canvas::canvas
@@ -25,7 +26,7 @@ set(
          ROOT::Core
 ) 
 
-cet_build_plugin(SBNDOpHitFinder art::modules SOURCE SBNDOpHitFinder_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(SBNDOpHitFinder art::module SOURCE SBNDOpHitFinder_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()

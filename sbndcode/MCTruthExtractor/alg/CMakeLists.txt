@@ -4,7 +4,6 @@ art_make_library( SOURCE NuAnaAlg.cxx
             larcorealg::Geometry
             nugen::NuReweight_art
             nugen::NuReweight
-            nugen::EventGeneratorBase_GENIE
             nusimdata::SimulationBase
             art::Framework_Core
             art::Framework_Principal
@@ -16,10 +15,10 @@ art_make_library( SOURCE NuAnaAlg.cxx
             canvas::canvas
             messagefacility::MF_MessageLogger
             fhiclcpp::fhiclcpp
-            cetlib::cetlib cetlib_except
+            cetlib::cetlib
             CLHEP::CLHEP
             ROOT::Core
-          ) 
-
+          )
+target_include_directories (sbndcode_MCTruthExtractor_alg PRIVATE $ENV{GENIE_INC}/GENIE )
 install_headers()
 

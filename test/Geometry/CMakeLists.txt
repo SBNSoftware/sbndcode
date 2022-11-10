@@ -18,11 +18,11 @@ cet_test(geometry_sbnd HANDBUILT
 #
 # unit test (uses configuration in test_geometry_sbnd.fcl)
 cet_test(geometry_sbnd_test
-  SOURCES geometry_sbnd_test.cxx
+  SOURCE geometry_sbnd_test.cxx
   DATAFILES test_geometry_sbnd.fcl
   TEST_ARGS ./test_geometry_sbnd.fcl
   LIBRARIES sbndcode_Geometry
-            larcorealg_Geometry
+            larcorealg::Geometry
             larcorealg::GeometryTestLib
             messagefacility::MF_MessageLogger
             fhiclcpp::fhiclcpp
@@ -37,9 +37,9 @@ cet_test(geometry_sbnd_test
 cet_test(geometry_iterator_sbnd_test
   DATAFILES test_geometry_sbnd.fcl
   TEST_ARGS ./test_geometry_sbnd.fcl
-  SOURCES geometry_iterator_sbnd_test.cxx
+  SOURCE geometry_iterator_sbnd_test.cxx
   LIBRARIES sbndcode_Geometry
-            larcorealg_Geometry
+            larcorealg::Geometry
             larcorealg::GeometryTestLib
             messagefacility::MF_MessageLogger
             fhiclcpp::fhiclcpp
@@ -51,11 +51,11 @@ cet_test(geometry_iterator_sbnd_test
 
 # unit test (uses configuration in test_geometry_sbnd.fcl)
 cet_test(geometry_iterator_loop_sbnd_test
-  SOURCES geometry_iterator_loop_sbnd_test.cxx
+  SOURCE geometry_iterator_loop_sbnd_test.cxx
   DATAFILES test_geometry_sbnd.fcl
   TEST_ARGS ./test_geometry_sbnd.fcl
   LIBRARIES sbndcode_Geometry
-            larcorealg_Geometry
+            larcorealg::Geometry
             larcorealg::GeometryTestLib
             messagefacility::MF_MessageLogger
             fhiclcpp::fhiclcpp

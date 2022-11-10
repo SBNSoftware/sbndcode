@@ -7,12 +7,12 @@ cet_build_plugin(SBNDThermalNoiseServiceInTime   art::service
               LIBRARIES
 		larcorealg::Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
-		art_root_io::tfile_support ROOT::Core
+		art_root_io::tfile_support
 		art_root_io::TFileService_service
 		nurandom::RandomUtils_NuRandomService_service
 		art::Framework_Core
-		art::Utilities canvas
-		cetlib::cetlib cetlib_except
+		art::Utilities
+		cetlib::cetlib
 		CLHEP::CLHEP
  		ROOT::Core
 )
@@ -26,8 +26,6 @@ cet_build_plugin(SBNDThermalNoiseServiceInFreq   art::service
 		art_root_io::TFileService_service
 		nurandom::RandomUtils_NuRandomService_service
 		art::Framework_Core
-		art::Utilities canvas
-		cetlib::cetlib cetlib_except
 		CLHEP::CLHEP
  		ROOT::Core
 )
@@ -37,12 +35,10 @@ cet_build_plugin(SBNDuBooNEDataDrivenNoiseService   art::service
                 LIBRARIES
 		larcorealg::Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
-		art_root_io::tfile_support ROOT::Core
+		art_root_io::tfile_support
 		art_root_io::TFileService_service
 		nurandom::RandomUtils_NuRandomService_service
 		art::Framework_Core
-		art::Utilities canvas
-		cetlib::cetlib cetlib_except
 		CLHEP::CLHEP
  		ROOT::Core
 )
