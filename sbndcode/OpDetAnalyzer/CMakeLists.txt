@@ -16,7 +16,7 @@ MODULE_LIBRARIES
   ROOT::Tree
   lardataobj::Simulation
   sbndcode_OpDetSim
-) 
+)
 cet_build_plugin(OpDetAnalyzer art::module SOURCE OpDetAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_fhicl()

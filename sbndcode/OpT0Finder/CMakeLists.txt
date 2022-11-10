@@ -32,7 +32,7 @@ set(
         ROOT::Gdml
         ROOT::Core
         ROOT::Tree
-) 
+)
 
 cet_build_plugin(SBNDOpT0FinderAna art::module SOURCE SBNDOpT0FinderAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(SBNDOpT0Finder art::module SOURCE SBNDOpT0Finder_module.cc LIBRARIES ${MODULE_LIBRARIES})

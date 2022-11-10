@@ -1,4 +1,4 @@
-set(      
+set(
           MODULE_LIBRARIES larcorealg::Geometry
                            larcore::Geometry_Geometry_service
                            larsim::Simulation
@@ -11,7 +11,7 @@ set(
                            lardataobj::RecoBase
 			   larreco::Calorimetry
                            larreco::RecoAlg
-                           lardata::RecoObjects  
+                           lardata::RecoObjects
                            larpandora::LArPandoraInterface
                            sbndcode_CRTUtils
                            sbndcode_CRT
@@ -32,7 +32,7 @@ set(
                            ROOT::Core
                            sbndcode_RecoUtils
                            sbndcode_OpDetSim
-        ) 
+        )
 
 cet_build_plugin(ToFAnalyzer art::module SOURCE ToFAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(ToFFilter art::module SOURCE ToFFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})

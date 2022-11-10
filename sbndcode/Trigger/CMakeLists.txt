@@ -31,7 +31,7 @@ set(
                     cetlib::cetlib
                     CLHEP::CLHEP
                     ROOT::Core
-) 
+)
 
 cet_build_plugin(ArtdaqFragmentProducer art::module SOURCE ArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(CRTArtdaqFragmentProducer art::module SOURCE CRTArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})

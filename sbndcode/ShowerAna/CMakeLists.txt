@@ -28,7 +28,7 @@ set(
   ROOT::Gdml
   ROOT::Core
   sbndcode_RecoUtils
-) 
+)
 
 cet_build_plugin(PFPSliceValidation art::module SOURCE PFPSliceValidation_module.cc LIBRARIES ${MODULE_LIBRARIES})
 

@@ -10,7 +10,7 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            lardataobj::RecoBase
 			   larreco::Calorimetry
                            larreco::RecoAlg
-                           lardata::RecoObjects  
+                           lardata::RecoObjects
                            larpandora::LArPandoraInterface
                            sbndcode_CRTUtils
                            sbndcode_CRT
@@ -33,7 +33,7 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            ROOT::Gdml
                            sbndcode_RecoUtils
                            sbndcode_OpDetSim
-        ) 
+        )
 cet_build_plugin(AnalysisTree art::Module SOURCE AnalysisTree_module.cc LIBRARIES ${MODULE_LIBRARIES} )
 # install_headers()
 install_fhicl()

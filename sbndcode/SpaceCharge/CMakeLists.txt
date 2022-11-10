@@ -10,7 +10,7 @@ art_make_library(
 			fhiclcpp::fhiclcpp
                         ROOT::Core
 			
-        ) 
+        )
 install_headers()
 install_fhicl()
 install_source()

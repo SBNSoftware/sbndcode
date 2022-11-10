@@ -28,7 +28,7 @@ set(     MODULE_LIBRARIES
             fhiclcpp::fhiclcpp
             cetlib::cetlib
             CLHEP::CLHEP
-          ) 
+          )
 cet_build_plugin( NuAna art::module SOURCE NuAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
 target_include_directories (sbndcode_MCTruthExtractor_NuAna_module PRIVATE $ENV{GENIE_INC}/GENIE )
 install_headers()

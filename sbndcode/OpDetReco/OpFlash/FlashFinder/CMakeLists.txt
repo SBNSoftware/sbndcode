@@ -32,7 +32,7 @@ art_make_library(
         ROOT::XMLIO
         ROOT::Gdml
         ROOT::Core
-) 
+)
 
 install_headers()
 install_fhicl()

@@ -17,7 +17,7 @@ set(
          cetlib_except::cetlib_except
          CLHEP::CLHEP
          ${ROOT_BASIC_LIB_LIST}
-) 
+)
 
 cet_build_plugin(SBNDOpDeconvolution art::module SOURCE SBNDOpDeconvolution_module.cc LIBRARIES ${MODULE_LIBRARIES})
 

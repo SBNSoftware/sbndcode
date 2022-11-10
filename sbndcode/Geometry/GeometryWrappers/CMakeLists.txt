@@ -10,7 +10,7 @@ art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
                            larevt::Filters
                            lardataobj::RawData
                            lardataobj::RecoBase
-                           lardata::RecoObjects  
+                           lardata::RecoObjects
                            larpandora::LArPandoraInterface
                            nusimdata::SimulationBase
                            cetlib::cetlib
@@ -29,7 +29,7 @@ art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
                            ROOT::XMLIO
                            ROOT::Gdml
                            ROOT::Core
-        ) 
+        )
 
 install_headers()
 install_source()

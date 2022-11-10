@@ -18,7 +18,7 @@ set(
          art::Utilities
          cetlib::cetlib
          cetlib_except::cetlib_except
-) 
+)
 
 cet_build_plugin(OpDeconvolutionAlgWiener art::tool SOURCE OpDeconvolutionAlgWiener_tool.cc LIBRARIES ${TOOL_LIBRARIES})
 

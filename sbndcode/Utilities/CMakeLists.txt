@@ -9,7 +9,7 @@ set( sbnd_util_lib_list   lardata::Utilities_LArFFT_service
                           art::Framework_Principal
                           art::Framework_Services_Registry
                           art::Persistency_Common
-                          art::Persistency_Provenance 
+                          art::Persistency_Provenance
                           art_root_io::tfile_support
                           art_root_io::TFileService_service
                           art::Framework_Services_System_TriggerNamesService_service
@@ -25,7 +25,7 @@ set( sbnd_util_lib_list   lardata::Utilities_LArFFT_service
 
 cet_build_plugin( SignalShapingServiceSBND  art::service SOURCE SignalShapingServiceSBND_service.cc LIBRARIES
                ${sbnd_util_lib_list}
-        ) 
+        )
 
 install_headers()
 install_fhicl()

@@ -31,7 +31,7 @@ set(
                 ROOT::Gdml
                 ROOT::Core
                 sbndcode_RecoUtils
-        ) 
+        )
 cet_build_plugin(CRTTrigFilter art::module SOURCE CRTTrigFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(GenCRTFilter art::module SOURCE GenCRTFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(GenNuFilter art::module SOURCE GenNuFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})

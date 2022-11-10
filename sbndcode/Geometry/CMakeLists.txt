@@ -21,7 +21,7 @@ cet_build_plugin( SBNDGeometryHelper art::service
                         fhiclcpp::fhiclcpp
                         cetlib_except::cetlib_except
                         ROOT::Core
-        ) 
+        )
 
 
 install_headers()

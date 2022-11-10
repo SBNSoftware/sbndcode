@@ -22,7 +22,7 @@ cet_build_plugin(SpaceChargeTest art::module SOURCE SpaceChargeTest_module.cc LI
                            ROOT::Gdml
                            sbndcode_RecoUtils
 			   sbndcode_SpaceCharge
-        ) 
+        )
 
 install_headers()
 install_fhicl()

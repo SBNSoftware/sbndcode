@@ -28,7 +28,7 @@ set(
         ROOT::Gdml
         ROOT::Core
         ROOT::Tree
-) 
+)
 
 cet_build_plugin(SBNDFlashAna art::module SOURCE SBNDFlashAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(SBNDFlashFinder art::module SOURCE SBNDFlashFinder_module.cc LIBRARIES ${MODULE_LIBRARIES})

@@ -8,7 +8,7 @@ cet_build_plugin(SpaceChargeServiceSBND art::service SOURCE SpaceChargeServiceSB
 	      art_root_io::tfile_support
 	      art_root_io::TFileService_service
 	      art::Utilities
-) 
+)
 install_headers()
 install_fhicl()
 install_source()
