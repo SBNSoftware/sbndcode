@@ -1311,7 +1311,7 @@ void CRTAnalysis::analyze(art::Event const& e)
 	      }
 	    ++used_hits_1;
 	  }
-	if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
+	else if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
 	  {
 	    _ct_hit2_t0[i] = hit->ts0_ns;
 	    _ct_hit2_t1[i] = hit->ts1_ns;
@@ -1322,9 +1322,9 @@ void CRTAnalysis::analyze(art::Event const& e)
 
 	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
 	      {
-		_ct_hit2_sipm_raw_adc[i][4 * used_hits_1 + adc_i]  = raw_adcs[adc_i];
-		_ct_hit2_sipm_adc[i][4 * used_hits_1 + adc_i]      = adcs[adc_i];
-		_ct_hit2_sipm_corr_adc[i][4 * used_hits_1 + adc_i] = corr_adcs[adc_i];
+		_ct_hit2_sipm_raw_adc[i][4 * used_hits_2 + adc_i]  = raw_adcs[adc_i];
+		_ct_hit2_sipm_adc[i][4 * used_hits_2 + adc_i]      = adcs[adc_i];
+		_ct_hit2_sipm_corr_adc[i][4 * used_hits_2 + adc_i] = corr_adcs[adc_i];
 	      }
 	    ++used_hits_2;
 	  }
