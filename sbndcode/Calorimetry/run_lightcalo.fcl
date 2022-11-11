@@ -2,6 +2,8 @@
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
+#include "particleinventoryservice.fcl"
+#include "backtrackerservice.fcl"
 
 #include "lightcalo.fcl"
 
@@ -15,6 +17,9 @@ services:
     FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                                 @table::sbnd_services              # from services_sbnd.fcl
                                 @table::sbnd_g4_services
+    BackTrackerService: @local::standard_backtrackerservice
+    ParticleInventoryService: @local::standard_particleinventoryservice
+
 }
 
 source:
@@ -32,3 +37,5 @@ physics:
     path: [ana]
     end_paths: [path]
 }
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
