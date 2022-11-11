@@ -63,8 +63,8 @@ void ChannelMapping()
 	  
       if(save)
 	{
-	  canvas_xy->SaveAs(saveDir + "/" + run_name + "/crthit_xy" + Form("_board_%d", i) + ".png");
-	  canvas_xy->SaveAs(saveDir + "/" + run_name + "/crthit_xy" + Form("_board_%d", i) + ".pdf");
+	  canvas_xy->SaveAs(saveDir + "/" + run_name + "/crthit_xy" + Form("_board_%d", i) + "_updated.png");
+	  canvas_xy->SaveAs(saveDir + "/" + run_name + "/crthit_xy" + Form("_board_%d", i) + "_updated.pdf");
 	}
 
       TCanvas *canvas_yz = new TCanvas(Form("c_crthit_yz_%d", i), Form("c_crthit_yz_%d", i));
@@ -76,8 +76,8 @@ void ChannelMapping()
 	  
       if(save)
 	{
-	  canvas_yz->SaveAs(saveDir + "/" + run_name + "/crthit_yz" + Form("_board_%d", i) + ".png");
-	  canvas_yz->SaveAs(saveDir + "/" + run_name + "/crthit_yz" + Form("_board_%d", i) + ".pdf");
+	  canvas_yz->SaveAs(saveDir + "/" + run_name + "/crthit_yz" + Form("_board_%d", i) + "_updated.png");
+	  canvas_yz->SaveAs(saveDir + "/" + run_name + "/crthit_yz" + Form("_board_%d", i) + "_updated.pdf");
 	}
     }
 }
