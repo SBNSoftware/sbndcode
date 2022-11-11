@@ -180,7 +180,9 @@ void CRTTrackProducer::produce(art::Event & evt)
       //loop over hits for this tzero, sort by tagger
       std::map<std::string, std::vector<art::Ptr<sbn::crt::CRTHit>>> hits;
       for (size_t ah = 0; ah< CRTTzeroVect[i].size(); ++ah){        
-        std::string ip = CRTTzeroVect[i][ah]->tagger;       
+        std::string ip = CRTTzeroVect[i][ah]->tagger;
+	if(ip == "volTaggerSouthOne_0" || ip == "volTaggerSouthTwo_0" || ip == "volTaggerSouthThree_0")
+	  ip = "volTaggerSouth_0";
         hits[ip].push_back(CRTTzeroVect[i][ah]);
       } // loop over hits
       
