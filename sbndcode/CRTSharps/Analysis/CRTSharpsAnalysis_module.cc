@@ -199,30 +199,30 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
   if(fDebug)
     {
       for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
-	{
-	  std::cout << "Tagger:  " << tagger.name << '\n'
-		    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
-		    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
-		    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
-	}
+        {
+          std::cout << "Tagger:  " << tagger.name << '\n'
+                    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
+                    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
+                    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
+        }
 
       std::cout << std::endl;
 
       for(auto const &[name, module] : fCRTGeoAlg.GetModules())
-	{
-	  std::cout << "Module:  " << module.name << '\n'
-		    << "X - Min: " << module.minX << " Max: " << module.maxX << '\n'
-		    << "Y - Min: " << module.minY << " Max: " << module.maxY << '\n'
-		    << "Z - Min: " << module.minZ << " Max: " << module.maxZ << '\n' << std::endl;
-	}
+        {
+          std::cout << "Module:  " << module.name << '\n'
+                    << "X - Min: " << module.minX << " Max: " << module.maxX << '\n'
+                    << "Y - Min: " << module.minY << " Max: " << module.maxY << '\n'
+                    << "Z - Min: " << module.minZ << " Max: " << module.maxZ << '\n' << std::endl;
+        }
 
       std::cout << std::endl;
 
       for(auto const &[name, sipm] : fCRTGeoAlg.GetSiPMs())
-	{
-	  std::cout << "SiPM:  " << sipm.channel << " (" << sipm.channel/32 << " - " << sipm.channel%32 << ")" << '\n'
-		    << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
-	}
+        {
+          std::cout << "SiPM:  " << sipm.channel << " (" << sipm.channel/32 << " - " << sipm.channel%32 << ")" << '\n'
+                    << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
+        }
     }
 }
 
@@ -307,7 +307,7 @@ void CRTSharpsAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<sbnd::crt::FEBData>
       _feb_coinc[i] = data->Coinc();
 
       for(unsigned j = 0; j < 32; ++j)
-	_feb_adc[i][j] = data->ADC(j);
+        _feb_adc[i][j] = data->ADC(j);
     }
 }
 
@@ -354,9 +354,9 @@ void CRTSharpsAnalysis::AnalyseCRTHits(std::vector<art::Ptr<sbn::crt::CRTHit>> &
       _chit_pes[i]     = hit->peshit;
 
       if(hit->tagger == "volTESTTaggerSouth_0")
-	_chit_plane[i] = 0; // upstream
+        _chit_plane[i] = 0; // upstream
       else
-	_chit_plane[i] = 1; // downstream
+        _chit_plane[i] = 1; // downstream
       
       _chit_sipm_raw_adc[i].resize(4);
       _chit_sipm_adc[i].resize(4);
@@ -366,15 +366,15 @@ void CRTSharpsAnalysis::AnalyseCRTHits(std::vector<art::Ptr<sbn::crt::CRTHit>> &
       const std::array<uint16_t, 4> corr_adcs = hit->corr_adcs;
 
       for(unsigned adc_i = 0; adc_i < 4; ++adc_i)
-	{
-	  _chit_sipm_raw_adc[i][adc_i]      = raw_adcs[adc_i];
-	  _chit_sipm_adc[i][adc_i]      = adcs[adc_i];
-	  _chit_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
-	}
+        {
+          _chit_sipm_raw_adc[i][adc_i]      = raw_adcs[adc_i];
+          _chit_sipm_adc[i][adc_i]      = adcs[adc_i];
+          _chit_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+        }
 
       std::vector<art::Ptr<sbnd::crt::FEBData>> FEBDataVec = CRTHitToFEBData.at(hit.key());
       if(FEBDataVec.size() != 2)
-	std::cout << "ERROR: CRTHit associated to " << FEBDataVec.size() << " FEBDatas" << std::endl;
+        std::cout << "ERROR: CRTHit associated to " << FEBDataVec.size() << " FEBDatas" << std::endl;
 
       _chit_sipm_feb_mac5[i].resize(2);
       _chit_sipm_feb_mac5[i][0] = FEBDataVec[0]->Mac5();
@@ -452,45 +452,45 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
 
       std::vector<art::Ptr<sbn::crt::CRTHit>> CRTHitVec = CRTTrackToCRTHits.at(track.key());
       if(CRTHitVec.size() != 2)
-	std::cout << "ERROR: CRTTrack associated to " << CRTHitVec.size() << " CRTHits" << std::endl;
+        std::cout << "ERROR: CRTTrack associated to " << CRTHitVec.size() << " CRTHits" << std::endl;
 
       for(unsigned i_hit = 0; i_hit < CRTHitVec.size(); ++i_hit)
-	{
-	  art::Ptr<sbn::crt::CRTHit> hit = CRTHitVec[i_hit];
+        {
+          art::Ptr<sbn::crt::CRTHit> hit = CRTHitVec[i_hit];
 
-	  if(i_hit == 0)
-	    {
-	      _ct_hit1_t0[i] = hit->ts0_ns;
-	      _ct_hit1_t1[i] = hit->ts1_ns;
-	    
-	      const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
-	      const std::array<uint16_t,4> adcs      = hit->adcs;
-	      const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
+          if(i_hit == 0)
+            {
+              _ct_hit1_t0[i] = hit->ts0_ns;
+              _ct_hit1_t1[i] = hit->ts1_ns;
+            
+              const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+              const std::array<uint16_t,4> adcs      = hit->adcs;
+              const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
-	      for(unsigned adc_i = 0; adc_i < 4; ++adc_i)
-		{
-		  _ct_hit1_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-		  _ct_hit1_sipm_adc[i][adc_i]      = adcs[adc_i];
-		  _ct_hit1_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
-		}
-	    }
-	  else if(i_hit == 1)
-	    {
-	      _ct_hit2_t0[i] = hit->ts0_ns;
-	      _ct_hit2_t1[i] = hit->ts1_ns;
+              for(unsigned adc_i = 0; adc_i < 4; ++adc_i)
+                {
+                  _ct_hit1_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
+                  _ct_hit1_sipm_adc[i][adc_i]      = adcs[adc_i];
+                  _ct_hit1_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+                }
+            }
+          else if(i_hit == 1)
+            {
+              _ct_hit2_t0[i] = hit->ts0_ns;
+              _ct_hit2_t1[i] = hit->ts1_ns;
 
-	      const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
-	      const std::array<uint16_t,4> adcs      = hit->adcs;
-	      const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
+              const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+              const std::array<uint16_t,4> adcs      = hit->adcs;
+              const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
-	      for(unsigned adc_i = 0; adc_i < 4; ++adc_i)
-		{
-		  _ct_hit2_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-		  _ct_hit2_sipm_adc[i][adc_i]      = adcs[adc_i];
-		  _ct_hit2_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
-		}
-	    }
-	}
+              for(unsigned adc_i = 0; adc_i < 4; ++adc_i)
+                {
+                  _ct_hit2_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
+                  _ct_hit2_sipm_adc[i][adc_i]      = adcs[adc_i];
+                  _ct_hit2_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+                }
+            }
+        }
     }
 }
 
