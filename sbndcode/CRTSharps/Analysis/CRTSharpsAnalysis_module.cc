@@ -114,6 +114,8 @@ private:
   std::vector<double>                 _ct_hit1_t1;
   std::vector<double>                 _ct_hit2_t0;
   std::vector<double>                 _ct_hit2_t1;
+  std::vector<uint16_t>               _ct_hit1_nhits;
+  std::vector<uint16_t>               _ct_hit2_nhits;
   std::vector<std::vector<uint16_t> > _ct_hit1_sipm_raw_adc;
   std::vector<std::vector<uint16_t> > _ct_hit1_sipm_adc;
   std::vector<std::vector<uint16_t> > _ct_hit1_sipm_corr_adc;
@@ -126,105 +128,107 @@ private:
 CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
-{
-  fFEBDataModuleLabel  = p.get<std::string>("FEBDataLabel", "importdata");
-  fCRTHitModuleLabel   = p.get<std::string>("CRTHitLabel", "crthit");
-  fCRTTrackModuleLabel = p.get<std::string>("CRTTrackLabel", "crttrack");
-  fDebug               = p.get<bool>("Debug", false);
+  {
+    fFEBDataModuleLabel  = p.get<std::string>("FEBDataLabel", "importdata");
+    fCRTHitModuleLabel   = p.get<std::string>("CRTHitLabel", "crthit");
+    fCRTTrackModuleLabel = p.get<std::string>("CRTTrackLabel", "crttrack");
+    fDebug               = p.get<bool>("Debug", false);
 
-  art::ServiceHandle<art::TFileService> fs;
+    art::ServiceHandle<art::TFileService> fs;
 
-  fTree = fs->make<TTree>("tree","");
-  fTree->Branch("run", &_run);
-  fTree->Branch("subrun", &_subrun);
-  fTree->Branch("event", &_event);
+    fTree = fs->make<TTree>("tree","");
+    fTree->Branch("run", &_run);
+    fTree->Branch("subrun", &_subrun);
+    fTree->Branch("event", &_event);
 
-  fTree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
-  fTree->Branch("feb_flags", "std::vector<uint16_t>", &_feb_flags);
-  fTree->Branch("feb_ts0", "std::vector<uint32_t>", &_feb_ts0);
-  fTree->Branch("feb_ts1", "std::vector<uint32_t>", &_feb_ts1);
-  fTree->Branch("feb_unixs", "std::vector<uint32_t>", &_feb_unixs);
-  fTree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
-  fTree->Branch("feb_coinc", "std::vector<uint32_t>", &_feb_coinc);
+    fTree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
+    fTree->Branch("feb_flags", "std::vector<uint16_t>", &_feb_flags);
+    fTree->Branch("feb_ts0", "std::vector<uint32_t>", &_feb_ts0);
+    fTree->Branch("feb_ts1", "std::vector<uint32_t>", &_feb_ts1);
+    fTree->Branch("feb_unixs", "std::vector<uint32_t>", &_feb_unixs);
+    fTree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
+    fTree->Branch("feb_coinc", "std::vector<uint32_t>", &_feb_coinc);
 
-  fTree->Branch("chit_x", "std::vector<double>", &_chit_x);
-  fTree->Branch("chit_y", "std::vector<double>", &_chit_y);
-  fTree->Branch("chit_z", "std::vector<double>", &_chit_z);
-  fTree->Branch("chit_ex", "std::vector<double>", &_chit_ex);
-  fTree->Branch("chit_ey", "std::vector<double>", &_chit_ey);
-  fTree->Branch("chit_ez", "std::vector<double>", &_chit_ez);
-  fTree->Branch("chit_t0", "std::vector<double>", &_chit_t0);
-  fTree->Branch("chit_t1", "std::vector<double>", &_chit_t1);
-  fTree->Branch("chit_t1_diff", "std::vector<double>", &_chit_t1_diff);
-  fTree->Branch("chit_unix_s", "std::vector<uint64_t>", &_chit_unix_s);
-  fTree->Branch("chit_h1_t0", "std::vector<double>", &_chit_h1_t0);
-  fTree->Branch("chit_h2_t0", "std::vector<double>", &_chit_h2_t0);
-  fTree->Branch("chit_h1_t1", "std::vector<double>", &_chit_h1_t1);
-  fTree->Branch("chit_h2_t1", "std::vector<double>", &_chit_h2_t1);
-  fTree->Branch("chit_pes", "std::vector<double>", &_chit_pes);
-  fTree->Branch("chit_plane", "std::vector<int>", &_chit_plane);
-  fTree->Branch("chit_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_raw_adc);
-  fTree->Branch("chit_sipm_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_adc);
-  fTree->Branch("chit_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_corr_adc);
-  fTree->Branch("chit_sipm_channel_id", "std::vector<std::vector<uint16_t> >", &_chit_sipm_channel_id);
-  fTree->Branch("chit_sipm_feb_mac5", "std::vector<std::vector<uint16_t> >", &_chit_sipm_feb_mac5);
+    fTree->Branch("chit_x", "std::vector<double>", &_chit_x);
+    fTree->Branch("chit_y", "std::vector<double>", &_chit_y);
+    fTree->Branch("chit_z", "std::vector<double>", &_chit_z);
+    fTree->Branch("chit_ex", "std::vector<double>", &_chit_ex);
+    fTree->Branch("chit_ey", "std::vector<double>", &_chit_ey);
+    fTree->Branch("chit_ez", "std::vector<double>", &_chit_ez);
+    fTree->Branch("chit_t0", "std::vector<double>", &_chit_t0);
+    fTree->Branch("chit_t1", "std::vector<double>", &_chit_t1);
+    fTree->Branch("chit_t1_diff", "std::vector<double>", &_chit_t1_diff);
+    fTree->Branch("chit_unix_s", "std::vector<uint64_t>", &_chit_unix_s);
+    fTree->Branch("chit_h1_t0", "std::vector<double>", &_chit_h1_t0);
+    fTree->Branch("chit_h2_t0", "std::vector<double>", &_chit_h2_t0);
+    fTree->Branch("chit_h1_t1", "std::vector<double>", &_chit_h1_t1);
+    fTree->Branch("chit_h2_t1", "std::vector<double>", &_chit_h2_t1);
+    fTree->Branch("chit_pes", "std::vector<double>", &_chit_pes);
+    fTree->Branch("chit_plane", "std::vector<int>", &_chit_plane);
+    fTree->Branch("chit_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_raw_adc);
+    fTree->Branch("chit_sipm_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_adc);
+    fTree->Branch("chit_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_chit_sipm_corr_adc);
+    fTree->Branch("chit_sipm_channel_id", "std::vector<std::vector<uint16_t> >", &_chit_sipm_channel_id);
+    fTree->Branch("chit_sipm_feb_mac5", "std::vector<std::vector<uint16_t> >", &_chit_sipm_feb_mac5);
 
-  fTree->Branch("ct_time", "std::vector<double>", &_ct_time);
-  fTree->Branch("ct_pes", "std::vector<double>", &_ct_pes);
-  fTree->Branch("ct_length", "std::vector<double>", &_ct_length);
-  fTree->Branch("ct_tof", "std::vector<double>", &_ct_tof);
-  fTree->Branch("ct_hit1_x", "std::vector<double>", &_ct_hit1_x);
-  fTree->Branch("ct_hit1_y", "std::vector<double>", &_ct_hit1_y);
-  fTree->Branch("ct_hit1_z", "std::vector<double>", &_ct_hit1_z);
-  fTree->Branch("ct_hit2_x", "std::vector<double>", &_ct_hit2_x);
-  fTree->Branch("ct_hit2_y", "std::vector<double>", &_ct_hit2_y);
-  fTree->Branch("ct_hit2_z", "std::vector<double>", &_ct_hit2_z);
-  fTree->Branch("ct_hit1_ex", "std::vector<double>", &_ct_hit1_ex);
-  fTree->Branch("ct_hit1_ey", "std::vector<double>", &_ct_hit1_ey);
-  fTree->Branch("ct_hit1_ez", "std::vector<double>", &_ct_hit1_ez);
-  fTree->Branch("ct_hit2_ex", "std::vector<double>", &_ct_hit2_ex);
-  fTree->Branch("ct_hit2_ey", "std::vector<double>", &_ct_hit2_ey);
-  fTree->Branch("ct_hit2_ez", "std::vector<double>", &_ct_hit2_ez);
-  fTree->Branch("ct_hit1_t0", "std::vector<double>", &_ct_hit1_t0);
-  fTree->Branch("ct_hit1_t1", "std::vector<double>", &_ct_hit1_t1);
-  fTree->Branch("ct_hit2_t0", "std::vector<double>", &_ct_hit2_t0);
-  fTree->Branch("ct_hit2_t1", "std::vector<double>", &_ct_hit2_t1);
-  fTree->Branch("ct_hit1_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_raw_adc);
-  fTree->Branch("ct_hit1_sipm_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_adc);
-  fTree->Branch("ct_hit1_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_corr_adc);
-  fTree->Branch("ct_hit2_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_raw_adc);
-  fTree->Branch("ct_hit2_sipm_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_adc);
-  fTree->Branch("ct_hit2_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_corr_adc);
+    fTree->Branch("ct_time", "std::vector<double>", &_ct_time);
+    fTree->Branch("ct_pes", "std::vector<double>", &_ct_pes);
+    fTree->Branch("ct_length", "std::vector<double>", &_ct_length);
+    fTree->Branch("ct_tof", "std::vector<double>", &_ct_tof);
+    fTree->Branch("ct_hit1_x", "std::vector<double>", &_ct_hit1_x);
+    fTree->Branch("ct_hit1_y", "std::vector<double>", &_ct_hit1_y);
+    fTree->Branch("ct_hit1_z", "std::vector<double>", &_ct_hit1_z);
+    fTree->Branch("ct_hit2_x", "std::vector<double>", &_ct_hit2_x);
+    fTree->Branch("ct_hit2_y", "std::vector<double>", &_ct_hit2_y);
+    fTree->Branch("ct_hit2_z", "std::vector<double>", &_ct_hit2_z);
+    fTree->Branch("ct_hit1_ex", "std::vector<double>", &_ct_hit1_ex);
+    fTree->Branch("ct_hit1_ey", "std::vector<double>", &_ct_hit1_ey);
+    fTree->Branch("ct_hit1_ez", "std::vector<double>", &_ct_hit1_ez);
+    fTree->Branch("ct_hit2_ex", "std::vector<double>", &_ct_hit2_ex);
+    fTree->Branch("ct_hit2_ey", "std::vector<double>", &_ct_hit2_ey);
+    fTree->Branch("ct_hit2_ez", "std::vector<double>", &_ct_hit2_ez);
+    fTree->Branch("ct_hit1_t0", "std::vector<double>", &_ct_hit1_t0);
+    fTree->Branch("ct_hit1_t1", "std::vector<double>", &_ct_hit1_t1);
+    fTree->Branch("ct_hit2_t0", "std::vector<double>", &_ct_hit2_t0);
+    fTree->Branch("ct_hit2_t1", "std::vector<double>", &_ct_hit2_t1);
+    fTree->Branch("ct_hit1_nhits", "std::vector<uint16_t>", &_ct_hit1_nhits);
+    fTree->Branch("ct_hit2_nhits", "std::vector<uint16_t>", &_ct_hit2_nhits);
+    fTree->Branch("ct_hit1_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_raw_adc);
+    fTree->Branch("ct_hit1_sipm_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_adc);
+    fTree->Branch("ct_hit1_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_corr_adc);
+    fTree->Branch("ct_hit2_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_raw_adc);
+    fTree->Branch("ct_hit2_sipm_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_adc);
+    fTree->Branch("ct_hit2_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_corr_adc);
 
-  if(fDebug)
-    {
-      for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
-        {
-          std::cout << "Tagger:  " << tagger.name << '\n'
-                    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
-                    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
-                    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
-        }
+    if(fDebug)
+      {
+        for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
+          {
+            std::cout << "Tagger:  " << tagger.name << '\n'
+                      << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
+                      << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
+                      << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
+          }
 
-      std::cout << std::endl;
+        std::cout << std::endl;
 
-      for(auto const &[name, module] : fCRTGeoAlg.GetModules())
-        {
-          std::cout << "Module:  " << module.name << '\n'
-                    << "X - Min: " << module.minX << " Max: " << module.maxX << '\n'
-                    << "Y - Min: " << module.minY << " Max: " << module.maxY << '\n'
-                    << "Z - Min: " << module.minZ << " Max: " << module.maxZ << '\n' << std::endl;
-        }
+        for(auto const &[name, module] : fCRTGeoAlg.GetModules())
+          {
+            std::cout << "Module:  " << module.name << '\n'
+                      << "X - Min: " << module.minX << " Max: " << module.maxX << '\n'
+                      << "Y - Min: " << module.minY << " Max: " << module.maxY << '\n'
+                      << "Z - Min: " << module.minZ << " Max: " << module.maxZ << '\n' << std::endl;
+          }
 
-      std::cout << std::endl;
+        std::cout << std::endl;
 
-      for(auto const &[name, sipm] : fCRTGeoAlg.GetSiPMs())
-        {
-          std::cout << "SiPM:  " << sipm.channel << " (" << sipm.channel/32 << " - " << sipm.channel%32 << ")" << '\n'
-                    << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
-        }
-    }
-}
+        for(auto const &[name, sipm] : fCRTGeoAlg.GetSiPMs())
+          {
+            std::cout << "SiPM:  " << sipm.channel << " (" << sipm.channel/32 << " - " << sipm.channel%32 << ")" << '\n'
+                      << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
+          }
+      }
+  }
 
 void CRTSharpsAnalysis::analyze(art::Event const& e)
 {
@@ -415,6 +419,8 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
   _ct_hit1_t1.resize(nCRTTracks);
   _ct_hit2_t0.resize(nCRTTracks);
   _ct_hit2_t1.resize(nCRTTracks);
+  _ct_hit1_nhits.resize(nCRTTracks);
+  _ct_hit2_nhits.resize(nCRTTracks);
   _ct_hit1_sipm_raw_adc.resize(nCRTTracks);
   _ct_hit1_sipm_adc.resize(nCRTTracks);
   _ct_hit1_sipm_corr_adc.resize(nCRTTracks);
@@ -443,22 +449,32 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
       _ct_hit2_ey[i] = track->y2_err;
       _ct_hit2_ez[i] = track->z2_err;
 
-      _ct_hit1_sipm_raw_adc[i].resize(4);
-      _ct_hit1_sipm_adc[i].resize(4);
-      _ct_hit1_sipm_corr_adc[i].resize(4);
-      _ct_hit2_sipm_raw_adc[i].resize(4);
-      _ct_hit2_sipm_adc[i].resize(4);
-      _ct_hit2_sipm_corr_adc[i].resize(4);
-
       std::vector<art::Ptr<sbn::crt::CRTHit>> CRTHitVec = CRTTrackToCRTHits.at(track.key());
-      if(CRTHitVec.size() != 2)
-        std::cout << "ERROR: CRTTrack associated to " << CRTHitVec.size() << " CRTHits" << std::endl;
+      _ct_hit1_nhits[i] = 0;
+      _ct_hit2_nhits[i] = 0;
+
+      for(art::Ptr<sbn::crt::CRTHit> hit : CRTHitVec)
+        {
+          if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
+            ++_ct_hit1_nhits[i];
+          if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
+            ++_ct_hit2_nhits[i];
+        }
+
+      _ct_hit1_sipm_raw_adc[i].resize(4 * _ct_hit1_nhits[i]);
+      _ct_hit1_sipm_adc[i].resize(4 * _ct_hit1_nhits[i]);
+      _ct_hit1_sipm_corr_adc[i].resize(4 * _ct_hit1_nhits[i]);
+      _ct_hit2_sipm_raw_adc[i].resize(4 * _ct_hit2_nhits[i]);
+      _ct_hit2_sipm_adc[i].resize(4 * _ct_hit2_nhits[i]);
+      _ct_hit2_sipm_corr_adc[i].resize(4 * _ct_hit2_nhits[i]);
+
+      unsigned used_hits_1 = 0, used_hits_2 = 0;
 
       for(unsigned i_hit = 0; i_hit < CRTHitVec.size(); ++i_hit)
         {
           art::Ptr<sbn::crt::CRTHit> hit = CRTHitVec[i_hit];
 
-          if(i_hit == 0)
+          if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
             {
               _ct_hit1_t0[i] = hit->ts0_ns;
               _ct_hit1_t1[i] = hit->ts1_ns;
@@ -469,12 +485,13 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
 
               for(unsigned adc_i = 0; adc_i < 4; ++adc_i)
                 {
-                  _ct_hit1_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-                  _ct_hit1_sipm_adc[i][adc_i]      = adcs[adc_i];
-                  _ct_hit1_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+                  _ct_hit1_sipm_raw_adc[i][4 * used_hits_1 + adc_i]  = raw_adcs[adc_i];
+                  _ct_hit1_sipm_adc[i][4 * used_hits_1 + adc_i]      = adcs[adc_i];
+                  _ct_hit1_sipm_corr_adc[i][4 * used_hits_1 + adc_i] = corr_adcs[adc_i];
                 }
+              ++used_hits_1;
             }
-          else if(i_hit == 1)
+          else if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
             {
               _ct_hit2_t0[i] = hit->ts0_ns;
               _ct_hit2_t1[i] = hit->ts1_ns;
@@ -485,10 +502,11 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
 
               for(unsigned adc_i = 0; adc_i < 4; ++adc_i)
                 {
-                  _ct_hit2_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-                  _ct_hit2_sipm_adc[i][adc_i]      = adcs[adc_i];
-                  _ct_hit2_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+                  _ct_hit2_sipm_raw_adc[i][4 * used_hits_2 + adc_i]  = raw_adcs[adc_i];
+                  _ct_hit2_sipm_adc[i][4 * used_hits_2 + adc_i]      = adcs[adc_i];
+                  _ct_hit2_sipm_corr_adc[i][4 * used_hits_2 + adc_i] = corr_adcs[adc_i];
                 }
+              ++used_hits_2;
             }
         }
     }
