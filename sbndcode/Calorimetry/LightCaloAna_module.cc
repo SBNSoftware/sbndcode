@@ -41,6 +41,9 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
+#include "larsim/MCCheater/BackTrackerService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 // SBND includes
 #include "sbnobj/Common/Reco/SimpleFlashMatchVars.h"
@@ -98,11 +101,10 @@ private:
   fhicl::ParameterSet _vis_params;
 
   TTree* _tree;
-  int _run, _subrun, _event;
-  std::vector<int> _slc_pfpid;
-  std::vector<float> _slc_nuscore;
-  std::vector<float> _slc_fmscore; 
-  std::vector<float> _slc_fmtime;
+  // int _run, _subrun, _event;
+  std::vector<double> _sp_x; 
+  std::vector<double> _sp_x_true;
+  std::vector<double> _sp_peakT;
 
   TTree* _tree2;
   int _nmatch=0;
@@ -134,15 +136,16 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
 
   art::ServiceHandle<art::TFileService> fs;
   _tree = fs->make<TTree>("slice_tree","");
-  _tree->Branch("run",             &_run,                             "run/I");
-  _tree->Branch("subrun",          &_subrun,                          "subrun/I");
-  _tree->Branch("event",           &_event,                           "event/I");
-  _tree->Branch("slc_pfpid", "std::vector<int>", &_slc_pfpid);
-  _tree->Branch("slc_nuscore", "std::vector<float>", &_slc_nuscore);
-  _tree->Branch("slc_fmscore", "std::vector<float>", &_slc_fmscore);
+  _tree->Branch("sp_x"    ,  "std::vector<double>", &_sp_x);
+  _tree->Branch("sp_x_true", "std::vector<double>", &_sp_x_true);
+  _tree->Branch("sp_peakT",  "std::vector<double>", &_sp_peakT);
+  // _tree->Branch("run",             &_run,                             "run/I");
+  // _tree->Branch("subrun",          &_subrun,                          "subrun/I");
+  // _tree->Branch("event",           &_event,                           "event/I");
+
 
   _tree2 = fs->make<TTree>("match_tree","");
-  _tree2->Branch("nmatch",       &_nmatch,        "nmatch/I");
+  _tree2->Branch("nmatch",        &_nmatch,       "nmatch/I");
   _tree2->Branch("edep_time",   "std::vector<double>", &_edep_time);
   _tree2->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
   _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
@@ -155,10 +158,12 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
 
 void sbnd::LightCaloAna::analyze(art::Event const& e)
 {
-  _run    = e.id().run();
-  _subrun = e.id().subRun();
-  _event  = e.id().event();
-  std::cout << "run: " << _run <<  ", subrun: " << _subrun  << ", event: " <<  _event << std::endl;
+  int run    = e.id().run();
+  int subrun = e.id().subRun();
+  int event  = e.id().event();
+  std::cout << "run: " << run <<  ", subrun: " << subrun  << ", event: " <<  event << std::endl;
+
+  auto const clockData(art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e));
 
   // get slices 
   ::art::Handle<std::vector<recob::Slice>> slice_h;
@@ -201,17 +206,13 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   art::FindManyP<recob::SpacePoint> pfp_to_spacepoint(pfp_h, e, _slice_producer);
   art::FindManyP<recob::Hit> spacepoint_to_hit(spacepoint_h, e, _slice_producer);
 
-  _slc_pfpid.clear();
-  _slc_nuscore.clear();
-  _slc_fmscore.clear(); 
-
   std::vector<art::Ptr<recob::Slice>> match_slices_v; 
   std::vector<art::Ptr<sbn::SimpleFlashMatch>> match_fm_v;
 
   for (size_t n_slice=0; n_slice < slice_v.size(); n_slice++){
     float nu_score = -9999;
     float fm_score = -9999;
-    float fm_time  = -9999;
+    // float fm_time  = -9999;
     auto slice = slice_v[n_slice];
     bool found_fm = false;
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(n_slice);
@@ -221,7 +222,6 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       // only select the PRIMARY pfp 
       if(!pfp->IsPrimary() && !(abs(pfp->PdgCode()) == 12 || abs(pfp->PdgCode()) == 14|| abs(pfp->PdgCode()) == 16))
         continue;
-      _slc_pfpid.push_back(pfp->Self());
 
       // if primary, get nu-score 
       const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpmeta_v = pfp_to_meta.at(pfp->Self());
@@ -229,12 +229,10 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       larpandoraobj::PFParticleMetadata::PropertiesMap propmap = pfpmeta->GetPropertiesMap();
       if (propmap.count("NuScore")) nu_score = propmap.at("NuScore");
       else nu_score = -1;
-      _slc_nuscore.push_back(nu_score);
       
       // get fm-score 
       std::vector<art::Ptr<sbn::SimpleFlashMatch>> fm_v = pfp_to_sfm.at(pfp.key());
       if (fm_v.empty()){
-        _slc_fmscore.push_back(-999);
         continue;
       }
       if (fm_v.size() > 1)
@@ -242,15 +240,13 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       for (size_t n_fm=0; n_fm < fm_v.size(); n_fm++){
         auto fm = fm_v.at(n_fm);
         fm_score = fm->score.total;
-        fm_time  = fm->time;
+        // fm_time  = fm->time;
         if (nu_score > _nuscore_cut && fm_score < _fmscore_cut && fm_score > 0){
           found_fm = true;
           match_fm_v.push_back(fm);
         }
       } // end flashmatch loop
       if (found_fm ==true) match_slices_v.push_back(slice);
-      _slc_fmscore.push_back(fm_score);
-      _slc_fmtime.push_back(fm_time);
     } // end pfp loop
   } // end slice loop
   if (match_slices_v.empty() && !slice_v.empty()){
@@ -283,9 +279,12 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
 
   const art::ValidHandle<std::vector<sim::SimEnergyDeposit>>&
     energyDeps(e.getValidHandle<std::vector<sim::SimEnergyDeposit>>("ionandscint"));
+  
+  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
 
   for (size_t n_slice=0; n_slice < match_slices_v.size(); n_slice++){
     _nmatch++;
+    _sp_x.clear(); _sp_x_true.clear(); _sp_peakT.clear();
     _edep_time.clear();
 
     std::vector<geo::Point_t> sp_xyz;
@@ -347,6 +346,8 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
           auto hit = hit_v[n_hit];
           if (hit->View() !=plane) continue;
           const auto &position(sp->XYZ());
+          // get true position information 
+          const std::vector<double> xyz_true(bt_serv->HitToXYZ(clockData, hit));
           geo::Point_t xyz(position[0],position[1],position[2]);
           // std::cout << "spacepoint pos: (" << position[0] << ", " << position[1] << ", " << position[2] << std::endl;
           sp_xyz.push_back(xyz);
@@ -355,6 +356,9 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
           double charge = (1/.0201293)*atten_correction*hit->Integral();
           sp_charge.push_back(charge);
           _slice_Q += charge;
+          _sp_x.push_back(position[0]);
+          _sp_x_true.push_back(xyz_true[0]);
+          _sp_peakT.push_back(hit->PeakTime());
         }
       } // end spacepoint loop 
     } // end pfp loop
@@ -379,7 +383,10 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       }
     }
     // TO-DO: keep the amount of light as the average amount of light? 
-    _slice_L = sum_gamma/counter;
+    if (counter != 0)
+      _slice_L = sum_gamma/counter;
+    else
+      _slice_L = 0;
     _true_gamma = 0; 
     _true_charge = 0;
     _true_energy = 0;
@@ -409,9 +416,10 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     std::cout << "fractional energy difference:  " << (_true_energy - _slice_E)/_true_energy << std::endl;
   
     _opflash_time = flash_time;
+    
+    _tree->Fill();
     _tree2->Fill();
   } // end slice loop
-  _tree->Fill();
 } // end analyze
 
 
@@ -474,7 +482,7 @@ void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
                                    std::vector<double> &total_pe_v){
   for (size_t ichan = 0; ichan < flash_pe_v.size(); ichan++){
     auto pe = flash_pe_v[ichan];
-    if(pe == 0)
+    if((pe == 0) || std::isinf(1/visibility[ichan]))
       continue;
     total_pe_v[ichan] += (1/0.03)*pe*(1/visibility[ichan]); 
   }

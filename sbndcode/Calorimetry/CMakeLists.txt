@@ -6,8 +6,12 @@ art_make(
                            larcorealg_GeoAlgo
                            sbncode_OpT0Finder_flashmatch_Base
                            lardataobj_Simulation
+                           larsim_MCCheater_BackTrackerService_service
+                           larsim_MCCheater_ParticleInventoryService_service
+                           larsim_Utils
 
           MODULE_LIBRARIES 
+                           larsim_Utils
                            larsim_PhotonPropagation
                            larsim_PhotonPropagation_PhotonVisibilityService_service
                            larsim_LegacyLArG4
