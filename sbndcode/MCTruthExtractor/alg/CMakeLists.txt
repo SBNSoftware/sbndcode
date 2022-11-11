@@ -1,9 +1,7 @@
-include_directories ( $ENV{GENIE_INC}/GENIE )
-
-art_make(
-            LIB_LIBRARIES
-            larcore_Geometry_Geometry_service
-            larcorealg_Geometry
+art_make_library( SOURCE NuAnaAlg.cxx
+            LIBRARIES
+            larcore::Geometry_Geometry_service
+            larcorealg::Geometry
             nugen::NuReweight_art
             nugen::NuReweight
             nusimdata::SimulationBase
@@ -16,13 +14,11 @@ art_make(
             art::Utilities
             canvas::canvas
             messagefacility::MF_MessageLogger
-
             fhiclcpp::fhiclcpp
-            cetlib::cetlib cetlib_except
+            cetlib::cetlib
             CLHEP::CLHEP
-            
-            ${ROOT_BASIC_LIB_LIST}
+            ROOT::Core
           )
-
+target_include_directories (sbndcode_MCTruthExtractor_alg PRIVATE $ENV{GENIE_INC}/GENIE )
 install_headers()
 
