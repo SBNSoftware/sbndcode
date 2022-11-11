@@ -200,6 +200,8 @@ private:
   std::vector<double> _ct_hit1_t1; ///< CRT track t1 of hit 1
   std::vector<double> _ct_hit2_t0; ///< CRT track t0 of hit 2
   std::vector<double> _ct_hit2_t1; ///< CRT track t1 of hit 2
+  std::vector<uint16_t> _ct_hit1_nhits; ///< CRT track, number of hits merged for 'hit 1'
+  std::vector<uint16_t> _ct_hit2_nhits; ///< CRT track, number of hits merged for 'hit 2'
   std::vector<std::vector<uint16_t> > _ct_hit1_sipm_raw_adc; ///< CRT track, 4 ADC values from hit 1 before corrections are made or pedestals subtracted
   std::vector<std::vector<uint16_t> > _ct_hit1_sipm_adc; ///< CRT track, 4 ADC values from hit 1 before corrections are made (but with pedestals subtracted)
   std::vector<std::vector<uint16_t> > _ct_hit1_sipm_corr_adc; ///< CRT track, 4 ADC values from hit 1
@@ -379,6 +381,8 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("ct_hit1_t1", "std::vector<double>", &_ct_hit1_t1);
   _tree->Branch("ct_hit2_t0", "std::vector<double>", &_ct_hit2_t0);
   _tree->Branch("ct_hit2_t1", "std::vector<double>", &_ct_hit2_t1);
+  _tree->Branch("ct_hit1_nhits", "std::vector<uint16_t>", &_ct_hit1_nhits);
+  _tree->Branch("ct_hit2_nhits", "std::vector<uint16_t>", &_ct_hit2_nhits);
   _tree->Branch("ct_hit1_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_raw_adc);
   _tree->Branch("ct_hit1_sipm_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_adc);
   _tree->Branch("ct_hit1_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit1_sipm_corr_adc);
@@ -1231,6 +1235,8 @@ void CRTAnalysis::analyze(art::Event const& e)
   _ct_hit1_t1.resize(n_tracks);
   _ct_hit2_t0.resize(n_tracks);
   _ct_hit2_t1.resize(n_tracks);
+  _ct_hit1_nhits.resize(n_tracks);
+  _ct_hit2_nhits.resize(n_tracks);
   _ct_hit1_sipm_raw_adc.resize(n_tracks);
   _ct_hit1_sipm_adc.resize(n_tracks);
   _ct_hit1_sipm_corr_adc.resize(n_tracks);
@@ -1260,23 +1266,35 @@ void CRTAnalysis::analyze(art::Event const& e)
     _ct_hit2_ez[i] = track->z2_err;
 
     if (_debug) std::cout << "CRT track, z1 = " << _ct_hit1_z[i] << ", z2 = " << _ct_hit2_z[i] << ", ts0_ns_h1 = " << track->ts0_ns_h1 << ", ts0_ns_h2 = " << track->ts0_ns_h2 << ", tof = " << _ct_tof[i] << std::endl;
-    _ct_hit1_sipm_raw_adc[i].resize(4);
-    _ct_hit1_sipm_adc[i].resize(4);
-    _ct_hit1_sipm_corr_adc[i].resize(4);
-    _ct_hit2_sipm_raw_adc[i].resize(4);
-    _ct_hit2_sipm_adc[i].resize(4);
-    _ct_hit2_sipm_corr_adc[i].resize(4);
+
+    auto hit_v = crt_track_to_hit.at(track.key());
+    _ct_hit1_nhits[i] = 0;
+    _ct_hit2_nhits[i] = 0;
+
+    for(auto hit : hit_v)
+      {
+	if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
+	  ++_ct_hit1_nhits[i];
+	else if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
+	  ++_ct_hit2_nhits[i];
+      }
+
+    _ct_hit1_sipm_raw_adc[i].resize(4 * _ct_hit1_nhits[i]);
+    _ct_hit1_sipm_adc[i].resize(4 * _ct_hit1_nhits[i]);
+    _ct_hit1_sipm_corr_adc[i].resize(4 * _ct_hit1_nhits[i]);
+    _ct_hit2_sipm_raw_adc[i].resize(4 * _ct_hit1_nhits[i]);
+    _ct_hit2_sipm_adc[i].resize(4 * _ct_hit1_nhits[i]);
+    _ct_hit2_sipm_corr_adc[i].resize(4 * _ct_hit1_nhits[i]);
 
     _ct_true_tof[i] = 0;
-   
-    auto hit_v = crt_track_to_hit.at(track.key());
-    assert(hit_v.size == 2);
+
+    unsigned used_hits_1 = 0, used_hits_2 = 0;
 
     for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++)
       {
 	auto hit = hit_v[i_hit];
 	  
-	if(i_hit == 0)
+	if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
 	  {
 	    _ct_hit1_t0[i] = hit->ts0_ns;
 	    _ct_hit1_t1[i] = hit->ts1_ns;
@@ -1287,12 +1305,13 @@ void CRTAnalysis::analyze(art::Event const& e)
 
 	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
 	      {
-		_ct_hit1_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-		_ct_hit1_sipm_adc[i][adc_i]      = adcs[adc_i];
-		_ct_hit1_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+		_ct_hit1_sipm_raw_adc[i][4 * used_hits_1 + adc_i]  = raw_adcs[adc_i];
+		_ct_hit1_sipm_adc[i][4 * used_hits_1 + adc_i]      = adcs[adc_i];
+		_ct_hit1_sipm_corr_adc[i][4 * used_hits_1 + adc_i] = corr_adcs[adc_i];
 	      }
+	    ++used_hits_1;
 	  }
-	else if(i_hit == 1)
+	if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
 	  {
 	    _ct_hit2_t0[i] = hit->ts0_ns;
 	    _ct_hit2_t1[i] = hit->ts1_ns;
@@ -1303,10 +1322,11 @@ void CRTAnalysis::analyze(art::Event const& e)
 
 	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
 	      {
-		_ct_hit2_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-		_ct_hit2_sipm_adc[i][adc_i]      = adcs[adc_i];
-		_ct_hit2_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+		_ct_hit2_sipm_raw_adc[i][4 * used_hits_1 + adc_i]  = raw_adcs[adc_i];
+		_ct_hit2_sipm_adc[i][4 * used_hits_1 + adc_i]      = adcs[adc_i];
+		_ct_hit2_sipm_corr_adc[i][4 * used_hits_1 + adc_i] = corr_adcs[adc_i];
 	      }
+	    ++used_hits_2;
 	  }
       }
   }
