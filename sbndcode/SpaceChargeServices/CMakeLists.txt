@@ -1,19 +1,13 @@
-simple_plugin(SpaceChargeServiceSBND "service"
+cet_build_plugin(SpaceChargeServiceSBND art::service SOURCE SpaceChargeServiceSBND_service.cc LIBRARIES
               sbndcode_SpaceCharge
 	      art::Framework_Core
 	      art::Framework_Principal
 	      art::Framework_Services_Registry
-	      art::Persistency_Common canvas
-	      art::Persistency_Provenance canvas
-	      ${ART_FRAMEWORK_SERVICES_BASIC}
-	      art_root_io::tfile_support ROOT::Core
+	      art::Persistency_Common
+	      art::Persistency_Provenance
+	      art_root_io::tfile_support
 	      art_root_io::TFileService_service
-	      ${ART_FRAMEWORK_SERVICES_SYSTEM_FILECATALOGMETADATA_SERVICE}
-	      art::Utilities canvas
-	      messagefacility::MF_MessageLogger
-	      
-  	      cetlib::cetlib cetlib_except
-   	      ${ROOT_BASIC_LIB_LIST}
+	      art::Utilities
 )
 install_headers()
 install_fhicl()
