@@ -263,8 +263,8 @@ namespace sbnd{
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).orientation;
   }
 
-  std::vector<double> CRTGeoAlg::StripHit3DPos(const std::string stripName, const double x, 
-                                               const double ex)
+  std::array<double, 6> CRTGeoAlg::StripHit3DPos(const std::string stripName, const double x, 
+                                                 const double ex)
   {
     const CRTStripGeo &strip = fStrips.at(stripName);
 
@@ -285,9 +285,9 @@ namespace sbnd{
     double w2[3];
     auxDetSensitive.LocalToWorld(l2, w2);
 
-    std::vector<double> limits = {std::min(w1[0],w2[0]), std::max(w1[0],w2[0]),
-                                  std::min(w1[1],w2[1]), std::max(w1[1],w2[1]),
-                                  std::min(w1[2],w2[2]), std::max(w1[2],w2[2])};
+    std::array<double, 6> limits = {std::min(w1[0],w2[0]), std::max(w1[0],w2[0]),
+                                    std::min(w1[1],w2[1]), std::max(w1[1],w2[1]),
+                                    std::min(w1[2],w2[2]), std::max(w1[2],w2[2])};
     return limits;
   }
 
