@@ -159,8 +159,8 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
 sbnd::crt::CRTCluster sbnd::CRTClusterProducer::CharacteriseCluster(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &clusteredHits)
 {
   const uint16_t nHits = clusteredHits.size();
-  uint16_t s = 0, ts0 = 0, ts1 = 0;
-  uint32_t adc = 0, adcCorr = 0;
+  uint32_t s = 0, ts0 = 0, ts1 = 0;
+  uint16_t adc = 0, adcCorr = 0;
 
   std::string taggerName = fCRTGeoAlg.ChannelToTaggerName(clusteredHits.at(0)->Channel());
   
@@ -187,7 +187,7 @@ sbnd::crt::CRTCluster sbnd::CRTClusterProducer::CharacteriseCluster(const std::v
       for(uint16_t ii = i+1; ii < clusteredHits.size(); ++ii)
         {
           const art::Ptr<sbnd::crt::CRTStripHit> overlappinghit = clusteredHits[ii];
-          const CRTStripGeo overlappingstrip          = fCRTGeoAlg.GetStrip(overlappinghit->Channel());
+          const CRTStripGeo overlappingstrip                    = fCRTGeoAlg.GetStrip(overlappinghit->Channel());
           
           if(!fCRTGeoAlg.CheckOverlap(strip, overlappingstrip))
             continue;
@@ -209,7 +209,7 @@ sbnd::crt::CRTCluster sbnd::CRTClusterProducer::CharacteriseCluster(const std::v
   ts0 /= nHits;
   ts1 /= nHits;
 
-  return sbnd::crt::CRTCluster(s, ts0, ts1, edges, nHits, adc, adcCorr, taggerName);
+  return sbnd::crt::CRTCluster(ts0, ts1, s, edges, nHits, adc, adcCorr, taggerName);
 }
   
 std::array<double, 6> sbnd::CRTClusterProducer::FindOverlap(const art::Ptr<sbnd::crt::CRTStripHit> &hit0, const art::Ptr<sbnd::crt::CRTStripHit> &hit1,
