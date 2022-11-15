@@ -33,6 +33,11 @@ void CRTHitRecoAlg::reconfigure(const Config& config){
   fClockSpeedCRT = config.ClockSpeedCRT();
   fTimeOffset = config.TimeOffset();
   fUseG4RefTimeOffset = config.UseG4RefTimeOffset();
+  fPropDelay = config.PropDelay();
+  fTDelayNorm = config.TDelayNorm();
+  fTDelayShift = config.TDelayShift();
+  fTDelaySigma = config.TDelaySigma();
+  fTDelayOffset = config.TDelayOffset();
 
   return;
 }
@@ -181,8 +186,8 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTHitRecoAlg::Create
                            std::abs((overlap[3] - overlap[2])/2.), 
                            std::abs((overlap[5] - overlap[4])/2.));
 
-            // Average the time
-            double time = (t0_1 + t0_2)/2 - fTimeOffset;
+            // Correct and average the time
+            double time = CorrectTime(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean) - fTimeOffset;
             //double pes = tagStrip.second[hit_i].pes + taggerStrips[otherPlane][hit_j].pes;
             double pes = CorrectNpe(tagStrip.second[hit_i], taggerStrips[otherPlane][hit_j], mean);
             int plane = sbnd::CRTCommonUtils::GetPlaneIndex(tagStrip.first.first);
@@ -321,8 +326,6 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
 
   sbn::crt::CRTHit crtHit;
 
-  std::cout << "Filling hit with time " << time << ", fTimeOffset " << fTimeOffset << std::endl;
-
   crtHit.feb_id      = tfeb_id;
   crtHit.pesmap      = tpesmap;
   crtHit.peshit      = peshit;
@@ -339,7 +342,9 @@ sbn::crt::CRTHit CRTHitRecoAlg::FillCrtHit(std::vector<uint8_t> tfeb_id, std::ma
   crtHit.z_pos       = z;
   crtHit.z_err       = ez;
   crtHit.tagger      = tagger;
-  std::cout << "\t and is in fact " << crtHit.ts0_ns << " " << crtHit.ts0_s << " " <<crtHit.ts1_ns << std::endl;
+
+  mf::LogInfo("CRTHitRecoAlg") << "Filling hit with time " << time << ", fTimeOffset " << fTimeOffset << '\n'
+                               << "\t and is in fact " << crtHit.ts0_ns << " " << crtHit.ts0_s << " " <<crtHit.ts1_ns << std::endl;
 
   return crtHit;
 
@@ -364,6 +369,33 @@ double CRTHitRecoAlg::CorrectNpe(CRTStrip strip1, CRTStrip strip2, TVector3 posi
 
   // Add the two strips together
   return pesCorr1 + pesCorr2;
+}
+
+double CRTHitRecoAlg::CorrectTime(CRTStrip strip1, CRTStrip strip2, TVector3 position){
+  geo::Point_t pos {position.X(), position.Y(), position.Z()};
+
+  // Get the strip name from the channel ID
+  std::string name1 = fCrtGeo.ChannelToStripName(strip1.channel);
+  std::string name2 = fCrtGeo.ChannelToStripName(strip2.channel);
+
+  // Get the distance from the CRT hit to the sipm end
+  double stripDist1 = fCrtGeo.DistanceDownStrip(pos, name1);
+  double stripDist2 = fCrtGeo.DistanceDownStrip(pos, name2);
+
+  // Correct the measured time for propagation delay
+  double timeCorr1 = strip1.t0 - stripDist1 * fPropDelay * 1e-3;
+  double timeCorr2 = strip2.t0 - stripDist2 * fPropDelay * 1e-3;
+
+  // Find the corrected pe
+  double pesCorr1 = strip1.pes * pow(stripDist1 - fNpeScaleShift, 2) / pow(fNpeScaleShift, 2);
+  double pesCorr2 = strip2.pes * pow(stripDist2 - fNpeScaleShift, 2) / pow(fNpeScaleShift, 2);
+
+  // Use to correct for time walk
+  timeCorr1 -= (fTDelayNorm * exp(-0.5 * pow((pesCorr1 - fTDelayShift) / fTDelaySigma, 2)) + fTDelayOffset) * 1e-3;
+  timeCorr2 -= (fTDelayNorm * exp(-0.5 * pow((pesCorr2 - fTDelayShift) / fTDelaySigma, 2)) + fTDelayOffset) * 1e-3;
+
+  // Average the two strips times
+  return (timeCorr1 + timeCorr2) / 2.;
 }
 
 }

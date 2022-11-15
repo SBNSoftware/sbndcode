@@ -15,7 +15,7 @@ namespace lightana
     SimpleFlashAlgo(const std::string name);
 
     void Configure(const Config_t &p);
-    
+
     virtual ~SimpleFlashAlgo();
 
     LiteOpFlashArray_t RecoFlash(const LiteOpHitArray_t ophits);
@@ -36,6 +36,7 @@ namespace lightana
     double _veto_time;      // veto time
     double _time_res;       // time resolution of pe sum
     double _pre_sample;     // time pre-sample
+    int    _tpc;            // tpc
 
     std::vector<double> _pesum_v;        // pw aum array
     std::vector<double> _pe_baseline_v;  // calibration: PEs to be subtracted from each opdet
@@ -47,7 +48,7 @@ namespace lightana
     // list of opchannel to use
     std::vector<int> _opch_to_index_v;
     std::vector<int> _index_to_opch_v;
-                             
+
   };
 
   /**

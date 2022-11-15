@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+FlashGeoBarycenter:
+{
+  tool_type: "FlashGeoBarycenter"
+  WeightExp: 2
+}
+
+END_PROLOG

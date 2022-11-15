@@ -1,14 +1,21 @@
-art_make(
-          LIB_LIBRARIES larcorealg_Geometry
+art_make_library(
+          SOURCE
+                      ChannelMapSBNDAlg.cxx
+                      GeoObjectSorterSBND.cxx
+          LIBRARIES     larcorealg::Geometry
                         messagefacility::MF_MessageLogger
                         cetlib::cetlib
                         cetlib_except::cetlib_except
                         fhiclcpp::fhiclcpp
-                        ${ROOT_BASIC_LIB_LIST}
+                        ROOT::Core
                         ROOT::Geom
-          SERVICE_LIBRARIES
-                        sbndcode_Geometry
-                        larcorealg_Geometry
+)
+cet_build_plugin( SBNDGeometryHelper art::service
+          SOURCE SBNDGeometryHelper_service.cc
+          LIBRARIES
+                        sbndcode::Geometry
+                        larcorealg::Geometry
+                        larcore::Geometry_Geometry_service
                         art::Framework_Services_Registry
                         canvas::canvas
                         fhiclcpp::fhiclcpp

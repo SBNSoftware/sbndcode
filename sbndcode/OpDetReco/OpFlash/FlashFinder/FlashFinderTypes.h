@@ -28,19 +28,21 @@ namespace lightana {
     std::vector<unsigned int> asshit_idx;
     double time;
     double time_err;
-    
+    int tpc;
+
     LiteOpFlash_t() : channel_pe(),
                      time(kINVALID_TIME)
     {}
 
     LiteOpFlash_t(double flash_time,
                   double flash_time_err,
+                  int flash_tpc,
                   std::vector<double>&& pe_array,
                   std::vector<unsigned int>&& hit_idx)
       : channel_pe(std::move(pe_array))
       , asshit_idx(std::move(hit_idx))
-    { time = flash_time; time_err = flash_time_err; }
-    
+    { time = flash_time; time_err = flash_time_err; tpc=flash_tpc; }
+
     void Register(size_t channel, double pe)
     {
       if(channel >= channel_pe.size()) channel_pe.resize(channel+1,0);

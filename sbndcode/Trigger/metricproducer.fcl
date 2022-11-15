@@ -1,0 +1,28 @@
+#include "pmtsoftwaretriggerproducer.fcl"
+
+BEGIN_PROLOG
+
+MetricProducer:
+{
+  module_type: "MetricProducer"
+  is_persistable: true
+  BeamWindowStart: 320000
+  BeamWindowEnd: 350000
+  Verbose: true
+
+  crt_metrics: true
+  pmt_metrics: true
+
+  TriggerTimeOffset: @local::pmtSoftwareTriggerProducer.TriggerTimeOffset
+  BeamWindowLength: @local::pmtSoftwareTriggerProducer.BeamWindowLength
+  WvfmLength: @local::pmtSoftwareTriggerProducer.WvfmLength
+
+  BaselineAlgo: @local::pmtSoftwareTriggerProducer.BaselineAlgo
+  InputBaseline: @local::pmtSoftwareTriggerProducer.InputBaseline
+  InputBaselineSigma: @local::pmtSoftwareTriggerProducer.InputBaselineSigma
+  ADCThreshold: @local::pmtSoftwareTriggerProducer.ADCThreshold 
+  FindPulses: @local::pmtSoftwareTriggerProducer.FindPulses
+  PEArea: @local::pmtSoftwareTriggerProducer.PEArea 
+}
+
+END_PROLOG

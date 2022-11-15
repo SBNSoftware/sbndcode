@@ -1,0 +1,15 @@
+
+BEGIN_PROLOG
+
+CRTArtdaqFragmentProducer:
+{
+  module_type: "CRTArtdaqFragmentProducer"
+  SimModuleLabel: "largeant"
+  CRTSimLabel: "crt"
+  FEBDataLabel: "crtsim"
+  ClockSpeedCRT: 1 #set to @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT in run fcl
+  Verbose: true
+  FirstFEBMac5: 0
+}
+
+END_PROLOG

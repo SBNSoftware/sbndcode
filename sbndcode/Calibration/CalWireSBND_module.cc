@@ -80,6 +80,10 @@ namespace caldata {
     bool          fDoAdvBaselineSub;  ///< use interpolation-based baseline subtraction
     int           fBaseSampleBins;    ///< bin grouping size in "interpolate"  method
     float         fBaseVarCut;        ///< baseline variance cut used in "interpolate" method
+    //FFT service options
+    int fFFTSize;
+    std::string fFFTOption;
+    int fFFTFitBins;
    
     std::string  fDigitModuleLabel;   ///< module that made digits
                                                        
@@ -125,6 +129,9 @@ namespace caldata {
     fDoAdvBaselineSub = p.get< bool >       ("DoAdvBaselineSub");
     fBaseSampleBins   = p.get< int >        ("BaseSampleBins");
     fBaseVarCut       = p.get< int >        ("BaseVarCut");
+    fFFTSize          = p.get< int >        ("FFTSize");
+    fFFTOption        = p.get< std::string >("FFTOption");
+    fFFTFitBins       = p.get< int >        ("FFTFitBins");
     
     fSpillName="";
     
@@ -154,6 +161,10 @@ namespace caldata {
 
     // get the FFT service to have access to the FFT size
     art::ServiceHandle<util::LArFFT> fFFT;
+
+    // reset FFT service for each event
+    fFFT->ReinitializeFFT(fFFTSize,fFFTOption,fFFTFitBins);
+
     int transformSize = fFFT->FFTSize();
 
     // Get signal shaping service.
@@ -182,12 +193,12 @@ namespace caldata {
 
 
     if( (unsigned int)transformSize < dataSize){
-      mf::LogWarning("CalWireSBND")<<"FFT size (" << transformSize << ") "
+      mf::LogInfo("CalWireSBND")<<"FFT size (" << transformSize << ") "
                                     << "is smaller than the data size (" << dataSize << ") "
                                     << "\nResizing the FFT now...";
       fFFT->ReinitializeFFT(dataSize,fFFT->FFTOptions(),fFFT->FFTFitBins());
       transformSize = fFFT->FFTSize();
-      mf::LogWarning("CalWireSBND")<<"FFT size is now (" << transformSize << ") "
+      mf::LogInfo("CalWireSBND")<<"FFT size is now (" << transformSize << ") "
                                     << "and should be larger than the data size (" << dataSize << ")";
     }
 

@@ -7,6 +7,7 @@ sbnd_basicpandora:
 {
     module_type:                                                    "StandardPandora"
     GeantModuleLabel:                                               "largeant"
+    SimChannelModuleLabel:                                          "simdrift"
     HitFinderModuleLabel:                                           "gaushit"
     EnableMCParticles:                                              false
     EnableProduction:                                               true
@@ -32,6 +33,10 @@ sbnd_pandora.ShouldRunSlicing:                                      true
 sbnd_pandora.ShouldRunNeutrinoRecoOption:                           true
 sbnd_pandora.ShouldRunCosmicRecoOption:                             true
 sbnd_pandora.ShouldPerformSliceId:                                  true
+
+sbnd_pandora_cheat:                                                 @local::sbnd_pandora
+sbnd_pandora_cheat.EnableMCParticles:                               true
+sbnd_pandora_cheat.ConfigFile:                                      "PandoraSettings_Cheat.xml"
 
 sbnd_pandorawriter:                                                 @local::sbnd_basicpandora
 sbnd_pandorawriter.ConfigFile:                                      "PandoraSettings_Write.xml"
