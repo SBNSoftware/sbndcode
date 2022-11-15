@@ -16,6 +16,7 @@ namespace sbnd{
     fSimLabel = config.SimLabel();
     fSimDepositLabel = config.SimDepositLabel();
     fStripHitLabel = config.StripHitLabel();
+    fClusterLabel = config.ClusterLabel();
 
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
@@ -24,12 +25,14 @@ namespace sbnd{
     fDrawTrueTracks = config.DrawTrueTracks();
     fDrawSimDeposits = config.DrawSimDeposits();
     fDrawStripHits = config.DrawStripHits();
+    fDrawClusters = config.DrawClusters();
 
     fTaggerColour = config.TaggerColour();
     fTpcColour = config.TpcColour();
     fTrueTrackColour = config.TrueTrackColour();
     fSimDepositColour = config.SimDepositColour();
     fStripHitColour = config.StripHitColour();
+    fClusterColour = config.ClusterColour();
 
     fPrint = config.Print();
 
@@ -61,6 +64,11 @@ namespace sbnd{
   void CRTEventDisplayAlg::SetDrawStripHits(bool tf)
   {
     fDrawStripHits = tf;
+  }
+
+  void CRTEventDisplayAlg::SetDrawClusters(bool tf)
+  {
+    fDrawClusters = tf;
   }
 
   void CRTEventDisplayAlg::SetPrint(bool tf)
@@ -219,6 +227,7 @@ namespace sbnd{
  		double x = (ide.entryX + ide.exitX) / 2.;
 		double y = (ide.entryY + ide.exitY) / 2.;
 		double z = (ide.entryZ + ide.exitZ) / 2.;
+		double t = (ide.entryT + ide.exitT) / 2.;
 
  		double ex = std::abs(ide.entryX - ide.exitX) / 2.;
 		double ey = std::abs(ide.entryY - ide.exitY) / 2.;
@@ -229,7 +238,7 @@ namespace sbnd{
 
 		if(fPrint)
 		  std::cout << "Sim Energy Deposit: (" 
-			    << x << ", " << y << ", " << z << ") by trackID: " << ide.trackID << std::endl;
+			    << x << ", " << y << ", " << z << ") by trackID: " << ide.trackID << " at t = " << t << std::endl;
 		DrawCube(c1, rmin, rmax, fSimDepositColour);
 	      }
 	  }	
@@ -252,6 +261,24 @@ namespace sbnd{
 			<< rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << stripHit.Ts1() << std::endl;
     
 	    DrawCube(c1, rmin, rmax, fStripHitColour);
+	  }
+      }
+
+    if(fDrawClusters)
+      {
+	auto clustersHandle = event.getValidHandle<std::vector<sbnd::crt::CRTCluster>>(fClusterLabel);
+
+	for(auto const cluster : *clustersHandle)
+	  {
+	    double rmin[3] = {cluster.MinX(), cluster.MinY(), cluster.MinZ()};
+	    double rmax[3] = {cluster.MaxX(), cluster.MaxY(), cluster.MaxZ()};
+
+	    if(fPrint)
+	      std::cout << "Cluster of " << cluster.NHits() << " hits: (" 
+			<< rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
+			<< rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << cluster.Ts1() << std::endl;
+    
+	    DrawCube(c1, rmin, rmax, fClusterColour);
 	  }
       }
 
