@@ -197,11 +197,9 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
     else{
       wfPeakADC = *min_element(wave.begin(), wave.end());
       saturated = wfPeakADC<=fADCSaturationValue;
-      std::cout<<wfPeakADC<<" "<<saturated<<" "<<"Saturation!\n";
     }
 
     if(!fUseSaturated && saturated ){
-      std::cout<<"IsSaturated \n";
       mf::LogWarning("OpDeconvolutionAlg")<<"Skip saturated waveform @ OpCh "<< wf.ChannelNumber()<<" with time stamp "<<wf.TimeStamp()<<"\n";
       continue;
     }
