@@ -27,4 +27,5 @@ install_source()
 ##FILE(GLOB fcl_files *.fcl)
 
 add_subdirectory(Alg)
+add_subdirectory(job)
 add_subdirectory(reco_deco_sbnd)
