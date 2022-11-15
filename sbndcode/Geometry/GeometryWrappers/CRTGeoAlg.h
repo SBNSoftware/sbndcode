@@ -156,8 +156,8 @@ namespace sbnd{
       moduleNode->LocalToMaster(origin, modulePosMother);
       orientation = (modulePosMother[2] > 0);
 
-      // Location of SiPMs - CRT BeamTelescope specific
-      top = false;
+      // Location of SiPMs
+      top = (orientation == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
 
       // Fill edges
       minX = std::min(limitsWorld[0], limitsWorld2[0]);
@@ -254,11 +254,15 @@ namespace sbnd{
 
     size_t NumStrips() const;
 
+    size_t NumSiPMs() const;
+
     std::map<std::string, CRTTaggerGeo> GetTaggers() const;
 
     std::map<std::string, CRTModuleGeo> GetModules() const;
 
     std::map<std::string, CRTStripGeo> GetStrips() const;
+
+    std::map<uint16_t, CRTSiPMGeo> GetSiPMs() const;
 
     CRTTaggerGeo GetTagger(const std::string taggerName) const;
 
