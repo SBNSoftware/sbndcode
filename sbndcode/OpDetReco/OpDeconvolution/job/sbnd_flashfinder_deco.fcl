@@ -1,0 +1,51 @@
+#include "sbnd_flashfinder.fcl"
+
+
+BEGIN_PROLOG
+
+####OpFlash finder for PMT deconvolved waveforms#####
+###TPC0
+SBNDDecoSimpleFlashTPC0: @local::SBNDSimpleFlashTPC0
+SBNDDecoSimpleFlashTPC0.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC0.OpHitProducers: ["ophitpmt"]
+SBNDDecoSimpleFlashTPC0.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC0.UseT0Tool: true
+SBNDDecoSimpleFlashTPC0.CorrectLightPropagation: true
+
+#TPC1
+SBNDDecoSimpleFlashTPC1: @local::SBNDSimpleFlashTPC1
+SBNDDecoSimpleFlashTPC1.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC1.OpHitProducers: ["ophitpmt"]
+SBNDDecoSimpleFlashTPC1.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC1.UseT0Tool: true
+SBNDDecoSimpleFlashTPC1.CorrectLightPropagation: true
+
+
+
+
+
+####OpFlash finder for XArapucas deconvolved waveforms#####
+###TPC0
+SBNDDecoSimpleFlashTPC0Arapuca: @local::SBNDSimpleFlashTPC0
+SBNDDecoSimpleFlashTPC0Arapuca.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC0Arapuca.OpHitProducers: ["ophitdecoxarapuca"]
+SBNDDecoSimpleFlashTPC0Arapuca.OpFlashProducer: "opflasharapuca"
+SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.PD: ["xarapuca_vuv","xarapuca_vis"]
+#TPC1
+SBNDDecoSimpleFlashTPC1Arapuca: @local::SBNDSimpleFlashTPC1
+SBNDDecoSimpleFlashTPC1Arapuca.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC1Arapuca.OpHitProducers: ["ophitdecoxarapuca"]
+SBNDDecoSimpleFlashTPC1Arapuca.OpFlashProducer: "opflasharapuca"
+SBNDDecoSimpleFlashTPC1Arapuca.AlgoConfig.PD: ["xarapuca_vuv","xarapuca_vis"]
+
+physics.producers.opflashdecotpc0arapuca.AlgoConfig.MinMultCoinc: 3
+physics.producers.opflashdecotpc0arapuca.AlgoConfig.PEThreshold: 30
+physics.producers.opflashdecotpc0arapuca.AlgoConfig.TimeResolution: 0.06
+
+physics.producers.opflashdecotpc1arapuca.AlgoConfig.MinMultCoinc: 3
+physics.producers.opflashdecotpc1arapuca.AlgoConfig.PEThreshold: 30
+physics.producers.opflashdecotpc1arapuca.AlgoConfig.TimeResolution: 0.06
+
+
+
+END_PROLOG

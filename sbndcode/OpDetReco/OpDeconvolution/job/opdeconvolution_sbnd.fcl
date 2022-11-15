@@ -14,7 +14,7 @@ SBNDOpDeconvolution:
 SBNDOpDeconvolutionPMT: @local::SBNDOpDeconvolution
 SBNDOpDeconvolutionPMT.PDTypes: ["pmt_coated", "pmt_uncoated"]
 SBNDOpDeconvolutionPMT.Electronics: [""]
-SBNDOpDeconvolutionPMT.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_pmt_sbnd.root"
+SBNDOpDeconvolutionPMT.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"
 
 SBNDOpDeconvolutionXARAPUCA: @local::SBNDOpDeconvolution
 SBNDOpDeconvolutionXARAPUCA.PDTypes: ["xarapuca_vuv", "xarapuca_vis"]
@@ -24,7 +24,9 @@ SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Electronics: "Daphne"
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.UseParamFilter: true
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0;
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.FilterParams: [0.002558, 2] #Freq in GHz
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.DecoWaveformPrecision: 0.002 #Scale deco waves by factor x500
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.PositivePolarity: true
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ADCSaturationValue: 5000 #!!!Check with R.Alvarez
+
 
 
 END_PROLOG
