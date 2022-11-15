@@ -1,4 +1,4 @@
-#include "cafmakerjob_sbnd_genie_and_fluxwgt.fcl"
+#include "cafmakerjob_sbnd_sce_genie_and_fluxwgt.fcl"
 
 services.NuRandomService.policy: "perEvent"
 

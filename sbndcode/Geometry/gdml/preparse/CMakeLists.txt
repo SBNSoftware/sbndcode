@@ -1,6 +1,7 @@
-art_make_exec(NAME preparseGDML
+cet_make_exec(NAME preparseGDML
   LIBRARIES
-    ${ROOT_BASIC_LIB_LIST}
+    ROOT::Core
+    ROOT::Hist
   )
 
 install_source()
