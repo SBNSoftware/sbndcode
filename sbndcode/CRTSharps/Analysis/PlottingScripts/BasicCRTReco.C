@@ -7,10 +7,10 @@ void BasicCRTReco()
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *tree = new TChain("crtana/tree");
-  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/run2100/crtana_sbnd.root");
+  const TString run_name = "run4460";
 
-  const TString run_name = "run2100";
+  TChain *tree = new TChain("crtana/tree");
+  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/" + run_name + "/crtana_sbnd.root");
 
   struct datacut {
     TCut cut;
@@ -45,7 +45,9 @@ void BasicCRTReco()
 
   const int plotcolour = kMagenta+2;
   
-  std::vector<datacut> cuts = { { "", "all" },
+  std::vector<datacut> cuts = { { "", "all"},
+				{ "chit_t1 < 3.32e5", "prebeam"},
+				{ "chit_t1 > 3.32e5 && chit_t1 < 3.35e5", "beam"},
   };
 
   std::vector<plt> plots = { {"n_crthits", "@chit_x.size()", ";nCRTHits;Events",
@@ -62,14 +64,24 @@ void BasicCRTReco()
 			      120, -300, 900, plotcolour},
 			     {"crthit_t0", "1e-6 * chit_t0", ";CRTHit t0 (ms);CRTHits",
 			      120, 0, 1200, plotcolour, {}, "", true},
-			     {"crthit_t1", "1e-3 * chit_t1", ";CRTHit t1 (#mus);CRTHits",
+			     {"crthit_t1", "1e-6 * chit_t1", ";CRTHit t1 (ms);CRTHits",
+			      100, 0, 1200, plotcolour, {}, "", true},
+			     {"crthit_t1_wide_beam", "1e-3 * chit_t1", ";CRTHit t1 (#mus);CRTHits",
 			      100, 0, 500, plotcolour, {}, "", true},
+			     {"crthit_t1_beam", "1e-3 * chit_t1", ";CRTHit t1 (#mus);CRTHits",
+			      120, 320, 350, plotcolour, {}, "", true},
 			     {"crthit_t1_diff", "chit_t1_diff", ";CRTHit #Delta t1 (ns);CRTHits",
 			      100, -50, 50, plotcolour, {}, "", true},
     			     {"crthit_pes", "chit_pes", ";CRTHit PEs;CRTHits",
 			      40, 0, 800, plotcolour},
 			     {"crthit_panel", "chit_z > 0", ";CRTHit panel;CRTHits",
 			      2, 0, 2, plotcolour, {"Upstream", "Downstream"}, "", true},
+			     {"crthit_sipm_raw_adc", "chit_sipm_raw_adc", ";CRTHit Raw ADC;CRTHits",
+			      100, 0, 5000, plotcolour},
+			     {"crthit_sipm_adc", "chit_sipm_adc", ";CRTHit ADC;CRTHits",
+			      100, 0, 5000, plotcolour},
+			     {"crthit_sipm_corr_adc", "chit_sipm_corr_adc", ";CRTHit Corrected ADC;CRTHits",
+			      160, 0, 8000, plotcolour},
 			     {"feb_geo_id", "feb_mac5", ";FEB Geo ID;FEBDatas",
 			      9, 0, 9, plotcolour},
 			     {"feb_t0", "1e-6 * feb_ts0", ";FEB t0 (ms);FEBDatas",
@@ -132,6 +144,9 @@ void BasicCRTReco()
 
       for(auto const &plot : plots)
 	{
+	  if(cut.name != "all" && !plot.name.Contains("crthit"))
+	    continue;
+	  
 	  TCanvas *canvas = new TCanvas("c_" + plot.name + "_" + cut.name, 
 					"c_" + plot.name + "_" + cut.name);
 	  canvas->cd();
@@ -180,7 +195,3 @@ void BasicCRTReco()
 	}
     }
 }
-
-      
-      
-    
