@@ -93,6 +93,9 @@ namespace sbnd{
       
       adsID = _adsID;
       null  = false;
+      
+      std::string volumeName = stripNode->GetVolume()->GetName();
+      minos = volumeName.find("MINOS") != std::string::npos ? true : false;
     }
     std::string name;
     std::string moduleName;
@@ -107,6 +110,7 @@ namespace sbnd{
     double      width;
     uint16_t    adsID;
     bool        null;
+    bool        minos;
   };
 
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger

@@ -373,6 +373,9 @@ namespace crt {
 
         const CRTStripGeo strip   = fCRTGeoAlg.GetStripByAuxDetIndices(adid, adsid);
         const CRTModuleGeo module = fCRTGeoAlg.GetModule(strip.moduleName);
+	
+	if(strip.minos)
+	  return;
         
         // Retrive the ID of this CRT module
         const uint16_t mac5 = adid;
@@ -446,8 +449,6 @@ namespace crt {
             uint32_t channel1ID = strip.channel1;
             uint32_t sipm0ID = stripID * 2 + 0;
             uint32_t sipm1ID = stripID * 2 + 1;
-
-            //            if (volumeName.find("MINOS") != std::string::npos) {continue;} // Ignoring MINOS modules for now.
 
             // Apply ADC threshold and strip-level coincidence (both fibers fire)
             double threshold = static_cast<double>(fParams.QThreshold());
