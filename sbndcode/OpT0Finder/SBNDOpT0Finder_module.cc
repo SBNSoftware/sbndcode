@@ -110,11 +110,12 @@ private:
   double _flash_trange_end; ///< The time stop from where to stop including flashes (to be set)
 
   float _calibration_const;  /// conversion from (ADC*time ticks) to e- (to be set), given in units of (ADC*time ticks)/e-
-  float _charge_limit;
+  float _dQdx_limit;
   float _pitch_limit;
+  bool  _exclude_outliers;
 
-  // float _charge_to_n_photons_track; ///< The conversion factor betweeen hit integral and photons (to be set)
-  // float _charge_to_n_photons_shower; ///< The conversion factor betweeen hit integral and photons (to be set)
+  float _track_to_photons; ///< The conversion factor betweeen hit integral and photons (to be set)
+  float _shower_to_photons; ///< The conversion factor betweeen hit integral and photons (to be set)
 
   // bool _calc_correlated;
   // art::ServiceHandle<sim::LArG4Parameters const> g4param;
@@ -179,11 +180,12 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _uncoated_pmts = this->GetUncoatedPTMList(_opch_to_use);
 
   _calibration_const = p.get<float>("CalibrationConst");
-  _charge_limit      = p.get<float>("ChargeLimit");
+  _dQdx_limit        = p.get<float>("dQdxLimit");
   _pitch_limit       = p.get<float>("PitchLimit");
+  _exclude_outliers  = p.get<bool>("ExcludeOutliers");
 
-  // _charge_to_n_photons_track = p.get<float>("ChargeToNPhotonsTrack");
-  // _charge_to_n_photons_shower = p.get<float>("ChargeToNPhotonsShower");
+  _track_to_photons = p.get<float>("ChargeToNPhotonsTrack");
+  _shower_to_photons = p.get<float>("ChargeToNPhotonsShower");
 
   // _calc_correlated = p.get<bool>("CalcCorrelated",false);
   _select_nus = p.get<bool>("SelectNeutrino", true);
@@ -573,25 +575,27 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           std::vector<art::Ptr<anab::Calorimetry>> calo_v = trk_to_calo.at(track.key());
           auto calo = calo_v[2];
           auto dEdx_v = calo->dEdx(); // assuming units in MeV/cm
-          auto dQdx_v = calo->dQdx(); // this is in ADC/cm!!!!!!
+          auto dADCdx_v = calo->dQdx(); // this is in ADC/cm!!!!!!
           auto pitch_v = calo->TrkPitchVec(); // assuming units in cm 
           auto pos_v   = calo->XYZ();
 
           // create vector of e- instead of ADC units 
-          std::vector<float> dQ_v(dQdx_v.size(),0);
-          for (size_t n_calo = 0; n_calo < dQdx_v.size(); n_calo++){
-            dQ_v[n_calo] = dQdx_v[n_calo]*pitch_v[n_calo]*(1/_calibration_const);
+          std::vector<float> dQdx_v(dADCdx_v.size(),0);
+          for (size_t n_calo = 0; n_calo < dADCdx_v.size(); n_calo++){
+            dQdx_v[n_calo] = dADCdx_v[n_calo]*(1/_calibration_const);
           }
-
-          // remove outliers and find average pitch and dQ
-          for (size_t n_calo = 0; n_calo < calo->dEdx().size(); n_calo++){
-            if (pitch_v[n_calo] > _pitch_limit) pitch_v[n_calo] = 0.0; 
-            if (dQ_v[n_calo] > _charge_limit) dQ_v[n_calo] = 0.0;
-          }
+          // ** start old code **
+          // // remove outliers and find average pitch and dQ
+          // for (size_t n_calo = 0; n_calo < calo->dEdx().size(); n_calo++){
+          //   if (pitch_v[n_calo] > _pitch_limit) pitch_v[n_calo] = 0.0; 
+          //   if (dQ_v[n_calo] > _charge_limit) dQ_v[n_calo] = 0.0;
+          // }
           // float avg_dQ = std::reduce(dQ_v.begin(), dQ_v.end()) / (dQ_v.size());
-          float avg_pitch = std::reduce(pitch_v.begin(), pitch_v.end()) / (pitch_v.size());
-          float max_dQ = _charge_limit;
+          // float avg_pitch = std::reduce(pitch_v.begin(), pitch_v.end()) / (pitch_v.size());
+          // float max_dQ = _charge_limit;
           // loop over all entries in the calo object and replace outliers with averages
+          // ** end old code **
+
           for (size_t n_calo = 0; n_calo < calo->dEdx().size(); n_calo++){
             // only select steps that are in the right TPC
             auto &position = pos_v[n_calo];
@@ -602,25 +606,38 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             float dE; 
             float dQ;
             float pitch; 
-            float W_ph = 19.5*1e-6; // MeV
+            float nphotons; 
+            int   trk_val; 
+
+            // lifetime correction: TODO: remove hardcoded detector lim, drift velocity, and electron lifetime 
+            double drift_time = abs(200.0 - abs(x_calo))/(0.16); // in us, drift velocity = 0.16 cm/us 
+            double atten_corr = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
+
             // steps that do not contain an outlier: 
-            if (pitch_v[n_calo] != 0.0 && dQ_v[n_calo] != 0.0){
+            if (pitch_v[n_calo] < _pitch_limit && dQdx_v[n_calo] < _dQdx_limit){
               pitch = pitch_v[n_calo];
-              dQ = dQ_v[n_calo];
-              dE = dEdx_v[n_calo] * pitch_v[n_calo];
+              dQ = dQdx_v[n_calo] * pitch * atten_corr;
+              dE = dEdx_v[n_calo] * pitch; // this value *is* lifetime corrected
+              nphotons = dE/(19.5*1e-6) - dQ;
+              trk_val = 1;
             } 
             // steps that do contain an outlier: 
-            else{
-              float ModBoxA = 0.93;
-              float ModBoxB = 0.305344;
-              float W_ion = 2.36016e-05;
+            else if(_exclude_outliers == true) // skip outlier values 
+              continue;
+            else if(_exclude_outliers == false){ // use outlier values 
+              pitch = -1.;
+              dQ = dQdx_v[n_calo] * pitch_v[n_calo] * atten_corr;  
+              dE = -1.;
+              nphotons = dQ*_track_to_photons; 
+              trk_val = 0;
+              // float ModBoxA = 0.93;
+              // float ModBoxB = 0.305344;
+              // float W_ion = 2.36016e-05;
 
-              pitch = (pitch_v[n_calo] == 0.0)? avg_pitch : pitch_v[n_calo];
-              dQ = (dQ_v[n_calo] == 0.0)? max_dQ: dQ_v[n_calo];
-              dE = (pitch/ModBoxB)*(std::exp(ModBoxB*W_ion*dQ/pitch) - ModBoxA);
+              // pitch = (pitch_v[n_calo] == 0.0)? avg_pitch : pitch_v[n_calo];
+              // dQ    = (dQ_v[n_calo] == 0.0)?    max_dQ:dQ_v[n_calo];
+              // dE    = (pitch/ModBoxB)*(std::exp(ModBoxB*W_ion*dQ/pitch) - ModBoxA);
             }
-            auto nphotons = dE/W_ph - dQ;
-
             // Fill tree variables 
             _dep_slice.push_back(n_slice);
             _dep_pfpid.push_back(pfp->Self());
@@ -631,14 +648,14 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             _dep_charge.push_back(dQ);
             _dep_photons.push_back(nphotons);
             _dep_pitch.push_back(pitch);
-            _dep_trk.push_back(1);
+            _dep_trk.push_back(trk_val);
 
             // emplace this point into the light cluster 
             light_cluster.emplace_back(position.X(),
                                       position.Y(),
                                       position.Z(),
                                       nphotons,
-                                      1);
+                                      trk_val);
           } // end loop over calo steps 
         } // end loop over tracks 
       } // end calo track section 
@@ -667,18 +684,20 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             }
 
             const auto &position(spacepoint->XYZ());
-            const auto charge((1/_calibration_const)*hit->Integral());
-            // std::cout << "check: " << ::lar_pandora::LArPandoraHelper::IsTrack(pfp) << std::endl;
+            double drift_time = abs(200.0 - abs(position[0]))/(0.16); // in us, drift velocity = 0.16 cm/us 
+            double atten_corr = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
 
+            const auto charge((1/_calibration_const)*hit->Integral()*atten_corr);
+            auto nphotons = charge*_shower_to_photons;
+            
             // Emplace this point with charge to the light cluster
             light_cluster.emplace_back(position[0],
                                        position[1],
                                        position[2],
-                                       charge,
+                                       nphotons,
                                        0);
 
             // Also save the quantites for the output tree
-            // _dep_slice.push_back(_light_cluster_v.size());,
             _dep_slice.push_back(n_slice);
             _dep_pfpid.push_back(pfp->Self());
             _dep_x.push_back(position[0]);
@@ -686,9 +705,9 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             _dep_z.push_back(position[2]);
             _dep_E.push_back(-1.);
             _dep_charge.push_back(charge);
-            _dep_photons.push_back(-1.);
+            _dep_photons.push_back(nphotons);
             _dep_pitch.push_back(-1.);
-            _dep_trk.push_back(0); 
+            _dep_trk.push_back(0);
           }
         } // End loop over Spacepoints
       } // end non-track loop
