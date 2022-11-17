@@ -196,6 +196,8 @@ physics:
          , ophitdecoxarapuca
          , opflashtpc0
          , opflashtpc1
+         , opflashtpc0xarapuca
+         , opflashtpc1xarapuca
          , caldata
          , gaushit
          , fasthit
