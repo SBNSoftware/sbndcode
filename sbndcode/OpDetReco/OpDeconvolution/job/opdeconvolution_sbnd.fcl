@@ -25,7 +25,7 @@ SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.UseParamFilter: true
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0;
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.FilterParams: [0.002558, 2] #Freq in GHz
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.PositivePolarity: true
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ADCSaturationValue: 5000 #!!!Check with R.Alvarez
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ADCSaturationValue: 6954 #From digi_arapuca_sbnd.fcl values and DigiArapucaSBNDAlg.cc#L15
 
 
 

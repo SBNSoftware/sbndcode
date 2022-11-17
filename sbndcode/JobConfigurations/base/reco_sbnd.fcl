@@ -94,17 +94,22 @@ physics:
   rns:                 { module_type: RandomNumberSaver }
 
   ### optical deconvolution
-  opdecopmt:     @local::SBNDOpDeconvolutionPMT
+  opdecopmt:          @local::SBNDOpDeconvolutionPMT
+  opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
 
   ### optical hit finders
   # ophit:               @local::sbnd_hit_finder
   ophitpmt:            @local::SBNDDecoOpHitFinderPMT
-  ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+  ophitdecoxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
 
   ### flash finders
   # opflash:             @local::sbnd_opflash
   opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0
   opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
+
+  # opflash(arapucas):             @local::sbnd_opflash
+  opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
+  opflashtpc1xarapuca:         @local::SBNDDecoSimpleFlashTPC1Arapuca
 
   ### calwire producers
   caldata:             @local::sbnd_calwire
@@ -186,8 +191,9 @@ physics:
  #filters reject all following items.  see lines starting physics.producers below
  reco1: [ rns
          , opdecopmt
+         , opdecoxarapuca
          , ophitpmt
-         , ophitarapuca
+         , ophitdecoxarapuca
          , opflashtpc0
          , opflashtpc1
          , caldata
