@@ -1282,9 +1282,9 @@ void CRTAnalysis::analyze(art::Event const& e)
     _ct_hit1_sipm_raw_adc[i].resize(4 * _ct_hit1_nhits[i]);
     _ct_hit1_sipm_adc[i].resize(4 * _ct_hit1_nhits[i]);
     _ct_hit1_sipm_corr_adc[i].resize(4 * _ct_hit1_nhits[i]);
-    _ct_hit2_sipm_raw_adc[i].resize(4 * _ct_hit1_nhits[i]);
-    _ct_hit2_sipm_adc[i].resize(4 * _ct_hit1_nhits[i]);
-    _ct_hit2_sipm_corr_adc[i].resize(4 * _ct_hit1_nhits[i]);
+    _ct_hit2_sipm_raw_adc[i].resize(4 * _ct_hit2_nhits[i]);
+    _ct_hit2_sipm_adc[i].resize(4 * _ct_hit2_nhits[i]);
+    _ct_hit2_sipm_corr_adc[i].resize(4 * _ct_hit2_nhits[i]);
 
     _ct_true_tof[i] = 0;
 
