@@ -1,3 +1,4 @@
+
 void Pedestals()
 {
   const TString saveDir = "/sbnd/data/users/hlay/crt/sharps/plots/pedestals";
@@ -8,9 +9,9 @@ void Pedestals()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/run2100/ana/data*_ana.root");
+  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/run4460/ana/data*_ana.root");
 
-  const TString run_name = "run2100";
+  const TString run_name = "run4460";
   gSystem->Exec("mkdir -p /sbnd/data/users/hlay/crt/sharps/plots/pedestals/" + run_name);
 
   std::vector<std::vector<uint16_t>> *feb_adc = 0;

@@ -7,7 +7,7 @@ void BasicCRTReco()
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  const TString run_name = "run4460";
+  const TString run_name = "run2100";
 
   TChain *tree = new TChain("crtana/tree");
   tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/" + run_name + "/crtana_sbnd.root");
@@ -70,6 +70,8 @@ void BasicCRTReco()
 			      100, 0, 500, plotcolour, {}, "", true},
 			     {"crthit_t1_beam", "1e-3 * chit_t1", ";CRTHit t1 (#mus);CRTHits",
 			      120, 320, 350, plotcolour, {}, "", true},
+			     {"crthit_t1_fine_beam", "1e-3 * chit_t1", ";CRTHit t1 (#mus);CRTHits",
+			      120, 332, 336, plotcolour, {}, "", true},
 			     {"crthit_t1_diff", "chit_t1_diff", ";CRTHit #Delta t1 (ns);CRTHits",
 			      100, -50, 50, plotcolour, {}, "", true},
     			     {"crthit_pes", "chit_pes", ";CRTHit PEs;CRTHits",
