@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       ImportCRTSharpData
+// Class:       CRTDecoder
 // Plugin Type: producer
-// File:        ImportCRTSharpData_module.cc
+// File:        CRTDecoder_module.cc
 // Author:      Henry Lay (h.lay@lancaster.ac.uk)
 ////////////////////////////////////////////////////////////////////////
 
@@ -23,20 +23,20 @@
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
 
-class ImportCRTSharpData;
+class CRTDecoder;
 
 
-class ImportCRTSharpData : public art::EDProducer {
+class CRTDecoder : public art::EDProducer {
 public:
-  explicit ImportCRTSharpData(fhicl::ParameterSet const& p);
+  explicit CRTDecoder(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  ImportCRTSharpData(ImportCRTSharpData const&) = delete;
-  ImportCRTSharpData(ImportCRTSharpData&&) = delete;
-  ImportCRTSharpData& operator=(ImportCRTSharpData const&) = delete;
-  ImportCRTSharpData& operator=(ImportCRTSharpData&&) = delete;
+  CRTDecoder(CRTDecoder const&) = delete;
+  CRTDecoder(CRTDecoder&&) = delete;
+  CRTDecoder& operator=(CRTDecoder const&) = delete;
+  CRTDecoder& operator=(CRTDecoder&&) = delete;
 
   // Required functions.
   void produce(art::Event& e) override;
@@ -50,7 +50,7 @@ private:
 };
 
 
-ImportCRTSharpData::ImportCRTSharpData(fhicl::ParameterSet const& p)
+CRTDecoder::CRTDecoder(fhicl::ParameterSet const& p)
   : EDProducer{p}
 {
   produces<std::vector<sbnd::crt::FEBData>>();
@@ -60,7 +60,7 @@ ImportCRTSharpData::ImportCRTSharpData(fhicl::ParameterSet const& p)
   fMac5ToGeoID    = std::map<unsigned, unsigned>(fMac5ToGeoIDVec.begin(), fMac5ToGeoIDVec.end());
 }
 
-void ImportCRTSharpData::produce(art::Event& e)
+void CRTDecoder::produce(art::Event& e)
 {
   auto febDataVec      = std::make_unique<std::vector<sbnd::crt::FEBData>>();
   //  auto febDataFragAssn = std::make_unique<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
@@ -92,7 +92,7 @@ void ImportCRTSharpData::produce(art::Event& e)
   e.put(std::move(febDataVec));
 }
 
-std::vector<sbnd::crt::FEBData> ImportCRTSharpData::FragToFEB(const artdaq::Fragment &frag)
+std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &frag)
 {
   std::vector<sbnd::crt::FEBData> feb_datas;
 
@@ -128,7 +128,7 @@ std::vector<sbnd::crt::FEBData> ImportCRTSharpData::FragToFEB(const artdaq::Frag
         }
       adc_string.resize(adc_string.size() - 2);
 
-      mf::LogInfo("ImportCRTSharpData")
+      mf::LogInfo("CRTDecoder")
         << "Creating FEBData object from BernCRT Fragment\n"
         << "Mac5: " << feb_datas.back().Mac5() << '\n'
         << "Flags: " << feb_datas.back().Flags() << '\n'
@@ -142,4 +142,4 @@ std::vector<sbnd::crt::FEBData> ImportCRTSharpData::FragToFEB(const artdaq::Frag
   return feb_datas;
 }
 
-DEFINE_ART_MODULE(ImportCRTSharpData)
+DEFINE_ART_MODULE(CRTDecoder)

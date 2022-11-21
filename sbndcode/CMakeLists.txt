@@ -38,3 +38,4 @@ add_subdirectory(ToFStudies)
 
 add_subdirectory(CRTBeamTelescope)
 add_subdirectory(CRTSharps)
+add_subdirectory(Decoders)

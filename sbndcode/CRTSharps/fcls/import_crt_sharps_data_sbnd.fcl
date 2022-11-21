@@ -19,7 +19,7 @@ physics:
   {
     importdata: 
     { 
-      module_type:	      "ImportCRTSharpData" 
+      module_type:	      "CRTDecoder"
       FEBMac5ToGeometryIDMap: [ [88, 0],
                               	[85, 1],
                             	[87, 2],
