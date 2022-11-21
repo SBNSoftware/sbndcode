@@ -271,10 +271,9 @@ namespace filt{
       //Get the position of the particle
       TLorentzVector position_lvector = particle->Position(pt_i);
       //We are going to use a function in the geometry service to see if there is a CRT at this particular position.  Said function requires an array, lets make one
-      double position[3];
-      position[0] = position_lvector.X();
-      position[1] = position_lvector.Y();
-      position[2] = position_lvector.Z();
+      geo::Point_t const position{position_lvector.X(),
+                                  position_lvector.Y(),
+                                  position_lvector.Z()};
       //The find the auxdet function throws a wobbler (an exception) if it can't find an auxdet.  Wrap what we want to do in a try catch statement pair
       try{
         unsigned int crt_id = geom->FindAuxDetAtPosition(position);

@@ -1,47 +1,46 @@
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
-include_directories( $ENV{NUTOOLS_INC} )
-include_directories( $ENV{IFDHX_FQ_DIR}/inc )
-
-art_make(
+set(
   MODULE_LIBRARIES
                     sbndcode_OpDetSim
-                    pthread
-		    larcorealg_Geometry
-                    larcore_Geometry_Geometry_service
-                    lardataobj_Simulation
-                    lardata_Utilities
-                    lardataobj_RawData
-                    lardataobj_RecoBase
-                    lardataobj_AnalysisBase
-                    lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+		    larcorealg::Geometry
+                    larcore::Geometry_Geometry_service
+                    lardataobj::Simulation
+                    lardata::Utilities
+                    lardataobj::RawData
+                    lardataobj::RecoBase
+                    lardataobj::AnalysisBase
+                    lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     sbndcode_Utilities_SignalShapingServiceSBND_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
-			
 		    artdaq_core::artdaq-core_Data
                     artdaq_core::artdaq-core_Utilities
-                    artdaq_core::artdaq-core_Data_Artdaq_fragmentNameHelper
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
-
 		    sbndcode_CRT
 		    sbndcode_CRTUtils
-                    sbnobj_Common_CRT
-		    sbnobj_SBND_CRT
-		    sbnobj_SBND_Trigger
+                    sbnobj::Common_CRT
+		    sbnobj::SBND_CRT
+		    sbnobj::SBND_Trigger
                     sbndcode_CRTUtils
                     sbndcode_GeoWrappers
-                    
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
                     messagefacility::MF_MessageLogger
-                    
                     fhiclcpp::fhiclcpp
-                    cetlib::cetlib cetlib_except
+                    cetlib::cetlib
                     CLHEP::CLHEP
-                    ${ROOT_BASIC_LIB_LIST}
+                    ROOT::Core
 )
+
+cet_build_plugin(ArtdaqFragmentProducer art::module SOURCE ArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(CRTArtdaqFragmentProducer art::module SOURCE CRTArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(MetricProducer art::module SOURCE MetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(pmtArtdaqFragmentProducer art::module SOURCE pmtArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(pmtSoftwareTriggerProducer art::module SOURCE pmtSoftwareTriggerProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(pmtTriggerProducer art::module SOURCE pmtTriggerProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+
+
 install_headers()
 install_fhicl()
 install_source()

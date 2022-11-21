@@ -1,6 +1,3 @@
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
-include_directories( $ENV{NUTOOLS_INC} )
-include_directories( $ENV{IFDHX_FQ_DIR}/inc )
 
 add_subdirectory(CRTTools)
 add_subdirectory(CRTUtils)
@@ -8,31 +5,23 @@ add_subdirectory(CRTUtils)
 add_subdirectory(CRTSimulation)
 add_subdirectory(Examples)
 
-art_make( 
-    EXCLUDE
-        CRTChannelMapAlg.cxx
-        CRTGeometryHelper_service.cc
-        CRTDetSim_module.cc
-        CRTSlimmer_module.cc
-        CRTHitProducer_module.cc
-        CRTTzeroProducer_module.cc
-        CRTTrackProducer_module.cc
-	CRTEventDisplay_module.cc
+art_make_library(
+    SOURCE
+        CRTGeoObjectSorter.cxx
     LIBRARY_NAME
         sbndcode_CRTData
-    LIB_LIBRARIES
-        larcorealg_Geometry
-        larcore_Geometry_Geometry_service
-        lardataobj_RecoBase
+    LIBRARIES
+        larcorealg::Geometry
+        larcore::Geometry_Geometry_service
+        lardataobj::RecoBase
         art::Framework_Core
         art::Framework_IO_Sources
         art::Framework_Principal
         canvas::canvas
         art::Framework_Services_Registry
         messagefacility::MF_MessageLogger
-        
         fhiclcpp::fhiclcpp
-        ${ROOT_BASIC_LIB_LIST}
+        ROOT::Core
         ROOT::Geom
         cetlib::cetlib
 )
@@ -40,20 +29,20 @@ art_make(
 art_make_library( LIBRARY_NAME sbndcode_CRT
     SOURCE
         CRTChannelMapAlg.cxx
-    LIBRARIES 
-        larcorealg_Geometry
+    LIBRARIES
+        larcorealg::Geometry
         sbndcode_CRTData
         cetlib_except::cetlib_except
         messagefacility::MF_MessageLogger
-        
         fhiclcpp::fhiclcpp
-        ${ROOT_BASIC_LIB_LIST}
+        ROOT::Core
         ROOT::Geom
         cetlib::cetlib
 )
 
-simple_plugin( CRTGeometryHelper service
-        larcorealg_Geometry
+cet_build_plugin( CRTGeometryHelper art::service SOURCE CRTGeometryHelper_service.cc
+    LIBRARIES
+        larcorealg::Geometry
         sbndcode_CRT
         art::Framework_Core
         art::Framework_IO_Sources
@@ -62,65 +51,64 @@ simple_plugin( CRTGeometryHelper service
         cetlib_except::cetlib_except
         art::Framework_Services_Registry
         messagefacility::MF_MessageLogger
-        
-        ${ROOT_BASIC_LIB_LIST}
+        ROOT::Core
         cetlib::cetlib
 )
 
-simple_plugin( CRTDetSim module
-        larcorealg_Geometry
+cet_build_plugin( CRTDetSim art::module SOURCE CRTDetSim_module.cc
+    LIBRARIES
+        larcorealg::Geometry
         sbndcode_CRT
         sbndcode_CRT_CRTSimulation
         sbndcode_CRTData
-        sbnobj_SBND_CRT
-        sbnobj_Common_CRT
+        sbnobj::SBND_CRT
+        sbnobj::Common_CRT
         art::Framework_Core
         art::Framework_IO_Sources
         art::Framework_Principal
         art::Persistency_Provenance
         canvas::canvas
         cetlib_except::cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+        lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
         nurandom::RandomUtils_NuRandomService_service
         art::Framework_Services_Registry
         art::Framework_Services_Optional_RandomNumberGenerator_service
         messagefacility::MF_MessageLogger
-
-        ${ROOT_BASIC_LIB_LIST}
+        ROOT::Core
         CLHEP::CLHEP
         cetlib::cetlib
 )
 
-simple_plugin( CRTSlimmer module
-        larcorealg_Geometry
+cet_build_plugin( CRTSlimmer art::module SOURCE CRTSlimmer_module.cc
+    LIBRARIES
+        larcorealg::Geometry
         sbndcode_CRT
         sbndcode_CRT_CRTSimulation
         sbndcode_CRTData
-        sbnobj_SBND_CRT
-        sbnobj_Common_CRT
+        sbnobj::SBND_CRT
+        sbnobj::Common_CRT
         art::Framework_Core
         art::Framework_IO_Sources
         art::Framework_Principal
         art::Persistency_Provenance
         canvas::canvas
         cetlib_except::cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+        lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
         nurandom::RandomUtils_NuRandomService_service
         art::Framework_Services_Registry
         art::Framework_Services_Optional_RandomNumberGenerator_service
         messagefacility::MF_MessageLogger
-
-        ${ROOT_BASIC_LIB_LIST}
+        ROOT::Core
         CLHEP::CLHEP
         cetlib::cetlib
 )
 
-simple_plugin( CRTHitProducer module
-        larcorealg_Geometry
+cet_build_plugin( CRTHitProducer art::module SOURCE CRTHitProducer_module.cc
+    LIBRARIES
+        larcorealg::Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbnobj_Common_CRT
-        sbnobj_SBND_CRT
+        sbnobj::Common_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
         art::Framework_Core
@@ -129,22 +117,23 @@ simple_plugin( CRTHitProducer module
 	art::Persistency_Provenance
         canvas::canvas
         cetlib_except::cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+        lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
         nurandom::RandomUtils_NuRandomService_service
         art::Framework_Services_Registry
         art::Framework_Services_Optional_RandomNumberGenerator_service
 	art_root_io::TFileService_service
         messagefacility::MF_MessageLogger
-        ${ROOT_BASIC_LIB_LIST}
+        ROOT::Core
         CLHEP::CLHEP
         cetlib::cetlib
 )
 
-simple_plugin(CRTTrackProducer module
-        larcorealg_Geometry
+cet_build_plugin(CRTTrackProducer art::module SOURCE CRTTrackProducer_module.cc
+    LIBRARIES
+        larcorealg::Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbnobj_Common_CRT
+        sbnobj::Common_CRT
         sbndcode_CRTUtils
         sbndcode_GeoWrappers
         art::Framework_Core
@@ -153,37 +142,36 @@ simple_plugin(CRTTrackProducer module
 	art::Persistency_Provenance
         canvas::canvas
         cetlib_except::cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+        lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
         nurandom::RandomUtils_NuRandomService_service
         art::Framework_Services_Registry
         art::Framework_Services_Optional_RandomNumberGenerator_service
 	art_root_io::TFileService_service
         messagefacility::MF_MessageLogger
-        
-        ${ROOT_BASIC_LIB_LIST}
+        ROOT::Core
         CLHEP::CLHEP
         cetlib::cetlib
 )
 
-simple_plugin(CRTTzeroProducer module
-        larcorealg_Geometry
+cet_build_plugin(CRTTzeroProducer art::module SOURCE CRTTzeroProducer_module.cc
+    LIBRARIES
+        larcorealg::Geometry
         sbndcode_CRT
         sbndcode_CRTData
-        sbnobj_Common_CRT
+        sbnobj::Common_CRT
         art::Framework_Core
         art::Framework_IO_Sources
         art::Framework_Principal
 	art::Persistency_Provenance
         canvas::canvas
         cetlib_except::cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+        lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
         nurandom::RandomUtils_NuRandomService_service
         art::Framework_Services_Registry
         art::Framework_Services_Optional_RandomNumberGenerator_service
 	art_root_io::TFileService_service
         messagefacility::MF_MessageLogger
-        
-        ${ROOT_BASIC_LIB_LIST}
+        ROOT::Core
         CLHEP::CLHEP
         cetlib::cetlib
 )

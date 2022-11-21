@@ -1,19 +1,19 @@
-art_make(   LIB_LIBRARIES  larcorealg_Geometry
-                           larcore_Geometry_Geometry_service
-                           lardataobj_Simulation
-                           lardataobj_RawData
-                           lardataobj_RecoBase
-                           lardata_RecoObjects
-                           lardataalg_DetectorInfo
-                           cetlib::cetlib cetlib_except
+art_make_library( SOURCE CRTDetSimAlg.cxx
+                LIBRARIES  larcorealg::Geometry
+                           larcore::Geometry_Geometry_service
+                           lardataobj::Simulation
+                           lardataobj::RawData
+                           lardataobj::RecoBase
+                           lardata::RecoObjects
+                           lardataalg::DetectorInfo
+                           cetlib::cetlib
+                           cetlib_except::cetlib_except
                            messagefacility::MF_MessageLogger
                            fhiclcpp::fhiclcpp
-
-                           ${ROOT_BASIC_LIB_LIST}
-                           ${ROOT_MATHMORE}
-
-                           sbnobj_SBND_CRT
-                           sbndcode_GeoWrappers
+                           ROOT::Core
+                           ROOT::MathMore
+                           sbnobj::SBND_CRT
+			   sbndcode::GeoWrappers
         )
 
 install_headers()
