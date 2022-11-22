@@ -7,14 +7,13 @@ simple_plugin( ImportCRTData
 )
 
 art_make( EXCLUDE ImportCRTData_source.cc
-          LIB_LIBRARIES nusimdata_SimulationBase
+          LIB_LIBRARIES nusimdata::SimulationBase
                         sbnobj_SBND_CRT
-                        larcoreobj_SummaryData
-                        ${ART_FRAMEWORK_CORE}
-                        ${ART_FRAMEWORK_IO_SOURCES}
-                        ${ART_FRAMEWORK_PRINCIPAL}
-                        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-                        ${ART_FRAMEWORK_SERVICES_OPTIONAL}
+                        larcoreobj::SummaryData
+                        lardata::Utilities
+                        art::Framework_Core
+                        art::Framework_IO_Sources
+                        art::Framework_Principal
 
                         art_root_io::TFileService_service
                         art_root_io::tfile_support
@@ -26,11 +25,12 @@ art_make( EXCLUDE ImportCRTData_source.cc
                         fhiclcpp::fhiclcpp
 
                         ${ROOT_BASIC_LIB_LIST}
-                        cetlib cetlib_except
+                        cetlib::cetlib
+                        cetlib_except::cetlib_except
 
           MODULE_LIBRARIES sbnobj_SBND_CRT
-                        nusimdata_SimulationBase
-                        larcoreobj_SummaryData
+                        nusimdata::SimulationBase
+                        larcoreobj::SummaryData
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_IO_SOURCES}
                         ${ART_FRAMEWORK_PRINCIPAL}
@@ -67,4 +67,3 @@ art_make( EXCLUDE ImportCRTData_source.cc
 install_headers()
 install_source()
 install_fhicl()
-

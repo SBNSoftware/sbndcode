@@ -177,7 +177,7 @@ cet_build_plugin(CRTTzeroProducer art::module SOURCE CRTTzeroProducer_module.cc
 )
 
 simple_plugin(CRTEventDisplay module
-        larcorealg_Geometry
+        larcorealg::Geometry
         sbndcode_CRT
         sbndcode_CRTData
         sbndcode_CRTUtils
@@ -188,7 +188,7 @@ simple_plugin(CRTEventDisplay module
 	art::Persistency_Provenance
         canvas::canvas
         cetlib_except::cetlib_except
-        lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+        lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
         nurandom::RandomUtils_NuRandomService_service
         art::Framework_Services_Registry
         art::Framework_Services_Optional_RandomNumberGenerator_service
