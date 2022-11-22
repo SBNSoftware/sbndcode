@@ -1,0 +1,18 @@
+#include "crt_sharps_data_params.fcl"
+
+BEGIN_PROLOG
+
+crt_decoder_sharps:
+{
+   module_type:            "CRTDecoder"
+   CRTInstanceLabels:      [ "ContainerBERNCRTV2" ]
+   FEBMac5ToGeometryIDMap: @local::crt_sharps_data_params.FEBMac5ToGeometryIDMap
+}
+
+spec_tdc_decoder_sbnd:
+{
+   module_type:           "SPECTDCDecoder"
+   SPECTDCInstanceLabels: [ "ContainerTDCTIMESTAMP" ]
+}
+
+END_PROLOG

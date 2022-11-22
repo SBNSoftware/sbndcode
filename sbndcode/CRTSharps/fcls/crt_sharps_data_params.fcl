@@ -2,6 +2,15 @@ BEGIN_PROLOG
 
 crt_sharps_data_params:
 {
+   FEBMac5ToGeometryIDMap: [ [88, 0],
+                             [85, 1],
+                             [87, 2],
+                             [193, 3],
+                             [79, 4],
+                             [89, 5],
+                             [80, 6],
+                             [81, 7] ]
+
    InvertedChannelOrder: [ [0, false],
                            [1, true],
                            [2, true],
