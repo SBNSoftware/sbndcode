@@ -20,7 +20,7 @@
 
 #include "artdaq-core/Data/ContainerFragment.hh"
 #include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
-//#include "sbndaq-artdaq-core/Overlays/SBND/TDCTimestampFragment.hh"
+#include "sbndaq-artdaq-core/Overlays/SBND/TDCTimestampFragment.hh"
 
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
@@ -42,7 +42,7 @@ public:
   // Required functions.
   void produce(art::Event& e) override;
 
-  std::vector<sbnd::timing::DAQTimestamp> FragToDAQTimestamp(const artdaq::Fragment &frag);
+  sbnd::timing::DAQTimestamp FragToDAQTimestamp(const artdaq::Fragment &frag);
 
 private:
 
@@ -79,34 +79,29 @@ void SPECTDCDecoder::produce(art::Event& e)
               if(contf.fragment_type() == sbndaq::detail::FragmentType::TDCTIMESTAMP)
                 {
                   for(unsigned i = 0; i < contf.block_count(); ++i)
-                    {
-                      std::vector<sbnd::timing::DAQTimestamp> newDAQTimestamps = FragToDAQTimestamp(*contf[i].get());
-                      daqTimestampVec->insert(daqTimestampVec->end(), newDAQTimestamps.begin(), newDAQTimestamps.end());
-                    }
+                    daqTimestampVec->emplace_back(FragToDAQTimestamp(*contf[i].get()));
                 }
             }
         }
       else
-	{
-	  if(fragmentHandle->front().type() == sbndaq::detail::FragmentType::TDCTIMESTAMP)
-	    {
-	      for(auto frag : *fragmentHandle)
-		{
-		  std::vector<sbnd::timing::DAQTimestamp> newDAQTimestamps = FragToDAQTimestamp(frag);
-		  daqTimestampVec->insert(daqTimestampVec->end(), newDAQTimestamps.begin(), newDAQTimestamps.end());
-		}
-	    }
-	}
+        {
+          if(fragmentHandle->front().type() == sbndaq::detail::FragmentType::TDCTIMESTAMP)
+            {
+              for(auto frag : *fragmentHandle)
+                daqTimestampVec->emplace_back(FragToDAQTimestamp(frag));
+            }
+        }
     }
   
   e.put(std::move(daqTimestampVec));
 }
 
-std::vector<sbnd::timing::DAQTimestamp> SPECTDCDecoder::FragToDAQTimestamp(const artdaq::Fragment &frag)
+sbnd::timing::DAQTimestamp SPECTDCDecoder::FragToDAQTimestamp(const artdaq::Fragment &frag)
 {
-  std::vector<sbnd::timing::DAQTimestamp> daqTimestamps;
+  const sbndaq::TDCTimestampFragment tdcFrag = sbndaq::TDCTimestampFragment(frag);
+  const sbndaq::TDCTimestamp         *tdcTS  = tdcFrag.getTDCTimestamp();
 
-  return daqTimestamps;
+  return sbnd::timing::DAQTimestamp(tdcTS->vals.channel, tdcTS->timestamp_ns(), 0, tdcTS->vals.name);
 }
 
 DEFINE_ART_MODULE(SPECTDCDecoder)
