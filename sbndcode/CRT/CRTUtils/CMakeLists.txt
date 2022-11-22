@@ -1,8 +1,8 @@
-art_make_library(    LIBRARY_NAME sbndcode_CRTUtils
+art_make_library(    LIBRARY_NAME sbndcode::CRTUtils
                    SOURCE
                            CRTBackTracker.cc
                            CRTCommonUtils.cc
-                           CRTEventDisplay.cc
+                           CRTEventDisplayAlg.cc
                            CRTHitRecoAlg.cc
                            CRTT0MatchAlg.cc
                            CRTTrackMatchAlg.cc
