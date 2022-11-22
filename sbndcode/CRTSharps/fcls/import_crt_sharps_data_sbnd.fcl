@@ -1,4 +1,5 @@
 #include "services_sbnd.fcl"
+#include "decoders_sbnd.fcl"
 
 process_name: ImportData
 
@@ -17,21 +18,11 @@ physics:
 
   producers:
   {
-    importdata: 
-    { 
-      module_type:	      "CRTDecoder"
-      FEBMac5ToGeometryIDMap: [ [88, 0],
-                              	[85, 1],
-                            	[87, 2],
-                            	[193, 3],
-                            	[79, 4],
-                            	[89, 5],
-                            	[80, 6],
-                            	[81, 7] ]
-    }
+    importcrt:     @local::crt_decoder_sharps
+    importspectdc: @local::spec_tdc_decoder_sbnd
   }
 
-  import: [ importdata ]
+  import: [ importcrt, importspectdc ]
   stream1:  [ out1 ]
 
   trigger_paths: [ import ]
