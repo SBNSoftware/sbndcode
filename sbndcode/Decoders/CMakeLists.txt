@@ -1,5 +1,7 @@
 art_make(
 	MODULE_LIBRARIES 
 	sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
+	sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND
 	sbnobj_SBND_CRT
+	sbnobj_SBND_Timing
 )
