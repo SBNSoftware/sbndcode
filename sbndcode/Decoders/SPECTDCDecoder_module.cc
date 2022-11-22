@@ -85,13 +85,10 @@ void SPECTDCDecoder::produce(art::Event& e)
                 }
             }
         }
-      else
+      else if(fragmentHandle->front().type() == sbndaq::detail::FragmentType::TDCTIMESTAMP)
         {
-          if(fragmentHandle->front().type() == sbndaq::detail::FragmentType::TDCTIMESTAMP)
-            {
-              for(auto frag : *fragmentHandle)
-                daqTimestampVec->emplace_back(FragToDAQTimestamp(frag));
-            }
+          for(auto frag : *fragmentHandle)
+            daqTimestampVec->emplace_back(FragToDAQTimestamp(frag));
         }
     }
   

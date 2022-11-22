@@ -47,11 +47,16 @@ private:
 
   std::vector<std::pair<unsigned, unsigned>> fMac5ToGeoIDVec;
   std::map<unsigned, unsigned>               fMac5ToGeoID;
+
+  std::string              fCRTModuleLabel;
+  std::vector<std::string> fCRTInstanceLabels;
 };
 
 
 CRTDecoder::CRTDecoder(fhicl::ParameterSet const& p)
   : EDProducer{p}
+  , fCRTModuleLabel(p.get<std::string>("CRTModuleLabel", "daq"))
+  , fCRTInstanceLabels(p.get<std::vector<std::string>>("CRTInstanceLabels"))
 {
   produces<std::vector<sbnd::crt::FEBData>>();
   //  produces<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
@@ -64,17 +69,18 @@ void CRTDecoder::produce(art::Event& e)
 {
   auto febDataVec      = std::make_unique<std::vector<sbnd::crt::FEBData>>();
   //  auto febDataFragAssn = std::make_unique<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
-  
-  std::vector<art::Handle<artdaq::Fragments>> fragmentHandles = e.getMany<std::vector<artdaq::Fragment>>();
 
-  for(auto handle : fragmentHandles)
+  for(const std::string &CRTInstanceLabel : fCRTInstanceLabels)
     {
-      if(!handle.isValid() || handle->size() == 0)
+      art::Handle<std::vector<artdaq::Fragment>> fragmentHandle;
+      e.getByLabel(fCRTModuleLabel, CRTInstanceLabel, fragmentHandle);
+
+      if(!fragmentHandle.isValid() || fragmentHandle->size() == 0)
         continue;
 
-      if(handle->front().type() == artdaq::Fragment::ContainerFragmentType)
+      if(fragmentHandle->front().type() == artdaq::Fragment::ContainerFragmentType)
         {
-          for(auto cont : *handle)
+          for(auto cont : *fragmentHandle)
             {
               artdaq::ContainerFragment contf(cont);
               if(contf.fragment_type() == sbndaq::detail::FragmentType::BERNCRTV2)
@@ -85,6 +91,14 @@ void CRTDecoder::produce(art::Event& e)
                       febDataVec->insert(febDataVec->end(), newFebDatas.begin(), newFebDatas.end());
                     }
                 }
+            }
+        }
+      else if(fragmentHandle->front().type() == sbndaq::detail::FragmentType::BERNCRTV2)
+        {
+          for(auto frag : *fragmentHandle)
+            {
+              std::vector<sbnd::crt::FEBData> newFebDatas = FragToFEB(frag);
+              febDataVec->insert(febDataVec->end(), newFebDatas.begin(), newFebDatas.end());
             }
         }
     }
