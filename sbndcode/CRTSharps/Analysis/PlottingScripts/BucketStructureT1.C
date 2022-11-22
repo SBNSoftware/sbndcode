@@ -1,6 +1,6 @@
-void BucketStructure(const double period = 18.94)
+void BucketStructureT1(const double period = 18.94)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/sharps/bucketstructure";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/sharps/bucketstructuret1";
   const bool save = true;
 
   using namespace std;
