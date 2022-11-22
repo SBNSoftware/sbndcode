@@ -46,13 +46,15 @@ public:
 
 private:
 
-  std::vector<std::string> fSPECTDCModuleLabels;
+  std::string              fSPECTDCModuleLabel;
+  std::vector<std::string> fSPECTDCInstanceLabels;
 };
 
 
 SPECTDCDecoder::SPECTDCDecoder(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fSPECTDCModuleLabels(p.get<std::vector<std::string>>("SPECTDCModuleLabels"))
+  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel", "daq"))
+  , fSPECTDCInstanceLabels(p.get<std::vector<std::string>>("SPECTDCInstanceLabels"))
 {
   produces<std::vector<sbnd::timing::DAQTimestamp>>();
   // produces<art::Assns<artdaq::Fragment,sbnd::timing::DAQTimestamp>>();
@@ -63,10 +65,10 @@ void SPECTDCDecoder::produce(art::Event& e)
   auto daqTimestampVec      = std::make_unique<std::vector<sbnd::timing::DAQTimestamp>>();
   // auto daqTimestampFragAssn = std::make_unique<art::Assns<artdaq::Fragment,sbnd::timing::DAQTimestamp>>();
   
-  for(const std::string &SPECTDCModuleLabel : fSPECTDCModuleLabels)
+  for(const std::string &SPECTDCInstanceLabel : fSPECTDCInstanceLabels)
     {
       art::Handle<std::vector<artdaq::Fragment>> fragmentHandle;
-      e.getByLabel(SPECTDCModuleLabel, fragmentHandle);
+      e.getByLabel(fSPECTDCModuleLabel, SPECTDCInstanceLabel, fragmentHandle);
 
       if(!fragmentHandle.isValid() || fragmentHandle->size() == 0)
         continue;
