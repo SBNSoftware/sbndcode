@@ -482,7 +482,6 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
       _ct_pes[i]     = track->peshit;
       _ct_time[i]    = track->ts1_ns;
       _ct_length[i]  = track->length;
-      _ct_tof[i]     = track->ts0_ns_h2 - track->ts0_ns_h1;
       _ct_hit1_x[i]  = track->x1_pos;
       _ct_hit1_y[i]  = track->y1_pos;
       _ct_hit1_z[i]  = track->z1_pos;
@@ -515,6 +514,11 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
       _ct_hit2_sipm_adc[i].resize(4 * _ct_hit2_nhits[i]);
       _ct_hit2_sipm_corr_adc[i].resize(4 * _ct_hit2_nhits[i]);
 
+      _ct_hit1_t0[i] = 0;
+      _ct_hit1_t1[i] = 0;
+      _ct_hit2_t0[i] = 0;
+      _ct_hit2_t1[i] = 0;
+
       unsigned used_hits_1 = 0, used_hits_2 = 0;
 
       for(unsigned i_hit = 0; i_hit < CRTHitVec.size(); ++i_hit)
@@ -523,8 +527,8 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
 
           if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
             {
-              _ct_hit1_t0[i] = hit->ts0_ns;
-              _ct_hit1_t1[i] = hit->ts1_ns;
+              _ct_hit1_t0[i] += hit->ts0_ns;
+              _ct_hit1_t1[i] += hit->ts1_ns;
             
               const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
               const std::array<uint16_t,4> adcs      = hit->adcs;
@@ -540,8 +544,8 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
             }
           else if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
             {
-              _ct_hit2_t0[i] = hit->ts0_ns;
-              _ct_hit2_t1[i] = hit->ts1_ns;
+              _ct_hit2_t0[i] += hit->ts0_ns;
+              _ct_hit2_t1[i] += hit->ts1_ns;
 
               const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
               const std::array<uint16_t,4> adcs      = hit->adcs;
@@ -556,6 +560,13 @@ void CRTSharpsAnalysis::AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack
               ++used_hits_2;
             }
         }
+
+      _ct_hit1_t0[i] /= _ct_hit1_nhits[i];
+      _ct_hit1_t1[i] /= _ct_hit1_nhits[i];
+      _ct_hit2_t0[i] /= _ct_hit2_nhits[i];
+      _ct_hit2_t1[i] /= _ct_hit2_nhits[i];
+      
+      _ct_tof[i] = _ct_hit2_t1[i] - _ct_hit1_t1[i];
     }
 }
 
