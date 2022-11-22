@@ -20,6 +20,7 @@
 #include "TTree.h"
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 
@@ -45,6 +46,8 @@ public:
 
   void AnalyseFEBDatas(std::vector<art::Ptr<sbnd::crt::FEBData>> &FEBDataVec);
 
+  void AnalyseSPECTDCTimestamps(std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> &DAQTimestampVec);
+
   void AnalyseCRTHits(std::vector<art::Ptr<sbn::crt::CRTHit>> &CRTHitVec, art::FindManyP<sbnd::crt::FEBData> &CRTHitToFEBData);
 
   void AnalyseCRTTracks(std::vector<art::Ptr<sbn::crt::CRTTrack>> &CRTTrackVec, art::FindManyP<sbn::crt::CRTHit> &CRTTrackToCRTHits);
@@ -53,7 +56,7 @@ private:
 
   sbnd::CRTGeoAlg fCRTGeoAlg;
 
-  std::string fFEBDataModuleLabel, fCRTHitModuleLabel, fCRTTrackModuleLabel;
+  std::string fFEBDataModuleLabel, fSPECTDCModuleLabel, fCRTHitModuleLabel, fCRTTrackModuleLabel;
   bool fDebug;
 
   TTree* fTree;
@@ -71,6 +74,11 @@ private:
   std::vector<uint32_t>              _feb_unixs;
   std::vector<std::vector<uint16_t>> _feb_adc;
   std::vector<uint32_t>              _feb_coinc;
+
+  std::vector<uint32_t>    _tdc_channel;
+  std::vector<uint64_t>    _tdc_timestamp;
+  std::vector<uint64_t>    _tdc_offset;
+  std::vector<std::string> _tdc_name;
 
   std::vector<double>                _chit_x;
   std::vector<double>                _chit_y;
@@ -129,9 +137,10 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   {
-    fFEBDataModuleLabel  = p.get<std::string>("FEBDataLabel", "importdata");
-    fCRTHitModuleLabel   = p.get<std::string>("CRTHitLabel", "crthit");
-    fCRTTrackModuleLabel = p.get<std::string>("CRTTrackLabel", "crttrack");
+    fFEBDataModuleLabel  = p.get<std::string>("FEBDataModuleLabel", "importcrt");
+    fSPECTDCModuleLabel  = p.get<std::string>("SPECTDCModuleLabel", "importspectdc");
+    fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
+    fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
     fDebug               = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
@@ -148,6 +157,11 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("feb_unixs", "std::vector<uint32_t>", &_feb_unixs);
     fTree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
     fTree->Branch("feb_coinc", "std::vector<uint32_t>", &_feb_coinc);
+
+    fTree->Branch("tdc_channel", "std::vector<uint32_t>", &_tdc_channel);
+    fTree->Branch("tdc_timestamp", "std::vector<uint64_t>", &_tdc_timestamp);
+    fTree->Branch("tdc_offset", "std::vector<uint64_t>", &_tdc_offset);
+    fTree->Branch("tdc_name", "std::vector<std::string>", &_tdc_name);
 
     fTree->Branch("chit_x", "std::vector<double>", &_chit_x);
     fTree->Branch("chit_y", "std::vector<double>", &_chit_y);
@@ -251,6 +265,19 @@ void CRTSharpsAnalysis::analyze(art::Event const& e)
   // Fill FEBData variables
   AnalyseFEBDatas(FEBDataVec);
 
+  // Get DAQTimestamps
+  art::Handle<std::vector<sbnd::timing::DAQTimestamp>> DAQTimestampHandle;
+  e.getByLabel(fSPECTDCModuleLabel, DAQTimestampHandle);
+  if(!DAQTimestampHandle.isValid()){
+    std::cout << "DAQTimestamp product " << fSPECTDCModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+  std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> DAQTimestampVec;
+  art::fill_ptr_vector(DAQTimestampVec, DAQTimestampHandle);
+
+  // Fill SPECTDC variables
+  AnalyseSPECTDCTimestamps(DAQTimestampVec);
+
   // Get CRTHits
   art::Handle<std::vector<sbn::crt::CRTHit>> CRTHitHandle;
   e.getByLabel(fCRTHitModuleLabel, CRTHitHandle);
@@ -312,6 +339,26 @@ void CRTSharpsAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<sbnd::crt::FEBData>
 
       for(unsigned j = 0; j < 32; ++j)
         _feb_adc[i][j] = data->ADC(j);
+    }
+}
+
+void CRTSharpsAnalysis::AnalyseSPECTDCTimestamps(std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> &DAQTimestampVec)
+{
+  unsigned nDAQTimestamps = DAQTimestampVec.size();
+
+  _tdc_channel.resize(nDAQTimestamps);
+  _tdc_timestamp.resize(nDAQTimestamps);
+  _tdc_offset.resize(nDAQTimestamps);
+  _tdc_name.resize(nDAQTimestamps);
+
+  for(unsigned i = 0; i < nDAQTimestamps; ++i)
+    {
+      auto ts = DAQTimestampVec[i];
+
+      _tdc_channel[i] = ts->Channel();
+      _tdc_timestamp[i] = ts->Timestamp();
+      _tdc_offset[i]    = ts->Offset();
+      _tdc_name[i]      = ts->Name();
     }
 }
 
