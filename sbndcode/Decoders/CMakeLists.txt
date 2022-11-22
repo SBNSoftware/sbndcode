@@ -5,3 +5,5 @@ art_make(
 	sbnobj_SBND_CRT
 	sbnobj_SBND_Timing
 )
+
+install_fhicl()
