@@ -12,7 +12,7 @@ crt_decoder_sharps:
 spec_tdc_decoder_sbnd:
 {
    module_type:           "SPECTDCDecoder"
-   SPECTDCInstanceLabels: [ "ContainerTDCTIMESTAMP" ]
+   SPECTDCInstanceLabels: [ "TDCTIMESTAMP", "ContainerTDCTIMESTAMP" ]
 }
 
 END_PROLOG
