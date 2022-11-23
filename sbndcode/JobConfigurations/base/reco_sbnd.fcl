@@ -100,7 +100,7 @@ physics:
   ### optical hit finders
   # ophit:               @local::sbnd_hit_finder
   ophitpmt:            @local::SBNDDecoOpHitFinderPMT
-  ophitdecoxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
+  ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
 
   ### flash finders
   # opflash:             @local::sbnd_opflash
@@ -193,7 +193,7 @@ physics:
          , opdecopmt
          , opdecoxarapuca
          , ophitpmt
-         , ophitdecoxarapuca
+         , ophitxarapuca
          , opflashtpc0
          , opflashtpc1
          , opflashtpc0xarapuca

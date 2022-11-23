@@ -47,7 +47,7 @@ physics:
     opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1
 
     opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
-    ophitdecoxarapuca:  @local::SBNDDecoOpHitFinderXArapuca
+    ophitxarapuca:  @local::SBNDDecoOpHitFinderXArapuca
     opflashdecotpc0arapuca:   @local::SBNDDecoSimpleFlashTPC0Arapuca
     opflashdecotpc1arapuca:   @local::SBNDDecoSimpleFlashTPC1Arapuca
 
@@ -60,7 +60,7 @@ physics:
     opflashtpc1,
 
     opdecoxarapuca,
-    ophitdecoxarapuca,
+    ophitxarapuca,
     opflashdecotpc0arapuca,
     opflashdecotpc1arapuca
   ]
