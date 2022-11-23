@@ -121,15 +121,6 @@ private:
   std::vector<int> _mcp_trackid; ///< G4 MCParticle, track ID
   std::vector<int> _mcp_primaryid; ///< G4 MCParticle, primary ID
   std::vector<int> _mcp_makes_adh; ///< G4 MCParticle, true if this MCP deposits energy in CRT
-  std::vector<int> _mcp_primary_makes_adh; ///< G4 MCParticle, true if this MCP's primary deposits energy in CRT
-  std::vector<double> _mcp_upstream_dist; ///< Distance from the centre of the upstream tagger at the point the particle would intersect that plane
-  std::vector<double> _mcp_downstream_dist; ///< Distance from the centre of the downstream tagger at the point the particle would intersect that plane
-  std::vector<int> _mcp_intersects_upstream; ///< Does the extrapolation of the particle's trajectory intercept the upstream tagger (with a buffer zone)
-  std::vector<int> _mcp_intersects_downstream; ///< Does the extrapolation of the particle's trajectory intercept the downstream tagger (with a buffer zone)
-  std::vector<double> _mcp_cl_ap_upstream; ///< How close does the extrapolation of the particle's trajectory come to the upstream tagger?
-  std::vector<double> _mcp_cl_ap_downstream; ///< How close does the extrapolation of the particle's trajectory come to the downstream tagger?
-  std::vector<int> _mcp_intersects_upstream1000; ///< Does the extrapolation of the particle's trajectory intercept the upstream tagger (with a buffer zone)
-  std::vector<int> _mcp_intersects_downstream1000; ///< Does the extrapolation of the particle's trajectory intercept the downstream tagger (with a buffer zone)
 
   std::vector<double> _adh_t; ///< AuxDetHit time
   std::vector<double> _adh_e; ///< AuxDetHit deposited energy
@@ -298,15 +289,6 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       _tree->Branch("mcp_trackid", "std::vector<int>", &_mcp_trackid);
       _tree->Branch("mcp_primaryid", "std::vector<int>", &_mcp_primaryid);
       _tree->Branch("mcp_makes_adh", "std::vector<int>", &_mcp_makes_adh);
-      _tree->Branch("mcp_primary_makes_adh", "std::vector<int>", &_mcp_primary_makes_adh);
-      _tree->Branch("mcp_upstream_dist", "std::vector<double>", &_mcp_upstream_dist);
-      _tree->Branch("mcp_downstream_dist", "std::vector<double>", &_mcp_downstream_dist);
-      _tree->Branch("mcp_intercepts_upstream", "std::vector<int>", &_mcp_intersects_upstream);
-      _tree->Branch("mcp_intercepts_downstream", "std::vector<int>", &_mcp_intersects_downstream);
-      _tree->Branch("mcp_cl_ap_upstream", "std::vector<double>" , &_mcp_cl_ap_upstream);
-      _tree->Branch("mcp_cl_ap_downstream", "std::vector<double>" , &_mcp_cl_ap_downstream);
-      _tree->Branch("mcp_intercepts_upstream1000", "std::vector<int>", &_mcp_intersects_upstream1000);
-      _tree->Branch("mcp_intercepts_downstream1000", "std::vector<int>", &_mcp_intersects_downstream1000);
 
       _tree->Branch("adh_t", "std::vector<double>", &_adh_t);
       _tree->Branch("adh_e", "std::vector<double>", &_adh_e);
@@ -723,15 +705,6 @@ void CRTAnalysis::analyze(art::Event const& e)
     _mcp_trackid.resize(n_mcp);
     _mcp_primaryid.resize(n_mcp);
     _mcp_makes_adh.resize(n_mcp);
-    _mcp_primary_makes_adh.resize(n_mcp);
-    _mcp_upstream_dist.resize(n_mcp);
-    _mcp_downstream_dist.resize(n_mcp);
-    _mcp_intersects_upstream.resize(n_mcp);
-    _mcp_intersects_downstream.resize(n_mcp);
-    _mcp_cl_ap_upstream.resize(n_mcp);
-    _mcp_cl_ap_downstream.resize(n_mcp);
-    _mcp_intersects_upstream1000.resize(n_mcp);
-    _mcp_intersects_downstream1000.resize(n_mcp);
 
     size_t counter = 0;
     for (size_t i = 0; i < mcp_v.size(); i++) {
@@ -743,7 +716,7 @@ void CRTAnalysis::analyze(art::Event const& e)
           trackids_from_adh.find(particle->TrackId()) == trackids_from_adh.end()) {
         continue;
       }
-      // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
+
       _mcp_pdg[counter] = particle->PdgCode();
       _mcp_e[counter] = particle->E();
       _mcp_px[counter] = particle->Px();
@@ -759,217 +732,6 @@ void CRTAnalysis::analyze(art::Event const& e)
       _mcp_trackid[counter] = particle->TrackId();
       _mcp_primaryid[counter] = trackid_to_primaryid_map[particle->TrackId()];
       _mcp_makes_adh[counter] = trackids_from_adh.find(particle->TrackId()) != trackids_from_adh.end();
-      if(_mcp_isprimary[counter])
-        _mcp_primary_makes_adh[counter] = primaryids_from_adh.find(particle->TrackId()) != primaryids_from_adh.end();
-      else
-        _mcp_primary_makes_adh[counter] = -1;
-
-      const double t_upstream   = (upstream_z -_mcp_startz[counter]) / _mcp_pz[counter];
-      const double t_downstream = (downstream_z -_mcp_startz[counter]) / _mcp_pz[counter];
-
-      const double mcp_upstream_x = _mcp_startx[counter] + _mcp_px[counter] * t_upstream;
-      const double mcp_upstream_y = _mcp_starty[counter] + _mcp_py[counter] * t_upstream;
-
-      const double mcp_downstream_x = _mcp_startx[counter] + _mcp_px[counter] * t_downstream;
-      const double mcp_downstream_y = _mcp_starty[counter] + _mcp_py[counter] * t_downstream;
-
-      const TVector3 mcp_upstream   = TVector3(mcp_upstream_x, mcp_upstream_y, upstream_z);
-      const TVector3 mcp_downstream = TVector3(mcp_downstream_x, mcp_downstream_y, downstream_z);
-
-      _mcp_upstream_dist[counter]   = (mcp_upstream - upstream_centre).Mag();
-      _mcp_downstream_dist[counter] = (mcp_downstream - downstream_centre).Mag();
-
-      std::vector<double> upstream_wide_limits = upstream_limits;
-      std::vector<double> downstream_wide_limits = downstream_limits;
-      std::vector<double> buffer_box = {-0., 0., -0., 0., -0., 0};
-
-      for (unsigned j = 0; j < 6; ++j) {
-        upstream_wide_limits[j] += buffer_box[j];
-        downstream_wide_limits[j] += buffer_box[j];
-      }
-
-      const std::vector<double> x0 = {_mcp_startx[counter], _mcp_starty[counter], _mcp_startz[counter]};
-      const std::vector<double> dx = {_mcp_px[counter], _mcp_py[counter], _mcp_pz[counter]};
-
-      bool intersects_upstream = false;
-      double closest_approach_upstream = std::numeric_limits<double>::max();
-
-      for (int bnd = 0; bnd != 6; ++bnd) {
-        if (bnd<2) {
-          double p2[3] = {upstream_wide_limits[bnd],  x0[1] + (dx[1]/dx[0])*(upstream_wide_limits[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(upstream_wide_limits[bnd] - x0[0])};
-          if ( p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3] &&
-               p2[2] >= upstream_wide_limits[4] && p2[2] <= upstream_wide_limits[5] ) {
-            intersects_upstream = true;
-            closest_approach_upstream = 0.;
-            break;
-          }
-          else if (p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3])
-            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[4] - p2[2]), std::abs(upstream_wide_limits[5] - p2[2])});
-          else
-            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[2] - p2[1]), std::abs(upstream_wide_limits[3] - p2[1])});
-        }
-        else if (bnd>=2 && bnd<4) {
-          double p2[3] = {x0[0] + (dx[0]/dx[1])*(upstream_wide_limits[bnd] - x0[1]), upstream_wide_limits[bnd], x0[2] + (dx[2]/dx[1])*(upstream_wide_limits[bnd] - x0[1])};
-          if ( p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1] &&
-               p2[2] >= upstream_wide_limits[4] && p2[2] <= upstream_wide_limits[5] ) {
-            intersects_upstream = true;
-            closest_approach_upstream = 0.;
-            break;
-          }
-          else if (p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1])
-            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[4] - p2[2]), std::abs(upstream_wide_limits[5] - p2[2])});
-          else
-            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[0] - p2[0]), std::abs(upstream_wide_limits[1] - p2[0])});
-        }
-        else if (bnd>=4) {
-          double p2[3] = {x0[0] + (dx[0]/dx[2])*(upstream_wide_limits[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(upstream_wide_limits[bnd] - x0[2]), upstream_wide_limits[bnd]};
-          if ( p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1] &&
-               p2[1] >= upstream_wide_limits[2] && p2[1] <= upstream_wide_limits[3] ) {
-            intersects_upstream = true;
-            closest_approach_upstream = 0.;
-            break;
-          }
-          else if (p2[0] >= upstream_wide_limits[0] && p2[0] <= upstream_wide_limits[1])
-            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[2] - p2[1]), std::abs(upstream_wide_limits[3] - p2[1])});
-          else
-            closest_approach_upstream = std::min({closest_approach_upstream, std::abs(upstream_wide_limits[0] - p2[0]), std::abs(upstream_wide_limits[1] - p2[0])});
-        }
-      }
-
-      bool intersects_downstream = false;
-      double closest_approach_downstream = std::numeric_limits<double>::max();
-
-      for (int bnd = 0; bnd != 6; ++bnd) {
-        if (bnd<2) {
-          double p2[3] = {downstream_wide_limits[bnd],  x0[1] + (dx[1]/dx[0])*(downstream_wide_limits[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(downstream_wide_limits[bnd] - x0[0])};
-          if ( p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3] &&
-               p2[2] >= downstream_wide_limits[4] && p2[2] <= downstream_wide_limits[5] ) {
-            intersects_downstream = true;
-            closest_approach_downstream = 0.;
-            break;
-          }
-          else if (p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3])
-            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[4] - p2[2]), std::abs(downstream_wide_limits[5] - p2[2])});
-          else
-            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[2] - p2[1]), std::abs(downstream_wide_limits[3] - p2[1])});
-        }
-        else if (bnd>=2 && bnd<4) {
-          double p2[3] = {x0[0] + (dx[0]/dx[1])*(downstream_wide_limits[bnd] - x0[1]), downstream_wide_limits[bnd], x0[2] + (dx[2]/dx[1])*(downstream_wide_limits[bnd] - x0[1])};
-          if ( p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1] &&
-               p2[2] >= downstream_wide_limits[4] && p2[2] <= downstream_wide_limits[5] ) {
-            intersects_downstream = true;
-            closest_approach_downstream = 0.;
-            break;
-          }
-          else if (p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1])
-            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[4] - p2[2]), std::abs(downstream_wide_limits[5] - p2[2])});
-          else
-            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[0] - p2[0]), std::abs(downstream_wide_limits[1] - p2[0])});
-        }
-        else if (bnd>=4) {
-          double p2[3] = {x0[0] + (dx[0]/dx[2])*(downstream_wide_limits[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(downstream_wide_limits[bnd] - x0[2]), downstream_wide_limits[bnd]};
-          if ( p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1] &&
-               p2[1] >= downstream_wide_limits[2] && p2[1] <= downstream_wide_limits[3] ) {
-            intersects_downstream = true;
-            closest_approach_downstream = 0.;
-            break;
-          }
-          else if (p2[0] >= downstream_wide_limits[0] && p2[0] <= downstream_wide_limits[1])
-            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[2] - p2[1]), std::abs(downstream_wide_limits[3] - p2[1])});
-          else
-            closest_approach_downstream = std::min({closest_approach_downstream, std::abs(downstream_wide_limits[0] - p2[0]), std::abs(downstream_wide_limits[1] - p2[0])});
-        }
-      }
-
-      _mcp_intersects_upstream[counter] = intersects_upstream;
-      _mcp_intersects_downstream[counter] = intersects_downstream;
-      _mcp_cl_ap_upstream[counter] = closest_approach_upstream;
-      _mcp_cl_ap_downstream[counter] = closest_approach_downstream;
-
-      std::vector<double> upstream_wide_limits1000 = upstream_limits;
-      std::vector<double> downstream_wide_limits1000 = downstream_limits;
-      std::vector<double> buffer_box1000 = {-1000., 1000., -1000., 1000., -1000., 1000.};
-
-      for (unsigned j = 0; j < 6; ++j) {
-        upstream_wide_limits1000[j] += buffer_box1000[j];
-        downstream_wide_limits1000[j] += buffer_box1000[j];
-      }
-
-      bool intersects_upstream1000 = false;
-
-      for (int bnd = 0; bnd != 6; ++bnd) {
-        if (bnd<2) {
-          double p2[3] = {upstream_wide_limits1000[bnd],  x0[1] + (dx[1]/dx[0])*(upstream_wide_limits1000[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(upstream_wide_limits1000[bnd] - x0[0])};
-          if ( p2[1] >= upstream_wide_limits1000[2] && p2[1] <= upstream_wide_limits1000[3] &&
-               p2[2] >= upstream_wide_limits1000[4] && p2[2] <= upstream_wide_limits1000[5] ) {
-            intersects_upstream1000 = true;
-            break;
-          }
-        }
-        else if (bnd>=2 && bnd<4) {
-          double p2[3] = {x0[0] + (dx[0]/dx[1])*(upstream_wide_limits1000[bnd] - x0[1]), upstream_wide_limits1000[bnd], x0[2] + (dx[2]/dx[1])*(upstream_wide_limits1000[bnd] - x0[1])};
-          if ( p2[0] >= upstream_wide_limits1000[0] && p2[0] <= upstream_wide_limits1000[1] &&
-               p2[2] >= upstream_wide_limits1000[4] && p2[2] <= upstream_wide_limits1000[5] ) {
-            intersects_upstream1000 = true;
-            break;
-          }
-        }
-        else if (bnd>=4) {
-          double p2[3] = {x0[0] + (dx[0]/dx[2])*(upstream_wide_limits1000[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(upstream_wide_limits1000[bnd] - x0[2]), upstream_wide_limits1000[bnd]};
-          if ( p2[0] >= upstream_wide_limits1000[0] && p2[0] <= upstream_wide_limits1000[1] &&
-               p2[1] >= upstream_wide_limits1000[2] && p2[1] <= upstream_wide_limits1000[3] ) {
-            intersects_upstream1000 = true;
-            break;
-          }
-        }
-      }
-
-      bool intersects_downstream1000 = false;
-
-      for (int bnd = 0; bnd != 6; ++bnd) {
-        if (bnd<2) {
-          double p2[3] = {downstream_wide_limits1000[bnd],  x0[1] + (dx[1]/dx[0])*(downstream_wide_limits1000[bnd] - x0[0]), x0[2] + (dx[2]/dx[0])*(downstream_wide_limits1000[bnd] - x0[0])};
-          if ( p2[1] >= downstream_wide_limits1000[2] && p2[1] <= downstream_wide_limits1000[3] &&
-               p2[2] >= downstream_wide_limits1000[4] && p2[2] <= downstream_wide_limits1000[5] ) {
-            intersects_downstream1000 = true;
-            break;
-          }
-        }
-        else if (bnd>=2 && bnd<4) {
-          double p2[3] = {x0[0] + (dx[0]/dx[1])*(downstream_wide_limits1000[bnd] - x0[1]), downstream_wide_limits1000[bnd], x0[2] + (dx[2]/dx[1])*(downstream_wide_limits1000[bnd] - x0[1])};
-          if ( p2[0] >= downstream_wide_limits1000[0] && p2[0] <= downstream_wide_limits1000[1] &&
-               p2[2] >= downstream_wide_limits1000[4] && p2[2] <= downstream_wide_limits1000[5] ) {
-            intersects_downstream1000 = true;
-            break;
-          }
-        }
-        else if (bnd>=4) {
-          double p2[3] = {x0[0] + (dx[0]/dx[2])*(downstream_wide_limits1000[bnd] - x0[2]), x0[1] + (dx[1]/dx[2])*(downstream_wide_limits1000[bnd] - x0[2]), downstream_wide_limits1000[bnd]};
-          if ( p2[0] >= downstream_wide_limits1000[0] && p2[0] <= downstream_wide_limits1000[1] &&
-               p2[1] >= downstream_wide_limits1000[2] && p2[1] <= downstream_wide_limits1000[3] ) {
-            intersects_downstream1000 = true;
-            break;
-          }
-        }
-      }
-
-      _mcp_intersects_upstream1000[counter] = intersects_upstream1000;
-      _mcp_intersects_downstream1000[counter] = intersects_downstream1000;
-
-      if(_debug)
-        {
-          std::cout << "MCP - " << counter << '\n'
-                    << "Start:  " << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter] << '\n'
-                    << "Mom:    " << _mcp_px[counter] << ", " << _mcp_py[counter] << ", " << _mcp_pz[counter] << '\n'
-                    << "t_up:   " << t_upstream << '\n'
-                    << "t_down: " << t_downstream << '\n' 
-                    << "UP:     " << mcp_upstream.x() << ", " << mcp_upstream.y() << ", " << mcp_upstream.z() << '\n'
-                    << "DOWN:   " << mcp_downstream.x() << ", " << mcp_downstream.y() << ", " << mcp_downstream.z() << '\n'
-                    << "DIST-U: " << _mcp_upstream_dist[counter] << '\n'
-                    << "DIST-D: " << _mcp_downstream_dist[counter] << '\n'
-                    << std::endl;
-        }
-
 
       if (_debug) {
         std::cout << "MCP " << _mcp_pdg[counter] << ", trackID = " << _mcp_trackid[counter]
