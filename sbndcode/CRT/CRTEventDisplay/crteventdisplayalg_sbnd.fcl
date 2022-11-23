@@ -19,7 +19,7 @@ crteventdisplayalg_sbnd:
    DrawClusters:     true
 
    TaggerColour:     1
-   TpcColour:        1
+   TpcColour:        15
    TrueTrackColour:  8
    SimDepositColour: 2
    StripHitColour:   4
