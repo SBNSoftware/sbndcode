@@ -28,4 +28,3 @@ install_source()
 
 add_subdirectory(Alg)
 add_subdirectory(job)
-add_subdirectory(reco_deco_sbnd)
