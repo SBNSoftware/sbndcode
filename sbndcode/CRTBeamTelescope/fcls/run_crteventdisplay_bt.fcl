@@ -1,8 +1,9 @@
 #include "run_crteventdisplay.fcl"
 
-physics.analyzers.crtevd.EventDisplayConfig.DrawTpc:	 false
-physics.analyzers.crtevd.EventDisplayConfig.DrawTaggers: true
+physics.analyzers.crtevd.EventDisplayConfig.DrawTpc:     false
+physics.analyzers.crtevd.EventDisplayConfig.DrawTaggers: false
+physics.analyzers.crtevd.EventDisplayConfig.DrawModules: true
 physics.analyzers.crtevd.EventDisplayConfig.DrawCrtHits: true
-physics.analyzers.crtevd.EventDisplayConfig.Print: 	 true
+physics.analyzers.crtevd.EventDisplayConfig.Print:       true
 
 #include "use_crt_beam_tele_geometry.fcl"

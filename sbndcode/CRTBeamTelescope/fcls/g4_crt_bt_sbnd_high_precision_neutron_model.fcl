@@ -1,0 +1,3 @@
+#include "g4_crt_bt_sbnd.fcl"
+
+services.PhysicsList.PhysicsListName: "QGSP_BERT_HP"
