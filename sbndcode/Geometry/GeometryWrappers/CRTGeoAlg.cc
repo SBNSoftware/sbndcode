@@ -371,4 +371,12 @@ namespace sbnd{
     // If the two strips overlap in 2 dimensions then return true
     return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
   }
+
+  bool CRTGeoAlg::DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2)
+  {
+    const CRTModuleGeo module1 = GetModule(strip1.moduleName);
+    const CRTModuleGeo module2 = GetModule(strip2.moduleName);
+
+    return module1.orientation != module2.orientation;
+  }
 }

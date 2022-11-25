@@ -48,9 +48,6 @@ public:
 
   sbnd::crt::CRTCluster CharacteriseCluster(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &clusteredHits);
 
-  std::array<double, 6> FindOverlap(const art::Ptr<sbnd::crt::CRTStripHit> &hit0, const art::Ptr<sbnd::crt::CRTStripHit> &hit1, 
-                                    const CRTStripGeo &strip0, const CRTStripGeo &strip1);
-
 private:
 
   sbnd::CRTGeoAlg fCRTGeoAlg;
@@ -159,73 +156,30 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
 sbnd::crt::CRTCluster sbnd::CRTClusterProducer::CharacteriseCluster(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &clusteredHits)
 {
   const uint16_t nHits = clusteredHits.size();
-  uint32_t s = 0, ts0 = 0, ts1 = 0;
-  uint16_t adc = 0, adcCorr = 0;
 
-  std::string taggerName = fCRTGeoAlg.ChannelToTaggerName(clusteredHits.at(0)->Channel());
-  
-  std::array<double, 6> edges({-std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),
-                               -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),
-                               -std::numeric_limits<double>::max(), std::numeric_limits<double>::max()});
+  const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(clusteredHits.at(0)->Channel());
+  const std::string taggerName = fCRTGeoAlg.ChannelToTaggerName(clusteredHits.at(0)->Channel());
 
-  if(clusteredHits.size() == 1)
-    edges = fCRTGeoAlg.StripHit3DPos(fCRTGeoAlg.GetStrip(clusteredHits.at(0)->Channel()).name, clusteredHits.at(0)->Pos(), clusteredHits.at(0)->Error());
-  
+  uint32_t ts0 = 0, ts1 = 0, s = 0;
+  bool threeD = false;
+
   for(uint16_t i = 0; i < clusteredHits.size(); ++i)
     {
       const art::Ptr<sbnd::crt::CRTStripHit> hit = clusteredHits[i];
-      const CRTStripGeo strip                    = fCRTGeoAlg.GetStrip(hit->Channel());
 
-      s       += hit->UnixS();
-      ts0     += hit->Ts0();
-      ts1     += hit->Ts1();
-      adc     += hit->ADC1();
-      adc     += hit->ADC2();
-      adcCorr += hit->ADC1();
-      adcCorr += hit->ADC2();
+      ts0 += hit->Ts0();
+      ts1 += hit->Ts1();
+      s   += hit->UnixS();
 
-      for(uint16_t ii = i+1; ii < clusteredHits.size(); ++ii)
-        {
-          const art::Ptr<sbnd::crt::CRTStripHit> overlappinghit = clusteredHits[ii];
-          const CRTStripGeo overlappingstrip                    = fCRTGeoAlg.GetStrip(overlappinghit->Channel());
-          
-          if(!fCRTGeoAlg.CheckOverlap(strip, overlappingstrip))
-            continue;
-
-          std::array<double, 6> overlap = FindOverlap(hit, overlappinghit, strip, overlappingstrip);
-
-          for(uint16_t iii = 0; iii < 6; iii+=2)
-            {
-              if(overlap[iii] > edges[iii]) 
-                edges[iii] = overlap[iii];
-              
-              if(overlap[iii+1] < edges[iii+1])
-                edges[iii+1] = overlap[iii+1];
-            }
-        } 
+      const CRTStripGeo strip = fCRTGeoAlg.GetStrip(hit->Channel());
+      threeD |= fCRTGeoAlg.DifferentOrientations(strip0, strip);
     }
 
   s   /= nHits;
   ts0 /= nHits;
   ts1 /= nHits;
 
-  return sbnd::crt::CRTCluster(ts0, ts1, s, edges, nHits, adc, adcCorr, taggerName);
+  return sbnd::crt::CRTCluster(ts0, ts1, s, nHits, taggerName, threeD);
 }
   
-std::array<double, 6> sbnd::CRTClusterProducer::FindOverlap(const art::Ptr<sbnd::crt::CRTStripHit> &hit0, const art::Ptr<sbnd::crt::CRTStripHit> &hit1,
-                                                            const CRTStripGeo &strip0, const CRTStripGeo &strip1)
-{
-  const std::array<double, 6> hit0pos = fCRTGeoAlg.StripHit3DPos(strip0.name, hit0->Pos(), hit0->Error());
-  const std::array<double, 6> hit1pos = fCRTGeoAlg.StripHit3DPos(strip1.name, hit1->Pos(), hit1->Error());
-  
-  std::array<double, 6> overlap({std::max(hit0pos[0], hit1pos[0]),
-                                 std::min(hit0pos[1], hit1pos[1]),
-                                 std::max(hit0pos[2], hit1pos[2]),
-                                 std::min(hit0pos[3], hit1pos[3]),
-                                 std::max(hit0pos[4], hit1pos[4]),
-                                 std::min(hit0pos[5], hit1pos[5])});
-
-  return overlap;
-}
-
 DEFINE_ART_MODULE(sbnd::CRTClusterProducer)

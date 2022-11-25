@@ -307,6 +307,8 @@ namespace sbnd{
 
     bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
 
+    bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
+
   private:
 
     std::map<std::string, CRTTaggerGeo> fTaggers;
