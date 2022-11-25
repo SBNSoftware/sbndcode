@@ -1,0 +1,29 @@
+#include "services_sbnd.fcl"
+
+process_name: CRTAnalyzer
+
+services:
+{
+  TFileService: { fileName: "crtana_sbnd.root" }
+  @table::sbnd_basic_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+
+  analyzers:
+  {
+    crtana: 
+    { 
+      module_type: "CRTAnalysis"
+    }
+  }
+
+  ana:       [ crtana ]
+  end_paths: [ ana ]
+}

@@ -110,28 +110,22 @@ private:
   std::vector<std::vector<uint16_t>> _feb_adc;
   std::vector<uint32_t>              _feb_coinc;
 
-  std::vector<uint32_t> _csh_channel;
-  std::vector<uint32_t> _csh_ts0;
-  std::vector<uint32_t> _csh_ts1;
-  std::vector<uint32_t> _csh_unixs;
-  std::vector<double>   _csh_pos;
-  std::vector<double>   _csh_err;
-  std::vector<uint16_t> _csh_adc1;
-  std::vector<uint16_t> _csh_adc2;
+  std::vector<uint32_t> _sh_channel;
+  std::vector<uint32_t> _sh_ts0;
+  std::vector<uint32_t> _sh_ts1;
+  std::vector<uint32_t> _sh_unixs;
+  std::vector<double>   _sh_pos;
+  std::vector<double>   _sh_err;
+  std::vector<uint16_t> _sh_adc1;
+  std::vector<uint16_t> _sh_adc2;
+  std::vector<bool>     _sh_saturated;
 
   std::vector<uint32_t>    _cl_ts0;
   std::vector<uint32_t>    _cl_ts1;
   std::vector<uint32_t>    _cl_unixs;
-  std::vector<double>      _cl_minx;
-  std::vector<double>      _cl_maxx;
-  std::vector<double>      _cl_miny;
-  std::vector<double>      _cl_maxy;
-  std::vector<double>      _cl_minz;
-  std::vector<double>      _cl_maxz;
   std::vector<uint16_t>    _cl_nhits;
-  std::vector<uint16_t>    _cl_sumadc;
-  std::vector<uint16_t>    _cl_sumadccorr;
   std::vector<std::string> _cl_tagger;
+  std::vector<bool>        _cl_threed;
 };
 
 
@@ -139,8 +133,12 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   {
-    fFEBDataModuleLabel  = p.get<std::string>("FEBDataLabel", "crtsim");
-    fDebug               = p.get<bool>("Debug", false);
+    fMCParticleModuleLabel  = p.get<std::string>("MCParticleModuleLabel", "largeant");
+    fSimDepositModuleLabel  = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
+    fFEBDataModuleLabel     = p.get<std::string>("FEBDataModuleLabel", "crtsim");
+    fCRTStripHitModuleLabel = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
+    fCRTClusterModuleLabel  = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
+    fDebug                  = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
 
@@ -190,29 +188,22 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("ide_exitz", "std::vector<float>", &_ide_exitz);
     fTree->Branch("ide_exitt", "std::vector<float>", &_ide_exitt);
 
-    fTree->Branch("csh_channel", "std::vector<uint32_t>", &_csh_channel);
-    fTree->Branch("csh_ts0", "std::vector<uint32_t>", &_csh_ts0);
-    fTree->Branch("csh_ts1", "std::vector<uint32_t>", &_csh_ts1);
-    fTree->Branch("csh_unixs", "std::vector<uint32_t>", &_csh_unixs);
-    fTree->Branch("csh_pos", "std::vector<double>", &_csh_pos);
-    fTree->Branch("csh_err", "std::vector<double>", &_csh_err);
-    fTree->Branch("csh_adc1", "std::vector<uint16_t>", &_csh_adc1);
-    fTree->Branch("csh_adc2", "std::vector<uint16_t>", &_csh_adc2);
+    fTree->Branch("sh_channel", "std::vector<uint32_t>", &_sh_channel);
+    fTree->Branch("sh_ts0", "std::vector<uint32_t>", &_sh_ts0);
+    fTree->Branch("sh_ts1", "std::vector<uint32_t>", &_sh_ts1);
+    fTree->Branch("sh_unixs", "std::vector<uint32_t>", &_sh_unixs);
+    fTree->Branch("sh_pos", "std::vector<double>", &_sh_pos);
+    fTree->Branch("sh_err", "std::vector<double>", &_sh_err);
+    fTree->Branch("sh_adc1", "std::vector<uint16_t>", &_sh_adc1);
+    fTree->Branch("sh_adc2", "std::vector<uint16_t>", &_sh_adc2);
+    fTree->Branch("sh_saturated", "std::vector<bool>", &_sh_saturated);
 
     fTree->Branch("cl_ts0", "std::vector<uint32_t>", &_cl_ts0);
     fTree->Branch("cl_ts1", "std::vector<uint32_t>", &_cl_ts1);
     fTree->Branch("cl_unixs", "std::vector<uint32_t>", &_cl_unixs);
-    fTree->Branch("cl_minx", "std::vector<double>", &_cl_minx);
-    fTree->Branch("cl_maxx", "std::vector<double>", &_cl_maxx);
-    fTree->Branch("cl_miny", "std::vector<double>", &_cl_miny);
-    fTree->Branch("cl_maxy", "std::vector<double>", &_cl_maxy);
-    fTree->Branch("cl_minz", "std::vector<double>", &_cl_minz);
-    fTree->Branch("cl_maxz", "std::vector<double>", &_cl_maxz);
-    fTree->Branch("cl_unixs", "std::vector<uint16_t>", &_cl_unixs);
     fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
-    fTree->Branch("cl_sumadc", "std::vector<uint16_t>", &_cl_sumadc);
-    fTree->Branch("cl_sumadccorr", "std::vector<uint16_t>", &_cl_sumadccorr);
     fTree->Branch("cl_tagger", "std::vector<std::string>", &_cl_tagger);
+    fTree->Branch("cl_threed", "std::vector<bool>", &_cl_threed);
 
     if(fDebug)
       {
@@ -458,10 +449,56 @@ void CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<sbnd::crt::FEBData>> &FEB
 
 void CRTAnalysis::AnalyseCRTStripHits(std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &CRTStripHitVec)
 {
+  unsigned nStripHits = CRTStripHitVec.size();
+  
+  _sh_channel.resize(nStripHits);
+  _sh_ts0.resize(nStripHits);
+  _sh_ts1.resize(nStripHits);
+  _sh_unixs.resize(nStripHits);
+  _sh_pos.resize(nStripHits);
+  _sh_err.resize(nStripHits);
+  _sh_adc1.resize(nStripHits);
+  _sh_adc2.resize(nStripHits);
+  _sh_saturated.resize(nStripHits);
+
+  for(unsigned i = 0; i < nStripHits; ++i)
+    {
+      auto hit = CRTStripHitVec[i];
+
+      _sh_channel[i]   = hit->Channel();
+      _sh_ts0[i]       = hit->Ts0();
+      _sh_ts1[i]       = hit->Ts1();
+      _sh_unixs[i]     = hit->UnixS();
+      _sh_pos[i]       = hit->Pos();
+      _sh_err[i]       = hit->Error();
+      _sh_adc1[i]      = hit->ADC1();
+      _sh_adc2[i]      = hit->ADC2();
+      _sh_saturated[i] = hit->Saturated();
+    }
 }
 
 void CRTAnalysis::AnalyseCRTClusters(std::vector<art::Ptr<sbnd::crt::CRTCluster>> &CRTClusterVec)
 {
+  unsigned nClusters = CRTClusterVec.size();
+
+  _cl_ts0.resize(nClusters);
+  _cl_ts1.resize(nClusters);
+  _cl_unixs.resize(nClusters);
+  _cl_nhits.resize(nClusters);
+  _cl_tagger.resize(nClusters);
+  _cl_threed.resize(nClusters);
+
+  for(unsigned i = 0; i < nClusters; ++i)
+    {
+      auto cluster = CRTClusterVec[i];
+      
+      _cl_ts0[i]    = cluster->Ts0();
+      _cl_ts1[i]    = cluster->Ts1();
+      _cl_unixs[i]  = cluster->UnixS();
+      _cl_nhits[i]  = cluster->NHits();
+      _cl_tagger[i] = cluster->Tagger();
+      _cl_threed[i] = cluster->ThreeD();
+    }
 }
 
 DEFINE_ART_MODULE(CRTAnalysis)

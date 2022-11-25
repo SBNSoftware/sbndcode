@@ -4,3 +4,4 @@ art_make(
 	 sbndcode_GeoWrappers
 )
 
+install_fhicl()
