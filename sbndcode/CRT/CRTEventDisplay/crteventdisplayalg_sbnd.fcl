@@ -18,12 +18,13 @@ crteventdisplayalg_sbnd:
    DrawStripHits:    true
    DrawClusters:     true
 
-   TaggerColour:     1
-   TpcColour:        15
-   TrueTrackColour:  8
-   SimDepositColour: 2
-   StripHitColour:   4
-   ClusterColour:    6
+   TaggerColour:             1
+   TpcColour:                15
+   TrueTrackColour:          8
+   SimDepositColour:         2
+   StripHitColour:           4
+   ClusterStartingColour:    800
+   ClusterColourInterval:    20
 
    Print:            true
 

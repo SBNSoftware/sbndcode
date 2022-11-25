@@ -23,6 +23,9 @@
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
 
+//larsoft
+#include "lardataalg/DetectorInfo/DetectorClocksData.h"
+
 // sbnobj
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
@@ -101,8 +104,11 @@ namespace sbnd
       fhicl::Atom<int> StripHitColour {
         Name("StripHitColour")
           };
-      fhicl::Atom<int> ClusterColour {
-        Name("ClusterColour")
+      fhicl::Atom<int> ClusterStartingColour {
+        Name("ClusterStartingColour")
+          };
+      fhicl::Atom<int> ClusterColourInterval {
+        Name("ClusterColourInterval")
           };
 
       fhicl::Atom<bool> Print {
@@ -162,7 +168,8 @@ namespace sbnd
     int fTrueTrackColour;
     int fSimDepositColour;
     int fStripHitColour;
-    int fClusterColour;
+    int fClusterStartingColour;
+    int fClusterColourInterval;
 
     bool fPrint;
 

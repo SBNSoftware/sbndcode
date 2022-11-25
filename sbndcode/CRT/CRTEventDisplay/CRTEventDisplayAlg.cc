@@ -32,7 +32,8 @@ namespace sbnd{
     fTrueTrackColour = config.TrueTrackColour();
     fSimDepositColour = config.SimDepositColour();
     fStripHitColour = config.StripHitColour();
-    fClusterColour = config.ClusterColour();
+    fClusterStartingColour = config.ClusterStartingColour();
+    fClusterColourInterval = config.ClusterColourInterval();
 
     fPrint = config.Print();
 
@@ -103,6 +104,8 @@ namespace sbnd{
   void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                                 const art::Event& event)
   {
+    double G4RefTime(clockData.G4ToElecTime(0) * 1e3);
+
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
     
@@ -183,6 +186,9 @@ namespace sbnd{
 
         for(auto const& part : *particleHandle)
           {
+	    if(std::abs(part.T()) > 2e4)
+	      continue;
+
             size_t npts = part.NumberTrajectoryPoints();
             TPolyLine3D *line = new TPolyLine3D(npts);
             int ipt = 0;
@@ -229,6 +235,9 @@ namespace sbnd{
 		double z = (ide.entryZ + ide.exitZ) / 2.;
 		double t = (ide.entryT + ide.exitT) / 2.;
 
+		if(std::abs(t) > 2e4)
+		  continue;
+
  		double ex = std::abs(ide.entryX - ide.exitX) / 2.;
 		double ey = std::abs(ide.entryY - ide.exitY) / 2.;
 		double ez = std::abs(ide.entryZ - ide.exitZ) / 2.;
@@ -250,6 +259,9 @@ namespace sbnd{
 
 	for(auto const stripHit : *stripHitsHandle)
 	  {
+	    if(std::abs(stripHit.Ts1() - G4RefTime) > 2e4)
+	      continue;
+
 	    CRTStripGeo strip = fCrtGeo.GetStrip(stripHit.Channel());
 
 	    double rmin[3] = {strip.minX, strip.minY, strip.minZ};
@@ -267,18 +279,33 @@ namespace sbnd{
     if(fDrawClusters)
       {
 	auto clustersHandle = event.getValidHandle<std::vector<sbnd::crt::CRTCluster>>(fClusterLabel);
+	std::vector<art::Ptr<sbnd::crt::CRTCluster>> clustersVec;
+	art::fill_ptr_vector(clustersVec, clustersHandle);
+	art::FindManyP<sbnd::crt::CRTStripHit> clustersToStripHits(clustersHandle, event, fClusterLabel);
 
-	for(auto const cluster : *clustersHandle)
+	int colour = fClusterStartingColour;
+
+	for(auto const cluster : clustersVec)
 	  {
-	    double rmin[3] = {cluster.MinX(), cluster.MinY(), cluster.MinZ()};
-	    double rmax[3] = {cluster.MaxX(), cluster.MaxY(), cluster.MaxZ()};
+	    if(std::abs(cluster->Ts1() - G4RefTime) > 2e4)
+	      continue;
+
+	    auto stripHitVec = clustersToStripHits.at(cluster.key());
+
+	    for(auto stripHit : stripHitVec)
+	      {
+		CRTStripGeo strip = fCrtGeo.GetStrip(stripHit->Channel());
+
+		double rmin[3] = {strip.minX, strip.minY, strip.minZ};
+		double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
+
+		DrawCube(c1, rmin, rmax, colour);
+	      }
 
 	    if(fPrint)
-	      std::cout << "Cluster of " << cluster.NHits() << " hits: (" 
-			<< rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
-			<< rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << cluster.Ts1() << std::endl;
-    
-	    DrawCube(c1, rmin, rmax, fClusterColour);
+	      std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1() << std::endl;
+
+            colour += fClusterColourInterval;
 	  }
       }
 
