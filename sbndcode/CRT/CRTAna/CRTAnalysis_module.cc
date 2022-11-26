@@ -24,6 +24,7 @@
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 
 class CRTAnalysis;
 
@@ -49,13 +50,14 @@ public:
 
   void AnalyseFEBDatas(std::vector<art::Ptr<sbnd::crt::FEBData>> &FEBDataVec);
 
-  void AnalyseCRTStripHits(std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &CRTStripHitVec);
+  void AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &CRTStripHitVec);
 
-  void AnalyseCRTClusters(std::vector<art::Ptr<sbnd::crt::CRTCluster>> &CRTClusterVec);  
+  void AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<sbnd::crt::CRTCluster>> &CRTClusterVec);  
 
 private:
 
   sbnd::CRTGeoAlg fCRTGeoAlg;
+  sbnd::CRTBackTrackerAlg fCRTBackTrackerAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
     fCRTClusterModuleLabel;
@@ -119,6 +121,9 @@ private:
   std::vector<uint16_t> _sh_adc1;
   std::vector<uint16_t> _sh_adc2;
   std::vector<bool>     _sh_saturated;
+  std::vector<int16_t>  _sh_truth_trackid;
+  std::vector<double>   _sh_truth_completeness;
+  std::vector<double>   _sh_truth_purity;
 
   std::vector<uint32_t>    _cl_ts0;
   std::vector<uint32_t>    _cl_ts1;
@@ -126,12 +131,16 @@ private:
   std::vector<uint16_t>    _cl_nhits;
   std::vector<std::string> _cl_tagger;
   std::vector<bool>        _cl_threed;
+  std::vector<int16_t>     _cl_truth_trackid;
+  std::vector<double>      _cl_truth_completeness;
+  std::vector<double>      _cl_truth_purity;
 };
 
 
 CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
+  , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
   {
     fMCParticleModuleLabel  = p.get<std::string>("MCParticleModuleLabel", "largeant");
     fSimDepositModuleLabel  = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
@@ -146,14 +155,6 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("run", &_run);
     fTree->Branch("subrun", &_subrun);
     fTree->Branch("event", &_event);
-
-    fTree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
-    fTree->Branch("feb_flags", "std::vector<uint16_t>", &_feb_flags);
-    fTree->Branch("feb_ts0", "std::vector<uint32_t>", &_feb_ts0);
-    fTree->Branch("feb_ts1", "std::vector<uint32_t>", &_feb_ts1);
-    fTree->Branch("feb_unixs", "std::vector<uint32_t>", &_feb_unixs);
-    fTree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
-    fTree->Branch("feb_coinc", "std::vector<uint32_t>", &_feb_coinc);
 
     fTree->Branch("mc_trackid", "std::vector<int16_t>", &_mc_trackid);
     fTree->Branch("mc_pdg", "std::vector<int16_t>", &_mc_pdg);
@@ -188,6 +189,14 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("ide_exitz", "std::vector<float>", &_ide_exitz);
     fTree->Branch("ide_exitt", "std::vector<float>", &_ide_exitt);
 
+    fTree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
+    fTree->Branch("feb_flags", "std::vector<uint16_t>", &_feb_flags);
+    fTree->Branch("feb_ts0", "std::vector<uint32_t>", &_feb_ts0);
+    fTree->Branch("feb_ts1", "std::vector<uint32_t>", &_feb_ts1);
+    fTree->Branch("feb_unixs", "std::vector<uint32_t>", &_feb_unixs);
+    fTree->Branch("feb_adc", "std::vector<std::vector<uint16_t>>", &_feb_adc);
+    fTree->Branch("feb_coinc", "std::vector<uint32_t>", &_feb_coinc);
+
     fTree->Branch("sh_channel", "std::vector<uint32_t>", &_sh_channel);
     fTree->Branch("sh_ts0", "std::vector<uint32_t>", &_sh_ts0);
     fTree->Branch("sh_ts1", "std::vector<uint32_t>", &_sh_ts1);
@@ -197,6 +206,9 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("sh_adc1", "std::vector<uint16_t>", &_sh_adc1);
     fTree->Branch("sh_adc2", "std::vector<uint16_t>", &_sh_adc2);
     fTree->Branch("sh_saturated", "std::vector<bool>", &_sh_saturated);
+    fTree->Branch("sh_truth_trackid", "std::vector<int16_t>", &_sh_truth_trackid);
+    fTree->Branch("sh_truth_completeness", "std::vector<double>", &_sh_truth_completeness);
+    fTree->Branch("sh_truth_purity", "std::vector<double>", &_sh_truth_purity);
 
     fTree->Branch("cl_ts0", "std::vector<uint32_t>", &_cl_ts0);
     fTree->Branch("cl_ts1", "std::vector<uint32_t>", &_cl_ts1);
@@ -204,6 +216,9 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
     fTree->Branch("cl_tagger", "std::vector<std::string>", &_cl_tagger);
     fTree->Branch("cl_threed", "std::vector<bool>", &_cl_threed);
+    fTree->Branch("cl_truth_trackid", "std::vector<int16_t>", &_cl_truth_trackid);
+    fTree->Branch("cl_truth_completeness", "std::vector<double>", &_cl_truth_completeness);
+    fTree->Branch("cl_truth_purity", "std::vector<double>", &_cl_truth_purity);
 
     if(fDebug)
       {
@@ -237,6 +252,8 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
 void CRTAnalysis::analyze(art::Event const& e)
 {
+  fCRTBackTrackerAlg.SetupMaps(e);
+
   _run = e.id().run();
   _subrun = e.id().subRun();
   _event =  e.id().event();
@@ -293,7 +310,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   art::fill_ptr_vector(CRTStripHitVec, CRTStripHitHandle);
 
   // Fill CRTStripHit variables
-  AnalyseCRTStripHits(CRTStripHitVec);
+  AnalyseCRTStripHits(e, CRTStripHitVec);
 
   // Get CRTClusters
   art::Handle<std::vector<sbnd::crt::CRTCluster>> CRTClusterHandle;
@@ -306,7 +323,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   art::fill_ptr_vector(CRTClusterVec, CRTClusterHandle);
 
   // Fill CRTCluster variables
-  AnalyseCRTClusters(CRTClusterVec);
+  AnalyseCRTClusters(e, CRTClusterVec);
 
   // Fill the Tree
   fTree->Fill();
@@ -366,7 +383,7 @@ void CRTAnalysis::AnalyseMCParticles(std::vector<art::Ptr<simb::MCParticle>> &MC
       _mc_daughters[i].resize(_mc_ndaughters[i]);
 
       for(unsigned ii = 0; ii < _mc_ndaughters[i]; ++ii)
-	_mc_daughters[i][ii] = mcp->Daughter(ii);
+        _mc_daughters[i][ii] = mcp->Daughter(ii);
     }
 }
 
@@ -400,22 +417,22 @@ void CRTAnalysis::AnalyseSimDeposits(std::vector<art::Ptr<sim::AuxDetSimChannel>
       auto ideVec           = auxDetSimChannel->AuxDetIDEs();
 
       for(unsigned ii = 0; ii < ideVec.size(); ++ii)
-	{
-	  auto ide = ideVec[ii];
+        {
+          auto ide = ideVec[ii];
 
-	  _ide_trackid[ide_counter] = ide.trackID;
-	  _ide_e[ide_counter]       = ide.energyDeposited;
-	  _ide_entryx[ide_counter]  = ide.entryX;
-	  _ide_entryy[ide_counter]  = ide.entryY;
-	  _ide_entryz[ide_counter]  = ide.entryZ;
-	  _ide_entryt[ide_counter]  = ide.entryT;
-	  _ide_exitx[ide_counter]   = ide.exitX;
-	  _ide_exity[ide_counter]   = ide.exitY;
-	  _ide_exitz[ide_counter]   = ide.exitZ;
-	  _ide_exitt[ide_counter]   = ide.exitT;
-	  
-	  ++ide_counter;
-	}
+          _ide_trackid[ide_counter] = ide.trackID;
+          _ide_e[ide_counter]       = ide.energyDeposited;
+          _ide_entryx[ide_counter]  = ide.entryX;
+          _ide_entryy[ide_counter]  = ide.entryY;
+          _ide_entryz[ide_counter]  = ide.entryZ;
+          _ide_entryt[ide_counter]  = ide.entryT;
+          _ide_exitx[ide_counter]   = ide.exitX;
+          _ide_exity[ide_counter]   = ide.exitY;
+          _ide_exitz[ide_counter]   = ide.exitZ;
+          _ide_exitt[ide_counter]   = ide.exitT;
+          
+          ++ide_counter;
+        }
     }
 }
 
@@ -447,7 +464,7 @@ void CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<sbnd::crt::FEBData>> &FEB
     }
 }
 
-void CRTAnalysis::AnalyseCRTStripHits(std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &CRTStripHitVec)
+void CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &CRTStripHitVec)
 {
   unsigned nStripHits = CRTStripHitVec.size();
   
@@ -460,6 +477,9 @@ void CRTAnalysis::AnalyseCRTStripHits(std::vector<art::Ptr<sbnd::crt::CRTStripHi
   _sh_adc1.resize(nStripHits);
   _sh_adc2.resize(nStripHits);
   _sh_saturated.resize(nStripHits);
+  _sh_truth_trackid.resize(nStripHits);
+  _sh_truth_completeness.resize(nStripHits);
+  _sh_truth_purity.resize(nStripHits);
 
   for(unsigned i = 0; i < nStripHits; ++i)
     {
@@ -474,10 +494,15 @@ void CRTAnalysis::AnalyseCRTStripHits(std::vector<art::Ptr<sbnd::crt::CRTStripHi
       _sh_adc1[i]      = hit->ADC1();
       _sh_adc2[i]      = hit->ADC2();
       _sh_saturated[i] = hit->Saturated();
+
+      sbnd::CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, hit);
+      _sh_truth_trackid[i]      = truthMatch.trackid;
+      _sh_truth_completeness[i] = truthMatch.completeness;
+      _sh_truth_purity[i]       = truthMatch.purity;
     }
 }
 
-void CRTAnalysis::AnalyseCRTClusters(std::vector<art::Ptr<sbnd::crt::CRTCluster>> &CRTClusterVec)
+void CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<sbnd::crt::CRTCluster>> &CRTClusterVec)
 {
   unsigned nClusters = CRTClusterVec.size();
 
@@ -487,6 +512,9 @@ void CRTAnalysis::AnalyseCRTClusters(std::vector<art::Ptr<sbnd::crt::CRTCluster>
   _cl_nhits.resize(nClusters);
   _cl_tagger.resize(nClusters);
   _cl_threed.resize(nClusters);
+  _cl_truth_trackid.resize(nClusters);
+  _cl_truth_completeness.resize(nClusters);
+  _cl_truth_purity.resize(nClusters);
 
   for(unsigned i = 0; i < nClusters; ++i)
     {
@@ -498,6 +526,11 @@ void CRTAnalysis::AnalyseCRTClusters(std::vector<art::Ptr<sbnd::crt::CRTCluster>
       _cl_nhits[i]  = cluster->NHits();
       _cl_tagger[i] = cluster->Tagger();
       _cl_threed[i] = cluster->ThreeD();
+
+      sbnd::CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
+      _cl_truth_trackid[i]      = truthMatch.trackid;
+      _cl_truth_completeness[i] = truthMatch.completeness;
+      _cl_truth_purity[i]       = truthMatch.purity;
     }
 }
 

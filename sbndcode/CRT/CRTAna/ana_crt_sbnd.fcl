@@ -1,4 +1,5 @@
 #include "services_sbnd.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
 
 process_name: CRTAnalyzer
 
@@ -20,7 +21,8 @@ physics:
   {
     crtana: 
     { 
-      module_type: "CRTAnalysis"
+      module_type:       "CRTAnalysis"
+      CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
     }
   }
 
