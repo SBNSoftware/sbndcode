@@ -6,6 +6,7 @@
 //
 // Wrapper for some awkward CRT geometry things
 // T Brooks (tbrooks@fnal.gov), November 2018
+// Edited heavily - Henry Lay, November 2022
 ///////////////////////////////////////////////
 
 // framework
@@ -308,6 +309,8 @@ namespace sbnd{
     bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
 
     bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
+
+    std::string WhichTagger(const double &x, const double &y, const double &z);
 
   private:
 

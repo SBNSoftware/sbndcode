@@ -379,4 +379,17 @@ namespace sbnd{
 
     return module1.orientation != module2.orientation;
   }
+
+  std::string CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z)
+  {
+
+    for(auto const [name, tagger] : fTaggers)
+      {
+        if(x > tagger.minX - 1 && x < tagger.maxX + 1 &&
+           y > tagger.minY - 1 && y < tagger.maxY + 1 &&
+           z > tagger.minZ - 1 && z < tagger.maxZ + 1)
+          return name;
+      }
+    return "";
+  }
 }

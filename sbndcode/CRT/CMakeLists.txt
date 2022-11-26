@@ -1,4 +1,5 @@
 add_subdirectory(CRTAna)
+add_subdirectory(CRTBackTracker)
 add_subdirectory(CRTEventDisplay)
 add_subdirectory(CRTReco)
 add_subdirectory(CRTSimulation)
