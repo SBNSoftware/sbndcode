@@ -28,6 +28,16 @@ namespace sbnd{
     fMCPIDEsEnergyMap.clear();
     fMCPRecoMap.clear();
     fIDERecoMap.clear();
+    fTrackIDMotherMap.clear();
+
+    auto droppedTrackIds = event.getMany<std::map<int, std::set<int>>>();
+    assert(droppedTrackIds.size() == 1);
+
+    for(auto const& [mother, ids] : *(droppedTrackIds[0]))
+      {
+	for(auto const& id : ids)
+	  fTrackIDMotherMap[id] = mother;
+      }
 
     art::Handle<std::vector<sim::AuxDetIDE>> ideHandle;
     event.getByLabel(fFEBDataModuleLabel, ideHandle);
@@ -43,8 +53,8 @@ namespace sbnd{
         const double z = (ide->entryZ + ide->exitZ) / 2.;
         const std::string tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
-        depositCategories.insert({ide->trackID, tagger});
-        fMCPRecoMap[ide->trackID] = false;
+        depositCategories.insert({RollUpID(ide->trackID), tagger});
+        fMCPRecoMap[RollUpID(ide->trackID)] = false;
       }
         
     for(auto const category : depositCategories)
@@ -60,10 +70,19 @@ namespace sbnd{
         const double z = (ide->entryZ + ide->exitZ) / 2.;
         const std::string tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
-        fMCPnIDEsMap[ide->trackID][tagger]      += 1;
-        fMCPIDEsEnergyMap[ide->trackID][tagger] += ide->energyDeposited;
-        fIDERecoMap[ide.key()]                   =  false;
+        fMCPnIDEsMap[RollUpID(ide->trackID)][tagger]      += 1;
+        fMCPIDEsEnergyMap[RollUpID(ide->trackID)][tagger] += ide->energyDeposited;
+        fIDERecoMap[ide.key()]                            =  false;
       }
+
+  }
+
+  int CRTBackTrackerAlg::RollUpID(const int &id)
+  {
+    if(fTrackIDMotherMap.find(id) != fTrackIDMotherMap.end())
+      return fTrackIDMotherMap[id];
+
+    return id;
   }
 
   CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<sbnd::crt::CRTStripHit> &stripHit)
@@ -92,8 +111,8 @@ namespace sbnd{
         const sbnd::crt::FEBTruthInfo *febTruthInfo = febDataToIDEs.data(febData.at(0).key())[i];
         if((uint) febTruthInfo->GetChannel() == (stripHit->Channel() % 32))
           {
-            idToEnergyMap[ide->trackID] += ide->energyDeposited;
-            totalEnergy                 += ide->energyDeposited;
+            idToEnergyMap[RollUpID(ide->trackID)] += ide->energyDeposited;
+            totalEnergy                           += ide->energyDeposited;
           }
       }
 
@@ -147,8 +166,8 @@ namespace sbnd{
             const sbnd::crt::FEBTruthInfo *febTruthInfo = febDataToIDEs.data(febData.at(0).key())[i];
             if((uint) febTruthInfo->GetChannel() == (stripHit->Channel() % 32))
               {
-                idToEnergyMap[ide->trackID] += ide->energyDeposited;
-                totalEnergy                 += ide->energyDeposited;
+                idToEnergyMap[RollUpID(ide->trackID)] += ide->energyDeposited;
+                totalEnergy                           += ide->energyDeposited;
               }
           }
       }

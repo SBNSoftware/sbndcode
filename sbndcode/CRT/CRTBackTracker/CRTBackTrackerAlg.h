@@ -86,6 +86,8 @@ namespace sbnd
 
     void SetupMaps(const art::Event &event);
 
+    int RollUpID(const int &id);
+
     TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<sbnd::crt::CRTStripHit> &stripHit);
 
     TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<sbnd::crt::CRTCluster> &cluster);
@@ -104,7 +106,7 @@ namespace sbnd
     std::map<int, std::map<std::string, double>> fMCPIDEsEnergyMap;
     std::map<int, bool>   fMCPRecoMap;
     std::map<int, bool>   fIDERecoMap;
-    
+    std::map<int, int>    fTrackIDMotherMap;
   };
 }
 
