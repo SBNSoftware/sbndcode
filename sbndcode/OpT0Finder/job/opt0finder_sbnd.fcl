@@ -10,7 +10,7 @@ sbnd_opt0_finder:
   TPCs: [0, 1]
   SliceProducer:   "pandora"
   TrackProducer:   "pandoraTrack"
-  ShowerProducer:  "pandoraShower"
+  ShowerProducer:  "pandoraShowerSBN"
   CaloProducer:    "pandoraCalo"
 
   FlashVetoTimeStart: -1e9
@@ -23,14 +23,16 @@ sbnd_opt0_finder:
   VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
 
   FlashMatchConfig: @local::flashmatch_config
-  CalibrationConst:          0.0201293  # the calibration constant for
+  CalAreaConstants: [ 0.0200906, 0.0200016, 0.0201293 ]
+  # CalibrationConst:          0.0201293  # the calibration constant for
                                         # collection plane derived in docdb 19505
   dQdxLimit:       5e5 # units of e-/cm
   PitchLimit:      2e2 # units of cm
   ExcludeOutliers: false # to skip values w/ dQ/dx or pitch values greater than the limits above
+  ShowerConstantConversion: false # to use constant constanct conversion or energy information 
 
-  ChargeToNPhotonsTrack:  54
-  ChargeToNPhotonsShower: 60
+  ChargeToNPhotonsTrack:  0.5
+  ChargeToNPhotonsShower: 0.5
 
  #  ChargeToNPhotonsTrack:    39   #  (1 / 0.0201293) e-/ADC*time_ticks  x
                                  #  x  23.6e-6 MeV/e-  x
@@ -59,20 +61,22 @@ sbnd_opt0_finder:
 sbnd_opt0_finder_one_to_many: @local::sbnd_opt0_finder
 sbnd_opt0_finder_one_to_many.FlashVetoTimeStart: 0
 sbnd_opt0_finder_one_to_many.FlashVetoTimeEnd: 2
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.UseMinuit: false
+
 
 # ... for TPC 0
 sbnd_opt0_finder_one_to_many_tpc0: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc0.TPC: 0
 sbnd_opt0_finder_one_to_many_tpc0.OpFlashProducer: "opflashtpc0"
 sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
-sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.UseMinuit: false
+# sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.UseMinuit: false
 
 # ... for TPC 1
 sbnd_opt0_finder_one_to_many_tpc1: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc1.TPC: 1
 sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: "opflashtpc1"
 sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
-sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.UseMinuit: false
+# sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.UseMinuit: false
 
 #
 # Configuration to run the flash matching in many flashes to many slices configuration
