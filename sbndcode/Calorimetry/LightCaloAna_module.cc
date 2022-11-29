@@ -44,7 +44,6 @@
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "larsim/MCCheater/BackTrackerService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/sim.h"
 
@@ -109,15 +108,15 @@ private:
 
   TTree* _tree;
   int _match_type;
-  // std::vector<double> _sp_x; 
-  // std::vector<double> _sp_x_true;
-  // std::vector<double> _sp_peakT;
 
   TTree* _tree2;
   int _nmatch=0;
   int _pfpid; 
-  // std::vector<double> _edep_time;
   double _opflash_time;
+
+  std::vector<double> _rec_charge;
+  std::vector<float>  _dep_charge;
+  std::vector<float>  _dep_energy;
 
   double _true_gamma;
   double _true_charge;
@@ -130,15 +129,11 @@ private:
   double _frac_Q; 
   double _frac_E;
 
-  // std::vector<double> _reco_gamma; 
-  // std::vector<double> _meas_pe; 
-
-  TTree* _tree3; 
-  double _rec_charge;
-  float  _dep_charge;
-  float  _dep_energy;
-  float  _dep_photon;
-
+  // TTree* _tree3; 
+  // double _rec_charge;
+  // float  _dep_charge;
+  // float  _dep_energy;
+  // float  _dep_photon;
 };
 
 
@@ -159,9 +154,6 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
 
   art::ServiceHandle<art::TFileService> fs;
   _tree = fs->make<TTree>("slice_tree","");
-  // _tree->Branch("sp_x"    ,  "std::vector<double>", &_sp_x);
-  // _tree->Branch("sp_x_true", "std::vector<double>", &_sp_x_true);
-  // _tree->Branch("sp_peakT",  "std::vector<double>", &_sp_peakT);
   _tree->Branch("run",             &_run,        "run/I");
   _tree->Branch("subrun",          &_subrun,     "subrun/I");
   _tree->Branch("event",           &_event,      "event/I");
@@ -173,10 +165,12 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _tree2->Branch("event",         &_event,        "event/I");
   _tree2->Branch("nmatch",        &_nmatch,       "nmatch/I");
   _tree2->Branch("pfpid",         &_pfpid,        "pfpid/I");
-  // _tree2->Branch("edep_time",     "std::vector<double>", &_edep_time);
   _tree2->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
-  // _tree2->Branch("reco_gamma",    "std::vector<double>", &_reco_gamma);
-  // _tree2->Branch("meas_pe",       "std::vector<double>", &_meas_pe);
+
+  _tree2->Branch("rec_charge",    "std::vector<double>", &_rec_charge);
+  _tree2->Branch("dep_charge",    "std::vector<float>",  &_dep_charge);
+  _tree2->Branch("dep_energy",    "std::vector<float>",  &_dep_energy);
+
   _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
   _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
   _tree2->Branch("true_energy",   &_true_energy,  "true_energy/D");
@@ -187,11 +181,11 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _tree2->Branch("frac_Q",        &_frac_Q,       "frac_Q/D");
   _tree2->Branch("frac_E",        &_frac_E,       "frac_E/D");
 
-  _tree3 = fs->make<TTree>("dep_tree","");
-  _tree3->Branch("rec_charge", &_rec_charge, "rec_charge/D");
-  _tree3->Branch("dep_energy", &_dep_energy, "dep_energy/F");
-  _tree3->Branch("dep_charge", &_dep_charge, "dep_charge/F");
-  _tree3->Branch("dep_photon", &_dep_photon, "dep_photon/F");
+  // _tree3 = fs->make<TTree>("dep_tree","");
+  // _tree3->Branch("rec_charge", &_rec_charge, "rec_charge/D");
+  // _tree3->Branch("dep_energy", &_dep_energy, "dep_energy/F");
+  // _tree3->Branch("dep_charge", &_dep_charge, "dep_charge/F");
+  // _tree3->Branch("dep_photon", &_dep_photon, "dep_photon/F");
 }
 
 void sbnd::LightCaloAna::analyze(art::Event const& e)
@@ -246,13 +240,6 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
 
   std::vector<art::Ptr<recob::Slice>> match_slices_v; 
   std::vector<art::Ptr<sbn::SimpleFlashMatch>> match_fm_v;
-
-  // std::string _hit_producer = "gaushit";
-  // ::art::Handle<std::vector<recob::Hit>> hit_h;
-  // e.getByLabel(_hit_producer, hit_h);
-
-  // art::FindManyP<recob::Wire> hit_to_wire(hit_h, e, _hit_producer);
-  // std::vector<art::Ptr<recob::Hit>> large_hits_v; 
 
   for (size_t n_slice=0; n_slice < slice_v.size(); n_slice++){
     float nu_score = -9999;
@@ -336,13 +323,14 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     // initialize tree2 variables 
     _nmatch++;
     _pfpid = -1; 
-    // _edep_time.clear();
 
     _slice_Q = 0; // total amount of charge
     _slice_L = 0; // total amount of light
     _slice_E = 0;
 
-     // _sp_x.clear(); _sp_x_true.clear(); _sp_peakT.clear();
+    _rec_charge.clear();
+    _dep_charge.clear();
+    _dep_energy.clear();
 
     std::vector<geo::Point_t> sp_xyz;
     std::vector<double> sp_charge; // vector of charge info for charge-weighting
@@ -389,6 +377,10 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     else if ( integral1 >= integral0 && integral1 >= integral2) plane = 1;
     else plane = 2;
 
+    _rec_charge.reserve(slice_hits_v.size()/2); // estimate the size of the vector to be between v.size()/3 and v.size()/2
+    _dep_charge.reserve(slice_hits_v.size()/2); 
+    _dep_energy.reserve(slice_hits_v.size()/2); 
+
     // get charge information 
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(slice.key());
     for (size_t n_pfp=0; n_pfp < pfp_v.size(); n_pfp++){
@@ -401,10 +393,6 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
         for (size_t n_hit=0; n_hit < hit_v.size(); n_hit++){
           auto hit = hit_v[n_hit];
           if (hit->View() !=plane) continue;
-          // std::cout << "plane: " << hit->View() << ", multiplicity: " << hit->Multiplicity() << std::endl;
-          // get true position information 
-          // const std::vector<double> xyz_true(bt_serv->HitToXYZ(clockData, hit));
-          // get reco position information
           const auto &position(sp->XYZ());
           geo::Point_t xyz(position[0],position[1],position[2]);
           // correct for e- attenuation 
@@ -412,31 +400,30 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
           double atten_correction = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
           double charge = (1/.0201293)*atten_correction*hit->Integral();
           if (charge > 0){
-            // large_hits_v.push_back(hit);
-            std::vector<const sim::IDE*> ide_v = bt_serv->HitToSimIDEs_Ps(clockData, hit);
-            float ide_energy = 0.0;
-            float ide_charge = 0.0;
-            for (auto const ide: ide_v){
-              ide_energy += ide->energy;
-              ide_charge += ide->numElectrons;  
+            // art::Ptr<sim::SimChannel> sim_chan_ptr = bt_serv->FindSimChannel(hit->Channel());
+            // if (sim_chan_ptr.isNull()) std::cout << "null channel" << std::endl;
+            if (hit->Channel() != 8294 && hit->Channel() != 8327){
+              std::vector<const sim::IDE*> ide_v = bt_serv->HitToSimIDEs_Ps(clockData, hit);
+              float ide_energy = 0.0;
+              float ide_charge = 0.0;
+              for (auto const ide: ide_v){
+                ide_energy += ide->energy;
+                ide_charge += ide->numElectrons;  
+              }
+              _rec_charge.push_back(charge);
+              _dep_charge.push_back(ide_charge*atten_correction);
+              _dep_energy.push_back(ide_energy);
             }
-            // std::cout << "ide (deposit) energy: " << ide_energy << std::endl;
-            // std::cout << "ide (readout) charge: " << ide_charge << std::endl;
-            // std::cout << "ide (deposit) charge: " << ide_charge*atten_correction << std::endl;
-            // std::cout << "ide (deposit) light: "  << ide_energy/(19.5*1e-6) - ide_charge*atten_correction << std::endl;
-            _rec_charge = charge;
-            _dep_energy = ide_energy;
-            _dep_charge = ide_charge*atten_correction;
-            _dep_photon = ide_energy/(19.5*1e-6) - ide_charge*atten_correction; 
-            _tree3->Fill();
+            else{
+              _rec_charge.push_back(charge);
+              _dep_charge.push_back(-1);
+              _dep_energy.push_back(-1);
+            }
+            // _dep_photon = ide_energy/(19.5*1e-6) - ide_charge*atten_correction; 
+            // _tree3->Fill();
           }
           sp_xyz.push_back(xyz);
           sp_charge.push_back(charge);
-
-          // tree variables
-          // _sp_x.push_back(position[0]);
-          // _sp_x_true.push_back(xyz_true[0]);
-          // _sp_peakT.push_back(hit->PeakTime());
 
           _slice_Q += charge;
         }
@@ -457,9 +444,6 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
       CalcLight(flash_pe_v, visibility_map, total_gamma);
     }
-    // fill tree variables 
-    // _reco_gamma = total_gamma;
-    // _meas_pe = total_pe;
 
     // calculate the weighted average: 
     double counter = 0.0;  // counter of non-zero channels 
@@ -494,7 +478,6 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
         _true_gamma  += energyDep.NumPhotons()/0.03; 
         _true_charge += energyDep.NumElectrons(); 
         _true_energy += energyDep.Energy(); 
-        // _edep_time.push_back(time);
       }
     }
     _slice_E = (_slice_L + _slice_Q)*19.5*1e-6; 
@@ -522,13 +505,6 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   } // end slice loop
   _match_type=nsuccessful_matches;
   _tree->Fill();
-  // do large hit stuff here : ) 
-  // if (!large_hits_v.empty()){
-  //   for (auto hit : large_hits_v){
-  //     std::vector<art::Ptr<recob::Wire>> wires_v = hit_to_wire.at(hit.key()); 
-  //     std::cout << "wire v size: " << wires_v.size() << std::endl;
-  //   }
-  // }
 
 } // end analyze
 
