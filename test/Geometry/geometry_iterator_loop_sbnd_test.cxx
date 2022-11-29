@@ -103,16 +103,13 @@ int main(int argc, char const** argv) {
   // run the test algorithm
   //
   
-  // 1. we initialize it from the configuration in the environment,
-  geo::GeometryIteratorLoopTestAlg Tester(TestEnvironment.TesterParameters());
+  // 1. we initialize it with the geometry from the environment,
+  geo::GeometryIteratorLoopTestAlg Tester(TestEnvironment.Geometry());
   
-  // 2. we set it up with the geometry from the environment
-  Tester.Setup(*TestEnvironment.Geometry());
-  
-  // 3. then we run it!
+  // 2. then we run it!
   unsigned int nErrors = Tester.Run();
   
-  // 4. And finally we cross fingers.
+  // 3. And finally we cross fingers.
   if (nErrors > 0) {
     mf::LogError("geometry_iterator_loop_test_SBND")
       << nErrors << " errors detected!";
