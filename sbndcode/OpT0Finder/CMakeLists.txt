@@ -14,6 +14,8 @@ include_directories($ENV{GEANT4_FQ_DIR}/include)
 
 art_make(
     LIB_LIBRARIES
+        larsim_MCCheater_BackTrackerService_service
+        larsim_MCCheater_ParticleInventoryService_service
         sbncode_OpT0Finder_flashmatch_Base
         sbncode_OpT0Finder_flashmatch_Algorithms
         sbnbcode_Geometry
@@ -50,6 +52,8 @@ art_make(
         ROOT::Gdml
         ${ROOT_BASIC_LIB_LIST}
     MODULE_LIBRARIES
+        larsim_MCCheater_BackTrackerService_service
+        larsim_MCCheater_ParticleInventoryService_service
         sbncode_OpT0Finder_flashmatch_Base
         sbncode_OpT0Finder_flashmatch_Algorithms
         # sbndcode_OpDetReco_OpFlash_FlashFinder

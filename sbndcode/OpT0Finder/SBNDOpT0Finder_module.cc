@@ -47,16 +47,17 @@
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
-#include "larsim/MCCheater/BackTrackerService.h"
-#include "lardataobj/Simulation/SimChannel.h"
-#include "lardataobj/Simulation/sim.h"
+// #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+// #include "lardata/DetectorInfoServices/DetectorClocksService.h"
+// #include "larsim/MCCheater/BackTrackerService.h"
+// #include "lardataobj/Simulation/SimChannel.h"
+// #include "lardataobj/Simulation/sim.h"
 
 #include "TFile.h"
 #include "TTree.h"
 
 #include <memory>
+#include <algorithm>
 
 
 
@@ -116,10 +117,12 @@ private:
   double _flash_trange_start; ///< The time start from where to include flashes (to be set)
   double _flash_trange_end; ///< The time stop from where to stop including flashes (to be set)
 
-  float _calibration_const;  /// conversion from (ADC*time ticks) to e- (to be set), given in units of (ADC*time ticks)/e-
+  std::vector<float> _cal_area_const; 
+  // float _calibration_const;  /// conversion from (ADC*time ticks) to e- (to be set), given in units of (ADC*time ticks)/e-
   float _dQdx_limit;
   float _pitch_limit;
   bool  _exclude_outliers;
+  bool  _shower_const_conv; 
 
   float _track_to_photons; ///< The conversion factor betweeen hit integral and photons (to be set)
   float _shower_to_photons; ///< The conversion factor betweeen hit integral and photons (to be set)
@@ -186,10 +189,12 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _opch_to_use = this->PDNamesToList(_photo_detectors);
   _uncoated_pmts = this->GetUncoatedPTMList(_opch_to_use);
 
-  _calibration_const = p.get<float>("CalibrationConst");
+  _cal_area_const    = p.get<std::vector<float>>("CalAreaConstants");
+  // _calibration_const = p.get<float>("CalibrationConst");
   _dQdx_limit        = p.get<float>("dQdxLimit");
   _pitch_limit       = p.get<float>("PitchLimit");
   _exclude_outliers  = p.get<bool>("ExcludeOutliers");
+  _shower_const_conv = p.get<bool>("ShowerConstantConversion");
 
   _track_to_photons = p.get<float>("ChargeToNPhotonsTrack");
   _shower_to_photons = p.get<float>("ChargeToNPhotonsShower");
@@ -488,8 +493,8 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
   // Use the charge on the collection plane to estimate the light, and the 3D spacepoint
   // position for the 3D location.
 
-  auto const clockData(art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e));
-  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
+  // auto const clockData(art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e));
+  // art::ServiceHandle<cheat::BackTrackerService> bt_serv;
 
   _light_cluster_v.clear();
 
@@ -526,12 +531,14 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
 
   // Get the associations between slice->pfp->spacepoint->hit
   art::FindManyP<recob::PFParticle> slice_to_pfps (slice_h, e, _slice_producer);
-  art::FindManyP<recob::SpacePoint> pfp_to_spacepoints (pfp_h, e, _slice_producer);
-  art::FindManyP<recob::Hit> spacepoint_to_hits (spacepoint_h, e, _slice_producer);
+  // art::FindManyP<recob::SpacePoint> pfp_to_spacepoints (pfp_h, e, _slice_producer);
   // For using track calorimetry objects, get slice->pfp->track->calo 
   art::FindManyP<recob::Track>  pfp_to_trks (pfp_h, e, _trk_producer);
-  art::FindManyP<recob::Shower> pfp_to_shws (pfp_h, e, _shw_producer);
   art::FindManyP<anab::Calorimetry> trk_to_calo (trk_h, e, _calo_producer);
+  // Get spacepoint to Shower
+  art::FindManyP<recob::Shower> pfp_to_shws (pfp_h, e, _shw_producer);
+  art::FindManyP<recob::SpacePoint> shw_to_spacepoints(shw_h, e, _shw_producer);
+  art::FindManyP<recob::Hit> spacepoint_to_hits (spacepoint_h, e, _slice_producer);
   // for truth information 
   art::FindManyP<recob::Hit> trk_to_hits (trk_h, e, _trk_producer);
   art::FindManyP<recob::Hit> shw_to_hits (shw_h, e, _shw_producer);
@@ -580,10 +587,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           auto track = track_v[n_trk];
           // section to analyze calo hits vs. track hits 
           std::vector<art::Ptr<anab::Calorimetry>> calo_v = trk_to_calo.at(track.key());
-          std::cout << "nhits in calo plane 0: " << (calo_v[0])->dQdx().size() 
-                    << ", plane 1: " << (calo_v[1])->dQdx().size()
-                    << ", plane 2: " << (calo_v[2])->dQdx().size() 
-                    << std::endl;
+          // std::cout << "nhits in calo plane 0: " << (calo_v[0])->dQdx().size() 
+          //           << ", plane 1: " << (calo_v[1])->dQdx().size()
+          //           << ", plane 2: " << (calo_v[2])->dQdx().size() 
+          //           << std::endl;
 
           float calo_integral = 0.0;
           // end section
@@ -591,7 +598,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           // Get the associate calo objects, we expect one for each plane... 
 
           // auto calo = calo_v[0]; // choose collection plane (calo object only stores pitch for collection plane)
-          // choose plane with the most hits: 
+          // choose plane with the most hits:  TODO: most hits in the right TPC? 
           const unsigned int maxHits(std::max({ calo_v[0]->dEdx().size(), calo_v[1]->dEdx().size(), calo_v[2]->dEdx().size() }));
           const int bestPlane((calo_v[0]->dEdx().size() == maxHits) ? 0 : (calo_v[2]->dEdx().size() == maxHits) ? 2 : (calo_v[1]->dEdx().size() == maxHits) ? 1 : -1);
           if (bestPlane == -1)
@@ -605,7 +612,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           // create vector of e- instead of ADC units 
           std::vector<float> dQdx_v(dADCdx_v.size(),0);
           for (size_t n_calo = 0; n_calo < dADCdx_v.size(); n_calo++){
-            dQdx_v[n_calo] = dADCdx_v[n_calo]*(1/_calibration_const);
+            dQdx_v[n_calo] = dADCdx_v[n_calo]*(1/_cal_area_const.at(bestPlane));
             calo_integral += dADCdx_v[n_calo]*pitch_v[n_calo]; 
           }
           // std::cout << "number of hits in calo in track: " << dADCdx_v.size() << std::endl;
@@ -679,10 +686,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             //   hit_integral += hit->Integral();
             // }
           }
-          std::cout << "nhits in trk plane 0: " << n_hit_plane0
-                    << ", plane 1: " << n_hit_plane1
-                    << ", plane 2: " << n_hit_plane2
-                    << std::endl;    
+          // std::cout << "nhits in trk plane 0: " << n_hit_plane0
+          //           << ", plane 1: " << n_hit_plane1
+          //           << ", plane 2: " << n_hit_plane2
+          //           << std::endl;    
 
           // std::cout << "calo integral tot: " << calo_integral << std::endl;    
           // std::cout << "hits integral tot: " << hit_integral << std::endl;
@@ -691,101 +698,114 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
         } // end loop over tracks 
       } // end calo track section 
       else if (pfpisshower){
-        // look inside shower
         std::vector<art::Ptr<recob::Shower>> shower_v = pfp_to_shws.at(pfp.key());
         for (size_t n_shw = 0; n_shw < shower_v.size(); n_shw++){
-          std::cout << "shower section start" << std::endl;
+          int bestPlane_shw=2; 
+          double energy_shw=0; 
           auto shower = shower_v[n_shw];
-          int bestPlane = shower->best_plane();
-          const std::vector<double> showerEnergy = shower->Energy();
-          std::cout << "bestPlane: " << bestPlane << std::endl;
-          std::cout << "energy: (" << showerEnergy[0] << ", " << showerEnergy[1] << ", " << showerEnergy[2] << ")" << std::endl;
-          std::vector<art::Ptr<recob::Hit>> hit_v = shw_to_hits.at(shower.key());
-          int nhit0=0; int nhit1=0; int nhit2=0;
-          for (size_t n_hit=0; n_hit<hit_v.size(); n_hit++){
-            auto hit = hit_v[n_hit];
-            if (hit->View() == 0)  nhit0++;
-            if (hit->View() == 1)  nhit1++;
-            if (hit->View() == 2)  nhit2++;
+          double integral_shw=0;
+          if (_shower_const_conv==false){
+            int bestPlane = shower->best_plane();
+            const std::vector<double> showerEnergy = shower->Energy();
+            std::vector<art::Ptr<recob::Hit>> hit_v = shw_to_hits.at(shower.key());
+            int nhit0_shw=0; int nhit1_shw=0; int nhit2_shw=0;
+            double int0_shw=0; double int1_shw=0; double int2_shw=0;
+            for (size_t n_hit=0; n_hit<hit_v.size(); n_hit++){
+              auto hit = hit_v[n_hit];
+              if (hit->View() == 0){  nhit0_shw++; int0_shw += hit->Integral();} 
+              if (hit->View() == 1){  nhit1_shw++; int1_shw += hit->Integral();} 
+              if (hit->View() == 2){  nhit2_shw++; int2_shw += hit->Integral();}
+            }
+            std::vector<int> shw_nhit{nhit0_shw,nhit1_shw,nhit2_shw};
+            std::vector<double> shw_int{int0_shw, int1_shw, int2_shw};
+
+            int nhits_shw  = shw_nhit[bestPlane];
+            energy_shw = showerEnergy[bestPlane];
+            bestPlane_shw   = bestPlane;
+            integral_shw    = shw_int[bestPlane];
+
+            if (energy_shw == -999 || nhits_shw == 0){ 
+              const int maxHits = *std::max_element(shw_nhit.begin(),shw_nhit.end());
+              const int nextbestPlane((shw_nhit.at(2) == maxHits) ? 2 : (shw_nhit.at(1) == maxHits) ? 1 : (shw_nhit.at(0) == maxHits) ? 0 : -1);
+              if (nextbestPlane == -1 || showerEnergy[nextbestPlane] == -999) continue;
+              energy_shw = showerEnergy[nextbestPlane];
+              nhits_shw  = shw_nhit[nextbestPlane];
+              bestPlane_shw = nextbestPlane;
+              integral_shw = shw_int[nextbestPlane];
+            }
+
+            // std::cout << "bestPlane: " << bestPlane << std::endl;
+            // std::cout << "energy: (" << showerEnergy[0] << ", " << showerEnergy[1] << ", " << showerEnergy[2] << ")" << std::endl;
+            // std::cout << "nhits (shower): " << nhit0_shw << ", " << nhit1_shw << ", " << nhit2_shw << std::endl;
+          } // end non constant conv 
+          std::vector<art::Ptr<recob::SpacePoint>> spacepoint_v = shw_to_spacepoints.at(shower.key());
+          // save integral values 
+          // double total_integral = 0;
+          int nhit0_sp=0; int nhit1_sp=0; int nhit2_sp=0;
+          for (size_t n_spacepoint = 0; n_spacepoint < spacepoint_v.size(); n_spacepoint++) {
+            auto spacepoint = spacepoint_v[n_spacepoint];
+            std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hits.at(spacepoint.key());
+            // loop over hits to get the charge sum for calculating photons later 
+            for (size_t n_hit = 0; n_hit < hit_v.size(); n_hit++) {
+              auto hit = hit_v[n_hit];
+              if (hit->View() == 0)  nhit0_sp++; 
+              if (hit->View() == 1)  nhit1_sp++; 
+              if (hit->View() == 2)  nhit2_sp++;
+            //   if ( (hit->View() == bestPlane_shw) && hit->WireID().TPC == tpc) total_integral += hit->Integral();
+            }
           }
-          const std::vector<int> shw_nhit{nhit0,nhit1,nhit2};
-          std::cout << "nhits in shw: (" << shw_nhit[0] << ", " << shw_nhit[1] << ", " << shw_nhit[2] << ")" << std::endl;
-          std::cout << "avg energy per hit (bestplane): " << showerEnergy[bestPlane] / shw_nhit[bestPlane] << std::endl;
-          std::cout << "shower section end" << std::endl;
-        }
+          for (size_t n_spacepoint = 0; n_spacepoint < spacepoint_v.size(); n_spacepoint++) {
+            auto spacepoint = spacepoint_v[n_spacepoint];
+            std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hits.at(spacepoint.key());
+            // loop over hits to save into the light cluster now
+            for (size_t n_hit = 0; n_hit < hit_v.size(); n_hit++) {
+              auto hit = hit_v[n_hit];
+              // Only select hits from the collection plane or best plane
+              if (hit->View() != bestPlane_shw) continue;
+              // Only use hits (and so spacepoints) that are in the specified TPC
+              if (hit->WireID().TPC != tpc) continue; 
+
+              const auto &position(spacepoint->XYZ());
+              double drift_time = abs(200.0 - abs(position[0]))/(0.16); // in us, drift velocity = 0.16 cm/us 
+              double atten_corr = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
+
+              double integral_weight = hit->Integral()/integral_shw;
+              const auto charge((1/_cal_area_const.at(bestPlane_shw))*hit->Integral()*atten_corr);
+              double nphotons;
+              // std::cout << "total_integral: " << integral_shw << std::endl;
+              // std::cout << "integral weight: " << integral_weight << std::endl;
+              if ( _shower_const_conv) nphotons = charge*_shower_to_photons;
+              if (!_shower_const_conv) nphotons = (integral_weight*energy_shw)/(19.5e-6) - charge;
+
+              double eff_recomb_nphotons = ((charge/0.64)*23.6e-6)/(19.5e-6) - charge;
+              // std::cout << "const conv nphotons: " << charge*_shower_to_photons << std::endl;
+              // std::cout << "eff recomb nphotons: " << ((charge/0.64)*23.6e-6)/(19.5e-6) - charge << std::endl;
+              // if (!_shower_const_conv) nphotons = energy_per_hit/(19.5e-6) - charge;
+
+              // Emplace this point with charge to the light cluster
+              light_cluster.emplace_back(position[0],
+                                        position[1],
+                                        position[2],
+                                        nphotons,
+                                        2);
+
+              // Also save the quantites for the output tree
+              _dep_slice.push_back(n_slice);
+              _dep_pfpid.push_back(pfp->Self());
+              _dep_x.push_back(position[0]);
+              _dep_y.push_back(position[1]);
+              _dep_z.push_back(position[2]);
+              _dep_E.push_back(-1.);
+              _dep_charge.push_back(charge);
+              _dep_photons.push_back(nphotons);
+              _dep_pitch.push_back(-1.);
+              _dep_trk.push_back(2);
+            }
+          } // End loop over Spacepoints
+          // std::cout << "nhits (spacepoint): " << nhit0_sp << ", " << nhit1_sp << ", " << nhit2_sp << std::endl;
+        } // end shower loop
+        // loop over spacepoints to get position information 
       }
-      else{ // if pfp is not a track (belongs to shower or neither track nor shower)
-        // Get the associated SpacePoints
-        std::vector<art::Ptr<recob::SpacePoint>> spacepoint_v = pfp_to_spacepoints.at(pfp.key());
-
-        for (size_t n_spacepoint = 0; n_spacepoint < spacepoint_v.size(); n_spacepoint++) {
-          auto spacepoint = spacepoint_v[n_spacepoint];
-
-          // Get the associated hits
-          std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hits.at(spacepoint.key());
-
-          for (size_t n_hit = 0; n_hit < hit_v.size(); n_hit++) {
-
-            auto hit = hit_v[n_hit];
-
-            // Only select hits from the collection plane
-            if (hit->View() != geo::kZ) {
-              continue;
-            }
-
-            // Only use hits (and so spacepoints) that are in the specified TPC
-            if (hit->WireID().TPC != tpc) {
-              continue;
-            }
-
-            const auto &position(spacepoint->XYZ());
-            double drift_time = abs(200.0 - abs(position[0]))/(0.16); // in us, drift velocity = 0.16 cm/us 
-            double atten_corr = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
-
-            const auto charge((1/_calibration_const)*hit->Integral()*atten_corr);
-            auto nphotons = charge*_shower_to_photons;
-            // obtain truth info
-            float ide_energy = 0.0;
-            float ide_charge = 0.0;
-            if ((charge > 0) & (hit->Channel() != 8294) & (hit->Channel() != 8327)){
-              std::vector<const sim::IDE*> ide_v = bt_serv->HitToSimIDEs_Ps(clockData, hit);
-              for (auto const ide: ide_v){
-                ide_energy += ide->energy;
-                ide_charge += ide->numElectrons; // electrons at the wires 
-              }
-            }
-
-            // std::cout << "ide energy: " << ide_energy << std::endl;
-            // std::cout << "ide charge: " << ide_charge*atten_corr << std::endl;
-            // std::cout << "ide photon: " << ide_energy/(19.5*1e-6) - ide_charge*atten_corr << std::endl;
-            
-            // if (nphotons<0) std::cout << "nphotons val: " << nphotons << std::endl;
-            // Emplace this point with charge to the light cluster
-            light_cluster.emplace_back(position[0],
-                                       position[1],
-                                       position[2],
-                                       nphotons,
-                                       0);
-
-            // Also save the quantites for the output tree
-            _dep_slice.push_back(n_slice);
-            _dep_pfpid.push_back(pfp->Self());
-            _dep_x.push_back(position[0]);
-            _dep_y.push_back(position[1]);
-            _dep_z.push_back(position[2]);
-            _dep_E.push_back(-1.);
-            _dep_charge.push_back(charge);
-            _dep_photons.push_back(nphotons);
-            _dep_pitch.push_back(-1.);
-            _dep_trk.push_back(0);
-            
-            // _tru_charge.push_back(ide_charge*atten_corr);
-            // _tru_photon.push_back(ide_energy/(19.5*1e-6) - ide_charge*atten_corr);
-            // std::cout << "true charge/dep charge: " << (ide_charge*atten_corr)/charge << std::endl;
-            // std::cout << "true photons/dep photons: " << (ide_energy/(19.5*1e-6) - ide_charge*atten_corr)/nphotons << std::endl;
-          }
-        } // End loop over Spacepoints
-      } // end non-track loop
     } // End loop over PFParticle
 
     _tree1->Fill();
