@@ -65,6 +65,7 @@
 		<rotation name="rotateP180X" unit="deg" x="180" y="0" z="0"/>
 		<rotation name="rotate180X180Y" unit="deg" x="180" y="180" z="0"/>
         <rotation name="rotateP90X180Z" unit="deg" x="90" y="0" z="180"/>
+		
 		<rotation name="rotBuldingCeilingSlopeP" unit="deg" x="0" y="0" z="1.1574"/>
 		<position name="posAPAVertical_L" 	unit="mm" x="0" y="0" z="-1232.8385000000001" />
 		<position name="posAPAVertical_R" 	unit="mm" x="0" y="0" z="1232.8385000000001" />
@@ -62237,32 +62238,33 @@
 		</volume>
 	</structure>
 	<define>
-		<position name="posCryostat" unit="mm" x="0" y="30000" z="-474.69999999999999" />
-		<position name="posCRT_TopHigh" unit="mm" x="0" y="9286" z="-474.69999999999999"/>
-		<position name="posCRT_TopLow" unit="mm" x="0" y="6401.2000000000007" z="-474.69999999999999"/>
-		<position name="posCRT_North" unit="mm" x="250" y="-2400" z="4378.3000000000002"/>
-		<position name="posCRT_SouthOne" unit="mm" x="3200" y="-2400" z="-5084.1999999999998"/>
-		<position name="posCRT_SouthTwo" unit="mm" x="250" y="-2400" z="-5084.1999999999998"/>
-		<position name="posCRT_SouthThree" unit="mm" x="-2700" y="-2400" z="-5084.1999999999998"/>
-		<position name="posCRT_East" unit="mm" x="3830" y="0" z="-474.69999999999999"/>
-		<position name="postCRT_West" unit="mm" x="-3830" y="0" z="-474.69999999999999"/>
-		<position name="posCRT_Bottom" unit="mm" x="0" y="-3780" z="-474.69999999999999"/>
-		<position name="posCryoPlywood" unit="mm" x="0" y="29995" z="-474.69999999999999" />
-		<position name="posMassBuffer" unit="mm" x="0" y="4274" z="-474.69999999999999"/>
+		<position name="posCryostat" unit="mm" x="0" y="7140" z="-474.69999999999999" />
+		<position name="posCRT_TopHigh" unit="mm" x="0" y="-13574" z="-474.69999999999999"/>
+		<position name="posCRT_TopLow" unit="mm" x="0" y="-16458.799999999999" z="-474.69999999999999"/>
+		<position name="posCRT_North" unit="mm" x="250" y="-25260" z="4378.3000000000002"/>
+		<position name="posCRT_SouthOne" unit="mm" x="3200" y="-25260" z="-5084.1999999999998"/>
+		<position name="posCRT_SouthTwo" unit="mm" x="250" y="-25260" z="-5084.1999999999998"/>
+		<position name="posCRT_SouthThree" unit="mm" x="-2700" y="-25260" z="-5084.1999999999998"/>
+		<position name="posCRT_East" unit="mm" x="3830" y="-22860" z="-474.69999999999999"/>
+		<position name="postCRT_West" unit="mm" x="-3830" y="-22860" z="-474.69999999999999"/>
+		<position name="posCRT_Bottom" unit="mm" x="0" y="-26640" z="-474.69999999999999"/>
+		<position name="posCryoPlywood" unit="mm" x="0" y="7135" z="-474.69999999999999" />
+		<position name="posMassBuffer" unit="mm" x="0" y="-18586" z="-474.69999999999999"/>
 	</define>
 	<solids>
-		<box name="boxDetectorEnclosure_Pit"   lunit="mm" x="9448.7990000000009" y="101589.84000000001" z="12191.999"/>
+		<!--box name="boxDetectorEnclosure_Pit"   lunit="mm" x="9448.7990000000009" y="55869.840000000004" z="12191.999"/>
 		<box name="boxDetectorEnclosure_Tower" lunit="mm" x="9448.7990000000009" y="10670" z="12191.999"/>
 		<union name="boxDetectorEnclosure_0">
 			<first ref="boxDetectorEnclosure_Pit"/>
 			<second ref="boxDetectorEnclosure_Tower"/>
-			<position name="posTopTower" unit="mm" x="0" y="56129.920000000006" z="0"/>
-		</union>
-		<union name="boxDetectorEnclosure">
+			<position name="posTopTower" unit="mm" x="0" y="33269.919999999998" z="0"/>
+		</union-->
+		<!--union name="boxDetectorEnclosure">
 			<first ref="boxDetectorEnclosure_0"/>
 			<second ref="boxShielding"/>
 			<position name="posShield" unit="mm" x="0" y="7843.6000000000004" z="0"/>
-		</union>
+		</union-->
+		<box name="boxDetectorEnclosure" lunit="mm" x="9448.7990000000009" y="55869.840000000004" z="12191.999"/>
 	</solids>
 	<structure>
 		<volume name="volDetEnclosure_dummy" >
@@ -62289,7 +62291,7 @@
 			<physvol>
 					<volumeref ref="volTaggerNorth"/>
 					<positionref ref="posCRT_North"/>
-                    <rotationref ref="rotateP180Y"/>
+					<rotationref ref="rotateP180Y"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerSouthOne"/>
@@ -62451,7 +62453,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volDetEnclosureWithSh"/>
-				<position name="posEnclosureWithSh" unit="mm" x="0" y="0" z="3434.1999999999998" />
+				<position name="posEnclosureWithSh" unit="mm" x="0" y="22860" z="3434.1999999999998" />
 			</physvol>
 		</volume>
 		<volume name="volWorld" >
@@ -62479,7 +62481,7 @@
 			</physvol>
 			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-				<position name="posEnclosure" unit="mm" x="0" y="0" z="3434.1999999999998" />
+				<position name="posEnclosure" unit="mm" x="0" y="22860" z="3434.1999999999998" />
 			</physvol>
 		</volume>
 	</structure>

@@ -103,6 +103,7 @@ private:
 
   std::vector<int> _mcp_pdg; ///< G4 MCParticle PDG
   std::vector<double> _mcp_e; ///< G4 MCParticle Energy
+  std::vector<std::vector<double>> _mcp_e_vec; ///< G4 MCParticle Energy per trajectory point.
   std::vector<double> _mcp_px; ///< G4 MCParticle Momentum along X
   std::vector<double> _mcp_py; ///< G4 MCParticle Momentum along Y
   std::vector<double> _mcp_pz; ///< G4 MCParticle Momentum along Z
@@ -296,6 +297,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
     _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
     _tree->Branch("mcp_e", "std::vector<double>", &_mcp_e);
+    _tree->Branch("mcp_e_vec", "std::vector<std::vector<double>>", &_mcp_e_vec);
     _tree->Branch("mcp_px", "std::vector<double>", &_mcp_px);
     _tree->Branch("mcp_py", "std::vector<double>", &_mcp_py);
     _tree->Branch("mcp_pz", "std::vector<double>", &_mcp_pz);
@@ -439,7 +441,7 @@ void CRTAnalysis::analyze(art::Event const& e)
   _subrun = e.id().subRun();
   _event =  e.id().event();
 
-  std::cout << "This is event " << _event << std::endl;
+  if (_debug) std::cout << "This is event " << _event << std::endl;
 
 
   art::Handle<std::vector<simb::MCTruth>> mct_h;
@@ -662,7 +664,7 @@ void CRTAnalysis::analyze(art::Event const& e)
                                  auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
       _adh_trackid[i] = auxdethit->GetTrackID();
       trackids_from_adh.insert(auxdethit->GetTrackID());
-      std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
+      if (_debug) std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
     }
 
 
@@ -676,6 +678,14 @@ void CRTAnalysis::analyze(art::Event const& e)
     if (_keep_mcp_from_adh) { n_mcp = trackids_from_adh.size(); }
     _mcp_pdg.resize(n_mcp);
     _mcp_e.resize(n_mcp);
+
+    for (auto mcp : mcp_v){ 
+      if (mcp->StatusCode() == 1) 
+      {
+        size_t n_trajectoryPoints = mcp->NumberTrajectoryPoints(); 
+        _mcp_e_vec.resize(n_mcp, std::vector<double>(n_trajectoryPoints)); 
+      }
+    }
     _mcp_px.resize(n_mcp);
     _mcp_py.resize(n_mcp);
     _mcp_pz.resize(n_mcp);
@@ -702,6 +712,10 @@ void CRTAnalysis::analyze(art::Event const& e)
       // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
       _mcp_pdg[counter] = particle->PdgCode();
       _mcp_e[counter] = particle->E();
+
+      for (size_t j = 0; j < _mcp_e_vec[counter].size(); j++)
+        _mcp_e_vec[counter].at(j) = particle->E(j);
+
       _mcp_px[counter] = particle->Px();
       _mcp_py[counter] = particle->Py();
       _mcp_pz[counter] = particle->Pz();

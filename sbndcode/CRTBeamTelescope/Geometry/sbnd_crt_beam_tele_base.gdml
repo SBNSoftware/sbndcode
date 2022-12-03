@@ -195,21 +195,27 @@
 		<constant name="coordMembrane_at_Enclosure_X" value="0" />
 		<constant name="coordMembrane_at_Enclosure_Y" value="0" />
 		<constant name="coordMembrane_at_Enclosure_Z" value="-474.7" />
-
+		<!--Jiaoyang's modification --> 
+		<!-- becasue we increase the height of the orgin of volDetEnclousure, so we need to bring everything back --> 
+		<constant name="Membrane_at_Enclosure_Ypos" value="-(300.0*_ft_)/4.0" />  
+		
 		<!-- Detector Enclosure = Cryostat + CRTs -->
 		<constant name="dimDetEnclosure_X" value="dimDetectorHall_X_mm-_eD_" />
-		<constant name="dimDetEnclosure_Y" value="333.3*_ft_" />
+		<constant name="dimDetEnclosure_Y" value="(366.6*_ft_)/2.0" />
 		<constant name="dimDetEnclosure_Z" value="dimDetectorHall_Z_mm-_eD_" />
 		<constant name="dimTopCRTEnclosure_Y" value="buildingInternalSpace_Y" />
 
 		<!-- Jiaoyang modification -->
-		<constant name="cryostat_offset_y" value="30000.0" /> 
+		<constant name="cryostat_offset_y" value="30000.0-(300.0*_ft_)/4.0" /> 
 		<!-- end of modification -->
 
 		<!-- Position of Enclosure (mm) -->
 		<constant name="whereEnclosure_X" 	value="-coordMembrane_at_Enclosure_X-coordTPC_at_Membrane_X"/>
 		<constant name="whereEnclosure_Y" 	value="-coordMembrane_at_Enclosure_Y-coordTPC_at_Membrane_Y"/>
 		<constant name="whereEnclosure_Z" 	value="theTPC_Z/2.0-coordMembrane_at_Enclosure_Z-coordTPC_at_Membrane_Z"/>
+
+		<!-- Jiaoyang's modification --> 
+		<constant name="Enclosure_Y_pos" 	value="(300.0*_ft_)/4.0"/>
 
 		<!-- Position of TPC inside the Membrane (mm) -->
 		<constant name="whereTPC_X" value="coordTPC_at_Membrane_X"/>
@@ -6491,10 +6497,10 @@
 
 	<!-- ========== Detector Enclosure ========== -->
 	<define>
-
+		<!-- Jiaoyang's modifications --> 
 		<!-- Membrane Cryostat Position w.r.t. Detector Enclosure System -->
 		<constant name="whereMembrane_X" value="coordMembrane_at_Enclosure_X"/>
-		<constant name="whereMembrane_Y" value="coordMembrane_at_Enclosure_Y"/>
+		<constant name="whereMembrane_Y" value="Membrane_at_Enclosure_Ypos"/>
 		<constant name="whereMembrane_Z" value="coordMembrane_at_Enclosure_Z"/>
 		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="cryostat_offset_y" z="whereMembrane_Z" />
 		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
@@ -6514,22 +6520,23 @@
 
 	<solids>
 
-		<box name="boxDetectorEnclosure_Pit"   lunit="mm" x="dimDetEnclosure_X" y="dimDetEnclosure_Y" z="dimDetEnclosure_Z"/>
+		<!--box name="boxDetectorEnclosure_Pit"   lunit="mm" x="dimDetEnclosure_X" y="dimDetEnclosure_Y" z="dimDetEnclosure_Z"/>
 		<box name="boxDetectorEnclosure_Tower" lunit="mm" x="dimDetEnclosure_X" y="dimTopCRTEnclosure_Y" z="dimDetEnclosure_Z"/>
 
 		<union name="boxDetectorEnclosure_0">
 			<first ref="boxDetectorEnclosure_Pit"/>
 			<second ref="boxDetectorEnclosure_Tower"/>
 			<position name="posTopTower" unit="mm" x="0" y="(dimDetEnclosure_Y+dimTopCRTEnclosure_Y)/2.0" z="0"/>
-		</union>
+		</union-->
 
 		<!-- Expand the box to make room for the overburden -->
-		<union name="boxDetectorEnclosure">
+		<!--union name="boxDetectorEnclosure">
 			<first ref="boxDetectorEnclosure_0"/>
 			<second ref="boxShielding"/>
 			<position name="posShield" unit="mm" x="0" y="whereShielding_Y" z="0"/>
-		</union>
+		</union-->
 
+		<box name="boxDetectorEnclosure" lunit="mm" x="dimDetEnclosure_X" y="dimDetEnclosure_Y" z="dimDetEnclosure_Z"/>
 
 	</solids>
 
@@ -6762,7 +6769,7 @@
 			<!-- Positioning the Detector Enclosure with Shielding (Overburden) -->
 			<physvol>
 				<volumeref ref="volDetEnclosureWithSh"/>
-				<position name="posEnclosureWithSh" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />
+				<position name="posEnclosureWithSh" unit="mm" x="whereEnclosure_X" y="Enclosure_Y_pos" z="whereEnclosure_Z" />
 			</physvol>
 
 		</volume>
@@ -6800,7 +6807,7 @@
 			<!-- Positioning the Detector Enclosure -->
 			<physvol>
 				<volumeref ref="volDetEnclosure"/>
-				<position name="posEnclosure" unit="mm" x="whereEnclosure_X" y="whereEnclosure_Y" z="whereEnclosure_Z" />
+				<position name="posEnclosure" unit="mm" x="whereEnclosure_X" y="Enclosure_Y_pos" z="whereEnclosure_Z" />
 			</physvol>
 
 		</volume>
