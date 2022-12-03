@@ -65,5 +65,3 @@ outputs:
 }
 
 #include "use_crt_beam_tele_geometry_g4_services.fcl"
-
-
