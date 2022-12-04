@@ -7,11 +7,11 @@ void BucketStructureT0TDC(const double period = 18.94)
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  const TString run_name = "run4460";
-  const int beam_start = 332897;
-  const int beam_end   = beam_start + 1500;
-  const int beam_start_rwm = -1047;
-  const int beam_end_rwm   = beam_start_rwm + 1500;
+  const TString run_name = "run4500";
+  const double beam_start = 332899.25;
+  const double beam_end   = beam_start + 1500;
+  const double beam_start_rwm = -1045.25;
+  const double beam_end_rwm   = beam_start_rwm + 1500;
 
   std::stringstream ss; ss.precision(4); ss << period;
   const TString period_s = ss.str();
@@ -23,7 +23,7 @@ void BucketStructureT0TDC(const double period = 18.94)
   const TString period_frac_s = ss.str();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/" + run_name + "/ana/data*_ana.root");
+  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/" + run_name + "/crtana_sbnd.root");
 
   gSystem->Exec("mkdir -p " + saveDir + "/" + run_name);
 
@@ -101,13 +101,13 @@ void BucketStructureT0TDC(const double period = 18.94)
 	  for(auto adc : chit_sipm_raw_adc->at(ii))
 	    if(adc > 4080) saturation = true;
 
-	  // if(saturation)
-	  //   continue;
+	  if(saturation)
+	    continue;
 
 	  double t0 = chit_t0->at(ii);
 	  double unixs = chit_unix_s->at(ii);
 
-	  if((bes / 1e9 - unixs) < std::numeric_limits<double>::epsilon())
+	  if(std::abs(bes / 1e9 - unixs) < std::numeric_limits<double>::epsilon())
 	    std::cout << std::setprecision(9) << "Disagreement between unit part of BES: " << bes / 1e9 << " & UnixS: " << unixs << std::endl;
 
 	  double bes_time = t0 - (bes % 1000000000 - 193);
@@ -121,7 +121,7 @@ void BucketStructureT0TDC(const double period = 18.94)
 	      ts0_to_bes_bucket_hist->Fill(bes_remainder);
 	    }
 
-	  if((rwm / 1e9 - unixs) < std::numeric_limits<double>::epsilon())
+	  if(std::abs(rwm / 1e9 - unixs) < std::numeric_limits<double>::epsilon())
 	    std::cout << std::setprecision(9) << "Disagreement between unit part of RWM: " << rwm / 1e9 << " & UnixS: " << unixs << std::endl;
 
 	  double rwm_time = t0 - (rwm % 1000000000 - 193);
@@ -162,7 +162,7 @@ void BucketStructureT0TDC(const double period = 18.94)
 
   TPaveText *pt = new TPaveText(.18,.79,.31,.87, "NDC");
   pt->AddText("SBND CRT##");
-  pt->AddText("Run4460 Data");
+  pt->AddText("Run4500 Data");
   pt->SetFillColor(kWhite);
   pt->SetTextColor(kGray+2);
   pt->SetTextSize(0.035);
@@ -224,7 +224,7 @@ void BucketStructureT0TDC(const double period = 18.94)
 
   TPaveText *pt_rwm = new TPaveText(.18,.79,.31,.87, "NDC");
   pt_rwm->AddText("SBND CRT##");
-  pt_rwm->AddText("Run4460 Data");
+  pt_rwm->AddText("Run4500 Data");
   pt_rwm->SetFillColor(kWhite);
   pt_rwm->SetTextColor(kGray+2);
   pt_rwm->SetTextSize(0.035);

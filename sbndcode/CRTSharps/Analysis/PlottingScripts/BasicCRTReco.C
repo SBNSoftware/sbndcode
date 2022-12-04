@@ -7,7 +7,7 @@ void BasicCRTReco()
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  const TString run_name = "run2100";
+  const TString run_name = "run4500";
 
   TChain *tree = new TChain("crtana/tree");
   tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/" + run_name + "/crtana_sbnd.root");

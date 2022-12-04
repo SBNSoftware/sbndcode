@@ -7,9 +7,9 @@ void BucketStructureT1(const double period = 18.94)
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  const TString run_name = "run4460";
-  const int beam_start = 332898;
-  const int beam_end   = beam_start + 1500;
+  const TString run_name = "run4500";
+  const double beam_start = 332899.25;
+  const double beam_end   = beam_start + 1500;
 
   std::stringstream ss; ss.precision(4); ss << period;
   const TString period_s = ss.str();
@@ -26,8 +26,10 @@ void BucketStructureT1(const double period = 18.94)
   gSystem->Exec("mkdir -p " + saveDir + "/" + run_name);
 
   std::vector<double> *chit_t1 = 0;
+  std::vector<std::vector<uint16_t>> *chit_sipm_raw_adc = 0;
 
   tree->SetBranchAddress("chit_t1", &chit_t1);
+  tree->SetBranchAddress("chit_sipm_raw_adc", &chit_sipm_raw_adc);
 
   const unsigned N = tree->GetEntries();
   std::cout << "==== TOTAL ENTRIES: " << N << std::endl;
@@ -42,6 +44,13 @@ void BucketStructureT1(const double period = 18.94)
       
       for(unsigned ii = 0; ii < chit_t1->size(); ++ii)
 	{
+          bool saturation = false;
+          for(auto adc : chit_sipm_raw_adc->at(ii))
+            if(adc > 4080) saturation = true;
+
+	  if(saturation)
+	    continue;
+
 	  double time = chit_t1->at(ii);
 	  ts1_hist->Fill(1e-3 * time);
 	  if(time > beam_start && time < beam_end)
@@ -80,7 +89,7 @@ void BucketStructureT1(const double period = 18.94)
 
   TPaveText *pt = new TPaveText(.18,.79,.31,.87, "NDC");
   pt->AddText("SBND CRT##");
-  pt->AddText("Run4460 Data");
+  pt->AddText("Run4500 Data");
   pt->SetFillColor(kWhite);
   pt->SetTextColor(kGray+2);
   pt->SetTextSize(0.035);

@@ -7,10 +7,12 @@ void BasicFEBDataAna()
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *tree = new TChain("crtana/tree");
-  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/run2100/ana/data*_ana.root");
+  const TString run_name = "run4500";
 
-  const TString run_name = "run2100";
+  TChain *tree = new TChain("crtana/tree");
+  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt_sharps_data/" + run_name + "/crtana_sbnd.root");
+
+  gSystem->Exec("mkdir -p " + saveDir + "/" + run_name);
 
   struct datacut {
     TCut cut;
