@@ -216,8 +216,12 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
 
     if(fDebug)
       {
+        std::map<std::string, double> overlap_map;
+
         for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
           {
+            overlap_map[name] = 0.;
+
             std::cout << "Tagger:  " << tagger.name << '\n'
                       << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
                       << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
@@ -232,8 +236,21 @@ CRTSharpsAnalysis::CRTSharpsAnalysis(fhicl::ParameterSet const& p)
                       << "X - Min: " << module.minX << " Max: " << module.maxX << '\n'
                       << "Y - Min: " << module.minY << " Max: " << module.maxY << '\n'
                       << "Z - Min: " << module.minZ << " Max: " << module.maxZ << '\n' << std::endl;
+
+            for(auto const &[name2, module2] : fCRTGeoAlg.GetModules())
+              {
+                if(name >= name2) continue;
+
+                if(module.taggerName != module2.taggerName) continue;
+
+                if(module.orientation == module2.orientation) continue;
+                
+                overlap_map[module.taggerName] += fCRTGeoAlg.OverlapArea(module, module2);
+              }
           }
 
+        std::cout << "Tagger Active Areas" << std::endl;
+        for(auto const& [name, area] : overlap_map) std::cout << name << ": " << area << std::endl;
         std::cout << std::endl;
 
         for(auto const &[name, sipm] : fCRTGeoAlg.GetSiPMs())

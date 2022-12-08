@@ -9,7 +9,8 @@ namespace sbnd{
 
   CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry, 
                        geo::AuxDetGeometryCore const *auxdet_geometry)
-    : fCableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
+    : fT0CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T0CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
+    , fT1CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T1CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
     , fSiPMPedestalsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestals", std::vector<std::pair<unsigned, double>>()))
     , fChannelInversionVector(p.get<std::vector<std::pair<unsigned, bool>>>("InvertedChannelOrder", std::vector<std::pair<unsigned, bool>>()))
   {
@@ -17,8 +18,10 @@ namespace sbnd{
     fAuxDetGeoCore   = auxdet_geometry;
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
 
-    fCableLengthCorrections = std::map<unsigned, double>(fCableLengthCorrectionsVector.begin(), 
-                                                         fCableLengthCorrectionsVector.end());
+    fT0CableLengthCorrections = std::map<unsigned, double>(fT0CableLengthCorrectionsVector.begin(), 
+                                                           fT0CableLengthCorrectionsVector.end());
+    fT1CableLengthCorrections = std::map<unsigned, double>(fT1CableLengthCorrectionsVector.begin(), 
+                                                           fT1CableLengthCorrectionsVector.end());
     fSiPMPedestals          = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), 
                                                          fSiPMPedestalsVector.end());
     fChannelInversion       = std::map<unsigned, bool>(fChannelInversionVector.begin(), 
@@ -77,11 +80,13 @@ namespace sbnd{
             const bool invert = fChannelInversion.size() ? fChannelInversion.at(ad_i) : false;
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                const int32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
-                  fCableLengthCorrections.at(ad_i) : 0;
+                const int32_t t0CableDelayCorrection = fT0CableLengthCorrections.size() ? 
+                  fT0CableLengthCorrections.at(ad_i) : 0;
+                const int32_t t1CableDelayCorrection = fT1CableLengthCorrections.size() ? 
+                  fT1CableLengthCorrections.at(ad_i) : 0;
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-                                                    cableDelayCorrection, invert);
+                                                    t0CableDelayCorrection, t1CableDelayCorrection, invert);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
@@ -370,5 +375,21 @@ namespace sbnd{
 
     // If the two strips overlap in 2 dimensions then return true
     return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
+  }
+
+  double CRTGeoAlg::OverlapArea(const CRTModuleGeo &module1, const CRTModuleGeo &module2)
+  {
+    const double minX = std::max(module1.minX, module2.minX);
+    const double maxX = std::min(module1.maxX, module2.maxX);
+    const double minY = std::max(module1.minY, module2.minY);
+    const double maxY = std::min(module1.maxY, module2.maxY);
+    const double minZ = std::max(module1.minZ, module2.minZ);
+    const double maxZ = std::min(module1.maxZ, module2.maxZ);
+
+    // If the two modules overlap in 2 dimensions then return true
+    if(minX<maxX && minY<maxY) return (maxX - minX) * (maxY - minY);
+    else if(minX<maxX && minZ<maxZ) return (maxX - minX) * (maxZ - minZ);
+    else if(minY<maxY && minZ<maxZ) return (maxY - minY) * (maxZ - minZ);
+    else return 0.;
   }
 }

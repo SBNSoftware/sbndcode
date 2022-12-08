@@ -3,7 +3,8 @@
 
 services.BackTrackerService: @erase
 
-physics.producers.crthit.FEBDataModuleLabel:                       "importcrt"
-physics.producers.crthit.HitRecoAlg.GeoAlg.CableLengthCorrections: @local::crt_sharps_data_params.CableLengthCorrections
-physics.producers.crthit.HitRecoAlg.GeoAlg.SiPMPedestals:          @local::crt_sharps_data_params.SiPMPedestals
-physics.producers.crthit.HitRecoAlg.GeoAlg.InvertedChannelOrder:   @local::crt_sharps_data_params.InvertedChannelOrder
+physics.producers.crthit.FEBDataModuleLabel:                         "importcrt"
+physics.producers.crthit.HitRecoAlg.GeoAlg.T0CableLengthCorrections: @local::crt_sharps_data_params.T0CableLengthCorrections
+physics.producers.crthit.HitRecoAlg.GeoAlg.T1CableLengthCorrections: @local::crt_sharps_data_params.T1CableLengthCorrections
+physics.producers.crthit.HitRecoAlg.GeoAlg.SiPMPedestals:            @local::crt_sharps_data_params.SiPMPedestals
+physics.producers.crthit.HitRecoAlg.GeoAlg.InvertedChannelOrder:     @local::crt_sharps_data_params.InvertedChannelOrder

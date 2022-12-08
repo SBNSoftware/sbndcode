@@ -123,14 +123,16 @@ namespace sbnd{
     , orientation(0)
     , top(false)
     , adID(std::numeric_limits<uint16_t>::max())
-    , cableDelayCorrection(0)
+    , t0CableDelayCorrection(0)
+    , t1CableDelayCorrection(0)
     , invertedOrdering(false)
     , null(false)
     {}
 
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet, 
                  const uint16_t _adID, const std::string &_taggerName,
-                 const int32_t _cableDelayCorrection,
+                 const int32_t _t0CableDelayCorrection,
+                 const int32_t _t1CableDelayCorrection,
                  const bool _invertedOrdering)
     {
       name       = moduleNode->GetName();
@@ -159,7 +161,7 @@ namespace sbnd{
       // Location of SiPMs - CRT## specific
       top = false;
       if(_adID == 4 || _adID == 5)
-	top = true;
+        top = true;
 
       // Fill edges
       minX = std::min(limitsWorld[0], limitsWorld2[0]);
@@ -169,7 +171,8 @@ namespace sbnd{
       minZ = std::min(limitsWorld[2], limitsWorld2[2]);
       maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
 
-      cableDelayCorrection = _cableDelayCorrection;
+      t0CableDelayCorrection = _t0CableDelayCorrection;
+      t1CableDelayCorrection = _t1CableDelayCorrection;
 
       invertedOrdering = _invertedOrdering;
 
@@ -187,7 +190,8 @@ namespace sbnd{
     uint16_t      orientation;
     bool          top;
     uint16_t      adID;
-    int32_t       cableDelayCorrection;
+    int32_t       t0CableDelayCorrection;
+    int32_t       t1CableDelayCorrection;
     bool          invertedOrdering;
     bool          null;
   };
@@ -305,6 +309,8 @@ namespace sbnd{
 
     bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
 
+    double OverlapArea(const CRTModuleGeo &module1, const CRTModuleGeo &module2);
+
   private:
 
     std::map<std::string, CRTTaggerGeo> fTaggers;
@@ -315,8 +321,10 @@ namespace sbnd{
     geo::GeometryCore const       *fGeometryService;
     const geo::AuxDetGeometryCore *fAuxDetGeoCore;
 
-    std::vector<std::pair<unsigned, double>> fCableLengthCorrectionsVector;
-    std::map<unsigned, double>               fCableLengthCorrections;
+    std::vector<std::pair<unsigned, double>> fT0CableLengthCorrectionsVector;
+    std::map<unsigned, double>               fT0CableLengthCorrections;
+    std::vector<std::pair<unsigned, double>> fT1CableLengthCorrectionsVector;
+    std::map<unsigned, double>               fT1CableLengthCorrections;
     std::vector<std::pair<unsigned, double>> fSiPMPedestalsVector;
     std::map<unsigned, double>               fSiPMPedestals;
     std::vector<std::pair<unsigned, bool>>   fChannelInversionVector;

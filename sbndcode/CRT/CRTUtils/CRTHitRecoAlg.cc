@@ -1,4 +1,3 @@
-
 #include "CRTHitRecoAlg.h"
 
 namespace sbnd{
@@ -34,10 +33,10 @@ namespace sbnd{
         uint32_t mac5  = data->Mac5();
         uint32_t unixs = data->UnixS();
 
-	// Ignore events where the readout was due to a reset or where the
-	// clocks aren't in a 'good' state
-	if(data->Flags() != 3) 
-	  continue;
+        // Ignore events where the readout was due to a reset or where the
+        // clocks aren't in a 'good' state
+        if(data->Flags() != 3) 
+          continue;
 
         CRTModuleGeo module    = fCRTGeoAlg.GetModule(mac5 * 32);
         std::string taggerName = module.taggerName;
@@ -48,8 +47,8 @@ namespace sbnd{
           stripHits[taggerName].resize(2);
 
         // Correct for FEB readout cable length
-        uint32_t t0 = data->Ts0() + module.cableDelayCorrection;
-        uint32_t t1 = data->Ts1() + module.cableDelayCorrection;
+        uint32_t t0 = data->Ts0() + module.t0CableDelayCorrection;
+        uint32_t t1 = data->Ts1() + module.t1CableDelayCorrection;
 
         // Iterate via strip (2 SiPMs per strip)
         const auto &sipm_adcs = data->ADC();

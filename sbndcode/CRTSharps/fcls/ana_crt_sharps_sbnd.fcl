@@ -24,9 +24,10 @@ physics:
       module_type: "CRTSharpsAnalysis"
       CRTGeoAlg:
       {
-        CableLengthCorrections: @local::crt_sharps_data_params.CableLengthCorrections
-        SiPMPedestals:          @local::crt_sharps_data_params.SiPMPedestals
-        InvertedChannelOrder:   @local::crt_sharps_data_params.InvertedChannelOrder
+        T0CableLengthCorrections: @local::crt_sharps_data_params.T0CableLengthCorrections
+        T1CableLengthCorrections: @local::crt_sharps_data_params.T1CableLengthCorrections
+        SiPMPedestals:            @local::crt_sharps_data_params.SiPMPedestals
+        InvertedChannelOrder:     @local::crt_sharps_data_params.InvertedChannelOrder
       }
     }
   }
