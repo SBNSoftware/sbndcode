@@ -1,0 +1,9 @@
+#include "fm_scores_sbnd_sce.fcl"
+
+physics.producers.fmatchSCE.MakeTree:       true
+physics.producers.fmatchSCE.StoreMCInfo:    true
+physics.producers.fmatchSCE.SelectNeutrino: true
+physics.producers.fmatchSCE.CorrectDriftDistance: false
+physics.producers.fmatchSCE.MaxFlashes:     1
+physics.producers.fmatchSCE.FlashFindingTimeStart: @local::sbnd_simple_flashmatch_sce.BeamSpillTimeStart
+physics.producers.fmatchSCE.FlashFindingTimeEnd:   @local::sbnd_simple_flashmatch_sce.BeamSpillTimeEnd
