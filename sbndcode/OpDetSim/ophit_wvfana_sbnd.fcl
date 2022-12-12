@@ -26,7 +26,7 @@
 #include "detsimmodules_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
 #include "ophitfinder_sbnd.fcl"
-#include "wvfana.fcl"
+#include "wvfana_sbnd.fcl"
 
 #include "hitfindermodules_sbnd.fcl"
 #include "cluster_sbnd.fcl"
@@ -91,7 +91,7 @@ physics:
   
   analyzers:
   {
-    wvfana: @local::wvf_ana
+    wvfana: @local::wvf_ana_sbnd
   }
 
   # define the producer and filter modules for this path, order matters,
