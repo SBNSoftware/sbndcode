@@ -125,7 +125,6 @@ sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools: [
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[8].ShowerDirectionOutputLabel: "TrajDirection"
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[9].FirstDirectionInputLabel: "TrajDirection"
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[9].SecondDirectionInputLabel: "ShowerDirection"
-sbnd_incremental_pandoraModularShowerCreation.UseAllParticles: true
 
 sbnd_cheat_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::sbnd_showerstartpositioncheater,
