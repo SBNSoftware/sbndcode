@@ -1,0 +1,4 @@
+physics.producers.generator.Flux.MagUe4: @local::Ume4
+physics.producers.generator.Flux.MagUm4: @local::Umu4
+physics.producers.generator.Decay.ReferenceUE4: @local::Ume4
+physics.producers.generator.Decay.ReferenceUM4: @local::Umu4

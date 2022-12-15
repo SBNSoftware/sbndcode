@@ -1,0 +1,7 @@
+#include "hnl_sbnd_gen.fcl"
+hnlM: 0.385
+#include "set_hnlM.fcl"
+Umu4: 1.00e-7
+Ume4: 0
+#include "set_hnlU.fcl"
+#include "set_GeoCryostat.fcl" 
