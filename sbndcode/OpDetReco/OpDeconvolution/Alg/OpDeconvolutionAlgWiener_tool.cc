@@ -46,6 +46,9 @@ private:
   bool fDebug;
   int fMaxFFTSizePow;
   std::vector<double> fSinglePEWave;
+  bool fPositivePolarity;
+  bool fUseSaturated;
+  int fADCSaturationValue;
   bool fApplyExpoAvSmooth;
   bool fApplyUnAvSmooth;
   float fExpoAvSmoothPar;
@@ -98,6 +101,9 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   //read fhicl paramters
   fDebug = p.get< bool >("Debug");
   fMaxFFTSizePow = p.get< int >("MaxFFTSizePow", 15);
+  fPositivePolarity = p.get< bool >("PositivePolarity");
+  fUseSaturated = p.get< bool >("UseSaturated");
+  fADCSaturationValue = p.get< int >("ADCSaturationValue");
   fApplyExpoAvSmooth   = p.get< bool >("ApplyExpoAvSmooth");
   fApplyUnAvSmooth   = p.get< bool >("ApplyUnAvSmooth");
   fExpoAvSmoothPar = p.get< float >("ExpoAvSmoothPar");
@@ -139,7 +145,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   file->GetObject("SinglePEVec", SinglePEVec_p);
   if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
   fSinglePEWave = *SinglePEVec_p;
-  //for(size_t k=0; k<fSinglePEWave.size(); k++) std::cout<<"  "<<k<<":"<<fSinglePEWave[k];std::cout<<std::endl;
+
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
   fSinglePEWave.resize(MaxBinsFFT, 0);
   file->Close();
@@ -156,7 +162,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
     if(fFilter=="Wiener")
       fSignalHypothesis = ScintArrivalTimesShape(MaxBinsFFT, *lar_prop);
     else if(fFilter=="Wiener1PE")
-      fSignalHypothesis[0]=1; 
+      fSignalHypothesis[0]=1;
     mf::LogInfo("OpDeconvolutionAlg")<<"Built light signal hypothesis... L="<<fFilter<<" size"<<fSignalHypothesis.size()<<std::endl;
   }
 }
@@ -175,15 +181,28 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
       mf::LogWarning("OpDeconvolutionAlg")<<"Skipping waveform...waveform size is"<<wfsize<<"...maximum allowed FFT size is="<<MaxBinsFFT<<std::endl;
       continue;
     }
-    mf::LogInfo("OpDeconvolutionAlg")<<"Deconvolving waveform:"<<NDecoWf<<"...size="<<wfsize<<std::endl;
     size_t wfsizefft=WfSizeFFT(wfsize);
 
     std::vector<double> wave;
     wave.reserve(wfsizefft);
     wave.assign(wf.Waveform().begin(), wf.Waveform().end());
 
-    //Reserve minimum ADCC value for Wiener filter
-    double minADC=*min_element(wave.begin(), wave.end());
+    //Get peak ADC value
+    double wfPeakADC;
+    bool saturated=false;
+    if(fPositivePolarity) {
+      wfPeakADC = *max_element(wave.begin(), wave.end());
+      saturated = wfPeakADC>=fADCSaturationValue;
+    }
+    else{
+      wfPeakADC = *min_element(wave.begin(), wave.end());
+      saturated = wfPeakADC<=fADCSaturationValue;
+    }
+
+    if(!fUseSaturated && saturated ){
+      mf::LogWarning("OpDeconvolutionAlg")<<"Skip saturated waveform @ OpCh "<< wf.ChannelNumber()<<" with time stamp "<<wf.TimeStamp()<<"\n";
+      continue;
+    }
 
     //Apply waveform smoothing
     if(fApplyExpoAvSmooth)
@@ -191,10 +210,12 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
     if(fApplyUnAvSmooth)
       ApplyUnAvSmoothing(wave);
 
-    //Estimate baseline standrd deviation
+    //Estimate baseline standard deviation
     double baseline_mean=0., baseline_stddev=1.;
     EstimateBaselineStdDev(wave, baseline_mean, baseline_stddev);
-    double wfPeakPE=fHypoSignalScale*(baseline_mean-minADC)/fPMTChargeToADC;
+    double wfPeakPE;
+    if(fPositivePolarity) wfPeakPE = fHypoSignalScale*(wfPeakADC-baseline_mean)/fPMTChargeToADC;
+    else wfPeakPE = fHypoSignalScale*(baseline_mean-wfPeakADC)/fPMTChargeToADC;
     SubtractBaseline(wave, baseline_mean);
 
     //Create deconvolution kernel
@@ -214,22 +235,15 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
 
     //Debbuging and save wf in hist file
     if(fDebug){
-      std::cout<<".....Debbuging.....\n";
-      auto minADC_ix=min_element(wave.begin(), wave.end());
-      std::cout<<"Stamp="<<wf.TimeStamp()<<" OpCh"<<wf.ChannelNumber()<<" MinADC="<<minADC<<" (";
-      std::cout<<minADC_ix-wave.begin()<<") Size="<<wf.Waveform().size()<<" ScFactor="<<wfPeakPE<<"\n\n";
-
       std::string name="h_deco"+std::to_string(NDecoWf)+"_"+std::to_string(wf.ChannelNumber())+"_"+std::to_string(wf.TimeStamp());
       TH1F * h_deco = tfs->make< TH1F >(name.c_str(),";Bin;#PE", MaxBinsFFT, 0, MaxBinsFFT);
       for(size_t k=0; k<wave.size(); k++){
-        //if(fDebug) std::cout<<k<<":"<<wave[k]<<":"<<rawsignal[k]<<"  ";
         h_deco->Fill(k, wave[k]);
       }
 
       name="h_raw"+std::to_string(NDecoWf)+"_"+std::to_string(wf.ChannelNumber())+"_"+std::to_string(wf.TimeStamp());
       TH1F * h_raw = tfs->make< TH1F >(name.c_str(),";Bin;ADC", MaxBinsFFT, 0, MaxBinsFFT);
       for(size_t k=0; k<wf.Waveform().size(); k++){
-        //if(fDebug) std::cout<<k<<":"<<wave[k]<<":"<<rawsignal[k]<<"  ";
         h_raw->Fill(k, wf.Waveform()[k]);
       }
     }
@@ -256,7 +270,6 @@ void opdet::OpDeconvolutionAlgWiener::ApplyUnAvSmoothing(std::vector<double>& wf
     double sum=0.;
     for(size_t nbin=bin-fUnAvNeighbours; nbin<=bin+fUnAvNeighbours; nbin++)
       sum+=wf_aux[nbin];
-    //std::cout<<bin<<" "<<sum<<" "<<sum*fNormUnAvSmooth<<std::endl;
     wf[bin]=sum*fNormUnAvSmooth;
   }
 }
@@ -333,15 +346,12 @@ void opdet::OpDeconvolutionAlgWiener::EstimateBaselineStdDev(std::vector<double>
     }
     h_std.Fill( std::sqrt(sum2/fBaselineSample) );
     h_mean.Fill( sum );
-    //std::cout<<ix<<":"<<wf[ix]<<":"<<sum<<" ";
   }
 
   _stddev=h_std.GetXaxis()->GetBinCenter(h_std.GetMaximumBin());
   _mean=h_mean.GetXaxis()->GetBinCenter(h_mean.GetMaximumBin());
 
   if(fDebug){
-    std::cout<<"   -- Estimating baseline...StdDev: "<<_stddev<<" Bias="<<_mean<<std::endl;
-    std::cout<<"      .. "<<minADC<<" "<<maxADC<<" "<<maxADC-minADC<<" "<<ceil(log10(maxADC-minADC))<<" "<<nbins<<"\n";
 
     std::string name="h_baselinestddev_"+std::to_string(NDecoWf)+std::to_string(_mean);
     TH1F * hs_std = tfs->make< TH1F > (name.c_str(),"Baseline StdDev;ADC;# entries",
@@ -377,7 +387,6 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
     double freq_step=fSamplingFreq/size;
     for(size_t k=0; k<size/2; k++){
       kernel[k]= fFilterTF1->Eval(k*freq_step) / serfft[k] ;
-      //std::cout<<k<<" "<<freq<<" "<<filval<<" "<<fSamplingFreq<<"\n";
     }
   }
   else{
@@ -401,7 +410,6 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
     for(size_t k=0; k<size/2; k++){
       double den = pow(TComplex::Abs(serfft[k]), 2) + noise_power / pow(TComplex::Abs(hypofft[k]), 2) ;
       kernel[k]= TComplex::Conjugate( serfft[k] ) / den;
-      //std::cout<<k<<":"<<serfft[k]<<":"<<hypofft[k]<<":"<<den << " ";
     }
   }
 
