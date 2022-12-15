@@ -36,6 +36,7 @@ art_make(
         ${ROOT_BASIC_LIB_LIST}
         sbndcode_RecoUtils
         sbndcode_OpDetSim
+	sbndcode_GeoWrappers
 )
 
 install_source()
