@@ -15,7 +15,7 @@ crteventdisplayalg_sbnd:
    DrawTpc:          true
    DrawTrueTracks:   true
    DrawSimDeposits:  true
-   DrawStripHits:    true
+   DrawStripHits:    false
    DrawClusters:     true
 
    TaggerColour:             1

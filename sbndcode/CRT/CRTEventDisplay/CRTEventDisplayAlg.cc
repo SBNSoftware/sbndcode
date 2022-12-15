@@ -186,7 +186,8 @@ namespace sbnd{
 
         for(auto const& part : *particleHandle)
           {
-	    if(std::abs(part.T()) > 2e4)
+	    //	    if(std::abs(part.T()) > 2e4)
+	    if(part.T() < 8e4 || part.T() > 12e4)
 	      continue;
 
             size_t npts = part.NumberTrajectoryPoints();
@@ -235,7 +236,8 @@ namespace sbnd{
 		double z = (ide.entryZ + ide.exitZ) / 2.;
 		double t = (ide.entryT + ide.exitT) / 2.;
 
-		if(std::abs(t) > 2e4)
+		//		if(std::abs(t) > 2e4)
+		if(t < 8e4 || t > 12e4)
 		  continue;
 
  		double ex = std::abs(ide.entryX - ide.exitX) / 2.;
@@ -259,7 +261,8 @@ namespace sbnd{
 
 	for(auto const stripHit : *stripHitsHandle)
 	  {
-	    if(std::abs(stripHit.Ts1() - G4RefTime) > 2e4)
+	    //	    if(std::abs(stripHit.Ts1() - G4RefTime) > 2e4)
+	    if(stripHit.Ts1() - G4RefTime < 8e4 || stripHit.Ts1() - G4RefTime > 12e4)
 	      continue;
 
 	    CRTStripGeo strip = fCrtGeo.GetStrip(stripHit.Channel());
@@ -287,7 +290,8 @@ namespace sbnd{
 
 	for(auto const cluster : clustersVec)
 	  {
-	    if(std::abs(cluster->Ts1() - G4RefTime) > 2e4)
+	    //	    if(std::abs(cluster->Ts1() - G4RefTime) > 2e4)
+	    if(cluster->Ts1() - G4RefTime < 8e4 || cluster->Ts1() - G4RefTime > 12e4)
 	      continue;
 
 	    auto stripHitVec = clustersToStripHits.at(cluster.key());
