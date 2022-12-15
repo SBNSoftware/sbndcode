@@ -1,0 +1,5 @@
+#include "fm_scores_sbnd.fcl"
+
+physics.producers.fmatch.MakeTree:       true
+physics.producers.fmatch.StoreMCInfo:    true
+# physics.producers.fmatch.SelectNeutrino: false

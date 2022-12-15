@@ -167,7 +167,7 @@ physics:
 
   ### flash-matching
   fmatch:              @local::sbnd_simple_flashmatch
-  fmatchSCE:           @local::sbnd_simple_flashmatch
+  fmatchSCE:           @local::sbnd_simple_flashmatch_sce
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
  
@@ -311,11 +311,6 @@ physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCET
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
 physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
-
-physics.producers.fmatchSCE.PandoraProducer: "pandoraSCE"
-physics.producers.fmatchSCE.TrackProducer: "pandoraSCETrack"
-physics.producers.fmatchSCE.CaloProducer: "pandoraSCECalo"
-physics.producers.fmatchSCE.SpacePointProducer: "pandoraSCE"
 
 physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
 physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"
