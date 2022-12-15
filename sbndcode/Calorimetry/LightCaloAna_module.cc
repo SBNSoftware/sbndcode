@@ -470,9 +470,8 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
             [&](int A, int B) -> bool {
                   return total_gamma[A] < total_gamma[B];
               });
-    for (auto i : idx){
-      std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) <<std::endl;
-    }
+    // find the median
+    
 
     // calculate the weighted average: 
     double counter = 0.0;  // counter of non-zero channels 
