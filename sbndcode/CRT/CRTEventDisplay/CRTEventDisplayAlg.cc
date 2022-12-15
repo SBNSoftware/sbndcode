@@ -1,6 +1,6 @@
 #include "CRTEventDisplayAlg.h"
 
-namespace sbnd{
+namespace sbnd::crt {
   
   CRTEventDisplayAlg::CRTEventDisplayAlg(const Config& config)
   {

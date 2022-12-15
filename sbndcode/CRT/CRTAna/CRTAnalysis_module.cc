@@ -56,8 +56,8 @@ public:
 
 private:
 
-  sbnd::CRTGeoAlg fCRTGeoAlg;
-  sbnd::CRTBackTrackerAlg fCRTBackTrackerAlg;
+  sbnd::crt::CRTGeoAlg fCRTGeoAlg;
+  sbnd::crt::CRTBackTrackerAlg fCRTBackTrackerAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
     fCRTClusterModuleLabel;
@@ -125,15 +125,15 @@ private:
   std::vector<double>   _sh_truth_completeness;
   std::vector<double>   _sh_truth_purity;
 
-  std::vector<uint32_t>    _cl_ts0;
-  std::vector<uint32_t>    _cl_ts1;
-  std::vector<uint32_t>    _cl_unixs;
-  std::vector<uint16_t>    _cl_nhits;
-  std::vector<std::string> _cl_tagger;
-  std::vector<bool>        _cl_threed;
-  std::vector<int16_t>     _cl_truth_trackid;
-  std::vector<double>      _cl_truth_completeness;
-  std::vector<double>      _cl_truth_purity;
+  std::vector<uint32_t>             _cl_ts0;
+  std::vector<uint32_t>             _cl_ts1;
+  std::vector<uint32_t>             _cl_unixs;
+  std::vector<uint16_t>             _cl_nhits;
+  std::vector<sbnd::crt::CRTTagger> _cl_tagger;
+  std::vector<bool>                 _cl_threed;
+  std::vector<int16_t>              _cl_truth_trackid;
+  std::vector<double>               _cl_truth_completeness;
+  std::vector<double>               _cl_truth_purity;
 };
 
 
@@ -214,7 +214,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_ts1", "std::vector<uint32_t>", &_cl_ts1);
     fTree->Branch("cl_unixs", "std::vector<uint32_t>", &_cl_unixs);
     fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
-    fTree->Branch("cl_tagger", "std::vector<std::string>", &_cl_tagger);
+    fTree->Branch("cl_tagger", "std::vector<sbnd::crt::CRTTagger>", &_cl_tagger);
     fTree->Branch("cl_threed", "std::vector<bool>", &_cl_threed);
     fTree->Branch("cl_truth_trackid", "std::vector<int16_t>", &_cl_truth_trackid);
     fTree->Branch("cl_truth_completeness", "std::vector<double>", &_cl_truth_completeness);
@@ -495,7 +495,7 @@ void CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std::vector<art
       _sh_adc2[i]      = hit->ADC2();
       _sh_saturated[i] = hit->Saturated();
 
-      sbnd::CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, hit);
+      sbnd::crt::CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, hit);
       _sh_truth_trackid[i]      = truthMatch.trackid;
       _sh_truth_completeness[i] = truthMatch.completeness;
       _sh_truth_purity[i]       = truthMatch.purity;
@@ -527,7 +527,7 @@ void CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::vector<art:
       _cl_tagger[i] = cluster->Tagger();
       _cl_threed[i] = cluster->ThreeD();
 
-      sbnd::CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
+      sbnd::crt::CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
       _cl_truth_trackid[i]      = truthMatch.trackid;
       _cl_truth_completeness[i] = truthMatch.completeness;
       _cl_truth_purity[i]       = truthMatch.purity;

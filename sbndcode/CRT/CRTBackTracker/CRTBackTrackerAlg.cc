@@ -1,6 +1,6 @@
 #include "CRTBackTrackerAlg.h"
 
-namespace sbnd{
+namespace sbnd::crt {
   
   CRTBackTrackerAlg::CRTBackTrackerAlg(const Config& config)
   {
@@ -46,14 +46,14 @@ namespace sbnd{
     std::vector<art::Ptr<sim::AuxDetIDE>> ideVec;
     art::fill_ptr_vector(ideVec, ideHandle);
 
-    std::set<std::pair<int, std::string>> depositCategories;
+    std::set<std::pair<int, sbnd::crt::CRTTagger>> depositCategories;
 
     for(auto const ide : ideVec)
       {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const std::string tagger = fCRTGeoAlg.WhichTagger(x, y, z);
+        const sbnd::crt::CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
         depositCategories.insert({RollUpID(ide->trackID), tagger});
         fMCPRecoMap[RollUpID(ide->trackID)] = false;
@@ -70,7 +70,7 @@ namespace sbnd{
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const std::string tagger = fCRTGeoAlg.WhichTagger(x, y, z);
+        const sbnd::crt::CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
         fMCPnIDEsMap[RollUpID(ide->trackID)][tagger]      += 1;
         fMCPIDEsEnergyMap[RollUpID(ide->trackID)][tagger] += ide->energyDeposited;
@@ -99,7 +99,7 @@ namespace sbnd{
 
     art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
     art::FindManyP<sbnd::crt::FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
-    const std::string taggerName = fCRTGeoAlg.ChannelToTaggerName(stripHit->Channel());
+    const sbnd::crt::CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
 
     std::map<int, double> idToEnergyMap;
     double totalEnergy = 0.;
@@ -128,7 +128,7 @@ namespace sbnd{
           {
             trackid = id;
             bestPur = pur;
-            comp    = en / fMCPIDEsEnergyMap[id][taggerName];
+            comp    = en / fMCPIDEsEnergyMap[id][tagger];
           }
       }
     

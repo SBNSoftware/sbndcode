@@ -27,7 +27,8 @@ art_make(    LIBRARY_NAME sbndcode_GeoWrappers
                            ROOT::XMLIO
                            ROOT::Gdml
                            ${ROOT_BASIC_LIB_LIST}
-                           
+
+			   sbndcode_CRTUtils
         )
 
 install_headers()

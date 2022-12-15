@@ -20,17 +20,18 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "sbndcode/CRT/CRTEventDisplay/CRTEventDisplayAlg.h"
 
-class CRTEventDisplay;
+namespace sbnd::crt {
+  class CRTEventDisplay;
+}
 
-
-class CRTEventDisplay : public art::EDAnalyzer {
+class sbnd::crt::CRTEventDisplay : public art::EDAnalyzer {
 public:
 
   struct Config {
     using Name = fhicl::Name;
     using Comment = fhicl::Comment;
  
-    fhicl::Table<sbnd::CRTEventDisplayAlg::Config> EventDisplayConfig {
+    fhicl::Table<CRTEventDisplayAlg::Config> EventDisplayConfig {
       Name("EventDisplayConfig"),
         };
   };
@@ -48,20 +49,20 @@ public:
 
 private:
 
-  sbnd::CRTEventDisplayAlg fCRTEventDisplayAlg;
+  CRTEventDisplayAlg fCRTEventDisplayAlg;
 };
 
 
-CRTEventDisplay::CRTEventDisplay(Parameters const& config)
+sbnd::crt::CRTEventDisplay::CRTEventDisplay(Parameters const& config)
   : EDAnalyzer{config}
   , fCRTEventDisplayAlg(config().EventDisplayConfig())
   {
   }
 
-void CRTEventDisplay::analyze(art::Event const& e)
+void sbnd::crt::CRTEventDisplay::analyze(art::Event const& e)
 {
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
   fCRTEventDisplayAlg.Draw(clockData, e);
 }
 
-DEFINE_ART_MODULE(CRTEventDisplay)
+DEFINE_ART_MODULE(sbnd::crt::CRTEventDisplay)

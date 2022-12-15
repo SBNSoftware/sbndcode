@@ -26,12 +26,12 @@
 
 #include <memory>
 
-namespace sbnd {
+namespace sbnd::crt {
   class CRTStripHitProducer;
 }
 
 
-class sbnd::CRTStripHitProducer : public art::EDProducer {
+class sbnd::crt::CRTStripHitProducer : public art::EDProducer {
 public:
   explicit CRTStripHitProducer(fhicl::ParameterSet const& p);
 
@@ -46,13 +46,13 @@ public:
 
 private:
 
-  sbnd::CRTGeoAlg fCRTGeoAlg;
-  std::string     fFEBDataModuleLabel;
-  uint16_t        fADCThreshold;
+  sbnd::crt::CRTGeoAlg fCRTGeoAlg;
+  std::string          fFEBDataModuleLabel;
+  uint16_t             fADCThreshold;
 };
 
 
-sbnd::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p)
+sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
@@ -62,7 +62,7 @@ sbnd::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p)
     produces<art::Assns<sbnd::crt::FEBData, sbnd::crt::CRTStripHit>>();
   }
 
-void sbnd::CRTStripHitProducer::produce(art::Event& e)
+void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 {
   auto stripHitVec      = std::make_unique<std::vector<sbnd::crt::CRTStripHit>>();
   auto stripHitDataAssn = std::make_unique<art::Assns<sbnd::crt::FEBData, sbnd::crt::CRTStripHit>>();
@@ -88,7 +88,7 @@ void sbnd::CRTStripHitProducer::produce(art::Event& e)
   e.put(std::move(stripHitDataAssn));
 }
 
-std::vector<sbnd::crt::CRTStripHit> sbnd::CRTStripHitProducer::CreateStripHits(art::Ptr<sbnd::crt::FEBData> &data)
+std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<sbnd::crt::FEBData> &data)
 {
   std::vector<sbnd::crt::CRTStripHit> stripHits;
 
@@ -138,4 +138,4 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::CRTStripHitProducer::CreateStripHits(a
   return stripHits;
 }
 
-DEFINE_ART_MODULE(sbnd::CRTStripHitProducer)
+DEFINE_ART_MODULE(sbnd::crt::CRTStripHitProducer)

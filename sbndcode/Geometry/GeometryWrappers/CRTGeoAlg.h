@@ -35,7 +35,10 @@
 #include "TVector3.h"
 #include "TGeoManager.h"
 
-namespace sbnd{
+// sbndcode
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+
+namespace sbnd::crt {
 
   struct CRTSiPMGeo{
     CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const double location[3], 
@@ -47,7 +50,7 @@ namespace sbnd{
       y         = location[1];
       z         = location[2];
       pedestal  = _pedestal;
-      null = false;
+      null      = false;
     }
     std::string stripName;
     uint16_t    channel;
@@ -291,6 +294,8 @@ namespace sbnd{
 
     std::string ChannelToTaggerName(const uint16_t channel) const;
 
+    enum CRTTagger ChannelToTaggerEnum(const uint16_t channel) const;
+
     size_t ChannelToOrientation(const uint16_t channel) const;
 
     std::vector<double> StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
@@ -310,7 +315,7 @@ namespace sbnd{
 
     bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
 
-    std::string WhichTagger(const double &x, const double &y, const double &z);
+    enum CRTTagger WhichTagger(const double &x, const double &y, const double &z);
 
   private:
 

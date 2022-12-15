@@ -40,11 +40,9 @@
 
 namespace detinfo { class DetectorClocksData; }
 
-namespace sbnd
-{
+namespace sbnd::crt {
   
-  class CRTEventDisplayAlg
-  {
+  class CRTEventDisplayAlg {
   public:
     
     struct Config {

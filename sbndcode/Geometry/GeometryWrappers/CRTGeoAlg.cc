@@ -1,6 +1,6 @@
 #include "CRTGeoAlg.h"
 
-namespace sbnd{
+namespace sbnd::crt {
 
   CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p) :
     CRTGeoAlg(p, lar::providerFrom<geo::Geometry>(), 
@@ -268,6 +268,11 @@ namespace sbnd{
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).taggerName;
   }
 
+  enum CRTTagger CRTGeoAlg::ChannelToTaggerEnum(const uint16_t channel) const
+  {
+    return CRTCommonUtils::GetTaggerEnum(ChannelToTaggerName(channel));
+  }
+
   size_t CRTGeoAlg::ChannelToOrientation(const uint16_t channel) const
   {
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).orientation;
@@ -380,7 +385,7 @@ namespace sbnd{
     return module1.orientation != module2.orientation;
   }
 
-  std::string CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z)
+  enum CRTTagger CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z)
   {
 
     for(auto const [name, tagger] : fTaggers)
@@ -388,8 +393,8 @@ namespace sbnd{
         if(x > tagger.minX - 1 && x < tagger.maxX + 1 &&
            y > tagger.minY - 1 && y < tagger.maxY + 1 &&
            z > tagger.minZ - 1 && z < tagger.maxZ + 1)
-          return name;
+          return CRTCommonUtils::GetTaggerEnum(name);
       }
-    return "";
+    return kUndefinedTagger;
   }
 }

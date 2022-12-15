@@ -32,11 +32,9 @@
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
-namespace sbnd
-{
+namespace sbnd::crt {
   
-  class CRTBackTrackerAlg
-  {
+  class CRTBackTrackerAlg {
   public:
     
     struct Config {
@@ -102,8 +100,8 @@ namespace sbnd
     art::InputTag fFEBDataModuleLabel;
     art::InputTag fClusterModuleLabel;
 
-    std::map<int, std::map<std::string, int>>    fMCPnIDEsMap;
-    std::map<int, std::map<std::string, double>> fMCPIDEsEnergyMap;
+    std::map<int, std::map<sbnd::crt::CRTTagger, int>>    fMCPnIDEsMap;
+    std::map<int, std::map<sbnd::crt::CRTTagger, double>> fMCPIDEsEnergyMap;
     std::map<int, bool>   fMCPRecoMap;
     std::map<int, bool>   fIDERecoMap;
     std::map<int, int>    fTrackIDMotherMap;
