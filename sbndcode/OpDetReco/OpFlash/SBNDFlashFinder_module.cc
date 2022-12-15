@@ -57,6 +57,7 @@ namespace opdet{
     std::string _ophit_input_time;
     bool _use_t0tool;
     bool _correct_light_propagation;
+    double _readout_delay;
 
     // Tool for calculating the OpFlash Y and Z centers
     std::unique_ptr<lightana::FlashGeoBase> _flashgeo;
@@ -86,6 +87,7 @@ namespace opdet{
     _pecalib.Configure(p.get<lightana::Config_t>("PECalib"));
     _ophit_input_time = p.get<std::string>("OpHitInputTime", "PeakTime");
     _use_t0tool = p.get<bool>("UseT0Tool", false);
+    _readout_delay = p.get<double>("ReadoutDelay", 0);
     _correct_light_propagation = p.get<bool>("CorrectLightPropagation", false);
 
     auto const flashgeo_pset = p.get<lightana::Config_t>("FlashGeoConfig");
@@ -163,6 +165,9 @@ namespace opdet{
       // Refine t0 calculation
       if(_use_t0tool)
         flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
+
+      // Subtract readout ReadoutDelay
+      flasht0 = flasht0 -  _readout_delay;
 
       // Estimate drift location of the interaction and
       // make t0 unbias (lght propagation time correction)

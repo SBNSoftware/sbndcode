@@ -30,9 +30,9 @@
 #include "showerfindermodules_sbnd.fcl"
 #include "databaseutil_sbnd.fcl"
 ##include "opticaldetectormodules_sbnd.fcl"
-#include "ophitfinder_sbnd.fcl"
-#include "ophit_finder_sbnd.fcl"
-#include "sbnd_flashfinder.fcl"
+#include "opdeconvolution_sbnd.fcl"
+#include "sbnd_ophitfinder_deco.fcl"
+#include "sbnd_flashfinder_deco.fcl"
 #include "vertexfindermodules.fcl"
 #include "pandoramodules_sbnd.fcl"
 ##include "triggeralgo_service.fcl"
@@ -90,15 +90,23 @@ physics:
   ### random number saver
   rns:                 { module_type: RandomNumberSaver }
 
+  ### optical deconvolution
+  opdecopmt:          @local::SBNDOpDeconvolutionPMT
+  opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
+
   ### optical hit finders
   # ophit:               @local::sbnd_hit_finder
-  ophitpmt:            @local::sbnd_ophit_finder_pmt
-  ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+  ophitpmt:            @local::SBNDDecoOpHitFinderPMT
+  ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
 
   ### flash finders
   # opflash:             @local::sbnd_opflash
-  opflashtpc0:         @local::SBNDSimpleFlashTPC0
-  opflashtpc1:         @local::SBNDSimpleFlashTPC1
+  opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0
+  opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
+
+  # opflash(arapucas):             @local::sbnd_opflash
+  opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
+  opflashtpc1xarapuca:         @local::SBNDDecoSimpleFlashTPC1Arapuca
 
   ### calwire producers
   caldata:             @local::sbnd_calwire
@@ -170,24 +178,28 @@ physics:
   fmatchSCE:           @local::sbnd_simple_flashmatch_sce
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
- 
+
   ### Uncalibrated calorimetry producer for calibration caloskimmer
   caloskimCalorimetry: @local::caloskim_calorimetry
- 
+
  }
 
  #define the producer and filter modules for this path, order matters,
  #filters reject all following items.  see lines starting physics.producers below
  reco1: [ rns
+         , opdecopmt
+         , opdecoxarapuca
          , ophitpmt
-         , ophitarapuca
+         , ophitxarapuca
          , opflashtpc0
          , opflashtpc1
+         , opflashtpc0xarapuca
+         , opflashtpc1xarapuca
          , caldata
          , gaushit
          , fasthit
    #         , linecluster
-         , gaushitTruthMatch 
+         , gaushitTruthMatch
    #      , rffhit
    #      , corner
    #      , fuzzycluster
@@ -199,7 +211,7 @@ physics:
    #      , cccluster
    #      , spacepts,
    #       , blurredcluster
-          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN 
+          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN
   #       , pandoraShowerLegacy
           , pandoraCalo, pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
@@ -219,13 +231,13 @@ physics:
 
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
- 
+
  analyzers:{
   caloskim: @local::caloskim_nodigits_goldentracks
  }
 
  caloskimana: [ caloskim ]
- 
+
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
 
@@ -255,12 +267,12 @@ outputs:
          "drop *_linecluster_*_*",
          "drop *_fasthit_*_*"
      ]
-     
+
 
  }
 }
 
-physics.reco2: [ @sequence::physics.reco2_no_opt0finder, opt0finder ] 
+physics.reco2: [ @sequence::physics.reco2_no_opt0finder, opt0finder ]
 
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
