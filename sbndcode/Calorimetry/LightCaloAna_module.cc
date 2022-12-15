@@ -58,6 +58,7 @@
 // C++ includes
 #include <numeric>
 #include <memory>
+#include <algorithm> // sort 
 
 namespace sbnd {
   class LightCaloAna;
@@ -97,6 +98,7 @@ private:
   std::string _flashmatch_producer;
   float _nuscore_cut; 
   float _fmscore_cut;
+  std::vector<float> _cal_area_const; 
   bool  _light_wavg;
 
   std::unique_ptr<SemiAnalyticalModel> _semi_model;
@@ -117,6 +119,9 @@ private:
   std::vector<double> _rec_charge;
   std::vector<float>  _dep_charge;
   std::vector<float>  _dep_energy;
+
+  std::vector<double> _dep_pe; 
+  std::vector<double> _rec_gamma; 
 
   double _true_gamma;
   double _true_charge;
@@ -150,6 +155,7 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _flashmatch_producer = p.get<std::string>("FlashMatchProducer");
   _nuscore_cut = p.get<float>("nuScoreCut");
   _fmscore_cut = p.get<float>("fmScoreCut");
+  _cal_area_const    = p.get<std::vector<float>>("CalAreaConstants");
   _light_wavg  = p.get<bool> ("LightWeightedAverage");
 
   art::ServiceHandle<art::TFileService> fs;
@@ -170,6 +176,9 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _tree2->Branch("rec_charge",    "std::vector<double>", &_rec_charge);
   _tree2->Branch("dep_charge",    "std::vector<float>",  &_dep_charge);
   _tree2->Branch("dep_energy",    "std::vector<float>",  &_dep_energy);
+
+  _tree2->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
+  _tree2->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
 
   _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
   _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
@@ -361,27 +370,30 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     }
     
     auto slice = match_slices_v[n_slice];
+    // sum charge information (without position info) for Q 
     // find which plane has the most integrated charge for this slice
     std::vector<art::Ptr<recob::Hit>> slice_hits_v = slice_to_hit.at(slice.key());
-    double integral0 = 0;
-    double integral1 = 0; 
-    double integral2 = 0;
+    std::vector<double> plane_charge{0.,0.,0.};
     for (size_t i=0; i < slice_hits_v.size(); i++){
       auto hit = slice_hits_v[i];
-      if (hit->View()==0) integral0+=hit->Integral();
-      if (hit->View()==1) integral1+=hit->Integral();
-      if (hit->View()==2) integral2+=hit->Integral();
+      auto drift_time = (hit->PeakTime() - 500)*0.5; // us 
+      double atten_correction = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
+      auto hit_plane = hit->View();
+      plane_charge.at(hit_plane) += hit->Integral()*atten_correction*(1/_cal_area_const.at(hit_plane));
     }
-    uint plane = 2; 
-    if ( integral0 >= integral1 && integral0 >= integral2) plane = 0;
-    else if ( integral1 >= integral0 && integral1 >= integral2) plane = 1;
-    else plane = 2;
+    uint bestPlane = std::max_element(plane_charge.begin(), plane_charge.end()) - plane_charge.begin(); 
+    std::cout << "best plane: " << bestPlane << std::endl;
+    // bestPlane = 2;
+    _slice_Q = plane_charge.at(bestPlane);
+    std::cout << "charge from hits: " << _slice_Q << std::endl;
 
     _rec_charge.reserve(slice_hits_v.size()/2); // estimate the size of the vector to be between v.size()/3 and v.size()/2
     _dep_charge.reserve(slice_hits_v.size()/2); 
     _dep_energy.reserve(slice_hits_v.size()/2); 
 
-    // get charge information 
+    double sps_Q = 0;
+
+    // get charge information to create the weighted map 
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(slice.key());
     for (size_t n_pfp=0; n_pfp < pfp_v.size(); n_pfp++){
       auto pfp = pfp_v[n_pfp];
@@ -392,7 +404,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
         std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hit.at(sp.key());
         for (size_t n_hit=0; n_hit < hit_v.size(); n_hit++){
           auto hit = hit_v[n_hit];
-          if (hit->View() !=plane) continue;
+          if (hit->View() !=bestPlane) continue;
           const auto &position(sp->XYZ());
           geo::Point_t xyz(position[0],position[1],position[2]);
           // correct for e- attenuation 
@@ -425,14 +437,15 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
           sp_xyz.push_back(xyz);
           sp_charge.push_back(charge);
 
-          _slice_Q += charge;
+          sps_Q += charge;
         }
       } // end spacepoint loop 
     } // end pfp loop
     // get total L count
+    std::cout << "sps charge: " << sps_Q << std::endl;
     std::vector<double> visibility_map = CalcVisibility(sp_xyz,sp_charge);
-    std::vector<double> total_pe(_nchan,0); 
-    std::vector<double> total_gamma(_nchan, 0);
+    std::vector<double> total_pe(_nchan,0.); 
+    std::vector<double> total_gamma(_nchan, 0.);
 
     if (flash_in_0){
       auto flash_pe_v = opflash0->PEs();
@@ -443,6 +456,22 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       auto flash_pe_v = opflash1->PEs();
       for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
       CalcLight(flash_pe_v, visibility_map, total_gamma);
+    }
+
+    for (size_t i=0; i < total_gamma.size(); i++){
+    std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) <<std::endl;
+    }
+    _dep_pe = total_pe;
+    _rec_gamma = total_gamma;
+    // get a map of sorted indices 
+    std::vector<int> idx(total_gamma.size());
+    std::iota(idx.begin(), idx.end(), 0);
+    std::sort(idx.begin(), idx.end(),
+            [&](int A, int B) -> bool {
+                  return total_gamma[A] < total_gamma[B];
+              });
+    for (auto i : idx){
+      std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) <<std::endl;
     }
 
     // calculate the weighted average: 
@@ -573,6 +602,38 @@ void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
     total_pe_v[ichan] += (1/0.03)*pe*(1/visibility[ichan]); 
   }
 }
+
+// double sbnd::LightCaloAna::EqualizeLight(std::vector<double> total_gamma,
+//                                          std::vector<double> total_pe){
+
+//   for (size_t i=0; i < total_gamma.size(); i++){
+//     std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) std::endl;
+//   }
+//   // get a map of sorted indices 
+//   std::vector<int> idx(total_gamma.size());
+//   std::iota(idx.begin(), idx.end(), 0);
+//   std::sort(idx.begin(), idx.end(),
+//            [&](int A, int B) -> bool {
+//                 return total_gamma[A] < total_gamma[B];
+//             });
+//     for (auto i : idx){
+//       std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) std::endl;
+//     }
+
+  // std::vector<double> sorted_gamma = std::sort(total_gamma.begin(), total_gamma.end());
+  // sorted_gamma.erase(std::remove(sorted_gamma.begin(), sorted_gamma.end(), 0.), sorted_gamma.end());
+  // int nch = int(sorted_gamma.size()); // number of nonzero channels
+  // double gamma_median = sorted_gamma.at(int(nch/2));
+  // double gamma_mean   = std::accumulate(sorted_gamma.begin(), sorted_gamma.end(), 0.)/nch;
+  // // light estimate weighted by PE
+  // double gamma_wgt_sum = 0;
+  // double pe_sum = std::accumulate(total_pe.begin(), total_pe.end(), 0.);
+  // for (size_t i=0; i < total_gamma.size(); i++){
+  //   gamma_wgt_sum += total_gamma.at(i)*total_pe.at(i); 
+
+  // }
+
+// }
 
 
 DEFINE_ART_MODULE(sbnd::LightCaloAna)
