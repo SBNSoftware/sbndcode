@@ -17,41 +17,25 @@ sbnd_opt0_finder:
   FlashVetoTimeEnd:   +1e9
 
   PhotoDetectors: ["pmt_coated", "pmt_uncoated"]
-  TPC: 0
 
   VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
   VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
 
   FlashMatchConfig: @local::flashmatch_config
-  CalAreaConstants: [ 0.0200906, 0.0200016, 0.0201293 ]
-  # CalibrationConst:          0.0201293  # the calibration constant for
-                                        # collection plane derived in docdb 19505
+  SelectNeutrino: true # select only potential neutrino slices (ignore unambiguous cosmics)
+  CollectionPlaneOnly: false # use the collection plane hit information only 
+  CalAreaConstants: [ 0.0200906, 0.0200016, 0.0201293 ] # calibration constants for each plane 
   dQdxLimit:       5e5 # units of e-/cm
   PitchLimit:      2e2 # units of cm
   ExcludeOutliers: false # to skip values w/ dQ/dx or pitch values greater than the limits above
-  ShowerConstantConversion: false # to use constant constanct conversion or energy information 
+  ShowerConstantConversion: true # to use constant constanct conversion or energy information 
 
   ChargeToNPhotonsTrack:  0.5
   ChargeToNPhotonsShower: 0.5
-
- #  ChargeToNPhotonsTrack:    39   #  (1 / 0.0201293) e-/ADC*time_ticks  x
-                                 #  x  23.6e-6 MeV/e-  x
-                                 #  x  24,000 gamma/MeV  =
-                                 #  =  28 (not including recombination)
-                                 #  0.0201293 is the calibration constant for
-                                 #  collection plane derived in docdb 19505
-  # ChargeToNPhotonsShower:   39   #  Not tuned! higher mainly beacause we need
-                                 #  to account for missing charge contributions
-
-  # ChargeToNPhotonsTrack:    164. # 240 e-/ADC x 23.6/1e6 MeV/e- x 29,000 gamma/MeV = 164. (not including recombination)
-  # ChargeToNPhotonsShower:   164. # Not tuned! higher mainly beacause we need to account for missing charge contributions
-
-  # CalcCorrelated: false # turn on charge-photon anti-correlation calculation 
   
   PDSMapTool: {
     tool_type: "sbndPDMapAlg"
   }
-  SelectNeutrino: true # select only potential neutrino slices (ignore unambiguous cosmics)
 }
 
 #
