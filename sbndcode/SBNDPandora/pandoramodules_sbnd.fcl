@@ -47,11 +47,13 @@ sbnd_pandoraTrackCreation:
 {
     module_type:                                                    "LArPandoraTrackCreation"
     PFParticleLabel:                                                "pandora"
+    UseAllParticles:                                                true
 }
 
 sbnd_pandoraShowerCreation:
 {
     module_type:                                                    "LArPandoraShowerCreation"
+    UseAllParticles:                                                true
 }
 
 # Need to set up sbnd specific versions of the cheating tools to accomodate the change in input label
@@ -71,6 +73,8 @@ sbnd_showertrackfindercheater.HitModuleLabel: "gaushit"
 sbnd_showertrackfindercheater.LArPandoraShowerCheatingAlg: @local::sbnd_larpandorashowercheatingalg
 
 # Pandora Shower Configurations
+standard_pandoraModularShowerCreation.UseAllParticles: true
+
 sbnd_legacy_pandoraModularShowerCreation:      @local::legacy_pandoraModularShowerCreation
 sbnd_basic_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
 sbnd_3dTraj_pandoraModularShowerCreation:      @local::standard_pandoraModularShowerCreation
