@@ -1,12 +1,14 @@
-art_make( NO_PLUGINS          
-          LIB_LIBRARIES
-                        lardata_Utilities
-			larcorealg_Geometry
+art_make_library(
+          SOURCE SpaceChargeSBND.cxx
+          LIBRARIES
+                        lardata::Utilities
+			larcorealg::Geometry
                         messagefacility::MF_MessageLogger
-                        
-                        cetlib::cetlib cetlib_except
+                        larevt::SpaceCharge
+                        cetlib::cetlib
+                        cetlib_except::cetlib_except
 			fhiclcpp::fhiclcpp
-                        ${ROOT_BASIC_LIB_LIST}
+                        ROOT::Core
 			
         )
 install_headers()
