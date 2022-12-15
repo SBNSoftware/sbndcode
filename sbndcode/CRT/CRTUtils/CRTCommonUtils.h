@@ -8,23 +8,15 @@
 ///////////////////////////////////////////////
 
 #include <string>
+#include "sbnobj/SBND/CRT/CRTCluster.hh"
 
-namespace sbnd {
-  enum CRTPlane {
-    kCRTNotDefined = -1,   ///< Not defined
-    kCRTBot = 0,           ///< Bottom
-    kCRTFaceSouth = 1,     ///< Face South (Front)
-    kCRTFaceNorth,         ///< Face North (Back)
-    kCRTPosMax
-  };
-}
+namespace sbnd::crt {
 
-namespace sbnd{
-namespace CRTCommonUtils{
+  namespace CRTCommonUtils{
 
-  // Returns the CRT plane index given the tagger name
-  enum ::sbnd::CRTPlane GetPlaneIndex(std::string tagger);
-}
+    // Returns the CRT plane index given the tagger name
+    enum CRTTagger GetTaggerEnum(std::string tagger);
+  }
 }
 
 #endif

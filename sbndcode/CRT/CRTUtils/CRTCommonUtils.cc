@@ -3,17 +3,20 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include <iostream>
 
-namespace sbnd{
+namespace sbnd::crt {
 
-enum CRTPlane CRTCommonUtils::GetPlaneIndex(std::string tagger) {
+  enum CRTTagger CRTCommonUtils::GetTaggerEnum(std::string tagger) {
 
-  if      (tagger == "volTaggerBot_0"      ) return kCRTBot;
-  else if (tagger == "volTESTTaggerSouth_0") return kCRTFaceSouth;
-  else if (tagger == "volTESTTaggerNorth_0") return kCRTFaceNorth;
-  else {
-    mf::LogWarning("CRTCommonUtils") << "CRT tagger unkown: " << tagger << std::endl;
-    return kCRTNotDefined;
+    if      (tagger == "volTaggerBot_0"     ) return kBottomTagger;
+    else if (tagger == "volTaggerSouth_0"   ) return kSouthTagger;
+    else if (tagger == "volTaggerNorth_0"   ) return kNorthTagger;
+    else if (tagger == "volTaggerWest_0"    ) return kWestTagger;
+    else if (tagger == "volTaggerEast_0"    ) return kEastTagger;
+    else if (tagger == "volTaggerTopLow_0"  ) return kTopLowTagger;
+    else if (tagger == "volTaggerTopHigh_0" ) return kTopHighTagger;
+    else {
+      mf::LogWarning("CRTCommonUtils") << "CRT tagger unkown: " << tagger << std::endl;
+      return kUndefinedTagger;
+    }
   }
 }
-}
-
