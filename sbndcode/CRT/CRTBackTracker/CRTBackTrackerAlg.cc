@@ -30,13 +30,15 @@ namespace sbnd{
     fIDERecoMap.clear();
     fTrackIDMotherMap.clear();
 
-    auto droppedTrackIds = event.getMany<std::map<int, std::set<int>>>();
-    assert(droppedTrackIds.size() == 1);
+    auto droppedTrackIdMaps = event.getMany<std::map<int, std::set<int>>>();
 
-    for(auto const& [mother, ids] : *(droppedTrackIds[0]))
+    for(auto const& droppedTrackIdMap : droppedTrackIdMaps)
       {
-	for(auto const& id : ids)
-	  fTrackIDMotherMap[id] = mother;
+	for(auto const& [mother, ids] : *droppedTrackIdMap)
+	  {
+	    for(auto const& id : ids)
+	      fTrackIDMotherMap[id] = mother;
+	  }
       }
 
     art::Handle<std::vector<sim::AuxDetIDE>> ideHandle;
