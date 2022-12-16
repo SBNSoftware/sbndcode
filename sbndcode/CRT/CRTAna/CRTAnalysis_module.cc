@@ -135,6 +135,8 @@ private:
   std::vector<int16_t>  _cl_truth_trackid;
   std::vector<double>   _cl_truth_completeness;
   std::vector<double>   _cl_truth_purity;
+  std::vector<double>   _cl_truth_hit_completeness;
+  std::vector<double>   _cl_truth_hit_purity;
 };
 
 
@@ -220,6 +222,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_truth_trackid", "std::vector<int16_t>", &_cl_truth_trackid);
     fTree->Branch("cl_truth_completeness", "std::vector<double>", &_cl_truth_completeness);
     fTree->Branch("cl_truth_purity", "std::vector<double>", &_cl_truth_purity);
+    fTree->Branch("cl_truth_hit_completeness", "std::vector<double>", &_cl_truth_hit_completeness);
+    fTree->Branch("cl_truth_hit_purity", "std::vector<double>", &_cl_truth_hit_purity);
 
     if(fDebug)
       {
@@ -516,6 +520,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_truth_trackid.resize(nClusters);
   _cl_truth_completeness.resize(nClusters);
   _cl_truth_purity.resize(nClusters);
+  _cl_truth_hit_completeness.resize(nClusters);
+  _cl_truth_hit_purity.resize(nClusters);
 
   for(unsigned i = 0; i < nClusters; ++i)
     {
@@ -529,9 +535,11 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_threed[i] = cluster->ThreeD();
 
       CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
-      _cl_truth_trackid[i]      = truthMatch.trackid;
-      _cl_truth_completeness[i] = truthMatch.completeness;
-      _cl_truth_purity[i]       = truthMatch.purity;
+      _cl_truth_trackid[i]          = truthMatch.trackid;
+      _cl_truth_completeness[i]     = truthMatch.completeness;
+      _cl_truth_purity[i]           = truthMatch.purity;
+      _cl_truth_hit_completeness[i] = truthMatch.hitcompleteness;
+      _cl_truth_hit_purity[i]       = truthMatch.hitpurity;
     }
 }
 
