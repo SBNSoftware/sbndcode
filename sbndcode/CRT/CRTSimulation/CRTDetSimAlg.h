@@ -169,7 +169,7 @@ public:
      *
      * @return Vector of pairs (FEBData, vector of AuxDetIDE)
      */
-    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> GetData();
+    std::vector<std::pair<FEBData, std::vector<AuxDetIDE>>> GetData();
 
     /**
      * Returns the indeces of SiPMs associated to the AuxDetIDEs
@@ -243,7 +243,7 @@ private:
 
     std::map<std::string, Tagger> fTaggers; //!< A list of hit taggers, before any coincidence requirement (name -> tagger)
 
-    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData; //!< This member stores the final FEBData for the CRT simulation
+    std::vector<std::pair<FEBData, std::vector<AuxDetIDE>>> fData; //!< This member stores the final FEBData for the CRT simulation
 
     std::vector<std::vector<int>> fAuxData; //!< This member stores the indeces of SiPM per AuxDetIDE
 
@@ -277,7 +277,7 @@ private:
      * @param sipmID The SiPM index (0-31).
      * @param adc ADC value to be added.
      */
-    void AddADC(sbnd::crt::FEBData & feb_data, const int & sipmID, const uint16_t & adc);
+    void AddADC(FEBData & feb_data, const int & sipmID, const uint16_t & adc);
 
 };
 

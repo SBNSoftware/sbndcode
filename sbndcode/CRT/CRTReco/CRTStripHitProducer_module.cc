@@ -42,13 +42,13 @@ public:
 
   void produce(art::Event& e) override;
 
-  std::vector<sbnd::crt::CRTStripHit> CreateStripHits(art::Ptr<sbnd::crt::FEBData> &data);
+  std::vector<CRTStripHit> CreateStripHits(art::Ptr<FEBData> &data);
 
 private:
 
-  sbnd::crt::CRTGeoAlg fCRTGeoAlg;
-  std::string          fFEBDataModuleLabel;
-  uint16_t             fADCThreshold;
+  CRTGeoAlg   fCRTGeoAlg;
+  std::string fFEBDataModuleLabel;
+  uint16_t    fADCThreshold;
 };
 
 
@@ -58,24 +58,24 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   {
-    produces<std::vector<sbnd::crt::CRTStripHit>>();
-    produces<art::Assns<sbnd::crt::FEBData, sbnd::crt::CRTStripHit>>();
+    produces<std::vector<CRTStripHit>>();
+    produces<art::Assns<FEBData, CRTStripHit>>();
   }
 
 void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 {
-  auto stripHitVec      = std::make_unique<std::vector<sbnd::crt::CRTStripHit>>();
-  auto stripHitDataAssn = std::make_unique<art::Assns<sbnd::crt::FEBData, sbnd::crt::CRTStripHit>>();
+  auto stripHitVec      = std::make_unique<std::vector<CRTStripHit>>();
+  auto stripHitDataAssn = std::make_unique<art::Assns<FEBData, CRTStripHit>>();
   
-  art::Handle<std::vector<sbnd::crt::FEBData>> FEBDataHandle;
+  art::Handle<std::vector<FEBData>> FEBDataHandle;
   e.getByLabel(fFEBDataModuleLabel, FEBDataHandle);
   
-  std::vector<art::Ptr<sbnd::crt::FEBData>> FEBDataVec;
+  std::vector<art::Ptr<FEBData>> FEBDataVec;
   art::fill_ptr_vector(FEBDataVec, FEBDataHandle);
 
   for(auto data : FEBDataVec)
     {
-      std::vector<sbnd::crt::CRTStripHit> newStripHits = CreateStripHits(data);
+      std::vector<CRTStripHit> newStripHits = CreateStripHits(data);
       
       for(auto hit : newStripHits)
 	{
@@ -88,9 +88,9 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   e.put(std::move(stripHitDataAssn));
 }
 
-std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<sbnd::crt::FEBData> &data)
+std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<FEBData> &data)
 {
-  std::vector<sbnd::crt::CRTStripHit> stripHits;
+  std::vector<CRTStripHit> stripHits;
 
   uint32_t mac5  = data->Mac5();
   uint32_t unixs = data->UnixS();

@@ -86,9 +86,9 @@ namespace sbnd::crt {
 
     int RollUpID(const int &id);
 
-    TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<sbnd::crt::CRTStripHit> &stripHit);
+    TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<CRTStripHit> &stripHit);
 
-    TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<sbnd::crt::CRTCluster> &cluster);
+    TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<CRTCluster> &cluster);
 
   private:
     
@@ -100,8 +100,8 @@ namespace sbnd::crt {
     art::InputTag fFEBDataModuleLabel;
     art::InputTag fClusterModuleLabel;
 
-    std::map<int, std::map<sbnd::crt::CRTTagger, int>>    fMCPnIDEsMap;
-    std::map<int, std::map<sbnd::crt::CRTTagger, double>> fMCPIDEsEnergyMap;
+    std::map<int, std::map<CRTTagger, int>>    fMCPnIDEsMap;
+    std::map<int, std::map<CRTTagger, double>> fMCPIDEsEnergyMap;
     std::map<int, bool>   fMCPRecoMap;
     std::map<int, bool>   fIDERecoMap;
     std::map<int, int>    fTrackIDMotherMap;

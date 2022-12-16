@@ -43,17 +43,17 @@ public:
 
   void produce(art::Event& e) override;
 
-  std::map<sbnd::crt::CRTTagger, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>> GroupStripHits(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &CRTStripHitVec);
+  std::map<CRTTagger, std::vector<art::Ptr<CRTStripHit>>> GroupStripHits(const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec);
 
-  std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>>> CreateClusters(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &stripHits);
+  std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> CreateClusters(const std::vector<art::Ptr<CRTStripHit>> &stripHits);
 
-  sbnd::crt::CRTCluster CharacteriseCluster(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &clusteredHits);
+  CRTCluster CharacteriseCluster(const std::vector<art::Ptr<CRTStripHit>> &clusteredHits);
 
 private:
 
-  sbnd::crt::CRTGeoAlg fCRTGeoAlg;
-  std::string          fCRTStripHitModuleLabel;
-  uint32_t             fCoincidenceTimeRequirement;
+  CRTGeoAlg   fCRTGeoAlg;
+  std::string fCRTStripHitModuleLabel;
+  uint32_t    fCoincidenceTimeRequirement;
 };
 
 
@@ -63,29 +63,29 @@ sbnd::crt::CRTClusterProducer::CRTClusterProducer(fhicl::ParameterSet const& p)
   , fCRTStripHitModuleLabel(p.get<std::string>("CRTStripHitModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<uint32_t>("CoincidenceTimeRequirement"))
   {
-    produces<std::vector<sbnd::crt::CRTCluster>>();
-    produces<art::Assns<sbnd::crt::CRTCluster, sbnd::crt::CRTStripHit>>();
+    produces<std::vector<CRTCluster>>();
+    produces<art::Assns<CRTCluster, CRTStripHit>>();
   }
 
 void sbnd::crt::CRTClusterProducer::produce(art::Event& e)
 {
-  auto clusterVec          = std::make_unique<std::vector<sbnd::crt::CRTCluster>>();
-  auto clusterStripHitAssn = std::make_unique<art::Assns<sbnd::crt::CRTCluster, sbnd::crt::CRTStripHit>>();
+  auto clusterVec          = std::make_unique<std::vector<CRTCluster>>();
+  auto clusterStripHitAssn = std::make_unique<art::Assns<CRTCluster, CRTStripHit>>();
   
-  art::Handle<std::vector<sbnd::crt::CRTStripHit>> CRTStripHitHandle;
+  art::Handle<std::vector<CRTStripHit>> CRTStripHitHandle;
   e.getByLabel(fCRTStripHitModuleLabel, CRTStripHitHandle);
   
-  std::vector<art::Ptr<sbnd::crt::CRTStripHit>> CRTStripHitVec;
+  std::vector<art::Ptr<CRTStripHit>> CRTStripHitVec;
   art::fill_ptr_vector(CRTStripHitVec, CRTStripHitHandle);
 
-  std::map<sbnd::crt::CRTTagger, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>> taggerStripHitsMap = GroupStripHits(CRTStripHitVec);
+  std::map<CRTTagger, std::vector<art::Ptr<CRTStripHit>>> taggerStripHitsMap = GroupStripHits(CRTStripHitVec);
 
   for(auto& [tagger, stripHits] : taggerStripHitsMap)
     {
-      std::sort(stripHits.begin(), stripHits.end(), [](art::Ptr<sbnd::crt::CRTStripHit> &a, art::Ptr<sbnd::crt::CRTStripHit> &b)->bool{
+      std::sort(stripHits.begin(), stripHits.end(), [](art::Ptr<CRTStripHit> &a, art::Ptr<CRTStripHit> &b)->bool{
           return a->Ts1() < b->Ts1();});
 
-      std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>>> clustersAndHits = CreateClusters(stripHits);
+      std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> clustersAndHits = CreateClusters(stripHits);
 
       for(auto const& [cluster, clusteredHits] : clustersAndHits)
         {
@@ -98,19 +98,19 @@ void sbnd::crt::CRTClusterProducer::produce(art::Event& e)
   e.put(std::move(clusterStripHitAssn));
 }
 
-std::map<sbnd::crt::CRTTagger, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>> sbnd::crt::CRTClusterProducer::GroupStripHits(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &CRTStripHitVec)
+std::map<sbnd::crt::CRTTagger, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>> sbnd::crt::CRTClusterProducer::GroupStripHits(const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec)
 {
-  std::map<sbnd::crt::CRTTagger, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>> taggerStripHitsMap;
+  std::map<CRTTagger, std::vector<art::Ptr<CRTStripHit>>> taggerStripHitsMap;
 
-  for(const art::Ptr<sbnd::crt::CRTStripHit> &stripHit : CRTStripHitVec)
+  for(const art::Ptr<CRTStripHit> &stripHit : CRTStripHitVec)
     {
-      sbnd::crt::CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+      CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
 
       if(taggerStripHitsMap.find(tagger) != taggerStripHitsMap.end())
         taggerStripHitsMap[tagger].push_back(stripHit);
       else
         {
-          taggerStripHitsMap[tagger] = std::vector<art::Ptr<sbnd::crt::CRTStripHit>>();
+          taggerStripHitsMap[tagger] = std::vector<art::Ptr<CRTStripHit>>();
           taggerStripHitsMap[tagger].push_back(stripHit);
         }
     }
@@ -118,25 +118,25 @@ std::map<sbnd::crt::CRTTagger, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>> sb
   return taggerStripHitsMap;
 }
 
-std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>>> sbnd::crt::CRTClusterProducer::CreateClusters(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &stripHits)
+std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>>> sbnd::crt::CRTClusterProducer::CreateClusters(const std::vector<art::Ptr<CRTStripHit>> &stripHits)
 {
-  std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>>> clustersAndHits;
+  std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> clustersAndHits;
 
   std::vector<bool> used(stripHits.size(), false);
 
   for(uint16_t i = 0; i < stripHits.size(); ++i)
     {
-      const art::Ptr<sbnd::crt::CRTStripHit> &initialStripHit = stripHits[i];
+      const art::Ptr<CRTStripHit> &initialStripHit = stripHits[i];
 
       if(!used[i])
         {
-          std::vector<art::Ptr<sbnd::crt::CRTStripHit>> clusteredHits;
+          std::vector<art::Ptr<CRTStripHit>> clusteredHits;
           clusteredHits.push_back(initialStripHit);
           used[i] = true;
 
           for(uint16_t ii = i+1; ii < stripHits.size(); ++ii)
             {
-              const art::Ptr<sbnd::crt::CRTStripHit> &stripHit = stripHits[ii];
+              const art::Ptr<CRTStripHit> &stripHit = stripHits[ii];
     
               if(!used[ii])
                 {
@@ -147,26 +147,26 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
                     }
                 }
             }
-          const sbnd::crt::CRTCluster &cluster = CharacteriseCluster(clusteredHits);
+          const CRTCluster &cluster = CharacteriseCluster(clusteredHits);
           clustersAndHits.emplace_back(cluster, clusteredHits);
         }      
     }
   return clustersAndHits;
 }
 
-sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const std::vector<art::Ptr<sbnd::crt::CRTStripHit>> &clusteredHits)
+sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const std::vector<art::Ptr<CRTStripHit>> &clusteredHits)
 {
   const uint16_t nHits = clusteredHits.size();
 
   const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(clusteredHits.at(0)->Channel());
-  const sbnd::crt::CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(clusteredHits.at(0)->Channel());
+  const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(clusteredHits.at(0)->Channel());
 
   uint32_t ts0 = 0, ts1 = 0, s = 0;
   bool threeD = false;
 
   for(uint16_t i = 0; i < clusteredHits.size(); ++i)
     {
-      const art::Ptr<sbnd::crt::CRTStripHit> hit = clusteredHits[i];
+      const art::Ptr<CRTStripHit> hit = clusteredHits[i];
 
       ts0 += hit->Ts0();
       ts1 += hit->Ts1();
@@ -180,7 +180,7 @@ sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const s
   ts0 /= nHits;
   ts1 /= nHits;
 
-  return sbnd::crt::CRTCluster(ts0, ts1, s, nHits, tagger, threeD);
+  return CRTCluster(ts0, ts1, s, nHits, tagger, threeD);
 }
   
 DEFINE_ART_MODULE(sbnd::crt::CRTClusterProducer)

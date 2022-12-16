@@ -46,14 +46,14 @@ namespace sbnd::crt {
     std::vector<art::Ptr<sim::AuxDetIDE>> ideVec;
     art::fill_ptr_vector(ideVec, ideHandle);
 
-    std::set<std::pair<int, sbnd::crt::CRTTagger>> depositCategories;
+    std::set<std::pair<int, CRTTagger>> depositCategories;
 
     for(auto const ide : ideVec)
       {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const sbnd::crt::CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
+        const CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
         depositCategories.insert({RollUpID(ide->trackID), tagger});
         fMCPRecoMap[RollUpID(ide->trackID)] = false;
@@ -70,7 +70,7 @@ namespace sbnd::crt {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const sbnd::crt::CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
+        const CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
         fMCPnIDEsMap[RollUpID(ide->trackID)][tagger]      += 1;
         fMCPIDEsEnergyMap[RollUpID(ide->trackID)][tagger] += ide->energyDeposited;
@@ -87,19 +87,19 @@ namespace sbnd::crt {
     return id;
   }
 
-  CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<sbnd::crt::CRTStripHit> &stripHit)
+  CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<CRTStripHit> &stripHit)
   {  
-    art::Handle<std::vector<sbnd::crt::FEBData>> febDataHandle;
+    art::Handle<std::vector<FEBData>> febDataHandle;
     event.getByLabel(fFEBDataModuleLabel, febDataHandle);
 
-    art::Handle<std::vector<sbnd::crt::CRTStripHit>> stripHitHandle;
+    art::Handle<std::vector<CRTStripHit>> stripHitHandle;
     event.getByLabel(fStripHitModuleLabel, stripHitHandle);
-    std::vector<art::Ptr<sbnd::crt::CRTStripHit>> stripHitVec;
+    std::vector<art::Ptr<CRTStripHit>> stripHitVec;
     art::fill_ptr_vector(stripHitVec, stripHitHandle);
 
-    art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
-    art::FindManyP<sbnd::crt::FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
-    const sbnd::crt::CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+    art::FindManyP<sim::AuxDetIDE, FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
+    art::FindManyP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
+    const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
 
     std::map<int, double> idToEnergyMap;
     double totalEnergy = 0.;
@@ -110,7 +110,7 @@ namespace sbnd::crt {
     for(unsigned i = 0; i < assnIDEVec.size(); ++i)
       {
         const art::Ptr<sim::AuxDetIDE> ide = assnIDEVec[i];
-        const sbnd::crt::FEBTruthInfo *febTruthInfo = febDataToIDEs.data(febData.at(0).key())[i];
+        const FEBTruthInfo *febTruthInfo = febDataToIDEs.data(febData.at(0).key())[i];
         if((uint) febTruthInfo->GetChannel() == (stripHit->Channel() % 32))
           {
             idToEnergyMap[RollUpID(ide->trackID)] += ide->energyDeposited;
@@ -135,22 +135,22 @@ namespace sbnd::crt {
     return TruthMatchMetrics(trackid, comp, bestPur);
   }
 
-  CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<sbnd::crt::CRTCluster> &cluster)
+  CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<CRTCluster> &cluster)
   {
-    art::Handle<std::vector<sbnd::crt::FEBData>> febDataHandle;
+    art::Handle<std::vector<FEBData>> febDataHandle;
     event.getByLabel(fFEBDataModuleLabel, febDataHandle);
 
-    art::Handle<std::vector<sbnd::crt::CRTStripHit>> stripHitHandle;
+    art::Handle<std::vector<CRTStripHit>> stripHitHandle;
     event.getByLabel(fStripHitModuleLabel, stripHitHandle);
 
-    art::Handle<std::vector<sbnd::crt::CRTCluster>> clusterHandle;
+    art::Handle<std::vector<CRTCluster>> clusterHandle;
     event.getByLabel(fClusterModuleLabel, clusterHandle);
-    std::vector<art::Ptr<sbnd::crt::CRTCluster>> clusterVec;
+    std::vector<art::Ptr<CRTCluster>> clusterVec;
     art::fill_ptr_vector(clusterVec, clusterHandle);
 
-    art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
-    art::FindManyP<sbnd::crt::FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
-    art::FindManyP<sbnd::crt::CRTStripHit> clusterToStripHits(clusterHandle, event, fClusterModuleLabel);
+    art::FindManyP<sim::AuxDetIDE, FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
+    art::FindManyP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
+    art::FindManyP<CRTStripHit> clusterToStripHits(clusterHandle, event, fClusterModuleLabel);
 
     std::map<int, double> idToEnergyMap;
     double totalEnergy = 0.;
@@ -165,7 +165,7 @@ namespace sbnd::crt {
         for(unsigned i = 0; i < assnIDEVec.size(); ++i)
           {
             const art::Ptr<sim::AuxDetIDE> ide = assnIDEVec[i];
-            const sbnd::crt::FEBTruthInfo *febTruthInfo = febDataToIDEs.data(febData.at(0).key())[i];
+            const FEBTruthInfo *febTruthInfo = febDataToIDEs.data(febData.at(0).key())[i];
             if((uint) febTruthInfo->GetChannel() == (stripHit->Channel() % 32))
               {
                 idToEnergyMap[RollUpID(ide->trackID)] += ide->energyDeposited;

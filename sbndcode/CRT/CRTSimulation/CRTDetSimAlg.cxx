@@ -56,7 +56,7 @@ namespace crt {
         }
     }
 
-    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> CRTDetSimAlg::GetData()
+    std::vector<std::pair<FEBData, std::vector<AuxDetIDE>>> CRTDetSimAlg::GetData()
     {
         return fData;
     }
@@ -101,7 +101,7 @@ namespace crt {
     }
 
 
-    void CRTDetSimAlg::AddADC(sbnd::crt::FEBData & feb_data,
+    void CRTDetSimAlg::AddADC(FEBData & feb_data,
                               const int & sipmID, const uint16_t & adc)
     {
         uint16_t original_adc = feb_data.ADC(sipmID);
@@ -127,7 +127,7 @@ namespace crt {
 
     void CRTDetSimAlg::ProcessStrips(const std::vector<StripData> & strips)
     {
-        std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
+        std::map<uint16_t, FEBData> mac_to_febdata;
         std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
         std::map<uint16_t, std::vector<int>> mac_to_sipmids;
 
@@ -141,13 +141,13 @@ namespace crt {
             if (!mac_to_febdata.count(strip.mac5))
             {
                 // Construct a new FEBData object with only pedestal values (will be filled later)
-                mac_to_febdata[strip.mac5] = sbnd::crt::FEBData(strip.mac5,          // FEB ID
-                                                                strip.flags,         // Flags
-                                                                strip.sipm0.t0,      // Ts0
-                                                                strip.sipm0.t1,      // Ts1
-                                                                strip.unixs,         // UnixS
-                                                                adc_pedestal,        // ADCs
-                                                                strip.sipm0.sipmID); // Coinc
+                mac_to_febdata[strip.mac5] = FEBData(strip.mac5,          // FEB ID
+                                                     strip.flags,         // Flags
+                                                     strip.sipm0.t0,      // Ts0
+                                                     strip.sipm0.t1,      // Ts1
+                                                     strip.unixs,         // UnixS
+                                                     adc_pedestal,        // ADCs
+                                                     strip.sipm0.sipmID); // Coinc
 
                 mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
                 mac_to_sipmids[strip.mac5] = std::vector<int>();

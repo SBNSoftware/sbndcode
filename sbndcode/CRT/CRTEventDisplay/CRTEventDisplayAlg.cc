@@ -257,7 +257,7 @@ namespace sbnd::crt {
 
     if(fDrawStripHits)
       {
-	auto stripHitsHandle = event.getValidHandle<std::vector<sbnd::crt::CRTStripHit>>(fStripHitLabel);
+	auto stripHitsHandle = event.getValidHandle<std::vector<CRTStripHit>>(fStripHitLabel);
 
 	for(auto const stripHit : *stripHitsHandle)
 	  {
@@ -281,10 +281,10 @@ namespace sbnd::crt {
 
     if(fDrawClusters)
       {
-	auto clustersHandle = event.getValidHandle<std::vector<sbnd::crt::CRTCluster>>(fClusterLabel);
-	std::vector<art::Ptr<sbnd::crt::CRTCluster>> clustersVec;
+	auto clustersHandle = event.getValidHandle<std::vector<CRTCluster>>(fClusterLabel);
+	std::vector<art::Ptr<CRTCluster>> clustersVec;
 	art::fill_ptr_vector(clustersVec, clustersHandle);
-	art::FindManyP<sbnd::crt::CRTStripHit> clustersToStripHits(clustersHandle, event, fClusterLabel);
+	art::FindManyP<CRTStripHit> clustersToStripHits(clustersHandle, event, fClusterLabel);
 
 	int colour = fClusterStartingColour;
 
