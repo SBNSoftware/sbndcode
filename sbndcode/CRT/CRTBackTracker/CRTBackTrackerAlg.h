@@ -32,6 +32,8 @@
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
+#include "larsim/MCCheater/ParticleInventoryService.h"
+
 namespace sbnd::crt {
   
   class CRTBackTrackerAlg {
@@ -93,7 +95,8 @@ namespace sbnd::crt {
   private:
     
     CRTGeoAlg fCRTGeoAlg;
-    
+    art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
+
     art::InputTag fSimModuleLabel;
     art::InputTag fSimDepositModuleLabel;
     art::InputTag fStripHitModuleLabel;

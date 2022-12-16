@@ -121,8 +121,14 @@ namespace sbnd::crt {
     double bestPur = 0., comp = 0.;
     int trackid = -99999;
 
+    std::cout << "New Strip Hit" << std::endl;
+
     for(auto const [id, en] : idToEnergyMap)
       {
+	const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(id);
+	const int pdg = particle == NULL ? -1 : particle->PdgCode();
+	const std::string endprocess = particle == NULL ? "" : particle->EndProcess();
+	std::cout << "\tTrackID: " << id << " En: " << en << " PDG: " << pdg << " EndProc: " <<  endprocess << std::endl;
         double pur = en / totalEnergy;
         if(pur > bestPur)
           {
@@ -131,7 +137,8 @@ namespace sbnd::crt {
             comp    = en / fMCPIDEsEnergyMap[id][tagger];
           }
       }
-    
+    std::cout << "\tPur: " << bestPur << " Comp: " << comp << std::endl;
+    std::cout << std::endl;
     return TruthMatchMetrics(trackid, comp, bestPur);
   }
 
