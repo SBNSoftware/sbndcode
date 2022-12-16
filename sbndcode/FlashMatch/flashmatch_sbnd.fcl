@@ -6,69 +6,112 @@ sbnd_simple_flashmatch:{
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
   OpHitARAProducer: "ophitarapuca"
-  BeamWindowStart: -50 # us
-  BeamWindowEnd: 50.0 # us
-  FlashStart: -0.02 # us, wrt flash time
-  FlashEnd: 0.08 # us, wrt flash time
-  SelectNeutrino: true
+  BeamSpillTimeStart:       0.15 # us, with some tolerance # TODO: update this when time gets zeroed
+  BeamSpillTimeEnd:         1.8  # us, with some tolerance # TODO: update this when time gets zeroed
+  FlashFindingTimeStart: -100.   # us # TODO: tune
+  FlashFindingTimeEnd:    100.   # us # TODO: tune
+  FlashStart:              -0.02 # us, wrt flash time
+  FlashEnd:                 0.08 # us, wrt flash time
   OnlyCollectionWires: false
   ForceConcurrence: true
-  UseUncoatedPMT: true
-  UseARAPUCAS: false
+  CorrectDriftDistance: true
+  UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
+  SelectNeutrino: true # it's too buggy to set 'false'
   MakeTree: false
-  StoreTrueNus: false
-  StoreCheatMCT0: false
+  StoreMCInfo: false
+  # TODO: tune below
   MinHitQ: 0.
   MinSpacePointQ: 0.
   MinParticleQ: 0.
   MinSliceQ: 0.
-  MaxFlashes: 3
+  OpHitTime: "PeakTime" # TODO: test and change to RiseTime or StartTime once they become available
+  MinInTimeFlashes: 2
+  MaxFlashes: 7
   MinOpHPE: 0.
   MinFlashPE: 10.
+  FlashPEFraction: 0.8
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
+  # TODO: tune above
 
-  ThresholdTerm: 50.
+  ThresholdTerm:200.
 
   PDMapAlg: {
     tool_type: sbndPDMapAlg
   }
 
-  # binning and geometry
-  score_hist_bins: 100
-  score_hist_low: 0.
-  score_hist_up: 50.
-
+  # Metrics binning
   DriftDistance: 202.05 # only used for metrics creation
   XBins: 40
   # XBinWidth approx 5.
+  #
+  # TODO: Metrics should depend on X,Y,Z.
+  #       The limiting factor to the number of bins is having enough
+  #       nu only stats.  The binning has to be done such that no two
+  #       PMTs fall under the same bin. Could potentially use
+  #       irregular binning?
+  # TODO: below needs to be tested
+  x_bins_: 10
+  x_low:    0.
+  x_up:   202.05
+  y_bins:   9
+  y_low: -204.
+  y_up:   204.
+  z_bins:  12
+  z_low:  -11.0
+  z_up:   511.0
 
   # block for Y and Z ophit distributions, used for unbiassing
+  fit_func_y:    "pol2"
   YBins: 9
   YLow: -180.
   YHigh: 180.
-  YBiasSlope: 0.004
+  fit_func_z:    "pol2"
   ZBins: 12
   ZLow: 10.
-  YHigh: 490.
-  ZBiasSlope: 0.002
+  ZHigh: 490.
+  SkewLimitY: 5.
+  SkewLimitZ: 5.
 
-  dy_bins: 100
-  dy_low: -200.
-  dy_up: 200.
-  dz_bins: 100
-  dz_low: -200.
-  dz_up: 200.
-  rr_bins: 50
-  rr_low: 0.
-  rr_up: 200
-  rr_TF1_fit: "pol3"
-  ratio_bins: 50
-  ratio_low: 0.
-  ratio_up: 1.
-  ratio_TF1_fit: "pol3"
+  # binning for template and metrics generation
+  score: {
+    bins:     60
+    low:       0.
+    up:       30. }
+  dy: {
+    bins:     60
+    low:    -150.
+    up:      150. }
+  dz: {
+    bins:     60
+    low:    -150.
+    up:      150. }
+  rr: {
+    bins:     40
+    low:       0.
+    up:      200. }
+  ratio: {
+    bins:     40
+    low:       0.
+    up:        1. }
+  slope: {
+    bins:     40     # TODO
+    low:       0.    # TODO
+    up:        1.}   # TODO
+  petoq: {
+    bins:     40  
+    low:       0. 
+    up:        1.4}
+  # rr_TF1_fit: "pol3" # LEGACY, not used in the normal operation but helpful for diagnostics
+  # ratio_TF1_fit: "pol3" # LEGACY, not used in the normal operation but helpful for diagnostics
 }
+
+sbnd_simple_flashmatch_sce: @local::sbnd_simple_flashmatch
+sbnd_simple_flashmatch_sce.PandoraProducer: "pandoraSCE"
+sbnd_simple_flashmatch_sce.TrackProducer: "pandoraSCETrack"
+sbnd_simple_flashmatch_sce.CaloProducer: "pandoraSCECalo"
+sbnd_simple_flashmatch_sce.SpacePointProducer: "pandoraSCE"
 
 END_PROLOG #comment to run generate_simple_weighted_template.py
