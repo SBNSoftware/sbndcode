@@ -64,12 +64,17 @@ namespace sbnd::crt {
       int    trackid;
       double completeness;
       double purity;
+      double hitcompleteness;
+      double hitpurity;
 
-      TruthMatchMetrics(int _trackid, double _completeness, double _purity)
+      TruthMatchMetrics(int _trackid, double _completeness, double _purity,
+                        double _hitcompleteness = 0., double _hitpurity = 0.)
       {
-        trackid      = _trackid;
-        completeness = _completeness;
-        purity       = _purity;
+        trackid         = _trackid;
+        completeness    = _completeness;
+        purity          = _purity;
+        hitcompleteness = _hitcompleteness;
+        hitpurity       = _hitpurity;
       }
     };
     
@@ -103,11 +108,11 @@ namespace sbnd::crt {
     art::InputTag fFEBDataModuleLabel;
     art::InputTag fClusterModuleLabel;
 
-    std::map<int, std::map<CRTTagger, int>>    fMCPnIDEsMap;
-    std::map<int, std::map<CRTTagger, double>> fMCPIDEsEnergyMap;
-    std::map<int, bool>   fMCPRecoMap;
-    std::map<int, bool>   fIDERecoMap;
-    std::map<int, int>    fTrackIDMotherMap;
+    std::map<std::pair<int, CRTTagger>, double> fMCPIDEsEnergyMap;
+    std::map<std::pair<int, CRTTagger>, int>    fMCPStripHitsMap;
+
+    std::map<int, int> fTrackIDMotherMap;
+    std::map<int, int> fStripHitMCPMap;
   };
 }
 

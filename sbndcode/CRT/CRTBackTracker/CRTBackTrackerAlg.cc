@@ -24,21 +24,21 @@ namespace sbnd::crt {
 
   void CRTBackTrackerAlg::SetupMaps(const art::Event &event)
   {
-    fMCPnIDEsMap.clear();
     fMCPIDEsEnergyMap.clear();
-    fMCPRecoMap.clear();
-    fIDERecoMap.clear();
+    fMCPStripHitsMap.clear();
+
     fTrackIDMotherMap.clear();
+    fStripHitMCPMap.clear();
 
     auto droppedTrackIdMaps = event.getMany<std::map<int, std::set<int>>>();
 
     for(auto const& droppedTrackIdMap : droppedTrackIdMaps)
       {
-	for(auto const& [mother, ids] : *droppedTrackIdMap)
-	  {
-	    for(auto const& id : ids)
-	      fTrackIDMotherMap[id] = mother;
-	  }
+        for(auto const& [mother, ids] : *droppedTrackIdMap)
+          {
+            for(auto const& id : ids)
+              fTrackIDMotherMap[id] = mother;
+          }
       }
 
     art::Handle<std::vector<sim::AuxDetIDE>> ideHandle;
@@ -56,15 +56,11 @@ namespace sbnd::crt {
         const CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
         depositCategories.insert({RollUpID(ide->trackID), tagger});
-        fMCPRecoMap[RollUpID(ide->trackID)] = false;
       }
         
     for(auto const category : depositCategories)
-      {
-        fMCPnIDEsMap[category.first][category.second] = 0;
-        fMCPIDEsEnergyMap[category.first][category.second] = 0.;
-      }
-
+      fMCPIDEsEnergyMap[category] = 0.;
+      
     for(auto const ide : ideVec)
       {
         const double x = (ide->entryX + ide->exitX) / 2.;
@@ -72,11 +68,26 @@ namespace sbnd::crt {
         const double z = (ide->entryZ + ide->exitZ) / 2.;
         const CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
-        fMCPnIDEsMap[RollUpID(ide->trackID)][tagger]      += 1;
-        fMCPIDEsEnergyMap[RollUpID(ide->trackID)][tagger] += ide->energyDeposited;
-        fIDERecoMap[ide.key()]                            =  false;
+        fMCPIDEsEnergyMap[{RollUpID(ide->trackID), tagger}] += ide->energyDeposited;
       }
 
+    art::Handle<std::vector<CRTStripHit>> stripHitHandle;
+    event.getByLabel(fStripHitModuleLabel, stripHitHandle);
+    std::vector<art::Ptr<CRTStripHit>> stripHitVec;
+    art::fill_ptr_vector(stripHitVec, stripHitHandle);
+
+    for(auto const stripHit : stripHitVec)
+      {
+        const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+        TruthMatchMetrics truthMatch = TruthMatching(event, stripHit);
+
+        fStripHitMCPMap[stripHit.key()] = truthMatch.trackid;
+
+        if(fMCPStripHitsMap.find({truthMatch.trackid, tagger}) == fMCPStripHitsMap.end())
+          fMCPStripHitsMap[{truthMatch.trackid, tagger}] = 0;
+
+        ++fMCPStripHitsMap[{truthMatch.trackid, tagger}];
+      }
   }
 
   int CRTBackTrackerAlg::RollUpID(const int &id)
@@ -125,16 +136,16 @@ namespace sbnd::crt {
 
     for(auto const [id, en] : idToEnergyMap)
       {
-	const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(id);
-	const int pdg = particle == NULL ? -1 : particle->PdgCode();
-	const std::string endprocess = particle == NULL ? "" : particle->EndProcess();
-	std::cout << "\tTrackID: " << id << " En: " << en << " PDG: " << pdg << " EndProc: " <<  endprocess << std::endl;
+        const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(id);
+        const int pdg = particle == NULL ? -1 : particle->PdgCode();
+        const std::string endprocess = particle == NULL ? "" : particle->EndProcess();
+        std::cout << "\tTrackID: " << id << " En: " << en << " PDG: " << pdg << " EndProc: " <<  endprocess << std::endl;
         double pur = en / totalEnergy;
         if(pur > bestPur)
           {
             trackid = id;
             bestPur = pur;
-            comp    = en / fMCPIDEsEnergyMap[id][tagger];
+            comp    = en / fMCPIDEsEnergyMap[{id, tagger}];
           }
       }
     std::cout << "\tPur: " << bestPur << " Comp: " << comp << std::endl;
@@ -161,6 +172,7 @@ namespace sbnd::crt {
 
     std::map<int, double> idToEnergyMap;
     double totalEnergy = 0.;
+    std::map<int, int> idToNHitsMap;
 
     auto const assnStripHitVec = clusterToStripHits.at(cluster.key());
 
@@ -179,6 +191,11 @@ namespace sbnd::crt {
                 totalEnergy                           += ide->energyDeposited;
               }
           }
+
+        if(idToNHitsMap.find(fStripHitMCPMap[stripHit.key()]) == idToNHitsMap.end())
+           idToNHitsMap[fStripHitMCPMap[stripHit.key()]] = 0;
+        
+        ++idToNHitsMap[fStripHitMCPMap[stripHit.key()]];
       }
 
     double bestPur = 0., comp = 0.;
@@ -191,10 +208,13 @@ namespace sbnd::crt {
           {
             trackid = id;
             bestPur = pur;
-            comp    = en / fMCPIDEsEnergyMap[id][cluster->Tagger()];
+            comp    = en / fMCPIDEsEnergyMap[{id, cluster->Tagger()}];
           }
       }
-    
-    return TruthMatchMetrics(trackid, comp, bestPur);
+
+    double hitComp = idToNHitsMap[trackid] / (double) fMCPStripHitsMap[{trackid, cluster->Tagger()}];
+    double hitPur  = idToNHitsMap[trackid] / (double) assnStripHitVec.size();
+
+    return TruthMatchMetrics(trackid, comp, bestPur, hitComp, hitPur);
   }
 }
