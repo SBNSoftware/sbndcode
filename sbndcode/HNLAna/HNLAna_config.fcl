@@ -1,8 +1,0 @@
-BEGIN_PROLOG
-
-HNLAna:
-{
-  module_type: "HNLAna"
-}
-
-END_PROLOG
