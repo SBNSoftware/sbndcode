@@ -11,7 +11,7 @@ SimpleFlashStandard:
   TimeResolution:    0.01
   HitVetoRangeStart: []
   HitVetoRangeEnd:   []
-  OpChannelRange:    [0,319]
+  OpChannelRange:    [0,311]
   TPC:               0
   #PD:                ["pmt_coated", "pmt_uncoated", "xarapuca", "xarapuca_vuv", "xarapuca_vis"]
   PD:                ["pmt_coated", "pmt_uncoated"]
@@ -25,4 +25,3 @@ SimpleFlashTPC1: @local::SimpleFlashStandard
 SimpleFlashTPC1.TPC: 1
 
 END_PROLOG
-

@@ -49,6 +49,8 @@ namespace lightana
     std::vector<int> _opch_to_index_v;
     std::vector<int> _index_to_opch_v;
 
+    static size_t _nopdet_maxsize;
+
   };
 
   /**
