@@ -1,6 +1,6 @@
 #include "services_sbnd.fcl"
-#include "crtbacktrackeralg_sbnd.fcl"
 #include "particleinventoryservice.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
 
 process_name: CRTAnalyzer
 
@@ -18,7 +18,6 @@ source:
 
 physics:
 {
-
   analyzers:
   {
     crtana: 
