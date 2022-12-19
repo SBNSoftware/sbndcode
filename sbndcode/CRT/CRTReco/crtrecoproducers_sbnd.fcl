@@ -14,4 +14,10 @@ crtclusterproducer_sbnd:
    module_type:                "sbndcode/CRT/CRTReco/CRTClusterProducer"
 }
 
+crtspacepointproducer_sbnd:
+{
+   ClusterModuleLabel: "crtclustering"
+   module_type:        "sbndcode/CRT/CRTReco/CRTSpacePointProducer"
+}
+
 END_PROLOG

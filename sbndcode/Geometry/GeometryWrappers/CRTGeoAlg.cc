@@ -11,6 +11,7 @@ namespace sbnd::crt {
                        geo::AuxDetGeometryCore const *auxdet_geometry)
     : fCableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
     , fSiPMPedestalsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestals", std::vector<std::pair<unsigned, double>>()))
+    , fSiPMGainsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMGains", std::vector<std::pair<unsigned, double>>()))
     , fChannelInversionVector(p.get<std::vector<std::pair<unsigned, bool>>>("InvertedChannelOrder", std::vector<std::pair<unsigned, bool>>()))
   {
     fGeometryService = geometry;
@@ -21,6 +22,8 @@ namespace sbnd::crt {
                                                          fCableLengthCorrectionsVector.end());
     fSiPMPedestals          = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), 
                                                          fSiPMPedestalsVector.end());
+    fSiPMGains              = std::map<unsigned, double>(fSiPMGainsVector.begin(), 
+                                                         fSiPMGainsVector.end());
     fChannelInversion       = std::map<unsigned, bool>(fChannelInversionVector.begin(), 
                                                        fChannelInversionVector.end());
 
@@ -119,9 +122,12 @@ namespace sbnd::crt {
             const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : 0;
             const uint32_t pedestal1 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel1) : 0;
 
+            const uint32_t gain0 = fSiPMGains.size() ? fSiPMGains.at(channel0) : 0;
+            const uint32_t gain1 = fSiPMGains.size() ? fSiPMGains.at(channel1) : 0;
+
             // Fill SiPM information
-            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0);
-            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, pedestal1);
+            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0);
+            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, pedestal1, gain1);
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel0, sipm0));
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel1, sipm1));
           }
@@ -278,10 +284,10 @@ namespace sbnd::crt {
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).orientation;
   }
 
-  std::array<double, 6> CRTGeoAlg::StripHit3DPos(const std::string stripName, const double x, 
+  std::array<double, 6> CRTGeoAlg::StripHit3DPos(const uint16_t channel, const double x, 
                                                  const double ex)
   {
-    const CRTStripGeo &strip = fStrips.at(stripName);
+    const CRTStripGeo &strip = GetStrip(channel);
 
     const uint16_t adsID = strip.adsID;
     const uint16_t adID  = fModules.at(strip.moduleName).adID;

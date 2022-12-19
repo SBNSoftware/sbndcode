@@ -41,8 +41,8 @@
 namespace sbnd::crt {
 
   struct CRTSiPMGeo{
-    CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const double location[3], 
-               const uint32_t _pedestal)
+    CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const double location[3],
+               const uint32_t _pedestal, const double _gain)
     {
       stripName = _stripName;
       channel   = _channel;
@@ -50,6 +50,7 @@ namespace sbnd::crt {
       y         = location[1];
       z         = location[2];
       pedestal  = _pedestal;
+      gain      = _gain;
       null      = false;
     }
     std::string stripName;
@@ -59,6 +60,7 @@ namespace sbnd::crt {
     double      z;
     bool        null;
     uint32_t    pedestal;
+    double      gain;
   };
 
   // CRT strip geometry struct contains dimensions and mother module
@@ -119,7 +121,7 @@ namespace sbnd::crt {
 
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
-    CRTModuleGeo() 
+    CRTModuleGeo()
     : name("")
     , taggerName("")
     , minX(-std::numeric_limits<double>::max())
@@ -301,7 +303,7 @@ namespace sbnd::crt {
     std::vector<double> StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
                                              const double y, const double z);
 
-    std::array<double, 6> StripHit3DPos(const std::string stripName, const double x, const double ex);
+    std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex);
 
     TVector3 ChannelToSipmPosition(const uint16_t channel) const;
 
@@ -331,6 +333,8 @@ namespace sbnd::crt {
     std::map<unsigned, double>               fCableLengthCorrections;
     std::vector<std::pair<unsigned, double>> fSiPMPedestalsVector;
     std::map<unsigned, double>               fSiPMPedestals;
+    std::vector<std::pair<unsigned, double>> fSiPMGainsVector;
+    std::map<unsigned, double>               fSiPMGains;
     std::vector<std::pair<unsigned, bool>>   fChannelInversionVector;
     std::map<unsigned, bool>                 fChannelInversion;
   };

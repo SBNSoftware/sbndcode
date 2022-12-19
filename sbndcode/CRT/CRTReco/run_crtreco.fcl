@@ -27,11 +27,12 @@ physics:
 {
   producers:
   {
-    crtstrips:     @local::crtstriphitproducer_sbnd
-    crtclustering: @local::crtclusterproducer_sbnd
+    crtstrips:      @local::crtstriphitproducer_sbnd
+    crtclustering:  @local::crtclusterproducer_sbnd
+    crtspacepoints: @local::crtspacepointproducer_sbnd
   }
 
-  reco:    [ crtstrips, crtclustering ]
+  reco:    [ crtstrips, crtclustering, crtspacepoints ]
   stream1: [ out1 ]
 
   trigger_paths: [ reco ]

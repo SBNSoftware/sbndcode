@@ -27,7 +27,7 @@ physics:
 {
   producers:
   {
-    crtclustering:   @local::crtclusterproducer_sbnd
+    crtclustering: @local::crtclusterproducer_sbnd
   }
 
   reco:    [ crtclustering ]

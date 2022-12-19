@@ -2,7 +2,7 @@
 #include "rootoutput_sbnd.fcl"
 #include "crtrecoproducers_sbnd.fcl"
 
-process_name: CRTStripHitReco
+process_name: CRTSpacePointReco
 
 services:
 {
@@ -27,10 +27,10 @@ physics:
 {
   producers:
   {
-    crtstrips: @local::crtstriphitproducer_sbnd
+    crtspacepoints: @local::crtspacepointproducer_sbnd
   }
 
-  reco:    [ crtstrips ]
+  reco:    [ crtspacepoints ]
   stream1: [ out1 ]
 
   trigger_paths: [ reco ]
