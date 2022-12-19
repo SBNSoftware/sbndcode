@@ -64,9 +64,9 @@ void BasicClusterVariables()
                              {"sh_saturated","sh_saturated", ";;Strip Hits",
                               2, 0, 2, plotcolour, {"Not Saturated", "Saturated"}, "", true},
                              {"sh_completeness","sh_truth_completeness", ";Completeness;Strip Hits",
-                              50, 0, 1, plotcolour},
+                              50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
                              {"sh_purity","sh_truth_purity", ";Purity;Strip Hits",
-                              50, 0, 1, plotcolour},
+                              50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
                              {"cl_ts0","cl_ts0", ";Ts0 [ns];Clusters",
                               120, 0, 1.2e9, plotcolour},
                              {"cl_ts1","cl_ts1", ";Ts1 [ns];Clusters",
@@ -76,16 +76,16 @@ void BasicClusterVariables()
                              {"cl_threed","cl_threed", ";;Clusters",
                               2, 0, 2, plotcolour, {"TwoD","ThreeD"}, "", true},
                              {"cl_completeness","cl_truth_completeness", ";Completeness;Clusters",
-                              50, 0, 1, plotcolour},
+                              50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
                              {"cl_purity","cl_truth_purity", ";Purity;Clusters",
-                              50, 0, 1, plotcolour},
+                              50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
   };
 
   std::vector<plttwod> twodplots = {
     {"cl_completeness_nhits","cl_nhits:cl_truth_completeness", ";Completeness;Hits per cluster;Clusters",
-     50, 0, 1, 10, 0, 10},
+     50, 0, 1 + std::numeric_limits<double>::epsilon(), 10, 0, 10},
     {"cl_purity_nhits","cl_nhits:cl_truth_purity", ";Purity;Hits per cluster;Clusters",
-     50, 0, 1, 10, 0, 10},
+     50, 0, 1 + std::numeric_limits<double>::epsilon(), 10, 0, 10},
   };
 
   gSystem->Exec("mkdir -p " + saveDir);                                                                                                                                                                
