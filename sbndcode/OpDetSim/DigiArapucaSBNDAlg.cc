@@ -33,7 +33,8 @@ namespace opdet {
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.ArapucaDataFile, fname);
-    TFile* file = TFile::Open(fname.c_str(), "READ");
+    // TFile* file = TFile::Open(fname.c_str(), "READ");
+    TFile* file = TFile::Open("/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/new_digi_arapuca_sbnd.root", "READ");//temporarly patch
     //Note: TPB time now implemented at digitization module for both coated pmts and (x)arapucas
     //OpDetSim/digi_arapuca_sbnd.root updated in sbnd_data (now including the TPB times vector)
 
@@ -56,13 +57,17 @@ namespace opdet {
   
     if(fParams.ArapucaSinglePEmodel) {
       mf::LogDebug("DigiArapucaSBNDAlg") << " using testbench pe response";
-      TFile* file =  TFile::Open(fname.c_str(), "READ");
+      // TFile* file =  TFile::Open(fname.c_str(), "READ");
+      TFile* file = TFile::Open("/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/new_digi_arapuca_sbnd.root", "READ");//temporarly patch
       std::vector<double>* SinglePEVec_40ftCable_Daphne;
       std::vector<double>* SinglePEVec_40ftCable_Apsaia;
       file->GetObject("SinglePEVec_40ftCable_Apsaia", SinglePEVec_40ftCable_Apsaia);
       file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_40ftCable_Daphne);
       fWaveformSP = *SinglePEVec_40ftCable_Apsaia;
       fWaveformSP_Daphne = *SinglePEVec_40ftCable_Daphne;
+      
+      std::cout<<"~rodrigoa: testing......"<<std::endl;
+      produceSER_HD(fWaveformSP_Daphne_HD,fWaveformSP_Daphne);
     }  
     else{
       mf::LogDebug("DigiArapucaSBNDAlg") << " using ideal pe response";
@@ -126,10 +131,12 @@ namespace opdet {
           if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
+          size_t timeBin_HD = (is_daphne) ? std::floor(10*tphoton * fSampling_Daphne) : std::floor(10*tphoton * fSampling);//get first decimal of the bin
+          size_t wvf_shift  = timeBin_HD%10;
           if(timeBin < wave.size()) {
             if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);}
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne_HD[wvf_shift], nCT);}
           }
         }
       }
@@ -142,10 +149,12 @@ namespace opdet {
           if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
+          size_t timeBin_HD = (is_daphne) ? std::floor(10*tphoton * fSampling_Daphne) : std::floor(10*tphoton * fSampling);//get first decimal of the bin
+          size_t wvf_shift  = timeBin_HD%10;
           if(timeBin < wave.size()) {
             if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne_HD[wvf_shift], nCT);
             }
           }
         }
@@ -158,7 +167,7 @@ namespace opdet {
     if(fParams.DarkNoiseRate > 0.0)
     {
       if (!is_daphne) AddDarkNoise(wave,fWaveformSP);
-      else            AddDarkNoise(wave,fWaveformSP_Daphne);
+      else            AddDarkNoise(wave,fWaveformSP_Daphne_HD[0]);
     } 
     CreateSaturation(wave);
   }
@@ -186,7 +195,7 @@ namespace opdet {
     if(fParams.DarkNoiseRate > 0.0)
     {
       if (!is_daphne) AddDarkNoise(wave,fWaveformSP);
-      else            AddDarkNoise(wave,fWaveformSP_Daphne);
+      else            AddDarkNoise(wave,fWaveformSP_Daphne_HD[0]);
     } 
 
     CreateSaturation(wave);
@@ -220,11 +229,13 @@ namespace opdet {
         if(fParams.CrossTalk > 0.0 &&
            fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
+          size_t timeBin_HD = (is_daphne) ? std::floor(10*tphoton * fSampling_Daphne) : std::floor(10*tphoton * fSampling);//get first decimal of the bin
+          size_t wvf_shift  = timeBin_HD%10;
           if(timeBin < wave.size()) {
             // P_truth=P_truth+nCT;
             if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);}
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne_HD[wvf_shift], nCT);}
           }
       }
     }
@@ -255,11 +266,13 @@ namespace opdet {
         if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
+          size_t timeBin_HD = (is_daphne) ? std::floor(10*tphoton * fSampling_Daphne) : std::floor(10*tphoton * fSampling);//get first decimal of the bin
+          size_t wvf_shift  = timeBin_HD%10;
           if(timeBin < wave.size()) {
             // P_truth=P_truth+nCT;
             if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne, nCT);}
+            else{ AddSPE(timeBin, wave, fWaveformSP_Daphne_HD[wvf_shift], nCT);}
           }
       }
     }
@@ -406,4 +419,16 @@ namespace opdet {
     return std::make_unique<DigiArapucaSBNDAlg>(params);
   } // DigiArapucaSBNDAlgMaker::create()
 
+  void DigiArapucaSBNDAlg::produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER)
+  {
+      int N=10; //TODO: sget the resolution factor(RF) from fcl file ~rodrigoa
+      for(int i=1; i<N;i++)SER_HD[i%N].push_back(0);
+
+      for(int i=0; i < (int)SER.size(); i++)
+      {
+        if (i%N == 0)SER_HD[i%N].push_back(SER.at(i)); //prepare xRF SPEs from higher sampling rate estimation
+        else SER_HD[N-i%N].push_back(SER.at(i));
+      }
+      SER_HD[0].push_back(0);//add an extra 0 to the first vector, so all of them have the same size (prevents issues at deconvolution stage)
+  }
 }
