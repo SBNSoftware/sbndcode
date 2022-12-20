@@ -44,11 +44,25 @@ namespace sbnd::crt {
 
     CRTSpacePoint CharacteriseSingleHitCluster(const art::Ptr<CRTCluster> &cluster, const art::Ptr<CRTStripHit> &stripHit);
 
+    CRTSpacePoint CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits);
+
+    double ADCToPE(const uint16_t channel, const uint16_t adc1, const uint16_t adc2);
+
     double ADCToPE(const uint16_t channel, const uint16_t adc);
+
+    std::array<double, 6> FindOverlap(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1);
+
+    void CentralPosition(const std::array<double, 6> overlap, TVector3 &pos, TVector3 &err);
+
+    double ReconstructPE(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos);
+
+    double ReconstructPE(const art::Ptr<CRTStripHit> &hit, const double dist);
 
   private:
 
     CRTGeoAlg fCRTGeoAlg;
+
+    double fPEAttenuation;
   };
 }
 

@@ -1,3 +1,5 @@
+#include "crtsimmodules_sbnd.fcl"
+
 BEGIN_PROLOG
 
 crtstriphitproducer_sbnd:
@@ -16,6 +18,11 @@ crtclusterproducer_sbnd:
 
 crtspacepointproducer_sbnd:
 {
+   ClusterCharacterisationAlg:
+   {   
+       PEAttenuation: @local::sbnd_crtsim.DetSimParams.NpeScaleShift
+   }
+   
    ClusterModuleLabel: "crtclustering"
    module_type:        "sbndcode/CRT/CRTReco/CRTSpacePointProducer"
 }

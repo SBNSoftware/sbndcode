@@ -383,6 +383,14 @@ namespace sbnd::crt {
     return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
   }
 
+  bool CRTGeoAlg::CheckOverlap(const uint16_t channel1, const uint16_t channel2)
+  {
+    CRTStripGeo strip1 = GetStrip(channel1);
+    CRTStripGeo strip2 = GetStrip(channel2);
+
+    return CheckOverlap(strip1, strip2);
+  }
+
   bool CRTGeoAlg::DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2)
   {
     const CRTModuleGeo module1 = GetModule(strip1.moduleName);
