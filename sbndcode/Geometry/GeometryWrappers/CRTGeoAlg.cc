@@ -9,7 +9,8 @@ namespace sbnd::crt {
 
   CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry, 
                        geo::AuxDetGeometryCore const *auxdet_geometry)
-    : fCableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
+    : fT0CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T0CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
+    , fT1CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T1CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
     , fSiPMPedestalsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestals", std::vector<std::pair<unsigned, double>>()))
     , fSiPMGainsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMGains", std::vector<std::pair<unsigned, double>>()))
     , fChannelInversionVector(p.get<std::vector<std::pair<unsigned, bool>>>("InvertedChannelOrder", std::vector<std::pair<unsigned, bool>>()))
@@ -18,8 +19,10 @@ namespace sbnd::crt {
     fAuxDetGeoCore   = auxdet_geometry;
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
 
-    fCableLengthCorrections = std::map<unsigned, double>(fCableLengthCorrectionsVector.begin(), 
-                                                         fCableLengthCorrectionsVector.end());
+    fT0CableLengthCorrections = std::map<unsigned, double>(fT0CableLengthCorrectionsVector.begin(), 
+                                                           fT0CableLengthCorrectionsVector.end());
+    fT1CableLengthCorrections = std::map<unsigned, double>(fT1CableLengthCorrectionsVector.begin(), 
+                                                           fT1CableLengthCorrectionsVector.end());
     fSiPMPedestals          = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), 
                                                          fSiPMPedestalsVector.end());
     fSiPMGains              = std::map<unsigned, double>(fSiPMGainsVector.begin(), 
@@ -80,11 +83,14 @@ namespace sbnd::crt {
             const bool invert = fChannelInversion.size() ? fChannelInversion.at(ad_i) : false;
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                const int32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
-                  fCableLengthCorrections.at(ad_i) : 0;
+                const int32_t t0CableDelayCorrection = fT0CableLengthCorrections.size() ? 
+                  fT0CableLengthCorrections.at(ad_i) : 0;
+                const int32_t t1CableDelayCorrection = fT1CableLengthCorrections.size() ? 
+                  fT1CableLengthCorrections.at(ad_i) : 0;
+
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-                                                    cableDelayCorrection, invert);
+                                                    t0CableDelayCorrection, t1CableDelayCorrection, invert);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
