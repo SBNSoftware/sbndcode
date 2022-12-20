@@ -58,11 +58,22 @@ namespace sbnd::crt {
 
     double ReconstructPE(const art::Ptr<CRTStripHit> &hit, const double dist);
 
+    double CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos);
+
+    double TimingCorrectionOffset(const double &dist, const double &pe);
+
   private:
 
     CRTGeoAlg fCRTGeoAlg;
 
+    bool fUseT1;
+
     double fPEAttenuation;
+    double fPropDelay;
+    double fTimeWalkNorm;
+    double fTimeWalkShift;
+    double fTimeWalkSigma;
+    double fTimeWalkOffset;
   };
 }
 

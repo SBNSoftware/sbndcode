@@ -1,10 +1,17 @@
+
 #include "CRTClusterCharacterisationAlg.h"
 
 namespace sbnd::crt {
   
   CRTClusterCharacterisationAlg::CRTClusterCharacterisationAlg(const fhicl::ParameterSet& pset)
     : fCRTGeoAlg(pset.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
+    , fUseT1(pset.get<bool>("UseT1", true))
     , fPEAttenuation(pset.get<double>("PEAttenuation"))
+    , fPropDelay(pset.get<double>("PropDelay"))
+    , fTimeWalkNorm(pset.get<double>("TimeWalkNorm"))
+    , fTimeWalkShift(pset.get<double>("TimeWalkShift"))
+    , fTimeWalkSigma(pset.get<double>("TimeWalkSigma"))
+    , fTimeWalkOffset(pset.get<double>("TimeWalkOffset"))
   {
   }
 
@@ -21,7 +28,7 @@ namespace sbnd::crt {
     TVector3 pos, err;
     CentralPosition(hitPos, pos, err);
 
-    return CRTSpacePoint(pos, err, pe);
+    return CRTSpacePoint(pos, err, pe, stripHit->Ts1());
   }
 
   CRTSpacePoint CRTClusterCharacterisationAlg::CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits)
@@ -38,9 +45,10 @@ namespace sbnd::crt {
             TVector3 pos, err;
             CentralPosition(overlap, pos, err);
 
-            const double pe = ReconstructPE(hit0, hit1, pos);
+            const double pe   = ReconstructPE(hit0, hit1, pos);
+            const double time = CorrectTime(hit0, hit1, pos);
 
-            return CRTSpacePoint(pos, err, pe);
+            return CRTSpacePoint(pos, err, pe, time);
           }
       }
 
@@ -99,4 +107,26 @@ namespace sbnd::crt {
 
     return pe * correction;
   }
+
+  double CRTClusterCharacterisationAlg::CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos)
+  {
+    const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0->Channel());
+    const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1->Channel());
+
+    const double pe0 = ReconstructPE(hit0, dist0);
+    const double pe1 = ReconstructPE(hit1, dist1);
+
+    const double corr0 = TimingCorrectionOffset(dist0, pe0);
+    const double corr1 = TimingCorrectionOffset(dist1, pe1);
+
+    if(fUseT1)
+      return (hit0->Ts1() - corr0 + hit1->Ts1() - corr1) / 2.;
+    else
+      return (hit0->Ts0() - corr0 + hit1->Ts0() - corr1) / 2.;
+  }
+
+  double CRTClusterCharacterisationAlg::TimingCorrectionOffset(const double &dist, const double &pe)
+  {
+    return dist * fPropDelay + fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset;
+  } 
 }
