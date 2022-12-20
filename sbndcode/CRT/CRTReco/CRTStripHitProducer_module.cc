@@ -102,8 +102,8 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   CRTModuleGeo module    = fCRTGeoAlg.GetModule(mac5 * 32);
 
   // Correct for FEB readout cable length
-  uint32_t t0 = data->Ts0() + module.cableDelayCorrection;
-  uint32_t t1 = data->Ts1() + module.cableDelayCorrection;
+  uint32_t t0 = data->Ts0() + module.t0CableDelayCorrection;
+  uint32_t t1 = data->Ts1() + module.t1CableDelayCorrection;
 
   // Iterate via strip (2 SiPMs per strip)
   const auto &sipm_adcs = data->ADC();
