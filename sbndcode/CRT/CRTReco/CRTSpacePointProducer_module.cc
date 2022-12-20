@@ -76,10 +76,15 @@ void sbnd::crt::CRTSpacePointProducer::produce(art::Event& e)
           spacePointVec->push_back(spacepoint);
           util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
         }
-
-      if(nhits == 2)
+      else if(nhits == 2)
         {
           CRTSpacePoint spacepoint = fClusterCharacAlg.CharacteriseDoubleHitCluster(cluster, stripHits);
+          spacePointVec->push_back(spacepoint);
+          util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
+        }
+      else
+        {
+          CRTSpacePoint spacepoint;
           spacePointVec->push_back(spacepoint);
           util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
         }
