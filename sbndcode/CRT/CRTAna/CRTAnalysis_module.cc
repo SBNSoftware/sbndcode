@@ -22,6 +22,7 @@
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
@@ -53,7 +54,7 @@ public:
 
   void AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec);
 
-  void AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec);  
+  void AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints);
 
 private:
 
@@ -61,7 +62,7 @@ private:
   CRTBackTrackerAlg fCRTBackTrackerAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
-    fCRTClusterModuleLabel;
+    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel;
   bool fDebug;
 
   TTree* fTree;
@@ -137,6 +138,14 @@ private:
   std::vector<double>   _cl_truth_purity;
   std::vector<double>   _cl_truth_hit_completeness;
   std::vector<double>   _cl_truth_hit_purity;
+  std::vector<double>   _cl_sp_x;
+  std::vector<double>   _cl_sp_ex;
+  std::vector<double>   _cl_sp_y;
+  std::vector<double>   _cl_sp_ey;
+  std::vector<double>   _cl_sp_z;
+  std::vector<double>   _cl_sp_ez;
+  std::vector<double>   _cl_sp_pe;
+  std::vector<double>   _cl_sp_time;
 };
 
 
@@ -145,12 +154,13 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
   {
-    fMCParticleModuleLabel  = p.get<std::string>("MCParticleModuleLabel", "largeant");
-    fSimDepositModuleLabel  = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
-    fFEBDataModuleLabel     = p.get<std::string>("FEBDataModuleLabel", "crtsim");
-    fCRTStripHitModuleLabel = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
-    fCRTClusterModuleLabel  = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
-    fDebug                  = p.get<bool>("Debug", false);
+    fMCParticleModuleLabel    = p.get<std::string>("MCParticleModuleLabel", "largeant");
+    fSimDepositModuleLabel    = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
+    fFEBDataModuleLabel       = p.get<std::string>("FEBDataModuleLabel", "crtsim");
+    fCRTStripHitModuleLabel   = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
+    fCRTClusterModuleLabel    = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
+    fCRTSpacePointModuleLabel = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
+    fDebug                    = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
 
@@ -224,6 +234,14 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_truth_purity", "std::vector<double>", &_cl_truth_purity);
     fTree->Branch("cl_truth_hit_completeness", "std::vector<double>", &_cl_truth_hit_completeness);
     fTree->Branch("cl_truth_hit_purity", "std::vector<double>", &_cl_truth_hit_purity);
+    fTree->Branch("cl_sp_x", "std::vector<double>", &_cl_sp_x);
+    fTree->Branch("cl_sp_ex", "std::vector<double>", &_cl_sp_ex);
+    fTree->Branch("cl_sp_y", "std::vector<double>", &_cl_sp_y);
+    fTree->Branch("cl_sp_ey", "std::vector<double>", &_cl_sp_ey);
+    fTree->Branch("cl_sp_z", "std::vector<double>", &_cl_sp_z);
+    fTree->Branch("cl_sp_ez", "std::vector<double>", &_cl_sp_ez);
+    fTree->Branch("cl_sp_pe", "std::vector<double>", &_cl_sp_pe);
+    fTree->Branch("cl_sp_time", "std::vector<double>", &_cl_sp_time);
 
     if(fDebug)
       {
@@ -327,8 +345,11 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   std::vector<art::Ptr<CRTCluster>> CRTClusterVec;
   art::fill_ptr_vector(CRTClusterVec, CRTClusterHandle);
 
+  // Get CRTSpacePoint to CRTCluster Assns
+  art::FindManyP<CRTSpacePoint> clustersToSpacePoints(CRTClusterHandle, e, fCRTSpacePointModuleLabel);
+
   // Fill CRTCluster variables
-  AnalyseCRTClusters(e, CRTClusterVec);
+  AnalyseCRTClusters(e, CRTClusterVec, clustersToSpacePoints);
 
   // Fill the Tree
   fTree->Fill();
@@ -507,7 +528,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec)
+void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints)
 {
   unsigned nClusters = CRTClusterVec.size();
 
@@ -522,11 +543,19 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_truth_purity.resize(nClusters);
   _cl_truth_hit_completeness.resize(nClusters);
   _cl_truth_hit_purity.resize(nClusters);
+  _cl_sp_x.resize(nClusters);
+  _cl_sp_ex.resize(nClusters);
+  _cl_sp_y.resize(nClusters);
+  _cl_sp_ey.resize(nClusters);
+  _cl_sp_z.resize(nClusters);
+  _cl_sp_ez.resize(nClusters);
+  _cl_sp_pe.resize(nClusters);
+  _cl_sp_time.resize(nClusters);
 
   for(unsigned i = 0; i < nClusters; ++i)
     {
       auto cluster = CRTClusterVec[i];
-      
+
       _cl_ts0[i]    = cluster->Ts0();
       _cl_ts1[i]    = cluster->Ts1();
       _cl_unixs[i]  = cluster->UnixS();
@@ -540,6 +569,19 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_truth_purity[i]           = truthMatch.purity;
       _cl_truth_hit_completeness[i] = truthMatch.hitcompleteness;
       _cl_truth_hit_purity[i]       = truthMatch.hitpurity;
+
+      auto spacepoints = clustersToSpacePoints.at(cluster.key());
+      if(spacepoints.size() != 1) { std::cout << "nSpacePoints != 1" << std::endl; return; }
+      auto spacepoint = spacepoints[0];
+      
+      _cl_sp_x[i]    = spacepoint->X();
+      _cl_sp_ex[i]   = spacepoint->XErr();
+      _cl_sp_y[i]    = spacepoint->Y();
+      _cl_sp_ey[i]   = spacepoint->YErr();
+      _cl_sp_z[i]    = spacepoint->Z();
+      _cl_sp_ez[i]   = spacepoint->ZErr();
+      _cl_sp_pe[i]   = spacepoint->PE();
+      _cl_sp_time[i] = spacepoint->Time();
     }
 }
 
