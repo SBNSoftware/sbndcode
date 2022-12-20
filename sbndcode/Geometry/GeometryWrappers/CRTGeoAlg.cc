@@ -11,7 +11,9 @@ namespace sbnd::crt {
                        geo::AuxDetGeometryCore const *auxdet_geometry)
     : fT0CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T0CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
     , fT1CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T1CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
+    , fDefaultPedestal(p.get<double>("DefaultPedestal", 0.))
     , fSiPMPedestalsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestals", std::vector<std::pair<unsigned, double>>()))
+    , fDefaultGain(p.get<double>("DefaultGain", 0.025))
     , fSiPMGainsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMGains", std::vector<std::pair<unsigned, double>>()))
     , fChannelInversionVector(p.get<std::vector<std::pair<unsigned, bool>>>("InvertedChannelOrder", std::vector<std::pair<unsigned, bool>>()))
   {
@@ -125,11 +127,11 @@ namespace sbnd::crt {
             double sipm1XYZWorld[3];
             auxDetSensitive.LocalToWorld(sipm1XYZ, sipm1XYZWorld);
 
-            const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : 0;
-            const uint32_t pedestal1 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel1) : 0;
+            const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : fDefaultPedestal;
+            const uint32_t pedestal1 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel1) : fDefaultPedestal;
 
-            const uint32_t gain0 = fSiPMGains.size() ? fSiPMGains.at(channel0) : 0;
-            const uint32_t gain1 = fSiPMGains.size() ? fSiPMGains.at(channel1) : 0;
+            const double gain0 = fSiPMGains.size() ? fSiPMGains.at(channel0) : fDefaultGain;
+            const double gain1 = fSiPMGains.size() ? fSiPMGains.at(channel1) : fDefaultGain;
 
             // Fill SiPM information
             CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0);

@@ -339,8 +339,10 @@ namespace sbnd::crt {
     std::map<unsigned, double>               fT0CableLengthCorrections;
     std::vector<std::pair<unsigned, double>> fT1CableLengthCorrectionsVector;
     std::map<unsigned, double>               fT1CableLengthCorrections;
+    double                                   fDefaultPedestal;
     std::vector<std::pair<unsigned, double>> fSiPMPedestalsVector;
     std::map<unsigned, double>               fSiPMPedestals;
+    double                                   fDefaultGain;
     std::vector<std::pair<unsigned, double>> fSiPMGainsVector;
     std::map<unsigned, double>               fSiPMGains;
     std::vector<std::pair<unsigned, bool>>   fChannelInversionVector;
