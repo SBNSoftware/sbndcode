@@ -1,0 +1,295 @@
+#
+# File:    photpropservices_sbnd.fcl
+# Purpose: Configuration of services related to the optical detectors.
+#
+# Currently provides:
+# * `sbnd_photonvisibilityservice`: default configuration of
+#     `PhotonVisibilityService` used in higher level standard scripts
+#     (defined at the bottom of this configuration file)
+# * `sbnd_photonvisibilityservice_sbnd_v2`: legacy configuration
+#     for use with geometry `sbnd_v2`
+#     (e.g. `sbnd_geometry_services_legacy_sbnd_v2`)
+# * `sbnd_photonvisibilityservice_direct`: configuration of
+#     `PhotonVisibilityService` using a photon visibility library and no mapping
+# * `sbnd_photonvisibilityservice_mapped`: configuration of
+#     `PhotonVisibilityService` using a single cryostat photon visibility
+#     library and a mapping
+# * `sbnd_photonvisibilityservice_mapped_oldPMTmap`: configuration of
+#     `PhotonVisibilityService` using a single cryostat photon visibility
+#     library and a library mapping, for use with the old PMT channel mapping
+# * `sbnd_photonvisibilityservice_2018`: configuration of
+#     `PhotonVisibilityService` using the photon library tagged 20180801
+#     library and a library mapping, for use with the old PMT channel mapping
+#
+
+
+#include "photpropservices.fcl"
+#include "photon_propogation_timing_sbnd.fcl"
+
+
+BEGIN_PROLOG
+
+
+#################################################################################
+#
+# Geometry coordinates for different library files and geometries
+#
+# Each configuration includes the library file version (e.g. 20201209)
+# and the geometry name (e.g. `sbnd_v3`)
+#
+sbnd_photonlibrary_coordinates_20201209_sbndv2: {
+  LibraryFile:      "PhotonLibrary/PhotonLibrary-20201209.root"
+
+  # this stuff is also included in the metadata
+  XMin: -405.0  # cm
+  XMax:  -35.0  # cm
+  YMin: -215.0  # cm
+  YMax:  170.0  # cm
+  ZMin: -985.0  # cm
+  ZMax:  985.0  # cm
+  
+} # sbnd_photonlibrary_coordinates_sbndv2
+
+
+sbnd_photonlibrary_coordinates_20201209_sbndv3: {
+  LibraryFile:      "PhotonLibrary/PhotonLibrary-20201209.root"
+
+  # this stuff is also included in the metadata;
+  # modified for sbnd_v3 geometry (metadata in sbnd_data v09_26_01 and earlier encodes sbnd_v2)
+  XMin: -395.0  # cm
+  XMax:  -25.0  # cm
+  YMin: -215.0  # cm
+  YMax:  170.0  # cm
+  ZMin: -985.0  # cm
+  ZMax:  985.0  # cm
+
+} # sbnd_photonlibrary_coordinates_20201209_sbndv3
+
+
+################################################################################
+#
+# PhotonVisibilityService configuration
+#
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::sbnd_photonvisibilityservice_direct
+#     
+#
+sbnd_photonvisibilityservice_direct: {
+  
+  @table::photon_propagation_timing_sbnd # from photon_propogation_timing_sbnd.fcl
+  
+  LibraryFile:      "PhotonLibrary/PhotonLibrary-20201209.root"
+  UseCryoBoundary:  false
+  DoNotLoadLibrary: false
+  
+  # coordinates are hard-coded and delegated to:
+  @table::sbnd_photonlibrary_coordinates_20201209_sbndv3
+  NX:     74
+  NY:     77
+  NZ:    394
+
+  IncludePropTime: true
+  
+} # sbnd_photonvisibilityservice_direct
+
+
+###
+###  Configuration for first cryostat library and mapping to the other one
+###
+#
+# This is the configuration expected to work correctly with the current version
+# of the software.
+# 
+# This configuration is used for photon visibility library: 20200925.
+# The "mapped" in the name refers to the mapping from the first cryostat to
+# the second one.
+#
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::sbnd_photonvisibilityservice_mapped
+#     
+sbnd_photonvisibilityservice_mapped: {
+  @table::sbnd_photonvisibilityservice_direct
+  
+  Mapping: {
+    tool_type: SBNDPhotonMappingTransformations
+  } # Mapping
+
+} # sbnd_photonvisibilityservice_mapped
+
+
+
+###############################################################################
+###
+### Legacy configurations
+###
+# ----------------------------------------------------------------------------
+#
+# This configuration should be used with samples processed with sbnd_v2
+# geometry, that was the default for sbndcode versions 
+#
+
+sbnd_photonvisibilityservice_sbnd_v2: {
+  
+  @table::photon_propagation_timing_sbnd # from photon_propogation_timing_sbnd.fcl
+  
+  LibraryFile:      "PhotonLibrary/PhotonLibrary-20201209.root"
+  UseCryoBoundary:  false
+  DoNotLoadLibrary: false
+  
+  # coordinates are hard-coded and delegated to:
+  @table::sbnd_photonlibrary_coordinates_20201209_sbndv2
+  NX:     74
+  NY:     77
+  NZ:    394
+
+  IncludePropTime: true
+  
+  Mapping: {
+    tool_type: SBNDPhotonMappingTransformations
+  } # Mapping
+ 
+} # sbnd_photonvisibilityservice_sbnd_v2
+
+
+
+# ----------------------------------------------------------------------------
+#
+# This configuration should be used with the "old" PMT channel mapping.
+# PMT channel mapping reflects the optical detector sorting.
+# This sorting was changed when moving to the split wire geometry, so that the
+# new geometry included a new TPC and PMT channel mapping.
+# For the single wire geometry, this does not apply and the old configuration
+# is needed.
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::sbnd_photonvisibilityservice_noPMTremapping
+#     
+# This configuration is almost self-contained (i.e. it would be self-contained
+# except that it relies on
+# `standard_library_vuv_prop_timing_photonvisibilityservice` which we are not
+# reproducing here).
+#
+sbnd_photonvisibilityservice_noPMTremapping: {
+
+  @table::standard_library_vuv_prop_timing_photonvisibilityservice
+
+  LibraryFile:     "PhotonLibrary/PhotonLibrary-20180801.root"
+  UseCryoBoundary: false
+  
+  XMin: -395      # Was -391 in old geometry
+  XMax: -45       # Was -41  in old geometry
+  YMin: -215.2    # Was -210 in old geometry
+  YMax:  174.8    # Was -180 in old geometry
+  ZMin: -995
+  ZMax:  965
+  NX:     70
+  NY:     78
+  NZ:    392
+
+  IncludePropTime: true
+  
+  Mapping: {
+    tool_type: SBNDPhotonMappingTransformations
+  }
+
+} # sbnd_photonvisibilityservice_noPMTremapping
+
+
+
+# ----------------------------------------------------------------------------
+#
+# It is part of `sbnd_legacy_services` configuration, and it should not
+# be used by itself since it requires a specific geometry and channel mapping.
+# Use as:
+#     
+#     services: @local::sbnd_legacy_services
+#     
+# This configuration is almost frozen (i.e. it would be frozen except that it
+# relies on `standard_library_vuv_prop_timing_photonvisibilityservice` which
+# we are not reproducing here).
+#
+sbnd_legacy_photonvisibilityservice_v08_50_00: @local::sbnd_photonvisibilityservice_noPMTremapping
+
+
+
+# ----------------------------------------------------------------------------
+#
+# For the single wire geometry, this does not apply and the legac...ier
+# configuration is needed.
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::sbnd_photonvisibilityservice_2018
+#     
+# This configuration is almost self-contained (i.e. it would be self-contained
+# except that it relies on
+# `standard_library_vuv_prop_timing_photonvisibilityservice` which we are not
+# reproducing here).
+#
+sbnd_photonvisibilityservice_2018: {
+  @table::standard_library_vuv_prop_timing_photonvisibilityservice # TODO copy the old configuration from LArSoft into SBND and refer it here
+
+  LibraryFile:     "PhotonLibrary/PhotonLibrary-20180801.root"
+  UseCryoBoundary: false
+  
+  XMin: -395      # Was -391 in old geometry
+  XMax: -45       # Was -41  in old geometry
+  YMin: -215.2    # Was -210 in old geometry
+  YMax:  174.8    # Was -180 in old geometry
+  ZMin: -995
+  ZMax:  965
+  NX:     70
+  NY:     78
+  NZ:    392
+
+  IncludePropTime: true
+  
+  Mapping: {
+    tool_type: SBNDPhotonMappingTransformations
+    
+    # use this mapping only with photon visibility maps generated before
+    # v08_50_01 when using split wire geometry;
+    # it expresses that the values in the photon map for the library channel c
+    # it now should be associated to channel CryostatChannelRemap[c] instead
+    CryostatChannelRemap: [
+      
+      179,  89, 178,  88, 177,  87, 176,  86, 175,  85, 174,  84, 173,  83, 172,
+       82, 171,  81, 170,  80, 169,  79, 168,  78, 167,  77, 166,  76, 165,  75,
+      164,  74, 163,  73, 162,  72, 161,  71, 160,  70, 159,  69, 158,  68, 157,
+       67, 156,  66, 155,  65, 154,  64, 153,  63, 152,  62, 151,  61, 150,  60,
+      149,  59, 148,  58, 147,  57, 146,  56, 145,  55, 144,  54, 143,  53, 142,
+       52, 141,  51, 140,  50, 139,  49, 138,  48, 137,  47, 136,  46, 135,  45,
+      134,  44, 133,  43, 132,  42, 131,  41, 130,  40, 129,  39, 128,  38, 127,
+       37, 126,  36, 125,  35, 124,  34, 123,  33, 122,  32, 121,  31, 120,  30,
+      119,  29, 118,  28, 117,  27, 116,  26, 115,  25, 114,  24, 113,  23, 112,
+       22, 111,  21, 110,  20, 109,  19, 108,  18, 107,  17, 106,  16, 105,  15,
+      104,  14, 103,  13, 102,  12, 101,  11, 100,  10,  99,   9,  98,   8,  97,
+        7,  96,   6,  95,   5,  94,   4,  93,   3,  92,   2,  91,   1,  90,   0
+      
+    ]
+    
+  } # Mapping
+
+} # sbnd_photonvisibilityservice_2018
+
+
+
+###############################################################################
+###
+### Default configuration
+###
+#
+# This is the configuration used by the "standard" SBND job configurations.
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::sbnd_photonvisibilityservice
+#     
+#
+sbnd_photonvisibilityservice: @local::sbnd_photonvisibilityservice_mapped
+
+
+###############################################################################
+
+
+END_PROLOG

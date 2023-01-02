@@ -1,0 +1,15 @@
+<lcgdict>
+  
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  <!-- sbnd::timing::PMTWaveformTimeCorrection -->
+  <class name="sbnd::timing::PMTWaveformTimeCorrection" ClassVersion="11" >
+   <version ClassVersion="11" checksum="849345931"/>
+   <version ClassVersion="10" checksum="1609503266"/>
+  </class>
+
+  <class name="art::Ptr<sbnd::timing::PMTWaveformTimeCorrection>"/>
+  <class name="std::vector<sbnd::timing::PMTWaveformTimeCorrection>"/>
+  <class name="art::Wrapper<std::vector<sbnd::timing::PMTWaveformTimeCorrection> >"/>
+
+  
+</lcgdict>

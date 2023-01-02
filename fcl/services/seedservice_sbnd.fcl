@@ -1,0 +1,60 @@
+#
+# File:    seedservice_sbnd.fcl
+# Purpose: preset configurations for random number generator seeds in SBND.
+# Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
+# Date:    September 9, 2022
+#
+# A "standard" configuration for SBND random number generators is defined:
+#     
+#     services.NuRandomService: @local::sbnd_default_NuRandomService
+#     
+# includes it in a job configuration.
+#
+# This configuration file includes all the presets from LArSoft, and it adds
+# one with per-event seed policy but with a fallback policy as described in
+# LArSoft Redmine issue #26116 and sbndcode issues #243.
+# 
+# This configuration should be good enough for all applications.
+#
+
+#include "seedservice.fcl"
+
+BEGIN_PROLOG
+#-------------------------------------------------------------------------------
+
+## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Per-event with random fallback
+#
+# This policy guarantees reproducibility for all random numbers used while
+# processing an event, just like the perEvent policy does.
+# In addition, it explicitly assigns an unreproducible random number sequence
+# for use before the first event is encountered (as for example in a generator
+# randomly selecting before the job starts which pools to extract pre-generated
+# events from, like the CORSIKA implementation in LArSoft does).
+# 
+# In practice, there may be some way to reproduce also the "unreproducible"
+# random sequence by setting the master seed to the value printed by the job;
+# although the success of this process also depends on providing the exact input
+# data file sequence to the job, which can't be guaranteed when SAM is feeding
+# the input.
+#
+per_event_with_random_fallback_NuRandomService: {
+  
+  @table::per_event_NuRandomService
+  
+  initSeedPolicy: { policy: "random" }
+  
+} # per_event_with_random_fallback_NuRandomService
+
+
+## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# SBND "default" seed configuration
+#
+# If there are no specific needs, this is the configuration that should be used.
+#
+
+sbnd_default_NuRandomService: @local::per_event_with_random_fallback_NuRandomService
+
+
+#-------------------------------------------------------------------------------
+END_PROLOG

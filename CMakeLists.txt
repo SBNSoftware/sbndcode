@@ -17,6 +17,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.62.00.02)
 find_package(cetmodules REQUIRED)
+
 project(sbndcode LANGUAGES CXX)
 
 # for CI:
@@ -97,6 +98,9 @@ add_subdirectory(sbndcode)
 add_subdirectory(test)
 # subdirectory for scripts
 add_subdirectory(bin)
+
+# Top level fcl files.
+add_subdirectory(fcl)
 
 # packaging utility
 

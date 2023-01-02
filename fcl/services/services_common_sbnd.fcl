@@ -1,0 +1,184 @@
+#
+# File:    services_common_sbnd.fcl
+# Purpose: presets for service configurations for non-simulation jobs.
+#
+# The configuration presets can be used as a starting point, with more services added,
+# some removed, and some configuration amended or rewritten.
+# A complete example of these cases:
+#
+#     services: {
+#
+#         @table::sbnd_common_services  # include all SBND basic services
+#
+#         # rewrite the configuration of a service:
+#         messages: @local::sbnd_message_services_prod
+#
+#         # rewrite the configuration of a service explicitly:
+#         TFileService: {
+#           fileName: "TreeFile.root"
+#         }
+#
+#         # add a set of services
+#         @table::sbnd_backtracking_services
+#
+#         # remove a service
+#         TimeTracker: @erase
+#
+#     } # services
+#
+#     # amend a single configuration parameter of a service
+#     services.NuRandomService.policy: "random"
+#
+#
+# Available configurations:
+#
+# * `sbnd_common_services`: minimal set of art + LArSoft services
+# * `sbnd_wirecalibration_services`: for signal processing and TPC wire signal
+#      calibration
+#
+#
+
+#include "seedservice_sbnd.fcl"
+#include "magfield_larsoft.fcl"
+
+#include "services_basic_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+#include "correctionservices_sbnd.fcl"
+#include "calibrationservices_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+BEGIN_PROLOG
+
+
+################################################################################
+###  sbnd_art_services
+###
+#
+# A set of basic art services you never want to be without.
+# Includes:
+#  * resource monitoring (`TimeTracker`, `MemoryTracker`)
+#  * message facility, with interactive (non-debug) configuration
+#
+# Although you may want to use different message facility service settings.
+#
+sbnd_art_services: {
+
+  scheduler:   { defaultExceptions: false }    # Make all uncaught exceptions fatal.
+
+  message:     @local::sbnd_basic_services.message # from `services_basic_sbnd.fcl`
+
+  TimeTracker: {
+    printSummary: true
+    dbOutput: {
+      filename:  "TimingReport.db"
+      overwrite: true
+    }
+  }
+  MemoryTracker: {
+    dbOutput: {
+      filename:  "MemoryReport.db"
+      overwrite: true
+    }
+  }
+
+  DuplicateEventTracker: {}
+
+} # sbnd_art_services
+
+
+################################################################################
+###  sbnd_random_services
+###
+#
+# Standard SBND configuration of random number related services.
+#
+sbnd_random_services:
+{
+    RandomNumberGenerator:               {}
+    NuRandomService:                     @local::sbnd_default_NuRandomService  # seedservice_sbnd.fcl
+
+} # sbnd_random_services
+
+
+################################################################################
+###  sbnd_minimum_services
+###
+#
+# Standard SBND configuration of the minimum needed services, including
+# message service, art services, geometry and properties,
+# but not calibration services.
+#
+sbnd_minimum_services:
+{
+    @table::sbnd_art_services
+
+    # Load the service that manages root files for histograms.
+    TFileService:                        { fileName: "Supplemental-%ifb_%tc-%p.root" }
+
+    FileCatalogMetadata:                 @local::art_file_catalog_mc
+
+                                         @table::sbnd_basic_services
+
+} # sbnd_common_services
+
+
+################################################################################
+###  sbnd_common_services
+###
+#
+# Standard SBND configuration of common services, including message service,
+# art services, geometry and properties, but not calibration services.
+#
+sbnd_common_services:
+{
+    @table::sbnd_minimum_services
+
+    @table::sbnd_random_services
+
+} # sbnd_common_services
+
+
+################################################################################
+###  sbnd_wirecalibration_minimum_services
+###
+#
+# Standard SBND configuration of services required for wire signal calibration
+# (usually the first step of reconstruction).
+#
+sbnd_wirecalibration_minimum_services: {
+
+                                    @table::sbnd_minimum_services
+
+    SignalShapingSBNDService:     @local::sbnd_signalshapingservice
+
+                                    @table::sbnd_calibration_services
+
+} # sbnd_wirecalibration_minimum_services
+
+
+################################################################################
+###  sbnd_wirecalibration_services
+###
+#
+# Standard SBND configuration of services required for wire signal calibration
+# (usually the first step of reconstruction).
+#
+sbnd_wirecalibration_services: {
+
+                     @table::sbnd_wirecalibration_minimum_services
+
+                     @table::sbnd_random_services
+
+} # sbnd_wirecalibration_services
+
+
+################################################################################
+
+sbnd_prod_services: {
+                       @table::sbnd_common_services
+  FileCatalogMetadata: @local::art_file_catalog_mc
+} # sbnd_prod_services
+
+END_PROLOG
+
+
