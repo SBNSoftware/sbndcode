@@ -1,4 +1,5 @@
 
+add_subdirectory(Decoders)
 add_subdirectory(JobConfigurations)
 add_subdirectory(LArSoftConfigurations)
 add_subdirectory(Utilities)

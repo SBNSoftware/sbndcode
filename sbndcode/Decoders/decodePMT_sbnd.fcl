@@ -1,0 +1,136 @@
+#
+# File:    decodePMT_sbnd.fcl
+# Purpose: PMT readout fragment decoding for studies in SBND.
+# Author:  Afroditi Papadopoulou (apapadopoulou@anl.gov)
+# Date:    Jan 28, 2023
+# 
+# 
+# PMT waveform decoding is performed, extensive debugging messages are
+# included in the `debug.log` log file, and ROOT trees are produced for studies.
+# This configuration, as is, is not meant for production.
+# 
+# 
+# Input
+# ------
+# 
+# * artDAQ fragments from all 24 PMT readout boards, named
+#   `daq:ContainerCAENV1730`
+# * trigger fragment `daq:ICARUSTriggerUDP` (will be decoded as well)
+# * DAQ configuration as FHiCL in the art/ROOT input file
+# 
+# This configuration requires a data fragment for each PMT readout board
+# which is mentioned in `physics.producers.daqPMT.DecoderTool.BoardSetup`,
+# which by default is all 24.
+# 
+# 
+# Output
+# -------
+# 
+# Only new data products are written in the art/ROOT output file, including:
+# 
+# * `daqPMT` (std::vector<raw::OpDetWaveform>): decoded waveforms,
+#   with our best reconstruction for their time stamps in LArSoft reference
+# 
+# 
+# The `Trees-<InputFile>*.root` file (from `TFileService`) includes ROOT tree
+# `PMTfragments`.
+# 
+# 
+# 
+# Service configuration
+# ----------------------
+# 
+# * `DetectorClocksService` is essential to assign a correct waveform timestamp
+# * `Geometry` service bundle is required by `DetectorClocksService`
+# * `SBNDChannelMap` to relate PMT fragment IDs to channels
+# * `TFileService` used to write trees (not needed if all trees are disabled)
+# 
+#
+
+
+# ------------------------------------------------------------------------------
+#include "services_common_sbnd.fcl"
+#include "channelmapping_sbnd.fcl"
+
+#include "rootoutput_sbnd.fcl"
+#include "decoderdefs_sbnd.fcl"
+
+# ------------------------------------------------------------------------------
+process_name: DecodePMT
+
+
+# ------------------------------------------------------------------------------
+services: {
+  
+                     @table::sbnd_art_services
+  message:           @local::sbnd_message_services_interactive_debug
+  
+                     @table::sbnd_geometry_services
+  DetectorClocksService: @local::sbnd_detectorclocks
+  SBNDChannelMap: @local::sbnd_channelmappinggservice
+  
+  TFileService: { fileName: "Trees-%ifb_%tc-%p.root" }
+}
+
+
+# ------------------------------------------------------------------------------
+physics: {
+  
+  producers: {
+    
+    triggerconfig: @local::extractTriggerConfig
+    pmtconfig:     @local::extractPMTconfig
+    
+    daqTrigger:    @local::decodeTriggerV2
+    
+    daqPMT:        @local::decodePMT
+    
+  }
+  
+  decoding: [ triggerconfig, pmtconfig, daqTrigger, daqPMT ]
+  streams: [ rootoutput ]
+}
+
+
+# ------------------------------------------------------------------------------
+outputs: {
+  rootoutput: {
+                      @table::sbnd_rootoutput
+    dataTier:        "decoded"
+    fileProperties:   { maxInputFiles: 1 }
+    checkFileName:    false
+    compressionLevel: 501
+    
+    outputCommands:  [ "drop *_*_*_*", "keep *_*_*_DecodePMT" ]
+  } # rootoutput
+} # outputs 
+
+
+# ------------------------------------------------------------------------------
+
+physics.producers.daqTrigger.DecoderTool.TrigConfigLabel: triggerconfig # required
+physics.producers.daqPMT.PMTconfigTag: pmtconfig # required
+physics.producers.daqPMT.TriggerTag:   daqTrigger # required
+
+# services.Geometry.Name: sbnd_splitwires # for runs < 548x
+
+#
+# customization of PMT decoding
+#
+
+physics.producers.daqPMT.SurviveExceptions: false
+physics.producers.daqPMT.DiagnosticOutput:  true
+physics.producers.daqPMT.PacketDump:        false
+physics.producers.daqPMT.RequireKnownBoards: true
+physics.producers.daqPMT.RequireBoardConfig: true
+physics.producers.daqPMT.DataTrees: [ "PMTfragments" ]
+
+#
+# customization of trigger decoding
+#
+
+physics.producers.daqTrigger.DecoderTool.DiagnosticOutput: true
+physics.producers.daqTrigger.DecoderTool.Debug: false
+
+
+# ------------------------------------------------------------------------------
