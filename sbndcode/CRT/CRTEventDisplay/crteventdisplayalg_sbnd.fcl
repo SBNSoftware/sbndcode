@@ -1,9 +1,12 @@
 #include "crtsimmodules_sbnd.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
 
 BEGIN_PROLOG
 
 crteventdisplayalg_sbnd:
 {
+   CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
+
    SimLabel:         "largeant"
    SimDepositLabel:  "genericcrt"
    StripHitLabel:    "crtstrips"
@@ -15,7 +18,7 @@ crteventdisplayalg_sbnd:
    DrawTpc:          true
    DrawTrueTracks:   true
    DrawSimDeposits:  true
-   DrawStripHits:    false
+   DrawStripHits:    true
    DrawClusters:     true
 
    TaggerColour:             1
@@ -25,6 +28,9 @@ crteventdisplayalg_sbnd:
    StripHitColour:           4
    ClusterStartingColour:    800
    ClusterColourInterval:    20
+
+   MinTime: 250200
+   MaxTime: 250300
 
    Print:            true
 

@@ -3,6 +3,8 @@
 namespace sbnd::crt {
   
   CRTEventDisplayAlg::CRTEventDisplayAlg(const Config& config)
+    : fCRTGeoAlg(config.GeoAlgConfig())
+    , fCRTBackTrackerAlg(config.BackTrackerAlgConfig())
   {
     this->reconfigure(config);
   }
@@ -34,6 +36,9 @@ namespace sbnd::crt {
     fStripHitColour = config.StripHitColour();
     fClusterStartingColour = config.ClusterStartingColour();
     fClusterColourInterval = config.ClusterColourInterval();
+
+    fMinTime = config.MinTime();
+    fMaxTime = config.MaxTime();
 
     fPrint = config.Print();
 
@@ -104,7 +109,10 @@ namespace sbnd::crt {
   void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                                 const art::Event& event)
   {
+    fCRTBackTrackerAlg.SetupMaps(event);
+
     double G4RefTime(clockData.G4ToElecTime(0) * 1e3);
+    if(fPrint) std::cout << "G4RefTime: " << G4RefTime << std::endl;
 
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
@@ -112,7 +120,7 @@ namespace sbnd::crt {
     // Draw the CRT taggers
     if(fDrawTaggers)
       {
-        for(auto const &[name, tagger] : fCrtGeo.GetTaggers())
+        for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
           {
             double rmin[3] = {tagger.minX, 
                               tagger.minY, 
@@ -127,7 +135,7 @@ namespace sbnd::crt {
     // Draw individual CRT modules
     if(fDrawModules)
       {
-        for(auto const &[name, module] : fCrtGeo.GetModules())
+        for(auto const &[name, module] : fCRTGeoAlg.GetModules())
           {
             double rmin[3] = {module.minX, 
                               module.minY, 
@@ -142,7 +150,7 @@ namespace sbnd::crt {
     // Draw individual CRT strips
     if(fDrawStrips)
       {
-        for(auto const &[name, strip] : fCrtGeo.GetStrips())
+        for(auto const &[name, strip] : fCRTGeoAlg.GetStrips())
           {
             double rmin[3] = {strip.minX, 
                               strip.minY, 
@@ -157,38 +165,35 @@ namespace sbnd::crt {
     // Draw the TPC with central cathode
     if(fDrawTpc)
       {
-        double rmin[3] = {fTpcGeo.MinX(), 
-                          fTpcGeo.MinY(), 
-                          fTpcGeo.MinZ()};
-        double rmax[3] = {-fTpcGeo.CpaWidth(), 
-                          fTpcGeo.MaxY(), 
-                          fTpcGeo.MaxZ()};
+        double rmin[3] = {fTPCGeoAlg.MinX(), 
+                          fTPCGeoAlg.MinY(), 
+                          fTPCGeoAlg.MinZ()};
+        double rmax[3] = {-fTPCGeoAlg.CpaWidth(), 
+                          fTPCGeoAlg.MaxY(), 
+                          fTPCGeoAlg.MaxZ()};
         DrawCube(c1, rmin, rmax, fTpcColour);
-        double rmin2[3] = {fTpcGeo.CpaWidth(), 
-                           fTpcGeo.MinY(), 
-                           fTpcGeo.MinZ()};
-        double rmax2[3] = {fTpcGeo.MaxX(), 
-                           fTpcGeo.MaxY(), 
-                           fTpcGeo.MaxZ()};
+        double rmin2[3] = {fTPCGeoAlg.CpaWidth(), 
+                           fTPCGeoAlg.MinY(), 
+                           fTPCGeoAlg.MinZ()};
+        double rmax2[3] = {fTPCGeoAlg.MaxX(), 
+                           fTPCGeoAlg.MaxY(), 
+                           fTPCGeoAlg.MaxZ()};
         DrawCube(c1, rmin2, rmax2, fTpcColour);
       }
     
     // Draw true track trajectories for visible particles that cross the CRT
     if(fDrawTrueTracks)
       { 
-        if(fPrint) std::cout<<"\nTrue tracks in event:\n";
-        
         auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimLabel);
 
-        std::vector<double> crtLims = fCrtGeo.CRTLimits();
-	crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
-	crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
+        std::vector<double> crtLims = fCRTGeoAlg.CRTLimits();
+        crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
+        crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
 
         for(auto const& part : *particleHandle)
           {
-	    //	    if(std::abs(part.T()) > 2e4)
-	    if(part.T() < 8e4 || part.T() > 12e4)
-	      continue;
+            if(part.T() < fMinTime || part.T() > fMaxTime)
+              continue;
 
             size_t npts = part.NumberTrajectoryPoints();
             TPolyLine3D *line = new TPolyLine3D(npts);
@@ -218,99 +223,116 @@ namespace sbnd::crt {
             line->SetLineWidth(fLineWidth);
             line->Draw();
           
-            if(fPrint) std::cout<<"->True ID: "<<part.TrackId()<<", traj points: "<<npts<<", start = ("<<start.X()<<", "<<start.Y()<<", "
+            if(fPrint) std::cout<<"MCParticle, Track ID: " << part.TrackId() << " PDG: " << part.PdgCode() << ", traj points: "<<npts<<", start = ("<<start.X()<<", "<<start.Y()<<", "
                                 <<start.Z()<<"), end = ("<<end.X()<<", "<<end.Y()<<", "<<end.Z()<<")\n";
           }
       }
 
     if(fDrawSimDeposits)
       {
-	auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetSimChannel>>(fSimDepositLabel);
+        auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetSimChannel>>(fSimDepositLabel);
 
-	for(auto const simDep : *simDepositsHandle)
-	  {
-	    for(auto const ide : simDep.AuxDetIDEs())
-	      {
- 		double x = (ide.entryX + ide.exitX) / 2.;
-		double y = (ide.entryY + ide.exitY) / 2.;
-		double z = (ide.entryZ + ide.exitZ) / 2.;
-		double t = (ide.entryT + ide.exitT) / 2.;
+        for(auto const simDep : *simDepositsHandle)
+          {
+            for(auto const ide : simDep.AuxDetIDEs())
+              {
+                double x = (ide.entryX + ide.exitX) / 2.;
+                double y = (ide.entryY + ide.exitY) / 2.;
+                double z = (ide.entryZ + ide.exitZ) / 2.;
+                double t = (ide.entryT + ide.exitT) / 2.;
 
-		//		if(std::abs(t) > 2e4)
-		if(t < 8e4 || t > 12e4)
-		  continue;
+                if(t < fMinTime || t > fMaxTime)
+                  continue;
 
- 		double ex = std::abs(ide.entryX - ide.exitX) / 2.;
-		double ey = std::abs(ide.entryY - ide.exitY) / 2.;
-		double ez = std::abs(ide.entryZ - ide.exitZ) / 2.;
+                double ex = std::abs(ide.entryX - ide.exitX) / 2.;
+                double ey = std::abs(ide.entryY - ide.exitY) / 2.;
+                double ez = std::abs(ide.entryZ - ide.exitZ) / 2.;
 
-		double rmin[3] = { x - ex, y - ey, z - ez};
-		double rmax[3] = { x + ex, y + ey, z + ez};
+                ex = std::max(ex, 1.);
+                ey = std::max(ey, 1.);
+                ez = std::max(ez, 1.);
 
-		if(fPrint)
-		  std::cout << "Sim Energy Deposit: (" 
-			    << x << ", " << y << ", " << z << ") by trackID: " << ide.trackID << " at t = " << t << std::endl;
-		DrawCube(c1, rmin, rmax, fSimDepositColour);
-	      }
-	  }	
+                double rmin[3] = { x - ex, y - ey, z - ez};
+                double rmax[3] = { x + ex, y + ey, z + ez};
+
+                if(fPrint)
+                  std::cout << "Sim Energy Deposit: (" << x << ", " << y << ", " << z 
+                            << ")  +/- (" << ex << ", " << ey << ", " << ez << ") by trackID: " 
+                            << ide.trackID << " at t = " << t << std::endl;
+                DrawCube(c1, rmin, rmax, fSimDepositColour);
+              }
+          }     
       }
 
     if(fDrawStripHits)
       {
-	auto stripHitsHandle = event.getValidHandle<std::vector<CRTStripHit>>(fStripHitLabel);
+        auto stripHitsHandle = event.getValidHandle<std::vector<CRTStripHit>>(fStripHitLabel);
+        std::vector<art::Ptr<CRTStripHit>> stripHitsVec;
+        art::fill_ptr_vector(stripHitsVec, stripHitsHandle);
 
-	for(auto const stripHit : *stripHitsHandle)
-	  {
-	    //	    if(std::abs(stripHit.Ts1() - G4RefTime) > 2e4)
-	    if(stripHit.Ts1() - G4RefTime < 8e4 || stripHit.Ts1() - G4RefTime > 12e4)
-	      continue;
+        for(auto const stripHit : stripHitsVec)
+          {
+            if(stripHit->Ts1() - G4RefTime < fMinTime || stripHit->Ts1() - G4RefTime > fMaxTime)
+              continue;
 
-	    CRTStripGeo strip = fCrtGeo.GetStrip(stripHit.Channel());
+            CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
 
-	    double rmin[3] = {strip.minX, strip.minY, strip.minZ};
-	    double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
+            double rmin[3] = {strip.minX, strip.minY, strip.minZ};
+            double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
 
-	    if(fPrint)
-	      std::cout << "Strip Hit: (" 
-			<< rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
-			<< rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << stripHit.Ts1() << std::endl;
+            CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, stripHit);
+
+            if(fPrint)
+              std::cout << "Strip Hit: (" 
+                        << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
+                        << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << stripHit->Ts1()
+                        << "\t Matches to trackID: " << truthMatch.trackid 
+                //                      << "(" << particleInv->TrackIdToMotherParticle_P(truthMatch.trackid)->TrackId() << ") "
+                //                      << "(" << particleInv->TrackIdToParticle_P(truthMatch.trackid)->PdgCode() << ") "
+                        << " with completeness: " << truthMatch.completeness 
+                        << " and purity: " << truthMatch.purity << std::endl;
+
     
-	    DrawCube(c1, rmin, rmax, fStripHitColour);
-	  }
+            DrawCube(c1, rmin, rmax, fStripHitColour);
+          }
       }
 
     if(fDrawClusters)
       {
-	auto clustersHandle = event.getValidHandle<std::vector<CRTCluster>>(fClusterLabel);
-	std::vector<art::Ptr<CRTCluster>> clustersVec;
-	art::fill_ptr_vector(clustersVec, clustersHandle);
-	art::FindManyP<CRTStripHit> clustersToStripHits(clustersHandle, event, fClusterLabel);
+        auto clustersHandle = event.getValidHandle<std::vector<CRTCluster>>(fClusterLabel);
+        std::vector<art::Ptr<CRTCluster>> clustersVec;
+        art::fill_ptr_vector(clustersVec, clustersHandle);
+        art::FindManyP<CRTStripHit> clustersToStripHits(clustersHandle, event, fClusterLabel);
 
-	int colour = fClusterStartingColour;
+        int colour = fClusterStartingColour;
 
-	for(auto const cluster : clustersVec)
-	  {
-	    //	    if(std::abs(cluster->Ts1() - G4RefTime) > 2e4)
-	    if(cluster->Ts1() - G4RefTime < 8e4 || cluster->Ts1() - G4RefTime > 12e4)
-	      continue;
+        for(auto const cluster : clustersVec)
+          {
+            if(cluster->Ts1() - G4RefTime < fMinTime || cluster->Ts1() - G4RefTime > fMaxTime)
+              continue;
 
-	    auto stripHitVec = clustersToStripHits.at(cluster.key());
+            auto stripHitVec = clustersToStripHits.at(cluster.key());
 
-	    for(auto stripHit : stripHitVec)
-	      {
-		CRTStripGeo strip = fCrtGeo.GetStrip(stripHit->Channel());
+            for(auto stripHit : stripHitVec)
+              {
+                CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
 
-		double rmin[3] = {strip.minX, strip.minY, strip.minZ};
-		double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
+                double rmin[3] = {strip.minX, strip.minY, strip.minZ};
+                double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
 
-		DrawCube(c1, rmin, rmax, colour);
-	      }
+                DrawCube(c1, rmin, rmax, colour);
+              }
 
-	    if(fPrint)
-	      std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1() << std::endl;
+            CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, cluster);
+
+            if(fPrint)
+              std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1()
+                        << "\t Matches to trackID: " << truthMatch.trackid
+                        << " with completeness: " << truthMatch.completeness
+                        << " and purity: " << truthMatch.purity << std::endl;
 
             colour += fClusterColourInterval;
-	  }
+          }
       }
 
     c1->SaveAs(Form("crtEventDisplayEvent%d.root", event.event()));

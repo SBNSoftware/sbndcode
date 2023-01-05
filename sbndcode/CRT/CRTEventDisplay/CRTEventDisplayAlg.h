@@ -33,6 +33,7 @@
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 
 // ROOT
 #include "TPolyLine3D.h"
@@ -48,6 +49,17 @@ namespace sbnd::crt {
     struct Config {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
+      
+      fhicl::Table<fhicl::ParameterSet> GeoAlgConfig {
+	Name("CRTGeoAlg"),
+        Comment("Configuration parameters for the CRT geometry algorithm"),
+        fhicl::ParameterSet()
+      };
+
+      fhicl::Table<CRTBackTrackerAlg::Config> BackTrackerAlgConfig {
+	Name("CRTBackTrackerAlg"),
+        Comment("Configuration parameters for the CRT back tracking algorithm")
+      };
       
       fhicl::Atom<art::InputTag> SimLabel {
         Name("SimLabel")
@@ -109,6 +121,17 @@ namespace sbnd::crt {
         Name("ClusterColourInterval")
           };
 
+      fhicl::Atom<double> MinTime {
+	Name ("MinTime"),
+        Comment ("Ignore truth & reco products before this time"),
+	0.
+      };
+      fhicl::Atom<double> MaxTime {
+	Name ("MaxTime"),
+        Comment ("Ignore truth & reco products after this time"),
+	3.2e6
+      };
+
       fhicl::Atom<bool> Print {
         Name("Print")
           };
@@ -144,8 +167,11 @@ namespace sbnd::crt {
 
   private:
     
-    TPCGeoAlg fTpcGeo;
-    CRTGeoAlg fCrtGeo;
+    TPCGeoAlg         fTPCGeoAlg;
+    CRTGeoAlg         fCRTGeoAlg;
+    CRTBackTrackerAlg fCRTBackTrackerAlg;
+
+    art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
     
     art::InputTag fSimLabel;
     art::InputTag fSimDepositLabel;
@@ -168,6 +194,9 @@ namespace sbnd::crt {
     int fStripHitColour;
     int fClusterStartingColour;
     int fClusterColourInterval;
+
+    double fMinTime;
+    double fMaxTime;
 
     bool fPrint;
 

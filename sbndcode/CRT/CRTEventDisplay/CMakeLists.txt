@@ -5,6 +5,7 @@ art_make_library(
 			larsim_Utils
 	 		sbnobj_SBND_CRT
 	 		sbndcode_GeoWrappers
+			sbndcode_CRT_CRTBackTracker
 )
 
 simple_plugin(
