@@ -317,9 +317,9 @@ namespace sbnd::crt {
 
     double DistanceDownStrip(const TVector3 position, const uint16_t channel) const;
 
-    bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
+    bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.);
 
-    bool CheckOverlap(const uint16_t channel1, const uint16_t channel2);
+    bool CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.);
 
     bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
 

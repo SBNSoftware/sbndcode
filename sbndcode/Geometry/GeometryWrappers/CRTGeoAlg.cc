@@ -378,25 +378,25 @@ namespace sbnd::crt {
     return DistanceDownStrip(position, sipm.stripName);
   }
 
-  bool CRTGeoAlg::CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2)
+  bool CRTGeoAlg::CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer)
   {
-    const double minX = std::max(strip1.minX, strip2.minX);
-    const double maxX = std::min(strip1.maxX, strip2.maxX);
-    const double minY = std::max(strip1.minY, strip2.minY);
-    const double maxY = std::min(strip1.maxY, strip2.maxY);
-    const double minZ = std::max(strip1.minZ, strip2.minZ);
-    const double maxZ = std::min(strip1.maxZ, strip2.maxZ);
+    const double minX = std::max(strip1.minX, strip2.minX) + overlap_buffer / 2.;
+    const double maxX = std::min(strip1.maxX, strip2.maxX) - overlap_buffer / 2.;
+    const double minY = std::max(strip1.minY, strip2.minY) + overlap_buffer / 2.;
+    const double maxY = std::min(strip1.maxY, strip2.maxY) - overlap_buffer / 2.;
+    const double minZ = std::max(strip1.minZ, strip2.minZ) + overlap_buffer / 2.;
+    const double maxZ = std::min(strip1.maxZ, strip2.maxZ) - overlap_buffer / 2.;
 
     // If the two strips overlap in 2 dimensions then return true
     return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
   }
 
-  bool CRTGeoAlg::CheckOverlap(const uint16_t channel1, const uint16_t channel2)
+  bool CRTGeoAlg::CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer)
   {
     CRTStripGeo strip1 = GetStrip(channel1);
     CRTStripGeo strip2 = GetStrip(channel2);
 
-    return CheckOverlap(strip1, strip2);
+    return CheckOverlap(strip1, strip2, overlap_buffer);
   }
 
   bool CRTGeoAlg::DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2)

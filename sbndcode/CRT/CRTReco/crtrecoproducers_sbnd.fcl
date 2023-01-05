@@ -20,6 +20,7 @@ crtspacepointproducer_sbnd:
 {
    ClusterCharacterisationAlg:
    {   
+       OverlapBuffer:  1.
        PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift
        PropDelay:      @local::sbnd_crtsim.DetSimParams.PropDelay
        TimeWalkNorm:   @local::sbnd_crtsim.DetSimParams.TDelayNorm

@@ -5,6 +5,7 @@ namespace sbnd::crt {
   CRTClusterCharacterisationAlg::CRTClusterCharacterisationAlg(const fhicl::ParameterSet& pset)
     : fCRTGeoAlg(pset.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
     , fUseT1(pset.get<bool>("UseT1", true))
+    , fOverlapBuffer(pset.get<double>("OverlapBuffer"))
     , fPEAttenuation(pset.get<double>("PEAttenuation"))
     , fPropDelay(pset.get<double>("PropDelay"))
     , fTimeWalkNorm(pset.get<double>("TimeWalkNorm"))
@@ -37,7 +38,7 @@ namespace sbnd::crt {
         const art::Ptr<CRTStripHit> &hit0 = stripHits[0];
         const art::Ptr<CRTStripHit> &hit1 = stripHits[1];
 
-        if(fCRTGeoAlg.CheckOverlap(hit0->Channel(), hit1->Channel()))
+        if(fCRTGeoAlg.CheckOverlap(hit0->Channel(), hit1->Channel(), fOverlapBuffer))
           {
             std::array<double, 6> overlap   = FindOverlap(hit0, hit1);
             

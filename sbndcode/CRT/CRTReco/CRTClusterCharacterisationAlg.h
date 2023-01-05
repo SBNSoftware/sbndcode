@@ -68,6 +68,7 @@ namespace sbnd::crt {
 
     bool fUseT1;
 
+    double fOverlapBuffer;
     double fPEAttenuation;
     double fPropDelay;
     double fTimeWalkNorm;
