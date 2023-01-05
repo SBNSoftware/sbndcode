@@ -70,18 +70,20 @@ private:
   // Declare member data here.
 
   // fhicl parameters
-  art::Persistable is_persistable_;
+  // art::Persistable is_persistable_;
   double fTriggerTimeOffset;    // offset of trigger time, default 0.5 sec
   double fBeamWindowLength; // beam window length after trigger time, default 1.6us
   uint32_t fWvfmLength;
   bool fVerbose;
   bool fSaveHists;
 
-  std::string fBaselineAlgo;
-  double fInputBaseline;
-  double fInputBaselineSigma;
-  int fADCThreshold;
+  bool fCalculateBaseline;
+  bool fCountPMTs;
+  bool fCalculatePEMetrics;
   bool fFindPulses;
+
+  std::vector<double> fInputBaseline;
+  int fADCThreshold;
   double fPEArea; // conversion factor from ADCxns area to PE count 
 
   // histogram info  
@@ -115,27 +117,35 @@ private:
   void estimateBaseline(int i_ch);
   void SimpleThreshAlgo(int i_ch);
 
+  // TTree* _tree; 
+  int _run, _sub, _evt; 
+  bool   _beam_trig; 
+  double _time_trig; 
+  int    _npmt;
+  double _promptPE, _prelimPE; 
 };
 
 
 sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::ParameterSet const& p)
   : EDProducer{p},
-  is_persistable_(p.get<bool>("is_persistable", true) ? art::Persistable::Yes : art::Persistable::No),
+  // is_persistable_(p.get<bool>("is_persistable", true) ? art::Persistable::Yes : art::Persistable::No),
   fTriggerTimeOffset(p.get<double>("TriggerTimeOffset", 0.5)),
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)), 
   fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
   fVerbose(p.get<bool>("Verbose", false)),
   fSaveHists(p.get<bool>("SaveHists",false)),
-  fBaselineAlgo(p.get<std::string>("BaselineAlgo", "estimate")),
-  fInputBaseline(p.get<double>("InputBaseline", 8000)),
-  fInputBaselineSigma(p.get<double>("InputBaselineSigma", 2)),
-  fADCThreshold(p.get<double>("ADCThreshold", 7960)),
+  fCalculateBaseline(p.get<bool>("CalculateBaseline",true)),
+  fCountPMTs(p.get<bool>("CountPMTs",true)),
+  fCalculatePEMetrics(p.get<bool>("CalculatePEMetrics",false)),
   fFindPulses(p.get<bool>("FindPulses", false)),
+  fInputBaseline(p.get<std::vector<double>>("InputBaseline")),
+  fADCThreshold(p.get<double>("ADCThreshold", 7960)),
   fPEArea(p.get<double>("PEArea", 66.33))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
-  produces< sbnd::trigger::pmtSoftwareTrigger >("", is_persistable_);
+  // produces< sbnd::trigger::pmtSoftwareTrigger >("", is_persistsable_);
+  produces<std::vector<sbnd::trigger::pmtSoftwareTrigger>>();
 
   beamWindowStart = fTriggerTimeOffset*1e9;
   beamWindowEnd = beamWindowStart + fBeamWindowLength*1000;
@@ -146,6 +156,16 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   for(auto const& i:pmtMap){
     channelList.push_back(i["channel"]);
   }
+  // art::ServiceHandle<art::TFileService> fs;
+  // _tree = fs->make<TTree>("software_metrics_tree","");
+  // _tree->Branch("run",       &_run,       "run/I");
+  // _tree->Branch("sub",       &_sub,       "sub/I");
+  // _tree->Branch("evt",       &_evt,       "evt/I");
+  // _tree->Branch("beam_trig", &_beam_trig, "beam_trig/O");
+  // _tree->Branch("time_trig", &_time_trig, "time_trig/D");
+  // _tree->Branch("npmt",      &_npmt,      "npmt/I");
+  // _tree->Branch("promptPE",  &_promptPE,  "promptPE/D");
+  // _tree->Branch("prelimPE",  &_prelimPE,  "prelimPE/D");
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
@@ -156,6 +176,10 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   fRun = e.run();
   fSubrun = e.subRun();
   fEvent = e.id().event();
+  
+  _run = e.run();
+  _sub = e.subRun();
+  _evt = e.id().event();
 
   if (fVerbose) std::cout << "Processing Run: " << fRun << ", Subrun: " << fSubrun << ", Event: " << fEvent << std::endl;
 
@@ -165,6 +189,10 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   fWvfmsVec.clear(); fWvfmsVec.resize(15*8); // 15 pmt channels per fragment, 8 fragments per trigger
   fpmtInfoVec.clear(); fpmtInfoVec.resize(15*8); 
 
+  _beam_trig = false;
+  _time_trig = -9999;
+  _npmt = -9999;
+  _promptPE = -9999; _prelimPE = -9999;
 
   // get fragment handles
   std::vector<art::Handle<artdaq::Fragments>> fragmentHandles = e.getMany<std::vector<artdaq::Fragment>>();
@@ -197,15 +225,19 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   } // end loop over handles
 
   // object to store trigger metrics in
-  std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
+  std::unique_ptr<std::vector<sbnd::trigger::pmtSoftwareTrigger>> trig_metrics_v = std::make_unique<std::vector<sbnd::trigger::pmtSoftwareTrigger>>();
+  sbnd::trigger::pmtSoftwareTrigger trig_metrics;
 
   if (foundBeamTrigger && fWvfmsFound) {
 
-    pmtSoftwareTriggerMetrics->foundBeamTrigger = true;
+    trig_metrics.foundBeamTrigger = true;
+    _beam_trig = true;
+
     // store timestamp of trigger, relative to beam window start
     double triggerTimeStamp = fTriggerTime - beamWindowStart;
-    pmtSoftwareTriggerMetrics->triggerTimestamp = triggerTimeStamp;
-    if (fVerbose) std::cout << "Saving trigger timestamp: " << triggerTimeStamp << " ns" << std::endl;
+    trig_metrics.triggerTimestamp = triggerTimeStamp;
+    _time_trig = triggerTimeStamp;
+    if (fVerbose) std::cout << "Saving trigger timestamp: " << trig_metrics.triggerTimestamp << " ns" << std::endl;
 
     double promptPE = 0;
     double prelimPE = 0; 
@@ -224,26 +256,32 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       // assign channel 
       pmtInfo.channel = channelList.at(i_ch);
 
-      // calculate baseline 
-      if (fBaselineAlgo == "constant"){ pmtInfo.baseline=fInputBaseline; pmtInfo.baselineSigma = fInputBaselineSigma; }
-      else if (fBaselineAlgo == "estimate") estimateBaseline(i_ch);
+         // calculate baseline 
+      if (fCalculateBaseline) estimateBaseline(i_ch);
+      else { pmtInfo.baseline=fInputBaseline.at(0); pmtInfo.baselineSigma = fInputBaseline.at(1); }
 
-      // count number of PMTs above threshold 
-      for (int bin = beamStartBin; bin < beamEndBin; ++bin){
-        auto adc = wvfm[bin];
-        if (adc < fADCThreshold){ nAboveThreshold++; break; } 
+      // count number of PMTs above threshold within the beam window
+      if (fCountPMTs){
+        for (int bin = beamStartBin; bin < beamEndBin; ++bin){
+          auto adc = wvfm[bin];
+          if (adc < fADCThreshold){ nAboveThreshold++; break; } 
+        }
       }
+      else nAboveThreshold=-9999;
 
       // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
-      double baseline = pmtInfo.baseline;
-      auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
-      auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
-      if (fFindPulses == false){
-        double ch_promptPE = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
-        double ch_prelimPE = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
-        promptPE += ch_promptPE;
-        prelimPE += ch_prelimPE;
+      if (fCalculatePEMetrics){
+        double baseline = pmtInfo.baseline;
+        auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
+        auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
+        if (fFindPulses == false){
+          double ch_promptPE = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
+          double ch_prelimPE = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
+          promptPE += ch_promptPE;
+          prelimPE += ch_prelimPE;
+        }
       }
+      else {promptPE = -9999; prelimPE =-9999;}
 
       // pulse finder + prompt and prelim calculation with pulses 
       if (fFindPulses == true){
@@ -258,12 +296,18 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       }
     } // end of wvfm loop 
 
-    pmtSoftwareTriggerMetrics->nAboveThreshold = nAboveThreshold;    
-    pmtSoftwareTriggerMetrics->promptPE = promptPE;
-    pmtSoftwareTriggerMetrics->prelimPE = prelimPE;
-    if (fVerbose) std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
-    if (fVerbose) std::cout << "prompt pe: " << promptPE << std::endl;
-    if (fVerbose) std::cout << "prelim pe: " << prelimPE << std::endl;
+    trig_metrics.nAboveThreshold = nAboveThreshold;    
+    trig_metrics.promptPE = promptPE;
+    trig_metrics.prelimPE = prelimPE;
+
+    // tree variables 
+    _npmt = nAboveThreshold;
+    _promptPE = promptPE; 
+    _prelimPE = prelimPE;
+
+    if (fVerbose) std::cout << "nPMTs Above Threshold: " << trig_metrics.nAboveThreshold << std::endl;
+    if (fVerbose) std::cout << "prompt pe: " << trig_metrics.promptPE << std::endl;
+    if (fVerbose) std::cout << "prelim pe: " << trig_metrics.prelimPE << std::endl;
 
     // start histo 
     if (fSaveHists == true){
@@ -288,14 +332,19 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   }
   else{
     if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
-    pmtSoftwareTriggerMetrics->foundBeamTrigger = false;
-    pmtSoftwareTriggerMetrics->triggerTimestamp = -9999;
-    pmtSoftwareTriggerMetrics->nAboveThreshold = -9999;
-    pmtSoftwareTriggerMetrics->promptPE = -9999;
-    pmtSoftwareTriggerMetrics->prelimPE = -9999;
+    trig_metrics.foundBeamTrigger = false;
+    trig_metrics.triggerTimestamp = -9999;
+    trig_metrics.nAboveThreshold = -9999;
+    trig_metrics.promptPE = -9999;
+    trig_metrics.prelimPE = -9999;
+    // tree variables 
+    _beam_trig = false; 
+    _time_trig = -9999; _npmt = -9999; _promptPE = -9999; _prelimPE = -9999;
   }
-  e.put(std::move(pmtSoftwareTriggerMetrics));      
-
+    trig_metrics_v->push_back(trig_metrics);
+    e.put(std::move(trig_metrics_v));   
+  // _tree->Fill();
+   
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(const artdaq::Fragment &frag) {
