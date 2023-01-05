@@ -48,10 +48,13 @@ namespace sbnd::crt {
             const double pe   = ReconstructPE(hit0, hit1, pos);
             const double time = CorrectTime(hit0, hit1, pos);
 
+	    std::cout << "Both (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
             return CRTSpacePoint(pos, err, pe, time);
           }
+	std::cout << "ThreeD but no overlap (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
+	return CRTSpacePoint();
       }
-
+    std::cout << "Not threeD (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
     return CRTSpacePoint();
   }
 
