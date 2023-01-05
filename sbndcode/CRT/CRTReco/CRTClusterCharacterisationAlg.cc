@@ -1,4 +1,3 @@
-
 #include "CRTClusterCharacterisationAlg.h"
 
 namespace sbnd::crt {
@@ -28,10 +27,10 @@ namespace sbnd::crt {
     TVector3 pos, err;
     CentralPosition(hitPos, pos, err);
 
-    return CRTSpacePoint(pos, err, pe, stripHit->Ts1());
+    return CRTSpacePoint(pos, err, pe, stripHit->Ts1(), false);
   }
 
-  CRTSpacePoint CRTClusterCharacterisationAlg::CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits)
+  bool CRTClusterCharacterisationAlg::CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint)
   {
     if(cluster->ThreeD())
       {
@@ -48,14 +47,15 @@ namespace sbnd::crt {
             const double pe   = ReconstructPE(hit0, hit1, pos);
             const double time = CorrectTime(hit0, hit1, pos);
 
-	    std::cout << "Both (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
-            return CRTSpacePoint(pos, err, pe, time);
+	    //	    std::cout << "Both (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
+	    spacepoint = CRTSpacePoint(pos, err, pe, time, true);
+            return true;
           }
-	std::cout << "ThreeD but no overlap (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
-	return CRTSpacePoint();
+	//	std::cout << "ThreeD but no overlap (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
+	return false;
       }
-    std::cout << "Not threeD (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
-    return CRTSpacePoint();
+    //    std::cout << "Not threeD (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
+    return false;
   }
 
   double CRTClusterCharacterisationAlg::ADCToPE(const uint16_t channel, const uint16_t adc1, const uint16_t adc2)

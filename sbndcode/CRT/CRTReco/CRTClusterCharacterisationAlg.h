@@ -44,7 +44,7 @@ namespace sbnd::crt {
 
     CRTSpacePoint CharacteriseSingleHitCluster(const art::Ptr<CRTCluster> &cluster, const art::Ptr<CRTStripHit> &stripHit);
 
-    CRTSpacePoint CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits);
+    bool CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint);
 
     double ADCToPE(const uint16_t channel, const uint16_t adc1, const uint16_t adc2);
 
