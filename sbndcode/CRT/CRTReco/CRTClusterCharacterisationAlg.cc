@@ -103,10 +103,7 @@ namespace sbnd::crt {
       }
 
     if(complete_spacepoints.size() == 0)
-      {
-        std::cout << "Problem, no complete spacepoints! (" << cluster->Ts1() << ")" << std::endl;
-        return false;
-      }
+      return false;
     
     std::array<double, 6> aggregate_position({std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 
           -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()});
