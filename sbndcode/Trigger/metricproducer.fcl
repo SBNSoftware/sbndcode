@@ -17,11 +17,13 @@ MetricProducer:
   BeamWindowLength: @local::pmtSoftwareTriggerProducer.BeamWindowLength
   WvfmLength: @local::pmtSoftwareTriggerProducer.WvfmLength
 
-  BaselineAlgo: @local::pmtSoftwareTriggerProducer.BaselineAlgo
-  InputBaseline: @local::pmtSoftwareTriggerProducer.InputBaseline
-  InputBaselineSigma: @local::pmtSoftwareTriggerProducer.InputBaselineSigma
-  ADCThreshold: @local::pmtSoftwareTriggerProducer.ADCThreshold 
+  CalculateBaseline: @local::pmtSoftwareTriggerProducer.CalculateBaseline
+  CountPMTs: @local::pmtSoftwareTriggerProducer.CountPMTs
+  CalculatePEMetrics: @local::pmtSoftwareTriggerProducer.CalculatePEMetrics
   FindPulses: @local::pmtSoftwareTriggerProducer.FindPulses
+
+  InputBaseline: @local::pmtSoftwareTriggerProducer.InputBaseline
+  ADCThreshold: @local::pmtSoftwareTriggerProducer.ADCThreshold 
   PEArea: @local::pmtSoftwareTriggerProducer.PEArea 
 }
 

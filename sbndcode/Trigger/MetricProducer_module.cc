@@ -31,6 +31,9 @@
 
 #include <memory>
 #include <iostream>
+#include <algorithm>
+#include <valarray>
+#include <numeric>
 
 namespace sbndaq {
   class MetricProducer;
@@ -73,12 +76,14 @@ private:
   double fBeamWindowLength; // beam window length after trigger time, default 1.6us
   uint32_t fWvfmLength;
 
-  std::string fBaselineAlgo;
-  double fInputBaseline;
-  double fInputBaselineSigma;
-  int fADCThreshold;
+  bool fCalculateBaseline;
+  bool fCountPMTs;
+  bool fCalculatePEMetrics;
   bool fFindPulses;
-  double fPEArea; // conversion factor from ADCxns area to PE count
+
+  std::vector<double> fInputBaseline;
+  int fADCThreshold;
+  double fPEArea; // conversion factor from ADCxns area to PE count 
 
   // event information
   int fRun, fSubrun;
@@ -127,17 +132,17 @@ sbndaq::MetricProducer::MetricProducer(fhicl::ParameterSet const& p)
   fTriggerTimeOffset(p.get<double>("TriggerTimeOffset", 0.5)),
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)),
   fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
-  fBaselineAlgo(p.get<std::string>("BaselineAlgo", "estimate")),
-  fInputBaseline(p.get<double>("InputBaseline", 8000)),
-  fInputBaselineSigma(p.get<double>("InputBaselineSigma", 2)),
-  fADCThreshold(p.get<double>("ADCThreshold", 7960)),
+  fCalculateBaseline(p.get<bool>("CalculateBaseline",true)),
+  fCountPMTs(p.get<bool>("CountPMTs",true)),
+  fCalculatePEMetrics(p.get<bool>("CalculatePEMetrics",false)),
   fFindPulses(p.get<bool>("FindPulses", false)),
+  fADCThreshold(p.get<double>("ADCThreshold", 7960)),
   fPEArea(p.get<double>("PEArea", 66.33))
   {
   // Call appropriate produces<>() functions here.
   produces< sbndaq::CRTmetric >("", is_persistable_);
 
-  produces< sbnd::trigger::pmtSoftwareTrigger >("", is_persistable_);
+  produces<std::vector<sbnd::trigger::pmtSoftwareTrigger>>("", is_persistable_);
 
   beamWindowStart = fTriggerTimeOffset*1e9;
   beamWindowEnd = beamWindowStart + fBeamWindowLength*1000;
@@ -166,8 +171,9 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
   std::unique_ptr<sbndaq::CRTmetric> CRTMetricInfo = std::make_unique<sbndaq::CRTmetric>();
 
   // object to store trigger metrics in
-  std::unique_ptr<sbnd::trigger::pmtSoftwareTrigger> pmtSoftwareTriggerMetrics = std::make_unique<sbnd::trigger::pmtSoftwareTrigger>();
-
+  // object to store trigger metrics in
+  std::unique_ptr<std::vector<sbnd::trigger::pmtSoftwareTrigger>> trig_metrics_v = std::make_unique<std::vector<sbnd::trigger::pmtSoftwareTrigger>>();
+  sbnd::trigger::pmtSoftwareTrigger trig_metrics;
   // clear variables at the beginning of the event
   // move this to constructor??
   for (int ip=0;ip<7;++ip)  { CRTMetricInfo->hitsperplane[ip]=0; hitsperplane[ip]=0;}
@@ -260,11 +266,8 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
   if (fpmt_metrics){
 
     if (foundBeamTrigger && fWvfmsFound) {
-
-      pmtSoftwareTriggerMetrics->foundBeamTrigger = true;
       // store timestamp of trigger, relative to beam window start
       double triggerTimeStamp = fTriggerTime - beamWindowStart;
-      pmtSoftwareTriggerMetrics->triggerTimestamp = triggerTimeStamp;
       if (fVerbose) std::cout << "Saving trigger timestamp: " << triggerTimeStamp << " ns" << std::endl;
 
       double promptPE = 0;
@@ -285,61 +288,65 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
         pmtInfo.channel = channelList.at(i_ch);
 
         // calculate baseline
-        if (fBaselineAlgo == "constant"){ pmtInfo.baseline=fInputBaseline; pmtInfo.baselineSigma = fInputBaselineSigma; }
-        else if (fBaselineAlgo == "estimate") estimateBaseline(i_ch);
+        if (fCalculateBaseline) estimateBaseline(i_ch);
+        else { pmtInfo.baseline=fInputBaseline.at(0); pmtInfo.baselineSigma = fInputBaseline.at(1); }
 
         // count number of PMTs above threshold
-        for (int bin = beamStartBin; bin < beamEndBin; ++bin){
-          auto adc = wvfm[bin];
-          if (adc < fADCThreshold){ nAboveThreshold++; break; }
-        }
-
-        // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
-        double baseline = pmtInfo.baseline;
-        auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
-        auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
-        if (fFindPulses == false){
-          double ch_promptPE = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
-          double ch_prelimPE = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
-          promptPE += ch_promptPE;
-          prelimPE += ch_prelimPE;
-        }
-
-        // pulse finder + prompt and prelim calculation with pulses
-        if (fFindPulses == true){
-          SimpleThreshAlgo(i_ch);
-          for (auto pulse : pmtInfo.pulseVec){
-            if (pulse.t_start > 500 && pulse.t_end < 550) promptPE+=pulse.pe;
-            if ((triggerTimeStamp) >= 1000){ if (pulse.t_end < 500) prelimPE+=pulse.pe; }
-            else if (triggerTimeStamp < 1000){
-              if (pulse.t_start > (500 - abs((triggerTimeStamp-1000)/2)) && pulse.t_end < 500) prelimPE+=pulse.pe;
-            }
+        if (fCountPMTs){
+          for (int bin = beamStartBin; bin < beamEndBin; ++bin){
+            auto adc = wvfm[bin];
+            if (adc < fADCThreshold){ nAboveThreshold++; break; } 
           }
         }
+        else nAboveThreshold=-9999;
+
+        // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
+        if (fCalculatePEMetrics){
+          double baseline = pmtInfo.baseline;
+          auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
+          auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
+          if (fFindPulses == false){
+            double ch_promptPE = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
+            double ch_prelimPE = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
+            promptPE += ch_promptPE;
+            prelimPE += ch_prelimPE;
+          }
+          // pulse finder + prompt and prelim calculation with pulses
+          if (fFindPulses == true){
+            SimpleThreshAlgo(i_ch);
+            for (auto pulse : pmtInfo.pulseVec){
+              if (pulse.t_start > 500 && pulse.t_end < 550) promptPE+=pulse.pe;
+              if ((triggerTimeStamp) >= 1000){ if (pulse.t_end < 500) prelimPE+=pulse.pe; }
+              else if (triggerTimeStamp < 1000){
+                if (pulse.t_start > (500 - abs((triggerTimeStamp-1000)/2)) && pulse.t_end < 500) prelimPE+=pulse.pe;
+              }
+            }
+          }
+        } 
       } // end of wvfm loop
 
-      pmtSoftwareTriggerMetrics->nAboveThreshold = nAboveThreshold;
-      pmtSoftwareTriggerMetrics->promptPE = promptPE;
-      pmtSoftwareTriggerMetrics->prelimPE = prelimPE;
+      trig_metrics.nAboveThreshold = nAboveThreshold;    
+      trig_metrics.promptPE = promptPE;
+      trig_metrics.prelimPE = prelimPE;
+
       if (fVerbose) std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
       if (fVerbose) std::cout << "prompt pe: " << promptPE << std::endl;
       if (fVerbose) std::cout << "prelim pe: " << prelimPE << std::endl;
-    }
+    } // if beam and wvfms found 
     else{
       if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
-      pmtSoftwareTriggerMetrics->foundBeamTrigger = false;
-      pmtSoftwareTriggerMetrics->triggerTimestamp = -9999;
-      pmtSoftwareTriggerMetrics->nAboveThreshold = -9999;
-      pmtSoftwareTriggerMetrics->promptPE = -9999;
-      pmtSoftwareTriggerMetrics->prelimPE = -9999;
+      trig_metrics.foundBeamTrigger = false;
+      trig_metrics.triggerTimestamp = -9999;
+      trig_metrics.nAboveThreshold = -9999;
+      trig_metrics.promptPE = -9999;
+      trig_metrics.prelimPE = -9999;
     }
-
   }//if save pmt metrics
 
   // add to event
   evt.put(std::move(CRTMetricInfo));
-  evt.put(std::move(pmtSoftwareTriggerMetrics));
-
+  trig_metrics_v->push_back(trig_metrics);
+  evt.put(std::move(trig_metrics_v));   
 }//produce
 
 
