@@ -29,6 +29,7 @@
 // sbnobj
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
@@ -73,6 +74,9 @@ namespace sbnd::crt {
       fhicl::Atom<art::InputTag> ClusterLabel {
         Name("ClusterLabel")
           };
+      fhicl::Atom<art::InputTag> SpacePointLabel {
+        Name("SpacePointLabel")
+          };
 
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
@@ -98,6 +102,9 @@ namespace sbnd::crt {
       fhicl::Atom<bool> DrawClusters {
         Name("DrawClusters")
           };
+      fhicl::Atom<bool> DrawSpacePoints {
+        Name("DrawSpacePoints")
+          };
 
       fhicl::Atom<int> TaggerColour {
         Name("TaggerColour")
@@ -119,6 +126,9 @@ namespace sbnd::crt {
           };
       fhicl::Atom<int> ClusterColourInterval {
         Name("ClusterColourInterval")
+          };
+      fhicl::Atom<int> SpacePointColour {
+        Name("SpacePointColour")
           };
 
       fhicl::Atom<double> MinTime {
@@ -177,6 +187,7 @@ namespace sbnd::crt {
     art::InputTag fSimDepositLabel;
     art::InputTag fStripHitLabel;
     art::InputTag fClusterLabel;
+    art::InputTag fSpacePointLabel;
 
     bool fDrawTaggers;
     bool fDrawModules;
@@ -186,6 +197,7 @@ namespace sbnd::crt {
     bool fDrawSimDeposits;
     bool fDrawStripHits;
     bool fDrawClusters;
+    bool fDrawSpacePoints;
 
     int fTaggerColour;
     int fTpcColour;
@@ -194,6 +206,7 @@ namespace sbnd::crt {
     int fStripHitColour;
     int fClusterStartingColour;
     int fClusterColourInterval;
+    int fSpacePointColour;
 
     double fMinTime;
     double fMaxTime;

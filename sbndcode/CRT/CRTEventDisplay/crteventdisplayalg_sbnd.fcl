@@ -11,15 +11,17 @@ crteventdisplayalg_sbnd:
    SimDepositLabel:  "genericcrt"
    StripHitLabel:    "crtstrips"
    ClusterLabel:     "crtclustering"
+   SpacePointLabel:  "crtspacepoints"
 
    DrawTaggers:      true
    DrawModules:      false
    DrawStrips:       false
    DrawTpc:          true
    DrawTrueTracks:   true
-   DrawSimDeposits:  true
-   DrawStripHits:    true
-   DrawClusters:     true
+   DrawSimDeposits:  false
+   DrawStripHits:    false
+   DrawClusters:     false
+   DrawSpacePoints:  true
 
    TaggerColour:             1
    TpcColour:                15
@@ -28,9 +30,10 @@ crteventdisplayalg_sbnd:
    StripHitColour:           4
    ClusterStartingColour:    800
    ClusterColourInterval:    20
+   SpacePointColour:         6
 
-   MinTime: 250200
-   MaxTime: 250300
+   MinTime: -200000
+   MaxTime: -100000
 
    Print:            true
 

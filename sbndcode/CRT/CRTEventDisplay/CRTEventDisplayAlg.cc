@@ -19,6 +19,7 @@ namespace sbnd::crt {
     fSimDepositLabel = config.SimDepositLabel();
     fStripHitLabel = config.StripHitLabel();
     fClusterLabel = config.ClusterLabel();
+    fSpacePointLabel = config.SpacePointLabel();
 
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
@@ -28,6 +29,7 @@ namespace sbnd::crt {
     fDrawSimDeposits = config.DrawSimDeposits();
     fDrawStripHits = config.DrawStripHits();
     fDrawClusters = config.DrawClusters();
+    fDrawSpacePoints = config.DrawSpacePoints();
 
     fTaggerColour = config.TaggerColour();
     fTpcColour = config.TpcColour();
@@ -36,6 +38,7 @@ namespace sbnd::crt {
     fStripHitColour = config.StripHitColour();
     fClusterStartingColour = config.ClusterStartingColour();
     fClusterColourInterval = config.ClusterColourInterval();
+    fSpacePointColour = config.SpacePointColour();
 
     fMinTime = config.MinTime();
     fMaxTime = config.MaxTime();
@@ -259,6 +262,7 @@ namespace sbnd::crt {
                   std::cout << "Sim Energy Deposit: (" << x << ", " << y << ", " << z 
                             << ")  +/- (" << ex << ", " << ey << ", " << ez << ") by trackID: " 
                             << ide.trackID << " at t = " << t << std::endl;
+
                 DrawCube(c1, rmin, rmax, fSimDepositColour);
               }
           }     
@@ -292,17 +296,17 @@ namespace sbnd::crt {
                         << " with completeness: " << truthMatch.completeness 
                         << " and purity: " << truthMatch.purity << std::endl;
 
-    
             DrawCube(c1, rmin, rmax, fStripHitColour);
           }
       }
 
-    if(fDrawClusters)
+    if(fDrawClusters || fDrawSpacePoints)
       {
         auto clustersHandle = event.getValidHandle<std::vector<CRTCluster>>(fClusterLabel);
         std::vector<art::Ptr<CRTCluster>> clustersVec;
         art::fill_ptr_vector(clustersVec, clustersHandle);
         art::FindManyP<CRTStripHit> clustersToStripHits(clustersHandle, event, fClusterLabel);
+        art::FindManyP<CRTSpacePoint> clustersToSpacePoints(clustersHandle, event, fSpacePointLabel);
 
         int colour = fClusterStartingColour;
 
@@ -311,16 +315,35 @@ namespace sbnd::crt {
             if(cluster->Ts1() - G4RefTime < fMinTime || cluster->Ts1() - G4RefTime > fMaxTime)
               continue;
 
-            auto stripHitVec = clustersToStripHits.at(cluster.key());
+            auto stripHitVec   = clustersToStripHits.at(cluster.key());
+            auto spacePointVec = clustersToSpacePoints.at(cluster.key());
 
-            for(auto stripHit : stripHitVec)
+            if(fDrawClusters)
               {
-                CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
+                for(auto stripHit : stripHitVec)
+                  {
+                    CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
+                    
+                    double rmin[3] = {strip.minX, strip.minY, strip.minZ};
+                    double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
+                    
+                    DrawCube(c1, rmin, rmax, colour);
+                  }
+              }
 
-                double rmin[3] = {strip.minX, strip.minY, strip.minZ};
-                double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
-
-                DrawCube(c1, rmin, rmax, colour);
+            if(fDrawSpacePoints)
+              {
+                if(spacePointVec.size() == 1)
+                  {
+                    const art::Ptr<CRTSpacePoint> spacepoint = spacePointVec[0];
+                    const TVector3 pos = spacepoint->Pos();
+                    const TVector3 err = spacepoint->Err();
+                    
+                    double rmin[3] = {pos.X() - err.X(), pos.Y() - err.Y(), pos.Z() - err.Z()};
+                    double rmax[3] = {pos.X() + err.X(), pos.Y() + err.Y(), pos.Z() + err.Z()};
+                    
+                    DrawCube(c1, rmin, rmax, fSpacePointColour);
+                  }
               }
 
             CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, cluster);
