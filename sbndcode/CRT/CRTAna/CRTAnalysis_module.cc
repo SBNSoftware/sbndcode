@@ -138,6 +138,12 @@ private:
   std::vector<double>   _cl_truth_purity;
   std::vector<double>   _cl_truth_hit_completeness;
   std::vector<double>   _cl_truth_hit_purity;
+  std::vector<double>   _cl_truth_x;
+  std::vector<double>   _cl_truth_y;
+  std::vector<double>   _cl_truth_z;
+  std::vector<double>   _cl_truth_energy;
+  std::vector<double>   _cl_truth_time;
+  std::vector<bool>     _cl_has_sp;
   std::vector<double>   _cl_sp_x;
   std::vector<double>   _cl_sp_ex;
   std::vector<double>   _cl_sp_y;
@@ -146,6 +152,7 @@ private:
   std::vector<double>   _cl_sp_ez;
   std::vector<double>   _cl_sp_pe;
   std::vector<double>   _cl_sp_time;
+  std::vector<bool>     _cl_sp_complete;
 };
 
 
@@ -234,6 +241,12 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_truth_purity", "std::vector<double>", &_cl_truth_purity);
     fTree->Branch("cl_truth_hit_completeness", "std::vector<double>", &_cl_truth_hit_completeness);
     fTree->Branch("cl_truth_hit_purity", "std::vector<double>", &_cl_truth_hit_purity);
+    fTree->Branch("cl_truth_x", "std::vector<double>", &_cl_truth_x);
+    fTree->Branch("cl_truth_y", "std::vector<double>", &_cl_truth_y);
+    fTree->Branch("cl_truth_z", "std::vector<double>", &_cl_truth_z);
+    fTree->Branch("cl_truth_energy", "std::vector<double>", &_cl_truth_energy);
+    fTree->Branch("cl_truth_time", "std::vector<double>", &_cl_truth_time);
+    fTree->Branch("cl_has_sp", "std::vector<bool>", &_cl_has_sp);
     fTree->Branch("cl_sp_x", "std::vector<double>", &_cl_sp_x);
     fTree->Branch("cl_sp_ex", "std::vector<double>", &_cl_sp_ex);
     fTree->Branch("cl_sp_y", "std::vector<double>", &_cl_sp_y);
@@ -242,6 +255,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_sp_ez", "std::vector<double>", &_cl_sp_ez);
     fTree->Branch("cl_sp_pe", "std::vector<double>", &_cl_sp_pe);
     fTree->Branch("cl_sp_time", "std::vector<double>", &_cl_sp_time);
+    fTree->Branch("cl_sp_complete", "std::vector<bool>", &_cl_sp_complete);
 
     if(fDebug)
       {
@@ -543,6 +557,12 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_truth_purity.resize(nClusters);
   _cl_truth_hit_completeness.resize(nClusters);
   _cl_truth_hit_purity.resize(nClusters);
+  _cl_truth_x.resize(nClusters);
+  _cl_truth_y.resize(nClusters);
+  _cl_truth_z.resize(nClusters);
+  _cl_truth_energy.resize(nClusters);
+  _cl_truth_time.resize(nClusters);
+  _cl_has_sp.resize(nClusters);
   _cl_sp_x.resize(nClusters);
   _cl_sp_ex.resize(nClusters);
   _cl_sp_y.resize(nClusters);
@@ -551,6 +571,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_sp_ez.resize(nClusters);
   _cl_sp_pe.resize(nClusters);
   _cl_sp_time.resize(nClusters);
+  _cl_sp_complete.resize(nClusters);
 
   for(unsigned i = 0; i < nClusters; ++i)
     {
@@ -569,19 +590,41 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_truth_purity[i]           = truthMatch.purity;
       _cl_truth_hit_completeness[i] = truthMatch.hitcompleteness;
       _cl_truth_hit_purity[i]       = truthMatch.hitpurity;
+      _cl_truth_x[i]                = truthMatch.x;
+      _cl_truth_y[i]                = truthMatch.y;
+      _cl_truth_z[i]                = truthMatch.z;
+      _cl_truth_energy[i]           = truthMatch.energy;
+      _cl_truth_time[i]             = truthMatch.time;
 
       auto spacepoints = clustersToSpacePoints.at(cluster.key());
-      if(spacepoints.size() != 1) { std::cout << "nSpacePoints != 1" << std::endl; return; }
-      auto spacepoint = spacepoints[0];
-      
-      _cl_sp_x[i]    = spacepoint->X();
-      _cl_sp_ex[i]   = spacepoint->XErr();
-      _cl_sp_y[i]    = spacepoint->Y();
-      _cl_sp_ey[i]   = spacepoint->YErr();
-      _cl_sp_z[i]    = spacepoint->Z();
-      _cl_sp_ez[i]   = spacepoint->ZErr();
-      _cl_sp_pe[i]   = spacepoint->PE();
-      _cl_sp_time[i] = spacepoint->Time();
+      if(spacepoints.size() == 1)
+        { 
+          auto spacepoint = spacepoints[0];
+          
+          _cl_has_sp[i]      = true;
+          _cl_sp_x[i]        = spacepoint->X();
+          _cl_sp_ex[i]       = spacepoint->XErr();
+          _cl_sp_y[i]        = spacepoint->Y();
+          _cl_sp_ey[i]       = spacepoint->YErr();
+          _cl_sp_z[i]        = spacepoint->Z();
+          _cl_sp_ez[i]       = spacepoint->ZErr();
+          _cl_sp_pe[i]       = spacepoint->PE();
+          _cl_sp_time[i]     = spacepoint->Time();
+          _cl_sp_complete[i] = spacepoint->Complete();
+        }
+      else
+        {
+          _cl_has_sp[i]      = false;
+          _cl_sp_x[i]        = -999999.;
+          _cl_sp_ex[i]       = -999999.;
+          _cl_sp_y[i]        = -999999.;
+          _cl_sp_ey[i]       = -999999.;
+          _cl_sp_z[i]        = -999999.;
+          _cl_sp_ez[i]       = -999999.;
+          _cl_sp_pe[i]       = -999999.;
+          _cl_sp_time[i]     = -999999.;
+          _cl_sp_complete[i] = false;
+        }
     }
 }
 

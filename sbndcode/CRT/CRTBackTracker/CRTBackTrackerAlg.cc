@@ -112,12 +112,13 @@ namespace sbnd::crt {
     art::FindManyP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
     const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
 
-    std::map<int, double> idToEnergyMap;
+    std::map<int, double> idToEnergyMap, idToXMap, idToYMap, idToZMap, idToTimeMap;
+    std::map<int, uint> idToNIDEsMap;
     double totalEnergy = 0.;
 
     auto const febData = stripHitToFEBData.at(stripHit.key());
-    assert(febData.size() == 1);
     auto const assnIDEVec = febDataToIDEs.at(febData.at(0).key());
+
     for(unsigned i = 0; i < assnIDEVec.size(); ++i)
       {
         const art::Ptr<sim::AuxDetIDE> ide = assnIDEVec[i];
@@ -126,22 +127,24 @@ namespace sbnd::crt {
           {
             idToEnergyMap[RollUpID(ide->trackID)] += ide->energyDeposited;
             totalEnergy                           += ide->energyDeposited;
+            
+            idToXMap[RollUpID(ide->trackID)]      += (ide->entryX + ide->exitX) / 2.;
+            idToYMap[RollUpID(ide->trackID)]      += (ide->entryY + ide->exitY) / 2.;
+            idToZMap[RollUpID(ide->trackID)]      += (ide->entryZ + ide->exitZ) / 2.;
+            idToTimeMap[RollUpID(ide->trackID)]   += (ide->entryT + ide->exitT) / 2.;
+
+            if(idToNIDEsMap.find(RollUpID(ide->trackID)) == idToNIDEsMap.end())
+              idToNIDEsMap[RollUpID(ide->trackID)] = 0;
+
+            ++idToNIDEsMap[RollUpID(ide->trackID)];
           }
       }
 
     double bestPur = 0., comp = 0.;
     int trackid = -99999;
 
-    //    std::cout << "New Strip Hit" << std::endl;
-
     for(auto const [id, en] : idToEnergyMap)
       {
-	/*
-	const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(id);
-        const int pdg = particle == NULL ? -1 : particle->PdgCode();
-        const std::string endprocess = particle == NULL ? "" : particle->EndProcess();
-        std::cout << "\tTrackID: " << id << " En: " << en << " PDG: " << pdg << " EndProc: " <<  endprocess << std::endl;
-	*/
         double pur = en / totalEnergy;
         if(pur > bestPur)
           {
@@ -150,11 +153,15 @@ namespace sbnd::crt {
             comp    = en / fMCPIDEsEnergyMap[{id, tagger}];
           }
       }
-    /*
-    std::cout << "\tPur: " << bestPur << " Comp: " << comp << std::endl;
-    std::cout << std::endl;
-    */
-    return TruthMatchMetrics(trackid, comp, bestPur);
+
+    double x    = idToXMap[trackid] / idToNIDEsMap[trackid];
+    double y    = idToYMap[trackid] / idToNIDEsMap[trackid];
+    double z    = idToZMap[trackid] / idToNIDEsMap[trackid];
+    double time = idToTimeMap[trackid] / idToNIDEsMap[trackid];
+
+    double energy = idToEnergyMap[trackid];
+
+    return TruthMatchMetrics(trackid, comp, bestPur, 1., 1., x, y, z, energy, time);
   }
 
   CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<CRTCluster> &cluster)
@@ -174,9 +181,9 @@ namespace sbnd::crt {
     art::FindManyP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
     art::FindManyP<CRTStripHit> clusterToStripHits(clusterHandle, event, fClusterModuleLabel);
 
-    std::map<int, double> idToEnergyMap;
+    std::map<int, double> idToEnergyMap, idToXMap, idToYMap, idToZMap, idToTimeMap;
     double totalEnergy = 0.;
-    std::map<int, int> idToNHitsMap;
+    std::map<int, uint> idToNHitsMap, idToNIDEsMap;
 
     auto const assnStripHitVec = clusterToStripHits.at(cluster.key());
 
@@ -193,6 +200,16 @@ namespace sbnd::crt {
               {
                 idToEnergyMap[RollUpID(ide->trackID)] += ide->energyDeposited;
                 totalEnergy                           += ide->energyDeposited;
+
+                idToXMap[RollUpID(ide->trackID)]      += (ide->entryX + ide->exitX) / 2.;
+                idToYMap[RollUpID(ide->trackID)]      += (ide->entryY + ide->exitY) / 2.;
+                idToZMap[RollUpID(ide->trackID)]      += (ide->entryZ + ide->exitZ) / 2.;
+                idToTimeMap[RollUpID(ide->trackID)]   += (ide->entryT + ide->exitT) / 2.;
+
+                if(idToNIDEsMap.find(RollUpID(ide->trackID)) == idToNIDEsMap.end())
+                  idToNIDEsMap[RollUpID(ide->trackID)] = 0;
+
+                ++idToNIDEsMap[RollUpID(ide->trackID)];
               }
           }
 
@@ -219,6 +236,13 @@ namespace sbnd::crt {
     double hitComp = idToNHitsMap[trackid] / (double) fMCPStripHitsMap[{trackid, cluster->Tagger()}];
     double hitPur  = idToNHitsMap[trackid] / (double) assnStripHitVec.size();
 
-    return TruthMatchMetrics(trackid, comp, bestPur, hitComp, hitPur);
+    double x    = idToXMap[trackid] / idToNIDEsMap[trackid];
+    double y    = idToYMap[trackid] / idToNIDEsMap[trackid];
+    double z    = idToZMap[trackid] / idToNIDEsMap[trackid];
+    double time = idToTimeMap[trackid] / idToNIDEsMap[trackid];
+
+    double energy = idToEnergyMap[trackid];
+
+    return TruthMatchMetrics(trackid, comp, bestPur, hitComp, hitPur, x, y, z, energy, time);
   }
 }

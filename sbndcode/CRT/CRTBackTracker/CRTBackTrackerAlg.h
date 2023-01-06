@@ -66,15 +66,27 @@ namespace sbnd::crt {
       double purity;
       double hitcompleteness;
       double hitpurity;
+      double x;
+      double y;
+      double z;
+      double energy;
+      double time;
 
       TruthMatchMetrics(int _trackid, double _completeness, double _purity,
-                        double _hitcompleteness = 0., double _hitpurity = 0.)
+                        double _hitcompleteness, double _hitpurity,
+                        double _x, double _y, double _z,
+                        double _energy, double _time)
       {
         trackid         = _trackid;
         completeness    = _completeness;
         purity          = _purity;
         hitcompleteness = _hitcompleteness;
         hitpurity       = _hitpurity;
+        x               = _x;
+        y               = _y;
+        z               = _z;
+        energy          = _energy;
+        time            = _time;
       }
     };
     
