@@ -329,8 +329,18 @@ namespace sbnd::crt {
                     
                     DrawCube(c1, rmin, rmax, colour);
                   }
-              }
 
+                CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, cluster);
+
+                if(fPrint)
+                  std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1()
+                            << "\t Matches to trackID: " << truthMatch.trackid
+                            << " with completeness: " << truthMatch.completeness
+                            << " and purity: " << truthMatch.purity << std::endl;
+
+                colour += fClusterColourInterval;
+              }
+            
             if(fDrawSpacePoints)
               {
                 if(spacePointVec.size() == 1)
@@ -338,23 +348,22 @@ namespace sbnd::crt {
                     const art::Ptr<CRTSpacePoint> spacepoint = spacePointVec[0];
                     const TVector3 pos = spacepoint->Pos();
                     const TVector3 err = spacepoint->Err();
-                    
+
                     double rmin[3] = {pos.X() - err.X(), pos.Y() - err.Y(), pos.Z() - err.Z()};
                     double rmax[3] = {pos.X() + err.X(), pos.Y() + err.Y(), pos.Z() + err.Z()};
-                    
+
                     DrawCube(c1, rmin, rmax, fSpacePointColour);
+
+                    if(fPrint)
+                      std::cout << "Space Point: (" 
+                                << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
+                                << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = "
+                                << spacepoint->Time() << " with PE " << spacepoint->PE() 
+                                << std::endl;
                   }
+                else if(spacePointVec.size() != 0)
+                  std::cout << "What an earth is going on here then..." << std::endl;
               }
-
-            CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, cluster);
-
-            if(fPrint)
-              std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1()
-                        << "\t Matches to trackID: " << truthMatch.trackid
-                        << " with completeness: " << truthMatch.completeness
-                        << " and purity: " << truthMatch.purity << std::endl;
-
-            colour += fClusterColourInterval;
           }
       }
 
