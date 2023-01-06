@@ -117,7 +117,7 @@ private:
   void estimateBaseline(int i_ch);
   void SimpleThreshAlgo(int i_ch);
 
-  // TTree* _tree; 
+  TTree* _tree; 
   int _run, _sub, _evt; 
   bool   _beam_trig; 
   double _time_trig; 
@@ -156,16 +156,16 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   for(auto const& i:pmtMap){
     channelList.push_back(i["channel"]);
   }
-  // art::ServiceHandle<art::TFileService> fs;
-  // _tree = fs->make<TTree>("software_metrics_tree","");
-  // _tree->Branch("run",       &_run,       "run/I");
-  // _tree->Branch("sub",       &_sub,       "sub/I");
-  // _tree->Branch("evt",       &_evt,       "evt/I");
-  // _tree->Branch("beam_trig", &_beam_trig, "beam_trig/O");
-  // _tree->Branch("time_trig", &_time_trig, "time_trig/D");
-  // _tree->Branch("npmt",      &_npmt,      "npmt/I");
-  // _tree->Branch("promptPE",  &_promptPE,  "promptPE/D");
-  // _tree->Branch("prelimPE",  &_prelimPE,  "prelimPE/D");
+  art::ServiceHandle<art::TFileService> fs;
+  _tree = fs->make<TTree>("software_metrics_tree","");
+  _tree->Branch("run",       &_run,       "run/I");
+  _tree->Branch("sub",       &_sub,       "sub/I");
+  _tree->Branch("evt",       &_evt,       "evt/I");
+  _tree->Branch("beam_trig", &_beam_trig, "beam_trig/O");
+  _tree->Branch("time_trig", &_time_trig, "time_trig/D");
+  _tree->Branch("npmt",      &_npmt,      "npmt/I");
+  _tree->Branch("promptPE",  &_promptPE,  "promptPE/D");
+  _tree->Branch("prelimPE",  &_prelimPE,  "prelimPE/D");
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
@@ -343,7 +343,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   }
     trig_metrics_v->push_back(trig_metrics);
     e.put(std::move(trig_metrics_v));   
-  // _tree->Fill();
+  _tree->Fill();
    
 }
 
