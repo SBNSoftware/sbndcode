@@ -46,6 +46,10 @@ namespace sbnd::crt {
 
     bool CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint);
 
+    bool TwoHitSpacePoint(const art::Ptr<CRTStripHit> hit0, const art::Ptr<CRTStripHit> hit1, CRTSpacePoint &spacepoint);
+
+    bool CharacteriseMultiHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint);
+
     double ADCToPE(const uint16_t channel, const uint16_t adc1, const uint16_t adc2);
 
     double ADCToPE(const uint16_t channel, const uint16_t adc);
@@ -63,6 +67,8 @@ namespace sbnd::crt {
     double CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos);
 
     double TimingCorrectionOffset(const double &dist, const double &pe);
+
+    void AggregatePositions(const TVector3 &pos, const TVector3 &err, std::array<double, 6> &agg);
 
   private:
 

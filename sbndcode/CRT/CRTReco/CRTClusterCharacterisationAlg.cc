@@ -36,7 +36,14 @@ namespace sbnd::crt {
     const art::Ptr<CRTStripHit> &hit0 = stripHits[0];
     const art::Ptr<CRTStripHit> &hit1 = stripHits[1];
 
-    if(cluster->ThreeD())
+    return TwoHitSpacePoint(hit0, hit1, spacepoint);
+  }
+
+  bool CRTClusterCharacterisationAlg::TwoHitSpacePoint(const art::Ptr<CRTStripHit> hit0, const art::Ptr<CRTStripHit> hit1, CRTSpacePoint &spacepoint)
+  {
+    const bool threeD = fCRTGeoAlg.ChannelToOrientation(hit0->Channel()) != fCRTGeoAlg.ChannelToOrientation(hit1->Channel());
+
+    if(threeD)
       {
         if(fCRTGeoAlg.CheckOverlap(hit0->Channel(), hit1->Channel(), fOverlapBuffer))
           {
@@ -63,13 +70,63 @@ namespace sbnd::crt {
             CentralPosition(overlap, pos, err);
 
             const double pe   = ADCToPE(hit0->Channel(), hit0->ADC1(), hit0->ADC2()) + ADCToPE(hit1->Channel(), hit1->ADC1(), hit1->ADC2());
-            const double time = hit0->Ts1() + hit1->Ts1() / 2.;
+            const double time = (hit0->Ts1() + hit1->Ts1()) / 2.;
 
             spacepoint = CRTSpacePoint(pos, err, pe, time, false);
             return true;
           }
         return false;
       }
+  }
+
+  bool CRTClusterCharacterisationAlg::CharacteriseMultiHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint)
+  {
+    std::vector<CRTSpacePoint> spacepoints, complete_spacepoints;
+
+    for(unsigned i = 0; i < stripHits.size(); ++i)
+      {
+        const art::Ptr<CRTStripHit> hit0 = stripHits[i];
+
+        for(unsigned ii = i + 1; ii < stripHits.size(); ++ii)
+          {
+            const art::Ptr<CRTStripHit> hit1 = stripHits[ii];
+
+            CRTSpacePoint sp;
+            if(TwoHitSpacePoint(hit0, hit1, sp))
+              {
+                spacepoints.push_back(sp);
+        
+                if(sp.Complete()) 
+                  complete_spacepoints.push_back(sp);
+              }
+          }
+      }
+
+    if(complete_spacepoints.size() == 0)
+      {
+        std::cout << "Problem, no complete spacepoints! (" << cluster->Ts1() << ")" << std::endl;
+        return false;
+      }
+    
+    std::array<double, 6> aggregate_position({std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 
+          -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()});
+
+    double pe = 0., time = 0.;
+
+    for(auto const &sp : complete_spacepoints)
+      {
+        AggregatePositions(sp.Pos(), sp.Err(), aggregate_position);
+        pe   += sp.PE();
+        time += sp.Time();
+      }
+
+    TVector3 pos, err;
+    CentralPosition(aggregate_position, pos, err);
+    pe   /= complete_spacepoints.size();
+    time /= complete_spacepoints.size();
+    
+    spacepoint = CRTSpacePoint(pos, err, pe, time, true);
+    return true;
   }
 
   double CRTClusterCharacterisationAlg::ADCToPE(const uint16_t channel, const uint16_t adc1, const uint16_t adc2)
@@ -160,5 +217,15 @@ namespace sbnd::crt {
   double CRTClusterCharacterisationAlg::TimingCorrectionOffset(const double &dist, const double &pe)
   {
     return dist * fPropDelay + fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset;
-  } 
+  }
+
+  void CRTClusterCharacterisationAlg::AggregatePositions(const TVector3 &pos, const TVector3 &err, std::array<double, 6> &agg)
+  {
+    agg[0] = std::min(pos.X() - err.X(), agg[0]);
+    agg[1] = std::max(pos.X() + err.X(), agg[1]);
+    agg[2] = std::min(pos.Y() - err.Y(), agg[2]);
+    agg[3] = std::max(pos.Y() + err.Y(), agg[3]);
+    agg[4] = std::min(pos.Z() - err.Z(), agg[4]);
+    agg[5] = std::max(pos.Z() + err.Z(), agg[5]);
+  }
 }

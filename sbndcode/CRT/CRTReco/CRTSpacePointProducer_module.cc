@@ -79,17 +79,20 @@ void sbnd::crt::CRTSpacePointProducer::produce(art::Event& e)
       else if(nhits == 2)
         {
           CRTSpacePoint spacepoint;
-	  if(fClusterCharacAlg.CharacteriseDoubleHitCluster(cluster, stripHits, spacepoint))
-	    {
-	      spacePointVec->push_back(spacepoint);
-	      util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
-	    }
+          if(fClusterCharacAlg.CharacteriseDoubleHitCluster(cluster, stripHits, spacepoint))
+            {
+              spacePointVec->push_back(spacepoint);
+              util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
+            }
         }
       else
         {
           CRTSpacePoint spacepoint;
-          spacePointVec->push_back(spacepoint);
-          util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
+          if(fClusterCharacAlg.CharacteriseMultiHitCluster(cluster, stripHits, spacepoint))
+            {
+              spacePointVec->push_back(spacepoint);
+              util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
+            }
         }
     }
 
