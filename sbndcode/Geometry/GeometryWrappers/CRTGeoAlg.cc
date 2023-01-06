@@ -424,9 +424,7 @@ namespace sbnd::crt {
        strip1.minZ == strip2.minZ && strip1.maxZ == strip2.maxZ)
       return minX < (maxX + overlap_buffer);
     else
-      std::cout << "Error: potential adjacent strips without two equal dimensions" << std::endl;
-
-    return false;
+      return false;
   }
 
   bool CRTGeoAlg::AdjacentStrips(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer)
