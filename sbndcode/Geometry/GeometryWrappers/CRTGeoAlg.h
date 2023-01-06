@@ -321,6 +321,10 @@ namespace sbnd::crt {
 
     bool CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.);
 
+    bool AdjacentStrips(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.1);
+
+    bool AdjacentStrips(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.1);
+
     bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
 
     enum CRTTagger WhichTagger(const double &x, const double &y, const double &z);

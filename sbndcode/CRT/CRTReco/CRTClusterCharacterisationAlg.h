@@ -52,6 +52,8 @@ namespace sbnd::crt {
 
     std::array<double, 6> FindOverlap(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1);
 
+    std::array<double, 6> FindAdjacentPosition(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1);
+
     void CentralPosition(const std::array<double, 6> overlap, TVector3 &pos, TVector3 &err);
 
     double ReconstructPE(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos);

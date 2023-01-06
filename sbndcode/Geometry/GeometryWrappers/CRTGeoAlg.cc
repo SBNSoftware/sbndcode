@@ -380,12 +380,12 @@ namespace sbnd::crt {
 
   bool CRTGeoAlg::CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer)
   {
-    const double minX = std::max(strip1.minX, strip2.minX) + overlap_buffer / 2.;
-    const double maxX = std::min(strip1.maxX, strip2.maxX) - overlap_buffer / 2.;
-    const double minY = std::max(strip1.minY, strip2.minY) + overlap_buffer / 2.;
-    const double maxY = std::min(strip1.maxY, strip2.maxY) - overlap_buffer / 2.;
-    const double minZ = std::max(strip1.minZ, strip2.minZ) + overlap_buffer / 2.;
-    const double maxZ = std::min(strip1.maxZ, strip2.maxZ) - overlap_buffer / 2.;
+    const double minX = std::max(strip1.minX, strip2.minX) - overlap_buffer / 2.;
+    const double maxX = std::min(strip1.maxX, strip2.maxX) + overlap_buffer / 2.;
+    const double minY = std::max(strip1.minY, strip2.minY) - overlap_buffer / 2.;
+    const double maxY = std::min(strip1.maxY, strip2.maxY) + overlap_buffer / 2.;
+    const double minZ = std::max(strip1.minZ, strip2.minZ) - overlap_buffer / 2.;
+    const double maxZ = std::min(strip1.maxZ, strip2.maxZ) + overlap_buffer / 2.;
 
     // If the two strips overlap in 2 dimensions then return true
     return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
@@ -397,6 +397,44 @@ namespace sbnd::crt {
     CRTStripGeo strip2 = GetStrip(channel2);
 
     return CheckOverlap(strip1, strip2, overlap_buffer);
+  }
+
+  bool CRTGeoAlg::AdjacentStrips(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer)
+  {
+    CRTModuleGeo module1 = GetModule(strip1.channel0);
+    CRTModuleGeo module2 = GetModule(strip2.channel0);
+
+    if(module1.taggerName != module2.taggerName || module1.orientation != module2.orientation)
+      return false;
+
+    const double minX = std::max(strip1.minX, strip2.minX);
+    const double maxX = std::min(strip1.maxX, strip2.maxX);
+    const double minY = std::max(strip1.minY, strip2.minY);
+    const double maxY = std::min(strip1.maxY, strip2.maxY);
+    const double minZ = std::max(strip1.minZ, strip2.minZ);
+    const double maxZ = std::min(strip1.maxZ, strip2.maxZ);
+
+    if(strip1.minX == strip2.minX && strip1.maxX == strip2.maxX &&
+       strip1.minY == strip2.minY && strip1.maxY == strip2.maxY)
+      return minZ < (maxZ + overlap_buffer);
+    if(strip1.minX == strip2.minX && strip1.maxX == strip2.maxX &&
+       strip1.minZ == strip2.minZ && strip1.maxZ == strip2.maxZ)
+      return minY < (maxY + overlap_buffer);
+    if(strip1.minY == strip2.minY && strip1.maxY == strip2.maxY &&
+       strip1.minZ == strip2.minZ && strip1.maxZ == strip2.maxZ)
+      return minX < (maxX + overlap_buffer);
+    else
+      std::cout << "Error: potential adjacent strips without two equal dimensions" << std::endl;
+
+    return false;
+  }
+
+  bool CRTGeoAlg::AdjacentStrips(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer)
+  {
+    CRTStripGeo strip1 = GetStrip(channel1);
+    CRTStripGeo strip2 = GetStrip(channel2);
+
+    return AdjacentStrips(strip1, strip2, overlap_buffer);
   }
 
   bool CRTGeoAlg::DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2)

@@ -33,14 +33,14 @@ namespace sbnd::crt {
 
   bool CRTClusterCharacterisationAlg::CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint)
   {
+    const art::Ptr<CRTStripHit> &hit0 = stripHits[0];
+    const art::Ptr<CRTStripHit> &hit1 = stripHits[1];
+
     if(cluster->ThreeD())
       {
-        const art::Ptr<CRTStripHit> &hit0 = stripHits[0];
-        const art::Ptr<CRTStripHit> &hit1 = stripHits[1];
-
         if(fCRTGeoAlg.CheckOverlap(hit0->Channel(), hit1->Channel(), fOverlapBuffer))
           {
-            std::array<double, 6> overlap   = FindOverlap(hit0, hit1);
+            std::array<double, 6> overlap = FindOverlap(hit0, hit1);
             
             TVector3 pos, err;
             CentralPosition(overlap, pos, err);
@@ -48,15 +48,28 @@ namespace sbnd::crt {
             const double pe   = ReconstructPE(hit0, hit1, pos);
             const double time = CorrectTime(hit0, hit1, pos);
 
-	    //	    std::cout << "Both (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
-	    spacepoint = CRTSpacePoint(pos, err, pe, time, true);
+            spacepoint = CRTSpacePoint(pos, err, pe, time, true);
             return true;
           }
-	//	std::cout << "ThreeD but no overlap (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
-	return false;
+        return false;
       }
-    //    std::cout << "Not threeD (" << cluster.key() << " " << cluster->Ts1() << ")" << std::endl;
-    return false;
+    else
+      {
+        if(fCRTGeoAlg.AdjacentStrips(hit0->Channel(), hit1->Channel(), fOverlapBuffer))
+          {
+            std::array<double, 6> overlap = FindAdjacentPosition(hit0, hit1);
+
+            TVector3 pos, err;
+            CentralPosition(overlap, pos, err);
+
+            const double pe   = ADCToPE(hit0->Channel(), hit0->ADC1(), hit0->ADC2()) + ADCToPE(hit1->Channel(), hit1->ADC1(), hit1->ADC2());
+            const double time = hit0->Ts1() + hit1->Ts1() / 2.;
+
+            spacepoint = CRTSpacePoint(pos, err, pe, time, false);
+            return true;
+          }
+        return false;
+      }
   }
 
   double CRTClusterCharacterisationAlg::ADCToPE(const uint16_t channel, const uint16_t adc1, const uint16_t adc2)
@@ -80,6 +93,21 @@ namespace sbnd::crt {
                                    std::min(hit0pos[3], hit1pos[3]),
                                    std::max(hit0pos[4], hit1pos[4]),
                                    std::min(hit0pos[5], hit1pos[5])});
+
+    return overlap;
+  }
+
+  std::array<double, 6> CRTClusterCharacterisationAlg::FindAdjacentPosition(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1)
+  {
+    const std::array<double, 6> hit0pos = fCRTGeoAlg.StripHit3DPos(hit0->Channel(), hit0->Pos(), hit0->Error());
+    const std::array<double, 6> hit1pos = fCRTGeoAlg.StripHit3DPos(hit1->Channel(), hit1->Pos(), hit1->Error());
+
+    std::array<double, 6> overlap({std::min(hit0pos[0], hit1pos[0]),
+                                   std::max(hit0pos[1], hit1pos[1]),
+                                   std::min(hit0pos[2], hit1pos[2]),
+                                   std::max(hit0pos[3], hit1pos[3]),
+                                   std::min(hit0pos[4], hit1pos[4]),
+                                   std::max(hit0pos[5], hit1pos[5])});
 
     return overlap;
   }
