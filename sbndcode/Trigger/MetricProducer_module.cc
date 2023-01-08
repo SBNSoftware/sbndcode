@@ -63,7 +63,7 @@ private:
   int fBeamWindowStart;
   int fBeamWindowEnd;
   bool fVerbose;
-  bool fcrt_metrics;
+  bool fCalcCRTMetrics;
 
   //metric variables
   int hitsperplane[7];
@@ -71,7 +71,7 @@ private:
   //PMT Metric variables
 
   //fhicl parameters
-  bool fpmt_metrics;
+  bool fCalcPMTMetrics;
   double fTriggerTimeOffset;    // offset of trigger time, default 0.5 sec
   double fBeamWindowLength; // beam window length after trigger time, default 1.6us
   uint32_t fWvfmLength;
@@ -127,8 +127,8 @@ sbndaq::MetricProducer::MetricProducer(fhicl::ParameterSet const& p)
   fBeamWindowStart(p.get<int>("BeamWindowStart",320000)),
   fBeamWindowEnd(p.get<int>("BeamWindowEnd",350000)),
   fVerbose(p.get<bool>("Verbose",false)),
-  fcrt_metrics(p.get<bool>("crt_metrics",true)),
-  fpmt_metrics(p.get<bool>("pmt_metrics",true)),
+  fCalcCRTMetrics(p.get<bool>("CalcCRTMetrics",true)),
+  fCalcPMTMetrics(p.get<bool>("CalcPMTMetrics",true)),
   fTriggerTimeOffset(p.get<double>("TriggerTimeOffset", 0.5)),
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)),
   fWvfmLength(p.get<uint32_t>("WvfmLength", 5120)),
@@ -140,7 +140,7 @@ sbndaq::MetricProducer::MetricProducer(fhicl::ParameterSet const& p)
   fPEArea(p.get<double>("PEArea", 66.33))
   {
   // Call appropriate produces<>() functions here.
-  produces< sbndaq::CRTmetric >("", is_persistable_);
+  produces< std::vector<sbndaq::CRTmetric >>("", is_persistable_);
 
   produces<std::vector<sbnd::trigger::pmtSoftwareTrigger>>("", is_persistable_);
 
@@ -168,15 +168,16 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
   if (fVerbose) std::cout << "Processing: Run " << fRun << ", Subrun " << fSubrun << ", Event " << fEvent << std::endl;
 
   // object to store required trigger information in
-  std::unique_ptr<sbndaq::CRTmetric> CRTMetricInfo = std::make_unique<sbndaq::CRTmetric>();
+  std::unique_ptr<std::vector<sbndaq::CRTmetric>> crt_metrics_v = std::make_unique<std::vector<sbndaq::CRTmetric>>();
+  sbndaq::CRTmetric crt_metrics; 
+  // std::unique_ptr<sbndaq::CRTmetric> CRTMetricInfo = std::make_unique<sbndaq::CRTmetric>();
 
   // object to store trigger metrics in
-  // object to store trigger metrics in
-  std::unique_ptr<std::vector<sbnd::trigger::pmtSoftwareTrigger>> trig_metrics_v = std::make_unique<std::vector<sbnd::trigger::pmtSoftwareTrigger>>();
-  sbnd::trigger::pmtSoftwareTrigger trig_metrics;
+  std::unique_ptr<std::vector<sbnd::trigger::pmtSoftwareTrigger>> pmt_metrics_v = std::make_unique<std::vector<sbnd::trigger::pmtSoftwareTrigger>>();
+  sbnd::trigger::pmtSoftwareTrigger pmt_metrics;
   // clear variables at the beginning of the event
   // move this to constructor??
-  for (int ip=0;ip<7;++ip)  { CRTMetricInfo->hitsperplane[ip]=0; hitsperplane[ip]=0;}
+  for (int ip=0;ip<7;++ip)  { crt_metrics.hitsperplane[ip]=0; hitsperplane[ip]=0;}
   foundBeamTrigger = false;
   fWvfmsFound = false;
   fWvfmsVec.clear(); fWvfmsVec.resize(15*8); // 15 pmt channels per fragment, 8 fragments per trigger
@@ -198,7 +199,7 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
           artdaq::ContainerFragment contf(cont);
           if (contf.fragment_type() == sbndaq::detail::FragmentType::BERNCRTV2){
     	      if (fVerbose)     std::cout << "    Found " << contf.block_count() << " CRT Fragments in container " << std::endl;
-            if (fcrt_metrics){
+            if (fCalcCRTMetrics){
     	         for (size_t ii = 0; ii < contf.block_count(); ++ii) analyze_crt_fragment(*contf[ii].get());
             }
           }
@@ -211,14 +212,14 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
           beamFragmentIdx++;
           if (frag.type()==sbndaq::detail::FragmentType::BERNCRTV2) {
             num_crt_frags++;
-          	if (fcrt_metrics){analyze_crt_fragment(frag);}
+          	if (fCalcCRTMetrics){analyze_crt_fragment(frag);}
           }
 
 
 
       if (frag.type()==sbndaq::detail::FragmentType::CAENV1730) {
         num_pmt_frags++;
-        if (fpmt_metrics){
+        if (fCalcPMTMetrics){
         // identify whether any fragments correspond to the beam spill
         // loop over fragments, in steps of 8
         //size_t beamFragmentIdx = 9999;
@@ -250,24 +251,27 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
 
   } // loop over frag handles
 
-  if (fcrt_metrics){
+  if (fCalcCRTMetrics){
 
-    for (int i=0;i<7;++i) {CRTMetricInfo->hitsperplane[i] = hitsperplane[i];}
+    for (int i=0;i<7;++i) {crt_metrics.hitsperplane[i] = hitsperplane[i];}
 
     if (fVerbose) {
       std::cout << "CRT hit count during beam spill ";
-      for (int i=0;i<7;++i) std::cout << i << ": " << CRTMetricInfo->hitsperplane[i] << "   " ;
+      for (int i=0;i<7;++i) std::cout << i << ": " << crt_metrics.hitsperplane[i] << "   " ;
       std::cout << std::endl;
     }
 
 
   }//if save crt metrics
 
-  if (fpmt_metrics){
+  if (fCalcPMTMetrics){
 
     if (foundBeamTrigger && fWvfmsFound) {
       // store timestamp of trigger, relative to beam window start
       double triggerTimeStamp = fTriggerTime - beamWindowStart;
+      pmt_metrics.foundBeamTrigger = true;
+      pmt_metrics.triggerTimestamp = triggerTimeStamp;
+      
       if (fVerbose) std::cout << "Saving trigger timestamp: " << triggerTimeStamp << " ns" << std::endl;
 
       double promptPE = 0;
@@ -325,9 +329,9 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
         } 
       } // end of wvfm loop
 
-      trig_metrics.nAboveThreshold = nAboveThreshold;    
-      trig_metrics.promptPE = promptPE;
-      trig_metrics.prelimPE = prelimPE;
+      pmt_metrics.nAboveThreshold = nAboveThreshold;    
+      pmt_metrics.promptPE = promptPE;
+      pmt_metrics.prelimPE = prelimPE;
 
       if (fVerbose) std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
       if (fVerbose) std::cout << "prompt pe: " << promptPE << std::endl;
@@ -335,18 +339,19 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
     } // if beam and wvfms found 
     else{
       if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
-      trig_metrics.foundBeamTrigger = false;
-      trig_metrics.triggerTimestamp = -9999;
-      trig_metrics.nAboveThreshold = -9999;
-      trig_metrics.promptPE = -9999;
-      trig_metrics.prelimPE = -9999;
+      pmt_metrics.foundBeamTrigger = false;
+      pmt_metrics.triggerTimestamp = -9999;
+      pmt_metrics.nAboveThreshold = -9999;
+      pmt_metrics.promptPE = -9999;
+      pmt_metrics.prelimPE = -9999;
     }
   }//if save pmt metrics
 
   // add to event
-  evt.put(std::move(CRTMetricInfo));
-  trig_metrics_v->push_back(trig_metrics);
-  evt.put(std::move(trig_metrics_v));   
+  crt_metrics_v->push_back(crt_metrics);
+  evt.put(std::move(crt_metrics_v));
+  pmt_metrics_v->push_back(pmt_metrics);
+  evt.put(std::move(pmt_metrics_v));   
 }//produce
 
 
@@ -371,7 +376,7 @@ void sbndaq::MetricProducer::analyze_crt_fragment(artdaq::Fragment & frag)
       // check ts1 for beam window
       auto thistime=bevt->ts1;
       if ((int)thistime>fBeamWindowStart && (int)thistime<fBeamWindowEnd) hitsperplane[plane]++;
-      //CRTMetricInfo->hitsperplane[plane]++;
+      //crt_metrics.hitsperplane[plane]++;
     }
   }
 
