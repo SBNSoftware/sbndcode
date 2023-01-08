@@ -10,8 +10,8 @@ MetricProducer:
   BeamWindowEnd: 350000
   Verbose: true
 
-  crt_metrics: true
-  pmt_metrics: true
+  CalcCRTMetrics: true
+  CalcPMTMetrics: true
 
   TriggerTimeOffset: @local::pmtSoftwareTriggerProducer.TriggerTimeOffset
   BeamWindowLength: @local::pmtSoftwareTriggerProducer.BeamWindowLength
