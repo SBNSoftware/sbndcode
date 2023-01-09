@@ -88,7 +88,7 @@ void BasicClusterVariables()
      50, 0, 1 + std::numeric_limits<double>::epsilon(), 10, 0, 10},
   };
 
-  gSystem->Exec("mkdir -p " + saveDir);                                                                                                                                                                
+  gSystem->Exec("mkdir -p " + saveDir);
 
   for(auto const &plot : plots)
     {
@@ -113,7 +113,7 @@ void BasicClusterVariables()
           canvas->SaveAs(saveDir + "/" + plot.name + ".png");
           canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
         }
-      //      delete canvas, hist;                                                                                                                                                                         
+      delete canvas, hist;
     }
 
   for(auto const &plot : twodplots)
@@ -134,6 +134,6 @@ void BasicClusterVariables()
           canvas->SaveAs(saveDir + "/" + plot.name + ".png");
           canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
         }
-      //      delete canvas, hist;                                                                                                                                                                         
+      delete canvas, hist;
     }
 }
