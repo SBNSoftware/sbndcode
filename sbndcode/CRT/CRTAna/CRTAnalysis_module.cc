@@ -56,6 +56,8 @@ public:
 
   void AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints);
 
+  void AnalyseTrueDeposits(const std::map<std::pair<int, CRTTagger>, bool> &recoStatusMap);
+
 private:
 
   CRTGeoAlg fCRTGeoAlg;
@@ -153,6 +155,15 @@ private:
   std::vector<double>   _cl_sp_pe;
   std::vector<double>   _cl_sp_time;
   std::vector<bool>     _cl_sp_complete;
+
+  std::vector<int16_t> _td_trackid;
+  std::vector<int16_t> _td_tagger;
+  std::vector<double>  _td_x;
+  std::vector<double>  _td_y;
+  std::vector<double>  _td_z;
+  std::vector<double>  _td_energy;
+  std::vector<double>  _td_time;
+  std::vector<bool>    _td_reco_status;
 };
 
 
@@ -257,6 +268,15 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_sp_time", "std::vector<double>", &_cl_sp_time);
     fTree->Branch("cl_sp_complete", "std::vector<bool>", &_cl_sp_complete);
 
+    fTree->Branch("td_trackid", "std::vector<int16_t>", &_td_trackid);
+    fTree->Branch("td_tagger", "std::vector<int16_t>", &_td_tagger);
+    fTree->Branch("td_x", "std::vector<double>", &_td_x);
+    fTree->Branch("td_y", "std::vector<double>", &_td_y);
+    fTree->Branch("td_z", "std::vector<double>", &_td_z);
+    fTree->Branch("td_energy", "std::vector<double>", &_td_energy);
+    fTree->Branch("td_time", "std::vector<double>", &_td_time);
+    fTree->Branch("td_reco_status", "std::vector<bool>", &_td_reco_status);
+
     if(fDebug)
       {
         for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
@@ -290,6 +310,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 {
   fCRTBackTrackerAlg.SetupMaps(e);
+  fCRTBackTrackerAlg.RunRecoStatusChecks(e);
 
   _run = e.id().run();
   _subrun = e.id().subRun();
@@ -365,13 +386,19 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   // Fill CRTCluster variables
   AnalyseCRTClusters(e, CRTClusterVec, clustersToSpacePoints);
 
+  // Get Map of TrueDeposits from BackTracker
+  std::map<std::pair<int, CRTTagger>, bool> recoStatusMap = fCRTBackTrackerAlg.GetRecoStatusMap();
+  
+  // Fill TrueDeposit variables
+  AnalyseTrueDeposits(recoStatusMap);
+
   // Fill the Tree
   fTree->Fill();
 }
 
 void sbnd::crt::CRTAnalysis::AnalyseMCParticles(std::vector<art::Ptr<simb::MCParticle>> &MCParticleVec)
 {
-  unsigned nMCParticles = MCParticleVec.size();
+  const unsigned nMCParticles = MCParticleVec.size();
 
   _mc_trackid.resize(nMCParticles);
   _mc_pdg.resize(nMCParticles);
@@ -429,7 +456,7 @@ void sbnd::crt::CRTAnalysis::AnalyseMCParticles(std::vector<art::Ptr<simb::MCPar
 
 void sbnd::crt::CRTAnalysis::AnalyseSimDeposits(std::vector<art::Ptr<sim::AuxDetSimChannel>> &SimDepositVec)
 {
-  unsigned nAuxDetSimChannels = SimDepositVec.size();
+  const unsigned nAuxDetSimChannels = SimDepositVec.size();
   unsigned nIDEs              = 0;
 
   for(unsigned i = 0; i < nAuxDetSimChannels; ++i)
@@ -478,7 +505,7 @@ void sbnd::crt::CRTAnalysis::AnalyseSimDeposits(std::vector<art::Ptr<sim::AuxDet
 
 void sbnd::crt::CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<FEBData>> &FEBDataVec)
 {
-  unsigned nFEBData = FEBDataVec.size();
+  const unsigned nFEBData = FEBDataVec.size();
 
   _feb_mac5.resize(nFEBData);
   _feb_flags.resize(nFEBData);
@@ -506,7 +533,7 @@ void sbnd::crt::CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<FEBData>> &FEB
 
 void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec)
 {
-  unsigned nStripHits = CRTStripHitVec.size();
+  const unsigned nStripHits = CRTStripHitVec.size();
   
   _sh_channel.resize(nStripHits);
   _sh_ts0.resize(nStripHits);
@@ -544,7 +571,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
 
 void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints)
 {
-  unsigned nClusters = CRTClusterVec.size();
+  const unsigned nClusters = CRTClusterVec.size();
 
   _cl_ts0.resize(nClusters);
   _cl_ts1.resize(nClusters);
@@ -590,11 +617,11 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_truth_purity[i]           = truthMatch.purity;
       _cl_truth_hit_completeness[i] = truthMatch.hitcompleteness;
       _cl_truth_hit_purity[i]       = truthMatch.hitpurity;
-      _cl_truth_x[i]                = truthMatch.x;
-      _cl_truth_y[i]                = truthMatch.y;
-      _cl_truth_z[i]                = truthMatch.z;
-      _cl_truth_energy[i]           = truthMatch.energy;
-      _cl_truth_time[i]             = truthMatch.time;
+      _cl_truth_x[i]                = truthMatch.deposit.x;
+      _cl_truth_y[i]                = truthMatch.deposit.y;
+      _cl_truth_z[i]                = truthMatch.deposit.z;
+      _cl_truth_energy[i]           = truthMatch.deposit.energy;
+      _cl_truth_time[i]             = truthMatch.deposit.time;
 
       auto spacepoints = clustersToSpacePoints.at(cluster.key());
       if(spacepoints.size() == 1)
@@ -625,6 +652,37 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_sp_time[i]     = -999999.;
           _cl_sp_complete[i] = false;
         }
+    }
+}
+
+void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<std::pair<int, CRTTagger>, bool> &recoStatusMap)
+{
+  const unsigned nTrueDeposits = recoStatusMap.size();
+
+  _td_trackid.resize(nTrueDeposits);
+  _td_tagger.resize(nTrueDeposits);
+  _td_x.resize(nTrueDeposits);
+  _td_y.resize(nTrueDeposits);
+  _td_z.resize(nTrueDeposits);
+  _td_energy.resize(nTrueDeposits);
+  _td_time.resize(nTrueDeposits);
+  _td_reco_status.resize(nTrueDeposits);
+
+  unsigned entry = 0;
+  for(auto const& [category, status] : recoStatusMap)
+    {
+      const CRTBackTrackerAlg::TrueDeposit deposit = fCRTBackTrackerAlg.GetTrueDeposit(category);
+
+      _td_trackid[entry]     = deposit.trackid;
+      _td_tagger[entry]      = deposit.tagger;
+      _td_x[entry]           = deposit.x;
+      _td_y[entry]           = deposit.y;
+      _td_z[entry]           = deposit.z;
+      _td_energy[entry]      = deposit.energy;
+      _td_time[entry]        = deposit.time;
+      _td_reco_status[entry] = status;
+
+      ++entry;
     }
 }
 

@@ -28,6 +28,7 @@
 #include "sbnobj/SBND/CRT/FEBTruthInfo.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
@@ -58,42 +59,58 @@ namespace sbnd::crt {
       fhicl::Atom<art::InputTag> ClusterModuleLabel {
         Name("ClusterModuleLabel"),
           };
+      fhicl::Atom<art::InputTag> SpacePointModuleLabel {
+        Name("SpacePointModuleLabel"),
+          };
+    };
+
+    struct TrueDeposit {
+      int       trackid;
+      CRTTagger tagger;
+      double    x;
+      double    y;
+      double    z;
+      double    energy;
+      double    time;
+      
+      TrueDeposit(int _trackid = -999999, CRTTagger _tagger = kUndefinedTagger, 
+                  double _x = -999999., double _y = -999999., double _z = -999999., 
+                  double _energy = -999999., double _time = -999999.)
+      {
+        trackid = _trackid;
+        tagger  = _tagger;
+        x       = _x;
+        y       = _y;
+        z       = _z;
+        energy  = _energy;
+        time    = _time;
+      }
     };
 
     struct TruthMatchMetrics {
-      int    trackid;
-      double completeness;
-      double purity;
-      double hitcompleteness;
-      double hitpurity;
-      double x;
-      double y;
-      double z;
-      double energy;
-      double time;
+      int         trackid;
+      double      completeness;
+      double      purity;
+      double      hitcompleteness;
+      double      hitpurity;
+      TrueDeposit deposit;
 
       TruthMatchMetrics(int _trackid, double _completeness, double _purity,
-                        double _hitcompleteness, double _hitpurity,
-                        double _x, double _y, double _z,
-                        double _energy, double _time)
+                        double _hitcompleteness, double _hitpurity, TrueDeposit _deposit)
       {
         trackid         = _trackid;
         completeness    = _completeness;
         purity          = _purity;
         hitcompleteness = _hitcompleteness;
         hitpurity       = _hitpurity;
-        x               = _x;
-        y               = _y;
-        z               = _z;
-        energy          = _energy;
-        time            = _time;
+        deposit         = _deposit;
       }
     };
-    
+
     CRTBackTrackerAlg(const Config& config);
     
     CRTBackTrackerAlg(const fhicl::ParameterSet& pset) :
-      CRTBackTrackerAlg(fhicl::Table<Config>(pset, {})()) {}
+    CRTBackTrackerAlg(fhicl::Table<Config>(pset, {})()) {}
     
     CRTBackTrackerAlg();
 
@@ -104,6 +121,12 @@ namespace sbnd::crt {
     void SetupMaps(const art::Event &event);
 
     int RollUpID(const int &id);
+
+    void RunRecoStatusChecks(const art::Event &event);
+    
+    std::map<std::pair<int, CRTTagger>, bool> GetRecoStatusMap();
+
+    TrueDeposit GetTrueDeposit(std::pair<int, CRTTagger> category);
 
     TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<CRTStripHit> &stripHit);
 
@@ -116,15 +139,20 @@ namespace sbnd::crt {
 
     art::InputTag fSimModuleLabel;
     art::InputTag fSimDepositModuleLabel;
-    art::InputTag fStripHitModuleLabel;
     art::InputTag fFEBDataModuleLabel;
+    art::InputTag fStripHitModuleLabel;
     art::InputTag fClusterModuleLabel;
+    art::InputTag fSpacePointModuleLabel;
+
+    std::map<std::pair<int, CRTTagger>, TrueDeposit> fTrueDepositsMap;
+    std::map<std::pair<int, CRTTagger>, bool>        fTrackIDRecoMap;
 
     std::map<std::pair<int, CRTTagger>, double> fMCPIDEsEnergyMap;
     std::map<std::pair<int, CRTTagger>, int>    fMCPStripHitsMap;
 
     std::map<int, int> fTrackIDMotherMap;
     std::map<int, int> fStripHitMCPMap;
+    
   };
 }
 
