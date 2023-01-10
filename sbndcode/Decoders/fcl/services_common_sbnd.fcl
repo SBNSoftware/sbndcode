@@ -8,8 +8,6 @@
 #
 #     services: {
 #
-#         @table::sbnd_common_services  # include all SBND basic services
-#
 #         # rewrite the configuration of a service:
 #         messages: @local::sbnd_message_services_prod
 #
@@ -41,7 +39,6 @@
 #include "seedservice_sbnd.fcl"
 #include "magfield_larsoft.fcl"
 
-#include "services_basic_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
 #include "correctionservices_sbnd.fcl"
 #include "calibrationservices_sbnd.fcl"
@@ -64,8 +61,6 @@ BEGIN_PROLOG
 sbnd_art_services: {
 
   scheduler:   { defaultExceptions: false }    # Make all uncaught exceptions fatal.
-
-  message:     @local::sbnd_basic_services.message # from `services_basic_sbnd.fcl`
 
   TimeTracker: {
     printSummary: true
@@ -116,8 +111,6 @@ sbnd_minimum_services:
     TFileService:                        { fileName: "Supplemental-%ifb_%tc-%p.root" }
 
     FileCatalogMetadata:                 @local::art_file_catalog_mc
-
-                                         @table::sbnd_basic_services
 
 } # sbnd_common_services
 

@@ -49,29 +49,33 @@
 
 
 # ------------------------------------------------------------------------------
-#include "services_common_sbnd.fcl"
-#include "channelmapping_sbnd.fcl"
 
+#include "mctrutht0matching.fcl"
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-#include "decoderdefs_sbnd.fcl"
 
 # ------------------------------------------------------------------------------
 process_name: DecodePMT
 
 
 # ------------------------------------------------------------------------------
+
 services: {
-  
-                     @table::sbnd_art_services
-  message:           @local::sbnd_message_services_interactive_debug
-  
+
+  TFileService: { fileName: "Trees-%ifb_%tc-%p.root" }
+                     @table::sbnd_services
+  message:           @local::sbnd_message_services_prod # from messages_sbnd.fcl
+
                      @table::sbnd_geometry_services
   DetectorClocksService: @local::sbnd_detectorclocks
-  SBNDChannelMap: @local::sbnd_channelmappinggservice
-  
-  TFileService: { fileName: "Trees-%ifb_%tc-%p.root" }
-}
+  #SBNDChannelMap: @local::sbnd_channelmappinggservice   #Not exist yet
 
+}
 
 # ------------------------------------------------------------------------------
 physics: {
