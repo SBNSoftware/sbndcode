@@ -305,9 +305,9 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     _promptPE = promptPE; 
     _prelimPE = prelimPE;
 
-    if (fVerbose) std::cout << "nPMTs Above Threshold: " << trig_metrics.nAboveThreshold << std::endl;
-    if (fVerbose) std::cout << "prompt pe: " << trig_metrics.promptPE << std::endl;
-    if (fVerbose) std::cout << "prelim pe: " << trig_metrics.prelimPE << std::endl;
+    if (fVerbose && fCountPMTs) std::cout << "nPMTs Above Threshold: " << trig_metrics.nAboveThreshold << std::endl;
+    if (fVerbose && fCalculatePEMetrics) std::cout << "prompt pe: " << trig_metrics.promptPE << std::endl;
+    if (fVerbose && fCalculatePEMetrics) std::cout << "prelim pe: " << trig_metrics.prelimPE << std::endl;
 
     // start histo 
     if (fSaveHists == true){
