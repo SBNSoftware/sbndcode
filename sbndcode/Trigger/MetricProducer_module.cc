@@ -16,6 +16,7 @@
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "art_root_io/TFileService.h"
 
 #include "sbndaq-artdaq-core/Overlays/Common/BernCRTFragmentV2.hh"
 #include "sbndaq-artdaq-core/Overlays/Common/CAENV1730Fragment.hh"
@@ -28,6 +29,9 @@
 //#include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
 //#include "sbndaq-artdaq-core/Obj/SBND/CRTmetric.hh"
 #include "sbnobj/SBND/Trigger/CRTmetric.hh"
+
+#include "TFile.h"
+#include "TTree.h"
 
 #include <memory>
 #include <iostream>
@@ -85,10 +89,6 @@ private:
   int fADCThreshold;
   double fPEArea; // conversion factor from ADCxns area to PE count 
 
-  // event information
-  int fRun, fSubrun;
-  art::EventNumber_t fEvent;
-
   // PD information
   opdet::sbndPDMapAlg pdMap; // photon detector map
   std::vector<unsigned int> channelList;
@@ -117,6 +117,19 @@ private:
   void analyzeCAEN1730Fragment(const artdaq::Fragment &frag);
   void estimateBaseline(int i_ch);
   void SimpleThreshAlgo(int i_ch);
+
+  // variables to create an output root tree
+  TTree* _tree;
+  int _run, _sub, _evt;
+
+  // crt tree variables
+  int _crt_hitsperplane[7];
+  
+  // pmt tree variables 
+  bool   _pmt_beam_trig; 
+  double _pmt_time_trig; 
+  int    _pmt_npmt;
+  double _pmt_promptPE, _pmt_prelimPE; 
 
 };
 
@@ -153,19 +166,28 @@ sbndaq::MetricProducer::MetricProducer(fhicl::ParameterSet const& p)
   for(auto const& i:pmtMap){
     channelList.push_back(i["channel"]);
   }
-  // Call appropriate consumes<>() for any products to be retrieved by this module.
+
+  art::ServiceHandle<art::TFileService> fs;
+  _tree = fs->make<TTree>("softmetrictree","");
+  _tree->Branch("run",       &_run,       "run/I");s
+  _tree->Branch("sub",       &_sub,       "sub/I");
+  _tree->Branch("evt",       &_evt,       "evt/I");
+  _tree->Branch("crt_hitsperplane", &_crt_hitsperplane, "crt_hitsperplane[7]/I");
+  _tree->Branch("pmt_beam_trig", &_pmt_beam_trig, "pmt_beam_trig/O");
+  _tree->Branch("pmt_time_trig", &_pmt_time_trig, "pmt_time_trig/D");
+  _tree->Branch("pmt_npmt",      &_pmt_npmt,      "pmt_npmt/I");
+  _tree->Branch("pmt_promptPE",  &_pmt_promptPE,  "pmt_promptPE/D");
+  _tree->Branch("pmt_prelimPE",  &_pmt_prelimPE,  "pmt_prelimPE/D");
 }
 
 
 void sbndaq::MetricProducer::produce(art::Event& evt)
 {
+  _run = evt.run();
+  _sub = evt.subRun();
+  _evt = evt.id().event();
 
-  // load event information
-  fRun = evt.run();
-  fSubrun = evt.subRun();
-  fEvent = evt.event();
-
-  if (fVerbose) std::cout << "Processing: Run " << fRun << ", Subrun " << fSubrun << ", Event " << fEvent << std::endl;
+  if (fVerbose) std::cout << "Processing: Run " << _run << ", Subrun " << _sub << ", Event " << _evt << std::endl;
 
   // object to store required trigger information in
   std::unique_ptr<std::vector<sbndaq::CRTmetric>> crt_metrics_v = std::make_unique<std::vector<sbndaq::CRTmetric>>();
@@ -183,77 +205,76 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
   fWvfmsVec.clear(); fWvfmsVec.resize(15*8); // 15 pmt channels per fragment, 8 fragments per trigger
   fpmtInfoVec.clear(); fpmtInfoVec.resize(15*8);
 
+  _pmt_beam_trig = false;
+  _pmt_time_trig = -9999;
+  _pmt_npmt = -9999;
+  _pmt_promptPE = -9999; _pmt_prelimPE = -9999;
+
+  std::fill(_crt_hitsperplane, _crt_hitsperplane+7, 0);
+
   // get fragment handles
   std::vector<art::Handle<artdaq::Fragments>> fragmentHandles = evt.getMany<std::vector<artdaq::Fragment>>();
 
+  num_crt_frags = 0;
+  num_pmt_frags = 0;
   // loop over fragment handles
   for (auto handle : fragmentHandles) {
     if (!handle.isValid() || handle->size() == 0) continue;
 
-    num_crt_frags = 0;
-    num_pmt_frags = 0;
-
-      if (handle->front().type() == artdaq::Fragment::ContainerFragmentType) {
-        // container fragment
-        for (auto cont : *handle) {
-          artdaq::ContainerFragment contf(cont);
-          if (contf.fragment_type() == sbndaq::detail::FragmentType::BERNCRTV2){
-    	      if (fVerbose)     std::cout << "    Found " << contf.block_count() << " CRT Fragments in container " << std::endl;
-            if (fCalcCRTMetrics){
-    	         for (size_t ii = 0; ii < contf.block_count(); ++ii) analyze_crt_fragment(*contf[ii].get());
-            }
+    if (handle->front().type() == artdaq::Fragment::ContainerFragmentType) {
+      // container fragment
+      for (auto cont : *handle) {
+        artdaq::ContainerFragment contf(cont);
+        if (contf.fragment_type() == sbndaq::detail::FragmentType::BERNCRTV2){
+          if (fVerbose)     std::cout << "    Found " << contf.block_count() << " CRT Fragments in container " << std::endl;
+          if (fCalcCRTMetrics){
+              for (size_t ii = 0; ii < contf.block_count(); ++ii) analyze_crt_fragment(*contf[ii].get());
           }
         }
       }
-      else {
-        // normal fragment
-        size_t beamFragmentIdx = -1;
-        for (auto frag : *handle){
-          beamFragmentIdx++;
-          if (frag.type()==sbndaq::detail::FragmentType::BERNCRTV2) {
-            num_crt_frags++;
-          	if (fCalcCRTMetrics){analyze_crt_fragment(frag);}
-          }
-
-
-
-      if (frag.type()==sbndaq::detail::FragmentType::CAENV1730) {
-        num_pmt_frags++;
-        if (fCalcPMTMetrics){
-        // identify whether any fragments correspond to the beam spill
-        // loop over fragments, in steps of 8
-        //size_t beamFragmentIdx = 9999;
-        //for (size_t fragmentIdx = 0; fragmentIdx < handle->size(); fragmentIdx += 8) {
-        if (!foundBeamTrigger){
-          checkCAEN1730FragmentTimeStamp(frag);//handle->at(fragmentIdx));
-          if (foundBeamTrigger) {
-            //beamFragmentIdx = fragmentIdx;
-            if (fVerbose) std::cout << "Found fragment in time with beam" << std::endl;// at index: " << beamFragmentIdx << std::endl;
-            //break;
-          }
-
-          // if set of fragment in time with beam found, process waveforms
-          if (foundBeamTrigger && beamFragmentIdx != 9999) {
-            for (size_t fragmentIdx = beamFragmentIdx; fragmentIdx < beamFragmentIdx+8; fragmentIdx++) {
-              analyzeCAEN1730Fragment(handle->at(fragmentIdx));
-            }
-            fWvfmsFound = true;
-          }
+    }
+    else {
+      // normal fragment
+      size_t beamFragmentIdx = -1;
+      for (auto frag : *handle){
+        beamFragmentIdx++;
+        if (frag.type()==sbndaq::detail::FragmentType::BERNCRTV2) {
+          num_crt_frags++;
+          if (fCalcCRTMetrics){analyze_crt_fragment(frag);}
         }
-      }//if saving pmt metrics
-    }//if is pmt frag
 
-    }//loop over frags
-  }
-
-    if (fVerbose)   std::cout << "Found " << num_crt_frags << " BERNCRTV2 fragments" << std::endl;
-    if (fVerbose)   std::cout << "Found " << num_pmt_frags << " CAEN1730 fragments" << std::endl;
-
+        if (frag.type()==sbndaq::detail::FragmentType::CAENV1730) {
+          num_pmt_frags++;
+          if (fCalcPMTMetrics){
+          // identify whether any fragments correspond to the beam spill
+          // loop over fragments, in steps of 8
+          //size_t beamFragmentIdx = 9999;
+          //for (size_t fragmentIdx = 0; fragmentIdx < handle->size(); fragmentIdx += 8) {
+            if (!foundBeamTrigger){
+              checkCAEN1730FragmentTimeStamp(frag);//handle->at(fragmentIdx));
+              // if set of fragment in time with beam found, process waveforms
+              if (foundBeamTrigger && beamFragmentIdx != 9999) {
+                for (size_t fragmentIdx = beamFragmentIdx; fragmentIdx < beamFragmentIdx+8; fragmentIdx++) {
+                  analyzeCAEN1730Fragment(handle->at(fragmentIdx));
+                }
+                fWvfmsFound = true;
+              }
+            }
+          } //if saving pmt metrics
+        } //if is pmt frag
+      } //loop over frags
+    }
   } // loop over frag handles
+
+  if (fVerbose)   std::cout << "Found " << num_crt_frags << " BERNCRTV2 fragments" << std::endl;
+  if (fVerbose)   std::cout << "Found " << num_pmt_frags << " CAEN1730 fragments" << std::endl;
 
   if (fCalcCRTMetrics){
 
-    for (int i=0;i<7;++i) {crt_metrics.hitsperplane[i] = hitsperplane[i];}
+    for (int i=0;i<7;++i) {
+      crt_metrics.hitsperplane[i] = hitsperplane[i];
+      _crt_hitsperplane[i] = hitsperplane[i];
+      }
 
     if (fVerbose) {
       std::cout << "CRT hit count during beam spill ";
@@ -271,8 +292,11 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
       double triggerTimeStamp = fTriggerTime - beamWindowStart;
       pmt_metrics.foundBeamTrigger = true;
       pmt_metrics.triggerTimestamp = triggerTimeStamp;
+
+      _pmt_beam_trig = true;
+      _pmt_time_trig = triggerTimeStamp;
       
-      if (fVerbose) std::cout << "Saving trigger timestamp: " << triggerTimeStamp << " ns" << std::endl;
+      if (fVerbose) std::cout << "Saving PMT trigger timestamp: " << triggerTimeStamp << " ns" << std::endl;
 
       double promptPE = 0;
       double prelimPE = 0;
@@ -333,9 +357,14 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
       pmt_metrics.promptPE = promptPE;
       pmt_metrics.prelimPE = prelimPE;
 
-      if (fVerbose) std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
-      if (fVerbose) std::cout << "prompt pe: " << promptPE << std::endl;
-      if (fVerbose) std::cout << "prelim pe: " << prelimPE << std::endl;
+      // tree variables 
+      _pmt_npmt = nAboveThreshold;
+      _pmt_promptPE = promptPE; 
+      _pmt_prelimPE = prelimPE;
+
+      if (fVerbose && fCountPMTs) std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
+      if (fVerbose && fCalculatePEMetrics) std::cout << "prompt pe: " << promptPE << std::endl;
+      if (fVerbose && fCalculatePEMetrics) std::cout << "prelim pe: " << prelimPE << std::endl;
     } // if beam and wvfms found 
     else{
       if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
@@ -344,6 +373,10 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
       pmt_metrics.nAboveThreshold = -9999;
       pmt_metrics.promptPE = -9999;
       pmt_metrics.prelimPE = -9999;
+
+      // tree variables 
+      _pmt_beam_trig = false; 
+      _pmt_time_trig = -9999; _pmt_npmt = -9999; _pmt_promptPE = -9999; _pmt_prelimPE = -9999;
     }
   }//if save pmt metrics
 
@@ -351,14 +384,14 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
   crt_metrics_v->push_back(crt_metrics);
   evt.put(std::move(crt_metrics_v));
   pmt_metrics_v->push_back(pmt_metrics);
-  evt.put(std::move(pmt_metrics_v));   
+  evt.put(std::move(pmt_metrics_v)); 
+  _tree->Fill(); 
 }//produce
 
 
 
 void sbndaq::MetricProducer::analyze_crt_fragment(artdaq::Fragment & frag)
 {
-
 
   sbndaq::BernCRTFragmentV2 bern_fragment(frag);
 
