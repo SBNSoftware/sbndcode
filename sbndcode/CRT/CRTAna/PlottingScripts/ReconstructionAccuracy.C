@@ -1,6 +1,7 @@
-void SpacePointVariables()
+void ReconstructionAccuracy()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/spacepointvariables";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/reconstructionaccuracy";
+  gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
   using namespace std;
@@ -45,68 +46,56 @@ void SpacePointVariables()
 
   const int plotcolour = kMagenta+2;
 
-  std::vector<plt> plots = { {"spacepoint_x","cl_sp_x", ";x [cm];SpacePoints",
-                              100, -500, 500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"spacepoint_y","cl_sp_y", ";y [cm];SpacePoints",
-                              100, -500, 1500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"spacepoint_z","cl_sp_z", ";z [cm];SpacePoints",
-                              100, -250, 850, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"spacepoint_pe","cl_sp_pe", ";PE;SpacePoints",
-                              100, 0, 800, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"spacepoint_time","cl_sp_time", ";Time in readout [ns];SpacePoints",
-                              100, 0, 3.5e6, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"cl_has_sp","cl_has_sp", ";Has SpacePoint?;Clusters",
-                              2, 0, 2, plotcolour, {"No","Yes"}, "", true},
-                             {"cl_sp_complete","cl_sp_complete", ";Is SpacePoint Complete?;Clusters",
-                              2, 0, 2, plotcolour, {"No","Yes"}, "cl_has_sp", true},
-                             {"cl_x_accuracy", "cl_sp_x - cl_truth_x", ";(reco - true) x [cm];SpacePoints",
+  std::vector<plt> plots = { {"sp_x_accuracy", "cl_sp_x - cl_truth_x", ";(reco - true) x [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"cl_x_accuracy_no_sides", "cl_sp_x - cl_truth_x", ";(reco - true) x [cm];SpacePoints",
+                             {"sp_x_accuracy_no_sides", "cl_sp_x - cl_truth_x", ";(reco - true) x [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete && cl_tagger!=3 && cl_tagger!=4"},
-                             {"cl_x_accuracy_no_sides_log", "cl_sp_x - cl_truth_x", ";(reco - true) x [cm];SpacePoints",
+                             {"sp_x_accuracy_no_sides_log", "cl_sp_x - cl_truth_x", ";(reco - true) x [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete && cl_tagger!=3 && cl_tagger!=4", false, true},
-                             {"cl_y_accuracy", "cl_sp_y - cl_truth_y", ";(reco - true) y [cm];SpacePoints",
+                             {"sp_y_accuracy", "cl_sp_y - cl_truth_y", ";(reco - true) y [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"cl_y_accuracy_no_top_bottom", "cl_sp_y - cl_truth_y", ";(reco - true) y [cm];SpacePoints",
+                             {"sp_y_accuracy_no_top_bottom", "cl_sp_y - cl_truth_y", ";(reco - true) y [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete && cl_tagger!=0 && cl_tagger!=5 && cl_tagger!=6"},
-                             {"cl_y_accuracy_no_top_bottom_log", "cl_sp_y - cl_truth_y", ";(reco - true) y [cm];SpacePoints",
+                             {"sp_y_accuracy_no_top_bottom_log", "cl_sp_y - cl_truth_y", ";(reco - true) y [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete && cl_tagger!=0 && cl_tagger!=5 && cl_tagger!=6", false, true},
-                             {"cl_z_accuracy", "cl_sp_z - cl_truth_z", ";(reco - true) z [cm];SpacePoints",
+                             {"sp_z_accuracy", "cl_sp_z - cl_truth_z", ";(reco - true) z [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"cl_z_accuracy_no_front_back", "cl_sp_z - cl_truth_z", ";(reco - true) z [cm];SpacePoints",
+                             {"sp_z_accuracy_no_front_back", "cl_sp_z - cl_truth_z", ";(reco - true) z [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete && cl_tagger!=1 && cl_tagger!=2"},
-                             {"cl_z_accuracy_no_front_back_log", "cl_sp_z - cl_truth_z", ";(reco - true) z [cm];SpacePoints",
+                             {"sp_z_accuracy_no_front_back_log", "cl_sp_z - cl_truth_z", ";(reco - true) z [cm];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete && cl_tagger!=1 && cl_tagger!=2", false, true},
-                             {"cl_pos_accuracy", "sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];SpacePoints",
+                             {"sp_pos_accuracy", "sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Space Points",
                               55, -5, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"cl_pos_accuracy_multi_strip_clusters", "sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];SpacePoints",
+                             {"sp_pos_accuracy_multi_strip_clusters", "sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Space Points",
                               55, -5, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete && cl_nhits>2"},
-                             {"cl_time_accuracy", "cl_sp_time - (cl_truth_time + 1.7e6)", ";(reco - (true - G4RefTime)) t [ns];SpacePoints",
+                             {"sp_time_accuracy", "cl_sp_time - (cl_truth_time + 1.7e6)", ";(reco - (true - G4RefTime)) time [ns];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+			     {"sh_pos_accuracy", "sh_pos - sh_truth_pos", ";(reco - true) position [cm];Strip Hits",
+			      100, -50, 50, plotcolour},
+			     {"sh_time_accuracy", "sh_ts1 - (sh_truth_time + 1.7e6)", ";(reco - (true - G4RefTime)) time [ns];Strip Hits",
+			      100, -50, 50, plotcolour},
   };
 
   std::vector<plttwod> twodplots = {
-    {"cl_pe_energy_relation", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
+    {"sp_pe_energy_relation", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
      50, 0, 700, 50, 0, 0.1, "cl_has_sp && cl_sp_complete"},
-    {"cl_pe_energy_relation_zoom", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
+    {"sp_pe_energy_relation_zoom", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
      50, 0, 700, 50, 0, 0.02, "cl_has_sp && cl_sp_complete"},
-    {"cl_pe_energy_relation_log", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
+    {"sp_pe_energy_relation_log", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
      50, 0, 700, 50, 0, 0.1, "cl_has_sp && cl_sp_complete", true},
-    {"cl_pe_energy_relation_zoom_log", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
+    {"sp_pe_energy_relation_zoom_log", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
      50, 0, 700, 50, 0, 0.02, "cl_has_sp && cl_sp_complete", true},
-    {"cl_pos_accuracy_nhits", "cl_nhits:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];# Hits in Cluster;SpacePoints",
+    {"sp_pos_accuracy_nhits", "cl_nhits:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];# Hits in Cluster;SpacePoints",
      55, -5, 50, 10, 0, 10, "cl_has_sp && cl_sp_complete", true},
-    {"cl_pos_accuracy_completeness", "cl_truth_completeness:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster completeness;SpacePoints",
+    {"sp_pos_accuracy_completeness", "cl_truth_completeness:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster completeness;SpacePoints",
      55, -5, 50, 50, 0, 1 + std::numeric_limits<double>::epsilon(), "cl_has_sp && cl_sp_complete", true},
-    {"cl_pos_accuracy_purity", "cl_truth_purity:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster purity;SpacePoints",
+    {"sp_pos_accuracy_purity", "cl_truth_purity:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster purity;SpacePoints",
      55, -5, 50, 50, 0, 1 + std::numeric_limits<double>::epsilon(), "cl_has_sp && cl_sp_complete", true},
-    {"cl_pos_accuracy_completeness_multi_strip_clusters", "cl_truth_completeness:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster completeness;SpacePoints",
+    {"sp_pos_accuracy_completeness_multi_strip_clusters", "cl_truth_completeness:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster completeness;SpacePoints",
      55, -5, 50, 50, 0, 1 + std::numeric_limits<double>::epsilon(), "cl_has_sp && cl_sp_complete && cl_nhits>2", true},
-    {"cl_pos_accuracy_purity_multi_strip_clusters", "cl_truth_purity:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster purity;SpacePoints",
+    {"sp_pos_accuracy_purity_multi_strip_clusters", "cl_truth_purity:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster purity;SpacePoints",
      55, -5, 50, 50, 0, 1 + std::numeric_limits<double>::epsilon(), "cl_has_sp && cl_sp_complete && cl_nhits>2", true},
   };
-
-  gSystem->Exec("mkdir -p " + saveDir);
 
   for(auto const &plot : plots)
     {

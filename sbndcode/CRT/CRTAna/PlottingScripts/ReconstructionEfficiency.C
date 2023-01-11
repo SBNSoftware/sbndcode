@@ -14,9 +14,11 @@ void ReconstructionEfficiency()
 
   std::vector<double> *td_energy = 0;
   std::vector<bool> *td_reco_status = 0;
+  std::vector<int> *td_pdg = 0;
 
   tree->SetBranchAddress("td_energy", &td_energy);
   tree->SetBranchAddress("td_reco_status", &td_reco_status);
+  tree->SetBranchAddress("td_pdg", &td_pdg);
 
   double bins[23];
   for(int i = 0; i < 16; ++i)
@@ -36,6 +38,9 @@ void ReconstructionEfficiency()
 
       for(unsigned ii = 0; ii < td_energy->size(); ++ii)
 	{
+	  if(td_pdg->at(ii) == -999999) 
+	    continue;
+
 	  hTrueDepositEnergy->Fill(1e3*td_energy->at(ii));
 	  
 	  if(td_reco_status->at(ii))

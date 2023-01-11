@@ -1,6 +1,7 @@
-void BasicClusterVariables()
+void BasicVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/basicclustervariables";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/basicvariables";
+  gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
   using namespace std;
@@ -42,7 +43,7 @@ void BasicClusterVariables()
   };
 
   const int plotcolour = kMagenta+2;
-
+  
   std::vector<plt> plots = { {"n_strip_hits", "@sh_channel.size()", ";nStripHits;Events",
                               50, 0, 500, plotcolour},
                              {"n_clusters", "@cl_ts0.size()", ";nClusters;Events",
@@ -79,16 +80,28 @@ void BasicClusterVariables()
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
                              {"cl_purity","cl_truth_purity", ";Purity;Clusters",
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
+			     {"sp_x","cl_sp_x", ";x [cm];Space Points",
+                              100, -500, 500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                             {"sp_y","cl_sp_y", ";y [cm];Space Points",
+                              100, -500, 1500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                             {"sp_z","cl_sp_z", ";z [cm];Space Points",
+                              100, -250, 850, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                             {"sp_pe","cl_sp_pe", ";PE;Space Points",
+                              100, 0, 800, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                             {"sp_time","cl_sp_time", ";Time in readout [ns];Space Points",
+                              100, 0, 3.5e6, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                             {"cl_has_sp","cl_has_sp", ";Has SpacePoint?;Clusters",
+                              2, 0, 2, plotcolour, {"No","Yes"}, "", true},
+                             {"cl_sp_complete","cl_sp_complete", ";Is SpacePoint Complete?;Clusters",
+                              2, 0, 2, plotcolour, {"No","Yes"}, "cl_has_sp"},
   };
-
+  
   std::vector<plttwod> twodplots = {
     {"cl_completeness_nhits","cl_nhits:cl_truth_completeness", ";Completeness;Hits per cluster;Clusters",
      50, 0, 1 + std::numeric_limits<double>::epsilon(), 10, 0, 10},
     {"cl_purity_nhits","cl_nhits:cl_truth_purity", ";Purity;Hits per cluster;Clusters",
      50, 0, 1 + std::numeric_limits<double>::epsilon(), 10, 0, 10},
   };
-
-  gSystem->Exec("mkdir -p " + saveDir);
 
   for(auto const &plot : plots)
     {
