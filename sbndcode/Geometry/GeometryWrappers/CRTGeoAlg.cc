@@ -336,6 +336,13 @@ namespace sbnd::crt {
     return localvec;
   }
 
+  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const uint16_t channel, const double x, 
+                                                      const double y, const double z)
+  {
+    const CRTStripGeo strip = GetStrip(channel);
+    return StripWorldToLocalPos(strip, x, y, z);
+  }
+
   TVector3 CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
   {
     const CRTSiPMGeo &sipm = fSiPMs.at(channel);

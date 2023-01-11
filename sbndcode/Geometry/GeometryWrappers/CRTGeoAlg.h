@@ -307,6 +307,9 @@ namespace sbnd::crt {
     std::vector<double> StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
                                              const double y, const double z);
 
+    std::vector<double> StripWorldToLocalPos(const uint16_t channel, const double x,
+                                             const double y, const double z);
+
     std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex);
 
     TVector3 ChannelToSipmPosition(const uint16_t channel) const;
