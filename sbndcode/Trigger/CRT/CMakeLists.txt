@@ -37,12 +37,11 @@ set(
                     ROOT::Tree
 )
 
-add_subdirectory(CRT)
-add_subdirectory(PMT)
+cet_build_plugin(CRTArtdaqFragmentProducer art::module SOURCE CRTArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
-cet_build_plugin(ArtdaqFragmentProducer art::module SOURCE ArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(MetricProducer art::module SOURCE MetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
 install_source()
+
+
