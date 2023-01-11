@@ -169,7 +169,7 @@ sbndaq::MetricProducer::MetricProducer(fhicl::ParameterSet const& p)
 
   art::ServiceHandle<art::TFileService> fs;
   _tree = fs->make<TTree>("softmetrictree","");
-  _tree->Branch("run",       &_run,       "run/I");s
+  _tree->Branch("run",       &_run,       "run/I");
   _tree->Branch("sub",       &_sub,       "sub/I");
   _tree->Branch("evt",       &_evt,       "evt/I");
   _tree->Branch("crt_hitsperplane", &_crt_hitsperplane, "crt_hitsperplane[7]/I");
