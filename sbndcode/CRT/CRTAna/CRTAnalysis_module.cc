@@ -125,9 +125,12 @@ private:
   std::vector<uint16_t> _sh_adc1;
   std::vector<uint16_t> _sh_adc2;
   std::vector<bool>     _sh_saturated;
-  std::vector<int16_t>  _sh_truth_trackid;
+  std::vector<int>      _sh_truth_trackid;
   std::vector<double>   _sh_truth_completeness;
   std::vector<double>   _sh_truth_purity;
+  std::vector<double>   _sh_truth_pos;
+  std::vector<double>   _sh_truth_energy;
+  std::vector<double>   _sh_truth_time;
 
   std::vector<uint32_t> _cl_ts0;
   std::vector<uint32_t> _cl_ts1;
@@ -135,11 +138,12 @@ private:
   std::vector<uint16_t> _cl_nhits;
   std::vector<int16_t>  _cl_tagger;
   std::vector<bool>     _cl_threed;
-  std::vector<int16_t>  _cl_truth_trackid;
+  std::vector<int>      _cl_truth_trackid;
   std::vector<double>   _cl_truth_completeness;
   std::vector<double>   _cl_truth_purity;
   std::vector<double>   _cl_truth_hit_completeness;
   std::vector<double>   _cl_truth_hit_purity;
+  std::vector<int>      _cl_truth_pdg;
   std::vector<double>   _cl_truth_x;
   std::vector<double>   _cl_truth_y;
   std::vector<double>   _cl_truth_z;
@@ -156,7 +160,8 @@ private:
   std::vector<double>   _cl_sp_time;
   std::vector<bool>     _cl_sp_complete;
 
-  std::vector<int16_t> _td_trackid;
+  std::vector<int>     _td_trackid;
+  std::vector<int>     _td_pdg;
   std::vector<int16_t> _td_tagger;
   std::vector<double>  _td_x;
   std::vector<double>  _td_y;
@@ -165,7 +170,6 @@ private:
   std::vector<double>  _td_time;
   std::vector<bool>    _td_reco_status;
 };
-
 
 sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
@@ -237,9 +241,12 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("sh_adc1", "std::vector<uint16_t>", &_sh_adc1);
     fTree->Branch("sh_adc2", "std::vector<uint16_t>", &_sh_adc2);
     fTree->Branch("sh_saturated", "std::vector<bool>", &_sh_saturated);
-    fTree->Branch("sh_truth_trackid", "std::vector<int16_t>", &_sh_truth_trackid);
+    fTree->Branch("sh_truth_trackid", "std::vector<int>", &_sh_truth_trackid);
     fTree->Branch("sh_truth_completeness", "std::vector<double>", &_sh_truth_completeness);
     fTree->Branch("sh_truth_purity", "std::vector<double>", &_sh_truth_purity);
+    fTree->Branch("sh_truth_pos", "std::vector<double>", &_sh_truth_pos);
+    fTree->Branch("sh_truth_energy", "std::vector<double>", &_sh_truth_energy);
+    fTree->Branch("sh_truth_time", "std::vector<double>", &_sh_truth_time);
 
     fTree->Branch("cl_ts0", "std::vector<uint32_t>", &_cl_ts0);
     fTree->Branch("cl_ts1", "std::vector<uint32_t>", &_cl_ts1);
@@ -247,11 +254,12 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
     fTree->Branch("cl_tagger", "std::vector<int16_t>", &_cl_tagger);
     fTree->Branch("cl_threed", "std::vector<bool>", &_cl_threed);
-    fTree->Branch("cl_truth_trackid", "std::vector<int16_t>", &_cl_truth_trackid);
+    fTree->Branch("cl_truth_trackid", "std::vector<int>", &_cl_truth_trackid);
     fTree->Branch("cl_truth_completeness", "std::vector<double>", &_cl_truth_completeness);
     fTree->Branch("cl_truth_purity", "std::vector<double>", &_cl_truth_purity);
     fTree->Branch("cl_truth_hit_completeness", "std::vector<double>", &_cl_truth_hit_completeness);
     fTree->Branch("cl_truth_hit_purity", "std::vector<double>", &_cl_truth_hit_purity);
+    fTree->Branch("cl_truth_pdg", "std::vector<int>", &_cl_truth_pdg);
     fTree->Branch("cl_truth_x", "std::vector<double>", &_cl_truth_x);
     fTree->Branch("cl_truth_y", "std::vector<double>", &_cl_truth_y);
     fTree->Branch("cl_truth_z", "std::vector<double>", &_cl_truth_z);
@@ -268,7 +276,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_sp_time", "std::vector<double>", &_cl_sp_time);
     fTree->Branch("cl_sp_complete", "std::vector<bool>", &_cl_sp_complete);
 
-    fTree->Branch("td_trackid", "std::vector<int16_t>", &_td_trackid);
+    fTree->Branch("td_trackid", "std::vector<int>", &_td_trackid);
+    fTree->Branch("td_pdg", "std::vector<int>", &_td_pdg);
     fTree->Branch("td_tagger", "std::vector<int16_t>", &_td_tagger);
     fTree->Branch("td_x", "std::vector<double>", &_td_x);
     fTree->Branch("td_y", "std::vector<double>", &_td_y);
@@ -424,7 +433,7 @@ void sbnd::crt::CRTAnalysis::AnalyseMCParticles(std::vector<art::Ptr<simb::MCPar
   
   for(unsigned i = 0; i < nMCParticles; ++i)
     {
-      auto mcp = MCParticleVec[i];
+      const auto mcp = MCParticleVec[i];
 
       _mc_trackid[i]    = mcp->TrackId();
       _mc_pdg[i]        = mcp->PdgCode();
@@ -457,11 +466,11 @@ void sbnd::crt::CRTAnalysis::AnalyseMCParticles(std::vector<art::Ptr<simb::MCPar
 void sbnd::crt::CRTAnalysis::AnalyseSimDeposits(std::vector<art::Ptr<sim::AuxDetSimChannel>> &SimDepositVec)
 {
   const unsigned nAuxDetSimChannels = SimDepositVec.size();
-  unsigned nIDEs              = 0;
+  unsigned nIDEs = 0;
 
   for(unsigned i = 0; i < nAuxDetSimChannels; ++i)
     {
-      auto auxDetSimChannel = SimDepositVec[i];
+      const auto auxDetSimChannel = SimDepositVec[i];
       nIDEs += auxDetSimChannel->AuxDetIDEs().size();
     }
 
@@ -480,12 +489,12 @@ void sbnd::crt::CRTAnalysis::AnalyseSimDeposits(std::vector<art::Ptr<sim::AuxDet
 
   for(unsigned i = 0; i < nAuxDetSimChannels; ++i)
     {
-      auto auxDetSimChannel = SimDepositVec[i];
-      auto ideVec           = auxDetSimChannel->AuxDetIDEs();
+      const auto auxDetSimChannel = SimDepositVec[i];
+      const auto ideVec           = auxDetSimChannel->AuxDetIDEs();
 
       for(unsigned ii = 0; ii < ideVec.size(); ++ii)
         {
-          auto ide = ideVec[ii];
+          const auto ide = ideVec[ii];
 
           _ide_trackid[ide_counter] = ide.trackID;
           _ide_e[ide_counter]       = ide.energyDeposited;
@@ -517,7 +526,7 @@ void sbnd::crt::CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<FEBData>> &FEB
 
   for(unsigned i = 0; i < nFEBData; ++i)
     {
-      auto data = FEBDataVec[i];
+      const auto data = FEBDataVec[i];
       
       _feb_mac5[i]  = data->Mac5();
       _feb_flags[i] = data->Flags();
@@ -547,10 +556,13 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
   _sh_truth_trackid.resize(nStripHits);
   _sh_truth_completeness.resize(nStripHits);
   _sh_truth_purity.resize(nStripHits);
+  _sh_truth_pos.resize(nStripHits);
+  _sh_truth_energy.resize(nStripHits);
+  _sh_truth_time.resize(nStripHits);
 
   for(unsigned i = 0; i < nStripHits; ++i)
     {
-      auto hit = CRTStripHitVec[i];
+      const auto hit = CRTStripHitVec[i];
 
       _sh_channel[i]   = hit->Channel();
       _sh_ts0[i]       = hit->Ts0();
@@ -562,10 +574,16 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
       _sh_adc2[i]      = hit->ADC2();
       _sh_saturated[i] = hit->Saturated();
 
-      CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, hit);
+      const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, hit);
+      const std::vector<double> localpos = fCRTGeoAlg.StripWorldToLocalPos(hit->Channel(), truthMatch.deposit.x, truthMatch.deposit.y, truthMatch.deposit.z);
+      const double width = fCRTGeoAlg.GetStrip(hit->Channel()).width;
+
       _sh_truth_trackid[i]      = truthMatch.trackid;
       _sh_truth_completeness[i] = truthMatch.completeness;
       _sh_truth_purity[i]       = truthMatch.purity;
+      _sh_truth_pos[i]          = localpos[1] + width / 2.;
+      _sh_truth_energy[i]       = truthMatch.deposit.energy;
+      _sh_truth_time[i]         = truthMatch.deposit.time;
     }
 }
 
@@ -584,6 +602,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_truth_purity.resize(nClusters);
   _cl_truth_hit_completeness.resize(nClusters);
   _cl_truth_hit_purity.resize(nClusters);
+  _cl_truth_pdg.resize(nClusters);
   _cl_truth_x.resize(nClusters);
   _cl_truth_y.resize(nClusters);
   _cl_truth_z.resize(nClusters);
@@ -602,7 +621,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
 
   for(unsigned i = 0; i < nClusters; ++i)
     {
-      auto cluster = CRTClusterVec[i];
+      const auto cluster = CRTClusterVec[i];
 
       _cl_ts0[i]    = cluster->Ts0();
       _cl_ts1[i]    = cluster->Ts1();
@@ -611,22 +630,23 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_tagger[i] = cluster->Tagger();
       _cl_threed[i] = cluster->ThreeD();
 
-      CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
+      const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
       _cl_truth_trackid[i]          = truthMatch.trackid;
       _cl_truth_completeness[i]     = truthMatch.completeness;
       _cl_truth_purity[i]           = truthMatch.purity;
       _cl_truth_hit_completeness[i] = truthMatch.hitcompleteness;
       _cl_truth_hit_purity[i]       = truthMatch.hitpurity;
+      _cl_truth_pdg[i]              = truthMatch.deposit.pdg;
       _cl_truth_x[i]                = truthMatch.deposit.x;
       _cl_truth_y[i]                = truthMatch.deposit.y;
       _cl_truth_z[i]                = truthMatch.deposit.z;
       _cl_truth_energy[i]           = truthMatch.deposit.energy;
       _cl_truth_time[i]             = truthMatch.deposit.time;
 
-      auto spacepoints = clustersToSpacePoints.at(cluster.key());
+      const auto spacepoints = clustersToSpacePoints.at(cluster.key());
       if(spacepoints.size() == 1)
         { 
-          auto spacepoint = spacepoints[0];
+          const auto spacepoint = spacepoints[0];
           
           _cl_has_sp[i]      = true;
           _cl_sp_x[i]        = spacepoint->X();
@@ -660,6 +680,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<std::pair<int, C
   const unsigned nTrueDeposits = recoStatusMap.size();
 
   _td_trackid.resize(nTrueDeposits);
+  _td_pdg.resize(nTrueDeposits);
   _td_tagger.resize(nTrueDeposits);
   _td_x.resize(nTrueDeposits);
   _td_y.resize(nTrueDeposits);
@@ -674,6 +695,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<std::pair<int, C
       const CRTBackTrackerAlg::TrueDeposit deposit = fCRTBackTrackerAlg.GetTrueDeposit(category);
 
       _td_trackid[entry]     = deposit.trackid;
+      _td_pdg[entry]         = deposit.pdg;
       _td_tagger[entry]      = deposit.tagger;
       _td_x[entry]           = deposit.x;
       _td_y[entry]           = deposit.y;
