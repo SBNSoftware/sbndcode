@@ -88,8 +88,11 @@ namespace sbnd::crt {
         const double time   = idToTimeMap[category] / idToNIDEsMap[category];
         const double energy = idToEnergyMap[category];
 
-        fTrueDepositsMap[category] = TrueDeposit(category.first, category.second, x, y, z,
-                                                 energy, time);
+        const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(category.first);
+        const int pdg = particle == NULL ? -999999 : particle->PdgCode();
+
+        fTrueDepositsMap[category] = TrueDeposit(category.first, pdg, category.second, 
+                                                 x, y, z, energy, time);
       }
       
     for(auto const ide : ideVec)
@@ -175,7 +178,8 @@ namespace sbnd::crt {
     auto const assnIDEVec = febDataToIDEs.at(febData.at(0).key());
 
     std::map<int, double> idToEnergyMap;
-    double totalEnergy = 0.;
+    double totalEnergy = 0., x = 0., y = 0., z = 0., t = 0.;
+    uint nides = 0;
 
     for(unsigned i = 0; i < assnIDEVec.size(); ++i)
       {
@@ -185,8 +189,20 @@ namespace sbnd::crt {
           {
             idToEnergyMap[RollUpID(ide->trackID)] += ide->energyDeposited;
             totalEnergy                           += ide->energyDeposited;
+
+            x                                     += (ide->entryX + ide->exitX) / 2.;
+            y                                     += (ide->entryY + ide->exitY) / 2.;
+            z                                     += (ide->entryZ + ide->exitZ) / 2.;
+            t                                     += (ide->entryT + ide->exitT) / 2.;
+
+            ++nides;
           }
       }
+
+    x /= nides;
+    y /= nides;
+    z /= nides;
+    t /= nides;
 
     double bestPur = 0., comp = 0.;
     int trackid = -99999;
@@ -202,8 +218,9 @@ namespace sbnd::crt {
           }
       }
 
-    return TruthMatchMetrics(trackid, comp, bestPur, 1., 1., 
-                             fTrueDepositsMap[{trackid, tagger}]);
+    TrueDeposit deposit(-999999, -999999, tagger, x, y, z, totalEnergy, t);
+
+    return TruthMatchMetrics(trackid, comp, bestPur, 1., 1., deposit);
   }
 
   CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<CRTCluster> &cluster)

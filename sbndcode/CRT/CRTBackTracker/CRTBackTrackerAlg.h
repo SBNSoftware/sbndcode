@@ -66,6 +66,7 @@ namespace sbnd::crt {
 
     struct TrueDeposit {
       int       trackid;
+      int       pdg;
       CRTTagger tagger;
       double    x;
       double    y;
@@ -73,11 +74,12 @@ namespace sbnd::crt {
       double    energy;
       double    time;
       
-      TrueDeposit(int _trackid = -999999, CRTTagger _tagger = kUndefinedTagger, 
+      TrueDeposit(int _trackid = -999999, int _pdg = -999999, CRTTagger _tagger = kUndefinedTagger, 
                   double _x = -999999., double _y = -999999., double _z = -999999., 
                   double _energy = -999999., double _time = -999999.)
       {
         trackid = _trackid;
+        pdg     = _pdg;
         tagger  = _tagger;
         x       = _x;
         y       = _y;
