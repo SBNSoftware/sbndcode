@@ -393,6 +393,8 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
 
     double sps_Q = 0;
 
+    bool hit_in_0 = false;
+    bool hit_in_1 = false;
     // get charge information to create the weighted map 
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(slice.key());
     for (size_t n_pfp=0; n_pfp < pfp_v.size(); n_pfp++){
@@ -408,6 +410,8 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
           const auto &position(sp->XYZ());
           geo::Point_t xyz(position[0],position[1],position[2]);
           // correct for e- attenuation 
+          if (position[0] < 0) hit_in_0 = true;
+          if (position[0] > 0) hit_in_1 = true;
           double drift_time = abs(200.0 - abs(position[0]))/(0.16); // in us, drift velocity = 0.16 cm/us 
           double atten_correction = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
           double charge = (1/.0201293)*atten_correction*hit->Integral();
@@ -447,6 +451,9 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     std::vector<double> total_pe(_nchan,0.); 
     std::vector<double> total_gamma(_nchan, 0.);
 
+    if ( (flash_in_0 && !hit_in_0) || (!flash_in_0 && hit_in_0)) std::cout << "TPC 0 light and charge non-currence!" << std::endl;
+    if ( (flash_in_1 && !hit_in_1) || (!flash_in_1 && hit_in_1)) std::cout << "TPC 1 light and charge non-currence!" << std::endl;
+
     if (flash_in_0){
       auto flash_pe_v = opflash0->PEs();
       for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
@@ -459,7 +466,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     }
 
     for (size_t i=0; i < total_gamma.size(); i++){
-    std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) <<std::endl;
+      std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) << " vis: "<< visibility_map[i] << std::endl;
     }
     _dep_pe = total_pe;
     _rec_gamma = total_gamma;
@@ -470,9 +477,24 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
             [&](int A, int B) -> bool {
                   return total_gamma[A] < total_gamma[B];
               });
-    for (auto i : idx){
-      std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) <<std::endl;
+    // count number of zero entries: 
+    int zero_counter = 0;
+    for (size_t i=0; i < total_gamma.size(); i++){
+      if (total_gamma.at(i) <= 0) zero_counter++;
     }
+    std::cout << "zero_counter: " << zero_counter << std::endl;
+    int med_gamma_idx=0;
+    double med_gamma=0;
+    if (zero_counter != int(total_gamma.size())){
+      med_gamma_idx = idx.at(int((total_gamma.size()-zero_counter))/2 + zero_counter); 
+      std::cout << "med_gamma_idx: " << med_gamma_idx << std::endl;
+      // std::cout << "median gamma idx: " << med_gamma_idx << std::endl;
+      med_gamma = total_gamma.at(med_gamma_idx);
+      std::cout << "median gamma: " << med_gamma << std::endl;
+    }
+    // for (auto i : idx){
+    //   std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) <<std::endl;
+    // }
 
     // calculate the weighted average: 
     double counter = 0.0;  // counter of non-zero channels 
@@ -518,7 +540,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
 
     // std::cout << "true deposited energy: " << _true_energy << std::endl;
     // std::cout << "calc deposited energy: " << _slice_E << std::endl;
-
+    std::cout << "ratio of gamma (median/true):  " << med_gamma/_true_gamma << std::endl;
     std::cout << "ratio of gamma (calc/true):    " << _slice_L/_true_gamma << std::endl;
     std::cout << "ratio of electron (calc/true): " << _slice_Q/_true_charge << std::endl;
     std::cout << "ratio of energy (calc/true):   " << _slice_E/_true_energy << std::endl;
